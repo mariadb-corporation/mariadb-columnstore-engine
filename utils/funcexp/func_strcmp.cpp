@@ -75,7 +75,7 @@ std::string Func_strcmp::getStrVal(rowgroup::Row& row,
                                    bool& isNull,
                                    execplan::CalpontSystemCatalog::ColType& type)
 {
-    uint64_t val = getIntVal(row, fp, isNull, type);
+    int64_t val = getIntVal(row, fp, isNull, type);
 
     if (val > 0)
         return string("1");

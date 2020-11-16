@@ -177,7 +177,7 @@ public:
       We implement this in ha_example.cc. It's not an obligatory method;
       skip it and and MySQL will treat it as not implemented.
     */
-    int update_row(const uchar* old_data, uchar* new_data);
+    int update_row(const uchar* old_data, const uchar* new_data) override;
     int direct_update_rows_init(List<Item> *update_fields);
     int direct_update_rows(ha_rows *update_rows);
     int direct_update_rows(ha_rows *update_rows, ha_rows *found_rows);
@@ -239,8 +239,8 @@ public:
     int extra(enum ha_extra_function operation);
     int external_lock(THD* thd, int lock_type);                   ///< required
     int delete_all_rows(void);
-    ha_rows records_in_range(uint32_t inx, key_range* min_key,
-                             key_range* max_key);
+    ha_rows records_in_range(uint32_t inx, const key_range* min_key,
+                             const key_range* max_key, page_range* res) override;
     int delete_table(const char* from);
     int rename_table(const char* from, const char* to);
     int create(const char* name, TABLE* form,

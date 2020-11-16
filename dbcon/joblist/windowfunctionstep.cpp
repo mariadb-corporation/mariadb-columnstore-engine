@@ -78,6 +78,8 @@ using namespace querytele;
 #include "windowfunctionstep.h"
 using namespace joblist;
 
+#include "checks.h"
+
 
 namespace
 {
@@ -722,7 +724,7 @@ void WindowFunctionStep::initialize(const RowGroup& rg, JobInfo& jobInfo)
         string fn = boost::to_upper_copy(wc->functionName());
 
         if ( (fn == "MEDIAN" || fn == "PERCENTILE_CONT" || fn == "PERCENTILE_DISC") &&
-                peerIdx[0] >= 0 && peerIdx[0] < types.size() )
+                utils::is_nonnegative(peerIdx[0]) && peerIdx[0] < types.size() )
             ct = types[peerIdx[0]];
 
         // create the functor based on function name

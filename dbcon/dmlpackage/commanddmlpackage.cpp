@@ -61,8 +61,8 @@ int CommandDMLPackage::write(messageqcpp::ByteStream& bytestream)
     bytestream << fTimeZone;
     bytestream << fTableName;
     bytestream << fTableOid;
-    bytestream << static_cast<const messageqcpp::ByteStream::byte>(fIsAutocommitOn);
-    bytestream << static_cast<const messageqcpp::ByteStream::byte>(fIsBatchInsert);
+    bytestream << static_cast<messageqcpp::ByteStream::byte>(fIsAutocommitOn);
+    bytestream << static_cast<messageqcpp::ByteStream::byte>(fIsBatchInsert);
     return retval;
 }
 

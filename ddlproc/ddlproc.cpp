@@ -41,7 +41,6 @@ using namespace joblist;
 
 //#include "boost/filesystem/operations.hpp"
 //#include "boost/filesystem/path.hpp"
-#include "boost/progress.hpp"
 #include <boost/scoped_ptr.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/thread.hpp>
@@ -66,8 +65,76 @@ using namespace execplan;
 
 #include "collation.h"
 
+#include "service.h"
+
 namespace
 {
+
+class Opt
+{
+public:
+    int m_debug;
+    bool m_fg;
+    Opt(int argc, char *argv[])
+     :m_debug(0),
+      m_fg(false)
+    {
+        int c;
+        while ((c = getopt(argc, argv, "df")) != EOF)
+        {
+            switch(c)
+            {
+                case 'd':
+                    m_debug++; // TODO: not really used yes
+                    break;
+                case 'f':
+                    m_fg= true;
+                    break;
+                case '?':
+                default:
+                    break;
+            }
+        }
+  }
+};
+
+
+class ServiceDDLProc: public Service, public Opt
+{
+protected:
+    void setupChildSignalHandlers();
+
+    void log(logging::LOG_TYPE type, const std::string &str)
+    {
+        LoggingID logid(23, 0, 0);
+        Message::Args args;
+        Message message(8);
+        args.add(str);
+        message.format(args);
+        logging::Logger logger(logid.fSubsysID);
+        logger.logMessage(LOG_TYPE_CRITICAL, message, logid);
+    }
+
+public:
+    ServiceDDLProc(const Opt &opt)
+     :Service("DDLProc"), Opt(opt)
+    { }
+    void LogErrno() override
+    {
+        log(LOG_TYPE_CRITICAL, std::string(strerror(errno)));
+    }
+    void ParentLogChildMessage(const std::string &str) override
+    {
+        log(LOG_TYPE_INFO, str);
+    }
+    int Child() override;
+    int Run()
+    {
+        return m_fg ? Child() : RunForking();
+    }
+};
+
+
 DistributedEngineComm* Dec;
 
 int8_t setupCwd()
@@ -94,38 +161,9 @@ void added_a_pm(int)
 }
 }
 
-int main(int argc, char* argv[])
+
+void ServiceDDLProc::setupChildSignalHandlers()
 {
-    // Set locale language
-    setlocale(LC_ALL, "");
-    setlocale(LC_NUMERIC, "C");
-    // Initialize the charset library
-    my_init();
-    // This is unset due to the way we start it
-    program_invocation_short_name = const_cast<char*>("DDLProc");
-
-    if ( setupCwd() < 0 )
-    {
-        LoggingID logid(23, 0, 0);
-        logging::Message::Args args1;
-        logging::Message msg(9);
-        args1.add("DDLProc could not set working directory ");
-        msg.format( args1 );
-        logging::Logger logger(logid.fSubsysID);
-        logger.logMessage(LOG_TYPE_CRITICAL, msg, logid);
-        return 1;
-    }
-
-
-    WriteEngine::WriteEngineWrapper::init( WriteEngine::SUBSYSTEM_ID_DDLPROC );
-#ifdef _MSC_VER
-    // In windows, initializing the wrapper (A dll) does not set the static variables
-    // in the main program
-    idbdatafile::IDBPolicy::configIDBPolicy();
-#endif
-
-    ResourceManager* rm = ResourceManager::instance();
-    Dec = DistributedEngineComm::instance(rm);
 #ifndef _MSC_VER
     /* set up some signal handlers */
     struct sigaction ign;
@@ -140,8 +178,40 @@ int main(int argc, char* argv[])
     sigaction(SIGABRT, &ign, 0);
     sigaction(SIGFPE, &ign, 0);
 #endif
+}
+
+
+int ServiceDDLProc::Child()
+{
+    if ( setupCwd() < 0 )
+    {
+        LoggingID logid(23, 0, 0);
+        logging::Message::Args args1;
+        logging::Message msg(9);
+        args1.add("DDLProc could not set working directory ");
+        msg.format( args1 );
+        logging::Logger logger(logid.fSubsysID);
+        logger.logMessage(LOG_TYPE_CRITICAL, msg, logid);
+        NotifyServiceInitializationFailed();
+        return 1;
+    }
+
+
+    WriteEngine::WriteEngineWrapper::init( WriteEngine::SUBSYSTEM_ID_DDLPROC );
+#ifdef _MSC_VER
+    // In windows, initializing the wrapper (A dll) does not set the static variables
+    // in the main program
+    idbdatafile::IDBPolicy::configIDBPolicy();
+#endif
+
+    ResourceManager* rm = ResourceManager::instance();
+    Dec = DistributedEngineComm::instance(rm);
+
+    setupChildSignalHandlers();
 
     ddlprocessor::DDLProcessor ddlprocessor(1, 20);
+
+    NotifyServiceStarted();
 
     {
         Oam oam;
@@ -209,6 +279,21 @@ int main(int argc, char* argv[])
     }
 
     return 0;
+}
+
+
+int main(int argc, char** argv)
+{
+    Opt opt(argc, argv);
+    // Set locale language
+    setlocale(LC_ALL, "");
+    setlocale(LC_NUMERIC, "C");
+    // This is unset due to the way we start it
+    program_invocation_short_name = const_cast<char*>("DDLProc");
+    // Initialize the charset library
+    my_init();
+
+    return ServiceDDLProc(opt).Run();
 }
 // vim:ts=4 sw=4:
 

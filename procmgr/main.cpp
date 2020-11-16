@@ -81,8 +81,8 @@ extern vector<string> downModuleList;
 extern bool startFailOver;
 extern bool gOAMParentModuleFlag;
 
-static void messageThread(Configuration config);
-static void alarmMessageThread(Configuration config);
+static void* messageThread(Configuration* config);
+static void* alarmMessageThread(Configuration* config);
 static void sigUser1Handler(int sig);
 static void startMgrProcessThread();
 static void hdfsActiveAlarmsPushingThread();
@@ -462,10 +462,11 @@ int main(int argc, char** argv)
 * purpose:	Read incoming messages
 *
 ******************************************************************************************/
-static void messageThread(Configuration config)
+static void* messageThread(Configuration* config)
 {
     ProcessLog log;
-    ProcessManager processManager(config, log);
+    assert(config);
+    ProcessManager processManager(*config, log);
     Oam oam;
 
     //check for running active, then launch
@@ -536,6 +537,7 @@ static void messageThread(Configuration config)
             sleep(60);
         }
     }
+    return NULL;
 }
 
 /******************************************************************************************
@@ -544,10 +546,11 @@ static void messageThread(Configuration config)
 * purpose:	Read incoming alarm messages
 *
 ******************************************************************************************/
-static void alarmMessageThread(Configuration config)
+static void* alarmMessageThread(Configuration* config)
 {
     ProcessLog log;
-    ProcessManager processManager(config, log);
+    assert(config);
+    ProcessManager processManager(*config, log);
     Oam oam;
 
     ByteStream msg;
@@ -677,6 +680,7 @@ static void alarmMessageThread(Configuration config)
             sleep(1);
         }
     }
+    return NULL;
 }
 
 /******************************************************************************************

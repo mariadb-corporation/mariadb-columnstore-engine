@@ -49,6 +49,8 @@ using namespace joblist;
 
 #include "wf_udaf.h"
 
+#include "vlarray.h"
+
 
 namespace windowfunction
 {
@@ -118,7 +120,7 @@ bool WF_udaf::dropValues(int64_t b, int64_t e)
     getContext().setContextFlag(mcsv1sdk::CONTEXT_IS_ANALYTIC);
 
     // Put the parameter metadata (type, scale, precision) into valsIn
-    mcsv1sdk::ColumnDatum valsIn[getContext().getParameterCount()];
+    utils::VLArray<mcsv1sdk::ColumnDatum> valsIn(getContext().getParameterCount());
     ConstantColumn* cc = NULL;
 
     for (uint32_t i = 0; i < getContext().getParameterCount(); ++i)
@@ -141,6 +143,7 @@ bool WF_udaf::dropValues(int64_t b, int64_t e)
         }
     }
 
+    utils::VLArray<uint32_t> flags(getContext().getParameterCount());
     for (int64_t i = b; i < e; i++)
     {
         if (i % 1000 == 0 && fStep->cancelled())
@@ -149,7 +152,6 @@ bool WF_udaf::dropValues(int64_t b, int64_t e)
         fRow.setData(getPointer(fRowData->at(i)));
 
         // NULL flags
-        uint32_t flags[getContext().getParameterCount()];
         bool bSkipIt = false;
 
         for (uint32_t k = 0; k < getContext().getParameterCount(); ++k)
@@ -786,7 +788,7 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
         getContext().setContextFlag(mcsv1sdk::CONTEXT_IS_ANALYTIC);
 
         // Put the parameter metadata (type, scale, precision) into valsIn
-        mcsv1sdk::ColumnDatum valsIn[getContext().getParameterCount()];
+        utils::VLArray<mcsv1sdk::ColumnDatum> valsIn(getContext().getParameterCount());
         ConstantColumn* cc = NULL;
 
         for (uint32_t i = 0; i < getContext().getParameterCount(); ++i)
@@ -815,7 +817,7 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
             getContext().clearContextFlag(mcsv1sdk::CONTEXT_HAS_CURRENT_ROW);
 
         bool bSkipIt = false;
-
+        utils::VLArray<uint32_t> flags(getContext().getParameterCount());
         for (int64_t i = b; i <= e; i++)
         {
             if (i % 1000 == 0 && fStep->cancelled())
@@ -824,7 +826,6 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
             fRow.setData(getPointer(fRowData->at(i)));
 
             // NULL flags
-            uint32_t flags[getContext().getParameterCount()];
             bSkipIt = false;
 
             for (uint32_t k = 0; k < getContext().getParameterCount(); ++k)

@@ -49,6 +49,8 @@ using namespace funcexp;
 #include "mcsv1_udaf.h"
 using namespace mcsv1sdk;
 
+#include "vlarray.h"
+
 namespace cal_impl_if
 {
 
@@ -389,8 +391,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
         context.setPrecision(rt.precision);
         context.setParamCount(funcParms.size());
 
-        mcsv1sdk::ColumnDatum colType;
-        mcsv1sdk::ColumnDatum colTypes[funcParms.size()];
+        utils::VLArray<mcsv1sdk::ColumnDatum> colTypes(funcParms.size());
 
         // Turn on the Analytic flag so the function is aware it is being called
         // as a Window Function.
@@ -402,11 +403,11 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
         {
             const execplan::CalpontSystemCatalog::ColType& resultType
                 = funcParms[i]->resultType();
+            mcsv1sdk::ColumnDatum& colType = colTypes[i];
             colType.dataType = resultType.colDataType;
             colType.precision = resultType.precision;
             colType.scale = resultType.scale;
             colType.charsetNumber = resultType.charsetNumber;
-            colTypes[i] = colType;
         }
 
         // Call the user supplied init()

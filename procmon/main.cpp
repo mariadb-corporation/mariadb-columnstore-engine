@@ -28,6 +28,7 @@ namespace bi = boost::interprocess;
 #include "IDBPolicy.h"
 #include "utils_utf8.h"
 #include "crashtrace.h"
+#include "checks.h"
 
 using namespace std;
 using namespace messageqcpp;
@@ -40,13 +41,13 @@ using namespace idbdatafile;
 
 //using namespace procheartbeat;
 
-static void messageThread(MonitorConfig config);
-static void statusControlThread();
-static void sigchldHandleThread();
+static void* messageThread(MonitorConfig* config);
+static void* statusControlThread(void*);
+static void* sigchldHandleThread(void*);
 static void	SIGCHLDHandler(int signal_number);
-static void chldHandleThread(MonitorConfig config);
+static void* chldHandleThread(MonitorConfig* config);
 static void sigHupHandler(int sig);
-static void mysqlMonitorThread(MonitorConfig config);
+static void* mysqlMonitorThread(MonitorConfig* config);
 string systemOAM;
 string dm_server;
 string cloud;
@@ -189,7 +190,7 @@ int main(int argc, char** argv)
 
     // create message thread
     pthread_t MessageThread;
-    int ret = pthread_create (&MessageThread, NULL, (void* (*)(void*)) &messageThread, &config);
+    int ret = pthread_create (&MessageThread, NULL, (void*(*)(void*))&messageThread, &config);
 
     if ( ret != 0 )
     {
@@ -630,7 +631,7 @@ int main(int argc, char** argv)
 
         //launch Status table control thread on 'pm' modules
         pthread_t statusThread;
-        int ret = pthread_create (&statusThread, NULL, (void* (*)(void*)) &statusControlThread, NULL);
+        int ret = pthread_create (&statusThread, NULL, &statusControlThread, NULL);
 
         if ( ret != 0 )
             log.writeLog(__LINE__, "pthread_create failed, return code = " + oam.itoa(ret), LOG_TYPE_ERROR);
@@ -826,7 +827,7 @@ int main(int argc, char** argv)
 
     //handle SIGCHLD signal
     pthread_t signalThread;
-    ret = pthread_create (&signalThread, NULL, (void* (*)(void*)) &sigchldHandleThread, NULL);
+    ret = pthread_create (&signalThread, NULL, &sigchldHandleThread, NULL);
 
     if ( ret != 0 )
         log.writeLog(__LINE__, "pthread_create failed, return code = " + oam.itoa(ret), LOG_TYPE_ERROR);
@@ -837,7 +838,7 @@ int main(int argc, char** argv)
             ( config.moduleType() == "pm" && PMwithUM == "y") )
     {
         pthread_t mysqlThread;
-        ret = pthread_create (&mysqlThread, NULL, (void* (*)(void*)) &mysqlMonitorThread, NULL);
+        ret = pthread_create (&mysqlThread, NULL, (void*(*)(void*))&mysqlMonitorThread, NULL);
 
         if ( ret != 0 )
             log.writeLog(__LINE__, "pthread_create failed, return code = " + oam.itoa(ret), LOG_TYPE_ERROR);
@@ -1090,7 +1091,7 @@ int main(int argc, char** argv)
 
     // create process health (monitor) thread
     pthread_t processHealthThread;
-    ret = pthread_create (&processHealthThread, NULL, (void* (*)(void*)) &chldHandleThread, &config);
+    ret = pthread_create (&processHealthThread, NULL, (void*(*)(void*))&chldHandleThread, &config);
 
     if ( ret != 0 )
         log.writeLog(__LINE__, "pthread_create failed, return code = " + oam.itoa(ret), LOG_TYPE_ERROR);
@@ -1163,15 +1164,16 @@ int main(int argc, char** argv)
 * purpose:	Read incoming messages
 *
 ******************************************************************************************/
-static void messageThread(MonitorConfig config)
+static void* messageThread(MonitorConfig* config)
 {
     //ProcMon log file
     MonitorLog log;
-    ProcessMonitor aMonitor(config, log);
+    assert(config);
+    ProcessMonitor aMonitor(*config, log);
     log.writeLog(__LINE__, "Message Thread started ..", LOG_TYPE_DEBUG);
     Oam oam;
 
-    string msgPort = config.moduleName() + "_ProcessMonitor";
+    string msgPort = config->moduleName() + "_ProcessMonitor";
     string port = "";
 
     //ProcMon will wait for request
@@ -1263,7 +1265,7 @@ static void messageThread(MonitorConfig config)
         }
     }
 
-    return;
+    return NULL;
 }
 
 /******************************************************************************************
@@ -1272,10 +1274,11 @@ static void messageThread(MonitorConfig config)
 * purpose:	monitor mysqld by getting status
 *
 ******************************************************************************************/
-static void mysqlMonitorThread(MonitorConfig config)
+static void* mysqlMonitorThread(MonitorConfig* config)
 {
     MonitorLog log;
-    ProcessMonitor aMonitor(config, log);
+    assert(config);
+    ProcessMonitor aMonitor(*config, log);
     log.writeLog(__LINE__, "mysqld Monitoring Thread started ..", LOG_TYPE_DEBUG);
     Oam oam;
 
@@ -1292,6 +1295,7 @@ static void mysqlMonitorThread(MonitorConfig config)
         sleep(5);
     }
 
+    return NULL;
 }
 
 /******************************************************************************************
@@ -1300,13 +1304,13 @@ static void mysqlMonitorThread(MonitorConfig config)
 * purpose:	Catch and process dieing child processes
 *
 ******************************************************************************************/
-static void sigchldHandleThread()
+static void* sigchldHandleThread(void*)
 {
     struct sigaction sigchld_action;
     memset (&sigchld_action, 0, sizeof (sigchld_action));
     sigchld_action.sa_handler = &SIGCHLDHandler;
     sigaction(SIGCHLD, &sigchld_action, NULL);
-    return;
+    return NULL;
 }
 
 static void	SIGCHLDHandler(int signal_number)
@@ -1325,18 +1329,19 @@ static void	SIGCHLDHandler(int signal_number)
 *			Also validate the internal Process status with the Process-Status disk file
 *
 ******************************************************************************************/
-static void chldHandleThread(MonitorConfig config)
+static void* chldHandleThread(MonitorConfig* config)
 {
     //ProcMon log file
     MonitorLog log;
-    ProcessMonitor aMonitor(config, log);
+    assert(config);
+    ProcessMonitor aMonitor(*config, log);
     log.writeLog(__LINE__, "Child Process Monitoring Thread started ..", LOG_TYPE_DEBUG);
     Oam oam;
     SystemProcessStatus systemprocessstatus;
 
     //Loop through the process list to check the process current state
     processList::iterator listPtr;
-    processList* aPtr = config.monitoredListPtr();
+    processList* aPtr = config->monitoredListPtr();
 
     //get dbhealth flag
     string DBFunctionalMonitorFlag;
@@ -1386,7 +1391,7 @@ static void chldHandleThread(MonitorConfig config)
                     try
                     {
                         ProcessStatus procstat;
-                        oam.getProcessStatus((*listPtr).ProcessName, config.moduleName(), procstat);
+                        oam.getProcessStatus((*listPtr).ProcessName, config->moduleName(), procstat);
                         state = procstat.ProcessOpState;
                         PID = procstat.ProcessID;
 
@@ -1471,7 +1476,7 @@ static void chldHandleThread(MonitorConfig config)
                                 //setModule status to failed
                                 try
                                 {
-                                    oam.setModuleStatus(config.moduleName(), oam::FAILED);
+                                    oam.setModuleStatus(config->moduleName(), oam::FAILED);
                                 }
                                 catch (exception& ex)
                                 {
@@ -1532,18 +1537,18 @@ static void chldHandleThread(MonitorConfig config)
                         processRestartCount == 0)
                 {
                     // don't restart it
-                    config.buildList((*listPtr).ProcessModuleType,
-                                     (*listPtr).ProcessName,
-                                     (*listPtr).ProcessLocation,
-                                     (*listPtr).ProcessArgs,
-                                     (*listPtr).launchID,
-                                     0,
-                                     oam::AUTO_OFFLINE,
-                                     (*listPtr).BootLaunch,
-                                     (*listPtr).RunType,
-                                     (*listPtr).DepProcessName,
-                                     (*listPtr).DepModuleName,
-                                     (*listPtr).LogFile);
+                    config->buildList((*listPtr).ProcessModuleType,
+                                      (*listPtr).ProcessName,
+                                      (*listPtr).ProcessLocation,
+                                      (*listPtr).ProcessArgs,
+                                      (*listPtr).launchID,
+                                      0,
+                                      oam::AUTO_OFFLINE,
+                                      (*listPtr).BootLaunch,
+                                      (*listPtr).RunType,
+                                      (*listPtr).DepProcessName,
+                                      (*listPtr).DepModuleName,
+                                      (*listPtr).LogFile);
 
                     //Set the alarm
                     aMonitor.sendAlarm((*listPtr).ProcessName, PROCESS_DOWN_AUTO, SET);
@@ -1562,13 +1567,13 @@ static void chldHandleThread(MonitorConfig config)
                     {
                         bool degraded;
                         int moduleStatus;
-                        oam.getModuleStatus(config.moduleName(), moduleStatus, degraded);
+                        oam.getModuleStatus(config->moduleName(), moduleStatus, degraded);
 
                         if ( moduleStatus == oam::ACTIVE)
                         {
                             try
                             {
-                                oam.setModuleStatus(config.moduleName(), oam::DEGRADED);
+                                oam.setModuleStatus(config->moduleName(), oam::DEGRADED);
                             }
                             catch (exception& ex)
                             {
@@ -1620,18 +1625,18 @@ static void chldHandleThread(MonitorConfig config)
                         initStatus = oam::STANDBY;
 
                     //record the process information into processList
-                    config.buildList((*listPtr).ProcessModuleType,
-                                     (*listPtr).ProcessName,
-                                     (*listPtr).ProcessLocation,
-                                     (*listPtr).ProcessArgs,
-                                     (*listPtr).launchID,
-                                     0,
-                                     oam::AUTO_OFFLINE,
-                                     (*listPtr).BootLaunch,
-                                     (*listPtr).RunType,
-                                     (*listPtr).DepProcessName,
-                                     (*listPtr).DepModuleName,
-                                     (*listPtr).LogFile);
+                    config->buildList((*listPtr).ProcessModuleType,
+                                      (*listPtr).ProcessName,
+                                      (*listPtr).ProcessLocation,
+                                      (*listPtr).ProcessArgs,
+                                      (*listPtr).launchID,
+                                      0,
+                                      oam::AUTO_OFFLINE,
+                                      (*listPtr).BootLaunch,
+                                      (*listPtr).RunType,
+                                      (*listPtr).DepProcessName,
+                                      (*listPtr).DepModuleName,
+                                      (*listPtr).LogFile);
 
                     //Set the alarm
                     aMonitor.sendAlarm((*listPtr).ProcessName, PROCESS_DOWN_AUTO, SET);
@@ -1698,13 +1703,13 @@ static void chldHandleThread(MonitorConfig config)
                         {
                             bool degraded;
                             int moduleStatus;
-                            oam.getModuleStatus(config.moduleName(), moduleStatus, degraded);
+                            oam.getModuleStatus(config->moduleName(), moduleStatus, degraded);
 
                             if ( moduleStatus == oam::ACTIVE)
                             {
                                 try
                                 {
-                                    oam.setModuleStatus(config.moduleName(), oam::DEGRADED);
+                                    oam.setModuleStatus(config->moduleName(), oam::DEGRADED);
                                 }
                                 catch (exception& ex)
                                 {
@@ -1765,6 +1770,7 @@ static void chldHandleThread(MonitorConfig config)
 
         sleep(5);
     }
+    return NULL;
 }
 
 /******************************************************************************************
@@ -1798,7 +1804,7 @@ int processNumber = 0;
 boost::interprocess::shared_memory_object fSysStatShmobj;
 boost::interprocess::mapped_region fSysStatMapreg;
 
-void processStatusMSG(messageqcpp::IOSocket* fIos);
+void* processStatusMSG(messageqcpp::IOSocket* fIos);
 
 processStatusList* aPtr;
 SystemProcessConfig systemprocessconfig;
@@ -1832,7 +1838,7 @@ processStatusList*	statusListPtr()
 *			into the Status Shared-Memory table
 *
 ******************************************************************************************/
-static void statusControlThread()
+static void* statusControlThread(void*)
 {
     MonitorLog log;
     MonitorConfig config;
@@ -2050,7 +2056,7 @@ static void statusControlThread()
         memset(fShmSystemStatus, 0, SYSTEMSTATshmsize);
 
         //set system status
-        memcpy(fShmSystemStatus[0].Name, "system", NAMESIZE);
+        memcpy(fShmSystemStatus[0].Name, "system", sizeof("system"));
 
         if (runStandby)
         {
@@ -2333,7 +2339,7 @@ static void statusControlThread()
             {
                 //log.writeLog(__LINE__, "***before create thread", LOG_TYPE_DEBUG);
                 pthread_t messagethread;
-                int status = pthread_create (&messagethread, NULL, (void* (*)(void*)) &processStatusMSG, fIos);
+                int status = pthread_create (&messagethread, NULL, (void*(*)(void*))&processStatusMSG, fIos);
 
                 //log.writeLog(__LINE__, "***after create thread", LOG_TYPE_DEBUG);
 
@@ -2365,6 +2371,7 @@ static void statusControlThread()
             }
         }
     } // end of for loop
+    return NULL;
 }
 
 /******************************************************************************************
@@ -2373,7 +2380,7 @@ static void statusControlThread()
 * purpose:	Process the status message
 *
 ******************************************************************************************/
-void processStatusMSG(messageqcpp::IOSocket* cfIos)
+void* processStatusMSG(messageqcpp::IOSocket* cfIos)
 {
     messageqcpp::IOSocket* fIos = cfIos;
 
@@ -2594,7 +2601,7 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
                 }
             }
 
-            if (  PID < 0 )
+            if (!utils::is_nonnegative(PID))
                 PID = 0;
 
             log.writeLog(__LINE__, "statusControl: Set Process " + moduleName + "/" + processName +  + " State = " + oamState[state] + " PID = " + oam.itoa(PID), LOG_TYPE_DEBUG);
@@ -3582,6 +3589,7 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
     delete msg;
     pthread_detach (ThreadId);
     pthread_exit(0);
+    return NULL;
 }
 
 /******************************************************************************************

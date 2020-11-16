@@ -6,7 +6,7 @@ PartOf=mcs-writeengineserver.service
 After=network.target mcs-dmlproc.service
 
 [Service]
-Type=simple
+Type=forking
 
 User=@DEFAULT_USER@
 Group=@DEFAULT_GROUP@

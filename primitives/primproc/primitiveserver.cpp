@@ -45,7 +45,6 @@ typedef int pthread_t;
 
 using namespace std;
 
-#include <boost/timer.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/thread.hpp>
@@ -2493,7 +2492,7 @@ PrimitiveServer::~PrimitiveServer()
 {
 }
 
-void PrimitiveServer::start()
+void PrimitiveServer::start(Service *service)
 {
     // start all the server threads
     for ( int i = 1; i <= fServerThreads; i++)
@@ -2514,6 +2513,8 @@ void PrimitiveServer::start()
         }
         catch (...) {}
     }
+
+    service->NotifyServiceStarted();
 
     fServerpool.wait();
 

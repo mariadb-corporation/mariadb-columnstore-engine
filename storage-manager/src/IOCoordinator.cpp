@@ -29,6 +29,8 @@
 #define BOOST_SPIRIT_THREADSAFE
 #include <boost/property_tree/json_parser.hpp>
 #include <iostream>
+#include "checks.h"
+#include "vlarray.h"
 
 #define max(x, y) (x > y ? x : y)
 #define min(x, y) (x < y ? x : y)
@@ -191,12 +193,13 @@ ssize_t IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, 
     vector<metadataObject> relevants = meta.metadataRead(offset, length);
     map<string, int> journalFDs, objectFDs;
     map<string, string> keyToJournalName, keyToObjectName;
-    ScopedCloser fdMinders[relevants.size() * 2];
+    utils::VLArray<ScopedCloser> fdMinders(relevants.size() * 2, -1);
     int mindersIndex = 0;
     char buf[80];
     
     // load them into the cache
     vector<string> keys;
+    keys.reserve(relevants.size());
     for (const auto &object : relevants)
         keys.push_back(object.key);
     cache->read(firstDir, keys);
@@ -413,12 +416,12 @@ ssize_t IOCoordinator::_write(const boost::filesystem::path &filename, const uin
             objects = metadata.metadataRead(currentEndofData,1);
             if (objects.size() == 1)
             {
-            	// last objeect needs data
-            	metadataObject lastObject = objects[0];
-            	uint64_t nullJournalSize = (objectSize - lastObject.length);
-            	uint8_t nullData[nullJournalSize];
-            	memset(nullData,0,nullJournalSize);
-                err = replicator->addJournalEntry((firstDir/lastObject.key),nullData,lastObject.length,nullJournalSize);
+                // last objeect needs data
+                metadataObject lastObject = objects[0];
+                uint64_t nullJournalSize = (objectSize - lastObject.length);
+                utils::VLArray<uint8_t, 4096> nullData(nullJournalSize);
+                memset(nullData, 0, nullJournalSize);
+                err = replicator->addJournalEntry((firstDir/lastObject.key),nullData.data(),lastObject.length,nullJournalSize);
                 if (err < 0)
                 {
                     l_errno = errno;
@@ -823,7 +826,7 @@ int IOCoordinator::_truncate(const bf::path &bfpath, size_t newSize, ScopedFileL
     else
     {
         meta.updateEntryLength(objects[0].offset, newSize - objects[0].offset);
-        assert(objects[0].offset >= 0 && objectSize > (newSize - objects[0].offset));
+        assert(utils::is_nonnegative(objects[0].offset) && objectSize > (newSize - objects[0].offset));
     }
     for (uint i = 1; i < objects.size(); i++)
         meta.removeEntry(objects[i].offset);

@@ -47,6 +47,7 @@ SimpleScalarFilter::SimpleScalarFilter(const vector<SRCP>& cols,
 {}
 
 SimpleScalarFilter::SimpleScalarFilter(const SimpleScalarFilter& rhs):
+    Filter(rhs),
     fCols (rhs.fCols),
     fOp (rhs.fOp),
     fSub (rhs.fSub),

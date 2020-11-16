@@ -44,6 +44,7 @@ using namespace std;
 #include "tupleaggregatestep.h"
 #include "errorids.h"
 #include "diskjoinstep.h"
+#include "vlarray.h"
 
 using namespace execplan;
 using namespace joiner;
@@ -295,7 +296,7 @@ void TupleHashJoinStep::startSmallRunners(uint index)
     */
 
     stopMemTracking = false;
-    uint64_t jobs[numCores];
+    utils::VLArray<uint64_t> jobs(numCores);
     uint64_t memMonitor = jobstepThreadPool.invoke([this, index] { this->trackMem(index); });
     // starting 1 thread when in PM mode, since it's only inserting into a
     // vector of rows.  The rest will be started when converted to UM mode.

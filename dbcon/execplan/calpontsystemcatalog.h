@@ -301,6 +301,7 @@ public:
         const CHARSET_INFO* cs;
 
         ColType(const ColType& rhs);
+        ColType& operator=(const ColType& rhs);
 
         CHARSET_INFO* getCharset();
         // for F&E use. only serialize necessary info for now
@@ -1109,6 +1110,7 @@ inline bool isNull(int64_t val, const execplan::CalpontSystemCatalog::ColType& c
                     break;
                 }
             }
+            break;
         }
 
         case execplan::CalpontSystemCatalog::DOUBLE:

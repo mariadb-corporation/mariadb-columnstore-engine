@@ -39,12 +39,14 @@
 #include "IDBPolicy.h"
 
 #include "crashtrace.h"
+#include "service.h"
+#include "jobstep.h"
 
 using namespace BRM;
 using namespace std;
 
 SlaveComm* comm;
-bool die;
+bool die= false;
 boost::thread_group monitorThreads;
 
 void fail()
@@ -61,6 +63,49 @@ void fail()
     }
 }
 
+
+class Opt
+{
+protected:
+    const char *m_progname;
+    const char *m_nodename;
+    bool m_fg;
+public:
+  Opt(int argc, char **argv)
+   :m_progname(argv[0]),
+    m_nodename(argc > 1 ? argv[1] : nullptr),
+    m_fg(argc > 2 && string(argv[2]) == "fg")
+  { }
+};
+
+
+class ServiceWorkerNode: public Service, public Opt
+{
+protected:
+    void setupChildSignalHandlers();
+
+public:
+    ServiceWorkerNode(const Opt &opt)
+     :Service("WorkerNode"), Opt(opt)
+    { }
+    void LogErrno() override
+    {
+        perror(m_progname);
+        log_errno(std::string(m_progname));
+        fail();
+    }
+    void ParentLogChildMessage(const std::string &str) override
+    {
+        log(str, logging::LOG_TYPE_INFO);
+    }
+    int Child() override;
+    int Run()
+    {
+        return m_fg ? Child() : RunForking();
+    }
+};
+
+
 void stop(int sig)
 {
     if (!die)
@@ -76,48 +121,9 @@ void reset(int sig)
     comm->reset();
 }
 
-int main(int argc, char** argv)
+
+void ServiceWorkerNode::setupChildSignalHandlers()
 {
-    // Set locale language
-    setlocale(LC_ALL, "");
-    setlocale(LC_NUMERIC, "C");
-
-    BRM::logInit ( BRM::SubSystemLogId_workerNode );
-
-    string nodeName;
-    SlaveDBRMNode slave;
-    string arg;
-    int err = 0;
-    ShmKeys keys;
-
-    if (argc < 2)
-    {
-        ostringstream os;
-        os << "Usage: " << argv[0] << " DBRM_WorkerN";
-        cerr << os.str() << endl;
-        log(os.str());
-        fail();
-        exit(1);
-    }
-
-    idbdatafile::IDBPolicy::configIDBPolicy();
-
-    nodeName = argv[1];
-
-    try
-    {
-        comm = new SlaveComm(nodeName, &slave);
-    }
-    catch (exception& e)
-    {
-        ostringstream os;
-        os << "An error occured: " << e.what();
-        cerr << os.str() << endl;
-        log(os.str());
-        fail();
-        exit(1);
-    }
-
 #ifdef SIGHUP
     signal(SIGHUP, reset);
 #endif
@@ -133,57 +139,101 @@ int main(int argc, char** argv)
     sigaction(SIGSEGV, &ign, 0);
     sigaction(SIGABRT, &ign, 0);
     sigaction(SIGFPE, &ign, 0);
+}
 
-    if (!(argc >= 3 && (arg = argv[2]) == "fg"))
-        err = fork();
 
-    if (err == 0)
+int ServiceWorkerNode::Child()
+{
+    setupChildSignalHandlers();
+
+    SlaveDBRMNode slave;
+    ShmKeys keys;
+
+    try
     {
-
-        /* Start 4 threads to monitor write lock state */
-        monitorThreads.create_thread(RWLockMonitor
-                                     (&die, slave.getEMFLLockStatus(), keys.KEYRANGE_EMFREELIST_BASE));
-        monitorThreads.create_thread(RWLockMonitor
-                                     (&die, slave.getEMLockStatus(), keys.KEYRANGE_EXTENTMAP_BASE));
-        monitorThreads.create_thread(RWLockMonitor
-                                     (&die, slave.getVBBMLockStatus(), keys.KEYRANGE_VBBM_BASE));
-        monitorThreads.create_thread(RWLockMonitor
-                                     (&die, slave.getVSSLockStatus(), keys.KEYRANGE_VSS_BASE));
-
-        try
-        {
-            oam::Oam oam;
-
-            oam.processInitComplete("DBRMWorkerNode");
-        }
-        catch (exception& e)
-        {
-            ostringstream os;
-            os << "failed to notify OAM: " << e.what();
-            os << " continuing anyway";
-            cerr << os.str() << endl;
-            log(os.str(), logging::LOG_TYPE_WARNING);
-        }
-
-        try
-        {
-            comm->run();
-        }
-        catch (exception& e)
-        {
-            ostringstream os;
-            os << "An error occurred: " << e.what();
-            cerr << os.str() << endl;
-            log(os.str());
-            exit(1);
-        }
+        comm = new SlaveComm(std::string(m_nodename), &slave);
+        NotifyServiceStarted();
     }
-    else if (err < 0)
+    catch (exception& e)
     {
-        perror(argv[0]);
-        log_errno(string(argv[0]));
+        ostringstream os;
+        os << "An error occured: " << e.what();
+        cerr << os.str() << endl;
+        log(os.str());
         fail();
+        NotifyServiceInitializationFailed();
+        return 1;
     }
 
-    exit(0);
+    /* Start 4 threads to monitor write lock state */
+    monitorThreads.create_thread(RWLockMonitor
+                                 (&die, slave.getEMFLLockStatus(), keys.KEYRANGE_EMFREELIST_BASE));
+    monitorThreads.create_thread(RWLockMonitor
+                                 (&die, slave.getEMLockStatus(), keys.KEYRANGE_EXTENTMAP_BASE));
+    monitorThreads.create_thread(RWLockMonitor
+                                 (&die, slave.getVBBMLockStatus(), keys.KEYRANGE_VBBM_BASE));
+    monitorThreads.create_thread(RWLockMonitor
+                                 (&die, slave.getVSSLockStatus(), keys.KEYRANGE_VSS_BASE));
+
+    try
+    {
+        oam::Oam oam;
+
+        oam.processInitComplete("DBRMWorkerNode");
+    }
+    catch (exception& e)
+    {
+        ostringstream os;
+        os << "failed to notify OAM: " << e.what();
+        os << " continuing anyway";
+        cerr << os.str() << endl;
+        log(os.str(), logging::LOG_TYPE_WARNING);
+    }
+
+    try
+    {
+        comm->run();
+    }
+    catch (exception& e)
+    {
+        ostringstream os;
+        os << "An error occurred: " << e.what();
+        cerr << os.str() << endl;
+        log(os.str());
+        return 1;
+    }
+    return 0;
+}
+
+
+int main(int argc, char** argv)
+{
+    Opt opt(argc, argv);
+
+    // Set locale language
+    setlocale(LC_ALL, "");
+    setlocale(LC_NUMERIC, "C");
+
+    BRM::logInit ( BRM::SubSystemLogId_workerNode );
+
+    /*
+      Need to shutdown TheadPool before fork(),
+      otherwise it would get stuck when trying to join fPruneThread.
+    */
+    joblist::JobStep::jobstepThreadPool.stop();
+
+    if (argc < 2)
+    {
+        ostringstream os;
+        os << "Usage: " << argv[0] << " DBRM_WorkerN";
+        cerr << os.str() << endl;
+        log(os.str());
+        fail();
+        exit(1);
+    }
+
+    // TODO: this should move to child() probably, like in masternode.cpp
+    idbdatafile::IDBPolicy::configIDBPolicy();
+
+    return ServiceWorkerNode(opt).Run();
 }
