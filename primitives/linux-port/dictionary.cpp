@@ -604,11 +604,13 @@ int PrimitiveProcessor::convertToRegexp(idb_regex_t* regex, const p_DataValue* s
 bool PrimitiveProcessor::isLike(const p_DataValue* dict, const idb_regex_t* regex) throw()
 {
 #ifdef POSIX_REGEX
-    char cBuf[dict->len + 1];
+    char* cBuf = new char[dict->len + 1];
     memcpy(cBuf, dict->data, dict->len);
     cBuf[dict->len] = '\0';
 
-    return (regexec(&regex->regex, cBuf, 0, NULL, 0) == 0);
+    bool ret = (regexec(&regex->regex, cBuf, 0, NULL, 0) == 0);
+    delete [] cBuf;
+    return ret;
 #else
     /* Note, the passed-in pointers are effectively begin() and end() iterators */
     return regex_match(dict->data, dict->data + dict->len, regex->regex);

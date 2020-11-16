@@ -67,9 +67,9 @@ int InsertDMLPackage::write(messageqcpp::ByteStream& bytestream)
     bytestream << (uint8_t)fLogending;
 
     bytestream << fTableOid;
-    bytestream << static_cast<const messageqcpp::ByteStream::byte>(fIsInsertSelect);
-    bytestream << static_cast<const messageqcpp::ByteStream::byte>(fIsBatchInsert);
-    bytestream << static_cast<const messageqcpp::ByteStream::byte>(fIsAutocommitOn);
+    bytestream << static_cast<messageqcpp::ByteStream::byte>(fIsInsertSelect);
+    bytestream << static_cast<messageqcpp::ByteStream::byte>(fIsBatchInsert);
+    bytestream << static_cast<messageqcpp::ByteStream::byte>(fIsAutocommitOn);
 
     if (fTable != 0)
     {

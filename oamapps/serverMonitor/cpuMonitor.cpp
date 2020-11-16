@@ -87,7 +87,7 @@ void cpuMonitor()
     		ml.logErrorMessage(msg);
     	}
     */
-    int periodCount = 5;
+    const int periodCount = 5;
     float cpuPeriod[periodCount];
     int periodCounter = 0;
     float averageCpuUsage = 0;

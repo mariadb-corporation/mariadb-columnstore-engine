@@ -28,9 +28,9 @@
 #include <cstring>
 #include <cassert>
 #include <stdexcept>
+#include <chrono>
 using namespace std;
 
-#include <boost/timer.hpp>
 #include <boost/thread.hpp>
 using namespace boost;
 
@@ -343,9 +343,11 @@ void ClientRotator::connectList(double timeout)
     if (++idx >= fClients.size() )
         idx = 0;
 
-    timer runTime;
+    typedef std::chrono::steady_clock clock;
+    auto start = clock::now();
 
-    while ( runTime.elapsed() < timeout)
+    typedef std::chrono::duration<double> double_secs;
+    while (std::chrono::duration_cast<double_secs>(clock::now() - start).count() < timeout)
     {
         try
         {
@@ -355,8 +357,9 @@ void ClientRotator::connectList(double timeout)
             if (fClients.size() == idx)
                 idx = 0;
         }
-        catch (... )
-        {		}
+        catch (...)
+        {
+        }
     }
 
 #ifdef LOG_TO_CERR

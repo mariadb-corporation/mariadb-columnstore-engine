@@ -67,6 +67,7 @@ SimpleFilter::SimpleFilter(const SOP& op, ReturnedColumn* lhs, ReturnedColumn* r
 }
 
 SimpleFilter::SimpleFilter(const SimpleFilter& rhs) :
+    Filter(rhs),
     fOp(rhs.op()),
     fIndexFlag(rhs.indexFlag()),
     fJoinFlag(rhs.joinFlag()),

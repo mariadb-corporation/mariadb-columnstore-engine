@@ -34,7 +34,7 @@ ResourceNode::ResourceNode() : _lbid(0)
 {
 }
 
-ResourceNode::ResourceNode(const ResourceNode& n) : _lbid(n._lbid)
+ResourceNode::ResourceNode(const ResourceNode& n) : RGNode(n), _lbid(n._lbid)
 {
 }
 

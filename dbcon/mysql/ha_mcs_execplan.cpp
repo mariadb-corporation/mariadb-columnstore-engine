@@ -86,6 +86,7 @@ using namespace execplan;
 using namespace funcexp;
 
 #include "collation.h"
+#include "vlarray.h"
 
 const uint64_t AGG_BIT = 0x01;
 const uint64_t SUB_BIT = 0x02;
@@ -5026,8 +5027,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                 context.setPrecision(udafc->resultType().precision);
 
                 context.setParamCount(udafc->aggParms().size());
-                mcsv1sdk::ColumnDatum colType;
-                mcsv1sdk::ColumnDatum colTypes[udafc->aggParms().size()];
+                utils::VLArray<mcsv1sdk::ColumnDatum> colTypes(udafc->aggParms().size());
 
                 // Build the column type vector.
                 // Modified for MCOL-1201 multi-argument aggregate
@@ -5035,11 +5035,11 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                 {
                     const execplan::CalpontSystemCatalog::ColType& resultType
                         = udafc->aggParms()[i]->resultType();
+                    mcsv1sdk::ColumnDatum& colType = colTypes[i];
                     colType.dataType = resultType.colDataType;
                     colType.precision = resultType.precision;
                     colType.scale = resultType.scale;
                     colType.charsetNumber = resultType.charsetNumber;
-                    colTypes[i] = colType;
                 }
 
                 // Call the user supplied init()

@@ -49,6 +49,7 @@ using namespace BRM;
 #include "cacheutils.h"
 using namespace idbdatafile;
 #include "utils_utf8.h"
+#include "checks.h"
 
 namespace
 {
@@ -407,7 +408,7 @@ int Dctnry::closeDctnry(bool realClose)
     }
 
     m_hwm = (HWM)m_lastFbo;
-    idbassert(m_dctnryOID >= 0);
+    idbassert(utils::is_nonnegative(m_dctnryOID));
 
     if (idbdatafile::IDBPolicy::useHdfs() && realClose)
     {
