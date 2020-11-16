@@ -65,6 +65,9 @@ public:
   IDB_Decimal(int64_t val, int8_t s, uint8_t p, const int128_t &val128 = 0) :
     VDecimal(val, s, p, val128) {}
 
+  IDB_Decimal(int64_t val, int8_t s, uint8_t p, const TSInt128 &val128) :
+    VDecimal(val, s, p, val128) {}
+
   inline void operator=(const datatypes::TSInt128& rhs)
   {
     value = 0; scale = 0; precision = 0;
@@ -1032,41 +1035,75 @@ inline IDB_Decimal TreeNode::getDecimalVal()
             throw logging::InvalidConversionExcept("TreeNode::getDecimalVal: non-support conversion from binary string");
 
         case CalpontSystemCatalog::BIGINT:
+        {
+            int64_t temp = (int64_t)(fResult.intVal * pow((double)10.0, fResultType.scale));
+
+            if (fResultType.isWideDecimalPrecision())
+                fResult.decimalVal = IDB_Decimal(0, fResultType.scale,
+                                         fResultType.precision, (int128_t)temp);
+            else
+                fResult.decimalVal = IDB_Decimal(temp, fResultType.scale,
+                                         fResultType.precision);
+
+            break;
+        }
+
         case CalpontSystemCatalog::MEDINT:
         case CalpontSystemCatalog::INT:
         case CalpontSystemCatalog::SMALLINT:
         case CalpontSystemCatalog::TINYINT:
-            fResult.decimalVal.value = (int64_t)(fResult.intVal * pow((double)10.0, fResultType.scale));
-            fResult.decimalVal.scale = fResultType.scale;
-            fResult.decimalVal.precision = fResultType.precision;
+            fResult.decimalVal = IDB_Decimal(
+                                     (int64_t)(fResult.intVal * pow((double)10.0, fResultType.scale)),
+                                     fResultType.scale, fResultType.precision);
             break;
 
         case CalpontSystemCatalog::UBIGINT:
+        {
+            int64_t temp = (int64_t)(fResult.uintVal * pow((double)10.0, fResultType.scale));
+
+            if (fResultType.isWideDecimalPrecision())
+                fResult.decimalVal = IDB_Decimal(0, fResultType.scale,
+                                         fResultType.precision, (int128_t)temp);
+            else
+                fResult.decimalVal = IDB_Decimal(temp, fResultType.scale,
+                                         fResultType.precision);
+
+            break;
+        }
+
         case CalpontSystemCatalog::UMEDINT:
         case CalpontSystemCatalog::UINT:
         case CalpontSystemCatalog::USMALLINT:
         case CalpontSystemCatalog::UTINYINT:
-            fResult.decimalVal.value = (int64_t)(fResult.uintVal * pow((double)10.0, fResultType.scale));
-            fResult.decimalVal.scale = fResultType.scale;
-            fResult.decimalVal.precision = fResultType.precision;
+            fResult.decimalVal = IDB_Decimal(
+                                     (int64_t)(fResult.uintVal * pow((double)10.0, fResultType.scale)),
+                                     fResultType.scale, fResultType.precision);
             break;
 
         case CalpontSystemCatalog::LONGDOUBLE:
+        {
+            long double dlScaled = fResult.longDoubleVal;
+
+            if (fResultType.scale > 0)
             {
-                long double dlScaled = fResult.longDoubleVal;
-                if (fResultType.scale > 0)
-                {
-                    dlScaled= fResult.longDoubleVal * pow((double)10.0, fResultType.scale);
-                }
-                if (dlScaled > (double)MAX_BIGINT)
-                {
-                    throw logging::InvalidConversionExcept("TreeNode::getDecimalVal: decimal overflow.");
-                }
-                fResult.decimalVal.value = (int64_t)roundl((fResult.longDoubleVal * pow((double)10.0, fResultType.scale)));
-                fResult.decimalVal.scale = fResultType.scale;
-                fResult.decimalVal.precision = fResultType.precision;
+                dlScaled= fResult.longDoubleVal * pow((double)10.0, fResultType.scale);
             }
+            if (dlScaled > (double)MAX_BIGINT)
+            {
+                throw logging::InvalidConversionExcept("TreeNode::getDecimalVal: decimal overflow.");
+            }
+
+            int64_t temp = (int64_t)roundl((fResult.longDoubleVal * pow((double)10.0, fResultType.scale)));
+
+            if (fResultType.isWideDecimalPrecision())
+                fResult.decimalVal = IDB_Decimal(0, fResultType.scale,
+                                         fResultType.precision, (int128_t)temp);
+            else
+                fResult.decimalVal = IDB_Decimal(temp, fResultType.scale,
+                                         fResultType.precision);
+
             break;
+        }
 
         case CalpontSystemCatalog::DATE:
             throw logging::InvalidConversionExcept("TreeNode::getDecimalVal: Invalid conversion from date.");

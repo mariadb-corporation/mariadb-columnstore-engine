@@ -544,6 +544,13 @@ class VDecimal: public TSInt128
     {
     }
 
+    VDecimal(int64_t val, int8_t s, uint8_t p, const TSInt128 &val128) :
+        TSInt128(val128),
+        value(val),
+        scale(s),
+        precision(p)
+    { }
+
     VDecimal(int64_t val, int8_t s, uint8_t p, const int128_t &val128 = 0) :
         TSInt128(val128),
         value(val),
