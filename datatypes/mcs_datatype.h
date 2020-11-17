@@ -662,21 +662,17 @@ class ColBatchWriter
   FILE *m_filePtr;
   char m_delimiter;
   char m_enclosed_by;
-  bool m_utf8;
 public:
   ColBatchWriter(FILE *f,
                  char delimiter,
-                 char enclosed_by,
-                 bool utf8)
+                 char enclosed_by)
    :m_filePtr(f),
     m_delimiter(delimiter),
-    m_enclosed_by(enclosed_by),
-    m_utf8(utf8)
+    m_enclosed_by(enclosed_by)
   { }
   FILE *filePtr() const { return m_filePtr; }
   char delimiter() const { return m_delimiter; }
   char enclosed_by() const { return m_enclosed_by; }
-  bool utf8() const { return m_utf8; }
 };
 
 
