@@ -736,9 +736,15 @@ int ha_mcs_impl_write_batch_row_(const uchar* buf, TABLE* table, cal_impl_if::ca
             const datatypes::TypeHandler *h= colType.typeHandler();
             if (h) // QQ: error reporting
             {
-                datatypes::ColBatchWriter writer(ci.filePtr, ci.delimiter,
-                                                 ci.enclosed_by, ci.utf8);
-                datatypes::WriteBatchFieldMariaDB field(table->field[colpos], colType);
+                datatypes::ColBatchWriter writer(ci.filePtr,
+                                                 ci.delimiter,
+                                                 ci.enclosed_by);
+                Field* fieldPtr= table->field[colpos];
+                uint32_t mbmaxlen = (fieldPtr->charset() && fieldPtr->charset()->mbmaxlen)
+                            ? fieldPtr->charset()->mbmaxlen : 0;
+                datatypes::WriteBatchFieldMariaDB field(fieldPtr,
+                                                        colType,
+                                                        mbmaxlen);
                 idbassert(table == table->field[colpos]->table);
                 buf+= h->ColWriteBatch(&field, buf, nullVal, writer);
             }
