@@ -13,8 +13,6 @@ usr/bin/MCSInstanceCmds.sh
 usr/bin/MCSVolumeCmds.sh
 usr/bin/MCSgetCredentials.sh
 usr/bin/PrimProc
-usr/bin/ProcMgr
-usr/bin/ProcMon
 usr/bin/ServerMonitor
 usr/bin/StorageManager
 usr/bin/WriteEngineServer
