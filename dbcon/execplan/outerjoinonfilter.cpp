@@ -39,11 +39,13 @@ OuterJoinOnFilter::OuterJoinOnFilter():
 {}
 
 OuterJoinOnFilter::OuterJoinOnFilter(const SPTP& pt):
+    Filter(),
     fPt(new ParseTree (*(pt.get()))),
     fData("Outer Join On Filter")
 {}
 
 OuterJoinOnFilter::OuterJoinOnFilter(const OuterJoinOnFilter& rhs):
+    Filter(rhs),
     fPt (rhs.fPt),
     fData (rhs.fData)
 {}

@@ -65,6 +65,7 @@ using namespace rowgroup;
 using namespace querytele;
 
 #include "threadnaming.h"
+#include "checks.h"
 
 namespace joblist
 {
@@ -496,7 +497,7 @@ void pDictionaryScan::sendAPrimitiveMessage(
     hdr.Hdr.Priority	  = priority();
 
     hdr.LBID              = msgLbidStart;
-    idbassert(hdr.LBID >= 0);
+    idbassert(utils::is_nonnegative(hdr.LBID));
     hdr.OutputType        = OT_TOKEN;
     hdr.BOP               = fBOP;
     hdr.COP1              = fCOP1;

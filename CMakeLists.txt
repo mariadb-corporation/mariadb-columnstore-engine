@@ -187,8 +187,7 @@ ELSE ()
     # Remove visibility flag for now as it breaks Ubuntu 18.05 and we need to
     # fix our libraries anyway
     STRING(REPLACE "-fvisibility=hidden" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    # TODO: Re-enable these and fix the warnings they generate
-    MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-ignored-qualifiers -Wno-overloaded-virtual -Wno-vla -Wno-non-virtual-dtor -Wno-extra -D_DEBUG" DEBUG)
+    MY_CHECK_AND_SET_COMPILER_FLAG("-D_DEBUG" DEBUG)
 ENDIF()
 
 
@@ -323,8 +322,6 @@ ADD_SUBDIRECTORY(dbcon/dmlpackageproc)
 ADD_SUBDIRECTORY(exemgr)
 ADD_SUBDIRECTORY(ddlproc)
 ADD_SUBDIRECTORY(dmlproc)
-ADD_SUBDIRECTORY(procmon)
-ADD_SUBDIRECTORY(procmgr)
 ADD_SUBDIRECTORY(oamapps)
 ADD_SUBDIRECTORY(primitives)
 ADD_SUBDIRECTORY(tools)

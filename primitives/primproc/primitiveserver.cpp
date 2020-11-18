@@ -45,7 +45,6 @@ typedef int pthread_t;
 
 using namespace std;
 
-#include <boost/timer.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/thread.hpp>

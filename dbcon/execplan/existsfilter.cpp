@@ -50,6 +50,7 @@ ExistsFilter::ExistsFilter( const SCSEP& sub,
 {}
 
 ExistsFilter::ExistsFilter(const ExistsFilter& rhs):
+    Filter(rhs),
     fSub (rhs.fSub),
     fNotExists (rhs.fNotExists),
     fCorrelated (rhs.fCorrelated),
@@ -83,8 +84,8 @@ void ExistsFilter::serialize(messageqcpp::ByteStream& b) const
     else
         b << static_cast<ObjectReader::id_t>(ObjectReader::NULL_CLASS);
 
-    b << static_cast<const ByteStream::doublebyte>(fNotExists);
-    b << static_cast<const ByteStream::doublebyte>(fCorrelated);
+    b << static_cast<ByteStream::doublebyte>(fNotExists);
+    b << static_cast<ByteStream::doublebyte>(fCorrelated);
 }
 
 void ExistsFilter::unserialize(messageqcpp::ByteStream& b)

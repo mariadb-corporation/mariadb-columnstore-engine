@@ -480,7 +480,7 @@ void CalpontSelectExecutionPlan::serialize(messageqcpp::ByteStream& b) const
     b << fVerID;
     b << fTraceFlags;
     b << fStatementID;
-    b << static_cast<const ByteStream::byte>(fDistinct);
+    b << static_cast<ByteStream::byte>(fDistinct);
     b << static_cast<uint8_t>(fOverrideLargeSideEstimate);
 
     // for union
@@ -500,8 +500,8 @@ void CalpontSelectExecutionPlan::serialize(messageqcpp::ByteStream& b) const
 
     b << (uint64_t)fLimitStart;
     b << (uint64_t)fLimitNum;
-    b << static_cast<const ByteStream::byte>(fHasOrderBy);
-    b << static_cast<const ByteStream::byte>(fSpecHandlerProcessed);
+    b << static_cast<ByteStream::byte>(fHasOrderBy);
+    b << static_cast<ByteStream::byte>(fSpecHandlerProcessed);
     b << reinterpret_cast<uint32_t>(fOrderByThreads);
 
     b << static_cast<uint32_t>(fSelectSubList.size());

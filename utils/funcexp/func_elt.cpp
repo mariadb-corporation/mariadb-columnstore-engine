@@ -34,6 +34,8 @@ using namespace execplan;
 #include "dataconvert.h"
 using namespace dataconvert;
 
+#include "checks.h"
+
 namespace funcexp
 {
 
@@ -75,10 +77,10 @@ string Func_elt::getStrVal(rowgroup::Row& row,
             number = d.value / pow(10.0, dscale);
             int lefto = (d.value - number * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
-            if ( number >= 0 && lefto > 4 )
+            if ( utils::is_nonnegative(number) && lefto > 4 )
                 number++;
 
-            if ( number < 0 && lefto < -4 )
+            if ( utils::is_negative(number) && lefto < -4 )
                 number--;
 
             break;
@@ -102,7 +104,7 @@ string Func_elt::getStrVal(rowgroup::Row& row,
     }
 
     std::string ret;
-	stringValue(parm[number], row, isNull, ret);
+    stringValue(parm[number], row, isNull, ret);
     return ret;
 
 }

@@ -966,7 +966,7 @@ void InetStreamSocket::connect(const sockaddr* serv_addr)
         char buf = '\0';
         (void)::recv(socketParms().sd(), &buf, 1, 0);
 #else
-#if defined(__GNUC__) && __GNUC__ >= 6
+#if defined(__GNUC__) && __GNUC__ >= 5
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-result"
         char buf = '\0';
