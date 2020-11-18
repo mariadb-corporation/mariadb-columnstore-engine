@@ -32,9 +32,9 @@
 // end
 #include <boost/lexical_cast.hpp>
 #ifdef _MSC_VER
-#include <unordered_map>
+#include <unordered_set>
 #else
-#include <tr1/unordered_map>
+#include <tr1/unordered_set>
 #endif
 
 #include "we_brm.h"
@@ -72,15 +72,19 @@ class Log;
 // for truly long running transactions.
 struct TxnLBIDRec
 {
-    std::tr1::unordered_map<BRM::LBID_t, uint32_t> m_LBIDMap;
-    uint32_t        m_lastSeqnum;
-    uint32_t        m_squashedLbids;
+    std::tr1::unordered_set<BRM::LBID_t> m_LBIDSet;
+    std::vector<BRM::LBID_t> m_LBIDs;
+    std::vector<execplan::CalpontSystemCatalog::ColDataType> m_ColDataTypes;
 
-    TxnLBIDRec() : m_lastSeqnum(0), m_squashedLbids(0) {};
+    TxnLBIDRec() {};
     ~TxnLBIDRec() {}
-    void AddLBID(BRM::LBID_t lbid)
+    void AddLBID(BRM::LBID_t lbid, const execplan::CalpontSystemCatalog::ColDataType& colDataType)
     {
-        m_LBIDMap[lbid] = ++m_lastSeqnum;
+        if ( m_LBIDSet.insert(lbid).second)
+        {
+            m_LBIDs.push_back(lbid);
+	    m_ColDataTypes.push_back(colDataType);
+        }
     }
 };
 
@@ -738,11 +742,14 @@ private:
     // Bug 4312: We use a hash set to hold the set of starting LBIDS for a given
     // txn so that we don't waste time marking the same extent as invalid. This
     // list should be trimmed if it gets too big.
-    int AddLBIDtoList(const TxnID     txnid,
-                      std::vector<BRM::LBID_t>& lbids,
-                      std::vector<execplan::CalpontSystemCatalog::ColDataType>& colDataTypes,
+    int AddLBIDtoList(const TxnID        txnid,
                       const ColStruct& colStruct,
-                      const int       fbo);
+                      const int          fbo,
+		      const BRM::CPInfo& cpInfo // there is dummy value for you to use
+		      );
+
+    // mark extents of the transaction as invalid. erase transaction from txn->lbidsrec map if requested.
+    int markTxnExtentsAsInvalid(const TxnID txnid, bool erase = false);
 
     int RemoveTxnFromLBIDMap(const TxnID txnid);
 
