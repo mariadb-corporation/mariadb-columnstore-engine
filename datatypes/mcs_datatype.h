@@ -582,6 +582,7 @@ class MinMaxPartitionInfo: public MinMaxInfo
 {
   enum status_flag_t : uint64_t
   {
+    EXPL_NULL = 0x0000,
     ET_DISABLED = 0x0002,
     CPINVALID = 0x0004
   };

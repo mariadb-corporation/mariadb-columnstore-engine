@@ -72,6 +72,7 @@ namespace datatypes
 {
 
 using int128_t = __int128;
+using uint128_t = unsigned __int128;
 
 
 //    Type traits
@@ -90,6 +91,26 @@ struct is_allowed_numeric<int128_t> {
   static const bool value = true;
 };
 
+template <typename T>
+struct is_int128_t {
+  static const bool value = false;
+};
+
+template<>
+struct is_int128_t<int128_t> {
+  static const bool value = true;
+};
+  
+template <typename T>
+struct is_uint128_t {
+  static const bool value = false;
+};
+
+template<>
+struct is_uint128_t<uint128_t> {
+  static const bool value = true;
+};
+ 
 //     The method converts a __float128 s128Value to a double.
 static inline double getDoubleFromFloat128(const __float128& value)
 {

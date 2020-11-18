@@ -346,13 +346,13 @@ TypeHandler::find(SystemCatalog::ColDataType typeCode,
   case SystemCatalog::UDOUBLE:    return &mcs_type_handler_udouble;
 
   case SystemCatalog::DECIMAL:
-    if (ct.colWidth < datatypes::MAXDECIMALWIDTH)
+    if (static_cast<uint32_t>(ct.colWidth) < datatypes::MAXDECIMALWIDTH)
       return &mcs_type_handler_sdecimal64;
     else
       return &mcs_type_handler_sdecimal128;
 
   case SystemCatalog::UDECIMAL:
-    if (ct.colWidth < datatypes::MAXDECIMALWIDTH)
+    if (static_cast<uint32_t>(ct.colWidth) < datatypes::MAXDECIMALWIDTH)
       return &mcs_type_handler_udecimal64;
     else
       return &mcs_type_handler_udecimal128;
@@ -1303,7 +1303,7 @@ TypeHandlerStr::toSimpleValue(const SessionParam &sp,
 /****************************************************************************/
 
 MinMaxPartitionInfo::MinMaxPartitionInfo(const BRM::EMEntry &entry)
-  :m_status(entry.status == BRM::EXTENTOUTOFSERVICE ? ET_DISABLED : 0)
+  :m_status(entry.status == BRM::EXTENTOUTOFSERVICE ? ET_DISABLED : EXPL_NULL)
 { }
 
 

@@ -303,7 +303,7 @@ float RowEstimator::estimateRowReturnFactor(const BRM::EMEntry& emEntry,
     float factor = 1.0;
     float tempFactor = 1.0;
 
-    uint64_t adjustedMin, adjustedMax;
+    uint64_t adjustedMin = 0, adjustedMax = 0;
     uint128_t adjustedBigMin, adjustedBigMax;
     uint32_t distinctValuesEstimate;
 

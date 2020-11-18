@@ -1584,7 +1584,8 @@ bool TupleBPS::processSingleFilterString(int8_t BOP, int8_t colWidth, T val, con
                 throw logic_error("invalid column width");
         }
 
-        if (colWidth < datatypes::MAXDECIMALWIDTH)
+        // Assumption is that colWidth > 0
+        if (static_cast<uint8_t>(colWidth) < datatypes::MAXDECIMALWIDTH)
             thisPredicate = compareSingleValue(COP, (int64_t) val, val2);
         else
             thisPredicate = compareSingleValue(COP, (int128_t) val, bigVal2);

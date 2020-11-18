@@ -383,7 +383,7 @@ uint64_t Func_cast_unsigned::getUintVal(Row& row,
                 uint128_t tmpval = d.s128Value / scaleDivisor;
                 int128_t lefto = (d.s128Value - tmpval * scaleDivisor) / scaleDivisor2;
 
-                if (tmpval >= 0 && lefto > 4)
+                if (utils::is_nonnegative(tmpval) && lefto > 4)
                     tmpval++;
 
                 if (tmpval > static_cast<int128_t>(UINT64_MAX))
@@ -404,7 +404,9 @@ uint64_t Func_cast_unsigned::getUintVal(Row& row,
                 int lefto = (d.value - value * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
             if ( utils::is_nonnegative(value) && lefto > 4 )
+            {
                 value++;
+            }
 
                 return value;
             }

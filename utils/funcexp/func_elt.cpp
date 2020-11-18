@@ -86,10 +86,10 @@ string Func_elt::getStrVal(rowgroup::Row& row,
                 int128_t tmpval = d.s128Value / scaleDivisor;
                 int128_t lefto = (d.s128Value - tmpval * scaleDivisor) / scaleDivisor2;
 
-                if (utils::is_nonnegative(tmpval) >= 0 && lefto > 4)
+                if (utils::is_nonnegative(tmpval) && lefto > 4)
                     tmpval++;
 
-                if (utils::is_negative(tmpval) < 0 && lefto < -4)
+                if (utils::is_negative(tmpval) && lefto < -4)
                     tmpval--;
 
                 number = datatypes::Decimal::getInt64FromWideDecimal(tmpval);

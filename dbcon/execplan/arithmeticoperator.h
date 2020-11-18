@@ -196,7 +196,7 @@ public:
         return TreeNode::getBoolVal();
     }
     void adjustResultType(const CalpontSystemCatalog::ColType& m);
-    const inline bool getOverflowCheck() const
+    inline bool getOverflowCheck() const
     {
         return fDecimalOverflowCheck;
     }

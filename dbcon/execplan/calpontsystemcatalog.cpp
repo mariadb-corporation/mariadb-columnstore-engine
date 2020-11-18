@@ -6119,6 +6119,26 @@ CalpontSystemCatalog::ColType::ColType(const ColType& rhs)
     cs = rhs.cs;
 }
 
+CalpontSystemCatalog::ColType& CalpontSystemCatalog::ColType::operator=(const ColType& rhs)
+{
+    TypeHolderStd::operator=(rhs);
+    constraintType = rhs.constraintType;
+    ddn = rhs.ddn;
+    defaultValue = rhs.defaultValue;
+    colPosition = rhs.colPosition;
+    compressionType = rhs.compressionType;
+    columnOID = rhs.columnOID;
+    autoincrement = rhs.autoincrement;
+    nextvalue = rhs.nextvalue;
+    charsetNumber = rhs.charsetNumber;
+    cs = rhs.cs;
+
+    return *this;
+}
+
+
+
+
 CHARSET_INFO* CalpontSystemCatalog::ColType::getCharset()
 {
     if (!cs)
