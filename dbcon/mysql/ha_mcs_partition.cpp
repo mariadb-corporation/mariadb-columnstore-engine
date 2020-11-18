@@ -623,6 +623,7 @@ void partitionByValue_common(UDF_ARGS* args,								// input
                              string functionName)							// input
 {
     // identify partitions by the range
+    BRM::DBRM::refreshShm();
     DBRM em;
     vector<struct EMEntry> entries;
     vector<struct EMEntry>::iterator iter;
@@ -1002,6 +1003,7 @@ extern "C"
                                   char* result, unsigned long* length,
                                   char* is_null, char* error)
     {
+        BRM::DBRM::refreshShm();
         DBRM em;
         vector<struct EMEntry> entries;
         vector<struct EMEntry>::iterator iter;
@@ -1712,6 +1714,7 @@ extern "C"
                                          char* result, unsigned long* length,
                                          char* is_null, char* error)
     {
+        BRM::DBRM::refreshShm();
         DBRM em;
         vector<struct EMEntry> entries;
         vector<struct EMEntry>::iterator iter;
