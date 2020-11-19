@@ -50,6 +50,9 @@ struct get_integral_type<TSInt128>{
 class TFloat128
 {
   public:
+    static constexpr int128_t minInt128 = int128_t(0x8000000000000000LL) << 64;
+    static constexpr int128_t maxInt128 = (int128_t(0x7FFFFFFFFFFFFFFFLL) << 64) + 0xFFFFFFFFFFFFFFFFLL;
+
     static constexpr uint16_t MAXLENGTH16BYTES = 42;
     //  A variety of ctors for aligned and unaligned arguments
     TFloat128(): value(0) { }
@@ -64,7 +67,21 @@ class TFloat128
       return TFloat128::MAXLENGTH16BYTES;
     }
 
-    //     The method converts a TFloat128 to integral types
+    inline int128_t toTSInt128() const
+    {
+      if (value > static_cast<__float128>(maxInt128))
+        return maxInt128;
+      else if (value < static_cast<__float128>(minInt128))
+        return minInt128;
+
+      return static_cast<int128_t>(value);
+    }
+
+    inline operator int128_t() const
+    {
+      return toTSInt128();
+    }
+
     inline operator double() const
     {
       return toDouble();
@@ -100,7 +117,7 @@ class TFloat128
       return toTSInt64();
     }
 
-    inline int64_t toTUInt64() const
+    inline uint64_t toTUInt64() const
     {
       if (value > static_cast<__float128>(UINT64_MAX))
           return UINT64_MAX;

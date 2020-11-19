@@ -230,6 +230,16 @@ public:
           }
       }
 
+      /**
+          @brief The method returns true if the column precision
+          belongs to a wide decimal range.
+      */
+      inline bool isWideDecimalPrecision() const
+      {
+          return ((precision > INT64MAXPRECISION) &&
+              (precision <= INT128MAXPRECISION));
+      }
+
   };
 
   class TypeHolderStd: public TypeAttributesStd
