@@ -40,6 +40,7 @@
 
 #include "brmtypes.h"
 #include "we_type.h"
+#include "dataconvert.h"
 
 namespace WriteEngine
 {
@@ -62,14 +63,22 @@ public:
     ColExtInfEntry() : fLbid(INVALID_LBID),
         fMinVal(LLONG_MIN),
         fMaxVal(LLONG_MIN),
-        fNewExtent(true)   { }
+        fNewExtent(true)
+    {
+        utils::int128Min(fbigMaxVal);
+        utils::int128Max(fbigMinVal);
+    }
 
     // Used to create entry for an existing extent we are going to add data to.
     ColExtInfEntry(BRM::LBID_t lbid, bool bIsNewExtent) :
         fLbid(lbid),
         fMinVal(LLONG_MIN),
         fMaxVal(LLONG_MIN),
-        fNewExtent(bIsNewExtent)  { }
+        fNewExtent(bIsNewExtent)
+    {
+        utils::int128Min(fbigMaxVal);
+        utils::int128Max(fbigMinVal);
+    }
 
     // Used to create entry for a new extent, with LBID not yet allocated
     ColExtInfEntry(int64_t minVal, int64_t maxVal) :
@@ -79,16 +88,40 @@ public:
         fNewExtent(true)   { }
 
     // Used to create entry for a new extent, with LBID not yet allocated
+    ColExtInfEntry(int128_t bigMinVal, int128_t bigMaxVal) :
+        fLbid(INVALID_LBID),
+        fNewExtent(true),
+        fbigMinVal(bigMinVal),
+        fbigMaxVal(bigMaxVal) { }
+
+    // Used to create entry for a new extent, with LBID not yet allocated
     ColExtInfEntry(uint64_t minVal, uint64_t maxVal) :
         fLbid(INVALID_LBID),
         fMinVal(static_cast<int64_t>(minVal)),
         fMaxVal(static_cast<int64_t>(maxVal)),
         fNewExtent(true)   { }
 
+    // Used to create entry for a new extent, with LBID not yet allocated
+    ColExtInfEntry(uint128_t bigMinVal, uint128_t bigMaxVal) :
+        fLbid(INVALID_LBID),
+        fNewExtent(true),
+        fbigMinVal(static_cast<int128_t>(bigMinVal)),
+        fbigMaxVal(static_cast<int128_t>(bigMaxVal)) { }
+
     BRM::LBID_t fLbid;     // LBID for an extent; should be the starting LBID
     int64_t     fMinVal;   // minimum value for extent associated with LBID
     int64_t     fMaxVal;   // maximum value for extent associated with LBID
     bool        fNewExtent;// is this a new extent
+    union
+    {
+        int128_t fbigMinVal;
+        int64_t fMinVal_;
+    };
+    union
+    {
+        int128_t fbigMaxVal;
+        int64_t fMaxVal_;
+    };
 };
 
 //------------------------------------------------------------------------------
@@ -122,7 +155,14 @@ public:
     virtual void addOrUpdateEntry( RID     lastInputRow,
                                    int64_t minVal,
                                    int64_t maxVal,
-                                   ColDataType colDataType ) { }
+                                   ColDataType colDataType,
+                                   int width ) { }
+
+    virtual void addOrUpdateEntry( RID     lastInputRow,
+                                   int128_t minVal,
+                                   int128_t maxVal,
+                                   ColDataType colDataType,
+                                   int width ) { }
 
     virtual void getCPInfoForBRM ( JobColumn column,
                                    BRMReporter& brmReporter) { }
@@ -173,10 +213,33 @@ public:
      *  @param minVal       Minimum value for the latest buffer read
      *  @param maxVal       Maximum value for the latest buffer read
      */
+    template <typename T>
+    void addOrUpdateEntryTemplate( RID     lastInputRow,
+                                   T minVal, T maxVal,
+                                   ColDataType colDataType,
+                                   int width );
+
     virtual void addOrUpdateEntry( RID     lastInputRow,
-                                   int64_t minVal,
-                                   int64_t maxVal,
-                                   ColDataType colDataType );
+                                   int64_t minVal, int64_t maxVal,
+                                   ColDataType colDataType,
+                                   int width )
+    {
+        addOrUpdateEntryTemplate( lastInputRow,
+                                  minVal, maxVal,
+                                  colDataType,
+                                  width );
+    }
+
+    virtual void addOrUpdateEntry( RID     lastInputRow,
+                                   int128_t minVal, int128_t maxVal,
+                                   ColDataType colDataType,
+                                   int width )
+    {
+        addOrUpdateEntryTemplate( lastInputRow,
+                                  minVal, maxVal,
+                                  colDataType,
+                                  width );
+    }
 
     /** @brief Send updated Casual Partition (CP) info to BRM.
      */

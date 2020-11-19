@@ -359,7 +359,9 @@ bool WindowFunctionColumn::hasWindowFunc()
 
 void WindowFunctionColumn::adjustResultType()
 {
-    if (fResultType.colDataType == CalpontSystemCatalog::DECIMAL &&
+    if ((fResultType.colDataType == CalpontSystemCatalog::DECIMAL ||
+         fResultType.colDataType == CalpontSystemCatalog::UDECIMAL)
+        &&
             !boost::iequals(fFunctionName, "COUNT") &&
             !boost::iequals(fFunctionName, "COUNT(*)") &&
             !boost::iequals(fFunctionName, "ROW_NUMBER") &&
@@ -385,11 +387,20 @@ void WindowFunctionColumn::adjustResultType()
 
     if (boost::iequals(fFunctionName, "SUM") ||
         boost::iequals(fFunctionName, "AVG") ||
-        boost::iequals(fFunctionName, "AVG_DISTINCT"))
+        boost::iequals(fFunctionName, "AVG_DISTINCT") ||
+        boost::iequals(fFunctionName, "PERCENTILE"))
     {
-        fResultType.colDataType = CalpontSystemCatalog::LONGDOUBLE;
-        fResultType.colWidth = sizeof(long double);
-        fResultType.precision = -1;
+        if (fFunctionParms[0]->resultType().colDataType == CalpontSystemCatalog::DECIMAL ||
+            fFunctionParms[0]->resultType().colDataType == CalpontSystemCatalog::UDECIMAL)
+        {
+            fResultType.colWidth = sizeof(int128_t);
+        }
+        else
+        {
+            fResultType.colDataType = CalpontSystemCatalog::LONGDOUBLE;
+            fResultType.colWidth = sizeof(long double);
+            fResultType.precision = -1;
+        }
     }
 }
 
@@ -478,7 +489,9 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
                         fResult.origIntVal = row.getUintField<8>(fInputIndex);
 
                     break;
-
+                case 16:
+                    cout << __FILE__<< ":" <<__LINE__ << " Fix  16 Bytes ?" << endl;
+                    //fallthrough
                 default:
                     if (row.equals(CPNULLSTRMARK, fInputIndex))
                         isNull = true;
@@ -627,8 +640,10 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
                         isNull = true;
                     else
                     {
-                        fResult.decimalVal.value = row.getIntField<1>(fInputIndex);
-                        fResult.decimalVal.scale = (unsigned)fResultType.scale;
+                        fResult.decimalVal = IDB_Decimal(
+                                                 row.getIntField<1>(fInputIndex),
+                                                 fResultType.scale,
+                                                 fResultType.precision);
                     }
 
                     break;
@@ -640,8 +655,10 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
                         isNull = true;
                     else
                     {
-                        fResult.decimalVal.value = row.getIntField<2>(fInputIndex);
-                        fResult.decimalVal.scale = (unsigned)fResultType.scale;
+                        fResult.decimalVal = IDB_Decimal(
+                                                 row.getIntField<2>(fInputIndex),
+                                                 fResultType.scale,
+                                                 fResultType.precision);
                     }
 
                     break;
@@ -653,25 +670,47 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
                         isNull = true;
                     else
                     {
-                        fResult.decimalVal.value = row.getIntField<4>(fInputIndex);
-                        fResult.decimalVal.scale = (unsigned)fResultType.scale;
+                        fResult.decimalVal = IDB_Decimal(
+                                                 row.getIntField<4>(fInputIndex),
+                                                 fResultType.scale,
+                                                 fResultType.precision);
                     }
 
                     break;
                 }
 
-                default:
+                case 8:
                 {
                     if (row.equals<8>(BIGINTNULL, fInputIndex))
                         isNull = true;
                     else
                     {
-                        fResult.decimalVal.value = (int64_t)row.getUintField<8>(fInputIndex);
-                        fResult.decimalVal.scale = (unsigned)fResultType.scale;
+                        fResult.decimalVal = IDB_Decimal(
+                                                 row.getIntField<8>(fInputIndex),
+                                                 fResultType.scale,
+                                                 fResultType.precision);
                     }
 
                     break;
                 }
+
+                case 16:
+                {
+                    int128_t val;
+                    row.getInt128Field(fInputIndex, val);
+
+                    if (val == datatypes::Decimal128Null)
+                        isNull = true;
+                    else
+                    {
+                        fResult.decimalVal = IDB_Decimal(0, fResultType.scale, fResultType.precision, val);
+                    }
+
+                    break;
+                }
+                default:
+                    // Should log error
+                    break;
             }
 
             break;

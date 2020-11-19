@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016, 2017 MariaDB Corporation
+   Copyright (C) 2016-2020 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -54,6 +54,7 @@ using namespace boost;
 #include "MonitorProcMem.h"
 #include "threadnaming.h"
 #include "vlarray.h"
+#include "widedecimalutils.h"
 
 #define MAX64 0x7fffffffffffffffLL
 #define MIN64 0x8000000000000000LL
@@ -100,6 +101,7 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor() :
     baseRid(0),
     ridCount(0),
     needStrValues(false),
+    wideColumnsWidths(0),
     filterCount(0),
     projectCount(0),
     sendRidsAtDelivery(false),
@@ -111,6 +113,7 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor() :
     minVal(MAX64),
     maxVal(MIN64),
     lbidForCP(0),
+    hasWideColumnOut(false),
     busyLoaderCount(0),
     physIO(0),
     cachedIO(0),
@@ -144,6 +147,7 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor(ByteStream& b, double prefetch,
     baseRid(0),
     ridCount(0),
     needStrValues(false),
+    wideColumnsWidths(0),
     filterCount(0),
     projectCount(0),
     sendRidsAtDelivery(false),
@@ -155,6 +159,7 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor(ByteStream& b, double prefetch,
     minVal(MAX64),
     maxVal(MIN64),
     lbidForCP(0),
+    hasWideColumnOut(false),
     busyLoaderCount(0),
     physIO(0),
     cachedIO(0),
@@ -216,6 +221,7 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
 {
     uint32_t i;
     uint8_t tmp8;
+    uint16_t tmp16;
     Command::CommandType type;
 
     bs.advance(sizeof(ISMPacketHeader));  // skip the header
@@ -227,20 +233,24 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
     bs >> uniqueID;
     bs >> versionInfo;
 
-    bs >> tmp8;
-    needStrValues = tmp8 & NEED_STR_VALUES;
-    gotAbsRids = tmp8 & GOT_ABS_RIDS;
-    gotValues = tmp8 & GOT_VALUES;
-    LBIDTrace = tmp8 & LBID_TRACE;
-    sendRidsAtDelivery = tmp8 & SEND_RIDS_AT_DELIVERY;
-    doJoin = tmp8 & HAS_JOINER;
-    hasRowGroup = tmp8 & HAS_ROWGROUP;
-    getTupleJoinRowGroupData = tmp8 & JOIN_ROWGROUP_DATA;
+    bs >> tmp16;
+    needStrValues = tmp16 & NEED_STR_VALUES;
+    gotAbsRids = tmp16 & GOT_ABS_RIDS;
+    gotValues = tmp16 & GOT_VALUES;
+    LBIDTrace = tmp16 & LBID_TRACE;
+    sendRidsAtDelivery = tmp16 & SEND_RIDS_AT_DELIVERY;
+    doJoin = tmp16 & HAS_JOINER;
+    hasRowGroup = tmp16 & HAS_ROWGROUP;
+    getTupleJoinRowGroupData = tmp16 & JOIN_ROWGROUP_DATA;
+    bool hasWideColumnsIn = tmp16 & HAS_WIDE_COLUMNS;
 
     // This used to signify that there was input row data from previous jobsteps, and
     // it never quite worked right. No need to fix it or update it; all BPP's have started
     // with a scan for years.  Took it out.
     assert(!hasRowGroup);
+
+    if (hasWideColumnsIn)
+        bs >> wideColumnsWidths;
 
     bs >> bop;
     bs >> forHJ;
@@ -1016,6 +1026,8 @@ void BatchPrimitiveProcessor::initProcessor()
             fFiltRidCount[i] = 0;
             fFiltCmdRids[i].reset(new uint16_t[LOGICAL_BLOCK_RIDS]);
             fFiltCmdValues[i].reset(new int64_t[LOGICAL_BLOCK_RIDS]);
+            if (wideColumnsWidths | datatypes::MAXDECIMALWIDTH)
+                fFiltCmdBinaryValues[i].reset(new int128_t[LOGICAL_BLOCK_RIDS]);
 
             if (filtOnString) fFiltStrValues[i].reset(new string[LOGICAL_BLOCK_RIDS]);
         }
@@ -1082,8 +1094,16 @@ void BatchPrimitiveProcessor::initProcessor()
             fAggregator->setInputOutput(fe2 ? fe2Output : outputRG, &fAggregateRG);
     }
 
-    minVal = MAX64;
-    maxVal = MIN64;
+    if (LIKELY(!hasWideColumnOut))
+    {
+        minVal = MAX64;
+        maxVal = MIN64;
+    }
+    else
+    {
+        max128Val = datatypes::Decimal::minInt128;
+        min128Val = datatypes::Decimal::maxInt128;
+    }
 
     // @bug 1269, initialize data used by execute() for async loading blocks
     // +1 for the scan filter step with no predicate, if any
@@ -1970,8 +1990,19 @@ void BatchPrimitiveProcessor::writeProjectionPreamble()
         {
             *serialized << (uint8_t) 1;
             *serialized << lbidForCP;
-            *serialized << (uint64_t) minVal;
-            *serialized << (uint64_t) maxVal;
+            if (UNLIKELY(hasWideColumnOut))
+            {
+                // PSA width
+                *serialized << (uint8_t) wideColumnWidthOut;
+                *serialized << min128Val;
+                *serialized << max128Val;
+            }
+            else
+            {
+                *serialized << (uint8_t) utils::MAXLEGACYWIDTH; // width of min/max value
+                *serialized << (uint64_t) minVal;
+                *serialized << (uint64_t) maxVal;
+            }
         }
         else
         {
@@ -2060,8 +2091,22 @@ void BatchPrimitiveProcessor::makeResponse()
         {
             *serialized << (uint8_t) 1;
             *serialized << lbidForCP;
-            *serialized << (uint64_t) minVal;
-            *serialized << (uint64_t) maxVal;
+
+            if (UNLIKELY(hasWideColumnOut))
+            {
+                // PSA width
+                // Remove the assert for >16 bytes DTs.
+                assert(wideColumnWidthOut == datatypes::MAXDECIMALWIDTH);
+                *serialized << (uint8_t) wideColumnWidthOut;
+                *serialized << min128Val;
+                *serialized << max128Val;
+            }
+            else
+            {
+                *serialized << (uint8_t) utils::MAXLEGACYWIDTH; // width of min/max value
+                *serialized << (uint64_t) minVal;
+                *serialized << (uint64_t) maxVal;
+            }
         }
         else
         {
@@ -2164,8 +2209,18 @@ int BatchPrimitiveProcessor::operator()()
         }
 
         allocLargeBuffers();
-        minVal = MAX64;
-        maxVal = MIN64;
+
+        if (LIKELY(!hasWideColumnOut))
+        {
+            minVal = MAX64;
+            maxVal = MIN64;
+        }
+        else
+        {
+            max128Val = datatypes::Decimal::minInt128;
+            min128Val = datatypes::Decimal::maxInt128;
+        }
+
         validCPData = false;
 #ifdef PRIMPROC_STOPWATCH
         stopwatch->start("BPP() execute");
@@ -2300,6 +2355,7 @@ SBPP BatchPrimitiveProcessor::duplicate()
     bpp->stepID = stepID;
     bpp->uniqueID = uniqueID;
     bpp->needStrValues = needStrValues;
+    bpp->wideColumnsWidths = wideColumnsWidths;
     bpp->gotAbsRids = gotAbsRids;
     bpp->gotValues = gotValues;
     bpp->LBIDTrace = LBIDTrace;

@@ -61,10 +61,22 @@ DateTime getDateTime(rowgroup::Row& row,
             break;
         }
         case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal dec = parm[0]->data()->getDecimalVal(row, isNull);
-            val = dec.value / IDB_pow[dec.scale];
-            msec = dec.value % IDB_pow[dec.scale];
+
+            if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                int128_t scaleDivisor;
+                datatypes::getScaleDivisor(scaleDivisor, dec.scale);
+                val = datatypes::Decimal::getInt64FromWideDecimal(dec.s128Value / scaleDivisor);
+                msec = datatypes::Decimal::getUInt32FromWideDecimal(dec.s128Value % scaleDivisor);
+            }
+            else
+            {
+                val = dec.value / IDB_pow[dec.scale];
+                msec = dec.value % IDB_pow[dec.scale];
+            }
             break;
         }
 

@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporation
+   Copyright (C) 2016-2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -57,6 +57,7 @@ using namespace execplan;
 #include "IDBPolicy.h"
 #include "MonitorProcMem.h"
 using namespace idbdatafile;
+#include "dataconvert.h"
 
 #ifdef _MSC_VER
 #define isnan _isnan
@@ -166,7 +167,6 @@ int WriteEngineWrapper::checkValid(const TxnID& txnid, const ColStructList& colS
     structListSize = colStructList.size() ;
     valListSize = colValueList.size();
 
-//      if (colStructList.size() !=  colValueList.size())
     if (structListSize != valListSize)
         return ERR_STRUCT_VALUE_NOT_MATCH;
 
@@ -218,12 +218,13 @@ void WriteEngineWrapper::findSmallestColumn(uint32_t& colId, ColStructList colSt
     }
 }
 
-/*@convertValArray -  Convert interface values to internal values
+/*@convertValArray - Convert interface values to internal values
  */
 /***********************************************************
  * DESCRIPTION:
  *    Convert interface values to internal values
  * PARAMETERS:
+ *    cscColType -  CSC ColType struct list
  *    colStructList - column struct list
  *    colValueList - column value list
  * RETURN:
@@ -231,29 +232,33 @@ void WriteEngineWrapper::findSmallestColumn(uint32_t& colId, ColStructList colSt
  *    valArray - output value array
  *    nullArray - output null flag array
  ***********************************************************/
-void WriteEngineWrapper::convertValArray(const size_t totalRow, const ColType colType, ColTupleList& curTupleList, void* valArray, bool bFromList)
+void WriteEngineWrapper::convertValArray(const size_t totalRow, const CalpontSystemCatalog::ColType& cscColType, const ColType colType, ColTupleList& curTupleList, void* valArray, bool bFromList)
 {
     ColTuple    curTuple;
     ColTupleList::size_type i;
 
     if (bFromList)
+    {
         for (i = 0; i < curTupleList.size(); i++)
         {
             curTuple = curTupleList[i];
-            convertValue(colType, valArray, i, curTuple.data);
-        } // end of for (int i = 0
+            convertValue(cscColType, colType, valArray, i, curTuple.data);
+        }
+    } 
     else
+    {
         for (i = 0; i < totalRow; i++)
         {
-            convertValue(colType, valArray, i, curTuple.data, false);
+            convertValue(cscColType, colType, valArray, i, curTuple.data, false);
             curTupleList.push_back(curTuple);
         }
+    }
 }
 
 /*
  * @brief Convert column value to its internal representation
  */
-void WriteEngineWrapper::convertValue(const ColType colType, void* value, boost::any& data)
+void WriteEngineWrapper::convertValue(const execplan::CalpontSystemCatalog::ColType& cscColType, ColType colType, void* value, boost::any& data)
 {
     string curStr;
     int size;
@@ -388,9 +393,27 @@ void WriteEngineWrapper::convertValue(const ColType colType, void* value, boost:
             memcpy(value, &val, size);
         }
         break;
+        
+        case WriteEngine::WR_BINARY:
+        {
+            size = cscColType.colWidth;
+            if (cscColType.colDataType == CalpontSystemCatalog::DECIMAL ||
+                cscColType.colDataType == CalpontSystemCatalog::UDECIMAL)
+            {
+                int128_t val = boost::any_cast<int128_t>(data);
+                memcpy(value, &val, size);
+            }
+            else // for CalpontSystemCatalog::BINARY
+            {
+                char val = boost::any_cast<char>(data);
+                memcpy(value, &val, size);
+            }
+        }
+        break;
 
     } // end of switch (colType)
 }  /*@convertValue -  The base for converting values */
+
 
 /***********************************************************
  * DESCRIPTION:
@@ -402,10 +425,9 @@ void WriteEngineWrapper::convertValue(const ColType colType, void* value, boost:
  * RETURN:
  *    none
  ***********************************************************/
-void WriteEngineWrapper::convertValue(const ColType colType, void* valArray, const size_t pos, boost::any& data, bool fromList)
+void WriteEngineWrapper::convertValue(const CalpontSystemCatalog::ColType& cscColType, const ColType colType, void* valArray, const size_t pos, boost::any& data, bool fromList)
 {
     string curStr;
-//      ColTuple    curTuple;
 
     if (fromList)
     {
@@ -492,6 +514,23 @@ void WriteEngineWrapper::convertValue(const ColType colType, void* valArray, con
             case WriteEngine::WR_TOKEN:
                 ((Token*)valArray)[pos] = boost::any_cast<Token>(data);
                 break;
+                
+            // WIP MCOL-641
+            case WriteEngine::WR_BINARY:
+                size_t size = cscColType.colWidth;
+                if (cscColType.colDataType == CalpontSystemCatalog::DECIMAL ||
+                    cscColType.colDataType == CalpontSystemCatalog::UDECIMAL)
+                {
+                    int128_t val = boost::any_cast<int128_t>(data);
+                    memcpy((uint8_t*)valArray + pos * size, &val, size);
+                }
+                else // for CalpontSystemCatalog::BINARY
+                {
+                    char val = boost::any_cast<char>(data);
+                    memcpy((uint8_t*)valArray + pos * size, &val, size);
+                }
+
+                break;
         } // end of switch (colType)
     }
     else
@@ -557,6 +596,23 @@ void WriteEngineWrapper::convertValue(const ColType colType, void* valArray, con
             case WriteEngine::WR_TOKEN:
                 data = ((Token*)valArray)[pos];
                 break;
+            // WIP MCOL-641
+            case WriteEngine::WR_BINARY :
+                if (cscColType.colDataType == CalpontSystemCatalog::DECIMAL ||
+                    cscColType.colDataType == CalpontSystemCatalog::UDECIMAL)
+                {
+                    data = ((int128_t*)valArray)[pos];
+                }
+                else // for CalpontSystemCatalog::BINARY
+                {
+                    // WIP do we need tmp here?
+                    size_t size = cscColType.colWidth;
+                    char *tmp = (char*) alloca (sizeof(char) * size);
+                    memcpy(tmp, (uint8_t*)valArray + pos * size, size);
+                    curStr = tmp;
+                    data = curStr;
+                }
+            break;
         } // end of switch (colType)
     } // end of if
 }
@@ -619,7 +675,7 @@ int WriteEngineWrapper::createColumn(
  * @brief Fill column with default values
  */
 int WriteEngineWrapper::fillColumn(const TxnID& txnid, const OID& dataOid,
-                                   const CalpontSystemCatalog::ColDataType dataType, int dataWidth,
+                                   const CalpontSystemCatalog::ColType& colType,
                                    ColTuple defaultVal, const OID& refColOID,
                                    const CalpontSystemCatalog::ColDataType refColDataType,
                                    int refColWidth, int refCompressionType,
@@ -638,39 +694,37 @@ int WriteEngineWrapper::fillColumn(const TxnID& txnid, const OID& dataOid,
     Dctnry*   dctnry  = m_dctnry[op(compressionType)];
     colOpNewCol->initColumn(newCol);
     refColOp->initColumn(refCol);
-    //boost::shared_ptr<Dctnry> dctnry;
-    // boost::shared_ptr<ColumnOp> refColOp;
-    // refColOp.reset(colOpRefCol);
-    // dctnry.reset(dctOp);
     uint16_t dbRoot = 1;	//not to be used
-   int newDataWidth = dataWidth;
+    int newDataWidth = colType.colWidth;
     //Convert HWM of the reference column for the new column
     //Bug 1703,1705
     bool isToken = false;
 
-    if (((dataType == CalpontSystemCatalog::VARCHAR) && (dataWidth > 7)) ||
-            ((dataType == CalpontSystemCatalog::CHAR) && (dataWidth > 8)) ||
-            (dataType == CalpontSystemCatalog::VARBINARY) ||
-            (dataType == CalpontSystemCatalog::BLOB) ||
-            (dataType == CalpontSystemCatalog::TEXT))
+    if (((colType.colDataType == CalpontSystemCatalog::VARCHAR) && (colType.colWidth > 7)) ||
+            ((colType.colDataType == CalpontSystemCatalog::CHAR) && (colType.colWidth > 8)) ||
+            (colType.colDataType == CalpontSystemCatalog::VARBINARY) ||
+            (colType.colDataType == CalpontSystemCatalog::BLOB) ||
+            (colType.colDataType == CalpontSystemCatalog::TEXT))
     {
         isToken = true;
     }
 
-    Convertor::convertColType(dataType, newColType, isToken);
+    Convertor::convertColType(colType.colDataType, newColType, isToken);
 
+    // WIP
+    // replace with isDictCol
     if (((refColDataType == CalpontSystemCatalog::VARCHAR) && (refColWidth > 7)) ||
             ((refColDataType == CalpontSystemCatalog::CHAR) && (refColWidth > 8)) ||
             (refColDataType == CalpontSystemCatalog::VARBINARY) ||
-            (dataType == CalpontSystemCatalog::BLOB) ||
-            (dataType == CalpontSystemCatalog::TEXT))
+            (colType.colDataType == CalpontSystemCatalog::BLOB) ||
+            (colType.colDataType == CalpontSystemCatalog::TEXT))
     {
         isToken = true;
     }
 
-    newDataWidth = colOpNewCol->getCorrectRowWidth(dataType, dataWidth);
+    newDataWidth = colOpNewCol->getCorrectRowWidth(colType.colDataType, colType.colWidth);
     // MCOL-1347 CS doubles the width for ALTER TABLE..ADD COLUMN
-    if ( dataWidth < 4 && dataType == CalpontSystemCatalog::VARCHAR )
+    if ( colType.colWidth < 4 && colType.colDataType == CalpontSystemCatalog::VARCHAR )
     {
         newDataWidth >>= 1;
     }
@@ -679,7 +733,7 @@ int WriteEngineWrapper::fillColumn(const TxnID& txnid, const OID& dataOid,
     refColOp->setColParam(refCol, 0, refColOp->getCorrectRowWidth(refColDataType, refColWidth),
                           refColDataType, refColType, (FID)refColOID, refCompressionType, dbRoot);
    colOpNewCol->setColParam(newCol, 0, newDataWidth,
-                             dataType, newColType, (FID)dataOid, compressionType, dbRoot);
+                             colType.colDataType, newColType, (FID)dataOid, compressionType, dbRoot);
 
     int size = sizeof(Token);
 
@@ -690,39 +744,36 @@ int WriteEngineWrapper::fillColumn(const TxnID& txnid, const OID& dataOid,
             Token nullToken;
             memcpy(defVal.get(), &nullToken, size);
         }
-
         //Tokenization is done when we create dictionary file
     }
     else
-        convertValue(newColType, defVal.get(), defaultVal.data);
+    {
+        // WIP
+        convertValue(colType, newColType, defVal.get(), defaultVal.data);
+    }
 
     if (rc == NO_ERROR)
-        rc = colOpNewCol->fillColumn(txnid, newCol, refCol, defVal.get(), dctnry, refColOp, dictOid, dataWidth, defaultValStr, autoincrement);
-
-//   colOpNewCol->clearColumn(newCol);
-//   colOpRefCol->clearColumn(refCol);
-
-//   free(defVal);
+        rc = colOpNewCol->fillColumn(txnid, newCol, refCol, defVal.get(), dctnry, refColOp, dictOid, colType.colWidth, defaultValStr, autoincrement);
 
 // flushing files is in colOp->fillColumn()
-// if (rc == NO_ERROR)
-// rc = flushDataFiles();
 
     return rc;
 }
 
-int WriteEngineWrapper::deleteRow(const TxnID& txnid, vector<ColStructList>& colExtentsStruct, vector<void*>& colOldValueList,
+int WriteEngineWrapper::deleteRow(const TxnID& txnid, const vector<CSCTypesList>& colExtentsColType,
+                                  vector<ColStructList>& colExtentsStruct, vector<void*>& colOldValueList,
                                   vector<RIDList>& ridLists, const int32_t tableOid)
 {
     ColTuple         curTuple;
     ColStruct        curColStruct;
+    CalpontSystemCatalog::ColType cscColType;
     DctnryStruct     dctnryStruct;
     ColValueList     colValueList;
     ColTupleList     curTupleList;
     DctnryStructList dctnryStructList;
     DctnryValueList  dctnryValueList;
     ColStructList    colStructList;
-    uint64_t         emptyVal;
+    CSCTypesList     cscColTypeList;
     int              rc;
     string           tmpStr("");
     vector<DctnryStructList> dctnryExtentsStruct;
@@ -734,20 +785,24 @@ int WriteEngineWrapper::deleteRow(const TxnID& txnid, vector<ColStructList>& col
     setTransId(txnid);
     unsigned numExtents = colExtentsStruct.size();
 
+    uint128_t emptyVal;
+
     for (unsigned extent = 0; extent < numExtents; extent++)
     {
         colStructList = colExtentsStruct[extent];
+        cscColTypeList = colExtentsColType[extent];
 
         for (ColStructList::size_type i = 0; i < colStructList.size(); i++)
         {
             curTupleList.clear();
             curColStruct = colStructList[i];
-            emptyVal = m_colOp[op(curColStruct.fCompressionType)]->
-                       getEmptyRowValue(curColStruct.colDataType, curColStruct.colWidth);
+            cscColType = cscColTypeList[i];
+            Convertor::convertColType(&curColStruct);
 
+            m_colOp[op(curColStruct.fCompressionType)]->
+                getEmptyRowValue(curColStruct.colDataType, curColStruct.colWidth, (uint8_t*)&emptyVal);
             curTuple.data = emptyVal;
-            //for (RIDList::size_type j = 0; j < ridLists[extent].size(); j++)
-            //    curTupleList.push_back(curTuple);
+
             curTupleList.push_back(curTuple);
             colValueList.push_back(curTupleList);
 
@@ -772,10 +827,31 @@ int WriteEngineWrapper::deleteRow(const TxnID& txnid, vector<ColStructList>& col
 
     // unfortunately I don't have a better way to instruct without passing too many parameters
     m_opType = DELETE;
-    rc = updateColumnRec(txnid, colExtentsStruct, colValueList, colOldValueList, ridLists, dctnryExtentsStruct, dctnryValueList, tableOid);
+    rc = updateColumnRec(txnid, colExtentsColType, colExtentsStruct, colValueList, colOldValueList, ridLists, dctnryExtentsStruct, dctnryValueList, tableOid);
     m_opType = NOOP;
 
     return rc;
+}
+
+inline void allocateValArray(void*& valArray, ColTupleList::size_type totalRow,
+                             ColType colType, int colWidth)
+{
+    // MCS allocates 8 bytes even for CHARs smaller then 8 bytes.
+    switch (colType)
+    {
+        case WriteEngine::WR_VARBINARY : // treat same as char for now
+        case WriteEngine::WR_CHAR:
+        case WriteEngine::WR_BLOB:
+        case WriteEngine::WR_TEXT:
+            valArray = calloc(sizeof(char), totalRow * MAX_COLUMN_BOUNDARY);
+            break;
+        case WriteEngine::WR_TOKEN:
+            valArray = calloc(sizeof(Token), totalRow);
+            break;
+        default:
+            valArray = calloc(totalRow, colWidth);
+            break;
+    }
 }
 
 int WriteEngineWrapper::deleteBadRows(const TxnID& txnid, ColStructList& colStructs,
@@ -817,61 +893,7 @@ int WriteEngineWrapper::deleteBadRows(const TxnID& txnid, ColStructList& colStru
                     throw std::runtime_error(oss.str());
                 }
 
-                switch (colStructs[i].colType)
-                {
-                    case WriteEngine::WR_INT:
-                    case WriteEngine::WR_MEDINT:
-                        valArray = (int*) calloc(sizeof(int), 1);
-                        break;
-
-                    case WriteEngine::WR_UINT:
-                    case WriteEngine::WR_UMEDINT:
-                        valArray = (uint32_t*) calloc(sizeof(uint32_t), 1);
-                        break;
-
-                    case WriteEngine::WR_VARBINARY : // treat same as char for now
-                    case WriteEngine::WR_CHAR:
-                    case WriteEngine::WR_BLOB:
-                    case WriteEngine::WR_TEXT:
-                        valArray = (char*) calloc(sizeof(char), 1 * MAX_COLUMN_BOUNDARY);
-                        break;
-
-                    case WriteEngine::WR_FLOAT:
-                        valArray = (float*) calloc(sizeof(float), 1);
-                        break;
-
-                    case WriteEngine::WR_DOUBLE:
-                        valArray = (double*) calloc(sizeof(double), 1);
-                        break;
-
-                    case WriteEngine::WR_BYTE:
-                        valArray = (char*) calloc(sizeof(char), 1);
-                        break;
-
-                    case WriteEngine::WR_UBYTE:
-                        valArray = (uint8_t*) calloc(sizeof(uint8_t), 1);
-                        break;
-
-                    case WriteEngine::WR_SHORT:
-                        valArray = (short*) calloc(sizeof(short), 1);
-                        break;
-
-                    case WriteEngine::WR_USHORT:
-                        valArray = (uint16_t*) calloc(sizeof(uint16_t), 1);
-                        break;
-
-                    case WriteEngine::WR_LONGLONG:
-                        valArray = (long long*) calloc(sizeof(long long), 1);
-                        break;
-
-                    case WriteEngine::WR_ULONGLONG:
-                        valArray = (uint64_t*) calloc(sizeof(uint64_t), 1);
-                        break;
-
-                    case WriteEngine::WR_TOKEN:
-                        valArray = (Token*) calloc(sizeof(Token), 1);
-                        break;
-                }
+                allocateValArray(valArray, 1, colStructs[i].colType, colStructs[i].colWidth);
 
                 rc = colOp->writeRows(curCol, ridList.size(), ridList, valArray, 0, true);
 
@@ -942,6 +964,7 @@ void WriteEngineWrapper::flushVMCache() const
  ***********************************************************/
 
 int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
+        const CSCTypesList& cscColTypeList,
         ColStructList& colStructList,
         ColValueList& colValueList,
         DctnryStructList& dctnryStructList,
@@ -1031,8 +1054,8 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
     //--------------------------------------------------------------------------
     if (isFirstBatchPm)
     {
-		currentDBrootIdx = dbRootExtentTrackers[colId]->getCurrentDBRootIdx();
-		extentInfo = dbRootExtentTrackers[colId]->getDBRootExtentList();
+	currentDBrootIdx = dbRootExtentTrackers[colId]->getCurrentDBRootIdx();
+	extentInfo = dbRootExtentTrackers[colId]->getDBRootExtentList();
         dbRoot = extentInfo[currentDBrootIdx].fDbRoot;
         partitionNum = extentInfo[currentDBrootIdx].fPartition;
 
@@ -1041,7 +1064,6 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
         //----------------------------------------------------------------------
         if (bFirstExtentOnThisPM)
         {
-            //cout << "bFirstExtentOnThisPM is " << bFirstExtentOnThisPM << endl;
             std::vector<BRM::CreateStripeColumnExtentsArgIn> cols;
             BRM::CreateStripeColumnExtentsArgIn createStripeColumnExtentsArgIn;
 
@@ -1062,24 +1084,11 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
             BRM::CPInfoList_t cpinfoList;
             BRM::CPInfo cpInfo;
 
-            if (isUnsigned(colStructList[i].colDataType))
-            {
-                cpInfo.max = 0;
-                cpInfo.min = static_cast<int64_t>(numeric_limits<uint64_t>::max());
-            }
-            else
-            {
-                cpInfo.max = numeric_limits<int64_t>::min();
-                cpInfo.min = numeric_limits<int64_t>::max();
-            }
-
-            cpInfo.seqNum = -1;
-
             for ( i = 0; i < extents.size(); i++)
             {
                 colOp = m_colOp[op(colStructList[i].fCompressionType)];
                 colOp->initColumn(curCol);
-				colOp->setColParam(curCol, colId, colStructList[i].colWidth, colStructList[i].colDataType,
+                colOp->setColParam(curCol, colId, colStructList[i].colWidth, colStructList[i].colDataType,
                                    colStructList[i].colType, colStructList[i].dataOid, colStructList[i].fCompressionType,
                                    dbRoot, partitionNum, segmentNum);
                 rc = colOp->extendColumn(curCol, false, extents[i].startBlkOffset, extents[i].startLbid, extents[i].allocSize, dbRoot,
@@ -1087,6 +1096,37 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
 
                 if (rc != NO_ERROR)
                     return rc;
+
+                cpInfo.isBinaryColumn = colStructList[i].colWidth > 8;
+
+                if (!cpInfo.isBinaryColumn)
+                {
+                    if (isUnsigned(colStructList[i].colDataType))
+                    {
+                        cpInfo.max = 0;
+                        cpInfo.min = static_cast<int64_t>(numeric_limits<uint64_t>::max());
+                    }
+                    else
+                    {
+                        cpInfo.max = numeric_limits<int64_t>::min();
+                        cpInfo.min = numeric_limits<int64_t>::max();
+                    }
+                }
+                else
+                {
+                    if (isUnsigned(colStructList[i].colDataType))
+                    {
+                        cpInfo.bigMax = 0;
+                        cpInfo.bigMin = -1;
+                    }
+                    else
+                    {
+                        utils::int128Min(cpInfo.bigMax);
+                        utils::int128Max(cpInfo.bigMin);
+                    }
+                }
+
+                cpInfo.seqNum = -1;
 
                 //mark the extents to invalid
                 cpInfo.firstLbid = extents[i].startLbid;
@@ -1128,8 +1168,6 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
                 colStructList[i].fColPartition =  tmpExtentInfo[currentDBrootIdx].fPartition;
                 colStructList[i].fColSegment = tmpExtentInfo[currentDBrootIdx].fSegment;
                 colStructList[i].fColDbRoot = tmpExtentInfo[currentDBrootIdx].fDbRoot;
-                //cout << "Load from dbrootExtenttracker oid:dbroot:part:seg = " <<colStructList[i].dataOid<<":"
-                //<<colStructList[i].fColDbRoot<<":"<<colStructList[i].fColPartition<<":"<<colStructList[i].fColSegment<<endl;
                 dctnryStructList[i].fColPartition = tmpExtentInfo[currentDBrootIdx].fPartition;
                 dctnryStructList[i].fColSegment = tmpExtentInfo[currentDBrootIdx].fSegment;
                 dctnryStructList[i].fColDbRoot = tmpExtentInfo[currentDBrootIdx].fDbRoot;
@@ -1165,7 +1203,6 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
                 {
                     aExt.hwm = extents[i].startBlkOffset;
                     aExt.isNewExt = true;
-                    //cout << "adding a ext to metadata" << endl;
                 }
                 else
                 {
@@ -1173,12 +1210,10 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
                     tmpExtentInfo = dbRootExtentTrackers[i]->getDBRootExtentList();
                     aExt.isNewExt = false;
                     aExt.hwm = tmpExtentInfo[currentDBrootIdx].fLocalHwm;
-                    //cout << "oid " << colStructList[i].dataOid << " gets hwm " << aExt.hwm << endl;
                 }
 
                 aExt.current = true;
                 aColExtsInfo.push_back(aExt);
-                //cout << "get from extentinfo oid:hwm = " << colStructList[i].dataOid << ":" << aExt.hwm << endl;
             }
 
             tableMetaData->setColExtsInfo(colStructList[i].dataOid, aColExtsInfo);
@@ -1253,7 +1288,7 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
     //--------------------------------------------------------------------------
     // allocate row id(s)
     //--------------------------------------------------------------------------
-   curColStruct = colStructList[colId];
+    curColStruct = colStructList[colId];
     colOp = m_colOp[op(curColStruct.fCompressionType)];
 
     colOp->initColumn(curCol);
@@ -1264,12 +1299,12 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
     vector<ExtentInfo> fileInfo;
     dbRoot = curColStruct.fColDbRoot;
     //use the first column to calculate row id
-   ColExtsInfo aColExtsInfo = tableMetaData->getColExtsInfo(colStructList[colId].dataOid);
+    ColExtsInfo aColExtsInfo = tableMetaData->getColExtsInfo(colStructList[colId].dataOid);
     ColExtsInfo::iterator it = aColExtsInfo.begin();
 
     while (it != aColExtsInfo.end())
     {
-		if ((it->dbRoot == colStructList[colId].fColDbRoot) && 
+        if ((it->dbRoot == colStructList[colId].fColDbRoot) && 
             (it->partNum == colStructList[colId].fColPartition) && 
             (it->segNum == colStructList[colId].fColSegment) && it->current )
         {
@@ -1281,7 +1316,6 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
     if (it != aColExtsInfo.end())
     {
         hwm = it->hwm;
-		//cout << "Got from colextinfo hwm for oid " << colStructList[colId].dataOid << " is " << hwm << " and seg is " << colStructList[0].fColSegment << endl;
     }
 
     oldHwm = hwm; //Save this info for rollback
@@ -1316,8 +1350,6 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
                            curCol, (uint64_t)totalRow, rowIdArray, hwm, newExtent, rowsLeft, newHwm, newFile,
                            newColStructList, newDctnryStructList, dbRootExtentTrackers, insertSelect, true, tableOid, isFirstBatchPm);
 
-    //cout << "after allocrowid, total row = " <<totalRow << " newExtent is " << newExtent << endl; 
-    //cout << "column oid " << curColStruct.dataOid << " has hwm:newHwm = " << hwm <<":" << newHwm<< endl;
     if (rc != NO_ERROR) //Clean up is already done
         return rc;
 
@@ -1335,7 +1367,7 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
             ((totalRow - rowsLeft) > 0) &&
             (rowIdArray[totalRow - rowsLeft - 1] >= (RID)INITIAL_EXTENT_ROWS_TO_DISK))
     {
-       for (unsigned k=0; k<colStructList.size(); k++)
+        for (unsigned k=0; k<colStructList.size(); k++)
         {
            // Skip the selected column
            if (k == colId)
@@ -1399,7 +1431,7 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
                 return rc;
             }
 
-            for (uint32_t     rows = 0; rows < (totalRow - rowsLeft); rows++)
+            for (uint32_t rows = 0; rows < (totalRow - rowsLeft); rows++)
             {
                 if (dctStr_iter->length() == 0)
                 {
@@ -1454,7 +1486,7 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
                 if (rc != NO_ERROR)
                     return rc;
 
-                for (uint32_t     rows = 0; rows < rowsLeft; rows++)
+                for (uint32_t rows = 0; rows < rowsLeft; rows++)
                 {
                     if (dctStr_iter->length() == 0)
                     {
@@ -1521,13 +1553,11 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
         lastRidNew = rowIdArray[totalRow - 1];
     }
 
-    //cout << "rowid allocated is "  << lastRid << endl;
     //if a new extent is created, all the columns in this table should have their own new extent
     //First column already processed
 
     //@Bug 1701. Close the file (if uncompressed)
     m_colOp[op(curCol.compressionType)]->clearColumn(curCol);
-    //cout << "Saving hwm info for new ext batch" << endl;
     //Update hwm to set them in the end
     bool succFlag = false;
     unsigned colWidth = 0;
@@ -1557,7 +1587,6 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
         colWidth = colStructList[i].colWidth;
         succFlag = colOp->calculateRowId(lastRid, BYTE_PER_BLOCK / colWidth, colWidth, curFbo, curBio);
 
-        //cout << "insertcolumnrec   oid:rid:fbo:oldhwm = " << colStructList[i].dataOid << ":" << lastRid << ":" << curFbo << ":" << oldHwm << endl;
         if (succFlag)
         {
             if ((HWM)curFbo >= oldHwm)
@@ -1571,8 +1600,6 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
                 it->current = false;
             }
 
-            //cout << "updated old ext info for oid " << colStructList[i].dataOid << " dbroot:part:seg:hwm:current = "
-            //<< it->dbRoot<<":"<<it->partNum<<":"<<it->segNum<<":"<<it->hwm<<":"<< it->current<< " and newExtent is " << newExtent << endl;
         }
         else
             return ERR_INVALID_PARAM;
@@ -1628,7 +1655,7 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
         colNewValueList.push_back(newColTupleList);
         newColTupleList.clear();
 
-        //upate the oldvalue list for the old extent
+        //update the oldvalue list for the old extent
         for (uint64_t j = 0; j < (totalRow - rowsLeft); j++)
         {
             firstPartTupleList.push_back(colTupleList[j]);
@@ -1643,7 +1670,6 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
 #ifdef PROFILE
     timer.start("writeColumnRec");
 #endif
-//cout << "Writing column record" << endl;
 
     if (rc == NO_ERROR)
     {
@@ -1686,7 +1712,7 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
         //----------------------------------------------------------------------
         // Write row(s) to database file(s)
         //----------------------------------------------------------------------
-        rc = writeColumnRec(txnid, colStructList, colOldValueList, rowIdArray, newColStructList, colNewValueList, tableOid, useTmpSuffix); // @bug 5572 HDFS tmp file
+        rc = writeColumnRec(txnid, cscColTypeList, colStructList, colOldValueList, rowIdArray, newColStructList, colNewValueList, tableOid, useTmpSuffix); // @bug 5572 HDFS tmp file
     }
 
     return rc;
@@ -1804,19 +1830,6 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
             BRM::CPInfoList_t cpinfoList;
             BRM::CPInfo cpInfo;
 
-            if (isUnsigned(colStructList[i].colDataType))
-            {
-                cpInfo.max = 0;
-                cpInfo.min = static_cast<int64_t>(numeric_limits<uint64_t>::max());
-            }
-            else
-            {
-                cpInfo.max = numeric_limits<int64_t>::min();
-                cpInfo.min = numeric_limits<int64_t>::max();
-            }
-
-            cpInfo.seqNum = -1;
-
             for ( i = 0; i < extents.size(); i++)
             {
                 colOp = m_colOp[op(colStructList[i].fCompressionType)];
@@ -1829,6 +1842,37 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
 
                 if (rc != NO_ERROR)
                     return rc;
+
+                cpInfo.isBinaryColumn = colStructList[i].colWidth > 8;
+
+                if (!cpInfo.isBinaryColumn)
+                {
+                    if (isUnsigned(colStructList[i].colDataType))
+                    {
+                        cpInfo.max = 0;
+                        cpInfo.min = static_cast<int64_t>(numeric_limits<uint64_t>::max());
+                    }
+                    else
+                    {
+                        cpInfo.max = numeric_limits<int64_t>::min();
+                        cpInfo.min = numeric_limits<int64_t>::max();
+                    }
+                }
+                else
+                {
+                    if (isUnsigned(colStructList[i].colDataType))
+                    {
+                        cpInfo.bigMax = 0;
+                        cpInfo.bigMin = -1;
+                    }
+                    else
+                    {
+                        utils::int128Min(cpInfo.bigMax);
+                        utils::int128Max(cpInfo.bigMin);
+                    }
+                }
+
+                cpInfo.seqNum = -1;
 
                 //mark the extents to invalid
                 cpInfo.firstLbid = extents[i].startLbid;
@@ -2452,6 +2496,7 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
 
 
 int WriteEngineWrapper::insertColumnRec_SYS(const TxnID& txnid,
+        const CSCTypesList& cscColTypeList,
         ColStructList& colStructList,
         ColValueList& colValueList,
         DctnryStructList& dctnryStructList,
@@ -3033,11 +3078,11 @@ int WriteEngineWrapper::insertColumnRec_SYS(const TxnID& txnid,
 
         if (newExtent)
         {
-            rc = writeColumnRec(txnid, colStructList, colOldValueList, rowIdArray, newColStructList, colNewValueList, tableOid, false); // @bug 5572 HDFS tmp file
+            rc = writeColumnRec(txnid, cscColTypeList, colStructList, colOldValueList, rowIdArray, newColStructList, colNewValueList, tableOid, false); // @bug 5572 HDFS tmp file
         }
         else
         {
-            rc = writeColumnRec(txnid, colStructList, colValueList, rowIdArray, newColStructList, colNewValueList, tableOid, false); // @bug 5572 HDFS tmp file
+            rc = writeColumnRec(txnid, cscColTypeList, colStructList, colValueList, rowIdArray, newColStructList, colNewValueList, tableOid, false); // @bug 5572 HDFS tmp file
         }
     }
 
@@ -3114,6 +3159,7 @@ int WriteEngineWrapper::insertColumnRec_SYS(const TxnID& txnid,
 }
 
 int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
+        const CSCTypesList& cscColTypeList,
         ColStructList& colStructList,
         ColValueList& colValueList,
         DctnryStructList& dctnryStructList,
@@ -3151,8 +3197,6 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
         printInputValue(colStructList, colValueList, ridList);
     }
 
-    // end
-
     //Convert data type and column width to write engine specific
     for (i = 0; i < colStructList.size(); i++)
         Convertor::convertColType(&colStructList[i]);
@@ -3180,7 +3224,7 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
     //--------------------------------------------------------------------------
     // allocate row id(s)
     //--------------------------------------------------------------------------
-	curColStruct = colStructList[colId];
+    curColStruct = colStructList[colId];
     colOp = m_colOp[op(curColStruct.fCompressionType)];
 
     colOp->initColumn(curCol);
@@ -3217,7 +3261,7 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
 
     oldHwm = hwm; //Save this info for rollback
     //need to pass real dbRoot, partition, and segment to setColParam
-	colOp->setColParam(curCol, colId, curColStruct.colWidth, curColStruct.colDataType,
+    colOp->setColParam(curCol, colId, curColStruct.colWidth, curColStruct.colDataType,
                        curColStruct.colType, curColStruct.dataOid, curColStruct.fCompressionType,
                        dbRoot, partitionNum, segmentNum);
 
@@ -3234,7 +3278,8 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
     }
 
     bool newFile;
-
+    // WIP
+    cout << "Datafile   " << curCol.dataFile.fSegFileName << endl;
 #ifdef PROFILE
     timer.start("allocRowId");
 #endif
@@ -3334,13 +3379,13 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
     // Expand initial abbreviated extent if any RID in 1st extent is > 256K.
     // if totalRow == rowsLeft, then not adding rows to 1st extent, so skip it.
     //--------------------------------------------------------------------------
-// DMC-SHARED_NOTHING_NOTE: Is it safe to assume only part0 seg0 is abbreviated?
-	if ((colStructList[colId].fColPartition == 0) &&
-		(colStructList[colId].fColSegment   == 0) &&
-            ((totalRow - rowsLeft) > 0) &&
-            (rowIdArray[totalRow - rowsLeft - 1] >= (RID)INITIAL_EXTENT_ROWS_TO_DISK))
+    // DMC-SHARED_NOTHING_NOTE: Is it safe to assume only part0 seg0 is abbreviated?
+    if ((colStructList[colId].fColPartition == 0) &&
+	(colStructList[colId].fColSegment   == 0) &&
+        ((totalRow - rowsLeft) > 0) &&
+        (rowIdArray[totalRow - rowsLeft - 1] >= (RID)INITIAL_EXTENT_ROWS_TO_DISK))
     {
-		for (unsigned k=0; k<colStructList.size(); k++)
+	for (unsigned k=0; k<colStructList.size(); k++)
         {
             if (k == colId)
                continue;
@@ -3565,7 +3610,6 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
         lastRidNew = rowIdArray[totalRow - 1];
     }
 
-    //cout << "rowid allocated is "  << lastRid << endl;
     //if a new extent is created, all the columns in this table should
     //have their own new extent
 
@@ -3596,9 +3640,6 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
             succFlag = colOp->calculateRowId(lastRid,
                                              BYTE_PER_BLOCK / colWidth, colWidth, curFbo, curBio);
 
-            //cout << "insertcolumnrec   oid:rid:fbo:hwm = " <<
-            //colStructList[i].dataOid << ":" << lastRid << ":" <<
-            //curFbo << ":" << hwm << endl;
             if (succFlag)
             {
                 if ((HWM)curFbo > oldHwm)
@@ -3661,33 +3702,13 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
     //--------------------------------------------------------------------------
     //Mark extents invalid
     //--------------------------------------------------------------------------
+    // WIP
+    // Set min/max in dmlprocprocessor if aplicable
     vector<BRM::LBID_t> lbids;
     vector<CalpontSystemCatalog::ColDataType> colDataTypes;
     bool successFlag = true;
     unsigned width = 0;
-    //BRM::LBID_t lbid;
     int curFbo = 0, curBio, lastFbo = -1;
-    /*	if (totalRow-rowsLeft > 0)
-    	{
-    		for (unsigned i = 0; i < colStructList.size(); i++)
-    		{
-    			colOp = m_colOp[op(colStructList[i].fCompressionType)];
-    			width = colStructList[i].colWidth;
-    			successFlag = colOp->calculateRowId(lastRid ,
-    				BYTE_PER_BLOCK/width, width, curFbo, curBio);
-    			if (successFlag) {
-    				if (curFbo != lastFbo) {
-    					RETURN_ON_ERROR(BRMWrapper::getInstance()->getBrmInfo(
-    						colStructList[i].dataOid,
-    						colStructList[i].fColPartition,
-    						colStructList[i].fColSegment, curFbo, lbid));
-    					lbids.push_back((BRM::LBID_t)lbid);
-    					colDataTypes.push_back(colStructList[i].colDataType);
-    				}
-    			}
-    		}
-    	}
-    */
     lastRid = rowIdArray[totalRow - 1];
 
     for (unsigned i = 0; i < colStructList.size(); i++)
@@ -3711,7 +3732,6 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
         }
     }
 
-    //cout << "lbids size = " << lbids.size()<< endl;
     if (lbids.size() > 0)
         rc = BRMWrapper::getInstance()->markExtentsInvalid(lbids, colDataTypes);
 
@@ -3726,13 +3746,13 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
     {
         if (newExtent)
         {
-            rc = writeColumnRec(txnid, colStructList, colOldValueList,
+            rc = writeColumnRec(txnid, cscColTypeList, colStructList, colOldValueList,
                                 rowIdArray, newColStructList, colNewValueList, tableOid,
                                 false); // @bug 5572 HDFS tmp file
         }
         else
         {
-            rc = writeColumnRec(txnid, colStructList, colValueList,
+            rc = writeColumnRec(txnid, cscColTypeList, colStructList, colValueList,
                                 rowIdArray, newColStructList, colNewValueList, tableOid,
                                 true); // @bug 5572 HDFS tmp file
         }
@@ -3741,18 +3761,12 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
 #ifdef PROFILE
     timer.stop("writeColumnRec");
 #endif
-//  for (ColTupleList::size_type  i = 0; i < totalRow; i++)
-//      ridList.push_back((RID) rowIdArray[i]);
-
-//  if (rc == NO_ERROR)
-//  rc = flushDataFiles(NO_ERROR);
 
     //--------------------------------------------------------------------------
     // Update BRM
     //--------------------------------------------------------------------------
     if ( !newExtent )
     {
-        //flushVMCache();
         bool succFlag = false;
         unsigned colWidth = 0;
         int  extState;
@@ -3762,7 +3776,6 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
 
         for (unsigned i = 0; i < totalColumns; i++)
         {
-            //colOp = m_colOp[op(colStructList[i].fCompressionType)];
             //Set all columns hwm together
             BulkSetHWMArg aHwmEntry;
             RETURN_ON_ERROR(BRMWrapper::getInstance()->getLastHWM_DBroot(
@@ -3813,7 +3826,6 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
             RETURN_ON_ERROR(BRMWrapper::getInstance()->bulkSetHWMAndCP(
                                 hwmVecOldext, mergeCPDataArgs));
 
-        //flushVMCache();
 #ifdef PROFILE
         timer.stop("flushVMCache");
 #endif
@@ -3822,33 +3834,6 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
 #ifdef PROFILE
     timer.finish();
 #endif
-    //flush PrimProc FD cache moved to we_dmlcommandproc.cpp
-    /*	ColsExtsInfoMap colsExtsInfoMap = aTableMetaData->getColsExtsInfoMap();
-    	ColsExtsInfoMap::iterator it = colsExtsInfoMap.begin();
-    	ColExtsInfo::iterator aIt;
-    	std::vector<BRM::FileInfo> files;
-    	BRM::FileInfo aFile;
-    	while (it != colsExtsInfoMap.end())
-    	{
-    		aIt = (it->second).begin();
-    		aFile.oid = it->first;
-    		//cout << "OID:" << aArg.oid;
-    		while (aIt != (it->second).end())
-    		{
-    			aFile.partitionNum = aIt->partNum;
-    			aFile.dbRoot =aIt->dbRoot;
-    			aFile.segmentNum = aIt->segNum;
-    			aFile.compType = aIt->compType;
-    			files.push_back(aFile);
-    			//cout <<"Added to files oid:dbroot:part:seg:compType = " << aFile.oid<<":"<<aFile.dbRoot<<":"<<aFile.partitionNum<<":"<<aFile.segmentNum
-    			//<<":"<<aFile.compType <<endl;
-    			aIt++;
-    		}
-    		it++;
-    	}
-    	if ((idbdatafile::IDBPolicy::useHdfs()) && (files.size() > 0))
-    		cacheutils::purgePrimProcFdCache(files, Config::getLocalModuleID());
-    	TableMetaData::removeTableMetaData(tableOid);	*/
     return rc;
 }
 
@@ -3909,11 +3894,13 @@ void WriteEngineWrapper::printInputValue(const ColStructList& colStructList,
                     curStr = boost::lexical_cast<string>(boost::any_cast<float>(curTuple.data));
                 else if (curTuple.data.type() == typeid(long long))
                     curStr = boost::lexical_cast<string>(boost::any_cast<long long>(curTuple.data));
+                else if (curTuple.data.type() == typeid(int128_t))
+                {
+                    datatypes::TSInt128 val(boost::any_cast<int128_t>(curTuple.data));
+                    curStr = val.toString();
+                }
                 else if (curTuple.data.type() == typeid(double))
                     curStr = boost::lexical_cast<string>(boost::any_cast<double>(curTuple.data));
-//               else
-//               if (curTuple.data.type() == typeid(bool))
-//                  curStr = boost::lexical_cast<string>(boost::any_cast<bool>(curTuple.data));
                 else if (curTuple.data.type() == typeid(short))
                     curStr = boost::lexical_cast<string>(boost::any_cast<short>(curTuple.data));
                 else if (curTuple.data.type() == typeid(char))
@@ -4177,6 +4164,7 @@ void WriteEngineWrapper::writeVBEnd(const TxnID& txnid, std::vector<BRM::LBIDRan
 }
 
 int WriteEngineWrapper::updateColumnRec(const TxnID& txnid,
+                                        const vector<CSCTypesList>& colExtentsColType,
                                         vector<ColStructList>& colExtentsStruct,
                                         ColValueList& colValueList,
                                         vector<void*>& colOldValueList,
@@ -4186,40 +4174,20 @@ int WriteEngineWrapper::updateColumnRec(const TxnID& txnid,
                                         const int32_t tableOid)
 {
     int            rc = 0;
-    //RID*           rowIdArray = NULL;
-    //RIDList::size_type i;
     unsigned numExtents = colExtentsStruct.size();
-    // ColValueList tmpColValueList;
-    RIDList::const_iterator ridsIter;
     ColStructList colStructList;
     DctnryStructList dctnryStructList;
+    WriteEngine::CSCTypesList cscColTypeList;
     ColumnOp* colOp = NULL;
 
     for (unsigned extent = 0; extent < numExtents; extent++)
     {
-        ridsIter = ridLists[extent].begin();
-
-        //rowIdArray = (RID*)calloc(sizeof(RID), ridLists[extent].size());
-
         colStructList = colExtentsStruct[extent];
         dctnryStructList = dctnryExtentsStruct[extent];
+        cscColTypeList = colExtentsColType[extent];
 
         if (m_opType != DELETE)
         {
-
-            /*            ColTuple colTuple;
-                     ColTupleList colTupleList;
-                     for (i=0; i < colValueList.size(); i++)
-                     {
-                         colTupleList = colValueList[i];
-                         colTuple = colTupleList[0];
-                         for (unsigned i = 1; i < ridLists[extent].size(); i++)
-                         {
-                             colTupleList.push_back(colTuple);
-                         }
-                         tmpColValueList.push_back(colTupleList);
-                     }
-            */
             //Tokenize data if needed
             vector<Token> tokenList;
 
@@ -4232,7 +4200,6 @@ int WriteEngineWrapper::updateColumnRec(const TxnID& txnid,
                 {
                     // only need to tokenize once
                     dctCol_iter = dctnryValueList[i].begin();
-                    //col_iter = colValueList[i].begin();
                     Token token;
 
                     if (!dctCol_iter->isNull)
@@ -4245,14 +4212,7 @@ int WriteEngineWrapper::updateColumnRec(const TxnID& txnid,
 //timer.stop("tokenize");
 #endif
                     }
-                    else
-                    {
-                        //if (dctnryStructList[i].dctnryOid == 2001)
-                        //	std::cout << " got null token for string " << dctCol_iter->sigValue <<std::endl;
-                    }
 
-                    //if (dctnryStructList[i].dctnryOid == 2001)
-                    //std::cout << " got token for string " << dctCol_iter->sigValue << " op:fbo = " << token.op <<":"<<token.fbo << std::endl;
                     tokenList.push_back(token);
                 }
             }
@@ -4278,21 +4238,12 @@ int WriteEngineWrapper::updateColumnRec(const TxnID& txnid,
         }
 
         RIDList::iterator rid_iter;
-        /*    i = 0;
-              while (rid_iter != ridLists[extent].end())
-              {
-                 rowIdArray[i] = *rid_iter;
-                 rid_iter++;
-                 i++;
-              }
-        */
         //Mark extents invalid
-        //if (colStructList[0].dataOid < 3000) {
         vector<BRM::LBID_t> lbids;
         vector<CalpontSystemCatalog::ColDataType> colDataTypes;
         bool successFlag = true;
         unsigned width = 0;
-        int      curFbo = 0, curBio, lastFbo = -1;
+        int curFbo = 0, curBio, lastFbo = -1;
         rid_iter = ridLists[extent].begin();
         RID aRid = *rid_iter;
 
@@ -4319,23 +4270,17 @@ int WriteEngineWrapper::updateColumnRec(const TxnID& txnid,
             }
         }
 
-        //cout << "lbids size = " << lbids.size()<< endl;
 //#ifdef PROFILE
 //timer.start("markExtentsInvalid");
 //#endif
         if (lbids.size() > 0)
             rc = BRMWrapper::getInstance()->markExtentsInvalid(lbids, colDataTypes);
 
-        //}
-
-        if ( m_opType != DELETE)
+        if (m_opType != DELETE)
             m_opType = UPDATE;
 
-        rc = writeColumnRec(txnid, colStructList, colValueList, colOldValueList,
+        rc = writeColumnRec(txnid, cscColTypeList, colStructList, colValueList, colOldValueList,
                             ridLists[extent], tableOid, true, ridLists[extent].size());
-
-//    if (rowIdArray)
-//       free(rowIdArray);
 
         m_opType = NOOP;
 
@@ -4347,21 +4292,18 @@ int WriteEngineWrapper::updateColumnRec(const TxnID& txnid,
 }
 
 int WriteEngineWrapper::updateColumnRecs(const TxnID& txnid,
+        const CSCTypesList& cscColTypeList,
         vector<ColStruct>& colExtentsStruct,
         ColValueList& colValueList,
         const RIDList& ridLists,
         const int32_t tableOid)
 {
     //Mark extents invalid
-    //int rc = 0;
-    //if (colExtentsStruct[0].dataOid < 3000)
-    //{
     vector<BRM::LBID_t> lbids;
     vector<CalpontSystemCatalog::ColDataType> colDataTypes;
     ColumnOp* colOp = NULL;
     bool successFlag = true;
     unsigned width = 0;
-    \
     int curFbo = 0, curBio, lastFbo = -1;
     RID aRid = ridLists[0];
     int rc = 0;
@@ -4391,20 +4333,19 @@ int WriteEngineWrapper::updateColumnRecs(const TxnID& txnid,
 
     if (lbids.size() > 0)
     {
-//        cout << "BRMWrapper::getInstance()->markExtentsInvalid(lbids); " << lbids.size() << " lbids" << endl;
         rc = BRMWrapper::getInstance()->markExtentsInvalid(lbids, colDataTypes);
     }
 
-    //}
-    if ( m_opType != DELETE)
+    if (m_opType != DELETE)
         m_opType = UPDATE;
 
-    rc = writeColumnRecords (txnid, colExtentsStruct, colValueList, ridLists, tableOid);
+    rc = writeColumnRecords(txnid, cscColTypeList, colExtentsStruct, colValueList, ridLists, tableOid);
     m_opType = NOOP;
     return rc;
 }
 
 int WriteEngineWrapper::writeColumnRecords(const TxnID& txnid,
+        const CSCTypesList& cscColTypeList,
         vector<ColStruct>& colStructList,
         ColValueList& colValueList,
         const RIDList& ridLists, const int32_t tableOid, bool versioning)
@@ -4414,6 +4355,7 @@ int WriteEngineWrapper::writeColumnRecords(const TxnID& txnid,
     void*          valArray = NULL;
     Column         curCol;
     ColStruct      curColStruct;
+    CalpontSystemCatalog::ColType curColType;
     ColTupleList   curTupleList;
     ColStructList::size_type  totalColumn;
     ColStructList::size_type  i;
@@ -4428,6 +4370,7 @@ int WriteEngineWrapper::writeColumnRecords(const TxnID& txnid,
     {
         valArray = NULL;
         curColStruct = colStructList[i];
+        curColType = cscColTypeList[i];
         curTupleList = colValueList[i];
         ColumnOp* colOp = m_colOp[op(curColStruct.fCompressionType)];
 
@@ -4489,68 +4432,14 @@ int WriteEngineWrapper::writeColumnRecords(const TxnID& txnid,
             break;
         }
 
-        switch (curColStruct.colType)
-        {
-            case WriteEngine::WR_INT:
-            case WriteEngine::WR_MEDINT:
-                valArray = (int*) calloc(sizeof(int), totalRow);
-                break;
-
-            case WriteEngine::WR_UINT:
-            case WriteEngine::WR_UMEDINT:
-                valArray = (uint32_t*) calloc(sizeof(uint32_t), totalRow);
-                break;
-
-            case WriteEngine::WR_VARBINARY : // treat same as char for now
-            case WriteEngine::WR_CHAR:
-            case WriteEngine::WR_BLOB:
-            case WriteEngine::WR_TEXT:
-                valArray = (char*) calloc(sizeof(char), totalRow * MAX_COLUMN_BOUNDARY);
-                break;
-
-            case WriteEngine::WR_FLOAT:
-                valArray = (float*) calloc(sizeof(float), totalRow);
-                break;
-
-            case WriteEngine::WR_DOUBLE:
-                valArray = (double*) calloc(sizeof(double), totalRow);
-                break;
-
-            case WriteEngine::WR_BYTE:
-                valArray = (char*) calloc(sizeof(char), totalRow);
-                break;
-
-            case WriteEngine::WR_UBYTE:
-                valArray = (uint8_t*) calloc(sizeof(uint8_t), totalRow);
-                break;
-
-            case WriteEngine::WR_SHORT:
-                valArray = (short*) calloc(sizeof(short), totalRow);
-                break;
-
-            case WriteEngine::WR_USHORT:
-                valArray = (uint16_t*) calloc(sizeof(uint16_t), totalRow);
-                break;
-
-            case WriteEngine::WR_LONGLONG:
-                valArray = (long long*) calloc(sizeof(long long), totalRow);
-                break;
-
-            case WriteEngine::WR_ULONGLONG:
-                valArray = (uint64_t*) calloc(sizeof(uint64_t), totalRow);
-                break;
-
-            case WriteEngine::WR_TOKEN:
-                valArray = (Token*) calloc(sizeof(Token), totalRow);
-                break;
-        }
+        allocateValArray(valArray, totalRow, curColStruct.colType, curColStruct.colWidth);
 
         // convert values to valArray
         bExcp = false;
 
         try
         {
-            convertValArray(totalRow, curColStruct.colType, curTupleList, valArray);
+            convertValArray(totalRow, cscColTypeList[i], curColStruct.colType, curTupleList, valArray);
         }
         catch (...)
         {
@@ -4606,6 +4495,7 @@ int WriteEngineWrapper::writeColumnRecords(const TxnID& txnid,
  *    Write values to a column
  * PARAMETERS:
  *    tableOid - table object id
+ *    cscColTypesList - CSC ColType list
  *    colStructList - column struct list
  *    colValueList - column value list
  *    colNewStructList - the new extent struct list
@@ -4617,6 +4507,7 @@ int WriteEngineWrapper::writeColumnRecords(const TxnID& txnid,
  *    others if something wrong in inserting the value
  ***********************************************************/
 int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
+                                       const CSCTypesList& cscColTypeList,
                                        const ColStructList& colStructList,
                                        ColValueList& colValueList,
                                        RID* rowIdArray,
@@ -4643,16 +4534,11 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
     StopWatch timer;
 #endif
 
+    totalRow1 = colValueList[0].size();
+    totalRow2 = 0;
+
     if (newColValueList.size() > 0)
-    {
-        totalRow1 = colValueList[0].size();
         totalRow2 = newColValueList[0].size();
-    }
-    else
-    {
-        totalRow1 = colValueList[0].size();
-        totalRow2 = 0;
-    }
 
     TableMetaData* aTbaleMetaData = TableMetaData::makeTableMetaData(tableOid);
 
@@ -4725,73 +4611,23 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
                     }
                 }
 
-                //totalRow1 -= totalRow2;
+                // WIP We can allocate based on column size and not colType
                 // have to init the size here
-                // nullArray = (bool*) malloc(sizeof(bool) * totalRow);
-                switch (colStructList[i].colType)
-                {
-                    case WriteEngine::WR_INT:
-                    case WriteEngine::WR_MEDINT:
-                        valArray = (int*) calloc(sizeof(int), totalRow1);
-                        break;
-
-                    case WriteEngine::WR_UINT:
-                    case WriteEngine::WR_UMEDINT:
-                        valArray = (uint32_t*) calloc(sizeof(uint32_t), totalRow1);
-                        break;
-
-                    case WriteEngine::WR_VARBINARY : // treat same as char for now
-                    case WriteEngine::WR_CHAR:
-                    case WriteEngine::WR_BLOB:
-                    case WriteEngine::WR_TEXT:
-                        valArray = (char*) calloc(sizeof(char), totalRow1 * MAX_COLUMN_BOUNDARY);
-                        break;
-
-                    case WriteEngine::WR_FLOAT:
-                        valArray = (float*) calloc(sizeof(float), totalRow1);
-                        break;
-
-                    case WriteEngine::WR_DOUBLE:
-                        valArray = (double*) calloc(sizeof(double), totalRow1);
-                        break;
-
-                    case WriteEngine::WR_BYTE:
-                        valArray = (char*) calloc(sizeof(char), totalRow1);
-                        break;
-
-                    case WriteEngine::WR_UBYTE:
-                        valArray = (uint8_t*) calloc(sizeof(uint8_t), totalRow1);
-                        break;
-
-                    case WriteEngine::WR_SHORT:
-                        valArray = (short*) calloc(sizeof(short), totalRow1);
-                        break;
-
-                    case WriteEngine::WR_USHORT:
-                        valArray = (uint16_t*) calloc(sizeof(uint16_t), totalRow1);
-                        break;
-
-                    case WriteEngine::WR_LONGLONG:
-                        valArray = (long long*) calloc(sizeof(long long), totalRow1);
-                        break;
-
-                    case WriteEngine::WR_ULONGLONG:
-                        valArray = (uint64_t*) calloc(sizeof(uint64_t), totalRow1);
-                        break;
-
-                    case WriteEngine::WR_TOKEN:
-                        valArray = (Token*) calloc(sizeof(Token), totalRow1);
-                        break;
-                }
+                allocateValArray(valArray, totalRow1, colStructList[i].colType, colStructList[i].colWidth);
 
                 // convert values to valArray
+                // WIP Is m_opType ever set to DELETE?
                 if (m_opType != DELETE)
                 {
                     bExcp = false;
 
                     try
                     {
-                        convertValArray(totalRow1, colStructList[i].colType, colValueList[i], valArray);
+                        // WIP We convert values twice!?
+                        // dmlcommandproc converts strings to boost::any and this converts
+                        // into actual type value masked by *void
+                        // It is not clear why we need to convert to boost::any b/c we can convert from the original string here
+                        convertValArray(totalRow1, cscColTypeList[i], colStructList[i].colType, colValueList[i], valArray);
                     }
                     catch (...)
                     {
@@ -4900,64 +4736,7 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
                 }
             }
 
-            //totalRow1 -= totalRow2;
-            // have to init the size here
-//       nullArray = (bool*) malloc(sizeof(bool) * totalRow);
-            switch (newColStructList[i].colType)
-            {
-                case WriteEngine::WR_INT:
-                case WriteEngine::WR_MEDINT:
-                    valArray = (int*) calloc(sizeof(int), totalRow2);
-                    break;
-
-                case WriteEngine::WR_UINT:
-                case WriteEngine::WR_UMEDINT:
-                    valArray = (uint32_t*) calloc(sizeof(uint32_t), totalRow2);
-                    break;
-
-                case WriteEngine::WR_VARBINARY : // treat same as char for now
-                case WriteEngine::WR_CHAR:
-                case WriteEngine::WR_BLOB:
-                case WriteEngine::WR_TEXT:
-                    valArray = (char*) calloc(sizeof(char), totalRow2 * MAX_COLUMN_BOUNDARY);
-                    break;
-
-                case WriteEngine::WR_FLOAT:
-                    valArray = (float*) calloc(sizeof(float), totalRow2);
-                    break;
-
-                case WriteEngine::WR_DOUBLE:
-                    valArray = (double*) calloc(sizeof(double), totalRow2);
-                    break;
-
-                case WriteEngine::WR_BYTE:
-                    valArray = (char*) calloc(sizeof(char), totalRow2);
-                    break;
-
-                case WriteEngine::WR_UBYTE:
-                    valArray = (uint8_t*) calloc(sizeof(uint8_t), totalRow2);
-                    break;
-
-                case WriteEngine::WR_SHORT:
-                    valArray = (short*) calloc(sizeof(short), totalRow2);
-                    break;
-
-                case WriteEngine::WR_USHORT:
-                    valArray = (uint16_t*) calloc(sizeof(uint16_t), totalRow2);
-                    break;
-
-                case WriteEngine::WR_LONGLONG:
-                    valArray = (long long*) calloc(sizeof(long long), totalRow2);
-                    break;
-
-                case WriteEngine::WR_ULONGLONG:
-                    valArray = (uint64_t*) calloc(sizeof(uint64_t), totalRow2);
-                    break;
-
-                case WriteEngine::WR_TOKEN:
-                    valArray = (Token*) calloc(sizeof(Token), totalRow2);
-                    break;
-            }
+            allocateValArray(valArray, totalRow2, newColStructList[i].colType, newColStructList[i].colWidth);
 
             // convert values to valArray
             if (m_opType != DELETE)
@@ -4966,7 +4745,7 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
 
                 try
                 {
-                    convertValArray(totalRow2, newColStructList[i].colType, newColValueList[i], valArray);
+                    convertValArray(totalRow2, cscColTypeList[i], newColStructList[i].colType, newColValueList[i], valArray);
                 }
                 catch (...)
                 {
@@ -5074,63 +4853,7 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
                 }
             }
 
-            // have to init the size here
-//       nullArray = (bool*) malloc(sizeof(bool) * totalRow);
-            switch (colStructList[i].colType)
-            {
-                case WriteEngine::WR_INT:
-                case WriteEngine::WR_MEDINT:
-                    valArray = (int*) calloc(sizeof(int), totalRow1);
-                    break;
-
-                case WriteEngine::WR_UINT:
-                case WriteEngine::WR_UMEDINT:
-                    valArray = (uint32_t*) calloc(sizeof(uint32_t), totalRow1);
-                    break;
-
-                case WriteEngine::WR_VARBINARY : // treat same as char for now
-                case WriteEngine::WR_CHAR:
-                case WriteEngine::WR_BLOB:
-                case WriteEngine::WR_TEXT:
-                    valArray = (char*) calloc(sizeof(char), totalRow1 * MAX_COLUMN_BOUNDARY);
-                    break;
-
-                case WriteEngine::WR_FLOAT:
-                    valArray = (float*) calloc(sizeof(float), totalRow1);
-                    break;
-
-                case WriteEngine::WR_DOUBLE:
-                    valArray = (double*) calloc(sizeof(double), totalRow1);
-                    break;
-
-                case WriteEngine::WR_BYTE:
-                    valArray = (char*) calloc(sizeof(char), totalRow1);
-                    break;
-
-                case WriteEngine::WR_UBYTE:
-                    valArray = (uint8_t*) calloc(sizeof(uint8_t), totalRow1);
-                    break;
-
-                case WriteEngine::WR_SHORT:
-                    valArray = (short*) calloc(sizeof(short), totalRow1);
-                    break;
-
-                case WriteEngine::WR_USHORT:
-                    valArray = (uint16_t*) calloc(sizeof(uint16_t), totalRow1);
-                    break;
-
-                case WriteEngine::WR_LONGLONG:
-                    valArray = (long long*) calloc(sizeof(long long), totalRow1);
-                    break;
-
-                case WriteEngine::WR_ULONGLONG:
-                    valArray = (uint64_t*) calloc(sizeof(uint64_t), totalRow1);
-                    break;
-
-                case WriteEngine::WR_TOKEN:
-                    valArray = (Token*) calloc(sizeof(Token), totalRow1);
-                    break;
-            }
+            allocateValArray(valArray, totalRow1, colStructList[i].colType, colStructList[i].colWidth);
 
             // convert values to valArray
             if (m_opType != DELETE)
@@ -5139,7 +4862,7 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
 
                 try
                 {
-                    convertValArray(totalRow1, colStructList[i].colType, colValueList[i], valArray);
+                    convertValArray(totalRow1, cscColTypeList[i], colStructList[i].colType, colValueList[i], valArray);
                 }
                 catch (...)
                 {
@@ -5349,6 +5072,12 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
                         tmp16 = curValue;
                         ((uint16_t*)valArray)[j] = tmp16;
                         break;
+                   
+                    // WIP
+                    case WriteEngine::WR_BINARY:
+                         ((uint64_t*)valArray)[j] = curValue; //FIXME maybe
+                        break;   
+                   
                 }
             }
 
@@ -5492,6 +5221,11 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
                         tmp16 = curValue;
                         ((uint16_t*)valArray)[j] = tmp16;
                         break;
+                    
+                    // WIP
+                    case WriteEngine::WR_BINARY:
+                       ((uint64_t*)valArray)[j] = curValue; // FIXME maybe
+                        break;
                 }
             }
 
@@ -5525,8 +5259,8 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
     return rc;
 }
 
-
 int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
+                                       const CSCTypesList& cscColTypeList,
                                        const ColStructList& colStructList,
                                        const ColValueList& colValueList,
                                        vector<void*>& colOldValueList,
@@ -5649,11 +5383,6 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
         }
 
         // handling versioning
-        //cout << " pass to processVersionBuffer rid " << rowIdArray[0] << endl;
-        //cout << "dataOid:fColPartition = " << curColStruct.dataOid << ":" << curColStruct.fColPartition << endl;
-//timer.start("processVersionBuffers");
-        //vector<LBIDRange>   rangeList;
-        // rc = processVersionBuffers(curCol.dataFile.pFile, txnid, curColStruct, curColStruct.colWidth, totalRow, ridList, rangeList);
         std::vector<VBRange> curFreeList;
         uint32_t blockUsed = 0;
 
@@ -5667,7 +5396,6 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
                     aRange.vbFBO = freeList[0].vbFBO + blocksProcessed;
                     aRange.size = rangeLists[i].size();
                     curFreeList.push_back(aRange);
-                    //cout << "range size = " << aRange.size <<" and blocksProcessed = " << blocksProcessed<< endl;
                 }
                 else
                 {
@@ -5690,14 +5418,10 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
                         rc = 1;
                         break;
                     }
-
-                    //cout << "curFreeList size = " << curFreeList.size() << endl;
-
                 }
 
                 blocksProcessed += rangeLists[i].size();
 
-                //timer.start("Delete:writeVB");
                 rc = BRMWrapper::getInstance()->
                      writeVB(curCol.dataFile.pFile, (BRM::VER_t)txnid,
                              curColStruct.dataOid, fboLists[i], rangeLists[i],
@@ -5705,9 +5429,6 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
             }
         }
 
-        //timer.stop("Delete:writeVB");
-//timer.stop("processVersionBuffers");
-        // cout << " rc for processVersionBuffer is " << rc << endl;
         if (rc != NO_ERROR)
         {
             if (curColStruct.fCompressionType == 0)
@@ -5721,61 +5442,7 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
             break;
         }
 
-        switch (curColStruct.colType)
-        {
-            case WriteEngine::WR_INT:
-            case WriteEngine::WR_MEDINT:
-                valArray = (int*) calloc(sizeof(int), 1);
-                break;
-
-            case WriteEngine::WR_UINT:
-            case WriteEngine::WR_UMEDINT:
-                valArray = (uint32_t*) calloc(sizeof(uint32_t), 1);
-                break;
-
-            case WriteEngine::WR_VARBINARY : // treat same as char for now
-            case WriteEngine::WR_CHAR:
-            case WriteEngine::WR_BLOB:
-            case WriteEngine::WR_TEXT:
-                valArray = (char*) calloc(sizeof(char), 1 * MAX_COLUMN_BOUNDARY);
-                break;
-
-            case WriteEngine::WR_FLOAT:
-                valArray = (float*) calloc(sizeof(float), 1);
-                break;
-
-            case WriteEngine::WR_DOUBLE:
-                valArray = (double*) calloc(sizeof(double), 1);
-                break;
-
-            case WriteEngine::WR_BYTE:
-                valArray = (char*) calloc(sizeof(char), 1);
-                break;
-
-            case WriteEngine::WR_UBYTE:
-                valArray = (uint8_t*) calloc(sizeof(uint8_t), 1);
-                break;
-
-            case WriteEngine::WR_SHORT:
-                valArray = (short*) calloc(sizeof(short), 1);
-                break;
-
-            case WriteEngine::WR_USHORT:
-                valArray = (uint16_t*) calloc(sizeof(uint16_t), 1);
-                break;
-
-            case WriteEngine::WR_LONGLONG:
-                valArray = (long long*) calloc(sizeof(long long), 1);
-                break;
-
-            case WriteEngine::WR_ULONGLONG:
-                valArray = (uint64_t*) calloc(sizeof(uint64_t), 1);
-                break;
-
-            case WriteEngine::WR_TOKEN:
-                valArray = (Token*) calloc(sizeof(Token), 1);
-                break;
-        }
+        allocateValArray(valArray, 1, curColStruct.colType, curColStruct.colWidth);
 
         // convert values to valArray
         if (m_opType != DELETE)
@@ -5786,7 +5453,7 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
 
             try
             {
-                convertValue(curColStruct.colType, valArray, curTuple.data);
+                convertValue(cscColTypeList[i], curColStruct.colType, valArray, curTuple.data);
             }
             catch (...)
             {
@@ -5820,7 +5487,6 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
 #endif
         }
 
-//     colOldValueList.push_back(oldValArray);
 //timer.start("Delete:closefile");
         colOp->clearColumn(curCol);
 
@@ -5838,8 +5504,6 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
     if ((idbdatafile::IDBPolicy::useHdfs()) && (files.size() > 0))
         cacheutils::purgePrimProcFdCache(files, Config::getLocalModuleID());
 
-//if (idbdatafile::IDBPolicy::useHdfs())
-//			cacheutils::dropPrimProcFdCache();
 //timer.stop("Delete:purgePrimProcFdCache");
     if (rangeListTot.size() > 0)
         BRMWrapper::getInstance()->writeVBEnd(txnid, rangeListTot);
@@ -6304,17 +5968,20 @@ int WriteEngineWrapper::updateNextValue(const TxnID txnId, const OID& columnoid,
     ColValueList colValueList;
     WriteEngine::ColTupleList colTuples;
     ColStructList colStructList;
+    WriteEngine::CSCTypesList cscColTypeList;
     WriteEngine::ColStruct colStruct;
-    colStruct.dataOid = OID_SYSCOLUMN_NEXTVALUE;
-    colStruct.colWidth = 8;
+    CalpontSystemCatalog::ColType colType;
+    colType.columnOID = colStruct.dataOid = OID_SYSCOLUMN_NEXTVALUE;
+    colType.colWidth = colStruct.colWidth = 8;
     colStruct.tokenFlag = false;
-    colStruct.colDataType =  CalpontSystemCatalog::UBIGINT;
+    colType.colDataType = colStruct.colDataType =  CalpontSystemCatalog::UBIGINT;
     colStruct.fColDbRoot = dbRoot;
 
     if (idbdatafile::IDBPolicy::useHdfs())
         colStruct.fCompressionType = 2;
 
     colStructList.push_back(colStruct);
+    cscColTypeList.push_back(colType);
     ColTuple colTuple;
     systemCatalogPtr = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
     systemCatalogPtr->identity(CalpontSystemCatalog::EC);
@@ -6336,8 +6003,7 @@ int WriteEngineWrapper::updateNextValue(const TxnID txnId, const OID& columnoid,
     colTuple.data = nextVal;
     colTuples.push_back(colTuple);
     colValueList.push_back(colTuples);
-    //TxnID txnid;
-    rc = writeColumnRecords(txnId, colStructList, colValueList, ridList, SYSCOLUMN_BASE, false);
+    rc = writeColumnRecords(txnId, cscColTypeList, colStructList, colValueList, ridList, SYSCOLUMN_BASE, false);
 
     if (rc != NO_ERROR)
         return rc;

@@ -77,6 +77,10 @@ void PassThruCommand::project()
 
     switch (colWidth)
     {
+        case 16:
+            bpp->serialized->append((uint8_t*) bpp->wide128Values, bpp->ridCount << 4);
+            break;
+        
         case 8:
             bpp->serialized->append((uint8_t*) bpp->values, bpp->ridCount << 3);
             break;
@@ -118,7 +122,6 @@ void PassThruCommand::projectIntoRowGroup(RowGroup& rg, uint32_t col)
         case 1:
             for (i = 0; i < bpp->ridCount; i++)
             {
-//				cout << "PTC: " << bpp->values[i] << endl;
                 r.setUintField_offset<1>(bpp->values[i], offset);
                 r.nextRow(rowSize);
             }
@@ -128,7 +131,6 @@ void PassThruCommand::projectIntoRowGroup(RowGroup& rg, uint32_t col)
         case 2:
             for (i = 0; i < bpp->ridCount; i++)
             {
-//				cout << "PTC: " << bpp->values[i] << endl;
                 r.setUintField_offset<2>(bpp->values[i], offset);
                 r.nextRow(rowSize);
             }
@@ -147,12 +149,17 @@ void PassThruCommand::projectIntoRowGroup(RowGroup& rg, uint32_t col)
         case 8:
             for (i = 0; i < bpp->ridCount; i++)
             {
-// 				cout << "PTC: " << bpp->values[i] << endl;
                 r.setUintField_offset<8>(bpp->values[i], offset);
                 r.nextRow(rowSize);
             }
 
             break;
+        case 16:
+            for (i = 0; i < bpp->ridCount; i++)
+            {
+                r.setBinaryField_offset(&bpp->wide128Values[i], 16, offset);
+                r.nextRow(rowSize);
+            }
     }
 }
 

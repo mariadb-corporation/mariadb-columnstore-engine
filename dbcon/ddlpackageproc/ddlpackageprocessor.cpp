@@ -27,6 +27,7 @@ using namespace std;
 
 #include "ddlpackageprocessor.h"
 
+#include "mcs_datatype.h"
 #include "dataconvert.h"
 using namespace dataconvert;
 #include "calpontselectexecutionplan.h"
@@ -251,6 +252,10 @@ execplan::CalpontSystemCatalog::ColDataType DDLPackageProcessor::convertDataType
         case ddlpackage::DDL_TEXT:
             colDataType = CalpontSystemCatalog::TEXT;
             break;
+        
+        case ddlpackage::DDL_BINARY:
+            colDataType = CalpontSystemCatalog::BINARY;
+            break;
 
         default:
             throw runtime_error("Unsupported datatype!");
@@ -386,237 +391,6 @@ char DDLPackageProcessor::getConstraintCode(ddlpackage::DDL_CONSTRAINTS type)
     return constraint_type;
 }
 
-boost::any
-DDLPackageProcessor::getNullValueForType(const execplan::CalpontSystemCatalog::ColType& colType)
-{
-    boost::any value;
-
-    switch (colType.colDataType)
-    {
-        case execplan::CalpontSystemCatalog::BIT:
-            break;
-
-        case execplan::CalpontSystemCatalog::TINYINT:
-        {
-            char tinyintvalue = joblist::TINYINTNULL;
-            value = tinyintvalue;
-
-        }
-        break;
-
-        case execplan::CalpontSystemCatalog::SMALLINT:
-        {
-            short smallintvalue = joblist::SMALLINTNULL;
-            value = smallintvalue;
-        }
-        break;
-
-        case execplan::CalpontSystemCatalog::MEDINT:
-        case execplan::CalpontSystemCatalog::INT:
-        {
-            int intvalue = joblist::INTNULL;
-            value = intvalue;
-        }
-        break;
-
-        case execplan::CalpontSystemCatalog::BIGINT:
-        {
-            long long bigint = joblist::BIGINTNULL;
-            value = bigint;
-        }
-        break;
-
-        case execplan::CalpontSystemCatalog::DECIMAL:
-        case execplan::CalpontSystemCatalog::UDECIMAL:
-        {
-            if (colType.colWidth <= 4)
-            {
-                short smallintvalue = joblist::SMALLINTNULL;
-                value = smallintvalue;
-            }
-            else if (colType.colWidth <= 9)
-            {
-                int intvalue = joblist::INTNULL;
-                value = intvalue;
-            }
-            else if (colType.colWidth <= 18)
-            {
-                long long eightbyte = joblist::BIGINTNULL;
-                value = eightbyte;
-            }
-            else
-            {
-                WriteEngine::Token nullToken;
-                value = nullToken;
-            }
-        }
-        break;
-
-        case execplan::CalpontSystemCatalog::FLOAT:
-        case execplan::CalpontSystemCatalog::UFLOAT:
-        {
-            uint32_t jlfloatnull = joblist::FLOATNULL;
-            float* fp = reinterpret_cast<float*>(&jlfloatnull);
-            value = *fp;
-        }
-        break;
-
-        case execplan::CalpontSystemCatalog::DOUBLE:
-        case execplan::CalpontSystemCatalog::UDOUBLE:
-        {
-            uint64_t jldoublenull = joblist::DOUBLENULL;
-            double* dp = reinterpret_cast<double*>(&jldoublenull);
-            value = *dp;
-        }
-        break;
-
-        case execplan::CalpontSystemCatalog::DATE:
-        {
-            int d = joblist::DATENULL;
-            value = d;
-        }
-        break;
-
-        case execplan::CalpontSystemCatalog::DATETIME:
-        {
-            long long d = joblist::DATETIMENULL;
-            value = d;
-        }
-        break;
-
-        case execplan::CalpontSystemCatalog::TIME:
-        {
-            long long d = joblist::TIMENULL;
-            value = d;
-        }
-        break;
-
-        case execplan::CalpontSystemCatalog::TIMESTAMP:
-        {
-            long long d = joblist::TIMESTAMPNULL;
-            value = d;
-        }
-        break;
-
-        case execplan::CalpontSystemCatalog::CHAR:
-        {
-            std::string charnull;
-
-            if (colType.colWidth == execplan::CalpontSystemCatalog::ONE_BYTE)
-            {
-                //charnull = joblist::CHAR1NULL;
-                charnull = "\376";
-                value = charnull;
-            }
-            else if (colType.colWidth == execplan::CalpontSystemCatalog::TWO_BYTE)
-            {
-                //charnull = joblist::CHAR2NULL;
-                charnull = "\377\376";
-                value = charnull;
-            }
-            else if (colType.colWidth <= execplan::CalpontSystemCatalog::FOUR_BYTE)
-            {
-                //charnull = joblist::CHAR4NULL;
-                charnull = "\377\377\377\376";
-                value = charnull;
-            }
-            else
-            {
-                WriteEngine::Token nullToken;
-                value = nullToken;
-            }
-
-        }
-        break;
-
-        case execplan::CalpontSystemCatalog::VARCHAR:
-        {
-            std::string charnull;
-
-            if (colType.colWidth == execplan::CalpontSystemCatalog::ONE_BYTE)
-            {
-                //charnull = joblist::CHAR2NULL;
-                charnull = "\377\376";
-                value = charnull;
-            }
-            else if (colType.colWidth < execplan::CalpontSystemCatalog::FOUR_BYTE)
-            {
-                //charnull = joblist::CHAR4NULL;
-                charnull = "\377\377\377\376";
-                value = charnull;
-            }
-            else
-            {
-                WriteEngine::Token nullToken;
-                value = nullToken;
-            }
-
-        }
-        break;
-
-        case execplan::CalpontSystemCatalog::VARBINARY:
-        {
-            std::string charnull;
-
-            if (colType.colWidth == execplan::CalpontSystemCatalog::ONE_BYTE)
-            {
-                //charnull = joblist::CHAR2NULL;
-                charnull = "\377\376";
-                value = charnull;
-            }
-            else if (colType.colWidth < execplan::CalpontSystemCatalog::FOUR_BYTE)
-            {
-                //charnull = joblist::CHAR4NULL;
-                charnull = "\377\377\377\376";
-                value = charnull;
-            }
-            else
-            {
-                WriteEngine::Token nullToken;
-                value = nullToken;
-            }
-
-        }
-        break;
-
-        case execplan::CalpontSystemCatalog::UTINYINT:
-        {
-            uint8_t utinyintvalue = joblist::UTINYINTNULL;
-            value = utinyintvalue;
-
-        }
-        break;
-
-        case execplan::CalpontSystemCatalog::USMALLINT:
-        {
-            uint16_t usmallintvalue = joblist::USMALLINTNULL;
-            value = usmallintvalue;
-        }
-        break;
-
-        case execplan::CalpontSystemCatalog::UMEDINT:
-        case execplan::CalpontSystemCatalog::UINT:
-        {
-            uint32_t uintvalue = joblist::UINTNULL;
-            value = uintvalue;
-        }
-        break;
-
-        case execplan::CalpontSystemCatalog::UBIGINT:
-        {
-            uint64_t ubigint = joblist::UBIGINTNULL;
-            value = ubigint;
-        }
-        break;
-
-        default:
-            throw std::runtime_error("getNullValueForType: unkown column data type");
-            break;
-
-    }
-
-    return value;
-}
 
 bool DDLPackageProcessor::isIndexConstraint(ddlpackage::DDL_CONSTRAINTS type)
 {
@@ -1546,17 +1320,20 @@ void DDLPackageProcessor::updateSyscolumns(execplan::CalpontSystemCatalog::SCN t
     if (result.result != NO_ERROR)
         return;
 
-    WriteEngine::ColStructList  colStructs;
+    WriteEngine::ColStructList colStructs;
+    WriteEngine::CSCTypesList cscColTypeList;
     //std::vector<ColStruct> colStructs;
     WriteEngine::ColStruct colStruct;
+    execplan::CalpontSystemCatalog::ColType colType;
     WriteEngine::DctnryStructList dctnryStructList;
     WriteEngine::DctnryValueList dctnryValueList;
     //Build column structure for COLUMNPOS_COL
-    colStruct.dataOid = OID_SYSCOLUMN_COLUMNPOS;
-    colStruct.colWidth = 4;
+    colType.columnOID = colStruct.dataOid = OID_SYSCOLUMN_COLUMNPOS;
+    colType.colWidth = colStruct.colWidth = 4;
     colStruct.tokenFlag = false;
-    colStruct.colDataType = CalpontSystemCatalog::INT;
+    colType.colDataType = colStruct.colDataType = CalpontSystemCatalog::INT;
     colStructs.push_back(colStruct);
+    cscColTypeList.push_back(colType);
     int error;
     std::string err;
     std::vector<void*> colOldValuesList1;
@@ -1564,7 +1341,7 @@ void DDLPackageProcessor::updateSyscolumns(execplan::CalpontSystemCatalog::SCN t
     try
     {
         //@Bug 3051 use updateColumnRecs instead of updateColumnRec to use different value for diffrent rows.
-        if (NO_ERROR != (error = fWriteEngine.updateColumnRecs( txnID, colStructs, colValuesList, ridList )))
+        if (NO_ERROR != (error = fWriteEngine.updateColumnRecs( txnID, cscColTypeList, colStructs, colValuesList, ridList )))
         {
             // build the logging message
             WErrorCodes ec;

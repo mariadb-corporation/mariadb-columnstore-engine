@@ -116,11 +116,15 @@ inline bool getBool(rowgroup::Row& row,
         {
             IDB_Decimal d = pm[0]->data()->getDecimalVal(row, isNull);
 
-            char buf[80];
+            if (pm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                expr = d.toString(true);
+            }
+            else
+            {
+                expr = d.toString();
+            }
 
-            dataconvert::DataConvert::decimalToString(d.value, d.scale, buf, 80, pm[0]->data()->resultType().colDataType);
-
-            expr = buf;
             break;
         }
 
@@ -191,11 +195,14 @@ inline bool getBool(rowgroup::Row& row,
         {
             IDB_Decimal d = pm[1]->data()->getDecimalVal(row, isNull);
 
-            char buf[80];
-
-            dataconvert::DataConvert::decimalToString( d.value, d.scale, buf, 80, pm[1]->data()->resultType().colDataType);
-
-            pattern = buf;
+            if (pm[1]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                pattern = d.toString(true);
+            }
+            else
+            {
+                pattern = d.toString();
+            }
             break;
         }
 

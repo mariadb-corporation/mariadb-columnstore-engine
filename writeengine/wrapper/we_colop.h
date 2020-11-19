@@ -220,7 +220,7 @@ public:
     /**
      * @brief Check whether it is an empty row
      */
-    EXPORT virtual bool isEmptyRow(unsigned char* buf, int offset, const Column& column);
+    EXPORT virtual bool isEmptyRow(uint64_t* curVal, uint8_t* emptyVal, const int colWidth);
 
     /**
      * @brief Check whether it is a valid column

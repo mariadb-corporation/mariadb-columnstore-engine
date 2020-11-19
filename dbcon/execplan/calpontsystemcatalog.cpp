@@ -31,6 +31,7 @@ using namespace std;
 
 #include "messagequeue.h"
 #include "calpontsystemcatalog.h"
+#include "dataconvert.h"
 #include "ddlpkg.h"
 #include "expressionparser.h"
 #include "calpontselectexecutionplan.h"
@@ -226,6 +227,10 @@ const string colDataTypeToString(CalpontSystemCatalog::ColDataType cdt)
             return "udouble";
             break;
 
+        case CalpontSystemCatalog::BINARY:
+            return "binary";
+            break;            
+        
         default:
             break;
     }
@@ -6087,13 +6092,9 @@ void CalpontSystemCatalog::checkSysCatVer()
 }
 
 CalpontSystemCatalog::ColType::ColType() : 
-    colWidth(0), 
     constraintType(NO_CONSTRAINT), 
-    colDataType(MEDINT), 
     defaultValue(""), 
     colPosition(-1), 
-    scale(0), 
-    precision(-1), 
     compressionType(NO_COMPRESSION), 
     columnOID(0),
     autoincrement(0), 
@@ -6104,15 +6105,12 @@ CalpontSystemCatalog::ColType::ColType() :
 }
 
 CalpontSystemCatalog::ColType::ColType(const ColType& rhs)
+   :TypeHolderStd(rhs)
 {
-    colWidth = rhs.colWidth;
     constraintType = rhs.constraintType;
-    colDataType = rhs.colDataType;
     ddn = rhs.ddn;
     defaultValue = rhs.defaultValue;
     colPosition = rhs.colPosition;
-    scale = rhs.scale;
-    precision = rhs.precision;
     compressionType = rhs.compressionType;
     columnOID = rhs.columnOID;
     autoincrement = rhs.autoincrement;
@@ -6123,14 +6121,11 @@ CalpontSystemCatalog::ColType::ColType(const ColType& rhs)
 
 CalpontSystemCatalog::ColType& CalpontSystemCatalog::ColType::operator=(const ColType& rhs)
 {
-    colWidth = rhs.colWidth;
+    TypeHolderStd::operator=(rhs);
     constraintType = rhs.constraintType;
-    colDataType = rhs.colDataType;
     ddn = rhs.ddn;
     defaultValue = rhs.defaultValue;
     colPosition = rhs.colPosition;
-    scale = rhs.scale;
-    precision = rhs.precision;
     compressionType = rhs.compressionType;
     columnOID = rhs.columnOID;
     autoincrement = rhs.autoincrement;
@@ -6140,6 +6135,9 @@ CalpontSystemCatalog::ColType& CalpontSystemCatalog::ColType::operator=(const Co
 
     return *this;
 }
+
+
+
 
 CHARSET_INFO* CalpontSystemCatalog::ColType::getCharset()
 {
@@ -6165,6 +6163,38 @@ const string CalpontSystemCatalog::ColType::toString() const
            << " nv: " << nextvalue;
     return output.str();
 }
+
+
+boost::any
+CalpontSystemCatalog::ColType::convertColumnData(const std::string& data,
+                                                 bool& pushWarning,
+                                                 const std::string& timeZone,
+                                                 bool nulFlag,
+                                                 bool noRoundup,
+                                                 bool isUpdate) const
+{
+    pushWarning = false;
+    const datatypes::TypeHandler *h= typeHandler();
+    if (!h)
+        throw QueryDataExcept("convertColumnData: unknown column data type.", dataTypeErr);
+
+    if (nulFlag)
+        return h->getNullValueForType(*this);
+
+    const datatypes::ConvertFromStringParam prm(timeZone, noRoundup, isUpdate);
+    return h->convertFromString(*this, prm, data, pushWarning);
+}
+
+
+CalpontSystemCatalog::ColType CalpontSystemCatalog::ColType::convertUnionColType(vector<CalpontSystemCatalog::ColType>& types)
+{
+    idbassert(types.size());
+    CalpontSystemCatalog::ColType unionedType = types[0];
+    for (uint64_t i = 1; i < types.size(); i++)
+         dataconvert::DataConvert::joinColTypeForUnion(unionedType, types[i]);
+    return unionedType;
+}
+
 
 //format a session id that includes the module id
 //we want the top bit clear to use as a syscat flag, then we want 7 bits of module id, then 24 bits of thread id

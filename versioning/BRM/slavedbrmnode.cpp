@@ -413,8 +413,17 @@ int SlaveDBRMNode::bulkSetHWMAndCP(const vector<BulkSetHWMArg>& hwmArgs,
         {
             for (i = 0; i < setCPDataArgs.size(); i++)
             {
-                setCPEntry.max = setCPDataArgs[i].max;
-                setCPEntry.min = setCPDataArgs[i].min;
+                setCPEntry.isBinaryColumn = setCPDataArgs[i].isBinaryColumn;
+                if (!setCPEntry.isBinaryColumn)
+                {
+                    setCPEntry.max = setCPDataArgs[i].max;
+                    setCPEntry.min = setCPDataArgs[i].min;
+                }
+                else
+                {
+                    setCPEntry.bigMax = setCPDataArgs[i].bigMax;
+                    setCPEntry.bigMin = setCPDataArgs[i].bigMin;
+                }
                 setCPEntry.seqNum = setCPDataArgs[i].seqNum;
                 bulkSetCPMap[setCPDataArgs[i].firstLbid] = setCPEntry;
             }
@@ -428,8 +437,17 @@ int SlaveDBRMNode::bulkSetHWMAndCP(const vector<BulkSetHWMArg>& hwmArgs,
             for (i = 0; i < mergeCPDataArgs.size(); i++)
             {
                 mergeCPEntry.type = mergeCPDataArgs[i].type;
-                mergeCPEntry.max = mergeCPDataArgs[i].max;
-                mergeCPEntry.min = mergeCPDataArgs[i].min;
+                mergeCPEntry.colWidth = mergeCPDataArgs[i].colWidth;
+                if (mergeCPDataArgs[i].colWidth <= 8)
+                {
+                    mergeCPEntry.max = mergeCPDataArgs[i].max;
+                    mergeCPEntry.min = mergeCPDataArgs[i].min;
+                }
+                else
+                {
+                    mergeCPEntry.bigMax = mergeCPDataArgs[i].bigMax;
+                    mergeCPEntry.bigMin = mergeCPDataArgs[i].bigMin;
+                }
                 mergeCPEntry.newExtent = mergeCPDataArgs[i].newExtent;
                 mergeCPEntry.seqNum = mergeCPDataArgs[i].seqNum;
                 bulkMergeCPMap[mergeCPDataArgs[i].startLbid] = mergeCPEntry;

@@ -246,15 +246,45 @@ public:
     {
         IDB_Decimal decimal = fFunctor->getDecimalVal(row, fFunctionParms, isNull, fOperationType);
 
-        if (fResultType.scale == decimal.scale)
+        if (UNLIKELY(fResultType.colWidth == utils::MAXLEGACYWIDTH
+                && fResultType.scale == decimal.scale))
             return decimal;
 
-        if (fResultType.scale > decimal.scale)
-            decimal.value *= IDB_pow[fResultType.scale - decimal.scale];
-        else
-            decimal.value = (int64_t)(decimal.value > 0 ?
-                                      (double)decimal.value / IDB_pow[decimal.scale - fResultType.scale] + 0.5 :
-                                      (double)decimal.value / IDB_pow[decimal.scale - fResultType.scale] - 0.5);
+        if (LIKELY(fResultType.colWidth == datatypes::MAXDECIMALWIDTH))
+        {
+            decimal.s128Value =
+                (datatypes::Decimal::isWideDecimalTypeByPrecision(decimal.precision)) ?
+                    decimal.s128Value : decimal.value;
+
+            int128_t scaleMultiplier;
+            int32_t scaleDiff = fResultType.scale - decimal.scale;
+            datatypes::getScaleDivisor(scaleMultiplier, abs(scaleDiff));
+
+            if (scaleMultiplier > 1)
+            {
+                if (scaleDiff > 0)
+                {
+                    // WIP MCOL-641 Unconditional overflow check
+                    datatypes::MultiplicationNoOverflowCheck mul;
+                    mul(decimal.s128Value, scaleMultiplier, decimal.s128Value);
+                }
+                else
+                {
+                    decimal.s128Value = (int128_t)(decimal.s128Value > 0 ?
+                                                   (__float128)decimal.s128Value / scaleMultiplier + 0.5 :
+                                                   (__float128)decimal.s128Value / scaleMultiplier - 0.5);
+                }
+            }
+        }
+        else if (fResultType.colWidth == utils::MAXLEGACYWIDTH)
+        {
+            if (fResultType.scale > decimal.scale)
+                decimal.value *= IDB_pow[fResultType.scale - decimal.scale];
+            else
+                decimal.value = (int64_t)(decimal.value > 0 ?
+                                          (double)decimal.value / IDB_pow[decimal.scale - fResultType.scale] + 0.5 :
+                                          (double)decimal.value / IDB_pow[decimal.scale - fResultType.scale] - 0.5);
+        }
 
         decimal.scale = fResultType.scale;
         decimal.precision = fResultType.precision;

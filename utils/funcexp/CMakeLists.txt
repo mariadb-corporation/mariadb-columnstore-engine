@@ -112,7 +112,7 @@ add_library(funcexp SHARED ${funcexp_LIB_SRCS})
 
 add_dependencies(funcexp loggingcpp)
 
-target_link_libraries(funcexp ${NETSNMP_LIBRARIES})
+target_link_libraries(funcexp ${NETSNMP_LIBRARIES} quadmath)
 
 install(TARGETS funcexp DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 

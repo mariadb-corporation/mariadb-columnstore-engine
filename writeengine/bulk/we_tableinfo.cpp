@@ -69,6 +69,31 @@ const std::string  BOLD_STOP       = "\033[0;39m";
 
 namespace WriteEngine
 {
+// Helpers
+int TableInfo::compareHWMs(const int smallestColumnId,
+    const int widerColumnId,
+    const size_t widerColumnWidth,
+    const std::vector<DBRootExtentInfo>& segFileInfo,
+    int& colIdx)
+{
+    int rc = NO_ERROR;
+    if (widerColumnId < 0)
+    {
+        return rc;
+    }
+    HWM hwmLo = segFileInfo[smallestColumnId].fLocalHwm * widerColumnWidth;
+    HWM hwmHi = hwmLo + widerColumnWidth - 1;
+
+    if ((segFileInfo[widerColumnId].fLocalHwm < hwmLo) ||
+            (segFileInfo[widerColumnId].fLocalHwm > hwmHi))
+    {
+        colIdx = widerColumnId;
+        rc     = ERR_BRM_HWMS_OUT_OF_SYNC;
+    }
+    return rc;
+}
+
+
 //------------------------------------------------------------------------------
 // Puts the current thread to sleep for the specified number of milliseconds.
 // (Ex: used to wait for a Read buffer to become available.)
@@ -2064,6 +2089,7 @@ int TableInfo::validateColumnHWMs(
     int byte2First = -1;
     int byte4First = -1;
     int byte8First = -1;
+    int byte16First = -1;
 
     // Make sure the HWMs for all 1-byte columns match; same for all 2-byte,
     // 4-byte, and 8-byte columns as well.
@@ -2107,7 +2133,6 @@ int TableInfo::validateColumnHWMs(
             }
 
             case 8:
-            default:
             {
                 if (byte8First == -1)
                     byte8First = k;
@@ -2115,16 +2140,34 @@ int TableInfo::validateColumnHWMs(
                 k1 = byte8First;
                 break;
             }
-        } // end of switch based on column width (1,2,4, or 8)
+            case 16:
+            {
+                if (byte16First == -1)
+                    byte16First = k;
+
+                k1 = byte16First;
+                break;
+            }
+            default:
+            {
+                ostringstream oss;
+                oss << stage << " Unsupported width for"
+                    " OID-"        << jobColK.mapOid               <<
+                    "; column-"    << jobColK.colName              <<
+                    "; width-"     << jobColK.width;
+                fLog->logMsg( oss.str(), ERR_BRM_UNSUPP_WIDTH, MSGLVL_ERROR );
+                return ERR_BRM_UNSUPP_WIDTH;
+            }
+        } // end of switch based on column width.
 
         // Validate HWMs in jobTable if we have it, else use fColumns.
         const JobColumn& jobColK1 =
             ( (jobTable != 0) ? jobTable->colList[k1] : fColumns[k1].column );
 
-//std::cout << "dbg: comparing0 " << stage << " refcol-" << k1 <<
-//  "; wid-" << jobColK1.width << "; hwm-" << segFileInfo[k1].fLocalHwm <<
-//  " <to> col-" << k <<
-//  "; wid-" << jobColK.width << " ; hwm-"<<segFileInfo[k].fLocalHwm<<std::endl;
+        //std::cout << "dbg: comparing0 " << stage << " refcol-" << k1 <<
+        //  "; wid-" << jobColK1.width << "; hwm-" << segFileInfo[k1].fLocalHwm <<
+        //  " <to> col-" << k <<
+        //  "; wid-" << jobColK.width << " ; hwm-"<<segFileInfo[k].fLocalHwm<<std::endl;
 
         // Validate that the HWM for this column (k) matches that of the
         // corresponding reference column with the same width.
@@ -2189,29 +2232,29 @@ int TableInfo::validateColumnHWMs(
     int refCol = 0;
     int colIdx = 0;
 
-//if (byte1First >= 0)
-//  std::cout << "dbg: cross compare1 " << stage << " col-" << byte1First <<
-//  "; wid-" << ( (jobTable != 0) ? jobTable->colList[byte1First].width :
-//                                  fColumns[byte1First].column.width ) <<
-//  "; hwm-" << segFileInfo[byte1First].fLocalHwm << std::endl;
+    //if (byte1First >= 0)
+    //  std::cout << "dbg: cross compare1 " << stage << " col-" << byte1First <<
+    //  "; wid-" << ( (jobTable != 0) ? jobTable->colList[byte1First].width :
+    //                                  fColumns[byte1First].column.width ) <<
+    //  "; hwm-" << segFileInfo[byte1First].fLocalHwm << std::endl;
 
-//if (byte2First >= 0)
-//  std::cout << "dbg: cross compare2 " << stage << " col-" << byte2First <<
-//  "; wid-" << ( (jobTable != 0) ? jobTable->colList[byte2First].width :
-//                                  fColumns[byte2First].column.width ) <<
-//  "; hwm-" << segFileInfo[byte2First].fLocalHwm << std::endl;
+    //if (byte2First >= 0)
+    //  std::cout << "dbg: cross compare2 " << stage << " col-" << byte2First <<
+    //  "; wid-" << ( (jobTable != 0) ? jobTable->colList[byte2First].width :
+    //                                  fColumns[byte2First].column.width ) <<
+    //  "; hwm-" << segFileInfo[byte2First].fLocalHwm << std::endl;
 
-//if (byte4First >= 0)
-//  std::cout << "dbg: cross compare4 " << stage << " col-" << byte4First <<
-//  "; wid-" << ( (jobTable != 0) ? jobTable->colList[byte4First].width :
-//                                  fColumns[byte4First].column.width ) <<
-//  "; hwm-" << segFileInfo[byte4First].fLocalHwm << std::endl;
+    //if (byte4First >= 0)
+    //  std::cout << "dbg: cross compare4 " << stage << " col-" << byte4First <<
+    //  "; wid-" << ( (jobTable != 0) ? jobTable->colList[byte4First].width :
+    //                                  fColumns[byte4First].column.width ) <<
+    //  "; hwm-" << segFileInfo[byte4First].fLocalHwm << std::endl;
 
-//if (byte8First >= 0)
-//  std::cout << "dbg: cross compare8 " << stage << " col-" << byte8First <<
-//  "; wid-" << ( (jobTable != 0) ? jobTable->colList[byte8First].width :
-//                                  fColumns[byte8First].column.width ) <<
-//  "; hwm-" << segFileInfo[byte8First].fLocalHwm << std::endl;
+    //if (byte8First >= 0)
+    //  std::cout << "dbg: cross compare8 " << stage << " col-" << byte8First <<
+    //  "; wid-" << ( (jobTable != 0) ? jobTable->colList[byte8First].width :
+    //                                  fColumns[byte8First].column.width ) <<
+    //  "; hwm-" << segFileInfo[byte8First].fLocalHwm << std::endl;
 
     // Validate/compare HWMs given a 1-byte column as a starting point
     if (byte1First >= 0)
@@ -2259,6 +2302,11 @@ int TableInfo::validateColumnHWMs(
                 goto errorCheck;
             }
         }
+        if ((rc = compareHWMs(byte1First, byte16First, 16,
+             segFileInfo, colIdx) < 0))
+        {
+            goto errorCheck;
+        }
     }
 
     // Validate/compare HWMs given a 2-byte column as a starting point
@@ -2293,6 +2341,13 @@ int TableInfo::validateColumnHWMs(
                 goto errorCheck;
             }
         }
+        if ((rc = compareHWMs(byte2First, byte16First, 16,
+             segFileInfo, colIdx) < 0))
+        {
+            goto errorCheck;
+        }
+
+
     }
 
     // Validate/compare HWMs given a 4-byte column as a starting point
@@ -2313,6 +2368,22 @@ int TableInfo::validateColumnHWMs(
                 goto errorCheck;
             }
         }
+        if ((rc = compareHWMs(byte4First, byte16First, 16,
+             segFileInfo, colIdx) < 0))
+        {
+            goto errorCheck;
+        }
+
+    }
+    if (byte8First >= 0)
+    {
+        refCol = byte8First;
+        if ((rc = compareHWMs(byte8First, byte16First, 16,
+             segFileInfo, colIdx) < 0))
+        {
+            goto errorCheck;
+        }
+
     }
 
 // To avoid repeating this message 6 times in the preceding source code, we

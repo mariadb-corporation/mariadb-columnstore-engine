@@ -26,6 +26,7 @@
 #define DDLPKG_DLLEXPORT
 #include "ddlpkg.h"
 #undef DDLPKG_DLLEXPORT
+#include "../../utils/common/columnwidth.h"
 
 namespace ddlpackage
 {
@@ -61,32 +62,6 @@ ostream& operator<<(ostream& os, const QualifiedName& qname)
     return os;
 }
 
-
-/** @brief Map a DECIMAL precision to data width in bytes */
-unsigned int precision_width(unsigned p)
-{
-    switch (p)
-    {
-        case 1:
-        case 2:
-            return 1;
-
-        case 3:
-        case 4:
-            return 2;
-
-        case 5:
-        case 6:
-        case 7:
-        case 8:
-        case 9:
-            return 4;
-
-        default:
-            return 8;
-    }
-}
-
 ColumnType::ColumnType(int prec, int scale) :
     fType(DDL_INVALID_DATATYPE),
     fLength(0),
@@ -94,7 +69,7 @@ ColumnType::ColumnType(int prec, int scale) :
     fScale(scale),
     fWithTimezone(false)
 {
-    fLength = precision_width(fPrecision);
+    fLength = utils::widthByPrecision(fPrecision);
 }
 
 ColumnType::ColumnType(int type) :
@@ -141,19 +116,6 @@ ColumnType::ColumnType(int type) :
             break;
     }
 }
-#if 0
-ColumnType::ColumnType(int type, int length, int precision, int scale, int compressiontype, const char* autoIncrement, int64_t nextValue, bool withTimezone) :
-    fType(type),
-    fLength(length),
-    fPrecision(precision),
-    fScale(scale),
-    fWithTimezone(withTimezone),
-    fCompressiontype(compressiontype),
-    fAutoincrement(autoIncrement),
-    fNextvalue(nextValue)
-{
-}
-#endif
 ColumnConstraintDef::ColumnConstraintDef(DDL_CONSTRAINTS type) :
     SchemaObject(),
     fDeferrable(false),
@@ -199,14 +161,12 @@ void ColumnDef::convertDecimal()
     }
     else if ((fType->fPrecision > 0) && (fType->fPrecision < 3))
     {
-        //dataType = CalpontSystemCatalog::TINYINT;
         fType->fType = DDL_TINYINT;
         fType->fLength = 1;
     }
 
     else if (fType->fPrecision < 5 && (fType->fPrecision > 2))
     {
-        //dataType = CalpontSystemCatalog::SMALLINT;
         fType->fType = DDL_SMALLINT;
         fType->fLength = 2;
     }
@@ -217,15 +177,18 @@ void ColumnDef::convertDecimal()
     }
     else if (fType->fPrecision > 6 && fType->fPrecision < 10)
     {
-        //dataType = CalpontSystemCatalog::INT;
         fType->fType = DDL_INT;
         fType->fLength = 4;
     }
     else if (fType->fPrecision > 9 && fType->fPrecision < 19)
     {
-        //dataType = CalpontSystemCatalog::BIGINT;
         fType->fType = DDL_BIGINT;
         fType->fLength = 8;
     }
+    else if (fType->fPrecision > 18 && fType->fPrecision < 39)
+    {
+        fType->fType = DDL_BINARY;
+        fType->fLength = 16;
+    }
 }
-}
+} // end of namespace

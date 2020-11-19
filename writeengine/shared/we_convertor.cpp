@@ -328,6 +328,7 @@ void Convertor::mapErrnoToString(int errNum, std::string& errString)
  *    none
  ******************************************************************************/
 /* static */
+// TODO MCOL-641
 void Convertor::convertColType(CalpontSystemCatalog::ColDataType dataType,
                                ColType& internalType, bool isToken)
 {
@@ -434,6 +435,11 @@ void Convertor::convertColType(CalpontSystemCatalog::ColDataType dataType,
         case CalpontSystemCatalog::UBIGINT:
             internalType = WriteEngine::WR_ULONGLONG;
             break;
+        
+        // Map BINARY to WR_BINARY
+        case CalpontSystemCatalog::BINARY:
+            internalType = WriteEngine::WR_BINARY;
+            break;    
 
         default:
             internalType = WriteEngine::WR_CHAR;
@@ -628,8 +634,12 @@ void Convertor::convertColType(ColStruct* curStruct)
                     *internalType = WriteEngine::WR_INT;
                     break;
 
-                default:
+                case 8:
                     *internalType = WriteEngine::WR_LONGLONG;
+                    break;
+
+                default:
+                    *internalType = WriteEngine::WR_BINARY;
                     break;
             }
 
@@ -682,6 +692,11 @@ void Convertor::convertColType(ColStruct* curStruct)
         case CalpontSystemCatalog::UBIGINT:
             *internalType = WriteEngine::WR_ULONGLONG;
             break;
+                    
+        // Map BINARY to WR_BINARY
+        case CalpontSystemCatalog::BINARY:
+            *internalType = WriteEngine::WR_BINARY;
+            break;  
 
         default:
             *internalType = WriteEngine::WR_CHAR;
@@ -693,14 +708,8 @@ void Convertor::convertColType(ColStruct* curStruct)
 
     // check whether width is in sync with the requirement
     *width = getCorrectRowWidth(dataType, *width);
-
-    // This is the patch for the decimal thing, override
-//  if (dataType == CalpontSystemCatalog::DECIMAL)
-//  {
-//      *internalType = *width <= 4 ?
-//                      WriteEngine::WR_INT : WriteEngine::WR_LONGLONG;
-//  }
 }
+
 
 /*******************************************************************************
  * DESCRIPTION:
@@ -758,9 +767,10 @@ int Convertor::getCorrectRowWidth(CalpontSystemCatalog::ColDataType dataType, in
                 newWidth = 2;
             else if (width <= 4)
                 newWidth = 4;
-            else
+            else if (width <= 8)
                 newWidth = 8;
-
+            else
+                newWidth = 16;
             break;
 
         case CalpontSystemCatalog::DATE:
@@ -772,7 +782,11 @@ int Convertor::getCorrectRowWidth(CalpontSystemCatalog::ColDataType dataType, in
         case CalpontSystemCatalog::TIMESTAMP:
             newWidth = 8;
             break;
-
+        
+        case CalpontSystemCatalog::BINARY:
+            newWidth = width;
+            break;
+            
         case CalpontSystemCatalog::CHAR:
         case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::VARBINARY: // treat same as varchar for now

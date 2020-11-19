@@ -9,9 +9,10 @@
  * http://www.boost.org/LICENSE_1_0.txt
  */
 
-#include  <stdint.h>
+#include <stdint.h>
 #include <stdexcept>
 #include <cstring>
+#include "mcs_basic_types.h"
 
 namespace static_any
 {
@@ -123,7 +124,13 @@ namespace anyimpl
         typedef void type;
     };
 
-    /// Specializations for small types.
+    /// Specializations for big types.
+#define BIG_POLICY(TYPE) template<> struct \
+   choose_policy<TYPE> { typedef big_any_policy<TYPE> type; };
+
+   BIG_POLICY(int128_t);
+   
+   /// Specializations for small types.
 #define SMALL_POLICY(TYPE) template<> struct \
    choose_policy<TYPE> { typedef small_any_policy<TYPE> type; };
 

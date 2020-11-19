@@ -89,8 +89,9 @@ public:
     /**
      * @brief Get an empty row value
      */
-    EXPORT uint64_t getEmptyRowValue(const execplan::CalpontSystemCatalog::ColDataType colDataType,
-                                     const int width ) const;
+    EXPORT void getEmptyRowValue(const execplan::CalpontSystemCatalog::ColDataType colDataType,
+                                 const int width,
+                                 uint8_t* emptyVal ) const;
 
     /**
      * @brief Calculate row id
@@ -116,7 +117,7 @@ public:
      */
     EXPORT void static setEmptyBuf( unsigned char* buf,
                                     const int bufSize,
-                                    uint64_t emptyVal, const int width );
+                                    uint8_t* emptyVal, const int width );
 
     /**
      * @brief Set a value in a buffer

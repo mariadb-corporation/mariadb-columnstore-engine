@@ -44,6 +44,8 @@ using namespace config;
 #include "dataconvert.h"
 using namespace dataconvert;
 
+#include "mcs_decimal.h"
+
 #include "liboamcpp.h"
 
 #undef REALLY_DANGEROUS
@@ -164,40 +166,76 @@ const string charcolToString(int64_t v)
 //------------------------------------------------------------------------------
 // Formats an integer to it's date, datetime, or char equivalent
 //------------------------------------------------------------------------------
-const string fmt(int64_t v)
+template<typename T>
+const string fmt(T v)
 {
     ostringstream oss;
 
     if (tflg)
     {
-        oss << DataConvert::dateToString(v);
+        oss << DataConvert::dateToString((int64_t) v);
     }
     else if (sflg)
     {
-        oss << DataConvert::datetimeToString(v);
+        oss << DataConvert::datetimeToString((int64_t) v);
     }
     else if (aflg)
     {
-        oss << charcolToString(v);
+        oss << charcolToString((int64_t) v);
     }
     else if (mflg)
     {
-        oss << v;
+        if (typeid(T) != typeid(int128_t))
+        {
+            oss << (int64_t) v;
+        }
+        else
+        {
+            oss << datatypes::TSInt128(v);
+        }
     }
     else if (uflg)
     {
-        if (static_cast<uint64_t>(v) > numeric_limits<uint64_t>::max() - 2)
-            oss << "notset";
+        if (typeid(T) != typeid(int128_t))
+        {
+            if (static_cast<uint64_t>(v) > numeric_limits<uint64_t>::max() - 2)
+                oss << "notset";
+            else
+                oss << static_cast<uint64_t>(v);
+        }
         else
-            oss << static_cast<uint64_t>(v);
+        {
+            if (v <= utils::minInt128 + 1)
+            {
+                oss << "notset";
+            }
+            else
+            {
+                oss << datatypes::TSInt128(v);
+            }
+        }
     }
     else
     {
-        if (v == numeric_limits<int64_t>::max() ||
-                v <= (numeric_limits<int64_t>::min() + 2))
-            oss << "notset";
+        if (typeid(T) != typeid(int128_t))
+        {
+            if (v == numeric_limits<int64_t>::max() ||
+                    v <= (numeric_limits<int64_t>::min() + 1))
+                oss << "notset";
+            else
+                oss << (int64_t) v;
+        }
         else
-            oss << v;
+        {
+            if (v == utils::maxInt128 || (v <= utils::minInt128 + 1))
+            {
+                oss << "notset";
+            }
+            else
+            {
+                oss << datatypes::TSInt128(v);
+            }
+        }
     }
 
     return oss.str();
@@ -234,6 +272,8 @@ int dumpone(OID_t oid, unsigned int sortOrder)
     std::vector<struct EMEntry>::iterator end;
     int64_t max;
     int64_t min;
+    int128_t bigMax;
+    int128_t bigMin;
     int32_t seqNum;
     bool header;
     bool needtrailer = false;
@@ -262,8 +302,6 @@ int dumpone(OID_t oid, unsigned int sortOrder)
         while (iter != end)
         {
             uint32_t lbidRangeSize = iter->range.size * 1024;
-            max       = iter->partition.cprange.hi_val;
-            min       = iter->partition.cprange.lo_val;
             seqNum    = iter->partition.cprange.sequenceNum;
             int state = iter->partition.cprange.isValid;
 
@@ -287,10 +325,26 @@ int dumpone(OID_t oid, unsigned int sortOrder)
             if (vflg)
                 cout << oid << ' ';
 
-            cout << iter->range.start << " - " <<
-                 (iter->range.start + lbidRangeSize - 1) <<
-                 " (" << lbidRangeSize << ") min: " << fmt(min) <<
-                 ", max: " << fmt(max) << ", seqNum: " << seqNum << ", state: ";
+            if (iter->colWid != datatypes::MAXDECIMALWIDTH)
+            {
+                max = iter->partition.cprange.hiVal;
+                min = iter->partition.cprange.loVal;
+
+                cout << iter->range.start << " - " <<
+                     (iter->range.start + lbidRangeSize - 1) <<
+                     " (" << lbidRangeSize << ") min: " << fmt(min) <<
+                     ", max: " << fmt(max) << ", seqNum: " << seqNum << ", state: ";
+            }
+            else
+            {
+                bigMax = iter->partition.cprange.bigHiVal;
+                bigMin = iter->partition.cprange.bigLoVal;
+
+                cout << iter->range.start << " - " <<
+                     (iter->range.start + lbidRangeSize - 1) <<
+                     " (" << lbidRangeSize << ") min: " << fmt(bigMin) <<
+                     ", max: " << fmt(bigMax) << ", seqNum: " << seqNum << ", state: ";
+            }
 
             switch (state)
             {
@@ -408,11 +462,31 @@ int clearAllCPData()
 
         if (err == 0 && ranges.size() > 0)
         {
+            // Get the extents for a given OID to determine it's column width
+            std::vector<struct EMEntry> entries;
+            CHECK(emp->getExtents(oid, entries, false, false, true));
+
+            if (entries.empty())
+                continue;
+
+            bool isBinaryColumn = (entries[0].colWid == datatypes::MAXDECIMALWIDTH);
+
             BRM::CPInfo cpInfo;
             BRM::CPInfoList_t vCpInfo;
-            cpInfo.max = numeric_limits<int64_t>::min();
-            cpInfo.min = numeric_limits<int64_t>::max();
+
+            if (!isBinaryColumn)
+            {
+                cpInfo.max = numeric_limits<int64_t>::min();
+                cpInfo.min = numeric_limits<int64_t>::max();
+            }
+            else
+            {
+                utils::int128Min(cpInfo.bigMax);
+                utils::int128Max(cpInfo.bigMin);
+            }
+
             cpInfo.seqNum = -1;
+            cpInfo.isBinaryColumn = isBinaryColumn;
 
             for (uint32_t i = 0; i < ranges.size(); i++)
             {
@@ -433,17 +507,38 @@ int clearAllCPData()
 //------------------------------------------------------------------------------
 int clearmm(OID_t oid)
 {
-
     BRM::LBIDRange_v ranges;
     CHECK(emp->lookup(oid, ranges));
     BRM::LBIDRange_v::size_type rcount = ranges.size();
 
+    // Get the extents for a given OID to determine it's column width
+    std::vector<struct EMEntry> entries;
+    CHECK(emp->getExtents(oid, entries, false, false, true));
+    if (entries.empty())
+    {
+        cerr << "There are no entries in the Extent Map for OID: " << oid << endl;
+        return 1;
+    }
+
+    bool isBinaryColumn = (entries[0].colWid == datatypes::MAXDECIMALWIDTH);
+
     // @bug 2280.  Changed to use the batch interface to clear the CP info to make the clear option faster.
     BRM::CPInfo cpInfo;
     BRM::CPInfoList_t vCpInfo;
-    cpInfo.max = numeric_limits<int64_t>::min();
-    cpInfo.min = numeric_limits<int64_t>::max();
+
+    if (!isBinaryColumn)
+    {
+        cpInfo.max = numeric_limits<int64_t>::min();
+        cpInfo.min = numeric_limits<int64_t>::max();
+    }
+    else
+    {
+        utils::int128Min(cpInfo.bigMax);
+        utils::int128Max(cpInfo.bigMin);
+    }
+
     cpInfo.seqNum = -1;
+    cpInfo.isBinaryColumn = isBinaryColumn;
 
     for (unsigned i = 0; i < rcount; i++)
     {

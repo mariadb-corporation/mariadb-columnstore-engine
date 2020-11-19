@@ -25,6 +25,7 @@
 
 #ifndef SIMPLECOLUMNDECIMAL_H
 #define SIMPLECOLUMNDECIMAL_H
+#include <iostream>
 #include <string>
 #include <cmath>
 
@@ -141,7 +142,9 @@ void SimpleColumn_Decimal<len>::setNullVal()
         case 1:
             fNullVal = joblist::TINYINTNULL;
             break;
-
+        case 16:
+            std::cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << std::endl;
+            //fallthrough
         default:
             fNullVal = joblist::BIGINTNULL;
     }
@@ -150,8 +153,10 @@ void SimpleColumn_Decimal<len>::setNullVal()
 template<int len>
 inline const std::string& SimpleColumn_Decimal<len>:: getStrVal(rowgroup::Row& row, bool& isNull)
 {
-    dataconvert::DataConvert::decimalToString((int64_t)row.getIntField<len>(fInputIndex), fResultType.scale, tmp, 22, fResultType.colDataType);
-    fResult.strVal = std::string(tmp);
+    datatypes::VDecimal dec((int64_t)row.getIntField<len>(fInputIndex),
+                            fResultType.scale,
+                            fResultType.precision);
+    fResult.strVal = dec.toString();
     return fResult.strVal;
 }
 
@@ -223,6 +228,8 @@ void SimpleColumn_Decimal<len>::serialize(messageqcpp::ByteStream& b) const
         case 8:
             b << (ObjectReader::id_t) ObjectReader::SIMPLECOLUMN_DECIMAL8;
             break;
+        case 16:
+            std::cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << std::endl;
     }
 
     SimpleColumn::serialize(b);
@@ -248,6 +255,8 @@ void SimpleColumn_Decimal<len>::unserialize(messageqcpp::ByteStream& b)
         case 8:
             ObjectReader::checkType(b, ObjectReader::SIMPLECOLUMN_DECIMAL8);
             break;
+        case 16:
+            std::cout << __FILE__<< ":" <<__LINE__ << " Fix  16 Bytes ?" << std::endl;            
     }
 
     SimpleColumn::unserialize(b);

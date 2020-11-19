@@ -25,12 +25,14 @@
 
 #ifndef SIMPLECOLUMNINT_H
 #define SIMPLECOLUMNINT_H
+#include <iostream>
 #include <string>
 
 #include "simplecolumn.h"
 #include "objectreader.h"
 #include "joblisttypes.h"
 #include "rowgroup.h"
+#include "mcs_decimal.h"
 
 /**
  * Namespace
@@ -216,7 +218,7 @@ inline IDB_Decimal SimpleColumn_INT<len>::getDecimalVal(rowgroup::Row& row, bool
         isNull = true;
 
     fResult.decimalVal.value = (int64_t)row.getIntField<len>(fInputIndex);
-    fResult.decimalVal.precision = 65;
+    fResult.decimalVal.precision = datatypes::INT64MAXPRECISION;
     fResult.decimalVal.scale = 0;
     return fResult.decimalVal;
 }

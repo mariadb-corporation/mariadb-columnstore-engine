@@ -1329,9 +1329,12 @@ void SlaveComm::do_setExtentsMaxMin(ByteStream& msg)
     LBID_t lbid;
     uint64_t tmp64;
     uint32_t tmp32;
+    uint8_t tmp8;
+    uint128_t tmp128;
     int err;
     ByteStream reply;
     int32_t updateCount;
+    bool isBinaryColumn = false;
 
 #ifdef BRM_VERBOSE
     cerr << "WorkerComm: do_setExtentsMaxMin()" << endl;
@@ -1348,14 +1351,30 @@ void SlaveComm::do_setExtentsMaxMin(ByteStream& msg)
     // Loop through extents and add each one to a map.
     for (int64_t i = 0; i < updateCount; i++)
     {
+        msg >> tmp8;
+        isBinaryColumn = (tmp8 != 0);
+
         msg >> tmp64;
         lbid = tmp64;
 
-        msg >> tmp64;
-        cpMaxMin.max = tmp64;
+        cpMaxMin.isBinaryColumn = isBinaryColumn;
 
-        msg >> tmp64;
-        cpMaxMin.min = tmp64;
+        if (isBinaryColumn)
+        {
+            msg >> tmp128;
+            cpMaxMin.bigMax = tmp128;
+
+            msg >> tmp128;
+            cpMaxMin.bigMin = tmp128;
+        }
+        else
+        {
+            msg >> tmp64;
+            cpMaxMin.max = tmp64;
+
+            msg >> tmp64;
+            cpMaxMin.min = tmp64;
+        }
 
         msg >> tmp32;
         cpMaxMin.seqNum = tmp32;

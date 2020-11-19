@@ -126,6 +126,7 @@ bool PredicateOperator::operator!=(const TreeNode* t) const
 }
 
 //FIXME: VARBINARY???
+//FIXME: BINARY???
 void PredicateOperator::setOpType(Type& l, Type& r)
 {
     fOperationType = l;  // Default to left side. Modify as needed.

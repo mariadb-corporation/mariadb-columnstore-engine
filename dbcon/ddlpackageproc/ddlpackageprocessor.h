@@ -418,12 +418,6 @@ protected:
      */
     execplan::CalpontSystemCatalog::ColDataType convertDataType(int dataType);
 
-    /** @brief get the null representation for the given column type
-     *
-     * @param colType the column type
-     */
-    boost::any getNullValueForType(const execplan::CalpontSystemCatalog::ColType& colType);
-
     /** @brief return a tokenized value for the supplied data value
       *
       * @param result the result of the operation

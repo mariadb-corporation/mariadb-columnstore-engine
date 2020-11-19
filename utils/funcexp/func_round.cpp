@@ -116,18 +116,36 @@ int64_t Func_round::getIntVal(Row& row,
 {
     IDB_Decimal x = getDecimalVal(row, parm, isNull, op_ct);
 
-    if (x.scale > 0)
+    if (!op_ct.isWideDecimalType())
     {
-        while (x.scale-- > 0)
-            x.value /= 10;
+        if (x.scale > 0)
+        {
+            while (x.scale-- > 0)
+                x.value /= 10;
+        }
+        else
+        {
+            while (x.scale++ < 0)
+                x.value *= 10;
+        }
+
+        return x.value;
     }
     else
     {
-        while (x.scale++ < 0)
-            x.value *= 10;
-    }
+        if (x.scale > 0)
+        {
+            while (x.scale-- > 0)
+                x.s128Value /= 10;
+        }
+        else
+        {
+            while (x.scale++ < 0)
+                x.s128Value *= 10;
+        }
 
-    return x.value;
+        return datatypes::Decimal::getInt64FromWideDecimal(x.s128Value);
+    }
 }
 
 
@@ -187,7 +205,12 @@ double Func_round::getDoubleVal(Row& row,
     if (isNull)
         return 0.0;
 
-    double d = x.value;
+    double d;
+
+    if (!op_ct.isWideDecimalType())
+        d = x.value;
+    else
+        d = datatypes::Decimal::getDoubleFromWideDecimal(x.s128Value);
 
     if (x.scale > 0)
     {
@@ -249,7 +272,12 @@ long double Func_round::getLongDoubleVal(Row& row,
     if (isNull)
         return 0.0;
 
-    double d = x.value;
+    double d;
+
+    if (!op_ct.isWideDecimalType())
+        d = x.value;
+    else
+        d = datatypes::Decimal::getDoubleFromWideDecimal(x.s128Value);
 
     if (x.scale > 0)
     {
@@ -283,62 +311,130 @@ IDB_Decimal Func_round::getDecimalVal(Row& row,
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             int64_t d = 0;
-            //@Bug 3101 - GCC 4.5.1 optimizes too aggressively here. Mark as volatile.
-            volatile int64_t p = 1;
             decimal = parm[0]->data()->getDecimalVal(row, isNull);
 
-            if (!isNull && parm.size() > 1)  // round(X, D)
+            if (!op_ct.isWideDecimalType())
             {
-                int64_t nvp = p;
-                d = parm[1]->data()->getIntVal(row, isNull);
+                //@Bug 3101 - GCC 4.5.1 optimizes too aggressively here. Mark as volatile.
+                volatile int64_t p = 1;
 
-                if (!isNull)
-                    helpers::decimalPlaceDec(d, nvp, decimal.scale);
-
-                p = nvp;
-            }
-
-            if (isNull)
-                break;
-
-            int64_t x = decimal.value;
-
-            if (d > 0)
-            {
-                x = x * p;
-            }
-            else if (d < 0)
-            {
-                int64_t h = p / 2;  // 0.5
-
-                if ((x >= h) || (x <= -h))
+                if (!isNull && parm.size() > 1)  // round(X, D)
                 {
-                    if (x >= 0)
-                        x += h;
-                    else
-                        x -= h;
+                    int64_t nvp = p;
+                    d = parm[1]->data()->getIntVal(row, isNull);
 
-                    if (p != 0)
-                        x = x / p;
+                    if (!isNull)
+                        helpers::decimalPlaceDec(d, nvp, decimal.scale);
+
+                    p = nvp;
+                }
+
+                if (isNull)
+                    break;
+
+                int64_t x = decimal.value;
+
+                if (d > 0)
+                {
+                    x = x * p;
+                }
+                else if (d < 0)
+                {
+                    int64_t h = p / 2;  // 0.5
+
+                    if ((x >= h) || (x <= -h))
+                    {
+                        if (x >= 0)
+                            x += h;
+                        else
+                            x -= h;
+
+                        if (p != 0)
+                            x = x / p;
+                        else
+                            x = 0;
+                    }
                     else
+                    {
                         x = 0;
+                    }
                 }
-                else
+
+                // negative scale is not supported by CNX yet, set d to 0.
+                if (decimal.scale < 0)
                 {
-                    x = 0;
+                    do
+                        x *= 10;
+
+                    while (++decimal.scale < 0);
                 }
-            }
 
-            // negative scale is not supported by CNX yet, set d to 0.
-            if (decimal.scale < 0)
+                decimal.value = x;
+            }
+            else
             {
-                do
-                    x *= 10;
+                //@Bug 3101 - GCC 4.5.1 optimizes too aggressively here. Mark as volatile.
+                volatile int128_t p = 1;
 
-                while (++decimal.scale < 0);
+                if (!isNull && parm.size() > 1)  // round(X, D)
+                {
+                    int128_t nvp = p;
+                    d = parm[1]->data()->getIntVal(row, isNull);
+
+                    if (!isNull)
+                        helpers::decimalPlaceDec(d, nvp, decimal.scale);
+
+                    p = nvp;
+                }
+
+                if (isNull)
+                    break;
+
+                if (d < -datatypes::INT128MAXPRECISION)
+                {
+                    decimal.s128Value = 0;
+                    break;
+                }
+
+                int128_t x = decimal.s128Value;
+
+                if (d > 0)
+                {
+                    x = x * p;
+                }
+                else if (d < 0)
+                {
+                    int128_t h = p / 2;  // 0.5
+
+                    if ((x >= h) || (x <= -h))
+                    {
+                        if (x >= 0)
+                            x += h;
+                        else
+                            x -= h;
+
+                        if (p != 0)
+                            x = x / p;
+                        else
+                            x = 0;
+                    }
+                    else
+                    {
+                        x = 0;
+                    }
+                }
+
+                // negative scale is not supported by CNX yet, set d to 0.
+                if (decimal.scale < 0)
+                {
+                    do
+                        x *= 10;
+
+                    while (++decimal.scale < 0);
+                }
+
+                decimal.s128Value = x;
             }
-
-            decimal.value = x;
         }
         break;
 
@@ -624,7 +720,10 @@ string Func_round::getStrVal(Row& row,
             break;
     }
 
-    return  dataconvert::DataConvert::decimalToString(x.value, x.scale, op_ct.colDataType);
+    if (!op_ct.isWideDecimalType())
+        return x.toString();
+    else
+        return x.toString(true);
 }
 
 

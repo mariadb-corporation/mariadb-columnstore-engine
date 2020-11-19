@@ -53,7 +53,7 @@ namespace windowfunction
 
 
 template<typename T>
-boost::shared_ptr<WindowFunctionType> WF_nth_value<T>::makeFunction(int id, const string& name, int ct)
+boost::shared_ptr<WindowFunctionType> WF_nth_value<T>::makeFunction(int id, const string& name, int ct, WindowFunctionColumn* wc)
 {
     boost::shared_ptr<WindowFunctionType> func;
 
@@ -64,7 +64,6 @@ boost::shared_ptr<WindowFunctionType> WF_nth_value<T>::makeFunction(int id, cons
         case CalpontSystemCatalog::MEDINT:
         case CalpontSystemCatalog::INT:
         case CalpontSystemCatalog::BIGINT:
-        case CalpontSystemCatalog::DECIMAL:
         {
             func.reset(new WF_nth_value<int64_t>(id, name));
             break;
@@ -75,7 +74,6 @@ boost::shared_ptr<WindowFunctionType> WF_nth_value<T>::makeFunction(int id, cons
         case CalpontSystemCatalog::UMEDINT:
         case CalpontSystemCatalog::UINT:
         case CalpontSystemCatalog::UBIGINT:
-        case CalpontSystemCatalog::UDECIMAL:
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
         case CalpontSystemCatalog::TIMESTAMP:
@@ -85,6 +83,25 @@ boost::shared_ptr<WindowFunctionType> WF_nth_value<T>::makeFunction(int id, cons
             break;
         }
 
+        case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
+        {
+            decltype(datatypes::MAXDECIMALWIDTH) width =
+                wc->functionParms()[0]->resultType().colWidth;
+            if (width < datatypes::MAXDECIMALWIDTH)
+            {
+                if (ct == CalpontSystemCatalog::UDECIMAL)
+                    func.reset(new WF_nth_value<uint64_t>(id, name));
+                else
+                    func.reset(new WF_nth_value<int64_t>(id, name));
+            }
+            else if (width == datatypes::MAXDECIMALWIDTH)
+            {
+                func.reset(new WF_nth_value<int128_t>(id, name));
+            }
+            break;
+        }
+        
         case CalpontSystemCatalog::DOUBLE:
         case CalpontSystemCatalog::UDOUBLE:
         {
@@ -191,22 +208,9 @@ void WF_nth_value<T>::operator()(int64_t b, int64_t e, int64_t c)
             if (!fNthNull)
             {
                 implicit2T(idx, tmp, 0);
-
-                if (tmp <= 0)
-                {
-                    ostringstream oss;
-                    oss << tmp;
-                    throw IDBExcept(IDBErrorInfo::instance()->errorMsg(ERR_WF_ARG_OUT_OF_RANGE,
-                                    oss.str()), ERR_WF_ARG_OUT_OF_RANGE);
-                }
-
-                if (tmp > e) // prevent integer overflow
-                    tmp = e + 1;
-
-                fNth = (int64_t) tmp;
+                fNth = round(tmp);
             }
         }
-
 
         bool isNull = true;
 
@@ -232,7 +236,7 @@ void WF_nth_value<T>::operator()(int64_t b, int64_t e, int64_t c)
 
                 int64_t n = k + fNth - 1;
 
-                if (n <= e)
+                if (n <= e && n >= 0)
                 {
                     fRow.setData(getPointer(fRowData->at(n)));
                     getValue(colIn, fValue);
@@ -273,7 +277,7 @@ void WF_nth_value<T>::operator()(int64_t b, int64_t e, int64_t c)
 
 
 template
-boost::shared_ptr<WindowFunctionType> WF_nth_value<int64_t>::makeFunction(int, const string&, int);
+boost::shared_ptr<WindowFunctionType> WF_nth_value<int64_t>::makeFunction(int, const string&, int, WindowFunctionColumn*);
 
 
 }   //namespace

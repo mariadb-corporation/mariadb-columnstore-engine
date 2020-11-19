@@ -56,8 +56,12 @@ bool getUIntValFromParm(
     const execplan::SPTP& parm,
     uint64_t& value,
     bool& isNull,
-    const string& timeZone)
+    const string& timeZone,
+    bool& isBigVal,
+    int128_t& bigval)
 {
+    isBigVal = false;
+
     switch (parm->data()->resultType().colDataType)
     {
         case execplan::CalpontSystemCatalog::BIGINT:
@@ -102,22 +106,53 @@ bool getUIntValFromParm(
         {
             IDB_Decimal d = parm->data()->getDecimalVal(row, isNull);
 
-            if (parm->data()->resultType().colDataType == execplan::CalpontSystemCatalog::UDECIMAL &&
-                    d.value < 0)
+            if (parm->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
             {
-                d.value = 0;
+                isBigVal = true;
+
+                if (parm->data()->resultType().colDataType == execplan::CalpontSystemCatalog::UDECIMAL &&
+                        d.value < 0)
+                {
+                    bigval = 0;
+                    break;
+                }
+
+                int128_t scaleDivisor, scaleDivisor2;
+
+                datatypes::getScaleDivisor(scaleDivisor, d.scale);
+
+                scaleDivisor2 = (scaleDivisor <= 10) ? 1 : (scaleDivisor / 10);
+
+                int128_t tmpval = d.s128Value / scaleDivisor;
+                int128_t lefto = (d.s128Value - tmpval * scaleDivisor) / scaleDivisor2;
+
+                if (tmpval >= 0 && lefto > 4)
+                    tmpval++;
+
+                if (tmpval < 0 && lefto < -4)
+                    tmpval--;
+
+                bigval = tmpval;
             }
-            double dscale = d.scale;
-            int64_t tmpval = d.value / pow(10.0, dscale);
-            int lefto = (d.value - tmpval * pow(10.0, dscale)) / pow(10.0, dscale - 1);
+            else
+            {
+                if (parm->data()->resultType().colDataType == execplan::CalpontSystemCatalog::UDECIMAL &&
+                        d.value < 0)
+                {
+                    d.value = 0;
+                }
+                double dscale = d.scale;
+                int64_t tmpval = d.value / pow(10.0, dscale);
+                int lefto = (d.value - tmpval * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
-            if ( tmpval >= 0 && lefto > 4 )
-                tmpval++;
+                if (tmpval >= 0 && lefto > 4)
+                    tmpval++;
 
-            if ( tmpval < 0 && lefto < -4 )
-                tmpval--;
+                if (tmpval < 0 && lefto < -4)
+                    tmpval--;
 
-            value = tmpval;
+                value = tmpval;
+            }
         }
         break;
 
@@ -195,15 +230,39 @@ int64_t Func_bitand::getIntVal(Row& row,
     uint64_t val1 = 0;
     uint64_t val2 = 0;
 
-    if (!getUIntValFromParm(row, parm[0], val1, isNull, timeZone()) ||
-            !getUIntValFromParm(row, parm[1], val2, isNull, timeZone()))
+    int128_t bigval1 = 0;
+    int128_t bigval2 = 0;
+    bool isBigVal1;
+    bool isBigVal2;
+
+    if (!getUIntValFromParm(row, parm[0], val1, isNull, timeZone(), isBigVal1, bigval1) ||
+            !getUIntValFromParm(row, parm[1], val2, isNull, timeZone(), isBigVal2, bigval2))
     {
         std::ostringstream oss;
         oss << "bitand: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
         throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
     }
 
-    return val1 & val2;
+    if (LIKELY(!isBigVal1 && !isBigVal2))
+    {
+        return val1 & val2;
+    }
+
+    // Type promotion to int128_t
+    if (!isBigVal1)
+        bigval1 = val1;
+
+    if (!isBigVal2)
+        bigval2 = val2;
+
+    int128_t res = bigval1 & bigval2;
+
+    if (res > static_cast<int128_t>(UINT64_MAX))
+        res = UINT64_MAX;
+    else if (res < static_cast<int128_t>(INT64_MIN))
+        res = INT64_MIN;
+
+    return (int64_t) res;
 }
 
 
@@ -231,15 +290,39 @@ int64_t Func_leftshift::getIntVal(Row& row,
     uint64_t val1 = 0;
     uint64_t val2 = 0;
 
-    if (!getUIntValFromParm(row, parm[0], val1, isNull, timeZone()) ||
-            !getUIntValFromParm(row, parm[1], val2, isNull, timeZone()))
+    int128_t bigval1 = 0;
+    int128_t bigval2 = 0;
+    bool isBigVal1;
+    bool isBigVal2;
+
+    if (!getUIntValFromParm(row, parm[0], val1, isNull, timeZone(), isBigVal1, bigval1) ||
+            !getUIntValFromParm(row, parm[1], val2, isNull, timeZone(), isBigVal2, bigval2))
     {
         std::ostringstream oss;
         oss << "leftshift: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
         throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
     }
 
-    return val1 << val2;
+    if (LIKELY(!isBigVal1 && !isBigVal2))
+    {
+        return val1 << val2;
+    }
+
+    // Type promotion to int128_t
+    if (!isBigVal1)
+        bigval1 = val1;
+
+    if (!isBigVal2)
+        bigval2 = val2;
+
+    int128_t res = bigval1 << bigval2;
+
+    if (res > static_cast<int128_t>(UINT64_MAX))
+        res = UINT64_MAX;
+    else if (res < static_cast<int128_t>(INT64_MIN))
+        res = INT64_MIN;
+
+    return (int64_t) res;
 }
 
 
@@ -267,15 +350,39 @@ int64_t Func_rightshift::getIntVal(Row& row,
     uint64_t val1 = 0;
     uint64_t val2 = 0;
 
-    if (!getUIntValFromParm(row, parm[0], val1, isNull, timeZone()) ||
-            !getUIntValFromParm(row, parm[1], val2, isNull, timeZone()))
+    int128_t bigval1 = 0;
+    int128_t bigval2 = 0;
+    bool isBigVal1;
+    bool isBigVal2;
+
+    if (!getUIntValFromParm(row, parm[0], val1, isNull, timeZone(), isBigVal1, bigval1) ||
+            !getUIntValFromParm(row, parm[1], val2, isNull, timeZone(), isBigVal2, bigval2))
     {
         std::ostringstream oss;
         oss << "rightshift: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
         throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
     }
 
-    return val1 >> val2;
+    if (LIKELY(!isBigVal1 && !isBigVal2))
+    {
+        return val1 >> val2;
+    }
+
+    // Type promotion to int128_t
+    if (!isBigVal1)
+        bigval1 = val1;
+
+    if (!isBigVal2)
+        bigval2 = val2;
+
+    int128_t res = bigval1 >> bigval2;
+
+    if (res > static_cast<int128_t>(UINT64_MAX))
+        res = UINT64_MAX;
+    else if (res < static_cast<int128_t>(INT64_MIN))
+        res = INT64_MIN;
+
+    return (int64_t) res;
 }
 
 
@@ -303,15 +410,39 @@ int64_t Func_bitor::getIntVal(Row& row,
     uint64_t val1 = 0;
     uint64_t val2 = 0;
 
-    if (!getUIntValFromParm(row, parm[0], val1, isNull, timeZone()) ||
-            !getUIntValFromParm(row, parm[1], val2, isNull, timeZone()))
+    int128_t bigval1 = 0;
+    int128_t bigval2 = 0;
+    bool isBigVal1;
+    bool isBigVal2;
+
+    if (!getUIntValFromParm(row, parm[0], val1, isNull, timeZone(), isBigVal1, bigval1) ||
+            !getUIntValFromParm(row, parm[1], val2, isNull, timeZone(), isBigVal2, bigval2))
     {
         std::ostringstream oss;
         oss << "bitor: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
         throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
     }
 
-    return val1 | val2;
+    if (LIKELY(!isBigVal1 && !isBigVal2))
+    {
+        return val1 | val2;
+    }
+
+    // Type promotion to int128_t
+    if (!isBigVal1)
+        bigval1 = val1;
+
+    if (!isBigVal2)
+        bigval2 = val2;
+
+    int128_t res = bigval1 | bigval2;
+
+    if (res > static_cast<int128_t>(UINT64_MAX))
+        res = UINT64_MAX;
+    else if (res < static_cast<int128_t>(INT64_MIN))
+        res = INT64_MIN;
+
+    return (int64_t) res;
 }
 
 uint64_t Func_bitor::getUintVal(rowgroup::Row& row,
@@ -347,15 +478,39 @@ int64_t Func_bitxor::getIntVal(Row& row,
     uint64_t val1 = 0;
     uint64_t val2 = 0;
 
-    if (!getUIntValFromParm(row, parm[0], val1, isNull, timeZone()) ||
-            !getUIntValFromParm(row, parm[1], val2, isNull, timeZone()))
+    int128_t bigval1 = 0;
+    int128_t bigval2 = 0;
+    bool isBigVal1;
+    bool isBigVal2;
+
+    if (!getUIntValFromParm(row, parm[0], val1, isNull, timeZone(), isBigVal1, bigval1) ||
+            !getUIntValFromParm(row, parm[1], val2, isNull, timeZone(), isBigVal2, bigval2))
     {
         std::ostringstream oss;
         oss << "bitxor: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
         throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
     }
 
-    return val1 ^ val2;
+    if (LIKELY(!isBigVal1 && !isBigVal2))
+    {
+        return val1 ^ val2;
+    }
+
+    // Type promotion to int128_t
+    if (!isBigVal1)
+        bigval1 = val1;
+
+    if (!isBigVal2)
+        bigval2 = val2;
+
+    int128_t res = bigval1 ^ bigval2;
+
+    if (res > static_cast<int128_t>(UINT64_MAX))
+        res = UINT64_MAX;
+    else if (res < static_cast<int128_t>(INT64_MIN))
+        res = INT64_MIN;
+
+    return (int64_t) res;
 }
 
 
@@ -367,6 +522,20 @@ int64_t Func_bitxor::getIntVal(Row& row,
 CalpontSystemCatalog::ColType Func_bit_count::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
 {
     return resultType;
+}
+
+inline int64_t bitCount(uint64_t val)
+{
+    // Refer to Hacker's Delight Chapter 5
+    // for the bit counting algo used here
+    val = val - ((val >> 1) & 0x5555555555555555);
+    val = (val & 0x3333333333333333) + ((val >> 2) & 0x3333333333333333);
+    val = (val + (val >> 4)) & 0x0F0F0F0F0F0F0F0F;
+    val = val + (val >> 8);
+    val = val + (val >> 16);
+    val = val + (val >> 32);
+
+    return (int64_t)(val & 0x000000000000007F);
 }
 
 int64_t Func_bit_count::getIntVal(Row& row,
@@ -382,24 +551,25 @@ int64_t Func_bit_count::getIntVal(Row& row,
 
     uint64_t val = 0;
 
-    if (!getUIntValFromParm(row, parm[0], val, isNull, timeZone()))
+    int128_t bigval = 0;
+    bool isBigVal;
+
+    if (!getUIntValFromParm(row, parm[0], val, isNull, timeZone(), isBigVal, bigval))
     {
         std::ostringstream oss;
         oss << "bit_count: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
         throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
     }
 
-    // Refer to Hacker's Delight Chapter 5
-    // for the bit counting algo used here
-    val = val - ((val >> 1) & 0x5555555555555555);
-    val = (val & 0x3333333333333333) + ((val >> 2) & 0x3333333333333333);
-    val = (val + (val >> 4)) & 0x0F0F0F0F0F0F0F0F;
-    val = val + (val >> 8);
-    val = val + (val >> 16);
-    val = val + (val >> 32);
-
-    return (int64_t)(val & 0x000000000000007F);
-
+    if (LIKELY(!isBigVal))
+    {
+        return bitCount(val);
+    }
+    else
+    {
+        return (bitCount(*reinterpret_cast<uint64_t*>(&bigval)) +
+                bitCount(*(reinterpret_cast<uint64_t*>(&bigval) + 1)));
+    }
 }
 
 

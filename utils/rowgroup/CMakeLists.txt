@@ -15,4 +15,3 @@ add_dependencies(rowgroup loggingcpp)
 target_link_libraries(rowgroup ${NETSNMP_LIBRARIES} funcexp)
 
 install(TARGETS rowgroup DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
-

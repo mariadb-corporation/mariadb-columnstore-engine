@@ -45,6 +45,7 @@
 #include "mcsv1_udaf.h"
 #include "calpontsystemcatalog.h"
 #include "windowfunctioncolumn.h"
+#include "hasher.h"
 
 #if defined(_MSC_VER) && defined(xxxRGNODE_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
@@ -54,6 +55,38 @@
 
 namespace mcsv1sdk
 {
+// A hasher that handles int128_t    
+template<class T>
+struct hasher
+{
+    inline size_t operator()(T val) const
+    {
+        return fHasher((char*) &val, sizeof(T));
+    }
+
+private:
+    utils::Hasher fHasher;
+};
+
+template<>
+struct hasher<long double>
+{
+    inline size_t operator()(long double val) const
+    {
+        if (sizeof(long double) == 8) // Probably just MSC, but you never know.
+        {
+            return fHasher((char*) &val, sizeof(long double));
+        }
+        else
+        {
+            // For Linux x86_64, long double is stored in 128 bits, but only 80 are significant
+            return fHasher((char*) &val, 10);
+        }
+    }
+private:
+    utils::Hasher fHasher;
+};
+
 // Override UserData for data storage
 struct ModaData : public UserData
 {
@@ -69,22 +102,22 @@ struct ModaData : public UserData
     virtual void unserialize(messageqcpp::ByteStream& bs);
 
     template<class T>
-    std::unordered_map<T, uint32_t>* getMap() 
+    std::unordered_map<T, uint32_t, hasher<T> >* getMap() 
     {
         if (!fMap)
         {
             // Just in time creation
-            fMap = new std::unordered_map<T, uint32_t>;
+            fMap = new std::unordered_map<T, uint32_t, hasher<T> >;
         }
-        return (std::unordered_map<T, uint32_t>*) fMap;
+        return (std::unordered_map<T, uint32_t, hasher<T> >*) fMap;
     }
     
     // The const version is only called by serialize()
     // It shouldn't (and can't) create a new map.
     template<class T>
-    std::unordered_map<T, uint32_t>* getMap() const
+    std::unordered_map<T, uint32_t, hasher<T> >* getMap() const
     {
-        return (std::unordered_map<T, uint32_t>*) fMap;
+        return (std::unordered_map<T, uint32_t, hasher<T> >*) fMap;
     }
     
     template<class T>
@@ -92,7 +125,7 @@ struct ModaData : public UserData
     {
         if (fMap)
         {
-            delete (std::unordered_map<T, uint32_t>*) fMap;
+            delete (std::unordered_map<T, uint32_t, hasher<T> >*) fMap;
             fMap = NULL;
         }
     }
@@ -123,10 +156,10 @@ private:
     template<class T>
     void serializeMap(messageqcpp::ByteStream& bs) const
     {
-        std::unordered_map<T, uint32_t>* map = getMap<T>();
+        std::unordered_map<T, uint32_t, hasher<T> >* map = getMap<T>();
         if (map)
         {
-            typename std::unordered_map<T, uint32_t>::const_iterator iter;
+            typename std::unordered_map<T, uint32_t, hasher<T> >::const_iterator iter;
             bs << (uint64_t)map->size();
             for (iter = map->begin(); iter != map->end(); ++iter)
             {
@@ -147,7 +180,7 @@ private:
         T num;
         uint64_t sz;
         bs >> sz;
-        std::unordered_map<T, uint32_t>* map = getMap<T>();
+        std::unordered_map<T, uint32_t, hasher<T> >* map = getMap<T>();
         map->clear();
         for (uint64_t i = 0; i < sz; ++i)
         {
@@ -234,6 +267,7 @@ protected:
     Moda_impl_T<int16_t>     moda_impl_int16;
     Moda_impl_T<int32_t>     moda_impl_int32;
     Moda_impl_T<int64_t>     moda_impl_int64;
+    Moda_impl_T<int128_t>    moda_impl_int128;
     Moda_impl_T<uint8_t>     moda_impl_uint8;
     Moda_impl_T<uint16_t>    moda_impl_uint16;
     Moda_impl_T<uint32_t>    moda_impl_uint32;

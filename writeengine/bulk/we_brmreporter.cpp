@@ -34,6 +34,8 @@
 #include "we_log.h"
 #include "cacheutils.h"
 #include "IDBPolicy.h"
+#include "mcs_decimal.h"
+#include "dataconvert.h"
 
 namespace WriteEngine
 {
@@ -305,12 +307,27 @@ void BRMReporter::sendCPToFile( )
 
         for (unsigned int i = 0; i < fCPInfo.size(); i++)
         {
-            fRptFile << "CP: " << fCPInfo[i].startLbid << ' ' <<
-                     fCPInfo[i].max       << ' ' <<
-                     fCPInfo[i].min       << ' ' <<
-                     fCPInfo[i].seqNum    << ' ' <<
-                     fCPInfo[i].type      << ' ' <<
-                     fCPInfo[i].newExtent << std::endl;
+            if (!datatypes::isWideDecimalType(fCPInfo[i].type, fCPInfo[i].colWidth))
+            {
+                fRptFile << "CP: " << fCPInfo[i].startLbid << ' ' <<
+                         fCPInfo[i].max       << ' ' <<
+                         fCPInfo[i].min       << ' ' <<
+                         fCPInfo[i].seqNum    << ' ' <<
+                         fCPInfo[i].type      << ' ' <<
+                         fCPInfo[i].newExtent << std::endl;
+            }
+            else
+            {
+                datatypes::TSInt128 bigMin(&fCPInfo[i].bigMin);
+                datatypes::TSInt128 bigMax(&fCPInfo[i].bigMax);
+        
+                fRptFile << "CP: " << fCPInfo[i].startLbid << ' ' <<
+                         bigMax               << ' ' <<
+                         bigMin               << ' ' <<
+                         fCPInfo[i].seqNum    << ' ' <<
+                         fCPInfo[i].type      << ' ' <<
+                         fCPInfo[i].newExtent << std::endl;
+            }
         }
     }
 }

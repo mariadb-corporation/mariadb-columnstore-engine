@@ -39,6 +39,7 @@
 #include <iosfwd>
 #include <limits>
 
+#include "mcs_basic_types.h"
 #include "../../writeengine/shared/we_typeext.h"
 #include "columnresult.h"
 #include "bytestream.h"
@@ -48,55 +49,16 @@
 #undef min
 #undef max
 
-// Because including my_sys.h in a Columnstore header causes too many conflicts
-struct charset_info_st;
-typedef const struct charset_info_st CHARSET_INFO;
+#include "mcs_datatype.h"
 
 
-#ifdef _MSC_VER
-#define __attribute__(x)
-#endif
-
-namespace
-{
-const int64_t MIN_TINYINT	__attribute__ ((unused)) = std::numeric_limits<int8_t>::min() + 2;	 //-126;
-const int64_t MAX_TINYINT	__attribute__ ((unused)) = std::numeric_limits<int8_t>::max();		//127;
-const int64_t MIN_SMALLINT   __attribute__ ((unused)) = std::numeric_limits<int16_t>::min() + 2;	 //-32766;
-const int64_t MAX_SMALLINT   __attribute__ ((unused)) = std::numeric_limits<int16_t>::max();	   //32767;
-const int64_t MIN_MEDINT	__attribute__ ((unused)) = -(1ULL << 23);	//-8388608;
-const int64_t MAX_MEDINT	__attribute__ ((unused)) = (1ULL << 23) - 1;	//8388607;
-const int64_t MIN_INT		__attribute__ ((unused)) = std::numeric_limits<int32_t>::min() + 2;	 //-2147483646;
-const int64_t MAX_INT		__attribute__ ((unused)) = std::numeric_limits<int32_t>::max();	   //2147483647;
-const int64_t MIN_BIGINT	 __attribute__ ((unused)) = std::numeric_limits<int64_t>::min() + 2;	 //-9223372036854775806LL;
-const int64_t MAX_BIGINT	 __attribute__ ((unused)) = std::numeric_limits<int64_t>::max();	   //9223372036854775807
-
-const uint64_t MIN_UINT	  __attribute__ ((unused)) = 0;
-const uint64_t MIN_UTINYINT  __attribute__ ((unused)) = 0;
-const uint64_t MIN_USMALLINT __attribute__ ((unused)) = 0;
-const uint64_t MIN_UMEDINT	 __attribute__ ((unused)) = 0;
-const uint64_t MIN_UBIGINT   __attribute__ ((unused)) = 0;
-const uint64_t MAX_UINT	  __attribute__ ((unused)) = std::numeric_limits<uint32_t>::max() - 2;	//4294967293
-const uint64_t MAX_UTINYINT  __attribute__ ((unused)) = std::numeric_limits<uint8_t>::max() - 2;	 //253;
-const uint64_t MAX_USMALLINT __attribute__ ((unused)) = std::numeric_limits<uint16_t>::max() - 2;	//65533;
-const uint64_t MAX_UMEDINT	__attribute__ ((unused)) = (1ULL << 24) - 1;                            //16777215
-const uint64_t MAX_UBIGINT   __attribute__ ((unused)) = std::numeric_limits<uint64_t>::max() - 2;	//18446744073709551613
-
-const float MAX_FLOAT		__attribute__ ((unused)) = std::numeric_limits<float>::max();		 //3.402823466385289e+38
-const float MIN_FLOAT		__attribute__ ((unused)) = -std::numeric_limits<float>::max();
-const double MAX_DOUBLE	  __attribute__ ((unused)) = std::numeric_limits<double>::max();		//1.7976931348623157e+308
-const double MIN_DOUBLE	  __attribute__ ((unused)) = -std::numeric_limits<double>::max();
-const long double MAX_LONGDOUBLE	  __attribute__ ((unused)) = std::numeric_limits<long double>::max();		//1.7976931348623157e+308
-const long double MIN_LONGDOUBLE	  __attribute__ ((unused)) = -std::numeric_limits<long double>::max();
-
-
-const uint64_t AUTOINCR_SATURATED __attribute__ ((unused)) = std::numeric_limits<uint64_t>::max();
-}
 
 class ExecPlanTest;
 namespace messageqcpp
 {
 class MessageQueueClient;
 }
+
 
 // This is now set in the Columnstore.xml file
 // Use, e.g., 0x500 for uid 500 so it is easy to spot in ipcs list
@@ -116,7 +78,7 @@ const int32_t IDB_VTABLE_ID = CNX_VTABLE_ID;
  *
  * This object encapsulates the system catalog stored in the engine
  */
-class CalpontSystemCatalog
+class CalpontSystemCatalog: public datatypes::SystemCatalog
 {
 public:
 
@@ -129,49 +91,6 @@ public:
      *
      */
     enum Identity { EC = 0, FE };
-
-    /** the set of Calpont column widths
-     *
-     */
-    enum ColWidth { ONE_BIT, ONE_BYTE, TWO_BYTE, THREE_BYTE, FOUR_BYTE, FIVE_BYTE, SIX_BYTE, SEVEN_BYTE, EIGHT_BYTE };
-
-    /** the set of Calpont column data types
-     *
-     */
-    enum ColDataType
-    {
-        BIT,			/*!< BIT type */
-        TINYINT,		/*!< TINYINT type */
-        CHAR,			/*!< CHAR type */
-        SMALLINT,		/*!< SMALLINT type */
-        DECIMAL,		/*!< DECIMAL type */
-        MEDINT,			/*!< MEDINT type */
-        INT,			/*!< INT type */
-        FLOAT,			/*!< FLOAT type */
-        DATE,			/*!< DATE type */
-        BIGINT,			/*!< BIGINT type */
-        DOUBLE,			/*!< DOUBLE type */
-        DATETIME,		/*!< DATETIME type */
-        VARCHAR,		/*!< VARCHAR type */
-        VARBINARY,		/*!< VARBINARY type */
-        CLOB,			/*!< CLOB type */
-        BLOB,			/*!< BLOB type */
-        UTINYINT,		/*!< Unsigned TINYINT type */
-        USMALLINT,		/*!< Unsigned SMALLINT type */
-        UDECIMAL,		/*!< Unsigned DECIMAL type */
-        UMEDINT,		/*!< Unsigned MEDINT type */
-        UINT,			/*!< Unsigned INT type */
-        UFLOAT,			/*!< Unsigned FLOAT type */
-        UBIGINT,		/*!< Unsigned BIGINT type */
-        UDOUBLE,		/*!< Unsigned DOUBLE type */
-        TEXT,           /*!< TEXT type */
-        TIME,           /*!< TIME type */
-        TIMESTAMP,      /*!< TIMESTAMP type */
-        NUM_OF_COL_DATA_TYPE, /* NEW TYPES ABOVE HERE */
-        LONGDOUBLE,		/* @bug3241, dev and variance calculation only */
-        STRINT,			/* @bug3532, string as int for fast comparison */
-        UNDEFINED       /*!< Undefined - used in UDAF API */
-    };
 
     /** the set of column constraint types
      *
@@ -278,21 +197,18 @@ public:
       */
     typedef std::vector<DictOID> DictOIDList;
 
+
     /** the structure returned by colType
      *
      * defaultValue is only meaningful when constraintType == DEFAULT_CONSTRAINT
      */
-    struct ColType
+    struct ColType: public datatypes::SystemCatalog::TypeHolderStd
     {
         ColType();
-        int32_t colWidth;
         ConstraintType constraintType;
-        ColDataType colDataType;
         DictOID ddn;
         std::string defaultValue;
         int32_t colPosition;	// temporally put here. may need to have ColInfo struct later
-        int32_t scale;  //number after decimal points
-        int32_t precision;
         int32_t compressionType;
         OID columnOID;
         bool	 autoincrement; //set to true if  SYSCOLUMN autoincrement is �y�
@@ -326,6 +242,23 @@ public:
             b >> (uint32_t&)compressionType;
             b >> charsetNumber;
         }
+
+        /**
+         * @brief convert a columns data, represnted as a string,
+         * to its native format
+         * @param       data       - the string representation
+         * @param [OUT] bSaturate  - the value was truncated/adjusted
+         * @param       timeZone   - the time zone name, for TIMESTAMP conversion
+         * @param       nullFlag   - SQL NULL flag
+         * @param       nRoundtrip
+         * @param       isUpdate
+         */
+        boost::any convertColumnData(const std::string& data,
+                                     bool& bSaturate,
+                                     const std::string& timeZone,
+                                     bool nulFlag = false,
+                                     bool noRoundup = false,
+                                     bool isUpdate = false) const;
 
         const std::string toString() const;
 
@@ -361,6 +294,8 @@ public:
         {
             return !(*this == t);
         }
+
+        static ColType convertUnionColType(std::vector<ColType>&);
 
     };
 
@@ -962,80 +897,9 @@ const CalpontSystemCatalog::TableAliasName make_aliastable(const std::string& s,
 const CalpontSystemCatalog::TableAliasName make_aliasview(const std::string& s, const std::string& t, const std::string& a, const std::string& v,
                                                           const bool fisColumnStore = true, int lower_case_table_names=0);
 
-/** convenience function to determine if column type is a char
- *  type
- */
-inline bool isCharType(const execplan::CalpontSystemCatalog::ColDataType type)
+inline bool isNull(int128_t val, const execplan::CalpontSystemCatalog::ColType& ct)
 {
-    return (execplan::CalpontSystemCatalog::VARCHAR == type ||
-            execplan::CalpontSystemCatalog::CHAR == type ||
-            execplan::CalpontSystemCatalog::BLOB == type ||
-            execplan::CalpontSystemCatalog::TEXT == type);
-}
-
-/** convenience function to determine if column type is a
- *  numeric type
- */
-inline bool isNumeric(const execplan::CalpontSystemCatalog::ColDataType type)
-{
-    switch (type)
-    {
-        case execplan::CalpontSystemCatalog::TINYINT:
-        case execplan::CalpontSystemCatalog::SMALLINT:
-        case execplan::CalpontSystemCatalog::MEDINT:
-        case execplan::CalpontSystemCatalog::INT:
-        case execplan::CalpontSystemCatalog::BIGINT:
-        case execplan::CalpontSystemCatalog::FLOAT:
-        case execplan::CalpontSystemCatalog::DOUBLE:
-        case execplan::CalpontSystemCatalog::DECIMAL:
-        case execplan::CalpontSystemCatalog::UTINYINT:
-        case execplan::CalpontSystemCatalog::USMALLINT:
-        case execplan::CalpontSystemCatalog::UMEDINT:
-        case execplan::CalpontSystemCatalog::UINT:
-        case execplan::CalpontSystemCatalog::UBIGINT:
-        case execplan::CalpontSystemCatalog::UFLOAT:
-        case execplan::CalpontSystemCatalog::UDOUBLE:
-        case execplan::CalpontSystemCatalog::UDECIMAL:
-            return true;
-
-        default:
-            return false;
-    }
-}
-
-/** convenience function to determine if column type is an
- *  unsigned type
- */
-inline bool isUnsigned(const execplan::CalpontSystemCatalog::ColDataType type)
-{
-    switch (type)
-    {
-        case execplan::CalpontSystemCatalog::UTINYINT:
-        case execplan::CalpontSystemCatalog::USMALLINT:
-        case execplan::CalpontSystemCatalog::UMEDINT:
-        case execplan::CalpontSystemCatalog::UINT:
-        case execplan::CalpontSystemCatalog::UBIGINT:
-            return true;
-
-        default:
-            return false;
-    }
-}
-
-inline bool isSignedInteger(const execplan::CalpontSystemCatalog::ColDataType type)
-{
-    switch (type)
-    {
-        case execplan::CalpontSystemCatalog::TINYINT:
-        case execplan::CalpontSystemCatalog::SMALLINT:
-        case execplan::CalpontSystemCatalog::MEDINT:
-        case execplan::CalpontSystemCatalog::INT:
-        case execplan::CalpontSystemCatalog::BIGINT:
-            return true;
-
-        default:
-            return false;
-    }
+    return datatypes::Decimal::isWideDecimalNullValue(val);
 }
 
 inline bool isNull(int64_t val, const execplan::CalpontSystemCatalog::ColType& ct)
@@ -1212,6 +1076,13 @@ inline bool isNull(int64_t val, const execplan::CalpontSystemCatalog::ColType& c
             break;
         }
 
+        case execplan::CalpontSystemCatalog::BINARY:
+        {
+            ret = false;
+
+            break;
+        }
+        
         default:
             break;
     }

@@ -37,6 +37,7 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/uuid/uuid.hpp>
 
+#include "mcs_basic_types.h"
 #include "primitivemsg.h"
 #include "serializeable.h"
 #include "primitivestep.h"
@@ -49,6 +50,8 @@ namespace joblist
 {
 const uint32_t LOGICAL_BLOCKS_CONVERTER = 23;  		// 10 + 13.  13 to convert to logical blocks,
 // 10 to convert to groups of 1024 logical blocks
+const uint8_t CP_FLAG_AND_LBID = 9; // # bytes used for CP boolean and the lbid
+                                    // used by BatchPrimitiveProcessorJL::countThisMsg()
 
 // forward reference
 struct JobInfo;
@@ -166,9 +169,9 @@ public:
     void deserializeAggregateResults(messageqcpp::ByteStream* in,
                                      std::vector<rowgroup::RGData>* out) const;
     void getRowGroupData(messageqcpp::ByteStream& in, std::vector<rowgroup::RGData>* out,
-                         bool* validCPData, uint64_t* lbid, int64_t* min, int64_t* max,
+                         bool* validCPData, uint64_t* lbid, int128_t* min, int128_t* max,
                          uint32_t* cachedIO,	uint32_t* physIO, uint32_t* touchedBlocks, bool* countThis,
-                         uint32_t threadID) const;
+                         uint32_t threadID, bool* hasBinaryColumn, const execplan::CalpontSystemCatalog::ColType& colType) const;
     void deserializeAggregateResult(messageqcpp::ByteStream* in,
                                     std::vector<rowgroup::RGData>* out) const;
     bool countThisMsg(messageqcpp::ByteStream& in) const;
@@ -279,9 +282,14 @@ private:
 
     uint16_t relRids[LOGICAL_BLOCK_RIDS];
     boost::scoped_array<uint64_t> absRids;
+    // TODO MCOL-641 Do we need uint128_t buffers here?
+    // When would sendValues=true, in which case values[]
+    // is sent to primproc?
     uint64_t values[LOGICAL_BLOCK_RIDS];
     uint16_t ridCount;
     bool needStrValues;
+
+    uint16_t wideColumnsWidths;
 
     std::vector<SCommand> filterSteps;
     std::vector<SCommand> projectSteps;

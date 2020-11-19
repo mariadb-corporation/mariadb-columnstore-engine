@@ -108,9 +108,12 @@ enum ColType                            /** @brief Column type enumeration*/
     WR_USHORT           = 14,           /** @brief Unsigned Short */
     WR_UINT             = 15,           /** @brief Unsigned Int */
     WR_ULONGLONG        = 16,           /** @brief Unsigned Long long*/
-    WR_TEXT             = 17,            /** @brief TEXT */
+    WR_TEXT             = 17,           /** @brief TEXT */
     WR_MEDINT           = 18,           /** @brief Medium Int */
-    WR_UMEDINT          = 19            /** @brief Unsigned Medium Int */
+    WR_UMEDINT          = 19,           /** @brief Unsigned Medium Int */
+    WR_BINARY           = 20           /** @brief BINARY */
+    // WIP
+    //WR_INT128           
 };
 
 // Describes relation of field to column for a bulk load
@@ -299,6 +302,7 @@ struct ColStruct                        /** @brief Column Interface Struct*/
 typedef std::vector<ColStruct>      ColStructList; /** @brief column struct list */
 typedef std::vector<ColTupleList>   ColValueList;  /** @brief column value list */
 typedef std::vector<RID>            RIDList;       /** @brief RID list */
+typedef std::vector<execplan::CalpontSystemCatalog::ColType>      CSCTypesList; /** @brief CSC column types list */
 
 typedef std::vector<std::string> dictStr;
 typedef std::vector<dictStr> DictStrList;
@@ -343,7 +347,7 @@ struct JobColumn                        /** @brief Job Column Structure */
     execplan::CalpontSystemCatalog::ColDataType    dataType;            /** @brief column data type */
     ColType        weType;              /** @brief write engine data type */
     std::string    typeName;            /** @brief data type name */
-    uint64_t       emptyVal;            /** @brief default empty value */
+    uint128_t       emptyVal;            /** @brief default empty value */
     int            width;               /** @brief column width; for a dictionary column, this is "eventually" the token width */
     int            definedWidth;        /** @brief column width as defined in the table, used for non-dictionary strings */
     int            dctnryWidth;         /** @brief dictionary width */

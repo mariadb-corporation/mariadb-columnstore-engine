@@ -29,6 +29,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include "mcs_basic_types.h"
 
 namespace utils
 {
@@ -343,6 +344,25 @@ public:
         h2 += h1;
 
         return h1;
+    }
+};
+
+// TODO a copy of these classes also exists in primitiveprocessor.h; consolidate
+class Hash128
+{
+public:
+    inline size_t operator()(const int128_t i) const
+    {
+        return *reinterpret_cast<const uint64_t*>(&i);
+    }
+};
+
+class Equal128
+{
+public:
+    inline bool operator()(const int128_t f1, const int128_t f2) const
+    {
+        return f1 == f2;
     }
 };
 

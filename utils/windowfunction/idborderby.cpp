@@ -47,7 +47,7 @@ using namespace rowgroup;
 #include "idborderby.h"
 
 #include "joblisttypes.h"
-
+#include "mcs_decimal.h"
 #include "collation.h"
 
 // See agg_arg_charsets in sql_type.h to see conversion rules for 
@@ -153,6 +153,35 @@ int BigIntCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
         if (v1 != nullValue && v2 == nullValue)
             ret = fSpec.fNf;
         else if (v1 == nullValue && v2 != nullValue)
+            ret = -fSpec.fNf;
+    }
+    else
+    {
+        if (v1 > v2)
+            ret = fSpec.fAsc;
+        else if (v1 < v2)
+            ret = -fSpec.fAsc;
+    }
+
+    return ret;
+}
+
+int WideDecimalCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
+{
+    l->row1().setData(r1);
+    l->row2().setData(r2);
+
+    int ret = 0;
+    int128_t v1 = *(l->row1().getBinaryField_offset<int128_t>(keyColumnOffset));
+    int128_t v2 = *(l->row2().getBinaryField_offset<int128_t>(keyColumnOffset));
+    bool v1IsNull = v1 == datatypes::Decimal128Null;
+    bool v2IsNull = v2 == datatypes::Decimal128Null;
+
+    if (v1IsNull || v2IsNull)
+    {
+        if (!v1IsNull && v2IsNull)
+            ret = fSpec.fNf;
+        else if (v1IsNull  && !v2IsNull)
             ret = -fSpec.fNf;
     }
     else
@@ -537,6 +566,7 @@ void CompareRule::revertRules()
 void CompareRule::compileRules(const std::vector<IdbSortSpec>& spec, const rowgroup::RowGroup& rg)
 {
     const vector<CalpontSystemCatalog::ColDataType>& types = rg.getColTypes();
+    const auto& offsets = rg.getOffsets();
 
     for (vector<IdbSortSpec>::const_iterator i = spec.begin(); i != spec.end(); i++)
     {
@@ -574,14 +604,16 @@ void CompareRule::compileRules(const std::vector<IdbSortSpec>& spec, const rowgr
                 uint32_t len = rg.getColumnWidth(i->fIndex);
                 switch (len)
                 {
+                    case datatypes::MAXDECIMALWIDTH:
+                        c = new WideDecimalCompare(*i, offsets[i->fIndex]); break;
+                    case datatypes::MAXLEGACYWIDTH:
+                        c = new BigIntCompare(*i); break;
                     case 1 :
                         c = new TinyIntCompare(*i); break;
                     case 2 :
                         c = new SmallIntCompare(*i); break;
                     case 4 :
                         c = new IntCompare(*i); break;
-                    default:
-                        c = new BigIntCompare(*i);
                 }
 
                 fCompares.push_back(c);
@@ -802,8 +834,6 @@ bool EqualCompData::operator()(Row::Pointer a, Row::Pointer b)
             case CalpontSystemCatalog::MEDINT:
             case CalpontSystemCatalog::INT:
             case CalpontSystemCatalog::BIGINT:
-            case CalpontSystemCatalog::DECIMAL:
-            case CalpontSystemCatalog::UDECIMAL:
             case CalpontSystemCatalog::UTINYINT:
             case CalpontSystemCatalog::USMALLINT:
             case CalpontSystemCatalog::UMEDINT:
@@ -816,6 +846,22 @@ bool EqualCompData::operator()(Row::Pointer a, Row::Pointer b)
             {
                 // equal compare. ignore sign and null
                 eq = (fRow1.getUintField(*i) == fRow2.getUintField(*i));
+                break;
+            }
+
+            case CalpontSystemCatalog::DECIMAL:
+            case CalpontSystemCatalog::UDECIMAL:
+            {
+                // equal compare. ignore sign and null
+                if (UNLIKELY(fRow1.getColumnWidth(*i) < datatypes::MAXDECIMALWIDTH))
+                {
+                    eq = (fRow1.getUintField(*i) == fRow2.getUintField(*i));
+                }
+                else if (fRow1.getColumnWidth(*i) == datatypes::MAXDECIMALWIDTH)
+                {
+                    eq = (*fRow1.getBinaryField<int128_t>(*i) ==
+                            *fRow2.getBinaryField<int128_t>(*i));
+                }
                 break;
             }
 

@@ -43,6 +43,7 @@ namespace execplan
 
 class ArithmeticOperator : public Operator
 {
+using cscType = execplan::CalpontSystemCatalog::ColType;
 
 public:
     ArithmeticOperator();
@@ -195,12 +196,21 @@ public:
         return TreeNode::getBoolVal();
     }
     void adjustResultType(const CalpontSystemCatalog::ColType& m);
+    inline bool getOverflowCheck() const
+    {
+        return fDecimalOverflowCheck;
+    }
+    inline void setOverflowCheck(bool check)
+    {
+        fDecimalOverflowCheck = check;
+    }
 
 private:
     template <typename result_t>
     inline result_t execute(result_t op1, result_t op2, bool& isNull);
     inline void execute(IDB_Decimal& result, IDB_Decimal op1, IDB_Decimal op2, bool& isNull);
     std::string fTimeZone;
+    bool fDecimalOverflowCheck;
 };
 
 #include "parsetree.h"
@@ -236,12 +246,11 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
         case execplan::CalpontSystemCatalog::LONGDOUBLE:
             fResult.longDoubleVal = execute(lop->getLongDoubleVal(row, isNull), rop->getLongDoubleVal(row, isNull), isNull);
             break;
-
+        // WIP MCOL-641
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
-            execute (fResult.decimalVal, lop->getDecimalVal(row, isNull), rop->getDecimalVal(row, isNull), isNull);
+            execute(fResult.decimalVal, lop->getDecimalVal(row, isNull), rop->getDecimalVal(row, isNull), isNull);
             break;
-
         default:
         {
             std::ostringstream oss;
@@ -287,79 +296,152 @@ inline void ArithmeticOperator::execute(IDB_Decimal& result, IDB_Decimal op1, ID
     switch (fOp)
     {
         case OP_ADD:
-            if (result.scale == op1.scale && result.scale == op2.scale)
+            if (fOperationType.colWidth == datatypes::MAXDECIMALWIDTH)
             {
-                result.value = op1.value + op2.value;
-                break;
+                if (LIKELY(!fDecimalOverflowCheck))
+                {
+                    datatypes::Decimal::addition<decltype(result.s128Value), false>(
+                        op1, op2, result);
+                }
+                else
+                {
+                    datatypes::Decimal::addition<decltype(result.s128Value), true>(
+                        op1, op2, result);
+                }
             }
-
-            if (result.scale >= op1.scale)
-                op1.value *= IDB_pow[result.scale - op1.scale];
+            else if (fOperationType.colWidth == utils::MAXLEGACYWIDTH)
+            {
+                if (LIKELY(!fDecimalOverflowCheck))
+                {
+                    datatypes::Decimal::addition<decltype(result.value), false>(
+                        op1, op2, result);
+                }
+                else
+                {
+                    datatypes::Decimal::addition<decltype(result.value), true>(
+                        op1, op2, result);
+                }
+            }
             else
-                op1.value = (int64_t)(op1.value > 0 ?
-                                      (double)op1.value / IDB_pow[op1.scale - result.scale] + 0.5 :
-                                      (double)op1.value / IDB_pow[op1.scale - result.scale] - 0.5);
-
-            if (result.scale >= op2.scale)
-                op2.value *= IDB_pow[result.scale - op2.scale];
-            else
-                op2.value = (int64_t)(op2.value > 0 ?
-                                      (double)op2.value / IDB_pow[op2.scale - result.scale] + 0.5 :
-                                      (double)op2.value / IDB_pow[op2.scale - result.scale] - 0.5);
-
-            result.value = op1.value + op2.value;
+            {
+                throw logging::InvalidArgumentExcept(
+                    "Unexpected result width");
+            }
             break;
 
         case OP_SUB:
-            if (result.scale == op1.scale && result.scale == op2.scale)
+            if (fOperationType.colWidth == datatypes::MAXDECIMALWIDTH)
             {
-                result.value = op1.value - op2.value;
-                break;
+                if (LIKELY(!fDecimalOverflowCheck))
+                {
+                    datatypes::Decimal::subtraction<decltype(result.s128Value), false>(
+                        op1, op2, result);
+                }
+                else
+                {
+                    datatypes::Decimal::subtraction<decltype(result.s128Value), true>(
+                        op1, op2, result);
+                }
             }
-
-            if (result.scale >= op1.scale)
-                op1.value *= IDB_pow[result.scale - op1.scale];
+            else if (fOperationType.colWidth == utils::MAXLEGACYWIDTH)
+            {
+                if (LIKELY(!fDecimalOverflowCheck))
+                {
+                    datatypes::Decimal::subtraction<decltype(result.value), false>(
+                        op1, op2, result);
+                }
+                else
+                {
+                    datatypes::Decimal::subtraction<decltype(result.value), true>(
+                        op1, op2, result);
+                }
+            }
             else
-                op1.value = (int64_t)(op1.value > 0 ?
-                                      (double)op1.value / IDB_pow[op1.scale - result.scale] + 0.5 :
-                                      (double)op1.value / IDB_pow[op1.scale - result.scale] - 0.5);
-
-            if (result.scale >= op2.scale)
-                op2.value *= IDB_pow[result.scale - op2.scale];
-            else
-                op2.value = (int64_t)(op2.value > 0 ?
-                                      (double)op2.value / IDB_pow[op2.scale - result.scale] + 0.5 :
-                                      (double)op2.value / IDB_pow[op2.scale - result.scale] - 0.5);
-
-            result.value = op1.value - op2.value;
+            {
+                throw logging::InvalidArgumentExcept(
+                    "Unexpected result width");
+            }
             break;
 
         case OP_MUL:
-            if (result.scale >= op1.scale + op2.scale)
-                result.value = op1.value * op2.value * IDB_pow[result.scale - (op1.scale + op2.scale)];
+            if (fOperationType.colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                if (LIKELY(!fDecimalOverflowCheck))
+                {
+                    datatypes::Decimal::multiplication<decltype(result.s128Value), false>(
+                    op1, op2, result);
+                }
+                else
+                {
+                    datatypes::Decimal::multiplication<decltype(result.s128Value), true>(
+                    op1, op2, result);
+                }
+            }
+            else if (fOperationType.colWidth == utils::MAXLEGACYWIDTH)
+            {
+                if (LIKELY(!fDecimalOverflowCheck))
+                {
+                    datatypes::Decimal::multiplication<decltype(result.value), false>(
+                        op1, op2, result);
+                }
+                else
+                {
+                    datatypes::Decimal::multiplication<decltype(result.value), true>(
+                        op1, op2, result);
+                }
+            }
             else
-                result.value = (int64_t)(( (op1.value > 0 && op2.value > 0) || (op1.value < 0 && op2.value < 0) ?
-                                           (double)op1.value * op2.value / IDB_pow[op1.scale + op2.scale - result.scale] + 0.5 :
-                                           (double)op1.value * op2.value / IDB_pow[op1.scale + op2.scale - result.scale] - 0.5));
-
+            {
+                throw logging::InvalidArgumentExcept(
+                    "Unexpected result width");
+            }
             break;
 
         case OP_DIV:
-            if (op2.value == 0)
+            if (fOperationType.colWidth == datatypes::MAXDECIMALWIDTH)
             {
-                isNull = true;
-                break;
+                if ((datatypes::Decimal::isWideDecimalTypeByPrecision(op2.precision) && op2.s128Value == 0)
+                    || (!datatypes::Decimal::isWideDecimalTypeByPrecision(op2.precision) && op2.value == 0))
+                {
+                    isNull = true;
+                    break;
+                }
+
+                if (LIKELY(!fDecimalOverflowCheck))
+                {
+                    datatypes::Decimal::division<decltype(result.s128Value), false>(
+                    op1, op2, result);
+                }
+                else
+                {
+                    datatypes::Decimal::division<decltype(result.s128Value), true>(
+                    op1, op2, result);
+                }
             }
+            else if (fOperationType.colWidth == utils::MAXLEGACYWIDTH)
+            {
+                if (op2.value == 0)
+                {
+                    isNull = true;
+                    break;
+                }
 
-            if (result.scale >= op1.scale - op2.scale)
-                result.value = (int64_t)(( (op1.value > 0 && op2.value > 0) || (op1.value < 0 && op2.value < 0) ?
-                                           (long double)op1.value / op2.value * IDB_pow[result.scale - (op1.scale - op2.scale)] + 0.5 :
-                                           (long double)op1.value / op2.value * IDB_pow[result.scale - (op1.scale - op2.scale)] - 0.5));
+                if (LIKELY(!fDecimalOverflowCheck))
+                {
+                    datatypes::Decimal::division<decltype(result.value), false>(
+                        op1, op2, result);
+                }
+                else
+                {
+                    datatypes::Decimal::division<decltype(result.value), true>(
+                        op1, op2, result);
+                }
+            }
             else
-                result.value = (int64_t)(( (op1.value > 0 && op2.value > 0) || (op1.value < 0 && op2.value < 0) ?
-                                           (long double)op1.value / op2.value / IDB_pow[op1.scale - op2.scale - result.scale] + 0.5 :
-                                           (long double)op1.value / op2.value / IDB_pow[op1.scale - op2.scale - result.scale] - 0.5));
-
+            {
+                throw logging::InvalidArgumentExcept(
+                    "Unexpected result width");
+            }
             break;
 
         default:

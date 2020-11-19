@@ -37,6 +37,7 @@ using namespace boost;
 #define BYTESTREAM_DLLEXPORT
 #include "bytestream.h"
 #undef BYTESTREAM_DLLEXPORT
+#include "datatypes/mcs_int128.h"
 
 #define DEBUG_DUMP_STRINGS_LESS_THAN 0
 
@@ -235,6 +236,24 @@ ByteStream& ByteStream::operator<<(const uint64_t o)
     return *this;
 }
 
+ByteStream& ByteStream::operator<<(const uint128_t& o)
+{
+    if (fBuf == 0 || (fCurInPtr - fBuf + 16U > fMaxLen + ISSOverhead))
+        growBuf(fMaxLen + BlockSize);
+    datatypes::TSInt128::storeUnaligned(fCurInPtr, o);
+    fCurInPtr += 16;
+    return *this;
+}
+
+ByteStream& ByteStream::operator<<(const int128_t& o)
+{
+    if (fBuf == 0 || (fCurInPtr - fBuf + 16U > fMaxLen + ISSOverhead))
+        growBuf(fMaxLen + BlockSize);
+    datatypes::TSInt128::storeUnaligned(fCurInPtr, o);
+    fCurInPtr += 16;
+    return *this;
+}
+
 ByteStream& ByteStream::operator<<(const string& s)
 {
     int32_t len = s.size();
@@ -319,6 +338,20 @@ ByteStream& ByteStream::operator>>(uint64_t& o)
     return *this;
 }
 
+ByteStream& ByteStream::operator>>(uint128_t& o)
+{
+    peek(o);
+    fCurOutPtr += 16;
+    return *this;
+}
+
+ByteStream& ByteStream::operator>>(int128_t& o)
+{
+    peek(o);
+    fCurOutPtr += 16;
+    return *this;
+}
+
 ByteStream& ByteStream::operator>>(string& s)
 {
     peek(s);
@@ -397,6 +430,20 @@ void ByteStream::peek(uint64_t& o) const
         throw underflow_error("ByteStream>uint64_t: not enough data in stream to fill datatype");
 
     o = *((uint64_t*) fCurOutPtr);
+}
+
+void ByteStream::peek(uint128_t& o) const
+{
+    if (length() < 16)
+        throw underflow_error("ByteStream>uint128_t: not enough data in stream to fill datatype");
+    datatypes::TSInt128::assignPtrPtr(&o, fCurOutPtr);
+}
+
+void ByteStream::peek(int128_t& o) const
+{
+    if (length() < 16)
+        throw underflow_error("ByteStream>int128_t: not enough data in stream to fill datatype");
+    datatypes::TSInt128::assignPtrPtr(&o, fCurOutPtr);
 }
 
 void ByteStream::peek(string& s) const

@@ -21,6 +21,7 @@
 #include "moda.h"
 #include "bytestream.h"
 #include "objectreader.h"
+#include "columnwidth.h"
 
 using namespace mcsv1sdk;
 
@@ -103,8 +104,11 @@ mcsv1_UDAF* moda::getImpl(mcsv1Context* context)
                 case 4:
                    data->modaImpl = &moda_impl_int32;
                    break;
-                default:
+                case 8:
                    data->modaImpl = &moda_impl_int64;
+                   break;
+                case 16:
+                   data->modaImpl = &moda_impl_int128;
                    break;
             }
             break;
@@ -154,7 +158,7 @@ mcsv1_UDAF::ReturnCode moda::init(mcsv1Context* context,
         return mcsv1_UDAF::ERROR;
     }
 
-    if (!(execplan::isNumeric(colTypes[0].dataType)))
+    if (!(datatypes::isNumeric(colTypes[0].dataType)))
     {
         // The error message will be prepended with
         // "The storage engine for the table doesn't support "
@@ -179,11 +183,18 @@ mcsv1_UDAF::ReturnCode moda::init(mcsv1Context* context,
         {
             context->setColWidth(4);
         }
-        else
+        else if (colTypes[0].precision < 19)
         {
             context->setColWidth(8);
         }
+        else if (utils::widthByPrecision(colTypes[0].precision))
+        {
+            context->setColWidth(16);
+        }
+        
+        context->setScale(colTypes[0].scale);
     }
+    context->setPrecision(colTypes[0].precision);
     
     mcsv1_UDAF* impl = getImpl(context);
     
@@ -203,10 +214,7 @@ template<class T>
 mcsv1_UDAF::ReturnCode Moda_impl_T<T>::init(mcsv1Context* context,
                                   ColumnDatum* colTypes)
 {
-    context->setScale(context->getScale());
-    context->setPrecision(19);
     return mcsv1_UDAF::SUCCESS;
-
 }
 
 template<class T>
@@ -224,7 +232,7 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<T>::nextValue(mcsv1Context* context, ColumnDa
 {
     static_any::any& valIn = valsIn[0].columnData;
     ModaData* data = static_cast<ModaData*>(context->getUserData());
-    std::unordered_map<T, uint32_t>* map = data->getMap<T>();
+    std::unordered_map<T, uint32_t, hasher<T> >* map = data->getMap<T>();
 
     if (valIn.empty())
     {
@@ -261,9 +269,9 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<T>::subEvaluate(mcsv1Context* context, const 
 
     ModaData* outData = static_cast<ModaData*>(context->getUserData());
     const ModaData* inData = static_cast<const ModaData*>(userDataIn);
-    std::unordered_map<T, uint32_t>* outMap = outData->getMap<T>();
-    std::unordered_map<T, uint32_t>* inMap = inData->getMap<T>();
-    typename std::unordered_map<T, uint32_t>::const_iterator iter;
+    std::unordered_map<T, uint32_t, hasher<T> >* outMap = outData->getMap<T>();
+    std::unordered_map<T, uint32_t, hasher<T> >* inMap = inData->getMap<T>();
+    typename std::unordered_map<T, uint32_t, hasher<T> >::const_iterator iter;
     
     for (iter = inMap->begin(); iter != inMap->end(); ++iter)
     {
@@ -283,7 +291,7 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<T>::evaluate(mcsv1Context* context, static_an
     long double avg = 0;
     T val = 0;
     ModaData* data = static_cast<ModaData*>(context->getUserData());
-    std::unordered_map<T, uint32_t>* map = data->getMap<T>();
+    std::unordered_map<T, uint32_t, hasher<T> >* map = data->getMap<T>();
 
     if (map->size() == 0)
     {
@@ -292,7 +300,7 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<T>::evaluate(mcsv1Context* context, static_an
     }
 
     avg = data->fCount ? data->fSum / data->fCount : 0;
-    typename std::unordered_map<T, uint32_t>::iterator iter;
+    typename std::unordered_map<T, uint32_t, hasher<T> >::iterator iter;
 
     for (iter = map->begin(); iter != map->end(); ++iter)
     {
@@ -303,11 +311,13 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<T>::evaluate(mcsv1Context* context, static_an
         }
         else if (iter->second == maxCnt)
         {
+            T absval = val >= 0 ? val : -val;
+            T absfirst = iter->first >= 0 ? iter->first : -iter->first;
             // Tie breaker: choose the closest to avg. If still tie, choose smallest
             long double dist1 = val > avg ? (long double)val-avg : avg-(long double)val;
             long double dist2 = iter->first > avg ? (long double)iter->first-avg : avg-(long double)iter->first;
             if ((dist1 > dist2)
-            || ((dist1 == dist2) && (std::fabs(val) > std::fabs(iter->first))))
+            || ((dist1 == dist2) && (absval > absfirst)))
             {
                 val = iter->first;
             }
@@ -328,7 +338,7 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<T>::dropValue(mcsv1Context* context, ColumnDa
 {
     static_any::any& valDropped = valsDropped[0].columnData;
     ModaData* data = static_cast<ModaData*>(context->getUserData());
-    std::unordered_map<T, uint32_t>* map = data->getMap<T>();
+    std::unordered_map<T, uint32_t, hasher<T> >* map = data->getMap<T>();
 
     if (valDropped.empty())
     {
@@ -379,8 +389,11 @@ void ModaData::serialize(messageqcpp::ByteStream& bs) const
                 case 4:
                     serializeMap<int32_t>(bs);
                     break;
-                default:
+                case 8:
                     serializeMap<int64_t>(bs);
+                    break;
+                case 16:
+                    serializeMap<int128_t>(bs);
                     break;
             }
             break;
@@ -447,8 +460,11 @@ void ModaData::unserialize(messageqcpp::ByteStream& bs)
                 case 4:
                     unserializeMap<int32_t>(bs);
                     break;
-                default:
+                case 8:
                     unserializeMap<int64_t>(bs);
+                    break;
+                case 16:
+                    unserializeMap<int128_t>(bs);
                     break;
             }
             break;
@@ -519,9 +535,13 @@ void ModaData::cleanup()
                     clear<int32_t>();
                     deleteMap<int32_t>();
                     break;
-                default:
+                case 8:
                     clear<int64_t>();
                     deleteMap<int64_t>();
+                    break;
+                case 16:
+                    clear<int128_t>();
+                    deleteMap<int128_t>();
                     break;
             }
             break;

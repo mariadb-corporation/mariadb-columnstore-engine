@@ -39,11 +39,14 @@ using namespace std;
 
 using namespace execplan;
 
+#include "dataconvert.h"
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
 
 using namespace idbdatafile;
 
+#include "emptyvaluemanip.h"
+#include "mcs_decimal.h"
 
 namespace WriteEngine
 {
@@ -52,6 +55,7 @@ struct RefcolInfo
     int localHwm;
     unsigned numExtents;
 };
+
 
 /**
  * Constructor
@@ -84,6 +88,7 @@ ColumnOp::~ColumnOp()
  *    NO_ERROR if success
  *    rowIdArray - allocation of the row id left here
  ***********************************************************/
+// TODO MCOL-641 add support here
 int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
                          Column& column, uint64_t totalRow, RID* rowIdArray, HWM& hwm, bool& newExtent, uint64_t& rowsLeft, HWM& newHwm,
                          bool& newFile, ColStructList& newColStructList, DctnryStructList& newDctnryStructList, std::vector<boost::shared_ptr<DBRootExtentTracker> >&   dbRootExtentTrackers,
@@ -123,7 +128,10 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
     newFile = false;
     Column newCol;
     unsigned char  buf[BYTE_PER_BLOCK];
-
+    unsigned char* curVal;
+    uint8_t* emptyVal = (uint8_t*) alloca(column.colWidth);
+    getEmptyRowValue(column.colDataType, column.colWidth, emptyVal);
+    
     if (useStartingExtent)
     {
         // ZZ. For insert select, skip the hwm block and start inserting from the next block
@@ -137,10 +145,10 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
 
             if ( rc != NO_ERROR)
                 return rc;
-
-            for (j = 0; j < totalRowPerBlock; j++)
+            
+            for (j = 0, curVal = buf; j < totalRowPerBlock; j++, curVal += column.colWidth)
             {
-                if (isEmptyRow(buf, j, column))
+                if (isEmptyRow((uint64_t*)curVal, emptyVal, column.colWidth))
                 {
                     rowIdArray[counter] = getRowId(hwm, column.colWidth, j);
                     rowsallocated++;
@@ -183,18 +191,20 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
                 {
                     if (rc == ERR_FILE_EOF)
                     {
-                        uint64_t emptyVal = getEmptyRowValue(column.colDataType, column.colWidth);
+                        uint8_t* emptyVal = (uint8_t*) alloca(column.colWidth);
+                        getEmptyRowValue(column.colDataType, column.colWidth, emptyVal);
                         setEmptyBuf(buf, BYTE_PER_BLOCK, emptyVal, column.colWidth);
                         RETURN_ON_ERROR(saveBlock(column.dataFile.pFile, buf, hwm));
-                    } else
+                    }
+                    else
                     {
                         return rc;
                     }
                 }
 
-                for (j = 0; j < totalRowPerBlock; j++)
+                for (j = 0, curVal = buf; j < totalRowPerBlock; j++, curVal += column.colWidth)
                 {
-                    if (isEmptyRow(buf, j, column))
+                    if (isEmptyRow((uint64_t*)curVal, emptyVal, column.colWidth))
                     {
                         rowIdArray[counter] = getRowId(hwm, column.colWidth, j);
                         rowsallocated++;
@@ -280,7 +290,8 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
 
                         if (newColStructList[i].fCompressionType > 0)
                         {
-                            uint64_t emptyVal = getEmptyRowValue(newColStructList[i].colDataType, newColStructList[i].colWidth);
+                            uint8_t* emptyVal = (uint8_t*) alloca(newColStructList[i].colWidth);
+                            getEmptyRowValue(newColStructList[i].colDataType, newColStructList[i].colWidth, emptyVal);
                             string errorInfo;
                             rc = fileOp.fillCompColumnExtentEmptyChunks(newColStructList[i].dataOid, newColStructList[i].colWidth,
                                     emptyVal, dbRoot, partition, segment, newHwm, segFile, errorInfo);
@@ -306,7 +317,8 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
                                     return rc;
                                 }
 
-                                uint64_t emptyVal = getEmptyRowValue(newColStructList[i].colDataType, newColStructList[i].colWidth);
+                                uint8_t* emptyVal = (uint8_t*) alloca(newColStructList[i].colWidth);
+                                getEmptyRowValue(newColStructList[i].colDataType, newColStructList[i].colWidth, emptyVal);
                                 rc = fileOp.expandAbbrevColumnExtent( pFile, dbRoot, emptyVal, newColStructList[i].colWidth);
                                 //set hwm for this extent.
                                 fileOp.closeFile(pFile);
@@ -378,7 +390,7 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
                     return rc;
 
                 //create corresponding dictionary files
-                if (newFile )
+                if (newFile)
                 {
                     boost::scoped_ptr<WriteEngineWrapper> we (new WriteEngineWrapper());
                     we->setTransId(txnid);
@@ -399,7 +411,7 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
                         }
                     }
 
-                    we->flushDataFiles(rc, txnid, columnOids );
+                    we->flushDataFiles(rc, txnid, columnOids);
                 }
             }
 
@@ -483,18 +495,20 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
             {
                 if (rc == ERR_FILE_EOF)
                 {
-                    uint64_t emptyVal = getEmptyRowValue(newCol.colDataType, newCol.colWidth);
+                    uint8_t* emptyVal = (uint8_t*) alloca(newCol.colWidth);
+                    getEmptyRowValue(newCol.colDataType, newCol.colWidth, emptyVal);
                     setEmptyBuf(buf, BYTE_PER_BLOCK, emptyVal, newCol.colWidth);
                     RETURN_ON_ERROR(saveBlock(newCol.dataFile.pFile, buf, newHwm));
-                } else
+                }
+                else
                 {
                     return rc;
                 }
             }
 
-            for (j = 0; j < totalRowPerBlock; j++)
+            for (j = 0, curVal = buf; j < totalRowPerBlock; j++, curVal += column.colWidth)
             {
-                if (isEmptyRow(buf, j, column))
+                if (isEmptyRow((uint64_t*)curVal, emptyVal, column.colWidth)) // Why to check it if beacause line 483 is always true ?
                 {
                     rowIdArray[counter] = getRowId(newHwm, column.colWidth, j);
                     rowsallocated++;
@@ -524,18 +538,20 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
                     {
                         if (rc == ERR_FILE_EOF)
                         {
-                            uint64_t emptyVal = getEmptyRowValue(newCol.colDataType, newCol.colWidth);
+                            uint8_t* emptyVal = (uint8_t*) alloca(newCol.colWidth);
+                            getEmptyRowValue(newCol.colDataType, newCol.colWidth, emptyVal);
                             setEmptyBuf(buf, BYTE_PER_BLOCK, emptyVal, newCol.colWidth);
                             RETURN_ON_ERROR(saveBlock(newCol.dataFile.pFile, buf, newHwm));
-                        } else
+                        }
+                        else
                         {
                             return rc;
                         }
                     }
 
-                    for (j = 0; j < totalRowPerBlock; j++)
+                    for (j = 0, curVal = buf; j < totalRowPerBlock; j++, curVal += column.colWidth)
                     {
-                        if (isEmptyRow(buf, j, column))
+                        if (isEmptyRow((uint64_t*)curVal, emptyVal, column.colWidth))
                         {
                             rowIdArray[counter] = getRowId(newHwm, newCol.colWidth, j);
                             rowsallocated++;
@@ -634,10 +650,10 @@ int ColumnOp::createColumn(Column& column,
                            uint32_t partition)
 {
     int rc, newWidth, allocSize;
-    uint64_t emptyVal = 0;
     int compressionType = column.compressionType;
     setColParam(column, colNo, colWidth, colDataType, colType);
-    emptyVal = getEmptyRowValue(colDataType, colWidth);
+    uint8_t* emptyVal = (uint8_t*) alloca(colWidth);
+    getEmptyRowValue(colDataType, colWidth, emptyVal);
     newWidth = getCorrectRowWidth(colDataType, colWidth);
     column.dataFile.fid = dataFid;
     column.dataFile.fDbRoot    = dbRoot;
@@ -670,8 +686,6 @@ int ColumnOp::fillColumn(const TxnID& txnid, Column& column, Column& refCol, voi
     HWM colHwm = 0;
     RID maxRowId = 0;
     int size = sizeof(Token);
-    uint64_t emptyVal;
-    uint64_t refEmptyVal;
 
     long long startColFbo = 0;
     long long startRefColFbo = 0;
@@ -706,8 +720,10 @@ int ColumnOp::fillColumn(const TxnID& txnid, Column& column, Column& refCol, voi
     config.initConfigCache();
     std::vector<uint16_t> rootList;
     config.getRootIdList( rootList );
-    emptyVal = getEmptyRowValue(column.colDataType, column.colWidth);
-    refEmptyVal = getEmptyRowValue(refCol.colDataType, refCol.colWidth);
+    uint8_t* emptyVal = (uint8_t*) alloca(column.colWidth);
+    uint8_t* refEmptyVal = (uint8_t*) alloca(refCol.colWidth);
+    getEmptyRowValue(column.colDataType, column.colWidth, emptyVal);
+    getEmptyRowValue(refCol.colDataType, refCol.colWidth, refEmptyVal);
     //find the dbroots which have rows for refrence column
     unsigned int i = 0, k = 0;
 
@@ -931,7 +947,7 @@ int ColumnOp::fillColumn(const TxnID& txnid, Column& column, Column& refCol, voi
 
             while (refBufOffset > 0)
             {
-                if (memcmp(&refColBuf[refBufOffset], &refEmptyVal, refCol.colWidth) != 0)
+                if (memcmp(&refColBuf[refBufOffset], refEmptyVal, refCol.colWidth) != 0)
                 {
                     maxRowId = maxRowId + (refBufOffset / refCol.colWidth);
                     break;
@@ -992,7 +1008,7 @@ int ColumnOp::fillColumn(const TxnID& txnid, Column& column, Column& refCol, voi
                         while ((tmpBufOffset + refCol.colWidth) <= BYTE_PER_BLOCK)
 
                         {
-                            if (memcmp(refColBuf + tmpBufOffset, &refEmptyVal, refCol.colWidth) != 0) //Find the number of nextVal needed.
+                            if (memcmp(refColBuf + tmpBufOffset, refEmptyVal, refCol.colWidth) != 0) //Find the number of nextVal needed.
                             {
                                 nexValNeeded++;
                                 //memcpy(colBuf + colBufOffset, defaultVal, column.colWidth);
@@ -1021,7 +1037,7 @@ int ColumnOp::fillColumn(const TxnID& txnid, Column& column, Column& refCol, voi
                     while (((refBufOffset + refCol.colWidth) <= BYTE_PER_BLOCK) &&
                             ((colBufOffset + column.colWidth) <= BYTE_PER_BLOCK))
                     {
-                        if (memcmp(refColBuf + refBufOffset, &refEmptyVal, refCol.colWidth) != 0) //Find the number of nextVal needed.
+                        if (memcmp(refColBuf + refBufOffset, refEmptyVal, refCol.colWidth) != 0) //Find the number of nextVal needed.
                         {
                             memcpy(defaultVal, &nextVal, 8);
                             nextVal++;
@@ -1034,8 +1050,18 @@ int ColumnOp::fillColumn(const TxnID& txnid, Column& column, Column& refCol, voi
                     }
                 }
 
-                cpInfo.max = nextValStart + nexValNeeded - 1;
-                cpInfo.min = nextValStart;
+                cpInfo.isBinaryColumn = column.colWidth > 8;
+
+                if (!cpInfo.isBinaryColumn)
+                {
+                    cpInfo.max = nextValStart + nexValNeeded - 1;
+                    cpInfo.min = nextValStart;
+                }
+                else
+                {
+                    cpInfo.bigMax = nextValStart + nexValNeeded - 1;
+                    cpInfo.bigMin = nextValStart;
+                }
                 cpInfo.seqNum = 0;
 
             }
@@ -1064,11 +1090,11 @@ int ColumnOp::fillColumn(const TxnID& txnid, Column& column, Column& refCol, voi
                         startColFbo++;
                         colBufOffset = 0;
                     }
-
+                    
                     while (((refBufOffset + refCol.colWidth) <= BYTE_PER_BLOCK) &&
                             ((colBufOffset + column.colWidth) <= BYTE_PER_BLOCK))
                     {
-                        if (memcmp(refColBuf + refBufOffset, &refEmptyVal, refCol.colWidth) != 0)
+                        if (memcmp(refColBuf + refBufOffset, refEmptyVal, refCol.colWidth) != 0)
                         {
                             /*if (autoincrement)
                             {
@@ -1080,7 +1106,7 @@ int ColumnOp::fillColumn(const TxnID& txnid, Column& column, Column& refCol, voi
                         }
                         else if (column.compressionType != 0) //@Bug 3866, fill the empty row value for compressed chunk
                         {
-                            memcpy(colBuf + colBufOffset, &emptyVal, column.colWidth);
+                            memcpy(colBuf + colBufOffset, emptyVal, column.colWidth);
                             dirty = true;
                         }
 
@@ -1089,15 +1115,33 @@ int ColumnOp::fillColumn(const TxnID& txnid, Column& column, Column& refCol, voi
                     }
                 }
 
-                if (isUnsigned(column.colDataType))
+                cpInfo.isBinaryColumn = column.colWidth > 8;
+
+                if (!cpInfo.isBinaryColumn)
                 {
-                    cpInfo.max = 0;
-                    cpInfo.min = static_cast<int64_t>(numeric_limits<uint64_t>::max());
+                    if (isUnsigned(column.colDataType))
+                    {
+                        cpInfo.max = 0;
+                        cpInfo.min = static_cast<int64_t>(numeric_limits<uint64_t>::max());
+                    }
+                    else
+                    {
+                        cpInfo.max = numeric_limits<int64_t>::min();
+                        cpInfo.min = numeric_limits<int64_t>::max();
+                    }
                 }
                 else
                 {
-                    cpInfo.max = numeric_limits<int64_t>::min();
-                    cpInfo.min = numeric_limits<int64_t>::max();
+                    if (isUnsigned(column.colDataType))
+                    {
+                        cpInfo.bigMax = 0;
+                        cpInfo.min = -1;
+                    }
+                    else
+                    {
+                        utils::int128Min(cpInfo.bigMax);
+                        utils::int128Max(cpInfo.bigMin);
+                    }
                 }
 
                 cpInfo.seqNum = -1;
@@ -1124,16 +1168,33 @@ int ColumnOp::fillColumn(const TxnID& txnid, Column& column, Column& refCol, voi
             if (autoincrement) //@Bug 4074. Mark it invalid first to set later
             {
                 BRM::CPInfo cpInfo1;
+                cpInfo1.isBinaryColumn = column.colWidth > 8;
 
-                if (isUnsigned(column.colDataType))
+                if (!cpInfo1.isBinaryColumn)
                 {
-                    cpInfo1.max = 0;
-                    cpInfo1.min = static_cast<int64_t>(numeric_limits<int64_t>::max());
+                    if (isUnsigned(column.colDataType))
+                    {
+                        cpInfo1.max = 0;
+                        cpInfo1.min = static_cast<int64_t>(numeric_limits<uint64_t>::max());
+                    }
+                    else
+                    {
+                        cpInfo1.max = numeric_limits<int64_t>::min();
+                        cpInfo1.min = numeric_limits<int64_t>::max();
+                    }
                 }
                 else
                 {
-                    cpInfo1.max = numeric_limits<int64_t>::min();
-                    cpInfo1.min = numeric_limits<int64_t>::max();
+                    if (isUnsigned(column.colDataType))
+                    {
+                        cpInfo1.bigMax = 0;
+                        cpInfo1.bigMin = -1;
+                    }
+                    else
+                    {
+                        utils::int128Min(cpInfo1.bigMax);
+                        utils::int128Max(cpInfo1.bigMin);
+                    }
                 }
 
                 cpInfo1.seqNum = -1;
@@ -1149,13 +1210,11 @@ int ColumnOp::fillColumn(const TxnID& txnid, Column& column, Column& refCol, voi
             BRM::CPInfoList_t cpinfoList;
             cpInfo.firstLbid = startLbid;
             cpinfoList.push_back(cpInfo);
-            //cout << "calling setExtentsMaxMin for startLbid = " << startLbid << endl;
             rc = BRMWrapper::getInstance()->setExtentsMaxMin(cpinfoList);
 
             if ( rc != NO_ERROR)
                 return rc;
 
-            //cout << "calling setLocalHWM for oid:hwm = " << column.dataFile.fid <<":"<<colHwm << endl;
             rc = BRMWrapper::getInstance()->setLocalHWM((OID)column.dataFile.fid, column.dataFile.fPartition,
                     column.dataFile.fSegment, colHwm);
 
@@ -1276,9 +1335,8 @@ int ColumnOp::extendColumn(
     bool&        newFile,
     char*        hdrs)
 {
-    uint64_t emptyVal = 0;
-
-    emptyVal = getEmptyRowValue(column.colDataType, column.colWidth);
+    uint8_t* emptyVal = (uint8_t*) alloca(column.colWidth);
+    getEmptyRowValue(column.colDataType, column.colWidth, emptyVal);
     int rc = extendFile(column.dataFile.fid,
                         emptyVal,
                         column.colWidth,
@@ -1319,9 +1377,8 @@ int ColumnOp::addExtent(
     int&         allocSize,
     char*        hdrs)
 {
-    uint64_t emptyVal = 0;
-
-    emptyVal = getEmptyRowValue(column.colDataType, column.colWidth);
+    uint8_t* emptyVal = (uint8_t*) alloca(column.colWidth);
+    getEmptyRowValue(column.colDataType, column.colWidth, emptyVal);
     int rc = addExtentExactFile(column.dataFile.fid,
                                 emptyVal,
                                 column.colWidth,
@@ -1349,7 +1406,8 @@ int ColumnOp::addExtent(
  ***********************************************************/
 int ColumnOp::expandAbbrevExtent(const Column& column)
 {
-    uint64_t emptyVal = getEmptyRowValue(column.colDataType, column.colWidth);
+    uint8_t* emptyVal = (uint8_t*) alloca(column.colWidth);
+    getEmptyRowValue(column.colDataType, column.colWidth, emptyVal);
     int rc = expandAbbrevColumnExtent(column.dataFile.pFile,
                                       column.dataFile.fDbRoot,
                                       emptyVal,
@@ -1405,18 +1463,31 @@ void ColumnOp::initColumn(Column& column) const
  * RETURN:
  *    true if success, false otherwise
  ***********************************************************/
-bool ColumnOp::isEmptyRow(unsigned char* buf, int offset, const Column& column)
+inline bool ColumnOp::isEmptyRow(uint64_t* curVal, uint8_t* emptyVal, const int colWidth)
 {
-    bool emptyFlag = true;
-    uint64_t  curVal, emptyVal;
+    // colWidth is either 1, 2, 4, 8, or 16 (Convertor::getCorrectRowWidth)
+    switch(colWidth){
+        case 1:
+            return *(uint8_t*)curVal == *(uint8_t*)emptyVal;
 
-    memcpy(&curVal, buf + offset * column.colWidth, column.colWidth);
-    emptyVal = getEmptyRowValue(column.colDataType, column.colWidth);
+        case 2:
+            return *(uint16_t*)curVal == *(uint16_t*)emptyVal;
+        
+        case 4:
+            return *(uint32_t*)curVal == *(uint32_t*)emptyVal;
+ 
+        case 8:
+            return *(uint64_t*)curVal == *(uint64_t*)emptyVal;
+        
+        case 16:
+            return *(uint128_t*)curVal == *(uint128_t*)emptyVal;
+        
+        //case 32:
+        //    return ((curVal[0] == emptyVal) && (curVal[1] == emptyVal)
+        //        && (curVal[2] == emptyVal) && (curVal[3] == emptyVal));
+    }
 
-    if (/*curVal != emptyVal*/memcmp(&curVal, &emptyVal, column.colWidth))
-        emptyFlag = false;
-
-    return emptyFlag;
+    return false;
 }
 
 /***********************************************************
@@ -1534,7 +1605,7 @@ void ColumnOp::setColParam(Column& column,
     column.colWidth = colWidth;
     column.colType = colType;
     column.colDataType = colDataType;
-
+    
     column.dataFile.fid = dataFid;
     column.dataFile.fDbRoot    = dbRoot;
     column.dataFile.fPartition = partition;
@@ -1542,7 +1613,6 @@ void ColumnOp::setColParam(Column& column,
 
     column.compressionType = compressionType;
 }
-
 
 /***********************************************************
  * DESCRIPTION:
@@ -1566,7 +1636,7 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
     bool     bExit = false, bDataDirty = false;
     void*    pVal = 0;
     char     charTmpBuf[8];
-    uint64_t  emptyVal;
+    uint8_t* emptyVal = (uint8_t*) alloca(curCol.colWidth);
     int rc = NO_ERROR;
     uint16_t rowsInBlock = BYTE_PER_BLOCK / curCol.colWidth;
 
@@ -1598,8 +1668,6 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
             bDataDirty = true;
         }
 
-        // This is a awkward way to convert void* and get its element, I just don't have a good solution for that
-        // How about pVal = valArray + i*curCol.colWidth?
         switch (curCol.colType)
         {
             case WriteEngine::WR_FLOAT :
@@ -1662,6 +1730,14 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
                 if (!bDelete) pVal = &((uint64_t*) valArray)[i];
                 break;
 
+            case WriteEngine::WR_BINARY:
+                if (!bDelete)
+                {
+                    if (curCol.colWidth == datatypes::MAXDECIMALWIDTH)
+                        pVal = &((int128_t*) valArray)[i];
+                }
+                break;
+                
             default  :
                 if (!bDelete) pVal = &((int*) valArray)[i];
                 break;
@@ -1669,8 +1745,8 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
 
         if (bDelete)
         {
-            emptyVal = getEmptyRowValue(curCol.colDataType, curCol.colWidth);
-            pVal = &emptyVal;
+            utils::getEmptyRowValue(curCol.colDataType, curCol.colWidth, emptyVal);
+            pVal = emptyVal;
         }
 
         // This is the write stuff
@@ -1715,7 +1791,7 @@ int ColumnOp::writeRows(Column& curCol, uint64_t totalRow, const RIDList& ridLis
     void*    pVal = 0;
     //void*    pOldVal;
     char     charTmpBuf[8];
-    uint64_t  emptyVal;
+    uint8_t*  emptyVal;
     int rc = NO_ERROR;
 
     while (!bExit)
@@ -1750,108 +1826,79 @@ int ColumnOp::writeRows(Column& curCol, uint64_t totalRow, const RIDList& ridLis
 
         // This is a awkward way to convert void* and get ith element, I just don't have a good solution for that
         // How about pVal = valArray? You're always getting the 0'th element here anyways.
-        switch (curCol.colType)
+        // TODO MCOL-641 add support here
+        // This branch does not seem to be called from anywhere
+        if (!bDelete)
         {
-//               case WriteEngine::WR_LONG :   pVal = &((long *) valArray)[i]; break;
-            case WriteEngine::WR_FLOAT :
-                if (!bDelete) pVal = &((float*) valArray)[0];
-
-                //pOldVal = &((float *) oldValArray)[i];
-                break;
-
-            case WriteEngine::WR_DOUBLE :
-                if (!bDelete) pVal = &((double*) valArray)[0];
-
-                //pOldVal = &((double *) oldValArray)[i];
-                break;
-
-            case WriteEngine::WR_VARBINARY :   // treat same as char for now
-            case WriteEngine::WR_BLOB :
-            case WriteEngine::WR_TEXT :
-            case WriteEngine::WR_CHAR :
-                if (!bDelete)
-                {
+            switch (curCol.colType)
+            {
+                case WriteEngine::WR_FLOAT :
+                    pVal = &((float*) valArray)[0];
+                    break;
+    
+                case WriteEngine::WR_DOUBLE :
+                    pVal = &((double*) valArray)[0];
+                    break;
+    
+                case WriteEngine::WR_VARBINARY :   // treat same as char for now
+                case WriteEngine::WR_BLOB :
+                case WriteEngine::WR_TEXT :
+                case WriteEngine::WR_CHAR :
                     memcpy(charTmpBuf, (char*)valArray, 8);
                     pVal = charTmpBuf;
-                }
-
-                //pOldVal = (char*)oldValArray + i*8;
-                break;
-
-//          case WriteEngine::WR_BIT :    pVal = &((bool *) valArray)[i]; break;
-            case WriteEngine::WR_SHORT :
-                if (!bDelete) pVal = &((short*) valArray)[0];
-
-                //pOldVal = &((short *) oldValArray)[i];
-                break;
-
-            case WriteEngine::WR_BYTE :
-                if (!bDelete) pVal = &((char*) valArray)[0];
-
-                //pOldVal = &((char *) oldValArray)[i];
-                break;
-
-            case WriteEngine::WR_LONGLONG:
-                if (!bDelete) pVal = &((long long*) valArray)[0];
-
-                //pOldVal = &((long long *) oldValArray)[i];
-                break;
-
-            case WriteEngine::WR_TOKEN:
-                if (!bDelete) pVal = &((Token*) valArray)[0];
-
-                //pOldVal = &((Token *) oldValArray)[i];
-                break;
-
-            case WriteEngine::WR_INT :
-            case WriteEngine::WR_MEDINT :
-                if (!bDelete) pVal = &((int*) valArray)[0];
-
-                //pOldVal = &((int *) oldValArray)[i];
-                break;
-
-            case WriteEngine::WR_USHORT :
-                if (!bDelete) pVal = &((uint16_t*) valArray)[0];
-
-                //pOldVal = &((uint16_t *) oldValArray)[i];
-                break;
-
-            case WriteEngine::WR_UBYTE :
-                if (!bDelete) pVal = &((uint8_t*) valArray)[0];
-
-                //pOldVal = &((uint8_t *) oldValArray)[i];
-                break;
-
-            case WriteEngine::WR_ULONGLONG:
-                if (!bDelete) pVal = &((uint64_t*) valArray)[0];
-
-                //pOldVal = &((uint64_t *) oldValArray)[i];
-                break;
-
-            case WriteEngine::WR_UINT :
-            case WriteEngine::WR_UMEDINT :
-                if (!bDelete) pVal = &((uint32_t*) valArray)[0];
-
-                //pOldVal = &((uint32_t *) oldValArray)[i];
-                break;
-
-            default  :
-                if (!bDelete) pVal = &((int*) valArray)[0];
-
-                //pOldVal = &((int *) oldValArray)[i];
-                break;
+                    break;
+    
+                // case WriteEngine::WR_BIT :    pVal = &((bool *) valArray)[i]; break;
+                case WriteEngine::WR_SHORT :
+                    pVal = &((short*) valArray)[0];
+                    break;
+    
+                case WriteEngine::WR_BYTE :
+                    pVal = &((char*) valArray)[0];
+                    break;
+    
+                case WriteEngine::WR_LONGLONG:
+                    pVal = &((long long*) valArray)[0];
+                    break;
+    
+                case WriteEngine::WR_TOKEN:
+                    pVal = &((Token*) valArray)[0];
+                    break;
+    
+                case WriteEngine::WR_INT :
+                case WriteEngine::WR_MEDINT :
+                    pVal = &((int*) valArray)[0];
+                    break;
+    
+                case WriteEngine::WR_USHORT :
+                    pVal = &((uint16_t*) valArray)[0];
+                    break;
+    
+                case WriteEngine::WR_UBYTE :
+                    pVal = &((uint8_t*) valArray)[0];
+                    break;
+    
+                case WriteEngine::WR_ULONGLONG:
+                    pVal = &((uint64_t*) valArray)[0];
+                    break;
+    
+                case WriteEngine::WR_UINT :
+                case WriteEngine::WR_UMEDINT :
+                    pVal = &((uint32_t*) valArray)[0];
+                    break;
+    
+                default  :
+                    pVal = &((int*) valArray)[0];
+                    break;
+            }
         }
-
-        // This is the stuff to retrieve old value
-        //memcpy(pOldVal, dataBuf + dataBio, curCol.colWidth);
-
-        if (bDelete)
+        else
         {
-            emptyVal = getEmptyRowValue(curCol.colDataType, curCol.colWidth);
-            pVal = &emptyVal;
+            emptyVal = (uint8_t*) alloca(curCol.colWidth);
+            getEmptyRowValue(curCol.colDataType, curCol.colWidth, emptyVal);
+            pVal = emptyVal;
         }
 
-        // This is the write stuff
         writeBufValue(dataBuf + dataBio, pVal, curCol.colWidth);
 
         i++;
@@ -1980,6 +2027,10 @@ int ColumnOp::writeRowsValues(Column& curCol, uint64_t totalRow, const RIDList& 
             case WriteEngine::WR_UINT :
             case WriteEngine::WR_UMEDINT :
                 pVal = &((uint32_t*) valArray)[i];
+                break;
+
+            case WriteEngine::WR_BINARY:
+                pVal = &((int128_t*) valArray)[i];
                 break;
 
             default  :

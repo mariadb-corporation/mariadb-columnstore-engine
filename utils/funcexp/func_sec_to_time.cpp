@@ -120,6 +120,7 @@ string Func_sec_to_time::getStrVal(rowgroup::Row& row,
         break;
 
         case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             const string& valStr = parm[0]->data()->getStrVal(row, isNull);
 
@@ -257,12 +258,15 @@ execplan::IDB_Decimal Func_sec_to_time::getDecimalVal(rowgroup::Row& row,
         execplan::CalpontSystemCatalog::ColType& op_ct)
 {
     IDB_Decimal d;
+
     int64_t val = parm[0]->data()->getIntVal(row, isNull);
 
+    int64_t tmpVal;
+
     if (val > 3020399)
-        d.value = 8385959;
+        tmpVal = 8385959;
     else if (val < -3020399)
-        d.value = 4286581337LL;
+        tmpVal = 4286581337LL;
     else
     {
         string time = getStrVal(row, parm, isNull, op_ct);
@@ -277,15 +281,17 @@ execplan::IDB_Decimal Func_sec_to_time::getDecimalVal(rowgroup::Row& row,
         char* ep = NULL;
         const char* str = time.c_str();
         errno = 0;
-        d.value = strtoll(str, &ep, 10);
+        tmpVal = strtoll(str, &ep, 10);
     }
+
+    if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+        d.s128Value = tmpVal;
+    else
+        d.value = tmpVal;
 
     d.scale = 0;
     return d;
 }
-
-
-
 
 } // namespace funcexp
 // vim:ts=4 sw=4:

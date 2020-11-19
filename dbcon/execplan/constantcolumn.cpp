@@ -230,12 +230,14 @@ ConstantColumn::ConstantColumn(const int64_t val, TYPE type) :
     fResult.doubleVal = (double)fResult.intVal;
     fResult.longDoubleVal = (long double)fResult.intVal;
     fResult.decimalVal.value = fResult.intVal;
+    fResult.decimalVal.s128Value = fResult.intVal;
     fResult.decimalVal.scale = 0;
     fResultType.colDataType = CalpontSystemCatalog::BIGINT;
     fResultType.colWidth = 8;
 }
 
-ConstantColumn::ConstantColumn(const uint64_t val, TYPE type) :
+ConstantColumn::ConstantColumn(const uint64_t val, TYPE type,
+                               int8_t scale, uint8_t precision) :
     ReturnedColumn(),
     fType(type)
 {
@@ -250,7 +252,9 @@ ConstantColumn::ConstantColumn(const uint64_t val, TYPE type) :
     fResult.doubleVal = (double)fResult.uintVal;
     fResult.longDoubleVal = (long double)fResult.uintVal;
     fResult.decimalVal.value = fResult.uintVal;
-    fResult.decimalVal.scale = 0;
+    fResult.decimalVal.s128Value = fResult.uintVal;
+    fResult.decimalVal.scale = scale;
+    fResult.decimalVal.precision = precision;
     fResultType.colDataType = CalpontSystemCatalog::UBIGINT;
     fResultType.colWidth = 8;
 }
@@ -317,6 +321,7 @@ void ConstantColumn::serialize(messageqcpp::ByteStream& b) const
     b << (uint8_t)fResult.boolVal;
     b << fResult.strVal;
     b << (uint64_t)fResult.decimalVal.value;
+    b << (uint128_t)fResult.decimalVal.s128Value;
     b << (uint8_t)fResult.decimalVal.scale;
     b << (uint8_t)fResult.decimalVal.precision;
 }
@@ -341,6 +346,7 @@ void ConstantColumn::unserialize(messageqcpp::ByteStream& b)
     b >> (uint8_t&)fResult.boolVal;
     b >> fResult.strVal;
     b >> (uint64_t&)fResult.decimalVal.value;
+    b >> (uint128_t&)fResult.decimalVal.s128Value;
     b >> (uint8_t&)fResult.decimalVal.scale;
     b >> (uint8_t&)fResult.decimalVal.precision;
 }

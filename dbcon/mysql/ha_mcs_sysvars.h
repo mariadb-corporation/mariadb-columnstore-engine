@@ -101,6 +101,9 @@ void set_varbin_always_hex(THD* thd, bool value);
 bool get_double_for_decimal_math(THD* thd);
 void set_double_for_decimal_math(THD* thd, bool value);
 
+bool get_decimal_overflow_check(THD* thd);
+void set_decimal_overflow_check(THD* thd, bool value);
+
 ulong get_local_query(THD* thd);
 void set_local_query(THD* thd, ulong value);
 

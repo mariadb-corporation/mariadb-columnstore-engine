@@ -177,7 +177,11 @@ pColStep::pColStep(
         fColType.colWidth = 8;
         fIsDict = true;
     }
-    else if (fColType.colWidth > 8 )
+    // WIP MCOL-641
+    else if (fColType.colWidth > 8 
+        && fColType.colDataType != CalpontSystemCatalog::BINARY
+        && fColType.colDataType != CalpontSystemCatalog::DECIMAL
+        && fColType.colDataType != CalpontSystemCatalog::UDECIMAL)
     {
         fColType.colWidth = 8;
         fIsDict = true;
@@ -630,6 +634,18 @@ void pColStep::addFilter(int8_t COP, int64_t value, uint8_t roundFlag)
     fFilterCount++;
 }
 
+// WIP MCOL-641
+void pColStep::addFilter(int8_t COP, const int128_t& value, uint8_t roundFlag)
+{
+    fFilterString << (uint8_t) COP;
+    fFilterString << roundFlag;
+
+    // bitwise copies into the filter ByteStream
+    fFilterString << *reinterpret_cast<const uint128_t*>(&value);
+
+    fFilterCount++;
+}
+
 void pColStep::setRidList(DataList<ElementType>* dl)
 {
     ridList = dl;
@@ -723,8 +739,8 @@ void pColStep::sendPrimitiveMessages()
 //		{
 //
 //		bool flag = lbidList->CasualPartitionPredicate(
-//											extents[idx].partition.cprange.lo_val,
-//											extents[idx].partition.cprange.hi_val,
+//											extents[idx].partition.cprange.loVal,
+//											extents[idx].partition.cprange.hiVal,
 //											&fFilterString,
 //                                            fFilterCount,
 //                                            fColType,
@@ -733,8 +749,8 @@ void pColStep::sendPrimitiveMessages()
 //#ifdef DEBUG
 //		if (fOid >= 3000 && flushInterval == 0)
 //			cout << (flag ? "  will scan " : "  will not scan ")
-//				<< "extent with range " << extents[idx].partition.cprange.lo_val
-//				<< "-" << extents[idx].partition.cprange.hi_val << endl;
+//				<< "extent with range " << extents[idx].partition.cprange.loVal
+//				<< "-" << extents[idx].partition.cprange.hiVal << endl;
 //#endif
 //
 //		}

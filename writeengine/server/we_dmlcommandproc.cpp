@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporation
+   Copyright (C) 2016-2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -51,8 +51,8 @@ using namespace BRM;
 #include "cacheutils.h"
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
-
 #include "checks.h"
+#include "columnwidth.h"
 
 namespace WriteEngine
 {
@@ -116,6 +116,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
     RowList rows = tablePtr->get_RowList();
 
     WriteEngine::ColStructList colStructs;
+    WriteEngine::CSCTypesList cscColTypeList;
     WriteEngine::DctnryStructList dctnryStructList;
     WriteEngine::DctnryValueList dctnryValueList;
     WriteEngine::ColValueList colValuesList;
@@ -139,12 +140,18 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
         {
             Row* rowPtr = rows.at(0);
             ColumnList columns = rowPtr->get_ColumnList();
+            unsigned int numcols = rowPtr->get_NumberOfColumns();
+            cscColTypeList.reserve(numcols);
+            // WIP
+            // We presume that DictCols number is low
+            colStructs.reserve(numcols);
             ColumnList::const_iterator column_iterator = columns.begin();
 
             while (column_iterator != columns.end())
             {
                 DMLColumn* columnPtr = *column_iterator;
                 tableColName.column = columnPtr->get_Name();
+                // WIP MCOL-641 replace with getColRidsOidsTypes()
                 CalpontSystemCatalog::ROPair roPair = systemCatalogPtr->columnRID(tableColName);
 
                 CalpontSystemCatalog::OID oid = systemCatalogPtr->lookupOID(tableColName);
@@ -161,8 +168,9 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
                 colStruct.fCompressionType = colType.compressionType;
 
                 // Token
-                if ( isDictCol(colType) )
+                if (isDictCol(colType) )
                 {
+                    // WIP Hardcoded value
                     colStruct.colWidth = 8;
                     colStruct.tokenFlag = true;
                 }
@@ -190,11 +198,11 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
                 colStructs.push_back(colStruct);
                 dctnryStructList.push_back(dctnryStruct);
+                cscColTypeList.push_back(colType);
 
                 ++column_iterator;
             }
 
-            unsigned int numcols = rowPtr->get_NumberOfColumns();
             std::string tmpStr("");
 
             for (unsigned int i = 0; i < numcols; i++)
@@ -210,6 +218,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
                     const DMLColumn* columnPtr = rowPtr->get_ColumnAt(i);
 
                     tableColName.column = columnPtr->get_Name();
+                    // WIP MCOL-641 remove these calls
                     CalpontSystemCatalog::OID oid = systemCatalogPtr->lookupOID(tableColName);
 
                     CalpontSystemCatalog::ColType colType;
@@ -303,6 +312,8 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
                             {
                                 try
                                 {
+                                    // WIP What if we combine this and previous loop and fail
+                                    // after get nextAIValue ?
                                     nextVal = systemCatalogPtr->nextAutoIncrValue(tableName);
                                     fDbrm.startAISequence(oid, nextVal, colType.colWidth, colType.colDataType);
                                 }
@@ -359,7 +370,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
                             try
                             {
-                                datavalue = DataConvert::convertColumnData(colType, indata, pushWarning, insertPkg.get_TimeZone(), isNULL, false, false);
+                                datavalue = colType.convertColumnData(indata, pushWarning, insertPkg.get_TimeZone(), isNULL, false, false);
                             }
                             catch (exception&)
                             {
@@ -375,7 +386,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
                                 return rc;
                             }
 
-                            if ( pushWarning)
+                            if (pushWarning)
                             {
                                 if (!isWarningSet)
                                     isWarningSet = true;
@@ -412,14 +423,16 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
     // call the write engine to write the rows
     int error = NO_ERROR;
-    //fWriteEngine.setDebugLevel(WriteEngine::DEBUG_3);
-    //cout << "inserting a row with transaction id " << txnid.id << endl;
+    // MCOL-641 WIP
+    fWEWrapper.setDebugLevel(WriteEngine::DEBUG_3);
+    cout << "inserting a row with transaction id " << txnid.id << endl;
     fWEWrapper.setIsInsert(true);
     fWEWrapper.setBulkFlag(true);
     fWEWrapper.setTransId(txnid.id);
     //For hdfs use only
     uint32_t  tblOid = tableRoPair.objnum;
 
+    // WIP are we saving HDFS?
     if (idbdatafile::IDBPolicy::useHdfs())
     {
 
@@ -523,7 +536,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
     if (colValuesList[0].size() > 0)
     {
         if (NO_ERROR !=
-                (error = fWEWrapper.insertColumnRec_Single(txnid.id, colStructs, colValuesList, dctnryStructList, dicStringList, tableRoPair.objnum)))
+                (error = fWEWrapper.insertColumnRec_Single(txnid.id, cscColTypeList, colStructs, colValuesList, dctnryStructList, dicStringList, tableRoPair.objnum)))
         {
             if (error == ERR_BRM_DEAD_LOCK)
             {
@@ -531,7 +544,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
                 WErrorCodes ec;
                 err = ec.errorString(error);
             }
-            else if ( error == ERR_BRM_VB_OVERFLOW )
+            else if (error == ERR_BRM_VB_OVERFLOW)
             {
                 rc = dmlpackageprocessor::DMLPackageProcessor::VB_OVERFLOW_ERROR;
                 err = IDBErrorInfo::instance()->errorMsg(ERR_VERSIONBUFFER_OVERFLOW);
@@ -546,9 +559,9 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
     }
 
     std::map<uint32_t, uint32_t> oids;
-    std::vector<BRM::OID_t>  oidsToFlush;
+    std::vector<BRM::OID_t> oidsToFlush;
 
-    for ( unsigned i = 0; i < colStructs.size(); i++)
+    for (unsigned i = 0; i < colStructs.size(); i++)
     {
         oids[colStructs[i].dataOid] = colStructs[i].dataOid;
         oidsToFlush.push_back(colStructs[i].dataOid);
@@ -802,24 +815,19 @@ uint8_t WE_DMLCommandProc::rollbackVersion(ByteStream& bs, std::string& err)
 uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::string& err, ByteStream::quadbyte& PMId)
 {
     int rc = 0;
-    //cout << "processBatchInsert received bytestream length " << bs.length() << endl;
 
     InsertDMLPackage insertPkg;
     ByteStream::quadbyte tmp32;
     bs >> tmp32;
-    //cout << "processBatchInsert got transaction id " << tmp32 << endl;
     bs >> PMId;
-    //cout << "processBatchInsert gor PMId " << PMId << endl;
     insertPkg.read( bs);
     uint32_t sessionId = insertPkg.get_SessionID();
-    //cout << " processBatchInsert for session " << sessionId << endl;
     DMLTable* tablePtr = insertPkg.get_Table();
     bool isAutocommitOn = insertPkg.get_isAutocommitOn();
 
     if (idbdatafile::IDBPolicy::useHdfs())
         isAutocommitOn = true;
 
-    //cout << "This session isAutocommitOn is " << isAutocommitOn << endl;
     BRM::TxnID txnid;
     txnid.id  = tmp32;
     txnid.valid = true;
@@ -827,6 +835,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
     bool isInsertSelect = insertPkg.get_isInsertSelect();
 
     WriteEngine::ColStructList colStructs;
+    WriteEngine::CSCTypesList cscColTypeList;
     WriteEngine::DctnryStructList dctnryStructList;
     WriteEngine::DctnryValueList dctnryValueList;
     WriteEngine::ColValueList colValuesList;
@@ -844,7 +853,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
     try
     {
         ridList = systemCatalogPtr->columnRIDs(tableName, true);
-        roPair = systemCatalogPtr->tableRID( tableName);
+        roPair = systemCatalogPtr->tableRID(tableName);
     }
     catch (std::exception& ex)
     {
@@ -852,7 +861,6 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
         rc = 1;
         return rc;
     }
-
 
     std::vector<OID>    dctnryStoreOids(ridList.size()) ;
     std::vector<Column> columns;
@@ -905,13 +913,9 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
                 if (i == 0)
                 {
                     rc = pDBRootExtentTracker->selectFirstSegFile(dbRootExtent, bFirstExtentOnThisPM, bEmptyPM, trkErrMsg);
-                    /*	cout << "bEmptyPM = " << (int) bEmptyPM << " bFirstExtentOnThisPM= " << (int)bFirstExtentOnThisPM <<
-                    	" oid:dbroot:hwm = " << ridList[i].objnum << ":"<<dbRootExtent.fDbRoot << ":"
-                    	<<":"<<dbRootExtent.fLocalHwm << " err = " << trkErrMsg << endl; */
                 }
                 else
                     pDBRootExtentTracker->assignFirstSegFile(*(dbRootExtTrackerVec[0].get()), dbRootExtent);
-
 
                 colDBRootExtentInfo.push_back(dbRootExtent);
 
@@ -970,7 +974,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
     std::vector<BRM::LBIDRange>   rangeList;
 
     // use of MetaFile for bulk rollback support
-    if ( fIsFirstBatchPm && isAutocommitOn)
+    if (fIsFirstBatchPm && isAutocommitOn)
     {
         //save meta data, version last block for each dbroot at the start of batch insert
         try
@@ -978,10 +982,8 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
             fRBMetaWriter->init(tblOid, tableName.table);
             fRBMetaWriter->saveBulkRollbackMetaData(columns, dctnryStoreOids, dbRootHWMInfoColVec);
 
-            //cout << "Saved meta files" << endl;
             if (!bFirstExtentOnThisPM)
             {
-                //cout << "Backing up hwm chunks" << endl;
                 for (unsigned i = 0; i < dctnryList.size(); i++) //back up chunks for compressed dictionary
                 {
                     // @bug 5572 HDFS tmp file - Ignoring return flag, don't need in this context
@@ -1031,7 +1033,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
                 colStruct.fCompressionType = colType.compressionType;
 
                 // Token
-                if ( isDictCol(colType) )
+                if (isDictCol(colType) )
                 {
                     colStruct.colWidth = 8;
                     colStruct.tokenFlag = true;
@@ -1060,6 +1062,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
 
                 colStructs.push_back(colStruct);
                 dctnryStructList.push_back(dctnryStruct);
+                cscColTypeList.push_back(colType);
 
                 ++column_iterator;
             }
@@ -1242,7 +1245,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
 
                             try
                             {
-                                datavalue = DataConvert::convertColumnData(colType, indata, pushWarning, insertPkg.get_TimeZone(), isNULL, false, false);
+                                datavalue = colType.convertColumnData(indata, pushWarning, insertPkg.get_TimeZone(), isNULL, false, false);
                             }
                             catch (exception&)
                             {
@@ -1295,7 +1298,6 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
     int error = NO_ERROR;
 
     //fWriteEngine.setDebugLevel(WriteEngine::DEBUG_3);
-    //cout << "Batch inserting a row with transaction id " << txnid.id << endl;
     if (colValuesList.size() > 0)
     {
         if (colValuesList[0].size() > 0)
@@ -1309,7 +1311,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
             */
 
             if (NO_ERROR !=
-                    (error = fWEWrapper.insertColumnRecs(txnid.id, colStructs, colValuesList, dctnryStructList, dicStringList,
+                    (error = fWEWrapper.insertColumnRecs(txnid.id, cscColTypeList, colStructs, colValuesList, dctnryStructList, dicStringList,
                              dbRootExtTrackerVec, 0, bFirstExtentOnThisPM, isInsertSelect, isAutocommitOn, roPair.objnum, fIsFirstBatchPm)))
             {
                 if (error == ERR_BRM_DEAD_LOCK)
@@ -1346,7 +1348,6 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
     if ( isWarningSet && ( rc == NO_ERROR ) )
     {
         rc = dmlpackageprocessor::DMLPackageProcessor::IDBRANGE_WARNING;
-        //cout << "Got warning" << endl;
         Message::Args args;
         string cols = "'" + colNames[0] + "'";
 
@@ -2614,13 +2615,13 @@ uint8_t WE_DMLCommandProc::rollbackBatchAutoOff(messageqcpp::ByteStream& bs, std
     //Rollbacked all versioned blocks
     return rc;
 }
+
 uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
         std::string& err,
         ByteStream::quadbyte& PMId,
         uint64_t& blocksChanged)
 {
     uint8_t rc = 0;
-    //cout << " In processUpdate" << endl;
     uint32_t tmp32, sessionID;
     TxnID txnId;
     bs >> PMId;
@@ -2637,7 +2638,6 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
         uint8_t pkgType;
         bs >> pkgType;
         cpackages[txnId].read(bs);
-        //cout << "Processed meta data in update" << endl;
 
         rc = fWEWrapper.startTransaction(txnId);
 
@@ -2676,6 +2676,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
     WriteEngine::ColStruct colStruct;
     WriteEngine::ColValueList colValueList;
     WriteEngine::RIDList  rowIDLists;
+    WriteEngine::CSCTypesList cscColTypeList;
 
     WriteEngine::DctnryStructList dctnryStructList;
     WriteEngine::DctnryStruct dctnryStruct;
@@ -2786,54 +2787,6 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
 
     for (unsigned int j = 0; j < columnsUpdated.size(); j++)
     {
-        /*		WriteEngine::ColTupleList colTupleList;
-        		//timer.start("lookupsyscat");
-        		tableColName.column  = columnsUpdated[j]->get_Name();
-        		try
-        		{
-        			oid = systemCatalogPtr->lookupOID(tableColName);
-        		}
-        		catch  (std::exception& ex)
-        		{
-        			rc = 1;
-        			ostringstream oss;
-        			oss << "lookupOID got exception " << ex.what() << " with column " << tableColName.schema << "." << tableColName.table << "." << tableColName.column;
-        			err = oss.str();
-        		}
-        		catch ( ... )
-        		{
-        			rc = 1;
-        			ostringstream oss;
-        			oss <<  "lookupOID got unknown exception with column " << tableColName.schema << "." << tableColName.table << "." << tableColName.column;
-        			err = oss.str();
-        		}
-
-        		if (rc != 0)
-        			return rc;
-
-        		CalpontSystemCatalog::ColType colType;
-        		try
-        		{
-        			colType = systemCatalogPtr->colType(oid);
-        		}
-        		catch  (std::exception& ex)
-        		{
-        			rc = 1;
-        			ostringstream oss;
-        			oss << "colType got exception " << ex.what() << " with column oid " << oid;
-        			err = oss.str();
-        		}
-        		catch ( ... )
-        		{
-        			rc = 1;
-        			ostringstream oss;
-        			oss << "colType got unknown exception with column oid " << oid;
-        			err = oss.str();
-        		}
-
-        		if (rc !=0)
-        			return rc;
-        		*/
         WriteEngine::ColTupleList colTupleList;
         CalpontSystemCatalog::ColType colType = colTypes[j];
         oid = oids[j];
@@ -2843,7 +2796,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
         colStruct.fCompressionType = colType.compressionType;
         tableColName.column  = columnsUpdated[j]->get_Name();
 
-        if ( !ridsFetched)
+        if (!ridsFetched)
         {
             // querystats
             uint64_t relativeRID = 0;
@@ -2856,13 +2809,26 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                 rid = relativeRID;
                 convertToRelativeRid (rid, extentNum, blockNum);
                 rowIDLists.push_back(rid);
-                uint32_t colWidth = (colTypes[j].colWidth > 8 ? 8 : colTypes[j].colWidth);
+
+                uint32_t colWidth = colTypes[j].colWidth;
+
+                if (colWidth > 8 &&
+                    !(colTypes[j].colDataType == CalpontSystemCatalog::DECIMAL ||
+                      colTypes[j].colDataType == CalpontSystemCatalog::UDECIMAL))
+                {
+                    colWidth = 8;
+                }
+                else if (colWidth >= datatypes::MAXDECIMALWIDTH)
+                {
+                    colWidth = datatypes::MAXDECIMALWIDTH;
+                }
+
 		int rrid = (int) relativeRID / (BYTE_PER_BLOCK / colWidth);
                 // populate stats.blocksChanged 
 		if (rrid > preBlkNums[j])
                 {
-			preBlkNums[j] = rrid ;
-                        blocksChanged++;
+		    preBlkNums[j] = rrid ;
+                    blocksChanged++;
 		}
 
             }
@@ -3026,17 +2992,15 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                         case CalpontSystemCatalog::DECIMAL:
                         case CalpontSystemCatalog::UDECIMAL:
                         {
-                            // decimal width > 8 cannot be stored in an integer
-                            if (fetchColColwidths[fetchColPos] > 8)
+                            if (fetchColColwidths[fetchColPos] == datatypes::MAXDECIMALWIDTH)
                             {
-                                value = row.getStringField(fetchColPos);
-                                unsigned i = strlen(value.c_str());
-                                value = value.substr(0, i);
+                                datatypes::VDecimal dec(0,
+                                                        fetchColScales[fetchColPos],
+                                                        rowGroups[txnId]->getPrecision()[fetchColPos],
+                                                        row.getBinaryField<int128_t>(fetchColPos));
+                                value = dec.toString(true);
                                 break;
                             }
-
-                            // else
-                            //     fall through to integer cases
                         }
                         /* fall through */
 
@@ -3073,12 +3037,10 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                                 }
                                 else
                                 {
-                                    const int ctmp_size = 65 + 1 + 1 + 1;
-                                    char ctmp[ctmp_size] = {0};
-                                    DataConvert::decimalToString(
-                                        intColVal, fetchColScales[fetchColPos],
-                                        ctmp, ctmp_size, fetchColTypes[fetchColPos]);
-                                    value = ctmp;  // null termination by decimalToString
+                                    datatypes::VDecimal dec(intColVal,
+                                                            fetchColScales[fetchColPos],
+                                                            rowGroups[txnId]->getPrecision()[fetchColPos]);
+                                    value = dec.toString();
                                 }
                             }
                             break;
@@ -3385,17 +3347,15 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                             case CalpontSystemCatalog::DECIMAL:
                             case CalpontSystemCatalog::UDECIMAL:
                             {
-                                // decimal width > 8 cannot be stored in an integer
-                                if (fetchColColwidths[fetchColPos] > 8)
+                                if (fetchColColwidths[fetchColPos] == datatypes::MAXDECIMALWIDTH)
                                 {
-                                    value = row.getStringField(fetchColPos);
-                                    unsigned i = strlen(value.c_str());
-                                    value = value.substr(0, i);
+                                    datatypes::VDecimal dec(0,
+                                                            fetchColScales[fetchColPos],
+                                                            rowGroups[txnId]->getPrecision()[fetchColPos],
+                                                            row.getBinaryField<int128_t>(fetchColPos));
+                                    value = dec.toString(true);
                                     break;
                                 }
-
-                                // else
-                                //     fall through to integer cases
                             }
                             /* fall through */
 
@@ -3433,12 +3393,10 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                                     }
                                     else
                                     {
-                                        const int ctmp_size = 65 + 1 + 1 + 1;
-                                        char ctmp[ctmp_size] = {0};
-                                        DataConvert::decimalToString(
-                                            intColVal, fetchColScales[fetchColPos],
-                                            ctmp, ctmp_size, fetchColTypes[fetchColPos]);
-                                        value = ctmp;  // null termination by decimalToString
+                                        datatypes::VDecimal dec(intColVal,
+                                                                fetchColScales[fetchColPos],
+                                                                rowGroups[txnId]->getPrecision()[fetchColPos]);
+                                        value = dec.toString();
                                     }
                                 }
                                 break;
@@ -3547,7 +3505,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
 
                         try
                         {
-                            datavalue = DataConvert::convertColumnData(colType, colType.defaultValue, pushWarn, timeZone, isNull, false, false);
+                            datavalue = colType.convertColumnData(colType.defaultValue, pushWarn, timeZone, isNull, false, false);
                         }
                         catch (exception&)
                         {
@@ -3579,7 +3537,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                     {
                         try
                         {
-                            datavalue = DataConvert::convertColumnData(colType, value, pushWarn, timeZone, isNull, false, false);
+                            datavalue = colType.convertColumnData(value, pushWarn, timeZone, isNull, false, false);
                         }
                         catch (exception&)
                         {
@@ -3676,7 +3634,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
 
                         try
                         {
-                            datavalue = DataConvert::convertColumnData(colType, inData, pushWarn, timeZone, isNull, false, false);
+                            datavalue = colType.convertColumnData(inData, pushWarn, timeZone, isNull, false, false);
                         }
                         catch (exception&)
                         {
@@ -3722,7 +3680,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                     {
                         try
                         {
-                            datavalue = DataConvert::convertColumnData(colType, colType.defaultValue, pushWarn, timeZone, isNull, false, false);
+                            datavalue = colType.convertColumnData(colType.defaultValue, pushWarn, timeZone, isNull, false, false);
                         }
                         catch (exception&)
                         {
@@ -3755,7 +3713,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                 {
                     try
                     {
-                        datavalue = DataConvert::convertColumnData(colType, inData, pushWarn, timeZone, isNull, false, true);
+                        datavalue = colType.convertColumnData(inData, pushWarn, timeZone, isNull, false, true);
                     }
                     catch (exception& ex)
                     {
@@ -3791,12 +3749,13 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
 
         colStructList.push_back(colStruct);
         colValueList.push_back (colTupleList);
+        cscColTypeList.push_back(colType);
     } //end of bulding values and column structure.
 
     //timer.stop("fetch values");
     if (rowIDLists.size() > 0)
     {
-        error = fWEWrapper.updateColumnRecs(txnId, colStructList, colValueList,  rowIDLists, tableRO.objnum);
+        error = fWEWrapper.updateColumnRecs(txnId, cscColTypeList, colStructList, colValueList,  rowIDLists, tableRO.objnum);
     }
 
     if (error != NO_ERROR)
@@ -4026,7 +3985,6 @@ uint8_t WE_DMLCommandProc::processDelete(messageqcpp::ByteStream& bs,
         uint64_t& blocksChanged)
 {
     uint8_t rc = 0;
-    //cout << " In processDelete" << endl;
     uint32_t tmp32, sessionID;
     TxnID txnId;
     bs >> PMId;
@@ -4101,13 +4059,25 @@ uint8_t WE_DMLCommandProc::processDelete(messageqcpp::ByteStream& bs,
     for (uint32_t j = 0; j < row.getColumnCount(); j++)
     {
         preBlkNums[j] = -1;
-        colWidth[j] = (row.getColumnWidth(j) >= 8 ? 8 : row.getColumnWidth(j));
+        colWidth[j] = row.getColumnWidth(j);
+        execplan::CalpontSystemCatalog::ColDataType colDataType = row.getColType(j);
+        if (colWidth[j] >= 8 &&
+            !(colDataType == execplan::CalpontSystemCatalog::DECIMAL ||
+              colDataType == execplan::CalpontSystemCatalog::UDECIMAL))
+        {
+            colWidth[j] = 8;
+        }
+        else if (colWidth[j] >= datatypes::MAXDECIMALWIDTH)
+        {
+            colWidth[j] = datatypes::MAXDECIMALWIDTH;
+        }
     }
 
     //Get the file information from rowgroup
     dbRoot = rowGroups[txnId]->getDBRoot();
     rowGroups[txnId]->getLocation(&partition, &segment, &extentNum, &blockNum);
     WriteEngine::ColStructList colStructList;
+    WriteEngine::CSCTypesList cscColTypeList;
     WriteEngine::ColStruct colStruct;
     colStruct.fColPartition = partition;
     colStruct.fColSegment = segment;
@@ -4143,7 +4113,9 @@ uint8_t WE_DMLCommandProc::processDelete(messageqcpp::ByteStream& bs,
             colStruct.tokenFlag = false;
             colStruct.fCompressionType = colType.compressionType;
 
-            if (colType.colWidth > 8)  //token
+            if (colType.colWidth > 8 &&
+                !(colType.colDataType == CalpontSystemCatalog::DECIMAL ||
+                  colType.colDataType == CalpontSystemCatalog::UDECIMAL))  //token
             {
                 colStruct.colWidth = 8;
                 colStruct.tokenFlag = true;
@@ -4155,7 +4127,8 @@ uint8_t WE_DMLCommandProc::processDelete(messageqcpp::ByteStream& bs,
 
             colStruct.colDataType = colType.colDataType;
 
-            colStructList.push_back( colStruct );
+            colStructList.push_back(colStruct);
+            cscColTypeList.push_back(colType);
         }
     }
     catch (exception& ex)
@@ -4166,13 +4139,15 @@ uint8_t WE_DMLCommandProc::processDelete(messageqcpp::ByteStream& bs,
     }
 
     std::vector<ColStructList> colExtentsStruct;
+    std::vector<CSCTypesList> colExtentsColType;
     std::vector<void*> colOldValueList;
     std::vector<RIDList> ridLists;
     colExtentsStruct.push_back(colStructList);
+    colExtentsColType.push_back(cscColTypeList);
     ridLists.push_back(rowIDList);
     int error = 0;
 
-    error = fWEWrapper.deleteRow( txnId, colExtentsStruct, colOldValueList, ridLists, roPair.objnum );
+    error = fWEWrapper.deleteRow(txnId, colExtentsColType, colExtentsStruct, colOldValueList, ridLists, roPair.objnum);
 
     if (error != NO_ERROR)
     {

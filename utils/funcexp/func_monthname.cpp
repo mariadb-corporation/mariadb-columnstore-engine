@@ -158,6 +158,7 @@ int64_t Func_monthname::getIntVal(rowgroup::Row& row,
             break;
 
         case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
             if (parm[0]->data()->resultType().scale == 0)
             {
                 val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
@@ -197,7 +198,11 @@ execplan::IDB_Decimal Func_monthname::getDecimalVal(rowgroup::Row& row,
         execplan::CalpontSystemCatalog::ColType& op_ct)
 {
     IDB_Decimal d;
-    d.value = getIntVal(row, fp, isNull, op_ct);
+
+    if (fp[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+        d.s128Value = getIntVal(row, fp, isNull, op_ct);
+    else
+        d.value = getIntVal(row, fp, isNull, op_ct);
     d.scale = 0;
     return d;
 }

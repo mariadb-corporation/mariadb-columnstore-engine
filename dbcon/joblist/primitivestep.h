@@ -46,6 +46,7 @@
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
 
+#include "mcs_basic_types.h"
 #include "calpontsystemcatalog.h"
 #include "calpontselectexecutionplan.h"
 #include "brm.h"
@@ -195,6 +196,8 @@ public:
      */
     void addFilter(int8_t COP, int64_t value, uint8_t roundFlag = 0);
     void addFilter(int8_t COP, float value);
+    // WIP MCOL-641
+    void addFilter(int8_t COP, const int128_t& value, uint8_t roundFlag = 0);
 
     /** @brief Sets the DataList to get RID values from.
      *
@@ -1325,7 +1328,8 @@ public:
      * Note that it is an adder not a setter.  For an extent to be scanned, all calls
      * must have a non-empty intersection.
      */
-    void addCPPredicates(uint32_t OID, const std::vector<int64_t>& vals, bool isRange);
+    void addCPPredicates(uint32_t OID, const std::vector<int128_t>& vals, bool isRange,
+                         bool isSmallSideWideDecimal);
 
     /* semijoin adds */
     void setJoinFERG(const rowgroup::RowGroup& rg);
@@ -1507,13 +1511,16 @@ private:
 
     /* Pseudo column filter processing.  Think about refactoring into a separate class. */
     bool processPseudoColFilters(uint32_t extentIndex, boost::shared_ptr<std::map<int, int> > dbRootPMMap) const;
-    bool processOneFilterType(int8_t colWidth, int64_t value, uint32_t type) const;
-    bool processSingleFilterString(int8_t BOP, int8_t colWidth, int64_t val, const uint8_t* filterString,
+    template<typename T>
+    bool processOneFilterType(int8_t colWidth, T value, uint32_t type) const;
+    template<typename T>
+    bool processSingleFilterString(int8_t BOP, int8_t colWidth, T val, const uint8_t* filterString,
                                    uint32_t filterCount) const;
     bool processSingleFilterString_ranged(int8_t BOP, int8_t colWidth, int64_t min, int64_t max,
                                           const uint8_t* filterString, uint32_t filterCount) const;
     bool processLBIDFilter(const BRM::EMEntry& emEntry) const;
-    bool compareSingleValue(uint8_t COP, int64_t val1, int64_t val2) const;
+    template<typename T>
+    bool compareSingleValue(uint8_t COP, T val1, T val2) const;
     bool compareRange(uint8_t COP, int64_t min, int64_t max, int64_t val) const;
     bool hasPCFilter, hasPMFilter, hasRIDFilter, hasSegmentFilter, hasDBRootFilter, hasSegmentDirFilter,
          hasPartitionFilter, hasMaxFilter, hasMinFilter, hasLBIDFilter, hasExtentIDFilter;

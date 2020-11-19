@@ -20,15 +20,17 @@
 #include <algorithm>
 #include <vector>
 #include <limits>
-#ifdef _MSC_VER
-#include <unordered_set>
-#else
+#ifndef _MSC_VER
 #include <tr1/unordered_set>
+#else
+#include <unordered_set>
 #endif
+
 #include "hasher.h"
 #include "lbidlist.h"
 #include "spinlock.h"
 #include "vlarray.h"
+
 
 using namespace std;
 using namespace rowgroup;
@@ -102,18 +104,38 @@ TupleJoiner::TupleJoiner(
     smallKeyColumns.push_back(smallJoinColumn);
     largeKeyColumns.push_back(largeJoinColumn);
     discreteValues.reset(new bool[1]);
-    cpValues.reset(new vector<int64_t>[1]);
+    cpValues.reset(new vector<int128_t>[1]);
     discreteValues[0] = false;
 
     if (smallRG.isUnsigned(smallKeyColumns[0]))
     {
-        cpValues[0].push_back(numeric_limits<uint64_t>::max());
-        cpValues[0].push_back(0);
+        if (datatypes::isWideDecimalType(
+            smallRG.getColType(smallKeyColumns[0]),
+            smallRG.getColumnWidth(smallKeyColumns[0])))
+        {
+            cpValues[0].push_back((int128_t) -1);
+            cpValues[0].push_back(0);
+        }
+        else
+        {
+            cpValues[0].push_back((int128_t) numeric_limits<uint64_t>::max());
+            cpValues[0].push_back(0);
+        }
     }
     else
     {
-        cpValues[0].push_back(numeric_limits<int64_t>::max());
-        cpValues[0].push_back(numeric_limits<int64_t>::min());
+        if (datatypes::isWideDecimalType(
+            smallRG.getColType(smallKeyColumns[0]),
+            smallRG.getColumnWidth(smallKeyColumns[0])))
+        {
+            cpValues[0].push_back(utils::maxInt128);
+            cpValues[0].push_back(utils::minInt128);
+        }
+        else
+        {
+            cpValues[0].push_back((int128_t) numeric_limits<int64_t>::max());
+            cpValues[0].push_back((int128_t) numeric_limits<int64_t>::min());
+        }
     }
 
     if (smallRG.isUnsigned(smallJoinColumn) != largeRG.isUnsigned(largeJoinColumn))
@@ -195,20 +217,40 @@ TupleJoiner::TupleJoiner(
         storedKeyAlloc[i].setAllocSize(keyLength);
 
     discreteValues.reset(new bool[smallKeyColumns.size()]);
-    cpValues.reset(new vector<int64_t>[smallKeyColumns.size()]);
+    cpValues.reset(new vector<int128_t>[smallKeyColumns.size()]);
 
     for (i = 0; i < smallKeyColumns.size(); i++)
     {
         discreteValues[i] = false;
         if (isUnsigned(smallRG.getColTypes()[smallKeyColumns[i]]))
         {
-            cpValues[i].push_back(static_cast<int64_t>(numeric_limits<uint64_t>::max()));
-            cpValues[i].push_back(0);
+            if (datatypes::isWideDecimalType(
+                smallRG.getColType(smallKeyColumns[i]),
+                smallRG.getColumnWidth(smallKeyColumns[i])))
+            {
+                cpValues[i].push_back((int128_t) -1);
+                cpValues[i].push_back(0);
+            }
+            else
+            {
+                cpValues[i].push_back((int128_t) numeric_limits<uint64_t>::max());
+                cpValues[i].push_back(0);
+            }
         }
         else
         {
-            cpValues[i].push_back(numeric_limits<int64_t>::max());
-            cpValues[i].push_back(numeric_limits<int64_t>::min());
+            if (datatypes::isWideDecimalType(
+                smallRG.getColType(smallKeyColumns[i]),
+                smallRG.getColumnWidth(smallKeyColumns[i])))
+            {
+                cpValues[i].push_back(utils::maxInt128);
+                cpValues[i].push_back(utils::minInt128);
+            }
+            else
+            {
+                cpValues[i].push_back(numeric_limits<int64_t>::max());
+                cpValues[i].push_back(numeric_limits<int64_t>::min());
+            }
         }
     }
 }
@@ -678,8 +720,9 @@ void TupleJoiner::doneInserting()
 
     for (col = 0; col < smallKeyColumns.size(); col++)
     {
-        tr1::unordered_set<int64_t> uniquer;
-        tr1::unordered_set<int64_t>::iterator uit;
+        typedef std::tr1::unordered_set<int128_t, utils::Hash128, utils::Equal128> unordered_set_int128;
+        unordered_set_int128 uniquer;
+        unordered_set_int128::iterator uit;
         sthash_t::iterator sthit;
         hash_t::iterator hit;
         ldhash_t::iterator ldit;
@@ -757,6 +800,12 @@ void TupleJoiner::doneInserting()
                         uniquer.insert((int64_t)dval);
                     }
                 }
+            }
+            else if (datatypes::isWideDecimalType(
+                     smallRow.getColType(smallKeyColumns[col]),
+                     smallRow.getColumnWidth(smallKeyColumns[col])))
+            {
+                uniquer.insert(*((int128_t*)smallRow.getBinaryField<int128_t>(smallKeyColumns[col])));
             }
             else if (smallRow.isUnsigned(smallKeyColumns[col]))
             {
@@ -1070,32 +1119,33 @@ void TupleJoiner::updateCPData(const Row& r)
 
     for (col = 0; col < smallKeyColumns.size(); col++)
     {
-//        if (r.getColumnWidth(smallKeyColumns[col]) > 8)
-        if (r.isLongString(smallKeyColumns[col]))
+        auto colIdx = smallKeyColumns[col];
+        if (r.isLongString(colIdx))
              continue;
 
-        int64_t& min = cpValues[col][0], &max = cpValues[col][1];
+        auto& min = cpValues[col][0], &max = cpValues[col][1];
 
-        if (r.isCharType(smallKeyColumns[col]))
+        if (r.isCharType(colIdx))
         {
-            int64_t val = r.getIntField(smallKeyColumns[col]);
+            int64_t val = r.getIntField(colIdx);
 
-            if (order_swap(val) < order_swap(min) ||
-                    min == numeric_limits<int64_t>::max())
+            if (order_swap(val) < order_swap((int64_t) min) ||
+                    ((int64_t) min) == numeric_limits<int64_t>::max())
             {
                 min = val;
             }
 
-            if (order_swap(val) > order_swap(max) ||
-                    max == numeric_limits<int64_t>::min())
+            if (order_swap(val) > order_swap((int64_t) max) ||
+                    ((int64_t) max) == numeric_limits<int64_t>::min())
             {
                 max = val;
             }
         }
-        else if (r.isUnsigned(smallKeyColumns[col]))
+        else if (r.isUnsigned(colIdx))
         {
-            uint64_t uval;
-            if (r.getColType(smallKeyColumns[col]) == CalpontSystemCatalog::LONGDOUBLE)
+            uint128_t uval;
+
+            if (r.getColType(colIdx) == CalpontSystemCatalog::LONGDOUBLE)
             {
                 double dval = (double)roundl(r.getLongDoubleField(smallKeyColumns[col]));
                 switch (largeRG.getColType(largeKeyColumns[col]))
@@ -1114,23 +1164,30 @@ void TupleJoiner::updateCPData(const Row& r)
                     }
                 }
             }
+            else if (datatypes::isWideDecimalType(
+                     r.getColType(colIdx),
+                     r.getColumnWidth(colIdx)))
+            {
+                uval = *((int128_t*)r.getBinaryField<int128_t>(colIdx));
+            }
             else
             {
-                uval = r.getUintField(smallKeyColumns[col]);
+                uval = r.getUintField(colIdx);
             }
 
-            if (uval > static_cast<uint64_t>(max))
-                max = static_cast<int64_t>(uval);
+            if (uval > static_cast<uint128_t>(max))
+                max = static_cast<int128_t>(uval);
 
-            if (uval < static_cast<uint64_t>(min))
-                min = static_cast<int64_t>(uval);
+            if (uval < static_cast<uint128_t>(min))
+                min = static_cast<int128_t>(uval);
         }
         else
         {
-            int64_t val;
-            if (r.getColType(smallKeyColumns[col]) == CalpontSystemCatalog::LONGDOUBLE)
+            int128_t val = 0;
+
+            if (r.getColType(colIdx) == CalpontSystemCatalog::LONGDOUBLE)
             {
-                double dval = (double)roundl(r.getLongDoubleField(smallKeyColumns[col]));
+                double dval = (double)roundl(r.getLongDoubleField(colIdx));
                 switch (largeRG.getColType(largeKeyColumns[col]))
                 {
                     case CalpontSystemCatalog::DOUBLE:
@@ -1147,9 +1204,15 @@ void TupleJoiner::updateCPData(const Row& r)
                     }
                 }
             }
+            else if (datatypes::isWideDecimalType(
+                     r.getColType(colIdx),
+                     r.getColumnWidth(colIdx)))
+            {
+                val = *((int128_t*)r.getBinaryField<int128_t>(colIdx));
+            }
             else
             {
-                val = r.getIntField(smallKeyColumns[col]);
+                val = r.getIntField(colIdx);
             }
 
             if (val > max)
@@ -1674,20 +1737,40 @@ boost::shared_ptr<TupleJoiner> TupleJoiner::copyForDiskJoin()
     ret->uniqueLimit = uniqueLimit;
 
     ret->discreteValues.reset(new bool[smallKeyColumns.size()]);
-    ret->cpValues.reset(new vector<int64_t>[smallKeyColumns.size()]);
+    ret->cpValues.reset(new vector<int128_t>[smallKeyColumns.size()]);
 
     for (uint32_t i = 0; i < smallKeyColumns.size(); i++)
     {
         ret->discreteValues[i] = false;
         if (isUnsigned(smallRG.getColTypes()[smallKeyColumns[i]]))
         {
-            ret->cpValues[i].push_back(static_cast<int64_t>(numeric_limits<uint64_t>::max()));
-            ret->cpValues[i].push_back(0);
+            if (datatypes::isWideDecimalType(
+                smallRG.getColType(smallKeyColumns[i]),
+                smallRG.getColumnWidth(smallKeyColumns[i])))
+            {
+                ret->cpValues[i].push_back((int128_t) -1);
+                ret->cpValues[i].push_back(0);
+            }
+            else
+            {
+                ret->cpValues[i].push_back((int128_t) numeric_limits<uint64_t>::max());
+                ret->cpValues[i].push_back(0);
+            }
         }
         else
         {
-            ret->cpValues[i].push_back(numeric_limits<int64_t>::max());
-            ret->cpValues[i].push_back(numeric_limits<int64_t>::min());
+            if (datatypes::isWideDecimalType(
+                smallRG.getColType(smallKeyColumns[i]),
+                smallRG.getColumnWidth(smallKeyColumns[i])))
+            {
+                ret->cpValues[i].push_back(utils::maxInt128);
+                ret->cpValues[i].push_back(utils::minInt128);
+            }
+            else
+            {
+                ret->cpValues[i].push_back(numeric_limits<int64_t>::max());
+                ret->cpValues[i].push_back(numeric_limits<int64_t>::min());
+            }
         }
     }
 

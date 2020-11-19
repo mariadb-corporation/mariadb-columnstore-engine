@@ -34,17 +34,20 @@ namespace execplan
 /**
  * Constructors/Destructors
  */
-ArithmeticOperator::ArithmeticOperator() : Operator()
+ArithmeticOperator::ArithmeticOperator() : Operator(), 
+    fDecimalOverflowCheck(false)
 {
 }
 
-ArithmeticOperator::ArithmeticOperator(const string& operatorName): Operator(operatorName)
+ArithmeticOperator::ArithmeticOperator(const string& operatorName): Operator(operatorName),
+    fDecimalOverflowCheck(false)
 {
 }
 
 ArithmeticOperator::ArithmeticOperator(const ArithmeticOperator& rhs):
     Operator(rhs),
-    fTimeZone(rhs.timeZone())
+    fTimeZone(rhs.timeZone()),
+    fDecimalOverflowCheck(false)
 {
 }
 
@@ -63,6 +66,7 @@ ostream& operator<<(ostream& output, const ArithmeticOperator& rhs)
 {
     output << rhs.toString();
     output << "opType=" << rhs.operationType().colDataType << endl;
+    output << "decimalOverflowCheck=" << rhs.getOverflowCheck() << endl;
     return output;
 }
 
@@ -73,6 +77,8 @@ void ArithmeticOperator::serialize(messageqcpp::ByteStream& b) const
 {
     b << (ObjectReader::id_t) ObjectReader::ARITHMETICOPERATOR;
     b << fTimeZone;
+    const messageqcpp::ByteStream::byte tmp = fDecimalOverflowCheck;
+    b << tmp;
     Operator::serialize(b);
 }
 
@@ -80,6 +86,9 @@ void ArithmeticOperator::unserialize(messageqcpp::ByteStream& b)
 {
     ObjectReader::checkType(b, ObjectReader::ARITHMETICOPERATOR);
     b >> fTimeZone;
+    messageqcpp::ByteStream::byte tmp;
+    b >> tmp;
+    fDecimalOverflowCheck = tmp;
     Operator::unserialize(b);
 }
 
@@ -115,70 +124,6 @@ bool ArithmeticOperator::operator!=(const TreeNode* t) const
 {
     return (!(*this == t));
 }
-
-#if 0
-void ArithmeticOperator::operationType(const Type& l, const Type& r)
-{
-    if (l.colDataType == execplan::CalpontSystemCatalog::DECIMAL)
-    {
-        switch (r.colDataType)
-        {
-            case execplan::CalpontSystemCatalog::DECIMAL:
-            {
-                // should follow the result type that MySQL gives
-                fOperationType = fResultType;
-                break;
-            }
-
-            case execplan::CalpontSystemCatalog::INT:
-            case execplan::CalpontSystemCatalog::MEDINT:
-            case execplan::CalpontSystemCatalog::TINYINT:
-            case execplan::CalpontSystemCatalog::BIGINT:
-                fOperationType.colDataType = execplan::CalpontSystemCatalog::DECIMAL;
-                fOperationType.scale = l.scale;
-                break;
-
-            default:
-                fOperationType.colDataType = execplan::CalpontSystemCatalog::DOUBLE;
-        }
-    }
-    else if (r.colDataType == execplan::CalpontSystemCatalog::DECIMAL)
-    {
-        switch (l.colDataType)
-        {
-            case execplan::CalpontSystemCatalog::DECIMAL:
-            {
-                // should following the result type that MySQL gives based on the following logic?
-                // @NOTE is this trustable?
-                fOperationType = fResultType;
-                break;
-            }
-
-            case execplan::CalpontSystemCatalog::INT:
-            case execplan::CalpontSystemCatalog::MEDINT:
-            case execplan::CalpontSystemCatalog::TINYINT:
-            case execplan::CalpontSystemCatalog::BIGINT:
-                fOperationType.colDataType = execplan::CalpontSystemCatalog::DECIMAL;
-                fOperationType.scale = r.scale;
-                break;
-
-            default:
-                fOperationType.colDataType = execplan::CalpontSystemCatalog::DOUBLE;
-        }
-    }
-    else if ((l.colDataType == execplan::CalpontSystemCatalog::INT ||
-              l.colDataType == execplan::CalpontSystemCatalog::MEDINT ||
-              l.colDataType == execplan::CalpontSystemCatalog::TINYINT ||
-              l.colDataType == execplan::CalpontSystemCatalog::BIGINT) &&
-             (r.colDataType == execplan::CalpontSystemCatalog::INT ||
-              r.colDataType == execplan::CalpontSystemCatalog::MEDINT ||
-              r.colDataType == execplan::CalpontSystemCatalog::TINYINT ||
-              r.colDataType == execplan::CalpontSystemCatalog::BIGINT))
-        fOperationType.colDataType = execplan::CalpontSystemCatalog::BIGINT;
-    else
-        fOperationType.colDataType = execplan::CalpontSystemCatalog::DOUBLE;
-}
-#endif
 
 void ArithmeticOperator::adjustResultType(const CalpontSystemCatalog::ColType& m)
 {

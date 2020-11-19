@@ -47,9 +47,11 @@
 #include <boost/regex.hpp>
 #endif
 
-#include "calpontsystemcatalog.h"
+#include "mcs_datatype.h"
 #include "columnresult.h"
 #include "exceptclasses.h"
+#include "common/branchpred.h"
+
 
 // remove this block if the htonll is defined in library
 #ifdef __linux__
@@ -84,6 +86,7 @@ inline uint64_t uint64ToStr(uint64_t n)
     return htonll(n);
 }
 
+using cscDataType = datatypes::SystemCatalog::ColDataType;
 
 #if defined(_MSC_VER) && defined(xxxDATACONVERT_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
@@ -114,6 +117,29 @@ const int64_t IDB_pow[19] =
     1000000000000000000LL
 };
 
+const std::string columnstore_big_precision[20] =
+{
+    "9999999999999999999",
+    "99999999999999999999",
+    "999999999999999999999",
+    "9999999999999999999999",
+    "99999999999999999999999",
+    "999999999999999999999999",
+    "9999999999999999999999999",
+    "99999999999999999999999999",
+    "999999999999999999999999999",
+    "9999999999999999999999999999",
+    "99999999999999999999999999999",
+    "999999999999999999999999999999",
+    "9999999999999999999999999999999",
+    "99999999999999999999999999999999",
+    "999999999999999999999999999999999",
+    "9999999999999999999999999999999999",
+    "99999999999999999999999999999999999",
+    "999999999999999999999999999999999999",
+    "9999999999999999999999999999999999999",
+    "99999999999999999999999999999999999999"
+};
 
 const int32_t SECS_PER_MIN = 60;
 const int32_t MINS_PER_HOUR = 60;
@@ -802,8 +828,8 @@ void TimeStamp::reset()
     second = 0xFFFFFFFFFFF;
 }
 
-inline
-int64_t string_to_ll( const std::string& data, bool& bSaturate )
+template<typename T=int64_t>
+inline T string_to_ll( const std::string& data, bool& bSaturate )
 {
     // This function doesn't take into consideration our special values
     // for NULL and EMPTY when setting the saturation point. Should it?
@@ -850,22 +876,25 @@ uint64_t string_to_ull( const std::string& data, bool& bSaturate )
     return value;
 }
 
+template <typename T>
+void number_int_value(const std::string& data,
+                      cscDataType typeCode,
+                      const datatypes::SystemCatalog::TypeAttributesStd &ct,
+                      bool& pushwarning,
+                      bool noRoundup,
+                      T& intVal);
+
+uint64_t number_uint_value(const string& data,
+                           cscDataType typeCode,
+                           const datatypes::SystemCatalog::TypeAttributesStd& ct,
+                           bool& pushwarning,
+                           bool  noRoundup);
+
 /** @brief DataConvert is a component for converting string data to Calpont format
   */
 class DataConvert
 {
 public:
-
-    /**
-     * @brief convert a columns data, represnted as a string, to it's native
-     * format
-     *
-     * @param type the columns data type
-     * @param data the columns string representation of it's data
-     */
-    EXPORT static boost::any convertColumnData( const execplan::CalpontSystemCatalog::ColType& colType,
-            const std::string& dataOrig, bool& bSaturate, const std::string& timeZone,
-            bool nulFlag = false, bool noRoundup = false, bool isUpdate = false);
 
     /**
       * @brief convert a columns data from native format to a string
@@ -1008,9 +1037,6 @@ public:
     EXPORT static bool      isColumnTimeValid( int64_t time );
     EXPORT static bool      isColumnTimeStampValid( int64_t timeStamp );
 
-    EXPORT static bool isNullData(execplan::ColumnResult* cr, int rownum, execplan::CalpontSystemCatalog::ColType colType);
-    static inline std::string decimalToString(int64_t value, uint8_t scale, execplan::CalpontSystemCatalog::ColDataType colDataType);
-    static inline void decimalToString(int64_t value, uint8_t scale, char* buf, unsigned int buflen, execplan::CalpontSystemCatalog::ColDataType colDataType);
     static inline std::string constructRegexp(const std::string& str);
     static inline void trimWhitespace(int64_t& charData);
     static inline bool isEscapedChar(char c)
@@ -1038,7 +1064,49 @@ public:
     EXPORT static int64_t timeToInt(const std::string& time);
     EXPORT static int64_t stringToTime (const std::string& data);
     // bug4388, union type conversion
-    EXPORT static execplan::CalpontSystemCatalog::ColType convertUnionColType(std::vector<execplan::CalpontSystemCatalog::ColType>&);
+    EXPORT static void joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd &unionedType,
+                                           const datatypes::SystemCatalog::TypeHolderStd &type);
+
+    static boost::any StringToBit(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+                                  const datatypes::ConvertFromStringParam &prm,
+                                  const std::string& dataOrig,
+                                  bool& pushWarning);
+
+    static boost::any StringToSDecimal(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+                                       const datatypes::ConvertFromStringParam &prm,
+                                       const std::string& data,
+                                       bool& pushWarning);
+
+    static boost::any StringToUDecimal(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+                                       const datatypes::ConvertFromStringParam &prm,
+                                       const std::string& data,
+                                       bool& pushWarning);
+
+    static boost::any StringToFloat(cscDataType typeCode,
+                                    const std::string& dataOrig,
+                                    bool& pushWarning);
+
+    static boost::any StringToDouble(cscDataType typeCode,
+                                     const std::string& dataOrig,
+                                     bool& pushWarning);
+
+    static boost::any StringToString(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+                                     const std::string& dataOrig,
+                                     bool& pushWarning);
+
+    static boost::any StringToDate(const std::string& data,
+                                   bool& pushWarning);
+
+    static boost::any StringToDatetime(const std::string& data,
+                                       bool& pushWarning);
+
+    static boost::any StringToTime(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+                                   const std::string& data,
+                                   bool& pushWarning);
+
+    static boost::any StringToTimestamp(const datatypes::ConvertFromStringParam &prm,
+                                        const std::string& data,
+                                        bool& pushWarning);
 };
 
 inline void DataConvert::dateToString( int datevalue, char* buf, unsigned int buflen)
@@ -1221,95 +1289,6 @@ inline void DataConvert::timeToString1( long long timevalue, char* buf, unsigned
 #endif
 }
 
-inline std::string DataConvert::decimalToString(int64_t value, uint8_t scale, execplan::CalpontSystemCatalog::ColDataType colDataType)
-{
-    char buf[80];
-    DataConvert::decimalToString(value, scale, buf, 80, colDataType);
-    return std::string(buf);
-}
-
-inline void DataConvert::decimalToString(int64_t int_val, uint8_t scale, char* buf, unsigned int buflen,
-        execplan::CalpontSystemCatalog::ColDataType colDataType)
-{
-    // Need to convert a string with a binary unsigned number in it to a 64-bit signed int
-
-    // MySQL seems to round off values unless we use the string store method. Groan.
-    // Taken from ha_mcs_impl.cpp
-
-    //biggest Calpont supports is DECIMAL(18,x), or 18 total digits+dp+sign for column
-    // Need 19 digits maxium to hold a sum result of 18 digits decimal column.
-    if (isUnsigned(colDataType))
-    {
-#ifndef __LP64__
-        snprintf(buf, buflen, "%llu", static_cast<uint64_t>(int_val));
-#else
-        snprintf(buf, buflen, "%lu", static_cast<uint64_t>(int_val));
-#endif
-    }
-    else
-    {
-#ifndef __LP64__
-        snprintf(buf, buflen, "%lld", int_val);
-#else
-        snprintf(buf, buflen, "%ld", int_val);
-#endif
-    }
-
-    if (scale == 0)
-        return;
-
-    //we want to move the last dt_scale chars right by one spot to insert the dp
-    //we want to move the trailing null as well, so it's really dt_scale+1 chars
-    size_t l1 = strlen(buf);
-    char* ptr = &buf[0];
-
-    if (int_val < 0)
-    {
-        ptr++;
-        idbassert(l1 >= 2);
-        l1--;
-    }
-
-    //need to make sure we have enough leading zeros for this to work...
-    //at this point scale is always > 0
-    size_t l2 = 1;
-
-    if ((unsigned)scale > l1)
-    {
-        const char* zeros = "00000000000000000000"; //20 0's
-        size_t diff = 0;
-
-        if (int_val != 0)
-            diff = scale - l1; //this will always be > 0
-        else
-            diff = scale;
-
-        memmove((ptr + diff), ptr, l1 + 1); //also move null
-        memcpy(ptr, zeros, diff);
-
-        if (int_val != 0)
-            l1 = 0;
-        else
-            l1 = 1;
-    }
-    else if ((unsigned)scale == l1)
-    {
-        l1 = 0;
-        l2 = 2;
-    }
-    else
-    {
-        l1 -= scale;
-    }
-
-    memmove((ptr + l1 + l2), (ptr + l1), scale + 1); //also move null
-
-    if (l2 == 2)
-        *(ptr + l1++) = '0';
-
-    *(ptr + l1) = '.';
-}
-
 inline void DataConvert::trimWhitespace(int64_t& charData)
 {
     // Trims whitespace characters off non-dict character data
@@ -1404,6 +1383,107 @@ inline std::string DataConvert::constructRegexp(const std::string& str)
     std::string ret(cBuf);
     delete [] cBuf;
     return ret;
+}
+
+inline int128_t add128(int128_t a, int128_t b)
+{
+    return a + b;
+}
+
+inline int128_t subtract128(int128_t a, int128_t b)
+{
+    return a - b;
+}
+
+inline bool lessThan128(int128_t a, int128_t b)
+{
+    return a < b;
+}
+
+inline bool greaterThan128(int128_t a, int128_t b)
+{
+    return a > b;
+}
+
+// Naive int128_t version of strtoll
+inline int128_t strtoll128(const char* data, bool& saturate, char** ep)
+{
+    int128_t res = 0;
+
+    if (*data == '\0')
+    {
+        if (ep) 
+            *ep = (char*)data;
+        return res;
+    }
+
+    // skip leading whitespace characters
+    while (*data != '\0' && 
+           (*data == ' ' || *data == '\t' || *data == '\n'))
+        data++;
+
+    int128_t (*op)(int128_t, int128_t);
+    op = add128;
+    bool (*compare)(int128_t, int128_t);
+    compare = lessThan128;
+
+    // check the -ve sign
+    bool is_neg = false;
+    if (*data == '-')
+    {
+        is_neg = true;
+        op = subtract128;
+        compare = greaterThan128;
+        data++;
+    }
+
+    int128_t tmp;
+
+    for (; *data != '\0' && isdigit(*data); data++)
+    {
+        tmp = op(res*10, *data - '0');
+
+        if (UNLIKELY(compare(tmp, res)))
+        {
+            saturate = true;
+
+            if (is_neg)
+                utils::int128Min(res);
+            else
+                utils::int128Max(res);
+
+            while (*data != '\0' && isdigit(*data))
+                data++;
+
+            if (ep)
+                *ep = (char*)data;
+
+            return res;
+        }
+
+        res = tmp;
+    }
+
+    if (ep)
+        *ep = (char*)data;
+
+    return res;
+}
+
+template<>
+inline int128_t string_to_ll<int128_t> ( const std::string& data, bool& bSaturate )
+{
+    // This function doesn't take into consideration our special values
+    // for NULL and EMPTY when setting the saturation point. Should it?
+    char* ep = NULL;
+    const char* str = data.c_str();
+    int128_t value = strtoll128(str, bSaturate, &ep);
+
+    //  (no digits) || (more chars)
+    if ((ep == str) || (*ep != '\0'))
+        throw logging::QueryDataExcept("value is not numerical.", logging::formatErr);
+
+    return value;
 }
 
 } // namespace dataconvert

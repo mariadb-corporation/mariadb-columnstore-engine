@@ -30,6 +30,7 @@
 #include "boost/ptr_container/ptr_vector.hpp"
 #include "we_columninfo.h"
 #include "calpontsystemcatalog.h"
+#include "dataconvert.h"
 
 namespace WriteEngine
 {
@@ -42,17 +43,31 @@ public:
     int64_t minBufferVal;
     int64_t maxBufferVal;
     int64_t satCount;
+    union
+    {
+        int128_t bigMinBufferVal;
+        int64_t minBufferVal_;
+    };
+    union
+    {
+        int128_t bigMaxBufferVal;
+        int64_t maxBufferVal_;
+    };
     BLBufferStats(ColDataType colDataType) : satCount(0)
     {
         if (isUnsigned(colDataType) || isCharType(colDataType))
         {
             minBufferVal = static_cast<int64_t>(MAX_UBIGINT);
             maxBufferVal = static_cast<int64_t>(MIN_UBIGINT);
+            bigMinBufferVal = -1;
+            bigMaxBufferVal = 0;
         }
         else
         {
             minBufferVal = MAX_BIGINT;
             maxBufferVal = MIN_BIGINT;
+            utils::int128Max(bigMinBufferVal);
+            utils::int128Min(bigMaxBufferVal);
         }
     }
 };

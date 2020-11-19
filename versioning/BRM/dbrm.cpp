@@ -30,6 +30,7 @@
 //#define NDEBUG
 #include <cassert>
 
+#include "dataconvert.h"
 #include "oamcache.h"
 #include "rwlock.h"
 #include "mastersegmenttable.h"
@@ -461,7 +462,8 @@ int DBRM::markExtentsInvalid(const vector<LBID_t>& lbids,
     return err;
 }
 
-int DBRM::getExtentMaxMin(const LBID_t lbid, int64_t& max, int64_t& min, int32_t& seqNum) throw()
+template <typename T>
+int DBRM::getExtentMaxMin(const LBID_t lbid, T& max, T& min, int32_t& seqNum) throw()
 {
 #ifdef BRM_INFO
 
@@ -556,7 +558,14 @@ int DBRM::setExtentsMaxMin(const CPInfoList_t& cpInfos) DBRM_THROW
 
     for (it = cpInfos.begin(); it != cpInfos.end(); it++)
     {
-        command << (uint64_t)it->firstLbid << (uint64_t)it->max << (uint64_t)it->min << (uint32_t)it->seqNum;
+        if (it->isBinaryColumn)
+        {
+            command << (uint8_t)1 << (uint64_t)it->firstLbid << (uint128_t)it->bigMax << (uint128_t)it->bigMin << (uint32_t)it->seqNum;
+        }
+        else
+        {
+            command << (uint8_t)0 << (uint64_t)it->firstLbid << (uint64_t)it->max << (uint64_t)it->min << (uint32_t)it->seqNum;
+        }
     }
 
     err = send_recv(command, response);
@@ -4526,15 +4535,34 @@ void DBRM::invalidateUncommittedExtentLBIDs(execplan::CalpontSystemCatalog::SCN 
         // lookup the column oid for that lbid (all we care about is oid here)
         if (em->lookupLocal(lbid, oid, dbRoot, partitionNum, segmentNum, fileBlockOffset) == 0)
         {
-            if (execplan::isUnsigned(csc->colType(oid).colDataType))
+            execplan::CalpontSystemCatalog::ColType colType = csc->colType(oid);
+            bool isBinaryColumn = colType.colWidth > 8;
+            aInfo.isBinaryColumn = isBinaryColumn;
+            if (!isBinaryColumn)
             {
-                aInfo.max = 0;
-                aInfo.min = numeric_limits<uint64_t>::max();
+                if (datatypes::isUnsigned(colType.colDataType))
+                {
+                    aInfo.max = 0;
+                    aInfo.min = numeric_limits<uint64_t>::max();
+                }
+                else
+                {
+                    aInfo.max = numeric_limits<int64_t>::min();
+                    aInfo.min = numeric_limits<int64_t>::max();
+                }
             }
             else
             {
-                aInfo.max = numeric_limits<int64_t>::min();
-                aInfo.min = numeric_limits<int64_t>::max();
+                if (datatypes::isUnsigned(colType.colDataType))
+                {
+                    aInfo.bigMax = 0;
+                    aInfo.bigMin = -1;
+                }
+                else
+                {
+                    utils::int128Min(aInfo.bigMax);
+                    utils::int128Max(aInfo.bigMin);
+                }
             }
         }
         else
@@ -4542,6 +4570,8 @@ void DBRM::invalidateUncommittedExtentLBIDs(execplan::CalpontSystemCatalog::SCN 
             // We have a problem, but we need to put something in. This should never happen.
             aInfo.max = numeric_limits<int64_t>::min();
             aInfo.min = numeric_limits<int64_t>::max();
+            // MCOL-641 is this correct?
+            aInfo.isBinaryColumn = false;
         }
 
         aInfo.seqNum = -2;
@@ -4551,5 +4581,11 @@ void DBRM::invalidateUncommittedExtentLBIDs(execplan::CalpontSystemCatalog::SCN 
     // Call setExtentsMaxMin to invalidate and set the proper max/min in each extent
     setExtentsMaxMin(cpInfos);
 }
+
+template
+int DBRM::getExtentMaxMin<int128_t>(const LBID_t lbid, int128_t& max, int128_t& min, int32_t& seqNum) throw();
+
+template
+int DBRM::getExtentMaxMin<int64_t>(const LBID_t lbid, int64_t& max, int64_t& min, int32_t& seqNum) throw();
 
 }   //namespace

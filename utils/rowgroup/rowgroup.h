@@ -55,6 +55,7 @@
 #include "mcsv1_udaf.h"
 
 #include "branchpred.h"
+#include "datatypes/mcs_int128.h"
 
 #include "../winport/winport.h"
 
@@ -372,10 +373,13 @@ public:
     inline uint64_t getUintField(uint32_t colIndex) const;
     template<int len> inline int64_t getIntField(uint32_t colIndex) const;
     inline int64_t getIntField(uint32_t colIndex) const;
+    template<typename T>
+    inline bool equals(T* value, uint32_t colIndex) const;
     template<int len> inline bool equals(uint64_t val, uint32_t colIndex) const;
     inline bool equals(long double val, uint32_t colIndex) const;
     bool equals(const std::string& val, uint32_t colIndex) const;
-
+    inline bool equals(const int128_t& val, uint32_t colIndex) const;
+    
     inline double getDoubleField(uint32_t colIndex) const;
     inline float getFloatField(uint32_t colIndex) const;
     inline double getDecimalField(uint32_t colIndex) const
@@ -383,6 +387,8 @@ public:
         return 0.0;   // TODO: Do something here
     }
     inline long double getLongDoubleField(uint32_t colIndex) const;
+    inline void getInt128Field(uint32_t colIndex, int128_t& x) const;
+    inline datatypes::TSInt128 getTSInt128Field(uint32_t colIndex) const;
 
     inline uint64_t getBaseRid() const;
     inline uint64_t getRid() const;
@@ -411,7 +417,8 @@ public:
     inline void setDoubleField(double val, uint32_t colIndex);
     inline void setFloatField(float val, uint32_t colIndex);
     inline void setDecimalField(double val, uint32_t colIndex) { };  // TODO: Do something here
-    inline void setLongDoubleField(long double val, uint32_t colIndex);
+    inline void setLongDoubleField(const long double& val, uint32_t colIndex);
+    inline void setInt128Field(const int128_t& val, uint32_t colIndex);
 
     inline void setRid(uint64_t rid);
 
@@ -421,7 +428,12 @@ public:
     inline uint32_t getStringLength(uint32_t colIndex) const;
     void setStringField(const std::string& val, uint32_t colIndex);
     inline void setStringField(const uint8_t*, uint32_t len, uint32_t colIndex);
-
+    template<typename T>
+    inline void setBinaryField(const T* value, uint32_t width, uint32_t colIndex);
+    template<typename T>
+    inline void setBinaryField(const T* value, uint32_t colIndex);
+    template<typename T>
+    inline void setBinaryField_offset(const T* value, uint32_t width, uint32_t colIndex);
     // support VARBINARY
     // Add 2-byte length at the CHARSET_INFO*beginning of the field.  NULL and zero length field are
     // treated the same, could use one of the length bit to distinguish these two cases.
@@ -433,6 +445,15 @@ public:
     inline const uint8_t* getVarBinaryField(uint32_t& len, uint32_t colIndex) const;
     inline void setVarBinaryField(const uint8_t* val, uint32_t len, uint32_t colIndex);
 
+    //inline std::string getBinaryField(uint32_t colIndex) const;
+    template <typename T>
+    inline T* getBinaryField(uint32_t colIndex) const;
+    // To simplify parameter type deduction.
+    template <typename T>
+    inline T* getBinaryField(T* argtype, uint32_t colIndex) const;
+    template <typename T>
+    inline T* getBinaryField_offset(uint32_t offset) const;
+    
     inline boost::shared_ptr<mcsv1sdk::UserData> getUserData(uint32_t colIndex) const;
     inline void setUserData(mcsv1sdk::mcsv1Context& context,
                             boost::shared_ptr<mcsv1sdk::UserData> userData,
@@ -440,6 +461,8 @@ public:
 
     uint64_t getNullValue(uint32_t colIndex) const;
     bool isNullValue(uint32_t colIndex) const;
+    template<cscDataType cscDT, int width>
+    inline bool isNullValue_offset(uint32_t offset) const;
 
     // when NULLs are pulled out via getIntField(), they come out with these values.
     // Ex: the 1-byte int null value is 0x80.  When it gets cast to an int64_t
@@ -455,6 +478,9 @@ public:
     // an adapter for code that uses the copyField call above;
     // that's not string-table safe, this one is
     inline void copyField(Row& dest, uint32_t destIndex, uint32_t srcIndex) const;
+
+    template<typename T>
+    inline void copyBinaryField(Row& dest, uint32_t destIndex, uint32_t srcIndex) const;
 
     std::string toString() const;
     std::string toCSV() const;
@@ -624,12 +650,12 @@ inline uint32_t Row::getCharsetNumber(uint32_t col) const
 
 inline bool Row::isCharType(uint32_t colIndex) const
 {
-    return execplan::isCharType(types[colIndex]);
+    return datatypes::isCharType(types[colIndex]);
 }
 
 inline bool Row::isUnsigned(uint32_t colIndex) const
 {
-    return execplan::isUnsigned(types[colIndex]);
+    return datatypes::isUnsigned(types[colIndex]);
 }
 
 inline bool Row::isShortString(uint32_t colIndex) const
@@ -645,6 +671,12 @@ inline bool Row::isLongString(uint32_t colIndex) const
 inline bool Row::inStringTable(uint32_t col) const
 {
     return strings && getColumnWidth(col) >= sTableThreshold && !forceInline[col];
+}
+
+template<typename T>
+inline bool Row::equals(T* value, uint32_t colIndex) const
+{
+    return *reinterpret_cast<T*>(&data[offsets[colIndex]]) == *value;
 }
 
 template<int len>
@@ -664,7 +696,6 @@ inline bool Row::equals(uint64_t val, uint32_t colIndex) const
 
         case 8:
             return *((uint64_t*) &data[offsets[colIndex]]) == val;
-
         default:
             idbassert(0);
             throw std::logic_error("Row::equals(): bad length.");
@@ -675,6 +706,12 @@ inline bool Row::equals(long double val, uint32_t colIndex) const
 {
     return *((long double*) &data[offsets[colIndex]]) == val;
 }
+
+inline bool Row::equals(const int128_t& val, uint32_t colIndex) const
+{
+    return *((int128_t*) &data[offsets[colIndex]]) == val;
+}
+
 template<int len>
 inline uint64_t Row::getUintField(uint32_t colIndex) const
 {
@@ -692,7 +729,6 @@ inline uint64_t Row::getUintField(uint32_t colIndex) const
 
         case 8:
             return *((uint64_t*) &data[offsets[colIndex]]);
-
         default:
             idbassert(0);
             throw std::logic_error("Row::getUintField(): bad length.");
@@ -711,7 +747,6 @@ inline uint64_t Row::getUintField(uint32_t colIndex) const
 
         case 4:
             return *((uint32_t*) &data[offsets[colIndex]]);
-
         case 8:
             return *((uint64_t*) &data[offsets[colIndex]]);
 
@@ -740,6 +775,7 @@ inline int64_t Row::getIntField(uint32_t colIndex) const
             return *((int64_t*) &data[offsets[colIndex]]);
 
         default:
+            std::cout << "Row::getIntField getColumnWidth(colIndex) " << getColumnWidth(colIndex) << std::endl;
             idbassert(0);
             throw std::logic_error("Row::getIntField(): bad length.");
     }
@@ -784,6 +820,44 @@ inline uint32_t Row::getStringLength(uint32_t colIndex) const
     return strnlen((char*) &data[offsets[colIndex]], getColumnWidth(colIndex));
 }
 
+template<typename T>
+inline void Row::setBinaryField(const T* value, uint32_t width, uint32_t colIndex)
+{
+    memcpy(&data[offsets[colIndex]], value, width);
+}
+
+template<typename T>
+inline void Row::setBinaryField(const T* value, uint32_t colIndex)
+{
+    *reinterpret_cast<T*>(&data[offsets[colIndex]]) = *value;
+}
+
+template<>
+inline void Row::setBinaryField<int128_t>(const int128_t* value, uint32_t colIndex)
+{
+    datatypes::TSInt128::assignPtrPtr(&data[offsets[colIndex]], value);
+}
+
+
+// This method !cannot! be applied to uint8_t* buffers.
+template<typename T>
+inline void Row::setBinaryField_offset(const T* value, uint32_t width, uint32_t offset)
+{
+    *reinterpret_cast<T*>(&data[offset]) = *value;
+}
+
+template<>
+inline void Row::setBinaryField_offset<uint8_t>(const uint8_t* value, uint32_t width, uint32_t offset)
+{
+   memcpy(&data[offset], value, width);
+}
+
+template<>
+inline void Row::setBinaryField_offset<int128_t>(const int128_t* value, uint32_t width, uint32_t offset)
+{
+     datatypes::TSInt128::assignPtrPtr(&data[offset], value);
+}
+
 inline void Row::setStringField(const uint8_t* strdata, uint32_t length, uint32_t colIndex)
 {
     uint64_t offset;
@@ -815,6 +889,24 @@ inline std::string Row::getStringField(uint32_t colIndex) const
     // Not all CHAR/VARCHAR are NUL terminated so use length
     return std::string((char*) &data[offsets[colIndex]],
                        strnlen((char*) &data[offsets[colIndex]], getColumnWidth(colIndex)));
+}
+
+template <typename T>
+inline T* Row::getBinaryField(uint32_t colIndex) const
+{
+    return getBinaryField_offset<T>(offsets[colIndex]);
+}
+
+template <typename T>
+inline T* Row::getBinaryField(T* argtype, uint32_t colIndex) const
+{
+    return getBinaryField_offset<T>(offsets[colIndex]);
+}
+
+template <typename T>
+inline T* Row::getBinaryField_offset(uint32_t offset) const
+{
+    return reinterpret_cast<T*>(&data[offset]);
 }
 
 inline std::string Row::getVarBinaryStringField(uint32_t colIndex) const
@@ -878,6 +970,17 @@ inline float Row::getFloatField(uint32_t colIndex) const
 inline long double Row::getLongDoubleField(uint32_t colIndex) const
 {
     return *((long double*) &data[offsets[colIndex]]);
+}
+
+inline void Row::getInt128Field(uint32_t colIndex, int128_t& x) const
+{
+    datatypes::TSInt128::assignPtrPtr(&x, &data[offsets[colIndex]]);
+}
+
+inline datatypes::TSInt128 Row::getTSInt128Field(uint32_t colIndex) const
+{
+    const int128_t* ptr = getBinaryField<int128_t>(colIndex);
+    return datatypes::TSInt128(ptr);
 }
 
 inline uint64_t Row::getRid() const
@@ -1076,7 +1179,7 @@ inline void Row::setFloatField(float val, uint32_t colIndex)
         *((float*) &data[offsets[colIndex]]) = val;
 }
 
-inline void Row::setLongDoubleField(long double val, uint32_t colIndex)
+inline void Row::setLongDoubleField(const long double& val, uint32_t colIndex)
 {
     uint8_t* p = &data[offsets[colIndex]];
     *((long double*)p) = val;
@@ -1085,6 +1188,11 @@ inline void Row::setLongDoubleField(long double val, uint32_t colIndex)
         // zero out the unused portion as there may be garbage there.
         *((uint64_t*)p+1) &= 0x000000000000FFFFULL;
     }
+}
+
+inline void Row::setInt128Field(const int128_t& val, uint32_t colIndex)
+{
+    setBinaryField<int128_t>(&val, colIndex);
 }
 
 inline void Row::setVarBinaryField(const std::string& val, uint32_t colIndex)
@@ -1140,16 +1248,36 @@ inline void Row::copyField(Row& out, uint32_t destIndex, uint32_t srcIndex) cons
     if (UNLIKELY(types[srcIndex] == execplan::CalpontSystemCatalog::VARBINARY ||
                  types[srcIndex] == execplan::CalpontSystemCatalog::BLOB ||
                  types[srcIndex] == execplan::CalpontSystemCatalog::TEXT))
+    {
         out.setVarBinaryField(getVarBinaryStringField(srcIndex), destIndex);
+    }
     else if (UNLIKELY(isLongString(srcIndex)))
+    {
         out.setStringField(getStringPointer(srcIndex), getStringLength(srcIndex), destIndex);
-    //out.setStringField(getStringField(srcIndex), destIndex);
+    }
     else if (UNLIKELY(isShortString(srcIndex)))
+    {
         out.setUintField(getUintField(srcIndex), destIndex);
+    }
     else if (UNLIKELY(types[srcIndex] == execplan::CalpontSystemCatalog::LONGDOUBLE))
+    {
         out.setLongDoubleField(getLongDoubleField(srcIndex), destIndex);
+    }
+    else if (UNLIKELY(datatypes::isWideDecimalType(
+        types[srcIndex], colWidths[srcIndex])))
+    {
+        copyBinaryField<int128_t>(out, destIndex, srcIndex);
+    }
     else
+    {
         out.setIntField(getIntField(srcIndex), destIndex);
+    }
+}
+
+template<typename T>
+inline void Row::copyBinaryField(Row& out, uint32_t destIndex, uint32_t srcIndex) const
+{
+    out.setBinaryField(getBinaryField<T>(srcIndex), destIndex);
 }
 
 inline void Row::setRid(uint64_t rid)
@@ -1582,12 +1710,12 @@ inline uint64_t RowGroup::getSizeWithStrings() const
 
 inline bool RowGroup::isCharType(uint32_t colIndex) const
 {
-    return execplan::isCharType(types[colIndex]);
+    return datatypes::isCharType(types[colIndex]);
 }
 
 inline bool RowGroup::isUnsigned(uint32_t colIndex) const
 {
-    return execplan::isUnsigned(types[colIndex]);
+    return datatypes::isUnsigned(types[colIndex]);
 }
 
 inline bool RowGroup::isShortString(uint32_t colIndex) const
@@ -1774,16 +1902,30 @@ inline void copyRow(const Row& in, Row* out, uint32_t colCount)
                      in.getColTypes()[i] == execplan::CalpontSystemCatalog::BLOB ||
                      in.getColTypes()[i] == execplan::CalpontSystemCatalog::TEXT ||
                      in.getColTypes()[i] == execplan::CalpontSystemCatalog::CLOB))
+        {
             out->setVarBinaryField(in.getVarBinaryStringField(i), i);
+        }
         else if (UNLIKELY(in.isLongString(i)))
-            //out->setStringField(in.getStringField(i), i);
+        {
             out->setStringField(in.getStringPointer(i), in.getStringLength(i), i);
+        }
         else if (UNLIKELY(in.isShortString(i)))
+        {
             out->setUintField(in.getUintField(i), i);
+        }
         else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::LONGDOUBLE))
+        {
             out->setLongDoubleField(in.getLongDoubleField(i), i);
+        }
+        else if (UNLIKELY(datatypes::isWideDecimalType(
+            in.getColType(i), in.getColumnWidth(i))))
+        {
+            in.copyBinaryField<int128_t>(*out, i, i);
+        }
         else
+        {
             out->setIntField(in.getIntField(i), i);
+        }
     }
 }
 

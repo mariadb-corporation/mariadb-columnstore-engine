@@ -470,7 +470,8 @@ inline int power ( int16_t a )
     return b;
 }
 
-inline void decimalPlaceDec(int64_t& d, int64_t& p, int8_t& s)
+template <typename T>
+inline void decimalPlaceDec(int64_t& d, T& p, int8_t& s)
 {
     // find new scale if D < s
     if (d < s)
@@ -783,10 +784,6 @@ string longDoubleToString(long double ld)
     snprintf(buf, 384, "%Lf", ld);
     return buf;
 }
-
-//@bug6146, remove duplicate function with incorrect impl. Use the DataConvert::decimalToString()
-//string decimalToString( execplan::IDB_Decimal x, int p )
-
 
 uint64_t dateAdd( uint64_t time, const std::string& expr, execplan::IntervalColumn::interval_type unit, bool dateType, execplan::OpType funcType );
 const std::string IDB_date_format(const dataconvert::DateTime&, const std::string&);

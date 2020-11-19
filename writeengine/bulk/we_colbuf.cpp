@@ -115,12 +115,13 @@ int ColumnBuffer::writeToFile(int startOffset, int writeSize, bool fillUpWEmptie
     {
         BlockOp blockOp;
         newBuf = new unsigned char[BYTE_PER_BLOCK];
-        uint64_t EmptyValue = blockOp.getEmptyRowValue(fColInfo->column.dataType,
-                                                      fColInfo->column.width);
+        uint8_t* emptyVal = (uint8_t*) alloca(fColInfo->column.width);
+        blockOp.getEmptyRowValue(fColInfo->column.dataType,
+            fColInfo->column.width, emptyVal);
         ::memcpy(static_cast<void *>(newBuf),
                 static_cast<const void *>(fBuffer + startOffset), writeSize);
         blockOp.setEmptyBuf(newBuf + writeSize, BYTE_PER_BLOCK - writeSize,
-                            EmptyValue, fColInfo->column.width);
+                            emptyVal, fColInfo->column.width);
     }
 #ifdef PROFILE
     Stats::startParseEvent(WE_STATS_WRITE_COL);

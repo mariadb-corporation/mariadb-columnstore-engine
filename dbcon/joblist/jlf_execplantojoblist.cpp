@@ -65,9 +65,6 @@ namespace ba = boost::algorithm;
 #include "simplescalarfilter.h"
 using namespace execplan;
 
-#include "dataconvert.h"
-using namespace dataconvert;
-
 #include "configcpp.h"
 using namespace config;
 
@@ -88,7 +85,7 @@ using namespace logging;
 #include "jlf_common.h"
 #include "jlf_subquery.h"
 #include "jlf_tuplejoblist.h"
-
+#include "mcs_decimal.h"
 
 namespace
 {
@@ -130,11 +127,12 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo);
 
 /* This looks like an inefficient way to get NULL values. Much easier ways
    to do it. */
-int64_t valueNullNum(const CalpontSystemCatalog::ColType& ct, const string& timeZone)
+template<typename T>
+void valueNullNum(const CalpontSystemCatalog::ColType& ct, const string& timeZone, T& val)
 {
-    int64_t n = 0;
+    T& n = val;
     bool pushWarning = false;
-    boost::any anyVal = DataConvert::convertColumnData(ct, "", pushWarning, timeZone, true, false, false);
+    boost::any anyVal = ct.convertColumnData("", pushWarning, timeZone, true, false, false);
 
     switch (ct.colDataType)
     {
@@ -292,34 +290,38 @@ int64_t valueNullNum(const CalpontSystemCatalog::ColType& ct, const string& time
 
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
-            if (ct.colWidth == execplan::CalpontSystemCatalog::ONE_BYTE)
-                n = boost::any_cast<char>(anyVal);
-            else if (ct.colWidth == execplan::CalpontSystemCatalog::TWO_BYTE)
-                n = boost::any_cast<short>(anyVal);
-            else if (ct.colWidth == execplan::CalpontSystemCatalog::FOUR_BYTE)
-                n = boost::any_cast<int>(anyVal);
+            if (LIKELY(ct.colWidth == datatypes::MAXDECIMALWIDTH))
+                n = boost::any_cast<int128_t>(anyVal);
             else if (ct.colWidth == execplan::CalpontSystemCatalog::EIGHT_BYTE)
                 n = boost::any_cast<long long>(anyVal);
-            else
-                n = 0xfffffffffffffffeLL;
+            else if (ct.colWidth == execplan::CalpontSystemCatalog::FOUR_BYTE)
+                n = boost::any_cast<int>(anyVal);
+            else if (ct.colWidth == execplan::CalpontSystemCatalog::TWO_BYTE)
+                n = boost::any_cast<short>(anyVal);
+            else if (ct.colWidth == execplan::CalpontSystemCatalog::ONE_BYTE)
+                n = boost::any_cast<char>(anyVal);
 
             break;
 
         default:
             break;
     }
-
-    return n;
 }
 
-int64_t convertValueNum(const string& str, const CalpontSystemCatalog::ColType& ct, bool isNull, uint8_t& rf, const string& timeZone)
+template <typename T>
+void convertValueNum(const string& str, const CalpontSystemCatalog::ColType& ct, bool isNull, uint8_t& rf, const string& timeZone, T& v)
 {
-    if (str.size() == 0 || isNull ) return valueNullNum(ct, timeZone);
+    if (str.size() == 0 || isNull )
+    {
+        valueNullNum(ct, timeZone, v);
+        return;
+    }
 
-    int64_t v = 0;
+
+    v = 0;
     rf = 0;
     bool pushWarning = false;
-    boost::any anyVal = DataConvert::convertColumnData(ct, str, pushWarning, timeZone, false, true, false);
+    boost::any anyVal = ct.convertColumnData(str, pushWarning, timeZone, false, true, false);
 
     switch (ct.colDataType)
     {
@@ -439,10 +441,10 @@ int64_t convertValueNum(const string& str, const CalpontSystemCatalog::ColType& 
 
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
-            if (ct.colWidth == execplan::CalpontSystemCatalog::ONE_BYTE)
-                v = boost::any_cast<char>(anyVal);
-            else if (ct.colWidth == execplan::CalpontSystemCatalog::TWO_BYTE)
-                v = boost::any_cast<int16_t>(anyVal);
+            if (LIKELY(ct.colWidth == datatypes::MAXDECIMALWIDTH))
+                v = boost::any_cast<int128_t>(anyVal);
+            else if (ct.colWidth == execplan::CalpontSystemCatalog::EIGHT_BYTE)
+                v = boost::any_cast<long long>(anyVal);
             else if (ct.colWidth == execplan::CalpontSystemCatalog::FOUR_BYTE)
 #ifdef _MSC_VER
                 v = boost::any_cast<int>(anyVal);
@@ -450,8 +452,10 @@ int64_t convertValueNum(const string& str, const CalpontSystemCatalog::ColType& 
 #else
                 v = boost::any_cast<int32_t>(anyVal);
 #endif
-            else
-                v = boost::any_cast<long long>(anyVal);
+            else if (ct.colWidth == execplan::CalpontSystemCatalog::TWO_BYTE)
+                v = boost::any_cast<int16_t>(anyVal);
+            else if (ct.colWidth == execplan::CalpontSystemCatalog::ONE_BYTE)
+                v = boost::any_cast<char>(anyVal);
 
             break;
 
@@ -485,8 +489,6 @@ int64_t convertValueNum(const string& str, const CalpontSystemCatalog::ColType& 
 
         rf = (data[0] == '-') ? ROUND_NEG : ROUND_POS;
     }
-
-    return v;
 }
 
 //TODO: make this totaly case-insensitive
@@ -1601,7 +1603,6 @@ bool optimizeIdbPatitionSimpleFilter(SimpleFilter* sf, JobStepVector& jsv, JobIn
     return true;
 }
 
-
 const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 {
     JobStepVector jsv;
@@ -1841,6 +1842,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
         {
             // @bug 1151 string longer than colwidth of char/varchar.
             int64_t value = 0;
+            int128_t value128 = 0;
             uint8_t rf = 0;
 #ifdef FAILED_ATOI_IS_ZERO
 
@@ -1849,7 +1851,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
             try
             {
                 bool isNull = ConstantColumn::NULLDATA == cc->type();
-                value = convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone);
+                convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value);
 
                 if (ct.colDataType == CalpontSystemCatalog::FLOAT && !isNull)
                 {
@@ -1888,7 +1890,13 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 
 #else
             bool isNull = ConstantColumn::NULLDATA == cc->type();
-            value = convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone);
+            // WIP MCOL-641 width check must be a f() not a literal
+            // make a template from convertValueNum to avoid extra if
+            // this condition doesn't support UDECIMAL
+            if (ct.isWideDecimalType())
+                convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value128);
+            else
+                convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value);
 
             if (ct.colDataType == CalpontSystemCatalog::FLOAT && !isNull)
             {
@@ -1921,7 +1929,12 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
                     pcs = new PseudoColStep(sc->oid(), tbl_oid, pc->pseudoType(), ct, jobInfo);
 
                 if (sc->isColumnStore())
-                    pcs->addFilter(cop, value, rf);
+                {
+                    if (ct.isWideDecimalType())
+                        pcs->addFilter(cop, value128, rf);
+                    else
+                        pcs->addFilter(cop, value, rf);
+                }
 
                 pcs->alias(alias);
                 pcs->view(view);
@@ -2988,12 +3001,17 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
                     //add each filter to pColStep
                     int8_t cop = op2num(sop);
                     int64_t value = 0;
+                    int128_t value128 = 0;
                     string constval = cc->constval();
 
                     // @bug 1151 string longer than colwidth of char/varchar.
                     uint8_t rf = 0;
                     bool isNull = ConstantColumn::NULLDATA == cc->type();
-                    value = convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone);
+
+                    if (ct.isWideDecimalType())
+                        convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value128);
+                    else
+                        convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value);
 
                     if (ct.colDataType == CalpontSystemCatalog::FLOAT && !isNull)
                     {
@@ -3010,7 +3028,10 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
                     if (ConstantColumn::NULLDATA == cc->type() && (opeq == *sop || opne == *sop))
                         cop = COMPARE_NIL;
 
-                    pcs->addFilter(cop, value, rf);
+                    if (ct.isWideDecimalType())
+                        pcs->addFilter(cop, value128, rf);
+                    else
+                        pcs->addFilter(cop, value, rf);
                 }
             }
 
@@ -3433,7 +3454,6 @@ JLF_ExecPlanToJobList::walkTree(execplan::ParseTree* n, JobInfo& jobInfo)
             break;
 
         case CONSTANTFILTER:
-            //cout << "ConstantFilter" << endl;
             jsv = doConstantFilter(dynamic_cast<const ConstantFilter*>(tn), jobInfo);
             JLF_ExecPlanToJobList::addJobSteps(jsv, jobInfo, false);
             break;

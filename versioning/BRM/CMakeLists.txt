@@ -28,7 +28,8 @@ set(brm_LIB_SRCS
     transactionnode.cpp
     undoable.cpp
     vbbm.cpp
-    vss.cpp)
+    vss.cpp
+    ../../datatypes/mcs_datatype.cpp)
 
 add_library(brm SHARED ${brm_LIB_SRCS})
 

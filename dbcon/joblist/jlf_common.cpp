@@ -38,6 +38,7 @@ using namespace BRM;
 
 #include "jlf_common.h"
 using namespace joblist;
+#include "mcs_decimal.h"
 
 namespace
 {
@@ -332,6 +333,9 @@ string extractTableAlias(const SSC& sc)
 //------------------------------------------------------------------------------
 CalpontSystemCatalog::OID isDictCol(const CalpontSystemCatalog::ColType& colType)
 {
+    if (colType.isWideDecimalType() ||
+        colType.colDataType == CalpontSystemCatalog::BINARY) return 0;
+    
     if (colType.colWidth > 8) return colType.ddn.dictOID;
 
     if (colType.colDataType == CalpontSystemCatalog::VARCHAR &&

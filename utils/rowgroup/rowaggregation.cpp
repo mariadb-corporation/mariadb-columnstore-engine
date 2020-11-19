@@ -1,6 +1,6 @@
 /*
    Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (c) 2019 MariaDB Corporation
+   Copyright (c) 2019-2020 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -56,6 +56,7 @@
 
 //..comment out NDEBUG to enable assertions, uncomment NDEBUG to disable
 //#define NDEBUG
+#include "mcs_decimal.h"
 
 using namespace std;
 using namespace boost;
@@ -69,12 +70,16 @@ namespace
 const int64_t AGG_ROWGROUP_SIZE = 256;
 
 template <typename T>
-bool minMax(T d1, T d2, int type)
+inline bool minMax(T d1, T d2, int type)
 {
     if (type == rowgroup::ROWAGG_MIN) return d1 < d2;
     else                              return d1 > d2;
 }
 
+inline bool minMax(int128_t* d1, int128_t* d2, int type)
+{
+    return (type == rowgroup::ROWAGG_MIN) ? *d1 < *d2 : *d1 > *d2;
+}
 
 inline int64_t getIntNullValue(int colType)
 {
@@ -224,7 +229,6 @@ inline string getStringNullValue()
 
 }
 
-
 namespace rowgroup
 {
 const std::string typeStr("");
@@ -234,6 +238,7 @@ const static_any::any& RowAggregation::shortTypeId((short)1);
 const static_any::any& RowAggregation::intTypeId((int)1);
 const static_any::any& RowAggregation::longTypeId((long)1);
 const static_any::any& RowAggregation::llTypeId((long long)1);
+const static_any::any& RowAggregation::int128TypeId((int128_t)1);
 const static_any::any& RowAggregation::ucharTypeId((unsigned char)1);
 const static_any::any& RowAggregation::ushortTypeId((unsigned short)1);
 const static_any::any& RowAggregation::uintTypeId((unsigned int)1);
@@ -243,6 +248,8 @@ const static_any::any& RowAggregation::floatTypeId((float)1);
 const static_any::any& RowAggregation::doubleTypeId((double)1);
 const static_any::any& RowAggregation::longdoubleTypeId((long double)1);
 const static_any::any& RowAggregation::strTypeId(typeStr);
+
+using Dec = datatypes::Decimal;
 
 KeyStorage::KeyStorage(const RowGroup& keys, Row** tRow) : tmpRow(tRow), rg(keys)
 {
@@ -334,6 +341,16 @@ inline bool ExternalKeyEq::operator()(const RowPosition& pos1, const RowPosition
 
 static const string overflowMsg("Aggregation overflow.");
 
+inline void RowAggregation::updateIntMinMax(int128_t* val1, int128_t* val2, int64_t col, int func)
+{
+    int32_t colOutOffset = fRow.getOffset(col);
+    if (isNull(fRowGroupOut, fRow, col))
+        fRow.setBinaryField_offset(val1, sizeof(int128_t), colOutOffset);
+    else if (minMax(val1, val2, func))
+        fRow.setBinaryField_offset(val1, sizeof(int128_t), colOutOffset);
+}
+
+
 inline void RowAggregation::updateIntMinMax(int64_t val1, int64_t val2, int64_t col, int func)
 {
     if (isNull(fRowGroupOut, fRow, col))
@@ -413,6 +430,7 @@ void RowAggregation::updateStringMinMax(string val1, string val2, int64_t col, i
 inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, int64_t col)
 {
     /* TODO: Can we replace all of this with a call to row.isNullValue(col)? */
+    // WIP MCOL-641 Yes. We can
     bool ret = false;
 
     int colDataType = (pRowGroup->getColTypes())[col];
@@ -463,7 +481,7 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
             else
             {
                 //@bug 1821
-                ret = (row.equals("", col) || row.equals(joblist::CPNULLSTRMARK, col));
+                ret = (row.equals(string(""), col) || row.equals(joblist::CPNULLSTRMARK, col));
             }
 
             break;
@@ -536,18 +554,7 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
-            int colWidth = pRowGroup->getColumnWidth(col);
-            int64_t val = row.getIntField(col);
-
-            if (colWidth == 1)
-                ret = ((uint8_t)val == joblist::TINYINTNULL);
-            else if (colWidth == 2)
-                ret = ((uint16_t)val == joblist::SMALLINTNULL);
-            else if (colWidth == 4)
-                ret = ((uint32_t)val == joblist::INTNULL);
-            else
-                ret = ((uint64_t)val == joblist::BIGINTNULL);
-
+            ret = row.isNullValue(col);
             break;
         }
 
@@ -572,7 +579,7 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
         case execplan::CalpontSystemCatalog::VARBINARY:
         case execplan::CalpontSystemCatalog::BLOB:
         {
-            ret = (row.equals("", col) || row.equals(joblist::CPNULLSTRMARK, col));
+            ret = (row.equals(string(""), col) || row.equals(joblist::CPNULLSTRMARK, col));
             break;
         }
 
@@ -614,9 +621,6 @@ RowAggregation::RowAggregation(const RowAggregation& rhs):
     fSmallSideRGs(NULL), fLargeSideRG(NULL), fSmallSideCount(0),
     fRGContext(rhs.fRGContext), fOrigFunctionCols(NULL)
 {
-    //fGroupByCols.clear();
-    //fFunctionCols.clear();
-
     fGroupByCols.assign(rhs.fGroupByCols.begin(), rhs.fGroupByCols.end());
     fFunctionCols.assign(rhs.fFunctionCols.begin(), rhs.fFunctionCols.end());
 }
@@ -716,31 +720,32 @@ void RowAggregation::setJoinRowGroups(vector<RowGroup>* pSmallSideRG, RowGroup* 
 // threads on the PM and by multple threads on the UM. It must remain
 // thread safe.
 //------------------------------------------------------------------------------
-void RowAggregation::resetUDAF(RowUDAFFunctionCol* rowUDAF)
+void RowAggregation::resetUDAF(RowUDAFFunctionCol* rowUDAF, uint64_t funcColsIdx)
 {
     // RowAggregation and it's functions need to be re-entrant which means
     // each instance (thread) needs its own copy of the context object.
     // Note: operator=() doesn't copy userData.
-    fRGContext = rowUDAF->fUDAFContext;
+    fRGContextColl[funcColsIdx] = rowUDAF->fUDAFContext;
 
     // Call the user reset for the group userData. Since, at this point,
     // context's userData will be NULL, reset will generate a new one.
     mcsv1sdk::mcsv1_UDAF::ReturnCode rc;
-    rc = fRGContext.getFunction()->reset(&fRGContext);
+    rc = fRGContextColl[funcColsIdx].getFunction()->reset(&fRGContextColl[funcColsIdx]);
 
     if (rc == mcsv1sdk::mcsv1_UDAF::ERROR)
     {
         rowUDAF->bInterrupted = true;
-        throw logging::QueryDataExcept(fRGContext.getErrorMessage(), logging::aggregateFuncErr);
+        throw logging::QueryDataExcept(fRGContextColl[funcColsIdx].getErrorMessage(),
+                                       logging::aggregateFuncErr);
     }
 
     fRow.setUserDataStore(fRowGroupOut->getRGData()->getUserDataStore());
-    fRow.setUserData(fRGContext,
-                     fRGContext.getUserDataSP(),
-                     fRGContext.getUserDataSize(),
+    fRow.setUserData(fRGContextColl[funcColsIdx],
+                     fRGContextColl[funcColsIdx].getUserDataSP(),
+                     fRGContextColl[funcColsIdx].getUserDataSize(),
                      rowUDAF->fAuxColumnIndex);
-
-    fRGContext.setUserData(NULL); // Prevents calling deleteUserData on the fRGContext.
+    // Prevents calling deleteUserData on the mcsv1Context.
+    fRGContextColl[funcColsIdx].setUserData(NULL);
 }
 
 //------------------------------------------------------------------------------
@@ -767,6 +772,9 @@ void RowAggregation::initialize()
     // save the original output rowgroup data as primary row data
     fPrimaryRowData = fRowGroupOut->getRGData();
 
+    // Lazy approach w/o a mapping b/w fFunctionCols idx and fRGContextColl idx
+    fRGContextColl.resize(fFunctionCols.size());
+
     // Need map only if groupby list is not empty.
     if (!fGroupByCols.empty())
     {
@@ -779,13 +787,13 @@ void RowAggregation::initialize()
     {
         fRowGroupOut->setRowCount(1);
         attachGroupConcatAg();
-
         // For UDAF, reset the data
         for (uint64_t i = 0; i < fFunctionCols.size(); i++)
         {
             if (fFunctionCols[i]->fAggFunction == ROWAGG_UDAF)
             {
-                resetUDAF(dynamic_cast<RowUDAFFunctionCol*>(fFunctionCols[i].get()));
+                auto rowUDAFColumnPtr = dynamic_cast<RowUDAFFunctionCol*>(fFunctionCols[i].get());
+                resetUDAF(rowUDAFColumnPtr, i);
             }
         }
     }
@@ -837,7 +845,8 @@ void RowAggregation::aggReset()
     {
         if (fFunctionCols[i]->fAggFunction == ROWAGG_UDAF)
         {
-            resetUDAF(dynamic_cast<RowUDAFFunctionCol*>(fFunctionCols[i].get()));
+            auto rowUDAFColumnPtr = dynamic_cast<RowUDAFFunctionCol*>(fFunctionCols[i].get());
+            resetUDAF(rowUDAFColumnPtr, i);
         }
     }
 }
@@ -859,7 +868,8 @@ void RowAggregationUM::aggReset()
 }
 
 
-void RowAggregationUM::aggregateRowWithRemap(Row& row)
+void RowAggregationUM::aggregateRowWithRemap(Row& row,
+                                             std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
     pair<ExtKeyMap_t::iterator, bool> inserted;
     RowPosition pos(RowPosition::MSB, 0);
@@ -892,7 +902,8 @@ void RowAggregationUM::aggregateRowWithRemap(Row& row)
             {
                 if ((*fOrigFunctionCols)[i]->fAggFunction == ROWAGG_UDAF)
                 {
-                    resetUDAF(dynamic_cast<RowUDAFFunctionCol*>((*fOrigFunctionCols)[i].get()));
+                    auto rowUDAFColumnPtr = dynamic_cast<RowUDAFFunctionCol*>((*fOrigFunctionCols)[i].get());
+                    resetUDAF(rowUDAFColumnPtr, i);
                 }
             }
         }
@@ -902,7 +913,8 @@ void RowAggregationUM::aggregateRowWithRemap(Row& row)
             {
                 if (fFunctionCols[i]->fAggFunction == ROWAGG_UDAF)
                 {
-                    resetUDAF(dynamic_cast<RowUDAFFunctionCol*>(fFunctionCols[i].get()));
+                    auto rowUDAFColumnPtr = dynamic_cast<RowUDAFFunctionCol*>(fFunctionCols[i].get());
+                    resetUDAF(rowUDAFColumnPtr, i);
                 }
             }
         }
@@ -915,20 +927,22 @@ void RowAggregationUM::aggregateRowWithRemap(Row& row)
         fResultDataVec[pos.group]->getRow(pos.row, &fRow);
     }
 
-    updateEntry(row);
+    updateEntry(row, rgContextColl);
 }
 
 
 
-void RowAggregationUM::aggregateRow(Row& row)
+void RowAggregationUM::aggregateRow(Row& row,
+                                    std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
     if (UNLIKELY(fKeyOnHeap))
-        aggregateRowWithRemap(row);
+        aggregateRowWithRemap(row, rgContextColl);
     else
-        RowAggregation::aggregateRow(row);
+        RowAggregation::aggregateRow(row, rgContextColl);
 }
 
-void RowAggregation::aggregateRow(Row& row)
+void RowAggregation::aggregateRow(Row& row,
+                                  std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
     // groupby column list is not empty, find the entry.
     if (!fGroupByCols.empty())
@@ -967,7 +981,8 @@ void RowAggregation::aggregateRow(Row& row)
                 {
                     if ((*fOrigFunctionCols)[i]->fAggFunction == ROWAGG_UDAF)
                     {
-                        resetUDAF(dynamic_cast<RowUDAFFunctionCol*>((*fOrigFunctionCols)[i].get()));
+                        auto rowUDAFColumnPtr = dynamic_cast<RowUDAFFunctionCol*>((*fOrigFunctionCols)[i].get());
+                        resetUDAF(rowUDAFColumnPtr, i);
                     }
                 }
             }
@@ -977,7 +992,8 @@ void RowAggregation::aggregateRow(Row& row)
                 {
                     if (fFunctionCols[i]->fAggFunction == ROWAGG_UDAF)
                     {
-                        resetUDAF(dynamic_cast<RowUDAFFunctionCol*>(fFunctionCols[i].get()));
+                        auto rowUDAFColumnPtr = dynamic_cast<RowUDAFFunctionCol*>(fFunctionCols[i].get());
+                        resetUDAF(rowUDAFColumnPtr, i);
                     }
                 }
             }
@@ -990,7 +1006,7 @@ void RowAggregation::aggregateRow(Row& row)
         }
     }
 
-    updateEntry(row);
+    updateEntry(row, rgContextColl);
 }
 
 
@@ -1020,12 +1036,35 @@ void RowAggregation::initMapData(const Row& rowIn)
             case execplan::CalpontSystemCatalog::MEDINT:
             case execplan::CalpontSystemCatalog::INT:
             case execplan::CalpontSystemCatalog::BIGINT:
-            case execplan::CalpontSystemCatalog::DECIMAL:
-            case execplan::CalpontSystemCatalog::UDECIMAL:
             {
                 fRow.setIntField(rowIn.getIntField(colIn), colOut);
                 break;
             }
+
+            case execplan::CalpontSystemCatalog::DECIMAL:
+            case execplan::CalpontSystemCatalog::UDECIMAL:
+            {
+                if (LIKELY(rowIn.getColumnWidth(colIn) == datatypes::MAXDECIMALWIDTH))
+                {
+                    uint32_t colOutOffset = fRow.getOffset(colOut);
+                    fRow.setBinaryField_offset(
+                        rowIn.getBinaryField<int128_t>(colIn),
+                        sizeof(int128_t),
+                        colOutOffset);
+                }
+                else if (rowIn.getColumnWidth(colIn) <= datatypes::MAXLEGACYWIDTH)
+                {
+                    fRow.setIntField(rowIn.getIntField(colIn), colOut);
+                }
+                else
+                {
+                    idbassert(0);
+                    throw std::logic_error("RowAggregation::initMapData(): DECIMAL bad length.");
+                }
+
+                break;
+            }
+
 
             case execplan::CalpontSystemCatalog::UTINYINT:
             case execplan::CalpontSystemCatalog::USMALLINT:
@@ -1123,8 +1162,6 @@ void RowAggregation::makeAggFieldsNull(Row& row)
                 fFunctionCols[i]->fAggFunction == ROWAGG_GROUP_CONCAT ||
                 fFunctionCols[i]->fAggFunction == ROWAGG_STATS)
         {
-//			done by memset
-//			row.setIntField(0, colOut);
             continue;
         }
 
@@ -1170,7 +1207,23 @@ void RowAggregation::makeAggFieldsNull(Row& row)
             case execplan::CalpontSystemCatalog::UDECIMAL:
             {
                 int colWidth = fRowGroupOut->getColumnWidth(colOut);
-                row.setIntField(getUintNullValue(colDataType, colWidth), colOut);
+                if (LIKELY(colWidth == datatypes::MAXDECIMALWIDTH))
+                {
+                    uint32_t offset = row.getOffset(colOut);
+                    row.setBinaryField_offset(
+                        const_cast<int128_t*>(&datatypes::Decimal128Null),
+                        colWidth,
+                        offset);
+                }
+                else if (colWidth <= datatypes::MAXLEGACYWIDTH)
+                {
+                    row.setIntField(getUintNullValue(colDataType, colWidth), colOut);
+                }
+                else
+                {
+                    idbassert(0);
+                    throw std::logic_error("RowAggregation::makeAggFieldsNull(): DECIMAL bad length.");
+                }
                 break;
             }
 
@@ -1182,7 +1235,7 @@ void RowAggregation::makeAggFieldsNull(Row& row)
             {
                 int colWidth = fRowGroupOut->getColumnWidth(colOut);
 
-                if (colWidth <= 8)
+                if (colWidth <= datatypes::MAXLEGACYWIDTH)
                 {
                     row.setUintField(getUintNullValue(colDataType, colWidth), colOut);
                 }
@@ -1255,12 +1308,34 @@ void RowAggregation::doMinMax(const Row& rowIn, int64_t colIn, int64_t colOut, i
         case execplan::CalpontSystemCatalog::MEDINT:
         case execplan::CalpontSystemCatalog::INT:
         case execplan::CalpontSystemCatalog::BIGINT:
-        case execplan::CalpontSystemCatalog::DECIMAL:
-        case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             int64_t valIn = rowIn.getIntField(colIn);
             int64_t valOut = fRow.getIntField(colOut);
             updateIntMinMax(valIn, valOut, colOut, funcType);
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::UDECIMAL:
+        {
+            if (LIKELY(rowIn.getColumnWidth(colIn) == datatypes::MAXDECIMALWIDTH))
+            {
+                updateIntMinMax(rowIn.getBinaryField<int128_t>(colIn),
+                    fRow.getBinaryField<int128_t>(colOut),
+                    colOut, funcType);
+            }
+            else if (rowIn.getColumnWidth(colIn) <= datatypes::MAXLEGACYWIDTH)
+            {
+                int64_t valIn = rowIn.getIntField(colIn);
+                int64_t valOut = fRow.getIntField(colOut);
+                updateIntMinMax(valIn, valOut, colOut, funcType);
+            }
+            else
+            {
+                idbassert(0);
+                throw std::logic_error("RowAggregation::doMinMax(): DECIMAL bad length.");
+            }
+
             break;
         }
 
@@ -1343,7 +1418,9 @@ void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int 
 {
     int colDataType = (fRowGroupIn.getColTypes())[colIn];
     long double valIn = 0;
-    long double valOut = fRow.getLongDoubleField(colOut);
+    bool isWideDataType = false;
+    void *wideValInPtr = nullptr;
+
     if (isNull(&fRowGroupIn, rowIn, colIn) == true)
         return;
 
@@ -1372,12 +1449,28 @@ void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int 
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
-            valIn = rowIn.getIntField(colIn);
-            double scale = (double)(fRowGroupIn.getScale())[colIn];
-            if (valIn != 0 && scale > 0)
+            uint32_t width = fRowGroupIn.getColumnWidth(colIn);
+            isWideDataType = width == datatypes::MAXDECIMALWIDTH;
+            if(LIKELY(isWideDataType))
             {
-                valIn /= pow(10.0, scale);
+                int128_t *dec = rowIn.getBinaryField<int128_t>(colIn);
+                wideValInPtr = reinterpret_cast<void*>(dec);
             }
+            else if (width <= datatypes::MAXLEGACYWIDTH)
+            {
+                valIn = rowIn.getIntField(colIn);
+                double scale = (double)(fRowGroupIn.getScale())[colIn];
+                if (valIn != 0 && scale > 0)
+                {
+                    valIn /= pow(10.0, scale);
+                }
+            }
+            else
+            {
+                idbassert(0);
+                throw std::logic_error("RowAggregation::doSum(): DECIMAL bad length.");
+            }
+    
             break;
         }
 
@@ -1428,14 +1521,33 @@ void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int 
             break;
         }
     }
-    if (isNull(fRowGroupOut, fRow, colOut))
+    if (LIKELY(!isWideDataType))
     {
-        fRow.setLongDoubleField(valIn, colOut);
+        if (LIKELY(!isNull(fRowGroupOut, fRow, colOut)))
+        {
+            long double valOut = fRow.getLongDoubleField(colOut);
+            fRow.setLongDoubleField(valIn+valOut, colOut);
+        }
+        else
+        {
+            fRow.setLongDoubleField(valIn, colOut);
+        }
     }
     else
     {
-        fRow.setLongDoubleField(valIn+valOut, colOut);
-    }
+        uint32_t offset = fRow.getOffset(colOut);
+        int128_t* dec = reinterpret_cast<int128_t*>(wideValInPtr);
+        if (LIKELY(!isNull(fRowGroupOut, fRow, colOut)))
+        {
+            int128_t *valOutPtr = fRow.getBinaryField<int128_t>(colOut);
+            int128_t sum = *valOutPtr + *dec;
+            fRow.setBinaryField_offset(&sum, sizeof(sum), offset);
+        }
+        else
+        {
+            fRow.setBinaryField_offset(dec, sizeof(*dec), offset);
+        }
+    } // end-of isWideDataType block
 }
 
 //------------------------------------------------------------------------------
@@ -1696,8 +1808,10 @@ void RowAggregation::deserialize(messageqcpp::ByteStream& bs)
 // NULL values are recognized and ignored for all agg functions except for
 // COUNT(*), which counts all rows regardless of value.
 // rowIn(in) - Row to be included in aggregation.
+// rgContextColl(in) - ptr to a vector of UDAF contexts
 //------------------------------------------------------------------------------
-void RowAggregation::updateEntry(const Row& rowIn)
+void RowAggregation::updateEntry(const Row& rowIn,
+                                 std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
     for (uint64_t i = 0; i < fFunctionCols.size(); i++)
     {
@@ -1727,7 +1841,7 @@ void RowAggregation::updateEntry(const Row& rowIn)
 
             case ROWAGG_AVG:
                 // count(column) for average is inserted after the sum,
-                // colOut+1 is the position of the count column.
+                // colOut+1 is the position of the aux count column.
                 doAvg(rowIn, colIn, colOut, colOut + 1);
                 break;
 
@@ -1754,7 +1868,7 @@ void RowAggregation::updateEntry(const Row& rowIn)
 
             case ROWAGG_UDAF:
             {
-                doUDAF(rowIn, colIn, colOut, colOut + 1, i);
+                doUDAF(rowIn, colIn, colOut, colOut + 1, i, rgContextColl);
                 break;
             }
 
@@ -1787,6 +1901,8 @@ void RowAggregation::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int6
     int colDataType = (fRowGroupIn.getColTypes())[colIn];
     long double valIn = 0;
     long double valOut = fRow.getLongDoubleField(colOut);
+    bool isWideDataType = false;
+    void *wideValInPtr = nullptr;
 
     switch (colDataType)
     {
@@ -1797,7 +1913,6 @@ void RowAggregation::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int6
         case execplan::CalpontSystemCatalog::BIGINT:
         {
             valIn = rowIn.getIntField(colIn);
-            break;
             break;
         }
 
@@ -1814,12 +1929,28 @@ void RowAggregation::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int6
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
-            valIn = rowIn.getIntField(colIn);
-            double scale = (double)(fRowGroupIn.getScale())[colIn];
-            if (valIn != 0 && scale > 0)
+            uint32_t width = fRowGroupIn.getColumnWidth(colIn);
+            isWideDataType = width == datatypes::MAXDECIMALWIDTH;
+            if(LIKELY(isWideDataType))
             {
-                valIn /= pow(10.0, scale);
+                int128_t* dec = rowIn.getBinaryField<int128_t>(colIn);
+                wideValInPtr = reinterpret_cast<void*>(dec);
             }
+            else if (width <= datatypes::MAXLEGACYWIDTH)
+            {
+                valIn = rowIn.getIntField(colIn);
+                double scale = (double)(fRowGroupIn.getScale())[colIn];
+                if (valIn != 0 && scale > 0)
+                {
+                    valIn /= pow(10.0, scale);
+                }
+            }
+            else
+            {
+                idbassert(0);
+                throw std::logic_error("RowAggregation::doAvg(): DECIMAL bad length.");
+            }
+
             break;
         }
 
@@ -1853,16 +1984,32 @@ void RowAggregation::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int6
         }
     }
 
-    if (fRow.getUintField(colAux) == 0)
+    // min(count) = 0
+    uint64_t count = fRow.getUintField(colAux) + 1;
+    fRow.setUintField<8>(count, colAux);
+    bool notFirstValue = count > 1;
+
+    if (LIKELY(!isWideDataType))
     {
-        // This is the first value
-        fRow.setLongDoubleField(valIn, colOut);
-        fRow.setUintField(1, colAux);
+        if (LIKELY(notFirstValue))
+            fRow.setLongDoubleField(valIn + valOut, colOut);
+        else // This is the first value
+            fRow.setLongDoubleField(valIn, colOut);
     }
     else
     {
-        fRow.setLongDoubleField(valIn + valOut, colOut);
-        fRow.setUintField(fRow.getUintField(colAux) + 1, colAux);
+        uint32_t offset = fRow.getOffset(colOut);
+        int128_t* dec = reinterpret_cast<int128_t*>(wideValInPtr);
+        if (LIKELY(notFirstValue))
+        {
+            int128_t *valOutPtr = fRow.getBinaryField<int128_t>(colOut);
+            int128_t sum = *valOutPtr + *dec;
+            fRow.setBinaryField_offset(&sum, sizeof(sum), offset);
+        }
+        else
+        {
+            fRow.setBinaryField_offset(dec, sizeof(*dec), offset);
+        }
     }
 }
 
@@ -1891,9 +2038,24 @@ void RowAggregation::doStatistics(const Row& rowIn, int64_t colIn, int64_t colOu
         case execplan::CalpontSystemCatalog::MEDINT:
         case execplan::CalpontSystemCatalog::INT:
         case execplan::CalpontSystemCatalog::BIGINT:
+            valIn = (long double) rowIn.getIntField(colIn);
+            break;
+
         case execplan::CalpontSystemCatalog::DECIMAL:   // handle scale later
         case execplan::CalpontSystemCatalog::UDECIMAL:  // handle scale later
-            valIn = (long double) rowIn.getIntField(colIn);
+            if (LIKELY(fRowGroupIn.getColumnWidth(colIn) == datatypes::MAXDECIMALWIDTH))
+            {
+                int128_t* val128InPtr = rowIn.getBinaryField<int128_t>(colIn);
+                valIn = Dec::getLongDoubleFromWideDecimal(*val128InPtr);
+            }
+            else if (fRowGroupIn.getColumnWidth(colIn) <= datatypes::MAXLEGACYWIDTH)
+            {
+                valIn = (long double) rowIn.getIntField(colIn);
+            }
+            else
+            {
+                idbassert(false);
+            }
             break;
 
         case execplan::CalpontSystemCatalog::UTINYINT:
@@ -1931,10 +2093,24 @@ void RowAggregation::doStatistics(const Row& rowIn, int64_t colIn, int64_t colOu
     fRow.setLongDoubleField(fRow.getLongDoubleField(colAux + 1) + valIn * valIn, colAux + 1);
 }
 
-void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
-                            int64_t colAux, uint64_t& funcColsIdx)
+void RowAggregation::doUDAF(const Row& rowIn,
+                            int64_t colIn,
+                            int64_t colOut,
+                            int64_t colAux,
+                            uint64_t& funcColsIdx,
+                            std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
-    uint32_t paramCount = fRGContext.getParameterCount();
+    std::vector<mcsv1sdk::mcsv1Context>* udafContextsCollPtr = &fRGContextColl;
+    if (UNLIKELY(rgContextColl != nullptr))
+    {
+        udafContextsCollPtr = rgContextColl;
+    }
+
+    std::vector<mcsv1sdk::mcsv1Context>& udafContextsColl = *udafContextsCollPtr;
+    uint32_t paramCount = udafContextsColl[funcColsIdx].getParameterCount();
+    // doUDAF changes funcColsIdx to skip UDAF arguments so the real UDAF
+    // column idx is the initial value of the funcColsIdx
+    uint64_t origFuncColsIdx = funcColsIdx;
     // The vector of parameters to be sent to the UDAF
     utils::VLArray<mcsv1sdk::ColumnDatum> valsIn(paramCount);
     utils::VLArray<uint32_t> dataFlags(paramCount);
@@ -1960,7 +2136,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
         if ((cc && cc->type() == execplan::ConstantColumn::NULLDATA)
                 ||  (!cc && isNull(&fRowGroupIn, rowIn, colIn) == true))
         {
-            if (fRGContext.getRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS))
+            if (udafContextsColl[origFuncColsIdx].getRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS))
             {
                 // When Ignore nulls, if there are multiple parameters and any 
                 // one of them is NULL, we ignore the entry. We need to increment
@@ -2005,7 +2181,6 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                         datum.scale = fRowGroupIn.getScale()[colIn];
                         datum.precision = fRowGroupIn.getPrecision()[colIn];
                     }
-
                     break;
                 }
 
@@ -2022,7 +2197,22 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                     }
                     else
                     {
-                        datum.columnData = rowIn.getIntField(colIn);
+                        if (LIKELY(fRowGroupIn.getColumnWidth(colIn)
+                            == datatypes::MAXDECIMALWIDTH))
+                        {
+                            // We can't control boost::any asignment
+                            // so let's get an aligned memory
+                            datatypes::TSInt128 val = rowIn.getTSInt128Field(colIn);
+                            datum.columnData = val.s128Value;
+                        }
+                        else if (fRowGroupIn.getColumnWidth(colIn) <= datatypes::MAXLEGACYWIDTH)
+                        {
+                            datum.columnData = rowIn.getIntField(colIn);
+                        }
+                        else
+                        {
+                            idbassert(false);
+                        }
                         datum.scale = fRowGroupIn.getScale()[colIn];
                         datum.precision = fRowGroupIn.getPrecision()[colIn];
                     }
@@ -2188,7 +2378,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                 default:
                 {
                     std::ostringstream errmsg;
-                    errmsg << "RowAggregation " << fRGContext.getName() <<
+                    errmsg << "RowAggregation " << udafContextsColl[origFuncColsIdx].getName() <<
                            ": No logic for data type: " << colDataType;
                     throw logging::QueryDataExcept(errmsg.str(), logging::aggregateFuncErr);
                     break;
@@ -2214,18 +2404,20 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
     }
 
     // The intermediate values are stored in userData referenced by colAux.
-    fRGContext.setDataFlags(dataFlags);
-    fRGContext.setUserData(fRow.getUserData(colAux));
+    udafContextsColl[origFuncColsIdx].setDataFlags(dataFlags);
+    udafContextsColl[origFuncColsIdx].setUserData(fRow.getUserData(colAux));
 
     mcsv1sdk::mcsv1_UDAF::ReturnCode rc;
-    rc = fRGContext.getFunction()->nextValue(&fRGContext, valsIn);
-    fRGContext.setUserData(NULL);
+    rc = udafContextsColl[origFuncColsIdx].getFunction()->nextValue(&udafContextsColl[origFuncColsIdx],
+                                                              valsIn);
+    udafContextsColl[origFuncColsIdx].setUserData(NULL);
 
     if (rc == mcsv1sdk::mcsv1_UDAF::ERROR)
     {
-        RowUDAFFunctionCol* rowUDAF = dynamic_cast<RowUDAFFunctionCol*>(fFunctionCols[funcColsIdx].get());
+        RowUDAFFunctionCol* rowUDAF = dynamic_cast<RowUDAFFunctionCol*>(fFunctionCols[origFuncColsIdx].get());
         rowUDAF->bInterrupted = true;
-        throw logging::QueryDataExcept(fRGContext.getErrorMessage(), logging::aggregateFuncErr);
+        throw logging::QueryDataExcept(udafContextsColl[origFuncColsIdx].getErrorMessage(),
+                                       logging::aggregateFuncErr);
     }
 }
 
@@ -2455,8 +2647,10 @@ void RowAggregationUM::attachGroupConcatAg()
 // Update the aggregation totals in the internal hashmap for the specified row.
 // NULL values are recognized and ignored for all agg functions except for count
 // rowIn(in) - Row to be included in aggregation.
+// rgContextColl(in) - ptr to a vector of UDAF contexts
 //------------------------------------------------------------------------------
-void RowAggregationUM::updateEntry(const Row& rowIn)
+void RowAggregationUM::updateEntry(const Row& rowIn,
+                                   std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
     for (uint64_t i = 0; i < fFunctionCols.size(); i++)
     {
@@ -2524,7 +2718,7 @@ void RowAggregationUM::updateEntry(const Row& rowIn)
 
             case ROWAGG_UDAF:
             {
-                doUDAF(rowIn, colIn, colOut, colAux, i);
+                doUDAF(rowIn, colIn, colOut, colAux, i, rgContextColl);
                 break;
             }
 
@@ -2568,11 +2762,6 @@ void RowAggregationUM::calculateAvgColumns()
             int64_t colOut = fFunctionCols[i]->fOutputColumnIndex;
             int64_t colAux = fFunctionCols[i]->fAuxColumnIndex;
 
-//            int scale = fRowGroupOut->getScale()[colOut];
-//            int scale1 = scale >> 8;
-//            int scale2 = scale & 0x000000FF;
-//            long double factor = pow(10.0, scale2 - scale1);
-
             for (uint64_t j = 0; j < fRowGroupOut->getRowCount(); j++)
             {
                 fRowGroupOut->getRow(j, &fRow);
@@ -2581,14 +2770,38 @@ void RowAggregationUM::calculateAvgColumns()
                 if (cnt == 0) // empty set, value is initialized to null.
                     continue;
 
-                long double sum = 0.0;
-                long double avg = 0.0;
+                uint32_t precision = fRow.getPrecision(colOut);
+                bool isWideDecimal =
+                    datatypes::Decimal::isWideDecimalTypeByPrecision(precision);
 
-                // MCOL-1822 Always long double
-                sum = fRow.getLongDoubleField(colOut);
-                avg = sum / cnt;
-//                avg *= factor;
-                fRow.setLongDoubleField(avg, colOut);
+                if (!isWideDecimal)
+                {
+                    long double sum = 0.0;
+                    long double avg = 0.0;
+                    sum = fRow.getLongDoubleField(colOut);
+                    avg = sum / cnt;
+                    fRow.setLongDoubleField(avg, colOut);
+                }
+                else
+                {
+                    uint32_t offset = fRow.getOffset(colOut);
+                    uint32_t scale = fRow.getScale(colOut);
+                    // Get multiplied to deliver AVG with the scale closest
+                    // to the expected original scale + 4. 
+                    // There is a counterpart in buildAggregateColumn.
+                    datatypes::Decimal::setScalePrecision4Avg(precision, scale);
+                    int128_t* sumPnt = fRow.getBinaryField_offset<int128_t>(offset);
+                    uint32_t scaleDiff = scale - fRow.getScale(colOut);
+                    // multiplication overflow check
+                    datatypes::MultiplicationOverflowCheck multOp;
+                    int128_t sum = 0;
+                    if (scaleDiff > 0)
+                        multOp(*sumPnt, datatypes::mcs_pow_10[scaleDiff], sum);
+                    else
+                        sum = *sumPnt;
+                    int128_t avg = sum / cnt;
+                    fRow.setBinaryField_offset(&avg, sizeof(avg), offset);
+                }
             }
         }
     }
@@ -2605,11 +2818,11 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
         return;
     }
 
-    int64_t intOut = 0;
-    uint64_t uintOut = 0;
-    float floatOut = 0.0;
-    double doubleOut = 0.0;
-    long double longdoubleOut = 0.0;
+    int64_t intOut;
+    uint64_t uintOut;
+    float floatOut;
+    double doubleOut;
+    long double longdoubleOut;
     ostringstream oss;
     std::string strOut;
 
@@ -2674,6 +2887,12 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
             {
                 intOut = valOut.cast<long long>();
                 fRow.setIntField<8>(intOut, colOut);
+                bSetSuccess = true;
+            }
+            else if (valOut.compatible(int128TypeId))
+            {
+                int128_t int128Out = valOut.cast<int128_t>();
+                fRow.setInt128Field(int128Out, colOut);
                 bSetSuccess = true;
             }
 
@@ -2799,6 +3018,8 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
 
     if (!bSetSuccess)
     {
+        // This means the return from the UDAF doesn't match the field
+        // This handles the mismatch
         SetUDAFAnyValue(valOut, colOut);
     }
 }
@@ -2811,104 +3032,102 @@ void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
     // that they didn't set in mcsv1_UDAF::init(), but this
     // handles whatever return type is given and casts
     // it to whatever they said to return.
-    // TODO: Save cpu cycles here.
+    // TODO: Save cpu cycles here. For one, we don't need to initialize these
+
     int64_t intOut = 0;
     uint64_t uintOut = 0;
-    float floatOut = 0.0;
     double doubleOut = 0.0;
     long double longdoubleOut = 0.0;
+    int128_t int128Out = 0;
     ostringstream oss;
     std::string strOut;
 
     if (valOut.compatible(charTypeId))
     {
-        uintOut = intOut  = valOut.cast<char>();
-        floatOut = intOut;
+        int128Out = uintOut = intOut  = valOut.cast<char>();
+        doubleOut = intOut;
         oss << intOut;
     }
     else if (valOut.compatible(scharTypeId))
     {
-        uintOut = intOut = valOut.cast<signed char>();
-        floatOut = intOut;
+        int128Out = uintOut = intOut = valOut.cast<signed char>();
+        doubleOut = intOut;
         oss << intOut;
     }
     else if (valOut.compatible(shortTypeId))
     {
-        uintOut = intOut = valOut.cast<short>();
-        floatOut = intOut;
+        int128Out = uintOut = intOut = valOut.cast<short>();
+        doubleOut = intOut;
         oss << intOut;
     }
     else if (valOut.compatible(intTypeId))
     {
-        uintOut = intOut = valOut.cast<int>();
-        floatOut = intOut;
+        int128Out = uintOut = intOut = valOut.cast<int>();
+        doubleOut = intOut;
         oss << intOut;
     }
     else if (valOut.compatible(longTypeId))
     {
-        uintOut = intOut = valOut.cast<long>();
-        floatOut = intOut;
+        int128Out = uintOut = intOut = valOut.cast<long>();
+        doubleOut = intOut;
         oss << intOut;
     }
     else if (valOut.compatible(llTypeId))
     {
-        uintOut = intOut = valOut.cast<long long>();
-        floatOut = intOut;
+        int128Out = uintOut = intOut = valOut.cast<long long>();
+        doubleOut = intOut;
         oss << intOut;
     }
     else if (valOut.compatible(ucharTypeId))
     {
-        intOut = uintOut = valOut.cast<unsigned char>();
-        floatOut = uintOut;
+        int128Out = intOut = uintOut = valOut.cast<unsigned char>();
+        doubleOut = uintOut;
         oss << uintOut;
     }
     else if (valOut.compatible(ushortTypeId))
     {
-        intOut = uintOut = valOut.cast<unsigned short>();
-        floatOut = uintOut;
+        int128Out = intOut = uintOut = valOut.cast<unsigned short>();
+        doubleOut = uintOut;
         oss << uintOut;
     }
     else if (valOut.compatible(uintTypeId))
     {
-        intOut = uintOut = valOut.cast<unsigned int>();
-        floatOut = uintOut;
+        int128Out = intOut = uintOut = valOut.cast<unsigned int>();
+        doubleOut = uintOut;
         oss << uintOut;
     }
     else if (valOut.compatible(ulongTypeId))
     {
-        intOut = uintOut = valOut.cast<unsigned long>();
-        floatOut = uintOut;
+        int128Out = intOut = uintOut = valOut.cast<unsigned long>();
+        doubleOut = uintOut;
         oss << uintOut;
     }
     else if (valOut.compatible(ullTypeId))
     {
-        intOut = uintOut = valOut.cast<unsigned long long>();
-        floatOut = uintOut;
+        int128Out = intOut = uintOut = valOut.cast<unsigned long long>();
+        doubleOut = uintOut;
         oss << uintOut;
     }
-    else if (valOut.compatible(floatTypeId))
+    else if (valOut.compatible(int128TypeId))
     {
-        floatOut = valOut.cast<float>();
-        doubleOut = floatOut;
-        longdoubleOut = doubleOut;
-        intOut = uintOut = floatOut;
-        oss << floatOut;
+        intOut = uintOut = int128Out = valOut.cast<int128_t>();
+        doubleOut = uintOut;
+        oss << uintOut;
     }
-    else if (valOut.compatible(doubleTypeId))
+    else if (valOut.compatible(floatTypeId) || valOut.compatible(doubleTypeId))
     {
-        doubleOut = valOut.cast<double>();
-        longdoubleOut = doubleOut;
-        floatOut = (float)doubleOut;
-        uintOut = (uint64_t)doubleOut;
-        intOut = (int64_t)doubleOut;
+        // Should look at scale for decimal and adjust
+        doubleOut = valOut.cast<float>();
+        int128Out = doubleOut;
+        intOut = uintOut = doubleOut;
         oss << doubleOut;
     }
-
     else if (valOut.compatible(longdoubleTypeId))
     {
+        // Should look at scale for decimal and adjust
         longdoubleOut = valOut.cast<long double>();
+        int128Out = longdoubleOut;
         doubleOut = (double)longdoubleOut;
-        floatOut = (float)doubleOut;
         uintOut = (uint64_t)doubleOut;
         intOut = (int64_t)doubleOut;
         oss << doubleOut;
@@ -2922,7 +3141,7 @@ void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
         uintOut = strtoul(strOut.c_str(), NULL, 10);
         doubleOut = strtod(strOut.c_str(), NULL);
         longdoubleOut = strtold(strOut.c_str(), NULL);
-        floatOut = (float)doubleOut;
+        int128Out = longdoubleOut;
     }
     else
     {
@@ -2946,10 +3165,19 @@ void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
             break;
 
         case execplan::CalpontSystemCatalog::BIGINT:
-        case execplan::CalpontSystemCatalog::DECIMAL:
-        case execplan::CalpontSystemCatalog::UDECIMAL:
             fRow.setIntField<8>(intOut, colOut);
             break;
+
+        case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::UDECIMAL:
+        {
+            uint32_t width = fRowGroupOut->getColumnWidth(colOut);
+            if (width == datatypes::MAXDECIMALWIDTH)
+                fRow.setInt128Field(int128Out, colOut);
+            else
+                fRow.setIntField<8>(intOut, colOut);
+            break;
+        }
 
         case execplan::CalpontSystemCatalog::UTINYINT:
             fRow.setUintField<1>(uintOut, colOut);
@@ -2982,8 +3210,11 @@ void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
 
         case execplan::CalpontSystemCatalog::FLOAT:
         case execplan::CalpontSystemCatalog::UFLOAT:
+        {
+            float floatOut = (float)doubleOut;
             fRow.setFloatField(floatOut, colOut);
             break;
+        }
 
         case execplan::CalpontSystemCatalog::DOUBLE:
         case execplan::CalpontSystemCatalog::UDOUBLE:
@@ -3024,7 +3255,6 @@ void RowAggregationUM::calculateUDAFColumns()
 {
     RowUDAFFunctionCol* rowUDAF = NULL;
     static_any::any valOut;
-
 
     for (uint64_t i = 0; i < fFunctionCols.size(); i++)
     {
@@ -3254,10 +3484,28 @@ void RowAggregationUM::doNullConstantAggregate(const ConstantAggData& aggData, u
                 case execplan::CalpontSystemCatalog::MEDINT:
                 case execplan::CalpontSystemCatalog::INT:
                 case execplan::CalpontSystemCatalog::BIGINT:
+                {
+                    fRow.setIntField(getIntNullValue(colDataType), colOut);
+                }
+                break;
+
                 case execplan::CalpontSystemCatalog::DECIMAL:
                 case execplan::CalpontSystemCatalog::UDECIMAL:
                 {
-                    fRow.setIntField(getIntNullValue(colDataType), colOut);
+                    auto width = fRow.getColumnWidth(colOut);
+                    if (fRow.getColumnWidth(colOut) == datatypes::MAXDECIMALWIDTH)
+                    {
+                        fRow.setInt128Field(datatypes::Decimal128Null, colOut);
+                    }
+                    else if (width <= datatypes::MAXLEGACYWIDTH)
+                    {
+                        fRow.setIntField(getIntNullValue(colDataType), colOut);
+                    }
+                    else
+                    {
+                        idbassert(0);
+                        throw std::logic_error("RowAggregationUM::doNullConstantAggregate(): DECIMAL bad length.");
+                    }
                 }
                 break;
 
@@ -3417,7 +3665,7 @@ void RowAggregationUM::doNullConstantAggregate(const ConstantAggData& aggData, u
 void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData, uint64_t i)
 {
     int64_t colOut = fFunctionCols[i]->fOutputColumnIndex;
-    int colDataType = (fRowGroupOut->getColTypes())[colOut];
+    auto colDataType = (fRowGroupOut->getColTypes())[colOut];
     int64_t rowCnt = fRow.getIntField(fFunctionCols[i]->fAuxColumnIndex);
 
     switch (aggData.fOp)
@@ -3439,7 +3687,7 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
                 {
                     fRow.setIntField(strtol(aggData.fConstValue.c_str(), 0, 10), colOut);
                 }
-                break;
+                break;                    
 
                 // AVG should not be uint32_t result type.
                 case execplan::CalpontSystemCatalog::UTINYINT:
@@ -3455,9 +3703,27 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
                 case execplan::CalpontSystemCatalog::DECIMAL:
                 case execplan::CalpontSystemCatalog::UDECIMAL:
                 {
-                    double dbl = strtod(aggData.fConstValue.c_str(), 0);
-                    double scale = pow(10.0, (double) fRowGroupOut->getScale()[i]);
-                    fRow.setIntField((int64_t)(scale * dbl), colOut);
+                    auto width = fRow.getColumnWidth(colOut);
+                    if (width == datatypes::MAXDECIMALWIDTH)
+                    {
+                        execplan::CalpontSystemCatalog::TypeHolderStd colType;
+                        colType.colWidth = width;
+                        colType.precision = fRow.getPrecision(i);
+                        colType.scale = fRow.getScale(i);
+                        colType.colDataType =  colDataType;
+                        fRow.setInt128Field(colType.decimal128FromString(aggData.fConstValue), colOut);
+                    }
+                    else if (width <= datatypes::MAXLEGACYWIDTH)
+                    {
+                        double dbl = strtod(aggData.fConstValue.c_str(), 0);
+                        double scale = pow(10.0, (double) fRowGroupOut->getScale()[i]);
+                        fRow.setIntField((int64_t)(scale * dbl), colOut);
+                    }
+                    else
+                    {
+                        idbassert(0);
+                        throw std::logic_error("RowAggregationUM::doNotNullConstantAggregate(): DECIMAL bad length.");
+                    }
                 }
                 break;
 
@@ -3562,15 +3828,38 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
                 case execplan::CalpontSystemCatalog::DECIMAL:
                 case execplan::CalpontSystemCatalog::UDECIMAL:
                 {
-                    double dbl = strtod(aggData.fConstValue.c_str(), 0);
-                    dbl *= pow(10.0, (double) fRowGroupOut->getScale()[i]);
-                    dbl *= rowCnt;
+                    auto width = fRow.getColumnWidth(colOut);
+                    if (width == datatypes::MAXDECIMALWIDTH)
+                    {
+                        execplan::CalpontSystemCatalog::TypeHolderStd colType;
+                        colType.colWidth = width;
+                        colType.precision = fRow.getPrecision(i);
+                        colType.scale = fRow.getScale(i);
+                        colType.colDataType =  colDataType;
+                        int128_t constValue = colType.decimal128FromString(aggData.fConstValue);
+                        int128_t sum;
 
-                    if ((dbl > 0 && dbl > (double) numeric_limits<int64_t>::max()) ||
-                            (dbl < 0 && dbl < (double) numeric_limits<int64_t>::min()))
-                        throw logging::QueryDataExcept(overflowMsg, logging::aggregateDataErr);
+                        datatypes::MultiplicationOverflowCheck multOp;
+                        multOp(constValue, rowCnt, sum);
+                        fRow.setInt128Field(sum, colOut);
+                    }
+                    else if (width == datatypes::MAXLEGACYWIDTH)
+                    {
+                        double dbl = strtod(aggData.fConstValue.c_str(), 0);
+                        dbl *= pow(10.0, (double) fRowGroupOut->getScale()[i]);
+                        dbl *= rowCnt;
+ 
+                        if ((dbl > 0 && dbl > (double) numeric_limits<int64_t>::max()) ||
+                                (dbl < 0 && dbl < (double) numeric_limits<int64_t>::min()))
+                            throw logging::QueryDataExcept(overflowMsg, logging::aggregateDataErr);
+                        fRow.setIntField((int64_t) dbl, colOut);
+                    }
+                    else
+                    {
+                        idbassert(0);
+                        throw std::logic_error("RowAggregationUM::doNotNullConstantAggregate(): sum() DECIMAL bad length.");
+                    }
 
-                    fRow.setIntField((int64_t) dbl, colOut);
                 }
                 break;
 
@@ -4010,8 +4299,10 @@ RowAggregationUMP2::~RowAggregationUMP2()
 // Update the aggregation totals in the internal hashmap for the specified row.
 // NULL values are recognized and ignored for all agg functions except for count
 // rowIn(in) - Row to be included in aggregation.
+// rgContextColl(in) - ptr to a vector of UDAF contexts
 //------------------------------------------------------------------------------
-void RowAggregationUMP2::updateEntry(const Row& rowIn)
+void RowAggregationUMP2::updateEntry(const Row& rowIn,
+                                     std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
     for (uint64_t i = 0; i < fFunctionCols.size(); i++)
     {
@@ -4077,7 +4368,7 @@ void RowAggregationUMP2::updateEntry(const Row& rowIn)
 
             case ROWAGG_UDAF:
             {
-                doUDAF(rowIn, colIn, colOut, colAux, i);
+                doUDAF(rowIn, colIn, colOut, colAux, i, rgContextColl);
                 break;
             }
 
@@ -4110,6 +4401,8 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
     int colDataType = (fRowGroupIn.getColTypes())[colIn];
     long double valIn = 0;
     long double valOut = fRow.getLongDoubleField(colOut);
+    bool isWideDataType = false;
+    void *wideValInPtr = nullptr;
 
     switch (colDataType)
     {
@@ -4136,13 +4429,28 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
-            valIn = rowIn.getIntField(colIn);
-            break;
-            double scale = (double)(fRowGroupIn.getScale())[colIn];
-            if (valIn != 0 && scale > 0)
+            uint32_t width = fRowGroupIn.getColumnWidth(colIn);
+            isWideDataType = width == datatypes::MAXDECIMALWIDTH;
+            if(LIKELY(isWideDataType))
             {
-                valIn /= pow(10.0, scale);
+                int128_t* dec = rowIn.getBinaryField<int128_t>(colIn);
+                wideValInPtr = reinterpret_cast<void*>(dec);
             }
+            else if (width <= datatypes::MAXLEGACYWIDTH)
+            {
+                valIn = rowIn.getIntField(colIn);
+                double scale = (double)(fRowGroupIn.getScale())[colIn];
+                if (valIn != 0 && scale > 0)
+                {
+                    valIn /= pow(10.0, scale);
+                }
+            }
+            else
+            {
+                idbassert(0);
+                throw std::logic_error("RowAggregationUMP2::doAvg(): DECIMAL bad length.");
+            }
+
             break;
         }
 
@@ -4176,16 +4484,36 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
         }
     }
 
-    int64_t cnt = fRow.getUintField(colAux);
-    if (cnt == 0)
+    uint64_t cnt = fRow.getUintField(colAux);
+    if (LIKELY(!isWideDataType))
     {
-        fRow.setLongDoubleField(valIn, colOut);
-        fRow.setUintField(rowIn.getUintField(colIn + 1), colAux);
+        if (LIKELY(cnt > 0))
+        {
+            fRow.setLongDoubleField(valIn + valOut, colOut);
+            fRow.setUintField(rowIn.getUintField(colIn + 1) + cnt, colAux);
+        }
+        else
+        {
+            fRow.setLongDoubleField(valIn, colOut);
+            fRow.setUintField(rowIn.getUintField(colIn + 1), colAux);
+        }
     }
     else
     {
-        fRow.setLongDoubleField(valIn + valOut, colOut);
-        fRow.setUintField(rowIn.getUintField(colIn + 1) + cnt, colAux);
+        uint32_t offset = fRow.getOffset(colOut);
+        int128_t* dec = reinterpret_cast<int128_t*>(wideValInPtr);
+        if (LIKELY(cnt > 0))
+        {
+            int128_t *valOutPtr = fRow.getBinaryField<int128_t>(colOut);
+            int128_t sum = *valOutPtr + *dec;
+            fRow.setBinaryField_offset(&sum, sizeof(sum), offset);
+            fRow.setUintField(rowIn.getUintField(colIn + 1) + cnt, colAux);
+        }
+        else
+        {
+            fRow.setBinaryField_offset(dec, sizeof(*dec), offset);
+            fRow.setUintField(rowIn.getUintField(colIn + 1), colAux);
+        }
     }
 }
 
@@ -4252,11 +4580,23 @@ void RowAggregationUMP2::doBitOp(const Row& rowIn, int64_t colIn, int64_t colOut
 // colOut(in)   - column in the output row group
 // colAux(in)   - Where the UDAF userdata resides
 // rowUDAF(in)  - pointer to the RowUDAFFunctionCol for this UDAF instance
+// rgContextColl(in) - ptr to a vector that brings UDAF contextx in
 //------------------------------------------------------------------------------
-void RowAggregationUMP2::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
-                                int64_t colAux, uint64_t& funcColsIdx)
+void RowAggregationUMP2::doUDAF(const Row& rowIn,
+                                int64_t colIn,
+                                int64_t colOut,
+                                int64_t colAux,
+                                uint64_t& funcColsIdx,
+                                std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
     static_any::any valOut;
+    std::vector<mcsv1sdk::mcsv1Context>* udafContextsCollPtr = &fRGContextColl;
+    if (UNLIKELY(rgContextColl != nullptr))
+    {
+        udafContextsCollPtr = rgContextColl;
+    }
+
+    std::vector<mcsv1sdk::mcsv1Context>& udafContextsColl = *udafContextsCollPtr;
 
     // Get the user data
     boost::shared_ptr<mcsv1sdk::UserData> userDataIn = rowIn.getUserData(colIn + 1);
@@ -4269,7 +4609,7 @@ void RowAggregationUMP2::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
 
     if (!userDataIn)
     {
-        if (fRGContext.getRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS))
+        if (udafContextsColl[funcColsIdx].getRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS))
         {
             return;
         }
@@ -4278,14 +4618,14 @@ void RowAggregationUMP2::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
         flags[0] |= mcsv1sdk::PARAM_IS_NULL;
     }
 
-    fRGContext.setDataFlags(flags);
+    udafContextsColl[funcColsIdx].setDataFlags(flags);
 
     // The intermediate values are stored in colAux.
-    fRGContext.setUserData(fRow.getUserData(colAux));
+    udafContextsColl[funcColsIdx].setUserData(fRow.getUserData(colAux));
 
     // Call the UDAF subEvaluate method
     mcsv1sdk::mcsv1_UDAF::ReturnCode rc;
-    rc = fRGContext.getFunction()->subEvaluate(&fRGContext, userDataIn.get());
+    rc = udafContextsColl[funcColsIdx].getFunction()->subEvaluate(&udafContextsColl[funcColsIdx], userDataIn.get());
     fRGContext.setUserData(NULL);
 
     if (rc == mcsv1sdk::mcsv1_UDAF::ERROR)
@@ -4404,8 +4744,10 @@ void RowAggregationDistinct::doDistinctAggregation_rowVec(vector<Row::Pointer>& 
 // Update the aggregation totals in the internal hashmap for the specified row.
 // for non-DISTINCT columns works partially aggregated results
 // rowIn(in) - Row to be included in aggregation.
+// rgContextColl(in) - ptr to a vector of UDAF contexts
 //------------------------------------------------------------------------------
-void RowAggregationDistinct::updateEntry(const Row& rowIn)
+void RowAggregationDistinct::updateEntry(const Row& rowIn,
+                                         std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
     for (uint64_t i = 0; i < fFunctionCols.size(); i++)
     {
@@ -4487,7 +4829,7 @@ void RowAggregationDistinct::updateEntry(const Row& rowIn)
 
             case ROWAGG_UDAF:
             {
-                doUDAF(rowIn, colIn, colOut, colAux, i);
+                doUDAF(rowIn, colIn, colOut, colAux, i, rgContextColl);
                 break;
             }
 
@@ -4775,6 +5117,7 @@ void RowAggregationMultiDistinct::doDistinctAggregation()
     {
         fFunctionCols = fSubFunctions[i];
         fRowGroupIn = fSubRowGroups[i];
+        auto* rgContextColl = fSubAggregators[i]->rgContextColl();
         Row rowIn;
         fRowGroupIn.initRow(&rowIn);
 
@@ -4790,14 +5133,14 @@ void RowAggregationMultiDistinct::doDistinctAggregation()
 
             for (uint64_t j = 0; j < fRowGroupIn.getRowCount(); ++j, rowIn.nextRow())
             {
-                aggregateRow(rowIn);
+                aggregateRow(rowIn, rgContextColl);
             }
         }
     }
 
     // restore the function column vector
     fFunctionCols = origFunctionCols;
-    fOrigFunctionCols = NULL;
+    fOrigFunctionCols = nullptr;
 }
 
 
@@ -4812,20 +5155,21 @@ void RowAggregationMultiDistinct::doDistinctAggregation_rowVec(vector<vector<Row
     {
         fFunctionCols = fSubFunctions[i];
         fRowGroupIn = fSubRowGroups[i];
+        auto* rgContextColl = fSubAggregators[i]->rgContextColl();
         Row rowIn;
         fRowGroupIn.initRow(&rowIn);
 
         for (uint64_t j = 0; j < inRows[i].size(); ++j)
         {
             rowIn.setData(inRows[i][j]);
-            aggregateRow(rowIn);
+            aggregateRow(rowIn, rgContextColl);
         }
 
         inRows[i].clear();
     }
     // restore the function column vector
     fFunctionCols = origFunctionCols;
-    fOrigFunctionCols = NULL;
+    fOrigFunctionCols = nullptr;
 }
 
 

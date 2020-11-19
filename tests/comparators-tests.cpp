@@ -36,7 +36,8 @@
 #include <boost/any.hpp>
 #include <boost/function.hpp>
 #include "bytestream.h"
-#include "idborderby.h"
+#include "utils/windowfunction/idborderby.h"
+#include "mcs_decimal.h"
 
 #define DEBUG
 #define MEMORY_LIMIT 14983602176
@@ -123,32 +124,37 @@ class FilterDriver : public CppUnit::TestFixture
 
     CPPUNIT_TEST(INT_TEST);
     CPPUNIT_TEST(FLOAT_TEST);
+    CPPUNIT_TEST(WIDEDT_TEST);
 
     CPPUNIT_TEST_SUITE_END();
 
 private:
     // The tests creates an RG with 1 column of the cscDt type 
     // then initialize RGData. After that it adds two numeric values (v1 < v2)and two NULL.
-    // Then creates comparator structores and run a number of tests. v1 < v2
-    void testComparatorWithDT(execplan::CalpontSystemCatalog::ColDataType cscDt, 
+    // Then creates comparator structures and run a number of tests. v1 < v2
+    void testComparatorWithDT(execplan::CalpontSystemCatalog::ColDataType cscDt,
     uint32_t width,
-    bool generateRandValues)
+    bool generateRandValues,
+    uint8_t precision)
     {
         std::cout << std::endl << "------------------------------------------------------------" << std::endl;
         uint32_t oid =3001;
-	std::vector<uint32_t> offsets, roids, tkeys, cscale, cprecision;
+        std::vector<uint32_t> offsets, roids, tkeys, cscale, cprecision;
+        std::vector<uint32_t> charSetNumVec;
         std::vector<execplan::CalpontSystemCatalog::ColDataType> types;
         offsets.push_back(2); offsets.push_back(2+width);
         roids.push_back(oid);
         tkeys.push_back(1);
         types.push_back(cscDt);
         cscale.push_back(0);
-        cprecision.push_back(20);
+        cprecision.push_back(precision);
+        charSetNumVec.push_back(8);
         rowgroup::RowGroup inRG(1, //column count
             offsets, //oldOffset
             roids, // column oids
             tkeys, //keys
             types, // types
+            charSetNumVec, // charset numbers
             cscale, //scale
             cprecision, // precision
             20, // sTableThreshold
@@ -295,7 +301,7 @@ private:
                         r.setUintField<4>(joblist::INTNULL, 0);
                         break;
                     }
-                    default:
+                    case 8 :
                     {
                         r.setUintField<8>(42, 0);
                         r.nextRow(rowSize);
@@ -304,6 +310,21 @@ private:
                         r.setUintField<8>(joblist::BIGINTNULL, 0);
                         break;
                     }
+                    case 16 :
+                    {
+                        uint128_t dec = 42;
+                        r.setBinaryField(&dec, 0);
+                        r.nextRow(rowSize);
+                        dec++;
+                        r.setBinaryField(&dec, 0);
+                        r.nextRow(rowSize);
+                        r.setBinaryField(
+                            const_cast<int128_t*>(&datatypes::Decimal128Null),
+                            0);
+                        break;
+                    }
+                    default :
+                        std::cout << " This is the end. My only friend the end... " << std::endl;
                 }
                 break;
             }
@@ -387,26 +408,32 @@ private:
     {
         //bool generateValues = true;
         bool fixedValues = false;
-        testComparatorWithDT(execplan::CalpontSystemCatalog::UTINYINT, 1, fixedValues);
-        testComparatorWithDT(execplan::CalpontSystemCatalog::USMALLINT, 2, fixedValues);
-        testComparatorWithDT(execplan::CalpontSystemCatalog::UMEDINT, 4, fixedValues);
-        testComparatorWithDT(execplan::CalpontSystemCatalog::UBIGINT, 8, fixedValues);
-        testComparatorWithDT(execplan::CalpontSystemCatalog::DATETIME, 8, fixedValues);
+        testComparatorWithDT(execplan::CalpontSystemCatalog::UTINYINT, 1, fixedValues, 20);
+        testComparatorWithDT(execplan::CalpontSystemCatalog::USMALLINT, 2, fixedValues, 20);
+        testComparatorWithDT(execplan::CalpontSystemCatalog::UMEDINT, 4, fixedValues, 20);
+        testComparatorWithDT(execplan::CalpontSystemCatalog::UBIGINT, 8, fixedValues, 20);
+        testComparatorWithDT(execplan::CalpontSystemCatalog::DATETIME, 8, fixedValues, 20);
 
-        testComparatorWithDT(execplan::CalpontSystemCatalog::TINYINT, 1, fixedValues);
-        testComparatorWithDT(execplan::CalpontSystemCatalog::SMALLINT, 2, fixedValues);
-        testComparatorWithDT(execplan::CalpontSystemCatalog::MEDINT, 4, fixedValues);
-        testComparatorWithDT(execplan::CalpontSystemCatalog::DATE, 4, fixedValues);
-        testComparatorWithDT(execplan::CalpontSystemCatalog::BIGINT, 8, fixedValues);
-        testComparatorWithDT(execplan::CalpontSystemCatalog::DECIMAL, 8, fixedValues);
+        testComparatorWithDT(execplan::CalpontSystemCatalog::TINYINT, 1, fixedValues, 20);
+        testComparatorWithDT(execplan::CalpontSystemCatalog::SMALLINT, 2, fixedValues, 20);
+        testComparatorWithDT(execplan::CalpontSystemCatalog::MEDINT, 4, fixedValues, 20);
+        testComparatorWithDT(execplan::CalpontSystemCatalog::DATE, 4, fixedValues, 20);
+        testComparatorWithDT(execplan::CalpontSystemCatalog::BIGINT, 8, fixedValues, 20);
+        testComparatorWithDT(execplan::CalpontSystemCatalog::DECIMAL, 8, fixedValues, 20);
 
-        testComparatorWithDT(execplan::CalpontSystemCatalog::FLOAT, 4, fixedValues);
-        testComparatorWithDT(execplan::CalpontSystemCatalog::DOUBLE, 8, fixedValues);
-        testComparatorWithDT(execplan::CalpontSystemCatalog::LONGDOUBLE, 8, fixedValues);
+        testComparatorWithDT(execplan::CalpontSystemCatalog::FLOAT, 4, fixedValues, 20);
+        testComparatorWithDT(execplan::CalpontSystemCatalog::DOUBLE, 8, fixedValues, 20);
+        testComparatorWithDT(execplan::CalpontSystemCatalog::LONGDOUBLE, 8, fixedValues, 20);
     }
 
     void FLOAT_TEST()
     {
+    }
+
+    void WIDEDT_TEST()
+    {
+        bool fixedValues = false;
+        testComparatorWithDT(execplan::CalpontSystemCatalog::DECIMAL, 16, fixedValues, 38);
     }
 };
 

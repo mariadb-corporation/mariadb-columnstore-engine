@@ -61,9 +61,6 @@ using namespace ddlpackage;
 #include "ddlpackageprocessor.h"
 using namespace ddlpackageprocessor;
 
-#include "dataconvert.h"
-using namespace dataconvert;
-
 #include "bytestream.h"
 using namespace messageqcpp;
 
@@ -133,131 +130,16 @@ static void decode_file_path(const char *path, char *decoded_dbname,
   decode_objectname(decoded_tbname, tbname_start, FN_REFLEN);
 }
 
-uint32_t convertDataType(int dataType)
+
+CalpontSystemCatalog::ColDataType convertDataType(const ddlpackage::ColumnType &ct)
 {
-    uint32_t calpontDataType;
-
-    switch (dataType)
-    {
-        case ddlpackage::DDL_CHAR:
-            calpontDataType = CalpontSystemCatalog::CHAR;
-            break;
-
-        case ddlpackage::DDL_VARCHAR:
-            calpontDataType = CalpontSystemCatalog::VARCHAR;
-            break;
-
-        case ddlpackage::DDL_VARBINARY:
-            calpontDataType = CalpontSystemCatalog::VARBINARY;
-            break;
-
-        case ddlpackage::DDL_BIT:
-            calpontDataType = CalpontSystemCatalog::BIT;
-            break;
-
-        case ddlpackage::DDL_REAL:
-        case ddlpackage::DDL_DECIMAL:
-        case ddlpackage::DDL_NUMERIC:
-        case ddlpackage::DDL_NUMBER:
-            calpontDataType = CalpontSystemCatalog::DECIMAL;
-            break;
-
-        case ddlpackage::DDL_FLOAT:
-            calpontDataType = CalpontSystemCatalog::FLOAT;
-            break;
-
-        case ddlpackage::DDL_DOUBLE:
-            calpontDataType = CalpontSystemCatalog::DOUBLE;
-            break;
-
-        case ddlpackage::DDL_INT:
-        case ddlpackage::DDL_INTEGER:
-            calpontDataType = CalpontSystemCatalog::INT;
-            break;
-
-        case ddlpackage::DDL_BIGINT:
-            calpontDataType = CalpontSystemCatalog::BIGINT;
-            break;
-
-        case ddlpackage::DDL_MEDINT:
-            calpontDataType = CalpontSystemCatalog::MEDINT;
-            break;
-
-        case ddlpackage::DDL_SMALLINT:
-            calpontDataType = CalpontSystemCatalog::SMALLINT;
-            break;
-
-        case ddlpackage::DDL_TINYINT:
-            calpontDataType = CalpontSystemCatalog::TINYINT;
-            break;
-
-        case ddlpackage::DDL_DATE:
-            calpontDataType = CalpontSystemCatalog::DATE;
-            break;
-
-        case ddlpackage::DDL_DATETIME:
-            calpontDataType = CalpontSystemCatalog::DATETIME;
-            break;
-
-        case ddlpackage::DDL_TIME:
-            calpontDataType = CalpontSystemCatalog::TIME;
-            break;
-
-        case ddlpackage::DDL_TIMESTAMP:
-            calpontDataType = CalpontSystemCatalog::TIMESTAMP;
-            break;
-
-        case ddlpackage::DDL_CLOB:
-            calpontDataType = CalpontSystemCatalog::CLOB;
-            break;
-
-        case ddlpackage::DDL_BLOB:
-            calpontDataType = CalpontSystemCatalog::BLOB;
-            break;
-
-        case ddlpackage::DDL_TEXT:
-            calpontDataType = CalpontSystemCatalog::TEXT;
-            break;
-
-        case ddlpackage::DDL_UNSIGNED_TINYINT:
-            calpontDataType = CalpontSystemCatalog::UTINYINT;
-            break;
-
-        case ddlpackage::DDL_UNSIGNED_SMALLINT:
-            calpontDataType = CalpontSystemCatalog::USMALLINT;
-            break;
-
-        case ddlpackage::DDL_UNSIGNED_MEDINT:
-            calpontDataType = CalpontSystemCatalog::UMEDINT;
-            break;
-
-        case ddlpackage::DDL_UNSIGNED_INT:
-            calpontDataType = CalpontSystemCatalog::UINT;
-            break;
-
-        case ddlpackage::DDL_UNSIGNED_BIGINT:
-            calpontDataType = CalpontSystemCatalog::UBIGINT;
-            break;
-
-        case ddlpackage::DDL_UNSIGNED_DECIMAL:
-        case ddlpackage::DDL_UNSIGNED_NUMERIC:
-            calpontDataType = CalpontSystemCatalog::UDECIMAL;
-            break;
-
-        case ddlpackage::DDL_UNSIGNED_FLOAT:
-            calpontDataType = CalpontSystemCatalog::UFLOAT;
-            break;
-
-        case ddlpackage::DDL_UNSIGNED_DOUBLE:
-            calpontDataType = CalpontSystemCatalog::UDOUBLE;
-            break;
-
-        default:
-            throw runtime_error("Unsupported datatype!");
-
-    }
-
-    return calpontDataType;
+  const datatypes::TypeHandler *h= datatypes::TypeHandler::find_by_ddltype(ct);
+  if (!h)
+  {
+    throw runtime_error("Unsupported datatype!");
+    return CalpontSystemCatalog::UNDEFINED;
+  }
+  return h->code();
 }
 
 
@@ -1003,10 +885,10 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
                     if (!createTable->fTableDef->fColumns[i]->fDefaultValue->fNull)
                     {
                         //validate the default value, if out of range, just error out
-                        uint32_t dataType;
+                        CalpontSystemCatalog::ColDataType dataType;
                         dataType = convertDataType(createTable->fTableDef->fColumns[i]->fType->fType);
                         CalpontSystemCatalog::ColType colType;
-                        colType.colDataType = (CalpontSystemCatalog::ColDataType) dataType;
+                        colType.colDataType = dataType;
                         colType.colWidth = createTable->fTableDef->fColumns[i]->fType->fLength;
                         colType.precision = createTable->fTableDef->fColumns[i]->fType->fPrecision;
                         colType.scale = createTable->fTableDef->fColumns[i]->fType->fScale;
@@ -1015,7 +897,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 
                         try
                         {
-                            convertedVal = DataConvert::convertColumnData(colType, createTable->fTableDef->fColumns[i]->fDefaultValue->fValue, pushWarning, thd->variables.time_zone->get_name()->ptr(), false, false, false);
+                            convertedVal = colType.convertColumnData(createTable->fTableDef->fColumns[i]->fDefaultValue->fValue, pushWarning, thd->variables.time_zone->get_name()->ptr(), false, false, false);
                         }
                         catch (std::exception&)
                         {
@@ -1379,10 +1261,10 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
                             }
 
                             //validate the default value, if out of range, just error out
-                            uint32_t dataType;
+                            CalpontSystemCatalog::ColDataType dataType;
                             dataType = convertDataType(addColumnPtr->fColumnDef->fType->fType);
                             CalpontSystemCatalog::ColType colType;
-                            colType.colDataType = (CalpontSystemCatalog::ColDataType) dataType;
+                            colType.colDataType = dataType;
                             colType.colWidth = addColumnPtr->fColumnDef->fType->fLength;
                             colType.precision = addColumnPtr->fColumnDef->fType->fPrecision;
                             colType.scale = addColumnPtr->fColumnDef->fType->fScale;
@@ -1391,7 +1273,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 
                             try
                             {
-                                convertedVal = DataConvert::convertColumnData(colType, addColumnPtr->fColumnDef->fDefaultValue->fValue, pushWarning, thd->variables.time_zone->get_name()->ptr(), false, false, false);
+                                convertedVal = colType.convertColumnData(addColumnPtr->fColumnDef->fDefaultValue->fValue, pushWarning, thd->variables.time_zone->get_name()->ptr(), false, false, false);
                             }
                             catch (std::exception&)
                             {
@@ -1733,10 +1615,10 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
                             }
 
                             //validate the default value, if out of range, just error out
-                            uint32_t dataType;
+                            CalpontSystemCatalog::ColDataType dataType;
                             dataType = convertDataType(addColumnsPtr->fColumns[0]->fType->fType);
                             CalpontSystemCatalog::ColType colType;
-                            colType.colDataType = (CalpontSystemCatalog::ColDataType) dataType;
+                            colType.colDataType = dataType;
                             colType.colWidth = addColumnsPtr->fColumns[0]->fType->fLength;
                             colType.precision = addColumnsPtr->fColumns[0]->fType->fPrecision;
                             colType.scale = addColumnsPtr->fColumns[0]->fType->fScale;
@@ -1745,7 +1627,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 
                             try
                             {
-                                convertedVal = DataConvert::convertColumnData(colType, addColumnsPtr->fColumns[0]->fDefaultValue->fValue, pushWarning, thd->variables.time_zone->get_name()->ptr(), false, false, false);
+                                convertedVal = colType.convertColumnData(addColumnsPtr->fColumns[0]->fDefaultValue->fValue, pushWarning, thd->variables.time_zone->get_name()->ptr(), false, false, false);
                             }
                             catch (std::exception&)
                             {
@@ -2295,6 +2177,22 @@ static bool get_field_default_value(THD *thd, Field *field, String *def_value,
   return has_default;
 }
 
+/*
+    Utility function search for ZEROFILL 
+*/
+
+bool hasZerofillDecimal(TABLE *table_arg)
+{
+    for (Field **field= table_arg->field; *field; field++)
+    {
+        if (((*field)->flags & ZEROFILL_FLAG)
+                && typeid (**field) == typeid(Field_new_decimal))
+            return true;
+    }
+
+    return false;
+}
+
 int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* create_info, cal_connection_info& ci)
 {
 #ifdef MCS_DEBUG
@@ -2573,6 +2471,14 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
 #ifdef MCS_DEBUG
         cout << "ha_mcs_impl_create_: ProcessDDL error, now in state NOT_ALTER" << endl;
 #endif
+    }
+    else
+    {
+        if (hasZerofillDecimal(table_arg))
+        {
+            push_warning(thd, Sql_condition::WARN_LEVEL_WARN,
+                WARN_OPTION_IGNORED, "ZEROFILL is ignored in ColumnStore");
+        }
     }
 
     return rc;

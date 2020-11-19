@@ -76,8 +76,13 @@ protected:
     // compare method, take the indices to the values array
     virtual bool compare(uint64_t, uint64_t);
 
+    // compare method, take the indices to the values array
+    virtual bool binaryCompare(uint64_t, uint64_t);
+
     // binary operator
     uint8_t fBOP;
+
+    bool hasWideColumns;
 
     // column type for null check
     execplan::CalpontSystemCatalog::ColType leftColType;

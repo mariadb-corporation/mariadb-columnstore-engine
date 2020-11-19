@@ -60,6 +60,7 @@ BatchPrimitiveProcessorJL::BatchPrimitiveProcessorJL(const ResourceManager* rm) 
     baseRid(0),
     ridCount(0),
     needStrValues(false),
+    wideColumnsWidths(0),
     filterCount(0),
     projectCount(0),
     needRidsAtDelivery(false),
@@ -100,6 +101,8 @@ void BatchPrimitiveProcessorJL::addFilterStep(const pColScanStep& scan, vector<B
     filterSteps.push_back(cc);
     filterCount++;
     _hasScan = true;
+    if (utils::isWide(cc->getWidth()))
+        wideColumnsWidths |= cc->getWidth();
     idbassert(sessionID == scan.sessionId());
 }
 
@@ -128,6 +131,8 @@ void BatchPrimitiveProcessorJL::addFilterStep(const pColStep& step)
     cc->setStepUuid(uuid);
     filterSteps.push_back(cc);
     filterCount++;
+    if (utils::isWide(cc->getWidth()))
+        wideColumnsWidths |= cc->getWidth();
     idbassert(sessionID == step.sessionId());
 }
 
@@ -198,6 +203,8 @@ void BatchPrimitiveProcessorJL::addProjectStep(const pColStep& step)
     colWidths.push_back(cc->getWidth());
     tupleLength += cc->getWidth();
     projectCount++;
+    if (utils::isWide(cc->getWidth()))
+        wideColumnsWidths |= cc->getWidth();
     idbassert(sessionID == step.sessionId());
 }
 
@@ -214,6 +221,9 @@ void BatchPrimitiveProcessorJL::addProjectStep(const PassThruStep& step)
     colWidths.push_back(cc->getWidth());
     tupleLength += cc->getWidth();
     projectCount++;
+
+    if (utils::isWide(cc->getWidth()))
+        wideColumnsWidths |= cc->getWidth();
 
     if (filterCount == 0 && !sendRowGroups)
         sendValues = true;
@@ -411,6 +421,7 @@ void BatchPrimitiveProcessorJL::addElementType(const StringElementType& et, uint
  * block touches
  */
 
+// TODO MCOL-641 Add support here. Refer to BatchPrimitiveProcessor::makeResponse()
 void BatchPrimitiveProcessorJL::getElementTypes(ByteStream& in,
         vector<ElementType>* out, bool* validCPData, uint64_t* lbid, int64_t* min,
         int64_t* max, uint32_t* cachedIO, uint32_t* physIO, 
@@ -491,6 +502,7 @@ void BatchPrimitiveProcessorJL::getElementTypes(ByteStream& in,
  * blocks touched
  */
 
+// TODO MCOL-641 Add support here. Refer to BatchPrimitiveProcessor::makeResponse()
 void BatchPrimitiveProcessorJL::getStringElementTypes(ByteStream& in,
         vector<StringElementType>* out, bool* validCPData, uint64_t* lbid, int64_t* min,
         int64_t* max, uint32_t* cachedIO, uint32_t* physIO, uint32_t* touchedBlocks) const
@@ -547,6 +559,7 @@ void BatchPrimitiveProcessorJL::getStringElementTypes(ByteStream& in,
  * as when the output type is TableBands
  */
 
+// TODO MCOL-641 Add support here. Refer to BatchPrimitiveProcessor::makeResponse()
 void BatchPrimitiveProcessorJL::getTuples(messageqcpp::ByteStream& in,
         std::vector<TupleType>* out, bool* validCPData, uint64_t* lbid, int64_t* min,
         int64_t* max, uint32_t* cachedIO, uint32_t* physIO, uint32_t* touchedBlocks) const
@@ -667,7 +680,9 @@ void BatchPrimitiveProcessorJL::getTuples(messageqcpp::ByteStream& in,
                         columnData[j]++;
                         pos++;
                         break;
-
+                    case 16:
+                        cout << __FILE__<< ":" <<__LINE__ << " Fix  16 Bytes ?" << endl;
+                        //fallthrough
                     default:
                         cout << "BPP::getTuples(): bad column width of " << colWidths[j]
                              << endl;
@@ -691,9 +706,9 @@ bool BatchPrimitiveProcessorJL::countThisMsg(messageqcpp::ByteStream& in) const
     if (_hasScan)
     {
         if (data[offset] != 0)
-            offset += 25;  // skip the CP data
+            offset += (data[offset + CP_FLAG_AND_LBID] * 2) + CP_FLAG_AND_LBID + 1;  // skip the CP data with wide min/max values (16/32 bytes each)
         else
-            offset += 9;  // skip only the "valid CP data" & LBID bytes
+            offset += CP_FLAG_AND_LBID;  // skip only the "valid CP data" & LBID bytes
     }
 
     idbassert(in.length() > offset);
@@ -717,11 +732,12 @@ void BatchPrimitiveProcessorJL::deserializeAggregateResult(ByteStream* in,
 }
 
 void BatchPrimitiveProcessorJL::getRowGroupData(ByteStream& in, vector<RGData>* out,
-        bool* validCPData, uint64_t* lbid, int64_t* min, int64_t* max,
+        bool* validCPData, uint64_t* lbid, int128_t* min, int128_t* max,
         uint32_t* cachedIO, uint32_t* physIO, uint32_t* touchedBlocks, bool* countThis,
-        uint32_t threadID) const
+        uint32_t threadID, bool* hasWideColumn, const execplan::CalpontSystemCatalog::ColType& colType) const
 {
     uint64_t tmp64;
+    int128_t tmp128;
     uint8_t tmp8;
     RGData rgData;
     uint32_t rowCount;
@@ -753,10 +769,34 @@ void BatchPrimitiveProcessorJL::getRowGroupData(ByteStream& in, vector<RGData>* 
         if (*validCPData)
         {
             in >> *lbid;
-            in >> tmp64;
-            *min = (int64_t) tmp64;
-            in >> tmp64;
-            *max = (int64_t) tmp64;
+            in >> tmp8;
+            *hasWideColumn = (tmp8 > utils::MAXLEGACYWIDTH);
+            if (UNLIKELY(*hasWideColumn))
+            {
+                idbassert(colType.colWidth > utils::MAXLEGACYWIDTH);
+                if (LIKELY(colType.isWideDecimalType()))
+                {
+                    in >> tmp128;
+                    *min = tmp128;
+                    in >> tmp128;
+                    *max = tmp128;
+                }
+                else
+                {
+                    std::ostringstream oss;
+                    oss << __func__ << " WARNING!!! Not implemented for the data type ";
+                    oss << colType.colDataType << std::endl;
+                    std::cout  << oss.str();
+                    idbassert(false);
+                }
+            }
+            else
+            {
+                in >> tmp64;
+                *min = static_cast<int128_t>(tmp64);
+                in >> tmp64;
+                *max = static_cast<int128_t>(tmp64);
+            }
         }
         else
             in >> *lbid;
@@ -940,7 +980,7 @@ void BatchPrimitiveProcessorJL::createBPP(ByteStream& bs) const
 {
     ISMPacketHeader ism;
     uint32_t i;
-    uint8_t flags = 0;
+    uint16_t flags = 0;
 
     ism.Command = BATCH_PRIMITIVE_CREATE;
 
@@ -976,7 +1016,13 @@ void BatchPrimitiveProcessorJL::createBPP(ByteStream& bs) const
     if (sendTupleJoinRowGroupData)
         flags |= JOIN_ROWGROUP_DATA;
 
+    if (wideColumnsWidths)
+        flags |= HAS_WIDE_COLUMNS;
+
     bs << flags;
+
+    if (wideColumnsWidths)
+        bs << wideColumnsWidths;
 
     bs << bop;
     bs << (uint8_t) (forHJ ? 1 : 0);

@@ -72,17 +72,41 @@ string Func_maketime::getStrVal(rowgroup::Row& row,
         }
 
         case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-            double dscale = d.scale;
-            hour = d.value / pow(10.0, dscale);
-            int lefto = (d.value - hour * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
-            if ( hour >= 0 && lefto > 4 )
-                hour++;
+            if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                int128_t scaleDivisor, scaleDivisor2;
 
-            if ( hour < 0 && lefto < -4 )
-                hour--;
+                datatypes::getScaleDivisor(scaleDivisor, d.scale);
+
+                scaleDivisor2 = (scaleDivisor <= 10) ? 1 : (scaleDivisor / 10);
+
+                int128_t tmpval = d.s128Value / scaleDivisor;
+                int128_t lefto = (d.s128Value - tmpval * scaleDivisor) / scaleDivisor2;
+
+                if (tmpval >= 0 && lefto > 4)
+                    tmpval++;
+
+                if (tmpval < 0 && lefto < -4)
+                    tmpval--;
+
+                hour = datatypes::Decimal::getInt64FromWideDecimal(tmpval);
+            }
+            else
+            {
+                double dscale = d.scale;
+                hour = d.value / pow(10.0, dscale);
+                int lefto = (d.value - hour * pow(10.0, dscale)) / pow(10.0, dscale - 1);
+
+                if ( hour >= 0 && lefto > 4 )
+                    hour++;
+
+                if ( hour < 0 && lefto < -4 )
+                    hour--;
+            }
 
             break;
         }
@@ -112,17 +136,41 @@ string Func_maketime::getStrVal(rowgroup::Row& row,
         }
 
         case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[1]->data()->getDecimalVal(row, isNull);
-            double dscale = d.scale;
-            min = d.value / pow(10.0, dscale);
-            int lefto = (d.value - min * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
-            if ( min >= 0 && lefto > 4 )
-                min++;
+            if (parm[1]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                int128_t scaleDivisor, scaleDivisor2;
 
-            if ( min < 0 && lefto < -4 )
-                min--;
+                datatypes::getScaleDivisor(scaleDivisor, d.scale);
+
+                scaleDivisor2 = (scaleDivisor <= 10) ? 1 : (scaleDivisor / 10);
+
+                int128_t tmpval = d.s128Value / scaleDivisor;
+                int128_t lefto = (d.s128Value - tmpval * scaleDivisor) / scaleDivisor2;
+
+                if (tmpval >= 0 && lefto > 4)
+                    tmpval++;
+
+                if (tmpval < 0 && lefto < -4)
+                    tmpval--;
+
+                min = datatypes::Decimal::getInt64FromWideDecimal(tmpval);
+            }
+            else
+            {
+                double dscale = d.scale;
+                min = d.value / pow(10.0, dscale);
+                int lefto = (d.value - min * pow(10.0, dscale)) / pow(10.0, dscale - 1);
+
+                if ( min >= 0 && lefto > 4 )
+                    min++;
+
+                if ( min < 0 && lefto < -4 )
+                    min--;
+            }
 
             break;
         }
@@ -158,17 +206,41 @@ string Func_maketime::getStrVal(rowgroup::Row& row,
         }
 
         case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[2]->data()->getDecimalVal(row, isNull);
-            double dscale = d.scale;
-            sec = d.value / pow(10.0, dscale);
-            int lefto = (d.value - sec * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
-            if ( sec >= 0 && lefto > 4 )
-                sec++;
+            if (parm[2]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                int128_t scaleDivisor, scaleDivisor2;
 
-            if ( sec < 0 && lefto < -4 )
-                sec--;
+                datatypes::getScaleDivisor(scaleDivisor, d.scale);
+
+                scaleDivisor2 = (scaleDivisor <= 10) ? 1 : (scaleDivisor / 10);
+
+                int128_t tmpval = d.s128Value / scaleDivisor;
+                int128_t lefto = (d.s128Value - tmpval * scaleDivisor) / scaleDivisor2;
+
+                if (tmpval >= 0 && lefto > 4)
+                    tmpval++;
+
+                if (tmpval < 0 && lefto < -4)
+                    tmpval--;
+
+                sec = datatypes::Decimal::getInt64FromWideDecimal(tmpval);
+            }
+            else
+            {
+                double dscale = d.scale;
+                sec = d.value / pow(10.0, dscale);
+                int lefto = (d.value - sec * pow(10.0, dscale)) / pow(10.0, dscale - 1);
+
+                if ( sec >= 0 && lefto > 4 )
+                    sec++;
+
+                if ( sec < 0 && lefto < -4 )
+                    sec--;
+            }
 
             break;
         }

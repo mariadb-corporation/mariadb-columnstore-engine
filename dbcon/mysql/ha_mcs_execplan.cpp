@@ -3105,14 +3105,13 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB (const Item* item)
         case DECIMAL_RESULT:
         {
             Item_decimal* idp = (Item_decimal*)item;
-            ct.colDataType = CalpontSystemCatalog::DECIMAL;
-            ct.colWidth = 8;
-            ct.scale = idp->decimals;
 
-            if (ct.scale == 0)
-                ct.precision = idp->max_length - 1;
-            else
-                ct.precision = idp->max_length - idp->decimals;
+            ct.colDataType = CalpontSystemCatalog::DECIMAL;
+
+            unsigned int precision = idp->decimal_precision();
+            unsigned int scale = idp->decimal_scale();
+
+            ct.setDecimalScalePrecision(precision, scale);
 
             break;
         }
@@ -3138,7 +3137,7 @@ ReturnedColumn* buildReturnedColumn(
 {
     ReturnedColumn* rc = NULL;
 
-    if ( gwi.thd)
+    if (gwi.thd)
     {
         //if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ))
         {
@@ -3174,7 +3173,8 @@ ReturnedColumn* buildReturnedColumn(
 
                     if (item->unsigned_flag)
                     {
-                        rc = new ConstantColumn((uint64_t)item->val_uint(), ConstantColumn::NUM);
+                        rc = new ConstantColumn((uint64_t)item->val_uint(), ConstantColumn::NUM,
+                                                (int8_t) item->decimal_scale(), (uint8_t) item->decimal_precision());
                     }
                     else
                     {
@@ -3441,6 +3441,7 @@ ArithmeticColumn* buildArithmeticColumn(
     Item** sfitempp = item->arguments();
     ArithmeticOperator* aop = new ArithmeticOperator(item->func_name());
     aop->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+    aop->setOverflowCheck(get_decimal_overflow_check(gwi.thd));
     ParseTree* pt = new ParseTree(aop);
     //ReturnedColumn *lhs = 0, *rhs = 0;
     ParseTree* lhs = 0, *rhs = 0;
@@ -3599,16 +3600,53 @@ ArithmeticColumn* buildArithmeticColumn(
         pt->right(rhs);
     }
 
-    //aop->resultType(colType_MysqlToIDB(item));
     // @bug5715. Use InfiniDB adjusted coltype for result type.
     // decimal arithmetic operation gives double result when the session variable is set.
-    //idbassert(pt->left() && pt->right() && pt->left()->data() && pt->right()->data());
-    CalpontSystemCatalog::ColType mysql_type = colType_MysqlToIDB(item);
+    CalpontSystemCatalog::ColType mysqlType = colType_MysqlToIDB(item);
+
+    const CalpontSystemCatalog::ColType& leftColType = pt->left()->data()->resultType();
+    const CalpontSystemCatalog::ColType& rightColType = pt->right()->data()->resultType();
+
+    // Only tinker with the type if all columns involved are decimal
+    if (datatypes::isDecimalOperands(mysqlType.colDataType,
+            leftColType.colDataType, rightColType.colDataType))
+    {
+        int32_t leftColWidth = leftColType.colWidth;
+        int32_t rightColWidth = rightColType.colWidth;
+
+        if (leftColWidth == datatypes::MAXDECIMALWIDTH ||
+            rightColWidth == datatypes::MAXDECIMALWIDTH)
+        {
+            mysqlType.colWidth = datatypes::MAXDECIMALWIDTH;
+
+            string funcName = item->func_name();
+
+            int32_t scale1 = leftColType.scale;
+            int32_t scale2 = rightColType.scale;
+
+            if (funcName == "/" &&
+                (mysqlType.scale - (scale1 - scale2)) > datatypes::INT128MAXPRECISION)
+            {
+                Item_decimal* idp = (Item_decimal*)item;
+
+                unsigned int precision = idp->decimal_precision();
+                unsigned int scale = idp->decimal_scale();
+
+                mysqlType.setDecimalScalePrecisionHeuristic(precision, scale);
+
+                if (mysqlType.scale < scale1)
+                    mysqlType.scale = scale1;
+
+                if (mysqlType.precision < mysqlType.scale)
+                    mysqlType.precision = mysqlType.scale;
+            }
+        }
+    }
 
     if (get_double_for_decimal_math(current_thd) == true)
-        aop->adjustResultType(mysql_type);
+        aop->adjustResultType(mysqlType);
     else
-        aop->resultType(mysql_type);
+        aop->resultType(mysqlType);
 
     // adjust decimal result type according to internalDecimalScale
     if (gwi.internalDecimalScale >= 0 && aop->resultType().colDataType == CalpontSystemCatalog::DECIMAL)
@@ -4043,6 +4081,20 @@ ReturnedColumn* buildFunctionColumn(
         fc->functionParms(funcParms);
         fc->resultType(colType_MysqlToIDB(ifp));
 
+        // if the result type is DECIMAL and any function parameter is a wide decimal
+        // column, set the result colwidth to wide
+        if (fc->resultType().colDataType == CalpontSystemCatalog::DECIMAL)
+        {
+            for (size_t i = 0; i < funcParms.size(); i++)
+            {
+                if (funcParms[i]->data()->resultType().isWideDecimalType())
+                {
+                    fc->resultType().colWidth = datatypes::MAXDECIMALWIDTH;
+                    break;
+                }
+            }
+        }
+
         // MySQL give string result type for date function, but has the flag set.
         // we should set the result type to be datetime for comparision.
         if (ifp->field_type() == MYSQL_TYPE_DATETIME ||
@@ -4358,6 +4410,14 @@ ConstantColumn* buildDecimalColumn(Item* item, gp_walk_info& gwi)
         i = 1;
     }
 
+    bool specialPrecision = false;
+
+    // handle the case when the constant value is 0.12345678901234567890123456789012345678
+    // In this case idp->decimal_precision() = 39, but we can 
+    if (((i + 1) < str->length()) &&
+        str->ptr()[i] == '0' && str->ptr()[i + 1] == '.')
+        specialPrecision = true;
+
     for (; i < str->length(); i++)
     {
         if (str->ptr()[i] == '.')
@@ -4366,8 +4426,18 @@ ConstantColumn* buildDecimalColumn(Item* item, gp_walk_info& gwi)
         columnstore_decimal_val << str->ptr()[i];
     }
 
-    columnstore_decimal.value = strtoll(columnstore_decimal_val.str().c_str(), 0, 10);
+    if (idp->decimal_precision() <= datatypes::INT64MAXPRECISION)
+        columnstore_decimal.value = strtoll(columnstore_decimal_val.str().c_str(), 0, 10);
+    else if (idp->decimal_precision() <= datatypes::INT128MAXPRECISION ||
+             (idp->decimal_precision() <= datatypes::INT128MAXPRECISION + 1 &&
+              specialPrecision))
+    {
+        bool dummy = false;
+        columnstore_decimal.s128Value =
+            dataconvert::strtoll128(columnstore_decimal_val.str().c_str(), dummy, 0);
+    }
 
+    // TODO MCOL-641 Add support here
     if (gwi.internalDecimalScale >= 0 && idp->decimals > (uint)gwi.internalDecimalScale)
     {
         columnstore_decimal.scale = gwi.internalDecimalScale;
@@ -4375,9 +4445,10 @@ ConstantColumn* buildDecimalColumn(Item* item, gp_walk_info& gwi)
         columnstore_decimal.value = (int64_t)(val > 0 ? val + 0.5 : val - 0.5);
     }
     else
-        columnstore_decimal.scale = idp->decimals;
+        columnstore_decimal.scale = idp->decimal_scale();
 
-    columnstore_decimal.precision = idp->max_length - idp->decimals;
+    columnstore_decimal.precision = (idp->decimal_precision() > datatypes::INT128MAXPRECISION) ?
+                                     datatypes::INT128MAXPRECISION : idp->decimal_precision();
     ConstantColumn* cc = new ConstantColumn(valStr, columnstore_decimal);
     cc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
     cc->charsetNumber(idp->collation.collation->number);
@@ -4404,18 +4475,18 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
         return buildSimpleColFromDerivedTable(gwi, ifp);
 
     CalpontSystemCatalog::ColType ct;
-    bool columnStore = true;
+    datatypes::SimpleColumnParam prm(gwi.sessionid, true);
 
     try
     {
         // check foreign engine
         if (ifp->cached_table && ifp->cached_table->table)
-            columnStore = isMCSTable(ifp->cached_table->table);
+            prm.columnStore(isMCSTable(ifp->cached_table->table));
         // @bug4509. ifp->cached_table could be null for myisam sometimes
         else if (ifp->field && ifp->field->table)
-            columnStore = isMCSTable(ifp->field->table);
+            prm.columnStore(isMCSTable(ifp->field->table));
 
-        if (columnStore)
+        if (prm.columnStore())
         {
             ct = gwi.csc->colType(
                      gwi.csc->lookupOID(make_tcn(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str)));
@@ -4432,75 +4503,12 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
         return NULL;
     }
 
-    SimpleColumn* sc = NULL;
+    const datatypes::DatabaseQualifiedColumnName name(ifp->db_name.str,
+                                                      bestTableName(ifp),
+                                                      ifp->field_name.str);
+    const datatypes::TypeHandler *h= ct.typeHandler();
+    SimpleColumn *sc = h->newSimpleColumn(name, ct, prm);
 
-    switch (ct.colDataType)
-    {
-        case CalpontSystemCatalog::TINYINT:
-            if (ct.scale == 0)
-                sc = new SimpleColumn_INT<1>(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
-            else
-            {
-                sc = new SimpleColumn_Decimal<1>(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
-                ct.colDataType = CalpontSystemCatalog::DECIMAL;
-            }
-
-            break;
-
-        case CalpontSystemCatalog::SMALLINT:
-            if (ct.scale == 0)
-                sc = new SimpleColumn_INT<2>(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
-            else
-            {
-                sc = new SimpleColumn_Decimal<2>(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
-                ct.colDataType = CalpontSystemCatalog::DECIMAL;
-            }
-
-            break;
-
-        case CalpontSystemCatalog::INT:
-        case CalpontSystemCatalog::MEDINT:
-            if (ct.scale == 0)
-                sc = new SimpleColumn_INT<4>(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
-            else
-            {
-                sc = new SimpleColumn_Decimal<4>(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
-                ct.colDataType = CalpontSystemCatalog::DECIMAL;
-            }
-
-            break;
-
-        case CalpontSystemCatalog::BIGINT:
-            if (ct.scale == 0)
-                sc = new SimpleColumn_INT<8>(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
-            else
-            {
-                sc = new SimpleColumn_Decimal<8>(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
-                ct.colDataType = CalpontSystemCatalog::DECIMAL;
-            }
-
-            break;
-
-        case CalpontSystemCatalog::UTINYINT:
-            sc = new SimpleColumn_UINT<1>(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
-            break;
-
-        case CalpontSystemCatalog::USMALLINT:
-            sc = new SimpleColumn_UINT<2>(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
-            break;
-
-        case CalpontSystemCatalog::UINT:
-        case CalpontSystemCatalog::UMEDINT:
-            sc = new SimpleColumn_UINT<4>(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
-            break;
-
-        case CalpontSystemCatalog::UBIGINT:
-            sc = new SimpleColumn_UINT<8>(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
-            break;
-
-        default:
-            sc = new SimpleColumn(ifp->db_name.str, bestTableName(ifp), ifp->field_name.str, columnStore, gwi.sessionid);
-    }
     sc->resultType(ct);
     sc->charsetNumber(ifp->collation.collation->number);
     string tbname(ifp->table_name.str);
@@ -4517,10 +4525,10 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
     sc->viewName(getViewName(ifp->cached_table), lower_case_table_names);
     sc->alias(ifp->name.str);
 
-    sc->isColumnStore(columnStore);
+    sc->isColumnStore(prm.columnStore());
     sc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
 
-    if (!columnStore && ifp->field)
+    if (!prm.columnStore() && ifp->field)
         sc->oid(ifp->field->field_index + 1); // ExeMgr requires offset started from 1
 
     if (ifp->depended_from)
@@ -4583,6 +4591,9 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
     vector<SRCP> selCols;
     vector<SRCP> orderCols;
     bool bIsConst = false;
+    unsigned int constValPrecision = 0;
+    unsigned int constValScale = 0;
+    bool hasDecimalConst = false;
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
@@ -4590,7 +4601,6 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 
     Item_sum* isp = reinterpret_cast<Item_sum*>(item);
     Item** sfitempp = isp->get_orig_args();
-//	Item** sfitempp = isp->arguments();
     SRCP parm;
 
     // @bug4756
@@ -4767,6 +4777,13 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                                 parm.reset(buildReturnedColumn(sfitemp, gwi, gwi.fatalParseError));
                                 ac->constCol(parm);
                                 bIsConst = true;
+                                if (sfitemp->cmp_type() == DECIMAL_RESULT)
+                                {
+                                    hasDecimalConst = true;
+                                    Item_decimal* idp = (Item_decimal*)sfitemp;
+                                    constValPrecision = idp->decimal_precision();
+                                    constValScale = idp->decimal_scale();
+                                }
                                 break;
                             }
                             default:
@@ -4810,7 +4827,6 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 
                             if ((fc && fc->functionParms().empty()) || !fc)
                             {
-                                //ac->aggOp(AggregateColumn::COUNT_ASTERISK);
                                 ReturnedColumn* rc = buildReturnedColumn(sfitemp, gwi, gwi.fatalParseError);
 
                                 if (dynamic_cast<ConstantColumn*>(rc))
@@ -4889,6 +4905,9 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
             }
         }
 
+        bool isAvg = (isp->sum_func() == Item_sum::AVG_FUNC ||
+                    isp->sum_func() == Item_sum::AVG_DISTINCT_FUNC);
+
         // Get result type
         // Modified for MCOL-1201 multi-argument aggregate
         if (!bIsConst && ac->aggParms().size() > 0)
@@ -4897,14 +4916,31 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
             // use the first parm for result type.
             parm = ac->aggParms()[0];
 
-            if (isp->sum_func() == Item_sum::AVG_FUNC ||
-                    isp->sum_func() == Item_sum::AVG_DISTINCT_FUNC)
+            if (isAvg || isp->sum_func() == Item_sum::SUM_FUNC ||
+                isp->sum_func() == Item_sum::SUM_DISTINCT_FUNC)
             {
                 CalpontSystemCatalog::ColType ct = parm->resultType();
-                ct.colDataType = CalpontSystemCatalog::LONGDOUBLE;
-                ct.colWidth = sizeof(long double);
-                ct.scale += 4;
-                ct.precision = -1;
+                if (ct.isWideDecimalType())
+                {
+                    uint32_t precision = ct.precision;
+                    uint32_t scale = ct.scale;
+                    if (isAvg)
+                    {
+                        datatypes::Decimal::setScalePrecision4Avg(precision, scale);
+                    }
+                    ct.precision = precision;
+                    ct.scale = scale;
+                }
+                else
+                {
+                    ct.colDataType = CalpontSystemCatalog::LONGDOUBLE;
+                    ct.colWidth = sizeof(long double);
+                    if (isAvg)
+                    {
+                        ct.scale += datatypes::MAXSCALEINC4AVG;
+                    }
+                    ct.precision = datatypes::IGNOREPRECISION;
+                }
                 ac->resultType(ct);
             }
             else if (isp->sum_func() == Item_sum::COUNT_FUNC ||
@@ -4914,15 +4950,6 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                 ct.colDataType = CalpontSystemCatalog::BIGINT;
                 ct.colWidth = 8;
                 ct.scale = parm->resultType().scale;
-                ac->resultType(ct);
-            }
-            else if (isp->sum_func() == Item_sum::SUM_FUNC ||
-                     isp->sum_func() == Item_sum::SUM_DISTINCT_FUNC)
-            {
-                CalpontSystemCatalog::ColType ct = parm->resultType();
-                ct.colDataType = CalpontSystemCatalog::LONGDOUBLE;
-                ct.colWidth = sizeof(long double);
-                ct.precision = -1;
                 ac->resultType(ct);
             }
             else if (isp->sum_func() == Item_sum::STD_FUNC ||
@@ -4958,13 +4985,27 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                 ac->resultType(parm->resultType());
             }
         }
+        else if (bIsConst && hasDecimalConst && isAvg)
+        {
+            CalpontSystemCatalog::ColType ct = parm->resultType();
+            if (datatypes::Decimal::isWideDecimalTypeByPrecision(constValPrecision))
+            {
+                ct.precision = constValPrecision;
+                ct.scale = constValScale;
+                ct.colWidth = datatypes::MAXDECIMALWIDTH;
+            }
+            ac->resultType(ct);
+        }
         else
         {
             ac->resultType(colType_MysqlToIDB(isp));
         }
 
         // adjust decimal result type according to internalDecimalScale
-        if (gwi.internalDecimalScale >= 0 && ac->resultType().colDataType == CalpontSystemCatalog::DECIMAL)
+        bool isWideDecimal = ac->resultType().isWideDecimalType();
+        // This must be also valid for UDECIMAL
+        if (!isWideDecimal && gwi.internalDecimalScale >= 0
+            && ac->resultType().colDataType == CalpontSystemCatalog::DECIMAL)
         {
             CalpontSystemCatalog::ColType ct = ac->resultType();
             ct.scale = gwi.internalDecimalScale;
@@ -7308,7 +7349,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                     gwi.returnedCols[i]->hasAggregate(true);
             }
 
-            gwi.returnedCols[i]->resultType(dataconvert::DataConvert::convertUnionColType(coltypes));
+            gwi.returnedCols[i]->resultType(CalpontSystemCatalog::ColType::convertUnionColType(coltypes));
         }
     }
 
@@ -9058,7 +9099,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                     gwi.returnedCols[i]->hasAggregate(true);
             }
 
-            gwi.returnedCols[i]->resultType(dataconvert::DataConvert::convertUnionColType(coltypes));
+            gwi.returnedCols[i]->resultType(CalpontSystemCatalog::ColType::convertUnionColType(coltypes));
         }
     }
 

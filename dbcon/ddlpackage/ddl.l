@@ -156,6 +156,7 @@ REFERENCES {return REFERENCES;}
 RENAME {return RENAME;}
 RESTRICT {return RESTRICT;}
 SESSION_USER {return SESSION_USER;}
+SIGNED {return SIGNED;}
 SYSTEM_USER {return SYSTEM_USER;}
 SET {return SET;}
 SMALLINT {return SMALLINT;}
@@ -188,6 +189,7 @@ LONGTEXT {return LONGTEXT;}
 BOOL {return BOOL;}
 BOOLEAN {return BOOLEAN;}
 MEDIUMINT {return MEDIUMINT;}
+ZEROFILL {return ZEROFILL;}
 
 \n { lineno++;}
 

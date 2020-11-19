@@ -82,7 +82,26 @@ public:
     }
 };
 
+class pcfHasher128
+{
+public:
+    inline size_t operator()(const int128_t i) const
+    {
+        return *reinterpret_cast<const uint64_t*>(&i);
+    }
+};
+
+class pcfEqual128
+{
+public:
+    inline bool operator()(const int128_t f1, const int128_t f2) const
+    {
+        return f1 == f2;
+    }
+};
+
 typedef std::tr1::unordered_set<int64_t, pcfHasher, pcfEqual> prestored_set_t;
+typedef std::tr1::unordered_set<int128_t, pcfHasher128, pcfEqual128> prestored_set_t_128;
 typedef std::tr1::unordered_set<std::string, utils::Hasher> DictEqualityFilter;
 
 struct idb_regex_t
@@ -109,9 +128,11 @@ struct ParsedColumnFilter
 {
     ColumnFilterMode columnFilterMode;
     boost::shared_array<int64_t> prestored_argVals;
+    boost::shared_array<int128_t> prestored_argVals128;
     boost::shared_array<uint8_t> prestored_cops;
     boost::shared_array<uint8_t> prestored_rfs;
     boost::shared_ptr<prestored_set_t> prestored_set;
+    boost::shared_ptr<prestored_set_t_128> prestored_set_128;
     boost::shared_array<idb_regex_t> prestored_regex;
     uint8_t  likeOps;
 
@@ -308,6 +329,7 @@ private:
     int dict_OffsetIndex, currentOffsetIndex;		// used by p_dictionary
     int fDebugLevel;
     dbbc::Stats* fStatsPtr; // pointer for pmstats
+    // To be removed b/c always true
     bool logicalBlockMode;
 
     boost::shared_ptr<ParsedColumnFilter> parsedColumnFilter;

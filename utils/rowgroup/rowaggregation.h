@@ -605,7 +605,8 @@ public:
         return fResultDataVec;
     }
 
-    virtual void aggregateRow(Row& row);
+    virtual void aggregateRow(Row& row,
+                              std::vector<mcsv1sdk::mcsv1Context>* rgContextColl = nullptr);
     inline uint32_t aggMapKeyLength()
     {
         return fAggMapKeyCount;
@@ -619,19 +620,29 @@ public:
     {
         return fTimeZone;
     }
+    inline std::vector<mcsv1sdk::mcsv1Context>* rgContextColl()
+    {
+        return &fRGContextColl;
+    }
 
 protected:
     virtual void initialize();
     virtual void initMapData(const Row& row);
     virtual void attachGroupConcatAg();
 
-    virtual void updateEntry(const Row& row);
+    virtual void updateEntry(const Row& row,
+                             std::vector<mcsv1sdk::mcsv1Context>* rgContextColl = nullptr);
     virtual void doMinMax(const Row&, int64_t, int64_t, int);
     virtual void doSum(const Row&, int64_t, int64_t, int);
     virtual void doAvg(const Row&, int64_t, int64_t, int64_t);
     virtual void doStatistics(const Row&, int64_t, int64_t, int64_t);
     virtual void doBitOp(const Row&, int64_t, int64_t, int);
-    virtual void doUDAF(const Row&, int64_t, int64_t, int64_t, uint64_t& funcColsIdx);
+    virtual void doUDAF(const Row&,
+                        int64_t,
+                        int64_t,
+                        int64_t,
+                        uint64_t& funcColsIdx,
+                        std::vector<mcsv1sdk::mcsv1Context>* rgContextColl = nullptr);
     virtual bool countSpecial(const RowGroup* pRG)
     {
         fRow.setUintField<8>(fRow.getUintField<8>(0) + pRG->getRowCount(), 0);
@@ -645,6 +656,7 @@ protected:
     }
 
     void resetUDAF(RowUDAFFunctionCol* rowUDAF);
+    void resetUDAF(RowUDAFFunctionCol* rowUDAF, uint64_t funcColIdx);
 
     inline bool isNull(const RowGroup* pRowGroup, const Row& row, int64_t col);
     inline void makeAggFieldsNull(Row& row);
@@ -653,6 +665,7 @@ protected:
         copyRow(fNullRow, &row);
     }
 
+    inline void updateIntMinMax(int128_t* val1, int128_t* val2, int64_t col, int func);
     inline void updateIntMinMax(int64_t val1, int64_t val2, int64_t col, int func);
     inline void updateUintMinMax(uint64_t val1, uint64_t val2, int64_t col, int func);
     inline void updateCharMinMax(uint64_t val1, uint64_t val2, int64_t col, int func);
@@ -709,6 +722,7 @@ protected:
 
     // We need a separate copy for each thread.
     mcsv1sdk::mcsv1Context fRGContext;
+    std::vector<mcsv1sdk::mcsv1Context> fRGContextColl;
     
     // These are handy for testing the actual type of static_any for UDAF
     static const static_any::any& charTypeId;
@@ -717,6 +731,7 @@ protected:
     static const static_any::any& intTypeId;
     static const static_any::any& longTypeId;
     static const static_any::any& llTypeId;
+    static const static_any::any& int128TypeId;
     static const static_any::any& ucharTypeId;
     static const static_any::any& ushortTypeId;
     static const static_any::any& uintTypeId;
@@ -819,19 +834,21 @@ public:
         return fGroupConcat;
     }
 
-    void aggregateRow(Row&);
-    //void initialize();
+    void aggregateRow(Row&,
+                      std::vector<mcsv1sdk::mcsv1Context>* rgContextColl = nullptr) override;
     virtual void aggReset();
 
     void setInputOutput(const RowGroup& pRowGroupIn, RowGroup* pRowGroupOut);
 
 protected:
-    // virtual methods from base
-    void initialize();
-    void aggregateRowWithRemap(Row&);
+    void initialize() override;
+    void updateEntry(const Row& row,
+                     std::vector<mcsv1sdk::mcsv1Context>* rgContextColl = nullptr) override;
+
+    void aggregateRowWithRemap(Row&,
+                               std::vector<mcsv1sdk::mcsv1Context>* rgContextColl = nullptr);
 
     void attachGroupConcatAg();
-    void updateEntry(const Row& row);
     bool countSpecial(const RowGroup* pRG)
     {
         fRow.setIntField<8>(
@@ -944,12 +961,18 @@ public:
 
 protected:
     // virtual methods from base
-    void updateEntry(const Row& row);
+    void updateEntry(const Row& row,
+                     std::vector<mcsv1sdk::mcsv1Context>* rgContextColl = nullptr) override;
     void doAvg(const Row&, int64_t, int64_t, int64_t);
     void doStatistics(const Row&, int64_t, int64_t, int64_t);
     void doGroupConcat(const Row&, int64_t, int64_t);
     void doBitOp(const Row&, int64_t, int64_t, int);
-    void doUDAF(const Row&, int64_t, int64_t, int64_t, uint64_t& funcColsIdx);
+    void doUDAF(const Row&,
+                int64_t,
+                int64_t,
+                int64_t,
+                uint64_t& funcColsIdx,
+                std::vector<mcsv1sdk::mcsv1Context>* rgContextColl = nullptr) override;
     bool countSpecial(const RowGroup* pRG)
     {
         return false;
@@ -1017,8 +1040,8 @@ public:
     }
 
 protected:
-    // virtual methods from base
-    void updateEntry(const Row& row);
+    void updateEntry(const Row& row,
+                     std::vector<mcsv1sdk::mcsv1Context>* rgContextColl = nullptr) override;
 
     boost::shared_ptr<RowAggregation>   fAggregator;
     RowGroup                            fRowGroupDist;

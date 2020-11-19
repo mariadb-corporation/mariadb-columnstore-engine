@@ -95,7 +95,7 @@ string Func_char::getStrVal(Row& row,
     buf[0]= 0;
     char* pBuf = buf;
     CHARSET_INFO* cs = ct.getCharset();
-    int32_t value;
+    int32_t value = 0;
     int32_t numBytes = 0;
     for (uint32_t i = 0; i < parm.size(); ++i)
     {
@@ -135,14 +135,36 @@ string Func_char::getStrVal(Row& row,
             case execplan::CalpontSystemCatalog::UDECIMAL:
             {
                 IDB_Decimal d = rc->getDecimalVal(row, isNull);
-                double dscale = d.scale;
-                // get decimal and round up
-                value = d.value / pow(10.0, dscale);
-                int lefto = (d.value - value * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
-                if ( lefto > 4 )
-                    value++;
-                
+                if (ct.colWidth == datatypes::MAXDECIMALWIDTH)
+                {
+                    if (d.s128Value < 0)
+                        return "";
+
+                    int128_t scaleDivisor, scaleDivisor2;
+
+                    datatypes::getScaleDivisor(scaleDivisor, d.scale);
+
+                    scaleDivisor2 = (scaleDivisor <= 10) ? 1 : (scaleDivisor / 10);
+
+                    int128_t tmpval = d.s128Value / scaleDivisor;
+                    int128_t lefto = (d.s128Value - tmpval * scaleDivisor) / scaleDivisor2;
+
+                    if (lefto > 4)
+                        tmpval++;
+
+                    value = datatypes::Decimal::getInt32FromWideDecimal(tmpval);
+                }
+                else
+                {
+                    double dscale = d.scale;
+                    // get decimal and round up
+                    value = d.value / pow(10.0, dscale);
+                    int lefto = (d.value - value * pow(10.0, dscale)) / pow(10.0, dscale - 1);
+
+                    if ( lefto > 4 )
+                        value++;
+                }
             }
             break;
 
@@ -165,6 +187,7 @@ string Func_char::getStrVal(Row& row,
         
         numBytes += getChar(value, pBuf);
     }
+
     isNull = false;
     /* Check whether we got a well-formed string */
     MY_STRCOPY_STATUS status;

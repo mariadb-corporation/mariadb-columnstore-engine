@@ -106,17 +106,14 @@ struct cmpTuple
                     return true;
                 if (pUDAFa == pUDAFb)
                 {
-                    if (pUDAFa == NULL)
-                        return false;
                     std::vector<uint32_t>* paramKeysa = boost::get<3>(a);
                     std::vector<uint32_t>* paramKeysb = boost::get<3>(b);
-
+                    if (paramKeysa == NULL || paramKeysb == NULL)
+                        return false;
                     if (paramKeysa->size() < paramKeysb->size())
                         return true;
                     if (paramKeysa->size() == paramKeysb->size())
                     {
-                        if (paramKeysa == NULL)
-                            return false;
                         for (uint64_t i = 0; i < paramKeysa->size(); ++i)
                         {
                             if ((*paramKeysa)[i] < (*paramKeysb)[i])
@@ -343,6 +340,33 @@ string keyName(uint64_t i, uint32_t key, const joblist::JobInfo& jobInfo)
 namespace joblist
 {
 
+void wideDecimalOrLongDouble(const uint64_t colProj,
+    const CalpontSystemCatalog::ColDataType type,
+    const vector<uint32_t>& precisionProj,
+    const vector<uint32_t>& scaleProj,
+    const vector<uint32_t>& width,
+    vector<CalpontSystemCatalog::ColDataType>& typeAgg,
+    vector<uint32_t>& scaleAgg,
+    vector<uint32_t>& precisionAgg,
+    vector<uint32_t>& widthAgg)
+{
+    if ((type == CalpontSystemCatalog::DECIMAL
+        || type == CalpontSystemCatalog::UDECIMAL)
+        && datatypes::Decimal::isWideDecimalTypeByPrecision(precisionProj[colProj]))
+    {
+        typeAgg.push_back(type);
+        scaleAgg.push_back(scaleProj[colProj]);
+        precisionAgg.push_back(precisionProj[colProj]);
+        widthAgg.push_back(width[colProj]);
+    }
+    else
+    {
+        typeAgg.push_back(CalpontSystemCatalog::LONGDOUBLE);
+        scaleAgg.push_back(0);
+        precisionAgg.push_back(-1);
+        widthAgg.push_back(sizeof(long double));
+    }
+}
 
 TupleAggregateStep::TupleAggregateStep(
     const SP_ROWAGG_UM_t& agg,
@@ -717,25 +741,56 @@ void TupleAggregateStep::configDeliveredRowGroup(const JobInfo& jobInfo)
 
     // correct the scale
     vector<uint32_t> scale = fRowGroupOut.getScale();
+    vector<uint32_t> precision = fRowGroupOut.getPrecision();
 
-//    for (uint64_t i = 0; i < scale.size(); i++)
-//    {
-        // to support CNX_DECIMAL_SCALE the avg column's scale is coded with two scales:
-        // fe's avg column scale << 8 + original column scale
-        //if ((scale[i] & 0x0000FF00) > 0)
-//        scale[i] = scale[i] &  0x000000FF;
-//    }
-
-    size_t retColCount = jobInfo.nonConstDelCols.size();
+    size_t retColCount = 0;
+    auto scaleIter = scale.begin();
+    auto precisionIter = precision.begin();
 
     if (jobInfo.havingStep)
+    {
         retColCount = jobInfo.returnedColVec.size();
+
+        idbassert(jobInfo.returnedColVec.size() == jobInfo.nonConstCols.size());
+
+        for (size_t i = 0; i < jobInfo.nonConstCols.size() &&
+             scaleIter != scale.end(); i++)
+        {
+            const auto& colType = jobInfo.nonConstCols[i]->resultType();
+
+            if (colType.isWideDecimalType())
+            {
+                *scaleIter = colType.scale;
+                *precisionIter = colType.precision;
+            }
+
+            scaleIter++; precisionIter++;
+        }
+    }
+    else
+    {
+        retColCount = jobInfo.nonConstDelCols.size();
+
+        for (size_t i = 0; i < jobInfo.nonConstDelCols.size() &&
+             scaleIter != scale.end(); i++)
+        {
+            const auto& colType = jobInfo.nonConstDelCols[i]->resultType();
+
+            if (colType.isWideDecimalType())
+            {
+                *scaleIter = colType.scale;
+                *precisionIter = colType.precision;
+            }
+
+            scaleIter++; precisionIter++;
+        }
+    }
 
     vector<uint32_t>::const_iterator offsets0 = fRowGroupOut.getOffsets().begin();
     vector<CalpontSystemCatalog::ColDataType>::const_iterator types0 =
         fRowGroupOut.getColTypes().begin();
     vector<uint32_t> csNums = fRowGroupOut.getCharsetNumbers();
-    vector<uint32_t>::const_iterator precision0 = fRowGroupOut.getPrecision().begin();
+    vector<uint32_t>::const_iterator precision0 = precision.begin();
     fRowGroupDelivered = RowGroup(retColCount,
                                   vector<uint32_t>(offsets0, offsets0 + retColCount + 1),
                                   vector<uint32_t>(oids.begin(), oids.begin() + retColCount),
@@ -896,7 +951,6 @@ SJSTEP TupleAggregateStep::prepAggregate(SJSTEP& step, JobInfo& jobInfo)
     // preprocess the columns used by group_concat
     jobInfo.groupConcatInfo.prepGroupConcat(jobInfo);
     bool doUMOnly = jobInfo.groupConcatInfo.columns().size() > 0
-//                 || jobInfo.windowSet.size() > 0
                  || sas
                  || ces;
 
@@ -1304,13 +1358,13 @@ void TupleAggregateStep::prep1PhaseAggregate(
                     throw IDBExcept(emsg, ERR_AGGREGATE_TYPE_NOT_SUPPORT);
                 }
 
+                wideDecimalOrLongDouble(colProj, typeProj[colProj],
+                    precisionProj, scaleProj, width,
+                    typeAgg, scaleAgg, precisionAgg, widthAgg);
+
                 oidsAgg.push_back(oidsProj[colProj]);
                 keysAgg.push_back(key);
-                typeAgg.push_back(CalpontSystemCatalog::LONGDOUBLE);
                 csNumAgg.push_back(csNumProj[colProj]);
-                precisionAgg.push_back(-1);
-                widthAgg.push_back(sizeof(long double));
-                scaleAgg.push_back(0);
             }
             break;
 
@@ -1418,7 +1472,7 @@ void TupleAggregateStep::prep1PhaseAggregate(
         // find if this func is a duplicate
         AGG_MAP::iterator iter = aggFuncMap.find(boost::make_tuple(key, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL));
 
-        if (iter != aggFuncMap.end())
+        if (aggOp != ROWAGG_UDAF && aggOp != ROWAGG_MULTI_PARM && iter != aggFuncMap.end())
         {
             if (funct->fAggFunction == ROWAGG_AVG)
                 funct->fAggFunction = ROWAGG_DUP_AVG;
@@ -1460,7 +1514,7 @@ void TupleAggregateStep::prep1PhaseAggregate(
     }
 
     // there is avg(k), but no count(k) in the select list
-    uint64_t lastCol = returnedColVec.size();
+    uint64_t lastCol = outIdx;
 
     for (map<uint32_t, SP_ROWAGG_FUNC_t>::iterator k = avgFuncMap.begin(); k != avgFuncMap.end(); k++)
     {
@@ -1755,11 +1809,6 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                 throw logic_error(emsg.str());
             }
 
-            // skip sum / count(column) if avg is also selected
-//            if ((aggOp == ROWAGG_SUM || aggOp == ROWAGG_COUNT_COL_NAME) &&
-//                    (avgSet.find(aggKey) != avgSet.end()))
-//                continue;
-
             if (aggOp == ROWAGG_DISTINCT_SUM ||
                     aggOp == ROWAGG_DISTINCT_AVG ||
                     aggOp == ROWAGG_COUNT_DISTINCT_COL_NAME)
@@ -1807,8 +1856,12 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
             }
 
             // skip if this is a duplicate
-            if (aggFuncMap.find(boost::make_tuple(aggKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL)) != aggFuncMap.end())
+            if (aggOp != ROWAGG_UDAF && aggOp != ROWAGG_MULTI_PARM
+             && aggFuncMap.find(boost::make_tuple(aggKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL)) != aggFuncMap.end())
+            {
+                // skip if this is a duplicate
                 continue;
+            }
 
             functionVec1.push_back(funct);
             aggFuncMap.insert(make_pair(boost::make_tuple(aggKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL), colAgg));
@@ -3086,9 +3139,13 @@ void TupleAggregateStep::prep2PhasesAggregate(
             }
 
             // skip if this is a duplicate
-            if (aggFuncMap.find(boost::make_tuple(aggKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL)) != aggFuncMap.end())
+            if (aggOp != ROWAGG_UDAF && aggOp != ROWAGG_MULTI_PARM
+             && aggFuncMap.find(boost::make_tuple(aggKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL)) != aggFuncMap.end())
+            {
+                // skip if this is a duplicate
                 continue;
-
+            }
+            
             functionVecPm.push_back(funct);
             aggFuncMap.insert(make_pair(boost::make_tuple(aggKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL), colAggPm));
 
@@ -3129,13 +3186,13 @@ void TupleAggregateStep::prep2PhasesAggregate(
                         throw IDBExcept(emsg, ERR_AGGREGATE_TYPE_NOT_SUPPORT);
                     }
 
+                    wideDecimalOrLongDouble(colProj, typeProj[colProj],
+                        precisionProj, scaleProj, width,
+                        typeAggPm, scaleAggPm, precisionAggPm, widthAggPm);
+
                     oidsAggPm.push_back(oidsProj[colProj]);
                     keysAggPm.push_back(aggKey);
-                    typeAggPm.push_back(CalpontSystemCatalog::LONGDOUBLE);
                     csNumAggPm.push_back(8);
-                    scaleAggPm.push_back(0);
-                    precisionAggPm.push_back(-1);
-                    widthAggPm.push_back(sizeof(long double));
                     colAggPm++;
                 }
 
@@ -3418,13 +3475,13 @@ void TupleAggregateStep::prep2PhasesAggregate(
 
                         if (aggOp == ROWAGG_SUM)
                         {
-                            oidsAggUm.push_back(oidsAggPm[colPm]);
+                            wideDecimalOrLongDouble(colPm, typeProj[colPm],
+                                precisionProj, scaleProj, widthAggPm,
+                                typeAggUm, scaleAggUm, precisionAggUm, widthAggUm);
+
+                            oidsAggUm.push_back(oidsProj[colPm]);
                             keysAggUm.push_back(retKey);
-                            scaleAggUm.push_back(0);
-                            typeAggUm.push_back(CalpontSystemCatalog::LONGDOUBLE);
                             csNumAggUm.push_back(8);
-                            precisionAggUm.push_back(-1);
-                            widthAggUm.push_back(sizeof(long double));
                         }
                         else
                         {
@@ -3967,8 +4024,12 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
             }
 
             // skip if this is a duplicate
-            if (aggFuncMap.find(boost::make_tuple(aggKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL)) != aggFuncMap.end())
+            if (aggOp != ROWAGG_UDAF && aggOp != ROWAGG_MULTI_PARM
+             && aggFuncMap.find(boost::make_tuple(aggKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL)) != aggFuncMap.end())
+            {
+                // skip if this is a duplicate
                 continue;
+            }
 
             functionVecPm.push_back(funct);
             aggFuncMap.insert(make_pair(boost::make_tuple(aggKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL), colAggPm-multiParm));

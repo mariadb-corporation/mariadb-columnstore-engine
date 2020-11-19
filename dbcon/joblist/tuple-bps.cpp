@@ -838,8 +838,7 @@ void TupleBPS::storeCasualPartitionInfo(const bool estimateRowCounts)
             scanFlags[idx] = scanFlags[idx] &&
                              (ignoreCP || extent.partition.cprange.isValid != BRM::CP_VALID ||
                               lbidListVec[i]->CasualPartitionPredicate(
-                                  extent.partition.cprange.lo_val,
-                                  extent.partition.cprange.hi_val,
+                                  extent.partition.cprange,
                                   &(colCmd->getFilterString()),
                                   colCmd->getFilterCount(),
                                   colCmd->getColType(),
@@ -928,7 +927,8 @@ void TupleBPS::prepCasualPartitioning()
 {
     uint32_t i;
     int64_t min, max, seq;
-	boost::mutex::scoped_lock lk(cpMutex);
+    int128_t bigMin, bigMax;
+    boost::mutex::scoped_lock lk(cpMutex);
 
     for (i = 0; i < scannedExtents.size(); i++)
     {
@@ -938,8 +938,18 @@ void TupleBPS::prepCasualPartitioning()
 
             if (scanFlags[i] && lbidList->CasualPartitionDataType(fColType.colDataType,
                     fColType.colWidth))
-                lbidList->GetMinMax(min, max, seq, (int64_t) scannedExtents[i].range.start,
-                                    &scannedExtents, fColType.colDataType);
+            {
+                if (fColType.colWidth <= 8)
+                {
+                    lbidList->GetMinMax(min, max, seq, (int64_t) scannedExtents[i].range.start,
+                                        &scannedExtents, fColType.colDataType);
+                }
+                else if (fColType.colWidth == 16)
+                {
+                    lbidList->GetMinMax(bigMin, bigMax, seq, (int64_t) scannedExtents[i].range.start,
+                                        &scannedExtents, fColType.colDataType);
+                }
+            }
         }
         else
             scanFlags[i] = true;
@@ -1411,7 +1421,8 @@ void TupleBPS::sendJobs(const vector<Job>& jobs)
     }
 }
 
-bool TupleBPS::compareSingleValue(uint8_t COP, int64_t val1, int64_t val2) const
+template<typename T>
+bool TupleBPS::compareSingleValue(uint8_t COP, T val1, T val2) const
 {
     switch (COP)
     {
@@ -1526,7 +1537,8 @@ bool TupleBPS::processSingleFilterString_ranged(int8_t BOP, int8_t colWidth, int
     return ret;
 }
 
-bool TupleBPS::processSingleFilterString(int8_t BOP, int8_t colWidth, int64_t val, const uint8_t* filterString,
+template<typename T>
+bool TupleBPS::processSingleFilterString(int8_t BOP, int8_t colWidth, T val, const uint8_t* filterString,
         uint32_t filterCount) const
 {
     uint j;
@@ -1536,6 +1548,7 @@ bool TupleBPS::processSingleFilterString(int8_t BOP, int8_t colWidth, int64_t va
     {
         int8_t COP;
         int64_t val2;
+        int128_t bigVal2;
         bool thisPredicate;
         COP = *filterString++;
         filterString++;   // skip the round var, don't think that applies here
@@ -1562,11 +1575,20 @@ bool TupleBPS::processSingleFilterString(int8_t BOP, int8_t colWidth, int64_t va
                 filterString += 8;
                 break;
 
+            case 16:
+                bigVal2 = *((int128_t*) filterString);
+                filterString += 16;
+                break;
+
             default:
                 throw logic_error("invalid column width");
         }
 
-        thisPredicate = compareSingleValue(COP, val, val2);
+        // Assumption is that colWidth > 0
+        if (static_cast<uint8_t>(colWidth) < datatypes::MAXDECIMALWIDTH)
+            thisPredicate = compareSingleValue(COP, (int64_t) val, val2);
+        else
+            thisPredicate = compareSingleValue(COP, (int128_t) val, bigVal2);
 
         if (j == 0)
             ret = thisPredicate;
@@ -1580,7 +1602,8 @@ bool TupleBPS::processSingleFilterString(int8_t BOP, int8_t colWidth, int64_t va
     return ret;
 }
 
-bool TupleBPS::processOneFilterType(int8_t colWidth, int64_t value, uint32_t type) const
+template<typename T>
+bool TupleBPS::processOneFilterType(int8_t colWidth, T value, uint32_t type) const
 {
     const vector<SCommand>& filters = fBPP->getFilterSteps();
     uint i;
@@ -1671,9 +1694,13 @@ bool TupleBPS::processPseudoColFilters(uint32_t extentIndex, boost::shared_ptr<m
                && (!hasSegmentDirFilter || processOneFilterType(8, emEntry.partitionNum, PSEUDO_SEGMENTDIR))
                && (!hasExtentIDFilter || processOneFilterType(8, emEntry.range.start, PSEUDO_EXTENTID))
                && (!hasMaxFilter || (emEntry.partition.cprange.isValid == BRM::CP_VALID ?
-                                     processOneFilterType(emEntry.range.size, emEntry.partition.cprange.hi_val, PSEUDO_EXTENTMAX) : true))
+                                     (!fColType.isWideDecimalType() ?
+                                      processOneFilterType(emEntry.range.size, emEntry.partition.cprange.hiVal, PSEUDO_EXTENTMAX) :
+                                      processOneFilterType(fColType.colWidth, emEntry.partition.cprange.bigHiVal, PSEUDO_EXTENTMAX)) : true))
                && (!hasMinFilter || (emEntry.partition.cprange.isValid == BRM::CP_VALID ?
-                                     processOneFilterType(emEntry.range.size, emEntry.partition.cprange.lo_val, PSEUDO_EXTENTMIN) : true))
+                                     (!fColType.isWideDecimalType() ?
+                                      processOneFilterType(emEntry.range.size, emEntry.partition.cprange.loVal, PSEUDO_EXTENTMIN) :
+                                      processOneFilterType(fColType.colWidth, emEntry.partition.cprange.bigLoVal, PSEUDO_EXTENTMIN)) : true))
                && (!hasLBIDFilter || processLBIDFilter(emEntry))
                ;
     }
@@ -1685,9 +1712,13 @@ bool TupleBPS::processPseudoColFilters(uint32_t extentIndex, boost::shared_ptr<m
                || (hasSegmentDirFilter && processOneFilterType(8, emEntry.partitionNum, PSEUDO_SEGMENTDIR))
                || (hasExtentIDFilter && processOneFilterType(8, emEntry.range.start, PSEUDO_EXTENTID))
                || (hasMaxFilter && (emEntry.partition.cprange.isValid == BRM::CP_VALID ?
-                                    processOneFilterType(emEntry.range.size, emEntry.partition.cprange.hi_val, PSEUDO_EXTENTMAX) : false))
+                                    (!fColType.isWideDecimalType() ?
+                                     processOneFilterType(emEntry.range.size, emEntry.partition.cprange.hiVal, PSEUDO_EXTENTMAX) :
+                                     processOneFilterType(fColType.colWidth, emEntry.partition.cprange.bigHiVal, PSEUDO_EXTENTMAX)) : false))
                || (hasMinFilter && (emEntry.partition.cprange.isValid == BRM::CP_VALID ?
-                                    processOneFilterType(emEntry.range.size, emEntry.partition.cprange.lo_val, PSEUDO_EXTENTMIN) : false))
+                                    (!fColType.isWideDecimalType() ?
+                                     processOneFilterType(emEntry.range.size, emEntry.partition.cprange.loVal, PSEUDO_EXTENTMIN) :
+                                     processOneFilterType(fColType.colWidth, emEntry.partition.cprange.bigLoVal, PSEUDO_EXTENTMIN)) : false))
                || (hasLBIDFilter && processLBIDFilter(emEntry))
                ;
     }
@@ -1859,8 +1890,17 @@ abort:
 struct _CPInfo
 {
     _CPInfo(int64_t MIN, int64_t MAX, uint64_t l, bool val) : min(MIN), max(MAX), LBID(l), valid(val) { };
-    int64_t min;
-    int64_t max;
+    _CPInfo(int128_t BIGMIN, int128_t BIGMAX, uint64_t l, bool val) : bigMin(BIGMIN), bigMax(BIGMAX), LBID(l), valid(val) { };
+    union
+    {
+        int128_t bigMin;
+        int64_t min;
+    };
+    union
+    {
+        int128_t bigMax;
+        int64_t max;
+    };
     uint64_t LBID;
     bool valid;
 };
@@ -1878,8 +1918,9 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
     vector<RGData> fromPrimProc;
 
     bool validCPData;
-    int64_t min;
-    int64_t max;
+    bool hasBinaryColumn;
+    int128_t min;
+    int128_t max;
     uint64_t lbid;
     vector<_CPInfo> cpv;
     uint32_t cachedIO;
@@ -2154,7 +2195,7 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
 
                 fromPrimProc.clear();
                 fBPP->getRowGroupData(*bs, &fromPrimProc, &validCPData, &lbid, &min, &max,
-                                      &cachedIO, &physIO, &touchedBlocks, &unused, threadID);
+                                      &cachedIO, &physIO, &touchedBlocks, &unused, threadID, &hasBinaryColumn, fColType);
 
                 /* Another layer of messiness.  Need to refactor this fcn. */
                 while (!fromPrimProc.empty() && !cancelled())
@@ -2318,7 +2359,16 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
                     touchedBlocks_Thread += touchedBlocks;
 
                     if (fOid >= 3000 && ffirstStepType == SCAN && bop == BOP_AND)
-                        cpv.push_back(_CPInfo(min, max, lbid, validCPData));
+                    {
+                        if (fColType.colWidth <= 8)
+                        {
+                            cpv.push_back(_CPInfo((int64_t) min, (int64_t) max, lbid, validCPData));
+                        }
+                        else if (fColType.colWidth == 16)
+                        {
+                            cpv.push_back(_CPInfo(min, max, lbid, validCPData));
+                        }
+                    }
                 }  // end of the per-rowgroup processing loop
 
                 // insert the resulting rowgroup data from a single bytestream into dlp
@@ -2344,8 +2394,16 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
 
                 for (i = 0; i < size; i++)
                 {
-                    lbidList->UpdateMinMax(cpv[i].min, cpv[i].max, cpv[i].LBID, fColType.colDataType,
-                                           cpv[i].valid);
+                    if (fColType.colWidth > 8)
+                    {
+                        lbidList->UpdateMinMax(cpv[i].bigMin, cpv[i].bigMax, cpv[i].LBID, fColType.colDataType,
+                                               cpv[i].valid);
+                    }
+                    else
+                    {
+                        lbidList->UpdateMinMax(cpv[i].min, cpv[i].max, cpv[i].LBID, fColType.colDataType,
+                                               cpv[i].valid);
+                    }
                 }
 
                 cpMutex.unlock();
@@ -2619,7 +2677,7 @@ out:
         if (ffirstStepType == SCAN && bop == BOP_AND && !cancelled())
         {
             cpMutex.lock();
-            lbidList->UpdateAllPartitionInfo();
+            lbidList->UpdateAllPartitionInfo(fColType);
             cpMutex.unlock();
         }
     }
@@ -3155,7 +3213,8 @@ void TupleBPS::setJoinFERG(const RowGroup& rg)
     fBPP->setJoinFERG(rg);
 }
 
-void TupleBPS::addCPPredicates(uint32_t OID, const vector<int64_t>& vals, bool isRange)
+void TupleBPS::addCPPredicates(uint32_t OID, const vector<int128_t>& vals, bool isRange,
+                               bool isSmallSideWideDecimal)
 {
 
     if (fTraceFlags & CalpontSelectExecutionPlan::IGNORE_CP || fOid < 3000)
@@ -3163,6 +3222,7 @@ void TupleBPS::addCPPredicates(uint32_t OID, const vector<int64_t>& vals, bool i
 
     uint32_t i, j, k;
     int64_t min, max, seq;
+    int128_t bigMin, bigMax;
     bool isValid, intersection;
     vector<SCommand> colCmdVec = fBPP->getFilterSteps();
     ColumnCommandJL* cmd;
@@ -3186,7 +3246,9 @@ void TupleBPS::addCPPredicates(uint32_t OID, const vector<int64_t>& vals, bool i
 
         if (cmd != NULL && cmd->getOID() == OID)
         {
-            if (!ll.CasualPartitionDataType(cmd->getColType().colDataType, cmd->getColType().colWidth)
+            const execplan::CalpontSystemCatalog::ColType& colType = cmd->getColType();
+
+            if (!ll.CasualPartitionDataType(colType.colDataType, colType.colWidth)
                     || cmd->isDict())
                 return;
 
@@ -3213,25 +3275,73 @@ void TupleBPS::addCPPredicates(uint32_t OID, const vector<int64_t>& vals, bool i
                 extentsPtr = &mref;
             }
 
-            for (j = 0; j < extents.size(); j++)
+            if (colType.colWidth <= 8)
             {
-                isValid = ll.GetMinMax(&min, &max, &seq, extents[j].range.start, *extentsPtr,
-                                       cmd->getColType().colDataType);
-
-                if (isValid)
+                for (j = 0; j < extents.size(); j++)
                 {
-                    if (isRange)
-                        runtimeCPFlags[j] = ll.checkRangeOverlap(min, max, vals[0], vals[1],
-                                            cmd->getColType().colDataType) && runtimeCPFlags[j];
-                    else
+                    isValid = ll.GetMinMax(&min, &max, &seq, extents[j].range.start, *extentsPtr,
+                                           colType.colDataType);
+
+                    if (isValid)
                     {
-                        intersection = false;
+                        if (isRange)
+                        {
+                            if (!isSmallSideWideDecimal)
+                            {
+                                runtimeCPFlags[j] = ll.checkRangeOverlap(min, max, (int64_t) vals[0], (int64_t) vals[1],
+                                                    colType.colDataType) && runtimeCPFlags[j];
+                            }
+                            else
+                            {
+                                runtimeCPFlags[j] = ll.checkRangeOverlap((int128_t) min, (int128_t) max, vals[0], vals[1],
+                                                    colType.colDataType) && runtimeCPFlags[j];
+                            }
+                        }
+                        else
+                        {
+                            intersection = false;
 
-                        for (k = 0; k < vals.size(); k++)
-                            intersection = intersection ||
-                                           ll.checkSingleValue(min, max, vals[k], cmd->getColType().colDataType);
+                            for (k = 0; k < vals.size(); k++)
+                            {
+                                if (!isSmallSideWideDecimal)
+                                {
+                                    intersection = intersection ||
+                                                   ll.checkSingleValue(min, max, (int64_t) vals[k], colType.colDataType);
+                                }
+                                else
+                                {
+                                    intersection = intersection ||
+                                                   ll.checkSingleValue((int128_t) min, (int128_t) max, vals[k], colType.colDataType);
+                                }
+                            }
 
-                        runtimeCPFlags[j] = intersection && runtimeCPFlags[j];
+                            runtimeCPFlags[j] = intersection && runtimeCPFlags[j];
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (j = 0; j < extents.size(); j++)
+                {
+                    isValid = ll.GetMinMax(&bigMin, &bigMax, &seq, extents[j].range.start, *extentsPtr,
+                                           colType.colDataType);
+
+                    if (isValid)
+                    {
+                        if (isRange)
+                            runtimeCPFlags[j] = ll.checkRangeOverlap(bigMin, bigMax, vals[0], vals[1],
+                                                colType.colDataType) && runtimeCPFlags[j];
+                        else
+                        {
+                            intersection = false;
+
+                            for (k = 0; k < vals.size(); k++)
+                                intersection = intersection ||
+                                               ll.checkSingleValue(bigMin, bigMax, vals[k], colType.colDataType);
+
+                            runtimeCPFlags[j] = intersection && runtimeCPFlags[j];
+                        }
                     }
                 }
             }
@@ -3288,6 +3398,23 @@ void TupleBPS::abort()
     boost::mutex::scoped_lock scoped(boost::mutex);
     abort_nolock();
 }
+
+template
+bool TupleBPS::processOneFilterType<int64_t>(int8_t colWidth, int64_t value, uint32_t type) const;
+template
+bool TupleBPS::processOneFilterType<int128_t>(int8_t colWidth, int128_t value, uint32_t type) const;
+
+template
+bool TupleBPS::processSingleFilterString<int64_t>(int8_t BOP, int8_t colWidth, int64_t val, const uint8_t* filterString,
+                                                  uint32_t filterCount) const;
+template
+bool TupleBPS::processSingleFilterString<int128_t>(int8_t BOP, int8_t colWidth, int128_t val, const uint8_t* filterString,
+                                                   uint32_t filterCount) const;
+
+template
+bool TupleBPS::compareSingleValue<int64_t>(uint8_t COP, int64_t val1, int64_t val2) const;
+template
+bool TupleBPS::compareSingleValue<int128_t>(uint8_t COP, int128_t val1, int128_t val2) const;
 
 }   //namespace
 // vim:ts=4 sw=4:

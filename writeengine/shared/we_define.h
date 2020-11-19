@@ -36,6 +36,8 @@
 /** Namespace WriteEngine */
 namespace WriteEngine
 {
+// Max column size is 16 bytes since MCOL-641. However left this value
+// for backward compatibility
 const short MAX_COLUMN_BOUNDARY     = 8;        // Max bytes for one column
 const int   MAX_SIGNATURE_SIZE      = 8000;     // Max len of dict sig val
 const int   MAX_FIELD_SIZE          = 1000;     // Max len non-dict fld val
@@ -308,6 +310,7 @@ const int   ERR_BRM_GET_SHUTDOWN    = ERR_BRMBASE + 43;// error getting BRM Shut
 const int   ERR_BRM_SUSPEND         = ERR_BRMBASE + 44;// BRM is set to Suspend writes
 const int   ERR_BRM_GET_SUSPEND     = ERR_BRMBASE + 45;// error getting BRM Suspend flag
 const int   ERR_BRM_BAD_STRIPE_CNT  = ERR_BRMBASE + 46;// Incorrect num of cols allocated in stripe
+const int   ERR_BRM_UNSUPP_WIDTH    = ERR_BRMBASE + 47;// Non-dict column Width > allowed MAX.
 
 //--------------------------------------------------------------------------
 // DM error

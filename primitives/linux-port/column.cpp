@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016-2020 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -40,6 +41,8 @@ using namespace boost;
 #include "stats.h"
 #include "primproc.h"
 #include "dataconvert.h"
+#include "mcs_decimal.h"
+
 using namespace logging;
 using namespace dbbc;
 using namespace primitives;
@@ -274,6 +277,22 @@ template<int>
 inline bool isEmptyVal(uint8_t type, const uint8_t* val8);
 
 template<>
+inline bool isEmptyVal<32>(uint8_t type, const uint8_t* ival) // For BINARY
+{
+    std::cout << __func__ << " WARNING!!! Not implemented for 32 byte data types." << std::endl;
+    return false;
+}
+
+template<>
+inline bool isEmptyVal<16>(uint8_t type, const uint8_t* ival) // For BINARY
+{
+    const int128_t* val = reinterpret_cast<const int128_t*>(ival);
+    // Wide-DECIMAL supplies a universal NULL/EMPTY magics for all 16 byte
+    // data types.
+    return *val == datatypes::Decimal128Empty;
+}
+
+template<>
 inline bool isEmptyVal<8>(uint8_t type, const uint8_t* ival)
 {
     const uint64_t* val = reinterpret_cast<const uint64_t*>(ival);
@@ -393,6 +412,24 @@ inline bool isEmptyVal<1>(uint8_t type, const uint8_t* ival)
 
 template<int>
 inline bool isNullVal(uint8_t type, const uint8_t* val8);
+
+template<>
+inline bool isNullVal<16>(uint8_t type, const uint8_t* ival)
+{
+    const int128_t* val = reinterpret_cast<const int128_t*>(ival);
+    // Wide-DECIMAL supplies a universal NULL/EMPTY magics for all 16 byte
+    // data types.
+    return *val == datatypes::Decimal128Null;
+}
+
+template<>
+inline bool isNullVal<32>(uint8_t type, const uint8_t* ival)
+{
+
+    std::cout << __func__ << " WARNING!!! Not implemented for 32 byte data types."
+<< std::endl;
+    return false;
+}
 
 template<>
 inline bool isNullVal<8>(uint8_t type, const uint8_t* ival)
@@ -521,6 +558,9 @@ inline bool isNullVal(uint32_t length, uint8_t type, const uint8_t* val8)
 {
     switch (length)
     {
+        case 16:
+            return isNullVal<16>(type, val8);
+
         case 8:
             return isNullVal<8>(type, val8);
 
@@ -533,7 +573,8 @@ inline bool isNullVal(uint32_t length, uint8_t type, const uint8_t* val8)
         case 1:
             return isNullVal<1>(type, val8);
     };
-
+    std::cout << __func__ << " WARNING!!! Not implemented for " << length << " bytes data types." << std::endl;
+ 
     return false;
 }
 
@@ -576,7 +617,7 @@ inline bool isMinMaxValid(const NewColRequestHeader* in)
 
             case CalpontSystemCatalog::DECIMAL:
             case CalpontSystemCatalog::UDECIMAL:
-                return (in->DataSize <= 8);
+                return (in->DataSize <= datatypes::MAXDECIMALWIDTH);
 
             default:
                 return false;
@@ -597,8 +638,6 @@ inline string fixChar(int64_t intval)
 
 inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int type, uint8_t width, const idb_regex_t& regex, bool isNull = false)
 {
-// 	cout << "comparing " << hex << val1 << " to " << val2 << endl;
-
     if (COMPARE_NIL == COP) return false;
 
     //@bug 425 added isNull condition
@@ -647,9 +686,22 @@ inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int 
     }
 }
 
+inline bool colCompare(int128_t val1, int128_t val2, uint8_t COP, uint8_t rf, int type, uint8_t width, bool isNull = false)
+{
+    if (COMPARE_NIL == COP) return false;
+
+    /* isNullVal should work on the normalized value on little endian machines */
+    bool val2Null = isNullVal(width, type, (uint8_t*) &val2);
+
+    if (isNull == val2Null || (val2Null && COP == COMPARE_NE))
+        return colCompare_(val1, val2, COP, rf);
+    else
+        return false;
+}
+
 inline bool colCompareUnsigned(uint64_t val1, uint64_t val2, uint8_t COP, uint8_t rf, int type, uint8_t width, const idb_regex_t& regex, bool isNull = false)
 {
-// 	cout << "comparing unsigned" << hex << val1 << " to " << val2 << endl;
+    // 	cout << "comparing unsigned" << hex << val1 << " to " << val2 << endl;
 
     if (COMPARE_NIL == COP) return false;
 
@@ -703,7 +755,19 @@ inline void store(const NewColRequestHeader* in,
 
         switch (in->DataSize)
         {
+            case 32:
+                std::cout << __func__ << " WARNING!!! Not implemented for 32 byte data types." << std::endl;
+                break;
+
+            case 16:
+                ptr2 += (rid << 4);
+                memcpy(ptr1, ptr2, 16);
+                break;
+
             default:
+                std::cout << __func__ << " WARNING!!! unspecified column width." << std::endl;
+                // fallthrough
+
             case 8:
                 ptr2 += (rid << 3);
                 memcpy(ptr1, ptr2, 8);
@@ -724,7 +788,6 @@ inline void store(const NewColRequestHeader* in,
                 memcpy(ptr1, ptr2, 1);
                 break;
         }
-
         *written += in->DataSize;
     }
 
@@ -811,6 +874,66 @@ inline uint64_t nextUnsignedColValue(int type,
             return -1;
     }
 }
+template<int W>
+inline uint8_t* nextBinColValue(int type,
+                                     const uint16_t* ridArray,
+                                     int NVALS,
+                                     int* index,
+                                     bool* done,
+                                     bool* isNull,
+                                     bool* isEmpty,
+                                     uint16_t* rid,
+                                     uint8_t OutputType, uint8_t* val8, unsigned itemsPerBlk)
+{
+    if (ridArray == NULL)
+    {
+        while (static_cast<unsigned>(*index) < itemsPerBlk &&
+                isEmptyVal<W>(type, &val8[*index * W]) &&
+                (OutputType & OT_RID))
+        {
+            (*index)++;
+        }
+
+
+        if (static_cast<unsigned>(*index) >= itemsPerBlk)
+        {
+            *done = true;
+            return NULL;
+        }
+        *rid = (*index)++;
+    }
+    else
+    {
+        while (*index < NVALS &&
+            isEmptyVal<W>(type, &val8[ridArray[*index] * W]))
+        {
+            (*index)++;
+        }
+
+        if (*index >= NVALS)
+        {
+            *done = true;
+            return NULL;
+        }
+        *rid = ridArray[(*index)++];
+    }
+
+    uint32_t curValueOffset = *rid * W;
+
+    *isNull = isNullVal<W>(type, &val8[curValueOffset]);
+    *isEmpty = isEmptyVal<W>(type, &val8[curValueOffset]);
+    //cout << "nextColBinValue " << *index <<  " rowid " << *rid << endl;
+    // at this point, nextRid is the index to return, and index is...
+    //   if RIDs are not specified, nextRid + 1,
+    //	 if RIDs are specified, it's the next index in the rid array.
+    return &val8[curValueOffset];
+
+#ifdef PRIM_DEBUG
+            throw logic_error("PrimitiveProcessor::nextColBinValue() bad width");
+#endif
+            return NULL;
+}
+
 
 template<int W>
 inline int64_t nextColValue(int type,
@@ -1426,6 +1549,225 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
 #endif
 }
 
+// There are number of hardcoded type-dependant objects
+// that effectively makes this template int128-based only.
+// Use type based template method for Min,Max values.
+// prestored_set_128 must be a template with a type arg.
+template<int W, typename T>
+inline void p_Col_bin_ridArray(NewColRequestHeader* in,
+                           NewColResultHeader* out,
+                           unsigned outSize,
+                           unsigned* written, int* block, Stats* fStatsPtr, unsigned itemsPerBlk,
+                           boost::shared_ptr<ParsedColumnFilter> parsedColumnFilter)
+{
+    uint16_t* ridArray = 0;
+    uint8_t* in8 = reinterpret_cast<uint8_t*>(in);
+    const uint8_t filterSize = sizeof(uint8_t) + sizeof(uint8_t) + W;
+    idb_regex_t placeholderRegex;
+    placeholderRegex.used = false;
+
+    if (in->NVALS > 0)
+        ridArray = reinterpret_cast<uint16_t*>(&in8[sizeof(NewColRequestHeader) +
+                                                                           (in->NOPS * filterSize)]);
+
+    if (ridArray && 1 == in->sort )
+    {
+        qsort(ridArray, in->NVALS, sizeof(uint16_t), compareBlock<uint16_t>);
+
+        if (fStatsPtr)
+#ifdef _MSC_VER
+            fStatsPtr->markEvent(in->LBID, GetCurrentThreadId(), in->hdr.SessionID, 'O');
+
+#else
+            fStatsPtr->markEvent(in->LBID, pthread_self(), in->hdr.SessionID, 'O');
+#endif
+    }
+
+    // Set boolean indicating whether to capture the min and max values.
+    out->ValidMinMax = isMinMaxValid(in);
+
+    if (out->ValidMinMax)
+    {
+        // Assume that isUnsigned returns true for 8-bytes DTs only
+        if (isUnsigned((CalpontSystemCatalog::ColDataType)in->DataType))
+        {
+            out->Min = -1;
+            out->Max = 0;
+        }
+        else
+        {
+            out->Min = datatypes::Decimal::maxInt128;
+            out->Max = datatypes::Decimal::minInt128;
+        }
+    }
+    else
+    {
+        out->Min = 0;
+        out->Max = 0;
+    }
+
+    typedef char binWtype [W];
+
+    const ColArgs* args = NULL;
+    binWtype* bval;
+    int nextRidIndex = 0, argIndex = 0;
+    bool done = false, cmp = false, isNull = false, isEmpty = false;
+    uint16_t rid = 0;
+    prestored_set_t_128::const_iterator it;
+
+    binWtype* argVals = (binWtype*)alloca(in->NOPS * W);
+    uint8_t* std_cops = (uint8_t*)alloca(in->NOPS * sizeof(uint8_t));
+    uint8_t* std_rfs = (uint8_t*)alloca(in->NOPS * sizeof(uint8_t));
+    uint8_t* cops = NULL;
+    uint8_t* rfs = NULL;
+
+    scoped_array<idb_regex_t> std_regex;
+    idb_regex_t* regex = NULL;
+
+    // no pre-parsed column filter is set, parse the filter in the message
+    if (parsedColumnFilter.get() == NULL) {
+        std_regex.reset(new idb_regex_t[in->NOPS]);
+        regex = &(std_regex[0]);
+
+        cops = std_cops;
+        rfs = std_rfs;
+
+        for (argIndex = 0; argIndex < in->NOPS; argIndex++) {
+            args = reinterpret_cast<const ColArgs*> (&in8[sizeof (NewColRequestHeader) +
+                    (argIndex * filterSize)]);
+            cops[argIndex] = args->COP;
+            rfs[argIndex] = args->rf;
+
+            memcpy(argVals[argIndex],args->val, W);
+            regex[argIndex].used = false;
+        }
+    }
+    // we have a pre-parsed filter, and it's in the form of op and value arrays
+    else if (parsedColumnFilter->columnFilterMode == TWO_ARRAYS)
+    {
+        argVals = (binWtype*) parsedColumnFilter->prestored_argVals128.get();
+        cops = parsedColumnFilter->prestored_cops.get();
+        rfs = parsedColumnFilter->prestored_rfs.get();
+        regex = parsedColumnFilter->prestored_regex.get();
+    }
+
+    // else we have a pre-parsed filter, and it's an unordered set for quick == comparisons
+
+    bval = (binWtype*)nextBinColValue<W>(in->DataType, ridArray, in->NVALS, &nextRidIndex, &done, &isNull,
+                &isEmpty, &rid, in->OutputType, reinterpret_cast<uint8_t*>(block), itemsPerBlk);
+
+    T val;
+
+    while (!done)
+    {
+        val = *reinterpret_cast<T*>(bval);
+
+        if (cops == NULL)    // implies parsedColumnFilter && columnFilterMode == SET
+        {
+            /* bug 1920: ignore NULLs in the set and in the column data */
+            if (!(isNull && in->BOP == BOP_AND))
+            {
+
+                it = parsedColumnFilter->prestored_set_128->find(val);
+
+
+                if (in->BOP == BOP_OR)
+                {
+                    // assume COP == COMPARE_EQ
+                    if (it != parsedColumnFilter->prestored_set_128->end())
+                    {
+                        store(in, out, outSize, written, rid, reinterpret_cast<const uint8_t*>(block));
+                    }
+                }
+                else if (in->BOP == BOP_AND)
+                {
+                    // assume COP == COMPARE_NE
+                    if (it == parsedColumnFilter->prestored_set_128->end())
+                    {
+                        store(in, out, outSize, written, rid, reinterpret_cast<const uint8_t*>(block));
+                    }
+                }
+            }
+        }
+        else
+        {
+            for (argIndex = 0; argIndex < in->NOPS; argIndex++)
+            {
+                T filterVal = *reinterpret_cast<T*>(argVals[argIndex]);
+
+                cmp = colCompare(val, filterVal, cops[argIndex],
+                                 rfs[argIndex], in->DataType, W, isNull);
+
+                if (in->NOPS == 1)
+                {
+                    if (cmp == true)
+                    {
+                        store(in, out, outSize, written, rid, reinterpret_cast<const uint8_t*>(block));
+                    }
+                    break;
+                }
+                else if (in->BOP == BOP_AND && cmp == false)
+                {
+                    break;
+                }
+                else if (in->BOP == BOP_OR && cmp == true)
+                {
+                    store(in, out, outSize, written, rid, reinterpret_cast<const uint8_t*>(block));
+                    break;
+                }
+            }
+
+            if ((argIndex == in->NOPS && in->BOP == BOP_AND) || in->NOPS == 0)
+            {
+                store(in, out, outSize, written, rid, reinterpret_cast<const uint8_t*>(block));
+            }
+        }
+
+        // Set the min and max if necessary.  Ignore nulls.
+        if (out->ValidMinMax && !isNull && !isEmpty)
+        {
+
+            if (in->DataType == CalpontSystemCatalog::CHAR || in->DataType == CalpontSystemCatalog::VARCHAR)
+            {
+                // !!! colCompare is overloaded with int128_t only yet.
+                if (colCompare(out->Min, val, COMPARE_GT, false, in->DataType, W, placeholderRegex))
+                {
+                    out->Min = val;
+                }
+
+                if (colCompare(out->Max, val, COMPARE_LT, false, in->DataType, W, placeholderRegex))
+                {
+                    out->Max = val;
+                }
+            }
+            else
+            {
+                if (out->Min > val)
+                {
+                    out->Min = val;
+                }
+
+                if (out->Max < val)
+                {
+                    out->Max = val;
+                }
+            }
+        }
+
+        bval = (binWtype*)nextBinColValue<W>(in->DataType, ridArray, in->NVALS, &nextRidIndex, &done, &isNull,
+            &isEmpty, &rid, in->OutputType, reinterpret_cast<uint8_t*>(block), itemsPerBlk);
+
+    }
+
+    if (fStatsPtr)
+#ifdef _MSC_VER
+        fStatsPtr->markEvent(in->LBID, GetCurrentThreadId(), in->hdr.SessionID, 'K');
+
+#else
+        fStatsPtr->markEvent(in->LBID, pthread_self(), in->hdr.SessionID, 'K');
+#endif
+}
+
 } //namespace anon
 
 namespace primitives
@@ -1492,6 +1834,14 @@ void PrimitiveProcessor::p_Col(NewColRequestHeader* in, NewColResultHeader* out,
             p_Col_ridArray<1>(in, out, outSize, written, block, fStatsPtr, itemsPerBlk, parsedColumnFilter);
             break;
 
+        case 16:
+            p_Col_bin_ridArray<16, int128_t>(in, out, outSize, written, block, fStatsPtr, itemsPerBlk, parsedColumnFilter);
+            break;
+
+        case 32:
+            std::cout << __func__ << " WARNING!!! Not implemented for 32 byte data types." << std::endl;
+            // fallthrough
+
         default:
             idbassert(0);
             break;
@@ -1521,7 +1871,10 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter
     ret.reset(new ParsedColumnFilter());
 
     ret->columnFilterMode = TWO_ARRAYS;
-    ret->prestored_argVals.reset(new int64_t[filterCount]);
+    if (colWidth == datatypes::MAXDECIMALWIDTH)
+        ret->prestored_argVals128.reset(new int128_t[filterCount]);
+    else
+        ret->prestored_argVals.reset(new int64_t[filterCount]);
     ret->prestored_cops.reset(new uint8_t[filterCount]);
     ret->prestored_rfs.reset(new uint8_t[filterCount]);
     ret->prestored_regex.reset(new idb_regex_t[filterCount]);
@@ -1614,6 +1967,13 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter
                 case 8:
                     ret->prestored_argVals[argIndex] = *reinterpret_cast<const int64_t*>(args->val);
                     break;
+
+                case 16:
+                {
+                    datatypes::TSInt128::assignPtrPtr(&(ret->prestored_argVals128[argIndex]),
+                                                            args->val);
+                    break;
+                }
             }
         }
 
@@ -1642,12 +2002,24 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter
     if (convertToSet)
     {
         ret->columnFilterMode = UNORDERED_SET;
-        ret->prestored_set.reset(new prestored_set_t());
+        if (colWidth == datatypes::MAXDECIMALWIDTH)
+        {
+            ret->prestored_set_128.reset(new prestored_set_t_128());
 
-        // @bug 2584, use COMPARE_NIL for "= null" to allow "is null" in OR expression
-        for (argIndex = 0; argIndex < filterCount; argIndex++)
-            if (ret->prestored_rfs[argIndex] == 0)
-                ret->prestored_set->insert(ret->prestored_argVals[argIndex]);
+            // @bug 2584, use COMPARE_NIL for "= null" to allow "is null" in OR expression
+            for (argIndex = 0; argIndex < filterCount; argIndex++)
+                if (ret->prestored_rfs[argIndex] == 0)
+                    ret->prestored_set_128->insert(ret->prestored_argVals128[argIndex]);
+        }
+        else
+        {
+            ret->prestored_set.reset(new prestored_set_t());
+
+            // @bug 2584, use COMPARE_NIL for "= null" to allow "is null" in OR expression
+            for (argIndex = 0; argIndex < filterCount; argIndex++)
+                if (ret->prestored_rfs[argIndex] == 0)
+                    ret->prestored_set->insert(ret->prestored_argVals[argIndex]);
+        }
     }
 
     return ret;

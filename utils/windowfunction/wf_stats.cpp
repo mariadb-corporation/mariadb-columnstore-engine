@@ -55,7 +55,7 @@ namespace windowfunction
 
 
 template<typename T>
-boost::shared_ptr<WindowFunctionType> WF_stats<T>::makeFunction(int id, const string& name, int ct)
+boost::shared_ptr<WindowFunctionType> WF_stats<T>::makeFunction(int id, const string& name, int ct, WindowFunctionColumn* wc)
 {
     boost::shared_ptr<WindowFunctionType> func;
 
@@ -66,7 +66,6 @@ boost::shared_ptr<WindowFunctionType> WF_stats<T>::makeFunction(int id, const st
         case CalpontSystemCatalog::MEDINT:
         case CalpontSystemCatalog::INT:
         case CalpontSystemCatalog::BIGINT:
-        case CalpontSystemCatalog::DECIMAL:
         {
             func.reset(new WF_stats<int64_t>(id, name));
             break;
@@ -77,9 +76,27 @@ boost::shared_ptr<WindowFunctionType> WF_stats<T>::makeFunction(int id, const st
         case CalpontSystemCatalog::UMEDINT:
         case CalpontSystemCatalog::UINT:
         case CalpontSystemCatalog::UBIGINT:
-        case CalpontSystemCatalog::UDECIMAL:
         {
             func.reset(new WF_stats<uint64_t>(id, name));
+            break;
+        }
+
+        case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
+        {
+            decltype(datatypes::MAXDECIMALWIDTH) width =
+                wc->functionParms()[0]->resultType().colWidth;
+            if (width < datatypes::MAXDECIMALWIDTH)
+            {
+                if (ct == CalpontSystemCatalog::UDECIMAL)
+                    func.reset(new WF_stats<uint64_t>(id, name));
+                else
+                    func.reset(new WF_stats<int64_t>(id, name));
+            }
+            else if (width == datatypes::MAXDECIMALWIDTH)
+            {
+                func.reset(new WF_stats<int128_t>(id, name));
+            }
             break;
         }
 
@@ -177,17 +194,19 @@ void WF_stats<T>::operator()(int64_t b, int64_t e, int64_t c)
         {
             int scale = fRow.getScale(colIn);
             long double factor = pow(10.0, scale);
+            long double ldSum1 = fSum1;
+            long double ldSum2 = fSum2;
 
             // adjust the scale if necessary
             if (scale != 0 &&
                 cdt != CalpontSystemCatalog::LONGDOUBLE)
             {
-                fSum1 /= factor;
-                fSum2 /= factor * factor;
+                ldSum1 /= factor;
+                ldSum2 /= factor * factor;
             }
 
-            long double stat = fSum1 * fSum1 / fCount;
-            stat = fSum2 - stat;
+            long double stat = ldSum1 * ldSum1 / fCount;
+            stat = ldSum2 - stat;
 
             if (fFunctionId == WF__STDDEV_POP)
                 stat = sqrt(stat / fCount);
@@ -220,7 +239,7 @@ void WF_stats<T>::operator()(int64_t b, int64_t e, int64_t c)
 
 
 template
-boost::shared_ptr<WindowFunctionType> WF_stats<int64_t>::makeFunction(int, const string&, int);
+boost::shared_ptr<WindowFunctionType> WF_stats<int64_t>::makeFunction(int, const string&, int, WindowFunctionColumn*);
 
 
 }   //namespace

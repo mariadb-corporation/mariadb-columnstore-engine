@@ -121,6 +121,7 @@ usr/lib/*/libwindowfunction.so
 usr/lib/*/libwriteengine.so
 usr/lib/*/libwriteengineclient.so
 usr/lib/*/libwriteengineredistribute.so
+usr/lib/*/libdatatypes.so
 usr/lib/mysql/plugin/ha_columnstore.so
 usr/lib/mysql/plugin/libregr_mysql.so
 usr/lib/mysql/plugin/libudf_mysql.so

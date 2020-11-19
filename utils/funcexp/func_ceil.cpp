@@ -65,8 +65,15 @@ int64_t Func_ceil::getIntVal(Row& row,
         case CalpontSystemCatalog::MEDINT:
         case CalpontSystemCatalog::TINYINT:
         case CalpontSystemCatalog::SMALLINT:
-        case CalpontSystemCatalog::DECIMAL:
-        case CalpontSystemCatalog::UDECIMAL:
+        {
+            ret = parm[0]->data()->getIntVal(row, isNull);
+        }
+        break;
+
+        // ceil(decimal(X,Y)) leads to this path if X, Y allows to
+        // downcast to INT otherwise Func_ceil::getDecimalVal() is called
+        case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             if (op_ct.scale == 0)
             {
@@ -74,33 +81,48 @@ int64_t Func_ceil::getIntVal(Row& row,
                 break;
             }
 
-            IDB_Decimal decimal = parm[0]->data()->getDecimalVal(row, isNull);
+            IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
 
             if (isNull)
                 break;
 
-            ret = decimal.value;
-
             // negative scale is not supported by CNX yet
-            if (decimal.scale > 0)
+            if (d.scale > 0)
             {
-
-                if (decimal.scale >= 19)
+                if (d.scale > datatypes::INT128MAXPRECISION)
                 {
                     std::ostringstream oss;
-                    oss << "ceil: datatype of " << colDataTypeToString(op_ct.colDataType)
-                        << " with scale " << (int) decimal.scale << " is beyond supported scale";
+                    oss << "ceil: datatype of " << execplan::colDataTypeToString(op_ct.colDataType)
+                        << " with scale " << (int) d.scale << " is beyond supported scale";
                     throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
                 }
 
-                // Adjust to an int based on the scale.
-                int64_t tmp = ret;
-                ret /= helpers::powerOf10_c[decimal.scale];
+                if (op_ct.colWidth == datatypes::MAXDECIMALWIDTH)
+                {
+                    int128_t tmp = d.s128Value;
+                    int128_t scaleDivisor;
+                    datatypes::getScaleDivisor(scaleDivisor, d.scale);
+                    d.s128Value /= scaleDivisor;
 
-                // Add 1 if this is a positive number and there were values to the right of the
-                // decimal point so that we return the largest integer value not less than X.
-                if ((tmp - (ret * helpers::powerOf10_c[decimal.scale]) > 0))
-                    ret += 1;
+                    // Add 1 if this is a positive number and there were values to the right of the
+                    // decimal point so that we return the largest integer value not less than X.
+                    if ((tmp - (d.s128Value * scaleDivisor)) > 0)
+                        d.s128Value += 1;
+
+                    ret = datatypes::Decimal::getInt64FromWideDecimal(d.s128Value);
+                }
+                else
+                {
+                    int64_t tmp = d.value;
+                    d.value /= helpers::powerOf10_c[d.scale];
+
+                    // Add 1 if this is a positive number and there were values to the right of the
+                    // decimal point so that we return the largest integer value not less than X.
+                    if ((tmp - (d.value * helpers::powerOf10_c[d.scale])) > 0)
+                        d.value += 1;
+
+                    ret = d.value;
+                }
             }
         }
         break;
@@ -196,10 +218,65 @@ uint64_t Func_ceil::getUintVal(Row& row,
         case CalpontSystemCatalog::MEDINT:
         case CalpontSystemCatalog::TINYINT:
         case CalpontSystemCatalog::SMALLINT:
-        case CalpontSystemCatalog::DECIMAL:
-        case CalpontSystemCatalog::UDECIMAL:
         {
             ret = (uint64_t)parm[0]->data()->getIntVal(row, isNull);
+        }
+        break;
+
+        // ceil(decimal(X,Y)) leads to this path if X, Y allows to
+        // downcast to INT otherwise Func_ceil::getDecimalVal() is called
+        case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::UDECIMAL:
+        {
+            if (op_ct.scale == 0)
+            {
+                ret = parm[0]->data()->getIntVal(row, isNull);
+                break;
+            }
+
+            IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
+
+            if (isNull)
+                break;
+
+            // negative scale is not supported by CNX yet
+            if (d.scale > 0)
+            {
+                if (d.scale > datatypes::INT128MAXPRECISION)
+                {
+                    std::ostringstream oss;
+                    oss << "ceil: datatype of " << execplan::colDataTypeToString(op_ct.colDataType)
+                        << " with scale " << (int) d.scale << " is beyond supported scale";
+                    throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
+                }
+
+                if (op_ct.colWidth == datatypes::MAXDECIMALWIDTH)
+                {
+                    int128_t tmp = d.s128Value;
+                    int128_t scaleDivisor;
+                    datatypes::getScaleDivisor(scaleDivisor, d.scale);
+                    d.s128Value /= scaleDivisor;
+
+                    // Add 1 if this is a positive number and there were values to the right of the
+                    // decimal point so that we return the largest integer value not less than X.
+                    if ((tmp - (d.s128Value * scaleDivisor)) > 0)
+                        d.s128Value += 1;
+
+                    ret = datatypes::Decimal::getUInt64FromWideDecimal(d.s128Value);
+                }
+                else
+                {
+                    int64_t tmp = d.value;
+                    d.value /= helpers::powerOf10_c[d.scale];
+
+                    // Add 1 if this is a positive number and there were values to the right of the
+                    // decimal point so that we return the largest integer value not less than X.
+                    if ((tmp - (d.value * helpers::powerOf10_c[d.scale])) > 0)
+                        d.value += 1;
+
+                    ret = (uint64_t) d.value;
+                }
+            }
         }
         break;
 
@@ -308,6 +385,20 @@ double Func_ceil::getDoubleVal(Row& row,
     {
         ret = (double)ceill(parm[0]->data()->getLongDoubleVal(row, isNull));
     }
+    else if (op_ct.colDataType == CalpontSystemCatalog::DECIMAL ||
+             op_ct.colDataType == CalpontSystemCatalog::UDECIMAL)
+    {
+        IDB_Decimal tmp = getDecimalVal(row, parm, isNull, op_ct);
+
+        if (op_ct.colWidth == datatypes::MAXDECIMALWIDTH)
+        {
+            ret = datatypes::Decimal::getDoubleFromWideDecimal(tmp.s128Value);
+        }
+        else
+        {
+            ret = (double) tmp.value;
+        }
+    }
     else
     {
         if (isUnsigned(op_ct.colDataType))
@@ -349,6 +440,20 @@ long double Func_ceil::getLongDoubleVal(Row& row,
 
         if (!isNull)
             ret = ceil(strtod(str.c_str(), 0));
+    }
+    else if (op_ct.colDataType == CalpontSystemCatalog::DECIMAL ||
+             op_ct.colDataType == CalpontSystemCatalog::UDECIMAL)
+    {
+        IDB_Decimal tmp = getDecimalVal(row, parm, isNull, op_ct);
+
+        if (op_ct.colWidth == datatypes::MAXDECIMALWIDTH)
+        {
+            ret = datatypes::Decimal::getLongDoubleFromWideDecimal(tmp.s128Value);
+        }
+        else
+        {
+            ret = (long double) tmp.value;
+        }
     }
     else
     {
@@ -403,6 +508,20 @@ string Func_ceil::getStrVal(Row& row,
 
         *d = '\0';
     }
+    else if (op_ct.colDataType == CalpontSystemCatalog::DECIMAL ||
+             op_ct.colDataType == CalpontSystemCatalog::UDECIMAL)
+    {
+        IDB_Decimal d = getDecimalVal(row, parm, isNull, op_ct);
+
+        if (op_ct.colWidth == datatypes::MAXDECIMALWIDTH)
+        {
+            return d.toString(true);
+        }
+        else
+        {
+            return d.toString();
+        }
+    }
     else if (isUnsigned(op_ct.colDataType))
     {
 #ifndef __LP64__
@@ -421,6 +540,157 @@ string Func_ceil::getStrVal(Row& row,
     }
 
     return string(tmp);
+}
+
+
+IDB_Decimal Func_ceil::getDecimalVal(Row& row,
+                                      FunctionParm& parm,
+                                      bool& isNull,
+                                      CalpontSystemCatalog::ColType& op_ct)
+{
+    IDB_Decimal ret;
+
+    switch (op_ct.colDataType)
+    {
+        case execplan::CalpontSystemCatalog::BIGINT:
+        case execplan::CalpontSystemCatalog::INT:
+        case execplan::CalpontSystemCatalog::MEDINT:
+        case execplan::CalpontSystemCatalog::TINYINT:
+        case execplan::CalpontSystemCatalog::SMALLINT:
+        {
+            ret.value = parm[0]->data()->getIntVal(row, isNull);
+        }
+        break;
+
+        case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::UDECIMAL:
+        {
+            ret = parm[0]->data()->getDecimalVal(row, isNull);
+
+            if (isNull)
+                break;
+
+            // negative scale is not supported by CNX yet
+            if (ret.scale > 0)
+            {
+                if (ret.scale > datatypes::INT128MAXPRECISION)
+                {
+                    std::ostringstream oss;
+                    oss << "ceil: datatype of " << execplan::colDataTypeToString(op_ct.colDataType)
+                        << " with scale " << (int) ret.scale << " is beyond supported scale";
+                    throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
+                }
+
+                if (op_ct.colWidth == datatypes::MAXDECIMALWIDTH)
+                {
+                    int128_t tmp = ret.s128Value;
+                    int128_t scaleDivisor;
+                    datatypes::getScaleDivisor(scaleDivisor, ret.scale);
+                    ret.s128Value /= scaleDivisor;
+
+                    // Add 1 if this is a positive number and there were values to the right of the
+                    // decimal point so that we return the largest integer value not less than X.
+                    if ((tmp - (ret.s128Value * scaleDivisor)) > 0)
+                        ret.s128Value += 1;
+                }
+                else
+                {
+                    int64_t tmp = ret.value;
+                    ret.value /= helpers::powerOf10_c[ret.scale];
+
+                    // Add 1 if this is a positive number and there were values to the right of the
+                    // decimal point so that we return the largest integer value not less than X.
+                    if ((tmp - (ret.value * helpers::powerOf10_c[ret.scale])) > 0)
+                        ret.value += 1;
+                }
+            }
+        }
+        break;
+
+        case execplan::CalpontSystemCatalog::UBIGINT:
+        case execplan::CalpontSystemCatalog::UINT:
+        case execplan::CalpontSystemCatalog::UMEDINT:
+        case execplan::CalpontSystemCatalog::UTINYINT:
+        case execplan::CalpontSystemCatalog::USMALLINT:
+        {
+            ret.value = (int64_t)parm[0]->data()->getUintVal(row, isNull);
+        }
+        break;
+
+        case execplan::CalpontSystemCatalog::DOUBLE:
+        case execplan::CalpontSystemCatalog::UDOUBLE:
+        case execplan::CalpontSystemCatalog::FLOAT:
+        case execplan::CalpontSystemCatalog::UFLOAT:
+        {
+            ret.value = (int64_t) ceil(parm[0]->data()->getDoubleVal(row, isNull));
+        }
+        break;
+
+        case execplan::CalpontSystemCatalog::LONGDOUBLE:
+        {
+            ret.value = (int64_t) ceill(parm[0]->data()->getLongDoubleVal(row, isNull));
+        }
+        break;
+
+        case execplan::CalpontSystemCatalog::VARCHAR:
+        case execplan::CalpontSystemCatalog::CHAR:
+        case execplan::CalpontSystemCatalog::TEXT:
+        {
+            const string& str = parm[0]->data()->getStrVal(row, isNull);
+
+            if (!isNull)
+                ret.value = (int64_t) ceil(strtod(str.c_str(), 0));
+        }
+        break;
+
+        case CalpontSystemCatalog::DATE:
+        {
+            Date d (parm[0]->data()->getDateIntVal(row, isNull));
+
+            if (!isNull)
+                ret.value = d.convertToMySQLint();
+        }
+        break;
+
+        case CalpontSystemCatalog::DATETIME:
+        {
+            DateTime dt(parm[0]->data()->getDatetimeIntVal(row, isNull));
+
+            if (!isNull)
+                ret.value = dt.convertToMySQLint();
+        }
+        break;
+
+        case CalpontSystemCatalog::TIMESTAMP:
+        {
+            TimeStamp dt(parm[0]->data()->getTimestampIntVal(row, isNull));
+
+            if (!isNull)
+                ret.value = dt.convertToMySQLint(timeZone());
+        }
+        break;
+
+        case CalpontSystemCatalog::TIME:
+        {
+            Time dt(parm[0]->data()->getTimeIntVal(row, isNull));
+
+            if (!isNull)
+                ret.value = dt.convertToMySQLint();
+        }
+        break;
+
+        default:
+        {
+            std::ostringstream oss;
+            oss << "ceil: datatype of " << colDataTypeToString(op_ct.colDataType)
+                << " is not supported";
+            throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
+        }
+    }
+
+    ret.scale = 0;
+
+    return ret;
 }
 
 

@@ -18,6 +18,7 @@
 #include <sstream>
 #include <cstring>
 #include <stdexcept>
+#include "mcs_basic_types.h"
 #include "mcsv1_udaf.h"
 #include "bytestream.h"
 #include "objectreader.h"
@@ -151,7 +152,7 @@ const std::string mcsv1Context::toString() const
     std::ostringstream output;
     output << "mcsv1Context: " << getName() << std::endl;
     output << "  RunFlags=" << fRunFlags << " ContextFlags=" << fContextFlags << std::endl;
-    output << "  UserDataSize=" << fUserDataSize << " ResultType=" << colDataTypeToString(fResultType) << std::endl;
+    output << "  UserDataSize=" << fUserDataSize << " ResultType=" << execplan::colDataTypeToString(fResultType) << std::endl;
     output << "  Resultscale=" << fResultscale << " ResultPrecision=" << fResultPrecision << std::endl;
     output << "  ErrorMsg=" << errorMsg << std::endl;
     output << "  bInterrupted=" << bInterrupted << std::endl;
@@ -278,6 +279,7 @@ const static_any::any& mcsv1_UDAF::shortTypeId((short)1);
 const static_any::any& mcsv1_UDAF::intTypeId((int)1);
 const static_any::any& mcsv1_UDAF::longTypeId((long)1);
 const static_any::any& mcsv1_UDAF::llTypeId((long long)1);
+const static_any::any& mcsv1_UDAF::int128TypeId((int128_t)1);
 const static_any::any& mcsv1_UDAF::ucharTypeId((unsigned char)1);
 const static_any::any& mcsv1_UDAF::ushortTypeId((unsigned short)1);
 const static_any::any& mcsv1_UDAF::uintTypeId((unsigned int)1);

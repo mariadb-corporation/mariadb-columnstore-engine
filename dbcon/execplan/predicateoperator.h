@@ -120,6 +120,7 @@ public:
     void setOpType(Type& l, Type& r);
 
 private:
+    inline bool numericCompare(IDB_Decimal& op1, IDB_Decimal& op2);
     template <typename result_t>
     inline bool numericCompare(result_t op1, result_t op2);
     inline bool strTrimCompare(const std::string& op1, const std::string& op2);
@@ -127,6 +128,36 @@ private:
     const CHARSET_INFO* cs;
 };
 
+inline bool PredicateOperator::numericCompare(IDB_Decimal& op1, IDB_Decimal& op2)
+{
+    switch (fOp)
+    {
+        case OP_EQ:
+            return op1 == op2;
+
+        case OP_NE:
+            return op1 != op2;
+
+        case OP_GT:
+            return op1 > op2;
+
+        case OP_GE:
+            return op1 >= op2;
+
+        case OP_LT:
+            return op1 < op2;
+
+        case OP_LE:
+            return op1 <= op2;
+
+        default:
+        {
+            std::ostringstream oss;
+            oss << "invalid predicate operation: " << fOp;
+            throw logging::InvalidOperationExcept(oss.str());
+        }
+    }
+}
 
 template <typename result_t>
 inline bool PredicateOperator::numericCompare(result_t op1, result_t op2)

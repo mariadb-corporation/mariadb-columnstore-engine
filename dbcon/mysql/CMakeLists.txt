@@ -7,6 +7,7 @@ include_directories( ${ENGINE_COMMON_INCLUDES}
 
 
 SET ( libcalmysql_SRCS
+    ../../datatypes/mcs_datatype.cpp
     ha_mcs_sysvars.cpp
     ha_mcs_client_udfs.cpp
     ha_mcs_opt_rewrites.cpp

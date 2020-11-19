@@ -51,6 +51,7 @@ using namespace joblist;
 #include "aggregatecolumn.h"
 #include "constantfilter.h"
 #include "../../utils/windowfunction/windowfunction.h"
+#include "utils/common/branchpred.h"
 
 namespace execplan
 {
@@ -482,6 +483,7 @@ void SimpleColumn::setDerivedTable()
 
     // @todo make aggregate filter to having clause. not optimize it for now
     if (fDerivedRefCol &&
+            // WIP replace with typeid()
             (dynamic_cast<AggregateColumn*>(fDerivedRefCol) ||
              dynamic_cast<WindowFunctionColumn*>(fDerivedRefCol)))
         fDerivedTable = "";
@@ -500,6 +502,12 @@ bool SimpleColumn::singleTable(CalpontSystemCatalog::TableAliasName& tan)
 // @todo move to inline
 void SimpleColumn::evaluate(Row& row, bool& isNull)
 {
+    // WIP Move this block into an appropriate place
+    if (UNLIKELY((int)(fInputOffset == (uint32_t)-1)))
+    {
+        fInputOffset = row.getOffset(fInputIndex);
+    }
+
     bool isNull2 = row.isNullValue(fInputIndex);
 
     if (isNull2)
@@ -625,34 +633,39 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
         {
             switch (fResultType.colWidth)
             {
+                case 16:
+                {
+                    datatypes::TSInt128::assignPtrPtr(&fResult.decimalVal.s128Value,
+                                                            row.getBinaryField_offset<int128_t>(fInputOffset));
+                    break;
+                }
                 case 1:
                 {
                     fResult.decimalVal.value = row.getIntField<1>(fInputIndex);
-                    fResult.decimalVal.scale = (unsigned)fResultType.scale;
                     break;
                 }
 
                 case 2:
                 {
                     fResult.decimalVal.value = row.getIntField<2>(fInputIndex);
-                    fResult.decimalVal.scale = (unsigned)fResultType.scale;
                     break;
                 }
 
                 case 4:
                 {
                     fResult.decimalVal.value = row.getIntField<4>(fInputIndex);
-                    fResult.decimalVal.scale = (unsigned)fResultType.scale;
                     break;
                 }
 
                 default:
                 {
                     fResult.decimalVal.value = (int64_t)row.getUintField<8>(fInputIndex);
-                    fResult.decimalVal.scale = (unsigned)fResultType.scale;
                     break;
                 }
             }
+
+            fResult.decimalVal.scale = (unsigned)fResultType.scale;
+            fResult.decimalVal.precision = (unsigned)fResultType.precision;
 
             break;
         }
@@ -690,6 +703,15 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
             break;
         }
 
+        case CalpontSystemCatalog::BINARY:
+            
+        {
+            // WIP MCOL-641 Binary representation could contain \0.
+            std::string value(row.getBinaryField<char>(fInputIndex));
+            fResult.strVal.swap(value);
+            break;
+        }
+        
         default:	// treat as int64
         {
             fResult.intVal = row.getUintField<8>(fInputIndex);

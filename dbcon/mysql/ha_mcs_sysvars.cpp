@@ -160,6 +160,15 @@ static MYSQL_THDVAR_BOOL(
 );
 
 static MYSQL_THDVAR_BOOL(
+    decimal_overflow_check,
+    PLUGIN_VAR_NOCMDARG,
+    "Enable/disable for ColumnStore to check for overflow in arithmetic operation.",
+    NULL,
+    NULL,
+    0
+);
+
+static MYSQL_THDVAR_BOOL(
     ordered_only,
     PLUGIN_VAR_NOCMDARG,
     "Always use the first table in the from clause as the large side "
@@ -353,6 +362,7 @@ st_mysql_sys_var* mcs_system_variables[] =
   MYSQL_SYSVAR(diskjoin_bucketsize),
   MYSQL_SYSVAR(um_mem_limit),
   MYSQL_SYSVAR(double_for_decimal_math),
+  MYSQL_SYSVAR(decimal_overflow_check),
   MYSQL_SYSVAR(local_query),
   MYSQL_SYSVAR(use_import_for_batchinsert),
   MYSQL_SYSVAR(import_for_batchinsert_delimiter),
@@ -555,6 +565,15 @@ bool get_double_for_decimal_math(THD* thd)
 void set_double_for_decimal_math(THD* thd, bool value)
 {
     THDVAR(thd, double_for_decimal_math) = value;
+}
+
+bool get_decimal_overflow_check(THD* thd)
+{
+    return ( thd == NULL ) ? false : THDVAR(thd, decimal_overflow_check);
+}
+void set_decimal_overflow_check(THD* thd, bool value)
+{
+    THDVAR(thd, decimal_overflow_check) = value;
 }
 
 ulong get_local_query(THD* thd)

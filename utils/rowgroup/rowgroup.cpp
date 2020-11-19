@@ -42,11 +42,15 @@ using namespace execplan;
 
 #include "nullvaluemanip.h"
 #include "rowgroup.h"
+#include "dataconvert.h"
+#include "columnwidth.h"
 
 #include "collation.h"
 
 namespace rowgroup
 {
+
+using cscType = execplan::CalpontSystemCatalog::ColDataType;
 
 StringStore::StringStore() : empty(true), fUseStoreStringMutex(false) { }
 
@@ -628,7 +632,22 @@ string Row::toString() const
                     os << " " << dec;
                     break;
                 }
-
+                // WIP MCOL-641
+                case CalpontSystemCatalog::BINARY:
+                    std::cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << std::endl;
+                    break;
+                case CalpontSystemCatalog::DECIMAL:
+                case CalpontSystemCatalog::UDECIMAL:
+                    if (colWidths[i] == datatypes::MAXDECIMALWIDTH)
+                    {
+                        datatypes::VDecimal dec(0,
+                                                scale[i],
+                                                precision[i],
+                                                getBinaryField<int128_t>(i));
+                        os << dec << " ";
+                        break;
+                    }
+                    //fallthrough
                 default:
                     os << getIntField(i) << " ";
                     break;
@@ -690,6 +709,9 @@ string Row::toCSV() const
                     os << dec;
                     break;
                 }
+                case CalpontSystemCatalog::BINARY:
+                    std::cout << __FILE__<< __LINE__ << ":" << "toCSV"<< std::endl;
+                    //fallthrough
 
                 default:
                     os << getIntField(i);
@@ -797,7 +819,6 @@ void Row::initToNull()
                     default:
                         *((uint64_t*) &data[offsets[i]]) = *((uint64_t*) joblist::CPNULLSTRMARK.c_str());
                         memset(&data[offsets[i] + 8], 0, len - 8);
-                        //strcpy((char *) &data[offsets[i]], joblist::CPNULLSTRMARK.c_str());
                         break;
                 }
 
@@ -828,6 +849,9 @@ void Row::initToNull()
                         *((int32_t*) &data[offsets[i]]) = static_cast<int32_t>(joblist::INTNULL);
                         break;
 
+                    case 16 :
+                        datatypes::Decimal::setWideDecimalNullValue(reinterpret_cast<int128_t&>(data[offsets[i]]));
+                        break;
                     default:
                         *((int64_t*) &data[offsets[i]]) = static_cast<int64_t>(joblist::BIGINTNULL);
                         break;
@@ -852,6 +876,11 @@ void Row::initToNull()
             case CalpontSystemCatalog::UBIGINT:
                 *((uint64_t*) &data[offsets[i]]) = joblist::UBIGINTNULL;
                 break;
+            case CalpontSystemCatalog::BINARY:
+                {
+                    datatypes::Decimal::setWideDecimalNullValue(reinterpret_cast<int128_t&>(data[offsets[i]]));
+                }
+                break;
 
             default:
                 ostringstream os;
@@ -861,6 +890,84 @@ void Row::initToNull()
                 throw logic_error(os.str());
         }
     }
+}
+
+template<cscDataType cscDT, int width>
+inline bool Row::isNullValue_offset(uint32_t offset) const
+{
+    ostringstream os;
+    os << "Row::isNullValue(): got bad column type at offset(";
+    os << offset;
+    os << ").  Width=";
+    os << width << endl;
+    throw logic_error(os.str());
+}
+
+// WIP Method template resolution could impose some perf degradation
+// Compare perf with switch-case
+template<>
+inline bool 
+Row::isNullValue_offset<execplan::CalpontSystemCatalog::BINARY,32>(
+    uint32_t offset) const
+{
+    const uint64_t *intPtr = reinterpret_cast<const uint64_t*>(&data[offset]);
+    return ((intPtr[0] == static_cast<uint64_t>(utils::BINARYNULLVALUELOW)) &&
+        (intPtr[1] == static_cast<uint64_t>(utils::BINARYNULLVALUELOW)) &&
+        (intPtr[2] == static_cast<uint64_t>(utils::BINARYNULLVALUELOW)) &&
+        (intPtr[3] == static_cast<uint64_t>(utils::BINARYEMPTYVALUEHIGH)));
+}
+
+template<>
+inline bool 
+Row::isNullValue_offset<execplan::CalpontSystemCatalog::BINARY,16>(
+    uint32_t offset) const
+{
+    const int128_t *intPtr = reinterpret_cast<const int128_t*>(&data[offset]);
+    return  datatypes::Decimal::isWideDecimalNullValue (*intPtr);
+}
+
+template<>
+inline bool 
+Row::isNullValue_offset<execplan::CalpontSystemCatalog::DECIMAL,16>(
+    uint32_t offset) const
+{
+    const int128_t *intPtr = reinterpret_cast<const int128_t*>(&data[offset]);
+    return  datatypes::Decimal::isWideDecimalNullValue (*intPtr);
+}
+
+template<>
+inline bool
+Row::isNullValue_offset<execplan::CalpontSystemCatalog::DECIMAL,8>(
+    uint32_t offset) const
+{
+    return (*reinterpret_cast<int64_t*>(&data[offset])
+        == static_cast<int64_t>(joblist::BIGINTNULL));
+}
+
+template<>
+inline bool
+Row::isNullValue_offset<execplan::CalpontSystemCatalog::DECIMAL,4>(
+    uint32_t offset) const
+{
+    return (*reinterpret_cast<int32_t*>(&data[offset])
+        == static_cast<int32_t>(joblist::INTNULL));
+}
+
+template<>
+inline bool
+Row::isNullValue_offset<execplan::CalpontSystemCatalog::DECIMAL,2>(
+    uint32_t offset) const
+{
+    return (*reinterpret_cast<int16_t*>(&data[offset])
+        == static_cast<int16_t>(joblist::SMALLINTNULL));
+}
+
+template<>
+inline bool
+Row::isNullValue_offset<execplan::CalpontSystemCatalog::DECIMAL,1>(
+    uint32_t offset) const
+{
+    return (data[offset] == joblist::TINYINTNULL);
 }
 
 bool Row::isNullValue(uint32_t colIndex) const
@@ -934,7 +1041,6 @@ bool Row::isNullValue(uint32_t colIndex) const
                 case 8:
                     return
                         (*((uint64_t*) &data[offsets[colIndex]]) == joblist::CHAR8NULL);
-
                 default:
                     return (*((uint64_t*) &data[offsets[colIndex]]) == *((uint64_t*) joblist::CPNULLSTRMARK.c_str()));
             }
@@ -945,10 +1051,14 @@ bool Row::isNullValue(uint32_t colIndex) const
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
         {
-            uint32_t len = getColumnWidth(colIndex);
-
-            switch (len)
+            // WIP MCOL-641 Allmighty hack.
+            switch (getColumnWidth(colIndex))
             {
+                // MCOL-641
+                case 16:
+                    return isNullValue_offset
+                        <execplan::CalpontSystemCatalog::DECIMAL,16>(offsets[colIndex]);
+
                 case 1 :
                     return (data[offsets[colIndex]] == joblist::TINYINTNULL);
 
@@ -1004,6 +1114,15 @@ bool Row::isNullValue(uint32_t colIndex) const
             return (*((long double*) &data[offsets[colIndex]]) == joblist::LONGDOUBLENULL);
             break;
 
+        case CalpontSystemCatalog::BINARY:
+        {
+            const uint32_t len = 16;
+            uint32_t* lenPtr = const_cast<uint32_t*>(&len);
+            *lenPtr = getColumnWidth(colIndex);
+            return isNullValue_offset
+                <execplan::CalpontSystemCatalog::BINARY,len>(offsets[colIndex]);
+        }
+       
         default:
         {
             ostringstream os;
@@ -1055,10 +1174,11 @@ bool Row::equals(const Row& r2, const std::vector<uint32_t>& keyCols) const
     for (uint32_t i = 0; i < keyCols.size(); i++)
     {
         const uint32_t& col = keyCols[i];
+        cscDataType columnType = getColType(col);
 
-        if (UNLIKELY(getColType(col) == execplan::CalpontSystemCatalog::VARCHAR ||
-                     (getColType(col) == execplan::CalpontSystemCatalog::CHAR  && (colWidths[col] > 1)) ||
-                     getColType(col) == execplan::CalpontSystemCatalog::TEXT))
+        if (UNLIKELY(columnType == execplan::CalpontSystemCatalog::VARCHAR ||
+                     (columnType == execplan::CalpontSystemCatalog::CHAR  && (colWidths[col] > 1)) ||
+                      columnType == execplan::CalpontSystemCatalog::TEXT))
         {
             CHARSET_INFO* cs = getCharset(col);
             if (cs->strnncollsp(getStringPointer(col), getStringLength(col), 
@@ -1067,7 +1187,7 @@ bool Row::equals(const Row& r2, const std::vector<uint32_t>& keyCols) const
                 return false;
             }
         }
-        else if (UNLIKELY(getColType(col) == execplan::CalpontSystemCatalog::BLOB))
+        else if (UNLIKELY(columnType == execplan::CalpontSystemCatalog::BLOB))
         {
             if (getStringLength(col) != r2.getStringLength(col))
                 return false;
@@ -1077,13 +1197,20 @@ bool Row::equals(const Row& r2, const std::vector<uint32_t>& keyCols) const
         }
         else
         {
-            if (getColType(col) == execplan::CalpontSystemCatalog::LONGDOUBLE)
+            if (UNLIKELY(columnType == execplan::CalpontSystemCatalog::LONGDOUBLE))
             {
                 if (getLongDoubleField(col) != r2.getLongDoubleField(col))
                     return false;
             }
+            else if (UNLIKELY(datatypes::isWideDecimalType(columnType, colWidths[col])))
+            {
+                if (*getBinaryField<int128_t>(col) != *r2.getBinaryField<int128_t>(col))
+                    return false;
+            }
             else if (getUintField(col) != r2.getUintField(col))
+            {
                 return false;
+            }
         }
     }
 
@@ -1107,9 +1234,10 @@ bool Row::equals(const Row& r2, uint32_t lastCol) const
     // because binary equality is not equality for many charsets/collations
     for (uint32_t col = 0; col <= lastCol; col++)
     {
-        if (UNLIKELY(getColType(col) == execplan::CalpontSystemCatalog::VARCHAR ||
-                     (getColType(col) == execplan::CalpontSystemCatalog::CHAR  && (colWidths[col] > 1)) ||
-                     getColType(col) == execplan::CalpontSystemCatalog::TEXT))
+        cscDataType columnType = getColType(col);
+        if (UNLIKELY(columnType == execplan::CalpontSystemCatalog::VARCHAR ||
+                     (columnType == execplan::CalpontSystemCatalog::CHAR  && (colWidths[col] > 1)) ||
+                     columnType == execplan::CalpontSystemCatalog::TEXT))
         {
             CHARSET_INFO* cs = getCharset(col);
             if (cs->strnncollsp(getStringPointer(col), getStringLength(col), 
@@ -1118,7 +1246,7 @@ bool Row::equals(const Row& r2, uint32_t lastCol) const
                 return false;
             }
         }
-        else if (UNLIKELY(getColType(col) == execplan::CalpontSystemCatalog::BLOB))
+        else if (UNLIKELY(columnType == execplan::CalpontSystemCatalog::BLOB))
         {
             if (getStringLength(col) != r2.getStringLength(col))
                 return false;
@@ -1128,13 +1256,20 @@ bool Row::equals(const Row& r2, uint32_t lastCol) const
         }
         else
         {
-            if (getColType(col) == execplan::CalpontSystemCatalog::LONGDOUBLE)
+            if (UNLIKELY(columnType == execplan::CalpontSystemCatalog::LONGDOUBLE))
             {
                 if (getLongDoubleField(col) != r2.getLongDoubleField(col))
                     return false;
             }
+            else if (UNLIKELY(datatypes::isWideDecimalType(columnType, colWidths[col])))
+            {
+                if (*getBinaryField<int128_t>(col) != *r2.getBinaryField<int128_t>(col))
+                    return false;
+            }
             else if (getUintField(col) != r2.getUintField(col))
+            {
                 return false;
+            }
         }
     }        
     return true;
@@ -1509,11 +1644,17 @@ void applyMapping(const int* mapping, const Row& in, Row* out)
                 out->setVarBinaryField(in.getVarBinaryField(i), in.getVarBinaryLength(i), mapping[i]);
             else if (UNLIKELY(in.isLongString(i)))
                 out->setStringField(in.getStringPointer(i), in.getStringLength(i), mapping[i]);
-            //out->setStringField(in.getStringField(i), mapping[i]);
             else if (UNLIKELY(in.isShortString(i)))
                 out->setUintField(in.getUintField(i), mapping[i]);
             else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::LONGDOUBLE))
                 out->setLongDoubleField(in.getLongDoubleField(i), mapping[i]);
+            // WIP this doesn't look right b/c we can pushdown colType
+            // Migrate to offset based methods here
+            // code precision 2 width convertor
+            else if (UNLIKELY(datatypes::isWideDecimalType(in.getColTypes()[i],
+                                  in.getColumnWidth(i))))
+                    out->setBinaryField_offset(in.getBinaryField<int128_t>(i), 16,
+                        out->getOffset(mapping[i]));
             else if (in.isUnsigned(i))
                 out->setUintField(in.getUintField(i), mapping[i]);
             else
@@ -1624,7 +1765,8 @@ void RowGroup::addToSysDataList(execplan::CalpontSystemCatalog::NJLSysDataList& 
                         case 8:
                             cr->PutData(row.getUintField<8>(j));
                             break;
-
+                        case 16:
+                        
                         default:
                         {
                             string s = row.getStringField(j);
@@ -1645,6 +1787,9 @@ void RowGroup::addToSysDataList(execplan::CalpontSystemCatalog::NJLSysDataList& 
                     cr->PutData(row.getUintField<4>(j));
                     break;
 
+                case CalpontSystemCatalog::BINARY:
+                    std::cout << __FILE__<< __LINE__ << __func__<< std::endl;
+                //fallthrough
                 default:
                     cr->PutData(row.getIntField<8>(j));
             }

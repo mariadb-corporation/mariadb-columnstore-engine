@@ -42,7 +42,7 @@ public:
     WindowFunctionType* clone() const;
     void resetData();
 
-    static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int);
+    static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int, WindowFunctionColumn*);
 
 protected:
 

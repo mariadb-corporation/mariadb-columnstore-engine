@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* CopyrighT (C) 2014 InfiniDB, Inc.
    Copyright (c) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
@@ -50,112 +50,109 @@ using namespace joblist;
 #include "wf_sum_avg.h"
 
 
-#if 0
-namespace
-{
-
-template<typename T>
-void checkSumLimit(T sum, T val)
-{
-}
-
-
-template<>
-void checkSumLimit<int64_t>(int64_t sum, int64_t val)
-{
-    if (((sum >= 0) && ((numeric_limits<int64_t>::max() - sum) < val)) ||
-            ((sum <  0) && ((numeric_limits<int64_t>::min() - sum) > val)))
-    {
-        string errStr = "SUM(int):";
-
-        ostringstream oss;
-        oss << sum << "+" << val;
-
-        if (sum > 0)
-            oss << " > " << numeric_limits<uint64_t>::max();
-        else
-            oss << " < " << numeric_limits<uint64_t>::min();
-
-        errStr += oss.str();
-
-        errStr = IDBErrorInfo::instance()->errorMsg(ERR_WF_OVERFLOW, errStr);
-        cerr << errStr << endl;
-        throw IDBExcept(errStr, ERR_WF_OVERFLOW);
-    }
-}
-
-
-template<>
-void checkSumLimit<uint64_t>(uint64_t sum, uint64_t val)
-{
-    if ((sum >= 0) && ((numeric_limits<uint64_t>::max() - sum) < val))
-    {
-        string errStr = "SUM(unsigned):";
-
-        ostringstream oss;
-        oss << sum << "+" << val << " > " << numeric_limits<uint64_t>::max();
-        errStr += oss.str();
-
-        errStr = IDBErrorInfo::instance()->errorMsg(ERR_WF_OVERFLOW, errStr);
-        cerr << errStr << endl;
-        throw IDBExcept(errStr, ERR_WF_OVERFLOW);
-    }
-}
-
-
-template<>
-long double calculateAvg(long double sum, uint64_t count, int s)
-{
-   return sum / count;
-}
-
-long double avgWithLimit(long double sum, uint64_t count, int scale, long double u, long double l)
-{
-    long double factor = pow(10.0, scale);
-    long double avg = sum / count;
-    avg *= factor;
-    avg += (avg < 0) ? (-0.5) : (0.5);
-
-    if (avg > u || avg < l)
-    {
-        string errStr = string("AVG") + (l < 0 ? "(int):" : "(unsign)");
-        ostringstream oss;
-        oss << avg;
-        errStr += oss.str();
-
-        errStr = IDBErrorInfo::instance()->errorMsg(ERR_WF_OVERFLOW, errStr);
-        cerr << errStr << endl;
-        throw IDBExcept(errStr, ERR_WF_OVERFLOW);
-    }
-
-    return avg;
-}
-
-
-template<>
-int64_t calculateAvg<int64_t>(int64_t sum, uint64_t count, int scale)
-{
-    int64_t t = (int64_t) avgWithLimit(sum, count, scale,
-                                       numeric_limits<int64_t>::max(), numeric_limits<int64_t>::min());
-    return t;
-}
-
-
-template<>
-uint64_t calculateAvg<uint64_t>(uint64_t sum, uint64_t count, int scale)
-{
-    uint64_t t = (uint64_t) avgWithLimit(sum, count, scale, numeric_limits<uint64_t>::max(), 0);
-    return t;
-}
-
-}
-#endif
-
 namespace windowfunction
 {
 
-template<typename T>
-boost::shared_ptr<WindowFunctionType> WF_sum_avg<T>::makeFunction(int id, const string& name, int ct)
+template<typename T_IN, typename T_OUT>
+inline void WF_sum_avg<T_IN,T_OUT>::checkSumLimit(const T_IN& val,
+    const T_OUT& sum)
+{ }
+
+template<>
+inline void WF_sum_avg<int128_t,int128_t>::checkSumLimit(const int128_t& val, 
+    const int128_t& sum)
+{
+    datatypes::AdditionOverflowCheck ofCheckOp;
+    ofCheckOp(sum, val);
+}
+
+template<>
+inline void WF_sum_avg<long double,long double>::checkSumLimit(const long double& val, 
+    const long double& sum)
+{ }
+
+template<>
+inline void WF_sum_avg<float, long double>::checkSumLimit(const float&,
+    const long double&)
+{ }
+
+template<>
+inline void WF_sum_avg<long, long double>::checkSumLimit(const long&,
+    const long double&)
+{ }
+
+template<>
+inline void WF_sum_avg<unsigned long, long double>::checkSumLimit(const unsigned long&,
+    const long double&)
+{ }
+template<>
+inline void WF_sum_avg<double, long double>::checkSumLimit(const double&,
+    const long double&)
+{ }
+
+template<>
+void WF_sum_avg<int128_t,int128_t>::checkSumLimit(const int128_t&, const int128_t&);
+template<>
+void WF_sum_avg<long double,long double>::checkSumLimit(const long double& val, const long double&);
+template<>
+void WF_sum_avg<float, long double>::checkSumLimit(const float&, const long double&);
+template<>
+void WF_sum_avg<long, long double>::checkSumLimit(const long&, const long double&);
+template<>
+void WF_sum_avg<unsigned long, long double>::checkSumLimit(const unsigned long&,
+    const long double&);
+template<>
+void WF_sum_avg<double, long double>::checkSumLimit(const double&, const long double&);
+
+template<typename T_IN, typename T_OUT>
+int128_t WF_sum_avg<T_IN, T_OUT>::calculateAvg(const int128_t& sum,
+    const uint64_t count,
+    const int scale)
+{
+    int128_t avg = 0;
+    int128_t factor;
+    datatypes::getScaleDivisor(factor, scale);
+    if (scale > 0)
+    {
+        if ((sum * factor) / factor == sum)
+        {
+            avg = sum * factor;
+            avg /= count;
+        }
+        else
+        {
+            // scale won't fit before divide, we're gonna lose precision.
+            avg = sum / count;
+            if ((avg * factor) / factor != avg) // Still won't fit
+            {
+                string errStr = string("AVG(int)");
+                errStr = IDBErrorInfo::instance()->errorMsg(ERR_WF_OVERFLOW, errStr);
+                cerr << errStr << endl;
+                throw IDBExcept(errStr, ERR_WF_OVERFLOW);
+            }
+            avg *= factor;
+        }
+    }
+    else
+    {
+        avg = sum / count;
+    }
+    
+    avg += (avg < 0) ? (-0.5) : (0.5);
+    return avg;
+}
+
+template<typename T_IN, typename T_OUT>
+inline long double WF_sum_avg<T_IN, T_OUT>::calculateAvg(const long double& sum, 
+    const uint64_t count, 
+    const int scale)
+{
+    return sum / count;
+}
+
+// For the static function makeFunction, the template parameters are ignored
+template<typename T_IN, typename T_OUT>
+boost::shared_ptr<WindowFunctionType> WF_sum_avg<T_IN, T_OUT>::makeFunction(int id, const string& name, int ct, WindowFunctionColumn* wc)
 {
     boost::shared_ptr<WindowFunctionType> func;
     switch (ct)
@@ -165,9 +162,9 @@ boost::shared_ptr<WindowFunctionType> WF_sum_avg<T>::makeFunction(int id, const 
         case CalpontSystemCatalog::MEDINT:
         case CalpontSystemCatalog::INT:
         case CalpontSystemCatalog::BIGINT:
-        case CalpontSystemCatalog::DECIMAL:
         {
-            func.reset(new WF_sum_avg<int64_t>(id, name));
+            // Look into using int128_t instead of long double
+            func.reset(new WF_sum_avg<int64_t, long double>(id, name));
             break;
         }
 
@@ -176,29 +173,48 @@ boost::shared_ptr<WindowFunctionType> WF_sum_avg<T>::makeFunction(int id, const 
         case CalpontSystemCatalog::UMEDINT:
         case CalpontSystemCatalog::UINT:
         case CalpontSystemCatalog::UBIGINT:
-        case CalpontSystemCatalog::UDECIMAL:
         {
-            func.reset(new WF_sum_avg<uint64_t>(id, name));
+            func.reset(new WF_sum_avg<uint64_t, long double>(id, name));
             break;
         }
 
+        case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
+        {
+            decltype(datatypes::MAXDECIMALWIDTH) width =
+                wc->functionParms()[0]->resultType().colWidth;
+
+            if (width < datatypes::MAXDECIMALWIDTH)
+            {
+                if (ct == CalpontSystemCatalog::UDECIMAL)
+                    func.reset(new WF_sum_avg<uint64_t, int128_t>(id, name));
+                else
+                    func.reset(new WF_sum_avg<int64_t, int128_t>(id, name));
+            }
+            else if (width == datatypes::MAXDECIMALWIDTH)
+            {
+                func.reset(new WF_sum_avg<int128_t, int128_t>(id, name));
+            }
+            break;
+        }
+        
         case CalpontSystemCatalog::DOUBLE:
         case CalpontSystemCatalog::UDOUBLE:
         {
-            func.reset(new WF_sum_avg<double>(id, name));
+            func.reset(new WF_sum_avg<double, long double>(id, name));
             break;
         }
 
         case CalpontSystemCatalog::FLOAT:
         case CalpontSystemCatalog::UFLOAT:
         {
-            func.reset(new WF_sum_avg<float>(id, name));
+            func.reset(new WF_sum_avg<float, long double>(id, name));
             break;
         }
 
         case CalpontSystemCatalog::LONGDOUBLE:
         {
-            func.reset(new WF_sum_avg<long double>(id, name));
+            func.reset(new WF_sum_avg<long double, long double>(id, name));
             break;
         }
         default:
@@ -216,15 +232,15 @@ boost::shared_ptr<WindowFunctionType> WF_sum_avg<T>::makeFunction(int id, const 
 }
 
 
-template<typename T>
-WindowFunctionType* WF_sum_avg<T>::clone() const
+template<typename T_IN, typename T_OUT>
+WindowFunctionType* WF_sum_avg<T_IN, T_OUT>::clone() const
 {
-    return new WF_sum_avg<T>(*this);
+    return new WF_sum_avg<T_IN, T_OUT>(*this);
 }
 
 
-template<typename T>
-void WF_sum_avg<T>::resetData()
+template<typename T_IN, typename T_OUT>
+void WF_sum_avg<T_IN, T_OUT>::resetData()
 {
     fAvg = 0;
     fSum = 0;
@@ -235,8 +251,8 @@ void WF_sum_avg<T>::resetData()
 }
 
 
-template<typename T>
-void WF_sum_avg<T>::operator()(int64_t b, int64_t e, int64_t c)
+template<typename T_IN, typename T_OUT>
+void WF_sum_avg<T_IN, T_OUT>::operator()(int64_t b, int64_t e, int64_t c)
 {
     uint64_t colOut = fFieldIndex[0];
 
@@ -251,8 +267,7 @@ void WF_sum_avg<T>::operator()(int64_t b, int64_t e, int64_t c)
             e = c;
 
         uint64_t colIn = fFieldIndex[1];
-        double scale = fRow.getScale(colIn);
-
+        int scale = fRow.getScale(colOut) - fRow.getScale(colIn);
         for (int64_t i = b; i <= e; i++)
         {
             if (i % 1000 == 0 && fStep->cancelled())
@@ -263,34 +278,27 @@ void WF_sum_avg<T>::operator()(int64_t b, int64_t e, int64_t c)
             if (fRow.isNullValue(colIn) == true)
                 continue;
 
-            T valIn;
             CDT cdt;
-            getValue(colIn, valIn, &cdt);
-//            checkSumLimit(fSum, valIn);
+            getValue(colIn, fVal, &cdt);
 
-            if ((!fDistinct) || (fSet.find(valIn) == fSet.end()))
+            if ((!fDistinct) || (fSet.find(fVal) == fSet.end()))
             {
-                long double val = valIn;
-                if (scale && 
-                    cdt != CalpontSystemCatalog::LONGDOUBLE)
-                {
-                    val /= pow(10.0, scale);
-                }
-                fSum += val;
+                checkSumLimit(fVal, fSum);
+                fSum += (T_OUT)fVal;
                 fCount++;
 
                 if (fDistinct)
-                    fSet.insert(valIn);
+                    fSet.insert(fVal);
             }
         }
 
         if ((fCount > 0) && (fFunctionId == WF__AVG || fFunctionId == WF__AVG_DISTINCT))
         {
-            fAvg = fSum / fCount;
+            fAvg = calculateAvg(fSum, fCount, scale);
         }
     }
 
-    long double* v = NULL;
+    T_OUT* v = NULL;
 
     if (fCount > 0)
     {
@@ -307,7 +315,7 @@ void WF_sum_avg<T>::operator()(int64_t b, int64_t e, int64_t c)
 
 
 template
-boost::shared_ptr<WindowFunctionType> WF_sum_avg<int64_t>::makeFunction(int, const string&, int);
+boost::shared_ptr<WindowFunctionType> WF_sum_avg<int64_t, long double>::makeFunction(int, const string&, int, WindowFunctionColumn*);
 
 
 }   //namespace

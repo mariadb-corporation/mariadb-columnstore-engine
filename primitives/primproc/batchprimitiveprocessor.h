@@ -52,6 +52,7 @@
 #include "rowaggregation.h"
 #include "funcexpwrapper.h"
 #include "bppsendthread.h"
+#include "columnwidth.h"
 
 namespace primitiveprocessor
 {
@@ -204,15 +205,16 @@ private:
     uint64_t baseRid;		// first rid of the logical block
 
     uint16_t relRids[LOGICAL_BLOCK_RIDS];
-    int64_t  values[LOGICAL_BLOCK_RIDS];
+    int64_t values[LOGICAL_BLOCK_RIDS];
+    int128_t wide128Values[LOGICAL_BLOCK_RIDS];
     boost::scoped_array<uint64_t> absRids;
     boost::scoped_array<std::string> strValues;
     uint16_t ridCount;
     bool needStrValues;
+    uint16_t wideColumnsWidths;
 
     /* Common space for primitive data */
-    static const uint32_t BUFFER_SIZE = 65536;
-    uint8_t blockData[BLOCK_SIZE * 8];
+    uint8_t blockData[BLOCK_SIZE * utils::MAXCOLUMNWIDTH];
     boost::scoped_array<uint8_t> outputMsg;
     uint32_t outMsgSize;
 
@@ -228,9 +230,21 @@ private:
 
     bool hasScan;
     bool validCPData;
-    int64_t minVal, maxVal;    // CP data from a scanned column
-    uint64_t lbidForCP;
+    // CP data from a scanned column
+    union
+    {
+        int128_t min128Val;
+        int64_t minVal;
+    };
+    union
+    {
+        int128_t max128Val;
+        int64_t maxVal;
+    };
 
+    uint64_t lbidForCP;
+    bool hasWideColumnOut;
+    uint8_t wideColumnWidthOut;
     // IO counters
     boost::mutex counterLock;
     uint32_t busyLoaderCount;
@@ -262,6 +276,7 @@ private:
     bool filtOnString;
     boost::scoped_array<uint16_t> fFiltCmdRids[2];
     boost::scoped_array<int64_t> fFiltCmdValues[2];
+    boost::scoped_array<int128_t> fFiltCmdBinaryValues[2];
     boost::scoped_array<std::string> fFiltStrValues[2];
     uint64_t fFiltRidCount[2];
 

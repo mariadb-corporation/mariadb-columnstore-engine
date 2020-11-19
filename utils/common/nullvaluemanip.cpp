@@ -125,7 +125,10 @@ uint64_t getNullValue(CalpontSystemCatalog::ColDataType t, uint32_t colWidth)
 
         case CalpontSystemCatalog::UBIGINT:
             return joblist::UBIGINTNULL;
-
+  
+        case CalpontSystemCatalog::BINARY:
+            return joblist::BINARYNULLVALUELOW;
+                 
         case CalpontSystemCatalog::VARBINARY:
         default:
             ostringstream os;
@@ -198,7 +201,6 @@ int64_t getSignedNullValue(CalpontSystemCatalog::ColDataType t, uint32_t colWidt
                 default:
                     throw logic_error("getSignedNullValue() Can't return the NULL string");
             }
-
             break;
         }
 
@@ -216,8 +218,14 @@ int64_t getSignedNullValue(CalpontSystemCatalog::ColDataType t, uint32_t colWidt
                 case 4 :
                     return (int64_t) ((int32_t) joblist::INTNULL);
 
-                default:
+                case 8:
                     return joblist::BIGINTNULL;
+
+                default:
+                    ostringstream os;
+                    os << "getSignedNullValue(): got bad column width (" << t <<
+                       ").  Width=" << colWidth << endl;
+                    throw logic_error(os.str());
             }
 
             break;
@@ -239,6 +247,9 @@ int64_t getSignedNullValue(CalpontSystemCatalog::ColDataType t, uint32_t colWidt
         case CalpontSystemCatalog::LONGDOUBLE:
             return (int64_t)joblist::LONGDOUBLENULL;
 
+        case CalpontSystemCatalog::BINARY:
+            return (int64_t)joblist::BINARYNULLVALUELOW;
+            
         case CalpontSystemCatalog::VARBINARY:
         default:
             ostringstream os;

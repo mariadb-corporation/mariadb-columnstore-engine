@@ -29,8 +29,9 @@
 namespace windowfunction
 {
 
-
-template<typename T>
+// T_IN is the data type of the input values.
+// T_OUT is the data type we are using for output and internal values    
+template<typename T_IN, typename T_OUT>
 class WF_sum_avg : public WindowFunctionType
 {
 public:
@@ -45,16 +46,21 @@ public:
     WindowFunctionType* clone() const;
     void resetData();
 
-    static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int);
+    static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int, WindowFunctionColumn*);
 
 protected:
-    long double fAvg;
-    long double fSum;
+    T_IN        fVal;
+    T_OUT       fAvg;
+    T_OUT       fSum;
     uint64_t    fCount;
     bool        fDistinct;
-    std::set<T> fSet;
-};
+    std::set<T_IN> fSet;
 
+    void checkSumLimit(const T_IN& val, const T_OUT& sum);
+
+    int128_t calculateAvg(const int128_t& sum, const uint64_t count, const int scale);
+    long double calculateAvg(const long double& sum, const uint64_t count, const int scale);
+};
 
 } // namespace
 

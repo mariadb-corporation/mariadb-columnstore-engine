@@ -476,7 +476,9 @@ void TupleHashJoinStep::forwardCPData()
 
         for (col = 0; col < joiners[i]->getSmallKeyColumns().size(); col++)
         {
-            if (smallRGs[i].isLongString(joiners[i]->getSmallKeyColumns()[col]))
+            uint32_t idx = joiners[i]->getSmallKeyColumns()[col];
+
+            if (smallRGs[i].isLongString(idx))
                 continue;
 
             // @bug3683, not to add CP predicates if large side is not simple column
@@ -484,8 +486,12 @@ void TupleHashJoinStep::forwardCPData()
                     fFunctionJoinKeys.end())
                 continue;
 
+            bool isSmallSideWideDecimal =
+                datatypes::isWideDecimalType(smallRGs[i].getColType(idx), smallRGs[i].getColumnWidth(idx));
+
             largeBPS->addCPPredicates(largeRG.getOIDs()[joiners[i]->getLargeKeyColumns()[col]],
-                                      joiners[i]->getCPData()[col], !joiners[i]->discreteCPValues()[col]);
+                                      joiners[i]->getCPData()[col], !joiners[i]->discreteCPValues()[col],
+                                      isSmallSideWideDecimal);
         }
     }
 }

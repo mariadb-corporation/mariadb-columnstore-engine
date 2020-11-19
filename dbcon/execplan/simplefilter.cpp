@@ -219,6 +219,7 @@ const string SimpleFilter::data() const
              fRhs->resultType().colDataType == CalpontSystemCatalog::DATE ||
              fRhs->resultType().colDataType == CalpontSystemCatalog::DATETIME ||
              fRhs->resultType().colDataType == CalpontSystemCatalog::TIMESTAMP ||
+             fRhs->resultType().colDataType == CalpontSystemCatalog::BINARY ||
              fRhs->resultType().colDataType == CalpontSystemCatalog::TIME))
         rhs = "'" + SimpleFilter::escapeString(fRhs->data()) + "'";
     else
@@ -233,6 +234,7 @@ const string SimpleFilter::data() const
              fLhs->resultType().colDataType == CalpontSystemCatalog::DATE ||
              fLhs->resultType().colDataType == CalpontSystemCatalog::TIME ||
              fLhs->resultType().colDataType == CalpontSystemCatalog::TIMESTAMP ||
+             fLhs->resultType().colDataType == CalpontSystemCatalog::BINARY ||
              fLhs->resultType().colDataType == CalpontSystemCatalog::DATETIME))
         lhs = "'" + SimpleFilter::escapeString(fLhs->data()) + "'";
     else
