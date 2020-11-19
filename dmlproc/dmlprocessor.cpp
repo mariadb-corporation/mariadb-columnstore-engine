@@ -1097,8 +1097,6 @@ void PackageHandler::run()
     }
     catch (std::exception& e)
     {
-
-
         cout << "dmlprocessor.cpp PackageHandler::run() package type("
              << fPackageType << ") exception: " << e.what() << endl;
         logging::LoggingID lid(21);
@@ -1112,6 +1110,9 @@ void PackageHandler::run()
         ml.logErrorMessage(message);
         result.result = DMLPackageProcessor::COMMAND_ERROR;
         result.message = message;
+
+        DistributedEngineComm* dec = DistributedEngineComm::instance(frm);
+        dec->Setup();
     }
     catch (...)
     {

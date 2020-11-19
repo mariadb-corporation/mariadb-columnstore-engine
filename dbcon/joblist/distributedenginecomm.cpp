@@ -1054,7 +1054,10 @@ int DistributedEngineComm::writeToClient(size_t index, const ByteStream& bs, uin
         alarmItem.append(" PrimProc");
         alarmMgr.sendAlarmReport(alarmItem.c_str(), oam::CONN_FAILURE, SET);
         */
-        throw runtime_error("DistributedEngineComm::write: Broken Pipe error");
+
+        // Re-establish connection before throwing error 
+        Setup();
+        throw runtime_error("DistributedEngineComm::write: Broken Pipe error. Attempting to re-establish connection.");
     }
 }
 

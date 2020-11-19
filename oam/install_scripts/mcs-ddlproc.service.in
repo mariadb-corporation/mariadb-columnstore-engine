@@ -1,9 +1,6 @@
 [Unit]
 Description=mcs-ddlproc
-
-# restart/start mcs-ddlproc on restart/start of mcs-writeengineserver
-PartOf=mcs-writeengineserver.service
-After=network.target mcs-dmlproc.service
+After=network.target
 
 [Service]
 Type=forking
@@ -13,7 +10,7 @@ Group=@DEFAULT_GROUP@
 LimitNOFILE=65536
 LimitNPROC=65536
 
-ExecStart=/usr/bin/env bash -c "/bin/sleep 2 && @ENGINE_BINDIR@/DDLProc"
+ExecStart=@ENGINE_BINDIR@/DDLProc
 
 Restart=on-failure
 TimeoutStopSec=2

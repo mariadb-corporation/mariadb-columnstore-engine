@@ -1,9 +1,9 @@
 [Unit]
 Description=mcs-exemgr
 
-# restart/start mcs-exemgr on restart/start of mcs-primproc
-PartOf=mcs-primproc.service
-After=network.target mcs-primproc.service
+# restart/start mcs-exemgr on mcs-controllernode restart/start
+PartOf=mcs-controllernode.service
+After=network.target mcs-controllernode.service
 
 [Service]
 Type=forking
