@@ -1,9 +1,6 @@
 [Unit]
 Description=mcs-controllernode
-
-# restart/stop mcs-controllernode on restart/stop of mcs-workernode
-PartOf=mcs-workernode@1.service
-After=network.target mcs-workernode@1.service
+After=network.target
 
 [Service]
 Type=simple

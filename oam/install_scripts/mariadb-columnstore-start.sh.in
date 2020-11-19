@@ -15,7 +15,7 @@ flock -n "$fd_lock" || exit 0
 /bin/systemctl start mcs-exemgr
 /bin/systemctl start mcs-dmlproc
 /bin/systemctl start mcs-ddlproc
-sleep 2
+
 su -s /bin/sh -c '@ENGINE_BINDIR@/dbbuilder 7' @DEFAULT_USER@ 1> /tmp/columnstore_tmp_files/dbbuilder.log
 
 flock -u "$fd_lock"

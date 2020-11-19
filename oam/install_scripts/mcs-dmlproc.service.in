@@ -1,9 +1,9 @@
 [Unit]
 Description=mcs-dmlproc
 
-# restart/stop mcs-dmlproc on restart/stop of mcs-writeengineserver
-PartOf=mcs-writeengineserver.service
-After=network.target mcs-writeengineserver.service
+#restart/start mcs-dmlproc on mcs-controllernode restart/start
+PartOf=mcs-controllernode.service 
+After=network.target mcs-controllernode.service
 
 [Service]
 Type=simple
@@ -13,7 +13,7 @@ Group=@DEFAULT_GROUP@
 LimitNOFILE=65536
 LimitNPROC=65536
 
-ExecStart=/usr/bin/env bash -c "/bin/sleep 2 && @ENGINE_BINDIR@/DMLProc"
+ExecStart=@ENGINE_BINDIR@/DMLProc
 
 Restart=on-failure
 TimeoutStopSec=2
