@@ -546,7 +546,7 @@ Row::Row() : data(NULL), strings(NULL), userDataStore(NULL) { }
 Row::Row(const Row& r) : columnCount(r.columnCount), baseRid(r.baseRid),
     oldOffsets(r.oldOffsets), stOffsets(r.stOffsets),
     offsets(r.offsets), colWidths(r.colWidths), types(r.types), 
-    charsetNumbers(r.charsetNumbers), charsets(r.charsets),
+    charsets(r.charsets),
     data(r.data), scale(r.scale), precision(r.precision), strings(r.strings),
     useStringTable(r.useStringTable), hasCollation(r.hasCollation),
     hasLongStringField(r.hasLongStringField), sTableThreshold(r.sTableThreshold),
@@ -564,7 +564,6 @@ Row& Row::operator=(const Row& r)
     offsets = r.offsets;
     colWidths = r.colWidths;
     types = r.types;
-    charsetNumbers = r.charsetNumbers;
     charsets = r.charsets;
     data = r.data;
     scale = r.scale;
@@ -1275,14 +1274,6 @@ bool Row::equals(const Row& r2, uint32_t lastCol) const
     return true;
 }
 
-const CHARSET_INFO* Row::getCharset(uint32_t col) const
-{
-    if (charsets[col] == NULL)
-    {
-        const_cast<CHARSET_INFO**>(charsets)[col] = get_charset(charsetNumbers[col], MYF(MY_WME));
-    }
-    return charsets[col];
-}
 
 RowGroup::RowGroup() : columnCount(0), data(NULL), rgData(NULL), strings(NULL),
     useStringTable(true), hasCollation(false), hasLongStringField(false), sTableThreshold(20)
@@ -1301,7 +1292,7 @@ RowGroup::RowGroup(uint32_t colCount,
                    const vector<uint32_t>& roids,
                    const vector<uint32_t>& tkeys,
                    const vector<CalpontSystemCatalog::ColDataType>& colTypes,
-                   const vector<uint32_t>& csNumbers,
+                   const vector<CHARSET_INFO *>& csets,
                    const vector<uint32_t>& cscale,
                    const vector<uint32_t>& cprecision,
                    uint32_t stringTableThreshold,
@@ -1309,7 +1300,7 @@ RowGroup::RowGroup(uint32_t colCount,
                    const vector<bool>& forceInlineData
                   ) :
     columnCount(colCount), data(NULL), oldOffsets(positions), oids(roids), keys(tkeys),
-    types(colTypes), charsetNumbers(csNumbers), scale(cscale), precision(cprecision), rgData(NULL), strings(NULL),
+    types(colTypes), charsets(csets), scale(cscale), precision(cprecision), rgData(NULL), strings(NULL),
     sTableThreshold(stringTableThreshold)
 {
     uint32_t i;
@@ -1352,15 +1343,12 @@ RowGroup::RowGroup(uint32_t colCount,
 
     useStringTable = (stringTable && hasLongStringField);
     offsets = (useStringTable ? &stOffsets[0] : &oldOffsets[0]);
-    
-    // Set all the charsets to NULL for jit initialization.
-    charsets.insert(charsets.begin(), charsetNumbers.size(), NULL);
 }
 
 RowGroup::RowGroup(const RowGroup& r) :
     columnCount(r.columnCount), data(r.data), oldOffsets(r.oldOffsets),
     stOffsets(r.stOffsets), colWidths(r.colWidths),
-    oids(r.oids), keys(r.keys), types(r.types), charsetNumbers(r.charsetNumbers), 
+    oids(r.oids), keys(r.keys), types(r.types),
     charsets(r.charsets), scale(r.scale), precision(r.precision),
     rgData(r.rgData), strings(r.strings), useStringTable(r.useStringTable),
     hasCollation(r.hasCollation), hasLongStringField(r.hasLongStringField),
@@ -1385,7 +1373,6 @@ RowGroup& RowGroup::operator=(const RowGroup& r)
     oids = r.oids;
     keys = r.keys;
     types = r.types;
-    charsetNumbers = r.charsetNumbers;
     charsets = r.charsets;
     data = r.data;
     scale = r.scale;
@@ -1432,7 +1419,12 @@ void RowGroup::serialize(ByteStream& bs) const
     serializeInlineVector<uint32_t>(bs, oids);
     serializeInlineVector<uint32_t>(bs, keys);
     serializeInlineVector<CalpontSystemCatalog::ColDataType>(bs, types);
+
+    vector<uint32_t> charsetNumbers;
+    for (uint64_t i = 0 ; i < charsets.size() ; i++)
+        charsetNumbers.push_back(charsets[i]->number);
     serializeInlineVector<uint32_t>(bs, charsetNumbers);
+
     serializeInlineVector<uint32_t>(bs, scale);
     serializeInlineVector<uint32_t>(bs, precision);
     bs << (uint8_t) useStringTable;
@@ -1453,7 +1445,18 @@ void RowGroup::deserialize(ByteStream& bs)
     deserializeInlineVector<uint32_t>(bs, oids);
     deserializeInlineVector<uint32_t>(bs, keys);
     deserializeInlineVector<CalpontSystemCatalog::ColDataType>(bs, types);
+
+    vector<uint32_t> charsetNumbers;
     deserializeInlineVector<uint32_t>(bs, charsetNumbers);
+    charsets.clear();
+    for (uint64_t i = 0; i < charsetNumbers.size(); i++)
+    {
+        CHARSET_INFO *cs = get_charset(charsetNumbers[i], MYF(MY_WME));
+        if (!cs)
+          cs = &my_charset_latin1;
+        charsets.push_back(cs);
+    }
+
     deserializeInlineVector<uint32_t>(bs, scale);
     deserializeInlineVector<uint32_t>(bs, precision);
     bs >> tmp8;
@@ -1473,10 +1476,6 @@ void RowGroup::deserialize(ByteStream& bs)
         offsets = &stOffsets[0];
     else if (!useStringTable && !oldOffsets.empty())
         offsets = &oldOffsets[0];
-
-    // Set all the charsets to NULL for jit initialization.
-    charsets.insert(charsets.begin(), charsetNumbers.size(), NULL);
-    
 }
 
 void RowGroup::serializeRGData(ByteStream& bs) const
@@ -1799,14 +1798,6 @@ void RowGroup::addToSysDataList(execplan::CalpontSystemCatalog::NJLSysDataList& 
     }
 }
 
-const CHARSET_INFO* RowGroup::getCharset(uint32_t col)
-{
-    if (charsets[col] == NULL)
-    {
-        charsets[col] = get_charset(charsetNumbers[col], MYF(MY_WME));
-    }
-    return charsets[col];
-}
 
 void RowGroup::setDBRoot(uint32_t dbroot)
 {

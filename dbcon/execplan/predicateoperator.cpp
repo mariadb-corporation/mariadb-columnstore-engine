@@ -42,13 +42,11 @@ namespace execplan
 /**
  * Constructors/Destructors
  */
-PredicateOperator::PredicateOperator() :
-    cs(NULL)
+PredicateOperator::PredicateOperator()
 {
 }
 
-PredicateOperator::PredicateOperator(const string& operatorName) :
-    cs(NULL)
+PredicateOperator::PredicateOperator(const string& operatorName)
 {
     data(operatorName);
 }
@@ -56,7 +54,7 @@ PredicateOperator::PredicateOperator(const string& operatorName) :
 PredicateOperator::PredicateOperator(const PredicateOperator& rhs) : Operator(rhs)
 {
     data(rhs.data());
-    cs = rhs.getCharset();
+    setCharset(rhs.getCharset());
 }
 
 PredicateOperator:: ~PredicateOperator()
@@ -92,7 +90,6 @@ void PredicateOperator::unserialize(messageqcpp::ByteStream& b)
     ObjectReader::checkType(b, ObjectReader::PREDICATEOPERATOR);
     //b >> fData;
     Operator::unserialize(b);
-    cs = get_charset(fOperationType.charsetNumber, MYF(MY_WME));
 }
 
 bool PredicateOperator::operator==(const PredicateOperator& t) const
@@ -139,7 +136,7 @@ void PredicateOperator::setOpType(Type& l, Type& r)
         {
             case execplan::CalpontSystemCatalog::CHAR:
             case execplan::CalpontSystemCatalog::VARCHAR:
-                fOperationType.charsetNumber = r.charsetNumber;
+                fOperationType.setCharset(r.getCharset());
                 break;
 
             case execplan::CalpontSystemCatalog::DATETIME:
@@ -302,7 +299,7 @@ void PredicateOperator::setOpType(Type& l, Type& r)
                 ( (r.colDataType == execplan::CalpontSystemCatalog::CHAR && r.colWidth <= 8) ||
                   (r.colDataType == execplan::CalpontSystemCatalog::VARCHAR && r.colWidth < 8) ) )
         {
-            switch (fOperationType.charsetNumber) 
+            switch (fOperationType.getCharset()->number)
             {
                 case 8:  // latin1_swedish_ci
                 case 9:  // latin2_general_ci
@@ -342,12 +339,13 @@ void PredicateOperator::setOpType(Type& l, Type& r)
         fOperationType.colWidth = 8;
     }
 
-    cs = get_charset(fOperationType.charsetNumber, MYF(MY_WME));
+    setCharset(fOperationType.getCharset());
 }
 
 inline bool PredicateOperator::strTrimCompare(const std::string& op1, const std::string& op2)
 {
-    int r1 =  cs->strnncollsp(op1.c_str(), op1.length(), op2.c_str(), op2.length());
+    int r1 =  getCharset()->strnncollsp(op1.c_str(), op1.length(),
+                                        op2.c_str(), op2.length());
     switch (fOp)
     {
         case OP_EQ:

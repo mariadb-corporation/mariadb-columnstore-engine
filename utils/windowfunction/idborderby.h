@@ -253,14 +253,12 @@ public:
 
 // Comparators for non-fixed size types
 
-class StringCompare : public Compare
+class StringCompare : public Compare, public datatypes::Charset
 {
 public:
-    StringCompare(const IdbSortSpec& spec) : Compare(spec), cs(NULL) {}
+    StringCompare(const IdbSortSpec& spec) : Compare(spec), Charset(NULL) {}
 
     int operator()(IdbCompare*, rowgroup::Row::Pointer, rowgroup::Row::Pointer);
-    
-    CHARSET_INFO* cs;
 };
 
 // End of comparators for variable sized types

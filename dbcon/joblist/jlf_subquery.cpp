@@ -808,7 +808,7 @@ void addOrderByAndLimit(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
                 if (sc->isColumnStore() && !(dynamic_cast<PseudoColumn*>(sc)))
                 {
                     ct = jobInfo.csc->colType(sc->oid());
-                    ct.charsetNumber =sc->colType().charsetNumber;
+                    ct.setCharset(sc->colType());
                 }
 //X
                 dictOid = isDictCol(ct);

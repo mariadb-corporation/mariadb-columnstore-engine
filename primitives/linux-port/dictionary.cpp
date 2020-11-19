@@ -145,7 +145,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
     offsets = reinterpret_cast<const uint16_t*>(&niceBlock[10]);
     niceInput = reinterpret_cast<const uint8_t*>(h);
     
-    const CHARSET_INFO* cs = get_charset(h->charsetNumber, MYF(MY_WME));
+    const CHARSET_INFO* cs = h->getCharset();
 
     // if LIKE is an operator, compile regexp's in advance.
     if ((h->NVALS > 0 && h->COP1 & COMPARE_LIKE) ||
@@ -647,7 +647,7 @@ PrimitiveProcessor::makeLikeFilter (const DictFilterElement* filterString, uint3
 void PrimitiveProcessor::p_Dictionary(const DictInput* in, 
                                       vector<uint8_t>* out,
                                       bool skipNulls, 
-                                      uint32_t charsetNumber,
+                                      CHARSET_INFO *cs,
                                       boost::shared_ptr<DictEqualityFilter> eqFilter, 
                                       uint8_t eqOp)
 {
@@ -660,7 +660,6 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in,
     uint16_t aggCount;
     bool cmpResult;
     DictOutput header;
-    const CHARSET_INFO* cs = get_charset(charsetNumber, MYF(MY_WME));
 
     // default size of the ouput to something sufficiently large to prevent
     // excessive reallocation and copy when resizing

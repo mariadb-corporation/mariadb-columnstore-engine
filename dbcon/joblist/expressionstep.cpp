@@ -400,7 +400,7 @@ void ExpressionStep::populateColumnInfo(SimpleColumn* sc, JobInfo& jobInfo)
         if (dynamic_cast<PseudoColumn*>(sc) == NULL)
         {
             ct = jobInfo.csc->colType(sc->oid());
-            ct.charsetNumber =sc->colType().charsetNumber;
+            ct.setCharset(sc->colType());
         }
 //X
         if (ct.scale == 0)       // keep passed original ct for decimal type
@@ -530,7 +530,7 @@ void ExpressionStep::updateInputIndex(map<uint32_t, uint32_t>& indexMap, const J
                 if (dynamic_cast<PseudoColumn*>(sc) == NULL)
                 {
                     ct = jobInfo.csc->colType(oid);
-                    ct.charsetNumber =sc->colType().charsetNumber;
+                    ct.setCharset(sc->colType());
                 }
 
 //X

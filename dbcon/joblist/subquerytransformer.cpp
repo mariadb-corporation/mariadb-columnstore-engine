@@ -199,7 +199,7 @@ SJSTEP& SubQueryTransformer::makeSubQueryStep(execplan::CalpontSelectExecutionPl
     vector<uint32_t> scale;
     vector<uint32_t> precision;
     vector<CalpontSystemCatalog::ColDataType> types;
-    vector<uint32_t> csNums;
+    vector<CHARSET_INFO*> csets;
     pos.push_back(2);
 
     CalpontSystemCatalog::OID tblOid = fVtable.tableOid();
@@ -231,7 +231,7 @@ SJSTEP& SubQueryTransformer::makeSubQueryStep(execplan::CalpontSelectExecutionPl
             {
                 ct.colWidth = row.getColumnWidth(i);
                 ct.colDataType = row.getColTypes()[i];
-                ct.charsetNumber = row.getCharsetNumber(i);
+                ct.setCharset(row.getCharset(i));
                 ct.scale = row.getScale(i);
 
                 if (colDataTypeInRg != CalpontSystemCatalog::FLOAT &&
@@ -271,7 +271,7 @@ SJSTEP& SubQueryTransformer::makeSubQueryStep(execplan::CalpontSelectExecutionPl
             oids.push_back(ti.oid);
             keys.push_back(ti.key);
             types.push_back(ti.dtype);
-            csNums.push_back(ti.csNum);
+            csets.push_back(ti.getCharset());
             scale.push_back(ti.scale);
             precision.push_back(ti.precision);
         }
@@ -280,7 +280,7 @@ SJSTEP& SubQueryTransformer::makeSubQueryStep(execplan::CalpontSelectExecutionPl
             fVtable.columnType(i);
     }
 
-    RowGroup rg1(oids.size(), pos, oids, keys, types, csNums, scale, precision, csep->stringTableThreshold());
+    RowGroup rg1(oids.size(), pos, oids, keys, types, csets, scale, precision, csep->stringTableThreshold());
     rg1.setUseStringTable(rg.usesStringTable());
 
     dynamic_cast<SubQueryStep*>(fSubQueryStep.get())->setOutputRowGroup(rg1);

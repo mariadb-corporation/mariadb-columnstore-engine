@@ -330,16 +330,16 @@ int StringCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
         const char* s1 = (const char*)l->row1().getStringPointer(fSpec.fIndex);
         const char* s2 = (const char*)l->row2().getStringPointer(fSpec.fIndex);
 
-        if (!cs)
-            cs = l->rowGroup()->getCharset(fSpec.fIndex);
+        if (!getCharset())
+            setCharset(l->rowGroup()->getCharset(fSpec.fIndex));
         
-        if (cs->state & MY_CS_BINSORT)
+        if (getCharset()->state & MY_CS_BINSORT)
         {
             ret = fSpec.fAsc * strncmp(s1, s2, max(len1,len2));
         }
         else
         {
-            ret = fSpec.fAsc * cs->strnncoll(s1, len1, s2, len2);
+            ret = fSpec.fAsc * getCharset()->strnncoll(s1, len1, s2, len2);
         }
     }
 

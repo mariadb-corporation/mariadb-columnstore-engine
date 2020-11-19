@@ -201,7 +201,7 @@ void TupleAnnexStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
         vector<uint32_t> scale, scaleIn = rgIn.getScale();
         vector<uint32_t> precision, precisionIn = rgIn.getPrecision();
         vector<CalpontSystemCatalog::ColDataType> types, typesIn = rgIn.getColTypes();
-        vector<uint32_t> csNums, csNumsIn = rgIn.getCharsetNumbers();
+        vector<CHARSET_INFO*> csets, csetsIn = rgIn.getCharsets();
         vector<uint32_t> pos, posIn = rgIn.getOffsets();
         size_t n = jobInfo.nonConstDelCols.size();
 
@@ -211,10 +211,10 @@ void TupleAnnexStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
         scale.insert(scale.end(), scaleIn.begin(), scaleIn.begin() + n);
         precision.insert(precision.end(), precisionIn.begin(), precisionIn.begin() + n);
         types.insert(types.end(), typesIn.begin(), typesIn.begin() + n);
-        csNums.insert(csNums.end(), csNumsIn.begin(), csNumsIn.begin() + n);
+        csets.insert(csets.end(), csetsIn.begin(), csetsIn.begin() + n);
         pos.insert(pos.end(), posIn.begin(), posIn.begin() + n + 1);
 
-        fRowGroupOut = RowGroup(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold);
+        fRowGroupOut = RowGroup(oids.size(), pos, oids, keys, types, csets, scale, precision, jobInfo.stringTableThreshold);
     }
     else
     {

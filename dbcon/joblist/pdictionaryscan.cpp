@@ -504,7 +504,7 @@ void pDictionaryScan::sendAPrimitiveMessage(
     hdr.NVALS             = fFilterCount;
     hdr.Count             = msgLbidCount;
     hdr.CompType          = fColType.ddn.compressionType;
-    hdr.charsetNumber     = fColType.charsetNumber;
+    hdr.setCharset(fColType);
     idbassert(hdr.Count > 0);
 
     if (isEquality)

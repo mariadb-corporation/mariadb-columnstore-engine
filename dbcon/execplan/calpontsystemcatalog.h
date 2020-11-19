@@ -202,7 +202,8 @@ public:
      *
      * defaultValue is only meaningful when constraintType == DEFAULT_CONSTRAINT
      */
-    struct ColType: public datatypes::SystemCatalog::TypeHolderStd
+    struct ColType: public datatypes::SystemCatalog::TypeHolderStd,
+                    public datatypes::Charset
     {
         ColType();
         ConstraintType constraintType;
@@ -213,34 +214,12 @@ public:
         OID columnOID;
         bool	 autoincrement; //set to true if  SYSCOLUMN autoincrement is �y�
         uint64_t nextvalue; //next autoincrement value
-        uint32_t charsetNumber;
-        const CHARSET_INFO* cs;
-
         ColType(const ColType& rhs);
 
-        CHARSET_INFO* getCharset();
         // for F&E use. only serialize necessary info for now
-        void serialize (messageqcpp::ByteStream& b) const
-        {
-            b << (uint32_t)colDataType;
-            b << (uint32_t)colWidth;
-            b << (uint32_t)scale;
-            b << (uint32_t)precision;
-            b << (uint32_t)compressionType;
-            b << charsetNumber;
-        }
+        void serialize (messageqcpp::ByteStream& b) const;
 
-        void unserialize (messageqcpp::ByteStream& b)
-        {
-            uint32_t val;
-            b >> (uint32_t&)val;
-            colDataType = (ColDataType)val;
-            b >> (uint32_t&)colWidth;
-            b >> (uint32_t&)scale;
-            b >> (uint32_t&)precision;
-            b >> (uint32_t&)compressionType;
-            b >> charsetNumber;
-        }
+        void unserialize (messageqcpp::ByteStream& b);
 
         /**
          * @brief convert a columns data, represnted as a string,

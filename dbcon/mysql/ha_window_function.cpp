@@ -405,7 +405,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
             colType.dataType = resultType.colDataType;
             colType.precision = resultType.precision;
             colType.scale = resultType.scale;
-            colType.charsetNumber = resultType.charsetNumber;
+            colType.charset = resultType.getCharset();
             colTypes[i] = colType;
         }
 
@@ -939,7 +939,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
     if (item->full_name())
         ac->alias(item->full_name());
 
-    ac->charsetNumber(item->collation.collation->number);
+    ac->setCharset(item->collation.collation);
 
     // put ac on windowFuncList
     gwi.windowFuncList.push_back(ac);

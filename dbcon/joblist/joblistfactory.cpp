@@ -130,7 +130,7 @@ void projectSimpleColumn(const SimpleColumn* sc, JobStepVector& jsv, JobInfo& jo
         if (sc->isColumnStore() && !pc)
         {
             ct = jobInfo.csc->colType(sc->oid());
-            ct.charsetNumber =sc->colType().charsetNumber;
+            ct.setCharset(sc->colType());
         }
 //X
         if (pc == NULL)
@@ -721,7 +721,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                 if (sc->isColumnStore() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
                 {
                     ct = jobInfo.csc->colType(sc->oid());
-                    ct.charsetNumber =sc->colType().charsetNumber;
+                    ct.setCharset(sc->colType());
                 }
 //X
                 dictOid = isDictCol(ct);
@@ -1013,7 +1013,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                             if (sc->isColumnStore() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
                             {
                                 ct = jobInfo.csc->colType(sc->oid());
-                                ct.charsetNumber =sc->colType().charsetNumber;
+                                ct.setCharset(sc->colType());
                             }
 
                             //X
@@ -1169,7 +1169,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                     if (sc->isColumnStore() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
                     {
                         ct = jobInfo.csc->colType(sc->oid());
-                        ct.charsetNumber =sc->colType().charsetNumber;
+                        ct.setCharset(sc->colType());
                     }
 
                     //X
@@ -1658,7 +1658,7 @@ void parseExecutionPlan(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo,
             if (sc->isColumnStore() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
             {
                 ct = jobInfo.csc->colType(sc->oid());
-                ct.charsetNumber =sc->colType().charsetNumber;
+                ct.setCharset(sc->colType());
             }
 
 //X

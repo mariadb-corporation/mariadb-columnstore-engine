@@ -43,9 +43,8 @@
 #include "expressionparser.h"
 #include "returnedcolumn.h"
 #include "dataconvert.h"
+#include "mcs_charset.h"
 
-struct charset_info_st;
-typedef const struct charset_info_st CHARSET_INFO;
 
 namespace messageqcpp
 {
@@ -108,10 +107,6 @@ public:
      */
     bool operator!=(const PredicateOperator& t) const;
 
-    const CHARSET_INFO* getCharset() const
-    {
-        return cs;
-    }
     /***********************************************************
      *                  F&E framework                          *
      ***********************************************************/
@@ -124,8 +119,6 @@ private:
     template <typename result_t>
     inline bool numericCompare(result_t op1, result_t op2);
     inline bool strTrimCompare(const std::string& op1, const std::string& op2);
-    
-    const CHARSET_INFO* cs;
 };
 
 inline bool PredicateOperator::numericCompare(IDB_Decimal& op1, IDB_Decimal& op2)

@@ -2962,7 +2962,7 @@ SimpleColumn* getSmallestColumn(boost::shared_ptr<CalpontSystemCatalog> csc,
     sc->viewName(tan.view);
     sc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
     sc->resultType(csc->colType(oidlist[minWidthColOffset].objnum));
-    sc->charsetNumber(3000);
+    sc->setCharset(&my_charset_bin); // QQ
     return sc;
 }
 
@@ -3125,7 +3125,7 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB (const Item* item)
                     << item->result_type() << endl );
             break;
     }
-    ct.charsetNumber = item->collation.collation->number;
+    ct.setCharset(item->collation.collation);
     return ct;
 }
 
@@ -3421,7 +3421,7 @@ ReturnedColumn* buildReturnedColumn(
         rc->alias(item->name.str);
 
     if (rc)
-        rc->charsetNumber(item->collation.collation->number);
+        rc->setCharset(item->collation.collation);
     
     return rc;
 }
@@ -4157,11 +4157,11 @@ ReturnedColumn* buildFunctionColumn(
         {
             DTCollation dt;
             ifp->Type_std_attributes::agg_arg_charsets_for_comparison(dt, ifp->func_name(), ifp->arguments(), 1, 1);
-            fc->charsetNumber(dt.collation->number);
+            fc->setCharset(dt.collation);
         }
         else
         {
-            fc->charsetNumber(ifp->collation.collation->number);
+            fc->setCharset(ifp->collation.collation);
         }
     }
     else if (ifp->type() == Item::COND_ITEM ||
@@ -4450,7 +4450,7 @@ ConstantColumn* buildDecimalColumn(Item* item, gp_walk_info& gwi)
                                      datatypes::INT128MAXPRECISION : idp->decimal_precision();
     ConstantColumn* cc = new ConstantColumn(valStr, columnstore_decimal);
     cc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
-    cc->charsetNumber(idp->collation.collation->number);
+    cc->setCharset(idp->collation.collation);
     return cc;
 }
 
@@ -4509,7 +4509,7 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
     SimpleColumn *sc = h->newSimpleColumn(name, ct, prm);
 
     sc->resultType(ct);
-    sc->charsetNumber(ifp->collation.collation->number);
+    sc->setCharset(ifp->collation.collation);
     string tbname(ifp->table_name.str);
 
     if (isInformationSchema)
@@ -5079,7 +5079,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                     colType.dataType = resultType.colDataType;
                     colType.precision = resultType.precision;
                     colType.scale = resultType.scale;
-                    colType.charsetNumber = resultType.charsetNumber;
+                    colType.charset = resultType.getCharset();
                     colTypes[i] = colType;
                 }
 
@@ -5155,7 +5155,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
         return NULL;
     }
 
-    ac->charsetNumber(item->collation.collation->number);
+    ac->setCharset(item->collation.collation);
     return ac;
 }
 

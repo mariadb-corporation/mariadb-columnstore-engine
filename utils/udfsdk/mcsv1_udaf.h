@@ -220,7 +220,7 @@ static uint32_t	PARAM_IS_CONSTANT __attribute__ ((unused)) = 1 << 1;
 //
 // It's probable that future versions of Columnstore will add functionality to
 // the context. UDA(n)F may need to be re-compiled in this case.
-class mcsv1Context
+class mcsv1Context: public datatypes::Charset
 {
 public:
     EXPORT mcsv1Context();
@@ -369,11 +369,6 @@ public:
 
     EXPORT mcsv1Context& operator=(const mcsv1Context& rhs);
     EXPORT mcsv1Context& copy(const mcsv1Context& rhs);
-    
-    // Character collation support
-    EXPORT void setCharsetNumber(uint32_t csNum);
-    EXPORT uint32_t getCharsetNumber(); // Returns the unique ID for the language/collation
-    EXPORT CHARSET_INFO* getCharset();
 
 private:
 
@@ -397,7 +392,6 @@ private:
     int32_t  fParamCount;
     std::vector<uint32_t> paramKeys;
     enum_mariadb_return_type mariadbReturnType;
-    uint32_t fCharsetNumber;
 
 public:
     // For use by the framework
@@ -445,9 +439,9 @@ struct ColumnDatum
     uint32_t    scale;     // If dataType is a DECIMAL type
     uint32_t    precision; // If dataType is a DECIMAL type
     std::string alias;     // Only filled in for init()
-    uint32_t    charsetNumber; // For string collations
+    CHARSET_INFO *charset; // For string collations
     ColumnDatum() : dataType(execplan::CalpontSystemCatalog::UNDEFINED), 
-                    scale(0), precision(-1), charsetNumber(8) {};
+                    scale(0), precision(-1), charset(&my_charset_latin1) {};
 };
 
 // Override mcsv1_UDAF to build your User Defined Aggregate (UDAF) and/or
@@ -654,6 +648,7 @@ protected:
  ***********************************************************************/
 // Function definitions for mcsv1Context
 inline mcsv1Context::mcsv1Context() :
+    Charset(&my_charset_latin1),
     fRunFlags(UDAF_OVER_ALLOWED | UDAF_ORDER_ALLOWED | UDAF_WINDOWFRAME_ALLOWED),
     fContextFlags(0),
     fUserDataSize(0),
@@ -668,8 +663,7 @@ inline mcsv1Context::mcsv1Context() :
     fStartConstant(0),
     fEndConstant(0),
     func(NULL),
-    fParamCount(0),
-    fCharsetNumber(8)  // Latin1
+    fParamCount(0)
 {
 }
 
@@ -681,6 +675,7 @@ inline mcsv1Context::mcsv1Context(const mcsv1Context& rhs) :
 
 inline mcsv1Context& mcsv1Context::copy(const mcsv1Context& rhs)
 {
+    Charset::operator=(rhs);
     fRunFlags        = rhs.fRunFlags;
     fContextFlags    = rhs.fContextFlags;
     fResultType      = rhs.fResultType;
@@ -694,7 +689,6 @@ inline mcsv1Context& mcsv1Context::copy(const mcsv1Context& rhs)
     bInterrupted     = rhs.bInterrupted;  // Multiple threads will use the same reference
     func             = rhs.func;
     fParamCount      = rhs.fParamCount;
-    fCharsetNumber   = rhs.fCharsetNumber;
     return *this;
 }
 
@@ -989,16 +983,6 @@ inline enum_mariadb_return_type mcsv1Context::getMariaDBReturnType() const
 inline void mcsv1Context::setMariaDBReturnType(enum_mariadb_return_type rt)
 {
     mariadbReturnType = rt;
-}
-
-inline void mcsv1Context::setCharsetNumber(uint32_t csNum)
-{
-    fCharsetNumber=csNum;
-}
-
-inline uint32_t mcsv1Context::getCharsetNumber()
-{
-    return fCharsetNumber;
 }
 
 inline mcsv1_UDAF::ReturnCode mcsv1_UDAF::dropValue(mcsv1Context* context, ColumnDatum* valsDropped)

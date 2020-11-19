@@ -654,12 +654,12 @@ const JobStepVector doColFilter(const SimpleColumn* sc1, const SimpleColumn* sc2
     if (!sc1->schemaName().empty() && sc1->isColumnStore() && !pc1)
     {
         ct1 = jobInfo.csc->colType(sc1->oid());
-        ct1.charsetNumber =sc1->colType().charsetNumber;
+        ct1.setCharset(sc1->colType());
     }
     if (!sc2->schemaName().empty() && sc2->isColumnStore() && !pc2)
     {
         ct2 = jobInfo.csc->colType(sc2->oid());
-        ct2.charsetNumber =sc2->colType().charsetNumber;
+        ct2.setCharset(sc2->colType());
     }
 //X
     int8_t op = op2num(sop);
@@ -1083,12 +1083,12 @@ const JobStepVector doJoin(
     if (!sc1->schemaName().empty() && sc1->isColumnStore() && !pc1)
     {
         ct1 = jobInfo.csc->colType(sc1->oid());
-        ct1.charsetNumber =sc1->colType().charsetNumber;
+        ct1.setCharset(sc1->colType());
     }
     if (!sc2->schemaName().empty() && sc2->isColumnStore() && !pc2)
     {
         ct2 = jobInfo.csc->colType(sc2->oid());
-        ct2.charsetNumber =sc2->colType().charsetNumber;
+        ct2.setCharset(sc2->colType());
     }
 //X
     uint64_t joinInfo = sc1->joinInfo() | sc2->joinInfo();
@@ -1354,7 +1354,7 @@ const JobStepVector doSemiJoin(const SimpleColumn* sc, const ReturnedColumn* rc,
     if (!sc->schemaName().empty() && sc->isColumnStore() && !pc1)
     {
         ct1 = jobInfo.csc->colType(sc->oid());
-        ct1.charsetNumber =sc->colType().charsetNumber;
+        ct1.setCharset(sc->colType());
     }
 //X
     JobStepVector jsv;
@@ -1664,7 +1664,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
         if (!sc->schemaName().empty() && sc->isColumnStore() && !pc)
         {
             ct = jobInfo.csc->colType(sc->oid());
-            ct.charsetNumber =sc->colType().charsetNumber;
+            ct.setCharset(sc->colType());
         }
 //X
 
@@ -2758,7 +2758,7 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
         if (!sc->schemaName().empty() && sc->isColumnStore() && !pc)
         {
             ct = jobInfo.csc->colType(sc->oid());
-            ct.charsetNumber =sc->colType().charsetNumber;
+            ct.setCharset(sc->colType());
         }
 
 //X
@@ -3047,7 +3047,7 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
             if (!sc->schemaName().empty() && sc->isColumnStore() && !pc)
             {
                 ct = jobInfo.csc->colType(sc->oid());
-                ct.charsetNumber =sc->colType().charsetNumber;
+                ct.setCharset(sc->colType());
             }
             TupleInfo ti(setTupleInfo(ct, sc->oid(), jobInfo, tblOid, sc.get(), alias));
 //X			TupleInfo ti(setTupleInfo(sc->colType(), sc->oid(), jobInfo, tblOid, sc.get(), alias));

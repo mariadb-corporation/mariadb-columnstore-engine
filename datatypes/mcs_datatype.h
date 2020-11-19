@@ -23,18 +23,13 @@
 #include <boost/any.hpp>
 #include "exceptclasses.h"
 #include "mcs_decimal.h"
-
+#include "mcs_charset.h"
 
 #ifdef _MSC_VER
 typedef int     mcs_sint32_t;
 #else
 typedef int32_t mcs_sint32_t;
 #endif
-
-
-// Because including my_sys.h in a Columnstore header causes too many conflicts
-struct charset_info_st;
-typedef const struct charset_info_st CHARSET_INFO;
 
 
 #ifdef _MSC_VER

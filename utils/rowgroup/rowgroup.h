@@ -61,6 +61,7 @@
 
 // Because including my_sys.h in a Columnstore header causes too many conflicts
 struct charset_info_st;
+extern "C" struct charset_info_st my_charset_latin1;
 typedef const struct charset_info_st CHARSET_INFO;
 
 
@@ -361,7 +362,6 @@ public:
     inline execplan::CalpontSystemCatalog::ColDataType getColType(uint32_t colIndex) const;
     inline execplan::CalpontSystemCatalog::ColDataType* getColTypes();
     inline const execplan::CalpontSystemCatalog::ColDataType* getColTypes() const;
-    inline uint32_t getCharsetNumber(uint32_t colIndex) const;
     
     // this returns true if the type is not CHAR or VARCHAR
     inline bool isCharType(uint32_t colIndex) const;
@@ -520,7 +520,11 @@ public:
         userDataStore = u;
     }
     
-    const CHARSET_INFO* getCharset(uint32_t col) const;
+    const CHARSET_INFO* getCharset(uint32_t col) const
+    {
+        idbassert(charsets[col]);
+        return charsets[col];
+    }
 
 private:
     uint32_t columnCount;
@@ -532,7 +536,6 @@ private:
     uint32_t* offsets;
     uint32_t* colWidths;
     execplan::CalpontSystemCatalog::ColDataType* types;
-    uint32_t* charsetNumbers;
     CHARSET_INFO** charsets;
     uint8_t* data;
     uint32_t* scale;
@@ -641,11 +644,6 @@ inline execplan::CalpontSystemCatalog::ColDataType* Row::getColTypes()
 inline const execplan::CalpontSystemCatalog::ColDataType* Row::getColTypes() const
 {
     return types;
-}
-
-inline uint32_t Row::getCharsetNumber(uint32_t col) const
-{
-    return charsetNumbers[col];
 }
 
 inline bool Row::isCharType(uint32_t colIndex) const
@@ -1374,7 +1372,7 @@ public:
     @param coids An array of oids for each column.
     @param tkeys An array of unique id for each column.
     @param colTypes An array of COLTYPEs for each column.
-    @param charsetNumbers an Array of the lookup numbers for the charset/collation object.
+    @param charsets an Array of the lookup numbers for the charset/collation object.
     @param scale An array specifying the scale of DECIMAL types (0 for non-decimal)
     @param precision An array specifying the precision of DECIMAL types (0 for non-decimal)
     */
@@ -1384,7 +1382,7 @@ public:
              const std::vector<uint32_t>& cOids,
              const std::vector<uint32_t>& tkeys,
              const std::vector<execplan::CalpontSystemCatalog::ColDataType>& colTypes,
-             const std::vector<uint32_t>& charsetNumbers,
+             const std::vector<CHARSET_INFO *>& charsets,
              const std::vector<uint32_t>& scale,
              const std::vector<uint32_t>& precision,
              uint32_t stringTableThreshold,
@@ -1446,8 +1444,7 @@ public:
     inline execplan::CalpontSystemCatalog::ColDataType getColType(uint32_t colIndex) const;
     inline const std::vector<execplan::CalpontSystemCatalog::ColDataType>& getColTypes() const;
     inline std::vector<execplan::CalpontSystemCatalog::ColDataType>& getColTypes();
-    inline const std::vector<uint32_t>& getCharsetNumbers() const;
-    inline uint32_t getCharsetNumber(uint32_t colIndex) const;
+    inline const std::vector<CHARSET_INFO *>& getCharsets() const;
     inline boost::shared_array<bool>& getForceInline();
     static inline uint32_t getHeaderSize()
     {
@@ -1508,7 +1505,11 @@ public:
 
     inline void setStringStore(boost::shared_ptr<StringStore>);
     
-    const CHARSET_INFO* getCharset(uint32_t col);
+    const CHARSET_INFO* getCharset(uint32_t col) const
+    {
+        idbassert(charsets[col]);
+        return charsets[col];
+    }
 
 private:
     uint32_t columnCount;
@@ -1526,7 +1527,6 @@ private:
     std::vector<uint32_t> keys;
     std::vector<execplan::CalpontSystemCatalog::ColDataType> types;
     // For string collation
-    std::vector<uint32_t> charsetNumbers;
     std::vector<CHARSET_INFO*> charsets;
     
     // DECIMAL support.  For non-decimal fields, the values are 0.
@@ -1663,7 +1663,6 @@ void RowGroup::initRow(Row* r, bool forceInlineData) const
     {
         r->colWidths = (uint32_t*) &colWidths[0];
         r->types = (execplan::CalpontSystemCatalog::ColDataType*) & (types[0]);
-        r->charsetNumbers = (uint32_t*) & (charsetNumbers[0]);
         r->charsets = (CHARSET_INFO**) & (charsets[0]);
         r->scale = (uint32_t*) & (scale[0]);
         r->precision = (uint32_t*) & (precision[0]);
@@ -1768,14 +1767,9 @@ inline std::vector<execplan::CalpontSystemCatalog::ColDataType>& RowGroup::getCo
     return types;
 }
 
-inline const std::vector<uint32_t>& RowGroup::getCharsetNumbers() const
+inline const std::vector<CHARSET_INFO *>& RowGroup::getCharsets() const
 {
-    return charsetNumbers;
-}
-
-inline uint32_t RowGroup::getCharsetNumber(uint32_t colIndex) const
-{
-    return charsetNumbers[colIndex];
+    return charsets;
 }
 
 inline const std::vector<uint32_t>& RowGroup::getScale() const

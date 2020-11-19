@@ -36,6 +36,8 @@
 #include "pp_logger.h"
 #include "../linux-port/primitiveprocessor.h"
 
+#include "collation.h"
+
 using namespace std;
 using namespace messageqcpp;
 using namespace rowgroup;
@@ -58,6 +60,7 @@ DictStep& DictStep::operator=(const DictStep& d)
 {
     // Not all fields are copied for the sake of efficiency.
     // Right now, these only need to copy fields deserialized from the create msg.
+    Charset::operator=(d);
     BOP = d.BOP;
     fFilterFeeder = d.fFilterFeeder;
     compressionType = d.compressionType;
@@ -66,7 +69,6 @@ DictStep& DictStep::operator=(const DictStep& d)
     eqFilter = d.eqFilter;
     eqOp = d.eqOp;
     filterCount = d.filterCount;
-    charsetNumber = d.charsetNumber;
     return *this;
 }
 
@@ -100,7 +102,11 @@ void DictStep::createCommand(ByteStream& bs)
     else
         bs >> filterString;
     
-    bs >> charsetNumber;
+    uint32_t tmpu32;
+    bs >> tmpu32;
+    if (!(mCharset= get_charset(tmpu32, MYF(MY_WME))))
+        mCharset= &my_charset_latin1;
+
 #if 0
     cout << "see " << filterCount << " filters\n";
     DictFilterElement* filters = (DictFilterElement*) filterString.buf();
@@ -175,7 +181,7 @@ void DictStep::issuePrimitive(bool isFilter)
     }
 
     bpp->pp.setLikeFilter(likeFilter);
-    bpp->pp.p_Dictionary(primMsg, &result, isFilter, charsetNumber, eqFilter, eqOp);
+    bpp->pp.p_Dictionary(primMsg, &result, isFilter, getCharset(), eqFilter, eqOp);
 }
 
 void DictStep::copyResultToTmpSpace(OrderedToken* ot)
@@ -699,7 +705,7 @@ SCommand DictStep::duplicate()
     ds->eqOp = eqOp;
     ds->filterString = filterString;
     ds->filterCount = filterCount;
-    ds->charsetNumber = charsetNumber;
+    ds->setCharset(*this);
     ds->Command::duplicate(this);
     return ret;
 }

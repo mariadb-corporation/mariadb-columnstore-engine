@@ -371,14 +371,14 @@ public:
         return fRegex;
     }
 
-    uint32_t charsetNumber() const
+    CHARSET_INFO *getCharset() const
     {
-        return fResultType.charsetNumber;
+        return fResultType.getCharset();
     }
-    void charsetNumber(uint32_t cnum)
+    void setCharset(CHARSET_INFO *cs)
     {
-        fResultType.charsetNumber = cnum;
-        fOperationType.charsetNumber = cnum;
+        fResultType.setCharset(cs);
+        fOperationType.setCharset(cs);
     }
 
 protected:

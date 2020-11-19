@@ -56,15 +56,13 @@ inline bool numericLE(result_t op1, result_t op2)
     return op1 <= op2;
 }
 
-inline bool strGE(uint32_t charsetNumber, const string& op1, const string& op2)
+inline bool strGE(CHARSET_INFO *cs, const string& op1, const string& op2)
 {
-    const CHARSET_INFO* cs = get_charset(charsetNumber, MYF(MY_WME));    
     return cs->strnncoll(op1.c_str(), op1.length(), op2.c_str(), op2.length()) >= 0;
 }
 
-inline bool strLE(uint32_t charsetNumber, const string& op1, const string& op2)
+inline bool strLE(CHARSET_INFO *cs, const string& op1, const string& op2)
 {
-    const CHARSET_INFO* cs = get_charset(charsetNumber, MYF(MY_WME));    
     return cs->strnncoll(op1.c_str(), op1.length(), op2.c_str(), op2.length()) <= 0;
 }
 
@@ -261,16 +259,16 @@ inline bool getBool(rowgroup::Row& row,
 
             if (notBetween)
             {
-                if (!strGE(ct.charsetNumber, val, pm[1]->data()->getStrVal(row, isNull)) && !isNull)
+                if (!strGE(ct.getCharset(), val, pm[1]->data()->getStrVal(row, isNull)) && !isNull)
                     return true;
 
                 isNull = false;
-                return (!strLE(ct.charsetNumber, val, pm[2]->data()->getStrVal(row, isNull)) && !isNull);
+                return (!strLE(ct.getCharset(), val, pm[2]->data()->getStrVal(row, isNull)) && !isNull);
             }
             
             return !isNull &&
-                   strGE(ct.charsetNumber, val, pm[1]->data()->getStrVal(row, isNull)) &&
-                   strLE(ct.charsetNumber, val, pm[2]->data()->getStrVal(row, isNull));
+                   strGE(ct.getCharset(), val, pm[1]->data()->getStrVal(row, isNull)) &&
+                   strLE(ct.getCharset(), val, pm[2]->data()->getStrVal(row, isNull));
         }
 
         default:

@@ -6092,20 +6092,18 @@ void CalpontSystemCatalog::checkSysCatVer()
 }
 
 CalpontSystemCatalog::ColType::ColType() : 
+    Charset(default_charset_info),
     constraintType(NO_CONSTRAINT), 
     defaultValue(""), 
     colPosition(-1), 
     compressionType(NO_COMPRESSION), 
     columnOID(0),
     autoincrement(0), 
-    nextvalue(0),
-    cs(NULL)
-{
-    charsetNumber = default_charset_info->number;
-}
+    nextvalue(0)
+{ }
 
 CalpontSystemCatalog::ColType::ColType(const ColType& rhs)
-   :TypeHolderStd(rhs)
+   :TypeHolderStd(rhs), Charset(rhs)
 {
     constraintType = rhs.constraintType;
     ddn = rhs.ddn;
@@ -6115,17 +6113,33 @@ CalpontSystemCatalog::ColType::ColType(const ColType& rhs)
     columnOID = rhs.columnOID;
     autoincrement = rhs.autoincrement;
     nextvalue = rhs.nextvalue;
-    charsetNumber = rhs.charsetNumber;
-    cs = rhs.cs;
 }
 
 
-CHARSET_INFO* CalpontSystemCatalog::ColType::getCharset()
+void CalpontSystemCatalog::ColType::serialize (messageqcpp::ByteStream& b) const
 {
-    if (!cs)
-        cs= get_charset(charsetNumber, MYF(MY_WME));
-    return cs;
+    b << (uint32_t)colDataType;
+    b << (uint32_t)colWidth;
+    b << (uint32_t)scale;
+    b << (uint32_t)precision;
+    b << (uint32_t)compressionType;
+    b << (uint32_t)getCharset()->number;
 }
+
+void CalpontSystemCatalog::ColType::unserialize (messageqcpp::ByteStream& b)
+{
+    uint32_t val;
+    b >> (uint32_t&)val;
+    colDataType = (ColDataType)val;
+    b >> (uint32_t&)colWidth;
+    b >> (uint32_t&)scale;
+    b >> (uint32_t&)precision;
+    b >> (uint32_t&)compressionType;
+    b >> val;
+    if (!(mCharset= get_charset(val, MYF(MY_WME))))
+        mCharset = &my_charset_bin;
+}
+
 
 const string CalpontSystemCatalog::ColType::toString() const
 {

@@ -102,7 +102,7 @@ void TupleHavingStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
     vector<uint32_t> scale, scaleIn = fRowGroupIn.getScale();
     vector<uint32_t> precision, precisionIn = fRowGroupIn.getPrecision();
     vector<CalpontSystemCatalog::ColDataType> types, typesIn = fRowGroupIn.getColTypes();
-    vector<uint32_t> csNums, csNumsIn = fRowGroupIn.getCharsetNumbers();
+    vector<CHARSET_INFO*> csets, csetsIn = fRowGroupIn.getCharsets();
     vector<uint32_t> pos, posIn = fRowGroupIn.getOffsets();
 
     size_t n = 0;
@@ -117,10 +117,10 @@ void TupleHavingStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
     scale.insert(scale.end(), scaleIn.begin(), scaleIn.begin() + n);
     precision.insert(precision.end(), precisionIn.begin(), precisionIn.begin() + n);
     types.insert(types.end(), typesIn.begin(), typesIn.begin() + n);
-    csNums.insert(csNums.end(), csNumsIn.begin(), csNumsIn.begin() + n);
+    csets.insert(csets.end(), csetsIn.begin(), csetsIn.begin() + n);
     pos.insert(pos.end(), posIn.begin(), posIn.begin() + n + 1);
 
-    fRowGroupOut = RowGroup(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold);
+    fRowGroupOut = RowGroup(oids.size(), pos, oids, keys, types, csets, scale, precision, jobInfo.stringTableThreshold);
     fRowGroupOut.initRow(&fRowOut);
 }
 

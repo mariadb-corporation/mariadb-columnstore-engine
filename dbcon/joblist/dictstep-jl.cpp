@@ -33,6 +33,8 @@
 using namespace std;
 using namespace messageqcpp;
 
+#include "collation.h"
+
 namespace joblist
 {
 
@@ -41,6 +43,7 @@ DictStepJL::DictStepJL()
 }
 
 DictStepJL::DictStepJL(const pDictionaryStep& dict)
+ :Charset(dict.fColType)
 {
     BOP = dict.fBOP;
     OID = dict.oid();
@@ -59,7 +62,6 @@ DictStepJL::DictStepJL(const pDictionaryStep& dict)
         filterString = dict.fFilterString;
 
     filterCount = dict.fFilterCount;
-    charsetNumber = dict.fColType.charsetNumber;
 }
 
 DictStepJL::~DictStepJL()
@@ -89,7 +91,7 @@ void DictStepJL::createCommand(ByteStream& bs) const
     }
     else
         bs << filterString;
-    bs << charsetNumber;
+    bs << (uint32_t) getCharset()->number;
     CommandJL::createCommand(bs);
 }
 

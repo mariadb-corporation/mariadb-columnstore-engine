@@ -159,14 +159,15 @@ void tupleKeyToProjectStep(uint32_t key, JobStepVector& jsv, JobInfo& jobInfo)
 
 inline void addColumnToRG(uint32_t cid, vector<uint32_t>& pos, vector<uint32_t>& oids,
                           vector<uint32_t>& keys, vector<uint32_t>& scale, vector<uint32_t>& precision,
-                          vector<CalpontSystemCatalog::ColDataType>& types, vector<uint32_t>& csNums, JobInfo& jobInfo)
+                          vector<CalpontSystemCatalog::ColDataType>& types,
+                          vector<CHARSET_INFO*>& csets, JobInfo& jobInfo)
 {
     TupleInfo ti(getTupleInfo(cid, jobInfo));
     pos.push_back(pos.back() + ti.width);
     oids.push_back(ti.oid);
     keys.push_back(ti.key);
     types.push_back(ti.dtype);
-    csNums.push_back(ti.csNum);
+    csets.push_back(ti.getCharset());
     scale.push_back(ti.scale);
     precision.push_back(ti.precision);
 }
@@ -174,20 +175,21 @@ inline void addColumnToRG(uint32_t cid, vector<uint32_t>& pos, vector<uint32_t>&
 
 inline void addColumnInExpToRG(uint32_t cid, vector<uint32_t>& pos, vector<uint32_t>& oids,
                                vector<uint32_t>& keys, vector<uint32_t>& scale, vector<uint32_t>& precision,
-                               vector<CalpontSystemCatalog::ColDataType>& types, vector<uint32_t>& csNums, JobInfo& jobInfo)
+                               vector<CalpontSystemCatalog::ColDataType>& types,
+                               vector<CHARSET_INFO*>& csets, JobInfo& jobInfo)
 {
     if (jobInfo.keyInfo->dictKeyMap.find(cid) != jobInfo.keyInfo->dictKeyMap.end())
         cid = jobInfo.keyInfo->dictKeyMap[cid];
 
     if (find(keys.begin(), keys.end(), cid) == keys.end())
-        addColumnToRG(cid, pos, oids, keys, scale, precision, types, csNums, jobInfo);
+        addColumnToRG(cid, pos, oids, keys, scale, precision, types, csets, jobInfo);
 }
 
 
 inline void addColumnsToRG(uint32_t tid, vector<uint32_t>& pos, vector<uint32_t>& oids,
                            vector<uint32_t>& keys, vector<uint32_t>& scale, vector<uint32_t>& precision,
                            vector<CalpontSystemCatalog::ColDataType>& types,
-                           vector<uint32_t>& csNums, 
+                           vector<CHARSET_INFO*>& csets, 
                            TableInfoMap& tableInfoMap, JobInfo& jobInfo)
 {
     // -- the selected columns
@@ -195,7 +197,7 @@ inline void addColumnsToRG(uint32_t tid, vector<uint32_t>& pos, vector<uint32_t>
 
     for (unsigned i = 0; i < pjCol.size(); i++)
     {
-        addColumnToRG(pjCol[i], pos, oids, keys, scale, precision, types, csNums, jobInfo);
+        addColumnToRG(pjCol[i], pos, oids, keys, scale, precision, types, csets, jobInfo);
     }
 
     // -- any columns will be used in cross-table exps
@@ -203,7 +205,7 @@ inline void addColumnsToRG(uint32_t tid, vector<uint32_t>& pos, vector<uint32_t>
 
     for (unsigned i = 0; i < exp2.size(); i++)
     {
-        addColumnInExpToRG(exp2[i], pos, oids, keys, scale, precision, types, csNums, jobInfo);
+        addColumnInExpToRG(exp2[i], pos, oids, keys, scale, precision, types, csets, jobInfo);
     }
 
     // -- any columns will be used in returned exps
@@ -211,7 +213,7 @@ inline void addColumnsToRG(uint32_t tid, vector<uint32_t>& pos, vector<uint32_t>
 
     for (unsigned i = 0; i < expr.size(); i++)
     {
-        addColumnInExpToRG(expr[i], pos, oids, keys, scale, precision, types, csNums, jobInfo);
+        addColumnInExpToRG(expr[i], pos, oids, keys, scale, precision, types, csets, jobInfo);
     }
 
     // -- any columns will be used in final outer join expression
@@ -219,7 +221,7 @@ inline void addColumnsToRG(uint32_t tid, vector<uint32_t>& pos, vector<uint32_t>
 
     for (unsigned i = 0; i < expo.size(); i++)
     {
-        addColumnInExpToRG(expo[i], pos, oids, keys, scale, precision, types, csNums, jobInfo);
+        addColumnInExpToRG(expo[i], pos, oids, keys, scale, precision, types, csets, jobInfo);
     }
 }
 
@@ -234,7 +236,7 @@ void constructJoinedRowGroup(RowGroup& rg, uint32_t large, uint32_t prev, bool r
     vector<uint32_t> scale;
     vector<uint32_t> precision;
     vector<CalpontSystemCatalog::ColDataType> types;
-    vector<uint32_t> csNums;
+    vector<CHARSET_INFO*> csets;
     pos.push_back(2);
 
     // -- start with the join keys
@@ -245,14 +247,14 @@ void constructJoinedRowGroup(RowGroup& rg, uint32_t large, uint32_t prev, bool r
         vector<uint32_t>& joinKeys = jobInfo.tableJoinMap[make_pair(large, prev)].fLeftKeys;
 
         for (vector<uint32_t>::iterator i = joinKeys.begin(); i != joinKeys.end(); i++)
-            addColumnToRG(*i, pos, oids, keys, scale, precision, types, csNums, jobInfo);
+            addColumnToRG(*i, pos, oids, keys, scale, precision, types, csets, jobInfo);
     }
 
     // -- followed by the columns in select or expression
     for (set<uint32_t>::iterator i = tableSet.begin(); i != tableSet.end(); i++)
-        addColumnsToRG(*i, pos, oids, keys, scale, precision, types, csNums, tableInfoMap, jobInfo);
+        addColumnsToRG(*i, pos, oids, keys, scale, precision, types, csets, tableInfoMap, jobInfo);
 
-    RowGroup tmpRg(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold);
+    RowGroup tmpRg(oids.size(), pos, oids, keys, types, csets, scale, precision, jobInfo.stringTableThreshold);
     rg = tmpRg;
 }
 
@@ -267,13 +269,13 @@ void constructJoinedRowGroup(RowGroup& rg, set<uint32_t>& tableSet, TableInfoMap
     vector<uint32_t> scale;
     vector<uint32_t> precision;
     vector<CalpontSystemCatalog::ColDataType> types;
-    vector<uint32_t> csNums;
+    vector<CHARSET_INFO*> csets;
     pos.push_back(2);
 
     for (set<uint32_t>::iterator i = tableSet.begin(); i != tableSet.end(); i++)
     {
         // columns in select or expression
-        addColumnsToRG(*i, pos, oids, keys, scale, precision, types, csNums, tableInfoMap, jobInfo);
+        addColumnsToRG(*i, pos, oids, keys, scale, precision, types, csets, tableInfoMap, jobInfo);
 
         // keys to be joined if not already in the rowgroup
         vector<uint32_t>& adjList = tableInfoMap[*i].fAdjacentList;
@@ -288,13 +290,13 @@ void constructJoinedRowGroup(RowGroup& rg, set<uint32_t>& tableSet, TableInfoMap
                 for (vector<uint32_t>::iterator k = joinKeys.begin(); k != joinKeys.end(); k++)
                 {
                     if (find(keys.begin(), keys.end(), *k) == keys.end())
-                        addColumnToRG(*k, pos, oids, keys, scale, precision, types, csNums, jobInfo);
+                        addColumnToRG(*k, pos, oids, keys, scale, precision, types, csets, jobInfo);
                 }
             }
         }
     }
 
-    RowGroup tmpRg(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold);
+    RowGroup tmpRg(oids.size(), pos, oids, keys, types, csets, scale, precision, jobInfo.stringTableThreshold);
     rg = tmpRg;
 }
 
@@ -343,7 +345,7 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
     vector<uint32_t> scale;
     vector<uint32_t> precision;
     vector<CalpontSystemCatalog::ColDataType> types;
-    vector<uint32_t> csNums;
+    vector<CHARSET_INFO*> csets;
     pos.push_back(2);
 
     for (unsigned i = 0; i < v.size(); i++)
@@ -352,12 +354,12 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
         oids.push_back(v[i].oid);
         keys.push_back(v[i].key);
         types.push_back(v[i].dtype);
-        csNums.push_back(v[i].csNum);
+        csets.push_back(v[i].getCharset());
         scale.push_back(v[i].scale);
         precision.push_back(v[i].precision);
     }
 
-    RowGroup rg1(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold);
+    RowGroup rg1(oids.size(), pos, oids, keys, types, csets, scale, precision, jobInfo.stringTableThreshold);
 
     // evaluate the returned/groupby expressions if any
     JobStepVector& expSteps = jobInfo.returnedExpressions;
@@ -371,7 +373,7 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
         scale.clear();
         precision.clear();
         types.clear();
-        csNums.clear();
+        csets.clear();
         pos.push_back(2);
 
         const vector<uint32_t>& keys0 = rg0->getKeys();
@@ -384,7 +386,7 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
                 oids.push_back(v[i].oid);
                 keys.push_back(v[i].key);
                 types.push_back(v[i].dtype);
-                csNums.push_back(v[i].csNum);
+                csets.push_back(v[i].getCharset());
                 scale.push_back(v[i].scale);
                 precision.push_back(v[i].precision);
             }
@@ -392,7 +394,7 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
 
         // for v0.9.3.0, the output and input to the expression are in the same row
         // add the returned column into the rg0 as rg01
-        RowGroup rg01 = *rg0 + RowGroup(oids.size(), pos, oids, keys, types, csNums,  scale, precision, jobInfo.stringTableThreshold);
+        RowGroup rg01 = *rg0 + RowGroup(oids.size(), pos, oids, keys, types, csets,  scale, precision, jobInfo.stringTableThreshold);
 
         if (jobInfo.trace) cout << "Output RowGroup 01: " << rg01.toString() << endl;
 
@@ -648,7 +650,7 @@ void addProjectStepsToBps(TableInfoMap::iterator& mit, BatchPrimitive* bps, JobI
     vector<uint32_t> scale;
     vector<uint32_t> precision;
     vector<CalpontSystemCatalog::ColDataType> types;
-    vector<uint32_t> csNums;
+    vector<CHARSET_INFO*> csets;
     pos.push_back(2);
 
     // this psv is a copy of the project steps, the original vector in mit is not changed
@@ -739,7 +741,7 @@ void addProjectStepsToBps(TableInfoMap::iterator& mit, BatchPrimitive* bps, JobI
         oids.push_back(ti.oid);
         keys.push_back(ti.key);
         types.push_back(ti.dtype);
-        csNums.push_back(ti.csNum);
+        csets.push_back(ti.getCharset());
         scale.push_back(ti.scale);
         precision.push_back(ti.precision);
     }
@@ -752,13 +754,13 @@ void addProjectStepsToBps(TableInfoMap::iterator& mit, BatchPrimitive* bps, JobI
         oids.push_back(ti.oid);
         keys.push_back(ti.key);
         types.push_back(ti.dtype);
-        csNums.push_back(ti.csNum);
+        csets.push_back(ti.getCharset());
         scale.push_back(ti.scale);
         precision.push_back(ti.precision);
     }
 
     // construct RowGroup
-    RowGroup rg(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold);
+    RowGroup rg(oids.size(), pos, oids, keys, types, csets, scale, precision, jobInfo.stringTableThreshold);
 
     // fix the output association
     AnyDataListSPtr spdl(new AnyDataList());
@@ -829,7 +831,7 @@ void addExpresssionStepsToBps(TableInfoMap::iterator& mit, SJSTEP& sjsp, JobInfo
     vector<uint32_t> scale;
     vector<uint32_t> precision;
     vector<CalpontSystemCatalog::ColDataType> types;
-    vector<uint32_t> csNums;
+    vector<CHARSET_INFO*> csets;
     pos.push_back(2);
 
     vector<uint32_t> cols;
@@ -866,13 +868,13 @@ void addExpresssionStepsToBps(TableInfoMap::iterator& mit, SJSTEP& sjsp, JobInfo
         oids.push_back(ti.oid);
         keys.push_back(ti.key);
         types.push_back(ti.dtype);
-        csNums.push_back(ti.csNum);
+        csets.push_back(ti.getCharset());
         scale.push_back(ti.scale);
         precision.push_back(ti.precision);
     }
 
     // construct RowGroup and add to TBPS
-    RowGroup rg(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold);
+    RowGroup rg(oids.size(), pos, oids, keys, types, csets, scale, precision, jobInfo.stringTableThreshold);
     bps->setFE1Input(rg);
 
     if (jobInfo.trace) cout << "FE1 input RowGroup: " << rg.toString() << endl << endl;
@@ -1038,7 +1040,7 @@ bool combineJobStepsByTable(TableInfoMap::iterator& mit, JobInfo& jobInfo)
                 vector<uint32_t> scale;
                 vector<uint32_t> precision;
                 vector<CalpontSystemCatalog::ColDataType> types;
-                vector<uint32_t> csNums;
+                vector<CHARSET_INFO*> csets;
                 pos.push_back(2);
 
                 pos.push_back(2 + 8);
@@ -1047,11 +1049,11 @@ bool combineJobStepsByTable(TableInfoMap::iterator& mit, JobInfo& jobInfo)
                 uint32_t keyId = pds->tupleId();
                 keys.push_back(keyId);
                 types.push_back(CalpontSystemCatalog::BIGINT);
-                csNums.push_back(pds->colType().charsetNumber);
+                csets.push_back(pds->colType().getCharset());
                 scale.push_back(0);
                 precision.push_back(0);
 
-                RowGroup rg(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold);
+                RowGroup rg(oids.size(), pos, oids, keys, types, csets, scale, precision, jobInfo.stringTableThreshold);
 
                 if (jobInfo.trace) cout << "RowGroup pds(and): " << rg.toString() << endl;
 
@@ -1356,7 +1358,7 @@ bool combineJobStepsByTable(TableInfoMap::iterator& mit, JobInfo& jobInfo)
                 vector<uint32_t> scale;
                 vector<uint32_t> precision;
                 vector<CalpontSystemCatalog::ColDataType> types;
-                vector<uint32_t> csNums;
+                vector<CHARSET_INFO*> csets;
                 pos.push_back(2);
 
                 for (unsigned i = 0; i < tis.size(); i++)
@@ -1365,12 +1367,12 @@ bool combineJobStepsByTable(TableInfoMap::iterator& mit, JobInfo& jobInfo)
                     oids.push_back(tis[i].oid);
                     keys.push_back(tis[i].key);
                     types.push_back(tis[i].dtype);
-                    csNums.push_back(tis[i].csNum);
+                    csets.push_back(tis[i].getCharset());
                     scale.push_back(tis[i].scale);
                     precision.push_back(tis[i].precision);
                 }
 
-                RowGroup addRg(oids.size(), pos, oids, keys, types, csNums, scale, precision,
+                RowGroup addRg(oids.size(), pos, oids, keys, types, csets, scale, precision,
                                jobInfo.stringTableThreshold);
 
                 RowGroup feRg1 = feRg;
@@ -4002,7 +4004,7 @@ SJSTEP unionQueries(JobStepVector& queries, uint64_t distinctUnionNum, JobInfo& 
     vector<uint32_t> precision;
     vector<uint32_t> width;
     vector<CalpontSystemCatalog::ColDataType> types;
-    vector<uint32_t> csNums;
+    vector<CHARSET_INFO*> csets;
     JobStepAssociation jsaToUnion;
 
     // bug4388, share code with connector for column type coversion
@@ -4027,12 +4029,12 @@ SJSTEP unionQueries(JobStepVector& queries, uint64_t distinctUnionNum, JobInfo& 
         const vector<uint32_t>& scaleIn = rg.getScale();
         const vector<uint32_t>& precisionIn = rg.getPrecision();
         const vector<CalpontSystemCatalog::ColDataType>& typesIn = rg.getColTypes();
-        const vector<uint32_t>& csNumsIn = rg.getCharsetNumbers();
+        const vector<CHARSET_INFO*>& csetsIn = rg.getCharsets();
         
         for (uint64_t j = 0; j < colCount; ++j)
         {
             queryColTypes[j][i].colDataType = typesIn[j];
-            queryColTypes[j][i].charsetNumber = csNumsIn[j];
+            queryColTypes[j][i].setCharset(csetsIn[j]);
             queryColTypes[j][i].scale = scaleIn[j];
             queryColTypes[j][i].precision = precisionIn[j];
             queryColTypes[j][i].colWidth = rg.getColumnWidth(j);
@@ -4074,7 +4076,7 @@ SJSTEP unionQueries(JobStepVector& queries, uint64_t distinctUnionNum, JobInfo& 
     {
         CalpontSystemCatalog::ColType colType = CalpontSystemCatalog::ColType::convertUnionColType(queryColTypes[j]);
         types.push_back(colType.colDataType);
-        csNums.push_back(colType.charsetNumber);
+        csets.push_back(colType.getCharset());
         scale.push_back(colType.scale);
         precision.push_back(colType.precision);
         width.push_back(colType.colWidth);
@@ -4088,7 +4090,7 @@ SJSTEP unionQueries(JobStepVector& queries, uint64_t distinctUnionNum, JobInfo& 
 
     unionStep->setInputRowGroups(inputRGs);
     unionStep->setDistinctFlags(distinct);
-    unionStep->setOutputRowGroup(RowGroup(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold));
+    unionStep->setOutputRowGroup(RowGroup(oids.size(), pos, oids, keys, types, csets, scale, precision, jobInfo.stringTableThreshold));
 
     // Fix for bug 4388 adjusts the result type at connector side, this workaround is obsolete.
     // bug 3067, update the returned column types.

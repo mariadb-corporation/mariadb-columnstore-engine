@@ -38,7 +38,8 @@ namespace primitiveprocessor
 {
 
 
-class DictStep : public Command
+class DictStep : public Command,
+                 public datatypes::Charset
 {
 public:
     DictStep();
@@ -141,7 +142,6 @@ private:
     messageqcpp::ByteStream filterString;
     uint32_t filterCount;
     uint32_t bufferSize;
-    uint32_t charsetNumber;
     uint16_t inputRidCount;
     
     bool hasEqFilter;

@@ -286,7 +286,7 @@ public:
 //	void p_ColAggregate(const NewColAggRequestHeader *in, NewColAggResultHeader *out);
 
     void p_Dictionary(const DictInput* in, std::vector<uint8_t>* out,
-                      bool skipNulls, uint32_t charsetNumber, 
+                      bool skipNulls, CHARSET_INFO *cs,
                       boost::shared_ptr<DictEqualityFilter> eqFilter,
                       uint8_t eqOp);
 

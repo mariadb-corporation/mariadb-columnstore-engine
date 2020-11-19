@@ -38,7 +38,8 @@
 namespace joblist
 {
 
-class DictStepJL : public CommandJL
+class DictStepJL : public CommandJL,
+                   public datatypes::Charset
 {
 public:
     DictStepJL();
@@ -76,7 +77,6 @@ private:
     std::vector<std::string> eqFilter;
     bool hasEqFilter;
     uint8_t eqOp;    // COMPARE_EQ or COMPARE_NE
-    uint32_t charsetNumber;
 };
 
 };  // namespace
