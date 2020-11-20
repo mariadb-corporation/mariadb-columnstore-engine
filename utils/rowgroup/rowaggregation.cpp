@@ -2045,8 +2045,9 @@ void RowAggregation::doStatistics(const Row& rowIn, int64_t colIn, int64_t colOu
         case execplan::CalpontSystemCatalog::UDECIMAL:  // handle scale later
             if (LIKELY(fRowGroupIn.getColumnWidth(colIn) == datatypes::MAXDECIMALWIDTH))
             {
-                int128_t* val128InPtr = rowIn.getBinaryField<int128_t>(colIn);
-                valIn = Dec::getLongDoubleFromWideDecimal(*val128InPtr);
+                // To save from unaligned memory
+                datatypes::TSInt128 val128In(rowIn.getBinaryField<int128_t>(colIn));
+                valIn =  static_cast<long double>(val128In.toTFloat128());
             }
             else if (fRowGroupIn.getColumnWidth(colIn) <= datatypes::MAXLEGACYWIDTH)
             {

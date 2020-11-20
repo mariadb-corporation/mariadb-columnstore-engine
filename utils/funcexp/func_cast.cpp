@@ -1881,9 +1881,11 @@ double Func_cast_decimal::getDoubleVal(Row& row,
                           isNull,
                           operationColType);
 
+    // WIP MCOL-641 This could deliver wrong result b/c wide DECIMAL might have
+    // p <= INT64MAXPRECISION
     if (decimal.precision > datatypes::INT64MAXPRECISION)
     {
-        return datatypes::Decimal::getDoubleFromWideDecimal(decimal.s128Value, decimal.scale);
+        return static_cast<double>(decimal);
     }
 
     return (double) decimal.value / helpers::powerOf10_c[decimal.scale];
@@ -1994,7 +1996,7 @@ double Func_cast_double::getDoubleVal(Row& row,
 
             if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
             {
-                dblval = datatypes::Decimal::getDoubleFromWideDecimal(decimal.s128Value, decimal.scale);
+                dblval = static_cast<double>(decimal);
             }
             else
             {

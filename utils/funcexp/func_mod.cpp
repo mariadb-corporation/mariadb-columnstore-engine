@@ -241,8 +241,8 @@ double Func_mod::getDoubleVal(Row& row,
                     datatypes::getScaleDivisor(scaleDivisor, d.scale);
                     int128_t value = d.s128Value / scaleDivisor;
                     int128_t lefto = d.s128Value % scaleDivisor;
-                    __float128 tmp = (__float128) (value % div) + (__float128) lefto / scaleDivisor;
-                    mod = datatypes::getDoubleFromFloat128(tmp);
+                    datatypes::TFloat128 tmp((__float128) (value % div) + (__float128) lefto / scaleDivisor);
+                    mod = static_cast<double>(tmp);
                 }
             }
             else
@@ -364,8 +364,8 @@ long double Func_mod::getLongDoubleVal(Row& row,
                     datatypes::getScaleDivisor(scaleDivisor, d.scale);
                     int128_t value = d.s128Value / scaleDivisor;
                     int128_t lefto = d.s128Value % scaleDivisor;
-                    __float128 tmp = (__float128) (value % div) + (__float128) lefto / scaleDivisor;
-                    mod = datatypes::getLongDoubleFromFloat128(tmp);
+                    datatypes::TFloat128 tmp((__float128) (value % div) + (__float128) lefto / scaleDivisor);
+                    mod = static_cast<long double>(tmp);
                 }
             }
             else

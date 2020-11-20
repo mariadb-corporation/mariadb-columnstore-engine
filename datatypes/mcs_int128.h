@@ -24,6 +24,7 @@
 #include <limits>
 #include <type_traits>
 #include <string>
+#include "mcs_float128.h"
 
 // Inline asm has three argument lists: output, input and clobber list
 #if defined(__GNUC__) && (__GNUC___ > 7)
@@ -111,30 +112,6 @@ struct is_uint128_t<uint128_t> {
   static const bool value = true;
 };
  
-//     The method converts a __float128 s128Value to a double.
-static inline double getDoubleFromFloat128(const __float128& value)
-{
-    if (value > static_cast<__float128>(DBL_MAX))
-        return DBL_MAX;
-    else if (value < -static_cast<__float128>(DBL_MAX))
-        return -DBL_MAX;
-
-    return static_cast<double>(value);
-}
-
-
-//     The method converts a __float128 value to a long double.
-static inline long double getLongDoubleFromFloat128(const __float128& value)
-{
-    if (value > static_cast<__float128>(LDBL_MAX))
-        return LDBL_MAX;
-    else if (value < -static_cast<__float128>(LDBL_MAX))
-        return -LDBL_MAX;
-
-    return static_cast<long double>(value);
-}
-
-
 class TSInt128
 {
   public:
@@ -203,6 +180,36 @@ class TSInt128
       return s128Value == static_cast<int128_t>(x);
     }
 
+    inline operator double() const
+    {
+      return toDouble();
+    }
+
+    inline long double toDouble() const
+    {
+      return static_cast<double>(s128Value);
+    }
+
+    inline operator long double() const
+    {
+      return toLongDouble();
+    }
+
+    inline long double toLongDouble() const
+    {
+      return static_cast<long double>(s128Value);
+    }
+
+    inline operator TFloat128() const
+    {
+      return toTFloat128();
+    }
+
+    inline TFloat128 toTFloat128() const
+    {
+      return TFloat128(s128Value);
+    }
+
     //    print int128_t parts represented as PODs
     uint8_t printPodParts(char* buf,
                           const int128_t& high,
@@ -218,12 +225,6 @@ class TSInt128
     std::string toString() const;
 
     friend std::ostream& operator<<(std::ostream& os, const TSInt128& x);
-
-    //     The method converts a wide decimal s128Value to a double.
-    inline double getDoubleFromWideDecimal();
-
-    //     The method converts a wide decimal s128Value to a long double.
-    inline long double getLongDoubleFromWideDecimal();
 
     //     The method converts a wide decimal s128Value to an int64_t,
     //    saturating the s128Value if necessary.

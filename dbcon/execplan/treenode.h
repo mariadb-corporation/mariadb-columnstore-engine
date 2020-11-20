@@ -927,7 +927,7 @@ inline double TreeNode::getDoubleVal()
         {
             if (fResultType.colWidth == datatypes::MAXDECIMALWIDTH)
             {
-                return datatypes::Decimal::getDoubleFromWideDecimal(fResult.decimalVal.s128Value, fResult.decimalVal.scale);
+                return static_cast<double>(fResult.decimalVal);
             }
             else
             {

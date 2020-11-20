@@ -25,6 +25,7 @@
 #include "exceptclasses.h"
 #include "widedecimalutils.h"
 #include "mcs_int128.h"
+#include "mcs_float128.h"
 
 
 namespace datatypes
@@ -334,36 +335,6 @@ class Decimal
             return static_cast<uint64_t>(value);
         }
 
-         /**
-            @brief The method converts a wide decimal value to a double.
-        */
-        static inline double getDoubleFromWideDecimal(const int128_t& value, int8_t scale)
-        {
-            int128_t scaleDivisor;
-
-            getScaleDivisor(scaleDivisor, scale);
-
-            __float128 tmpval = (__float128) value / scaleDivisor;
-
-            return getDoubleFromFloat128(tmpval);
-        }
-
-        /**
-            @brief The method converts a wide decimal value to a double.
-        */
-        static inline double getDoubleFromWideDecimal(const int128_t& value)
-        {
-            return getDoubleFromFloat128(static_cast<__float128>(value));
-        }
-
-        /**
-            @brief The method converts a wide decimal value to a long double.
-        */
-        static inline long double getLongDoubleFromWideDecimal(const int128_t& value)
-        {
-            return getLongDoubleFromFloat128(static_cast<__float128>(value));
-        }
-
         /**
             @brief The method converts a wide decimal value to an int64_t,
             saturating the value if necessary.
@@ -596,6 +567,35 @@ class VDecimal: public TSInt128
         }
 
         return ret;
+    }
+
+    inline TSInt128 toTSInt128() const
+    {
+        return TSInt128(s128Value);
+    }
+
+    inline TFloat128 toTFloat128() const
+    {
+        return TFloat128(s128Value);
+    }
+
+    inline double toDouble() const
+    {
+        int128_t scaleDivisor;
+        getScaleDivisor(scaleDivisor, scale);
+        datatypes::TFloat128 tmpval((__float128) s128Value / scaleDivisor);
+        return static_cast<double>(tmpval);
+    }
+
+    inline operator double() const
+    {
+        return toDouble();
+    }
+
+    inline long double toLongDouble() const
+    {
+        datatypes::TFloat128 y(s128Value);
+        return static_cast<long double>(y);
     }
 
     bool operator==(const VDecimal& rhs) const
