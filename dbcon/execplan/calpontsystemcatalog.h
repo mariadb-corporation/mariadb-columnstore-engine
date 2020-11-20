@@ -1076,13 +1076,6 @@ inline bool isNull(int64_t val, const execplan::CalpontSystemCatalog::ColType& c
             break;
         }
 
-        case execplan::CalpontSystemCatalog::BINARY:
-        {
-            ret = false;
-
-            break;
-        }
-        
         default:
             break;
     }

@@ -187,7 +187,7 @@ void ColumnDef::convertDecimal()
     }
     else if (fType->fPrecision > 18 && fType->fPrecision < 39)
     {
-        fType->fType = DDL_BINARY;
+        fType->fType = DDL_DECIMAL;
         fType->fLength = 16;
     }
 }

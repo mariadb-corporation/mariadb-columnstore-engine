@@ -953,7 +953,7 @@ int BRMWrapper::rollBack(const VER_t transID, int sessionId)
 
             CalpontSystemCatalog::ColDataType colDataType = colType.colDataType;
             ColType weColType;
-            Convertor::convertColType(colDataType, weColType);
+            Convertor::convertColType(colDataType, colType.colWidth, weColType);
             column.colWidth = Convertor::getCorrectRowWidth(colDataType, colType.colWidth);
             column.colType = weColType;
             column.colDataType = colDataType;
@@ -1240,7 +1240,7 @@ int BRMWrapper::rollBackBlocks(const VER_t transID, int sessionId)
 
         CalpontSystemCatalog::ColDataType colDataType = colType.colDataType;
         ColType weColType;
-        Convertor::convertColType(colDataType, weColType);
+        Convertor::convertColType(colDataType, colType.colWidth, weColType);
         column.colWidth = Convertor::getCorrectRowWidth(colDataType, colType.colWidth);
         column.colType = weColType;
         column.colDataType = colDataType;

@@ -83,10 +83,6 @@ void getEmptyRowValue(const execplan::CalpontSystemCatalog::ColDataType colDataT
                 datatypes::Decimal::setWideDecimalEmptyValue(*(reinterpret_cast<int128_t*>(emptyVal)));
             break;
 
-        //case CalpontSystemCatalog::BINARY:
-        //    emptyVal = joblist::BINARYEMPTYROW;
-        //    break;
-
         case execplan::CalpontSystemCatalog::CHAR:
         case execplan::CalpontSystemCatalog::VARCHAR:
         case execplan::CalpontSystemCatalog::DATE:

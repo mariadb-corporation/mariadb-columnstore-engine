@@ -178,44 +178,23 @@ class Decimal
 
         static inline bool isWideDecimalNullValue(const int128_t& val)
         {
-            const uint64_t* ptr = reinterpret_cast<const uint64_t*>(&val);
-            return (ptr[0] == utils::BINARYNULLVALUELOW && ptr[1] == utils::BINARYNULLVALUEHIGH);
+            return (val == TSInt128::NullValue);
         }
 
         static inline bool isWideDecimalEmptyValue(const int128_t& val)
         {
-            const uint64_t* ptr = reinterpret_cast<const uint64_t*>(&val);
-            return (ptr[0] == utils::BINARYEMPTYVALUELOW && ptr[1] == utils::BINARYEMPTYVALUEHIGH);
+            return (val == TSInt128::EmptyValue);
         }
 
         static inline void setWideDecimalNullValue(int128_t& val)
         {
-            uint64_t* ptr = reinterpret_cast<uint64_t*>(&val);
-            ptr[0] = utils::BINARYNULLVALUELOW;
-            ptr[1] = utils::BINARYNULLVALUEHIGH;
+            val = TSInt128::NullValue;
         }
 
         static inline void setWideDecimalEmptyValue(int128_t& val)
         {
-            uint64_t* ptr = reinterpret_cast<uint64_t*>(&val);
-            ptr[0] = utils::BINARYEMPTYVALUELOW;
-            ptr[1] = utils::BINARYEMPTYVALUEHIGH;
+            val = TSInt128::EmptyValue;
         }
-
-        static inline void setWideDecimalNullValue(int128_t* val)
-        {
-            uint64_t* ptr = reinterpret_cast<uint64_t*>(val);
-            ptr[0] = utils::BINARYNULLVALUELOW;
-            ptr[1] = utils::BINARYNULLVALUEHIGH;
-        }
-
-        static inline void setWideDecimalEmptyValue(int128_t* val)
-        {
-            uint64_t* ptr = reinterpret_cast<uint64_t*>(val);
-            ptr[0] = utils::BINARYEMPTYVALUELOW;
-            ptr[1] = utils::BINARYEMPTYVALUEHIGH;
-        }
-
 
         static constexpr int128_t minInt128 = int128_t(0x8000000000000000LL) << 64;
         static constexpr int128_t maxInt128 = (int128_t(0x7FFFFFFFFFFFFFFFLL) << 64) + 0xFFFFFFFFFFFFFFFFLL;

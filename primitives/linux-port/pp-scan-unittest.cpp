@@ -164,7 +164,7 @@ class PrimTest : public CppUnit::TestFixture
     
 // binary data type
     CPPUNIT_TEST(p_Col_bin_16);
-    CPPUNIT_TEST(p_Col_bin_32);
+//    CPPUNIT_TEST(p_Col_bin_32);
     
     CPPUNIT_TEST_SUITE_END();
 
@@ -3801,7 +3801,7 @@ public:
         args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader)]);
 
         in->DataSize = sizeof(binary16);
-        in->DataType = execplan::CalpontSystemCatalog::BINARY;
+        in->DataType = execplan::CalpontSystemCatalog::DECIMAL;
         in->OutputType = OT_DATAVALUE;
         in->NOPS = 3;
         in->BOP = BOP_OR;

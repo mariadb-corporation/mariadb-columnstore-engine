@@ -333,8 +333,7 @@ string extractTableAlias(const SSC& sc)
 //------------------------------------------------------------------------------
 CalpontSystemCatalog::OID isDictCol(const CalpontSystemCatalog::ColType& colType)
 {
-    if (colType.isWideDecimalType() ||
-        colType.colDataType == CalpontSystemCatalog::BINARY) return 0;
+    if (colType.isWideDecimalType()) return 0;
     
     if (colType.colWidth > 8) return colType.ddn.dictOID;
 

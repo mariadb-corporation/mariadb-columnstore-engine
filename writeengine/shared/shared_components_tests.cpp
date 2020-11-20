@@ -91,7 +91,7 @@ CPPUNIT_TEST(setUp);
 // Extent & dict related testing
     CPPUNIT_TEST( testExtensionWOPrealloc );
     CPPUNIT_TEST( testDictExtensionWOPrealloc );
-    CPPUNIT_TEST( testExtentCrWOPreallocBin );
+//    CPPUNIT_TEST( testExtentCrWOPreallocBin );
     // Semaphore related testing
 //    CPPUNIT_TEST( testSem );
 
@@ -1571,7 +1571,6 @@ public:
         fileOp.deleteFile(fileName);
         CPPUNIT_ASSERT(fileOp.exists(fileName) == false);
 
-        //binary16 emptyVal = blockOp.getEmptyBinRowValue( execplan::CalpontSystemCatalog::BINARY, 16 );
         uint64_t emptyVal = blockOp.getEmptyRowValue(execplan::CalpontSystemCatalog::BIGINT, 8);
         int width = blockOp.getCorrectRowWidth(execplan::CalpontSystemCatalog::BINARY, sizeof (binary16));
         int nBlocks = INITIAL_EXTENT_ROWS_TO_DISK / BYTE_PER_BLOCK * width;

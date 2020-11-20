@@ -703,15 +703,6 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
             break;
         }
 
-        case CalpontSystemCatalog::BINARY:
-            
-        {
-            // WIP MCOL-641 Binary representation could contain \0.
-            std::string value(row.getBinaryField<char>(fInputIndex));
-            fResult.strVal.swap(value);
-            break;
-        }
-        
         default:	// treat as int64
         {
             fResult.intVal = row.getUintField<8>(fInputIndex);

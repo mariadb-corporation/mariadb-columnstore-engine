@@ -632,10 +632,7 @@ string Row::toString() const
                     os << " " << dec;
                     break;
                 }
-                // WIP MCOL-641
-                case CalpontSystemCatalog::BINARY:
-                    std::cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << std::endl;
-                    break;
+
                 case CalpontSystemCatalog::DECIMAL:
                 case CalpontSystemCatalog::UDECIMAL:
                     if (colWidths[i] == datatypes::MAXDECIMALWIDTH)
@@ -709,9 +706,6 @@ string Row::toCSV() const
                     os << dec;
                     break;
                 }
-                case CalpontSystemCatalog::BINARY:
-                    std::cout << __FILE__<< __LINE__ << ":" << "toCSV"<< std::endl;
-                    //fallthrough
 
                 default:
                     os << getIntField(i);
@@ -876,11 +870,6 @@ void Row::initToNull()
             case CalpontSystemCatalog::UBIGINT:
                 *((uint64_t*) &data[offsets[i]]) = joblist::UBIGINTNULL;
                 break;
-            case CalpontSystemCatalog::BINARY:
-                {
-                    datatypes::Decimal::setWideDecimalNullValue(reinterpret_cast<int128_t&>(data[offsets[i]]));
-                }
-                break;
 
             default:
                 ostringstream os;
@@ -901,29 +890,6 @@ inline bool Row::isNullValue_offset(uint32_t offset) const
     os << ").  Width=";
     os << width << endl;
     throw logic_error(os.str());
-}
-
-// WIP Method template resolution could impose some perf degradation
-// Compare perf with switch-case
-template<>
-inline bool 
-Row::isNullValue_offset<execplan::CalpontSystemCatalog::BINARY,32>(
-    uint32_t offset) const
-{
-    const uint64_t *intPtr = reinterpret_cast<const uint64_t*>(&data[offset]);
-    return ((intPtr[0] == static_cast<uint64_t>(utils::BINARYNULLVALUELOW)) &&
-        (intPtr[1] == static_cast<uint64_t>(utils::BINARYNULLVALUELOW)) &&
-        (intPtr[2] == static_cast<uint64_t>(utils::BINARYNULLVALUELOW)) &&
-        (intPtr[3] == static_cast<uint64_t>(utils::BINARYEMPTYVALUEHIGH)));
-}
-
-template<>
-inline bool 
-Row::isNullValue_offset<execplan::CalpontSystemCatalog::BINARY,16>(
-    uint32_t offset) const
-{
-    const int128_t *intPtr = reinterpret_cast<const int128_t*>(&data[offset]);
-    return  datatypes::Decimal::isWideDecimalNullValue (*intPtr);
 }
 
 template<>
@@ -1114,15 +1080,6 @@ bool Row::isNullValue(uint32_t colIndex) const
             return (*((long double*) &data[offsets[colIndex]]) == joblist::LONGDOUBLENULL);
             break;
 
-        case CalpontSystemCatalog::BINARY:
-        {
-            const uint32_t len = 16;
-            uint32_t* lenPtr = const_cast<uint32_t*>(&len);
-            *lenPtr = getColumnWidth(colIndex);
-            return isNullValue_offset
-                <execplan::CalpontSystemCatalog::BINARY,len>(offsets[colIndex]);
-        }
-       
         default:
         {
             ostringstream os;
@@ -1787,9 +1744,6 @@ void RowGroup::addToSysDataList(execplan::CalpontSystemCatalog::NJLSysDataList& 
                     cr->PutData(row.getUintField<4>(j));
                     break;
 
-                case CalpontSystemCatalog::BINARY:
-                    std::cout << __FILE__<< __LINE__ << __func__<< std::endl;
-                //fallthrough
                 default:
                     cr->PutData(row.getIntField<8>(j));
             }
