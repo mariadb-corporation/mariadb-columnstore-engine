@@ -791,11 +791,21 @@ TypeHandlerXDecimal::format128(const SimpleValue &v,
 
 /****************************************************************************/
 
+class ostringstreamL: public ostringstream
+{
+public:
+  ostringstreamL()
+  {
+    setf(ios::left, ios::adjustfield);
+  }
+};
+
+
 string TypeHandler::formatPartitionInfoSInt64(
                              const SystemCatalog::TypeAttributesStd &attr,
                              const MinMaxInfo &pi) const
 {
-  ostringstream output;
+  ostringstreamL output;
   if (pi.isEmptyOrNullSInt64())
     output << setw(30) << "Empty/Null"
            << setw(30) << "Empty/Null";
@@ -810,7 +820,7 @@ string TypeHandler::formatPartitionInfoUInt64(
                              const SystemCatalog::TypeAttributesStd &attr,
                              const MinMaxInfo &pi) const
 {
-  ostringstream output;
+  ostringstreamL output;
   if (pi.isEmptyOrNullUInt64())
     output << setw(30) << "Empty/Null"
            << setw(30) << "Empty/Null";
@@ -827,7 +837,7 @@ TypeHandlerXDecimal::formatPartitionInfo128(
                               const SystemCatalog::TypeAttributesStd &attr,
                               const MinMaxInfo &pi) const
 {
-  ostringstream output;
+  ostringstreamL output;
   if (pi.isEmptyOrNullSInt128())
     output << setw(datatypes::Decimal::MAXLENGTH16BYTES) << "Empty/Null"
            << setw(datatypes::Decimal::MAXLENGTH16BYTES) << "Empty/Null";
@@ -843,7 +853,7 @@ TypeHandlerStr::formatPartitionInfoSmallCharVarchar(
                          const SystemCatalog::TypeAttributesStd &attr,
                          const MinMaxInfo &pi) const
 {
-  ostringstream output;
+  ostringstreamL output;
   int64_t maxLimit = numeric_limits<int64_t>::max();
   int64_t minLimit = numeric_limits<int64_t>::min();
   maxLimit = uint64ToStr(maxLimit);
@@ -1398,7 +1408,7 @@ string TypeHandler::PrintPartitionValueSInt64(
   if (!partInfo.isSuitableSInt64(startVal, rfMin, endVal, rfMax))
     return "";
 
-  ostringstream oss;
+  ostringstreamL oss;
   if (partInfo.min > partInfo.max)
     oss << setw(30) << "Empty/Null" << setw(30) << "Empty/Null";
   else
@@ -1419,7 +1429,7 @@ string TypeHandler::PrintPartitionValueUInt64(
   if (!partInfo.isSuitableUInt64(startVal, rfMin, endVal, rfMax))
     return "";
 
-  ostringstream oss;
+  ostringstreamL oss;
   if (static_cast<uint64_t>(partInfo.min) > static_cast<uint64_t>(partInfo.max))
     oss << setw(30) << "Empty/Null" << setw(30) << "Empty/Null";
   else
@@ -1440,7 +1450,7 @@ string TypeHandlerXDecimal::PrintPartitionValue128(
   if (!partInfo.isSuitableSInt128(startVal, rfMin, endVal, rfMax))
     return "";
 
-  ostringstream oss;
+  ostringstreamL oss;
   if (partInfo.int128Min > partInfo.int128Max)
     oss << setw(datatypes::Decimal::MAXLENGTH16BYTES) << "Empty/Null"
         << setw(datatypes::Decimal::MAXLENGTH16BYTES) << "Empty/Null";
