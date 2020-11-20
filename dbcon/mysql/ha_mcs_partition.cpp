@@ -717,7 +717,7 @@ extern "C"
             else
             {
                 const datatypes::TypeHandler *h= ct.typeHandler();
-                oss << h->formatPartitionInfo(ct, partIt->second);
+                output << h->formatPartitionInfo(ct, partIt->second);
             }
 
             if (partIt->second.is_disabled())
