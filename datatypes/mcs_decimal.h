@@ -415,28 +415,26 @@ struct DivisionOverflowCheck {
     }
 };
 
-/**
-    @brief The structure contains an overflow check for int128
-    and int64_t multiplication.
-*/
+//
+//  @brief The structure contains an overflow check for int128
+//  and int64_t multiplication.
+//
 struct MultiplicationOverflowCheck {
     void operator()(const int128_t& x, const int128_t& y)
     {
-        if (x * y / y != x)
-        {
-            throw logging::OperationOverflowExcept(
-                "Decimal::multiplication<int128_t> or scale multiplication \
-produces an overflow.");
-        }
+        int128_t tempR = 0;
+        this->operator()(x, y, tempR);
     }
     bool operator()(const int128_t& x, const int128_t& y, int128_t& r)
     {
-        if ((r = x * y) / y != x)
+        volatile int128_t z = x * y;
+        if (z / y != x)
         {
             throw logging::OperationOverflowExcept(
                 "Decimal::multiplication<int128_t> or scale multiplication \
 produces an overflow.");
         }
+        r = z;
         return true;
     }
     void operator()(const int64_t x, const int64_t y)
@@ -838,6 +836,7 @@ class VDecimal: public TSInt128
     // STRICTLY for unit tests!!!
     void setTSInt64Value(const int64_t x) { value = x; }
     void setTSInt128Value(const int128_t& x) { s128Value = x; }
+    void setScale(const uint8_t x) { scale = x; }
 
 private:
     uint8_t writeIntPart(const int128_t& x,

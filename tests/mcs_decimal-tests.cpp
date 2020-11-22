@@ -508,7 +508,6 @@ TEST(Decimal, additionWithOverflowCheck)
     result.scale = 1;
     result.precision = 38;
     result.s128Value = 0;
-
     EXPECT_THROW(doAdd(l, r, result), logging::OperationOverflowExcept);
 
     // Normal execution w/o overflow
@@ -880,6 +879,26 @@ TEST(Decimal, multiplicationWithOverflowCheck)
 
     EXPECT_NO_THROW(doMultiply(l, r, result));
     EXPECT_EQ("21267647932558653966460912964485513216", result.toString());
+
+    l.setTSInt128Value((int128_t)1 << 122);
+    l.setScale(0);
+    r.setTSInt128Value(100);
+    r.setScale(0);
+    EXPECT_THROW(doMultiply(l, r, result), logging::OperationOverflowExcept);
+
+    l.setTSInt128Value((int128_t)1 << 65);
+    l.setScale(0);
+    r.setTSInt128Value((int128_t)1 << 64);
+    r.setScale(0);
+    EXPECT_THROW(doMultiply(l, r, result), logging::OperationOverflowExcept);
+
+    l.setTSInt128Value((int128_t)1 << 122);
+    l.setScale(0);
+    r.setTSInt128Value(2);
+    r.setScale(0);
+    EXPECT_NO_THROW(doMultiply(l, r, result));
+    EXPECT_EQ("10633823966279326983230456482242756608", result.toString());
+
 }
 
 TEST(Decimal, DecimalToStringCheckScale0)
