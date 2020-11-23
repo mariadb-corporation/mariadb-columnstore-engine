@@ -185,7 +185,7 @@ class TSInt128
       return toDouble();
     }
 
-    inline long double toDouble() const
+    inline double toDouble() const
     {
       return static_cast<double>(s128Value);
     }
