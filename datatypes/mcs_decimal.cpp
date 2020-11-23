@@ -735,6 +735,4 @@ namespace datatypes
         os << dec.toString();
         return os;
     }
-
-
 } // end of namespace

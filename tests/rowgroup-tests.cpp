@@ -104,12 +104,11 @@ protected:
         sValueVector.push_back(0);
         sValueVector.push_back(nullValue-1);
 
-        uValueVector.push_back(nullValue);
-        uValueVector.push_back(42);
-        uValueVector.push_back(bigValue);
-        uValueVector.push_back(0);
-        uValueVector.push_back(nullValue-1);
-
+        anotherValueVector.push_back(nullValue);
+        anotherValueVector.push_back(42);
+        anotherValueVector.push_back(bigValue);
+        anotherValueVector.push_back(0);
+        anotherValueVector.push_back(nullValue-1);
         s8ValueVector.push_back(joblist::TINYINTNULL);
         s8ValueVector.push_back(-0x79);
         s8ValueVector.push_back(0);
@@ -138,8 +137,8 @@ protected:
         {
             r.setBinaryField_offset(&sValueVector[i],
                 sizeof(sValueVector[0]), offsets[0]);
-            r.setBinaryField_offset(&uValueVector[i],
-                sizeof(uValueVector[0]), offsets[1]);
+            r.setBinaryField_offset(&anotherValueVector[i],
+                sizeof(anotherValueVector[0]), offsets[1]);
             r.setIntField(s64ValueVector[i], 2);
             r.setIntField(s32ValueVector[i], 3);
             r.setIntField(s16ValueVector[i], 4);
@@ -159,7 +158,7 @@ protected:
   uint32_t rowSize;
   size_t rowCount;
   std::vector<int128_t> sValueVector;
-  std::vector<uint128_t> uValueVector;
+  std::vector<int128_t> anotherValueVector;
   std::vector<int64_t> s8ValueVector;
   std::vector<int64_t> s16ValueVector;
   std::vector<int64_t> s32ValueVector;
@@ -199,15 +198,15 @@ TEST_F(RowDecimalTest, InitToNullAndIsNullValueCheck)
 TEST_F(RowDecimalTest, GetBinaryFieldCheck)
 {
     rg.getRow(0, &r);
-    uint128_t* u128Value;
+    int128_t* a128Value;
     int128_t* s128Value;
 
     for (size_t i = 0; i < sValueVector.size(); i++)
     {
         s128Value = r.getBinaryField<int128_t>(0);
         EXPECT_EQ(sValueVector[i], *s128Value);
-        u128Value = r.getBinaryField<uint128_t>(1);
-        EXPECT_EQ(uValueVector[i], *u128Value);
+        a128Value = r.getBinaryField<int128_t>(1);
+        EXPECT_EQ(anotherValueVector[i], *a128Value);
         //EXPECT_EQ(s64ValueVector[i], r.getIntField(2));
         //EXPECT_EQ(s32ValueVector[i],r.getIntField(3));
         //EXPECT_EQ(r.getIntField(4),s16ValueVector[i]);
@@ -246,27 +245,27 @@ TEST_F(RowDecimalTest, ApplyMappingCheck)
     rg.getRow(1, &r);
     rg.getRow(2, &rOutMappingCheck);
     int128_t* s128Value = rOutMappingCheck.getBinaryField<int128_t>(0);
-    uint128_t* u128Value = rOutMappingCheck.getBinaryField<uint128_t>(1);
+    int128_t* a128Value = rOutMappingCheck.getBinaryField<int128_t>(1);
     EXPECT_NE(sValueVector[1], *s128Value);
-    EXPECT_NE(uValueVector[1], *u128Value);
+    EXPECT_NE(anotherValueVector[1], *a128Value);
     applyMapping(mapping, r, &rOutMappingCheck);
     s128Value = rOutMappingCheck.getBinaryField<int128_t>(0);
-    u128Value = rOutMappingCheck.getBinaryField<uint128_t>(1);
+    a128Value = rOutMappingCheck.getBinaryField<int128_t>(1);
     EXPECT_EQ(sValueVector[1], *s128Value);
-    EXPECT_EQ(uValueVector[1], *u128Value);
+    EXPECT_EQ(anotherValueVector[1], *a128Value);
 }
 
 TEST_F(RowDecimalTest, CopyBinaryFieldCheck)
 {
     int128_t constVal = 1;
     int128_t *col1Out, *col1In;
-    uint128_t *col2Out, *col2In;
+    int128_t *col2Out, *col2In;
     rgOut.getRow(0, &rOut);
 
     for (size_t i = 0; i < sValueVector.size(); i++)
     {
         rOut.setBinaryField_offset(&constVal, 16, offsets[0]);
-        rOut.setBinaryField_offset((uint128_t*)&constVal, 16, offsets[1]);
+        rOut.setBinaryField_offset(&constVal, 16, offsets[1]);
         rOut.nextRow(rowSize);
     }
 
@@ -278,14 +277,14 @@ TEST_F(RowDecimalTest, CopyBinaryFieldCheck)
     {
         col1In = r.getBinaryField<int128_t>(0);
         col1Out = rOut.getBinaryField<int128_t>(0);
-        col2In = r.getBinaryField<uint128_t>(1);
-        col2Out = rOut.getBinaryField<uint128_t>(1);
+        col2In = r.getBinaryField<int128_t>(1);
+        col2Out = rOut.getBinaryField<int128_t>(1);
         EXPECT_NE(*col1In, *col1Out);
         EXPECT_NE(*col2In, *col2Out);
         r.copyBinaryField<int128_t>(rOut, 0, 0);
         r.copyBinaryField<int128_t>(rOut, 1, 1);
         col1Out = rOut.getBinaryField<int128_t>(0);
-        col2Out = rOut.getBinaryField<uint128_t>(1);
+        col2Out = rOut.getBinaryField<int128_t>(1);
         EXPECT_EQ(*col1In, *col1Out);
         EXPECT_EQ(*col2In, *col2Out);
         r.nextRow(rowSize);
