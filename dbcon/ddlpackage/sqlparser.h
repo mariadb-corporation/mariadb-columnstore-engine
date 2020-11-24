@@ -27,6 +27,8 @@
  */
 
 #include <stdexcept>
+#include <my_global.h>
+#include <my_sys.h>
 #include "ddlpkg.h"
 
 #if defined(_MSC_VER) && defined(xxxDDLPKGSQLPARSER_DLLEXPORT)
@@ -86,8 +88,9 @@ struct pass_to_bison
     ParseTree* fParseTree;
     std::string fDBSchema;
     void* scanner;
+    const CHARSET_INFO* default_table_charset;
 
-    pass_to_bison(ParseTree* pt) : fParseTree(pt), scanner(NULL) {};
+    pass_to_bison(ParseTree* pt) : fParseTree(pt), scanner(NULL), default_table_charset(NULL) {};
 };
 
 class SqlParser
@@ -119,6 +122,13 @@ public:
       * @param schema the default schema
       */
     EXPORT void setDefaultSchema(std::string schema);
+
+    /** @brief Set the default table charset. Can be overriden by column
+     *  or table options
+     *
+     *  @param default_charset the default CHARSET_INFO pointer
+     */
+     EXPORT void setDefaultCharset(const CHARSET_INFO* default_charset);
 
 protected:
     ParseTree fParseTree;

@@ -877,7 +877,8 @@ bool anyNullInTheColumn (THD* thd, string& schema, string& table, string& column
 }
 
 int ProcessDDLStatement(string& ddlStatement, string& schema, const string& table, int sessionID,
-                        string& emsg, int compressionTypeIn = 2, bool isAnyAutoincreCol = false, int64_t nextvalue = 1, std::string autoiColName = "")
+                        string& emsg, int compressionTypeIn = 2, bool isAnyAutoincreCol = false, int64_t nextvalue = 1, std::string autoiColName = "",
+                        const CHARSET_INFO* default_table_charset = NULL)
 {
     SqlParser parser;
     THD* thd = current_thd;
@@ -886,6 +887,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 #endif
 
     parser.setDefaultSchema(schema);
+    parser.setDefaultCharset(default_table_charset);
     int rc = 0;
     IDBCompressInterface idbCompress;
     parser.Parse(ddlStatement.c_str());
@@ -2503,6 +2505,13 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
             {
                 oss << " DEFAULT " << def_value.c_ptr();
             }
+
+            const CHARSET_INFO* field_cs = (*field)->charset();
+            if (field_cs && (!share->table_charset || field_cs->number != share->table_charset->number))
+            {
+                oss << " CHARACTER SET " << field_cs->csname;
+            }
+
             if ((*field)->comment.length)
             {
                 String comment;
@@ -2565,7 +2574,7 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
         tmp_restore_column_map(table_arg->read_set, old_map);
     }
 
-    rc = ProcessDDLStatement(stmt, db, tbl, tid2sid(thd->thread_id), emsg, compressiontype, isAnyAutoincreCol, startValue, columnName);
+    rc = ProcessDDLStatement(stmt, db, tbl, tid2sid(thd->thread_id), emsg, compressiontype, isAnyAutoincreCol, startValue, columnName, create_info->default_table_charset);
 
     if (rc != 0)
     {

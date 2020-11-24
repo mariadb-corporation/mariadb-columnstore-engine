@@ -49,6 +49,9 @@
 #include "ddl-gram.h"
 #endif
 
+#include "my_global.h"
+#include "my_sys.h"
+
 #define scanner x->scanner
 
 using namespace std;
@@ -200,6 +203,7 @@ BOOL BOOLEAN MEDIUMINT TIMESTAMP
 %type <sqlStmt>              rename_table_statement
 %type <str>                  ident
 %type <str>                  opt_quoted_literal
+%type <str>                  opt_column_charset
 %%
 stmtblock:	stmtmulti { x->fParseTree = $1; }
 		;
@@ -279,14 +283,30 @@ opt_table_options:
 	;
 
 create_table_statement:
-	CREATE TABLE opt_if_not_exists table_name '(' table_element_list ')' table_options
+	CREATE TABLE opt_if_not_exists table_name '(' table_element_list ')' opt_table_options
 	{
+        const CHARSET_INFO* def_cs = x->default_table_charset;
+
+        for (auto* elem : *$6)
+        {
+            auto* column = dynamic_cast<ColumnDef*>(elem);
+            if (column == NULL)
+            {
+                continue;
+            }
+
+            if (column->fType && (column->fType->fType == DDL_VARCHAR || column->fType->fType == DDL_TEXT))
+            {
+                unsigned mul = def_cs ? def_cs->mbmaxlen : 1;
+                if (column->fType->fCharset) {
+                    const CHARSET_INFO* cs = get_charset_by_csname(column->fType->fCharset, MY_CS_PRIMARY, MYF(0));
+                    if (cs)
+                        mul = cs->mbmaxlen;
+                }
+                column->fType->fLength *= mul;
+            }
+        }
 		$$ = new CreateTableStatement(new TableDef($4, $6, $8));
-	}
-    |
-	CREATE TABLE opt_if_not_exists table_name '(' table_element_list ')'
-	{
-		$$ = new CreateTableStatement(new TableDef($4, $6, NULL));
 	}
 	;
 
@@ -745,12 +765,18 @@ opt_column_collate:
     ;
 
 data_type:
-	character_string_type opt_column_charset opt_column_collate
+	character_string_type opt_column_charset opt_column_collate {
+        $1->fCharset = $2;
+        $$ = $1;
+    }
 	| binary_string_type
 	| numeric_type
 	| datetime_type
 	| blob_type
-	| text_type opt_column_charset opt_column_collate
+	| text_type opt_column_charset opt_column_collate {
+        $1->fCharset = $2;
+        $$ = $1;
+    }
 	| IDB_BLOB
 	{
 		$$ = new ColumnType(DDL_BLOB);
