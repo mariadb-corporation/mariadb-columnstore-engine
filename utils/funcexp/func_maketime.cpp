@@ -78,22 +78,7 @@ string Func_maketime::getStrVal(rowgroup::Row& row,
 
             if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
             {
-                int128_t scaleDivisor, scaleDivisor2;
-
-                datatypes::getScaleDivisor(scaleDivisor, d.scale);
-
-                scaleDivisor2 = (scaleDivisor <= 10) ? 1 : (scaleDivisor / 10);
-
-                int128_t tmpval = d.s128Value / scaleDivisor;
-                int128_t lefto = (d.s128Value - tmpval * scaleDivisor) / scaleDivisor2;
-
-                if (tmpval >= 0 && lefto > 4)
-                    tmpval++;
-
-                if (tmpval < 0 && lefto < -4)
-                    tmpval--;
-
-                hour = datatypes::Decimal::getInt64FromWideDecimal(tmpval);
+                hour = static_cast<int64_t>(d.getPosNegRoundedIntegralPart(4));
             }
             else
             {
@@ -142,22 +127,7 @@ string Func_maketime::getStrVal(rowgroup::Row& row,
 
             if (parm[1]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
             {
-                int128_t scaleDivisor, scaleDivisor2;
-
-                datatypes::getScaleDivisor(scaleDivisor, d.scale);
-
-                scaleDivisor2 = (scaleDivisor <= 10) ? 1 : (scaleDivisor / 10);
-
-                int128_t tmpval = d.s128Value / scaleDivisor;
-                int128_t lefto = (d.s128Value - tmpval * scaleDivisor) / scaleDivisor2;
-
-                if (tmpval >= 0 && lefto > 4)
-                    tmpval++;
-
-                if (tmpval < 0 && lefto < -4)
-                    tmpval--;
-
-                min = datatypes::Decimal::getInt64FromWideDecimal(tmpval);
+                min = static_cast<int64_t>(d.getPosNegRoundedIntegralPart(4));
             }
             else
             {
@@ -212,22 +182,7 @@ string Func_maketime::getStrVal(rowgroup::Row& row,
 
             if (parm[2]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
             {
-                int128_t scaleDivisor, scaleDivisor2;
-
-                datatypes::getScaleDivisor(scaleDivisor, d.scale);
-
-                scaleDivisor2 = (scaleDivisor <= 10) ? 1 : (scaleDivisor / 10);
-
-                int128_t tmpval = d.s128Value / scaleDivisor;
-                int128_t lefto = (d.s128Value - tmpval * scaleDivisor) / scaleDivisor2;
-
-                if (tmpval >= 0 && lefto > 4)
-                    tmpval++;
-
-                if (tmpval < 0 && lefto < -4)
-                    tmpval--;
-
-                sec = datatypes::Decimal::getInt64FromWideDecimal(tmpval);
+                sec = static_cast<int64_t>(d.getPosNegRoundedIntegralPart(4));
             }
             else
             {

@@ -237,12 +237,12 @@ double Func_mod::getDoubleVal(Row& row,
                 }
                 else
                 {
-                    int128_t scaleDivisor;
-                    datatypes::getScaleDivisor(scaleDivisor, d.scale);
-                    int128_t value = d.s128Value / scaleDivisor;
-                    int128_t lefto = d.s128Value % scaleDivisor;
-                    datatypes::TFloat128 tmp((__float128) (value % div) + (__float128) lefto / scaleDivisor);
-                    mod = static_cast<double>(tmp);
+                    auto intAndFract = d.getIntegralAndFractional<datatypes::TFloat128>();
+
+                    datatypes::TSInt128 integralRemainder = intAndFract.first % div;
+                    mod = static_cast<double>(integralRemainder.toTFloat128() +
+                                                   intAndFract.second);
+
                 }
             }
             else
@@ -360,12 +360,11 @@ long double Func_mod::getLongDoubleVal(Row& row,
                 }
                 else
                 {
-                    int128_t scaleDivisor;
-                    datatypes::getScaleDivisor(scaleDivisor, d.scale);
-                    int128_t value = d.s128Value / scaleDivisor;
-                    int128_t lefto = d.s128Value % scaleDivisor;
-                    datatypes::TFloat128 tmp((__float128) (value % div) + (__float128) lefto / scaleDivisor);
-                    mod = static_cast<long double>(tmp);
+                    auto intAndFract = d.getIntegralAndFractional<datatypes::TFloat128>();
+
+                    datatypes::TSInt128 integralRemainder = intAndFract.first % div;
+                    mod = static_cast<long double>(integralRemainder.toTFloat128() +
+                                                   intAndFract.second);
                 }
             }
             else
@@ -486,12 +485,10 @@ int64_t Func_mod::getIntVal(Row& row,
                 }
                 else
                 {
-                    int128_t scaleDivisor;
-                    datatypes::getScaleDivisor(scaleDivisor, d.scale);
-                    int128_t value = d.s128Value / scaleDivisor;
-                    int128_t lefto = d.s128Value % scaleDivisor;
-                    __float128 tmp = (__float128) (value % div) + (__float128) lefto / scaleDivisor;
-                    mod = datatypes::Decimal::getInt64FromFloat128(tmp);
+                    auto intAndFract = d.getIntegralAndFractional<datatypes::TFloat128>();
+                    datatypes::TSInt128 integralRemainder = intAndFract.first % div;
+                    mod = static_cast<int64_t>(integralRemainder.toTFloat128() +
+                                               intAndFract.second);
                 }
             }
             else
@@ -603,12 +600,11 @@ uint64_t Func_mod::getUIntVal(Row& row,
                 }
                 else
                 {
-                    int128_t scaleDivisor;
-                    datatypes::getScaleDivisor(scaleDivisor, d.scale);
-                    int128_t value = d.s128Value / scaleDivisor;
-                    int128_t lefto = d.s128Value % scaleDivisor;
-                    __float128 tmp = (__float128) (value % div) + (__float128) lefto / scaleDivisor;
-                    mod = datatypes::Decimal::getUInt64FromFloat128(tmp);
+                    auto intAndFract = d.getIntegralAndFractional<datatypes::TFloat128>();
+                    datatypes::TSInt128 integralRemainder = intAndFract.first % div;
+                    mod = static_cast<uint64_t>(integralRemainder.toTFloat128() +
+                                               intAndFract.second);
+
                 }
             }
             else

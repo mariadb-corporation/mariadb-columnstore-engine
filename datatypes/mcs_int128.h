@@ -200,9 +200,38 @@ class TSInt128
       return static_cast<long double>(s128Value);
     }
 
+    int32_t toTSInt32() const;
+    inline operator int32_t() const
+    {
+      return toTSInt32();
+    }
+
+    uint32_t toTUInt32() const;
+    inline operator uint32_t() const
+    {
+      return toTUInt32();
+    }
+
+    int64_t toTSInt64() const;
+    inline operator int64_t() const
+    {
+      return toTSInt64();
+    }
+
+    uint64_t toTUInt64() const;
+    inline operator uint64_t() const
+    {
+      return toTUInt64();
+    }
+
     inline operator TFloat128() const
     {
       return toTFloat128();
+    }
+
+    inline TSInt128 operator%(const int64_t rhs) const
+    {
+      return TSInt128(s128Value % rhs);
     }
 
     inline TFloat128 toTFloat128() const
@@ -225,19 +254,6 @@ class TSInt128
     std::string toString() const;
 
     friend std::ostream& operator<<(std::ostream& os, const TSInt128& x);
-
-    //     The method converts a wide decimal s128Value to an int64_t,
-    //    saturating the s128Value if necessary.
-    inline int64_t getInt64FromWideDecimal();
-
-    //     The method converts a wide decimal s128Value to an uint32_t.
-    inline uint32_t getUInt32FromWideDecimal();
-
-    //     The method converts a wide decimal s128Value to an uint64_t.
-    inline uint64_t getUInt64FromWideDecimal();
-
-    //     The method converts a wide decimal s128Value to an int32_t.
-    inline int32_t getInt32FromWideDecimal();
 
     int128_t s128Value;
   }; // end of class

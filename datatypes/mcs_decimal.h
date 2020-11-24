@@ -26,6 +26,8 @@
 #include "widedecimalutils.h"
 #include "mcs_int128.h"
 #include "mcs_float128.h"
+#include "checks.h"
+#include "branchpred.h"
 
 
 namespace datatypes
@@ -271,85 +273,6 @@ class Decimal
         }
 
         /**
-            @brief The method converts a __float128 value to an int64_t.
-        */
-        static inline int64_t getInt64FromFloat128(const __float128& value)
-        {
-            if (value > static_cast<__float128>(INT64_MAX))
-                return INT64_MAX;
-            else if (value < static_cast<__float128>(INT64_MIN))
-                return INT64_MIN;
-
-            return static_cast<int64_t>(value);
-        }
-
-        /**
-            @brief The method converts a __float128 value to an uint64_t.
-        */
-        static inline uint64_t getUInt64FromFloat128(const __float128& value)
-        {
-            if (value > static_cast<__float128>(UINT64_MAX))
-                return UINT64_MAX;
-            else if (value < 0)
-                return 0;
-
-            return static_cast<uint64_t>(value);
-        }
-
-        /**
-            @brief The method converts a wide decimal value to an uint32_t.
-        */
-        static inline uint32_t getUInt32FromWideDecimal(const int128_t& value)
-        {
-            if (value > static_cast<int128_t>(UINT32_MAX))
-                return UINT32_MAX;
-            else if (value < 0)
-                return 0;
-
-            return static_cast<uint32_t>(value);
-        }
-
-        /**
-            @brief The method converts a wide decimal value to an int32_t.
-        */
-        static inline int32_t getInt32FromWideDecimal(const int128_t& value)
-        {
-            if (value > static_cast<int128_t>(INT32_MAX))
-                return INT32_MAX;
-            else if (value < static_cast<int128_t>(INT32_MIN))
-                return INT32_MIN;
-
-            return static_cast<int32_t>(value);
-        }
-
-        /**
-            @brief The method converts a wide decimal value to an uint64_t.
-        */
-        static inline uint64_t getUInt64FromWideDecimal(const int128_t& value)
-        {
-            if (value > static_cast<int128_t>(UINT64_MAX))
-                return UINT64_MAX;
-            else if (value < 0)
-                return 0;
-
-            return static_cast<uint64_t>(value);
-        }
-
-        /**
-            @brief The method converts a wide decimal value to an int64_t,
-            saturating the value if necessary.
-        */
-        static inline int64_t getInt64FromWideDecimal(const int128_t& value)
-        {
-            if (value > static_cast<int128_t>(INT64_MAX))
-                return INT64_MAX;
-            else if (value < static_cast<int128_t>(INT64_MIN))
-                return INT64_MIN;
-
-            return static_cast<int64_t>(value);
-        }
-
-        /**
             @brief MDB increases scale by up to 4 digits calculating avg()
         */
         static inline void setScalePrecision4Avg(
@@ -527,6 +450,13 @@ class VDecimal: public TSInt128
         precision(p)
     { }
 
+    VDecimal(const TSInt128& val128, int8_t s, uint8_t p) :
+        TSInt128(val128),
+        value(0),
+        scale(s),
+        precision(p)
+    { }
+
 
     int decimalComp(const VDecimal& d) const
     {
@@ -594,6 +524,71 @@ class VDecimal: public TSInt128
     {
         datatypes::TFloat128 y(s128Value);
         return static_cast<long double>(y);
+    }
+
+   
+    // The template returns integral as TSInt128 and
+    // fractional as D parts. We use template-type-defined types
+    // to return a fractional part
+    template<typename D>
+    inline std::pair<TSInt128, D> getIntegralAndFractional() const
+    {
+        int128_t scaleDivisor;
+        getScaleDivisor(scaleDivisor, scale);
+        return std::make_pair(TSInt128(s128Value / scaleDivisor),
+                              D((typename get_integral_type<D>::type)(s128Value % scaleDivisor) / scaleDivisor));
+    }
+
+    inline TSInt128 getIntegralPart() const
+    {
+        int128_t scaleDivisor = 0;
+        int128_t result = 0;
+        if(LIKELY(utils::is_nonnegative(scale)))
+        {
+            getIntegralPart(scaleDivisor, result);
+        }
+        else
+        {
+            getIntegralPartNegativeScale(scaleDivisor, result);
+        }
+        return TSInt128(result);
+    }
+
+    // !!! This is a very hevyweight rouding style
+    // Argument determines if it is a ceil
+    // rounding or not. 0 - ceil rounding
+    inline TSInt128 getRoundedIntegralPart(const uint8_t roundingFactor = 0) const
+    {
+        int128_t flooredScaleDivisor = 0;
+        int128_t roundedValue = 0;
+        getIntegralPart(flooredScaleDivisor, roundedValue);
+        int128_t ceiledScaleDivisor = (flooredScaleDivisor <= 10) ? 1 : (flooredScaleDivisor / 10);
+        int128_t leftO = (s128Value - roundedValue * flooredScaleDivisor) / ceiledScaleDivisor;
+        if (leftO > roundingFactor)
+        {
+            roundedValue++;
+        }
+
+        return TSInt128(roundedValue);
+    }
+
+    inline TSInt128 getPosNegRoundedIntegralPart(const uint8_t roundingFactor = 0) const
+    {
+        int128_t flooredScaleDivisor = 0;
+        int128_t roundedValue = 0;
+        getIntegralPart(flooredScaleDivisor, roundedValue);
+        int128_t ceiledScaleDivisor = (flooredScaleDivisor <= 10) ? 1 : (flooredScaleDivisor / 10);
+        int128_t leftO = (s128Value - roundedValue * flooredScaleDivisor) / ceiledScaleDivisor;
+        if (utils::is_nonnegative(roundedValue) && leftO > roundingFactor)
+        {
+            roundedValue++;
+        }
+        if (utils::is_negative(roundedValue) && leftO < -roundingFactor)
+        {
+            roundedValue--;
+        }
+
+        return TSInt128(roundedValue);
     }
 
     bool operator==(const VDecimal& rhs) const
@@ -829,6 +824,20 @@ private:
                                 const uint8_t buflen) const;
     std::string toStringTSInt128WithScale() const;
     std::string toStringTSInt64() const; 
+
+    inline void getIntegralPart(int128_t& scaleDivisor, int128_t& result) const
+    {
+        getScaleDivisor(scaleDivisor, scale);
+        result = s128Value / scaleDivisor;
+    }
+
+    inline void getIntegralPartNegativeScale(int128_t& scaleDivisor, int128_t& result) const
+    {
+        getScaleDivisor(scaleDivisor, -scale);
+        // Calls for overflow check
+        result = s128Value * scaleDivisor;
+    }
+
 
 };
 

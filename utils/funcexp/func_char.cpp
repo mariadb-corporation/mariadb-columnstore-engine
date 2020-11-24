@@ -136,11 +136,13 @@ string Func_char::getStrVal(Row& row,
             {
                 IDB_Decimal d = rc->getDecimalVal(row, isNull);
 
+                uint8_t roundingFactor = 4;
                 if (ct.colWidth == datatypes::MAXDECIMALWIDTH)
                 {
                     if (d.s128Value < 0)
                         return "";
 
+/*
                     int128_t scaleDivisor, scaleDivisor2;
 
                     datatypes::getScaleDivisor(scaleDivisor, d.scale);
@@ -154,15 +156,18 @@ string Func_char::getStrVal(Row& row,
                         tmpval++;
 
                     value = datatypes::Decimal::getInt32FromWideDecimal(tmpval);
+*/
+                    // rounding by the left over
+                    value = static_cast<int32_t>(d.getRoundedIntegralPart(roundingFactor));
                 }
                 else
                 {
                     double dscale = d.scale;
                     // get decimal and round up
                     value = d.value / pow(10.0, dscale);
-                    int lefto = (d.value - value * pow(10.0, dscale)) / pow(10.0, dscale - 1);
+                    uint8_t lefto = (d.value - value * pow(10.0, dscale)) / pow(10.0, dscale - 1);
 
-                    if ( lefto > 4 )
+                    if ( lefto > roundingFactor )
                         value++;
                 }
             }

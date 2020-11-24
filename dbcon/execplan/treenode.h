@@ -61,8 +61,17 @@ class IDB_Decimal: public datatypes::VDecimal
 {
 public:
   IDB_Decimal() = default;
-  IDB_Decimal(int64_t val, int8_t s, uint8_t p, const int128_t &val128 = 0) :
-    VDecimal(val, s, p, val128) {}
+  IDB_Decimal(int64_t val,
+              int8_t s,
+              uint8_t p,
+              const int128_t &val128 = 0)
+    : VDecimal(val, s, p, val128)
+  { }
+   IDB_Decimal(const TSInt128& val128,
+               int8_t s,
+               uint8_t p)
+        : VDecimal(val128, s, p)
+  { }
 
   inline void operator=(const datatypes::TSInt128& rhs)
   {
@@ -732,13 +741,7 @@ inline int64_t TreeNode::getIntVal()
         {
             if (fResultType.colWidth == datatypes::MAXDECIMALWIDTH)
             {
-                int128_t scaleDivisor;
-
-                datatypes::getScaleDivisor(scaleDivisor, fResult.decimalVal.scale);
-
-                int128_t tmpval = fResult.decimalVal.s128Value / scaleDivisor;
-
-                return datatypes::Decimal::getInt64FromWideDecimal(tmpval);
+                return static_cast<int64_t>(fResult.decimalVal.getIntegralPart());
             }
             else
             {

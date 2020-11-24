@@ -72,22 +72,7 @@ uint64_t makedate(rowgroup::Row& row,
 
             if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
             {
-                int128_t scaleDivisor, scaleDivisor2;
-
-                datatypes::getScaleDivisor(scaleDivisor, d.scale);
-
-                scaleDivisor2 = (scaleDivisor <= 10) ? 1 : (scaleDivisor / 10);
-
-                int128_t tmpval = d.s128Value / scaleDivisor;
-                int128_t lefto = (d.s128Value - tmpval * scaleDivisor) / scaleDivisor2;
-
-                if (tmpval >= 0 && lefto > 4)
-                    tmpval++;
-
-                if (tmpval < 0 && lefto < -4)
-                    tmpval--;
-
-                year = datatypes::Decimal::getInt64FromWideDecimal(tmpval);
+                year = static_cast<int64_t>(d.getPosNegRoundedIntegralPart(4));
             }
             else
             {
@@ -156,29 +141,14 @@ uint64_t makedate(rowgroup::Row& row,
 
             if (parm[1]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
             {
-                int128_t scaleDivisor, scaleDivisor2;
-
-                datatypes::getScaleDivisor(scaleDivisor, d.scale);
-
-                scaleDivisor2 = (scaleDivisor <= 10) ? 1 : (scaleDivisor / 10);
-
-                int128_t tmpval = d.s128Value / scaleDivisor;
-                int128_t lefto = (d.s128Value - tmpval * scaleDivisor) / scaleDivisor2;
-
-                if (tmpval >= 0 && lefto > 4)
-                    tmpval++;
-
-                if (tmpval < 0 && lefto < -4)
-                    tmpval--;
-
+                int64_t tmpval = static_cast<int64_t>(d.getPosNegRoundedIntegralPart(4));
                 if (tmpval < 1)
                 {
                     isNull = true;
                     return 0;
                 }
 
-                int64_t tmpval64 = datatypes::Decimal::getInt64FromWideDecimal(tmpval);
-                dayofyear = helpers::intToString(tmpval64);
+                dayofyear = helpers::intToString(tmpval);
             }
             else
             {
