@@ -113,21 +113,21 @@ static void decode_objectname(char *buf, const char *path, size_t buf_size)
 static void decode_file_path(const char *path, char *decoded_dbname,
     char *decoded_tbname)
 {
-  // The format cont ains './' in the beginning of a path.
-  char *dbname_start = (char*) path + 2;
-  char *dbname_end = dbname_start;
-  while (*dbname_end != '/')
+    // The format cont ains './' in the beginning of a path.
+    char *dbname_start = (char*) path + 2;
+    char *dbname_end = dbname_start;
+    while (*dbname_end != '/')
     dbname_end++;
 
-  int cnt = dbname_end - dbname_start;
-  char *dbname = (char *)my_alloca(cnt + 1);
-  memcpy(dbname, dbname_start, cnt);
-  dbname[cnt] = '\0';
-  decode_objectname(decoded_dbname, dbname, FN_REFLEN);
-  my_afree(dbname);
+    int cnt = dbname_end - dbname_start;
+    char *dbname = (char *)my_alloca(cnt + 1);
+    memcpy(dbname, dbname_start, cnt);
+    dbname[cnt] = '\0';
+    decode_objectname(decoded_dbname, dbname, FN_REFLEN);
+    my_afree(dbname);
 
-  char *tbname_start = dbname_end + 1;
-  decode_objectname(decoded_tbname, tbname_start, FN_REFLEN);
+    char *tbname_start = dbname_end + 1;
+    decode_objectname(decoded_tbname, tbname_start, FN_REFLEN);
 }
 
 
@@ -158,7 +158,7 @@ int parseCompressionComment ( std::string comment )
     {
         //Find the pattern, now get the compression type
         string compType (&(*(what[0].second)));
-        //; is the seperator between compression and autoincrement comments.
+        //; is the separator between compression and autoincrement comments.
         unsigned i = compType.find_first_of(";");
 
         if ( i <= compType.length() )
@@ -310,7 +310,7 @@ bool anyRowInTable(string& schema, string& tableName, int sessionID)
     }
     aTableName.schema = schema;
     aTableName.table = tableName;
-    
+
     CalpontSystemCatalog::RIDList ridList = csc->columnRIDs(aTableName, true);
     CalpontSystemCatalog::TableColName tableColName =  csc->colName(ridList[0].objnum);
 
@@ -759,7 +759,8 @@ bool anyNullInTheColumn (THD* thd, string& schema, string& table, string& column
 }
 
 int ProcessDDLStatement(string& ddlStatement, string& schema, const string& table, int sessionID,
-                        string& emsg, int compressionTypeIn = 2, bool isAnyAutoincreCol = false, int64_t nextvalue = 1, std::string autoiColName = "")
+                        string& emsg, int compressionTypeIn = 2, bool isAnyAutoincreCol = false, int64_t nextvalue = 1, std::string autoiColName = "",
+                        const CHARSET_INFO* default_table_charset = NULL)
 {
     SqlParser parser;
     THD* thd = current_thd;
@@ -768,6 +769,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 #endif
 
     parser.setDefaultSchema(schema);
+    parser.setDefaultCharset(default_table_charset);
     int rc = 0;
     IDBCompressInterface idbCompress;
     parser.Parse(ddlStatement.c_str());
@@ -1477,23 +1479,23 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
                     return rc;
                 }
                 /*			else if ( dynamic_cast<AtaSetColumnDefault*> (actionList[i]) )
-                			{
-                				rc = 1;
-                  	 			thd->get_stmt_da()->set_overwrite_status(true);
-                	 			thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS)).c_str());
-                				ci->alterTableState = cal_connection_info::NOT_ALTER;
-                				ci->isAlter = false;
-                	 			return rc;
-                			}
-                			else if ( dynamic_cast<AtaDropColumnDefault*> (actionList[i]) )
-                			{
-                				rc = 1;
-                  	 			thd->get_stmt_da()->set_overwrite_status(true);
-                	 			thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS)).c_str());
-                				ci->alterTableState = cal_connection_info::NOT_ALTER;
-                				ci->isAlter = false;
-                	 			return rc;
-                			}
+                                        {
+                                                rc = 1;
+                                                thd->get_stmt_da()->set_overwrite_status(true);
+                                                thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS)).c_str());
+                                                ci->alterTableState = cal_connection_info::NOT_ALTER;
+                                                ci->isAlter = false;
+                                                return rc;
+                                        }
+                                        else if ( dynamic_cast<AtaDropColumnDefault*> (actionList[i]) )
+                                        {
+                                                rc = 1;
+                                                thd->get_stmt_da()->set_overwrite_status(true);
+                                                thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS)).c_str());
+                                                ci->alterTableState = cal_connection_info::NOT_ALTER;
+                                                ci->isAlter = false;
+                                                return rc;
+                                        }
                 */
                 else if ( ddlpackage::AtaAddColumns* addColumnsPtr = dynamic_cast<AtaAddColumns*>(actionList[i]))
                 {
@@ -1879,14 +1881,14 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 
                             //@Bug 5444. rename column doen't need to check this.
                             /*	if (tblInfo.tablewithautoincr == 1)
-                            	{
-                            		rc = 1;
-                            		thd->get_stmt_da()->set_overwrite_status(true);
-                            		thd->raise_error_printf(ER_INTERNAL_ERROR, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_NUMBER_AUTOINCREMENT)).c_str());
-                            		ci->alterTableState = cal_connection_info::NOT_ALTER;
-                            		ci->isAlter = false;
-                            		return rc;
-                            	} */
+                                {
+                                        rc = 1;
+                                        thd->get_stmt_da()->set_overwrite_status(true);
+                                        thd->raise_error_printf(ER_INTERNAL_ERROR, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_NUMBER_AUTOINCREMENT)).c_str());
+                                        ci->alterTableState = cal_connection_info::NOT_ALTER;
+                                        ci->isAlter = false;
+                                        return rc;
+                                } */
 
                             if (!validateAutoincrementDatatype(renameColumnsPtr->fNewType->fType))
                             {
@@ -2113,68 +2115,68 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 static bool get_field_default_value(THD *thd, Field *field, String *def_value,
                                     bool quoted)
 {
-  bool has_default;
-  enum enum_field_types field_type= field->type();
+    bool has_default;
+    enum enum_field_types field_type= field->type();
 
-  has_default= (field->default_value ||
-                (!(field->flags & NO_DEFAULT_VALUE_FLAG) &&
-                 field->unireg_check != Field::NEXT_NUMBER));
+    has_default= (field->default_value ||
+                  (!(field->flags & NO_DEFAULT_VALUE_FLAG) &&
+                   field->unireg_check != Field::NEXT_NUMBER));
 
-  def_value->length(0);
-  if (has_default)
-  {
-    StringBuffer<MAX_FIELD_WIDTH> str(field->charset());
-    if (field->default_value)
+    def_value->length(0);
+    if (has_default)
     {
-      field->default_value->print(&str);
-      if (field->default_value->expr->need_parentheses_in_default())
-      {
-        def_value->set_charset(&my_charset_utf8mb4_general_ci);
-        def_value->append('(');
-        def_value->append(str);
-        def_value->append(')');
-      }
-      else
-        def_value->append(str);
-    }
-    else if (!field->is_null())
-    {                                             // Not null by default
-      if (field_type == MYSQL_TYPE_BIT)
-      {
-        str.qs_append('b');
-        str.qs_append('\'');
-        str.qs_append(field->val_int(), 2);
-        str.qs_append('\'');
-        quoted= 0;
-      }
-      else
-      {
-        field->val_str(&str);
-        if (!field->str_needs_quotes())
-          quoted= 0;
-      }
-      if (str.length())
-      {
-        StringBuffer<MAX_FIELD_WIDTH> def_val;
-        uint dummy_errors;
-        /* convert to system_charset_info == utf8 */
-        def_val.copy(str.ptr(), str.length(), field->charset(),
-                     system_charset_info, &dummy_errors);
-        if (quoted)
-          append_unescaped(def_value, def_val.ptr(), def_val.length());
+        StringBuffer<MAX_FIELD_WIDTH> str(field->charset());
+        if (field->default_value)
+        {
+            field->default_value->print(&str);
+            if (field->default_value->expr->need_parentheses_in_default())
+            {
+                def_value->set_charset(&my_charset_utf8mb4_general_ci);
+                def_value->append('(');
+                def_value->append(str);
+                def_value->append(')');
+            }
+            else
+                def_value->append(str);
+        }
+        else if (!field->is_null())
+        {                                             // Not null by default
+            if (field_type == MYSQL_TYPE_BIT)
+            {
+                str.qs_append('b');
+                str.qs_append('\'');
+                str.qs_append(field->val_int(), 2);
+                str.qs_append('\'');
+                quoted= 0;
+            }
+            else
+            {
+                field->val_str(&str);
+                if (!field->str_needs_quotes())
+                    quoted= 0;
+            }
+            if (str.length())
+            {
+                StringBuffer<MAX_FIELD_WIDTH> def_val;
+                uint dummy_errors;
+                /* convert to system_charset_info == utf8 */
+                def_val.copy(str.ptr(), str.length(), field->charset(),
+                             system_charset_info, &dummy_errors);
+                if (quoted)
+                    append_unescaped(def_value, def_val.ptr(), def_val.length());
+                else
+                    def_value->append(def_val);
+            }
+            else if (quoted)
+                def_value->set(STRING_WITH_LEN("''"), system_charset_info);
+        }
+        else if (field->maybe_null() && quoted)
+            def_value->set(STRING_WITH_LEN("NULL"), system_charset_info);    // Null as default
         else
-          def_value->append(def_val);
-      }
-      else if (quoted)
-        def_value->set(STRING_WITH_LEN("''"), system_charset_info);
-    }
-    else if (field->maybe_null() && quoted)
-      def_value->set(STRING_WITH_LEN("NULL"), system_charset_info);    // Null as default
-    else
-      return 0;
+            return 0;
 
-  }
-  return has_default;
+    }
+    return has_default;
 }
 
 /*
@@ -2211,7 +2213,7 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
     string stmt(query);
     stmt += ";";
     algorithm::to_upper(stmt);
-    
+
     string db, tbl;
     db = table_arg->s->db.str;
     tbl = table_arg->s->table_name.str;
@@ -2358,67 +2360,75 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
         return 1;
     }
 
-	// Check if this is one of
+    // Check if this is one of
     // * "CREATE TABLE ... LIKE "
     // * "ALTER TABLE ... ENGINE=Columnstore"
     // * "CREATE TABLE ... AS ..."
-	// If so generate a full create table statement using the properties of
-	// the source table. Note that source table has to be a columnstore table and
-	// we only check for currently supported options.
-	//
+    // If so generate a full create table statement using the properties of
+    // the source table. Note that source table has to be a columnstore table and
+    // we only check for currently supported options.
+    //
 
-	if ((thd->lex->sql_command == SQLCOM_CREATE_TABLE && thd->lex->used_tables) ||
+    if ((thd->lex->sql_command == SQLCOM_CREATE_TABLE && thd->lex->used_tables) ||
         (thd->lex->sql_command == SQLCOM_ALTER_TABLE && create_info->used_fields & HA_CREATE_USED_ENGINE) ||
         (thd->lex->create_info.like()))
-	{
-		TABLE_SHARE *share = table_arg->s;
-		my_bitmap_map *old_map;			// To save the read_set
-		char datatype_buf[MAX_FIELD_WIDTH], def_value_buf[MAX_FIELD_WIDTH];
-		String datatype, def_value;
-		ostringstream  oss;
+    {
+        TABLE_SHARE *share = table_arg->s;
+        my_bitmap_map *old_map;			// To save the read_set
+        char datatype_buf[MAX_FIELD_WIDTH], def_value_buf[MAX_FIELD_WIDTH];
+        String datatype, def_value;
+        ostringstream  oss;
         string tbl_name = string(share->db.str) + "." + string(share->table_name.str);
 
-		// Save the current read_set map and mark it for read
-		old_map= tmp_use_all_columns(table_arg, table_arg->read_set);
+        // Save the current read_set map and mark it for read
+        old_map= tmp_use_all_columns(table_arg, table_arg->read_set);
 
-		oss << "CREATE TABLE " << tbl_name  << " (";
+        oss << "CREATE TABLE " << tbl_name  << " (";
 
-		restore_record(table_arg, s->default_values);
-		for (Field **field= table_arg->field; *field; field++)
-		{
-			uint flags = (*field)->flags;
-			datatype.set(datatype_buf, sizeof(datatype_buf), system_charset_info);
-			(*field)->sql_type(datatype);
-			if (field != table_arg->field)
-				oss << ", ";
-			oss << (*field)->field_name.str << " " << datatype.ptr();
+        restore_record(table_arg, s->default_values);
+        for (Field **field= table_arg->field; *field; field++)
+        {
+            uint flags = (*field)->flags;
+            datatype.set(datatype_buf, sizeof(datatype_buf), system_charset_info);
+            (*field)->sql_type(datatype);
+            if (field != table_arg->field)
+                oss << ", ";
+            oss << (*field)->field_name.str << " " << datatype.ptr();
 
-			if (flags & NOT_NULL_FLAG)
-				oss << " NOT NULL";
+            if (flags & NOT_NULL_FLAG)
+                oss << " NOT NULL";
 
-			def_value.set(def_value_buf, sizeof(def_value_buf), system_charset_info);
-			if (get_field_default_value(thd, *field, &def_value, true)) {
-				oss << " DEFAULT " << def_value.c_ptr();
-			}
-			if ((*field)->comment.length)
-			{
-				String comment;
-				append_unescaped(&comment, (*field)->comment.str, (*field)->comment.length);
-				oss << " COMMENT ";
-				oss << comment.c_ptr();
-			}
+            def_value.set(def_value_buf, sizeof(def_value_buf), system_charset_info);
+            if (get_field_default_value(thd, *field, &def_value, true))
+            {
+                oss << " DEFAULT " << def_value.c_ptr();
+            }
 
-		}
-		// End the list of columns
-		oss<< ") ENGINE=columnstore ";
+            const CHARSET_INFO* field_cs = (*field)->charset();
+            if (field_cs && (!share->table_charset || field_cs->number != share->table_charset->number))
+            {
+                oss << " CHARACTER SET " << field_cs->csname;
+            }
 
-		// Process table level options
+            if ((*field)->comment.length)
+            {
+                String comment;
+                append_unescaped(&comment, (*field)->comment.str, (*field)->comment.length);
+                oss << " COMMENT ";
+                oss << comment.c_ptr();
+            }
+
+        }
+        // End the list of columns
+        oss << ") ENGINE=columnstore ";
+
+        // Process table level options
 
         /* TODO: uncomment when we support AUTO_INCREMENT
-		if (create_info->auto_increment_value > 1)
-		{
-			oss << " AUTO_INCREMENT=" << create_info->auto_increment_value;
-		}
+                if (create_info->auto_increment_value > 1)
+                {
+                        oss << " AUTO_INCREMENT=" << create_info->auto_increment_value;
+                }
         */
 
         if (create_info->auto_increment_value > 1)
@@ -2427,40 +2437,42 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
         }
 
 
-		if (share->table_charset)
-		{
-			oss << " DEFAULT CHARSET=" << share->table_charset->csname;
-		}
+        if (share->table_charset)
+        {
+            oss << " DEFAULT CHARSET=" << share->table_charset->csname;
+        }
 
-		// Process table level options such as MIN_ROWS, MAX_ROWS, COMMENT
+        // Process table level options such as MIN_ROWS, MAX_ROWS, COMMENT
 
-		if (share->min_rows)
-		{
-			char buff[80];
-			longlong10_to_str(share->min_rows, buff, 10);
-			oss << " MIN_ROWS=" << buff;
-		}
+        if (share->min_rows)
+        {
+            char buff[80];
+            longlong10_to_str(share->min_rows, buff, 10);
+            oss << " MIN_ROWS=" << buff;
+        }
 
-		if (share->max_rows) {
-			char buff[80];
-			longlong10_to_str(share->max_rows, buff, 10);
-			oss << " MAX_ROWS=" << buff;
-		}
+        if (share->max_rows)
+        {
+            char buff[80];
+            longlong10_to_str(share->max_rows, buff, 10);
+            oss << " MAX_ROWS=" << buff;
+        }
 
-		if (share->comment.length) {
-			String comment;
-			append_unescaped(&comment, share->comment.str, share->comment.length);
-			oss << " COMMENT ";
-			oss << comment.c_ptr();
-		}
+        if (share->comment.length)
+        {
+            String comment;
+            append_unescaped(&comment, share->comment.str, share->comment.length);
+            oss << " COMMENT ";
+            oss << comment.c_ptr();
+        }
 
-		oss << ";";
-		stmt = oss.str();
+        oss << ";";
+        stmt = oss.str();
 
-		tmp_restore_column_map(table_arg->read_set, old_map);
-	}
+        tmp_restore_column_map(table_arg->read_set, old_map);
+    }
 
-    rc = ProcessDDLStatement(stmt, db, tbl, tid2sid(thd->thread_id), emsg, compressiontype, isAnyAutoincreCol, startValue, columnName);
+    rc = ProcessDDLStatement(stmt, db, tbl, tid2sid(thd->thread_id), emsg, compressiontype, isAnyAutoincreCol, startValue, columnName, create_info->default_table_charset);
 
     if (rc != 0)
     {
