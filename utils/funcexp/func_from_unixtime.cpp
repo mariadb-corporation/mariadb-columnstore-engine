@@ -67,10 +67,9 @@ DateTime getDateTime(rowgroup::Row& row,
 
             if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
             {
-                int128_t scaleDivisor;
-                datatypes::getScaleDivisor(scaleDivisor, dec.scale);
-                val = datatypes::Decimal::getInt64FromWideDecimal(dec.s128Value / scaleDivisor);
-                msec = datatypes::Decimal::getUInt32FromWideDecimal(dec.s128Value % scaleDivisor);
+                auto integralAndFractional = dec.getIntegralAndFractional();
+                val = static_cast<int64_t>(integralAndFractional.first);
+                msec = static_cast<uint32_t>(integralAndFractional.second);
             }
             else
             {

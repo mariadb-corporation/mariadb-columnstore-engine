@@ -160,7 +160,7 @@ int64_t Func_floor::getIntVal(Row& row,
 
             if (op_ct.colWidth == datatypes::MAXDECIMALWIDTH)
             {
-                ret = datatypes::Decimal::getInt64FromWideDecimal(tmp.s128Value);
+                ret = static_cast<int64_t>(tmp.toTSInt128());
             }
             else
             {

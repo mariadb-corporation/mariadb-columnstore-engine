@@ -99,17 +99,7 @@ int64_t Func_ceil::getIntVal(Row& row,
 
                 if (op_ct.colWidth == datatypes::MAXDECIMALWIDTH)
                 {
-                    int128_t tmp = d.s128Value;
-                    int128_t scaleDivisor;
-                    datatypes::getScaleDivisor(scaleDivisor, d.scale);
-                    d.s128Value /= scaleDivisor;
-
-                    // Add 1 if this is a positive number and there were values to the right of the
-                    // decimal point so that we return the largest integer value not less than X.
-                    if ((tmp - (d.s128Value * scaleDivisor)) > 0)
-                        d.s128Value += 1;
-
-                    ret = datatypes::Decimal::getInt64FromWideDecimal(d.s128Value);
+                    ret = static_cast<int64_t>(d.getRoundedIntegralPart());
                 }
                 else
                 {
@@ -252,17 +242,7 @@ uint64_t Func_ceil::getUintVal(Row& row,
 
                 if (op_ct.colWidth == datatypes::MAXDECIMALWIDTH)
                 {
-                    int128_t tmp = d.s128Value;
-                    int128_t scaleDivisor;
-                    datatypes::getScaleDivisor(scaleDivisor, d.scale);
-                    d.s128Value /= scaleDivisor;
-
-                    // Add 1 if this is a positive number and there were values to the right of the
-                    // decimal point so that we return the largest integer value not less than X.
-                    if ((tmp - (d.s128Value * scaleDivisor)) > 0)
-                        d.s128Value += 1;
-
-                    ret = datatypes::Decimal::getUInt64FromWideDecimal(d.s128Value);
+                    ret = static_cast<uint64_t>(d.getRoundedIntegralPart());
                 }
                 else
                 {
@@ -548,6 +528,8 @@ IDB_Decimal Func_ceil::getDecimalVal(Row& row,
                                       bool& isNull,
                                       CalpontSystemCatalog::ColType& op_ct)
 {
+    // Questionable approach. I believe we should use pointer here
+    // and call an appropriate ctor
     IDB_Decimal ret;
 
     switch (op_ct.colDataType)
@@ -583,15 +565,9 @@ IDB_Decimal Func_ceil::getDecimalVal(Row& row,
 
                 if (op_ct.colWidth == datatypes::MAXDECIMALWIDTH)
                 {
-                    int128_t tmp = ret.s128Value;
-                    int128_t scaleDivisor;
-                    datatypes::getScaleDivisor(scaleDivisor, ret.scale);
-                    ret.s128Value /= scaleDivisor;
-
-                    // Add 1 if this is a positive number and there were values to the right of the
-                    // decimal point so that we return the largest integer value not less than X.
-                    if ((tmp - (ret.s128Value * scaleDivisor)) > 0)
-                        ret.s128Value += 1;
+                    ret = IDB_Decimal(ret.getRoundedIntegralPart(),
+                                      ret.scale,
+                                      ret.precision);
                 }
                 else
                 {

@@ -427,6 +427,35 @@ public:
                           FunctionParm& fp,
                           bool& isNull,
                           execplan::CalpontSystemCatalog::ColType& op_ct);
+private:
+    template<typename ModType>
+    ModType doDecimal(const FunctionParm& parm,
+                      const int64_t div,
+                      rowgroup::Row& row,
+                      bool isNull)
+    {
+        execplan::IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
+
+        if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+        {
+            if (!d.isScaled())
+            {
+                return d.toTSInt128() % div;
+            }
+            else
+            {
+                auto intAndFract = d.getIntegralAndDividedFractional();
+
+                datatypes::TSInt128 integralRemainder = intAndFract.first % div;
+                return static_cast<ModType>(integralRemainder.toTFloat128() +
+                                               intAndFract.second);
+
+            }
+        }
+        int64_t value = d.value / pow(10.0, d.scale);
+        return value % div;
+    }
+
 };
 
 

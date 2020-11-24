@@ -200,14 +200,79 @@ class TSInt128
       return static_cast<long double>(s128Value);
     }
 
+    inline operator int32_t() const
+    {
+      if (s128Value > static_cast<int128_t>(INT32_MAX))
+          return INT32_MAX;
+      if (s128Value < static_cast<int128_t>(INT32_MIN))
+          return INT32_MIN;
+
+      return static_cast<int32_t>(s128Value);
+    }
+
+    inline operator uint32_t() const
+    {
+      if (s128Value > static_cast<int128_t>(UINT32_MAX))
+          return UINT32_MAX;
+      if (s128Value < 0)
+          return 0;
+
+      return static_cast<uint32_t>(s128Value);
+    }
+
+    inline operator int64_t() const
+    {
+      if (s128Value > static_cast<int128_t>(INT64_MAX))
+          return INT64_MAX;
+      if (s128Value < static_cast<int128_t>(INT64_MIN))
+          return INT64_MIN;
+
+      return static_cast<int64_t>(s128Value);
+    }
+
+    inline operator uint64_t() const
+    {
+      if (s128Value > static_cast<int128_t>(UINT64_MAX))
+          return UINT64_MAX;
+      if (s128Value < 0)
+          return 0;
+
+      return static_cast<uint64_t>(s128Value);
+    }
+
     inline operator TFloat128() const
     {
       return toTFloat128();
     }
 
+    inline TSInt128 operator%(const int64_t& rhs) const
+    {
+      return TSInt128(s128Value % rhs);
+    }
+
+    inline TSInt128 operator%(const int128_t& rhs) const
+    {
+      return TSInt128(s128Value % rhs);
+    }
+
+    inline TSInt128 operator*(const TSInt128& rhs) const
+    {
+      return TSInt128(s128Value * rhs.s128Value);
+    }
+
+    inline TSInt128 operator+(const TSInt128& rhs) const
+    {
+      return TSInt128(s128Value + rhs.s128Value);
+    }
+
     inline TFloat128 toTFloat128() const
     {
       return TFloat128(s128Value);
+    }
+
+    inline const int128_t& getValue() const
+    {
+      return s128Value;
     }
 
     //    print int128_t parts represented as PODs
@@ -225,19 +290,6 @@ class TSInt128
     std::string toString() const;
 
     friend std::ostream& operator<<(std::ostream& os, const TSInt128& x);
-
-    //     The method converts a wide decimal s128Value to an int64_t,
-    //    saturating the s128Value if necessary.
-    inline int64_t getInt64FromWideDecimal();
-
-    //     The method converts a wide decimal s128Value to an uint32_t.
-    inline uint32_t getUInt32FromWideDecimal();
-
-    //     The method converts a wide decimal s128Value to an uint64_t.
-    inline uint64_t getUInt64FromWideDecimal();
-
-    //     The method converts a wide decimal s128Value to an int32_t.
-    inline int32_t getInt32FromWideDecimal();
 
     int128_t s128Value;
   }; // end of class

@@ -161,13 +161,13 @@ public:
     return m_field->store(static_cast<double>(dl));
   }
 
-  int store_decimal64(const datatypes::VDecimal& dec) override
+  int store_decimal64(const datatypes::Decimal& dec) override
   {
     std::string decAsAStr = dec.toString();
     return m_field->store(decAsAStr.c_str(), decAsAStr.length(), m_field->charset());
   }
 
-  int store_decimal128(const datatypes::VDecimal& dec) override
+  int store_decimal128(const datatypes::Decimal& dec) override
   {
     std::string decAsAStr = dec.toString(true);
     return m_field->store(decAsAStr.c_str(), decAsAStr.length(), m_field->charset());

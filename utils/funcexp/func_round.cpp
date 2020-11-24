@@ -133,18 +133,7 @@ int64_t Func_round::getIntVal(Row& row,
     }
     else
     {
-        if (x.scale > 0)
-        {
-            while (x.scale-- > 0)
-                x.s128Value /= 10;
-        }
-        else
-        {
-            while (x.scale++ < 0)
-                x.s128Value *= 10;
-        }
-
-        return datatypes::Decimal::getInt64FromWideDecimal(x.s128Value);
+        return static_cast<int64_t>(x.getIntegralPart());
     }
 }
 

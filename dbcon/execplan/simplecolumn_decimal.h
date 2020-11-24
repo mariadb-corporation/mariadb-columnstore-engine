@@ -153,7 +153,7 @@ void SimpleColumn_Decimal<len>::setNullVal()
 template<int len>
 inline const std::string& SimpleColumn_Decimal<len>:: getStrVal(rowgroup::Row& row, bool& isNull)
 {
-    datatypes::VDecimal dec((int64_t)row.getIntField<len>(fInputIndex),
+    datatypes::Decimal dec((int64_t)row.getIntField<len>(fInputIndex),
                             fResultType.scale,
                             fResultType.precision);
     fResult.strVal = dec.toString();

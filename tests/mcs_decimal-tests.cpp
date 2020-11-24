@@ -908,7 +908,7 @@ TEST(Decimal, DecimalToStringCheckScale0)
     int precision = 38;
     int scale = 0;
     res = 0;
-    datatypes::VDecimal dec(0, scale, precision, res);
+    datatypes::Decimal dec(0, scale, precision, res);
 
     // test simple values
     expected = "0";
@@ -957,7 +957,7 @@ TEST(Decimal, DecimalToStringCheckScale10)
     int precision = 38;
     int scale = 10;
     res = 0;
-    datatypes::VDecimal dec(0, scale, precision, res);
+    datatypes::Decimal dec(0, scale, precision, res);
 
     // test simple values
     expected = "0.0000000000";
@@ -1029,7 +1029,7 @@ TEST(Decimal, DecimalToStringCheckScale38)
     int precision = 38;
     int scale = 38;
     res = 0;
-    datatypes::VDecimal dec(0, scale, precision, res);
+    datatypes::Decimal dec(0, scale, precision, res);
 
     // test simple values
     res = 0;
@@ -1089,7 +1089,7 @@ TEST(Decimal, DecimalToStringCheckScale37)
     int precision = 38;
     int scale = 37;
     res = 0;
-    datatypes::VDecimal dec(0, scale, precision, res);
+    datatypes::Decimal dec(0, scale, precision, res);
 
     // test simple values
     res = 0;
