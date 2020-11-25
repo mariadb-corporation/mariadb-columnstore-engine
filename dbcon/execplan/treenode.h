@@ -55,33 +55,7 @@ namespace execplan
 {
 
 typedef execplan::CalpontSystemCatalog::ColType Type;
-
-
-class IDB_Decimal: public datatypes::VDecimal
-{
-public:
-  IDB_Decimal() = default;
-  IDB_Decimal(int64_t val,
-              int8_t s,
-              uint8_t p,
-              const int128_t &val128 = 0)
-    : VDecimal(val, s, p, val128)
-  { }
-   IDB_Decimal(const TSInt128& val128,
-               int8_t s,
-               uint8_t p)
-        : VDecimal(val128, s, p)
-  { }
-
-  inline void operator=(const datatypes::TSInt128& rhs)
-  {
-    value = 0; scale = 0; precision = 0;
-    datatypes::TSInt128::operator=(rhs);
-  }
-};
-
-
-typedef IDB_Decimal CNX_Decimal;
+typedef datatypes::Decimal IDB_Decimal;
 
 /**
  * @brief IDB_Regex struct

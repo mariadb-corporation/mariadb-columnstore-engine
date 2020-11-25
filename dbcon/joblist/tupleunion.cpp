@@ -1188,7 +1188,7 @@ dec4:                   /* have to pick a scale to use for the double. using 5..
                     {
                         if (LIKELY(isInputWide))
                         {
-                            datatypes::VDecimal dec(0,
+                            datatypes::Decimal dec(0,
                                                     in.getScale(i),
                                                     in.getPrecision(i),
                                                     val128);
@@ -1196,7 +1196,7 @@ dec4:                   /* have to pick a scale to use for the double. using 5..
                         }
                         else
                         {
-                            datatypes::VDecimal dec(val,
+                            datatypes::Decimal dec(val,
                                                     in.getScale(i),
                                                     in.getPrecision(i));
                             out->setStringField(dec.toString(), i);
