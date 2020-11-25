@@ -1871,7 +1871,8 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter
     ret.reset(new ParsedColumnFilter());
 
     ret->columnFilterMode = TWO_ARRAYS;
-    if (colWidth == datatypes::MAXDECIMALWIDTH)
+    if (datatypes::isWideDecimalType(
+        (CalpontSystemCatalog::ColDataType)colType, colWidth))
         ret->prestored_argVals128.reset(new int128_t[filterCount]);
     else
         ret->prestored_argVals.reset(new int64_t[filterCount]);
@@ -2002,7 +2003,8 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter
     if (convertToSet)
     {
         ret->columnFilterMode = UNORDERED_SET;
-        if (colWidth == datatypes::MAXDECIMALWIDTH)
+        if (datatypes::isWideDecimalType(
+            (CalpontSystemCatalog::ColDataType)colType, colWidth))
         {
             ret->prestored_set_128.reset(new prestored_set_t_128());
 
