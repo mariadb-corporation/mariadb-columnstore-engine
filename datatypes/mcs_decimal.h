@@ -590,12 +590,6 @@ class VDecimal: public TSInt128
         return toDouble();
     }
 
-    inline long double toLongDouble() const
-    {
-        datatypes::TFloat128 y(s128Value);
-        return static_cast<long double>(y);
-    }
-
     bool operator==(const VDecimal& rhs) const
     {
         if (isTSInt128ByPrecision() && rhs.isTSInt128ByPrecision())
