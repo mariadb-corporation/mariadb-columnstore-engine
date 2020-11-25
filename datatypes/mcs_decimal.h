@@ -598,16 +598,14 @@ class VDecimal: public TSInt128
 
     bool operator==(const VDecimal& rhs) const
     {
-        if (precision > datatypes::INT64MAXPRECISION &&
-            rhs.precision > datatypes::INT64MAXPRECISION)
+        if (isTSInt128ByPrecision() && rhs.isTSInt128ByPrecision())
         {
             if (scale == rhs.scale)
                 return s128Value == rhs.s128Value;
             else
                 return (datatypes::Decimal::compare(*this, rhs) == 0);
         }
-        else if (precision > datatypes::INT64MAXPRECISION &&
-                 rhs.precision <= datatypes::INT64MAXPRECISION)
+        else if (isTSInt128ByPrecision() && !rhs.isTSInt128ByPrecision())
         {
             const_cast<VDecimal&>(rhs).s128Value = rhs.value;
 
@@ -616,8 +614,7 @@ class VDecimal: public TSInt128
             else
                 return (datatypes::Decimal::compare(*this, rhs) == 0);
         }
-        else if (precision <= datatypes::INT64MAXPRECISION &&
-                 rhs.precision > datatypes::INT64MAXPRECISION)
+        else if (!isTSInt128ByPrecision() && rhs.isTSInt128ByPrecision())
         {
             if (scale == rhs.scale)
                 return (int128_t) value == rhs.s128Value;
@@ -635,16 +632,14 @@ class VDecimal: public TSInt128
 
     bool operator>(const VDecimal& rhs) const
     {
-        if (precision > datatypes::INT64MAXPRECISION &&
-            rhs.precision > datatypes::INT64MAXPRECISION)
+        if (isTSInt128ByPrecision() && rhs.isTSInt128ByPrecision())
         {
             if (scale == rhs.scale)
                 return s128Value > rhs.s128Value;
             else
                 return (datatypes::Decimal::compare(*this, rhs) > 0);
         }
-        else if (precision > datatypes::INT64MAXPRECISION &&
-                 rhs.precision <= datatypes::INT64MAXPRECISION)
+        else if (isTSInt128ByPrecision() && !rhs.isTSInt128ByPrecision())
         {
             VDecimal rhstmp(0, rhs.scale, rhs.precision, (int128_t) rhs.value);
 
@@ -653,8 +648,7 @@ class VDecimal: public TSInt128
             else
                 return (datatypes::Decimal::compare(*this, rhstmp) > 0);
         }
-        else if (precision <= datatypes::INT64MAXPRECISION &&
-                 rhs.precision > datatypes::INT64MAXPRECISION)
+        else if (!isTSInt128ByPrecision() && rhs.isTSInt128ByPrecision())
         {
             if (scale == rhs.scale)
                 return (int128_t) value > rhs.s128Value;
@@ -672,16 +666,14 @@ class VDecimal: public TSInt128
 
     bool operator<(const VDecimal& rhs) const
     {
-        if (precision > datatypes::INT64MAXPRECISION &&
-            rhs.precision > datatypes::INT64MAXPRECISION)
+        if (isTSInt128ByPrecision() && rhs.isTSInt128ByPrecision())
         {
             if (scale == rhs.scale)
                 return s128Value < rhs.s128Value;
             else
                 return (datatypes::Decimal::compare(*this, rhs) < 0);
         }
-        else if (precision > datatypes::INT64MAXPRECISION &&
-                 rhs.precision <= datatypes::INT64MAXPRECISION)
+        else if (isTSInt128ByPrecision() && !rhs.isTSInt128ByPrecision())
         {
             VDecimal rhstmp(0, rhs.scale, rhs.precision, (int128_t) rhs.value);
 
@@ -690,8 +682,7 @@ class VDecimal: public TSInt128
             else
                 return (datatypes::Decimal::compare(*this, rhstmp) < 0);
         }
-        else if (precision <= datatypes::INT64MAXPRECISION &&
-                 rhs.precision > datatypes::INT64MAXPRECISION)
+        else if (!isTSInt128ByPrecision() && rhs.isTSInt128ByPrecision())
         {
             if (scale == rhs.scale)
                 return (int128_t) value < rhs.s128Value;
@@ -709,16 +700,14 @@ class VDecimal: public TSInt128
 
     bool operator>=(const VDecimal& rhs) const
     {
-        if (precision > datatypes::INT64MAXPRECISION &&
-            rhs.precision > datatypes::INT64MAXPRECISION)
+        if (isTSInt128ByPrecision() && rhs.isTSInt128ByPrecision())
         {
             if (scale == rhs.scale)
                 return s128Value >= rhs.s128Value;
             else
                 return (datatypes::Decimal::compare(*this, rhs) >= 0);
         }
-        else if (precision > datatypes::INT64MAXPRECISION &&
-                 rhs.precision <= datatypes::INT64MAXPRECISION)
+        else if (isTSInt128ByPrecision() && !rhs.isTSInt128ByPrecision())
         {
             VDecimal rhstmp(0, rhs.scale, rhs.precision, (int128_t) rhs.value);
 
@@ -727,8 +716,7 @@ class VDecimal: public TSInt128
             else
                 return (datatypes::Decimal::compare(*this, rhstmp) >= 0);
         }
-        else if (precision <= datatypes::INT64MAXPRECISION &&
-                 rhs.precision > datatypes::INT64MAXPRECISION)
+        else if (!isTSInt128ByPrecision() && rhs.isTSInt128ByPrecision())
         {
             if (scale == rhs.scale)
                 return (int128_t) value >= rhs.s128Value;
@@ -746,16 +734,14 @@ class VDecimal: public TSInt128
 
     bool operator<=(const VDecimal& rhs) const
     {
-        if (precision > datatypes::INT64MAXPRECISION &&
-            rhs.precision > datatypes::INT64MAXPRECISION)
+        if (isTSInt128ByPrecision() && rhs.isTSInt128ByPrecision())
         {
             if (scale == rhs.scale)
                 return s128Value <= rhs.s128Value;
             else
                 return (datatypes::Decimal::compare(*this, rhs) <= 0);
         }
-        else if (precision > datatypes::INT64MAXPRECISION &&
-                 rhs.precision <= datatypes::INT64MAXPRECISION)
+        else if (isTSInt128ByPrecision() && !rhs.isTSInt128ByPrecision())
         {
             VDecimal rhstmp(0, rhs.scale, rhs.precision, (int128_t) rhs.value);
 
@@ -764,8 +750,7 @@ class VDecimal: public TSInt128
             else
                 return (datatypes::Decimal::compare(*this, rhstmp) <= 0);
         }
-        else if (precision <= datatypes::INT64MAXPRECISION &&
-                 rhs.precision > datatypes::INT64MAXPRECISION)
+        else if (!isTSInt128ByPrecision() && rhs.isTSInt128ByPrecision())
         {
             if (scale == rhs.scale)
                 return (int128_t) value <= rhs.s128Value;
@@ -783,16 +768,14 @@ class VDecimal: public TSInt128
 
     bool operator!=(const VDecimal& rhs) const
     {
-        if (precision > datatypes::INT64MAXPRECISION &&
-            rhs.precision > datatypes::INT64MAXPRECISION)
+        if (isTSInt128ByPrecision() && rhs.isTSInt128ByPrecision())
         {
             if (scale == rhs.scale)
                 return s128Value != rhs.s128Value;
             else
                 return (datatypes::Decimal::compare(*this, rhs) != 0);
         }
-        else if (precision > datatypes::INT64MAXPRECISION &&
-                 rhs.precision <= datatypes::INT64MAXPRECISION)
+        else if (isTSInt128ByPrecision() && !rhs.isTSInt128ByPrecision())
         {
             VDecimal rhstmp(0, rhs.scale, rhs.precision, (int128_t) rhs.value);
 
@@ -801,8 +784,7 @@ class VDecimal: public TSInt128
             else
                 return (datatypes::Decimal::compare(*this, rhstmp) != 0);
         }
-        else if (precision <= datatypes::INT64MAXPRECISION &&
-                 rhs.precision > datatypes::INT64MAXPRECISION)
+        else if (!isTSInt128ByPrecision() && rhs.isTSInt128ByPrecision())
         {
             if (scale == rhs.scale)
                 return (int128_t) value != rhs.s128Value;

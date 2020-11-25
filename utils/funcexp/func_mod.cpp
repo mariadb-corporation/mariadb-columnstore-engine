@@ -66,8 +66,8 @@ IDB_Decimal Func_mod::getDecimalVal(Row& row,
         return retValue;
     }
 
-    if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH ||
-        parm[1]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+    if (parm[0]->data()->resultType().isWideDecimalType() ||
+        parm[1]->data()->resultType().isWideDecimalType())
     {
         IDB_Decimal div = parm[1]->data()->getDecimalVal(row, isNull);
 

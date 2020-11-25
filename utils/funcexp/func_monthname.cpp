@@ -199,7 +199,7 @@ execplan::IDB_Decimal Func_monthname::getDecimalVal(rowgroup::Row& row,
 {
     IDB_Decimal d;
 
-    if (fp[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+    if (fp[0]->data()->resultType().isWideDecimalType())
         d.s128Value = getIntVal(row, fp, isNull, op_ct);
     else
         d.value = getIntVal(row, fp, isNull, op_ct);

@@ -636,7 +636,7 @@ IDB_Decimal Func_cast_date::getDecimalVal(Row& row,
 {
     IDB_Decimal decimal;
 
-    if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+    if (parm[0]->data()->resultType().isWideDecimalType())
         decimal.s128Value = Func_cast_date::getDatetimeIntVal(row,
                             parm,
                             isNull,
@@ -945,7 +945,7 @@ IDB_Decimal Func_cast_datetime::getDecimalVal(Row& row,
 {
     IDB_Decimal decimal;
 
-    if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+    if (parm[0]->data()->resultType().isWideDecimalType())
         decimal.s128Value = Func_cast_datetime::getDatetimeIntVal(row,
                             parm,
                             isNull,
@@ -1204,7 +1204,7 @@ int64_t Func_cast_decimal::getIntVal(Row& row,
                           isNull,
                           operationColType);
 
-    if (decimal.precision > datatypes::INT64MAXPRECISION)
+    if (decimal.isTSInt128ByPrecision())
     {
         int128_t scaleDivisor;
 
@@ -1228,7 +1228,7 @@ string Func_cast_decimal::getStrVal(Row& row,
                           parm,
                           isNull,
                           operationColType);
-    if (operationColType.colWidth == datatypes::MAXDECIMALWIDTH)
+    if (operationColType.isWideDecimalType())
         return decimal.toString(true);
     else
         return decimal.toString();
@@ -1258,7 +1258,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
         case execplan::CalpontSystemCatalog::TINYINT:
         case execplan::CalpontSystemCatalog::SMALLINT:
         {
-            if (max_length > datatypes::INT64MAXPRECISION)
+            if (decimal.isTSInt128ByPrecision())
             {
                 bool dummy = false;
                 char *ep = NULL;
@@ -1307,7 +1307,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
         case execplan::CalpontSystemCatalog::UTINYINT:
         case execplan::CalpontSystemCatalog::USMALLINT:
         {
-            if (max_length > datatypes::INT64MAXPRECISION)
+            if (decimal.isTSInt128ByPrecision())
             {
                 bool dummy = false;
                 char *ep = NULL;
@@ -1361,7 +1361,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
         case execplan::CalpontSystemCatalog::FLOAT:
         case execplan::CalpontSystemCatalog::UFLOAT:
         {
-            if (max_length > datatypes::INT64MAXPRECISION)
+            if (decimal.isTSInt128ByPrecision())
             {
                 bool dummy = false;
                 char *ep = NULL;
@@ -1411,7 +1411,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
 
         case execplan::CalpontSystemCatalog::LONGDOUBLE:
         {
-            if (max_length > datatypes::INT64MAXPRECISION)
+            if (decimal.isTSInt128ByPrecision())
             {
                 bool dummy = false;
                 char *ep = NULL;
@@ -1462,7 +1462,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
-            if (max_length > datatypes::INT64MAXPRECISION)
+            if (decimal.isTSInt128ByPrecision())
             {
                 bool dummy = false;
                 char *ep = NULL;
@@ -1473,7 +1473,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
                 int128_t scaleDivisor;
                 datatypes::getScaleDivisor(scaleDivisor, abs(decimals - decimal.scale));
 
-                if (decimal.precision <= datatypes::INT64MAXPRECISION)
+                if (!decimal.isTSInt128ByPrecision())
                     decimal.s128Value = decimal.value;
 
                 decimal.precision = max_length;
@@ -1501,7 +1501,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
 
                 decimal = parm[0]->data()->getDecimalVal(row, isNull);
 
-                if (decimal.precision > datatypes::INT64MAXPRECISION)
+                if (decimal.isTSInt128ByPrecision())
                 {
                     if ( decimal.s128Value > (int128_t) max_number_decimal )
                         decimal.value = max_number_decimal;
@@ -1559,7 +1559,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
             {
                 if (*s == 'e' || *s == 'E')
                 {
-                    if (max_length > datatypes::INT64MAXPRECISION)
+                    if (decimal.isTSInt128ByPrecision())
                     {
                         bool dummy = false;
                         char *ep = NULL;
@@ -1656,7 +1656,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
                 }
             }
 
-            if (max_length > datatypes::INT64MAXPRECISION)
+            if (decimal.isTSInt128ByPrecision())
             {
                 bool dummy = false;
                 char *ep = NULL;
@@ -1781,7 +1781,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
 
             if (!isNull)
             {
-                if (max_length > datatypes::INT64MAXPRECISION)
+                if (decimal.isTSInt128ByPrecision())
                     decimal.s128Value = x;
                 else
                     decimal.value = x;
@@ -1804,7 +1804,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
 
             if (!isNull)
             {
-                if (max_length > datatypes::INT64MAXPRECISION)
+                if (decimal.isTSInt128ByPrecision())
                     decimal.s128Value = x;
                 else
                     decimal.value = x;
@@ -1827,7 +1827,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
 
             if (!isNull)
             {
-                if (max_length > datatypes::INT64MAXPRECISION)
+                if (max_length > decimal.isTSInt128ByPrecision())
                     decimal.s128Value = x;
                 else
                     decimal.value = x;
@@ -1850,7 +1850,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
 
             if (!isNull)
             {
-                if (max_length > datatypes::INT64MAXPRECISION)
+                if (decimal.isTSInt128ByPrecision())
                     decimal.s128Value = x;
                 else
                     decimal.value = x;
@@ -1882,8 +1882,8 @@ double Func_cast_decimal::getDoubleVal(Row& row,
                           operationColType);
 
     // WIP MCOL-641 This could deliver wrong result b/c wide DECIMAL might have
-    // p <= INT64MAXPRECISION
-    if (decimal.precision > datatypes::INT64MAXPRECISION)
+    // p <= INT64MAXPRECISION || p > INT128MAXPRECISION
+    if (decimal.isTSInt128ByPrecision())
     {
         return static_cast<double>(decimal);
     }

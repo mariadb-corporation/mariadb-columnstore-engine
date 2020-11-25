@@ -158,7 +158,7 @@ execplan::IDB_Decimal Func_inet_aton::getDecimalVal(rowgroup::Row& row,
 
     const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
 
-    if (colType.precision <= datatypes::INT64MAXPRECISION)
+    if (!datatypes::Decimal::isWideDecimalTypeByPrecision(colType.precision))
     {
         if (!isNull)
         {

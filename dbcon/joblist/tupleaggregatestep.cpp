@@ -751,12 +751,12 @@ void TupleAggregateStep::configDeliveredRowGroup(const JobInfo& jobInfo)
     {
         retColCount = jobInfo.returnedColVec.size();
 
-        idbassert(jobInfo.returnedColVec.size() == jobInfo.nonConstCols.size());
+        idbassert(jobInfo.returnedColVec.size() == jobInfo.projectionCols.size());
 
-        for (size_t i = 0; i < jobInfo.nonConstCols.size() &&
+        for (size_t i = 0; i < jobInfo.projectionCols.size() &&
              scaleIter != scale.end(); i++)
         {
-            const auto& colType = jobInfo.nonConstCols[i]->resultType();
+            const auto& colType = jobInfo.projectionCols[i]->resultType();
 
             if (colType.isWideDecimalType())
             {

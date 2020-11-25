@@ -250,7 +250,7 @@ public:
                 && fResultType.scale == decimal.scale))
             return decimal;
 
-        if (LIKELY(fResultType.colWidth == datatypes::MAXDECIMALWIDTH))
+        if (LIKELY(fResultType.isWideDecimalType()))
         {
             decimal.s128Value =
                 (datatypes::Decimal::isWideDecimalTypeByPrecision(decimal.precision)) ?

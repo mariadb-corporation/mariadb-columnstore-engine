@@ -1068,7 +1068,7 @@ dec3:                   /* have to pick a scale to use for the double. using 5..
                     case CalpontSystemCatalog::DECIMAL:
                     case CalpontSystemCatalog::UDECIMAL:
                     {
-dec4:					/* have to pick a scale to use for the double. using 5... */
+dec4:                   /* have to pick a scale to use for the double. using 5... */
                         uint32_t scale = 5;
                         uint64_t ival = (uint64_t) (double) (val * pow((double) 10, (double) scale));
                         int diff = out->getScale(i) - scale;
@@ -1128,7 +1128,8 @@ dec4:					/* have to pick a scale to use for the double. using 5... */
                     case CalpontSystemCatalog::DECIMAL:
                     case CalpontSystemCatalog::UDECIMAL:
                     {
-                        if (out->getColumnWidth(i) == datatypes::MAXDECIMALWIDTH)
+                        if (datatypes::isWideDecimalType(out->getColTypes()[i],
+                            out->getColumnWidth(i)))
                         {
                             if (out->getScale(i) == scale)
                                 out->setInt128Field(isInputWide ? val128 : val, i);

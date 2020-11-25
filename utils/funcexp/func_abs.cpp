@@ -67,7 +67,7 @@ IDB_Decimal Func_abs::getDecimalVal(Row& row,
 {
     IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
 
-    if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+    if (parm[0]->data()->resultType().isWideDecimalType())
         d.s128Value = (d.s128Value < 0) ? -d.s128Value : d.s128Value;
     else
         d.value = llabs(d.value);
