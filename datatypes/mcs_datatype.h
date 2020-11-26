@@ -154,7 +154,6 @@ public:
       LONGDOUBLE,           /* @bug3241, dev and variance calculation only */
       STRINT,               /* @bug3532, string as int for fast comparison */
       UNDEFINED,            /*!< Undefined - used in UDAF API */
-      BINARY,               /*!< BINARY type */
   };
 
   class TypeAttributesStd

@@ -397,17 +397,8 @@ void WriteEngineWrapper::convertValue(const execplan::CalpontSystemCatalog::ColT
         case WriteEngine::WR_BINARY:
         {
             size = cscColType.colWidth;
-            if (cscColType.colDataType == CalpontSystemCatalog::DECIMAL ||
-                cscColType.colDataType == CalpontSystemCatalog::UDECIMAL)
-            {
-                int128_t val = boost::any_cast<int128_t>(data);
-                memcpy(value, &val, size);
-            }
-            else // for CalpontSystemCatalog::BINARY
-            {
-                char val = boost::any_cast<char>(data);
-                memcpy(value, &val, size);
-            }
+            int128_t val = boost::any_cast<int128_t>(data);
+            memcpy(value, &val, size);
         }
         break;
 
@@ -515,21 +506,10 @@ void WriteEngineWrapper::convertValue(const CalpontSystemCatalog::ColType& cscCo
                 ((Token*)valArray)[pos] = boost::any_cast<Token>(data);
                 break;
                 
-            // WIP MCOL-641
             case WriteEngine::WR_BINARY:
                 size_t size = cscColType.colWidth;
-                if (cscColType.colDataType == CalpontSystemCatalog::DECIMAL ||
-                    cscColType.colDataType == CalpontSystemCatalog::UDECIMAL)
-                {
-                    int128_t val = boost::any_cast<int128_t>(data);
-                    memcpy((uint8_t*)valArray + pos * size, &val, size);
-                }
-                else // for CalpontSystemCatalog::BINARY
-                {
-                    char val = boost::any_cast<char>(data);
-                    memcpy((uint8_t*)valArray + pos * size, &val, size);
-                }
-
+                int128_t val = boost::any_cast<int128_t>(data);
+                memcpy((uint8_t*)valArray + pos * size, &val, size);
                 break;
         } // end of switch (colType)
     }
@@ -596,23 +576,11 @@ void WriteEngineWrapper::convertValue(const CalpontSystemCatalog::ColType& cscCo
             case WriteEngine::WR_TOKEN:
                 data = ((Token*)valArray)[pos];
                 break;
-            // WIP MCOL-641
-            case WriteEngine::WR_BINARY :
-                if (cscColType.colDataType == CalpontSystemCatalog::DECIMAL ||
-                    cscColType.colDataType == CalpontSystemCatalog::UDECIMAL)
-                {
-                    data = ((int128_t*)valArray)[pos];
-                }
-                else // for CalpontSystemCatalog::BINARY
-                {
-                    // WIP do we need tmp here?
-                    size_t size = cscColType.colWidth;
-                    char *tmp = (char*) alloca (sizeof(char) * size);
-                    memcpy(tmp, (uint8_t*)valArray + pos * size, size);
-                    curStr = tmp;
-                    data = curStr;
-                }
-            break;
+
+            case WriteEngine::WR_BINARY:
+                data = ((int128_t*)valArray)[pos];
+                break;
+
         } // end of switch (colType)
     } // end of if
 }
@@ -709,7 +677,7 @@ int WriteEngineWrapper::fillColumn(const TxnID& txnid, const OID& dataOid,
         isToken = true;
     }
 
-    Convertor::convertColType(colType.colDataType, newColType, isToken);
+    Convertor::convertColType(colType.colDataType, colType.colWidth, newColType, isToken);
 
     // WIP
     // replace with isDictCol
@@ -729,7 +697,7 @@ int WriteEngineWrapper::fillColumn(const TxnID& txnid, const OID& dataOid,
         newDataWidth >>= 1;
     }
 
-    Convertor::convertColType(refColDataType, refColType, isToken);
+    Convertor::convertColType(refColDataType, refColWidth, refColType, isToken);
     refColOp->setColParam(refCol, 0, refColOp->getCorrectRowWidth(refColDataType, refColWidth),
                           refColDataType, refColType, (FID)refColOID, refCompressionType, dbRoot);
    colOpNewCol->setColParam(newCol, 0, newDataWidth,

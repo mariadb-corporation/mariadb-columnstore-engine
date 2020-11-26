@@ -98,7 +98,8 @@ public:
      */
     //BUG931
     EXPORT static void convertColType(execplan::CalpontSystemCatalog::ColDataType dataType,
-                                      ColType& internalType, bool isToken = false);
+                                      int colWidth, ColType& internalType,
+                                      bool isToken = false);
     /**
      * @brief Convert specified internal storage type (ColType) to
      *        ColDataType

@@ -263,10 +263,6 @@ inline int convertDataType(int dataType)
             calpontDataType = execplan::CalpontSystemCatalog::UDOUBLE;
             break;
             
-        case ddlpackage::DDL_BINARY:
-            calpontDataType = execplan::CalpontSystemCatalog::BINARY;
-            break;
-
         default:
             throw runtime_error("Unsupported datatype!");
 

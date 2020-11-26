@@ -69,12 +69,6 @@ boost::shared_ptr<WindowFunctionType> WF_count<T>::makeFunction(int id, const st
             break;
         }
 
-        case CalpontSystemCatalog::BINARY:
-        {
-             std::cout << __FILE__<< ":" <<__LINE__ << " Fix for 16 Bytes ?" << std::endl;
-             break;
-        }
-        
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
         {

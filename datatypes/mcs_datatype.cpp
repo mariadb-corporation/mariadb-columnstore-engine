@@ -371,7 +371,6 @@ TypeHandler::find(SystemCatalog::ColDataType typeCode,
   case SystemCatalog::NUM_OF_COL_DATA_TYPE:
   case SystemCatalog::STRINT:
   case SystemCatalog::UNDEFINED:
-  case SystemCatalog::BINARY:
     break;
   }
   return NULL;
@@ -452,7 +451,6 @@ TypeHandler::find_by_ddltype(const ddlpackage::ColumnType &ct)
   case ddlpackage::DDL_UNSIGNED_FLOAT:    return &mcs_type_handler_ufloat;
   case ddlpackage::DDL_UNSIGNED_DOUBLE:   return &mcs_type_handler_udouble;
     
-  case ddlpackage::DDL_BINARY:            //return &mcs_type_handler_binary;
   case ddlpackage::DDL_INVALID_DATATYPE:
     break;
   }

@@ -510,16 +510,6 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
                 throw std::runtime_error(os.str());
             }
 
-            else if (dataType == CalpontSystemCatalog::BINARY
-                     && ! (colDefPtr->fType->fLength == 16
-                           || colDefPtr->fType->fLength == 32))
-            {
-                ostringstream os;
-                os << "binary length may not be other than 16 or 32";
-                throw std::runtime_error(os.str());
-            }
-
-            
             unsigned int i = 0;
             column_iterator = columns.begin();
 
@@ -871,10 +861,10 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
         if (dataType == CalpontSystemCatalog::DECIMAL ||
                 dataType == CalpontSystemCatalog::UDECIMAL)
         {
-            if (colDefPtr->fType->fPrecision > 18) //@Bug 5717 precision cannot be over 18.
+            if (colDefPtr->fType->fPrecision > 38) //@Bug 5717 precision cannot be over 38.
             {
                 ostringstream os;
-                os << "Syntax error: The maximum precision (total number of digits) that can be specified is 18";
+                os << "Syntax error: The maximum precision (total number of digits) that can be specified is 38";
                 throw std::runtime_error(os.str());
             }
             else if	 (colDefPtr->fType->fPrecision < colDefPtr->fType->fScale)

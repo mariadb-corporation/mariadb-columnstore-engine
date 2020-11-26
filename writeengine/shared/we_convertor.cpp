@@ -328,9 +328,8 @@ void Convertor::mapErrnoToString(int errNum, std::string& errString)
  *    none
  ******************************************************************************/
 /* static */
-// TODO MCOL-641
 void Convertor::convertColType(CalpontSystemCatalog::ColDataType dataType,
-                               ColType& internalType, bool isToken)
+                               int colWidth, ColType& internalType, bool isToken)
 {
     if (isToken)
     {
@@ -382,6 +381,36 @@ void Convertor::convertColType(CalpontSystemCatalog::ColDataType dataType,
             internalType = WriteEngine::WR_DOUBLE;
             break;
 
+        // Map DECIMAL to applicable integer type
+        case CalpontSystemCatalog::DECIMAL :
+        case CalpontSystemCatalog::UDECIMAL :
+        {
+            switch (colWidth)
+            {
+                case 1 :
+                    internalType = WriteEngine::WR_BYTE;
+                    break;
+
+                case 2 :
+                    internalType = WriteEngine::WR_SHORT;
+                    break;
+
+                case 4 :
+                    internalType = WriteEngine::WR_INT;
+                    break;
+
+                case 8:
+                    internalType = WriteEngine::WR_LONGLONG;
+                    break;
+
+                default:
+                    internalType = WriteEngine::WR_BINARY;
+                    break;
+            }
+
+            break;
+        }
+
         // Map BLOB to WR_BLOB
         case CalpontSystemCatalog::BLOB :
             internalType = WriteEngine::WR_BLOB;
@@ -396,13 +425,6 @@ void Convertor::convertColType(CalpontSystemCatalog::ColDataType dataType,
         case CalpontSystemCatalog::VARBINARY:
             internalType = WriteEngine::WR_VARBINARY;
             break;
-
-        // Map DECIMAL to applicable WR_CHAR
-        // We can't map them to their proper int size, since in this version
-        // of convertColType(), we don't know what that is. Hopefully
-        // this is never used for DECIMAL.
-        case CalpontSystemCatalog::DECIMAL :
-        case CalpontSystemCatalog::UDECIMAL:
 
         // Map CHAR, VARCHAR, and CLOB to WR_CHAR
         case CalpontSystemCatalog::CHAR :
@@ -436,11 +458,6 @@ void Convertor::convertColType(CalpontSystemCatalog::ColDataType dataType,
             internalType = WriteEngine::WR_ULONGLONG;
             break;
         
-        // Map BINARY to WR_BINARY
-        case CalpontSystemCatalog::BINARY:
-            internalType = WriteEngine::WR_BINARY;
-            break;    
-
         default:
             internalType = WriteEngine::WR_CHAR;
             break;
@@ -693,11 +710,6 @@ void Convertor::convertColType(ColStruct* curStruct)
             *internalType = WriteEngine::WR_ULONGLONG;
             break;
                     
-        // Map BINARY to WR_BINARY
-        case CalpontSystemCatalog::BINARY:
-            *internalType = WriteEngine::WR_BINARY;
-            break;  
-
         default:
             *internalType = WriteEngine::WR_CHAR;
             break;
@@ -783,10 +795,6 @@ int Convertor::getCorrectRowWidth(CalpontSystemCatalog::ColDataType dataType, in
             newWidth = 8;
             break;
         
-        case CalpontSystemCatalog::BINARY:
-            newWidth = width;
-            break;
-            
         case CalpontSystemCatalog::CHAR:
         case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::VARBINARY: // treat same as varchar for now

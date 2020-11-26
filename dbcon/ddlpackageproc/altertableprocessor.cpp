@@ -247,11 +247,6 @@ bool typesAreSame(const CalpontSystemCatalog::ColType& colType, const ColumnType
 
             break;
 
-        case (CalpontSystemCatalog::BINARY):
-            if (newType.fType == DDL_BINARY && colType.colWidth == newType.fLength) return true;
-
-            break;
-
         default:
             break;
     }
