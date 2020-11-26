@@ -200,28 +200,44 @@ class TSInt128
       return static_cast<long double>(s128Value);
     }
 
-    int32_t toTSInt32() const;
     inline operator int32_t() const
     {
-      return toTSInt32();
+      if (s128Value > static_cast<int128_t>(INT32_MAX))
+          return INT32_MAX;
+      if (s128Value < static_cast<int128_t>(INT32_MIN))
+          return INT32_MIN;
+
+      return static_cast<int32_t>(s128Value);
     }
 
-    uint32_t toTUInt32() const;
     inline operator uint32_t() const
     {
-      return toTUInt32();
+      if (s128Value > static_cast<int128_t>(UINT32_MAX))
+          return UINT32_MAX;
+      if (s128Value < 0)
+          return 0;
+
+      return static_cast<uint32_t>(s128Value);
     }
 
-    int64_t toTSInt64() const;
     inline operator int64_t() const
     {
-      return toTSInt64();
+      if (s128Value > static_cast<int128_t>(INT64_MAX))
+          return INT64_MAX;
+      if (s128Value < static_cast<int128_t>(INT64_MIN))
+          return INT64_MIN;
+
+      return static_cast<int64_t>(s128Value);
     }
 
-    uint64_t toTUInt64() const;
     inline operator uint64_t() const
     {
-      return toTUInt64();
+      if (s128Value > static_cast<int128_t>(UINT64_MAX))
+          return UINT64_MAX;
+      if (s128Value < 0)
+          return 0;
+
+      return static_cast<uint64_t>(s128Value);
     }
 
     inline operator TFloat128() const
@@ -229,14 +245,34 @@ class TSInt128
       return toTFloat128();
     }
 
-    inline TSInt128 operator%(const int64_t rhs) const
+    inline TSInt128 operator%(const int64_t& rhs) const
     {
       return TSInt128(s128Value % rhs);
+    }
+
+    inline TSInt128 operator%(const int128_t& rhs) const
+    {
+      return TSInt128(s128Value % rhs);
+    }
+
+    inline TSInt128 operator*(const TSInt128& rhs) const
+    {
+      return TSInt128(s128Value * rhs.s128Value);
+    }
+
+    inline TSInt128 operator+(const TSInt128& rhs) const
+    {
+      return TSInt128(s128Value + rhs.s128Value);
     }
 
     inline TFloat128 toTFloat128() const
     {
       return TFloat128(s128Value);
+    }
+
+    inline const int128_t& getValue() const
+    {
+      return s128Value;
     }
 
     //    print int128_t parts represented as PODs

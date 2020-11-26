@@ -141,22 +141,6 @@ string Func_char::getStrVal(Row& row,
                 {
                     if (d.s128Value < 0)
                         return "";
-
-/*
-                    int128_t scaleDivisor, scaleDivisor2;
-
-                    datatypes::getScaleDivisor(scaleDivisor, d.scale);
-
-                    scaleDivisor2 = (scaleDivisor <= 10) ? 1 : (scaleDivisor / 10);
-
-                    int128_t tmpval = d.s128Value / scaleDivisor;
-                    int128_t lefto = (d.s128Value - tmpval * scaleDivisor) / scaleDivisor2;
-
-                    if (lefto > 4)
-                        tmpval++;
-
-                    value = datatypes::Decimal::getInt32FromWideDecimal(tmpval);
-*/
                     // rounding by the left over
                     value = static_cast<int32_t>(d.getRoundedIntegralPart(roundingFactor));
                 }

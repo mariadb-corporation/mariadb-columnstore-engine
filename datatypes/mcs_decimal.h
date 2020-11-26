@@ -375,31 +375,43 @@ class Decimal: public TSInt128
         }
 
        
-        // The template returns integral as TSInt128 and
-        // fractional as D parts. We use template-type-defined types
-        // to return a fractional part
-        template<typename D>
-        inline std::pair<TSInt128, D> getIntegralAndFractional() const
+        // This method returns integral part as a TSInt128 and
+        // fractional part as a TFloat128
+        inline std::pair<TSInt128, TFloat128> getIntegralAndDividedFractional() const
         {
             int128_t scaleDivisor;
             getScaleDivisor(scaleDivisor, scale);
             return std::make_pair(TSInt128(s128Value / scaleDivisor),
-                                  D((typename get_integral_type<D>::type)(s128Value % scaleDivisor) / scaleDivisor));
+                                  TFloat128((__float128)(s128Value % scaleDivisor) / scaleDivisor));
+        }
+
+        // This method returns integral part as a TSInt128 and
+        // fractional part as a TFloat128
+        inline std::pair<TSInt128, TSInt128> getIntegralAndFractional() const
+        {
+            int128_t scaleDivisor;
+            getScaleDivisor(scaleDivisor, scale);
+            return std::make_pair(TSInt128(s128Value / scaleDivisor),
+                                  TSInt128(s128Value % scaleDivisor));
+        }
+
+        inline std::tuple<TSInt128, TSInt128, TSInt128> getIntegralFractionalAndDivisor() const
+        {
+            int128_t scaleDivisor;
+            getScaleDivisor(scaleDivisor, scale);
+            return std::make_tuple(TSInt128(s128Value / scaleDivisor),
+                                   TSInt128(s128Value % scaleDivisor),
+                                   TSInt128(scaleDivisor));
         }
 
         inline TSInt128 getIntegralPart() const
         {
             int128_t scaleDivisor = 0;
-            int128_t result = 0;
             if(LIKELY(utils::is_nonnegative(scale)))
             {
-                getIntegralPart(scaleDivisor, result);
+                return TSInt128(getIntegralPartNonNegativeScale(scaleDivisor));
             }
-            else
-            {
-                getIntegralPartNegativeScale(scaleDivisor, result);
-            }
-            return TSInt128(result);
+            return TSInt128(getIntegralPartNegativeScale(scaleDivisor));
         }
 
         // !!! This is a very hevyweight rouding style
@@ -408,8 +420,7 @@ class Decimal: public TSInt128
         inline TSInt128 getRoundedIntegralPart(const uint8_t roundingFactor = 0) const
         {
             int128_t flooredScaleDivisor = 0;
-            int128_t roundedValue = 0;
-            getIntegralPart(flooredScaleDivisor, roundedValue);
+            int128_t roundedValue = getIntegralPartNonNegativeScale(flooredScaleDivisor);
             int128_t ceiledScaleDivisor = (flooredScaleDivisor <= 10) ? 1 : (flooredScaleDivisor / 10);
             int128_t leftO = (s128Value - roundedValue * flooredScaleDivisor) / ceiledScaleDivisor;
             if (leftO > roundingFactor)
@@ -423,8 +434,7 @@ class Decimal: public TSInt128
         inline TSInt128 getPosNegRoundedIntegralPart(const uint8_t roundingFactor = 0) const
         {
             int128_t flooredScaleDivisor = 0;
-            int128_t roundedValue = 0;
-            getIntegralPart(flooredScaleDivisor, roundedValue);
+            int128_t roundedValue = getIntegralPartNonNegativeScale(flooredScaleDivisor);
             int128_t ceiledScaleDivisor = (flooredScaleDivisor <= 10) ? 1 : (flooredScaleDivisor / 10);
             int128_t leftO = (s128Value - roundedValue * flooredScaleDivisor) / ceiledScaleDivisor;
             if (utils::is_nonnegative(roundedValue) && leftO > roundingFactor)
@@ -437,6 +447,20 @@ class Decimal: public TSInt128
             }
 
             return TSInt128(roundedValue);
+        }
+
+        // MOD operator for an integer divisor to be used
+        // for integer rhs
+        inline TSInt128 operator%(const TSInt128& div) const
+        {
+            if (!isScaled())
+            {
+                return s128Value % div.getValue();
+            }
+            // Scale the value and calculate
+            // (LHS.value % RHS.value) * LHS.scaleMultiplier + LHS.scale_div_remainder
+            auto integralFractionalDivisor = getIntegralFractionalAndDivisor();
+            return (std::get<0>(integralFractionalDivisor) % div.getValue()) * std::get<2>(integralFractionalDivisor) + std::get<1>(integralFractionalDivisor);
         }
 
         bool operator==(const Decimal& rhs) const
@@ -666,6 +690,12 @@ class Decimal: public TSInt128
             return precision > INT64MAXPRECISION
                 && precision <= INT128MAXPRECISION;
         }
+        
+        inline bool isScaled() const
+        {
+            return scale != 0;
+        }
+
         // hasTSInt128 explicitly tells to print int128 out in cases
         // where precision can't detect decimal type properly, e.g.
         // DECIMAL(10)/DECIMAL(38)
@@ -691,17 +721,17 @@ class Decimal: public TSInt128
         std::string toStringTSInt128WithScale() const;
         std::string toStringTSInt64() const; 
 
-        inline void getIntegralPart(int128_t& scaleDivisor, int128_t& result) const
+        inline int128_t getIntegralPartNonNegativeScale(int128_t& scaleDivisor) const
         {
             getScaleDivisor(scaleDivisor, scale);
-            result = s128Value / scaleDivisor;
+            return s128Value / scaleDivisor;
         }
 
-        inline void getIntegralPartNegativeScale(int128_t& scaleDivisor, int128_t& result) const
+        inline int128_t getIntegralPartNegativeScale(int128_t& scaleDivisor) const
         {
             getScaleDivisor(scaleDivisor, -scale);
             // Calls for overflow check
-            result = s128Value * scaleDivisor;
+            return s128Value * scaleDivisor;
         }
 }; //end of Decimal
 

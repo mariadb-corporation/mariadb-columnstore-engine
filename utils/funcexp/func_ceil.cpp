@@ -565,17 +565,6 @@ IDB_Decimal Func_ceil::getDecimalVal(Row& row,
 
                 if (op_ct.colWidth == datatypes::MAXDECIMALWIDTH)
                 {
-/*
-                    int128_t tmp = ret.s128Value;
-                    int128_t scaleDivisor;
-                    datatypes::getScaleDivisor(scaleDivisor, ret.scale);
-                    ret.s128Value /= scaleDivisor;
-
-                    // Add 1 if this is a positive number and there were values to the right of the
-                    // decimal point so that we return the largest integer value not less than X.
-                    if ((tmp - (ret.s128Value * scaleDivisor)) > 0)
-                        ret.s128Value += 1;
-*/
                     ret = IDB_Decimal(ret.getRoundedIntegralPart(),
                                       ret.scale,
                                       ret.precision);

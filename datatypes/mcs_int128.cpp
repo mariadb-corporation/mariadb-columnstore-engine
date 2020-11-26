@@ -117,45 +117,5 @@ namespace datatypes
     return os;
   }
 
-  int32_t TSInt128::toTSInt32() const
-  {
-    if (s128Value > static_cast<int128_t>(INT32_MAX))
-        return INT32_MAX;
-    else if (s128Value < static_cast<int128_t>(INT32_MIN))
-        return INT32_MIN;
-
-    return static_cast<int32_t>(s128Value);
-  }
-
-  uint32_t TSInt128::toTUInt32() const
-  {
-      if (s128Value > static_cast<int128_t>(UINT32_MAX))
-          return UINT32_MAX;
-      else if (s128Value < 0)
-          return 0;
-
-      return static_cast<uint32_t>(s128Value);
-  }
-
-  int64_t TSInt128::toTSInt64() const
-  {
-      if (s128Value > static_cast<int128_t>(INT64_MAX))
-          return INT64_MAX;
-      else if (s128Value < static_cast<int128_t>(INT64_MIN))
-          return INT64_MIN;
-
-      return static_cast<int64_t>(s128Value);
-  }
-
-  uint64_t TSInt128::toTUInt64() const
-  {
-      if (s128Value > static_cast<int128_t>(UINT64_MAX))
-          return UINT64_MAX;
-      else if (s128Value < 0)
-          return 0;
-
-      return static_cast<uint64_t>(s128Value);
-  }
-
 } // end of namespace datatypes
 // vim:ts=2 sw=2:
