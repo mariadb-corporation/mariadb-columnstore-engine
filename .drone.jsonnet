@@ -89,6 +89,7 @@ local Pipeline(branch, platform, event) = {
       // start mariadb and mariadb-columnstore services and run simple query
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl start mariadb',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl start mariadb-columnstore',
+      'sleep 10',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} mysql -e "create database if not exists test; create table test.t1 (a int) engine=Columnstore; insert into test.t1 values (1); select * from test.t1"',
       // restart mariadb and mariadb-columnstore services and run simple query again
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl restart mariadb',
