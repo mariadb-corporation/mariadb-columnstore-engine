@@ -189,8 +189,7 @@ void WF_stats<T>::operator()(int64_t b, int64_t e, int64_t c)
             fCount++;
         }
 
-        if ((fCount > 0) &&
-                !(fCount == 1 && (fFunctionId == WF__STDDEV_SAMP || fFunctionId == WF__VAR_SAMP)))
+        if (fCount > 1)
         {
             int scale = fRow.getScale(colIn);
             long double factor = pow(10.0, scale);
@@ -225,9 +224,17 @@ void WF_stats<T>::operator()(int64_t b, int64_t e, int64_t c)
     {
         setValue(CalpontSystemCatalog::DOUBLE, b, e, c, (double*) NULL);
     }
-    else if (fCount == 1 && (fFunctionId == WF__STDDEV_SAMP || fFunctionId == WF__VAR_SAMP))
+    else if (fCount == 1)
     {
-        setValue(CalpontSystemCatalog::DOUBLE, b, e, c, (double*) NULL);
+        if (fFunctionId == WF__STDDEV_SAMP || fFunctionId == WF__VAR_SAMP)
+        {
+            setValue(CalpontSystemCatalog::DOUBLE, b, e, c, (double*) NULL);
+        }
+        else // fFunctionId == WF__STDDEV_POP || fFunctionId == WF__VAR_POP
+        {
+            double temp = 0.0;
+            setValue(CalpontSystemCatalog::DOUBLE, b, e, c, (double*) &temp);
+        }
     }
     else
     {
