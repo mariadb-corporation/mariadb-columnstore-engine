@@ -145,7 +145,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
     offsets = reinterpret_cast<const uint16_t*>(&niceBlock[10]);
     niceInput = reinterpret_cast<const uint8_t*>(h);
     
-    const CHARSET_INFO* cs = get_charset(h->charsetNumber, MYF(MY_WME));
+    const CHARSET_INFO* cs = & datatypes::Charset(h->charsetNumber).getCharset();
 
     // if LIKE is an operator, compile regexp's in advance.
     if ((h->NVALS > 0 && h->COP1 & COMPARE_LIKE) ||
@@ -662,7 +662,7 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in,
     uint16_t aggCount;
     bool cmpResult;
     DictOutput header;
-    const CHARSET_INFO* cs = get_charset(charsetNumber, MYF(MY_WME));
+    const CHARSET_INFO* cs = & datatypes::Charset(charsetNumber).getCharset();
 
     // default size of the ouput to something sufficiently large to prevent
     // excessive reallocation and copy when resizing

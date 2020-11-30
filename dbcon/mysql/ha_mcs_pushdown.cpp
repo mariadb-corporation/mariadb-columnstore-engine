@@ -826,7 +826,7 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
                 sel->first_cond_optimization= false;
 
                 conds= simplify_joins_mcs(join, select_lex->join_list,
-                    join->conds, TRUE, FALSE);
+                    join->conds, true, false);
 
                 build_bitmap_for_nested_joins_mcs(select_lex->join_list, 0);
                 sel->where= conds;

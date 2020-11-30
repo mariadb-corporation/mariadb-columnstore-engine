@@ -41,9 +41,6 @@ using namespace funcexp;
 
 #include "collation.h"
 
-// Because including my_sys.h in a Columnstore header causes too many conflicts
-struct charset_info_st;
-typedef const struct charset_info_st CHARSET_INFO;
 
 namespace funcexp
 {

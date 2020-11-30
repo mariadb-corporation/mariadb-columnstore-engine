@@ -50,7 +50,7 @@
 #undef max
 
 #include "mcs_datatype.h"
-
+#include "collation.h"
 
 
 class ExecPlanTest;

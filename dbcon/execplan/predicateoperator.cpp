@@ -92,7 +92,7 @@ void PredicateOperator::unserialize(messageqcpp::ByteStream& b)
     ObjectReader::checkType(b, ObjectReader::PREDICATEOPERATOR);
     //b >> fData;
     Operator::unserialize(b);
-    cs = get_charset(fOperationType.charsetNumber, MYF(MY_WME));
+    cs = & datatypes::Charset(fOperationType.charsetNumber).getCharset();
 }
 
 bool PredicateOperator::operator==(const PredicateOperator& t) const
@@ -342,7 +342,7 @@ void PredicateOperator::setOpType(Type& l, Type& r)
         fOperationType.colWidth = 8;
     }
 
-    cs = get_charset(fOperationType.charsetNumber, MYF(MY_WME));
+    cs = & datatypes::Charset(fOperationType.charsetNumber).getCharset();
 }
 
 inline bool PredicateOperator::strTrimCompare(const std::string& op1, const std::string& op2)

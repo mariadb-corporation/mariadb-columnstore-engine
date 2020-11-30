@@ -59,9 +59,7 @@
 
 #include "../winport/winport.h"
 
-// Because including my_sys.h in a Columnstore header causes too many conflicts
-struct charset_info_st;
-typedef const struct charset_info_st CHARSET_INFO;
+#include "collation.h"
 
 
 // Workaround for my_global.h #define of isnan(X) causing a std::std namespace

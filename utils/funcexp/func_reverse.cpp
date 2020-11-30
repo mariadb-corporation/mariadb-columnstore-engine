@@ -35,6 +35,7 @@ using namespace rowgroup;
 using namespace joblist;
 
 #include "collation.h"
+#include <mariadb.h> // DBUG_ASSERT
 
 namespace funcexp
 {

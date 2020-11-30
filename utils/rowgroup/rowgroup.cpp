@@ -1236,7 +1236,7 @@ const CHARSET_INFO* Row::getCharset(uint32_t col) const
 {
     if (charsets[col] == NULL)
     {
-        const_cast<CHARSET_INFO**>(charsets)[col] = get_charset(charsetNumbers[col], MYF(MY_WME));
+        const_cast<CHARSET_INFO**>(charsets)[col] = & datatypes::Charset(charsetNumbers[col]).getCharset();
     }
     return charsets[col];
 }
@@ -1757,7 +1757,7 @@ const CHARSET_INFO* RowGroup::getCharset(uint32_t col)
 {
     if (charsets[col] == NULL)
     {
-        charsets[col] = get_charset(charsetNumbers[col], MYF(MY_WME));
+        charsets[col] = & datatypes::Charset(charsetNumbers[col]).getCharset();
     }
     return charsets[col];
 }
