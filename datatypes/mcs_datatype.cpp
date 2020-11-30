@@ -630,7 +630,7 @@ int TypeHandlerSLongDouble::storeValueToField(rowgroup::Row &row, int pos,
 int TypeHandlerXDecimal::storeValueToField64(rowgroup::Row &row, int pos,
                                              StoreField *f) const
 {
-  return f->store_decimal64(datatypes::VDecimal(row.getIntField(pos),
+  return f->store_decimal64(datatypes::Decimal(row.getIntField(pos),
                                                 f->scale(),
                                                 f->precision()));
 }
@@ -640,7 +640,7 @@ int TypeHandlerXDecimal::storeValueToField128(rowgroup::Row &row, int pos,
                                               StoreField *f) const
 {
   int128_t* decPtr = row.getBinaryField<int128_t>(pos);
-  return f->store_decimal128(datatypes::VDecimal(0,
+  return f->store_decimal128(datatypes::Decimal(0,
                                                  f->scale(),
                                                  f->precision(),
                                                  decPtr));
@@ -782,7 +782,7 @@ TypeHandlerXDecimal::format128(const SimpleValue &v,
                                const
 {
   idbassert(isValidXDecimal128(attr));
-  datatypes::VDecimal dec(0, attr.scale, attr.precision, v.toSInt128());
+  datatypes::Decimal dec(0, attr.scale, attr.precision, v.toSInt128());
   return dec.toString(true);
 }
 

@@ -637,7 +637,7 @@ string Row::toString() const
                 case CalpontSystemCatalog::UDECIMAL:
                     if (colWidths[i] == datatypes::MAXDECIMALWIDTH)
                     {
-                        datatypes::VDecimal dec(0,
+                        datatypes::Decimal dec(0,
                                                 scale[i],
                                                 precision[i],
                                                 getBinaryField<int128_t>(i));

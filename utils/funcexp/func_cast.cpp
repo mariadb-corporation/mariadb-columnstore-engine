@@ -188,22 +188,7 @@ int64_t Func_cast_signed::getIntVal(Row& row,
 
             if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
             {
-                int128_t scaleDivisor, scaleDivisor2;
-
-                datatypes::getScaleDivisor(scaleDivisor, d.scale);
-
-                scaleDivisor2 = (scaleDivisor <= 10) ? 1 : (scaleDivisor / 10);
-
-                int128_t tmpval = d.s128Value / scaleDivisor;
-                int128_t lefto = (d.s128Value - tmpval * scaleDivisor) / scaleDivisor2;
-
-                if (tmpval >= 0 && lefto > 4)
-                    tmpval++;
-
-                if (tmpval < 0 && lefto < -4)
-                    tmpval--;
-
-                return datatypes::Decimal::getInt64FromWideDecimal(tmpval);
+                return static_cast<int64_t>(d.getPosNegRoundedIntegralPart(4));
             }
             else
             {
@@ -1206,13 +1191,7 @@ int64_t Func_cast_decimal::getIntVal(Row& row,
 
     if (decimal.isTSInt128ByPrecision())
     {
-        int128_t scaleDivisor;
-
-        datatypes::getScaleDivisor(scaleDivisor, decimal.scale);
-
-        int128_t tmpval = decimal.s128Value / scaleDivisor;
-
-        return datatypes::Decimal::getInt64FromWideDecimal(tmpval);
+        return static_cast<int64_t>(decimal.getIntegralPart());
     }
 
     return (int64_t) decimal.value / helpers::powerOf10_c[decimal.scale];

@@ -460,7 +460,7 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
 
                 if (LIKELY(row.getColumnWidth(*i) == datatypes::MAXDECIMALWIDTH))
                 {
-                    datatypes::VDecimal dec(0,
+                    datatypes::Decimal dec(0,
                                             scale,
                                             row.getPrecision(*i),
                                             row.getBinaryField<int128_t>(*i));

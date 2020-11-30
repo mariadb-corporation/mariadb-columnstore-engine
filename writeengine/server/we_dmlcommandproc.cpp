@@ -2994,7 +2994,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                         {
                             if (fetchColColwidths[fetchColPos] == datatypes::MAXDECIMALWIDTH)
                             {
-                                datatypes::VDecimal dec(0,
+                                datatypes::Decimal dec(0,
                                                         fetchColScales[fetchColPos],
                                                         rowGroups[txnId]->getPrecision()[fetchColPos],
                                                         row.getBinaryField<int128_t>(fetchColPos));
@@ -3037,7 +3037,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                                 }
                                 else
                                 {
-                                    datatypes::VDecimal dec(intColVal,
+                                    datatypes::Decimal dec(intColVal,
                                                             fetchColScales[fetchColPos],
                                                             rowGroups[txnId]->getPrecision()[fetchColPos]);
                                     value = dec.toString();
@@ -3349,7 +3349,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                             {
                                 if (fetchColColwidths[fetchColPos] == datatypes::MAXDECIMALWIDTH)
                                 {
-                                    datatypes::VDecimal dec(0,
+                                    datatypes::Decimal dec(0,
                                                             fetchColScales[fetchColPos],
                                                             rowGroups[txnId]->getPrecision()[fetchColPos],
                                                             row.getBinaryField<int128_t>(fetchColPos));
@@ -3393,7 +3393,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                                     }
                                     else
                                     {
-                                        datatypes::VDecimal dec(intColVal,
+                                        datatypes::Decimal dec(intColVal,
                                                                 fetchColScales[fetchColPos],
                                                                 rowGroups[txnId]->getPrecision()[fetchColPos]);
                                         value = dec.toString();

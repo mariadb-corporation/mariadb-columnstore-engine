@@ -25,8 +25,27 @@
 namespace datatypes
 {
 
-//class TSInt128;
+class TSInt128;
+class TFloat128;
 using int128_t = __int128;
+
+// Type defined integral types
+// for templates
+template <typename T>
+struct get_integral_type {
+  typedef T type;
+};
+
+template<>
+struct get_integral_type<TFloat128>{
+  typedef __float128 type;
+};
+
+template<>
+struct get_integral_type<TSInt128>{
+  typedef int128_t type;
+};
+
 
 class TFloat128
 {
@@ -66,6 +85,40 @@ class TFloat128
       return toLongDouble();
     }
 
+    inline int64_t toTSInt64() const
+    {
+      if (value > static_cast<__float128>(INT64_MAX))
+          return INT64_MAX;
+      else if (value < static_cast<__float128>(INT64_MIN))
+          return INT64_MIN;
+
+      return static_cast<int64_t>(value);
+    }
+
+    inline operator int64_t() const
+    {
+      return toTSInt64();
+    }
+
+    inline int64_t toTUInt64() const
+    {
+      if (value > static_cast<__float128>(UINT64_MAX))
+          return UINT64_MAX;
+      else if (value < 0)
+          return 0;
+
+      return static_cast<uint64_t>(value);
+    }
+
+    inline operator uint64_t() const
+    {
+      return toTUInt64();
+    }
+
+    inline TFloat128 operator+(const TFloat128& rhs) const
+    {
+      return TFloat128(value + rhs.value);
+    }
 
     inline long double toLongDouble() const
     {

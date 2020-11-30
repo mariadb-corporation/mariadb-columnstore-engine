@@ -49,9 +49,9 @@ namespace datatypes
     template<typename BinaryOperation,
         typename OpOverflowCheck,
         typename MultiplicationOverflowCheck>
-    void addSubtractExecute(const VDecimal& l,
-        const VDecimal& r,
-        VDecimal& result,
+    void addSubtractExecute(const Decimal& l,
+        const Decimal& r,
+        Decimal& result,
         BinaryOperation op,
         OpOverflowCheck opOverflowCheck,
         MultiplicationOverflowCheck mulOverflowCheck)
@@ -109,9 +109,9 @@ namespace datatypes
 
     template<typename OpOverflowCheck,
         typename MultiplicationOverflowCheck>
-    void divisionExecute(const VDecimal& l,
-        const VDecimal& r,
-        VDecimal& result,
+    void divisionExecute(const Decimal& l,
+        const Decimal& r,
+        Decimal& result,
         OpOverflowCheck opOverflowCheck,
         MultiplicationOverflowCheck mulOverflowCheck)
     {
@@ -148,9 +148,9 @@ namespace datatypes
 
     template<typename OpOverflowCheck,
         typename MultiplicationOverflowCheck>
-    void multiplicationExecute(const VDecimal& l,
-        const VDecimal& r,
-        VDecimal& result,
+    void multiplicationExecute(const Decimal& l,
+        const Decimal& r,
+        Decimal& result,
         OpOverflowCheck opOverflowCheck,
         MultiplicationOverflowCheck mulOverflowCheck)
     {
@@ -195,7 +195,7 @@ namespace datatypes
         }
     }
 
-    int Decimal::compare(const VDecimal& l, const VDecimal& r)
+    int Decimal::compare(const Decimal& l, const Decimal& r)
     {
         int128_t divisorL, divisorR;
         getScaleDivisor(divisorL, l.scale);
@@ -242,8 +242,8 @@ namespace datatypes
 
     // no overflow check
     template<>
-    void Decimal::addition<int128_t, false>(const VDecimal& l,
-        const VDecimal& r, VDecimal& result)
+    void Decimal::addition<int128_t, false>(const Decimal& l,
+        const Decimal& r, Decimal& result)
     {
         std::plus<int128_t> add;
         NoOverflowCheck noOverflowCheck;
@@ -252,8 +252,8 @@ namespace datatypes
 
     // with overflow check
     template<>
-    void Decimal::addition<int128_t, true>(const VDecimal& l,
-        const VDecimal& r, VDecimal& result)
+    void Decimal::addition<int128_t, true>(const Decimal& l,
+        const Decimal& r, Decimal& result)
     {
         std::plus<int128_t> add;
         AdditionOverflowCheck overflowCheck;
@@ -263,8 +263,8 @@ namespace datatypes
 
     // no overflow check
     template<>
-    void Decimal::addition<int64_t, false>(const VDecimal& l,
-        const VDecimal& r, VDecimal& result)
+    void Decimal::addition<int64_t, false>(const Decimal& l,
+        const Decimal& r, Decimal& result)
     {
         if (result.scale == l.scale && result.scale == r.scale)
         {
@@ -293,8 +293,8 @@ namespace datatypes
 
     // with overflow check
     template<>
-    void Decimal::addition<int64_t, true>(const VDecimal& l,
-        const VDecimal& r, VDecimal& result)
+    void Decimal::addition<int64_t, true>(const Decimal& l,
+        const Decimal& r, Decimal& result)
     {
         AdditionOverflowCheck additionOverflowCheck;
         MultiplicationOverflowCheck mulOverflowCheck;
@@ -328,8 +328,8 @@ namespace datatypes
 
     // no overflow check
     template<>
-    void Decimal::subtraction<int128_t, false>(const VDecimal& l,
-        const VDecimal& r, VDecimal& result)
+    void Decimal::subtraction<int128_t, false>(const Decimal& l,
+        const Decimal& r, Decimal& result)
     {
         std::minus<int128_t> subtract;
         NoOverflowCheck noOverflowCheck;
@@ -338,8 +338,8 @@ namespace datatypes
 
     // with overflow check
     template<>
-    void Decimal::subtraction<int128_t, true>(const VDecimal& l,
-        const VDecimal& r, VDecimal& result)
+    void Decimal::subtraction<int128_t, true>(const Decimal& l,
+        const Decimal& r, Decimal& result)
     {
         std::minus<int128_t> subtract;
         SubtractionOverflowCheck overflowCheck;
@@ -349,8 +349,8 @@ namespace datatypes
 
     // no overflow check
     template<>
-    void Decimal::subtraction<int64_t, false>(const VDecimal& l,
-        const VDecimal& r, VDecimal& result)
+    void Decimal::subtraction<int64_t, false>(const Decimal& l,
+        const Decimal& r, Decimal& result)
     {
         if (result.scale == l.scale && result.scale == r.scale)
         {
@@ -379,8 +379,8 @@ namespace datatypes
 
     // with overflow check
     template<>
-    void Decimal::subtraction<int64_t, true>(const VDecimal& l,
-        const VDecimal& r, VDecimal& result)
+    void Decimal::subtraction<int64_t, true>(const Decimal& l,
+        const Decimal& r, Decimal& result)
     {
         SubtractionOverflowCheck subtractionOverflowCheck;
         MultiplicationOverflowCheck mulOverflowCheck;
@@ -414,8 +414,8 @@ namespace datatypes
 
     // no overflow check
     template<>
-    void Decimal::division<int128_t, false>(const VDecimal& l,
-        const VDecimal& r, VDecimal& result)
+    void Decimal::division<int128_t, false>(const Decimal& l,
+        const Decimal& r, Decimal& result)
     {
         NoOverflowCheck noOverflowCheck;
         divisionExecute(l, r, result, noOverflowCheck, noOverflowCheck);
@@ -423,8 +423,8 @@ namespace datatypes
 
     // With overflow check
     template<>
-    void Decimal::division<int128_t, true>(const VDecimal& l,
-        const VDecimal& r, VDecimal& result)
+    void Decimal::division<int128_t, true>(const Decimal& l,
+        const Decimal& r, Decimal& result)
     {
         DivisionOverflowCheck overflowCheck;
         MultiplicationOverflowCheck mulOverflowCheck;
@@ -434,8 +434,8 @@ namespace datatypes
     // no overflow check
     // We rely on the zero check from ArithmeticOperator::execute
     template<>
-    void Decimal::division<int64_t, false>(const VDecimal& l,
-        const VDecimal& r, VDecimal& result)
+    void Decimal::division<int64_t, false>(const Decimal& l,
+        const Decimal& r, Decimal& result)
     {
         if (result.scale >= l.scale - r.scale)
             result.value = (int64_t)(( (l.value > 0 && r.value > 0) || (l.value < 0 && r.value < 0) ?
@@ -449,8 +449,8 @@ namespace datatypes
 
     // With overflow check
     template<>
-    void Decimal::division<int64_t, true>(const VDecimal& l,
-        const VDecimal& r, VDecimal& result)
+    void Decimal::division<int64_t, true>(const Decimal& l,
+        const Decimal& r, Decimal& result)
     {
         DivisionOverflowCheck divisionOverflowCheck;
 
@@ -469,8 +469,8 @@ namespace datatypes
 
     // no overflow check
     template<>
-    void Decimal::multiplication<int128_t, false>(const VDecimal& l,
-        const VDecimal& r, VDecimal& result)
+    void Decimal::multiplication<int128_t, false>(const Decimal& l,
+        const Decimal& r, Decimal& result)
     {
         MultiplicationNoOverflowCheck noOverflowCheck;
         multiplicationExecute(l, r, result, noOverflowCheck, noOverflowCheck);
@@ -478,8 +478,8 @@ namespace datatypes
 
     // With overflow check
     template<>
-    void Decimal::multiplication<int128_t, true>(const VDecimal& l,
-        const VDecimal& r, VDecimal& result)
+    void Decimal::multiplication<int128_t, true>(const Decimal& l,
+        const Decimal& r, Decimal& result)
     {
         MultiplicationOverflowCheck mulOverflowCheck;
         multiplicationExecute(l, r, result, mulOverflowCheck, mulOverflowCheck);
@@ -487,8 +487,8 @@ namespace datatypes
 
     // no overflow check
     template<>
-    void Decimal::multiplication<int64_t, false>(const VDecimal& l,
-        const VDecimal& r, VDecimal& result)
+    void Decimal::multiplication<int64_t, false>(const Decimal& l,
+        const Decimal& r, Decimal& result)
     {
         if (result.scale >= l.scale + r.scale)
             result.value = l.value * r.value * mcs_pow_10[result.scale - (l.scale + r.scale)];
@@ -500,8 +500,8 @@ namespace datatypes
 
     // With overflow check
     template<>
-    void Decimal::multiplication<int64_t, true>(const VDecimal& l,
-        const VDecimal& r, VDecimal& result)
+    void Decimal::multiplication<int64_t, true>(const Decimal& l,
+        const Decimal& r, Decimal& result)
     {
         MultiplicationOverflowCheck mulOverflowCheck;
 
@@ -521,7 +521,7 @@ namespace datatypes
     }
 
     // Writes integer part of a Decimal using int128 argument provided
-    uint8_t VDecimal::writeIntPart(const int128_t& x,
+    uint8_t Decimal::writeIntPart(const int128_t& x,
                                    char* buf,
                                    const uint8_t buflen) const
     {
@@ -552,7 +552,7 @@ namespace datatypes
                 high = intPart / maxUint64divisor;
                 break;
             default:
-                throw logging::QueryDataExcept("VDecimal::writeIntPart() bad scale",
+                throw logging::QueryDataExcept("Decimal::writeIntPart() bad scale",
                                                logging::formatErr);
         }
 
@@ -560,14 +560,14 @@ namespace datatypes
         uint8_t written = p - buf;
         if (buflen <= written)
         {
-            throw logging::QueryDataExcept("VDecimal::writeIntPart() char buffer overflow.",
+            throw logging::QueryDataExcept("Decimal::writeIntPart() char buffer overflow.",
                                            logging::formatErr);
         }
 
         return written;
     }
 
-    uint8_t VDecimal::writeFractionalPart(const int128_t& x,
+    uint8_t Decimal::writeFractionalPart(const int128_t& x,
                                           char* buf,
                                           const uint8_t buflen) const
     {
@@ -605,7 +605,7 @@ namespace datatypes
     // The method writes Decimal based on TSInt128 with scale provided.
     // It first writes sign, then extracts integer part
     // prints delimiter and then decimal part.
-    std::string VDecimal::toStringTSInt128WithScale() const
+    std::string Decimal::toStringTSInt128WithScale() const
     {
         char buf[Decimal::MAXLENGTH16BYTES];
         uint8_t left = sizeof(buf); 
@@ -633,13 +633,13 @@ namespace datatypes
         uint8_t written = p - buf;
         if (sizeof(buf) <= written)
         {
-            throw logging::QueryDataExcept("VDecimal::toString() char buffer overflow.",
+            throw logging::QueryDataExcept("Decimal::toString() char buffer overflow.",
                                            logging::formatErr);
         }
         return std::string(buf);
     }
 
-    std::string VDecimal::toStringTSInt64() const
+    std::string Decimal::toStringTSInt64() const
     {
         char buf[Decimal::MAXLENGTH8BYTES];
         // Need 19 digits maxium to hold a sum result of 18 digits decimal column.
@@ -706,7 +706,7 @@ namespace datatypes
     }
     
     // Dispatcher method for toString() implementations
-    std::string VDecimal::toString(bool hasTSInt128) const
+    std::string Decimal::toString(bool hasTSInt128) const
     {
         // There must be no empty at this point though
         if (isNull())
@@ -730,7 +730,7 @@ namespace datatypes
         return std::to_string(value);
     }
 
-    std::ostream& operator<<(std::ostream& os, const VDecimal& dec)
+    std::ostream& operator<<(std::ostream& os, const Decimal& dec)
     {
         os << dec.toString();
         return os;
