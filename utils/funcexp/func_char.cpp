@@ -39,6 +39,8 @@ using namespace rowgroup;
 using namespace logging;
 
 #include "collation.h"
+#include "mariadb_my_sys.h"
+#include <myisampack.h> // min_intXstore()
 
 #include "vlarray.h"
 

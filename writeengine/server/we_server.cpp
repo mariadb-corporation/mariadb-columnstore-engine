@@ -52,7 +52,7 @@ using namespace oam;
 
 #include "crashtrace.h"
 
-#include "collation.h"
+#include "mariadb_my_sys.h"
 
 #include "service.h"
 
