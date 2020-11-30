@@ -30,8 +30,6 @@ SET ( libcalmysql_SRCS
     is_columnstore_files.cpp
     is_columnstore_extents.cpp)
 
-add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
-
 set_source_files_properties(ha_mcs.cpp PROPERTIES COMPILE_FLAGS "-fno-implicit-templates")
 
 if (COMMAND mysql_add_plugin)
@@ -39,17 +37,16 @@ if (COMMAND mysql_add_plugin)
     SET(disabled DISABLED)
   ENDIF()
   
-  FILE(COPY columnstore.cnf DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/)
-  SET(CS_CNF_FILE "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/columnstore.cnf")
-  
   mysql_add_plugin(columnstore ${libcalmysql_SRCS} STORAGE_ENGINE MODULE_ONLY ${disabled}
       LINK_LIBRARIES ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} threadpool
-      COMPONENT columnstore-engine CONFIG ${CS_CNF_FILE})
+      VERSION ${PACKAGE_VERSION}
+      COMPONENT columnstore-engine CONFIG columnstore.cnf)
 else ()
     add_library(ha_columnstore SHARED ${libcalmysql_SRCS})
     SET_TARGET_PROPERTIES(ha_columnstore PROPERTIES PREFIX "")
 
     add_dependencies(ha_columnstore loggingcpp)
+    add_definitions(-DMYSQL_DYNAMIC_PLUGIN -DPLUGIN_COLUMNSTORE_VERSION="${PACKAGE_VERSION}")
     
     target_link_libraries(ha_columnstore ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} ${SERVER_BUILD_DIR}/libservices/libmysqlservices.a threadpool)
 
