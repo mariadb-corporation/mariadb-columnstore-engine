@@ -6144,7 +6144,7 @@ CalpontSystemCatalog::ColType& CalpontSystemCatalog::ColType::operator=(const Co
 CHARSET_INFO* CalpontSystemCatalog::ColType::getCharset()
 {
     if (!cs)
-        cs= get_charset(charsetNumber, MYF(MY_WME));
+        cs= & datatypes::Charset(charsetNumber).getCharset();
     return cs;
 }
 

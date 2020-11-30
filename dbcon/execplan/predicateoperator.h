@@ -44,8 +44,7 @@
 #include "returnedcolumn.h"
 #include "dataconvert.h"
 
-struct charset_info_st;
-typedef const struct charset_info_st CHARSET_INFO;
+#include "collation.h"
 
 namespace messageqcpp
 {

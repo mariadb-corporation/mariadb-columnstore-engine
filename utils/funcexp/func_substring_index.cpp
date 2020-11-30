@@ -88,7 +88,7 @@ std::string Func_substring_index::getStrVal(rowgroup::Row& row,
         char* ptr = const_cast<char*>(src);
         char *i,*j;
         uint32_t l;
-        int32 n = 0, c = count, pass;
+        int32_t n = 0, c = count, pass;
         // For count > 0, this loop goes once.
         // For count < 0, it goes twice
         for (pass = (count > 0 ? 1 : 0); pass<2; ++pass)

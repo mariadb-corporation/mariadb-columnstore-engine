@@ -16,62 +16,24 @@
 #include "utils_utf8.h"
 #include "collation.h"
 
-namespace utf8
+#include "mariadb_my_sys.h"
+#include <m_ctype.h>
+
+
+namespace datatypes
 {
 
-/*
- * mcs_strcoll
-*/
-int mcs_strcoll(const char* str1, const char* str2, const uint32_t charsetNumber)
+static inline CHARSET_INFO & get_charset_or_bin(int32_t charsetNumber)
 {
-    const CHARSET_INFO* cs = get_charset(charsetNumber, MYF(MY_WME));
-    return cs->strnncoll(str1, strlen(str1), str2, strlen(str2));
+    CHARSET_INFO *cs= get_charset(charsetNumber, MYF(MY_WME));
+    return cs ? *cs : my_charset_bin;
 }
 
-int mcs_strcoll(const char* str1, const uint32_t l1, const char* str2, const uint32_t l2, const uint32_t charsetNumber)
+
+Charset::Charset(uint32_t charsetNumber)
+   :mCharset(get_charset_or_bin(charsetNumber))
 {
-    const CHARSET_INFO* cs = get_charset(charsetNumber, MYF(MY_WME));
-    return cs->strnncoll(str1, l1, str2, l2);
 }
 
-int mcs_strcoll(const std::string* str1, const std::string* str2, const uint32_t charsetNumber)
-{
-    const CHARSET_INFO* cs = get_charset(charsetNumber, MYF(MY_WME));
-    return cs->strnncoll(str1->c_str(), str1->length(), str2->c_str(), str2->length());
-}
 
-int mcs_strcoll(const std::string& str1, const std::string& str2, const uint32_t charsetNumber)
-{
-    const CHARSET_INFO* cs = get_charset(charsetNumber, MYF(MY_WME));
-    return cs->strnncoll(str1.c_str(), str1.length(), str2.c_str(), str2.length());
 }
-
-/*
- * mcs_strcollsp
-*/
-int mcs_strcollsp(const char* str1, const char* str2, const uint32_t charsetNumber)
-{
-    const CHARSET_INFO* cs = get_charset(charsetNumber, MYF(MY_WME));
-    return cs->strnncollsp(str1, strlen(str1), str2, strlen(str2));
-}
-
-int mcs_strcollsp(const char* str1, uint32_t l1, const char* str2, const uint32_t l2, const uint32_t charsetNumber)
-{
-    const CHARSET_INFO* cs = get_charset(charsetNumber, MYF(MY_WME));
-    return cs->strnncollsp(str1, l1, str2, l2);
-}
-
-int mcs_strcollsp(const std::string* str1, const std::string* str2, const uint32_t charsetNumber)
-{
-    const CHARSET_INFO* cs = get_charset(charsetNumber, MYF(MY_WME));
-    return cs->strnncollsp(str1->c_str(), str1->length(), str2->c_str(), str2->length());
-}
-    
-int mcs_strcollsp(const std::string& str1, const std::string& str2, const uint32_t charsetNumber)
-{
-    const CHARSET_INFO* cs = get_charset(charsetNumber, MYF(MY_WME));
-    return cs->strnncollsp(str1.c_str(), str1.length(), str2.c_str(), str2.length());
-}
-
-} //namespace utf8
-

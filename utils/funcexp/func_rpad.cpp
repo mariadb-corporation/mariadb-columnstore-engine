@@ -36,6 +36,7 @@ using namespace rowgroup;
 using namespace joblist;
 
 #include "collation.h"
+#include <mariadb.h> // INT_MAX32
 
 namespace funcexp
 {

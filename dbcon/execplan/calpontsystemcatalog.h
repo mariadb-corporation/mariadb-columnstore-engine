@@ -48,10 +48,7 @@
 #undef min
 #undef max
 
-// Because including my_sys.h in a Columnstore header causes too many conflicts
-struct charset_info_st;
-typedef const struct charset_info_st CHARSET_INFO;
-
+#include "collation.h"
 
 #ifdef _MSC_VER
 #define __attribute__(x)
