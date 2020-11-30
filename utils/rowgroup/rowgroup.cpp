@@ -844,7 +844,11 @@ void Row::initToNull()
                         break;
 
                     case 16 :
-                        datatypes::Decimal::setWideDecimalNullValue(reinterpret_cast<int128_t&>(data[offsets[i]]));
+                    {
+                        int128_t* s128ValuePtr = (int128_t*)(&data[offsets[i]]);
+                        datatypes::TSInt128::storeUnaligned(s128ValuePtr,
+                                                            datatypes::Decimal128Null);
+                    }
                         break;
                     default:
                         *((int64_t*) &data[offsets[i]]) = static_cast<int64_t>(joblist::BIGINTNULL);
