@@ -172,8 +172,11 @@ int WideDecimalCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer 
     l->row2().setData(r2);
 
     int ret = 0;
-    int128_t v1 = *(l->row1().getBinaryField_offset<int128_t>(keyColumnOffset));
-    int128_t v2 = *(l->row2().getBinaryField_offset<int128_t>(keyColumnOffset));
+
+    int128_t v1, v2;
+    l->row1().getInt128Field(fSpec.fIndex, v1);
+    l->row2().getInt128Field(fSpec.fIndex, v2);
+
     bool v1IsNull = v1 == datatypes::Decimal128Null;
     bool v2IsNull = v2 == datatypes::Decimal128Null;
 
