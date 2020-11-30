@@ -77,7 +77,7 @@
 
 #include "dbrm.h"
 
-#include "collation.h"
+#include "mariadb_my_sys.h"
 
 
 class Opt

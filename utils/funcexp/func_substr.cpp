@@ -97,7 +97,7 @@ std::string Func_substr::getStrVal(rowgroup::Row& row,
     if (start == 0 && strLen == length)
         return str;
 
-    length= MY_MIN(length, strLen - start);
+    length= std::min(length, strLen - start);
     
     std::string ret(strptr + start, length);
     return ret;

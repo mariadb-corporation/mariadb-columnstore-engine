@@ -56,16 +56,14 @@ inline bool numericLE(result_t op1, result_t op2)
     return op1 <= op2;
 }
 
-inline bool strGE(uint32_t charsetNumber, const string& op1, const string& op2)
+inline bool strGE(CHARSET_INFO &cs, const string& op1, const string& op2)
 {
-    const CHARSET_INFO* cs = get_charset(charsetNumber, MYF(MY_WME));    
-    return cs->strnncoll(op1.c_str(), op1.length(), op2.c_str(), op2.length()) >= 0;
+    return cs.strnncoll(op1.c_str(), op1.length(), op2.c_str(), op2.length()) >= 0;
 }
 
-inline bool strLE(uint32_t charsetNumber, const string& op1, const string& op2)
+inline bool strLE(CHARSET_INFO &cs, const string& op1, const string& op2)
 {
-    const CHARSET_INFO* cs = get_charset(charsetNumber, MYF(MY_WME));    
-    return cs->strnncoll(op1.c_str(), op1.length(), op2.c_str(), op2.length()) <= 0;
+    return cs.strnncoll(op1.c_str(), op1.length(), op2.c_str(), op2.length()) <= 0;
 }
 
 inline bool getBool(rowgroup::Row& row,
@@ -258,19 +256,20 @@ inline bool getBool(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::TEXT:
         {
             const string& val = pm[0]->data()->getStrVal(row, isNull);
+            CHARSET_INFO &cs = datatypes::Charset(ct.charsetNumber).getCharset();
 
             if (notBetween)
             {
-                if (!strGE(ct.charsetNumber, val, pm[1]->data()->getStrVal(row, isNull)) && !isNull)
+                if (!strGE(cs, val, pm[1]->data()->getStrVal(row, isNull)) && !isNull)
                     return true;
 
                 isNull = false;
-                return (!strLE(ct.charsetNumber, val, pm[2]->data()->getStrVal(row, isNull)) && !isNull);
+                return (!strLE(cs, val, pm[2]->data()->getStrVal(row, isNull)) && !isNull);
             }
             
             return !isNull &&
-                   strGE(ct.charsetNumber, val, pm[1]->data()->getStrVal(row, isNull)) &&
-                   strLE(ct.charsetNumber, val, pm[2]->data()->getStrVal(row, isNull));
+                   strGE(cs, val, pm[1]->data()->getStrVal(row, isNull)) &&
+                   strLE(cs, val, pm[2]->data()->getStrVal(row, isNull));
         }
 
         default:

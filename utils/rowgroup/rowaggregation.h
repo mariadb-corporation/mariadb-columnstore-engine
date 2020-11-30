@@ -53,9 +53,8 @@
 #include "mcsv1_udaf.h"
 #include "constantcolumn.h"
 
-// Because including my_sys.h in a Columnstore header causes too many conflicts
-struct charset_info_st;
-typedef const struct charset_info_st CHARSET_INFO;
+#include "collation.h"
+
 // To do: move code that depends on joblist to a proper subsystem.
 namespace joblist
 {

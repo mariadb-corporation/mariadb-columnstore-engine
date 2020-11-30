@@ -63,7 +63,7 @@ using namespace execplan;
 #include "crashtrace.h"
 #include "installdir.h"
 
-#include "collation.h"
+#include "mariadb_my_sys.h"
 
 #include "service.h"
 
