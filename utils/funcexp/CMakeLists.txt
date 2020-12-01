@@ -30,8 +30,10 @@ set(funcexp_LIB_SRCS
     func_dayname.cpp
     func_dayofweek.cpp
     func_dayofyear.cpp
+    func_decode.cpp
     func_div.cpp
     func_elt.cpp
+    func_encode.cpp
     func_exp.cpp
     func_extract.cpp
     func_find_in_set.cpp
@@ -106,7 +108,8 @@ set(funcexp_LIB_SRCS
     func_week.cpp
     func_weekday.cpp
     func_year.cpp
-    func_yearweek.cpp)
+    func_yearweek.cpp
+    sql_crypt.cpp)
 
 add_library(funcexp SHARED ${funcexp_LIB_SRCS})
 

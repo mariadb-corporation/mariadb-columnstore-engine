@@ -42,6 +42,7 @@ using namespace boost;
 
 #include "funcexp.h"
 #include "functor_export.h"
+#include "functor_str.h"
 using namespace funcexp;
 
 #ifdef _MSC_VER
@@ -97,7 +98,10 @@ FunctionColumn::FunctionColumn( const FunctionColumn& rhs, const uint32_t sessio
 }
 
 FunctionColumn::~FunctionColumn()
-{}
+{
+    if (fDynamicFunctor)
+        delete fDynamicFunctor;
+}
 
 /**
  * Methods
@@ -306,9 +310,16 @@ void FunctionColumn::unserialize(messageqcpp::ByteStream& b)
 
     // @bug 3506. Special treatment for rand() function. reset the seed
     Func_rand* rand = dynamic_cast<Func_rand*>(fFunctor);
-
     if (rand)
-        rand->seedSet(false);
+        fFunctor = fDynamicFunctor = new Func_rand();
+
+    Func_encode* encode = dynamic_cast<Func_encode*>(fFunctor);
+    if (encode)
+        fFunctor = fDynamicFunctor = new Func_encode();
+
+    Func_decode* decode = dynamic_cast<Func_decode*>(fFunctor);
+    if (decode)
+        fFunctor = fDynamicFunctor = new Func_decode();
 }
 
 bool FunctionColumn::operator==(const FunctionColumn& t) const
