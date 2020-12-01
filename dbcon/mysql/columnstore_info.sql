@@ -102,7 +102,7 @@ create procedure columnstore_upgrade() SQL SECURITY INVOKER
 `columnstore_upgrade`: BEGIN
     DECLARE done INTEGER DEFAULT 0;
     DECLARE schema_table VARCHAR(100) CHARACTER SET utf8 DEFAULT "";
-    DECLARE table_list CURSOR FOR select concat('`', table_schema,'`.`',table_name,'`') from information_schema.tables where engine='columnstore';
+    DECLARE table_list CURSOR FOR select concat('`', table_schema,'`.`',table_name,'`') from information_schema.tables where engine='columnstore' and table_schema != 'calpontsys';
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
     OPEN table_list;
     tlist: LOOP
