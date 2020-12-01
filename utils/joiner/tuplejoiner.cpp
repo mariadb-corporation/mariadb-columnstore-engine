@@ -166,7 +166,7 @@ TupleJoiner::TupleJoiner(
                 ||
                 smallRG.getColTypes()[smallKeyColumns[i]] == CalpontSystemCatalog::TEXT)
         {
-            keyLength += smallRG.getColumnWidth(smallKeyColumns[i]) + 1;  // +1 null char
+            keyLength += smallRG.getColumnWidth(smallKeyColumns[i]) + 2;  // +2 for length
 
             // MCOL-698: if we don't do this LONGTEXT allocates 32TB RAM
             if (keyLength > 65536)
@@ -1181,11 +1181,86 @@ size_t TupleJoiner::size() const
     return rows.size();
 }
 
+
+class TypelessDataStringEncoder
+{
+    const uint8_t* mStr;
+    uint32_t mLength;
+public:
+    TypelessDataStringEncoder(const uint8_t *str, uint32_t length)
+       :mStr(str), mLength(length)
+    { }
+    bool store(uint8_t* to, uint32_t& off, uint32_t keylen) const
+    {
+        if (mLength > 0xFFFF) // We encode length into two bytes below
+        {
+            throw runtime_error("Cannot join strings greater than 64KB");
+        }
+
+        if (off + mLength + 2 > keylen)
+            return true;
+
+        to[off++]= mLength / 0xFF;
+        to[off++]= mLength % 0xFF;
+        /*
+          QQ: perhaps now when we put length,
+          we don't need to stop at '\0' bytes any more.
+          If so, the loop below can be replace to memcpy().
+        */
+        for (uint32_t j = 0; j < mLength && mStr[j] != 0; j++)
+        {
+            if (off >= keylen)
+                return true;
+            to[off++] = mStr[j];
+        }
+
+        return false;
+    }
+};
+
+
+class TypelessDataDecoder
+{
+    const uint8_t *mPtr;
+    const uint8_t *mEnd;
+    void checkAvailableData(uint32_t nbytes) const
+    {
+        if (mPtr + nbytes > mEnd)
+            throw runtime_error("TypelessData is too short");
+    }
+public:
+    TypelessDataDecoder(const uint8_t* ptr, size_t length)
+        :mPtr(ptr), mEnd(ptr + length)
+    { }
+    TypelessDataDecoder(const TypelessData &data)
+        :TypelessDataDecoder(data.data, data.len)
+    { }
+    ConstString scanGeneric(uint32_t length)
+    {
+        checkAvailableData(length);
+        ConstString res((const char *) mPtr, length);
+        mPtr += length;
+        return res;
+    }
+    uint32_t scanStringLength()
+    {
+        checkAvailableData(2);
+        uint32_t res = ((uint32_t) mPtr[0]) * 255 + mPtr[1];
+        mPtr += 2;
+        return res;
+    }
+    ConstString scanString()
+    {
+        return scanGeneric(scanStringLength());
+    }
+};
+
+
 TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols,
                              uint32_t keylen, FixedAllocator* fa)
 {
     TypelessData ret;
-    uint32_t off = 0, i, j;
+    uint32_t off = 0, i;
     execplan::CalpontSystemCatalog::ColDataType type;
 
     ret.data = (uint8_t*) fa->allocate();
@@ -1201,24 +1276,8 @@ TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols,
             // this is a string, copy a normalized version
             const uint8_t* str = r.getStringPointer(keyCols[i]);
             uint32_t width = r.getStringLength(keyCols[i]);
-
-            if (width > 65536)
-            {
-                throw runtime_error("Cannot join strings greater than 64KB");
-            }
-
-            for (j = 0; j < width && str[j] != 0; j++)
-            {
-                if (off >= keylen)
-                    goto toolong;
-
-                ret.data[off++] = str[j];
-            }
-
-            if (off >= keylen)
+            if (TypelessDataStringEncoder(str, width).store(ret.data, off, keylen))
                 goto toolong;
-
-            ret.data[off++] = 0;
         }
         else if (r.isUnsigned(keyCols[i]))
         {
@@ -1245,12 +1304,78 @@ toolong:
     return ret;
 }
 
+
+uint32 TypelessData::hash(const RowGroup& r,
+                          const std::vector<uint32_t>& keyCols) const
+{
+    TypelessDataDecoder decoder(*this);
+    datatypes::MariaDBHasher hasher;
+    for (uint32_t i = 0; i < keyCols.size(); i++)
+    {
+        switch (r.getColTypes()[keyCols[i]])
+        {
+            case CalpontSystemCatalog::VARCHAR:
+            case CalpontSystemCatalog::CHAR:
+            case CalpontSystemCatalog::TEXT:
+            {
+                CHARSET_INFO *cs= const_cast<RowGroup&>(r).getCharset(keyCols[i]);
+                hasher.add(cs, decoder.scanString());
+                break;
+            }
+            default:
+            {
+                hasher.add(&my_charset_bin, decoder.scanGeneric(8));
+                break;
+            }
+        }
+    }
+    return hasher.finalize();
+}
+
+
+int TypelessData::cmp(const RowGroup& r, const std::vector<uint32_t>& keyCols,
+                      const TypelessData &da, const TypelessData &db)
+{
+    TypelessDataDecoder a(da);
+    TypelessDataDecoder b(db);
+
+    for (uint32_t i = 0; i < keyCols.size(); i++)
+    {
+        switch (r.getColTypes()[keyCols[i]])
+        {
+            case CalpontSystemCatalog::VARCHAR:
+            case CalpontSystemCatalog::CHAR:
+            case CalpontSystemCatalog::TEXT:
+            {
+                datatypes::Charset cs(*const_cast<RowGroup&>(r).getCharset(keyCols[i]));
+                ConstString ta = a.scanString();
+                ConstString tb = b.scanString();
+                if (int rc= cs.strnncollsp(ta, tb))
+                    return rc;
+                break;
+            }
+            default:
+            {
+                ConstString ta = a.scanGeneric(8);
+                ConstString tb = b.scanGeneric(8);
+                idbassert(ta.length() == tb.length());
+                if (int rc= memcmp(ta.str(), tb.str() , ta.length()))
+                    return rc;
+                break;
+            }
+        }
+    }
+    return 0; // Equal
+}
+
+
+
 TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols,
                              uint32_t keylen, FixedAllocator* fa,
                              const rowgroup::RowGroup& otherSideRG, const std::vector<uint32_t>& otherKeyCols)
 {
     TypelessData ret;
-    uint32_t off = 0, i, j;
+    uint32_t off = 0, i;
     execplan::CalpontSystemCatalog::ColDataType type;
 
     ret.data = (uint8_t*) fa->allocate();
@@ -1266,24 +1391,8 @@ TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols,
             // this is a string, copy a normalized version
             const uint8_t* str = r.getStringPointer(keyCols[i]);
             uint32_t width = r.getStringLength(keyCols[i]);
-
-            if (width > 65536)
-            {
-                throw runtime_error("Cannot join strings greater than 64KB");
-            }
-
-            for (j = 0; j < width && str[j] != 0; j++)
-            {
-                if (off >= keylen)
-                    goto toolong;
-
-                ret.data[off++] = str[j];
-            }
-
-            if (off >= keylen)
+            if (TypelessDataStringEncoder(str, width).store(ret.data, off, keylen))
                 goto toolong;
-
-            ret.data[off++] = 0;
         }
         else if (r.getColType(keyCols[i]) == CalpontSystemCatalog::LONGDOUBLE)
         {
@@ -1373,7 +1482,7 @@ TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols, Pool
                              const rowgroup::RowGroup& otherSideRG, const std::vector<uint32_t>& otherKeyCols)
 {
     TypelessData ret;
-    uint32_t off = 0, i, j;
+    uint32_t off = 0, i;
     execplan::CalpontSystemCatalog::ColDataType type;
 
     uint32_t keylen = 0;
@@ -1389,7 +1498,7 @@ TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols, Pool
             keylen += sizeof(long double);
         }
         else if (r.isCharType(keyCols[i]))
-            keylen += r.getStringLength(keyCols[i]) + 1;
+            keylen += r.getStringLength(keyCols[i]) + 2;
         else
             keylen += 8;
     }
@@ -1407,16 +1516,7 @@ TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols, Pool
             // this is a string, copy a normalized version
             const uint8_t* str = r.getStringPointer(keyCols[i]);
             uint32_t width = r.getStringLength(keyCols[i]);
-
-            if (width > 65536)
-            {
-                throw runtime_error("Cannot join strings greater than 64KB");
-            }
-
-            for (j = 0; j < width && str[j] != 0; j++)
-                ret.data[off++] = str[j];
-
-            ret.data[off++] = 0;
+            TypelessDataStringEncoder(str, width).store(ret.data, off, keylen);
         }
         else if (type == CalpontSystemCatalog::LONGDOUBLE)
         {

@@ -1448,8 +1448,11 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
                 //check data length
                 if ( data.length() > (unsigned int)colType.colWidth )
                 {
+                    datatypes::Charset cs(colType.charsetNumber);
+                    const char *newEnd = data.data() + colType.colWidth;
+                    const char *origEnd = data.data() + data.length();
+                    pushWarning = cs.test_if_important_data(newEnd, origEnd);
                     data = data.substr(0, colType.colWidth);
-                    pushWarning = true;
                 }
                 else
                 {

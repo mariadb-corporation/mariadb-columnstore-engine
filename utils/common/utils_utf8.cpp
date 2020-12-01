@@ -31,7 +31,7 @@ static inline CHARSET_INFO & get_charset_or_bin(int32_t charsetNumber)
 
 
 Charset::Charset(uint32_t charsetNumber)
-   :mCharset(get_charset_or_bin(charsetNumber))
+   :mCharset(&get_charset_or_bin(charsetNumber))
 {
 }
 

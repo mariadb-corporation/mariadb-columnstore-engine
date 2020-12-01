@@ -595,6 +595,47 @@ inline bool LBIDList::compareVal(const T& Min, const T& Max, const T& value, cha
     return true;
 }
 
+
+static inline bool compareStr(const datatypes::Charset &cs,
+                              const utils::ConstString &Min,
+                              const utils::ConstString &Max,
+                              const utils::ConstString &value,
+                              char op, uint8_t lcf)
+{
+    switch (op)
+    {
+        case COMPARE_LT:
+        case COMPARE_NGE:
+            return cs.strnncollsp(value, Min) > 0;
+
+        case COMPARE_LE:
+        case COMPARE_NGT:
+            return cs.strnncollsp(value, Min) >= 0;
+
+        case COMPARE_GT:
+        case COMPARE_NLE:
+            return cs.strnncollsp(value, Max) < 0;
+
+        case COMPARE_GE:
+        case COMPARE_NLT:
+            return cs.strnncollsp(value, Max) <= 0;
+
+        case COMPARE_EQ:
+            return cs.strnncollsp(value, Min) >= 0 &&
+                   cs.strnncollsp(value, Max) <= 0 &&
+                   lcf <= 0;
+
+        case COMPARE_NE:
+
+            // @bug 3087
+            return cs.strnncollsp(value, Min) != 0 ||
+                   cs.strnncollsp(value, Max) != 0 ||
+                                  lcf != 0;
+    }
+
+    return false;
+}
+
 bool LBIDList::checkSingleValue(int64_t min, int64_t max, int64_t value,
                                 execplan::CalpontSystemCatalog::ColDataType type)
 {
@@ -744,15 +785,13 @@ bool LBIDList::CasualPartitionPredicate(const int64_t Min,
 
         if (bIsChar && 1 < ct.colWidth)
         {
-            // MCOL-1246 Trim trailing whitespace for matching so that we have
-            // the same as InnoDB behaviour
-            int64_t tMin = Min;
-            int64_t tMax = Max;
-            dataconvert::DataConvert::trimWhitespace(tMin);
-            dataconvert::DataConvert::trimWhitespace(tMax);
-
-            scan = compareVal(order_swap(tMin), order_swap(tMax), order_swap(value),
-                              op, lcf);
+            datatypes::Charset cs(ct.charsetNumber);
+            utils::ConstString sMin((const char *) &Min, 8);
+            utils::ConstString sMax((const char *) &Max, 8);
+            utils::ConstString sVal((const char *) &value, 8);
+            scan = compareStr(cs, sMin.rtrimZero(),
+                                  sMax.rtrimZero(),
+                                  sVal.rtrimZero(), op, lcf);
 // 			cout << "scan=" << (uint32_t) scan << endl;
         }
         else if (bIsUnsigned)
