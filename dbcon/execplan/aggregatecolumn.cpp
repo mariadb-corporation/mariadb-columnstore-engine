@@ -525,14 +525,26 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
         case CalpontSystemCatalog::UDECIMAL:
             switch (fResultType.colWidth)
             {
+                case 16:
+                {
+                    datatypes::TSInt128 val = row.getTSInt128Field(fInputIndex);
+
+                    if (val.isNull())
+                        isNull = true;
+                    else
+                        fResult.decimalVal = IDB_Decimal(val, fResultType.scale, fResultType.precision);
+
+                    break;
+                }
+
                 case 1:
                     if (row.equals<1>(TINYINTNULL, fInputIndex))
                         isNull = true;
                     else
-                    {
-                        fResult.decimalVal.value = row.getIntField<1>(fInputIndex);
-                        fResult.decimalVal.scale = (unsigned)fResultType.scale;
-                    }
+                        fResult.decimalVal = IDB_Decimal(
+                                                 row.getIntField<1>(fInputIndex),
+                                                 fResultType.scale,
+                                                 fResultType.precision);
 
                     break;
 
@@ -540,10 +552,10 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
                     if (row.equals<2>(SMALLINTNULL, fInputIndex))
                         isNull = true;
                     else
-                    {
-                        fResult.decimalVal.value = row.getIntField<2>(fInputIndex);
-                        fResult.decimalVal.scale = (unsigned)fResultType.scale;
-                    }
+                        fResult.decimalVal = IDB_Decimal(
+                                                 row.getIntField<2>(fInputIndex),
+                                                 fResultType.scale,
+                                                 fResultType.precision);
 
                     break;
 
@@ -551,10 +563,10 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
                     if (row.equals<4>(INTNULL, fInputIndex))
                         isNull = true;
                     else
-                    {
-                        fResult.decimalVal.value = row.getIntField<4>(fInputIndex);
-                        fResult.decimalVal.scale = (unsigned)fResultType.scale;
-                    }
+                        fResult.decimalVal = IDB_Decimal(
+                                                 row.getIntField<4>(fInputIndex),
+                                                 fResultType.scale,
+                                                 fResultType.precision);
 
                     break;
 
@@ -562,10 +574,10 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
                     if (row.equals<8>(BIGINTNULL, fInputIndex))
                         isNull = true;
                     else
-                    {
-                        fResult.decimalVal.value = (int64_t)row.getUintField<8>(fInputIndex);
-                        fResult.decimalVal.scale = (unsigned)fResultType.scale;
-                    }
+                        fResult.decimalVal = IDB_Decimal(
+                                                 (int64_t) row.getUintField<8>(fInputIndex),
+                                                 fResultType.scale,
+                                                 fResultType.precision);
 
                     break;
             }

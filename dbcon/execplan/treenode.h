@@ -1003,41 +1003,82 @@ inline IDB_Decimal TreeNode::getDecimalVal()
             throw logging::InvalidConversionExcept("TreeNode::getDecimalVal: non-support conversion from binary string");
 
         case CalpontSystemCatalog::BIGINT:
+        {
+            idbassert(fResultType.scale == 0);
+
+            if (fResultType.isWideDecimalPrecision())
+                fResult.decimalVal = IDB_Decimal(0, 0, fResultType.precision,
+                                         (int128_t)fResult.intVal);
+            else
+                fResult.decimalVal = IDB_Decimal(fResult.intVal, 0,
+                                         fResultType.precision);
+
+            break;
+        }
+
         case CalpontSystemCatalog::MEDINT:
         case CalpontSystemCatalog::INT:
         case CalpontSystemCatalog::SMALLINT:
         case CalpontSystemCatalog::TINYINT:
-            fResult.decimalVal.value = (int64_t)(fResult.intVal * pow((double)10.0, fResultType.scale));
-            fResult.decimalVal.scale = fResultType.scale;
-            fResult.decimalVal.precision = fResultType.precision;
+        {
+            idbassert(fResultType.scale == 0);
+
+            fResult.decimalVal = IDB_Decimal(fResult.intVal, 0,
+                                     fResultType.precision);
+
             break;
+        }
 
         case CalpontSystemCatalog::UBIGINT:
+        {
+            idbassert(fResultType.scale == 0);
+
+            if (fResultType.isWideDecimalPrecision())
+                fResult.decimalVal = IDB_Decimal(0, 0, fResultType.precision,
+                                         (int128_t)fResult.uintVal);
+            else
+                fResult.decimalVal = IDB_Decimal((int64_t)fResult.uintVal, 0,
+                                         fResultType.precision);
+
+            break;
+        }
+
         case CalpontSystemCatalog::UMEDINT:
         case CalpontSystemCatalog::UINT:
         case CalpontSystemCatalog::USMALLINT:
         case CalpontSystemCatalog::UTINYINT:
-            fResult.decimalVal.value = (int64_t)(fResult.uintVal * pow((double)10.0, fResultType.scale));
-            fResult.decimalVal.scale = fResultType.scale;
-            fResult.decimalVal.precision = fResultType.precision;
+        {
+            idbassert(fResultType.scale == 0);
+
+            fResult.decimalVal = IDB_Decimal((int64_t)fResult.uintVal, 0,
+                                     fResultType.precision);
+
             break;
+        }
 
         case CalpontSystemCatalog::LONGDOUBLE:
+        {
+            long double dlScaled = fResult.longDoubleVal;
+
+            if (fResultType.scale > 0)
             {
-                long double dlScaled = fResult.longDoubleVal;
-                if (fResultType.scale > 0)
-                {
-                    dlScaled= fResult.longDoubleVal * pow((double)10.0, fResultType.scale);
-                }
-                if (dlScaled > (double)MAX_BIGINT)
-                {
-                    throw logging::InvalidConversionExcept("TreeNode::getDecimalVal: decimal overflow.");
-                }
-                fResult.decimalVal.value = (int64_t)roundl((fResult.longDoubleVal * pow((double)10.0, fResultType.scale)));
-                fResult.decimalVal.scale = fResultType.scale;
-                fResult.decimalVal.precision = fResultType.precision;
+                dlScaled = fResult.longDoubleVal * pow((double)10.0, fResultType.scale);
             }
+
+            if ((dlScaled > (long double)INT64_MAX) || (dlScaled < (long double)(INT64_MIN)))
+            {
+                datatypes::TFloat128 temp((__float128)dlScaled);
+                fResult.decimalVal = IDB_Decimal(0, fResultType.scale,
+                                         fResultType.precision, static_cast<int128_t>(temp));
+            }
+            else
+            {
+                fResult.decimalVal = IDB_Decimal((int64_t)lroundl(dlScaled),
+                                         fResultType.scale, fResultType.precision);
+            }
+
             break;
+        }
 
         case CalpontSystemCatalog::DATE:
             throw logging::InvalidConversionExcept("TreeNode::getDecimalVal: Invalid conversion from date.");

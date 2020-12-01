@@ -172,6 +172,8 @@ class Decimal: public TSInt128
     public:
         static constexpr uint8_t MAXLENGTH16BYTES = TSInt128::maxLength();
         static constexpr uint8_t MAXLENGTH8BYTES = 23;
+        static constexpr int128_t minInt128 = TFloat128::minInt128;
+        static constexpr int128_t maxInt128 = TFloat128::maxInt128;
 
         static inline bool isWideDecimalNullValue(const int128_t& val)
         {
@@ -192,9 +194,6 @@ class Decimal: public TSInt128
         {
             val = TSInt128::EmptyValue;
         }
-
-        static constexpr int128_t minInt128 = int128_t(0x8000000000000000LL) << 64;
-        static constexpr int128_t maxInt128 = (int128_t(0x7FFFFFFFFFFFFFFFLL) << 64) + 0xFFFFFFFFFFFFFFFFLL;
 
         /**
             @brief Compares two Decimal taking scale into account. 

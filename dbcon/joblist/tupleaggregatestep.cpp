@@ -3475,11 +3475,11 @@ void TupleAggregateStep::prep2PhasesAggregate(
 
                         if (aggOp == ROWAGG_SUM)
                         {
-                            wideDecimalOrLongDouble(colPm, typeProj[colPm],
-                                precisionProj, scaleProj, widthAggPm,
+                            wideDecimalOrLongDouble(colPm, typeAggPm[colPm],
+                                precisionAggPm, scaleAggPm, widthAggPm,
                                 typeAggUm, scaleAggUm, precisionAggUm, widthAggUm);
 
-                            oidsAggUm.push_back(oidsProj[colPm]);
+                            oidsAggUm.push_back(oidsAggPm[colPm]);
                             keysAggUm.push_back(retKey);
                             csNumAggUm.push_back(8);
                         }

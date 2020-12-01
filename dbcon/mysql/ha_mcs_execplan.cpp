@@ -4949,7 +4949,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                 CalpontSystemCatalog::ColType ct;
                 ct.colDataType = CalpontSystemCatalog::BIGINT;
                 ct.colWidth = 8;
-                ct.scale = parm->resultType().scale;
+                ct.scale = 0;
                 ac->resultType(ct);
             }
             else if (isp->sum_func() == Item_sum::STD_FUNC ||

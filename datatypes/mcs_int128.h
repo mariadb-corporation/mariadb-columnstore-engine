@@ -119,9 +119,11 @@ class TSInt128
     static constexpr int128_t NullValue = int128_t(0x8000000000000000LL) << 64;
     static constexpr int128_t EmptyValue = (int128_t(0x8000000000000000LL) << 64) + 1;
 
-
     //  A variety of ctors for aligned and unaligned arguments
     TSInt128(): s128Value(0) { }
+
+    // Copy ctor
+    TSInt128(const TSInt128& other): s128Value(other.s128Value) { }
 
     //    aligned argument
     TSInt128(const int128_t& x) { s128Value = x; }
