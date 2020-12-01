@@ -1004,7 +1004,7 @@ struct ColumnType
     EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
 
     /** @brief For deserialization. */
-    ColumnType()
+    ColumnType() : fCharset(NULL)
     {}
 
     friend std::ostream& operator<<(std::ostream& os, const ColumnType& ac);
@@ -1043,6 +1043,8 @@ struct ColumnType
     std::string fAutoincrement;
 
     uint64_t fNextvalue;
+
+    const char* fCharset;
 
 };
 
