@@ -186,11 +186,11 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
 
         if (eqFilter)
         {
-            // MCOL-1246 Trim whitespace before match
-            // TODO MCOL-3536 use CHARSET_INFO* cs for collation
-            // cs->hash_sort(hash_sort(const uchar *key, size_t len, ulong *nr1, ulong *nr2)) 
+            if (cs != & eqFilter->getCharset())
+            {
+                //throw runtime_error("Collations mismatch: TokenByScanRequestHeader and DicEqualityFilter");
+            }
             string strData(sig, siglen);
-            boost::trim_right_if(strData, boost::is_any_of(" "));
             bool gotIt = eqFilter->find(strData) != eqFilter->end();
 
             if ((h->COP1 == COMPARE_EQ && gotIt) || (h->COP1 == COMPARE_NE &&

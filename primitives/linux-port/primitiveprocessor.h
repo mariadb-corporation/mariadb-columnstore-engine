@@ -83,7 +83,28 @@ public:
 };
 
 typedef std::tr1::unordered_set<int64_t, pcfHasher, pcfEqual> prestored_set_t;
-typedef std::tr1::unordered_set<std::string, utils::Hasher> DictEqualityFilter;
+
+
+class DictEqualityFilter: public std::tr1::unordered_set<std::string,
+                                                         datatypes::CollationAwareHasher,
+                                                         datatypes::CollationAwareComparator>
+{
+public:
+    DictEqualityFilter(const datatypes::Charset &cs)
+        :std::tr1::unordered_set<std::string,
+                                 datatypes::CollationAwareHasher,
+                                 datatypes::CollationAwareComparator>
+            (10,
+             datatypes::CollationAwareHasher(cs),
+             datatypes::CollationAwareComparator(cs))
+    { }
+    CHARSET_INFO & getCharset() const
+    {
+        idbassert(& _M_h1.getCharset() == & _M_eq.getCharset());
+        return _M_h1.getCharset();
+    }
+};
+
 
 struct idb_regex_t
 {

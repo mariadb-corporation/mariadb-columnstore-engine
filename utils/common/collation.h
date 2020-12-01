@@ -18,6 +18,7 @@
 #ifndef COLLATION_H_INCLUDED
 #define COLLATION_H_INCLUDED
 
+#include "exceptclasses.h"
 
 /*
   Redefine definitions used by MariaDB m_ctype.h.
@@ -83,6 +84,26 @@ extern "C" MYSQL_PLUGIN_IMPORT CHARSET_INFO *default_charset_info;
 namespace datatypes
 {
 
+class MariaDBHasher
+{
+    ulong mPart1;
+    ulong mPart2;
+public:
+    MariaDBHasher()
+        :mPart1(1), mPart2(4)
+    { }
+    MariaDBHasher & add(CHARSET_INFO & cs, const char *str, size_t length)
+    {
+        cs.hash_sort((const uchar *) str, length, &mPart1, &mPart2);
+        return *this;
+    }
+    uint32_t finalize() const
+    {
+        return (uint32_t) mPart1;
+    }
+};
+
+
 // A reference to MariaDB CHARSET_INFO.
 
 class Charset
@@ -93,7 +114,48 @@ public:
     Charset(CHARSET_INFO & cs) :mCharset(cs) { }
     Charset(uint32_t charsetNumber);
     CHARSET_INFO & getCharset() const { return mCharset; }
+    uint32_t hash(const char *data, uint64_t len) const
+    {
+        return MariaDBHasher().add(mCharset, data, len).finalize();
+    }
+    bool eq(const std::string & str1, const std::string & str2) const
+    {
+        return mCharset.strnncollsp(str1.data(), str1.length(),
+                                    str2.data(), str2.length()) == 0;
+    }
+
 };
+
+
+class CollationAwareHasher: public Charset
+{
+public:
+    CollationAwareHasher(const Charset &cs)
+        :Charset(cs)
+    { }
+    inline uint32_t operator()(const std::string& s) const
+    {
+        return operator()(s.data(), s.length());
+    }
+    inline uint32_t operator()(const char* data, uint64_t len) const
+    {
+        return Charset::hash(data, len);
+    }
+};
+
+
+class CollationAwareComparator: public Charset
+{
+public:
+    CollationAwareComparator(const Charset &cs)
+       :Charset(cs)
+    { }
+    bool operator()(const std::string & str1, const std::string & str2) const
+    {
+        return Charset::eq(str1, str2);
+    }
+};
+
 
 
 } // end of namespace datatypes
