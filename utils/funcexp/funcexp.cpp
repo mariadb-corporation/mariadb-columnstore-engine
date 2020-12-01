@@ -109,9 +109,11 @@ FuncExp::FuncExp()
     fFuncMap["dayofmonth"] = new Func_day();	//dlh
     fFuncMap["dayofweek"] = new Func_dayofweek();	//dlh
     fFuncMap["dayofyear"] = new Func_dayofyear();	//dlh
+    fFuncMap["decode"] = new Func_decode(); // BT
     fFuncMap["degrees"] = new Func_degrees();
     fFuncMap["DIV"] = new Func_div(); // MySQL use upper case for this function name
     fFuncMap["elt"] = new Func_elt();
+    fFuncMap["encode"] = new Func_encode(); // BT
     fFuncMap["exp"] = new Func_exp();
     fFuncMap["extract"] = new Func_extract();	//dlh
     fFuncMap["find_in_set"] = new Func_find_in_set();
