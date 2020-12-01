@@ -98,6 +98,10 @@ public:
         cs->hash_sort((const uchar *) str, length, &mPart1, &mPart2);
         return *this;
     }
+    MariaDBHasher & add(CHARSET_INFO *cs, const utils::ConstString &str)
+    {
+        return add(cs, str.str(), str.length());
+    }
     uint32_t finalize() const
     {
         return (uint32_t) mPart1;
