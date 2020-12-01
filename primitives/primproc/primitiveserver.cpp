@@ -1804,12 +1804,15 @@ public:
 private:
     void createEqualityFilter()
     {
-        uint32_t uniqueID, count, i;
+        uint32_t uniqueID, count, i, charsetNumber;
         string str;
-        boost::shared_ptr<DictEqualityFilter> filter(new DictEqualityFilter());
-
         bs->advance(sizeof(ISMPacketHeader));
         *bs >> uniqueID;
+        *bs >> charsetNumber;
+
+        datatypes::Charset cs(charsetNumber);
+        boost::shared_ptr<DictEqualityFilter> filter(new DictEqualityFilter(cs));
+
         *bs >> count;
 
         for (i = 0; i < count; i++)

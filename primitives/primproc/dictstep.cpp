@@ -86,7 +86,7 @@ void DictStep::createCommand(ByteStream& bs)
     {
         string strTmp;
 
-        eqFilter.reset(new primitives::DictEqualityFilter());
+        eqFilter.reset(new primitives::DictEqualityFilter(my_charset_latin1));
         bs >> eqOp;
 
         //cout << "saw the eqfilter count=" << filterCount << endl;
