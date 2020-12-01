@@ -160,6 +160,7 @@ void ColumnCommandJL::createCommand(ByteStream& bs) const
     bs << (uint8_t) colType.colWidth;
     bs << (uint8_t) colType.scale;
     bs << (uint8_t) colType.compressionType;
+    bs << (uint32_t) colType.charsetNumber;
     bs << BOP;
     bs << filterCount;
     serializeInlineVector(bs, fLastLbid);

@@ -123,6 +123,7 @@ pColScanStep::pColScanStep(
     const JobInfo& jobInfo) :
     JobStep(jobInfo),
     fRm(jobInfo.rm),
+    fMsgHeader(),
     fNumThreads(fRm->getJlNumScanReceiveThreads()),
     fFilterCount(0),
     fOid(o),
@@ -158,8 +159,6 @@ pColScanStep::pColScanStep(
     recvExited = 0;
     rDoNothing = false;
     fIsDict = false;
-
-    memset(&fMsgHeader, 0, sizeof(fMsgHeader));
 
     //If this is a dictionary column, fudge the numbers...
     if ( fColType.colDataType == CalpontSystemCatalog::VARCHAR )
@@ -1010,7 +1009,8 @@ uint64_t pColScanStep::getFBO(uint64_t lbid)
 
 pColScanStep::pColScanStep(const pColStep& rhs) :
     JobStep(rhs),
-    fRm(rhs.resourceManager())
+    fRm(rhs.resourceManager()),
+    fMsgHeader()
 {
     fNumThreads = fRm->getJlNumScanReceiveThreads();
     fFilterCount = rhs.filterCount();
@@ -1041,8 +1041,6 @@ pColScanStep::pColScanStep(const pColStep& rhs) :
         return;
 
     int err;
-
-    memset(&fMsgHeader, 0, sizeof(fMsgHeader));
 
     err = dbrm.lookup(fOid, lbidRanges);
 

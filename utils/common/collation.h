@@ -19,6 +19,7 @@
 #define COLLATION_H_INCLUDED
 
 #include "exceptclasses.h"
+#include "conststring.h"
 
 /*
   Redefine definitions used by MariaDB m_ctype.h.
@@ -92,9 +93,9 @@ public:
     MariaDBHasher()
         :mPart1(1), mPart2(4)
     { }
-    MariaDBHasher & add(CHARSET_INFO & cs, const char *str, size_t length)
+    MariaDBHasher & add(CHARSET_INFO * cs, const char *str, size_t length)
     {
-        cs.hash_sort((const uchar *) str, length, &mPart1, &mPart2);
+        cs->hash_sort((const uchar *) str, length, &mPart1, &mPart2);
         return *this;
     }
     uint32_t finalize() const
@@ -109,21 +110,33 @@ public:
 class Charset
 {
 protected:
-    const struct charset_info_st & mCharset;
+    const struct charset_info_st * mCharset;
 public:
-    Charset(CHARSET_INFO & cs) :mCharset(cs) { }
+    Charset(CHARSET_INFO & cs) :mCharset(&cs) { }
     Charset(uint32_t charsetNumber);
-    CHARSET_INFO & getCharset() const { return mCharset; }
+    CHARSET_INFO & getCharset() const { return *mCharset; }
     uint32_t hash(const char *data, uint64_t len) const
     {
         return MariaDBHasher().add(mCharset, data, len).finalize();
     }
     bool eq(const std::string & str1, const std::string & str2) const
     {
-        return mCharset.strnncollsp(str1.data(), str1.length(),
-                                    str2.data(), str2.length()) == 0;
+        return mCharset->strnncollsp(str1.data(), str1.length(),
+                                     str2.data(), str2.length()) == 0;
     }
+    int strnncollsp(const utils::ConstString &str1,
+                    const utils::ConstString &str2) const
+    {
+        return mCharset->strnncollsp(str1.str(), str1.length(),
+                                     str2.str(), str2.length());
+    }
+    bool test_if_important_data(const char *str, const char *end) const
+    {
+        if (mCharset->state & MY_CS_NOPAD)
+          return str < end;
+        return str + mCharset->scan(str, end, MY_SEQ_SPACES) < end;
 
+    }
 };
 
 

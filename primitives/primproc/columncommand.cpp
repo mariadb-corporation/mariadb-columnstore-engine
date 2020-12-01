@@ -434,6 +434,7 @@ void ColumnCommand::processResult()
 void ColumnCommand::createCommand(ByteStream& bs)
 {
     uint8_t tmp8;
+    uint32_t tmp32;
 
     bs.advance(1);
     bs >> tmp8;
@@ -456,6 +457,8 @@ void ColumnCommand::createCommand(ByteStream& bs)
     colType.scale = tmp8;
     bs >> tmp8;
     colType.compressionType = tmp8;
+    bs >> tmp32;
+    colType.charsetNumber = tmp32;
     bs >> BOP;
     bs >> filterCount;
     deserializeInlineVector(bs, lastLbid);
@@ -510,9 +513,7 @@ void ColumnCommand::prep(int8_t outputType, bool absRids)
     primMsg->hdr.TransactionID = bpp->txnID;
     primMsg->hdr.VerID = bpp->versionInfo.currentScn;
     primMsg->hdr.StepID = bpp->stepID;
-    primMsg->DataSize = colType.colWidth;
-    primMsg->DataType = colType.colDataType;
-    primMsg->CompType = colType.compressionType;
+    primMsg->colType = ColRequestHeaderDataType(colType);
     primMsg->OutputType = outputType;
     primMsg->BOP = BOP;
     primMsg->NOPS = (suppressFilter ? 0 : filterCount);
