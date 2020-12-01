@@ -3664,7 +3664,8 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
                 }
                 else
                 {
-                    m1->second.fTypeless = m2->second.fTypeless = false;
+                    m1->second.fTypeless = m2->second.fTypeless = isCharType(ti1.dtype) ||
+                                                                  isCharType(ti2.dtype);
                 }
             }
             else
