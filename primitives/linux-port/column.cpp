@@ -140,6 +140,44 @@ inline bool colCompare_(const T& val1, const T& val2, uint8_t COP)
     }
 }
 
+
+inline bool colCompareStr(const ColRequestHeaderDataType &type,
+                          uint8_t COP,
+                          const utils::ConstString &val1,
+                          const utils::ConstString &val2)
+{
+    int res = type.strnncollsp(val1, val2);
+
+    switch (COP)
+    {
+        case COMPARE_NIL:
+            return false;
+
+        case COMPARE_LT:
+            return res < 0;
+
+        case COMPARE_EQ:
+            return res == 0;
+
+        case COMPARE_LE:
+            return res <= 0;
+
+        case COMPARE_GT:
+            return res > 0;
+
+        case COMPARE_NE:
+            return res != 0;
+
+        case COMPARE_GE:
+            return res >= 0;
+
+        default:
+            logIt(34, COP, "colCompareStr");
+            return false;  // throw an exception here?
+    }
+}
+
+
 template<class T>
 inline bool colCompare_(const T& val1, const T& val2, uint8_t COP, uint8_t rf)
 {
@@ -589,15 +627,15 @@ inline bool isMinMaxValid(const NewColRequestHeader* in)
     }
     else
     {
-        switch (in->DataType)
+        switch (in->colType.DataType)
         {
             case CalpontSystemCatalog::CHAR:
-                return (in->DataSize < 9);
+                return (in->colType.DataSize < 9);
 
             case CalpontSystemCatalog::VARCHAR:
             case CalpontSystemCatalog::BLOB:
             case CalpontSystemCatalog::TEXT:
-                return (in->DataSize < 8);
+                return (in->colType.DataSize < 8);
 
             case CalpontSystemCatalog::TINYINT:
             case CalpontSystemCatalog::SMALLINT:
@@ -617,7 +655,7 @@ inline bool isMinMaxValid(const NewColRequestHeader* in)
 
             case CalpontSystemCatalog::DECIMAL:
             case CalpontSystemCatalog::UDECIMAL:
-                return (in->DataSize <= datatypes::MAXDECIMALWIDTH);
+                return (in->colType.DataSize <= datatypes::MAXDECIMALWIDTH);
 
             default:
                 return false;
@@ -636,8 +674,13 @@ inline string fixChar(int64_t intval)
     return string(chval);
 }
 
-inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int type, uint8_t width, const idb_regex_t& regex, bool isNull = false)
+inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf,
+                       const ColRequestHeaderDataType &typeHolder, uint8_t width,
+                       const idb_regex_t& regex, bool isNull = false)
 {
+    uint8_t type = typeHolder.DataType;
+// 	cout << "comparing " << hex << val1 << " to " << val2 << endl;
+
     if (COMPARE_NIL == COP) return false;
 
     //@bug 425 added isNull condition
@@ -664,11 +707,9 @@ inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int 
     {
         if (!regex.used && !rf)
         {
-            // MCOL-1246 Trim trailing whitespace for matching, but not for
-            // regex
-            dataconvert::DataConvert::trimWhitespace(val1);
-            dataconvert::DataConvert::trimWhitespace(val2);
-            return colCompare_(order_swap(val1), order_swap(val2), COP);
+            utils::ConstString s1 = {reinterpret_cast<const char*>(&val1), 8};
+            utils::ConstString s2 = {reinterpret_cast<const char*>(&val2), 8};
+            return colCompareStr(typeHolder, COP, s1.rtrimZero(), s2.rtrimZero());
         }
         else
             return colStrCompare_(order_swap(val1), order_swap(val2), COP, rf, &regex);
@@ -742,7 +783,7 @@ inline void store(const NewColRequestHeader* in,
     {
 #ifdef PRIM_DEBUG
 
-        if (*written + in->DataSize > outSize)
+        if (*written + in->colType.DataSize > outSize)
         {
             logIt(35, 2);
             throw logic_error("PrimitiveProcessor::store(): output buffer is too small");
@@ -753,7 +794,7 @@ inline void store(const NewColRequestHeader* in,
         void* ptr1 = &out8[*written];
         const uint8_t* ptr2 = &block8[0];
 
-        switch (in->DataSize)
+        switch (in->colType.DataSize)
         {
             case 32:
                 std::cout << __func__ << " WARNING!!! Not implemented for 32 byte data types." << std::endl;
@@ -788,7 +829,8 @@ inline void store(const NewColRequestHeader* in,
                 memcpy(ptr1, ptr2, 1);
                 break;
         }
-        *written += in->DataSize;
+
+        *written += in->colType.DataSize;
     }
 
     out->NVALS++;
@@ -1146,7 +1188,7 @@ inline void p_Col_noprid(const NewColRequestHeader* in, NewColResultHeader* out,
         rid = *reinterpret_cast<const uint16_t*>(&in8[argOffset + sizeof(ColArgs) +
                           in->DataSize]);
 
-        if (isUnsigned((CalpontSystemCatalog::ColDataType)in->DataType))
+        if (isUnsigned((CalpontSystemCatalog::ColDataType)in->colType.DataType))
         {
             switch (in->DataSize)
             {
@@ -1178,7 +1220,7 @@ inline void p_Col_noprid(const NewColRequestHeader* in, NewColResultHeader* out,
                     return;
             }
 
-            if (colCompare(ucolVal, uargVal, args->COP, args->rf, in->DataType, in->DataSize, placeholderRegex))
+            if (colCompare(ucolVal, uargVal, args->COP, args->rf, in->colType.DataType, in->DataSize, placeholderRegex))
                 store(in, out, outSize, written, rid, reinterpret_cast<const uint8_t*>(block));
         }
         else
@@ -1213,7 +1255,7 @@ inline void p_Col_noprid(const NewColRequestHeader* in, NewColResultHeader* out,
                     return;
             }
 
-            if (colCompare(colVal, argVal, args->COP, args->rf, in->DataType, in->DataSize, placeholderRegex))
+            if (colCompare(colVal, argVal, args->COP, args->rf, in->colType.DataType, in->DataSize, placeholderRegex))
                 store(in, out, outSize, written, rid, reinterpret_cast<const uint8_t*>(block));
         }
     }
@@ -1255,7 +1297,7 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
 
     if (out->ValidMinMax)
     {
-        if (isUnsigned((CalpontSystemCatalog::ColDataType)in->DataType))
+        if (isUnsigned((CalpontSystemCatalog::ColDataType)in->colType.DataType))
         {
             out->Min = static_cast<int64_t>(numeric_limits<uint64_t>::max());
             out->Max = 0;
@@ -1298,7 +1340,7 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
         std_regex.reset(new idb_regex_t[in->NOPS]);
         regex = &(std_regex[0]);
 
-        if (isUnsigned((CalpontSystemCatalog::ColDataType)in->DataType))
+        if (isUnsigned((CalpontSystemCatalog::ColDataType)in->colType.DataType))
         {
             uargVals = reinterpret_cast<uint64_t*>(std_argVals);
             cops = std_cops;
@@ -1358,7 +1400,7 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
 
                     case 4:
 #if 0
-                        if (in->DataType == CalpontSystemCatalog::FLOAT)
+                        if (in->colType.DataType == CalpontSystemCatalog::FLOAT)
                         {
                             double dTmp;
 
@@ -1409,14 +1451,14 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
 
     // else we have a pre-parsed filter, and it's an unordered set for quick == comparisons
 
-    if (isUnsigned((CalpontSystemCatalog::ColDataType)in->DataType))
+    if (isUnsigned((CalpontSystemCatalog::ColDataType)in->colType.DataType))
     {
-        uval = nextUnsignedColValue<W>(in->DataType, ridArray, in->NVALS, &nextRidIndex, &done, &isNull,
+        uval = nextUnsignedColValue<W>(in->colType.DataType, ridArray, in->NVALS, &nextRidIndex, &done, &isNull,
                                        &isEmpty, &rid, in->OutputType, reinterpret_cast<uint8_t*>(block), itemsPerBlk);
     }
     else
     {
-        val = nextColValue<W>(in->DataType, ridArray, in->NVALS, &nextRidIndex, &done, &isNull,
+        val = nextColValue<W>(in->colType.DataType, ridArray, in->NVALS, &nextRidIndex, &done, &isNull,
                               &isEmpty, &rid, in->OutputType, reinterpret_cast<uint8_t*>(block), itemsPerBlk);
     }
 
@@ -1427,7 +1469,7 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
             /* bug 1920: ignore NULLs in the set and in the column data */
             if (!(isNull && in->BOP == BOP_AND))
             {
-                if (isUnsigned((CalpontSystemCatalog::ColDataType)in->DataType))
+                if (isUnsigned((CalpontSystemCatalog::ColDataType)in->colType.DataType))
                 {
                     it = parsedColumnFilter->prestored_set->find(*reinterpret_cast<int64_t*>(&uval));
                 }
@@ -1458,15 +1500,15 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
         {
             for (argIndex = 0; argIndex < in->NOPS; argIndex++)
             {
-                if (isUnsigned((CalpontSystemCatalog::ColDataType)in->DataType))
+                if (isUnsigned((CalpontSystemCatalog::ColDataType)in->colType.DataType))
                 {
                     cmp = colCompareUnsigned(uval, uargVals[argIndex], cops[argIndex],
-                                             rfs[argIndex], in->DataType, W, regex[argIndex], isNull);
+                                             rfs[argIndex], in->colType.DataType, W, regex[argIndex], isNull);
                 }
                 else
                 {
                     cmp = colCompare(val, argVals[argIndex], cops[argIndex],
-                                     rfs[argIndex], in->DataType, W, regex[argIndex], isNull);
+                                     rfs[argIndex], in->colType, W, regex[argIndex], isNull);
                 }
 
                 if (in->NOPS == 1)
@@ -1499,16 +1541,18 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
         if (out->ValidMinMax && !isNull && !isEmpty)
         {
 
-            if ((in->DataType == CalpontSystemCatalog::CHAR || in->DataType == CalpontSystemCatalog::VARCHAR ||
-                    in->DataType == CalpontSystemCatalog::BLOB || in->DataType == CalpontSystemCatalog::TEXT ) && 1 < W)
+            if ((in->colType.DataType == CalpontSystemCatalog::CHAR ||
+                 in->colType.DataType == CalpontSystemCatalog::VARCHAR ||
+                 in->colType.DataType == CalpontSystemCatalog::BLOB ||
+                 in->colType.DataType == CalpontSystemCatalog::TEXT ) && 1 < W)
             {
-                if (colCompare(out->Min, val, COMPARE_GT, false, in->DataType, W, placeholderRegex))
+                if (colCompare(out->Min, val, COMPARE_GT, false, in->colType, W, placeholderRegex))
                     out->Min = val;
 
-                if (colCompare(out->Max, val, COMPARE_LT, false, in->DataType, W, placeholderRegex))
+                if (colCompare(out->Max, val, COMPARE_LT, false, in->colType, W, placeholderRegex))
                     out->Max = val;
             }
-            else if (isUnsigned((CalpontSystemCatalog::ColDataType)in->DataType))
+            else if (isUnsigned((CalpontSystemCatalog::ColDataType)in->colType.DataType))
             {
                 if (static_cast<uint64_t>(out->Min) > uval)
                     out->Min = static_cast<int64_t>(uval);
@@ -1526,15 +1570,15 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
             }
         }
 
-        if (isUnsigned((CalpontSystemCatalog::ColDataType)in->DataType))
+        if (isUnsigned((CalpontSystemCatalog::ColDataType)in->colType.DataType))
         {
-            uval = nextUnsignedColValue<W>(in->DataType, ridArray, in->NVALS, &nextRidIndex, &done,
+            uval = nextUnsignedColValue<W>(in->colType.DataType, ridArray, in->NVALS, &nextRidIndex, &done,
                                            &isNull, &isEmpty, &rid, in->OutputType, reinterpret_cast<uint8_t*>(block),
                                            itemsPerBlk);
         }
         else
         {
-            val = nextColValue<W>(in->DataType, ridArray, in->NVALS, &nextRidIndex, &done,
+            val = nextColValue<W>(in->colType.DataType, ridArray, in->NVALS, &nextRidIndex, &done,
                                   &isNull, &isEmpty, &rid, in->OutputType, reinterpret_cast<uint8_t*>(block),
                                   itemsPerBlk);
         }
@@ -1589,7 +1633,7 @@ inline void p_Col_bin_ridArray(NewColRequestHeader* in,
     if (out->ValidMinMax)
     {
         // Assume that isUnsigned returns true for 8-bytes DTs only
-        if (isUnsigned((CalpontSystemCatalog::ColDataType)in->DataType))
+        if (isUnsigned((CalpontSystemCatalog::ColDataType)in->colType.DataType))
         {
             out->Min = -1;
             out->Max = 0;
@@ -1653,7 +1697,7 @@ inline void p_Col_bin_ridArray(NewColRequestHeader* in,
 
     // else we have a pre-parsed filter, and it's an unordered set for quick == comparisons
 
-    bval = (binWtype*)nextBinColValue<W>(in->DataType, ridArray, in->NVALS, &nextRidIndex, &done, &isNull,
+    bval = (binWtype*)nextBinColValue<W>(in->colType.DataType, ridArray, in->NVALS, &nextRidIndex, &done, &isNull,
                 &isEmpty, &rid, in->OutputType, reinterpret_cast<uint8_t*>(block), itemsPerBlk);
 
     T val;
@@ -1696,7 +1740,7 @@ inline void p_Col_bin_ridArray(NewColRequestHeader* in,
                 T filterVal = *reinterpret_cast<T*>(argVals[argIndex]);
 
                 cmp = colCompare(val, filterVal, cops[argIndex],
-                                 rfs[argIndex], in->DataType, W, isNull);
+                                 rfs[argIndex], in->colType.DataType, W, isNull);
 
                 if (in->NOPS == 1)
                 {
@@ -1727,15 +1771,16 @@ inline void p_Col_bin_ridArray(NewColRequestHeader* in,
         if (out->ValidMinMax && !isNull && !isEmpty)
         {
 
-            if (in->DataType == CalpontSystemCatalog::CHAR || in->DataType == CalpontSystemCatalog::VARCHAR)
+            if (in->colType.DataType == CalpontSystemCatalog::CHAR ||
+                in->colType.DataType == CalpontSystemCatalog::VARCHAR)
             {
                 // !!! colCompare is overloaded with int128_t only yet.
-                if (colCompare(out->Min, val, COMPARE_GT, false, in->DataType, W, placeholderRegex))
+                if (colCompare(out->Min, val, COMPARE_GT, false, in->colType, W, placeholderRegex))
                 {
                     out->Min = val;
                 }
 
-                if (colCompare(out->Max, val, COMPARE_LT, false, in->DataType, W, placeholderRegex))
+                if (colCompare(out->Max, val, COMPARE_LT, false, in->colType, W, placeholderRegex))
                 {
                     out->Max = val;
                 }
@@ -1754,7 +1799,7 @@ inline void p_Col_bin_ridArray(NewColRequestHeader* in,
             }
         }
 
-        bval = (binWtype*)nextBinColValue<W>(in->DataType, ridArray, in->NVALS, &nextRidIndex, &done, &isNull,
+        bval = (binWtype*)nextBinColValue<W>(in->colType.DataType, ridArray, in->NVALS, &nextRidIndex, &done, &isNull,
             &isEmpty, &rid, in->OutputType, reinterpret_cast<uint8_t*>(block), itemsPerBlk);
 
     }
@@ -1789,7 +1834,7 @@ void PrimitiveProcessor::p_Col(NewColRequestHeader* in, NewColResultHeader* out,
     if (logicalBlockMode)
         itemsPerBlk = BLOCK_SIZE;
     else
-        itemsPerBlk = BLOCK_SIZE / in->DataSize;
+        itemsPerBlk = BLOCK_SIZE / in->colType.DataSize;
 
     //...Initialize I/O counts;
     out->CacheIO    = 0;
@@ -1816,7 +1861,7 @@ void PrimitiveProcessor::p_Col(NewColRequestHeader* in, NewColResultHeader* out,
         fStatsPtr->markEvent(in->LBID, pthread_self(), in->hdr.SessionID, 'B');
 #endif
 
-    switch (in->DataSize)
+    switch (in->colType.DataSize)
     {
         case 8:
             p_Col_ridArray<8>(in, out, outSize, written, block, fStatsPtr, itemsPerBlk, parsedColumnFilter);
