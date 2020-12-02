@@ -1681,6 +1681,13 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
         // Write row(s) to database file(s)
         //----------------------------------------------------------------------
         rc = writeColumnRec(txnid, cscColTypeList, colStructList, colOldValueList, rowIdArray, newColStructList, colNewValueList, tableOid, useTmpSuffix); // @bug 5572 HDFS tmp file
+
+        if (rc == NO_ERROR)
+        {
+            rc = cacheutils::flushPrimProcCache();
+            if (rc != 0)
+                rc = ERR_BLKCACHE_FLUSH_LIST; // translate to WE error
+        }
     }
 
     return rc;
