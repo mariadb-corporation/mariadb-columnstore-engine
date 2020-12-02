@@ -5,6 +5,7 @@ using namespace std;
 #include "functor_str.h"
 #include "funchelpers.h"
 #include "functioncolumn.h"
+#include "vlarray.h"
 using namespace execplan;
 
 namespace funcexp
@@ -53,8 +54,9 @@ string Func_encode::getStrVal(rowgroup::Row& row,
 
     int nStrLen = str.length();
     int nPassLen = password.length();
-    char res[nStrLen+1];
-    memset(res,0,nStrLen+1);
+    utils::VLArray<char> res(nStrLen + 1);
+    memset(res.data(),0,nStrLen+1);
+
 
     if (!fSeeded)
     {
@@ -63,11 +65,11 @@ string Func_encode::getStrVal(rowgroup::Row& row,
         fSeeded = true;
     }
 
-    memcpy(res,str.c_str(),nStrLen);
-    sql_crypt.encode(res,nStrLen);
+    memcpy(res.data(),str.c_str(),nStrLen);
+    sql_crypt.encode(res.data(),nStrLen);
     sql_crypt.reinit();
 
-    return res;
+    return res.data();
 }
 
 }
