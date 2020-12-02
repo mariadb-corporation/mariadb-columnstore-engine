@@ -2507,16 +2507,6 @@ void PrimitiveServer::start(Service *service)
         fServerpool.invoke(ServerThread(oss.str(), this));
     }
 
-    {
-        Oam oam;
-
-        try
-        {
-            oam.processInitComplete("PrimProc");
-        }
-        catch (...) {}
-    }
-
     service->NotifyServiceStarted();
 
     fServerpool.wait();

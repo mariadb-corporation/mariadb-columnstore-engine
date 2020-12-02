@@ -20,7 +20,6 @@
 using namespace std;
 using namespace oam;
 using namespace config;
-using namespace alarmmanager;
 
 void getSystemNetworkConfig(FILE * pOutputFile)
 {
@@ -116,7 +115,7 @@ void getSystemNetworkConfig(FILE * pOutputFile)
                     {
                         /* MCOL-1607.  IPAddr may be a host name here b/c it is read straight
                         from the config file. */
-                        string tmphost = oam.getIPAddress(pt1->IPAddr);
+                        string tmphost = getIPAddress(pt1->IPAddr);
                         string ipAddr;
                         if (tmphost.empty())
                             ipAddr = pt1->IPAddr;
@@ -304,7 +303,7 @@ void getStorageConfig(FILE * pOutputFile)
         }
 
         //get any unassigned DBRoots
-        DBRootConfigList undbrootlist;
+        /*DBRootConfigList undbrootlist;
 
         try
         {
@@ -327,7 +326,7 @@ void getStorageConfig(FILE * pOutputFile)
             }
 
             fprintf(pOutputFile,"\n");
-        }
+        }*/
 
         fprintf(pOutputFile,"\n");
 
@@ -399,7 +398,7 @@ void getStorageConfig(FILE * pOutputFile)
             }
 
             // print un-assigned dbroots
-            DBRootConfigList::iterator pt1 = undbrootlist.begin();
+            /*DBRootConfigList::iterator pt1 = undbrootlist.begin();
 
             for ( ; pt1 != undbrootlist.end() ; pt1++)
             {
@@ -422,7 +421,7 @@ void getStorageConfig(FILE * pOutputFile)
                 }
 
                 fprintf(pOutputFile,"Amazon EC2 Volume Name/Device Name/Amazon Device Name for DBRoot%u: %s, %s, %s",*pt1,volumeName.c_str(),deviceName.c_str(),amazondeviceName.c_str());
-            }
+            }*/
         }
 
         string DataRedundancyConfig;
@@ -471,7 +470,7 @@ void getStorageConfig(FILE * pOutputFile)
                     try
                     {
                         string errmsg;
-                        oam.glusterctl(oam::GLUSTER_WHOHAS, oam.itoa(*pt), pmList, errmsg);
+                        //oam.glusterctl(oam::GLUSTER_WHOHAS, oam.itoa(*pt), pmList, errmsg);
                     }
                     catch (...)
                     {}
@@ -505,14 +504,13 @@ void getStorageConfig(FILE * pOutputFile)
 
 void getStorageStatus(FILE * pOutputFile)
 {
-    SystemStatus systemstatus;
     Oam oam;
 
     fprintf(pOutputFile,"System External DBRoot Storage Statuses\n\n");
     fprintf(pOutputFile,"Component     Status                       Last Status Change\n");
     fprintf(pOutputFile,"------------  --------------------------   ------------------------\n");
 
-    try
+    /*try
     {
         oam.getSystemStatus(systemstatus, false);
 
@@ -541,7 +539,7 @@ void getStorageStatus(FILE * pOutputFile)
     catch (exception& e)
     {
         cout << endl << "**** getSystemStatus Failed =  " << e.what() << endl;
-    }
+    }*/
 
     string DataRedundancyConfig;
     int DataRedundancyCopies;
@@ -555,21 +553,71 @@ void getStorageStatus(FILE * pOutputFile)
     }
     catch (...) {}
 
-    if ( DataRedundancyConfig == "y" )
-    {
-        string arg1 = "";
-        string arg2 = "";
-        string errmsg = "";
-        int ret = oam.glusterctl(oam::GLUSTER_STATUS, arg1, arg2, errmsg);
-
-        if ( ret == 0 )
-        {
-            cout << arg2 << endl;
-        }
-        else
-        {
-            cerr << "FAILURE: Status check error: " + errmsg << endl;
-        }
-    }
 }
 
+
+/********************************************************************
+ *
+ * checkLogStatus - Check for a phrase in a log file and return status
+ *
+ ********************************************************************/
+bool checkLogStatus(std::string fileName, std::string phrase )
+{
+    ifstream file (fileName.c_str());
+
+    if (!file.is_open())
+    {
+        return false;
+    }
+
+    string buf;
+
+    while (getline(file, buf))
+    {
+        string::size_type pos = buf.find(phrase, 0);
+
+        if (pos != string::npos)
+            //found phrase
+            return true;
+    }
+
+    if (file.bad())
+    {
+        return false;
+    }
+
+    file.close();
+    return false;
+}
+
+/******************************************************************************************
+ * @brief   Get Network IP Address for Host Name
+ *
+ * purpose: Get Network IP Address for Host Name
+ *
+ ******************************************************************************************/
+string getIPAddress(string hostName)
+{
+    static uint32_t my_bind_addr;
+    struct hostent* ent;
+    string IPAddr = "";
+    Oam oam;
+
+    ent = gethostbyname(hostName.c_str());
+
+    if (ent != 0)
+    {
+        my_bind_addr = (uint32_t) ((in_addr*)ent->h_addr_list[0])->s_addr;
+
+        uint8_t split[4];
+        uint32_t ip = my_bind_addr;
+        split[0] = (ip & 0xff000000) >> 24;
+        split[1] = (ip & 0x00ff0000) >> 16;
+        split[2] = (ip & 0x0000ff00) >> 8;
+        split[3] = (ip & 0x000000ff);
+
+        IPAddr = oam.itoa(split[3]) + "." + oam.itoa(split[2]) + "." + oam.itoa(split[1]) + "." + oam.itoa(split[0]);
+    }
+
+    return IPAddr;
+}
