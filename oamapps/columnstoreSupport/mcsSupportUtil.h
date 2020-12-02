@@ -26,12 +26,12 @@
 #include <sstream>
 #include "configcpp.h"
 #include "liboamcpp.h"
-#include "alarmmanager.h"
 
 void getSystemNetworkConfig(FILE * pOutputFile);
 void getModuleTypeConfig(FILE * pOutputFile);
 void getStorageConfig(FILE * pOutputFile);
 void getStorageStatus(FILE * pOutputFile);
-
+bool checkLogStatus(std::string filename, std::string phase);
+std::string getIPAddress(std::string hostName);
 
 #endif

@@ -213,40 +213,6 @@ int ServiceDDLProc::Child()
 
     NotifyServiceStarted();
 
-    {
-        Oam oam;
-
-        try
-        {
-            oam.processInitComplete("DDLProc", ACTIVE);
-        }
-        catch (std::exception& ex)
-        {
-            cerr << ex.what() << endl;
-            LoggingID logid(23, 0, 0);
-            logging::Message::Args args1;
-            logging::Message msg(1);
-            args1.add("DDLProc init caught exception: ");
-            args1.add(ex.what());
-            msg.format( args1 );
-            logging::Logger logger(logid.fSubsysID);
-            logger.logMessage(LOG_TYPE_CRITICAL, msg, logid);
-            return 1;
-        }
-        catch (...)
-        {
-            cerr << "Caught unknown exception in init!" << endl;
-            LoggingID logid(23, 0, 0);
-            logging::Message::Args args1;
-            logging::Message msg(1);
-            args1.add("DDLProc init caught unknown exception");
-            msg.format( args1 );
-            logging::Logger logger(logid.fSubsysID);
-            logger.logMessage(LOG_TYPE_CRITICAL, msg, logid);
-            return 1;
-        }
-    }
-
     try
     {
         ddlprocessor.process();

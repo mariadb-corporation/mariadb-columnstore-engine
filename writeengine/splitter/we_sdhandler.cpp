@@ -49,9 +49,6 @@ using namespace config;
 
 //-----
 
-#include "alarmmanager.h"
-using namespace alarmmanager;
-
 #include "messagequeue.h"
 #include "bytestream.h"
 using namespace messageqcpp;

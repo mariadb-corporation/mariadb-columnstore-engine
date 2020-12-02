@@ -48,21 +48,6 @@ bool die= false;
 using namespace std;
 using namespace BRM;
 
-void fail()
-{
-    try
-    {
-        oam::Oam oam;
-
-        oam.processInitFailure();
-    }
-    catch (exception&)
-    {
-        cerr << "failed to notify OAM of server failure" << endl;
-    }
-}
-
-
 class Opt
 {
 protected:
@@ -89,7 +74,6 @@ public:
     {
         perror(m_progname);
         log_errno(std::string(m_progname));
-        fail();
     }
     void ParentLogChildMessage(const std::string &str) override
     {
@@ -189,22 +173,6 @@ int ServiceControllerNode::Child()
 
             NotifyServiceStarted();
 
-            try
-            {
-                oam::Oam oam;
-
-                oam.processInitComplete("DBRMControllerNode");
-            }
-            catch (exception& e)
-            {
-                ostringstream os;
-
-                os << "failed to notify OAM: " << e.what();
-                os << " continuing anyway";
-                cerr << os.str() << endl;
-                log(os.str(), logging::LOG_TYPE_WARNING);
-            }
-
             m->run();
             retries = 0;
             delete m;
@@ -227,7 +195,6 @@ int ServiceControllerNode::Child()
     {
         NotifyServiceInitializationFailed();
         log(string("Exiting after too many errors"));
-        fail();
         return 1;
     }
 

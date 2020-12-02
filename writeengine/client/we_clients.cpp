@@ -52,8 +52,6 @@ using namespace config;
 using namespace logging;
 
 #include "liboamcpp.h"
-#include "alarmmanager.h"
-using namespace alarmmanager;
 using namespace oam;
 
 #include "we_clients.h"
@@ -417,11 +415,11 @@ Error:
         }
 
         // send alarm
-        ALARMManager alarmMgr;
+//        ALARMManager alarmMgr;
 //		string alarmItem = sin_addr2String(client->serv_addr().sin_addr);
-        string alarmItem = client->addr2String();
-        alarmItem.append(" WriteEngineServer");
-        alarmMgr.sendAlarmReport(alarmItem.c_str(), oam::CONN_FAILURE, SET);
+//        string alarmItem = client->addr2String();
+//        alarmItem.append(" WriteEngineServer");
+//        alarmMgr.sendAlarmReport(alarmItem.c_str(), oam::CONN_FAILURE, SET);
     }
     return;
 }
