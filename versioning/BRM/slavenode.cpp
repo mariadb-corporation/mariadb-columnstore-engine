@@ -49,21 +49,6 @@ SlaveComm* comm;
 bool die= false;
 boost::thread_group monitorThreads;
 
-void fail()
-{
-    try
-    {
-        oam::Oam oam;
-
-        oam.processInitFailure();
-    }
-    catch (exception&)
-    {
-        cerr << "failed to notify OAM of server failure" << endl;
-    }
-}
-
-
 class Opt
 {
 protected:
@@ -92,7 +77,6 @@ public:
     {
         perror(m_progname);
         log_errno(std::string(m_progname));
-        fail();
     }
     void ParentLogChildMessage(const std::string &str) override
     {
@@ -160,7 +144,6 @@ int ServiceWorkerNode::Child()
         os << "An error occured: " << e.what();
         cerr << os.str() << endl;
         log(os.str());
-        fail();
         NotifyServiceInitializationFailed();
         return 1;
     }
@@ -174,21 +157,6 @@ int ServiceWorkerNode::Child()
                                  (&die, slave.getVBBMLockStatus(), keys.KEYRANGE_VBBM_BASE));
     monitorThreads.create_thread(RWLockMonitor
                                  (&die, slave.getVSSLockStatus(), keys.KEYRANGE_VSS_BASE));
-
-    try
-    {
-        oam::Oam oam;
-
-        oam.processInitComplete("DBRMWorkerNode");
-    }
-    catch (exception& e)
-    {
-        ostringstream os;
-        os << "failed to notify OAM: " << e.what();
-        os << " continuing anyway";
-        cerr << os.str() << endl;
-        log(os.str(), logging::LOG_TYPE_WARNING);
-    }
 
     try
     {
@@ -228,7 +196,6 @@ int main(int argc, char** argv)
         os << "Usage: " << argv[0] << " DBRM_WorkerN";
         cerr << os.str() << endl;
         log(os.str());
-        fail();
         exit(1);
     }
 
