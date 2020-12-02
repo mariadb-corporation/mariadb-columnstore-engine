@@ -769,9 +769,9 @@ optional_braces:
 	;
 
 opt_column_charset:
-    /* empty */ {}
+    /* empty */ { $$ = NULL; }
     |
-    IDB_CHAR SET opt_quoted_literal {}
+    IDB_CHAR SET opt_quoted_literal { $$ = $3; }
     ;
 
 opt_column_collate:
