@@ -853,6 +853,8 @@ bool LBIDList::CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
             }
         }
 
+        MsgDataPtr += ct.colWidth;
+
         if (ct.isWideDecimalType() && execplan::isNull(bigValue, ct))
         {
                 continue;
@@ -861,8 +863,6 @@ bool LBIDList::CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
         {
             continue;
         }
-
-        MsgDataPtr += ct.colWidth;
 
         if (bIsChar && 1 < ct.colWidth)
         {
