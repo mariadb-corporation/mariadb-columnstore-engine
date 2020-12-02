@@ -1690,10 +1690,20 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
 
         if (rc == NO_ERROR)
         {
-            rc = cacheutils::flushPrimProcCache();
-            if (rc != 0)
-                rc = ERR_BLKCACHE_FLUSH_LIST; // translate to WE error
-        }
+            if (dctnryStructList.size() > 0)
+            {
+                vector<BRM::OID_t> oids {static_cast<int32_t>(tableOid)};
+                for (const DctnryStruct &dctnryStruct : dctnryStructList)
+                {
+                    oids.push_back(dctnryStruct.dctnryOid);
+                }
+
+                rc = flushOIDsFromCache(oids);
+
+                if (rc != 0)
+                    rc = ERR_BLKCACHE_FLUSH_LIST; // translate to WE error
+            }
+       }
     }
 
     return rc;
