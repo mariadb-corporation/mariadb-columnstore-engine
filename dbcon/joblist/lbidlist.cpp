@@ -775,13 +775,13 @@ bool LBIDList::CasualPartitionPredicate(const int64_t Min,
             }
         }
 
+        MsgDataPtr += ct.colWidth;
+
         // Should we also check for empty here?
         if (isNull(value, ct))	// This will work even if the data column is unsigned.
         {
             continue;
         }
-
-        MsgDataPtr += ct.colWidth;
 
         if (bIsChar && 1 < ct.colWidth)
         {
