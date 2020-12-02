@@ -70,7 +70,6 @@ void fix_column_length(SchemaObject* elem, const CHARSET_INFO* def_cs) {
 
     if (column->fType &&
         (column->fType->fType == DDL_VARCHAR ||
-         column->fType->fType == DDL_TEXT ||
          column->fType->fType == DDL_CHAR))
     {
         unsigned mul = def_cs ? def_cs->mbmaxlen : 1;
