@@ -43,6 +43,7 @@ using namespace oam;
 #include "we_cmdargs.h"
 
 #include "installdir.h"
+#include "mcsconfig.h"
 
 namespace WriteEngine
 {
@@ -598,7 +599,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
 
 
     if (argc > 0)
-        fPrgmName = "cpimport.bin"; //argv[0] is splitter but we need cpimport
+        fPrgmName = string(MCSBINDIR) + "/" + "cpimport.bin"; //argv[0] is splitter but we need cpimport
 
     while ((aCh = getopt(argc, argv,
                          "d:j:w:s:v:l:r:b:e:B:f:q:ihm:E:C:P:I:n:p:c:ST:Ny:K:t:H:g:U:"))
