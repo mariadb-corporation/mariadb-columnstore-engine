@@ -3539,7 +3539,9 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
                 ci->fdt[0] = -1;
                 // now we can send all the data thru FIFO[1], writer of PARENT
             }
-
+            // Set read_set used for bulk insertion of Fields inheriting
+            //from Field_blob|Field_varstring
+            bitmap_set_all(table->read_set);
 #endif
         }
         else
@@ -3600,6 +3602,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
             setError(current_thd, ER_READ_ONLY_MODE, "Cannot execute the statement. DBRM is read only!");
             ci->rc = rc;
             ci->singleInsert = true;
+            bitmap_clear_all(table->read_set);
             return;
         }
 
@@ -3609,6 +3612,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
         if (stateFlags & SessionManagerServer::SS_SUSPENDED)
         {
             setError(current_thd, ER_INTERNAL_ERROR, "Writing to the database is disabled.");
+            bitmap_clear_all(table->read_set);
             return;
         }
 
@@ -3624,10 +3628,11 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
         catch (IDBExcept& ie)
         {
             setError(thd, ER_INTERNAL_ERROR, ie.what());
-//			setError(thd, ER_UNKNOWN_TABLE, ie.what());
+            bitmap_clear_all(table->read_set);
         }
         catch (std::exception& ex)
         {
+            bitmap_clear_all(table->read_set);
             setError(thd, ER_INTERNAL_ERROR,
                      logging::IDBErrorInfo::instance()->errorMsg(ERR_SYSTEM_CATALOG) + ex.what());
         }
@@ -3641,6 +3646,9 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
 
 int ha_mcs_impl_end_bulk_insert(bool abort, TABLE* table)
 {
+    // Clear read_set used for bulk insertion of Fields inheriting
+    //from Field_blob|Field_varstring
+    bitmap_clear_all(table->read_set);
     THD* thd = current_thd;
 
     std::string aTmpDir(startup::StartUp::tmpDir());
@@ -3670,7 +3678,6 @@ int ha_mcs_impl_end_bulk_insert(bool abort, TABLE* table)
              ((thd->lex)->sql_command == SQLCOM_INSERT_SELECT) || ci->isCacheInsert) )
         {
 #ifdef _MSC_VER
-
             if (thd->killed > 0)
             {
                 errno = 0;
