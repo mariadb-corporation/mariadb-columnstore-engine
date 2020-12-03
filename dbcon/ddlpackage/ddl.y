@@ -63,14 +63,14 @@ char* copy_string(const char *str);
 
 void fix_column_length(SchemaObject* elem, const CHARSET_INFO* def_cs) {
     auto* column = dynamic_cast<ColumnDef*>(elem);
-    if (column == NULL)
+    if (column == NULL || column->fType == NULL)
     {
         return;
     }
 
-    if (column->fType &&
-        (column->fType->fType == DDL_VARCHAR ||
-         column->fType->fType == DDL_CHAR))
+    if (column->fType->fType == DDL_VARCHAR ||
+         column->fType->fType == DDL_CHAR ||
+         (column->fType->fType == DDL_TEXT && column->fType->fExplicitLength))
     {
         unsigned mul = def_cs ? def_cs->mbmaxlen : 1;
         if (column->fType->fCharset) {
@@ -79,6 +79,20 @@ void fix_column_length(SchemaObject* elem, const CHARSET_INFO* def_cs) {
                 mul = cs->mbmaxlen;
         }
         column->fType->fLength *= mul;
+    }
+
+    if (column->fType->fType == DDL_TEXT && column->fType->fExplicitLength)
+    {
+        // Rounding the resulting length of TEXT(N) field to the next default length
+        if (column->fType->fLength <= 255)
+            column->fType->fLength = 255;
+        else if (column->fType->fLength <= 65535)
+            column->fType->fLength = 65535;
+        else if (column->fType->fLength <= 16777215)
+            column->fType->fLength = 16777215;
+        else if (column->fType->fLength <= 2100000000)
+            column->fType->fLength = 2100000000;
+        // otherwise leave the decision to a caller code
     }
 }
 
@@ -992,6 +1006,7 @@ text_type:
 	{
 		$$ = new ColumnType(DDL_TEXT);
 		$$->fLength = atol($3);
+		$$->fExplicitLength = true;
 	}
 	| TEXT
 	{

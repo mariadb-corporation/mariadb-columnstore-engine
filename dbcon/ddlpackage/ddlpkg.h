@@ -1004,7 +1004,7 @@ struct ColumnType
     EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
 
     /** @brief For deserialization. */
-    ColumnType() : fCharset(NULL)
+    ColumnType() : fCharset(NULL), fExplicitLength(false)
     {}
 
     friend std::ostream& operator<<(std::ostream& os, const ColumnType& ac);
@@ -1044,7 +1044,11 @@ struct ColumnType
 
     uint64_t fNextvalue;
 
+    /** @brief Column charset (CHAR, VARCHAR and TEXT only) */
     const char* fCharset;
+
+    /** @brief Is the TEXT column has explicit defined length, ie TEXT(1717) */
+    bool fExplicitLength;
 
 };
 
