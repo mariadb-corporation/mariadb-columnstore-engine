@@ -887,10 +887,7 @@ int ha_mcs_impl_write_batch_row_(const uchar* buf, TABLE* table, cal_impl_if::ca
 
                 case CalpontSystemCatalog::CHAR:
                 {
-                    Field* field = table->field[colpos];
-
-                    uint32_t colWidthInBytes =
-                        ci.columnTypes[colpos].colWidth * field->charset()->mbmaxlen;
+                    uint32_t colWidthInBytes = ci.columnTypes[colpos].colWidth;
 
                     if (nullVal && (ci.columnTypes[colpos].constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
                     {
@@ -931,10 +928,7 @@ int ha_mcs_impl_write_batch_row_(const uchar* buf, TABLE* table, cal_impl_if::ca
 
                 case CalpontSystemCatalog::VARCHAR:
                 {
-                    Field* field = table->field[colpos];
-
-                    uint32_t colWidthInBytes =
-                        ci.columnTypes[colpos].colWidth * field->charset()->mbmaxlen;
+                    uint32_t colWidthInBytes = ci.columnTypes[colpos].colWidth;
 
                     if (nullVal && (ci.columnTypes[colpos].constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
                     {
@@ -1725,26 +1719,27 @@ int ha_mcs_impl_write_batch_row_(const uchar* buf, TABLE* table, cal_impl_if::ca
                     uint32_t dataLength = 0;
                     uintptr_t* dataptr;
                     uchar* ucharptr;
+                    uint32_t colWidthInBytes;
 
-                    bool isBlob =
-                        ci.columnTypes[colpos].colDataType == CalpontSystemCatalog::BLOB;
-
-                    Field* field = table->field[colpos];
-
-                    uint32_t colWidthInBytes = isBlob ? ci.columnTypes[colpos].colWidth :
-                        ci.columnTypes[colpos].colWidth * field->charset()->mbmaxlen;
-
-                    if (!isBlob && field->char_length() == 65535)
+                    bool isBlob = ci.columnTypes[colpos].colDataType == CalpontSystemCatalog::BLOB;
+                    
+                    if (isBlob)
                     {
-                        // Special case for TEXT field without default length,
-                        // such as:
-                        // CREATE TABLE mcol4364 (a TEXT);
-                        // Here, char_length() represents the number of bytes,
-                        // not number of characters.
-                        dataLength = *(uint16_t*) buf;
-                        buf += 2;
+                        colWidthInBytes = ci.columnTypes[colpos].colWidth;
                     }
-                    else if (colWidthInBytes < 256)
+                    else
+                    {
+                        // For TEXT fields, MDB sets char_length to the maximum number that will fit in the number of bytes the 
+                        // defined TEXT length will fit in.
+                        // Ex: 
+                        // TEXT(25) will have char_length() == 255; 
+                        // TEXT(200) for latin_1 will have char_length() = 255
+                        // TEXT(200) for udf8mb4 will have char_length() = 65535
+                        // the length 200 multiplied by mbmaxlen (4) is > 255, so it needs 2 bytes for length. MDB sets to max(uint_16t)
+                        colWidthInBytes = table->field[colpos]->char_length();
+                    }
+                    
+                    if (colWidthInBytes < 256)
                     {
                         dataLength = *(uint8_t*) buf;
                         buf++;
@@ -1769,7 +1764,6 @@ int ha_mcs_impl_write_batch_row_(const uchar* buf, TABLE* table, cal_impl_if::ca
                     // buf contains pointer to blob, for example:
                     // (gdb) p (char*)*(uintptr_t*)buf
                     // $43 = 0x7f68500c58f8 "hello world"
-
                     dataptr = (uintptr_t*)buf;
                     ucharptr = (uchar*)*dataptr;
                     buf += sizeof(uintptr_t);
@@ -1781,19 +1775,16 @@ int ha_mcs_impl_write_batch_row_(const uchar* buf, TABLE* table, cal_impl_if::ca
                             fprintf(ci.filePtr, "%02x", *(uint8_t*)ucharptr);
                             ucharptr++;
                         }
-
                         fprintf(ci.filePtr, "%c", ci.delimiter);
                     }
                     else
                     {
-                        // TEXT Column
                         escape.assign((char*)ucharptr, dataLength);
                         boost::replace_all(escape, "\\", "\\\\");
                         fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, (int)escape.length(), escape.c_str(), ci.enclosed_by, ci.delimiter);
                     }
-
+                    
                     break;
-
                 }
 
                 default:	// treat as int64
