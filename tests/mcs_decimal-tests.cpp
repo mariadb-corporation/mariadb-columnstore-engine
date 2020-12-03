@@ -23,63 +23,514 @@
 #include "mcs_decimal.h"
 #include "dataconvert.h"
 
-TEST(Decimal, compareCheck)
+TEST(Decimal, compareCheckInt64)
 {
-    // L values = R value, L scale < R scale
-    execplan::IDB_Decimal l, r;
-    l.scale = 20;
-    l.precision = 38;
-    l.s128Value = 42;
+    // remainder-based checks
+    // Equality checks
+    // l value = r value, L scale = R scale
+    {
+        datatypes::Decimal l(420, 10, 18);
+        datatypes::Decimal r(420, 10, 18);
+        EXPECT_TRUE(l == r);
+        EXPECT_TRUE(l >= r);
+    }
 
-    r.scale = 21;
-    l.precision = 38;
-    r.s128Value = 420;
-    EXPECT_EQ(0, datatypes::Decimal::compare(l, r));
-    // L values = R value, L scale > R scale
-    l.scale = 21;
-    l.precision = 38;
-    l.s128Value = 420;
+    // l value > r value, L scale < R scale
+    {
+        datatypes::Decimal l(420, 11, 18);
+        datatypes::Decimal r(42, 10, 18);
+        EXPECT_TRUE(l == r);
+        EXPECT_TRUE(l >= r);
+    }
 
-    r.scale = 20;
-    l.precision = 38;
-    r.s128Value = 42;
-    EXPECT_EQ(0, datatypes::Decimal::compare(l, r));
-    // L values > R value, L scale < R scale
-    l.scale = 20;
-    l.precision = 38;
-    l.s128Value = 999999;
+    // l value < r value, L scale > R scale
+    {
+        datatypes::Decimal l(42, 10, 18);
+        datatypes::Decimal r(420, 11, 18);
+        EXPECT_TRUE(l == r);
+        EXPECT_TRUE(l >= r);
+    }
 
-    r.scale = 21;
-    l.precision = 38;
-    r.s128Value = 420;
-    EXPECT_EQ(1, datatypes::Decimal::compare(l, r));
-    // L values > R value, L scale > R scale
-    l.scale = 21;
-    l.precision = 38;
-    l.s128Value = 99999999;
+    // Inequality checks
+    // l value = r value, L scale < R scale
+    {
+        datatypes::Decimal l(42, 10, 18);
+        datatypes::Decimal r(42, 13, 18);
+        EXPECT_TRUE(l > r);
+        EXPECT_TRUE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
 
-    r.scale = 20;
-    l.precision = 38;
-    r.s128Value = 420;
-    EXPECT_EQ(1, datatypes::Decimal::compare(l, r));
-    // L values < R value, L scale < R scale
-    l.scale = 20;
-    l.precision = 38;
-    l.s128Value = 99;
+    // l value = r value, L scale < R scale
+    {
+        datatypes::Decimal l(42, 13, 18);
+        datatypes::Decimal r(42, 10, 18);
+        EXPECT_FALSE(l > r);
+        EXPECT_FALSE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
 
-    r.scale = 21;
-    l.precision = 38;
-    r.s128Value = 42000;
-    EXPECT_EQ(-1, datatypes::Decimal::compare(l, r));
-    // L values < R value, L scale > R scale
-    l.scale = 21;
-    l.precision = 38;
-    l.s128Value = 99;
+    // l value > r value, L scale > R scale
+    {
+        datatypes::Decimal l(420, 13, 18);
+        datatypes::Decimal r(42, 10, 18);
+        EXPECT_FALSE(l > r);
+        EXPECT_FALSE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
 
-    r.scale = 20;
-    l.precision = 38;
-    r.s128Value = 420;
-    EXPECT_EQ(-1, datatypes::Decimal::compare(l, r));
+    // l value > r value, L scale < R scale
+    {
+        datatypes::Decimal l(4200, 11, 18);
+        datatypes::Decimal r(42, 12, 18);
+        EXPECT_TRUE(l > r);
+        EXPECT_TRUE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value < r value, L scale < R scale
+    {
+        datatypes::Decimal l(99, 10, 18);
+        datatypes::Decimal r(420, 11, 18);
+        EXPECT_TRUE(l > r);
+        EXPECT_TRUE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value < r value, L scale < R scale
+    {
+        datatypes::Decimal l(42, 10, 18);
+        datatypes::Decimal r(420, 13, 18);
+        EXPECT_TRUE(l > r);
+        EXPECT_TRUE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // quotinent-based checks
+    // l value = r value, L scale = R scale
+    {
+        datatypes::Decimal l(420, 1, 18);
+        datatypes::Decimal r(420, 1, 18);
+        EXPECT_TRUE(l == r);
+        EXPECT_TRUE(l >= r);
+    }
+
+    // l value > r value, L scale < R scale
+    {
+        datatypes::Decimal l(4200, 2, 18);
+        datatypes::Decimal r(420, 1, 18);
+        EXPECT_TRUE(l == r);
+        EXPECT_TRUE(l >= r);
+    }
+
+    // l value < r value, L scale > R scale
+    {
+        datatypes::Decimal l(42, 0, 18);
+        datatypes::Decimal r(420, 1, 18);
+        EXPECT_TRUE(l == r);
+        EXPECT_TRUE(l >= r);
+    }
+
+    // Inequality checks
+    // l value = r value, L scale < R scale
+    {
+        datatypes::Decimal l(42000, 0, 18);
+        datatypes::Decimal r(42000, 3, 18);
+        EXPECT_TRUE(l > r);
+        EXPECT_TRUE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value = r value, L scale < R scale
+    {
+        datatypes::Decimal l(420000, 3, 18);
+        datatypes::Decimal r(420000, 0, 18);
+        EXPECT_FALSE(l > r);
+        EXPECT_FALSE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value > r value, L scale > R scale
+    {
+        datatypes::Decimal l(420000, 3, 18);
+        datatypes::Decimal r(42000, 0, 18);
+        EXPECT_FALSE(l > r);
+        EXPECT_FALSE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value > r value, L scale < R scale
+    {
+        datatypes::Decimal l(420000, 1, 18);
+        datatypes::Decimal r(4200, 2, 18);
+        EXPECT_TRUE(l > r);
+        EXPECT_TRUE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value < r value, L scale < R scale
+    {
+        datatypes::Decimal l(990, 0, 18);
+        datatypes::Decimal r(4200, 1, 18);
+        EXPECT_TRUE(l > r);
+        EXPECT_TRUE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value < r value, L scale < R scale
+    {
+        datatypes::Decimal l(420, 0, 18);
+        datatypes::Decimal r(4200, 3, 18);
+        EXPECT_TRUE(l > r);
+        EXPECT_TRUE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+}
+
+TEST(Decimal, compareCheckInt128)
+{
+    // remainer-based checks
+    // Equality checks
+    // l value = r value, L scale = R scale
+    {
+        datatypes::Decimal l(datatypes::TSInt128(420), 20, 38);
+        datatypes::Decimal r(datatypes::TSInt128(420), 20, 38);
+        EXPECT_EQ(0, datatypes::Decimal::compare(l, r));
+        EXPECT_TRUE(l == r);
+        EXPECT_TRUE(l >= r);
+    }
+
+    // l value > r value, L scale < R scale
+    {
+        datatypes::Decimal l(datatypes::TSInt128(420), 21, 38);
+        datatypes::Decimal r(datatypes::TSInt128(42), 20, 38);
+        EXPECT_EQ(0, datatypes::Decimal::compare(l, r));
+        EXPECT_TRUE(l == r);
+        EXPECT_TRUE(l >= r);
+    }
+
+    // l value < r value, L scale > R scale
+    {
+        datatypes::Decimal l(datatypes::TSInt128(42), 20, 38);
+        datatypes::Decimal r(datatypes::TSInt128(420), 21, 38);
+        EXPECT_EQ(0, datatypes::Decimal::compare(l, r));
+        EXPECT_TRUE(l == r);
+        EXPECT_TRUE(l >= r);
+    }
+
+    // Inequality checks
+    // l value = r value, L scale < R scale
+    {
+        datatypes::Decimal l(datatypes::TSInt128(42), 20, 38);
+        datatypes::Decimal r(datatypes::TSInt128(42), 23, 38);
+        EXPECT_EQ(1, datatypes::Decimal::compare(l, r));
+        EXPECT_TRUE(l > r);
+        EXPECT_TRUE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value = r value, L scale < R scale
+    {
+        datatypes::Decimal l(datatypes::TSInt128(42), 23, 38);
+        datatypes::Decimal r(datatypes::TSInt128(42), 20, 38);
+        EXPECT_EQ(-1, datatypes::Decimal::compare(l, r));
+        EXPECT_FALSE(l > r);
+        EXPECT_FALSE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value > r value, L scale > R scale
+    {
+        datatypes::Decimal l(datatypes::TSInt128(420), 23, 38);
+        datatypes::Decimal r(datatypes::TSInt128(42), 20, 38);
+        EXPECT_EQ(-1, datatypes::Decimal::compare(l, r));
+        EXPECT_FALSE(l > r);
+        EXPECT_FALSE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value > r value, L scale < R scale
+    {
+        datatypes::Decimal l(datatypes::TSInt128(4200), 21, 38);
+        datatypes::Decimal r(datatypes::TSInt128(42), 22, 38);
+        EXPECT_EQ(1, datatypes::Decimal::compare(l, r));
+        EXPECT_TRUE(l > r);
+        EXPECT_TRUE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value < r value, L scale < R scale
+    {
+        datatypes::Decimal l(datatypes::TSInt128(99), 20, 38);
+        datatypes::Decimal r(datatypes::TSInt128(420), 21, 38);
+        EXPECT_EQ(1, datatypes::Decimal::compare(l, r));
+        EXPECT_TRUE(l > r);
+        EXPECT_TRUE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value < r value, L scale < R scale
+    {
+        datatypes::Decimal l(datatypes::TSInt128(42), 20, 38);
+        datatypes::Decimal r(datatypes::TSInt128(420), 23, 38);
+        EXPECT_EQ(1, datatypes::Decimal::compare(l, r));
+        EXPECT_TRUE(l > r);
+        EXPECT_TRUE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // quotinent-based checks
+    // l value = r value, L scale = R scale
+    {
+        datatypes::Decimal l(datatypes::TSInt128(420), 1, 38);
+        datatypes::Decimal r(datatypes::TSInt128(420), 1, 38);
+        EXPECT_EQ(0, datatypes::Decimal::compare(l, r));
+        EXPECT_TRUE(l == r);
+        EXPECT_TRUE(l >= r);
+    }
+
+    // l value > r value, L scale < R scale
+    {
+        datatypes::Decimal l(datatypes::TSInt128(4200), 2, 38);
+        datatypes::Decimal r(datatypes::TSInt128(420), 1, 38);
+        EXPECT_EQ(0, datatypes::Decimal::compare(l, r));
+        EXPECT_TRUE(l == r);
+        EXPECT_TRUE(l >= r);
+    }
+
+    // l value < r value, L scale > R scale
+    {
+        datatypes::Decimal l(datatypes::TSInt128(42), 0, 38);
+        datatypes::Decimal r(datatypes::TSInt128(420), 1, 38);
+        EXPECT_EQ(0, datatypes::Decimal::compare(l, r));
+        EXPECT_TRUE(l == r);
+        EXPECT_TRUE(l >= r);
+    }
+
+    // Inequality checks
+    // l value = r value, L scale < R scale
+    {
+        datatypes::Decimal l(datatypes::TSInt128(42000), 0, 38);
+        datatypes::Decimal r(datatypes::TSInt128(42000), 3, 38);
+        EXPECT_EQ(1, datatypes::Decimal::compare(l, r));
+        EXPECT_TRUE(l > r);
+        EXPECT_TRUE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value = r value, L scale < R scale
+    {
+        datatypes::Decimal l(datatypes::TSInt128(420000), 3, 38);
+        datatypes::Decimal r(datatypes::TSInt128(420000), 0, 38);
+        EXPECT_EQ(-1, datatypes::Decimal::compare(l, r));
+        EXPECT_FALSE(l > r);
+        EXPECT_FALSE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value > r value, L scale > R scale
+    {
+        datatypes::Decimal l(datatypes::TSInt128(420000), 3, 38);
+        datatypes::Decimal r(datatypes::TSInt128(42000), 0, 38);
+        EXPECT_EQ(-1, datatypes::Decimal::compare(l, r));
+        EXPECT_FALSE(l > r);
+        EXPECT_FALSE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value > r value, L scale < R scale
+    {
+        datatypes::Decimal l(datatypes::TSInt128(420000), 1, 38);
+        datatypes::Decimal r(datatypes::TSInt128(4200), 2, 38);
+        EXPECT_EQ(1, datatypes::Decimal::compare(l, r));
+        EXPECT_TRUE(l > r);
+        EXPECT_TRUE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value < r value, L scale < R scale
+    {
+        datatypes::Decimal l(datatypes::TSInt128(990), 0, 38);
+        datatypes::Decimal r(datatypes::TSInt128(4200), 1, 38);
+        EXPECT_EQ(1, datatypes::Decimal::compare(l, r));
+        EXPECT_TRUE(l > r);
+        EXPECT_TRUE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value < r value, L scale < R scale
+    {
+        datatypes::Decimal l(datatypes::TSInt128(420), 0, 38);
+        datatypes::Decimal r(datatypes::TSInt128(4200), 3, 38);
+        EXPECT_EQ(1, datatypes::Decimal::compare(l, r));
+        EXPECT_TRUE(l > r);
+        EXPECT_TRUE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+}
+
+TEST(Decimal, compareCheckInt64_Int128)
+{
+    // remainer-based checks
+    // Equality checks
+    // l value = r value, L scale = R scale
+    {
+        datatypes::Decimal l(420, 10, 18);
+        datatypes::Decimal r(datatypes::TSInt128(420), 10, 38);
+        EXPECT_TRUE(l == r);
+        EXPECT_TRUE(l >= r);
+    }
+
+    // l value > r value, L scale < R scale
+    {
+        datatypes::Decimal l(420, 11, 18);
+        datatypes::Decimal r(datatypes::TSInt128(42), 10, 38);
+        EXPECT_TRUE(l == r);
+        EXPECT_TRUE(l >= r);
+    }
+
+    // l value < r value, L scale > R scale
+    {
+        datatypes::Decimal l(42, 10, 18);
+        datatypes::Decimal r(datatypes::TSInt128(420), 11, 38);
+        EXPECT_TRUE(l == r);
+        EXPECT_TRUE(l >= r);
+    }
+
+    // Inequality checks
+    // l value = r value, L scale < R scale
+    {
+        datatypes::Decimal l(42, 10, 18);
+        datatypes::Decimal r(datatypes::TSInt128(42), 13, 38);
+        EXPECT_TRUE(l > r);
+        EXPECT_TRUE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value = r value, L scale < R scale
+    {
+        datatypes::Decimal l(42, 13, 18);
+        datatypes::Decimal r(datatypes::TSInt128(42), 10, 38);
+        EXPECT_FALSE(l > r);
+        EXPECT_FALSE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value > r value, L scale > R scale
+    {
+        datatypes::Decimal l(420, 13, 18);
+        datatypes::Decimal r(datatypes::TSInt128(42), 10, 38);
+        EXPECT_FALSE(l > r);
+        EXPECT_FALSE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value > r value, L scale < R scale
+    {
+        datatypes::Decimal l(4200, 11, 18);
+        datatypes::Decimal r(datatypes::TSInt128(42), 12, 38);
+        EXPECT_TRUE(l > r);
+        EXPECT_TRUE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value < r value, L scale < R scale
+    {
+        datatypes::Decimal l(99, 10, 18);
+        datatypes::Decimal r(datatypes::TSInt128(420), 11, 38);
+        EXPECT_TRUE(l > r);
+        EXPECT_TRUE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value < r value, L scale < R scale
+    {
+        datatypes::Decimal l(42, 10, 18);
+        datatypes::Decimal r(datatypes::TSInt128(420), 13, 38);
+        EXPECT_TRUE(l > r);
+        EXPECT_TRUE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // quotinent-based checks
+    // l value = r value, L scale = R scale
+    {
+        datatypes::Decimal l(420, 1, 18);
+        datatypes::Decimal r(datatypes::TSInt128(420), 1, 38);
+        EXPECT_TRUE(l == r);
+        EXPECT_TRUE(l >= r);
+    }
+
+    // l value > r value, L scale < R scale
+    {
+        datatypes::Decimal l(4200, 2, 18);
+        datatypes::Decimal r(datatypes::TSInt128(420), 1, 38);
+        EXPECT_TRUE(l == r);
+        EXPECT_TRUE(l >= r);
+    }
+
+    // l value < r value, L scale > R scale
+    {
+        datatypes::Decimal l(42, 0, 18);
+        datatypes::Decimal r(datatypes::TSInt128(420), 1, 38);
+        EXPECT_TRUE(l == r);
+        EXPECT_TRUE(l >= r);
+    }
+
+    // Inequality checks
+    // l value = r value, L scale < R scale
+    {
+        datatypes::Decimal l(42000, 0, 18);
+        datatypes::Decimal r(datatypes::TSInt128(42000), 3, 38);
+        EXPECT_TRUE(l > r);
+        EXPECT_TRUE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value = r value, L scale < R scale
+    {
+        datatypes::Decimal l(420000, 3, 18);
+        datatypes::Decimal r(datatypes::TSInt128(420000), 0, 38);
+        EXPECT_FALSE(l > r);
+        EXPECT_FALSE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value > r value, L scale > R scale
+    {
+        datatypes::Decimal l(420000, 3, 18);
+        datatypes::Decimal r(datatypes::TSInt128(42000), 0, 38);
+        EXPECT_FALSE(l > r);
+        EXPECT_FALSE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value > r value, L scale < R scale
+    {
+        datatypes::Decimal l(420000, 1, 18);
+        datatypes::Decimal r(datatypes::TSInt128(4200), 2, 38);
+        EXPECT_TRUE(l > r);
+        EXPECT_TRUE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value < r value, L scale < R scale
+    {
+        datatypes::Decimal l(990, 0, 18);
+        datatypes::Decimal r(datatypes::TSInt128(4200), 1, 38);
+        EXPECT_TRUE(l > r);
+        EXPECT_TRUE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
+
+    // l value < r value, L scale < R scale
+    {
+        datatypes::Decimal l(420, 0, 18);
+        datatypes::Decimal r(datatypes::TSInt128(4200), 3, 38);
+        EXPECT_TRUE(l > r);
+        EXPECT_TRUE(l >= r);
+        EXPECT_FALSE(l == r);
+    }
 }
 
 TEST(Decimal, additionNoOverflowCheck)
