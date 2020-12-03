@@ -163,6 +163,7 @@ bin
 external
 gitversionEngine
 mcsconfig.h
+storage-manager/storagemanager.cnf
 storage-manager/testS3Connection
 storage-manager/unit_tests
 .drone.yml
