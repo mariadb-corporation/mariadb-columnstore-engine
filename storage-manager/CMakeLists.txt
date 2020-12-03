@@ -53,6 +53,8 @@ if (SM_LOG_TO_STDERR)
     add_definitions(-DDEBUG)
 endif()
 
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/storagemanager.cnf.in" "${CMAKE_CURRENT_SOURCE_DIR}/storagemanager.cnf" @ONLY)
+
 # get linkage right
 link_directories(${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/../lib)

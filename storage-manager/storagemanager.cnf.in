@@ -44,14 +44,14 @@ object_size = 5M
 # perspective, each file will be represented by a metadata file in this
 # path.  A metadata file is a small json document enumerating the objects
 # that compose the file.
-metadata_path = /var/lib/columnstore/storagemanager/metadata
+metadata_path = @ENGINE_DATADIR@/storagemanager/metadata
 
 # journal_path is where SM will store deltas to apply to objects.
 # If an existing object is modified, that modification (aka delta) will
 # be written to a journal file corresponding to that object.  Periodically,
 # those deltas will be merged with the object they apply to, resulting
 # in a new object.
-journal_path = /var/lib/columnstore/storagemanager/journal
+journal_path = @ENGINE_DATADIR@/storagemanager/journal
 
 # max_concurrent_downloads is what is sounds like, per node.
 # This is not a global setting.
@@ -130,7 +130,7 @@ bucket = some_bucket
 [LocalStorage]
 
 # path specifies where the module should store object data.
-path = /var/lib/columnstore/storagemanager/fake-cloud
+path = @ENGINE_DATADIR@/storagemanager/fake-cloud
 
 # introduce latency to fake-cloud operations.  Useful for debugging.
 fake_latency = n
@@ -155,5 +155,5 @@ max_latency = 50000
 cache_size = 2g
 
 # Cache/path is where cached objects get stored.
-path = /var/lib/columnstore/storagemanager/cache
+path = @ENGINE_DATADIR@/storagemanager/cache
 
