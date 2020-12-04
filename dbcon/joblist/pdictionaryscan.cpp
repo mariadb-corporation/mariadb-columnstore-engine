@@ -904,6 +904,7 @@ void pDictionaryScan::serializeEqualityFilter()
     ism.Command  = DICT_CREATE_EQUALITY_FILTER;
     msg.load((uint8_t*) &ism, sizeof(ISMPacketHeader));
     msg << uniqueID;
+    msg << (uint32_t) colType().charsetNumber;
     msg << (uint32_t) equalityFilter.size();
 
     for (i = 0; i < equalityFilter.size(); i++)

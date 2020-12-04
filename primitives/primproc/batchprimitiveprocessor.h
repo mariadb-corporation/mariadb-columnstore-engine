@@ -296,7 +296,9 @@ private:
             utils::STLPoolAllocator<std::pair<const uint64_t, uint32_t> > > TJoiner;
 
     typedef std::tr1::unordered_multimap<joiner::TypelessData,
-            uint32_t, joiner::TupleJoiner::hasher, std::equal_to<joiner::TypelessData>,
+            uint32_t,
+            joiner::TupleJoiner::TypelessDataHasher,
+            joiner::TupleJoiner::TypelessDataComparator,
             utils::STLPoolAllocator<std::pair<const joiner::TypelessData, uint32_t> > > TLJoiner;
 
     bool generateJoinedRowGroup(rowgroup::Row& baseRow, const uint32_t depth = 0);

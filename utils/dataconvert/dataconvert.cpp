@@ -1542,8 +1542,14 @@ DataConvert::StringToString(const datatypes::SystemCatalog::TypeAttributesStd& c
     //check data length
     if ( data.length() > (unsigned int)colType.colWidth )
     {
+        // TODO: charsetNumber should be moved to TypeStdAttributes ASAP
+        const execplan::CalpontSystemCatalog::ColType &colType2=
+          static_cast<const execplan::CalpontSystemCatalog::ColType &>(colType);
+        datatypes::Charset cs(colType2.charsetNumber);
+        const char *newEnd = data.data() + colType.colWidth;
+        const char *origEnd = data.data() + data.length();
+        pushWarning = cs.test_if_important_data(newEnd, origEnd);
         data = data.substr(0, colType.colWidth);
-        pushWarning = true;
         boost::any value = data;
         return value;
     }

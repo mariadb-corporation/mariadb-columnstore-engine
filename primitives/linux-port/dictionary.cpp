@@ -58,22 +58,22 @@ inline bool PrimitiveProcessor::compare(int cmp, uint8_t COP, int len1, int len2
             return false;
 
         case COMPARE_LT:
-            return (cmp < 0 || (cmp == 0 && len1 < len2));
+            return cmp < 0;
 
         case COMPARE_EQ:
-            return (cmp == 0 && len1 == len2 ? true : false);
+            return cmp == 0;
 
         case COMPARE_LE:
-            return (cmp < 0  || (cmp == 0 && len1 <= len2));
+            return cmp <= 0;
 
         case COMPARE_GT:
-            return (cmp > 0 || (cmp == 0 && len1 > len2));
+            return cmp > 0;
 
         case COMPARE_NE:
-            return (cmp != 0 || len1 != len2 ? true : false);
+            return cmp != 0;
 
         case COMPARE_GE:
-            return (cmp > 0 || (cmp == 0 && len1 >= len2));
+            return cmp >= 0;
 
         case COMPARE_LIKE:
             return cmp;							// is done elsewhere; shouldn't get here.  Exception?
@@ -186,11 +186,11 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
 
         if (eqFilter)
         {
-            // MCOL-1246 Trim whitespace before match
-            // TODO MCOL-3536 use CHARSET_INFO* cs for collation
-            // cs->hash_sort(hash_sort(const uchar *key, size_t len, ulong *nr1, ulong *nr2)) 
+            if (cs != & eqFilter->getCharset())
+            {
+                //throw runtime_error("Collations mismatch: TokenByScanRequestHeader and DicEqualityFilter");
+            }
             string strData(sig, siglen);
-            boost::trim_right_if(strData, boost::is_any_of(" "));
             bool gotIt = eqFilter->find(strData) != eqFilter->end();
 
             if ((h->COP1 == COMPARE_EQ && gotIt) || (h->COP1 == COMPARE_NE &&
@@ -213,7 +213,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
         }
         else
         {
-            tmp = cs->strnncoll(sig, siglen, args->data, args->len);
+            tmp = cs->strnncollsp(sig, siglen, args->data, args->len);
             cmpResult = compare(tmp, h->COP1, siglen, args->len);
         }
 
@@ -254,7 +254,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
 
                 else
                 {
-                    tmp = cs->strnncoll(sig, siglen, args->data, args->len);
+                    tmp = cs->strnncollsp(sig, siglen, args->data, args->len);
                     cmpResult = compare(tmp, h->COP2, siglen, args->len);
                 }
 
@@ -282,7 +282,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
 
                     else
                     {
-                        tmp = cs->strnncoll(sig, siglen, args->data, args->len);
+                        tmp = cs->strnncollsp(sig, siglen, args->data, args->len);
                         cmpResult = compare(tmp, h->COP2, siglen, args->len);
                     }
 
@@ -704,7 +704,7 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in,
             // len == 0 indicates this is the first pass
             if (max.len != 0)
             {
-                tmp = cs->strnncoll(sigptr.data, sigptr.len, max.data, max.len);
+                tmp = cs->strnncollsp(sigptr.data, sigptr.len, max.data, max.len);
 
                 if (tmp > 0)
                     max = sigptr;
@@ -714,7 +714,7 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in,
 
             if (min.len != 0)
             {
-                tmp = cs->strnncoll(sigptr.data, sigptr.len, min.data, min.len);
+                tmp = cs->strnncollsp(sigptr.data, sigptr.len, min.data, min.len);
 
                 if (tmp < 0)
                     min = sigptr;
@@ -757,7 +757,7 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in,
             }
             else
             {
-                tmp = cs->strnncoll(sigptr.data, sigptr.len, filter->data, filter->len);
+                tmp = cs->strnncollsp(sigptr.data, sigptr.len, filter->data, filter->len);
                 cmpResult = compare(tmp, filter->COP, sigptr.len, filter->len);
             }
 

@@ -283,6 +283,27 @@ struct ColLoopback
     PrimitiveHeader Hdr;    // 64 bit header
 };
 
+
+struct ColRequestHeaderDataType: public datatypes::Charset
+{
+    int32_t CompType;
+    uint16_t DataSize;
+    uint8_t DataType;       // enum ColDataType defined in calpont system catalog header file
+    ColRequestHeaderDataType()
+       :Charset(my_charset_bin),
+        CompType(0),
+        DataSize(0),
+        DataType(0)
+    { }
+    ColRequestHeaderDataType(const execplan::CalpontSystemCatalog::ColType &rhs)
+       :Charset(rhs.charsetNumber),
+        CompType(rhs.compressionType),
+        DataSize(rhs.colWidth),
+        DataType(rhs.colDataType)
+   { }
+};
+
+
 //      COL_BY_SCAN
 //Tied to ColByScanRangeRequestHeader and NewColRequestHeader.  Check other headers if modifying.
 
@@ -290,15 +311,19 @@ struct ColByScanRequestHeader
 {
     PrimitiveHeader Hdr;    // 64 bit header
     uint64_t LBID;
-    int32_t CompType;
-    uint16_t DataSize;
-    uint8_t DataType;       // enum ColDataType defined in calpont system catalog header file
+    ColRequestHeaderDataType colType;
     uint8_t OutputType;     // 1 = RID, 2 = Token, 3 = Both
     uint8_t BOP;            // 0 = N/A, 1 = AND, 2 = OR
     uint8_t RidFlags;		// a bitmap indicating the rid ranges in the resultM SB => row 7168-8191
     uint16_t NOPS;
     uint16_t NVALS;
     uint8_t sort;
+    ColByScanRequestHeader()
+        :LBID(0), OutputType(0), BOP(0),
+         RidFlags(0), NOPS(0), NVALS(0), sort(0)
+    {
+        memset(&Hdr, 0, sizeof(Hdr));
+    }
 };
 
 //      COL_BY_SCAN_RANGE
@@ -308,9 +333,7 @@ struct ColByScanRangeRequestHeader
 {
     PrimitiveHeader Hdr;    // 64 bit header
     uint64_t LBID;		    // starting LBID
-    int32_t CompType;
-    uint16_t DataSize;
-    uint8_t DataType;       // enum ColDataType defined in calpont system catalog header file
+    ColRequestHeaderDataType colType;
     uint8_t OutputType;     // 1 = RID, 2 = Token, 3 = Both
     uint8_t BOP;            // 0 = N/A, 1 = AND, 2 = OR
     uint8_t RidFlags;		// a bitmap indicating the rid ranges in the result MSB => row 7168-8191
@@ -318,6 +341,13 @@ struct ColByScanRangeRequestHeader
     uint16_t NVALS;
     uint8_t sort;
     uint16_t Count;			//Number of LBID's
+    ColByScanRangeRequestHeader()
+        :LBID(0), OutputType(0),
+         BOP(0), RidFlags(0), NOPS(0), NVALS(0),
+         sort(0), Count(0)
+    {
+        memset(&Hdr, 0, sizeof(Hdr));
+    }
 };
 
 //      COL_BY_RID
@@ -326,15 +356,14 @@ struct ColByRIDRequestHeader
 {
     PrimitiveHeader Hdr;                      // 64 bit header
     uint64_t LBID;
-    int32_t CompType;
-    uint16_t DataSize;
-    uint8_t DataType;                            // enum ColDataType defined in calpont system catalog header file
+    ColRequestHeaderDataType colType;
     uint8_t OutputType;                          // 1 = RID, 2 = Token, 3 = Both
     uint8_t BOP;                                 // 0 = N/A, 1 = AND, 2 = OR
     uint8_t InputFlags;		// 1 = interpret each NOP & RID as a pair
     uint16_t NOPS;
     uint16_t NVALS;
     uint8_t sort;
+    ColByRIDRequestHeader(); // QQ? Not used?
 };
 
 //      COL_AGG_BY_SCAN
@@ -358,14 +387,13 @@ struct ColAggByRIDRequestHeader
 {
     PrimitiveHeader Hdr;                      // 64 bit header
     uint64_t LBID;
-    int32_t CompType;
-    uint16_t DataSize;
-    uint8_t DataType;                            // enum ColDataType defined in calpont system catalog header file
+    ColRequestHeaderDataType colType;
     uint8_t OutputType;                          // 1 = RID, 2 = Token, 3 = Both
     uint8_t BOP;                                 // 0 = N/A, 1 = AND, 2 = OR
     uint8_t   ExtraNotUsed;
     uint16_t NOPS;
     uint16_t NVALS;
+    ColAggByRIDRequestHeader(); // Not used?
 };
 
 //      Loopback Results
@@ -663,9 +691,7 @@ struct NewColRequestHeader
     ISMPacketHeader ism;
     PrimitiveHeader hdr;
     uint64_t LBID;
-    int32_t CompType;
-    uint16_t DataSize;
-    uint8_t DataType;
+    ColRequestHeaderDataType colType;
     uint8_t OutputType;		// OT_DATAVALUE, OT_RID, or OT_BOTH
     uint8_t BOP;
 // 	uint8_t InputFlags;		// 1 = interpret each NOP & RID as a pair (deprecated)
@@ -676,6 +702,10 @@ struct NewColRequestHeader
     // this follows the header
     // ColArgs ArgList[NOPS] (where the val field is DataSize bytes long)
     // uint16_t Rids[NVALS]  (each rid is relative to the given block)
+
+    // QQ: The below constructor is never used.
+    // This struct is used in a cast only, in a hackish way.
+    NewColRequestHeader();
 };
 
 struct NewColAggRequestHeader
@@ -683,9 +713,7 @@ struct NewColAggRequestHeader
     ISMPacketHeader ism;
     PrimitiveHeader hdr;
     uint64_t LBID;
-    int32_t CompType;
-    uint8_t DataSize;
-    uint8_t DataType;
+    ColRequestHeaderDataType colType;
     uint8_t OutputType;
     uint8_t BOP;
     uint8_t ExtraNotUsed;
@@ -694,6 +722,7 @@ struct NewColAggRequestHeader
     // this follows the header
     // ColArgs ArgList[NOPS] (where the val field is DataSize bytes long)
     // uint16_t Rids[NVALS] (each rid is relative to the given block)
+    NewColAggRequestHeader(); // QQ: not used
 };
 
 struct NewColResultHeader

@@ -1668,11 +1668,6 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
         }
 //X
 
-        // Because, on a filter, we want to compare ignoring trailing spaces in many cases
-        if (sf->op()->op() != execplan::OP_LIKE)
-        {
-            boost::algorithm::trim_right_if(constval, boost::is_any_of(" "));
-        }
         //@bug 339 nulls are not stored in dictionary
         if ((dictOid = isDictCol(ct)) > 0  && ConstantColumn::NULLDATA != cc->type())
         {

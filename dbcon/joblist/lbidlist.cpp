@@ -658,6 +658,48 @@ inline bool LBIDList::compareVal(const T& Min, const T& Max, const T& value, cha
     return true;
 }
 
+
+static inline bool compareStr(const datatypes::Charset &cs,
+                              const utils::ConstString &Min,
+                              const utils::ConstString &Max,
+                              const utils::ConstString &value,
+                              char op, uint8_t lcf)
+{
+    switch (op)
+    {
+        case COMPARE_LT:
+        case COMPARE_NGE:
+            return cs.strnncollsp(value, Min) > 0;
+
+        case COMPARE_LE:
+        case COMPARE_NGT:
+            return cs.strnncollsp(value, Min) >= 0;
+
+        case COMPARE_GT:
+        case COMPARE_NLE:
+            return cs.strnncollsp(value, Max) < 0;
+
+        case COMPARE_GE:
+        case COMPARE_NLT:
+            return cs.strnncollsp(value, Max) <= 0;
+
+        case COMPARE_EQ:
+            return cs.strnncollsp(value, Min) >= 0 &&
+                   cs.strnncollsp(value, Max) <= 0 &&
+                   lcf <= 0;
+
+        case COMPARE_NE:
+
+            // @bug 3087
+            return cs.strnncollsp(value, Min) != 0 ||
+                   cs.strnncollsp(value, Max) != 0 ||
+                                  lcf != 0;
+    }
+
+    return false;
+}
+
+
 template<typename T>
 bool LBIDList::checkSingleValue(T min, T max, T value,
                                 execplan::CalpontSystemCatalog::ColDataType type)
@@ -811,6 +853,8 @@ bool LBIDList::CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
             }
         }
 
+        MsgDataPtr += ct.colWidth;
+
         if (ct.isWideDecimalType() && execplan::isNull(bigValue, ct))
         {
                 continue;
@@ -820,19 +864,15 @@ bool LBIDList::CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
             continue;
         }
 
-        MsgDataPtr += ct.colWidth;
-
         if (bIsChar && 1 < ct.colWidth)
         {
-            // MCOL-1246 Trim trailing whitespace for matching so that we have
-            // the same as InnoDB behaviour
-            int64_t tMin = cpRange.loVal;
-            int64_t tMax = cpRange.hiVal;
-            dataconvert::DataConvert::trimWhitespace(tMin);
-            dataconvert::DataConvert::trimWhitespace(tMax);
-
-            scan = compareVal(order_swap(tMin), order_swap(tMax), order_swap(value),
-                              op, lcf);
+            datatypes::Charset cs(ct.charsetNumber);
+            utils::ConstString sMin((const char *) &cpRange.loVal, 8);
+            utils::ConstString sMax((const char *) &cpRange.hiVal, 8);
+            utils::ConstString sVal((const char *) &value, 8);
+            scan = compareStr(cs, sMin.rtrimZero(),
+                                  sMax.rtrimZero(),
+                                  sVal.rtrimZero(), op, lcf);
 // 			cout << "scan=" << (uint32_t) scan << endl;
         }
         else if (bIsUnsigned)

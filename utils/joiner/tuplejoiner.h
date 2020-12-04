@@ -68,6 +68,10 @@ public:
     void deserialize(messageqcpp::ByteStream&, utils::FixedAllocator&);
     void deserialize(messageqcpp::ByteStream&, utils::PoolAllocator&);
     std::string toString() const;
+    uint32_t hash(const rowgroup::RowGroup&, const std::vector<uint32_t>& keyCols) const;
+    static int cmp(const rowgroup::RowGroup&, const std::vector<uint32_t>& keyCols,
+                   const TypelessData &a,
+                   const TypelessData &b);
 };
 
 inline bool TypelessData::operator==(const TypelessData& t) const
@@ -108,6 +112,18 @@ extern TypelessData makeTypelessKey(const rowgroup::Row&,
 extern uint64_t getHashOfTypelessKey(const rowgroup::Row&, const std::vector<uint32_t>&,
                                      uint32_t seed = 0);
 
+class TypelessDataStructure
+{
+public:
+   const rowgroup::RowGroup *mRowGroup;
+   const std::vector<uint32_t> *mMap;
+   TypelessDataStructure(const rowgroup::RowGroup *rg,
+                         const std::vector<uint32_t> *map)
+       :mRowGroup(rg),
+        mMap(map)
+   { }
+};
+
 
 class TupleJoiner
 {
@@ -142,6 +158,33 @@ public:
     private:
         utils::Hasher fHasher;
     };
+
+
+    struct TypelessDataHasher: public TypelessDataStructure
+    {
+        TypelessDataHasher(const rowgroup::RowGroup *rg,
+                           const std::vector<uint32_t> *map)
+           :TypelessDataStructure(rg, map)
+        { }
+        inline size_t operator()(const TypelessData& e) const
+        {
+            return e.hash(*mRowGroup, *mMap);
+        }
+    };
+
+    struct TypelessDataComparator: public TypelessDataStructure
+    {
+    public:
+        TypelessDataComparator(const rowgroup::RowGroup *rg,
+                               const std::vector<uint32_t> *map)
+           :TypelessDataStructure(rg, map)
+        { }
+        bool operator()(const TypelessData& a, const TypelessData& b) const
+        {
+            return !TypelessData::cmp(*mRowGroup, *mMap, a, b);
+        }
+    };
+
 
     /* ctor to use for numeric join */
     TupleJoiner(
