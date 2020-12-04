@@ -703,6 +703,12 @@ bool BatchPrimitiveProcessorJL::countThisMsg(messageqcpp::ByteStream& in) const
     const uint8_t* data = in.buf();
     uint32_t offset = sizeof(ISMPacketHeader) + sizeof(PrimitiveHeader); // skip the headers
 
+    ISMPacketHeader* hdr = (ISMPacketHeader*)(data);
+
+    // Exit early if PrimProc has thrown an exception
+    if (hdr->Status > 0)
+        return true;
+
     if (_hasScan)
     {
         if (data[offset] != 0)
