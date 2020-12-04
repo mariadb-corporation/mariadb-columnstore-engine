@@ -147,27 +147,14 @@ int64_t Func_floor::getIntVal(Row& row,
 
         case execplan::CalpontSystemCatalog::DATETIME:
         {
-            string str =
-                DataConvert::datetimeToString1(parm[0]->data()->getDatetimeIntVal(row, isNull));
+            ret = parm[0]->data()->getDatetimeIntVal(row, isNull);
 
-            // strip off micro seconds
-            str = str.substr(0, 14);
-
-            if (!isNull)
-                ret = atoll(str.c_str());
         }
         break;
 
         case execplan::CalpontSystemCatalog::TIMESTAMP:
         {
-            string str =
-                DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull), timeZone());
-
-            // strip off micro seconds
-            str = str.substr(0, 14);
-
-            if (!isNull)
-                ret = atoll(str.c_str());
+            ret = parm[0]->data()->getTimestampIntVal(row, isNull);
         }
         break;
 
