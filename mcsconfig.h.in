@@ -390,6 +390,8 @@
 
 #define MCSSBINDIR "${ENGINE_SBINDIR}"
 
+#define MCSBINDIR "${ENGINE_BINDIR}"
+
 #define MCSMYCNFDIR "${MARIADB_MYCNFDIR}"
 
 #endif
