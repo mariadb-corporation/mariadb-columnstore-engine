@@ -49,6 +49,9 @@
 #include "ddl-gram.h"
 #endif
 
+#include "my_global.h"
+#include "my_sys.h"
+
 #define scanner x->scanner
 
 using namespace std;
@@ -57,6 +60,42 @@ using namespace ddlpackage;
 int ddllex(YYSTYPE* ddllval, void* yyscanner);
 void ddlerror(struct pass_to_bison* x, char const *s);
 char* copy_string(const char *str);
+
+void fix_column_length(SchemaObject* elem, const CHARSET_INFO* def_cs) {
+    auto* column = dynamic_cast<ColumnDef*>(elem);
+    if (column == NULL || column->fType == NULL)
+    {
+        return;
+    }
+
+    if (column->fType->fType == DDL_VARCHAR ||
+         column->fType->fType == DDL_CHAR ||
+         (column->fType->fType == DDL_TEXT && column->fType->fExplicitLength))
+    {
+        unsigned mul = def_cs ? def_cs->mbmaxlen : 1;
+        if (column->fType->fCharset) {
+            const CHARSET_INFO* cs = get_charset_by_csname(column->fType->fCharset, MY_CS_PRIMARY, MYF(0));
+            if (cs)
+                mul = cs->mbmaxlen;
+        }
+        column->fType->fLength *= mul;
+    }
+
+    if (column->fType->fType == DDL_TEXT && column->fType->fExplicitLength)
+    {
+        // Rounding the resulting length of TEXT(N) field to the next default length
+        if (column->fType->fLength <= 255)
+            column->fType->fLength = 255;
+        else if (column->fType->fLength <= 65535)
+            column->fType->fLength = 65535;
+        else if (column->fType->fLength <= 16777215)
+            column->fType->fLength = 16777215;
+        else if (column->fType->fLength <= 2100000000)
+            column->fType->fLength = 2100000000;
+        // otherwise leave the decision to a caller code
+    }
+}
+
 %}
 
 %expect 17
@@ -204,6 +243,7 @@ ZEROFILL
 %type <sqlStmt>              rename_table_statement
 %type <str>                  ident
 %type <str>                  opt_quoted_literal
+%type <str>                  opt_column_charset
 %%
 stmtblock:	stmtmulti { x->fParseTree = $1; }
 		;
@@ -283,14 +323,13 @@ opt_table_options:
 	;
 
 create_table_statement:
-	CREATE TABLE opt_if_not_exists table_name '(' table_element_list ')' table_options
+	CREATE TABLE opt_if_not_exists table_name '(' table_element_list ')' opt_table_options
 	{
+        for (auto* elem : *$6)
+        {
+            fix_column_length(elem, x->default_table_charset);
+        }
 		$$ = new CreateTableStatement(new TableDef($4, $6, $8));
-	}
-    |
-	CREATE TABLE opt_if_not_exists table_name '(' table_element_list ')'
-	{
-		$$ = new CreateTableStatement(new TableDef($4, $6, NULL));
 	}
 	;
 
@@ -647,10 +686,20 @@ ata_add_column:
     /* See the documentation for SchemaObject for an explanation of why we are using
      * dynamic_cast here.
      */
-	ADD column_def {$$ = new AtaAddColumn(dynamic_cast<ColumnDef*>($2));}
-	| ADD COLUMN column_def {$$ = new AtaAddColumn(dynamic_cast<ColumnDef*>($3));}
-	| ADD '(' table_element_list ')' {$$ = new AtaAddColumns($3);}
-	| ADD COLUMN '(' table_element_list ')' {$$ = new AtaAddColumns($4);}
+	ADD column_def { fix_column_length($2, x->default_table_charset); $$ = new AtaAddColumn(dynamic_cast<ColumnDef*>($2));}
+	| ADD COLUMN column_def { fix_column_length($3, x->default_table_charset); $$ = new AtaAddColumn(dynamic_cast<ColumnDef*>($3));}
+	| ADD '(' table_element_list ')' {
+        for (auto* elem : *$3) {
+            fix_column_length(elem, x->default_table_charset);
+        }
+        $$ = new AtaAddColumns($3);
+    }
+	| ADD COLUMN '(' table_element_list ')' {
+        for (auto* elem : *$4) {
+            fix_column_length(elem, x->default_table_charset);
+        }
+        $$ = new AtaAddColumns($4);
+    }
 	;
 
 column_name:
@@ -737,9 +786,9 @@ optional_braces:
 	;
 
 opt_column_charset:
-    /* empty */ {}
+    /* empty */ { $$ = NULL; }
     |
-    IDB_CHAR SET opt_quoted_literal {}
+    IDB_CHAR SET opt_quoted_literal { $$ = $3; }
     ;
 
 opt_column_collate:
@@ -749,12 +798,18 @@ opt_column_collate:
     ;
 
 data_type:
-	character_string_type opt_column_charset opt_column_collate
+	character_string_type opt_column_charset opt_column_collate {
+        $1->fCharset = $2;
+        $$ = $1;
+    }
 	| binary_string_type
 	| numeric_type
 	| datetime_type
 	| blob_type
-	| text_type opt_column_charset opt_column_collate
+	| text_type opt_column_charset opt_column_collate {
+        $1->fCharset = $2;
+        $$ = $1;
+    }
 	| IDB_BLOB
 	{
 		$$ = new ColumnType(DDL_BLOB);
@@ -955,6 +1010,7 @@ text_type:
 	{
 		$$ = new ColumnType(DDL_TEXT);
 		$$->fLength = atol($3);
+		$$->fExplicitLength = true;
 	}
 	| TEXT
 	{

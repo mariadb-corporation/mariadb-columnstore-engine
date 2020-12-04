@@ -67,7 +67,9 @@ ColumnType::ColumnType(int prec, int scale) :
     fLength(0),
     fPrecision(prec),
     fScale(scale),
-    fWithTimezone(false)
+    fWithTimezone(false),
+    fCharset(NULL),
+    fExplicitLength(false)
 {
     fLength = utils::widthByPrecision(fPrecision);
 }
@@ -76,7 +78,9 @@ ColumnType::ColumnType(int type) :
     fType(type),
     fLength(0),
     fScale(0),
-    fWithTimezone(false)
+    fWithTimezone(false),
+    fCharset(NULL),
+    fExplicitLength(false)
 {
     switch ( type )
     {
