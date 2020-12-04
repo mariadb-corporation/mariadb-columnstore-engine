@@ -705,11 +705,7 @@ bool BatchPrimitiveProcessorJL::countThisMsg(messageqcpp::ByteStream& in) const
 
     ISMPacketHeader* hdr = (ISMPacketHeader*)(data);
 
-    // Exit early if PrimProc has thrown an exception
-    if (hdr->Status > 0)
-        return true;
-
-    if (_hasScan)
+    if (_hasScan && in.length() > offset)
     {
         if (data[offset] != 0)
             offset += (data[offset + CP_FLAG_AND_LBID] * 2) + CP_FLAG_AND_LBID + 1;  // skip the CP data with wide min/max values (16/32 bytes each)
@@ -717,7 +713,19 @@ bool BatchPrimitiveProcessorJL::countThisMsg(messageqcpp::ByteStream& in) const
             offset += CP_FLAG_AND_LBID;  // skip only the "valid CP data" & LBID bytes
     }
 
-    idbassert(in.length() > offset);
+    // Throw b/c PP throws and sends here error msg.
+    // See BatchPrimitiveProcessor::writeErrorMsg() for details.
+    // The inversion of the assert used here previously.
+    if (in.length() <= offset)
+    {
+        if (hdr->Status > 0)
+        {
+            throw std::runtime_error(" an exception originally thrown by PrimProc: ");
+        }
+        throw std::runtime_error(" an exception because there is not enough \
+data in the Primitive message from PrimProc.");
+    }
+
 
     return (data[offset] != 0);
 }
