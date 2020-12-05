@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <cfloat>
 #include <limits>
+#include <functional>
 #include "mcs_basic_types.h"
 #include "exceptclasses.h"
 #include "widedecimalutils.h"
@@ -441,226 +442,97 @@ class Decimal: public TSInt128
             return (std::get<0>(integralFractionalDivisor) % div.getValue()) * std::get<2>(integralFractionalDivisor) + std::get<1>(integralFractionalDivisor);
         }
 
-        bool operator==(const Decimal& rhs) const
+        template<typename Op128, typename Op64>
+        bool cmpOperatorTemplate(const Decimal& rhs) const
         {
+            Op128 op128;
+            Op64 op64;
             if (precision > datatypes::INT64MAXPRECISION &&
                 rhs.precision > datatypes::INT64MAXPRECISION)
             {
                 if (scale == rhs.scale)
-                    return s128Value == rhs.s128Value;
+                    return op128(s128Value, rhs.s128Value);
                 else
-                    return (datatypes::Decimal::compare(*this, rhs) == 0);
+                    return op64(datatypes::Decimal::compare(*this, rhs), 0);
             }
             else if (precision > datatypes::INT64MAXPRECISION &&
                      rhs.precision <= datatypes::INT64MAXPRECISION)
             {
-                const_cast<Decimal&>(rhs).s128Value = rhs.value;
 
                 if (scale == rhs.scale)
-                    return s128Value == rhs.s128Value;
+                {
+                    return op128(s128Value, rhs.s128Value);
+                }
                 else
-                    return (datatypes::Decimal::compare(*this, rhs) == 0);
+                {
+                    // comp_op<int64>(compare(l,r),0)
+                    return op64(datatypes::Decimal::compare(
+                                    *this, 
+                                    Decimal(TSInt128(rhs.value),
+                                            rhs.scale,
+                                            rhs.precision)),
+                           0);
+                }
             }
             else if (precision <= datatypes::INT64MAXPRECISION &&
                      rhs.precision > datatypes::INT64MAXPRECISION)
             {
                 if (scale == rhs.scale)
-                    return (int128_t) value == rhs.s128Value;
+                {
+                    return op128((int128_t) value, rhs.s128Value);
+                }
                 else
-                    return (datatypes::Decimal::compare(Decimal(0, scale, precision, (int128_t) value), rhs) == 0);
+                {
+                    // comp_op<int64>(compare(l,r),0)
+                    return op64(datatypes::Decimal::compare(
+                                    Decimal(
+                                        TSInt128(value),
+                                        scale,
+                                        precision),
+                                    rhs),
+                           0);
+                }
             }
             else
             {
                 if (scale == rhs.scale)
-                    return value == rhs.value;
+                    return op64(value, rhs.value);
                 else
-                    return (decimalComp(rhs) == 0);
+                    return op64(decimalComp(rhs), 0);
             }
+        }
+
+        bool operator==(const Decimal& rhs) const
+        {
+            return cmpOperatorTemplate<std::equal_to<int128_t>,
+                                       std::equal_to<int64_t>>(rhs);
         }
 
         bool operator>(const Decimal& rhs) const
         {
-            if (precision > datatypes::INT64MAXPRECISION &&
-                rhs.precision > datatypes::INT64MAXPRECISION)
-            {
-                if (scale == rhs.scale)
-                    return s128Value > rhs.s128Value;
-                else
-                    return (datatypes::Decimal::compare(*this, rhs) > 0);
-            }
-            else if (precision > datatypes::INT64MAXPRECISION &&
-                     rhs.precision <= datatypes::INT64MAXPRECISION)
-            {
-                Decimal rhstmp(0, rhs.scale, rhs.precision, (int128_t) rhs.value);
-
-                if (scale == rhstmp.scale)
-                    return s128Value > rhstmp.s128Value;
-                else
-                    return (datatypes::Decimal::compare(*this, rhstmp) > 0);
-            }
-            else if (precision <= datatypes::INT64MAXPRECISION &&
-                     rhs.precision > datatypes::INT64MAXPRECISION)
-            {
-                if (scale == rhs.scale)
-                    return (int128_t) value > rhs.s128Value;
-                else
-                    return (datatypes::Decimal::compare(Decimal(0, scale, precision, (int128_t) value), rhs) > 0);
-            }
-            else
-            {
-                if (scale == rhs.scale)
-                    return value > rhs.value;
-                else
-                    return (decimalComp(rhs) > 0);
-            }
-        }
-
-        bool operator<(const Decimal& rhs) const
-        {
-            if (precision > datatypes::INT64MAXPRECISION &&
-                rhs.precision > datatypes::INT64MAXPRECISION)
-            {
-                if (scale == rhs.scale)
-                    return s128Value < rhs.s128Value;
-                else
-                    return (datatypes::Decimal::compare(*this, rhs) < 0);
-            }
-            else if (precision > datatypes::INT64MAXPRECISION &&
-                     rhs.precision <= datatypes::INT64MAXPRECISION)
-            {
-                Decimal rhstmp(0, rhs.scale, rhs.precision, (int128_t) rhs.value);
-
-                if (scale == rhstmp.scale)
-                    return s128Value < rhstmp.s128Value;
-                else
-                    return (datatypes::Decimal::compare(*this, rhstmp) < 0);
-            }
-            else if (precision <= datatypes::INT64MAXPRECISION &&
-                     rhs.precision > datatypes::INT64MAXPRECISION)
-            {
-                if (scale == rhs.scale)
-                    return (int128_t) value < rhs.s128Value;
-                else
-                    return (datatypes::Decimal::compare(Decimal(0, scale, precision, (int128_t) value), rhs) < 0);
-            }
-            else
-            {
-                if (scale == rhs.scale)
-                    return value < rhs.value;
-                else
-                    return (decimalComp(rhs) < 0);
-            }
+            return cmpOperatorTemplate<std::greater<int128_t>,
+                                       std::greater<int64_t>>(rhs);
         }
 
         bool operator>=(const Decimal& rhs) const
         {
-            if (precision > datatypes::INT64MAXPRECISION &&
-                rhs.precision > datatypes::INT64MAXPRECISION)
-            {
-                if (scale == rhs.scale)
-                    return s128Value >= rhs.s128Value;
-                else
-                    return (datatypes::Decimal::compare(*this, rhs) >= 0);
-            }
-            else if (precision > datatypes::INT64MAXPRECISION &&
-                     rhs.precision <= datatypes::INT64MAXPRECISION)
-            {
-                Decimal rhstmp(0, rhs.scale, rhs.precision, (int128_t) rhs.value);
+            return cmpOperatorTemplate<std::greater_equal<int128_t>,
+                                       std::greater_equal<int64_t>>(rhs);
+        }
 
-                if (scale == rhstmp.scale)
-                    return s128Value >= rhstmp.s128Value;
-                else
-                    return (datatypes::Decimal::compare(*this, rhstmp) >= 0);
-            }
-            else if (precision <= datatypes::INT64MAXPRECISION &&
-                     rhs.precision > datatypes::INT64MAXPRECISION)
-            {
-                if (scale == rhs.scale)
-                    return (int128_t) value >= rhs.s128Value;
-                else
-                    return (datatypes::Decimal::compare(Decimal(0, scale, precision, (int128_t) value), rhs) >= 0);
-            }
-            else
-            {
-                if (scale == rhs.scale)
-                    return value >= rhs.value;
-                else
-                    return (decimalComp(rhs) >= 0);
-            }
+        bool operator<(const Decimal& rhs) const
+        {
+            return !this->operator>=(rhs);
         }
 
         bool operator<=(const Decimal& rhs) const
         {
-            if (precision > datatypes::INT64MAXPRECISION &&
-                rhs.precision > datatypes::INT64MAXPRECISION)
-            {
-                if (scale == rhs.scale)
-                    return s128Value <= rhs.s128Value;
-                else
-                    return (datatypes::Decimal::compare(*this, rhs) <= 0);
-            }
-            else if (precision > datatypes::INT64MAXPRECISION &&
-                     rhs.precision <= datatypes::INT64MAXPRECISION)
-            {
-                Decimal rhstmp(0, rhs.scale, rhs.precision, (int128_t) rhs.value);
-
-                if (scale == rhstmp.scale)
-                    return s128Value <= rhstmp.s128Value;
-                else
-                    return (datatypes::Decimal::compare(*this, rhstmp) <= 0);
-            }
-            else if (precision <= datatypes::INT64MAXPRECISION &&
-                     rhs.precision > datatypes::INT64MAXPRECISION)
-            {
-                if (scale == rhs.scale)
-                    return (int128_t) value <= rhs.s128Value;
-                else
-                    return (datatypes::Decimal::compare(Decimal(0, scale, precision, (int128_t) value), rhs) <= 0);
-            }
-            else
-            {
-                if (scale == rhs.scale)
-                    return value <= rhs.value;
-                else
-                    return (decimalComp(rhs) <= 0);
-            }
+            return !this->operator>(rhs);
         }
 
         bool operator!=(const Decimal& rhs) const
         {
-            if (precision > datatypes::INT64MAXPRECISION &&
-                rhs.precision > datatypes::INT64MAXPRECISION)
-            {
-                if (scale == rhs.scale)
-                    return s128Value != rhs.s128Value;
-                else
-                    return (datatypes::Decimal::compare(*this, rhs) != 0);
-            }
-            else if (precision > datatypes::INT64MAXPRECISION &&
-                     rhs.precision <= datatypes::INT64MAXPRECISION)
-            {
-                Decimal rhstmp(0, rhs.scale, rhs.precision, (int128_t) rhs.value);
-
-                if (scale == rhstmp.scale)
-                    return s128Value != rhstmp.s128Value;
-                else
-                    return (datatypes::Decimal::compare(*this, rhstmp) != 0);
-            }
-            else if (precision <= datatypes::INT64MAXPRECISION &&
-                     rhs.precision > datatypes::INT64MAXPRECISION)
-            {
-                if (scale == rhs.scale)
-                    return (int128_t) value != rhs.s128Value;
-                else
-                    return (datatypes::Decimal::compare(Decimal(0, scale, precision, (int128_t) value), rhs) != 0);
-            }
-            else
-            {
-                if (scale == rhs.scale)
-                    return value != rhs.value;
-                else
-                    return (decimalComp(rhs) != 0);
-            }
+            return !this->operator==(rhs);
         }
 
         inline bool isTSInt128ByPrecision() const

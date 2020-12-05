@@ -15,13 +15,10 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#include <functional>
 #include <string>
 
 #include "utils/common/branchpred.h"
 #include "mcs_decimal.h"
-#include "exceptclasses.h"
-#include "dataconvert.h"
 
 namespace datatypes
 {
@@ -31,19 +28,16 @@ namespace datatypes
         int128_t quot;
         int128_t rem;
         lldiv_t_128() : quot(0), rem(0) {}
+        lldiv_t_128(const int128_t& a_quot, const int128_t& a_rem)
+            : quot(a_quot), rem(a_rem) {}
     };
 
     inline lldiv_t_128 lldiv128(const int128_t& dividend, const int128_t& divisor)
     {
-        lldiv_t_128 res;
-
         if (UNLIKELY(divisor == 0) || UNLIKELY(dividend == 0))
-            return res;
+            return lldiv_t_128();
 
-        res.quot = dividend / divisor;
-        res.rem = dividend % divisor;
-
-        return res;
+        return lldiv_t_128(dividend / divisor, dividend % divisor);
     }
 
     template<typename BinaryOperation,
