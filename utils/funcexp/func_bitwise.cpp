@@ -56,7 +56,7 @@ bool getUIntValFromParm(
     const execplan::SPTP& parm,
     uint64_t& value,
     bool& isNull,
-    const string& timeZone,
+    const funcexp::Func& thisFunc,
     bool& isBigVal,
     int128_t& bigval)
 {
@@ -180,7 +180,7 @@ bool getUIntValFromParm(
             int64_t time = parm->data()->getTimestampIntVal(row, isNull);
 
             TimeStamp dt(time);
-            value = dt.convertToMySQLint(timeZone);
+            value = dt.convertToMySQLint(thisFunc.timeZone());
         }
         break;
 
@@ -235,8 +235,8 @@ int64_t Func_bitand::getIntVal(Row& row,
     bool isBigVal1;
     bool isBigVal2;
 
-    if (!getUIntValFromParm(row, parm[0], val1, isNull, timeZone(), isBigVal1, bigval1) ||
-            !getUIntValFromParm(row, parm[1], val2, isNull, timeZone(), isBigVal2, bigval2))
+    if (!getUIntValFromParm(row, parm[0], val1, isNull, *this, isBigVal1, bigval1) ||
+            !getUIntValFromParm(row, parm[1], val2, isNull, *this, isBigVal2, bigval2))
     {
         std::ostringstream oss;
         oss << "bitand: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
@@ -295,8 +295,8 @@ int64_t Func_leftshift::getIntVal(Row& row,
     bool isBigVal1;
     bool isBigVal2;
 
-    if (!getUIntValFromParm(row, parm[0], val1, isNull, timeZone(), isBigVal1, bigval1) ||
-            !getUIntValFromParm(row, parm[1], val2, isNull, timeZone(), isBigVal2, bigval2))
+    if (!getUIntValFromParm(row, parm[0], val1, isNull, *this, isBigVal1, bigval1) ||
+            !getUIntValFromParm(row, parm[1], val2, isNull, *this, isBigVal2, bigval2))
     {
         std::ostringstream oss;
         oss << "leftshift: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
@@ -355,8 +355,8 @@ int64_t Func_rightshift::getIntVal(Row& row,
     bool isBigVal1;
     bool isBigVal2;
 
-    if (!getUIntValFromParm(row, parm[0], val1, isNull, timeZone(), isBigVal1, bigval1) ||
-            !getUIntValFromParm(row, parm[1], val2, isNull, timeZone(), isBigVal2, bigval2))
+    if (!getUIntValFromParm(row, parm[0], val1, isNull, *this, isBigVal1, bigval1) ||
+            !getUIntValFromParm(row, parm[1], val2, isNull, *this, isBigVal2, bigval2))
     {
         std::ostringstream oss;
         oss << "rightshift: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
@@ -415,8 +415,8 @@ int64_t Func_bitor::getIntVal(Row& row,
     bool isBigVal1;
     bool isBigVal2;
 
-    if (!getUIntValFromParm(row, parm[0], val1, isNull, timeZone(), isBigVal1, bigval1) ||
-            !getUIntValFromParm(row, parm[1], val2, isNull, timeZone(), isBigVal2, bigval2))
+    if (!getUIntValFromParm(row, parm[0], val1, isNull, *this, isBigVal1, bigval1) ||
+            !getUIntValFromParm(row, parm[1], val2, isNull, *this, isBigVal2, bigval2))
     {
         std::ostringstream oss;
         oss << "bitor: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
@@ -483,8 +483,8 @@ int64_t Func_bitxor::getIntVal(Row& row,
     bool isBigVal1;
     bool isBigVal2;
 
-    if (!getUIntValFromParm(row, parm[0], val1, isNull, timeZone(), isBigVal1, bigval1) ||
-            !getUIntValFromParm(row, parm[1], val2, isNull, timeZone(), isBigVal2, bigval2))
+    if (!getUIntValFromParm(row, parm[0], val1, isNull, *this, isBigVal1, bigval1) ||
+            !getUIntValFromParm(row, parm[1], val2, isNull, *this, isBigVal2, bigval2))
     {
         std::ostringstream oss;
         oss << "bitxor: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
@@ -554,7 +554,7 @@ int64_t Func_bit_count::getIntVal(Row& row,
     int128_t bigval = 0;
     bool isBigVal;
 
-    if (!getUIntValFromParm(row, parm[0], val, isNull, timeZone(), isBigVal, bigval))
+    if (!getUIntValFromParm(row, parm[0], val, isNull, *this, isBigVal, bigval))
     {
         std::ostringstream oss;
         oss << "bit_count: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
