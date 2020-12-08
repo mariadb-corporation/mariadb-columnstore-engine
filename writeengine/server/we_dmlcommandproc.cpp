@@ -578,24 +578,18 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
     if (idbdatafile::IDBPolicy::useHdfs())
     {
+        // XXX THIS IS WRONG
         //save the extent info to mark them invalid, after flush, the meta file will be gone.
-        std::tr1::unordered_map<TxnID, SP_TxnLBIDRec_t>::iterator mapIter;
         std::tr1::unordered_map<TxnID, SP_TxnLBIDRec_t>	m_txnLBIDMap = fWEWrapper.getTxnMap();
 
         try
         {
-            mapIter = m_txnLBIDMap.find(txnid.id);
+            auto mapIter = m_txnLBIDMap.find(txnid.id);
 
             if (mapIter != m_txnLBIDMap.end())
             {
                 SP_TxnLBIDRec_t spTxnLBIDRec = (*mapIter).second;
-                std::tr1::unordered_map<BRM::LBID_t, uint32_t> ::iterator listIter = spTxnLBIDRec->m_LBIDMap.begin();
-
-                while (listIter != spTxnLBIDRec->m_LBIDMap.end())
-                {
-                    lbidList.push_back(listIter->first);
-                    listIter++;
-                }
+		lbidList = spTxnLBIDRec->m_LBIDs;
             }
         }
         catch (...) {}
@@ -3800,23 +3794,16 @@ uint8_t WE_DMLCommandProc::getWrittenLbids(messageqcpp::ByteStream& bs, std::str
     vector<LBID_t> lbidList;
 
     bs >> txnId;
-    std::tr1::unordered_map<TxnID, SP_TxnLBIDRec_t>::iterator mapIter;
     std::tr1::unordered_map<TxnID, SP_TxnLBIDRec_t>  m_txnLBIDMap = fWEWrapper.getTxnMap();
 
     try
     {
-        mapIter = m_txnLBIDMap.find(txnId);
+        auto mapIter = m_txnLBIDMap.find(txnId);
 
         if (mapIter != m_txnLBIDMap.end())
         {
             SP_TxnLBIDRec_t spTxnLBIDRec = (*mapIter).second;
-            std::tr1::unordered_map<BRM::LBID_t, uint32_t> ::iterator listIter = spTxnLBIDRec->m_LBIDMap.begin();
-
-            while (listIter != spTxnLBIDRec->m_LBIDMap.end())
-            {
-                lbidList.push_back(listIter->first);
-                listIter++;
-            }
+	    lbidList = spTxnLBIDRec->m_LBIDs;
         }
     }
     catch (...) {}
@@ -3888,24 +3875,19 @@ uint8_t WE_DMLCommandProc::processFlushFiles(messageqcpp::ByteStream& bs, std::s
 
     if (idbdatafile::IDBPolicy::useHdfs())
     {
+        // XXX THIS IS WRONG!!!
         //save the extent info to mark them invalid, after flush, the meta file will be gone.
-        std::tr1::unordered_map<TxnID, SP_TxnLBIDRec_t>::iterator mapIter;
         std::tr1::unordered_map<TxnID, SP_TxnLBIDRec_t>  m_txnLBIDMap = fWEWrapper.getTxnMap();
 
         try
         {
-            mapIter = m_txnLBIDMap.find(txnId);
+            auto mapIter = m_txnLBIDMap.find(txnId);
 
             if (mapIter != m_txnLBIDMap.end())
             {
                 SP_TxnLBIDRec_t spTxnLBIDRec = (*mapIter).second;
-                std::tr1::unordered_map<BRM::LBID_t, uint32_t> ::iterator listIter = spTxnLBIDRec->m_LBIDMap.begin();
+                lbidList = spTxnLBIDRec->m_LBIDs;
 
-                while (listIter != spTxnLBIDRec->m_LBIDMap.end())
-                {
-                    lbidList.push_back(listIter->first);
-                    listIter++;
-                }
             }
         }
         catch (...) {}
