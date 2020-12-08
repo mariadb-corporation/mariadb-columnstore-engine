@@ -1920,7 +1920,7 @@ maria_declare_plugin(columnstore)
   MCSVERSIONHEX,
   mcs_status_variables,          /* status variables */
   mcs_system_variables,          /* system variables */
-  MCSVERSION,                    /* string version */
+  PLUGIN_COLUMNSTORE_VERSION,    /* string version */
   COLUMNSTORE_MATURITY           /* maturity */
 },
 {
@@ -1936,7 +1936,7 @@ maria_declare_plugin(columnstore)
     MCSVERSIONHEX,
     NULL,
     NULL,
-    MCSVERSION,
+    PLUGIN_COLUMNSTORE_VERSION,
     COLUMNSTORE_MATURITY
 },
 {
@@ -1952,7 +1952,7 @@ maria_declare_plugin(columnstore)
     MCSVERSIONHEX,
     NULL,
     NULL,
-    MCSVERSION,
+    PLUGIN_COLUMNSTORE_VERSION,
     COLUMNSTORE_MATURITY
 },
 {
@@ -1968,7 +1968,7 @@ maria_declare_plugin(columnstore)
     MCSVERSIONHEX,
     NULL,
     NULL,
-    MCSVERSION,
+    PLUGIN_COLUMNSTORE_VERSION,
     COLUMNSTORE_MATURITY
 },
 {
@@ -1984,7 +1984,7 @@ maria_declare_plugin(columnstore)
     MCSVERSIONHEX,
     NULL,
     NULL,
-    MCSVERSION,
+    PLUGIN_COLUMNSTORE_VERSION,
     COLUMNSTORE_MATURITY
 }
 maria_declare_plugin_end;
