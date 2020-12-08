@@ -117,6 +117,9 @@ protected:
     const struct charset_info_st * mCharset;
 public:
     Charset(CHARSET_INFO & cs) :mCharset(&cs) { }
+    Charset(CHARSET_INFO *cs)
+       :mCharset(cs ? cs : &my_charset_bin)
+    { }
     Charset(uint32_t charsetNumber);
     CHARSET_INFO & getCharset() const { return *mCharset; }
     uint32_t hash(const char *data, uint64_t len) const

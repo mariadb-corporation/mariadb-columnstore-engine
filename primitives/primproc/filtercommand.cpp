@@ -27,6 +27,7 @@
 #include "dictstep.h"
 #include "filtercommand.h"
 #include "dataconvert.h"
+#include "mcs_string.h"
 
 using namespace std;
 using namespace messageqcpp;
@@ -487,42 +488,60 @@ void StrFilterCmd::setCompareFunc(uint32_t columns)
 }
 
 
+// TODO:
+// Move this function as a method to class Charset
+// and reuse it in:
+// - colCompareStr() in primitives/linux-port/column.cpp
+// - compareStr()    in dbcon/joblist/lbidlist.cpp
+//
+// Note, the COMPARE_XXX constant should be put into
+// a globally visible  enum first, e.g. utils/common/mcs_basic_types.h
+// and all "fBOP" members in all classes should be changed to this enum.
+
+static inline bool compareString(const datatypes::Charset &cs,
+                                 const utils::ConstString &s0,
+                                 const utils::ConstString &s1,
+                                 uint8_t fBOP)
+{
+    int cmp = cs.strnncollsp(s0, s1);
+    switch (fBOP)
+    {
+        case COMPARE_GT:
+            return cmp > 0;
+
+        case COMPARE_LT:
+            return cmp < 0;
+
+        case COMPARE_EQ:
+            return cmp == 0;
+
+        case COMPARE_GE:
+            return cmp >= 0;
+
+        case COMPARE_LE:
+            return cmp <= 0;
+
+        case COMPARE_NE:
+            return cmp != 0;
+
+        default:
+            break;
+    }
+    return false;
+}
+
+
 bool StrFilterCmd::compare_cc(uint64_t i, uint64_t j)
 {
     if (execplan::isNull(bpp->fFiltCmdValues[0][i], leftColType) ||
             execplan::isNull(bpp->fFiltCmdValues[1][j], rightColType))
         return false;
 
-    switch (fBOP)
-    {
-        case COMPARE_GT:
-            return uint64ToStr(bpp->fFiltCmdValues[0][i]) > uint64ToStr(bpp->fFiltCmdValues[1][j]);
-            break;
-
-        case COMPARE_LT:
-            return uint64ToStr(bpp->fFiltCmdValues[0][i]) < uint64ToStr(bpp->fFiltCmdValues[1][j]);
-            break;
-
-        case COMPARE_EQ:
-            return uint64ToStr(bpp->fFiltCmdValues[0][i]) == uint64ToStr(bpp->fFiltCmdValues[1][j]);
-            break;
-
-        case COMPARE_GE:
-            return uint64ToStr(bpp->fFiltCmdValues[0][i]) >= uint64ToStr(bpp->fFiltCmdValues[1][j]);
-            break;
-
-        case COMPARE_LE:
-            return uint64ToStr(bpp->fFiltCmdValues[0][i]) <= uint64ToStr(bpp->fFiltCmdValues[1][j]);
-            break;
-
-        case COMPARE_NE:
-            return uint64ToStr(bpp->fFiltCmdValues[0][i]) != uint64ToStr(bpp->fFiltCmdValues[1][j]);
-            break;
-
-        default:
-            return false;
-            break;
-    }
+    datatypes::Charset    cs(leftColType.getCharset());
+    datatypes::TCharShort s0(bpp->fFiltCmdValues[0][i]);
+    datatypes::TCharShort s1(bpp->fFiltCmdValues[1][j]);
+    return compareString(cs, static_cast<utils::ConstString>(s0),
+                             static_cast<utils::ConstString>(s1), fBOP);
 }
 
 
@@ -532,36 +551,10 @@ bool StrFilterCmd::compare_ss(uint64_t i, uint64_t j)
             bpp->fFiltStrValues[0][i] == joblist::CPNULLSTRMARK || bpp->fFiltStrValues[1][j] == joblist::CPNULLSTRMARK)
         return false;
 
-    switch (fBOP)
-    {
-        case COMPARE_GT:
-            return bpp->fFiltStrValues[0][i] > bpp->fFiltStrValues[1][j];
-            break;
-
-        case COMPARE_LT:
-            return bpp->fFiltStrValues[0][i] < bpp->fFiltStrValues[1][j];
-            break;
-
-        case COMPARE_EQ:
-            return bpp->fFiltStrValues[0][i] == bpp->fFiltStrValues[1][j];
-            break;
-
-        case COMPARE_GE:
-            return bpp->fFiltStrValues[0][i] >= bpp->fFiltStrValues[1][j];
-            break;
-
-        case COMPARE_LE:
-            return bpp->fFiltStrValues[0][i] <= bpp->fFiltStrValues[1][j];
-            break;
-
-        case COMPARE_NE:
-            return bpp->fFiltStrValues[0][i] != bpp->fFiltStrValues[1][j];
-            break;
-
-        default:
-            return false;
-            break;
-    }
+    datatypes::Charset cs(leftColType.getCharset());
+    utils::ConstString s0(utils::ConstString(bpp->fFiltStrValues[0][i]));
+    utils::ConstString s1(utils::ConstString(bpp->fFiltStrValues[1][j]));
+    return compareString(cs, s0, s1, fBOP);
 }
 
 
@@ -571,39 +564,10 @@ bool StrFilterCmd::compare_cs(uint64_t i, uint64_t j)
             bpp->fFiltStrValues[1][j] == "" || bpp->fFiltStrValues[1][j] == joblist::CPNULLSTRMARK)
         return false;
 
-    int cmp = strncmp(reinterpret_cast<const char*>(&bpp->fFiltCmdValues[0][i]),
-                      bpp->fFiltStrValues[1][j].c_str(), fCharLength);
-
-    switch (fBOP)
-    {
-        case COMPARE_GT:
-            return (cmp > 0);
-            break;
-
-        case COMPARE_LT:
-            return (cmp < 0 || (cmp == 0 && fCharLength < bpp->fFiltStrValues[1][j].length()));
-            break;
-
-        case COMPARE_EQ:
-            return (cmp == 0 && fCharLength >= bpp->fFiltStrValues[1][j].length());
-            break;
-
-        case COMPARE_GE:
-            return (cmp > 0 || (cmp == 0 && fCharLength >= bpp->fFiltStrValues[1][j].length()));
-            break;
-
-        case COMPARE_LE:
-            return (cmp <= 0);
-            break;
-
-        case COMPARE_NE:
-            return (cmp != 0 || fCharLength < bpp->fFiltStrValues[1][j].length());
-            break;
-
-        default:
-            return false;
-            break;
-    }
+    datatypes::Charset    cs(leftColType.getCharset());
+    datatypes::TCharShort s0(bpp->fFiltCmdValues[0][i]);
+    utils::ConstString    s1(bpp->fFiltStrValues[1][j]);
+    return compareString(cs, static_cast<utils::ConstString>(s0), s1, fBOP);
 }
 
 
@@ -613,39 +577,10 @@ bool StrFilterCmd::compare_sc(uint64_t i, uint64_t j)
             execplan::isNull(bpp->fFiltCmdValues[1][j], rightColType))
         return false;
 
-    int cmp = strncmp(bpp->fFiltStrValues[0][i].c_str(),
-                      reinterpret_cast<const char*>(&bpp->fFiltCmdValues[1][j]), fCharLength);
-
-    switch (fBOP)
-    {
-        case COMPARE_GT:
-            return (cmp > 0 || (cmp == 0 && bpp->fFiltStrValues[0][i].length() > fCharLength));
-            break;
-
-        case COMPARE_LT:
-            return (cmp < 0);
-            break;
-
-        case COMPARE_EQ:
-            return (cmp == 0 && bpp->fFiltStrValues[0][i].length() <= fCharLength);
-            break;
-
-        case COMPARE_GE:
-            return (cmp >= 0);
-            break;
-
-        case COMPARE_LE:
-            return (cmp < 0 || (cmp == 0 && bpp->fFiltStrValues[0][i].length() <= fCharLength));
-            break;
-
-        case COMPARE_NE:
-            return (cmp != 0 || bpp->fFiltStrValues[0][i].length() > fCharLength);
-            break;
-
-        default:
-            return false;
-            break;
-    }
+    datatypes::Charset    cs(leftColType.getCharset());
+    utils::ConstString    s0(bpp->fFiltStrValues[0][i]);
+    datatypes::TCharShort s1(bpp->fFiltCmdValues[1][j]);
+    return compareString(cs, s0, static_cast<utils::ConstString>(s1), fBOP);
 }
 
 
