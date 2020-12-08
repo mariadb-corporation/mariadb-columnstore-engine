@@ -2395,6 +2395,18 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
                 oss << ", ";
             oss << (*field)->field_name.str << " " << datatype.ptr();
 
+
+            if ((*field)->has_charset())
+            {
+                const CHARSET_INFO* field_cs = (*field)->charset();
+                if (field_cs &&
+                    (!share->table_charset ||
+                     field_cs->number != share->table_charset->number))
+                {
+                    oss << " CHARACTER SET " << field_cs->csname;
+                }
+            }
+
             if (flags & NOT_NULL_FLAG)
                 oss << " NOT NULL";
 
@@ -2402,12 +2414,6 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
             if (get_field_default_value(thd, *field, &def_value, true))
             {
                 oss << " DEFAULT " << def_value.c_ptr();
-            }
-
-            const CHARSET_INFO* field_cs = (*field)->charset();
-            if (field_cs && (!share->table_charset || field_cs->number != share->table_charset->number))
-            {
-                oss << " CHARACTER SET " << field_cs->csname;
             }
 
             if ((*field)->comment.length)
