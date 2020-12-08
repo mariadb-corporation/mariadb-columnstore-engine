@@ -16,35 +16,30 @@
    MA 02110-1301, USA. */
 
 
-#ifndef MARIADB_CONSTSTRING_H
-#define MARIADB_CONSTSTRING_H
+#ifndef MCS_DATATYPES_STRING_H
+#define MCS_DATATYPES_STRING_H
 
+#include "conststring.h"
 
-namespace utils
+namespace datatypes
 {
 
-class ConstString
+class TCharShort
 {
-  const char *mStr;
-  size_t mLength;
+    int64_t mValue;
 public:
-  ConstString(const char *str, size_t length)
-      :mStr(str), mLength(length)
-  { }
-  explicit ConstString(const std::string &str)
-      :mStr(str.data()), mLength(str.length())
-  { }
-  const char *str() const { return mStr; }
-  size_t length() const { return mLength; }
-  ConstString & rtrimZero()
-  {
-    for ( ; mLength && mStr[mLength - 1] == '\0'; mLength--)
+    TCharShort(int64_t value)
+        :mValue(value)
     { }
-    return *this;
-  }
+    explicit operator utils::ConstString() const
+    {
+      utils::ConstString res = utils::ConstString((const char *) &mValue, 8);
+      return res.rtrimZero();
+    }
 };
 
 
-} // namespace utils
+} // namespace datatypes
 
-#endif // MARIADB_CONSTSTRING_H
+
+#endif // MCS_DATATYPES_STRING_H
