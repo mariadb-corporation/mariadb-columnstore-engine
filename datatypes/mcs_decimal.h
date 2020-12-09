@@ -374,6 +374,44 @@ class Decimal: public TSInt128
                                   TSInt128(s128Value % scaleDivisor));
         }
 
+        // @param - determines what is the middle digit to make floor or ceil
+        // rounding
+        // This method returns a pair that consist of:
+        // -    uint64_t for int128_t decimal to follow
+        //      strange MDB type cast that casts to uint64_t if the value is positive
+        //      and to int64_t if the value is negative.
+        // -    bool to signal if the value is negative
+        inline std::pair<uint64_t, bool> strangeMDBTypeCast(uint8_t roundingFactor) const
+        {
+            TSInt128 integralValue  = getPosNegRoundedIntegralPart(roundingFactor);
+            return std::make_pair(integralValue.strangeMDBTypeCast(),
+                                  integralValue.isNegative());
+        }
+
+        inline std::pair<uint64_t, bool> strangeMDBTypeCastTUInt64(uint8_t roundingFactor) const
+        {
+            // A little bit of ugly magic tricks
+            if (utils::is_negative(value))
+            {
+                if (LIKELY(value != std::numeric_limits<int64_t>::min()))
+                {
+                    uint64_t integralValue = getPosNegRoundedIntegralPartTSInt64(roundingFactor) * -1;
+                    return std::make_pair(integralValue, true);
+                }
+                else
+                {
+                    uint64_t integralValue = static_cast<uint64_t>(INT64_MAX)+1;
+                    return std::make_pair(integralValue, true);
+                }
+            
+            }
+            else
+            {
+                return std::make_pair(getPosNegRoundedIntegralPartTSInt64(roundingFactor),
+                                      false);
+            }
+        }
+
         inline std::tuple<TSInt128, TSInt128, TSInt128> getIntegralFractionalAndDivisor() const
         {
             int128_t scaleDivisor;
@@ -427,6 +465,24 @@ class Decimal: public TSInt128
 
             return TSInt128(roundedValue);
         }
+
+        inline int64_t getPosNegRoundedIntegralPartTSInt64(const uint8_t roundingFactor = 0) const
+        {
+            if (!scale)
+                return value;
+            // this method mustn't see a scale >= 19
+            idbassert(scale < 19);
+            int64_t roundedValue = value / (int64_t)mcs_pow_10[scale];
+            int32_t leftO =(value - roundedValue * mcs_pow_10[scale]) / mcs_pow_10[scale - 1];
+
+            if (utils::is_nonnegative(roundedValue) && leftO > roundingFactor)
+                roundedValue++;
+
+            if (utils::is_negative(roundedValue) && leftO < -roundingFactor)
+                roundedValue--;
+            return roundedValue;
+        }
+
 
         // MOD operator for an integer divisor to be used
         // for integer rhs

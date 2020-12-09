@@ -242,6 +242,18 @@ class TSInt128
       return static_cast<uint64_t>(s128Value);
     }
 
+    // Return positive value up to 2^64 and reversed negative value up to -2^63.
+    // The caller should deduce a sign of the value on his own.
+    inline uint64_t strangeMDBTypeCast() const
+    {
+      // A little bit of ugly magic tricks
+      if (s128Value < static_cast<int128_t>(INT64_MIN))
+          return static_cast<uint64_t>(INT64_MAX)+1;
+      if (s128Value > static_cast<int128_t>(UINT64_MAX))
+          return UINT64_MAX;
+      return (isNegative()) ? -s128Value : s128Value;
+    }
+
     inline operator TFloat128() const
     {
       return toTFloat128();
@@ -275,6 +287,11 @@ class TSInt128
     inline const int128_t& getValue() const
     {
       return s128Value;
+    }
+    
+    inline bool isNegative() const
+    {
+      return s128Value < 0;
     }
 
     //    print int128_t parts represented as PODs

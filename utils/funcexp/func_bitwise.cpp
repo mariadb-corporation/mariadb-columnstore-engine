@@ -41,6 +41,9 @@ using namespace logging;
 #include "dataconvert.h"
 using namespace dataconvert;
 
+#include "functionhelper.h"
+#include "mcs_functional.h"
+
 namespace
 {
 using namespace funcexp;
@@ -51,17 +54,19 @@ using namespace funcexp;
 // here.  This same method is potentially useful in other methods
 // and could be extracted into a utility class with its own header
 // if that is the case - this is left as future exercise
-bool getUIntValFromParm(
+uint64_t getUIntValFromParm(
     Row&  row,
     const execplan::SPTP& parm,
-    uint64_t& value,
     bool& isNull,
-    const funcexp::Func& thisFunc,
-    bool& isBigVal,
-    int128_t& bigval)
+    bool& isNegative,
+    bool& isUnknown,
+    const funcexp::Func& thisFunc)
 {
-    isBigVal = false;
-
+    if (isNull)
+    {
+        return 0;
+    }
+    
     switch (parm->data()->resultType().colDataType)
     {
         case execplan::CalpontSystemCatalog::BIGINT:
@@ -74,7 +79,7 @@ bool getUIntValFromParm(
         case execplan::CalpontSystemCatalog::UDOUBLE:
         case execplan::CalpontSystemCatalog::UFLOAT:
         {
-            value = parm->data()->getIntVal(row, isNull);
+            return parm->data()->getIntVal(row, isNull);
         }
         break;
 
@@ -84,7 +89,7 @@ bool getUIntValFromParm(
         case execplan::CalpontSystemCatalog::UTINYINT:
         case execplan::CalpontSystemCatalog::USMALLINT:
         {
-            value = parm->data()->getUintVal(row, isNull);
+            return parm->data()->getUintVal(row, isNull);
         }
         break;
 
@@ -92,12 +97,7 @@ bool getUIntValFromParm(
         case execplan::CalpontSystemCatalog::CHAR:
         case execplan::CalpontSystemCatalog::TEXT:
         {
-            value = parm->data()->getIntVal(row, isNull);
-
-            if (isNull)
-            {
-                isNull = true;
-            }
+            return parm->data()->getIntVal(row, isNull);
         }
         break;
 
@@ -106,53 +106,17 @@ bool getUIntValFromParm(
         {
             IDB_Decimal d = parm->data()->getDecimalVal(row, isNull);
 
-            if (parm->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
-            {
-                isBigVal = true;
+            uint8_t roundingFactor = 4;
+            bool isUnsignedDecimal = parm->data()->resultType().colDataType ==
+                                        execplan::CalpontSystemCatalog::UDECIMAL;
 
-                if (parm->data()->resultType().colDataType == execplan::CalpontSystemCatalog::UDECIMAL &&
-                        d.value < 0)
-                {
-                    bigval = 0;
-                    break;
-                }
+            auto methodPtr = (parm->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH) ?
+                                &datatypes::Decimal::strangeMDBTypeCast :
+                                &datatypes::Decimal::strangeMDBTypeCastTUInt64;
+            auto valueAndIsNegative = CALL_MEMBER_FN(d, methodPtr)(roundingFactor);
+            isNegative = valueAndIsNegative.second;
+            return (isUnsignedDecimal && isNegative) ? 0 : valueAndIsNegative.first;
 
-                int128_t scaleDivisor, scaleDivisor2;
-
-                datatypes::getScaleDivisor(scaleDivisor, d.scale);
-
-                scaleDivisor2 = (scaleDivisor <= 10) ? 1 : (scaleDivisor / 10);
-
-                int128_t tmpval = d.s128Value / scaleDivisor;
-                int128_t lefto = (d.s128Value - tmpval * scaleDivisor) / scaleDivisor2;
-
-                if (tmpval >= 0 && lefto > 4)
-                    tmpval++;
-
-                if (tmpval < 0 && lefto < -4)
-                    tmpval--;
-
-                bigval = tmpval;
-            }
-            else
-            {
-                if (parm->data()->resultType().colDataType == execplan::CalpontSystemCatalog::UDECIMAL &&
-                        d.value < 0)
-                {
-                    d.value = 0;
-                }
-                double dscale = d.scale;
-                int64_t tmpval = d.value / pow(10.0, dscale);
-                int lefto = (d.value - tmpval * pow(10.0, dscale)) / pow(10.0, dscale - 1);
-
-                if (tmpval >= 0 && lefto > 4)
-                    tmpval++;
-
-                if (tmpval < 0 && lefto < -4)
-                    tmpval--;
-
-                value = tmpval;
-            }
         }
         break;
 
@@ -161,7 +125,7 @@ bool getUIntValFromParm(
             int32_t time = parm->data()->getDateIntVal(row, isNull);
 
             Date d(time);
-            value = d.convertToMySQLint();
+            return d.convertToMySQLint();
         }
         break;
 
@@ -171,7 +135,7 @@ bool getUIntValFromParm(
 
             // @bug 4703 - missing year when convering to int
             DateTime dt(time);
-            value = dt.convertToMySQLint();
+            return dt.convertToMySQLint();
         }
         break;
 
@@ -180,7 +144,7 @@ bool getUIntValFromParm(
             int64_t time = parm->data()->getTimestampIntVal(row, isNull);
 
             TimeStamp dt(time);
-            value = dt.convertToMySQLint(thisFunc.timeZone());
+            return dt.convertToMySQLint(thisFunc.timeZone());
         }
         break;
 
@@ -189,18 +153,81 @@ bool getUIntValFromParm(
             int64_t time = parm->data()->getTimeIntVal(row, isNull);
 
             Time dt(time);
-            value = dt.convertToMySQLint();
+            return dt.convertToMySQLint();
         }
         break;
 
         default:
         {
-            return false;
+            isUnknown = true;
         }
     }
-
-    return true;
+    return 0;
 }
+
+void bitWiseExceptionHandler(const std::string& prefix,
+                             const CalpontSystemCatalog::ColType& colType)
+{
+    std::ostringstream oss;
+    oss << prefix << execplan::colDataTypeToString(colType.colDataType);
+    throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
+}
+
+template<typename Op>
+int64_t BitwiseFunctional(rowgroup::Row& row,
+                          FunctionParm& parm,
+                          const CalpontSystemCatalog::ColType& operationColType,
+                          bool& isNull,
+                          const funcexp::Func& callingFunc,
+                          const std::string& errorPrefix)
+{
+    if ( parm.size() < 2 )
+    {
+        isNull = true;
+        return 0;
+    }
+
+    bool isNegativeL = false, isNegativeR = false;
+    bool isUnknownL = false, isUnknownR = false;
+    uint64_t valL = getUIntValFromParm(row,
+                                       parm[0],
+                                       isNull,
+                                       isNegativeL,
+                                       isUnknownL,
+                                       callingFunc);
+    uint64_t valR = getUIntValFromParm(row,
+                                       parm[1],
+                                       isNull,
+                                       isNegativeR,
+                                       isUnknownR,
+                                       callingFunc);
+
+    if (isUnknownL || isUnknownR)
+    {
+        bitWiseExceptionHandler(errorPrefix, operationColType);
+    }
+    int64_t signL = (isNegativeL) ? -1 : 1;
+    int64_t signR = (isNegativeR) ? -1 : 1;
+
+    Op op;
+
+    return (int64_t)op(signL * valL, signR * valR);
+}
+
+inline int64_t bitCount(uint64_t val)
+{
+    // Refer to Hacker's Delight Chapter 5
+    // for the bit counting algo used here
+    val = val - ((val >> 1) & 0x5555555555555555);
+    val = (val & 0x3333333333333333) + ((val >> 2) & 0x3333333333333333);
+    val = (val + (val >> 4)) & 0x0F0F0F0F0F0F0F0F;
+    val = val + (val >> 8);
+    val = val + (val >> 16);
+    val = val + (val >> 32);
+
+    return (int64_t)(val & 0x000000000000007F);
+}
+
 }
 
 namespace funcexp
@@ -221,50 +248,13 @@ int64_t Func_bitand::getIntVal(Row& row,
                                bool& isNull,
                                CalpontSystemCatalog::ColType& operationColType)
 {
-    if ( parm.size() < 2 )
-    {
-        isNull = true;
-        return 0;
-    }
-
-    uint64_t val1 = 0;
-    uint64_t val2 = 0;
-
-    int128_t bigval1 = 0;
-    int128_t bigval2 = 0;
-    bool isBigVal1;
-    bool isBigVal2;
-
-    if (!getUIntValFromParm(row, parm[0], val1, isNull, *this, isBigVal1, bigval1) ||
-            !getUIntValFromParm(row, parm[1], val2, isNull, *this, isBigVal2, bigval2))
-    {
-        std::ostringstream oss;
-        oss << "bitand: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
-        throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
-    }
-
-    if (LIKELY(!isBigVal1 && !isBigVal2))
-    {
-        return val1 & val2;
-    }
-
-    // Type promotion to int128_t
-    if (!isBigVal1)
-        bigval1 = val1;
-
-    if (!isBigVal2)
-        bigval2 = val2;
-
-    int128_t res = bigval1 & bigval2;
-
-    if (res > static_cast<int128_t>(UINT64_MAX))
-        res = UINT64_MAX;
-    else if (res < static_cast<int128_t>(INT64_MIN))
-        res = INT64_MIN;
-
-    return (int64_t) res;
+    return BitwiseFunctional<std::bit_and<int64_t>>(row,
+                                                    parm,
+                                                    operationColType,
+                                                    isNull,
+                                                    *this,
+                                                    std::string("bitand: datatype of "));
 }
-
 
 //
 // LEFT SHIFT
@@ -281,48 +271,12 @@ int64_t Func_leftshift::getIntVal(Row& row,
                                   bool& isNull,
                                   CalpontSystemCatalog::ColType& operationColType)
 {
-    if ( parm.size() < 2 )
-    {
-        isNull = true;
-        return 0;
-    }
-
-    uint64_t val1 = 0;
-    uint64_t val2 = 0;
-
-    int128_t bigval1 = 0;
-    int128_t bigval2 = 0;
-    bool isBigVal1;
-    bool isBigVal2;
-
-    if (!getUIntValFromParm(row, parm[0], val1, isNull, *this, isBigVal1, bigval1) ||
-            !getUIntValFromParm(row, parm[1], val2, isNull, *this, isBigVal2, bigval2))
-    {
-        std::ostringstream oss;
-        oss << "leftshift: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
-        throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
-    }
-
-    if (LIKELY(!isBigVal1 && !isBigVal2))
-    {
-        return val1 << val2;
-    }
-
-    // Type promotion to int128_t
-    if (!isBigVal1)
-        bigval1 = val1;
-
-    if (!isBigVal2)
-        bigval2 = val2;
-
-    int128_t res = bigval1 << bigval2;
-
-    if (res > static_cast<int128_t>(UINT64_MAX))
-        res = UINT64_MAX;
-    else if (res < static_cast<int128_t>(INT64_MIN))
-        res = INT64_MIN;
-
-    return (int64_t) res;
+    return BitwiseFunctional<utils::left_shift<uint64_t>>(row,
+                                                         parm,
+                                                         operationColType,
+                                                         isNull,
+                                                         *this,
+                                                         std::string("leftshift: datatype of "));
 }
 
 
@@ -341,50 +295,13 @@ int64_t Func_rightshift::getIntVal(Row& row,
                                    bool& isNull,
                                    CalpontSystemCatalog::ColType& operationColType)
 {
-    if ( parm.size() < 2 )
-    {
-        isNull = true;
-        return 0;
-    }
-
-    uint64_t val1 = 0;
-    uint64_t val2 = 0;
-
-    int128_t bigval1 = 0;
-    int128_t bigval2 = 0;
-    bool isBigVal1;
-    bool isBigVal2;
-
-    if (!getUIntValFromParm(row, parm[0], val1, isNull, *this, isBigVal1, bigval1) ||
-            !getUIntValFromParm(row, parm[1], val2, isNull, *this, isBigVal2, bigval2))
-    {
-        std::ostringstream oss;
-        oss << "rightshift: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
-        throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
-    }
-
-    if (LIKELY(!isBigVal1 && !isBigVal2))
-    {
-        return val1 >> val2;
-    }
-
-    // Type promotion to int128_t
-    if (!isBigVal1)
-        bigval1 = val1;
-
-    if (!isBigVal2)
-        bigval2 = val2;
-
-    int128_t res = bigval1 >> bigval2;
-
-    if (res > static_cast<int128_t>(UINT64_MAX))
-        res = UINT64_MAX;
-    else if (res < static_cast<int128_t>(INT64_MIN))
-        res = INT64_MIN;
-
-    return (int64_t) res;
+    return BitwiseFunctional<utils::right_shift<uint64_t>>(row,
+                                                          parm,
+                                                          operationColType,
+                                                          isNull,
+                                                          *this,
+                                                          std::string("rightshift: datatype of "));
 }
-
 
 //
 // BIT OR
@@ -401,48 +318,12 @@ int64_t Func_bitor::getIntVal(Row& row,
                               bool& isNull,
                               CalpontSystemCatalog::ColType& operationColType)
 {
-    if ( parm.size() < 2 )
-    {
-        isNull = true;
-        return 0;
-    }
-
-    uint64_t val1 = 0;
-    uint64_t val2 = 0;
-
-    int128_t bigval1 = 0;
-    int128_t bigval2 = 0;
-    bool isBigVal1;
-    bool isBigVal2;
-
-    if (!getUIntValFromParm(row, parm[0], val1, isNull, *this, isBigVal1, bigval1) ||
-            !getUIntValFromParm(row, parm[1], val2, isNull, *this, isBigVal2, bigval2))
-    {
-        std::ostringstream oss;
-        oss << "bitor: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
-        throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
-    }
-
-    if (LIKELY(!isBigVal1 && !isBigVal2))
-    {
-        return val1 | val2;
-    }
-
-    // Type promotion to int128_t
-    if (!isBigVal1)
-        bigval1 = val1;
-
-    if (!isBigVal2)
-        bigval2 = val2;
-
-    int128_t res = bigval1 | bigval2;
-
-    if (res > static_cast<int128_t>(UINT64_MAX))
-        res = UINT64_MAX;
-    else if (res < static_cast<int128_t>(INT64_MIN))
-        res = INT64_MIN;
-
-    return (int64_t) res;
+    return BitwiseFunctional<std::bit_or<uint64_t>>(row,
+                                                   parm,
+                                                   operationColType,
+                                                   isNull,
+                                                   *this,
+                                                   std::string("bitor: datatype of "));
 }
 
 uint64_t Func_bitor::getUintVal(rowgroup::Row& row,
@@ -469,48 +350,12 @@ int64_t Func_bitxor::getIntVal(Row& row,
                                bool& isNull,
                                CalpontSystemCatalog::ColType& operationColType)
 {
-    if ( parm.size() < 2 )
-    {
-        isNull = true;
-        return 0;
-    }
-
-    uint64_t val1 = 0;
-    uint64_t val2 = 0;
-
-    int128_t bigval1 = 0;
-    int128_t bigval2 = 0;
-    bool isBigVal1;
-    bool isBigVal2;
-
-    if (!getUIntValFromParm(row, parm[0], val1, isNull, *this, isBigVal1, bigval1) ||
-            !getUIntValFromParm(row, parm[1], val2, isNull, *this, isBigVal2, bigval2))
-    {
-        std::ostringstream oss;
-        oss << "bitxor: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
-        throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
-    }
-
-    if (LIKELY(!isBigVal1 && !isBigVal2))
-    {
-        return val1 ^ val2;
-    }
-
-    // Type promotion to int128_t
-    if (!isBigVal1)
-        bigval1 = val1;
-
-    if (!isBigVal2)
-        bigval2 = val2;
-
-    int128_t res = bigval1 ^ bigval2;
-
-    if (res > static_cast<int128_t>(UINT64_MAX))
-        res = UINT64_MAX;
-    else if (res < static_cast<int128_t>(INT64_MIN))
-        res = INT64_MIN;
-
-    return (int64_t) res;
+    return BitwiseFunctional<std::bit_xor<int64_t>>(row,
+                                                    parm,
+                                                    operationColType,
+                                                    isNull,
+                                                    *this,
+                                                    std::string("bitxor: datatype of "));
 }
 
 
@@ -524,20 +369,6 @@ CalpontSystemCatalog::ColType Func_bit_count::operationType( FunctionParm& fp, C
     return resultType;
 }
 
-inline int64_t bitCount(uint64_t val)
-{
-    // Refer to Hacker's Delight Chapter 5
-    // for the bit counting algo used here
-    val = val - ((val >> 1) & 0x5555555555555555);
-    val = (val & 0x3333333333333333) + ((val >> 2) & 0x3333333333333333);
-    val = (val + (val >> 4)) & 0x0F0F0F0F0F0F0F0F;
-    val = val + (val >> 8);
-    val = val + (val >> 16);
-    val = val + (val >> 32);
-
-    return (int64_t)(val & 0x000000000000007F);
-}
-
 int64_t Func_bit_count::getIntVal(Row& row,
                                   FunctionParm& parm,
                                   bool& isNull,
@@ -549,27 +380,21 @@ int64_t Func_bit_count::getIntVal(Row& row,
         return 0;
     }
 
-    uint64_t val = 0;
-
-    int128_t bigval = 0;
-    bool isBigVal;
-
-    if (!getUIntValFromParm(row, parm[0], val, isNull, *this, isBigVal, bigval))
+    bool isNegative = false, isUnknown = false;
+    uint64_t val = getUIntValFromParm(row,
+                                      parm[0],
+                                      isNull,
+                                      isNegative,
+                                      isUnknown,
+                                      *this);
+    if (isUnknown)
     {
-        std::ostringstream oss;
-        oss << "bit_count: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
-        throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
+        bitWiseExceptionHandler(std::string("bit_count: datatype of "),
+                                operationColType);
     }
+    int64_t sign = (isNegative) ? -1 : 1;
 
-    if (LIKELY(!isBigVal))
-    {
-        return bitCount(val);
-    }
-    else
-    {
-        return (bitCount(*reinterpret_cast<uint64_t*>(&bigval)) +
-                bitCount(*(reinterpret_cast<uint64_t*>(&bigval) + 1)));
-    }
+    return bitCount(val * sign);
 }
 
 
