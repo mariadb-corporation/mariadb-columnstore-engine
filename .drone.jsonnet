@@ -1,13 +1,13 @@
 local platforms = {
   develop: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
   'develop-1.5': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
-  'columnstore-1.5.4-1': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
+  'columnstore-5.5.1-1': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
 };
 
 local server_ref_map = {
   develop: '10.6 https://github.com/MariaDB/server',
   'develop-1.5': '10.5 https://github.com/MariaDB/server',
-  'columnstore-1.5.4-1': '10.5.6-4 https://github.com/mariadb-corporation/MariaDBEnterprise',
+  'columnstore-5.5.1-1': '10.5-enterprise https://github.com/mariadb-corporation/MariaDBEnterprise',
 };
 
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
@@ -21,7 +21,7 @@ local platformMap(branch, platform) =
   local branch_cmakeflags_map = {
     develop: ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
     'develop-1.5': ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
-    'columnstore-1.5.4-1': ' -DBUILD_CONFIG=enterprise -DWITH_WSREP=OFF',
+    'columnstore-5.5.1-1': ' -DBUILD_CONFIG=enterprise -DWITH_WSREP=OFF',
   };
 
   local platform_map = {
@@ -384,23 +384,12 @@ local FinalPipeline(branch, event) = {
 
 [
   Pipeline(b, p, e)
-  for b in ['develop', 'develop-1.5']
+  for b in ['develop', 'develop-1.5', 'columnstore-5.5.1-1']
   for p in platforms[b]
   for e in ['pull_request', 'cron', 'custom']
 ] +
 [
   FinalPipeline(b, e)
-  for b in ['develop', 'develop-1.5']
+  for b in ['develop', 'develop-1.5', 'columnstore-5.5.1-1']
   for e in ['pull_request', 'cron', 'custom']
-] +
-[
-  Pipeline(b, p, e)
-  for b in ['columnstore-1.5.4-1']
-  for p in platforms[b]
-  for e in ['pull_request', 'cron', 'custom', 'push']
-] +
-[
-  FinalPipeline(b, e)
-  for b in ['columnstore-1.5.4-1']
-  for e in ['pull_request', 'cron', 'custom', 'push']
 ]
