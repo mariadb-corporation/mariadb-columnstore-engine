@@ -20,6 +20,7 @@
 #define MCS_DATATYPES_STRING_H
 
 #include "conststring.h"
+#include "collation.h"
 
 namespace datatypes
 {
@@ -35,6 +36,13 @@ public:
     {
       utils::ConstString res = utils::ConstString((const char *) &mValue, 8);
       return res.rtrimZero();
+    }
+    static int strnncollsp(const datatypes::Charset &cs, int64_t a, int64_t b)
+    {
+      datatypes::TCharShort sa(a);
+      datatypes::TCharShort sb(b);
+      return cs.strnncollsp(static_cast<utils::ConstString>(sa),
+                            static_cast<utils::ConstString>(sb));
     }
 };
 
