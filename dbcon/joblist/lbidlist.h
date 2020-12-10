@@ -93,7 +93,7 @@ public:
                    execplan::CalpontSystemCatalog::ColDataType type);
 
     void UpdateMinMax(int64_t min, int64_t max, int64_t lbid,
-                      execplan::CalpontSystemCatalog::ColDataType type, bool validData = true);
+                      const execplan::CalpontSystemCatalog::ColType &type, bool validData = true);
 
     void UpdateAllPartitionInfo();
 
@@ -107,10 +107,10 @@ public:
                                   const uint8_t BOP);
 
     bool checkSingleValue(int64_t min, int64_t max, int64_t value,
-                          execplan::CalpontSystemCatalog::ColDataType type);
+                          const execplan::CalpontSystemCatalog::ColType &type);
 
     bool checkRangeOverlap(int64_t min, int64_t max, int64_t tmin, int64_t tmax,
-                           execplan::CalpontSystemCatalog::ColDataType type);
+                           const execplan::CalpontSystemCatalog::ColType &type);
 
     // check the column data type and the column size to determine if it
     // is a data type  to apply casual paritioning.

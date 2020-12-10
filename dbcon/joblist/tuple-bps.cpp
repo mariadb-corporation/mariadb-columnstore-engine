@@ -2344,7 +2344,7 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
 
                 for (i = 0; i < size; i++)
                 {
-                    lbidList->UpdateMinMax(cpv[i].min, cpv[i].max, cpv[i].LBID, fColType.colDataType,
+                    lbidList->UpdateMinMax(cpv[i].min, cpv[i].max, cpv[i].LBID, fColType,
                                            cpv[i].valid);
                 }
 
@@ -3222,14 +3222,14 @@ void TupleBPS::addCPPredicates(uint32_t OID, const vector<int64_t>& vals, bool i
                 {
                     if (isRange)
                         runtimeCPFlags[j] = ll.checkRangeOverlap(min, max, vals[0], vals[1],
-                                            cmd->getColType().colDataType) && runtimeCPFlags[j];
+                                            cmd->getColType()) && runtimeCPFlags[j];
                     else
                     {
                         intersection = false;
 
                         for (k = 0; k < vals.size(); k++)
                             intersection = intersection ||
-                                           ll.checkSingleValue(min, max, vals[k], cmd->getColType().colDataType);
+                                           ll.checkSingleValue(min, max, vals[k], cmd->getColType());
 
                         runtimeCPFlags[j] = intersection && runtimeCPFlags[j];
                     }
