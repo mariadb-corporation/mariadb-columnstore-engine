@@ -24,6 +24,7 @@
 #include "primitivemsg.h"
 #include "blocksize.h"
 #include "lbidlist.h"
+#include "mcs_string.h"
 #include "calpontsystemcatalog.h"
 #include "brm.h"
 #include "brmtypes.h"
@@ -40,18 +41,6 @@ using namespace BRM;
 
 namespace joblist
 {
-
-inline uint64_t order_swap(uint64_t x)
-{
-    return (x >> 56) |
-           ((x << 40) & 0x00FF000000000000ULL) |
-           ((x << 24) & 0x0000FF0000000000ULL) |
-           ((x << 8)  & 0x000000FF00000000ULL) |
-           ((x >> 8)  & 0x00000000FF000000ULL) |
-           ((x >> 24) & 0x0000000000FF0000ULL) |
-           ((x >> 40) & 0x000000000000FF00ULL) |
-           (x << 56);
-}
 
 LBIDList::LBIDList()
 {
@@ -361,7 +350,8 @@ int LBIDList::getMinMaxFromEntries(T& min, T& max, int32_t& seq,
 }
 
 template <typename T>
-void LBIDList::UpdateMinMax(T min, T max, int64_t lbid, CalpontSystemCatalog::ColDataType type,
+void LBIDList::UpdateMinMax(T min, T max, int64_t lbid,
+                            const CalpontSystemCatalog::ColType & type,
                             bool validData)
 {
     MinMaxPartition* mmp = NULL;
@@ -400,17 +390,18 @@ void LBIDList::UpdateMinMax(T min, T max, int64_t lbid, CalpontSystemCatalog::Co
 
             if (mmp->isValid == BRM::CP_INVALID)
             {
-                if (datatypes::isCharType(type))
+                if (datatypes::isCharType(type.colDataType))
                 {
-                    if (order_swap(min) < order_swap(mmp->min) ||
+                    datatypes::Charset cs(const_cast<CalpontSystemCatalog::ColType &>(type).getCharset());
+                    if (datatypes::TCharShort::strnncollsp(cs, min, mmp->min) < 0 ||
                             mmp->min == numeric_limits<int64_t>::max())
                         mmp->min = min;
 
-                    if (order_swap(max) > order_swap(mmp->max) ||
+                    if (datatypes::TCharShort::strnncollsp(cs, max, mmp->max) > 0 ||
                             mmp->max == numeric_limits<int64_t>::min())
                         mmp->max = max;
                 }
-                else if (datatypes::isUnsigned(type))
+                else if (datatypes::isUnsigned(type.colDataType))
                 {
                     if (static_cast<uint64_t>(min) < static_cast<uint64_t>(mmp->min))
                         mmp->min = min;
@@ -702,18 +693,17 @@ static inline bool compareStr(const datatypes::Charset &cs,
 
 template<typename T>
 bool LBIDList::checkSingleValue(T min, T max, T value,
-                                execplan::CalpontSystemCatalog::ColDataType type)
+                                const execplan::CalpontSystemCatalog::ColType & type)
 {
-    if (isCharType(type))
+    if (isCharType(type.colDataType))
     {
         // MCOL-641 LBIDList::CasualPartitionDataType() returns false if
         // width > 8 for a character type, so T cannot be int128_t here
-        uint64_t mmin = order_swap(min);
-        uint64_t mmax = order_swap(max);
-        uint64_t vvalue = order_swap(value);
-        return (vvalue >= mmin && vvalue <= mmax);
+        datatypes::Charset cs(const_cast<execplan::CalpontSystemCatalog::ColType&>(type).getCharset());
+        return datatypes::TCharShort::strnncollsp(cs, value, min) >= 0 &&
+               datatypes::TCharShort::strnncollsp(cs, value, max) <= 0;
     }
-    else if (isUnsigned(type))
+    else if (isUnsigned(type.colDataType))
     {
         return (static_cast<uint64_t>(value) >= static_cast<uint64_t>(min) &&
                 static_cast<uint64_t>(value) <= static_cast<uint64_t>(max));
@@ -726,19 +716,17 @@ bool LBIDList::checkSingleValue(T min, T max, T value,
 
 template<typename T>
 bool LBIDList::checkRangeOverlap(T min, T max, T tmin, T tmax,
-                                 execplan::CalpontSystemCatalog::ColDataType type)
+                                 const execplan::CalpontSystemCatalog::ColType & type)
 {
-    if (isCharType(type))
+    if (isCharType(type.colDataType))
     {
         // MCOL-641 LBIDList::CasualPartitionDataType() returns false if
         // width > 8 for a character type, so T cannot be int128_t here
-        uint64_t min2 = order_swap(min);
-        uint64_t max2 = order_swap(max);
-        uint64_t tmin2 = order_swap(tmin);
-        uint64_t tmax2 = order_swap(tmax);
-        return (tmin2 <= max2 && tmax2 >= min2);
+        datatypes::Charset cs(const_cast<execplan::CalpontSystemCatalog::ColType&>(type).getCharset());
+        return datatypes::TCharShort::strnncollsp(cs, tmin, max) <= 0 &&
+               datatypes::TCharShort::strnncollsp(cs, tmax, min) >= 0;
     }
-    else if (isUnsigned(type))
+    else if (isUnsigned(type.colDataType))
     {
         return (static_cast<uint64_t>(tmin) <= static_cast<uint64_t>(max) &&
                 static_cast<uint64_t>(tmax) >= static_cast<uint64_t>(min));
@@ -964,27 +952,27 @@ bool LBIDList::GetMinMax<int64_t>(int64_t* min, int64_t* max, int64_t* seq,
 
 template
 void LBIDList::UpdateMinMax<int128_t>(int128_t min, int128_t max, int64_t lbid,
-                                      execplan::CalpontSystemCatalog::ColDataType type, bool validData = true);
+                                      const execplan::CalpontSystemCatalog::ColType & type, bool validData = true);
 
 template
 void LBIDList::UpdateMinMax<int64_t>(int64_t min, int64_t max, int64_t lbid,
-                                     execplan::CalpontSystemCatalog::ColDataType type, bool validData = true);
+                                     const execplan::CalpontSystemCatalog::ColType & type, bool validData = true);
 
 template
 bool LBIDList::checkSingleValue<int128_t>(int128_t min, int128_t max, int128_t value,
-                                execplan::CalpontSystemCatalog::ColDataType type);
+                                const execplan::CalpontSystemCatalog::ColType & type);
 
 template
 bool LBIDList::checkSingleValue<int64_t>(int64_t min, int64_t max, int64_t value,
-                               execplan::CalpontSystemCatalog::ColDataType type);
+                               const execplan::CalpontSystemCatalog::ColType & type);
 
 template
 bool LBIDList::checkRangeOverlap<int128_t>(int128_t min, int128_t max, int128_t tmin, int128_t tmax,
-                                 execplan::CalpontSystemCatalog::ColDataType type);
+                                 const execplan::CalpontSystemCatalog::ColType & type);
 
 template
 bool LBIDList::checkRangeOverlap<int64_t>(int64_t min, int64_t max, int64_t tmin, int64_t tmax,
-                                execplan::CalpontSystemCatalog::ColDataType type);
+                                const execplan::CalpontSystemCatalog::ColType & type);
 
 } //namespace joblist
 

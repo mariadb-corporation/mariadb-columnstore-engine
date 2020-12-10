@@ -2396,12 +2396,12 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
                 {
                     if (fColType.colWidth > 8)
                     {
-                        lbidList->UpdateMinMax(cpv[i].bigMin, cpv[i].bigMax, cpv[i].LBID, fColType.colDataType,
+                        lbidList->UpdateMinMax(cpv[i].bigMin, cpv[i].bigMax, cpv[i].LBID, fColType,
                                                cpv[i].valid);
                     }
                     else
                     {
-                        lbidList->UpdateMinMax(cpv[i].min, cpv[i].max, cpv[i].LBID, fColType.colDataType,
+                        lbidList->UpdateMinMax(cpv[i].min, cpv[i].max, cpv[i].LBID, fColType,
                                                cpv[i].valid);
                     }
                 }
@@ -3289,12 +3289,12 @@ void TupleBPS::addCPPredicates(uint32_t OID, const vector<int128_t>& vals, bool 
                             if (!isSmallSideWideDecimal)
                             {
                                 runtimeCPFlags[j] = ll.checkRangeOverlap(min, max, (int64_t) vals[0], (int64_t) vals[1],
-                                                    colType.colDataType) && runtimeCPFlags[j];
+                                                    colType) && runtimeCPFlags[j];
                             }
                             else
                             {
                                 runtimeCPFlags[j] = ll.checkRangeOverlap((int128_t) min, (int128_t) max, vals[0], vals[1],
-                                                    colType.colDataType) && runtimeCPFlags[j];
+                                                    colType) && runtimeCPFlags[j];
                             }
                         }
                         else
@@ -3306,12 +3306,12 @@ void TupleBPS::addCPPredicates(uint32_t OID, const vector<int128_t>& vals, bool 
                                 if (!isSmallSideWideDecimal)
                                 {
                                     intersection = intersection ||
-                                                   ll.checkSingleValue(min, max, (int64_t) vals[k], colType.colDataType);
+                                                   ll.checkSingleValue(min, max, (int64_t) vals[k], colType);
                                 }
                                 else
                                 {
                                     intersection = intersection ||
-                                                   ll.checkSingleValue((int128_t) min, (int128_t) max, vals[k], colType.colDataType);
+                                                   ll.checkSingleValue((int128_t) min, (int128_t) max, vals[k], colType);
                                 }
                             }
 
@@ -3331,14 +3331,14 @@ void TupleBPS::addCPPredicates(uint32_t OID, const vector<int128_t>& vals, bool 
                     {
                         if (isRange)
                             runtimeCPFlags[j] = ll.checkRangeOverlap(bigMin, bigMax, vals[0], vals[1],
-                                                colType.colDataType) && runtimeCPFlags[j];
+                                                colType) && runtimeCPFlags[j];
                         else
                         {
                             intersection = false;
 
                             for (k = 0; k < vals.size(); k++)
                                 intersection = intersection ||
-                                               ll.checkSingleValue(bigMin, bigMax, vals[k], colType.colDataType);
+                                               ll.checkSingleValue(bigMin, bigMax, vals[k], colType);
 
                             runtimeCPFlags[j] = intersection && runtimeCPFlags[j];
                         }

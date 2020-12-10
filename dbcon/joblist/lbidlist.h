@@ -104,7 +104,7 @@ public:
 
     template <typename T>
     void UpdateMinMax(T min, T max, int64_t lbid,
-                      execplan::CalpontSystemCatalog::ColDataType type, bool validData = true);
+                      const execplan::CalpontSystemCatalog::ColType & type, bool validData = true);
 
     void UpdateAllPartitionInfo(const execplan::CalpontSystemCatalog::ColType& colType);
 
@@ -118,11 +118,11 @@ public:
 
     template<typename T>
     bool checkSingleValue(T min, T max, T value,
-                          execplan::CalpontSystemCatalog::ColDataType type);
+                          const execplan::CalpontSystemCatalog::ColType & type);
 
     template<typename T>
     bool checkRangeOverlap(T min, T max, T tmin, T tmax,
-                           execplan::CalpontSystemCatalog::ColDataType type);
+                           const execplan::CalpontSystemCatalog::ColType & type);
 
     // check the column data type and the column size to determine if it
     // is a data type  to apply casual paritioning.
