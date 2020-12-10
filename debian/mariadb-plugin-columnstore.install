@@ -82,6 +82,7 @@ usr/bin/smls
 usr/bin/smput
 usr/bin/smrm
 usr/bin/startupTests.sh
+usr/bin/testS3Connection
 usr/bin/viewtablelock
 usr/bin/workernode
 usr/lib/*/libalarmmanager.so
