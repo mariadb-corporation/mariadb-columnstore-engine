@@ -314,7 +314,7 @@ struct ColByScanRequestHeader
     ColRequestHeaderDataType colType;
     uint8_t OutputType;     // 1 = RID, 2 = Token, 3 = Both
     uint8_t BOP;            // 0 = N/A, 1 = AND, 2 = OR
-    uint8_t RidFlags;		// a bitmap indicating the rid ranges in the resultM SB => row 7168-8191
+    uint16_t RidFlags;		// a bitmap indicating the rid ranges in the result MSB => row 7680-8191
     uint16_t NOPS;
     uint16_t NVALS;
     uint8_t sort;
@@ -336,7 +336,7 @@ struct ColByScanRangeRequestHeader
     ColRequestHeaderDataType colType;
     uint8_t OutputType;     // 1 = RID, 2 = Token, 3 = Both
     uint8_t BOP;            // 0 = N/A, 1 = AND, 2 = OR
-    uint8_t RidFlags;		// a bitmap indicating the rid ranges in the result MSB => row 7168-8191
+    uint16_t RidFlags;		// a bitmap indicating the rid ranges in the result MSB => row 7680-8191
     uint16_t NOPS;
     uint16_t NVALS;
     uint8_t sort;
@@ -409,7 +409,7 @@ struct ColResultHeader
 {
     PrimitiveHeader Hdr;
     uint64_t LBID;
-    uint8_t RidFlags;
+    uint16_t RidFlags;
     uint16_t NVALS;
     uint16_t ValidMinMax; 			  // 1 if Min/Max are valid, otherwise 0
     uint32_t OutputType;
@@ -695,7 +695,7 @@ struct NewColRequestHeader
     uint8_t OutputType;		// OT_DATAVALUE, OT_RID, or OT_BOTH
     uint8_t BOP;
 // 	uint8_t InputFlags;		// 1 = interpret each NOP & RID as a pair (deprecated)
-    uint8_t RidFlags;		// a bitmap indicating the rid ranges in the result MSB => row 7168-8191
+    uint16_t RidFlags;		// a bitmap indicating the rid ranges in the result MSB => row 7680-8191
     uint16_t NOPS;
     uint16_t NVALS;
     uint8_t sort;				//1 to sort
@@ -730,7 +730,7 @@ struct NewColResultHeader
     ISMPacketHeader ism;
     PrimitiveHeader hdr;
     uint64_t LBID;
-    uint8_t RidFlags;
+    uint16_t RidFlags;
     uint16_t NVALS;
     uint16_t ValidMinMax;		// 1 if Min/Max are valid, otherwise 0
     uint32_t OutputType;

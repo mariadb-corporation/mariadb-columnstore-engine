@@ -111,7 +111,7 @@ void number_int_value(const string& data,
                       const datatypes::SystemCatalog::TypeAttributesStd& ct,
                       bool& pushwarning,
                       bool noRoundup,
-                      T& intVal)
+                      T& intVal, bool* saturate)
 {
     // copy of the original input
     string valStr(data);
@@ -304,11 +304,17 @@ void number_int_value(const string& data,
             {
                 intVal = MIN_TINYINT;
                 pushwarning = true;
+
+                if (saturate)
+                    *saturate = true;
             }
             else if (intVal > MAX_TINYINT)
             {
                 intVal = MAX_TINYINT;
                 pushwarning = true;
+
+                if (saturate)
+                    *saturate = true;
             }
 
             break;
@@ -318,11 +324,17 @@ void number_int_value(const string& data,
             {
                 intVal = MIN_SMALLINT;
                 pushwarning = true;
+
+                if (saturate)
+                    *saturate = true;
             }
             else if (intVal > MAX_SMALLINT)
             {
                 intVal = MAX_SMALLINT;
                 pushwarning = true;
+
+                if (saturate)
+                    *saturate = true;
             }
 
             break;
@@ -332,11 +344,17 @@ void number_int_value(const string& data,
             {
                 intVal = MIN_MEDINT;
                 pushwarning = true;
+
+                if (saturate)
+                    *saturate = true;
             }
             else if (intVal > MAX_MEDINT)
             {
                 intVal = MAX_MEDINT;
                 pushwarning = true;
+
+                if (saturate)
+                    *saturate = true;
             }
 
             break;
@@ -346,11 +364,17 @@ void number_int_value(const string& data,
             {
                 intVal = MIN_INT;
                 pushwarning = true;
+
+                if (saturate)
+                    *saturate = true;
             }
             else if (intVal > MAX_INT)
             {
                 intVal = MAX_INT;
                 pushwarning = true;
+
+                if (saturate)
+                    *saturate = true;
             }
 
             break;
@@ -360,6 +384,9 @@ void number_int_value(const string& data,
             {
                 intVal = MIN_BIGINT;
                 pushwarning = true;
+
+                if (saturate)
+                    *saturate = true;
             }
 
             break;
@@ -374,6 +401,9 @@ void number_int_value(const string& data,
                 {
                     intVal = tmp + 2;
                     pushwarning = true;
+
+                    if (saturate)
+                        *saturate = true;
                 }
             }
             else if (ct.colWidth == 8)
@@ -382,6 +412,9 @@ void number_int_value(const string& data,
                 {
                     intVal = MIN_BIGINT;
                     pushwarning = true;
+
+                    if (saturate)
+                        *saturate = true;
                 }
             }
             else if (ct.colWidth == 4)
@@ -390,11 +423,17 @@ void number_int_value(const string& data,
                 {
                     intVal = MIN_INT;
                     pushwarning = true;
+
+                    if (saturate)
+                        *saturate = true;
                 }
                 else if (intVal > MAX_INT)
                 {
                     intVal = MAX_INT;
                     pushwarning = true;
+
+                    if (saturate)
+                        *saturate = true;
                 }
             }
             else if (ct.colWidth == 2)
@@ -403,11 +442,17 @@ void number_int_value(const string& data,
                 {
                     intVal = MIN_SMALLINT;
                     pushwarning = true;
+
+                    if (saturate)
+                        *saturate = true;
                 }
                 else if (intVal > MAX_SMALLINT)
                 {
                     intVal = MAX_SMALLINT;
                     pushwarning = true;
+
+                    if (saturate)
+                        *saturate = true;
                 }
             }
             else if (ct.colWidth == 1)
@@ -416,11 +461,17 @@ void number_int_value(const string& data,
                 {
                     intVal = MIN_TINYINT;
                     pushwarning = true;
+
+                    if (saturate)
+                        *saturate = true;
                 }
                 else if (intVal > MAX_TINYINT)
                 {
                     intVal = MAX_TINYINT;
                     pushwarning = true;
+
+                    if (saturate)
+                        *saturate = true;
                 }
             }
 
@@ -454,11 +505,17 @@ void number_int_value(const string& data,
         {
             intVal = rangeUp;
             pushwarning = true;
+
+            if (saturate)
+                *saturate = true;
         }
         else if (intVal < rangeLow)
         {
             intVal = rangeLow;
             pushwarning = true;
+
+            if (saturate)
+                *saturate = true;
         }
     }
 }
@@ -470,7 +527,7 @@ void number_int_value<int64_t>(const std::string& data,
                                const datatypes::SystemCatalog::TypeAttributesStd& ct,
                                bool& pushwarning,
                                bool noRoundup,
-                               int64_t& intVal);
+                               int64_t& intVal, bool* saturate);
 
 template
 void number_int_value<int128_t>(const std::string& data,
@@ -478,7 +535,7 @@ void number_int_value<int128_t>(const std::string& data,
                                 const datatypes::SystemCatalog::TypeAttributesStd& ct,
                                 bool& pushwarning,
                                 bool noRoundup,
-                                int128_t& intVal);
+                                int128_t& intVal, bool* saturate);
 
 uint64_t number_uint_value(const string& data,
                            cscDataType typeCode,

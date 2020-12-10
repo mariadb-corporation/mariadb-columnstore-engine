@@ -774,7 +774,7 @@ inline void store(const NewColRequestHeader* in,
         }
 
 #endif
-        out->RidFlags |= (1 << (rid >> 10)); // set the (row/1024)'th bit
+        out->RidFlags |= (1 << (rid >> 9)); // set the (row/512)'th bit
         memcpy(&out8[*written], &rid, 2);
         *written += 2;
     }

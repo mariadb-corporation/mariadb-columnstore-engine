@@ -285,7 +285,7 @@ void FilterCommand::doFilter()
                     bpp->wide128Values[bpp->ridCount] = bpp->fFiltCmdBinaryValues[0][i];
                 else
                     bpp->values[bpp->ridCount] = bpp->fFiltCmdValues[0][i];
-                bpp->ridMap |= 1 << (bpp->relRids[bpp->ridCount] >> 10);
+                bpp->ridMap |= 1 << (bpp->relRids[bpp->ridCount] >> 9);
                 bpp->ridCount++;
             }
 

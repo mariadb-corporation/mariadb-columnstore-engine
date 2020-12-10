@@ -525,7 +525,7 @@ void BatchPrimitiveProcessor::resetBPP(ByteStream& bs, const SP_UM_MUTEX& w,
         for (uint32_t i = 0; i < ridCount; i++)
         {
             relRids[i] = absRids[i] - baseRid;
-            ridMap |= 1 << (relRids[i] >> 10);
+            ridMap |= 1 << (relRids[i] >> 9);
         }
     }
     else
@@ -1481,7 +1481,7 @@ void BatchPrimitiveProcessor::execute()
                 if (accumulator[i])
                 {
                     relRids[ridCount] = i;
-                    ridMap |= 1 << (relRids[ridCount] >> 10);
+                    ridMap |= 1 << (relRids[ridCount] >> 9);
                     ++ridCount;
                 }
             }

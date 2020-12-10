@@ -204,6 +204,7 @@ ColumnInfo::ColumnInfo(Log*             logger,
         case WriteEngine::WR_ULONGLONG:
         case WriteEngine::WR_UMEDINT:
         case WriteEngine::WR_UINT:
+        case WriteEngine::WR_BINARY:
         default:
         {
             fColExtInf = new ColExtInf(column.mapOid, logger);

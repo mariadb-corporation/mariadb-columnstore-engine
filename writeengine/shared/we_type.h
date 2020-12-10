@@ -367,6 +367,7 @@ struct JobColumn                        /** @brief Job Column Structure */
     long long      fDefaultInt;         /** @brief Integer column default */
     unsigned long long fDefaultUInt;    /** @brief UnsignedInt col default*/
     double         fDefaultDbl;         /** @brief Dbl/Flt column default */
+    int128_t       fDefaultWideDecimal; /** @brief Wide decimal column default */
     std::string    fDefaultChr;         /** @brief Char column default */
     JobColumn() : mapOid(0), dataType(execplan::CalpontSystemCatalog::INT), weType(WR_INT),
         typeName("integer"), emptyVal(0),
@@ -376,7 +377,8 @@ struct JobColumn                        /** @brief Job Column Structure */
         compressionType(0), autoIncFlag(false),
         fMinIntSat(0), fMaxIntSat(0),
         fMinDblSat(0), fMaxDblSat(0), fWithDefault(false),
-        fDefaultInt(0), fDefaultUInt(0), fDefaultDbl(0.0)
+        fDefaultInt(0), fDefaultUInt(0), fDefaultDbl(0.0),
+        fDefaultWideDecimal(0)
     { }
 };
 

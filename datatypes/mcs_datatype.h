@@ -167,6 +167,11 @@ public:
           scale(0),
           precision(-1)
       {}
+      TypeAttributesStd(int32_t w, int32_t s, int32_t p)
+         :colWidth(w),
+          scale(s),
+          precision(p)
+      {}
       /**
           @brief Convenience method to get int128 from a std::string.
       */
