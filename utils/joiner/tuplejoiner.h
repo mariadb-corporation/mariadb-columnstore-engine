@@ -43,18 +43,6 @@
 namespace joiner
 {
 
-inline uint64_t order_swap(uint64_t x)
-{
-    return (x >> 56) |
-           ((x << 40) & 0x00FF000000000000ULL) |
-           ((x << 24) & 0x0000FF0000000000ULL) |
-           ((x << 8)  & 0x000000FF00000000ULL) |
-           ((x >> 8)  & 0x00000000FF000000ULL) |
-           ((x >> 24) & 0x0000000000FF0000ULL) |
-           ((x >> 40) & 0x000000000000FF00ULL) |
-           (x << 56);
-}
-
 class TypelessData
 {
 public:
