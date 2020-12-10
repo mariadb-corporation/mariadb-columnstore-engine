@@ -30,6 +30,7 @@
 #include "lbidlist.h"
 #include "spinlock.h"
 #include "vlarray.h"
+#include "mcs_string.h"
 
 
 using namespace std;
@@ -1127,15 +1128,16 @@ void TupleJoiner::updateCPData(const Row& r)
 
         if (r.isCharType(colIdx))
         {
+            datatypes::Charset cs(r.getCharset(col));
             int64_t val = r.getIntField(colIdx);
 
-            if (order_swap(val) < order_swap((int64_t) min) ||
+            if (datatypes::TCharShort::strnncollsp(cs, val, min) < 0 ||
                     ((int64_t) min) == numeric_limits<int64_t>::max())
             {
                 min = val;
             }
 
-            if (order_swap(val) > order_swap((int64_t) max) ||
+            if (datatypes::TCharShort::strnncollsp(cs, val, max) > 0 ||
                     ((int64_t) max) == numeric_limits<int64_t>::min())
             {
                 max = val;
