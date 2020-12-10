@@ -1,13 +1,11 @@
 local platforms = {
   develop: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
-  'develop-1.5': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
-  'columnstore-1.5.4-1': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
+  'develop-5': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
 };
 
 local server_ref_map = {
   develop: '10.6 https://github.com/MariaDB/server',
-  'develop-1.5': '10.5 https://github.com/MariaDB/server',
-  'columnstore-1.5.4-1': '10.5.6-4 https://github.com/mariadb-corporation/MariaDBEnterprise',
+  'develop-5': '10.5 https://github.com/MariaDB/server',
 };
 
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
@@ -20,8 +18,7 @@ local deb_build_deps = 'apt update && apt install --yes --no-install-recommends 
 local platformMap(branch, platform) =
   local branch_cmakeflags_map = {
     develop: ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
-    'develop-1.5': ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
-    'columnstore-1.5.4-1': ' -DBUILD_CONFIG=enterprise -DWITH_WSREP=OFF',
+    'develop-5': ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
   };
 
   local platform_map = {
@@ -43,8 +40,8 @@ local Pipeline(branch, platform, event) = {
   local mtr_path = if (pkg_format == 'rpm') then '/usr/share/mysql-test' else '/usr/share/mysql/mysql-test',
   local socket_path = if (pkg_format == 'rpm') then '/var/lib/mysql/mysql.sock' else '/run/mysqld/mysqld.sock',
   local img = if (std.split(platform, ':')[0] == 'centos') then platform else 'romcheck/' + std.strReplace(platform, '/', '-'),
-  local regression_ref = if (std.split(branch, '-')[0] == 'develop') then branch else 'develop-1.5',
-  local mtr_ref = if (branch == 'develop') then 'master' else 'develop-1.5',
+  local regression_ref = if (std.split(branch, '-')[0] == 'develop') then branch else 'develop-5',
+  local mtr_ref = if (branch == 'develop') then 'master' else 'develop-5',
 
   local pipeline = self,
 
@@ -384,23 +381,12 @@ local FinalPipeline(branch, event) = {
 
 [
   Pipeline(b, p, e)
-  for b in ['develop', 'develop-1.5']
+  for b in ['develop', 'develop-5']
   for p in platforms[b]
   for e in ['pull_request', 'cron', 'custom']
 ] +
 [
   FinalPipeline(b, e)
-  for b in ['develop', 'develop-1.5']
+  for b in ['develop', 'develop-5']
   for e in ['pull_request', 'cron', 'custom']
-] +
-[
-  Pipeline(b, p, e)
-  for b in ['columnstore-1.5.4-1']
-  for p in platforms[b]
-  for e in ['pull_request', 'cron', 'custom', 'push']
-] +
-[
-  FinalPipeline(b, e)
-  for b in ['columnstore-1.5.4-1']
-  for e in ['pull_request', 'cron', 'custom', 'push']
 ]
