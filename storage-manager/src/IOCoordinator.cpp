@@ -193,7 +193,7 @@ ssize_t IOCoordinator::read(const char *_filename, uint8_t *data, off_t offset, 
     vector<metadataObject> relevants = meta.metadataRead(offset, length);
     map<string, int> journalFDs, objectFDs;
     map<string, string> keyToJournalName, keyToObjectName;
-    utils::VLArray<ScopedCloser> fdMinders(relevants.size() * 2, -1);
+    utils::VLArray<ScopedCloser> fdMinders(relevants.size() * 2);
     int mindersIndex = 0;
     char buf[80];
     
