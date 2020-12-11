@@ -882,7 +882,7 @@ void number_int_value(const std::string& data,
                       const datatypes::SystemCatalog::TypeAttributesStd &ct,
                       bool& pushwarning,
                       bool noRoundup,
-                      T& intVal);
+                      T& intVal, bool* saturate = 0);
 
 uint64_t number_uint_value(const string& data,
                            cscDataType typeCode,

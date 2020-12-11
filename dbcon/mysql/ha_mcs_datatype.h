@@ -188,6 +188,20 @@ public:
 
 class WriteBatchFieldMariaDB: public WriteBatchField
 {
+  // Maximum number of decimal digits that can be represented in 4 bytes
+  static const int DIG_PER_DEC = 9;
+  // See strings/decimal.c
+  const int dig2bytes[DIG_PER_DEC+1]={0, 1, 1, 2, 2, 3, 3, 4, 4, 4};
+
+
+  // Returns the number of bytes required to store a given number
+  // of decimal digits
+  int numDecimalBytes(int digits)
+  {
+    return (((digits/DIG_PER_DEC) * 4) + dig2bytes[digits % DIG_PER_DEC]);
+  }
+
+
 public:
   Field *m_field;
   const CalpontSystemCatalog::ColType &m_type;
@@ -539,263 +553,27 @@ public:
 
   size_t ColWriteBatchXDecimal(const uchar *buf, bool nullVal, ColBatchWriter &ci) override 
   {
-    uint bytesBefore = 1;
-    uint totalBytes = 9;
-
-    switch (m_type.precision)
-    {
-      case 18:
-      case 17:
-      case 16:
-      {
-        totalBytes = 8;
-        break;
-      }
-
-      case 15:
-      case 14:
-      {
-        totalBytes = 7;
-        break;
-      }
-
-      case 13:
-      case 12:
-      {
-        totalBytes =  6;
-        break;
-      }
-
-      case 11:
-      {
-        totalBytes =  5;
-        break;
-      }
-
-      case 10:
-      {
-        totalBytes =  5;
-        break;
-      }
-
-      case 9:
-      case 8:
-      case 7:
-      {
-        totalBytes =  4;
-        break;
-      }
-
-      case 6:
-      case 5:
-      {
-        totalBytes = 3;
-        break;
-      }
-
-      case 4:
-      case 3:
-      {
-        totalBytes =  2;
-        break;
-      }
-
-      case 2:
-      case 1:
-      {
-        totalBytes = 1;
-        break;
-      }
-
-      default:
-        break;
-    }
-
-    switch (m_type.scale)
-    {
-      case 0:
-      {
-        bytesBefore = totalBytes;
-        break;
-      }
-
-      case 1: //1 byte for digits after decimal point
-      {
-        if ((m_type.precision != 16) && (m_type.precision != 14)
-            && (m_type.precision != 12) && (m_type.precision != 10)
-            && (m_type.precision != 7) && (m_type.precision != 5)
-            && (m_type.precision != 3) && (m_type.precision != 1))
-          totalBytes++;
-
-        bytesBefore = totalBytes - 1;
-        break;
-      }
-
-      case 2: //1 byte for digits after decimal point
-      {
-        if ((m_type.precision == 18) || (m_type.precision == 9))
-          totalBytes++;
-
-        bytesBefore = totalBytes - 1;
-        break;
-      }
-
-      case 3: //2 bytes for digits after decimal point
-      {
-        if ((m_type.precision != 16) && (m_type.precision != 14)
-            && (m_type.precision != 12) && (m_type.precision != 7)
-            && (m_type.precision != 5) && (m_type.precision != 3))
-          totalBytes++;
-
-        bytesBefore = totalBytes - 2;
-        break;
-      }
-
-      case 4:
-      {
-        if ((m_type.precision == 18) || (m_type.precision == 11)
-            || (m_type.precision == 9))
-          totalBytes++;
-
-        bytesBefore = totalBytes - 2;
-        break;
-
-      }
-
-      case 5:
-      {
-        if ((m_type.precision != 16) && (m_type.precision != 14)
-            && (m_type.precision != 7) && (m_type.precision != 5))
-          totalBytes++;
-
-        bytesBefore = totalBytes - 3;
-        break;
-      }
-
-      case 6:
-      {
-        if ((m_type.precision == 18) || (m_type.precision == 13)
-            || (m_type.precision == 11) || (m_type.precision == 9))
-          totalBytes++;
-
-        bytesBefore = totalBytes - 3;
-        break;
-      }
-
-      case 7:
-      {
-        if ((m_type.precision != 16) && (m_type.precision != 7))
-          totalBytes++;
-
-        bytesBefore = totalBytes - 4;
-        break;
-      }
-
-      case 8:
-      {
-        if ((m_type.precision == 18) || (m_type.precision == 15)
-            || (m_type.precision == 13) || (m_type.precision == 11)
-            || (m_type.precision == 9))
-          totalBytes++;
-
-        bytesBefore = totalBytes - 4;;
-        break;
-      }
-
-      case 9:
-      {
-        bytesBefore = totalBytes - 4;;
-        break;
-      }
-
-      case 10:
-      {
-        if ((m_type.precision != 16) && (m_type.precision != 14)
-            && (m_type.precision != 12) && (m_type.precision != 10))
-          totalBytes++;
-
-        bytesBefore = totalBytes - 5;;
-        break;
-      }
-
-      case 11:
-      {
-        if (m_type.precision == 18)
-          totalBytes++;
-
-        bytesBefore = totalBytes - 5;
-        break;
-      }
-
-      case 12:
-      {
-        if ((m_type.precision != 16) && (m_type.precision != 14)
-            && (m_type.precision != 12))
-          totalBytes++;
-
-        bytesBefore = totalBytes - 6;
-        break;
-      }
-
-      case 13:
-      {
-        if (m_type.precision == 18)
-          totalBytes++;
-
-        bytesBefore = totalBytes - 6;
-        break;
-      }
-
-      case 14:
-      {
-        if ((m_type.precision != 16) && (m_type.precision != 14))
-          totalBytes++;
-
-        bytesBefore = totalBytes - 7;
-        break;
-      }
-
-      case 15:
-      {
-        if (m_type.precision == 18)
-          totalBytes++;
-
-        bytesBefore = totalBytes - 7;
-        break;
-      }
-
-      case 16:
-      {
-        if (m_type.precision != 16)
-          totalBytes++;
-
-        bytesBefore = totalBytes - 8;
-        break;
-      }
-
-      case 17:
-      {
-        if (m_type.precision == 18)
-          totalBytes++;
-
-        bytesBefore = totalBytes - 8;
-        break;
-      }
-
-      case 18:
-      {
-        bytesBefore = totalBytes - 8;
-        break;
-      }
-
-      default:
-        break;
-    }
+    uint bytesBefore = numDecimalBytes(m_type.precision - m_type.scale);
+    uint totalBytes = bytesBefore + numDecimalBytes(m_type.scale);
 
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
     {
       fprintf(ci.filePtr(), "%c", ci.delimiter());
       //printf("|");
+    }
+    else if (m_type.precision > datatypes::INT64MAXPRECISION)
+    {
+      // TODO MCOL-641 The below else block for narrow decimal
+      // i.e. (m_type.precision <= datatypes::INT64MAXPRECISION)
+      // converts the decimal binary representation in buf directly
+      // to a string, while here, the my_decimal ctor first calls
+      // bin2decimal() on buf, and then we construct the string from
+      // the my_decimal. This approach might be a bit slower than the
+      // narrow decimal approach.
+      my_decimal dec(buf, m_type.precision, m_type.scale);
+      String str;
+      dec.to_string(&str);
+      fprintf(ci.filePtr(), "%s%c", str.c_ptr(), ci.delimiter());
     }
     else
     {
