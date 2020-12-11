@@ -149,7 +149,7 @@ private:
     int64_t* values;      // this is usually bpp->values; RTSCommand needs to use a different container
     int128_t* wide128Values;
 
-    uint8_t mask, shift;  // vars for the selective block loader
+    uint16_t mask, shift;  // vars for the selective block loader
 
     // counters to decide whether to prefetch or not
     uint32_t blockCount, loadCount;

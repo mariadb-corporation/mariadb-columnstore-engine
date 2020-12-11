@@ -224,7 +224,7 @@ private:
     uint16_t filterCount;
     uint16_t projectCount;
     bool sendRidsAtDelivery;
-    uint8_t ridMap;
+    uint16_t ridMap;
     bool gotAbsRids;
     bool gotValues;
 

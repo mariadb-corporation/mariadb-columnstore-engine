@@ -297,7 +297,7 @@ private:
     uint16_t filterCount;
     uint16_t projectCount;
     bool needRidsAtDelivery;
-    uint8_t ridMap;
+    uint16_t ridMap;
 
 //	TableBand templateTB;
     uint32_t tableOID;
