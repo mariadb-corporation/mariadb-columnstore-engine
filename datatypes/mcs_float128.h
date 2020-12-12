@@ -102,6 +102,21 @@ class TFloat128
       return toLongDouble();
     }
 
+    inline operator float() const
+    {
+      return toFloat();
+    }
+
+    inline float toFloat() const
+    {
+        if (value > static_cast<__float128>(FLT_MAX))
+            return FLT_MAX;
+        else if (value < -static_cast<__float128>(FLT_MAX))
+            return -FLT_MAX;
+
+        return static_cast<float>(value);
+    }
+
     inline int64_t toTSInt64() const
     {
       if (value > static_cast<__float128>(INT64_MAX))

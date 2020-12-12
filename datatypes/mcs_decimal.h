@@ -347,12 +347,31 @@ class Decimal: public TSInt128
             return toDouble();
         }
 
-        inline long double toLongDouble() const
+        inline float toFloat() const
         {
-            datatypes::TFloat128 y(s128Value);
-            return static_cast<long double>(y);
+            int128_t scaleDivisor;
+            getScaleDivisor(scaleDivisor, scale);
+            datatypes::TFloat128 tmpval((__float128) s128Value / scaleDivisor);
+            return static_cast<float>(tmpval);
         }
 
+        inline operator float() const
+        {
+            return toFloat();
+        }
+
+        inline long double toLongDouble() const
+        {
+            int128_t scaleDivisor;
+            getScaleDivisor(scaleDivisor, scale);
+            datatypes::TFloat128 tmpval((__float128) s128Value / scaleDivisor);
+            return static_cast<long double>(tmpval);
+        }
+
+        inline operator long double() const
+        {
+            return toLongDouble();
+        }
        
         // This method returns integral part as a TSInt128 and
         // fractional part as a TFloat128

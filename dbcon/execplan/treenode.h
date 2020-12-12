@@ -763,7 +763,14 @@ inline uint64_t TreeNode::getUintVal()
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
         {
-            return (uint64_t)(fResult.decimalVal.value / pow((double)10, fResult.decimalVal.scale));
+            if (fResultType.colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                return static_cast<uint64_t>(fResult.decimalVal.getIntegralPart());
+            }
+            else
+            {
+                return (uint64_t)(fResult.decimalVal.value / pow((double)10, fResult.decimalVal.scale));
+            }
         }
 
         case CalpontSystemCatalog::DATE:
@@ -829,8 +836,16 @@ inline float TreeNode::getFloatVal()
             return (float)fResult.doubleVal;
 
         case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
         {
-            return (fResult.decimalVal.value / pow((double)10, fResult.decimalVal.scale));
+            if (fResultType.colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                return static_cast<float>(fResult.decimalVal);
+            }
+            else
+            {
+                return (fResult.decimalVal.value / pow((double)10, fResult.decimalVal.scale));
+            }
         }
 
         case CalpontSystemCatalog::DATE:
@@ -974,8 +989,15 @@ inline long double TreeNode::getLongDoubleVal()
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
         {
-            // this may not be accurate. if this is problematic, change to pre-calculated power array.
-            return (long double)(fResult.decimalVal.value / pow((long double)10, fResult.decimalVal.scale));
+            if (fResultType.colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                return static_cast<long double>(fResult.decimalVal);
+            }
+            else
+            {
+                // this may not be accurate. if this is problematic, change to pre-calculated power array.
+                return (long double)(fResult.decimalVal.value / pow((long double)10, fResult.decimalVal.scale));
+            }
         }
 
         case CalpontSystemCatalog::DATE:
