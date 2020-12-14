@@ -34,6 +34,7 @@
 #include <cstring>
 #include <stdexcept>
 
+#include "brm.h"
 #include "we_define.h"
 #include "we_typeext.h"
 #include "calpontsystemcatalog.h"

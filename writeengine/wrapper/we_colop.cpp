@@ -82,7 +82,8 @@ ColumnOp::~ColumnOp()
  *    tableFid - the file id for table bitmap file
  *    totalRow - the total number of rows need to be allocated
  *    useStartingExtent - Indicates whether rows can be added to an existing
-*               starting extent
+ *               starting extent
+ *    newExtents - where to write extents allocated for newColStructList, etc, structures.
  * RETURN:
  *    NO_ERROR if success
  *    rowIdArray - allocation of the row id left here
@@ -90,7 +91,7 @@ ColumnOp::~ColumnOp()
 int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
                          Column& column, uint64_t totalRow, RID* rowIdArray, HWM& hwm, bool& newExtent, uint64_t& rowsLeft, HWM& newHwm,
                          bool& newFile, ColStructList& newColStructList, DctnryStructList& newDctnryStructList, std::vector<boost::shared_ptr<DBRootExtentTracker> >&   dbRootExtentTrackers,
-                         bool insertSelect, bool isBatchInsert, OID tableOid, bool isFirstBatchPm)
+                         bool insertSelect, bool isBatchInsert, OID tableOid, bool isFirstBatchPm, std::vector<BRM::LBID_t>* newExtents)
 {
     //MultiFiles per OID: always append the rows to the end for now.
     // See if the current HWM block might be in an abbreviated extent that
@@ -379,6 +380,10 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
                     newDctnryStructList[i].fColSegment = segment;
                     newDctnryStructList[i].fColDbRoot = dbRoot;
                     lbids.push_back(extents[i].startLbid);
+                    if (newExtents)
+                    {
+                        (*newExtents).push_back(extents[i].startLbid);
+                    }
                     colDataTypes.push_back(newColStructList[i].colDataType);
                 }
 
@@ -963,7 +968,7 @@ int ColumnOp::fillColumn(const TxnID& txnid, Column& column, Column& refCol, voi
             refBufOffset = BYTE_PER_BLOCK;
             colBufOffset = BYTE_PER_BLOCK;
             dirty = false;
-            BRM::CPInfo cpInfo;
+            ExtCPInfo cpInfo(column.colDataType, column.colWidth);
 
             if (autoincrement)
             {
@@ -1048,19 +1053,17 @@ int ColumnOp::fillColumn(const TxnID& txnid, Column& column, Column& refCol, voi
                     }
                 }
 
-                cpInfo.isBinaryColumn = column.colWidth > 8;
-
-                if (!cpInfo.isBinaryColumn)
+                if (!cpInfo.isBinaryColumn())
                 {
-                    cpInfo.max = nextValStart + nexValNeeded - 1;
-                    cpInfo.min = nextValStart;
+                    cpInfo.fCPInfo.max = nextValStart + nexValNeeded - 1;
+                    cpInfo.fCPInfo.min = nextValStart;
                 }
                 else
                 {
-                    cpInfo.bigMax = nextValStart + nexValNeeded - 1;
-                    cpInfo.bigMin = nextValStart;
+                    cpInfo.fCPInfo.bigMax = nextValStart + nexValNeeded - 1;
+                    cpInfo.fCPInfo.bigMin = nextValStart;
                 }
-                cpInfo.seqNum = 0;
+                cpInfo.fCPInfo.seqNum = 0;
 
             }
             else
@@ -1113,36 +1116,9 @@ int ColumnOp::fillColumn(const TxnID& txnid, Column& column, Column& refCol, voi
                     }
                 }
 
-                cpInfo.isBinaryColumn = column.colWidth > 8;
+                cpInfo.toInvalid();
 
-                if (!cpInfo.isBinaryColumn)
-                {
-                    if (isUnsigned(column.colDataType))
-                    {
-                        cpInfo.max = 0;
-                        cpInfo.min = static_cast<int64_t>(numeric_limits<uint64_t>::max());
-                    }
-                    else
-                    {
-                        cpInfo.max = numeric_limits<int64_t>::min();
-                        cpInfo.min = numeric_limits<int64_t>::max();
-                    }
-                }
-                else
-                {
-                    if (isUnsigned(column.colDataType))
-                    {
-                        cpInfo.bigMax = 0;
-                        cpInfo.min = -1;
-                    }
-                    else
-                    {
-                        utils::int128Min(cpInfo.bigMax);
-                        utils::int128Max(cpInfo.bigMin);
-                    }
-                }
-
-                cpInfo.seqNum = -1;
+                cpInfo.fCPInfo.seqNum = SEQNUM_MARK_INVALID;
             }
 
             if (dirty)
@@ -1165,39 +1141,11 @@ int ColumnOp::fillColumn(const TxnID& txnid, Column& column, Column& refCol, voi
 
             if (autoincrement) //@Bug 4074. Mark it invalid first to set later
             {
-                BRM::CPInfo cpInfo1;
-                cpInfo1.isBinaryColumn = column.colWidth > 8;
-
-                if (!cpInfo1.isBinaryColumn)
-                {
-                    if (isUnsigned(column.colDataType))
-                    {
-                        cpInfo1.max = 0;
-                        cpInfo1.min = static_cast<int64_t>(numeric_limits<uint64_t>::max());
-                    }
-                    else
-                    {
-                        cpInfo1.max = numeric_limits<int64_t>::min();
-                        cpInfo1.min = numeric_limits<int64_t>::max();
-                    }
-                }
-                else
-                {
-                    if (isUnsigned(column.colDataType))
-                    {
-                        cpInfo1.bigMax = 0;
-                        cpInfo1.bigMin = -1;
-                    }
-                    else
-                    {
-                        utils::int128Min(cpInfo1.bigMax);
-                        utils::int128Max(cpInfo1.bigMin);
-                    }
-                }
-
-                cpInfo1.seqNum = -1;
-                cpInfo1.firstLbid = startLbid;
-                BRM::CPInfoList_t cpinfoList1;
+                ExtCPInfo cpInfo1(column.colDataType, column.colWidth);
+		cpInfo1.toInvalid();
+		cpInfo1.fCPInfo.seqNum = SEQNUM_MARK_INVALID;
+                cpInfo1.fCPInfo.firstLbid = startLbid;
+                ExtCPInfoList cpinfoList1;
                 cpinfoList1.push_back(cpInfo1);
                 rc = BRMWrapper::getInstance()->setExtentsMaxMin(cpinfoList1);
 
@@ -1205,8 +1153,8 @@ int ColumnOp::fillColumn(const TxnID& txnid, Column& column, Column& refCol, voi
                     return rc;
             }
 
-            BRM::CPInfoList_t cpinfoList;
-            cpInfo.firstLbid = startLbid;
+            ExtCPInfoList cpinfoList;
+            cpInfo.fCPInfo.firstLbid = startLbid;
             cpinfoList.push_back(cpInfo);
             rc = BRMWrapper::getInstance()->setExtentsMaxMin(cpinfoList);
 
@@ -1627,7 +1575,7 @@ void ColumnOp::setColParam(Column& column,
  * RETURN:
  *    NO_ERROR if success, other number otherwise
  ***********************************************************/
-int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray, const void* valArray, bool bDelete )
+int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray, const void* valArray, void* oldValArray, bool bDelete )
 {
     uint64_t i = 0, curRowId;
     int      dataFbo, dataBio, curDataFbo = -1;
@@ -1748,6 +1696,12 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
         }
 
         // This is the write stuff
+        if (oldValArray)
+        {
+            uint8_t* p = static_cast<uint8_t*>(oldValArray);
+            memcpy(p + curCol.colWidth * i, dataBuf + dataBio, curCol.colWidth);
+        }
+
         writeBufValue(dataBuf + dataBio, pVal, curCol.colWidth);
 
         i++;
@@ -1780,7 +1734,7 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
  * RETURN:
  *    NO_ERROR if success, other number otherwise
  ***********************************************************/
-int ColumnOp::writeRows(Column& curCol, uint64_t totalRow, const RIDList& ridList, const void* valArray, const void* oldValArray, bool bDelete )
+int ColumnOp::writeRows(Column& curCol, uint64_t totalRow, const RIDList& ridList, const void* valArray, void* oldValArray, bool bDelete )
 {
     uint64_t i = 0, curRowId;
     int      dataFbo, dataBio, curDataFbo = -1;
@@ -1895,6 +1849,13 @@ int ColumnOp::writeRows(Column& curCol, uint64_t totalRow, const RIDList& ridLis
                                     curCol.colWidth);
         }
 
+        // This is the write stuff
+        if (oldValArray)
+        {
+            uint8_t* p = static_cast<uint8_t*>(oldValArray);
+            memcpy(p + i * curCol.colWidth, dataBuf + dataBio, curCol.colWidth);
+        }
+
         writeBufValue(dataBuf + dataBio, pVal, curCol.colWidth);
 
         i++;
@@ -1927,7 +1888,7 @@ int ColumnOp::writeRows(Column& curCol, uint64_t totalRow, const RIDList& ridLis
   * RETURN:
   *    NO_ERROR if success, other number otherwise
   ***********************************************************/
-int ColumnOp::writeRowsValues(Column& curCol, uint64_t totalRow, const RIDList& ridList, const void* valArray )
+int ColumnOp::writeRowsValues(Column& curCol, uint64_t totalRow, const RIDList& ridList, const void* valArray, void* oldValArray)
 {
     uint64_t i = 0, curRowId;
     int      dataFbo, dataBio, curDataFbo = -1;
@@ -2035,6 +1996,12 @@ int ColumnOp::writeRowsValues(Column& curCol, uint64_t totalRow, const RIDList& 
         }
 
         // This is the write stuff
+        if (oldValArray)
+        {
+            uint8_t* p = static_cast<uint8_t*>(oldValArray);
+            memcpy(p + curCol.colWidth * i, dataBuf + dataBio, curCol.colWidth);
+        }
+
         writeBufValue(dataBuf + dataBio, pVal, curCol.colWidth);
 
         i++;

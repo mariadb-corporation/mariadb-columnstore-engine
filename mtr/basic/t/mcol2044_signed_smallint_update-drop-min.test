@@ -1,0 +1,12 @@
+# tests updates that range when we updating min value to value that is bigger than min.
+--disable_warnings
+create database if not exists test_ranges;
+use test_ranges;
+drop table if exists t;
+--enable_warnings
+create table t(x smallint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=44; # range must be invalid now.
+
+select max_value, min_value from information_schema.columnstore_extents;
+drop database test_ranges;

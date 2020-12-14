@@ -145,6 +145,10 @@ typedef struct _SIDTIDEntry SIDTIDEntry;
 // @bug 1970 - Added CPInfo and CPMaxMin structs used by new interface that allows setting the max and min CP data
 // for multiple extents.
 
+// Special seqNum field values.
+#define SEQNUM_MARK_INVALID (-1)
+#define SEQNUM_MARK_INVALID_SET_RANGE (-2)
+
 // Used in vectors.
 struct CPInfo
 {
@@ -162,7 +166,7 @@ struct CPInfo
         int128_t bigMin;
         int64_t min_;
     };
-    bool isBinaryColumn;
+    bool isBinaryColumn;   // XXX: we should remove these two fields and replace it with type handler.
 };
 typedef std::vector<CPInfo> CPInfoList_t;
 
@@ -182,7 +186,8 @@ struct CPMaxMin
         int128_t bigMin;
         int64_t min_;
     };
-    bool isBinaryColumn;
+    bool isBinaryColumn;   // XXX: these two fields should be replaced with type handler pointer.
+
 };
 typedef std::tr1::unordered_map<LBID_t, CPMaxMin> CPMaxMinMap_t;
 

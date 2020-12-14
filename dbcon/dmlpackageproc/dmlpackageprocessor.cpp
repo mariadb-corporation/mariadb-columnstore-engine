@@ -485,37 +485,7 @@ int DMLPackageProcessor::commitBatchAutoOnTransaction(uint64_t uniqueId, BRM::Tx
     //set CP data before hwm.
 
     //cout << "setting hwm allHwm size " << allHwm.size() << endl;
-    vector<BRM::LBID_t> lbidList;
-
-    if (idbdatafile::IDBPolicy::useHdfs())
-    {
-        BRM::LBID_t startLbid;
-
-        for ( unsigned i = 0; i < allHwm.size(); i++)
-        {
-            rc = fDbrm->lookupLocalStartLbid(allHwm[i].oid, allHwm[i].partNum, allHwm[i].segNum, allHwm[i].hwm, startLbid);
-            lbidList.push_back(startLbid);
-        }
-    }
-    else
-        fDbrm->getUncommittedExtentLBIDs(static_cast<BRM::VER_t>(txnID.id), lbidList);
-
-    vector<BRM::LBID_t>::const_iterator iter = lbidList.begin();
-    vector<BRM::LBID_t>::const_iterator end = lbidList.end();
     BRM::CPInfoList_t cpInfos;
-    BRM::CPInfo aInfo;
-
-    while (iter != end)
-    {
-        aInfo.firstLbid = *iter;
-        aInfo.max = numeric_limits<int64_t>::min(); // Not used
-        aInfo.min = numeric_limits<int64_t>::max(); // Not used
-        utils::int128Min(aInfo.bigMax); // Not used
-        utils::int128Max(aInfo.bigMin); // Not used
-        aInfo.seqNum = -1;
-        cpInfos.push_back(aInfo);
-        ++iter;
-    }
 
     std::vector<BRM::CPInfoMerge>  mergeCPDataArgs;
     rc = fDbrm->bulkSetHWMAndCP(allHwm, cpInfos, mergeCPDataArgs, txnID.id);

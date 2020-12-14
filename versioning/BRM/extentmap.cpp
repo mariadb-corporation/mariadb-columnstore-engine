@@ -549,12 +549,12 @@ int ExtentMap::setMaxMin(const LBID_t lbid,
                 }
                 //special val to indicate a reset--used by editem -c.
                 //Also used by COMMIT and ROLLBACK to invalidate CP.
-                else if (seqNum == -1)
+                else if (seqNum == SEQNUM_MARK_INVALID)
                 {
                     makeUndoRecord(&fExtentMap[i], sizeof(struct EMEntry));
                     // We set hiVal and loVal to correct values for signed or unsigned
                     // during the markinvalid step, which sets the invalid variable to CP_UPDATING.
-                    // During this step (seqNum == -1), the min and max passed in are not reliable
+                    // During this step (seqNum == SEQNUM_MARK_INVALID), the min and max passed in are not reliable
                     // and should not be used.
                     fExtentMap[i].partition.cprange.isValid = CP_INVALID;
                     incSeqNum(fExtentMap[i].partition.cprange.sequenceNum);
@@ -595,7 +595,6 @@ void ExtentMap::setExtentsMaxMin(const CPMaxMinMap_t& cpMap, bool firstNode, boo
     }
 
 #endif
-
 
 #ifdef BRM_INFO
 
@@ -676,19 +675,19 @@ void ExtentMap::setExtentsMaxMin(const CPMaxMinMap_t& cpMap, bool firstNode, boo
 #endif
                 }
                 //special val to indicate a reset -- ignore the min/max
-                else if (it->second.seqNum == -1)
+                else if (it->second.seqNum == SEQNUM_MARK_INVALID)
                 {
                     makeUndoRecord(&fExtentMap[i], sizeof(struct EMEntry));
                     // We set hiVal and loVal to correct values for signed or unsigned
                     // during the markinvalid step, which sets the invalid variable to CP_UPDATING.
-                    // During this step (seqNum == -1), the min and max passed in are not reliable
+                    // During this step (seqNum == SEQNUM_MARK_INVALID), the min and max passed in are not reliable
                     // and should not be used.
                     fExtentMap[i].partition.cprange.isValid = CP_INVALID;
                     incSeqNum(fExtentMap[i].partition.cprange.sequenceNum);
                     extentsUpdated++;
                 }
                 //special val to indicate a reset -- assign the min/max
-                else if (it->second.seqNum == -2)
+                else if (it->second.seqNum == SEQNUM_MARK_INVALID_SET_RANGE)
                 {
                     makeUndoRecord(&fExtentMap[i], sizeof(struct EMEntry));
                     if (it->second.isBinaryColumn)
@@ -719,7 +718,25 @@ void ExtentMap::setExtentsMaxMin(const CPMaxMinMap_t& cpMap, bool firstNode, boo
         }
     }
 
-    throw logic_error("ExtentMap::setExtentsMaxMin(): lbid isn't allocated");
+    ostringstream oss;
+    oss << "ExtentMap::setExtentsMaxMin(): LBIDs not allocated:";
+    for (it = cpMap.begin(); it != cpMap.end(); it ++)
+    {
+        for (i = 0; i < entries; i++)
+        {
+            if (fExtentMap[i].range.start == it->first)
+	    {
+                break;
+	    }
+	}
+	if (i < entries)
+	{
+            continue;
+	}
+        oss << " " << it->first;
+    }
+
+    throw logic_error(oss.str());
 }
 
 //------------------------------------------------------------------------------
@@ -1164,6 +1181,47 @@ int ExtentMap::getMaxMin(const LBID_t lbid,
     releaseEMEntryTable(READ);
     throw logic_error("ExtentMap::getMaxMin(): that lbid isn't allocated");
 //   	return -1;
+}
+
+void ExtentMap::getCPMaxMin(const BRM::LBID_t lbid, BRM::CPMaxMin& cpMaxMin)
+{
+    int entries;
+    int i;
+    LBID_t lastBlock;
+
+#ifdef BRM_DEBUG
+
+    if (lbid < 0)
+        throw invalid_argument("ExtentMap::getMaxMin(): lbid must be >= 0");
+
+#endif
+
+    grabEMEntryTable(READ);
+    entries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
+
+    for (i = 0; i < entries; i++)
+    {
+        if (fExtentMap[i].range.size != 0)
+        {
+            lastBlock = fExtentMap[i].range.start +
+                        (static_cast<LBID_t>(fExtentMap[i].range.size) * 1024) - 1;
+
+            if (lbid >= fExtentMap[i].range.start && lbid <= lastBlock)
+            {
+                cpMaxMin.bigMax = fExtentMap[i].partition.cprange.bigHiVal;
+                cpMaxMin.bigMin = fExtentMap[i].partition.cprange.bigLoVal;
+                cpMaxMin.max    = fExtentMap[i].partition.cprange.hiVal;
+                cpMaxMin.min    = fExtentMap[i].partition.cprange.loVal;
+                cpMaxMin.seqNum = fExtentMap[i].partition.cprange.sequenceNum;
+
+                releaseEMEntryTable(READ);
+                return ;
+            }
+        }
+    }
+
+    releaseEMEntryTable(READ);
+    throw logic_error("ExtentMap::getMaxMin(): that lbid isn't allocated");
 }
 
 /* Removes a range from the freelist.  Used by load() */

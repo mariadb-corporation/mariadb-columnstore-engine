@@ -1,0 +1,11 @@
+# tests updates that sets invalid range when we set value at max boundary that is less than max.
+--disable_warnings
+create database if not exists test_ranges;
+use test_ranges;
+drop table if exists t;
+--enable_warnings
+create table t(x integer) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=44; # range must drop to invalid
+select max_value, min_value from information_schema.columnstore_extents;
+drop database test_ranges;

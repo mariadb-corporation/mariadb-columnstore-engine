@@ -4998,7 +4998,6 @@ void WE_DDLCommandProc::purgeFDCache()
                 aFile.compType = aIt->compType;
                 files.push_back(aFile);
                 fDbrm.lookupLocalStartLbid(aFile.oid, aFile.partitionNum, aFile.segmentNum, aIt->hwm, startLbid);
-                lbidList.push_back(startLbid);
                 //cout <<"Added to files oid:dbroot:part:seg:compType = " << aFile.oid<<":"<<aFile.dbRoot<<":"<<aFile.partitionNum<<":"<<aFile.segmentNum
                 //<<":"<<aFile.compType <<endl;
                 aIt++;

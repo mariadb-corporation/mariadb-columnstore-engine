@@ -491,6 +491,21 @@ int DBRM::getExtentMaxMin(const LBID_t lbid, T& max, T& min, int32_t& seqNum) th
     }
 }
 
+int DBRM::getExtentCPMaxMin(const LBID_t lbid, CPMaxMin& cpMaxMin) throw()
+{
+    try
+    {
+        em->getCPMaxMin(lbid, cpMaxMin);
+    }
+    catch (...)
+    {
+        return ERR_FAILURE;
+    }
+    return ERR_OK;
+}
+
+
+
 int DBRM::setExtentMaxMin(const LBID_t lbid, const int64_t max, const int64_t min, const int32_t seqNum) DBRM_THROW
 {
 #ifdef BRM_INFO
@@ -4574,7 +4589,7 @@ void DBRM::invalidateUncommittedExtentLBIDs(execplan::CalpontSystemCatalog::SCN 
             aInfo.isBinaryColumn = false;
         }
 
-        aInfo.seqNum = -2;
+        aInfo.seqNum = SEQNUM_MARK_INVALID_SET_RANGE;
         cpInfos.push_back(aInfo);
     }
 

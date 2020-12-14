@@ -206,6 +206,7 @@ WErrorCodes::WErrorCodes() : fErrorCodes()
     fErrorCodes[ERR_BRM_GET_SUSPEND] = " BRM error get the system suspend flag ";
     fErrorCodes[ERR_BRM_BAD_STRIPE_CNT] = " Incorrect number of column extents allocated in stripe";
     fErrorCodes[ERR_BRM_UNSUPP_WIDTH] = " Unsupported non-dictionary column width";
+    fErrorCodes[ERR_BRM_GET_EXTENT_CP] = " BRM error getting extent max/min";
 
     // DM error
     fErrorCodes[ERR_DM_CONVERT_OID] = " a DM Conversion error";
