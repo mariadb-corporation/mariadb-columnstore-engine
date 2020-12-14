@@ -127,7 +127,7 @@ void ColumnCommand::makeScanMsg()
     primMsg->ism.Size = baseMsgLength;
     primMsg->NVALS = 0;
     primMsg->LBID = lbid;
-    primMsg->RidFlags = 0xFF;
+    primMsg->RidFlags = 0xFFFF;
 
 // 	cout << "scanning lbid " << lbid << " colwidth = " << primMsg->DataSize <<
 // 		" filterCount = " << filterCount << " outputType = " <<
@@ -148,7 +148,7 @@ void ColumnCommand::loadData()
 {
     uint32_t wasCached;
     uint32_t blocksRead;
-    uint8_t _mask;
+    uint16_t _mask;
     uint64_t oidLastLbid = 0;
     bool lastBlockReached = false;
     oidLastLbid = getLastLbid();
@@ -161,7 +161,7 @@ void ColumnCommand::loadData()
 
 
     _mask = mask;
-// 	primMsg->RidFlags = 0xff;   // disables selective block loading
+// 	primMsg->RidFlags = 0xffff;   // disables selective block loading
     //cout <<__FILE__ << "::issuePrimitive() o: " << getOID() << " l:" << primMsg->LBID << " ll: " << oidLastLbid << endl;
 
     for (i = 0; i < colType.colWidth; ++i, _mask <<= shift)
@@ -599,30 +599,28 @@ void ColumnCommand::prep(int8_t outputType, bool absRids)
 // 	memcpy(primMsg + 1, filterString.buf(), filterString.length());
 
 
-
-    // JFYI This switch results are used by index scan code that is unused
-    // as of 1.5
     switch (colType.colWidth)
     {
         case 1:
+            shift = 16;
+            mask = 0xFFFF;
+            break;
+
+        case 2:
             shift = 8;
             mask = 0xFF;
             break;
 
-        case 2:
+        case 4:
             shift = 4;
             mask = 0x0F;
             break;
 
-        case 4:
+        case 8:
             shift = 2;
             mask = 0x03;
             break;
 
-        case 8:
-            shift = 1;
-            mask = 0x01;
-            break;
         case 16:
             shift = 1;
             mask = 0x01;

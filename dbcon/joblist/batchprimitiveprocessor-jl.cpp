@@ -351,8 +351,8 @@ void BatchPrimitiveProcessorJL::addElementType(const ElementType& et, uint32_t d
         absRids[ridCount] = et.first;
     else
     {
-        relRids[ridCount] = et.first & 0x1fff;  // 8192 rows per logical block
-        ridMap |= 1 << (relRids[ridCount] >> 10);	// LSB -> 0-1023, MSB -> 7168-8191
+        relRids[ridCount] = et.first & 0x1fff;   // 8192 rows per logical block
+        ridMap |= 1 << (relRids[ridCount] >> 9); // LSB -> 0-511, MSB -> 7680-8191
     }
 
     if (sendValues)
