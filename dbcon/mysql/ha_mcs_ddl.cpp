@@ -2480,7 +2480,7 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
         char datatype_buf[MAX_FIELD_WIDTH], def_value_buf[MAX_FIELD_WIDTH];
         String datatype, def_value;
         ostringstream  oss;
-        string tbl_name = string(share->db.str) + "." + string(share->table_name.str);
+        string tbl_name = "`" + string(share->db.str) + "`.`" + string(share->table_name.str) + "`";
 
         // Save the current read_set map and mark it for read
         old_map= tmp_use_all_columns(table_arg, table_arg->read_set);
@@ -2495,7 +2495,7 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
             (*field)->sql_type(datatype);
             if (field != table_arg->field)
                 oss << ", ";
-            oss << (*field)->field_name.str << " " << datatype.ptr();
+            oss << "`" << (*field)->field_name.str << "` " << datatype.ptr();
 
 
             if ((*field)->has_charset())
