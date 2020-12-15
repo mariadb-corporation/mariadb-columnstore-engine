@@ -970,6 +970,15 @@ inline bool isCharType(const execplan::CalpontSystemCatalog::ColDataType type)
             execplan::CalpontSystemCatalog::TEXT == type);
 }
 
+/** convenience function to determine if column type is BLOB or VARBINARY
+ */
+inline bool isBlobOrVarbinary(const execplan::CalpontSystemCatalog::ColDataType type)
+{
+    return (execplan::CalpontSystemCatalog::BLOB == type ||
+            execplan::CalpontSystemCatalog::VARBINARY == type);
+}
+
+
 /** convenience function to determine if column type is a
  *  numeric type
  */
