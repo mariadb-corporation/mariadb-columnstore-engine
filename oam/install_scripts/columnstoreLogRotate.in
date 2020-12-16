@@ -8,13 +8,37 @@
     rotate 7
     daily
     dateext
-	copytruncate
+    copytruncate
     olddir /var/log/mariadb/columnstore/archive
     su root root 
 }
 @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml {
     daily
     dateext
-	copy
+    copy
     olddir @ENGINE_SYSCONFDIR@/columnstore
+}
+@ENGINE_DATADIR@/data/bulk/job/*.xml {
+    missingok
+    daily
+    rotate 1
+    compress
+    maxage 30 
+    nocreate
+}
+@ENGINE_DATADIR@/data/bulk/log/*.err {
+    missingok
+    daily
+    rotate 1
+    compress
+    maxage 30 
+    nocreate
+}
+@ENGINE_DATADIR@/data/bulk/log/*.log {
+    missingok
+    daily
+    rotate 1
+    compress
+    maxage 30 
+    nocreate
 }
