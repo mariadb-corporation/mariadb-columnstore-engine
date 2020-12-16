@@ -42,9 +42,10 @@ using namespace ordering;
 namespace joblist
 {
 
+const uint64_t LimitedOrderBy::fMaxUncommited = 102400; // 100KiB - make it configurable?
 
 // LimitedOrderBy class implementation
-LimitedOrderBy::LimitedOrderBy() : fStart(0), fCount(-1)
+LimitedOrderBy::LimitedOrderBy() : fStart(0), fCount(-1), fUncommitedMemory(0)
 {
     fRule.fIdbCompare = this;
 }
@@ -122,6 +123,20 @@ void LimitedOrderBy::processRow(const rowgroup::Row& row)
         OrderByRow newRow(fRow0, fRule);
         fOrderByQueue.push(newRow);
 
+        uint64_t memSizeInc = sizeof(newRow);
+        fUncommitedMemory += memSizeInc;
+        if (fUncommitedMemory >= fMaxUncommited)
+        {
+            fMemSize += fUncommitedMemory;
+            if (!fRm->getMemory(fUncommitedMemory, fSessionMemLimit))
+            {
+                cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @"
+                     << __FILE__ << ":" << __LINE__;
+                throw IDBExcept(fErrorCode);
+            }
+            fUncommitedMemory = 0;
+        }
+
         // add to the distinct map
         if (fDistinct)
             fDistinctMap->insert(fRow0.getPointer());
@@ -132,7 +147,7 @@ void LimitedOrderBy::processRow(const rowgroup::Row& row)
         if (fRowGroup.getRowCount() >= fRowsPerRG)
         {
             fDataQueue.push(fData);
-            uint64_t newSize = fRowsPerRG * fRowGroup.getRowSize();
+            uint64_t newSize = fRowGroup.getSizeWithStrings() - fRowGroup.getHeaderSize();
             fMemSize += newSize;
 
             if (!fRm->getMemory(newSize, fSessionMemLimit))
@@ -157,7 +172,7 @@ void LimitedOrderBy::processRow(const rowgroup::Row& row)
 
         if (fDistinct)
         {
-			fDistinctMap->erase(fOrderByQueue.top().fData);
+            fDistinctMap->erase(fOrderByQueue.top().fData);
             fDistinctMap->insert(row1.getPointer());
         }
 
@@ -173,6 +188,18 @@ void LimitedOrderBy::processRow(const rowgroup::Row& row)
  */ 
 void LimitedOrderBy::finalize()
 {
+    if (fUncommitedMemory > 0)
+    {
+        fMemSize += fUncommitedMemory;
+        if (!fRm->getMemory(fUncommitedMemory, fSessionMemLimit))
+        {
+            cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @"
+                 << __FILE__ << ":" << __LINE__;
+            throw IDBExcept(fErrorCode);
+        }
+        fUncommitedMemory = 0;
+    }
+
     queue<RGData> tempQueue;
     if (fRowGroup.getRowCount() > 0)
         fDataQueue.push(fData);
@@ -181,7 +208,7 @@ void LimitedOrderBy::finalize()
     {
         // *DRRTUY Very memory intensive. CS needs to account active
         // memory only and release memory if needed.
-        uint64_t memSizeInc = fRowsPerRG * fRowGroup.getRowSize();
+        uint64_t memSizeInc = fRowGroup.getSizeWithStrings() - fRowGroup.getHeaderSize();
         fMemSize += memSizeInc;
 
         if (!fRm->getMemory(memSizeInc, fSessionMemLimit))
@@ -212,7 +239,7 @@ void LimitedOrderBy::finalize()
         }
 
         list<RGData>::iterator tempListIter = tempRGDataList.begin();
-        
+
         i = 0;
         uint32_t rSize = fRow0.getSize();
         uint64_t preLastRowNumb = fRowsPerRG - 1;
