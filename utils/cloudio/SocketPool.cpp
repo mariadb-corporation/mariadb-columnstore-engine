@@ -20,7 +20,10 @@
 #include "logger.h"
 #include "messageFormat.h"
 
+#include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <sys/un.h>
 
 using namespace std;
@@ -74,13 +77,14 @@ SocketPool::~SocketPool()
         ::close(allSockets[i]);
 }
 
-#define sm_check_error \
+// This macro may not work on non-linux OS -- strerror_r may be defined differently
+#define sm_check_error(sd) \
     if (err < 0) \
     { \
         char _smbuf[80]; \
         int l_errno = errno; \
         log(logging::LOG_TYPE_ERROR, string("SocketPool: got a network error: ") + strerror_r(l_errno, _smbuf, 80)); \
-        remoteClosed(sock); \
+        remoteClosed(sd); \
         return -1; \
     }
     
@@ -125,11 +129,11 @@ retry:
         sock = -1;
         goto retry;
     }
-    sm_check_error;
+    sm_check_error(sock);
     while (count < length)
     {
         err = ::write(sock, &inbuf[count], length-count);
-        sm_check_error;
+        sm_check_error(sock);
         count += err;
         in.advance(err);
     }
@@ -147,7 +151,7 @@ retry:
         //cout << "SP receiving msg on sock " << sock << endl;
         // here remainingBytes means the # of bytes from the previous message
         err = ::read(sock, &window[remainingBytes], 8192 - remainingBytes);
-        sm_check_error;
+        sm_check_error(sock);
         if (err == 0)
         {
             remoteClosed(sock);
@@ -201,7 +205,7 @@ retry:
     while (remainingBytes > 0)
     {
         err = ::read(sock, &outbuf[resp->payloadLen - remainingBytes], remainingBytes);
-        sm_check_error;
+        sm_check_error(sock);
         remainingBytes -= err;
         out->advanceInputPtr(err);
     }
@@ -221,22 +225,26 @@ int SocketPool::getSocket()
         memset(&addr, 0, sizeof(addr));
         addr.sun_family = AF_UNIX;
         strcpy(&addr.sun_path[1], &storagemanager::socket_name[1]);   // first char is null...
+        ssize_t err = 0;
         clientSocket = ::socket(AF_UNIX, SOCK_STREAM, 0);
-        int err = ::connect(clientSocket, (const struct sockaddr *) &addr, sizeof(addr));
-        if (err >= 0)
-            allSockets.push_back(clientSocket);
+        if (clientSocket < 0)
+        {
+            err = clientSocket;
+        }
         else
         {
-            int saved_errno = errno;
-            ostringstream os;
-            char buf[80];
-            os << "SocketPool::getSocket() failed to connect; got '" << strerror_r(saved_errno, buf, 80) << "'";
-            cout << os.str() << endl;
-            log(logging::LOG_TYPE_ERROR, os.str());
-            close(clientSocket);
-            errno = saved_errno;
-            return -1;
+            int bufferSize = 1;
+            socklen_t bufferSizeSize = 4;
+            err = setsockopt(clientSocket, IPPROTO_TCP, TCP_NODELAY, (const char*)&bufferSize, bufferSizeSize);
+
+            if (!err)
+            {
+                err = ::connect(clientSocket, (const struct sockaddr *) &addr, sizeof(addr));
+                if (err >= 0)
+                    allSockets.push_back(clientSocket);
+            }
         }
+        sm_check_error(clientSocket);
         return clientSocket;
     }
     
