@@ -4149,6 +4149,14 @@ ReturnedColumn* buildFunctionColumn(
 #endif
 
         fc->operationType(functor->operationType(funcParms, fc->resultType()));
+        // For some reason, MDB has MYSQL_TYPE_DATETIME2 for functions on a TIMESTAMP
+        if (fc->operationType().colDataType == CalpontSystemCatalog::TIMESTAMP)
+        {
+            CalpontSystemCatalog::ColType ct = fc->resultType();
+            ct.colDataType = CalpontSystemCatalog::TIMESTAMP;
+            ct.colWidth = 8;
+            fc->resultType(ct);
+        }
         fc->expressionId(ci->expressionId++);
         // A few functions use a different collation than that found in 
         // the base ifp class
