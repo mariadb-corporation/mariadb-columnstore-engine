@@ -57,7 +57,9 @@ using namespace dataconvert;
 namespace datatypes
 {
 
-int128_t SystemCatalog::TypeAttributesStd::decimal128FromString(const std::string& value) const
+int128_t
+SystemCatalog::TypeAttributesStd::decimal128FromString(
+    const std::string& value, bool *saturate) const
 {
   int128_t result = 0;
   bool pushWarning = false;
@@ -67,7 +69,8 @@ int128_t SystemCatalog::TypeAttributesStd::decimal128FromString(const std::strin
                                           *this,
                                           pushWarning,
                                           noRoundup,
-                                          result);
+                                          result,
+                                          saturate);
   return result;
 }
 

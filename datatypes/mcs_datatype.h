@@ -167,10 +167,15 @@ public:
           scale(0),
           precision(-1)
       {}
+      TypeAttributesStd(int32_t w, int32_t s, int32_t p)
+         :colWidth(w),
+          scale(s),
+          precision(p)
+      {}
       /**
           @brief Convenience method to get int128 from a std::string.
       */
-      int128_t decimal128FromString(const std::string& value) const;
+      int128_t decimal128FromString(const std::string& value, bool *saturate = 0) const;
 
       /**
           @brief The method sets the legacy scale and precision of a wide decimal

@@ -1087,13 +1087,21 @@ void XMLJob::fillInXMLDataNotNullDefault(
             case execplan::CalpontSystemCatalog::DECIMAL:
             case execplan::CalpontSystemCatalog::UDECIMAL:
             {
-                col.fDefaultInt = Convertor::convertDecimalString(
-                                      col_defaultValue.c_str(),
-                                      col_defaultValue.length(),
-                                      colType.scale);
+                if (LIKELY(colType.colWidth == datatypes::MAXDECIMALWIDTH))
+                {
+                    col.fDefaultWideDecimal = colType.decimal128FromString(
+                                                  col_defaultValue, &bDefaultConvertError);
+                }
+                else
+                {
+                    col.fDefaultInt = Convertor::convertDecimalString(
+                                          col_defaultValue.c_str(),
+                                          col_defaultValue.length(),
+                                          colType.scale);
 
-                if (errno == ERANGE)
-                    bDefaultConvertError = true;
+                    if (errno == ERANGE)
+                        bDefaultConvertError = true;
+                }
 
                 break;
             }

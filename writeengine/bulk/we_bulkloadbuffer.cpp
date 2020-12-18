@@ -940,9 +940,7 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
         // BIG INT
         //----------------------------------------------------------------------
         case WriteEngine::WR_LONGLONG:
-        case WriteEngine::WR_BINARY:
         {
-            // TODO MCOL-641 Add full support here.
             bool bSatVal = false;
 
             if ( column.dataType != CalpontSystemCatalog::DATETIME &&
@@ -987,18 +985,9 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                         if ( (column.dataType == CalpontSystemCatalog::DECIMAL) ||
                                 (column.dataType == CalpontSystemCatalog::UDECIMAL))
                         {
-                            if (LIKELY(width == datatypes::MAXDECIMALWIDTH))
-                            {
-                                bool saturate = false;
-                                bigllVal = dataconvert::string_to_ll<int128_t>(string(field), saturate);
-                                // TODO MCOL-641 check saturate
-                            }
-                            else if (width <= 8)
-                            {
-                                // errno is initialized and set in convertDecimalString
-                                llVal = Convertor::convertDecimalString(
-                                            field, fieldLength, column.scale );
-                            }
+                            // errno is initialized and set in convertDecimalString
+                            llVal = Convertor::convertDecimalString(
+                                        field, fieldLength, column.scale );
                         }
                         else
                         {
@@ -1024,31 +1013,17 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                     bSatVal = true;
                 }
 
-
                 if (bSatVal)
                     bufStats.satCount++;
 
                 // Update min/max range
-                if (width <= 8)
-                {
-                    if (llVal < bufStats.minBufferVal)
-                        bufStats.minBufferVal = llVal;
+                if (llVal < bufStats.minBufferVal)
+                    bufStats.minBufferVal = llVal;
 
-                    if (llVal > bufStats.maxBufferVal)
-                        bufStats.maxBufferVal = llVal;
+                if (llVal > bufStats.maxBufferVal)
+                    bufStats.maxBufferVal = llVal;
 
-                    pVal = &llVal;
-                }
-                else
-                {
-                    if (bigllVal < bufStats.bigMinBufferVal)
-                        bufStats.bigMinBufferVal = bigllVal;
-
-                    if (bigllVal > bufStats.bigMaxBufferVal)
-                        bufStats.bigMaxBufferVal = bigllVal;
-
-                    pVal = &bigllVal;
-                }
+                pVal = &llVal;
             }
             else if (column.dataType == CalpontSystemCatalog::TIME)
             {
@@ -1208,6 +1183,75 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
 
                 pVal = &llDate;
             }
+
+            break;
+        }
+
+        //----------------------------------------------------------------------
+        // WIDE DECIMAL
+        //----------------------------------------------------------------------
+        case WriteEngine::WR_BINARY:
+        {
+            bool bSatVal = false;
+
+            if (nullFlag)
+            {
+                if (!column.autoIncFlag)
+                {
+                    if (column.fWithDefault)
+                    {
+                        bigllVal = column.fDefaultWideDecimal;
+                        // fall through to update saturation and min/max
+                    }
+                    else
+                    {
+                        bigllVal = datatypes::Decimal128Null;
+                        pVal = &bigllVal;
+                        break;
+                    }
+                }
+                else
+                {
+                    // TODO MCOL-641 Add support for int128_t version of
+                    // fAutoIncNextValue
+                    bigllVal = fAutoIncNextValue++;
+                }
+            }
+            else
+            {
+                if (fImportDataMode != IMPORT_DATA_TEXT)
+                {
+                    memcpy(&bigllVal, field, sizeof(bigllVal));
+                }
+                else
+                {
+                    if (isTrueWord(const_cast<const char*>(field), fieldLength))
+                    {
+                        strcpy(field, "1");
+                        fieldLength = 1;
+                    }
+
+                    bool dummy = false;
+                    // Value saturation to 9999... or -9999... is handled by
+                    // number_int_value(), and the bSatVal flag is set to true
+                    dataconvert::number_int_value(string(field), column.dataType,
+                        datatypes::SystemCatalog::TypeAttributesStd(
+                            column.width, column.scale, column.precision),
+                        dummy, false, bigllVal, &bSatVal);
+                }
+            }
+
+            if (bSatVal)
+                bufStats.satCount++;
+
+            // Update min/max range
+            if (bigllVal < bufStats.bigMinBufferVal)
+                bufStats.bigMinBufferVal = bigllVal;
+
+            if (bigllVal > bufStats.bigMaxBufferVal)
+                bufStats.bigMaxBufferVal = bigllVal;
+
+            pVal = &bigllVal;
 
             break;
         }
@@ -3390,6 +3434,14 @@ bool BulkLoadBuffer::isBinaryFieldNull(void* val,
         case WriteEngine::WR_ULONGLONG:
         {
             if ((*(uint64_t*)val) == joblist::UBIGINTNULL)
+                isNullFlag = true;
+
+            break;
+        }
+
+        case WriteEngine::WR_BINARY:
+        {
+            if ((*((int128_t*)val)) == datatypes::Decimal128Null)
                 isNullFlag = true;
 
             break;
