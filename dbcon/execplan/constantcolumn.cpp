@@ -71,10 +71,10 @@ ConstantColumn::ConstantColumn(const string& sql, TYPE type) :
     fResult.longDoubleVal = strtold(sql.c_str(), NULL);
 
     // decimal for constant should be constructed by the caller and call the decimal constructor
-    fResult.decimalVal.value = fResult.intVal;
-    fResult.decimalVal.scale = 0;
-    fResult.decimalVal.precision = 18;
-
+    fResult.decimalVal = datatypes::Decimal(fResult.intVal,
+                                            0,
+                                            18,
+                                            (int128_t) fResult.intVal);
     // @bug 3381, default null item to integer type.
     if (fType == ConstantColumn::NULLDATA)
     {
@@ -109,9 +109,10 @@ ConstantColumn::ConstantColumn(const string& sql, const double val) :
     fResult.floatVal = (float)val;
     fResult.longDoubleVal = val;
     // decimal for constant should be constructed by the caller and call the decimal constructor
-    fResult.decimalVal.value = fResult.intVal;
-    fResult.decimalVal.scale = 0;
-    fResult.decimalVal.precision = 18;
+    fResult.decimalVal = datatypes::Decimal(fResult.intVal,
+                                            0,
+                                            18,
+                                            (int128_t) fResult.intVal);
     fResultType.colDataType = CalpontSystemCatalog::DOUBLE;
     fResultType.colWidth = 8;
 }
@@ -129,9 +130,10 @@ ConstantColumn::ConstantColumn(const string& sql, const long double val) :
     fResult.floatVal = (float)val;
     fResult.longDoubleVal = val;
     // decimal for constant should be constructed by the caller and call the decimal constructor
-    fResult.decimalVal.value = fResult.intVal;
-    fResult.decimalVal.scale = 0;
-    fResult.decimalVal.precision = 18;
+    fResult.decimalVal = datatypes::Decimal(fResult.intVal,
+                                            0,
+                                            18,
+                                            (int128_t) fResult.intVal);
     fResultType.colDataType = CalpontSystemCatalog::DOUBLE;
     fResultType.colWidth = 8;
 }
@@ -148,8 +150,10 @@ ConstantColumn::ConstantColumn(const string& sql, const int64_t val, TYPE type) 
     fResult.floatVal = (float)fResult.intVal;
     fResult.doubleVal = (double)fResult.intVal;
     fResult.longDoubleVal = (long double)fResult.intVal;
-    fResult.decimalVal.value = fResult.intVal;
-    fResult.decimalVal.scale = 0;
+    fResult.decimalVal = datatypes::Decimal(fResult.intVal,
+                                            0,
+                                            0,
+                                            (int128_t) fResult.intVal);
     fResultType.colDataType = CalpontSystemCatalog::BIGINT;
     fResultType.colWidth = 8;
 }
@@ -166,8 +170,10 @@ ConstantColumn::ConstantColumn(const string& sql, const uint64_t val, TYPE type)
     fResult.floatVal = (float)fResult.uintVal;
     fResult.doubleVal = (double)fResult.uintVal;
     fResult.longDoubleVal = (long double)fResult.uintVal;
-    fResult.decimalVal.value = fResult.uintVal;
-    fResult.decimalVal.scale = 0;
+    fResult.decimalVal = datatypes::Decimal(fResult.uintVal,
+                                            0,
+                                            0,
+                                            (int128_t) fResult.uintVal);
     fResultType.colDataType = CalpontSystemCatalog::UBIGINT;
     fResultType.colWidth = 8;
 }
@@ -229,9 +235,10 @@ ConstantColumn::ConstantColumn(const int64_t val, TYPE type) :
     fResult.floatVal = (float)fResult.intVal;
     fResult.doubleVal = (double)fResult.intVal;
     fResult.longDoubleVal = (long double)fResult.intVal;
-    fResult.decimalVal.value = fResult.intVal;
-    fResult.decimalVal.s128Value = fResult.intVal;
-    fResult.decimalVal.scale = 0;
+    fResult.decimalVal = datatypes::Decimal(fResult.intVal,
+                                            0,
+                                            0,
+                                            (int128_t) fResult.intVal);
     fResultType.colDataType = CalpontSystemCatalog::BIGINT;
     fResultType.colWidth = 8;
 }
@@ -251,10 +258,10 @@ ConstantColumn::ConstantColumn(const uint64_t val, TYPE type,
     fResult.floatVal = (float)fResult.uintVal;
     fResult.doubleVal = (double)fResult.uintVal;
     fResult.longDoubleVal = (long double)fResult.uintVal;
-    fResult.decimalVal.value = fResult.uintVal;
-    fResult.decimalVal.s128Value = fResult.uintVal;
-    fResult.decimalVal.scale = scale;
-    fResult.decimalVal.precision = precision;
+    fResult.decimalVal = datatypes::Decimal(fResult.uintVal,
+                                            scale,
+                                            precision,
+                                            (int128_t) fResult.uintVal);
     fResultType.colDataType = CalpontSystemCatalog::UBIGINT;
     fResultType.colWidth = 8;
 }
