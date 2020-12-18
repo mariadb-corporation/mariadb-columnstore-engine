@@ -246,11 +246,12 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
         case execplan::CalpontSystemCatalog::LONGDOUBLE:
             fResult.longDoubleVal = execute(lop->getLongDoubleVal(row, isNull), rop->getLongDoubleVal(row, isNull), isNull);
             break;
-        // WIP MCOL-641
+
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
             execute(fResult.decimalVal, lop->getDecimalVal(row, isNull), rop->getDecimalVal(row, isNull), isNull);
             break;
+
         default:
         {
             std::ostringstream oss;

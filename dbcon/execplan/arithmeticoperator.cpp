@@ -127,7 +127,8 @@ bool ArithmeticOperator::operator!=(const TreeNode* t) const
 
 void ArithmeticOperator::adjustResultType(const CalpontSystemCatalog::ColType& m)
 {
-    if (m.colDataType != CalpontSystemCatalog::DECIMAL)
+    if (m.colDataType != CalpontSystemCatalog::DECIMAL &&
+        m.colDataType != CalpontSystemCatalog::UDECIMAL)
     {
         fResultType = m;
     }
