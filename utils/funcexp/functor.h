@@ -45,6 +45,7 @@ class Row;
 
 namespace execplan
 {
+class FunctionColumn;
 extern const std::string colDataTypeToString(CalpontSystemCatalog::ColDataType cdt);
 }
 
@@ -81,6 +82,11 @@ public:
     {
         std::unique_lock<std::mutex> l(tzMutex);
         fTimeZone = timeZone;
+    }
+
+    virtual bool fix(execplan::FunctionColumn &col) const
+    {
+        return false;
     }
 
     virtual execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) = 0;
@@ -218,6 +224,58 @@ private:
 
     std::string fTimeZone;
     mutable std::mutex tzMutex;
+};
+
+
+class ParmTSInt64: public datatypes::TSInt64Null
+{
+public:
+    ParmTSInt64() { }
+    ParmTSInt64(rowgroup::Row& row,
+                const execplan::SPTP& parm,
+                const funcexp::Func& thisFunc)
+       :TSInt64Null(parm->data()->toTSInt64Null(row))
+    { }
+};
+
+
+class ParmTUInt64: public datatypes::TUInt64Null
+{
+public:
+    ParmTUInt64() { }
+    ParmTUInt64(rowgroup::Row& row,
+                const execplan::SPTP& parm,
+                const funcexp::Func& thisFunc)
+       :TUInt64Null(parm->data()->toTUInt64Null(row))
+    { }
+};
+
+
+template<class TA, class TB> class Arg2Lazy
+{
+public:
+   TA a;
+   TB b;
+   Arg2Lazy(rowgroup::Row& row,
+            FunctionParm& parm,
+            const Func& thisFunc)
+      :a(row, parm[0], thisFunc),
+       b(a.isNull() ? TB() : TB(row, parm[1], thisFunc))
+   { }
+};
+
+
+template<class TA, class TB> class Arg2Eager
+{
+public:
+   TA a;
+   TB b;
+   Arg2Eager(rowgroup::Row& row,
+             FunctionParm& parm,
+             const Func& thisFunc)
+      :a(row, parm[0], thisFunc),
+       b(row, parm[1], thisFunc)
+   { }
 };
 
 

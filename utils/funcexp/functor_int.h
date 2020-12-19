@@ -71,6 +71,43 @@ public:
     {
         return intToString(getIntVal(row, fp, isNull, op_ct));
     }
+
+};
+
+
+class Func_BitOp : public Func_Int
+{
+public:
+    Func_BitOp(const std::string& funcName) : Func_Int(funcName) {}
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override
+    {
+        return resultType;
+    }
+    bool validateArgCount(execplan::FunctionColumn &col, uint expected) const;
+    void setFunctorByParm(execplan::FunctionColumn & col,
+                          const execplan::SPTP& parm,
+                          Func_Int & return_uint64_from_uint64,
+                          Func_Int & return_uint64_from_sint64,
+                          Func_Int & return_uint64_from_generic) const;
+    // Fix for << and >>
+    bool fixForBitShift(execplan::FunctionColumn & col,
+                        Func_Int & return_uint64_from_uint64,
+                        Func_Int & return_uint64_from_sint64,
+                        Func_Int & return_uint64_from_generic) const;
+    // Fix for & | ^
+    bool fixForBitOp2(execplan::FunctionColumn & col,
+                      Func_Int & return_uint64_from_uint64_uint64,
+                      Func_Int & return_uint64_from_sint64_sint64,
+                      Func_Int & return_uint64_from_generic_generic) const;
+
+    int64_t getIntVal(rowgroup::Row& row,
+                      FunctionParm& fp,
+                      bool& isNull,
+                      execplan::CalpontSystemCatalog::ColType& op_ct) override
+    {
+        isNull = true;
+        return 0;
+    }
 };
 
 
@@ -310,35 +347,25 @@ public:
 
 /** @brief Func_bitand class
   */
-class Func_bitand : public Func_Int
+class Func_bitand : public Func_BitOp
 {
 public:
-    Func_bitand() : Func_Int("bitand") {}
+    Func_bitand() : Func_BitOp("bitand") {}
     virtual ~Func_bitand() {}
-
-    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
-
-    int64_t getIntVal(rowgroup::Row& row,
-                      FunctionParm& fp,
-                      bool& isNull,
-                      execplan::CalpontSystemCatalog::ColType& op_ct);
+    bool fix(execplan::FunctionColumn &col) const override;
 };
 
 
 /** @brief Func_bitor class
   */
-class Func_bitor : public Func_Int
+class Func_bitor : public Func_BitOp
 {
 public:
-    Func_bitor() : Func_Int("bitor") {}
+    Func_bitor() : Func_BitOp("bitor") {}
     virtual ~Func_bitor() {}
 
-    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+    bool fix(execplan::FunctionColumn &col) const override;
 
-    int64_t getIntVal(rowgroup::Row& row,
-                      FunctionParm& fp,
-                      bool& isNull,
-                      execplan::CalpontSystemCatalog::ColType& op_ct);
     uint64_t getUintVal(rowgroup::Row& row,
                         FunctionParm& fp,
                         bool& isNull,
@@ -348,35 +375,23 @@ public:
 
 /** @brief Func_bitxor class
   */
-class Func_bitxor : public Func_Int
+class Func_bitxor : public Func_BitOp
 {
 public:
-    Func_bitxor() : Func_Int("bitxor") {}
+    Func_bitxor() : Func_BitOp("bitxor") {}
     virtual ~Func_bitxor() {}
-
-    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
-
-    int64_t getIntVal(rowgroup::Row& row,
-                      FunctionParm& fp,
-                      bool& isNull,
-                      execplan::CalpontSystemCatalog::ColType& op_ct);
+    bool fix(execplan::FunctionColumn &col) const override;
 };
 
 
 /** @brief Func_bit_count class
   */
-class Func_bit_count : public Func_Int
+class Func_bit_count : public Func_BitOp
 {
 public:
-    Func_bit_count() : Func_Int("bit_count") {}
+    Func_bit_count() : Func_BitOp("bit_count") {}
     virtual ~Func_bit_count() {}
-
-    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
-
-    int64_t getIntVal(rowgroup::Row& row,
-                      FunctionParm& fp,
-                      bool& isNull,
-                      execplan::CalpontSystemCatalog::ColType& op_ct);
+    bool fix(execplan::FunctionColumn &col) const override;
 };
 
 
@@ -450,35 +465,23 @@ public:
 
 /** @brief Func_leftshift class
   */
-class Func_leftshift : public Func_Int
+class Func_leftshift : public Func_BitOp
 {
 public:
-    Func_leftshift() : Func_Int("leftshift") {}
+    Func_leftshift() : Func_BitOp("leftshift") {}
     virtual ~Func_leftshift() {}
-
-    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
-
-    int64_t getIntVal(rowgroup::Row& row,
-                      FunctionParm& fp,
-                      bool& isNull,
-                      execplan::CalpontSystemCatalog::ColType& op_ct);
+    bool fix(execplan::FunctionColumn &col) const override;
 };
 
 
 /** @brief Func_rightshift class
   */
-class Func_rightshift : public Func_Int
+class Func_rightshift : public Func_BitOp
 {
 public:
-    Func_rightshift() : Func_Int("rightshift") {}
+    Func_rightshift() : Func_BitOp("rightshift") {}
     virtual ~Func_rightshift() {}
-
-    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
-
-    int64_t getIntVal(rowgroup::Row& row,
-                      FunctionParm& fp,
-                      bool& isNull,
-                      execplan::CalpontSystemCatalog::ColType& op_ct);
+    bool fix(execplan::FunctionColumn &col) const override;
 };
 
 

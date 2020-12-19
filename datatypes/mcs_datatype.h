@@ -267,6 +267,57 @@ public:
                 colDataType == UDECIMAL) &&
                colWidth == MAXDECIMALWIDTH;
     }
+
+    bool isUnsignedInteger() const
+    {
+        switch (colDataType)
+        {
+           case datatypes::SystemCatalog::UTINYINT:
+           case datatypes::SystemCatalog::USMALLINT:
+           case datatypes::SystemCatalog::UMEDINT:
+           case datatypes::SystemCatalog::UINT:
+           case datatypes::SystemCatalog::UBIGINT:
+              return true;
+           default:
+             return false;
+         }
+    }
+
+    bool isSignedInteger() const
+    {
+       switch (colDataType)
+       {
+          case datatypes::SystemCatalog::TINYINT:
+          case datatypes::SystemCatalog::SMALLINT:
+          case datatypes::SystemCatalog::MEDINT:
+          case datatypes::SystemCatalog::INT:
+          case datatypes::SystemCatalog::BIGINT:
+              return true;
+
+          default:
+              return false;
+       }
+    }
+
+    bool canReturnXInt64() const
+    {
+        switch (colDataType)
+        {
+            case datatypes::SystemCatalog::BIT:
+            case datatypes::SystemCatalog::VARBINARY:
+            case datatypes::SystemCatalog::CLOB:
+            case datatypes::SystemCatalog::BLOB:
+            case datatypes::SystemCatalog::NUM_OF_COL_DATA_TYPE:
+            case datatypes::SystemCatalog::LONGDOUBLE:
+            case datatypes::SystemCatalog::STRINT:
+            case datatypes::SystemCatalog::UNDEFINED:
+                return false;
+            default:
+                break;
+        }
+        return true;
+    }
+
   };
 
 };

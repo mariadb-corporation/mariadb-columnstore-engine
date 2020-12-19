@@ -37,6 +37,7 @@
 #include "dataconvert.h"
 #include "columnwidth.h"
 #include "mcs_decimal.h"
+#include "mcs_int64.h"
 
 namespace messageqcpp
 {
@@ -263,6 +264,18 @@ public:
     virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull)
     {
         return fResult.uintVal;
+    }
+    datatypes::TUInt64Null toTUInt64Null(rowgroup::Row& row)
+    {
+        bool isNull;
+        uint64_t val = getUintVal(row, isNull);
+        return datatypes::TUInt64Null(val, isNull);
+    }
+    datatypes::TSInt64Null toTSInt64Null(rowgroup::Row& row)
+    {
+        bool isNull;
+        int64_t val = getIntVal(row, isNull);
+        return datatypes::TSInt64Null(val, isNull);
     }
     virtual float getFloatVal(rowgroup::Row& row, bool& isNull)
     {
