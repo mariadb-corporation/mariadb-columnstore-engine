@@ -9,7 +9,7 @@ This repository is not meant to be built independently outside of MariaDB server
 
   https://github.com/MariaDB/server
 
-Building instructions are coming soon.
+See building instructions [here](BUILD.md).
 
 # Issue tracking
 
