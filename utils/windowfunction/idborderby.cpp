@@ -744,7 +744,7 @@ void IdbOrderBy::initialize(const RowGroup& rg)
     // initialize rows
     IdbCompare::initialize(rg);
 
-    uint64_t newSize = fRowsPerRG * rg.getRowSize();
+    uint64_t newSize = rg.getSizeWithStrings(fRowsPerRG);
     fMemSize += newSize;
 
     if (!fRm->getMemory(newSize, fSessionMemLimit))
