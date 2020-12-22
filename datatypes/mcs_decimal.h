@@ -480,7 +480,7 @@ class Decimal: public TSInt128
 
                 if (scale == rhs.scale)
                 {
-                    return op128(s128Value, rhs.s128Value);
+                    return op128(s128Value, (int128_t) rhs.value);
                 }
                 else
                 {
