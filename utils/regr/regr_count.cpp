@@ -38,7 +38,7 @@ static Add_regr_count_ToUDAFMap addToMap;
 // Use the simple data model
 struct regr_count_data
 {
-    uint64_t	cnt;
+    long long	cnt;
 };
 
 

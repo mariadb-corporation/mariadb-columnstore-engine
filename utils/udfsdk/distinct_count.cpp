@@ -22,7 +22,7 @@ using namespace mcsv1sdk;
 
 struct distinct_count_data
 {
-    uint64_t	cnt;
+   long long	cnt;
 };
 
 #define OUT_TYPE int64_t
@@ -34,7 +34,7 @@ mcsv1_UDAF::ReturnCode distinct_count::init(mcsv1Context* context,
 	{
 		// The error message will be prepended with
 		// "The storage engine for the table doesn't support "
-        context->setErrorMessage("avgx() with other than 1 arguments");
+        context->setErrorMessage("distinct_count() with other than 1 arguments");
 		return mcsv1_UDAF::ERROR;
 	}
 	context->setResultType(execplan::CalpontSystemCatalog::BIGINT);
