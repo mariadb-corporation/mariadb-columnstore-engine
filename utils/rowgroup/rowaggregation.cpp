@@ -4627,13 +4627,14 @@ void RowAggregationUMP2::doUDAF(const Row& rowIn,
     // Call the UDAF subEvaluate method
     mcsv1sdk::mcsv1_UDAF::ReturnCode rc;
     rc = udafContextsColl[funcColsIdx].getFunction()->subEvaluate(&udafContextsColl[funcColsIdx], userDataIn.get());
-    fRGContext.setUserData(NULL);
+    udafContextsColl[funcColsIdx].setUserData(NULL);
 
     if (rc == mcsv1sdk::mcsv1_UDAF::ERROR)
     {
         RowUDAFFunctionCol* rowUDAF = dynamic_cast<RowUDAFFunctionCol*>(fFunctionCols[funcColsIdx].get());
         rowUDAF->bInterrupted = true;
-        throw logging::IDBExcept(fRGContext.getErrorMessage(), logging::aggregateFuncErr);
+        throw logging::IDBExcept(udafContextsColl[funcColsIdx].getErrorMessage(),
+                                 logging::aggregateFuncErr);
     }
 }
 

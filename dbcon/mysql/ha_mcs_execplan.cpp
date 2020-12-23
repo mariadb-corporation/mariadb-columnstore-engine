@@ -463,6 +463,20 @@ bool isDuplicateSF(gp_walk_info *gwip, execplan::SimpleFilter *sfp)
     return false;
 }
 
+// DESCRIPTION:
+// This f() checks if the arguments is a UDF Item
+// PARAMETERS:
+//    Item * Item to traverse
+// RETURN:
+//    bool
+inline bool isUDFSumItem(const Item_sum* isp)
+{
+    return typeid(*isp) == typeid(Item_sum_udf_int) ||
+           typeid(*isp) == typeid(Item_sum_udf_float) ||
+           typeid(*isp) == typeid(Item_sum_udf_decimal) ||
+           typeid(*isp) == typeid(Item_sum_udf_str);
+}
+
 string getViewName(TABLE_LIST* table_ptr)
 {
     string viewName = "";
@@ -4987,10 +5001,28 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                 ct.precision = 0;
                 ac->resultType(ct);
             }
+            // Setting the ColType in the resulting RowGroup
+            // according with what MDB expects.
+            // Internal processing UDAF result type will be set below.
+            else if (isUDFSumItem(isp))
+            {
+                ac->resultType(colType_MysqlToIDB(isp));
+            }
+            // Using the first param to deduce ac data type
+            else if (ac->aggParms().size() == 1)
+            {
+                ac->resultType(parm->resultType());
+            }
             else
             {
-                // UDAF result type will be set below.
-                ac->resultType(parm->resultType());
+                gwi.fatalParseError = true;
+                gwi.parseErrorText = "Can not deduce Aggregate Column resulting type \
+because it has multiple arguments.";
+
+                if (ac)
+                    delete ac;
+
+                return nullptr;
             }
         }
         else if (bIsConst && hasDecimalConst && isAvg)
