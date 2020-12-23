@@ -194,7 +194,7 @@ ELSE ()
     # Remove visibility flag for now as it breaks Ubuntu 18.05 and we need to
     # fix our libraries anyway
     STRING(REPLACE "-fvisibility=hidden" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    MY_CHECK_AND_SET_COMPILER_FLAG("-D_DEBUG" DEBUG)
+    MY_CHECK_AND_SET_COMPILER_FLAG("-D_DEBUG -O0" DEBUG)
 ENDIF()
 
 
