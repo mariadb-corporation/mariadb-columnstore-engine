@@ -371,6 +371,12 @@ void WriteEngineWrapper::convertValue(const execplan::CalpontSystemCatalog::ColT
                 size = sizeof(long long);
                 memcpy(value, &val, size);
             }
+            else if (data.type() == typeid(long))
+            {
+                long val = boost::any_cast<long>(data);
+                size = sizeof(long);
+                memcpy(value, &val, size);
+            }
             else
             {
                 uint64_t val = boost::any_cast<uint64_t>(data);
