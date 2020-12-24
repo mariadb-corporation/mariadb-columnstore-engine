@@ -429,6 +429,13 @@ void TupleAnnexStep::executeNoOrderBy()
                     continue;
                 }
 
+                if (UNLIKELY(fRowsReturned >= fLimitCount))
+                {
+                    fLimitHit = true;
+                    fJobList->abortOnLimit((JobStep*) this);
+                    continue;
+                }
+
                 if (fConstant)
                     fConstant->fillInConstants(fRowIn, fRowOut);
                 else
@@ -440,11 +447,6 @@ void TupleAnnexStep::executeNoOrderBy()
                 {
                     fRowOut.nextRow();
                     fRowIn.nextRow();
-                }
-                else
-                {
-                    fLimitHit = true;
-                    fJobList->abortOnLimit((JobStep*) this);
                 }
             }
 
@@ -511,26 +513,33 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
             {
                 pair<DistinctMap_t::iterator, bool> inserted;
 
-                if (fConstant)
-                    fConstant->fillInConstants(fRowIn, fRowOut);
-                else
-                    copyRow(fRowIn, &fRowOut);
-
+                inserted = distinctMap->insert(fRowIn.getPointer());
                 ++fRowsProcessed;
-                fRowIn.nextRow();
-
-                inserted = distinctMap->insert(fRowOut.getPointer());
 
                 if (inserted.second)
                 {
-                    fRowGroupOut.incRowCount();
-                    fRowOut.nextRow();
+                    // skip first limit-start rows
+                    if (distinctMap->size() <= fLimitStart)
+                    {
+                        fRowIn.nextRow();
+                        continue;
+                    }
 
-                    if (UNLIKELY(++fRowsReturned >= fLimitCount))
+                    if (UNLIKELY(fRowsReturned >= fLimitCount))
                     {
                         fLimitHit = true;
                         fJobList->abortOnLimit((JobStep*) this);
+                        break;
                     }
+
+                    ++fRowsReturned;
+                    if (fConstant)
+                        fConstant->fillInConstants(fRowIn, fRowOut);
+                    else
+                        copyRow(fRowIn, &fRowOut);
+
+                    fRowGroupOut.incRowCount();
+                    fRowOut.nextRow();
 
                     if (UNLIKELY(fRowGroupOut.getRowCount() >= rowgroup::rgCommonSize))
                     {
@@ -541,6 +550,8 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
                         fRowGroupOut.getRow(0, &fRowOut);
                     }
                 }
+
+                fRowIn.nextRow();
             }
 
             more = fInputDL->next(fInputIterator, &rgDataIn);
