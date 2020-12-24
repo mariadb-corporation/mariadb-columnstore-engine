@@ -1079,7 +1079,7 @@ void TupleJoiner::updateCPData(const Row& r)
 
         if (r.isCharType(smallKeyColumns[col]))
         {
-            datatypes::Charset cs(r.getCharset(col));
+            datatypes::Charset cs(r.getCharset(smallKeyColumns[col]));
             int64_t val = r.getIntField(smallKeyColumns[col]);
 
             if (datatypes::TCharShort::strnncollsp(cs, val, min) < 0 ||
