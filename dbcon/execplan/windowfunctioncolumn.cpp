@@ -393,7 +393,7 @@ void WindowFunctionColumn::adjustResultType()
         if (fFunctionParms[0]->resultType().colDataType == CalpontSystemCatalog::DECIMAL ||
             fFunctionParms[0]->resultType().colDataType == CalpontSystemCatalog::UDECIMAL)
         {
-            fResultType.colWidth = sizeof(int128_t);
+            fResultType.colWidth = datatypes::MAXDECIMALWIDTH;
         }
         else
         {
@@ -696,14 +696,17 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
 
                 case 16:
                 {
-                    int128_t val;
-                    row.getInt128Field(fInputIndex, val);
+                    datatypes::TSInt128 val = row.getTSInt128Field(fInputIndex);
 
-                    if (val == datatypes::Decimal128Null)
+                    if (val.isNull())
+                    {
                         isNull = true;
+                    }
                     else
                     {
-                        fResult.decimalVal = IDB_Decimal(0, fResultType.scale, fResultType.precision, val);
+                        fResult.decimalVal = IDB_Decimal(val,
+                                                         fResultType.scale,
+                                                         fResultType.precision);
                     }
 
                     break;

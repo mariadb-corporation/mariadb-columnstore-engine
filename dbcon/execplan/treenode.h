@@ -1038,56 +1038,30 @@ inline IDB_Decimal TreeNode::getDecimalVal()
             throw logging::InvalidConversionExcept("TreeNode::getDecimalVal: non-support conversion from binary string");
 
         case CalpontSystemCatalog::BIGINT:
-        {
-            idbassert(fResultType.scale == 0);
-
-            if (fResultType.isWideDecimalPrecision())
-                fResult.decimalVal = IDB_Decimal(0, 0, fResultType.precision,
-                                         (int128_t)fResult.intVal);
-            else
-                fResult.decimalVal = IDB_Decimal(fResult.intVal, 0,
-                                         fResultType.precision);
-
-            break;
-        }
-
         case CalpontSystemCatalog::MEDINT:
         case CalpontSystemCatalog::INT:
         case CalpontSystemCatalog::SMALLINT:
         case CalpontSystemCatalog::TINYINT:
         {
             idbassert(fResultType.scale == 0);
-
-            fResult.decimalVal = IDB_Decimal(fResult.intVal, 0,
-                                     fResultType.precision);
-
+            fResult.decimalVal = IDB_Decimal(fResult.intVal,
+                                             0,
+                                             fResultType.precision,
+                                             fResult.intVal);
             break;
         }
 
         case CalpontSystemCatalog::UBIGINT:
-        {
-            idbassert(fResultType.scale == 0);
-
-            if (fResultType.isWideDecimalPrecision())
-                fResult.decimalVal = IDB_Decimal(0, 0, fResultType.precision,
-                                         (int128_t)fResult.uintVal);
-            else
-                fResult.decimalVal = IDB_Decimal((int64_t)fResult.uintVal, 0,
-                                         fResultType.precision);
-
-            break;
-        }
-
         case CalpontSystemCatalog::UMEDINT:
         case CalpontSystemCatalog::UINT:
         case CalpontSystemCatalog::USMALLINT:
         case CalpontSystemCatalog::UTINYINT:
         {
             idbassert(fResultType.scale == 0);
-
-            fResult.decimalVal = IDB_Decimal((int64_t)fResult.uintVal, 0,
-                                     fResultType.precision);
-
+            fResult.decimalVal = IDB_Decimal((int64_t)fResult.uintVal,
+                                             0,
+                                             fResultType.precision,
+                                             fResult.uintVal);
             break;
         }
 
@@ -1108,8 +1082,11 @@ inline IDB_Decimal TreeNode::getDecimalVal()
             }
             else
             {
-                fResult.decimalVal = IDB_Decimal((int64_t)lroundl(dlScaled),
-                                         fResultType.scale, fResultType.precision);
+                int64_t val = (int64_t)lroundl(dlScaled);
+                fResult.decimalVal = IDB_Decimal(val,
+                                                 fResultType.scale,
+                                                 fResultType.precision,
+                                                 val);
             }
 
             break;

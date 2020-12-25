@@ -112,7 +112,7 @@ struct is_uint128_t<uint128_t> {
   static const bool value = true;
 };
 
-inline int128_t abs(int128_t& x)
+inline int128_t abs(int128_t x)
 {
   return (x >= 0) ? x : -x;
 }

@@ -125,8 +125,6 @@ bool PredicateOperator::operator!=(const TreeNode* t) const
     return (!(*this == t));
 }
 
-//FIXME: VARBINARY???
-//FIXME: BINARY???
 void PredicateOperator::setOpType(Type& l, Type& r)
 {
     fOperationType = l;  // Default to left side. Modify as needed.
@@ -763,7 +761,6 @@ bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, ReturnedCol
             return strTrimCompare(val1, rop->getStrVal(row, isNull)) && !isNull;
         }
 
-        //FIXME: ???
         case execplan::CalpontSystemCatalog::VARBINARY:
         case execplan::CalpontSystemCatalog::BLOB:
             return false;
