@@ -11,17 +11,27 @@ local server_ref_map = {
 };
 
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
-local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_XPAND=NO -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO';
+
+// This is stupid use of PLUGIN_*=NO syntax. It should just skip building
+// _everything_ else apart from the things that ColumnStore actually needs.
+local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_XPAND=NO -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO ' +
+                   '-DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
+                   '-DPLUGIN_PERFSCHEMA=NO -DWITH_EMBEDDED_SERVER=OFF -DWITH_WSREP=OFF';
 
 local rpm_build_deps = 'install -y systemd-devel git make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect readline-devel createrepo';
 
-local deb_build_deps = 'apt update && apt install --yes --no-install-recommends dpkg-dev systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libreadline-gplv2-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends';
+// All build dependencies for .deb packages are defined in debian/control. Do no
+// repeat them here manually, it would only increase the amount of maintenance
+// work needed when updating the dependencies in the future.
+local deb_build_deps = 'apt update && apt install --yes --no-install-recommends build-essential devscripts ccache equivs && ' +
+                       'mk-build-deps debian/control -t "apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends" -r -i';
+
 
 local platformMap(branch, platform) =
   local branch_cmakeflags_map = {
-    develop: ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
-    'develop-1.5': ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
-    'columnstore-1.5.4-1': ' -DBUILD_CONFIG=enterprise -DWITH_WSREP=OFF',
+    develop: ' -DBUILD_CONFIG=mysql_release',
+    'develop-1.5': ' -DBUILD_CONFIG=mysql_release',
+    'columnstore-1.5.4-1': ' -DBUILD_CONFIG=enterprise',
   };
 
   local platform_map = {
@@ -287,26 +297,27 @@ local Pipeline(branch, platform, event) = {
              volumes: [pipeline._volumes.mdb],
              environment: {
                DEBIAN_FRONTEND: 'noninteractive',
-               TRAVIS: 'true',
              },
              commands: [
                'cd /mdb/' + builddir,
-               // Temporary usage patched autobake-deb.sh till changes come in upstream server repo
-               // "rm -v debian/mariadb-plugin-columnstore.* debian/autobake-deb.sh",
-               // "cp storage/columnstore/columnstore/debian/autobake-deb.sh debian/",
-               // "sed -i '/Package: mariadb-plugin-columnstore/,/^$/d' -i debian/control",
-               // Unstrip columnstore while using TRAVIS flag (for speeding up builds)
-               "sed -i '/DPLUGIN_COLUMNSTORE/d' debian/autobake-deb.sh",
-               "sed -i '/Package: mariadb-plugin-columnstore/d' debian/autobake-deb.sh",
+               // Remove Debian build flags that could prevent ColumnStore from building
+               "sed '/-DPLUGIN_COLUMNSTORE=NO/d' -i debian/rules",
                // Tweak debian packaging stuff
                "sed -i -e '/Package: mariadb-backup/,/^$/d' debian/control",
                "sed -i -e '/Package: mariadb-plugin-connect/,/^$/d' debian/control",
                "sed -i -e '/Package: mariadb-plugin-gssapi*/,/^$/d' debian/control",
                "sed -i -e '/Package: mariadb-plugin-xpand*/,/^$/d' debian/control",
-               "sed -i -e '/wsrep/d' debian/mariadb-server-*.install",
+               'sed "/Package: mariadb-plugin-mroonga/,/^$/d" -i debian/control',
+               'sed "/Package: mariadb-plugin-rocksdb/,/^$/d" -i debian/control',
+               'sed "/Package: mariadb-plugin-spider/,/^$/d" -i debian/control',
+               'sed "/Package: mariadb-plugin-oqgraph/,/^$/d" -i debian/control',
+               'sed "/ha_sphinx.so/d" -i debian/mariadb-server-*.install',
+               'sed "/Package: libmariadbd19/,/^$/d" -i debian/control',
+               'sed "/Package: libmariadbd-dev/,/^$/d" -i debian/control',
                // Disable galera
                "sed -i -e 's/Depends: galera.*/Depends:/' debian/control",
                "sed -i -e 's/\"galera-enterprise-4\"//' cmake/cpack_rpm.cmake",
+               "sed -i -e '/wsrep/d' debian/mariadb-server-*.install",
                // Leave test package for mtr
                "sed -i '/(mariadb|mysql)-test/d;/-test/d' debian/autobake-deb.sh",
                "sed -i '/test-embedded/d' debian/mariadb-test.install",
