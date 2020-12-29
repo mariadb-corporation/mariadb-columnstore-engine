@@ -1128,7 +1128,7 @@ void TupleJoiner::updateCPData(const Row& r)
 
         if (r.isCharType(colIdx))
         {
-            datatypes::Charset cs(r.getCharset(col));
+            datatypes::Charset cs(r.getCharset(colIdx));
             int64_t val = r.getIntField(colIdx);
 
             if (datatypes::TCharShort::strnncollsp(cs, val, min) < 0 ||
