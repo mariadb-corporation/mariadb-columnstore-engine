@@ -43,8 +43,8 @@ local Pipeline(branch, platform, event) = {
   local mtr_path = if (pkg_format == 'rpm') then '/usr/share/mysql-test' else '/usr/share/mysql/mysql-test',
   local socket_path = if (pkg_format == 'rpm') then '/var/lib/mysql/mysql.sock' else '/run/mysqld/mysqld.sock',
   local img = if (std.split(platform, ':')[0] == 'centos') then platform else 'romcheck/' + std.strReplace(platform, '/', '-'),
-  local regression_ref = if (std.split(branch, '-')[0] == 'develop') then branch else 'develop-1.5',
-  local mtr_ref = if (branch == 'develop') then 'master' else 'develop-1.5',
+  local regression_ref = if (std.split(branch, '-')[0] == 'develop') then branch else 'develop-5',
+  local mtr_ref = regression_ref,
 
   local pipeline = self,
 
