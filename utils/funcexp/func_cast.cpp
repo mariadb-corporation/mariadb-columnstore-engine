@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2019 MariaDB Corporation
+   Copyright (C) 2019-20 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -21,8 +21,6 @@
 
 #include <string>
 using namespace std;
-
-#include <quadmath.h>
 
 #include "functor_dtm.h"
 #include "functor_int.h"
@@ -1540,14 +1538,14 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
                 {
                     if (decimal.isTSInt128ByPrecision())
                     {
+                        // it is worth to parse the exponent first to detect an overflow
                         bool dummy = false;
                         char *ep = NULL;
                         int128_t max_number_decimal = dataconvert::strtoll128(columnstore_big_precision[max_length - 19].c_str(), dummy, &ep);
 
                         int128_t scaleDivisor;
                         datatypes::getScaleDivisor(scaleDivisor, decimals);
-
-                        __float128 floatValue = strtoflt128 (str, 0);
+                        __float128 floatValue = datatypes::TFloat128::fromString(strValue);
 
                         // If the float value is too large, the saturated result may end up with
                         // the wrong sign, so we just check first.

@@ -855,8 +855,8 @@ TypeHandlerStr::formatPartitionInfoSmallCharVarchar(
                          const MinMaxInfo &pi) const
 {
   ostringstreamL output;
-  int64_t maxLimit = numeric_limits<int64_t>::max();
-  int64_t minLimit = numeric_limits<int64_t>::min();
+  int64_t maxLimit = std::numeric_limits<int64_t>::max();
+  int64_t minLimit = std::numeric_limits<int64_t>::min();
   maxLimit = uint64ToStr(maxLimit);
   minLimit = uint64ToStr(minLimit);
   if (pi.min == maxLimit && pi.max == minLimit)

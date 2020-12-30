@@ -25,8 +25,6 @@
 #include <string>
 using namespace std;
 
-#include <quadmath.h>
-
 #include "functor_real.h"
 #include "funchelpers.h"
 #include "functioncolumn.h"
@@ -100,7 +98,7 @@ IDB_Decimal Func_mod::getDecimalVal(Row& row,
             datatypes::getScaleDivisor(scaleDivisor, d.scale);
             dividendF = (__float128) dividendInt / scaleDivisor;
 
-            __float128 mod = fmodq(dividendF, divF) * scaleDivisor;
+            __float128 mod = datatypes::TFloat128::fmodq(dividendF, divF) * scaleDivisor;
 
             return IDB_Decimal(datatypes::TSInt128((int128_t) mod),
                                d.scale,
