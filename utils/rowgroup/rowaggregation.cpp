@@ -2788,7 +2788,7 @@ void RowAggregationUM::calculateAvgColumns()
                     uint32_t offset = fRow.getOffset(colOut);
                     uint32_t scale = fRow.getScale(colOut);
                     // Get multiplied to deliver AVG with the scale closest
-                    // to the expected original scale + 4. 
+                    // to the expected original scale + 4.
                     // There is a counterpart in buildAggregateColumn.
                     datatypes::Decimal::setScalePrecision4Avg(precision, scale);
                     int128_t* sumPnt = fRow.getBinaryField_offset<int128_t>(offset);
@@ -2800,8 +2800,22 @@ void RowAggregationUM::calculateAvgColumns()
                         multOp(*sumPnt, datatypes::mcs_pow_10[scaleDiff], sum);
                     else
                         sum = *sumPnt;
-                    int128_t avg = sum / cnt;
-                    fRow.setBinaryField_offset(&avg, sizeof(avg), offset);
+                    datatypes::lldiv_t_128 avgAndRem = datatypes::lldiv128(sum, cnt);
+                    // Round the last digit
+                    if (datatypes::abs(avgAndRem.rem) * 2 >= (int128_t)cnt)
+                    {
+                        if (utils::is_negative(avgAndRem.rem))
+                        {
+                            avgAndRem.quot--;
+                        }
+                        else
+                        {
+                            avgAndRem.quot++;
+                        }
+                    }
+                    fRow.setBinaryField_offset(&avgAndRem.quot,
+                                               sizeof(avgAndRem.quot),
+                                               offset);
                 }
             }
         }

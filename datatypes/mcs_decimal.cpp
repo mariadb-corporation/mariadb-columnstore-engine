@@ -22,24 +22,6 @@
 
 namespace datatypes
 {
-
-    struct lldiv_t_128
-    {
-        int128_t quot;
-        int128_t rem;
-        lldiv_t_128() : quot(0), rem(0) {}
-        lldiv_t_128(const int128_t& a_quot, const int128_t& a_rem)
-            : quot(a_quot), rem(a_rem) {}
-    };
-
-    inline lldiv_t_128 lldiv128(const int128_t& dividend, const int128_t& divisor)
-    {
-        if (UNLIKELY(divisor == 0) || UNLIKELY(dividend == 0))
-            return lldiv_t_128();
-
-        return lldiv_t_128(dividend / divisor, dividend % divisor);
-    }
-
     template<typename BinaryOperation,
         typename OpOverflowCheck,
         typename MultiplicationOverflowCheck>
@@ -115,7 +97,6 @@ namespace datatypes
             ? r.s128Value : r.value;
 
         opOverflowCheck(lValue, rValue);
-
         if (result.scale >= l.scale - r.scale)
         {
             int128_t scaleMultiplier;
@@ -213,7 +194,7 @@ namespace datatypes
             // rem carries the value's sign, but needs to be normalized.
             int64_t s = l.scale - r.scale;
             int128_t divisor;
-            getScaleDivisor(divisor, abs(s));
+            getScaleDivisor(divisor, std::abs(s));
 
             if (s < 0)
             {

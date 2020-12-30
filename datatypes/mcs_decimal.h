@@ -161,6 +161,23 @@ inline void getScaleDivisor(T& divisor, const int8_t scale)
     }
 }
 
+struct lldiv_t_128
+{
+    int128_t quot;
+    int128_t rem;
+    lldiv_t_128() : quot(0), rem(0) {}
+    lldiv_t_128(const int128_t& a_quot, const int128_t& a_rem)
+        : quot(a_quot), rem(a_rem) {}
+};
+
+inline lldiv_t_128 lldiv128(const int128_t& dividend, const int128_t& divisor)
+{
+    if (UNLIKELY(divisor == 0) || UNLIKELY(dividend == 0))
+        return lldiv_t_128();
+
+    return lldiv_t_128(dividend / divisor, dividend % divisor);
+}
+
 // @brief The class for Decimal related operations
 // The class contains Decimal related operations are scale and
 // precision aware.
