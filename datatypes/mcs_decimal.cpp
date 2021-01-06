@@ -194,7 +194,7 @@ namespace datatypes
             // rem carries the value's sign, but needs to be normalized.
             int64_t s = l.scale - r.scale;
             int128_t divisor;
-            getScaleDivisor(divisor, abs(s));
+            getScaleDivisor(divisor, std::abs(s));
 
             if (s < 0)
             {
