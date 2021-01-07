@@ -167,70 +167,6 @@ enum API_STATUS
     API_MAX
 };
 
-/** @brief Process and Hardware String States
- */
-
-const std::string MANOFFLINE = "MAN_OFFLINE";
-const std::string AUTOOFFLINE = "AUTO_OFFLINE";
-const std::string MANINIT = "MAN_INIT";
-const std::string AUTOINIT = "AUTO_INIT";
-const std::string ACTIVESTATE = "ACTIVE";
-const std::string STANDBYSTATE = "HOT_STANDBY";
-const std::string FAILEDSTATE = "FAILED";
-const std::string UPSTATE = "UP";
-const std::string DOWNSTATE = "DOWN";
-const std::string COLDSTANDBYSTATE = "COLD_STANDBY";
-const std::string INITIALSTATE = "INITIAL";
-const std::string DEGRADEDSTATE = "DEGRADED";
-const std::string ENABLEDSTATE = "ENABLED";
-const std::string MANDISABLEDSTATE = "MAN_DISABLED";
-const std::string AUTODISABLEDSTATE = "AUTO_DISABLED";
-const std::string STANDBYINIT = "STANDBY_INIT";
-const std::string BUSYINIT = "BUSY_INIT";
-
-/** @brief System Software Package parse data
- */
-const std::string SoftwareData[] =
-{
-    "version=",
-    "release=",
-    ""
-};
-
-/** @brief System Configuration Structure
- *
- *   Structure that is returned by the getSystemConfigFile API for the
- *   System Configuration data stored in the System Configuration file
- */
-
-struct SystemConfig_s
-{
-    std::string SystemName;                    //!< System Name
-    int32_t ModuleHeartbeatPeriod;           //!< Module Heartbeat period in minutes
-    uint32_t ModuleHeartbeatCount;            //!< Module Heartbeat failure count
-//        int32_t ProcessHeartbeatPeriod;          //!< Process Heartbeat period in minutes
-    std::string NMSIPAddr;                    //!< NMS system IP address
-    std::string DNSIPAddr;                    //!< DNS IP address
-    std::string LDAPIPAddr;                   //!< LDAP IP address
-    std::string NTPIPAddr;                    //!< NTP IP address
-    uint32_t DBRootCount;                  		//!< Database Root directory Count
-    std::vector<std::string> DBRoot;			//!< Database Root directories
-    std::string DBRMRoot;                     //!< DBRM Root directory
-    uint32_t ExternalCriticalThreshold;     	  //!< External Disk Critical Threahold %
-    uint32_t ExternalMajorThreshold;        	  //!< External Disk Major Threahold %
-    uint32_t ExternalMinorThreshold;        	  //!< External Disk Minor Threahold %
-    uint32_t MaxConcurrentTransactions;       //!< Session Mgr Max Current Trans
-    std::string SharedMemoryTmpFile;          //!< Session Mgr Shared Mem Temp file
-    uint32_t NumVersionBufferFiles;       		//!< Version Buffer number of files
-    uint32_t VersionBufferFileSize;       		//!< Version Buffer file size
-    std::string OIDBitmapFile;                  //!< OID Mgr Bitmap File name
-    uint32_t FirstOID;       			        //!< OID Mgr First O
-    std::string ParentOAMModule;				//!< Parent OAM Module Name
-    std::string StandbyOAMModule;				//!< Standby Parent OAM Module Name
-    uint32_t TransactionArchivePeriod;			//!< Tranaction Archive Period in minutes
-};
-typedef struct SystemConfig_s SystemConfig;
-
 /** @brief Host/IP Address Config Structure
  *
  */
@@ -299,18 +235,6 @@ typedef struct DeviceDBRootConfig_s DeviceDBRootConfig;
 
 typedef std::vector<DeviceDBRootConfig> DeviceDBRootList;
 
-/** @brief Module Type Configuration Structure
- *
- *   Structure that is returned by the getSystemConfigFile API for the
- *   Module Type Configuration data stored in the System Configuration file
- */
-
-struct PmDBRootCount_s
-{
-    uint16_t pmID;                 		//!< PM ID
-    uint16_t count;	    				//!< DBRoot Count
-};
-
 struct ModuleTypeConfig_s
 {
     std::string ModuleType;                   //!< Module Type
@@ -366,32 +290,6 @@ struct ModuleConfig_s
 };
 typedef struct ModuleConfig_s ModuleConfig;
 
-/** @brief DBRoot Status Structure
- *
- *   Structure that is returned by the getSystemStatus API for the
- *   System Status data stored in the System Status file
- */
-
-struct DbrootStatus_s
-{
-    std::string Name;                   		//!< Dbroot Name
-    uint16_t OpState;                			//!< Operational State
-    std::string StateChangeDate;              	//!< Last time/date state change
-};
-typedef struct DbrootStatus_s DbrootStatus;
-
-/** @brief Dbroot Status Structure
- *
- *   Structure that is returned by the getSystemStatus API for the
- *   System System Ext Status data stored in the System Status file
- */
-
-struct SystemDbrootStatus_s
-{
-    std::vector<DbrootStatus> dbrootstatus;   //!< Dbroot Status Structure
-};
-typedef struct SystemDbrootStatus_s SystemDbrootStatus;
-
 /** @brief Local Module OAM Configuration StructureLOG_
  *
  *   Structure that is returned by the getModuleInfo API for the
@@ -405,33 +303,6 @@ typedef struct SystemDbrootStatus_s SystemDbrootStatus;
 
 typedef boost::tuple<std::string, std::string, uint16_t, std::string, bool, uint16_t, std::string, bool > oamModuleInfo_t;
 
-/** @brief Store Device ID Structure
- *
- *   Structure that is returned by the getMyProcessStatus API for the
- *   Local Process OAM Status data stored in the Process Status file
- *	 Returns: Process ID, Process Name, and Process State
- */
-
-typedef boost::tuple<std::string, std::string> storageID_t;
-
-struct DataRedundancyStorageSetup
-{
-    int brickID;
-    std::string storageLocation;
-    std::string	storageFilesytemType;
-};
-typedef std::vector<DataRedundancyStorageSetup> DataRedundancyStorage;
-
-struct DataRedundancySetup_s
-{
-    int pmID;
-    std::string pmHostname;
-    std::string pmIpAddr;
-    std::vector<int> dbrootCopies;
-    DataRedundancyStorage storageLocations;
-};
-typedef struct DataRedundancySetup_s DataRedundancySetup;
-
 /** @brief System Storage Configuration Structure
  *
  *   Structure that is returned by the getStorageConfig API
@@ -439,8 +310,6 @@ typedef struct DataRedundancySetup_s DataRedundancySetup;
  */
 
 typedef boost::tuple<std::string, uint16_t, DeviceDBRootList, std::string > systemStorageInfo_t;
-
-typedef std::vector<std::string> dbrootList;
 
 /** @brief OAM API I/F class
  *
