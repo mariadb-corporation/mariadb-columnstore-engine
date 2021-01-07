@@ -138,10 +138,12 @@ int64_t Func_floor::getIntVal(Row& row,
 
         case execplan::CalpontSystemCatalog::DATE:
         {
-            string str = DataConvert::dateToString1(parm[0]->data()->getDateIntVal(row, isNull));
-
+            // For some reason, MDB doesn't return this as a date,
+            // but datetime is returned as a datetime. Expect
+            // this to change in the future.
+            Date d (parm[0]->data()->getDateIntVal(row, isNull));
             if (!isNull)
-                ret = atoll(str.c_str());
+                ret = d.convertToMySQLint();
         }
         break;
 
@@ -160,14 +162,7 @@ int64_t Func_floor::getIntVal(Row& row,
 
         case execplan::CalpontSystemCatalog::TIME:
         {
-            string str =
-                DataConvert::timeToString1(parm[0]->data()->getTimeIntVal(row, isNull));
-
-            // strip off micro seconds
-            str = str.substr(0, 14);
-
-            if (!isNull)
-                ret = atoll(str.c_str());
+            ret = parm[0]->data()->getTimeIntVal(row, isNull);
         }
         break;
 
