@@ -7,7 +7,6 @@ usr/bin/DDLProc
 usr/bin/DMLProc
 usr/bin/ExeMgr
 usr/bin/PrimProc
-usr/bin/ServerMonitor
 usr/bin/StorageManager
 usr/bin/WriteEngineServer
 usr/bin/clearShm
@@ -36,7 +35,6 @@ usr/bin/mcs-loadbrm.py
 usr/bin/mcs-stop-controllernode.sh
 usr/bin/mcsGetConfig
 usr/bin/mcsSetConfig
-usr/bin/mycnfUpgrade
 usr/bin/post-mysql-install
 usr/bin/post-mysqld-install
 usr/bin/reset_locks
@@ -49,7 +47,6 @@ usr/bin/smrm
 usr/bin/testS3Connection
 usr/bin/viewtablelock
 usr/bin/workernode
-usr/lib/*/libalarmmanager.so
 usr/lib/*/libbatchloader.so
 usr/lib/*/libbrm.so
 usr/lib/*/libcacheutils.so
@@ -98,7 +95,6 @@ usr/share/columnstore/columnstoreLogRotate
 usr/share/columnstore/columnstoreSyslog
 usr/share/columnstore/columnstoreSyslog-ng
 usr/share/columnstore/columnstoreSyslog7
-usr/share/columnstore/columnstore_functions
 usr/share/columnstore/columnstore_info.sql
 usr/share/columnstore/dumpcat_mysql.sql
 usr/share/columnstore/gitversionEngine
@@ -112,10 +108,6 @@ usr/share/columnstore/mcs-primproc.service
 usr/share/columnstore/mcs-storagemanager.service
 usr/share/columnstore/mcs-workernode.service
 usr/share/columnstore/mcs-writeengineserver.service
-usr/share/columnstore/mcstest-001.sh
-usr/share/columnstore/mcstest-002.sh
-usr/share/columnstore/mcstest-003.sh
-usr/share/columnstore/mcstest-004.sh
 usr/share/columnstore/myCnf-exclude-args.text
 usr/share/columnstore/myCnf-include-args.text
 usr/share/columnstore/releasenum
