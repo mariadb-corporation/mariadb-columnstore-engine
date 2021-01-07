@@ -105,10 +105,10 @@ int64_t Func_floor::getIntVal(Row& row,
 
         case execplan::CalpontSystemCatalog::DATE:
         {
-            string str = DataConvert::dateToString1(parm[0]->data()->getDateIntVal(row, isNull));
+            const string& str = parm[0]->data()->getStrVal(row, isNull);
 
             if (!isNull)
-                ret = atoll(str.c_str());
+                ret = (int64_t) ceil(strtod(str.c_str(), 0));
         }
         break;
 
@@ -127,14 +127,7 @@ int64_t Func_floor::getIntVal(Row& row,
 
         case execplan::CalpontSystemCatalog::TIME:
         {
-            string str =
-                DataConvert::timeToString1(parm[0]->data()->getTimeIntVal(row, isNull));
-
-            // strip off micro seconds
-            str = str.substr(0, 14);
-
-            if (!isNull)
-                ret = atoll(str.c_str());
+            ret = parm[0]->data()->getTimeIntVal(row, isNull);
         }
         break;
 
