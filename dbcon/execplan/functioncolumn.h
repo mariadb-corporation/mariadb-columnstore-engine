@@ -311,10 +311,24 @@ public:
         return fFunctor->getTimeIntVal(row, fFunctionParms, isNull, fOperationType);
     }
 
+    bool fixIfNeeded() override
+    {
+        if (fFixed)
+            return false;
+        if (fFunctor->fix(*this))
+            return true;
+        fFixed = true;
+        return false;
+    }
+    void setFunctor(funcexp::Func* functor)
+    {
+        fFunctor = functor;
+    }
 private:
     funcexp::FunctionParm fFunctionParms;
     funcexp::Func* fFunctor;   /// functor to execute this function
     funcexp::Func* fDynamicFunctor = NULL; // for rand encode decode
+    bool fFixed = false;
 };
 
 /**
