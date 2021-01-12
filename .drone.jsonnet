@@ -1,13 +1,11 @@
 local platforms = {
   develop: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
-  'develop-1.5': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
-  'columnstore-1.5.4-1': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
+  'develop-5': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
 };
 
 local server_ref_map = {
   develop: '10.6 https://github.com/MariaDB/server',
-  'develop-1.5': '10.5 https://github.com/MariaDB/server',
-  'columnstore-1.5.4-1': '10.5.6-4 https://github.com/mariadb-corporation/MariaDBEnterprise',
+  'develop-5': '10.5 https://github.com/MariaDB/server',
 };
 
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
@@ -20,8 +18,7 @@ local deb_build_deps = 'apt update && apt install --yes --no-install-recommends 
 local platformMap(branch, platform) =
   local branch_cmakeflags_map = {
     develop: ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
-    'develop-1.5': ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
-    'columnstore-1.5.4-1': ' -DBUILD_CONFIG=enterprise -DWITH_WSREP=OFF',
+    'develop-5': ' -DBUILD_CONFIG=mysql_release -DWITH_WSREP=OFF',
   };
 
   local platform_map = {
@@ -43,8 +40,8 @@ local Pipeline(branch, platform, event) = {
   local mtr_path = if (pkg_format == 'rpm') then '/usr/share/mysql-test' else '/usr/share/mysql/mysql-test',
   local socket_path = if (pkg_format == 'rpm') then '/var/lib/mysql/mysql.sock' else '/run/mysqld/mysqld.sock',
   local img = if (std.split(platform, ':')[0] == 'centos') then platform else 'romcheck/' + std.strReplace(platform, '/', '-'),
-  local regression_ref = if (std.split(branch, '-')[0] == 'develop') then branch else 'develop-1.5',
-  local mtr_ref = if (branch == 'develop') then 'master' else 'develop-1.5',
+  local regression_ref = if (std.split(branch, '-')[0] == 'develop') then branch else 'develop-5',
+  local mtr_ref = regression_ref,
 
   local pipeline = self,
 
@@ -114,9 +111,14 @@ local Pipeline(branch, platform, event) = {
       if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release diffutils which rsyslog hostname patch perl-Data-Dumper perl-Getopt-Long perl-Memoize perl-Time-HiRes cracklib-dicts && yum install -y /result/*.' + pkg_format + '"' else '',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update && apt install -y rsyslog hostname patch && apt install -y -f /result/*.' + pkg_format + '"' else '',
       'docker cp columnstore-tests/mysql-test/suite/columnstore mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/suite/',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} chown -R mysql:mysql ' + mtr_path,
+      // disable systemd 'ProtectSystem' (we need to write to /usr/share/)
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} sed -i "/ProtectSystem/d" /usr/lib/systemd/system/mariadb.service',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl daemon-reload',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl start mariadb',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} mariadb -e "create database if not exists test;"',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --max-test-fail=0 --suite=columnstore/basic --skip-test-list=suite/columnstore/basic/failed.def"',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --max-test-fail=0 --suite=columnstore/bugfixes --skip-test-list=suite/columnstore/bugfixes/failed.def"',
     ],
   },
   mtrlog:: {
@@ -291,12 +293,8 @@ local Pipeline(branch, platform, event) = {
              },
              commands: [
                'cd /mdb/' + builddir,
-               // Temporary usage patched autobake-deb.sh till changes come in upstream server repo
-               // "rm -v debian/mariadb-plugin-columnstore.* debian/autobake-deb.sh",
-               // "cp storage/columnstore/columnstore/debian/autobake-deb.sh debian/",
-               // "sed -i '/Package: mariadb-plugin-columnstore/,/^$/d' -i debian/control",
                // Unstrip columnstore while using TRAVIS flag (for speeding up builds)
-               "sed -i '/DPLUGIN_COLUMNSTORE/d' debian/autobake-deb.sh",
+               "sed -i '/DPLUGIN_COLUMNSTORE=NO|/d' debian/autobake-deb.sh",
                "sed -i '/Package: mariadb-plugin-columnstore/d' debian/autobake-deb.sh",
                // Tweak debian packaging stuff
                "sed -i -e '/Package: mariadb-backup/,/^$/d' debian/control",
@@ -384,23 +382,12 @@ local FinalPipeline(branch, event) = {
 
 [
   Pipeline(b, p, e)
-  for b in ['develop', 'develop-1.5']
+  for b in ['develop', 'develop-5']
   for p in platforms[b]
   for e in ['pull_request', 'cron', 'custom']
 ] +
 [
   FinalPipeline(b, e)
-  for b in ['develop', 'develop-1.5']
+  for b in ['develop', 'develop-5']
   for e in ['pull_request', 'cron', 'custom']
-] +
-[
-  Pipeline(b, p, e)
-  for b in ['columnstore-1.5.4-1']
-  for p in platforms[b]
-  for e in ['pull_request', 'cron', 'custom', 'push']
-] +
-[
-  FinalPipeline(b, e)
-  for b in ['columnstore-1.5.4-1']
-  for e in ['pull_request', 'cron', 'custom', 'push']
 ]
