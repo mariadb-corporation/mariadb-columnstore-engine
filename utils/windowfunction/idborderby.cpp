@@ -336,14 +336,7 @@ int StringCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
         if (!cs)
             cs = l->rowGroup()->getCharset(fSpec.fIndex);
         
-        if (cs->state & MY_CS_BINSORT)
-        {
-            ret = fSpec.fAsc * strncmp(s1, s2, max(len1,len2));
-        }
-        else
-        {
-            ret = fSpec.fAsc * cs->strnncoll(s1, len1, s2, len2);
-        }
+        ret = fSpec.fAsc * cs->strnncollsp(s1, len1, s2, len2);
     }
 
     return ret;
