@@ -142,7 +142,7 @@ datatypes::TUInt64Null GenericToBitOperand(
         case execplan::CalpontSystemCatalog::UDOUBLE:
         case execplan::CalpontSystemCatalog::UFLOAT:
         {
-            bool tmpIsNull;
+            bool tmpIsNull = false;
             double val = parm->data()->getDoubleVal(row, tmpIsNull);
             return tmpIsNull ? datatypes::TUInt64Null() :
                                ConvertToBitOperand<double>(round(val));
@@ -159,7 +159,7 @@ datatypes::TUInt64Null GenericToBitOperand(
         case execplan::CalpontSystemCatalog::CHAR:
         case execplan::CalpontSystemCatalog::TEXT:
         {
-            bool tmpIsNull;
+            bool tmpIsNull = false;
             const string& str = parm->data()->getStrVal(row, tmpIsNull);
             if (tmpIsNull)
                 return datatypes::TUInt64Null();
@@ -177,7 +177,7 @@ datatypes::TUInt64Null GenericToBitOperand(
 
         case execplan::CalpontSystemCatalog::DATE:
         {
-            bool tmpIsNull;
+            bool tmpIsNull = false;
             int32_t time = parm->data()->getDateIntVal(row, tmpIsNull);
             if (tmpIsNull)
                 return datatypes::TUInt64Null();
@@ -188,7 +188,7 @@ datatypes::TUInt64Null GenericToBitOperand(
 
         case execplan::CalpontSystemCatalog::DATETIME:
         {
-            bool tmpIsNull;
+            bool tmpIsNull = false;
             int64_t time = parm->data()->getDatetimeIntVal(row, tmpIsNull);
             if (tmpIsNull)
                 return datatypes::TUInt64Null();
@@ -203,7 +203,7 @@ datatypes::TUInt64Null GenericToBitOperand(
 
         case execplan::CalpontSystemCatalog::TIMESTAMP:
         {
-            bool tmpIsNull;
+            bool tmpIsNull = false;
             int64_t time = parm->data()->getTimestampIntVal(row, tmpIsNull);
             if (tmpIsNull)
                 return datatypes::TUInt64Null();
@@ -217,7 +217,7 @@ datatypes::TUInt64Null GenericToBitOperand(
 
         case execplan::CalpontSystemCatalog::TIME:
         {
-            bool tmpIsNull;
+            bool tmpIsNull = false;
             int64_t time = parm->data()->getTimeIntVal(row, tmpIsNull);
 
             Time dt(time);

@@ -267,13 +267,13 @@ public:
     }
     datatypes::TUInt64Null toTUInt64Null(rowgroup::Row& row)
     {
-        bool isNull;
+        bool isNull = false;
         uint64_t val = getUintVal(row, isNull);
         return datatypes::TUInt64Null(val, isNull);
     }
     datatypes::TSInt64Null toTSInt64Null(rowgroup::Row& row)
     {
-        bool isNull;
+        bool isNull = false;
         int64_t val = getIntVal(row, isNull);
         return datatypes::TSInt64Null(val, isNull);
     }
