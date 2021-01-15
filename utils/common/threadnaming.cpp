@@ -16,11 +16,19 @@
    MA 02110-1301, USA. */
 
 #include <sys/prctl.h>
+#include "threadnaming.h"
 
 namespace utils
 {
     void setThreadName(const char *threadName)
     {
         prctl(PR_SET_NAME, threadName, 0, 0, 0);
+    }
+
+    std::string getThreadName()
+    {
+      char buf[32];
+      prctl(PR_GET_NAME, buf, 0, 0, 0);
+      return std::string(buf);
     }
 } // end of namespace

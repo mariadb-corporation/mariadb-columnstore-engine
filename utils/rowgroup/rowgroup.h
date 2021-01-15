@@ -462,7 +462,7 @@ public:
     // that's not string-table safe, this one is
     inline void copyField(Row& dest, uint32_t destIndex, uint32_t srcIndex) const;
 
-    std::string toString() const;
+    std::string toString(uint32_t rownum = 0) const;
     std::string toCSV() const;
 
     /* These fcns are used only in joins.  The RID doesn't matter on the side that
@@ -1374,7 +1374,7 @@ public:
 
     RGData duplicate();   // returns a copy of the attached RGData
 
-    std::string toString() const;
+    std::string toString(const std::vector<uint64_t>& used = {}) const;
 
     /** operator+=
     *

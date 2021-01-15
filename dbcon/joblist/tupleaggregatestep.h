@@ -156,7 +156,10 @@ private:
         {}
         void operator()()
         {
-            utils::setThreadName("TASThrAggr");
+            std::string t{"TASThrAggr"};
+            t.append(std::to_string(fThreadID));
+            utils::setThreadName(t.c_str());
+            //utils::setThreadName("TASThrAggr");
             fStep->threadedAggregateRowGroups(fThreadID);
         }
 
