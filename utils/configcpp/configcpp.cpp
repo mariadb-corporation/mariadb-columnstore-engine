@@ -59,6 +59,9 @@ namespace fs = boost::filesystem;
 #include "installdir.h"
 #ifdef _MSC_VER
 #include "idbregistry.h"
+#include <unordered_map>
+#else
+#include <tr1/unordered_map>
 #endif
 
 #include "bytestream.h"
@@ -672,6 +675,24 @@ const vector<string> Config::enumSection(const string& section)
     }
 
     return fParser.enumSection(fDoc, section);
+}
+std::string Config::getTempFileDir(Config::TempDirPurpose what)
+{
+  std::string prefix = getConfig("SystemConfig", "SystemTempFileDir");
+  if (prefix.empty())
+  {
+    prefix.assign("/tmp/columnstore_tmp_files");
+  }
+  prefix.append("/");
+  switch (what)
+  {
+  case TempDirPurpose::Joins:
+    return prefix.append("joins/");
+  case TempDirPurpose::Aggregates:
+    return prefix.append("aggregates/");
+  }
+  // NOTREACHED
+  return {};
 }
 
 } //namespace config

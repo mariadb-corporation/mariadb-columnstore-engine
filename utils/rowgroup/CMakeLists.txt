@@ -4,7 +4,7 @@ include_directories( ${ENGINE_COMMON_INCLUDES} )
 
 ########### next target ###############
 
-set(rowgroup_LIB_SRCS rowaggregation.cpp rowgroup.cpp)
+set(rowgroup_LIB_SRCS rowaggregation.cpp rowgroup.cpp rowstorage.cpp)
 
 #librowgroup_la_CXXFLAGS = $(march_flags) $(AM_CXXFLAGS)
 
