@@ -347,7 +347,7 @@ struct JobColumn                        /** @brief Job Column Structure */
     execplan::CalpontSystemCatalog::ColDataType    dataType;            /** @brief column data type */
     ColType        weType;              /** @brief write engine data type */
     std::string    typeName;            /** @brief data type name */
-    uint128_t       emptyVal;            /** @brief default empty value */
+    const uint8_t* emptyVal;            /** @brief default empty value */
     int            width;               /** @brief column width; for a dictionary column, this is "eventually" the token width */
     int            definedWidth;        /** @brief column width as defined in the table, used for non-dictionary strings */
     int            dctnryWidth;         /** @brief dictionary width */
@@ -370,7 +370,7 @@ struct JobColumn                        /** @brief Job Column Structure */
     int128_t       fDefaultWideDecimal; /** @brief Wide decimal column default */
     std::string    fDefaultChr;         /** @brief Char column default */
     JobColumn() : mapOid(0), dataType(execplan::CalpontSystemCatalog::INT), weType(WR_INT),
-        typeName("integer"), emptyVal(0),
+        typeName("integer"), emptyVal(nullptr),
         width(0), definedWidth(0), dctnryWidth(0),
         precision(0), scale(0), fNotNull(false),
         fFldColRelation(BULK_FLDCOL_COLUMN_FIELD), colType(' '),

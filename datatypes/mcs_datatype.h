@@ -941,6 +941,9 @@ public:
                                        const ConvertFromStringParam& prm,
                                        const std::string& str,
                                        bool& pushWarning) const = 0;
+  virtual const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr)
+                                                                   const = 0;
+
 };
 
 
@@ -1003,6 +1006,12 @@ class TypeHandlerBit: public TypeHandler
                                const ConvertFromStringParam& prm,
                                const std::string& str,
                                bool& pushWarning) const override;
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const override
+  {
+    idbassert(0);
+    return nullptr;
+  }
+
 };
 
 
@@ -1074,6 +1083,7 @@ public:
                                const ConvertFromStringParam& prm,
                                const std::string& str,
                                bool& pushWarning) const override;
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const override;
 };
 
 
@@ -1130,6 +1140,7 @@ public:
                                const ConvertFromStringParam& prm,
                                const std::string& str,
                                bool& pushWarning) const override;
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const override;
 };
 
 
@@ -1188,6 +1199,7 @@ class TypeHandlerSInt24: public TypeHandlerInt
                                const ConvertFromStringParam& prm,
                                const std::string& str,
                                bool& pushWarning) const override;
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const override;
 };
 
 
@@ -1246,6 +1258,7 @@ class TypeHandlerSInt32: public TypeHandlerInt
                                const ConvertFromStringParam& prm,
                                const std::string& str,
                                bool& pushWarning) const override;
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const override;
 };
 
 
@@ -1301,6 +1314,7 @@ class TypeHandlerSInt64: public TypeHandlerInt
                                const ConvertFromStringParam& prm,
                                const std::string& str,
                                bool& pushWarning) const override;
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const override;
 };
 
 
@@ -1383,6 +1397,7 @@ class TypeHandlerUInt8: public TypeHandlerInt
                                const ConvertFromStringParam& prm,
                                const std::string& str,
                                bool& pushWarning) const override;
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const override;
 };
 
 
@@ -1464,6 +1479,7 @@ class TypeHandlerUInt16: public TypeHandlerInt
                                const ConvertFromStringParam& prm,
                                const std::string& str,
                                bool& pushWarning) const override;
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const override;
 };
 
 
@@ -1548,6 +1564,7 @@ class TypeHandlerUInt24: public TypeHandlerInt
                                const ConvertFromStringParam& prm,
                                const std::string& str,
                                bool& pushWarning) const override;
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const override;
 };
 
 
@@ -1632,6 +1649,7 @@ class TypeHandlerUInt32: public TypeHandlerInt
                                const ConvertFromStringParam& prm,
                                const std::string& str,
                                bool& pushWarning) const override;
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const override;
 };
 
 
@@ -1713,6 +1731,7 @@ class TypeHandlerUInt64: public TypeHandlerInt
                                const ConvertFromStringParam& prm,
                                const std::string& str,
                                bool& pushWarning) const override;
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const override;
 };
 
 
@@ -1853,6 +1872,7 @@ public:
                                const ConvertFromStringParam& prm,
                                const std::string& str,
                                bool& pushWarning) const override;
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const override;
 };
 
 
@@ -1933,6 +1953,7 @@ public:
                                const ConvertFromStringParam& prm,
                                const std::string& str,
                                bool& pushWarning) const override;
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const override;
 };
 
 
@@ -2015,6 +2036,7 @@ public:
                                const ConvertFromStringParam& prm,
                                const std::string& str,
                                bool& pushWarning) const override;
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const override;
 };
 
 
@@ -2093,6 +2115,7 @@ public:
                                const ConvertFromStringParam& prm,
                                const std::string& str,
                                bool& pushWarning) const override;
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const override;
 };
 
 
@@ -2152,6 +2175,7 @@ class TypeHandlerSFloat: public TypeHandlerReal
                                const ConvertFromStringParam& prm,
                                const std::string& str,
                                bool& pushWarning) const override;
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const override;
 };
 
 
@@ -2186,6 +2210,7 @@ class TypeHandlerSDouble: public TypeHandlerReal
                                const ConvertFromStringParam& prm,
                                const std::string& str,
                                bool& pushWarning) const override;
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const override;
 };
 
 
@@ -2220,6 +2245,7 @@ class TypeHandlerUFloat: public TypeHandlerReal
                                const ConvertFromStringParam& prm,
                                const std::string& str,
                                bool& pushWarning) const override;
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const override;
 };
 
 
@@ -2254,6 +2280,7 @@ class TypeHandlerUDouble: public TypeHandlerReal
                                const ConvertFromStringParam& prm,
                                const std::string& str,
                                bool& pushWarning) const override;
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const override;
 };
 
 
@@ -2294,6 +2321,276 @@ class TypeHandlerSLongDouble: public TypeHandlerReal
     throw logging::QueryDataExcept("convertColumnData: unknown column data type.", logging::dataTypeErr);
     return boost::any();
   }
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const override
+  {
+    idbassert(0);
+    return nullptr;
+  }
+};
+
+const uint8_t* getEmptyTypeHandlerStr(const SystemCatalog::TypeAttributesStd &attr, int8_t offset);
+
+class TypeHandlerStr: public TypeHandler
+{
+protected:
+  std::string formatPartitionInfoSmallCharVarchar(
+                                  const SystemCatalog::TypeAttributesStd &attr,
+                                  const MinMaxInfo &i)
+                                  const;
+  boost::any getNullValueForTypeVarcharText(const SystemCatalog::TypeAttributesStd &attr)
+                                                                  const;
+public:
+  int storeValueToFieldCharVarchar(rowgroup::Row &row, int pos,
+                                   StoreField *f) const;
+  int storeValueToFieldBlobText(rowgroup::Row &row, int pos,
+                                StoreField *f) const;
+  std::string formatPartitionInfo(const SystemCatalog::TypeAttributesStd &attr,
+                                          const MinMaxInfo &i)
+                                          const override
+  {
+    // QQ: Check with Roman if this correct:
+    return formatPartitionInfoSInt64(attr, i);
+  }
+  execplan::SimpleColumn *newSimpleColumn(const DatabaseQualifiedColumnName &name,
+                                          SystemCatalog::TypeHolderStd &ct,
+                                          const SimpleColumnParam &prm)
+                                          const override;
+  SimpleValue toSimpleValue(const SessionParam &sp,
+                            const SystemCatalog::TypeAttributesStd &attr,
+                            const char *str, round_style_t & rf) const override;
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const override;
+};
+
+
+class TypeHandlerChar: public TypeHandlerStr
+{
+  const string &name() const override;
+  code_t code() const override
+  {
+    return SystemCatalog::CHAR;
+  }
+  const string print(const SystemCatalog::TypeAttributesStd &attr) const override
+  {
+    ostringstream oss;
+    oss << name () << "(" << attr.colWidth << ")";
+    return oss.str();
+  }
+  bool CP_type(const SystemCatalog::TypeAttributesStd &attr) const override
+  {
+    return attr.colWidth <= 8;
+  }
+  size_t ColWriteBatch(WriteBatchField *field,
+                       const unsigned char *buf,
+                       bool nullVal,
+                       ColBatchWriter & writer) const override
+  {
+    return field->ColWriteBatchChar(buf, nullVal, writer);
+  }
+  int storeValueToField(rowgroup::Row &row, int pos,
+                        StoreField *f) const override
+  {
+    return storeValueToFieldCharVarchar(row, pos, f);
+  }
+  std::string format(const SimpleValue &v,
+                     const SystemCatalog::TypeAttributesStd &attr) const override;
+  std::string formatPartitionInfo(const SystemCatalog::TypeAttributesStd &attr,
+                                  const MinMaxInfo &i)
+                                  const override;
+  MinMaxPartitionInfo getExtentPartitionInfo(const SystemCatalog::TypeAttributesStd &attr,
+                                             BRM::DBRM &em,
+                                             const BRM::EMEntry &entry,
+                                             int *state) const override;
+  boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd &attr)
+                                                                const override;
+  boost::any convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                               const ConvertFromStringParam& prm,
+                               const std::string& str,
+                               bool& pushWarning) const override;
+};
+
+
+class TypeHandlerVarchar: public TypeHandlerStr
+{
+  const string &name() const override;
+  code_t code() const override
+  {
+    return SystemCatalog::VARCHAR;
+  }
+  const string print(const SystemCatalog::TypeAttributesStd &attr) const override
+  {
+    ostringstream oss;
+    oss << name () << "(" << attr.colWidth << ")";
+    return oss.str();
+  }
+  bool CP_type(const SystemCatalog::TypeAttributesStd &attr) const override
+  {
+    return attr.colWidth <= 7;
+  }
+  size_t ColWriteBatch(WriteBatchField *field,
+                       const unsigned char *buf,
+                       bool nullVal,
+                       ColBatchWriter & writer) const override
+  {
+    return field->ColWriteBatchVarchar(buf, nullVal, writer);
+  }
+  int storeValueToField(rowgroup::Row &row, int pos,
+                        StoreField *f) const override
+  {
+    return storeValueToFieldCharVarchar(row, pos, f);
+  }
+  std::string format(const SimpleValue &v,
+                     const SystemCatalog::TypeAttributesStd &attr) const override;
+  std::string formatPartitionInfo(const SystemCatalog::TypeAttributesStd &attr,
+                                  const MinMaxInfo &i)
+                                  const override;
+  MinMaxPartitionInfo getExtentPartitionInfo(const SystemCatalog::TypeAttributesStd &attr,
+                                             BRM::DBRM &em,
+                                             const BRM::EMEntry &entry,
+                                             int *state) const override;
+  boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd &attr)
+                                                                const override
+  {
+    return getNullValueForTypeVarcharText(attr);
+  }
+  boost::any convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                               const ConvertFromStringParam& prm,
+                               const std::string& str,
+                               bool& pushWarning) const override;
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const override;
+};
+
+
+class TypeHandlerVarbinary: public TypeHandlerStr
+{
+  const string &name() const override;
+  code_t code() const override
+  {
+    return SystemCatalog::VARBINARY;
+  }
+  size_t ColWriteBatch(WriteBatchField *field,
+                       const unsigned char *buf,
+                       bool nullVal,
+                       ColBatchWriter & writer) const override
+  {
+    return field->ColWriteBatchVarbinary(buf, nullVal, writer);
+  }
+  int storeValueToField(rowgroup::Row &row, int pos,
+                        StoreField *f) const override;
+  std::string format(const SimpleValue &v,
+                     const SystemCatalog::TypeAttributesStd &attr) const override;
+  boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd &attr)
+                                                                const override;
+  boost::any convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                               const ConvertFromStringParam& prm,
+                               const std::string& str,
+                               bool& pushWarning) const override;
+};
+
+
+class TypeHandlerBlob: public TypeHandlerStr
+{
+  const string &name() const override;
+  code_t code() const override
+  {
+    return SystemCatalog::BLOB;
+  }
+  size_t ColWriteBatch(WriteBatchField *field,
+                       const unsigned char *buf,
+                       bool nullVal,
+                       ColBatchWriter & writer) const override
+  {
+    return field->ColWriteBatchBlob(buf, nullVal, writer);
+  }
+  int storeValueToField(rowgroup::Row &row, int pos,
+                        StoreField *f) const override
+  {
+    return storeValueToFieldBlobText(row, pos, f);
+  }
+  std::string format(const SimpleValue &v,
+                     const SystemCatalog::TypeAttributesStd &attr) const override
+  {
+    return "0"; // QQ
+  }
+  boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd &attr)
+                                                                const override;
+  boost::any convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                               const ConvertFromStringParam& prm,
+                               const std::string& str,
+                               bool& pushWarning) const override;
+};
+
+
+class TypeHandlerText: public TypeHandlerStr
+{
+  const string &name() const override;
+  code_t code() const override
+  {
+    return SystemCatalog::TEXT;
+  }
+  size_t ColWriteBatch(WriteBatchField *field,
+                       const unsigned char *buf,
+                       bool nullVal,
+                       ColBatchWriter & writer) const override
+  {
+    return field->ColWriteBatchBlob(buf, nullVal, writer);
+  }
+  int storeValueToField(rowgroup::Row &row, int pos,
+                        StoreField *f) const override
+  {
+    return storeValueToFieldBlobText(row, pos, f);
+  }
+  std::string format(const SimpleValue &v,
+                     const SystemCatalog::TypeAttributesStd &attr) const override
+  {
+    return "0"; // QQ
+  }
+  boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd &attr)
+                                                                const override
+  {
+    return getNullValueForTypeVarcharText(attr);
+  }
+  boost::any convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                               const ConvertFromStringParam& prm,
+                               const std::string& str,
+                               bool& pushWarning) const override;
+};
+
+
+class TypeHandlerClob: public TypeHandlerStr
+{
+  const string &name() const override;
+  code_t code() const override
+  {
+    return SystemCatalog::CLOB;
+  }
+  size_t ColWriteBatch(WriteBatchField *field,
+                       const unsigned char *buf,
+                       bool nullVal,
+                       ColBatchWriter & writer) const override
+  {
+    idbassert(0); // QQ
+    return 0;
+  }
+  int storeValueToField(rowgroup::Row &row, int pos,
+                        StoreField *f) const override
+  {
+    idbassert(0); // QQ
+    return 1;
+  }
+  std::string format(const SimpleValue &v,
+                     const SystemCatalog::TypeAttributesStd &attr) const override
+  {
+    return "0"; // QQ
+  }
+  boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd &attr)
+                                                                const override
+  {
+    return boost::any(); // QQ
+  }
+  boost::any convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+                               const ConvertFromStringParam& prm,
+                               const std::string& str,
+                               bool& pushWarning) const override;
 };
 
 
@@ -2310,6 +2607,10 @@ public:
                                           SystemCatalog::TypeHolderStd &ct,
                                           const SimpleColumnParam &prm)
                                           const override;
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const override
+  {
+    return getEmptyTypeHandlerStr(attr, 0);
+  }
 };
 
 
@@ -2447,269 +2748,6 @@ class TypeHandlerTimestamp: public TypeHandlerTemporal
                                const std::string& str,
                                bool& pushWarning) const override;
 };
-
-
-class TypeHandlerStr: public TypeHandler
-{
-protected:
-  std::string formatPartitionInfoSmallCharVarchar(
-                                  const SystemCatalog::TypeAttributesStd &attr,
-                                  const MinMaxInfo &i)
-                                  const;
-  boost::any getNullValueForTypeVarcharText(const SystemCatalog::TypeAttributesStd &attr)
-                                                                  const;
-public:
-  int storeValueToFieldCharVarchar(rowgroup::Row &row, int pos,
-                                   StoreField *f) const;
-  int storeValueToFieldBlobText(rowgroup::Row &row, int pos,
-                                StoreField *f) const;
-  std::string formatPartitionInfo(const SystemCatalog::TypeAttributesStd &attr,
-                                          const MinMaxInfo &i)
-                                          const override
-  {
-    // QQ: Check with Roman if this correct:
-    return formatPartitionInfoSInt64(attr, i);
-  }
-  execplan::SimpleColumn *newSimpleColumn(const DatabaseQualifiedColumnName &name,
-                                          SystemCatalog::TypeHolderStd &ct,
-                                          const SimpleColumnParam &prm)
-                                          const override;
-  SimpleValue toSimpleValue(const SessionParam &sp,
-                            const SystemCatalog::TypeAttributesStd &attr,
-                            const char *str, round_style_t & rf) const override;
-};
-
-
-class TypeHandlerChar: public TypeHandlerStr
-{
-  const string &name() const override;
-  code_t code() const override
-  {
-    return SystemCatalog::CHAR;
-  }
-  const string print(const SystemCatalog::TypeAttributesStd &attr) const override
-  {
-    ostringstream oss;
-    oss << name () << "(" << attr.colWidth << ")";
-    return oss.str();
-  }
-  bool CP_type(const SystemCatalog::TypeAttributesStd &attr) const override
-  {
-    return attr.colWidth <= 8;
-  }
-  size_t ColWriteBatch(WriteBatchField *field,
-                       const unsigned char *buf,
-                       bool nullVal,
-                       ColBatchWriter & writer) const override
-  {
-    return field->ColWriteBatchChar(buf, nullVal, writer);
-  }
-  int storeValueToField(rowgroup::Row &row, int pos,
-                        StoreField *f) const override
-  {
-    return storeValueToFieldCharVarchar(row, pos, f);
-  }
-  std::string format(const SimpleValue &v,
-                     const SystemCatalog::TypeAttributesStd &attr) const override;
-  std::string formatPartitionInfo(const SystemCatalog::TypeAttributesStd &attr,
-                                  const MinMaxInfo &i)
-                                  const override;
-  MinMaxPartitionInfo getExtentPartitionInfo(const SystemCatalog::TypeAttributesStd &attr,
-                                             BRM::DBRM &em,
-                                             const BRM::EMEntry &entry,
-                                             int *state) const override;
-  boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd &attr)
-                                                                const override;
-  boost::any convertFromString(const SystemCatalog::TypeAttributesStd& colType,
-                               const ConvertFromStringParam& prm,
-                               const std::string& str,
-                               bool& pushWarning) const override;
-};
-
-
-class TypeHandlerVarchar: public TypeHandlerStr
-{
-  const string &name() const override;
-  code_t code() const override
-  {
-    return SystemCatalog::VARCHAR;
-  }
-  const string print(const SystemCatalog::TypeAttributesStd &attr) const override
-  {
-    ostringstream oss;
-    oss << name () << "(" << attr.colWidth << ")";
-    return oss.str();
-  }
-  bool CP_type(const SystemCatalog::TypeAttributesStd &attr) const override
-  {
-    return attr.colWidth <= 7;
-  }
-  size_t ColWriteBatch(WriteBatchField *field,
-                       const unsigned char *buf,
-                       bool nullVal,
-                       ColBatchWriter & writer) const override
-  {
-    return field->ColWriteBatchVarchar(buf, nullVal, writer);
-  }
-  int storeValueToField(rowgroup::Row &row, int pos,
-                        StoreField *f) const override
-  {
-    return storeValueToFieldCharVarchar(row, pos, f);
-  }
-  std::string format(const SimpleValue &v,
-                     const SystemCatalog::TypeAttributesStd &attr) const override;
-  std::string formatPartitionInfo(const SystemCatalog::TypeAttributesStd &attr,
-                                  const MinMaxInfo &i)
-                                  const override;
-  MinMaxPartitionInfo getExtentPartitionInfo(const SystemCatalog::TypeAttributesStd &attr,
-                                             BRM::DBRM &em,
-                                             const BRM::EMEntry &entry,
-                                             int *state) const override;
-  boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd &attr)
-                                                                const override
-  {
-    return getNullValueForTypeVarcharText(attr);
-  }
-  boost::any convertFromString(const SystemCatalog::TypeAttributesStd& colType,
-                               const ConvertFromStringParam& prm,
-                               const std::string& str,
-                               bool& pushWarning) const override;
-};
-
-
-class TypeHandlerVarbinary: public TypeHandlerStr
-{
-  const string &name() const override;
-  code_t code() const override
-  {
-    return SystemCatalog::VARBINARY;
-  }
-  size_t ColWriteBatch(WriteBatchField *field,
-                       const unsigned char *buf,
-                       bool nullVal,
-                       ColBatchWriter & writer) const override
-  {
-    return field->ColWriteBatchVarbinary(buf, nullVal, writer);
-  }
-  int storeValueToField(rowgroup::Row &row, int pos,
-                        StoreField *f) const override;
-  std::string format(const SimpleValue &v,
-                     const SystemCatalog::TypeAttributesStd &attr) const override;
-  boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd &attr)
-                                                                const override;
-  boost::any convertFromString(const SystemCatalog::TypeAttributesStd& colType,
-                               const ConvertFromStringParam& prm,
-                               const std::string& str,
-                               bool& pushWarning) const override;
-};
-
-
-class TypeHandlerBlob: public TypeHandlerStr
-{
-  const string &name() const override;
-  code_t code() const override
-  {
-    return SystemCatalog::BLOB;
-  }
-  size_t ColWriteBatch(WriteBatchField *field,
-                       const unsigned char *buf,
-                       bool nullVal,
-                       ColBatchWriter & writer) const override
-  {
-    return field->ColWriteBatchBlob(buf, nullVal, writer);
-  }
-  int storeValueToField(rowgroup::Row &row, int pos,
-                        StoreField *f) const override
-  {
-    return storeValueToFieldBlobText(row, pos, f);
-  }
-  std::string format(const SimpleValue &v,
-                     const SystemCatalog::TypeAttributesStd &attr) const override
-  {
-    return "0"; // QQ
-  }
-  boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd &attr)
-                                                                const override;
-  boost::any convertFromString(const SystemCatalog::TypeAttributesStd& colType,
-                               const ConvertFromStringParam& prm,
-                               const std::string& str,
-                               bool& pushWarning) const override;
-};
-
-
-class TypeHandlerText: public TypeHandlerStr
-{
-  const string &name() const override;
-  code_t code() const override
-  {
-    return SystemCatalog::TEXT;
-  }
-  size_t ColWriteBatch(WriteBatchField *field,
-                       const unsigned char *buf,
-                       bool nullVal,
-                       ColBatchWriter & writer) const override
-  {
-    return field->ColWriteBatchBlob(buf, nullVal, writer);
-  }
-  int storeValueToField(rowgroup::Row &row, int pos,
-                        StoreField *f) const override
-  {
-    return storeValueToFieldBlobText(row, pos, f);
-  }
-  std::string format(const SimpleValue &v,
-                     const SystemCatalog::TypeAttributesStd &attr) const override
-  {
-    return "0"; // QQ
-  }
-  boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd &attr)
-                                                                const override
-  {
-    return getNullValueForTypeVarcharText(attr);
-  }
-  boost::any convertFromString(const SystemCatalog::TypeAttributesStd& colType,
-                               const ConvertFromStringParam& prm,
-                               const std::string& str,
-                               bool& pushWarning) const override;
-};
-
-
-class TypeHandlerClob: public TypeHandlerStr
-{
-  const string &name() const override;
-  code_t code() const override
-  {
-    return SystemCatalog::CLOB;
-  }
-  size_t ColWriteBatch(WriteBatchField *field,
-                       const unsigned char *buf,
-                       bool nullVal,
-                       ColBatchWriter & writer) const override
-  {
-    idbassert(0); // QQ
-    return 0;
-  }
-  int storeValueToField(rowgroup::Row &row, int pos,
-                        StoreField *f) const override
-  {
-    idbassert(0); // QQ
-    return 1;
-  }
-  std::string format(const SimpleValue &v,
-                     const SystemCatalog::TypeAttributesStd &attr) const override
-  {
-    return "0"; // QQ
-  }
-  boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd &attr)
-                                                                const override
-  {
-    return boost::any(); // QQ
-  }
-  boost::any convertFromString(const SystemCatalog::TypeAttributesStd& colType,
-                               const ConvertFromStringParam& prm,
-                               const std::string& str,
-                               bool& pushWarning) const override;
-};
-
 
 }// end of namespace datatypes
 

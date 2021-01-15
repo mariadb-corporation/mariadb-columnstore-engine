@@ -115,9 +115,11 @@ int ColumnBuffer::writeToFile(int startOffset, int writeSize, bool fillUpWEmptie
     {
         BlockOp blockOp;
         newBuf = new unsigned char[BYTE_PER_BLOCK];
-        uint8_t* emptyVal = (uint8_t*) alloca(fColInfo->column.width);
-        blockOp.getEmptyRowValue(fColInfo->column.dataType,
-            fColInfo->column.width, emptyVal);
+        blockOp.findTypeHandler(fColInfo->column.width,
+                                fColInfo->column.dataType);
+        const uint8_t* emptyVal = blockOp.getEmptyRowValue(fColInfo->column.dataType,
+                                                     fColInfo->column.width);
+
         ::memcpy(static_cast<void *>(newBuf),
                 static_cast<const void *>(fBuffer + startOffset), writeSize);
         blockOp.setEmptyBuf(newBuf + writeSize, BYTE_PER_BLOCK - writeSize,

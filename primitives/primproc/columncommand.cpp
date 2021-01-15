@@ -48,8 +48,6 @@ using namespace rowgroup;
 #include "messageids.h"
 using namespace logging;
 
-#include "emptyvaluemanip.h"
-
 #ifdef _MSC_VER
 #define llabs labs
 #endif
@@ -177,65 +175,36 @@ void ColumnCommand::loadData()
         else if (lastBlockReached && _isScan)
         {
             // fill remaining blocks with empty values when col scan
-            int blockLen = BLOCK_SIZE / colType.colWidth;
-            ByteStream::hexbyte* hPtr = NULL;
-            ByteStream::octbyte* oPtr = NULL;
-            ByteStream::quadbyte* qPtr = NULL;
-            ByteStream::byte* bPtr = NULL;
-            ByteStream::doublebyte* dPtr = NULL;
+            uint32_t blockLen = BLOCK_SIZE / colType.colWidth;
+            auto attrs = datatypes::SystemCatalog::TypeAttributesStd(colType.colWidth,
+                                                                     0,
+                                                                     -1);
+            const auto* typeHandler = datatypes::TypeHandler::find(colType.colDataType,
+                                                                   attrs);
+            const uint8_t* emptyValue = typeHandler->getEmptyValueForType(attrs);
+            uint8_t* blockDataPtr = &bpp->blockData[i * BLOCK_SIZE];
 
-            if (colType.colWidth == 1)
-                bPtr = reinterpret_cast<ByteStream::byte*>(&bpp->blockData[i * BLOCK_SIZE]);
-
-            //@Bug 1812. Added two bytes column handling
-            if (colType.colWidth == 2)
-                dPtr = reinterpret_cast<ByteStream::doublebyte*>(&bpp->blockData[i * BLOCK_SIZE]);
-
-            if (colType.colWidth == 4)
-                qPtr = reinterpret_cast<ByteStream::quadbyte*>(&bpp->blockData[i * BLOCK_SIZE]);
-
-            if (colType.colWidth == 8)
-                oPtr = reinterpret_cast<ByteStream::octbyte*>(&bpp->blockData[i * BLOCK_SIZE]);
-
-            if (colType.colWidth == 16)
-                hPtr = reinterpret_cast<ByteStream::hexbyte*>(&bpp->blockData[i * BLOCK_SIZE]);
-
-
-            for (int idx = 0; idx < blockLen; idx++)
+            idbassert(blockDataPtr);
+            if (colType.colWidth == sizeof(ByteStream::byte))
             {
-                if (bPtr && colType.colWidth == 1)
-                {
-                    ByteStream::byte b;
-                    utils::getEmptyRowValue(colType.colDataType, colType.colWidth, (uint8_t*)&b);
-                    bPtr[idx] = b;
-                }
-                //@Bug 1812. Added two bytes column handling
-                else if (dPtr && colType.colWidth == 2)
-                {
-                    ByteStream::doublebyte d;
-                    utils::getEmptyRowValue(colType.colDataType, colType.colWidth, (uint8_t*)&d);
-                    dPtr[idx] = d;
-                }
-                else if (qPtr && colType.colWidth == 4)
-                {
-                    ByteStream::quadbyte q;
-                    utils::getEmptyRowValue(colType.colDataType, colType.colWidth, (uint8_t*)&q);
-                    qPtr[idx] = q;
-                }
-                else if (oPtr && colType.colWidth == 8)
-                {
-                    ByteStream::octbyte o;
-                    utils::getEmptyRowValue(colType.colDataType, colType.colWidth, (uint8_t*)&o);
-                    oPtr[idx] = o;
-                }
-                else if (colType.colWidth == 16)
-                {
-                    ByteStream::hexbyte h;
-                    utils::getEmptyRowValue(colType.colDataType, colType.colWidth, (uint8_t*)&h);
-                    datatypes::TSInt128::storeUnaligned(hPtr + idx, h);
-                }
+                fillEmptyBlock<ByteStream::byte>(blockDataPtr, emptyValue, blockLen);
             }
-
+            if (colType.colWidth == sizeof(ByteStream::doublebyte))
+            {
+                fillEmptyBlock<ByteStream::doublebyte>(blockDataPtr, emptyValue, blockLen);
+            }
+            if (colType.colWidth == sizeof(ByteStream::quadbyte))
+            {
+                fillEmptyBlock<ByteStream::quadbyte>(blockDataPtr, emptyValue, blockLen);
+            }
+            if (colType.colWidth == sizeof(ByteStream::octbyte))
+            {
+                fillEmptyBlock<ByteStream::octbyte>(blockDataPtr, emptyValue, blockLen);
+            }
+            if (colType.colWidth == sizeof(ByteStream::hexbyte))
+            {
+                fillEmptyBlock<ByteStream::hexbyte>(blockDataPtr, emptyValue, blockLen);
+            }
         }// else
 
         if ( (primMsg->LBID + i) == oidLastLbid)

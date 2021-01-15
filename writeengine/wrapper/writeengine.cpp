@@ -624,6 +624,9 @@ int WriteEngineWrapper::createColumn(
 
     int compress_op = op(compressionType);
     m_colOp[compress_op]->initColumn(curCol);
+    m_colOp[compress_op]->findTypeHandler(dataWidth, dataType);
+
+    
     rc = m_colOp[compress_op]->createColumn(curCol, 0, dataWidth, dataType,
                                             WriteEngine::WR_CHAR, (FID)dataOid, dbRoot, partition);
 
@@ -708,8 +711,13 @@ int WriteEngineWrapper::fillColumn(const TxnID& txnid, const OID& dataOid,
     Convertor::convertColType(refColDataType, refColWidth, refColType, isToken);
     refColOp->setColParam(refCol, 0, refColOp->getCorrectRowWidth(refColDataType, refColWidth),
                           refColDataType, refColType, (FID)refColOID, refCompressionType, dbRoot);
-   colOpNewCol->setColParam(newCol, 0, newDataWidth,
+    refColOp->findTypeHandler(refColOp->getCorrectRowWidth(refColDataType,
+                                                           refColWidth),
+                              refColDataType);
+    colOpNewCol->setColParam(newCol, 0, newDataWidth,
                              colType.colDataType, newColType, (FID)dataOid, compressionType, dbRoot);
+    colOpNewCol->findTypeHandler(newDataWidth, colType.colDataType);
+
 
     int size = sizeof(Token);
 
@@ -761,8 +769,6 @@ int WriteEngineWrapper::deleteRow(const TxnID& txnid, const vector<CSCTypesList>
     setTransId(txnid);
     unsigned numExtents = colExtentsStruct.size();
 
-    uint128_t emptyVal;
-
     for (unsigned extent = 0; extent < numExtents; extent++)
     {
         colStructList = colExtentsStruct[extent];
@@ -775,9 +781,13 @@ int WriteEngineWrapper::deleteRow(const TxnID& txnid, const vector<CSCTypesList>
             cscColType = cscColTypeList[i];
             Convertor::convertColType(&curColStruct);
 
-            m_colOp[op(curColStruct.fCompressionType)]->
-                getEmptyRowValue(curColStruct.colDataType, curColStruct.colWidth, (uint8_t*)&emptyVal);
-            curTuple.data = emptyVal;
+            const uint8_t* emptyVal = m_colOp[op(curColStruct.fCompressionType)]->
+                getEmptyRowValue(curColStruct.colDataType, curColStruct.colWidth);
+
+            if (curColStruct.colWidth == datatypes::MAXDECIMALWIDTH)
+                curTuple.data = *(int128_t*)emptyVal;
+            else 
+                curTuple.data = *(int64_t*)emptyVal;
 
             curTupleList.push_back(curTuple);
             colValueList.push_back(curTupleList);
@@ -854,6 +864,7 @@ int WriteEngineWrapper::deleteBadRows(const TxnID& txnid, ColStructList& colStru
                                    colStructs[i].colDataType, colStructs[i].colType, colStructs[i].dataOid,
                                    colStructs[i].fCompressionType, colStructs[i].fColDbRoot,
                                    colStructs[i].fColPartition, colStructs[i].fColSegment);
+                colOp->findTypeHandler(colStructs[i].colWidth, colStructs[i].colDataType);
 
                 string segFile;
                 rc = colOp->openColumnFile(curCol, segFile, true, IO_BUFF_SIZE); // @bug 5572 HDFS tmp file
@@ -1085,6 +1096,8 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
                 colOp->setColParam(curCol, colId, colStructList[i].colWidth, colStructList[i].colDataType,
                                    colStructList[i].colType, colStructList[i].dataOid, colStructList[i].fCompressionType,
                                    dbRoot, partitionNum, segmentNum);
+                colOp->findTypeHandler(colStructList[i].colWidth,
+                                       colStructList[i].colDataType);
                 rc = colOp->extendColumn(curCol, false, extents[i].startBlkOffset, extents[i].startLbid, extents[i].allocSize, dbRoot,
                                          partitionNum, segmentNum, segFile, pFile, newFile);
 
@@ -1314,9 +1327,11 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
 
     oldHwm = hwm; //Save this info for rollback
     //need to pass real dbRoot, partition, and segment to setColParam
-   colOp->setColParam(curCol, colId, curColStruct.colWidth, curColStruct.colDataType,
+    colOp->setColParam(curCol, colId, curColStruct.colWidth, curColStruct.colDataType,
                        curColStruct.colType, curColStruct.dataOid, curColStruct.fCompressionType,
                        curColStruct.fColDbRoot, curColStruct.fColPartition, curColStruct.fColSegment);
+    colOp->findTypeHandler(curColStruct.colWidth,
+                           curColStruct.colDataType);
     rc = colOp->openColumnFile(curCol, segFile, useTmpSuffix); // @bug 5572 HDFS tmp file
 
     if (rc != NO_ERROR)
@@ -1377,6 +1392,8 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
                                colStructList[k].fColDbRoot,
                                colStructList[k].fColPartition,
                                colStructList[k].fColSegment);
+            colOp->findTypeHandler(colStructList[k].colWidth,
+                                   colStructList[k].colDataType);
             rc = colOp->openColumnFile(expandCol, segFile, true); // @bug 5572 HDFS tmp file
 
             if (rc == NO_ERROR)
@@ -1844,6 +1861,8 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
                 colOp->setColParam(curCol, 0, colStructList[i].colWidth, colStructList[i].colDataType,
                                    colStructList[i].colType, colStructList[i].dataOid, colStructList[i].fCompressionType,
                                    dbRoot, partitionNum, segmentNum);
+                colOp->findTypeHandler(colStructList[i].colWidth,
+                                       colStructList[i].colDataType);
                 rc = colOp->extendColumn(curCol, false, extents[i].startBlkOffset, extents[i].startLbid, extents[i].allocSize, dbRoot,
                                          partitionNum, segmentNum, segFile, pFile, newFile);
 
@@ -2080,6 +2099,8 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
     colOp->setColParam(curCol, colId, curColStruct.colWidth, curColStruct.colDataType,
                        curColStruct.colType, curColStruct.dataOid, curColStruct.fCompressionType,
                        curColStruct.fColDbRoot, curColStruct.fColPartition, curColStruct.fColSegment);
+    colOp->findTypeHandler(curColStruct.colWidth,
+                           curColStruct.colDataType);
     rc = colOp->openColumnFile(curCol, segFile, useTmpSuffix); // @bug 5572 HDFS tmp file
 
     if (rc != NO_ERROR)
@@ -2144,6 +2165,8 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
                                colStructList[k].fColDbRoot,
                                colStructList[k].fColPartition,
                                colStructList[k].fColSegment);
+            colOp->findTypeHandler(colStructList[k].colWidth,
+                                   colStructList[k].colDataType);
             rc = colOp->openColumnFile(expandCol, segFile, true); // @bug 5572 HDFS tmp file
 
             if (rc == NO_ERROR)
@@ -2587,7 +2610,8 @@ int WriteEngineWrapper::insertColumnRec_SYS(const TxnID& txnid,
     colOp->setColParam(curCol, 0, curColStruct.colWidth, curColStruct.colDataType,
                        curColStruct.colType, curColStruct.dataOid, curColStruct.fCompressionType,
                        dbRoot, partitionNum, segmentNum);
-
+    colOp->findTypeHandler(curColStruct.colWidth,
+                           curColStruct.colDataType);
     string segFile;
     rc = colOp->openColumnFile(curCol, segFile, false); // @bug 5572 HDFS tmp file
 
@@ -2698,6 +2722,8 @@ int WriteEngineWrapper::insertColumnRec_SYS(const TxnID& txnid,
                                dbRoot,
                                partitionNum,
                                segmentNum);
+            colOp->findTypeHandler(colStructList[k].colWidth,
+                                   colStructList[k].colDataType);
             rc = colOp->openColumnFile(expandCol, segFile, false); // @bug 5572 HDFS tmp file
 
             if (rc == NO_ERROR)
@@ -2942,6 +2968,8 @@ int WriteEngineWrapper::insertColumnRec_SYS(const TxnID& txnid,
                                newColStructList[i].colWidth, newColStructList[i].colDataType,
                                newColStructList[i].colType, newColStructList[i].dataOid,
                                newColStructList[i].fCompressionType, dbRoot, partitionNum, segmentNum);
+            colOp->findTypeHandler(newColStructList[i].colWidth,
+                                   newColStructList[i].colDataType);
 
             rc = BRMWrapper::getInstance()->getLastHWM_DBroot(
                      curColLocal.dataFile.fid, dbRoot, partitionNum, segmentNum, oldHwm,
@@ -3257,7 +3285,8 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
     colOp->setColParam(curCol, colId, curColStruct.colWidth, curColStruct.colDataType,
                        curColStruct.colType, curColStruct.dataOid, curColStruct.fCompressionType,
                        dbRoot, partitionNum, segmentNum);
-
+    colOp->findTypeHandler(curColStruct.colWidth,
+                           curColStruct.colDataType);
     string segFile;
 
     if (bUseStartExtent)
@@ -3392,6 +3421,8 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
                                colStructList[k].fColDbRoot,
                                colStructList[k].fColPartition,
                                colStructList[k].fColSegment);
+            colOp->findTypeHandler(colStructList[k].colWidth,
+                                   colStructList[k].colDataType);
             rc = colOp->openColumnFile(expandCol, segFile, true); // @bug 5572 HDFS tmp file
 
             if (rc == NO_ERROR)
@@ -4363,7 +4394,8 @@ int WriteEngineWrapper::writeColumnRecords(const TxnID& txnid,
                            curColStruct.colDataType, curColStruct.colType, curColStruct.dataOid,
                            curColStruct.fCompressionType,
                            curColStruct.fColDbRoot, curColStruct.fColPartition, curColStruct.fColSegment);
-
+        colOp->findTypeHandler(curColStruct.colWidth,
+                               curColStruct.colDataType);
         ColExtsInfo aColExtsInfo = aTbaleMetaData->getColExtsInfo(curColStruct.dataOid);
         ColExtsInfo::iterator it = aColExtsInfo.begin();
 
@@ -4543,6 +4575,8 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
                                    colStructList[i].colDataType, colStructList[i].colType, colStructList[i].dataOid,
                                    colStructList[i].fCompressionType, colStructList[i].fColDbRoot,
                                    colStructList[i].fColPartition, colStructList[i].fColSegment);
+                colOp->findTypeHandler(colStructList[i].colWidth,
+                                       colStructList[i].colDataType);
 
                 ColExtsInfo aColExtsInfo = aTbaleMetaData->getColExtsInfo(colStructList[i].dataOid);
                 ColExtsInfo::iterator it = aColExtsInfo.begin();
@@ -4665,6 +4699,8 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
                                newColStructList[i].colDataType, newColStructList[i].colType, newColStructList[i].dataOid,
                                newColStructList[i].fCompressionType, newColStructList[i].fColDbRoot,
                                newColStructList[i].fColPartition, newColStructList[i].fColSegment);
+            colOp->findTypeHandler(newColStructList[i].colWidth,
+                                   newColStructList[i].colDataType);
 
             ColExtsInfo aColExtsInfo = aTbaleMetaData->getColExtsInfo(newColStructList[i].dataOid);
             ColExtsInfo::iterator it = aColExtsInfo.begin();
@@ -4784,6 +4820,8 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
                                colStructList[i].colDataType, colStructList[i].colType, colStructList[i].dataOid,
                                colStructList[i].fCompressionType, colStructList[i].fColDbRoot,
                                colStructList[i].fColPartition, colStructList[i].fColSegment);
+            colOp->findTypeHandler(colStructList[i].colWidth,
+                                   colStructList[i].colDataType);
 
             rc = colOp->openColumnFile(curCol, segFile, useTmpSuffix, IO_BUFF_SIZE); // @bug 5572 HDFS tmp file
 
@@ -4957,6 +4995,8 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
                                colStructList[i].colDataType, colStructList[i].colType, colStructList[i].dataOid,
                                colStructList[i].fCompressionType, colStructList[i].fColDbRoot,
                                colStructList[i].fColPartition, colStructList[i].fColSegment);
+            colOp->findTypeHandler(colStructList[i].colWidth,
+                                   colStructList[i].colDataType);
 
             ColExtsInfo aColExtsInfo = aTbaleMetaData->getColExtsInfo(colStructList[i].dataOid);
             ColExtsInfo::iterator it = aColExtsInfo.begin();
@@ -5106,6 +5146,8 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
                                newColStructList[i].colDataType, newColStructList[i].colType, newColStructList[i].dataOid,
                                newColStructList[i].fCompressionType, newColStructList[i].fColDbRoot,
                                newColStructList[i].fColPartition, newColStructList[i].fColSegment);
+            colOp->findTypeHandler(newColStructList[i].colWidth,
+                                   newColStructList[i].colDataType);
 
             ColExtsInfo aColExtsInfo = aTbaleMetaData->getColExtsInfo(newColStructList[i].dataOid);
             ColExtsInfo::iterator it = aColExtsInfo.begin();
@@ -5321,6 +5363,8 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
                            curColStruct.colDataType, curColStruct.colType, curColStruct.dataOid,
                            curColStruct.fCompressionType, curColStruct.fColDbRoot,
                            curColStruct.fColPartition, curColStruct.fColSegment);
+        colOp->findTypeHandler(curColStruct.colWidth,
+                               curColStruct.colDataType);
 
 
         ColExtsInfo aColExtsInfo = aTbaleMetaData->getColExtsInfo(curColStruct.dataOid);

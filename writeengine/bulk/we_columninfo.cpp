@@ -297,6 +297,7 @@ void ColumnInfo::setupDelayedFileCreation(
                         column.mapOid,
                         column.compressionType,
                         dbRoot, partition, segment );
+    colOp->findTypeHandler(column.width, column.dataType);
 }
 
 //------------------------------------------------------------------------------
@@ -896,7 +897,7 @@ int ColumnInfo::extendColumnOldExtent(
         }
 
         rc = colOp->expandAbbrevColumnExtent( pFile, dbRootNext,
-                                              (uint8_t*)&column.emptyVal, column.width);
+                                              column.emptyVal, column.width);
 
         if (rc != NO_ERROR)
         {
@@ -1422,6 +1423,7 @@ int ColumnInfo::setupInitialColumnExtent(
                         column.mapOid,
                         column.compressionType,
                         dbRoot, partition, segment );
+    colOp->findTypeHandler(column.width, column.dataType);
 
     // Open the column file
     if (!colOp->exists(column.mapOid, dbRoot, partition, segment) )
