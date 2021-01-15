@@ -126,6 +126,8 @@ const uint64_t defaultOrderByLimitMaxMemory = 1 * 1024 * 1024 * 1024ULL;
 const uint64_t defaultDECThrottleThreshold = 200000000;  // ~200 MB
 
 const uint8_t defaultUseCpimport = 1;
+
+const bool defaultAllowDiskAggregation = false;
 /** @brief ResourceManager
  *	Returns requested values from Config
  *
@@ -149,7 +151,7 @@ public:
 
     /** @brief dtor
      */
-    virtual ~ResourceManager() { }
+    virtual ~ResourceManager() {}
 
     typedef std::map <uint32_t, uint64_t> MemMap;
 
@@ -175,6 +177,11 @@ public:
     int  	    getEmExecQueueSize() const
     {
         return  getIntVal(fExeMgrStr, "ExecQueueSize", defaultEMExecQueueSize);
+    }
+
+    int         getAllowDiskAggregation() const
+    {
+        return getBoolVal(fRowAggregationStr, "AllowDiskBasedAggregation", defaultAllowDiskAggregation);
     }
 
     int	      	getHjMaxBuckets() const
@@ -559,6 +566,8 @@ private:
     template<typename IntType>
     IntType getIntVal(const std::string& section, const std::string& name, IntType defval) const;
 
+    bool getBoolVal(const std::string& section, const std::string& name, bool defval) const;
+
     void logMessage(logging::LOG_TYPE logLevel, logging::Message::MessageID mid, uint64_t value = 0, uint32_t sessionId = 0);
 
     /*static	const*/ std::string fExeMgrStr;
@@ -573,6 +582,7 @@ private:
     /*static	const*/ std::string fDMLProcStr;
     /*static	const*/ std::string fBatchInsertStr;
     static	const std::string fOrderByLimitStr;
+    static      const std::string fRowAggregationStr;
     config::Config* fConfig;
     static ResourceManager* fInstance;
     uint32_t fTraceFlags;
@@ -644,7 +654,11 @@ inline IntType ResourceManager::getIntVal(const std::string& section, const std:
     return ( 0 == retStr.length() ? defval : fConfig->fromText(retStr) );
 }
 
-
+inline bool ResourceManager::getBoolVal(const std::string& section, const std::string& name, bool defval) const
+{
+  auto retStr = fConfig->getConfig(section, name);
+  return ( 0 == retStr.length() ? defval : (retStr == "y" || retStr == "Y") );
+}
 
 }
 
