@@ -129,6 +129,10 @@ private:
     void makeScanMsg();
     void makeStepMsg();
     void setLBID(uint64_t rid);
+    template<typename T>
+    inline void fillEmptyBlock(uint8_t* dst,
+                        const uint8_t*emptyValue,
+                        const uint32_t number) const;
 
     bool _isScan;
 
@@ -170,6 +174,35 @@ private:
 
     friend class RTSCommand;
 };
+
+template<typename T>
+inline void ColumnCommand::fillEmptyBlock(uint8_t* dst,
+                                   const uint8_t*emptyValue,
+                                   const uint32_t number) const
+{
+    T* typedDst = reinterpret_cast<T*>(dst);
+    const T* typedEmptyValue = reinterpret_cast<const T*>(emptyValue);
+    for (uint32_t idx = 0; idx < number; idx = idx + 4)
+    {
+        typedDst[idx] = *typedEmptyValue;
+        typedDst[idx+1] = *typedEmptyValue;
+        typedDst[idx+2] = *typedEmptyValue;
+        typedDst[idx+3] = *typedEmptyValue;
+    }
+}
+
+template<>
+inline void ColumnCommand::fillEmptyBlock<messageqcpp::ByteStream::hexbyte>(uint8_t* dst,
+                                                               const uint8_t*emptyValue,
+                                                               const uint32_t number) const
+{
+    for (uint32_t idx = 0; idx < number; idx++)
+    {
+        datatypes::TSInt128::assignPtrPtr(dst + idx * sizeof(messageqcpp::ByteStream::hexbyte),
+                                          emptyValue);
+    }
+}
+
 
 }
 

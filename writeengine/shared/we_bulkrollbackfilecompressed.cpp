@@ -374,8 +374,7 @@ void BulkRollbackFileCompressed::reInitTruncColumnExtent(
 
         if (nBlocksToInit > 0)
         {
-            uint8_t* emptyVal = (uint8_t*) alloca(colWidth);
-            fDbFile.getEmptyRowValue( colType, colWidth, emptyVal );
+            const uint8_t* emptyVal = fDbFile.getEmptyRowValue( colType, colWidth );
             rc = fDbFile.reInitPartialColumnExtent( pFile,
                                                     (chunkPtrs[chunkIndex].first + restoredChunkLen),
                                                     nBlocksToInit,

@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "joblisttypes.h"
+#include "mcs_datatype.h"
 
 #include "we_blockop.h"
 
@@ -34,15 +35,13 @@
 
 using namespace execplan;
 
-#include "emptyvaluemanip.h"
-
 namespace WriteEngine
 {
 
 /**
  * Constructor
  */
-BlockOp::BlockOp()
+BlockOp::BlockOp(): m_typeHandler(nullptr)
 {}
 
 /**
@@ -84,11 +83,20 @@ bool BlockOp::calculateRowId(
  * RETURN:
  *    emptyVal - the value of empty row
  ***********************************************************/
-// TODO MCOL-641 Add support here
-void BlockOp::getEmptyRowValue(
-    const CalpontSystemCatalog::ColDataType colDataType, const int width, uint8_t* emptyVal ) const
+const uint8_t* BlockOp::getEmptyRowValue(
+    const CalpontSystemCatalog::ColDataType colDataType,
+    const int width) const
 {
-    utils::getEmptyRowValue(colDataType, width, emptyVal);
+    auto attrs = datatypes::SystemCatalog::TypeAttributesStd(width, 0, -1);
+    // Bulk operation runtime should have m_typeHandler nullptr calling this
+    // Non-bulk operations runtime branch
+    if (m_typeHandler)
+        return m_typeHandler->getEmptyValueForType(attrs);
+
+    // Bulk operation branch
+    auto* typeHandler = datatypes::TypeHandler::find(colDataType,
+                                                     attrs);
+    return typeHandler->getEmptyValueForType(attrs);
 }
 
 /***********************************************************
@@ -166,7 +174,10 @@ void BlockOp::resetBuf(  unsigned char* buf, const int bufSize ) const
  ***********************************************************/
 /* static */
 void BlockOp::setEmptyBuf(
-    unsigned char* buf, const int bufSize, uint8_t* emptyVal, const int width )
+    unsigned char* buf,
+    const int bufSize,
+    const uint8_t* emptyVal,
+    const int width )
 {
     const int ARRAY_COUNT     = 128;
     const int NBYTES_IN_ARRAY = width * ARRAY_COUNT;
@@ -214,12 +225,23 @@ void BlockOp::setEmptyBuf(
  *    none
  ***********************************************************/
 void BlockOp::writeBufValue(
-    unsigned char* buf, void* val, const size_t width, const bool clear ) const
+    unsigned char* buf, const void* val, const size_t width, const bool clear ) const
 {
     if ( clear )
         memset( buf, 0, width );
 
     memcpy( buf, val, width );
+}
+
+void BlockOp::findTypeHandler(const int colWidth,
+                              const execplan::CalpontSystemCatalog::ColDataType colDataType)
+
+{
+    auto attrs = datatypes::SystemCatalog::TypeAttributesStd(colWidth,
+                                                             0,
+                                                             -1);
+    m_typeHandler = datatypes::TypeHandler::find(colDataType,
+                                                 attrs);
 }
 
 } //end of namespace

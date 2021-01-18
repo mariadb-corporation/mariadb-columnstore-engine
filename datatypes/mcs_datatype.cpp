@@ -1750,7 +1750,6 @@ TypeHandlerStr::getNullValueForTypeVarcharText(const SystemCatalog::TypeAttribut
   return value;
 }
 
-
 boost::any
 TypeHandlerBlob::getNullValueForType(const SystemCatalog::TypeAttributesStd &attr) const
 {
@@ -2080,6 +2079,215 @@ TypeHandlerUDecimal128::convertFromString(const SystemCatalog::TypeAttributesStd
                                           bool& pushWarning) const
 {
   return dataconvert::DataConvert::StringToUDecimal(colType, prm, data, pushWarning);
+}
+
+
+/****************************************************************************/
+const uint8_t*
+getEmptyTypeHandlerSInt8()
+{
+  const static uint8_t TINYINTEMPTYROW = joblist::TINYINTEMPTYROW;
+  return &TINYINTEMPTYROW;
+}
+ 
+const uint8_t*
+TypeHandlerSInt8::getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const
+{
+  return getEmptyTypeHandlerSInt8();
+}
+
+const uint8_t*
+getEmptyTypeHandlerSInt16()
+{
+  const static uint16_t SMALLINTEMPTYROW = joblist::SMALLINTEMPTYROW;
+  return reinterpret_cast<const uint8_t*>(&SMALLINTEMPTYROW);
+}
+ 
+const uint8_t*
+TypeHandlerSInt16::getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const
+{
+  return getEmptyTypeHandlerSInt16();
+}
+
+const uint8_t*
+getEmptyTypeHandlerSInt32()
+{
+  const static uint32_t INTEMPTYROW = joblist::INTEMPTYROW;
+  return reinterpret_cast<const uint8_t*>(&INTEMPTYROW);
+}
+
+const uint8_t*
+TypeHandlerSInt24::getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const
+{
+  return getEmptyTypeHandlerSInt32();
+}
+
+const uint8_t*
+TypeHandlerSInt32::getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const
+{
+  return getEmptyTypeHandlerSInt32();
+}
+
+const uint8_t*
+getEmptyTypeHandlerSInt64()
+{
+  const static uint64_t BIGINTEMPTYROW = joblist::BIGINTEMPTYROW;
+  return reinterpret_cast<const uint8_t*>(&BIGINTEMPTYROW);
+}
+
+const uint8_t*
+TypeHandlerSInt64::getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const
+{
+  return getEmptyTypeHandlerSInt64();
+}
+
+const uint8_t*
+TypeHandlerUInt8::getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const
+{
+  const static uint8_t UTINYINTEMPTYROW = joblist::UTINYINTEMPTYROW;
+  return reinterpret_cast<const uint8_t*>(&UTINYINTEMPTYROW);
+}
+
+const uint8_t*
+TypeHandlerUInt16::getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const
+{
+  const static uint16_t USMALLINTEMPTYROW = joblist::USMALLINTEMPTYROW;
+  return reinterpret_cast<const uint8_t*>(&USMALLINTEMPTYROW);
+}
+
+const uint8_t*
+getEmptyTypeHandlerUInt32()
+{
+  const static uint32_t UINTEMPTYROW = joblist::UINTEMPTYROW;
+  return reinterpret_cast<const uint8_t*>(&UINTEMPTYROW);
+}
+
+const uint8_t*
+TypeHandlerUInt24::getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const
+{
+  return getEmptyTypeHandlerUInt32();
+}
+
+const uint8_t*
+TypeHandlerUInt32::getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const
+{
+  return getEmptyTypeHandlerUInt32();
+}
+
+const uint8_t*
+TypeHandlerUInt64::getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const
+{
+  const static uint64_t UBIGINTEMPTYROW = joblist::UBIGINTEMPTYROW;
+  return reinterpret_cast<const uint8_t*>(&UBIGINTEMPTYROW);
+}
+
+const uint8_t*
+getEmptyTypeHandlerFloat(const SystemCatalog::TypeAttributesStd &attr)
+{
+  const static uint32_t FLOATEMPTYROW = joblist::FLOATEMPTYROW;
+  return reinterpret_cast<const uint8_t*>(&FLOATEMPTYROW);
+}
+
+const uint8_t*
+TypeHandlerUFloat::getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const
+{
+  return getEmptyTypeHandlerFloat(attr);
+}
+
+const uint8_t*
+TypeHandlerSFloat::getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const
+{
+  return getEmptyTypeHandlerFloat(attr);
+}
+
+const uint8_t*
+getEmptyTypeHandlerDouble(const SystemCatalog::TypeAttributesStd &attr)
+{
+  const static uint64_t DOUBLEEMPTYROW = joblist::DOUBLEEMPTYROW;
+  return reinterpret_cast<const uint8_t*>(&DOUBLEEMPTYROW);
+}
+
+const uint8_t*
+TypeHandlerUDouble::getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const
+{
+  return getEmptyTypeHandlerDouble(attr);
+}
+
+const uint8_t*
+TypeHandlerSDouble::getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const
+{
+  return getEmptyTypeHandlerDouble(attr);
+}
+
+// returns a ptr to an empty magic value for TypeHandlerStr types
+// args
+//  attr - width, precision and scale
+//  offset - offset value to reduce width for VARCHAR by 1
+const uint8_t*
+getEmptyTypeHandlerStr(const SystemCatalog::TypeAttributesStd &attr, int8_t offset)
+{
+  const static uint8_t  CHAR1EMPTYROW = joblist::CHAR1EMPTYROW;
+  const static uint16_t CHAR2EMPTYROW = joblist::CHAR2EMPTYROW;
+  const static uint32_t CHAR4EMPTYROW = joblist::CHAR4EMPTYROW;
+  const static uint64_t CHAR8EMPTYROW = joblist::CHAR8EMPTYROW;
+
+  if (attr.colWidth == (2 + offset))
+    return reinterpret_cast<const uint8_t*>(&CHAR2EMPTYROW);
+  else if (attr.colWidth >= (3 + offset) && attr.colWidth <= (4 + offset))
+    return reinterpret_cast<const uint8_t*>(&CHAR4EMPTYROW);
+  else if (attr.colWidth >= (5 + offset))
+    return reinterpret_cast<const uint8_t*>(&CHAR8EMPTYROW);
+
+  return reinterpret_cast<const uint8_t*>(&CHAR1EMPTYROW);
+}
+
+const uint8_t*
+TypeHandlerStr::getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const
+{
+  return getEmptyTypeHandlerStr(attr, 0);
+}
+
+const uint8_t*
+TypeHandlerVarchar::getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const
+{
+  return getEmptyTypeHandlerStr(attr, -1);
+}
+
+inline const uint8_t*
+getEmptyValueForDecimal64(const SystemCatalog::TypeAttributesStd &attr)
+{
+  if (attr.colWidth <= 1)
+    return getEmptyTypeHandlerSInt8();
+  else if (attr.colWidth <= 2)
+    return getEmptyTypeHandlerSInt16();
+  else if (attr.colWidth <= 4)
+    return getEmptyTypeHandlerSInt32();
+  else
+    return getEmptyTypeHandlerSInt64();
+}
+
+const uint8_t*
+TypeHandlerSDecimal64::getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const
+{
+  return getEmptyValueForDecimal64(attr);
+}
+
+const uint8_t*
+TypeHandlerUDecimal64::getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const
+{
+  return getEmptyValueForDecimal64(attr);
+}
+
+const uint8_t*
+TypeHandlerSDecimal128::getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const
+{
+  return reinterpret_cast<const uint8_t*>(&datatypes::Decimal128Empty);
+}
+
+const uint8_t*
+TypeHandlerUDecimal128::getEmptyValueForType(const SystemCatalog::TypeAttributesStd &attr) const
+{
+  return reinterpret_cast<const uint8_t*>(&datatypes::Decimal128Empty);
 }
 
 
