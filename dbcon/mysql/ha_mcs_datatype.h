@@ -375,7 +375,7 @@ public:
     const char* ptr = value.ptr();
     for (uint32_t i = 0; i < value.length(); i++)
     {
-      fprintf(ci.filePtr(), "%02x", *(uint8_t*)ptr+i);
+      fprintf(ci.filePtr(), "%02x", *(uint8_t*)(ptr+i));
     }
     fprintf(ci.filePtr(), "%c", ci.delimiter());
   }
