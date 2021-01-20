@@ -97,7 +97,7 @@ public:
                 outName = name;
 
             ostringstream oss;
-            oss << "/var/log/mariadb/columnstore/trace/" << outName << '.' << sessionID;
+            oss << MCSLOGDIR << "/trace/" << outName << '.' << sessionID;
             oFile.reset(new ofstream());
             oFile->open(oss.str().c_str(), ios_base::out | ios_base::ate | ios_base::app);
         }

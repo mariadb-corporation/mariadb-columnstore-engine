@@ -33,6 +33,7 @@ using namespace logging;
 #include <iomanip>
 #include <sstream>
 #include "boost/date_time/posix_time/posix_time_types.hpp"
+#include "mcsconfig.h"
 
 namespace threadpool
 {
@@ -523,7 +524,7 @@ void ThreadPool::dump()
 void ThreadPoolMonitor::operator()()
 {
     ostringstream filename;
-    filename << "/var/log/mariadb/columnstore/trace/ThreadPool_" << fPool->name() << ".log";
+    filename << MCSLOGDIR << "/trace/ThreadPool_" << fPool->name() << ".log";
     fLog = new ofstream(filename.str().c_str());
 
     for (;;)

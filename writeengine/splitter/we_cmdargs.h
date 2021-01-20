@@ -268,6 +268,14 @@ public:
     {
         return fS3Region;
     }
+    std::string getErrorDir() const
+    {
+        return fErrorDir;
+    }
+    void setErrorDir(std::string fErrorDir)
+    {
+        this->fErrorDir = fErrorDir;
+    }
     std::string& getUsername();
     std::string PrepMode2ListOfFiles(std::string& FileName); // Bug 4342
     void getColumnList( std::set<std::string>& columnList ) const;
@@ -329,6 +337,7 @@ private:	// variables for SplitterApp
     bool fConsoleOutput;    // If false, no output to console.
     std::string fTimeZone;  // Timezone to use for TIMESTAMP datatype
     std::string fUsername;  // Username of the data files owner
+    std::string fErrorDir;
 };
 //----------------------------------------------------------------------
 
