@@ -187,21 +187,6 @@ void ServiceWriteEngine::setupChildSignalHandlers()
 
 int ServiceWriteEngine::Child()
 {
-
-    //set BUSY_INIT state
-    {
-        // Is there a reason to have a seperate Oam instance for this?
-        Oam oam;
-
-        try
-        {
-            oam.processInitComplete("WriteEngineServer", oam::BUSY_INIT);
-        }
-        catch (...)
-        {
-        }
-    }
-
     setupChildSignalHandlers();
 
     // Init WriteEngine Wrapper (including Config Columnstore.xml cache)
@@ -246,16 +231,6 @@ int ServiceWriteEngine::Child()
             }
             else
             {
-                Oam oam;
-
-                try // Get out of BUSYINIT state; else OAM will not retry
-                {
-                    oam.processInitComplete("WriteEngineServer");
-                }
-                catch (...)
-                {
-                }
-
                 // If/when a common logging class or function is added to the
                 // WriteEngineServer, we should use that.  In the mean time,
                 // I will log this errmsg with inline calls to the logging.
@@ -310,14 +285,6 @@ int ServiceWriteEngine::Child()
         ml.logCriticalMessage( message );
         cerr << errMsg << endl;
 
-        try
-        {
-            oam.processInitFailure();
-        }
-        catch (...)
-        {
-        }
-
         NotifyServiceInitializationFailed();
         return 2;
     }
@@ -328,18 +295,6 @@ int ServiceWriteEngine::Child()
     size_t qs = mt * 100;
     ThreadPool tp(mt, qs);
 
-    //set ACTIVE state
-    {
-        Oam oam;
-
-        try
-        {
-            oam.processInitComplete("WriteEngineServer", ACTIVE);
-        }
-        catch (...)
-        {
-        }
-    }
     cout << "WriteEngineServer is ready" << endl;
     NotifyServiceStarted();
 

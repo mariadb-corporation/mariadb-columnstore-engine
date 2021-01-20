@@ -411,14 +411,6 @@ int ServicePrimProc::Child()
         mlp->logMessage(errMsg);
         cerr << errMsg << endl;
 
-        try
-        {
-            oam.processInitFailure();
-        }
-        catch (...)
-        {
-        }
-
         NotifyServiceInitializationFailed();
         return 2;
     }
