@@ -4,7 +4,7 @@
 
 # prevent nodes using shared storage manager from stepping on each other when initializing
 # flock will open up an exclusive file lock to run atomic operations
-exec {fd_lock}>/var/lib/columnstore/storagemanager/storagemanager-lock
+exec {fd_lock}>@ENGINE_DATADIR@/storagemanager/storagemanager-lock
 flock -n "$fd_lock" || exit 0
 
 # pass in arg of 1 to start DBRM_Worker1
@@ -15,7 +15,7 @@ flock -n "$fd_lock" || exit 0
 /bin/systemctl start mcs-exemgr
 /bin/systemctl start mcs-dmlproc
 /bin/systemctl start mcs-ddlproc
-su -s /bin/sh -c '@ENGINE_BINDIR@/dbbuilder 7' @DEFAULT_USER@ 1> /tmp/columnstore_tmp_files/dbbuilder.log
+su -s /bin/sh -c '@ENGINE_BINDIR@/dbbuilder 7' @DEFAULT_USER@ 1> @ENGINE_LOGDIR@/install/dbbuilder.log
 
 flock -u "$fd_lock"
 

@@ -45,6 +45,7 @@ typedef int pthread_t;
 #include "errorcodes.h"
 #include "calpontsystemcatalog.h"
 #include "blockcacheclient.h"
+#include "mcsconfig.h"
 
 using namespace messageqcpp;
 using namespace std;
@@ -256,7 +257,7 @@ int BPPSeeder::operator()()
 #ifdef _MSC_VER
                 LogFileName << "C:/Calpont/log/trace/pt." << tid;
 #else
-                LogFileName << "/var/log/mariadb/columnstore/trace/pt." << tid;
+                LogFileName << MCSLOGDIR << "/trace/pt." << tid;
 #endif
                 spof.reset(new PTLogs_t(gThdCnt, LogFileName.str().c_str()));
                 gThdCnt++;

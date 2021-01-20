@@ -389,6 +389,8 @@
 
 #define MCSBINDIR "${ENGINE_BINDIR}"
 
+#define MCSLOGDIR "${ENGINE_LOGDIR}"
+
 #define MCSMYCNFDIR "${MARIADB_MYCNFDIR}"
 
 #endif

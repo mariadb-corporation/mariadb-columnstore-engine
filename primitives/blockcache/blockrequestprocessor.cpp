@@ -34,6 +34,7 @@ using namespace std;
 #include "rwlock_local.h"
 #include "dbrm.h"
 #include "pp_logger.h"
+#include "mcsconfig.h"
 
 namespace dbbc
 {
@@ -69,7 +70,7 @@ BlockRequestProcessor::BlockRequestProcessor(uint32_t numBlcks,
 #ifdef _MSC_VER
         brpLogFileName << "C:/Calpont/log/trace/brp." << tid;
 #else
-        brpLogFileName << "/var/log/mariadb/columnstore/trace/brp." << tid;
+        brpLogFileName << MCSLOGDIR << "/trace/brp." << tid;
 #endif
         fLogFile.open(brpLogFileName.str().c_str(), ios_base::app | ios_base::ate);
     }
