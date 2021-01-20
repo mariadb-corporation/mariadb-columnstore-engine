@@ -1594,7 +1594,7 @@ int ha_mcs_impl_write_batch_row_(const uchar* buf, TABLE* table, cal_impl_if::ca
                             const char* ptr = value.ptr();
                             for (uint32_t i = 0; i < value.length(); i++)
                             {
-                                fprintf(ci.filePtr, "%02x", *(uint8_t*)ptr+i);
+                                fprintf(ci.filePtr, "%02x", *(uint8_t*)(ptr+i));
                             }
                             fprintf(ci.filePtr, "%c", ci.delimiter);
                         }
