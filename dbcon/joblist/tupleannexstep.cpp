@@ -479,8 +479,12 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
     utils::setThreadName("TASwoOrdDist");
     scoped_ptr<DistinctMap_t> distinctMap(new DistinctMap_t(10, TAHasher(this), TAEq(this)));
     vector<RGData> dataVec;
+    vector<RGData> dataVecSkip;
     RGData rgDataIn;
     RGData rgDataOut;
+    RGData rgDataSkip;
+    RowGroup rowGroupSkip;
+    Row rowSkip;
     bool more = false;
 
     rgDataOut.reinit(fRowGroupOut);
@@ -490,6 +494,13 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
 
     fRowGroupOut.initRow(&row1);
     fRowGroupOut.initRow(&row2);
+
+    rowGroupSkip = fRowGroupOut;
+    rgDataSkip.reinit(rowGroupSkip);
+    rowGroupSkip.setData(&rgDataSkip);
+    rowGroupSkip.resetRowGroup(0);
+    rowGroupSkip.initRow(&rowSkip);
+    rowGroupSkip.getRow(0, &rowSkip);
 
     try
     {
@@ -512,19 +523,24 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
             for (uint64_t i = 0; i < fRowGroupIn.getRowCount() && !cancelled() && !fLimitHit; ++i)
             {
                 pair<DistinctMap_t::iterator, bool> inserted;
+                Row* rowPtr;
 
-                inserted = distinctMap->insert(fRowIn.getPointer());
+                if (distinctMap->size() < fLimitStart)
+                    rowPtr = &rowSkip;
+                else
+                    rowPtr = &fRowOut;
+
+                if (fConstant)
+                    fConstant->fillInConstants(fRowIn, *rowPtr);
+                else
+                    copyRow(fRowIn, rowPtr);
+
+                fRowIn.nextRow();
+                inserted = distinctMap->insert(rowPtr->getPointer());
                 ++fRowsProcessed;
 
                 if (inserted.second)
                 {
-                    // skip first limit-start rows
-                    if (distinctMap->size() <= fLimitStart)
-                    {
-                        fRowIn.nextRow();
-                        continue;
-                    }
-
                     if (UNLIKELY(fRowsReturned >= fLimitCount))
                     {
                         fLimitHit = true;
@@ -532,11 +548,26 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
                         break;
                     }
 
+                    // skip first limit-start rows
+                    if (distinctMap->size() <= fLimitStart)
+                    {
+                        rowGroupSkip.incRowCount();
+                        rowSkip.nextRow();
+                        if (UNLIKELY(rowGroupSkip.getRowCount() >= rowgroup::rgCommonSize))
+                        {
+                            // allocate new RGData for skipped rows below the fLimitStart
+                            // offset (do not take it into account in RM assuming there
+                            // are few skipped rows
+                            dataVecSkip.push_back(rgDataSkip);
+                            rgDataSkip.reinit(rowGroupSkip);
+                            rowGroupSkip.setData(&rgDataSkip);
+                            rowGroupSkip.resetRowGroup(0);
+                            rowGroupSkip.getRow(0, &rowSkip);
+                        }
+                        continue;
+                    }
+
                     ++fRowsReturned;
-                    if (fConstant)
-                        fConstant->fillInConstants(fRowIn, fRowOut);
-                    else
-                        copyRow(fRowIn, &fRowOut);
 
                     fRowGroupOut.incRowCount();
                     fRowOut.nextRow();
@@ -550,8 +581,6 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
                         fRowGroupOut.getRow(0, &fRowOut);
                     }
                 }
-
-                fRowIn.nextRow();
             }
 
             more = fInputDL->next(fInputIterator, &rgDataIn);
