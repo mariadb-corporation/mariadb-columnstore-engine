@@ -270,9 +270,7 @@ public:
                 }
                 else
                 {
-                    decimal.s128Value = (int128_t)(decimal.s128Value > 0 ?
-                                                   (__float128)decimal.s128Value / scaleMultiplier + 0.5 :
-                                                   (__float128)decimal.s128Value / scaleMultiplier - 0.5);
+                    decimal = decimal.integralWideRound();
                 }
             }
         }

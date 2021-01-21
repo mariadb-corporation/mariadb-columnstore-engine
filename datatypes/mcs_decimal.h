@@ -584,6 +584,28 @@ class Decimal: public TSInt128
             return !this->operator==(rhs);
         }
 
+        Decimal integralWideRound(const int128_t& scaleDivisor = 0) const
+        {
+            int128_t scaleDivisorInt = scaleDivisor;
+            if(UNLIKELY(!scaleDivisorInt))
+            {
+                datatypes::getScaleDivisor(scaleDivisorInt, scale);
+            }
+            lldiv_t div = lldiv(s128Value, scaleDivisorInt);
+
+            if (datatypes::abs(div.rem) * 2 >= scaleDivisorInt)
+            {
+                return Decimal(value,
+                               scale,
+                               precision,
+                               (div.quot < 0) ? div.quot-- : div.quot++);
+            }
+            return Decimal(value,
+                           scale,
+                           precision,
+                           div.quot);
+        }
+
         inline bool isTSInt128ByPrecision() const
         {
             return precision > INT64MAXPRECISION
