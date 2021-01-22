@@ -139,7 +139,12 @@ public:
     inline std::string getString(uint64_t offset) const;
     uint64_t storeString(const uint8_t* data, uint32_t length);  //returns the offset
     inline const uint8_t* getPointer(uint64_t offset) const;
-    inline uint32_t getStringLength(uint64_t offset);
+    inline uint32_t getStringLength(uint64_t offset) const;
+    inline utils::ConstString getConstString(uint64_t offset) const
+    {
+      return utils::ConstString((const char *) getPointer(offset),
+                                getStringLength(offset));
+    }
     inline bool isEmpty() const;
     inline uint64_t getSize() const;
     inline bool isNullValue(uint64_t offset) const;
@@ -417,6 +422,8 @@ public:
     inline std::string getStringField(uint32_t colIndex) const;
     inline const uint8_t* getStringPointer(uint32_t colIndex) const;
     inline uint32_t getStringLength(uint32_t colIndex) const;
+    inline utils::ConstString getConstString(uint32_t colIndex) const;
+    inline utils::ConstString getShortConstString(uint32_t colIndex) const;
     void setStringField(const std::string& val, uint32_t colIndex);
     inline void setStringField(const uint8_t*, uint32_t len, uint32_t colIndex);
 
@@ -479,9 +486,9 @@ public:
 
     // these are for cases when you already know the type definitions are the same.
     // a fcn to check the type defs seperately doesn't exist yet.  No normalization.
-    inline uint64_t hash(const std::vector<uint32_t>& keyColumns, uint32_t seed = 0) const;
     inline uint64_t hash(uint32_t lastCol) const;  // generates a hash for cols [0-lastCol]
     inline uint64_t hash() const;  // generates a hash for all cols
+    inline void colUpdateMariaDBHasher(datatypes::MariaDBHasher &hasher, uint32_t col) const;
 
     bool equals(const Row&, const std::vector<uint32_t>& keyColumns) const;
     bool equals(const Row&, uint32_t lastCol) const;
@@ -781,6 +788,42 @@ inline uint32_t Row::getStringLength(uint32_t colIndex) const
 
     return strnlen((char*) &data[offsets[colIndex]], getColumnWidth(colIndex));
 }
+
+
+inline utils::ConstString Row::getShortConstString(uint32_t colIndex) const
+{
+    const char *src= (const char *) &data[offsets[colIndex]];
+    return utils::ConstString(src, strnlen(src, getColumnWidth(colIndex)));
+}
+
+
+inline utils::ConstString Row::getConstString(uint32_t colIndex) const
+{
+    return inStringTable(colIndex) ?
+           strings->getConstString(*((uint64_t*) &data[offsets[colIndex]])) :
+           getShortConstString(colIndex);
+}
+
+
+inline void Row::colUpdateMariaDBHasher(datatypes::MariaDBHasher &h, uint32_t col) const
+{
+    switch (getColType(col))
+    {
+        case execplan::CalpontSystemCatalog::CHAR:
+        case execplan::CalpontSystemCatalog::VARCHAR:
+        case execplan::CalpontSystemCatalog::BLOB:
+        case execplan::CalpontSystemCatalog::TEXT:
+        {
+            CHARSET_INFO *cs = getCharset(col);
+            h.add(cs, getConstString(col));
+            break;
+        }
+        default:
+            h.add(&my_charset_bin, getShortConstString(col));
+            break;
+    }
+}
+
 
 inline void Row::setStringField(const uint8_t* strdata, uint32_t length, uint32_t colIndex)
 {
@@ -1160,53 +1203,20 @@ inline uint64_t Row::hash() const
     return hash(columnCount - 1);
 }
 
-inline uint64_t Row::hash(const std::vector<uint32_t>& keyCols, uint32_t seed) const
-{
-    utils::Hasher_r h;
-    uint32_t ret = seed;
-
-    for (uint32_t i = 0; i < keyCols.size(); i++)
-    {
-        const uint32_t& col = keyCols[i];
-
-        if (UNLIKELY(isLongString(col)))
-            ret = h((const char*) getStringPointer(col), getStringLength(col), ret);
-        else
-        {
-            ret = h((const char*) &data[offsets[i]], colWidths[i], ret);
-        }
-    }
-
-    ret = h.finalize(ret, keyCols.size() << 2);
-    return ret;
-}
 
 inline uint64_t Row::hash(uint32_t lastCol) const
 {
-    utils::Hasher_r h;
-    uint32_t ret = 0;
+    datatypes::MariaDBHasher h;
 
     // Sometimes we ask this to hash 0 bytes, and it comes through looking like
     // lastCol = -1.  Return 0.
     if (lastCol >= columnCount)
         return 0;
 
-    // Two rows that store identical values but are in different formats will return different hashes
-    // if this fast path is used.  Also can't use any column offsets in this fcn.
-
-    //if (!useStringTable) {
-    //	ret = h((const char *) &data[offsets[0]], offsets[lastCol+1] - offsets[0], 0);
-    //	return h.finalize(ret, offsets[lastCol+1]);
-    //}
-
     for (uint32_t i = 0; i <= lastCol; i++)
-        if (UNLIKELY(isLongString(i)))
-            ret = h((const char*) getStringPointer(i), getStringLength(i), ret);
-        else
-            ret = h((const char*) &data[offsets[i]], colWidths[i], ret);
+      colUpdateMariaDBHasher(h, i);
 
-    ret = h.finalize(ret, lastCol << 2);   // arbitary choice for the 2nd param
-    return ret;
+    return h.finalize();
 }
 
 inline bool Row::equals(const Row& r2) const
@@ -1905,7 +1915,7 @@ inline bool StringStore::isNullValue(uint64_t off) const
     return (memcmp(&mc->data[offset+4], joblist::CPNULLSTRMARK.c_str(), 8) == 0);
 }
 
-inline uint32_t StringStore::getStringLength(uint64_t off)
+inline uint32_t StringStore::getStringLength(uint64_t off) const
 {
     uint32_t length;
     MemChunk* mc;
