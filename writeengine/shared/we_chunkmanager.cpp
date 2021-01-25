@@ -18,6 +18,7 @@
 
 //  $Id: we_chunkmanager.cpp 4737 2013-08-14 20:45:46Z bwilkinson $
 
+#include <my_global.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/time.h>

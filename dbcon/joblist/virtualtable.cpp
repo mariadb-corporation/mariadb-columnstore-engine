@@ -18,6 +18,7 @@
 //  $Id: virtualtable.cpp 6412 2010-03-29 04:58:09Z xlou $
 
 
+#include <my_global.h>
 #include <iostream>
 //#define NDEBUG
 #include <cassert>

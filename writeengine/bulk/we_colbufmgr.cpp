@@ -31,6 +31,7 @@
  * ColumnBufferCompressed.
  */
 
+#include <my_global.h>
 #include "we_colbufmgr.h"
 #include "we_colbuf.h"
 #include "we_colbufcompressed.h"

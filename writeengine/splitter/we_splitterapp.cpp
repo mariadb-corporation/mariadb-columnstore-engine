@@ -28,6 +28,7 @@
  *      Author: bpaul
  */
 
+#include <my_global.h>
 #include <unistd.h>
 #include <cstdlib>
 #include <csignal>

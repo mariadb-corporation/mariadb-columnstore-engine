@@ -24,6 +24,7 @@
  * Contains class to allocate a "stripe" of extents for all columns across a tbl
  */
 
+#include <my_global.h>
 #include "we_extentstripealloc.h"
 
 #include <iostream>

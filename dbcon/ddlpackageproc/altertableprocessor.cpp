@@ -20,6 +20,7 @@
 
 /** @file */
 
+#include <my_global.h>
 #include <unistd.h>
 #include <typeinfo>
 #include <string>

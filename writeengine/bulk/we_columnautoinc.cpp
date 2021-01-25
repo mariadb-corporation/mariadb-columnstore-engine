@@ -24,6 +24,7 @@
  * ColumnAutoIncIncremental classes.
  */
 
+#include <my_global.h>
 #include "we_columnautoinc.h"
 
 #include <exception>

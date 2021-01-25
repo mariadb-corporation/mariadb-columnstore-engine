@@ -18,6 +18,7 @@
 
 // $Id: we_ddlcommandproc.cpp 3082 2011-09-26 22:00:38Z chao $
 
+#include <my_global.h>
 #include <unistd.h>
 #include "boost/filesystem/operations.hpp"
 #include "boost/filesystem/path.hpp"

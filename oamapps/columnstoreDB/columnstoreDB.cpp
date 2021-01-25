@@ -24,6 +24,7 @@
  * @file
  */
 
+#include <my_global.h>
 #include <iostream>
 #include <fstream>
 #include <cstdlib>

@@ -21,6 +21,7 @@
 *
 ***********************************************************************/
 
+#include <my_global.h>
 #include <sstream>
 #include "primitiveserver.h"
 #include "columncommand.h"

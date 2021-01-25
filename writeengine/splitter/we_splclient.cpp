@@ -28,6 +28,7 @@
  *      Author: bpaul
  */
 
+#include <my_global.h>
 #include <cstdio>
 #include <iostream>
 #include <string>

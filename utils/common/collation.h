@@ -74,9 +74,6 @@ extern "C" MYSQL_PLUGIN_IMPORT CHARSET_INFO *default_charset_info;
 
 #include "m_ctype.h"
 
-#undef FALSE
-#undef TRUE
-
 #ifdef DBUG_ASSERT_TEMPORARILY_DEFINED
 #undef DBUG_ASSERT
 #endif

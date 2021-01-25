@@ -26,6 +26,7 @@
 #define __STDC_FORMAT_MACROS
 #endif
 #endif
+#include <my_global.h>
 #include <inttypes.h>
 #include <string>
 #include <sstream>

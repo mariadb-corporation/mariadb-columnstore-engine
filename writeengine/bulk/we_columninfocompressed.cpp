@@ -20,6 +20,7 @@
 *
 *******************************************************************************/
 
+#include <my_global.h>
 #include "we_columninfocompressed.h"
 
 #include "we_define.h"

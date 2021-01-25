@@ -21,6 +21,7 @@
  *
  *
  ***********************************************************************/
+#include <my_global.h>
 #include "restorepartitionprocessor.h"
 
 #include "messagelog.h"

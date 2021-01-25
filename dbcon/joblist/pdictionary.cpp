@@ -22,6 +22,7 @@
 *
 ***********************************************************************/
 
+#include <my_global.h>
 #include <iostream>
 #include <stdexcept>
 #include <boost/thread.hpp>

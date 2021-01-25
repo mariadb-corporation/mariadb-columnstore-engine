@@ -25,6 +25,7 @@
  *
  */
 
+#include <my_global.h>
 #include "we_colbufcompressed.h"
 
 #include <cassert>

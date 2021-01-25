@@ -20,6 +20,7 @@
  *
  ****************************************************************************/
 
+#include <my_global.h>
 #include <stdexcept>
 
 #define UNDOABLE_DLLEXPORT

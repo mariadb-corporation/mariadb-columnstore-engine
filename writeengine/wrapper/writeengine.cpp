@@ -21,6 +21,7 @@
 /** @writeengine.cpp
  *   A wrapper class for the write engine to write information to files
  */
+#include <my_global.h>
 #include <cmath>
 #include <cstdlib>
 #include <unistd.h>

@@ -28,6 +28,7 @@
  *      Author: bpaul
  */
 
+#include <my_global.h>
 #include <ctime>
 #include <fstream>
 #include <istream>

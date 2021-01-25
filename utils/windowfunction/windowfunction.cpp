@@ -18,6 +18,7 @@
    MA 02110-1301, USA.
 */
 
+#include <my_global.h>
 //#define NDEBUG
 #include <cassert>
 #include <sstream>

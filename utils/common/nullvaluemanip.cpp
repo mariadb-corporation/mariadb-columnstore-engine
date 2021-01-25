@@ -17,6 +17,7 @@
    MA 02110-1301, USA. */
 
 
+#include <my_global.h>
 #include "nullvaluemanip.h"
 #include <sstream>
 

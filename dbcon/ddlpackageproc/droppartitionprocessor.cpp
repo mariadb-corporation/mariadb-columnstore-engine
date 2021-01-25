@@ -21,6 +21,7 @@
  *
  *
  ***********************************************************************/
+#include <my_global.h>
 #include "droppartitionprocessor.h"
 
 #include "messagelog.h"

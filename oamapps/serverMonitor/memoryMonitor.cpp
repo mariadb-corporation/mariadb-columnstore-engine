@@ -22,6 +22,7 @@
  *   Author: Zhixuan Zhu
  ***************************************************************************/
 
+#include <my_global.h>
 #include "cgroupconfigurator.h"
 #include "serverMonitor.h"
 

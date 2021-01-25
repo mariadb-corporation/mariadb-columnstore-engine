@@ -30,6 +30,7 @@
 //
 //
 
+#include <my_global.h>
 #include <sstream>
 #include <stdexcept>
 #include <cassert>

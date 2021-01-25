@@ -20,6 +20,7 @@
 */
 
 
+#include <my_global.h>
 #include <ctime>
 #include <iostream>
 #include <vector>

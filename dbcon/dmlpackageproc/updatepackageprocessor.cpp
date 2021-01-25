@@ -18,6 +18,7 @@
 
 //   $Id: updatepackageprocessor.cpp 9673 2013-07-09 15:59:49Z chao $
 
+#include <my_global.h>
 #include <iostream>
 #include <fstream>
 #include <ctype.h>

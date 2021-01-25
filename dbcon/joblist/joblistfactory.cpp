@@ -18,6 +18,7 @@
 
 //   $Id: joblistfactory.cpp 9632 2013-06-18 22:18:20Z xlou $
 
+#include <my_global.h>
 #include <iostream>
 #include <stack>
 #include <iterator>

@@ -19,6 +19,7 @@
  * $Id: cleartablelockthread.cpp 2101 2013-01-21 14:12:52Z rdempsey $
  *
  ****************************************************************************/
+#include <my_global.h>
 #include "cleartablelockthread.h"
 
 #include "bytestream.h"

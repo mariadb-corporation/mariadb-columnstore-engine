@@ -21,6 +21,7 @@
 *
 ***********************************************************************/
 /** @file */
+#include <my_global.h>
 #include "configcpp.h"
 #include <signal.h>
 #include <ctime>

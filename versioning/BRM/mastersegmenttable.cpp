@@ -20,6 +20,7 @@
  *
  ****************************************************************************/
 
+#include <my_global.h>
 #include <cstdio>
 #include <cstdlib>
 #include <stdexcept>

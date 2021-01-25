@@ -20,6 +20,7 @@
  *
  ****************************************************************************/
 
+#include <my_global.h>
 #include <sys/types.h>
 #include <iostream>
 #include <stdexcept>

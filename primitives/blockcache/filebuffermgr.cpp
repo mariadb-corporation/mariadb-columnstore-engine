@@ -30,6 +30,7 @@
 **/
 
 //#define NDEBUG
+#include <my_global.h>
 #include <cassert>
 #include <limits>
 #include <boost/thread.hpp>

@@ -19,6 +19,7 @@
 //  $Id: wf_sum_avg.cpp 3932 2013-06-25 16:08:10Z xlou $
 
 
+#include <my_global.h>
 //#define NDEBUG
 #include <cassert>
 #include <cmath>

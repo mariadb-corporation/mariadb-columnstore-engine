@@ -20,6 +20,7 @@
  *
  ****************************************************************************/
 
+#include <my_global.h>
 #include "we_colbufmgr.h"
 #include "we_columninfo.h"
 #include "we_log.h"

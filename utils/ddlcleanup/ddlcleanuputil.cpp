@@ -19,6 +19,7 @@
 * $Id: ddlcleanuputil.cpp 3904 2013-06-18 12:22:51Z rdempsey $
 */
 
+#include <my_global.h>
 #include <unistd.h>
 #include <iostream>
 #include <fstream>

@@ -19,6 +19,7 @@
 //  $Id: jlf_common.cpp 9655 2013-06-25 23:08:13Z xlou $
 
 
+#include <my_global.h>
 #include "calpontsystemcatalog.h"
 #include "aggregatecolumn.h"
 #include "pseudocolumn.h"

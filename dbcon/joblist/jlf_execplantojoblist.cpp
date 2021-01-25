@@ -18,6 +18,7 @@
 //  $Id: jlf_execplantojoblist.cpp 9702 2013-07-17 19:08:07Z xlou $
 
 
+#include <my_global.h>
 #include "jlf_execplantojoblist.h"
 
 #include <iostream>

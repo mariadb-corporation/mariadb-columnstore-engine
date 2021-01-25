@@ -20,6 +20,7 @@
 * $Id: stats.cpp 2035 2013-01-21 14:12:19Z rdempsey $
 */
 
+#include <my_global.h>
 #include <ctime>
 #include <sys/time.h>
 #ifndef _MSC_VER

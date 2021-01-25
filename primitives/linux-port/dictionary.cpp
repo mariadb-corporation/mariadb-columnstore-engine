@@ -19,6 +19,7 @@
  * $Id: dictionary.cpp 2122 2013-07-08 16:33:50Z bpaul $
  */
 
+#include <my_global.h>
 #include <iostream>
 #include <boost/scoped_array.hpp>
 #include <boost/algorithm/string/trim.hpp>

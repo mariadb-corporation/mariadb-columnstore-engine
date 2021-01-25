@@ -20,6 +20,7 @@
 *
 *
 ***********************************************************************/
+#include <my_global.h>
 #include <string>
 #include <sstream>
 using namespace std;

@@ -39,6 +39,7 @@
  * on the Front-End Processor where it is returned to the DBMS
  * front-end.
  */
+#include <my_global.h>
 #include <iostream>
 #include <cstdint>
 #include <csignal>

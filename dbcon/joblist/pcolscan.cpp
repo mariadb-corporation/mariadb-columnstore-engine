@@ -21,6 +21,7 @@
 *
 ***********************************************************************/
 
+#include <my_global.h>
 #include <unistd.h>
 #include <stdexcept>
 #include <cstring>

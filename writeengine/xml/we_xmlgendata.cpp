@@ -20,6 +20,7 @@
 *
 *******************************************************************************/
 
+#include <my_global.h>
 #include "we_xmlgendata.h"
 
 #include <iostream>

@@ -19,6 +19,7 @@
 //  $Id: func_floor.cpp 3923 2013-06-19 21:43:06Z bwilkinson $
 
 
+#include <my_global.h>
 #include <cstdlib>
 #include <iomanip>
 #include <string>

@@ -27,6 +27,7 @@
  *      Author: bpaul
  */
 
+#include <my_global.h>
 #include "brm.h"
 #include "brmtypes.h"
 using namespace BRM;

@@ -22,6 +22,7 @@
  *
  ***********************************************************************/
 
+#include <my_global.h>
 #include <iostream>
 #include <boost/scoped_ptr.hpp>
 using namespace std;

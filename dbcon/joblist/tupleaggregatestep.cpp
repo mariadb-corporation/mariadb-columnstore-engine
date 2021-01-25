@@ -21,6 +21,7 @@
 
 //#define NDEBUG
 // Cross engine needs to be at top due to MySQL includes
+#include <my_global.h>
 #include "crossenginestep.h"
 
 #include <cassert>

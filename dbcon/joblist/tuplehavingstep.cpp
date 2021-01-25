@@ -19,6 +19,7 @@
 
 
 //#define NDEBUG
+#include <my_global.h>
 #include <cassert>
 #include <sstream>
 #include <iomanip>

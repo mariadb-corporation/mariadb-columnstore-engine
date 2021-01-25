@@ -24,6 +24,7 @@
  * Implementation of the ColumnBufferSection class
  */
 
+#include <my_global.h>
 #include "we_colbufsec.h"
 
 namespace WriteEngine

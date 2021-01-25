@@ -20,6 +20,7 @@
  *
  ****************************************************************************/
 
+#include <my_global.h>
 #include <exception>
 #include <boost/scoped_ptr.hpp>
 

@@ -21,6 +21,7 @@
  *
  ***********************************************************************/
 
+#include <my_global.h>
 #include "calpontdmlpackage.h"
 using namespace std;
 

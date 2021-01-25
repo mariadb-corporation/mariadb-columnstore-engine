@@ -21,6 +21,7 @@
 *
 ****************************************************************************/
 
+#include <my_global.h>
 #include <algorithm>
 #include <cstdlib>
 #include <string>

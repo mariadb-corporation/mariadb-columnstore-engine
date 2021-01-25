@@ -18,6 +18,7 @@
 //  $Id: framebound.cpp 3828 2013-05-22 17:58:14Z xlou $
 
 
+#include <my_global.h>
 //#define NDEBUG
 #include <cassert>
 #include <cmath>

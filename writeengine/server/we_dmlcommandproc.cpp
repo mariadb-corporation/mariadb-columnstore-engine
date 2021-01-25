@@ -18,6 +18,7 @@
 
 // $Id: we_dmlcommandproc.cpp 3082 2011-09-26 22:00:38Z chao $
 
+#include <my_global.h>
 #include <unistd.h>
 using namespace std;
 #include "bytestream.h"

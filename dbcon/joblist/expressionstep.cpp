@@ -18,6 +18,7 @@
 //  $Id: expressionstep.cpp 9681 2013-07-11 22:58:05Z xlou $
 
 
+#include <my_global.h>
 //#define NDEBUG
 #include <cassert>
 #include <sstream>

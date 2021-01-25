@@ -21,6 +21,7 @@
 *
 ****************************************************************************/
 
+#include <my_global.h>
 #include "errorids.h"
 #include <string>
 using namespace std;

@@ -24,6 +24,7 @@
  *
  */
 
+#include <my_global.h>
 #include "unique32generator.h"
 
 #include <stdint.h>

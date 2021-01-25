@@ -28,6 +28,7 @@
  */
 
 
+#include <my_global.h>
 #include "we_messages.h"
 #include "we_sdhandler.h"
 #include "we_splitterapp.h"

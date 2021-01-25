@@ -22,6 +22,7 @@
 *
 ***********************************************************************/
 
+#include <my_global.h>
 #include <iostream>
 #include <string>
 #include <exception>

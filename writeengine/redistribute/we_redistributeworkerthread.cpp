@@ -19,6 +19,7 @@
 * $Id: we_redistributeworkerthread.cpp 4646 2013-05-23 20:58:08Z xlou $
 */
 
+#include <my_global.h>
 #include <iostream>
 #include <set>
 #include <vector>

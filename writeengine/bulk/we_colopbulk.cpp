@@ -25,6 +25,7 @@
  *
  */
 
+#include <my_global.h>
 #include "we_colopbulk.h"
 
 #include <exception>

@@ -20,6 +20,7 @@
 // This is a simple optimization to take DV's out of an IDL and insert them into an ODL
 // without having to get them from PrimProc
 
+#include <my_global.h>
 #include <string>
 #include <cassert>
 #include <sys/time.h>

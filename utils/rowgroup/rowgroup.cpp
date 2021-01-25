@@ -27,6 +27,7 @@
 //
 
 //#define NDEBUG
+#include <my_global.h>
 #include <sstream>
 #include <iterator>
 using namespace std;

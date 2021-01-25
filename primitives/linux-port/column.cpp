@@ -20,6 +20,7 @@
  * $Id: column.cpp 2103 2013-06-04 17:53:38Z dcathey $
  *
  ****************************************************************************/
+#include <my_global.h>
 #include <iostream>
 #include <sstream>
 //#define NDEBUG

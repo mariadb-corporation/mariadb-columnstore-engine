@@ -11,6 +11,7 @@
  * @file
  */
 
+#include <my_global.h>
 #include <iterator>
 #include <numeric>
 #include <deque>

@@ -16,6 +16,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
+#include <my_global.h>
 #define _CRT_RAND_S //for win rand_s
 #include <unistd.h>
 #include <boost/filesystem.hpp>

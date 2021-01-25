@@ -27,6 +27,7 @@
  *      Author: bpaul
  */
 
+#include <my_global.h>
 #include <boost/thread/condition.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/thread.hpp>

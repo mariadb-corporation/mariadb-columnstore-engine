@@ -22,6 +22,7 @@
 *
 ****************************************************************************/
 
+#include <my_global.h>
 #include <cstdlib>
 #include <iomanip>
 #include <string>

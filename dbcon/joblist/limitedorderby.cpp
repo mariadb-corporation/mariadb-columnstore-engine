@@ -18,6 +18,7 @@
 //  $Id: limitedorderby.cpp 9581 2013-05-31 13:46:14Z pleblanc $
 
 
+#include <my_global.h>
 #include <iostream>
 //#define NDEBUG
 #include <cassert>

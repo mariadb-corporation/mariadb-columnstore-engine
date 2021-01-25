@@ -21,6 +21,7 @@
 *******************************************************************************/
 /** @file */
 
+#include <my_global.h>
 #include "we_tempxmlgendata.h"
 
 #include <iostream>

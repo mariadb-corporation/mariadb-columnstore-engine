@@ -21,6 +21,7 @@
 *******************************************************************************/
 /** @file */
 
+#include <my_global.h>
 #include "we_tableinfo.h"
 #include "we_bulkstatus.h"
 #include "we_bulkload.h"

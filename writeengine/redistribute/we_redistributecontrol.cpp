@@ -20,6 +20,7 @@
 * $Id: we_redistributecontrol.cpp 4450 2013-01-21 14:13:24Z rdempsey $
 */
 
+#include <my_global.h>
 #include <iostream>
 #include <set>
 #include <vector>

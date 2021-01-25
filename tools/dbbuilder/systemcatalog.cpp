@@ -17,6 +17,7 @@
 
 //  $Id: systemcatalog.cpp 2101 2013-01-21 14:12:52Z rdempsey $
 
+#include <my_global.h>
 #include <iostream>
 #include <assert.h>
 #include <sys/time.h>

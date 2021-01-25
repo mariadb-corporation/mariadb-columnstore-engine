@@ -21,6 +21,7 @@
  *
  ****************************************************************************/
 
+#include <my_global.h>
 #include <string>
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>

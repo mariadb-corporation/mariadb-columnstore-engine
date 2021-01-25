@@ -20,6 +20,7 @@
 *
 *******************************************************************************/
 
+#include <my_global.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <cerrno>

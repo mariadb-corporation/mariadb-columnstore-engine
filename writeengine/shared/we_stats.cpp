@@ -21,6 +21,7 @@
 *******************************************************************************/
 /** @file */
 
+#include <my_global.h>
 #include <we_stats.h>
 
 using namespace std;

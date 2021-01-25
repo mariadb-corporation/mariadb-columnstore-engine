@@ -20,6 +20,7 @@
 */
 
 
+#include <my_global.h>
 #include "messagequeue.h"
 #include "bytestream.h"
 using namespace messageqcpp;

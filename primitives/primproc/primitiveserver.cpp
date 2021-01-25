@@ -23,6 +23,7 @@
  ***********************************************************************/
 #define _FILE_OFFSET_BITS 64
 #define _LARGEFILE64_SOURCE
+#include <my_global.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>

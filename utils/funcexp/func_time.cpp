@@ -21,6 +21,7 @@
 *
 ****************************************************************************/
 
+#include <my_global.h>
 #include <cstdlib>
 #include <string>
 #include <sstream>

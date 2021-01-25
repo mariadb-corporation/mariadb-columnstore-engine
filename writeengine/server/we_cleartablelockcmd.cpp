@@ -19,6 +19,7 @@
  * $Id: we_cleartablelockcmd.cpp 4450 2013-01-21 14:13:24Z rdempsey $
  *
  ****************************************************************************/
+#include <my_global.h>
 #include "we_cleartablelockcmd.h"
 
 #include <iostream>

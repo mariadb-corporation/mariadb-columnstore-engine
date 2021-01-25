@@ -21,6 +21,7 @@
 *
 ****************************************************************************/
 
+#include <my_global.h>
 #ifndef _MSC_VER
 #include <arpa/inet.h>
 #include <netinet/in.h>

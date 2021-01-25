@@ -22,6 +22,7 @@
  ***********************************************************************/
 
 #define CALPONTDMLFACTORY_DLLEXPORT
+#include <my_global.h>
 #include "calpontdmlfactory.h"
 #undef CALPONTDMLFACTORY_DLLEXPORT
 #include "insertdmlpackage.h"

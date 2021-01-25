@@ -19,6 +19,7 @@
 */
 
 
+#include <my_global.h>
 //#define NDEBUG
 #include <cassert>
 #include <cmath>

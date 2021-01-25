@@ -21,6 +21,7 @@
 *******************************************************************************/
 /** @file */
 
+#include <my_global.h>
 #define WRITEENGINEXMLJOB_DLLEXPORT
 #include "we_xmljob.h"
 #undef WRITEENGINEXMLJOB_DLLEXPORT

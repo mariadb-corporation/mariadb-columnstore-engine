@@ -19,6 +19,7 @@
 //  $Id: subquerytransformer.cpp 6406 2010-03-26 19:18:37Z xlou $
 
 
+#include <my_global.h>
 #include <iostream>
 //#define NDEBUG
 #include <cassert>

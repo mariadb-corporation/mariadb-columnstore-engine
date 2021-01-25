@@ -22,6 +22,7 @@
  *   Author: Zhixuan Zhu
  ***************************************************************************/
 
+#include <my_global.h>
 #include "serverMonitor.h"
 
 using namespace std;

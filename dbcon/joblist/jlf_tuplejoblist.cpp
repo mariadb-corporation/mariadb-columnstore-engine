@@ -19,6 +19,7 @@
 //  $Id: jlf_tuplejoblist.cpp 9728 2013-07-26 22:08:20Z xlou $
 
 // Cross engine needs to be at the top due to MySQL includes
+#include <my_global.h>
 #include "crossenginestep.h"
 #include <iostream>
 #include <stack>

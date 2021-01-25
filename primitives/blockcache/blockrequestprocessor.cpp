@@ -24,6 +24,7 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <my_global.h>
 #include <sys/time.h>
 #include <sstream>
 #include <string>

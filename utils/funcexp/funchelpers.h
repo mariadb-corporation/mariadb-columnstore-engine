@@ -104,7 +104,9 @@ const uint32_t TIMESTAMP_MIN_YEAR = (1970 - 1);
 const int TIMESTAMP_MIN_VALUE = 1;
 const int64_t TIMESTAMP_MAX_VALUE = 0x7FFFFFFFL;
 const unsigned long long MAX_NEGATIVE_NUMBER	= 0x8000000000000000ULL;
+#ifndef LONGLONG_MIN
 const long long LONGLONG_MIN =  0x8000000000000000LL;
+#endif
 const int INIT_CNT = 9;
 const unsigned long LFACTOR  = 1000000000;
 const unsigned long long LFACTOR1 = 10000000000ULL;

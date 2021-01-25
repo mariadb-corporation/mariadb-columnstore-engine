@@ -16,6 +16,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
+#include <my_global.h>
 #include <strings.h>
 
 #include <string>
@@ -3800,7 +3801,7 @@ ReturnedColumn* buildFunctionColumn(
         }
         else // collation
         {
-            val = info->col_name.str;
+            val = info->coll_name.str;
         }
 #endif
 

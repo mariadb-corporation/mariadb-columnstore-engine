@@ -28,6 +28,7 @@
 //
 //
 
+#include <my_global.h>
 #include <string>
 #include <cstdlib>
 #include <sstream>

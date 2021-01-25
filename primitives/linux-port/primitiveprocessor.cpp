@@ -21,6 +21,7 @@
  ****************************************************************************/
 
 //#define NDEBUG
+#include <my_global.h>
 #include <cassert>
 #ifdef __linux__
 #include <sys/types.h>

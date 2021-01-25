@@ -21,6 +21,7 @@
 *
 ***********************************************************************/
 
+#include <my_global.h>
 #include "jobstep.h"
 using namespace joblist;
 

@@ -19,6 +19,7 @@
 //  $Id: subquerystep.cpp 6370 2010-03-18 02:58:09Z xlou $
 
 
+#include <my_global.h>
 #include <iostream>
 //#define NDEBUG
 #include <cassert>

@@ -24,6 +24,7 @@
  * is the primary class.
  */
 
+#include <my_global.h>
 #include <unistd.h>
 #include <sstream>
 #include <stdexcept>

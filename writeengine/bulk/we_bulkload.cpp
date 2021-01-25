@@ -21,6 +21,7 @@
 *******************************************************************************/
 /** @file */
 
+#include <my_global.h>
 #define WE_BULKLOAD_DLLEXPORT
 #include "we_bulkload.h"
 #undef WE_BULKLOAD_DLLEXPORT

@@ -18,6 +18,7 @@
 // $Id: activestatementcounter.cpp 940 2013-01-21 14:11:31Z rdempsey $
 //
 
+#include <my_global.h>
 #include <unistd.h>
 using namespace std;
 

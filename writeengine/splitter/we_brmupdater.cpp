@@ -28,9 +28,7 @@
  *      Author: bpaul
  */
 
-
-
-
+#include <my_global.h>
 #include <iostream>
 #include <sstream>
 using namespace std;

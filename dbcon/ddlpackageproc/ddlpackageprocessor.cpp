@@ -18,6 +18,7 @@
 
 //   $Id: ddlpackageprocessor.cpp 9627 2013-06-18 13:59:21Z rdempsey $
 
+#include <my_global.h>
 #include <fstream>
 #include <iomanip>
 #include <iostream>

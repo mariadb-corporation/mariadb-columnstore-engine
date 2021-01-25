@@ -19,6 +19,7 @@
 //  $Id: tuplehashjoin.cpp 9709 2013-07-20 06:08:46Z xlou $
 
 
+#include <my_global.h>
 #include <climits>
 #include <cstdio>
 #include <ctime>

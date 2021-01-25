@@ -59,6 +59,7 @@
  * Time permitting we might look into those things.
  */
 
+#include <my_global.h>
 #include "objectidmanager.h"
 #include "configcpp.h"
 #include <cstdio>

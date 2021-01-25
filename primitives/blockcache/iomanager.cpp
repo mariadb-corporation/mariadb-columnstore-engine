@@ -28,10 +28,13 @@
 //
 //
 
+#include <my_global.h>
 #include "mcsconfig.h"
 
 #define _FILE_OFFSET_BITS 64
+#ifndef _LARGEFILE64_SOURCE
 #define _LARGEFILE64_SOURCE
+#endif
 #ifdef __linux__
 #include <sys/mount.h>
 #include <linux/fs.h>

@@ -19,6 +19,7 @@
 //  $Id: func_cast.cpp 3923 2013-06-19 21:43:06Z bwilkinson $
 
 
+#include <my_global.h>
 #include <string>
 using namespace std;
 

@@ -20,6 +20,7 @@
 *
 *
 ***********************************************************************/
+#include <my_global.h>
 #include <sstream>
 #include <iomanip>
 #include <algorithm>

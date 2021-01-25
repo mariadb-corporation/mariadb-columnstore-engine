@@ -19,6 +19,7 @@
 * $Id: we_bulkrollbackmgr.cpp 4737 2013-08-14 20:45:46Z bwilkinson $
 */
 
+#include <my_global.h>
 #include <sstream>
 #include <cerrno>
 #include <cstdio>

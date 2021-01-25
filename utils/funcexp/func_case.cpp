@@ -27,6 +27,7 @@
 #include <cassert>
 using namespace std;
 
+#include <my_global.h>
 #include "functor_all.h"
 #include "functioncolumn.h"
 #include "predicateoperator.h"

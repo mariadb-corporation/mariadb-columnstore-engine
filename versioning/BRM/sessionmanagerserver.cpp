@@ -24,6 +24,7 @@
  * This class issues Transaction ID and keeps track of the current version ID
  */
 
+#include <my_global.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <cerrno>

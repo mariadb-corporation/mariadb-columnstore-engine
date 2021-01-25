@@ -16,6 +16,7 @@
    MA 02110-1301, USA. */
 
 
+#include <my_global.h>
 #include "bpp.h"
 #include "pseudocolumn.h"
 

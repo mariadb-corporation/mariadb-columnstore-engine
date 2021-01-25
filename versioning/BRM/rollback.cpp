@@ -30,6 +30,7 @@
  */
 
 
+#include <my_global.h>
 #include "dbrm.h"
 
 #include <iostream>

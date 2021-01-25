@@ -21,6 +21,7 @@
 *
 ***********************************************************************/
 
+#include <my_global.h>
 #include <stdexcept>
 #include <unistd.h>
 #include <exception>

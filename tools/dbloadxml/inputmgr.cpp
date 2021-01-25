@@ -20,6 +20,7 @@
 *
 *******************************************************************************/
 
+#include <my_global.h>
 #include "inputmgr.h"
 
 #include <iostream>

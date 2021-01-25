@@ -25,6 +25,7 @@
  *  can be deleted.
  *  The whole file contains only one class Dctnry
  */
+#include <my_global.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>

@@ -19,6 +19,7 @@
 //  $Id: groupconcat.cpp 9705 2013-07-17 20:06:07Z pleblanc $
 
 
+#include <my_global.h>
 #include <iostream>
 //#define NDEBUG
 #include <cassert>

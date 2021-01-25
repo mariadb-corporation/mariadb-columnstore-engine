@@ -18,6 +18,7 @@
 
 //  $Id: idborderby.cpp 3932 2013-06-25 16:08:10Z xlou $
 
+#include <my_global.h>
 #include <iostream>
 #include <cassert>
 #include <string>

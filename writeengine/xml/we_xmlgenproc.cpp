@@ -19,6 +19,7 @@
  *   $Id: we_xmlgenproc.cpp 4639 2013-05-08 17:32:10Z dcathey $
  *
  ******************************************************************************/
+#include <my_global.h>
 #define WRITEENGINEXMLGENPROC_DLLEXPORT
 #include "we_xmlgenproc.h"
 #undef WRITEENGINEXMLGENPROC_DLLEXPORT

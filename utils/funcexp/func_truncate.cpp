@@ -18,6 +18,7 @@
 
 //  $Id: func_truncate.cpp 3921 2013-06-19 18:59:56Z bwilkinson $
 
+#include <my_global.h>
 #include <cstdlib>
 #include <iomanip>
 #include <string>

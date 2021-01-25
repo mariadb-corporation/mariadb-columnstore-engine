@@ -18,6 +18,8 @@
 /******************************************************************************************
 * Author: Zhixuan Zhu
 ******************************************************************************************/
+
+#include <my_global.h>
 #define ALARMMANAGER_DLLEXPORT
 #include "alarmmanager.h"
 #undef ALARMMANAGER_DLLEXPORT

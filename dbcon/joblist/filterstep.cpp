@@ -17,6 +17,7 @@
 
 // $Id: filterstep.cpp 9655 2013-06-25 23:08:13Z xlou $
 
+#include <my_global.h>
 #include <string>
 #include <sstream>
 #include <cassert>

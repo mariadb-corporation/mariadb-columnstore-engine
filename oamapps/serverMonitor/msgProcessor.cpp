@@ -22,6 +22,7 @@
  *   Author: David Hill
  ***************************************************************************/
 
+#include <my_global.h>
 #include "serverMonitor.h"
 
 using namespace std;

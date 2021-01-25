@@ -19,6 +19,7 @@
 //  $Id: jlf_subquery.cpp 6419 2010-03-30 04:28:32Z xlou $
 
 
+#include <my_global.h>
 #include <iostream>
 #include <stack>
 #include <iterator>

@@ -20,6 +20,8 @@
 *
 *
 ***********************************************************************/
+
+#include <my_global.h>
 #include <string>
 using namespace std;
 

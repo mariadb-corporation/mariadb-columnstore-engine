@@ -23,6 +23,7 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <my_global.h>
 #include "filebuffer.h"
 #include <sstream>
 #include <string>

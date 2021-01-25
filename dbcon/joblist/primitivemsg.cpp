@@ -19,6 +19,7 @@
  * $Id: primitivemsg.cpp 9210 2013-01-21 14:10:42Z rdempsey $
  */
 
+#include <my_global.h>
 #include <stdexcept>
 using namespace std;
 

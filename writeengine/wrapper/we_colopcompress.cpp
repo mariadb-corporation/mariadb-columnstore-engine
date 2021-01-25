@@ -20,6 +20,7 @@
 
 /** @file */
 
+#include <my_global.h>
 #include <stdio.h>
 #include <string.h>
 #include <vector>

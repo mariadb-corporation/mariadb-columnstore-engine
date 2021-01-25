@@ -20,6 +20,7 @@
  *
  *
  ***********************************************************************/
+#include <my_global.h>
 #include "dmlpackageprocessor.h"
 
 #include <math.h>

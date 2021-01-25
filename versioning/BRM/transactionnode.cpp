@@ -20,6 +20,7 @@
  *
  ****************************************************************************/
 
+#include <my_global.h>
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
 

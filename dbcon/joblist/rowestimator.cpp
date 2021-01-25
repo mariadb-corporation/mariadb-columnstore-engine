@@ -20,6 +20,7 @@
 * $Id: rowestimator.cpp 5642 2009-08-10 21:04:59Z wweeks $
 *
 ******************************************************************************/
+#include <my_global.h>
 #include <iostream>
 #include "primitivemsg.h"
 #include "blocksize.h"

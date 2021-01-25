@@ -22,6 +22,7 @@
  *   jrodriguez@calpont.com   *
  ***************************************************************************/
 
+#include <my_global.h>
 #include <sstream>
 #include <string>
 #include "blockcacheclient.h"

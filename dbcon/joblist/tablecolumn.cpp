@@ -20,6 +20,7 @@
  *
  *****************************************************************************/
 
+#include <my_global.h>
 #include <stdint.h>
 #include <vector>
 using namespace std;

@@ -25,6 +25,7 @@
  * For ex: this is where we track the min/max values per extent for a column.
  */
 
+#include <my_global.h>
 #include "we_colextinf.h"
 #include "dataconvert.h"
 

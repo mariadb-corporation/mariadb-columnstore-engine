@@ -17,6 +17,7 @@
    MA 02110-1301, USA. */
 
 // $Id: jobstep.cpp 9414 2013-04-22 22:18:30Z xlou $
+#include <my_global.h>
 #include <iostream>
 #include <string>
 using namespace std;

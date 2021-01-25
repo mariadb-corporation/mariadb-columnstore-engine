@@ -21,6 +21,7 @@
 *
 ****************************************************************************/
 
+#include <my_global.h>
 #include "functor_real.h"
 
 #include "calpontsystemcatalog.h"

@@ -21,6 +21,7 @@
 *******************************************************************************/
 /** @file */
 
+#include <my_global.h>
 #include <cerrno>
 #include <string>
 #include <map>

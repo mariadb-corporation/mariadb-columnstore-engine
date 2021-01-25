@@ -20,6 +20,7 @@
  *
  ****************************************************************************/
 
+#include <my_global.h>
 #define RGNODE_DLLEXPORT
 #include "rgnode.h"
 #undef RGNODE_DLLEXPORT

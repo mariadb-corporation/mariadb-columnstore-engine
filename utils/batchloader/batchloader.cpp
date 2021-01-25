@@ -19,6 +19,7 @@
 * $Id: we_dbrootextenttracker.cpp 3672 2012-03-26 12:31:27Z rdempsey $
 */
 
+#include <my_global.h>
 #include <unistd.h>
 #include <algorithm>
 #include <sstream>

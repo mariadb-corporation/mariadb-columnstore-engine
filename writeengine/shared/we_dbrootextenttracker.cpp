@@ -18,6 +18,7 @@
 /*
 * $Id: we_dbrootextenttracker.cpp 4631 2013-05-02 15:21:09Z dcathey $
 */
+#include <my_global.h>
 #include "we_dbrootextenttracker.h"
 
 #include <algorithm>

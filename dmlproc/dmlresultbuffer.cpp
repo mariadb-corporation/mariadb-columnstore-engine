@@ -22,6 +22,7 @@
 ***********************************************************************/
 /** @file */
 
+#include <my_global.h>
 #include "dmlresultbuffer.h"
 
 namespace dmlprocessor

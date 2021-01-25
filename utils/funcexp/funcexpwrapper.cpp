@@ -29,6 +29,7 @@
 //
 //
 
+#include <my_global.h>
 #include "funcexpwrapper.h"
 #include "objectreader.h"
 

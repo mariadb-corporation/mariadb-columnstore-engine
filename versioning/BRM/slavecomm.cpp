@@ -20,6 +20,7 @@
  * $Id: slavecomm.cpp 1839 2013-02-01 17:42:03Z pleblanc $
  *
  ****************************************************************************/
+#include <my_global.h>
 #include <unistd.h>
 #include <iostream>
 #include <sys/types.h>

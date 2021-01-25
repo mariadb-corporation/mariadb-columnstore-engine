@@ -20,6 +20,7 @@
  *
  *
  ***********************************************************************/
+#include <my_global.h>
 #include <map>
 #include <boost/scoped_ptr.hpp>
 using namespace std;

@@ -25,6 +25,7 @@
  * when sending response messages back to the UM.
  */
 
+#include <my_global.h>
 #include "umsocketselector.h"
 #ifdef _MSC_VER
 #define WIN32_LEAN_AND_MEAN

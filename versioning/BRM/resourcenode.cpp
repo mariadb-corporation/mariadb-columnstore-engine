@@ -20,6 +20,7 @@
  *
  ****************************************************************************/
 
+#include <my_global.h>
 #include "transactionnode.h"
 #define RESOURCENODE_DLLEXPORT
 #include "resourcenode.h"

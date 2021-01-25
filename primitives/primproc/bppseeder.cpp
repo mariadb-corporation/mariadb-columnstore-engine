@@ -29,6 +29,7 @@
 //
 //
 
+#include <my_global.h>
 #include <unistd.h>
 #include <sstream>
 #ifndef _MSC_VER

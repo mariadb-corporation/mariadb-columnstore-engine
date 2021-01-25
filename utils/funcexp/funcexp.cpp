@@ -22,6 +22,7 @@
 *
 ****************************************************************************/
 
+#include <my_global.h>
 #include <boost/thread/mutex.hpp>
 
 #include "funcexp.h"

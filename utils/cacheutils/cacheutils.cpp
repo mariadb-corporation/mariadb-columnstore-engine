@@ -17,6 +17,7 @@
 
 // $Id: cacheutils.cpp 4051 2013-08-09 22:38:47Z wweeks $
 
+#include <my_global.h>
 #include <unistd.h>
 
 #include "cacheutils.h"

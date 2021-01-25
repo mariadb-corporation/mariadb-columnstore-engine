@@ -19,6 +19,7 @@
 //
 /** @file */
 
+#include <my_global.h>
 #include <cassert>
 #include <limits>
 using namespace std;

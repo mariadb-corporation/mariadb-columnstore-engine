@@ -25,6 +25,7 @@
  *      Author: Boby Paul: bpaul@calpont.com
  */
 
+#include <my_global.h>
 #include "mcsconfig.h" // Used to pickup STRERROR_R_CHAR_P definition
 
 #include <cstdlib>

@@ -24,6 +24,7 @@
  * Implementation of the BRMReporter class
  */
 
+#include <my_global.h>
 #include "we_brmreporter.h"
 
 #include <cerrno>

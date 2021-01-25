@@ -20,6 +20,7 @@
  *
  ****************************************************************************/
 
+#include <my_global.h>
 #define BRMAUTOINCMGR_DLLEXPORT
 #include "autoincrementmanager.h"
 #undef BRMAUTOINCMGR_DLLEXPORT

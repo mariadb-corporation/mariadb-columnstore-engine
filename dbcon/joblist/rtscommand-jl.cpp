@@ -28,6 +28,7 @@
 //
 //
 
+#include <my_global.h>
 #include "bpp-jl.h"
 #include "tablecolumn.h"
 

@@ -59,6 +59,7 @@
  * Time permitting we might look into those things.
  */
 
+#include <my_global.h>
 #define BRMOIDSVR_DLLEXPORT
 #include "oidserver.h"
 #undef BRMOIDSVR_DLLEXPORT

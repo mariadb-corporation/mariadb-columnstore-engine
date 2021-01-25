@@ -19,6 +19,7 @@
 //
 /** @file */
 
+#include <my_global.h>
 #include <boost/thread/mutex.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/scoped_array.hpp>

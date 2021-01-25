@@ -25,6 +25,7 @@
  */
 
 
+#include <my_global.h>
 #include "masterdbrmnode.h"
 #include "liboamcpp.h"
 #include <unistd.h>

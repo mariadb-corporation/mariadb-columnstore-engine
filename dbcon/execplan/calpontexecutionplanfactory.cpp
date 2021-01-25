@@ -21,6 +21,7 @@
 *
 ***********************************************************************/
 
+#include <my_global.h>
 #include "calpontexecutionplanfactory.h"
 #include "calpontexecutionplan.h"
 #include "vendorexecutionplan.h"

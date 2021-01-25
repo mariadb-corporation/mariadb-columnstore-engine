@@ -22,7 +22,7 @@
 *
 ***********************************************************************/
 
-//#include <my_config.h>
+#include <my_global.h>
 #include <cmath>
 #include <iostream>
 using namespace std;

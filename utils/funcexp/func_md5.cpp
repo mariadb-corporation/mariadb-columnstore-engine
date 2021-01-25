@@ -20,11 +20,11 @@
 *
 *
 ****************************************************************************/
+#include <my_global.h>
 #include <assert.h>
 #include <memory.h>
 #include <stdio.h>
 #include <string.h>
-
 
 #include <cstdlib>
 #include <string>

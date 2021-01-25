@@ -18,6 +18,7 @@
  *************************************************************************************/
 
 
+#include <my_global.h>
 //#define NDEBUG
 #include <iostream>
 #include <cassert>
