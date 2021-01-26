@@ -852,7 +852,7 @@ int8_t DBRM::send_recv(const ByteStream& in, ByteStream& out) throw()
     if (fDebug) TRACER_WRITENOW("send_recv");
 
 #endif
-    bool firstAttempt = true;
+    uint8_t attempt = 1;
 
     mutex.lock();
 
@@ -887,9 +887,8 @@ reconnect:
     {
         cerr << "DBRM::send_recv caught: " << e.what() << endl;
 
-        if (firstAttempt)
+        if (attempt++ == 1)
         {
-            firstAttempt = false;
             MessageQueueClientPool::releaseInstance(msgClient);
             msgClient = NULL;
             goto reconnect;
@@ -902,12 +901,14 @@ reconnect:
     {
         cerr << "DBRM::send_recv: controller node closed the connection" << endl;
 
-        if (firstAttempt)
+        if (attempt <= 2)
         {
-            firstAttempt = false;
             MessageQueueClientPool::releaseInstance(msgClient);
             msgClient = NULL;
-            sleep(10);
+            if (attempt++ > 1)
+            {
+                sleep(3);
+            }
             goto reconnect;
         }
 
