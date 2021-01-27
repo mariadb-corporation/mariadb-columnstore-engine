@@ -1,0 +1,132 @@
+DROP DATABASE IF EXISTS mcol_4493;
+CREATE DATABASE mcol_4493;
+USE mcol_4493;
+CREATE TABLE t1 (a CHAR(10), b INT) ENGINE=columnstore;
+INSERT INTO t1 VALUES ('a', 1), ('b', 2), ('c', 3);
+CREATE TABLE t2 (a INT) ENGINE=columnstore;
+INSERT INTO t2 values (2), (3);
+SELECT * FROM t1 LEFT JOIN
+(SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+ON table1.a=table2.a AND table1.a=1) _h
+ON t1.b=_h.a ORDER BY t1.a;
+a	b	a
+a	1	NULL
+b	2	NULL
+c	3	NULL
+SELECT * FROM t1 LEFT JOIN
+(SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+ON table1.a=table2.a AND table1.a=2) _h
+ON t1.b=_h.a ORDER BY t1.a;
+a	b	a
+a	1	NULL
+b	2	2
+c	3	NULL
+SELECT * FROM t1 LEFT JOIN
+(SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+ON table1.a=table2.a AND table1.a=3) _h
+ON t1.b=_h.a ORDER BY t1.a;
+a	b	a
+a	1	NULL
+b	2	NULL
+c	3	3
+SELECT * FROM t1 LEFT JOIN
+(SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+ON table1.a=table2.a) _h
+ON t1.b=_h.a ORDER BY t1.a;
+a	b	a
+a	1	NULL
+b	2	2
+c	3	3
+SELECT * FROM t1 LEFT JOIN
+(SELECT table3.a FROM t2 table3 INNER JOIN
+(SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+ON table1.a=table2.a AND table1.a=1) _h ON table3.a=_h.a) _g
+ON t1.b=_g.a ORDER BY t1.a;
+a	b	a
+a	1	NULL
+b	2	NULL
+c	3	NULL
+SELECT * FROM t1 LEFT JOIN
+(SELECT table3.a FROM t2 table3 INNER JOIN
+(SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+ON table1.a=table2.a AND table1.a=2) _h ON table3.a=_h.a) _g
+ON t1.b=_g.a ORDER BY t1.a;
+a	b	a
+a	1	NULL
+b	2	2
+c	3	NULL
+SELECT * FROM t1 LEFT JOIN
+(SELECT table3.a FROM t2 table3 INNER JOIN
+(SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+ON table1.a=table2.a AND table1.a=3) _h ON table3.a=_h.a) _g
+ON t1.b=_g.a ORDER BY t1.a;
+a	b	a
+a	1	NULL
+b	2	NULL
+c	3	3
+SELECT * FROM t1 LEFT JOIN
+(SELECT table3.a FROM t2 table3 INNER JOIN
+(SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+ON table1.a=table2.a) _h ON table3.a=_h.a) _g
+ON t1.b=_g.a ORDER BY t1.a;
+a	b	a
+a	1	NULL
+b	2	2
+c	3	3
+SELECT * FROM
+(SELECT table1.a, table1.b FROM t1 table1 INNER JOIN t2 table2
+ON table1.b=table2.a) _g
+LEFT JOIN
+(SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+ON table1.a=table2.a) _h
+ON _g.b=_h.a ORDER BY _g.a;
+a	b	a
+b	2	2
+c	3	3
+SELECT * FROM
+(SELECT table1.a, table1.b FROM t1 table1 INNER JOIN t2 table2
+ON table1.b=table2.a AND table1.b=2) _g
+LEFT JOIN
+(SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+ON table1.a=table2.a AND (table1.a=1 OR table1.a=2)) _h
+ON _g.b=_h.a ORDER BY _g.a;
+a	b	a
+b	2	2
+SELECT * FROM
+(SELECT table1.a, table1.b FROM t1 table1 INNER JOIN t2 table2
+ON table1.b=table2.a AND (table1.b=2 OR table1.b=1)) _g
+LEFT JOIN
+(SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+ON table1.a=table2.a AND (table1.a=1 OR table1.a=3)) _h
+ON _g.b=_h.a ORDER BY _g.a;
+a	b	a
+b	2	NULL
+SELECT * FROM
+(SELECT table1.a, table1.b FROM t1 table1 INNER JOIN t2 table2
+ON table1.b=table2.a AND table1.b=1) _g
+LEFT JOIN
+(SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+ON table1.a=table2.a) _h
+ON _g.b=_h.a ORDER BY _g.a;
+a	b	a
+SELECT * FROM
+(SELECT table1.a, table1.b FROM t1 table1 INNER JOIN t2 table2
+ON table1.b=table2.a) _g
+LEFT JOIN
+(SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+ON table1.a=table2.a AND table1.a=1) _h
+ON _g.b=_h.a ORDER BY _g.a;
+a	b	a
+b	2	NULL
+c	3	NULL
+SELECT * FROM
+(SELECT table1.a, table1.b FROM t1 table1 INNER JOIN t2 table2
+ON table1.b=table2.a) _g
+LEFT JOIN
+(SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+ON table1.a=table2.a AND (table1.a=1 OR table1.a=2)) _h
+ON _g.b=_h.a ORDER BY _g.a;
+a	b	a
+b	2	2
+c	3	NULL
+DROP DATABASE mcol_4493;
