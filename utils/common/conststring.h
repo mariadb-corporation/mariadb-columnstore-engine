@@ -25,6 +25,7 @@ namespace utils
 
 class ConstString
 {
+protected:
   const char *mStr;
   size_t mLength;
 public:
@@ -35,7 +36,12 @@ public:
       :mStr(str.data()), mLength(str.length())
   { }
   const char *str() const { return mStr; }
+  const char *end() const { return mStr + mLength; }
   size_t length() const { return mLength; }
+  bool eq(char ch) const
+  {
+    return mLength == 1 && mStr[0] == ch;
+  }
   ConstString & rtrimZero()
   {
     for ( ; mLength && mStr[mLength - 1] == '\0'; mLength--)
