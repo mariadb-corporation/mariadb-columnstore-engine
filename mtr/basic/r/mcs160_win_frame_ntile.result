@@ -1,0 +1,16 @@
+DROP DATABASE IF EXISTS mcs160_db;
+CREATE DATABASE mcs160_db;
+USE mcs160_db;
+CREATE TABLE t1 (a CHAR(1), b INT)ENGINE=Columnstore;
+INSERT INTO t1 VALUES ('', NULL),('a', 12),('a', 13),('b', 14),('c', 15),('d', 16),('d', 17),('b', 18),('a', 19);
+SELECT a, b, NTILE(3) OVER(ORDER BY b RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) lead_value FROM t1;
+ERROR HY000: Window frame is not allowed with 'ntile'
+SELECT a, b, NTILE(3) OVER(ORDER BY b RANGE BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) lead_value FROM t1;
+ERROR HY000: Window frame is not allowed with 'ntile'
+SELECT a, b, NTILE(3) OVER(ORDER BY b ROWS BETWEEN 1 PRECEDING AND CURRENT ROW) lead_value FROM t1;
+ERROR HY000: Window frame is not allowed with 'ntile'
+SELECT a, b, NTILE(3) OVER(ORDER BY b ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) lead_value FROM t1;
+ERROR HY000: Window frame is not allowed with 'ntile'
+SELECT a, b, NTILE(3) OVER(ORDER BY b ROWS BETWEEN 1 PRECEDING AND UNBOUNDED FOLLOWING) lead_value FROM t1;
+ERROR HY000: Window frame is not allowed with 'ntile'
+DROP DATABASE mcs160_db;

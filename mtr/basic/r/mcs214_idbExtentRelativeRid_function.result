@@ -1,0 +1,18 @@
+DROP DATABASE IF EXISTS mcs214_db;
+CREATE DATABASE mcs214_db;
+USE mcs214_db;
+CREATE TABLE t1(col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnstore;
+LOAD DATA LOCAL infile './suite/columnstore/std_data/100Krows.dat' INTO TABLE t1 FIELDS TERMINATED BY '|';
+SELECT COUNT(*) FROM t1;
+COUNT(*)
+100001
+SELECT idbExtentRelativeRid(col1) FROM t1 WHERE col1=2 LIMIT 1;
+idbExtentRelativeRid(col1)
+47898
+SELECT idbExtentRelativeRid(col2) FROM t1 WHERE col1=2 LIMIT 1;
+idbExtentRelativeRid(col2)
+47898
+SELECT idbExtentRelativeRid(col3) FROM t1 WHERE col1=2 LIMIT 1;
+idbExtentRelativeRid(col3)
+47898
+DROP DATABASE mcs214_db;

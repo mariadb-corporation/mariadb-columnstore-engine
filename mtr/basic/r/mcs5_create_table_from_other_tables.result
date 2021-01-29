@@ -1,0 +1,141 @@
+DROP DATABASE IF EXISTS mcs5_db;
+CREATE DATABASE mcs5_db;
+USE mcs5_db;
+CREATE TABLE t1_ctas (c0 int, c1 char(20)) ENGINE=Columnstore;
+INSERT INTO t1_ctas VALUES (1, 'foo'), (2, 'bar'), (3, 'disco');
+CREATE TABLE t2 ENGINE=Columnstore AS SELECT * FROM t1_ctas;
+SHOW CREATE TABLE t2;
+Table	Create Table
+t2	CREATE TABLE `t2` (
+  `c0` int(11) DEFAULT NULL,
+  `c1` char(20) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE t3(col0 varchar(45) DEFAULT 'abc') ENGINE=Columnstore AS SELECT * FROM t1_ctas;
+SHOW CREATE TABLE t3;
+Table	Create Table
+t3	CREATE TABLE `t3` (
+  `col0` varchar(45) DEFAULT 'abc',
+  `c0` int(11) DEFAULT NULL,
+  `c1` char(20) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE t4(col0 varchar(45)) ENGINE=Columnstore AS SELECT * FROM t1_ctas;
+SHOW CREATE TABLE t4;
+Table	Create Table
+t4	CREATE TABLE `t4` (
+  `col0` varchar(45) DEFAULT NULL,
+  `c0` int(11) DEFAULT NULL,
+  `c1` char(20) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE t5(c0 int) ENGINE=Columnstore AS SELECT * FROM t1_ctas;
+SHOW CREATE TABLE t5;
+Table	Create Table
+t5	CREATE TABLE `t5` (
+  `c0` int(11) DEFAULT NULL,
+  `c1` char(20) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE t6(c0 int) ENGINE=Columnstore AS SELECT c1 FROM t1_ctas;
+SHOW CREATE TABLE t6;
+Table	Create Table
+t6	CREATE TABLE `t6` (
+  `c0` int(11) DEFAULT NULL,
+  `c1` char(20) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE t7 ENGINE=Columnstore SELECT c1 AS c11 FROM t1_ctas;
+SHOW CREATE TABLE t7;
+Table	Create Table
+t7	CREATE TABLE `t7` (
+  `c11` char(20) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE t8 ENGINE=Columnstore SELECT c0,c1 FROM t1_ctas WHERE c1='bar';
+SHOW CREATE TABLE t8;
+Table	Create Table
+t8	CREATE TABLE `t8` (
+  `c0` int(11) DEFAULT NULL,
+  `c1` char(20) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE t9(col0 varchar(45), c0 int DEFAULT 10) ENGINE=Columnstore SELECT * FROM t1_ctas;
+SHOW CREATE TABLE t9;
+Table	Create Table
+t9	CREATE TABLE `t9` (
+  `col0` varchar(45) DEFAULT NULL,
+  `c0` int(11) DEFAULT 10,
+  `c1` char(20) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE t2_ctas (c0 int, c1 char(20), PRIMARY KEY (c1))ENGINE=Innodb;
+INSERT INTO t2_ctas VALUES (1, 'foo'), (2, 'bar'), (3, 'disco');
+CREATE TABLE t10 ENGINE=Columnstore AS SELECT * FROM t1_ctas;
+SHOW CREATE TABLE t10;
+Table	Create Table
+t10	CREATE TABLE `t10` (
+  `c0` int(11) DEFAULT NULL,
+  `c1` char(20) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE t11(col0 varchar(45) DEFAULT 'abc') ENGINE=Columnstore AS SELECT * FROM t1_ctas;
+SHOW CREATE TABLE t11;
+Table	Create Table
+t11	CREATE TABLE `t11` (
+  `col0` varchar(45) DEFAULT 'abc',
+  `c0` int(11) DEFAULT NULL,
+  `c1` char(20) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE t12(col0 varchar(45)) ENGINE=Columnstore AS SELECT * FROM t1_ctas;
+SHOW CREATE TABLE t12;
+Table	Create Table
+t12	CREATE TABLE `t12` (
+  `col0` varchar(45) DEFAULT NULL,
+  `c0` int(11) DEFAULT NULL,
+  `c1` char(20) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE t13(c0 int) ENGINE=Columnstore AS SELECT * FROM t1_ctas;
+SHOW CREATE TABLE t13;
+Table	Create Table
+t13	CREATE TABLE `t13` (
+  `c0` int(11) DEFAULT NULL,
+  `c1` char(20) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE t14(c0 int) ENGINE=Columnstore AS SELECT c1 FROM t1_ctas;
+SHOW CREATE TABLE t14;
+Table	Create Table
+t14	CREATE TABLE `t14` (
+  `c0` int(11) DEFAULT NULL,
+  `c1` char(20) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE t15 ENGINE=Columnstore SELECT c1 AS c11 FROM t1_ctas;
+SHOW CREATE TABLE t15;
+Table	Create Table
+t15	CREATE TABLE `t15` (
+  `c11` char(20) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE t16 ENGINE=Columnstore SELECT c0,c1 FROM t1_ctas WHERE c1='bar';
+SHOW CREATE TABLE t16;
+Table	Create Table
+t16	CREATE TABLE `t16` (
+  `c0` int(11) DEFAULT NULL,
+  `c1` char(20) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE t17(col0 varchar(45), c0 int DEFAULT 10) ENGINE=Columnstore SELECT * FROM t1_ctas;
+SHOW CREATE TABLE t17;
+Table	Create Table
+t17	CREATE TABLE `t17` (
+  `col0` varchar(45) DEFAULT NULL,
+  `c0` int(11) DEFAULT 10,
+  `c1` char(20) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE t1_like(c0 int, c1 char(20)) ENGINE=Columnstore;
+CREATE TABLE t18 LIKE t1_like;
+SHOW CREATE TABLE t18;
+Table	Create Table
+t18	CREATE TABLE `t18` (
+  `c0` int(11) DEFAULT NULL,
+  `c1` char(20) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE t2_like(c0 int, c1 char(20), PRIMARY KEY (c1))ENGINE=Innodb;
+CREATE TABLE t19 LIKE t2_like;
+SHOW CREATE TABLE t19;
+Table	Create Table
+t19	CREATE TABLE `t19` (
+  `c0` int(11) DEFAULT NULL,
+  `c1` char(20) NOT NULL,
+  PRIMARY KEY (`c1`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1
+DROP DATABASE mcs5_db;

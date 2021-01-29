@@ -1,0 +1,22 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug4391.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+--disable_warnings
+drop table if exists bug4391;
+--enable_warnings
+create table bug4391(c1 int comment 'autoincrement', c2 int) engine=columnstore;
+insert into bug4391 values (10, 10);
+update bug4391 set c1=4, c2=4;
+insert into bug4391 (c2) values (1);
+insert into bug4391 (c2) values (2),(3);
+select * from bug4391;
+#
+drop table if exists bug4391;
+#

@@ -1,0 +1,223 @@
+#source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS test_mcol641_aggregate;
+--enable_warnings
+
+CREATE DATABASE test_mcol641_aggregate;
+USE test_mcol641_aggregate;
+
+--disable_warnings
+DROP TABLE IF EXISTS cs1;
+DROP TABLE IF EXISTS cs2;
+DROP TABLE IF EXISTS cs3;
+DROP TABLE IF EXISTS cs4;
+DROP TABLE IF EXISTS cs5;
+--enable_warnings
+
+CREATE TABLE cs1 (d1 DECIMAL(38), d2 DECIMAL(38,10), d3 DECIMAL(38,38), d4 DECIMAL(38),d5 DECIMAL(38),i1 INT) ENGINE=columnstore;
+CREATE TABLE cs2 (d1 DECIMAL(38) UNSIGNED, d2 DECIMAL(38,10) UNSIGNED, d3 DECIMAL(38,38) UNSIGNED, d4 DECIMAL(38),d5 DECIMAL(38),i1 INT) ENGINE=columnstore;
+CREATE TABLE cs3 (d1 DECIMAL(19), d2 DECIMAL(19,10), d3 DECIMAL(19,19), d4 DECIMAL(19),d5 DECIMAL(19),i1 INT) ENGINE=columnstore;
+CREATE TABLE cs4 (d1 DECIMAL(19) UNSIGNED, d2 DECIMAL(19,10) UNSIGNED, d3 DECIMAL(19,19) UNSIGNED, d4 DECIMAL(19) UNSIGNED,d5 DECIMAL(19),i1 INT) ENGINE=columnstore;
+CREATE TABLE cs5(d DECIMAL(25,19)) ENGINE=columnstore;
+
+INSERT INTO cs1 VALUES
+    (1234,5678,-0.12345678901234567890123456789018,2,1,1),     
+    (1234,-5678,0.1234567890123456789012345,2,1,1),
+    (12345678901234567890123,1234567890123456789012.9012345678,0.123456789012345678901234567890,2,1,1),
+    (NULL,NULL,NULL,2,1,1),
+    (0,0,0,2,1,1),
+    (1234,5678,0.1234567890123456783456789012345678,3,2,2),
+    (-123456789123456789,-5678,0.123456789012345673456789012345678,3,2,2),
+    (12345678901234567890901,1234567890123478901234.9012345678,0.1234567890123456789012345678908,3,2,2),
+    (NULL,NULL,NULL,3,2,2),
+    (0,0,0,3,2,2),
+    (1234,5678,-0.12345678901234567890123456789018,11111111111111111111111111111111,1,1),
+    (1234,5678,-0.12345678901234567890123456789018,11111111111111111111111111111111,1,1),
+    (1234,5678,-0.12345678901234567890123456789018,11111111111111111111111111111112,1,1); 
+INSERT INTO cs2 VALUES
+    (1234,5678,0.12345678901234567890123456789018,2,1,1),     
+    (1234,5678,0.1234567890123456789012345,2,1,1),
+    (12345678901234567890123,1234567890123456789012.9012345678,0.123456789012345678901234567890,2,1,1),
+    (NULL,NULL,NULL,2,1,1),
+    (0,0,0,2,1,1),
+    (1234,5678,0.1234567890123456783456789012345678,3,2,2),
+    (123456789123456789123,5678,0.123456789012345673456789012345678,3,2,2),
+    (12345678901234567890901,1234567890123478901234.9012345678,0.1234567890123456789012345678908,3,2,2),
+    (NULL,NULL,NULL,3,2,2),
+    (0,0,0,3,2,2),
+    (1234,5678,0.12345678901234567890123456789018,11111111111111111111111111111111,1,1),
+    (1234,5678,0.12345678901234567890123456789018,11111111111111111111111111111111,1,1),
+    (1234,5678,0.12345678901234567890123456789018,11111111111111111111111111111112,1,1); 
+INSERT INTO cs3 VALUES
+    (1234,5678,-0.12345678901234,2,1,1),     
+    (1234,-5678,0.12345678901234,2,1,1),
+    (12345678901,12345678.90128,0.1234567890123,2,1,1),
+    (NULL,NULL,NULL,2,1,1),
+    (0,0,0,2,1,1),
+    (1234,5678,0.12345678901234,3,2,2),
+    (-1234567899,-5678,0.1234567890123,3,2,2),
+    (12345678901,12345678.9012,0.1234567890123,3,2,2),
+    (NULL,NULL,NULL,3,2,2),
+    (0,0,0,3,2,2);
+INSERT INTO cs4 VALUES
+    (1234,5678,0.12345678901234,2,1,1),     
+    (1234,5678,0.12345678901234,2,1,1),
+    (12345678901,12345678.90128,0.1234567890123,2,1,1),
+    (NULL,NULL,NULL,2,1,1),
+    (0,0,0,2,1,1),
+    (1234,5678,0.12345678901234,3,2,2),
+    (1234567899,5678,0.1234567890123,3,2,2),
+    (12345678901,12345678.90123,0.1234567890123,3,2,2),
+    (NULL,NULL,NULL,3,2,2),
+    (0,0,0,3,2,2);
+
+#no GROUP BY DECIMAL(38)
+SELECT "sum(38)_test1", sum(d1),sum(d2),sum(d3) FROM cs1;
+SELECT "avg(38)_test1", avg(d1),avg(d2),avg(d3) FROM cs1;
+SELECT "count(38)_test1", count(d1),count(d2),count(d3) FROM cs1;
+SELECT "min(38)_test1", min(d1),min(d2),min(d3) FROM cs1;
+SELECT "max(38)_test1", max(d1),max(d2),max(d3) FROM cs1;
+SELECT "group_concat(38)_test1", group_concat(d1 ORDER BY d1),group_concat(d2 ORDER BY d2),group_concat(d3 ORDER BY d3) FROM cs1;
+SELECT "count(distinct 38)_test1", count(distinct d1),count(distinct d2),count(distinct d3) FROM cs1;
+#no GROUP BY DECIMAL(38) UM 1phase aggregates
+SELECT "sum(38)_test1", sum(d1),sum(d2),sum(d3) FROM (SELECT d1,d2,d3 FROM cs1)a1;
+SELECT "avg(38)_test1", avg(d1),avg(d2),avg(d3) FROM (SELECT d1,d2,d3 FROM cs1)a1;
+SELECT "count(38)_test1", count(d1),count(d2),count(d3) FROM (SELECT d1,d2,d3 FROM cs1)a1;
+SELECT "min(38)_test1", min(d1),min(d2),min(d3) FROM (SELECT d1,d2,d3 FROM cs1)a1;
+SELECT "max(38)_test1", max(d1),max(d2),max(d3) FROM (SELECT d1,d2,d3 FROM cs1)a1;
+#Next two are proccessed by UM anyway
+SELECT "group_concat(38)_test1", group_concat(d1 ORDER BY d1),group_concat(d2 ORDER BY d2),group_concat(d3 ORDER BY d3) FROM (SELECT d1,d2,d3 FROM cs1)a1;
+SELECT "count(distinct 38)_test1", count(distinct d1),count(distinct d2),count(distinct d3) FROM (SELECT d1,d2,d3 FROM cs1)a1;
+#GROUP BY DECIMAL(38)
+SELECT "sum(38)_GB(38)_test1" ,d4,d5,sum(d1),sum(d2),sum(d3) FROM cs1 GROUP BY d4,d5 ORDER BY 2,3;
+SELECT "avg(38)_GB(38)_test1" ,d4,d5,avg(d1),avg(d2),avg(d3) FROM cs1 GROUP BY d4,d5 ORDER BY 2,3;
+SELECT "count(38)_GB(38)_test1" ,d4,d5,count(d1),count(d2),count(d3) FROM cs1 GROUP BY d4,d5 ORDER BY 2,3;
+SELECT "min(38)_GB(38)_test1" ,d4,d5,min(d1),min(d2),min(d3) FROM cs1 GROUP BY d4,d5 ORDER BY 2,3;
+SELECT "max(38)_GB(38)_test1" ,d4,d5,max(d1),max(d2),max(d3) FROM cs1 GROUP BY d4,d5 ORDER BY 2,3;
+SELECT "group_concat(38)_GB(38)_test1", group_concat(d1 ORDER BY d1),group_concat(d2 ORDER BY d2),group_concat(d3 ORDER BY d3) FROM cs1 GROUP BY d4,d5 ORDER BY 2;
+SELECT "count(distinct 38)_GB(38)_test1", count(distinct d1),count(distinct d2),count(distinct d3) FROM cs1 GROUP BY d4,d5 ORDER BY 2,3;
+#with GROUP BY INT
+SELECT "sum(38)_GB(8)_test1" ,i1,sum(d1),sum(d2),sum(d3) FROM cs1 GROUP BY i1 ORDER BY 2;
+SELECT "avg(38)_GB(8)_test1" ,i1,avg(d1),avg(d2),avg(d3) FROM cs1 GROUP BY i1 ORDER BY 2;
+SELECT "count(38)_GB(8)_test1" ,i1,count(d1),count(d2),count(d3) FROM cs1 GROUP BY i1 ORDER BY 2;
+SELECT "min(38)_GB(8)_test1" ,i1,min(d1),min(d2),min(d3) FROM cs1 GROUP BY i1 ORDER BY 2;
+SELECT "max(38)_GB(8)_test1" ,i1,max(d1),max(d2),max(d3) FROM cs1 GROUP BY i1 ORDER BY 2;
+SELECT "group_concat(38)_GB(8)_test1", group_concat(d1 ORDER BY d1),group_concat(d2 ORDER BY d2),group_concat(d3 ORDER BY d3) FROM cs1 GROUP BY i1 ORDER BY 2;
+SELECT "count(distinct 38)_GB(8)_test1", count(distinct d1),count(distinct d2),count(distinct d3) FROM cs1 GROUP BY i1 ORDER BY 2;
+
+#no GROUP BY UDECIMAL(38,10)
+SELECT "sum(38)_test2", sum(d1),sum(d2),sum(d3) FROM cs2;
+SELECT "avg(38)_test2", avg(d1),avg(d2),avg(d3) FROM cs2;
+SELECT "count(38)_test2", count(d1),count(d2),count(d3) FROM cs2;
+SELECT "min(38)_test2", min(d1),min(d2),min(d3) FROM cs2;
+SELECT "max(38)_test2", max(d1),max(d2),max(d3) FROM cs2;
+SELECT "group_concat(38)_test2", group_concat(d1),group_concat(d2),group_concat(d3) FROM cs2;
+SELECT "count(distinct 38)_test2", count(distinct d1),count(distinct d2),count(distinct d3) FROM cs2;
+#no GROUP BY UDECIMAL(38) UM 1phase aggregates
+SELECT "sum(38)_test2", sum(d1),sum(d2),sum(d3) FROM (SELECT d1,d2,d3 FROM cs2)a1;
+SELECT "avg(38)_test2", avg(d1),avg(d2),avg(d3) FROM (SELECT d1,d2,d3 FROM cs2)a1;
+SELECT "count(38)_test2", count(d1),count(d2),count(d3) FROM (SELECT d1,d2,d3 FROM cs2)a1;
+SELECT "min(38)_test2", min(d1),min(d2),min(d3) FROM (SELECT d1,d2,d3 FROM cs2)a1;
+SELECT "max(38)_test2", max(d1),max(d2),max(d3) FROM (SELECT d1,d2,d3 FROM cs2)a1;
+SELECT "group_concat(38)_test2", group_concat(d1),group_concat(d2),group_concat(d3) FROM (SELECT d1,d2,d3 FROM cs2)a1;
+SELECT "count(distinct 38)_test2", count(distinct d1),count(distinct d2),count(distinct d3) FROM (SELECT d1,d2,d3 FROM cs2)a1;
+#GROUP BY DECIMAL(38)
+SELECT "sum(38)_GB(38)_test2" ,d4,d5,sum(d1),sum(d2),sum(d3) FROM cs2 GROUP BY d4,d5 ORDER BY 2,3;
+SELECT "avg(38)_GB(38)_test2" ,d4,d5,avg(d1),avg(d2),avg(d3) FROM cs2 GROUP BY d4,d5 ORDER BY 2,3;
+SELECT "count(38)_GB(38)_test2" ,d4,d5,count(d1),count(d2),count(d3) FROM cs2 GROUP BY d4,d5 ORDER BY 2,3;
+SELECT "min(38)_GB(38)_test2" ,d4,d5,min(d1),min(d2),min(d3) FROM cs2 GROUP BY d4,d5 ORDER BY 2,3;
+SELECT "max(38)_GB(38)_test2" ,d4,d5,max(d1),max(d2),max(d3) FROM cs2 GROUP BY d4,d5 ORDER BY 2,3;
+SELECT "group_concat(38)_GB(38)_test2", group_concat(d1 ORDER BY d1),group_concat(d2 ORDER BY d2),group_concat(d3 ORDER BY d3) FROM cs2 GROUP BY d4,d5 ORDER BY 2,3;
+SELECT "count(distinct 38)_GB(38)_test2", count(distinct d1),count(distinct d2),count(distinct d3) FROM cs2 GROUP BY d4,d5 ORDER BY 2,3;
+#with GROUP BY INT
+SELECT "sum(38)_GB(8)_test2" ,i1,sum(d1),sum(d2),sum(d3) FROM cs2 GROUP BY i1 ORDER BY 2,3;
+SELECT "avg(38)_GB(8)_test2" ,i1,avg(d1),avg(d2),avg(d3) FROM cs2 GROUP BY i1 ORDER BY 2,3;
+SELECT "count(38)_GB(8)_test2" ,i1,count(d1),count(d2),count(d3) FROM cs2 GROUP BY i1 ORDER BY 2,3;
+SELECT "min(38)_GB(8)_test2" ,i1,min(d1),min(d2),min(d3) FROM cs2 GROUP BY i1 ORDER BY 2,3;
+SELECT "max(38)_GB(8)_test2" ,i1,max(d1),max(d2),max(d3) FROM cs2 GROUP BY i1 ORDER BY 2,3;
+SELECT "group_concat(38)_GB(8)_test2", group_concat(d1 ORDER BY d1),group_concat(d2 ORDER BY d1),group_concat(d3 ORDER BY d1) FROM cs2 GROUP BY i1 ORDER BY 2,3;
+SELECT "count(distinct 38)_GB(8)_test2", count(distinct d1),count(distinct d2),count(distinct d3) FROM cs2 GROUP BY i1 ORDER BY 2,3;
+
+#no GROUP BY DECIMAL(19)
+SELECT "sum(19)_test3", sum(d1),sum(d2),sum(d3) FROM cs3;
+SELECT "avg(19)_test3", avg(d1),avg(d2),avg(d3) FROM cs3;
+SELECT "count(19)_test3", count(d1),count(d2),count(d3) FROM cs3;
+SELECT "min(19)_test3", min(d1),min(d2),min(d3) FROM cs3;
+SELECT "max(19)_test3", max(d1),max(d2),max(d3) FROM cs3;
+SELECT "group_concat(38)_test3", group_concat(d1 ORDER BY d1),group_concat(d2 ORDER BY d1),group_concat(d3 ORDER BY d1) FROM cs3;
+SELECT "count(distinct 38)_test3", count(distinct d1),count(distinct d2),count(distinct d3) FROM cs3;
+#no GROUP BY DECIMAL(19) UM 1phase aggregates
+SELECT "sum(19)_test3", sum(d1),sum(d2),sum(d3) FROM (SELECT d1,d2,d3 FROM cs3)a1;
+SELECT "avg(19)_test3", avg(d1),avg(d2),avg(d3) FROM (SELECT d1,d2,d3 FROM cs3)a1;
+SELECT "count(19)_test3", count(d1),count(d2),count(d3) FROM (SELECT d1,d2,d3 FROM cs3)a1;
+SELECT "min(19)_test3", min(d1),min(d2),min(d3) FROM (SELECT d1,d2,d3 FROM cs3)a1;
+SELECT "max(19)_test3", max(d1),max(d2),max(d3) FROM (SELECT d1,d2,d3 FROM cs3)a1;
+SELECT "group_concat(38)_test3", group_concat(d1 ORDER BY d1),group_concat(d2 ORDER BY d2),group_concat(d3 ORDER BY d3) FROM (SELECT d1,d2,d3 FROM cs3)a1;
+SELECT "count(distinct 38)_test3", count(distinct d1),count(distinct d2),count(distinct d3) FROM (SELECT d1,d2,d3 FROM cs3)a1;
+#GROUP BY DECIMAL(38)
+SELECT "sum(38)_GB(38)_test3" ,d4,d5,sum(d1),sum(d2),sum(d3) FROM cs3 GROUP BY d4,d5 ORDER BY 2,3;
+SELECT "avg(38)_GB(38)_test3" ,d4,d5,avg(d1),avg(d2),avg(d3) FROM cs3 GROUP BY d4,d5 ORDER BY 2,3;
+SELECT "count(38)_GB(38)_test3" ,d4,d5,count(d1),count(d2),count(d3) FROM cs3 GROUP BY d4,d5 ORDER BY 2,3;
+SELECT "min(38)_GB(38)_test3" ,d4,d5,min(d1),min(d2),min(d3) FROM cs3 GROUP BY d4,d5 ORDER BY 2,3;
+SELECT "max(38)_GB(38)_test3" ,d4,d5,max(d1),max(d2),max(d3) FROM cs3 GROUP BY d4,d5 ORDER BY 2,3;
+SELECT "group_concat(38)_GB(38)_test3", group_concat(d1 ORDER BY d1),group_concat(d2 ORDER BY d2),group_concat(d3 ORDER BY d3) FROM cs3 GROUP BY d4,d5 ORDER BY 2,3;
+SELECT "count(distinct 38)_GB(38)_test3", count(distinct d1),count(distinct d2),count(distinct d3) FROM cs3 GROUP BY d4,d5 ORDER BY 2,3;
+#with GROUP BY INT
+SELECT "sum(38)_GB(8)_test3" ,i1,sum(d1),sum(d2),sum(d3) FROM cs3 GROUP BY i1 ORDER BY 2,3;
+SELECT "avg(38)_GB(8)_test3" ,i1,avg(d1),avg(d2),avg(d3) FROM cs3 GROUP BY i1 ORDER BY 2,3;
+SELECT "count(38)_GB(8)_test3" ,i1,count(d1),count(d2),count(d3) FROM cs3 GROUP BY i1 ORDER BY 2,3;
+SELECT "min(38)_GB(8)_test3" ,i1,min(d1),min(d2),min(d3) FROM cs3 GROUP BY i1 ORDER BY 2,3;
+SELECT "max(38)_GB(8)_test3" ,i1,max(d1),max(d2),max(d3) FROM cs3 GROUP BY i1 ORDER BY 2,3;
+SELECT "group_concat(38)_GB(8)_test3", group_concat(d1 ORDER BY d1),group_concat(d2 ORDER BY d2),group_concat(d3 ORDER BY d3) FROM cs3 GROUP BY i1 ORDER BY 2,3;
+SELECT "count(distinct 38)_GB(8)_test3", count(distinct d1),count(distinct d2),count(distinct d3) FROM cs3 GROUP BY i1 ORDER BY 2,3;
+
+#no GROUP BY UDECIMAL(19)
+SELECT "sum(19)_test4", sum(d1),sum(d2),sum(d3) FROM cs4;
+SELECT "avg(19)_test4", avg(d1),avg(d2),avg(d3) FROM cs4;
+SELECT "count(19)_test4", count(d1),count(d2),count(d3) FROM cs4;
+SELECT "min(19)_test4", min(d1),min(d2),min(d3) FROM cs4;
+SELECT "max(19)_test4", max(d1),max(d2),max(d3) FROM cs4;
+SELECT "group_concat(38)_test4", group_concat(d1 ORDER BY d1),group_concat(d2 ORDER BY d2),group_concat(d3 ORDER BY d3) FROM cs4;
+SELECT "count(distinct 38)_test4", count(distinct d1),count(distinct d2),count(distinct d3) FROM cs4;
+#no GROUP BY UDECIMAL(19) UM 1phase aggregates
+SELECT "sum(19)_test4", sum(d1),sum(d2),sum(d3) FROM (SELECT d1,d2,d3 FROM cs4)a1;
+SELECT "avg(19)_test4", avg(d1),avg(d2),avg(d3) FROM (SELECT d1,d2,d3 FROM cs4)a1;
+SELECT "count(19)_test4", count(d1),count(d2),count(d3) FROM (SELECT d1,d2,d3 FROM cs4)a1;
+SELECT "min(19)_test4", min(d1),min(d2),min(d3) FROM (SELECT d1,d2,d3 FROM cs4)a1;
+SELECT "max(19)_test4", max(d1),max(d2),max(d3) FROM (SELECT d1,d2,d3 FROM cs4)a1;
+SELECT "group_concat(38)_test4", group_concat(d1 ORDER BY d1),group_concat(d2 ORDER BY d2),group_concat(d3 ORDER BY d3) FROM (SELECT d1,d2,d3 FROM cs4)a1;
+SELECT "count(distinct 38)_test4", count(distinct d1),count(distinct d2),count(distinct d3) FROM (SELECT d1,d2,d3 FROM cs4)a1;
+#GROUP BY DECIMAL(38)
+SELECT "sum(38)_GB(38)_test4" ,d4,d5,sum(d1),sum(d2),sum(d3) FROM cs4 GROUP BY d4,d5 ORDER BY 2,3;
+SELECT "avg(38)_GB(38)_test4" ,d4,d5,avg(d1),avg(d2),avg(d3) FROM cs4 GROUP BY d4,d5 ORDER BY 2,3;
+SELECT "count(38)_GB(38)_test4" ,d4,d5,count(d1),count(d2),count(d3) FROM cs4 GROUP BY d4,d5 ORDER BY 2,3;
+SELECT "min(38)_GB(38)_test4" ,d4,d5,min(d1),min(d2),min(d3) FROM cs4 GROUP BY d4,d5 ORDER BY 2,3;
+SELECT "max(38)_GB(38)_test4" ,d4,d5,max(d1),max(d2),max(d3) FROM cs4 GROUP BY d4,d5 ORDER BY 2,3;
+SELECT "group_concat(38)_GB(38)_test4", group_concat(d1 ORDER BY d1),group_concat(d2 ORDER BY d2),group_concat(d3 ORDER BY d3) FROM cs4 GROUP BY d4,d5 ORDER BY 2,3;
+SELECT "count(distinct 38)_GB(38)_test4", count(distinct d1),count(distinct d2),count(distinct d3) FROM cs4 GROUP BY d4,d5 ORDER BY 2,3;
+#with GROUP BY INT
+SELECT "sum(38)_GB(38)_test4" ,i1,sum(d1),sum(d2),sum(d3) FROM cs4 GROUP BY i1 ORDER BY 2,3;
+SELECT "avg(38)_GB(38)_test4" ,i1,avg(d1),avg(d2),avg(d3) FROM cs4 GROUP BY i1 ORDER BY 2,3;
+SELECT "count(38)_GB(38)_test4" ,i1,count(d1),count(d2),count(d3) FROM cs4 GROUP BY i1 ORDER BY 2,3;
+SELECT "min(38)_GB(38)_test4" ,i1,min(d1),min(d2),min(d3) FROM cs4 GROUP BY i1 ORDER BY 2,3;
+SELECT "max(38)_GB(38)_test4" ,i1,max(d1),max(d2),max(d3) FROM cs4 GROUP BY i1 ORDER BY 2,3;
+SELECT "group_concat(38)_GB(8)_test4", group_concat(d1 ORDER BY d1),group_concat(d2 ORDER BY d2),group_concat(d3 ORDER BY d3) FROM cs4 GROUP BY i1 ORDER BY 2,3;
+SELECT "count(distinct 38)_GB(8)_test4", count(distinct d1),count(distinct d2),count(distinct d3) FROM cs4 GROUP BY i1 ORDER BY 2,3;
+
+#non-first const column
+SELECT sum(d1), "sum(38)_test1", sum(d2),sum(d3) FROM cs1;
+#rounding for AVG
+#The last digit rounding is an open question for aggregates.
+INSERT INTO cs5 VALUES (1),(0.1),(0.05),(0.05),(0.05),(0.05),(0.2),(0.154),(0.1),(0.05),(0.05);
+SELECT avg(d) FROM cs5;
+UPDATE cs5 SET d=-d;
+SELECT avg(d) FROM cs5;
+
+#Add HAVING with GB  
+
+DROP TABLE cs1;
+DROP TABLE cs2;
+DROP TABLE cs3;
+DROP TABLE cs4;
+DROP TABLE cs5;

@@ -1,0 +1,73 @@
+# -------------------------------------------------------------- #
+# This test is to setup a the required databases for csinternal
+# test suite.  It must be executed alone before executing the
+# devregression test suite.
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+--disable_warnings
+DROP DATABASE IF EXISTS tpch1m;
+DROP DATABASE IF EXISTS tpch1;
+DROP DATABASE IF EXISTS ssb1;
+DROP DATABASE IF EXISTS dml;
+DROP DATABASE IF EXISTS autopilot;
+DROP DATABASE IF EXISTS outerjoin;
+--enable_warnings
+#
+CREATE DATABASE tpch1m;
+CREATE DATABASE tpch1;
+CREATE DATABASE ssb1;
+CREATE DATABASE dml;
+CREATE DATABASE autopilot;
+CREATE DATABASE outerjoin;
+#
+USE tpch1m;
+--source ../csinternal/include/dbt3/createTables.inc
+--source ../csinternal/include/dbt3/ldiTables1m.inc
+--source ../csinternal/include/dbt3/countTables.inc
+#
+USE tpch1;
+--source ../csinternal/include/dbt3/createTables.inc
+--source ../csinternal/include/dbt3/ldiTables1g.inc
+--source ../csinternal/include/dbt3/countTables.inc
+#
+use ssb1;
+--source ../csinternal/include/ssb/createTables.inc
+--source ../csinternal/include/ssb/ldiTables1g.inc
+--source ../csinternal/include/ssb/countTables.inc
+#
+USE dml;
+--source ../csinternal/include/dbt3/createTables.inc
+--source ../csinternal/include/dbt3/ldiTables1g.inc
+--source ../csinternal/include/dbt3/countTables.inc
+#
+# Create misc test tables
+USE tpch1;
+--source ../csinternal/include/regression_create_dtypes.inc
+--source ../csinternal/include/regression_create_simple_subselect.inc
+--source ../csinternal/include/regression_create_empsalary.inc
+--source ../csinternal/include/regression_create_datatypetestm.inc
+--source ../csinternal/include/regression_create_datatypetestm1.inc
+--source ../csinternal/include/regression_create_wide_tables.inc
+--source ../csinternal/include/regression_create_misc_tables.inc
+#
+USE autopilot;
+--source ../csinternal/include/autopilot_create_datatypetestm_tables.inc
+--source ../csinternal/include/autopilot_create_datatypeupdate_table.inc
+--source ../csinternal/include/autopilot_create_jsontest_table.inc
+#
+USE outerjoin;
+--source ../csinternal/include/dbt3/createTables.inc
+--source ../csinternal/include/dbt3/ldiTables1m.inc
+--source ../csinternal/include/dbt3/countTables.inc
+--source ../csinternal/include/autopilot_create_outerjoin_tables.inc
+#
+# Set table name to case insensitive
+--exec sed -i 's/\[mysqld\]/\[mysqld\]\nlower_case_table_name=1/g' /etc/my.cnf.d/server.cnf
+#
+--exec systemctl restart mariadb
+--exec sleep 10
+

@@ -41,7 +41,6 @@ local Pipeline(branch, platform, event) = {
   local socket_path = if (pkg_format == 'rpm') then '/var/lib/mysql/mysql.sock' else '/run/mysqld/mysqld.sock',
   local img = if (std.split(platform, ':')[0] == 'centos') then platform else 'romcheck/' + std.strReplace(platform, '/', '-'),
   local regression_ref = if (std.split(branch, '-')[0] == 'develop') then branch else 'develop-5',
-  local mtr_ref = regression_ref,
 
   local pipeline = self,
 
@@ -99,24 +98,14 @@ local Pipeline(branch, platform, event) = {
     name: 'mtr',
     image: 'docker:git',
     volumes: [pipeline._volumes.docker],
-    environment: {
-      MTR_REF: '${MTR_REF:-' + mtr_ref + '}',
-    },
     commands: [
-      // clone mtr repo
-      'git clone --branch $$MTR_REF --depth 1 https://github.com/mariadb-corporation/columnstore-tests',
-
-      # where are we now?
-      'cd columnstore-tests',
-      'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
-      'cd ..',
-
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env MYSQL_TEST_DIR=' + mtr_path + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       'docker cp result mtr$${DRONE_BUILD_NUMBER}:/',
       if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "zypper install -y which hostname rsyslog patch perl-Data-Dumper-Concise perl-Memoize-ExpireLRU && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
       if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release diffutils which rsyslog hostname patch perl-Data-Dumper perl-Getopt-Long perl-Memoize perl-Time-HiRes cracklib-dicts && yum install -y /result/*.' + pkg_format + '"' else '',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update && apt install -y rsyslog hostname patch && apt install -y -f /result/*.' + pkg_format + '"' else '',
-      'docker cp columnstore-tests/mysql-test/suite/columnstore mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/suite/',
+      'docker cp mtr mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/suite/',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} mv ' + mtr_path + '/suite/mtr ' + mtr_path + '/suite/columnstore',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} chown -R mysql:mysql ' + mtr_path,
       // disable systemd 'ProtectSystem' (we need to write to /usr/share/)
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} sed -i "/ProtectSystem/d" /usr/lib/systemd/system/mariadb.service',

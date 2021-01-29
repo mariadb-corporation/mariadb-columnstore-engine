@@ -1,0 +1,15 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug2912.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+select if(count(r_regionkey)/15000=round(count(r_regionkey)*15000),"good","bad") alias from region;
+select if(count(o_orderkey)/15000=round(count(o_orderkey)*15000/15000/15000),"good","bad") alias2 from orders;
+
+#
+

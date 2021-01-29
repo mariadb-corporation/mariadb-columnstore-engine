@@ -1,0 +1,18 @@
+USE tpch1;
+drop table if exists `football_teams`;
+Warnings:
+Note	1051	Unknown table 'tpch1.football_teams'
+CREATE TABLE `football_teams` (
+`num` int(11) DEFAULT NULL,
+`name` varchar(32) DEFAULT NULL,
+`roster_size` int(11) DEFAULT NULL
+) ENGINE=Columnstore;
+insert into football_teams VALUES (1,'Green Bay',53);
+insert into football_teams VALUES (2,'Chicago',53);
+insert into football_teams VALUES (3,'Detroit',53);
+insert into football_teams VALUES (4,'Minnesota',53);
+select * from (select  num from football_teams order by num limit 3 offset 2) a;
+num
+3
+4
+drop table football_teams;

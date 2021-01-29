@@ -1,0 +1,34 @@
+#
+# Test calenablepartitions() function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs203_db;
+--enable_warnings
+
+CREATE DATABASE mcs203_db;
+USE mcs203_db;
+
+CREATE TABLE t1(col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnstore;
+LOAD DATA LOCAL infile './suite/columnstore/std_data/100Krows.dat' INTO TABLE t1 FIELDS TERMINATED BY '|';
+
+SELECT COUNT(*) FROM t1;
+INSERT INTO t1 SELECT * FROM t1;
+INSERT INTO t1 SELECT * FROM t1;
+INSERT INTO t1 SELECT * FROM t1;
+INSERT INTO t1 SELECT * FROM t1;
+INSERT INTO t1 SELECT * FROM t1;
+INSERT INTO t1 SELECT * FROM t1;
+INSERT INTO t1 SELECT * FROM t1;
+SELECT COUNT(*) FROM t1;
+
+SELECT calshowpartitions('t1', 'col1');
+SELECT caldisablepartitions('t1', '0.0.1, 0.1.1');
+SELECT calshowpartitions('t1', 'col1');
+SELECT calenablepartitions('t1', '0.0.1');
+SELECT calshowpartitions('t1', 'col1');
+
+# Clean UP
+DROP DATABASE mcs203_db;

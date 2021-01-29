@@ -1,0 +1,12 @@
+#
+# Test case migrated from regression test suite:
+# ./mysql/queries/nightly/alltest/test002/q4.8.5.sql
+#
+# Author: Susil, susil.behera@mariadb.com
+#
+
+-- source ../include/have_columnstore.inc
+
+USE tpch1;
+
+Select l_quantity, count(*) from lineitem where l_orderkey < 1000000 group by l_quantity order by l_quantity;

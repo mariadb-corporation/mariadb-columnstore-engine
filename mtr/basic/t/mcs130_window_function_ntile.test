@@ -1,0 +1,41 @@
+#
+# Test NTILE() Window Function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs130_db;
+--enable_warnings
+
+CREATE DATABASE mcs130_db;
+USE mcs130_db;
+
+CREATE TABLE t1 (a CHAR(1), b INT)ENGINE=Columnstore;
+INSERT INTO t1 VALUES ('', NULL),('a', 123),('a', 1),('b', 123),('c', 1861),('c', 1991),('d', 10701),('d', 1071),('a', 92);
+
+SELECT a, b, NTILE(3) OVER(ORDER BY b DESC) ntile FROM t1;
+SELECT a, b, NTILE(4) OVER(ORDER BY a DESC) ntile FROM t1;
+SELECT a, b, NTILE(3) OVER w ntile FROM t1 WINDOW w AS (ORDER BY a DESC);
+SELECT a, b, NTILE(3) OVER w ntile FROM t1 WINDOW w AS (ORDER BY b);
+SELECT a, b, NTILE(3) OVER(PARTITION BY b) ntile FROM t1;
+SELECT a, b, NTILE(3) OVER(PARTITION BY a) ntile FROM t1;
+SELECT a, b, NTILE(3) OVER(PARTITION BY a ORDER BY b DESC) ntile FROM t1;
+SELECT a, b, NTILE(3) OVER(PARTITION BY b ORDER BY b DESC) ntile FROM t1;
+SELECT a, b, NTILE(3) OVER(PARTITION BY a ORDER BY b ASC) ntile FROM t1;
+SELECT a, b, NTILE(3) OVER(PARTITION BY b ORDER BY b DESC) ntile FROM t1;
+
+# Bug, below query should fail
+SELECT a, b, NTILE(-1) OVER(PARTITION BY b ORDER BY b DESC) ntile FROM t1;
+
+# Bug, should error with error number 4024
+--error 1815
+SELECT a, b, NTILE(0) OVER(PARTITION BY b ORDER BY b DESC) ntile FROM t1;
+
+--error ER_NOT_ALLOWED_WINDOW_FRAME
+SELECT a, b, NTILE(3) OVER(PARTITION BY a ORDER BY b RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) ntile FROM t1;
+--error ER_NOT_ALLOWED_WINDOW_FRAME
+SELECT a, b, NTILE(3) OVER(PARTITION BY b ORDER BY b RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) ntile FROM t1;
+
+# Clean UP
+DROP DATABASE mcs130_db;

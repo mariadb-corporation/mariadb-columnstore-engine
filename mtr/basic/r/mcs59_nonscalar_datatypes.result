@@ -1,0 +1,10 @@
+DROP DATABASE IF EXISTS mcs59_db;
+CREATE DATABASE mcs59_db;
+USE mcs59_db;
+CREATE TABLE t_enum(col ENUM('min','max','avg'))ENGINE=Columnstore;
+ERROR 42000: The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
+CREATE TABLE t_set(col SET('x','y','z'))ENGINE=Columnstore;
+ERROR 42000: The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
+CREATE TABLE t_json(col JSON)ENGINE=Columnstore;
+ERROR 42000: The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
+DROP DATABASE mcs59_db;

@@ -1,0 +1,4 @@
+USE tpch1;
+Select max(l_shipdate) from lineitem;
+max(l_shipdate)
+1998-12-01

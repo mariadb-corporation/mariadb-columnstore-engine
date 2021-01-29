@@ -1,0 +1,19 @@
+#
+# Test case migrated from regression test suite:
+# ./mysql/queries/nightly/alltest/test023/q1.1.3.sql
+#
+# Author: Susil, susil.behera@mariadb.com
+#
+
+-- source ../include/have_columnstore.inc
+
+USE tpch1;
+
+create table tpch1.`z k`(`a b` int, `c300_500_18 REF NOx` text) engine=columnstore;
+insert into tpch1.`z k`(`a b`,`c300_500_18 REF NOx`) values (1,'Lorem ipsum dolor sit amet, consectetur adipiscing elit,'),(7,'sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'),(8,'Ut enim ad minim veniam,'),(9,'quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'),(10,'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore e');
+select `a b`,`c300_500_18 REF NOx` from tpch1.`z k`;
+show create table `z k`;
+drop table tpch1.`z k`;
+# Negative. table doesn't exist
+--error 1146
+show create table `z k`;

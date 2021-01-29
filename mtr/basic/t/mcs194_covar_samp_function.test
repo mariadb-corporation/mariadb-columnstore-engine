@@ -1,0 +1,21 @@
+#
+# Test COVAR_SAMP function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs194_db;
+--enable_warnings
+
+CREATE DATABASE mcs194_db;
+USE mcs194_db;
+
+CREATE TABLE t1 (x INT, y MEDIUMINT, z CHAR(5))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL, NULL, ''),(20, 1, 'aaa'),(39, 2, 'aaa'),(48, 3, 'bbb'),(57, 4, 'bbb'),(66, 5, 'aaa'),(75, 6, 'aaa'),(84, 7, 'bbb');
+
+SELECT COVAR_SAMP(y, x) FROM t1;
+SELECT z, COVAR_SAMP(y, x) FROM t1 GROUP BY z ORDER BY z;
+
+# Clean UP
+DROP DATABASE mcs194_db;

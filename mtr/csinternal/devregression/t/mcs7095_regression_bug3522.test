@@ -1,0 +1,67 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3522.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+select 
+count(distinct c1) c1,
+count(distinct c2) c2,
+count(distinct c3) c3,
+count(distinct c4) c4,
+count(distinct c5) c5,
+count(distinct c6) c6,
+count(distinct c7) c7,
+count(distinct c8) c8,
+count(distinct c9) c9,
+count(distinct c10) c10,
+count(distinct c11) c11,
+count(distinct c12) c12,
+count(distinct c13) c13,
+count(distinct c14) c14,
+count(distinct c15) c15,
+count(distinct c16) c16,
+count(distinct c17) c17,
+count(distinct c18) c18,
+count(distinct c19) c19,
+count(distinct c20) c20,
+count(distinct c21) c21,
+count(distinct c22) c22,
+count(distinct c23) c23,
+count(distinct c24) c24,
+count(distinct c25) c25,
+count(distinct c26) c26,
+count(distinct c27) c27,
+count(distinct c28) c28,
+count(distinct c29) c29,
+count(distinct c30) c30,
+count(distinct c31) c31,
+count(distinct c32) c32,
+count(distinct c33) c33,
+count(distinct c34) c34,
+count(distinct c35) c35,
+count(distinct c36) c36,
+count(distinct c37) c37,
+count(distinct c38) c38,
+count(distinct c39) c39,
+count(distinct c40) c40,
+count(distinct c41) c41,
+count(distinct c42) c42,
+count(distinct c43) c43,
+count(distinct c44) c44,
+count(distinct c45) c45,
+count(distinct c46) c46,
+count(distinct c47) c47,
+count(distinct c48) c48,
+count(distinct c49) c49,
+count(distinct c50) c50
+from wide
+where idx = 99;
+
+
+#
+

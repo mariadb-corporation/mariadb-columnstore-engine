@@ -1,0 +1,25 @@
+#
+# Test case migrated from regression test suite:
+# ./mysql/queries/100GB/dataValidation/aggregate_tpch.lineitem.sql
+#
+# Author: Susil, susil.behera@mariadb.com
+#
+
+-- source ../include/have_columnstore.inc
+
+USE tpch1;
+
+select count(l_orderkey), min(l_orderkey), max(l_orderkey) , sum(l_orderkey), avg(l_orderkey)  from lineitem;
+select count(l_partkey), min(l_partkey), max(l_partkey) , sum(l_partkey), avg(l_partkey)  from lineitem;
+select count(l_suppkey), min(l_suppkey), max(l_suppkey) , sum(l_suppkey), avg(l_suppkey)  from lineitem;
+select count(l_linenumber), min(l_linenumber), max(l_linenumber) , sum(l_linenumber), avg(l_linenumber)  from lineitem;
+select count(l_quantity), min(l_quantity), max(l_quantity) , sum(l_quantity), avg(l_quantity)  from lineitem;
+select count(l_extendedprice), min(l_extendedprice), max(l_extendedprice) , sum(l_extendedprice), avg(l_extendedprice)  from lineitem;
+select count(l_discount), min(l_discount), max(l_discount) , sum(l_discount), avg(l_discount)  from lineitem;
+select count(l_tax), min(l_tax), max(l_tax) , sum(l_tax), avg(l_tax)  from lineitem;
+select count(l_returnflag), min(l_returnflag), max(l_returnflag)  from lineitem;
+select count(l_linestatus), min(l_linestatus), max(l_linestatus)  from lineitem;
+select count(l_shipdate), min(l_shipdate), max(l_shipdate) from lineitem;
+select count(l_commitdate), min(l_commitdate), max(l_commitdate) from lineitem;
+select count(l_receiptdate), min(l_receiptdate), max(l_receiptdate) from lineitem;
+select count(*) from lineitem;

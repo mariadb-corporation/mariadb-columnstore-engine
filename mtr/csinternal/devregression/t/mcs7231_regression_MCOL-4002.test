@@ -1,0 +1,167 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-4002.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+#-- Prepare the data
+#-- Same table definition as lineitem
+--disable_warnings
+DROP TABLE IF EXISTS mcol4002;
+--enable_warnings
+CREATE TABLE mcol4002(
+        l_orderkey INT,
+        l_partkey INT,
+        l_suppkey INT,
+        l_linenumber BIGINT,
+        l_quantity DECIMAL(12,2),
+        l_extendedprice DECIMAL(12,2),
+        l_discount DECIMAL(12,2),
+        l_tax DECIMAL(12,2),
+        l_returnflag CHAR (1),
+        l_linestatus CHAR (1),
+        l_shipdate DATE,
+        l_commitdate DATE,
+        l_receiptdate DATE,
+        l_shipinstruct CHAR (25),
+        l_shipmode CHAR (10),
+        l_comment VARCHAR (44)
+) ENGINE=columnstore;
+
+--exec rm -f /tmp/mcol4002.txt
+SELECT * FROM lineitem LIMIT 100 INTO OUTFILE '/tmp/mcol4002.txt' FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+
+#-- In the below, we are referring to a single insert as a DML
+
+#-- DML, rollback
+START TRANSACTION;
+INSERT INTO mcol4002(l_comment) VALUES ('mcol4002');
+SELECT COUNT(*) FROM mcol4002; #-- should return 1
+ROLLBACK;
+SELECT COUNT(*) FROM mcol4002; #-- should return 0
+
+#-- LDI, rollback
+START TRANSACTION;
+LOAD DATA LOCAL INFILE '/tmp/mcol4002.txt' INTO TABLE mcol4002 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+SELECT COUNT(*) FROM mcol4002; #-- should return 100
+ROLLBACK;
+SELECT COUNT(*) FROM mcol4002; #-- should return 0
+
+#-- DML, LDI, rollback
+START TRANSACTION;
+INSERT INTO mcol4002(l_comment) VALUES ('mcol4002');
+LOAD DATA LOCAL INFILE '/tmp/mcol4002.txt' INTO TABLE mcol4002 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+SELECT COUNT(*) FROM mcol4002; #-- should return 101
+ROLLBACK;
+SELECT COUNT(*) FROM mcol4002; #-- should return 0
+
+#-- LDI, DML, rollback
+START TRANSACTION;
+LOAD DATA LOCAL INFILE '/tmp/mcol4002.txt' INTO TABLE mcol4002 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+INSERT INTO mcol4002(l_comment) VALUES ('mcol4002');
+SELECT COUNT(*) FROM mcol4002; #-- should return 101
+ROLLBACK;
+SELECT COUNT(*) FROM mcol4002; #-- should return 0
+
+#-- DML, LDI, DML, rollback
+START TRANSACTION;
+INSERT INTO mcol4002(l_comment) VALUES ('mcol4002');
+LOAD DATA LOCAL INFILE '/tmp/mcol4002.txt' INTO TABLE mcol4002 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+INSERT INTO mcol4002(l_comment) VALUES ('mcol4002');
+SELECT COUNT(*) FROM mcol4002; #-- should return 102
+ROLLBACK;
+SELECT COUNT(*) FROM mcol4002; #-- should return 0
+
+#-- LDI, DML, LDI, rollback
+START TRANSACTION;
+LOAD DATA LOCAL INFILE '/tmp/mcol4002.txt' INTO TABLE mcol4002 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+INSERT INTO mcol4002(l_comment) VALUES ('mcol4002');
+LOAD DATA LOCAL INFILE '/tmp/mcol4002.txt' INTO TABLE mcol4002 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+SELECT COUNT(*) FROM mcol4002; #-- should return 201
+ROLLBACK;
+SELECT COUNT(*) FROM mcol4002; #-- should return 0
+
+
+#-- Repeat the above statements, but instead of rollback perform commit this time
+#-- DML, commit
+START TRANSACTION;
+INSERT INTO mcol4002(l_comment) VALUES ('mcol4002');
+COMMIT;
+SELECT COUNT(*) FROM mcol4002; #-- should return 1
+
+#-- LDI, commit
+START TRANSACTION;
+LOAD DATA LOCAL INFILE '/tmp/mcol4002.txt' INTO TABLE mcol4002 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+COMMIT;
+SELECT COUNT(*) FROM mcol4002; #-- should return 101
+
+#-- DML, LDI, commit
+START TRANSACTION;
+INSERT INTO mcol4002(l_comment) VALUES ('mcol4002');
+LOAD DATA LOCAL INFILE '/tmp/mcol4002.txt' INTO TABLE mcol4002 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+COMMIT;
+SELECT COUNT(*) FROM mcol4002; #-- should return 202
+
+#-- LDI, DML, commit
+START TRANSACTION;
+LOAD DATA LOCAL INFILE '/tmp/mcol4002.txt' INTO TABLE mcol4002 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+INSERT INTO mcol4002(l_comment) VALUES ('mcol4002');
+COMMIT;
+SELECT COUNT(*) FROM mcol4002; #-- should return 303
+
+#-- DML, LDI, DML, commit
+START TRANSACTION;
+INSERT INTO mcol4002(l_comment) VALUES ('mcol4002');
+LOAD DATA LOCAL INFILE '/tmp/mcol4002.txt' INTO TABLE mcol4002 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+INSERT INTO mcol4002(l_comment) VALUES ('mcol4002');
+COMMIT;
+SELECT COUNT(*) FROM mcol4002; #-- should return 405
+
+#-- LDI, DML, LDI, commit
+START TRANSACTION;
+LOAD DATA LOCAL INFILE '/tmp/mcol4002.txt' INTO TABLE mcol4002 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+INSERT INTO mcol4002(l_comment) VALUES ('mcol4002');
+LOAD DATA LOCAL INFILE '/tmp/mcol4002.txt' INTO TABLE mcol4002 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+COMMIT;
+SELECT COUNT(*) FROM mcol4002; #-- should return 606
+
+
+#-- Outside a transaction, this should be similar to START TRANSACTION, ... , COMMIT
+DELETE FROM mcol4002;
+
+#-- DML
+INSERT INTO mcol4002(l_comment) VALUES ('mcol4002');
+SELECT COUNT(*) FROM mcol4002; #-- should return 1
+
+#-- LDI
+LOAD DATA LOCAL INFILE '/tmp/mcol4002.txt' INTO TABLE mcol4002 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+SELECT COUNT(*) FROM mcol4002; #-- should return 101
+
+#-- DML, LDI
+INSERT INTO mcol4002(l_comment) VALUES ('mcol4002');
+LOAD DATA LOCAL INFILE '/tmp/mcol4002.txt' INTO TABLE mcol4002 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+SELECT COUNT(*) FROM mcol4002; #-- should return 202
+
+#-- LDI, DML
+LOAD DATA LOCAL INFILE '/tmp/mcol4002.txt' INTO TABLE mcol4002 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+INSERT INTO mcol4002(l_comment) VALUES ('mcol4002');
+SELECT COUNT(*) FROM mcol4002; #-- should return 303
+
+#-- DML, LDI, DML
+INSERT INTO mcol4002(l_comment) VALUES ('mcol4002');
+LOAD DATA LOCAL INFILE '/tmp/mcol4002.txt' INTO TABLE mcol4002 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+INSERT INTO mcol4002(l_comment) VALUES ('mcol4002');
+SELECT COUNT(*) FROM mcol4002; #-- should return 405
+
+#-- LDI, DML, LDI
+LOAD DATA LOCAL INFILE '/tmp/mcol4002.txt' INTO TABLE mcol4002 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+INSERT INTO mcol4002(l_comment) VALUES ('mcol4002');
+LOAD DATA LOCAL INFILE '/tmp/mcol4002.txt' INTO TABLE mcol4002 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+SELECT COUNT(*) FROM mcol4002; #-- should return 606
+#
+DROP TABLE mcol4002;
+#

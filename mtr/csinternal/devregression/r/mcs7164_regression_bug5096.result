@@ -1,0 +1,43 @@
+USE tpch1;
+create table if not exists bug5096 (id int, c1 int)engine=columnstore;
+insert into bug5096 values (1,1),(2,2),(3,3),(4,4);
+set autocommit=0;
+update bug5096 set id = 10 limit 2;
+select * from bug5096;
+id	c1
+10	1
+10	2
+3	3
+4	4
+rollback;
+update bug5096 set id = 10 where c1 in (select r_regionkey from region) limit 3;
+select * from bug5096;
+id	c1
+10	1
+10	2
+10	3
+4	4
+rollback;
+delete from bug5096 limit 2;
+select * from bug5096;
+id	c1
+3	3
+4	4
+rollback;
+set @@sql_select_limit=1;
+update bug5096 set c1=10;
+select * from bug5096;
+id	c1
+1	10
+select * from bug5096 limit 10;
+id	c1
+1	10
+2	10
+3	10
+4	10
+rollback;
+delete from bug5096 limit 2;
+select * from bug5096;
+id	c1
+3	3
+drop table bug5096;

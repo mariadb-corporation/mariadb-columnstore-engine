@@ -1,0 +1,35 @@
+DROP DATABASE IF EXISTS mcs177_db;
+CREATE DATABASE mcs177_db;
+USE mcs177_db;
+SET default_storage_engine=Columnstore;
+SELECT 1 & 1;
+1 & 1
+1
+SELECT 1 & 0;
+1 & 0
+0
+SELECT 0 & 1;
+0 & 1
+0
+SELECT 29 & 15;
+29 & 15
+13
+SELECT 29 & 29;
+29 & 29
+29
+SELECT 1 | 1;
+1 | 1
+1
+SELECT 1 | 0;
+1 | 0
+1
+SELECT 0 | 0;
+0 | 0
+0
+SELECT 29 | 15;
+29 | 15
+31
+SELECT 29 | 29;
+29 | 29
+29
+DROP DATABASE mcs177_db;

@@ -1,0 +1,29 @@
+#
+# CAST Date time in Columnstore
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs70_db;
+--enable_warnings
+
+CREATE DATABASE mcs70_db;
+USE mcs70_db;
+
+CREATE TABLE t1(t1_time TIME, t1_date DATE, t1_datetime DATETIME)ENGINE=Columnstore;
+INSERT INTO t1 VALUES(NULL, NULL, NULL);
+INSERT INTO t1 VALUES('0:0:0', '0:0:0', '0:0:0');
+INSERT INTO t1 VALUES('11:22:33', '2020-11-11', '2020-11-11 11:22:33');
+INSERT INTO t1 VALUES('10:20:30', '2222-1-1', '2222-1-1 10:20:30');
+
+SELECT * FROM t1;
+SELECT CAST(t1_time AS SIGNED), CAST(t1_date AS SIGNED), CAST(t1_datetime AS SIGNED) FROM t1;
+SELECT CAST(t1_time AS UNSIGNED), CAST(t1_date AS UNSIGNED), CAST(t1_datetime AS UNSIGNED) FROM t1;
+SELECT CAST(t1_datetime AS DATETIME(6)) FROM t1;
+SELECT CAST(t1_time AS TIME(0)) FROM t1;
+SELECT CAST(t1_date AS DATETIME) FROM t1;
+SELECT CAST(t1_time AS DECIMAL(32,6)), CAST(t1_date AS DECIMAL(32,6)), CAST(t1_datetime AS DECIMAL(32,6)) FROM t1;
+
+# Clean UP
+DROP DATABASE mcs70_db;

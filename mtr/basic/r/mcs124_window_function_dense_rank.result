@@ -1,0 +1,131 @@
+DROP DATABASE IF EXISTS mcs124_db;
+CREATE DATABASE mcs124_db;
+USE mcs124_db;
+CREATE TABLE t1 (a CHAR(1), b INT)ENGINE=Columnstore;
+INSERT INTO t1 VALUES ('', NULL),('a', 123),('a', 1),('b', 123),('c', 1861),('c', 1991),('d', 10701),('d', 1071),('a', 92);
+SELECT a, b, DENSE_RANK() OVER(ORDER BY a) rank FROM t1;
+a	b	rank
+NULL	NULL	1
+a	92	2
+a	1	2
+a	123	2
+b	123	3
+c	1991	4
+c	1861	4
+d	1071	5
+d	10701	5
+SELECT a, b, DENSE_RANK() OVER(ORDER BY b DESC) rank FROM t1;
+a	b	rank
+d	10701	1
+c	1991	2
+c	1861	3
+d	1071	4
+a	123	5
+b	123	5
+a	92	6
+a	1	7
+NULL	NULL	8
+SELECT a, b, DENSE_RANK() OVER(ORDER BY a) rank FROM t1;
+a	b	rank
+NULL	NULL	1
+a	92	2
+a	1	2
+a	123	2
+b	123	3
+c	1991	4
+c	1861	4
+d	1071	5
+d	10701	5
+SELECT a, b, DENSE_RANK() OVER(ORDER BY b DESC) rank FROM t1;
+a	b	rank
+d	10701	1
+c	1991	2
+c	1861	3
+d	1071	4
+a	123	5
+b	123	5
+a	92	6
+a	1	7
+NULL	NULL	8
+SELECT a, b, DENSE_RANK() OVER w rank FROM t1 WINDOW w AS (ORDER BY a DESC);
+a	b	rank
+d	10701	1
+d	1071	1
+c	1861	2
+c	1991	2
+b	123	3
+a	92	4
+a	123	4
+a	1	4
+NULL	NULL	5
+SELECT a, b, DENSE_RANK() OVER w rank FROM t1 WINDOW w AS (ORDER BY b);
+a	b	rank
+NULL	NULL	1
+a	1	2
+a	92	3
+b	123	4
+a	123	4
+d	1071	5
+c	1861	6
+c	1991	7
+d	10701	8
+SELECT a, b, DENSE_RANK() OVER(PARTITION BY a ORDER BY a DESC) rank FROM t1;
+a	b	rank
+NULL	NULL	1
+a	92	1
+a	1	1
+a	123	1
+b	123	1
+c	1991	1
+c	1861	1
+d	1071	1
+d	10701	1
+SELECT a, b, DENSE_RANK() OVER(PARTITION BY a ORDER BY b DESC) rank FROM t1;
+a	b	rank
+NULL	NULL	1
+a	123	1
+a	92	2
+a	1	3
+b	123	1
+c	1991	1
+c	1861	2
+d	10701	1
+d	1071	2
+SELECT a, b, DENSE_RANK() OVER(PARTITION BY a ORDER BY b ASC) rank FROM t1;
+a	b	rank
+NULL	NULL	1
+a	1	1
+a	92	2
+a	123	3
+b	123	1
+c	1861	1
+c	1991	2
+d	1071	1
+d	10701	2
+SELECT a, b, DENSE_RANK() OVER(PARTITION BY b ORDER BY a DESC) rank FROM t1;
+a	b	rank
+NULL	NULL	1
+a	1	1
+a	92	1
+b	123	1
+a	123	2
+d	1071	1
+c	1861	1
+c	1991	1
+d	10701	1
+SELECT a, b, DENSE_RANK() OVER(PARTITION BY b ORDER BY b DESC) rank FROM t1;
+a	b	rank
+NULL	NULL	1
+a	1	1
+a	92	1
+b	123	1
+a	123	1
+d	1071	1
+c	1861	1
+c	1991	1
+d	10701	1
+SELECT a, b, DENSE_RANK() OVER(PARTITION BY a) rank FROM t1;
+ERROR HY000: No order list in window specification for 'dense_rank'
+SELECT a, b, DENSE_RANK() OVER(PARTITION BY b) rank FROM t1;
+ERROR HY000: No order list in window specification for 'dense_rank'
+DROP DATABASE mcs124_db;

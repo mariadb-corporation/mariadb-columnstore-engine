@@ -1,0 +1,58 @@
+DROP DATABASE IF EXISTS mcs105_db;
+CREATE DATABASE mcs105_db;
+USE mcs105_db;
+CREATE TABLE discounts (
+id INT NOT NULL,
+title VARCHAR(255) NOT NULL
+) ENGINE=Columnstore;
+LOAD DATA INFILE '/tmp/mcs105.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
+LOAD DATA LOCAL INFILE '/tmp/mcs105.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
+SELECT * FROM discounts ORDER BY id;
+id	title
+1	Sprint Break - San Jose
+1	Sprint Break - San Jose
+2	Back to Scholl - San Jose
+2	Back to Scholl - San Jose
+3	Summer - San Jose
+3	Summer - San Jose
+4	Spring
+4	Spring
+SELECT COUNT(*) FROM discounts;
+COUNT(*)
+8
+TRUNCATE discounts;
+LOAD DATA INFILE '/tmp/mcs105.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n';
+LOAD DATA LOCAL INFILE '/tmp/mcs105.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n';
+SELECT * FROM discounts ORDER BY id;
+id	title
+1	Sprint Break - San Jose
+1	Sprint Break - San Jose
+2	Back to Scholl - San Jose
+2	Back to Scholl - San Jose
+3	Summer - San Jose
+3	Summer - San Jose
+4	Spring
+4	Spring
+SELECT COUNT(*) FROM discounts;
+COUNT(*)
+8
+TRUNCATE discounts;
+LOAD DATA INFILE '/tmp/mcs105.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' LINES TERMINATED BY '|';
+LOAD DATA LOCAL INFILE '/tmp/mcs105.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' LINES TERMINATED BY '|';
+SELECT * FROM discounts ORDER BY id;
+id	title
+1	Sprint Break - San Jose 
+1	Sprint Break - San Jose 
+2	Back to Scholl - San Jose 
+2	Back to Scholl - San Jose 
+3	Summer - San Jose 
+3	Summer - San Jose 
+4	Spring
+
+4	Spring
+
+SELECT COUNT(*) FROM discounts;
+COUNT(*)
+8
+TRUNCATE discounts;
+DROP DATABASE IF EXISTS mcs105_db;

@@ -1,0 +1,20 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-477.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists test.mcol477;
+create table test.mcol477 (a int, b int) engine=columnstore comment='autoincrement=a,9';
+insert into test.mcol477 set b=1;
+select * from test.mcol477;
+alter table test.mcol477 comment='autoincrement=25';
+insert into test.mcol477 set b=2;
+select * from test.mcol477;
+drop table test.mcol477;
+#
+

@@ -1,0 +1,31 @@
+USE tpch1;
+select count(o_orderkey), min(o_orderkey), max(o_orderkey) , sum(o_orderkey), avg(o_orderkey)  from orders;
+count(o_orderkey)	min(o_orderkey)	max(o_orderkey)	sum(o_orderkey)	avg(o_orderkey)
+1500000	1	6000000	4499987250000	2999991.5000
+select count(o_custkey), min(o_custkey), max(o_custkey) , sum(o_custkey), avg(o_custkey)  from orders;
+count(o_custkey)	min(o_custkey)	max(o_custkey)	sum(o_custkey)	avg(o_custkey)
+1500000	1	149999	112509060862	75006.0406
+select count(o_orderstatus), min(o_orderstatus), max(o_orderstatus)  from orders;
+count(o_orderstatus)	min(o_orderstatus)	max(o_orderstatus)
+1500000	F	P
+select count(o_totalprice), min(o_totalprice), max(o_totalprice) , sum(o_totalprice), avg(o_totalprice)  from orders;
+count(o_totalprice)	min(o_totalprice)	max(o_totalprice)	sum(o_totalprice)	avg(o_totalprice)
+1500000	857.71	555285.16	226829306447.46	151219.537632
+select count(o_orderdate), min(o_orderdate), max(o_orderdate) from orders;
+count(o_orderdate)	min(o_orderdate)	max(o_orderdate)
+1500000	1992-01-01	1998-08-02
+select count(o_orderpriority), min(o_orderpriority), max(o_orderpriority) from orders;
+count(o_orderpriority)	min(o_orderpriority)	max(o_orderpriority)
+1500000	1-URGENT	5-LOW
+select count(o_clerk), min(o_clerk), max(o_clerk)  from orders;
+count(o_clerk)	min(o_clerk)	max(o_clerk)
+1500000	Clerk#000000001	Clerk#000001000
+select count(o_shippriority), min(o_shippriority), max(o_shippriority)  from orders;
+count(o_shippriority)	min(o_shippriority)	max(o_shippriority)
+1500000	0	0
+select count(o_comment), min(o_comment), max(o_comment)  from orders;
+count(o_comment)	min(o_comment)	max(o_comment)
+1500000	 about the accounts	zzle? furiously ironic instructions among the unusual t
+select count(*) from orders;
+count(*)
+1500000

@@ -1,0 +1,17 @@
+USE tpch1;
+select count(get_format(date, 'USA')) from region;
+count(get_format(date, 'USA'))
+5
+select count(date_format('2011-06-16', '%y:%m:%d')) from region;
+count(date_format('2011-06-16', '%y:%m:%d'))
+5
+select count(abs(3)) from region;
+count(abs(3))
+5
+select count(date_format('2011-06-16', '%y:%m:%d')) from region group by r_regionkey;
+count(date_format('2011-06-16', '%y:%m:%d'))
+1
+1
+1
+1
+1

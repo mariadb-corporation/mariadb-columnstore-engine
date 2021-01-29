@@ -1,0 +1,26 @@
+DROP DATABASE IF EXISTS mcs9_db;
+CREATE DATABASE mcs9_db;
+USE mcs9_db;
+CREATE TABLE t1(t1_enum ENUM('one','two','three'))ENGINE=Columnstore;
+ERROR 42000: The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
+CREATE TABLE t2(t2_binary BINARY(3))ENGINE=Columnstore;
+ERROR 42000: The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
+CREATE TABLE t3(t3_set SET('a','b'))ENGINE=Columnstore;
+ERROR 42000: The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
+CREATE TABLE t4(t4_json JSON)ENGINE=Columnstore;
+ERROR 42000: The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
+CREATE TABLE $table(col1 INT)ENGINE=columnstore;
+ERROR 42000: The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
+CREATE TABLE abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklm(col1 VARCHAR(90))ENGINE=Columnstore;
+ERROR 42000: Incorrect table name 'abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklm'
+CREATE TABLE t5_key(col1 SMALLINT KEY)ENGINE=Columnstore;
+ERROR 42000: Too many keys specified; max 0 keys allowed
+CREATE TABLE t6(col1 INT NOT NULL PRIMARY KEY)ENGINE=Columnstore;
+ERROR 42000: Too many keys specified; max 0 keys allowed
+CREATE TABLE t7(col1 INT UNIQUE)ENGINE=Columnstore;
+ERROR 42000: Too many keys specified; max 0 keys allowed
+CREATE TABLE t8(col1 INT)MIN_ROWS=10, ENGINE=Columnstore;
+ERROR 42000: The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
+CREATE TABLE t9(col1 INT)MAX_ROWS=1000, ENGINE=Columnstore;
+ERROR 42000: The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
+DROP DATABASE mcs9_db;

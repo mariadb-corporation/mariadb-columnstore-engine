@@ -1,0 +1,27 @@
+USE tpch1;
+drop table if exists bug3792;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug3792'
+create table bug3792 (c1 int, c2 datetime) engine=columnstore;
+insert into bug3792 values (1, '9999-12-31 23:59:59');
+insert into bug3792 values (2, '1000-01-01 00:00:00');
+insert into bug3792 values (3, NULL);
+select c1, c2, addtime(c2, '2:0:0') x from bug3792 where c1 = 1;
+c1	c2	x
+1	9999-12-31 23:59:59	0000-00-00 00:00:00
+select c1, c2, addtime(c2, '2:0:0') x from bug3792 where c1 = 2;
+c1	c2	x
+2	1000-01-01 00:00:00	1000-01-01 02:00:00
+select c1, c2, addtime(c2, '2:0:0') x from bug3792 where c1 = 3;
+c1	c2	x
+3	NULL	NULL
+select c1, c2, subtime(c2, '2:0:0') x from bug3792 where c1 = 1;
+c1	c2	x
+1	9999-12-31 23:59:59	9999-12-31 21:59:59
+select c1, c2, subtime(c2, '2:0:0') x from bug3792 where c1 = 2;
+c1	c2	x
+2	1000-01-01 00:00:00	0999-12-31 22:00:00
+select c1, c2, subtime(c2, '2:0:0') x from bug3792 where c1 = 3;
+c1	c2	x
+3	NULL	NULL
+drop table bug3792;

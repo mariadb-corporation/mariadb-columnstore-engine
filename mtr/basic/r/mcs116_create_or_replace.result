@@ -1,0 +1,8 @@
+DROP DATABASE IF EXISTS mcs116_db;
+CREATE DATABASE mcs116_db;
+USE mcs116_db;
+CREATE OR REPLACE TABLE IF NOT EXISTS t1 (a INT);
+ERROR HY000: Incorrect usage of OR REPLACE and IF NOT EXISTS
+CREATE OR REPLACE TABLE t1 (a INT)ENGINE=Columnstore;
+ERROR 42000: The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
+DROP DATABASE mcs116_db;

@@ -1,0 +1,32 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-1535.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+--disable_warnings
+drop table if exists t2;
+--enable_warnings
+create table t2(id int, nm varchar(10)) engine=columnstore;
+
+insert into t2 values( 1, 'AAA');
+insert into t2 values( 2, 'BBB');
+insert into t2 values( 3, 'CCC');
+
+select
+id,nm,
+charset(nm),
+collation(nm),
+charset('AAA'),
+collation('AAA'),
+(case when nm='AAA' then 1 else 0 end) as nmchk1,
+(case nm when 'AAA' then 1 else 0 end) as nmchk2
+from t2;
+
+drop table t2;
+#
+

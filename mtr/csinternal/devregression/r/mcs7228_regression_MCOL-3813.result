@@ -1,0 +1,61 @@
+USE tpch1;
+/* FROM MCOL-1349 
+Note: Adding this because code that directly involved this bug was modified
+Other regression involved is working_tpch1_compareLogOnly/misc/bug5764.sql*/
+drop table if exists t3813_1;
+Warnings:
+Note	1051	Unknown table 'tpch1.t3813_1'
+drop table if exists t3813_2;
+Warnings:
+Note	1051	Unknown table 'tpch1.t3813_2'
+drop table if exists t3813_3;
+Warnings:
+Note	1051	Unknown table 'tpch1.t3813_3'
+drop table if exists t3813_4;
+Warnings:
+Note	1051	Unknown table 'tpch1.t3813_4'
+create table t3813_1
+(id int
+)ENGINE=COLUMNSTORE DEFAULT CHARSET=UTF8MB4;
+create table t3813_2
+(id2 int,
+snapshot_date date
+)ENGINE=COLUMNSTORE DEFAULT CHARSET=UTF8MB4;
+create table t3813_3
+(id3 int,
+from_date date,
+to_date date
+)ENGINE=COLUMNSTORE DEFAULT CHARSET=UTF8MB4;
+create table t3813_4
+(id4 int,
+category varchar(64)
+)ENGINE=COLUMNSTORE DEFAULT CHARSET=UTF8MB4;
+insert into t3813_1(id) values(1);
+insert into t3813_2(id2, snapshot_date) values(1,'2020-05-09');
+insert into t3813_3(id3, from_date, to_date) values(1,'2020-05-09'-interval 1 day, '2020-05-09'+interval 2 day);
+insert into t3813_4(id4, category) values(1, 'cat-1');
+/*PREPARATION END*/
+/*THE PROBLEM: The SELECT itself below runs properly, but calling it from view the 1815 error is thrown*/
+select * from t3813_1 t3813_1
+LEFT JOIN t3813_4 t3813_4 ON (t3813_1.id = t3813_4.id4) 
+LEFT JOIN t3813_2 t3813_2 ON (t3813_1.id = t3813_2.id2) 
+LEFT JOIN t3813_3 t3813_3 ON (t3813_2.id2 = t3813_3.id3 AND t3813_2.snapshot_date BETWEEN t3813_3.from_date AND t3813_3.to_date);
+id	id4	category	id2	snapshot_date	id3	from_date	to_date
+1	1	cat-1	1	2020-05-09	1	2020-05-08	2020-05-11
+/*Creating VIEW based on the SELECT above*/
+create or replace view view_test as
+select * from t3813_1 t3813_1
+LEFT JOIN t3813_4 t3813_4 ON (t3813_1.id = t3813_4.id4)
+LEFT JOIN t3813_2 t3813_2 ON (t3813_1.id = t3813_2.id2) 
+LEFT JOIN t3813_3 t3813_3 ON (t3813_2.id2 = t3813_3.id3 AND t3813_2.snapshot_date BETWEEN t3813_3.from_date AND t3813_3.to_date);
+/*SELECT from the VIEW throws the error: Error Code: 1815. Internal error: On clause filter involving a table not directly involved in the outer join is currently not supported.*/
+select * from view_test;
+id	id4	category	id2	snapshot_date	id3	from_date	to_date
+1	1	cat-1	1	2020-05-09	1	2020-05-08	2020-05-11
+/*Notes*/
+/*If I remove either the 1st or the 3rd LEFT JOINs from the VIEW definition, the SELECT * from VIEW will work. (I cannot remove the 2nd LEFT JOIN since the 3rd is based on that one)*/
+/*Replacing COLUMNSTORE engine to INNODB the view the SELECT * from VIEW will work, but if one of the tables is COLUMNSTORE the error will thrown*/
+drop table if exists t3813_1;
+drop table if exists t3813_2;
+drop table if exists t3813_3;
+drop table if exists t3813_4;

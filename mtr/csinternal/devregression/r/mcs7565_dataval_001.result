@@ -1,0 +1,12 @@
+USE tpch1;
+select * 
+from lineitem
+where l_orderkey in (1248, 315118979, 315119076, 315119136, 315119777, 315119878, 120957670, 235282085, 341482786, 426406758, 521332416, 578786432, 599692096)
+order by l_orderkey, l_linenumber;
+l_orderkey	l_partkey	l_suppkey	l_linenumber	l_quantity	l_extendedprice	l_discount	l_tax	l_returnflag	l_linestatus	l_shipdate	l_commitdate	l_receiptdate	l_shipinstruct	l_shipmode	l_comment
+1248	163061	3062	1	45.00	50582.70	0.00	0.08	A	F	1992-04-17	1992-03-31	1992-05-13	NONE	RAIL	ter the pending pl
+1248	150275	2791	2	37.00	49034.99	0.06	0.06	R	F	1992-01-26	1992-02-05	1992-02-13	COLLECT COD	TRUCK	. final requests integrate quickly. blit
+1248	55368	2884	3	26.00	34407.36	0.09	0.06	A	F	1992-01-16	1992-03-01	1992-02-06	TAKE BACK RETURN	AIR	 ironic dependen
+1248	155169	5170	4	49.00	59983.84	0.02	0.01	A	F	1992-04-24	1992-02-18	1992-05-03	TAKE BACK RETURN	AIR	beans run quickly according to the carefu
+1248	121465	3978	5	20.00	29729.20	0.08	0.00	A	F	1992-03-12	1992-03-23	1992-04-07	TAKE BACK RETURN	AIR	nal foxes cajole carefully slyl
+1248	61457	6470	6	30.00	42553.50	0.10	0.01	R	F	1992-02-01	1992-03-24	1992-02-08	TAKE BACK RETURN	MAIL	fily special foxes kindle am

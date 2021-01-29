@@ -1,0 +1,29 @@
+#
+# Test case migrated from regression test suite:
+# ./mysql/queries/nightly/alltest/test023/q2.1.1.sql
+#
+# Author: Susil, susil.behera@mariadb.com
+#
+
+-- source ../include/have_columnstore.inc
+
+USE tpch1;
+
+drop database if exists test023_cs3;
+create database test023_cs3;
+use test023_cs3;
+
+drop table if exists `cs3`;
+create table `test023_cs3`.`cs3`(i int, t text) engine=columnstore;
+insert into `test023_cs3`.`cs3` values (1,'Lorem ipsum dolor sit amet, consectetur adipiscing elit,'),(7,'sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'),(8,'Ut enim ad minim veniam,'),(9,'quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'),(10,'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore e');
+select * from `test023_cs3`.`cs3`;
+show create table `test023_cs3`.`cs3`;
+delete from `test023_cs3`.`cs3` where i = 1;
+update `test023_cs3`.`cs3` set i = 5 where i = 10;
+select * from `test023_cs3`.`cs3`;
+drop table `test023_cs3`.`cs3`;
+# Negative. table doesn't exist
+--error 1146
+show create table `test023_cs3`.`cs3`;
+use tpch1;
+drop database if exists test023_cs3;

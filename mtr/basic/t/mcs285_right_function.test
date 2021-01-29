@@ -1,0 +1,28 @@
+#
+# RIGHT() function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs285_db;
+--enable_warnings
+
+CREATE DATABASE mcs285_db;
+USE mcs285_db;
+
+CREATE TABLE t1 (a INT, b CHAR(15))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL, ''),(1, 'mariadb'),(2, 'columnstore'),(3, 'Innodb');
+
+SELECT RIGHT('mariadb cs', 2) FROM t1 LIMIT 1;
+SELECT RIGHT('mariadb cs', 3) FROM t1 LIMIT 1;
+SELECT RIGHT('mariadb cs', 4) FROM t1 LIMIT 1;
+
+SELECT b, RIGHT(b, 0) FROM t1 ORDER BY 1;
+SELECT b, RIGHT(b, -1) FROM t1 ORDER BY 1;
+SELECT b, RIGHT(b, 6) FROM t1 ORDER BY 1;
+SELECT b, RIGHT(b, 9) FROM t1 ORDER BY 1;
+SELECT b, RIGHT(concat(b, '_mmm'), 10) FROM t1 ORDER BY 1;
+
+# Clean UP
+DROP DATABASE mcs285_db;

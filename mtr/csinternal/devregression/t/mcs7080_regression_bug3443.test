@@ -1,0 +1,20 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3443.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+select (sum(case r_regionkey when 1 then r_regionkey else null end) / count(distinct (case r_regionkey when 3 then r_regionkey else null end))) s from region;
+
+select (sum(case r_regionkey when 1 then r_regionkey else null end) / count(distinct (case r_regionkey when 3 then r_regionkey else null end))) s from region, nation where r_regionkey=n_regionkey;
+
+select n_regionkey, (sum(case n_nationkey when 1 then n_nationkey else null end) / count(distinct (case n_nationkey when 3 then n_nationkey else null end))) s from nation group by n_regionkey order by n_regionkey;
+
+select n_regionkey, (sum(case r_regionkey when 1 then r_regionkey else null end) / count(distinct (case r_regionkey when 3 then r_regionkey else null end))) s from region, nation where r_regionkey=n_regionkey group by n_regionkey order by n_regionkey;
+
+#
+

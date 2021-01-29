@@ -1,0 +1,18 @@
+USE tpch1;
+select max(K), count(*) from (select n_nationkey K from nation limit 1) a;
+max(K)	count(*)
+0	1
+select n_nationkey K from nation limit 1;
+K
+0
+(select n_nationkey K from nation limit 1) union (select n_nationkey K from nation limit 2) order by 1;
+K
+0
+1
+(select n_nationkey K from nation limit 1) union all (select n_nationkey K from nation limit 1);
+K
+0
+0
+(select n_nationkey K from nation limit 1) union all (select n_nationkey K from nation limit 2) limit 1;
+K
+0

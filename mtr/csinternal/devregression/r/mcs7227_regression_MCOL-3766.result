@@ -1,0 +1,10 @@
+USE tpch1;
+DROP TABLE IF EXISTS `MCOL-3766`;
+CREATE TABLE `MCOL-3766`(a int) engine=columnstore;
+EXPLAIN SELECT a FROM `MCOL-3766` GROUP BY a HAVING 1 != 1 AND a > 1;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+1	PUSHED SELECT	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+EXPLAIN SELECT a FROM `MCOL-3766` GROUP BY a HAVING 1 != 1 AND a > 1;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+1	PUSHED SELECT	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+DROP TABLE IF EXISTS `MCOL-3766`;

@@ -1,0 +1,10 @@
+USE tpch1;
+Select l_shipmode, max(l_shipdate), min(l_shipdate) from lineitem where l_orderkey < 1000000 group by l_shipmode order by 1;
+l_shipmode	max(l_shipdate)	min(l_shipdate)
+AIR	1998-11-29	1992-01-02
+FOB	1998-11-28	1992-01-04
+MAIL	1998-12-01	1992-01-03
+RAIL	1998-11-30	1992-01-03
+REG AIR	1998-11-28	1992-01-02
+SHIP	1998-12-01	1992-01-02
+TRUCK	1998-12-01	1992-01-03

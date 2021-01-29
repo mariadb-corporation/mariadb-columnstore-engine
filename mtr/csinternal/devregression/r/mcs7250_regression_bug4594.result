@@ -1,0 +1,19 @@
+USE tpch1;
+select calshowpartitions('tpch1','dtypes','c2') into @x;
+select substr(@x, length(@x)-6, 10);
+substr(@x, length(@x)-6, 10)
+Enabled
+drop table if exists bug4594;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug4594'
+create table if not exists bug4594(c1 char(5))engine=columnstore;
+insert into bug4594 values ('abc'), ('def');
+select * from bug4594;
+c1
+abc
+def
+select calshowpartitionsbyvalue('bug4594', 'c1', 'aa', 'zz') into @y;
+select substr(@y, length(@y)-6, 10);
+substr(@y, length(@y)-6, 10)
+Enabled
+drop table bug4594;

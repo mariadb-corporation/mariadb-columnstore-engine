@@ -1,0 +1,25 @@
+#
+# Binary datatypes in columnstore
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs62_db;
+--enable_warnings
+
+CREATE DATABASE mcs62_db;
+USE mcs62_db;
+
+--error ER_CHECK_NOT_IMPLEMENTED
+CREATE TABLE t_binary(col BINARY(3))ENGINE=Columnstore;
+--error ER_CHECK_NOT_IMPLEMENTED
+CREATE TABLE t_binary(col BINARY)ENGINE=Columnstore;
+
+--error ER_CHECK_NOT_IMPLEMENTED
+CREATE TABLE t_varbinary(col VARBINARY(5))ENGINE=Columnstore;
+--error ER_PARSE_ERROR
+CREATE TABLE t_varbinary(col VARBINARY)ENGINE=Columnstore;
+
+# Clean UP
+DROP DATABASE mcs62_db;

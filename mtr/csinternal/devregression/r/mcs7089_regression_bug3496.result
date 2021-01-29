@@ -1,0 +1,395 @@
+USE tpch1;
+drop table if exists bug3496;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug3496'
+create table `bug3496` (`c1` int(11) default null,`c2` char(6) default null, `c3` char(11) default null) engine=columnstore;
+insert into bug3496 values
+(1, 'abc', 'abc'),
+(2, 'abbc', 'abbc'),
+(3, 'acbc', 'acbc'),
+(4, 'a.c', 'a.c'),
+(5, 'a[bc]d', 'a[bc]d'),
+(6, 'a[]d', 'a[]d'),
+(7, 'a[bcd', 'a[bcd'),
+(8, 'abc]d', 'abc]d'),
+(9, 'a{bc}d', 'a{bc}d'),
+(10, 'a{}d', 'a{}d'),
+(11, 'a{bcd', 'a{bcd'),
+(12, 'abc}d', 'abc}d'),
+(13, 'a(b)c', 'a(b)c'),
+(14, 'a()c', 'a()c'),
+(15, 'ab(bc', 'ab(bc'),
+(16, 'abb)c', 'abb)c'),
+(17, 'a\c', 'a\c'),
+(18, 'a*bc', 'a*bc'),
+(19, 'a.*c', 'a.*c'),
+(20, 'a+c', 'a+c'),
+(21, 'a?c', 'a?c'),
+(22, 'a|c', 'a|c'),
+(23, 'a^c', 'a^c'),
+(24, 'a$c', 'a$c'),
+(25, 'a&c', 'a&c'),
+(26, 'a(b)', 'a(b)|(c)');
+select c1, c2 from bug3496 where c2 like '%.%';
+c1	c2
+4	a.c
+19	a.*c
+select c1, c2 from bug3496 where c2 like 'a.%';
+c1	c2
+4	a.c
+19	a.*c
+select c1, c2 from bug3496 where c2 like '%[%';
+c1	c2
+5	a[bc]d
+6	a[]d
+7	a[bcd
+select c1, c2 from bug3496 where c2 like 'a[%';
+c1	c2
+5	a[bc]d
+6	a[]d
+7	a[bcd
+select c1, c2 from bug3496 where c2 like 'a[%';
+c1	c2
+5	a[bc]d
+6	a[]d
+7	a[bcd
+select c1, c2 from bug3496 where c2 like 'a[bc]%';
+c1	c2
+5	a[bc]d
+select c1, c2 from bug3496 where c2 like 'a[%]%';
+c1	c2
+5	a[bc]d
+6	a[]d
+select c1, c2 from bug3496 where c2 like '%{%';
+c1	c2
+9	a{bc}d
+10	a{}d
+11	a{bcd
+select c1, c2 from bug3496 where c2 like 'a{%';
+c1	c2
+9	a{bc}d
+10	a{}d
+11	a{bcd
+select c1, c2 from bug3496 where c2 like '%}%';
+c1	c2
+9	a{bc}d
+10	a{}d
+12	abc}d
+select c1, c2 from bug3496 where c2 like 'a}%';
+c1	c2
+select c1, c2 from bug3496 where c2 like '%{%}%';
+c1	c2
+9	a{bc}d
+10	a{}d
+select c1, c2 from bug3496 where c2 like '%(%';
+c1	c2
+13	a(b)c
+14	a()c
+15	ab(bc
+26	a(b)
+select c1, c2 from bug3496 where c2 like 'a(%';
+c1	c2
+13	a(b)c
+14	a()c
+26	a(b)
+select c1, c2 from bug3496 where c2 like '%)%';
+c1	c2
+13	a(b)c
+14	a()c
+16	abb)c
+26	a(b)
+select c1, c2 from bug3496 where c2 like 'a)%';
+c1	c2
+select c1, c2 from bug3496 where c2 like '%(%)%';
+c1	c2
+13	a(b)c
+14	a()c
+26	a(b)
+select c1, c2 from bug3496 where c2 like '%\%';
+c1	c2
+select c1, c2 from bug3496 where c2 like 'a\%';
+c1	c2
+select c1, c2 from bug3496 where c2 like '%*%';
+c1	c2
+18	a*bc
+19	a.*c
+select c1, c2 from bug3496 where c2 like 'a*%';
+c1	c2
+18	a*bc
+select c1, c2 from bug3496 where c2 like '%+%';
+c1	c2
+20	a+c
+select c1, c2 from bug3496 where c2 like 'a+%';
+c1	c2
+20	a+c
+select c1, c2 from bug3496 where c2 like '%?%';
+c1	c2
+21	a?c
+select c1, c2 from bug3496 where c2 like 'a?%';
+c1	c2
+21	a?c
+select c1, c2 from bug3496 where c2 like '%|%';
+c1	c2
+22	a|c
+select c1, c2 from bug3496 where c2 like 'a|%';
+c1	c2
+22	a|c
+select c1, c2 from bug3496 where c2 like '%^%';
+c1	c2
+23	a^c
+select c1, c2 from bug3496 where c2 like 'a^%';
+c1	c2
+23	a^c
+select c1, c2 from bug3496 where c2 like '%$%';
+c1	c2
+24	a$c
+select c1, c2 from bug3496 where c2 like 'a$%';
+c1	c2
+24	a$c
+select c1, c2 from bug3496 where c2 like '%&%';
+c1	c2
+25	a&c
+select c1, c2 from bug3496 where c2 like 'a&%';
+c1	c2
+25	a&c
+select c1, c2 from bug3496 where c2 like '%_%';
+c1	c2
+1	abc
+2	abbc
+3	acbc
+4	a.c
+5	a[bc]d
+6	a[]d
+7	a[bcd
+8	abc]d
+9	a{bc}d
+10	a{}d
+11	a{bcd
+12	abc}d
+13	a(b)c
+14	a()c
+15	ab(bc
+16	abb)c
+17	ac
+18	a*bc
+19	a.*c
+20	a+c
+21	a?c
+22	a|c
+23	a^c
+24	a$c
+25	a&c
+26	a(b)
+select c1, c2 from bug3496 where c2 like 'a_%';
+c1	c2
+1	abc
+2	abbc
+3	acbc
+4	a.c
+5	a[bc]d
+6	a[]d
+7	a[bcd
+8	abc]d
+9	a{bc}d
+10	a{}d
+11	a{bcd
+12	abc}d
+13	a(b)c
+14	a()c
+15	ab(bc
+16	abb)c
+17	ac
+18	a*bc
+19	a.*c
+20	a+c
+21	a?c
+22	a|c
+23	a^c
+24	a$c
+25	a&c
+26	a(b)
+select c1, c2 from bug3496 where c2 like 'a(b)|(c)%';
+c1	c2
+select c1, c3 from bug3496 where c3 like '%.%';
+c1	c3
+4	a.c
+19	a.*c
+select c1, c3 from bug3496 where c3 like 'a.%';
+c1	c3
+4	a.c
+19	a.*c
+select c1, c3 from bug3496 where c3 like '%[%';
+c1	c3
+5	a[bc]d
+6	a[]d
+7	a[bcd
+select c1, c3 from bug3496 where c3 like 'a[%';
+c1	c3
+5	a[bc]d
+6	a[]d
+7	a[bcd
+select c1, c3 from bug3496 where c3 like 'a[%';
+c1	c3
+5	a[bc]d
+6	a[]d
+7	a[bcd
+select c1, c3 from bug3496 where c3 like 'a[bc]%';
+c1	c3
+5	a[bc]d
+select c1, c3 from bug3496 where c3 like 'a[%]%';
+c1	c3
+5	a[bc]d
+6	a[]d
+select c1, c3 from bug3496 where c3 like '%{%';
+c1	c3
+9	a{bc}d
+10	a{}d
+11	a{bcd
+select c1, c3 from bug3496 where c3 like 'a{%';
+c1	c3
+9	a{bc}d
+10	a{}d
+11	a{bcd
+select c1, c3 from bug3496 where c3 like '%}%';
+c1	c3
+9	a{bc}d
+10	a{}d
+12	abc}d
+select c1, c3 from bug3496 where c3 like 'a}%';
+c1	c3
+select c1, c3 from bug3496 where c3 like '%{%}%';
+c1	c3
+9	a{bc}d
+10	a{}d
+select c1, c3 from bug3496 where c3 like '%(%';
+c1	c3
+13	a(b)c
+14	a()c
+15	ab(bc
+26	a(b)|(c)
+select c1, c3 from bug3496 where c3 like 'a(%';
+c1	c3
+13	a(b)c
+14	a()c
+26	a(b)|(c)
+select c1, c3 from bug3496 where c3 like '%)%';
+c1	c3
+13	a(b)c
+14	a()c
+16	abb)c
+26	a(b)|(c)
+select c1, c3 from bug3496 where c3 like 'a)%';
+c1	c3
+select c1, c3 from bug3496 where c3 like '%(%)%';
+c1	c3
+13	a(b)c
+14	a()c
+26	a(b)|(c)
+select c1, c3 from bug3496 where c3 like '%\%';
+c1	c3
+select c1, c3 from bug3496 where c3 like 'a\%';
+c1	c3
+select c1, c3 from bug3496 where c3 like '%*%';
+c1	c3
+18	a*bc
+19	a.*c
+select c1, c3 from bug3496 where c3 like 'a*%';
+c1	c3
+18	a*bc
+select c1, c3 from bug3496 where c3 like '%+%';
+c1	c3
+20	a+c
+select c1, c3 from bug3496 where c3 like 'a+%';
+c1	c3
+20	a+c
+select c1, c3 from bug3496 where c3 like '%?%';
+c1	c3
+21	a?c
+select c1, c3 from bug3496 where c3 like 'a?%';
+c1	c3
+21	a?c
+select c1, c3 from bug3496 where c3 like '%|%';
+c1	c3
+22	a|c
+26	a(b)|(c)
+select c1, c3 from bug3496 where c3 like 'a|%';
+c1	c3
+22	a|c
+select c1, c3 from bug3496 where c3 like '%^%';
+c1	c3
+23	a^c
+select c1, c3 from bug3496 where c3 like 'a^%';
+c1	c3
+23	a^c
+select c1, c3 from bug3496 where c3 like '%$%';
+c1	c3
+24	a$c
+select c1, c3 from bug3496 where c3 like 'a$%';
+c1	c3
+24	a$c
+select c1, c3 from bug3496 where c3 like '%&%';
+c1	c3
+25	a&c
+select c1, c3 from bug3496 where c3 like 'a&%';
+c1	c3
+25	a&c
+select c1, c3 from bug3496 where c3 like '%_%';
+c1	c3
+1	abc
+2	abbc
+3	acbc
+4	a.c
+5	a[bc]d
+6	a[]d
+7	a[bcd
+8	abc]d
+9	a{bc}d
+10	a{}d
+11	a{bcd
+12	abc}d
+13	a(b)c
+14	a()c
+15	ab(bc
+16	abb)c
+17	ac
+18	a*bc
+19	a.*c
+20	a+c
+21	a?c
+22	a|c
+23	a^c
+24	a$c
+25	a&c
+26	a(b)|(c)
+select c1, c3 from bug3496 where c3 like 'a_%';
+c1	c3
+1	abc
+2	abbc
+3	acbc
+4	a.c
+5	a[bc]d
+6	a[]d
+7	a[bcd
+8	abc]d
+9	a{bc}d
+10	a{}d
+11	a{bcd
+12	abc}d
+13	a(b)c
+14	a()c
+15	ab(bc
+16	abb)c
+17	ac
+18	a*bc
+19	a.*c
+20	a+c
+21	a?c
+22	a|c
+23	a^c
+24	a$c
+25	a&c
+26	a(b)|(c)
+select c1, c3 from bug3496 where c3 like 'a(b)|(c)%';
+c1	c3
+26	a(b)|(c)
+drop table bug3496;

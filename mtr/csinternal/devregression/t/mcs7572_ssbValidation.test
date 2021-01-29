@@ -1,0 +1,64 @@
+use ssb1;
+select count(c_custkey), min(c_custkey), max(c_custkey), sum(c_custkey), avg(c_custkey) from customer;
+select count(c_name), min(c_name), max(c_name) from customer;
+select count(c_address), min(c_address), max(upper(c_address)) from customer;
+select count(c_city), min(c_city), max(c_city) from customer;
+select count(c_nation), min(c_nation), max(c_nation) from customer;
+select count(c_region), min(c_region), max(c_region) from customer;
+select count(c_phone), min(c_phone), max(c_phone) from customer;
+select count(c_mktsegment), min(c_mktsegment), max(c_mktsegment) from customer;
+
+select count(d_datekey), min(d_datekey), max(d_datekey), sum(d_datekey), avg(d_datekey) from dateinfo;
+select count(d_date), min(d_date), max(d_date) from dateinfo;
+select count(d_dayofweek), min(d_dayofweek), max(d_dayofweek) from dateinfo;
+select count(d_month), min(d_month), max(d_month) from dateinfo;
+select count(d_year), min(d_year), max(d_year), sum(d_year), avg(d_year) from dateinfo;
+select count(d_yearmonthnum), min(d_yearmonthnum), max(d_yearmonthnum), sum(d_yearmonthnum), avg(d_yearmonthnum) from dateinfo;
+select count(d_yearmonth), min(d_yearmonth), max(d_yearmonth) from dateinfo;
+select count(d_daynuminweek), min(d_daynuminweek), max(d_daynuminweek), sum(d_daynuminweek), avg(d_daynuminweek) from dateinfo;
+select count(d_daynuminmonth), min(d_daynuminmonth), max(d_daynuminmonth), sum(d_daynuminmonth), avg(d_daynuminmonth) from dateinfo;
+select count(d_daynuminyear), min(d_daynuminyear), max(d_daynuminyear), sum(d_daynuminyear), avg(d_daynuminyear) from dateinfo;
+select count(d_monthnuminyear), min(d_monthnuminyear), max(d_monthnuminyear), sum(d_monthnuminyear), avg(d_monthnuminyear) from dateinfo;
+select count(d_weeknuminyear), min(d_weeknuminyear), max(d_weeknuminyear), sum(d_weeknuminyear), avg(d_weeknuminyear) from dateinfo;
+select count(d_sellingseason), min(d_sellingseason), max(d_sellingseason) from dateinfo;
+select count(d_lastdayinweekfl), min(d_lastdayinweekfl), max(d_lastdayinweekfl), sum(d_lastdayinweekfl), avg(d_lastdayinweekfl) from dateinfo;
+select count(d_lastdayinmonthfl), min(d_lastdayinmonthfl), max(d_lastdayinmonthfl), sum(d_lastdayinmonthfl), avg(d_lastdayinmonthfl) from dateinfo;
+select count(d_holidayfl), min(d_holidayfl), max(d_holidayfl), sum(d_holidayfl), avg(d_holidayfl) from dateinfo;
+select count(d_weekdayfl), min(d_weekdayfl), max(d_weekdayfl), sum(d_weekdayfl), avg(d_weekdayfl) from dateinfo;
+
+select count(lo_orderkey), min(lo_orderkey), max(lo_orderkey), sum(lo_orderkey), avg(lo_orderkey) from lineorder;
+select count(lo_linenumber), min(lo_linenumber), max(lo_linenumber), sum(lo_linenumber), avg(lo_linenumber) from lineorder;
+select count(lo_custkey), min(lo_custkey), max(lo_custkey), sum(lo_custkey), avg(lo_custkey) from lineorder;
+select count(lo_partkey), min(lo_partkey), max(lo_partkey), sum(lo_partkey), avg(lo_partkey) from lineorder;
+select count(lo_suppkey), min(lo_suppkey), max(lo_suppkey), sum(lo_suppkey), avg(lo_suppkey) from lineorder;
+select count(lo_orderdate), min(lo_orderdate), max(lo_orderdate) from lineorder;
+select count(lo_orderpriority) from lineorder;
+select count(lo_shippriority), min(lo_shippriority), max(lo_shippriority) from lineorder;
+select count(lo_quantity), min(lo_quantity), max(lo_quantity), sum(lo_quantity), avg(lo_quantity) from lineorder;
+select count(lo_extendedprice), min(lo_extendedprice), max(lo_extendedprice), sum(lo_extendedprice), avg(lo_extendedprice) from lineorder;
+select count(lo_ordtotalprice), min(lo_ordtotalprice), max(lo_ordtotalprice), sum(lo_ordtotalprice), avg(lo_ordtotalprice) from lineorder;
+select count(lo_discount), min(lo_discount), max(lo_discount), sum(lo_discount), avg(lo_discount) from lineorder;
+select count(lo_revenue), min(lo_revenue), max(lo_revenue), sum(lo_revenue), avg(lo_revenue) from lineorder;
+select count(lo_supplycost), min(lo_supplycost), max(lo_supplycost), sum(lo_supplycost), avg(lo_supplycost) from lineorder;
+select count(lo_tax), min(lo_tax), max(lo_tax), sum(lo_tax), avg(lo_tax) from lineorder;
+select count(lo_commitdate), min(lo_commitdate), max(lo_commitdate), sum(lo_commitdate), avg(lo_commitdate) from lineorder;
+select count(lo_shipmode) from lineorder;
+
+select count(p_partkey), min(p_partkey), max(p_partkey), sum(p_partkey), avg(p_partkey) from part;
+select count(p_name), min(p_name), max(p_name) from part;
+select count(p_mfgr), min(p_mfgr), max(p_mfgr) from part;
+select count(p_category), min(p_category), max(p_category) from part;
+select count(p_brand1), min(p_brand1), max(p_brand1) from part;
+select count(p_color), min(p_color), max(p_color) from part;
+select count(p_type), min(p_type), max(p_type) from part;
+select count(p_size), min(p_size), max(p_size) from part;
+select count(p_container), min(p_container), max(p_container) from part;
+
+select count(s_suppkey), min(s_suppkey), max(s_suppkey), sum(s_suppkey), avg(s_suppkey) from supplier;
+select count(s_name), min(s_name), max(s_name) from supplier;
+select count(s_address), min(s_address), max(upper(s_address)) from supplier;
+select count(s_city), min(s_city), max(s_city) from supplier;
+select count(s_nation), min(s_nation), max(s_nation) from supplier;
+select count(s_region), min(s_region), max(s_region) from supplier;
+select count(s_phone), min(s_phone), max(s_phone) from supplier;
+

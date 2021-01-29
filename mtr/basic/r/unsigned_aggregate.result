@@ -1,0 +1,51 @@
+DROP DATABASE IF EXISTS unsigned_aggregate_db;
+CREATE DATABASE unsigned_aggregate_db;
+USE unsigned_aggregate_db;
+create table customer (
+c_custkey int,
+c_name varchar (25),
+c_address varchar (40),
+c_nationkey int,
+c_phone char (15),
+c_acctbal decimal(12,2),
+c_mktsegment char (10),
+c_comment varchar (117)
+) engine=columnstore;
+LOAD DATA LOCAL infile './suite/columnstore/std_data/1m_customer.tbl' INTO TABLE customer FIELDS TERMINATED BY '|';
+ALTER TABLE customer ADD COLUMN u_custkey INT UNSIGNED;
+ALTER TABLE customer ADD COLUMN u_bigcustkey BIGINT UNSIGNED;
+UPDATE customer SET u_custkey=c_custkey * c_custkey + 4294000000;
+UPDATE customer SET u_bigcustkey=c_custkey * c_custkey + 4073709000000;
+SELECT 'q1', MAX(u_custKey) FROM customer;
+q1	MAX(u_custKey)
+q1	4294022500
+SELECT 'q2', MAX(u_bigcustKey) FROM customer;
+q2	MAX(u_bigcustKey)
+q2	4073709022500
+SELECT 'q3', MIN(u_custKey) FROM customer;
+q3	MIN(u_custKey)
+q3	4294000001
+SELECT 'q4', MIN(u_bigcustKey) FROM customer;
+q4	MIN(u_bigcustKey)
+q4	4073709000001
+SELECT 'q5', floor(STD(u_custKey)) FROM customer;
+q5	floor(STD(u_custKey))
+q5	6749
+SELECT 'q6', floor(STD(u_bigcustKey)) FROM customer;
+q6	floor(STD(u_bigcustKey))
+q6	6688
+SELECT 'q7', AVG(u_custKey) FROM customer;
+q7	AVG(u_custKey)
+q7	4294007575.1667
+SELECT 'q8', AVG(u_bigcustKey) FROM customer;
+q8	AVG(u_bigcustKey)
+q8	4073709007575.1667
+SELECT 'q9', SUM(u_custKey) FROM customer;
+q9	SUM(u_custKey)
+q9	644101136275
+SELECT 'q10', SUM(u_bigcustKey) FROM customer;
+q10	SUM(u_bigcustKey)
+q10	611056351136275
+ALTER TABLE customer DROP COLUMN u_custkey;
+ALTER TABLE customer DROP COLUMN u_bigcustkey;
+DROP DATABASE unsigned_aggregate_db;

@@ -1,0 +1,70 @@
+#
+# Test ALTER TABLE schemas in various negative scenarios.
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs13_db1;
+DROP DATABASE IF EXISTS mcs13_db2;
+--enable_warnings
+
+CREATE DATABASE mcs13_db1;
+CREATE DATABASE mcs13_db2;
+USE mcs13_db1;
+
+# Change ENGINE
+CREATE TABLE t1 (a INTEGER, c1 CHAR(10)) ENGINE=Columnstore;
+INSERT INTO t1 VALUES (1, 'a'),(2, 'b');
+--error 1064
+ALTER TABLE t1 ENGINE=;
+--error 1286
+ALTER TABLE t1 ENGINE=Invalid;
+--error 1286
+ALTER TABLE t1 ENGINE='#!~@$%^&*()_+-,.*`~';
+SHOW CREATE TABLE t1;
+
+# Rename
+DROP TABLE IF EXISTS nonexisting;
+--error 1146
+ALTER TABLE nonexisting RENAME t2;
+
+# Add column
+--error 4161
+ALTER TABLE t1 ADD COLUMN (c2 INVALIDDATATYPE);
+
+# Drop column
+--error 1091
+ALTER TABLE t1 DROP COLUMN c2;
+
+# Modify column
+--error 1054
+ALTER TABLE t1 CHANGE c2 c2 INTEGER;
+--error 4161
+ALTER TABLE t1 CHANGE c1 c2 INVALIDDATATYPE;
+
+# Add Key/Index
+--error 1069
+ALTER TABLE t1 ADD KEY k1(c1);
+--error 1069
+ALTER TABLE t1 ADD INDEX idx1(c1);
+--error 1069
+ALTER TABLE t1 ADD PRIMARY KEY pk(c1);
+--error 1091
+ALTER TABLE t1 DROP KEY k1;
+
+# Test from parallel connections
+connect (addconroot1, localhost, root,,);
+connect (addconroot2, localhost, root,,);
+connection addconroot1;
+--error 4161
+ALTER TABLE mcs13_db1.t1 CHANGE c1 c2 INVALIDDATATYPE;
+connection addconroot1;
+--error 1069
+ALTER TABLE mcs13_db1.t1 ADD KEY k1(c1);
+connection default;
+SHOW CREATE TABLE mcs13_db1.t1;
+SELECT * FROM mcs13_db1.t1;
+disconnect addconroot1;
+disconnect addconroot2;
+
+DROP DATABASE mcs13_db1;

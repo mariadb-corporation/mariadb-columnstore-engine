@@ -1,0 +1,28 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-830.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+#-- Make sure UTF8 works during cross engine
+DROP TABLE IF EXISTS test.mcol830a;
+DROP TABLE IF EXISTS test.mcol830b;
+CREATE TABLE test.mcol830a (
+`c1` int(11) DEFAULT NULL,
+`c2` varchar(64) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+CREATE TABLE test.mcol830b (
+`c1` int(11) DEFAULT NULL,
+`c2` varchar(64) DEFAULT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+insert into test.mcol830a values(1, 'cs测试');
+insert into test.mcol830b values(2, 'myisam测试');
+select * from test.mcol830a union select * from test.mcol830b order by c1 desc;
+DROP TABLE test.mcol830a;
+DROP TABLE test.mcol830b;
+#
+

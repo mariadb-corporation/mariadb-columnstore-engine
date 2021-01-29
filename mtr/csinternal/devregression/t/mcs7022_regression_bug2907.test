@@ -1,0 +1,13 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug2907.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE ssb1;
+#
+select   lo_shipmode, c_region,  sum(lo_extendedprice), count(*) from     lineorder join customer on lo_custkey = c_custkey  where lo_orderdate between (select d_start  from ( select d_yearmonthnum * 100 + 1 d_start  , count(*) from dateinfo where d_weekdayfl = 1 and d_year = 1998 group by 1 order by 2 desc limit 1) alias1) and (select d_end  from ( select d_yearmonthnum * 100 + 31 d_end  , count(*) from dateinfo where d_weekdayfl = 1 and d_year = 1998 group by 1 order by 2 desc limit 1) alias2) group by 1,2 order by 1,2;
+#
+

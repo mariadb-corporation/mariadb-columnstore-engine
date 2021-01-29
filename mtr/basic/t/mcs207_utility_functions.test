@@ -1,0 +1,23 @@
+#
+# Test columnstore utility functions
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs207_db;
+--enable_warnings
+
+CREATE DATABASE mcs207_db;
+USE mcs207_db;
+
+# Returns 1 if the system can accept queries, 0 if it's not ready yet
+SELECT mcsSystemReady();
+
+# Returns 1 if ColumnStore is in a writes suspended mode. That is, a user executed the SuspendDatabaseWrites.
+# It returns 2 if in a read only state. ColumnStore puts itself into a read only state if it detects a logic error that may have corrupted data. Generally it means a ROLLBACK operation failed. 
+# Returns 0 if the system is writable.
+SELECT mcsSystemReadOnly();
+
+# Clean UP
+DROP DATABASE mcs207_db;

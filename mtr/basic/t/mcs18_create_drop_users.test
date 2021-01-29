@@ -1,0 +1,48 @@
+#
+# Test create and drop users
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP USER IF EXISTS user1@test;
+DROP USER IF EXISTS 'user2'@'%';
+DROP USER IF EXISTS 'user'@'%';
+DROP USER IF EXISTS 'user'@'localhost';
+DROP USER IF EXISTS 'user'@'127.0.0.1';
+--enable_warnings
+
+SET default_storage_engine=Columnstore;
+SELECT @@default_storage_engine;
+
+CREATE USER user1@test IDENTIFIED BY 'Vagrant1|0000001';
+--error ER_CANNOT_USER
+CREATE USER user1@test IDENTIFIED BY 'Vagrant1|0000001';
+CREATE USER IF NOT EXISTS user1@test IDENTIFIED BY 'Vagrant1|0000001';
+CREATE OR REPLACE USER user1@test IDENTIFIED BY 'Vagrant1|0000001';
+
+CREATE USER 'user2'@'%' IDENTIFIED BY 'Vagrant1|0000001';
+--error ER_CANNOT_USER 
+CREATE USER 'user2'@'%' IDENTIFIED BY 'Vagrant1|0000001';
+CREATE USER IF NOT EXISTS 'user2'@'%' IDENTIFIED BY 'Vagrant1|0000001';
+CREATE OR REPLACE USER 'user2'@'%' IDENTIFIED BY 'Vagrant1|0000001';
+
+CREATE USER 'user'@'%' IDENTIFIED BY 'Vagrant1|0000001';
+CREATE USER 'user'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
+CREATE USER 'user'@'127.0.0.1' IDENTIFIED BY 'Vagrant1|0000001';
+--error ER_CANNOT_USER
+CREATE USER user@127.0.0.1 IDENTIFIED BY 'Vagrant1|0000001';
+--error ER_PARSE_ERROR
+CREATE USER user@% IDENTIFIED BY 'Vagrant1|0000001';
+
+DROP USER user1@test;
+--error ER_PARSE_ERROR
+DROP USER user2@%;
+DROP USER 'user2'@'%';
+DROP USER 'user'@'%';
+DROP USER 'user'@'localhost';
+DROP USER 'user'@'127.0.0.1';
+
+# Clean up
+SET default_storage_engine=default;
+SELECT @@default_storage_engine;

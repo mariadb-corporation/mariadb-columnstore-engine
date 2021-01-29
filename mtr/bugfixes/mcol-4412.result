@@ -1,0 +1,119 @@
+DROP DATABASE IF EXISTS mcol_4412;
+CREATE DATABASE mcol_4412;
+USE mcol_4412;
+create table dtypes (
+ti tinyint,
+si smallint,
+id int,
+bi bigint,
+uti tinyint,
+usi smallint,
+uid int,
+ubi bigint,
+f float,
+db double,
+dt date,
+dtm datetime,
+c2 char(2),
+vc1 varchar(1),
+d8 decimal(18, 0),
+d16 decimal(38, 0)
+)engine=columnstore;
+INSERT INTO dtypes (ti) VALUES (42);
+INSERT INTO dtypes (ti) VALUES (43);
+INSERT INTO dtypes (si) VALUES (42);
+INSERT INTO dtypes (si) VALUES (43);
+INSERT INTO dtypes (id) VALUES (42);
+INSERT INTO dtypes (id) VALUES (43);
+INSERT INTO dtypes (bi) VALUES (42);
+INSERT INTO dtypes (bi) VALUES (43);
+INSERT INTO dtypes (uti) VALUES (42);
+INSERT INTO dtypes (uti) VALUES (43);
+INSERT INTO dtypes (usi) VALUES (42);
+INSERT INTO dtypes (usi) VALUES (43);
+INSERT INTO dtypes (uid) VALUES (42);
+INSERT INTO dtypes (uid) VALUES (43);
+INSERT INTO dtypes (ubi) VALUES (42);
+INSERT INTO dtypes (ubi) VALUES (43);
+INSERT INTO dtypes (d8) VALUES (42);
+INSERT INTO dtypes (d8) VALUES (43);
+INSERT INTO dtypes (d16) VALUES (42);
+INSERT INTO dtypes (d16) VALUES (43);
+INSERT INTO dtypes (f) VALUES (42);
+INSERT INTO dtypes (f) VALUES (43);
+INSERT INTO dtypes (db) VALUES (42);
+INSERT INTO dtypes (db) VALUES (43);
+INSERT INTO dtypes (dt) VALUES ('2020-11-15');
+INSERT INTO dtypes (dt) VALUES ('2021-11-15');
+INSERT INTO dtypes (dtm) VALUES ('2020-11-15 08:20:22');
+INSERT INTO dtypes (dtm) VALUES ('2021-11-15 08:20:22');
+INSERT INTO dtypes (c2) VALUES ('so');
+INSERT INTO dtypes (c2) VALUES ('ot');
+INSERT INTO dtypes (vc1) VALUES ('s');
+INSERT INTO dtypes (vc1) VALUES ('o');
+DELETE FROM dtypes WHERE ti = 42;
+SELECT count(ti) FROM dtypes WHERE ti IS NOT NULL;
+count(ti)
+1
+DELETE FROM dtypes WHERE si = 42;
+SELECT count(si) FROM dtypes WHERE si IS NOT NULL;
+count(si)
+1
+DELETE FROM dtypes WHERE id = 42;
+SELECT count(id) FROM dtypes WHERE id IS NOT NULL;
+count(id)
+1
+DELETE FROM dtypes WHERE bi = 42;
+SELECT count(bi) FROM dtypes WHERE bi IS NOT NULL;
+count(bi)
+1
+DELETE FROM dtypes WHERE uti = 42;
+SELECT count(uti) FROM dtypes WHERE uti IS NOT NULL;
+count(uti)
+1
+DELETE FROM dtypes WHERE usi = 42;
+SELECT count(usi) FROM dtypes WHERE usi IS NOT NULL;
+count(usi)
+1
+DELETE FROM dtypes WHERE uid = 42;
+SELECT count(uid) FROM dtypes WHERE uid IS NOT NULL;
+count(uid)
+1
+DELETE FROM dtypes WHERE ubi = 42;
+SELECT count(ubi) FROM dtypes WHERE ubi IS NOT NULL;
+count(ubi)
+1
+DELETE FROM dtypes WHERE d8 = 42;
+SELECT count(d8) FROM dtypes WHERE d8 IS NOT NULL;
+count(d8)
+1
+DELETE FROM dtypes WHERE d16 = 42;
+SELECT count(d16) FROM dtypes WHERE d16 IS NOT NULL;
+count(d16)
+1
+DELETE FROM dtypes WHERE f = 42;
+SELECT count(f) FROM dtypes WHERE f IS NOT NULL;
+count(f)
+1
+DELETE FROM dtypes WHERE db = 42;
+SELECT count(db) FROM dtypes WHERE db IS NOT NULL;
+count(db)
+1
+DELETE FROM dtypes WHERE dt = '2020-11-15';
+SELECT count(dt) FROM dtypes WHERE dt IS NOT NULL;
+count(dt)
+1
+DELETE FROM dtypes WHERE dtm = '2020-11-15 08:20:22';
+SELECT count(dtm) FROM dtypes WHERE dtm IS NOT NULL;
+count(dtm)
+1
+DELETE FROM dtypes WHERE c2 = 'so';
+SELECT count(c2) FROM dtypes WHERE c2 IS NOT NULL;
+count(c2)
+1
+DELETE FROM dtypes WHERE vc1 = 's';
+SELECT count(vc1) FROM dtypes WHERE vc1 IS NOT NULL;
+count(vc1)
+1
+create table udtypes_ddl_test ( f float unsigned, db double unsigned )engine=columnstore;
+DROP DATABASE mcol_4412;

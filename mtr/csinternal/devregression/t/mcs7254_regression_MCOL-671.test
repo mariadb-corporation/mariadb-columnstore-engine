@@ -1,0 +1,19 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-671.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+
+drop table if exists MCOL_671;
+
+CREATE TABLE MCOL_671 (a int, b text) engine=columnstore;
+INSERT INTO MCOL_671 VALUES (1, REPEAT('MariaDB ', 7500));
+
+SELECT a, length(b) FROM MCOL_671 WHERE b > 'K';
+DROP TABLE MCOL_671;
+#

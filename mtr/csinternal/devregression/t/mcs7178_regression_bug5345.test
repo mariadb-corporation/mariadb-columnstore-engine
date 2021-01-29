@@ -1,0 +1,25 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug5345.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+select n_nationkey, avg(n_nationkey) over(order by n_nationkey range between unbounded preceding and 15 following) a from nation;
+select n_nationkey, avg(n_nationkey) over(order by n_nationkey range between 3 following and 15 following) b from nation;
+
+select n_nationkey, n_regionkey, avg(n_nationkey) over (partition by n_regionkey order by n_nationkey rows between 2 following and 2 following) c from nation order by n_regionkey, n_nationkey;
+select n_nationkey, n_regionkey, avg(n_nationkey) over (partition by n_regionkey order by n_nationkey rows between 20 following and 20 following) d from nation order by n_regionkey, n_nationkey;
+select n_nationkey, n_regionkey, avg(n_nationkey) over (partition by n_regionkey order by n_nationkey rows between 20 following and 1 following) e from nation order by n_regionkey, n_nationkey;
+select n_nationkey, n_regionkey, avg(n_nationkey) over (partition by n_regionkey order by n_nationkey rows between 1 following and 20 following) f from nation order by n_regionkey, n_nationkey;
+
+select n_nationkey, n_regionkey, avg(n_nationkey) over (partition by n_regionkey order by n_nationkey rows between 2 preceding and 2 preceding) g from nation order by n_regionkey, n_nationkey;
+select n_nationkey, n_regionkey, avg(n_nationkey) over (partition by n_regionkey order by n_nationkey rows between 20 preceding and 20 preceding) h from nation order by n_regionkey, n_nationkey;
+select n_nationkey, n_regionkey, avg(n_nationkey) over (partition by n_regionkey order by n_nationkey rows between 20 preceding and 1 preceding) k from nation order by n_regionkey, n_nationkey;
+select n_nationkey, n_regionkey, avg(n_nationkey) over (partition by n_regionkey order by n_nationkey rows between 1 preceding and 20 preceding) m from nation order by n_regionkey, n_nationkey;
+
+#
+

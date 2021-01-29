@@ -1,0 +1,4 @@
+USE tpch1;
+Select sum(l_orderkey) from lineitem where l_suppkey < 100000;
+sum(l_orderkey)
+18005322964949

@@ -1,0 +1,31 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-4126.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+--disable_warnings
+drop table if exists T4126_1;
+drop table if exists T4126_2;
+--enable_warnings
+create table T4126_1 (idx int, col varchar(20)) engine=columnstore;
+create table T4126_2 (idx int, col varchar(20), col2 varchar(20)) engine=columnstore;
+insert into T4126_1 values (3, 'a');
+select * from T4126_1;
+
+insert into T4126_2 values (1, 'lamp', 'table lamp');  
+select * from T4126_2;
+update T4126_2 set col = "floor lamp" where col = 'lamp';
+
+drop table if exists T4126_1;
+drop table if exists T4126_2;
+
+create table T4126_1 (idx1 int, col1 varchar(20)) engine=columnstore;
+insert into T4126_1 values (3, 'a');
+select * from T4126_1;
+drop table if exists T4126_1;
+#

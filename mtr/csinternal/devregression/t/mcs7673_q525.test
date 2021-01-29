@@ -1,0 +1,17 @@
+#
+# Test case migrated from regression test suite:
+# ./mysql/queries/nightly/alltest/test102/q5.2.5.sql
+#
+# Author: Susil, susil.behera@mariadb.com
+#
+
+-- source ../include/have_columnstore.inc
+
+USE tpch1;
+
+select max(l_orderkey), max(l_partkey), max(l_suppkey), count(*) from lineitem
+where l_partkey < 25000000
+and l_suppkey < 1250000
+and l_orderkey < 100000000
+and l_linenumber = 4
+and l_quantity <= 5;

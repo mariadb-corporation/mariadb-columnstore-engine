@@ -1,0 +1,27 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug5366.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+select * from region where (r_regionkey+1) in (select min(n_regionkey) over() from nation where r_regionkey=n_regionkey);
+select * from region where (r_regionkey) in (select min(n_regionkey) over() + 1 from nation where r_regionkey=n_regionkey);
+select * from region where (r_regionkey+1) in (select min(n_regionkey) over() + 1 from nation where r_regionkey=n_regionkey);
+select * from region where (r_regionkey+1) in (select (min(n_regionkey) over() + 1) from nation where r_regionkey=n_regionkey);
+select * from region where (r_regionkey+1) in (select min(n_regionkey+1) over() from nation where r_regionkey=n_regionkey);
+select * from region where (r_regionkey+1) in (select min(n_regionkey) over() + max(n_regionkey) over() from nation where r_regionkey=n_regionkey);
+select * from region where (r_regionkey+1) in (select min(n_regionkey) over(partition by n_regionkey) + max(n_regionkey) over(partition by n_regionkey) c from nation where r_regionkey=n_regionkey);
+select * from region where (r_regionkey+2) in (select min(n_regionkey) over(partition by n_regionkey) + max(n_regionkey) over(partition by n_regionkey) c from nation where r_regionkey=n_regionkey);
+select * from region where (r_regionkey+3) in (select min(n_regionkey) over(partition by n_regionkey) + max(n_regionkey) over(partition by n_regionkey) c from nation where r_regionkey=n_regionkey);
+select * from region where (r_regionkey+4) in (select min(n_regionkey) over(partition by n_regionkey) + max(n_regionkey) over(partition by n_regionkey) c from nation where r_regionkey=n_regionkey);
+select * from region where (r_regionkey+5) in (select min(n_regionkey) over(partition by n_regionkey) + max(n_regionkey) over(partition by n_regionkey) c from nation where r_regionkey=n_regionkey);
+select * from region where (r_regionkey+6) in (select min(n_regionkey) over(partition by n_regionkey) + max(n_regionkey) over(partition by n_regionkey) c from nation where r_regionkey=n_regionkey);
+select * from region where (r_regionkey+7) in (select min(n_regionkey) over(partition by n_regionkey) + max(n_regionkey) over(partition by n_regionkey) c from nation where r_regionkey=n_regionkey);
+select * from region where (r_regionkey+8) in (select min(n_regionkey) over(partition by n_regionkey) + max(n_regionkey) over(partition by n_regionkey) c from nation where r_regionkey=n_regionkey);
+select * from region where (r_regionkey+9) in (select min(n_regionkey) over(partition by n_regionkey) + max(n_regionkey) over(partition by n_regionkey) c from nation where r_regionkey=n_regionkey);
+#
+

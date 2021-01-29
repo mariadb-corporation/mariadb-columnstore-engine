@@ -1,0 +1,27 @@
+DROP DATABASE IF EXISTS mcs103_db;
+CREATE DATABASE mcs103_db;
+USE mcs103_db;
+CREATE TABLE discounts (
+id INT NOT NULL,
+title VARCHAR(255) NOT NULL,
+expired_date DATE NOT NULL,
+amount DECIMAL(10, 2) NULL
+) ENGINE=Columnstore;
+LOAD DATA INFILE '/tmp/mcs103.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
+ERROR 22007: Incorrect date value: ' San Jose"' for column `mcs103_db`.`discounts`.`expired_date` at row 1
+LOAD DATA INFILE '/tmp/mcs103.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+LOAD DATA LOCAL INFILE '/tmp/mcs103.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+SELECT * FROM discounts ORDER BY id;
+id	title	expired_date	amount
+1	Sprint Break, San Jose	2014-01-04	20.00
+1	Sprint Break, San Jose	2014-01-04	20.00
+2	Back to Scholl, San Jose	2014-01-09	25.00
+2	Back to Scholl, San Jose	2014-01-09	25.00
+3	Summer, San Jose	2014-06-25	10.00
+3	Summer, San Jose	2014-06-25	10.00
+4	Spring	2014-06-25	10.00
+4	Spring	2014-06-25	10.00
+SELECT COUNT(*) FROM discounts;
+COUNT(*)
+8
+DROP DATABASE IF EXISTS mcs103_db;

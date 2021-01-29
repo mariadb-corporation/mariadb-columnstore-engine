@@ -1,0 +1,52 @@
+DROP DATABASE IF EXISTS mcs229_db;
+CREATE DATABASE mcs229_db;
+USE mcs229_db;
+set columnstore_compression_type=0;
+CREATE TABLE t1
+(
+t1_INT INT,
+t1_DECIMAL DECIMAL(12,5),
+t1_TEXT TEXT,
+t1_DATE DATE,
+t1_TIME TIME
+)ENGINE=Columnstore;
+SHOW CREATE TABLE t1;
+Table	Create Table
+t1	CREATE TABLE `t1` (
+  `t1_INT` int(11) DEFAULT NULL,
+  `t1_DECIMAL` decimal(12,5) DEFAULT NULL,
+  `t1_TEXT` text DEFAULT NULL,
+  `t1_DATE` date DEFAULT NULL,
+  `t1_TIME` time DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+set columnstore_compression_type=1;
+CREATE TABLE t2
+(
+t2_INT INT,
+t2_DECIMAL DECIMAL(12,5),
+t2_TEXT TEXT,
+t2_DATE DATE,
+t2_TIME TIME
+)ENGINE=Columnstore;
+SHOW CREATE TABLE t2;
+Table	Create Table
+t2	CREATE TABLE `t2` (
+  `t2_INT` int(11) DEFAULT NULL,
+  `t2_DECIMAL` decimal(12,5) DEFAULT NULL,
+  `t2_TEXT` text DEFAULT NULL,
+  `t2_DATE` date DEFAULT NULL,
+  `t2_TIME` time DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+SELECT `schema`, tablename, columnname, compressiontype FROM calpontsys.syscolumn WHERE `schema`='mcs229_db' ORDER BY 2;
+schema	tablename	columnname	compressiontype
+mcs229_db	t1	t1_int	0
+mcs229_db	t1	t1_text	0
+mcs229_db	t1	t1_date	0
+mcs229_db	t1	t1_time	0
+mcs229_db	t1	t1_decimal	0
+mcs229_db	t2	t2_date	2
+mcs229_db	t2	t2_int	2
+mcs229_db	t2	t2_text	2
+mcs229_db	t2	t2_time	2
+mcs229_db	t2	t2_decimal	2
+DROP DATABASE mcs229_db;

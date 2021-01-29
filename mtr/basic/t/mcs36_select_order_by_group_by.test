@@ -1,0 +1,85 @@
+#
+# Test basic select...group by...order by
+# Author: Susil Behera, susil.behera@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs36_db1;
+--enable_warnings
+
+CREATE DATABASE mcs36_db1;
+USE mcs36_db1;
+
+CREATE TABLE t1 (
+  spID int(10) unsigned,
+  userID int(10) unsigned,
+  score smallint(5) unsigned,
+  lsg char(40),
+  date date
+) ENGINE=Columnstore;
+
+INSERT INTO t1 VALUES (1,1,1,'','0000-00-00');
+INSERT INTO t1 VALUES (2,2,2,'','0000-00-00');
+INSERT INTO t1 VALUES (2,1,1,'','0000-00-00');
+INSERT INTO t1 VALUES (3,3,3,'','0000-00-00');
+
+CREATE TABLE t2 (
+  userID int(10) unsigned NOT NULL,
+  niName char(15),
+  passwd char(8),
+  mail char(50),
+  isAukt char(1) DEFAULT 'N',
+  vName char(30),
+  nName char(40),
+  adr char(60),
+  plz char(5),
+  ort char(35),
+  land char(20)
+) ENGINE=Columnstore;
+
+INSERT INTO t2 VALUES (1,'name','pass','mail','Y','v','n','adr','1','1','1');
+INSERT INTO t2 VALUES (2,'name','pass','mail','Y','v','n','adr','1','1','1');
+INSERT INTO t2 VALUES (3,'name','pass','mail','Y','v','n','adr','1','1','1');
+INSERT INTO t2 VALUES (4,'name','pass','mail','Y','v','n','adr','1','1','1');
+INSERT INTO t2 VALUES (5,'name','pass','mail','Y','v','n','adr','1','1','1');
+
+SELECT t2.userid, MIN(t1.score) 
+ FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY t2.userid ORDER BY t2.userid;
+SELECT t2.userid, MIN(t1.score) 
+ FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY t2.userid ORDER BY t2.userid ASC;
+SELECT t2.userid, MIN(t1.score) 
+ FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY t2.userid ORDER BY t2.userid DESC;
+SELECT t2.userid, MIN(t1.score) 
+ FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY t2.userid ORDER BY t2.userid LIMIT 2;
+
+#Test multiple columns
+SELECT t1.spID, t2.userid, MIN(t1.score) 
+ FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY t2.userid, t1.spID ORDER BY t2.userid, t1.spID;
+SELECT t1.spID, t2.userid, MIN(t1.score) 
+ FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY t2.userid, t1.spID ORDER BY t1.spID, t2.userid;
+
+# columns in ORDER BY clause not included in the GROUP BY clause.
+#Suspected bug. Innodb succeeds.
+--error 1815
+SELECT t1.spID, t2.userid, MIN(t1.score) 
+ FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY t2.userid, t1.spID ORDER BY t1.date;
+
+# non-existing column in group by clause
+--error 1054
+SELECT t2.userid, MIN(t1.score)
+ FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY unknown ORDER BY t2.userid;
+
+# non-existing column in order by clause
+--error 1054
+SELECT t2.userid, MIN(t1.score)
+ FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY t2.userid ORDER BY unknown;
+
+# order by null
+#Suspected bug. Innodb succeeds.
+--error 1815
+SELECT t2.userid, MIN(t1.score)
+ FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY t2.userid ORDER BY NULL;
+
+#Clean up
+DROP DATABASE IF EXISTS mcs36_db1;

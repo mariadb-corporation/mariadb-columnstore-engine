@@ -1,0 +1,47 @@
+USE tpch1;
+select * from region;
+r_regionkey	r_name	r_comment
+0	AFRICA	lar deposits. blithely final packages cajole. regular waters are final requests. regular accounts are according to 
+1	AMERICA	hs use ironic, even requests. s
+2	ASIA	ges. thinly even pinto beans ca
+3	EUROPE	ly final courts cajole furiously final excuse
+4	MIDDLE EAST	uickly special accounts cajole carefully blithely close requests. carefully final asymptotes haggle furiousl
+select * from region limit 2,1;
+r_regionkey	r_name	r_comment
+2	ASIA	ges. thinly even pinto beans ca
+select * from region;
+r_regionkey	r_name	r_comment
+0	AFRICA	lar deposits. blithely final packages cajole. regular waters are final requests. regular accounts are according to 
+1	AMERICA	hs use ironic, even requests. s
+2	ASIA	ges. thinly even pinto beans ca
+3	EUROPE	ly final courts cajole furiously final excuse
+4	MIDDLE EAST	uickly special accounts cajole carefully blithely close requests. carefully final asymptotes haggle furiousl
+set @@sql_select_limit=1;
+select * from region;
+r_regionkey	r_name	r_comment
+0	AFRICA	lar deposits. blithely final packages cajole. regular waters are final requests. regular accounts are according to 
+select * from region limit 2, 2;
+r_regionkey	r_name	r_comment
+2	ASIA	ges. thinly even pinto beans ca
+3	EUROPE	ly final courts cajole furiously final excuse
+select * from region;
+r_regionkey	r_name	r_comment
+0	AFRICA	lar deposits. blithely final packages cajole. regular waters are final requests. regular accounts are according to 
+set @@sql_select_limit=DEFAULT;
+select * from region;
+r_regionkey	r_name	r_comment
+0	AFRICA	lar deposits. blithely final packages cajole. regular waters are final requests. regular accounts are according to 
+1	AMERICA	hs use ironic, even requests. s
+2	ASIA	ges. thinly even pinto beans ca
+3	EUROPE	ly final courts cajole furiously final excuse
+4	MIDDLE EAST	uickly special accounts cajole carefully blithely close requests. carefully final asymptotes haggle furiousl
+select * from region limit 2,1;
+r_regionkey	r_name	r_comment
+2	ASIA	ges. thinly even pinto beans ca
+select * from region;
+r_regionkey	r_name	r_comment
+0	AFRICA	lar deposits. blithely final packages cajole. regular waters are final requests. regular accounts are according to 
+1	AMERICA	hs use ironic, even requests. s
+2	ASIA	ges. thinly even pinto beans ca
+3	EUROPE	ly final courts cajole furiously final excuse
+4	MIDDLE EAST	uickly special accounts cajole carefully blithely close requests. carefully final asymptotes haggle furiousl

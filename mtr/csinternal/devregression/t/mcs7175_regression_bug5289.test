@@ -1,0 +1,39 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug5289.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists bug5289a;
+drop table if exists bug5289b;
+drop view if exists bug5289b_v;
+
+create table bug5289a(
+a decimal(10,0),
+b varchar(30)) 
+engine=columnstore; 
+
+create table bug5289b(
+a char(4),
+b varchar(30)) 
+engine=columnstore; 
+
+insert into bug5289a values (1, 1), (2, 2), (3, 3), (4, 4);
+insert into bug5289b values ('1', '1'), ('3', '3'), ('5', '5');
+
+create or replace view bug5289_v as 
+select cast(a as decimal(10,0)) as a, b from bug5289b;
+
+select 'q1', count(*) from bug5289a a,bug5289_v b where a.a = b.a;
+select 'q2', count(*) from bug5289a a left join bug5289_v b on (a.a = b.a);
+select 'q3', count(*) from bug5289a a, bug5289b b where a.a = cast(b.a as decimal(10,0));
+
+drop table if exists bug5289a;
+drop table if exists bug5289b;
+drop view if exists bug5289b_v;
+#
+

@@ -1,0 +1,28 @@
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS unsigned_bitop_db;
+--enable_warnings
+
+CREATE DATABASE unsigned_bitop_db;
+USE unsigned_bitop_db;
+
+CREATE TABLE utest1 (ukey INT, c1 TINYINT UNSIGNED, c2 SMALLINT UNSIGNED, c3 INT UNSIGNED, c4 BIGINT UNSIGNED)engine=columnstore;
+INSERT INTO utest1 VALUES (1,23,36,4888,51232), (2,253,65533,4294967293,18446744073709551613);
+INSERT INTO utest1 VALUES (3,54,3766,27483646,922336854775806);
+INSERT INTO utest1 VALUES (4,253,65533,4294967293,1846744073709551613);
+# Limitation with boundary values in Columnstore. Remove the error after the limitation is fixed
+--error 1264
+INSERT INTO utest1 VALUES (5,255,65535,4294967295,18446744073709551615);
+
+--error ER_WARN_DATA_OUT_OF_RANGE
+INSERT INTO utest1 VALUES (6,1255,165535,14294967295,118446744073709551615);
+SELECT 'q1', utest1.* FROM utest1 ORDER BY 1, 2;
+
+SELECT 'q2', BIT_AND(c1), BIT_OR(c1), BIT_XOR(c1) FROM utest1 order by 1, 2, 3, 4;
+SELECT 'q3', BIT_AND(c2), BIT_OR(c2), BIT_XOR(c2) FROM utest1 order by 1, 2, 3, 4;
+SELECT 'q4', BIT_AND(c3), BIT_OR(c3), BIT_XOR(c3) FROM utest1 order by 1, 2, 3, 4;
+SELECT 'q5', BIT_AND(c4), BIT_OR(c4), BIT_XOR(c4) FROM utest1 order by 1, 2, 3, 4;
+
+# Clean UP
+DROP DATABASE unsigned_bitop_db;

@@ -1,0 +1,25 @@
+USE tpch1;
+select case substr(dtm,12,2) when '06' then 'L' when '08' then 'M' end daypart, count(*)
+from dtypes group by 1 order by 1;
+daypart	count(*)
+NULL	60
+L	20
+M	20
+select case substr(dtm,12,2) when '06' then 'L' when '08' then 'M' else 'Z' end daypart, count(*)
+from dtypes group by 1 order by 1;
+daypart	count(*)
+L	20
+M	20
+Z	60
+select substr(dtm,12,2), case substr(dtm,12,2) when '06' then 'L' when '08' then 'M' end daypart, count(*)
+from dtypes group by 1,2 order by 1;
+substr(dtm,12,2)	daypart	count(*)
+06	L	20
+07	NULL	60
+08	M	20
+select substr(dtm,12,2), case substr(dtm,12,2) when '06' then 'L' when '08' then 'M' else 'Z' end daypart, count(*)
+from dtypes group by 1,2 order by 1;
+substr(dtm,12,2)	daypart	count(*)
+06	L	20
+07	Z	60
+08	M	20

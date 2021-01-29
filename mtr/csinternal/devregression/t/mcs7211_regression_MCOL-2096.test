@@ -1,0 +1,114 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-2096.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists t;
+create table t(a int, b int) engine=columnstore;
+insert into t(a,b) values(1,4),(2,3),(3,2),(4,1);
+
+#--query from ticket
+select
+a,
+r
+from (
+    select
+    a,
+    DENSE_RANK() OVER `w_0` as `r`
+    from t
+    WINDOW `w_0` as ( ORDER BY `b` DESC)
+) t0
+where r in (1,2);
+
+#-- test with NOT IN
+select
+a,
+r
+from (
+    select
+    a,
+    DENSE_RANK() OVER `w_0` as `r`
+    from t
+    WINDOW `w_0` as ( ORDER BY `b` DESC)
+) t0
+where r not in (1,2);
+
+#-- test with 1 condition
+select
+a,
+r
+from (
+    select
+    a,
+    DENSE_RANK() OVER `w_0` as `r`
+    from t
+    WINDOW `w_0` as ( ORDER BY `b` DESC)
+) t0
+where r in (1);
+
+#-- test on regular column from table
+select
+a,
+r
+from (
+    select
+    a,
+    DENSE_RANK() OVER `w_0` as `r`
+    from t
+    WINDOW `w_0` as ( ORDER BY `b` DESC)
+) t0
+where a in (1,2);
+
+#-- test with 1 condition
+select
+a,
+r
+from (
+    select
+    a,
+    DENSE_RANK() OVER `w_0` as `r`
+    from t
+    WINDOW `w_0` as ( ORDER BY `b` DESC)
+) t0
+where a in (1);
+
+#-- with no window function
+select
+a
+from t
+where a in (1,2);
+
+#-- subquery with no window function
+select
+a,
+r
+from (
+    select
+    a,
+    b as r
+    from t
+) t0
+where a in (1, 2);
+
+#-- subquery with no window function and not in
+select
+a,
+r
+from (
+    select
+    a,
+    b as r
+    from t
+) t0
+where a not in (1, 2);
+
+
+
+drop table if exists t;
+#
+

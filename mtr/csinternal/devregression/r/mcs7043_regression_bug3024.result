@@ -1,0 +1,17 @@
+USE tpch1;
+select * from nation where n_nationkey=@value;
+n_nationkey	n_name	n_regionkey	n_comment
+set @value=5;
+select * from nation where n_nationkey=@value;
+n_nationkey	n_name	n_regionkey	n_comment
+5	ETHIOPIA	0	ven packages wake quickly. regu
+create table if not exists bug3024 (c1 int) engine=columnstore;
+insert into bug3024 values (1), (2);
+update bug3024 set c1=3 where c1=@value;
+set @value=2;
+update bug3024 set c1=3 where c1=@value;
+select * from bug3024;
+c1
+1
+3
+drop table if exists bug3024;

@@ -1,0 +1,37 @@
+#
+# SIN() function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs263_db;
+--enable_warnings
+
+CREATE DATABASE mcs263_db;
+USE mcs263_db;
+
+CREATE TABLE t1
+(
+ t1_INT INT,
+ t1_DECIMAL DECIMAL(12,5),
+ t1_TEXT TEXT,
+ t1_DATE DATE,
+ t1_TIME TIME
+ )ENGINE=Columnstore;
+INSERT INTO t1 VALUES(103, 1234.5699, 'pqrstuvwxyz', '1997-12-12', '22:12:02');
+INSERT INTO t1 VALUES(-7299, 111.99, 'abcdefghijklm', '2001-1-1', '23:59:59');
+INSERT INTO t1 VALUES(9913, 98765.4321, repeat('q', 5), '09-12-11', '01:08:59');
+
+SELECT SIN(-1) FROM t1 LIMIT 1;
+SELECT SIN(0) FROM t1 LIMIT 1;
+SELECT SIN(1) FROM t1 LIMIT 1;
+SELECT SIN(3.14) FROM t1 LIMIT 1;
+SELECT SIN(3.14/2) FROM t1 LIMIT 1;
+SELECT SIN(3.14/4) FROM t1 LIMIT 1;
+
+SELECT t1_INT, SIN(t1_INT) FROM t1 ORDER BY 1;
+SELECT t1_DECIMAL, SIN(t1_DECIMAL) FROM t1 ORDER BY 1;
+
+# Clean UP
+DROP DATABASE mcs263_db;

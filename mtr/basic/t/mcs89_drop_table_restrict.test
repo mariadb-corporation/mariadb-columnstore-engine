@@ -1,0 +1,30 @@
+#
+# DROP TABLE RESTRICT                      #
+# The RESTRICT clause limits the table to being dropped in the front end only.
+# This could be useful when the table has been dropped on one user module,
+# and needs to be synced to others.
+#
+# Author: Susil, susil.behera@mariadb.com  #  
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs89_db;
+--enable_warnings
+
+CREATE DATABASE mcs89_db;
+USE mcs89_db;
+
+CREATE TABLE t1 (id INT, name CHAR(25));
+INSERT INTO t1 VALUES (1, 'one'), (2, 'two'), (3, 'three'), (4, 'four'), (5, 'five');
+
+SELECT * FROM t1 ORDER BY id;
+SELECT COUNT(*) FROM t1;
+
+DROP TABLE IF EXISTS t1 RESTRICT;
+--error 1051
+DROP TABLE t1;
+DROP TABLE t1 RESTRICT;
+
+# Clean up
+DROP DATABASE IF EXISTS mcs89_db;

@@ -1,0 +1,19 @@
+USE tpch1;
+drop table if exists qadefaulttest;
+Warnings:
+Note	1051	Unknown table 'tpch1.qadefaulttest'
+create table qadefaulttest (cidx int) engine=columnstore;
+ALTER TABLE qadefaulttest ADD column MYDOUBLE2 DOUBLE not null DEFAULT -88.88;
+insert into qadefaulttest values (1, -88.88);
+select * from qadefaulttest;
+cidx	MYDOUBLE2
+1	-88.88
+ALTER TABLE qadefaulttest ADD column MYFLOAT3 FLOAT not null DEFAULT -88.88;
+select * from qadefaulttest;
+cidx	MYDOUBLE2	MYFLOAT3
+1	-88.88	-88.88
+ALTER TABLE qadefaulttest ADD column MYDECIMAL2 DECIMAL(4,2) not null DEFAULT -88.88;
+select * from qadefaulttest;
+cidx	MYDOUBLE2	MYFLOAT3	MYDECIMAL2
+1	-88.88	-88.88	-88.88
+drop table qadefaulttest;

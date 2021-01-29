@@ -1,0 +1,24 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug1632.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+#-- Self joins.
+select n1.n_nationkey, n1.n_regionkey from nation n1, nation n2 where
+n1.n_nationkey = n2.n_regionkey order by 1, 2;
+
+select o1.o_orderkey o1order, o2.o_custkey o2order, o1.o_custkey
+from orders o1,
+     orders o2
+where o1.o_custkey = o2.o_orderkey and
+      o1.o_orderdate <= '1992-01-01' and
+      o1.o_orderstatus = 'F' and
+      o2.o_orderstatus = 'O'
+order by 1, 2, 3;
+#
+

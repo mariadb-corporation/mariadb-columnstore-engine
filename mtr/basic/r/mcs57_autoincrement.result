@@ -1,0 +1,27 @@
+DROP DATABASE IF EXISTS mcs57_db;
+CREATE DATABASE mcs57_db;
+USE mcs57_db;
+CREATE TABLE t1(col INT COMMENT'autoincrement')ENGINE=Columnstore;
+INSERT INTO t1 VALUES(NULL);
+INSERT INTO t1 VALUES();
+SELECT * FROM t1;
+col
+1
+2
+CREATE TABLE t2(t2_int INT COMMENT'autoincrement', t2_varchar VARCHAR(10) NOT NULL DEFAULT 'a')ENGINE=Columnstore;
+INSERT INTO t2 VALUES();
+INSERT INTO t2 VALUES(NULL,'');
+INSERT INTO t2(t2_varchar) VALUES('bb'),('ccc'),('dddd'),('eeeee');
+SELECT * FROM t2;
+t2_int	t2_varchar
+1	a
+2	a
+3	bb
+4	ccc
+5	dddd
+6	eeeee
+CREATE TABLE t3(a INT auto_increment) ENGINE=Columnstore;
+ERROR 42000: Incorrect table definition; there can be only one auto column and it must be defined as a key
+CREATE TABLE t3(a INT autoincrement) ENGINE=Columnstore;
+ERROR 42000: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ') ENGINE=Columnstore' at line 1
+DROP DATABASE mcs57_db;

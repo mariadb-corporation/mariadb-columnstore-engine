@@ -1,0 +1,35 @@
+#
+# Test RANK() Window Function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs134_db;
+--enable_warnings
+
+CREATE DATABASE mcs134_db;
+USE mcs134_db;
+
+CREATE TABLE t1 (a CHAR(1), b INT)ENGINE=Columnstore;
+INSERT INTO t1 VALUES ('', NULL),('a', 123),('a', 1),('b', 123),('c', 1861),('c', 1991),('d', 10701),('d', 1071),('a', 92);
+
+SELECT a, b, RANK() OVER(ORDER BY a) rank FROM t1;
+SELECT a, b, RANK() OVER(ORDER BY b DESC) rank FROM t1;
+SELECT a, b, RANK() OVER(ORDER BY a) rank FROM t1;
+SELECT a, b, RANK() OVER(ORDER BY b DESC) rank FROM t1;
+SELECT a, b, RANK() OVER w rank FROM t1 WINDOW w AS (ORDER BY a DESC);
+SELECT a, b, RANK() OVER w rank FROM t1 WINDOW w AS (ORDER BY b);
+SELECT a, b, RANK() OVER(PARTITION BY a ORDER BY a DESC) rank FROM t1;
+SELECT a, b, RANK() OVER(PARTITION BY a ORDER BY b DESC) rank FROM t1;
+SELECT a, b, RANK() OVER(PARTITION BY a ORDER BY b ASC) rank FROM t1;
+SELECT a, b, RANK() OVER(PARTITION BY b ORDER BY a DESC) rank FROM t1;
+SELECT a, b, RANK() OVER(PARTITION BY b ORDER BY b DESC) rank FROM t1;
+
+--error ER_NO_ORDER_LIST_IN_WINDOW_SPEC
+SELECT a, b, RANK() OVER(PARTITION BY a) rank FROM t1;
+--error ER_NO_ORDER_LIST_IN_WINDOW_SPEC
+SELECT a, b, RANK() OVER(PARTITION BY b) rank FROM t1;
+
+# Clean UP
+DROP DATABASE mcs134_db;

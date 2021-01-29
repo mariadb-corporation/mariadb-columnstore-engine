@@ -1,0 +1,7 @@
+USE tpch1;
+select if(count(r_regionkey)/15000=round(count(r_regionkey)*15000),"good","bad") alias from region;
+alias
+bad
+select if(count(o_orderkey)/15000=round(count(o_orderkey)*15000/15000/15000),"good","bad") alias2 from orders;
+alias2
+good

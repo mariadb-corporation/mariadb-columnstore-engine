@@ -1,0 +1,18 @@
+USE tpch1;
+drop table if exists bug2845;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug2845'
+create table bug2845(c1 int, c2 varchar(7), c3 varchar(30))engine=columnstore;
+insert into bug2845 values (1, 'A\'s', 'Joe\'s');
+select * from bug2845;
+c1	c2	c3
+1	A's	Joe's
+update bug2845 set c2='Bubba\'s', c3='Uncle Julio\'s';
+select * from bug2845;
+c1	c2	c3
+1	Bubba's	Uncle Julio's
+delete from bug2845;
+select count(*) from bug2845;
+count(*)
+0
+drop table bug2845;

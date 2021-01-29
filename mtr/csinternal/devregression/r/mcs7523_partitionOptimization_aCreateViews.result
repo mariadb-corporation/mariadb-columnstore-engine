@@ -1,0 +1,208 @@
+USE tpch1;
+drop view if exists v_nation;
+Warnings:
+Note	4092	Unknown VIEW: 'tpch1.v_nation'
+drop view if exists v_region;
+Warnings:
+Note	4092	Unknown VIEW: 'tpch1.v_region'
+drop view if exists v_customer;
+Warnings:
+Note	4092	Unknown VIEW: 'tpch1.v_customer'
+drop view if exists v_orders;
+Warnings:
+Note	4092	Unknown VIEW: 'tpch1.v_orders'
+drop view if exists v_supplier;
+Warnings:
+Note	4092	Unknown VIEW: 'tpch1.v_supplier'
+drop view if exists v_partsupp;
+Warnings:
+Note	4092	Unknown VIEW: 'tpch1.v_partsupp'
+drop view if exists v_part;
+Warnings:
+Note	4092	Unknown VIEW: 'tpch1.v_part'
+drop view if exists v_lineitem;
+Warnings:
+Note	4092	Unknown VIEW: 'tpch1.v_lineitem'
+create view v_nation as select * from nation where n_nationkey > 10 union all select * from nation where n_nationkey <= 10;
+create view v_region as select * from region where r_regionkey > 3 union all select * from region where r_regionkey <= 3;
+create view v_customer as select * from customer union all select * from customer where c_custkey=0;
+create view v_orders as select * from orders union all select * from orders where o_orderkey=0;
+create view v_supplier as select * from supplier union all select * from supplier where s_suppkey=0;
+create view v_partsupp as select * from partsupp union all select * from partsupp where ps_partkey=0;
+create view v_part as select * from part union all select * from part where p_partkey=0;
+create view v_lineitem as select * from lineitem union all select * from lineitem where l_orderkey=0;
+drop procedure if exists ordersColumnsTouched;
+Warnings:
+Note	1305	PROCEDURE tpch1.ordersColumnsTouched does not exist
+drop procedure if exists lineitemColumnsTouched;
+Warnings:
+Note	1305	PROCEDURE tpch1.lineitemColumnsTouched does not exist
+drop procedure if exists customerColumnsTouched;
+Warnings:
+Note	1305	PROCEDURE tpch1.customerColumnsTouched does not exist
+drop procedure if exists supplierColumnsTouched;
+Warnings:
+Note	1305	PROCEDURE tpch1.supplierColumnsTouched does not exist
+drop procedure if exists partColumnsTouched;
+Warnings:
+Note	1305	PROCEDURE tpch1.partColumnsTouched does not exist
+drop procedure if exists partsuppColumnsTouched;
+Warnings:
+Note	1305	PROCEDURE tpch1.partsuppColumnsTouched does not exist
+drop procedure if exists regionColumnsTouched;
+Warnings:
+Note	1305	PROCEDURE tpch1.regionColumnsTouched does not exist
+drop procedure if exists nationColumnsTouched;
+Warnings:
+Note	1305	PROCEDURE tpch1.nationColumnsTouched does not exist
+drop procedure if exists eliminatedBlocksGE;
+Warnings:
+Note	1305	PROCEDURE tpch1.eliminatedBlocksGE does not exist
+create procedure ordersColumnsTouched (in trace varchar(10000)) BEGIN
+select locate('o_orderkey', trace) > 0 as o_orderkey_accessed;
+select locate('o_custkey', trace) > 0 as o_custkey_accessed;
+select locate('o_orderstatus', trace) > 0 as o_orderstatus_accessed;
+select locate('o_totalprice', trace) > 0 as o_totalprice_accessed;
+select locate('o_orderdate', trace) > 0 as o_orderdate_accessed;
+select locate('o_orderpriority', trace) > 0 as o_orderpriority_accessed;
+select locate('o_clerk', trace) > 0 as o_clerk_accessed;
+select locate('o_shippriority', trace) > 0 as o_shippriority_accessed;
+select locate('o_comment', trace) > 0 as o_comment_accessed;
+END //
+create procedure lineitemColumnsTouched (in trace varchar(10000)) BEGIN
+select locate('l_orderkey', trace) > 0 as l_orderkey_accessed;
+select locate('l_partkey', trace) > 0 as l_partkey_accessed;
+select locate('l_suppkey', trace) > 0 as l_suppkey_accessed;
+select locate('l_linenumber', trace) > 0 as l_linenumber_accessed;
+select locate('l_quantity', trace) > 0 as l_quantity_accessed;
+select locate('l_extendedprice', trace) > 0 as l_extendedprice_accessed;
+select locate('l_discount', trace) > 0 as l_discount_accessed;
+select locate('l_tax', trace) > 0 as l_tax_accessed;
+select locate('l_returnflag', trace) > 0 as l_returnflag_accessed;
+select locate('l_linestatus', trace) > 0 as l_linestatus_accessed;
+select locate('l_shipdate', trace) > 0 as l_shipdate_accessed;
+select locate('l_commitdate', trace) > 0 as l_commitdate_accessed;
+select locate('l_receiptdate', trace) > 0 as l_receiptdate_accessed;
+select locate('l_shipinstruct', trace) > 0 as l_shipinstruct_accessed;
+select locate('l_shipmode', trace) > 0 as l_shipmode_accessed;
+select locate('l_comment', trace) > 0 as l_comment_accessed;
+END //
+create procedure customerColumnsTouched (in trace varchar(10000)) BEGIN
+select locate('c_custkey', trace) > 0 as c_custkey_accessed;
+select locate('c_name', trace) > 0 as c_name_accessed;
+select locate('c_address', trace) > 0 as c_address_accessed;
+select locate('c_nationkey', trace) > 0 as c_nationkey_accessed;
+select locate('c_phone', trace) > 0 as c_phone_accessed;
+select locate('c_acctbal', trace) > 0 as c_acctbal_accessed;
+select locate('c_mktsegment', trace) > 0 as c_mktsegment_accessed;
+select locate('c_comment', trace) > 0 as c_comment_accessed;
+END //
+create procedure partColumnsTouched (in trace varchar(10000)) BEGIN
+select locate('p_partkey', trace) > 0 as p_partkey_accessed;
+select locate('p_name', trace) > 0 as p_name_accessed;
+select locate('p_mfgr', trace) > 0 as p_mfgr_accessed;
+select locate('p_brand', trace) > 0 as p_brand_accessed;
+select locate('p_type', trace) > 0 as p_type_accessed;
+select locate('p_size', trace) > 0 as p_size_accessed;
+select locate('p_container', trace) > 0 as p_container_accessed;
+select locate('p_retailprice', trace) > 0 as p_retailprice_accessed;
+select locate('p_comment', trace) > 0 as p_comment_accessed;
+END //
+create procedure partsuppColumnsTouched (in trace varchar(10000)) BEGIN
+select locate('ps_partkey', trace) > 0 as ps_partkey_accessed;
+select locate('ps_suppkey', trace) > 0 as ps_suppkey_accessed;
+select locate('ps_availqty', trace) > 0 as ps_availqty_accessed;
+select locate('ps_supplycost', trace) > 0 as ps_supplycost_accessed;
+select locate('ps_comment', trace) > 0 as ps_comment_accessed;
+END //
+create procedure supplierColumnsTouched (in trace varchar(10000)) BEGIN
+select locate('s_suppkey', trace) > 0 as s_suppkey_accessed;
+select locate('s_name', trace) > 0 as s_name_accessed;
+select locate('s_address', trace) > 0 as s_address_accessed;
+select locate('s_nationkey', trace) > 0 as s_nationkey_accessed;
+select locate('s_phone', trace) > 0 as s_phone_accessed;
+select locate('s_acctbal', trace) > 0 as s_acctbal_accessed;
+select locate('s_comment', trace) > 0 as s_comment_accessed;
+END //
+create procedure nationColumnsTouched (in trace varchar(10000)) BEGIN
+select locate('n_nationkey', trace) > 0 as n_nationkey_accessed;
+select locate('n_name', trace) > 0 as n_name_accessed;
+select locate('n_regionkey', trace) > 0 as n_regionkey_accessed;
+select locate('n_comment', trace) > 0 as n_comment_accessed;
+END //
+create procedure regionColumnsTouched (in trace varchar(10000)) BEGIN
+select locate('r_regionkey', trace) > 0 as r_regionkey_accessed;
+select locate('r_name', trace) > 0 as r_name_accessed;
+select locate('r_comment', trace) > 0 as r_comment_accessed;
+END //
+create procedure eliminatedBlocksGE(in blocks int) BEGIN
+select calgetstats() into @stats;
+select substr(@stats, locate('PartitionBlocksEliminated', @stats)+26, 999) into @temp;
+select substr(@temp, 1, locate(';', @temp)-1) into @blocksEliminated;
+select concat('Blocks eliminated ', if(@blocksEliminated >= blocks, 'is ', 'is not '), 'greater than or equal to ', blocks, '.') as 'CP Result';
+END //
+select count(*) as lineitem_count from lineitem;
+lineitem_count
+6001215
+select count(*) as v_lineitem_count from v_lineitem;
+v_lineitem_count
+6001215
+select count(*) as orders_count from orders;
+orders_count
+1500000
+select count(*) as v_orders_count from v_orders;
+v_orders_count
+1500000
+select count(*) as part_count from part;
+part_count
+200000
+select count(*) as v_part_count from v_part;
+v_part_count
+200000
+select count(*) as partsupp_count from partsupp;
+partsupp_count
+800000
+select count(*) as v_partsupp_count from v_partsupp;
+v_partsupp_count
+800000
+select count(*) as customer_count from customer;
+customer_count
+150000
+select count(*) as v_customer_count from v_customer;
+v_customer_count
+150000
+select count(*) as supplier_count from supplier;
+supplier_count
+10000
+select count(*) as v_supplier_count from v_supplier;
+v_supplier_count
+10000
+select count(*) as region_count from region;
+region_count
+5
+select count(*) as v_region_count from v_region;
+v_region_count
+5
+select count(*) as nation_count from nation;
+nation_count
+25
+select count(*) as v_nation_count from v_nation;
+v_nation_count
+25
+drop view if exists v_nation;
+drop view if exists v_region;
+drop view if exists v_customer;
+drop view if exists v_orders;
+drop view if exists v_supplier;
+drop view if exists v_partsupp;
+drop view if exists v_part;
+drop view if exists v_lineitem;
+drop procedure if exists ordersColumnsTouched;
+drop procedure if exists lineitemColumnsTouched;
+drop procedure if exists customerColumnsTouched;
+drop procedure if exists supplierColumnsTouched;
+drop procedure if exists partColumnsTouched;
+drop procedure if exists partsuppColumnsTouched;
+drop procedure if exists regionColumnsTouched;
+drop procedure if exists nationColumnsTouched;
+drop procedure if exists eliminatedBlocksGE;

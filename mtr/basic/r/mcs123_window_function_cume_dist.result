@@ -1,0 +1,50 @@
+DROP DATABASE IF EXISTS mcs123_db;
+CREATE DATABASE mcs123_db;
+USE mcs123_db;
+CREATE TABLE t1 (a CHAR(1), b INT)ENGINE=Columnstore;
+INSERT INTO t1 VALUES ('', NULL),('a', 123),('a', 1),('b', 12),('c', 1861),('c', 1991),('d', 10701),('d', 1071);
+SELECT a, b, CUME_DIST() OVER(ORDER BY a) cume_dist_val FROM t1;
+a	b	cume_dist_val
+NULL	NULL	0.1250000000
+a	1	0.3750000000
+a	123	0.3750000000
+b	12	0.5000000000
+c	1991	0.7500000000
+c	1861	0.7500000000
+d	1071	1.0000000000
+d	10701	1.0000000000
+SELECT a, b, CUME_DIST() OVER(ORDER BY b DESC) cume_dist_val FROM t1;
+a	b	cume_dist_val
+d	10701	0.1250000000
+c	1991	0.2500000000
+c	1861	0.3750000000
+d	1071	0.5000000000
+a	123	0.6250000000
+b	12	0.7500000000
+a	1	0.8750000000
+NULL	NULL	1.0000000000
+SELECT a, b, CUME_DIST() OVER w cume_dist_val FROM t1 WINDOW w AS (ORDER BY a DESC);
+a	b	cume_dist_val
+d	10701	0.2500000000
+d	1071	0.2500000000
+c	1861	0.5000000000
+c	1991	0.5000000000
+b	12	0.6250000000
+a	123	0.8750000000
+a	1	0.8750000000
+NULL	NULL	1.0000000000
+SELECT a, b, CUME_DIST() OVER w cume_dist_val FROM t1 WINDOW w AS (ORDER BY b);
+a	b	cume_dist_val
+NULL	NULL	0.1250000000
+a	1	0.2500000000
+b	12	0.3750000000
+a	123	0.5000000000
+d	1071	0.6250000000
+c	1861	0.7500000000
+c	1991	0.8750000000
+d	10701	1.0000000000
+SELECT a, b, CUME_DIST(a) OVER(ORDER BY a) cume_dist_val FROM t1;
+ERROR 42000: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'a) OVER(ORDER BY a) cume_dist_val FROM t1' at line 1
+SELECT a, b, CUME_DIST() OVER(PARTITION BY b) cume_dist_val FROM t1;
+ERROR HY000: No order list in window specification for 'cume_dist'
+DROP DATABASE mcs123_db;

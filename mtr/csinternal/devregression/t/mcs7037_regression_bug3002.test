@@ -1,0 +1,16 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3002.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+select * from (select l_orderkey from lineitem where l_orderkey <= 10) x order by 1;
+
+#-- make sure session is not hung after above query
+select * from region;
+#
+

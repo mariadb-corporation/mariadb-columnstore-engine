@@ -1,0 +1,4 @@
+USE tpch1;
+select count(*)%25 from nation;
+count(*)%25
+0

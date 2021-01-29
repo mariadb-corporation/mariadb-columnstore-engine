@@ -1,0 +1,18 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-3343.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+select sum(l_discount) over() winsum, sum(l_discount) sum1, l_quantity * sum(l_discount) over () / sum(l_discount) div1 from lineitem group by l_discount, l_quantity order by l_discount, l_quantity;
+
+select l_discount, sum(l_discount) over() / l_discount from lineitem group by l_discount order by l_discount;
+
+select l_quantity, l_discount,sum(l_discount) over() winsum, sum(l_discount) sum1, l_quantity * sum(l_discount) over () / sum(l_discount) div1 from lineitem group by l_discount, l_quantity order by l_quantity, l_discount;
+
+#
+

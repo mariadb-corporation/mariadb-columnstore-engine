@@ -1,0 +1,10 @@
+DROP DATABASE IF EXISTS mcs207_db;
+CREATE DATABASE mcs207_db;
+USE mcs207_db;
+SELECT mcsSystemReady();
+mcsSystemReady()
+1
+SELECT mcsSystemReadOnly();
+mcsSystemReadOnly()
+0
+DROP DATABASE mcs207_db;

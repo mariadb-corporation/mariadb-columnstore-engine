@@ -1,0 +1,41 @@
+DROP DATABASE IF EXISTS mcs259_db;
+CREATE DATABASE mcs259_db;
+USE mcs259_db;
+CREATE TABLE t1 (a INT, b VARCHAR(30))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL, ''),(1, 'mariadb'),(2, 'columnstore'),(3, 'mariadb columnstore');
+SELECT INSTR('abcdefghi', 'i') FROM t1 LIMIT 1;
+INSTR('abcdefghi', 'i')
+9
+SELECT INSTR('abcdefghi', 'z') FROM t1 LIMIT 1;
+INSTR('abcdefghi', 'z')
+0
+SELECT INSTR('pqrstuvwxyz', 'u') FROM t1 LIMIT 1;
+INSTR('pqrstuvwxyz', 'u')
+6
+SELECT INSTR('mnopmm', 'm') FROM t1 LIMIT 1;
+INSTR('mnopmm', 'm')
+1
+SELECT INSTR('mnopmm', 'mm') FROM t1 LIMIT 1;
+INSTR('mnopmm', 'mm')
+5
+SELECT b, INSTR(b, 'mariadb') FROM t1 ORDER BY 1;
+b	INSTR(b, 'mariadb')
+NULL	NULL
+columnstore	0
+mariadb	1
+mariadb columnstore	1
+SELECT b, INSTR(concat(b,'pqr'), 'qr') FROM t1 ORDER BY 1;
+b	INSTR(concat(b,'pqr'), 'qr')
+NULL	NULL
+columnstore	13
+mariadb	9
+mariadb columnstore	21
+SELECT b, INSTR(concat('pqr', b), 'qr') FROM t1 ORDER BY 1;
+b	INSTR(concat('pqr', b), 'qr')
+NULL	NULL
+columnstore	2
+mariadb	2
+mariadb columnstore	2
+SELECT b, INSTR(b) FROM t1 ORDER BY 1;
+ERROR 42000: Incorrect parameter count in the call to native function 'INSTR'
+DROP DATABASE mcs259_db;

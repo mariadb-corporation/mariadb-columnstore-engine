@@ -1,0 +1,12 @@
+#
+# Test case migrated from regression test suite:
+# queries/working_tpch1/group/q5.1.3.sql
+#
+# Author: Susil, susil.behera@mariadb.com
+#
+
+-- source ../include/have_columnstore.inc
+
+USE tpch1;
+
+select * from lineitem where l_orderkey = 6000000000 order by l_orderkey, l_linenumber;

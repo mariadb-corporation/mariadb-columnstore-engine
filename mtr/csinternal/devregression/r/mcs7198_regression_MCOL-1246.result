@@ -1,0 +1,61 @@
+USE tpch1;
+drop table if exists mcol1246a;
+Warnings:
+Note	1051	Unknown table 'tpch1.mcol1246a'
+drop table if exists mcol1246b;
+Warnings:
+Note	1051	Unknown table 'tpch1.mcol1246b'
+drop table if exists mcol1246c;
+Warnings:
+Note	1051	Unknown table 'tpch1.mcol1246c'
+create table mcol1246a (a int, b varchar(7)) engine=columnstore;
+create table mcol1246b (a int, b varchar(20)) engine=columnstore;
+create table mcol1246c (a int, b text) engine=columnstore;
+insert into mcol1246a values (1, 'ABC '), (2, 'ABC	'), (3, 'ABC');
+insert into mcol1246b values (1, 'ABC '), (2, 'ABC	'), (3, 'ABC');
+insert into mcol1246c values (1, 'ABC '), (2, 'ABC	'), (3, 'ABC');
+select * from mcol1246a where b = 'ABC';
+a	b
+1	ABC 
+3	ABC
+select * from mcol1246b where b = 'ABC';
+a	b
+1	ABC 
+3	ABC
+select * from mcol1246c where b = 'ABC';
+a	b
+1	ABC 
+3	ABC
+select * from mcol1246a where b = 'ABC ';
+a	b
+1	ABC 
+3	ABC
+select * from mcol1246b where b = 'ABC ';
+a	b
+1	ABC 
+3	ABC
+select * from mcol1246c where b = 'ABC ';
+a	b
+1	ABC 
+3	ABC
+select * from mcol1246a where b = 'ABC	';
+a	b
+2	ABC	
+select * from mcol1246b where b = 'ABC	';
+a	b
+2	ABC	
+select * from mcol1246c where b = 'ABC	';
+a	b
+2	ABC	
+select * from mcol1246a where b LIKE 'ABC';
+a	b
+3	ABC
+select * from mcol1246b where b LIKE 'ABC';
+a	b
+3	ABC
+select * from mcol1246c where b LIKE 'ABC';
+a	b
+3	ABC
+drop table mcol1246a;
+drop table mcol1246b;
+drop table mcol1246c;

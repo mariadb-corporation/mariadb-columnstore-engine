@@ -1,0 +1,19 @@
+--source ../include/have_columnstore.inc
+--disable_warnings
+DROP DATABASE IF EXISTS `mcol 3785`;
+DROP DATABASE IF EXISTS `mcol 3785 2`;
+--enable_warnings
+CREATE DATABASE `mcol 3785`;
+CREATE DATABASE `mcol 3785 2`;
+USE `mcol 3785`;
+
+CREATE TABLE src (c0 INT, c1 INT);
+INSERT INTO src VALUES (1,1),(1,1),(1,1),(2,2),(2,2),(2,2),(3,3),(3,3),(3,3);
+CREATE TABLE `target table` ENGINE=ColumnStore AS SELECT c0, COUNT(c0) FROM `mcol 3785`.src GROUP BY c0;
+SELECT * FROM `target table`;
+CREATE TABLE `mcol 3785 2`.`target table` ENGINE=ColumnStore AS SELECT c0, COUNT(c0) FROM `mcol 3785`.src GROUP BY c0;
+SELECT * FROM `mcol 3785 2`.`target table`;
+
+# cleanup
+DROP DATABASE `mcol 3785`;
+DROP DATABASE `mcol 3785 2`;

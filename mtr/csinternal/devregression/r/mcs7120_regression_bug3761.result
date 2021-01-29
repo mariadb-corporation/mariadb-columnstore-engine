@@ -1,0 +1,27 @@
+USE tpch1;
+select 5, sum(r_regionkey) from region group by 1;
+5	sum(r_regionkey)
+5	10
+select 'abc', sum(r_regionkey) from region group by 1;
+abc	sum(r_regionkey)
+abc	10
+select 5, 3, r_regionkey, sum(4) from region group by 1,2,3 order by 1,2,3;
+5	3	r_regionkey	sum(4)
+5	3	0	4
+5	3	1	4
+5	3	2	4
+5	3	3	4
+5	3	4	4
+select a, sum(b) from (select 5 a, r_regionkey b from region) t group by 1 order by 1;
+a	sum(b)
+5	10
+select a, sum(b) from (select 5 a, r_regionkey b from region) t group by a order by 1;
+a	sum(b)
+5	10
+select a, sum(b) from (select r_name a, r_regionkey b from region) t group by 1 order by 1;
+a	sum(b)
+AFRICA	0
+AMERICA	1
+ASIA	2
+EUROPE	3
+MIDDLE EAST	4

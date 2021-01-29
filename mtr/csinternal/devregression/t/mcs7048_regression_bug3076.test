@@ -1,0 +1,26 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3076.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+select count(*), o_orderstatus from orders group by o_orderstatus order by count(*) desc, 2;
+
+select count(*), o_orderstatus from orders group by o_orderstatus order by 1 desc, 2;
+
+select count(*) cnt, o_orderstatus from orders group by o_orderstatus order by cnt desc, 2;
+
+select count(o_orderstatus), o_orderstatus from orders group by o_orderstatus order by count(o_orderstatus) desc, 2;
+
+select count(o_orderstatus), o_orderstatus from orders group by o_orderstatus order by 1, 2 desc;
+
+select count(distinct o_orderstatus), o_orderstatus from orders group by o_orderstatus order by 1, 2 desc;
+
+select count(distinct o_orderstatus), o_orderstatus from orders group by o_orderstatus order by count(distinct o_orderstatus), 2 desc;
+
+#
+

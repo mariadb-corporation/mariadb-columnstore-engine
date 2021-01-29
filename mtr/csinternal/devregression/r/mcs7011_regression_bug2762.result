@@ -1,0 +1,28 @@
+USE tpch1;
+select count(*) from orders where o_orderstatus = 'F';
+count(*)
+729413
+select count(*) from orders where o_orderstatus like 'F%';
+count(*)
+729413
+select count(*) from orders where o_orderstatus <> 'F';
+count(*)
+770587
+select count(*) from orders where o_orderstatus not like 'F%';
+count(*)
+770587
+select count(*) from orders where o_orderstatus = 'F' or o_orderstatus = 'O';
+count(*)
+1461457
+select count(*) from orders where o_orderstatus like 'F%' or o_orderstatus like 'O%';
+count(*)
+1461457
+select count(*) from orders where o_orderpriority like '4-NOT SPECIFIED';
+count(*)
+300254
+select count(*) from orders where o_orderpriority = '4-NOT SPECIFIED';
+count(*)
+300254
+select count(*) from orders where o_orderpriority like '4-%';
+count(*)
+300254

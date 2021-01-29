@@ -1,0 +1,36 @@
+#
+# Test TO_DAYS function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs249_db;
+--enable_warnings
+
+CREATE DATABASE mcs249_db;
+USE mcs249_db;
+
+CREATE TABLE t1
+(
+ t1_INT INT,
+ t1_DECIMAL DECIMAL(12,5),
+ t1_TEXT TEXT,
+ t1_DATE DATE,
+ t1_TIME TIME
+ )ENGINE=Columnstore;
+INSERT INTO t1 VALUES(103, 1234.5699, repeat('o', 5), '1997-12-12', '22:12:02');
+INSERT INTO t1 VALUES(-7299, 111.99, repeat('p', 5), '2001-1-1', '23:59:59');
+INSERT INTO t1 VALUES(9913, 98765.4321, repeat('q', 5), '09-12-11', '01:08:59');
+
+SELECT TO_DAYS('0000-00-00') FROM t1 LIMIT 1;
+SELECT TO_DAYS('0000-01-01') FROM t1 LIMIT 1;
+SELECT TO_DAYS('0000-10-10') FROM t1 LIMIT 1;
+SELECT TO_DAYS('2000-07-09') FROM t1 LIMIT 1;
+SELECT TO_DAYS('9999-12-31') FROM t1 LIMIT 1;
+SELECT TO_DAYS('99991231') FROM t1 LIMIT 1;
+SELECT TO_DAYS('9999/12/31') FROM t1 LIMIT 1;
+SELECT t1_DATE, TO_DAYS(t1_DATE) FROM t1 ORDER BY 1;
+
+# Clean UP
+DROP DATABASE mcs249_db;

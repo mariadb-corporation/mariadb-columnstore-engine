@@ -1,0 +1,219 @@
+DROP DATABASE IF EXISTS mcs128_db;
+CREATE DATABASE mcs128_db;
+USE mcs128_db;
+CREATE TABLE t1 (a CHAR(1), b INT)ENGINE=Columnstore;
+INSERT INTO t1 VALUES ('', NULL),('a', 123),('a', 1),('b', 123),('c', 1861),('c', 1991),('d', 10701),('d', 1071),('a', 92);
+SELECT a, b, LEAD(a) OVER(ORDER BY a) lead_value FROM t1;
+a	b	lead_value
+NULL	NULL	a
+a	92	a
+a	1	a
+a	123	b
+b	123	c
+c	1991	c
+c	1861	d
+d	1071	d
+d	10701	NULL
+SELECT a, b, LEAD(b) OVER(ORDER BY b DESC) lead_value FROM t1;
+a	b	lead_value
+d	10701	1991
+c	1991	1861
+c	1861	1071
+d	1071	123
+a	123	123
+b	123	92
+a	92	1
+a	1	NULL
+NULL	NULL	NULL
+SELECT a, b, LEAD(a) OVER(ORDER BY b) lead_value FROM t1;
+a	b	lead_value
+NULL	NULL	a
+a	1	a
+a	92	b
+b	123	a
+a	123	d
+d	1071	c
+c	1861	c
+c	1991	d
+d	10701	NULL
+SELECT a, b, LEAD(b) OVER(ORDER BY a DESC) lead_value FROM t1;
+a	b	lead_value
+d	10701	1071
+d	1071	1861
+c	1861	1991
+c	1991	123
+b	123	92
+a	92	123
+a	123	1
+a	1	NULL
+NULL	NULL	NULL
+SELECT a, b, LEAD(b, 0) OVER(ORDER BY a DESC) lead_value FROM t1;
+a	b	lead_value
+d	10701	10701
+d	1071	1071
+c	1861	1861
+c	1991	1991
+b	123	123
+a	92	92
+a	123	123
+a	1	1
+NULL	NULL	NULL
+SELECT a, b, LEAD(b, -1) OVER(ORDER BY a DESC) lead_value FROM t1;
+a	b	lead_value
+d	10701	NULL
+d	1071	10701
+c	1861	1071
+c	1991	1861
+b	123	1991
+a	92	123
+a	123	92
+a	1	123
+NULL	NULL	1
+SELECT a, b, LEAD(b, 2) OVER(ORDER BY a DESC) lead_value FROM t1;
+a	b	lead_value
+d	10701	1861
+d	1071	1991
+c	1861	123
+c	1991	92
+b	123	123
+a	92	1
+a	123	NULL
+a	1	NULL
+NULL	NULL	NULL
+SELECT a, b, LEAD(a) OVER w lead_value FROM t1 WINDOW w AS (ORDER BY a DESC);
+a	b	lead_value
+d	10701	d
+d	1071	c
+c	1861	c
+c	1991	b
+b	123	a
+a	92	a
+a	123	a
+a	1	NULL
+NULL	NULL	NULL
+SELECT a, b, LEAD(b) OVER w lead_value FROM t1 WINDOW w AS (ORDER BY b);
+a	b	lead_value
+NULL	NULL	1
+a	1	92
+a	92	123
+b	123	123
+a	123	1071
+d	1071	1861
+c	1861	1991
+c	1991	10701
+d	10701	NULL
+SELECT a, b, LEAD(a) OVER(PARTITION BY a ORDER BY a DESC) lead_value FROM t1;
+a	b	lead_value
+NULL	NULL	NULL
+a	92	a
+a	1	a
+a	123	NULL
+b	123	NULL
+c	1991	c
+c	1861	NULL
+d	1071	d
+d	10701	NULL
+SELECT a, b, LEAD(a) OVER(PARTITION BY a ORDER BY b DESC) lead_value FROM t1;
+a	b	lead_value
+NULL	NULL	NULL
+a	123	a
+a	92	a
+a	1	NULL
+b	123	NULL
+c	1991	c
+c	1861	NULL
+d	10701	d
+d	1071	NULL
+SELECT a, b, LEAD(a) OVER(PARTITION BY a ORDER BY b ASC) lead_value FROM t1;
+a	b	lead_value
+NULL	NULL	NULL
+a	1	a
+a	92	a
+a	123	NULL
+b	123	NULL
+c	1861	c
+c	1991	NULL
+d	1071	d
+d	10701	NULL
+SELECT a, b, LEAD(a) OVER(PARTITION BY b ORDER BY a DESC) lead_value FROM t1;
+a	b	lead_value
+NULL	NULL	NULL
+a	1	NULL
+a	92	NULL
+b	123	a
+a	123	NULL
+d	1071	NULL
+c	1861	NULL
+c	1991	NULL
+d	10701	NULL
+SELECT a, b, LEAD(a) OVER(PARTITION BY b ORDER BY b DESC) lead_value FROM t1;
+a	b	lead_value
+NULL	NULL	NULL
+a	1	NULL
+a	92	NULL
+b	123	a
+a	123	NULL
+d	1071	NULL
+c	1861	NULL
+c	1991	NULL
+d	10701	NULL
+SELECT a, b, LEAD(b) OVER(PARTITION BY a ORDER BY a DESC) lead_value FROM t1;
+a	b	lead_value
+NULL	NULL	NULL
+a	92	1
+a	1	123
+a	123	NULL
+b	123	NULL
+c	1991	1861
+c	1861	NULL
+d	1071	10701
+d	10701	NULL
+SELECT a, b, LEAD(b) OVER(PARTITION BY a ORDER BY b DESC) lead_value FROM t1;
+a	b	lead_value
+NULL	NULL	NULL
+a	123	92
+a	92	1
+a	1	NULL
+b	123	NULL
+c	1991	1861
+c	1861	NULL
+d	10701	1071
+d	1071	NULL
+SELECT a, b, LEAD(b) OVER(PARTITION BY a ORDER BY b ASC) lead_value FROM t1;
+a	b	lead_value
+NULL	NULL	NULL
+a	1	92
+a	92	123
+a	123	NULL
+b	123	NULL
+c	1861	1991
+c	1991	NULL
+d	1071	10701
+d	10701	NULL
+SELECT a, b, LEAD(b) OVER(PARTITION BY b ORDER BY a DESC) lead_value FROM t1;
+a	b	lead_value
+NULL	NULL	NULL
+a	1	NULL
+a	92	NULL
+b	123	123
+a	123	NULL
+d	1071	NULL
+c	1861	NULL
+c	1991	NULL
+d	10701	NULL
+SELECT a, b, LEAD(b) OVER(PARTITION BY b ORDER BY b DESC) lead_value FROM t1;
+a	b	lead_value
+NULL	NULL	NULL
+a	1	NULL
+a	92	NULL
+b	123	123
+a	123	NULL
+d	1071	NULL
+c	1861	NULL
+c	1991	NULL
+d	10701	NULL
+SELECT a, b, LEAD(a) OVER(PARTITION BY b) lead_value FROM t1;
+ERROR HY000: No order list in window specification for 'lead'
+SELECT a, b, LEAD(a) OVER(PARTITION BY a) lead_value FROM t1;
+ERROR HY000: No order list in window specification for 'lead'
+DROP DATABASE mcs128_db;

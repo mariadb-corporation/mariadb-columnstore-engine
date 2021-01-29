@@ -1,0 +1,154 @@
+DROP DATABASE IF EXISTS mcs12_db1;
+DROP DATABASE IF EXISTS mcs12_db2;
+CREATE DATABASE mcs12_db1;
+CREATE DATABASE mcs12_db2;
+USE mcs12_db1;
+CREATE TABLE t1 (a INTEGER, c1 CHAR(10));
+INSERT INTO t1 VALUES (1, 'a'),(2, 'b');
+ALTER TABLE t1 ENGINE=Columnstore;
+ALTER TABLE t1 ENGINE=INNODB;
+INSERT INTO t1 VALUES (3, 'c'),(4, 'd');
+ALTER TABLE mcs12_db1.t1 ENGINE=Columnstore;
+INSERT INTO mcs12_db1.t1 VALUES (3, 'c'),(4, 'd');
+SHOW CREATE TABLE mcs12_db1.t1;
+Table	Create Table
+t1	CREATE TABLE `t1` (
+  `a` int(11) DEFAULT NULL,
+  `c1` char(10) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+SELECT * FROM mcs12_db1.t1;
+a	c1
+1	a
+2	b
+3	c
+4	d
+3	c
+4	d
+SHOW CREATE TABLE t1;
+Table	Create Table
+t1	CREATE TABLE `t1` (
+  `a` int(11) DEFAULT NULL,
+  `c1` char(10) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+SELECT * FROM t1;
+a	c1
+1	a
+2	b
+3	c
+4	d
+3	c
+4	d
+ALTER TABLE t1 RENAME t2;
+SHOW CREATE TABLE t2;
+Table	Create Table
+t2	CREATE TABLE `t2` (
+  `a` int(11) DEFAULT NULL,
+  `c1` char(10) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+SELECT * FROM t2;
+a	c1
+1	a
+2	b
+3	c
+4	d
+3	c
+4	d
+ALTER TABLE t2 RENAME TO mcs12_db1.t1;
+SHOW CREATE TABLE t1;
+Table	Create Table
+t1	CREATE TABLE `t1` (
+  `a` int(11) DEFAULT NULL,
+  `c1` char(10) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+SELECT * FROM t1;
+a	c1
+1	a
+2	b
+3	c
+4	d
+3	c
+4	d
+ALTER TABLE mcs12_db1.t1 RENAME TO mcs12_db2.t1;
+ERROR HY000: Internal error: CAL0001: Alter table Failed:  The new tablename is already in use.  
+DROP TABLE t1;
+CREATE TABLE t1 (i INTEGER) ENGINE=Columnstore;
+ALTER TABLE t1 ADD COLUMN (c CHAR(10));
+INSERT INTO t1 VALUES (1, 'a'),(2, 'b');
+ALTER TABLE t1 ADD t TIMESTAMP;
+ALTER TABLE t1 ADD COLUMN i2 INT COMMENT 'Add one more column.';
+INSERT INTO t1 VALUES (1, 'a', '2020-07-08', 11);
+SHOW CREATE TABLE t1;
+Table	Create Table
+t1	CREATE TABLE `t1` (
+  `i` int(11) DEFAULT NULL,
+  `c` char(10) DEFAULT NULL,
+  `t` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `i2` int(11) DEFAULT NULL COMMENT 'Add one more column.'
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+ALTER TABLE t1 DROP COLUMN t;
+SHOW CREATE TABLE t1;
+Table	Create Table
+t1	CREATE TABLE `t1` (
+  `i` int(11) DEFAULT NULL,
+  `c` char(10) DEFAULT NULL,
+  `i2` int(11) DEFAULT NULL COMMENT 'Add one more column.'
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+SELECT * FROM t1;
+i	c	i2
+1	a	NULL
+2	b	NULL
+1	a	11
+ALTER TABLE t1 CHANGE i new_i INTEGER;
+INSERT INTO t1 VALUES (2, 'b', 22);
+SHOW CREATE TABLE t1;
+Table	Create Table
+t1	CREATE TABLE `t1` (
+  `new_i` int(11) DEFAULT NULL,
+  `c` char(10) DEFAULT NULL,
+  `i2` int(11) DEFAULT NULL COMMENT 'Add one more column.'
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+SELECT * FROM t1;
+new_i	c	i2
+1	a	NULL
+2	b	NULL
+1	a	11
+2	b	22
+DROP TABLE t1;
+CREATE TABLE t1 (i INTEGER) ENGINE=Columnstore;
+connect  addconroot1, localhost, root,,;
+connect  addconroot2, localhost, root,,;
+connection addconroot1;
+SHOW CREATE TABLE mcs12_db1.t1;
+Table	Create Table
+t1	CREATE TABLE `t1` (
+  `i` int(11) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+ALTER TABLE mcs12_db1.t1 ADD COLUMN c CHAR(10);
+INSERT INTO mcs12_db1.t1 VALUES (1, 'a'),(2, 'b');
+connection addconroot2;
+ALTER TABLE mcs12_db1.t1 ADD t TIMESTAMP;
+INSERT INTO mcs12_db1.t1 VALUES (3, 'c', '2020-07-08');
+connection addconroot1;
+ALTER TABLE mcs12_db1.t1 DROP COLUMN t;
+INSERT INTO mcs12_db1.t1 VALUES (4, 'd');
+connection addconroot2;
+ALTER TABLE mcs12_db1.t1 ADD COLUMN i2 INT COMMENT 'Add one more column.';
+INSERT INTO mcs12_db1.t1 VALUES (5, 'e', 55);
+connection default;
+SHOW CREATE TABLE mcs12_db1.t1;
+Table	Create Table
+t1	CREATE TABLE `t1` (
+  `i` int(11) DEFAULT NULL,
+  `c` char(10) DEFAULT NULL,
+  `i2` int(11) DEFAULT NULL COMMENT 'Add one more column.'
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+SELECT * FROM mcs12_db1.t1;
+i	c	i2
+1	a	NULL
+2	b	NULL
+3	c	NULL
+4	d	NULL
+5	e	55
+disconnect addconroot1;
+disconnect addconroot2;
+DROP DATABASE mcs12_db1;

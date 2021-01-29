@@ -1,0 +1,58 @@
+#
+# LOAD DATA INFILE with lines terminated by   #
+# Author: Susil, susil.behera@mariadb.com     #  
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs105_db;
+--enable_warnings
+
+CREATE DATABASE mcs105_db;
+USE mcs105_db;
+
+# Prepare the csv file
+exec rm -f /tmp/mcs105.csv;
+
+exec cat << EOF > /tmp/mcs105.csv 
+1,Sprint Break - San Jose
+2,Back to Scholl - San Jose
+3,Summer - San Jose
+4,Spring
+EOF;
+
+CREATE TABLE discounts (
+    id INT NOT NULL,
+    title VARCHAR(255) NOT NULL
+) ENGINE=Columnstore;
+
+# With default char '\n'
+LOAD DATA INFILE '/tmp/mcs105.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
+LOAD DATA LOCAL INFILE '/tmp/mcs105.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
+
+SELECT * FROM discounts ORDER BY id;
+SELECT COUNT(*) FROM discounts;
+TRUNCATE discounts;
+
+# explicit mention the char
+LOAD DATA INFILE '/tmp/mcs105.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n';
+LOAD DATA LOCAL INFILE '/tmp/mcs105.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n';
+
+SELECT * FROM discounts ORDER BY id;
+SELECT COUNT(*) FROM discounts;
+TRUNCATE discounts;
+
+exec cat << EOF > /tmp/mcs105.csv
+1,Sprint Break - San Jose | 2,Back to Scholl - San Jose | 3,Summer - San Jose | 4,Spring
+EOF;
+
+LOAD DATA INFILE '/tmp/mcs105.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' LINES TERMINATED BY '|';
+LOAD DATA LOCAL INFILE '/tmp/mcs105.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' LINES TERMINATED BY '|';
+
+SELECT * FROM discounts ORDER BY id;
+SELECT COUNT(*) FROM discounts;
+TRUNCATE discounts;
+
+# Clean up
+exec rm -f /tmp/mcs105.csv;
+DROP DATABASE IF EXISTS mcs105_db;

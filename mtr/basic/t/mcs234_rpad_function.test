@@ -1,0 +1,31 @@
+#
+# Test RPAD() function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs234_db;
+--enable_warnings
+
+CREATE DATABASE mcs234_db;
+USE mcs234_db;
+
+CREATE TABLE t1
+(
+ t1_CHAR CHAR(1),
+ t1_TEXT TEXT
+ )ENGINE=Columnstore;
+INSERT INTO t1 VALUES('o', 'pqrstuvwxyz');
+INSERT INTO t1 VALUES('z', 'abcdefghijklm');
+INSERT INTO t1 VALUES('p', repeat('q', 5));
+
+SELECT t1_CHAR, RPAD(t1_CHAR, 10, 'Columnstore') FROM t1 ORDER BY 1;
+SELECT t1_CHAR, RPAD(t1_CHAR, 5, '*') FROM t1 ORDER BY 1;
+SELECT t1_CHAR, RPAD(t1_CHAR, 10, '1234567890') FROM t1 ORDER BY 1;
+SELECT t1_TEXT, RPAD(t1_TEXT, 15, 'Columnstore') FROM t1 ORDER BY 1;
+SELECT t1_TEXT, RPAD(t1_TEXT, 5, '*') FROM t1 ORDER BY 1;
+SELECT t1_TEXT, RPAD(t1_TEXT, 20, '1234567890') FROM t1 ORDER BY 1;
+
+# Clean UP
+DROP DATABASE mcs234_db;

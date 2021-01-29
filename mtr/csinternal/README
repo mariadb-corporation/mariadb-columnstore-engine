@@ -1,0 +1,21 @@
+
+
+[Test Data]
+
+Some of the test cases in this test suite require the available DBT3 and SSD data sets.
+These data sets are not included in the test suite and must be available locally.
+The follow is the expected path to the data sets
+
+/data/qa/source/dbt3/1m
+/data/qa/source/dbt3/1g
+/data/qa/source/dbt3/10g
+/data/qa/source/dbt3/100g
+
+/data/qa/source/ssd/1m
+/data/qa/source/ssd/1g
+
+One ease way of making this data sets available is to store them on a
+mountable storage device.  If you are using a virtual machine environment, such as
+virtualBox, you can store the data on the host server.  That way, the server under test
+or VMs can simply mount the data according uisng the paths above.
+

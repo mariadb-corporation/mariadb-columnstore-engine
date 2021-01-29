@@ -1,0 +1,31 @@
+#
+# Test INET_ATON() function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs205_db;
+--enable_warnings
+
+CREATE DATABASE mcs205_db;
+USE mcs205_db;
+
+CREATE TABLE t1 (a INT, b CHAR(5))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL, ''),(1, 'aaa'),(2, 'aaa'),(3, 'ccc'),(4, 'ddd'),(5, 'aaa'),(6, 'ddd'),(7, 'eee');
+
+SELECT a, INET_ATON(a) FROM t1 ORDER BY a;
+SELECT b, INET_ATON(b) FROM t1 ORDER BY b;
+
+SELECT INET_ATON('0.0.0.0') FROM t1;
+SELECT INET_ATON('0.0.0.1') FROM t1;
+SELECT INET_ATON('0.0.1.0') FROM t1;
+SELECT INET_ATON('0.1.0.0') FROM t1;
+SELECT INET_ATON('1.0.0.0') FROM t1;
+SELECT INET_ATON('255.0.0.0') FROM t1;
+SELECT INET_ATON('256.0.0.0') FROM t1;
+SELECT INET_ATON('0.0.0.-1') FROM t1;
+SELECT INET_ATON('255.255.255.255') FROM t1;
+
+# Clean UP
+DROP DATABASE mcs205_db;

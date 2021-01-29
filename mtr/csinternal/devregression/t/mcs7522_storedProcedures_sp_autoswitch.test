@@ -1,0 +1,159 @@
+#
+# Test case migrated from regression test suite:
+# queries/working_tpch1_compareLogOnly/storedProcedures/sp_autoswitch.sql
+#
+# Author: Susil, susil.behera@mariadb.com
+#
+
+-- source ../include/have_columnstore.inc
+
+USE tpch1;
+
+# Simple SP without args
+DELIMITER $$;
+drop procedure if exists sp_simple_select;
+Create Procedure sp_simple_select( )
+begin
+        select * from part where p_partkey < 5;
+end $$
+
+# Simple SP with 1 arg
+drop procedure if exists sp_simple_variable;
+Create Procedure sp_simple_variable(in arg_key int)
+begin
+        select * from part where p_partkey <= arg_key;
+end $$
+
+# Simple SP with multiple args
+drop procedure if exists sp_simple_variables;
+Create Procedure sp_simple_variables(in arg_key int, in arg_string varchar(25))
+begin
+        select * from nation where n_nationkey <= arg_key and n_name > arg_string;
+end $$
+
+# Simple SP with cross table select query
+drop procedure if exists sp_complex_variable;
+Create Procedure sp_complex_variable(in arg_key int, in arg_date date)
+begin
+        Select * from lineitem, orders where o_custkey < arg_key and
+        l_partkey < 10000 and l_shipdate>arg_date and l_orderkey = o_orderkey order by l_orderkey, l_linenumber;
+end $$
+
+# Complex SP. All following SPs will fail vtable mode
+drop procedure if exists sp_unstructured_loop;
+Create Procedure sp_unstructured_loop(in arg_key int)
+begin
+        declare v_col1 int;
+        declare v_col2 char(122);
+        declare no_more_rows boolean ;
+        declare cursor1 cursor for
+            select p_partkey, p_name from part where p_partkey <= arg_key;
+        declare continue handler for not found
+            set no_more_rows := TRUE;
+        set no_more_rows := false;
+        open cursor1;
+        LOOP1: loop
+            fetch cursor1
+            into  v_col1, v_col2
+            ;
+            if no_more_rows then
+                close cursor1;
+                leave LOOP1;
+            end if;
+            --
+                select v_col1, v_col2;
+            --
+        end loop LOOP1;
+end$$
+
+
+drop procedure if exists sp_repeat_loop;
+Create Procedure sp_repeat_loop(in arg_key int, in arg_key2 int)
+begin
+   DECLARE done INT DEFAULT 0;
+    DECLARE a CHAR(122);
+    DECLARE b INT;
+    DECLARE cur1
+        CURSOR FOR
+        SELECT p_partkey, p_name
+        FROM part where p_partkey between arg_key and arg_key2;
+    DECLARE
+        CONTINUE HANDLER FOR
+        SQLSTATE '02000'
+            SET done = 1;
+
+    OPEN cur1;
+
+    REPEAT
+        FETCH cur1 INTO b, a;
+        if not done then
+                select b, a;
+        end if;
+    UNTIL
+        done
+    END REPEAT;
+
+    CLOSE cur1;
+end$$
+
+drop procedure if exists sp_while_loop;
+Create Procedure sp_while_loop(in arg_key int, in arg_key2 int)
+begin
+   DECLARE done INT DEFAULT 0;
+    DECLARE a CHAR(116);
+    DECLARE b INT;
+    DECLARE cur1
+        CURSOR FOR
+        SELECT p_partkey, p_name
+        FROM part where p_partkey between arg_key and arg_key2;
+    DECLARE
+        CONTINUE HANDLER FOR
+        SQLSTATE '02000'
+            SET done = 1;
+
+    OPEN cur1;
+
+    FETCH cur1 INTO b, a;
+    WHILE NOT done DO
+        if not done then
+                select b, a;
+        end if;
+       FETCH cur1 INTO b, a;
+    END WHILE;
+
+    CLOSE cur1;
+end$$
+
+# SP with DDL
+drop procedure if exists proc1;
+create procedure proc1()
+begin
+drop table if exists t1;
+create table if not exists t1 (id int)engine=columnstore;
+start transaction;
+alter table t1 add column c3 integer;
+insert into t1 values (1,2);
+select * into @a, @b from t1;
+drop table t1;
+commit;
+end$$
+
+DELIMITER ;$$
+call sp_simple_select;
+call sp_simple_variable(2);
+call sp_simple_variables(10, 'AMERICA');
+call sp_complex_variable(1000, '1998-10-10');
+call sp_unstructured_loop(2);
+call sp_repeat_loop(1,2);
+call sp_while_loop(1,2);
+call proc1();
+select @a, @b;
+
+drop procedure sp_simple_select;
+drop procedure sp_simple_variable;
+drop procedure sp_simple_variables;
+drop procedure sp_complex_variable;
+drop procedure sp_unstructured_loop;
+drop procedure sp_repeat_loop;
+drop procedure sp_while_loop;
+drop procedure proc1;

@@ -1,0 +1,28 @@
+#
+#Test CREATE TABLE with all supported constraints in Columnstore
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs8_db;
+--enable_warnings
+
+CREATE DATABASE mcs8_db;
+USE mcs8_db;
+
+CREATE TABLE t1(col1 SMALLINT  DEFAULT 10)ENGINE=Columnstore;
+SHOW CREATE TABLE t1;
+CREATE TABLE t2(col1 TINYINT  NOT NULL)ENGINE=Columnstore;
+SHOW CREATE TABLE t2;
+# Indexes and Keys aren't supported in MCS
+--error 1064
+CREATE INDEX on t2(col1);
+CREATE TABLE t3(col1 INT, CHECK (col1>=10))ENGINE=Columnstore;
+SHOW CREATE TABLE t3;
+--error 1069
+CREATE TABLE t4(col1 INT PRIMARY KEY AUTO_INCREMENT)ENGINE=Columnstore;
+--error 1178
+CREATE TABLE t4(col1 INT )MAX_ROWS=10, ENGINE=Columnstore;
+--error 1178
+CREATE TABLE t5(col1 INT )MIN_ROWS=10, ENGINE=Columnstore;
+DROP DATABASE mcs8_db;

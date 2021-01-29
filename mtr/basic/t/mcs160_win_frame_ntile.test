@@ -1,0 +1,29 @@
+#
+# Window Frame is not allowed with NTILE
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs160_db;
+--enable_warnings
+
+CREATE DATABASE mcs160_db;
+USE mcs160_db;
+
+CREATE TABLE t1 (a CHAR(1), b INT)ENGINE=Columnstore;
+INSERT INTO t1 VALUES ('', NULL),('a', 12),('a', 13),('b', 14),('c', 15),('d', 16),('d', 17),('b', 18),('a', 19);
+
+--error ER_NOT_ALLOWED_WINDOW_FRAME
+SELECT a, b, NTILE(3) OVER(ORDER BY b RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) lead_value FROM t1;
+--error ER_NOT_ALLOWED_WINDOW_FRAME
+SELECT a, b, NTILE(3) OVER(ORDER BY b RANGE BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) lead_value FROM t1;
+--error ER_NOT_ALLOWED_WINDOW_FRAME
+SELECT a, b, NTILE(3) OVER(ORDER BY b ROWS BETWEEN 1 PRECEDING AND CURRENT ROW) lead_value FROM t1;
+--error ER_NOT_ALLOWED_WINDOW_FRAME
+SELECT a, b, NTILE(3) OVER(ORDER BY b ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) lead_value FROM t1;
+--error ER_NOT_ALLOWED_WINDOW_FRAME
+SELECT a, b, NTILE(3) OVER(ORDER BY b ROWS BETWEEN 1 PRECEDING AND UNBOUNDED FOLLOWING) lead_value FROM t1;
+
+# Clean UP
+DROP DATABASE mcs160_db;

@@ -1,0 +1,103 @@
+DROP DATABASE IF EXISTS mcs30_db1;
+CREATE DATABASE mcs30_db1;
+USE mcs30_db1;
+CREATE TABLE t1
+( c1  INT, c2 CHAR(10), c3 TEXT DEFAULT 'ccc' ) ENGINE=Columnstore;
+INSERT INTO t1 (c1, c2) VALUES (1, 'a'), (1, 'b'), (2, 'b');
+UPDATE t1 SET c2 = 'b', c3 = 'bbb' WHERE c1 = 2;
+SELECT * FROM t1;
+c1	c2	c3
+1	a	ccc
+1	b	ccc
+2	b	bbb
+INSERT INTO t1 VALUES (NULL, NULL, NULL);
+INSERT INTO t1 (c1, c2) VALUES (NULL, NULL);
+UPDATE t1 SET c1 = c1+1, c3 = 'bbb' WHERE c2 = 'b';
+SELECT * FROM t1;
+c1	c2	c3
+1	a	ccc
+2	b	bbb
+3	b	bbb
+NULL	NULL	NULL
+NULL	NULL	ccc
+UPDATE t1 SET c2 = 'd' WHERE c3 IN ('bbb', 'ccc');
+SELECT * FROM t1;
+c1	c2	c3
+1	d	ccc
+2	d	bbb
+3	d	bbb
+NULL	NULL	NULL
+NULL	d	ccc
+UPDATE t1 SET c2 = 'e', c3 = 'eee' WHERE c1 > 1 AND c3 = 'bbb';
+SELECT * FROM t1;
+c1	c2	c3
+1	d	ccc
+2	e	eee
+3	e	eee
+NULL	NULL	NULL
+NULL	d	ccc
+UPDATE t1 SET c2 = NULL WHERE c3 = 'ccc';
+SELECT * FROM t1;
+c1	c2	c3
+1	NULL	ccc
+2	e	eee
+3	e	eee
+NULL	NULL	NULL
+NULL	NULL	ccc
+DROP TABLE t1;
+CREATE TABLE t1 (a INT NOT NULL, b INT NOT NULL) ENGINE=Columnstore;
+INSERT INTO t1 VALUES (1,1),(1,2),(1,3),(3,1),(3,2),(3,3),(3,1),(3,2),(3,3),(2,1),(2,2),(2,3);
+SET @tmp=0;
+UPDATE t1 SET b=(@tmp:=@tmp+1);
+SELECT * FROM t1 ORDER BY a, b;
+a	b
+1	1
+1	1
+1	1
+2	1
+2	1
+2	1
+3	1
+3	1
+3	1
+3	1
+3	1
+3	1
+CREATE TABLE t2 (a INT NOT NULL, b INT NOT NULL) ENGINE=Columnstore;
+INSERT INTO t2 VALUES (1,1),(1,2),(1,3);
+UPDATE t1 SET b=(SELECT 5);
+SELECT * FROM t1 ORDER BY a, b;
+a	b
+1	5
+1	5
+1	5
+2	5
+2	5
+2	5
+3	5
+3	5
+3	5
+3	5
+3	5
+3	5
+UPDATE t1 SET b=(SELECT b FROM t2 ORDER BY b LIMIT 1);
+SELECT * FROM t1 ORDER BY a, b;
+a	b
+1	1
+1	1
+1	1
+2	1
+2	1
+2	1
+3	1
+3	1
+3	1
+3	1
+3	1
+3	1
+SELECT * FROM t2 ORDER BY a, b;
+a	b
+1	1
+1	2
+1	3
+DROP DATABASE IF EXISTS mcs30_db1;

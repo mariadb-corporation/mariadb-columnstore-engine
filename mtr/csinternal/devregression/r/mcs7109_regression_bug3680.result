@@ -1,0 +1,185 @@
+USE tpch1;
+drop table if exists pts_agg_url_report;
+Warnings:
+Note	1051	Unknown table 'tpch1.pts_agg_url_report'
+drop table if exists pts_dim_publisher;
+Warnings:
+Note	1051	Unknown table 'tpch1.pts_dim_publisher'
+drop table if exists pts_dim_subsite;
+Warnings:
+Note	1051	Unknown table 'tpch1.pts_dim_subsite'
+drop table if exists pts_meta_ad;
+Warnings:
+Note	1051	Unknown table 'tpch1.pts_meta_ad'
+drop table if exists pts_meta_campaign;
+Warnings:
+Note	1051	Unknown table 'tpch1.pts_meta_campaign'
+CREATE TABLE `pts_agg_url_report` (
+`agg_date` date DEFAULT NULL,
+`client_id` varchar(32) DEFAULT NULL,
+`campaign_id` varchar(32) DEFAULT NULL,
+`ad_group_id` varchar(32) DEFAULT NULL,
+`ad_id` varchar(32) DEFAULT NULL,
+`creative_id` varchar(32) DEFAULT NULL,
+`network_id` varchar(32) DEFAULT NULL,
+`publisher_id` int(11) DEFAULT NULL,
+`host_id` int(11) DEFAULT NULL,
+`subsite_id` int(11) DEFAULT NULL,
+`count_view` int(11) DEFAULT NULL,
+`count_click` int(11) DEFAULT NULL
+) engine=columnstore;
+CREATE TABLE `pts_dim_publisher` (
+`publisher_id` int(11) DEFAULT NULL,
+`publisher` varchar(250) DEFAULT NULL,
+`client_id` varchar(32) DEFAULT NULL,
+`language` varchar(2) DEFAULT NULL,
+`constant` tinyint(4) DEFAULT NULL
+) engine=columnstore;
+CREATE TABLE `pts_dim_subsite` (
+`subsite_id` int(11) DEFAULT NULL,
+`subsite` varchar(50) DEFAULT NULL,
+`client_id` varchar(32) DEFAULT NULL,
+`language` varchar(2) DEFAULT NULL,
+`constant` tinyint(4) DEFAULT NULL
+) engine=columnstore;
+CREATE TABLE `pts_meta_ad` (
+`clientId` varchar(32) DEFAULT NULL,
+`clientExternalId` int(11) DEFAULT NULL,
+`id` varchar(32) DEFAULT NULL,
+`extenalId` int(11) DEFAULT NULL,
+`displayName` varchar(250) DEFAULT NULL,
+`grouped` tinyint(4) DEFAULT NULL,
+`campaignGroupId` varchar(32) DEFAULT NULL,
+`campaignGroupExternalId` int(11) DEFAULT NULL,
+`campaignId` varchar(32) DEFAULT NULL,
+`campaignExternalId` int(11) DEFAULT NULL,
+`dimension` varchar(7) DEFAULT NULL,
+`dimensionName` varchar(250) DEFAULT NULL
+) engine=columnstore;
+cREATE TABLE `pts_meta_campaign` (
+`clientId` varchar(32) DEFAULT NULL,
+`externalClientId` int(11) DEFAULT NULL,
+`id` varchar(32) DEFAULT NULL,
+`externalId` int(11) DEFAULT NULL,
+`displayName` varchar(250) DEFAULT NULL,
+`grouped` tinyint(4) DEFAULT NULL,
+`campaignGroupId` varchar(32) DEFAULT NULL,
+`campaignGroupExternalid` int(11) DEFAULT NULL,
+`advertiserId` varchar(32) DEFAULT NULL,
+`advertiserExternalId` varchar(32) DEFAULT NULL,
+`state` varchar(32) DEFAULT NULL,
+`startDate` datetime DEFAULT NULL,
+`endDate` datetime DEFAULT NULL,
+`plannedGoal` int(11) DEFAULT NULL,
+`passback` tinyint(4) DEFAULT NULL
+) engine=columnstore;
+select date_format(agg_date,'%X/%m/%d'),pmc.displayname,publisher,v,c, pds.subsite,pma.dimensionName
+from (
+select agg_date,campaign_id cid, publisher, sum(count_view) v, sum(count_click) c, subsite_id, ad_id
+from pts_agg_url_report s join pts_dim_publisher pdpub on s.publisher_id = pdpub.publisher_id and s.client_id = 
+pdpub.client_id
+where s.client_id = '5' and agg_date >= date_sub(date(now()),interval 7 DAY) and agg_date < date(now())
+group by agg_date,campaign_id, publisher, subsite_id,ad_id) s
+join pts_dim_subsite pds on pds.subsite_id = s.subsite_id join  pts_meta_ad pma on pma.id = s.ad_id join 
+pts_meta_campaign pmc on pmc.id = s.cid
+where cid is not null order by agg_date,pmc.displayname,publisher,pds.subsite,pma.dimensionname
+;
+date_format(agg_date,'%X/%m/%d')	displayname	publisher	v	c	subsite	dimensionName
+drop table pts_agg_url_report;
+drop table pts_dim_publisher;
+drop table pts_dim_subsite;
+drop table pts_meta_ad;
+drop table pts_meta_campaign;
+drop table if exists marketing_conversions;
+Warnings:
+Note	1051	Unknown table 'tpch1.marketing_conversions'
+drop table if exists marketing_events;
+Warnings:
+Note	1051	Unknown table 'tpch1.marketing_events'
+drop table if exists marketing_leads;
+Warnings:
+Note	1051	Unknown table 'tpch1.marketing_leads'
+CREATE TABLE `marketing_conversions` (
+`pkMarketingConversionID` int(10) DEFAULT NULL,
+`CreatedOn` datetime DEFAULT NULL,
+`AccountID` int(10) DEFAULT NULL,
+`InvoiceID` int(10) DEFAULT NULL,
+`ProductID` varchar(20) DEFAULT NULL,
+`ProductType` varchar(20) DEFAULT NULL,
+`AmountCharged` decimal(10,2) DEFAULT NULL,
+`Attribute` varchar(256) DEFAULT NULL,
+`NewUser` int(11) DEFAULT NULL,
+`Period` int(11) DEFAULT NULL,
+`SubAccountId` int(11) DEFAULT NULL
+) engine=columnstore;
+CREATE TABLE `marketing_events` (
+`pkMarketingEventID` int(10) DEFAULT NULL,
+`WebsiteID` int(10) DEFAULT NULL,
+`CreatedOn` datetime DEFAULT NULL,
+`AccountID` int(10) DEFAULT NULL,
+`Event` varchar(30) DEFAULT NULL,
+`Attribute` varchar(256) DEFAULT NULL,
+`Notes` varchar(256) DEFAULT NULL
+) engine=columnstore;
+CREATE TABLE `marketing_leads` (
+`pkMarketingLeadID` int(10) DEFAULT NULL,
+`CreatedOn` datetime DEFAULT NULL,
+`AccountID` int(10) DEFAULT NULL,
+`Source` varchar(45) DEFAULT NULL,
+`Campaign` varchar(45) DEFAULT NULL,
+`SubCampaign` varchar(45) DEFAULT NULL,
+`LandingUrl` varchar(256) DEFAULT NULL,
+`LastSource` varchar(45) DEFAULT NULL,
+`LastCampaign` varchar(45) DEFAULT NULL,
+`LastSubCampaign` varchar(45) DEFAULT NULL,
+`LastReferringUrl` varchar(256) DEFAULT NULL,
+`LastVisitOn` datetime DEFAULT NULL,
+`LastLandingUrl` varchar(256) DEFAULT NULL
+) engine=columnstore;
+select ml.xdate, sum(ml.ucv) as ucv, sum(me.trials) as trials,
+sum(conversions) as conversions, sum(monthly) as monthly, sum(yearly) as
+yearly, sum(biyearly) as biyearly, sum(standard) as standard, sum(advanced) as
+advanced, sum(business) as business, sum(conv_coupon) as cc_conv, sum(conv_dev)
+as dev_conv, (sum(trials)/sum(ucv)) as LtoT, (sum(conversions)/sum(trials)) as
+TtoP, (sum(monthly)/sum(conversions)) as MP, (sum(yearly)/sum(conversions)) as
+YP, (sum(2y.biyearly)/sum(conversions)) as 2P, (sum(standard)/sum(conversions))
+as SP, (sum(advanced)/sum(conversions)) as AP, (sum(business)/sum(conversions))
+as BP from ( select date(ml.createdon) as xdate, count(pkMarketingLeadID) as
+ucv from marketing_leads ml where ml.createdon > '2011-04-01'  group by xdate )
+ml left join ( select date(createdon) as xdate, count(accountid) as trials from
+marketing_events me where createdon > '2011-04-01'  and event = 'signup'  group
+by date(createdon) ) me  on me.xdate=ml.xdate left join ( select
+date(mc.createdon) as xdate, count(mc.accountid) as conversions from
+marketing_conversions mc where mc.createdon > '2011-04-01'  and mc.newuser = 1
+group by xdate ) mc1  on mc1.xdate=ml.xdate left join ( select date(createdon)
+as xdate, count(distinct(accountid)) as conv_coupon from marketing_conversions
+where attribute != '' and createdon > '2011-04-01' and newuser=1 and attribute
+not in ('DISCOUNT-TIER-I','DISCOUNT-TIER-II', 'DISCOUNT-TIER-III',
+'DISCOUNTTIER12', 'DISCOUNTTIER14', 'DISCOUNTTIER16', 'DISCOUNTTIER18',
+'DISCOUNTTIER20', 'DISCOUNTTIER25') group by xdate ) mc2  on mc2.xdate =
+ml.xdate left join ( select date(createdon) as xdate,
+count(distinct(accountid)) as conv_dev from marketing_conversions where
+createdon > '2011-04-01' and attribute like '%DISCOUNT%' and newuser=1 group by
+xdate ) mc3  on mc3.xdate = ml.xdate left join ( select date(createdon) as
+xdate, count(accountid) as monthly from marketing_conversions  where createdon
+> '2011-01-01' and newuser = 1 and period = 1 group by xdate ) m on
+m.xdate=ml.xdate left join ( select date(createdon) as xdate, count(accountid)
+as yearly from marketing_conversions  where createdon > '2011-01-01' and
+newuser = 1 and period in (2,3) group by xdate ) y  on y.xdate=ml.xdate left
+join ( select date(createdon) as xdate, count(accountid) as biyearly from
+marketing_conversions  where createdon > '2011-01-01' and newuser = 1 and
+period in (4) group by xdate ) 2y  on 2y.xdate=ml.xdate left join ( select
+date(createdon) as xdate, count(accountid) as standard from
+marketing_conversions  where createdon > '2011-01-01' and newuser = 1 and
+productid = 'Standard-2010' group by xdate ) std  on std.xdate=ml.xdate left
+join ( select date(createdon) as xdate, count(accountid) as advanced from
+marketing_conversions  where createdon > '2011-01-01' and newuser = 1 and
+productid = 'Advanced-2010' group by xdate ) adv  on adv.xdate=ml.xdate left
+join ( select date(createdon) as xdate, count(accountid) as business from
+marketing_conversions  where createdon > '2011-01-01' and newuser = 1 and
+productid = 'Business-2010' group by xdate ) bus  on bus.xdate=ml.xdate group
+by ml.xdate order by ml.xdate;
+xdate	ucv	trials	conversions	monthly	yearly	biyearly	standard	advanced	business	cc_conv	dev_conv	LtoT	TtoP	MP	YP	2P	SP	AP	BP
+drop table marketing_conversions;
+drop table marketing_events;
+drop table marketing_leads;

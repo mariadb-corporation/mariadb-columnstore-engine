@@ -1,0 +1,54 @@
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS test_mcol641_create;
+--enable_warnings
+
+CREATE DATABASE test_mcol641_create;
+USE test_mcol641_create;
+
+--disable_warnings
+DROP TABLE IF EXISTS cs1;
+DROP TABLE IF EXISTS cs2;
+DROP TABLE IF EXISTS cs3;
+DROP TABLE IF EXISTS cs4;
+--enable_warnings
+
+CREATE TABLE cs1(d1 DECIMAL(38), d2 DECIMAL(38,10), d3 DECIMAL(38,38), d4 DECIMAL(19), d5 DECIMAL(19,19),d6 DECIMAL(19,10)) ENGINE=columnstore;
+CREATE TABLE cs2(d1 DECIMAL(38) SIGNED, d2 DECIMAL(38,10) SIGNED, d3 DECIMAL(38,38) SIGNED) ENGINE=columnstore; 
+#This must raise a warning
+CREATE TABLE cs3(d1 DECIMAL(38) UNSIGNED ZEROFILL, d2 DECIMAL(38,10) UNSIGNED ZEROFILL, d3 DECIMAL(38,38) UNSIGNED ZEROFILL) ENGINE=columnstore; 
+CREATE TABLE cs4(d1 DECIMAL(18), d2 DECIMAL(18,10), d3 DECIMAL(18,18)) ENGINE=columnstore;
+SELECT TABLE_SCHEMA,TABLE_NAME,COLUMN_NAME,DATA_TYPE,COLUMN_LENGTH,COLUMN_POSITION,COLUMN_DEFAULT,NUMERIC_PRECISION,NUMERIC_SCALE FROM information_schema.columnstore_columns WHERE table_name = 'cs1' OR table_name = 'cs2' OR table_name = 'cs3' OR table_name = 'cs4' ORDER BY table_name,column_name ASC;
+
+ALTER TABLE cs1 DROP COLUMN d4;
+ALTER TABLE cs1 ADD COLUMN d7 DECIMAL(38,37);
+ALTER TABLE cs2 ADD COLUMN d4 DECIMAL(30,30) SIGNED;
+ALTER TABLE cs3 ADD COLUMN d5 DECIMAL(20,18) UNSIGNED;
+# Bug. This must work fine.
+--error 1178
+ALTER TABLE cs1 RENAME COLUMN d7 TO d17;
+# Bug. This must work fine.
+--error 1178
+ALTER TABLE cs2 ADD COLUMN (d5 DECIMAL(38,5), d6 DECIMAL(35,15));
+# Bug. This must work fine.
+--error 1815
+ALTER TABLE cs3 MODIFY d1 DECIMAL(38) SIGNED;
+SELECT TABLE_SCHEMA,TABLE_NAME,COLUMN_NAME,DATA_TYPE,COLUMN_LENGTH,COLUMN_POSITION,COLUMN_DEFAULT,NUMERIC_PRECISION,NUMERIC_SCALE FROM information_schema.columnstore_columns WHERE table_schema = 'test_mcol641_create' ORDER BY table_name,column_name ASC;
+
+# This must return an error
+--error 1815
+CREATE TABLE cs5(d1 DECIMAL(39)) ENGINE=columnstore;
+--error 1425
+CREATE TABLE cs5(d1 DECIMAL(38,39)) ENGINE=columnstore;
+--error 1815
+ALTER TABLE cs1 ADD COLUMN d10 DECIMAL(40);
+--error 1425
+ALTER TABLE cs1 ADD COLUMN d11 DECIMAL(38,40);
+
+DROP TABLE cs1;
+DROP TABLE cs2;
+DROP TABLE cs3;
+DROP TABLE cs4;
+
+DROP DATABASE test_mcol641_create;

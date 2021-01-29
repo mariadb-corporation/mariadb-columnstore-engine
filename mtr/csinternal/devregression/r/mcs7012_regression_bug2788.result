@@ -1,0 +1,6 @@
+USE tpch1;
+drop table if exists foo;
+Warnings:
+Note	1051	Unknown table 'tpch1.foo'
+create table foo (col1 int(11) null default null) engine=columnstore;
+drop table foo;

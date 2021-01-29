@@ -1,0 +1,18 @@
+USE tpch1;
+drop table if exists bug5932;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug5932'
+create table bug5932(c1 int)engine=columnstore;
+insert into bug5932 select 1 from lineitem;
+insert into bug5932 values (2);
+select * from bug5932 where c1=1 limit 1;
+c1
+1
+select * from bug5932 where c1=2;
+c1
+2
+select distinct c1 from bug5932 order by 1;
+c1
+1
+2
+drop table if exists bug5932;

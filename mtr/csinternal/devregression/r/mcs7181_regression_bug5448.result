@@ -1,0 +1,12 @@
+USE tpch1;
+drop table if exists bug5448;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug5448'
+create table bug5448 (mst_date datetime) engine=columnstore;
+insert into bug5448 values ('2013-03-01');
+insert into bug5448 values ('2012-03-01');
+select mst_date, date_add(date(mst_date), interval - 30 day) from bug5448;
+mst_date	date_add(date(mst_date), interval - 30 day)
+2013-03-01 00:00:00	2013-01-30
+2012-03-01 00:00:00	2012-01-31
+drop table if exists bug5448;

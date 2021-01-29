@@ -1,0 +1,21 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3819.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+select cdate from datatypetestm where cdate='';
+select cdatetime from datatypetestm where cdatetime='';
+select cdate from datatypetestm where cdate<>'';
+select cdatetime from datatypetestm where cdatetime<>'';
+select * from datatypetestm where cdate=null or cdatetime<>null;
+select cdate from datatypetestm where cdate is null;
+select cdatetime from datatypetestm where cdatetime is null;
+select cdate from datatypetestm where cdate is not null;
+select cdatetime from datatypetestm where cdatetime is not null;
+#
+

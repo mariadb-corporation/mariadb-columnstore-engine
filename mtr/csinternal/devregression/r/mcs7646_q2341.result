@@ -1,0 +1,4 @@
+USE tpch1;
+Select min(l_suppkey) from lineitem;
+min(l_suppkey)
+1

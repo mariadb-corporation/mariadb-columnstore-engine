@@ -1,0 +1,24 @@
+USE tpch1;
+drop table if exists bug3783;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug3783'
+set max_length_for_sort_data = 8192;
+create table bug3783 (id int, name varchar(1000))engine=columnstore;
+insert into bug3783 values (1,'yionfsdayfeiwajg'),(2,'gretsuyhejkstj jkete');
+select id, hex(name) from bug3783 order by 1,2;
+id	hex(name)
+1	79696F6E667364617966656977616A67
+2	6772657473757968656A6B73746A206A6B657465
+select id, group_concat(name) from bug3783 group by 1 order by 1;
+id	group_concat(name)
+1	yionfsdayfeiwajg
+2	gretsuyhejkstj jkete
+select id, min(repeat(name,3)) from bug3783 group by 1 order by 1;
+id	min(repeat(name,3))
+1	yionfsdayfeiwajgyionfsdayfeiwajgyionfsdayfeiwajg
+2	gretsuyhejkstj jketegretsuyhejkstj jketegretsuyhejkstj jkete
+select id, repeat(name,3) from bug3783 order by 1,2;
+id	repeat(name,3)
+1	yionfsdayfeiwajgyionfsdayfeiwajgyionfsdayfeiwajg
+2	gretsuyhejkstj jketegretsuyhejkstj jketegretsuyhejkstj jkete
+drop table bug3783;

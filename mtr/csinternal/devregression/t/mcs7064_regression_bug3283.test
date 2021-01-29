@@ -1,0 +1,16 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3283.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+# Negative test case for attempting to drop a non-existent partition.
+select caldroppartitions('lineitem', '4.1.1');
+select caldisablepartitions('lineitem', '4.1.1');
+
+#
+

@@ -1,0 +1,20 @@
+DROP DATABASE IF EXISTS mcs155_db;
+CREATE DATABASE mcs155_db;
+USE mcs155_db;
+CREATE TABLE t1 (a CHAR(1), b INT)ENGINE=Columnstore;
+INSERT INTO t1 VALUES ('', NULL),('a', 12),('a', 13),('b', 14),('c', 15),('d', 16),('d', 17),('b', 18),('a', 19);
+SELECT a, b, BIT_XOR(b) OVER(ORDER BY b RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) BIT_XOR FROM t1;
+ERROR HY000: Internal error: IDB-9018: Window Function 'BIT_XOR' is currently not supported in Columnstore.
+SELECT a, b, BIT_XOR(b) OVER(ORDER BY b RANGE BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) BIT_XOR FROM t1;
+ERROR HY000: Internal error: IDB-9018: Window Function 'BIT_XOR' is currently not supported in Columnstore.
+SELECT a, b, BIT_XOR(b) OVER(ORDER BY b ROWS BETWEEN 1 PRECEDING AND CURRENT ROW) BIT_XOR FROM t1;
+ERROR HY000: Internal error: IDB-9018: Window Function 'BIT_XOR' is currently not supported in Columnstore.
+SELECT a, b, BIT_XOR(b) OVER(ORDER BY b ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) BIT_XOR FROM t1;
+ERROR HY000: Internal error: IDB-9018: Window Function 'BIT_XOR' is currently not supported in Columnstore.
+SELECT a, b, BIT_XOR(b) OVER(ORDER BY b ROWS BETWEEN 1 PRECEDING AND UNBOUNDED FOLLOWING) BIT_XOR FROM t1;
+ERROR HY000: Internal error: IDB-9018: Window Function 'BIT_XOR' is currently not supported in Columnstore.
+SELECT a, b, BIT_XOR(b) OVER(PARTITION BY b RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) BIT_XOR FROM t1;
+ERROR HY000: RANGE-type frame requires ORDER BY clause with single sort key
+SELECT a, b, BIT_XOR(b) OVER(ORDER BY a RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) BIT_XOR FROM t1;
+ERROR HY000: Numeric datatype is required for RANGE-type frame
+DROP DATABASE mcs155_db;

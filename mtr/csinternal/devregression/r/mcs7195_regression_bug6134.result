@@ -1,0 +1,40 @@
+USE tpch1;
+drop table if exists bug6134;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug6134'
+create table bug6134 (a integer) engine=Columnstore;
+drop table if exists bug6134u;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug6134u'
+create table bug6134u (b integer, c varchar(20)) engine=Columnstore;
+drop view if exists bug6134vv;
+Warnings:
+Note	4092	Unknown VIEW: 'tpch1.bug6134vv'
+create or replace view bug6134vv as select distinct * from bug6134 t
+inner join bug6134u u on t.a = u.b;
+insert into bug6134 values (1);
+insert into bug6134 values (2);
+insert into bug6134u values (1, 2);
+insert into bug6134u values (1, 1);
+insert into bug6134u values (1, 3);
+insert into bug6134u values (2, 1);
+insert into bug6134u values (2, 2);
+select * from bug6134vv order by 1, 2, 3;
+a	b	c
+1	1	1
+1	1	2
+1	1	3
+2	2	1
+2	2	2
+drop table bug6134;
+drop table bug6134u;
+drop view bug6134vv;
+select count(*) from (select distinct n_regionkey, n_nationkey from nation)a order by 1;
+count(*)
+25
+select count(*) from (select * from region union select distinct r_regionkey, r_regionkey, r_regionkey from region)a order by 1;
+count(*)
+10
+select count(*) from (select r_regionkey from region union select r_regionkey from region)a order by 1;
+count(*)
+5

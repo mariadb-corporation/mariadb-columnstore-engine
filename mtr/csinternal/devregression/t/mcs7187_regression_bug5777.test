@@ -1,0 +1,43 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug5777.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+
+DROP TABLE IF EXISTS query_class_metrics_float;
+
+#
+CREATE TABLE `query_class_metrics_float` (
+`agent_id` bigint(20) DEFAULT NULL,
+`start_ts` datetime DEFAULT NULL,
+`query_class` int(11) DEFAULT NULL,
+`query_time_sum` float DEFAULT NULL)
+ENGINE=Columnstore;
+
+INSERT INTO query_class_metrics_float VALUES (1, '2013-06-18 22:55:00', 1563, 0.281992);
+INSERT INTO query_class_metrics_float VALUES (1, '2013-06-18 23:00:00', 1563, 0.292305);
+INSERT INTO query_class_metrics_float VALUES (1, '2013-06-18 23:05:00', 1563, 0.215658);
+INSERT INTO query_class_metrics_float VALUES (1, '2013-06-18 23:10:00', 1563, 0.243597);
+INSERT INTO query_class_metrics_float VALUES (1, '2013-06-18 23:15:00', 1563, 0.35189);
+INSERT INTO query_class_metrics_float VALUES (1, '2013-06-18 23:20:00', 1563, 0.543079);
+INSERT INTO query_class_metrics_float VALUES (1, '2013-06-18 23:25:00', 1563, 0.495779);
+INSERT INTO query_class_metrics_float VALUES (1, '2013-06-18 23:30:00', 1563, 0.589326);
+INSERT INTO query_class_metrics_float VALUES (1, '2013-06-18 23:35:00', 1563, 0.210907);
+INSERT INTO query_class_metrics_float VALUES (1, '2013-06-18 23:40:00', 1563, 0.167944);
+INSERT INTO query_class_metrics_float VALUES (1, '2013-06-18 23:45:00', 1563, 0.202401);
+#
+SELECT start_ts, Query_time_sum,LAG(Query_time_sum) OVER(order by start_ts) prev_sum  from query_class_metrics_float where agent_id=1 and query_class=1563 limit 50;
+SELECT start_ts, Query_time_sum,LEAD(Query_time_sum) OVER(order by start_ts) prev_sum  from query_class_metrics_float where agent_id=1 and query_class=1563 limit 50;
+SELECT start_ts, Query_time_sum,MAX(Query_time_sum) OVER(order by start_ts) prev_sum  from query_class_metrics_float where agent_id=1 and query_class=1563 limit 50;
+SELECT start_ts, Query_time_sum,MIN(Query_time_sum) OVER(order by start_ts) prev_sum  from query_class_metrics_float where agent_id=1 and query_class=1563 limit 50;
+SELECT start_ts, Query_time_sum,FIRST_VALUE(Query_time_sum) OVER(order by start_ts) prev_sum  from query_class_metrics_float where agent_id=1 and query_class=1563 limit 50;
+SELECT start_ts, Query_time_sum,LAST_VALUE(Query_time_sum) OVER(order by start_ts) prev_sum  from query_class_metrics_float where agent_id=1 and query_class=1563 limit 50;
+SELECT start_ts, Query_time_sum,NTH_VALUE(Query_time_sum, 3) OVER(order by start_ts) prev_sum  from query_class_metrics_float where agent_id=1 and query_class=1563 limit 50;
+#
+DROP TABLE query_class_metrics_float;
+

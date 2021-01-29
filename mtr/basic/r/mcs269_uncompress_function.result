@@ -1,0 +1,49 @@
+DROP DATABASE IF EXISTS mcs269_db;
+CREATE DATABASE mcs269_db;
+USE mcs269_db;
+CREATE TABLE t1
+(
+t1_INT INT,
+t1_DECIMAL DECIMAL(12,5),
+t1_TEXT TEXT,
+t1_DATE DATE,
+t1_TIME TIME
+)ENGINE=Columnstore;
+INSERT INTO t1 VALUES(103, 1234.5699, 'pqrstuvwxyz', '1997-12-12', '22:12:02');
+INSERT INTO t1 VALUES(-7299, 111.99, 'abcdefghijklm', '2001-1-1', '23:59:59');
+INSERT INTO t1 VALUES(9913, 98765.4321, repeat('q', 5), '09-12-11', '01:08:59');
+SELECT UNCOMPRESS(COMPRESS(256)) FROM t1 LIMIT 1;
+UNCOMPRESS(COMPRESS(256))
+256
+SELECT UNCOMPRESS(COMPRESS('256')) FROM t1 LIMIT 1;
+UNCOMPRESS(COMPRESS('256'))
+256
+SELECT UNCOMPRESS(COMPRESS('a')) FROM t1 LIMIT 1;
+UNCOMPRESS(COMPRESS('a'))
+a
+SELECT UNCOMPRESS(COMPRESS('ab')) FROM t1 LIMIT 1;
+UNCOMPRESS(COMPRESS('ab'))
+ab
+SELECT UNCOMPRESS(COMPRESS('1')) FROM t1 LIMIT 1;
+UNCOMPRESS(COMPRESS('1'))
+1
+SELECT UNCOMPRESS(COMPRESS('pqrstuvw')) FROM t1 LIMIT 1;
+UNCOMPRESS(COMPRESS('pqrstuvw'))
+pqrstuvw
+SELECT UNCOMPRESS(COMPRESS('mariadb!@#$')) FROM t1 LIMIT 1;
+UNCOMPRESS(COMPRESS('mariadb!@#$'))
+mariadb!@#$
+SELECT UNCOMPRESS(COMPRESS('!@')) FROM t1 LIMIT 1;
+UNCOMPRESS(COMPRESS('!@'))
+!@
+SELECT t1_INT, UNCOMPRESS(COMPRESS(t1_INT)) FROM t1 ORDER BY 1;
+ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'uncompress' isn't supported.
+SELECT t1_DECIMAL, UNCOMPRESS(COMPRESS(t1_DECIMAL)) FROM t1 ORDER BY 1;
+ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'uncompress' isn't supported.
+SELECT t1_TEXT, UNCOMPRESS(COMPRESS(t1_TEXT)) FROM t1 ORDER BY 1;
+ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'uncompress' isn't supported.
+SELECT t1_DATE, UNCOMPRESS(COMPRESS(t1_DATE)) FROM t1 ORDER BY 1;
+ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'uncompress' isn't supported.
+SELECT t1_TIME, UNCOMPRESS(COMPRESS(t1_TIME)) FROM t1 ORDER BY 1;
+ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'uncompress' isn't supported.
+DROP DATABASE mcs269_db;

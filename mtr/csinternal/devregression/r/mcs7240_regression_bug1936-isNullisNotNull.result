@@ -1,0 +1,526 @@
+USE tpch1;
+select  cidx          from datatypetestm where  cidx          is null order by 1;
+cidx
+select  cbigint       from datatypetestm where  cbigint       is null order by 1;
+cbigint
+select  cdecimal1     from datatypetestm where  cdecimal1     is null order by 1;
+cdecimal1
+select  cdecimal4     from datatypetestm where  cdecimal4     is null order by 1;
+cdecimal4
+select  cdecimal4_2   from datatypetestm where  cdecimal4_2   is null order by 1;
+cdecimal4_2
+select  cdecimal5     from datatypetestm where  cdecimal5     is null order by 1;
+cdecimal5
+select  cdecimal9     from datatypetestm where  cdecimal9     is null order by 1;
+cdecimal9
+select  cdecimal9_2   from datatypetestm where  cdecimal9_2   is null order by 1;
+cdecimal9_2
+select  cdecimal10    from datatypetestm where  cdecimal10    is null order by 1;
+cdecimal10
+select  cdecimal18    from datatypetestm where  cdecimal18    is null order by 1;
+cdecimal18
+select  cdecimal18_2  from datatypetestm where  cdecimal18_2  is null order by 1;
+cdecimal18_2
+select  cinteger      from datatypetestm where  cinteger      is null order by 1;
+cinteger
+select  csmallint     from datatypetestm where  csmallint     is null order by 1;
+csmallint
+select  ctinyint      from datatypetestm where  ctinyint      is null order by 1;
+ctinyint
+select  cdate         from datatypetestm where  cdate         is null order by 1;
+cdate
+select  cdatetime     from datatypetestm where  cdatetime     is null order by 1;
+cdatetime
+select  cchar1        from datatypetestm where  cchar1        is null order by 1;
+cchar1
+NULL
+select  cchar2        from datatypetestm where  cchar2        is null order by 1;
+cchar2
+NULL
+select  cchar3        from datatypetestm where  cchar3        is null order by 1;
+cchar3
+NULL
+select  cchar4        from datatypetestm where  cchar4        is null order by 1;
+cchar4
+NULL
+select  cchar5        from datatypetestm where  cchar5        is null order by 1;
+cchar5
+NULL
+select  cchar6        from datatypetestm where  cchar6        is null order by 1;
+cchar6
+NULL
+select  cchar7        from datatypetestm where  cchar7        is null order by 1;
+cchar7
+NULL
+select  cchar8        from datatypetestm where  cchar8        is null order by 1;
+cchar8
+NULL
+select  cchar9        from datatypetestm where  cchar9        is null order by 1;
+cchar9
+NULL
+select  cchar255      from datatypetestm where  cchar255      is null order by 1;
+cchar255
+NULL
+select  cvchar1       from datatypetestm where  cvchar1       is null order by 1;
+cvchar1
+NULL
+select  cvchar2       from datatypetestm where  cvchar2       is null order by 1;
+cvchar2
+NULL
+select  cvchar3       from datatypetestm where  cvchar3       is null order by 1;
+cvchar3
+NULL
+select  cvchar4       from datatypetestm where  cvchar4       is null order by 1;
+cvchar4
+NULL
+select  cvchar5       from datatypetestm where  cvchar5       is null order by 1;
+cvchar5
+NULL
+select  cvchar6       from datatypetestm where  cvchar6       is null order by 1;
+cvchar6
+NULL
+select  cvchar7       from datatypetestm where  cvchar7       is null order by 1;
+cvchar7
+NULL
+select  cvchar8       from datatypetestm where  cvchar8       is null order by 1;
+cvchar8
+NULL
+select  cvchar255     from datatypetestm where  cvchar255     is null order by 1;
+cvchar255
+NULL
+select  cidx          from datatypetestm where  cidx          is not null order by 1;
+cidx
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+select  cbigint       from datatypetestm where  cbigint       is not null order by 1;
+cbigint
+-72036854775806
+-72036854775805
+-72036854775804
+-72036854775803
+-72036854775802
+0
+72036854775803
+72036854775804
+72036854775805
+72036854775806
+72036854775807
+select  cdecimal1     from datatypetestm where  cdecimal1     is not null order by 1;
+cdecimal1
+-9
+-8
+-7
+-6
+-5
+0
+5
+6
+7
+8
+9
+select  cdecimal4     from datatypetestm where  cdecimal4     is not null order by 1;
+cdecimal4
+-999
+-998
+-997
+-996
+-995
+0
+995
+996
+997
+998
+999
+select  cdecimal4_2   from datatypetestm where  cdecimal4_2   is not null order by 1;
+cdecimal4_2
+-9.99
+-9.98
+-9.97
+-9.96
+-9.95
+0.00
+9.95
+9.96
+9.97
+9.98
+9.99
+select  cdecimal5     from datatypetestm where  cdecimal5     is not null order by 1;
+cdecimal5
+-999
+-998
+-997
+-996
+-995
+0
+995
+996
+997
+998
+999
+select  cdecimal9     from datatypetestm where  cdecimal9     is not null order by 1;
+cdecimal9
+-999999
+-999998
+-999997
+-999996
+-999995
+0
+999995
+999996
+999997
+999998
+999999
+select  cdecimal9_2   from datatypetestm where  cdecimal9_2   is not null order by 1;
+cdecimal9_2
+-9999.99
+-9999.98
+-9999.97
+-9999.96
+-9999.95
+0.00
+9999.95
+9999.96
+9999.97
+9999.98
+9999.99
+select  cdecimal10    from datatypetestm where  cdecimal10    is not null order by 1;
+cdecimal10
+-9999999
+-9999998
+-9999997
+-9999996
+-9999995
+0
+9999995
+9999996
+9999997
+9999998
+9999999
+select  cdecimal18    from datatypetestm where  cdecimal18    is not null order by 1;
+cdecimal18
+-9999999999999
+-9999999999998
+-9999999999997
+-9999999999996
+-9999999999995
+0
+9999999999995
+9999999999996
+9999999999997
+9999999999998
+9999999999999
+select  cdecimal18_2  from datatypetestm where  cdecimal18_2  is not null order by 1;
+cdecimal18_2
+-99999999999.99
+-99999999999.98
+-99999999999.97
+-99999999999.96
+-99999999999.95
+0.00
+99999999999.95
+99999999999.96
+99999999999.97
+99999999999.98
+99999999999.99
+select  cinteger      from datatypetestm where  cinteger      is not null order by 1;
+cinteger
+-7483646
+-7483645
+-7483644
+-7483643
+-7483642
+0
+7483643
+7483644
+7483645
+7483646
+7483647
+select  csmallint     from datatypetestm where  csmallint     is not null order by 1;
+csmallint
+-766
+-765
+-764
+-763
+-762
+0
+763
+764
+765
+766
+767
+select  ctinyint      from datatypetestm where  ctinyint      is not null order by 1;
+ctinyint
+-26
+-25
+-24
+-23
+-22
+0
+23
+24
+25
+26
+27
+select  cdate         from datatypetestm where  cdate         is not null order by 1;
+cdate
+1997-01-01
+1997-01-01
+1997-01-02
+1997-01-03
+1997-01-04
+2009-12-28
+2009-12-29
+2009-12-30
+2009-12-31
+2009-12-31
+2009-12-31
+select  cdatetime     from datatypetestm where  cdatetime     is not null order by 1;
+cdatetime
+1997-01-01 00:00:00
+1997-01-01 00:00:01
+1997-01-02 00:00:01
+1997-01-03 00:00:02
+1997-01-04 00:00:03
+2009-12-31 23:59:56
+2009-12-31 23:59:57
+2009-12-31 23:59:58
+2009-12-31 23:59:59
+2009-12-31 23:59:59
+2009-12-31 23:59:59
+select  cchar1        from datatypetestm where  cchar1        is not null order by 1;
+cchar1
+a
+a
+a
+a
+a
+z
+z
+z
+z
+z
+select  cchar2        from datatypetestm where  cchar2        is not null order by 1;
+cchar2
+aa
+b
+bb
+bb
+bb
+yy
+yy
+yy
+yy
+zz
+select  cchar3        from datatypetestm where  cchar3        is not null order by 1;
+cchar3
+aaa
+c
+cc
+ccc
+ccc
+xxx
+xxx
+xxx
+xxx
+zzz
+select  cchar4        from datatypetestm where  cchar4        is not null order by 1;
+cchar4
+aaaa
+d
+dd
+ddd
+dddd
+wwww
+wwww
+wwww
+wwww
+zzzz
+select  cchar5        from datatypetestm where  cchar5        is not null order by 1;
+cchar5
+aaaaa
+e
+ee
+eee
+eeee
+vvvvv
+vvvvv
+vvvvv
+vvvvv
+zzzzz
+select  cchar6        from datatypetestm where  cchar6        is not null order by 1;
+cchar6
+aaaaaa
+f
+ff
+fff
+ffff
+uuuuuu
+uuuuuu
+uuuuuu
+uuuuuu
+zzzzzz
+select  cchar7        from datatypetestm where  cchar7        is not null order by 1;
+cchar7
+aaaaaaa
+g
+gg
+ggg
+gggg
+ttttttt
+ttttttt
+ttttttt
+ttttttt
+zzzzzzz
+select  cchar8        from datatypetestm where  cchar8        is not null order by 1;
+cchar8
+aaaaaaaa
+h
+hh
+hhh
+hhhh
+sssssss
+ssssssss
+ssssssss
+ssssssss
+zzzzzzzz
+select  cchar9        from datatypetestm where  cchar9        is not null order by 1;
+cchar9
+aaaaaaaaa
+i
+ii
+iii
+iiii
+rrrrrrr
+rrrrrrrr
+rrrrrrrrr
+rrrrrrrrr
+zzzzzzzzz
+select  cchar255      from datatypetestm where  cchar255      is not null order by 1;
+cchar255
+aaaaaaaaaa
+j
+jj
+jjj
+jjjj
+qqqqqqq
+qqqqqqqq
+qqqqqqqqq
+qqqqqqqqqq
+zzzzzzzzzz
+select  cvchar1       from datatypetestm where  cvchar1       is not null order by 1;
+cvchar1
+a
+a
+a
+a
+a
+z
+z
+z
+z
+z
+select  cvchar2       from datatypetestm where  cvchar2       is not null order by 1;
+cvchar2
+aa
+b
+bb
+bb
+bb
+yy
+yy
+yy
+yy
+zz
+select  cvchar3       from datatypetestm where  cvchar3       is not null order by 1;
+cvchar3
+aaa
+c
+cc
+ccc
+ccc
+xxx
+xxx
+xxx
+xxx
+zzz
+select  cvchar4       from datatypetestm where  cvchar4       is not null order by 1;
+cvchar4
+aaaa
+d
+dd
+ddd
+dddd
+wwww
+wwww
+wwww
+wwww
+zzzz
+select  cvchar5       from datatypetestm where  cvchar5       is not null order by 1;
+cvchar5
+aaaaa
+e
+ee
+eee
+eeee
+vvvvv
+vvvvv
+vvvvv
+vvvvv
+zzzzz
+select  cvchar6       from datatypetestm where  cvchar6       is not null order by 1;
+cvchar6
+aaaaaa
+f
+ff
+fff
+ffff
+uuuuuu
+uuuuuu
+uuuuuu
+uuuuuu
+zzzzzz
+select  cvchar7       from datatypetestm where  cvchar7       is not null order by 1;
+cvchar7
+aaaaaaa
+g
+gg
+ggg
+gggg
+ttttttt
+ttttttt
+ttttttt
+ttttttt
+zzzzzzz
+select  cvchar8       from datatypetestm where  cvchar8       is not null order by 1;
+cvchar8
+aaaaaaaa
+h
+hh
+hhh
+hhhh
+sssssss
+ssssssss
+ssssssss
+ssssssss
+zzzzzzzz
+select  cvchar255     from datatypetestm where  cvchar255     is not null order by 1;
+cvchar255
+aaaaaaaaaa
+j
+jj
+jjj
+jjjj
+qqqqqqq
+qqqqqqqq
+qqqqqqqqq
+qqqqqqqqqq
+zzzzzzzzzz

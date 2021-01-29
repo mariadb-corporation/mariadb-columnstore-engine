@@ -1,0 +1,18 @@
+USE tpch1;
+select  n_name, sum(l_quantity), sum(l_extendedprice),
+max(l_quantity),
+sum(l_partkey),
+avg(l_suppkey),
+min(l_extendedprice),
+max(l_discount),
+count(l_shipdate),
+avg(l_tax)
+from nation, lineitem
+where l_suppkey between 10 and 70
+and n_regionkey = 1
+and n_nationkey = l_linenumber
+group by n_name order by n_name;
+n_name	sum(l_quantity)	sum(l_extendedprice)	max(l_quantity)	sum(l_partkey)	avg(l_suppkey)	min(l_extendedprice)	max(l_discount)	count(l_shipdate)	avg(l_tax)
+ARGENTINA	235190.00	310632614.01	50.00	910264586	39.8731	928.02	0.10	9330	0.040074
+BRAZIL	204999.00	269887405.30	50.00	792860154	39.9782	914.01	0.10	8041	0.039388
+CANADA	166158.00	219624566.68	50.00	639555348	39.4165	919.01	0.10	6454	0.040192

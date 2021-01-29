@@ -1,0 +1,36 @@
+#
+# Test FROM_DAYS function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs248_db;
+--enable_warnings
+
+CREATE DATABASE mcs248_db;
+USE mcs248_db;
+
+CREATE TABLE t1
+(
+ t1_INT INT,
+ t1_DECIMAL DECIMAL(12,5),
+ t1_TEXT TEXT,
+ t1_DATE DATE,
+ t1_TIME TIME
+ )ENGINE=Columnstore;
+INSERT INTO t1 VALUES(103, 1234.5699, repeat('o', 5), '1997-12-12', '22:12:02');
+INSERT INTO t1 VALUES(-7299, 111.99, repeat('p', 5), '2001-1-1', '23:59:59');
+INSERT INTO t1 VALUES(9913, 98765.4321, repeat('q', 5), '09-12-11', '01:08:59');
+
+SELECT FROM_DAYS(0) FROM t1 LIMIT 1;
+SELECT FROM_DAYS(-1) FROM t1 LIMIT 1;
+SELECT FROM_DAYS(795474) FROM t1 LIMIT 1;
+SELECT FROM_DAYS('795474') FROM t1 LIMIT 1;
+SELECT FROM_DAYS(75474) FROM t1 LIMIT 1;
+
+SELECT t1_INT, FROM_DAYS(t1_INT) FROM t1 ORDER BY 1;
+SELECT t1_DECIMAL, FROM_DAYS(t1_DECIMAL) FROM t1 ORDER BY 1;
+
+# Clean UP
+DROP DATABASE mcs248_db;

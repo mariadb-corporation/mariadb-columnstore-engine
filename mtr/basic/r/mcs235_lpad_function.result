@@ -1,0 +1,42 @@
+DROP DATABASE IF EXISTS mcs235_db;
+CREATE DATABASE mcs235_db;
+USE mcs235_db;
+CREATE TABLE t1
+(
+t1_CHAR CHAR(1),
+t1_TEXT TEXT
+)ENGINE=Columnstore;
+INSERT INTO t1 VALUES('o', 'pqrstuvwxyz');
+INSERT INTO t1 VALUES('z', 'abcdefghijklm');
+INSERT INTO t1 VALUES('p', repeat('q', 5));
+SELECT t1_CHAR, LPAD(t1_CHAR, 10, 'Columnstore') FROM t1 ORDER BY 1;
+t1_CHAR	LPAD(t1_CHAR, 10, 'Columnstore')
+o	Columnstoo
+p	Columnstop
+z	Columnstoz
+SELECT t1_CHAR, LPAD(t1_CHAR, 5, '*') FROM t1 ORDER BY 1;
+t1_CHAR	LPAD(t1_CHAR, 5, '*')
+o	****o
+p	****p
+z	****z
+SELECT t1_CHAR, LPAD(t1_CHAR, 10, '1234567890') FROM t1 ORDER BY 1;
+t1_CHAR	LPAD(t1_CHAR, 10, '1234567890')
+o	123456789o
+p	123456789p
+z	123456789z
+SELECT t1_TEXT, LPAD(t1_TEXT, 15, 'Columnstore') FROM t1 ORDER BY 1;
+t1_TEXT	LPAD(t1_TEXT, 15, 'Columnstore')
+abcdefghijklm	Coabcdefghijklm
+pqrstuvwxyz	Colupqrstuvwxyz
+qqqqq	Columnstorqqqqq
+SELECT t1_TEXT, LPAD(t1_TEXT, 5, '*') FROM t1 ORDER BY 1;
+t1_TEXT	LPAD(t1_TEXT, 5, '*')
+abcdefghijklm	abcde
+pqrstuvwxyz	pqrst
+qqqqq	qqqqq
+SELECT t1_TEXT, LPAD(t1_TEXT, 20, '1234567890') FROM t1 ORDER BY 1;
+t1_TEXT	LPAD(t1_TEXT, 20, '1234567890')
+abcdefghijklm	1234567abcdefghijklm
+pqrstuvwxyz	123456789pqrstuvwxyz
+qqqqq	123456789012345qqqqq
+DROP DATABASE mcs235_db;

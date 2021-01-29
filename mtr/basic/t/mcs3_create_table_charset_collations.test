@@ -1,0 +1,308 @@
+#
+#Test CREATE TABLE with charset and collations
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs3_db1;
+DROP DATABASE IF EXISTS mcs3_db2;
+DROP DATABASE IF EXISTS mcs3_db3;
+DROP DATABASE IF EXISTS mcs3_db4;
+DROP DATABASE IF EXISTS mcs3_db5;
+--enable_warnings
+
+# CREATE TABLE using all collations for each character set at TABLE level
+CREATE DATABASE mcs3_db1;
+USE mcs3_db1;
+let $column_flag = 0;
+let $char_set = armscii8;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = ascii;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = big5;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = binary;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = cp1250;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = cp1251;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = cp1256;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = cp1257;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = cp850;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = cp852;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = cp866;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = cp932;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = dec8;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = eucjpms;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = euckr;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = gb2312;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = gbk;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = geostd8;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = greek;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = hebrew;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = hp8;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = keybcs2;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = koi8r;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = koi8u;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = latin1;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = latin2;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = latin5;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = latin7;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = macce;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = macroman;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+CREATE DATABASE mcs3_db2;
+USE mcs3_db2;
+let $char_set = sjis;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = swe7;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = tis620;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = ucs2;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = ujis;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = utf16;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = utf16le;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = utf32;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = utf8;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = utf8mb4;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+# CREATE TABLE using all collations for each character set at COLUMN level
+CREATE DATABASE mcs3_db3;
+USE mcs3_db3;
+let $column_flag = 1;
+let $char_set = armscii8;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = ascii;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = big5;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = binary;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = cp1250;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = cp1251;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = cp1256;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = cp1257;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = cp850;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = cp852;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = cp866;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = cp932;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = dec8;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = eucjpms;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = euckr;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = gb2312;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = gbk;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = geostd8;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = greek;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = hebrew;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = hp8;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = keybcs2;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = koi8r;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = koi8u;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = latin1;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = latin2;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = latin5;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = latin7;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = macce;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = macroman;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+CREATE DATABASE mcs3_db4;
+USE mcs3_db4;
+let $char_set = sjis;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = swe7;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = tis620;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = ucs2;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = ujis;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = utf16;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = utf16le;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = utf32;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = utf8;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+let $char_set = utf8mb4;
+-- source $MYSQL_TEST_DIR/suite/columnstore/include/mcs3_create_table_charset_collations.inc
+
+# negative scenarios
+CREATE DATABASE mcs3_db5;
+USE mcs3_db5;
+--error 1115
+CREATE TABLE t1( name VARCHAR(40))ENGINE=Columnstore CHARSET 'abc';
+--error 1115
+CREATE TABLE t1_a(name VARCHAR(40))ENGINE=Columnstore CHARSET '!@$';
+--error 1115
+CREATE TABLE t1_b(name VARCHAR(40))ENGINE=Columnstore CHARSET '123';
+--error 1115
+CREATE TABLE tcol1(name VARCHAR(40) CHARSET 'abc')ENGINE=Columnstore;
+--error 1115
+CREATE TABLE tcol1_a(name VARCHAR(40) CHARACTER SET '!@$')ENGINE=Columnstore;
+--error 1115
+CREATE TABLE tcol1_b(name VARCHAR(40) CHARACTER SET '123')ENGINE=Columnstore;
+
+--error 1064
+CREATE TABLE t1(name VARCHAR(40))ENGINE=Columnstore CHARSET 123;
+--error 1064
+CREATE TABLE t1_a(name VARCHAR(40))ENGINE=Columnstore CHARSET !@$;
+--error 1064
+CREATE TABLE tcol1(name VARCHAR(40) CHARACTER SET 123)ENGINE=Columnstore;
+--error 1064
+CREATE TABLE tcol1_a(name VARCHAR(40) CHARACTER SET !@$)ENGINE=Columnstore;
+
+--error 1273
+CREATE TABLE t2(name VARCHAR(40))ENGINE=Columnstore CHARSET utf8 COLLATE 'abc'; 
+--error 1273
+CREATE TABLE t2_a(name VARCHAR(40))ENGINE=Columnstore CHARSET utf8 COLLATE '!@$';
+--error 1273
+CREATE TABLE t2_b(name VARCHAR(40))ENGINE=Columnstore CHARSET utf8 COLLATE '123';
+--error 1273
+CREATE TABLE tcol2(name VARCHAR(40) CHARACTER SET utf8 COLLATE 'abc')ENGINE=Columnstore;
+--error 1273
+CREATE TABLE tcol2_a(name VARCHAR(40) CHARACTER SET utf8 COLLATE '!@$')ENGINE=Columnstore;
+--error 1273
+CREATE TABLE tcol2_b(name VARCHAR(40) CHARACTER SET utf8 COLLATE '123')ENGINE=Columnstore;
+
+DROP DATABASE mcs3_db1;
+DROP DATABASE mcs3_db2;
+DROP DATABASE mcs3_db3;
+DROP DATABASE mcs3_db4;
+DROP DATABASE mcs3_db5;

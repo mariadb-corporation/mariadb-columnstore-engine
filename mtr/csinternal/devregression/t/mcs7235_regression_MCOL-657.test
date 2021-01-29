@@ -1,0 +1,17 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-657.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+create table if not exists MCOL657 (a int, b int) engine=columnstore;
+insert into MCOL657 values (1,1), (2,2), (3,4), (NULL, NULL), (NULL, 2), (3, NULL);
+select * from MCOL657 where a = b OR (a IS NULL AND b IS NULL);
+select * from MCOL657 where a<=>b;
+drop table MCOL657;
+#
+

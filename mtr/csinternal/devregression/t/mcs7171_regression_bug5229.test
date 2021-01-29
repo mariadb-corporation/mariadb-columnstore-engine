@@ -1,0 +1,66 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug5229.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists uriage_inf;
+
+create table uriage_inf(eigyo_shimei varchar(20),uriage numeric) engine=columnstore default charset=utf8;
+
+insert into uriage_inf values('SMITH',1000); insert into uriage_inf values('ALLEN',2000); insert into uriage_inf values('JONES',3000); insert into uriage_inf values('SMITH',4000); insert into uriage_inf values('BLAKE',5000);
+
+drop table if exists uriage_my;
+
+create table uriage_my (eigyo_shimei varchar(20),uriage numeric) engine=myisam default charset=utf8;
+
+insert into uriage_my values('SMITH',1000); insert into uriage_my values('ALLEN',2000); insert into uriage_my values('JONES',3000); insert into uriage_my values('SMITH',4000); insert into uriage_my values('BLAKE',5000);
+
+
+SELECT
+ T1.`eigyo_shimei`,SUM(-5)
+FROM
+ URIAGE_inf T1
+GROUP BY
+ T1.`eigyo_shimei`
+ORDER BY
+ T1.`eigyo_shimei`;
+
+
+SELECT
+ T1.`eigyo_shimei`,SUM(5)
+FROM
+ URIAGE_inf T1
+GROUP BY
+ T1.`eigyo_shimei`
+ORDER BY
+ T1.`eigyo_shimei`;
+
+
+
+SELECT
+ T1.`eigyo_shimei`,SUM(-5)
+FROM
+ URIAGE_my T1
+GROUP BY
+ T1.`eigyo_shimei`
+ORDER BY
+ T1.`eigyo_shimei`;
+
+
+SELECT
+ T1.`eigyo_shimei`,SUM(5)
+FROM
+ URIAGE_my T1
+GROUP BY
+ T1.`eigyo_shimei`
+ORDER BY
+ T1.`eigyo_shimei`;
+
+drop table uriage_inf;
+#
+

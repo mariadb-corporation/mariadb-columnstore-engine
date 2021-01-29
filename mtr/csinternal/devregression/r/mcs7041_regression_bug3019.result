@@ -1,0 +1,66 @@
+USE ssb1;
+select lo_supplycost 
+from lineorder  
+where lo_partkey < 3400 and lo_suppkey < 90 and lo_discount/lo_tax < 1.4 and
+lo_supplycost in 
+(select col1 
+from ( select lo_supplycost col1, count(*) cnt 
+from lineorder 
+where lo_partkey < 3400 and lo_suppkey < 90 and lo_discount/lo_tax < 1.4 
+group by 1 
+having cnt > 2     
+order by cnt desc limit 100) a)
+order by 1;
+lo_supplycost
+60786.00
+60786.00
+60786.00
+63489.00
+63489.00
+63489.00
+63969.00
+63969.00
+63969.00
+64750.00
+64750.00
+64750.00
+75741.00
+75741.00
+75741.00
+81627.00
+81627.00
+81627.00
+86011.00
+86011.00
+86011.00
+88113.00
+88113.00
+88113.00
+91116.00
+91116.00
+91116.00
+94780.00
+94780.00
+94780.00
+101086.00
+101086.00
+101086.00
+102948.00
+102948.00
+102948.00
+103489.00
+103489.00
+103489.00
+106131.00
+106131.00
+106131.00
+107032.00
+107032.00
+107032.00
+113338.00
+113338.00
+113338.00
+select count(*) from dateinfo where d_datekey in ( select d_datekey from
+(select d_datekey from dateinfo group by 1 order by count(*) desc limit 10) a);
+count(*)
+10
