@@ -6224,7 +6224,7 @@ int processFrom(bool &isUnion,
             }
           
             // Save on_expr to use it for WHERE processing
-            if (!table_ptr->outer_join && table_ptr->on_expr)
+            if (!(table_ptr->outer_join & (JOIN_TYPE_LEFT | JOIN_TYPE_RIGHT)) && table_ptr->on_expr)
             {
                 on_expr_list.push_back(table_ptr->on_expr);
             } 
