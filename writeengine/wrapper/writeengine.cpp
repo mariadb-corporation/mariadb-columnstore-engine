@@ -711,11 +711,9 @@ int WriteEngineWrapper::fillColumn(const TxnID& txnid, const OID& dataOid,
     Convertor::convertColType(refColDataType, refColWidth, refColType, isToken);
     refColOp->setColParam(refCol, 0, refColOp->getCorrectRowWidth(refColDataType, refColWidth),
                           refColDataType, refColType, (FID)refColOID, refCompressionType, dbRoot);
-    refColOp->findTypeHandler(refColOp->getCorrectRowWidth(refColDataType,
-                                                           refColWidth),
-                              refColDataType);
     colOpNewCol->setColParam(newCol, 0, newDataWidth,
                              colType.colDataType, newColType, (FID)dataOid, compressionType, dbRoot);
+    // refColOp and colOpNewCol are the same ptr.
     colOpNewCol->findTypeHandler(newDataWidth, colType.colDataType);
 
 
