@@ -707,6 +707,14 @@ bool BatchPrimitiveProcessorJL::countThisMsg(messageqcpp::ByteStream& in) const
 
     if (_hasScan && in.length() > offset)
     {
+        // This is a legitimate error message sent by PrimProc
+        // so we need to return to allow upper layer to throw an error
+        // if needed.
+        if (hdr->Status > 0)
+        {
+            return true;
+        }
+
         if (data[offset] != 0)
             offset += (data[offset + CP_FLAG_AND_LBID] * 2) + CP_FLAG_AND_LBID + 1;  // skip the CP data with wide min/max values (16/32 bytes each)
         else
