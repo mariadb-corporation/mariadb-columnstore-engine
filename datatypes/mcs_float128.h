@@ -23,6 +23,11 @@
 #include <cstdint>
 #include <cstring>
 
+#ifdef __aarch64__
+using float128_t = long double;
+#else
+using float128_t = __float128;
+#endif
 
 namespace datatypes
 {
@@ -30,7 +35,7 @@ namespace datatypes
 /* Main union type we use to manipulate the floating-point type.  */
 typedef union
 {
-  __float128 value;
+  float128_t value;
 
   struct
   {
@@ -91,15 +96,15 @@ class TSInt128;
 class TFloat128;
 using int128_t = __int128;
 
-static const __float128 mcs_fl_one = 1.0, mcs_fl_Zero[] = {0.0, -0.0,};
+static const float128_t mcs_fl_one = 1.0, mcs_fl_Zero[] = {0.0, -0.0,};
 
 template<typename T>
 class numeric_limits { };
 // Copy from boost::multiprecision::float128
-template<> class numeric_limits<__float128> {
+template<> class numeric_limits<float128_t> {
   public:
     static constexpr bool is_specialized = true;
-    static constexpr __float128 max()
+    static constexpr float128_t max()
     {
       return mcs_ieee854_float128{ .ieee = {0xffffffff,
                                             0xffffffff,
@@ -108,7 +113,7 @@ template<> class numeric_limits<__float128> {
                                             0x7ffe,
                                             0x0}}.value;
     }
-    static constexpr __float128 min()
+    static constexpr float128_t min()
     {
       return mcs_ieee854_float128{ .ieee = {0x0,
                                             0x0,
@@ -117,7 +122,7 @@ template<> class numeric_limits<__float128> {
                                             0x1,
                                             0x0}}.value;
     }
-    static __float128 denorm_min()
+    static float128_t denorm_min()
     {
       return mcs_ieee854_float128{ .ieee = {0x1,
                                             0x0,
@@ -126,7 +131,7 @@ template<> class numeric_limits<__float128> {
                                             0x0,
                                             0x0}}.value;
     }
-    static __float128 lowest() { return -max(); }
+    static float128_t lowest() { return -max(); }
     static constexpr int digits = 113;
     static constexpr int digits10 = 33;
     static constexpr int max_digits10 = 36;
@@ -134,18 +139,18 @@ template<> class numeric_limits<__float128> {
     static constexpr bool is_integer = false;
     static constexpr bool is_exact = false;
     static constexpr int radix = 2;
-    static __float128 round_error() { return 0.5; }
+    static float128_t round_error() { return 0.5; }
     static constexpr int min_exponent = -16381;
     static constexpr int min_exponent10 = min_exponent * 301L / 1000L;
     static constexpr int max_exponent = 16384;
     static constexpr int max_exponent10 = max_exponent * 301L / 1000L;
     static constexpr bool has_infinity = true;
     static constexpr bool has_quiet_NaN = true;
-    static __float128 quiet_NaN() { return 1.0 / 0.0; }
+    static float128_t quiet_NaN() { return 1.0 / 0.0; }
     static constexpr bool has_signaling_NaN = false;
     static constexpr bool has_denorm_loss = true;
-    static __float128 infinity() { return 1.0 / 0.0; }
-    static __float128 signaling_NaN() { return 0; }
+    static float128_t infinity() { return 1.0 / 0.0; }
+    static float128_t signaling_NaN() { return 0; }
     static constexpr bool is_iec559 = true;
     static constexpr bool is_bounded = false;
     static constexpr bool is_modulo = false;
@@ -162,7 +167,7 @@ struct get_integral_type {
 
 template<>
 struct get_integral_type<TFloat128>{
-  typedef __float128 type;
+  typedef float128_t type;
 };
 
 template<>
@@ -181,13 +186,13 @@ class TFloat128
     TFloat128(): value(0) { }
 
     //    aligned argument
-    TFloat128(const __float128& x) { value = x; }
-    TFloat128(const int128_t& x) { value = static_cast<__float128>(x); }
+    TFloat128(const float128_t& x) { value = x; }
+    TFloat128(const int128_t& x) { value = static_cast<float128_t>(x); }
 
     // fmodq(x,y) taken from libquadmath
     // Return x mod y in exact arithmetic
     // Method: shift and subtract
-    static __float128 fmodq (__float128& x, __float128& y)
+    static float128_t fmodq (float128_t& x, float128_t& y)
     {
       int64_t n,hx,hy,hz,ix,iy,sx,i;
       uint64_t lx,ly,lz;
@@ -292,57 +297,57 @@ class TFloat128
       return x;		/* exact output */
     }
 
-    // The f() returns __float128 power p
+    // The f() returns float128_t power p
     // taken from boost::multiprecision
-    static inline __float128 pown(const __float128& x, const int p)
+    static inline float128_t pown(const float128_t& x, const int p)
     {
       const bool isneg  = (x < 0);
       const bool isnan  = (x != x);
-      const bool isinf  = ((!isneg) ? bool(+x > (datatypes::numeric_limits<__float128>::max)())
-                                    : bool(-x > (datatypes::numeric_limits<__float128>::max)()));
+      const bool isinf  = ((!isneg) ? bool(+x > (datatypes::numeric_limits<float128_t>::max)())
+                                    : bool(-x > (datatypes::numeric_limits<float128_t>::max)()));
 
       if(isnan) { return x; }
 
-      if(isinf) { return datatypes::numeric_limits<__float128>::quiet_NaN(); }
+      if(isinf) { return datatypes::numeric_limits<float128_t>::quiet_NaN(); }
 
       const bool       x_is_neg = (x < 0);
-      const __float128 abs_x    = (x_is_neg ? -x : x);
+      const float128_t abs_x    = (x_is_neg ? -x : x);
 
       if(p < static_cast<int>(0))
       {
-        if(abs_x < (datatypes::numeric_limits<__float128>::min)())
+        if(abs_x < (datatypes::numeric_limits<float128_t>::min)())
         {
-          return (x_is_neg ? -datatypes::numeric_limits<__float128>::infinity()
-                           : +datatypes::numeric_limits<__float128>::infinity());
+          return (x_is_neg ? -datatypes::numeric_limits<float128_t>::infinity()
+                           : +datatypes::numeric_limits<float128_t>::infinity());
         }
         else
         {
-          return __float128(1) / pown(x, static_cast<int>(-p));
+          return float128_t(1) / pown(x, static_cast<int>(-p));
         }
       }
 
       if(p == static_cast<int>(0))
       {
-        return __float128(1);
+        return float128_t(1);
       }
       else
       {
         if(p == static_cast<int>(1)) { return x; }
 
-        if(abs_x > (datatypes::numeric_limits<__float128>::max)())
+        if(abs_x > (datatypes::numeric_limits<float128_t>::max)())
         {
-          return (x_is_neg ? -datatypes::numeric_limits<__float128>::infinity()
-                           : +datatypes::numeric_limits<__float128>::infinity());
+          return (x_is_neg ? -datatypes::numeric_limits<float128_t>::infinity()
+                           : +datatypes::numeric_limits<float128_t>::infinity());
         }
 
         if     (p == static_cast<int>(2)) { return  (x * x); }
         else if(p == static_cast<int>(3)) { return ((x * x) * x); }
-        else if(p == static_cast<int>(4)) { const __float128 x2 = (x * x); return (x2 * x2); }
+        else if(p == static_cast<int>(4)) { const float128_t x2 = (x * x); return (x2 * x2); }
         else
         {
           // The variable xn stores the binary powers of x.
-          __float128 result(((p % int(2)) != int(0)) ? x : __float128(1));
-          __float128 xn    (x);
+          float128_t result(((p % int(2)) != int(0)) ? x : float128_t(1));
+          float128_t xn    (x);
 
           int p2 = p;
 
@@ -365,12 +370,12 @@ class TFloat128
       }
     }
 
-    // fromString conversion for __float128
+    // fromString conversion for float128_t
     // algo is taken from
     // boost/math/cstdfloat/cstdfloat_iostream.hpp:convert_from_string()
-    static __float128 fromString(const std::string& str)
+    static float128_t fromString(const std::string& str)
     {
-      __float128 value = 0;
+      float128_t value = 0;
       const char* p = str.c_str();
 
       if((p == static_cast<const char*>(0U)) || (*p == static_cast<char>(0)))
@@ -386,7 +391,7 @@ class TFloat128
       int expon       = 0;
       int digits_seen = 0;
 
-      constexpr int max_digits10 = datatypes::numeric_limits<__float128>::max_digits10 + 1;
+      constexpr int max_digits10 = datatypes::numeric_limits<float128_t>::max_digits10 + 1;
 
       if(*p == static_cast<char>('+'))
       {
@@ -402,7 +407,7 @@ class TFloat128
 
       if(isnan)
       {
-        value = datatypes::numeric_limits<__float128>::infinity();
+        value = datatypes::numeric_limits<float128_t>::infinity();
         if (is_neg)
         {
           value = -value;
@@ -414,7 +419,7 @@ class TFloat128
 
       if(isinf)
       {
-        value = datatypes::numeric_limits<__float128>::infinity();
+        value = datatypes::numeric_limits<float128_t>::infinity();
         if (is_neg)
         {
           value = -value;
@@ -494,10 +499,10 @@ class TFloat128
         // Scale by 10^expon. Note that 10^expon can be outside the range
         // of our number type, even though the result is within range.
         // If that looks likely, then split the calculation in two parts.
-        __float128 t;
+        float128_t t;
         t = ten;
 
-        if(expon > (datatypes::numeric_limits<__float128>::min_exponent10 + 2))
+        if(expon > (datatypes::numeric_limits<float128_t>::min_exponent10 + 2))
         {
           t = TFloat128::pown(t, expon);
           value *= t;
@@ -527,9 +532,9 @@ class TFloat128
 
     inline int128_t toTSInt128() const
     {
-      if (value > static_cast<__float128>(maxInt128))
+      if (value > static_cast<float128_t>(maxInt128))
         return maxInt128;
-      else if (value < static_cast<__float128>(minInt128))
+      else if (value < static_cast<float128_t>(minInt128))
         return minInt128;
 
       return static_cast<int128_t>(value);
@@ -547,9 +552,9 @@ class TFloat128
 
     inline double toDouble() const
     {
-        if (value > static_cast<__float128>(DBL_MAX))
+        if (value > static_cast<float128_t>(DBL_MAX))
             return DBL_MAX;
-        else if (value < -static_cast<__float128>(DBL_MAX))
+        else if (value < -static_cast<float128_t>(DBL_MAX))
             return -DBL_MAX;
 
         return static_cast<double>(value);
@@ -567,9 +572,9 @@ class TFloat128
 
     inline float toFloat() const
     {
-        if (value > static_cast<__float128>(FLT_MAX))
+        if (value > static_cast<float128_t>(FLT_MAX))
             return FLT_MAX;
-        else if (value < -static_cast<__float128>(FLT_MAX))
+        else if (value < -static_cast<float128_t>(FLT_MAX))
             return -FLT_MAX;
 
         return static_cast<float>(value);
@@ -577,9 +582,9 @@ class TFloat128
 
     inline int64_t toTSInt64() const
     {
-      if (value > static_cast<__float128>(INT64_MAX))
+      if (value > static_cast<float128_t>(INT64_MAX))
           return INT64_MAX;
-      else if (value < static_cast<__float128>(INT64_MIN))
+      else if (value < static_cast<float128_t>(INT64_MIN))
           return INT64_MIN;
 
       return static_cast<int64_t>(value);
@@ -592,7 +597,7 @@ class TFloat128
 
     inline uint64_t toTUInt64() const
     {
-      if (value > static_cast<__float128>(UINT64_MAX))
+      if (value > static_cast<float128_t>(UINT64_MAX))
           return UINT64_MAX;
       else if (value < 0)
           return 0;
@@ -612,15 +617,15 @@ class TFloat128
 
     inline long double toLongDouble() const
     {
-        if (value > static_cast<__float128>(LDBL_MAX))
+        if (value > static_cast<float128_t>(LDBL_MAX))
             return LDBL_MAX;
-        else if (value < -static_cast<__float128>(LDBL_MAX))
+        else if (value < -static_cast<float128_t>(LDBL_MAX))
             return -LDBL_MAX;
 
         return static_cast<long double>(value);
     }
   private:
-    __float128 value;
+    float128_t value;
 };
 
 } //end of namespace

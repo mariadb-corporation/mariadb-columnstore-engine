@@ -1076,7 +1076,7 @@ inline IDB_Decimal TreeNode::getDecimalVal()
 
             if ((dlScaled > (long double)INT64_MAX) || (dlScaled < (long double)(INT64_MIN)))
             {
-                datatypes::TFloat128 temp((__float128)dlScaled);
+                datatypes::TFloat128 temp((float128_t)dlScaled);
                 fResult.decimalVal = IDB_Decimal(0, fResultType.scale,
                                          fResultType.precision, static_cast<int128_t>(temp));
             }
