@@ -27,7 +27,20 @@
 #include "mcs_float128.h"
 
 // Inline asm has three argument lists: output, input and clobber list
-#if defined(__GNUC__) && (__GNUC___ > 7)
+#ifdef __aarch64__
+    #define MACRO_VALUE_PTR_128(dst, \
+                                dst_restrictions, \
+                                src, \
+                                src_restrictions, \
+                                clobb) \
+        ::memcpy((dst), &(src), sizeof(int128_t));
+    #define MACRO_PTR_PTR_128(dst, \
+                              dst_restrictions, \
+                              src, \
+                              src_restrictions, \
+                              clobb) \
+        ::memcpy((dst), (src), sizeof(int128_t));
+#elif defined(__GNUC__) && (__GNUC___ > 7)
     #define MACRO_VALUE_PTR_128(dst, \
                                 dst_restrictions, \
                                 src, \
