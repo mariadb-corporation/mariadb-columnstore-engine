@@ -1,0 +1,103 @@
+#
+# Test based on Jira MCOL-4222 
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol_4222_db;
+--enable_warnings
+
+CREATE DATABASE mcol_4222_db;
+USE mcol_4222_db;
+
+#
+# Scenario-1: Tables with Default NULL
+#
+CREATE TABLE t1_i (
+  `C_` varchar(100) DEFAULT NULL
+) ENGINE=innodb DEFAULT CHARSET=utf8 ;
+
+CREATE TABLE t1_cs (
+  `C_` varchar(100) DEFAULT NULL
+) ENGINE=columnstore DEFAULT CHARSET=utf8 ;
+
+# Populate tables
+DELIMITER //;
+CREATE PROCEDURE generate_data()
+BEGIN NOT ATOMIC
+  DECLARE i INT DEFAULT 0;
+  TRUNCATE TABLE t1_i;
+  TRUNCATE TABLE t1_cs;
+  START TRANSACTION;
+  WHILE i < 70000 DO
+    INSERT INTO t1_i VALUES (i);
+    SET i = i + 1;
+  END WHILE;
+  COMMIT;
+END//
+DELIMITER ;//
+
+CALL generate_data();
+INSERT INTO t1_cs SELECT * FROM t1_i;
+SELECT COUNT(*), SUM(t1_i.C_ IS NULL) FROM t1_i;
+SELECT COUNT(*), SUM(t1_cs.C_ IS NULL) FROM t1_cs;
+
+# Copy derived CS table to innodb table
+CREATE TABLE t2 LIKE t1_i;
+INSERT INTO t2 SELECT *  FROM (SELECT * FROM t1_cs) derived;
+SELECT COUNT(*), SUM(C_ IS NULL) FROM t2;
+DROP TABLE t2;
+
+# Copy derived innodb table to CS table
+CREATE TABLE t2 LIKE t1_cs;
+INSERT INTO t2 SELECT * FROM (SELECT * FROM t1_i) derived;
+SELECT COUNT(*), SUM(C_ IS NULL) FROM t2;
+DROP TABLE t2;
+
+# Copy derived CS table to another CS table
+CREATE TABLE t2 LIKE t1_cs;
+INSERT INTO t2 SELECT * FROM (SELECT * FROM t1_cs) derived;
+SELECT COUNT(*), SUM(C_ IS NULL) FROM t2;
+DROP TABLE t2;
+
+#
+# Scenario-2: Tables with NOT NULL constraint and a default value
+#
+DROP TABLE IF EXISTS t1_i;
+DROP TABLE IF EXISTS t1_cs;
+
+CREATE TABLE t1_i ( 
+  `C_` varchar(100) NOT NULL DEFAULT 123
+) ENGINE=innodb DEFAULT CHARSET=utf8 ;
+
+CREATE TABLE t1_cs ( 
+  `C_` varchar(100) NOT NULL DEFAULT 123
+) ENGINE=columnstore DEFAULT CHARSET=utf8 ;
+
+# Populate tables
+CALL generate_data();
+INSERT INTO t1_cs SELECT * FROM t1_i;
+SELECT COUNT(*), SUM(t1_i.C_ IS NULL) FROM t1_i;
+SELECT COUNT(*), SUM(t1_cs.C_ IS NULL) FROM t1_cs;
+
+# Copy derived CS table to innodb table
+CREATE TABLE t2 LIKE t1_i;
+INSERT INTO t2 SELECT *  FROM (SELECT * FROM t1_cs) derived;
+SELECT * FROM t2 LIMIT 3;
+DROP TABLE t2;
+
+# Copy derived innodb table to CS table
+CREATE TABLE t2 LIKE t1_cs;
+INSERT INTO t2 SELECT * FROM (SELECT * FROM t1_i) derived;
+SELECT * FROM t2 LIMIT 3;
+DROP TABLE t2;
+
+# Copy derived CS table to another CS table
+CREATE TABLE t2 LIKE t1_cs;
+INSERT INTO t2 SELECT * FROM (SELECT * FROM t1_cs) derived;
+SELECT * FROM t2 LIMIT 3;
+DROP TABLE t2;
+
+# Clean UP
+DROP DATABASE mcol_4222_db;

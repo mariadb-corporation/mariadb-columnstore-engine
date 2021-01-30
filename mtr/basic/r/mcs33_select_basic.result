@@ -1,0 +1,90 @@
+DROP DATABASE IF EXISTS mcs33_db1;
+CREATE DATABASE mcs33_db1;
+USE mcs33_db1;
+CREATE TABLE t1
+(
+t1_tinyint TINYINT DEFAULT 0,
+t1_int INT DEFAULT NULL,
+t1_bigint BIGINT,
+t1_double DOUBLE,
+t1_float FLOAT,
+t1_blob BLOB,
+t1_text TEXT,
+t1_char CHAR(1),
+t1_varchar VARCHAR(255) DEFAULT 'hello world!',
+t1_datetime DATETIME
+)ENGINE=Columnstore;
+INSERT INTO t1 (t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_datetime)
+VALUES(203685477580676, -3.797693231E+108, -7.402866E+18, repeat('b',100), repeat('b',100), 'b', '2387-11-08 11:22:30.123');
+INSERT INTO t1 (t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_datetime) 
+VALUES(303685477580676, -4.797693231, -8.402866, repeat('b',101), repeat('b',101), 'b', '3387-11-08 11:22:30.123');
+INSERT INTO t1 (t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_datetime) 
+VALUES(403685477580676, +54.797693231, +8.402866, repeat('c',101), repeat('c',101), 'c', '3387-11-08 11:22:30.123');
+SELECT t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_datetime  FROM t1;
+t1_bigint	t1_double	t1_float	t1_blob	t1_text	t1_char	t1_datetime
+203685477580676	-3.797693231e108	-7.40287e18	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	b	2387-11-08 11:22:30
+303685477580676	-4.797693231	-8.40287	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	b	3387-11-08 11:22:30
+403685477580676	54.797693231	8.40287	ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc	ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc	c	3387-11-08 11:22:30
+SELECT t1_tinyint, t1_int, t1_varchar FROM t1;
+t1_tinyint	t1_int	t1_varchar
+0	NULL	hello world!
+0	NULL	hello world!
+0	NULL	hello world!
+SELECT * FROM t1;
+t1_tinyint	t1_int	t1_bigint	t1_double	t1_float	t1_blob	t1_text	t1_char	t1_varchar	t1_datetime
+0	NULL	203685477580676	-3.797693231e108	-7.40287e18	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	b	hello world!	2387-11-08 11:22:30
+0	NULL	303685477580676	-4.797693231	-8.40287	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	b	hello world!	3387-11-08 11:22:30
+0	NULL	403685477580676	54.797693231	8.40287	ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc	ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc	c	hello world!	3387-11-08 11:22:30
+SELECT * FROM t1 WHERE t1_int IS NULL;
+t1_tinyint	t1_int	t1_bigint	t1_double	t1_float	t1_blob	t1_text	t1_char	t1_varchar	t1_datetime
+0	NULL	203685477580676	-3.797693231e108	-7.40287e18	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	b	hello world!	2387-11-08 11:22:30
+0	NULL	303685477580676	-4.797693231	-8.40287	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	b	hello world!	3387-11-08 11:22:30
+0	NULL	403685477580676	54.797693231	8.40287	ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc	ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc	c	hello world!	3387-11-08 11:22:30
+SELECT * FROM t1 WHERE t1_tinyint = 0;
+t1_tinyint	t1_int	t1_bigint	t1_double	t1_float	t1_blob	t1_text	t1_char	t1_varchar	t1_datetime
+0	NULL	203685477580676	-3.797693231e108	-7.40287e18	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	b	hello world!	2387-11-08 11:22:30
+0	NULL	303685477580676	-4.797693231	-8.40287	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	b	hello world!	3387-11-08 11:22:30
+0	NULL	403685477580676	54.797693231	8.40287	ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc	ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc	c	hello world!	3387-11-08 11:22:30
+SELECT * FROM t1 WHERE t1_int IS NULL AND t1_tinyint = 0;
+t1_tinyint	t1_int	t1_bigint	t1_double	t1_float	t1_blob	t1_text	t1_char	t1_varchar	t1_datetime
+0	NULL	203685477580676	-3.797693231e108	-7.40287e18	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	b	hello world!	2387-11-08 11:22:30
+0	NULL	303685477580676	-4.797693231	-8.40287	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	b	hello world!	3387-11-08 11:22:30
+0	NULL	403685477580676	54.797693231	8.40287	ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc	ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc	c	hello world!	3387-11-08 11:22:30
+SELECT * FROM t1 WHERE t1_int IS NULL OR t1_tinyint = 0;
+t1_tinyint	t1_int	t1_bigint	t1_double	t1_float	t1_blob	t1_text	t1_char	t1_varchar	t1_datetime
+0	NULL	203685477580676	-3.797693231e108	-7.40287e18	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	b	hello world!	2387-11-08 11:22:30
+0	NULL	303685477580676	-4.797693231	-8.40287	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	b	hello world!	3387-11-08 11:22:30
+0	NULL	403685477580676	54.797693231	8.40287	ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc	ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc	c	hello world!	3387-11-08 11:22:30
+SELECT * FROM t1 WHERE t1_int IS NOT NULL AND t1_tinyint != 0;
+t1_tinyint	t1_int	t1_bigint	t1_double	t1_float	t1_blob	t1_text	t1_char	t1_varchar	t1_datetime
+SELECT * FROM t1 WHERE t1_char IN ('a', 'b');
+t1_tinyint	t1_int	t1_bigint	t1_double	t1_float	t1_blob	t1_text	t1_char	t1_varchar	t1_datetime
+0	NULL	203685477580676	-3.797693231e108	-7.40287e18	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	b	hello world!	2387-11-08 11:22:30
+0	NULL	303685477580676	-4.797693231	-8.40287	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	b	hello world!	3387-11-08 11:22:30
+SELECT * FROM t1 WHERE t1_varchar LIKE '%hello%';
+t1_tinyint	t1_int	t1_bigint	t1_double	t1_float	t1_blob	t1_text	t1_char	t1_varchar	t1_datetime
+0	NULL	203685477580676	-3.797693231e108	-7.40287e18	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	b	hello world!	2387-11-08 11:22:30
+0	NULL	303685477580676	-4.797693231	-8.40287	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	b	hello world!	3387-11-08 11:22:30
+0	NULL	403685477580676	54.797693231	8.40287	ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc	ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc	c	hello world!	3387-11-08 11:22:30
+SELECT 1;
+1
+1
+SELECT 'abc';
+abc
+abc
+SET @x=99;
+SELECT @x;
+@x
+99
+SELECT @x + 1;
+@x + 1
+100
+SELECT @x + @y;
+@x + @y
+NULL
+SELECT @x / @y;
+@x / @y
+NULL
+SELECT unknown;
+ERROR 42S22: Unknown column 'unknown' in 'field list'
+DROP DATABASE IF EXISTS mcs33_db1;

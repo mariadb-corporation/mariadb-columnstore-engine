@@ -1,0 +1,527 @@
+USE ssb1;
+select  d1.d_year ,  s2.s_city ,  count(*)
+from     dateinfo d1,
+supplier s2,
+customer c4,
+lineorder 
+where lo_orderkey > 0      and lo_orderdate = d1.d_datekey
+and lo_suppkey = s2.s_suppkey
+and lo_custkey = c4.c_custkey
+and d1.d_yearmonth in ('Jan1994','Feb1994','Mar1994','Apr1994')
+and s2.s_city in ('ALGERIA  0','ALGERIA  1','ALGERIA  2','GERMANY  0','GERMANY  1','UNITED KI2','UNITED KI3')
+and c4.c_region in ('EUROPE')
+group by 1,2 order by 1,2 limit 10;
+d_year	s_city	count(*)
+1994	ALGERIA  0	250
+1994	ALGERIA  1	245
+1994	ALGERIA  2	245
+1994	GERMANY  0	198
+1994	GERMANY  1	241
+1994	UNITED KI2	209
+1994	UNITED KI3	249
+select  d2.d_yearmonthnum ,  s1.s_region ,  count(*)
+from     dateinfo d2,
+supplier s1,
+customer c3_um,
+lineorder 
+where lo_orderkey > 0      and lo_orderdate = d2.d_datekey
+and lo_suppkey = s1.s_suppkey
+and lo_custkey = c3_um.c_custkey
+and d2.d_year = 1994
+and s1.s_region in ('EUROPE','MIDDLE EAST','ASIA')
+and c3_um.c_region in ('EUROPE','MIDDLE EAST','ASIA')
+group by 1,2 order by 1,2 limit 10;
+d_yearmonthnum	s_region	count(*)
+199401	ASIA	9596
+199401	EUROPE	9576
+199401	MIDDLE EAST	9579
+199402	ASIA	8423
+199402	EUROPE	8302
+199402	MIDDLE EAST	8263
+199403	ASIA	9387
+199403	EUROPE	9128
+199403	MIDDLE EAST	9401
+199404	ASIA	8945
+select  c1.c_city ,  p4_um.p_brand1 ,  count(*)
+from     customer c1,
+part p4_um,
+customer c2_um,
+lineorder 
+where lo_orderkey > 0      and lo_custkey = c1.c_custkey
+and lo_partkey = p4_um.p_partkey
+and lo_custkey = c2_um.c_custkey
+and c1.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','GERMANY','ROMANIA')
+and p4_um.p_category <= 'MFGR#13'
+    and c2_um.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','INDONESIA','GERMANY','ROMANIA')
+group by 1,2 order by 1,2 limit 10;
+c_city	p_brand1	count(*)
+BRAZIL   0	MFGR#111	26
+BRAZIL   0	MFGR#1110	14
+BRAZIL   0	MFGR#1111	30
+BRAZIL   0	MFGR#1112	24
+BRAZIL   0	MFGR#1113	23
+BRAZIL   0	MFGR#1114	25
+BRAZIL   0	MFGR#1115	33
+BRAZIL   0	MFGR#1116	29
+BRAZIL   0	MFGR#1117	34
+BRAZIL   0	MFGR#1118	23
+select  c2_um.c_nation ,  p3.p_category ,  count(*)
+from     customer c2_um,
+part p3,
+customer c1,
+lineorder 
+where lo_orderkey > 0      and lo_custkey = c2_um.c_custkey
+and lo_partkey = p3.p_partkey
+and lo_custkey = c1.c_custkey
+and c2_um.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','INDONESIA','GERMANY','ROMANIA')
+and p3.p_category <= 'MFGR#13'
+    and c1.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','GERMANY','ROMANIA')
+group by 1,2 order by 1,2 limit 10;
+c_nation	p_category	count(*)
+BRAZIL	MFGR#11	9164
+BRAZIL	MFGR#12	9039
+BRAZIL	MFGR#13	9139
+EGYPT	MFGR#11	10098
+EGYPT	MFGR#12	9464
+EGYPT	MFGR#13	9905
+GERMANY	MFGR#11	9963
+GERMANY	MFGR#12	9535
+GERMANY	MFGR#13	10009
+IRAQ	MFGR#11	10047
+select  c3_um.c_region ,  p2_um.p_color ,  count(*)
+from     customer c3_um,
+part p2_um,
+dateinfo d2,
+lineorder 
+where lo_orderkey > 0      and lo_custkey = c3_um.c_custkey
+and lo_partkey = p2_um.p_partkey
+and lo_orderdate = d2.d_datekey
+and c3_um.c_region in ('EUROPE','MIDDLE EAST','ASIA')
+and p2_um.p_mfgr <= 'MFGR#1' and p2_um.p_size <= 38
+and d2.d_year = 1994
+group by 1,2 order by 1,2 limit 10;
+c_region	p_color	count(*)
+ASIA	almond	313
+ASIA	antique	387
+ASIA	aquamarine	371
+ASIA	azure	366
+ASIA	beige	383
+ASIA	bisque	422
+ASIA	black	443
+ASIA	blanched	386
+ASIA	blue	423
+ASIA	blush	411
+select  c4.c_city ,  p1.p_brand1 ,  count(*)
+from     customer c4,
+part p1,
+dateinfo d1,
+lineorder 
+where lo_orderkey > 0      and lo_custkey = c4.c_custkey
+and lo_partkey = p1.p_partkey
+and lo_orderdate = d1.d_datekey
+and c4.c_region in ('EUROPE')
+and p1.p_mfgr <= 'MFGR#1' and p1.p_size <= 37
+and d1.d_yearmonth in ('Jan1994','Feb1994','Mar1994','Apr1994')
+group by 1,2 order by 1,2 limit 10;
+c_city	p_brand1	count(*)
+FRANCE   0	MFGR#111	1
+FRANCE   0	MFGR#1110	1
+FRANCE   0	MFGR#1111	1
+FRANCE   0	MFGR#1113	2
+FRANCE   0	MFGR#1115	2
+FRANCE   0	MFGR#1116	2
+FRANCE   0	MFGR#1118	1
+FRANCE   0	MFGR#112	1
+FRANCE   0	MFGR#1121	3
+FRANCE   0	MFGR#1123	2
+select  p1.p_brand1 ,  c4.c_city ,  count(*)
+from     part p1,
+customer c4,
+supplier s2,
+lineorder 
+where lo_orderkey > 0      and lo_partkey = p1.p_partkey
+and lo_custkey = c4.c_custkey
+and lo_suppkey = s2.s_suppkey
+and p1.p_mfgr <= 'MFGR#1' and p1.p_size <= 37
+and c4.c_region in ('EUROPE')
+and s2.s_city in ('ALGERIA  0','ALGERIA  1','ALGERIA  2','GERMANY  0','GERMANY  1','UNITED KI2','UNITED KI3')
+group by 1,2 order by 1,2 limit 10;
+p_brand1	c_city	count(*)
+MFGR#111	FRANCE   0	1
+MFGR#111	FRANCE   1	1
+MFGR#111	FRANCE   3	1
+MFGR#111	FRANCE   7	1
+MFGR#111	FRANCE   8	1
+MFGR#111	GERMANY  2	1
+MFGR#111	GERMANY  4	2
+MFGR#111	GERMANY  5	1
+MFGR#111	GERMANY  7	1
+MFGR#111	ROMANIA  1	1
+select  p2_um.p_color ,  c3_um.c_region ,  count(*)
+from     part p2_um,
+customer c3_um,
+supplier s1,
+lineorder 
+where lo_orderkey > 0      and lo_partkey = p2_um.p_partkey
+and lo_custkey = c3_um.c_custkey
+and lo_suppkey = s1.s_suppkey
+and p2_um.p_mfgr <= 'MFGR#1' and p2_um.p_size <= 38
+and c3_um.c_region in ('EUROPE','MIDDLE EAST','ASIA')
+and s1.s_region in ('EUROPE','MIDDLE EAST','ASIA')
+group by 1,2 order by 1,2 limit 10;
+p_color	c_region	count(*)
+almond	ASIA	1219
+almond	EUROPE	1215
+almond	MIDDLE EAST	1204
+antique	ASIA	1507
+antique	EUROPE	1543
+antique	MIDDLE EAST	1539
+aquamarine	ASIA	1568
+aquamarine	EUROPE	1460
+aquamarine	MIDDLE EAST	1515
+azure	ASIA	1507
+select  p3.p_category ,  c2_um.c_nation ,  count(*)
+from     part p3,
+customer c2_um,
+part p4_um,
+lineorder 
+where lo_orderkey > 0      and lo_partkey = p3.p_partkey
+and lo_custkey = c2_um.c_custkey
+and lo_partkey = p4_um.p_partkey
+and p3.p_category <= 'MFGR#13'
+    and c2_um.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','INDONESIA','GERMANY','ROMANIA')
+and p4_um.p_category <= 'MFGR#13'
+         group by 1,2 order by 1,2 limit 10;
+p_category	c_nation	count(*)
+MFGR#11	BRAZIL	9164
+MFGR#11	EGYPT	10098
+MFGR#11	GERMANY	9963
+MFGR#11	INDONESIA	10080
+MFGR#11	IRAQ	10047
+MFGR#11	JAPAN	9392
+MFGR#11	MOROCCO	9573
+MFGR#11	MOZAMBIQUE	9938
+MFGR#11	ROMANIA	9810
+MFGR#11	RUSSIA	9869
+select  p4_um.p_brand1 ,  c1.c_city ,  count(*)
+from     part p4_um,
+customer c1,
+part p3,
+lineorder 
+where lo_orderkey > 0      and lo_partkey = p4_um.p_partkey
+and lo_custkey = c1.c_custkey
+and lo_partkey = p3.p_partkey
+and p4_um.p_category <= 'MFGR#13'
+    and c1.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','GERMANY','ROMANIA')
+and p3.p_category <= 'MFGR#13'
+         group by 1,2 order by 1,2 limit 10;
+p_brand1	c_city	count(*)
+MFGR#111	BRAZIL   0	26
+MFGR#111	BRAZIL   1	29
+MFGR#111	BRAZIL   2	21
+MFGR#111	BRAZIL   3	29
+MFGR#111	BRAZIL   4	20
+MFGR#111	BRAZIL   5	23
+MFGR#111	BRAZIL   6	36
+MFGR#111	BRAZIL   7	19
+MFGR#111	BRAZIL   8	20
+MFGR#111	BRAZIL   9	21
+select  s1.s_region ,  d2.d_yearmonthnum ,  count(*)
+from     supplier s1,
+dateinfo d2,
+part p2_um,
+lineorder 
+where lo_orderkey > 0      and lo_suppkey = s1.s_suppkey
+and lo_orderdate = d2.d_datekey
+and lo_partkey = p2_um.p_partkey
+and s1.s_region in ('EUROPE','MIDDLE EAST','ASIA')
+and d2.d_year = 1994
+and p2_um.p_mfgr <= 'MFGR#1' and p2_um.p_size <= 38
+group by 1,2 order by 1,2 limit 10;
+s_region	d_yearmonthnum	count(*)
+ASIA	199401	2410
+ASIA	199402	2182
+ASIA	199403	2403
+ASIA	199404	2328
+ASIA	199405	2340
+ASIA	199406	2280
+ASIA	199407	2361
+ASIA	199408	2392
+ASIA	199409	2217
+ASIA	199410	2263
+select  s2.s_city ,  d1.d_year ,  count(*)
+from     supplier s2,
+dateinfo d1,
+part p1,
+lineorder 
+where lo_orderkey > 0      and lo_suppkey = s2.s_suppkey
+and lo_orderdate = d1.d_datekey
+and lo_partkey = p1.p_partkey
+and s2.s_city in ('ALGERIA  0','ALGERIA  1','ALGERIA  2','GERMANY  0','GERMANY  1','UNITED KI2','UNITED KI3')
+and d1.d_yearmonth in ('Jan1994','Feb1994','Mar1994','Apr1994')
+and p1.p_mfgr <= 'MFGR#1' and p1.p_size <= 37
+group by 1,2 order by 1,2 limit 10;
+s_city	d_year	count(*)
+ALGERIA  0	1994	210
+ALGERIA  1	1994	208
+ALGERIA  2	1994	175
+GERMANY  0	1994	153
+GERMANY  1	1994	202
+UNITED KI2	1994	159
+UNITED KI3	1994	162
+select  d1.d_year ,  p3.p_category ,  count(*)
+from     dateinfo d1,
+part p3,
+customer c4,
+lineorder 
+where lo_orderkey > 0      and lo_orderdate = d1.d_datekey
+and lo_partkey = p3.p_partkey
+and lo_custkey = c4.c_custkey
+and d1.d_yearmonth in ('Jan1994','Feb1994','Mar1994','Apr1994')
+and p3.p_category <= 'MFGR#13'
+    and c4.c_region in ('EUROPE')
+group by 1,2 order by 1,2 limit 10;
+d_year	p_category	count(*)
+1994	MFGR#11	2455
+1994	MFGR#12	2456
+1994	MFGR#13	2457
+select  d2.d_yearmonthnum ,  p2_um.p_color ,  count(*)
+from     dateinfo d2,
+part p2_um,
+customer c3_um,
+lineorder 
+where lo_orderkey > 0      and lo_orderdate = d2.d_datekey
+and lo_partkey = p2_um.p_partkey
+and lo_custkey = c3_um.c_custkey
+and d2.d_year = 1994
+and p2_um.p_mfgr <= 'MFGR#1' and p2_um.p_size <= 38
+and c3_um.c_region in ('EUROPE','MIDDLE EAST','ASIA')
+group by 1,2 order by 1,2 limit 10;
+d_yearmonthnum	p_color	count(*)
+199401	almond	77
+199401	antique	107
+199401	aquamarine	94
+199401	azure	87
+199401	beige	89
+199401	bisque	101
+199401	black	112
+199401	blanched	105
+199401	blue	112
+199401	blush	105
+select  c1.c_city ,  p1.p_brand1 ,  count(*)
+from     customer c1,
+part p1,
+customer c2_um,
+lineorder 
+where lo_orderkey > 0      and lo_custkey = c1.c_custkey
+and lo_partkey = p1.p_partkey
+and lo_custkey = c2_um.c_custkey
+and c1.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','GERMANY','ROMANIA')
+and p1.p_mfgr <= 'MFGR#1' and p1.p_size <= 37
+and c2_um.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','INDONESIA','GERMANY','ROMANIA')
+group by 1,2 order by 1,2 limit 10;
+c_city	p_brand1	count(*)
+BRAZIL   0	MFGR#111	20
+BRAZIL   0	MFGR#1110	12
+BRAZIL   0	MFGR#1111	20
+BRAZIL   0	MFGR#1112	18
+BRAZIL   0	MFGR#1113	17
+BRAZIL   0	MFGR#1114	18
+BRAZIL   0	MFGR#1115	27
+BRAZIL   0	MFGR#1116	23
+BRAZIL   0	MFGR#1117	24
+BRAZIL   0	MFGR#1118	19
+select  c2_um.c_nation ,  c4.c_city ,  count(*)
+from     customer c2_um,
+customer c4,
+customer c1,
+lineorder 
+where lo_orderkey > 0      and lo_custkey = c2_um.c_custkey
+and lo_custkey = c4.c_custkey
+and lo_custkey = c1.c_custkey
+and c2_um.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','INDONESIA','GERMANY','ROMANIA')
+and c4.c_region in ('EUROPE')
+and c1.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','GERMANY','ROMANIA')
+group by 1,2 order by 1,2 limit 10;
+c_nation	c_city	count(*)
+GERMANY	GERMANY  0	25853
+GERMANY	GERMANY  1	25206
+GERMANY	GERMANY  2	23094
+GERMANY	GERMANY  3	25704
+GERMANY	GERMANY  4	25772
+GERMANY	GERMANY  5	27929
+GERMANY	GERMANY  6	21315
+GERMANY	GERMANY  7	26187
+GERMANY	GERMANY  8	19524
+GERMANY	GERMANY  9	24437
+select  c3_um.c_region ,  c4.c_city ,  count(*)
+from     customer c3_um,
+customer c4,
+dateinfo d2,
+lineorder 
+where lo_orderkey > 0      and lo_custkey = c3_um.c_custkey
+and lo_custkey = c4.c_custkey
+and lo_orderdate = d2.d_datekey
+and c3_um.c_region in ('EUROPE','MIDDLE EAST','ASIA')
+and c4.c_region in ('EUROPE')
+and d2.d_year = 1994
+group by 1,2 order by 1,2 limit 10;
+c_region	c_city	count(*)
+EUROPE	FRANCE   0	3701
+EUROPE	FRANCE   1	3609
+EUROPE	FRANCE   2	3200
+EUROPE	FRANCE   3	4110
+EUROPE	FRANCE   4	3434
+EUROPE	FRANCE   5	4544
+EUROPE	FRANCE   6	3175
+EUROPE	FRANCE   7	3790
+EUROPE	FRANCE   8	3767
+EUROPE	FRANCE   9	3098
+select  c4.c_city ,  c2_um.c_nation ,  count(*)
+from     customer c4,
+customer c2_um,
+dateinfo d1,
+lineorder 
+where lo_orderkey > 0      and lo_custkey = c4.c_custkey
+and lo_custkey = c2_um.c_custkey
+and lo_orderdate = d1.d_datekey
+and c4.c_region in ('EUROPE')
+and c2_um.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','INDONESIA','GERMANY','ROMANIA')
+and d1.d_yearmonth in ('Jan1994','Feb1994','Mar1994','Apr1994')
+group by 1,2 order by 1,2 limit 10;
+c_city	c_nation	count(*)
+GERMANY  0	GERMANY	1297
+GERMANY  1	GERMANY	1307
+GERMANY  2	GERMANY	1204
+GERMANY  3	GERMANY	1229
+GERMANY  4	GERMANY	1295
+GERMANY  5	GERMANY	1517
+GERMANY  6	GERMANY	1018
+GERMANY  7	GERMANY	1294
+GERMANY  8	GERMANY	974
+GERMANY  9	GERMANY	1198
+select  p1.p_brand1 ,  c1.c_city ,  count(*)
+from     part p1,
+customer c1,
+supplier s2,
+lineorder 
+where lo_orderkey > 0      and lo_partkey = p1.p_partkey
+and lo_custkey = c1.c_custkey
+and lo_suppkey = s2.s_suppkey
+and p1.p_mfgr <= 'MFGR#1' and p1.p_size <= 37
+and c1.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','GERMANY','ROMANIA')
+and s2.s_city in ('ALGERIA  0','ALGERIA  1','ALGERIA  2','GERMANY  0','GERMANY  1','UNITED KI2','UNITED KI3')
+group by 1,2 order by 1,2 limit 10;
+p_brand1	c_city	count(*)
+MFGR#111	BRAZIL   4	1
+MFGR#111	BRAZIL   5	1
+MFGR#111	BRAZIL   6	4
+MFGR#111	BRAZIL   7	1
+MFGR#111	BRAZIL   9	1
+MFGR#111	EGYPT    0	2
+MFGR#111	EGYPT    6	1
+MFGR#111	GERMANY  2	1
+MFGR#111	GERMANY  4	2
+MFGR#111	GERMANY  5	1
+select  p2_um.p_color ,  d2.d_yearmonthnum ,  count(*)
+from     part p2_um,
+dateinfo d2,
+supplier s1,
+lineorder 
+where lo_orderkey > 0      and lo_partkey = p2_um.p_partkey
+and lo_orderdate = d2.d_datekey
+and lo_suppkey = s1.s_suppkey
+and p2_um.p_mfgr <= 'MFGR#1' and p2_um.p_size <= 38
+and d2.d_year = 1994
+and s1.s_region in ('EUROPE','MIDDLE EAST','ASIA')
+group by 1,2 order by 1,2 limit 10;
+p_color	d_yearmonthnum	count(*)
+almond	199401	79
+almond	199402	73
+almond	199403	81
+almond	199404	80
+almond	199405	89
+almond	199406	86
+almond	199407	66
+almond	199408	64
+almond	199409	55
+almond	199410	86
+select  p3.p_category ,  d1.d_year ,  count(*)
+from     part p3,
+dateinfo d1,
+part p4_um,
+lineorder 
+where lo_orderkey > 0      and lo_partkey = p3.p_partkey
+and lo_orderdate = d1.d_datekey
+and lo_partkey = p4_um.p_partkey
+and p3.p_category <= 'MFGR#13'
+    and d1.d_yearmonth in ('Jan1994','Feb1994','Mar1994','Apr1994')
+and p4_um.p_category <= 'MFGR#13'
+         group by 1,2 order by 1,2 limit 10;
+p_category	d_year	count(*)
+MFGR#11	1994	12103
+MFGR#12	1994	11976
+MFGR#13	1994	12319
+select  p4_um.p_brand1 ,  s2.s_city ,  count(*)
+from     part p4_um,
+supplier s2,
+part p3,
+lineorder 
+where lo_orderkey > 0      and lo_partkey = p4_um.p_partkey
+and lo_suppkey = s2.s_suppkey
+and lo_partkey = p3.p_partkey
+and p4_um.p_category <= 'MFGR#13'
+    and s2.s_city in ('ALGERIA  0','ALGERIA  1','ALGERIA  2','GERMANY  0','GERMANY  1','UNITED KI2','UNITED KI3')
+and p3.p_category <= 'MFGR#13'
+         group by 1,2 order by 1,2 limit 10;
+p_brand1	s_city	count(*)
+MFGR#111	ALGERIA  0	29
+MFGR#111	ALGERIA  1	26
+MFGR#111	ALGERIA  2	25
+MFGR#111	GERMANY  0	24
+MFGR#111	GERMANY  1	29
+MFGR#111	UNITED KI2	28
+MFGR#111	UNITED KI3	20
+MFGR#1110	ALGERIA  0	24
+MFGR#1110	ALGERIA  1	27
+MFGR#1110	ALGERIA  2	31
+select  s1.s_region ,  p4_um.p_brand1 ,  count(*)
+from     supplier s1,
+part p4_um,
+part p2_um,
+lineorder 
+where lo_orderkey > 0      and lo_suppkey = s1.s_suppkey
+and lo_partkey = p4_um.p_partkey
+and lo_partkey = p2_um.p_partkey
+and s1.s_region in ('EUROPE','MIDDLE EAST','ASIA')
+and p4_um.p_category <= 'MFGR#13'
+    and p2_um.p_mfgr <= 'MFGR#1' and p2_um.p_size <= 38
+group by 1,2 order by 1,2 limit 10;
+s_region	p_brand1	count(*)
+ASIA	MFGR#111	877
+ASIA	MFGR#1110	810
+ASIA	MFGR#1111	958
+ASIA	MFGR#1112	837
+ASIA	MFGR#1113	849
+ASIA	MFGR#1114	886
+ASIA	MFGR#1115	861
+ASIA	MFGR#1116	1073
+ASIA	MFGR#1117	1005
+ASIA	MFGR#1118	906
+select  s2.s_city ,  s1.s_region ,  count(*)
+from     supplier s2,
+supplier s1,
+part p1,
+lineorder 
+where lo_orderkey > 0      and lo_suppkey = s2.s_suppkey
+and lo_suppkey = s1.s_suppkey
+and lo_partkey = p1.p_partkey
+and s2.s_city in ('ALGERIA  0','ALGERIA  1','ALGERIA  2','GERMANY  0','GERMANY  1','UNITED KI2','UNITED KI3')
+and s1.s_region in ('EUROPE','MIDDLE EAST','ASIA')
+and p1.p_mfgr <= 'MFGR#1' and p1.p_size <= 37
+group by 1,2 order by 1,2 limit 10;
+s_city	s_region	count(*)
+GERMANY  0	EUROPE	3175
+GERMANY  1	EUROPE	3812
+UNITED KI2	EUROPE	3308
+UNITED KI3	EUROPE	3366

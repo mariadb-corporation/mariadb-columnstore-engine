@@ -1,0 +1,22 @@
+USE tpch1;
+drop table if exists T4126_1;
+drop table if exists T4126_2;
+create table T4126_1 (idx int, col varchar(20)) engine=columnstore;
+create table T4126_2 (idx int, col varchar(20), col2 varchar(20)) engine=columnstore;
+insert into T4126_1 values (3, 'a');
+select * from T4126_1;
+idx	col
+3	a
+insert into T4126_2 values (1, 'lamp', 'table lamp');
+select * from T4126_2;
+idx	col	col2
+1	lamp	table lamp
+update T4126_2 set col = "floor lamp" where col = 'lamp';
+drop table if exists T4126_1;
+drop table if exists T4126_2;
+create table T4126_1 (idx1 int, col1 varchar(20)) engine=columnstore;
+insert into T4126_1 values (3, 'a');
+select * from T4126_1;
+idx1	col1
+3	a
+drop table if exists T4126_1;

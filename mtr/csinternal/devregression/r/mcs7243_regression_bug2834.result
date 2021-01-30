@@ -1,0 +1,28 @@
+USE tpch1;
+select cidx, if(SECOND(cdatetime) between 1 and 20, 0, 1) from
+datatypetestm order by 1;
+cidx	if(SECOND(cdatetime) between 1 and 20, 0, 1)
+1	1
+2	0
+3	0
+4	0
+5	0
+6	1
+7	1
+8	1
+9	1
+10	1
+11	1
+select cidx, if(date_format(cdatetime,'%s') between 1 and 20, 0, 1) from datatypetestm order by 1;
+cidx	if(date_format(cdatetime,'%s') between 1 and 20, 0, 1)
+1	1
+2	0
+3	0
+4	0
+5	0
+6	1
+7	1
+8	1
+9	1
+10	1
+11	1

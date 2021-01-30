@@ -1,0 +1,30 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3406.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+--exec rm -f /tmp/tmp.tbl
+
+select *,
+wide2.c19 a,
+wide2.c19 b,
+wide2.c19 c,
+wide2.c19 d,
+wide2.c19 e,
+wide2.c19 f,
+wide2.c19 g,
+wide2.c19 h
+into outfile '/tmp/tmp.tbl'
+from wide2
+where id <= 3000000;
+
+--exec wc -l /tmp/tmp.tbl
+--exec rm -f /tmp/tmp.tbl
+
+#
+

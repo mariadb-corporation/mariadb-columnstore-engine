@@ -1,0 +1,22 @@
+DROP DATABASE IF EXISTS mcs120_db;
+CREATE DATABASE mcs120_db;
+USE mcs120_db;
+CREATE TABLE t1 (x INT)ENGINE=Columnstore;
+SELECT * FROM t1;
+x
+SELECT COUNT(*) FROM t1;
+COUNT(*)
+0
+SHOW STATUS LIKE 'Empty_queries';
+Variable_name	Value
+Empty_queries	1
+SELECT * FROM t1 LIMIT 0;
+x
+SHOW STATUS LIKE 'Empty_queries';
+Variable_name	Value
+Empty_queries	2
+DROP TABLE t1;
+SHOW STATUS LIKE 'Empty_queries';
+Variable_name	Value
+Empty_queries	2
+DROP DATABASE mcs120_db;

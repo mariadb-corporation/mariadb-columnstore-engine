@@ -1,0 +1,61 @@
+#
+# Some basic DELETE statements #
+# Author: Susil, susil.behera@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+#
+--disable_warnings
+DROP DATABASE IF EXISTS mcs32_db1;
+--enable_warnings
+
+CREATE DATABASE mcs32_db1;
+USE mcs32_db1;
+
+CREATE TABLE t1 (a tinyint(3), b tinyint(5)) ENGINE=Columnstore;
+INSERT INTO t1 VALUES (1,1);
+DELETE FROM t1;
+SELECT COUNT(*) FROM t1;
+INSERT INTO t1 VALUES (1, 2), (3, 4), (4, 5);
+DELETE FROM t1 WHERE b > 4;
+SELECT COUNT(*) FROM t1;
+
+#Unknow column
+--error 1054
+DELETE FROM t1 WHERE unknown = 2;
+
+#NULL value
+INSERT INTO t1 VALUES (1, NULL);
+DELETE FROM t1 WHERE b IS NULL;
+SELECT COUNT(*) FROM t1;
+
+#Compare with another columnstore table
+CREATE TABLE t2 (a tinyint(3), b tinyint(5)) ENGINE=Columnstore;
+INSERT INTO t1 VALUES (1,1);
+DELETE FROM t1 WHERE a = (SELECT a FROM t2);
+SELECT COUNT(*) FROM t1;
+
+--error 1146
+DELETE FROM unknown;
+--error 1146
+DELETE FROM t1 WHERE a = (SELECT a FROM unknown);
+
+#BUG<ID>
+#Compare with another innodb table
+#CREATE TABLE t3 (a tinyint(3), b tinyint(5)) ENGINE=Innodb;
+#INSERT INTO t1 VALUES (1,1);
+#DELETE FROM t1 WHERE a > (SELECT a FROM t3);
+#SELECT COUNT(*) FROM t1;
+
+#Delete table
+DELETE t1 FROM t1 WHERE a > 3;
+SELECT COUNT(*) FROM t1;
+DELETE t1 FROM t1,t2 WHERE t1.a = t2.a;
+SELECT COUNT(*) FROM t1;
+
+#Delete folowed by truncate
+TRUNCATE t1;
+DELETE FROM t1;
+SELECT COUNT(*) FROM t1;
+
+#Clean up
+DROP DATABASE IF EXISTS mcs32_db1;

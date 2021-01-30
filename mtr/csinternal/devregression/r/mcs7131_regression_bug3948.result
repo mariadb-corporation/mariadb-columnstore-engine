@@ -1,0 +1,192 @@
+USE tpch1;
+drop table if exists fct_summary_transactional_snapshot;
+Warnings:
+Note	1051	Unknown table 'tpch1.fct_summary_transactional_snapshot'
+drop table if exists dim_c_bridge_duration;
+Warnings:
+Note	1051	Unknown table 'tpch1.dim_c_bridge_duration'
+drop table if exists fct_macro_payment_details;
+Warnings:
+Note	1051	Unknown table 'tpch1.fct_macro_payment_details'
+drop table if exists dim_c_calendar;
+Warnings:
+Note	1051	Unknown table 'tpch1.dim_c_calendar'
+CREATE TABLE `fct_macro_payment_details` (
+`TRANSACTION_DW_ID` bigint(20) DEFAULT NULL,
+`TRANSACTION_ID` varchar(255) DEFAULT NULL,
+`TRANSACTION_DATE` date DEFAULT NULL,
+`TRANSACTION_DATE_KEY` bigint(20) DEFAULT NULL,
+`PAYMENT_AMOUNT` double DEFAULT NULL,
+`SOURCE_SYSTEM_NAME` varchar(255) DEFAULT NULL,
+`LAST_UPDATE_DATE` datetime DEFAULT NULL,
+`LAST_UPDATE_USER` varchar(7) DEFAULT NULL,
+`PURCHASE_ORDER_NUMBER` varchar(255) DEFAULT NULL,
+`APPROVAL_CODE` varchar(255) DEFAULT NULL,
+`INVOICE_NUMBER` varchar(255) DEFAULT NULL,
+`INVOICE_TEXT_DESCRIPTION` varchar(255) DEFAULT NULL,
+`LEDGER_KEY` bigint(20) DEFAULT NULL,
+`PAYMENT_METHOD_KEY` bigint(20) DEFAULT NULL,
+`INVOICE_DATE_KEY` bigint(20) DEFAULT NULL,
+`INVOICE_RECIEVED_DATE_KEY` bigint(20) DEFAULT NULL,
+`INVOICE_PAYMENT_DATE_KEY` bigint(20) DEFAULT NULL,
+`OPRA_COMMODITY_KEY` bigint(20) DEFAULT NULL,
+`ORIGINAL_OPRA_COMMODITY_KEY` bigint(20) DEFAULT NULL,
+`PAYMENT_LOCATION_GEOGRAPHY_KEY` bigint(20) DEFAULT NULL,
+`BUSINESS_UNIT_KEY` bigint(20) DEFAULT NULL,
+`CLIENT_VENDOR_KEY` bigint(20) DEFAULT NULL,
+`CLIENT_VENDOR_FAMILY_KEY` bigint(20) DEFAULT NULL,
+`DATA_SOURCE_FILE_NAME` varchar(255) DEFAULT NULL,
+`ITEM_NUMBER` varchar(100) DEFAULT NULL,
+`ITEM_DESCRIPTION` varchar(250) DEFAULT NULL,
+`VOUCHER_LINE_DESCRIPTION` varchar(250) DEFAULT NULL,
+`UNIT_PRICE` double DEFAULT NULL,
+`QUANTITY` int(11) DEFAULT NULL,
+`CATALOG_ITEM_NUMBER` varchar(100) DEFAULT NULL,
+`MFG_ITEM_SKU_NUMBER` varchar(100) DEFAULT NULL,
+`PAYMENT_CURRENCY_KEY` bigint(20) DEFAULT NULL,
+`PAYMENT_UNIT_OF_MEASURE_KEY` bigint(20) DEFAULT NULL,
+`buyer_key` bigint(20) DEFAULT NULL
+) engine=columnstore DEFAULT CHARSET=utf8;
+CREATE TABLE `dim_c_calendar` (
+`DATE_KEY` bigint(20) DEFAULT NULL,
+`DATE_TYPE_DATA` date DEFAULT NULL,
+`FULL_DATE_DESCRIPTION` varchar(50) DEFAULT NULL,
+`CALANDER_YEAR` bigint(19) DEFAULT NULL,
+`MONTH_KEY` bigint(19) DEFAULT NULL,
+`CALENDER_MONTH_NUMBER` bigint(19) DEFAULT NULL,
+`CALENDAR_MONTH_LONG_DESC` varchar(15) DEFAULT NULL,
+`CALENDAR_MONTH_SHRT_DESC` varchar(3) DEFAULT NULL,
+`CALENDAR_MONTH_DAY_NUMBER` bigint(19) DEFAULT NULL,
+`CALENDAR_DAY_NUMBER` bigint(19) DEFAULT NULL,
+`CALENDAR_DAY_LONG_NAME` varchar(10) DEFAULT NULL,
+`CALENDAR_DAY_SHORT_NAME` varchar(3) DEFAULT NULL,
+`WEEK_KEY` bigint(19) DEFAULT NULL,
+`CALENDAR_WEEK_NUMBER` bigint(19) DEFAULT NULL,
+`CALENDAR_QUARTER_NUMBER` bigint(19) DEFAULT NULL,
+`CALENDAR_QUARTER_DESCRIPTION` varchar(2) DEFAULT NULL,
+`FISCAL_YEAR_NUMBER` bigint(19) DEFAULT NULL,
+`FISCAL_MONTH_NUMBER` bigint(19) DEFAULT NULL,
+`FISCAL_DAY_NUMBER` bigint(19) DEFAULT NULL,
+`FISCAL_WEEK_NUMBER` bigint(19) DEFAULT NULL,
+`FISCAL_QRTR_NUMBER` bigint(19) DEFAULT NULL,
+`FISCAL_QUARTER_DESCRIPTION` varchar(2) DEFAULT NULL,
+`IS_WEEKDAY` varchar(1) DEFAULT NULL,
+`IS_WEEKEND` varchar(1) DEFAULT NULL,
+`IS_FEDERAL_HOLIDAY` varchar(1) DEFAULT NULL,
+`IS_LOCAL_HOLIDAY` varchar(1) DEFAULT NULL
+) engine=columnstore DEFAULT CHARSET=utf8;
+CREATE TABLE `fct_summary_transactional_snapshot` (
+`Domain_descriptor` varchar(25) DEFAULT NULL,
+`Last_collection_date` date DEFAULT NULL,
+`total_billed_or_spend` double DEFAULT NULL,
+`total_number_invoices` bigint(20) DEFAULT NULL,
+`month_key` bigint(20) DEFAULT NULL,
+`duration_key_year` bigint(20) DEFAULT NULL,
+`duration_key_qrtr` bigint(20) DEFAULT NULL,
+`duration_key_mnth` bigint(20) DEFAULT NULL,
+`opera_commodity_key` bigint(20) DEFAULT NULL
+) engine=columnstore DEFAULT CHARSET=utf8;
+CREATE TABLE `dim_c_bridge_duration` (
+`Duration_Key` int(11) DEFAULT NULL,
+`Month_key` int(11) DEFAULT NULL,
+`Fiscal` int(11) DEFAULT NULL,
+`Period_Size` varchar(20) DEFAULT NULL,
+`Period_Name` varchar(20) DEFAULT NULL,
+`Previous_Year_Key` int(11) DEFAULT NULL,
+`Previous_Time_Period_Key` int(11) DEFAULT NULL,
+`Parent_Key` int(11) DEFAULT NULL,
+`Period_Label` varchar(20) DEFAULT NULL,
+`Parent_Year_key` int(11) DEFAULT NULL,
+`Year_Number` int(11) DEFAULT NULL,
+`Quarter_Number` int(11) DEFAULT NULL,
+`Month_Number` int(11) DEFAULT NULL,
+`Period_Macro_Availability` int(11) DEFAULT NULL,
+`Year_Quarter` int(11) DEFAULT NULL
+) engine=columnstore DEFAULT CHARSET=utf8;
+insert into dim_c_bridge_duration values
+(1, 1, 1, 'Month', 'a', 1, 1, 1, 'a', 1, 1, 1, 1, 1, 1),
+(1, 1, 1, 'Month', 'a', 1, 1, 1, 'a', 1, 1, 1, 1, 1, 1),
+(1, 1, 1, 'Month', 'a', 1, 1, 1, 'a', 1, 1, 1, 1, 1, 1),
+(1, 1, 1, 'Month', 'a', 1, 1, 1, 'a', 1, 1, 1, 1, 1, 1),
+(1, 1, 1, 'Month', 'a', 1, 1, 1, 'a', 1, 1, 1, 1, 1, 1),
+(1, 1, 1, 'Month', 'a', 1, 1, 1, 'a', 1, 1, 1, 1, 1, 1);
+insert into dim_c_calendar values
+(1, '2010-11-01', 'a', 1,1,1, 'a','a',1,1,'a','a',1,1,1,'a',1,1 ,1,1 ,1,'a', 'y', 'y', 'y','y'),
+(1, '2010-11-01', 'a', 1,1,1, 'a','a',1,1,'a','a',1,1,1,'a',1,1 ,1,1 ,1,'a', 'y', 'y', 'y','y'),
+(1, '2010-11-01', 'a', 1,1,1, 'a','a',1,1,'a','a',1,1,1,'a',1,1 ,1,1 ,1,'a', 'y', 'y', 'y','y');
+insert into fct_macro_payment_details values
+(1, 1, '2010-11-01',1, 1234.4, 'aaa', '2011-10-02 10:10:10', 'zz',1, 'a', 1, 'a', 1, 1,1, 1, 1, 1, 1, 1, 1, 1, 1, 'a', 'a', 'a', 'a', 2374.12, 1, 'a', 'a',1, 1, 1),
+(1, 1, '2010-11-01',1, 1234.4, 'aaa', '2011-10-02 10:10:10', 'zz',1, 'a', 1, 'a', 1, 1,1, 1, 1, 1, 1, 1, 1, 1, 1, 'a', 'a', 'a', 'a', 2374.12, 1, 'a', 'a',1, 1, 1),
+(1, 1, '2010-11-01',1, 1234.4, 'aaa', '2011-10-02 10:10:10', 'zz',1, 'a', 1, 'a', 1, 1,1, 1, 1, 1, 1, 1, 1, 1, 1, 'a', 'a', 'a', 'a', 2374.12, 1, 'a', 'a',1, 1, 1),
+(1, 1, '2010-11-01',1, 1234.4, 'aaa', '2011-10-02 10:10:10', 'zz',1, 'a', 1, 'a', 1, 1,1, 1, 1, 1, 1, 1, 1, 1, 1, 'a', 'a', 'a', 'a', 2374.12, 1, 'a', 'a',1, 1, 1),
+(1, 1, '2010-11-01',1, 1234.4, 'aaa', '2011-10-02 10:10:10', 'zz',1, 'a', 1, 'a', 1, 1,1, 1, 1, 1, 1, 1, 1, 1, 1, 'a', 'a', 'a', 'a', 2374.12, 1, 'a', 'a',1, 1, 1);
+insert into fct_summary_transactional_snapshot values
+('a','2010-11-01', 3423.13, 1 ,1,1,1 ,1,1),
+('a','2010-11-01', 3423.13, 1 ,1,1,1 ,1,1),
+('a','2010-11-01', 3423.13, 1 ,1,1,1 ,1,1);
+SELECT * FROM
+(SELECT 'YTDCurrentYear' AS PeriodDesc, round(sum(fct.payment_amount),2) AS Spend
+FROM fct_macro_payment_details fct JOIN dim_c_calendar cal ON cal.DATE_KEY = fct.INVOICE_DATE_KEY
+JOIN dim_c_bridge_duration dur ON dur.Month_key = cal.MONTH_KEY
+WHERE duration_key IN
+(SELECT duration_key FROM dim_c_bridge_duration dur
+WHERE dur.month_key <= (SELECT distinct(month_key) FROM dim_c_calendar caln
+WHERE date_type_data <=(SELECT Date_ADD((DATE_FORMAT(current_date(),'%Y-%m-01')),INTERVAL -1 
+YEAR) FROM DUAL))
+AND period_size = 'Month'
+                     AND parent_year_key =(SELECT DISTINCT(parent_year_key) 
+FROM dim_c_bridge_duration WHERE duration_key = (SELECT DISTINCT(previous_year_key)
+FROM dim_c_bridge_duration WHERE duration_key=1)))
+)b
+JOIN
+(SELECT 'YTDCurrentYear' AS PeriodDesc, COUNT(duration_key) AS MonthCount
+FROM dim_c_bridge_duration
+WHERE MONTH_KEY <= (SELECT  distinct(month_key)
+FROM fct_summary_transactional_snapshot WHERE opera_commodity_key = 1)
+AND period_size = 'Month'
+              AND  parent_year_key IN (SELECT DISTINCT(parent_year_key)
+FROM dim_c_bridge_duration WHERE fiscal IN
+(SELECT DISTINCT(fiscal) FROM dim_c_bridge_duration WHERE duration_key = 1 )
+AND period_name IN (SELECT DISTINCT(period_name) FROM dim_c_bridge_duration
+WHERE duration_key IN (SELECT duration_key_year FROM fct_summary_transactional_snapshot
+WHERE opera_commodity_key = 1))))d 
+ON b.PeriodDesc = d.PeriodDesc ;
+PeriodDesc	Spend	PeriodDesc	MonthCount
+YTDCurrentYear	111096.00	YTDCurrentYear	6
+SELECT * FROM
+(SELECT
+'YTDCurrentYear' AS PeriodDesc,
+COUNT(duration_key) AS MonthCount
+FROM
+dim_c_bridge_duration
+WHERE   
+parent_year_key IN (SELECT DISTINCT(parent_year_key)FROM dim_c_bridge_duration 
+WHERE fiscal IN
+(SELECT DISTINCT(fiscal) FROM dim_c_bridge_duration WHERE duration_key 
+= 1 )
+AND period_name IN (SELECT DISTINCT(period_name) FROM dim_c_bridge_duration
+)
+)
+)d 
+JOIN
+(SELECT
+'YTDCurrentYear' AS PeriodDesc,
+round(sum(fct.payment_amount),2) AS Spend
+FROM fct_macro_payment_details fct
+JOIN dim_c_calendar cal
+ON cal.DATE_KEY = fct.INVOICE_DATE_KEY
+JOIN dim_c_bridge_duration dur
+ON dur.Month_key = cal.MONTH_KEY
+WHERE duration_key IN
+(SELECT duration_key FROM dim_c_bridge_duration dur
+WHERE dur.month_key    <=
+(SELECT month_key FROM dim_c_calendar caln limit 1 )
+)
+)b
+ON b.PeriodDesc= d.PeriodDesc;
+PeriodDesc	MonthCount	PeriodDesc	Spend
+YTDCurrentYear	6	YTDCurrentYear	111096.00
+drop table fct_summary_transactional_snapshot;
+drop table dim_c_bridge_duration;
+drop table fct_macro_payment_details;
+drop table dim_c_calendar;

@@ -1,0 +1,34 @@
+#
+# TIME_FORMAT() function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs252_db;
+--enable_warnings
+
+CREATE DATABASE mcs252_db;
+USE mcs252_db;
+
+CREATE TABLE t1
+(
+ t1_INT INT,
+ t1_TIME TIME,
+ t1_DATETIME DATETIME
+ )ENGINE=Columnstore;
+INSERT INTO t1 VALUES(1, '22:12:02', '1997-12-12 22:12:02');
+INSERT INTO t1 VALUES(2, '23:59:59', '2001-1-1 23:59:59');
+INSERT INTO t1 VALUES(3, '01:00:00', '09-12-11 01:08:59');
+
+SELECT TIME_FORMAT('00:00:00', '%H %k %h %I %l') FROM t1 LIMIT 1;
+SELECT TIME_FORMAT('24:00:00', '%H %k %h %I %l') FROM t1 LIMIT 1;
+SELECT TIME_FORMAT('10:50:40.9999', '%H %k %h %I %l') FROM t1 LIMIT 1;
+
+# Bug. The function should work fine with TIME datatype, but results NULL now.
+SELECT t1_TIME, TIME_FORMAT(t1_TIME, '%H %k %h %I %l') FROM t1 ORDER BY 1;
+
+SELECT t1_DATETIME, TIME_FORMAT(t1_DATETIME, '%H %k %h %I %l') FROM t1 ORDER BY 1;
+
+# Clean UP
+DROP DATABASE mcs252_db;

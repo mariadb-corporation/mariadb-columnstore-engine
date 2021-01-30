@@ -1,0 +1,24 @@
+#
+# Test idbDBRoot() function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs209_db;
+--enable_warnings
+
+CREATE DATABASE mcs209_db;
+USE mcs209_db;
+
+CREATE TABLE t1(col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnstore;
+LOAD DATA LOCAL infile './suite/columnstore/std_data/100Krows.dat' INTO TABLE t1 FIELDS TERMINATED BY '|';
+
+SELECT COUNT(*) FROM t1;
+
+SELECT idbDBRoot(col1) FROM t1 LIMIT 1;
+SELECT idbDBRoot(col2) FROM t1 LIMIT 1;
+SELECT idbDBRoot(col3) FROM t1 LIMIT 1;
+
+# Clean UP
+DROP DATABASE mcs209_db;

@@ -1,0 +1,15 @@
+DROP DATABASE IF EXISTS mcs213_db;
+CREATE DATABASE mcs213_db;
+USE mcs213_db;
+CREATE TABLE t1(col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnstore;
+LOAD DATA LOCAL infile './suite/columnstore/std_data/100Krows.dat' INTO TABLE t1 FIELDS TERMINATED BY '|';
+SELECT COUNT(*) FROM t1;
+COUNT(*)
+100001
+SELECT idbExtentMin(col1) FROM t1 LIMIT 1;
+idbExtentMin(col1)
+0
+SELECT idbExtentMin(col2) FROM t1 LIMIT 1;
+idbExtentMin(col2)
+0
+DROP DATABASE mcs213_db;

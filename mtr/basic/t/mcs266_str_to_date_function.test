@@ -1,0 +1,33 @@
+#
+# STR_TO_DATE() function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs266_db;
+--enable_warnings
+
+CREATE DATABASE mcs266_db;
+USE mcs266_db;
+
+CREATE TABLE t1(t1_d VARCHAR(20), t1_t CHAR(10), t1_dt VARCHAR(25))ENGINE=Columnstore;
+INSERT INTO t1 VALUES(NULL, NULL, NULL);
+INSERT INTO t1 VALUES('2222/11/11', '12:12:12', '2020-11-01 22:12:12');
+INSERT INTO t1 VALUES('2020/01/01', '17:31:11', '2020-22-11 17:34:56');
+INSERT INTO t1 VALUES('2016/02/01', '21:41:19', '2017-02-05 02:19:32');
+
+SELECT STR_TO_DATE('1990,09,24', '%Y,%m,%d') FROM t1 LIMIT 1;
+SELECT STR_TO_DATE('09:30:17','%h:%i:%s') FROM t1 LIMIT 1;
+SELECT STR_TO_DATE('09:30:17mcs','%h:%s:%imcs') FROM t1 LIMIT 1;
+SELECT STR_TO_DATE('1990/09/24 19:52:17', '%Y/%m/%d %H:%i:%s') FROM t1 LIMIT 1;
+
+SELECT t1_d, STR_TO_DATE(t1_d, '%Y/%m/%d') FROM t1 ORDER BY 1;
+SELECT t1_t, STR_TO_DATE(t1_t, '%H:%i:%s') FROM t1 ORDER BY 1;
+SELECT t1_dt, STR_TO_DATE(t1_dt, '%Y-%d-%m %H:%i:%s') FROM t1 ORDER BY 1;
+
+--error ER_WRONG_PARAMCOUNT_TO_NATIVE_FCT
+SELECT STR_TO_DATE(t1_d) FROM t1;
+
+# Clean UP
+DROP DATABASE mcs266_db;

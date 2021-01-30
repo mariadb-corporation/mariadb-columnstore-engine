@@ -1,0 +1,51 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3497.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists bug3497a;
+drop table if exists bug3497b;
+
+CREATE TABLE bug3497a (col1 int, col2 varchar(10)) engine=columnstore; 
+INSERT INTO bug3497a VALUES(1,'trudy'); 
+INSERT INTO bug3497a VALUES(2,'peter'); 
+INSERT INTO bug3497a VALUES(3,'sanja'); 
+INSERT INTO bug3497a VALUES(4,'monty'); 
+INSERT INTO bug3497a VALUES(5,'david'); 
+INSERT INTO bug3497a VALUES(6,'kent'); 
+INSERT INTO bug3497a VALUES(7,'carsten'); 
+INSERT INTO bug3497a VALUES(8,'ranger'); 
+INSERT INTO bug3497a VALUES(10,'matt'); 
+
+CREATE TABLE bug3497b (col1 int, col2 int, col3 char(1)) engine=columnstore; 
+INSERT INTO bug3497b VALUES (1,1,'y'); 
+INSERT INTO bug3497b VALUES (1,2,'y'); 
+INSERT INTO bug3497b VALUES (2,1,'n'); 
+INSERT INTO bug3497b VALUES (3,1,'n'); 
+INSERT INTO bug3497b VALUES (4,1,'y'); 
+INSERT INTO bug3497b VALUES (4,2,'n'); 
+INSERT INTO bug3497b VALUES (4,3,'n'); 
+INSERT INTO bug3497b VALUES (6,1,'n'); 
+INSERT INTO bug3497b VALUES (8,1,'y');
+
+SELECT a.col1,a.col2,b.col2,b.col3 FROM bug3497b b RIGHT JOIN bug3497a a ON
+a.col1=b.col1 WHERE a.col1 IN (1,5,9) AND b.col2=(SELECT MAX(col2) FROM bug3497b b2
+WHERE b2.col1=b.col1) order by 1, 2;
+
+SELECT distinct a.col1,a.col2,b.col2,b.col3 FROM bug3497b b RIGHT JOIN bug3497a a ON
+a.col1=b.col1 WHERE b.col2=(SELECT MAX(col2) FROM bug3497b b2 WHERE b2.col1=b.col1)
+order by 1, 2;
+
+SELECT a.col1,a.col2,b.col2,b.col3 FROM bug3497b b RIGHT JOIN bug3497a a ON
+a.col1=b.col1 WHERE b.col1 IN (1,5,9) AND b.col2=(SELECT MAX(col2) FROM bug3497b b2
+WHERE b2.col1=b.col1) order by 1, 2;
+
+drop table if exists bug3497a;
+drop table if exists bug3497b;
+#
+

@@ -1,0 +1,62 @@
+#
+#This test verifies show databases and tables with engine=columnstore.
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs11_db1;
+DROP DATABASE IF EXISTS mcs11_db2;
+--enable_warnings
+
+CREATE DATABASE mcs11_db1;
+CREATE SCHEMA mcs11_db2;
+--sorted_result
+SHOW DATABASES LIKE 'mcs11%';
+--sorted_result
+SHOW SCHEMAS LIKE 'mcs11%';
+
+SHOW TABLES IN mcs11_db1;
+USE mcs11_db2;
+--sorted_result
+SHOW TABLES;
+
+CREATE TABLE mcs11_db1.t1 (id INT) engine=innodb;
+CREATE TABLE mcs11_db1.t2 (id INT) engine=columnstore;
+--sorted_result
+SHOW TABLES IN mcs11_db1;
+USE mcs11_db1;
+--sorted_result
+SHOW TABLES;
+
+USE mcs11_db2;
+CREATE TABLE t1 (id INT) engine=innodb;
+CREATE TABLE t2 (id INT) engine=columnstore;
+CREATE TEMPORARY TABLE tmp1 (id INT) engine=innodb;
+--error 1050
+CREATE TEMPORARY TABLE tmp1 (id INT) engine=columnstore;
+--sorted_result
+SHOW TABLES;
+--sorted_result
+SHOW TABLES IN mcs11_db2;
+
+# Test from parallel connections
+connect (addconroot1, localhost, root,,);
+connect (addconroot2, localhost, root,,);
+connection addconroot1;
+--sorted_result
+SHOW DATABASES LIKE 'mcs11%';
+SHOW TABLES IN mcs11_db1;
+USE mcs11_db1;
+SHOW TABLES;
+connection addconroot2;
+SHOW SCHEMAS LIKE 'mcs11%';
+SHOW TABLES IN mcs11_db2;
+USE mcs11_db2;
+SHOW TABLES;
+
+connection default;
+disconnect addconroot1;
+disconnect addconroot2;
+DROP DATABASE IF EXISTS mcs11_db1;
+DROP DATABASE IF EXISTS mcs11_db2;
+

@@ -1,0 +1,36 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3051.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists bug3051;
+CREATE TABLE `bug3051` (
+  `c1` int(11) DEFAULT NULL,
+  `c2` varchar(17) DEFAULT NULL,
+  `c3` tinyint(3) DEFAULT NULL,
+  `c4` varchar(20) DEFAULT NULL,
+  `c5` varchar(20) DEFAULT NULL,
+  `c6` varchar(15) DEFAULT NULL,
+  `c7` datetime DEFAULT NULL,
+  `c8` int(11) DEFAULT NULL,
+  `c9` varchar(50) DEFAULT NULL,
+  `c10` varchar(20) DEFAULT NULL,
+  `c11` varchar(255) DEFAULT NULL,
+  `c12` varchar(4096) DEFAULT NULL,
+  `c14` int(11) DEFAULT NULL
+) engine=columnstore DEFAULT CHARSET=latin1;
+
+insert into bug3051 values (1,1,1,1,1,1,now(),1,1,1,1,1,1);
+insert into bug3051 values (2,2,2,2,2,2,now(),2,2,2,2,2,2);
+
+alter table bug3051 drop column c7;
+alter table bug3051 add column c7 datetime;
+select count(*) from bug3051;
+update bug3051 set c7=now();
+drop table bug3051;
+#

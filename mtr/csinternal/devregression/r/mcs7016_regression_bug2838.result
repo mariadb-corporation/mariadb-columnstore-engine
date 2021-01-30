@@ -1,0 +1,33 @@
+USE ssb1;
+select count(*), d1.d_date 
+from dateinfo as d1 
+inner join lineorder l1 on l1.lo_orderdate = d1.d_datekey  
+inner join lineorder l2 on l2.lo_orderkey = l1.lo_orderkey  
+where l1.lo_orderkey < 10 and l2.lo_orderkey < 10 and 
+l1.lo_linenumber <= l2.lo_linenumber 
+group by d1.d_date 
+order by d1.d_date;
+count(*)	d_date
+1	December 1, 1996
+1	February 21, 1992
+28	January 10, 1996
+21	January 2, 1996
+6	July 30, 1994
+1	Octorber 11, 1995
+21	Octorber 14, 1993
+select count(*), d1.d_date 
+from dateinfo as d1 
+inner join lineorder l1 on l1.lo_orderdate = d1.d_datekey  
+inner join lineorder l2 on l2.lo_orderkey = l1.lo_orderkey and
+l1.lo_linenumber <= l2.lo_linenumber  
+where l1.lo_orderkey < 10 and l2.lo_orderkey < 10 
+group by d1.d_date 
+order by d1.d_date;
+count(*)	d_date
+1	December 1, 1996
+1	February 21, 1992
+28	January 10, 1996
+21	January 2, 1996
+6	July 30, 1994
+1	Octorber 11, 1995
+21	Octorber 14, 1993

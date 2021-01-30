@@ -1,0 +1,12 @@
+DROP DATABASE IF EXISTS mcs62_db;
+CREATE DATABASE mcs62_db;
+USE mcs62_db;
+CREATE TABLE t_binary(col BINARY(3))ENGINE=Columnstore;
+ERROR 42000: The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
+CREATE TABLE t_binary(col BINARY)ENGINE=Columnstore;
+ERROR 42000: The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
+CREATE TABLE t_varbinary(col VARBINARY(5))ENGINE=Columnstore;
+ERROR 42000: The storage engine for the table doesn't support Varbinary is currently not supported by Columnstore.
+CREATE TABLE t_varbinary(col VARBINARY)ENGINE=Columnstore;
+ERROR 42000: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')ENGINE=Columnstore' at line 1
+DROP DATABASE mcs62_db;

@@ -1,0 +1,11 @@
+USE tpch1;
+drop table if exists bug3952;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug3952'
+create table bug3952 (id int, name varchar(25));
+insert into bug3952 values (1,'aaa'),(2,'bbb');
+select * from bug3952 n1, (select * from bug3952)n2 where n1.id=n2.id;
+id	name	id	name
+1	aaa	1	aaa
+2	bbb	2	bbb
+drop table bug3952;

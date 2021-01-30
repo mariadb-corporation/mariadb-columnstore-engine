@@ -1,0 +1,58 @@
+USE tpch1;
+drop table if exists paa;
+Warnings:
+Note	1051	Unknown table 'tpch1.paa'
+drop table if exists dates;
+Warnings:
+Note	1051	Unknown table 'tpch1.dates'
+drop table if exists t;
+Warnings:
+Note	1051	Unknown table 'tpch1.t'
+create table paa (
+p_id int,
+a_id int,
+date_id int
+) ENGINE=Columnstore DEFAULT CHARSET=latin1;
+insert into paa values
+(1, 10, 100),
+(2, 20, 100);
+create table dates (
+date_id int,
+dates date
+) ENGINE=Columnstore DEFAULT CHARSET=latin1;
+insert into dates values
+(100, '2010-09-01');
+create table t (
+p_id int,
+a_id int,
+date_id int,
+amount int
+) ENGINE=Columnstore DEFAULT CHARSET=latin1;
+insert into t values
+(2, 20, 100, 99999);
+select p.p_id,
+p.a_id,
+ifnull(`new_sales_amount`,0),
+ifnull(`new_sales_amount_ok`,0),
+p.dates as 'Date'
+from (select aaa.p_id, aaa.a_id, dof.date_id, dof.dates
+from (select paa.p_id, paa.a_id, 1 as xxx
+from paa
+) aaa
+join (select date_id, 1 as xxx, dates from dates) dof on (dof.xxx=aaa.xxx)
+) p
+left outer join (select t.date_id, t.p_id, a_id,
+IF(t.amount = 99999, amount, 0) / 10000 as 'new_sales_amount',
+IF(t.amount = 99999, amount, 0) as 'new_sales_amount_ok'
+   from t
+) tx
+on (p.p_id = tx.p_id
+and p.a_id = tx.a_id
+and p.date_id = tx.date_id)
+order by 1, 2, 3;
+p_id	a_id	ifnull(`new_sales_amount`,0)	ifnull(`new_sales_amount_ok`,0)	Date
+1	10	0.0000	0	2010-09-01
+2	20	9.9999	99999	2010-09-01
+drop table if exists paa;
+drop table if exists dates;
+drop table if exists t;

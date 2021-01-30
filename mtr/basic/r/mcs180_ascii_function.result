@@ -1,0 +1,52 @@
+DROP DATABASE IF EXISTS mcs180_db;
+CREATE DATABASE mcs180_db;
+USE mcs180_db;
+SET default_storage_engine=Columnstore;
+CREATE TABLE t1 (a CHAR(1), b INT);
+INSERT INTO t1 VALUES ('', NULL), ('m', 6), ('N', 5), ('o', 4);
+SHOW CREATE TABLE t1;
+Table	Create Table
+t1	CREATE TABLE `t1` (
+  `a` char(1) DEFAULT NULL,
+  `b` int(11) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+SELECT ASCII(0);
+ASCII(0)
+48
+SELECT ASCII(1);
+ASCII(1)
+49
+SELECT ASCII(9);
+ASCII(9)
+57
+SELECT ASCII('abc');
+ASCII('abc')
+97
+SELECT ASCII('a');
+ASCII('a')
+97
+SELECT ASCII('A');
+ASCII('A')
+65
+SELECT ASCII('z');
+ASCII('z')
+122
+SELECT ASCII('~');
+ASCII('~')
+126
+SELECT ASCII('-');
+ASCII('-')
+45
+SELECT a, ASCII(a) FROM t1;
+a	ASCII(a)
+NULL	NULL
+m	109
+N	78
+o	111
+SELECT b, ASCII(b) FROM t1;
+b	ASCII(b)
+NULL	NULL
+6	54
+5	53
+4	52
+DROP DATABASE mcs180_db;

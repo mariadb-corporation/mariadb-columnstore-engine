@@ -1,0 +1,47 @@
+#
+# Test SELECT FUNCTION call
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs39_db;
+--enable_warnings
+
+CREATE DATABASE mcs39_db;
+USE mcs39_db;
+
+CREATE TABLE t1(col INT)Engine=Columnstore;
+INSERT INTO t1 VALUEs(1),(2),(3),(4),(5),(6),(7),(8),(9),(10);
+
+# Function that returns square of a number
+CREATE FUNCTION func(num int) RETURNS INT RETURN(POW(num,2));
+
+SET @a = func(11);
+SET @b = 15;
+SELECT @a;
+SELECT func(@a);
+SELECT func(-@b);
+SELECT func(0);
+SELECT func(11+22);
+SELECT func(11-22);
+SELECT func(11*22);
+SELECT func(11/22);
+
+SELECT col,@a FROM t1;
+
+# Bug
+--error ER_CHECK_NOT_IMPLEMENTED
+SELECT col AS 'num', func(col) as 'square of num' from t1;
+
+--error ER_PARSE_ERROR
+SELECT f1(@b) AS 'square of 99', * FROM t1;
+--error ER_DIVISION_BY_ZERO
+SELECT func(@b/0);
+--error ER_SP_WRONG_NO_OF_ARGS
+SELECT func();
+--error ER_SP_DOES_NOT_EXIST
+SELECT fun(@b);
+
+# Clean UP
+DROP DATABASE mcs39_db;

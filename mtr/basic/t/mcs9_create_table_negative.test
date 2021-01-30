@@ -1,0 +1,39 @@
+#
+#Test CREATE TABLE with negative cases
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs9_db;
+--enable_warnings
+
+CREATE DATABASE mcs9_db;
+USE mcs9_db;
+
+# with data types that doesn't support.
+--error 1178
+CREATE TABLE t1(t1_enum ENUM('one','two','three'))ENGINE=Columnstore;
+--error 1178
+CREATE TABLE t2(t2_binary BINARY(3))ENGINE=Columnstore;
+--error 1178
+CREATE TABLE t3(t3_set SET('a','b'))ENGINE=Columnstore;
+--error 1178
+CREATE TABLE t4(t4_json JSON)ENGINE=Columnstore;
+
+# with unsupported table name
+--error 1178
+CREATE TABLE $table(col1 INT)ENGINE=columnstore;
+--error 1103
+CREATE TABLE abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklm(col1 VARCHAR(90))ENGINE=Columnstore;
+
+--error 1069
+CREATE TABLE t5_key(col1 SMALLINT KEY)ENGINE=Columnstore;
+--error 1069
+CREATE TABLE t6(col1 INT NOT NULL PRIMARY KEY)ENGINE=Columnstore;
+--error 1069
+CREATE TABLE t7(col1 INT UNIQUE)ENGINE=Columnstore;
+--error 1178
+CREATE TABLE t8(col1 INT)MIN_ROWS=10, ENGINE=Columnstore;
+--error 1178
+CREATE TABLE t9(col1 INT)MAX_ROWS=1000, ENGINE=Columnstore;
+DROP DATABASE mcs9_db;

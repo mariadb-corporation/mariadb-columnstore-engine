@@ -1,0 +1,20 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-3766.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+--disable_warnings
+DROP TABLE IF EXISTS `MCOL-3766`;
+--enable_warnings
+CREATE TABLE `MCOL-3766`(a int) engine=columnstore;
+EXPLAIN SELECT a FROM `MCOL-3766` GROUP BY a HAVING 1 != 1 AND a > 1;
+EXPLAIN SELECT a FROM `MCOL-3766` GROUP BY a HAVING 1 != 1 AND a > 1;
+#
+DROP TABLE IF EXISTS `MCOL-3766`;
+#
+

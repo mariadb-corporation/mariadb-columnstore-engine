@@ -1,0 +1,126 @@
+USE tpch1;
+SELECT n_nationkey, n_name as c1 FROM nation group by n_nationkey,
+n_name order by substr(n_nationkey,1,2);
+n_nationkey	c1
+0	ALGERIA
+1	ARGENTINA
+10	IRAN
+11	IRAQ
+12	JAPAN
+13	JORDAN
+14	KENYA
+15	MOROCCO
+16	MOZAMBIQUE
+17	PERU
+18	CHINA
+19	ROMANIA
+2	BRAZIL
+20	SAUDI ARABIA
+21	VIETNAM
+22	RUSSIA
+23	UNITED KINGDOM
+24	UNITED STATES
+3	CANADA
+4	EGYPT
+5	ETHIOPIA
+6	FRANCE
+7	GERMANY
+8	INDIA
+9	INDONESIA
+SELECT n_nationkey as c0, n_name as c1 FROM nation group by 
+n_nationkey, n_name order by isnull(n_nationkey), n_nationkey;
+c0	c1
+0	ALGERIA
+1	ARGENTINA
+2	BRAZIL
+3	CANADA
+4	EGYPT
+5	ETHIOPIA
+6	FRANCE
+7	GERMANY
+8	INDIA
+9	INDONESIA
+10	IRAN
+11	IRAQ
+12	JAPAN
+13	JORDAN
+14	KENYA
+15	MOROCCO
+16	MOZAMBIQUE
+17	PERU
+18	CHINA
+19	ROMANIA
+20	SAUDI ARABIA
+21	VIETNAM
+22	RUSSIA
+23	UNITED KINGDOM
+24	UNITED STATES
+SELECT n_nationkey as c0, n_name as c1 FROM nation group by 
+n_nationkey, n_name order by isnull(n_name), n_name;
+c0	c1
+0	ALGERIA
+1	ARGENTINA
+2	BRAZIL
+3	CANADA
+18	CHINA
+4	EGYPT
+5	ETHIOPIA
+6	FRANCE
+7	GERMANY
+8	INDIA
+9	INDONESIA
+10	IRAN
+11	IRAQ
+12	JAPAN
+13	JORDAN
+14	KENYA
+15	MOROCCO
+16	MOZAMBIQUE
+17	PERU
+19	ROMANIA
+22	RUSSIA
+20	SAUDI ARABIA
+23	UNITED KINGDOM
+24	UNITED STATES
+21	VIETNAM
+SELECT n_nationkey as c0, n_name as c1 FROM nation group by n_nationkey,
+n_name order by substr(n_nationkey,1,2);
+c0	c1
+0	ALGERIA
+1	ARGENTINA
+10	IRAN
+11	IRAQ
+12	JAPAN
+13	JORDAN
+14	KENYA
+15	MOROCCO
+16	MOZAMBIQUE
+17	PERU
+18	CHINA
+19	ROMANIA
+2	BRAZIL
+20	SAUDI ARABIA
+21	VIETNAM
+22	RUSSIA
+23	UNITED KINGDOM
+24	UNITED STATES
+3	CANADA
+4	EGYPT
+5	ETHIOPIA
+6	FRANCE
+7	GERMANY
+8	INDIA
+9	INDONESIA
+select cchar8, cvchar6 from datatypetestm order by isnull(cchar8), cchar8;
+cchar8	cvchar6
+aaaaaaaa	aaaaaa
+h	f
+hh	ff
+hhh	fff
+hhhh	ffff
+sssssss	uuuuuu
+ssssssss	uuuuuu
+ssssssss	uuuuuu
+ssssssss	uuuuuu
+zzzzzzzz	zzzzzz
+NULL	NULL

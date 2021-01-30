@@ -1,0 +1,16 @@
+USE tpch1;
+select p_size from part group by p_size  order by count(*) desc limit 1;
+p_size
+10
+select p_size, count(*) from part group by p_size  order by count(*) desc limit 1;
+p_size	count(*)
+10	4177
+select p_size, count(*) from part group by p_size  order by 2 desc limit 1;
+p_size	count(*)
+10	4177
+select p_size, count(*) from part group by 1  order by 2 desc limit 1;
+p_size	count(*)
+10	4177
+select p_size, count(*) from part group by 1  order by sum(p_size) desc limit 1;
+p_size	count(*)
+48	4056

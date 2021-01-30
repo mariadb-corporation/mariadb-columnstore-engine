@@ -1,0 +1,23 @@
+SET default_storage_engine=Columnstore;
+DROP DATABASE IF EXISTS mcs170_db;
+CREATE DATABASE mcs170_db;
+USE mcs170_db;
+SELECT CONNECTION_ID() > 0;
+CONNECTION_ID() > 0
+1
+SELECT CURRENT_USER();
+CURRENT_USER()
+root@localhost
+SELECT USER();
+USER()
+root@localhost
+SELECT SESSION_USER();
+SESSION_USER()
+root@localhost
+SELECT SYSTEM_USER();
+SYSTEM_USER()
+root@localhost
+SELECT DATABASE();
+DATABASE()
+mcs170_db
+DROP DATABASE mcs170_db;

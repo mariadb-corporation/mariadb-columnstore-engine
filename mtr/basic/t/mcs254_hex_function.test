@@ -1,0 +1,45 @@
+#
+# HEX() function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs254_db;
+--enable_warnings
+
+CREATE DATABASE mcs254_db;
+USE mcs254_db;
+
+CREATE TABLE t1
+(
+ t1_INT INT,
+ t1_DECIMAL DECIMAL(12,5),
+ t1_TEXT TEXT,
+ t1_DATE DATE,
+ t1_TIME TIME
+ )ENGINE=Columnstore;
+INSERT INTO t1 VALUES(103, 1234.5699, 'pqrstuvwxyz', '1997-12-12', '22:12:02');
+INSERT INTO t1 VALUES(-7299, 111.99, 'abcdefghijklm', '2001-1-1', '23:59:59');
+INSERT INTO t1 VALUES(9913, 98765.4321, repeat('q', 5), '09-12-11', '01:08:59');
+
+SET max_length_for_sort_data=8192;
+
+SELECT HEX(10) FROM t1 LIMIT 1;
+SELECT HEX(-1) FROM t1 LIMIT 1;
+SELECT HEX('a') FROM t1 LIMIT 1;
+SELECT HEX('b') FROM t1 LIMIT 1;
+SELECT HEX('abc') FROM t1 LIMIT 1;
+SELECT HEX('2020-1-1') FROM t1 LIMIT 1;
+SELECT HEX('12:13:14') FROM t1 LIMIT 1;
+SELECT HEX('2020-10-18 11:10:09') FROM t1 LIMIT 1;
+
+SELECT t1_INT, HEX(t1_INT) FROM t1 ORDER BY 1;
+SELECT t1_DECIMAL, HEX(t1_DECIMAL) FROM t1 ORDER BY 1;
+SELECT t1_TEXT, HEX(t1_TEXT) FROM t1 ORDER BY 1;
+SELECT t1_DATE, HEX(t1_DATE) FROM t1 ORDER BY 1;
+SELECT t1_TIME, HEX(t1_TIME) FROM t1 ORDER BY 1;
+
+# Clean UP
+SET max_length_for_sort_data=default;
+DROP DATABASE mcs254_db;

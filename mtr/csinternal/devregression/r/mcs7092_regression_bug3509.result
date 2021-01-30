@@ -1,0 +1,7 @@
+USE ssb1;
+select 'A' A,REVERSE(d_datekey), 'B' B from dateinfo where d_datekey = 19980404;
+A	REVERSE(d_datekey)	B
+A	40408991	B
+select 'A' A,REVERSE(d_datekey), md5(d_datekey) from dateinfo where d_datekey = 19980404;
+A	REVERSE(d_datekey)	md5(d_datekey)
+A	40408991	35472a41f34f6cffd1b4157cdc42d360

@@ -1,0 +1,32 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-1403.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists mcol1403a;
+drop table if exists mcol1403b;
+
+create table mcol1403a (a int, b varchar(4)) engine=columnstore;
+create table mcol1403b (a int, b char(20), c varchar(20)) engine=columnstore;
+#-- Make sure we don't regress MCOL-1246
+insert into mcol1403a values (1, 'ABC ');
+select * from mcol1403a where b = 'ABC';
+select * from mcol1403a where b like 'ABC';
+select a, hex(b) from mcol1403a;
+
+#-- Now for MCOL-1403
+insert into mcol1403b values (1, 'Majestic12 ', 'Majestic12 ');
+select * from mcol1403b where lower(b) like 'majestic12 ';
+select * from mcol1403b where lower(c) like 'majestic12 ';
+select concat(b, '#') from mcol1403b where b like '% ';
+select concat(c, '#') from mcol1403b where c like '% ';
+
+drop table mcol1403a;
+drop table mcol1403b;
+#
+

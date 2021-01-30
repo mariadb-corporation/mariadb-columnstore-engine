@@ -1,0 +1,14 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3728.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+select 'l_shipinstruct', count(l_shipinstruct)+sum(if(l_shipinstruct is null,1, 0)) from lineitem;
+
+#
+

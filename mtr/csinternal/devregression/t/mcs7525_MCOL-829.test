@@ -1,0 +1,29 @@
+#
+# Test case migrated from regression test suite:
+# queries/working_tpch1/misc/MCOL-829.sql
+#
+# Author: Susil, susil.behera@mariadb.com
+#
+
+-- source ../include/have_columnstore.inc
+
+USE tpch1;
+
+# Support INSERT...SELECT in stored procedures
+drop table if exists mcol829a;
+drop table if exists mcol829b;
+drop procedure if exists mcol829;
+create table mcol829a (a int, b int) engine=columnstore;
+create table mcol829b (a int, b int) engine=columnstore;
+insert into mcol829a values (1,1),(2,2),(3,3);
+delimiter //;
+create procedure mcol829() begin insert into mcol829b select * from mcol829a; end//
+delimiter ;//
+call mcol829();
+select * from mcol829b;
+
+drop procedure mcol829;
+drop table mcol829a;
+drop table mcol829b;
+
+

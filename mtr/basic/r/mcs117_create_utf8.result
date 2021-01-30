@@ -1,0 +1,39 @@
+set names utf8;
+DROP DATABASE IF EXISTS mcs117_db;
+CREATE DATABASE имя_базы_в_кодировке_утф8_длиной_больше_чем_45;
+USE имя_базы_в_кодировке_утф8_длиной_больше_чем_45;
+SELECT DATABASE();
+DATABASE()
+имя_базы_в_кодировке_утф8_длиной_больше_чем_45
+CREATE DATABASE mcs117_db;
+USE mcs117_db;
+SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.schemata
+WHERE schema_name='имя_базы_в_кодировке_утф8_длиной_больше_чем_45';
+SCHEMA_NAME
+имя_базы_в_кодировке_утф8_длиной_больше_чем_45
+DROP DATABASE имя_базы_в_кодировке_утф8_длиной_больше_чем_45;
+CREATE TABLE имя_таблицы_в_кодировке_утф8_длиной_больше_чем_48
+(
+имя_поля_в_кодировке_утф8_длиной_больше_чем_45 INT
+)ENGINE=Columnstore;
+SHOW CREATE TABLE имя_таблицы_в_кодировке_утф8_длиной_больше_чем_48;
+Table	Create Table
+имя_таблицы_в_кодировке_утф8_длиной_больше_чем_48	CREATE TABLE `имя_таблицы_в_кодировке_утф8_длиной_больше_чем_48` (
+  `имя_поля_в_кодировке_утф8_длиной_больше_чем_45` int(11) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE VIEW имя_вью_кодировке_утф8_длиной_больше_чем_42 AS SELECT * FROM имя_таблицы_в_кодировке_утф8_длиной_больше_чем_48;
+SHOW CREATE VIEW  имя_вью_кодировке_утф8_длиной_больше_чем_42;
+View	Create View	character_set_client	collation_connection
+имя_вью_кодировке_утф8_длиной_больше_чем_42	CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `имя_вью_кодировке_утф8_длиной_больше_чем_42` AS select `имя_таблицы_в_кодировке_утф8_длиной_больше_чем_48`.`имя_поля_в_кодировке_утф8_длиной_больше_чем_45` AS `имя_поля_в_кодировке_утф8_длиной_больше_чем_45` from `имя_таблицы_в_кодировке_утф8_длиной_больше_чем_48`	utf8	utf8_general_ci
+select TABLE_NAME from information_schema.tables where table_schema='mcs117_db' order by 1;
+TABLE_NAME
+имя_вью_кодировке_утф8_длиной_больше_чем_42
+имя_таблицы_в_кодировке_утф8_длиной_больше_чем_48
+select COLUMN_NAME from information_schema.columns where table_schema='mcs117_db' order by 1;
+COLUMN_NAME
+имя_поля_в_кодировке_утф8_длиной_больше_чем_45
+имя_поля_в_кодировке_утф8_длиной_больше_чем_45
+select TABLE_NAME from information_schema.views where table_schema='mcs117_db' order by 1;
+TABLE_NAME
+имя_вью_кодировке_утф8_длиной_больше_чем_42
+DROP DATABASE mcs117_db;

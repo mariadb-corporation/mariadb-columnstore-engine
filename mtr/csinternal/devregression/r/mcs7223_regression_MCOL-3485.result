@@ -1,0 +1,61 @@
+USE tpch1;
+drop table if exists t;
+Warnings:
+Note	1051	Unknown table 'tpch1.t'
+create table t(a int, b varchar(10), c decimal(7,2)) engine=columnstore;
+insert into t(a,b,c) values (1,'x',10),(2,'x',11), (3, 'x', 12), (1,'y',12),(2,'y',11), (3, 'y', 10);
+select a as bu, 
+sum(case when b='x' then c else null end) as 'x',
+sum(case when b='y' then c else null end) as 'y'
+from t
+group by bu
+order by bu;
+bu	x	y
+1	10.00	12.00
+2	11.00	11.00
+3	12.00	10.00
+select
+a as bu, 
+sum(case when b='x' then c else null end) as 'x',
+sum(case when b='y' then c else null end) as 'y'
+from t
+group by bu
+order by x;
+bu	x	y
+1	10.00	12.00
+2	11.00	11.00
+3	12.00	10.00
+select
+a as bu, 
+sum(case when b='x' then c else null end) as 'x',
+sum(case when b='y' then c else null end) as 'y'
+from t
+group by bu
+order by y;
+bu	x	y
+3	12.00	10.00
+2	11.00	11.00
+1	10.00	12.00
+select
+a as bu, 
+sum(case when b='x' then c else null end) as '',
+sum(case when b='y' then c else null end) as 'y'
+from t
+group by bu
+order by 2;
+bu		y
+1	10.00	12.00
+2	11.00	11.00
+3	12.00	10.00
+select
+a as bu, 
+sum(case when b='x' then c else null end) as 'x',
+sum(case when b='y' then c else null end) as 'y'
+from t
+group by bu
+order by 3;
+bu	x	y
+3	12.00	10.00
+2	11.00	11.00
+1	10.00	12.00
+drop table if exists t;

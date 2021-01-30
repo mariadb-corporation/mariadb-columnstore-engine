@@ -1,0 +1,35 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3584.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+select cdate, cdatetime, time(cdate) from datatypetestm where time(cdate) > 0;
+select cdate, cdatetime, time(cdate) from datatypetestm where time(cdate) < 0;
+select cdate, cdatetime, time(cdate) from datatypetestm where time(cdate) = 0;
+select cdate, cdatetime, time(cdate) from datatypetestm where time(cdatetime) > 0;
+select cdate, cdatetime, time(cdate) from datatypetestm where time(cdatetime) < 0;
+select cdate, cdatetime, time(cdate) from datatypetestm where time(cdatetime) = 0;
+select cdate, cdatetime, time(cdate) from datatypetestm where time(cdatetime) > 100;
+
+select id, dtm q1 from dtypes where time(dtm)>'08:10';
+select id, dtm q2 from dtypes where time(dtm)>'08:10:22';
+select count(*) q3 from dtypes where time(dtm) <= '07:40:00';
+select count(*) q4 from dtypes where time(dtm) <= '074000';
+select count(*) q5 from dtypes where time(dtm) <= 074000;
+select id, dtm q6 from dtypes where time(dtm)='06:46:22';
+select id, dtm q7 from dtypes where time(dtm)=064622;
+select count(*) q8 from dtypes where time(dt)=0;
+select count(*) q9 from dtypes where time(dt)='0';
+select count(*) q10 from dtypes where time(dt)='00:00:00';
+
+
+
+
+
+#
+

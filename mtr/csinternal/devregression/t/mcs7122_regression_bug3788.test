@@ -1,0 +1,26 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3788.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+select cidx, cdouble, repeat(cdouble, 3) from datatypetestm order by cidx;
+select cidx, cfloat,  repeat(cfloat, 3) from datatypetestm order by cidx;
+select cidx, cdouble, concat(cdouble, 'abc') from datatypetestm order by cidx;
+select cidx, cfloat,  concat(cfloat, 'abc') from datatypetestm order by cidx;
+select cidx, cdouble, concat_ws('|', cdouble, 'abc') from datatypetestm order by cidx;
+select cidx, cfloat,  concat_ws('|', cfloat, 'abc') from datatypetestm order by cidx;
+select cidx, cdouble, elt(1, cdouble, cfloat) from datatypetestm order by cidx;
+select cidx, cdouble, elt(2, cdouble, cfloat) from datatypetestm order by cidx;
+select cidx, cdouble, insert(cdouble, 3, 4, 'abc') from datatypetestm order by cidx;
+select cidx, cfloat,  insert(cfloat, 3, 4, 'abc') from datatypetestm order by cidx;
+select cidx, cdouble, reverse(cdouble) from datatypetestm order by cidx;
+select cidx, cfloat,  reverse(cfloat) from datatypetestm order by cidx;
+
+
+#
+

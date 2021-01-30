@@ -1,0 +1,110 @@
+USE tpch1;
+select n.n_regionkey nn, r.r_regionkey rr, n.n_nationkey, n.n_name from
+(select * from nation where n_regionkey <> 3) n right join region r on
+n.n_regionkey = r.r_regionkey order by 1, 2, 3, 4;
+nn	rr	n_nationkey	n_name
+NULL	3	NULL	NULL
+0	0	0	ALGERIA
+0	0	5	ETHIOPIA
+0	0	14	KENYA
+0	0	15	MOROCCO
+0	0	16	MOZAMBIQUE
+1	1	1	ARGENTINA
+1	1	2	BRAZIL
+1	1	3	CANADA
+1	1	17	PERU
+1	1	24	UNITED STATES
+2	2	8	INDIA
+2	2	9	INDONESIA
+2	2	12	JAPAN
+2	2	18	CHINA
+2	2	21	VIETNAM
+4	4	4	EGYPT
+4	4	10	IRAN
+4	4	11	IRAQ
+4	4	13	JORDAN
+4	4	20	SAUDI ARABIA
+select b.n_nationkey, b.n_regionkey, b.n_name, b.n_comment from (select * from (select * from nation)a)b order by 
+b.n_nationkey, b.n_name;
+n_nationkey	n_regionkey	n_name	n_comment
+0	0	ALGERIA	 haggle. carefully final deposits detect slyly agai
+1	1	ARGENTINA	al foxes promise slyly according to the regular accounts. bold requests alon
+2	1	BRAZIL	y alongside of the pending deposits. carefully special packages are about the ironic forges. slyly special 
+3	1	CANADA	eas hang ironic, silent packages. slyly regular packages are furiously over the tithes. fluffily bold
+4	4	EGYPT	y above the carefully unusual theodolites. final dugouts are quickly across the furiously regular d
+5	0	ETHIOPIA	ven packages wake quickly. regu
+6	3	FRANCE	refully final requests. regular, ironi
+7	3	GERMANY	l platelets. regular accounts x-ray: unusual, regular acco
+8	2	INDIA	ss excuses cajole slyly across the packages. deposits print aroun
+9	2	INDONESIA	 slyly express asymptotes. regular deposits haggle slyly. carefully ironic hockey players sleep blithely. carefull
+10	4	IRAN	efully alongside of the slyly final dependencies. 
+11	4	IRAQ	nic deposits boost atop the quickly final requests? quickly regula
+12	2	JAPAN	ously. final, express gifts cajole a
+13	4	JORDAN	ic deposits are blithely about the carefully regular pa
+14	0	KENYA	 pending excuses haggle furiously deposits. pending, express pinto beans wake fluffily past t
+15	0	MOROCCO	rns. blithely bold courts among the closely regular packages use furiously bold platelets?
+16	0	MOZAMBIQUE	s. ironic, unusual asymptotes wake blithely r
+17	1	PERU	platelets. blithely pending dependencies use fluffily across the even pinto beans. carefully silent accoun
+18	2	CHINA	c dependencies. furiously express notornis sleep slyly regular accounts. ideas sleep. depos
+19	3	ROMANIA	ular asymptotes are about the furious multipliers. express dependencies nag above the ironically ironic account
+20	4	SAUDI ARABIA	ts. silent requests haggle. closely express packages sleep across the blithely
+21	2	VIETNAM	hely enticingly express accounts. even, final 
+22	3	RUSSIA	 requests against the platelets use never according to the quickly regular pint
+23	3	UNITED KINGDOM	eans boost carefully special requests. accounts are. carefull
+24	1	UNITED STATES	y final packages. slow foxes cajole quickly. quickly silent platelets breach ironic accounts. unusual pinto be
+select b.n_nationkey, b.n_regionkey, b.n_name, b.n_comment from (select * from (select * from nation)a)b order by 
+1,2,3,4;
+n_nationkey	n_regionkey	n_name	n_comment
+0	0	ALGERIA	 haggle. carefully final deposits detect slyly agai
+1	1	ARGENTINA	al foxes promise slyly according to the regular accounts. bold requests alon
+2	1	BRAZIL	y alongside of the pending deposits. carefully special packages are about the ironic forges. slyly special 
+3	1	CANADA	eas hang ironic, silent packages. slyly regular packages are furiously over the tithes. fluffily bold
+4	4	EGYPT	y above the carefully unusual theodolites. final dugouts are quickly across the furiously regular d
+5	0	ETHIOPIA	ven packages wake quickly. regu
+6	3	FRANCE	refully final requests. regular, ironi
+7	3	GERMANY	l platelets. regular accounts x-ray: unusual, regular acco
+8	2	INDIA	ss excuses cajole slyly across the packages. deposits print aroun
+9	2	INDONESIA	 slyly express asymptotes. regular deposits haggle slyly. carefully ironic hockey players sleep blithely. carefull
+10	4	IRAN	efully alongside of the slyly final dependencies. 
+11	4	IRAQ	nic deposits boost atop the quickly final requests? quickly regula
+12	2	JAPAN	ously. final, express gifts cajole a
+13	4	JORDAN	ic deposits are blithely about the carefully regular pa
+14	0	KENYA	 pending excuses haggle furiously deposits. pending, express pinto beans wake fluffily past t
+15	0	MOROCCO	rns. blithely bold courts among the closely regular packages use furiously bold platelets?
+16	0	MOZAMBIQUE	s. ironic, unusual asymptotes wake blithely r
+17	1	PERU	platelets. blithely pending dependencies use fluffily across the even pinto beans. carefully silent accoun
+18	2	CHINA	c dependencies. furiously express notornis sleep slyly regular accounts. ideas sleep. depos
+19	3	ROMANIA	ular asymptotes are about the furious multipliers. express dependencies nag above the ironically ironic account
+20	4	SAUDI ARABIA	ts. silent requests haggle. closely express packages sleep across the blithely
+21	2	VIETNAM	hely enticingly express accounts. even, final 
+22	3	RUSSIA	 requests against the platelets use never according to the quickly regular pint
+23	3	UNITED KINGDOM	eans boost carefully special requests. accounts are. carefull
+24	1	UNITED STATES	y final packages. slow foxes cajole quickly. quickly silent platelets breach ironic accounts. unusual pinto be
+select b.n_nationkey, b.n_regionkey, b.n_name, b.n_comment from (select * from (select * from nation)a)b, region 
+where n_regionkey=r_regionkey order by 1,2,3,4;
+n_nationkey	n_regionkey	n_name	n_comment
+0	0	ALGERIA	 haggle. carefully final deposits detect slyly agai
+1	1	ARGENTINA	al foxes promise slyly according to the regular accounts. bold requests alon
+2	1	BRAZIL	y alongside of the pending deposits. carefully special packages are about the ironic forges. slyly special 
+3	1	CANADA	eas hang ironic, silent packages. slyly regular packages are furiously over the tithes. fluffily bold
+4	4	EGYPT	y above the carefully unusual theodolites. final dugouts are quickly across the furiously regular d
+5	0	ETHIOPIA	ven packages wake quickly. regu
+6	3	FRANCE	refully final requests. regular, ironi
+7	3	GERMANY	l platelets. regular accounts x-ray: unusual, regular acco
+8	2	INDIA	ss excuses cajole slyly across the packages. deposits print aroun
+9	2	INDONESIA	 slyly express asymptotes. regular deposits haggle slyly. carefully ironic hockey players sleep blithely. carefull
+10	4	IRAN	efully alongside of the slyly final dependencies. 
+11	4	IRAQ	nic deposits boost atop the quickly final requests? quickly regula
+12	2	JAPAN	ously. final, express gifts cajole a
+13	4	JORDAN	ic deposits are blithely about the carefully regular pa
+14	0	KENYA	 pending excuses haggle furiously deposits. pending, express pinto beans wake fluffily past t
+15	0	MOROCCO	rns. blithely bold courts among the closely regular packages use furiously bold platelets?
+16	0	MOZAMBIQUE	s. ironic, unusual asymptotes wake blithely r
+17	1	PERU	platelets. blithely pending dependencies use fluffily across the even pinto beans. carefully silent accoun
+18	2	CHINA	c dependencies. furiously express notornis sleep slyly regular accounts. ideas sleep. depos
+19	3	ROMANIA	ular asymptotes are about the furious multipliers. express dependencies nag above the ironically ironic account
+20	4	SAUDI ARABIA	ts. silent requests haggle. closely express packages sleep across the blithely
+21	2	VIETNAM	hely enticingly express accounts. even, final 
+22	3	RUSSIA	 requests against the platelets use never according to the quickly regular pint
+23	3	UNITED KINGDOM	eans boost carefully special requests. accounts are. carefull
+24	1	UNITED STATES	y final packages. slow foxes cajole quickly. quickly silent platelets breach ironic accounts. unusual pinto be

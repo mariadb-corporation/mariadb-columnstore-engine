@@ -1,0 +1,4 @@
+USE tpch1;
+select 'l_shipinstruct', count(l_shipinstruct)+sum(if(l_shipinstruct is null,1, 0)) from lineitem;
+l_shipinstruct	count(l_shipinstruct)+sum(if(l_shipinstruct is null,1, 0))
+l_shipinstruct	6001215

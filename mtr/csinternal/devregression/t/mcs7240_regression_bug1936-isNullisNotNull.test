@@ -1,0 +1,86 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug1936-isNullisNotNull.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+select  cidx          from datatypetestm where  cidx          is null order by 1;
+select  cbigint       from datatypetestm where  cbigint       is null order by 1;
+select  cdecimal1     from datatypetestm where  cdecimal1     is null order by 1;
+select  cdecimal4     from datatypetestm where  cdecimal4     is null order by 1;
+select  cdecimal4_2   from datatypetestm where  cdecimal4_2   is null order by 1;
+select  cdecimal5     from datatypetestm where  cdecimal5     is null order by 1;
+select  cdecimal9     from datatypetestm where  cdecimal9     is null order by 1;
+select  cdecimal9_2   from datatypetestm where  cdecimal9_2   is null order by 1;
+select  cdecimal10    from datatypetestm where  cdecimal10    is null order by 1;
+select  cdecimal18    from datatypetestm where  cdecimal18    is null order by 1;
+select  cdecimal18_2  from datatypetestm where  cdecimal18_2  is null order by 1;
+select  cinteger      from datatypetestm where  cinteger      is null order by 1;
+select  csmallint     from datatypetestm where  csmallint     is null order by 1;
+select  ctinyint      from datatypetestm where  ctinyint      is null order by 1;
+select  cdate         from datatypetestm where  cdate         is null order by 1;
+select  cdatetime     from datatypetestm where  cdatetime     is null order by 1;
+select  cchar1        from datatypetestm where  cchar1        is null order by 1;
+select  cchar2        from datatypetestm where  cchar2        is null order by 1;
+select  cchar3        from datatypetestm where  cchar3        is null order by 1;
+select  cchar4        from datatypetestm where  cchar4        is null order by 1;
+select  cchar5        from datatypetestm where  cchar5        is null order by 1;
+select  cchar6        from datatypetestm where  cchar6        is null order by 1;
+select  cchar7        from datatypetestm where  cchar7        is null order by 1;
+select  cchar8        from datatypetestm where  cchar8        is null order by 1;
+select  cchar9        from datatypetestm where  cchar9        is null order by 1;
+select  cchar255      from datatypetestm where  cchar255      is null order by 1;
+select  cvchar1       from datatypetestm where  cvchar1       is null order by 1;
+select  cvchar2       from datatypetestm where  cvchar2       is null order by 1;
+select  cvchar3       from datatypetestm where  cvchar3       is null order by 1;
+select  cvchar4       from datatypetestm where  cvchar4       is null order by 1;
+select  cvchar5       from datatypetestm where  cvchar5       is null order by 1;
+select  cvchar6       from datatypetestm where  cvchar6       is null order by 1;
+select  cvchar7       from datatypetestm where  cvchar7       is null order by 1;
+select  cvchar8       from datatypetestm where  cvchar8       is null order by 1;
+select  cvchar255     from datatypetestm where  cvchar255     is null order by 1;
+
+select  cidx          from datatypetestm where  cidx          is not null order by 1;
+select  cbigint       from datatypetestm where  cbigint       is not null order by 1;
+select  cdecimal1     from datatypetestm where  cdecimal1     is not null order by 1;
+select  cdecimal4     from datatypetestm where  cdecimal4     is not null order by 1;
+select  cdecimal4_2   from datatypetestm where  cdecimal4_2   is not null order by 1;
+select  cdecimal5     from datatypetestm where  cdecimal5     is not null order by 1;
+select  cdecimal9     from datatypetestm where  cdecimal9     is not null order by 1;
+select  cdecimal9_2   from datatypetestm where  cdecimal9_2   is not null order by 1;
+select  cdecimal10    from datatypetestm where  cdecimal10    is not null order by 1;
+select  cdecimal18    from datatypetestm where  cdecimal18    is not null order by 1;
+select  cdecimal18_2  from datatypetestm where  cdecimal18_2  is not null order by 1;
+select  cinteger      from datatypetestm where  cinteger      is not null order by 1;
+select  csmallint     from datatypetestm where  csmallint     is not null order by 1;
+select  ctinyint      from datatypetestm where  ctinyint      is not null order by 1;
+select  cdate         from datatypetestm where  cdate         is not null order by 1;
+select  cdatetime     from datatypetestm where  cdatetime     is not null order by 1;
+select  cchar1        from datatypetestm where  cchar1        is not null order by 1;
+select  cchar2        from datatypetestm where  cchar2        is not null order by 1;
+select  cchar3        from datatypetestm where  cchar3        is not null order by 1;
+select  cchar4        from datatypetestm where  cchar4        is not null order by 1;
+select  cchar5        from datatypetestm where  cchar5        is not null order by 1;
+select  cchar6        from datatypetestm where  cchar6        is not null order by 1;
+select  cchar7        from datatypetestm where  cchar7        is not null order by 1;
+select  cchar8        from datatypetestm where  cchar8        is not null order by 1;
+select  cchar9        from datatypetestm where  cchar9        is not null order by 1;
+select  cchar255      from datatypetestm where  cchar255      is not null order by 1;
+select  cvchar1       from datatypetestm where  cvchar1       is not null order by 1;
+select  cvchar2       from datatypetestm where  cvchar2       is not null order by 1;
+select  cvchar3       from datatypetestm where  cvchar3       is not null order by 1;
+select  cvchar4       from datatypetestm where  cvchar4       is not null order by 1;
+select  cvchar5       from datatypetestm where  cvchar5       is not null order by 1;
+select  cvchar6       from datatypetestm where  cvchar6       is not null order by 1;
+select  cvchar7       from datatypetestm where  cvchar7       is not null order by 1;
+select  cvchar8       from datatypetestm where  cvchar8       is not null order by 1;
+select  cvchar255     from datatypetestm where  cvchar255     is not null order by 1;
+
+
+
+#
+

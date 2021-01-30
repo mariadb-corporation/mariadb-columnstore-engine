@@ -1,0 +1,45 @@
+USE tpch1;
+drop table if exists cat;
+Warnings:
+Note	1051	Unknown table 'tpch1.cat'
+drop table if exists dog;
+Warnings:
+Note	1051	Unknown table 'tpch1.dog'
+create table cat(id int, f float, d double)engine=columnstore;
+create table dog(id int, f float, d double)engine=columnstore;
+insert into cat values
+(1, 1.234, 1.2343),
+(2, 989.789, 999.2343),
+(3, null, null),
+(4, 9121, 9999);
+insert into dog values
+(1, 989.789, 999.2343),
+(2, null, null),
+(3, 1.23234, 1.232343),
+(4, 91215, 9999);
+select 'q1', cat.id, dog.id from cat join dog on cat.f = dog.f;
+q1	id	id
+q1	2	1
+select 'q2', cat.id, dog.id from cat join dog on cat.d = dog.d;
+q2	id	id
+q2	2	1
+q2	4	4
+update dog, cat set dog.id=100+dog.id where dog.f = cat.f;
+select 'q3', dog.* from dog;
+q3	id	f	d
+q3	101	989.789	999.2343
+q3	2	NULL	NULL
+q3	3	1.23234	1.232343
+q3	4	91215	9999
+update cat, dog set cat.id=100+cat.id where dog.d = cat.d;
+select 'q4', cat.* from cat;
+q4	id	f	d
+q4	1	1.234	1.2343
+q4	102	989.789	999.2343
+q4	3	NULL	NULL
+q4	104	9121	9999
+select 'q5', cat.id, dog.id from cat join dog on cat.f = dog.f and cat.d = dog.d;
+q5	id	id
+q5	102	101
+drop table cat;
+drop table dog;

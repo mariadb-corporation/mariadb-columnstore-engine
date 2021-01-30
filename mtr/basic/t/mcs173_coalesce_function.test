@@ -1,0 +1,27 @@
+#
+# Test COALESCE function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs173_db;
+--enable_warnings
+
+CREATE DATABASE mcs173_db;
+USE mcs173_db;
+
+SET default_storage_engine=Columnstore;
+
+CREATE TABLE t1 (a CHAR(1), b INT, c DATETIME, d DOUBLE);
+INSERT INTO t1 VALUES ('', NULL, '0-0-0', NULL),('a', 12, '1212-12-12', 1.19691E+100),('b', 13, '1313-3-13 13:13:13', 2.1961E+18),('c', 14, '1414-4-14', 0.16191),('d', 15, '2015-5-15 15:15:15', 1.971917);
+SHOW CREATE TABLE t1;
+
+SELECT COALESCE(NULL, NULL, NULL, 'mariadb', NULL, 'columnstore');
+SELECT COALESCE(NULL, 1, 2, 'columnstore');
+SELECT a, COALESCE(a, 'na') FROM t1;
+SELECT b, COALESCE(b, 'null value') FROM t1;
+SELECT d, COALESCE(d, 'null value') FROM t1;
+
+# Clean UP
+DROP DATABASE mcs173_db;

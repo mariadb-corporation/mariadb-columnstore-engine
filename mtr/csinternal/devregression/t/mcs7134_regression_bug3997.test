@@ -1,0 +1,20 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3997.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+set autocommit=0;
+update lineitem a join region b on b.r_regionkey = a.l_orderkey set b.r_regionkey=2;
+select * from region;
+rollback;
+select * from region;
+update region b join lineitem a on b.r_regionkey = a.l_orderkey set b.r_regionkey=2;
+select * from region;
+rollback;
+select * from region;#
+

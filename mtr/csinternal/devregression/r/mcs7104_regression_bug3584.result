@@ -1,0 +1,90 @@
+USE tpch1;
+select cdate, cdatetime, time(cdate) from datatypetestm where time(cdate) > 0;
+cdate	cdatetime	time(cdate)
+select cdate, cdatetime, time(cdate) from datatypetestm where time(cdate) < 0;
+cdate	cdatetime	time(cdate)
+select cdate, cdatetime, time(cdate) from datatypetestm where time(cdate) = 0;
+cdate	cdatetime	time(cdate)
+1997-01-01	1997-01-01 00:00:00	NULL
+1997-01-01	1997-01-01 00:00:01	NULL
+1997-01-02	1997-01-02 00:00:01	NULL
+1997-01-03	1997-01-03 00:00:02	NULL
+1997-01-04	1997-01-04 00:00:03	NULL
+2009-12-28	2009-12-31 23:59:56	NULL
+2009-12-29	2009-12-31 23:59:57	NULL
+2009-12-30	2009-12-31 23:59:58	NULL
+2009-12-31	2009-12-31 23:59:59	NULL
+2009-12-31	2009-12-31 23:59:59	NULL
+2009-12-31	2009-12-31 23:59:59	NULL
+select cdate, cdatetime, time(cdate) from datatypetestm where time(cdatetime) > 0;
+cdate	cdatetime	time(cdate)
+1997-01-01	1997-01-01 00:00:01	NULL
+1997-01-02	1997-01-02 00:00:01	NULL
+1997-01-03	1997-01-03 00:00:02	NULL
+1997-01-04	1997-01-04 00:00:03	NULL
+2009-12-28	2009-12-31 23:59:56	NULL
+2009-12-29	2009-12-31 23:59:57	NULL
+2009-12-30	2009-12-31 23:59:58	NULL
+2009-12-31	2009-12-31 23:59:59	NULL
+2009-12-31	2009-12-31 23:59:59	NULL
+2009-12-31	2009-12-31 23:59:59	NULL
+select cdate, cdatetime, time(cdate) from datatypetestm where time(cdatetime) < 0;
+cdate	cdatetime	time(cdate)
+select cdate, cdatetime, time(cdate) from datatypetestm where time(cdatetime) = 0;
+cdate	cdatetime	time(cdate)
+1997-01-01	1997-01-01 00:00:00	NULL
+select cdate, cdatetime, time(cdate) from datatypetestm where time(cdatetime) > 100;
+cdate	cdatetime	time(cdate)
+2009-12-28	2009-12-31 23:59:56	NULL
+2009-12-29	2009-12-31 23:59:57	NULL
+2009-12-30	2009-12-31 23:59:58	NULL
+2009-12-31	2009-12-31 23:59:59	NULL
+2009-12-31	2009-12-31 23:59:59	NULL
+2009-12-31	2009-12-31 23:59:59	NULL
+select id, dtm q1 from dtypes where time(dtm)>'08:10';
+id	q1
+1	2010-11-08 08:19:22
+2	2010-11-01 08:18:22
+3	2010-10-25 08:17:22
+4	2010-10-18 08:16:22
+5	2010-10-11 08:15:22
+6	2010-10-04 08:14:22
+7	2010-09-27 08:13:22
+8	2010-09-20 08:12:22
+9	2010-09-13 08:11:22
+10	2010-09-06 08:10:22
+select id, dtm q2 from dtypes where time(dtm)>'08:10:22';
+id	q2
+1	2010-11-08 08:19:22
+2	2010-11-01 08:18:22
+3	2010-10-25 08:17:22
+4	2010-10-18 08:16:22
+5	2010-10-11 08:15:22
+6	2010-10-04 08:14:22
+7	2010-09-27 08:13:22
+8	2010-09-20 08:12:22
+9	2010-09-13 08:11:22
+select count(*) q3 from dtypes where time(dtm) <= '07:40:00';
+q3
+60
+select count(*) q4 from dtypes where time(dtm) <= '074000';
+q4
+60
+select count(*) q5 from dtypes where time(dtm) <= 074000;
+q5
+60
+select id, dtm q6 from dtypes where time(dtm)='06:46:22';
+id	q6
+94	2009-01-26 06:46:22
+select id, dtm q7 from dtypes where time(dtm)=064622;
+id	q7
+94	2009-01-26 06:46:22
+select count(*) q8 from dtypes where time(dt)=0;
+q8
+100
+select count(*) q9 from dtypes where time(dt)='0';
+q9
+0
+select count(*) q10 from dtypes where time(dt)='00:00:00';
+q10
+0

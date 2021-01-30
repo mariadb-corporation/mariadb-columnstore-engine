@@ -1,0 +1,18 @@
+DROP DATABASE IF EXISTS mcs210_db;
+CREATE DATABASE mcs210_db;
+USE mcs210_db;
+CREATE TABLE t1(col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnstore;
+LOAD DATA LOCAL infile './suite/columnstore/std_data/100Krows.dat' INTO TABLE t1 FIELDS TERMINATED BY '|';
+SELECT COUNT(*) FROM t1;
+COUNT(*)
+100001
+SELECT idbPm(col1) FROM t1 LIMIT 1;
+idbPm(col1)
+1
+SELECT idbPm(col2) FROM t1 LIMIT 1;
+idbPm(col2)
+1
+SELECT idbPm(col3) FROM t1 LIMIT 1;
+idbPm(col3)
+1
+DROP DATABASE mcs210_db;

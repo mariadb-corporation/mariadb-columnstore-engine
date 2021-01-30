@@ -1,0 +1,14 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug2922.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE ssb1;
+#
+select   c_name, d_month, sum(lo_extendedprice), min(lo_orderdate), max(lo_orderdate)  from     lineorder join customer on lo_custkey = c_custkey                              join dateinfo on lo_orderdate = d_datekey           where lo_orderdate between  19970101 and 19971230           and lo_custkey in ( select lo_custkey from                                                   (select lo_custkey, sum(lo_extendedprice)                                                               from lineorder                                                               where lo_orderdate between 19971201 and 19971230                                                                    group by 1 order by 2 desc limit 10 ) a   )   group by 1,2 order by 1,2;
+select   count(*)  from     lineorder             where lo_orderdate between  19970101 and 19970105           and lo_custkey not in  ( select lo_custkey                from  (select lo_custkey from lineorder                        where lo_orderdate between 19971201 and 19971201                       ) a                                );
+#
+

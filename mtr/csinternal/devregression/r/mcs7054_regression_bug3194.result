@@ -1,0 +1,35 @@
+USE tpch1;
+select * from sub1 left outer join (select * from sub2)a on (sub1.c1=a.c1 and sub1.c2=a.c2) order by 1,2, 3, 4, 5, 6, 7, 8, 9, 10;
+c1	c2	c3	s1	s2	s3	c1	c2	c3	s1	s2	s3
+1	1	1	1	1	1	1	1	1	1	1	1
+2	2	2	2	2	2	NULL	NULL	NULL	NULL	NULL	NULL
+3	3	3	3	3	3	NULL	NULL	NULL	NULL	NULL	NULL
+4	1	1	1	1	1	NULL	NULL	NULL	NULL	NULL	NULL
+5	99	99	99	99	99	NULL	NULL	NULL	NULL	NULL	NULL
+6	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+select * from sub1 right outer join (select * from sub2)a on (sub1.c1=a.c1 and sub1.c2=a.c2) order by 1,2, 3, 4, 5, 6, 7, 8, 9, 10;
+c1	c2	c3	s1	s2	s3	c1	c2	c3	s1	s2	s3
+NULL	NULL	NULL	NULL	NULL	NULL	1	2	2	2	2	2
+NULL	NULL	NULL	NULL	NULL	NULL	1	3	3	3	3	3
+NULL	NULL	NULL	NULL	NULL	NULL	2	NULL	NULL	NULL	NULL	NULL
+NULL	NULL	NULL	NULL	NULL	NULL	2	4	4	4	4	4
+NULL	NULL	NULL	NULL	NULL	NULL	2	5	5	5	5	5
+NULL	NULL	NULL	NULL	NULL	NULL	6	2	2	2	2	2
+1	1	1	1	1	1	1	1	1	1	1	1
+select * from sub1 left outer join (select * from sub2)a using(c1,c2) order by 1,2, 3, 4, 5, 6, 7, 8, 9, 10;
+c1	c2	c3	s1	s2	s3	c3	s1	s2	s3
+1	1	1	1	1	1	1	1	1	1
+2	2	2	2	2	2	NULL	NULL	NULL	NULL
+3	3	3	3	3	3	NULL	NULL	NULL	NULL
+4	1	1	1	1	1	NULL	NULL	NULL	NULL
+5	99	99	99	99	99	NULL	NULL	NULL	NULL
+6	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+select * from sub1 right outer join (select * from sub2)a using(c1,c2) order by 1,2, 3, 4, 5, 6, 7, 8, 9, 10;
+c1	c2	c3	s1	s2	s3	c3	s1	s2	s3
+1	1	1	1	1	1	1	1	1	1
+1	2	2	2	2	2	NULL	NULL	NULL	NULL
+1	3	3	3	3	3	NULL	NULL	NULL	NULL
+2	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+2	4	4	4	4	4	NULL	NULL	NULL	NULL
+2	5	5	5	5	5	NULL	NULL	NULL	NULL
+6	2	2	2	2	2	NULL	NULL	NULL	NULL

@@ -1,0 +1,19 @@
+USE tpch1;
+select count(*) from (select n_regionkey, n_nationkey, count(*) c from nation group by 1, 2) n;
+count(*)
+25
+select sum(c+0) from (select n_regionkey, n_nationkey, count(*) c from nation group by 1, 2) n;
+sum(c+0)
+25
+select count(*),sum(c) from (select n_regionkey,n_nationkey, count(*) c from nation group by 1,2) n;
+count(*)	sum(c)
+25	25
+select count(*), sum(c+0) from (select n_regionkey, n_nationkey, count(*) c from nation group by 1, 2) n;
+count(*)	sum(c+0)
+25	25
+select sum(1) T, sum(if(F=1,1,0)) "1", sum(if(F>=2,1,0)) "2+" from (select n_nationkey, n_regionkey, least(3, count(*)) F from nation group by 1, 2) a;
+T	1	2+
+25	25	0
+select sum(1) T, sum(if(F=1,1,0)) "1", sum(if(F=2,1,0)) "2", sum(if(F>=3,1,0)) "3+" from (select n_nationkey, n_regionkey, least(3, count(*)+n_regionkey) F from nation group by 1, 2) a;
+T	1	2	3+
+25	5	5	15

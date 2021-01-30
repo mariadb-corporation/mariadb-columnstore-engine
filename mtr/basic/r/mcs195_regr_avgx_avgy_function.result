@@ -1,0 +1,22 @@
+DROP DATABASE IF EXISTS mcs195_db;
+CREATE DATABASE mcs195_db;
+USE mcs195_db;
+CREATE TABLE t1 (x INT, y MEDIUMINT, z CHAR(5))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL, NULL, ''),(20, 1, 'aaa'),(39, 2, 'aaa'),(48, 3, 'bbb'),(57, 4, 'bbb'),(66, 5, 'aaa'),(75, 6, 'aaa'),(84, 7, 'bbb');
+SELECT REGR_AVGX(y, x) FROM t1;
+REGR_AVGX(y, x)
+55.5714
+SELECT z, REGR_AVGX(y, x) FROM t1 GROUP BY z ORDER BY z;
+z	REGR_AVGX(y, x)
+NULL	NULL
+aaa	50.0000
+bbb	63.0000
+SELECT REGR_AVGY(y, x) FROM t1;
+REGR_AVGY(y, x)
+4.0000
+SELECT z, REGR_AVGY(y, x) FROM t1 GROUP BY z ORDER BY z;
+z	REGR_AVGY(y, x)
+NULL	NULL
+aaa	3.5000
+bbb	4.6667
+DROP DATABASE mcs195_db;

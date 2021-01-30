@@ -1,0 +1,41 @@
+#
+# SELECT ... WITH ROLLUP                         #
+# https://mariadb.com/kb/en/select-with-rollup/  #
+#
+# Author: Susil, susil.behera@mariadb.com        #  
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs84_db;
+--enable_warnings
+
+CREATE DATABASE mcs84_db;
+USE mcs84_db;
+
+CREATE TABLE booksales ( 
+  country CHAR(35), genre CHAR(15), year INT, sales INT)
+  ENGINE=Columnstore;
+
+INSERT INTO booksales VALUES
+  ('Senegal','fiction',2014,12234), ('Senegal','fiction',2015,15647),
+  ('Senegal','non-fiction',2014,64980), ('Senegal','non-fiction',2015,78901),
+  ('Paraguay','fiction',2014,87970), ('Paraguay','fiction',2015,76940),
+  ('Paraguay','non-fiction',2014,8760), ('Paraguay','non-fiction',2015,9030);
+
+SELECT year, SUM(sales) FROM booksales GROUP BY year ORDER BY year;
+
+# Negative. WITH ROLLUP cannot be used with ORDER BY. 
+--error 1221
+SELECT year, SUM(sales) FROM booksales GROUP BY year WITH ROLLUP ORDER BY year;
+
+# WITH ROLLUP not supported yet. MCOL-678
+--error 1178
+SELECT year, SUM(sales) FROM booksales GROUP BY year WITH ROLLUP;
+--error 1178
+SELECT year, SUM(sales) FROM booksales GROUP BY year ASC WITH ROLLUP;
+--error 1178
+SELECT year, SUM(sales) FROM booksales GROUP BY year DESC WITH ROLLUP;
+
+# Clean up
+DROP DATABASE IF EXISTS mcs84_db;

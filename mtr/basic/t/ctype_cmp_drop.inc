@@ -1,0 +1,15 @@
+DROP PROCEDURE exec;
+DROP PROCEDURE test01_execval;
+DROP PROCEDURE test01_populate;
+DROP PROCEDURE test01_field_literal_op;
+DROP PROCEDURE test01_field_literal;
+DROP PROCEDURE test01_field_field;
+DROP PROCEDURE test01_distinct;
+DROP PROCEDURE test02_same_table_create_table;
+DROP PROCEDURE test02_same_table_populate;
+DROP PROCEDURE test02_same_table_cmp_field_field_op;
+DROP PROCEDURE test02_same_table_cmp_field_field;
+DROP PROCEDURE test03;
+EXECUTE IMMEDIATE CONCAT('DROP DATABASE ', @database);
+USE test;
+SET @@default_storage_engine=DEFAULT;

@@ -1,0 +1,27 @@
+USE tpch1;
+DROP TABLE IF EXISTS t1;
+Warnings:
+Note	1051	Unknown table 'tpch1.t1'
+DROP TABLE IF EXISTS t2;
+Warnings:
+Note	1051	Unknown table 'tpch1.t2'
+CREATE TABLE t1 (a bigint, b bigint)engine=columnstore;
+CREATE TABLE  t2 (a bigint, b bigint)engine=columnstore;
+INSERT INTO t1 VALUES (5,5),(4,4),(3,3);
+INSERT INTO t1 VALUES (5,5),(4,4),(3,3);
+SELECT * FROM ((SELECT a, b FROM t1 ORDER BY b LIMIT 2) UNION ALL (SELECT a, b FROM t2 ORDER BY b LIMIT 2)) as sq3 ORDER BY 1,2;
+a	b
+3	3
+3	3
+SELECT * FROM (select * FROM (SELECT a, b FROM t1 ORDER BY b LIMIT 2) sub1 UNION ALL SELECT * FROM (SELECT a, b FROM t2 ORDER BY b LIMIT 2) sub2 ) as sq3 ORDER BY 1,2;
+a	b
+3	3
+3	3
+SELECT * FROM (select * FROM (SELECT a, b FROM t1 ORDER BY b) sub1 UNION ALL SELECT * FROM (SELECT a, b FROM t2 ORDER BY b) sub2 ) as sq3 ORDER BY 1,2;
+a	b
+3	3
+3	3
+4	4
+4	4
+5	5
+5	5

@@ -1,0 +1,110 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-1234.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+SELECT * FROM region WHERE CASE WHEN r_regionkey < 3 THEN (r_name = 'ASIA' OR r_name = 'AFRICA') ELSE r_name = 'EUROPE' END;
+SELECT * FROM region WHERE CASE WHEN 1=1 THEN (r_name = 'ASIA' OR r_name = 'unknown') END;
+
+select
+     l_shipdate, l_shipmode, l_suppkey
+     from lineitem
+     where
+     l_shipdate between '1997-01-12' and '1997-01-14'
+     and
+     l_tax = .02
+     and
+     l_shipmode = 'AIR'
+     and
+     (case
+          when (COALESCE('0') = '0')  then
+              (case
+                   when (COALESCE('all') = 'ALL') 
+                       then 1=1
+                   when (COALESCE('all') is not null) 
+                       then l_shipmode in ('ABC')
+                   else 0=1
+              end)
+         else (case
+                   when (COALESCE('all') = 'ALL') 
+                       then 0=1
+                   when (COALESCE('all') is not null) 
+                       then l_shipmode not in ('ABC')
+                   else 1=1
+              end)
+    end)
+    and  
+    (case
+         when (COALESCE('0') = '0')  then
+             (case
+                   when (COALESCE('all') = 'ALL') 
+                       then 1=1
+                   when (COALESCE('all') is not null) 
+                       then l_suppkey in (42)
+                   else 0=1
+               end)
+       else (case
+                   when (COALESCE('all') = 'ALL') 
+                       then 0=1
+                   when (COALESCE('all') is not null) 
+                       then l_suppkey not in (42)
+                   else 1=1
+             end)
+    end)
+order by l_shipdate, l_suppkey;
+
+select
+    l_shipdate, l_shipmode, l_suppkey, l_discount, l_returnflag, l_tax
+    from lineitem
+    where
+    l_shipdate between '1997-01-12' and '1997-01-14'
+    and
+    l_tax = 0
+    and
+    l_shipmode = 'RAIL'
+    and
+    (case
+         when (l_quantity = 14.0)  then
+             (case
+                  when (l_discount = .02) 
+                      then l_returnflag in ('N', 'A')
+                  when (l_discount = .03)
+                      then l_returnflag in ('N', 'R')
+                  else l_returnflag in ('R', 'A')
+             end)
+         else (case
+                   when (l_discount = .02) 
+                       then l_returnflag in ('R', 'A')
+                   when (l_discount = .03) 
+                       then l_returnflag in ('N', 'R')
+                   else l_returnflag in ('N', 'A')
+                end)
+    end)
+    and  
+    (case
+         when (l_quantity = 5.0)  then
+              (case
+                   when (l_discount = .02) 
+                       then l_returnflag in ('N', 'A')
+                   when (l_discount = .03)
+                       then l_returnflag in ('N', 'R')
+                   else l_returnflag in ('R', 'A')
+              end)
+         else (case
+                   when (l_discount = .02) 
+                       then l_returnflag in ('R', 'A')
+                   when (l_discount = .03) 
+                       then l_returnflag in ('N', 'R')
+                   else l_returnflag in ('N', 'A')
+              end)
+    end)
+order by l_shipdate, l_suppkey, l_discount;
+
+
+#
+

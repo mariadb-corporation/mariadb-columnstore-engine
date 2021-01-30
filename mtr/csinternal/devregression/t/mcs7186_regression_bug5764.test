@@ -1,0 +1,183 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug5764.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists mk_calendar;
+ CREATE TABLE if not exists `mk_calendar` (
+  `nengetsu_yyyymmdd` date DEFAULT NULL,
+  `shukei_dd` varchar(6) DEFAULT NULL,
+  `nengetu_yyyymm` int(8) DEFAULT NULL
+
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+
+insert into mk_calendar values 
+('2009-03-01', 1, 200903),
+('2009-03-02', 2, 200903),
+('2009-03-09', 9, 200903),
+('2009-04-01', 1, 200904),
+('2009-04-02', 2, 200904);
+
+drop table if exists mk_kishu_gaibu;
+CREATE TABLE if not exists `mk_kishu_gaibu` (
+  `Jyohokei_Denwa_Shurui` varchar(100) DEFAULT NULL,
+  `Shuryoku_Hanbai_Kishu_Key` varchar(100) DEFAULT NULL
+
+) ENGINE=Columnstore default charset=utf8;
+
+insert into mk_kishu_gaibu values
+('HF', 'HD60'),                                           
+('B26', 'CA007X'),                                        
+('Y97', 'beskey'),                                        
+('X82', 'E06SH'),                                         
+('Y08', 'S002'),                                          
+('A1', '508G'),                                           
+('GT', 'HD60');                                           
+
+drop table if exists mk_kishubetsu_report2;
+ CREATE TABLE if not exists `mk_kishubetsu_report2` (
+  `KEYNO` int(10) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+
+insert into mk_kishubetsu_report2 values
+(1000001),
+(1000002),
+(1000003),
+(1000004),
+(1000005),
+(1000006),
+(1000007),
+(1000008),
+(1000009),
+(6000001);
+
+drop table if exists mk_organization;
+ CREATE TABLE if not exists `mk_organization` (
+  `Tokatsuten_Code` varchar(30) DEFAULT NULL,
+  `Kyoten_Code` varchar(30) DEFAULT NULL
+) ENGINE=Columnstore default charset=utf8;
+
+insert into mk_organization values 
+('K030', 'V22'),
+('K075', 'M08'),  
+('U939', '002'),  
+('M207', '*1*'),  
+('E359', '075'),  
+('G908', '010'),  
+('K436', 'M37'),  
+('K554', 'M18'),  
+('EK21', '017'),  
+('NESM', '021');
+
+drop table if exists mk_shuryoku_hanbai_kishu;
+ CREATE TABLE if not exists `mk_shuryoku_hanbai_kishu` (
+  `catalog_nengetsu` varchar(6) DEFAULT NULL,
+  `kata_shiki` varchar(20) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+
+insert into mk_shuryoku_hanbai_kishu values
+(201210, 'HD60'),
+(200903, 'HD60'),
+(200903, 'S002'),
+(200903, 'ABCD'),
+(200905, '508G'),
+(200905, 'S002'),
+(200905, 'BUGS');
+
+drop table if exists ts_kishubetsu_hibetsu_pfmtst;
+CREATE TABLE if not exists `ts_kishubetsu_hibetsu_pfmtst` (
+  `keijyo_yyyymm` int(6) DEFAULT NULL,
+  `keijyo_dd` varchar(6) DEFAULT '@',
+ `tokatsuten_code` varchar(30) DEFAULT '@',
+ `kyoten_code` varchar(30) DEFAULT '@',
+  `johokei_denwashurui` varchar(30) DEFAULT '@',
+  `data_shubetsu_code` int(10) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+
+insert into ts_kishubetsu_hibetsu_pfmtst values
+(200903, 1, 'K030', 'V22', 'HF', 1000001),
+(200903, 2, 'K030', 'M18', 'XX', 1000099),
+(200903, 3, 'K030', 'V22', 'HF', 1000001),
+(200903, 4, 'K555', '005', 'A1', 1111111),
+(200904, 1, 'K554', 'M18', 'GT', 1000003),
+(200904, 2, 'EK21', '017', 'ZZ', 2222222),
+(200904, 3, 'K554', 'M18', 'GT', 1000004),
+(200904, 4, 'K554', '021', 'ZZ', 3333333);
+
+drop view if exists v_kyotenbetsu_kishubetsu_hibetsu_base;
+CREATE VIEW `v_kyotenbetsu_kishubetsu_hibetsu_base`
+AS
+(
+		SELECT 
+			cast(`mst_cal`.`nengetu_yyyymm` AS CHAR charset latin1) AS `nengetu_yyyymm`
+			,`mst_kishu`.`Shuryoku_Hanbai_Kishu_Key` AS `Shuryoku_Hanbai_Kishu_Key`
+		FROM (
+			(
+				(
+					(
+						`ts_kishubetsu_hibetsu_pfmtst` `trn` INNER JOIN `mk_calendar` `mst_cal` ON (
+								(
+									(`trn`.`keijyo_yyyymm` = `mst_cal`.`nengetu_yyyymm`)
+									AND (`trn`.`keijyo_dd` = `mst_cal`.`shukei_dd`)
+									)
+								)
+						) INNER JOIN `mk_organization` `mst_org` ON (
+							(
+								(`trn`.`tokatsuten_code` = `mst_org`.`Tokatsuten_Code`)
+								AND (`trn`.`kyoten_code` = `mst_org`.`Kyoten_Code`)
+								)
+							)
+					) INNER JOIN `mk_kishubetsu_report2` `mst_report` ON ((`trn`.`data_shubetsu_code` = `mst_report`.`KEYNO`))
+				) INNER JOIN `mk_kishu_gaibu` `mst_kishu` ON ((`trn`.`johokei_denwashurui` = `mst_kishu`.`Jyohokei_Denwa_Shurui`))
+			)
+		);
+
+drop view if exists v_kyotenbetsu_kishubetsu_hibetsu;
+CREATE VIEW `v_kyotenbetsu_kishubetsu_hibetsu`
+AS
+(
+		SELECT 
+			cast(`base`.`nengetu_yyyymm` AS signed) AS `nengetu_yyyymm`
+		FROM (
+			`v_kyotenbetsu_kishubetsu_hibetsu_base` `base` LEFT JOIN `mk_shuryoku_hanbai_kishu` `mst_shuryoku` ON (
+					(
+						(convert(`base`.`nengetu_yyyymm` using utf8) = `mst_shuryoku`.`catalog_nengetsu`)
+						AND (`base`.`Shuryoku_Hanbai_Kishu_Key` = `mst_shuryoku`.`kata_shiki`)
+						)
+					)
+			)
+		);
+
+
+
+
+
+select count(*) count1
+from
+(
+SELECT 
+	cast(`base`.`nengetu_yyyymm` AS signed) AS `nengetu_yyyymm`
+from (
+`v_kyotenbetsu_kishubetsu_hibetsu_base` `base` left join 
+`mk_shuryoku_hanbai_kishu` `mst_shuryoku` on
+(((convert(`base`.`nengetu_yyyymm` using utf8) = `mst_shuryoku`.`catalog_nengetsu`) and 
+(`base`.`Shuryoku_Hanbai_Kishu_Key` = `mst_shuryoku`.`kata_shiki`))))) viewSql;
+
+select count(*) count2 from v_kyotenbetsu_kishubetsu_hibetsu;
+
+drop table if exists mk_calendar;
+drop table if exists mk_kishu_gaibu;
+drop table if exists mk_kishubetsu_report2;
+drop table if exists mk_organization;
+drop table if exists mk_shuryoku_hanbai_kishu;
+drop table if exists ts_kishubetsu_hibetsu_pfmtst;
+drop view if exists v_kyotenbetsu_kishubetsu_hibetsu_base;
+drop view if exists v_kyotenbetsu_kishubetsu_hibetsu;
+
+#
+

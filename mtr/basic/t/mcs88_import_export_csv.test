@@ -1,0 +1,44 @@
+#
+# Import/export CSV using LOAD DATA [LOCAL] INFILE
+# Author: Susil, susil.behera@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs88_db;
+--enable_warnings
+
+CREATE DATABASE mcs88_db;
+USE mcs88_db;
+
+# Copy the data file to a location where there is no need to have permission.
+--exec \cp ./suite/columnstore/std_data/100Krows.dat /tmp;
+
+CREATE TABLE t1(col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnstore;
+LOAD DATA INFILE '/tmp/100Krows.dat' INTO TABLE t1 FIELDS TERMINATED BY '|';
+
+SELECT COUNT(*) FROM t1;
+
+TRUNCATE t1;
+
+# Importing file from client to a remote MySQL database server
+LOAD DATA LOCAL INFILE '/tmp/100Krows.dat' INTO TABLE t1 FIELDS TERMINATED BY '|';
+
+SELECT COUNT(*) FROM t1;
+
+# Export table to CSV
+--exec rm -f /tmp/100Krows.dat
+SELECT col1, col2, col3 FROM t1 INTO OUTFILE '/tmp/100Krows.dat' FIELDS TERMINATED BY '|';
+
+# Clear table data and re-import
+TRUNCATE t1;
+SELECT COUNT(*) FROM t1;
+LOAD DATA INFILE '/tmp/100Krows.dat' INTO TABLE t1 FIELDS TERMINATED BY '|';
+
+--sorted_result
+SELECT * FROM t1;
+SELECT COUNT(*) FROM t1;
+
+# Clean UP
+--exec rm -f /tmp/100Krows.dat
+DROP DATABASE mcs88_db;

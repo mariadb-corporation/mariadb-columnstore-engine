@@ -1,0 +1,41 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-3423.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+DROP TABLE IF EXISTS tc;
+CREATE TABLE `tc` (
+  `id` int(11) NOT NULL,
+  `cid` int(11) DEFAULT NULL,
+  `d` datetime DEFAULT NULL,
+  `c` decimal(12,4) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1;
+
+INSERT INTO tc values 
+(19438,0,'2018-01-06 13:58:04',11375.5100),
+(23975,0,'2018-01-06 13:58:04',14122.9800),
+(38569,0,'2018-01-06 13:58:07',12452.7900),
+(82645,0,'2018-01-06 13:58:08',12702.8400),
+(138728,0,'2018-01-06 13:58:11',12471.4700),
+(167034,0,'2018-01-06 13:58:11',12209.9800),
+(171429,0,'2018-01-06 13:58:11',15981.4300),
+(191821,0,'2018-01-06 13:58:11',12398.8800);
+
+select cust, week_d, mpp_sum, 
+       stddev(mpp_sum) over (partition by cust) as mpp_stdev, 
+       avg(mpp_sum) over (partition by cust) as mpp_mean, 
+       sum(mpp_sum) over (partition by cust) as glob_mpp_sum,  
+       count(mpp_sum) over (partition by cust) as glob_mpp_count 
+ from  (select distinct cid as cust,  week(d) as week_d, 
+               sum(c) over (partition by cid, week(d)) as mpp_sum  
+         from tc where year(d) = '2018') as inside where cust = 0 and week_d = 0;
+
+DROP TABLE IF EXISTS tc;
+
+#
+

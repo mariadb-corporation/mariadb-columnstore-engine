@@ -1,0 +1,27 @@
+#
+# Test empty table
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs120_db;
+--enable_warnings
+
+CREATE DATABASE mcs120_db;
+USE mcs120_db;
+
+CREATE TABLE t1 (x INT)ENGINE=Columnstore;
+
+SELECT * FROM t1;
+SELECT COUNT(*) FROM t1;
+SHOW STATUS LIKE 'Empty_queries';
+
+SELECT * FROM t1 LIMIT 0;
+SHOW STATUS LIKE 'Empty_queries';
+
+DROP TABLE t1;
+SHOW STATUS LIKE 'Empty_queries';
+
+# Clean UP
+DROP DATABASE mcs120_db;

@@ -1,0 +1,16 @@
+USE tpch1;
+drop table if exists test.mcol477;
+Warnings:
+Note	1051	Unknown table 'test.mcol477'
+create table test.mcol477 (a int, b int) engine=columnstore comment='autoincrement=a,9';
+insert into test.mcol477 set b=1;
+select * from test.mcol477;
+a	b
+9	1
+alter table test.mcol477 comment='autoincrement=25';
+insert into test.mcol477 set b=2;
+select * from test.mcol477;
+a	b
+9	1
+25	2
+drop table test.mcol477;

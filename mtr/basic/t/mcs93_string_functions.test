@@ -1,0 +1,76 @@
+#
+# Test String Functions
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs93_db;
+--enable_warnings
+
+CREATE DATABASE mcs93_db;
+USE mcs93_db;
+
+CREATE TABLE t1(col1 VARCHAR(40), col2 TEXT)ENGINE=Columnstore;
+INSERT INTO t1 VALUES('', '');
+INSERT INTO t1 VALUES('  aaa', repeat('z',10));
+INSERT INTO t1 VALUES('klm, nopqrst', 'abcdefghijklmno, pqrsuvwxyz    ');
+INSERT INTO t1 VALUES('MariaDB, Columnstore', 'mariadb, COLUMNSTORE');
+
+SELECT col1 FROM t1;
+UPDATE t1 SET col1 = LTRIM(col1);
+SELECT col1 FROM t1;
+
+SELECT col2 FROM t1;
+UPDATE t1 SET col2 =  RTRIM(col2);
+SELECT col2 FROM t1;
+
+INSERT INTO t1 VALUES(' Columnstore Engine ', ' COLUMNSTORE ENGINE ');
+SELECT TRIM(TRAILING FROM col1), TRIM(LEADING FROM col1) FROM t1;
+SELECT TRIM(TRAILING FROM col2), TRIM(LEADING FROM col2) FROM t1;
+SELECT * FROM t1;
+UPDATE t1 SET col1 = TRIM(col1);
+UPDATE t1 SET col2 = TRIM(col2);
+SELECT * FROM t1;
+
+SELECT col1, col2, CONCAT(col1,col2) FROM t1;
+SELECT col1, col2, CONCAT(col1, ' ', col2) FROM t1;
+SELECT col1, col2, CONCAT('Concat', col1, ' ', col2) FROM t1;
+SELECT col1, col2, CONCAT(col2, ' string123# ', col1) FROM t1;
+SELECT col1, col2, CONCAT_WS(',', col2, col1) FROM t1;
+SELECT col1, col2, CONCAT_WS('....', col2, col1) FROM t1;
+SELECT col1, col2, CONCAT_WS(' string123# ', col2, col1) FROM t1;
+
+SELECT col1, col2, INSTR(col1, 'o') FROM t1;
+SELECT col1, LENGTH(col1), col2, LENGTH(col2) FROM t1;
+SELECT col1, CHAR_LENGTH(col1), col2, CHAR_LENGTH(col2) FROM t1;
+SET @s = CONVERT('Mariadb Coumnstore' USING ucs2);
+SELECT CHAR_LENGTH(@s), LENGTH(@s);
+
+SELECT col1, LEFT(col1, 1), col2, LEFT(col2, 2) FROM t1;
+SELECT col1, LEFT(col1,100), col2, LEFT(col2, 100) FROM t1;
+SELECT col1, RIGHT(col1, 2), col2, RIGHT(col2, 2) FROM t1;
+SELECT col1, RIGHT(col1, 11), col2, RIGHT(col2, 11) FROM t1;
+
+SELECT LOWER(col1), LOWER(col2) FROM t1;
+SELECT LCASE(col1), LCASE(col2) FROM t1;
+SELECT UPPER(col1), UPPER(col2) FROM t1;
+SELECT UCASE(col1), UCASE(col2) FROM t1;
+
+SELECT col1, SUBSTRING(col1, 5), col2, SUBSTRING(col2, 8) FROM t1;
+SELECT col1, SUBSTRING(col1, 5, 4), col2, SUBSTRING(col2, 8, 3) FROM t1;
+SELECT col1, SUBSTRING(col1, -5), col2, SUBSTRING(col2, -8) FROM t1;
+SELECT col1, SUBSTRING(col1, -5, 4), col2, SUBSTRING(col2, -8, 3) FROM t1;
+
+SELECT col1, SUBSTRING_INDEX(col1, 'o', 2), col2, SUBSTRING_INDEX(col2, 'o', 2) FROM t1;
+SELECT col1, SUBSTRING_INDEX(col1, 'O', 2), col2, SUBSTRING_INDEX(col2, 'O', 2) FROM t1;
+
+SELECT col1, FIND_IN_SET('mariadb', col1), col2, FIND_IN_SET('mariadb', col2) FROM t1;
+
+DELETE FROM t1;
+INSERT INTO t1 VALUES('75226.62', '96216681'),('27618', '61971811');
+SELECT col1, FORMAT(col1, 2), FORMAT(col1,10) FROM t1;
+SELECT col2, FORMAT(col2, 2), FORMAT(col2,10) FROM t1;
+
+# Clean UP
+DROP DATABASE mcs93_db;

@@ -1,0 +1,167 @@
+USE tpch1;
+drop procedure if exists sp_simple_select;
+Create Procedure sp_simple_select( )
+begin
+select * from part where p_partkey < 5;
+end $$
+drop procedure if exists sp_simple_variable;
+Create Procedure sp_simple_variable(in arg_key int)
+begin
+select * from part where p_partkey <= arg_key;
+end $$
+drop procedure if exists sp_simple_variables;
+Create Procedure sp_simple_variables(in arg_key int, in arg_string varchar(25))
+begin
+select * from nation where n_nationkey <= arg_key and n_name > arg_string;
+end $$
+drop procedure if exists sp_complex_variable;
+Create Procedure sp_complex_variable(in arg_key int, in arg_date date)
+begin
+Select * from lineitem, orders where o_custkey < arg_key and
+l_partkey < 10000 and l_shipdate>arg_date and l_orderkey = o_orderkey order by l_orderkey, l_linenumber;
+end $$
+drop procedure if exists sp_unstructured_loop;
+Create Procedure sp_unstructured_loop(in arg_key int)
+begin
+declare v_col1 int;
+declare v_col2 char(122);
+declare no_more_rows boolean ;
+declare cursor1 cursor for
+select p_partkey, p_name from part where p_partkey <= arg_key;
+declare continue handler for not found
+set no_more_rows := TRUE;
+set no_more_rows := false;
+open cursor1;
+LOOP1: loop
+fetch cursor1
+into  v_col1, v_col2
+;
+if no_more_rows then
+close cursor1;
+leave LOOP1;
+end if;
+--
+select v_col1, v_col2;
+--
+end loop LOOP1;
+end$$
+drop procedure if exists sp_repeat_loop;
+Create Procedure sp_repeat_loop(in arg_key int, in arg_key2 int)
+begin
+DECLARE done INT DEFAULT 0;
+DECLARE a CHAR(122);
+DECLARE b INT;
+DECLARE cur1
+CURSOR FOR
+SELECT p_partkey, p_name
+FROM part where p_partkey between arg_key and arg_key2;
+DECLARE
+CONTINUE HANDLER FOR
+SQLSTATE '02000'
+            SET done = 1;
+OPEN cur1;
+REPEAT
+FETCH cur1 INTO b, a;
+if not done then
+select b, a;
+end if;
+UNTIL
+done
+END REPEAT;
+CLOSE cur1;
+end$$
+drop procedure if exists sp_while_loop;
+Create Procedure sp_while_loop(in arg_key int, in arg_key2 int)
+begin
+DECLARE done INT DEFAULT 0;
+DECLARE a CHAR(116);
+DECLARE b INT;
+DECLARE cur1
+CURSOR FOR
+SELECT p_partkey, p_name
+FROM part where p_partkey between arg_key and arg_key2;
+DECLARE
+CONTINUE HANDLER FOR
+SQLSTATE '02000'
+            SET done = 1;
+OPEN cur1;
+FETCH cur1 INTO b, a;
+WHILE NOT done DO
+if not done then
+select b, a;
+end if;
+FETCH cur1 INTO b, a;
+END WHILE;
+CLOSE cur1;
+end$$
+drop procedure if exists proc1;
+create procedure proc1()
+begin
+drop table if exists t1;
+create table if not exists t1 (id int)engine=columnstore;
+start transaction;
+alter table t1 add column c3 integer;
+insert into t1 values (1,2);
+select * into @a, @b from t1;
+drop table t1;
+commit;
+end$$
+call sp_simple_select;
+p_partkey	p_name	p_mfgr	p_brand	p_type	p_size	p_container	p_retailprice	p_comment
+1	goldenrod lavender spring chocolate lace	Manufacturer#1	Brand#13	PROMO BURNISHED COPPER	7	JUMBO PKG	901.00	ly. slyly ironi
+2	blush thistle blue yellow saddle	Manufacturer#1	Brand#13	LARGE BRUSHED BRASS	1	LG CASE	902.00	lar accounts amo
+3	spring green yellow purple cornsilk	Manufacturer#4	Brand#42	STANDARD POLISHED BRASS	21	WRAP CASE	903.00	egular deposits hag
+4	cornflower chocolate smoke green pink	Manufacturer#3	Brand#34	SMALL PLATED BRASS	14	MED DRUM	904.00	p furiously r
+call sp_simple_variable(2);
+p_partkey	p_name	p_mfgr	p_brand	p_type	p_size	p_container	p_retailprice	p_comment
+1	goldenrod lavender spring chocolate lace	Manufacturer#1	Brand#13	PROMO BURNISHED COPPER	7	JUMBO PKG	901.00	ly. slyly ironi
+2	blush thistle blue yellow saddle	Manufacturer#1	Brand#13	LARGE BRUSHED BRASS	1	LG CASE	902.00	lar accounts amo
+call sp_simple_variables(10, 'AMERICA');
+n_nationkey	n_name	n_regionkey	n_comment
+1	ARGENTINA	1	al foxes promise slyly according to the regular accounts. bold requests alon
+2	BRAZIL	1	y alongside of the pending deposits. carefully special packages are about the ironic forges. slyly special 
+3	CANADA	1	eas hang ironic, silent packages. slyly regular packages are furiously over the tithes. fluffily bold
+4	EGYPT	4	y above the carefully unusual theodolites. final dugouts are quickly across the furiously regular d
+5	ETHIOPIA	0	ven packages wake quickly. regu
+6	FRANCE	3	refully final requests. regular, ironi
+7	GERMANY	3	l platelets. regular accounts x-ray: unusual, regular acco
+8	INDIA	2	ss excuses cajole slyly across the packages. deposits print aroun
+9	INDONESIA	2	 slyly express asymptotes. regular deposits haggle slyly. carefully ironic hockey players sleep blithely. carefull
+10	IRAN	4	efully alongside of the slyly final dependencies. 
+call sp_complex_variable(1000, '1998-10-10');
+l_orderkey	l_partkey	l_suppkey	l_linenumber	l_quantity	l_extendedprice	l_discount	l_tax	l_returnflag	l_linestatus	l_shipdate	l_commitdate	l_receiptdate	l_shipinstruct	l_shipmode	l_comment	o_orderkey	o_custkey	o_orderstatus	o_totalprice	o_orderdate	o_orderpriority	o_clerk	o_shippriority	o_comment
+1144356	175	5176	6	8.00	8601.36	0.02	0.06	N	O	1998-10-16	1998-08-17	1998-11-03	COLLECT COD	REG AIR	ckly regular foxes wake carefully r	1144356	743	O	145893.13	1998-06-22	2-HIGH	Clerk#000000969	0	er the regular packages. packages across the car
+1432258	5267	268	2	26.00	30478.76	0.00	0.08	N	O	1998-11-18	1998-09-05	1998-11-30	TAKE BACK RETURN	TRUCK	s. requests according to	1432258	121	O	77070.43	1998-07-27	1-URGENT	Clerk#000000590	0	he slyly final instructions. furious instructions boost along 
+2340768	958	8459	4	18.00	33461.10	0.06	0.02	N	O	1998-10-13	1998-09-11	1998-11-05	DELIVER IN PERSON	SHIP	nic requests might are slyly carefully sp	2340768	746	O	246588.89	1998-07-20	4-NOT SPECIFIED	Clerk#000000638	0	es integrate furiously about the ideas. quickly busy multipliers dazzle s
+2942787	2308	4809	1	23.00	27836.90	0.10	0.07	N	O	1998-11-20	1998-10-02	1998-12-11	TAKE BACK RETURN	MAIL	ggle slyly after the slyly e	2942787	410	O	26806.93	1998-07-27	5-LOW	Clerk#000000480	0	l accounts use blithely regular foxes. 
+3322659	2415	7416	2	14.00	18443.74	0.05	0.08	N	O	1998-11-03	1998-09-18	1998-11-30	COLLECT COD	TRUCK	 excuses. slyly ironic dolphins c	3322659	328	O	239015.82	1998-07-22	2-HIGH	Clerk#000000949	0	ng requests nod blithely pending, pen
+5045954	5271	2772	1	47.00	55284.69	0.05	0.04	N	O	1998-10-24	1998-09-15	1998-11-04	TAKE BACK RETURN	AIR	le carefully express pint	5045954	670	O	185551.67	1998-06-29	4-NOT SPECIFIED	Clerk#000000504	0	telets affix fluffily. quickly fluffy dependencies integr
+5289154	8736	3737	2	24.00	39473.52	0.10	0.01	N	O	1998-10-27	1998-09-22	1998-11-04	COLLECT COD	SHIP	 beans cajole idle instruction	5289154	655	O	195444.41	1998-07-13	3-MEDIUM	Clerk#000000401	0	r pinto beans. carefull
+5864708	4412	6913	6	49.00	64504.09	0.06	0.03	N	O	1998-10-22	1998-09-29	1998-11-21	COLLECT COD	REG AIR	es. ironic pinto 	5864708	601	O	284266.74	1998-07-03	2-HIGH	Clerk#000000869	0	ng requests after the even pinto b
+call sp_unstructured_loop(2);
+v_col1	v_col2
+1	goldenrod lavender spring chocolate lace
+v_col1	v_col2
+2	blush thistle blue yellow saddle
+call sp_repeat_loop(1,2);
+b	a
+1	goldenrod lavender spring chocolate lace
+b	a
+2	blush thistle blue yellow saddle
+call sp_while_loop(1,2);
+b	a
+1	goldenrod lavender spring chocolate lace
+b	a
+2	blush thistle blue yellow saddle
+call proc1();
+select @a, @b;
+@a	@b
+1	2
+drop procedure sp_simple_select;
+drop procedure sp_simple_variable;
+drop procedure sp_simple_variables;
+drop procedure sp_complex_variable;
+drop procedure sp_unstructured_loop;
+drop procedure sp_repeat_loop;
+drop procedure sp_while_loop;
+drop procedure proc1;

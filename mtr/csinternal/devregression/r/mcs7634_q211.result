@@ -1,0 +1,37 @@
+USE tpch1;
+drop database if exists test023_cs3;
+Warnings:
+Note	1008	Can't drop database 'test023_cs3'; database doesn't exist
+create database test023_cs3;
+use test023_cs3;
+drop table if exists `cs3`;
+Warnings:
+Note	1051	Unknown table 'test023_cs3.cs3'
+create table `test023_cs3`.`cs3`(i int, t text) engine=columnstore;
+insert into `test023_cs3`.`cs3` values (1,'Lorem ipsum dolor sit amet, consectetur adipiscing elit,'),(7,'sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'),(8,'Ut enim ad minim veniam,'),(9,'quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'),(10,'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore e');
+select * from `test023_cs3`.`cs3`;
+i	t
+1	Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+7	sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+8	Ut enim ad minim veniam,
+9	quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+10	Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore e
+show create table `test023_cs3`.`cs3`;
+Table	Create Table
+cs3	CREATE TABLE `cs3` (
+  `i` int(11) DEFAULT NULL,
+  `t` text DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+delete from `test023_cs3`.`cs3` where i = 1;
+update `test023_cs3`.`cs3` set i = 5 where i = 10;
+select * from `test023_cs3`.`cs3`;
+i	t
+7	sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+8	Ut enim ad minim veniam,
+9	quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+5	Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore e
+drop table `test023_cs3`.`cs3`;
+show create table `test023_cs3`.`cs3`;
+ERROR 42S02: Table 'test023_cs3.cs3' doesn't exist
+use tpch1;
+drop database if exists test023_cs3;

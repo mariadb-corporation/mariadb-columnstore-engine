@@ -1,0 +1,49 @@
+USE tpch1;
+drop table if exists tbl1;
+Warnings:
+Note	1051	Unknown table 'tpch1.tbl1'
+drop table if exists tbl2;
+Warnings:
+Note	1051	Unknown table 'tpch1.tbl2'
+create table tbl1 (c1 char(1), c2 char(255))engine=columnstore;
+create table tbl2 (c1 char(1), c2 char(255))engine=columnstore;
+insert into tbl1 values (1, 1), (2, 2), (3, 3), (4, 4), (null, null);
+insert into tbl2 values (1, 1), (2, 2), (3, 3), (null, null);
+select count(*) from tbl1 join tbl2 on tbl1.c1 = tbl2.c1;
+count(*)
+3
+select count(*) from tbl1 join tbl2 on tbl1.c1 = tbl2.c2;
+count(*)
+3
+select count(*) from tbl1 join tbl2 on tbl1.c2 = tbl2.c1;
+count(*)
+3
+select count(*) from tbl1 join tbl2 on tbl1.c2 = tbl2.c2;
+count(*)
+3
+select count(*) from tbl1 left join tbl2 on tbl1.c1 = tbl2.c1;
+count(*)
+5
+select count(*) from tbl1 left join tbl2 on tbl1.c1 = tbl2.c2;
+count(*)
+5
+select count(*) from tbl1 left join tbl2 on tbl1.c2 = tbl2.c1;
+count(*)
+5
+select count(*) from tbl1 left join tbl2 on tbl1.c2 = tbl2.c2;
+count(*)
+5
+select count(*) from tbl1 right join tbl2 on tbl1.c1 = tbl2.c1;
+count(*)
+4
+select count(*) from tbl1 right join tbl2 on tbl1.c1 = tbl2.c2;
+count(*)
+4
+select count(*) from tbl1 right join tbl2 on tbl1.c2 = tbl2.c1;
+count(*)
+4
+select count(*) from tbl1 right join tbl2 on tbl1.c2 = tbl2.c2;
+count(*)
+4
+drop table tbl1;
+drop table tbl2;

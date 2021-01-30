@@ -1,0 +1,21 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug5173.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists qadefaulttest;
+create table qadefaulttest (cidx int) engine=columnstore;
+ALTER TABLE qadefaulttest ADD column MYDOUBLE2 DOUBLE not null DEFAULT -88.88;
+insert into qadefaulttest values (1, -88.88);
+select * from qadefaulttest;
+ALTER TABLE qadefaulttest ADD column MYFLOAT3 FLOAT not null DEFAULT -88.88;
+select * from qadefaulttest;
+ALTER TABLE qadefaulttest ADD column MYDECIMAL2 DECIMAL(4,2) not null DEFAULT -88.88;
+select * from qadefaulttest;
+drop table qadefaulttest;#
+

@@ -1,0 +1,18 @@
+USE tpch1;
+drop table if exists bug3565;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug3565'
+create table bug3565(c1 tinyint)engine=columnstore;
+insert into bug3565 (select 0 from orders limit 270000);
+alter table bug3565 add column c2 bigint;
+alter table bug3565 add column c3 int;
+select count(c1) from bug3565;
+count(c1)
+270000
+select count(c2) from bug3565;
+count(c2)
+0
+select count(c3) from bug3565;
+count(c3)
+0
+drop table if exists bug3565;

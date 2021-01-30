@@ -1,0 +1,29 @@
+USE tpch1;
+drop table if exists test;
+Warnings:
+Note	1051	Unknown table 'tpch1.test'
+drop view if exists test_v;
+Warnings:
+Note	4092	Unknown VIEW: 'tpch1.test_v'
+create table test (test1 numeric,test2 varchar(20)) engine=columnstore;
+create view test_v as select * from test;
+insert into test values (1,'data1');
+insert into test values (2,'data2');
+insert into test values (3,'data3');
+select T.test1,T.test2 from test_v T;
+test1	test2
+1	data1
+2	data2
+3	data3
+select T.test1,T.test2 from test_v t;
+test1	test2
+1	data1
+2	data2
+3	data3
+select T.test1 from (select * from test_v)T;
+test1
+1
+2
+3
+drop table test;
+drop view test_v;

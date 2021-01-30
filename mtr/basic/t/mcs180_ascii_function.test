@@ -1,0 +1,34 @@
+#
+# Test ASCII function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs180_db;
+--enable_warnings
+
+CREATE DATABASE mcs180_db;
+USE mcs180_db;
+
+SET default_storage_engine=Columnstore;
+
+CREATE TABLE t1 (a CHAR(1), b INT);
+INSERT INTO t1 VALUES ('', NULL), ('m', 6), ('N', 5), ('o', 4);
+SHOW CREATE TABLE t1;
+
+SELECT ASCII(0);
+SELECT ASCII(1);
+SELECT ASCII(9);
+SELECT ASCII('abc');
+SELECT ASCII('a');
+SELECT ASCII('A');
+SELECT ASCII('z');
+SELECT ASCII('~');
+SELECT ASCII('-');
+
+SELECT a, ASCII(a) FROM t1;
+SELECT b, ASCII(b) FROM t1;
+
+# Clean UP
+DROP DATABASE mcs180_db;

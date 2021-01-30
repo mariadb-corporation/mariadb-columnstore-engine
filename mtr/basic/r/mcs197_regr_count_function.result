@@ -1,0 +1,16 @@
+DROP DATABASE IF EXISTS mcs197_db;
+CREATE DATABASE mcs197_db;
+USE mcs197_db;
+CREATE TABLE t1 (x INT, y MEDIUMINT, z CHAR(5))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL, NULL, ''),(20, 1, 'aaa'),(39, 2, 'aaa'),(48, 3, 'bbb'),(57, 4, 'bbb'),(66, 5, 'aaa'),(75, 6, 'aaa'),(84, 7, 'bbb');
+SELECT REGR_COUNT(y, x) FROM t1;
+REGR_COUNT(y, x)
+7
+SELECT z, REGR_COUNT(y, x) FROM t1 GROUP BY z ORDER BY z;
+z	REGR_COUNT(y, x)
+NULL	0
+aaa	4
+bbb	3
+SELECT REGR_COUNT(y) FROM t1;
+ERROR HY000: Can't initialize function 'regr_count'; regr_count() requires two arguments
+DROP DATABASE mcs197_db;

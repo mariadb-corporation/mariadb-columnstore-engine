@@ -1,0 +1,14 @@
+DROP DATABASE IF EXISTS mcs193_db;
+CREATE DATABASE mcs193_db;
+USE mcs193_db;
+CREATE TABLE t1 (x INT, y MEDIUMINT, z CHAR(5))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL, NULL, ''),(20, 1, 'aaa'),(39, 2, 'aaa'),(48, 3, 'bbb'),(57, 4, 'bbb'),(66, 5, 'aaa'),(75, 6, 'aaa'),(84, 7, 'bbb');
+SELECT COVAR_POP(y, x) FROM t1;
+COVAR_POP(y, x)
+40.285714285714285
+SELECT z, COVAR_POP(y, x) FROM t1 GROUP BY z ORDER BY z;
+z	COVAR_POP(y, x)
+NULL	NULL
+aaa	44.5
+bbb	26
+DROP DATABASE mcs193_db;

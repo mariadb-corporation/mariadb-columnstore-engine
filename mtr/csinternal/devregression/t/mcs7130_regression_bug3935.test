@@ -1,0 +1,55 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3935.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+--exec rm -f /tmp/bug3935_outfile.txt
+
+select n_nationkey, n_name into outfile '/tmp/bug3935_outfile.txt'
+FIELDS TERMINATED BY '|' LINES TERMINATED BY '/n' from nation;
+--exec rm -f /tmp/bug3935_outfile.txt
+
+select n_nationkey, n_name from nation into outfile '/tmp/bug3935_outfile.txt'
+FIELDS TERMINATED BY '|' LINES TERMINATED BY '/n';
+--exec rm -f /tmp/bug3935_outfile.txt
+
+select n_nationkey, n_name into outfile '/tmp/bug3935_outfile.txt'
+FIELDS TERMINATED BY '|' OPTIONALLY ENCLOSED BY '"' LINES TERMINATED BY '/n'
+from nation;
+--exec rm -f /tmp/bug3935_outfile.txt
+
+SELECT 'ID', 'Name' UNION (SELECT n_nationkey, n_name
+FROM nation ORDER BY n_name DESC) INTO OUTFILE
+'/tmp/bug3935_outfile.txt' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n';
+--exec rm -f /tmp/bug3935_outfile.txt
+
+SELECT 'ID', 'Name' UNION (SELECT n_nationkey, n_name
+FROM nation ORDER BY n_name DESC) INTO OUTFILE
+'/tmp/bug3935_outfile.txt' FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"'
+LINES TERMINATED BY '\n';
+--exec rm -f /tmp/bug3935_outfile.txt
+
+SELECT *
+INTO OUTFILE '/tmp/bug3935_outfile.txt'
+FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"'
+LINES TERMINATED BY '\n'
+FROM (SELECT 'ID', 'Name'
+       UNION
+      SELECT n_nationkey, n_name from nation) a;
+--exec rm -f /tmp/bug3935_outfile.txt
+
+SELECT a.*
+INTO OUTFILE '/tmp/bug3935_outfile.txt'
+FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"'
+LINES TERMINATED BY '\n'
+FROM (SELECT 'ID', 'Name'
+UNION
+SELECT n_nationkey, n_name from nation order by 2 desc) a;
+--exec rm -f /tmp/bug3935_outfile.txt
+#
+

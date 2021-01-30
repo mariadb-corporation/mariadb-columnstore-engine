@@ -1,0 +1,2089 @@
+USE tpch1;
+select COUNT(0) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+COUNT(0)
+11
+select SUM(0) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+SUM(0)
+0
+select AVG(0) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+AVG(0)
+0.0000
+select MIN(0) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+MIN(0)
+0
+select MAX(0) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+MAX(0)
+0
+select COUNT(DISTINCT 0) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+COUNT(DISTINCT 0)
+1
+select SUM(DISTINCT 0) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+SUM(DISTINCT 0)
+0
+select AVG(DISTINCT 0) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+AVG(DISTINCT 0)
+0.0000
+select STDDEV_POP(0) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+STDDEV_POP(0)
+0.0000
+select STDDEV_SAMP(0) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+STDDEV_SAMP(0)
+0.0000
+select VAR_POP(0) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+VAR_POP(0)
+0.0000
+select VAR_SAMP(0) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+VAR_SAMP(0)
+0.0000
+select COUNT(0) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+COUNT(0)
+0
+select SUM(0) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+SUM(0)
+NULL
+select AVG(0) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+AVG(0)
+NULL
+select MIN(0) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+MIN(0)
+NULL
+select MAX(0) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+MAX(0)
+NULL
+select COUNT(DISTINCT 0) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+COUNT(DISTINCT 0)
+0
+select SUM(DISTINCT 0) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+SUM(DISTINCT 0)
+NULL
+select AVG(DISTINCT 0) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+AVG(DISTINCT 0)
+NULL
+select STDDEV_POP(0) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+STDDEV_POP(0)
+NULL
+select STDDEV_SAMP(0) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+STDDEV_SAMP(0)
+NULL
+select VAR_POP(0) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+VAR_POP(0)
+NULL
+select VAR_SAMP(0) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+VAR_SAMP(0)
+NULL
+select COUNT(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+COUNT(2)
+11
+select SUM(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+SUM(2)
+22
+select AVG(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+AVG(2)
+2.0000
+select MIN(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+MIN(2)
+2
+select MAX(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+MAX(2)
+2
+select COUNT(DISTINCT 2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+COUNT(DISTINCT 2)
+1
+select SUM(DISTINCT 2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+SUM(DISTINCT 2)
+2
+select AVG(DISTINCT 2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+AVG(DISTINCT 2)
+2.0000
+select STDDEV_POP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+STDDEV_POP(2)
+0.0000
+select STDDEV_SAMP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+STDDEV_SAMP(2)
+0.0000
+select VAR_POP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+VAR_POP(2)
+0.0000
+select VAR_SAMP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+VAR_SAMP(2)
+0.0000
+select COUNT(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+COUNT(2)
+0
+select SUM(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+SUM(2)
+NULL
+select AVG(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+AVG(2)
+NULL
+select MIN(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+MIN(2)
+NULL
+select MAX(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+MAX(2)
+NULL
+select COUNT(DISTINCT 2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+COUNT(DISTINCT 2)
+0
+select SUM(DISTINCT 2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+SUM(DISTINCT 2)
+NULL
+select AVG(DISTINCT 2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+AVG(DISTINCT 2)
+NULL
+select STDDEV_POP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+STDDEV_POP(2)
+NULL
+select STDDEV_SAMP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+STDDEV_SAMP(2)
+NULL
+select VAR_POP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+VAR_POP(2)
+NULL
+select VAR_SAMP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+VAR_SAMP(2)
+NULL
+select COUNT(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+COUNT(8.9)
+11
+select SUM(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+SUM(8.9)
+97.9
+select AVG(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+AVG(8.9)
+8.90000
+select MIN(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+MIN(8.9)
+8.9
+select MAX(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+MAX(8.9)
+8.9
+select COUNT(DISTINCT 8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+COUNT(DISTINCT 8.9)
+1
+select SUM(DISTINCT 8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+SUM(DISTINCT 8.9)
+8.9
+select AVG(DISTINCT 8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+AVG(DISTINCT 8.9)
+8.90000
+select STDDEV_POP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+STDDEV_POP(8.9)
+0.00000
+select STDDEV_SAMP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+STDDEV_SAMP(8.9)
+0.00000
+select VAR_POP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+VAR_POP(8.9)
+0.00000
+select VAR_SAMP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+VAR_SAMP(8.9)
+0.00000
+select COUNT(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+COUNT(8.9)
+0
+select SUM(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+SUM(8.9)
+NULL
+select AVG(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+AVG(8.9)
+NULL
+select MIN(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+MIN(8.9)
+NULL
+select MAX(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+MAX(8.9)
+NULL
+select COUNT(DISTINCT 8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+COUNT(DISTINCT 8.9)
+0
+select SUM(DISTINCT 8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+SUM(DISTINCT 8.9)
+NULL
+select AVG(DISTINCT 8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+AVG(DISTINCT 8.9)
+NULL
+select STDDEV_POP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+STDDEV_POP(8.9)
+NULL
+select STDDEV_SAMP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+STDDEV_SAMP(8.9)
+NULL
+select VAR_POP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+VAR_POP(8.9)
+NULL
+select VAR_SAMP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+VAR_SAMP(8.9)
+NULL
+select COUNT('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+COUNT('8.9')
+11
+select SUM('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+SUM('8.9')
+97.9
+select AVG('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+AVG('8.9')
+8.9
+select MIN('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+MIN('8.9')
+8.9
+select MAX('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+MAX('8.9')
+8.9
+select COUNT(DISTINCT '8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+COUNT(DISTINCT '8.9')
+1
+select SUM(DISTINCT '8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+SUM(DISTINCT '8.9')
+8.9
+select AVG(DISTINCT '8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+AVG(DISTINCT '8.9')
+8.9
+select STDDEV_POP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+STDDEV_POP('8.9')
+0
+select STDDEV_SAMP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+STDDEV_SAMP('8.9')
+0
+select VAR_POP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+VAR_POP('8.9')
+0
+select VAR_SAMP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+VAR_SAMP('8.9')
+0
+select COUNT('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+COUNT('8.9')
+0
+select SUM('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+SUM('8.9')
+NULL
+select AVG('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+AVG('8.9')
+NULL
+select MIN('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+MIN('8.9')
+NULL
+select MAX('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+MAX('8.9')
+NULL
+select COUNT(DISTINCT '8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+COUNT(DISTINCT '8.9')
+0
+select SUM(DISTINCT '8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+SUM(DISTINCT '8.9')
+NULL
+select AVG(DISTINCT '8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+AVG(DISTINCT '8.9')
+NULL
+select STDDEV_POP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+STDDEV_POP('8.9')
+NULL
+select STDDEV_SAMP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+STDDEV_SAMP('8.9')
+NULL
+select VAR_POP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+VAR_POP('8.9')
+NULL
+select VAR_SAMP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+VAR_SAMP('8.9')
+NULL
+select COUNT('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+COUNT('a')
+11
+select SUM('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+SUM('a')
+0
+select AVG('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+AVG('a')
+0
+select MIN('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+MIN('a')
+a
+select MAX('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+MAX('a')
+a
+select COUNT(DISTINCT 'a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+COUNT(DISTINCT 'a')
+1
+select SUM(DISTINCT 'a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+SUM(DISTINCT 'a')
+0
+select AVG(DISTINCT 'a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+AVG(DISTINCT 'a')
+0
+select STDDEV_POP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+STDDEV_POP('a')
+0
+select STDDEV_SAMP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+STDDEV_SAMP('a')
+0
+select VAR_POP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+VAR_POP('a')
+0
+select VAR_SAMP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+VAR_SAMP('a')
+0
+select COUNT('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+COUNT('a')
+0
+select SUM('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+SUM('a')
+NULL
+select AVG('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+AVG('a')
+NULL
+select MIN('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+MIN('a')
+NULL
+select MAX('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+MAX('a')
+NULL
+select COUNT(DISTINCT 'a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+COUNT(DISTINCT 'a')
+0
+select SUM(DISTINCT 'a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+SUM(DISTINCT 'a')
+NULL
+select AVG(DISTINCT 'a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+AVG(DISTINCT 'a')
+NULL
+select STDDEV_POP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+STDDEV_POP('a')
+NULL
+select STDDEV_SAMP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+STDDEV_SAMP('a')
+NULL
+select VAR_POP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+VAR_POP('a')
+NULL
+select VAR_SAMP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+VAR_SAMP('a')
+NULL
+select COUNT('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+COUNT('2011-04-08')
+11
+select SUM('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+SUM('2011-04-08')
+22121
+select AVG('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+AVG('2011-04-08')
+2011
+select MIN('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+MIN('2011-04-08')
+2011-04-08
+select MAX('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+MAX('2011-04-08')
+2011-04-08
+select COUNT(DISTINCT '2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+COUNT(DISTINCT '2011-04-08')
+1
+select SUM(DISTINCT '2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+SUM(DISTINCT '2011-04-08')
+2011
+select AVG(DISTINCT '2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+AVG(DISTINCT '2011-04-08')
+2011
+select STDDEV_POP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+STDDEV_POP('2011-04-08')
+0
+select STDDEV_SAMP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+STDDEV_SAMP('2011-04-08')
+0
+select VAR_POP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+VAR_POP('2011-04-08')
+0
+select VAR_SAMP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+VAR_SAMP('2011-04-08')
+0
+select COUNT('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+COUNT('2011-04-08')
+0
+select SUM('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+SUM('2011-04-08')
+NULL
+select AVG('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+AVG('2011-04-08')
+NULL
+select MIN('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+MIN('2011-04-08')
+NULL
+select MAX('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+MAX('2011-04-08')
+NULL
+select COUNT(DISTINCT '2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+COUNT(DISTINCT '2011-04-08')
+0
+select SUM(DISTINCT '2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+SUM(DISTINCT '2011-04-08')
+NULL
+select AVG(DISTINCT '2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+AVG(DISTINCT '2011-04-08')
+NULL
+select STDDEV_POP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+STDDEV_POP('2011-04-08')
+NULL
+select STDDEV_SAMP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+STDDEV_SAMP('2011-04-08')
+NULL
+select VAR_POP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+VAR_POP('2011-04-08')
+NULL
+select VAR_SAMP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+VAR_SAMP('2011-04-08')
+NULL
+select COUNT('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+COUNT('2011-04-08 12:34:56')
+11
+select SUM('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+SUM('2011-04-08 12:34:56')
+22121
+select AVG('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+AVG('2011-04-08 12:34:56')
+2011
+select MIN('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+MIN('2011-04-08 12:34:56')
+2011-04-08 12:34:56
+select MAX('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+MAX('2011-04-08 12:34:56')
+2011-04-08 12:34:56
+select COUNT(DISTINCT '2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+COUNT(DISTINCT '2011-04-08 12:34:56')
+1
+select SUM(DISTINCT '2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+SUM(DISTINCT '2011-04-08 12:34:56')
+2011
+select AVG(DISTINCT '2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+AVG(DISTINCT '2011-04-08 12:34:56')
+2011
+select STDDEV_POP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+STDDEV_POP('2011-04-08 12:34:56')
+0
+select STDDEV_SAMP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+STDDEV_SAMP('2011-04-08 12:34:56')
+0
+select VAR_POP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+VAR_POP('2011-04-08 12:34:56')
+0
+select VAR_SAMP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+VAR_SAMP('2011-04-08 12:34:56')
+0
+select COUNT('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+COUNT('2011-04-08 12:34:56')
+0
+select SUM('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+SUM('2011-04-08 12:34:56')
+NULL
+select AVG('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+AVG('2011-04-08 12:34:56')
+NULL
+select MIN('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+MIN('2011-04-08 12:34:56')
+NULL
+select MAX('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+MAX('2011-04-08 12:34:56')
+NULL
+select COUNT(DISTINCT '2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+COUNT(DISTINCT '2011-04-08 12:34:56')
+0
+select SUM(DISTINCT '2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+SUM(DISTINCT '2011-04-08 12:34:56')
+NULL
+select AVG(DISTINCT '2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+AVG(DISTINCT '2011-04-08 12:34:56')
+NULL
+select STDDEV_POP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+STDDEV_POP('2011-04-08 12:34:56')
+NULL
+select STDDEV_SAMP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+STDDEV_SAMP('2011-04-08 12:34:56')
+NULL
+select VAR_POP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+VAR_POP('2011-04-08 12:34:56')
+NULL
+select VAR_SAMP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+VAR_SAMP('2011-04-08 12:34:56')
+NULL
+select COUNT(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+COUNT(null)
+0
+select SUM(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+SUM(null)
+NULL
+select AVG(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+AVG(null)
+NULL
+select MIN(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+MIN(null)
+NULL
+select MAX(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+MAX(null)
+NULL
+select COUNT(DISTINCT null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+COUNT(DISTINCT null)
+0
+select SUM(DISTINCT null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+SUM(DISTINCT null)
+NULL
+select AVG(DISTINCT null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+AVG(DISTINCT null)
+NULL
+select STDDEV_POP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+STDDEV_POP(null)
+NULL
+select STDDEV_SAMP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+STDDEV_SAMP(null)
+NULL
+select VAR_POP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+VAR_POP(null)
+NULL
+select VAR_SAMP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+VAR_SAMP(null)
+NULL
+select COUNT(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+COUNT(null)
+0
+select SUM(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+SUM(null)
+NULL
+select AVG(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+AVG(null)
+NULL
+select MIN(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+MIN(null)
+NULL
+select MAX(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+MAX(null)
+NULL
+select COUNT(DISTINCT null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+COUNT(DISTINCT null)
+0
+select SUM(DISTINCT null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+SUM(DISTINCT null)
+NULL
+select AVG(DISTINCT null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+AVG(DISTINCT null)
+NULL
+select STDDEV_POP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+STDDEV_POP(null)
+NULL
+select STDDEV_SAMP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+STDDEV_SAMP(null)
+NULL
+select VAR_POP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+VAR_POP(null)
+NULL
+select VAR_SAMP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+VAR_SAMP(null)
+NULL
+select max(t1.cinteger), COUNT(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	COUNT(2)
+7483647	11
+select max(t1.cinteger), SUM(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	SUM(2)
+7483647	22
+select max(t1.cinteger), AVG(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	AVG(2)
+7483647	2.0000
+select max(t1.cinteger), MIN(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	MIN(2)
+7483647	2
+select max(t1.cinteger), MAX(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	MAX(2)
+7483647	2
+select max(t1.cinteger), COUNT(DISTINCT 2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	COUNT(DISTINCT 2)
+7483647	1
+select max(t1.cinteger), SUM(DISTINCT 2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	SUM(DISTINCT 2)
+7483647	2
+select max(t1.cinteger), AVG(DISTINCT 2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	AVG(DISTINCT 2)
+7483647	2.0000
+select max(t1.cinteger), STDDEV_POP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	STDDEV_POP(2)
+7483647	0.0000
+select max(t1.cinteger), STDDEV_SAMP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	STDDEV_SAMP(2)
+7483647	0.0000
+select max(t1.cinteger), VAR_POP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	VAR_POP(2)
+7483647	0.0000
+select max(t1.cinteger), VAR_SAMP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	VAR_SAMP(2)
+7483647	0.0000
+select max(t1.cinteger), COUNT(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	COUNT(2)
+NULL	0
+select max(t1.cinteger), SUM(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	SUM(2)
+NULL	NULL
+select max(t1.cinteger), AVG(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	AVG(2)
+NULL	NULL
+select max(t1.cinteger), MIN(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	MIN(2)
+NULL	NULL
+select max(t1.cinteger), MAX(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	MAX(2)
+NULL	NULL
+select max(t1.cinteger), COUNT(DISTINCT 2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	COUNT(DISTINCT 2)
+NULL	0
+select max(t1.cinteger), SUM(DISTINCT 2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	SUM(DISTINCT 2)
+NULL	NULL
+select max(t1.cinteger), AVG(DISTINCT 2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	AVG(DISTINCT 2)
+NULL	NULL
+select max(t1.cinteger), STDDEV_POP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	STDDEV_POP(2)
+NULL	NULL
+select max(t1.cinteger), STDDEV_SAMP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	STDDEV_SAMP(2)
+NULL	NULL
+select max(t1.cinteger), VAR_POP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	VAR_POP(2)
+NULL	NULL
+select max(t1.cinteger), VAR_SAMP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	VAR_SAMP(2)
+NULL	NULL
+select max(t1.cinteger), COUNT(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	COUNT(8.9)
+7483647	11
+select max(t1.cinteger), SUM(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	SUM(8.9)
+7483647	97.9
+select max(t1.cinteger), AVG(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	AVG(8.9)
+7483647	8.90000
+select max(t1.cinteger), MIN(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	MIN(8.9)
+7483647	8.9
+select max(t1.cinteger), MAX(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	MAX(8.9)
+7483647	8.9
+select max(t1.cinteger), COUNT(DISTINCT 8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	COUNT(DISTINCT 8.9)
+7483647	1
+select max(t1.cinteger), SUM(DISTINCT 8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	SUM(DISTINCT 8.9)
+7483647	8.9
+select max(t1.cinteger), AVG(DISTINCT 8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	AVG(DISTINCT 8.9)
+7483647	8.90000
+select max(t1.cinteger), STDDEV_POP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	STDDEV_POP(8.9)
+7483647	0.00000
+select max(t1.cinteger), STDDEV_SAMP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	STDDEV_SAMP(8.9)
+7483647	0.00000
+select max(t1.cinteger), VAR_POP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	VAR_POP(8.9)
+7483647	0.00000
+select max(t1.cinteger), VAR_SAMP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	VAR_SAMP(8.9)
+7483647	0.00000
+select max(t1.cinteger), COUNT(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	COUNT(8.9)
+NULL	0
+select max(t1.cinteger), SUM(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	SUM(8.9)
+NULL	NULL
+select max(t1.cinteger), AVG(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	AVG(8.9)
+NULL	NULL
+select max(t1.cinteger), MIN(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	MIN(8.9)
+NULL	NULL
+select max(t1.cinteger), MAX(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	MAX(8.9)
+NULL	NULL
+select max(t1.cinteger), COUNT(DISTINCT 8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	COUNT(DISTINCT 8.9)
+NULL	0
+select max(t1.cinteger), SUM(DISTINCT 8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	SUM(DISTINCT 8.9)
+NULL	NULL
+select max(t1.cinteger), AVG(DISTINCT 8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	AVG(DISTINCT 8.9)
+NULL	NULL
+select max(t1.cinteger), STDDEV_POP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	STDDEV_POP(8.9)
+NULL	NULL
+select max(t1.cinteger), STDDEV_SAMP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	STDDEV_SAMP(8.9)
+NULL	NULL
+select max(t1.cinteger), VAR_POP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	VAR_POP(8.9)
+NULL	NULL
+select max(t1.cinteger), VAR_SAMP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	VAR_SAMP(8.9)
+NULL	NULL
+select max(t1.cinteger), COUNT('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	COUNT('8.9')
+7483647	11
+select max(t1.cinteger), SUM('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	SUM('8.9')
+7483647	97.9
+select max(t1.cinteger), AVG('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	AVG('8.9')
+7483647	8.9
+select max(t1.cinteger), MIN('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	MIN('8.9')
+7483647	8.9
+select max(t1.cinteger), MAX('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	MAX('8.9')
+7483647	8.9
+select max(t1.cinteger), COUNT(DISTINCT '8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	COUNT(DISTINCT '8.9')
+7483647	1
+select max(t1.cinteger), SUM(DISTINCT '8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	SUM(DISTINCT '8.9')
+7483647	8.9
+select max(t1.cinteger), AVG(DISTINCT '8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	AVG(DISTINCT '8.9')
+7483647	8.9
+select max(t1.cinteger), STDDEV_POP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	STDDEV_POP('8.9')
+7483647	0
+select max(t1.cinteger), STDDEV_SAMP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	STDDEV_SAMP('8.9')
+7483647	0
+select max(t1.cinteger), VAR_POP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	VAR_POP('8.9')
+7483647	0
+select max(t1.cinteger), VAR_SAMP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	VAR_SAMP('8.9')
+7483647	0
+select max(t1.cinteger), COUNT('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	COUNT('8.9')
+NULL	0
+select max(t1.cinteger), SUM('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	SUM('8.9')
+NULL	NULL
+select max(t1.cinteger), AVG('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	AVG('8.9')
+NULL	NULL
+select max(t1.cinteger), MIN('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	MIN('8.9')
+NULL	NULL
+select max(t1.cinteger), MAX('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	MAX('8.9')
+NULL	NULL
+select max(t1.cinteger), COUNT(DISTINCT '8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	COUNT(DISTINCT '8.9')
+NULL	0
+select max(t1.cinteger), SUM(DISTINCT '8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	SUM(DISTINCT '8.9')
+NULL	NULL
+select max(t1.cinteger), AVG(DISTINCT '8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	AVG(DISTINCT '8.9')
+NULL	NULL
+select max(t1.cinteger), STDDEV_POP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	STDDEV_POP('8.9')
+NULL	NULL
+select max(t1.cinteger), STDDEV_SAMP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	STDDEV_SAMP('8.9')
+NULL	NULL
+select max(t1.cinteger), VAR_POP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	VAR_POP('8.9')
+NULL	NULL
+select max(t1.cinteger), VAR_SAMP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	VAR_SAMP('8.9')
+NULL	NULL
+select max(t1.cinteger), COUNT('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	COUNT('a')
+7483647	11
+select max(t1.cinteger), SUM('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	SUM('a')
+7483647	0
+select max(t1.cinteger), AVG('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	AVG('a')
+7483647	0
+select max(t1.cinteger), MIN('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	MIN('a')
+7483647	a
+select max(t1.cinteger), MAX('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	MAX('a')
+7483647	a
+select max(t1.cinteger), COUNT(DISTINCT 'a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	COUNT(DISTINCT 'a')
+7483647	1
+select max(t1.cinteger), SUM(DISTINCT 'a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	SUM(DISTINCT 'a')
+7483647	0
+select max(t1.cinteger), AVG(DISTINCT 'a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	AVG(DISTINCT 'a')
+7483647	0
+select max(t1.cinteger), STDDEV_POP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	STDDEV_POP('a')
+7483647	0
+select max(t1.cinteger), STDDEV_SAMP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	STDDEV_SAMP('a')
+7483647	0
+select max(t1.cinteger), VAR_POP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	VAR_POP('a')
+7483647	0
+select max(t1.cinteger), VAR_SAMP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	VAR_SAMP('a')
+7483647	0
+select max(t1.cinteger), COUNT('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	COUNT('a')
+NULL	0
+select max(t1.cinteger), SUM('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	SUM('a')
+NULL	NULL
+select max(t1.cinteger), AVG('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	AVG('a')
+NULL	NULL
+select max(t1.cinteger), MIN('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	MIN('a')
+NULL	NULL
+select max(t1.cinteger), MAX('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	MAX('a')
+NULL	NULL
+select max(t1.cinteger), COUNT(DISTINCT 'a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	COUNT(DISTINCT 'a')
+NULL	0
+select max(t1.cinteger), SUM(DISTINCT 'a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	SUM(DISTINCT 'a')
+NULL	NULL
+select max(t1.cinteger), AVG(DISTINCT 'a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	AVG(DISTINCT 'a')
+NULL	NULL
+select max(t1.cinteger), STDDEV_POP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	STDDEV_POP('a')
+NULL	NULL
+select max(t1.cinteger), STDDEV_SAMP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	STDDEV_SAMP('a')
+NULL	NULL
+select max(t1.cinteger), VAR_POP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	VAR_POP('a')
+NULL	NULL
+select max(t1.cinteger), VAR_SAMP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	VAR_SAMP('a')
+NULL	NULL
+select max(t1.cinteger), COUNT('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	COUNT('2011-04-08')
+7483647	11
+select max(t1.cinteger), SUM('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	SUM('2011-04-08')
+7483647	22121
+select max(t1.cinteger), AVG('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	AVG('2011-04-08')
+7483647	2011
+select max(t1.cinteger), MIN('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	MIN('2011-04-08')
+7483647	2011-04-08
+select max(t1.cinteger), MAX('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	MAX('2011-04-08')
+7483647	2011-04-08
+select max(t1.cinteger), COUNT(DISTINCT '2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	COUNT(DISTINCT '2011-04-08')
+7483647	1
+select max(t1.cinteger), SUM(DISTINCT '2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	SUM(DISTINCT '2011-04-08')
+7483647	2011
+select max(t1.cinteger), AVG(DISTINCT '2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	AVG(DISTINCT '2011-04-08')
+7483647	2011
+select max(t1.cinteger), STDDEV_POP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	STDDEV_POP('2011-04-08')
+7483647	0
+select max(t1.cinteger), STDDEV_SAMP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	STDDEV_SAMP('2011-04-08')
+7483647	0
+select max(t1.cinteger), VAR_POP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	VAR_POP('2011-04-08')
+7483647	0
+select max(t1.cinteger), VAR_SAMP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	VAR_SAMP('2011-04-08')
+7483647	0
+select max(t1.cinteger), COUNT('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	COUNT('2011-04-08')
+NULL	0
+select max(t1.cinteger), SUM('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	SUM('2011-04-08')
+NULL	NULL
+select max(t1.cinteger), AVG('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	AVG('2011-04-08')
+NULL	NULL
+select max(t1.cinteger), MIN('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	MIN('2011-04-08')
+NULL	NULL
+select max(t1.cinteger), MAX('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	MAX('2011-04-08')
+NULL	NULL
+select max(t1.cinteger), COUNT(DISTINCT '2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	COUNT(DISTINCT '2011-04-08')
+NULL	0
+select max(t1.cinteger), SUM(DISTINCT '2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	SUM(DISTINCT '2011-04-08')
+NULL	NULL
+select max(t1.cinteger), AVG(DISTINCT '2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	AVG(DISTINCT '2011-04-08')
+NULL	NULL
+select max(t1.cinteger), STDDEV_POP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	STDDEV_POP('2011-04-08')
+NULL	NULL
+select max(t1.cinteger), STDDEV_SAMP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	STDDEV_SAMP('2011-04-08')
+NULL	NULL
+select max(t1.cinteger), VAR_POP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	VAR_POP('2011-04-08')
+NULL	NULL
+select max(t1.cinteger), VAR_SAMP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	VAR_SAMP('2011-04-08')
+NULL	NULL
+select max(t1.cinteger), COUNT('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	COUNT('2011-04-08 12:34:56')
+7483647	11
+select max(t1.cinteger), SUM('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	SUM('2011-04-08 12:34:56')
+7483647	22121
+select max(t1.cinteger), AVG('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	AVG('2011-04-08 12:34:56')
+7483647	2011
+select max(t1.cinteger), MIN('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	MIN('2011-04-08 12:34:56')
+7483647	2011-04-08 12:34:56
+select max(t1.cinteger), MAX('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	MAX('2011-04-08 12:34:56')
+7483647	2011-04-08 12:34:56
+select max(t1.cinteger), COUNT(DISTINCT '2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	COUNT(DISTINCT '2011-04-08 12:34:56')
+7483647	1
+select max(t1.cinteger), SUM(DISTINCT '2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	SUM(DISTINCT '2011-04-08 12:34:56')
+7483647	2011
+select max(t1.cinteger), AVG(DISTINCT '2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	AVG(DISTINCT '2011-04-08 12:34:56')
+7483647	2011
+select max(t1.cinteger), STDDEV_POP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	STDDEV_POP('2011-04-08 12:34:56')
+7483647	0
+select max(t1.cinteger), STDDEV_SAMP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	STDDEV_SAMP('2011-04-08 12:34:56')
+7483647	0
+select max(t1.cinteger), VAR_POP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	VAR_POP('2011-04-08 12:34:56')
+7483647	0
+select max(t1.cinteger), VAR_SAMP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	VAR_SAMP('2011-04-08 12:34:56')
+7483647	0
+select max(t1.cinteger), COUNT('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	COUNT('2011-04-08 12:34:56')
+NULL	0
+select max(t1.cinteger), SUM('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	SUM('2011-04-08 12:34:56')
+NULL	NULL
+select max(t1.cinteger), AVG('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	AVG('2011-04-08 12:34:56')
+NULL	NULL
+select max(t1.cinteger), MIN('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	MIN('2011-04-08 12:34:56')
+NULL	NULL
+select max(t1.cinteger), MAX('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	MAX('2011-04-08 12:34:56')
+NULL	NULL
+select max(t1.cinteger), COUNT(DISTINCT '2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	COUNT(DISTINCT '2011-04-08 12:34:56')
+NULL	0
+select max(t1.cinteger), SUM(DISTINCT '2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	SUM(DISTINCT '2011-04-08 12:34:56')
+NULL	NULL
+select max(t1.cinteger), AVG(DISTINCT '2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	AVG(DISTINCT '2011-04-08 12:34:56')
+NULL	NULL
+select max(t1.cinteger), STDDEV_POP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	STDDEV_POP('2011-04-08 12:34:56')
+NULL	NULL
+select max(t1.cinteger), STDDEV_SAMP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	STDDEV_SAMP('2011-04-08 12:34:56')
+NULL	NULL
+select max(t1.cinteger), VAR_POP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	VAR_POP('2011-04-08 12:34:56')
+NULL	NULL
+select max(t1.cinteger), VAR_SAMP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	VAR_SAMP('2011-04-08 12:34:56')
+NULL	NULL
+select max(t1.cinteger), COUNT(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	COUNT(null)
+7483647	0
+select max(t1.cinteger), SUM(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	SUM(null)
+7483647	NULL
+select max(t1.cinteger), AVG(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	AVG(null)
+7483647	NULL
+select max(t1.cinteger), MIN(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	MIN(null)
+7483647	NULL
+select max(t1.cinteger), MAX(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	MAX(null)
+7483647	NULL
+select max(t1.cinteger), COUNT(DISTINCT null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	COUNT(DISTINCT null)
+7483647	0
+select max(t1.cinteger), SUM(DISTINCT null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	SUM(DISTINCT null)
+7483647	NULL
+select max(t1.cinteger), AVG(DISTINCT null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	AVG(DISTINCT null)
+7483647	NULL
+select max(t1.cinteger), STDDEV_POP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	STDDEV_POP(null)
+7483647	NULL
+select max(t1.cinteger), STDDEV_SAMP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	STDDEV_SAMP(null)
+7483647	NULL
+select max(t1.cinteger), VAR_POP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	VAR_POP(null)
+7483647	NULL
+select max(t1.cinteger), VAR_SAMP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(t1.cinteger)	VAR_SAMP(null)
+7483647	NULL
+select max(t1.cinteger), COUNT(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	COUNT(null)
+NULL	0
+select max(t1.cinteger), SUM(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	SUM(null)
+NULL	NULL
+select max(t1.cinteger), AVG(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	AVG(null)
+NULL	NULL
+select max(t1.cinteger), MIN(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	MIN(null)
+NULL	NULL
+select max(t1.cinteger), MAX(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	MAX(null)
+NULL	NULL
+select max(t1.cinteger), COUNT(DISTINCT null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	COUNT(DISTINCT null)
+NULL	0
+select max(t1.cinteger), SUM(DISTINCT null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	SUM(DISTINCT null)
+NULL	NULL
+select max(t1.cinteger), AVG(DISTINCT null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	AVG(DISTINCT null)
+NULL	NULL
+select max(t1.cinteger), STDDEV_POP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	STDDEV_POP(null)
+NULL	NULL
+select max(t1.cinteger), STDDEV_SAMP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	STDDEV_SAMP(null)
+NULL	NULL
+select max(t1.cinteger), VAR_POP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	VAR_POP(null)
+NULL	NULL
+select max(t1.cinteger), VAR_SAMP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(t1.cinteger)	VAR_SAMP(null)
+NULL	NULL
+select max(distinct t1.cinteger), COUNT(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	COUNT(2)
+7483647	11
+select max(distinct t1.cinteger), SUM(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	SUM(2)
+7483647	22
+select max(distinct t1.cinteger), AVG(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	AVG(2)
+7483647	2.0000
+select max(distinct t1.cinteger), MIN(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	MIN(2)
+7483647	2
+select max(distinct t1.cinteger), MAX(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	MAX(2)
+7483647	2
+select max(distinct t1.cinteger), COUNT(DISTINCT 2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	COUNT(DISTINCT 2)
+7483647	1
+select max(distinct t1.cinteger), SUM(DISTINCT 2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	SUM(DISTINCT 2)
+7483647	2
+select max(distinct t1.cinteger), AVG(DISTINCT 2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	AVG(DISTINCT 2)
+7483647	2.0000
+select max(distinct t1.cinteger), STDDEV_POP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	STDDEV_POP(2)
+7483647	0.0000
+select max(distinct t1.cinteger), STDDEV_SAMP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	STDDEV_SAMP(2)
+7483647	0.0000
+select max(distinct t1.cinteger), VAR_POP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	VAR_POP(2)
+7483647	0.0000
+select max(distinct t1.cinteger), VAR_SAMP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	VAR_SAMP(2)
+7483647	0.0000
+select max(distinct t1.cinteger), COUNT(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	COUNT(2)
+NULL	0
+select max(distinct t1.cinteger), SUM(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	SUM(2)
+NULL	NULL
+select max(distinct t1.cinteger), AVG(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	AVG(2)
+NULL	NULL
+select max(distinct t1.cinteger), MIN(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	MIN(2)
+NULL	NULL
+select max(distinct t1.cinteger), MAX(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	MAX(2)
+NULL	NULL
+select max(distinct t1.cinteger), COUNT(DISTINCT 2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	COUNT(DISTINCT 2)
+NULL	0
+select max(distinct t1.cinteger), SUM(DISTINCT 2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	SUM(DISTINCT 2)
+NULL	NULL
+select max(distinct t1.cinteger), AVG(DISTINCT 2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	AVG(DISTINCT 2)
+NULL	NULL
+select max(distinct t1.cinteger), STDDEV_POP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	STDDEV_POP(2)
+NULL	NULL
+select max(distinct t1.cinteger), STDDEV_SAMP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	STDDEV_SAMP(2)
+NULL	NULL
+select max(distinct t1.cinteger), VAR_POP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	VAR_POP(2)
+NULL	NULL
+select max(distinct t1.cinteger), VAR_SAMP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	VAR_SAMP(2)
+NULL	NULL
+select max(distinct t1.cinteger), COUNT(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	COUNT(8.9)
+7483647	11
+select max(distinct t1.cinteger), SUM(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	SUM(8.9)
+7483647	97.9
+select max(distinct t1.cinteger), AVG(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	AVG(8.9)
+7483647	8.90000
+select max(distinct t1.cinteger), MIN(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	MIN(8.9)
+7483647	8.9
+select max(distinct t1.cinteger), MAX(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	MAX(8.9)
+7483647	8.9
+select max(distinct t1.cinteger), COUNT(DISTINCT 8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	COUNT(DISTINCT 8.9)
+7483647	1
+select max(distinct t1.cinteger), SUM(DISTINCT 8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	SUM(DISTINCT 8.9)
+7483647	8.9
+select max(distinct t1.cinteger), AVG(DISTINCT 8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	AVG(DISTINCT 8.9)
+7483647	8.90000
+select max(distinct t1.cinteger), STDDEV_POP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	STDDEV_POP(8.9)
+7483647	0.00000
+select max(distinct t1.cinteger), STDDEV_SAMP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	STDDEV_SAMP(8.9)
+7483647	0.00000
+select max(distinct t1.cinteger), VAR_POP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	VAR_POP(8.9)
+7483647	0.00000
+select max(distinct t1.cinteger), VAR_SAMP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	VAR_SAMP(8.9)
+7483647	0.00000
+select max(distinct t1.cinteger), COUNT(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	COUNT(8.9)
+NULL	0
+select max(distinct t1.cinteger), SUM(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	SUM(8.9)
+NULL	NULL
+select max(distinct t1.cinteger), AVG(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	AVG(8.9)
+NULL	NULL
+select max(distinct t1.cinteger), MIN(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	MIN(8.9)
+NULL	NULL
+select max(distinct t1.cinteger), MAX(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	MAX(8.9)
+NULL	NULL
+select max(distinct t1.cinteger), COUNT(DISTINCT 8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	COUNT(DISTINCT 8.9)
+NULL	0
+select max(distinct t1.cinteger), SUM(DISTINCT 8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	SUM(DISTINCT 8.9)
+NULL	NULL
+select max(distinct t1.cinteger), AVG(DISTINCT 8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	AVG(DISTINCT 8.9)
+NULL	NULL
+select max(distinct t1.cinteger), STDDEV_POP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	STDDEV_POP(8.9)
+NULL	NULL
+select max(distinct t1.cinteger), STDDEV_SAMP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	STDDEV_SAMP(8.9)
+NULL	NULL
+select max(distinct t1.cinteger), VAR_POP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	VAR_POP(8.9)
+NULL	NULL
+select max(distinct t1.cinteger), VAR_SAMP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	VAR_SAMP(8.9)
+NULL	NULL
+select max(distinct t1.cinteger), COUNT('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	COUNT('8.9')
+7483647	11
+select max(distinct t1.cinteger), SUM('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	SUM('8.9')
+7483647	97.9
+select max(distinct t1.cinteger), AVG('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	AVG('8.9')
+7483647	8.9
+select max(distinct t1.cinteger), MIN('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	MIN('8.9')
+7483647	8.9
+select max(distinct t1.cinteger), MAX('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	MAX('8.9')
+7483647	8.9
+select max(distinct t1.cinteger), COUNT(DISTINCT '8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	COUNT(DISTINCT '8.9')
+7483647	1
+select max(distinct t1.cinteger), SUM(DISTINCT '8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	SUM(DISTINCT '8.9')
+7483647	8.9
+select max(distinct t1.cinteger), AVG(DISTINCT '8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	AVG(DISTINCT '8.9')
+7483647	8.9
+select max(distinct t1.cinteger), STDDEV_POP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	STDDEV_POP('8.9')
+7483647	0
+select max(distinct t1.cinteger), STDDEV_SAMP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	STDDEV_SAMP('8.9')
+7483647	0
+select max(distinct t1.cinteger), VAR_POP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	VAR_POP('8.9')
+7483647	0
+select max(distinct t1.cinteger), VAR_SAMP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	VAR_SAMP('8.9')
+7483647	0
+select max(distinct t1.cinteger), COUNT('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	COUNT('8.9')
+NULL	0
+select max(distinct t1.cinteger), SUM('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	SUM('8.9')
+NULL	NULL
+select max(distinct t1.cinteger), AVG('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	AVG('8.9')
+NULL	NULL
+select max(distinct t1.cinteger), MIN('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	MIN('8.9')
+NULL	NULL
+select max(distinct t1.cinteger), MAX('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	MAX('8.9')
+NULL	NULL
+select max(distinct t1.cinteger), COUNT(DISTINCT '8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	COUNT(DISTINCT '8.9')
+NULL	0
+select max(distinct t1.cinteger), SUM(DISTINCT '8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	SUM(DISTINCT '8.9')
+NULL	NULL
+select max(distinct t1.cinteger), AVG(DISTINCT '8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	AVG(DISTINCT '8.9')
+NULL	NULL
+select max(distinct t1.cinteger), STDDEV_POP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	STDDEV_POP('8.9')
+NULL	NULL
+select max(distinct t1.cinteger), STDDEV_SAMP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	STDDEV_SAMP('8.9')
+NULL	NULL
+select max(distinct t1.cinteger), VAR_POP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	VAR_POP('8.9')
+NULL	NULL
+select max(distinct t1.cinteger), VAR_SAMP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	VAR_SAMP('8.9')
+NULL	NULL
+select max(distinct t1.cinteger), COUNT('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	COUNT('a')
+7483647	11
+select max(distinct t1.cinteger), SUM('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	SUM('a')
+7483647	0
+select max(distinct t1.cinteger), AVG('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	AVG('a')
+7483647	0
+select max(distinct t1.cinteger), MIN('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	MIN('a')
+7483647	a
+select max(distinct t1.cinteger), MAX('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	MAX('a')
+7483647	a
+select max(distinct t1.cinteger), COUNT(DISTINCT 'a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	COUNT(DISTINCT 'a')
+7483647	1
+select max(distinct t1.cinteger), SUM(DISTINCT 'a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	SUM(DISTINCT 'a')
+7483647	0
+select max(distinct t1.cinteger), AVG(DISTINCT 'a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	AVG(DISTINCT 'a')
+7483647	0
+select max(distinct t1.cinteger), STDDEV_POP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	STDDEV_POP('a')
+7483647	0
+select max(distinct t1.cinteger), STDDEV_SAMP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	STDDEV_SAMP('a')
+7483647	0
+select max(distinct t1.cinteger), VAR_POP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	VAR_POP('a')
+7483647	0
+select max(distinct t1.cinteger), VAR_SAMP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	VAR_SAMP('a')
+7483647	0
+select max(distinct t1.cinteger), COUNT('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	COUNT('a')
+NULL	0
+select max(distinct t1.cinteger), SUM('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	SUM('a')
+NULL	NULL
+select max(distinct t1.cinteger), AVG('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	AVG('a')
+NULL	NULL
+select max(distinct t1.cinteger), MIN('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	MIN('a')
+NULL	NULL
+select max(distinct t1.cinteger), MAX('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	MAX('a')
+NULL	NULL
+select max(distinct t1.cinteger), COUNT(DISTINCT 'a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	COUNT(DISTINCT 'a')
+NULL	0
+select max(distinct t1.cinteger), SUM(DISTINCT 'a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	SUM(DISTINCT 'a')
+NULL	NULL
+select max(distinct t1.cinteger), AVG(DISTINCT 'a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	AVG(DISTINCT 'a')
+NULL	NULL
+select max(distinct t1.cinteger), STDDEV_POP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	STDDEV_POP('a')
+NULL	NULL
+select max(distinct t1.cinteger), STDDEV_SAMP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	STDDEV_SAMP('a')
+NULL	NULL
+select max(distinct t1.cinteger), VAR_POP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	VAR_POP('a')
+NULL	NULL
+select max(distinct t1.cinteger), VAR_SAMP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	VAR_SAMP('a')
+NULL	NULL
+select max(distinct t1.cinteger), COUNT('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	COUNT('2011-04-08')
+7483647	11
+select max(distinct t1.cinteger), SUM('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	SUM('2011-04-08')
+7483647	22121
+select max(distinct t1.cinteger), AVG('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	AVG('2011-04-08')
+7483647	2011
+select max(distinct t1.cinteger), MIN('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	MIN('2011-04-08')
+7483647	2011-04-08
+select max(distinct t1.cinteger), MAX('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	MAX('2011-04-08')
+7483647	2011-04-08
+select max(distinct t1.cinteger), COUNT(DISTINCT '2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	COUNT(DISTINCT '2011-04-08')
+7483647	1
+select max(distinct t1.cinteger), SUM(DISTINCT '2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	SUM(DISTINCT '2011-04-08')
+7483647	2011
+select max(distinct t1.cinteger), AVG(DISTINCT '2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	AVG(DISTINCT '2011-04-08')
+7483647	2011
+select max(distinct t1.cinteger), STDDEV_POP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	STDDEV_POP('2011-04-08')
+7483647	0
+select max(distinct t1.cinteger), STDDEV_SAMP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	STDDEV_SAMP('2011-04-08')
+7483647	0
+select max(distinct t1.cinteger), VAR_POP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	VAR_POP('2011-04-08')
+7483647	0
+select max(distinct t1.cinteger), VAR_SAMP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	VAR_SAMP('2011-04-08')
+7483647	0
+select max(distinct t1.cinteger), COUNT('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	COUNT('2011-04-08')
+NULL	0
+select max(distinct t1.cinteger), SUM('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	SUM('2011-04-08')
+NULL	NULL
+select max(distinct t1.cinteger), AVG('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	AVG('2011-04-08')
+NULL	NULL
+select max(distinct t1.cinteger), MIN('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	MIN('2011-04-08')
+NULL	NULL
+select max(distinct t1.cinteger), MAX('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	MAX('2011-04-08')
+NULL	NULL
+select max(distinct t1.cinteger), COUNT(DISTINCT '2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	COUNT(DISTINCT '2011-04-08')
+NULL	0
+select max(distinct t1.cinteger), SUM(DISTINCT '2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	SUM(DISTINCT '2011-04-08')
+NULL	NULL
+select max(distinct t1.cinteger), AVG(DISTINCT '2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	AVG(DISTINCT '2011-04-08')
+NULL	NULL
+select max(distinct t1.cinteger), STDDEV_POP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	STDDEV_POP('2011-04-08')
+NULL	NULL
+select max(distinct t1.cinteger), STDDEV_SAMP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	STDDEV_SAMP('2011-04-08')
+NULL	NULL
+select max(distinct t1.cinteger), VAR_POP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	VAR_POP('2011-04-08')
+NULL	NULL
+select max(distinct t1.cinteger), VAR_SAMP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	VAR_SAMP('2011-04-08')
+NULL	NULL
+select max(distinct t1.cinteger), COUNT('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	COUNT('2011-04-08 12:34:56')
+7483647	11
+select max(distinct t1.cinteger), SUM('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	SUM('2011-04-08 12:34:56')
+7483647	22121
+select max(distinct t1.cinteger), AVG('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	AVG('2011-04-08 12:34:56')
+7483647	2011
+select max(distinct t1.cinteger), MIN('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	MIN('2011-04-08 12:34:56')
+7483647	2011-04-08 12:34:56
+select max(distinct t1.cinteger), MAX('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	MAX('2011-04-08 12:34:56')
+7483647	2011-04-08 12:34:56
+select max(distinct t1.cinteger), COUNT(DISTINCT '2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	COUNT(DISTINCT '2011-04-08 12:34:56')
+7483647	1
+select max(distinct t1.cinteger), SUM(DISTINCT '2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	SUM(DISTINCT '2011-04-08 12:34:56')
+7483647	2011
+select max(distinct t1.cinteger), AVG(DISTINCT '2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	AVG(DISTINCT '2011-04-08 12:34:56')
+7483647	2011
+select max(distinct t1.cinteger), STDDEV_POP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	STDDEV_POP('2011-04-08 12:34:56')
+7483647	0
+select max(distinct t1.cinteger), STDDEV_SAMP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	STDDEV_SAMP('2011-04-08 12:34:56')
+7483647	0
+select max(distinct t1.cinteger), VAR_POP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	VAR_POP('2011-04-08 12:34:56')
+7483647	0
+select max(distinct t1.cinteger), VAR_SAMP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	VAR_SAMP('2011-04-08 12:34:56')
+7483647	0
+select max(distinct t1.cinteger), COUNT('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	COUNT('2011-04-08 12:34:56')
+NULL	0
+select max(distinct t1.cinteger), SUM('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	SUM('2011-04-08 12:34:56')
+NULL	NULL
+select max(distinct t1.cinteger), AVG('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	AVG('2011-04-08 12:34:56')
+NULL	NULL
+select max(distinct t1.cinteger), MIN('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	MIN('2011-04-08 12:34:56')
+NULL	NULL
+select max(distinct t1.cinteger), MAX('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	MAX('2011-04-08 12:34:56')
+NULL	NULL
+select max(distinct t1.cinteger), COUNT(DISTINCT '2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	COUNT(DISTINCT '2011-04-08 12:34:56')
+NULL	0
+select max(distinct t1.cinteger), SUM(DISTINCT '2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	SUM(DISTINCT '2011-04-08 12:34:56')
+NULL	NULL
+select max(distinct t1.cinteger), AVG(DISTINCT '2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	AVG(DISTINCT '2011-04-08 12:34:56')
+NULL	NULL
+select max(distinct t1.cinteger), STDDEV_POP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	STDDEV_POP('2011-04-08 12:34:56')
+NULL	NULL
+select max(distinct t1.cinteger), STDDEV_SAMP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	STDDEV_SAMP('2011-04-08 12:34:56')
+NULL	NULL
+select max(distinct t1.cinteger), VAR_POP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	VAR_POP('2011-04-08 12:34:56')
+NULL	NULL
+select max(distinct t1.cinteger), VAR_SAMP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	VAR_SAMP('2011-04-08 12:34:56')
+NULL	NULL
+select max(distinct t1.cinteger), COUNT(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	COUNT(null)
+7483647	0
+select max(distinct t1.cinteger), SUM(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	SUM(null)
+7483647	NULL
+select max(distinct t1.cinteger), AVG(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	AVG(null)
+7483647	NULL
+select max(distinct t1.cinteger), MIN(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	MIN(null)
+7483647	NULL
+select max(distinct t1.cinteger), MAX(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	MAX(null)
+7483647	NULL
+select max(distinct t1.cinteger), COUNT(DISTINCT null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	COUNT(DISTINCT null)
+7483647	0
+select max(distinct t1.cinteger), SUM(DISTINCT null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	SUM(DISTINCT null)
+7483647	NULL
+select max(distinct t1.cinteger), AVG(DISTINCT null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	AVG(DISTINCT null)
+7483647	NULL
+select max(distinct t1.cinteger), STDDEV_POP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	STDDEV_POP(null)
+7483647	NULL
+select max(distinct t1.cinteger), STDDEV_SAMP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	STDDEV_SAMP(null)
+7483647	NULL
+select max(distinct t1.cinteger), VAR_POP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	VAR_POP(null)
+7483647	NULL
+select max(distinct t1.cinteger), VAR_SAMP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+max(distinct t1.cinteger)	VAR_SAMP(null)
+7483647	NULL
+select max(distinct t1.cinteger), COUNT(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	COUNT(null)
+NULL	0
+select max(distinct t1.cinteger), SUM(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	SUM(null)
+NULL	NULL
+select max(distinct t1.cinteger), AVG(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	AVG(null)
+NULL	NULL
+select max(distinct t1.cinteger), MIN(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	MIN(null)
+NULL	NULL
+select max(distinct t1.cinteger), MAX(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	MAX(null)
+NULL	NULL
+select max(distinct t1.cinteger), COUNT(DISTINCT null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	COUNT(DISTINCT null)
+NULL	0
+select max(distinct t1.cinteger), SUM(DISTINCT null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	SUM(DISTINCT null)
+NULL	NULL
+select max(distinct t1.cinteger), AVG(DISTINCT null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	AVG(DISTINCT null)
+NULL	NULL
+select max(distinct t1.cinteger), STDDEV_POP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	STDDEV_POP(null)
+NULL	NULL
+select max(distinct t1.cinteger), STDDEV_SAMP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	STDDEV_SAMP(null)
+NULL	NULL
+select max(distinct t1.cinteger), VAR_POP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	VAR_POP(null)
+NULL	NULL
+select max(distinct t1.cinteger), VAR_SAMP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+max(distinct t1.cinteger)	VAR_SAMP(null)
+NULL	NULL
+select count(distinct t1.cinteger), COUNT(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	COUNT(2)
+11	11
+select count(distinct t1.cinteger), SUM(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	SUM(2)
+11	22
+select count(distinct t1.cinteger), AVG(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	AVG(2)
+11	2.0000
+select count(distinct t1.cinteger), MIN(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	MIN(2)
+11	2
+select count(distinct t1.cinteger), MAX(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	MAX(2)
+11	2
+select count(distinct t1.cinteger), COUNT(DISTINCT 2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	COUNT(DISTINCT 2)
+11	1
+select count(distinct t1.cinteger), SUM(DISTINCT 2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	SUM(DISTINCT 2)
+11	2
+select count(distinct t1.cinteger), AVG(DISTINCT 2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	AVG(DISTINCT 2)
+11	2.0000
+select count(distinct t1.cinteger), STDDEV_POP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	STDDEV_POP(2)
+11	0.0000
+select count(distinct t1.cinteger), STDDEV_SAMP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	STDDEV_SAMP(2)
+11	0.0000
+select count(distinct t1.cinteger), VAR_POP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	VAR_POP(2)
+11	0.0000
+select count(distinct t1.cinteger), VAR_SAMP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	VAR_SAMP(2)
+11	0.0000
+select count(distinct t1.cinteger), COUNT(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	COUNT(2)
+0	0
+select count(distinct t1.cinteger), SUM(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	SUM(2)
+0	NULL
+select count(distinct t1.cinteger), AVG(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	AVG(2)
+0	NULL
+select count(distinct t1.cinteger), MIN(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	MIN(2)
+0	NULL
+select count(distinct t1.cinteger), MAX(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	MAX(2)
+0	NULL
+select count(distinct t1.cinteger), COUNT(DISTINCT 2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	COUNT(DISTINCT 2)
+0	0
+select count(distinct t1.cinteger), SUM(DISTINCT 2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	SUM(DISTINCT 2)
+0	NULL
+select count(distinct t1.cinteger), AVG(DISTINCT 2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	AVG(DISTINCT 2)
+0	NULL
+select count(distinct t1.cinteger), STDDEV_POP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	STDDEV_POP(2)
+0	NULL
+select count(distinct t1.cinteger), STDDEV_SAMP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	STDDEV_SAMP(2)
+0	NULL
+select count(distinct t1.cinteger), VAR_POP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	VAR_POP(2)
+0	NULL
+select count(distinct t1.cinteger), VAR_SAMP(2) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	VAR_SAMP(2)
+0	NULL
+select count(distinct t1.cinteger), COUNT(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	COUNT(8.9)
+11	11
+select count(distinct t1.cinteger), SUM(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	SUM(8.9)
+11	97.9
+select count(distinct t1.cinteger), AVG(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	AVG(8.9)
+11	8.90000
+select count(distinct t1.cinteger), MIN(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	MIN(8.9)
+11	8.9
+select count(distinct t1.cinteger), MAX(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	MAX(8.9)
+11	8.9
+select count(distinct t1.cinteger), COUNT(DISTINCT 8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	COUNT(DISTINCT 8.9)
+11	1
+select count(distinct t1.cinteger), SUM(DISTINCT 8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	SUM(DISTINCT 8.9)
+11	8.9
+select count(distinct t1.cinteger), AVG(DISTINCT 8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	AVG(DISTINCT 8.9)
+11	8.90000
+select count(distinct t1.cinteger), STDDEV_POP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	STDDEV_POP(8.9)
+11	0.00000
+select count(distinct t1.cinteger), STDDEV_SAMP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	STDDEV_SAMP(8.9)
+11	0.00000
+select count(distinct t1.cinteger), VAR_POP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	VAR_POP(8.9)
+11	0.00000
+select count(distinct t1.cinteger), VAR_SAMP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	VAR_SAMP(8.9)
+11	0.00000
+select count(distinct t1.cinteger), COUNT(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	COUNT(8.9)
+0	0
+select count(distinct t1.cinteger), SUM(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	SUM(8.9)
+0	NULL
+select count(distinct t1.cinteger), AVG(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	AVG(8.9)
+0	NULL
+select count(distinct t1.cinteger), MIN(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	MIN(8.9)
+0	NULL
+select count(distinct t1.cinteger), MAX(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	MAX(8.9)
+0	NULL
+select count(distinct t1.cinteger), COUNT(DISTINCT 8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	COUNT(DISTINCT 8.9)
+0	0
+select count(distinct t1.cinteger), SUM(DISTINCT 8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	SUM(DISTINCT 8.9)
+0	NULL
+select count(distinct t1.cinteger), AVG(DISTINCT 8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	AVG(DISTINCT 8.9)
+0	NULL
+select count(distinct t1.cinteger), STDDEV_POP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	STDDEV_POP(8.9)
+0	NULL
+select count(distinct t1.cinteger), STDDEV_SAMP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	STDDEV_SAMP(8.9)
+0	NULL
+select count(distinct t1.cinteger), VAR_POP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	VAR_POP(8.9)
+0	NULL
+select count(distinct t1.cinteger), VAR_SAMP(8.9) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	VAR_SAMP(8.9)
+0	NULL
+select count(distinct t1.cinteger), COUNT('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	COUNT('8.9')
+11	11
+select count(distinct t1.cinteger), SUM('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	SUM('8.9')
+11	97.9
+select count(distinct t1.cinteger), AVG('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	AVG('8.9')
+11	8.9
+select count(distinct t1.cinteger), MIN('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	MIN('8.9')
+11	8.9
+select count(distinct t1.cinteger), MAX('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	MAX('8.9')
+11	8.9
+select count(distinct t1.cinteger), COUNT(DISTINCT '8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	COUNT(DISTINCT '8.9')
+11	1
+select count(distinct t1.cinteger), SUM(DISTINCT '8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	SUM(DISTINCT '8.9')
+11	8.9
+select count(distinct t1.cinteger), AVG(DISTINCT '8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	AVG(DISTINCT '8.9')
+11	8.9
+select count(distinct t1.cinteger), STDDEV_POP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	STDDEV_POP('8.9')
+11	0
+select count(distinct t1.cinteger), STDDEV_SAMP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	STDDEV_SAMP('8.9')
+11	0
+select count(distinct t1.cinteger), VAR_POP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	VAR_POP('8.9')
+11	0
+select count(distinct t1.cinteger), VAR_SAMP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	VAR_SAMP('8.9')
+11	0
+select count(distinct t1.cinteger), COUNT('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	COUNT('8.9')
+0	0
+select count(distinct t1.cinteger), SUM('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	SUM('8.9')
+0	NULL
+select count(distinct t1.cinteger), AVG('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	AVG('8.9')
+0	NULL
+select count(distinct t1.cinteger), MIN('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	MIN('8.9')
+0	NULL
+select count(distinct t1.cinteger), MAX('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	MAX('8.9')
+0	NULL
+select count(distinct t1.cinteger), COUNT(DISTINCT '8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	COUNT(DISTINCT '8.9')
+0	0
+select count(distinct t1.cinteger), SUM(DISTINCT '8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	SUM(DISTINCT '8.9')
+0	NULL
+select count(distinct t1.cinteger), AVG(DISTINCT '8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	AVG(DISTINCT '8.9')
+0	NULL
+select count(distinct t1.cinteger), STDDEV_POP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	STDDEV_POP('8.9')
+0	NULL
+select count(distinct t1.cinteger), STDDEV_SAMP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	STDDEV_SAMP('8.9')
+0	NULL
+select count(distinct t1.cinteger), VAR_POP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	VAR_POP('8.9')
+0	NULL
+select count(distinct t1.cinteger), VAR_SAMP('8.9') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	VAR_SAMP('8.9')
+0	NULL
+select count(distinct t1.cinteger), COUNT('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	COUNT('a')
+11	11
+select count(distinct t1.cinteger), SUM('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	SUM('a')
+11	0
+select count(distinct t1.cinteger), AVG('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	AVG('a')
+11	0
+select count(distinct t1.cinteger), MIN('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	MIN('a')
+11	a
+select count(distinct t1.cinteger), MAX('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	MAX('a')
+11	a
+select count(distinct t1.cinteger), COUNT(DISTINCT 'a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	COUNT(DISTINCT 'a')
+11	1
+select count(distinct t1.cinteger), SUM(DISTINCT 'a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	SUM(DISTINCT 'a')
+11	0
+select count(distinct t1.cinteger), AVG(DISTINCT 'a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	AVG(DISTINCT 'a')
+11	0
+select count(distinct t1.cinteger), STDDEV_POP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	STDDEV_POP('a')
+11	0
+select count(distinct t1.cinteger), STDDEV_SAMP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	STDDEV_SAMP('a')
+11	0
+select count(distinct t1.cinteger), VAR_POP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	VAR_POP('a')
+11	0
+select count(distinct t1.cinteger), VAR_SAMP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	VAR_SAMP('a')
+11	0
+select count(distinct t1.cinteger), COUNT('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	COUNT('a')
+0	0
+select count(distinct t1.cinteger), SUM('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	SUM('a')
+0	NULL
+select count(distinct t1.cinteger), AVG('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	AVG('a')
+0	NULL
+select count(distinct t1.cinteger), MIN('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	MIN('a')
+0	NULL
+select count(distinct t1.cinteger), MAX('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	MAX('a')
+0	NULL
+select count(distinct t1.cinteger), COUNT(DISTINCT 'a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	COUNT(DISTINCT 'a')
+0	0
+select count(distinct t1.cinteger), SUM(DISTINCT 'a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	SUM(DISTINCT 'a')
+0	NULL
+select count(distinct t1.cinteger), AVG(DISTINCT 'a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	AVG(DISTINCT 'a')
+0	NULL
+select count(distinct t1.cinteger), STDDEV_POP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	STDDEV_POP('a')
+0	NULL
+select count(distinct t1.cinteger), STDDEV_SAMP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	STDDEV_SAMP('a')
+0	NULL
+select count(distinct t1.cinteger), VAR_POP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	VAR_POP('a')
+0	NULL
+select count(distinct t1.cinteger), VAR_SAMP('a') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	VAR_SAMP('a')
+0	NULL
+select count(distinct t1.cinteger), COUNT('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	COUNT('2011-04-08')
+11	11
+select count(distinct t1.cinteger), SUM('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	SUM('2011-04-08')
+11	22121
+select count(distinct t1.cinteger), AVG('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	AVG('2011-04-08')
+11	2011
+select count(distinct t1.cinteger), MIN('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	MIN('2011-04-08')
+11	2011-04-08
+select count(distinct t1.cinteger), MAX('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	MAX('2011-04-08')
+11	2011-04-08
+select count(distinct t1.cinteger), COUNT(DISTINCT '2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	COUNT(DISTINCT '2011-04-08')
+11	1
+select count(distinct t1.cinteger), SUM(DISTINCT '2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	SUM(DISTINCT '2011-04-08')
+11	2011
+select count(distinct t1.cinteger), AVG(DISTINCT '2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	AVG(DISTINCT '2011-04-08')
+11	2011
+select count(distinct t1.cinteger), STDDEV_POP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	STDDEV_POP('2011-04-08')
+11	0
+select count(distinct t1.cinteger), STDDEV_SAMP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	STDDEV_SAMP('2011-04-08')
+11	0
+select count(distinct t1.cinteger), VAR_POP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	VAR_POP('2011-04-08')
+11	0
+select count(distinct t1.cinteger), VAR_SAMP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	VAR_SAMP('2011-04-08')
+11	0
+select count(distinct t1.cinteger), COUNT('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	COUNT('2011-04-08')
+0	0
+select count(distinct t1.cinteger), SUM('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	SUM('2011-04-08')
+0	NULL
+select count(distinct t1.cinteger), AVG('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	AVG('2011-04-08')
+0	NULL
+select count(distinct t1.cinteger), MIN('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	MIN('2011-04-08')
+0	NULL
+select count(distinct t1.cinteger), MAX('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	MAX('2011-04-08')
+0	NULL
+select count(distinct t1.cinteger), COUNT(DISTINCT '2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	COUNT(DISTINCT '2011-04-08')
+0	0
+select count(distinct t1.cinteger), SUM(DISTINCT '2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	SUM(DISTINCT '2011-04-08')
+0	NULL
+select count(distinct t1.cinteger), AVG(DISTINCT '2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	AVG(DISTINCT '2011-04-08')
+0	NULL
+select count(distinct t1.cinteger), STDDEV_POP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	STDDEV_POP('2011-04-08')
+0	NULL
+select count(distinct t1.cinteger), STDDEV_SAMP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	STDDEV_SAMP('2011-04-08')
+0	NULL
+select count(distinct t1.cinteger), VAR_POP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	VAR_POP('2011-04-08')
+0	NULL
+select count(distinct t1.cinteger), VAR_SAMP('2011-04-08') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	VAR_SAMP('2011-04-08')
+0	NULL
+select count(distinct t1.cinteger), COUNT('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	COUNT('2011-04-08 12:34:56')
+11	11
+select count(distinct t1.cinteger), SUM('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	SUM('2011-04-08 12:34:56')
+11	22121
+select count(distinct t1.cinteger), AVG('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	AVG('2011-04-08 12:34:56')
+11	2011
+select count(distinct t1.cinteger), MIN('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	MIN('2011-04-08 12:34:56')
+11	2011-04-08 12:34:56
+select count(distinct t1.cinteger), MAX('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	MAX('2011-04-08 12:34:56')
+11	2011-04-08 12:34:56
+select count(distinct t1.cinteger), COUNT(DISTINCT '2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	COUNT(DISTINCT '2011-04-08 12:34:56')
+11	1
+select count(distinct t1.cinteger), SUM(DISTINCT '2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	SUM(DISTINCT '2011-04-08 12:34:56')
+11	2011
+select count(distinct t1.cinteger), AVG(DISTINCT '2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	AVG(DISTINCT '2011-04-08 12:34:56')
+11	2011
+select count(distinct t1.cinteger), STDDEV_POP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	STDDEV_POP('2011-04-08 12:34:56')
+11	0
+select count(distinct t1.cinteger), STDDEV_SAMP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	STDDEV_SAMP('2011-04-08 12:34:56')
+11	0
+select count(distinct t1.cinteger), VAR_POP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	VAR_POP('2011-04-08 12:34:56')
+11	0
+select count(distinct t1.cinteger), VAR_SAMP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	VAR_SAMP('2011-04-08 12:34:56')
+11	0
+select count(distinct t1.cinteger), COUNT('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	COUNT('2011-04-08 12:34:56')
+0	0
+select count(distinct t1.cinteger), SUM('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	SUM('2011-04-08 12:34:56')
+0	NULL
+select count(distinct t1.cinteger), AVG('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	AVG('2011-04-08 12:34:56')
+0	NULL
+select count(distinct t1.cinteger), MIN('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	MIN('2011-04-08 12:34:56')
+0	NULL
+select count(distinct t1.cinteger), MAX('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	MAX('2011-04-08 12:34:56')
+0	NULL
+select count(distinct t1.cinteger), COUNT(DISTINCT '2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	COUNT(DISTINCT '2011-04-08 12:34:56')
+0	0
+select count(distinct t1.cinteger), SUM(DISTINCT '2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	SUM(DISTINCT '2011-04-08 12:34:56')
+0	NULL
+select count(distinct t1.cinteger), AVG(DISTINCT '2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	AVG(DISTINCT '2011-04-08 12:34:56')
+0	NULL
+select count(distinct t1.cinteger), STDDEV_POP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	STDDEV_POP('2011-04-08 12:34:56')
+0	NULL
+select count(distinct t1.cinteger), STDDEV_SAMP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	STDDEV_SAMP('2011-04-08 12:34:56')
+0	NULL
+select count(distinct t1.cinteger), VAR_POP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	VAR_POP('2011-04-08 12:34:56')
+0	NULL
+select count(distinct t1.cinteger), VAR_SAMP('2011-04-08 12:34:56') from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	VAR_SAMP('2011-04-08 12:34:56')
+0	NULL
+select count(distinct t1.cinteger), COUNT(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	COUNT(null)
+11	0
+select count(distinct t1.cinteger), SUM(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	SUM(null)
+11	NULL
+select count(distinct t1.cinteger), AVG(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	AVG(null)
+11	NULL
+select count(distinct t1.cinteger), MIN(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	MIN(null)
+11	NULL
+select count(distinct t1.cinteger), MAX(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	MAX(null)
+11	NULL
+select count(distinct t1.cinteger), COUNT(DISTINCT null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	COUNT(DISTINCT null)
+11	0
+select count(distinct t1.cinteger), SUM(DISTINCT null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	SUM(DISTINCT null)
+11	NULL
+select count(distinct t1.cinteger), AVG(DISTINCT null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	AVG(DISTINCT null)
+11	NULL
+select count(distinct t1.cinteger), STDDEV_POP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	STDDEV_POP(null)
+11	NULL
+select count(distinct t1.cinteger), STDDEV_SAMP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	STDDEV_SAMP(null)
+11	NULL
+select count(distinct t1.cinteger), VAR_POP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	VAR_POP(null)
+11	NULL
+select count(distinct t1.cinteger), VAR_SAMP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx > 0;
+count(distinct t1.cinteger)	VAR_SAMP(null)
+11	NULL
+select count(distinct t1.cinteger), COUNT(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	COUNT(null)
+0	0
+select count(distinct t1.cinteger), SUM(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	SUM(null)
+0	NULL
+select count(distinct t1.cinteger), AVG(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	AVG(null)
+0	NULL
+select count(distinct t1.cinteger), MIN(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	MIN(null)
+0	NULL
+select count(distinct t1.cinteger), MAX(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	MAX(null)
+0	NULL
+select count(distinct t1.cinteger), COUNT(DISTINCT null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	COUNT(DISTINCT null)
+0	0
+select count(distinct t1.cinteger), SUM(DISTINCT null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	SUM(DISTINCT null)
+0	NULL
+select count(distinct t1.cinteger), AVG(DISTINCT null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	AVG(DISTINCT null)
+0	NULL
+select count(distinct t1.cinteger), STDDEV_POP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	STDDEV_POP(null)
+0	NULL
+select count(distinct t1.cinteger), STDDEV_SAMP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	STDDEV_SAMP(null)
+0	NULL
+select count(distinct t1.cinteger), VAR_POP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	VAR_POP(null)
+0	NULL
+select count(distinct t1.cinteger), VAR_SAMP(null) from datatypetestm t1, datatypetestm t2 where t1.cidx = t2.cidx and t1.cidx = 0;
+count(distinct t1.cinteger)	VAR_SAMP(null)
+0	NULL

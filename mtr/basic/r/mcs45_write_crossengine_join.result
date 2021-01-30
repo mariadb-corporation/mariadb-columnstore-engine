@@ -1,0 +1,70 @@
+DROP DATABASE IF EXISTS mcs45_db;
+CREATE DATABASE mcs45_db;
+USE mcs45_db;
+CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
+GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+FLUSH PRIVILEGES;
+CREATE TABLE t1 (t1_int INT, t1_char CHAR(5))ENGINE=Innodb;
+CREATE TABLE t2 (t2_int INT, t2_char CHAR(5))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL,''),(1,'aaa'),(2,'bbb'),(3,'ccc'),(4,'ddd'),(5,'eee'),(6,'ffff'),(7,'ggggg');
+INSERT INTO t2 VALUES (NULL,''),(1,'hhhh'),(3,'iii'),(5,'jjj'),(7,'kkkk'),(9,'lll'),(11,'m'),(13,'nnn');
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int AND t1.t1_int = 3;
+t1_int	t1_char	t2_int	t2_char
+3	ccc	3	iii
+UPDATE t2, t1 SET t2.t2_char = 'zzz' WHERE t1.t1_int = t2.t2_int AND t1.t1_int = 3;
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int AND t1.t1_int = 3;
+t1_int	t1_char	t2_int	t2_char
+3	ccc	3	zzz
+UPDATE t1 JOIN t2 on t1.t1_int=t2.t2_int SET t2.t2_char='sssss';
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int;
+t1_int	t1_char	t2_int	t2_char
+1	aaa	1	sssss
+3	ccc	3	sssss
+5	eee	5	sssss
+7	ggggg	7	sssss
+UPDATE t1 JOIN t2 on t1.t1_int=t2.t2_int SET t1.t1_char='s';
+ERROR HY000: Internal error: IDB-2006: 'mcs45_db.t1' does not exist in Columnstore.
+SELECT * FROM t1;
+t1_int	t1_char
+NULL	
+1	aaa
+2	bbb
+3	ccc
+4	ddd
+5	eee
+6	ffff
+7	ggggg
+SELECT * FROM t2;
+t2_int	t2_char
+NULL	NULL
+1	sssss
+3	sssss
+5	sssss
+7	sssss
+9	lll
+11	m
+13	nnn
+DELETE t2 FROM t2 JOIN t1 ON t1.t1_int = t2.t2_int AND t1.t1_int = 7;
+SELECT * FROM t1;
+t1_int	t1_char
+NULL	
+1	aaa
+2	bbb
+3	ccc
+4	ddd
+5	eee
+6	ffff
+7	ggggg
+SELECT * FROM t2;
+t2_int	t2_char
+NULL	NULL
+1	sssss
+3	sssss
+5	sssss
+9	lll
+11	m
+13	nnn
+DELETE t1 FROM t1 JOIN t2 ON t1.t1_int = t2.t2_int AND t1.t1_int = 5;
+ERROR HY000: Internal error: IDB-2006: 'mcs45_db.t1' does not exist in Columnstore.
+DROP USER 'cejuser'@'localhost';
+DROP DATABASE mcs45_db;

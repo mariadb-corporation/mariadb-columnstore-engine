@@ -1,0 +1,20 @@
+USE tpch1;
+set max_length_for_sort_data = 4000;
+select r_regionkey, group_concat(r_name) from region group by 1 order by 1;
+r_regionkey	group_concat(r_name)
+0	AFRICA
+1	AMERICA
+2	ASIA
+3	EUROPE
+4	MIDDLE EAST
+select group_concat(r_name) from region order by 1;
+group_concat(r_name)
+AFRICA,AMERICA,ASIA,EUROPE,MIDDLE EAST
+select r_name, group_concat(r_comment) from region group by 1 order by 1,2 desc;
+r_name	group_concat(r_comment)
+AFRICA	lar deposits. blithely final packages cajole. regular waters are final requests. regular accounts are according to 
+AMERICA	hs use ironic, even requests. s
+ASIA	ges. thinly even pinto beans ca
+EUROPE	ly final courts cajole furiously final excuse
+MIDDLE EAST	uickly special accounts cajole carefully blithely close requests. carefully final asymptotes haggle furiousl
+set max_length_for_sort_data = 1024;

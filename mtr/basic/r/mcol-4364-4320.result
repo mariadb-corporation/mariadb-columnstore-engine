@@ -1,0 +1,709 @@
+DROP DATABASE IF EXISTS test_4364;
+CREATE DATABASE test_4364;
+USE test_4364;
+drop table if exists mcol4364_cs;
+drop table if exists mcol4364;
+CREATE TABLE `mcol4364_cs` (
+`Id` bigint(20) NOT NULL,
+`redacted00` bigint(20) unsigned DEFAULT NULL,
+`redacted01` int(11) NOT NULL,
+`redacted02` int(11) DEFAULT NULL,
+`redacted03` int(11) DEFAULT NULL,
+`redacted04` bigint(20) DEFAULT NULL,
+`redacted05` int(11) NOT NULL,
+`redacted06` bigint(20) NOT NULL,
+`redacted07` bigint(20) NOT NULL,
+`redacted08` int(4) unsigned DEFAULT NULL,
+`redacted09` int(4) unsigned DEFAULT NULL,
+`redacted10` int(4) unsigned DEFAULT NULL,
+`redacted11` int(4) unsigned DEFAULT NULL,
+`redacted12` int(4) unsigned DEFAULT NULL,
+`redacted13` varchar(63) DEFAULT NULL,
+`redacted14` decimal(18,8) NOT NULL,
+`redacted15` decimal(18,8) NOT NULL,
+`redacted16` tinyint(1) NOT NULL,
+`redacted17` int(11) NOT NULL DEFAULT 0,
+`redacted18` decimal(18,8) NOT NULL DEFAULT 0.00000000,
+`redacted19` decimal(18,8) NOT NULL,
+`redacted20` int(11) DEFAULT NULL,
+`redacted21` int(11) DEFAULT NULL,
+`redacted22` varchar(255) DEFAULT NULL,
+`redacted23` decimal(18,8) DEFAULT 0.00000000,
+`redacted24` decimal(18,8) DEFAULT NULL,
+`redacted25` decimal(18,8) DEFAULT NULL,
+`redacted26` decimal(5,2) DEFAULT NULL,
+`redacted27` decimal(5,2) DEFAULT NULL,
+`redacted28` decimal(8,4) DEFAULT NULL,
+`redacted29` decimal(5,2) DEFAULT NULL,
+`redacted30` decimal(8,2) DEFAULT NULL,
+`redacted31` decimal(6,4) DEFAULT NULL,
+`redacted32` int(3) DEFAULT NULL,
+`redacted33` int(11) NOT NULL,
+`redacted34` text DEFAULT NULL,
+`redacted35` timestamp NOT NULL,
+`redacted36` text DEFAULT NULL,
+`redacted37` text DEFAULT NULL
+) engine=columnstore DEFAULT CHARSET=utf8;
+CREATE TABLE `mcol4364` (
+`Id` bigint(20) NOT NULL,
+`redacted00` bigint(20) unsigned DEFAULT NULL,
+`redacted01` int(11) NOT NULL,
+`redacted02` int(11) DEFAULT NULL,
+`redacted03` int(11) DEFAULT NULL,
+`redacted04` bigint(20) DEFAULT NULL,
+`redacted05` int(11) NOT NULL,
+`redacted06` bigint(20) NOT NULL,
+`redacted07` bigint(20) NOT NULL,
+`redacted08` int(4) unsigned DEFAULT NULL,
+`redacted09` int(4) unsigned DEFAULT NULL,
+`redacted10` int(4) unsigned DEFAULT NULL,
+`redacted11` int(4) unsigned DEFAULT NULL,
+`redacted12` int(4) unsigned DEFAULT NULL,
+`redacted13` varchar(63) DEFAULT NULL,
+`redacted14` decimal(18,8) NOT NULL,
+`redacted15` decimal(18,8) NOT NULL,
+`redacted16` tinyint(1) NOT NULL,
+`redacted17` int(11) NOT NULL DEFAULT 0,
+`redacted18` decimal(18,8) NOT NULL DEFAULT 0.00000000,
+`redacted19` decimal(18,8) NOT NULL,
+`redacted20` int(11) DEFAULT NULL,
+`redacted21` int(11) DEFAULT NULL,
+`redacted22` varchar(255) DEFAULT NULL,
+`redacted23` decimal(18,8) DEFAULT 0.00000000,
+`redacted24` decimal(18,8) DEFAULT NULL,
+`redacted25` decimal(18,8) DEFAULT NULL,
+`redacted26` decimal(5,2) DEFAULT NULL,
+`redacted27` decimal(5,2) DEFAULT NULL,
+`redacted28` decimal(8,4) DEFAULT NULL,
+`redacted29` decimal(5,2) DEFAULT NULL,
+`redacted30` decimal(8,2) DEFAULT NULL,
+`redacted31` decimal(6,4) DEFAULT NULL,
+`redacted32` int(3) DEFAULT NULL,
+`redacted33` int(11) NOT NULL,
+`redacted34` text DEFAULT NULL,
+`redacted35` timestamp NOT NULL,
+`redacted36` text DEFAULT NULL,
+`redacted37` text DEFAULT NULL
+) DEFAULT CHARSET=utf8;
+insert into mcol4364 values (3871250004,955385077888386499,131083,249881,171605,3826160523,5003,1577836919000,1577836919000,1,1,2020,0,3,"5141360283FC07BF",40.54220581,-3.45858359,1,0,0.00001526,1154.44339348,NULL,NULL,"value",0.00000000,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,37,"[]","2020-01-01 00:01:59",NULL,"01000000E066454440000000C02DAB0BC0D83B685E6F0100000000000000000000000000E066454440000000C02DAB0BC0604F685E6F0100000000000000000000000000E066454440000000C02DAB0BC0E862685E6F0100000000000000000000000000E066454440000000E02DAB0BC07076685E6F01000000000000000000000000000067454440000000E02DAB0BC0F889685E6F01000000000000000000000000000067454440000000E02DAB0BC0809D685E6F01000000000000000000000000000067454440000000E02DAB0BC008B1685E6F0100000000000000000000");
+SELECT * FROM mcol4364 INTO OUTFILE "/data/mdb-server/mysql-test/var/tmp/mcol4364.txt" FIELDS TERMINATED BY ',' ENCLOSED BY '"';;
+LOAD DATA LOCAL INFILE "/data/mdb-server/mysql-test/var/tmp/mcol4364.txt" INTO TABLE mcol4364_cs FIELDS TERMINATED BY ',' ENCLOSED BY '"';;
+SELECT * FROM mcol4364_cs;
+Id	redacted00	redacted01	redacted02	redacted03	redacted04	redacted05	redacted06	redacted07	redacted08	redacted09	redacted10	redacted11	redacted12	redacted13	redacted14	redacted15	redacted16	redacted17	redacted18	redacted19	redacted20	redacted21	redacted22	redacted23	redacted24	redacted25	redacted26	redacted27	redacted28	redacted29	redacted30	redacted31	redacted32	redacted33	redacted34	redacted35	redacted36	redacted37
+3871250004	955385077888386499	131083	249881	171605	3826160523	5003	1577836919000	1577836919000	1	1	2020	0	3	5141360283FC07BF	40.54220581	-3.45858359	1	0	0.00001526	1154.44339348	NULL	NULL	value	0.00000000	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	37	[]	2020-01-01 00:01:59	NULL	01000000E066454440000000C02DAB0BC0D83B685E6F0100000000000000000000000000E066454440000000C02DAB0BC0604F685E6F0100000000000000000000000000E066454440000000C02DAB0BC0E862685E6F0100000000000000000000000000E066454440000000E02DAB0BC07076685E6F01000000000000000000000000000067454440000000E02DAB0BC0F889685E6F01000000000000000000000000000067454440000000E02DAB0BC0809D685E6F01000000000000000000000000000067454440000000E02DAB0BC008B1685E6F0100000000000000000000
+drop table mcol4364;
+drop table mcol4364_cs;
+drop table if exists mcol4370;
+drop table if exists mcol4370_cs;
+CREATE TABLE `mcol4370_cs` (
+`id` text DEFAULT NULL
+) engine=columnstore DEFAULT CHARSET=utf8;
+CREATE TABLE `mcol4370` (
+`id` text DEFAULT NULL
+) DEFAULT CHARSET=utf8;
+insert into mcol4370 values ("1{"), ("2"), ("3"), ("4");
+SELECT * FROM mcol4370 INTO OUTFILE "/data/mdb-server/mysql-test/var/tmp/mcol4370.txt" FIELDS TERMINATED BY ',' ENCLOSED BY '"';;
+LOAD DATA LOCAL INFILE "/data/mdb-server/mysql-test/var/tmp/mcol4370.txt" INTO TABLE mcol4370_cs FIELDS TERMINATED BY ',' ENCLOSED BY '"';;
+SELECT * FROM mcol4370_cs;
+id
+1{
+2
+3
+4
+drop table if exists cs1;
+drop table if exists cs2;
+drop table if exists i1;
+drop table if exists i2;
+create table cs1 (a varchar(1) NOT NULL, b datetime NOT NULL,
+c varchar(10) NOT NULL, d datetime NOT NULL,
+e varchar(240) NOT NULL, f datetime NOT NULL,
+g varchar(2000) NOT NULL, h datetime NOT NULL
+)engine=columnstore;
+create table cs2 (a varchar(1), b datetime NOT NULL,
+c varchar(10), d datetime NOT NULL,
+e varchar(240), f datetime NOT NULL,
+g varchar(2000), h datetime NOT NULL
+)engine=columnstore;
+create table i1 (a varchar(1) NOT NULL, b datetime NOT NULL,
+c varchar(10) NOT NULL, d datetime NOT NULL,
+e varchar(240) NOT NULL, f datetime NOT NULL,
+g varchar(2000) NOT NULL, h datetime NOT NULL
+);
+create table i2 (a varchar(1), b datetime NOT NULL,
+c varchar(10), d datetime NOT NULL,
+e varchar(240), f datetime NOT NULL,
+g varchar(2000), h datetime NOT NULL
+);
+insert into i1 values ('a', '2020-10-25 01:02:03',
+'bcd', '2020-10-25 01:02:04',
+'cde', '2020-10-25 01:02:05',
+'def', '2020-10-25 01:02:06'
+                      );
+insert into i2(b, d, f, h) values ('2020-10-25 01:02:03',
+'2020-10-25 01:02:04',
+'2020-10-25 01:02:05',
+'2020-10-25 01:02:06'
+                                  );
+insert into cs1 select * from i1;
+insert into cs2 select * from i2;
+select * from cs1;
+a	b	c	d	e	f	g	h
+a	2020-10-25 01:02:03	bcd	2020-10-25 01:02:04	cde	2020-10-25 01:02:05	def	2020-10-25 01:02:06
+select * from cs2;
+a	b	c	d	e	f	g	h
+NULL	2020-10-25 01:02:03	NULL	2020-10-25 01:02:04	NULL	2020-10-25 01:02:05	NULL	2020-10-25 01:02:06
+drop table if exists cs1;
+drop table if exists cs2;
+drop table if exists i1;
+drop table if exists i2;
+create table cs1 (a varchar(1) CHARACTER SET utf8 NOT NULL, b datetime NOT NULL,
+c varchar(10) CHARACTER SET utf8mb4 NOT NULL, d datetime NOT NULL,
+e varchar(240) CHARACTER SET utf8 NOT NULL, f datetime NOT NULL,
+g varchar(2000) CHARACTER SET utf8mb4 NOT NULL, h datetime NOT NULL
+)engine=columnstore;
+create table cs2 (a varchar(1) CHARACTER SET utf8, b datetime NOT NULL,
+c varchar(10) CHARACTER SET utf8mb4, d datetime NOT NULL,
+e varchar(240) CHARACTER SET utf8, f datetime NOT NULL,
+g varchar(2000) CHARACTER SET utf8mb4, h datetime NOT NULL
+)engine=columnstore;
+create table i1 (a varchar(1) CHARACTER SET utf8 NOT NULL, b datetime NOT NULL,
+c varchar(10) CHARACTER SET utf8mb4 NOT NULL, d datetime NOT NULL,
+e varchar(240) CHARACTER SET utf8 NOT NULL, f datetime NOT NULL,
+g varchar(2000) CHARACTER SET utf8mb4 NOT NULL, h datetime NOT NULL
+);
+create table i2 (a varchar(1) CHARACTER SET utf8, b datetime NOT NULL,
+c varchar(10) CHARACTER SET utf8mb4, d datetime NOT NULL,
+e varchar(240) CHARACTER SET utf8, f datetime NOT NULL,
+g varchar(2000) CHARACTER SET utf8mb4, h datetime NOT NULL
+);
+insert into i1 values ('a', '2020-10-25 01:02:03',
+'bcd', '2020-10-25 01:02:04',
+'cde', '2020-10-25 01:02:05',
+'def', '2020-10-25 01:02:06'
+                      );
+insert into i2(b, d, f, h) values ('2020-10-25 01:02:03',
+'2020-10-25 01:02:04',
+'2020-10-25 01:02:05',
+'2020-10-25 01:02:06'
+                                  );
+insert into cs1 select * from i1;
+insert into cs2 select * from i2;
+select * from cs1;
+a	b	c	d	e	f	g	h
+a	2020-10-25 01:02:03	bcd	2020-10-25 01:02:04	cde	2020-10-25 01:02:05	def	2020-10-25 01:02:06
+select * from cs2;
+a	b	c	d	e	f	g	h
+NULL	2020-10-25 01:02:03	NULL	2020-10-25 01:02:04	NULL	2020-10-25 01:02:05	NULL	2020-10-25 01:02:06
+drop table if exists cs1;
+drop table if exists cs2;
+drop table if exists i1;
+drop table if exists i2;
+create table cs1 (a varchar(1) NOT NULL, b datetime NOT NULL,
+c varchar(10) NOT NULL, d datetime NOT NULL,
+e varchar(240) NOT NULL, f datetime NOT NULL,
+g varchar(2000) NOT NULL, h datetime NOT NULL
+)engine=columnstore default character set utf8;
+create table cs2 (a varchar(1), b datetime NOT NULL,
+c varchar(10), d datetime NOT NULL,
+e varchar(240), f datetime NOT NULL,
+g varchar(2000), h datetime NOT NULL
+)engine=columnstore default character set utf8;
+create table i1 (a varchar(1) NOT NULL, b datetime NOT NULL,
+c varchar(10) NOT NULL, d datetime NOT NULL,
+e varchar(240) NOT NULL, f datetime NOT NULL,
+g varchar(2000) NOT NULL, h datetime NOT NULL
+) default character set utf8;
+create table i2 (a varchar(1), b datetime NOT NULL,
+c varchar(10), d datetime NOT NULL,
+e varchar(240), f datetime NOT NULL,
+g varchar(2000), h datetime NOT NULL
+) default character set utf8;
+insert into i1 values ('a', '2020-10-25 01:02:03',
+'bcd', '2020-10-25 01:02:04',
+'cde', '2020-10-25 01:02:05',
+'def', '2020-10-25 01:02:06'
+                      );
+insert into i2(b, d, f, h) values ('2020-10-25 01:02:03',
+'2020-10-25 01:02:04',
+'2020-10-25 01:02:05',
+'2020-10-25 01:02:06'
+                                  );
+insert into cs1 select * from i1;
+insert into cs2 select * from i2;
+select * from cs1;
+a	b	c	d	e	f	g	h
+a	2020-10-25 01:02:03	bcd	2020-10-25 01:02:04	cde	2020-10-25 01:02:05	def	2020-10-25 01:02:06
+select * from cs2;
+a	b	c	d	e	f	g	h
+NULL	2020-10-25 01:02:03	NULL	2020-10-25 01:02:04	NULL	2020-10-25 01:02:05	NULL	2020-10-25 01:02:06
+drop table if exists cs1;
+drop table if exists cs2;
+drop table if exists i1;
+drop table if exists i2;
+create table cs1 (a varchar(1) NOT NULL, b datetime NOT NULL,
+c varchar(10) NOT NULL, d datetime NOT NULL,
+e varchar(240) NOT NULL, f datetime NOT NULL,
+g varchar(2000) NOT NULL, h datetime NOT NULL
+)engine=columnstore default character set utf8mb4;
+create table cs2 (a varchar(1), b datetime NOT NULL,
+c varchar(10), d datetime NOT NULL,
+e varchar(240), f datetime NOT NULL,
+g varchar(2000), h datetime NOT NULL
+)engine=columnstore default character set utf8mb4;
+create table i1 (a varchar(1) NOT NULL, b datetime NOT NULL,
+c varchar(10) NOT NULL, d datetime NOT NULL,
+e varchar(240) NOT NULL, f datetime NOT NULL,
+g varchar(2000) NOT NULL, h datetime NOT NULL
+) default character set utf8mb4;
+create table i2 (a varchar(1), b datetime NOT NULL,
+c varchar(10), d datetime NOT NULL,
+e varchar(240), f datetime NOT NULL,
+g varchar(2000), h datetime NOT NULL
+) default character set utf8mb4;
+insert into i1 values ('a', '2020-10-25 01:02:03',
+'bcd', '2020-10-25 01:02:04',
+'cde', '2020-10-25 01:02:05',
+'def', '2020-10-25 01:02:06'
+                      );
+insert into i2(b, d, f, h) values ('2020-10-25 01:02:03',
+'2020-10-25 01:02:04',
+'2020-10-25 01:02:05',
+'2020-10-25 01:02:06'
+                                  );
+insert into cs1 select * from i1;
+insert into cs2 select * from i2;
+select * from cs1;
+a	b	c	d	e	f	g	h
+a	2020-10-25 01:02:03	bcd	2020-10-25 01:02:04	cde	2020-10-25 01:02:05	def	2020-10-25 01:02:06
+select * from cs2;
+a	b	c	d	e	f	g	h
+NULL	2020-10-25 01:02:03	NULL	2020-10-25 01:02:04	NULL	2020-10-25 01:02:05	NULL	2020-10-25 01:02:06
+drop table if exists cs1;
+drop table if exists cs2;
+drop table if exists i1;
+drop table if exists i2;
+create table cs1 (a char(1) NOT NULL, b datetime NOT NULL,
+c char(10) NOT NULL, d datetime NOT NULL,
+e char(240) NOT NULL, f datetime NOT NULL,
+g char(255) NOT NULL, h datetime NOT NULL
+)engine=columnstore;
+create table cs2 (a char(1), b datetime NOT NULL,
+c char(10), d datetime NOT NULL,
+e char(240), f datetime NOT NULL,
+g char(255), h datetime NOT NULL
+)engine=columnstore;
+create table i1 (a char(1) NOT NULL, b datetime NOT NULL,
+c char(10) NOT NULL, d datetime NOT NULL,
+e char(240) NOT NULL, f datetime NOT NULL,
+g char(255) NOT NULL, h datetime NOT NULL
+);
+create table i2 (a char(1), b datetime NOT NULL,
+c char(10), d datetime NOT NULL,
+e char(240), f datetime NOT NULL,
+g char(255), h datetime NOT NULL
+);
+insert into i1 values ('a', '2020-10-25 01:02:03',
+'bcd', '2020-10-25 01:02:04',
+'cde', '2020-10-25 01:02:05',
+'def', '2020-10-25 01:02:06'
+                      );
+insert into i2(b, d, f, h) values ('2020-10-25 01:02:03',
+'2020-10-25 01:02:04',
+'2020-10-25 01:02:05',
+'2020-10-25 01:02:06'
+                                  );
+insert into cs1 select * from i1;
+insert into cs2 select * from i2;
+select * from cs1;
+a	b	c	d	e	f	g	h
+a	2020-10-25 01:02:03	bcd	2020-10-25 01:02:04	cde	2020-10-25 01:02:05	def	2020-10-25 01:02:06
+select * from cs2;
+a	b	c	d	e	f	g	h
+NULL	2020-10-25 01:02:03	NULL	2020-10-25 01:02:04	NULL	2020-10-25 01:02:05	NULL	2020-10-25 01:02:06
+drop table if exists cs1;
+drop table if exists cs2;
+drop table if exists i1;
+drop table if exists i2;
+create table cs1 (a char(1) CHARACTER SET utf8 NOT NULL, b datetime NOT NULL,
+c char(10) CHARACTER SET utf8mb4 NOT NULL, d datetime NOT NULL,
+e char(240) CHARACTER SET utf8 NOT NULL, f datetime NOT NULL,
+g char(255) CHARACTER SET utf8mb4 NOT NULL, h datetime NOT NULL
+)engine=columnstore;
+create table cs2 (a char(1) CHARACTER SET utf8, b datetime NOT NULL,
+c char(10) CHARACTER SET utf8mb4, d datetime NOT NULL,
+e char(240) CHARACTER SET utf8, f datetime NOT NULL,
+g char(255) CHARACTER SET utf8mb4, h datetime NOT NULL
+)engine=columnstore;
+create table i1 (a char(1) CHARACTER SET utf8 NOT NULL, b datetime NOT NULL,
+c char(10) CHARACTER SET utf8mb4 NOT NULL, d datetime NOT NULL,
+e char(240) CHARACTER SET utf8 NOT NULL, f datetime NOT NULL,
+g char(255) CHARACTER SET utf8mb4 NOT NULL, h datetime NOT NULL
+);
+create table i2 (a char(1) CHARACTER SET utf8, b datetime NOT NULL,
+c char(10) CHARACTER SET utf8mb4, d datetime NOT NULL,
+e char(240) CHARACTER SET utf8, f datetime NOT NULL,
+g char(255) CHARACTER SET utf8mb4, h datetime NOT NULL
+);
+insert into i1 values ('a', '2020-10-25 01:02:03',
+'bcd', '2020-10-25 01:02:04',
+'cde', '2020-10-25 01:02:05',
+'def', '2020-10-25 01:02:06'
+                      );
+insert into i2(b, d, f, h) values ('2020-10-25 01:02:03',
+'2020-10-25 01:02:04',
+'2020-10-25 01:02:05',
+'2020-10-25 01:02:06'
+                                  );
+insert into cs1 select * from i1;
+insert into cs2 select * from i2;
+select * from cs1;
+a	b	c	d	e	f	g	h
+a	2020-10-25 01:02:03	bcd	2020-10-25 01:02:04	cde	2020-10-25 01:02:05	def	2020-10-25 01:02:06
+select * from cs2;
+a	b	c	d	e	f	g	h
+NULL	2020-10-25 01:02:03	NULL	2020-10-25 01:02:04	NULL	2020-10-25 01:02:05	NULL	2020-10-25 01:02:06
+drop table if exists cs1;
+drop table if exists cs2;
+drop table if exists i1;
+drop table if exists i2;
+create table cs1 (a char(1) NOT NULL, b datetime NOT NULL,
+c char(10) NOT NULL, d datetime NOT NULL,
+e char(240) NOT NULL, f datetime NOT NULL,
+g char(255) NOT NULL, h datetime NOT NULL
+)engine=columnstore default character set utf8;
+create table cs2 (a char(1), b datetime NOT NULL,
+c char(10), d datetime NOT NULL,
+e char(240), f datetime NOT NULL,
+g char(255), h datetime NOT NULL
+)engine=columnstore default character set utf8;
+create table i1 (a char(1) NOT NULL, b datetime NOT NULL,
+c char(10) NOT NULL, d datetime NOT NULL,
+e char(240) NOT NULL, f datetime NOT NULL,
+g char(255) NOT NULL, h datetime NOT NULL
+) default character set utf8;
+create table i2 (a char(1), b datetime NOT NULL,
+c char(10), d datetime NOT NULL,
+e char(240), f datetime NOT NULL,
+g char(255), h datetime NOT NULL
+) default character set utf8;
+insert into i1 values ('a', '2020-10-25 01:02:03',
+'bcd', '2020-10-25 01:02:04',
+'cde', '2020-10-25 01:02:05',
+'def', '2020-10-25 01:02:06'
+                      );
+insert into i2(b, d, f, h) values ('2020-10-25 01:02:03',
+'2020-10-25 01:02:04',
+'2020-10-25 01:02:05',
+'2020-10-25 01:02:06'
+                                  );
+insert into cs1 select * from i1;
+insert into cs2 select * from i2;
+select * from cs1;
+a	b	c	d	e	f	g	h
+a	2020-10-25 01:02:03	bcd	2020-10-25 01:02:04	cde	2020-10-25 01:02:05	def	2020-10-25 01:02:06
+select * from cs2;
+a	b	c	d	e	f	g	h
+NULL	2020-10-25 01:02:03	NULL	2020-10-25 01:02:04	NULL	2020-10-25 01:02:05	NULL	2020-10-25 01:02:06
+drop table if exists cs1;
+drop table if exists cs2;
+drop table if exists i1;
+drop table if exists i2;
+create table cs1 (a char(1) NOT NULL, b datetime NOT NULL,
+c char(10) NOT NULL, d datetime NOT NULL,
+e char(240) NOT NULL, f datetime NOT NULL,
+g char(255) NOT NULL, h datetime NOT NULL
+)engine=columnstore default character set utf8mb4;
+create table cs2 (a char(1), b datetime NOT NULL,
+c char(10), d datetime NOT NULL,
+e char(240), f datetime NOT NULL,
+g char(255), h datetime NOT NULL
+)engine=columnstore default character set utf8mb4;
+create table i1 (a char(1) NOT NULL, b datetime NOT NULL,
+c char(10) NOT NULL, d datetime NOT NULL,
+e char(240) NOT NULL, f datetime NOT NULL,
+g char(255) NOT NULL, h datetime NOT NULL
+) default character set utf8mb4;
+create table i2 (a char(1), b datetime NOT NULL,
+c char(10), d datetime NOT NULL,
+e char(240), f datetime NOT NULL,
+g char(255), h datetime NOT NULL
+) default character set utf8mb4;
+insert into i1 values ('a', '2020-10-25 01:02:03',
+'bcd', '2020-10-25 01:02:04',
+'cde', '2020-10-25 01:02:05',
+'def', '2020-10-25 01:02:06'
+                      );
+insert into i2(b, d, f, h) values ('2020-10-25 01:02:03',
+'2020-10-25 01:02:04',
+'2020-10-25 01:02:05',
+'2020-10-25 01:02:06'
+                                  );
+insert into cs1 select * from i1;
+insert into cs2 select * from i2;
+select * from cs1;
+a	b	c	d	e	f	g	h
+a	2020-10-25 01:02:03	bcd	2020-10-25 01:02:04	cde	2020-10-25 01:02:05	def	2020-10-25 01:02:06
+select * from cs2;
+a	b	c	d	e	f	g	h
+NULL	2020-10-25 01:02:03	NULL	2020-10-25 01:02:04	NULL	2020-10-25 01:02:05	NULL	2020-10-25 01:02:06
+drop table if exists cs1;
+drop table if exists cs2;
+drop table if exists i1;
+drop table if exists i2;
+create table cs1 (a text(8) NOT NULL, b datetime NOT NULL,
+c text(10) NOT NULL, d datetime NOT NULL,
+e text(255) NOT NULL, f datetime NOT NULL,
+g text NOT NULL, h datetime NOT NULL,
+i text(65535) NOT NULL, j datetime NOT NULL,
+k text(16777215) NOT NULL, l datetime NOT NULL
+)engine=columnstore;
+create table cs2 (a text(8), b datetime NOT NULL,
+c text(10), d datetime NOT NULL,
+e text(255), f datetime NOT NULL,
+g text, h datetime NOT NULL,
+i text(65535), j datetime NOT NULL,
+k text(16777215), l datetime NOT NULL
+)engine=columnstore;
+create table i1  (a text(8) NOT NULL, b datetime NOT NULL,
+c text(10) NOT NULL, d datetime NOT NULL,
+e text(255) NOT NULL, f datetime NOT NULL,
+g text NOT NULL, h datetime NOT NULL,
+i text(65535) NOT NULL, j datetime NOT NULL,
+k text(16777215) NOT NULL, l datetime NOT NULL
+);
+create table i2  (a text(8), b datetime NOT NULL,
+c text(10), d datetime NOT NULL,
+e text(255), f datetime NOT NULL,
+g text, h datetime NOT NULL,
+i text(65535), j datetime NOT NULL,
+k text(16777215), l datetime NOT NULL
+);
+insert into i1 values ('a', '2020-10-25 01:02:03',
+'bcd', '2020-10-25 01:02:04',
+'cde', '2020-10-25 01:02:05',
+'def', '2020-10-25 01:02:06',
+'efg', '2020-10-25 01:02:07',
+'fgh', '2020-10-25 01:02:08'
+                      );
+insert into i2(b, d, f, h, j, l) values ('2020-10-25 01:02:03',
+'2020-10-25 01:02:04',
+'2020-10-25 01:02:05',
+'2020-10-25 01:02:06',
+'2020-10-25 01:02:07',
+'2020-10-25 01:02:08'
+                                        );
+insert into cs1 select * from i1;
+insert into cs2 select * from i2;
+select * from cs1;
+a	b	c	d	e	f	g	h	i	j	k	l
+a	2020-10-25 01:02:03	bcd	2020-10-25 01:02:04	cde	2020-10-25 01:02:05	def	2020-10-25 01:02:06	efg	2020-10-25 01:02:07	fgh	2020-10-25 01:02:08
+select * from cs2;
+a	b	c	d	e	f	g	h	i	j	k	l
+NULL	2020-10-25 01:02:03	NULL	2020-10-25 01:02:04	NULL	2020-10-25 01:02:05	NULL	2020-10-25 01:02:06	NULL	2020-10-25 01:02:07	NULL	2020-10-25 01:02:08
+drop table if exists cs1;
+drop table if exists cs2;
+drop table if exists i1;
+drop table if exists i2;
+create table cs1 (a text(8) CHARACTER SET utf8 NOT NULL, b datetime NOT NULL,
+c text(10) CHARACTER SET utf8mb4 NOT NULL, d datetime NOT NULL,
+e text(255) CHARACTER SET utf8 NOT NULL, f datetime NOT NULL,
+g text CHARACTER SET utf8mb4 NOT NULL, h datetime NOT NULL,
+i text(65535) CHARACTER SET utf8 NOT NULL, j datetime NOT NULL,
+k text(16777215) CHARACTER SET utf8mb4 NOT NULL, l datetime NOT NULL
+)engine=columnstore;
+create table cs2 (a text(8) CHARACTER SET utf8, b datetime NOT NULL,
+c text(10) CHARACTER SET utf8mb4, d datetime NOT NULL,
+e text(255) CHARACTER SET utf8, f datetime NOT NULL,
+g text CHARACTER SET utf8mb4, h datetime NOT NULL,
+i text(65535) CHARACTER SET utf8, j datetime NOT NULL,
+k text(16777215) CHARACTER SET utf8mb4, l datetime NOT NULL
+)engine=columnstore;
+create table i1  (a text(8) CHARACTER SET utf8 NOT NULL, b datetime NOT NULL,
+c text(10) CHARACTER SET utf8mb4 NOT NULL, d datetime NOT NULL,
+e text(255) CHARACTER SET utf8 NOT NULL, f datetime NOT NULL,
+g text CHARACTER SET utf8mb4 NOT NULL, h datetime NOT NULL,
+i text(65535) CHARACTER SET utf8 NOT NULL, j datetime NOT NULL,
+k text(16777215) CHARACTER SET utf8mb4 NOT NULL, l datetime NOT NULL
+);
+create table i2  (a text(8) CHARACTER SET utf8, b datetime NOT NULL,
+c text(10) CHARACTER SET utf8mb4, d datetime NOT NULL,
+e text(255) CHARACTER SET utf8, f datetime NOT NULL,
+g text CHARACTER SET utf8mb4, h datetime NOT NULL,
+i text(65535) CHARACTER SET utf8, j datetime NOT NULL,
+k text(16777215) CHARACTER SET utf8mb4, l datetime NOT NULL
+);
+insert into i1 values ('ab', '2020-10-25 01:02:03',
+'bcd', '2020-10-25 01:02:04',
+'cde', '2020-10-25 01:02:05',
+'def', '2020-10-25 01:02:06',
+'efg', '2020-10-25 01:02:07',
+'fgh', '2020-10-25 01:02:08'
+                      );
+insert into i2(b, d, f, h, j, l) values ('2020-10-25 01:02:03',
+'2020-10-25 01:02:04',
+'2020-10-25 01:02:05',
+'2020-10-25 01:02:06',
+'2020-10-25 01:02:07',
+'2020-10-25 01:02:08'
+                                        );
+insert into cs1 select * from i1;
+insert into cs2 select * from i2;
+select * from cs1;
+a	b	c	d	e	f	g	h	i	j	k	l
+ab	2020-10-25 01:02:03	bcd	2020-10-25 01:02:04	cde	2020-10-25 01:02:05	def	2020-10-25 01:02:06	efg	2020-10-25 01:02:07	fgh	2020-10-25 01:02:08
+select * from cs2;
+a	b	c	d	e	f	g	h	i	j	k	l
+NULL	2020-10-25 01:02:03	NULL	2020-10-25 01:02:04	NULL	2020-10-25 01:02:05	NULL	2020-10-25 01:02:06	NULL	2020-10-25 01:02:07	NULL	2020-10-25 01:02:08
+drop table if exists cs1;
+drop table if exists cs2;
+drop table if exists i1;
+drop table if exists i2;
+create table cs1 (a text(8) NOT NULL, b datetime NOT NULL,
+c text(10) NOT NULL, d datetime NOT NULL,
+e text(255) NOT NULL, f datetime NOT NULL,
+g text NOT NULL, h datetime NOT NULL,
+i text(65535) NOT NULL, j datetime NOT NULL,
+k text(16777215) NOT NULL, l datetime NOT NULL
+)engine=columnstore default character set utf8;
+create table cs2 (a text(8), b datetime NOT NULL,
+c text(10), d datetime NOT NULL,
+e text(255), f datetime NOT NULL,
+g text, h datetime NOT NULL,
+i text(65535), j datetime NOT NULL,
+k text(16777215), l datetime NOT NULL
+)engine=columnstore default character set utf8;
+create table i1  (a text(8) NOT NULL, b datetime NOT NULL,
+c text(10) NOT NULL, d datetime NOT NULL,
+e text(255) NOT NULL, f datetime NOT NULL,
+g text NOT NULL, h datetime NOT NULL,
+i text(65535) NOT NULL, j datetime NOT NULL,
+k text(16777215) NOT NULL, l datetime NOT NULL
+) default character set utf8;
+create table i2  (a text(8), b datetime NOT NULL,
+c text(10), d datetime NOT NULL,
+e text(255), f datetime NOT NULL,
+g text, h datetime NOT NULL,
+i text(65535), j datetime NOT NULL,
+k text(16777215), l datetime NOT NULL
+) default character set utf8;
+insert into i1 values ('ab', '2020-10-25 01:02:03',
+'bcd', '2020-10-25 01:02:04',
+'cde', '2020-10-25 01:02:05',
+'def', '2020-10-25 01:02:06',
+'efg', '2020-10-25 01:02:07',
+'fgh', '2020-10-25 01:02:08'
+                      );
+insert into i2(b, d, f, h, j, l) values ('2020-10-25 01:02:03',
+'2020-10-25 01:02:04',
+'2020-10-25 01:02:05',
+'2020-10-25 01:02:06',
+'2020-10-25 01:02:07',
+'2020-10-25 01:02:08'
+                                        );
+insert into cs1 select * from i1;
+insert into cs2 select * from i2;
+select * from cs1;
+a	b	c	d	e	f	g	h	i	j	k	l
+ab	2020-10-25 01:02:03	bcd	2020-10-25 01:02:04	cde	2020-10-25 01:02:05	def	2020-10-25 01:02:06	efg	2020-10-25 01:02:07	fgh	2020-10-25 01:02:08
+select * from cs2;
+a	b	c	d	e	f	g	h	i	j	k	l
+NULL	2020-10-25 01:02:03	NULL	2020-10-25 01:02:04	NULL	2020-10-25 01:02:05	NULL	2020-10-25 01:02:06	NULL	2020-10-25 01:02:07	NULL	2020-10-25 01:02:08
+drop table if exists cs1;
+drop table if exists cs2;
+drop table if exists i1;
+drop table if exists i2;
+create table cs1 (a text(8) NOT NULL, b datetime NOT NULL,
+c text(10) NOT NULL, d datetime NOT NULL,
+e text(255) NOT NULL, f datetime NOT NULL,
+g text NOT NULL, h datetime NOT NULL,
+i text(65535) NOT NULL, j datetime NOT NULL,
+k text(16777215) NOT NULL, l datetime NOT NULL
+)engine=columnstore default character set utf8mb4;
+create table cs2 (a text(8), b datetime NOT NULL,
+c text(10), d datetime NOT NULL,
+e text(255), f datetime NOT NULL,
+g text, h datetime NOT NULL,
+i text(65535), j datetime NOT NULL,
+k text(16777215), l datetime NOT NULL
+)engine=columnstore default character set utf8mb4;
+create table i1  (a text(8) NOT NULL, b datetime NOT NULL,
+c text(10) NOT NULL, d datetime NOT NULL,
+e text(255) NOT NULL, f datetime NOT NULL,
+g text NOT NULL, h datetime NOT NULL,
+i text(65535) NOT NULL, j datetime NOT NULL,
+k text(16777215) NOT NULL, l datetime NOT NULL
+) default character set utf8mb4;
+create table i2  (a text(8), b datetime NOT NULL,
+c text(10), d datetime NOT NULL,
+e text(255), f datetime NOT NULL,
+g text, h datetime NOT NULL,
+i text(65535), j datetime NOT NULL,
+k text(16777215), l datetime NOT NULL
+) default character set utf8mb4;
+insert into i1 values ('ab', '2020-10-25 01:02:03',
+'bcd', '2020-10-25 01:02:04',
+'cde', '2020-10-25 01:02:05',
+'def', '2020-10-25 01:02:06',
+'efg', '2020-10-25 01:02:07',
+'fgh', '2020-10-25 01:02:08'
+                      );
+insert into i2(b, d, f, h, j, l) values ('2020-10-25 01:02:03',
+'2020-10-25 01:02:04',
+'2020-10-25 01:02:05',
+'2020-10-25 01:02:06',
+'2020-10-25 01:02:07',
+'2020-10-25 01:02:08'
+                                        );
+insert into cs1 select * from i1;
+insert into cs2 select * from i2;
+select * from cs1;
+a	b	c	d	e	f	g	h	i	j	k	l
+ab	2020-10-25 01:02:03	bcd	2020-10-25 01:02:04	cde	2020-10-25 01:02:05	def	2020-10-25 01:02:06	efg	2020-10-25 01:02:07	fgh	2020-10-25 01:02:08
+select * from cs2;
+a	b	c	d	e	f	g	h	i	j	k	l
+NULL	2020-10-25 01:02:03	NULL	2020-10-25 01:02:04	NULL	2020-10-25 01:02:05	NULL	2020-10-25 01:02:06	NULL	2020-10-25 01:02:07	NULL	2020-10-25 01:02:08
+drop table cs1;
+drop table cs2;
+drop table i1;
+drop table i2;
+set sql_mode= 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION';
+drop table if exists global_cust_ra_clm_cs;
+drop table if exists global_cust_ra_clm;
+CREATE TABLE `global_cust_ra_clm_cs` (
+`GLOBAL_CUST_KEY` varchar(240) COLLATE utf8mb4_bin NOT NULL,
+`GLOBAL_IDENT_NUM` varchar(200) COLLATE utf8mb4_bin DEFAULT NULL,
+`ASOF_DT` datetime NOT NULL,
+`REL_GRP_KEY` varchar(120) COLLATE utf8mb4_bin DEFAULT NULL,
+`CUST_OWNR_KEY` varchar(80) COLLATE utf8mb4_bin DEFAULT NULL,
+`IDENT_NUM_TYP` varchar(120) COLLATE utf8mb4_bin DEFAULT NULL,
+`CUST_NM` varchar(800) COLLATE utf8mb4_bin DEFAULT NULL,
+`MAS_INDUSTRY_CD` varchar(80) COLLATE utf8mb4_bin DEFAULT NULL,
+`MAS_INDUSTRY_DESC` varchar(320) COLLATE utf8mb4_bin DEFAULT NULL,
+`CNTRY_NM_OF_REGISTRATION` varchar(176) COLLATE utf8mb4_bin DEFAULT NULL,
+`DT_OF_REGISTRATION` datetime DEFAULT NULL,
+`LOCAL_RM_CD` varchar(200) COLLATE utf8mb4_bin DEFAULT NULL,
+`LRM_NM` varchar(400) COLLATE utf8mb4_bin DEFAULT NULL
+) engine=columnstore DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+CREATE TABLE `global_cust_ra_clm` (
+`GLOBAL_CUST_KEY` varchar(60) COLLATE utf8mb4_bin NOT NULL,
+`GLOBAL_IDENT_NUM` varchar(50) COLLATE utf8mb4_bin DEFAULT NULL,
+`ASOF_DT` datetime NOT NULL,
+`REL_GRP_KEY` varchar(30) COLLATE utf8mb4_bin DEFAULT NULL,
+`CUST_OWNR_KEY` varchar(20) COLLATE utf8mb4_bin DEFAULT NULL,
+`IDENT_NUM_TYP` varchar(30) COLLATE utf8mb4_bin DEFAULT NULL,
+`CUST_NM` varchar(200) COLLATE utf8mb4_bin DEFAULT NULL,
+`MAS_INDUSTRY_CD` varchar(20) COLLATE utf8mb4_bin DEFAULT NULL,
+`MAS_INDUSTRY_DESC` varchar(80) COLLATE utf8mb4_bin DEFAULT NULL,
+`CNTRY_NM_OF_REGISTRATION` varchar(44) COLLATE utf8mb4_bin DEFAULT NULL,
+`DT_OF_REGISTRATION` datetime DEFAULT NULL,
+`LOCAL_RM_CD` varchar(50) COLLATE utf8mb4_bin DEFAULT NULL,
+`LRM_NM` varchar(100) COLLATE utf8mb4_bin DEFAULT NULL
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+INSERT INTO global_cust_ra_clm (GLOBAL_CUST_KEY,GLOBAL_IDENT_NUM,ASOF_DT,REL_GRP_KEY,CUST_OWNR_KEY,IDENT_NUM_TYP,CUST_NM,MAS_INDUSTRY_CD,MAS_INDUSTRY_DESC,CNTRY_NM_OF_REGISTRATION,DT_OF_REGISTRATION, LOCAL_RM_CD,LRM_NM) VALUES ('GC000012148420200823','GC0000121484','2020-08-23 00:00:00','DBSIDID30220090131',400120090131,'GCINC CUSTOMER','XXXXXXX XXXXX XXXX XXXX, XX',010101,'AGRICULTURAL & LIVESTOCK PRODUCTION','INDONESIA','1980-03-15 00:00:00','SAMUELYULIADY','SAMUELYULIADY');
+INSERT INTO global_cust_ra_clm_cs SELECT * FROM global_cust_ra_clm;
+SELECT * FROM global_cust_ra_clm_cs;
+GLOBAL_CUST_KEY	GLOBAL_IDENT_NUM	ASOF_DT	REL_GRP_KEY	CUST_OWNR_KEY	IDENT_NUM_TYP	CUST_NM	MAS_INDUSTRY_CD	MAS_INDUSTRY_DESC	CNTRY_NM_OF_REGISTRATION	DT_OF_REGISTRATION	LOCAL_RM_CD	LRM_NM
+GC000012148420200823	GC0000121484	2020-08-23 00:00:00	DBSIDID30220090131	400120090131	GCINC CUSTOMER	XXXXXXX XXXXX XXXX XXXX, XX	10101	AGRICULTURAL & LIVESTOCK PRODUCTION	INDONESIA	1980-03-15 00:00:00	SAMUELYULIADY	SAMUELYULIADY
+drop table global_cust_ra_clm_cs;
+drop table global_cust_ra_clm;
+DROP DATABASE test_4364;

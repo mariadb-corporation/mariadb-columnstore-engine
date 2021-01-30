@@ -1,0 +1,700 @@
+USE tpch1;
+select avg(id), min(id), max(id), (100/1000000) * avg(id) avg2, 0.0001 * min(id) min2, max(id)/10000 max2 from dtypes;
+avg(id)	min(id)	max(id)	avg2	min2	max2
+50.5000	1	100	0.00505000	0.0001	0.0100
+select avg(f), min(f), max(f), (100/1000000) * avg(f) avg2, 0.0001 * min(f) min2, max(f)/10000 max2 from dtypes;
+avg(f)	min(f)	max(f)	avg2	min2	max2
+451548.7858609402	-2233	5860520	45.15487858609402	-0.2233	586.05205
+select avg(db), min(db), max(db), (100/1000000) * avg(db) avg2, 0.0001 * min(db) min2, max(db)/10000 max2 from dtypes;
+avg(db)	min(db)	max(db)	avg2	min2	max2
+451548.78639718535	-2233	5860520.599163	45.15487863971854	-0.2233	586.0520599163
+select avg(ti), min(ti), max(ti), (100/1000000) * avg(ti) avg2, 0.0001 * min(ti) min2, max(ti)/10000 max2 from dtypes;
+avg(ti)	min(ti)	max(ti)	avg2	min2	max2
+38.5500	-126	127	0.00385500	-0.0126	0.0127
+select avg(si), min(si), max(si), (100/1000000) * avg(si) avg2, 0.0001 * min(si) min2, max(si)/10000 max2 from dtypes;
+avg(si)	min(si)	max(si)	avg2	min2	max2
+5168.9200	-2233	32767	0.51689200	-0.2233	3.2767
+select avg(i), min(i), max(i), (100/1000000) * avg(i) avg2, 0.0001 * min(i) min2, max(i)/10000 max2 from dtypes;
+avg(i)	min(i)	max(i)	avg2	min2	max2
+451548.7900	-2233	5860521	45.15487900	-0.2233	586.0521
+select avg(bi), min(bi), max(bi), (100/1000000) * avg(bi) avg2, 0.0001 * min(bi) min2, max(bi)/10000 max2 from dtypes;
+avg(bi)	min(bi)	max(bi)	avg2	min2	max2
+451548.7900	-2233	5860521	45.15487900	-0.2233	586.0521
+select avg(d1), min(d1), max(d1), count(d1), (100/1000000) * avg(d1) avg2, 0.0001 * min(d1) min2, max(d1)/10000 max2 from dtypes;
+avg(d1)	min(d1)	max(d1)	count(d1)	avg2	min2	max2
+3.6900	-9	9	100	0.00036900	-0.0009	0.0009
+select d1 from dtypes;
+d1
+-9
+1
+1
+1
+0
+-1
+0
+-8
+5
+0
+9
+-7
+9
+1
+9
+-6
+9
+1
+9
+2
+0
+9
+3
+9
+8
+9
+4
+-9
+-9
+1
+9
+-9
+9
+1
+1
+9
+-4
+9
+1
+9
+-3
+9
+1
+-3
+9
+1
+-1
+9
+0
+-1
+9
+1
+9
+9
+-9
+1
+9
+1
+2
+9
+0
+9
+2
+9
+0
+3
+9
+0
+9
+5
+9
+0
+9
+5
+9
+0
+9
+7
+9
+0
+9
+7
+9
+1
+9
+9
+9
+1
+9
+9
+9
+1
+9
+9
+9
+0
+9
+9
+-9
+0
+select avg(d2), min(d2), max(d2), (100/1000000) * avg(d2) avg2, 0.0001 * min(d2) min2, max(d2)/10000 max2 from dtypes;
+avg(d2)	min(d2)	max(d2)	avg2	min2	max2
+0.52400	-0.9	0.9	0.000052400	-0.00009	0.00009
+select avg(d3), min(d3), max(d3), count(d3), (100/1000000) * avg(d3) avg2, 0.0001 * min(d3) min2, max(d3)/10000 max2 from dtypes;
+avg(d3)	min(d3)	max(d3)	count(d3)	avg2	min2	max2
+30.9900	-99	99	100	0.00309900	-0.0099	0.0099
+select d3 from dtypes;
+d3
+-9
+1
+1
+1
+0
+-1
+0
+-8
+5
+0
+99
+-7
+9
+1
+99
+-6
+17
+1
+99
+2
+0
+99
+3
+99
+8
+10
+4
+-99
+-44
+1
+45
+-24
+99
+1
+1
+99
+-4
+26
+1
+99
+-3
+36
+1
+-3
+50
+1
+-1
+65
+0
+-1
+81
+1
+99
+44
+-44
+1
+99
+1
+2
+99
+0
+99
+2
+99
+0
+3
+99
+0
+99
+5
+99
+0
+99
+5
+99
+0
+99
+7
+99
+0
+99
+7
+99
+1
+99
+9
+99
+1
+99
+9
+99
+1
+99
+11
+99
+0
+99
+99
+-99
+0
+select avg(d4), min(d4), max(d4), (100/1000000) * avg(d4) avg2, 0.0001 * min(d4) min2, max(d4)/10000 max2 from dtypes;
+avg(d4)	min(d4)	max(d4)	avg2	min2	max2
+4.02700	-9.9	9.9	0.000402700	-0.00099	0.00099
+select avg(d5), min(d5), max(d5), (100/1000000) * avg(d5) avg2, 0.0001 * min(d5) min2, max(d5)/10000 max2 from dtypes;
+avg(d5)	min(d5)	max(d5)	avg2	min2	max2
+0.566400	-0.99	0.99	0.0000566400	-0.000099	0.000099
+select avg(d6), min(d6), max(d6), (100/1000000) * avg(d6) avg2, 0.0001 * min(d6) min2, max(d6)/10000 max2 from dtypes;
+avg(d6)	min(d6)	max(d6)	avg2	min2	max2
+191.8200	-999	999	0.01918200	-0.0999	0.0999
+select avg(d7), min(d7), max(d7), (100/1000000) * avg(d7) avg2, 0.0001 * min(d7) min2, max(d7)/10000 max2 from dtypes;
+avg(d7)	min(d7)	max(d7)	avg2	min2	max2
+31.25100	-99.9	99.9	0.003125100	-0.00999	0.00999
+select avg(d8), min(d8), max(d8), (100/1000000) * avg(d8) avg2, 0.0001 * min(d8) min2, max(d8)/10000 max2 from dtypes;
+avg(d8)	min(d8)	max(d8)	avg2	min2	max2
+4.058100	-9.99	9.99	0.0004058100	-0.000999	0.000999
+select avg(d9), min(d9), max(d9), (100/1000000) * avg(d9) avg2, 0.0001 * min(d9) min2, max(d9)/10000 max2 from dtypes;
+avg(d9)	min(d9)	max(d9)	avg2	min2	max2
+0.5707200	-0.999	0.999	0.00005707200	-0.0000999	0.0000999
+select avg(d10), min(d10), max(d10), (100/1000000) * avg(d10) avg2, 0.0001 * min(d10) min2, max(d10)/10000 max2 from dtypes;
+avg(d10)	min(d10)	max(d10)	avg2	min2	max2
+1619.4800	-2233	9999	0.16194800	-0.2233	0.9999
+select avg(d11), min(d11), max(d11), (100/1000000) * avg(d11) avg2, 0.0001 * min(d11) min2, max(d11)/10000 max2 from dtypes;
+avg(d11)	min(d11)	max(d11)	avg2	min2	max2
+191.95500	-999.9	999.9	0.019195500	-0.09999	0.09999
+select avg(d12), min(d12), max(d12), (100/1000000) * avg(d12) avg2, 0.0001 * min(d12) min2, max(d12)/10000 max2 from dtypes;
+avg(d12)	min(d12)	max(d12)	avg2	min2	max2
+31.276900	-99.99	99.99	0.0031276900	-0.009999	0.009999
+select avg(d13), min(d13), max(d13), (100/1000000) * avg(d13) avg2, 0.0001 * min(d13) min2, max(d13)/10000 max2 from dtypes;
+avg(d13)	min(d13)	max(d13)	avg2	min2	max2
+4.0613100	-9.999	9.999	0.00040613100	-0.0009999	0.0009999
+select avg(d14), min(d14), max(d14), (100/1000000) * avg(d14) avg2, 0.0001 * min(d14) min2, max(d14)/10000 max2 from dtypes;
+avg(d14)	min(d14)	max(d14)	avg2	min2	max2
+0.57113300	-0.9999	0.9999	0.000057113300	-0.00009999	0.00009999
+select avg(d15), min(d15), max(d15), (100/1000000) * avg(d15) avg2, 0.0001 * min(d15) min2, max(d15)/10000 max2 from dtypes;
+avg(d15)	min(d15)	max(d15)	avg2	min2	max2
+15253.7200	-2233	99999	1.52537200	-0.2233	9.9999
+select avg(d16), min(d16), max(d16), (100/1000000) * avg(d16) avg2, 0.0001 * min(d16) min2, max(d16)/10000 max2 from dtypes;
+avg(d16)	min(d16)	max(d16)	avg2	min2	max2
+1619.62400	-2233.0	9999.9	0.161962400	-0.22330	0.99999
+select avg(d17), min(d17), max(d17), (100/1000000) * avg(d17) avg2, 0.0001 * min(d17) min2, max(d17)/10000 max2 from dtypes;
+avg(d17)	min(d17)	max(d17)	avg2	min2	max2
+191.971200	-999.99	999.99	0.0191971200	-0.099999	0.099999
+select avg(d18), min(d18), max(d18), (100/1000000) * avg(d18) avg2, 0.0001 * min(d18) min2, max(d18)/10000 max2 from dtypes;
+avg(d18)	min(d18)	max(d18)	avg2	min2	max2
+31.2796100	-99.999	99.999	0.00312796100	-0.0099999	0.0099999
+select avg(d19), min(d19), max(d19), (100/1000000) * avg(d19) avg2, 0.0001 * min(d19) min2, max(d19)/10000 max2 from dtypes;
+avg(d19)	min(d19)	max(d19)	avg2	min2	max2
+4.06163600	-9.9999	9.9999	0.000406163600	-0.00099999	0.00099999
+select avg(d20), min(d20), max(d20), (100/1000000) * avg(d20) avg2, 0.0001 * min(d20) min2, max(d20)/10000 max2 from dtypes;
+avg(d20)	min(d20)	max(d20)	avg2	min2	max2
+0.571173400	-0.99999	0.99999	0.0000571173400	-0.000099999	0.000099999
+select avg(d21), min(d21), max(d21), (100/1000000) * avg(d21) avg2, 0.0001 * min(d21) min2, max(d21)/10000 max2 from dtypes;
+avg(d21)	min(d21)	max(d21)	avg2	min2	max2
+137701.3800	-2233	999999	13.77013800	-0.2233	99.9999
+select avg(d22), min(d22), max(d22), (100/1000000) * avg(d22) avg2, 0.0001 * min(d22) min2, max(d22)/10000 max2 from dtypes;
+avg(d22)	min(d22)	max(d22)	avg2	min2	max2
+15253.85500	-2233.0	99999.9	1.525385500	-0.22330	9.99999
+select avg(d23), min(d23), max(d23), (100/1000000) * avg(d23) avg2, 0.0001 * min(d23) min2, max(d23)/10000 max2 from dtypes;
+avg(d23)	min(d23)	max(d23)	avg2	min2	max2
+1619.641100	-2233.00	9999.99	0.1619641100	-0.223300	0.999999
+select avg(d24), min(d24), max(d24), (100/1000000) * avg(d24) avg2, 0.0001 * min(d24) min2, max(d24)/10000 max2 from dtypes;
+avg(d24)	min(d24)	max(d24)	avg2	min2	max2
+191.9725700	-999.999	999.999	0.01919725700	-0.0999999	0.0999999
+select avg(d25), min(d25), max(d25), (100/1000000) * avg(d25) avg2, 0.0001 * min(d25) min2, max(d25)/10000 max2 from dtypes;
+avg(d25)	min(d25)	max(d25)	avg2	min2	max2
+31.27987900	-99.9999	99.9999	0.003127987900	-0.00999999	0.00999999
+select avg(d26), min(d26), max(d26), (100/1000000) * avg(d26) avg2, 0.0001 * min(d26) min2, max(d26)/10000 max2 from dtypes;
+avg(d26)	min(d26)	max(d26)	avg2	min2	max2
+4.061665600	-9.99999	9.99999	0.0004061665600	-0.000999999	0.000999999
+select avg(d27), min(d27), max(d27), (100/1000000) * avg(d27) avg2, 0.0001 * min(d27) min2, max(d27)/10000 max2 from dtypes;
+avg(d27)	min(d27)	max(d27)	avg2	min2	max2
+0.5711778200	-0.999999	0.999999	0.00005711778200	-0.0000999999	0.0000999999
+select avg(d28), min(d28), max(d28), (100/1000000) * avg(d28) avg2, 0.0001 * min(d28) min2, max(d28)/10000 max2 from dtypes;
+avg(d28)	min(d28)	max(d28)	avg2	min2	max2
+451548.7900	-2233	5860521	45.15487900	-0.2233	586.0521
+select avg(d29), min(d29), max(d29), (100/1000000) * avg(d29) avg2, 0.0001 * min(d29) min2, max(d29)/10000 max2 from dtypes;
+avg(d29)	min(d29)	max(d29)	avg2	min2	max2
+137701.49900	-2233.0	999999.9	13.770149900	-0.22330	99.99999
+select avg(d30), min(d30), max(d30), (100/1000000) * avg(d30) avg2, 0.0001 * min(d30) min2, max(d30)/10000 max2 from dtypes;
+avg(d30)	min(d30)	max(d30)	avg2	min2	max2
+15253.871200	-2233.00	99999.99	1.5253871200	-0.223300	9.999999
+select avg(d31), min(d31), max(d31), (100/1000000) * avg(d31) avg2, 0.0001 * min(d31) min2, max(d31)/10000 max2 from dtypes;
+avg(d31)	min(d31)	max(d31)	avg2	min2	max2
+1619.6425600	-2233.000	9999.999	0.16196425600	-0.2233000	0.9999999
+select avg(d32), min(d32), max(d32), (100/1000000) * avg(d32) avg2, 0.0001 * min(d32) min2, max(d32)/10000 max2 from dtypes;
+avg(d32)	min(d32)	max(d32)	avg2	min2	max2
+191.97272200	-999.9999	999.9999	0.019197272200	-0.09999999	0.09999999
+select avg(d33), min(d33), max(d33), (100/1000000) * avg(d33) avg2, 0.0001 * min(d33) min2, max(d33)/10000 max2 from dtypes;
+avg(d33)	min(d33)	max(d33)	avg2	min2	max2
+31.279903200	-99.99999	99.99999	0.0031279903200	-0.009999999	0.009999999
+select avg(d34), min(d34), max(d34), (100/1000000) * avg(d34) avg2, 0.0001 * min(d34) min2, max(d34)/10000 max2 from dtypes;
+avg(d34)	min(d34)	max(d34)	avg2	min2	max2
+4.0616690000	-9.999999	9.999999	0.00040616690000	-0.0009999999	0.0009999999
+select avg(d35), min(d35), max(d35), (100/1000000) * avg(d35) avg2, 0.0001 * min(d35) min2, max(d35)/10000 max2 from dtypes;
+avg(d35)	min(d35)	max(d35)	avg2	min2	max2
+0.57117823000	-0.9999999	0.9999999	0.000057117823000	-0.00009999999	0.00009999999
+select avg(d36), min(d36), max(d36), (100/1000000) * avg(d36) avg2, 0.0001 * min(d36) min2, max(d36)/10000 max2 from dtypes;
+avg(d36)	min(d36)	max(d36)	avg2	min2	max2
+451548.7900	-2233	5860521	45.15487900	-0.2233	586.0521
+select avg(d37), min(d37), max(d37), (100/1000000) * avg(d37) avg2, 0.0001 * min(d37) min2, max(d37)/10000 max2 from dtypes;
+avg(d37)	min(d37)	max(d37)	avg2	min2	max2
+451548.78300	-2233.0	5860520.6	45.154878300	-0.22330	586.05206
+select avg(d38), min(d38), max(d38), (100/1000000) * avg(d38) avg2, 0.0001 * min(d38) min2, max(d38)/10000 max2 from dtypes;
+avg(d38)	min(d38)	max(d38)	avg2	min2	max2
+137701.513400	-2233.00	999999.99	13.7701513400	-0.223300	99.999999
+select avg(d39), min(d39), max(d39), (100/1000000) * avg(d39) avg2, 0.0001 * min(d39) min2, max(d39)/10000 max2 from dtypes;
+avg(d39)	min(d39)	max(d39)	avg2	min2	max2
+15253.8725700	-2233.000	99999.999	1.52538725700	-0.2233000	9.9999999
+select avg(d40), min(d40), max(d40), (100/1000000) * avg(d40) avg2, 0.0001 * min(d40) min2, max(d40)/10000 max2 from dtypes;
+avg(d40)	min(d40)	max(d40)	avg2	min2	max2
+1619.64272100	-2233.0000	9999.9999	0.161964272100	-0.22330000	0.99999999
+select avg(d41), min(d41), max(d41), (100/1000000) * avg(d41) avg2, 0.0001 * min(d41) min2, max(d41)/10000 max2 from dtypes;
+avg(d41)	min(d41)	max(d41)	avg2	min2	max2
+191.972734500	-999.99999	999.99999	0.0191972734500	-0.099999999	0.099999999
+select avg(d42), min(d42), max(d42), (100/1000000) * avg(d42) avg2, 0.0001 * min(d42) min2, max(d42)/10000 max2 from dtypes;
+avg(d42)	min(d42)	max(d42)	avg2	min2	max2
+31.2799060600	-99.999999	99.999999	0.00312799060600	-0.0099999999	0.0099999999
+select avg(d43), min(d43), max(d43), (100/1000000) * avg(d43) avg2, 0.0001 * min(d43) min2, max(d43)/10000 max2 from dtypes;
+avg(d43)	min(d43)	max(d43)	avg2	min2	max2
+4.06166930600	-9.9999999	9.9999999	0.000406166930600	-0.00099999999	0.00099999999
+select avg(d44), min(d44), max(d44), (100/1000000) * avg(d44) avg2, 0.0001 * min(d44) min2, max(d44)/10000 max2 from dtypes;
+avg(d44)	min(d44)	max(d44)	avg2	min2	max2
+0.571178271700	-0.99999999	0.99999999	0.0000571178271700	-0.000099999999	0.000099999999
+select avg(d45), min(d45), max(d45), (100/1000000) * avg(d45) avg2, 0.0001 * min(d45) min2, max(d45)/10000 max2 from dtypes;
+avg(d45)	min(d45)	max(d45)	avg2	min2	max2
+451548.7900	-2233	5860521	45.15487900	-0.2233	586.0521
+select avg(d46), min(d46), max(d46), (100/1000000) * avg(d46) avg2, 0.0001 * min(d46) min2, max(d46)/10000 max2 from dtypes;
+avg(d46)	min(d46)	max(d46)	avg2	min2	max2
+451548.78300	-2233.0	5860520.6	45.154878300	-0.22330	586.05206
+select avg(d47), min(d47), max(d47), (100/1000000) * avg(d47) avg2, 0.0001 * min(d47) min2, max(d47)/10000 max2 from dtypes;
+avg(d47)	min(d47)	max(d47)	avg2	min2	max2
+451548.786500	-2233.00	5860520.60	45.1548786500	-0.223300	586.052060
+select avg(d48), min(d48), max(d48), (100/1000000) * avg(d48) avg2, 0.0001 * min(d48) min2, max(d48)/10000 max2 from dtypes;
+avg(d48)	min(d48)	max(d48)	avg2	min2	max2
+137701.5145500	-2233.000	999999.999	13.77015145500	-0.2233000	99.9999999
+select avg(d49), min(d49), max(d49), (100/1000000) * avg(d49) avg2, 0.0001 * min(d49) min2, max(d49)/10000 max2 from dtypes;
+avg(d49)	min(d49)	max(d49)	avg2	min2	max2
+15253.87272200	-2233.0000	99999.9999	1.525387272200	-0.22330000	9.99999999
+select avg(d50), min(d50), max(d50), (100/1000000) * avg(d50) avg2, 0.0001 * min(d50) min2, max(d50)/10000 max2 from dtypes;
+avg(d50)	min(d50)	max(d50)	avg2	min2	max2
+1619.642734400	-2233.00000	9999.99999	0.1619642734400	-0.223300000	0.999999999
+select avg(d51), min(d51), max(d51), (100/1000000) * avg(d51) avg2, 0.0001 * min(d51) min2, max(d51)/10000 max2 from dtypes;
+avg(d51)	min(d51)	max(d51)	avg2	min2	max2
+191.9727361900	-999.999999	999.999999	0.01919727361900	-0.0999999999	0.0999999999
+select avg(d52), min(d52), max(d52), (100/1000000) * avg(d52) avg2, 0.0001 * min(d52) min2, max(d52)/10000 max2 from dtypes;
+avg(d52)	min(d52)	max(d52)	avg2	min2	max2
+31.27990631200	-99.9999999	99.9999999	0.003127990631200	-0.00999999999	0.00999999999
+select avg(d53), min(d53), max(d53), (100/1000000) * avg(d53) avg2, 0.0001 * min(d53) min2, max(d53)/10000 max2 from dtypes;
+avg(d53)	min(d53)	max(d53)	avg2	min2	max2
+4.061669337500	-9.99999999	9.99999999	0.0004061669337500	-0.000999999999	0.000999999999
+select avg(d54), min(d54), max(d54), (100/1000000) * avg(d54) avg2, 0.0001 * min(d54) min2, max(d54)/10000 max2 from dtypes;
+avg(d54)	min(d54)	max(d54)	avg2	min2	max2
+0.5711782758800	-0.999999999	0.999999999	0.00005711782758800	-0.0000999999999	0.0000999999999
+select avg(d55), min(d55), max(d55), (100/1000000) * avg(d55) avg2, 0.0001 * min(d55) min2, max(d55)/10000 max2 from dtypes;
+avg(d55)	min(d55)	max(d55)	avg2	min2	max2
+451548.7900	-2233	5860521	45.15487900	-0.2233	586.0521
+select avg(d56), min(d56), max(d56), (100/1000000) * avg(d56) avg2, 0.0001 * min(d56) min2, max(d56)/10000 max2 from dtypes;
+avg(d56)	min(d56)	max(d56)	avg2	min2	max2
+451548.78300	-2233.0	5860520.6	45.154878300	-0.22330	586.05206
+select avg(d57), min(d57), max(d57), (100/1000000) * avg(d57) avg2, 0.0001 * min(d57) min2, max(d57)/10000 max2 from dtypes;
+avg(d57)	min(d57)	max(d57)	avg2	min2	max2
+451548.786500	-2233.00	5860520.60	45.1548786500	-0.223300	586.052060
+select avg(d58), min(d58), max(d58), (100/1000000) * avg(d58) avg2, 0.0001 * min(d58) min2, max(d58)/10000 max2 from dtypes;
+avg(d58)	min(d58)	max(d58)	avg2	min2	max2
+451548.7863700	-2233.000	5860520.599	45.15487863700	-0.2233000	586.0520599
+select avg(d59), min(d59), max(d59), (100/1000000) * avg(d59) avg2, 0.0001 * min(d59) min2, max(d59)/10000 max2 from dtypes;
+avg(d59)	min(d59)	max(d59)	avg2	min2	max2
+137701.51468600	-2233.0000	999999.9999	13.770151468600	-0.22330000	99.99999999
+select avg(d60), min(d60), max(d60), (100/1000000) * avg(d60) avg2, 0.0001 * min(d60) min2, max(d60)/10000 max2 from dtypes;
+avg(d60)	min(d60)	max(d60)	avg2	min2	max2
+15253.872734500	-2233.00000	99999.99999	1.5253872734500	-0.223300000	9.999999999
+select avg(d61), min(d61), max(d61), (100/1000000) * avg(d61) avg2, 0.0001 * min(d61) min2, max(d61)/10000 max2 from dtypes;
+avg(d61)	min(d61)	max(d61)	avg2	min2	max2
+1619.6427361800	-2233.000000	9999.999999	0.16196427361800	-0.2233000000	0.9999999999
+select avg(d62), min(d62), max(d62), (100/1000000) * avg(d62) avg2, 0.0001 * min(d62) min2, max(d62)/10000 max2 from dtypes;
+avg(d62)	min(d62)	max(d62)	avg2	min2	max2
+191.97273632500	-999.9999999	999.9999999	0.019197273632500	-0.09999999999	0.09999999999
+select avg(d63), min(d63), max(d63), (100/1000000) * avg(d63) avg2, 0.0001 * min(d63) min2, max(d63)/10000 max2 from dtypes;
+avg(d63)	min(d63)	max(d63)	avg2	min2	max2
+31.279906338100	-99.99999999	99.99999999	0.0031279906338100	-0.009999999999	0.009999999999
+select avg(d64), min(d64), max(d64), (100/1000000) * avg(d64) avg2, 0.0001 * min(d64) min2, max(d64)/10000 max2 from dtypes;
+avg(d64)	min(d64)	max(d64)	avg2	min2	max2
+4.0616693406600	-9.999999999	9.999999999	0.00040616693406600	-0.0009999999999	0.0009999999999
+select avg(d65), min(d65), max(d65), (100/1000000) * avg(d65) avg2, 0.0001 * min(d65) min2, max(d65)/10000 max2 from dtypes;
+avg(d65)	min(d65)	max(d65)	avg2	min2	max2
+0.57117827629600	-0.9999999999	0.9999999999	0.000057117827629600	-0.00009999999999	0.00009999999999
+select avg(d66), min(d66), max(d66), (100/1000000) * avg(d66) avg2, 0.0001 * min(d66) min2, max(d66)/10000 max2 from dtypes;
+avg(d66)	min(d66)	max(d66)	avg2	min2	max2
+451548.7900	-2233	5860521	45.15487900	-0.2233	586.0521
+select avg(d67), min(d67), max(d67), (100/1000000) * avg(d67) avg2, 0.0001 * min(d67) min2, max(d67)/10000 max2 from dtypes;
+avg(d67)	min(d67)	max(d67)	avg2	min2	max2
+451548.78300	-2233.0	5860520.6	45.154878300	-0.22330	586.05206
+select avg(d68), min(d68), max(d68), (100/1000000) * avg(d68) avg2, 0.0001 * min(d68) min2, max(d68)/10000 max2 from dtypes;
+avg(d68)	min(d68)	max(d68)	avg2	min2	max2
+451548.786500	-2233.00	5860520.60	45.1548786500	-0.223300	586.052060
+select avg(d69), min(d69), max(d69), (100/1000000) * avg(d69) avg2, 0.0001 * min(d69) min2, max(d69)/10000 max2 from dtypes;
+avg(d69)	min(d69)	max(d69)	avg2	min2	max2
+451548.7863700	-2233.000	5860520.599	45.15487863700	-0.2233000	586.0520599
+select avg(d70), min(d70), max(d70), (100/1000000) * avg(d70) avg2, 0.0001 * min(d70) min2, max(d70)/10000 max2 from dtypes;
+avg(d70)	min(d70)	max(d70)	avg2	min2	max2
+451548.78639900	-2233.0000	5860520.5992	45.154878639900	-0.22330000	586.05205992
+select avg(d71), min(d71), max(d71), (100/1000000) * avg(d71) avg2, 0.0001 * min(d71) min2, max(d71)/10000 max2 from dtypes;
+avg(d71)	min(d71)	max(d71)	avg2	min2	max2
+137701.514696700	-2233.00000	999999.99999	13.7701514696700	-0.223300000	99.999999999
+select avg(d72), min(d72), max(d72), (100/1000000) * avg(d72) avg2, 0.0001 * min(d72) min2, max(d72)/10000 max2 from dtypes;
+avg(d72)	min(d72)	max(d72)	avg2	min2	max2
+15253.8727361900	-2233.000000	99999.999999	1.52538727361900	-0.2233000000	9.9999999999
+select avg(d73), min(d73), max(d73), (100/1000000) * avg(d73) avg2, 0.0001 * min(d73) min2, max(d73)/10000 max2 from dtypes;
+avg(d73)	min(d73)	max(d73)	avg2	min2	max2
+1619.64273632400	-2233.0000000	9999.9999999	0.161964273632400	-0.22330000000	0.99999999999
+select avg(d74), min(d74), max(d74), (100/1000000) * avg(d74) avg2, 0.0001 * min(d74) min2, max(d74)/10000 max2 from dtypes;
+avg(d74)	min(d74)	max(d74)	avg2	min2	max2
+191.972736339400	-999.99999999	999.99999999	0.0191972736339400	-0.099999999999	0.099999999999
+select avg(d75), min(d75), max(d75), (100/1000000) * avg(d75) avg2, 0.0001 * min(d75) min2, max(d75)/10000 max2 from dtypes;
+avg(d75)	min(d75)	max(d75)	avg2	min2	max2
+31.2799063407200	-99.999999999	99.999999999	0.00312799063407200	-0.0099999999999	0.0099999999999
+select avg(d76), min(d76), max(d76), (100/1000000) * avg(d76) avg2, 0.0001 * min(d76) min2, max(d76)/10000 max2 from dtypes;
+avg(d76)	min(d76)	max(d76)	avg2	min2	max2
+4.06166934096800	-9.9999999999	9.9999999999	0.000406166934096800	-0.00099999999999	0.00099999999999
+select avg(d77), min(d77), max(d77), (100/1000000) * avg(d77) avg2, 0.0001 * min(d77) min2, max(d77)/10000 max2 from dtypes;
+avg(d77)	min(d77)	max(d77)	avg2	min2	max2
+0.571178276337700	-0.99999999999	0.99999999999	0.0000571178276337700	-0.000099999999999	0.000099999999999
+select avg(d78), min(d78), max(d78), (100/1000000) * avg(d78) avg2, 0.0001 * min(d78) min2, max(d78)/10000 max2 from dtypes;
+avg(d78)	min(d78)	max(d78)	avg2	min2	max2
+451548.7900	-2233	5860521	45.15487900	-0.2233	586.0521
+select avg(d79), min(d79), max(d79), (100/1000000) * avg(d79) avg2, 0.0001 * min(d79) min2, max(d79)/10000 max2 from dtypes;
+avg(d79)	min(d79)	max(d79)	avg2	min2	max2
+451548.78300	-2233.0	5860520.6	45.154878300	-0.22330	586.05206
+select avg(d80), min(d80), max(d80), (100/1000000) * avg(d80) avg2, 0.0001 * min(d80) min2, max(d80)/10000 max2 from dtypes;
+avg(d80)	min(d80)	max(d80)	avg2	min2	max2
+451548.786500	-2233.00	5860520.60	45.1548786500	-0.223300	586.052060
+select avg(d81), min(d81), max(d81), (100/1000000) * avg(d81) avg2, 0.0001 * min(d81) min2, max(d81)/10000 max2 from dtypes;
+avg(d81)	min(d81)	max(d81)	avg2	min2	max2
+451548.7863700	-2233.000	5860520.599	45.15487863700	-0.2233000	586.0520599
+select avg(d82), min(d82), max(d82), (100/1000000) * avg(d82) avg2, 0.0001 * min(d82) min2, max(d82)/10000 max2 from dtypes;
+avg(d82)	min(d82)	max(d82)	avg2	min2	max2
+451548.78639900	-2233.0000	5860520.5992	45.154878639900	-0.22330000	586.05205992
+select avg(d83), min(d83), max(d83), (100/1000000) * avg(d83) avg2, 0.0001 * min(d83) min2, max(d83)/10000 max2 from dtypes;
+avg(d83)	min(d83)	max(d83)	avg2	min2	max2
+451548.786396900	-2233.00000	5860520.59916	45.1548786396900	-0.223300000	586.052059916
+select avg(d84), min(d84), max(d84), (100/1000000) * avg(d84) avg2, 0.0001 * min(d84) min2, max(d84)/10000 max2 from dtypes;
+avg(d84)	min(d84)	max(d84)	avg2	min2	max2
+137701.5146981800	-2233.000000	999999.999999	13.77015146981800	-0.2233000000	99.9999999999
+select avg(d85), min(d85), max(d85), (100/1000000) * avg(d85) avg2, 0.0001 * min(d85) min2, max(d85)/10000 max2 from dtypes;
+avg(d85)	min(d85)	max(d85)	avg2	min2	max2
+15253.87273632500	-2233.0000000	99999.9999999	1.525387273632500	-0.22330000000	9.99999999999
+select avg(d86), min(d86), max(d86), (100/1000000) * avg(d86) avg2, 0.0001 * min(d86) min2, max(d86)/10000 max2 from dtypes;
+avg(d86)	min(d86)	max(d86)	avg2	min2	max2
+1619.642736339300	-2233.00000000	9999.99999999	0.1619642736339300	-0.223300000000	0.999999999999
+select avg(d87), min(d87), max(d87), (100/1000000) * avg(d87) avg2, 0.0001 * min(d87) min2, max(d87)/10000 max2 from dtypes;
+avg(d87)	min(d87)	max(d87)	avg2	min2	max2
+191.9727363408500	-999.999999999	999.999999999	0.01919727363408500	-0.0999999999999	0.0999999999999
+select avg(d88), min(d88), max(d88), (100/1000000) * avg(d88) avg2, 0.0001 * min(d88) min2, max(d88)/10000 max2 from dtypes;
+avg(d88)	min(d88)	max(d88)	avg2	min2	max2
+31.27990634097400	-99.9999999999	99.9999999999	0.003127990634097400	-0.00999999999999	0.00999999999999
+select avg(d89), min(d89), max(d89), (100/1000000) * avg(d89) avg2, 0.0001 * min(d89) min2, max(d89)/10000 max2 from dtypes;
+avg(d89)	min(d89)	max(d89)	avg2	min2	max2
+4.061669340998900	-9.99999999999	9.99999999999	0.0004061669340998900	-0.000999999999999	0.000999999999999
+select avg(d90), min(d90), max(d90), (100/1000000) * avg(d90) avg2, 0.0001 * min(d90) min2, max(d90)/10000 max2 from dtypes;
+avg(d90)	min(d90)	max(d90)	avg2	min2	max2
+0.5711782763418400	-0.999999999999	0.999999999999	0.00005711782763418400	-0.0000999999999999	0.0000999999999999
+select avg(d91), min(d91), max(d91), (100/1000000) * avg(d91) avg2, 0.0001 * min(d91) min2, max(d91)/10000 max2 from dtypes;
+avg(d91)	min(d91)	max(d91)	avg2	min2	max2
+451548.7900	-2233	5860521	45.15487900	-0.2233	586.0521
+select avg(d92), min(d92), max(d92), (100/1000000) * avg(d92) avg2, 0.0001 * min(d92) min2, max(d92)/10000 max2 from dtypes;
+avg(d92)	min(d92)	max(d92)	avg2	min2	max2
+451548.78300	-2233.0	5860520.6	45.154878300	-0.22330	586.05206
+select avg(d93), min(d93), max(d93), (100/1000000) * avg(d93) avg2, 0.0001 * min(d93) min2, max(d93)/10000 max2 from dtypes;
+avg(d93)	min(d93)	max(d93)	avg2	min2	max2
+451548.786500	-2233.00	5860520.60	45.1548786500	-0.223300	586.052060
+select avg(d94), min(d94), max(d94), (100/1000000) * avg(d94) avg2, 0.0001 * min(d94) min2, max(d94)/10000 max2 from dtypes;
+avg(d94)	min(d94)	max(d94)	avg2	min2	max2
+451548.7863700	-2233.000	5860520.599	45.15487863700	-0.2233000	586.0520599
+select avg(d95), min(d95), max(d95), (100/1000000) * avg(d95) avg2, 0.0001 * min(d95) min2, max(d95)/10000 max2 from dtypes;
+avg(d95)	min(d95)	max(d95)	avg2	min2	max2
+451548.78639900	-2233.0000	5860520.5992	45.154878639900	-0.22330000	586.05205992
+select avg(d96), min(d96), max(d96), (100/1000000) * avg(d96) avg2, 0.0001 * min(d96) min2, max(d96)/10000 max2 from dtypes;
+avg(d96)	min(d96)	max(d96)	avg2	min2	max2
+451548.786396900	-2233.00000	5860520.59916	45.1548786396900	-0.223300000	586.052059916
+select avg(d97), min(d97), max(d97), (100/1000000) * avg(d97) avg2, 0.0001 * min(d97) min2, max(d97)/10000 max2 from dtypes;
+avg(d97)	min(d97)	max(d97)	avg2	min2	max2
+451548.7863971800	-2233.000000	5860520.599163	45.15487863971800	-0.2233000000	586.0520599163
+select avg(d98), min(d98), max(d98), (100/1000000) * avg(d98) avg2, 0.0001 * min(d98) min2, max(d98)/10000 max2 from dtypes;
+avg(d98)	min(d98)	max(d98)	avg2	min2	max2
+137701.51469829700	-2233.0000000	999999.9999999	13.770151469829700	-0.22330000000	99.99999999999
+select avg(d99), min(d99), max(d99), (100/1000000) * avg(d99) avg2, 0.0001 * min(d99) min2, max(d99)/10000 max2 from dtypes;
+avg(d99)	min(d99)	max(d99)	avg2	min2	max2
+15253.872736339400	-2233.00000000	99999.99999999	1.5253872736339400	-0.223300000000	9.999999999999
+select avg(d100), min(d100), max(d100), (100/1000000) * avg(d100) avg2, 0.0001 * min(d100) min2, max(d100)/10000 max2 from dtypes;
+avg(d100)	min(d100)	max(d100)	avg2	min2	max2
+1619.6427363408400	-2233.000000000	9999.999999999	0.16196427363408400	-0.2233000000000	0.9999999999999
+select avg(d101), min(d101), max(d101), (100/1000000) * avg(d101) avg2, 0.0001 * min(d101) min2, max(d101)/10000 max2 from dtypes;
+avg(d101)	min(d101)	max(d101)	avg2	min2	max2
+191.97273634098700	-999.9999999999	999.9999999999	0.019197273634098700	-0.09999999999999	0.09999999999999
+select avg(d102), min(d102), max(d102), (100/1000000) * avg(d102) avg2, 0.0001 * min(d102) min2, max(d102)/10000 max2 from dtypes;
+avg(d102)	min(d102)	max(d102)	avg2	min2	max2
+31.279906340999500	-99.99999999999	99.99999999999	0.0031279906340999500	-0.009999999999999	0.009999999999999
+select avg(d103), min(d103), max(d103), (100/1000000) * avg(d103) avg2, 0.0001 * min(d103) min2, max(d103)/10000 max2 from dtypes;
+avg(d103)	min(d103)	max(d103)	avg2	min2	max2
+4.0616693410019600	-9.999999999999	9.999999999999	0.00040616693410019600	-0.0009999999999999	0.0009999999999999
+select avg(d104), min(d104), max(d104), (100/1000000) * avg(d104) avg2, 0.0001 * min(d104) min2, max(d104)/10000 max2 from dtypes;
+avg(d104)	min(d104)	max(d104)	avg2	min2	max2
+0.57117827634225400	-0.9999999999999	0.9999999999999	0.000057117827634225400	-0.00009999999999999	0.00009999999999999
+select avg(d105), min(d105), max(d105), (100/1000000) * avg(d105) avg2, 0.0001 * min(d105) min2, max(d105)/10000 max2 from dtypes;
+avg(d105)	min(d105)	max(d105)	avg2	min2	max2
+451548.7900	-2233	5860521	45.15487900	-0.2233	586.0521
+select avg(d106), min(d106), max(d106), (100/1000000) * avg(d106) avg2, 0.0001 * min(d106) min2, max(d106)/10000 max2 from dtypes;
+avg(d106)	min(d106)	max(d106)	avg2	min2	max2
+451548.78300	-2233.0	5860520.6	45.154878300	-0.22330	586.05206
+select avg(d107), min(d107), max(d107), (100/1000000) * avg(d107) avg2, 0.0001 * min(d107) min2, max(d107)/10000 max2 from dtypes;
+avg(d107)	min(d107)	max(d107)	avg2	min2	max2
+451548.786500	-2233.00	5860520.60	45.1548786500	-0.223300	586.052060
+select avg(d108), min(d108), max(d108), (100/1000000) * avg(d108) avg2, 0.0001 * min(d108) min2, max(d108)/10000 max2 from dtypes;
+avg(d108)	min(d108)	max(d108)	avg2	min2	max2
+451548.7863700	-2233.000	5860520.599	45.15487863700	-0.2233000	586.0520599
+select avg(d109), min(d109), max(d109), (100/1000000) * avg(d109) avg2, 0.0001 * min(d109) min2, max(d109)/10000 max2 from dtypes;
+avg(d109)	min(d109)	max(d109)	avg2	min2	max2
+451548.78639900	-2233.0000	5860520.5992	45.154878639900	-0.22330000	586.05205992
+select avg(d110), min(d110), max(d110), (100/1000000) * avg(d110) avg2, 0.0001 * min(d110) min2, max(d110)/10000 max2 from dtypes;
+avg(d110)	min(d110)	max(d110)	avg2	min2	max2
+451548.786396900	-2233.00000	5860520.59916	45.1548786396900	-0.223300000	586.052059916
+select avg(d111), min(d111), max(d111), (100/1000000) * avg(d111) avg2, 0.0001 * min(d111) min2, max(d111)/10000 max2 from dtypes;
+avg(d111)	min(d111)	max(d111)	avg2	min2	max2
+451548.7863971800	-2233.000000	5860520.599163	45.15487863971800	-0.2233000000	586.0520599163
+select avg(d112), min(d112), max(d112), (100/1000000) * avg(d112) avg2, 0.0001 * min(d112) min2, max(d112)/10000 max2 from dtypes;
+avg(d112)	min(d112)	max(d112)	avg2	min2	max2
+451548.78639718400	-2233.0000000	5860520.5991630	45.154878639718400	-0.22330000000	586.05205991630
+select avg(d113), min(d113), max(d113), (100/1000000) * avg(d113) avg2, 0.0001 * min(d113) min2, max(d113)/10000 max2 from dtypes;
+avg(d113)	min(d113)	max(d113)	avg2	min2	max2
+137701.514698309600	-2233.00000000	999999.99999999	13.7701514698309600	-0.223300000000	99.999999999999
+select avg(d114), min(d114), max(d114), (100/1000000) * avg(d114) avg2, 0.0001 * min(d114) min2, max(d114)/10000 max2 from dtypes;
+avg(d114)	min(d114)	max(d114)	avg2	min2	max2
+15253.8727363408500	-2233.000000000	99999.999999999	1.52538727363408500	-0.2233000000000	9.9999999999999
+select avg(d115), min(d115), max(d115), (100/1000000) * avg(d115) avg2, 0.0001 * min(d115) min2, max(d115)/10000 max2 from dtypes;
+avg(d115)	min(d115)	max(d115)	avg2	min2	max2
+1619.64273634098600	-2233.0000000000	9999.9999999999	0.161964273634098600	-0.22330000000000	0.99999999999999
+select avg(d116), min(d116), max(d116), (100/1000000) * avg(d116) avg2, 0.0001 * min(d116) min2, max(d116)/10000 max2 from dtypes;
+avg(d116)	min(d116)	max(d116)	avg2	min2	max2
+191.972736341000800	-999.99999999999	999.99999999999	0.0191972736341000800	-0.099999999999999	0.099999999999999
+select avg(d117), min(d117), max(d117), (100/1000000) * avg(d117) avg2, 0.0001 * min(d117) min2, max(d117)/10000 max2 from dtypes;
+avg(d117)	min(d117)	max(d117)	avg2	min2	max2
+31.2799063410020200	-99.999999999999	99.999999999999	0.00312799063410020200	-0.0099999999999999	0.0099999999999999
+select avg(d118), min(d118), max(d118), (100/1000000) * avg(d118) avg2, 0.0001 * min(d118) min2, max(d118)/10000 max2 from dtypes;
+avg(d118)	min(d118)	max(d118)	avg2	min2	max2
+4.06166934100226600	-9.9999999999999	9.9999999999999	0.000406166934100226600	-0.00099999999999999	0.00099999999999999
+select avg(d119), min(d119), max(d119), (100/1000000) * avg(d119) avg2, 0.0001 * min(d119) min2, max(d119)/10000 max2 from dtypes;
+avg(d119)	min(d119)	max(d119)	avg2	min2	max2
+0.571178276342295400	-0.99999999999999	0.99999999999999	0.0000571178276342295400	-0.000099999999999999	0.000099999999999999
+select avg(d120), min(d120), max(d120), (100/1000000) * avg(d120) avg2, 0.0001 * min(d120) min2, max(d120)/10000 max2 from dtypes;
+avg(d120)	min(d120)	max(d120)	avg2	min2	max2
+451548.7900	-2233	5860521	45.15487900	-0.2233	586.0521
+select avg(d121), min(d121), max(d121), (100/1000000) * avg(d121) avg2, 0.0001 * min(d121) min2, max(d121)/10000 max2 from dtypes;
+avg(d121)	min(d121)	max(d121)	avg2	min2	max2
+451548.78300	-2233.0	5860520.6	45.154878300	-0.22330	586.05206
+select avg(d122), min(d122), max(d122), (100/1000000) * avg(d122) avg2, 0.0001 * min(d122) min2, max(d122)/10000 max2 from dtypes;
+avg(d122)	min(d122)	max(d122)	avg2	min2	max2
+451548.786500	-2233.00	5860520.60	45.1548786500	-0.223300	586.052060
+select avg(d123), min(d123), max(d123), (100/1000000) * avg(d123) avg2, 0.0001 * min(d123) min2, max(d123)/10000 max2 from dtypes;
+avg(d123)	min(d123)	max(d123)	avg2	min2	max2
+451548.7863700	-2233.000	5860520.599	45.15487863700	-0.2233000	586.0520599
+select avg(d124), min(d124), max(d124), (100/1000000) * avg(d124) avg2, 0.0001 * min(d124) min2, max(d124)/10000 max2 from dtypes;
+avg(d124)	min(d124)	max(d124)	avg2	min2	max2
+451548.78639900	-2233.0000	5860520.5992	45.154878639900	-0.22330000	586.05205992
+select avg(d125), min(d125), max(d125), (100/1000000) * avg(d125) avg2, 0.0001 * min(d125) min2, max(d125)/10000 max2 from dtypes;
+avg(d125)	min(d125)	max(d125)	avg2	min2	max2
+451548.786396900	-2233.00000	5860520.59916	45.1548786396900	-0.223300000	586.052059916
+select avg(d126), min(d126), max(d126), (100/1000000) * avg(d126) avg2, 0.0001 * min(d126) min2, max(d126)/10000 max2 from dtypes;
+avg(d126)	min(d126)	max(d126)	avg2	min2	max2
+451548.7863971800	-2233.000000	5860520.599163	45.15487863971800	-0.2233000000	586.0520599163
+select avg(d127), min(d127), max(d127), (100/1000000) * avg(d127) avg2, 0.0001 * min(d127) min2, max(d127)/10000 max2 from dtypes;
+avg(d127)	min(d127)	max(d127)	avg2	min2	max2
+451548.78639718400	-2233.0000000	5860520.5991630	45.154878639718400	-0.22330000000	586.05205991630
+select avg(d128), min(d128), max(d128), (100/1000000) * avg(d128) avg2, 0.0001 * min(d128) min2, max(d128)/10000 max2 from dtypes;
+avg(d128)	min(d128)	max(d128)	avg2	min2	max2
+451548.786397185200	-2233.00000000	5860520.59916300	45.1548786397185200	-0.223300000000	586.052059916300
+select avg(d129), min(d129), max(d129), (100/1000000) * avg(d129) avg2, 0.0001 * min(d129) min2, max(d129)/10000 max2 from dtypes;
+avg(d129)	min(d129)	max(d129)	avg2	min2	max2
+137701.5146983108700	-2233.000000000	999999.999999999	13.77015146983108700	-0.2233000000000	99.9999999999999
+select avg(d130), min(d130), max(d130), (100/1000000) * avg(d130) avg2, 0.0001 * min(d130) min2, max(d130)/10000 max2 from dtypes;
+avg(d130)	min(d130)	max(d130)	avg2	min2	max2
+15253.87273634098700	-2233.0000000000	99999.9999999999	1.525387273634098700	-0.22330000000000	9.99999999999999
+select avg(d131), min(d131), max(d131), (100/1000000) * avg(d131) avg2, 0.0001 * min(d131) min2, max(d131)/10000 max2 from dtypes;
+avg(d131)	min(d131)	max(d131)	avg2	min2	max2
+1619.642736341000700	-2233.00000000000	9999.99999999999	0.1619642736341000700	-0.223300000000000	0.999999999999999
+select avg(d132), min(d132), max(d132), (100/1000000) * avg(d132) avg2, 0.0001 * min(d132) min2, max(d132)/10000 max2 from dtypes;
+avg(d132)	min(d132)	max(d132)	avg2	min2	max2
+191.9727363410021500	-999.999999999999	999.999999999999	0.01919727363410021500	-0.0999999999999999	0.0999999999999999
+select avg(d133), min(d133), max(d133), (100/1000000) * avg(d133) avg2, 0.0001 * min(d133) min2, max(d133)/10000 max2 from dtypes;
+avg(d133)	min(d133)	max(d133)	avg2	min2	max2
+31.27990634100227201	-99.9999999999999	99.9999999999999	0.003127990634100227201	-0.00999999999999999	0.00999999999999999
+select avg(d134), min(d134), max(d134), (100/1000000) * avg(d134) avg2, 0.0001 * min(d134) min2, max(d134)/10000 max2 from dtypes;
+avg(d134)	min(d134)	max(d134)	avg2	min2	max2
+4.061669341002296601	-9.99999999999999	9.99999999999999	0.0004061669341002296601	-0.000999999999999999	0.000999999999999999
+select avg(d135), min(d135), max(d135), (100/1000000) * avg(d135) avg2, 0.0001 * min(d135) min2, max(d135)/10000 max2 from dtypes;
+avg(d135)	min(d135)	max(d135)	avg2	min2	max2
+0.5711782763422995403	-0.999999999999999	0.999999999999999	0.00005711782763422995403	-0.0000999999999999999	0.0000999999999999999
+select avg(d136), min(d136), max(d136), (100/1000000) * avg(d136) avg2, 0.0001 * min(d136) min2, max(d136)/10000 max2 from dtypes;
+avg(d136)	min(d136)	max(d136)	avg2	min2	max2
+451548.7900	-2233	5860521	45.15487900	-0.2233	586.0521
+select avg(d137), min(d137), max(d137), (100/1000000) * avg(d137) avg2, 0.0001 * min(d137) min2, max(d137)/10000 max2 from dtypes;
+avg(d137)	min(d137)	max(d137)	avg2	min2	max2
+451548.78300	-2233.0	5860520.6	45.154878300	-0.22330	586.05206
+select avg(d138), min(d138), max(d138), (100/1000000) * avg(d138) avg2, 0.0001 * min(d138) min2, max(d138)/10000 max2 from dtypes;
+avg(d138)	min(d138)	max(d138)	avg2	min2	max2
+451548.786500	-2233.00	5860520.60	45.1548786500	-0.223300	586.052060
+select avg(d139), min(d139), max(d139), (100/1000000) * avg(d139) avg2, 0.0001 * min(d139) min2, max(d139)/10000 max2 from dtypes;
+avg(d139)	min(d139)	max(d139)	avg2	min2	max2
+451548.7863700	-2233.000	5860520.599	45.15487863700	-0.2233000	586.0520599
+select avg(d140), min(d140), max(d140), (100/1000000) * avg(d140) avg2, 0.0001 * min(d140) min2, max(d140)/10000 max2 from dtypes;
+avg(d140)	min(d140)	max(d140)	avg2	min2	max2
+451548.78639900	-2233.0000	5860520.5992	45.154878639900	-0.22330000	586.05205992
+select avg(d141), min(d141), max(d141), (100/1000000) * avg(d141) avg2, 0.0001 * min(d141) min2, max(d141)/10000 max2 from dtypes;
+avg(d141)	min(d141)	max(d141)	avg2	min2	max2
+451548.786396900	-2233.00000	5860520.59916	45.1548786396900	-0.223300000	586.052059916
+select avg(d142), min(d142), max(d142), (100/1000000) * avg(d142) avg2, 0.0001 * min(d142) min2, max(d142)/10000 max2 from dtypes;
+avg(d142)	min(d142)	max(d142)	avg2	min2	max2
+451548.7863971800	-2233.000000	5860520.599163	45.15487863971800	-0.2233000000	586.0520599163
+select avg(d143), min(d143), max(d143), (100/1000000) * avg(d143) avg2, 0.0001 * min(d143) min2, max(d143)/10000 max2 from dtypes;
+avg(d143)	min(d143)	max(d143)	avg2	min2	max2
+451548.78639718400	-2233.0000000	5860520.5991630	45.154878639718400	-0.22330000000	586.05205991630
+select avg(d144), min(d144), max(d144), (100/1000000) * avg(d144) avg2, 0.0001 * min(d144) min2, max(d144)/10000 max2 from dtypes;
+avg(d144)	min(d144)	max(d144)	avg2	min2	max2
+451548.786397185200	-2233.00000000	5860520.59916300	45.1548786397185200	-0.223300000000	586.052059916300
+select avg(d145), min(d145), max(d145), (100/1000000) * avg(d145) avg2, 0.0001 * min(d145) min2, max(d145)/10000 max2 from dtypes;
+avg(d145)	min(d145)	max(d145)	avg2	min2	max2
+451548.7863971853299	-2233.000000000	5860520.599163000	45.15487863971853299	-0.2233000000000	586.0520599163000
+select avg(d160), min(d160), max(d160), (100/1000000) * avg(d160) avg2, 0.0001 * min(d160) min2, max(d160)/10000 max2 from dtypes;
+avg(d160)	min(d160)	max(d160)	avg2	min2	max2
+451548.78639718400	-2233.0000000	5860520.5991630	45.154878639718400	-0.22330000000	586.05205991630
+select avg(d161), min(d161), max(d161), (100/1000000) * avg(d161) avg2, 0.0001 * min(d161) min2, max(d161)/10000 max2 from dtypes;
+avg(d161)	min(d161)	max(d161)	avg2	min2	max2
+451548.786397185200	-2233.00000000	5860520.59916300	45.1548786397185200	-0.223300000000	586.052059916300
+select avg(d162), min(d162), max(d162), (100/1000000) * avg(d162) avg2, 0.0001 * min(d162) min2, max(d162)/10000 max2 from dtypes;
+avg(d162)	min(d162)	max(d162)	avg2	min2	max2
+451548.7863971853299	-2233.000000000	5860520.599163000	45.15487863971853299	-0.2233000000000	586.0520599163000
+select avg(d171), min(d171), max(d171), (100/1000000) * avg(d171) avg2, 0.0001 * min(d171) min2, max(d171)/10000 max2 from dtypes;
+avg(d171)	min(d171)	max(d171)	avg2	min2	max2
+451548.7900	-2233	5860521	45.15487900	-0.2233	586.0521
+select avg(d172), min(d172), max(d172), (100/1000000) * avg(d172) avg2, 0.0001 * min(d172) min2, max(d172)/10000 max2 from dtypes;
+avg(d172)	min(d172)	max(d172)	avg2	min2	max2
+451548.78300	-2233.0	5860520.6	45.154878300	-0.22330	586.05206
+select avg(d173), min(d173), max(d173), (100/1000000) * avg(d173) avg2, 0.0001 * min(d173) min2, max(d173)/10000 max2 from dtypes;
+avg(d173)	min(d173)	max(d173)	avg2	min2	max2
+451548.786500	-2233.00	5860520.60	45.1548786500	-0.223300	586.052060
+select avg(d174), min(d174), max(d174), (100/1000000) * avg(d174) avg2, 0.0001 * min(d174) min2, max(d174)/10000 max2 from dtypes;
+avg(d174)	min(d174)	max(d174)	avg2	min2	max2
+451548.7863700	-2233.000	5860520.599	45.15487863700	-0.2233000	586.0520599
+select avg(d175), min(d175), max(d175), (100/1000000) * avg(d175) avg2, 0.0001 * min(d175) min2, max(d175)/10000 max2 from dtypes;
+avg(d175)	min(d175)	max(d175)	avg2	min2	max2
+451548.78639900	-2233.0000	5860520.5992	45.154878639900	-0.22330000	586.05205992
+select avg(d176), min(d176), max(d176), (100/1000000) * avg(d176) avg2, 0.0001 * min(d176) min2, max(d176)/10000 max2 from dtypes;
+avg(d176)	min(d176)	max(d176)	avg2	min2	max2
+451548.786396900	-2233.00000	5860520.59916	45.1548786396900	-0.223300000	586.052059916
+select avg(d177), min(d177), max(d177), (100/1000000) * avg(d177) avg2, 0.0001 * min(d177) min2, max(d177)/10000 max2 from dtypes;
+avg(d177)	min(d177)	max(d177)	avg2	min2	max2
+451548.7863971800	-2233.000000	5860520.599163	45.15487863971800	-0.2233000000	586.0520599163
+select avg(d178), min(d178), max(d178), (100/1000000) * avg(d178) avg2, 0.0001 * min(d178) min2, max(d178)/10000 max2 from dtypes;
+avg(d178)	min(d178)	max(d178)	avg2	min2	max2
+451548.78639718400	-2233.0000000	5860520.5991630	45.154878639718400	-0.22330000000	586.05205991630
+select avg(d179), min(d179), max(d179), (100/1000000) * avg(d179) avg2, 0.0001 * min(d179) min2, max(d179)/10000 max2 from dtypes;
+avg(d179)	min(d179)	max(d179)	avg2	min2	max2
+451548.786397185200	-2233.00000000	5860520.59916300	45.1548786397185200	-0.223300000000	586.052059916300
+select avg(d180), min(d180), max(d180), (100/1000000) * avg(d180) avg2, 0.0001 * min(d180) min2, max(d180)/10000 max2 from dtypes;
+avg(d180)	min(d180)	max(d180)	avg2	min2	max2
+451548.7863971853299	-2233.000000000	5860520.599163000	45.15487863971853299	-0.2233000000000	586.0520599163000

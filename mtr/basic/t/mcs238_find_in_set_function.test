@@ -1,0 +1,28 @@
+#
+# Test FIND_IN_SET() function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs238_db;
+--enable_warnings
+
+CREATE DATABASE mcs238_db;
+USE mcs238_db;
+
+CREATE TABLE t1 (a INT, b CHAR(1), c TEXT)ENGINE=Columnstore;
+INSERT INTO t1 VALUES (1, 'a', 'abc'), (2, 'b', 'xyz'), (3, 'c', 'mcs');
+
+SELECT a, FIND_IN_SET(a, 'a,b,1,2,c,d,3,4') FROM t1 ORDER BY 1;
+SELECT a, FIND_IN_SET(a, '1,2,3,4') FROM t1 ORDER BY 1;
+SELECT b, FIND_IN_SET(b, 'a,b,1,2,c,d,3,4') FROM t1 ORDER BY 1;
+SELECT b, FIND_IN_SET(b, '1,2,3,4') FROM t1 ORDER BY 1;
+SELECT c, FIND_IN_SET(c, 'a,b,1,2,c,d,3,4') FROM t1 ORDER BY 1;
+SELECT c, FIND_IN_SET(c, 'abc,xyz,mnop,mcs') FROM t1 ORDER BY 1;
+
+--error ER_WRONG_PARAMCOUNT_TO_NATIVE_FCT
+SELECT FIND_IN_SET(a) FROM t1;
+
+# Clean UP
+DROP DATABASE mcs238_db;

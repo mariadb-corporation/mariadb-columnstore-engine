@@ -1,0 +1,31 @@
+#
+# Test INET_NTOA() function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs206_db;
+--enable_warnings
+
+CREATE DATABASE mcs206_db;
+USE mcs206_db;
+
+CREATE TABLE t1 (a INT, b CHAR(5))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL, ''),(1, 'aaa'),(2, 'aaa'),(3, 'ccc'),(4, 'ddd'),(5, 'aaa'),(6, 'ddd'),(7, 'eee');
+
+SELECT a, INET_NTOA(a) FROM t1 ORDER BY a;
+SELECT b, INET_NTOA(b) FROM t1 ORDER BY b;
+
+SELECT INET_NTOA(9717171) FROM t1;
+SELECT INET_NTOA(256) FROM t1;
+SELECT INET_NTOA(7197191) FROM t1;
+SELECT INET_NTOA(100) FROM t1;
+SELECT INET_NTOA(0) FROM t1;
+SELECT INET_NTOA(-1) FROM t1;
+SELECT INET_NTOA(33333) FROM t1;
+SELECT INET_NTOA(2130706433) FROM t1;
+SELECT INET_NTOA(4294967295) FROM t1;
+
+# Clean UP
+DROP DATABASE mcs206_db;

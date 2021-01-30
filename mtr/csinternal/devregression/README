@@ -1,0 +1,20 @@
+1. General
+
+The devregression test suite contains test cases migrated from development's regression tests.
+
+2. Environment setup
+
+Before execting this test suite, please execute regression_env_setup.test in the csinternal
+directory.  This test will setup the required databases and tables for the test suite.
+
+3. About the tests
+
+These test cases are regression tests for fixed bugs in development's regression tests.
+There are about 350 .sql files matching "bug*.sql" or "MCOL*.sql" patterns were identified.
+Some of them failed to run in MTR due to required data was not setup, or syntax is not MTR
+compatible.  There are also some cases that ran in MTR, but did not survive repeat MTR runs.
+These failed test cases need more TLC before they can be migrated to MTR correctly.
+
+
+ 
+

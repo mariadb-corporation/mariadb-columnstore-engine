@@ -1,0 +1,271 @@
+USE tpch1;
+select n_nationkey, avg(n_nationkey) over(order by n_nationkey range between unbounded preceding and 15 following) a from nation;
+n_nationkey	a
+0	7.5000
+1	8.0000
+2	8.5000
+3	9.0000
+4	9.5000
+5	10.0000
+6	10.5000
+7	11.0000
+8	11.5000
+9	12.0000
+10	12.0000
+11	12.0000
+12	12.0000
+13	12.0000
+14	12.0000
+15	12.0000
+16	12.0000
+17	12.0000
+18	12.0000
+19	12.0000
+20	12.0000
+21	12.0000
+22	12.0000
+23	12.0000
+24	12.0000
+select n_nationkey, avg(n_nationkey) over(order by n_nationkey range between 3 following and 15 following) b from nation;
+n_nationkey	b
+0	9.0000
+1	10.0000
+2	11.0000
+3	12.0000
+4	13.0000
+5	14.0000
+6	15.0000
+7	16.0000
+8	17.0000
+9	18.0000
+10	18.5000
+11	19.0000
+12	19.5000
+13	20.0000
+14	20.5000
+15	21.0000
+16	21.5000
+17	22.0000
+18	22.5000
+19	23.0000
+20	23.5000
+21	24.0000
+22	NULL
+23	NULL
+24	NULL
+select n_nationkey, n_regionkey, avg(n_nationkey) over (partition by n_regionkey order by n_nationkey rows between 2 following and 2 following) c from nation order by n_regionkey, n_nationkey;
+n_nationkey	n_regionkey	c
+0	0	14.0000
+5	0	15.0000
+14	0	16.0000
+15	0	NULL
+16	0	NULL
+1	1	3.0000
+2	1	17.0000
+3	1	24.0000
+17	1	NULL
+24	1	NULL
+8	2	12.0000
+9	2	18.0000
+12	2	21.0000
+18	2	NULL
+21	2	NULL
+6	3	19.0000
+7	3	22.0000
+19	3	23.0000
+22	3	NULL
+23	3	NULL
+4	4	11.0000
+10	4	13.0000
+11	4	20.0000
+13	4	NULL
+20	4	NULL
+select n_nationkey, n_regionkey, avg(n_nationkey) over (partition by n_regionkey order by n_nationkey rows between 20 following and 20 following) d from nation order by n_regionkey, n_nationkey;
+n_nationkey	n_regionkey	d
+0	0	NULL
+5	0	NULL
+14	0	NULL
+15	0	NULL
+16	0	NULL
+1	1	NULL
+2	1	NULL
+3	1	NULL
+17	1	NULL
+24	1	NULL
+8	2	NULL
+9	2	NULL
+12	2	NULL
+18	2	NULL
+21	2	NULL
+6	3	NULL
+7	3	NULL
+19	3	NULL
+22	3	NULL
+23	3	NULL
+4	4	NULL
+10	4	NULL
+11	4	NULL
+13	4	NULL
+20	4	NULL
+select n_nationkey, n_regionkey, avg(n_nationkey) over (partition by n_regionkey order by n_nationkey rows between 20 following and 1 following) e from nation order by n_regionkey, n_nationkey;
+n_nationkey	n_regionkey	e
+0	0	NULL
+5	0	NULL
+14	0	NULL
+15	0	NULL
+16	0	NULL
+1	1	NULL
+2	1	NULL
+3	1	NULL
+17	1	NULL
+24	1	NULL
+8	2	NULL
+9	2	NULL
+12	2	NULL
+18	2	NULL
+21	2	NULL
+6	3	NULL
+7	3	NULL
+19	3	NULL
+22	3	NULL
+23	3	NULL
+4	4	NULL
+10	4	NULL
+11	4	NULL
+13	4	NULL
+20	4	NULL
+select n_nationkey, n_regionkey, avg(n_nationkey) over (partition by n_regionkey order by n_nationkey rows between 1 following and 20 following) f from nation order by n_regionkey, n_nationkey;
+n_nationkey	n_regionkey	f
+0	0	12.5000
+5	0	15.0000
+14	0	15.5000
+15	0	16.0000
+16	0	NULL
+1	1	11.5000
+2	1	14.6667
+3	1	20.5000
+17	1	24.0000
+24	1	NULL
+8	2	15.0000
+9	2	17.0000
+12	2	19.5000
+18	2	21.0000
+21	2	NULL
+6	3	17.7500
+7	3	21.3333
+19	3	22.5000
+22	3	23.0000
+23	3	NULL
+4	4	13.5000
+10	4	14.6667
+11	4	16.5000
+13	4	20.0000
+20	4	NULL
+select n_nationkey, n_regionkey, avg(n_nationkey) over (partition by n_regionkey order by n_nationkey rows between 2 preceding and 2 preceding) g from nation order by n_regionkey, n_nationkey;
+n_nationkey	n_regionkey	g
+0	0	NULL
+5	0	NULL
+14	0	0.0000
+15	0	5.0000
+16	0	14.0000
+1	1	NULL
+2	1	NULL
+3	1	1.0000
+17	1	2.0000
+24	1	3.0000
+8	2	NULL
+9	2	NULL
+12	2	8.0000
+18	2	9.0000
+21	2	12.0000
+6	3	NULL
+7	3	NULL
+19	3	6.0000
+22	3	7.0000
+23	3	19.0000
+4	4	NULL
+10	4	NULL
+11	4	4.0000
+13	4	10.0000
+20	4	11.0000
+select n_nationkey, n_regionkey, avg(n_nationkey) over (partition by n_regionkey order by n_nationkey rows between 20 preceding and 20 preceding) h from nation order by n_regionkey, n_nationkey;
+n_nationkey	n_regionkey	h
+0	0	NULL
+5	0	NULL
+14	0	NULL
+15	0	NULL
+16	0	NULL
+1	1	NULL
+2	1	NULL
+3	1	NULL
+17	1	NULL
+24	1	NULL
+8	2	NULL
+9	2	NULL
+12	2	NULL
+18	2	NULL
+21	2	NULL
+6	3	NULL
+7	3	NULL
+19	3	NULL
+22	3	NULL
+23	3	NULL
+4	4	NULL
+10	4	NULL
+11	4	NULL
+13	4	NULL
+20	4	NULL
+select n_nationkey, n_regionkey, avg(n_nationkey) over (partition by n_regionkey order by n_nationkey rows between 20 preceding and 1 preceding) k from nation order by n_regionkey, n_nationkey;
+n_nationkey	n_regionkey	k
+0	0	NULL
+5	0	0.0000
+14	0	2.5000
+15	0	6.3333
+16	0	8.5000
+1	1	NULL
+2	1	1.0000
+3	1	1.5000
+17	1	2.0000
+24	1	5.7500
+8	2	NULL
+9	2	8.0000
+12	2	8.5000
+18	2	9.6667
+21	2	11.7500
+6	3	NULL
+7	3	6.0000
+19	3	6.5000
+22	3	10.6667
+23	3	13.5000
+4	4	NULL
+10	4	4.0000
+11	4	7.0000
+13	4	8.3333
+20	4	9.5000
+select n_nationkey, n_regionkey, avg(n_nationkey) over (partition by n_regionkey order by n_nationkey rows between 1 preceding and 20 preceding) m from nation order by n_regionkey, n_nationkey;
+n_nationkey	n_regionkey	m
+0	0	NULL
+5	0	NULL
+14	0	NULL
+15	0	NULL
+16	0	NULL
+1	1	NULL
+2	1	NULL
+3	1	NULL
+17	1	NULL
+24	1	NULL
+8	2	NULL
+9	2	NULL
+12	2	NULL
+18	2	NULL
+21	2	NULL
+6	3	NULL
+7	3	NULL
+19	3	NULL
+22	3	NULL
+23	3	NULL
+4	4	NULL
+10	4	NULL
+11	4	NULL
+13	4	NULL
+20	4	NULL

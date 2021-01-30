@@ -1,0 +1,4 @@
+USE tpch1;
+select count(*) from supplier where s_suppkey != substr(s_name, 10, 99) + 0;
+count(*)
+0

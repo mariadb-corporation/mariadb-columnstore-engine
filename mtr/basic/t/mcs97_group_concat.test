@@ -1,0 +1,25 @@
+#
+# Test group_concat function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs97_db;
+--enable_warnings
+
+CREATE DATABASE mcs97_db;
+USE mcs97_db;
+
+CREATE TABLE t1 (a INT, b CHAR(5))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL, ''),(1, 'aaa'),(2, 'aaa'),(3, 'ccc'),(4, 'ddd'),(5, 'aaa'),(6, 'ddd'),(7, 'eee');
+
+SELECT GROUP_CONCAT(a) FROM t1;
+SELECT GROUP_CONCAT(a SEPARATOR ';') FROM t1 ORDER BY a DESC;
+SELECT GROUP_CONCAT(a ORDER BY a DESC SEPARATOR ';') FROM t1;
+SELECT GROUP_CONCAT(b) FROM t1;
+SELECT GROUP_CONCAT(DISTINCT b SEPARATOR ';') FROM t1 ORDER BY b ASC;
+SELECT GROUP_CONCAT(b ORDER BY b DESC SEPARATOR ';') FROM t1;
+
+# Clean UP
+DROP DATABASE mcs97_db;

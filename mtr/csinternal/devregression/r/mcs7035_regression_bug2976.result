@@ -1,0 +1,197 @@
+USE tpch1;
+/*
+* Bug 2976.  Lost connection with from clause subselect against MyISAM tables in an InfiniDB instance.
+*/
+drop table if exists a;
+Warnings:
+Note	1051	Unknown table 'tpch1.a'
+drop table if exists b;
+Warnings:
+Note	1051	Unknown table 'tpch1.b'
+create table a (c1 int)engine=myisam;
+create table b (c2 int)engine=myisam;
+insert into a values (1), (2);
+insert into b values (1), (2);
+select * from a, (select * from b) x;
+c1	c2
+1	1
+2	1
+1	2
+2	2
+drop table a;
+drop table b;
+/*
+* Skinit example. 
+*/
+drop table if exists shipamounts;
+Warnings:
+Note	1051	Unknown table 'tpch1.shipamounts'
+drop table if exists ship1;
+Warnings:
+Note	1051	Unknown table 'tpch1.ship1'
+drop table if exists ship2;
+Warnings:
+Note	1051	Unknown table 'tpch1.ship2'
+CREATE TABLE `shipamounts` (
+`OrderNum` varchar(50) DEFAULT NULL,
+`OrderLine` int(11) DEFAULT NULL,
+`ShippingAmount` decimal(10,2) DEFAULT NULL,
+`ShippingDiscountAmount` decimal(10,2) DEFAULT NULL,
+`ShippingOrderAmount` decimal(10,2) DEFAULT NULL,
+`ShippingDiscountOrderAmount` decimal(10,2) DEFAULT NULL
+) ENGINE=myisam DEFAULT CHARSET=latin1;
+CREATE TABLE `ship1` (
+`OrderNum` varchar(50) DEFAULT NULL,
+`OrderLine` int(11) DEFAULT NULL,
+`ShippingAmount` decimal(10,2) DEFAULT NULL,
+`ShippingOrderAmount` decimal(10,2) DEFAULT NULL,
+`ShippingDiscountAmount` decimal(10,2) DEFAULT NULL,
+`ShippingDiscountOrderAmount` decimal(10,2) DEFAULT NULL
+) ENGINE=myisam DEFAULT CHARSET=latin1;
+CREATE TABLE `ship2` (
+`OrderNum` varchar(50) DEFAULT NULL,
+`OrderLine` int(11) DEFAULT NULL,
+`ShippingAmount` decimal(10,2) DEFAULT NULL,
+`ShippingOrderAmount` decimal(10,2) DEFAULT NULL,
+`ShippingDiscountAmount` decimal(10,2) DEFAULT NULL,
+`ShippingDiscountOrderAmount` decimal(10,2) DEFAULT NULL
+) ENGINE=myisam DEFAULT CHARSET=latin1;
+insert into shipamounts values (2357203684, 352338, 0, 0, 0, 0);
+insert into ship1 values (2357203684, 352338, 0, 0, 0, 0);
+insert into ship2 values (2357203684, 352338, 0, 0, 0, 0);
+SELECT s.OrderNum, s.OrderLine, s.ShippingAmount, s.ShippingOrderAmount,
+total.ShippingTotalAmount, s.ShippingDiscountAmount,
+s.ShippingDiscountOrderAmount,
+total.ShippingDiscountTotalAmount,
+IF( s.OrderLine = t.MinOrderLine, 1, 0 )
+FROM shipAmounts AS s
+LEFT OUTER JOIN (
+SELECT OrderNum, MIN(OrderLine) AS MinOrderLine
+FROM ship1
+GROUP BY OrderNum
+) AS t ON s.OrderNum = t.OrderNum
+LEFT OUTER JOIN (
+SELECT OrderNum, SUM(ShippingAmount) AS ShippingTotalAmount,
+SUM(ShippingDiscountAmount) AS ShippingDiscountTotalAmount
+FROM ship2 GROUP BY OrderNum
+) AS total ON s.OrderNum = total.OrderNum;
+OrderNum	OrderLine	ShippingAmount	ShippingOrderAmount	ShippingTotalAmount	ShippingDiscountAmount	ShippingDiscountOrderAmount	ShippingDiscountTotalAmount	IF( s.OrderLine = t.MinOrderLine, 1, 0 )
+2357203684	352338	0.00	0.00	0.00	0.00	0.00	0.00	1
+SELECT s.OrderNum, s.OrderLine, s.ShippingAmount, s.ShippingOrderAmount,
+total.ShippingTotalAmount, s.ShippingDiscountAmount,
+s.ShippingDiscountOrderAmount,
+total.ShippingDiscountTotalAmount,
+IF( s.OrderLine = t.MinOrderLine, 1, 0 )
+FROM shipAmounts AS s
+JOIN (
+SELECT sa.OrderNum, MIN(ship1.OrderLine) AS MinOrderLine
+FROM shipAmounts sa left join ship1
+on (sa.OrderNum = ship1.OrderNum)
+GROUP BY OrderNum
+) AS t ON s.OrderNum = t.OrderNum
+LEFT OUTER JOIN (
+SELECT OrderNum, SUM(ShippingAmount) AS ShippingTotalAmount,
+SUM(ShippingDiscountAmount) AS ShippingDiscountTotalAmount
+FROM ship2 GROUP BY OrderNum
+) AS total ON s.OrderNum = total.OrderNum;
+OrderNum	OrderLine	ShippingAmount	ShippingOrderAmount	ShippingTotalAmount	ShippingDiscountAmount	ShippingDiscountOrderAmount	ShippingDiscountTotalAmount	IF( s.OrderLine = t.MinOrderLine, 1, 0 )
+2357203684	352338	0.00	0.00	0.00	0.00	0.00	0.00	1
+drop table if exists shipamounts;
+drop table if exists ship1;
+drop table if exists ship2;
+/*
+* Lurn India example.
+*/
+drop table if exists users;
+Warnings:
+Note	1051	Unknown table 'tpch1.users'
+drop table if exists user_login_log;
+Warnings:
+Note	1051	Unknown table 'tpch1.user_login_log'
+drop table if exists user_groups;
+Warnings:
+Note	1051	Unknown table 'tpch1.user_groups'
+drop table if exists user_types;
+Warnings:
+Note	1051	Unknown table 'tpch1.user_types'
+drop table if exists system;
+Warnings:
+Note	1051	Unknown table 'tpch1.system'
+drop table if exists user_system;
+Warnings:
+Note	1051	Unknown table 'tpch1.user_system'
+create table users(
+id int,
+users_id int, 
+fullname varchar(40), 
+email varchar(40), 
+countries_name varchar(40),
+state_name varchar(7), 
+tel_no varchar(12), 
+affiliate_id varchar(30),
+created datetime,
+milestone varchar(20),
+tel_no2 varchar(12),
+class int,
+status varchar(20)
+)engine=myisam;
+create table user_login_log 
+(
+user_id int,
+dw_system_id int,
+login_time datetime
+)engine=myisam;
+create table user_groups 
+(
+user_id int,
+status varchar(7),
+start_date date,
+end_date date,
+user_type_id int
+)engine=myisam;
+create table user_types 
+(
+id int,
+user_type_id int,
+name varchar(20)
+)engine=myisam;
+create table user_system 
+(
+user_id int,
+system_id int
+)engine=myisam;
+create table system
+(
+id int,
+dw_system_id int
+)engine=myisam;
+SELECT u.users_id as user_id, u.fullname as fullname, u.email as email, u.countries_name as country, u.state_name as state, COALESCE(tel_no, tel_no2, 'No Number') as contact,
+IFNULL((SELECT users.fullname FROM users WHERE users.id = affiliate_id), 'No Affiliate') as affiliate_name,
+IFNULL((SELECT users.email FROM users WHERE users.id = affiliate_id), 'No Affiliate') as affiliate_email,
+DATE_FORMAT( ug.start_date, '%W %D, %M %Y' ) as start_date, DATE_FORMAT( ug.end_date, '%W %D, %M %Y' ) as end_date, ug.status AS status , ug.name AS product, DATE_FORMAT( u.created, '%W %D, %M %Y' ) as created,
+(SELECT DATE_FORMAT( max(ull.login_time), '%W %D, %M %Y' ) FROM user_login_log as ull WHERE ull.user_id = ug.user_id AND ull.dw_system_id = (SELECT dw_system_id from system where id = 6) AND ull.login_time BETWEEN '2010-06-01' AND '2010-06-30') as 'Last Log In',
+(SELECT count(id) FROM user_login_log as ull WHERE ull.user_id = ug.user_id AND ull.dw_system_id = (SELECT dw_system_id from system where id = 6) AND ull.login_time BETWEEN '2010-06-01' AND '2010-06-30') as login_count,
+u.milestone as milestone_level,
+u.class as class_level
+FROM users u, ( 
+SELECT user_id, user_groups.user_type_id, start_date, end_date, user_groups.status, user_types.name
+FROM user_groups, user_types
+WHERE user_types.user_type_id IN (54)
+AND user_groups.user_type_id = user_types.id
+AND user_groups.status IN ('active')
+GROUP BY user_id
+ORDER BY user_type_id DESC ) ug, user_system as us
+WHERE ug.user_id = u.id
+AND u.id = us.user_id
+AND us.system_id IN (6)
+AND u.status IN ('active')
+AND ug.start_date BETWEEN '2010-06-01' AND '2010-06-30'
+ORDER BY DATE(ug.start_date) DESC, u.users_id DESC;
+user_id	fullname	email	country	state	contact	affiliate_name	affiliate_email	start_date	end_date	status	product	created	Last Log In	login_count	milestone_level	class_level
+NULL	NULL	NULL	NULL	NULL	No Number	No Affiliate	No Affiliate	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+drop table if exists users;
+drop table if exists user_login_log;
+drop table if exists user_groups;
+drop table if exists user_types;
+drop table if exists system;
+drop table if exists user_system;

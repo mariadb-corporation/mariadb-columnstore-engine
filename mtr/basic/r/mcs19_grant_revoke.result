@@ -1,0 +1,80 @@
+DROP DATABASE IF EXISTS mcs19_db;
+DROP USER IF EXISTS 'user'@'localhost';
+DROP USER IF EXISTS 'user1'@'localhost';
+SET default_storage_engine=Columnstore;
+SELECT @@default_storage_engine;
+@@default_storage_engine
+Columnstore
+GRANT ALL on *.* TO 'user'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
+SHOW GRANTS FOR 'user'@'localhost';
+Grants for user@localhost
+GRANT ALL PRIVILEGES ON *.* TO `user`@`localhost` IDENTIFIED BY PASSWORD '*CB386B3062EFB295ED40F6A5B1A8CFE300642E38'
+CREATE USER 'user1'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
+SHOW GRANTS FOR 'user1'@'localhost';
+Grants for user1@localhost
+GRANT USAGE ON *.* TO `user1`@`localhost` IDENTIFIED BY PASSWORD '*CB386B3062EFB295ED40F6A5B1A8CFE300642E38'
+GRANT ALL ON *.* TO 'user1'@'localhost';
+SHOW GRANTS FOR 'user1'@'localhost';
+Grants for user1@localhost
+GRANT ALL PRIVILEGES ON *.* TO `user1`@`localhost` IDENTIFIED BY PASSWORD '*CB386B3062EFB295ED40F6A5B1A8CFE300642E38'
+REVOKE ALL ON *.* FROM 'user1'@'localhost';
+SHOW GRANTS FOR 'user1'@'localhost';
+Grants for user1@localhost
+GRANT USAGE ON *.* TO `user1`@`localhost` IDENTIFIED BY PASSWORD '*CB386B3062EFB295ED40F6A5B1A8CFE300642E38'
+GRANT CREATE, SELECT, INSERT ON mcs19_db.* TO 'user1'@'localhost';
+connect conn1, localhost, user1, Vagrant1|0000001,;
+connect conn2, localhost, user1, Vagrant1|0000001,;
+connection conn1;
+SELECT USER();
+USER()
+user1@localhost
+SHOW GRANTS FOR 'user1'@'localhost';
+Grants for user1@localhost
+GRANT USAGE ON *.* TO `user1`@`localhost` IDENTIFIED BY PASSWORD '*CB386B3062EFB295ED40F6A5B1A8CFE300642E38'
+GRANT ALL PRIVILEGES ON `test`.* TO `user1`@`localhost`
+GRANT SELECT, INSERT, CREATE ON `mcs19_db`.* TO `user1`@`localhost`
+CREATE DATABASE mcs19_db;
+USE mcs19_db;
+CREATE DATABASE mcs19_db1;
+ERROR 42000: Access denied for user 'user1'@'localhost' to database 'mcs19_db1'
+CREATE TABLE t1(col INT);
+SHOW CREATE TABLE t1;
+Table	Create Table
+t1	CREATE TABLE `t1` (
+  `col` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1
+INSERT INTO t1 VALUES(1);
+SELECT * FROM t1;
+col
+1
+DROP DATABASE mcs19_db;
+ERROR 42000: Access denied for user 'user1'@'localhost' to database 'mcs19_db'
+connection default;
+SELECT USER();
+USER()
+root@localhost
+REVOKE CREATE, SELECT, INSERT ON mcs19_db.* FROM 'user1'@'localhost';
+connection conn2;
+SELECT USER();
+USER()
+user1@localhost
+SHOW GRANTS FOR 'user1'@'localhost';
+Grants for user1@localhost
+GRANT USAGE ON *.* TO `user1`@`localhost` IDENTIFIED BY PASSWORD '*CB386B3062EFB295ED40F6A5B1A8CFE300642E38'
+GRANT ALL PRIVILEGES ON `test`.* TO `user1`@`localhost`
+USE mcs19_db;
+ERROR 42000: Access denied for user 'user1'@'localhost' to database 'mcs19_db'
+INSERT INTO mcs19_db.t1 VALUES(2);
+ERROR 42000: INSERT command denied to user 'user1'@'localhost' for table 't1'
+SELECT * FROM mcs19_db.t1;
+ERROR 42000: SELECT command denied to user 'user1'@'localhost' for table 't1'
+CREATE TABLE mcs19_db.t1;
+ERROR 42000: CREATE command denied to user 'user1'@'localhost' for table 't1'
+connection default;
+SET default_storage_engine=default;
+SELECT @@default_storage_engine;
+@@default_storage_engine
+InnoDB
+DROP DATABASE mcs19_db;
+DROP USER 'user'@'localhost';
+DROP USER 'user1'@'localhost';

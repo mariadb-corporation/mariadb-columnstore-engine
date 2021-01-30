@@ -1,0 +1,38 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug5976.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+select test 
+from (
+  select 1 test
+  union all
+  select count(1) test from region
+) checks
+where test <> 0 order by 1;
+
+select test
+from (
+  select abs(r_regionkey) test from region
+  union all
+  select count(1) test from region
+) checks
+where test <> 0 order by 1;
+
+select test
+from (
+  select 1 test
+  union all
+  select r_regionkey from region
+  union
+  select count(1) test from region
+) checks
+where test <> 0 order by 1;
+
+#
+

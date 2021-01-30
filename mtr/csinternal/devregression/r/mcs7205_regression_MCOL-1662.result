@@ -1,0 +1,13 @@
+USE tpch1;
+CREATE TABLE IF NOT EXISTS mcol1662 (a int, b varchar(200)) engine=columnstore;
+CREATE TABLE IF NOT EXISTS mcol1662_source (a int, b varchar(200));
+INSERT INTO mcol1662_source VALUES (1, 'hello');
+SET columnstore_use_import_for_batchinsert=0;
+INSERT INTO mcol1662 SELECT * FROM mcol1662_source;
+UPDATE mcol1662 SET a = 1, b = 'Hello' WHERE a = 1 and b = 'hello';
+SELECT * FROM mcol1662;
+a	b
+1	Hello
+SET columnstore_use_import_for_batchinsert=1;
+DROP TABLE mcol1662_source;
+DROP TABLE mcol1662;

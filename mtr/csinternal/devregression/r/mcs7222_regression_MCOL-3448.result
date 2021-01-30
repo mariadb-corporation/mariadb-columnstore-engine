@@ -1,0 +1,19 @@
+USE tpch1;
+DROP TABLE IF EXISTS dim_date;
+Warnings:
+Note	1051	Unknown table 'tpch1.dim_date'
+create table dim_date(semaine varchar(10), date_jour date, val int) engine=columnstore;
+insert into dim_date values 
+('2019-S08','2019-02-18',1),
+('2019-S08','2019-02-19',2),
+('2019-S08','2019-02-20',3),
+('2019-S07','2019-02-15',0),
+('2019-S07','2019-02-14',5),
+('2019-S01','2019-01-01',5);
+SELECT * FROM dim_date WHERE SEMAINE IN ('2019-S07') OR (SEMAINE,DATE_JOUR) IN ( ('2019-S08','2019-02-18'), ('2019-S08','2019-02-19') ) order by val;
+semaine	date_jour	val
+2019-S07	2019-02-15	0
+2019-S08	2019-02-18	1
+2019-S08	2019-02-19	2
+2019-S07	2019-02-14	5
+DROP TABLE IF EXISTS dim_date;

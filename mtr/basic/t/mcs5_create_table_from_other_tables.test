@@ -1,0 +1,65 @@
+#
+#Test CREATE TABLE from other tables in Columnstore
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs5_db;
+--enable_warnings
+
+CREATE DATABASE mcs5_db;
+USE mcs5_db;
+
+# 'create table as select' statement with columnstore engine
+CREATE TABLE t1_ctas (c0 int, c1 char(20)) ENGINE=Columnstore;
+INSERT INTO t1_ctas VALUES (1, 'foo'), (2, 'bar'), (3, 'disco');
+
+CREATE TABLE t2 ENGINE=Columnstore AS SELECT * FROM t1_ctas;
+SHOW CREATE TABLE t2;
+CREATE TABLE t3(col0 varchar(45) DEFAULT 'abc') ENGINE=Columnstore AS SELECT * FROM t1_ctas;
+SHOW CREATE TABLE t3;
+CREATE TABLE t4(col0 varchar(45)) ENGINE=Columnstore AS SELECT * FROM t1_ctas;
+SHOW CREATE TABLE t4;
+CREATE TABLE t5(c0 int) ENGINE=Columnstore AS SELECT * FROM t1_ctas;
+SHOW CREATE TABLE t5;
+CREATE TABLE t6(c0 int) ENGINE=Columnstore AS SELECT c1 FROM t1_ctas;
+SHOW CREATE TABLE t6;
+CREATE TABLE t7 ENGINE=Columnstore SELECT c1 AS c11 FROM t1_ctas;
+SHOW CREATE TABLE t7;
+CREATE TABLE t8 ENGINE=Columnstore SELECT c0,c1 FROM t1_ctas WHERE c1='bar';
+SHOW CREATE TABLE t8;
+CREATE TABLE t9(col0 varchar(45), c0 int DEFAULT 10) ENGINE=Columnstore SELECT * FROM t1_ctas;
+SHOW CREATE TABLE t9;
+
+# 'create table as select' statement with innodb engine
+CREATE TABLE t2_ctas (c0 int, c1 char(20), PRIMARY KEY (c1))ENGINE=Innodb;
+INSERT INTO t2_ctas VALUES (1, 'foo'), (2, 'bar'), (3, 'disco');
+
+CREATE TABLE t10 ENGINE=Columnstore AS SELECT * FROM t1_ctas;
+SHOW CREATE TABLE t10;
+CREATE TABLE t11(col0 varchar(45) DEFAULT 'abc') ENGINE=Columnstore AS SELECT * FROM t1_ctas;
+SHOW CREATE TABLE t11;
+CREATE TABLE t12(col0 varchar(45)) ENGINE=Columnstore AS SELECT * FROM t1_ctas;
+SHOW CREATE TABLE t12;
+CREATE TABLE t13(c0 int) ENGINE=Columnstore AS SELECT * FROM t1_ctas;
+SHOW CREATE TABLE t13;
+CREATE TABLE t14(c0 int) ENGINE=Columnstore AS SELECT c1 FROM t1_ctas;
+SHOW CREATE TABLE t14;
+CREATE TABLE t15 ENGINE=Columnstore SELECT c1 AS c11 FROM t1_ctas;
+SHOW CREATE TABLE t15;
+CREATE TABLE t16 ENGINE=Columnstore SELECT c0,c1 FROM t1_ctas WHERE c1='bar';
+SHOW CREATE TABLE t16;
+CREATE TABLE t17(col0 varchar(45), c0 int DEFAULT 10) ENGINE=Columnstore SELECT * FROM t1_ctas;
+SHOW CREATE TABLE t17;
+
+# create table using 'like' statement with columnstore engine
+CREATE TABLE t1_like(c0 int, c1 char(20)) ENGINE=Columnstore;
+CREATE TABLE t18 LIKE t1_like;
+SHOW CREATE TABLE t18;
+
+# create table using 'like' statement with innodb engine
+CREATE TABLE t2_like(c0 int, c1 char(20), PRIMARY KEY (c1))ENGINE=Innodb;
+CREATE TABLE t19 LIKE t2_like;
+SHOW CREATE TABLE t19;
+
+DROP DATABASE mcs5_db;

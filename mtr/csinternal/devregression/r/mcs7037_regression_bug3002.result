@@ -1,0 +1,35 @@
+USE tpch1;
+select * from (select l_orderkey from lineitem where l_orderkey <= 10) x order by 1;
+l_orderkey
+1
+1
+1
+1
+1
+1
+2
+3
+3
+3
+3
+3
+3
+4
+5
+5
+5
+6
+7
+7
+7
+7
+7
+7
+7
+select * from region;
+r_regionkey	r_name	r_comment
+0	AFRICA	lar deposits. blithely final packages cajole. regular waters are final requests. regular accounts are according to 
+1	AMERICA	hs use ironic, even requests. s
+2	ASIA	ges. thinly even pinto beans ca
+3	EUROPE	ly final courts cajole furiously final excuse
+4	MIDDLE EAST	uickly special accounts cajole carefully blithely close requests. carefully final asymptotes haggle furiousl

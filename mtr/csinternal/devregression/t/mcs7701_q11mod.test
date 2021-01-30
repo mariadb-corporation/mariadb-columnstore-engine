@@ -1,0 +1,19 @@
+#
+# Test case migrated from regression test suite:
+# ./mysql/queries/working_ssb_compareLogOnly/ssb/q1.1.mod.sql
+#
+# Author: Susil, susil.behera@mariadb.com
+#
+
+-- source ../include/have_columnstore.inc
+
+USE ssb1;
+
+# Q1.1
+select sum(lo_extendedprice*lo_discount) as revenue 
+from dateinfo, lineorder				   # changed order
+where lo_orderdate = d_datekey
+and d_year = 1993
+and lo_orderdate between 19930101 and 19931231		   # added matching predicate
+and lo_discount between 1  and 3
+and lo_quantity < 25;

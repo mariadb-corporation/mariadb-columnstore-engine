@@ -1,0 +1,24 @@
+--source ../include/have_columnstore.inc
+--source ctype_cmp_combinations.inc
+--source ctype_cmp_create.inc
+
+SET NAMES utf8;
+
+SET @datatype='VARCHAR(32) CHARACTER SET latin1 COLLATE latin1_nopad_bin';
+
+CREATE TABLE t1 (c1 VARCHAR(32) CHARACTER SET latin1 COLLATE latin1_nopad_bin);
+
+CALL test01_populate(1,3);
+CALL test01_field_literal(1,4);
+CALL test01_field_field();
+CALL test01_distinct();
+DROP TABLE t1;
+
+CALL test02_same_table_create_table(@datatype);
+CALL test02_same_table_populate();
+CALL test02_same_table_cmp_field_field();
+DROP TABLE t1;
+
+CALL test03(32,@datatype);
+
+--source ctype_cmp_drop.inc

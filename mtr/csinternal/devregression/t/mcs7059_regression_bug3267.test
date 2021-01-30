@@ -1,0 +1,18 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3267.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists bug3267;
+create table bug3267 (c1 decimal(12, 6), c2 float) engine=columnstore;
+insert into bug3267 values (5.240620, 5.24062e+06), (7.240620, 7.24062e+06), (9.940620, 9.94062e+06), (5.240620, 5.24062), (-4.44, -4.44), (-8.87, -8.87);
+select floor(c1), ceil(c1), c1 from bug3267;
+select floor(c2), ceil(c2), c2 from bug3267;
+drop table if exists bug3267;
+#
+

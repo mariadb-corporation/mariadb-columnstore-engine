@@ -1,0 +1,58 @@
+#
+# Columnstore engine doesn't support SHA2() function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs267_db;
+--enable_warnings
+
+CREATE DATABASE mcs267_db;
+USE mcs267_db;
+
+CREATE TABLE t1
+(
+ t1_INT INT,
+ t1_DECIMAL DECIMAL(12,5),
+ t1_TEXT TEXT,
+ t1_DATE DATE,
+ t1_TIME TIME
+ )ENGINE=Columnstore;
+INSERT INTO t1 VALUES(103, 1234.5699, 'pqrstuvwxyz', '1997-12-12', '22:12:02');
+INSERT INTO t1 VALUES(-7299, 111.99, 'abcdefghijklm', '2001-1-1', '23:59:59');
+INSERT INTO t1 VALUES(9913, 98765.4321, repeat('q', 5), '09-12-11', '01:08:59');
+
+# The second argument indicates the desired bit length of the result, which must have a 
+# value of 224, 256, 384, 512, or 0 (which is equivalent to 256).
+SELECT SHA2(NULL, 256) FROM t1 LIMIT 1;
+SELECT SHA2(-1, 0) FROM t1 LIMIT 1;
+SELECT SHA2(-1, 256) FROM t1 LIMIT 1;
+SELECT SHA2(-1, 224) FROM t1 LIMIT 1;
+SELECT SHA2(-1, 384) FROM t1 LIMIT 1;
+SELECT SHA2(-1, 512) FROM t1 LIMIT 1;
+SELECT SHA2(0, 0) FROM t1 LIMIT 1;
+SELECT SHA2(0.5, 0) FROM t1 LIMIT 1;
+SELECT SHA2(1234, 0) FROM t1 LIMIT 1;
+SELECT SHA2('1234', 0) FROM t1 LIMIT 1;
+SELECT SHA2('@', 0) FROM t1 LIMIT 1;
+SELECT SHA2('a', 0) FROM t1 LIMIT 1;
+SELECT SHA2('abcdefg', 0) FROM t1 LIMIT 1;
+
+--error ER_CHECK_NOT_IMPLEMENTED
+SELECT t1_INT, SHA2(t1_INT, 0) FROM t1 ORDER BY 1;
+
+--error ER_CHECK_NOT_IMPLEMENTED
+SELECT t1_DECIMAL, SHA2(t1_DECIMAL, 0) FROM t1 ORDER BY 1;
+
+--error ER_CHECK_NOT_IMPLEMENTED
+SELECT t1_TEXT, SHA2(t1_TEXT, 0) FROM t1 ORDER BY 1;
+
+--error ER_CHECK_NOT_IMPLEMENTED
+SELECT t1_DATE, SHA2(t1_DATE, 0) FROM t1 ORDER BY 1;
+
+--error ER_CHECK_NOT_IMPLEMENTED
+SELECT t1_TIME, SHA2(t1_TIME, 0) FROM t1 ORDER BY 1;
+
+# Clean UP
+DROP DATABASE mcs267_db;

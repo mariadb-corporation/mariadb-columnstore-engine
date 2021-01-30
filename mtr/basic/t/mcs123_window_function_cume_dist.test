@@ -1,0 +1,28 @@
+#
+# Test CUME_DIST() Window Function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs123_db;
+--enable_warnings
+
+CREATE DATABASE mcs123_db;
+USE mcs123_db;
+
+CREATE TABLE t1 (a CHAR(1), b INT)ENGINE=Columnstore;
+INSERT INTO t1 VALUES ('', NULL),('a', 123),('a', 1),('b', 12),('c', 1861),('c', 1991),('d', 10701),('d', 1071);
+
+SELECT a, b, CUME_DIST() OVER(ORDER BY a) cume_dist_val FROM t1;
+SELECT a, b, CUME_DIST() OVER(ORDER BY b DESC) cume_dist_val FROM t1;
+SELECT a, b, CUME_DIST() OVER w cume_dist_val FROM t1 WINDOW w AS (ORDER BY a DESC);
+SELECT a, b, CUME_DIST() OVER w cume_dist_val FROM t1 WINDOW w AS (ORDER BY b);
+
+--error ER_PARSE_ERROR
+SELECT a, b, CUME_DIST(a) OVER(ORDER BY a) cume_dist_val FROM t1;
+--error ER_NO_ORDER_LIST_IN_WINDOW_SPEC
+SELECT a, b, CUME_DIST() OVER(PARTITION BY b) cume_dist_val FROM t1;
+
+# Clean UP
+DROP DATABASE mcs123_db;

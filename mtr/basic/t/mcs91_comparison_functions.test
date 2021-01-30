@@ -1,0 +1,50 @@
+#
+# Test Comparison Functions like COALESCE, LEAST, GREATEST, ISNULL
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs91_db;
+--enable_warnings
+
+CREATE DATABASE mcs91_db;
+USE mcs91_db;
+
+CREATE TABLE t1
+(
+ t1_int INT,
+ t1_decimal DECIMAL(5,2),
+ t1_text TEXT,
+ t1_char CHAR(1),
+ t1_datetime DATETIME
+ )ENGINE=Columnstore;
+INSERT INTO t1 VALUES(NULL, NULL, '', '', '0000-00-00');
+INSERT INTO t1 VALUES(123456, 111.11, repeat('a',10), 'a', '1111-11-11 11:11:11');
+INSERT INTO t1 VALUES(NULL, 222.22, '', 'b', '2222-12-22 22:22:22');
+
+SELECT *, COALESCE(t1_int, 'No Value') FROM t1 ORDER BY t1_int;
+SELECT *, COALESCE(t1_decimal, 'No Value') FROM t1 ORDER BY t1_int;
+SELECT *, COALESCE(t1_text, 'No Value') FROM t1 ORDER BY t1_int;
+SELECT *, COALESCE(t1_datetime, 'No Value') FROM t1 ORDER BY t1_int;
+SELECT t1_int, t1_decimal, COALESCE(t1_text, LEFT(t1_char,10)) FROM t1 ORDER BY t1_int;
+
+SELECT t1_int, LEAST(t1_int, t1_decimal) FROM t1 ORDER BY 1;
+SELECT t1_int, LEAST(t1_int, t1_decimal, t1_text) FROM t1 ORDER BY 1;
+SELECT t1_int, LEAST(t1_int, t1_decimal, t1_text, t1_datetime) FROM t1 ORDER BY 1;
+
+SELECT t1_int, GREATEST(t1_int, t1_decimal) FROM t1 ORDER BY 1;
+SELECT t1_int, GREATEST(t1_int, t1_decimal, t1_text) FROM t1 ORDER BY 1;
+SELECT t1_int, GREATEST(t1_int, t1_decimal, t1_text, t1_datetime) FROM t1 ORDER BY 1;
+
+SELECT t1_int, LEAST(IFNULL(t1_int, 0), IFNULL(t1_decimal, 0), IFNULL(t1_text, 'no value'), IFNULL(t1_datetime, '0')) least,
+GREATEST(IFNULL(t1_int, 0), IFNULL(t1_decimal, 0), IFNULL(t1_text, 0), IFNULL(t1_datetime, 0)) highest
+FROM t1 ORDER BY 2;
+
+SELECT * FROM t1 WHERE ISNULL(t1_int) ORDER BY t1_decimal;
+SELECT * FROM t1 WHERE ISNULL(t1_decimal) ORDER BY t1_decimal;
+SELECT * FROM t1 WHERE ISNULL(t1_text) ORDER BY t1_decimal;
+SELECT * FROM t1 WHERE ISNULL(t1_datetime) ORDER BY t1_decimal;
+
+# Clean UP
+DROP DATABASE mcs91_db;

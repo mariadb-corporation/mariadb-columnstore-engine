@@ -1,0 +1,12 @@
+#
+# Test case migrated from regression test suite:
+# ./mysql/queries/nightly/alltest/test000/tpchSchemaValidation/datatypetestm2.sql
+#
+# Author: Susil, susil.behera@mariadb.com
+#
+
+-- source ../include/have_columnstore.inc
+
+USE autopilot;
+
+select * from datatypetestm2;

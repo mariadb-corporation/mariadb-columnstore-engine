@@ -1,0 +1,49 @@
+#
+# Test Math Functions
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs94_db;
+--enable_warnings
+
+CREATE DATABASE mcs94_db;
+USE mcs94_db;
+
+CREATE TABLE t1 (a INT, b DECIMAL(5,2))ENGINE=Columnstore;
+INSERT INTO t1 VALUES(NULL, NULL), (0, 0.0), (1, 11.11), (10, 82.12), (-15, -202.19), (-297, 0.41), (719, 359.9);
+
+SELECT a, ABS(a), b, ABS(b) FROM t1;
+SELECT a, ACOS(a), b, ACOS(b) FROM t1;
+SELECT a, ASIN(a), b, ASIN(b) FROM t1;
+SELECT a, ATAN(a), b, ATAN(b) FROM t1;
+SELECT a, CEIL(a), b, CEIL(b) FROM t1;
+SELECT a, CEILING(a), b, CEILING(b) FROM t1;
+SELECT a, CONV(a, 10, 2)  FROM t1;
+SELECT a, CONV(a, 10, 8)  FROM t1;
+SELECT a, CONV(a, 10, 16)  FROM t1;
+SELECT a, COS(a), b, COS(b) FROM t1;
+SELECT a, COT(a), b, COT(b) FROM t1 WHERE a != 0;
+SELECT a, CRC32(a), b, CRC32(b) FROM t1;
+SELECT a, DEGREES(a), b, DEGREES(b) FROM t1;
+SELECT a, EXP(1), b, EXP(b) FROM t1;
+SELECT a, FLOOR(a), b, FLOOR(b) FROM t1;
+SELECT a, LN(a), b, LN(b) FROM t1;
+SELECT a, LOG(a), b, LOG(b) FROM t1;
+SELECT a, LOG2(a), b, LOG2(b) FROM t1;
+SELECT a, LOG10(a), b, LOG10(b) FROM t1;
+SELECT a, MOD(a, 10), b, MOD(b, 10) FROM t1;
+SELECT a, MOD(a, 2), b, MOD(b, 2) FROM t1;
+SELECT a, POW(a, 2), b, POW(b, 2) FROM t1;
+SELECT a, RADIANS(a), b, RADIANS(b) FROM t1;
+SELECT a, RAND(a), b, RAND(b) FROM t1;
+SELECT a, ROUND(a), b, ROUND(b) FROM t1;
+SELECT a, SIGN(a), b, SIGN(b) FROM t1;
+SELECT a, SQRT(a), b, SQRT(b) FROM t1;
+SELECT a, TAN(a), b, TAN(b) FROM t1;
+SELECT a, TRUNCATE(a, 1) FROM t1;
+SELECT b, TRUNCATE(b, 1), TRUNCATE(b, 4), TRUNCATE(b, -1), TRUNCATE(b, -2), TRUNCATE(b, -3) FROM t1;
+
+# Clean UP
+DROP DATABASE mcs94_db;

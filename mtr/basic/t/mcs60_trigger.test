@@ -1,0 +1,64 @@
+#
+# Test triggers
+# Author: Susil, susil.behera@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs60_db;
+--enable_warnings
+
+CREATE DATABASE mcs60_db;
+USE mcs60_db;
+
+DROP DATABASE IF EXISTS mcs60_db;
+CREATE DATABASE mcs60_db;
+USE mcs60_db;
+
+CREATE TABLE t1 (i INT, j INT) ENGINE=Columnstore;
+
+# insert trigger
+DELIMITER |;
+CREATE TRIGGER trg1 BEFORE INSERT ON t1 FOR EACH ROW 
+BEGIN
+  IF NEW.j > 10 THEN
+    SET NEW.j := 10;
+  END IF;
+END|
+DELIMITER ;|
+
+INSERT INTO t1 VALUES (1,2),(2,3),(3,14);
+SELECT * FROM t1 ORDER BY i;
+
+# BUG MCOL-4273
+# update trigger
+#DELIMITER |;
+#CREATE TRIGGER trg2 BEFORE UPDATE ON t1 FOR EACH ROW
+#BEGIN
+#  IF OLD.i % 2 = 0 THEN
+#    SET NEW.j := -1;
+#  END IF;
+#END|
+
+#DELIMITER ;|
+#UPDATE t1 SET j= 20;
+#SELECT * FROM t1 ORDER BY i;
+
+#DELIMITER |;
+#CREATE TRIGGER trg3 AFTER UPDATE ON t1 FOR EACH ROW 
+#BEGIN
+#  IF NEW.j = 30 THEN
+#    SET @fired:= "Yes";
+#  END IF;
+#END|
+#DELIMITER ;|
+
+#SET @fired:="";
+#UPDATE t1 SET j= 30;
+#SELECT @fired;
+#SELECT * FROM t1 ORDER BY i;
+
+# More cases will be added based on MCOL-4273
+
+# Clean UP
+DROP DATABASE mcs60_db;

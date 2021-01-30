@@ -1,0 +1,7 @@
+USE tpch1;
+select count(n_nationkey) from nation n join region r on n_regionkey = r_regionkey and n_nationkey in (select distinct n_regionkey from nation where n.n_nationkey < 10);
+count(n_nationkey)
+5
+select count(n_nationkey) from nation n join region r on n_regionkey = r_regionkey and n_nationkey in (select distinct n_regionkey from nation where n.n_name <> 'abc');
+count(n_nationkey)
+5

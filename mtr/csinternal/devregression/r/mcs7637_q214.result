@@ -1,0 +1,5 @@
+USE tpch1;
+CREATE TABLE IF NOT EXISTS mcol2219 (`t (space` int) engine=columnstore;
+SELECT column_name FROM information_schema.columnstore_columns WHERE table_name='mcol2219';
+column_name
+DROP TABLE mcol2219;

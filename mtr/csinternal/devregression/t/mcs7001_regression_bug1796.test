@@ -1,0 +1,26 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug1796.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+select count(n_nationkey)
+from nation, customer, orders, lineitem
+where n_nationkey = c_nationkey and
+c_custkey = o_custkey and
+o_orderkey = l_orderkey and
+l_orderkey <= 10000;
+
+select count(n_nationkey)
+from nation, customer, orders, lineitem
+where c_custkey = o_custkey and
+o_orderkey = l_orderkey and
+n_nationkey = c_nationkey and 
+l_orderkey <= 10000;
+
+#
+

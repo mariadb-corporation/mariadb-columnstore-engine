@@ -1,0 +1,21 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug2762.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+select count(*) from orders where o_orderstatus = 'F';
+select count(*) from orders where o_orderstatus like 'F%';
+select count(*) from orders where o_orderstatus <> 'F';
+select count(*) from orders where o_orderstatus not like 'F%';
+select count(*) from orders where o_orderstatus = 'F' or o_orderstatus = 'O';
+select count(*) from orders where o_orderstatus like 'F%' or o_orderstatus like 'O%';
+select count(*) from orders where o_orderpriority like '4-NOT SPECIFIED';
+select count(*) from orders where o_orderpriority = '4-NOT SPECIFIED';
+select count(*) from orders where o_orderpriority like '4-%';
+#
+

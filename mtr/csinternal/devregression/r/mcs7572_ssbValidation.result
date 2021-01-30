@@ -1,0 +1,175 @@
+use ssb1;
+select count(c_custkey), min(c_custkey), max(c_custkey), sum(c_custkey), avg(c_custkey) from customer;
+count(c_custkey)	min(c_custkey)	max(c_custkey)	sum(c_custkey)	avg(c_custkey)
+30000	1	30000	450015000	15000.5000
+select count(c_name), min(c_name), max(c_name) from customer;
+count(c_name)	min(c_name)	max(c_name)
+30000	Customer#000000001	Customer#000030000
+select count(c_address), min(c_address), max(upper(c_address)) from customer;
+count(c_address)	min(c_address)	max(upper(c_address))
+30000	  3SUEwTaEs35Z	ZZYQCZPC50YD
+select count(c_city), min(c_city), max(c_city) from customer;
+count(c_city)	min(c_city)	max(c_city)
+30000	ALGERIA  0	VIETNAM  9
+select count(c_nation), min(c_nation), max(c_nation) from customer;
+count(c_nation)	min(c_nation)	max(c_nation)
+30000	ALGERIA	VIETNAM
+select count(c_region), min(c_region), max(c_region) from customer;
+count(c_region)	min(c_region)	max(c_region)
+30000	AFRICA	MIDDLE EAST
+select count(c_phone), min(c_phone), max(c_phone) from customer;
+count(c_phone)	min(c_phone)	max(c_phone)
+30000	10-100-449-4295	34-999-791-6646
+select count(c_mktsegment), min(c_mktsegment), max(c_mktsegment) from customer;
+count(c_mktsegment)	min(c_mktsegment)	max(c_mktsegment)
+30000	AUTOMOBILE	MACHINERY
+select count(d_datekey), min(d_datekey), max(d_datekey), sum(d_datekey), avg(d_datekey) from dateinfo;
+count(d_datekey)	min(d_datekey)	max(d_datekey)	sum(d_datekey)	avg(d_datekey)
+2556	19920101	19981230	50993856793	19950648.1976
+select count(d_date), min(d_date), max(d_date) from dateinfo;
+count(d_date)	min(d_date)	max(d_date)
+2556	April 1, 1992	September 9, 1998
+select count(d_dayofweek), min(d_dayofweek), max(d_dayofweek) from dateinfo;
+count(d_dayofweek)	min(d_dayofweek)	max(d_dayofweek)
+2556	Friday	Wednesday
+select count(d_month), min(d_month), max(d_month) from dateinfo;
+count(d_month)	min(d_month)	max(d_month)
+2556	April	September
+select count(d_year), min(d_year), max(d_year), sum(d_year), avg(d_year) from dateinfo;
+count(d_year)	min(d_year)	max(d_year)	sum(d_year)	avg(d_year)
+2556	1992	1998	5099215	1994.9980
+select count(d_yearmonthnum), min(d_yearmonthnum), max(d_yearmonthnum), sum(d_yearmonthnum), avg(d_yearmonthnum) from dateinfo;
+count(d_yearmonthnum)	min(d_yearmonthnum)	max(d_yearmonthnum)	sum(d_yearmonthnum)	avg(d_yearmonthnum)
+2556	199201	199812	509938166	199506.3247
+select count(d_yearmonth), min(d_yearmonth), max(d_yearmonth) from dateinfo;
+count(d_yearmonth)	min(d_yearmonth)	max(d_yearmonth)
+2556	Apr1992	Sep1998
+select count(d_daynuminweek), min(d_daynuminweek), max(d_daynuminweek), sum(d_daynuminweek), avg(d_daynuminweek) from dateinfo;
+count(d_daynuminweek)	min(d_daynuminweek)	max(d_daynuminweek)	sum(d_daynuminweek)	avg(d_daynuminweek)
+2556	1	7	10225	4.0004
+select count(d_daynuminmonth), min(d_daynuminmonth), max(d_daynuminmonth), sum(d_daynuminmonth), avg(d_daynuminmonth) from dateinfo;
+count(d_daynuminmonth)	min(d_daynuminmonth)	max(d_daynuminmonth)	sum(d_daynuminmonth)	avg(d_daynuminmonth)
+2556	1	31	40193	15.7250
+select count(d_daynuminyear), min(d_daynuminyear), max(d_daynuminyear), sum(d_daynuminyear), avg(d_daynuminyear) from dateinfo;
+count(d_daynuminyear)	min(d_daynuminyear)	max(d_daynuminyear)	sum(d_daynuminyear)	avg(d_daynuminyear)
+2556	1	366	467932	183.0720
+select count(d_monthnuminyear), min(d_monthnuminyear), max(d_monthnuminyear), sum(d_monthnuminyear), avg(d_monthnuminyear) from dateinfo;
+count(d_monthnuminyear)	min(d_monthnuminyear)	max(d_monthnuminyear)	sum(d_monthnuminyear)	avg(d_monthnuminyear)
+2556	1	12	16666	6.5203
+select count(d_weeknuminyear), min(d_weeknuminyear), max(d_weeknuminyear), sum(d_weeknuminyear), avg(d_weeknuminyear) from dateinfo;
+count(d_weeknuminyear)	min(d_weeknuminyear)	max(d_weeknuminyear)	sum(d_weeknuminyear)	avg(d_weeknuminyear)
+2556	1	53	68310	26.7254
+select count(d_sellingseason), min(d_sellingseason), max(d_sellingseason) from dateinfo;
+count(d_sellingseason)	min(d_sellingseason)	max(d_sellingseason)
+2556	Christmas	Winter
+select count(d_lastdayinweekfl), min(d_lastdayinweekfl), max(d_lastdayinweekfl), sum(d_lastdayinweekfl), avg(d_lastdayinweekfl) from dateinfo;
+count(d_lastdayinweekfl)	min(d_lastdayinweekfl)	max(d_lastdayinweekfl)	sum(d_lastdayinweekfl)	avg(d_lastdayinweekfl)
+2556	0	1	365	0.1428
+select count(d_lastdayinmonthfl), min(d_lastdayinmonthfl), max(d_lastdayinmonthfl), sum(d_lastdayinmonthfl), avg(d_lastdayinmonthfl) from dateinfo;
+count(d_lastdayinmonthfl)	min(d_lastdayinmonthfl)	max(d_lastdayinmonthfl)	sum(d_lastdayinmonthfl)	avg(d_lastdayinmonthfl)
+2556	0	1	2473	0.9675
+select count(d_holidayfl), min(d_holidayfl), max(d_holidayfl), sum(d_holidayfl), avg(d_holidayfl) from dateinfo;
+count(d_holidayfl)	min(d_holidayfl)	max(d_holidayfl)	sum(d_holidayfl)	avg(d_holidayfl)
+2556	0	1	70	0.0274
+select count(d_weekdayfl), min(d_weekdayfl), max(d_weekdayfl), sum(d_weekdayfl), avg(d_weekdayfl) from dateinfo;
+count(d_weekdayfl)	min(d_weekdayfl)	max(d_weekdayfl)	sum(d_weekdayfl)	avg(d_weekdayfl)
+2556	0	1	1826	0.7144
+select count(lo_orderkey), min(lo_orderkey), max(lo_orderkey), sum(lo_orderkey), avg(lo_orderkey) from lineorder;
+count(lo_orderkey)	min(lo_orderkey)	max(lo_orderkey)	sum(lo_orderkey)	avg(lo_orderkey)
+6001215	1	6000000	18005322964949	3000279.6042
+select count(lo_linenumber), min(lo_linenumber), max(lo_linenumber), sum(lo_linenumber), avg(lo_linenumber) from lineorder;
+count(lo_linenumber)	min(lo_linenumber)	max(lo_linenumber)	sum(lo_linenumber)	avg(lo_linenumber)
+6001215	1	7	18007100	3.0006
+select count(lo_custkey), min(lo_custkey), max(lo_custkey), sum(lo_custkey), avg(lo_custkey) from lineorder;
+count(lo_custkey)	min(lo_custkey)	max(lo_custkey)	sum(lo_custkey)	avg(lo_custkey)
+6001215	1	29999	90077509067	15009.8787
+select count(lo_partkey), min(lo_partkey), max(lo_partkey), sum(lo_partkey), avg(lo_partkey) from lineorder;
+count(lo_partkey)	min(lo_partkey)	max(lo_partkey)	sum(lo_partkey)	avg(lo_partkey)
+6001215	1	200000	600229457837	100017.9893
+select count(lo_suppkey), min(lo_suppkey), max(lo_suppkey), sum(lo_suppkey), avg(lo_suppkey) from lineorder;
+count(lo_suppkey)	min(lo_suppkey)	max(lo_suppkey)	sum(lo_suppkey)	avg(lo_suppkey)
+6001215	1	10000	30016437018	5001.7267
+select count(lo_orderdate), min(lo_orderdate), max(lo_orderdate) from lineorder;
+count(lo_orderdate)	min(lo_orderdate)	max(lo_orderdate)
+6001215	19920101	19980802
+select count(lo_orderpriority) from lineorder;
+count(lo_orderpriority)
+6001215
+select count(lo_shippriority), min(lo_shippriority), max(lo_shippriority) from lineorder;
+count(lo_shippriority)	min(lo_shippriority)	max(lo_shippriority)
+6001215	0	0
+select count(lo_quantity), min(lo_quantity), max(lo_quantity), sum(lo_quantity), avg(lo_quantity) from lineorder;
+count(lo_quantity)	min(lo_quantity)	max(lo_quantity)	sum(lo_quantity)	avg(lo_quantity)
+6001215	1.00	50.00	153078795.00	25.507967
+select count(lo_extendedprice), min(lo_extendedprice), max(lo_extendedprice), sum(lo_extendedprice), avg(lo_extendedprice) from lineorder;
+count(lo_extendedprice)	min(lo_extendedprice)	max(lo_extendedprice)	sum(lo_extendedprice)	avg(lo_extendedprice)
+6001215	90100.00	10494950.00	22957731090120.00	3825513.848466
+select count(lo_ordtotalprice), min(lo_ordtotalprice), max(lo_ordtotalprice), sum(lo_ordtotalprice), avg(lo_ordtotalprice) from lineorder;
+count(lo_ordtotalprice)	min(lo_ordtotalprice)	max(lo_ordtotalprice)	sum(lo_ordtotalprice)	avg(lo_ordtotalprice)
+6001215	85771.00	55528516.00	113443610188019.00	18903440.417985
+select count(lo_discount), min(lo_discount), max(lo_discount), sum(lo_discount), avg(lo_discount) from lineorder;
+count(lo_discount)	min(lo_discount)	max(lo_discount)	sum(lo_discount)	avg(lo_discount)
+6001215	0.00	10.00	30005733.00	4.999943
+select count(lo_revenue), min(lo_revenue), max(lo_revenue), sum(lo_revenue), avg(lo_revenue) from lineorder;
+count(lo_revenue)	min(lo_revenue)	max(lo_revenue)	sum(lo_revenue)	avg(lo_revenue)
+6001215	81360.00	10464950.00	21810219932448.00	3634300.709514
+select count(lo_supplycost), min(lo_supplycost), max(lo_supplycost), sum(lo_supplycost), avg(lo_supplycost) from lineorder;
+count(lo_supplycost)	min(lo_supplycost)	max(lo_supplycost)	sum(lo_supplycost)	avg(lo_supplycost)
+6001215	54060.00	125939.00	539963566642.00	89975.707693
+select count(lo_tax), min(lo_tax), max(lo_tax), sum(lo_tax), avg(lo_tax) from lineorder;
+count(lo_tax)	min(lo_tax)	max(lo_tax)	sum(lo_tax)	avg(lo_tax)
+6001215	0.00	8.00	24012967.00	4.001351
+select count(lo_commitdate), min(lo_commitdate), max(lo_commitdate), sum(lo_commitdate), avg(lo_commitdate) from lineorder;
+count(lo_commitdate)	min(lo_commitdate)	max(lo_commitdate)	sum(lo_commitdate)	avg(lo_commitdate)
+6001215	19920131	19981031	119726092431428	19950308.8010
+select count(lo_shipmode) from lineorder;
+count(lo_shipmode)
+6001215
+select count(p_partkey), min(p_partkey), max(p_partkey), sum(p_partkey), avg(p_partkey) from part;
+count(p_partkey)	min(p_partkey)	max(p_partkey)	sum(p_partkey)	avg(p_partkey)
+200000	1	200000	20000100000	100000.5000
+select count(p_name), min(p_name), max(p_name) from part;
+count(p_name)	min(p_name)	max(p_name)
+200000	almond antique	yellow white
+select count(p_mfgr), min(p_mfgr), max(p_mfgr) from part;
+count(p_mfgr)	min(p_mfgr)	max(p_mfgr)
+200000	MFGR#1	MFGR#5
+select count(p_category), min(p_category), max(p_category) from part;
+count(p_category)	min(p_category)	max(p_category)
+200000	MFGR#11	MFGR#55
+select count(p_brand1), min(p_brand1), max(p_brand1) from part;
+count(p_brand1)	min(p_brand1)	max(p_brand1)
+200000	MFGR#111	MFGR#559
+select count(p_color), min(p_color), max(p_color) from part;
+count(p_color)	min(p_color)	max(p_color)
+200000	almond	yellow
+select count(p_type), min(p_type), max(p_type) from part;
+count(p_type)	min(p_type)	max(p_type)
+200000	ECONOMY ANODIZED BRASS	STANDARD POLISHED TIN
+select count(p_size), min(p_size), max(p_size) from part;
+count(p_size)	min(p_size)	max(p_size)
+200000	1	50
+select count(p_container), min(p_container), max(p_container) from part;
+count(p_container)	min(p_container)	max(p_container)
+200000	JUMBO BAG	WRAP PKG
+select count(s_suppkey), min(s_suppkey), max(s_suppkey), sum(s_suppkey), avg(s_suppkey) from supplier;
+count(s_suppkey)	min(s_suppkey)	max(s_suppkey)	sum(s_suppkey)	avg(s_suppkey)
+10000	1	10000	50005000	5000.5000
+select count(s_name), min(s_name), max(s_name) from supplier;
+count(s_name)	min(s_name)	max(s_name)
+10000	Supplier#000000001	Supplier#000010000
+select count(s_address), min(s_address), max(upper(s_address)) from supplier;
+count(s_address)	min(s_address)	max(upper(s_address))
+10000	  3TLxhVMg	ZZY9HINAPGUSSJYR
+select count(s_city), min(s_city), max(s_city) from supplier;
+count(s_city)	min(s_city)	max(s_city)
+10000	ALGERIA  0	VIETNAM  9
+select count(s_nation), min(s_nation), max(s_nation) from supplier;
+count(s_nation)	min(s_nation)	max(s_nation)
+10000	ALGERIA	VIETNAM
+select count(s_region), min(s_region), max(s_region) from supplier;
+count(s_region)	min(s_region)	max(s_region)
+10000	AFRICA	MIDDLE EAST
+select count(s_phone), min(s_phone), max(s_phone) from supplier;
+count(s_phone)	min(s_phone)	max(s_phone)
+10000	10-103-225-8470	34-995-213-3253

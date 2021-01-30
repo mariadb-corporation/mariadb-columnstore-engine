@@ -1,0 +1,71 @@
+#
+# Cross Engine ORDER BY statements
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs65_db;
+--enable_warnings
+
+CREATE DATABASE mcs65_db;
+USE mcs65_db;
+
+#
+# Enable cross engine join
+# Configure user and password in Columnstore.xml file
+#
+--exec /usr/bin/mcsSetConfig CrossEngineSupport User 'cejuser'
+--exec /usr/bin/mcsSetConfig CrossEngineSupport Password 'Vagrant1|0000001'
+#
+# Create corresponding in the server
+#
+--disable_warnings
+CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
+--enable_warnings
+GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+FLUSH PRIVILEGES;
+
+# Create tables with Innodb and Columnstore engines
+CREATE TABLE t1 (t1_int INT, t1_char CHAR(5))ENGINE=Innodb;
+CREATE TABLE t2 (t2_int INT, t2_char CHAR(5))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL,''),(1,'ddd'),(2,'bbb'),(3,'fffff'),(4,'eee'),(5,'a'),(6,'ccc'),(7,'ggg');
+INSERT INTO t2 VALUES (NULL,''),(1,'ooo'),(3,'iii'),(5,'hhh'),(7,'nnnnn'),(9,'kkkk'),(11,'mm'),(13,'j');
+
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 1;
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 1 ASC;
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 1 DESC;
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 2;
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 2 DESC; 
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 3;
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 3 DESC;
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 4 ASC;
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 4 DESC;
+--error ER_BAD_FIELD_ERROR
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY -1;
+--error ER_BAD_FIELD_ERROR
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 0;
+--error ER_BAD_FIELD_ERROR
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 5;
+
+SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_int DESC;
+SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_int ASC;
+SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_char DESC;
+SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_char ASC;
+SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_int DESC;
+SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_int ASC;
+SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_char DESC;
+SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_char ASC;
+
+SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_int DESC;
+SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_int ASC;
+SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_char DESC;
+SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_char ASC;
+SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_int DESC;
+SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_int ASC;
+SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_char DESC;
+SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_char ASC;
+
+# Clean UP
+DROP USER 'cejuser'@'localhost';
+DROP DATABASE mcs65_db;

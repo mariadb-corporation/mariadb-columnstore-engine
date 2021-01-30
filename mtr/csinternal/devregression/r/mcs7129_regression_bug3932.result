@@ -1,0 +1,448 @@
+USE tpch1;
+drop table if exists qa_nation;
+Warnings:
+Note	1051	Unknown table 'tpch1.qa_nation'
+drop table if exists qa_customer;
+Warnings:
+Note	1051	Unknown table 'tpch1.qa_customer'
+drop table if exists qa_region;
+Warnings:
+Note	1051	Unknown table 'tpch1.qa_region'
+drop table if exists qa_orders;
+Warnings:
+Note	1051	Unknown table 'tpch1.qa_orders'
+create table qa_nation (n_id int, n_name char(20), regionid int) engine=columnstore;
+create table qa_customer (c_id int, c_custname char(20), nationid int) engine=columnstore;
+create table qa_region (r_id int, r_name char(20)) engine=columnstore;
+create table qa_orders (o_id int, o_name char(20), custid int) engine=columnstore;
+insert into qa_region values (1, 'ASIA'), (2, 'AMERICA'), (3, 'EUROPE');
+insert into qa_nation values (1, 'UNITED STATES', 2), (2, 'CANADA', 2), (3, 'JAPAN', 1), (4, 'CHINA', 1), (5, 'GERMANY', 3), (6, 'ITALY', 3);
+insert into qa_customer values (1, 'Cust_US', 1), (2, 'Cust_Japan', 3), (3, 'Cust_Italy', 6);
+insert into qa_orders values (1, 'Order_US#1', 1), (2, 'Order_US#2', 1), (3, 'Order_Japan#1', 2);
+select n.n_name, c.c_custname
+from qa_nation n 
+join qa_customer c on n.n_id = c.nationid
+where n.n_id in (select n2.n_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id) order by n.n_name;
+n_name	c_custname
+ITALY	Cust_Italy
+JAPAN	Cust_Japan
+UNITED STATES	Cust_US
+select n.n_name, c.c_custname
+from qa_nation n 
+join qa_customer c on n.n_id = c.nationid
+where n.n_id in (select n2.n_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id and r1.r_name = 'AMERICA') order by n.n_name;
+n_name	c_custname
+UNITED STATES	Cust_US
+select n.n_name, count(c.c_id)
+from qa_nation n 
+join qa_customer c on n.n_id = c.nationid
+where n.n_id in (select n2.n_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id) group by n.n_name order by n.n_name;
+n_name	count(c.c_id)
+ITALY	1
+JAPAN	1
+UNITED STATES	1
+select n.n_name, c.c_custname
+from qa_nation n 
+left join qa_customer c on n.n_id = c.nationid
+where n.n_id in (select n2.n_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id) order by n.n_name;
+n_name	c_custname
+CANADA	NULL
+CHINA	NULL
+GERMANY	NULL
+ITALY	Cust_Italy
+JAPAN	Cust_Japan
+UNITED STATES	Cust_US
+select n.n_name, c.c_custname
+from qa_nation n 
+left outer join qa_customer c on n.n_id = c.nationid
+where n.n_id in (select n2.n_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id) order by n.n_name;
+n_name	c_custname
+CANADA	NULL
+CHINA	NULL
+GERMANY	NULL
+ITALY	Cust_Italy
+JAPAN	Cust_Japan
+UNITED STATES	Cust_US
+select n.n_name, count(c.c_id)
+from qa_nation n 
+left outer join qa_customer c on n.n_id = c.nationid
+where n.n_id in (select n2.n_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id) group by n.n_name order by n.n_name;
+n_name	count(c.c_id)
+CANADA	0
+CHINA	0
+GERMANY	0
+ITALY	1
+JAPAN	1
+UNITED STATES	1
+select r.r_name, n.n_name, c.c_custname
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid
+where n.n_id in (select n2.n_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id) order by r.r_name, n.n_name;
+r_name	n_name	c_custname
+AMERICA	UNITED STATES	Cust_US
+ASIA	JAPAN	Cust_Japan
+EUROPE	ITALY	Cust_Italy
+select r.r_name, n.n_name, c.c_custname
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+left join qa_customer c on n.n_id = c.nationid
+where n.n_id in (select n2.n_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id) order by r.r_name, n.n_name;
+r_name	n_name	c_custname
+AMERICA	CANADA	NULL
+AMERICA	UNITED STATES	Cust_US
+ASIA	CHINA	NULL
+ASIA	JAPAN	Cust_Japan
+EUROPE	GERMANY	NULL
+EUROPE	ITALY	Cust_Italy
+select r.r_name, n.n_name, c.c_custname
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+left outer join qa_customer c on n.n_id = c.nationid
+where n.n_id in (select n2.n_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id) order by r.r_name, n.n_name;
+r_name	n_name	c_custname
+AMERICA	CANADA	NULL
+AMERICA	UNITED STATES	Cust_US
+ASIA	CHINA	NULL
+ASIA	JAPAN	Cust_Japan
+EUROPE	GERMANY	NULL
+EUROPE	ITALY	Cust_Italy
+select r.r_name, n.n_name, c.c_custname
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid
+where n.n_id in (select n2.n_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id and r1.r_name = 'AMERICA') order by r.r_name, n.n_name;
+r_name	n_name	c_custname
+AMERICA	UNITED STATES	Cust_US
+select r.r_name, n.n_name, c.c_custname
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+left join qa_customer c on n.n_id = c.nationid
+where n.n_id in (select n2.n_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id and r1.r_name = 'AMERICA') order by r.r_name, n.n_name;
+r_name	n_name	c_custname
+AMERICA	CANADA	NULL
+AMERICA	UNITED STATES	Cust_US
+select r.r_name, n.n_name, c.c_custname
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+left outer join qa_customer c on n.n_id = c.nationid
+where n.n_id in (select n2.n_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id and r1.r_name = 'AMERICA') order by r.r_name, n.n_name;
+r_name	n_name	c_custname
+AMERICA	CANADA	NULL
+AMERICA	UNITED STATES	Cust_US
+select r.r_name, n.n_name, c.c_custname
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid
+where r.r_id in (select r1.r_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id) order by r.r_name, n.n_name;
+r_name	n_name	c_custname
+AMERICA	UNITED STATES	Cust_US
+ASIA	JAPAN	Cust_Japan
+EUROPE	ITALY	Cust_Italy
+select r.r_name, n.n_name, c.c_custname
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+left join qa_customer c on n.n_id = c.nationid
+where r.r_id in (select r1.r_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id) order by r.r_name, n.n_name;
+r_name	n_name	c_custname
+AMERICA	CANADA	NULL
+AMERICA	UNITED STATES	Cust_US
+ASIA	CHINA	NULL
+ASIA	JAPAN	Cust_Japan
+EUROPE	GERMANY	NULL
+EUROPE	ITALY	Cust_Italy
+select r.r_name, n.n_name, c.c_custname
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+left outer join qa_customer c on n.n_id = c.nationid
+where r.r_id in (select r1.r_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id) order by r.r_name, n.n_name;
+r_name	n_name	c_custname
+AMERICA	CANADA	NULL
+AMERICA	UNITED STATES	Cust_US
+ASIA	CHINA	NULL
+ASIA	JAPAN	Cust_Japan
+EUROPE	GERMANY	NULL
+EUROPE	ITALY	Cust_Italy
+select r.r_name, n.n_name, c.c_custname
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid
+where r.r_id in (select r1.r_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id and n2.n_name = 'UNITED STATES') order by r.r_name, n.n_name;
+r_name	n_name	c_custname
+AMERICA	UNITED STATES	Cust_US
+select r.r_name, n.n_name, c.c_custname
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+left join qa_customer c on n.n_id = c.nationid
+where r.r_id in (select r1.r_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id and n2.n_name = 'UNITED STATES') order by r.r_name, n.n_name;
+r_name	n_name	c_custname
+AMERICA	CANADA	NULL
+AMERICA	UNITED STATES	Cust_US
+select r.r_name, n.n_name, c.c_custname
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+left outer join qa_customer c on n.n_id = c.nationid
+where r.r_id in (select r1.r_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id and n2.n_name = 'UNITED STATES') order by r.r_name, n.n_name;
+r_name	n_name	c_custname
+AMERICA	CANADA	NULL
+AMERICA	UNITED STATES	Cust_US
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+join qa_orders o on c.c_id = o.custid
+where n.n_id in (select n2.n_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id) order by r.r_name, n.n_name, o.o_name;
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+left join qa_orders o on c.c_id = o.custid
+where n.n_id in (select n2.n_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id) order by r.r_name, n.n_name, o.o_name;
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+EUROPE	ITALY	Cust_Italy	NULL
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+left outer join qa_orders o on c.c_id = o.custid
+where n.n_id in (select n2.n_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id) order by r.r_name, n.n_name, o.o_name;
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+EUROPE	ITALY	Cust_Italy	NULL
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+join qa_orders o on c.c_id = o.custid
+where n.n_id in (select n2.n_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id and r1.r_name = 'AMERICA') order by r.r_name, n.n_name, o.o_name;
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+left join qa_orders o on c.c_id = o.custid
+where n.n_id in (select n2.n_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id and r1.r_name = 'AMERICA') order by r.r_name, n.n_name, o.o_name;
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+left outer join qa_orders o on c.c_id = o.custid
+where n.n_id in (select n2.n_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id and r1.r_name = 'AMERICA') order by r.r_name, n.n_name, o.o_name;
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+join qa_orders o on c.c_id = o.custid
+where r.r_id in (select r1.r_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id) order by r.r_name, n.n_name, o.o_name;
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+left join qa_orders o on c.c_id = o.custid
+where r.r_id in (select r1.r_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id) order by r.r_name, n.n_name, o.o_name;
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+EUROPE	ITALY	Cust_Italy	NULL
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+left outer join qa_orders o on c.c_id = o.custid
+where r.r_id in (select r1.r_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id) order by r.r_name, n.n_name, o.o_name;
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+EUROPE	ITALY	Cust_Italy	NULL
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+join qa_orders o on c.c_id = o.custid
+where r.r_id in (select r1.r_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id and n2.n_name = 'UNITED STATES') order by r.r_name, n.n_name, o.o_name;
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+left join qa_orders o on c.c_id = o.custid
+where r.r_id in (select r1.r_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id and n2.n_name = 'UNITED STATES') order by r.r_name, n.n_name, o.o_name;
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+left outer join qa_orders o on c.c_id = o.custid
+where r.r_id in (select r1.r_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id and n2.n_name = 'UNITED STATES') order by r.r_name, n.n_name, o.o_name;
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+join qa_orders o on c.c_id = o.custid
+where r.r_id in (select r1.r_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id) order by r.r_name, n.n_name, o.o_name;
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+left join qa_orders o on c.c_id = o.custid
+where r.r_id in (select r1.r_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id) order by r.r_name, n.n_name, o.o_name;
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+EUROPE	ITALY	Cust_Italy	NULL
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+left outer join qa_orders o on c.c_id = o.custid
+where r.r_id in (select r1.r_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id) order by r.r_name, n.n_name, o.o_name;
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+EUROPE	ITALY	Cust_Italy	NULL
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+join qa_orders o on c.c_id = o.custid
+where r.r_id in (select r1.r_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id and n2.n_name = 'UNITED STATES') order by r.r_name, n.n_name, o.o_name;
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+left join qa_orders o on c.c_id = o.custid
+where r.r_id in (select r1.r_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id and n2.n_name = 'UNITED STATES') order by r.r_name, n.n_name, o.o_name;
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+left outer join qa_orders o on c.c_id = o.custid
+where r.r_id in (select r1.r_id from qa_nation n2, qa_region r1 where n2.regionid = r1.r_id and n2.n_name = 'UNITED STATES') order by r.r_name, n.n_name, o.o_name;
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+join qa_orders o on c.c_id = o.custid
+where c.c_id in (select c1.c_id from qa_customer c1) order by r.r_name, n.n_name, o.o_name;
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+left join qa_orders o on c.c_id = o.custid
+where c.c_id in (select c1.c_id from qa_customer c1) order by r.r_name, n.n_name, o.o_name;
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+EUROPE	ITALY	Cust_Italy	NULL
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+left outer join qa_orders o on c.c_id = o.custid
+where c.c_id in (select c1.c_id from qa_customer c1) order by r.r_name, n.n_name, o.o_name;
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+EUROPE	ITALY	Cust_Italy	NULL
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+join qa_orders o on c.c_id = o.custid
+where c.c_id in (select c1.c_id from qa_customer c1 where c1.c_custname = 'Cust_Japan') order by r.r_name, n.n_name, o.o_name;
+r_name	n_name	c_custname	o_name
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+join qa_orders o on c.c_id = o.custid
+where c.c_id in (select c1.c_id from qa_customer c1 where c1.c_custname = 'Cust_Italy') order by r.r_name, n.n_name;
+r_name	n_name	c_custname	o_name
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+left join qa_orders o on c.c_id = o.custid
+where c.c_id in (select c1.c_id from qa_customer c1 where c1.c_custname = 'Cust_Japan') order by r.r_name, n.n_name;
+r_name	n_name	c_custname	o_name
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+left join qa_orders o on c.c_id = o.custid
+where c.c_id in (select c1.c_id from qa_customer c1 where c1.c_custname = 'Cust_Italy') order by r.r_name, n.n_name;
+r_name	n_name	c_custname	o_name
+EUROPE	ITALY	Cust_Italy	NULL
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+left outer join qa_orders o on c.c_id = o.custid
+where c.c_id in (select c1.c_id from qa_customer c1 where c1.c_custname = 'Cust_Japan') order by r.r_name, n.n_name;
+r_name	n_name	c_custname	o_name
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+select r.r_name, n.n_name, c.c_custname, o.o_name
+from qa_region r 
+join qa_nation n on r.r_id = n.regionid 
+join qa_customer c on n.n_id = c.nationid 
+left outer join qa_orders o on c.c_id = o.custid
+where c.c_id in (select c1.c_id from qa_customer c1 where c1.c_custname = 'Cust_Italy') order by r.r_name, n.n_name;
+r_name	n_name	c_custname	o_name
+EUROPE	ITALY	Cust_Italy	NULL
+drop table if exists qa_nation;
+drop table if exists qa_customer;
+drop table if exists qa_region;
+drop table if exists qa_orders;

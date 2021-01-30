@@ -1,0 +1,36 @@
+#
+# Check CREATE TABLE with valid table names
+#
+-- source ../include/have_columnstore.inc
+--source include/default_charset.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs2_db;
+--enable_warnings
+
+CREATE DATABASE mcs2_db;
+USE mcs2_db;
+
+# Table name with numbers
+CREATE TABLE 1234table(col1 INT)ENGINE=Columnstore;
+SHOW CREATE TABLE 1234table;
+CREATE TABLE table5678(col1 INT)ENGINE=Columnstore;
+SHOW CREATE TABLE table5678;
+CREATE TABLE 1234table5678(col1 INT)ENGINE=Columnstore;
+SHOW CREATE TABLE 1234table5678;
+CREATE TABLE tab09le(col1 INT)ENGINE=Columnstore;
+SHOW CREATE TABLE tab09le;
+CREATE TABLE `table_`(col1 INT)ENGINE=Columnstore;
+SHOW CREATE TABLE `table_`;
+CREATE TABLE `table_13579`(col1 INT)ENGINE=Columnstore;
+SHOW CREATE TABLE `table_13579`;
+
+# Table name with max length i.e, 64
+CREATE TABLE abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl(col1 INT)ENGINE=Columnstore;
+SHOW CREATE TABLE abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl;
+
+# MCOL-4110: ColumnStore cannot handle case sensitive database and table name
+CREATE TABLE abcdefghijklmnopqrstuvwxyz(col1 INT)ENGINE=Columnstore;
+SHOW CREATE TABLE abcdefghijklmnopqrstuvwxyz;
+
+DROP DATABASE mcs2_db;

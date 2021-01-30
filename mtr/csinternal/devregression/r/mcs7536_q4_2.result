@@ -1,0 +1,4 @@
+USE tpch1;
+select max(l_shipdate), count(l_partkey) from lineitem where l_orderkey < 1000000;
+max(l_shipdate)	count(l_partkey)
+1998-12-01	1000048

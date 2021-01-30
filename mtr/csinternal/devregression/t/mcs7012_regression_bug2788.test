@@ -1,0 +1,15 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug2788.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists foo;
+create table foo (col1 int(11) null default null) engine=columnstore;
+drop table foo;
+#
+

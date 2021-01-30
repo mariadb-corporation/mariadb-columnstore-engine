@@ -1,0 +1,14 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug2887_negative.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+# WWW 6/2/2010.  No longer a negative test case courtesy of DHill implementing the hour function.
+select avg(hour(cdatetime)+1) from datatypetestm;
+#
+

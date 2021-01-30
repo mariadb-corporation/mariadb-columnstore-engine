@@ -1,0 +1,7 @@
+USE tpch1;
+select count(*) from customer left join (select * from nation) t1 on c_custkey=n_regionkey and c_nationkey=n_nationkey;
+count(*)
+150000
+select count(*) from customer left join (select * from nation) t1 on c_custkey=n_regionkey and n_nationkey=c_nationkey;
+count(*)
+150000

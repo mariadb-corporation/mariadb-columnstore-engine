@@ -1,0 +1,13 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug2833.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+select if(date_format(cdatetime,'%s') between 3 and 58, 0, 1) from datatypetestm;
+#
+

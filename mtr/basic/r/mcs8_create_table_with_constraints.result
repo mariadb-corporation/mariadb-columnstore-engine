@@ -1,0 +1,31 @@
+DROP DATABASE IF EXISTS mcs8_db;
+CREATE DATABASE mcs8_db;
+USE mcs8_db;
+CREATE TABLE t1(col1 SMALLINT  DEFAULT 10)ENGINE=Columnstore;
+SHOW CREATE TABLE t1;
+Table	Create Table
+t1	CREATE TABLE `t1` (
+  `col1` smallint(6) DEFAULT 10
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE t2(col1 TINYINT  NOT NULL)ENGINE=Columnstore;
+SHOW CREATE TABLE t2;
+Table	Create Table
+t2	CREATE TABLE `t2` (
+  `col1` tinyint(4) NOT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE INDEX on t2(col1);
+ERROR 42000: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'on t2(col1)' at line 1
+CREATE TABLE t3(col1 INT, CHECK (col1>=10))ENGINE=Columnstore;
+SHOW CREATE TABLE t3;
+Table	Create Table
+t3	CREATE TABLE `t3` (
+  `col1` int(11) DEFAULT NULL,
+  CONSTRAINT `CONSTRAINT_1` CHECK (`col1` >= 10)
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE t4(col1 INT PRIMARY KEY AUTO_INCREMENT)ENGINE=Columnstore;
+ERROR 42000: Too many keys specified; max 0 keys allowed
+CREATE TABLE t4(col1 INT )MAX_ROWS=10, ENGINE=Columnstore;
+ERROR 42000: The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
+CREATE TABLE t5(col1 INT )MIN_ROWS=10, ENGINE=Columnstore;
+ERROR 42000: The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
+DROP DATABASE mcs8_db;

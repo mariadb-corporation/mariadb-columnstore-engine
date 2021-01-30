@@ -1,0 +1,15 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug5133.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+alter table nation add column c1 varchar(20) default 'abcd';
+select distinct(c1) from nation;
+alter table nation drop column c1;
+#
+

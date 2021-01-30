@@ -1,0 +1,103 @@
+USE tpch1;
+drop table if exists dw_entradas_fact;
+Warnings:
+Note	1051	Unknown table 'tpch1.dw_entradas_fact'
+drop table if exists dw_entradas_fact_1;
+Warnings:
+Note	1051	Unknown table 'tpch1.dw_entradas_fact_1'
+create table dw_entradas_fact (fecha date) engine=columnstore;
+create table dw_entradas_fact_1 (fecha date) engine=columnstore;
+insert into dw_entradas_fact values ('2010-01-01'), ('2010-02-02'), ('2010-02-27'), ('2010-03-01');
+insert into dw_entradas_fact_1 values ('2010-01-01'), ('2010-02-02'), ('2010-02-27'), ('2010-03-01');
+SELECT 1  NORMAL, 1  OFERTA
+FROM DW_ENTRADAS_FACT a
+WHERE a.FECHA BETWEEN '2010-02-01' and '2010-02-28' 
+union all
+SELECT 1  NORMAL, 1  OFERTA
+FROM DW_ENTRADAS_FACT_1 a
+WHERE a.FECHA BETWEEN '2010-02-01' and '2010-02-28';
+NORMAL	OFERTA
+1	1
+1	1
+1	1
+1	1
+SELECT TY.NORMAL  NORMAL ,
+TY.OFERTA  OFERTA
+FROM (SELECT 1  NORMAL,
+1  OFERTA
+FROM DW_ENTRADAS_FACT a
+WHERE a.FECHA BETWEEN '2010-02-01' and '2010-02-28')  TY
+union all
+SELECT TY.NORMAL  NORMAL ,
+TY.OFERTA OFERTA
+FROM (SELECT 1  NORMAL,
+1  OFERTA
+FROM DW_ENTRADAS_FACT_1 a
+WHERE a.FECHA BETWEEN '2010-02-01' and '2010-02-28')  TY;
+NORMAL	OFERTA
+1	1
+1	1
+1	1
+1	1
+SELECT TY.NORMAL  NORMAL ,
+TY.OFERTA  OFERTA
+FROM ((SELECT 1  NORMAL,
+1  OFERTA
+FROM DW_ENTRADAS_FACT
+WHERE FECHA BETWEEN '2010-02-01' and '2010-02-28')
+union all
+(SELECT 1  NORMAL,
+1  OFERTA
+FROM DW_ENTRADAS_FACT_1
+WHERE FECHA BETWEEN '2010-02-01' and '2010-02-28')) AS TY;
+NORMAL	OFERTA
+1	1
+1	1
+1	1
+1	1
+SELECT 1  NORMAL, 1  OFERTA
+FROM DW_ENTRADAS_FACT a
+WHERE a.FECHA BETWEEN '2010-02-01' and '2010-02-28' 
+union
+SELECT 1  NORMAL, 1  OFERTA
+FROM DW_ENTRADAS_FACT_1 a
+WHERE a.FECHA BETWEEN '2010-02-01' and '2010-02-28';
+NORMAL	OFERTA
+1	1
+SELECT TY.NORMAL  NORMAL ,
+TY.OFERTA  OFERTA
+FROM (SELECT 1  NORMAL,
+1  OFERTA
+FROM DW_ENTRADAS_FACT a
+WHERE a.FECHA BETWEEN '2010-02-01' and '2010-02-28')  TY
+union
+SELECT TY.NORMAL  NORMAL ,
+TY.OFERTA OFERTA
+FROM (SELECT 1  NORMAL,
+1  OFERTA
+FROM DW_ENTRADAS_FACT_1 a
+WHERE a.FECHA BETWEEN '2010-02-01' and '2010-02-28')  TY;
+NORMAL	OFERTA
+1	1
+SELECT TY.NORMAL  NORMAL ,
+TY.OFERTA  OFERTA
+FROM ((SELECT 1  NORMAL,
+1  OFERTA
+FROM DW_ENTRADAS_FACT
+WHERE FECHA BETWEEN '2010-02-01' and '2010-02-28')
+union
+(SELECT 1  NORMAL,
+1  OFERTA
+FROM DW_ENTRADAS_FACT_1
+WHERE FECHA BETWEEN '2010-02-01' and '2010-02-28')) AS TY;
+NORMAL	OFERTA
+1	1
+drop table if exists dw_entradas_fact;
+drop table if exists dw_entradas_fact_1;
+select * from region where 2=2 union select n_regionkey, n_nationkey, n_name from nation where 0=1;
+r_regionkey	r_name	r_comment
+0	AFRICA	lar deposits. blithely final packages cajole. regular waters are final requests. regular accounts are according to 
+1	AMERICA	hs use ironic, even requests. s
+2	ASIA	ges. thinly even pinto beans ca
+3	EUROPE	ly final courts cajole furiously final excuse
+4	MIDDLE EAST	uickly special accounts cajole carefully blithely close requests. carefully final asymptotes haggle furiousl

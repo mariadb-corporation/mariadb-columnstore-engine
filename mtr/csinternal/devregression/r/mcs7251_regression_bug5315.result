@@ -1,0 +1,27 @@
+USE tpch1;
+drop table if exists trow;
+Warnings:
+Note	1051	Unknown table 'tpch1.trow'
+create table trow(col1 int, col2 int) engine=columnstore;
+insert into trow values(1,2),(3,4);
+select * from trow;
+col1	col2
+1	2
+3	4
+update trow set col1 = 10;
+select * from trow;
+col1	col2
+10	2
+10	4
+update trow set col1 = 11 where col2=20;
+update trow set col1 = 11;
+update trow set col1 = 12 where col2=20;
+select * from trow;
+col1	col2
+11	2
+11	4
+delete from trow;
+delete from trow where col2=20;
+select * from trow;
+col1	col2
+drop table trow;

@@ -1,0 +1,77 @@
+DROP DATABASE IF EXISTS mcs11_db1;
+DROP DATABASE IF EXISTS mcs11_db2;
+CREATE DATABASE mcs11_db1;
+CREATE SCHEMA mcs11_db2;
+SHOW DATABASES LIKE 'mcs11%';
+Database (mcs11%)
+mcs11_db1
+mcs11_db2
+SHOW SCHEMAS LIKE 'mcs11%';
+Database (mcs11%)
+mcs11_db1
+mcs11_db2
+SHOW TABLES IN mcs11_db1;
+Tables_in_mcs11_db1
+USE mcs11_db2;
+SHOW TABLES;
+Tables_in_mcs11_db2
+CREATE TABLE mcs11_db1.t1 (id INT) engine=innodb;
+CREATE TABLE mcs11_db1.t2 (id INT) engine=columnstore;
+SHOW TABLES IN mcs11_db1;
+Tables_in_mcs11_db1
+t1
+t2
+USE mcs11_db1;
+SHOW TABLES;
+Tables_in_mcs11_db1
+t1
+t2
+USE mcs11_db2;
+CREATE TABLE t1 (id INT) engine=innodb;
+CREATE TABLE t2 (id INT) engine=columnstore;
+CREATE TEMPORARY TABLE tmp1 (id INT) engine=innodb;
+CREATE TEMPORARY TABLE tmp1 (id INT) engine=columnstore;
+ERROR 42S01: Table 'tmp1' already exists
+SHOW TABLES;
+Tables_in_mcs11_db2
+t1
+t2
+SHOW TABLES IN mcs11_db2;
+Tables_in_mcs11_db2
+t1
+t2
+connect  addconroot1, localhost, root,,;
+connect  addconroot2, localhost, root,,;
+connection addconroot1;
+SHOW DATABASES LIKE 'mcs11%';
+Database (mcs11%)
+mcs11_db1
+mcs11_db2
+SHOW TABLES IN mcs11_db1;
+Tables_in_mcs11_db1
+t1
+t2
+USE mcs11_db1;
+SHOW TABLES;
+Tables_in_mcs11_db1
+t1
+t2
+connection addconroot2;
+SHOW SCHEMAS LIKE 'mcs11%';
+Database (mcs11%)
+mcs11_db1
+mcs11_db2
+SHOW TABLES IN mcs11_db2;
+Tables_in_mcs11_db2
+t1
+t2
+USE mcs11_db2;
+SHOW TABLES;
+Tables_in_mcs11_db2
+t1
+t2
+connection default;
+disconnect addconroot1;
+disconnect addconroot2;
+DROP DATABASE IF EXISTS mcs11_db1;
+DROP DATABASE IF EXISTS mcs11_db2;

@@ -1,0 +1,96 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug4947.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+--disable_warnings
+drop table if exists orders2;
+--enable_warnings
+CREATE TABLE `orders2` (
+  `o_orderkey` int(11) DEFAULT NULL,
+  `o_orderstatus` char(1) DEFAULT NULL,
+  `o_totalprice` decimal(12,2) DEFAULT NULL,
+  `o_orderpriority` char(15) DEFAULT NULL
+) ENGINE=Columnstore;
+
+insert into orders2 (select o_orderkey, o_orderstatus, o_totalprice, o_orderpriority from orders);
+select 1, count(o_orderkey) from orders2;
+select 1, count(o_orderstatus) from orders2;
+select 1, count(o_totalprice) from orders2;
+select 1, count(o_orderpriority) from orders2;
+
+insert into orders2 (select o_orderkey, o_orderstatus, o_totalprice, o_orderpriority from orders);
+select 2, count(o_orderkey) from orders2;
+select 2, count(o_orderstatus) from orders2;
+select 2, count(o_totalprice) from orders2;
+select 2, count(o_orderpriority) from orders2;
+
+insert into orders2 (select o_orderkey, o_orderstatus, o_totalprice, o_orderpriority from orders);
+select 3, count(o_orderkey) from orders2;
+select 3, count(o_orderstatus) from orders2;
+select 3, count(o_totalprice) from orders2;
+select 3, count(o_orderpriority) from orders2;
+
+insert into orders2 (select o_orderkey, o_orderstatus, o_totalprice, o_orderpriority from orders);
+select 4, count(o_orderkey) from orders2;
+select 4, count(o_orderstatus) from orders2;
+select 4, count(o_totalprice) from orders2;
+select 4, count(o_orderpriority) from orders2;
+
+insert into orders2 (select o_orderkey, o_orderstatus, o_totalprice, o_orderpriority from orders);
+select 5, count(o_orderkey) from orders2;
+select 5, count(o_orderstatus) from orders2;
+select 5, count(o_totalprice) from orders2;
+select 5, count(o_orderpriority) from orders2;
+
+insert into orders2 (select o_orderkey, o_orderstatus, o_totalprice, o_orderpriority from orders);
+select 6, count(o_orderkey) from orders2;
+select 6, count(o_orderstatus) from orders2;
+select 6, count(o_totalprice) from orders2;
+select 6, count(o_orderpriority) from orders2;
+
+insert into orders2 (select o_orderkey, o_orderstatus, o_totalprice, o_orderpriority from orders);
+select 7, count(o_orderkey) from orders2;
+select 7, count(o_orderstatus) from orders2;
+select 7, count(o_totalprice) from orders2;
+select 7, count(o_orderpriority) from orders2;
+
+insert into orders2 (select o_orderkey, o_orderstatus, o_totalprice, o_orderpriority from orders);
+select 8, count(o_orderkey) from orders2;
+select 8, count(o_orderstatus) from orders2;
+select 8, count(o_totalprice) from orders2;
+select 8, count(o_orderpriority) from orders2;
+
+insert into orders2 (select o_orderkey, o_orderstatus, o_totalprice, o_orderpriority from orders);
+select 9, count(o_orderkey) from orders2;
+select 9, count(o_orderstatus) from orders2;
+select 9, count(o_totalprice) from orders2;
+select 9, count(o_orderpriority) from orders2;
+
+insert into orders2 (select o_orderkey, o_orderstatus, o_totalprice, o_orderpriority from orders);
+select 10, count(o_orderkey) from orders2;
+select 10, count(o_orderstatus) from orders2;
+select 10, count(o_totalprice) from orders2;
+select 10, count(o_orderpriority) from orders2;
+
+insert into orders2 (select o_orderkey, o_orderstatus, o_totalprice, o_orderpriority from orders);
+select 11, count(o_orderkey) from orders2;
+select 11, count(o_orderstatus) from orders2;
+select 11, count(o_totalprice) from orders2;
+select 11, count(o_orderpriority) from orders2;
+
+insert into orders2 (select o_orderkey, o_orderstatus, o_totalprice, o_orderpriority from orders);
+select 12, count(o_orderkey) from orders2;
+select 12, count(o_orderstatus) from orders2;
+select 12, count(o_totalprice) from orders2;
+select 12, count(o_orderpriority) from orders2;
+
+select count(distinct o_orderkey) from orders2;
+#
+drop table if exists orders2;
+
