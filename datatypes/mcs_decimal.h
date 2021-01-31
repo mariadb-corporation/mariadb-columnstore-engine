@@ -355,7 +355,7 @@ class Decimal: public TSInt128
         {
             int128_t scaleDivisor;
             getScaleDivisor(scaleDivisor, scale);
-            datatypes::TFloat128 tmpval((__float128) s128Value / scaleDivisor);
+            datatypes::TFloat128 tmpval((float128_t) s128Value / scaleDivisor);
             return static_cast<double>(tmpval);
         }
 
@@ -368,7 +368,7 @@ class Decimal: public TSInt128
         {
             int128_t scaleDivisor;
             getScaleDivisor(scaleDivisor, scale);
-            datatypes::TFloat128 tmpval((__float128) s128Value / scaleDivisor);
+            datatypes::TFloat128 tmpval((float128_t) s128Value / scaleDivisor);
             return static_cast<float>(tmpval);
         }
 
@@ -381,7 +381,7 @@ class Decimal: public TSInt128
         {
             int128_t scaleDivisor;
             getScaleDivisor(scaleDivisor, scale);
-            datatypes::TFloat128 tmpval((__float128) s128Value / scaleDivisor);
+            datatypes::TFloat128 tmpval((float128_t) s128Value / scaleDivisor);
             return static_cast<long double>(tmpval);
         }
 
@@ -397,7 +397,7 @@ class Decimal: public TSInt128
             int128_t scaleDivisor;
             getScaleDivisor(scaleDivisor, scale);
             return std::make_pair(TSInt128(s128Value / scaleDivisor),
-                                  TFloat128((__float128)(s128Value % scaleDivisor) / scaleDivisor));
+                                  TFloat128((float128_t)(s128Value % scaleDivisor) / scaleDivisor));
         }
 
         // This method returns integral part as a TSInt128 and

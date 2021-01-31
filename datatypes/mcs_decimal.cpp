@@ -56,8 +56,8 @@ namespace datatypes
             int128_t scaleMultiplier;
             getScaleDivisor(scaleMultiplier, l.scale - result.scale);
             lValue = (int128_t) (lValue > 0 ?
-                                 (__float128)lValue / scaleMultiplier + 0.5 :
-                                 (__float128)lValue / scaleMultiplier - 0.5);
+                                 (float128_t)lValue / scaleMultiplier + 0.5 :
+                                 (float128_t)lValue / scaleMultiplier - 0.5);
         }
 
         if (result.scale > r.scale)
@@ -72,8 +72,8 @@ namespace datatypes
             int128_t scaleMultiplier;
             getScaleDivisor(scaleMultiplier, r.scale - result.scale);
             rValue = (int128_t) (rValue > 0 ?
-                                 (__float128)rValue / scaleMultiplier + 0.5 :
-                                 (__float128)rValue / scaleMultiplier - 0.5);
+                                 (float128_t)rValue / scaleMultiplier + 0.5 :
+                                 (float128_t)rValue / scaleMultiplier - 0.5);
         }
 
         // We assume there is no way that lValue or rValue calculations
@@ -103,11 +103,11 @@ namespace datatypes
 
             getScaleDivisor(scaleMultiplier, result.scale - (l.scale - r.scale));
 
-            // TODO How do we check overflow of (int128_t)((__float128)lValue / rValue * scaleMultiplier) ?
+            // TODO How do we check overflow of (int128_t)((float128_t)lValue / rValue * scaleMultiplier) ?
 
             result.s128Value = (int128_t)(( (lValue > 0 && rValue > 0) || (lValue < 0 && rValue < 0) ?
-                                             (__float128)lValue / rValue * scaleMultiplier + 0.5 :
-                                             (__float128)lValue / rValue * scaleMultiplier - 0.5));
+                                             (float128_t)lValue / rValue * scaleMultiplier + 0.5 :
+                                             (float128_t)lValue / rValue * scaleMultiplier - 0.5));
         }
         else
         {
@@ -116,8 +116,8 @@ namespace datatypes
             getScaleDivisor(scaleMultiplier, (l.scale - r.scale) - result.scale);
 
             result.s128Value = (int128_t)(( (lValue > 0 && rValue > 0) || (lValue < 0 && rValue < 0) ?
-                                             (__float128)lValue / rValue / scaleMultiplier + 0.5 :
-                                             (__float128)lValue / rValue / scaleMultiplier - 0.5));
+                                             (float128_t)lValue / rValue / scaleMultiplier + 0.5 :
+                                             (float128_t)lValue / rValue / scaleMultiplier - 0.5));
         }
     }
 
@@ -159,12 +159,12 @@ namespace datatypes
             getScaleDivisor(scaleMultiplierR, diff - (diff / 2));
 
             lValue = (int128_t)(( (lValue > 0) ?
-                                   (__float128)lValue / scaleMultiplierL + 0.5 :
-                                   (__float128)lValue / scaleMultiplierL - 0.5));
+                                   (float128_t)lValue / scaleMultiplierL + 0.5 :
+                                   (float128_t)lValue / scaleMultiplierL - 0.5));
 
             rValue = (int128_t)(( (rValue > 0) ?
-                                   (__float128)rValue / scaleMultiplierR + 0.5 :
-                                   (__float128)rValue / scaleMultiplierR - 0.5));
+                                   (float128_t)rValue / scaleMultiplierR + 0.5 :
+                                   (float128_t)rValue / scaleMultiplierR - 0.5));
 
             opOverflowCheck(lValue, rValue, result.s128Value);;
         }

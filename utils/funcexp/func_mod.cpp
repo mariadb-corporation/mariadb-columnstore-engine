@@ -88,17 +88,17 @@ IDB_Decimal Func_mod::getDecimalVal(Row& row,
             int128_t dividendInt = (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH) ? d.s128Value : d.value;
            
     
-            __float128 divF, dividendF;
+            float128_t divF, dividendF;
 
             int128_t scaleDivisor;
 
             datatypes::getScaleDivisor(scaleDivisor, div.scale);
-            divF = (__float128) divInt / scaleDivisor;
+            divF = (float128_t) divInt / scaleDivisor;
 
             datatypes::getScaleDivisor(scaleDivisor, d.scale);
-            dividendF = (__float128) dividendInt / scaleDivisor;
+            dividendF = (float128_t) dividendInt / scaleDivisor;
 
-            __float128 mod = datatypes::TFloat128::fmodq(dividendF, divF) * scaleDivisor;
+            float128_t mod = datatypes::TFloat128::fmodq(dividendF, divF) * scaleDivisor;
 
             return IDB_Decimal(datatypes::TSInt128((int128_t) mod),
                                d.scale,

@@ -227,7 +227,7 @@ float RowEstimator::estimateOpFactor(const T& min, const T& max, const T& value,
                 if (!ct.isWideDecimalType())
                     factor = (1.0 * value - min) / (max - min + 1);
                 else
-                    factor = ((__float128) value - min) / (max - min + 1);
+                    factor = ((float128_t) value - min) / (max - min + 1);
             }
 
             break;
@@ -239,7 +239,7 @@ float RowEstimator::estimateOpFactor(const T& min, const T& max, const T& value,
                 if (!ct.isWideDecimalType())
                     factor = (1.0 * value - min + 1) / (max - min + 1);
                 else
-                    factor = ((__float128) value - min + 1) / (max - min + 1);
+                    factor = ((float128_t) value - min + 1) / (max - min + 1);
             }
 
             break;
@@ -251,7 +251,7 @@ float RowEstimator::estimateOpFactor(const T& min, const T& max, const T& value,
                 if (!ct.isWideDecimalType())
                     factor = (1.0 * max - value) / (1.0 * max - min + 1);
                 else
-                    factor = ((__float128) max - value) / (max - min + 1);
+                    factor = ((float128_t) max - value) / (max - min + 1);
             }
 
             break;
@@ -264,7 +264,7 @@ float RowEstimator::estimateOpFactor(const T& min, const T& max, const T& value,
                 if (!ct.isWideDecimalType())
                     factor = (1.0 * max - value + 1) / (max - min + 1);
                 else
-                    factor = ((__float128) max - value + 1) / (max - min + 1);
+                    factor = ((float128_t) max - value + 1) / (max - min + 1);
             }
 
             break;

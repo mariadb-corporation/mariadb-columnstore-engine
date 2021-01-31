@@ -1344,7 +1344,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
                 char *ep = NULL;
                 int128_t max_number_decimal = dataconvert::strtoll128(columnstore_big_precision[max_length - 19].c_str(), dummy, &ep);
 
-                __float128 value = parm[0]->data()->getDoubleVal(row, isNull);
+                float128_t value = parm[0]->data()->getDoubleVal(row, isNull);
 
                 int128_t scaleDivisor;
                 datatypes::getScaleDivisor(scaleDivisor, decimals);
@@ -1394,7 +1394,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
                 char *ep = NULL;
                 int128_t max_number_decimal = dataconvert::strtoll128(columnstore_big_precision[max_length - 19].c_str(), dummy, &ep);
 
-                __float128 value = parm[0]->data()->getLongDoubleVal(row, isNull);
+                float128_t value = parm[0]->data()->getLongDoubleVal(row, isNull);
 
                 int128_t scaleDivisor;
                 datatypes::getScaleDivisor(scaleDivisor, decimals);
@@ -1461,8 +1461,8 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
                         decimal.s128Value *= scaleDivisor;
                     else
                         decimal.s128Value = (int128_t)(decimal.s128Value > 0 ?
-                                                       (__float128)decimal.s128Value / scaleDivisor + 0.5 :
-                                                       (__float128)decimal.s128Value / scaleDivisor - 0.5);
+                                                       (float128_t)decimal.s128Value / scaleDivisor + 0.5 :
+                                                       (float128_t)decimal.s128Value / scaleDivisor - 0.5);
                 }
 
                 decimal.scale = decimals;
@@ -1545,7 +1545,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
 
                         int128_t scaleDivisor;
                         datatypes::getScaleDivisor(scaleDivisor, decimals);
-                        __float128 floatValue = datatypes::TFloat128::fromString(strValue);
+                        float128_t floatValue = datatypes::TFloat128::fromString(strValue);
 
                         // If the float value is too large, the saturated result may end up with
                         // the wrong sign, so we just check first.
