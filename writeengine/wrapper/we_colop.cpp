@@ -707,10 +707,13 @@ int ColumnOp::fillColumn(const TxnID& txnid, Column& column, Column& refCol, voi
     config.initConfigCache();
     std::vector<uint16_t> rootList;
     config.getRootIdList( rootList );
-    const uint8_t* emptyVal = getEmptyRowValue(column.colDataType, 
+    const uint8_t* emptyVal = getEmptyRowValue(column.colDataType,
                                                column.colWidth);
+    // Set TypeHandler to get empty value ptr for the ref column
+    findTypeHandler(refCol.colWidth, refCol.colDataType);
     const uint8_t* refEmptyVal = getEmptyRowValue(refCol.colDataType,
                                                   refCol.colWidth);
+    findTypeHandler(column.colWidth, column.colDataType);
     //find the dbroots which have rows for refrence column
     unsigned int i = 0, k = 0;
 
