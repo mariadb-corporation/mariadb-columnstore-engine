@@ -1,0 +1,132 @@
+# Test case for MCOL-4493
+# This test case demonstrates that the WHERE condition
+# used in the ON expression of an INNER JOIN used in a
+# subquery as the LEFT side of an outer join is getting
+# processed correctly.
+
+-- source ../include/have_columnstore.inc
+
+-- disable_warnings
+DROP DATABASE IF EXISTS mcol_4493;
+-- enable_warnings
+
+CREATE DATABASE mcol_4493;
+USE mcol_4493;
+
+CREATE TABLE t1 (a CHAR(10), b INT) ENGINE=columnstore;
+INSERT INTO t1 VALUES ('a', 1), ('b', 2), ('c', 3);
+
+CREATE TABLE t2 (a INT) ENGINE=columnstore;
+INSERT INTO t2 values (2), (3);
+
+# Test single INNER JOIN
+## Test impossible WHERE condition in the ON expression
+SELECT * FROM t1 LEFT JOIN
+(SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+ ON table1.a=table2.a AND table1.a=1) _h
+ON t1.b=_h.a ORDER BY t1.a;
+
+## Test possible WHERE condition in the ON expression
+SELECT * FROM t1 LEFT JOIN
+(SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+ ON table1.a=table2.a AND table1.a=2) _h
+ON t1.b=_h.a ORDER BY t1.a;
+
+## Test possible WHERE condition in the ON expression
+SELECT * FROM t1 LEFT JOIN
+(SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+ ON table1.a=table2.a AND table1.a=3) _h
+ON t1.b=_h.a ORDER BY t1.a;
+
+## Test the INNER JOIN without a WHERE condition
+SELECT * FROM t1 LEFT JOIN
+(SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+ ON table1.a=table2.a) _h
+ON t1.b=_h.a ORDER BY t1.a;
+
+# Test nested INNER JOIN
+## Test impossible WHERE condition in the ON expression
+SELECT * FROM t1 LEFT JOIN
+(SELECT table3.a FROM t2 table3 INNER JOIN
+ (SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+  ON table1.a=table2.a AND table1.a=1) _h ON table3.a=_h.a) _g
+ON t1.b=_g.a ORDER BY t1.a;
+
+## Test possible WHERE condition in the ON expression
+SELECT * FROM t1 LEFT JOIN
+(SELECT table3.a FROM t2 table3 INNER JOIN
+ (SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+  ON table1.a=table2.a AND table1.a=2) _h ON table3.a=_h.a) _g
+ON t1.b=_g.a ORDER BY t1.a;
+
+## Test possible WHERE condition in the ON expression
+SELECT * FROM t1 LEFT JOIN
+(SELECT table3.a FROM t2 table3 INNER JOIN
+ (SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+  ON table1.a=table2.a AND table1.a=3) _h ON table3.a=_h.a) _g
+ON t1.b=_g.a ORDER BY t1.a;
+
+## Test the INNER JOIN without a WHERE condition
+SELECT * FROM t1 LEFT JOIN
+(SELECT table3.a FROM t2 table3 INNER JOIN
+ (SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+  ON table1.a=table2.a) _h ON table3.a=_h.a) _g
+ON t1.b=_g.a ORDER BY t1.a;
+
+# Test INNER JOIN as both LEFT and RIGHT side of outer LEFT JOIN
+## Without a WHERE condition
+SELECT * FROM
+(SELECT table1.a, table1.b FROM t1 table1 INNER JOIN t2 table2
+ ON table1.b=table2.a) _g
+LEFT JOIN
+(SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+ ON table1.a=table2.a) _h
+ON _g.b=_h.a ORDER BY _g.a;
+
+## With a possible WHERE condition case 1
+SELECT * FROM
+(SELECT table1.a, table1.b FROM t1 table1 INNER JOIN t2 table2
+ ON table1.b=table2.a AND table1.b=2) _g
+LEFT JOIN
+(SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+ ON table1.a=table2.a AND (table1.a=1 OR table1.a=2)) _h
+ON _g.b=_h.a ORDER BY _g.a;
+
+## With a possible WHERE condition case 2
+SELECT * FROM
+(SELECT table1.a, table1.b FROM t1 table1 INNER JOIN t2 table2
+ ON table1.b=table2.a AND (table1.b=2 OR table1.b=1)) _g
+LEFT JOIN
+(SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+ ON table1.a=table2.a AND (table1.a=1 OR table1.a=3)) _h
+ON _g.b=_h.a ORDER BY _g.a;
+
+## With an impossible WHERE condition case 1
+SELECT * FROM
+(SELECT table1.a, table1.b FROM t1 table1 INNER JOIN t2 table2
+ ON table1.b=table2.a AND table1.b=1) _g
+LEFT JOIN
+(SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+ ON table1.a=table2.a) _h
+ON _g.b=_h.a ORDER BY _g.a;
+
+## With an impossible WHERE condition case 2
+SELECT * FROM
+(SELECT table1.a, table1.b FROM t1 table1 INNER JOIN t2 table2
+ ON table1.b=table2.a) _g
+LEFT JOIN
+(SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+ ON table1.a=table2.a AND table1.a=1) _h
+ON _g.b=_h.a ORDER BY _g.a;
+
+## With an impossible WHERE condition case 3
+SELECT * FROM
+(SELECT table1.a, table1.b FROM t1 table1 INNER JOIN t2 table2
+ ON table1.b=table2.a) _g
+LEFT JOIN
+(SELECT table1.a FROM t2 table1 INNER JOIN t2 table2
+ ON table1.a=table2.a AND (table1.a=1 OR table1.a=2)) _h
+ON _g.b=_h.a ORDER BY _g.a;
+
+# cleanup
+DROP DATABASE mcol_4493;
