@@ -1435,6 +1435,7 @@ public:
 
     // this returns the size of the row data with the string table
     inline uint64_t getSizeWithStrings() const;
+    inline uint64_t getSizeWithStrings(uint64_t n) const;
 
     // sets the row count to 0 and the baseRid to something
     // effectively initializing whatever chunk of memory
@@ -1708,12 +1709,17 @@ inline uint32_t RowGroup::getRowSizeWithStrings() const
     return oldOffsets[columnCount];
 }
 
-inline uint64_t RowGroup::getSizeWithStrings() const
+inline uint64_t RowGroup::getSizeWithStrings(uint64_t n) const
 {
     if (strings == NULL)
-        return getDataSize();
+        return getDataSize(n);
     else
-        return getDataSize() + strings->getSize();
+        return getDataSize(n) + strings->getSize();
+}
+
+inline uint64_t RowGroup::getSizeWithStrings() const
+{
+    return getSizeWithStrings(getRowCount());
 }
 
 inline bool RowGroup::isCharType(uint32_t colIndex) const

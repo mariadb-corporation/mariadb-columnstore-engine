@@ -61,8 +61,10 @@ public:
     void finalize();
 
 protected:
-    uint64_t                            fStart;
-    uint64_t                            fCount;
+    uint64_t              fStart;
+    uint64_t              fCount;
+    uint64_t              fUncommitedMemory;
+    static const uint64_t fMaxUncommited;
 };
 
 
