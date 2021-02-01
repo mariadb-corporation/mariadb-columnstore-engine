@@ -1,0 +1,1523 @@
+SELECT @mysqltest_file;
+@mysqltest_file
+ctype_cmp_varchar4_latin1_nopad_bin
+SET @database=CONCAT('mcs_', @mysqltest_file);
+EXECUTE IMMEDIATE CONCAT('DROP DATABASE IF EXISTS ', @database);
+EXECUTE IMMEDIATE CONCAT('CREATE DATABASE ', @database);
+CREATE PROCEDURE exec(query TEXT)
+BEGIN
+SELECT query AS '';
+EXECUTE IMMEDIATE query;
+END;
+$$
+CREATE PROCEDURE test01_execval(op VARCHAR(3) CHARACTER SET utf8,
+val VARCHAR(64) CHARACTER SET utf8)
+BEGIN
+DECLARE query TEXT DEFAULT 'SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1=''VAL''';
+SET query=REPLACE(query,'=',op);
+SET query=REPLACE(query,'VAL', val);
+CALL exec(query);
+END;
+$$
+CREATE PROCEDURE test01_populate(len1 INT, len2 INT)
+BEGIN
+-- Make sure the table is handled by a proper ENGINE
+SELECT (SELECT engine FROM information_schema.tables WHERE (table_schema,table_name)=(@database,'t1')) =
+@@default_storage_engine;
+FOR i IN len1..len2
+DO
+INSERT INTO t1 VALUES (RPAD('a',i)),(RPAD('A',i));
+-- LATIN SMALL LETTER A WITH TILDE
+-- LATIN CAPITAL LETTER A WITH TILDE
+INSERT INTO t1 VALUES (RPAD(_latin1 0xE3,i)),(RPAD(_latin1 0xC3,i));
+INSERT INTO t1 VALUES (RPAD('b',i)),(RPAD('B',i));
+END FOR;
+-- MCOL-4454 "ORDER BY BINARY a" is not like in InnoDB
+CALL exec('SELECT QUOTE(c1) FROM t1 ORDER BY c1, BINARY(c1) ASC');
+CALL exec('SELECT QUOTE(c1) FROM t1 ORDER BY c1, BINARY(c1) DESC');
+END;
+$$
+CREATE PROCEDURE test01_field_literal_op(len1 INT,
+len2 INT,
+op VARCHAR(3) CHARACTER SET utf8)
+BEGIN
+FOR i IN len1..len2
+DO
+CALL test01_execval(op,RPAD('a',i));
+CALL test01_execval(op,RPAD('A',i));
+CALL test01_execval(op,RPAD(_latin1 0xE3,i)); -- LATIN SMALL LETTER A WITH TILDE
+CALL test01_execval(op,RPAD(_latin1 0xC3,i)); -- LATIN CAPITAL LETTER A WITH TILDE
+END FOR;
+END;
+$$
+CREATE PROCEDURE test01_field_literal(len1 INT,
+len2 INT)
+BEGIN
+CALL test01_field_literal_op(len1, len2, '=');
+CALL test01_field_literal_op(len1, len2, '<=');
+CALL test01_field_literal_op(len1, len2, '<');
+CALL test01_field_literal_op(len1, len2, '>');
+CALL test01_field_literal_op(len1, len2, '>=');
+CALL test01_field_literal_op(len1, len2, '<>');
+END;
+$$
+CREATE PROCEDURE test01_field_field()
+BEGIN
+SELECT QUOTE(t1.c1), QUOTE(t2.c1) FROM t1, t1 t2 WHERE t1.c1=t2.c1 ORDER BY HEX(t1.c1), HEX(t2.c1);
+END;
+$$
+CREATE PROCEDURE test01_distinct()
+BEGIN
+DECLARE vrecno INT DEFAULT 1;
+CALL exec('SELECT GROUP_CONCAT(CONCAT(''['',c1,'']'') ORDER BY BINARY(c1) SEPARATOR '''') FROM t1 GROUP BY c1 ORDER BY c1');
+CALL exec('SELECT COUNT(DISTINCT c1) FROM t1');
+CREATE TABLE t2 AS SELECT DISTINCT c1 FROM t1;
+CALL exec('SELECT COUNT(*) FROM t2');
+CREATE TABLE t3 AS SELECT t1.c1, CAST(0 AS UNSIGNED) AS distinct_count FROM t1 LIMIT 0;
+FOR rec IN (SELECT c1 FROM t1)
+DO
+INSERT INTO t3 SELECT rec.c1, COUNT(*) FROM t2 WHERE t2.c1=rec.c1;
+END FOR;
+CALL exec('SELECT distinct_count, QUOTE(c1) FROM t3 ORDER BY c1, BINARY(c1)');
+DROP TABLE t3;
+CREATE TABLE t4 AS SELECT t1.c1, CAST(0 AS UNSIGNED) AS distinct_recno FROM t1 LIMIT 0;
+FOR rec IN (SELECT c1 FROM t2 ORDER BY c1)
+DO
+INSERT INTO t4 SELECT t1.c1, vrecno FROM t1 WHERE t1.c1=rec.c1 ORDER BY BINARY t1.c1;
+SET vrecno= vrecno+1;
+END FOR;
+CALL exec('SELECT distinct_recno, QUOTE(c1) FROM t4 ORDER BY c1, BINARY(c1)');
+DROP TABLE t4;
+DROP TABLE t2;
+END;
+$$
+CREATE PROCEDURE test02_same_table_create_table(dtype VARCHAR(128))
+BEGIN
+DECLARE tbl TEXT DEFAULT 'CREATE TABLE t1 (c1 TYPE, c2 TYPE)';
+SET tbl=REPLACE(tbl,'TYPE',dtype);
+CALL exec(tbl);
+END;
+$$
+CREATE PROCEDURE test02_same_table_populate()
+BEGIN
+INSERT INTO t1 VALUES ('a', 'A');
+INSERT INTO t1 VALUES ('a', 'A ');
+INSERT INTO t1 VALUES ('a ', 'A');
+INSERT INTO t1 VALUES ('a ', 'A ');
+END;
+$$
+CREATE PROCEDURE test02_same_table_cmp_field_field_op(op VARCHAR(2))
+BEGIN
+DECLARE query TEXT DEFAULT 'SELECT QUOTE(c1), QUOTE(c2) FROM t1 '
+                             'WHERE c1=c2 ORDER BY HEX(c1), HEX(c2)';
+SET query=REPLACE(query,'=',op);
+CALL exec(query);
+END;
+$$
+CREATE PROCEDURE test02_same_table_cmp_field_field()
+BEGIN
+CALL test02_same_table_cmp_field_field_op('=');
+CALL test02_same_table_cmp_field_field_op('<=');
+CALL test02_same_table_cmp_field_field_op('<');
+CALL test02_same_table_cmp_field_field_op('>');
+CALL test02_same_table_cmp_field_field_op('>=');
+CALL test02_same_table_cmp_field_field_op('<>');
+END;
+$$
+CREATE PROCEDURE test03(len INT, datatype TEXT)
+BEGIN
+CALL exec(REPLACE('CREATE TABLE t1 (c1 DATATYPE, c2 DATATYPE)', 'DATATYPE', datatype));
+CALL exec(REPLACE('INSERT INTO t1 VALUES (LEFT(''Hellooooooooooooooooooo'',LEN),LEFT(''hellooooooooooooooooooo'',LEN))', 'LEN', len));
+CALL exec(REPLACE('CREATE TABLE t2 (c1 DATATYPE, c2 DATATYPE)', 'DATATYPE', datatype));
+CALL exec(REPLACE('INSERT INTO t2 VALUES (LEFT(''Hellooooooooooooooooooo'',LEN),LEFT(''hellooooooooooooooooooo'',LEN))', 'LEN', len));
+CALL exec(REPLACE('SELECT * FROM t1 WHERE c1=''VAL''', 'VAL', LEFT('Hellooooooooooooooooooo', len)));
+CALL exec(REPLACE('SELECT * FROM t1 WHERE c1=''VAL''', 'VAL', LEFT('hellooooooooooooooooooo', len)));
+CALL exec('SELECT * FROM t1 WHERE c1=c2');
+CALL exec('SELECT * FROM t1, t2 WHERE t1.c1=t2.c1');
+CALL exec('SELECT * FROM t1, t2 WHERE t1.c1=t2.c2');
+CALL exec('SELECT * FROM t1, t2 WHERE t1.c2=t2.c1');
+CALL exec('SELECT * FROM t1, t2 WHERE t1.c2=t2.c2');
+CALL exec('DROP TABLE t1');
+END;
+$$
+SET NAMES utf8;
+SET @datatype='VARCHAR(4) CHARACTER SET latin1 COLLATE latin1_nopad_bin';
+CREATE TABLE t1 (c1 VARCHAR(4) CHARACTER SET latin1 COLLATE latin1_nopad_bin);
+CALL test01_populate(1,3);
+(SELECT engine FROM information_schema.tables WHERE (table_schema,table_name)=(@database,'t1')) =
+@@default_storage_engine
+1
+
+SELECT QUOTE(c1) FROM t1 ORDER BY c1, BINARY(c1) ASC
+QUOTE(c1)
+'A'
+'A '
+'A  '
+'B'
+'B '
+'B  '
+'a'
+'a '
+'a  '
+'b'
+'b '
+'b  '
+'Ã'
+'Ã '
+'Ã  '
+'ã'
+'ã '
+'ã  '
+
+SELECT QUOTE(c1) FROM t1 ORDER BY c1, BINARY(c1) DESC
+QUOTE(c1)
+'A'
+'A '
+'A  '
+'B'
+'B '
+'B  '
+'a'
+'a '
+'a  '
+'b'
+'b '
+'b  '
+'Ã'
+'Ã '
+'Ã  '
+'ã'
+'ã '
+'ã  '
+CALL test01_field_literal(1,4);
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1='a'
+HEX(c1)	QUOTE(c1)
+61	'a'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1='A'
+HEX(c1)	QUOTE(c1)
+41	'A'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1='ã'
+HEX(c1)	QUOTE(c1)
+E3	'ã'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1='Ã'
+HEX(c1)	QUOTE(c1)
+C3	'Ã'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1='a '
+HEX(c1)	QUOTE(c1)
+6120	'a '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1='A '
+HEX(c1)	QUOTE(c1)
+4120	'A '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1='ã '
+HEX(c1)	QUOTE(c1)
+E320	'ã '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1='Ã '
+HEX(c1)	QUOTE(c1)
+C320	'Ã '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1='a  '
+HEX(c1)	QUOTE(c1)
+612020	'a  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1='A  '
+HEX(c1)	QUOTE(c1)
+412020	'A  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1='ã  '
+HEX(c1)	QUOTE(c1)
+E32020	'ã  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1='Ã  '
+HEX(c1)	QUOTE(c1)
+C32020	'Ã  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1='a   '
+HEX(c1)	QUOTE(c1)
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1='A   '
+HEX(c1)	QUOTE(c1)
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1='ã   '
+HEX(c1)	QUOTE(c1)
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1='Ã   '
+HEX(c1)	QUOTE(c1)
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<='a'
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+42	'B'
+4120	'A '
+4220	'B '
+412020	'A  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<='A'
+HEX(c1)	QUOTE(c1)
+41	'A'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<='ã'
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<='Ã'
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<='a '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+42	'B'
+6120	'a '
+4120	'A '
+4220	'B '
+412020	'A  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<='A '
+HEX(c1)	QUOTE(c1)
+41	'A'
+4120	'A '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<='ã '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<='Ã '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<='a  '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+42	'B'
+6120	'a '
+4120	'A '
+4220	'B '
+612020	'a  '
+412020	'A  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<='A  '
+HEX(c1)	QUOTE(c1)
+41	'A'
+4120	'A '
+412020	'A  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<='ã  '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<='Ã  '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<='a   '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+42	'B'
+6120	'a '
+4120	'A '
+4220	'B '
+612020	'a  '
+412020	'A  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<='A   '
+HEX(c1)	QUOTE(c1)
+41	'A'
+4120	'A '
+412020	'A  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<='ã   '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<='Ã   '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<'a'
+HEX(c1)	QUOTE(c1)
+41	'A'
+42	'B'
+4120	'A '
+4220	'B '
+412020	'A  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<'A'
+HEX(c1)	QUOTE(c1)
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<'ã'
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<'Ã'
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<'a '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+42	'B'
+4120	'A '
+4220	'B '
+412020	'A  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<'A '
+HEX(c1)	QUOTE(c1)
+41	'A'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<'ã '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<'Ã '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<'a  '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+42	'B'
+6120	'a '
+4120	'A '
+4220	'B '
+412020	'A  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<'A  '
+HEX(c1)	QUOTE(c1)
+41	'A'
+4120	'A '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<'ã  '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<'Ã  '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<'a   '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+42	'B'
+6120	'a '
+4120	'A '
+4220	'B '
+612020	'a  '
+412020	'A  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<'A   '
+HEX(c1)	QUOTE(c1)
+41	'A'
+4120	'A '
+412020	'A  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<'ã   '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<'Ã   '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>'a'
+HEX(c1)	QUOTE(c1)
+E3	'ã'
+C3	'Ã'
+62	'b'
+6120	'a '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+612020	'a  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>'A'
+HEX(c1)	QUOTE(c1)
+61	'a'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>'ã'
+HEX(c1)	QUOTE(c1)
+E320	'ã '
+E32020	'ã  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>'Ã'
+HEX(c1)	QUOTE(c1)
+E3	'ã'
+E320	'ã '
+C320	'Ã '
+E32020	'ã  '
+C32020	'Ã  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>'a '
+HEX(c1)	QUOTE(c1)
+E3	'ã'
+C3	'Ã'
+62	'b'
+E320	'ã '
+C320	'Ã '
+6220	'b '
+612020	'a  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>'A '
+HEX(c1)	QUOTE(c1)
+61	'a'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>'ã '
+HEX(c1)	QUOTE(c1)
+E32020	'ã  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>'Ã '
+HEX(c1)	QUOTE(c1)
+E3	'ã'
+E320	'ã '
+E32020	'ã  '
+C32020	'Ã  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>'a  '
+HEX(c1)	QUOTE(c1)
+E3	'ã'
+C3	'Ã'
+62	'b'
+E320	'ã '
+C320	'Ã '
+6220	'b '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>'A  '
+HEX(c1)	QUOTE(c1)
+61	'a'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>'ã  '
+HEX(c1)	QUOTE(c1)
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>'Ã  '
+HEX(c1)	QUOTE(c1)
+E3	'ã'
+E320	'ã '
+E32020	'ã  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>'a   '
+HEX(c1)	QUOTE(c1)
+E3	'ã'
+C3	'Ã'
+62	'b'
+E320	'ã '
+C320	'Ã '
+6220	'b '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>'A   '
+HEX(c1)	QUOTE(c1)
+61	'a'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>'ã   '
+HEX(c1)	QUOTE(c1)
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>'Ã   '
+HEX(c1)	QUOTE(c1)
+E3	'ã'
+E320	'ã '
+E32020	'ã  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>='a'
+HEX(c1)	QUOTE(c1)
+61	'a'
+E3	'ã'
+C3	'Ã'
+62	'b'
+6120	'a '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+612020	'a  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>='A'
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>='ã'
+HEX(c1)	QUOTE(c1)
+E3	'ã'
+E320	'ã '
+E32020	'ã  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>='Ã'
+HEX(c1)	QUOTE(c1)
+E3	'ã'
+C3	'Ã'
+E320	'ã '
+C320	'Ã '
+E32020	'ã  '
+C32020	'Ã  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>='a '
+HEX(c1)	QUOTE(c1)
+E3	'ã'
+C3	'Ã'
+62	'b'
+6120	'a '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+612020	'a  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>='A '
+HEX(c1)	QUOTE(c1)
+61	'a'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>='ã '
+HEX(c1)	QUOTE(c1)
+E320	'ã '
+E32020	'ã  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>='Ã '
+HEX(c1)	QUOTE(c1)
+E3	'ã'
+E320	'ã '
+C320	'Ã '
+E32020	'ã  '
+C32020	'Ã  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>='a  '
+HEX(c1)	QUOTE(c1)
+E3	'ã'
+C3	'Ã'
+62	'b'
+E320	'ã '
+C320	'Ã '
+6220	'b '
+612020	'a  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>='A  '
+HEX(c1)	QUOTE(c1)
+61	'a'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>='ã  '
+HEX(c1)	QUOTE(c1)
+E32020	'ã  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>='Ã  '
+HEX(c1)	QUOTE(c1)
+E3	'ã'
+E320	'ã '
+E32020	'ã  '
+C32020	'Ã  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>='a   '
+HEX(c1)	QUOTE(c1)
+E3	'ã'
+C3	'Ã'
+62	'b'
+E320	'ã '
+C320	'Ã '
+6220	'b '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>='A   '
+HEX(c1)	QUOTE(c1)
+61	'a'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>='ã   '
+HEX(c1)	QUOTE(c1)
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>='Ã   '
+HEX(c1)	QUOTE(c1)
+E3	'ã'
+E320	'ã '
+E32020	'ã  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<>'a'
+HEX(c1)	QUOTE(c1)
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<>'A'
+HEX(c1)	QUOTE(c1)
+61	'a'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<>'ã'
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<>'Ã'
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<>'a '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+4120	'A '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<>'A '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<>'ã '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<>'Ã '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+E320	'ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<>'a  '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+412020	'A  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<>'A  '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<>'ã  '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<>'Ã  '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+E32020	'ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<>'a   '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<>'A   '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<>'ã   '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<>'Ã   '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+6120	'a '
+4120	'A '
+E320	'ã '
+C320	'Ã '
+6220	'b '
+4220	'B '
+612020	'a  '
+412020	'A  '
+E32020	'ã  '
+C32020	'Ã  '
+622020	'b  '
+422020	'B  '
+CALL test01_field_field();
+QUOTE(t1.c1)	QUOTE(t2.c1)
+'A'	'A'
+'A '	'A '
+'A  '	'A  '
+'B'	'B'
+'B '	'B '
+'B  '	'B  '
+'a'	'a'
+'a '	'a '
+'a  '	'a  '
+'b'	'b'
+'b '	'b '
+'b  '	'b  '
+'Ã'	'Ã'
+'Ã '	'Ã '
+'Ã  '	'Ã  '
+'ã'	'ã'
+'ã '	'ã '
+'ã  '	'ã  '
+CALL test01_distinct();
+
+SELECT GROUP_CONCAT(CONCAT('[',c1,']') ORDER BY BINARY(c1) SEPARATOR '') FROM t1 GROUP BY c1 ORDER BY c1
+GROUP_CONCAT(CONCAT('[',c1,']') ORDER BY BINARY(c1) SEPARATOR '')
+[A]
+[A ]
+[A  ]
+[B]
+[B ]
+[B  ]
+[a]
+[a ]
+[a  ]
+[b]
+[b ]
+[b  ]
+[Ã]
+[Ã ]
+[Ã  ]
+[ã]
+[ã ]
+[ã  ]
+
+SELECT COUNT(DISTINCT c1) FROM t1
+COUNT(DISTINCT c1)
+18
+
+SELECT COUNT(*) FROM t2
+COUNT(*)
+18
+
+SELECT distinct_count, QUOTE(c1) FROM t3 ORDER BY c1, BINARY(c1)
+distinct_count	QUOTE(c1)
+1	'A'
+1	'A '
+1	'A  '
+1	'B'
+1	'B '
+1	'B  '
+1	'a'
+1	'a '
+1	'a  '
+1	'b'
+1	'b '
+1	'b  '
+1	'Ã'
+1	'Ã '
+1	'Ã  '
+1	'ã'
+1	'ã '
+1	'ã  '
+
+SELECT distinct_recno, QUOTE(c1) FROM t4 ORDER BY c1, BINARY(c1)
+distinct_recno	QUOTE(c1)
+1	'A'
+2	'A '
+3	'A  '
+4	'B'
+5	'B '
+6	'B  '
+7	'a'
+8	'a '
+9	'a  '
+10	'b'
+11	'b '
+12	'b  '
+13	'Ã'
+14	'Ã '
+15	'Ã  '
+16	'ã'
+17	'ã '
+18	'ã  '
+DROP TABLE t1;
+CALL test02_same_table_create_table(@datatype);
+
+CREATE TABLE t1 (c1 VARCHAR(4) CHARACTER SET latin1 COLLATE latin1_nopad_bin, c2 VARCHAR(4) CHARACTER SET latin1 COLLATE latin1_nopad_bin)
+CALL test02_same_table_populate();
+CALL test02_same_table_cmp_field_field();
+
+SELECT QUOTE(c1), QUOTE(c2) FROM t1 WHERE c1=c2 ORDER BY HEX(c1), HEX(c2)
+QUOTE(c1)	QUOTE(c2)
+
+SELECT QUOTE(c1), QUOTE(c2) FROM t1 WHERE c1<=c2 ORDER BY HEX(c1), HEX(c2)
+QUOTE(c1)	QUOTE(c2)
+
+SELECT QUOTE(c1), QUOTE(c2) FROM t1 WHERE c1<c2 ORDER BY HEX(c1), HEX(c2)
+QUOTE(c1)	QUOTE(c2)
+
+SELECT QUOTE(c1), QUOTE(c2) FROM t1 WHERE c1>c2 ORDER BY HEX(c1), HEX(c2)
+QUOTE(c1)	QUOTE(c2)
+'a'	'A'
+'a'	'A '
+'a '	'A'
+'a '	'A '
+
+SELECT QUOTE(c1), QUOTE(c2) FROM t1 WHERE c1>=c2 ORDER BY HEX(c1), HEX(c2)
+QUOTE(c1)	QUOTE(c2)
+'a'	'A'
+'a'	'A '
+'a '	'A'
+'a '	'A '
+
+SELECT QUOTE(c1), QUOTE(c2) FROM t1 WHERE c1<>c2 ORDER BY HEX(c1), HEX(c2)
+QUOTE(c1)	QUOTE(c2)
+'a'	'A'
+'a'	'A '
+'a '	'A'
+'a '	'A '
+DROP TABLE t1;
+CALL test03(4,@datatype);
+
+CREATE TABLE t1 (c1 VARCHAR(4) CHARACTER SET latin1 COLLATE latin1_nopad_bin, c2 VARCHAR(4) CHARACTER SET latin1 COLLATE latin1_nopad_bin)
+
+INSERT INTO t1 VALUES (LEFT('Hellooooooooooooooooooo',4),LEFT('hellooooooooooooooooooo',4))
+
+CREATE TABLE t2 (c1 VARCHAR(4) CHARACTER SET latin1 COLLATE latin1_nopad_bin, c2 VARCHAR(4) CHARACTER SET latin1 COLLATE latin1_nopad_bin)
+
+INSERT INTO t2 VALUES (LEFT('Hellooooooooooooooooooo',4),LEFT('hellooooooooooooooooooo',4))
+
+SELECT * FROM t1 WHERE c1='Hell'
+c1	c2
+Hell	hell
+
+SELECT * FROM t1 WHERE c1='hell'
+c1	c2
+
+SELECT * FROM t1 WHERE c1=c2
+c1	c2
+
+SELECT * FROM t1, t2 WHERE t1.c1=t2.c1
+c1	c2	c1	c2
+Hell	hell	Hell	hell
+
+SELECT * FROM t1, t2 WHERE t1.c1=t2.c2
+c1	c2	c1	c2
+
+SELECT * FROM t1, t2 WHERE t1.c2=t2.c1
+c1	c2	c1	c2
+
+SELECT * FROM t1, t2 WHERE t1.c2=t2.c2
+c1	c2	c1	c2
+Hell	hell	Hell	hell
+
+DROP TABLE t1
+DROP PROCEDURE exec;
+DROP PROCEDURE test01_execval;
+DROP PROCEDURE test01_populate;
+DROP PROCEDURE test01_field_literal_op;
+DROP PROCEDURE test01_field_literal;
+DROP PROCEDURE test01_field_field;
+DROP PROCEDURE test01_distinct;
+DROP PROCEDURE test02_same_table_create_table;
+DROP PROCEDURE test02_same_table_populate;
+DROP PROCEDURE test02_same_table_cmp_field_field_op;
+DROP PROCEDURE test02_same_table_cmp_field_field;
+DROP PROCEDURE test03;
+EXECUTE IMMEDIATE CONCAT('DROP DATABASE ', @database);
+USE test;
+SET @@default_storage_engine=DEFAULT;

@@ -1,0 +1,41 @@
+DROP USER IF EXISTS user1@test;
+DROP USER IF EXISTS 'user2'@'%';
+DROP USER IF EXISTS 'user'@'%';
+DROP USER IF EXISTS 'user'@'localhost';
+DROP USER IF EXISTS 'user'@'127.0.0.1';
+SET default_storage_engine=Columnstore;
+SELECT @@default_storage_engine;
+@@default_storage_engine
+Columnstore
+CREATE USER user1@test IDENTIFIED BY 'Vagrant1|0000001';
+CREATE USER user1@test IDENTIFIED BY 'Vagrant1|0000001';
+ERROR HY000: Operation CREATE USER failed for 'user1'@'test'
+CREATE USER IF NOT EXISTS user1@test IDENTIFIED BY 'Vagrant1|0000001';
+Warnings:
+Note	1973	Can't create user 'user1'@'test'; it already exists
+CREATE OR REPLACE USER user1@test IDENTIFIED BY 'Vagrant1|0000001';
+CREATE USER 'user2'@'%' IDENTIFIED BY 'Vagrant1|0000001';
+CREATE USER 'user2'@'%' IDENTIFIED BY 'Vagrant1|0000001';
+ERROR HY000: Operation CREATE USER failed for 'user2'@'%'
+CREATE USER IF NOT EXISTS 'user2'@'%' IDENTIFIED BY 'Vagrant1|0000001';
+Warnings:
+Note	1973	Can't create user 'user2'@'%'; it already exists
+CREATE OR REPLACE USER 'user2'@'%' IDENTIFIED BY 'Vagrant1|0000001';
+CREATE USER 'user'@'%' IDENTIFIED BY 'Vagrant1|0000001';
+CREATE USER 'user'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
+CREATE USER 'user'@'127.0.0.1' IDENTIFIED BY 'Vagrant1|0000001';
+CREATE USER user@127.0.0.1 IDENTIFIED BY 'Vagrant1|0000001';
+ERROR HY000: Operation CREATE USER failed for 'user'@'127.0.0.1'
+CREATE USER user@% IDENTIFIED BY 'Vagrant1|0000001';
+ERROR 42000: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '% IDENTIFIED BY 'Vagrant1|0000001'' at line 1
+DROP USER user1@test;
+DROP USER user2@%;
+ERROR 42000: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '%' at line 1
+DROP USER 'user2'@'%';
+DROP USER 'user'@'%';
+DROP USER 'user'@'localhost';
+DROP USER 'user'@'127.0.0.1';
+SET default_storage_engine=default;
+SELECT @@default_storage_engine;
+@@default_storage_engine
+InnoDB

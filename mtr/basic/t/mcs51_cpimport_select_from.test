@@ -1,0 +1,38 @@
+#
+# Bulk loading output of SELECT FROM Table(s) 
+# Author: Susil, susil.behera@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs51_db1;
+DROP DATABASE IF EXISTS mcs51_db2;
+--enable_warnings
+
+CREATE DATABASE mcs51_db1;
+CREATE DATABASE mcs51_db2;
+CREATE TABLE mcs51_db1.t_innodb (col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Innodb;
+CREATE TABLE mcs51_db1.t_myisam (col1 INT, col2 INT, col3 CHAR(8)) ENGINE=MyISAM;
+CREATE TABLE mcs51_db2.t_mcs (col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnstore;
+
+#Load data into Innodb and MyISAM tables
+LOAD DATA LOCAL infile './suite/columnstore/std_data/100Krows.dat' INTO TABLE mcs51_db1.t_innodb FIELDS TERMINATED BY '|';
+LOAD DATA LOCAL infile './suite/columnstore/std_data/100Krows.dat' INTO TABLE mcs51_db1.t_myisam FIELDS TERMINATED BY '|';
+
+#Bulk load deom Innodb table
+--exec mariadb -q -e 'SELECT * FROM mcs51_db1.t_innodb;' -N  | cpimport -s '\t' mcs51_db2 t_mcs >/dev/null
+SELECT * FROM mcs51_db2.t_mcs ORDER BY col1;
+SELECT COUNT(*) FROM mcs51_db2.t_mcs;
+TRUNCATE mcs51_db2.t_mcs;
+
+#Bulk load deom MyISAM table
+--exec mariadb -q -e 'SELECT * FROM mcs51_db1.t_myisam;' -N  | cpimport -s '\t' mcs51_db2 t_mcs >/dev/null
+SELECT * FROM mcs51_db2.t_mcs ORDER BY col1;
+SELECT COUNT(*) FROM mcs51_db2.t_mcs;
+TRUNCATE mcs51_db2.t_mcs;
+
+#TBD negative scenarios
+
+# Clean UP
+DROP DATABASE mcs51_db1;
+DROP DATABASE mcs51_db2;

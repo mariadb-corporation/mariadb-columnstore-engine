@@ -1,0 +1,16 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3203.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists bug3203;
+create table bug3203 (c1 varchar(20))engine=columnstore;
+select * from bug3203 where c1 = 'x';
+drop table if exists bug3203;
+#
+

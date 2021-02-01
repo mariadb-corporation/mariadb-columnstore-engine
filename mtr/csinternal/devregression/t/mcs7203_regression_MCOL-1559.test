@@ -1,0 +1,44 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-1559.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists mcol1559;
+create table mcol1559 (c7nospace char(7), c7space char(7), c20nospace char(20), c20space char(20), vcnospace varchar(20), vcspace varchar(20)) engine=columnstore;
+
+insert into mcol1559 values ("ABC", "ABC ", "ABC12345678910", "ABC12345678910 ", "ABC", "ABC ");
+
+# All of these should return a row
+select * from mcol1559 where c7nospace = "ABC";
+select * from mcol1559 where c20nospace = "ABC12345678910";
+select * from mcol1559 where c7nospace = "ABC ";
+select * from mcol1559 where c20nospace = "ABC12345678910 ";
+select * from mcol1559 where vcnospace = "ABC";
+select * from mcol1559 where vcnospace = "ABC ";
+
+# All of these should return a row
+select * from mcol1559 where c7space = "ABC";
+select * from mcol1559 where c20space = "ABC12345678910";
+select * from mcol1559 where c7space = "ABC ";
+select * from mcol1559 where c20space = "ABC12345678910 ";
+select * from mcol1559 where vcspace = "ABC";
+select * from mcol1559 where vcspace = "ABC ";
+
+# should return a row
+select * from mcol1559 where c7nospace LIKE "ABC";
+select * from mcol1559 where c20nospace LIKE "ABC12345678910";
+select * from mcol1559 where vcnospace LIKE "ABC";
+# should not return a row
+select * from mcol1559 where c7nospace LIKE "ABC ";
+select * from mcol1559 where c20nospace LIKE "ABC12345678910 ";
+select * from mcol1559 where vcnospace LIKE "ABC ";
+
+drop table if exists mcol1559;
+
+#
+

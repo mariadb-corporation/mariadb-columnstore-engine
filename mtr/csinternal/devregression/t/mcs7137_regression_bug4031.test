@@ -1,0 +1,28 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug4031.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+ select s_name, count(distinct(l1.l_orderkey+10*l1.l_linenumber)) as numwait 
+from supplier, orders, nation, lineitem l1 
+left join lineitem l2 on (l2.l_orderkey = l1.l_orderkey and l2.l_suppkey <> l1.l_suppkey)
+left join 
+(select l3.l_orderkey,l3.l_suppkey from lineitem l3 where l3.l_orderkey <= 100000 and l3.l_receiptdate > l3.l_commitdate) l4 on 
+(l4.l_orderkey =  l1.l_orderkey and l4.l_suppkey <> l1.l_suppkey) 
+where s_suppkey =  l1.l_suppkey and o_orderkey = l1.l_orderkey and o_orderstatus = 'F'
+  and l1.l_receiptdate > l1.l_commitdate and l2.l_orderkey is not null
+  and l4.l_orderkey is null and s_nationkey = n_nationkey and n_name =
+  'MOROCCO' and l1.l_orderkey <= 100000 and l2.l_orderkey <= 100000 
+
+group by s_name order by numwait desc, s_name ;
+
+select r_regionkey, n_regionkey, n_nationkey from region left join
+nation on (r_regionkey=n_regionkey and R_regionkey>n_nationkey) order by 1, 2, 3;
+
+#
+

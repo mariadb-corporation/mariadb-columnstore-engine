@@ -1,0 +1,21 @@
+#
+# Columnstore Engine doesn't support CREATE OR REPLACE table 
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs116_db;
+--enable_warnings
+
+CREATE DATABASE mcs116_db;
+USE mcs116_db;
+
+--error ER_WRONG_USAGE
+CREATE OR REPLACE TABLE IF NOT EXISTS t1 (a INT);
+
+--error ER_CHECK_NOT_IMPLEMENTED
+CREATE OR REPLACE TABLE t1 (a INT)ENGINE=Columnstore;
+
+# Clean UP
+DROP DATABASE mcs116_db;

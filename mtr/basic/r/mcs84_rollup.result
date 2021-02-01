@@ -1,0 +1,24 @@
+DROP DATABASE IF EXISTS mcs84_db;
+CREATE DATABASE mcs84_db;
+USE mcs84_db;
+CREATE TABLE booksales ( 
+country CHAR(35), genre CHAR(15), year INT, sales INT)
+ENGINE=Columnstore;
+INSERT INTO booksales VALUES
+('Senegal','fiction',2014,12234), ('Senegal','fiction',2015,15647),
+('Senegal','non-fiction',2014,64980), ('Senegal','non-fiction',2015,78901),
+('Paraguay','fiction',2014,87970), ('Paraguay','fiction',2015,76940),
+('Paraguay','non-fiction',2014,8760), ('Paraguay','non-fiction',2015,9030);
+SELECT year, SUM(sales) FROM booksales GROUP BY year ORDER BY year;
+year	SUM(sales)
+2014	173944
+2015	180518
+SELECT year, SUM(sales) FROM booksales GROUP BY year WITH ROLLUP ORDER BY year;
+ERROR HY000: Incorrect usage of CUBE/ROLLUP and ORDER BY
+SELECT year, SUM(sales) FROM booksales GROUP BY year WITH ROLLUP;
+ERROR 42000: The storage engine for the table doesn't support IDB-1014: Rollup is currently not supported.
+SELECT year, SUM(sales) FROM booksales GROUP BY year ASC WITH ROLLUP;
+ERROR 42000: The storage engine for the table doesn't support IDB-1014: Rollup is currently not supported.
+SELECT year, SUM(sales) FROM booksales GROUP BY year DESC WITH ROLLUP;
+ERROR 42000: The storage engine for the table doesn't support IDB-1014: Rollup is currently not supported.
+DROP DATABASE IF EXISTS mcs84_db;

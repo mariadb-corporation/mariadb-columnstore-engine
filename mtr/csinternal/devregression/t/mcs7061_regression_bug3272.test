@@ -1,0 +1,26 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3272.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists bug3272;
+create table bug3272 (c1 float, c2 char(12)) engine=columnstore;
+
+insert into bug3272 values (5.24062, '5.24062'), (7.24062, '7.24062'), (9.94062, '9.94062');
+insert into bug3272 values (-5.24062, '-5.24062'), (-7.24062, '-7.24062'), (-9.94062, '-9.94062');
+insert into bug3272 values (5.24562, '5.24562'), (7.24562, '7.24562'), (9.94562, '9.94562');
+insert into bug3272 values (-5.24562, '-5.24562'), (-7.24562, '-7.24562'), (-9.94562, '-9.94562');
+
+select cast(c1 as decimal(4,2)) floattype, cast(c2 as decimal(4,2)) chartype from bug3272 order by 1, 2;
+select cast(c1 as decimal(0,0)) floattype, cast(c2 as decimal(0,0)) chartype from bug3272 order by 1, 2;
+select cast(c1 as signed) floattype, cast(c2 as signed) chartype from bug3272 order by 1, 2;
+select cast(cast(c1 as decimal(4,2)) as signed) decimaltype, cast(c2 as signed) chartype from bug3272 order by 1, 2;
+
+drop table if exists bug3272;
+#
+

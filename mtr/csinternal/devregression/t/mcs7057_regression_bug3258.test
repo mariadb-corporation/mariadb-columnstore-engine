@@ -1,0 +1,28 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3258.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists var_between;
+create table var_between (c1 varchar(10), c2 char(7)) engine=columnstore;
+insert into var_between values ('099', '099');
+insert into var_between values ('9', '9');
+insert into var_between values ('1', '1');
+select 'q1', var_between.* from var_between where substr(c1,1,1) between '0' and '9';
+select 'q2', var_between.* from var_between where substr(c1,1,1) not  between '0' and '9';
+select 'q3', var_between.* from var_between where substr(c2,1,1) between '0' and '9';
+select 'q4', var_between.* from var_between where substr(c2,1,1) not  between '0' and '9';
+drop table var_between;
+
+select 'q5', count(*) from orders where substr(o_comment, 1, 1) between 'a' and 'f';
+select 'q6', count(*) from orders where substr(o_orderpriority, 1, 1) between '2' and '3';
+select 'q7', count(*) from orders where substr(o_orderpriority, 1, 1) not between '2' and '3';
+select 'q8', count(*) from orders where substr(o_totalprice, 2, 3)  between '200' and '300';
+select 'q9', count(*) from orders where substr(o_totalprice, 2, 3)  not between '200' and '300';
+#
+

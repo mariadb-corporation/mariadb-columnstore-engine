@@ -1,0 +1,47 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug5764b.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop view if exists vwBug;
+drop view if exists vwBug2;
+drop view if exists vwBug3;
+drop view if exists vwBug4;
+
+create view vwBug as 
+select sub1.c1 s1c1, sub1.c2 s1c2, sub2.c1 s2c1, sub2.c2 s2c2, sub3.c1 s3c1, sub3.c2 s3c2
+from sub1 
+left join sub2 on (sub1.c1 = sub2.c1 and sub1.c2 = sub2.c2) 
+left join sub3 on (sub1.c1 = sub3.c1 and sub1.c2 = sub3.c2);
+
+select 'q1', vwBug.*, sub4.c2 from vwBug left join sub4 on (vwBug.s1c2 = sub4.c2);
+create view vwBug2 as select vwBug.*, sub4.c2 from vwBug left join sub4 on (vwBug.s1c2 = sub4.c2);
+
+select 'q2', vwBug2.* from vwBug2 order by 1, 2, 3;
+
+select 'q3', sub5.c1, count(*) from vwBug2 right join sub5 on (s1c1=sub5.c2) group by 1, 2 order by 1, 2;
+select 'q4', sub5.c1, count(*) from vwBug2 left join sub5 on (s1c1=sub5.c2) group by 1, 2 order by 1, 2;
+select 'q5', vwBug2.s1c1, vwBug2.s1c2, count(*) from vwBug2 left join sub5 on (s1c1=sub5.c2) group by 1, 2, 3 order by 1, 2, 3;
+
+create view vwBug3 as select vwBug2.s1c1, vwBug2.s1c2 from vwBug2 left join sub5 on (s1c1=sub5.c2);
+select 'q6', s1c1, s1c2, count(*) from vwBug2 group by 1, 2, 3 order by 1, 2, 3;
+
+select 'q7', vwBug.s1c1, vwBug2.s1c1 from vwBug join vwBug2 on (vwBug.s1c1 = vwBug2.s1c2) order by 1, 2, 3;
+select 'q8', vwBug.s1c1, vwBug2.s1c1 from vwBug left join vwBug2 on (vwBug.s1c1 = vwBug2.s1c2) order by 1, 2, 3;
+select 'q9', vwBug.s1c1, vwBug2.s1c1 from vwBug right join vwBug2 on (vwBug.s1c1 = vwBug2.s1c2) order by 1, 2, 3;
+
+create view vwBug4 as (select * from vwBug3 where s1c1 in (select s1c2 from vwBug2 where s1c1 in (select s1c1 from vwBug)));
+select 'q10', vwBug4.s1c1, vwBug4.s1c2, count(*) from vwBug4 group by 1, 2, 3 order by 1, 2, 3;
+
+
+drop view vwBug;
+drop view vwBug2;
+drop view vwBug3;
+drop view vwBug4;
+#
+

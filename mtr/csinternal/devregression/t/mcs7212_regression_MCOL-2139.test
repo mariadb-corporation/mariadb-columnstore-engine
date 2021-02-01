@@ -1,0 +1,27 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-2139.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+--disable_warnings
+drop table if exists dairy_collection_animal;
+drop view if exists dairy_collection_view;
+--enable_warnings
+create table dairy_collection_animal (collection_id int(11), animal_id varchar(18), cdcb_verified tinyint(4)) engine = columnstore;
+insert into dairy_collection_animal values (1, '1', 1), (2, '2', 2);
+create algorithm = undefined view dairy_collection_view as select a.collection_id as collection_id, a.animal_id as animal_id, a.cdcb_verified as cdcb_verified from dairy_collection_animal a;
+select * from dairy_collection_animal;
+select * from dairy_collection_view;
+update dairy_collection_animal a, (select collection_id from dairy_collection_view where collection_id = 2)b set a.animal_id = '4' where a.collection_id = b.collection_id;
+select * from dairy_collection_animal;
+select * from dairy_collection_view;
+
+drop table dairy_collection_animal;
+drop view dairy_collection_view;
+#
+

@@ -1,0 +1,74 @@
+DROP DATABASE IF EXISTS test_mcol641_create;
+CREATE DATABASE test_mcol641_create;
+USE test_mcol641_create;
+DROP TABLE IF EXISTS cs1;
+DROP TABLE IF EXISTS cs2;
+DROP TABLE IF EXISTS cs3;
+DROP TABLE IF EXISTS cs4;
+CREATE TABLE cs1(d1 DECIMAL(38), d2 DECIMAL(38,10), d3 DECIMAL(38,38), d4 DECIMAL(19), d5 DECIMAL(19,19),d6 DECIMAL(19,10)) ENGINE=columnstore;
+CREATE TABLE cs2(d1 DECIMAL(38) SIGNED, d2 DECIMAL(38,10) SIGNED, d3 DECIMAL(38,38) SIGNED) ENGINE=columnstore;
+CREATE TABLE cs3(d1 DECIMAL(38) UNSIGNED ZEROFILL, d2 DECIMAL(38,10) UNSIGNED ZEROFILL, d3 DECIMAL(38,38) UNSIGNED ZEROFILL) ENGINE=columnstore;
+Warnings:
+Warning	1618	ZEROFILL is ignored in ColumnStore
+CREATE TABLE cs4(d1 DECIMAL(18), d2 DECIMAL(18,10), d3 DECIMAL(18,18)) ENGINE=columnstore;
+SELECT TABLE_SCHEMA,TABLE_NAME,COLUMN_NAME,DATA_TYPE,COLUMN_LENGTH,COLUMN_POSITION,COLUMN_DEFAULT,NUMERIC_PRECISION,NUMERIC_SCALE FROM information_schema.columnstore_columns WHERE table_name = 'cs1' OR table_name = 'cs2' OR table_name = 'cs3' OR table_name = 'cs4' ORDER BY table_name,column_name ASC;
+TABLE_SCHEMA	TABLE_NAME	COLUMN_NAME	DATA_TYPE	COLUMN_LENGTH	COLUMN_POSITION	COLUMN_DEFAULT	NUMERIC_PRECISION	NUMERIC_SCALE
+test_mcol641_create	cs1	d1	decimal	16	0	NULL	38	0
+test_mcol641_create	cs1	d2	decimal	16	1	NULL	38	10
+test_mcol641_create	cs1	d3	decimal	16	2	NULL	38	38
+test_mcol641_create	cs1	d4	decimal	16	3	NULL	19	0
+test_mcol641_create	cs1	d5	decimal	16	4	NULL	19	19
+test_mcol641_create	cs1	d6	decimal	16	5	NULL	19	10
+test_mcol641_create	cs2	d1	decimal	16	0	NULL	38	0
+test_mcol641_create	cs2	d2	decimal	16	1	NULL	38	10
+test_mcol641_create	cs2	d3	decimal	16	2	NULL	38	38
+test_mcol641_create	cs3	d1	udecimal	16	0	NULL	38	0
+test_mcol641_create	cs3	d2	udecimal	16	1	NULL	38	10
+test_mcol641_create	cs3	d3	udecimal	16	2	NULL	38	38
+test_mcol641_create	cs4	d1	decimal	8	0	NULL	18	0
+test_mcol641_create	cs4	d2	decimal	8	1	NULL	18	10
+test_mcol641_create	cs4	d3	decimal	8	2	NULL	18	18
+ALTER TABLE cs1 DROP COLUMN d4;
+ALTER TABLE cs1 ADD COLUMN d7 DECIMAL(38,37);
+ALTER TABLE cs2 ADD COLUMN d4 DECIMAL(30,30) SIGNED;
+ALTER TABLE cs3 ADD COLUMN d5 DECIMAL(20,18) UNSIGNED;
+Warnings:
+Warning	1618	ZEROFILL is ignored in ColumnStore
+ALTER TABLE cs1 RENAME COLUMN d7 TO d17;
+ERROR 42000: The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
+ALTER TABLE cs2 ADD COLUMN (d5 DECIMAL(38,5), d6 DECIMAL(35,15));
+ERROR 42000: The storage engine for the table doesn't support Multiple actions in alter table statement is currently not supported by Columnstore.
+ALTER TABLE cs3 MODIFY d1 DECIMAL(38) SIGNED;
+ERROR HY000: Internal error: CAL0001: Alter table Failed:  Altertable: Error in the action type  
+SELECT TABLE_SCHEMA,TABLE_NAME,COLUMN_NAME,DATA_TYPE,COLUMN_LENGTH,COLUMN_POSITION,COLUMN_DEFAULT,NUMERIC_PRECISION,NUMERIC_SCALE FROM information_schema.columnstore_columns WHERE table_schema = 'test_mcol641_create' ORDER BY table_name,column_name ASC;
+TABLE_SCHEMA	TABLE_NAME	COLUMN_NAME	DATA_TYPE	COLUMN_LENGTH	COLUMN_POSITION	COLUMN_DEFAULT	NUMERIC_PRECISION	NUMERIC_SCALE
+test_mcol641_create	cs1	d1	decimal	16	0	NULL	38	0
+test_mcol641_create	cs1	d2	decimal	16	1	NULL	38	10
+test_mcol641_create	cs1	d3	decimal	16	2	NULL	38	38
+test_mcol641_create	cs1	d5	decimal	16	3	NULL	19	19
+test_mcol641_create	cs1	d6	decimal	16	4	NULL	19	10
+test_mcol641_create	cs1	d7	decimal	16	5	NULL	38	37
+test_mcol641_create	cs2	d1	decimal	16	0	NULL	38	0
+test_mcol641_create	cs2	d2	decimal	16	1	NULL	38	10
+test_mcol641_create	cs2	d3	decimal	16	2	NULL	38	38
+test_mcol641_create	cs2	d4	decimal	16	3	NULL	30	30
+test_mcol641_create	cs3	d1	udecimal	16	0	NULL	38	0
+test_mcol641_create	cs3	d2	udecimal	16	1	NULL	38	10
+test_mcol641_create	cs3	d3	udecimal	16	2	NULL	38	38
+test_mcol641_create	cs3	d5	udecimal	16	3	NULL	20	18
+test_mcol641_create	cs4	d1	decimal	8	0	NULL	18	0
+test_mcol641_create	cs4	d2	decimal	8	1	NULL	18	10
+test_mcol641_create	cs4	d3	decimal	8	2	NULL	18	18
+CREATE TABLE cs5(d1 DECIMAL(39)) ENGINE=columnstore;
+ERROR HY000: Internal error: CAL0009: (3)Create table failed due to  Syntax error: The maximum precision (total number of digits) that can be specified is 38  
+CREATE TABLE cs5(d1 DECIMAL(38,39)) ENGINE=columnstore;
+ERROR 42000: Too big scale 39 specified for 'd1'. Maximum is 38
+ALTER TABLE cs1 ADD COLUMN d10 DECIMAL(40);
+ERROR HY000: Internal error: CAL0001: Alter table Failed:  AlterTableProcessor::addColumn Syntax error: The maximum precision (total number of digits) that can be specified is 38  
+ALTER TABLE cs1 ADD COLUMN d11 DECIMAL(38,40);
+ERROR 42000: Too big scale 40 specified for 'd11'. Maximum is 38
+DROP TABLE cs1;
+DROP TABLE cs2;
+DROP TABLE cs3;
+DROP TABLE cs4;
+DROP DATABASE test_mcol641_create;

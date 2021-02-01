@@ -1,0 +1,80 @@
+USE tpch1;
+drop table if exists visit;
+Warnings:
+Note	1051	Unknown table 'tpch1.visit'
+drop table if exists client;
+Warnings:
+Note	1051	Unknown table 'tpch1.client'
+create table visit (id_client integer,nb_event integer,update_date datetime, visit_date datetime) engine=columnstore;
+create table client (id_client integer,id_event integer,event_date datetime) engine=columnstore;
+insert into visit values (1,0,NULL,"2010-09-08");
+insert into visit values (2,0,NULL,"2010-09-08");
+insert into visit values (2,0,NULL,"2010-09-10");
+insert into visit values (3,0,NULL,"2010-09-08");
+insert into visit values (3,0,NULL,"2010-09-10");
+insert into client values (1,20,"2010-09-07");
+insert into client values (1,21,"2010-09-07");
+insert into client values (1,22,"2010-09-07");
+insert into client values (2,23,"2010-09-07");
+insert into client values (2,24,"2010-09-07");
+insert into client values (2,25,"2010-09-10");
+insert into client values (3,29,"2010-09-10");
+select * from
+visit V,
+(
+SELECT
+CL.id_client,
+COUNT(CL.id_event) as nb_event
+FROM
+client CL
+WHERE
+CL.event_date < "2010-09-10"
+GROUP BY
+CL.id_client
+) Res
+WHERE
+V.visit_date ="2010-09-08"
+AND V.id_client = Res.id_client order by 1, 2, 3;
+id_client	nb_event	update_date	visit_date	id_client	nb_event
+1	0	NULL	2010-09-08 00:00:00	1	3
+2	0	NULL	2010-09-08 00:00:00	2	2
+UPDATE
+visit V,
+(
+SELECT
+CL.id_client,
+COUNT(CL.id_event) as nb_event
+FROM
+client CL
+WHERE
+CL.event_date < "2010-09-10"
+GROUP BY
+CL.id_client
+) Res
+SET 
+V.nb_event = Res.nb_event,
+V.update_date = '2010-12-11'
+WHERE
+V.visit_date ="2010-09-08"
+AND V.id_client = Res.id_client;
+select * from
+visit V,
+(
+SELECT
+CL.id_client,
+COUNT(CL.id_event) as nb_event
+FROM
+client CL
+WHERE
+CL.event_date < "2010-09-10"
+GROUP BY
+CL.id_client
+) Res
+WHERE
+V.visit_date ="2010-09-08"
+AND V.id_client = Res.id_client order by 1, 2, 3;
+id_client	nb_event	update_date	visit_date	id_client	nb_event
+1	3	2010-12-11 00:00:00	2010-09-08 00:00:00	1	3
+2	2	2010-12-11 00:00:00	2010-09-08 00:00:00	2	2
+drop table if exists visit;
+drop table if exists client;

@@ -1,0 +1,37 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug4827.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+select count(*) from  (select l_orderkey from lineitem where l_orderkey
+< 10 ) L4 where exists ( select 1 from lineitem l2 where l2.l_orderkey =
+L4.l_orderkey and l2.l_orderkey between 5 and 15);
+
+ select count(*) from  (select l_orderkey from lineitem where l_orderkey
+< 10 ) L4 where L4.l_orderkey > 0 and exists ( select 1 from lineitem l2 where
+l2.l_orderkey = L4.l_orderkey and l2.l_orderkey between 5 and 15);
+
+SELECT count(*)
+FROM LINEITEM L1
+WHERE l1.l_orderkey < 10
+AND L1.L_ORDERKEY not in ( SELECT l_orderkey FROM LINEITEM
+where l_orderkey < 10
+group by 1 having count(*) > 0 );
+
+select * from (select * from region) r where r_regionkey in (select n_regionkey from nation where 
+n_nationkey>r_regionkey);
+
+select * from (select * from region) r where r_regionkey > (select min(n_regionkey) from nation where 
+n_nationkey=r_regionkey);
+
+select * from (select * from region) r where exists (select n_regionkey from nation where n_nationkey=r_regionkey);
+
+select (select min(r_regionkey) from region where r_regionkey=n_regionkey) from (select * from nation)n order by 1;
+
+#
+

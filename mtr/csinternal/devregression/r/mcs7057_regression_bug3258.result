@@ -1,0 +1,38 @@
+USE tpch1;
+drop table if exists var_between;
+Warnings:
+Note	1051	Unknown table 'tpch1.var_between'
+create table var_between (c1 varchar(10), c2 char(7)) engine=columnstore;
+insert into var_between values ('099', '099');
+insert into var_between values ('9', '9');
+insert into var_between values ('1', '1');
+select 'q1', var_between.* from var_between where substr(c1,1,1) between '0' and '9';
+q1	c1	c2
+q1	099	099
+q1	9	9
+q1	1	1
+select 'q2', var_between.* from var_between where substr(c1,1,1) not  between '0' and '9';
+q2	c1	c2
+select 'q3', var_between.* from var_between where substr(c2,1,1) between '0' and '9';
+q3	c1	c2
+q3	099	099
+q3	9	9
+q3	1	1
+select 'q4', var_between.* from var_between where substr(c2,1,1) not  between '0' and '9';
+q4	c1	c2
+drop table var_between;
+select 'q5', count(*) from orders where substr(o_comment, 1, 1) between 'a' and 'f';
+q5	count(*)
+q5	388241
+select 'q6', count(*) from orders where substr(o_orderpriority, 1, 1) between '2' and '3';
+q6	count(*)
+q6	598814
+select 'q7', count(*) from orders where substr(o_orderpriority, 1, 1) not between '2' and '3';
+q7	count(*)
+q7	901186
+select 'q8', count(*) from orders where substr(o_totalprice, 2, 3)  between '200' and '300';
+q8	count(*)
+q8	165747
+select 'q9', count(*) from orders where substr(o_totalprice, 2, 3)  not between '200' and '300';
+q9	count(*)
+q9	1334253

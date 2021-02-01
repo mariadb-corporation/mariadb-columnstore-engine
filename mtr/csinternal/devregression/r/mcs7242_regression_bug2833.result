@@ -1,0 +1,14 @@
+USE tpch1;
+select if(date_format(cdatetime,'%s') between 3 and 58, 0, 1) from datatypetestm;
+if(date_format(cdatetime,'%s') between 3 and 58, 0, 1)
+1
+1
+1
+1
+0
+0
+0
+0
+1
+1
+1

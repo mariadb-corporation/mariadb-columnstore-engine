@@ -1,0 +1,42 @@
+DROP DATABASE IF EXISTS mcs234_db;
+CREATE DATABASE mcs234_db;
+USE mcs234_db;
+CREATE TABLE t1
+(
+t1_CHAR CHAR(1),
+t1_TEXT TEXT
+)ENGINE=Columnstore;
+INSERT INTO t1 VALUES('o', 'pqrstuvwxyz');
+INSERT INTO t1 VALUES('z', 'abcdefghijklm');
+INSERT INTO t1 VALUES('p', repeat('q', 5));
+SELECT t1_CHAR, RPAD(t1_CHAR, 10, 'Columnstore') FROM t1 ORDER BY 1;
+t1_CHAR	RPAD(t1_CHAR, 10, 'Columnstore')
+o	oColumnsto
+p	pColumnsto
+z	zColumnsto
+SELECT t1_CHAR, RPAD(t1_CHAR, 5, '*') FROM t1 ORDER BY 1;
+t1_CHAR	RPAD(t1_CHAR, 5, '*')
+o	o****
+p	p****
+z	z****
+SELECT t1_CHAR, RPAD(t1_CHAR, 10, '1234567890') FROM t1 ORDER BY 1;
+t1_CHAR	RPAD(t1_CHAR, 10, '1234567890')
+o	o123456789
+p	p123456789
+z	z123456789
+SELECT t1_TEXT, RPAD(t1_TEXT, 15, 'Columnstore') FROM t1 ORDER BY 1;
+t1_TEXT	RPAD(t1_TEXT, 15, 'Columnstore')
+abcdefghijklm	abcdefghijklmCo
+pqrstuvwxyz	pqrstuvwxyzColu
+qqqqq	qqqqqColumnstor
+SELECT t1_TEXT, RPAD(t1_TEXT, 5, '*') FROM t1 ORDER BY 1;
+t1_TEXT	RPAD(t1_TEXT, 5, '*')
+abcdefghijklm	abcde
+pqrstuvwxyz	pqrst
+qqqqq	qqqqq
+SELECT t1_TEXT, RPAD(t1_TEXT, 20, '1234567890') FROM t1 ORDER BY 1;
+t1_TEXT	RPAD(t1_TEXT, 20, '1234567890')
+abcdefghijklm	abcdefghijklm1234567
+pqrstuvwxyz	pqrstuvwxyz123456789
+qqqqq	qqqqq123456789012345
+DROP DATABASE mcs234_db;

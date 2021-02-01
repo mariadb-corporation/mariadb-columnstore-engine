@@ -1,0 +1,28 @@
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS unsigned_bug5712_db;
+--enable_warnings
+
+CREATE DATABASE unsigned_bug5712_db;
+USE unsigned_bug5712_db;
+
+DROP TABLE IF EXISTS bug5712;
+CREATE TABLE bug5712 (`time_tk` INT(11) UNSIGNED NOT NULL) ENGINE=Columnstore DEFAULT CHARSET=latin1;
+
+INSERT INTO bug5712 VALUES 
+(2013113023),
+(1900010100),
+(2199123100),
+(2199123100),
+(2147483646),
+(2147483647),
+(2147483648);
+
+SELECT LEFT(time_tk,6) AS time_tk_left FROM bug5712;
+SELECT RIGHT(time_tk,6) AS time_tk_right FROM bug5712;
+
+DROP TABLE IF EXISTS bug5712;
+
+# Clean UP
+DROP DATABASE unsigned_bug5712_db;

@@ -1,0 +1,19 @@
+USE tpch1;
+create table tpch1.`z k`(`a b` int, `c300_500_18 REF NOx` text) engine=columnstore;
+insert into tpch1.`z k`(`a b`,`c300_500_18 REF NOx`) values (1,'Lorem ipsum dolor sit amet, consectetur adipiscing elit,'),(7,'sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'),(8,'Ut enim ad minim veniam,'),(9,'quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'),(10,'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore e');
+select `a b`,`c300_500_18 REF NOx` from tpch1.`z k`;
+a b	c300_500_18 REF NOx
+1	Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+7	sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+8	Ut enim ad minim veniam,
+9	quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+10	Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore e
+show create table `z k`;
+Table	Create Table
+z k	CREATE TABLE `z k` (
+  `a b` int(11) DEFAULT NULL,
+  `c300_500_18 REF NOx` text DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+drop table tpch1.`z k`;
+show create table `z k`;
+ERROR 42S02: Table 'tpch1.z k' doesn't exist

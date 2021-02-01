@@ -1,0 +1,23 @@
+drop table if exists j1;
+Warnings:
+Note	1051	Unknown table 'test.j1'
+create table j1 (j1_key int)engine=columnstore;
+insert into j1 values (1),(2),(3),(4),(5),(6),(7),(8),(9),(10),(11),(12),(13),(14),(15),(null);
+select * from j1;
+j1_key
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+NULL

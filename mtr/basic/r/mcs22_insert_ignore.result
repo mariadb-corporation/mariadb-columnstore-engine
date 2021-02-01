@@ -1,0 +1,32 @@
+DROP DATABASE IF EXISTS mcs22_db;
+CREATE DATABASE mcs22_db;
+USE mcs22_db;
+CREATE TABLE t1(
+c1 CHAR(5),
+c2 CHAR(10) NOT NULL
+)ENGINE=Columnstore;
+INSERT INTO t1 VALUES ('helloworld', 'hi');
+ERROR 22001: Data too long for column 'c1' at row 1
+INSERT IGNORE INTO t1 VALUES ('helloworld', 'hi');
+Warnings:
+Warning	1265	Data truncated for column 'c1' at row 1
+SELECT * FROM t1;
+c1	c2
+hello	hi
+INSERT INTO t1 (c1) VALUES ('hello');
+ERROR HY000: Field 'c2' doesn't have a default value
+INSERT IGNORE INTO t1 (c1) VALUES ('hello');
+ERROR HY000: Internal error: CAL0001: Insert Failed:  IDB-4015: Column 'c2' cannot be null.  
+SELECT * FROM t1;
+c1	c2
+hello	hi
+INSERT INTO t1 VALUES ('123', 'abc');
+INSERT INTO t1 VALUES ('123', 'abc');
+INSERT IGNORE INTO t1 VALUES ('123', 'abc');
+SELECT * FROM t1;
+c1	c2
+hello	hi
+123	abc
+123	abc
+123	abc
+DROP DATABASE mcs22_db;

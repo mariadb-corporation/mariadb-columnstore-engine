@@ -1,0 +1,33 @@
+#
+# Test MID() function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs219_db;
+--enable_warnings
+
+CREATE DATABASE mcs219_db;
+USE mcs219_db;
+
+CREATE TABLE t1 (a INT, b CHAR(35))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL, ''),(1, 'columnstore engine'),(2, 'mariadb database');
+
+SELECT b, MID(b,4,5) FROM t1;
+SELECT b, MID(b,12,5) FROM t1;
+SELECT b, MID(b,5,15) FROM t1;
+SELECT b, MID(b,12,15) FROM t1;
+SELECT b, MID(b,1,1) FROM t1;
+SELECT b, MID(b,1,2) FROM t1;
+SELECT b, MID(b,5,5) FROM t1;
+SELECT b, MID(b,-2,5) FROM t1;
+SELECT b, MID(b,-5,15) FROM t1;
+SELECT b, MID(b,-15,15) FROM t1;
+SELECT b, MID(b,0,0) FROM t1;
+SELECT b, MID(b,1,0) FROM t1;
+SELECT b, MID(b,0,1) FROM t1;
+SELECT b, MID(b,-1,0) FROM t1;
+
+# Clean UP
+DROP DATABASE mcs219_db;

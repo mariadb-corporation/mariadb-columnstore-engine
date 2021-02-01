@@ -1,0 +1,1119 @@
+USE tpch1;
+select cidx, CBIGINT+((5+2)/2-(9-2)*2) from datatypetestm;
+cidx	CBIGINT+((5+2)/2-(9-2)*2)
+1	-72036854775816.5000
+2	-72036854775815.5000
+3	-72036854775814.5000
+4	-72036854775813.5000
+5	-72036854775812.5000
+6	72036854775792.5000
+7	72036854775793.5000
+8	72036854775794.5000
+9	72036854775795.5000
+10	72036854775796.5000
+11	-10.5000
+select cidx, CBIGINT+((5+2.3)/2.9-(9-2)*2.2) from datatypetestm;
+cidx	CBIGINT+((5+2.3)/2.9-(9-2)*2.2)
+1	-72036854775818.88276
+2	-72036854775817.88276
+3	-72036854775816.88276
+4	-72036854775815.88276
+5	-72036854775814.88276
+6	72036854775790.11724
+7	72036854775791.11724
+8	72036854775792.11724
+9	72036854775793.11724
+10	72036854775794.11724
+11	-12.88276
+select cidx, CDECIMAL1+((5+2)/2-(9-2)*2) from datatypetestm;
+cidx	CDECIMAL1+((5+2)/2-(9-2)*2)
+1	-19.5000
+2	-18.5000
+3	-17.5000
+4	-16.5000
+5	-15.5000
+6	-5.5000
+7	-4.5000
+8	-3.5000
+9	-2.5000
+10	-1.5000
+11	-10.5000
+select cidx, CDECIMAL1+((5+2.3)/2.9-(9-2)*2.2) from datatypetestm;
+cidx	CDECIMAL1+((5+2.3)/2.9-(9-2)*2.2)
+1	-21.88276
+2	-20.88276
+3	-19.88276
+4	-18.88276
+5	-17.88276
+6	-7.88276
+7	-6.88276
+8	-5.88276
+9	-4.88276
+10	-3.88276
+11	-12.88276
+select cidx, CDECIMAL4+((5+2)/2-(9-2)*2) from datatypetestm;
+cidx	CDECIMAL4+((5+2)/2-(9-2)*2)
+1	-1009.5000
+2	-1008.5000
+3	-1007.5000
+4	-1006.5000
+5	-1005.5000
+6	984.5000
+7	985.5000
+8	986.5000
+9	987.5000
+10	988.5000
+11	-10.5000
+select cidx, CDECIMAL4+((5+2.3)/2.9-(9-2)*2.2) from datatypetestm;
+cidx	CDECIMAL4+((5+2.3)/2.9-(9-2)*2.2)
+1	-1011.88276
+2	-1010.88276
+3	-1009.88276
+4	-1008.88276
+5	-1007.88276
+6	982.11724
+7	983.11724
+8	984.11724
+9	985.11724
+10	986.11724
+11	-12.88276
+select cidx, CDECIMAL4_2+((5+2)/2-(9-2)*2) from datatypetestm;
+cidx	CDECIMAL4_2+((5+2)/2-(9-2)*2)
+1	-20.4900
+2	-20.4800
+3	-20.4700
+4	-20.4600
+5	-20.4500
+6	-0.5500
+7	-0.5400
+8	-0.5300
+9	-0.5200
+10	-0.5100
+11	-10.5000
+select cidx, CDECIMAL4_2+((5+2.3)/2.9-(9-2)*2.2) from datatypetestm;
+cidx	CDECIMAL4_2+((5+2.3)/2.9-(9-2)*2.2)
+1	-22.87276
+2	-22.86276
+3	-22.85276
+4	-22.84276
+5	-22.83276
+6	-2.93276
+7	-2.92276
+8	-2.91276
+9	-2.90276
+10	-2.89276
+11	-12.88276
+select cidx, CDECIMAL5+((5+2)/2-(9-2)*2) from datatypetestm;
+cidx	CDECIMAL5+((5+2)/2-(9-2)*2)
+1	-1009.5000
+2	-1008.5000
+3	-1007.5000
+4	-1006.5000
+5	-1005.5000
+6	984.5000
+7	985.5000
+8	986.5000
+9	987.5000
+10	988.5000
+11	-10.5000
+select cidx, CDECIMAL5+((5+2.3)/2.9-(9-2)*2.2) from datatypetestm;
+cidx	CDECIMAL5+((5+2.3)/2.9-(9-2)*2.2)
+1	-1011.88276
+2	-1010.88276
+3	-1009.88276
+4	-1008.88276
+5	-1007.88276
+6	982.11724
+7	983.11724
+8	984.11724
+9	985.11724
+10	986.11724
+11	-12.88276
+select cidx, CDECIMAL9+((5+2)/2-(9-2)*2) from datatypetestm;
+cidx	CDECIMAL9+((5+2)/2-(9-2)*2)
+1	-1000009.5000
+2	-1000008.5000
+3	-1000007.5000
+4	-1000006.5000
+5	-1000005.5000
+6	999984.5000
+7	999985.5000
+8	999986.5000
+9	999987.5000
+10	999988.5000
+11	-10.5000
+select cidx, CDECIMAL9+((5+2.3)/2.9-(9-2)*2.2) from datatypetestm;
+cidx	CDECIMAL9+((5+2.3)/2.9-(9-2)*2.2)
+1	-1000011.88276
+2	-1000010.88276
+3	-1000009.88276
+4	-1000008.88276
+5	-1000007.88276
+6	999982.11724
+7	999983.11724
+8	999984.11724
+9	999985.11724
+10	999986.11724
+11	-12.88276
+select cidx, CDECIMAL9_2+((5+2)/2-(9-2)*2) from datatypetestm;
+cidx	CDECIMAL9_2+((5+2)/2-(9-2)*2)
+1	-10010.4900
+2	-10010.4800
+3	-10010.4700
+4	-10010.4600
+5	-10010.4500
+6	9989.4500
+7	9989.4600
+8	9989.4700
+9	9989.4800
+10	9989.4900
+11	-10.5000
+select cidx, CDECIMAL9_2+((5+2.3)/2.9-(9-2)*2.2) from datatypetestm;
+cidx	CDECIMAL9_2+((5+2.3)/2.9-(9-2)*2.2)
+1	-10012.87276
+2	-10012.86276
+3	-10012.85276
+4	-10012.84276
+5	-10012.83276
+6	9987.06724
+7	9987.07724
+8	9987.08724
+9	9987.09724
+10	9987.10724
+11	-12.88276
+select cidx, CDECIMAL10+((5+2)/2-(9-2)*2) from datatypetestm;
+cidx	CDECIMAL10+((5+2)/2-(9-2)*2)
+1	-10000009.5000
+2	-10000008.5000
+3	-10000007.5000
+4	-10000006.5000
+5	-10000005.5000
+6	9999984.5000
+7	9999985.5000
+8	9999986.5000
+9	9999987.5000
+10	9999988.5000
+11	-10.5000
+select cidx, CDECIMAL10+((5+2.3)/2.9-(9-2)*2.2) from datatypetestm;
+cidx	CDECIMAL10+((5+2.3)/2.9-(9-2)*2.2)
+1	-10000011.88276
+2	-10000010.88276
+3	-10000009.88276
+4	-10000008.88276
+5	-10000007.88276
+6	9999982.11724
+7	9999983.11724
+8	9999984.11724
+9	9999985.11724
+10	9999986.11724
+11	-12.88276
+select cidx, CDECIMAL18+((5+2)/2-(9-2)*2) from datatypetestm;
+cidx	CDECIMAL18+((5+2)/2-(9-2)*2)
+1	-10000000000009.5000
+2	-10000000000008.5000
+3	-10000000000007.5000
+4	-10000000000006.5000
+5	-10000000000005.5000
+6	9999999999984.5000
+7	9999999999985.5000
+8	9999999999986.5000
+9	9999999999987.5000
+10	9999999999988.5000
+11	-10.5000
+select cidx, CDECIMAL18+((5+2.3)/2.9-(9-2)*2.2) from datatypetestm;
+cidx	CDECIMAL18+((5+2.3)/2.9-(9-2)*2.2)
+1	-10000000000011.88276
+2	-10000000000010.88276
+3	-10000000000009.88276
+4	-10000000000008.88276
+5	-10000000000007.88276
+6	9999999999982.11724
+7	9999999999983.11724
+8	9999999999984.11724
+9	9999999999985.11724
+10	9999999999986.11724
+11	-12.88276
+select cidx, CDECIMAL18_2+((5+2)/2-(9-2)*2) from datatypetestm;
+cidx	CDECIMAL18_2+((5+2)/2-(9-2)*2)
+1	-100000000010.4900
+2	-100000000010.4800
+3	-100000000010.4700
+4	-100000000010.4600
+5	-100000000010.4500
+6	99999999989.4500
+7	99999999989.4600
+8	99999999989.4700
+9	99999999989.4800
+10	99999999989.4900
+11	-10.5000
+select cidx, CDECIMAL18_2+((5+2.3)/2.9-(9-2)*2.2) from datatypetestm;
+cidx	CDECIMAL18_2+((5+2.3)/2.9-(9-2)*2.2)
+1	-100000000012.87276
+2	-100000000012.86276
+3	-100000000012.85276
+4	-100000000012.84276
+5	-100000000012.83276
+6	99999999987.06724
+7	99999999987.07724
+8	99999999987.08724
+9	99999999987.09724
+10	99999999987.10724
+11	-12.88276
+select cidx, CINTEGER+((5+2)/2-(9-2)*2) from datatypetestm;
+cidx	CINTEGER+((5+2)/2-(9-2)*2)
+1	-7483656.5000
+2	-7483655.5000
+3	-7483654.5000
+4	-7483653.5000
+5	-7483652.5000
+6	7483632.5000
+7	7483633.5000
+8	7483634.5000
+9	7483635.5000
+10	7483636.5000
+11	-10.5000
+select cidx, CINTEGER+((5+2.3)/2.9-(9-2)*2.2) from datatypetestm;
+cidx	CINTEGER+((5+2.3)/2.9-(9-2)*2.2)
+1	-7483658.88276
+2	-7483657.88276
+3	-7483656.88276
+4	-7483655.88276
+5	-7483654.88276
+6	7483630.11724
+7	7483631.11724
+8	7483632.11724
+9	7483633.11724
+10	7483634.11724
+11	-12.88276
+select cidx, CSMALLINT+((5+2)/2-(9-2)*2) from datatypetestm;
+cidx	CSMALLINT+((5+2)/2-(9-2)*2)
+1	-776.5000
+2	-775.5000
+3	-774.5000
+4	-773.5000
+5	-772.5000
+6	752.5000
+7	753.5000
+8	754.5000
+9	755.5000
+10	756.5000
+11	-10.5000
+select cidx, CSMALLINT+((5+2.3)/2.9-(9-2)*2.2) from datatypetestm;
+cidx	CSMALLINT+((5+2.3)/2.9-(9-2)*2.2)
+1	-778.88276
+2	-777.88276
+3	-776.88276
+4	-775.88276
+5	-774.88276
+6	750.11724
+7	751.11724
+8	752.11724
+9	753.11724
+10	754.11724
+11	-12.88276
+select cidx, CTINYINT+((5+2)/2-(9-2)*2) from datatypetestm;
+cidx	CTINYINT+((5+2)/2-(9-2)*2)
+1	-36.5000
+2	-35.5000
+3	-34.5000
+4	-33.5000
+5	-32.5000
+6	12.5000
+7	13.5000
+8	14.5000
+9	15.5000
+10	16.5000
+11	-10.5000
+select cidx, CTINYINT+((5+2.3)/2.9-(9-2)*2.2) from datatypetestm;
+cidx	CTINYINT+((5+2.3)/2.9-(9-2)*2.2)
+1	-38.88276
+2	-37.88276
+3	-36.88276
+4	-35.88276
+5	-34.88276
+6	10.11724
+7	11.11724
+8	12.11724
+9	13.11724
+10	14.11724
+11	-12.88276
+select cidx, CBIGINT from datatypetestm where CBIGINT+((5+2)/2-(9-2)*2) = 0;
+cidx	CBIGINT
+select cidx, CBIGINT from datatypetestm where CBIGINT+((5+2)/2-(9-2)*2) <> 0;
+cidx	CBIGINT
+1	-72036854775806
+2	-72036854775805
+3	-72036854775804
+4	-72036854775803
+5	-72036854775802
+6	72036854775803
+7	72036854775804
+8	72036854775805
+9	72036854775806
+10	72036854775807
+11	0
+select cidx, CBIGINT from datatypetestm where CBIGINT+((5+2)/2-(9-2)*2) < 0;
+cidx	CBIGINT
+1	-72036854775806
+2	-72036854775805
+3	-72036854775804
+4	-72036854775803
+5	-72036854775802
+11	0
+select cidx, CBIGINT from datatypetestm where CBIGINT+((5+2)/2-(9-2)*2) > 0;
+cidx	CBIGINT
+6	72036854775803
+7	72036854775804
+8	72036854775805
+9	72036854775806
+10	72036854775807
+select cidx, CBIGINT from datatypetestm where CBIGINT+((5+2.3)/2.9-(9-2)*2.2) = 0;
+cidx	CBIGINT
+select cidx, CBIGINT from datatypetestm where CBIGINT+((5+2.3)/2.9-(9-2)*2.2) <> 0;
+cidx	CBIGINT
+1	-72036854775806
+2	-72036854775805
+3	-72036854775804
+4	-72036854775803
+5	-72036854775802
+6	72036854775803
+7	72036854775804
+8	72036854775805
+9	72036854775806
+10	72036854775807
+11	0
+select cidx, CBIGINT from datatypetestm where CBIGINT+((5+2.3)/2.9-(9-2)*2.2) < 0;
+cidx	CBIGINT
+1	-72036854775806
+2	-72036854775805
+3	-72036854775804
+4	-72036854775803
+5	-72036854775802
+11	0
+select cidx, CBIGINT from datatypetestm where CBIGINT+((5+2.3)/2.9-(9-2)*2.2) > 0;
+cidx	CBIGINT
+6	72036854775803
+7	72036854775804
+8	72036854775805
+9	72036854775806
+10	72036854775807
+select cidx, CDECIMAL1 from datatypetestm where CDECIMAL1+((5+2)/2-(9-2)*2) = 0;
+cidx	CDECIMAL1
+select cidx, CDECIMAL1 from datatypetestm where CDECIMAL1+((5+2)/2-(9-2)*2) <> 0;
+cidx	CDECIMAL1
+1	-9
+2	-8
+3	-7
+4	-6
+5	-5
+6	5
+7	6
+8	7
+9	8
+10	9
+11	0
+select cidx, CDECIMAL1 from datatypetestm where CDECIMAL1+((5+2)/2-(9-2)*2) < 0;
+cidx	CDECIMAL1
+1	-9
+2	-8
+3	-7
+4	-6
+5	-5
+6	5
+7	6
+8	7
+9	8
+10	9
+11	0
+select cidx, CDECIMAL1 from datatypetestm where CDECIMAL1+((5+2)/2-(9-2)*2) > 0;
+cidx	CDECIMAL1
+select cidx, CDECIMAL1 from datatypetestm where CDECIMAL1+((5+2.3)/2.9-(9-2)*2.2) = 0;
+cidx	CDECIMAL1
+select cidx, CDECIMAL1 from datatypetestm where CDECIMAL1+((5+2.3)/2.9-(9-2)*2.2) <> 0;
+cidx	CDECIMAL1
+1	-9
+2	-8
+3	-7
+4	-6
+5	-5
+6	5
+7	6
+8	7
+9	8
+10	9
+11	0
+select cidx, CDECIMAL1 from datatypetestm where CDECIMAL1+((5+2.3)/2.9-(9-2)*2.2) < 0;
+cidx	CDECIMAL1
+1	-9
+2	-8
+3	-7
+4	-6
+5	-5
+6	5
+7	6
+8	7
+9	8
+10	9
+11	0
+select cidx, CDECIMAL1 from datatypetestm where CDECIMAL1+((5+2.3)/2.9-(9-2)*2.2) > 0;
+cidx	CDECIMAL1
+select cidx, CDECIMAL4 from datatypetestm where CDECIMAL4+((5+2)/2-(9-2)*2) = 0;
+cidx	CDECIMAL4
+select cidx, CDECIMAL4 from datatypetestm where CDECIMAL4+((5+2)/2-(9-2)*2) <> 0;
+cidx	CDECIMAL4
+1	-999
+2	-998
+3	-997
+4	-996
+5	-995
+6	995
+7	996
+8	997
+9	998
+10	999
+11	0
+select cidx, CDECIMAL4 from datatypetestm where CDECIMAL4+((5+2)/2-(9-2)*2) < 0;
+cidx	CDECIMAL4
+1	-999
+2	-998
+3	-997
+4	-996
+5	-995
+11	0
+select cidx, CDECIMAL4 from datatypetestm where CDECIMAL4+((5+2)/2-(9-2)*2) > 0;
+cidx	CDECIMAL4
+6	995
+7	996
+8	997
+9	998
+10	999
+select cidx, CDECIMAL4 from datatypetestm where CDECIMAL4+((5+2.3)/2.9-(9-2)*2.2) = 0;
+cidx	CDECIMAL4
+select cidx, CDECIMAL4 from datatypetestm where CDECIMAL4+((5+2.3)/2.9-(9-2)*2.2) <> 0;
+cidx	CDECIMAL4
+1	-999
+2	-998
+3	-997
+4	-996
+5	-995
+6	995
+7	996
+8	997
+9	998
+10	999
+11	0
+select cidx, CDECIMAL4 from datatypetestm where CDECIMAL4+((5+2.3)/2.9-(9-2)*2.2) < 0;
+cidx	CDECIMAL4
+1	-999
+2	-998
+3	-997
+4	-996
+5	-995
+11	0
+select cidx, CDECIMAL4 from datatypetestm where CDECIMAL4+((5+2.3)/2.9-(9-2)*2.2) > 0;
+cidx	CDECIMAL4
+6	995
+7	996
+8	997
+9	998
+10	999
+select cidx, CDECIMAL4_2 from datatypetestm where CDECIMAL4_2+((5+2)/2-(9-2)*2) = 0;
+cidx	CDECIMAL4_2
+select cidx, CDECIMAL4_2 from datatypetestm where CDECIMAL4_2+((5+2)/2-(9-2)*2) <> 0;
+cidx	CDECIMAL4_2
+1	-9.99
+2	-9.98
+3	-9.97
+4	-9.96
+5	-9.95
+6	9.95
+7	9.96
+8	9.97
+9	9.98
+10	9.99
+11	0.00
+select cidx, CDECIMAL4_2 from datatypetestm where CDECIMAL4_2+((5+2)/2-(9-2)*2) < 0;
+cidx	CDECIMAL4_2
+1	-9.99
+2	-9.98
+3	-9.97
+4	-9.96
+5	-9.95
+6	9.95
+7	9.96
+8	9.97
+9	9.98
+10	9.99
+11	0.00
+select cidx, CDECIMAL4_2 from datatypetestm where CDECIMAL4_2+((5+2)/2-(9-2)*2) > 0;
+cidx	CDECIMAL4_2
+select cidx, CDECIMAL4_2 from datatypetestm where CDECIMAL4_2+((5+2.3)/2.9-(9-2)*2.2) = 0;
+cidx	CDECIMAL4_2
+select cidx, CDECIMAL4_2 from datatypetestm where CDECIMAL4_2+((5+2.3)/2.9-(9-2)*2.2) <> 0;
+cidx	CDECIMAL4_2
+1	-9.99
+2	-9.98
+3	-9.97
+4	-9.96
+5	-9.95
+6	9.95
+7	9.96
+8	9.97
+9	9.98
+10	9.99
+11	0.00
+select cidx, CDECIMAL4_2 from datatypetestm where CDECIMAL4_2+((5+2.3)/2.9-(9-2)*2.2) < 0;
+cidx	CDECIMAL4_2
+1	-9.99
+2	-9.98
+3	-9.97
+4	-9.96
+5	-9.95
+6	9.95
+7	9.96
+8	9.97
+9	9.98
+10	9.99
+11	0.00
+select cidx, CDECIMAL4_2 from datatypetestm where CDECIMAL4_2+((5+2.3)/2.9-(9-2)*2.2) > 0;
+cidx	CDECIMAL4_2
+select cidx, CDECIMAL5 from datatypetestm where CDECIMAL5+((5+2)/2-(9-2)*2) = 0;
+cidx	CDECIMAL5
+select cidx, CDECIMAL5 from datatypetestm where CDECIMAL5+((5+2)/2-(9-2)*2) <> 0;
+cidx	CDECIMAL5
+1	-999
+2	-998
+3	-997
+4	-996
+5	-995
+6	995
+7	996
+8	997
+9	998
+10	999
+11	0
+select cidx, CDECIMAL5 from datatypetestm where CDECIMAL5+((5+2)/2-(9-2)*2) < 0;
+cidx	CDECIMAL5
+1	-999
+2	-998
+3	-997
+4	-996
+5	-995
+11	0
+select cidx, CDECIMAL5 from datatypetestm where CDECIMAL5+((5+2)/2-(9-2)*2) > 0;
+cidx	CDECIMAL5
+6	995
+7	996
+8	997
+9	998
+10	999
+select cidx, CDECIMAL5 from datatypetestm where CDECIMAL5+((5+2.3)/2.9-(9-2)*2.2) = 0;
+cidx	CDECIMAL5
+select cidx, CDECIMAL5 from datatypetestm where CDECIMAL5+((5+2.3)/2.9-(9-2)*2.2) <> 0;
+cidx	CDECIMAL5
+1	-999
+2	-998
+3	-997
+4	-996
+5	-995
+6	995
+7	996
+8	997
+9	998
+10	999
+11	0
+select cidx, CDECIMAL5 from datatypetestm where CDECIMAL5+((5+2.3)/2.9-(9-2)*2.2) < 0;
+cidx	CDECIMAL5
+1	-999
+2	-998
+3	-997
+4	-996
+5	-995
+11	0
+select cidx, CDECIMAL5 from datatypetestm where CDECIMAL5+((5+2.3)/2.9-(9-2)*2.2) > 0;
+cidx	CDECIMAL5
+6	995
+7	996
+8	997
+9	998
+10	999
+select cidx, CDECIMAL9 from datatypetestm where CDECIMAL9+((5+2)/2-(9-2)*2) = 0;
+cidx	CDECIMAL9
+select cidx, CDECIMAL9 from datatypetestm where CDECIMAL9+((5+2)/2-(9-2)*2) <> 0;
+cidx	CDECIMAL9
+1	-999999
+2	-999998
+3	-999997
+4	-999996
+5	-999995
+6	999995
+7	999996
+8	999997
+9	999998
+10	999999
+11	0
+select cidx, CDECIMAL9 from datatypetestm where CDECIMAL9+((5+2)/2-(9-2)*2) < 0;
+cidx	CDECIMAL9
+1	-999999
+2	-999998
+3	-999997
+4	-999996
+5	-999995
+11	0
+select cidx, CDECIMAL9 from datatypetestm where CDECIMAL9+((5+2)/2-(9-2)*2) > 0;
+cidx	CDECIMAL9
+6	999995
+7	999996
+8	999997
+9	999998
+10	999999
+select cidx, CDECIMAL9 from datatypetestm where CDECIMAL9+((5+2.3)/2.9-(9-2)*2.2) = 0;
+cidx	CDECIMAL9
+select cidx, CDECIMAL9 from datatypetestm where CDECIMAL9+((5+2.3)/2.9-(9-2)*2.2) <> 0;
+cidx	CDECIMAL9
+1	-999999
+2	-999998
+3	-999997
+4	-999996
+5	-999995
+6	999995
+7	999996
+8	999997
+9	999998
+10	999999
+11	0
+select cidx, CDECIMAL9 from datatypetestm where CDECIMAL9+((5+2.3)/2.9-(9-2)*2.2) < 0;
+cidx	CDECIMAL9
+1	-999999
+2	-999998
+3	-999997
+4	-999996
+5	-999995
+11	0
+select cidx, CDECIMAL9 from datatypetestm where CDECIMAL9+((5+2.3)/2.9-(9-2)*2.2) > 0;
+cidx	CDECIMAL9
+6	999995
+7	999996
+8	999997
+9	999998
+10	999999
+select cidx, CDECIMAL9_2 from datatypetestm where CDECIMAL9_2+((5+2)/2-(9-2)*2) = 0;
+cidx	CDECIMAL9_2
+select cidx, CDECIMAL9_2 from datatypetestm where CDECIMAL9_2+((5+2)/2-(9-2)*2) <> 0;
+cidx	CDECIMAL9_2
+1	-9999.99
+2	-9999.98
+3	-9999.97
+4	-9999.96
+5	-9999.95
+6	9999.95
+7	9999.96
+8	9999.97
+9	9999.98
+10	9999.99
+11	0.00
+select cidx, CDECIMAL9_2 from datatypetestm where CDECIMAL9_2+((5+2)/2-(9-2)*2) < 0;
+cidx	CDECIMAL9_2
+1	-9999.99
+2	-9999.98
+3	-9999.97
+4	-9999.96
+5	-9999.95
+11	0.00
+select cidx, CDECIMAL9_2 from datatypetestm where CDECIMAL9_2+((5+2)/2-(9-2)*2) > 0;
+cidx	CDECIMAL9_2
+6	9999.95
+7	9999.96
+8	9999.97
+9	9999.98
+10	9999.99
+select cidx, CDECIMAL9_2 from datatypetestm where CDECIMAL9_2+((5+2.3)/2.9-(9-2)*2.2) = 0;
+cidx	CDECIMAL9_2
+select cidx, CDECIMAL9_2 from datatypetestm where CDECIMAL9_2+((5+2.3)/2.9-(9-2)*2.2) <> 0;
+cidx	CDECIMAL9_2
+1	-9999.99
+2	-9999.98
+3	-9999.97
+4	-9999.96
+5	-9999.95
+6	9999.95
+7	9999.96
+8	9999.97
+9	9999.98
+10	9999.99
+11	0.00
+select cidx, CDECIMAL9_2 from datatypetestm where CDECIMAL9_2+((5+2.3)/2.9-(9-2)*2.2) < 0;
+cidx	CDECIMAL9_2
+1	-9999.99
+2	-9999.98
+3	-9999.97
+4	-9999.96
+5	-9999.95
+11	0.00
+select cidx, CDECIMAL9_2 from datatypetestm where CDECIMAL9_2+((5+2.3)/2.9-(9-2)*2.2) > 0;
+cidx	CDECIMAL9_2
+6	9999.95
+7	9999.96
+8	9999.97
+9	9999.98
+10	9999.99
+select cidx, CDECIMAL10 from datatypetestm where CDECIMAL10+((5+2)/2-(9-2)*2) = 0;
+cidx	CDECIMAL10
+select cidx, CDECIMAL10 from datatypetestm where CDECIMAL10+((5+2)/2-(9-2)*2) <> 0;
+cidx	CDECIMAL10
+1	-9999999
+2	-9999998
+3	-9999997
+4	-9999996
+5	-9999995
+6	9999995
+7	9999996
+8	9999997
+9	9999998
+10	9999999
+11	0
+select cidx, CDECIMAL10 from datatypetestm where CDECIMAL10+((5+2)/2-(9-2)*2) < 0;
+cidx	CDECIMAL10
+1	-9999999
+2	-9999998
+3	-9999997
+4	-9999996
+5	-9999995
+11	0
+select cidx, CDECIMAL10 from datatypetestm where CDECIMAL10+((5+2)/2-(9-2)*2) > 0;
+cidx	CDECIMAL10
+6	9999995
+7	9999996
+8	9999997
+9	9999998
+10	9999999
+select cidx, CDECIMAL10 from datatypetestm where CDECIMAL10+((5+2.3)/2.9-(9-2)*2.2) = 0;
+cidx	CDECIMAL10
+select cidx, CDECIMAL10 from datatypetestm where CDECIMAL10+((5+2.3)/2.9-(9-2)*2.2) <> 0;
+cidx	CDECIMAL10
+1	-9999999
+2	-9999998
+3	-9999997
+4	-9999996
+5	-9999995
+6	9999995
+7	9999996
+8	9999997
+9	9999998
+10	9999999
+11	0
+select cidx, CDECIMAL10 from datatypetestm where CDECIMAL10+((5+2.3)/2.9-(9-2)*2.2) < 0;
+cidx	CDECIMAL10
+1	-9999999
+2	-9999998
+3	-9999997
+4	-9999996
+5	-9999995
+11	0
+select cidx, CDECIMAL10 from datatypetestm where CDECIMAL10+((5+2.3)/2.9-(9-2)*2.2) > 0;
+cidx	CDECIMAL10
+6	9999995
+7	9999996
+8	9999997
+9	9999998
+10	9999999
+select cidx, CDECIMAL18 from datatypetestm where CDECIMAL18+((5+2)/2-(9-2)*2) = 0;
+cidx	CDECIMAL18
+select cidx, CDECIMAL18 from datatypetestm where CDECIMAL18+((5+2)/2-(9-2)*2) <> 0;
+cidx	CDECIMAL18
+1	-9999999999999
+2	-9999999999998
+3	-9999999999997
+4	-9999999999996
+5	-9999999999995
+6	9999999999995
+7	9999999999996
+8	9999999999997
+9	9999999999998
+10	9999999999999
+11	0
+select cidx, CDECIMAL18 from datatypetestm where CDECIMAL18+((5+2)/2-(9-2)*2) < 0;
+cidx	CDECIMAL18
+1	-9999999999999
+2	-9999999999998
+3	-9999999999997
+4	-9999999999996
+5	-9999999999995
+11	0
+select cidx, CDECIMAL18 from datatypetestm where CDECIMAL18+((5+2)/2-(9-2)*2) > 0;
+cidx	CDECIMAL18
+6	9999999999995
+7	9999999999996
+8	9999999999997
+9	9999999999998
+10	9999999999999
+select cidx, CDECIMAL18 from datatypetestm where CDECIMAL18+((5+2.3)/2.9-(9-2)*2.2) = 0;
+cidx	CDECIMAL18
+select cidx, CDECIMAL18 from datatypetestm where CDECIMAL18+((5+2.3)/2.9-(9-2)*2.2) <> 0;
+cidx	CDECIMAL18
+1	-9999999999999
+2	-9999999999998
+3	-9999999999997
+4	-9999999999996
+5	-9999999999995
+6	9999999999995
+7	9999999999996
+8	9999999999997
+9	9999999999998
+10	9999999999999
+11	0
+select cidx, CDECIMAL18 from datatypetestm where CDECIMAL18+((5+2.3)/2.9-(9-2)*2.2) < 0;
+cidx	CDECIMAL18
+1	-9999999999999
+2	-9999999999998
+3	-9999999999997
+4	-9999999999996
+5	-9999999999995
+11	0
+select cidx, CDECIMAL18 from datatypetestm where CDECIMAL18+((5+2.3)/2.9-(9-2)*2.2) > 0;
+cidx	CDECIMAL18
+6	9999999999995
+7	9999999999996
+8	9999999999997
+9	9999999999998
+10	9999999999999
+select cidx, CDECIMAL18_2 from datatypetestm where CDECIMAL18_2+((5+2)/2-(9-2)*2) = 0;
+cidx	CDECIMAL18_2
+select cidx, CDECIMAL18_2 from datatypetestm where CDECIMAL18_2+((5+2)/2-(9-2)*2) <> 0;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+2	-99999999999.98
+3	-99999999999.97
+4	-99999999999.96
+5	-99999999999.95
+6	99999999999.95
+7	99999999999.96
+8	99999999999.97
+9	99999999999.98
+10	99999999999.99
+11	0.00
+select cidx, CDECIMAL18_2 from datatypetestm where CDECIMAL18_2+((5+2)/2-(9-2)*2) < 0;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+2	-99999999999.98
+3	-99999999999.97
+4	-99999999999.96
+5	-99999999999.95
+11	0.00
+select cidx, CDECIMAL18_2 from datatypetestm where CDECIMAL18_2+((5+2)/2-(9-2)*2) > 0;
+cidx	CDECIMAL18_2
+6	99999999999.95
+7	99999999999.96
+8	99999999999.97
+9	99999999999.98
+10	99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm where CDECIMAL18_2+((5+2.3)/2.9-(9-2)*2.2) = 0;
+cidx	CDECIMAL18_2
+select cidx, CDECIMAL18_2 from datatypetestm where CDECIMAL18_2+((5+2.3)/2.9-(9-2)*2.2) <> 0;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+2	-99999999999.98
+3	-99999999999.97
+4	-99999999999.96
+5	-99999999999.95
+6	99999999999.95
+7	99999999999.96
+8	99999999999.97
+9	99999999999.98
+10	99999999999.99
+11	0.00
+select cidx, CDECIMAL18_2 from datatypetestm where CDECIMAL18_2+((5+2.3)/2.9-(9-2)*2.2) < 0;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+2	-99999999999.98
+3	-99999999999.97
+4	-99999999999.96
+5	-99999999999.95
+11	0.00
+select cidx, CDECIMAL18_2 from datatypetestm where CDECIMAL18_2+((5+2.3)/2.9-(9-2)*2.2) > 0;
+cidx	CDECIMAL18_2
+6	99999999999.95
+7	99999999999.96
+8	99999999999.97
+9	99999999999.98
+10	99999999999.99
+select cidx, CINTEGER from datatypetestm where CINTEGER+((5+2)/2-(9-2)*2) = 0;
+cidx	CINTEGER
+select cidx, CINTEGER from datatypetestm where CINTEGER+((5+2)/2-(9-2)*2) <> 0;
+cidx	CINTEGER
+1	-7483646
+2	-7483645
+3	-7483644
+4	-7483643
+5	-7483642
+6	7483643
+7	7483644
+8	7483645
+9	7483646
+10	7483647
+11	0
+select cidx, CINTEGER from datatypetestm where CINTEGER+((5+2)/2-(9-2)*2) < 0;
+cidx	CINTEGER
+1	-7483646
+2	-7483645
+3	-7483644
+4	-7483643
+5	-7483642
+11	0
+select cidx, CINTEGER from datatypetestm where CINTEGER+((5+2)/2-(9-2)*2) > 0;
+cidx	CINTEGER
+6	7483643
+7	7483644
+8	7483645
+9	7483646
+10	7483647
+select cidx, CINTEGER from datatypetestm where CINTEGER+((5+2.3)/2.9-(9-2)*2.2) = 0;
+cidx	CINTEGER
+select cidx, CINTEGER from datatypetestm where CINTEGER+((5+2.3)/2.9-(9-2)*2.2) <> 0;
+cidx	CINTEGER
+1	-7483646
+2	-7483645
+3	-7483644
+4	-7483643
+5	-7483642
+6	7483643
+7	7483644
+8	7483645
+9	7483646
+10	7483647
+11	0
+select cidx, CINTEGER from datatypetestm where CINTEGER+((5+2.3)/2.9-(9-2)*2.2) < 0;
+cidx	CINTEGER
+1	-7483646
+2	-7483645
+3	-7483644
+4	-7483643
+5	-7483642
+11	0
+select cidx, CINTEGER from datatypetestm where CINTEGER+((5+2.3)/2.9-(9-2)*2.2) > 0;
+cidx	CINTEGER
+6	7483643
+7	7483644
+8	7483645
+9	7483646
+10	7483647
+select cidx, CSMALLINT from datatypetestm where CSMALLINT+((5+2)/2-(9-2)*2) = 0;
+cidx	CSMALLINT
+select cidx, CSMALLINT from datatypetestm where CSMALLINT+((5+2)/2-(9-2)*2) <> 0;
+cidx	CSMALLINT
+1	-766
+2	-765
+3	-764
+4	-763
+5	-762
+6	763
+7	764
+8	765
+9	766
+10	767
+11	0
+select cidx, CSMALLINT from datatypetestm where CSMALLINT+((5+2)/2-(9-2)*2) < 0;
+cidx	CSMALLINT
+1	-766
+2	-765
+3	-764
+4	-763
+5	-762
+11	0
+select cidx, CSMALLINT from datatypetestm where CSMALLINT+((5+2)/2-(9-2)*2) > 0;
+cidx	CSMALLINT
+6	763
+7	764
+8	765
+9	766
+10	767
+select cidx, CSMALLINT from datatypetestm where CSMALLINT+((5+2.3)/2.9-(9-2)*2.2) = 0;
+cidx	CSMALLINT
+select cidx, CSMALLINT from datatypetestm where CSMALLINT+((5+2.3)/2.9-(9-2)*2.2) <> 0;
+cidx	CSMALLINT
+1	-766
+2	-765
+3	-764
+4	-763
+5	-762
+6	763
+7	764
+8	765
+9	766
+10	767
+11	0
+select cidx, CSMALLINT from datatypetestm where CSMALLINT+((5+2.3)/2.9-(9-2)*2.2) < 0;
+cidx	CSMALLINT
+1	-766
+2	-765
+3	-764
+4	-763
+5	-762
+11	0
+select cidx, CSMALLINT from datatypetestm where CSMALLINT+((5+2.3)/2.9-(9-2)*2.2) > 0;
+cidx	CSMALLINT
+6	763
+7	764
+8	765
+9	766
+10	767
+select cidx, CTINYINT from datatypetestm where CTINYINT+((5+2)/2-(9-2)*2) = 0;
+cidx	CTINYINT
+select cidx, CTINYINT from datatypetestm where CTINYINT+((5+2)/2-(9-2)*2) <> 0;
+cidx	CTINYINT
+1	-26
+2	-25
+3	-24
+4	-23
+5	-22
+6	23
+7	24
+8	25
+9	26
+10	27
+11	0
+select cidx, CTINYINT from datatypetestm where CTINYINT+((5+2)/2-(9-2)*2) < 0;
+cidx	CTINYINT
+1	-26
+2	-25
+3	-24
+4	-23
+5	-22
+11	0
+select cidx, CTINYINT from datatypetestm where CTINYINT+((5+2)/2-(9-2)*2) > 0;
+cidx	CTINYINT
+6	23
+7	24
+8	25
+9	26
+10	27
+select cidx, CTINYINT from datatypetestm where CTINYINT+((5+2.3)/2.9-(9-2)*2.2) = 0;
+cidx	CTINYINT
+select cidx, CTINYINT from datatypetestm where CTINYINT+((5+2.3)/2.9-(9-2)*2.2) <> 0;
+cidx	CTINYINT
+1	-26
+2	-25
+3	-24
+4	-23
+5	-22
+6	23
+7	24
+8	25
+9	26
+10	27
+11	0
+select cidx, CTINYINT from datatypetestm where CTINYINT+((5+2.3)/2.9-(9-2)*2.2) < 0;
+cidx	CTINYINT
+1	-26
+2	-25
+3	-24
+4	-23
+5	-22
+11	0
+select cidx, CTINYINT from datatypetestm where CTINYINT+((5+2.3)/2.9-(9-2)*2.2) > 0;
+cidx	CTINYINT
+6	23
+7	24
+8	25
+9	26
+10	27

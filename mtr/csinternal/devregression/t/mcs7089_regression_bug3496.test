@@ -1,0 +1,121 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3496.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists bug3496;
+create table `bug3496` (`c1` int(11) default null,`c2` char(6) default null, `c3` char(11) default null) engine=columnstore;
+insert into bug3496 values
+(1, 'abc', 'abc'),
+(2, 'abbc', 'abbc'),
+(3, 'acbc', 'acbc'),
+(4, 'a.c', 'a.c'),
+(5, 'a[bc]d', 'a[bc]d'),
+(6, 'a[]d', 'a[]d'),
+(7, 'a[bcd', 'a[bcd'),
+(8, 'abc]d', 'abc]d'),
+(9, 'a{bc}d', 'a{bc}d'),
+(10, 'a{}d', 'a{}d'),
+(11, 'a{bcd', 'a{bcd'),
+(12, 'abc}d', 'abc}d'),
+(13, 'a(b)c', 'a(b)c'),
+(14, 'a()c', 'a()c'),
+(15, 'ab(bc', 'ab(bc'),
+(16, 'abb)c', 'abb)c'),
+(17, 'a\c', 'a\c'),
+(18, 'a*bc', 'a*bc'),
+(19, 'a.*c', 'a.*c'),
+(20, 'a+c', 'a+c'),
+(21, 'a?c', 'a?c'),
+(22, 'a|c', 'a|c'),
+(23, 'a^c', 'a^c'),
+(24, 'a$c', 'a$c'),
+(25, 'a&c', 'a&c'),
+(26, 'a(b)', 'a(b)|(c)');
+
+#-- .[{}()\*+?|^$
+
+select c1, c2 from bug3496 where c2 like '%.%';
+select c1, c2 from bug3496 where c2 like 'a.%';
+select c1, c2 from bug3496 where c2 like '%[%';
+select c1, c2 from bug3496 where c2 like 'a[%';
+select c1, c2 from bug3496 where c2 like 'a[%';
+select c1, c2 from bug3496 where c2 like 'a[bc]%';
+select c1, c2 from bug3496 where c2 like 'a[%]%';
+select c1, c2 from bug3496 where c2 like '%{%';
+select c1, c2 from bug3496 where c2 like 'a{%';
+select c1, c2 from bug3496 where c2 like '%}%';
+select c1, c2 from bug3496 where c2 like 'a}%';
+select c1, c2 from bug3496 where c2 like '%{%}%';
+select c1, c2 from bug3496 where c2 like '%(%';
+select c1, c2 from bug3496 where c2 like 'a(%';
+select c1, c2 from bug3496 where c2 like '%)%';
+select c1, c2 from bug3496 where c2 like 'a)%';
+select c1, c2 from bug3496 where c2 like '%(%)%';
+select c1, c2 from bug3496 where c2 like '%\%';
+select c1, c2 from bug3496 where c2 like 'a\%';
+select c1, c2 from bug3496 where c2 like '%*%';
+select c1, c2 from bug3496 where c2 like 'a*%';
+select c1, c2 from bug3496 where c2 like '%+%';
+select c1, c2 from bug3496 where c2 like 'a+%';
+select c1, c2 from bug3496 where c2 like '%?%';
+select c1, c2 from bug3496 where c2 like 'a?%';
+select c1, c2 from bug3496 where c2 like '%|%';
+select c1, c2 from bug3496 where c2 like 'a|%';
+select c1, c2 from bug3496 where c2 like '%^%';
+select c1, c2 from bug3496 where c2 like 'a^%';
+select c1, c2 from bug3496 where c2 like '%$%';
+select c1, c2 from bug3496 where c2 like 'a$%';
+select c1, c2 from bug3496 where c2 like '%&%';
+select c1, c2 from bug3496 where c2 like 'a&%';
+select c1, c2 from bug3496 where c2 like '%_%';
+select c1, c2 from bug3496 where c2 like 'a_%';
+select c1, c2 from bug3496 where c2 like 'a(b)|(c)%';
+
+
+select c1, c3 from bug3496 where c3 like '%.%';
+select c1, c3 from bug3496 where c3 like 'a.%';
+select c1, c3 from bug3496 where c3 like '%[%';
+select c1, c3 from bug3496 where c3 like 'a[%';
+select c1, c3 from bug3496 where c3 like 'a[%';
+select c1, c3 from bug3496 where c3 like 'a[bc]%';
+select c1, c3 from bug3496 where c3 like 'a[%]%';
+select c1, c3 from bug3496 where c3 like '%{%';
+select c1, c3 from bug3496 where c3 like 'a{%';
+select c1, c3 from bug3496 where c3 like '%}%';
+select c1, c3 from bug3496 where c3 like 'a}%';
+select c1, c3 from bug3496 where c3 like '%{%}%';
+select c1, c3 from bug3496 where c3 like '%(%';
+select c1, c3 from bug3496 where c3 like 'a(%';
+select c1, c3 from bug3496 where c3 like '%)%';
+select c1, c3 from bug3496 where c3 like 'a)%';
+select c1, c3 from bug3496 where c3 like '%(%)%';
+select c1, c3 from bug3496 where c3 like '%\%';
+select c1, c3 from bug3496 where c3 like 'a\%';
+select c1, c3 from bug3496 where c3 like '%*%';
+select c1, c3 from bug3496 where c3 like 'a*%';
+select c1, c3 from bug3496 where c3 like '%+%';
+select c1, c3 from bug3496 where c3 like 'a+%';
+select c1, c3 from bug3496 where c3 like '%?%';
+select c1, c3 from bug3496 where c3 like 'a?%';
+select c1, c3 from bug3496 where c3 like '%|%';
+select c1, c3 from bug3496 where c3 like 'a|%';
+select c1, c3 from bug3496 where c3 like '%^%';
+select c1, c3 from bug3496 where c3 like 'a^%';
+select c1, c3 from bug3496 where c3 like '%$%';
+select c1, c3 from bug3496 where c3 like 'a$%';
+select c1, c3 from bug3496 where c3 like '%&%';
+select c1, c3 from bug3496 where c3 like 'a&%';
+select c1, c3 from bug3496 where c3 like '%_%';
+select c1, c3 from bug3496 where c3 like 'a_%';
+select c1, c3 from bug3496 where c3 like 'a(b)|(c)%';
+
+drop table bug3496;
+
+#
+

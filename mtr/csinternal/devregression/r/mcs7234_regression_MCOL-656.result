@@ -1,0 +1,6 @@
+USE tpch1;
+select CCHAR2 from datatypetestm where CCHAR2 LIKE ('%bb%');
+CCHAR2
+bb
+bb
+bb

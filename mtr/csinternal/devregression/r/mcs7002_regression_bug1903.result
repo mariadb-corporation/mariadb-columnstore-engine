@@ -1,0 +1,12 @@
+USE tpch1;
+select n_regionkey, r_regionkey
+from nation, region
+where n_regionkey = r_regionkey and
+r_regionkey = 3
+order by 1, 2;
+n_regionkey	r_regionkey
+3	3
+3	3
+3	3
+3	3
+3	3

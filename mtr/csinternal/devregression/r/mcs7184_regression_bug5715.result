@@ -1,0 +1,35 @@
+USE tpch1;
+set columnstore_double_for_decimal_math = 1;
+drop table if exists `p2_loaded_uh_p_xml_fsc_2x_for_agg_201310_valid_sess`;
+create table `p2_loaded_uh_p_xml_fsc_2x_for_agg_201310_valid_sess` ( `session_duration` decimal(13,3) not null,`session_idle_down_duration` decimal(13,3) not null, `session_q5_down` int(11) not null ) engine=columnstore default charset=latin1;
+insert into p2_loaded_uh_p_xml_fsc_2x_for_agg_201310_valid_sess values (1032632.1 , 86382, 1273564557);
+select  session_duration as session_duration,  session_idle_down_duration as session_idle_down_duration,  session_q5_down as session_q5_down,  session_duration*session_q5_down as result_1, (session_duration*session_q5_down)*8 as result_2, (1032632.1*1273564557)*8 as result_3 from p2_loaded_uh_p_xml_fsc_2x_for_agg_201310_valid_sess t1;
+session_duration	session_idle_down_duration	session_q5_down	result_1	result_2	result_3
+1032632.100	86382.000	1273564557	1315123642980479.700	10520989143843837.601	10520989143843837.6
+drop table if exists bug2437;
+create table bug2437 (col1 decimal(6,4)) engine=columnstore;
+insert into bug2437 values (10.0001);
+select col1*2.0002*2.0000002*0.999999999999 from bug2437;
+col1*2.0002*2.0000002*0.999999999999
+40.004404040399999601000000000
+select col1*4.00040040003599959959996 from bug2437;
+col1*4.00040040003599959959996
+40.004404040399999597000000000
+select (count(*)/72143371)*100,(6001215/72143371)*100,(count(*)*100)/72143371,(6001215*100)/72143371 from lineitem;
+(count(*)/72143371)*100	(6001215/72143371)*100	(count(*)*100)/72143371	(6001215*100)/72143371
+8.3185	8.3185	8.3185	8.3185
+set columnstore_double_for_decimal_math = 0;
+select  session_duration as session_duration,  session_idle_down_duration as session_idle_down_duration,  session_q5_down as session_q5_down,  session_duration*session_q5_down as result_1, (session_duration*session_q5_down)*8 as result_2, (1032632.1*1273564557)*8 as result_3 from p2_loaded_uh_p_xml_fsc_2x_for_agg_201310_valid_sess t1;
+session_duration	session_idle_down_duration	session_q5_down	result_1	result_2	result_3
+1032632.100	86382.000	1273564557	1315123642980479.700	-7925754929865714.016	10520989143843837.6
+select col1*2.0002*2.0000002*0.999999999999 from bug2437;
+col1*2.0002*2.0000002*0.999999999999
+0.000000008844817964341929788
+select col1*4.00040040003599959959996 from bug2437;
+col1*4.00040040003599959959996
+0.000000009223372036854675807
+select (count(*)/72143371)*100,(6001215/72143371)*100,(count(*)*100)/72143371,(6001215*100)/72143371 from lineitem;
+(count(*)/72143371)*100	(6001215/72143371)*100	(count(*)*100)/72143371	(6001215*100)/72143371
+8.3200	8.3185	8.3185	8.3185
+drop table `p2_loaded_uh_p_xml_fsc_2x_for_agg_201310_valid_sess`;
+drop table bug2437;

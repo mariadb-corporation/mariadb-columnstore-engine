@@ -1,0 +1,32 @@
+USE tpch1;
+set autocommit=0;
+update datatypetestm set cchar255=convert(cdate,date),cvchar255=convert(cdatetime,date);
+select cchar255, cvchar255 from datatypetestm;
+cchar255	cvchar255
+1997-01-01	1997-01-01
+1997-01-01	1997-01-01
+1997-01-02	1997-01-02
+1997-01-03	1997-01-03
+1997-01-04	1997-01-04
+2009-12-28	2009-12-31
+2009-12-29	2009-12-31
+2009-12-30	2009-12-31
+2009-12-31	2009-12-31
+2009-12-31	2009-12-31
+2009-12-31	2009-12-31
+rollback;
+update datatypetestm set cidx=cidx*10, CCHAR255=DATE(CDATE) where DATE(CDATE) >0;
+select cidx, cchar255 from datatypetestm;
+cidx	cchar255
+10	1997-01-01
+20	1997-01-01
+30	1997-01-02
+40	1997-01-03
+50	1997-01-04
+60	2009-12-28
+70	2009-12-29
+80	2009-12-30
+90	2009-12-31
+100	2009-12-31
+110	2009-12-31
+rollback;

@@ -1,0 +1,39 @@
+USE tpch1;
+select test 
+from (
+select 1 test
+union all
+select count(1) test from region
+) checks
+where test <> 0 order by 1;
+test
+1
+5
+select test
+from (
+select abs(r_regionkey) test from region
+union all
+select count(1) test from region
+) checks
+where test <> 0 order by 1;
+test
+1
+2
+3
+4
+5
+select test
+from (
+select 1 test
+union all
+select r_regionkey from region
+union
+select count(1) test from region
+) checks
+where test <> 0 order by 1;
+test
+1
+2
+3
+4
+5

@@ -1,0 +1,14 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-656.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+#-- This should return 3 rows, if it returns 4 then the bug still exists
+select CCHAR2 from datatypetestm where CCHAR2 LIKE ('%bb%');
+#
+

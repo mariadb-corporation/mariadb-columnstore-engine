@@ -1,0 +1,19 @@
+DROP DATABASE IF EXISTS mcs25_db;
+CREATE DATABASE mcs25_db;
+USE mcs25_db;
+CREATE TABLE t_cs(
+c1 INT,
+c2 INT
+)ENGINE=Columnstore;
+CREATE TABLE t_myisam(
+c1 INT,
+c2 INT
+)ENGINE=MyISAM;
+INSERT DELAYED INTO t_cs VALUES (1, 2);
+ERROR HY000: DELAYED option not supported for table 't_cs'
+INSERT DELAYED INTO t_myisam VALUES (1, 2);
+INSERT INTO t_cs SELECT * FROM t_myisam;
+SELECT * FROM t_cs;
+c1	c2
+1	2
+DROP DATABASE mcs25_db;

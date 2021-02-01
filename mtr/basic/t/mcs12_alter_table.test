@@ -1,0 +1,86 @@
+#
+# Test ALTER TABLE schemas in various possible ways.
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs12_db1;
+DROP DATABASE IF EXISTS mcs12_db2;
+--enable_warnings
+
+CREATE DATABASE mcs12_db1;
+CREATE DATABASE mcs12_db2;
+USE mcs12_db1;
+
+# Change ENGINE
+CREATE TABLE t1 (a INTEGER, c1 CHAR(10));
+INSERT INTO t1 VALUES (1, 'a'),(2, 'b');
+ALTER TABLE t1 ENGINE=Columnstore;
+ALTER TABLE t1 ENGINE=INNODB;
+INSERT INTO t1 VALUES (3, 'c'),(4, 'd');
+ALTER TABLE mcs12_db1.t1 ENGINE=Columnstore;
+INSERT INTO mcs12_db1.t1 VALUES (3, 'c'),(4, 'd');
+SHOW CREATE TABLE mcs12_db1.t1;
+SELECT * FROM mcs12_db1.t1;
+SHOW CREATE TABLE t1;
+SELECT * FROM t1;
+
+# Rename
+ALTER TABLE t1 RENAME t2;
+SHOW CREATE TABLE t2;
+SELECT * FROM t2;
+ALTER TABLE t2 RENAME TO mcs12_db1.t1;
+SHOW CREATE TABLE t1;
+SELECT * FROM t1;
+# Cross db rename errors in CS but not in innodb. Need to check.
+--error 1815
+ALTER TABLE mcs12_db1.t1 RENAME TO mcs12_db2.t1;
+
+# Add column
+DROP TABLE t1;
+CREATE TABLE t1 (i INTEGER) ENGINE=Columnstore;
+ALTER TABLE t1 ADD COLUMN (c CHAR(10));
+INSERT INTO t1 VALUES (1, 'a'),(2, 'b');
+ALTER TABLE t1 ADD t TIMESTAMP;
+ALTER TABLE t1 ADD COLUMN i2 INT COMMENT 'Add one more column.';
+INSERT INTO t1 VALUES (1, 'a', '2020-07-08', 11);
+SHOW CREATE TABLE t1;
+
+# Drop column
+ALTER TABLE t1 DROP COLUMN t;
+SHOW CREATE TABLE t1;
+SELECT * FROM t1;
+
+# Modify column
+ALTER TABLE t1 CHANGE i new_i INTEGER;
+INSERT INTO t1 VALUES (2, 'b', 22);
+SHOW CREATE TABLE t1;
+SELECT * FROM t1;
+
+DROP TABLE t1;
+CREATE TABLE t1 (i INTEGER) ENGINE=Columnstore;
+
+# Test from parallel connections
+connect (addconroot1, localhost, root,,);
+connect (addconroot2, localhost, root,,);
+connection addconroot1;
+SHOW CREATE TABLE mcs12_db1.t1;
+ALTER TABLE mcs12_db1.t1 ADD COLUMN c CHAR(10);
+INSERT INTO mcs12_db1.t1 VALUES (1, 'a'),(2, 'b');
+connection addconroot2;
+ALTER TABLE mcs12_db1.t1 ADD t TIMESTAMP;
+INSERT INTO mcs12_db1.t1 VALUES (3, 'c', '2020-07-08');
+connection addconroot1;
+ALTER TABLE mcs12_db1.t1 DROP COLUMN t;
+INSERT INTO mcs12_db1.t1 VALUES (4, 'd');
+connection addconroot2;
+ALTER TABLE mcs12_db1.t1 ADD COLUMN i2 INT COMMENT 'Add one more column.';
+INSERT INTO mcs12_db1.t1 VALUES (5, 'e', 55);
+
+connection default;
+SHOW CREATE TABLE mcs12_db1.t1;
+SELECT * FROM mcs12_db1.t1;
+disconnect addconroot1;
+disconnect addconroot2;
+
+DROP DATABASE mcs12_db1;

@@ -1,0 +1,76 @@
+DROP DATABASE IF EXISTS mcs219_db;
+CREATE DATABASE mcs219_db;
+USE mcs219_db;
+CREATE TABLE t1 (a INT, b CHAR(35))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL, ''),(1, 'columnstore engine'),(2, 'mariadb database');
+SELECT b, MID(b,4,5) FROM t1;
+b	MID(b,4,5)
+NULL	NULL
+columnstore engine	umnst
+mariadb database	iadb 
+SELECT b, MID(b,12,5) FROM t1;
+b	MID(b,12,5)
+NULL	NULL
+columnstore engine	 engi
+mariadb database	abase
+SELECT b, MID(b,5,15) FROM t1;
+b	MID(b,5,15)
+NULL	NULL
+columnstore engine	mnstore engine
+mariadb database	adb database
+SELECT b, MID(b,12,15) FROM t1;
+b	MID(b,12,15)
+NULL	NULL
+columnstore engine	 engine
+mariadb database	abase
+SELECT b, MID(b,1,1) FROM t1;
+b	MID(b,1,1)
+NULL	NULL
+columnstore engine	c
+mariadb database	m
+SELECT b, MID(b,1,2) FROM t1;
+b	MID(b,1,2)
+NULL	NULL
+columnstore engine	co
+mariadb database	ma
+SELECT b, MID(b,5,5) FROM t1;
+b	MID(b,5,5)
+NULL	NULL
+columnstore engine	mnsto
+mariadb database	adb d
+SELECT b, MID(b,-2,5) FROM t1;
+b	MID(b,-2,5)
+NULL	NULL
+columnstore engine	ne
+mariadb database	se
+SELECT b, MID(b,-5,15) FROM t1;
+b	MID(b,-5,15)
+NULL	NULL
+columnstore engine	ngine
+mariadb database	abase
+SELECT b, MID(b,-15,15) FROM t1;
+b	MID(b,-15,15)
+NULL	NULL
+columnstore engine	umnstore engine
+mariadb database	ariadb database
+SELECT b, MID(b,0,0) FROM t1;
+b	MID(b,0,0)
+NULL	NULL
+columnstore engine	NULL
+mariadb database	NULL
+SELECT b, MID(b,1,0) FROM t1;
+b	MID(b,1,0)
+NULL	NULL
+columnstore engine	NULL
+mariadb database	NULL
+SELECT b, MID(b,0,1) FROM t1;
+b	MID(b,0,1)
+NULL	NULL
+columnstore engine	NULL
+mariadb database	NULL
+SELECT b, MID(b,-1,0) FROM t1;
+b	MID(b,-1,0)
+NULL	NULL
+columnstore engine	NULL
+mariadb database	NULL
+DROP DATABASE mcs219_db;

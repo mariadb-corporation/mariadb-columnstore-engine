@@ -1,0 +1,22 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-3267.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+DROP TABLE IF EXISTS t1;
+DROP TABLE IF EXISTS t2;
+CREATE TABLE t1 (a bigint, b bigint)engine=columnstore;
+CREATE TABLE  t2 (a bigint, b bigint)engine=columnstore;
+INSERT INTO t1 VALUES (5,5),(4,4),(3,3);
+INSERT INTO t1 VALUES (5,5),(4,4),(3,3);
+
+SELECT * FROM ((SELECT a, b FROM t1 ORDER BY b LIMIT 2) UNION ALL (SELECT a, b FROM t2 ORDER BY b LIMIT 2)) as sq3 ORDER BY 1,2;
+SELECT * FROM (select * FROM (SELECT a, b FROM t1 ORDER BY b LIMIT 2) sub1 UNION ALL SELECT * FROM (SELECT a, b FROM t2 ORDER BY b LIMIT 2) sub2 ) as sq3 ORDER BY 1,2;
+SELECT * FROM (select * FROM (SELECT a, b FROM t1 ORDER BY b) sub1 UNION ALL SELECT * FROM (SELECT a, b FROM t2 ORDER BY b) sub2 ) as sq3 ORDER BY 1,2;
+#
+

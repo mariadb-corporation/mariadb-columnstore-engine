@@ -1,0 +1,30 @@
+USE tpch1;
+DROP TABLE IF EXISTS mcol128;
+Warnings:
+Note	1051	Unknown table 'tpch1.mcol128'
+CREATE TABLE mcol128 (a int, b varchar(50));
+INSERT INTO mcol128 VALUES (1, 'hello'),(2, 'world');
+SELECT * FROM mcol128;
+a	b
+1	hello
+2	world
+ALTER TABLE mcol128 ENGINE=Columnstore;
+SELECT * FROM mcol128;
+a	b
+1	hello
+2	world
+ALTER TABLE mcol128 ENGINE=InnoDB;
+SELECT * FROM mcol128;
+a	b
+1	hello
+2	world
+DROP TABLE IF EXISTS mcol128_clone;
+Warnings:
+Note	1051	Unknown table 'tpch1.mcol128_clone'
+CREATE TABLE mcol128_clone ENGINE=Columnstore AS SELECT * FROM mcol128;
+SELECT * FROM mcol128_clone;
+a	b
+1	hello
+2	world
+DROP TABLE mcol128_clone;
+DROP TABLE mcol128;

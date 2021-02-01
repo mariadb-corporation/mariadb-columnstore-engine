@@ -1,0 +1,25 @@
+#
+# Test SECOND() function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs232_db;
+--enable_warnings
+
+CREATE DATABASE mcs232_db;
+USE mcs232_db;
+
+CREATE TABLE t1(t1_d DATE, t1_t TIME, t1_dt DATETIME)ENGINE=Columnstore;
+INSERT INTO t1 VALUES(NULL, NULL, NULL);
+INSERT INTO t1 VALUES('2222-11-11', '12:12:12', '2020-11-11 12:12:12');
+INSERT INTO t1 VALUES('2020-01-01', '11:37:21', '2020-12-31 12:34:56');
+INSERT INTO t1 VALUES('2016-02-01', '03:41:19', '2017-02-01 12:12:12');
+
+SELECT t1_d, SECOND(t1_d) FROM t1 ORDER BY 1;
+SELECT t1_t, SECOND(t1_t) FROM t1 ORDER BY 1;
+SELECT t1_dt, SECOND(t1_dt) FROM t1 ORDER BY 1;
+
+# Clean UP
+DROP DATABASE mcs232_db;

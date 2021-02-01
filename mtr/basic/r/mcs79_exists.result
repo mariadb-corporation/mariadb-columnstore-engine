@@ -1,0 +1,102 @@
+DROP DATABASE IF EXISTS mcs79_db;
+CREATE DATABASE mcs79_db;
+USE mcs79_db;
+CREATE USER IF NOT EXISTS 'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
+GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+FLUSH PRIVILEGES;
+CREATE TABLE t1 (t1_int INT, t1_char CHAR(5))ENGINE=Columnstore;
+CREATE TABLE t2 (t2_int INT, t2_char CHAR(5))ENGINE=Columnstore;
+CREATE TABLE t3 (t3_int INT, t3_char CHAR(5))ENGINE=Innodb;
+CREATE TABLE t4 (t4_int INT, t4_char CHAR(5))ENGINE=Myisam;
+INSERT INTO t1 VALUES (NULL, ''),(1, 'aaa'),(2, 'aaa'),(3, 'ccc'),(4, 'ddd'),(5, 'aaa'),(6, ''),(7, 'eee');
+INSERT INTO t2 VALUES (NULL, ''),(1, 'eee'),(3, 'ccc'),(5, 'jjj'),(6, ''),(7, 'lll'),(9, 'eee'),(11, 'nnn');
+INSERT INTO t3 SELECT * FROM t2;
+INSERT INTO t4 SELECT * FROM t1;
+SELECT t1_int FROM t1 WHERE EXISTS (SELECT t2_int FROM t2 WHERE t1.t1_int = t2.t2_int) ORDER BY 1;
+t1_int
+1
+3
+5
+6
+7
+SELECT t1_int, t1_char FROM t1 WHERE NOT EXISTS (SELECT t2_int FROM t2 WHERE t1.t1_int = t2.t2_int) ORDER BY t1_char;
+t1_int	t1_char
+NULL	NULL
+2	aaa
+4	ddd
+SELECT * FROM t2 WHERE EXISTS (SELECT t1_int FROM t1 WHERE t1.t1_int = t2.t2_int) ORDER BY t2_int;
+t2_int	t2_char
+1	eee
+3	ccc
+5	jjj
+6	NULL
+7	lll
+SELECT t1_char FROM t1 WHERE NOT EXISTS (SELECT t2_int FROM t2 WHERE t1.t1_int = t2.t2_int) ORDER BY t1_char;
+t1_char
+NULL
+aaa
+ddd
+SELECT t1_char FROM t1 WHERE EXISTS (SELECT 1 FROM t2 WHERE t2_int IS NULL) ORDER BY 1;
+t1_char
+NULL
+NULL
+aaa
+aaa
+aaa
+ccc
+ddd
+eee
+SELECT t1_char, t1_int FROM t1 WHERE EXISTS (SELECT 1 FROM t2 WHERE t2_int IS NULL) AND t1_int > 5 ORDER BY 1;
+t1_char	t1_int
+NULL	6
+eee	7
+SELECT t1_int FROM t1 WHERE EXISTS (SELECT t3_int FROM t3 WHERE t1.t1_int = t3.t3_int);
+t1_int
+1
+3
+5
+6
+7
+SELECT t1_int FROM t1 WHERE NOT EXISTS (SELECT t3_int FROM t3 WHERE t1.t1_int = t3.t3_int);
+t1_int
+NULL
+2
+4
+SELECT t3_int FROM t3 WHERE EXISTS (SELECT t2_int FROM t2 WHERE t3.t3_int = t2.t2_int);
+t3_int
+1
+3
+5
+6
+7
+9
+11
+SELECT t3_int FROM t3 WHERE NOT EXISTS (SELECT t2_int FROM t2 WHERE t3.t3_int = t2.t2_int);
+t3_int
+NULL
+SELECT t1_int FROM t1 WHERE EXISTS (SELECT t4_int FROM t4 WHERE t1.t1_int = t4.t4_int);
+t1_int
+1
+2
+3
+4
+5
+6
+7
+SELECT t1_int FROM t1 WHERE NOT EXISTS (SELECT t4_int FROM t4 WHERE t1.t1_int = t4.t4_int);
+t1_int
+NULL
+SELECT t4_int FROM t4 WHERE EXISTS (SELECT t2_int FROM t2 WHERE t4.t4_int = t2.t2_int);
+t4_int
+1
+3
+5
+6
+7
+SELECT t4_int FROM t4 WHERE NOT EXISTS (SELECT t2_int FROM t2 WHERE t4.t4_int = t2.t2_int);
+t4_int
+NULL
+2
+4
+DROP USER 'cejuser'@'localhost';
+DROP DATABASE mcs79_db;

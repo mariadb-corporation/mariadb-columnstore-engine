@@ -1,0 +1,51 @@
+#
+# LOAD DATA INFILE transform source data   #
+# Author: Susil, susil.behera@mariadb.com  #  
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs102_db1;
+--enable_warnings
+
+CREATE DATABASE mcs102_db1;
+USE mcs102_db1;
+
+# Prepare the csv file
+exec rm -f /tmp/mcs102.csv;
+
+exec cat << EOF > /tmp/mcs102.csv 
+1,Sprint Break 2014,Jan 04 2014,20
+2,Back to Scholl 2014,Jan 09 2014,25
+3,Summer 2014,Jun 25 2014,10
+EOF;
+
+CREATE TABLE discounts (
+    id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    expired_date DATE NOT NULL,
+    amount DECIMAL(10, 2) NULL
+) ENGINE=Columnstore;
+
+# Incorrect date value
+--error 1292
+LOAD DATA INFILE '/tmp/mcs102.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
+# Suspected BUG! Should fail but it is passing.
+#--error 1292
+#LOAD DATA LOCAL INFILE '/tmp/mcs102.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
+
+# Transform date value
+LOAD DATA INFILE '/tmp/mcs102.csv' INTO TABLE discounts FIELDS TERMINATED BY ','
+(id, title, @expired_date, amount)
+SET expired_date = STR_TO_DATE(@expired_date, "%M %d %Y");
+
+LOAD DATA LOCAL INFILE '/tmp/mcs102.csv' INTO TABLE discounts FIELDS TERMINATED BY ','
+(id, title, @expired_date, amount)
+SET expired_date = STR_TO_DATE(@expired_date, "%M %d %Y");
+
+SELECT * FROM discounts ORDER BY id;
+SELECT COUNT(*) FROM discounts;
+
+# Clean up
+exec rm -f /tmp/mcs102.csv;
+DROP DATABASE IF EXISTS mcs102_db1;

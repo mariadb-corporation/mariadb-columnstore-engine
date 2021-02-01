@@ -1,0 +1,35 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug4509.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+# -------------------------------------------------------------- #
+# Enable cross engine join
+# Configure user and password in Columnstore.xml file
+# -------------------------------------------------------------- #
+--exec /usr/bin/mcsSetConfig CrossEngineSupport User 'cejuser'
+--exec /usr/bin/mcsSetConfig CrossEngineSupport Password 'Vagrant1!0000001'
+# -------------------------------------------------------------- #
+# Create corresponding in the server
+# -------------------------------------------------------------- #
+
+CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1!0000001';
+
+GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+FLUSH PRIVILEGES;
+#
+create table if not exists bug4509 (id int, c1 int)engine=columnstore;
+create table if not exists bug4509_myisam (id int, c1 int);
+insert into bug4509 values (1,2),(2,3),(3,4);
+insert into bug4509_myisam values (1,2),(2,4),(3,4);
+select * from bug4509 join bug4509_myisam using (id);
+select * from bug4509_myisam join bug4509 using (c1, id);
+drop table bug4509;
+drop table bug4509_myisam;
+#
+DROP USER 'cejuser'@'localhost';

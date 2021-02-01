@@ -1,0 +1,15 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3458.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+select cidx, CAST(132.499*cidx AS DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, convert(132.499*cidx, decimal(9,2)) from datatypetestm order by cidx;
+
+#
+

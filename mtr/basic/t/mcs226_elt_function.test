@@ -1,0 +1,37 @@
+#
+# Test ELT() function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs226_db;
+--enable_warnings
+
+CREATE DATABASE mcs226_db;
+USE mcs226_db;
+
+CREATE TABLE t1
+(
+ t1_INT INT,
+ t1_TEXT TEXT,
+ t1_CHAR_1 CHAR(1),
+ t1_DATE DATE,
+ t1_TIME TIME
+ )ENGINE=Columnstore;
+INSERT INTO t1 VALUES(1, repeat('m',5), 'o', '1111-11-11', '11:22:30.123');
+
+SELECT ELT(0, t1_TEXT, '1:1:1') FROM t1;
+SELECT ELT(1, 'abcd', t1_TIME) FROM t1;
+SELECT ELT(2, '12:12:12', 71917, 'mariadb columnstore', t1_DATE) FROM t1;
+SELECT t1_INT, t1_DATE, t1_TIME, ELT(t1_INT, t1_TEXT, t1_DATE) FROM t1 ORDER BY 1;
+SELECT t1_INT, t1_DATE, t1_TIME, ELT(3, t1_TEXT, t1_CHAR_1, t1_DATE) FROM t1 ORDER BY 1;
+SELECT t1_INT, t1_DATE, t1_TIME, ELT(3, t1_TEXT, t1_DATE, 'Columnstore', t1_DATE) FROM t1 ORDER BY 1;
+SELECT t1_INT, t1_DATE, t1_TIME, ELT(4, t1_CHAR_1, t1_DATE, 'Columnstore', t1_TIME) FROM t1 ORDER BY 1;
+SELECT t1_INT, t1_DATE, t1_TIME, ELT(12, t1_CHAR_1, t1_TIME) FROM t1 ORDER BY 1;
+
+--error ER_WRONG_PARAMCOUNT_TO_NATIVE_FCT
+SELECT t1_INT, t1_DATE, t1_TIME, ELT(t1_Text) FROM t1 ORDER BY 1;
+
+# Clean UP
+DROP DATABASE mcs226_db;

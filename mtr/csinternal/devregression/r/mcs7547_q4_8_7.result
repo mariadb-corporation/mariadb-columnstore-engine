@@ -1,0 +1,8 @@
+USE tpch1;
+Select o_orderpriority, min(o_orderstatus), max(o_orderstatus) from orders where o_orderkey < 1000000 group by o_orderpriority order by o_orderpriority;
+o_orderpriority	min(o_orderstatus)	max(o_orderstatus)
+1-URGENT	F	P
+2-HIGH	F	P
+3-MEDIUM	F	P
+4-NOT SPECIFIED	F	P
+5-LOW	F	P

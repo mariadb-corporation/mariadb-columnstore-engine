@@ -1,0 +1,33 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3137.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists bug3137;
+
+CREATE TABLE `bug3137` (
+  `id` INTEGER DEFAULT NULL,
+  `value` INTEGER DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+
+INSERT INTO `bug3137` (id, value) VALUES (0, 1);
+INSERT INTO `bug3137` (id, value) VALUES (1, 1);
+INSERT INTO `bug3137` (id, value) VALUES (2, 2);
+INSERT INTO `bug3137` (id, value) VALUES (3, 2);
+INSERT INTO `bug3137` (id, value) VALUES (4, 3);
+INSERT INTO `bug3137` (id, value) VALUES (5, 3); 
+
+select * from bug3137 where (value = 1 OR 1 = 1);
+select * from bug3137 where id >= 0 and (value = 1 or 1 = -1);
+select n_nationkey from nation where n_nationkey <=5 and (n_nationkey=2 or 1=-1);
+
+drop table if exists bug3137;
+
+
+#
+

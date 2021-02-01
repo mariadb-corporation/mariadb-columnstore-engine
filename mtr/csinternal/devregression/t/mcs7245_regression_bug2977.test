@@ -1,0 +1,67 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug2977.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists `shipamounts`;
+drop table if exists `ship1`;
+drop table if exists `ship2`;
+CREATE TABLE `shipamounts` (
+  `OrderNum` varchar(50) DEFAULT NULL,
+  `OrderLine` int(11) DEFAULT NULL,
+  `ShippingAmount` decimal(10,2) DEFAULT NULL,
+  `ShippingDiscountAmount` decimal(10,2) DEFAULT NULL,
+  `ShippingOrderAmount` decimal(10,2) DEFAULT NULL,
+  `ShippingDiscountOrderAmount` decimal(10,2) DEFAULT NULL
+) engine=columnstore DEFAULT CHARSET=latin1;
+
+CREATE TABLE `ship1` (
+  `OrderNum` varchar(50) DEFAULT NULL,
+  `OrderLine` int(11) DEFAULT NULL,
+  `ShippingAmount` decimal(10,2) DEFAULT NULL,
+  `ShippingOrderAmount` decimal(10,2) DEFAULT NULL,
+  `ShippingDiscountAmount` decimal(10,2) DEFAULT NULL,
+  `ShippingDiscountOrderAmount` decimal(10,2) DEFAULT NULL
+) engine=columnstore DEFAULT CHARSET=latin1;
+
+CREATE TABLE `ship2` (
+  `OrderNum` varchar(50) DEFAULT NULL,
+  `OrderLine` int(11) DEFAULT NULL,
+  `ShippingAmount` decimal(10,2) DEFAULT NULL,
+  `ShippingOrderAmount` decimal(10,2) DEFAULT NULL,
+  `ShippingDiscountAmount` decimal(10,2) DEFAULT NULL,
+  `ShippingDiscountOrderAmount` decimal(10,2) DEFAULT NULL
+) engine=columnstore DEFAULT CHARSET=latin1;
+
+insert into shipamounts values (2357203684, 352338, 0, 0, 0, 0);
+insert into ship1 values (2357203684, 352338, 0, 0, 0, 0);
+insert into ship2 values (2357203684, 352338, 0, 0, 0, 0);
+
+SELECT	s.OrderNum,
+        s.OrderLine,        
+	s.ShippingAmount,
+	s.ShippingOrderAmount,
+	total.ShippingTotalAmount,
+	s.ShippingDiscountAmount,
+	s.ShippingDiscountOrderAmount,
+	total.ShippingDiscountTotalAmount,      
+	IF( s.OrderLine = MIN(t.OrderLine), 1, 0 )  
+FROM shipAmounts AS s  
+	LEFT OUTER JOIN ship1 AS t ON s.OrderNum = t.OrderNum 
+	LEFT OUTER JOIN  
+	(SELECT OrderNum, SUM(ShippingAmount) AS ShippingTotalAmount,
+		SUM(ShippingDiscountAmount) AS ShippingDiscountTotalAmount
+	FROM ship2
+	GROUP BY OrderNum) AS total ON s.OrderNum = total.OrderNum 
+	GROUP BY s.OrderNum,s.OrderLine,3,4,5,6,7,8;
+
+drop table if exists shipamounts;
+drop table if exists ship1;
+drop table if exists ship2;
+#
+

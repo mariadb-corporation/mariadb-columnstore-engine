@@ -1,0 +1,40 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3181.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+select r_regionkey, r_name,
+       sum(ordercnt2) ordercnt3,
+       round(sum(sumcusttotal2)/100,2) custtotal3,
+       min(minorderdate2) minorderdate3,
+       max(maxorderdate2) maxorderdate3
+from region,
+(select n_nationkey,
+       n_regionkey,
+       sum(ordercnt1) ordercnt2,
+       sum(totalprice1) sumcusttotal2,
+       min(minorderdate1) minorderdate2,
+       max(maxorderdate1) maxorderdate2
+from customer, nation,
+(select o_custkey,
+       count(*) ordercnt1,
+       sum(o_totalprice)*100 totalprice1,
+       min(o_orderdate) minorderdate1,
+       max(o_orderdate) maxorderdate1
+from orders group by o_custkey) order1
+where c_custkey = o_custkey
+and c_nationkey = n_nationkey
+group by n_nationkey, n_regionkey
+) nation1
+where r_regionkey = n_regionkey
+group by r_regionkey, r_name
+order by r_regionkey, r_name;
+
+
+#
+

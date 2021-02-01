@@ -1,0 +1,42 @@
+DROP DATABASE IF EXISTS mcs87_db;
+CREATE DATABASE mcs87_db;
+USE mcs87_db;
+CREATE TABLE t1 (c1 INT, c2 CHAR(1)) ENGINE=Columnstore;
+INSERT INTO t1 VALUES (1, 'a'), (2, 'b'), (3, 'c'), (4, 'd'), (5, 'e');
+ALTER TABLE t1 ADD COLUMN c11 INT NOT NULL;
+ERROR HY000: Internal error: Table is not empty. New column has to have a default value if NOT NULL required.
+ALTER TABLE t1 ADD COLUMN c11 INT(1);
+ALTER TABLE t1 ADD COLUMN c21 CHAR(2);
+ALTER TABLE t1 ADD COLUMN c11 INT(2);
+ERROR 42S21: Duplicate column name 'c11'
+ALTER TABLE t1 ADD COLUMN c12 CHAR(1) AFTER c11;
+ERROR 42000: The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
+ALTER TABLE t1 ADD COLUMN c0 INT FIRST;
+ERROR 42000: The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
+ALTER TABLE t1 MODIFY COLUMN c11 TINYINT;
+ERROR HY000: Internal error: CAL0001: Alter table Failed:  Altertable: Error in the action type  
+ALTER TABLE t1 CHANGE COLUMN c2 c2new CHAR(2);
+ERROR HY000: Internal error: CAL0001: Alter table Failed:  Changing the datatype of a column is not supported  
+ALTER TABLE t1 CHANGE COLUMN c2 c2new CHAR(1);
+ALTER TABLE t1 CHANGE COLUMN c2new c2 CHAR(1);
+ALTER TABLE t1 DROP COLUMN IF EXISTS c11;
+ERROR 42000: The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
+ALTER TABLE t1 DROP COLUMN c11;
+ALTER TABLE t1 DROP COLUMN IF EXISTS c11;
+Warnings:
+Note	1091	Can't DROP COLUMN `c11`; check that it exists
+SHOW CREATE TABLE t1;
+Table	Create Table
+t1	CREATE TABLE `t1` (
+  `c1` int(11) DEFAULT NULL,
+  `c2` char(1) DEFAULT NULL,
+  `c21` char(2) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+SELECT * FROM t1 ORDER BY c1;
+c1	c2	c21
+1	a	NULL
+2	b	NULL
+3	c	NULL
+4	d	NULL
+5	e	NULL
+DROP DATABASE mcs87_db;

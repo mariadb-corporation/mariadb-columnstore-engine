@@ -1,0 +1,9 @@
+USE tpch1;
+select * from sub1;
+c1	c2	c3	s1	s2	s3
+1	1	1	1	1	1
+2	2	2	2	2	2
+3	3	3	3	3	3
+4	1	1	1	1	1
+5	99	99	99	99	99
+6	NULL	NULL	NULL	NULL	NULL

@@ -1,0 +1,19 @@
+USE tpch1;
+select date('2010-02-01') into @xxx;
+select @xxx;
+@xxx
+2010-02-01
+drop table if exists bug3021;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug3021'
+create table bug3021(c1 date)engine=columnstore;
+insert into bug3021 values ('2001-01-01');
+update bug3021 set c1=@xxx;
+select * from bug3021;
+c1
+2010-02-01
+update bug3021 set c1=date('2010-11-14');
+select * from bug3021;
+c1
+2010-11-14
+drop table bug3021;

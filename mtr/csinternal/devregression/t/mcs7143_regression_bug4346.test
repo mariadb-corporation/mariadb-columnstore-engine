@@ -1,0 +1,21 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug4346.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists dim_day;
+CREATE TABLE `dim_day` (
+  `dayId` SMALLINT(5) DEFAULT NULL,
+  `displayDate` DATE DEFAULT NULL
+) engine=columnstore DEFAULT CHARSET=utf8;
+INSERT INTO dim_day (dayId, displayDate) VALUES (1,'2012-01-01') ,
+(2,'2012-02-01');
+SELECT STR_TO_DATE(CONCAT(YEARWEEK(displayDate,2),'-01'),'%X%V-%w')
+FROM dim_day;
+drop table dim_day;#
+

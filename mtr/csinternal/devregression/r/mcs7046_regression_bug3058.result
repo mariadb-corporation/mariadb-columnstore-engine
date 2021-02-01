@@ -1,0 +1,51 @@
+USE tpch1;
+select count(*) from nation where n_nationkey in (select n_nationkey from (select  n_nationkey from nation group by n_nationkey ) a);
+count(*)
+25
+select count(*) from nation where n_nationkey in (select n_nationkey from (select count(*) c3, n_nationkey from nation group by n_nationkey ) a);
+count(*)
+25
+select count(*) from nation where n_nationkey in (select n_nationkey from (select  n_nationkey, count(*) from nation group by n_nationkey ) a);
+count(*)
+25
+select n_nationkey from (select count(*) c3, n_nationkey from nation group by 2) a order by 1;
+n_nationkey
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+select n_nationkey, n_name from nation where  n_nationkey in (select r_regionkey from (select count(*), r_regionkey from region group by 2) a) order by 1;
+n_nationkey	n_name
+0	ALGERIA
+1	ARGENTINA
+2	BRAZIL
+3	CANADA
+4	EGYPT
+select n_nationkey, n_name from nation where  n_nationkey in (select r_regionkey from (select r_regionkey, count(*) from region group by 1) a) order by 1;
+n_nationkey	n_name
+0	ALGERIA
+1	ARGENTINA
+2	BRAZIL
+3	CANADA
+4	EGYPT

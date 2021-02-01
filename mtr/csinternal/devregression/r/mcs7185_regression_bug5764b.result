@@ -1,0 +1,135 @@
+USE tpch1;
+drop view if exists vwBug;
+Warnings:
+Note	4092	Unknown VIEW: 'tpch1.vwbug'
+drop view if exists vwBug2;
+Warnings:
+Note	4092	Unknown VIEW: 'tpch1.vwbug2'
+drop view if exists vwBug3;
+Warnings:
+Note	4092	Unknown VIEW: 'tpch1.vwbug3'
+drop view if exists vwBug4;
+Warnings:
+Note	4092	Unknown VIEW: 'tpch1.vwbug4'
+create view vwBug as 
+select sub1.c1 s1c1, sub1.c2 s1c2, sub2.c1 s2c1, sub2.c2 s2c2, sub3.c1 s3c1, sub3.c2 s3c2
+from sub1 
+left join sub2 on (sub1.c1 = sub2.c1 and sub1.c2 = sub2.c2) 
+left join sub3 on (sub1.c1 = sub3.c1 and sub1.c2 = sub3.c2);
+select 'q1', vwBug.*, sub4.c2 from vwBug left join sub4 on (vwBug.s1c2 = sub4.c2);
+q1	s1c1	s1c2	s2c1	s2c2	s3c1	s3c2	c2
+q1	1	1	1	1	1	1	1
+q1	1	1	1	1	1	1	1
+q1	2	2	NULL	NULL	NULL	NULL	2
+q1	2	2	NULL	NULL	NULL	NULL	2
+q1	3	3	NULL	NULL	NULL	NULL	3
+q1	3	3	NULL	NULL	NULL	NULL	3
+q1	4	1	NULL	NULL	NULL	NULL	1
+q1	4	1	NULL	NULL	NULL	NULL	1
+q1	5	99	NULL	NULL	NULL	NULL	NULL
+q1	6	NULL	NULL	NULL	NULL	NULL	NULL
+create view vwBug2 as select vwBug.*, sub4.c2 from vwBug left join sub4 on (vwBug.s1c2 = sub4.c2);
+select 'q2', vwBug2.* from vwBug2 order by 1, 2, 3;
+q2	s1c1	s1c2	s2c1	s2c2	s3c1	s3c2	c2
+q2	1	1	1	1	1	1	1
+q2	1	1	1	1	1	1	1
+q2	2	2	NULL	NULL	NULL	NULL	2
+q2	2	2	NULL	NULL	NULL	NULL	2
+q2	3	3	NULL	NULL	NULL	NULL	3
+q2	3	3	NULL	NULL	NULL	NULL	3
+q2	4	1	NULL	NULL	NULL	NULL	1
+q2	4	1	NULL	NULL	NULL	NULL	1
+q2	5	99	NULL	NULL	NULL	NULL	NULL
+q2	6	NULL	NULL	NULL	NULL	NULL	NULL
+select 'q3', sub5.c1, count(*) from vwBug2 right join sub5 on (s1c1=sub5.c2) group by 1, 2 order by 1, 2;
+q3	c1	count(*)
+q3	1	900
+q3	2	901
+q3	3	900
+q3	4	900
+q3	5	450
+q3	6	450
+q3	7	450
+q3	8	450
+q3	9	450
+q3	10	450
+q3	11	450
+q3	12	450
+q3	13	450
+q3	14	450
+q3	15	450
+q3	16	450
+q3	17	450
+q3	18	450
+q3	19	450
+q3	20	450
+select 'q4', sub5.c1, count(*) from vwBug2 left join sub5 on (s1c1=sub5.c2) group by 1, 2 order by 1, 2;
+q4	c1	count(*)
+q4	1	900
+q4	2	900
+q4	3	900
+q4	4	900
+q4	5	450
+q4	6	450
+select 'q5', vwBug2.s1c1, vwBug2.s1c2, count(*) from vwBug2 left join sub5 on (s1c1=sub5.c2) group by 1, 2, 3 order by 1, 2, 3;
+q5	s1c1	s1c2	count(*)
+q5	1	1	900
+q5	2	2	900
+q5	3	3	900
+q5	4	1	900
+q5	5	99	450
+q5	6	NULL	450
+create view vwBug3 as select vwBug2.s1c1, vwBug2.s1c2 from vwBug2 left join sub5 on (s1c1=sub5.c2);
+select 'q6', s1c1, s1c2, count(*) from vwBug2 group by 1, 2, 3 order by 1, 2, 3;
+q6	s1c1	s1c2	count(*)
+q6	1	1	2
+q6	2	2	2
+q6	3	3	2
+q6	4	1	2
+q6	5	99	1
+q6	6	NULL	1
+select 'q7', vwBug.s1c1, vwBug2.s1c1 from vwBug join vwBug2 on (vwBug.s1c1 = vwBug2.s1c2) order by 1, 2, 3;
+q7	s1c1	s1c1
+q7	1	1
+q7	1	1
+q7	1	4
+q7	1	4
+q7	2	2
+q7	2	2
+q7	3	3
+q7	3	3
+select 'q8', vwBug.s1c1, vwBug2.s1c1 from vwBug left join vwBug2 on (vwBug.s1c1 = vwBug2.s1c2) order by 1, 2, 3;
+q8	s1c1	s1c1
+q8	1	1
+q8	1	1
+q8	1	4
+q8	1	4
+q8	2	2
+q8	2	2
+q8	3	3
+q8	3	3
+q8	4	NULL
+q8	5	NULL
+q8	6	NULL
+select 'q9', vwBug.s1c1, vwBug2.s1c1 from vwBug right join vwBug2 on (vwBug.s1c1 = vwBug2.s1c2) order by 1, 2, 3;
+q9	s1c1	s1c1
+q9	NULL	5
+q9	NULL	6
+q9	1	1
+q9	1	1
+q9	1	4
+q9	1	4
+q9	2	2
+q9	2	2
+q9	3	3
+q9	3	3
+create view vwBug4 as (select * from vwBug3 where s1c1 in (select s1c2 from vwBug2 where s1c1 in (select s1c1 from vwBug)));
+select 'q10', vwBug4.s1c1, vwBug4.s1c2, count(*) from vwBug4 group by 1, 2, 3 order by 1, 2, 3;
+q10	s1c1	s1c2	count(*)
+q10	1	1	900
+q10	2	2	900
+q10	3	3	900
+drop view vwBug;
+drop view vwBug2;
+drop view vwBug3;
+drop view vwBug4;

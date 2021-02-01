@@ -1,0 +1,62 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3492.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE ssb1;
+#
+select  format(count(lo_orderdate), 0) num_days,
+    format(min(lo_orderdate), 0),
+    format(max(lo_orderdate), 0),
+    format(avg(daily_cnt), 0) avg_rows_per_day,
+    format(sum(daily_cnt), 0) total_rows,
+    format(sum(daily_cnt * d_lastdayinweekfl), 0) total_sales_last_day_in_week,
+    format(sum(daily_cnt * d_lastdayinmonthfl), 0) total_sales_last_day_in_month,
+    format(sum(daily_cnt * d_holidayfl), 0) total_sales_on_holidays,
+    format(sum(daily_cnt * d_weekdayfl), 0) total_weekday_sales,
+    format(sum(case when d_weekdayfl = 0 then daily_cnt else 0 end), 0) total_weekend_sales
+from (select lo_orderdate, count(*) daily_cnt
+      from lineorder where lo_orderdate in (19920102,19920101,19930101) group by 1) a,
+     dateinfo where d_datekey = lo_orderdate;
+
+select  count(lo_orderdate) num_days,
+    min(lo_orderdate),
+    max(lo_orderdate),
+    avg(daily_cnt) avg_rows_per_day,
+    sum(daily_cnt) total_rows,
+    sum(daily_cnt * d_lastdayinweekfl)  total_sales_last_day_in_week,
+    sum(daily_cnt * d_lastdayinmonthfl) total_sales_last_day_in_month,
+    sum(daily_cnt * d_holidayfl) total_sales_on_holidays,
+    sum(daily_cnt * d_weekdayfl) total_weekday_sales,
+    sum(case when d_weekdayfl = 0 then daily_cnt else 0 end) total_weekend_sales,
+    format(count(lo_orderdate), 0) num_days,
+    format(min(lo_orderdate), 0),
+    format(max(lo_orderdate), 0),
+    format(avg(daily_cnt), 0) avg_rows_per_day,
+    format(sum(daily_cnt), 0) total_rows1,
+    format(sum(daily_cnt * d_lastdayinweekfl), 0) total_sales_last_day_in_week,
+    format(sum(daily_cnt * d_lastdayinmonthfl), 0) total_sales_last_day_in_month,
+    format(sum(daily_cnt * d_holidayfl), 0) total_sales_on_holidays,
+    format(sum(daily_cnt * d_weekdayfl), 0) total_weekday_sales,
+    format(sum(case when d_weekdayfl = 0 then daily_cnt else 0 end), 0) total_weekend_sales
+from (select lo_orderdate, count(*) daily_cnt
+      from lineorder where lo_orderdate in (19920102,19920101,19930101) group by 1) a,
+     dateinfo where d_datekey = lo_orderdate;
+
+select  count(lo_orderdate) num_days, sum(daily_cnt * d_lastdayinweekfl)
+    ##-- ,format(cast(sum(daily_cnt * d_lastdayinweekfl) as char), 0) total_sales_last_day_in_week
+from (select lo_orderdate, count(*) daily_cnt
+      from lineorder where lo_orderdate in (19920102,19920101,19930101) group by 1) a,
+     dateinfo where d_datekey = lo_orderdate;
+
+select  count(lo_orderdate) num_days, sum(daily_cnt * d_lastdayinweekfl)
+     ,format(cast(sum(daily_cnt * d_lastdayinweekfl) as char), 0) total_sales_last_day_in_week
+from (select lo_orderdate, count(*) daily_cnt
+      from lineorder where lo_orderdate in (19920102,19920101,19930101) group by 1) a,
+     dateinfo where d_datekey = lo_orderdate;
+
+#
+

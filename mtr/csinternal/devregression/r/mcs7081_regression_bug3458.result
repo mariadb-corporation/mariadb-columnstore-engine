@@ -1,0 +1,27 @@
+USE tpch1;
+select cidx, CAST(132.499*cidx AS DECIMAL(9,2)) from datatypetestm order by cidx;
+cidx	CAST(132.499*cidx AS DECIMAL(9,2))
+1	132.50
+2	265.00
+3	397.50
+4	530.00
+5	662.50
+6	794.99
+7	927.49
+8	1059.99
+9	1192.49
+10	1324.99
+11	1457.49
+select cidx, convert(132.499*cidx, decimal(9,2)) from datatypetestm order by cidx;
+cidx	convert(132.499*cidx, decimal(9,2))
+1	132.50
+2	265.00
+3	397.50
+4	530.00
+5	662.50
+6	794.99
+7	927.49
+8	1059.99
+9	1192.49
+10	1324.99
+11	1457.49

@@ -1,0 +1,83 @@
+DROP DATABASE IF EXISTS mcs28_db1;
+CREATE DATABASE mcs28_db1;
+USE mcs28_db1;
+CREATE TABLE t1 (a DATE, b DATE, c DATE not null, d DATE) ENGINE=Columnstore;
+LOAD DATA LOCAL infile './suite/columnstore/std_data/loaddata1.dat' IGNORE INTO TABLE t1 FIELDS TERMINATED BY ',';;
+Warnings:
+Warning	1265	Data truncated for column 'a' at row 1
+Warning	1265	Data truncated for column 'c' at row 1
+Warning	1265	Data truncated for column 'd' at row 1
+Warning	1265	Data truncated for column 'a' at row 2
+Warning	1265	Data truncated for column 'b' at row 2
+Warning	1265	Data truncated for column 'd' at row 2
+LOAD DATA LOCAL infile './suite/columnstore/std_data/loaddata1.dat' INTO TABLE t1 FIELDS TERMINATED BY ',' IGNORE 2 LINES;;
+SELECT * FROM t1;
+a	b	c	d
+0000-00-00	NULL	0000-00-00	0000-00-00
+0000-00-00	0000-00-00	0000-00-00	0000-00-00
+2003-03-03	2003-03-03	2003-03-03	NULL
+2003-03-03	2003-03-03	2003-03-03	NULL
+TRUNCATE TABLE t1;
+LOAD DATA LOCAL infile './suite/columnstore/std_data/loaddata1.dat' IGNORE INTO TABLE t1 FIELDS TERMINATED BY ',' LINES STARTING BY ',' (b,c,d);;
+Warnings:
+Warning	1265	Data truncated for column 'c' at row 1
+Warning	1265	Data truncated for column 'd' at row 1
+Warning	1265	Data truncated for column 'b' at row 2
+Warning	1265	Data truncated for column 'd' at row 2
+SELECT * FROM t1;
+a	b	c	d
+NULL	NULL	0000-00-00	0000-00-00
+NULL	0000-00-00	0000-00-00	0000-00-00
+NULL	2003-03-03	2003-03-03	NULL
+DROP TABLE t1;
+CREATE TABLE t1 (a TEXT, b TEXT) ENGINE=Columnstore;
+LOAD DATA LOCAL infile './suite/columnstore/std_data/loaddata2.dat' IGNORE INTO TABLE t1 FIELDS TERMINATED BY ',' ENCLOSED BY '''';;
+Warnings:
+Warning	1261	Row 3 doesn't contain data for all columns
+SELECT CONCAT('|',a,'|'), CONCAT('|',b,'|') FROM t1;
+CONCAT('|',a,'|')	CONCAT('|',b,'|')
+|Field A|	|Field B|
+|Field 1|	|Field 2' 
+Field 3,'Field 4|
+|Field 5' ,'Field 6|	NULL
+|Field 6|	| 'Field 7'|
+DROP TABLE t1;
+CREATE TABLE t1 (a INT, b CHAR(10)) ENGINE=Columnstore;
+LOAD DATA LOCAL infile './suite/columnstore/std_data/loaddata3.dat' IGNORE INTO TABLE t1 FIELDS TERMINATED BY '' ENCLOSED BY '' IGNORE 1 LINES;;
+Warnings:
+Note	1265	Data truncated for column 'a' at row 1
+Note	1265	Data truncated for column 'a' at row 2
+Warning	1366	Incorrect integer value: 'error      ' for column `mcs28_db1`.`t1`.`a` at row 3
+Warning	1262	Row 3 was truncated; it contained more data than there were input columns
+Note	1265	Data truncated for column 'a' at row 4
+Warning	1366	Incorrect integer value: 'wrong end  ' for column `mcs28_db1`.`t1`.`a` at row 5
+Warning	1262	Row 5 was truncated; it contained more data than there were input columns
+SELECT * FROM t1;
+a	b
+1	row 1
+2	row 2
+0	1234567890
+3	row 3
+0	1234567890
+TRUNCATE TABLE t1;
+LOAD DATA LOCAL infile './suite/columnstore/std_data/loaddata4.dat' IGNORE INTO TABLE t1 FIELDS TERMINATED BY '' ENCLOSED BY '' LINES TERMINATED BY '' IGNORE 1 LINES;;
+Warnings:
+Note	1265	Data truncated for column 'a' at row 1
+Note	1265	Data truncated for column 'a' at row 2
+Note	1265	Data truncated for column 'a' at row 3
+Warning	1366	Incorrect integer value: '
+' for column `mcs28_db1`.`t1`.`a` at row 4
+Warning	1261	Row 4 doesn't contain data for all columns
+SELECT * FROM t1;
+a	b
+1	row 1
+2	row 2
+3	row 3
+0	NULL
+SHOW CREATE TABLE t1;
+Table	Create Table
+t1	CREATE TABLE `t1` (
+  `a` int(11) DEFAULT NULL,
+  `b` char(10) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+DROP DATABASE IF EXISTS mcs28_db1;

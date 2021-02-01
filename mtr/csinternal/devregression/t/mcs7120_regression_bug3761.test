@@ -1,0 +1,20 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3761.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+select 5, sum(r_regionkey) from region group by 1;
+select 'abc', sum(r_regionkey) from region group by 1;
+select 5, 3, r_regionkey, sum(4) from region group by 1,2,3 order by 1,2,3;
+select a, sum(b) from (select 5 a, r_regionkey b from region) t group by 1 order by 1;
+select a, sum(b) from (select 5 a, r_regionkey b from region) t group by a order by 1;
+select a, sum(b) from (select r_name a, r_regionkey b from region) t group by 1 order by 1;
+
+
+#
+

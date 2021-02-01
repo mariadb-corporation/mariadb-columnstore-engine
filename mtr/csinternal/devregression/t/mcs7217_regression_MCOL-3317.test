@@ -1,0 +1,19 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-3317.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+DROP TABLE IF EXISTS `mcol-498`;
+CREATE TABLE `mcol-498` (i BIGINT) ENGINE=columnstore;
+INSERT INTO `mcol-498` VALUES (42),(6);
+DELETE FROM `mcol-498` WHERE i = 42;
+INSERT INTO `mcol-498` VALUES (42);
+SELECT i FROM `mcol-498`;
+DROP TABLE `mcol-498`;
+#
+

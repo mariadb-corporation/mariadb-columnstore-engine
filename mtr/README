@@ -1,0 +1,87 @@
+Objective
+---------
+The 'columnstore' test suite includes tests suites aimed at testing MariaDB Columnstore
+Database Engine (MCS).
+
+https://mariadb.com/kb/en/mariadb-columnstore/
+
+Test Repo
+---------
+https://github.com/mariadb-corporation/columnstore-tests/tree/master/mysql-test/suite/columnstore
+
+Test structure
+--------------
+The current directory structure is shown below:
+
+columnstore/
+├── basic
+│   ├── r
+│   └── t
+├── csinternal
+│   ├── autopilot
+│   │   ├── r
+│   │   └── t
+│   ├── devregression
+│   │   ├── r
+│   │   └── t
+│   └── include
+│       ├── dbt3
+│       └── ssb
+├── extended
+├── include
+└── std_data
+
+'t' dir contains the tests.
+'r' dir contains the expected result files.
+'include' dir contains common libraries used by the tests.
+'std_data' dir containt test data files. 
+
+Test suites:
+1. basic
+Mostly sanity, high value, shorter execution time tests
+
+2. extended
+More complex and involved tests - longer execution time, variations
+
+3. csinternal
+Limited to CS internal team - Uses seeded test data. The tests in this are divided into the following two sub-suites:
+   autopilot - Autopilot cases migrated to MTR
+   devregression - Part of Dev test suite migrated to MTR
+
+Prerequisites
+-------------
+1.
+MariaDB Server and Columnstore are already installed on the test box, let's call it INSTALL_DIR. Usually it is /usr/share/mysql.
+mysql-test is already installed, let's call it MYSQLTEST_DIR. Usually it is /usr/share/mysql-test.
+Columnstore-tests local repository, let's call it MCSTEST_DIR. Usually it is columnstore-tests/mysql-test/suite/columnstore
+
+cd MYSQLTEST_DIR
+ln -s MCSTEST_DIR MYSQLTEST_DIR/suite/columnstore
+
+2. Only for csinternal tests
+For csinternal test run requires the test data 'dbt3' and 'ssb' stored at https://drive.google.com/drive/folders/1dAV4ltxLrvC_7TrZ4zLu42gxx17wzH15?usp=sharing to be available at the following location on the test box:
+
+/data/qa/source/
+               dbt3
+               ssb
+
+Setup test environment by running the following:
+./mtr --suite=columnstore/csinternal regression_env_setup  --extern socket=/var/lib/mysql/mysql.sock
+
+Test Run
+--------
+Run test suite:
+mtr --force --suite=columnstore/basic --extern socket=/var/lib/mysql/mysql.sock
+mtr --force --suite=columnstore/extended --extern socket=/var/lib/mysql/mysql.sock
+mtr --force --suite=columnstore/csinternal --extern socket=/var/lib/mysql/mysql.sock
+mtr --force --suite=columnstore/csinternal/autopilot --extern socket=/var/lib/mysql/mysql.sock
+mtr --force --suite=columnstore/csinternal/devregression --extern socket=/var/lib/mysql/mysql.sock
+
+Run individual test:
+example
+mtr --suite=columnstore/basic mcs12_alter_table.test --extern socket=/var/lib/mysql/mysql.sock
+
+Run by skipping list of tests:
+example
+mtr --force --skip-test-list=failed.def --suite=columnstore/basic --extern socket=/var/lib/mysql/mysql.sock
+failed.def file lists test names in separated lines.

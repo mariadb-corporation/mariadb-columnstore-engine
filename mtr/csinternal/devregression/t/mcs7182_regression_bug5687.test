@@ -1,0 +1,27 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug5687.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists bug5687;
+
+create table bug5687(col1 datetime DEFAULT NULL) engine=columnstore;
+insert into bug5687 (col1) values ("2012-01-24 11:00:01");
+insert into bug5687 (col1) values ("1812-02-24 11:10:01");
+insert into bug5687 (col1) values ("2002-03-24 11:20:01");
+insert into bug5687 (col1) values ("2010-04-24 11:30:01");
+insert into bug5687 (col1) values ("2000-05-24 11:40:01");
+insert into bug5687 (col1) values ("2019-06-24 11:50:11");
+insert into bug5687 (col1) values ("2022-07-24 11:00:21");
+insert into bug5687 (col1) values ("2052-08-24 11:00:31");
+insert into bug5687 (col1) values ("3002-09-24 11:00:41");
+select TIMESTAMPADD(SECOND, 25284748647, col1) from bug5687;
+
+drop table if exists bug5687;
+#
+

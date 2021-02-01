@@ -1,0 +1,130 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug4422.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists bigsumplus;
+drop table if exists areas;
+drop table if exists geo_tag_values;
+drop table if exists geo_tags;
+drop view if exists tag_values_geo_country;
+
+
+create table if not exists
+`bigsumplus` (
+  `served` bigint(20) DEFAULT NULL,
+  `clicked` int(11) DEFAULT NULL,
+  `acted` int(11) DEFAULT NULL,
+  `cdate` date DEFAULT NULL,
+  `flight_id` int(11) DEFAULT NULL,
+  `flight_creative_id` int(11) DEFAULT NULL,
+  `site` int(11) DEFAULT NULL,
+  `area` int(11) DEFAULT NULL,
+  `geo_country` int(11) DEFAULT NULL,
+  `geo_region` int(11) DEFAULT NULL,
+  `geo_city` int(11) DEFAULT NULL,
+  `progid` int(11) DEFAULT NULL,
+  `pv` int(11) DEFAULT NULL,
+  `rs` int(11) DEFAULT NULL,
+  `source` int(11) DEFAULT NULL,
+  `rstrct` int(11) DEFAULT NULL,
+  `owner` int(11) DEFAULT NULL,
+  `chanbrand` int(11) DEFAULT NULL,
+  `proggenre` int(11) DEFAULT NULL,
+  `us` int(11) DEFAULT NULL,
+  `pm` int(11) DEFAULT NULL,
+  `breaknum` int(11) DEFAULT NULL,
+  `adpos` int(11) DEFAULT NULL,
+  `genre` int(11) DEFAULT NULL,
+  `position` int(11) DEFAULT NULL,
+  `progname` int(11) DEFAULT NULL,
+  `brandid` int(11) DEFAULT NULL,
+  `ctr` int(11) DEFAULT NULL,
+  `samrdr` int(11) DEFAULT NULL,
+  `month_id` int(2) DEFAULT NULL,
+  `day_of_week_id` int(1) DEFAULT NULL,
+  `quarter_id` int(1) DEFAULT NULL,
+  `creative_id` int(11) DEFAULT NULL,
+  `size_id` int(11) DEFAULT NULL,
+  `campaign_id` int(11) DEFAULT NULL,
+  `product_id` int(11) DEFAULT NULL,
+  `tier_id` int(11) DEFAULT NULL,
+  `flight_type_id` int(10) DEFAULT NULL,
+  `flight_status_id` int(10) DEFAULT NULL,
+  `advertiser_id` int(11) DEFAULT NULL,
+  `agency_id` int(11) DEFAULT NULL,
+  `trafficker_id` int(11) DEFAULT NULL,
+  `salesperson_id` int(11) DEFAULT NULL,
+  `exposure_policy_id` int(11) DEFAULT NULL,
+  `region_id` int(11) DEFAULT NULL,
+  `industry_id` int(11) DEFAULT NULL,
+  `impressions` int(11) DEFAULT NULL,
+  `bonus_impressions` int(11) DEFAULT NULL,
+  `flat_rate` decimal(9,2) DEFAULT NULL,
+  `cost_impressions` decimal(7,2) DEFAULT NULL,
+  `cost_clicks` decimal(7,2) DEFAULT NULL,
+  `bonus_clicks` int(11) DEFAULT NULL,
+  `bonus_actions` int(11) DEFAULT NULL,
+  `cost_actions` decimal(7,2) DEFAULT NULL,
+  `list_rate` decimal(9,2) DEFAULT NULL,
+  `floor_rate` decimal(9,2) DEFAULT NULL,
+  `goal_rate` decimal(9,2) DEFAULT NULL,
+  `discount_rate` decimal(5,2) DEFAULT NULL,
+  `adtype` int(11) DEFAULT NULL,
+  `year_id` int(11) DEFAULT NULL,
+  `tp` int(11) DEFAULT NULL,
+  `prodid` int(11) DEFAULT NULL,
+  `ff` int(11) DEFAULT NULL,
+  `restricted` int(11) DEFAULT NULL,
+  `game` int(11) DEFAULT NULL,
+  `seg` int(11) DEFAULT NULL
+) engine=columnstore DEFAULT CHARSET=utf8;
+
+create table if not exists
+`areas` (
+  `id` int(11) DEFAULT NULL,
+  `name` varchar(105) DEFAULT NULL,
+  `deleted_at` datetime DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  `lock_version` int(11) DEFAULT NULL
+) engine=columnstore DEFAULT CHARSET=utf8;
+
+CREATE TABLE if not exists `geo_tags` (
+  `id` int(11),
+  `name` varchar(32)
+) engine=columnstore DEFAULT CHARSET=utf8;
+
+CREATE TABLE if not exists `geo_tag_values` (
+  `id` int(11),
+  `value` varchar(50),
+  `geo_tag_id` int(11)
+) engine=columnstore DEFAULT CHARSET=utf8;
+
+insert into bigsumplus (served, cdate, area, geo_country) values (2, '2012-05-15', 1, 1),(1,'2012-05-15',1,1);
+insert into areas (id) values (1),(2);
+insert into geo_tags values (0, 'OTHER'),(1, 'geo_country'),(2, 'geo_city');
+insert into geo_tag_values values (1, 'China', 1);
+
+create view `tag_values_geo_country` AS select `t`.`id` AS `id`,`t`.`value` AS 
+`value`,`t`.`geo_tag_id` AS `tag_id` from (`geo_tag_values` `t` join `geo_tags` `tag`) where 
+((`t`.`geo_tag_id` = `tag`.`id`) and ((lcase(`tag`.`name`) = 'geo_country') or (`tag`.`id` = 0)));
+
+select g.name,g.country,g.served from (select b.area as name,gc.value as country,sum(b.served) as served from 
+bigsumplus b join tag_values_geo_country gc on b.geo_country=gc.id join areas a on b.area=a.id where 
+cdate='2012-05-15' group by b.area,gc.value) g where g.served <= 3;
+
+
+drop table bigsumplus;
+drop table areas;
+drop table geo_tag_values;
+drop table geo_tags;
+drop view tag_values_geo_country;
+
+#
+

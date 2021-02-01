@@ -1,0 +1,43 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3520.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE ssb1;
+#
+--exec rm -f /tmp/bug3520.txt
+select lo_orderkey into outfile '/tmp/bug3520.txt' from (select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1) x;
+
+--exec rm -f /tmp/bug3520.txt
+select lo_orderkey into outfile '/tmp/bug3520.txt' from (select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1) x;
+
+--exec rm -f /tmp/bug3520.txt
+select lo_orderkey into outfile '/tmp/bug3520.txt' from (select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1) x;
+
+--exec rm -f /tmp/bug3520.txt
+select lo_orderkey into outfile '/tmp/bug3520.txt' from (select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1) x;
+
+--exec rm -f /tmp/bug3520.txt
+select lo_orderkey into outfile '/tmp/bug3520.txt' from (select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1) x;
+
+--exec rm -f /tmp/bug3520.txt
+select lo_orderkey into outfile '/tmp/bug3520.txt' from (select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1) x;
+
+--exec rm -f /tmp/bug3520.txt
+select lo_orderkey into outfile '/tmp/bug3520.txt' from (select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1) x;
+
+--exec rm -f /tmp/bug3520.txt
+select lo_orderkey into outfile '/tmp/bug3520.txt' from (select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1) x;
+
+--exec rm -f /tmp/bug3520.txt
+select lo_orderkey into outfile '/tmp/bug3520.txt' from (select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1) x;
+
+--exec rm -f /tmp/bug3520.txt
+select lo_orderkey into outfile '/tmp/bug3520.txt' from (select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1 union all select lo_orderkey from lineorder group by 1) x;
+--exec rm -f /tmp/bug3520.txt
+
+#
+

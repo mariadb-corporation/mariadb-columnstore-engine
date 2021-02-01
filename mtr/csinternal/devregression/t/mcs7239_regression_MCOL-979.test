@@ -1,0 +1,82 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-979.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists mcol979;
+create table mcol979 (a int, b double, c CHAR(1), d CHAR(2), e CHAR(3), f CHAR(4), g CHAR(8),
+                      h CHAR(16), m VARCHAR(32)) engine=columnstore;
+
+insert into mcol979 values (1,1.1,'a','ab','abc','abcd','abcdefgh','abcdefghijklmnop','abcdefghijklmnopqrstuvwxyz123456');
+insert into mcol979 values (2,2.2,'b','bc','bcd','bcde','bcdefghi','bcdefghijklmnopq','bcdefghijklmnopqrstuvwxyz1234567');
+insert into mcol979 values (3,3.3,'c','cd','cde','cdef','cdefghij','cdefghijklmnopqr','cdefghijklmnopqrstuvwxyz12345678');
+insert into mcol979 values (4,4.4,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+
+select lead(c) over (order by a) from mcol979;
+select lead(d) over (order by a) from mcol979;
+select lead(e) over (order by a) from mcol979;
+select lead(f) over (order by a) from mcol979;
+select lead(g) over (order by a) from mcol979;
+select lead(h) over (order by a) from mcol979;
+select lead(m) over (order by a) from mcol979;
+select lead(c) over (order by b) from mcol979;
+select lead(d) over (order by b) from mcol979;
+select lead(e) over (order by b) from mcol979;
+select lead(f) over (order by b) from mcol979;
+select lead(g) over (order by b) from mcol979;
+select lead(h) over (order by b) from mcol979;
+select lead(m) over (order by b) from mcol979;
+
+select lag(c) over (order by a) from mcol979;
+select lag(d) over (order by a) from mcol979;
+select lag(e) over (order by a) from mcol979;
+select lag(f) over (order by a) from mcol979;
+select lag(g) over (order by a) from mcol979;
+select lag(h) over (order by a) from mcol979;
+select lag(m) over (order by a) from mcol979;
+select lag(c) over (order by b) from mcol979;
+select lag(d) over (order by b) from mcol979;
+select lag(e) over (order by b) from mcol979;
+select lag(f) over (order by b) from mcol979;
+select lag(g) over (order by b) from mcol979;
+select lag(h) over (order by b) from mcol979;
+select lag(m) over (order by b) from mcol979;
+
+select lead(a) over (order by c) from mcol979;
+select lead(a) over (order by d) from mcol979;
+select lead(a) over (order by e) from mcol979;
+select lead(a) over (order by f) from mcol979;
+select lead(a) over (order by g) from mcol979;
+select lead(a) over (order by h) from mcol979;
+select lead(a) over (order by m) from mcol979;
+select lead(b) over (order by c) from mcol979;
+select lead(b) over (order by d) from mcol979;
+select lead(b) over (order by e) from mcol979;
+select lead(b) over (order by f) from mcol979;
+select lead(b) over (order by g) from mcol979;
+select lead(b) over (order by h) from mcol979;
+select lead(b) over (order by m) from mcol979;
+
+select lag(a) over (order by c) from mcol979;
+select lag(a) over (order by d) from mcol979;
+select lag(a) over (order by e) from mcol979;
+select lag(a) over (order by f) from mcol979;
+select lag(a) over (order by g) from mcol979;
+select lag(a) over (order by h) from mcol979;
+select lag(a) over (order by m) from mcol979;
+select lag(b) over (order by c) from mcol979;
+select lag(b) over (order by d) from mcol979;
+select lag(b) over (order by e) from mcol979;
+select lag(b) over (order by f) from mcol979;
+select lag(b) over (order by g) from mcol979;
+select lag(b) over (order by h) from mcol979;
+select lag(b) over (order by m) from mcol979;
+
+drop table if exists mcol979;
+#
+

@@ -1,0 +1,27 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-736.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+#-- SELECT was triggering implicit commit
+
+DROP TABLE IF EXISTS MCOL_736;
+CREATE TABLE `MCOL_736` (
+	`code` varchar(255) NOT NULL
+) ENGINE=InnoDB;
+INSERT INTO MCOL_736 (code) VALUES ('BR');
+BEGIN;
+INSERT INTO MCOL_736 (code) VALUES ('UK');
+SELECT 'INSIDE TRANSACTION' AS '';
+ROLLBACK;
+
+#-- Result should be BR and not UK
+SELECT * FROM MCOL_736;
+DROP TABLE MCOL_736;
+#
+

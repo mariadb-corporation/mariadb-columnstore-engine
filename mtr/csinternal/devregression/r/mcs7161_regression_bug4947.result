@@ -1,0 +1,168 @@
+USE tpch1;
+drop table if exists orders2;
+CREATE TABLE `orders2` (
+`o_orderkey` int(11) DEFAULT NULL,
+`o_orderstatus` char(1) DEFAULT NULL,
+`o_totalprice` decimal(12,2) DEFAULT NULL,
+`o_orderpriority` char(15) DEFAULT NULL
+) ENGINE=Columnstore;
+insert into orders2 (select o_orderkey, o_orderstatus, o_totalprice, o_orderpriority from orders);
+select 1, count(o_orderkey) from orders2;
+1	count(o_orderkey)
+1	1500000
+select 1, count(o_orderstatus) from orders2;
+1	count(o_orderstatus)
+1	1500000
+select 1, count(o_totalprice) from orders2;
+1	count(o_totalprice)
+1	1500000
+select 1, count(o_orderpriority) from orders2;
+1	count(o_orderpriority)
+1	1500000
+insert into orders2 (select o_orderkey, o_orderstatus, o_totalprice, o_orderpriority from orders);
+select 2, count(o_orderkey) from orders2;
+2	count(o_orderkey)
+2	3000000
+select 2, count(o_orderstatus) from orders2;
+2	count(o_orderstatus)
+2	3000000
+select 2, count(o_totalprice) from orders2;
+2	count(o_totalprice)
+2	3000000
+select 2, count(o_orderpriority) from orders2;
+2	count(o_orderpriority)
+2	3000000
+insert into orders2 (select o_orderkey, o_orderstatus, o_totalprice, o_orderpriority from orders);
+select 3, count(o_orderkey) from orders2;
+3	count(o_orderkey)
+3	4500000
+select 3, count(o_orderstatus) from orders2;
+3	count(o_orderstatus)
+3	4500000
+select 3, count(o_totalprice) from orders2;
+3	count(o_totalprice)
+3	4500000
+select 3, count(o_orderpriority) from orders2;
+3	count(o_orderpriority)
+3	4500000
+insert into orders2 (select o_orderkey, o_orderstatus, o_totalprice, o_orderpriority from orders);
+select 4, count(o_orderkey) from orders2;
+4	count(o_orderkey)
+4	6000000
+select 4, count(o_orderstatus) from orders2;
+4	count(o_orderstatus)
+4	6000000
+select 4, count(o_totalprice) from orders2;
+4	count(o_totalprice)
+4	6000000
+select 4, count(o_orderpriority) from orders2;
+4	count(o_orderpriority)
+4	6000000
+insert into orders2 (select o_orderkey, o_orderstatus, o_totalprice, o_orderpriority from orders);
+select 5, count(o_orderkey) from orders2;
+5	count(o_orderkey)
+5	7500000
+select 5, count(o_orderstatus) from orders2;
+5	count(o_orderstatus)
+5	7500000
+select 5, count(o_totalprice) from orders2;
+5	count(o_totalprice)
+5	7500000
+select 5, count(o_orderpriority) from orders2;
+5	count(o_orderpriority)
+5	7500000
+insert into orders2 (select o_orderkey, o_orderstatus, o_totalprice, o_orderpriority from orders);
+select 6, count(o_orderkey) from orders2;
+6	count(o_orderkey)
+6	9000000
+select 6, count(o_orderstatus) from orders2;
+6	count(o_orderstatus)
+6	9000000
+select 6, count(o_totalprice) from orders2;
+6	count(o_totalprice)
+6	9000000
+select 6, count(o_orderpriority) from orders2;
+6	count(o_orderpriority)
+6	9000000
+insert into orders2 (select o_orderkey, o_orderstatus, o_totalprice, o_orderpriority from orders);
+select 7, count(o_orderkey) from orders2;
+7	count(o_orderkey)
+7	10500000
+select 7, count(o_orderstatus) from orders2;
+7	count(o_orderstatus)
+7	10500000
+select 7, count(o_totalprice) from orders2;
+7	count(o_totalprice)
+7	10500000
+select 7, count(o_orderpriority) from orders2;
+7	count(o_orderpriority)
+7	10500000
+insert into orders2 (select o_orderkey, o_orderstatus, o_totalprice, o_orderpriority from orders);
+select 8, count(o_orderkey) from orders2;
+8	count(o_orderkey)
+8	12000000
+select 8, count(o_orderstatus) from orders2;
+8	count(o_orderstatus)
+8	12000000
+select 8, count(o_totalprice) from orders2;
+8	count(o_totalprice)
+8	12000000
+select 8, count(o_orderpriority) from orders2;
+8	count(o_orderpriority)
+8	12000000
+insert into orders2 (select o_orderkey, o_orderstatus, o_totalprice, o_orderpriority from orders);
+select 9, count(o_orderkey) from orders2;
+9	count(o_orderkey)
+9	13500000
+select 9, count(o_orderstatus) from orders2;
+9	count(o_orderstatus)
+9	13500000
+select 9, count(o_totalprice) from orders2;
+9	count(o_totalprice)
+9	13500000
+select 9, count(o_orderpriority) from orders2;
+9	count(o_orderpriority)
+9	13500000
+insert into orders2 (select o_orderkey, o_orderstatus, o_totalprice, o_orderpriority from orders);
+select 10, count(o_orderkey) from orders2;
+10	count(o_orderkey)
+10	15000000
+select 10, count(o_orderstatus) from orders2;
+10	count(o_orderstatus)
+10	15000000
+select 10, count(o_totalprice) from orders2;
+10	count(o_totalprice)
+10	15000000
+select 10, count(o_orderpriority) from orders2;
+10	count(o_orderpriority)
+10	15000000
+insert into orders2 (select o_orderkey, o_orderstatus, o_totalprice, o_orderpriority from orders);
+select 11, count(o_orderkey) from orders2;
+11	count(o_orderkey)
+11	16500000
+select 11, count(o_orderstatus) from orders2;
+11	count(o_orderstatus)
+11	16500000
+select 11, count(o_totalprice) from orders2;
+11	count(o_totalprice)
+11	16500000
+select 11, count(o_orderpriority) from orders2;
+11	count(o_orderpriority)
+11	16500000
+insert into orders2 (select o_orderkey, o_orderstatus, o_totalprice, o_orderpriority from orders);
+select 12, count(o_orderkey) from orders2;
+12	count(o_orderkey)
+12	18000000
+select 12, count(o_orderstatus) from orders2;
+12	count(o_orderstatus)
+12	18000000
+select 12, count(o_totalprice) from orders2;
+12	count(o_totalprice)
+12	18000000
+select 12, count(o_orderpriority) from orders2;
+12	count(o_orderpriority)
+12	18000000
+select count(distinct o_orderkey) from orders2;
+count(distinct o_orderkey)
+1500000
+drop table if exists orders2;

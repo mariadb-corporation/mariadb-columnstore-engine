@@ -1,0 +1,347 @@
+USE tpch1;
+drop table if exists mcol979;
+Warnings:
+Note	1051	Unknown table 'tpch1.mcol979'
+create table mcol979 (a int, b double, c CHAR(1), d CHAR(2), e CHAR(3), f CHAR(4), g CHAR(8),
+h CHAR(16), m VARCHAR(32)) engine=columnstore;
+insert into mcol979 values (1,1.1,'a','ab','abc','abcd','abcdefgh','abcdefghijklmnop','abcdefghijklmnopqrstuvwxyz123456');
+insert into mcol979 values (2,2.2,'b','bc','bcd','bcde','bcdefghi','bcdefghijklmnopq','bcdefghijklmnopqrstuvwxyz1234567');
+insert into mcol979 values (3,3.3,'c','cd','cde','cdef','cdefghij','cdefghijklmnopqr','cdefghijklmnopqrstuvwxyz12345678');
+insert into mcol979 values (4,4.4,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+select lead(c) over (order by a) from mcol979;
+lead(c) over (order by a)
+b
+c
+NULL
+NULL
+select lead(d) over (order by a) from mcol979;
+lead(d) over (order by a)
+bc
+cd
+NULL
+NULL
+select lead(e) over (order by a) from mcol979;
+lead(e) over (order by a)
+bcd
+cde
+NULL
+NULL
+select lead(f) over (order by a) from mcol979;
+lead(f) over (order by a)
+bcde
+cdef
+NULL
+NULL
+select lead(g) over (order by a) from mcol979;
+lead(g) over (order by a)
+bcdefghi
+cdefghij
+NULL
+NULL
+select lead(h) over (order by a) from mcol979;
+lead(h) over (order by a)
+bcdefghijklmnopq
+cdefghijklmnopqr
+NULL
+NULL
+select lead(m) over (order by a) from mcol979;
+lead(m) over (order by a)
+bcdefghijklmnopqrstuvwxyz1234567
+cdefghijklmnopqrstuvwxyz12345678
+NULL
+NULL
+select lead(c) over (order by b) from mcol979;
+lead(c) over (order by b)
+b
+c
+NULL
+NULL
+select lead(d) over (order by b) from mcol979;
+lead(d) over (order by b)
+bc
+cd
+NULL
+NULL
+select lead(e) over (order by b) from mcol979;
+lead(e) over (order by b)
+bcd
+cde
+NULL
+NULL
+select lead(f) over (order by b) from mcol979;
+lead(f) over (order by b)
+bcde
+cdef
+NULL
+NULL
+select lead(g) over (order by b) from mcol979;
+lead(g) over (order by b)
+bcdefghi
+cdefghij
+NULL
+NULL
+select lead(h) over (order by b) from mcol979;
+lead(h) over (order by b)
+bcdefghijklmnopq
+cdefghijklmnopqr
+NULL
+NULL
+select lead(m) over (order by b) from mcol979;
+lead(m) over (order by b)
+bcdefghijklmnopqrstuvwxyz1234567
+cdefghijklmnopqrstuvwxyz12345678
+NULL
+NULL
+select lag(c) over (order by a) from mcol979;
+lag(c) over (order by a)
+NULL
+a
+b
+c
+select lag(d) over (order by a) from mcol979;
+lag(d) over (order by a)
+NULL
+ab
+bc
+cd
+select lag(e) over (order by a) from mcol979;
+lag(e) over (order by a)
+NULL
+abc
+bcd
+cde
+select lag(f) over (order by a) from mcol979;
+lag(f) over (order by a)
+NULL
+abcd
+bcde
+cdef
+select lag(g) over (order by a) from mcol979;
+lag(g) over (order by a)
+NULL
+abcdefgh
+bcdefghi
+cdefghij
+select lag(h) over (order by a) from mcol979;
+lag(h) over (order by a)
+NULL
+abcdefghijklmnop
+bcdefghijklmnopq
+cdefghijklmnopqr
+select lag(m) over (order by a) from mcol979;
+lag(m) over (order by a)
+NULL
+abcdefghijklmnopqrstuvwxyz123456
+bcdefghijklmnopqrstuvwxyz1234567
+cdefghijklmnopqrstuvwxyz12345678
+select lag(c) over (order by b) from mcol979;
+lag(c) over (order by b)
+NULL
+a
+b
+c
+select lag(d) over (order by b) from mcol979;
+lag(d) over (order by b)
+NULL
+ab
+bc
+cd
+select lag(e) over (order by b) from mcol979;
+lag(e) over (order by b)
+NULL
+abc
+bcd
+cde
+select lag(f) over (order by b) from mcol979;
+lag(f) over (order by b)
+NULL
+abcd
+bcde
+cdef
+select lag(g) over (order by b) from mcol979;
+lag(g) over (order by b)
+NULL
+abcdefgh
+bcdefghi
+cdefghij
+select lag(h) over (order by b) from mcol979;
+lag(h) over (order by b)
+NULL
+abcdefghijklmnop
+bcdefghijklmnopq
+cdefghijklmnopqr
+select lag(m) over (order by b) from mcol979;
+lag(m) over (order by b)
+NULL
+abcdefghijklmnopqrstuvwxyz123456
+bcdefghijklmnopqrstuvwxyz1234567
+cdefghijklmnopqrstuvwxyz12345678
+select lead(a) over (order by c) from mcol979;
+lead(a) over (order by c)
+1
+2
+3
+NULL
+select lead(a) over (order by d) from mcol979;
+lead(a) over (order by d)
+1
+2
+3
+NULL
+select lead(a) over (order by e) from mcol979;
+lead(a) over (order by e)
+1
+2
+3
+NULL
+select lead(a) over (order by f) from mcol979;
+lead(a) over (order by f)
+1
+2
+3
+NULL
+select lead(a) over (order by g) from mcol979;
+lead(a) over (order by g)
+1
+2
+3
+NULL
+select lead(a) over (order by h) from mcol979;
+lead(a) over (order by h)
+1
+2
+3
+NULL
+select lead(a) over (order by m) from mcol979;
+lead(a) over (order by m)
+1
+2
+3
+NULL
+select lead(b) over (order by c) from mcol979;
+lead(b) over (order by c)
+1.1
+2.2
+3.3
+NULL
+select lead(b) over (order by d) from mcol979;
+lead(b) over (order by d)
+1.1
+2.2
+3.3
+NULL
+select lead(b) over (order by e) from mcol979;
+lead(b) over (order by e)
+1.1
+2.2
+3.3
+NULL
+select lead(b) over (order by f) from mcol979;
+lead(b) over (order by f)
+1.1
+2.2
+3.3
+NULL
+select lead(b) over (order by g) from mcol979;
+lead(b) over (order by g)
+1.1
+2.2
+3.3
+NULL
+select lead(b) over (order by h) from mcol979;
+lead(b) over (order by h)
+1.1
+2.2
+3.3
+NULL
+select lead(b) over (order by m) from mcol979;
+lead(b) over (order by m)
+1.1
+2.2
+3.3
+NULL
+select lag(a) over (order by c) from mcol979;
+lag(a) over (order by c)
+NULL
+4
+1
+2
+select lag(a) over (order by d) from mcol979;
+lag(a) over (order by d)
+NULL
+4
+1
+2
+select lag(a) over (order by e) from mcol979;
+lag(a) over (order by e)
+NULL
+4
+1
+2
+select lag(a) over (order by f) from mcol979;
+lag(a) over (order by f)
+NULL
+4
+1
+2
+select lag(a) over (order by g) from mcol979;
+lag(a) over (order by g)
+NULL
+4
+1
+2
+select lag(a) over (order by h) from mcol979;
+lag(a) over (order by h)
+NULL
+4
+1
+2
+select lag(a) over (order by m) from mcol979;
+lag(a) over (order by m)
+NULL
+4
+1
+2
+select lag(b) over (order by c) from mcol979;
+lag(b) over (order by c)
+NULL
+4.4
+1.1
+2.2
+select lag(b) over (order by d) from mcol979;
+lag(b) over (order by d)
+NULL
+4.4
+1.1
+2.2
+select lag(b) over (order by e) from mcol979;
+lag(b) over (order by e)
+NULL
+4.4
+1.1
+2.2
+select lag(b) over (order by f) from mcol979;
+lag(b) over (order by f)
+NULL
+4.4
+1.1
+2.2
+select lag(b) over (order by g) from mcol979;
+lag(b) over (order by g)
+NULL
+4.4
+1.1
+2.2
+select lag(b) over (order by h) from mcol979;
+lag(b) over (order by h)
+NULL
+4.4
+1.1
+2.2
+select lag(b) over (order by m) from mcol979;
+lag(b) over (order by m)
+NULL
+4.4
+1.1
+2.2
+drop table if exists mcol979;

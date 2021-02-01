@@ -1,0 +1,37 @@
+#
+# Columnstore doesn't support Indexes
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs73_db;
+--enable_warnings
+
+CREATE DATABASE mcs73_db;
+USE mcs73_db;
+
+CREATE TABLE t1(t1_int INT, t1_text TEXT)ENGINE=Columnstore;
+
+--error ER_TOO_MANY_KEYS
+CREATE INDEX idx1 ON t1(t1_int);
+--error ER_TOO_MANY_KEYS
+ALTER TABLE t1 ADD INDEX(t1_int);
+--error ER_TOO_MANY_KEYS
+ALTER TABLE t1 ADD UNIQUE INDEX(t1_int);
+--error ER_TOO_MANY_KEYS
+ALTER TABLE t1 ADD PRIMARY KEY(t1_int);
+--error ER_TOO_MANY_KEYS
+ALTER TABLE t1 ADD KEY(t1_int);
+
+--error ER_TOO_MANY_KEYS
+CREATE TABLE t2(t2_int INT, t2_varchar VARCHAR(10), t2_datetime DATETIME, PRIMARY KEY(t2_int))ENGINE=Columnstore;
+--error ER_TOO_MANY_KEYS
+CREATE TABLE t2(t2_int INT, t2_varchar VARCHAR(10), KEY(t2_int))ENGINE=Columnstore;
+--error ER_TOO_MANY_KEYS
+CREATE TABLE t2(t2_int INT, t2_varchar VARCHAR(10), UNIQUE INDEX(t2_int))ENGINE=Columnstore;
+--error ER_TOO_MANY_KEYS
+CREATE TABLE t2(t2_int INT, t2_varchar VARCHAR(10), INDEX(t2_int))ENGINE=Columnstore;
+
+# Clean UP
+DROP DATABASE mcs73_db;

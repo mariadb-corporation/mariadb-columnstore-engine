@@ -1,0 +1,56 @@
+#
+# Binary source import 
+# Author: Susil, susil.behera@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs55_db;
+--enable_warnings
+
+CREATE DATABASE mcs55_db;
+USE mcs55_db;
+
+CREATE TABLE t1(col1 INT, col2 INT) ENGINE=Columnstore;
+
+# Prepare data 
+exec rm -f /tmp/mcs55.bin;
+
+# NULL is accepting by cpimport. Will add after better gaining better understanding.
+exec cat << EOF > /tmp/mcs55.bin
+111|222
+111|222
+222|333
+333|444
+444|555
+111|222
+111|222
+222|333
+333|444
+444|555
+EOF;
+
+# Binary mode with NULLs accepted Numeric fields containing NULL will be treated
+# as NULL unless the column has a default value
+--disable_result_log #cpimport logs thread/timestamps
+--exec cpimport -I1 mcs55_db t1 '/tmp/mcs55.bin';
+--enable_result_log
+
+#Validate data
+SELECT * FROM t1 ORDER BY col1;
+SELECT COUNT(*) FROM t1;
+
+TRUNCATE t1;
+
+# Binary mode with NULLs saturated NULLs in numeric fields will be saturated
+--disable_result_log #cpimport logs thread/timestamps
+--exec cpimport -I2 mcs55_db t1 '/tmp/mcs55.bin';
+--enable_result_log
+
+#Validate data
+SELECT * FROM t1 ORDER BY col1;
+SELECT COUNT(*) FROM t1;
+
+# Clean UP
+--exec rm -f /tmp/mcs55.bin
+DROP DATABASE mcs55_db;

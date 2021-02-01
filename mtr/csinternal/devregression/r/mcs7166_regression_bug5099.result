@@ -1,0 +1,26 @@
+USE tpch1;
+DROP TABLE if exists bug5099;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug5099'
+CREATE TABLE `bug5099` (`col1` datetime DEFAULT NULL, `col2` datetime DEFAULT NULL ) ENGINE=Columnstore;
+insert into bug5099 (col1, col2) values ('2012-09-24 11:00:01', '2012-09-24 11:00:00');
+insert into bug5099 (col1, col2) values ('2012-09-24 11:01:00', '2012-09-24 11:02:00');
+insert into bug5099 (col1, col2) values ('2012-09-24 11:01:00', '2012-09-24 11:00:00');
+insert into bug5099 (col1, col2) values ('2012-09-24 11:00:00', '2012-09-24 12:00:00');
+insert into bug5099 (col1, col2) values ('2012-09-24 12:00:00', '2012-09-24 11:00:00');
+insert into bug5099 (col1, col2) values ('2011-09-24 12:00:00', '2012-09-24 11:00:00');
+insert into bug5099 (col1, col2) values ('2012-09-24 12:00:00', '2011-09-24 11:00:00');
+insert into bug5099 (col1, col2) values ('2012-01-24 12:00:00', '2012-01-29 11:00:00');
+insert into bug5099 (col1, col2) values ('2012-09-29 12:00:00', '2012-01-24 11:00:00');
+select col1,col2,timediff(col1, col2),time_to_sec(timediff(col1, col2) ) from bug5099;
+col1	col2	timediff(col1, col2)	time_to_sec(timediff(col1, col2) )
+2012-09-24 11:00:01	2012-09-24 11:00:00	00:00:01	1
+2012-09-24 11:01:00	2012-09-24 11:02:00	-00:01:00	-60
+2012-09-24 11:01:00	2012-09-24 11:00:00	00:01:00	60
+2012-09-24 11:00:00	2012-09-24 12:00:00	-01:00:00	-3600
+2012-09-24 12:00:00	2012-09-24 11:00:00	01:00:00	3600
+2011-09-24 12:00:00	2012-09-24 11:00:00	-838:59:59	-3020399
+2012-09-24 12:00:00	2011-09-24 11:00:00	838:59:59	3020399
+2012-01-24 12:00:00	2012-01-29 11:00:00	-119:00:00	-428400
+2012-09-29 12:00:00	2012-01-24 11:00:00	838:59:59	3020399
+drop table if exists bug5099;

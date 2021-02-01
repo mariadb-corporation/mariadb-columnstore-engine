@@ -1,0 +1,41 @@
+#
+# Bulk Load from a central location with single data source file 
+# Author: Susil, susil.behera@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs47_db;
+--enable_warnings
+
+CREATE DATABASE mcs47_db;
+USE mcs47_db;
+
+CREATE TABLE t1(col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnstore;
+
+#Bulk Load from a central location with single data source file
+#cpimport -m1
+--disable_result_log #cpimport logs thread/timestamps
+--exec cpimport -m1 mcs47_db t1 './suite/columnstore/std_data/100Krows.dat';
+--enable_result_log
+
+#Validate data
+SELECT * FROM t1;
+SELECT COUNT(*) FROM t1;
+
+let $rowcount1 = query_get_value(SELECT COUNT(*) cnt FROM t1, cnt, 1);
+
+TRUNCATE TABLE t1;
+
+#cpimport default behavior is same as -m1 option.
+--disable_result_log
+--exec cpimport mcs47_db t1 './suite/columnstore/std_data/100Krows.dat';
+--enable_result_log
+
+let $rowcount2 = query_get_value(SELECT COUNT(*) cnt FROM t1, cnt, 1);
+
+let $match_counts= SELECT $rowcount1 = $rowcount2;
+--eval $match_counts
+
+# Clean UP
+DROP DATABASE mcs47_db;

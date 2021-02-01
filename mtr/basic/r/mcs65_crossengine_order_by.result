@@ -1,0 +1,232 @@
+DROP DATABASE IF EXISTS mcs65_db;
+CREATE DATABASE mcs65_db;
+USE mcs65_db;
+CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
+GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+FLUSH PRIVILEGES;
+CREATE TABLE t1 (t1_int INT, t1_char CHAR(5))ENGINE=Innodb;
+CREATE TABLE t2 (t2_int INT, t2_char CHAR(5))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL,''),(1,'ddd'),(2,'bbb'),(3,'fffff'),(4,'eee'),(5,'a'),(6,'ccc'),(7,'ggg');
+INSERT INTO t2 VALUES (NULL,''),(1,'ooo'),(3,'iii'),(5,'hhh'),(7,'nnnnn'),(9,'kkkk'),(11,'mm'),(13,'j');
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 1;
+t1_int	t1_char	t2_int	t2_char
+1	ddd	1	ooo
+3	fffff	3	iii
+5	a	5	hhh
+7	ggg	7	nnnnn
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 1 ASC;
+t1_int	t1_char	t2_int	t2_char
+1	ddd	1	ooo
+3	fffff	3	iii
+5	a	5	hhh
+7	ggg	7	nnnnn
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 1 DESC;
+t1_int	t1_char	t2_int	t2_char
+7	ggg	7	nnnnn
+5	a	5	hhh
+3	fffff	3	iii
+1	ddd	1	ooo
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 2;
+t1_int	t1_char	t2_int	t2_char
+5	a	5	hhh
+1	ddd	1	ooo
+3	fffff	3	iii
+7	ggg	7	nnnnn
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 2 DESC;
+t1_int	t1_char	t2_int	t2_char
+7	ggg	7	nnnnn
+3	fffff	3	iii
+1	ddd	1	ooo
+5	a	5	hhh
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 3;
+t1_int	t1_char	t2_int	t2_char
+1	ddd	1	ooo
+3	fffff	3	iii
+5	a	5	hhh
+7	ggg	7	nnnnn
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 3 DESC;
+t1_int	t1_char	t2_int	t2_char
+7	ggg	7	nnnnn
+5	a	5	hhh
+3	fffff	3	iii
+1	ddd	1	ooo
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 4 ASC;
+t1_int	t1_char	t2_int	t2_char
+5	a	5	hhh
+3	fffff	3	iii
+7	ggg	7	nnnnn
+1	ddd	1	ooo
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 4 DESC;
+t1_int	t1_char	t2_int	t2_char
+1	ddd	1	ooo
+7	ggg	7	nnnnn
+3	fffff	3	iii
+5	a	5	hhh
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY -1;
+ERROR 42S22: Unknown column '???' in 'order clause'
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 0;
+ERROR 42S22: Unknown column '0' in 'order clause'
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 5;
+ERROR 42S22: Unknown column '5' in 'order clause'
+SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_int DESC;
+t1_int	t1_char	t2_int	t2_char
+7	ggg	7	nnnnn
+6	ccc	NULL	NULL
+5	a	5	hhh
+4	eee	NULL	NULL
+3	fffff	3	iii
+2	bbb	NULL	NULL
+1	ddd	1	ooo
+NULL	NULL	NULL	NULL
+SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_int ASC;
+t1_int	t1_char	t2_int	t2_char
+NULL	NULL	NULL	NULL
+1	ddd	1	ooo
+2	bbb	NULL	NULL
+3	fffff	3	iii
+4	eee	NULL	NULL
+5	a	5	hhh
+6	ccc	NULL	NULL
+7	ggg	7	nnnnn
+SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_char DESC;
+t1_int	t1_char	t2_int	t2_char
+7	ggg	7	nnnnn
+3	fffff	3	iii
+4	eee	NULL	NULL
+1	ddd	1	ooo
+6	ccc	NULL	NULL
+2	bbb	NULL	NULL
+5	a	5	hhh
+NULL	NULL	NULL	NULL
+SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_char ASC;
+t1_int	t1_char	t2_int	t2_char
+NULL	NULL	NULL	NULL
+5	a	5	hhh
+2	bbb	NULL	NULL
+6	ccc	NULL	NULL
+1	ddd	1	ooo
+4	eee	NULL	NULL
+3	fffff	3	iii
+7	ggg	7	nnnnn
+SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_int DESC;
+t1_int	t1_char	t2_int	t2_char
+7	ggg	7	nnnnn
+5	a	5	hhh
+3	fffff	3	iii
+1	ddd	1	ooo
+2	bbb	NULL	NULL
+4	eee	NULL	NULL
+NULL	NULL	NULL	NULL
+6	ccc	NULL	NULL
+SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_int ASC;
+t1_int	t1_char	t2_int	t2_char
+NULL	NULL	NULL	NULL
+4	eee	NULL	NULL
+2	bbb	NULL	NULL
+6	ccc	NULL	NULL
+1	ddd	1	ooo
+3	fffff	3	iii
+5	a	5	hhh
+7	ggg	7	nnnnn
+SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_char DESC;
+t1_int	t1_char	t2_int	t2_char
+1	ddd	1	ooo
+7	ggg	7	nnnnn
+3	fffff	3	iii
+5	a	5	hhh
+2	bbb	NULL	NULL
+4	eee	NULL	NULL
+NULL	NULL	NULL	NULL
+6	ccc	NULL	NULL
+SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_char ASC;
+t1_int	t1_char	t2_int	t2_char
+NULL	NULL	NULL	NULL
+4	eee	NULL	NULL
+2	bbb	NULL	NULL
+6	ccc	NULL	NULL
+5	a	5	hhh
+3	fffff	3	iii
+7	ggg	7	nnnnn
+1	ddd	1	ooo
+SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_int DESC;
+t1_int	t1_char	t2_int	t2_char
+7	ggg	7	nnnnn
+5	a	5	hhh
+3	fffff	3	iii
+1	ddd	1	ooo
+NULL	NULL	9	kkkk
+NULL	NULL	13	j
+NULL	NULL	11	mm
+NULL	NULL	NULL	NULL
+SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_int ASC;
+t1_int	t1_char	t2_int	t2_char
+NULL	NULL	11	mm
+NULL	NULL	NULL	NULL
+NULL	NULL	9	kkkk
+NULL	NULL	13	j
+1	ddd	1	ooo
+3	fffff	3	iii
+5	a	5	hhh
+7	ggg	7	nnnnn
+SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_char DESC;
+t1_int	t1_char	t2_int	t2_char
+7	ggg	7	nnnnn
+3	fffff	3	iii
+1	ddd	1	ooo
+5	a	5	hhh
+NULL	NULL	NULL	NULL
+NULL	NULL	13	j
+NULL	NULL	11	mm
+NULL	NULL	9	kkkk
+SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_char ASC;
+t1_int	t1_char	t2_int	t2_char
+NULL	NULL	11	mm
+NULL	NULL	NULL	NULL
+NULL	NULL	9	kkkk
+NULL	NULL	13	j
+5	a	5	hhh
+1	ddd	1	ooo
+3	fffff	3	iii
+7	ggg	7	nnnnn
+SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_int DESC;
+t1_int	t1_char	t2_int	t2_char
+NULL	NULL	13	j
+NULL	NULL	11	mm
+NULL	NULL	9	kkkk
+7	ggg	7	nnnnn
+5	a	5	hhh
+3	fffff	3	iii
+1	ddd	1	ooo
+NULL	NULL	NULL	NULL
+SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_int ASC;
+t1_int	t1_char	t2_int	t2_char
+NULL	NULL	NULL	NULL
+1	ddd	1	ooo
+3	fffff	3	iii
+5	a	5	hhh
+7	ggg	7	nnnnn
+NULL	NULL	9	kkkk
+NULL	NULL	11	mm
+NULL	NULL	13	j
+SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_char DESC;
+t1_int	t1_char	t2_int	t2_char
+1	ddd	1	ooo
+7	ggg	7	nnnnn
+NULL	NULL	11	mm
+NULL	NULL	9	kkkk
+NULL	NULL	13	j
+3	fffff	3	iii
+5	a	5	hhh
+NULL	NULL	NULL	NULL
+SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_char ASC;
+t1_int	t1_char	t2_int	t2_char
+NULL	NULL	NULL	NULL
+5	a	5	hhh
+3	fffff	3	iii
+NULL	NULL	13	j
+NULL	NULL	9	kkkk
+NULL	NULL	11	mm
+7	ggg	7	nnnnn
+1	ddd	1	ooo
+DROP USER 'cejuser'@'localhost';
+DROP DATABASE mcs65_db;

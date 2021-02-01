@@ -1,0 +1,42 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3333.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE ssb1;
+#
+drop table if exists datetest;
+create table if not exists datetest (rowid int, c1 varchar(20), c2 bigint) engine=columnstore;
+insert into datetest values (1, "1990-10-20", 19901121), (2, "1997-01-01 10:00:05", 19970201000000), (3, "0705", 0805), (4, "20120230", 20120230),(5, "20110229", 20110229),(6, "9905", 9905),(7, "20011010888888", 20031010888888),(8, "20011011124455", 20011010122233);
+select 'q1', rowid, c1, c2, cast(c1 as date), cast(c2 as date) from datetest where c2 <> 0805 order by rowid;
+select 'q1b', rowid, c1, c2, cast(c1 as date), substr(cast(c2 as date), 6, 5) from datetest where c2 = 0805 order by rowid;
+
+select 'q2', rowid, c1, c2, cast(c1 as date), cast(c2 as datetime) from datetest where c2 <> 0805 order by rowid;
+select 'q2b', rowid, c1, c2, cast(c1 as date), substr(cast(c2 as datetime), 6, 14) from datetest where c2 = 0805 order by rowid;
+
+select 'q3', rowid, c1, c2, quarter(c1), quarter(c2) from datetest order by rowid;
+select 'q4', rowid, c1, c2 from datetest where quarter(c1) = quarter(c2) order by rowid;
+select 'q5', rowid, c1, c2, timediff(c1,c2) from datetest order by rowid;
+select 'q6', rowid, c1, c2, date_format(c1, '%W %M %Y'), date_format(c2, '%H:%i:%s') from datetest order by rowid;
+
+select 'q7', rowid, c1, c2, c1 + interval 2 day, c2 + interval 12 hour from datetest where c2 <> 0805 order by rowid;
+select 'q7b', rowid, c1, c2, c1 + interval 2 day, substr(c2 + interval 12 hour, 6, 14) from datetest where c2 = 0805 order by rowid;
+
+select 'q8', rowid, c1, c2, minute(c1), minute(c2) from datetest order by rowid;
+select 'q9', rowid, c1, c2, day(c1), day(c2) from datetest order by 1,2;
+select 'q10', rowid, c1, c2, hour(c1), hour(c2) from datetest order by 1,2;
+select 'q11', rowid, c1, c2, dayofweek(c1), dayofweek(c2) from datetest where c2 <> 0805 order by 1,2;
+select 'q12', rowid, c1, c2, dayofyear(c1), dayofyear(c2) from datetest where c2 <> 0805 order by 1,2;
+select 'q13', rowid, c1, c2, week(c1), week(c2) from datetest where c2 <> 0805 order by 1,2;
+select 'q14', rowid, second(c1), second(c2) from datetest order by 1,2;
+select 'q15', rowid, c1, c2, year(c1), year(c2) from datetest where c2 <> 0805 order by 1,2;
+select 'q16', rowid, c1, c2, month(c1), month(c2) from datetest order by 1,2;
+select 'q17', rowid, c1, c2, time(c1), time(c2) from datetest order by 1,2;
+
+drop table if exists datetest;
+select 'q18', year(lo_orderdate), month(lo_orderdate), count(*) from ssb1.lineorder group by 1, 2, 3 order by 1, 2, 3;
+#
+

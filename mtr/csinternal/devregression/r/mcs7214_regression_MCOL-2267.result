@@ -1,0 +1,61 @@
+USE tpch1;
+DROP TABLE IF EXISTS `MCOL-2267a`;
+Warnings:
+Note	1051	Unknown table 'tpch1.mcol-2267a'
+DROP TABLE IF EXISTS `MCOL-2267b`;
+Warnings:
+Note	1051	Unknown table 'tpch1.mcol-2267b'
+CREATE TABLE `MCOL-2267a` (
+`thing1` varchar(32) DEFAULT NULL,
+`my_id` varchar(8) DEFAULT NULL,
+`f1` float DEFAULT NULL,
+`type` tinyint(4) DEFAULT NULL,
+`c1` varchar(10) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+CREATE TABLE `MCOL-2267b` (
+`c1` varchar(10) DEFAULT NULL,
+`my_id` varchar(8) DEFAULT NULL,
+`type` tinyint(4) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+insert into `MCOL-2267a` values ('THING1-ID1_123456', '12345678', 0.46, 1, 'twerp01');
+insert into `MCOL-2267a` values ('THING1-ID1_123456', '12345678', 0.46, 1, 'twerp01');
+insert into `MCOL-2267b` values ('twerp01', '12345678', 1);
+with cte1 as (select my_id,type,f1 from `MCOL-2267a` where thing1='THING1-ID1_123456'),
+cte2 as (select c1,
+sum(if(f1<0.02,abs(a.type-b.type),0)) as sum1,
+sum(if(f1>=0.02 and f1<0.2, if(abs(a.type-b.type)=2,1,0),0)) as sum2,
+sum(if(f1>0.45,if(abs(a.type-1)=0,1,0),0)) as sum3,
+count(*) as total
+from `MCOL-2267b` a,cte1 b 
+where a.my_id=b.my_id 
+group by c1 
+having sum1<1 and sum2<1 and total>0 ),
+cte3 as (select a.c1,
+group_concat(abs((2*b.type-a.type)-a.type) order by b.f1 separator '') as gc1,
+sum1,
+sum2,
+sum3,
+group_concat(a.type order by f1 separator '') as gc2 
+from `MCOL-2267b` a,cte1 b,cte2 c  
+where a.my_id=b.my_id and a.c1=c.c1  
+group by a.c1,sum1,sum2,sum3),
+cte4 as (select a.c1,
+replace(replace(group_concat((2*b.type-a.type)-1 order by b.f1 separator ''),'-2','0'),'-1','1') as gc3,
+group_concat(a.type order by b.f1 separator '') as gc4,
+sum1,
+sum2              
+from `MCOL-2267b` a,cte1 b,cte2 c   
+where a.my_id=b.my_id and a.c1=c.c1  
+group by a.c1,sum1,sum2,sum3)              
+select sum3,
+gc1,
+group_concat(cte3.c1) as gc5,
+cast(replace(replace(cast(avg(cast(replace(gc2,'0','4') as double)) as char),'3','1'),'1','0') as double) as comp,
+abs(gc3-gc4) as matched 
+from cte3 
+left join cte4 on cte3.c1=cte4.c1 
+group by sum3,gc1,matched;
+sum3	gc1	gc5	comp	matched
+2	00	twerp01	0	11
+DROP TABLE IF EXISTS `MCOL-2267a`;
+DROP TABLE IF EXISTS `MCOL-2267b`;

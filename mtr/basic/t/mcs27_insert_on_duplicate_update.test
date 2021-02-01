@@ -1,0 +1,29 @@
+#
+# Test INSERT ON DUPLICATE KEY UPDATE statement
+# Author: Susil, susil.behera@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs27_db;
+--enable_warnings
+
+CREATE DATABASE mcs27_db;
+USE mcs27_db;
+
+CREATE TABLE t1(
+c1 INT,
+c2 CHAR(5)
+) ENGINE=Columnstore;
+
+INSERT INTO t1 VALUES (123, 'abc');
+INSERT INTO t1 VALUES (123, 'abc');
+
+#On Columnstore INSERT ON DUPLICATE KEY UPDATE has no significance.
+#This will be executed as a normal INSERT.
+INSERT INTO t1 VALUES (123, 'abc') ON DUPLICATE KEY UPDATE c1 = VALUES(c1) + 1;
+
+SELECT * FROM t1;
+
+#Clean up
+DROP DATABASE mcs27_db;

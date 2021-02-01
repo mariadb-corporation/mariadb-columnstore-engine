@@ -1,0 +1,28 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug5176.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+set @@sql_select_limit=4;
+create table if not exists bug5054(id int)engine=columnstore; 
+insert into bug5054 values (1),(2),(3),(4),(5),(6),(7),(8); 
+update bug5054 set id=4 where id>5; 
+select * from bug5054 order by 1; 
+select count(*) from bug5054; 
+delete from bug5054 where id>3; 
+select * from bug5054 order by 1; 
+select count(*) from bug5054 order by 1;
+insert into bug5054 select * from bug5054;
+select * from bug5054 order by 1;
+select count(*) from bug5054;
+drop table bug5054;
+
+
+
+#
+

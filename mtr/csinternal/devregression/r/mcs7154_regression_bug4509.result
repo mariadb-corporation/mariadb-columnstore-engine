@@ -1,0 +1,20 @@
+USE tpch1;
+CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1!0000001';
+GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+FLUSH PRIVILEGES;
+create table if not exists bug4509 (id int, c1 int)engine=columnstore;
+create table if not exists bug4509_myisam (id int, c1 int);
+insert into bug4509 values (1,2),(2,3),(3,4);
+insert into bug4509_myisam values (1,2),(2,4),(3,4);
+select * from bug4509 join bug4509_myisam using (id);
+id	c1	c1
+1	2	2
+2	3	4
+3	4	4
+select * from bug4509_myisam join bug4509 using (c1, id);
+id	c1
+1	2
+3	4
+drop table bug4509;
+drop table bug4509_myisam;
+DROP USER 'cejuser'@'localhost';

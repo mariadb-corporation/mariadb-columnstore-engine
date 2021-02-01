@@ -1,0 +1,47 @@
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS unsigned_aggregate_db;
+--enable_warnings
+
+CREATE DATABASE unsigned_aggregate_db;
+USE unsigned_aggregate_db;
+
+create table customer (
+        c_custkey int,
+        c_name varchar (25),
+        c_address varchar (40),
+        c_nationkey int,
+        c_phone char (15),
+        c_acctbal decimal(12,2),
+        c_mktsegment char (10),
+        c_comment varchar (117)
+) engine=columnstore;
+
+LOAD DATA LOCAL infile './suite/columnstore/std_data/1m_customer.tbl' INTO TABLE customer FIELDS TERMINATED BY '|';
+
+ALTER TABLE customer ADD COLUMN u_custkey INT UNSIGNED;
+ALTER TABLE customer ADD COLUMN u_bigcustkey BIGINT UNSIGNED;
+UPDATE customer SET u_custkey=c_custkey * c_custkey + 4294000000;
+UPDATE customer SET u_bigcustkey=c_custkey * c_custkey + 4073709000000;
+
+SELECT 'q1', MAX(u_custKey) FROM customer;
+SELECT 'q2', MAX(u_bigcustKey) FROM customer;
+
+SELECT 'q3', MIN(u_custKey) FROM customer;
+SELECT 'q4', MIN(u_bigcustKey) FROM customer;
+
+SELECT 'q5', floor(STD(u_custKey)) FROM customer;
+SELECT 'q6', floor(STD(u_bigcustKey)) FROM customer;
+
+SELECT 'q7', AVG(u_custKey) FROM customer;
+SELECT 'q8', AVG(u_bigcustKey) FROM customer;
+
+SELECT 'q9', SUM(u_custKey) FROM customer;
+SELECT 'q10', SUM(u_bigcustKey) FROM customer;
+
+ALTER TABLE customer DROP COLUMN u_custkey;
+ALTER TABLE customer DROP COLUMN u_bigcustkey;
+
+# Clean UP
+DROP DATABASE unsigned_aggregate_db;

@@ -1,0 +1,121 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-4000.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+#-- Please note that set columnstore_use_import_for_batchinsert=ALWAYS;
+#-- is a custom feature in ColumnStore. As such, the ref file generated
+#-- for this test cannot be reproduced in MariaDB server/InnoDB.
+
+#-- Prepare the data
+#-- Same table definition as lineitem
+--disable_warnings
+DROP TABLE IF EXISTS mcol4000;
+--enable_warnings
+CREATE TABLE mcol4000(
+        l_orderkey INT,
+        l_partkey INT,
+        l_suppkey INT,
+        l_linenumber BIGINT,
+        l_quantity DECIMAL(12,2),
+        l_extendedprice DECIMAL(12,2),
+        l_discount DECIMAL(12,2),
+        l_tax DECIMAL(12,2),
+        l_returnflag CHAR (1),
+        l_linestatus CHAR (1),
+        l_shipdate DATE,
+        l_commitdate DATE,
+        l_receiptdate DATE,
+        l_shipinstruct CHAR (25),
+        l_shipmode CHAR (10),
+        l_comment VARCHAR (44)
+) ENGINE=columnstore;
+
+--exec rm -f /tmp/mcol4000.txt
+SELECT * FROM lineitem LIMIT 1000000 INTO OUTFILE '/tmp/mcol4000.txt' FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+
+#-- In the below, we are referring to a single insert as a DML
+
+#-- columnstore_use_import_for_batchinsert=ON (default) is tested in MCOL-4002.sql.
+#-- So, here, we only test columnstore_use_import_for_batchinsert=ALWAYS
+#-- (i.e. use cpimport for LDI and INSERT..SELECT in a transaction)
+#-- but with basically the same sequence of statements as in MCOL-4002.sql
+set columnstore_use_import_for_batchinsert=ALWAYS;
+
+#-- DML, rollback
+START TRANSACTION;
+INSERT INTO mcol4000(l_comment) VALUES ('mcol4000');
+SELECT COUNT(*) FROM mcol4000; #-- should return 1
+ROLLBACK;
+SELECT COUNT(*) FROM mcol4000; #-- should return 0
+
+#-- LDI, rollback
+START TRANSACTION;
+LOAD DATA LOCAL INFILE '/tmp/mcol4000.txt' INTO TABLE mcol4000 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+SELECT COUNT(*) FROM mcol4000; #-- should return 1000000
+ROLLBACK;
+SELECT COUNT(*) FROM mcol4000; #-- should return 1000000, because the LDI above is handled by cpimport,
+#-- which doesn't know how to handle rollbacks yet.
+
+#-- DML, LDI, rollback
+#-- We cannot execute this test as dmlproc locks the table in the first command,
+#-- so when cpimport is invoked by LDI, it fails because it cannot get lock on the table.
+
+#-- LDI, DML, rollback
+#-- As opposed to DML->LDI->rollback, this test runs fine since cpimport commits
+#-- for LDI, then the subsequent DML would run fine since dmlproc can get the table lock.
+START TRANSACTION;
+LOAD DATA LOCAL INFILE '/tmp/mcol4000.txt' INTO TABLE mcol4000 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+INSERT INTO mcol4000(l_comment) VALUES ('mcol4000');
+SELECT COUNT(*) FROM mcol4000; #-- should return 2000001
+ROLLBACK;
+SELECT COUNT(*) FROM mcol4000; #-- should return 2000000. This is because the LDI is executed by
+#-- cpimport, which commits, so that part of the transaction cannot be rolled back.
+
+#-- DML, LDI, DML, rollback
+#-- LDI, DML, LDI, rollback
+#-- Similar to DML->LDI, these tests cannot be executed.
+
+#-- Repeat the above statements, but instead of rollback perform commit this time
+#-- DML, commit
+START TRANSACTION;
+INSERT INTO mcol4000(l_comment) VALUES ('mcol4000');
+COMMIT;
+SELECT COUNT(*) FROM mcol4000; #-- should return 2000001
+
+#-- LDI, commit
+START TRANSACTION;
+LOAD DATA LOCAL INFILE '/tmp/mcol4000.txt' INTO TABLE mcol4000 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+COMMIT;
+SELECT COUNT(*) FROM mcol4000; #-- should return 3000001
+
+#-- LDI, DML, commit
+START TRANSACTION;
+LOAD DATA LOCAL INFILE '/tmp/mcol4000.txt' INTO TABLE mcol4000 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+INSERT INTO mcol4000(l_comment) VALUES ('mcol4000');
+COMMIT;
+SELECT COUNT(*) FROM mcol4000; #-- should return 4000002
+
+
+#-- Outside a transaction, this should be similar to START TRANSACTION, ... , COMMIT
+#-- DML
+INSERT INTO mcol4000(l_comment) VALUES ('mcol4000');
+SELECT COUNT(*) FROM mcol4000; #-- should return 4000003
+
+#-- LDI, LDI
+LOAD DATA LOCAL INFILE '/tmp/mcol4000.txt' INTO TABLE mcol4000 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+LOAD DATA LOCAL INFILE '/tmp/mcol4000.txt' INTO TABLE mcol4000 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+SELECT COUNT(*) FROM mcol4000; #-- should return 6000003
+
+#-- DML, LDI
+INSERT INTO mcol4000(l_comment) VALUES ('mcol4000');
+LOAD DATA LOCAL INFILE '/tmp/mcol4000.txt' INTO TABLE mcol4000 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+SELECT COUNT(*) FROM mcol4000; #-- should return 7000004
+#
+DROP TABLE mcol4000;
+#

@@ -1,0 +1,71 @@
+DROP DATABASE IF EXISTS mcs15_db;
+CREATE DATABASE mcs15_db;
+USE mcs15_db;
+CREATE TABLE t1(id INT)ENGINE=Columnstore;
+CREATE VIEW IF NOT EXISTS v1 AS SELECT * FROM t1 WHERE id>10;
+INSERT INTO t1 VALUES (5), (8), (10), (20), (30);
+SELECT * FROM t1;
+id
+5
+8
+10
+20
+30
+SELECT * FROM v1;
+id
+20
+30
+SELECT * FROM v2;
+ERROR 42S02: Table 'mcs15_db.v2' doesn't exist
+CREATE VIEW v1 AS SELECT * FROM t1 WHERE id>11;
+ERROR 42S01: Table 'v1' already exists
+SELECT VIEW_DEFINITION FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_NAME='v1' AND TABLE_SCHEMA='mcs15_db';
+VIEW_DEFINITION
+select `mcs15_db`.`t1`.`id` AS `id` from `mcs15_db`.`t1` where `mcs15_db`.`t1`.`id` > 10
+CREATE VIEW IF NOT EXISTS v1 AS SELECT * FROM t1 WHERE id>12;
+Warnings:
+Note	1050	Table 'v1' already exists
+SELECT VIEW_DEFINITION FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_NAME='v1' AND TABLE_SCHEMA='mcs15_db';
+VIEW_DEFINITION
+select `mcs15_db`.`t1`.`id` AS `id` from `mcs15_db`.`t1` where `mcs15_db`.`t1`.`id` > 10
+CREATE OR REPLACE VIEW IF NOT EXISTS v1 AS SELECT * FROM t1 WHERE id>13;
+ERROR HY000: Incorrect usage of OR REPLACE and IF NOT EXISTS
+SELECT VIEW_DEFINITION FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_NAME='v1' AND TABLE_SCHEMA='mcs15_db';
+VIEW_DEFINITION
+select `mcs15_db`.`t1`.`id` AS `id` from `mcs15_db`.`t1` where `mcs15_db`.`t1`.`id` > 10
+CREATE OR REPLACE VIEW v1 AS SELECT * FROM t1 WHERE id>40;
+SELECT VIEW_DEFINITION FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_NAME='v1' AND TABLE_SCHEMA='mcs15_db';
+VIEW_DEFINITION
+select `mcs15_db`.`t1`.`id` AS `id` from `mcs15_db`.`t1` where `mcs15_db`.`t1`.`id` > 40
+INSERT INTO t1 VALUES (50), (80), (3), (2), (40);
+SELECT * FROM t1;
+id
+5
+8
+10
+20
+30
+50
+80
+3
+2
+40
+SELECT * FROM v1;
+id
+50
+80
+DROP TABLE v1;
+ERROR 42S02: 'mcs15_db.v1' is a view
+DROP TABLE IF EXISTS v1;
+Warnings:
+Note	1965	'mcs15_db.v1' is a view
+DROP VIEW v2;
+ERROR 42S02: Unknown VIEW: 'mcs15_db.v2'
+DROP TABLE t1;
+SELECT * FROM v1;
+ERROR HY000: View 'mcs15_db.v1' references invalid table(s) or column(s) or function(s) or definer/invoker of view lack rights to use them
+DROP VIEW IF EXISTS v1;
+DROP VIEW IF EXISTS t1;
+Warnings:
+Note	4092	Unknown VIEW: 'mcs15_db.t1'
+DROP DATABASE mcs15_db;

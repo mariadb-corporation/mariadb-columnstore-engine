@@ -1,0 +1,464 @@
+DROP DATABASE IF EXISTS mcs80_db;
+CREATE DATABASE mcs80_db;
+USE mcs80_db;
+CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
+GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+FLUSH PRIVILEGES;
+CREATE TABLE t1 (t1_int INT, t1_char CHAR(5))ENGINE=Columnstore;
+CREATE TABLE t2 (t2_int INT, t2_char CHAR(5))ENGINE=Columnstore;
+CREATE TABLE t3 (t3_int INT, t3_char CHAR(5))ENGINE=Innodb;
+CREATE TABLE t4 (t4_int INT, t4_char CHAR(5))ENGINE=Myisam;
+INSERT INTO t1 VALUES (NULL, ''),(1, 'aaa'),(2, 'aaa'),(3, 'ccc'),(4, 'ddd'),(5, 'aaa'),(6, ''),(7, 'eee');
+INSERT INTO t2 VALUES (NULL, ''),(1, 'eee'),(3, 'ccc'),(5, 'jjj'),(6, ''),(7, 'lll'),(9, 'eee'),(11, 'nnn');
+INSERT INTO t3 SELECT * FROM t2;
+INSERT INTO t4 SELECT * FROM t1;
+SELECT t1_int FROM t1 UNION SELECT t2_int FROM t2 ORDER BY t1_int;
+t1_int
+NULL
+1
+2
+3
+4
+5
+6
+7
+9
+11
+SELECT t1_char FROM t1 UNION SELECT t2_char FROM t2 ORDER BY t1_char;
+t1_char
+NULL
+aaa
+ccc
+ddd
+eee
+jjj
+lll
+nnn
+SELECT t1_int, 'Integer' AS Table1 FROM t1 WHERE t1_int > 1 UNION SELECT t2_int, 'Integer' AS Table2 FROM t2 ORDER BY t1_int;
+t1_int	Table1
+NULL	Integer
+1	Integer
+2	Integer
+3	Integer
+4	Integer
+5	Integer
+6	Integer
+7	Integer
+9	Integer
+11	Integer
+SELECT t1_int, 'Integer' AS Table1 FROM t1 UNION SELECT t2_char, 'Character' AS Table2 FROM t2 WHERE t2_int > 1 ORDER by 1,2;
+t1_int	Table1
+NULL	Character
+NULL	Integer
+1	Integer
+2	Integer
+3	Integer
+4	Integer
+5	Integer
+6	Integer
+7	Integer
+ccc	Character
+eee	Character
+jjj	Character
+lll	Character
+nnn	Character
+SELECT t1_int, 'Integer' AS Table1 FROM t1 UNION SELECT t2_char, 'Character' AS Table2 FROM t2 ORDER by 1 DESC;
+t1_int	Table1
+nnn	Character
+lll	Character
+jjj	Character
+eee	Character
+ccc	Character
+7	Integer
+6	Integer
+5	Integer
+4	Integer
+3	Integer
+2	Integer
+1	Integer
+NULL	Character
+NULL	Integer
+SELECT t1_char, 'Character' AS Table1 FROM t1 UNION SELECT t2_int, 'Integer' AS Table2 FROM t2 ORDER BY 2 ASC;
+t1_char	Table1
+NULL	Character
+aaa	Character
+ccc	Character
+ddd	Character
+eee	Character
+NULL	Integer
+1	Integer
+3	Integer
+5	Integer
+6	Integer
+7	Integer
+9	Integer
+11	Integer
+SELECT t1_char, 'Character' AS Table1 FROM t1 UNION SELECT t2_int, 'Integer' AS Table2 FROM t2 ORDER BY 1, 2;
+t1_char	Table1
+NULL	Character
+NULL	Integer
+1	Integer
+11	Integer
+3	Integer
+5	Integer
+6	Integer
+7	Integer
+9	Integer
+aaa	Character
+ccc	Character
+ddd	Character
+eee	Character
+SELECT t1_char, t1_int FROM t1 UNION SELECT t2_char, t2_int FROM t2 ORDER BY 1;
+t1_char	t1_int
+NULL	6
+NULL	NULL
+aaa	5
+aaa	1
+aaa	2
+ccc	3
+ddd	4
+eee	7
+eee	1
+eee	9
+jjj	5
+lll	7
+nnn	11
+SELECT t1_int FROM t1 UNION SELECT t3_int FROM t3 ORDER BY t1_int;
+t1_int
+NULL
+1
+2
+3
+4
+5
+6
+7
+9
+11
+SELECT t2_int FROM t2 UNION SELECT t4_int FROM t4 ORDER BY t2_int;
+t2_int
+NULL
+1
+2
+3
+4
+5
+6
+7
+9
+11
+SELECT t1_int, 'Integer' AS Table1 FROM t1 UNION SELECT t2_int FROM t2 order by t1_int desc;
+ERROR 21000: The used SELECT statements have a different number of columns
+SELECT t1_int, 'Integer' AS Table1 FROM t1 UNION SELECT t3_int FROM t3 order by t1_int desc;
+ERROR 21000: The used SELECT statements have a different number of columns
+SELECT t1_int, 'Integer' AS Table1 FROM t1 UNION SELECT t3_int, 'Integer' AS Table2 FROM t3 order by t3_int;
+ERROR 42S22: Unknown column 't3_int' in 'order clause'
+SELECT t1_int, 'Integer' AS Table1 FROM t1 UNION SELECT t2_int, 'Integer' AS Table2 FROM t2 order by t2_int;
+ERROR 42S22: Unknown column 't2_int' in 'order clause'
+SELECT t1_int FROM t1 UNION ALL SELECT t2_int FROM t2 ORDER BY t1_int;
+t1_int
+NULL
+NULL
+1
+1
+2
+3
+3
+4
+5
+5
+6
+6
+7
+7
+9
+11
+SELECT t1_char FROM t1 UNION ALL SELECT t2_char FROM t2 ORDER BY t1_char;
+t1_char
+NULL
+NULL
+NULL
+NULL
+aaa
+aaa
+aaa
+ccc
+ccc
+ddd
+eee
+eee
+eee
+jjj
+lll
+nnn
+SELECT t1_int, 'Integer' AS Table1 FROM t1 WHERE t1_int > 1 UNION ALL SELECT t2_int, 'Integer' AS Table2 FROM t2 ORDER BY t1_int;
+t1_int	Table1
+NULL	Integer
+1	Integer
+2	Integer
+3	Integer
+3	Integer
+4	Integer
+5	Integer
+5	Integer
+6	Integer
+6	Integer
+7	Integer
+7	Integer
+9	Integer
+11	Integer
+SELECT t1_int, 'Integer' AS Table1 FROM t1 UNION ALL SELECT t2_char, 'Character' AS Table2 FROM t2 WHERE t2_int > 1 ORDER by 1,2;
+t1_int	Table1
+NULL	Character
+NULL	Integer
+1	Integer
+2	Integer
+3	Integer
+4	Integer
+5	Integer
+6	Integer
+7	Integer
+ccc	Character
+eee	Character
+jjj	Character
+lll	Character
+nnn	Character
+SELECT t1_int, 'Integer' AS Table1 FROM t1 UNION ALL SELECT t2_char, 'Character' AS Table2 FROM t2 ORDER by 1 DESC;
+t1_int	Table1
+nnn	Character
+lll	Character
+jjj	Character
+eee	Character
+eee	Character
+ccc	Character
+7	Integer
+6	Integer
+5	Integer
+4	Integer
+3	Integer
+2	Integer
+1	Integer
+NULL	Character
+NULL	Character
+NULL	Integer
+SELECT t1_char, 'Character' AS Table1 FROM t1 UNION ALL SELECT t2_int, 'Integer' AS Table2 FROM t2 ORDER BY 2 ASC;
+t1_char	Table1
+aaa	Character
+ccc	Character
+ddd	Character
+aaa	Character
+NULL	Character
+eee	Character
+NULL	Character
+aaa	Character
+7	Integer
+9	Integer
+11	Integer
+NULL	Integer
+1	Integer
+3	Integer
+5	Integer
+6	Integer
+SELECT t1_char, 'Character' AS Table1 FROM t1 UNION ALL SELECT t2_int, 'Integer' AS Table2 FROM t2 ORDER BY 1, 2;
+t1_char	Table1
+NULL	Character
+NULL	Character
+NULL	Integer
+1	Integer
+11	Integer
+3	Integer
+5	Integer
+6	Integer
+7	Integer
+9	Integer
+aaa	Character
+aaa	Character
+aaa	Character
+ccc	Character
+ddd	Character
+eee	Character
+SELECT t1_char, t1_int FROM t1 UNION ALL SELECT t2_char, t2_int FROM t2 ORDER BY 1;
+t1_char	t1_int
+NULL	NULL
+NULL	6
+NULL	NULL
+NULL	6
+aaa	1
+aaa	2
+aaa	5
+ccc	3
+ccc	3
+ddd	4
+eee	9
+eee	7
+eee	1
+jjj	5
+lll	7
+nnn	11
+SELECT t1_int FROM t1 UNION ALL SELECT t3_int FROM t3 ORDER BY t1_int;
+t1_int
+NULL
+NULL
+1
+1
+2
+3
+3
+4
+5
+5
+6
+6
+7
+7
+9
+11
+SELECT t2_int FROM t2 UNION ALL SELECT t4_int FROM t4 ORDER BY t2_int;
+t2_int
+NULL
+NULL
+1
+1
+2
+3
+3
+4
+5
+5
+6
+6
+7
+7
+9
+11
+SELECT t1_int, 'Integer' AS Table1 FROM t1 UNION ALL SELECT t2_int FROM t2 order by t1_int desc;
+ERROR 21000: The used SELECT statements have a different number of columns
+SELECT t1_int, 'Integer' AS Table1 FROM t1 UNION ALL SELECT t3_int FROM t3 order by t1_int desc;
+ERROR 21000: The used SELECT statements have a different number of columns
+SELECT t1_int, 'Integer' AS Table1 FROM t1 UNION ALL SELECT t3_int, 'Integer' AS Table2 FROM t3 order by t3_int;
+ERROR 42S22: Unknown column 't3_int' in 'order clause'
+SELECT t1_int, 'Integer' AS Table1 FROM t1 UNION ALL SELECT t2_int, 'Integer' AS Table2 FROM t2 order by t2_int;
+ERROR 42S22: Unknown column 't2_int' in 'order clause'
+SELECT t1_int FROM t1 INTERSECT SELECT t2_int FROM t2 ORDER BY t1_int;
+t1_int
+NULL
+1
+3
+5
+6
+7
+SELECT t1_char FROM t1 INTERSECT SELECT t2_char FROM t2 ORDER BY t1_char;
+t1_char
+NULL
+ccc
+eee
+SELECT t1_int, 'Integer' AS Table1 FROM t1 WHERE t1_int > 1 INTERSECT SELECT t2_int, 'Integer' AS Table2 FROM t2 ORDER BY t1_int;
+t1_int	Table1
+3	Integer
+5	Integer
+6	Integer
+7	Integer
+SELECT t1_int, 'Integer' AS Table1 FROM t1 INTERSECT SELECT t2_char, 'Character' AS Table2 FROM t2 WHERE t2_int > 1 ORDER by 1,2;
+t1_int	Table1
+SELECT t1_char, 'Character' AS Table1 FROM t1 INTERSECT SELECT t2_int, 'Integer' AS Table2 FROM t2;
+t1_char	Table1
+SELECT t1_char, t1_int FROM t1 INTERSECT SELECT t2_char, t2_int FROM t2 ORDER BY 1;
+t1_char	t1_int
+NULL	6
+NULL	NULL
+ccc	3
+SELECT t1_int FROM t1 INTERSECT SELECT t3_int FROM t3 ORDER BY t1_int;
+t1_int
+NULL
+1
+3
+5
+6
+7
+SELECT t2_int FROM t2 INTERSECT SELECT t4_int FROM t4 ORDER BY t2_int;
+t2_int
+NULL
+1
+3
+5
+6
+7
+SELECT t1_int, 'Integer' AS Table1 FROM t1 INTERSECT SELECT t2_int FROM t2 order by t1_int desc;
+ERROR 21000: The used SELECT statements have a different number of columns
+SELECT t1_int, 'Integer' AS Table1 FROM t1 INTERSECT SELECT t3_int FROM t3 order by t1_int desc;
+ERROR 21000: The used SELECT statements have a different number of columns
+SELECT t1_int, 'Integer' AS Table1 FROM t1 INTERSECT SELECT t3_int, 'Integer' AS Table2 FROM t3 order by t3_int;
+ERROR 42S22: Unknown column 't3_int' in 'order clause'
+SELECT t1_int, 'Integer' AS Table1 FROM t1 INTERSECT SELECT t2_int, 'Integer' AS Table2 FROM t2 order by t2_int;
+ERROR 42S22: Unknown column 't2_int' in 'order clause'
+SELECT t1_int FROM t1 EXCEPT SELECT t2_int FROM t2 ORDER BY t1_int;
+t1_int
+2
+4
+SELECT t1_char FROM t1 EXCEPT SELECT t2_char FROM t2 ORDER BY t1_char;
+t1_char
+aaa
+ddd
+SELECT t1_int, 'Integer' AS Table1 FROM t1 WHERE t1_int > 1 EXCEPT SELECT t2_int, 'Integer' AS Table2 FROM t2 ORDER BY t1_int;
+t1_int	Table1
+2	Integer
+4	Integer
+SELECT t1_int, 'Integer' AS Table1 FROM t1 EXCEPT SELECT t2_char, 'Character' AS Table2 FROM t2 WHERE t2_int > 1 ORDER by 1,2;
+t1_int	Table1
+NULL	Integer
+1	Integer
+2	Integer
+3	Integer
+4	Integer
+5	Integer
+6	Integer
+7	Integer
+SELECT t1_int, 'Integer' AS Table1 FROM t1 EXCEPT SELECT t2_char, 'Character' AS Table2 FROM t2 ORDER by 1 DESC;
+t1_int	Table1
+7	Integer
+6	Integer
+5	Integer
+4	Integer
+3	Integer
+2	Integer
+1	Integer
+NULL	Integer
+SELECT t1_char, 'Character' AS Table1 FROM t1 EXCEPT SELECT t2_int, 'Integer' AS Table2 FROM t2 ORDER BY 2 ASC;
+t1_char	Table1
+ccc	Character
+ddd	Character
+eee	Character
+NULL	Character
+aaa	Character
+SELECT t1_char, 'Character' AS Table1 FROM t1 EXCEPT SELECT t2_int, 'Integer' AS Table2 FROM t2 ORDER BY 1, 2;
+t1_char	Table1
+NULL	Character
+aaa	Character
+ccc	Character
+ddd	Character
+eee	Character
+SELECT t1_char, t1_int FROM t1 EXCEPT SELECT t2_char, t2_int FROM t2 ORDER BY 1;
+t1_char	t1_int
+aaa	5
+aaa	1
+aaa	2
+ddd	4
+eee	7
+SELECT t1_int FROM t1 EXCEPT SELECT t3_int FROM t3 ORDER BY t1_int;
+t1_int
+2
+4
+SELECT t2_int FROM t2 EXCEPT SELECT t4_int FROM t4 ORDER BY t2_int;
+t2_int
+9
+11
+SELECT t1_int, 'Integer' AS Table1 FROM t1 EXCEPT SELECT t2_int FROM t2 order by t1_int desc;
+ERROR 21000: The used SELECT statements have a different number of columns
+SELECT t1_int, 'Integer' AS Table1 FROM t1 EXCEPT SELECT t3_int FROM t3 order by t1_int desc;
+ERROR 21000: The used SELECT statements have a different number of columns
+SELECT t1_int, 'Integer' AS Table1 FROM t1 EXCEPT SELECT t3_int, 'Integer' AS Table2 FROM t3 order by t3_int;
+ERROR 42S22: Unknown column 't3_int' in 'order clause'
+SELECT t1_int, 'Integer' AS Table1 FROM t1 EXCEPT SELECT t2_int, 'Integer' AS Table2 FROM t2 order by t2_int;
+ERROR 42S22: Unknown column 't2_int' in 'order clause'
+DROP USER 'cejuser'@'localhost';
+DROP DATABASE mcs80_db;

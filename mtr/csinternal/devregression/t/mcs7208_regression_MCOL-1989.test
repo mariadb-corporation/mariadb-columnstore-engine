@@ -1,0 +1,71 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-1989.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+DROP VIEW IF EXISTS vv2;
+DROP VIEW IF EXISTS vv1;
+DROP TABLE IF EXISTS vt1;
+DROP TABLE IF EXISTS vt2;
+DROP TABLE IF EXISTS vt3;
+DROP TABLE IF EXISTS vt4;
+
+CREATE TABLE `vt1` (
+  `num_sample_id` int(11) DEFAULT NULL,
+  `sample_id` varchar(32) DEFAULT NULL,
+  `object_id` varchar(18) DEFAULT NULL,
+  `name` varchar(80) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE `vt2` (
+  `num_sample_id` int(11) DEFAULT NULL,
+  `collection_id` int(11) DEFAULT NULL,
+  `gender` char(1) DEFAULT NULL,
+  `breed` varchar(3) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE `vt3` (
+  `collection_id` int(11) DEFAULT NULL,
+  `object_id` varchar(18) DEFAULT NULL,
+  `verified` tinyint(4) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+
+
+CREATE 
+SQL SECURITY DEFINER 
+VIEW `vv1` AS 
+select `a`.`num_sample_id` AS `num_sample_id`,`a`.`sample_id` AS `sample_id`,`a`.`object_id` AS `object_id_raw`,`a`.`name` AS `name`,`b`.`gender` AS `gender`,`b`.`breed` AS `breed`,`b`.`collection_id` AS `collection_id`,`c`.`object_id` AS `object_id`,`c`.`verified` AS `verified` from ((`vt1` `a` join `vt2` `b`) join `vt3` `c`) where `a`.`num_sample_id` = `b`.`num_sample_id` and `b`.`collection_id` = `c`.`collection_id` order by `b`.`collection_id`;
+
+
+CREATE TABLE `vt4` (
+  `id` varchar(18) DEFAULT NULL,
+  `code` varchar(10) DEFAULT NULL,
+  `sampID` varchar(30) DEFAULT NULL,
+  `version_date` date DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+
+
+CREATE 
+SQL SECURITY DEFINER 
+VIEW `vv2` AS 
+select `a`.`id` AS `cid`,`a`.`sampid` AS `csample`,`a`.`code` AS `ncode`,`b`.`sample_id` AS `sample_id`,`b`.`num_sample_id` AS `num_sample_id`,`b`.`collection_id` AS `collection_id`,`b`.`object_id` AS `object_id`,`b`.`gender` AS `gender`,`b`.`name` AS `name`,`b`.`verified` AS `verified` from (`vv1` `b` left join (select `a`.`id` AS `id`,`b`.`sampid` AS `sampid`,`b`.`code` AS `code` from (((select `vt4`.`id` AS `id`,max(`vt4`.`version_date`) AS `version_date` from `vt4` group by `vt4`.`id`)) `a` left join (select distinct `vt4`.`id` AS `id`,`vt4`.`sampID` AS `sampid`,`vt4`.`code` AS `code`,`vt4`.`version_date` AS `version_date` from `vt4`) `b` on(`a`.`id` = `b`.`id` and `a`.`version_date` = `b`.`version_date`))) `a` on(`a`.`sampid` = `b`.`sample_id`));
+
+#-- Should return no result. Should not error.
+SELECT * from vv2;
+
+DROP VIEW IF EXISTS vv2;
+DROP VIEW IF EXISTS vv1;
+DROP TABLE IF EXISTS vt1;
+DROP TABLE IF EXISTS vt2;
+DROP TABLE IF EXISTS vt3;
+DROP TABLE IF EXISTS vt4;
+
+#
+

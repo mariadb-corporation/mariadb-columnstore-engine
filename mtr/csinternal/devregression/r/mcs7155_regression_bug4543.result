@@ -1,0 +1,29 @@
+USE tpch1;
+drop table if exists bug4543;
+create table bug4543 (
+dart_ad_id int, 
+hsa_order_id int, 
+date_stamp int,
+adjusted_imp int
+) engine=columnstore;
+insert into bug4543 (select s_suppkey, s_suppkey, s_suppkey, s_suppkey from supplier);
+select count(hsa_order_id) from bug4543;
+count(hsa_order_id)
+10000
+select count(date_stamp) from bug4543;
+count(date_stamp)
+10000
+select count(adjusted_imp) from bug4543;
+count(adjusted_imp)
+10000
+select date_stamp, sum(adjusted_imp)
+from bug4543
+where date_stamp>=20000
+and hsa_order_id>=3 and dart_ad_id=3
+group by date_stamp
+order by date_stamp;
+date_stamp	sum(adjusted_imp)
+select count(*) from bug4543 where dart_ad_id >= 1;
+count(*)
+10000
+drop table if exists bug4543;

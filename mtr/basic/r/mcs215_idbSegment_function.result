@@ -1,0 +1,18 @@
+DROP DATABASE IF EXISTS mcs215_db;
+CREATE DATABASE mcs215_db;
+USE mcs215_db;
+CREATE TABLE t1(col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnstore;
+LOAD DATA LOCAL infile './suite/columnstore/std_data/100Krows.dat' INTO TABLE t1 FIELDS TERMINATED BY '|';
+SELECT COUNT(*) FROM t1;
+COUNT(*)
+100001
+SELECT idbSegment(col1) FROM t1 WHERE col1=2 LIMIT 1;
+idbSegment(col1)
+0
+SELECT idbSegment(col2) FROM t1 WHERE col1=2 LIMIT 1;
+idbSegment(col2)
+0
+SELECT idbSegment(col3) FROM t1 WHERE col1=2 LIMIT 1;
+idbSegment(col3)
+0
+DROP DATABASE mcs215_db;

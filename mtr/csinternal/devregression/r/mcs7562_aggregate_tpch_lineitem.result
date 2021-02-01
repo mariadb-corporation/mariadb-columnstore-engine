@@ -1,0 +1,43 @@
+USE tpch1;
+select count(l_orderkey), min(l_orderkey), max(l_orderkey) , sum(l_orderkey), avg(l_orderkey)  from lineitem;
+count(l_orderkey)	min(l_orderkey)	max(l_orderkey)	sum(l_orderkey)	avg(l_orderkey)
+6001215	1	6000000	18005322964949	3000279.6042
+select count(l_partkey), min(l_partkey), max(l_partkey) , sum(l_partkey), avg(l_partkey)  from lineitem;
+count(l_partkey)	min(l_partkey)	max(l_partkey)	sum(l_partkey)	avg(l_partkey)
+6001215	1	200000	600229457837	100017.9893
+select count(l_suppkey), min(l_suppkey), max(l_suppkey) , sum(l_suppkey), avg(l_suppkey)  from lineitem;
+count(l_suppkey)	min(l_suppkey)	max(l_suppkey)	sum(l_suppkey)	avg(l_suppkey)
+6001215	1	10000	30009691369	5000.6026
+select count(l_linenumber), min(l_linenumber), max(l_linenumber) , sum(l_linenumber), avg(l_linenumber)  from lineitem;
+count(l_linenumber)	min(l_linenumber)	max(l_linenumber)	sum(l_linenumber)	avg(l_linenumber)
+6001215	1	7	18007100	3.0006
+select count(l_quantity), min(l_quantity), max(l_quantity) , sum(l_quantity), avg(l_quantity)  from lineitem;
+count(l_quantity)	min(l_quantity)	max(l_quantity)	sum(l_quantity)	avg(l_quantity)
+6001215	1.00	50.00	153078795.00	25.507967
+select count(l_extendedprice), min(l_extendedprice), max(l_extendedprice) , sum(l_extendedprice), avg(l_extendedprice)  from lineitem;
+count(l_extendedprice)	min(l_extendedprice)	max(l_extendedprice)	sum(l_extendedprice)	avg(l_extendedprice)
+6001215	901.00	104949.50	229577310901.20	38255.138485
+select count(l_discount), min(l_discount), max(l_discount) , sum(l_discount), avg(l_discount)  from lineitem;
+count(l_discount)	min(l_discount)	max(l_discount)	sum(l_discount)	avg(l_discount)
+6001215	0.00	0.10	300057.33	0.049999
+select count(l_tax), min(l_tax), max(l_tax) , sum(l_tax), avg(l_tax)  from lineitem;
+count(l_tax)	min(l_tax)	max(l_tax)	sum(l_tax)	avg(l_tax)
+6001215	0.00	0.08	240129.67	0.040014
+select count(l_returnflag), min(l_returnflag), max(l_returnflag)  from lineitem;
+count(l_returnflag)	min(l_returnflag)	max(l_returnflag)
+6001215	A	R
+select count(l_linestatus), min(l_linestatus), max(l_linestatus)  from lineitem;
+count(l_linestatus)	min(l_linestatus)	max(l_linestatus)
+6001215	F	O
+select count(l_shipdate), min(l_shipdate), max(l_shipdate) from lineitem;
+count(l_shipdate)	min(l_shipdate)	max(l_shipdate)
+6001215	1992-01-02	1998-12-01
+select count(l_commitdate), min(l_commitdate), max(l_commitdate) from lineitem;
+count(l_commitdate)	min(l_commitdate)	max(l_commitdate)
+6001215	1992-01-31	1998-10-31
+select count(l_receiptdate), min(l_receiptdate), max(l_receiptdate) from lineitem;
+count(l_receiptdate)	min(l_receiptdate)	max(l_receiptdate)
+6001215	1992-01-04	1998-12-31
+select count(*) from lineitem;
+count(*)
+6001215

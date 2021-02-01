@@ -1,0 +1,32 @@
+#
+# Test COUNT() Window Function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs137_db;
+--enable_warnings
+
+CREATE DATABASE mcs137_db;
+USE mcs137_db;
+
+CREATE TABLE t1 (a CHAR(1), b INT)ENGINE=Columnstore;
+INSERT INTO t1 VALUES ('', NULL),('a', 123),('a', 1),('b', 123),('c', 1861),('c', 1991),('d', 10701),('d', 1071),('a', 92);
+
+SELECT a, b, COUNT(b) OVER(ORDER BY a) count FROM t1;
+SELECT a, b, COUNT(b) OVER(ORDER BY b DESC) count FROM t1;
+SELECT a, b, COUNT(a) OVER(ORDER BY a) count FROM t1;
+SELECT a, b, COUNT(a) OVER(ORDER BY b DESC) count FROM t1;
+SELECT a, b, COUNT(b) OVER w count FROM t1 WINDOW w AS (ORDER BY a DESC);
+SELECT a, b, COUNT(b) OVER w count FROM t1 WINDOW w AS (ORDER BY b);
+SELECT a, b, COUNT(b) OVER(PARTITION BY a) count FROM t1;
+SELECT a, b, COUNT(b) OVER(PARTITION BY b) count FROM t1;
+SELECT a, b, COUNT(b) OVER(PARTITION BY a ORDER BY a DESC) count FROM t1;
+SELECT a, b, COUNT(b) OVER(PARTITION BY a ORDER BY b DESC) count FROM t1;
+SELECT a, b, COUNT(b) OVER(PARTITION BY a ORDER BY b ASC) count FROM t1;
+SELECT a, b, COUNT(b) OVER(PARTITION BY b ORDER BY a DESC) count FROM t1;
+SELECT a, b, COUNT(b) OVER(PARTITION BY b ORDER BY b DESC) count FROM t1;
+
+# Clean UP
+DROP DATABASE mcs137_db;

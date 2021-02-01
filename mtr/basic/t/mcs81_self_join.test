@@ -1,0 +1,35 @@
+#
+# Test Self JOIN
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs81_db;
+--enable_warnings
+
+CREATE DATABASE mcs81_db;
+USE mcs81_db;
+
+CREATE TABLE t1 (t1_col1 INT, t1_col2 TEXT)ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL, '');
+INSERT INTO t1 VALUES (1, repeat('a', 20)),(3, repeat('c', 20)),(5, repeat('a', 20)),(7, repeat('c', 20)),(9, repeat('a', 20));
+
+--sorted_result
+SELECT * FROM t1 AS a, t1 AS b WHERE a.t1_col1 = b.t1_col1;
+--sorted_result
+SELECT a.t1_col1,b.t1_col2 FROM t1 AS a, t1 AS b WHERE a.t1_col1 = b.t1_col1;
+SELECT a.t1_col1 AS a_col1, b.t1_col2 AS b_col2 FROM t1 AS a, t1 AS b WHERE a.t1_col1 = b.t1_col1 ORDER BY a.t1_col1;
+
+--sorted_result
+SELECT * FROM t1 a JOIN t1 b ON a.t1_col1 = b.t1_col1;
+--sorted_result
+SELECT a.t1_col1,b.t1_col2 FROM t1 a JOIN t1 b ON a.t1_col1 = b.t1_col1;
+SELECT a.t1_col1 AS a_col1, b.t1_col2 AS b_col2 FROM t1 a JOIN t1 b ON a.t1_col1 = b.t1_col1 ORDER BY b.t1_col1;
+
+--sorted_result
+SELECT * FROM t1 a INNER JOIN t1 b ON a.t1_col1 = b.t1_col1 AND b.t1_col1 > 5;
+SELECT * FROM t1 a LEFT JOIN t1 b ON a.t1_col1 = b.t1_col1 AND a.t1_col2 LIKE '%a%' ORDER BY a.t1_col1;
+
+# Clean UP
+DROP DATABASE mcs81_db;

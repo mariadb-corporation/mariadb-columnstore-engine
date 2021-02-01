@@ -1,0 +1,14 @@
+DROP DATABASE IF EXISTS mcs192_db;
+CREATE DATABASE mcs192_db;
+USE mcs192_db;
+CREATE TABLE t1 (x INT, y MEDIUMINT, z CHAR(5))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL, NULL, ''),(20, 1, 'aaa'),(39, 2, 'aaa'),(48, 3, 'bbb'),(57, 4, 'bbb'),(66, 5, 'aaa'),(75, 6, 'aaa'),(84, 7, 'bbb');
+SELECT CORR(y, x) FROM t1;
+CORR(y, x)
+0.9907002406503415
+SELECT z, CORR(y, x) FROM t1 GROUP BY z ORDER BY z;
+z	CORR(y, x)
+NULL	NULL
+aaa	0.9898976319320635
+bbb	1
+DROP DATABASE mcs192_db;

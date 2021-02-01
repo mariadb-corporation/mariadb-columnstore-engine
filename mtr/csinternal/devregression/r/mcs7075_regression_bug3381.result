@@ -1,0 +1,16 @@
+USE tpch1;
+select avg(if(n_regionkey>0, n_nationkey, NULL)) from nation;
+avg(if(n_regionkey>0, n_nationkey, NULL))
+12.5000
+select r_regionkey as r, NULL as n from region union select r_regionkey, r_name from region order by 1, 2;
+r	n
+0	NULL
+0	AFRICA
+1	NULL
+1	AMERICA
+2	NULL
+2	ASIA
+3	NULL
+3	EUROPE
+4	NULL
+4	MIDDLE EAST

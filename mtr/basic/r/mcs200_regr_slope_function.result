@@ -1,0 +1,16 @@
+DROP DATABASE IF EXISTS mcs200_db;
+CREATE DATABASE mcs200_db;
+USE mcs200_db;
+CREATE TABLE t1 (x INT, y MEDIUMINT, z CHAR(5))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL, NULL, ''),(20, 1, 'aaa'),(39, 2, 'aaa'),(48, 3, 'bbb'),(57, 4, 'bbb'),(66, 5, 'aaa'),(75, 6, 'aaa'),(84, 7, 'bbb');
+SELECT REGR_SLOPE(y, x) FROM t1;
+REGR_SLOPE(y, x)
+0.09745260663507109
+SELECT z, REGR_SLOPE(y, x) FROM t1 GROUP BY z ORDER BY z;
+z	REGR_SLOPE(y, x)
+NULL	NULL
+aaa	0.0935856992639327
+bbb	0.1111111111111111
+SELECT REGR_SLOPE(y) FROM t1;
+ERROR HY000: Can't initialize function 'regr_slope'; regr_slope() requires two arguments
+DROP DATABASE mcs200_db;

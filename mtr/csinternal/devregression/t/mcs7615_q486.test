@@ -1,0 +1,12 @@
+#
+# Test case migrated from regression test suite:
+# ./mysql/queries/nightly/alltest/test002/q4.8.6.sql
+#
+# Author: Susil, susil.behera@mariadb.com
+#
+
+-- source ../include/have_columnstore.inc
+
+USE tpch1;
+
+Select l_shipmode, max(l_shipdate), min(l_shipdate) from lineitem where l_orderkey < 1000000 group by l_shipmode order by 1;

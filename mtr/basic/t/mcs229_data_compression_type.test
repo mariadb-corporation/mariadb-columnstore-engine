@@ -1,0 +1,39 @@
+#
+# Verify compression flags in system catalog
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs229_db;
+--enable_warnings
+
+CREATE DATABASE mcs229_db;
+USE mcs229_db;
+
+set columnstore_compression_type=0;
+CREATE TABLE t1
+(
+ t1_INT INT,
+ t1_DECIMAL DECIMAL(12,5),
+ t1_TEXT TEXT,
+ t1_DATE DATE,
+ t1_TIME TIME
+ )ENGINE=Columnstore;
+SHOW CREATE TABLE t1;
+
+set columnstore_compression_type=1;
+CREATE TABLE t2
+(
+ t2_INT INT,
+ t2_DECIMAL DECIMAL(12,5),
+ t2_TEXT TEXT,
+ t2_DATE DATE,
+ t2_TIME TIME
+ )ENGINE=Columnstore;
+SHOW CREATE TABLE t2;
+
+SELECT `schema`, tablename, columnname, compressiontype FROM calpontsys.syscolumn WHERE `schema`='mcs229_db' ORDER BY 2;
+
+# Clean UP
+DROP DATABASE mcs229_db;

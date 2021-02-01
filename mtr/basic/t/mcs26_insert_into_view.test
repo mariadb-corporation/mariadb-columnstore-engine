@@ -1,0 +1,47 @@
+#
+# Test INSERT VIEW statement
+# Author: Susil, susil.behera@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs26_db;
+--enable_warnings
+
+CREATE DATABASE mcs26_db;
+USE mcs26_db;
+
+CREATE TABLE table_a (id int, value int) ENGINE=Columnstore;
+CREATE TABLE table_b (id int, ta_id int, value int) ENGINE=Columnstore;
+
+INSERT INTO table_a VALUES (1, 10);
+INSERT INTO table_a VALUES (2, 20);
+INSERT INTO table_a VALUES (3, 30);
+
+INSERT INTO table_b VALUES (1, 1, 100);
+INSERT INTO table_b VALUES (2, 1, 200);
+INSERT INTO table_b VALUES (3, 2, 300);
+INSERT INTO table_b VALUES (4, 2, 400);
+
+CREATE VIEW v AS 
+    SELECT      a.id a_id, b.id b_id, b.ta_id, a.value v1, b.value v2
+    FROM        table_a a
+    INNER JOIN  table_b b ON (b.ta_id = a.id);
+
+SELECT * FROM v;
+
+#Can not modify more than one base table through a join view
+--error 1393
+INSERT INTO v (a_id, b_id, ta_id, v1, v2) VALUES (3, 5, 3, 30, 500);
+
+#Insert on VIEW is currently not supported
+#Suspected bug. Needs an enhancement request.
+--error 1178
+INSERT INTO v (a_id, v1) VALUES (3, 30);
+--error 1178
+INSERT INTO v (b_id, ta_id, v2) VALUES (5, 3, 500);
+
+SELECT * FROM v;
+
+#Clean up
+DROP DATABASE mcs26_db;

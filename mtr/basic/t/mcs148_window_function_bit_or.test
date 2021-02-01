@@ -1,0 +1,23 @@
+#
+# BIT_OR() Window Function currently not supported in Columnstore. 
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs148_db;
+--enable_warnings
+
+CREATE DATABASE mcs148_db;
+USE mcs148_db;
+
+CREATE TABLE t1 (a CHAR(1), b INT)ENGINE=Columnstore;
+INSERT INTO t1 VALUES ('', NULL),('a', 12),('a', 13),('b', 14),('b', 15),('b', 16),('b', 17),('b', 18),('a', 19);
+
+--error ER_INTERNAL_ERROR
+SELECT a, b, BIT_OR(b) OVER(PARTITION BY a) FROM t1;
+--error ER_INTERNAL_ERROR
+SELECT a, b, BIT_OR(b) OVER(ORDER BY a) FROM t1;
+
+# Clean UP
+DROP DATABASE mcs148_db;

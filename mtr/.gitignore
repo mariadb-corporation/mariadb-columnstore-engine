@@ -1,0 +1,15 @@
+# ignore all logs
+*.log
+
+# ignore all mtr actual result files
+*.reject
+
+# ignore all swap files
+*.swp
+
+# ignore all bad/error test data files
+*.bad
+*.err
+
+# ignore nohup output files
+nohup.*

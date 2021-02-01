@@ -1,0 +1,66 @@
+USE tpch1;
+drop table if exists bug3272;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug3272'
+create table bug3272 (c1 float, c2 char(12)) engine=columnstore;
+insert into bug3272 values (5.24062, '5.24062'), (7.24062, '7.24062'), (9.94062, '9.94062');
+insert into bug3272 values (-5.24062, '-5.24062'), (-7.24062, '-7.24062'), (-9.94062, '-9.94062');
+insert into bug3272 values (5.24562, '5.24562'), (7.24562, '7.24562'), (9.94562, '9.94562');
+insert into bug3272 values (-5.24562, '-5.24562'), (-7.24562, '-7.24562'), (-9.94562, '-9.94562');
+select cast(c1 as decimal(4,2)) floattype, cast(c2 as decimal(4,2)) chartype from bug3272 order by 1, 2;
+floattype	chartype
+-9.95	-9.95
+-9.94	-9.94
+-7.25	-7.25
+-7.24	-7.24
+-5.25	-5.25
+-5.24	-5.24
+5.24	5.24
+5.25	5.25
+7.24	7.24
+7.25	7.25
+9.94	9.94
+9.95	9.95
+select cast(c1 as decimal(0,0)) floattype, cast(c2 as decimal(0,0)) chartype from bug3272 order by 1, 2;
+floattype	chartype
+-10	-10
+-10	-10
+-7	-7
+-7	-7
+-5	-5
+-5	-5
+5	5
+5	5
+7	7
+7	7
+10	10
+10	10
+select cast(c1 as signed) floattype, cast(c2 as signed) chartype from bug3272 order by 1, 2;
+floattype	chartype
+-10	-9
+-10	-9
+-7	-7
+-7	-7
+-5	-5
+-5	-5
+5	5
+5	5
+7	7
+7	7
+10	9
+10	9
+select cast(cast(c1 as decimal(4,2)) as signed) decimaltype, cast(c2 as signed) chartype from bug3272 order by 1, 2;
+decimaltype	chartype
+-10	-9
+-10	-9
+-7	-7
+-7	-7
+-5	-5
+-5	-5
+5	5
+5	5
+7	7
+7	7
+10	9
+10	9
+drop table if exists bug3272;

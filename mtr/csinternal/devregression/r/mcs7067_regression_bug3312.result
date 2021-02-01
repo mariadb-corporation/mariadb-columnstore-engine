@@ -1,0 +1,24 @@
+USE tpch1;
+drop table if exists user_prop_by_game;
+Warnings:
+Note	1051	Unknown table 'tpch1.user_prop_by_game'
+drop table if exists visit;
+Warnings:
+Note	1051	Unknown table 'tpch1.visit'
+create table user_prop_by_game(cl_id int, last_visit_date date)engine=columnstore;
+create table visit(cl_id int, visit_date date)engine=columnstore;
+insert into user_prop_by_game values (1, now()), (2, now());
+Warnings:
+Note	1265	Data truncated for column 'last_visit_date' at row 1
+Note	1265	Data truncated for column 'last_visit_date' at row 2
+insert into visit values (1, '2010-10-01'), (2, '2010-11-01'), (2,
+'2010-10-01');
+UPDATE user_prop_by_game UPBG, (SELECT cl_id, max(visit_date) AS max_date FROM
+visit GROUP BY cl_id) sub SET UPBG.last_visit_date = sub.max_date WHERE
+UPBG.cl_id = sub.cl_id;
+select * from user_prop_by_game;
+cl_id	last_visit_date
+1	2010-10-01
+2	2010-11-01
+drop table if exists user_prop_by_game;
+drop table if exists visit;

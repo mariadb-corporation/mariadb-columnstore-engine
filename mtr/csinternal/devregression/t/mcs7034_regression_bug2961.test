@@ -1,0 +1,27 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug2961.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+/* From bug 2961 description. */
+ select top_part.n_nationkey top, minus_part.n_nationkey minus from (select n_nationkey from nation)
+top_part left outer join  (select n_nationkey from nation) minus_part on ( top_part.n_nationkey = minus_part.n_nationkey ) order by 1, 2;
+
+select top_part.n_nationkey top, minus_part.n_nationkey minus from (select n_nationkey from nation) top_part left outer join  
+(select n_nationkey from nation where n_nationkey < 5) minus_part on (top_part.n_nationkey = minus_part.n_nationkey ) order by 1, 2;
+
+/* Comment 1 */
+select sub1.c1 x, sub2.c1 y from sub1 left join sub2 on sub1.c1 = sub2.c1 order by 1, 2;
+select sub1.c1, x.c1 from sub1 left join (select c1 from sub2) x on sub1.c1 = x.c1 order by 1, 2;
+
+/* Comment 3 */
+select sub1.c1, x.c1 from sub1 join (select sub1.c1 as sub1_c1, sub2.c1 from sub1 left join sub2 on 
+sub1.c1 = sub2.c1) x on sub1.c1 = x.sub1_c1 order by 1, 2;
+
+#
+

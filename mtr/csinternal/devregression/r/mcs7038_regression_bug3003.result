@@ -1,0 +1,35 @@
+USE tpch1;
+SELECT
+`LOGICAL_TABLE_1`.`p_name` AS `COL0`,
+`LOGICAL_TABLE_1`.`p_size` AS `COL1`
+FROM
+(select * from part where p_partkey < 20 limit 10) `LOGICAL_TABLE_1`
+ORDER BY `COL0`, `COL1`;
+COL0	COL1
+bisque cornflower lawn forest magenta	4
+blush thistle blue yellow saddle	1
+cornflower chocolate smoke green pink	14
+forest brown coral puff cream	15
+goldenrod lavender spring chocolate lace	7
+linen pink saddle puff powder	44
+misty lace thistle snow royal	41
+moccasin green thistle khaki floral	45
+spring green yellow purple cornsilk	21
+thistle dim navajo dark gainsboro	12
+SELECT
+`LOGICAL_TABLE_1`.`p_name` AS `COL0`,
+`LOGICAL_TABLE_1`.`p_size` AS `COL1`
+FROM
+(select * from part where p_partkey < 20 limit 10) `LOGICAL_TABLE_1`
+ORDER BY COL0, COL1;
+COL0	COL1
+bisque cornflower lawn forest magenta	4
+blush thistle blue yellow saddle	1
+cornflower chocolate smoke green pink	14
+forest brown coral puff cream	15
+goldenrod lavender spring chocolate lace	7
+linen pink saddle puff powder	44
+misty lace thistle snow royal	41
+moccasin green thistle khaki floral	45
+spring green yellow purple cornsilk	21
+thistle dim navajo dark gainsboro	12

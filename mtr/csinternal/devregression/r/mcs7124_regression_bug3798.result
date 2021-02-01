@@ -1,0 +1,24 @@
+USE tpch1;
+select cidx, CDOUBLE, CAST(CDOUBLE AS DECIMAL(9)) from datatypetestm order by cidx;
+cidx	CDOUBLE	CAST(CDOUBLE AS DECIMAL(9))
+1	-1.797693231e108	-999999999
+2	-1.79769323e108	-999999999
+3	-1.797693229e108	-999999999
+4	-1.797693228e108	-999999999
+5	-1.797693227e108	-999999999
+6	1.797693227e108	999999999
+7	1.797693228e108	999999999
+8	1.797693229e108	999999999
+9	1.79769323e108	999999999
+10	1.797693231e108	999999999
+11	0	0
+drop table if exists bug3798;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug3798'
+create table bug3798 (c1 float) engine=columnstore;
+insert into bug3798 values (1234567), (1.2345678);
+select c1, cast(c1 as decimal(9,2)), cast(c1 as decimal(14,12)) from bug3798;
+c1	cast(c1 as decimal(9,2))	cast(c1 as decimal(14,12))
+1234570	1234567.00	99.999999999999
+1.23457	1.23	1.234567761421
+drop table bug3798;

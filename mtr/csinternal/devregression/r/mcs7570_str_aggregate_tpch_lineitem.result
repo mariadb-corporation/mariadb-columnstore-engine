@@ -1,0 +1,10 @@
+USE tpch1;
+select count(l_shipinstruct), min(l_shipinstruct), max(l_shipinstruct)  from lineitem;
+count(l_shipinstruct)	min(l_shipinstruct)	max(l_shipinstruct)
+6001215	COLLECT COD	TAKE BACK RETURN
+select count(l_shipmode), min(l_shipmode), max(l_shipmode)  from lineitem;
+count(l_shipmode)	min(l_shipmode)	max(l_shipmode)
+6001215	AIR	TRUCK
+select count(l_comment), min(l_comment), max(l_comment)  from lineitem;
+count(l_comment)	min(l_comment)	max(l_comment)
+6001215	 about the	zzle? slyly final platelets sleep quickly. 

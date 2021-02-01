@@ -1,0 +1,10 @@
+USE tpch1;
+drop table if exists bug4394;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug4394'
+create table bug4394(c1 datetime) engine=columnstore;
+insert into bug4394 values('1000-01-01 00:00:00');
+select * from bug4394;
+c1
+1000-01-01 00:00:00
+drop table bug4394;

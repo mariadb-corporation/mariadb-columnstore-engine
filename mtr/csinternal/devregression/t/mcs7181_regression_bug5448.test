@@ -1,0 +1,23 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug5448.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists bug5448;
+
+create table bug5448 (mst_date datetime) engine=columnstore; 
+
+insert into bug5448 values ('2013-03-01');
+insert into bug5448 values ('2012-03-01');
+
+select mst_date, date_add(date(mst_date), interval - 30 day) from bug5448;
+
+drop table if exists bug5448;
+
+#
+

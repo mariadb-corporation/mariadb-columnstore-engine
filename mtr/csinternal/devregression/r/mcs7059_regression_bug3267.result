@@ -1,0 +1,23 @@
+USE tpch1;
+drop table if exists bug3267;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug3267'
+create table bug3267 (c1 decimal(12, 6), c2 float) engine=columnstore;
+insert into bug3267 values (5.240620, 5.24062e+06), (7.240620, 7.24062e+06), (9.940620, 9.94062e+06), (5.240620, 5.24062), (-4.44, -4.44), (-8.87, -8.87);
+select floor(c1), ceil(c1), c1 from bug3267;
+floor(c1)	ceil(c1)	c1
+5	6	5.240620
+7	8	7.240620
+9	10	9.940620
+5	6	5.240620
+-5	-4	-4.440000
+-9	-8	-8.870000
+select floor(c2), ceil(c2), c2 from bug3267;
+floor(c2)	ceil(c2)	c2
+5240620	5240620	5240620
+7240620	7240620	7240620
+9940620	9940620	9940620
+5	6	5.24062
+-5	-4	-4.44
+-9	-8	-8.87
+drop table if exists bug3267;

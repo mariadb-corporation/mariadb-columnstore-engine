@@ -1,0 +1,5 @@
+USE tpch1;
+select d109, avg(d109) over(), count(d109) over(), sum(d109) over() from dtypes where id < 3;
+d109	avg(d109) over()	count(d109) over()	sum(d109) over()
+-8.7622	-3.73555000	2	-7.4711
+1.2911	-3.73555000	2	-7.4711

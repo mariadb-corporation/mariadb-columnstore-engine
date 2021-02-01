@@ -1,0 +1,255 @@
+DROP DATABASE IF EXISTS mcs93_db;
+CREATE DATABASE mcs93_db;
+USE mcs93_db;
+CREATE TABLE t1(col1 VARCHAR(40), col2 TEXT)ENGINE=Columnstore;
+INSERT INTO t1 VALUES('', '');
+INSERT INTO t1 VALUES('  aaa', repeat('z',10));
+INSERT INTO t1 VALUES('klm, nopqrst', 'abcdefghijklmno, pqrsuvwxyz    ');
+INSERT INTO t1 VALUES('MariaDB, Columnstore', 'mariadb, COLUMNSTORE');
+SELECT col1 FROM t1;
+col1
+NULL
+  aaa
+klm, nopqrst
+MariaDB, Columnstore
+UPDATE t1 SET col1 = LTRIM(col1);
+SELECT col1 FROM t1;
+col1
+NULL
+aaa
+klm, nopqrst
+MariaDB, Columnstore
+SELECT col2 FROM t1;
+col2
+NULL
+zzzzzzzzzz
+abcdefghijklmno, pqrsuvwxyz    
+mariadb, COLUMNSTORE
+UPDATE t1 SET col2 =  RTRIM(col2);
+SELECT col2 FROM t1;
+col2
+NULL
+zzzzzzzzzz
+abcdefghijklmno, pqrsuvwxyz
+mariadb, COLUMNSTORE
+INSERT INTO t1 VALUES(' Columnstore Engine ', ' COLUMNSTORE ENGINE ');
+SELECT TRIM(TRAILING FROM col1), TRIM(LEADING FROM col1) FROM t1;
+TRIM(TRAILING FROM col1)	TRIM(LEADING FROM col1)
+NULL	NULL
+aaa	aaa
+klm, nopqrst	klm, nopqrst
+MariaDB, Columnstore	MariaDB, Columnstore
+ Columnstore Engine	Columnstore Engine 
+SELECT TRIM(TRAILING FROM col2), TRIM(LEADING FROM col2) FROM t1;
+TRIM(TRAILING FROM col2)	TRIM(LEADING FROM col2)
+NULL	NULL
+zzzzzzzzzz	zzzzzzzzzz
+abcdefghijklmno, pqrsuvwxyz	abcdefghijklmno, pqrsuvwxyz
+mariadb, COLUMNSTORE	mariadb, COLUMNSTORE
+ COLUMNSTORE ENGINE	COLUMNSTORE ENGINE 
+SELECT * FROM t1;
+col1	col2
+NULL	NULL
+aaa	zzzzzzzzzz
+klm, nopqrst	abcdefghijklmno, pqrsuvwxyz
+MariaDB, Columnstore	mariadb, COLUMNSTORE
+ Columnstore Engine 	 COLUMNSTORE ENGINE 
+UPDATE t1 SET col1 = TRIM(col1);
+UPDATE t1 SET col2 = TRIM(col2);
+SELECT * FROM t1;
+col1	col2
+NULL	NULL
+aaa	zzzzzzzzzz
+klm, nopqrst	abcdefghijklmno, pqrsuvwxyz
+MariaDB, Columnstore	mariadb, COLUMNSTORE
+Columnstore Engine	COLUMNSTORE ENGINE
+SELECT col1, col2, CONCAT(col1,col2) FROM t1;
+col1	col2	CONCAT(col1,col2)
+NULL	NULL	NULL
+aaa	zzzzzzzzzz	aaazzzzzzzzzz
+klm, nopqrst	abcdefghijklmno, pqrsuvwxyz	klm, nopqrstabcdefghijklmno, pqrsuvwxyz
+MariaDB, Columnstore	mariadb, COLUMNSTORE	MariaDB, Columnstoremariadb, COLUMNSTORE
+Columnstore Engine	COLUMNSTORE ENGINE	Columnstore EngineCOLUMNSTORE ENGINE
+SELECT col1, col2, CONCAT(col1, ' ', col2) FROM t1;
+col1	col2	CONCAT(col1, ' ', col2)
+NULL	NULL	NULL
+aaa	zzzzzzzzzz	aaa zzzzzzzzzz
+klm, nopqrst	abcdefghijklmno, pqrsuvwxyz	klm, nopqrst abcdefghijklmno, pqrsuvwxyz
+MariaDB, Columnstore	mariadb, COLUMNSTORE	MariaDB, Columnstore mariadb, COLUMNSTORE
+Columnstore Engine	COLUMNSTORE ENGINE	Columnstore Engine COLUMNSTORE ENGINE
+SELECT col1, col2, CONCAT('Concat', col1, ' ', col2) FROM t1;
+col1	col2	CONCAT('Concat', col1, ' ', col2)
+NULL	NULL	NULL
+aaa	zzzzzzzzzz	Concataaa zzzzzzzzzz
+klm, nopqrst	abcdefghijklmno, pqrsuvwxyz	Concatklm, nopqrst abcdefghijklmno, pqrsuvwxyz
+MariaDB, Columnstore	mariadb, COLUMNSTORE	ConcatMariaDB, Columnstore mariadb, COLUMNSTORE
+Columnstore Engine	COLUMNSTORE ENGINE	ConcatColumnstore Engine COLUMNSTORE ENGINE
+SELECT col1, col2, CONCAT(col2, ' string123# ', col1) FROM t1;
+col1	col2	CONCAT(col2, ' string123# ', col1)
+NULL	NULL	NULL
+aaa	zzzzzzzzzz	zzzzzzzzzz string123# aaa
+klm, nopqrst	abcdefghijklmno, pqrsuvwxyz	abcdefghijklmno, pqrsuvwxyz string123# klm, nopqrst
+MariaDB, Columnstore	mariadb, COLUMNSTORE	mariadb, COLUMNSTORE string123# MariaDB, Columnstore
+Columnstore Engine	COLUMNSTORE ENGINE	COLUMNSTORE ENGINE string123# Columnstore Engine
+SELECT col1, col2, CONCAT_WS(',', col2, col1) FROM t1;
+col1	col2	CONCAT_WS(',', col2, col1)
+NULL	NULL	NULL
+aaa	zzzzzzzzzz	zzzzzzzzzz,aaa
+klm, nopqrst	abcdefghijklmno, pqrsuvwxyz	abcdefghijklmno, pqrsuvwxyz,klm, nopqrst
+MariaDB, Columnstore	mariadb, COLUMNSTORE	mariadb, COLUMNSTORE,MariaDB, Columnstore
+Columnstore Engine	COLUMNSTORE ENGINE	COLUMNSTORE ENGINE,Columnstore Engine
+SELECT col1, col2, CONCAT_WS('....', col2, col1) FROM t1;
+col1	col2	CONCAT_WS('....', col2, col1)
+NULL	NULL	NULL
+aaa	zzzzzzzzzz	zzzzzzzzzz....aaa
+klm, nopqrst	abcdefghijklmno, pqrsuvwxyz	abcdefghijklmno, pqrsuvwxyz....klm, nopqrst
+MariaDB, Columnstore	mariadb, COLUMNSTORE	mariadb, COLUMNSTORE....MariaDB, Columnstore
+Columnstore Engine	COLUMNSTORE ENGINE	COLUMNSTORE ENGINE....Columnstore Engine
+SELECT col1, col2, CONCAT_WS(' string123# ', col2, col1) FROM t1;
+col1	col2	CONCAT_WS(' string123# ', col2, col1)
+NULL	NULL	NULL
+aaa	zzzzzzzzzz	zzzzzzzzzz string123# aaa
+klm, nopqrst	abcdefghijklmno, pqrsuvwxyz	abcdefghijklmno, pqrsuvwxyz string123# klm, nopqrst
+MariaDB, Columnstore	mariadb, COLUMNSTORE	mariadb, COLUMNSTORE string123# MariaDB, Columnstore
+Columnstore Engine	COLUMNSTORE ENGINE	COLUMNSTORE ENGINE string123# Columnstore Engine
+SELECT col1, col2, INSTR(col1, 'o') FROM t1;
+col1	col2	INSTR(col1, 'o')
+NULL	NULL	NULL
+aaa	zzzzzzzzzz	0
+klm, nopqrst	abcdefghijklmno, pqrsuvwxyz	7
+MariaDB, Columnstore	mariadb, COLUMNSTORE	11
+Columnstore Engine	COLUMNSTORE ENGINE	2
+SELECT col1, LENGTH(col1), col2, LENGTH(col2) FROM t1;
+col1	LENGTH(col1)	col2	LENGTH(col2)
+NULL	NULL	NULL	NULL
+aaa	3	zzzzzzzzzz	10
+klm, nopqrst	12	abcdefghijklmno, pqrsuvwxyz	27
+MariaDB, Columnstore	20	mariadb, COLUMNSTORE	20
+Columnstore Engine	18	COLUMNSTORE ENGINE	18
+SELECT col1, CHAR_LENGTH(col1), col2, CHAR_LENGTH(col2) FROM t1;
+col1	CHAR_LENGTH(col1)	col2	CHAR_LENGTH(col2)
+NULL	NULL	NULL	NULL
+aaa	3	zzzzzzzzzz	10
+klm, nopqrst	12	abcdefghijklmno, pqrsuvwxyz	27
+MariaDB, Columnstore	20	mariadb, COLUMNSTORE	20
+Columnstore Engine	18	COLUMNSTORE ENGINE	18
+SET @s = CONVERT('Mariadb Coumnstore' USING ucs2);
+SELECT CHAR_LENGTH(@s), LENGTH(@s);
+CHAR_LENGTH(@s)	LENGTH(@s)
+18	36
+SELECT col1, LEFT(col1, 1), col2, LEFT(col2, 2) FROM t1;
+col1	LEFT(col1, 1)	col2	LEFT(col2, 2)
+NULL	NULL	NULL	NULL
+aaa	a	zzzzzzzzzz	zz
+klm, nopqrst	k	abcdefghijklmno, pqrsuvwxyz	ab
+MariaDB, Columnstore	M	mariadb, COLUMNSTORE	ma
+Columnstore Engine	C	COLUMNSTORE ENGINE	CO
+SELECT col1, LEFT(col1,100), col2, LEFT(col2, 100) FROM t1;
+col1	LEFT(col1,100)	col2	LEFT(col2, 100)
+NULL	NULL	NULL	NULL
+aaa	aaa	zzzzzzzzzz	zzzzzzzzzz
+klm, nopqrst	klm, nopqrst	abcdefghijklmno, pqrsuvwxyz	abcdefghijklmno, pqrsuvwxyz
+MariaDB, Columnstore	MariaDB, Columnstore	mariadb, COLUMNSTORE	mariadb, COLUMNSTORE
+Columnstore Engine	Columnstore Engine	COLUMNSTORE ENGINE	COLUMNSTORE ENGINE
+SELECT col1, RIGHT(col1, 2), col2, RIGHT(col2, 2) FROM t1;
+col1	RIGHT(col1, 2)	col2	RIGHT(col2, 2)
+NULL	NULL	NULL	NULL
+aaa	aa	zzzzzzzzzz	zz
+klm, nopqrst	st	abcdefghijklmno, pqrsuvwxyz	yz
+MariaDB, Columnstore	re	mariadb, COLUMNSTORE	RE
+Columnstore Engine	ne	COLUMNSTORE ENGINE	NE
+SELECT col1, RIGHT(col1, 11), col2, RIGHT(col2, 11) FROM t1;
+col1	RIGHT(col1, 11)	col2	RIGHT(col2, 11)
+NULL	NULL	NULL	NULL
+aaa	aaa	zzzzzzzzzz	zzzzzzzzzz
+klm, nopqrst	lm, nopqrst	abcdefghijklmno, pqrsuvwxyz	 pqrsuvwxyz
+MariaDB, Columnstore	Columnstore	mariadb, COLUMNSTORE	COLUMNSTORE
+Columnstore Engine	tore Engine	COLUMNSTORE ENGINE	TORE ENGINE
+SELECT LOWER(col1), LOWER(col2) FROM t1;
+LOWER(col1)	LOWER(col2)
+NULL	NULL
+aaa	zzzzzzzzzz
+klm, nopqrst	abcdefghijklmno, pqrsuvwxyz
+mariadb, columnstore	mariadb, columnstore
+columnstore engine	columnstore engine
+SELECT LCASE(col1), LCASE(col2) FROM t1;
+LCASE(col1)	LCASE(col2)
+NULL	NULL
+aaa	zzzzzzzzzz
+klm, nopqrst	abcdefghijklmno, pqrsuvwxyz
+mariadb, columnstore	mariadb, columnstore
+columnstore engine	columnstore engine
+SELECT UPPER(col1), UPPER(col2) FROM t1;
+UPPER(col1)	UPPER(col2)
+NULL	NULL
+AAA	ZZZZZZZZZZ
+KLM, NOPQRST	ABCDEFGHIJKLMNO, PQRSUVWXYZ
+MARIADB, COLUMNSTORE	MARIADB, COLUMNSTORE
+COLUMNSTORE ENGINE	COLUMNSTORE ENGINE
+SELECT UCASE(col1), UCASE(col2) FROM t1;
+UCASE(col1)	UCASE(col2)
+NULL	NULL
+AAA	ZZZZZZZZZZ
+KLM, NOPQRST	ABCDEFGHIJKLMNO, PQRSUVWXYZ
+MARIADB, COLUMNSTORE	MARIADB, COLUMNSTORE
+COLUMNSTORE ENGINE	COLUMNSTORE ENGINE
+SELECT col1, SUBSTRING(col1, 5), col2, SUBSTRING(col2, 8) FROM t1;
+col1	SUBSTRING(col1, 5)	col2	SUBSTRING(col2, 8)
+NULL	NULL	NULL	NULL
+aaa	NULL	zzzzzzzzzz	zzz
+klm, nopqrst	 nopqrst	abcdefghijklmno, pqrsuvwxyz	hijklmno, pqrsuvwxyz
+MariaDB, Columnstore	aDB, Columnstore	mariadb, COLUMNSTORE	, COLUMNSTORE
+Columnstore Engine	mnstore Engine	COLUMNSTORE ENGINE	TORE ENGINE
+SELECT col1, SUBSTRING(col1, 5, 4), col2, SUBSTRING(col2, 8, 3) FROM t1;
+col1	SUBSTRING(col1, 5, 4)	col2	SUBSTRING(col2, 8, 3)
+NULL	NULL	NULL	NULL
+aaa	NULL	zzzzzzzzzz	zzz
+klm, nopqrst	 nop	abcdefghijklmno, pqrsuvwxyz	hij
+MariaDB, Columnstore	aDB,	mariadb, COLUMNSTORE	, C
+Columnstore Engine	mnst	COLUMNSTORE ENGINE	TOR
+SELECT col1, SUBSTRING(col1, -5), col2, SUBSTRING(col2, -8) FROM t1;
+col1	SUBSTRING(col1, -5)	col2	SUBSTRING(col2, -8)
+NULL	NULL	NULL	NULL
+aaa	NULL	zzzzzzzzzz	zzzzzzzz
+klm, nopqrst	pqrst	abcdefghijklmno, pqrsuvwxyz	rsuvwxyz
+MariaDB, Columnstore	store	mariadb, COLUMNSTORE	UMNSTORE
+Columnstore Engine	ngine	COLUMNSTORE ENGINE	E ENGINE
+SELECT col1, SUBSTRING(col1, -5, 4), col2, SUBSTRING(col2, -8, 3) FROM t1;
+col1	SUBSTRING(col1, -5, 4)	col2	SUBSTRING(col2, -8, 3)
+NULL	NULL	NULL	NULL
+aaa	NULL	zzzzzzzzzz	zzz
+klm, nopqrst	pqrs	abcdefghijklmno, pqrsuvwxyz	rsu
+MariaDB, Columnstore	stor	mariadb, COLUMNSTORE	UMN
+Columnstore Engine	ngin	COLUMNSTORE ENGINE	E E
+SELECT col1, SUBSTRING_INDEX(col1, 'o', 2), col2, SUBSTRING_INDEX(col2, 'o', 2) FROM t1;
+col1	SUBSTRING_INDEX(col1, 'o', 2)	col2	SUBSTRING_INDEX(col2, 'o', 2)
+NULL	NULL	NULL	NULL
+aaa	aaa	zzzzzzzzzz	zzzzzzzzzz
+klm, nopqrst	klm, nopqrst	abcdefghijklmno, pqrsuvwxyz	abcdefghijklmno, pqrsuvwxyz
+MariaDB, Columnstore	MariaDB, Columnst	mariadb, COLUMNSTORE	mariadb, COLUMNSTORE
+Columnstore Engine	Columnst	COLUMNSTORE ENGINE	COLUMNSTORE ENGINE
+SELECT col1, SUBSTRING_INDEX(col1, 'O', 2), col2, SUBSTRING_INDEX(col2, 'O', 2) FROM t1;
+col1	SUBSTRING_INDEX(col1, 'O', 2)	col2	SUBSTRING_INDEX(col2, 'O', 2)
+NULL	NULL	NULL	NULL
+aaa	aaa	zzzzzzzzzz	zzzzzzzzzz
+klm, nopqrst	klm, nopqrst	abcdefghijklmno, pqrsuvwxyz	abcdefghijklmno, pqrsuvwxyz
+MariaDB, Columnstore	MariaDB, Columnstore	mariadb, COLUMNSTORE	mariadb, COLUMNST
+Columnstore Engine	Columnstore Engine	COLUMNSTORE ENGINE	COLUMNST
+SELECT col1, FIND_IN_SET('mariadb', col1), col2, FIND_IN_SET('mariadb', col2) FROM t1;
+col1	FIND_IN_SET('mariadb', col1)	col2	FIND_IN_SET('mariadb', col2)
+NULL	NULL	NULL	NULL
+aaa	0	zzzzzzzzzz	0
+klm, nopqrst	0	abcdefghijklmno, pqrsuvwxyz	0
+MariaDB, Columnstore	1	mariadb, COLUMNSTORE	1
+Columnstore Engine	0	COLUMNSTORE ENGINE	0
+DELETE FROM t1;
+INSERT INTO t1 VALUES('75226.62', '96216681'),('27618', '61971811');
+SELECT col1, FORMAT(col1, 2), FORMAT(col1,10) FROM t1;
+col1	FORMAT(col1, 2)	FORMAT(col1,10)
+75226.62	75,226.62	75,226.6200000000
+27618	27,618.00	27,618.0000000000
+SELECT col2, FORMAT(col2, 2), FORMAT(col2,10) FROM t1;
+col2	FORMAT(col2, 2)	FORMAT(col2,10)
+96216681	96,216,681.00	96,216,681.0000000000
+61971811	61,971,811.00	61,971,811.0000000000
+DROP DATABASE mcs93_db;

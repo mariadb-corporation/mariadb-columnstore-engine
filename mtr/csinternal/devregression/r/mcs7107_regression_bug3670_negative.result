@@ -1,0 +1,26 @@
+USE tpch1;
+drop table if exists month;
+Warnings:
+Note	1051	Unknown table 'tpch1.month'
+create table month(id int, month varchar(20), season varchar(6))engine=columnstore;
+insert into month values (1, 'Jan', 'Winter');
+SELECT  *,
+@r AS `FIRST_VALUE(month) OVER (PARTITION BY season ORDER BY id)`
+FROM    (
+SELECT  m.*
+FROM    (
+SELECT  @_season = NULL
+) vars,
+month m
+ORDER BY
+season, id
+) mo
+WHERE   (CASE WHEN @_season IS NULL OR @_season <> season THEN @r := month ELSE
+month END IS NOT NULL)
+AND (@_season := season) IS NOT NULL;
+id	month	season	FIRST_VALUE(month) OVER (PARTITION BY season ORDER BY id)
+1	Jan	Winter	NULL
+SELECT  * FROM    ( SELECT  m.* FROM   
+( SELECT  @_season is NULL a) vars, month m where a=m.id ORDER BY season, id ) mo;
+id	month	season
+drop table month;

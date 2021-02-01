@@ -1,0 +1,61 @@
+USE tpch1;
+drop table if exists bug3436a;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug3436a'
+drop table if exists bug3436b;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug3436b'
+create table bug3436a (i int, j int, c1 tinyint, c2 decimal(2,1), c3 decimal(4,0), c4 decimal(4,2), c5 float, c6 double) engine=columnstore;
+insert into bug3436a values (1, 1, 1, 1.1, 9991, 99.1, 1.1, 1.1), (1, 1, 2, 2.2, 9992, 99.2, 2.2, 2.2), (2, 2, 1, 1.1, 9993, 99.3, 1.1, 1.1), (2, 2, 2, 2.2, 9994, 99.4, 2.2, 2.2), (1, 1, 127, 9.1, 9995, 99.5, 127.1, 127.1), (1, 2, 100, 9.2, 9996, 99.6, 100.2, 100.2);
+create table bug3436b (k int) engine=columnstore;
+insert into bug3436b values (1), (2), (3);
+select s/d from (select k, sum(c1) s, count(distinct j) d from bug3436a join bug3436b on i=k group by 1) a order by 1;
+s/d
+3.0000
+115.0000
+select s/d from (select k, sum(c2) s, count(distinct j) d from bug3436a join bug3436b on i=k group by 1) a order by 1;
+s/d
+3.30000
+10.80000
+select s/d from (select k, sum(c3) s, count(distinct j) d from bug3436a join bug3436b on i=k group by 1) a order by 1;
+s/d
+19987.0000
+19987.0000
+select s/d from (select k, sum(c4) s, count(distinct j) d from bug3436a join bug3436b on i=k group by 1) a order by 1;
+s/d
+198.700000
+198.700000
+select s/d from (select k, sum(c5) s, count(distinct j) d from bug3436a join bug3436b on i=k group by 1) a order by 1;
+s/d
+3.3000000715255737
+115.29999774694443
+select s/d from (select k, sum(c6) s, count(distinct j) d from bug3436a join bug3436b on i=k group by 1) a order by 1;
+s/d
+3.3000000000000003
+115.3
+select s/d from (select k, stddev(c1) s, count(distinct j) d from bug3436a join bug3436b on i=k group by 1) a order by 1;
+s/d
+0.50000000
+28.40444507
+select s/d from (select k, stddev(c2) s, count(distinct j) d from bug3436a join bug3436b on i=k group by 1) a order by 1;
+s/d
+0.550000000
+1.885139252
+select s/d from (select k, stddev(c3) s, count(distinct j) d from bug3436a join bug3436b on i=k group by 1) a order by 1;
+s/d
+0.50000000
+1.03077641
+select s/d from (select k, stddev(c4) s, count(distinct j) d from bug3436a join bug3436b on i=k group by 1) a order by 1;
+s/d
+0.0500000000
+0.1030776406
+select s/d from (select k, stddev(c5) s, count(distinct j) d from bug3436a join bug3436b on i=k group by 1) a order by 1;
+s/d
+0.550000011920929
+28.401594938011623
+select s/d from (select k, stddev(c6) s, count(distinct j) d from bug3436a join bug3436b on i=k group by 1) a order by 1;
+s/d
+0.55
+28.401595465748045
+drop table bug3436a;
+drop table bug3436b;

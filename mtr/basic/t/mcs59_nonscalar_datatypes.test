@@ -1,0 +1,22 @@
+#
+# Non-scalar datatypes in columnstore
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs59_db;
+--enable_warnings
+
+CREATE DATABASE mcs59_db;
+USE mcs59_db;
+
+--error ER_CHECK_NOT_IMPLEMENTED
+CREATE TABLE t_enum(col ENUM('min','max','avg'))ENGINE=Columnstore;
+--error ER_CHECK_NOT_IMPLEMENTED
+CREATE TABLE t_set(col SET('x','y','z'))ENGINE=Columnstore;
+--error ER_CHECK_NOT_IMPLEMENTED
+CREATE TABLE t_json(col JSON)ENGINE=Columnstore;
+
+# Clean UP
+DROP DATABASE mcs59_db;

@@ -1,0 +1,127 @@
+USE tpch1;
+select count(n_nationkey), min(n_nationkey), max(n_nationkey) , sum(n_nationkey), avg(n_nationkey)  from nation;
+count(n_nationkey)	min(n_nationkey)	max(n_nationkey)	sum(n_nationkey)	avg(n_nationkey)
+25	0	24	300	12.0000
+select count(n_name), min(n_name), max(n_name)  from nation;
+count(n_name)	min(n_name)	max(n_name)
+25	ALGERIA	VIETNAM
+select count(n_regionkey), min(n_regionkey), max(n_regionkey) , sum(n_regionkey), avg(n_regionkey)  from nation;
+count(n_regionkey)	min(n_regionkey)	max(n_regionkey)	sum(n_regionkey)	avg(n_regionkey)
+25	0	4	50	2.0000
+select count(n_comment), min(n_comment), max(n_comment)  from nation;
+count(n_comment)	min(n_comment)	max(n_comment)
+25	 haggle. carefully final deposits detect slyly agai	y final packages. slow foxes cajole quickly. quickly silent platelets breach ironic accounts. unusual pinto be
+select count(*) from nation;
+count(*)
+25
+select count(r_regionkey), min(r_regionkey), max(r_regionkey) , sum(r_regionkey), avg(r_regionkey)  from region;
+count(r_regionkey)	min(r_regionkey)	max(r_regionkey)	sum(r_regionkey)	avg(r_regionkey)
+5	0	4	10	2.0000
+select count(r_name), min(r_name), max(r_name)  from region;
+count(r_name)	min(r_name)	max(r_name)
+5	AFRICA	MIDDLE EAST
+select count(r_comment), min(r_comment), max(r_comment)  from region;
+count(r_comment)	min(r_comment)	max(r_comment)
+5	ges. thinly even pinto beans ca	uickly special accounts cajole carefully blithely close requests. carefully final asymptotes haggle furiousl
+select count(*) from region;
+count(*)
+5
+select count(c_custkey), min(c_custkey), max(c_custkey) , sum(c_custkey), avg(c_custkey)  from customer;
+count(c_custkey)	min(c_custkey)	max(c_custkey)	sum(c_custkey)	avg(c_custkey)
+150000	1	150000	11250075000	75000.5000
+select count(c_name), min(c_name), max(c_name)  from customer;
+count(c_name)	min(c_name)	max(c_name)
+150000	Customer#000000001	Customer#000150000
+select count(c_address), min(c_address), max(c_address)  from customer;
+count(c_address)	min(c_address)	max(c_address)
+150000	   2uZwVhQvwA	zzZWJlpDD8eDh8BaXld7BMBX0w
+select count(c_nationkey), min(c_nationkey), max(c_nationkey) , sum(c_nationkey), avg(c_nationkey)  from customer;
+count(c_nationkey)	min(c_nationkey)	max(c_nationkey)	sum(c_nationkey)	avg(c_nationkey)
+150000	0	24	1801005	12.0067
+select count(c_phone), min(c_phone), max(c_phone)  from customer;
+count(c_phone)	min(c_phone)	max(c_phone)
+150000	10-100-106-1617	34-999-618-6881
+select count(c_acctbal), min(c_acctbal), max(c_acctbal) , sum(c_acctbal), avg(c_acctbal)  from customer;
+count(c_acctbal)	min(c_acctbal)	max(c_acctbal)	sum(c_acctbal)	avg(c_acctbal)
+150000	-999.99	9999.99	674326849.74	4495.512332
+select count(c_mktsegment), min(c_mktsegment), max(c_mktsegment)  from customer;
+count(c_mktsegment)	min(c_mktsegment)	max(c_mktsegment)
+150000	AUTOMOBILE	MACHINERY
+select count(c_comment), min(c_comment), max(c_comment)  from customer;
+count(c_comment)	min(c_comment)	max(c_comment)
+150000	 about the accounts nag slyly ironic theodolites. furiously i	zzle. blithely regular instructions cajol
+select count(*) from customer;
+count(*)
+150000
+select count(s_suppkey), min(s_suppkey), max(s_suppkey) , sum(s_suppkey), avg(s_suppkey)  from supplier;
+count(s_suppkey)	min(s_suppkey)	max(s_suppkey)	sum(s_suppkey)	avg(s_suppkey)
+10000	1	10000	50005000	5000.5000
+select count(s_name), min(s_name), max(s_name)  from supplier;
+count(s_name)	min(s_name)	max(s_name)
+10000	Supplier#000000001	Supplier#000010000
+select count(s_address), min(s_address), max(s_address)  from supplier;
+count(s_address)	min(s_address)	max(s_address)
+10000	  9aW1wwnBJJPnCx,nox0MA48Y0zpI1IeVfYZ	ZZZwPfP9X1xcLQ
+select count(s_nationkey), min(s_nationkey), max(s_nationkey) , sum(s_nationkey), avg(s_nationkey)  from supplier;
+count(s_nationkey)	min(s_nationkey)	max(s_nationkey)	sum(s_nationkey)	avg(s_nationkey)
+10000	0	24	119353	11.9353
+select count(s_phone), min(s_phone), max(s_phone)  from supplier;
+count(s_phone)	min(s_phone)	max(s_phone)
+10000	10-102-116-6785	34-998-900-4911
+select count(s_acctbal), min(s_acctbal), max(s_acctbal)  from supplier;
+count(s_acctbal)	min(s_acctbal)	max(s_acctbal)
+10000	-998.22	9999.72
+select count(s_comment), min(s_comment), max(s_comment)  from supplier;
+count(s_comment)	min(s_comment)	max(s_comment)
+10000	 about the blithely express foxes. bli	zzle furiously. bold accounts haggle furiously ironic excuses. fur
+select count(*) from supplier;
+count(*)
+10000
+select count(ps_partkey), min(ps_partkey), max(ps_partkey) , sum(ps_partkey), avg(ps_partkey)  from partsupp;
+count(ps_partkey)	min(ps_partkey)	max(ps_partkey)	sum(ps_partkey)	avg(ps_partkey)
+800000	1	200000	80000400000	100000.5000
+select count(ps_suppkey), min(ps_suppkey), max(ps_suppkey) , sum(ps_suppkey), avg(ps_suppkey)  from partsupp;
+count(ps_suppkey)	min(ps_suppkey)	max(ps_suppkey)	sum(ps_suppkey)	avg(ps_suppkey)
+800000	1	10000	4000400000	5000.5000
+select count(ps_availqty), min(ps_availqty), max(ps_availqty) , sum(ps_availqty), avg(ps_availqty)  from partsupp;
+count(ps_availqty)	min(ps_availqty)	max(ps_availqty)	sum(ps_availqty)	avg(ps_availqty)
+800000	1	9999	4002581547	5003.2269
+select count(ps_supplycost), min(ps_supplycost), max(ps_supplycost) , sum(ps_supplycost), avg(ps_supplycost)  from partsupp;
+count(ps_supplycost)	min(ps_supplycost)	max(ps_supplycost)	sum(ps_supplycost)	avg(ps_supplycost)
+800000	1.00	1000.00	400420638.54	500.525798
+select count(ps_comment), min(ps_comment), max(ps_comment)  from partsupp;
+count(ps_comment)	min(ps_comment)	max(ps_comment)
+800000	 about the accounts are furiously slyly pending escapades. fluffily pending packages sublate quickly carefully final dependencies. regular ideas maint	zzle. unusual decoys detect slyly blithely express frays. furiously ironic packages about the bold accounts are close requests. slowly silent reque
+select count(*) from partsupp;
+count(*)
+800000
+select count(p_partkey), min(p_partkey), max(p_partkey) , sum(p_partkey), avg(p_partkey)  from part;
+count(p_partkey)	min(p_partkey)	max(p_partkey)	sum(p_partkey)	avg(p_partkey)
+200000	1	200000	20000100000	100000.5000
+select count(p_name), min(p_name), max(p_name)  from part;
+count(p_name)	min(p_name)	max(p_name)
+200000	almond antique blue royal burnished	yellow white seashell lavender black
+select count(p_mfgr), min(p_mfgr), max(p_mfgr)  from part;
+count(p_mfgr)	min(p_mfgr)	max(p_mfgr)
+200000	Manufacturer#1	Manufacturer#5
+select count(p_brand), min(p_brand), max(p_brand)  from part;
+count(p_brand)	min(p_brand)	max(p_brand)
+200000	Brand#11	Brand#55
+select count(p_type), min(p_type), max(p_type)  from part;
+count(p_type)	min(p_type)	max(p_type)
+200000	ECONOMY ANODIZED BRASS	STANDARD POLISHED TIN
+select count(p_size), min(p_size), max(p_size) , sum(p_size), avg(p_size)  from part;
+count(p_size)	min(p_size)	max(p_size)	sum(p_size)	avg(p_size)
+200000	1	50	5085421	25.4271
+select count(p_container), min(p_container), max(p_container)  from part;
+count(p_container)	min(p_container)	max(p_container)
+200000	JUMBO BAG	WRAP PKG
+select count(p_retailprice), min(p_retailprice), max(p_retailprice) , sum(p_retailprice), avg(p_retailprice)  from part;
+count(p_retailprice)	min(p_retailprice)	max(p_retailprice)	sum(p_retailprice)	avg(p_retailprice)
+200000	901.00	2098.99	299899200.00	1499.496000
+select count(p_comment), min(p_comment), max(p_comment)  from part;
+count(p_comment)	min(p_comment)	max(p_comment)
+200000	 abou	zzle. quickly si
+select count(*) from part;
+count(*)
+200000

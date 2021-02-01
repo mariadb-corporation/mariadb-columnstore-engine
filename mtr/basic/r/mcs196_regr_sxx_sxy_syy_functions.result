@@ -1,0 +1,30 @@
+DROP DATABASE IF EXISTS mcs196_db;
+CREATE DATABASE mcs196_db;
+USE mcs196_db;
+CREATE TABLE t1 (x INT, y MEDIUMINT, z CHAR(5))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL, NULL, ''),(20, 1, 'aaa'),(39, 2, 'aaa'),(48, 3, 'bbb'),(57, 4, 'bbb'),(66, 5, 'aaa'),(75, 6, 'aaa'),(84, 7, 'bbb');
+SELECT REGR_SXX(y, x) FROM t1;
+REGR_SXX(y, x)
+2893.714285714286
+SELECT z, REGR_SXX(y, x) FROM t1 GROUP BY z ORDER BY z;
+z	REGR_SXX(y, x)
+NULL	NULL
+aaa	1902
+bbb	702
+SELECT REGR_SXY(y, x) FROM t1;
+REGR_SXY(y, x)
+282
+SELECT z, REGR_SXY(y, x) FROM t1 GROUP BY z ORDER BY z;
+z	REGR_SXY(y, x)
+NULL	NULL
+aaa	178
+bbb	78
+SELECT REGR_SYY(y, x) FROM t1;
+REGR_SYY(y, x)
+28
+SELECT z, REGR_SYY(y, x) FROM t1 GROUP BY z ORDER BY z;
+z	REGR_SYY(y, x)
+NULL	NULL
+aaa	17
+bbb	8.666666666666666
+DROP DATABASE mcs196_db;

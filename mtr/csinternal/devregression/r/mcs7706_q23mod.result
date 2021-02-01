@@ -1,0 +1,18 @@
+USE ssb1;
+select sum(lo_revenue), d_year, p_brand1
+from part, supplier, dateinfo, lineorder		   # changed order
+where lo_orderdate = d_datekey
+and lo_partkey = p_partkey
+and lo_suppkey = s_suppkey
+and p_brand1= 'MFGR#2239'
+and s_region = 'EUROPE'
+group by d_year, p_brand1
+order by d_year, p_brand1;
+sum(lo_revenue)	d_year	p_brand1
+880724694.00	1992	MFGR#2239
+663352977.00	1993	MFGR#2239
+720870928.00	1994	MFGR#2239
+692803702.00	1995	MFGR#2239
+763065426.00	1996	MFGR#2239
+714671963.00	1997	MFGR#2239
+443345612.00	1998	MFGR#2239

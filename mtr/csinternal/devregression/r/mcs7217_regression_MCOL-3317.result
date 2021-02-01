@@ -1,0 +1,13 @@
+USE tpch1;
+DROP TABLE IF EXISTS `mcol-498`;
+Warnings:
+Note	1051	Unknown table 'tpch1.mcol-498'
+CREATE TABLE `mcol-498` (i BIGINT) ENGINE=columnstore;
+INSERT INTO `mcol-498` VALUES (42),(6);
+DELETE FROM `mcol-498` WHERE i = 42;
+INSERT INTO `mcol-498` VALUES (42);
+SELECT i FROM `mcol-498`;
+i
+42
+6
+DROP TABLE `mcol-498`;

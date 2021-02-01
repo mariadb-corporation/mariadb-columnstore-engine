@@ -1,0 +1,15 @@
+USE tpch1;
+drop table if exists t1;
+Warnings:
+Note	1051	Unknown table 'tpch1.t1'
+create table t1(f1 varchar(5)) engine=columnstore;
+insert into t1(f1) select if(max(f1) is null, '2000',max(f1)+1) from t1;
+select * from t1 order by 1;
+f1
+2000
+insert into t1(f1) select if(max(f1) is null, '2000',max(f1)+1) from t1;
+select * from t1 order by 1;
+f1
+2000
+2001
+drop table t1;

@@ -1,0 +1,6 @@
+USE tpch1;
+alter table nation add column c1 varchar(20) default 'abcd';
+select distinct(c1) from nation;
+c1
+abcd
+alter table nation drop column c1;

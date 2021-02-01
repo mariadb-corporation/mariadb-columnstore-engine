@@ -1,0 +1,22 @@
+#
+# Test Variance functions
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs95_db;
+--enable_warnings
+
+CREATE DATABASE mcs95_db;
+USE mcs95_db;
+
+CREATE TABLE t1 (a CHAR(1), b INT)ENGINE=Columnstore;
+INSERT INTO t1 VALUES ('', NULL),('a', 12),('a', 13),('b', 14),('c', 15),('d', 16),('d', 17),('b', 18),('a', 19);
+
+SELECT a, VARIANCE(b) FROM t1 GROUP BY a ORDER BY a;
+SELECT a, VAR_POP(b) FROM t1 GROUP BY a ORDER BY a;
+SELECT a, VAR_SAMP(b) FROM t1 GROUP BY a ORDER BY a;
+
+# Clean UP
+DROP DATABASE mcs95_db;

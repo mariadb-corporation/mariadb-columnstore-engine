@@ -1,0 +1,8 @@
+USE tpch1;
+drop table if exists bug3203;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug3203'
+create table bug3203 (c1 varchar(20))engine=columnstore;
+select * from bug3203 where c1 = 'x';
+c1
+drop table if exists bug3203;

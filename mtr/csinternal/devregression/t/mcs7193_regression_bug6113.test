@@ -1,0 +1,29 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug6113.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists t;
+create table t(a bigint, b varchar(10)) engine=columnstore;
+ 
+insert into t values (1, 'hi');
+insert into t values (1, 'hello');
+insert into t values (2, 'bye');
+insert into t values (2, 'good night');
+ 
+select t.*, row_number() over (partition by a order by b) as rnum from t;
+drop view if exists v;
+create view v as select * from t;
+ 
+select v.*, row_number() over (partition by a order by b) as rnum from v;
+select v.*, min(a) over (partition by a order by b) as rnum from v;
+select rank() over(order by a) from v;
+drop table t;
+drop view v;
+#
+

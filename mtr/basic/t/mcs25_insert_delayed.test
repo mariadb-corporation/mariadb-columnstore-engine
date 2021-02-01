@@ -1,0 +1,35 @@
+#
+# Test INSERT DELAYED statement
+# Author: Susil, susil.behera@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs25_db;
+--enable_warnings
+
+CREATE DATABASE mcs25_db;
+USE mcs25_db;
+
+CREATE TABLE t_cs(
+c1 INT,
+c2 INT
+)ENGINE=Columnstore;
+
+CREATE TABLE t_myisam(
+c1 INT,
+c2 INT
+)ENGINE=MyISAM;
+
+#DELAYED option not supported on Columnstore
+--error 1616
+INSERT DELAYED INTO t_cs VALUES (1, 2);
+
+#DELAYED option not supported on MyISAM
+INSERT DELAYED INTO t_myisam VALUES (1, 2);
+
+INSERT INTO t_cs SELECT * FROM t_myisam;
+SELECT * FROM t_cs; 
+
+#Clean up
+DROP DATABASE mcs25_db;

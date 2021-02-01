@@ -1,0 +1,83 @@
+DROP DATABASE IF EXISTS mcs74_db;
+CREATE DATABASE mcs74_db;
+USE mcs74_db;
+CREATE TABLE t1(t1_int INT, t1_char CHAR(5), CHECK (t1_int > 0))ENGINE=Columnstore;
+SHOW CREATE TABLE t1;
+Table	Create Table
+t1	CREATE TABLE `t1` (
+  `t1_int` int(11) DEFAULT NULL,
+  `t1_char` char(5) DEFAULT NULL,
+  CONSTRAINT `CONSTRAINT_1` CHECK (`t1_int` > 0)
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+INSERT INTO t1 VALUES(NULL, '');
+INSERT INTO t1 VALUES(1, 'a');
+INSERT INTO t1 VALUES(0, 'b');
+ERROR 23000: CONSTRAINT `CONSTRAINT_1` failed for `mcs74_db`.`t1`
+INSERT INTO t1 VALUES(-1, 'c');
+ERROR 23000: CONSTRAINT `CONSTRAINT_1` failed for `mcs74_db`.`t1`
+SELECT * FROM t1;
+t1_int	t1_char
+NULL	NULL
+1	a
+CREATE TABLE t2(t1_char CHAR(10), CONSTRAINT c1 CHECK(t1_char = ''))ENGINE=Columnstore;
+SHOW CREATE TABLE t2;
+Table	Create Table
+t2	CREATE TABLE `t2` (
+  `t1_char` char(10) DEFAULT NULL,
+  CONSTRAINT `c1` CHECK (`t1_char` = '')
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+INSERT INTO t2 VALUES();
+INSERT INTO t2 VALUES('');
+INSERT INTO t2 VALUES('aaaa');
+ERROR 23000: CONSTRAINT `c1` failed for `mcs74_db`.`t2`
+SELECT * FROM t2;
+t1_char
+NULL
+NULL
+CREATE TABLE t3(
+t3_decimal DECIMAL(5,2),
+t3_blob BLOB,
+t3_datetime DATETIME,
+CONSTRAINT t3_check_date CHECK(t3_datetime >= '1212-12-12 12:12:12'),
+CONSTRAINT t3_check_decimal CHECK(t3_decimal < 888.88),
+CONSTRAINT t3_check_blob CHECK(t3_blob = 'aaaa')
+)ENGINE=Columnstore;
+SHOW CREATE TABLE t3;
+Table	Create Table
+t3	CREATE TABLE `t3` (
+  `t3_decimal` decimal(5,2) DEFAULT NULL,
+  `t3_blob` blob DEFAULT NULL,
+  `t3_datetime` datetime DEFAULT NULL,
+  CONSTRAINT `t3_check_date` CHECK (`t3_datetime` >= '1212-12-12 12:12:12'),
+  CONSTRAINT `t3_check_decimal` CHECK (`t3_decimal` < 888.88),
+  CONSTRAINT `t3_check_blob` CHECK (`t3_blob` = 'aaaa')
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+INSERT INTO t3(t3_decimal) VALUES(NULL);
+INSERT INTO t3(t3_decimal) VALUES(888.87);
+INSERT INTO t3(t3_decimal) VALUES(888.88);
+ERROR 23000: CONSTRAINT `t3_check_decimal` failed for `mcs74_db`.`t3`
+INSERT INTO t3(t3_decimal) VALUES(888.89);
+ERROR 23000: CONSTRAINT `t3_check_decimal` failed for `mcs74_db`.`t3`
+INSERT INTO t3(t3_blob) VALUES('');
+ERROR 23000: CONSTRAINT `t3_check_blob` failed for `mcs74_db`.`t3`
+INSERT INTO t3(t3_blob) VALUES('aaaa');
+INSERT INTO t3(t3_blob) VALUES('aaaaa');
+ERROR 23000: CONSTRAINT `t3_check_blob` failed for `mcs74_db`.`t3`
+INSERT INTO t3(t3_blob) VALUES('aaa');
+ERROR 23000: CONSTRAINT `t3_check_blob` failed for `mcs74_db`.`t3`
+INSERT INTO t3(t3_datetime) VALUES(NULL);
+INSERT INTO t3(t3_datetime) VALUES('0:0:0');
+ERROR 23000: CONSTRAINT `t3_check_date` failed for `mcs74_db`.`t3`
+INSERT INTO t3(t3_datetime) VALUES('1212-12-12 12:12:12');
+INSERT INTO t3(t3_datetime) VALUES('1212-12-12 12:12:13');
+INSERT INTO t3(t3_datetime) VALUES('1212-12-12 12:12:11');
+ERROR 23000: CONSTRAINT `t3_check_date` failed for `mcs74_db`.`t3`
+SELECT * FROM t3;
+t3_decimal	t3_blob	t3_datetime
+NULL	NULL	NULL
+888.87	NULL	NULL
+NULL	aaaa	NULL
+NULL	NULL	NULL
+NULL	NULL	1212-12-12 12:12:12
+NULL	NULL	1212-12-12 12:12:13
+DROP DATABASE mcs74_db;

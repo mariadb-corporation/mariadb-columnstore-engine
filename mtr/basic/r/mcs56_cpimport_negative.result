@@ -1,0 +1,13 @@
+DROP DATABASE IF EXISTS mcs56_db;
+CREATE DATABASE mcs56_db;
+USE mcs56_db;
+CREATE TABLE t1(col1 INT, col2 INT) ENGINE=Columnstore;
+
+Check for the correct error message:
+DROP DATABASE IF EXISTS nonexist_db;
+DROP DATABASE IF EXISTS nonexist_tbl;
+
+Check for the correct error message:
+
+Check for the correct error message:
+DROP DATABASE mcs56_db;

@@ -1,0 +1,25 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug5286.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists test;
+drop view if exists test_v;
+create table test (test1 numeric,test2 varchar(20)) engine=columnstore; 
+create view test_v as select * from test;
+insert into test values (1,'data1');
+insert into test values (2,'data2');
+insert into test values (3,'data3');
+
+select T.test1,T.test2 from test_v T;
+select T.test1,T.test2 from test_v t;
+select T.test1 from (select * from test_v)T;
+drop table test;
+drop view test_v;
+#
+

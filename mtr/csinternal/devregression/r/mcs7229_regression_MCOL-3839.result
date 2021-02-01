@@ -1,0 +1,70 @@
+USE tpch1;
+drop table if exists test_wf_count_with_constants;
+Warnings:
+Note	1051	Unknown table 'tpch1.test_wf_count_with_constants'
+create table test_wf_count_with_constants (t1 int) engine=columnstore;
+insert into test_wf_count_with_constants values (1);
+select count(null) over () from test_wf_count_with_constants;
+count(null) over ()
+0
+select count(5) over () from test_wf_count_with_constants;
+count(5) over ()
+1
+select count(*) from test_wf_count_with_constants;
+count(*)
+1
+select count(t1) from test_wf_count_with_constants;
+count(t1)
+1
+insert into test_wf_count_with_constants values (3);
+select count(null) over () from test_wf_count_with_constants;
+count(null) over ()
+0
+0
+select count(5) over () from test_wf_count_with_constants;
+count(5) over ()
+2
+2
+select count(*) from test_wf_count_with_constants;
+count(*)
+2
+select count(t1) from test_wf_count_with_constants;
+count(t1)
+2
+select count(5) over(partition by t1)  from test_wf_count_with_constants;
+count(5) over(partition by t1)
+1
+1
+select count(*) over(partition by t1)  from test_wf_count_with_constants;
+count(*) over(partition by t1)
+1
+1
+select count(null) over(partition by t1)  from test_wf_count_with_constants;
+count(null) over(partition by t1)
+0
+0
+select count(5) over(order by t1 rows between unbounded preceding and current row exclude no others)  from test_wf_count_with_constants;
+count(5) over(order by t1 rows between unbounded preceding and current row exclude no others)
+1
+2
+select count(*) over(order by t1 rows between unbounded preceding and current row exclude no others)  from test_wf_count_with_constants;
+count(*) over(order by t1 rows between unbounded preceding and current row exclude no others)
+1
+2
+select count(null) over(order by t1 rows between unbounded preceding and current row exclude no others)  from test_wf_count_with_constants;
+count(null) over(order by t1 rows between unbounded preceding and current row exclude no others)
+0
+0
+select count(5) over(order by t1 rows between current row and unbounded following)  from test_wf_count_with_constants;
+count(5) over(order by t1 rows between current row and unbounded following)
+2
+1
+select count(*) over(order by t1 rows between current row and unbounded following)  from test_wf_count_with_constants;
+count(*) over(order by t1 rows between current row and unbounded following)
+2
+1
+select count(null) over(order by t1 rows between current row and unbounded following)  from test_wf_count_with_constants;
+count(null) over(order by t1 rows between current row and unbounded following)
+0
+0
+drop table test_wf_count_with_constants;

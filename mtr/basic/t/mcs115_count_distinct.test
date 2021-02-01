@@ -1,0 +1,22 @@
+#
+# Test FlUSH
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs115_db;
+--enable_warnings
+
+CREATE DATABASE mcs115_db;
+USE mcs115_db;
+
+CREATE TABLE t1 (a INT, b CHAR(1))ENGINE=Columnstore;
+INSERT INTO t1 VALUES(NULL, ''),(1, 'z'),(2, 'y'),(1, 'y'),(2, 'z'),(3, 'z');
+
+SELECT COUNT(a) FROM t1;
+SELECT COUNT(DISTINCT a) FROM t1;
+SELECT COUNT(DISTINCT b) FROM t1;
+
+# Clean UP
+DROP DATABASE mcs115_db;

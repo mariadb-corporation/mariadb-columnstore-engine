@@ -1,0 +1,28 @@
+#
+# Test MEDIAN() Window Function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs140_db;
+--enable_warnings
+
+CREATE DATABASE mcs140_db;
+USE mcs140_db;
+
+CREATE TABLE t1 (a CHAR(1), b INT)ENGINE=Columnstore;
+INSERT INTO t1 VALUES ('', NULL),('a', 123),('a', 1),('b', 123),('c', 1861),('c', 1991),('d', 10701),('d', 1071),('a', 92);
+
+SELECT a, b, MEDIAN(b) OVER(PARTITION BY b) median FROM t1;
+SELECT a, b, MEDIAN(b) OVER(PARTITION BY a) median FROM t1;
+
+--error ER_PARSE_ERROR
+SELECT a, b, MEDIAN(b) OVER(ORDER BY b DESC) median FROM t1;
+--error ER_WRONG_TYPE_FOR_PERCENTILE_FUNC
+SELECT a, b, MEDIAN(a) OVER(PARTITION BY a) median FROM t1;
+--error ER_WRONG_TYPE_FOR_PERCENTILE_FUNC
+SELECT a, b, MEDIAN(a) OVER(PARTITION BY b) median FROM t1;
+
+# Clean UP
+DROP DATABASE mcs140_db;

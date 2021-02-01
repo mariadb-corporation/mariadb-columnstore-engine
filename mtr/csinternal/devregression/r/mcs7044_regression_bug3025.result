@@ -1,0 +1,66 @@
+USE tpch1;
+drop table if exists bug3025;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug3025'
+create table bug3025(value integer(5)) engine=Columnstore;
+insert into bug3025 values (1), (1001), (24), (2123), (null), (123), (888), (8421), (231), (-100), (null);
+select value, IF(value<=1000,'<=1000', '>1000') 
+from bug3025 
+group by value, IF(value<=1000,'<=1000', '>1000') 
+order by ISNULL(IF(value<=1000,'<=1000', '>1000')), value;
+value	IF(value<=1000,'<=1000', '>1000')
+NULL	>1000
+-100	<=1000
+1	<=1000
+24	<=1000
+123	<=1000
+231	<=1000
+888	<=1000
+1001	>1000
+2123	>1000
+8421	>1000
+select IF(value<=1000,'<=1000', '>1000') 
+from bug3025 
+group by IF(value<=1000,'<=1000', '>1000'), value 
+order by ISNULL(IF(value<=1000,'<=1000', '>1000')), value;
+IF(value<=1000,'<=1000', '>1000')
+>1000
+<=1000
+<=1000
+<=1000
+<=1000
+<=1000
+<=1000
+>1000
+>1000
+>1000
+select IF(value<=1000,'<=1000', '>1000') from bug3025 group by
+IF(value<=1000,'<=1000', '>1000') order by IF(value<=1000,'<=1000', '>1000');
+IF(value<=1000,'<=1000', '>1000')
+<=1000
+>1000
+select IF(value<=1000,'<=1000', '>1000') a, isnull(IF(value<=1000,'<=1000',
+'>1000')) b from bug3025 group by 1,2 order by 2,1;
+a	b
+<=1000	0
+>1000	0
+select * from (select count(*) cnt , if((if(not isnull(value),"notNull","null")
+like 'null'),null,if(value<1000,"<1000",">=1000")) a from bug3025 group by a, value
+order by not isnull(a),2 asc) b
+order by 1, 2;
+cnt	a
+1	<1000
+1	<1000
+1	<1000
+1	<1000
+1	<1000
+1	<1000
+1	>=1000
+1	>=1000
+1	>=1000
+2	NULL
+select IF(value<=1000,'<=1000', '>1000') a, isnull(IF(value<=1000,'<=1000', '>1000')) b from bug3025 group by 1,2 order by 2,1;
+a	b
+<=1000	0
+>1000	0
+drop table if exists bug3025;

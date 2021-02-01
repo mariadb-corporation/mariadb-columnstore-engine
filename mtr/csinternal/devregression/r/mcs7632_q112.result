@@ -1,0 +1,20 @@
+USE tpch1;
+SET sql_mode = ANSI_QUOTES;
+create table "to!@#$%^&*$#,()[].;:+-|/%^<>=!&|@\"(some int,t text) engine=columnstore;
+insert into `to!@#$%^&*$#,()[].;:+-|/%^<>=!&|@\` values (1,'Lorem ipsum dolor sit amet, consectetur adipiscing elit,'),(7,'sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'),(8,'Ut enim ad minim veniam,'),(9,'quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'),(10,'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore e');
+select * from "to!@#$%^&*$#,()[].;:+-|/%^<>=!&|@\";
+some	t
+1	Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+7	sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+8	Ut enim ad minim veniam,
+9	quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+10	Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore e
+show create table "to!@#$%^&*$#,()[].;:+-|/%^<>=!&|@\";
+Table	Create Table
+to!@#$%^&*$#,()[].;:+-|/%^<>=!&|@\	CREATE TABLE "to!@#$%^&*$#,()[].;:+-|/%^<>=!&|@\" (
+  "some" int(11) DEFAULT NULL,
+  "t" text DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+drop table "to!@#$%^&*$#,()[].;:+-|/%^<>=!&|@\";
+show create table "to!@#$%^&*$#,()[].;:+-|/%^<>=!&|@\";
+ERROR 42S02: Table 'tpch1.to!@#$%^&*$#,()[].;:+-|/%^<>=!&|@\' doesn't exist

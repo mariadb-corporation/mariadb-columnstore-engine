@@ -1,0 +1,42 @@
+#
+# Columnstore engine doesn't support NOT RLIKE
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs243_db;
+--enable_warnings
+
+CREATE DATABASE mcs243_db;
+USE mcs243_db;
+
+CREATE TABLE t1
+(
+ t1_INT INT,
+ t1_DECIMAL DECIMAL(12,5),
+ t1_TEXT TEXT,
+ t1_DATE DATE,
+ t1_TIME TIME
+ )ENGINE=Columnstore;
+INSERT INTO t1 VALUES(103, 1234.5699, repeat('o', 5), '1997-12-12', '22:12:02');
+INSERT INTO t1 VALUES(-7299, 111.99, repeat('p', 5), '2001-1-1', '23:59:59');
+INSERT INTO t1 VALUES(9913, 98765.4321, repeat('q', 5), '09-12-11', '01:08:59');
+
+--error ER_CHECK_NOT_IMPLEMENTED
+SELECT t1_INT, t1_INT NOT RLIKE '99$' FROM t1 ORDER BY 1;
+
+--error ER_CHECK_NOT_IMPLEMENTED
+SELECT t1_DECIMAL, t1_DECIMAL NOT RLIKE '99$' FROM t1 ORDER BY 1;
+
+--error ER_CHECK_NOT_IMPLEMENTED
+SELECT t1_TEXT, t1_TEXT NOT RLIKE 'oooo$' FROM t1 ORDER BY 1;
+
+--error ER_CHECK_NOT_IMPLEMENTED
+SELECT t1_DATE, t1_DATE NOT RLIKE '(1997)+' FROM t1 ORDER BY 1;
+
+--error ER_CHECK_NOT_IMPLEMENTED
+SELECT t1_TIME, t1_TIME NOT RLIKE '22$' FROM t1 ORDER BY 1;
+
+# Clean UP
+DROP DATABASE mcs243_db;

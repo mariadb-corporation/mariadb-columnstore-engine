@@ -1,0 +1,74 @@
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS unsigned_joins_db;
+--enable_warnings
+
+CREATE DATABASE unsigned_joins_db;
+USE unsigned_joins_db;
+
+create table customer (
+        c_custkey int,
+        c_name varchar (25),
+        c_address varchar (40),
+        c_nationkey int,
+        c_phone char (15),
+        c_acctbal decimal(12,2),
+        c_mktsegment char (10),
+        c_comment varchar (117)
+) engine=columnstore;
+
+create table orders (
+        o_orderkey int,
+        o_custkey int,
+        o_orderstatus char (1),
+        o_totalprice decimal(12,2),
+        o_orderdate date,
+        o_orderpriority char (15),
+        o_clerk char (15),
+        o_shippriority int,
+        o_comment varchar (79)
+) engine=columnstore;
+
+LOAD DATA LOCAL infile './suite/columnstore/std_data/1m_customer.tbl' INTO TABLE customer FIELDS TERMINATED BY '|';
+LOAD DATA LOCAL infile './suite/columnstore/std_data/1m_orders.tbl' INTO TABLE orders FIELDS TERMINATED BY '|';
+
+alter table customer add column u_custkey int unsigned;
+update customer set u_custkey=c_custkey;
+alter table orders add column u_custkey int unsigned;
+update orders set u_custkey=o_custkey;
+
+# Join unsigned int to unsigned int.
+select count(*) as count1 from customer join orders on orders.u_custkey = customer.u_custkey;
+select count(*) as count2 from customer left join orders on orders.u_custkey = customer.u_custkey;
+# Bug: MCOL-4519
+--error 1815
+select count(*) as count3 from customer right join orders on orders.u_custkey = customer.u_custkey;
+select count(*) as count4 from customer where exists (select u_custkey from orders where orders.u_custkey = customer.u_custkey);
+# Bug: MCOL-4519
+--error 1815
+select count(*) as count5 from customer where not exists (select u_custkey from orders where orders.u_custkey = customer.u_custkey);
+
+# Join unsigned int on customer to int on orders.
+select count(*) as count11 from customer join orders on orders.o_custkey = customer.u_custkey;
+select count(*) as count12 from customer left join orders on orders.o_custkey = customer.u_custkey;
+select count(*) as count13 from customer right join orders on orders.o_custkey = customer.u_custkey;
+select count(*) as count14 from customer where exists (select u_custkey from orders where orders.o_custkey = customer.u_custkey);
+# Bug : MCOL-4519
+--error 1815
+select count(*) as count15 from customer where not exists (select u_custkey from orders where orders.o_custkey = customer.u_custkey);
+
+# Join unsigned int on orders to int on customer;
+select count(*) as count11 from customer join orders on orders.u_custkey = customer.c_custkey;
+select count(*) as count12 from customer left join orders on orders.u_custkey = customer.c_custkey;
+# Bug: MCOL-4519
+--error 1815
+select count(*) as count13 from customer right join orders on orders.u_custkey = customer.c_custkey;
+select count(*) as count14 from customer where exists (select u_custkey from orders where orders.u_custkey = customer.c_custkey);
+select count(*) as count15 from customer where not exists (select u_custkey from orders where orders.u_custkey = customer.c_custkey);
+
+alter table customer drop column u_custkey;
+alter table orders drop column u_custkey;
+
+# Clean UP
+DROP DATABASE unsigned_joins_db;

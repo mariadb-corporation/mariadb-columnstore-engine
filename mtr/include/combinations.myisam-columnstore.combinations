@@ -1,0 +1,5 @@
+[myisam]
+default_storage_engine=myisam
+
+[columnstore]
+default_storage_engine=columnstore
