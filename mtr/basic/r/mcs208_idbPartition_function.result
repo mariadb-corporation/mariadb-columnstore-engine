@@ -1,0 +1,18 @@
+DROP DATABASE IF EXISTS mcs208_db;
+CREATE DATABASE mcs208_db;
+USE mcs208_db;
+CREATE TABLE t1(col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnstore;
+LOAD DATA LOCAL infile './suite/columnstore/std_data/100Krows.dat' INTO TABLE t1 FIELDS TERMINATED BY '|';
+SELECT COUNT(*) FROM t1;
+COUNT(*)
+100001
+SELECT idbPartition(col1) FROM t1 LIMIT 1;
+idbPartition(col1)
+0.0.1
+SELECT idbPartition(col2) FROM t1 LIMIT 1;
+idbPartition(col2)
+0.0.1
+SELECT idbPartition(col3) FROM t1 LIMIT 1;
+idbPartition(col3)
+0.0.1
+DROP DATABASE mcs208_db;

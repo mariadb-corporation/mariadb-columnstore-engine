@@ -1,0 +1,11 @@
+USE tpch1;
+select caldroppartitions('lineitem', '4.1.1');
+caldroppartitions('lineitem', '4.1.1')
+No partitions are dropped
+Warnings:
+Warning	9999	IDB-4003: Partition "4.1.1" does not exist.
+select caldisablepartitions('lineitem', '4.1.1');
+caldisablepartitions('lineitem', '4.1.1')
+No partitions are disabled
+Warnings:
+Warning	9999	IDB-4003: Partition "4.1.1" does not exist.

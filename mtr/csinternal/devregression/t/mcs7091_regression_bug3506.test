@@ -1,0 +1,26 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3506.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+select rand(0) from region;
+select rand(-2) from region order by 1;
+select rand(2) from region order by rand(1);
+select * from (select n_nationkey, rand(1) from nation limit 1) x;
+select * from (select n_nationkey from nation order by rand(1) limit 1 )a;
+select rand(r_regionkey) from region;
+select rand(r_name) from region;
+
+#-- should test the following to make sure rand() without arg returns random value each time. 
+#-- comment out for regression test because it'll never compare
+#-- select * from (select n_nationkey from nation order by rand() limit 1 ) a;
+#-- select n_nationkey from nation order by rand() limit 1;
+
+
+#
+

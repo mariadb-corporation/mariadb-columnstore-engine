@@ -1,0 +1,64 @@
+#
+# Test CHECK Constraint 
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs74_db;
+--enable_warnings
+
+CREATE DATABASE mcs74_db;
+USE mcs74_db;
+
+CREATE TABLE t1(t1_int INT, t1_char CHAR(5), CHECK (t1_int > 0))ENGINE=Columnstore;
+SHOW CREATE TABLE t1;
+INSERT INTO t1 VALUES(NULL, '');
+INSERT INTO t1 VALUES(1, 'a');
+--error ER_CONSTRAINT_FAILED
+INSERT INTO t1 VALUES(0, 'b');
+--error ER_CONSTRAINT_FAILED
+INSERT INTO t1 VALUES(-1, 'c');
+SELECT * FROM t1;
+
+CREATE TABLE t2(t1_char CHAR(10), CONSTRAINT c1 CHECK(t1_char = ''))ENGINE=Columnstore;
+SHOW CREATE TABLE t2;
+INSERT INTO t2 VALUES();
+INSERT INTO t2 VALUES('');
+--error ER_CONSTRAINT_FAILED
+INSERT INTO t2 VALUES('aaaa');
+SELECT * FROM t2;
+
+CREATE TABLE t3(
+ t3_decimal DECIMAL(5,2),
+ t3_blob BLOB,
+ t3_datetime DATETIME,
+ CONSTRAINT t3_check_date CHECK(t3_datetime >= '1212-12-12 12:12:12'),
+ CONSTRAINT t3_check_decimal CHECK(t3_decimal < 888.88),
+ CONSTRAINT t3_check_blob CHECK(t3_blob = 'aaaa')
+)ENGINE=Columnstore;
+SHOW CREATE TABLE t3;
+INSERT INTO t3(t3_decimal) VALUES(NULL);
+INSERT INTO t3(t3_decimal) VALUES(888.87);
+--error ER_CONSTRAINT_FAILED
+INSERT INTO t3(t3_decimal) VALUES(888.88);
+--error ER_CONSTRAINT_FAILED
+INSERT INTO t3(t3_decimal) VALUES(888.89);
+--error ER_CONSTRAINT_FAILED
+INSERT INTO t3(t3_blob) VALUES('');
+INSERT INTO t3(t3_blob) VALUES('aaaa');
+--error ER_CONSTRAINT_FAILED
+INSERT INTO t3(t3_blob) VALUES('aaaaa');
+--error ER_CONSTRAINT_FAILED
+INSERT INTO t3(t3_blob) VALUES('aaa');
+INSERT INTO t3(t3_datetime) VALUES(NULL);
+--error ER_CONSTRAINT_FAILED
+INSERT INTO t3(t3_datetime) VALUES('0:0:0');
+INSERT INTO t3(t3_datetime) VALUES('1212-12-12 12:12:12');
+INSERT INTO t3(t3_datetime) VALUES('1212-12-12 12:12:13');
+--error ER_CONSTRAINT_FAILED
+INSERT INTO t3(t3_datetime) VALUES('1212-12-12 12:12:11');
+SELECT * FROM t3;
+
+# Clean UP
+DROP DATABASE mcs74_db;

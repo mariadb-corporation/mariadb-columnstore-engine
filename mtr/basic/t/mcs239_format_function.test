@@ -1,0 +1,24 @@
+#
+# Test FORMAT() function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs239_db;
+--enable_warnings
+
+CREATE DATABASE mcs239_db;
+USE mcs239_db;
+
+CREATE TABLE t1 (a INT, b DECIMAL(10,5))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (1, 12.0623), (2, -0.1712), (3, 3.3851);
+
+SELECT a, FORMAT(a, 2) FROM t1 ORDER BY 1;
+SELECT a*0.06, FORMAT(a*0.06, 2) FROM t1 ORDER BY 1;
+SELECT b, FORMAT(b, 2) FROM t1 ORDER BY 1;
+SELECT b, FORMAT(b, 6) FROM t1 ORDER BY 1;
+SELECT b*0.2, FORMAT(b*0.2, 7) FROM t1 ORDER BY 1;
+
+# Clean UP
+DROP DATABASE mcs239_db;

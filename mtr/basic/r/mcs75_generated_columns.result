@@ -1,0 +1,6 @@
+DROP DATABASE IF EXISTS mcs75_db;
+CREATE DATABASE mcs75_db;
+USE mcs75_db;
+CREATE TABLE t1(col1 INT, col2 CHAR(10), col3 CHAR(10), col4 VARCHAR(20) GENERATED ALWAYS AS (CONCAT(col2,col3)))ENGINE=Columnstore;
+ERROR HY000: Columnstore storage engine does not support generated columns
+DROP DATABASE mcs75_db;

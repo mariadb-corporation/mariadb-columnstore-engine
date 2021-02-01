@@ -1,0 +1,29 @@
+DROP DATABASE IF EXISTS mcs4_db;
+CREATE DATABASE mcs4_db;
+USE mcs4_db;
+CREATE TABLE t_default
+(
+t_INT INT DEFAULT 10,
+t_CHAR_10 CHAR(10) DEFAULT 'mariadb cs',
+t_VARCHAR_100 VARCHAR(100) DEFAULT 'mariadb columnstore',
+t_DATE DATE DEFAULT '1000-11-11',
+t_TIME TIME DEFAULT '00:00:00',
+t_TIMESTAMP TIMESTAMP DEFAULT '2020-01-01',
+t_DATETIME DATETIME DEFAULT '1000-01-01 00:00:00'
+ )ENGINE=Columnstore;
+INSERT INTO t_default VALUES();
+SELECT * FROM t_default;
+t_INT	t_CHAR_10	t_VARCHAR_100	t_DATE	t_TIME	t_TIMESTAMP	t_DATETIME
+10	mariadb cs	mariadb columnstore	1000-11-11	00:00:00	2020-01-01 00:00:00	1000-01-01 00:00:00
+CREATE TABLE t1_default(t_TEXT TEXT DEFAULT 'mariadb columnstore', t_BLOB BLOB DEFAULT 'columnstore mariadb')ENGINE=Columnstore;
+INSERT INTO t1_default VALUES();
+SELECT * FROM t1_default;
+t_TEXT	t_BLOB
+mariadb columnstore	columnstore mariadb
+CREATE TABLE t_neg(col1 INT DEFAULT 'a')ENGINE=Columnstore;
+ERROR 42000: Invalid default value for 'col1'
+CREATE TABLE t1_neg(col1 VARCHAR(10) DEFAULT 'mariadb columnstore')ENGINE=Columnstore;
+ERROR 42000: Invalid default value for 'col1'
+CREATE TABLE t2_neg(col1 DATETIME DEFAULT '1')ENGINE=Columnstore;
+ERROR 42000: Invalid default value for 'col1'
+DROP DATABASE mcs4_db;

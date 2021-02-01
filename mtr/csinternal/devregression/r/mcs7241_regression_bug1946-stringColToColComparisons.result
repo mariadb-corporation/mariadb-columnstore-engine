@@ -1,0 +1,75 @@
+USE tpch1;
+select cidx, cchar1, cvchar255 from datatypetestm where cchar1 < cvchar255 order by 1;
+cidx	cchar1	cvchar255
+1	a	aaaaaaaaaa
+2	a	j
+3	a	jj
+4	a	jjj
+5	a	jjjj
+10	z	zzzzzzzzzz
+select cidx, cchar2, cvchar8 from datatypetestm where cchar2 <= cvchar8 order by 1;
+cidx	cchar2	cvchar8
+1	aa	aaaaaaaa
+2	b	h
+3	bb	hh
+4	bb	hhh
+5	bb	hhhh
+10	zz	zzzzzzzz
+select cidx, cchar3, cvchar7 from datatypetestm where cchar3 >= cvchar7 order by 1;
+cidx	cchar3	cvchar7
+6	xxx	ttttttt
+7	xxx	ttttttt
+8	xxx	ttttttt
+9	xxx	ttttttt
+select cidx, cchar4, cvchar6 from datatypetestm where cchar4 > cvchar6 order by 1;
+cidx	cchar4	cvchar6
+6	wwww	uuuuuu
+7	wwww	uuuuuu
+8	wwww	uuuuuu
+9	wwww	uuuuuu
+select cidx, cchar5, cvchar5 from datatypetestm where cchar5 != cvchar5 order by 1;
+cidx	cchar5	cvchar5
+select cidx, cchar6, cvchar4 from datatypetestm where cchar6 > cvchar4 order by 1;
+cidx	cchar6	cvchar4
+1	aaaaaa	aaaa
+2	f	d
+3	ff	dd
+4	fff	ddd
+5	ffff	dddd
+10	zzzzzz	zzzz
+select cidx, cchar7, cvchar3 from datatypetestm where cchar7 < cvchar3 order by 1;
+cidx	cchar7	cvchar3
+6	ttttttt	xxx
+7	ttttttt	xxx
+8	ttttttt	xxx
+9	ttttttt	xxx
+select cidx, cchar8, cvchar2 from datatypetestm where cchar8 >= cvchar2 order by 1;
+cidx	cchar8	cvchar2
+1	aaaaaaaa	aa
+2	h	b
+3	hh	bb
+4	hhh	bb
+5	hhhh	bb
+10	zzzzzzzz	zz
+select cidx, cchar9, cvchar1 from datatypetestm where cchar9 <= cvchar1 order by 1;
+cidx	cchar9	cvchar1
+6	rrrrrrr	z
+7	rrrrrrrr	z
+8	rrrrrrrrr	z
+9	rrrrrrrrr	z
+select cidx, cchar255, cvchar3 from datatypetestm where cchar255 != cvchar3 order by 1;
+cidx	cchar255	cvchar3
+1	aaaaaaaaaa	aaa
+2	j	c
+3	jj	cc
+4	jjj	ccc
+5	jjjj	ccc
+6	qqqqqqq	xxx
+7	qqqqqqqq	xxx
+8	qqqqqqqqq	xxx
+9	qqqqqqqqqq	xxx
+10	zzzzzzzzzz	zzz
+select cidx, cchar4, cchar5 from datatypetestm where cchar4 = cchar5 order by 1;
+cidx	cchar4	cchar5
+select cidx cchar3, cvchar255 from datatypetestm where cchar3 = cvchar255;
+cchar3	cvchar255

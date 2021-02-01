@@ -1,0 +1,29 @@
+#
+# Test POSITION() function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs222_db;
+--enable_warnings
+
+CREATE DATABASE mcs222_db;
+USE mcs222_db;
+
+CREATE TABLE t1 (a INT, b CHAR(15))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL, ''),(1, 'a'),(2, 'aqaaqq'),(3, 'cqcqqcq'),(4, 'qdqdqqdq'),(5, 'aaaqq');
+
+SELECT POSITION('zz' IN 'aazazazapq');
+SELECT POSITION('zz' IN 'zzaazapq');
+SELECT POSITION('zz' IN 'aazzzazzaq');
+
+SELECT b, POSITION('a' IN b) FROM t1 ORDER BY b;
+SELECT b, POSITION('aa' IN b) FROM t1 ORDER BY b;
+SELECT b, POSITION('aaa' IN b) FROM t1 ORDER BY b;
+SELECT b, POSITION('qq' IN b) FROM t1 ORDER BY b;
+
+SELECT b, POSITION(concat(b, 'zzz') IN 'azzzghijk') FROM t1 ORDER BY b;
+
+# Clean UP
+DROP DATABASE mcs222_db;

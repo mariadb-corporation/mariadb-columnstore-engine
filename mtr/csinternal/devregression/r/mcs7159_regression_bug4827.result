@@ -1,0 +1,66 @@
+USE tpch1;
+select count(*) from  (select l_orderkey from lineitem where l_orderkey
+< 10 ) L4 where exists ( select 1 from lineitem l2 where l2.l_orderkey =
+L4.l_orderkey and l2.l_orderkey between 5 and 15);
+count(*)
+11
+select count(*) from  (select l_orderkey from lineitem where l_orderkey
+< 10 ) L4 where L4.l_orderkey > 0 and exists ( select 1 from lineitem l2 where
+l2.l_orderkey = L4.l_orderkey and l2.l_orderkey between 5 and 15);
+count(*)
+11
+SELECT count(*)
+FROM LINEITEM L1
+WHERE l1.l_orderkey < 10
+AND L1.L_ORDERKEY not in ( SELECT l_orderkey FROM LINEITEM
+where l_orderkey < 10
+group by 1 having count(*) > 0 );
+count(*)
+0
+select * from (select * from region) r where r_regionkey in (select n_regionkey from nation where 
+n_nationkey>r_regionkey);
+r_regionkey	r_name	r_comment
+0	AFRICA	lar deposits. blithely final packages cajole. regular waters are final requests. regular accounts are according to 
+1	AMERICA	hs use ironic, even requests. s
+2	ASIA	ges. thinly even pinto beans ca
+3	EUROPE	ly final courts cajole furiously final excuse
+4	MIDDLE EAST	uickly special accounts cajole carefully blithely close requests. carefully final asymptotes haggle furiousl
+select * from (select * from region) r where r_regionkey > (select min(n_regionkey) from nation where 
+n_nationkey=r_regionkey);
+r_regionkey	r_name	r_comment
+2	ASIA	ges. thinly even pinto beans ca
+3	EUROPE	ly final courts cajole furiously final excuse
+select * from (select * from region) r where exists (select n_regionkey from nation where n_nationkey=r_regionkey);
+r_regionkey	r_name	r_comment
+0	AFRICA	lar deposits. blithely final packages cajole. regular waters are final requests. regular accounts are according to 
+1	AMERICA	hs use ironic, even requests. s
+2	ASIA	ges. thinly even pinto beans ca
+3	EUROPE	ly final courts cajole furiously final excuse
+4	MIDDLE EAST	uickly special accounts cajole carefully blithely close requests. carefully final asymptotes haggle furiousl
+select (select min(r_regionkey) from region where r_regionkey=n_regionkey) from (select * from nation)n order by 1;
+(select min(r_regionkey) from region where r_regionkey=n_regionkey)
+0
+0
+0
+0
+0
+1
+1
+1
+1
+1
+2
+2
+2
+2
+2
+3
+3
+3
+3
+3
+4
+4
+4
+4
+4

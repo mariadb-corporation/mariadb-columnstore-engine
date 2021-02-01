@@ -1,0 +1,108 @@
+USE tpch1;
+drop table if exists t;
+Warnings:
+Note	1051	Unknown table 'tpch1.t'
+create table t(a int, b int) engine=columnstore;
+insert into t(a,b) values(1,4),(2,3),(3,2),(4,1);
+select
+a,
+r
+from (
+select
+a,
+DENSE_RANK() OVER `w_0` as `r`
+    from t
+WINDOW `w_0` as ( ORDER BY `b` DESC)
+) t0
+where r in (1,2);
+a	r
+1	1
+2	2
+select
+a,
+r
+from (
+select
+a,
+DENSE_RANK() OVER `w_0` as `r`
+    from t
+WINDOW `w_0` as ( ORDER BY `b` DESC)
+) t0
+where r not in (1,2);
+a	r
+3	3
+4	4
+select
+a,
+r
+from (
+select
+a,
+DENSE_RANK() OVER `w_0` as `r`
+    from t
+WINDOW `w_0` as ( ORDER BY `b` DESC)
+) t0
+where r in (1);
+a	r
+1	1
+select
+a,
+r
+from (
+select
+a,
+DENSE_RANK() OVER `w_0` as `r`
+    from t
+WINDOW `w_0` as ( ORDER BY `b` DESC)
+) t0
+where a in (1,2);
+a	r
+1	1
+2	2
+select
+a,
+r
+from (
+select
+a,
+DENSE_RANK() OVER `w_0` as `r`
+    from t
+WINDOW `w_0` as ( ORDER BY `b` DESC)
+) t0
+where a in (1);
+a	r
+1	1
+select
+a
+from t
+where a in (1,2);
+a
+1
+2
+select
+a,
+r
+from (
+select
+a,
+b as r
+from t
+) t0
+where a in (1, 2);
+a	r
+1	4
+2	3
+select
+a,
+r
+from (
+select
+a,
+b as r
+from t
+) t0
+where a not in (1, 2);
+a	r
+3	2
+4	1
+drop table if exists t;

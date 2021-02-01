@@ -1,0 +1,45 @@
+DROP DATABASE IF EXISTS mcs285_db;
+CREATE DATABASE mcs285_db;
+USE mcs285_db;
+CREATE TABLE t1 (a INT, b CHAR(15))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL, ''),(1, 'mariadb'),(2, 'columnstore'),(3, 'Innodb');
+SELECT RIGHT('mariadb cs', 2) FROM t1 LIMIT 1;
+RIGHT('mariadb cs', 2)
+cs
+SELECT RIGHT('mariadb cs', 3) FROM t1 LIMIT 1;
+RIGHT('mariadb cs', 3)
+ cs
+SELECT RIGHT('mariadb cs', 4) FROM t1 LIMIT 1;
+RIGHT('mariadb cs', 4)
+b cs
+SELECT b, RIGHT(b, 0) FROM t1 ORDER BY 1;
+b	RIGHT(b, 0)
+NULL	NULL
+columnstore	NULL
+Innodb	NULL
+mariadb	NULL
+SELECT b, RIGHT(b, -1) FROM t1 ORDER BY 1;
+b	RIGHT(b, -1)
+NULL	NULL
+columnstore	
+Innodb	
+mariadb	
+SELECT b, RIGHT(b, 6) FROM t1 ORDER BY 1;
+b	RIGHT(b, 6)
+NULL	NULL
+columnstore	nstore
+Innodb	Innodb
+mariadb	ariadb
+SELECT b, RIGHT(b, 9) FROM t1 ORDER BY 1;
+b	RIGHT(b, 9)
+NULL	NULL
+columnstore	lumnstore
+Innodb	Innodb
+mariadb	mariadb
+SELECT b, RIGHT(concat(b, '_mmm'), 10) FROM t1 ORDER BY 1;
+b	RIGHT(concat(b, '_mmm'), 10)
+NULL	NULL
+columnstore	nstore_mmm
+Innodb	Innodb_mmm
+mariadb	ariadb_mmm
+DROP DATABASE mcs285_db;

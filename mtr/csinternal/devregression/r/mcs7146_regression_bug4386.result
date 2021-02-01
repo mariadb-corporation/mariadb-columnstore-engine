@@ -1,0 +1,19 @@
+USE tpch1;
+drop table if exists dim_date;
+Warnings:
+Note	1051	Unknown table 'tpch1.dim_date'
+create table dim_date ( companycode integer, FinancialQuarterID integer,
+FinancialQuarter integer, FinancialYear integer ) engine=columnstore;
+insert into dim_date values (1,1,2,1);
+insert into dim_date values (1,3,2,1);
+select count(*)     from dim_date x_varDate      where      FinancialQuarterID > CASE      WHEN
+x_varDate.FinancialQuarter <= 3 THEN (x_varDate.FinancialYear-1) ELSE (x_varDate.FinancialYear) END ;
+count(*)
+2
+select count(*)     from dim_date x_varDate      where      FinancialQuarterID BETWEEN CASE      WHEN
+x_varDate.FinancialQuarter <=               3       THEN          ((x_varDate.FinancialYear  - 1) * 10)          +
+(1 + x_varDate.FinancialQuarter)       ELSE          (x_varDate.FinancialYear * 10)          +
+(x_varDate.FinancialQuarter - 3)         END       AND x_varDate.FinancialQuarterID;
+count(*)
+1
+drop table dim_date;

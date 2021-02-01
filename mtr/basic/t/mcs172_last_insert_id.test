@@ -1,0 +1,24 @@
+#
+# LAST_INSERT_ID function is not supported in columnstore
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs172_db;
+--enable_warnings
+
+CREATE DATABASE mcs172_db;
+USE mcs172_db;
+
+SET default_storage_engine=Columnstore;
+
+CREATE TABLE t1 (a INT COMMENT'autoincrement');
+INSERT INTO t1 VALUES ();
+
+SELECT LAST_INSERT_ID();
+--error 1178
+SELECT LAST_INSERT_ID(a) FROM t1;
+
+# Clean UP
+DROP DATABASE mcs172_db;

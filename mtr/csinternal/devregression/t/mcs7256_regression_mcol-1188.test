@@ -1,0 +1,138 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: mcol-1188.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+--disable_warnings
+drop table if exists cs_item;
+drop table if exists ar_item;
+drop table if exists in_item;
+drop table if exists item;
+--enable_warnings
+CREATE TABLE cs_item (
+  `i_product_name` char(50) DEFAULT NULL,
+  `i_category` char(50) DEFAULT NULL,
+  `i_manufact_id` int(11) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1 ;
+
+insert into cs_item values('shirt', 'Women', 947);
+
+CREATE TABLE ar_item (
+  `i_product_name` char(50) DEFAULT NULL,
+  `i_category` char(50) DEFAULT NULL,
+  `i_manufact_id` int(11) DEFAULT NULL
+) ENGINE=Aria DEFAULT CHARSET=latin1 ;
+insert into ar_item values('shirt', 'Women', 947);
+
+CREATE TABLE in_item (
+  `i_product_name` char(50) DEFAULT NULL,
+  `i_category` char(50) DEFAULT NULL,
+  `i_manufact_id` int(11) DEFAULT NULL
+) ENGINE=innodb DEFAULT CHARSET=latin1 ;
+insert into in_item values('shirt', 'Women', 947);
+
+CREATE TABLE `item` (
+  `i_item_sk` int(11) NOT NULL,
+  `i_item_id` char(16) NOT NULL,
+  `i_rec_start_date` date DEFAULT NULL,
+  `i_rec_end_date` date DEFAULT NULL,
+  `i_item_desc` varchar(200) DEFAULT NULL,
+  `i_current_price` decimal(7,2) DEFAULT NULL,
+  `i_wholesale_cost` decimal(7,2) DEFAULT NULL,
+  `i_brand_id` int(11) DEFAULT NULL,
+  `i_brand` char(50) DEFAULT NULL,
+  `i_class_id` int(11) DEFAULT NULL,
+  `i_class` char(50) DEFAULT NULL,
+  `i_category_id` int(11) DEFAULT NULL,
+  `i_category` char(50) DEFAULT NULL,
+  `i_manufact_id` int(11) DEFAULT NULL,
+  `i_manufact` char(50) DEFAULT NULL,
+  `i_size` char(20) DEFAULT NULL,
+  `i_formulation` char(20) DEFAULT NULL,
+  `i_color` char(20) DEFAULT NULL,
+  `i_units` char(10) DEFAULT NULL,
+  `i_container` char(10) DEFAULT NULL,
+  `i_manager_id` int(11) DEFAULT NULL,
+  `i_product_name` char(50) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1 ;
+
+select  i_product_name from cs_item 
+where i_manufact_id  > 742 and (select count(*) as item_cnt from cs_item where ((i_category = 'Women' ))) > 0 ;
+
+select  i_product_name from cs_item 
+where i_manufact_id  > 742 and (select count(*) as item_cnt from cs_item where ((i_category = 'Women' ))) > 0 and (1=0);
+
+select  i_product_name from cs_item 
+where i_manufact_id  > 742 and (select count(*) as item_cnt from cs_item where ((i_category = 'Women' ))) > 0 and (1=1);
+
+select  i_product_name from cs_item where i_manufact_id  > 742 and i_category = 'Women' ;
+select  i_product_name from cs_item where i_manufact_id  > 742 and i_category = 'Women' AND (TRUE OR FALSE);
+select  i_product_name from cs_item where i_manufact_id  > 742 and i_category = 'Women' AND ( 1 = 0);
+select  i_product_name from cs_item where i_manufact_id  > 742 and i_category = 'Women' AND ( 1 = 1);
+select  i_product_name from cs_item where i_manufact_id  > 742 and i_category = 'Women' AND ( 1 > 5/7);
+select  i_product_name from cs_item where i_manufact_id  > 742 and i_category = 'Women' AND ( 1 > 7/5);
+select  i_product_name from cs_item where i_manufact_id  > 742 and i_category = 'Women' AND ( i_manufact_id > 300 OR i_manufact_id <= 300);
+select  i_product_name from cs_item where i_manufact_id  > 742 and i_category = 'Women' AND (TRUE);
+select  i_product_name from cs_item where i_manufact_id  > 742 and i_category = 'Women' AND (FALSE);
+
+select  distinct(i_product_name)
+ from item 
+ where i_manufact_id between 742 and 742+40
+   and 
+(select count(*) as item_cnt
+        from item
+        where (i_manufact = i_manufact and
+        ((i_category = 'Women' and
+        (i_color = 'orchid' or i_color = 'papaya') and
+        (i_units = 'Pound' or i_units = 'Lb') and
+        (i_size = 'petite' or i_size = 'medium')
+        ) or
+        (i_category = 'Women' and
+        (i_color = 'burlywood' or i_color = 'navy') and
+        (i_units = 'Bundle' or i_units = 'Each') and
+        (i_size = 'N/A' or i_size = 'extra large')
+        ) or
+        (i_category = 'Men' and
+        (i_color = 'bisque' or i_color = 'azure') and
+        (i_units = 'N/A' or i_units = 'Tsp') and
+        (i_size = 'small' or i_size = 'large')
+        ) or
+        (i_category = 'Men' and
+        (i_color = 'chocolate' or i_color = 'cornflower') and
+        (i_units = 'Bunch' or i_units = 'Gross') and
+        (i_size = 'petite' or i_size = 'medium')
+        ))) or
+       (i_manufact = i_manufact and
+        ((i_category = 'Women' and
+        (i_color = 'salmon' or i_color = 'midnight') and
+        (i_units = 'Oz' or i_units = 'Box') and
+        (i_size = 'petite' or i_size = 'medium')
+        ) or
+        (i_category = 'Women' and
+        (i_color = 'snow' or i_color = 'steel') and
+        (i_units = 'Carton' or i_units = 'Tbl') and
+        (i_size = 'N/A' or i_size = 'extra large')
+        ) or
+        (i_category = 'Men' and
+        (i_color = 'purple' or i_color = 'gainsboro') and
+        (i_units = 'Dram' or i_units = 'Unknown') and
+        (i_size = 'small' or i_size = 'large')
+        ) or
+        (i_category = 'Men' and
+        (i_color = 'metallic' or i_color = 'forest') and
+        (i_units = 'Gram' or i_units = 'Ounce') and
+        (i_size = 'petite' or i_size = 'medium')
+        )))) > 0
+ order by i_product_name
+ limit 100;
+#
+drop table if exists cs_item;
+drop table if exists ar_item;
+drop table if exists in_item;
+drop table if exists item;
+#

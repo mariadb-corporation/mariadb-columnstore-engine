@@ -1,0 +1,30 @@
+USE tpch1;
+select c2 from sub1 order by 1;
+c2
+NULL
+1
+1
+2
+3
+99
+select c2 from sub2 order by 1;
+c2
+NULL
+1
+2
+2
+3
+4
+5
+select sub1.c2 as x, sub1.c2 as y from sub1, sub2 where sub1.c2 = sub2.c2 order by 1, 2;
+x	y
+1	1
+1	1
+2	2
+2	2
+3	3
+select sub1.c2 as x, sub2.c2 as y, count(sub2.c2) as z from sub1, sub2 where sub1.c2 = sub2.c2 group by 1, 2 order by 1, 2;
+x	y	z
+1	1	2
+2	2	2
+3	3	1

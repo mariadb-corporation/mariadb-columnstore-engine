@@ -1,0 +1,63 @@
+USE tpch1;
+select cdate from datatypetestm where cdate='';
+cdate
+select cdatetime from datatypetestm where cdatetime='';
+cdatetime
+select cdate from datatypetestm where cdate<>'';
+cdate
+1997-01-01
+1997-01-01
+1997-01-02
+1997-01-03
+1997-01-04
+2009-12-28
+2009-12-29
+2009-12-30
+2009-12-31
+2009-12-31
+2009-12-31
+select cdatetime from datatypetestm where cdatetime<>'';
+cdatetime
+1997-01-01 00:00:00
+1997-01-01 00:00:01
+1997-01-02 00:00:01
+1997-01-03 00:00:02
+1997-01-04 00:00:03
+2009-12-31 23:59:56
+2009-12-31 23:59:57
+2009-12-31 23:59:58
+2009-12-31 23:59:59
+2009-12-31 23:59:59
+2009-12-31 23:59:59
+select * from datatypetestm where cdate=null or cdatetime<>null;
+CIDX	CBIGINT	CDECIMAL1	CDECIMAL4	CDECIMAL4_2	CDECIMAL5	CDECIMAL9	CDECIMAL9_2	CDECIMAL10	CDECIMAL18	CDECIMAL18_2	CINTEGER	CSMALLINT	CTINYINT	CDOUBLE	CFLOAT	CDATE	CDATETIME	CCHAR1	CCHAR2	CCHAR3	CCHAR4	CCHAR5	CCHAR6	CCHAR7	CCHAR8	CCHAR9	CCHAR255	CVCHAR1	CVCHAR2	CVCHAR3	CVCHAR4	CVCHAR5	CVCHAR6	CVCHAR7	CVCHAR8	CVCHAR255
+select cdate from datatypetestm where cdate is null;
+cdate
+select cdatetime from datatypetestm where cdatetime is null;
+cdatetime
+select cdate from datatypetestm where cdate is not null;
+cdate
+1997-01-01
+1997-01-01
+1997-01-02
+1997-01-03
+1997-01-04
+2009-12-28
+2009-12-29
+2009-12-30
+2009-12-31
+2009-12-31
+2009-12-31
+select cdatetime from datatypetestm where cdatetime is not null;
+cdatetime
+1997-01-01 00:00:00
+1997-01-01 00:00:01
+1997-01-02 00:00:01
+1997-01-03 00:00:02
+1997-01-04 00:00:03
+2009-12-31 23:59:56
+2009-12-31 23:59:57
+2009-12-31 23:59:58
+2009-12-31 23:59:59
+2009-12-31 23:59:59
+2009-12-31 23:59:59

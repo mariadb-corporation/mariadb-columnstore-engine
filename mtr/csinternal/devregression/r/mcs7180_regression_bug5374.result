@@ -1,0 +1,20 @@
+USE tpch1;
+select r_name, n_name from region left outer join nation on r_name = n_name where n_name is null;
+r_name	n_name
+AFRICA	NULL
+AMERICA	NULL
+ASIA	NULL
+EUROPE	NULL
+MIDDLE EAST	NULL
+select n_nationkey, r_regionkey from nation left join region on r_regionkey=n_nationkey where r_regionkey < 2;
+n_nationkey	r_regionkey
+0	0
+1	1
+select n_nationkey from nation left join region on r_regionkey=n_nationkey where (case when r_regionkey < 2 then 1 else 2 end) < 2;
+n_nationkey
+0
+1
+select n_nationkey, r_regionkey from nation left join region on r_regionkey=n_nationkey where (case when r_regionkey < 2 then 1 else 0 end) > 0;
+n_nationkey	r_regionkey
+0	0
+1	1

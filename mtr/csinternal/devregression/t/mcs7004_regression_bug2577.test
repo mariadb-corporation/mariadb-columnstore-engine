@@ -1,0 +1,14 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug2577.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+select sum((case when r_regionkey>3 or r_regionkey<1 then 1 else 0 end)*r_regionkey) alias from region;
+select (case when (n_regionkey>3 and n_nationkey<5 or n_regionkey <2 and n_nationkey >7) then 1 else 0 end) alias from nation where n_nationkey < 10 order by 1;
+#
+

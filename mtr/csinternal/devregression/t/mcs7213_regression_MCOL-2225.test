@@ -1,0 +1,34 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-2225.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists mcol2225i;
+drop table if exists mcol2225c;
+# -------------------------------------------------------------- #
+# Enable cross engine join
+# Configure user and password in Columnstore.xml file
+# -------------------------------------------------------------- #
+--exec /usr/bin/mcsSetConfig CrossEngineSupport User 'cejuser'
+--exec /usr/bin/mcsSetConfig CrossEngineSupport Password 'Vagrant1!0000001'
+# -------------------------------------------------------------- #
+# Create corresponding in the server
+# -------------------------------------------------------------- #
+
+CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1!0000001';
+
+GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+FLUSH PRIVILEGES;
+#
+create table mcol2225i (`a 2` int, `b 2` int);
+create table mcol2225c (a int) engine=columnstore;
+select * from mcol2225i join mcol2225c where mcol2225i.`a 2` = mcol2225c.a and mcol2225i.`b 2` = 5;
+drop table mcol2225i;
+drop table mcol2225c;
+#
+DROP USER 'cejuser'@'localhost';

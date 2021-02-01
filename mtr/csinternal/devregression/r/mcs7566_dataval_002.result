@@ -1,0 +1,4 @@
+USE tpch1;
+select count(*) from customer where c_custkey != substr(c_name, 10, 99) + 0;
+count(*)
+0

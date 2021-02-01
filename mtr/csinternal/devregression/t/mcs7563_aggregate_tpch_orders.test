@@ -1,0 +1,21 @@
+#
+# Test case migrated from regression test suite:
+# ./mysql/queries/100GB/dataValidation/aggregate_tpch.orders.sql
+#
+# Author: Susil, susil.behera@mariadb.com
+#
+
+-- source ../include/have_columnstore.inc
+
+USE tpch1;
+
+select count(o_orderkey), min(o_orderkey), max(o_orderkey) , sum(o_orderkey), avg(o_orderkey)  from orders;
+select count(o_custkey), min(o_custkey), max(o_custkey) , sum(o_custkey), avg(o_custkey)  from orders;
+select count(o_orderstatus), min(o_orderstatus), max(o_orderstatus)  from orders;
+select count(o_totalprice), min(o_totalprice), max(o_totalprice) , sum(o_totalprice), avg(o_totalprice)  from orders;
+select count(o_orderdate), min(o_orderdate), max(o_orderdate) from orders;
+select count(o_orderpriority), min(o_orderpriority), max(o_orderpriority) from orders;
+select count(o_clerk), min(o_clerk), max(o_clerk)  from orders;
+select count(o_shippriority), min(o_shippriority), max(o_shippriority)  from orders;
+select count(o_comment), min(o_comment), max(o_comment)  from orders;
+select count(*) from orders;

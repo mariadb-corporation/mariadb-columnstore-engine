@@ -1,0 +1,36 @@
+#
+# Test DIV function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs227_db;
+--enable_warnings
+
+CREATE DATABASE mcs227_db;
+USE mcs227_db;
+
+CREATE TABLE t1
+(
+ t1_INT INT,
+ t1_DECIMAL DECIMAL(12,5)
+ )ENGINE=Columnstore;
+INSERT INTO t1 VALUES(1, 1234.567),(20, 111.2345),(24, 98765.4321);
+
+SELECT t1_INT, t1_INT DIV 2 FROM t1 ORDER BY 1;
+SELECT t1_INT, t1_INT DIV 2.4 FROM t1 ORDER BY 1;
+SELECT t1_INT, t1_INT DIV 4.7 FROM t1 ORDER BY 1;
+SELECT t1_DECIMAL, t1_DECIMAL DIV 2 FROM t1 ORDER BY 1;
+SELECT t1_DECIMAL, t1_DECIMAL DIV 2.4 FROM t1 ORDER BY 1;
+SELECT t1_DECIMAL, t1_DECIMAL DIV 4.7 FROM t1 ORDER BY 1;
+
+# Bug. Columnstore doesn't warn 'Division by 0'
+SELECT t1_INT DIV 0 FROM t1 LIMIT 1;
+SELECT t1_DECIMAL DIV 0 FROM t1 LIMIT 1;
+
+SELECT 0 DIV t1_INT FROM t1 LIMIT 1;
+SELECT 0 DIV t1_DECIMAL FROM t1 LIMIT 1;
+
+# Clean UP
+DROP DATABASE mcs227_db;

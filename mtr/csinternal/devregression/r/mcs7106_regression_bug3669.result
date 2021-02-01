@@ -1,0 +1,29 @@
+USE tpch1;
+drop table if exists stringtest;
+Warnings:
+Note	1051	Unknown table 'tpch1.stringtest'
+create table stringtest (c1 char(10), c2 varchar(10), c3 varchar(6))engine=columnstore;
+insert into stringtest values ('abc','cde','abc'), ('cde','abc','cde');
+select * from stringtest where c1='abc' or c2='abc';
+c1	c2	c3
+abc	cde	abc
+cde	abc	cde
+select * from stringtest where c1= 'abc ';
+c1	c2	c3
+abc	cde	abc
+select * from stringtest where c2='abc  ';
+c1	c2	c3
+cde	abc	cde
+select * from stringtest where c1='abc ' or c2='abc  ';
+c1	c2	c3
+abc	cde	abc
+cde	abc	cde
+select * from stringtest where c1 = 'abc' or c3='cde  ';
+c1	c2	c3
+abc	cde	abc
+cde	abc	cde
+select concat('abc ', c2), concat('cde ', c3) from stringtest;
+concat('abc ', c2)	concat('cde ', c3)
+abc cde	cde abc
+abc abc	cde cde
+drop table stringtest;

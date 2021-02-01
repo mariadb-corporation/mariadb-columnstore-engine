@@ -1,0 +1,56 @@
+#
+# Test Derived tables
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs85_db;
+--enable_warnings
+
+CREATE DATABASE mcs85_db;
+USE mcs85_db;
+
+#
+# Enable cross engine join
+# Configure user and password in Columnstore.xml file
+#
+--exec /usr/bin/mcsSetConfig CrossEngineSupport User 'cejuser'
+--exec /usr/bin/mcsSetConfig CrossEngineSupport Password 'Vagrant1|0000001'
+#
+# Create corresponding in the server
+#
+--disable_warnings
+CREATE USER IF NOT EXISTS 'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
+--enable_warnings
+GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+FLUSH PRIVILEGES;
+
+CREATE TABLE t1 (a INT, b CHAR(5))ENGINE=Columnstore;
+CREATE TABLE t2 (a INT, b CHAR(5))ENGINE=Columnstore;
+
+INSERT INTO t1 VALUES (NULL, ''),(1, 'aaa'),(2, 'aaa'),(3, 'ccc'),(4, 'ddd'),(5, 'aaa'),(6, ''),(7, 'eee');
+INSERT INTO t2 VALUES (NULL, ''),(1, 'eee'),(3, 'ccc'),(5, 'jjj'),(6, ''),(7, 'ccc'),(9, 'eee'),(11, 'nnn');
+
+SELECT t1.a,t3.y FROM t1,(SELECT a AS y FROM t2 WHERE b='ccc') AS t3 WHERE t1.a = t3.y;
+SELECT t1.a,t3.a FROM t1,(SELECT * FROM t2  WHERE b='ccc') t3 WHERE t1.a = t3.a;
+SELECT t1.a,t3.a FROM t1 JOIN (SELECT * FROM t2  WHERE b='ccc') t3 ON t1.a = t3.a ORDER BY t1.a;
+SELECT t1.a,t3.a FROM t1 LEFT JOIN (SELECT * FROM t2) t3 ON t1.a = t3.a ORDER BY t3.a;
+SELECT t1.a,t3.a FROM t1 RIGHT JOIN (SELECT * FROM t2) t3 ON t1.a = t3.a ORDER BY 1;
+
+# cross engine
+CREATE TABLE t3 (a INT, b CHAR(5))ENGINE=Innodb;
+CREATE TABLE t4 (a INT, b CHAR(5))ENGINE=Myisam;
+INSERT INTO t3 SELECT * FROM t2;
+INSERT INTO t4 SELECT * FROM t1;
+
+SELECT t3.a, t.a FROM t3 JOIN (SELECT * FROM t2  WHERE b='ccc') t ON t.a = t3.a ORDER BY t.a;
+SELECT t3.a, t.a FROM t3 LEFT JOIN (SELECT * FROM t2) t ON t.a = t3.a ORDER BY t3.a;
+SELECT t3.a, t.a FROM t3 RIGHT JOIN (SELECT * FROM t2) t ON t.a = t3.a ORDER BY 1;
+SELECT t4.a, t.a FROM t4 JOIN (SELECT * FROM t2  WHERE b='ccc') t ON t.a = t4.a ORDER BY t.a;
+SELECT t4.a, t.a FROM t4 LEFT JOIN (SELECT * FROM t2) t ON t.a = t4.a ORDER BY t4.a;
+SELECT t4.a, t.a FROM t4 RIGHT JOIN (SELECT * FROM t2) t ON t.a = t4.a ORDER BY 2;
+
+# Clean UP
+DROP USER 'cejuser'@'localhost';
+DROP DATABASE mcs85_db;

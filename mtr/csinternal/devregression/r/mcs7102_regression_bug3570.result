@@ -1,0 +1,7 @@
+USE tpch1;
+select * from region where ((r_regionkey = 9  and r_comment = 'a') or r_regionkey = 1);
+r_regionkey	r_name	r_comment
+1	AMERICA	hs use ironic, even requests. s
+select * from region where (r_regionkey = 1 or (r_regionkey = 9 and r_comment = 'a'));
+r_regionkey	r_name	r_comment
+1	AMERICA	hs use ironic, even requests. s

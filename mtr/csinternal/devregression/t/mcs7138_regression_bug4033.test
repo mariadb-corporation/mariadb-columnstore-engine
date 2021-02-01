@@ -1,0 +1,13 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug4033.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+set character_set_client=sjis;
+#
+

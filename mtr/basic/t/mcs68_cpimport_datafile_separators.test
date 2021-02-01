@@ -1,0 +1,39 @@
+#
+# cpimport -s <delimiter between column values> 
+# Author: Susil, susil.behera@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs68_db;
+--enable_warnings
+
+CREATE DATABASE mcs68_db;
+USE mcs68_db;
+
+CREATE TABLE t1(col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnstore;
+
+#Error in loading job data as ',' is not the actual delimiter
+--error 1
+--exec cpimport -s ',' mcs68_db t1 './suite/columnstore/std_data/100Krows.dat' >/dev/null
+
+#Correct delimiter
+--exec cpimport -s '|' mcs68_db t1 './suite/columnstore/std_data/100Krows.dat' >/dev/null
+
+#Validate data
+SELECT COUNT(*) FROM t1;
+
+TRUNCATE t1;
+
+#Use a non-default delimiter '\t'
+--exec rm -f /tmp/100Krows.dat
+--exec cp ./suite/columnstore/std_data/100Krows.dat /tmp/100Krows.dat
+--exec sed -i 's/|/\t/g' /tmp/100Krows.dat
+--exec cpimport -s '\t' mcs68_db t1 '/tmp/100Krows.dat' >/dev/null
+
+#Validate data
+SELECT COUNT(*) FROM t1;
+
+# Clean UP
+--exec rm -f /tmp/100Krows.dat
+DROP DATABASE mcs68_db;

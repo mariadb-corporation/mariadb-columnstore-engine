@@ -1,0 +1,18 @@
+#
+# Columnstore engine doesn't support Generated Columns
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs75_db;
+--enable_warnings
+
+CREATE DATABASE mcs75_db;
+USE mcs75_db;
+
+--error ER_UNSUPPORTED_ENGINE_FOR_GENERATED_COLUMNS
+CREATE TABLE t1(col1 INT, col2 CHAR(10), col3 CHAR(10), col4 VARCHAR(20) GENERATED ALWAYS AS (CONCAT(col2,col3)))ENGINE=Columnstore;
+
+# Clean UP
+DROP DATABASE mcs75_db;

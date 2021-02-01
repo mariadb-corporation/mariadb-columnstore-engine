@@ -1,0 +1,1025 @@
+USE tpch1;
+select cidx, csmallint from datatypetestm where csmallint > 765.2;
+cidx	csmallint
+9	766
+10	767
+select cidx, csmallint from datatypetestm where csmallint > -765.2;
+cidx	csmallint
+2	-765
+3	-764
+4	-763
+5	-762
+6	763
+7	764
+8	765
+9	766
+10	767
+11	0
+select cidx, csmallint from datatypetestm where csmallint >= 765.2;
+cidx	csmallint
+9	766
+10	767
+select cidx, csmallint from datatypetestm where csmallint >= -765.2;
+cidx	csmallint
+2	-765
+3	-764
+4	-763
+5	-762
+6	763
+7	764
+8	765
+9	766
+10	767
+11	0
+select cidx, csmallint from datatypetestm where csmallint = 765.2;
+cidx	csmallint
+select cidx, csmallint from datatypetestm where csmallint = -765.2;
+cidx	csmallint
+select cidx, csmallint from datatypetestm where csmallint <= 765.2;
+cidx	csmallint
+1	-766
+2	-765
+3	-764
+4	-763
+5	-762
+6	763
+7	764
+8	765
+11	0
+select cidx, csmallint from datatypetestm where csmallint <= -765.2;
+cidx	csmallint
+1	-766
+select cidx, csmallint from datatypetestm where csmallint < 765.2;
+cidx	csmallint
+1	-766
+2	-765
+3	-764
+4	-763
+5	-762
+6	763
+7	764
+8	765
+11	0
+select cidx, csmallint from datatypetestm where csmallint < -765.2;
+cidx	csmallint
+1	-766
+select cidx, csmallint from datatypetestm where csmallint > 765.5;
+cidx	csmallint
+9	766
+10	767
+select cidx, csmallint from datatypetestm where csmallint > -765.5;
+cidx	csmallint
+2	-765
+3	-764
+4	-763
+5	-762
+6	763
+7	764
+8	765
+9	766
+10	767
+11	0
+select cidx, csmallint from datatypetestm where csmallint >= 765.5;
+cidx	csmallint
+9	766
+10	767
+select cidx, csmallint from datatypetestm where csmallint >= -765.5;
+cidx	csmallint
+2	-765
+3	-764
+4	-763
+5	-762
+6	763
+7	764
+8	765
+9	766
+10	767
+11	0
+select cidx, csmallint from datatypetestm where csmallint = 765.5;
+cidx	csmallint
+select cidx, csmallint from datatypetestm where csmallint = -765.5;
+cidx	csmallint
+select cidx, csmallint from datatypetestm where csmallint <= 765.5;
+cidx	csmallint
+1	-766
+2	-765
+3	-764
+4	-763
+5	-762
+6	763
+7	764
+8	765
+11	0
+select cidx, csmallint from datatypetestm where csmallint <= -765.5;
+cidx	csmallint
+1	-766
+select cidx, csmallint from datatypetestm where csmallint < 765.5;
+cidx	csmallint
+1	-766
+2	-765
+3	-764
+4	-763
+5	-762
+6	763
+7	764
+8	765
+11	0
+select cidx, csmallint from datatypetestm where csmallint < -765.5;
+cidx	csmallint
+1	-766
+select cidx, cbigint from datatypetestm where cbigint > 72036854775804.2;
+cidx	cbigint
+8	72036854775805
+9	72036854775806
+10	72036854775807
+select cidx, cbigint from datatypetestm where cbigint > -72036854775804.2;
+cidx	cbigint
+3	-72036854775804
+4	-72036854775803
+5	-72036854775802
+6	72036854775803
+7	72036854775804
+8	72036854775805
+9	72036854775806
+10	72036854775807
+11	0
+select cidx, cbigint from datatypetestm where cbigint >= 72036854775804.2;
+cidx	cbigint
+8	72036854775805
+9	72036854775806
+10	72036854775807
+select cidx, cbigint from datatypetestm where cbigint >= -72036854775804.2;
+cidx	cbigint
+3	-72036854775804
+4	-72036854775803
+5	-72036854775802
+6	72036854775803
+7	72036854775804
+8	72036854775805
+9	72036854775806
+10	72036854775807
+11	0
+select cidx, cbigint from datatypetestm where cbigint = 72036854775804.2;
+cidx	cbigint
+select cidx, cbigint from datatypetestm where cbigint = -72036854775804.2;
+cidx	cbigint
+select cidx, cbigint from datatypetestm where cbigint <= 72036854775804.2;
+cidx	cbigint
+1	-72036854775806
+2	-72036854775805
+3	-72036854775804
+4	-72036854775803
+5	-72036854775802
+6	72036854775803
+7	72036854775804
+11	0
+select cidx, cbigint from datatypetestm where cbigint <= -72036854775804.2;
+cidx	cbigint
+1	-72036854775806
+2	-72036854775805
+select cidx, cbigint from datatypetestm where cbigint < 72036854775804.2;
+cidx	cbigint
+1	-72036854775806
+2	-72036854775805
+3	-72036854775804
+4	-72036854775803
+5	-72036854775802
+6	72036854775803
+7	72036854775804
+11	0
+select cidx, cbigint from datatypetestm where cbigint < -72036854775804.2;
+cidx	cbigint
+1	-72036854775806
+2	-72036854775805
+select cidx, cbigint from datatypetestm where cbigint > 72036854775804.6;
+cidx	cbigint
+8	72036854775805
+9	72036854775806
+10	72036854775807
+select cidx, cbigint from datatypetestm where cbigint > -72036854775804.6;
+cidx	cbigint
+3	-72036854775804
+4	-72036854775803
+5	-72036854775802
+6	72036854775803
+7	72036854775804
+8	72036854775805
+9	72036854775806
+10	72036854775807
+11	0
+select cidx, cbigint from datatypetestm where cbigint >= 72036854775804.6;
+cidx	cbigint
+8	72036854775805
+9	72036854775806
+10	72036854775807
+select cidx, cbigint from datatypetestm where cbigint >= -72036854775804.6;
+cidx	cbigint
+3	-72036854775804
+4	-72036854775803
+5	-72036854775802
+6	72036854775803
+7	72036854775804
+8	72036854775805
+9	72036854775806
+10	72036854775807
+11	0
+select cidx, cbigint from datatypetestm where cbigint = 72036854775804.6;
+cidx	cbigint
+select cidx, cbigint from datatypetestm where cbigint = -72036854775804.6;
+cidx	cbigint
+select cidx, cbigint from datatypetestm where cbigint <= 72036854775804.6;
+cidx	cbigint
+1	-72036854775806
+2	-72036854775805
+3	-72036854775804
+4	-72036854775803
+5	-72036854775802
+6	72036854775803
+7	72036854775804
+11	0
+select cidx, cbigint from datatypetestm where cbigint <= -72036854775804.6;
+cidx	cbigint
+1	-72036854775806
+2	-72036854775805
+select cidx, cbigint from datatypetestm where cbigint < 72036854775804.6;
+cidx	cbigint
+1	-72036854775806
+2	-72036854775805
+3	-72036854775804
+4	-72036854775803
+5	-72036854775802
+6	72036854775803
+7	72036854775804
+11	0
+select cidx, cbigint from datatypetestm where cbigint < -72036854775804.6;
+cidx	cbigint
+1	-72036854775806
+2	-72036854775805
+select cidx, cdecimal1 from datatypetestm where cdecimal1 > 7.2;
+cidx	cdecimal1
+9	8
+10	9
+select cidx, cdecimal1 from datatypetestm where cdecimal1 > -7.2;
+cidx	cdecimal1
+3	-7
+4	-6
+5	-5
+6	5
+7	6
+8	7
+9	8
+10	9
+11	0
+select cidx, cdecimal1 from datatypetestm where cdecimal1 >= 7.2;
+cidx	cdecimal1
+9	8
+10	9
+select cidx, cdecimal1 from datatypetestm where cdecimal1 >= -7.2;
+cidx	cdecimal1
+3	-7
+4	-6
+5	-5
+6	5
+7	6
+8	7
+9	8
+10	9
+11	0
+select cidx, cdecimal1 from datatypetestm where cdecimal1 = 7.2;
+cidx	cdecimal1
+select cidx, cdecimal1 from datatypetestm where cdecimal1 = -7.2;
+cidx	cdecimal1
+select cidx, cdecimal1 from datatypetestm where cdecimal1 <= 7.2;
+cidx	cdecimal1
+1	-9
+2	-8
+3	-7
+4	-6
+5	-5
+6	5
+7	6
+8	7
+11	0
+select cidx, cdecimal1 from datatypetestm where cdecimal1 <= -7.2;
+cidx	cdecimal1
+1	-9
+2	-8
+select cidx, cdecimal1 from datatypetestm where cdecimal1 < 7.2;
+cidx	cdecimal1
+1	-9
+2	-8
+3	-7
+4	-6
+5	-5
+6	5
+7	6
+8	7
+11	0
+select cidx, cdecimal1 from datatypetestm where cdecimal1 < -7.2;
+cidx	cdecimal1
+1	-9
+2	-8
+select cidx, cdecimal1 from datatypetestm where cdecimal1 > 7.5;
+cidx	cdecimal1
+9	8
+10	9
+select cidx, cdecimal1 from datatypetestm where cdecimal1 > -7.5;
+cidx	cdecimal1
+3	-7
+4	-6
+5	-5
+6	5
+7	6
+8	7
+9	8
+10	9
+11	0
+select cidx, cdecimal1 from datatypetestm where cdecimal1 >= 7.5;
+cidx	cdecimal1
+9	8
+10	9
+select cidx, cdecimal1 from datatypetestm where cdecimal1 >= -7.5;
+cidx	cdecimal1
+3	-7
+4	-6
+5	-5
+6	5
+7	6
+8	7
+9	8
+10	9
+11	0
+select cidx, cdecimal1 from datatypetestm where cdecimal1 = 7.5;
+cidx	cdecimal1
+select cidx, cdecimal1 from datatypetestm where cdecimal1 = -7.5;
+cidx	cdecimal1
+select cidx, cdecimal1 from datatypetestm where cdecimal1 <= 7.5;
+cidx	cdecimal1
+1	-9
+2	-8
+3	-7
+4	-6
+5	-5
+6	5
+7	6
+8	7
+11	0
+select cidx, cdecimal1 from datatypetestm where cdecimal1 <= -7.5;
+cidx	cdecimal1
+1	-9
+2	-8
+select cidx, cdecimal1 from datatypetestm where cdecimal1 < 7.5;
+cidx	cdecimal1
+1	-9
+2	-8
+3	-7
+4	-6
+5	-5
+6	5
+7	6
+8	7
+11	0
+select cidx, cdecimal1 from datatypetestm where cdecimal1 < -7.5;
+cidx	cdecimal1
+1	-9
+2	-8
+select cidx, cdecimal4_2 from datatypetestm where cdecimal4_2 > 9.972;
+cidx	cdecimal4_2
+9	9.98
+10	9.99
+select cidx, cdecimal4_2 from datatypetestm where cdecimal4_2 > -9.972;
+cidx	cdecimal4_2
+3	-9.97
+4	-9.96
+5	-9.95
+6	9.95
+7	9.96
+8	9.97
+9	9.98
+10	9.99
+11	0.00
+select cidx, cdecimal4_2 from datatypetestm where cdecimal4_2 >= 9.972;
+cidx	cdecimal4_2
+9	9.98
+10	9.99
+select cidx, cdecimal4_2 from datatypetestm where cdecimal4_2 >= -9.972;
+cidx	cdecimal4_2
+3	-9.97
+4	-9.96
+5	-9.95
+6	9.95
+7	9.96
+8	9.97
+9	9.98
+10	9.99
+11	0.00
+select cidx, cdecimal4_2 from datatypetestm where cdecimal4_2 = 9.972;
+cidx	cdecimal4_2
+select cidx, cdecimal4_2 from datatypetestm where cdecimal4_2 = -9.972;
+cidx	cdecimal4_2
+select cidx, cdecimal4_2 from datatypetestm where cdecimal4_2 <= 9.972;
+cidx	cdecimal4_2
+1	-9.99
+2	-9.98
+3	-9.97
+4	-9.96
+5	-9.95
+6	9.95
+7	9.96
+8	9.97
+11	0.00
+select cidx, cdecimal4_2 from datatypetestm where cdecimal4_2 <= -9.972;
+cidx	cdecimal4_2
+1	-9.99
+2	-9.98
+select cidx, cdecimal4_2 from datatypetestm where cdecimal4_2 < 9.972;
+cidx	cdecimal4_2
+1	-9.99
+2	-9.98
+3	-9.97
+4	-9.96
+5	-9.95
+6	9.95
+7	9.96
+8	9.97
+11	0.00
+select cidx, cdecimal4_2 from datatypetestm where cdecimal4_2 < -9.972;
+cidx	cdecimal4_2
+1	-9.99
+2	-9.98
+select cidx, cdecimal4_2 from datatypetestm where cdecimal4_2 > 9.975;
+cidx	cdecimal4_2
+9	9.98
+10	9.99
+select cidx, cdecimal4_2 from datatypetestm where cdecimal4_2 > -9.975;
+cidx	cdecimal4_2
+3	-9.97
+4	-9.96
+5	-9.95
+6	9.95
+7	9.96
+8	9.97
+9	9.98
+10	9.99
+11	0.00
+select cidx, cdecimal4_2 from datatypetestm where cdecimal4_2 >= 9.975;
+cidx	cdecimal4_2
+9	9.98
+10	9.99
+select cidx, cdecimal4_2 from datatypetestm where cdecimal4_2 >= -9.975;
+cidx	cdecimal4_2
+3	-9.97
+4	-9.96
+5	-9.95
+6	9.95
+7	9.96
+8	9.97
+9	9.98
+10	9.99
+11	0.00
+select cidx, cdecimal4_2 from datatypetestm where cdecimal4_2 = 9.975;
+cidx	cdecimal4_2
+select cidx, cdecimal4_2 from datatypetestm where cdecimal4_2 = -9.975;
+cidx	cdecimal4_2
+select cidx, cdecimal4_2 from datatypetestm where cdecimal4_2 <= 9.975;
+cidx	cdecimal4_2
+1	-9.99
+2	-9.98
+3	-9.97
+4	-9.96
+5	-9.95
+6	9.95
+7	9.96
+8	9.97
+11	0.00
+select cidx, cdecimal4_2 from datatypetestm where cdecimal4_2 <= -9.975;
+cidx	cdecimal4_2
+1	-9.99
+2	-9.98
+select cidx, cdecimal4_2 from datatypetestm where cdecimal4_2 < 9.975;
+cidx	cdecimal4_2
+1	-9.99
+2	-9.98
+3	-9.97
+4	-9.96
+5	-9.95
+6	9.95
+7	9.96
+8	9.97
+11	0.00
+select cidx, cdecimal4_2 from datatypetestm where cdecimal4_2 < -9.975;
+cidx	cdecimal4_2
+1	-9.99
+2	-9.98
+select cidx, cdecimal5 from datatypetestm where cdecimal5 > 997.2;
+cidx	cdecimal5
+9	998
+10	999
+select cidx, cdecimal5 from datatypetestm where cdecimal5 > -997.2;
+cidx	cdecimal5
+3	-997
+4	-996
+5	-995
+6	995
+7	996
+8	997
+9	998
+10	999
+11	0
+select cidx, cdecimal5 from datatypetestm where cdecimal5 >= 997.2;
+cidx	cdecimal5
+9	998
+10	999
+select cidx, cdecimal5 from datatypetestm where cdecimal5 >= -997.2;
+cidx	cdecimal5
+3	-997
+4	-996
+5	-995
+6	995
+7	996
+8	997
+9	998
+10	999
+11	0
+select cidx, cdecimal5 from datatypetestm where cdecimal5 = 997.2;
+cidx	cdecimal5
+select cidx, cdecimal5 from datatypetestm where cdecimal5 = -997.2;
+cidx	cdecimal5
+select cidx, cdecimal5 from datatypetestm where cdecimal5 <= 997.2;
+cidx	cdecimal5
+1	-999
+2	-998
+3	-997
+4	-996
+5	-995
+6	995
+7	996
+8	997
+11	0
+select cidx, cdecimal5 from datatypetestm where cdecimal5 <= -997.2;
+cidx	cdecimal5
+1	-999
+2	-998
+select cidx, cdecimal5 from datatypetestm where cdecimal5 < 997.2;
+cidx	cdecimal5
+1	-999
+2	-998
+3	-997
+4	-996
+5	-995
+6	995
+7	996
+8	997
+11	0
+select cidx, cdecimal5 from datatypetestm where cdecimal5 < -997.2;
+cidx	cdecimal5
+1	-999
+2	-998
+select cidx, cdecimal5 from datatypetestm where cdecimal5 > 997.5;
+cidx	cdecimal5
+9	998
+10	999
+select cidx, cdecimal5 from datatypetestm where cdecimal5 > -997.5;
+cidx	cdecimal5
+3	-997
+4	-996
+5	-995
+6	995
+7	996
+8	997
+9	998
+10	999
+11	0
+select cidx, cdecimal5 from datatypetestm where cdecimal5 >= 997.5;
+cidx	cdecimal5
+9	998
+10	999
+select cidx, cdecimal5 from datatypetestm where cdecimal5 >= -997.5;
+cidx	cdecimal5
+3	-997
+4	-996
+5	-995
+6	995
+7	996
+8	997
+9	998
+10	999
+11	0
+select cidx, cdecimal5 from datatypetestm where cdecimal5 = 997.5;
+cidx	cdecimal5
+select cidx, cdecimal5 from datatypetestm where cdecimal5 = -997.5;
+cidx	cdecimal5
+select cidx, cdecimal5 from datatypetestm where cdecimal5 <= 997.5;
+cidx	cdecimal5
+1	-999
+2	-998
+3	-997
+4	-996
+5	-995
+6	995
+7	996
+8	997
+11	0
+select cidx, cdecimal5 from datatypetestm where cdecimal5 <= -997.5;
+cidx	cdecimal5
+1	-999
+2	-998
+select cidx, cdecimal5 from datatypetestm where cdecimal5 < 997.5;
+cidx	cdecimal5
+1	-999
+2	-998
+3	-997
+4	-996
+5	-995
+6	995
+7	996
+8	997
+11	0
+select cidx, cdecimal5 from datatypetestm where cdecimal5 < -997.5;
+cidx	cdecimal5
+1	-999
+2	-998
+select cidx, cdecimal9_2 from datatypetestm where cdecimal9_2 > 9999.982;
+cidx	cdecimal9_2
+10	9999.99
+select cidx, cdecimal9_2 from datatypetestm where cdecimal9_2 > -9999.982;
+cidx	cdecimal9_2
+2	-9999.98
+3	-9999.97
+4	-9999.96
+5	-9999.95
+6	9999.95
+7	9999.96
+8	9999.97
+9	9999.98
+10	9999.99
+11	0.00
+select cidx, cdecimal9_2 from datatypetestm where cdecimal9_2 >= 9999.982;
+cidx	cdecimal9_2
+10	9999.99
+select cidx, cdecimal9_2 from datatypetestm where cdecimal9_2 >= -9999.982;
+cidx	cdecimal9_2
+2	-9999.98
+3	-9999.97
+4	-9999.96
+5	-9999.95
+6	9999.95
+7	9999.96
+8	9999.97
+9	9999.98
+10	9999.99
+11	0.00
+select cidx, cdecimal9_2 from datatypetestm where cdecimal9_2 = 9999.982;
+cidx	cdecimal9_2
+select cidx, cdecimal9_2 from datatypetestm where cdecimal9_2 = -9999.982;
+cidx	cdecimal9_2
+select cidx, cdecimal9_2 from datatypetestm where cdecimal9_2 <= 9999.982;
+cidx	cdecimal9_2
+1	-9999.99
+2	-9999.98
+3	-9999.97
+4	-9999.96
+5	-9999.95
+6	9999.95
+7	9999.96
+8	9999.97
+9	9999.98
+11	0.00
+select cidx, cdecimal9_2 from datatypetestm where cdecimal9_2 <= -9999.982;
+cidx	cdecimal9_2
+1	-9999.99
+select cidx, cdecimal9_2 from datatypetestm where cdecimal9_2 < 9999.982;
+cidx	cdecimal9_2
+1	-9999.99
+2	-9999.98
+3	-9999.97
+4	-9999.96
+5	-9999.95
+6	9999.95
+7	9999.96
+8	9999.97
+9	9999.98
+11	0.00
+select cidx, cdecimal9_2 from datatypetestm where cdecimal9_2 < -9999.982;
+cidx	cdecimal9_2
+1	-9999.99
+select cidx, cdecimal9_2 from datatypetestm where cdecimal9_2 > 9999.985;
+cidx	cdecimal9_2
+10	9999.99
+select cidx, cdecimal9_2 from datatypetestm where cdecimal9_2 > -9999.985;
+cidx	cdecimal9_2
+2	-9999.98
+3	-9999.97
+4	-9999.96
+5	-9999.95
+6	9999.95
+7	9999.96
+8	9999.97
+9	9999.98
+10	9999.99
+11	0.00
+select cidx, cdecimal9_2 from datatypetestm where cdecimal9_2 >= 9999.985;
+cidx	cdecimal9_2
+10	9999.99
+select cidx, cdecimal9_2 from datatypetestm where cdecimal9_2 >= -9999.985;
+cidx	cdecimal9_2
+2	-9999.98
+3	-9999.97
+4	-9999.96
+5	-9999.95
+6	9999.95
+7	9999.96
+8	9999.97
+9	9999.98
+10	9999.99
+11	0.00
+select cidx, cdecimal9_2 from datatypetestm where cdecimal9_2 = 9999.985;
+cidx	cdecimal9_2
+select cidx, cdecimal9_2 from datatypetestm where cdecimal9_2 = -9999.985;
+cidx	cdecimal9_2
+select cidx, cdecimal9_2 from datatypetestm where cdecimal9_2 <= 9999.985;
+cidx	cdecimal9_2
+1	-9999.99
+2	-9999.98
+3	-9999.97
+4	-9999.96
+5	-9999.95
+6	9999.95
+7	9999.96
+8	9999.97
+9	9999.98
+11	0.00
+select cidx, cdecimal9_2 from datatypetestm where cdecimal9_2 <= -9999.985;
+cidx	cdecimal9_2
+1	-9999.99
+select cidx, cdecimal9_2 from datatypetestm where cdecimal9_2 < 9999.985;
+cidx	cdecimal9_2
+1	-9999.99
+2	-9999.98
+3	-9999.97
+4	-9999.96
+5	-9999.95
+6	9999.95
+7	9999.96
+8	9999.97
+9	9999.98
+11	0.00
+select cidx, cdecimal9_2 from datatypetestm where cdecimal9_2 < -9999.985;
+cidx	cdecimal9_2
+1	-9999.99
+select cidx, cdecimal18 from datatypetestm where cdecimal18 > 9999999999998.2;
+cidx	cdecimal18
+10	9999999999999
+select cidx, cdecimal18 from datatypetestm where cdecimal18 > -9999999999998.2;
+cidx	cdecimal18
+2	-9999999999998
+3	-9999999999997
+4	-9999999999996
+5	-9999999999995
+6	9999999999995
+7	9999999999996
+8	9999999999997
+9	9999999999998
+10	9999999999999
+11	0
+select cidx, cdecimal18 from datatypetestm where cdecimal18 >= 9999999999998.2;
+cidx	cdecimal18
+10	9999999999999
+select cidx, cdecimal18 from datatypetestm where cdecimal18 >= -9999999999998.2;
+cidx	cdecimal18
+2	-9999999999998
+3	-9999999999997
+4	-9999999999996
+5	-9999999999995
+6	9999999999995
+7	9999999999996
+8	9999999999997
+9	9999999999998
+10	9999999999999
+11	0
+select cidx, cdecimal18 from datatypetestm where cdecimal18 = 9999999999998.2;
+cidx	cdecimal18
+select cidx, cdecimal18 from datatypetestm where cdecimal18 = -9999999999998.2;
+cidx	cdecimal18
+select cidx, cdecimal18 from datatypetestm where cdecimal18 <= 9999999999998.2;
+cidx	cdecimal18
+1	-9999999999999
+2	-9999999999998
+3	-9999999999997
+4	-9999999999996
+5	-9999999999995
+6	9999999999995
+7	9999999999996
+8	9999999999997
+9	9999999999998
+11	0
+select cidx, cdecimal18 from datatypetestm where cdecimal18 <= -9999999999998.2;
+cidx	cdecimal18
+1	-9999999999999
+select cidx, cdecimal18 from datatypetestm where cdecimal18 < 9999999999998.2;
+cidx	cdecimal18
+1	-9999999999999
+2	-9999999999998
+3	-9999999999997
+4	-9999999999996
+5	-9999999999995
+6	9999999999995
+7	9999999999996
+8	9999999999997
+9	9999999999998
+11	0
+select cidx, cdecimal18 from datatypetestm where cdecimal18 < -9999999999998.2;
+cidx	cdecimal18
+1	-9999999999999
+select cidx, cdecimal18 from datatypetestm where cdecimal18 > 9999999999998.5;
+cidx	cdecimal18
+10	9999999999999
+select cidx, cdecimal18 from datatypetestm where cdecimal18 > -9999999999998.5;
+cidx	cdecimal18
+2	-9999999999998
+3	-9999999999997
+4	-9999999999996
+5	-9999999999995
+6	9999999999995
+7	9999999999996
+8	9999999999997
+9	9999999999998
+10	9999999999999
+11	0
+select cidx, cdecimal18 from datatypetestm where cdecimal18 >= 9999999999998.5;
+cidx	cdecimal18
+10	9999999999999
+select cidx, cdecimal18 from datatypetestm where cdecimal18 >= -9999999999998.5;
+cidx	cdecimal18
+2	-9999999999998
+3	-9999999999997
+4	-9999999999996
+5	-9999999999995
+6	9999999999995
+7	9999999999996
+8	9999999999997
+9	9999999999998
+10	9999999999999
+11	0
+select cidx, cdecimal18 from datatypetestm where cdecimal18 = 9999999999998.5;
+cidx	cdecimal18
+select cidx, cdecimal18 from datatypetestm where cdecimal18 = -9999999999998.5;
+cidx	cdecimal18
+select cidx, cdecimal18 from datatypetestm where cdecimal18 <= 9999999999998.5;
+cidx	cdecimal18
+1	-9999999999999
+2	-9999999999998
+3	-9999999999997
+4	-9999999999996
+5	-9999999999995
+6	9999999999995
+7	9999999999996
+8	9999999999997
+9	9999999999998
+11	0
+select cidx, cdecimal18 from datatypetestm where cdecimal18 <= -9999999999998.5;
+cidx	cdecimal18
+1	-9999999999999
+select cidx, cdecimal18 from datatypetestm where cdecimal18 < 9999999999998.5;
+cidx	cdecimal18
+1	-9999999999999
+2	-9999999999998
+3	-9999999999997
+4	-9999999999996
+5	-9999999999995
+6	9999999999995
+7	9999999999996
+8	9999999999997
+9	9999999999998
+11	0
+select cidx, cdecimal18 from datatypetestm where cdecimal18 < -9999999999998.5;
+cidx	cdecimal18
+1	-9999999999999
+select cidx, cdecimal18_2 from datatypetestm where cdecimal18_2 > 99999999999.972;
+cidx	cdecimal18_2
+9	99999999999.98
+10	99999999999.99
+select cidx, cdecimal18_2 from datatypetestm where cdecimal18_2 > -99999999999.972;
+cidx	cdecimal18_2
+3	-99999999999.97
+4	-99999999999.96
+5	-99999999999.95
+6	99999999999.95
+7	99999999999.96
+8	99999999999.97
+9	99999999999.98
+10	99999999999.99
+11	0.00
+select cidx, cdecimal18_2 from datatypetestm where cdecimal18_2 >= 99999999999.972;
+cidx	cdecimal18_2
+9	99999999999.98
+10	99999999999.99
+select cidx, cdecimal18_2 from datatypetestm where cdecimal18_2 >= -99999999999.972;
+cidx	cdecimal18_2
+3	-99999999999.97
+4	-99999999999.96
+5	-99999999999.95
+6	99999999999.95
+7	99999999999.96
+8	99999999999.97
+9	99999999999.98
+10	99999999999.99
+11	0.00
+select cidx, cdecimal18_2 from datatypetestm where cdecimal18_2 = 99999999999.972;
+cidx	cdecimal18_2
+select cidx, cdecimal18_2 from datatypetestm where cdecimal18_2 = -99999999999.972;
+cidx	cdecimal18_2
+select cidx, cdecimal18_2 from datatypetestm where cdecimal18_2 <= 99999999999.972;
+cidx	cdecimal18_2
+1	-99999999999.99
+2	-99999999999.98
+3	-99999999999.97
+4	-99999999999.96
+5	-99999999999.95
+6	99999999999.95
+7	99999999999.96
+8	99999999999.97
+11	0.00
+select cidx, cdecimal18_2 from datatypetestm where cdecimal18_2 <= -99999999999.972;
+cidx	cdecimal18_2
+1	-99999999999.99
+2	-99999999999.98
+select cidx, cdecimal18_2 from datatypetestm where cdecimal18_2 < 99999999999.972;
+cidx	cdecimal18_2
+1	-99999999999.99
+2	-99999999999.98
+3	-99999999999.97
+4	-99999999999.96
+5	-99999999999.95
+6	99999999999.95
+7	99999999999.96
+8	99999999999.97
+11	0.00
+select cidx, cdecimal18_2 from datatypetestm where cdecimal18_2 < -99999999999.972;
+cidx	cdecimal18_2
+1	-99999999999.99
+2	-99999999999.98
+select cidx, cdecimal18_2 from datatypetestm where cdecimal18_2 > 99999999999.975;
+cidx	cdecimal18_2
+9	99999999999.98
+10	99999999999.99
+select cidx, cdecimal18_2 from datatypetestm where cdecimal18_2 > -99999999999.975;
+cidx	cdecimal18_2
+3	-99999999999.97
+4	-99999999999.96
+5	-99999999999.95
+6	99999999999.95
+7	99999999999.96
+8	99999999999.97
+9	99999999999.98
+10	99999999999.99
+11	0.00
+select cidx, cdecimal18_2 from datatypetestm where cdecimal18_2 >= 99999999999.975;
+cidx	cdecimal18_2
+9	99999999999.98
+10	99999999999.99
+select cidx, cdecimal18_2 from datatypetestm where cdecimal18_2 >= -99999999999.975;
+cidx	cdecimal18_2
+3	-99999999999.97
+4	-99999999999.96
+5	-99999999999.95
+6	99999999999.95
+7	99999999999.96
+8	99999999999.97
+9	99999999999.98
+10	99999999999.99
+11	0.00
+select cidx, cdecimal18_2 from datatypetestm where cdecimal18_2 = 99999999999.975;
+cidx	cdecimal18_2
+select cidx, cdecimal18_2 from datatypetestm where cdecimal18_2 = -99999999999.975;
+cidx	cdecimal18_2
+select cidx, cdecimal18_2 from datatypetestm where cdecimal18_2 <= 99999999999.975;
+cidx	cdecimal18_2
+1	-99999999999.99
+2	-99999999999.98
+3	-99999999999.97
+4	-99999999999.96
+5	-99999999999.95
+6	99999999999.95
+7	99999999999.96
+8	99999999999.97
+11	0.00
+select cidx, cdecimal18_2 from datatypetestm where cdecimal18_2 <= -99999999999.975;
+cidx	cdecimal18_2
+1	-99999999999.99
+2	-99999999999.98
+select cidx, cdecimal18_2 from datatypetestm where cdecimal18_2 < 99999999999.975;
+cidx	cdecimal18_2
+1	-99999999999.99
+2	-99999999999.98
+3	-99999999999.97
+4	-99999999999.96
+5	-99999999999.95
+6	99999999999.95
+7	99999999999.96
+8	99999999999.97
+11	0.00
+select cidx, cdecimal18_2 from datatypetestm where cdecimal18_2 < -99999999999.975;
+cidx	cdecimal18_2
+1	-99999999999.99
+2	-99999999999.98

@@ -1,0 +1,30 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-3304.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+DROP TABLE IF EXISTS `MCOL3304`;
+CREATE TABLE `MCOL3304` (
+`c` decimal(5,2) DEFAULT NULL
+) ENGINE=columnstore;
+
+INSERT INTO `MCOL3304`
+(`c`)
+VALUES (2.05), (5.44),(3.04);
+
+select c,sum(c) over(), sum(c) over w1, sum(c) over w2 from `MCOL3304`
+WINDOW `w1` as (),`w2` as (rows between unbounded preceding and current row);
+
+select csum,sum(csum) over(), sum(csum) over w1, sum(csum) over w2 from
+(select sum(c) as csum from`MCOL3304`) t 
+WINDOW `w1` as (),`w2` as (rows between unbounded preceding and current row);
+
+DROP TABLE IF EXISTS `MCOL3304`;
+
+#
+

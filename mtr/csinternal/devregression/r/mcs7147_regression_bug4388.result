@@ -1,0 +1,41 @@
+USE tpch1;
+create table if not exists bug4388(
+`venta_clave` int(10) DEFAULT NULL,
+`cantidad` decimal(10,3) DEFAULT NULL,
+`changev` decimal(18,4) DEFAULT NULL
+) engine=columnstore;
+insert into bug4388 values (null,null,6.8000);
+select coalesce(sum(changev),0) as col1 from bug4388;
+col1
+6.8000
+select sum(co) + 0 from ( select sum(col1) as co from  ( select 0 
+as col1 union all select coalesce(sum(changev),0) as col1 from 
+bug4388 ) t ) res;
+sum(co) + 0
+6.8000
+select sum(co) + 0 from ( select sum(col1) as co from  ( select 
+coalesce(sum(changev),0) as col1 from bug4388 union all select 0 
+as col1 ) t ) res;
+sum(co) + 0
+6.8000
+select sum(co) + 0 from ( select sum(col1) as co from  ( select 0 
+as col1 union all select coalesce(sum(6.800),0) as col1  ) t ) res;
+sum(co) + 0
+6.800
+select sum(col1) + 0 from( select 0 as col1 union all
+select sum(changev) as col1 from bug4388 ) res;
+sum(col1) + 0
+6.8000
+select sum(col1) from
+( select 0 as col1 union all
+select sum(changev) as col1 from bug4388 ) res;
+sum(col1)
+6.8000
+select sum(co) from (select sum(changev) as co from bug4388 ) t;
+sum(co)
+6.8000
+select sum(co) from ( select sum(col1) as co from (select sum(changev)
+as col1 from bug4388 ) t ) res;
+sum(co)
+6.8000
+drop table bug4388;

@@ -1,0 +1,78 @@
+DROP DATABASE IF EXISTS mcs256_db;
+CREATE DATABASE mcs256_db;
+USE mcs256_db;
+CREATE TABLE t1
+(
+t1_INT INT,
+t1_DECIMAL DECIMAL(12,5),
+t1_TEXT TEXT,
+t1_DATE DATE,
+t1_TIME TIME
+)ENGINE=Columnstore;
+INSERT INTO t1 VALUES(103, 1234.5699, 'pqrstuvwxyz', '1997-12-12', '22:12:02');
+INSERT INTO t1 VALUES(-7299, 111.99, 'abcdefghijklm', '2001-1-1', '23:59:59');
+INSERT INTO t1 VALUES(9913, 98765.4321, repeat('q', 5), '09-12-11', '01:08:59');
+SELECT LOCATE('a', 'bcdefga') FROM t1 LIMIT 1;
+LOCATE('a', 'bcdefga')
+7
+SELECT LOCATE('b', 'abcd') FROM t1 LIMIT 1;
+LOCATE('b', 'abcd')
+2
+SELECT LOCATE('z', 'abcd') FROM t1 LIMIT 1;
+LOCATE('z', 'abcd')
+0
+SELECT LOCATE('abcd', 'abcdefg') FROM t1 LIMIT 1;
+LOCATE('abcd', 'abcdefg')
+1
+SELECT LOCATE('0123', '1234') FROM t1 LIMIT 1;
+LOCATE('0123', '1234')
+0
+SELECT LOCATE('345', '12345678') FROM t1 LIMIT 1;
+LOCATE('345', '12345678')
+3
+SELECT LOCATE('378', '12345678') FROM t1 LIMIT 1;
+LOCATE('378', '12345678')
+0
+SELECT t1_TEXT, LOCATE('a', t1_TEXT) FROM t1 ORDER BY 1;
+t1_TEXT	LOCATE('a', t1_TEXT)
+abcdefghijklm	1
+pqrstuvwxyz	0
+qqqqq	0
+SELECT t1_TEXT, LOCATE('efg', t1_TEXT) FROM t1 ORDER BY 1;
+t1_TEXT	LOCATE('efg', t1_TEXT)
+abcdefghijklm	5
+pqrstuvwxyz	0
+qqqqq	0
+SELECT t1_TEXT, LOCATE('ef', t1_TEXT) FROM t1 ORDER BY 1;
+t1_TEXT	LOCATE('ef', t1_TEXT)
+abcdefghijklm	5
+pqrstuvwxyz	0
+qqqqq	0
+SELECT t1_TEXT, LOCATE('stuv', t1_TEXT) FROM t1 ORDER BY 1;
+t1_TEXT	LOCATE('stuv', t1_TEXT)
+abcdefghijklm	0
+pqrstuvwxyz	4
+qqqqq	0
+SELECT t1_TEXT, LOCATE('zyxwv', t1_TEXT) FROM t1 ORDER BY 1;
+t1_TEXT	LOCATE('zyxwv', t1_TEXT)
+abcdefghijklm	0
+pqrstuvwxyz	0
+qqqqq	0
+SELECT t1_TEXT, LOCATE('vwxyz', t1_TEXT) FROM t1 ORDER BY 1;
+t1_TEXT	LOCATE('vwxyz', t1_TEXT)
+abcdefghijklm	0
+pqrstuvwxyz	7
+qqqqq	0
+SELECT t1_TEXT, LOCATE('q', t1_TEXT) FROM t1 ORDER BY 1;
+t1_TEXT	LOCATE('q', t1_TEXT)
+abcdefghijklm	0
+pqrstuvwxyz	2
+qqqqq	1
+SELECT t1_TEXT, LOCATE('qq', t1_TEXT) FROM t1 ORDER BY 1;
+t1_TEXT	LOCATE('qq', t1_TEXT)
+abcdefghijklm	0
+pqrstuvwxyz	0
+qqqqq	1
+SELECT t1_TEXT, LOCATE(t1_TEXT) FROM t1 ORDER BY 1;
+ERROR 42000: Incorrect parameter count in the call to native function 'LOCATE'
+DROP DATABASE mcs256_db;

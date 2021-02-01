@@ -1,0 +1,26 @@
+#
+# Test EXP() function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs237_db;
+--enable_warnings
+
+CREATE DATABASE mcs237_db;
+USE mcs237_db;
+
+CREATE TABLE t1 (a INT, b DECIMAL(7,5))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (1, 2.1791), (2, -0.6493), (3, 0.17171);
+
+SELECT EXP(0);
+SELECT EXP(-0.99);
+
+SELECT a, EXP(a) FROM t1 ORDER BY 1;
+SELECT a, EXP(a*3) FROM t1 ORDER BY 1;
+SELECT b, EXP(b) FROM t1 ORDER BY 1;
+SELECT b, EXP(b*0.05) FROM t1 ORDER BY 1;
+
+# Clean UP
+DROP DATABASE mcs237_db;

@@ -1,0 +1,60 @@
+#
+# Test INSERT into table with all supported charset
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs21_db;
+--enable_warnings
+
+CREATE DATABASE mcs21_db;
+USE mcs21_db;
+
+SET NAMES ascii;
+CREATE TABLE t_ascii(name VARCHAR(20)) CHARSET ascii ENGINE=Columnstore;
+INSERT INTO t_ascii VALUES(' '), ('abcdefghijklmnopqrst'),('uvwxyzABCDEFGHIJKLMN'),('OPQRSTUVWXYZ'),('1234567890');
+SELECT * FROM t_ascii;
+
+SET NAMES big5; 
+CREATE TABLE t_big5(name VARCHAR(20)) CHARSET big5 ENGINE=Columnstore;
+INSERT INTO t_big5 VALUES(0xF9D6),(0xF9D7),(0xF9D8),(0xF9D9),(0xF9DA),(0xF9DB),(0xF9DC);
+SELECT hex(name) FROM t_big5;
+
+SET NAMES binary;
+CREATE TABLE t_binary(name VARCHAR(20)) CHARSET binary ENGINE=Columnstore;
+INSERT INTO t_binary VALUES(0x61000162FF),(0x61000163FF),(0x61000164FF),(0x61000165FF);
+SELECT hex(name) FROM t_binary;
+
+SET NAMES cp1250;
+CREATE TABLE t_cp1250(name VARCHAR(20)) CHARSET cp1250 ENGINE=Columnstore;
+INSERT INTO t_cp1250 VALUES('aaaa'),('bbbbb');
+SELECT hex(name) FROM t_cp1250;
+
+SET NAMES eucjpms;
+CREATE TABLE t_eucjpms(name VARCHAR(20)) CHARSET eucjpms ENGINE=Columnstore;
+INSERT INTO t_eucjpms VALUES(0x5C),(0x7E),(0xA1B1),(0xA1BD),(0xA1C0),(0xA1C1),(0xA1C2),(0xA1DD),(0xA1F1),(0xA1F2),(0xA1EF),(0xA2CC),(0x8FA2B7),(0x8FA2C3);
+INSERT INTO t_eucjpms VALUES(0xADA1),(0xADA2),(0xADA3),(0xADA4),(0xADA5),(0xADA6),(0xADA9),(0xADAA),(0xADAB),(0xADAC),(0xADAD),(0xADAE),(0xADAF),(0xADB0);
+INSERT INTO t_eucjpms VALUES(0x8FF3F3),(0x8FF3F4),(0x8FF3F5),(0x8FF3F6),(0x8FF3F7),(0x8FF3F8),(0x8FF3F9),(0x8FF3FA);
+SELECT hex(name) FROM t_eucjpms;
+
+SET NAMES euckr;
+CREATE TABLE t_euckr(name VARCHAR(20)) CHARSET euckr ENGINE=Columnstore;
+INSERT INTO t_euckr VALUES(0xA141),(0xA15A),(0xA161),(0xA17A),(0xA181);
+SELECT hex(name) FROM t_euckr;
+
+SET NAMES latin1;
+CREATE TABLE t_latin1(name VARCHAR(20)) CHARSET latin1 ENGINE=Columnstore;
+INSERT INTO t_latin1 VALUES(0x00),(0x01),(0x02),(0x03),(0x04),(0x05),(0x06),(0x07);
+SELECT hex(name) FROM t_latin1;
+
+SET NAMES latin2;
+CREATE TABLE t_latin2(name VARCHAR(20)) CHARSET latin2 ENGINE=Columnstore;
+INSERT INTO t_latin2 VALUES(0x20),(0x21),(0x22),(0x23),(0x24),(0x25),(0x26),(0x27);
+SELECT hex(name) FROM t_latin2;
+
+SET NAMES utf8;
+CREATE TABLE t_utf8(name VARCHAR(20)) CHARSET utf8 ENGINE=Columnstore;
+INSERT INTO t_utf8 VALUES('123456'),('Ð°Ð½Ð'),(0xE38182),(0xE38182),('jhgajga');
+SELECT hex(name) FROM t_utf8;
+
+DROP DATABASE mcs21_db;

@@ -1,0 +1,76 @@
+DROP DATABASE IF EXISTS mcs10_db1;
+DROP DATABASE IF EXISTS mcs10_db2;
+DROP DATABASE mcs10_db1;
+ERROR HY000: Can't drop database 'mcs10_db1'; database doesn't exist
+DROP DATABASE mcs10_db1, mcs10_db2;
+ERROR 42000: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ' mcs10_db2' at line 1
+DROP DATABASE mcs10_db1 mcs10_db2;
+ERROR 42000: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'mcs10_db2' at line 1
+CREATE DATABASE mcs10_db1;
+DROP DATABASE mcs10_db1;
+USE mcs10_db1;
+ERROR 42000: Unknown database 'mcs10_db1'
+CREATE DATABASE mcs10_db1;
+CREATE DATABASE mcs10_db2;
+USE mcs10_db1;
+DROP DATABASE mcs10_db2;
+DROP DATABASE mcs10_db1;
+CREATE DATABASE mcs10_db1;
+CREATE DATABASE mcs10_db2;
+USE mcs10_db1;
+DROP TABLE IF EXISTS t_innodb, t_columnstore;
+Warnings:
+Note	1051	Unknown table 'mcs10_db1.t_innodb,mcs10_db1.t_columnstore'
+DROP TABLE IF EXISTS t_innodb;
+Warnings:
+Note	1051	Unknown table 'mcs10_db1.t_innodb'
+DROP TABLE IF EXISTS t_columnstore;
+Warnings:
+Note	1051	Unknown table 'mcs10_db1.t_columnstore'
+DROP TABLE t_innodb;
+ERROR 42S02: Unknown table 'mcs10_db1.t_innodb'
+DROP TABLE t_columnstore;
+ERROR 42S02: Unknown table 'mcs10_db1.t_columnstore'
+CREATE TABLE t_innodb (id int) engine=innodb;
+CREATE TABLE t_columnstore (id int) engine=columnstore;
+DROP TABLE t_innodb;
+DROP TABLE IF EXISTS t_innodb;
+Warnings:
+Note	1051	Unknown table 'mcs10_db1.t_innodb'
+DROP TABLE t_columnstore;
+DROP TABLE IF EXISTS t_columnstore;
+Warnings:
+Note	1051	Unknown table 'mcs10_db1.t_columnstore'
+CREATE TABLE t_columnstore1 (id int) engine=columnstore;
+CREATE TABLE t_columnstore2 (id int) engine=columnstore;
+DROP TABLE t_columnstore1, t_columnstore2;
+DROP TABLE IF EXISTS t_columnstore1, t_columnstore2;
+Warnings:
+Note	1051	Unknown table 'mcs10_db1.t_columnstore1,mcs10_db1.t_columnstore2'
+DROP DATABASE mcs10_db1;
+DROP DATABASE mcs10_db2;
+CREATE DATABASE mcs10_db1;
+CREATE DATABASE mcs10_db2;
+CREATE TABLE mcs10_db1.t_columnstore1 (id int) engine=columnstore;
+CREATE TABLE mcs10_db2.t_columnstore1 (id int) engine=columnstore;
+DROP TABLE mcs10_db1.t_columnstore1, mcs10_db1.t_columnstore1;
+ERROR 42000: Not unique table/alias: 't_columnstore1'
+DROP TABLE IF EXISTS mcs10_db1.t_columnstore1, mcs10_db1.t_columnstore1;
+ERROR 42000: Not unique table/alias: 't_columnstore1'
+DROP TABLE mcs10_db1.t_columnstore1;
+DROP TABLE IF EXISTS mcs10_db2.t_columnstore1;
+USE mcs10_db1;
+CREATE TABLE t_columnstore1 (id int) engine=columnstore;
+CREATE TABLE t_columnstore2 (id int) engine=columnstore;
+connect  addconroot1, localhost, root,,;
+connect  addconroot2, localhost, root,,;
+connection addconroot1;
+DROP TABLE mcs10_db1.t_columnstore1;
+connection addconroot2;
+DROP TABLE mcs10_db1.t_columnstore1;
+ERROR 42S02: Unknown table 'mcs10_db1.t_columnstore1'
+USE mcs10_db1;
+DROP TABLE IF EXISTS t_columnstore2;
+connection default;
+DROP DATABASE IF EXISTS mcs10_db1;
+DROP DATABASE mcs10_db2;

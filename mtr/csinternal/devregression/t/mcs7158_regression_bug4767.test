@@ -1,0 +1,43 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug4767.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists cat;
+drop table if exists dog;
+
+create table cat(id int, f float, d double)engine=columnstore;
+create table dog(id int, f float, d double)engine=columnstore;
+
+insert into cat values
+(1, 1.234, 1.2343),
+(2, 989.789, 999.2343),
+(3, null, null),
+(4, 9121, 9999);
+
+insert into dog values
+(1, 989.789, 999.2343),
+(2, null, null),
+(3, 1.23234, 1.232343),
+(4, 91215, 9999);
+
+select 'q1', cat.id, dog.id from cat join dog on cat.f = dog.f;
+select 'q2', cat.id, dog.id from cat join dog on cat.d = dog.d;
+
+update dog, cat set dog.id=100+dog.id where dog.f = cat.f;
+select 'q3', dog.* from dog;
+
+update cat, dog set cat.id=100+cat.id where dog.d = cat.d;
+select 'q4', cat.* from cat;
+
+select 'q5', cat.id, dog.id from cat join dog on cat.f = dog.f and cat.d = dog.d;
+
+drop table cat;
+drop table dog; 
+#
+

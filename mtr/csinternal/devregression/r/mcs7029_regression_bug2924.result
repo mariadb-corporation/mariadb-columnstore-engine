@@ -1,0 +1,4 @@
+USE ssb1;
+select   count(*)    from     lineorder alias1 join customer on lo_custkey = c_custkey             where lo_orderdate between  19970101 and 19971230             and exists ( select 'x' from    (select lo_custkey, sum(lo_extendedprice)    from lineorder    where lo_orderdate between 19971201 and 19971230    group by 1 order by 2 desc limit 100 ) a    where a.lo_custkey = alias1.lo_orderkey );
+count(*)
+8

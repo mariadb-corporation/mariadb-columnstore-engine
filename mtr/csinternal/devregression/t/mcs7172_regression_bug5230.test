@@ -1,0 +1,29 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug5230.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists region1;
+create table  region1
+   (
+    r_regionkey int,
+    r_name char(25),
+    r_comment varchar(152)
+   ) engine=columnstore;
+start transaction;
+insert into region1 select * from tpch1.region;
+rollback;
+select * from region1;
+start transaction;
+insert into region1 select * from tpch1.region;
+commit;
+select * from region1;
+drop table region1;
+
+#
+

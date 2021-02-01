@@ -1,0 +1,11 @@
+USE tpch1;
+select count(*) from nation into outfile '/tmp/natcount.tbl';
+Warnings:
+Warning	1287	'<select expression> INTO <destination>;' is deprecated and will be removed in a future release. Please use 'SELECT <select list> INTO <destination> FROM...' instead
+select count(*) into outfile '/tmp/natcount.tbl' from nation;
+select count(*) from nation;
+count(*)
+25
+select count(*) from nation into outfile 'nation.out';
+Warnings:
+Warning	1287	'<select expression> INTO <destination>;' is deprecated and will be removed in a future release. Please use 'SELECT <select list> INTO <destination> FROM...' instead

@@ -1,0 +1,55 @@
+#
+# Update and Delete using Cross engine join
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs45_db;
+--enable_warnings
+
+CREATE DATABASE mcs45_db;
+USE mcs45_db;
+
+#
+# Enable cross engine join
+# Configure user and password in Columnstore.xml file
+#
+--exec /usr/bin/mcsSetConfig CrossEngineSupport User 'cejuser'
+--exec /usr/bin/mcsSetConfig CrossEngineSupport Password 'Vagrant1|0000001'
+#
+# Create corresponding in the server
+#
+--disable_warnings
+CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
+--enable_warnings
+GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+FLUSH PRIVILEGES;
+
+# Create tables with Innodb and Columnstore engines
+CREATE TABLE t1 (t1_int INT, t1_char CHAR(5))ENGINE=Innodb;
+CREATE TABLE t2 (t2_int INT, t2_char CHAR(5))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL,''),(1,'aaa'),(2,'bbb'),(3,'ccc'),(4,'ddd'),(5,'eee'),(6,'ffff'),(7,'ggggg');
+INSERT INTO t2 VALUES (NULL,''),(1,'hhhh'),(3,'iii'),(5,'jjj'),(7,'kkkk'),(9,'lll'),(11,'m'),(13,'nnn');
+
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int AND t1.t1_int = 3;
+UPDATE t2, t1 SET t2.t2_char = 'zzz' WHERE t1.t1_int = t2.t2_int AND t1.t1_int = 3;
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int AND t1.t1_int = 3;
+UPDATE t1 JOIN t2 on t1.t1_int=t2.t2_int SET t2.t2_char='sssss';
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int;
+# MCOL-1482
+--error ER_INTERNAL_ERROR
+UPDATE t1 JOIN t2 on t1.t1_int=t2.t2_int SET t1.t1_char='s';
+
+SELECT * FROM t1;
+SELECT * FROM t2;
+DELETE t2 FROM t2 JOIN t1 ON t1.t1_int = t2.t2_int AND t1.t1_int = 7;
+SELECT * FROM t1;
+SELECT * FROM t2;
+# Similar error as MCOL-1482
+--error ER_INTERNAL_ERROR
+DELETE t1 FROM t1 JOIN t2 ON t1.t1_int = t2.t2_int AND t1.t1_int = 5;
+
+# Clean UP
+DROP USER 'cejuser'@'localhost';
+DROP DATABASE mcs45_db;

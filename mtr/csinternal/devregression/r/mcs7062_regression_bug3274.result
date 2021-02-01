@@ -1,0 +1,23 @@
+USE tpch1;
+drop table if exists bug3274;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug3274'
+create table bug3274(d2 decimal(4,2), f float);
+insert into bug3274 values (43.34, 43.345), (13.54, 13.545);
+select d2, count(*) from bug3274 group by 1 order by 1;
+d2	count(*)
+13.54	1
+43.34	1
+select f, count(*) from bug3274 group by 1 order by 1;
+f	count(*)
+13.545	1
+43.345	1
+select * from (select d2, count(*) from bug3274 group by 1 order by 1) a;
+d2	count(*)
+13.54	1
+43.34	1
+select * from (select f, count(*) from bug3274 group by 1 order by 1) a;
+f	count(*)
+13.545	1
+43.345	1
+drop table if exists bug3274;

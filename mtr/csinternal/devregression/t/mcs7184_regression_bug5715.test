@@ -1,0 +1,47 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug5715.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+#-- turn infinidb_double_for_decimal_math on
+set columnstore_double_for_decimal_math = 1;
+
+#-- bug5715
+--disable_warnings
+drop table if exists `p2_loaded_uh_p_xml_fsc_2x_for_agg_201310_valid_sess`;
+--enable_warnings
+
+create table `p2_loaded_uh_p_xml_fsc_2x_for_agg_201310_valid_sess` ( `session_duration` decimal(13,3) not null,`session_idle_down_duration` decimal(13,3) not null, `session_q5_down` int(11) not null ) engine=columnstore default charset=latin1;
+insert into p2_loaded_uh_p_xml_fsc_2x_for_agg_201310_valid_sess values (1032632.1 , 86382, 1273564557);
+select  session_duration as session_duration,  session_idle_down_duration as session_idle_down_duration,  session_q5_down as session_q5_down,  session_duration*session_q5_down as result_1, (session_duration*session_q5_down)*8 as result_2, (1032632.1*1273564557)*8 as result_3 from p2_loaded_uh_p_xml_fsc_2x_for_agg_201310_valid_sess t1;
+
+#-- bug2437
+--disable_warnings
+drop table if exists bug2437;
+--enable_warnings
+create table bug2437 (col1 decimal(6,4)) engine=columnstore;
+insert into bug2437 values (10.0001);
+select col1*2.0002*2.0000002*0.999999999999 from bug2437;
+select col1*4.00040040003599959959996 from bug2437;
+
+#-- bug5697
+select (count(*)/72143371)*100,(6001215/72143371)*100,(count(*)*100)/72143371,(6001215*100)/72143371 from lineitem;
+
+#-- turn infinidb_double_for_decimal_math off
+set columnstore_double_for_decimal_math = 0;
+
+select  session_duration as session_duration,  session_idle_down_duration as session_idle_down_duration,  session_q5_down as session_q5_down,  session_duration*session_q5_down as result_1, (session_duration*session_q5_down)*8 as result_2, (1032632.1*1273564557)*8 as result_3 from p2_loaded_uh_p_xml_fsc_2x_for_agg_201310_valid_sess t1;
+
+select col1*2.0002*2.0000002*0.999999999999 from bug2437;
+select col1*4.00040040003599959959996 from bug2437;
+
+select (count(*)/72143371)*100,(6001215/72143371)*100,(count(*)*100)/72143371,(6001215*100)/72143371 from lineitem;
+#
+drop table `p2_loaded_uh_p_xml_fsc_2x_for_agg_201310_valid_sess`;
+drop table bug2437;
+#

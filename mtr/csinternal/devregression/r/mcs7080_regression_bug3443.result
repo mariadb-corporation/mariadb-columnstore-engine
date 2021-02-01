@@ -1,0 +1,21 @@
+USE tpch1;
+select (sum(case r_regionkey when 1 then r_regionkey else null end) / count(distinct (case r_regionkey when 3 then r_regionkey else null end))) s from region;
+s
+1.0000
+select (sum(case r_regionkey when 1 then r_regionkey else null end) / count(distinct (case r_regionkey when 3 then r_regionkey else null end))) s from region, nation where r_regionkey=n_regionkey;
+s
+5.0000
+select n_regionkey, (sum(case n_nationkey when 1 then n_nationkey else null end) / count(distinct (case n_nationkey when 3 then n_nationkey else null end))) s from nation group by n_regionkey order by n_regionkey;
+n_regionkey	s
+0	NULL
+1	1.0000
+2	NULL
+3	NULL
+4	NULL
+select n_regionkey, (sum(case r_regionkey when 1 then r_regionkey else null end) / count(distinct (case r_regionkey when 3 then r_regionkey else null end))) s from region, nation where r_regionkey=n_regionkey group by n_regionkey order by n_regionkey;
+n_regionkey	s
+0	NULL
+1	NULL
+2	NULL
+3	NULL
+4	NULL

@@ -1,0 +1,30 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-1531.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+DROP TABLE IF EXISTS cs1;
+DROP TABLE IF EXISTS cs2;
+
+CREATE TABLE `cs1` (
+  `t` varchar(2) DEFAULT NULL,
+  `i` int(11) DEFAULT NULL
+) ENGINE=Columnstore;
+CREATE TABLE `cs2` (
+  `t` varchar(2) DEFAULT NULL,
+  `i` int(11) DEFAULT NULL
+) ENGINE=Columnstore;
+insert into cs1 values ('MO', 2);
+insert into cs1 values (NULL, 2);
+
+select * from cs1 inner join cs2 on (cs1.t = case cs2.t when NULL then 'MO' else cs2.t end);
+
+DROP TABLE IF EXISTS cs1;
+DROP TABLE IF EXISTS cs2;
+#
+

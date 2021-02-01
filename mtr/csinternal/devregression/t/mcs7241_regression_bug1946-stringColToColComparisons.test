@@ -1,0 +1,26 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug1946-stringColToColComparisons.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+select cidx, cchar1, cvchar255 from datatypetestm where cchar1 < cvchar255 order by 1;
+select cidx, cchar2, cvchar8 from datatypetestm where cchar2 <= cvchar8 order by 1;
+select cidx, cchar3, cvchar7 from datatypetestm where cchar3 >= cvchar7 order by 1;
+select cidx, cchar4, cvchar6 from datatypetestm where cchar4 > cvchar6 order by 1;
+select cidx, cchar5, cvchar5 from datatypetestm where cchar5 != cvchar5 order by 1;
+select cidx, cchar6, cvchar4 from datatypetestm where cchar6 > cvchar4 order by 1;
+select cidx, cchar7, cvchar3 from datatypetestm where cchar7 < cvchar3 order by 1;
+select cidx, cchar8, cvchar2 from datatypetestm where cchar8 >= cvchar2 order by 1;
+select cidx, cchar9, cvchar1 from datatypetestm where cchar9 <= cvchar1 order by 1;
+select cidx, cchar255, cvchar3 from datatypetestm where cchar255 != cvchar3 order by 1;
+select cidx, cchar4, cchar5 from datatypetestm where cchar4 = cchar5 order by 1;
+select cidx cchar3, cvchar255 from datatypetestm where cchar3 = cvchar255;
+
+
+#
+

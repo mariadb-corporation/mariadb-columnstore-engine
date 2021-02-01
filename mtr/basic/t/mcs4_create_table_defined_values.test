@@ -1,0 +1,39 @@
+#
+#Test CREATE TABLE with defualt values
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs4_db;
+--enable_warnings
+
+CREATE DATABASE mcs4_db;
+USE mcs4_db;
+
+CREATE TABLE t_default
+(
+ t_INT INT DEFAULT 10,
+ t_CHAR_10 CHAR(10) DEFAULT 'mariadb cs',
+ t_VARCHAR_100 VARCHAR(100) DEFAULT 'mariadb columnstore',
+ t_DATE DATE DEFAULT '1000-11-11',
+ t_TIME TIME DEFAULT '00:00:00',
+ t_TIMESTAMP TIMESTAMP DEFAULT '2020-01-01',
+ t_DATETIME DATETIME DEFAULT '1000-01-01 00:00:00'
+ )ENGINE=Columnstore;
+INSERT INTO t_default VALUES();
+SELECT * FROM t_default;
+
+# Starting from MariaDB 10.2.1, BLOB and TEXT columns can have a DEFAULT value.
+CREATE TABLE t1_default(t_TEXT TEXT DEFAULT 'mariadb columnstore', t_BLOB BLOB DEFAULT 'columnstore mariadb')ENGINE=Columnstore;
+INSERT INTO t1_default VALUES();
+SELECT * FROM t1_default;
+
+# negative scenarios
+--error 1067
+CREATE TABLE t_neg(col1 INT DEFAULT 'a')ENGINE=Columnstore;
+--error 1067
+CREATE TABLE t1_neg(col1 VARCHAR(10) DEFAULT 'mariadb columnstore')ENGINE=Columnstore;
+--error 1067
+CREATE TABLE t2_neg(col1 DATETIME DEFAULT '1')ENGINE=Columnstore;
+
+DROP DATABASE mcs4_db;

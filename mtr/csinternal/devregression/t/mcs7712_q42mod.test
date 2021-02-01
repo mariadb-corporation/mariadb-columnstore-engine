@@ -1,0 +1,27 @@
+#
+# Test case migrated from regression test suite:
+# ./mysql/queries/working_ssb_compareLogOnly/ssb/q4.2.mod.sql
+#
+# Author: Susil, susil.behera@mariadb.com
+#
+
+-- source ../include/have_columnstore.inc
+
+USE ssb1;
+# Q4.2
+select d_year, s_nation, p_category,
+sum(lo_revenue - lo_supplycost) as profit
+from customer, supplier, part, dateinfo, lineorder	   # changed order
+where lo_custkey = c_custkey
+and lo_suppkey = s_suppkey
+and lo_partkey = p_partkey
+and lo_orderdate = d_datekey
+and c_region = 'AMERICA'
+and s_region = 'AMERICA'
+and (d_year = 1997 or d_year = 1998)
+and lo_orderdate between 19970101 and 19981231		   # added matching predicate
+and (p_mfgr = 'MFGR#1'
+or p_mfgr = 'MFGR#2')
+group by d_year, s_nation, p_category
+order by d_year, s_nation, p_category;
+

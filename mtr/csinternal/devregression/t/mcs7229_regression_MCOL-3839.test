@@ -1,0 +1,47 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL-3839.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists test_wf_count_with_constants;
+
+create table test_wf_count_with_constants (t1 int) engine=columnstore;
+insert into test_wf_count_with_constants values (1);
+select count(null) over () from test_wf_count_with_constants;
+select count(5) over () from test_wf_count_with_constants;
+
+#-- make sure count(*) count(field) are not broken
+select count(*) from test_wf_count_with_constants;
+select count(t1) from test_wf_count_with_constants;
+
+
+insert into test_wf_count_with_constants values (3);
+select count(null) over () from test_wf_count_with_constants;
+select count(5) over () from test_wf_count_with_constants;
+
+#-- make sure count(*) count(field) are not broken
+select count(*) from test_wf_count_with_constants;
+select count(t1) from test_wf_count_with_constants;
+
+#-- test with partition by
+select count(5) over(partition by t1)  from test_wf_count_with_constants;
+select count(*) over(partition by t1)  from test_wf_count_with_constants;
+select count(null) over(partition by t1)  from test_wf_count_with_constants;
+
+#-- test with different frames
+select count(5) over(order by t1 rows between unbounded preceding and current row exclude no others)  from test_wf_count_with_constants;
+select count(*) over(order by t1 rows between unbounded preceding and current row exclude no others)  from test_wf_count_with_constants;
+select count(null) over(order by t1 rows between unbounded preceding and current row exclude no others)  from test_wf_count_with_constants;
+select count(5) over(order by t1 rows between current row and unbounded following)  from test_wf_count_with_constants;
+select count(*) over(order by t1 rows between current row and unbounded following)  from test_wf_count_with_constants;
+select count(null) over(order by t1 rows between current row and unbounded following)  from test_wf_count_with_constants;
+
+drop table test_wf_count_with_constants;
+
+#
+

@@ -1,0 +1,20 @@
+USE tpch1;
+drop table if exists t2;
+create table t2(id int, nm varchar(10)) engine=columnstore;
+insert into t2 values( 1, 'AAA');
+insert into t2 values( 2, 'BBB');
+insert into t2 values( 3, 'CCC');
+select
+id,nm,
+charset(nm),
+collation(nm),
+charset('AAA'),
+collation('AAA'),
+(case when nm='AAA' then 1 else 0 end) as nmchk1,
+(case nm when 'AAA' then 1 else 0 end) as nmchk2
+from t2;
+id	nm	charset(nm)	collation(nm)	charset('AAA')	collation('AAA')	nmchk1	nmchk2
+1	AAA	latin1	latin1_swedish_ci	latin1	latin1_swedish_ci	1	1
+2	BBB	latin1	latin1_swedish_ci	latin1	latin1_swedish_ci	0	0
+3	CCC	latin1	latin1_swedish_ci	latin1	latin1_swedish_ci	0	0
+drop table t2;

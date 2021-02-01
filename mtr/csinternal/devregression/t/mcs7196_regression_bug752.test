@@ -1,0 +1,67 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug752.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+DROP TABLE if exists `source`;
+DROP TABLE if exists `dest`;
+
+CREATE TABLE `source` (
+  `datum` date NOT NULL,
+  `datum_hour` datetime NOT NULL,
+  `datum_month` date NOT NULL,
+  `datum_week` tinyint(3) unsigned NOT NULL,
+  `us_id` int(10) unsigned NOT NULL,
+  `xy_id` int(10) unsigned NOT NULL,
+  `yellow` char(2) DEFAULT NULL,
+  `device` tinyint(3) unsigned NOT NULL,
+  `device_sys` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `r_id` tinyint(4) NOT NULL DEFAULT '1',
+  `os_id` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `br_id` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `op_id` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `pa_id` int(10) unsigned NOT NULL,
+  `ba_id` int(10) unsigned NOT NULL,
+  `rule_id` int(10) unsigned NOT NULL DEFAULT '0',
+  `sub_id` varchar(24) DEFAULT NULL,
+  `watchme` tinyint(3) unsigned DEFAULT NULL
+) engine=columnstore DEFAULT CHARSET=latin1 COMMENT='compression=0';
+
+CREATE TABLE `dest` (
+  `datum` date NOT NULL,
+  `datum_hour` datetime NOT NULL,
+  `datum_month` date NOT NULL,
+  `datum_week` tinyint(3) unsigned NOT NULL,
+  `us_id` int(10) unsigned NOT NULL,
+  `xy_id` int(10) unsigned NOT NULL,
+  `yellow` char(2) DEFAULT NULL,
+  `device` tinyint(3) unsigned NOT NULL,
+  `device_sys` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `r_id` tinyint(4) NOT NULL DEFAULT '1',
+  `os_id` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `br_id` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `op_id` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `pa_id` int(10) unsigned NOT NULL,
+  `ba_id` int(10) unsigned NOT NULL,
+  `rule_id` int(10) unsigned NOT NULL DEFAULT '0',
+  `sub_id` varchar(24) DEFAULT NULL,
+  `watchme` tinyint(3) unsigned DEFAULT NULL
+) engine=columnstore DEFAULT CHARSET=latin1 COMMENT='compression=0';
+
+INSERT INTO source VALUES(
+'2015-04-17','2015-04-17 03:00:00','2015-04-01' ,        16,     19,     90,       24          ,     2,         0,      2,    1,   15,  196, 3617,100018,   1114,NULL  ,       9
+);
+
+INSERT INTO dest SELECT * FROM source;
+select * from dest;
+
+drop table source;
+drop table dest;
+
+#
+

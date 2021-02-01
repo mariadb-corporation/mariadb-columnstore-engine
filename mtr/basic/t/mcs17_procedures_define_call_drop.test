@@ -1,0 +1,78 @@
+#
+# Basic Stored Procedures
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs17_db;
+--enable_warnings
+
+CREATE DATABASE mcs17_db;
+USE mcs17_db;
+
+CREATE TABLE t1 (id INT)ENGINE=Columnstore;
+INSERT INTO t1 VALUES (1), (2), (3);
+DELIMITER //;
+CREATE PROCEDURE proc1 (OUT cnt INT) COMMENT 'comment1' 
+BEGIN
+ SELECT COUNT(*) INTO cnt FROM t1; 
+END//
+DELIMITER ;//
+SELECT comment FROM mysql.proc WHERE name='proc1' and db='mcs17_db';
+CALL proc1(@cnt);
+SELECT @cnt;
+--error 1414
+CALL proc1(1);
+--error 1318
+CALL proc1();
+--error 1054
+CALL proc1(cnt);
+
+DELIMITER //;
+--error 1304
+CREATE PROCEDURE proc1 (OUT cnt INT) COMMENT 'comment2'
+BEGIN
+ SELECT COUNT(*) INTO cnt FROM t1;
+END//
+SELECT comment FROM mysql.proc WHERE name='proc1' and db='mcs17_db'//
+
+CREATE OR REPLACE PROCEDURE proc1 (OUT cnt INT) COMMENT 'comment3'
+BEGIN
+ SELECT COUNT(*) INTO cnt FROM t1;
+END//
+SELECT comment FROM mysql.proc WHERE name='proc1' and db='mcs17_db'//
+DELIMITER ;//
+
+DROP PROCEDURE proc1;
+--error 1305
+DROP PROCEDURE proc1;
+
+# Fibonacci series using procedure
+DELIMITER //;
+CREATE TABLE t2( f BIGINT UNSIGNED NOT NULL )//
+INSERT INTO t2 VALUES (0),(1)//
+CREATE PROCEDURE fib_proc(n INT UNSIGNED)
+BEGIN
+  IF n > 1 THEN
+    BEGIN
+      DECLARE x, y BIGINT UNSIGNED;
+      DECLARE c CURSOR FOR SELECT f FROM t2 ORDER BY f DESC LIMIT 2;
+      OPEN c;
+      FETCH c INTO y;
+      FETCH c INTO x;
+      INSERT INTO t1 VALUEs (x+y);
+      CALL fib_proc(n-1);
+      CLOSE c;
+    END;
+  END IF;
+END//
+DELIMITER ;//
+SET @@max_sp_recursion_depth=20;
+CALL fib_proc(4);
+SELECT * FROM t2;
+
+# Clean up
+SET @@max_sp_recursion_depth=default; 
+DROP PROCEDURE fib_proc;
+DROP DATABASE mcs17_db;

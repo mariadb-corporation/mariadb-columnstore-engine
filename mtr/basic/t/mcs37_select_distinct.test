@@ -1,0 +1,33 @@
+#
+# SELECT..DISTINCT in columnstore
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs37_db;
+--enable_warnings
+
+CREATE DATABASE mcs37_db;
+USE mcs37_db;
+
+CREATE TABLE t1(col1 INT, col2 CHAR(5))ENGINE=Columnstore;
+INSERT INTO t1 VALUES(NULL,''),(1,'a'),(1,'b'),(1,'c'),(2,'dd'),(3,'eee');
+SELECT COUNT(DISTINCT col1) FROM t1;
+SELECT COUNT(DISTINCT col2) FROM t1;
+SELECT DISTINCT col1 FROM t1;
+SELECT DISTINCT col1 FROM t1 ORDER BY col1 DESC;
+SELECT DISTINCT col2 FROM t1;
+
+CREATE TABLE t2(col1 INT)ENGINE=Columnstore;
+INSERT INTO t2 SELECT DISTINCT col1 FROM t1;
+SELECT * FROM t2;
+
+CREATE TABLE t3 (name varchar(255));
+INSERT INTO t3 VALUES ('aa'),('ab'),('ac'),('ad'),('ae');
+SELECT DISTINCT * FROM t3;
+SELECT DISTINCT name FROM t3 LIMIT 2;
+SELECT DISTINCT 1 FROM t3 LIMIT 3;
+
+# Clean UP
+DROP DATABASE mcs37_db;

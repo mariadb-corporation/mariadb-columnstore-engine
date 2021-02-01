@@ -1,0 +1,51 @@
+#
+# cpimport negative scenarios
+# Author: Susil, susil.behera@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs56_db;
+--enable_warnings
+
+CREATE DATABASE mcs56_db;
+USE mcs56_db;
+
+CREATE TABLE t1(col1 INT, col2 INT) ENGINE=Columnstore;
+
+# Negative. Non-existing data file.
+exec rm -f /tmp/nonexisting.dat; 
+--disable_result_log #cpimport logs thread/timestamps
+exec cpimport mcs56_db t1 /tmp/nonexisting.dat 2>&1 | tee /tmp/mcs56.out;
+--enable_result_log
+
+exec echo "";
+exec echo "Check for the correct error message:";
+exec grep -q "ERR  : input data file /tmp/nonexisting.dat does not exist" /tmp/mcs56.out;
+
+--disable_warnings
+DROP DATABASE IF EXISTS nonexist_db;
+DROP DATABASE IF EXISTS nonexist_tbl;
+--enable_warnings
+
+# Negative. Non-existing db.
+--disable_result_log
+exec cpimport nonexist_db t1 /tmp/nonexisting.dat 2>&1 | tee /tmp/mcs56.out;
+--enable_result_log
+
+exec echo "";
+exec echo "Check for the correct error message:";
+exec grep -q "IDB-2006: 'nonexist_db.t1' does not exist in Columnstore." /tmp/mcs56.out;
+
+
+# Negative. Non-existing table.
+--disable_result_log
+exec cpimport mcs56_db nonexist_tbl /tmp/nonexisting.dat 2>&1 | tee /tmp/mcs56.out;
+--enable_result_log
+
+exec echo "";
+exec echo "Check for the correct error message:";
+exec grep -q "IDB-2006: 'mcs56_db.nonexist_tbl' does not exist in Columnstore." /tmp/mcs56.out;
+
+# Clean UP
+DROP DATABASE mcs56_db;

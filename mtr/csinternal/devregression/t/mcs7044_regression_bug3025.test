@@ -1,0 +1,43 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3025.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists bug3025;
+
+create table bug3025(value integer(5)) engine=Columnstore;
+insert into bug3025 values (1), (1001), (24), (2123), (null), (123), (888), (8421), (231), (-100), (null);
+
+select value, IF(value<=1000,'<=1000', '>1000') 
+from bug3025 
+group by value, IF(value<=1000,'<=1000', '>1000') 
+order by ISNULL(IF(value<=1000,'<=1000', '>1000')), value;
+
+
+select IF(value<=1000,'<=1000', '>1000') 
+from bug3025 
+group by IF(value<=1000,'<=1000', '>1000'), value 
+order by ISNULL(IF(value<=1000,'<=1000', '>1000')), value;
+
+select IF(value<=1000,'<=1000', '>1000') from bug3025 group by
+IF(value<=1000,'<=1000', '>1000') order by IF(value<=1000,'<=1000', '>1000');
+
+select IF(value<=1000,'<=1000', '>1000') a, isnull(IF(value<=1000,'<=1000',
+'>1000')) b from bug3025 group by 1,2 order by 2,1;
+
+select * from (select count(*) cnt , if((if(not isnull(value),"notNull","null")
+like 'null'),null,if(value<1000,"<1000",">=1000")) a from bug3025 group by a, value
+order by not isnull(a),2 asc) b
+order by 1, 2;
+
+select IF(value<=1000,'<=1000', '>1000') a, isnull(IF(value<=1000,'<=1000', '>1000')) b from bug3025 group by 1,2 order by 2,1;
+
+
+drop table if exists bug3025;
+#
+

@@ -1,0 +1,28 @@
+#
+# LEFT() function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs286_db;
+--enable_warnings
+
+CREATE DATABASE mcs286_db;
+USE mcs286_db;
+
+CREATE TABLE t1 (a INT, b CHAR(15))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL, ''),(1, 'mariadb'),(2, 'columnstore'),(3, 'Innodb');
+
+SELECT LEFT('mariadb cs', 7) FROM t1 LIMIT 1;
+SELECT LEFT('mariadb cs', 8) FROM t1 LIMIT 1;
+SELECT LEFT('mariadb cs', 9) FROM t1 LIMIT 1;
+
+SELECT b, LEFT(b, 0) FROM t1 ORDER BY 1;
+SELECT b, LEFT(b, -1) FROM t1 ORDER BY 1;
+SELECT b, LEFT(b, 6) FROM t1 ORDER BY 1;
+SELECT b, LEFT(b, 9) FROM t1 ORDER BY 1;
+SELECT b, LEFT(concat('mmm_', b), 10) FROM t1 ORDER BY 1;
+
+# Clean UP
+DROP DATABASE mcs286_db;

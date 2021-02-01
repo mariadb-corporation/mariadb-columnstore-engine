@@ -1,0 +1,21 @@
+drop table if exists j6;
+create table j6 (j6_key int)engine=columnstore;
+insert into j6 values (6),(7),(8),(9),(10),(11),(12),(13),(14),(15),(16),(17),(18),(19),(20),(null);
+select * from j6;
+j6_key
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+NULL

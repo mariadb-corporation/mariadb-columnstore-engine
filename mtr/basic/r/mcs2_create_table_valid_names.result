@@ -1,0 +1,52 @@
+DROP DATABASE IF EXISTS mcs2_db;
+CREATE DATABASE mcs2_db;
+USE mcs2_db;
+CREATE TABLE 1234table(col1 INT)ENGINE=Columnstore;
+SHOW CREATE TABLE 1234table;
+Table	Create Table
+1234table	CREATE TABLE `1234table` (
+  `col1` int(11) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE table5678(col1 INT)ENGINE=Columnstore;
+SHOW CREATE TABLE table5678;
+Table	Create Table
+table5678	CREATE TABLE `table5678` (
+  `col1` int(11) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE 1234table5678(col1 INT)ENGINE=Columnstore;
+SHOW CREATE TABLE 1234table5678;
+Table	Create Table
+1234table5678	CREATE TABLE `1234table5678` (
+  `col1` int(11) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE tab09le(col1 INT)ENGINE=Columnstore;
+SHOW CREATE TABLE tab09le;
+Table	Create Table
+tab09le	CREATE TABLE `tab09le` (
+  `col1` int(11) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE `table_`(col1 INT)ENGINE=Columnstore;
+SHOW CREATE TABLE `table_`;
+Table	Create Table
+table_	CREATE TABLE `table_` (
+  `col1` int(11) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE `table_13579`(col1 INT)ENGINE=Columnstore;
+SHOW CREATE TABLE `table_13579`;
+Table	Create Table
+table_13579	CREATE TABLE `table_13579` (
+  `col1` int(11) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl(col1 INT)ENGINE=Columnstore;
+SHOW CREATE TABLE abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl;
+Table	Create Table
+abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl	CREATE TABLE `abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl` (
+  `col1` int(11) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+CREATE TABLE abcdefghijklmnopqrstuvwxyz(col1 INT)ENGINE=Columnstore;
+SHOW CREATE TABLE abcdefghijklmnopqrstuvwxyz;
+Table	Create Table
+abcdefghijklmnopqrstuvwxyz	CREATE TABLE `abcdefghijklmnopqrstuvwxyz` (
+  `col1` int(11) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+DROP DATABASE mcs2_db;

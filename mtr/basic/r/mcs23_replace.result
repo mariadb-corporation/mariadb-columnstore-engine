@@ -1,0 +1,34 @@
+DROP DATABASE IF EXISTS mcs23_db;
+CREATE DATABASE mcs23_db;
+USE mcs23_db;
+CREATE TABLE t1(t1_bool BOOLEAN,
+t1_int INT,
+t1_decimal DECIMAL(5,2),
+t1_varchar VARCHAR(10),
+t1_dt DATETIME
+)ENGINE=Columnstore;
+INSERT INTO t1 (t1_bool,t1_dt,t1_varchar,t1_decimal,t1_int) VALUES (1,'1011-10-10','abcd',2.34,25);
+REPLACE INTO t1 (t1_bool,t1_dt,t1_varchar,t1_decimal,t1_int) VALUES (1,'1011-10-10','abcd',2.34,25);
+REPLACE INTO t1 VALUES(0,98,725.2,'aaaaa','1971-11-1'),
+(1,285,262.22,'bbbbb','9999-9-9 12:22:22');
+REPLACE INTO t1 SET t1_int=1,t1_bool=0,t1_decimal=12.1,t1_varchar='ccccc',t1_dt='7826-2-28';
+REPLACE INTO t1 SET t1_int=2,t1_bool=0,t1_decimal=71.91,t1_varchar='ddddd',t1_dt='3219-12-22' RETURNING *;
+t1_bool	t1_int	t1_decimal	t1_varchar	t1_dt
+0	2	71.91	ddddd	3219-12-22 00:00:00
+REPLACE INTO t1 SET t1_int=123,t1_bool=0,t1_decimal=48.91,t1_varchar='eeeee',t1_dt='1976-2-28' RETURNING t1_int as 'Integer',t1_bool as 'boolean value';
+Integer	boolean value
+123	0
+SELECT * FROM t1;
+t1_bool	t1_int	t1_decimal	t1_varchar	t1_dt
+1	25	2.34	abcd	1011-10-10 00:00:00
+1	25	2.34	abcd	1011-10-10 00:00:00
+0	98	725.20	aaaaa	1971-11-01 00:00:00
+1	285	262.22	bbbbb	9999-09-09 12:22:22
+0	1	12.10	ccccc	7826-02-28 00:00:00
+0	2	71.91	ddddd	3219-12-22 00:00:00
+0	123	48.91	eeeee	1976-02-28 00:00:00
+REPLACE DELAYED INTO t1 VALUES(0,98,725.2,'aaaaa','1971-11-1');
+ERROR HY000: DELAYED option not supported for table 't1'
+REPLACE INTO t1(t1_int,t1_bool) values();
+ERROR 21S01: Column count doesn't match value count at row 1
+DROP DATABASE mcs23_db;

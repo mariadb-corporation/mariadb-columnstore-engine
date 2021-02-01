@@ -1,0 +1,21 @@
+USE tpch1;
+set autocommit=0;
+select * from region where r_regionkey=1;
+r_regionkey	r_name	r_comment
+1	AMERICA	hs use ironic, even requests. s
+update region set r_comment='xxx' where r_regionkey=1;
+select * from region where r_regionkey=1;
+r_regionkey	r_name	r_comment
+1	AMERICA	xxx
+rollback;
+select * from region where r_regionkey=1;
+r_regionkey	r_name	r_comment
+1	AMERICA	hs use ironic, even requests. s
+update region set r_comment='xxx' where r_regionkey=1;
+select * from region where r_regionkey=1;
+r_regionkey	r_name	r_comment
+1	AMERICA	xxx
+rollback;
+select * from region where r_regionkey=1;
+r_regionkey	r_name	r_comment
+1	AMERICA	hs use ironic, even requests. s

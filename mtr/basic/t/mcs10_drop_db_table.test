@@ -1,0 +1,82 @@
+#
+#This test verifies drop databases and tables with engine=columnstore.
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs10_db1;
+DROP DATABASE IF EXISTS mcs10_db2;
+--enable_warnings
+
+--error 1008
+DROP DATABASE mcs10_db1;
+--error 1064
+DROP DATABASE mcs10_db1, mcs10_db2;
+--error 1064
+DROP DATABASE mcs10_db1 mcs10_db2;
+
+CREATE DATABASE mcs10_db1;
+DROP DATABASE mcs10_db1;
+--error 1049
+USE mcs10_db1;
+CREATE DATABASE mcs10_db1;
+CREATE DATABASE mcs10_db2;
+USE mcs10_db1;
+DROP DATABASE mcs10_db2;
+DROP DATABASE mcs10_db1;
+
+CREATE DATABASE mcs10_db1;
+CREATE DATABASE mcs10_db2;
+USE mcs10_db1;
+
+DROP TABLE IF EXISTS t_innodb, t_columnstore;
+DROP TABLE IF EXISTS t_innodb;
+DROP TABLE IF EXISTS t_columnstore;
+--error 1051
+DROP TABLE t_innodb;
+--error 1051
+DROP TABLE t_columnstore;
+
+CREATE TABLE t_innodb (id int) engine=innodb;
+CREATE TABLE t_columnstore (id int) engine=columnstore;
+DROP TABLE t_innodb;
+DROP TABLE IF EXISTS t_innodb;
+DROP TABLE t_columnstore;
+DROP TABLE IF EXISTS t_columnstore;
+
+CREATE TABLE t_columnstore1 (id int) engine=columnstore;
+CREATE TABLE t_columnstore2 (id int) engine=columnstore;
+DROP TABLE t_columnstore1, t_columnstore2;
+DROP TABLE IF EXISTS t_columnstore1, t_columnstore2;
+
+DROP DATABASE mcs10_db1;
+DROP DATABASE mcs10_db2;
+CREATE DATABASE mcs10_db1;
+CREATE DATABASE mcs10_db2;
+
+CREATE TABLE mcs10_db1.t_columnstore1 (id int) engine=columnstore;
+CREATE TABLE mcs10_db2.t_columnstore1 (id int) engine=columnstore;
+--error 1066
+DROP TABLE mcs10_db1.t_columnstore1, mcs10_db1.t_columnstore1;
+--error 1066
+DROP TABLE IF EXISTS mcs10_db1.t_columnstore1, mcs10_db1.t_columnstore1;
+DROP TABLE mcs10_db1.t_columnstore1;
+DROP TABLE IF EXISTS mcs10_db2.t_columnstore1;
+
+# DROP tables in parallel in two sessions.
+USE mcs10_db1;
+CREATE TABLE t_columnstore1 (id int) engine=columnstore;
+CREATE TABLE t_columnstore2 (id int) engine=columnstore;
+connect (addconroot1, localhost, root,,);
+connect (addconroot2, localhost, root,,);
+connection addconroot1;
+DROP TABLE mcs10_db1.t_columnstore1;
+connection addconroot2;
+--error 1051
+DROP TABLE mcs10_db1.t_columnstore1;
+USE mcs10_db1;
+DROP TABLE IF EXISTS t_columnstore2;
+
+connection default;
+DROP DATABASE IF EXISTS mcs10_db1;
+DROP DATABASE mcs10_db2;

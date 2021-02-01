@@ -1,0 +1,82 @@
+USE tpch1;
+DROP TABLE IF EXISTS `fact_radius_sessions`;
+DROP TABLE IF EXISTS `dim_traffic_class`;
+DROP TABLE IF EXISTS `dim_age_band_marketing_list`;
+CREATE TABLE IF NOT EXISTS `fact_radius_sessions` (
+`start_date_id` INT(11) NOT NULL,
+`start_time_id` INT(11) NOT NULL,
+`end_date_id` INT(11) NOT NULL,
+`end_time_id` INT(11) NOT NULL,
+`estate_id` INT(11) NOT NULL DEFAULT '0',
+`customer_id` INT(11) NOT NULL,
+`brand_id` INT(11) NOT NULL DEFAULT '0',
+`venue_id` INT(11) NOT NULL DEFAULT '0',
+`equipment_id` INT(11) NOT NULL DEFAULT '0',
+`ip_range_id` INT(11) NOT NULL DEFAULT '0',
+`user_id` INT(11) NOT NULL,
+`gender_id` INT(11) NOT NULL DEFAULT '1',
+`age_id` INT(11) NOT NULL DEFAULT '0',
+`device_id` INT(11) NOT NULL,
+`device_type_id` INT(11) NOT NULL DEFAULT '0',
+`visit_type_id` INT(11) NOT NULL,
+`session_type_id` INT(11) NOT NULL,
+`traffic_class_id` INT(11) NOT NULL,
+`estate_visit_id` INT(11) NOT NULL DEFAULT '1',
+`customer_visit_id` INT(11) NOT NULL DEFAULT '1',
+`brand_visit_id` INT(11) NOT NULL DEFAULT '1',
+`venue_visit_id` INT(11) NOT NULL DEFAULT '1',
+`registered_at_customer` INT(11) NOT NULL DEFAULT '0',
+`registered_at_brand` INT(11) NOT NULL DEFAULT '0',
+`registered_at_venue` INT(11) NOT NULL DEFAULT '0',
+`session_duration` INT(11) NOT NULL,
+`session_unique_id` VARCHAR(50) NOT NULL DEFAULT '',
+`session_ip_address` INT(10) UNSIGNED NOT NULL DEFAULT '0',
+`bytes_downstream` BIGINT(20) NOT NULL DEFAULT '0',
+`bytes_upstream` BIGINT(20) NOT NULL DEFAULT '0',
+`inserted_by` VARCHAR(85) NOT NULL DEFAULT '',
+`inserted_id` INT(11) NOT NULL DEFAULT '0',
+`inserted_at` DATETIME NOT NULL DEFAULT '1900-01-01 00:00:00',
+`rowid` INT(11) NOT NULL DEFAULT '0' ) ENGINE=Columnstore;
+CREATE TABLE IF NOT EXISTS `dim_traffic_class` (
+`traffic_class_id` INT(11) NULL DEFAULT NULL COMMENT 'autoincrement',
+`traffic_class` VARCHAR(30) NULL DEFAULT 'LOW USAGE (UP TO 1MB)',
+`traffic_class_size` INT(11) NULL DEFAULT '0',
+`traffic_class_type` INT(11) NULL DEFAULT '1' ) ENGINE=Columnstore;
+CREATE TABLE IF NOT EXISTS `dim_age_band_marketing_list` (
+`age_id` INT(11) NOT NULL,
+`age_band_id` INT(11) NOT NULL DEFAULT '0',
+`age_band` VARCHAR(25) NULL DEFAULT 'NONE' ) ENGINE=Columnstore;
+SELECT
+20140701 as end_date_id,
+s.estate_id,
+s.customer_id,
+s.brand_id,
+s.venue_id,
+m.age_band_id,
+s.venue_visit_id as visit_type_id,
+count(DISTINCT s.user_id) as users,
+count(DISTINCT s.device_id) as devices,
+count(DISTINCT s.venue_id) as venues,
+s.registered_at_venue as registered_type,
+s.session_type_id
+FROM
+fact_radius_sessions s
+INNER JOIN
+dim_age_band_marketing_list m ON (s.age_id = m.age_id)
+INNER JOIN dim_traffic_class t ON (s.traffic_class_id = t.traffic_class_id)
+WHERE
+s.end_date_id = 20140701 AND
+t.traffic_class_type = 1
+GROUP BY
+s.estate_id,
+s.customer_id,
+s.brand_id,
+s.venue_id,
+m.age_band_id,
+s.session_type_id,
+s.venue_visit_id,
+s.registered_at_venue;
+end_date_id	estate_id	customer_id	brand_id	venue_id	age_band_id	visit_type_id	users	devices	venues	registered_type	session_type_id
+DROP TABLE `fact_radius_sessions`;
+DROP TABLE `dim_traffic_class`;
+DROP TABLE `dim_age_band_marketing_list`;

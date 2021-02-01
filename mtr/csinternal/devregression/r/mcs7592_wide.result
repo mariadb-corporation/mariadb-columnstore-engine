@@ -1,0 +1,154 @@
+USE tpch1;
+select count(*) from wide;
+count(*)
+0
+select count(c1), min(c1), max(c1) from wide;
+count(c1)	min(c1)	max(c1)
+0	NULL	NULL
+select count(c2), min(c2), max(c2) from wide;
+count(c2)	min(c2)	max(c2)
+0	NULL	NULL
+select count(c3), min(c3), max(c3) from wide;
+count(c3)	min(c3)	max(c3)
+0	NULL	NULL
+select count(c4), min(c4), max(c4) from wide;
+count(c4)	min(c4)	max(c4)
+0	NULL	NULL
+select count(c5), min(c5), max(c5) from wide;
+count(c5)	min(c5)	max(c5)
+0	NULL	NULL
+select count(c6), min(c6), max(c6) from wide;
+count(c6)	min(c6)	max(c6)
+0	NULL	NULL
+select count(c7), min(c7), max(c7) from wide;
+count(c7)	min(c7)	max(c7)
+0	NULL	NULL
+select count(c8), min(c8), max(c8) from wide;
+count(c8)	min(c8)	max(c8)
+0	NULL	NULL
+select count(c9), min(c9), max(c9) from wide;
+count(c9)	min(c9)	max(c9)
+0	NULL	NULL
+select count(c10), min(c10), max(c10) from wide;
+count(c10)	min(c10)	max(c10)
+0	NULL	NULL
+select count(c11), min(c11), max(c11) from wide;
+count(c11)	min(c11)	max(c11)
+0	NULL	NULL
+select count(c12), min(c12), max(c12) from wide;
+count(c12)	min(c12)	max(c12)
+0	NULL	NULL
+select count(c13), min(c13), max(c13) from wide;
+count(c13)	min(c13)	max(c13)
+0	NULL	NULL
+select count(c14), min(c14), max(c14) from wide;
+count(c14)	min(c14)	max(c14)
+0	NULL	NULL
+select count(c15), min(c15), max(c15) from wide;
+count(c15)	min(c15)	max(c15)
+0	NULL	NULL
+select count(c16), min(c16), max(c16) from wide;
+count(c16)	min(c16)	max(c16)
+0	NULL	NULL
+select count(c17), min(c17), max(c17) from wide;
+count(c17)	min(c17)	max(c17)
+0	NULL	NULL
+select count(c18), min(c18), max(c18) from wide;
+count(c18)	min(c18)	max(c18)
+0	NULL	NULL
+select count(c19), min(c19), max(c19) from wide;
+count(c19)	min(c19)	max(c19)
+0	NULL	NULL
+select count(c20), min(c20), max(c20) from wide;
+count(c20)	min(c20)	max(c20)
+0	NULL	NULL
+select count(c21), min(c21), max(c21) from wide;
+count(c21)	min(c21)	max(c21)
+0	NULL	NULL
+select count(c22), min(c22), max(c22) from wide;
+count(c22)	min(c22)	max(c22)
+0	NULL	NULL
+select count(c23), min(c23), max(c23) from wide;
+count(c23)	min(c23)	max(c23)
+0	NULL	NULL
+select count(c24), min(c24), max(c24) from wide;
+count(c24)	min(c24)	max(c24)
+0	NULL	NULL
+select count(c25), min(c25), max(c25) from wide;
+count(c25)	min(c25)	max(c25)
+0	NULL	NULL
+select count(c26), min(c26), max(c26) from wide;
+count(c26)	min(c26)	max(c26)
+0	NULL	NULL
+select count(c27), min(c27), max(c27) from wide;
+count(c27)	min(c27)	max(c27)
+0	NULL	NULL
+select count(c28), min(c28), max(c28) from wide;
+count(c28)	min(c28)	max(c28)
+0	NULL	NULL
+select count(c29), min(c29), max(c29) from wide;
+count(c29)	min(c29)	max(c29)
+0	NULL	NULL
+select count(c30), min(c30), max(c30) from wide;
+count(c30)	min(c30)	max(c30)
+0	NULL	NULL
+select count(c31), min(c31), max(c31) from wide;
+count(c31)	min(c31)	max(c31)
+0	NULL	NULL
+select count(c32), min(c32), max(c32) from wide;
+count(c32)	min(c32)	max(c32)
+0	NULL	NULL
+select count(c33), min(c33), max(c33) from wide;
+count(c33)	min(c33)	max(c33)
+0	NULL	NULL
+select count(c34), min(c34), max(c34) from wide;
+count(c34)	min(c34)	max(c34)
+0	NULL	NULL
+select count(c35), min(c35), max(c35) from wide;
+count(c35)	min(c35)	max(c35)
+0	NULL	NULL
+select count(c36), min(c36), max(c36) from wide;
+count(c36)	min(c36)	max(c36)
+0	NULL	NULL
+select count(c37), min(c37), max(c37) from wide;
+count(c37)	min(c37)	max(c37)
+0	NULL	NULL
+select count(c38), min(c38), max(c38) from wide;
+count(c38)	min(c38)	max(c38)
+0	NULL	NULL
+select count(c39), min(c39), max(c39) from wide;
+count(c39)	min(c39)	max(c39)
+0	NULL	NULL
+select count(c40), min(c40), max(c40) from wide;
+count(c40)	min(c40)	max(c40)
+0	NULL	NULL
+select count(c41), min(c41), max(c41) from wide;
+count(c41)	min(c41)	max(c41)
+0	NULL	NULL
+select count(c42), min(c42), max(c42) from wide;
+count(c42)	min(c42)	max(c42)
+0	NULL	NULL
+select count(c43), min(c43), max(c43) from wide;
+count(c43)	min(c43)	max(c43)
+0	NULL	NULL
+select count(c44), min(c44), max(c44) from wide;
+count(c44)	min(c44)	max(c44)
+0	NULL	NULL
+select count(c45), min(c45), max(c45) from wide;
+count(c45)	min(c45)	max(c45)
+0	NULL	NULL
+select count(c46), min(c46), max(c46) from wide;
+count(c46)	min(c46)	max(c46)
+0	NULL	NULL
+select count(c47), min(c47), max(c47) from wide;
+count(c47)	min(c47)	max(c47)
+0	NULL	NULL
+select count(c48), min(c48), max(c48) from wide;
+count(c48)	min(c48)	max(c48)
+0	NULL	NULL
+select count(c49), min(c49), max(c49) from wide;
+count(c49)	min(c49)	max(c49)
+0	NULL	NULL
+select count(c50), min(c50), max(c50) from wide;
+count(c50)	min(c50)	max(c50)
+0	NULL	NULL

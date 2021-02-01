@@ -1,0 +1,36 @@
+USE tpch1;
+select count(*), o_orderstatus from orders group by o_orderstatus order by count(*) desc, 2;
+count(*)	o_orderstatus
+732044	O
+729413	F
+38543	P
+select count(*), o_orderstatus from orders group by o_orderstatus order by 1 desc, 2;
+count(*)	o_orderstatus
+732044	O
+729413	F
+38543	P
+select count(*) cnt, o_orderstatus from orders group by o_orderstatus order by cnt desc, 2;
+cnt	o_orderstatus
+732044	O
+729413	F
+38543	P
+select count(o_orderstatus), o_orderstatus from orders group by o_orderstatus order by count(o_orderstatus) desc, 2;
+count(o_orderstatus)	o_orderstatus
+732044	O
+729413	F
+38543	P
+select count(o_orderstatus), o_orderstatus from orders group by o_orderstatus order by 1, 2 desc;
+count(o_orderstatus)	o_orderstatus
+38543	P
+729413	F
+732044	O
+select count(distinct o_orderstatus), o_orderstatus from orders group by o_orderstatus order by 1, 2 desc;
+count(distinct o_orderstatus)	o_orderstatus
+1	P
+1	O
+1	F
+select count(distinct o_orderstatus), o_orderstatus from orders group by o_orderstatus order by count(distinct o_orderstatus), 2 desc;
+count(distinct o_orderstatus)	o_orderstatus
+1	P
+1	O
+1	F

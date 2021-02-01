@@ -1,0 +1,4 @@
+USE tpch1;
+select count(*)/count(distinct n_regionkey) from nation;
+count(*)/count(distinct n_regionkey)
+5.0000

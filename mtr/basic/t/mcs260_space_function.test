@@ -1,0 +1,29 @@
+#
+# SPACE() function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs260_db;
+--enable_warnings
+
+CREATE DATABASE mcs260_db;
+USE mcs260_db;
+
+CREATE TABLE t1 (a INT, b DECIMAL(3,2), c CHAR(5))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL, NULL, ''),(1, 1.11, 'a'),(2, 2.22, 'b'),(3, 3.33, 'c');
+
+SELECT SPACE(-1) FROM t1 LIMIT 1;
+SELECT SPACE(0) FROM t1 LIMIT 1;
+SELECT SPACE(0.49) FROM t1 LIMIT 1;
+SELECT SPACE(0.5) FROM t1 LIMIT 1;
+SELECT SPACE(1) FROM t1 LIMIT 1;
+SELECT SPACE('@') FROM t1 LIMIT 1;
+
+SELECT a, SPACE(a) FROM t1 ORDER BY 1;
+SELECT b, SPACE(b) FROM t1 ORDER BY 1;
+SELECT c, SPACE(c) FROM t1 ORDER BY 1;
+
+# Clean UP
+DROP DATABASE mcs260_db;

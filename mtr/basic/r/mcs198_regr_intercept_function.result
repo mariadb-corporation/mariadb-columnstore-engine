@@ -1,0 +1,16 @@
+DROP DATABASE IF EXISTS mcs198_db;
+CREATE DATABASE mcs198_db;
+USE mcs198_db;
+CREATE TABLE t1 (x INT, y MEDIUMINT, z CHAR(5))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL, NULL, ''),(20, 1, 'aaa'),(39, 2, 'aaa'),(48, 3, 'bbb'),(57, 4, 'bbb'),(66, 5, 'aaa'),(75, 6, 'aaa'),(84, 7, 'bbb');
+SELECT REGR_INTERCEPT(y, x) FROM t1;
+REGR_INTERCEPT(y, x)
+-1.415580568720379
+SELECT z, REGR_INTERCEPT(y, x) FROM t1 GROUP BY z ORDER BY z;
+z	REGR_INTERCEPT(y, x)
+NULL	NULL
+aaa	-1.1792849631966351
+bbb	-2.3333333333333335
+SELECT REGR_INTERCEPT(y) FROM t1;
+ERROR HY000: Can't initialize function 'regr_intercept'; regr_intercept() requires two arguments
+DROP DATABASE mcs198_db;

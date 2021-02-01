@@ -1,0 +1,291 @@
+USE tpch1;
+create database if not exists geo;
+use geo;
+drop table if exists `geo_tag_values`;
+Warnings:
+Note	1051	Unknown table 'geo.geo_tag_values'
+drop table if exists `geo_tags`;
+Warnings:
+Note	1051	Unknown table 'geo.geo_tags'
+CREATE TABLE `geo_tag_values` (
+`id` int(11) DEFAULT NULL,
+`value` varchar(255) DEFAULT NULL,
+`geo_tag_id` int(11) DEFAULT NULL
+) engine=columnstore;
+CREATE TABLE `geo_tags` (
+`id` int(11) DEFAULT NULL,
+`name` varchar(255) DEFAULT NULL,
+`deleted_at` datetime DEFAULT NULL,
+`created_at` datetime DEFAULT NULL,
+`updated_at` datetime DEFAULT NULL,
+`lock_version` int(11) DEFAULT NULL
+) engine=columnstore;
+create database if not exists pbkt;
+use pbkt;
+drop table if exists `areas`;
+Warnings:
+Note	1051	Unknown table 'pbkt.areas'
+drop table if exists `bigsumplus`;
+Warnings:
+Note	1051	Unknown table 'pbkt.bigsumplus'
+drop table if exists `dim_date`;
+Warnings:
+Note	1051	Unknown table 'pbkt.dim_date'
+drop table if exists `sizes`;
+Warnings:
+Note	1051	Unknown table 'pbkt.sizes'
+drop table if exists `tag_values`;
+Warnings:
+Note	1051	Unknown table 'pbkt.tag_values'
+drop view if exists `tag_values_geo_country`;
+Warnings:
+Note	4092	Unknown VIEW: 'pbkt.tag_values_geo_country'
+drop view if exists `tag_values_geo_region`;
+Warnings:
+Note	4092	Unknown VIEW: 'pbkt.tag_values_geo_region'
+drop view if exists `tag_values_ptype`;
+Warnings:
+Note	4092	Unknown VIEW: 'pbkt.tag_values_ptype'
+CREATE TABLE `areas` (
+`id` int(11) DEFAULT NULL,
+`name` varchar(255) DEFAULT NULL,
+`deleted_at` datetime DEFAULT NULL,
+`created_at` datetime DEFAULT NULL,
+`updated_at` datetime DEFAULT NULL,
+`lock_version` int(11) DEFAULT NULL
+) engine=columnstore;
+CREATE TABLE `bigsumplus` (
+`served` int(20) DEFAULT NULL,
+`clicked` int(11) DEFAULT NULL,
+`acted` int(11) DEFAULT NULL,
+`cdate` date DEFAULT NULL,
+`flight_id` int(11) DEFAULT NULL,
+`flight_creative_id` int(11) DEFAULT NULL,
+`geo_country` int(11) DEFAULT NULL,
+`geo_region` int(11) DEFAULT NULL,
+`geo_city` int(11) DEFAULT NULL,
+`geo_zip_code_text` int(11) DEFAULT NULL,
+`age` int(11) DEFAULT NULL,
+`area` int(11) DEFAULT NULL,
+`site` int(11) DEFAULT NULL,
+`gender` int(11) DEFAULT NULL,
+`reg_zip` int(11) DEFAULT NULL,
+`geo_metro_code` int(11) DEFAULT NULL,
+`sic_code` int(11) DEFAULT NULL,
+`track` int(11) DEFAULT NULL,
+`ptype` int(11) DEFAULT NULL,
+`search_kw` int(11) DEFAULT NULL,
+`user_kw` int(11) DEFAULT NULL,
+`cam_make` int(11) DEFAULT NULL,
+`cam_model` int(11) DEFAULT NULL,
+`cam_type` int(11) DEFAULT NULL,
+`m_manuf` int(11) DEFAULT NULL,
+`m_carrier` int(11) DEFAULT NULL,
+`login` int(11) DEFAULT NULL,
+`ref_domain` int(11) DEFAULT NULL,
+`linked_domains` int(11) DEFAULT NULL,
+`sp` int(11) DEFAULT NULL,
+`spon` int(11) DEFAULT NULL,
+`agency_id` int(11) DEFAULT NULL,
+`advertiser_id` int(11) DEFAULT NULL,
+`campaign_id` int(11) DEFAULT NULL,
+`product_id` int(11) DEFAULT NULL,
+`creative_id` int(11) DEFAULT NULL,
+`month_id` int(2) DEFAULT NULL,
+`day_of_week_id` int(1) DEFAULT NULL,
+`quarter_id` int(1) DEFAULT NULL,
+`size_id` int(11) DEFAULT NULL,
+`tier_id` int(11) DEFAULT NULL,
+`cost_impressions` decimal(7,2) DEFAULT NULL,
+`cost_actions` decimal(7,2) DEFAULT NULL,
+`cost_clicks` decimal(7,2) DEFAULT NULL,
+`bonus_impressions` int(11) DEFAULT NULL,
+`flight_type_id` int(10) DEFAULT NULL,
+`flight_status_id` int(10) DEFAULT NULL,
+`bonus_actions` int(11) DEFAULT NULL,
+`bonus_clicks` int(11) DEFAULT NULL,
+`imp_goal` int(11) DEFAULT NULL
+) engine=columnstore;
+CREATE TABLE `dim_date` (
+`cdate` date DEFAULT NULL,
+`quarter_num` int(10) DEFAULT NULL,
+`quarter_name` varchar(20) DEFAULT NULL,
+`month_number` int(10) DEFAULT NULL,
+`month_name` varchar(20) DEFAULT NULL,
+`week_of_year` int(10) DEFAULT NULL,
+`day_of_week` varchar(20) DEFAULT NULL,
+`day_of_year` int(10) DEFAULT NULL
+) engine=columnstore;
+CREATE TABLE `sizes` (
+`id` int(11) DEFAULT NULL,
+`name` varchar(32) DEFAULT NULL,
+`width` int(11) DEFAULT NULL,
+`height` int(11) DEFAULT NULL,
+`deleted_at` datetime DEFAULT NULL,
+`created_at` datetime DEFAULT NULL,
+`updated_at` datetime DEFAULT NULL,
+`lock_version` int(11) DEFAULT NULL
+) engine=columnstore;
+CREATE TABLE `tag_values` (
+`id` int(11) DEFAULT NULL,
+`value` varchar(255) DEFAULT NULL,
+`tag_id` int(11) DEFAULT NULL,
+`deleted_at` datetime DEFAULT NULL,
+`created_at` datetime DEFAULT NULL,
+`updated_at` datetime DEFAULT NULL
+) engine=columnstore;
+create view `tag_values_geo_country` AS 
+select `t`.`id` AS `id`,`t`.`value` AS `value`,`t`.`geo_tag_id` AS `tag_id` 
+from (	`geo`.`geo_tag_values` `t` join 
+`geo`.`geo_tags` `tag`) 
+where ((`t`.`geo_tag_id` = `tag`.`id`) and (`tag`.`name` = 'geo_country'));
+create view `tag_values_geo_region` AS 
+select `t`.`id` AS `id`,`t`.`value` AS `value`,`t`.`geo_tag_id` AS `tag_id` 
+from (`geo`.`geo_tag_values` `t` join `geo`.`geo_tags` `tag`) 
+where ((`t`.`geo_tag_id` = `tag`.`id`) and (`tag`.`name` = 'geo_region'));
+create view `tag_values_ptype` AS 
+select `t`.`id` AS `id`,`t`.`value` AS `value`,`t`.`tag_id` AS `tag_id`,`t`.`deleted_at` AS 
+`deleted_at`,`t`.`created_at` AS `created_at`,`t`.`updated_at` AS `updated_at` 
+from `tag_values` `t` 
+where (`t`.`tag_id` = 5);
+use pbkt;
+select 
+`areas`.`id` as `c0`, 
+`areas`.`name` as `c1`, 
+`tag_values_ptype`.`id` as `c2`, 
+`tag_values_ptype`.`value` as `c3`, 
+`sizes`.`id` as `c4`, 
+`sizes`.`name` as `c5`, 
+`tag_values_geo_region`.`id` as `c6`, 
+`tag_values_geo_region`.`value` as `c7`, 
+`tag_values_geo_country`.`id` as `c8`, 
+`tag_values_geo_country`.`value` as `c9`, 
+`dim_date`.`cdate` as `c10` 
+from 
+`areas` as `areas`, 
+`bigsumplus` as `bigsumplus`, 
+`tag_values_ptype` as `tag_values_ptype`, 
+`sizes` as `sizes`, 
+`tag_values_geo_region` as `tag_values_geo_region`, 
+`tag_values_geo_country` as `tag_values_geo_country`, 
+`dim_date` as `dim_date` 
+where `bigsumplus`.`area` = `areas`.`id` and 
+`bigsumplus`.`ptype` = `tag_values_ptype`.`id` and 
+`bigsumplus`.`size_id` = `sizes`.`id` and 
+`bigsumplus`.`geo_region` = `tag_values_geo_region`.`id` and 
+`bigsumplus`.`geo_country` = `tag_values_geo_country`.`id` and 
+`bigsumplus`.`cdate` = `dim_date`.`cdate` and 
+(`tag_values_geo_country`.`id` = '26088') and (`dim_date`.`cdate` in 
+(DATE '2011-04-01', DATE '2011-04-02', DATE '2011-04-03', DATE '2011-04-04', DATE '2011-04-05', DATE 
+'2011-04-06', 
+DATE '2011-04-07', DATE '2011-04-08', DATE '2011-04-09', DATE '2011-04-10', DATE '2011-04-11', DATE 
+'2011-04-12', DATE '2011-04-13', 
+DATE '2011-04-14', DATE '2011-04-15', DATE '2011-04-16', DATE '2011-04-17', DATE '2011-04-18', DATE 
+'2011-04-19', DATE '2011-04-20', 
+DATE '2011-04-21', DATE '2011-04-22', DATE '2011-04-23', DATE '2011-04-24', DATE '2011-04-25', DATE 
+'2011-04-26', DATE '2011-04-27', 
+DATE '2011-04-28', DATE '2011-04-29', DATE '2011-04-30')) 
+group by `areas`.`id`, `areas`.`name`, `tag_values_ptype`.`id`, `tag_values_ptype`.`value`, `sizes`.`id`, 
+`sizes`.`name`, `tag_values_geo_region`.`id`, `tag_values_geo_region`.`value`, `tag_values_geo_country`.`id`, 
+`tag_values_geo_country`.`value`, `dim_date`.`cdate` order by ISNULL(`areas`.`id`), `areas`.`id` ASC, 
+ISNULL(`tag_values_ptype`.`id`), `tag_values_ptype`.`id` ASC, ISNULL(`sizes`.`id`), `sizes`.`id` ASC, 
+ISNULL(`tag_values_geo_region`.`id`), `tag_values_geo_region`.`id` ASC, ISNULL(`tag_values_geo_country`.`id`), 
+`tag_values_geo_country`.`id` ASC, ISNULL(`dim_date`.`cdate`), `dim_date`.`cdate` ASC;
+c0	c1	c2	c3	c4	c5	c6	c7	c8	c9	c10
+select 
+`areas`.`id` as `c0`, 
+`areas`.`name` as `c1`, 
+`tag_values_ptype`.`id` as `c2`, 
+`tag_values_ptype`.`value` as `c3`, 
+`sizes`.`id` as `c4`, 
+`sizes`.`name` as `c5`, 
+`tag_values_geo_region`.`id` as `c6`, 
+`tag_values_geo_region`.`value` as `c7`, 
+`tag_values_geo_country`.`id` as `c8`, 
+`tag_values_geo_country`.`value` as `c9`, 
+`dim_date`.`cdate` as `c10` 
+from 
+`areas` as `areas`, 
+`bigsumplus` as `bigsumplus`, 
+`tag_values_ptype` as `tag_values_ptype`, 
+`sizes` as `sizes`, 
+`tag_values_geo_region` as `tag_values_geo_region`, 
+`tag_values_geo_country` as `tag_values_geo_country`, 
+`dim_date` as `dim_date` 
+where 
+`bigsumplus`.`area` = `areas`.`id` and 
+`bigsumplus`.`ptype` = `tag_values_ptype`.`id` and 
+`bigsumplus`.`size_id` = `sizes`.`id` and 
+`bigsumplus`.`geo_region` = `tag_values_geo_region`.`id` and 
+`bigsumplus`.`geo_country` = `tag_values_geo_country`.`id` and 
+`bigsumplus`.`cdate` = `dim_date`.`cdate` and 
+(`tag_values_geo_country`.`id` = '26088') and (`dim_date`.`cdate` in 
+(DATE '2011-04-01', DATE '2011-04-02', DATE '2011-04-03', DATE '2011-04-04', DATE '2011-04-05', DATE 
+'2011-04-06', 
+DATE '2011-04-07', DATE '2011-04-08', DATE '2011-04-09', DATE '2011-04-10', DATE '2011-04-11', DATE 
+'2011-04-12', DATE '2011-04-13', 
+DATE '2011-04-14', DATE '2011-04-15', DATE '2011-04-16', DATE '2011-04-17', DATE '2011-04-18', DATE 
+'2011-04-19', DATE '2011-04-20', 
+DATE '2011-04-21', DATE '2011-04-22', DATE '2011-04-23', DATE '2011-04-24', DATE '2011-04-25', DATE 
+'2011-04-26', DATE '2011-04-27', 
+DATE '2011-04-28', DATE '2011-04-29', DATE '2011-04-30')) 
+/*
+group by 
+`areas`.`id`, 
+`areas`.`name`, 
+`tag_values_ptype`.`id`, 
+`tag_values_ptype`.`value`, 
+`sizes`.`id`, 
+`sizes`.`name`, 
+`tag_values_geo_region`.`id`, 
+`tag_values_geo_region`.`value`, 
+`tag_values_geo_country`.`id`, 
+`tag_values_geo_country`.`value`, 
+`dim_date`.`cdate` 
+*/
+order by 
+ISNULL(`areas`.`id`)
+/*
+, 
+`areas`.`id` ASC, 
+ISNULL(`tag_values_ptype`.`id`), 
+`tag_values_ptype`.`id` ASC, 
+ISNULL(`sizes`.`id`), `sizes`.`id` ASC, 
+ISNULL(`tag_values_geo_region`.`id`), 
+`tag_values_geo_region`.`id` ASC, 
+ISNULL(`tag_values_geo_country`.`id`), 
+`tag_values_geo_country`.`id` ASC, 
+ISNULL(`dim_date`.`cdate`), 
+`dim_date`.`cdate` ASC
+*/
+;
+c0	c1	c2	c3	c4	c5	c6	c7	c8	c9	c10
+select 
+t.value
+from 
+`tag_values_ptype` t,
+`tag_values_ptype` t1,
+`tag_values_geo_country`
+where 
+t.`id` = `tag_values_geo_country`.`id` and
+t.`id` = t1.`id`
+order by 
+ISNULL(t1.`value`);
+value
+select `tag_values_ptype`.value from (select * from tag_values_ptype) t1, tag_values_ptype 
+where tag_values_ptype.id = t1.id;
+value
+use geo;
+drop table `geo_tag_values`;
+drop table `geo_tags`;
+use pbkt;
+drop table `areas`;
+drop table `bigsumplus`;
+drop table `dim_date`;
+drop table `sizes`;
+drop table `tag_values`;
+drop view `tag_values_geo_country`;
+drop view `tag_values_geo_region`;
+drop view `tag_values_ptype`;
+drop database geo;
+drop database pbkt;

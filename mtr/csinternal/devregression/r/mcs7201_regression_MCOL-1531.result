@@ -1,0 +1,21 @@
+USE tpch1;
+DROP TABLE IF EXISTS cs1;
+Warnings:
+Note	1051	Unknown table 'tpch1.cs1'
+DROP TABLE IF EXISTS cs2;
+Warnings:
+Note	1051	Unknown table 'tpch1.cs2'
+CREATE TABLE `cs1` (
+`t` varchar(2) DEFAULT NULL,
+`i` int(11) DEFAULT NULL
+) ENGINE=Columnstore;
+CREATE TABLE `cs2` (
+`t` varchar(2) DEFAULT NULL,
+`i` int(11) DEFAULT NULL
+) ENGINE=Columnstore;
+insert into cs1 values ('MO', 2);
+insert into cs1 values (NULL, 2);
+select * from cs1 inner join cs2 on (cs1.t = case cs2.t when NULL then 'MO' else cs2.t end);
+t	i	t	i
+DROP TABLE IF EXISTS cs1;
+DROP TABLE IF EXISTS cs2;

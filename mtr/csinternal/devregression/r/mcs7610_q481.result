@@ -1,0 +1,4 @@
+USE tpch1;
+Select count(*) from lineitem where l_orderkey < 1000000;
+count(*)
+1000048

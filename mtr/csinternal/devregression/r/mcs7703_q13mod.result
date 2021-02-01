@@ -1,0 +1,11 @@
+USE ssb1;
+select sum(lo_extendedprice*lo_discount) as revenue
+from dateinfo, lineorder				   # changed order
+where lo_orderdate = d_datekey
+and d_weeknuminyear = 6
+and d_year = 1994
+and lo_orderdate between 19940101 and 19941231		   # added matching predicate
+and lo_discount between 5 and 7
+and lo_quantity between 26 and 35;
+revenue
+26232701005.0000

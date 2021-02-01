@@ -1,0 +1,143 @@
+USE tpch1;
+drop table if exists bug3998a;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug3998a'
+drop table if exists bug3998b;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug3998b'
+drop table if exists bug3998c;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug3998c'
+drop table if exists bug3998d;
+Warnings:
+Note	1051	Unknown table 'tpch1.bug3998d'
+create table bug3998a (c1 int, c2 int) engine=columnstore;
+insert into bug3998a values (0,0), (1,1), (2,1), (3, 1), (null,1), (null, null);
+select * from bug3998a;
+c1	c2
+0	0
+1	1
+2	1
+3	1
+NULL	1
+NULL	NULL
+create table bug3998b (c1 int, c2 int) engine=columnstore;
+insert into bug3998b values (0,0), (1,1), (2,1), (3, 1), (null,1), (null, null);
+select * from bug3998b;
+c1	c2
+0	0
+1	1
+2	1
+3	1
+NULL	1
+NULL	NULL
+create table bug3998c (c1 int, c2 int) engine=columnstore;
+insert into bug3998c values (0,0), (1,1), (2,1), (3, 1), (null,1), (null, null);
+select * from bug3998c;
+c1	c2
+0	0
+1	1
+2	1
+3	1
+NULL	1
+NULL	NULL
+create table bug3998d (c1 int, c2 int) engine=columnstore;
+insert into bug3998d values (1,1), (2,1), (5, 1), (null,1), (null, null);
+select * from bug3998d;
+c1	c2
+1	1
+2	1
+5	1
+NULL	1
+NULL	NULL
+update bug3998a left join bug3998d on bug3998a.c1 = bug3998d.c1 set bug3998a.c1=9;
+select * from bug3998a;
+c1	c2
+9	0
+9	1
+9	1
+9	1
+9	1
+9	NULL
+update bug3998b join bug3998d on bug3998b.c1 = bug3998d.c1 set bug3998b.c1=9;
+select * from bug3998b;
+c1	c2
+0	0
+9	1
+9	1
+3	1
+NULL	1
+NULL	NULL
+update bug3998c right join bug3998d on bug3998c.c1 = bug3998d.c1 set bug3998c.c1=9;
+select * from bug3998c;
+c1	c2
+0	0
+9	1
+9	1
+3	1
+NULL	1
+NULL	NULL
+drop table if exists bug3998a;
+drop table if exists bug3998b;
+drop table if exists bug3998c;
+drop table if exists bug3998d;
+create table bug3998a (c1 int, c2 int) engine=columnstore;
+insert into bug3998a values (0,0), (1,1), (2,1), (3, 1), (null,1), (null, null);
+select * from bug3998a;
+c1	c2
+0	0
+1	1
+2	1
+3	1
+NULL	1
+NULL	NULL
+create table bug3998b (c1 int, c2 int) engine=columnstore;
+insert into bug3998b values (0,0), (1,1), (2,1), (3, 1), (null,1), (null, null);
+select * from bug3998b;
+c1	c2
+0	0
+1	1
+2	1
+3	1
+NULL	1
+NULL	NULL
+create table bug3998c (c1 int, c2 int) engine=columnstore;
+insert into bug3998c values (0,0), (1,1), (2,1), (3, 1), (null,1), (null, null);
+select * from bug3998c;
+c1	c2
+0	0
+1	1
+2	1
+3	1
+NULL	1
+NULL	NULL
+create table bug3998d (c1 int, c2 int) engine=columnstore;
+insert into bug3998d values (1,1), (2,1), (5, 1), (null,1), (null, null);
+select * from bug3998d;
+c1	c2
+1	1
+2	1
+5	1
+NULL	1
+NULL	NULL
+delete a from bug3998a a left join bug3998d d on a.c1 = d.c1;
+select * from bug3998a;
+c1	c2
+delete b from bug3998b b join bug3998d d on b.c1 = d.c1;
+select * from bug3998b;
+c1	c2
+0	0
+3	1
+NULL	1
+NULL	NULL
+delete c from bug3998c c right join bug3998d d on c.c1 = d.c1;
+select * from bug3998c;
+c1	c2
+0	0
+3	1
+NULL	1
+NULL	NULL
+drop table if exists bug3998a;
+drop table if exists bug3998b;
+drop table if exists bug3998c;
+drop table if exists bug3998d;

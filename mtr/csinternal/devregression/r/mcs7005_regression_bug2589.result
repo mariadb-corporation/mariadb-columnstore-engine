@@ -1,0 +1,607 @@
+USE tpch1;
+select cidx, cbigint, round(cbigint) from datatypetestm;
+cidx	cbigint	round(cbigint)
+1	-72036854775806	-72036854775806
+2	-72036854775805	-72036854775805
+3	-72036854775804	-72036854775804
+4	-72036854775803	-72036854775803
+5	-72036854775802	-72036854775802
+6	72036854775803	72036854775803
+7	72036854775804	72036854775804
+8	72036854775805	72036854775805
+9	72036854775806	72036854775806
+10	72036854775807	72036854775807
+11	0	0
+select cidx, cbigint, round(cbigint,0) from datatypetestm;
+cidx	cbigint	round(cbigint,0)
+1	-72036854775806	-72036854775806
+2	-72036854775805	-72036854775805
+3	-72036854775804	-72036854775804
+4	-72036854775803	-72036854775803
+5	-72036854775802	-72036854775802
+6	72036854775803	72036854775803
+7	72036854775804	72036854775804
+8	72036854775805	72036854775805
+9	72036854775806	72036854775806
+10	72036854775807	72036854775807
+11	0	0
+select cidx, cbigint, round(cbigint,1) from datatypetestm;
+cidx	cbigint	round(cbigint,1)
+1	-72036854775806	-72036854775806
+2	-72036854775805	-72036854775805
+3	-72036854775804	-72036854775804
+4	-72036854775803	-72036854775803
+5	-72036854775802	-72036854775802
+6	72036854775803	72036854775803
+7	72036854775804	72036854775804
+8	72036854775805	72036854775805
+9	72036854775806	72036854775806
+10	72036854775807	72036854775807
+11	0	0
+select cidx, cbigint, round(cbigint,-1) from datatypetestm;
+cidx	cbigint	round(cbigint,-1)
+1	-72036854775806	-72036854775810
+2	-72036854775805	-72036854775810
+3	-72036854775804	-72036854775800
+4	-72036854775803	-72036854775800
+5	-72036854775802	-72036854775800
+6	72036854775803	72036854775800
+7	72036854775804	72036854775800
+8	72036854775805	72036854775810
+9	72036854775806	72036854775810
+10	72036854775807	72036854775810
+11	0	0
+select cidx, cdecimal4_2, round(cdecimal4_2) from datatypetestm;
+cidx	cdecimal4_2	round(cdecimal4_2)
+1	-9.99	-10
+2	-9.98	-10
+3	-9.97	-10
+4	-9.96	-10
+5	-9.95	-10
+6	9.95	10
+7	9.96	10
+8	9.97	10
+9	9.98	10
+10	9.99	10
+11	0.00	0
+select cidx, cdecimal4_2, round(cdecimal4_2,2) from datatypetestm;
+cidx	cdecimal4_2	round(cdecimal4_2,2)
+1	-9.99	-9.99
+2	-9.98	-9.98
+3	-9.97	-9.97
+4	-9.96	-9.96
+5	-9.95	-9.95
+6	9.95	9.95
+7	9.96	9.96
+8	9.97	9.97
+9	9.98	9.98
+10	9.99	9.99
+11	0.00	0.00
+select cidx, cdecimal4_2, round(cdecimal4_2,0) from datatypetestm;
+cidx	cdecimal4_2	round(cdecimal4_2,0)
+1	-9.99	-10
+2	-9.98	-10
+3	-9.97	-10
+4	-9.96	-10
+5	-9.95	-10
+6	9.95	10
+7	9.96	10
+8	9.97	10
+9	9.98	10
+10	9.99	10
+11	0.00	0
+select cidx, cdecimal4_2, round(cdecimal4_2,-2) from datatypetestm;
+cidx	cdecimal4_2	round(cdecimal4_2,-2)
+1	-9.99	0
+2	-9.98	0
+3	-9.97	0
+4	-9.96	0
+5	-9.95	0
+6	9.95	0
+7	9.96	0
+8	9.97	0
+9	9.98	0
+10	9.99	0
+11	0.00	0
+select cidx, cdecimal18_2, round(cdecimal18_2,1) from datatypetestm;
+cidx	cdecimal18_2	round(cdecimal18_2,1)
+1	-99999999999.99	-100000000000.0
+2	-99999999999.98	-100000000000.0
+3	-99999999999.97	-100000000000.0
+4	-99999999999.96	-100000000000.0
+5	-99999999999.95	-100000000000.0
+6	99999999999.95	100000000000.0
+7	99999999999.96	100000000000.0
+8	99999999999.97	100000000000.0
+9	99999999999.98	100000000000.0
+10	99999999999.99	100000000000.0
+11	0.00	0.0
+select cidx, cdecimal18_2, round(cdecimal18_2,-1) from datatypetestm;
+cidx	cdecimal18_2	round(cdecimal18_2,-1)
+1	-99999999999.99	-100000000000
+2	-99999999999.98	-100000000000
+3	-99999999999.97	-100000000000
+4	-99999999999.96	-100000000000
+5	-99999999999.95	-100000000000
+6	99999999999.95	100000000000
+7	99999999999.96	100000000000
+8	99999999999.97	100000000000
+9	99999999999.98	100000000000
+10	99999999999.99	100000000000
+11	0.00	0
+select cidx, cbigint from datatypetestm where round(cbigint) <> cbigint;
+cidx	cbigint
+select cidx, cbigint from datatypetestm where round(cbigint,1) <> cbigint;
+cidx	cbigint
+select cidx, cbigint from datatypetestm where round(cbigint,2) <> cbigint;
+cidx	cbigint
+select cidx, cbigint from datatypetestm where round(cbigint,0) <> cbigint;
+cidx	cbigint
+select cidx, cbigint from datatypetestm where round(cbigint,-2) <> cbigint;
+cidx	cbigint
+1	-72036854775806
+2	-72036854775805
+3	-72036854775804
+4	-72036854775803
+5	-72036854775802
+6	72036854775803
+7	72036854775804
+8	72036854775805
+9	72036854775806
+10	72036854775807
+select cidx, cbigint from datatypetestm where round(cbigint,-1) <> cbigint;
+cidx	cbigint
+1	-72036854775806
+2	-72036854775805
+3	-72036854775804
+4	-72036854775803
+5	-72036854775802
+6	72036854775803
+7	72036854775804
+8	72036854775805
+9	72036854775806
+10	72036854775807
+select cidx, cbigint from datatypetestm where round(cbigint) = cbigint;
+cidx	cbigint
+1	-72036854775806
+2	-72036854775805
+3	-72036854775804
+4	-72036854775803
+5	-72036854775802
+6	72036854775803
+7	72036854775804
+8	72036854775805
+9	72036854775806
+10	72036854775807
+11	0
+select cidx, cbigint from datatypetestm where round(cbigint,1) = cbigint;
+cidx	cbigint
+1	-72036854775806
+2	-72036854775805
+3	-72036854775804
+4	-72036854775803
+5	-72036854775802
+6	72036854775803
+7	72036854775804
+8	72036854775805
+9	72036854775806
+10	72036854775807
+11	0
+select cidx, cbigint from datatypetestm where round(cbigint,2) = cbigint;
+cidx	cbigint
+1	-72036854775806
+2	-72036854775805
+3	-72036854775804
+4	-72036854775803
+5	-72036854775802
+6	72036854775803
+7	72036854775804
+8	72036854775805
+9	72036854775806
+10	72036854775807
+11	0
+select cidx, cbigint from datatypetestm where round(cbigint,0) = cbigint;
+cidx	cbigint
+1	-72036854775806
+2	-72036854775805
+3	-72036854775804
+4	-72036854775803
+5	-72036854775802
+6	72036854775803
+7	72036854775804
+8	72036854775805
+9	72036854775806
+10	72036854775807
+11	0
+select cidx, cbigint from datatypetestm where round(cbigint,-2) = cbigint;
+cidx	cbigint
+11	0
+select cidx, cbigint from datatypetestm where round(cbigint,-1) = cbigint;
+cidx	cbigint
+11	0
+select cidx, cdecimal4_2 from datatypetestm where round(cdecimal4_2,2) > cdecimal4_2;
+cidx	cdecimal4_2
+select cidx, cdecimal4_2 from datatypetestm where round(cdecimal4_2,0) > cdecimal4_2;
+cidx	cdecimal4_2
+6	9.95
+7	9.96
+8	9.97
+9	9.98
+10	9.99
+select cidx, cdecimal4_2 from datatypetestm where round(cdecimal4_2,-1) > cdecimal4_2;
+cidx	cdecimal4_2
+6	9.95
+7	9.96
+8	9.97
+9	9.98
+10	9.99
+select cidx, cdecimal18_2 from datatypetestm where round(cdecimal18_2) < cdecimal18_2;
+cidx	cdecimal18_2
+1	-99999999999.99
+2	-99999999999.98
+3	-99999999999.97
+4	-99999999999.96
+5	-99999999999.95
+select cidx, cdecimal18_2 from datatypetestm where round(cdecimal18_2,1) < cdecimal18_2;
+cidx	cdecimal18_2
+1	-99999999999.99
+2	-99999999999.98
+3	-99999999999.97
+4	-99999999999.96
+5	-99999999999.95
+select cidx, cdecimal18_2 from datatypetestm where round(cdecimal18_2,2) < cdecimal18_2;
+cidx	cdecimal18_2
+select cidx, cdecimal18_2 from datatypetestm where round(cdecimal18_2,0) < cdecimal18_2;
+cidx	cdecimal18_2
+1	-99999999999.99
+2	-99999999999.98
+3	-99999999999.97
+4	-99999999999.96
+5	-99999999999.95
+select cidx, cdecimal18_2 from datatypetestm where round(cdecimal18_2,-2) < cdecimal18_2;
+cidx	cdecimal18_2
+1	-99999999999.99
+2	-99999999999.98
+3	-99999999999.97
+4	-99999999999.96
+5	-99999999999.95
+select cidx, cdecimal18_2 from datatypetestm where round(cdecimal18_2,-1) < cdecimal18_2;
+cidx	cdecimal18_2
+1	-99999999999.99
+2	-99999999999.98
+3	-99999999999.97
+4	-99999999999.96
+5	-99999999999.95
+select round(r_regionkey, 0) from region;
+round(r_regionkey, 0)
+0
+1
+2
+3
+4
+select round(r_regionkey, -1) from region;
+round(r_regionkey, -1)
+0
+0
+0
+0
+0
+select round(r_regionkey, 1) from region;
+round(r_regionkey, 1)
+0
+1
+2
+3
+4
+select round(r_name, 2) from region;
+round(r_name, 2)
+0.00
+0.00
+0.00
+0.00
+0.00
+select concat(n_name, round(n_nationkey, 0)) from nation;
+concat(n_name, round(n_nationkey, 0))
+ALGERIA0
+ARGENTINA1
+BRAZIL2
+CANADA3
+EGYPT4
+ETHIOPIA5
+FRANCE6
+GERMANY7
+INDIA8
+INDONESIA9
+IRAN10
+IRAQ11
+JAPAN12
+JORDAN13
+KENYA14
+MOROCCO15
+MOZAMBIQUE16
+PERU17
+CHINA18
+ROMANIA19
+SAUDI ARABIA20
+VIETNAM21
+RUSSIA22
+UNITED KINGDOM23
+UNITED STATES24
+select concat(n_name, round(n_nationkey, 1)) from nation;
+concat(n_name, round(n_nationkey, 1))
+ALGERIA0
+ARGENTINA1
+BRAZIL2
+CANADA3
+EGYPT4
+ETHIOPIA5
+FRANCE6
+GERMANY7
+INDIA8
+INDONESIA9
+IRAN10
+IRAQ11
+JAPAN12
+JORDAN13
+KENYA14
+MOROCCO15
+MOZAMBIQUE16
+PERU17
+CHINA18
+ROMANIA19
+SAUDI ARABIA20
+VIETNAM21
+RUSSIA22
+UNITED KINGDOM23
+UNITED STATES24
+select concat(n_name, round(n_nationkey, 2)) from nation;
+concat(n_name, round(n_nationkey, 2))
+ALGERIA0
+ARGENTINA1
+BRAZIL2
+CANADA3
+EGYPT4
+ETHIOPIA5
+FRANCE6
+GERMANY7
+INDIA8
+INDONESIA9
+IRAN10
+IRAQ11
+JAPAN12
+JORDAN13
+KENYA14
+MOROCCO15
+MOZAMBIQUE16
+PERU17
+CHINA18
+ROMANIA19
+SAUDI ARABIA20
+VIETNAM21
+RUSSIA22
+UNITED KINGDOM23
+UNITED STATES24
+select concat(n_name, round(n_nationkey, -1)) from nation;
+concat(n_name, round(n_nationkey, -1))
+ALGERIA0
+ARGENTINA0
+BRAZIL0
+CANADA0
+EGYPT0
+ETHIOPIA10
+FRANCE10
+GERMANY10
+INDIA10
+INDONESIA10
+IRAN10
+IRAQ10
+JAPAN10
+JORDAN10
+KENYA10
+MOROCCO20
+MOZAMBIQUE20
+PERU20
+CHINA20
+ROMANIA20
+SAUDI ARABIA20
+VIETNAM20
+RUSSIA20
+UNITED KINGDOM20
+UNITED STATES20
+select concat(n_name, round(n_nationkey, -2)) from nation;
+concat(n_name, round(n_nationkey, -2))
+ALGERIA0
+ARGENTINA0
+BRAZIL0
+CANADA0
+EGYPT0
+ETHIOPIA0
+FRANCE0
+GERMANY0
+INDIA0
+INDONESIA0
+IRAN0
+IRAQ0
+JAPAN0
+JORDAN0
+KENYA0
+MOROCCO0
+MOZAMBIQUE0
+PERU0
+CHINA0
+ROMANIA0
+SAUDI ARABIA0
+VIETNAM0
+RUSSIA0
+UNITED KINGDOM0
+UNITED STATES0
+select concat(n_name, round(n_nationkey/10, -1)) from nation;
+concat(n_name, round(n_nationkey/10, -1))
+ALGERIA0
+ARGENTINA0
+BRAZIL0
+CANADA0
+EGYPT0
+ETHIOPIA0
+FRANCE0
+GERMANY0
+INDIA0
+INDONESIA0
+IRAN0
+IRAQ0
+JAPAN0
+JORDAN0
+KENYA0
+MOROCCO0
+MOZAMBIQUE0
+PERU0
+CHINA0
+ROMANIA0
+SAUDI ARABIA0
+VIETNAM0
+RUSSIA0
+UNITED KINGDOM0
+UNITED STATES0
+select concat(n_name, round(n_nationkey/10, -2)) from nation;
+concat(n_name, round(n_nationkey/10, -2))
+ALGERIA0
+ARGENTINA0
+BRAZIL0
+CANADA0
+EGYPT0
+ETHIOPIA0
+FRANCE0
+GERMANY0
+INDIA0
+INDONESIA0
+IRAN0
+IRAQ0
+JAPAN0
+JORDAN0
+KENYA0
+MOROCCO0
+MOZAMBIQUE0
+PERU0
+CHINA0
+ROMANIA0
+SAUDI ARABIA0
+VIETNAM0
+RUSSIA0
+UNITED KINGDOM0
+UNITED STATES0
+select concat(n_name, round(n_nationkey/10, 1)) from nation;
+concat(n_name, round(n_nationkey/10, 1))
+ALGERIA0.0
+ARGENTINA0.1
+BRAZIL0.2
+CANADA0.3
+EGYPT0.4
+ETHIOPIA0.5
+FRANCE0.6
+GERMANY0.7
+INDIA0.8
+INDONESIA0.9
+IRAN1.0
+IRAQ1.1
+JAPAN1.2
+JORDAN1.3
+KENYA1.4
+MOROCCO1.5
+MOZAMBIQUE1.6
+PERU1.7
+CHINA1.8
+ROMANIA1.9
+SAUDI ARABIA2.0
+VIETNAM2.1
+RUSSIA2.2
+UNITED KINGDOM2.3
+UNITED STATES2.4
+select concat(n_name, round(n_nationkey/10, 2)) from nation;
+concat(n_name, round(n_nationkey/10, 2))
+ALGERIA0.00
+ARGENTINA0.10
+BRAZIL0.20
+CANADA0.30
+EGYPT0.40
+ETHIOPIA0.50
+FRANCE0.60
+GERMANY0.70
+INDIA0.80
+INDONESIA0.90
+IRAN1.00
+IRAQ1.10
+JAPAN1.20
+JORDAN1.30
+KENYA1.40
+MOROCCO1.50
+MOZAMBIQUE1.60
+PERU1.70
+CHINA1.80
+ROMANIA1.90
+SAUDI ARABIA2.00
+VIETNAM2.10
+RUSSIA2.20
+UNITED KINGDOM2.30
+UNITED STATES2.40
+select round(n_nationkey / n_regionkey - (n_nationkey * n_nationkey), 2) as rnd from nation, region where n_regionkey = r_regionkey order by 1;
+rnd
+NULL
+NULL
+NULL
+NULL
+NULL
+-552.00
+-521.33
+-476.67
+-430.50
+-395.00
+-354.67
+-315.00
+-272.00
+-165.75
+-138.00
+-118.25
+-97.50
+-76.50
+-60.00
+-46.67
+-34.00
+-15.00
+-6.00
+-2.00
+0.00
+select length(substr(n_name, round(n_nationkey / 10))) from nation;
+length(substr(n_name, round(n_nationkey / 10)))
+0
+0
+0
+0
+0
+8
+6
+7
+5
+9
+4
+4
+5
+6
+5
+6
+9
+3
+4
+6
+11
+6
+5
+13
+12
+select substr(cchar255, round(cdecimal1, 0),3) from datatypetestm where length(cchar255) > 5;
+substr(cchar255, round(cdecimal1, 0),3)
+aaa
+qqq
+qqq
+qqq
+qqq
+zz

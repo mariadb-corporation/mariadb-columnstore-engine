@@ -1,0 +1,45 @@
+DROP DATABASE IF EXISTS mcs32_db1;
+CREATE DATABASE mcs32_db1;
+USE mcs32_db1;
+CREATE TABLE t1 (a tinyint(3), b tinyint(5)) ENGINE=Columnstore;
+INSERT INTO t1 VALUES (1,1);
+DELETE FROM t1;
+SELECT COUNT(*) FROM t1;
+COUNT(*)
+0
+INSERT INTO t1 VALUES (1, 2), (3, 4), (4, 5);
+DELETE FROM t1 WHERE b > 4;
+SELECT COUNT(*) FROM t1;
+COUNT(*)
+2
+DELETE FROM t1 WHERE unknown = 2;
+ERROR 42S22: Unknown column 'unknown' in 'where clause'
+INSERT INTO t1 VALUES (1, NULL);
+DELETE FROM t1 WHERE b IS NULL;
+SELECT COUNT(*) FROM t1;
+COUNT(*)
+2
+CREATE TABLE t2 (a tinyint(3), b tinyint(5)) ENGINE=Columnstore;
+INSERT INTO t1 VALUES (1,1);
+DELETE FROM t1 WHERE a = (SELECT a FROM t2);
+SELECT COUNT(*) FROM t1;
+COUNT(*)
+3
+DELETE FROM unknown;
+ERROR 42S02: Table 'mcs32_db1.unknown' doesn't exist
+DELETE FROM t1 WHERE a = (SELECT a FROM unknown);
+ERROR 42S02: Table 'mcs32_db1.unknown' doesn't exist
+DELETE t1 FROM t1 WHERE a > 3;
+SELECT COUNT(*) FROM t1;
+COUNT(*)
+3
+DELETE t1 FROM t1,t2 WHERE t1.a = t2.a;
+SELECT COUNT(*) FROM t1;
+COUNT(*)
+3
+TRUNCATE t1;
+DELETE FROM t1;
+SELECT COUNT(*) FROM t1;
+COUNT(*)
+0
+DROP DATABASE IF EXISTS mcs32_db1;

@@ -1,0 +1,32 @@
+#
+# Test makedate() function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs217_db;
+--enable_warnings
+
+CREATE DATABASE mcs217_db;
+USE mcs217_db;
+
+CREATE TABLE t1(t1_d DATE, t1_t TIME, t1_dt DATETIME)ENGINE=Columnstore;
+INSERT INTO t1 VALUES(NULL, NULL, NULL);
+INSERT INTO t1 VALUES('0000-00-00', '00:00:00', '0000-00-00');
+INSERT INTO t1 VALUES('2222-11-11', '12:12:12', '2020-11-11 12:12:12');
+INSERT INTO t1 VALUES('2020-01-01', '11:11:11', '2020-12-31 12:34:56');
+INSERT INTO t1 VALUES('2016-02-01', '11:11:11', '2017-02-01 12:12:12');
+
+SELECT t1_t, makedate(1111, t1_t) FROM t1 ORDER BY t1_t;
+SELECT t1_t, makedate(2222, t1_t) FROM t1 ORDER BY t1_t;
+SELECT t1_t, makedate(2020, t1_t) FROM t1 ORDER BY t1_t;
+
+SELECT t1_d, makedate(2000, t1_d) FROM t1 ORDER BY t1_d;
+SELECT t1_dt, makedate(2000, t1_dt) FROM t1 ORDER BY t1_dt;
+
+--error ER_WRONG_PARAMCOUNT_TO_NATIVE_FCT
+SELECT makedate(t1_d) FROM t1;
+
+# Clean UP
+DROP DATABASE mcs217_db;

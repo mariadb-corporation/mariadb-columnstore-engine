@@ -1,0 +1,17 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug2595.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+##-- Bug 2595 regression test.
+select c2 from sub1 order by 1;
+select c2 from sub2 order by 1;
+select sub1.c2 as x, sub1.c2 as y from sub1, sub2 where sub1.c2 = sub2.c2 order by 1, 2;
+select sub1.c2 as x, sub2.c2 as y, count(sub2.c2) as z from sub1, sub2 where sub1.c2 = sub2.c2 group by 1, 2 order by 1, 2;
+#
+

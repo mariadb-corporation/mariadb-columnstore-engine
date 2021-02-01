@@ -1,0 +1,98 @@
+USE tpch1;
+select * from nation where not n_regionkey;
+n_nationkey	n_name	n_regionkey	n_comment
+0	ALGERIA	0	 haggle. carefully final deposits detect slyly agai
+5	ETHIOPIA	0	ven packages wake quickly. regu
+14	KENYA	0	 pending excuses haggle furiously deposits. pending, express pinto beans wake fluffily past t
+15	MOROCCO	0	rns. blithely bold courts among the closely regular packages use furiously bold platelets?
+16	MOZAMBIQUE	0	s. ironic, unusual asymptotes wake blithely r
+select * from nation where not n_regionkey and not n_nationkey;
+n_nationkey	n_name	n_regionkey	n_comment
+0	ALGERIA	0	 haggle. carefully final deposits detect slyly agai
+select n_regionkey from nation where not n_regionkey or not n_nationkey;
+n_regionkey
+0
+0
+0
+0
+0
+select n_nationkey from nation where n_nationkey > 3 and not n_regionkey;
+n_nationkey
+5
+14
+15
+16
+select n_nationkey from nation where not n_regionkey and n_nationkey > 3;
+n_nationkey
+5
+14
+15
+16
+select n_nationkey from nation where n_nationkey > 3 or not n_regionkey;
+n_nationkey
+0
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+select n_nationkey from nation where not (n_nationkey > 2 or n_regionkey < 3);
+n_nationkey
+select * from region where not r_regionkey > (select avg(n_regionkey) from nation);
+r_regionkey	r_name	r_comment
+0	AFRICA	lar deposits. blithely final packages cajole. regular waters are final requests. regular accounts are according to 
+1	AMERICA	hs use ironic, even requests. s
+2	ASIA	ges. thinly even pinto beans ca
+select * from region where not r_regionkey in (select n_regionkey from nation);
+r_regionkey	r_name	r_comment
+select n_nationkey from nation where not (n_regionkey between 1 and 3) or not n_regionkey;
+n_nationkey
+0
+4
+5
+10
+11
+13
+14
+15
+16
+20
+select n_nationkey from nation where not (n_regionkey between 1 and 3) and not n_regionkey;
+n_nationkey
+0
+5
+14
+15
+16
+select * from sub1 where c2 is null and c3 is not null;
+c1	c2	c3	s1	s2	s3
+select if (not r_regionkey, 'no', 'yes') from region;
+if (not r_regionkey, 'no', 'yes')
+no
+yes
+yes
+yes
+yes
+select if (not r_regionkey < 2, 'no', 'yes') from region;
+if (not r_regionkey < 2, 'no', 'yes')
+yes
+yes
+no
+no
+no

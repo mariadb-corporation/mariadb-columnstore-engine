@@ -1,0 +1,21 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: MCOL_3747.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists cs1;
+create table cs1(key_ bigint) engine=columnstore;
+insert into cs1 values (42),(43),(45),(666),(777),(333);
+ 
+select key_, count(*) from cs1 where key_ in (select * from (select key_ from cs1 group by key_ order by key_ limit 2) a1) group by key_ order by 1;
+ 
+select * from (select key_, count(*) from cs1 where key_ in (select * from (select key_ from cs1 group by key_ order by key_ limit 2) a1) group by key_) a2 order by 1;
+
+drop table cs1;
+#
+

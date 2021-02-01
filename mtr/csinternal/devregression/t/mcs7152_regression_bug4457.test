@@ -1,0 +1,144 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug4457.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+#-- connector parsing test. no data needed
+CREATE TABLE if not exists `poc_enveloppe_fact` (
+  `pef_env_id_env` bigint(20) DEFAULT NULL COMMENT 'Id Tech',
+  `pef_env_env_id` varchar(45) DEFAULT NULL COMMENT 'CAB',
+  `pef_env_id_article` int(11) DEFAULT NULL COMMENT 'Id dim article',
+  `pef_int_date_integration_datetime` datetime DEFAULT NULL COMMENT 'Datetime integration',
+  `pef_int_date_integration_date` date DEFAULT NULL COMMENT 'Date integration',
+  `pef_dep_numdepot` varchar(8) DEFAULT NULL COMMENT 'Numero de depot',
+  `pef_dep_codelieudepot` varchar(45) DEFAULT NULL COMMENT 'Code regate lieu depot',
+  `pef_dep_coclico_deposant_restitue` varchar(45) DEFAULT NULL COMMENT 'Client deposant',
+  `pef_dep_coclico_contractant` varchar(45) DEFAULT NULL COMMENT 'Client contractant',
+  `pef_dep_date_depot_restitue_datetime` datetime DEFAULT NULL,
+  `pef_dep_date_depot_restitue_date` date DEFAULT NULL,
+  `pef_ind_nb_traces` int(11) DEFAULT NULL COMMENT 'Nombre de traces de enveloppe',
+  `pef_id_nb_traces` tinyint(4) DEFAULT NULL COMMENT 'Id dim libelle nb traces',
+  `pef_pnd_id_pnd` tinyint(4) DEFAULT NULL COMMENT 'Id dim pnd et motif',
+  `pef_date_restit_limite_pli` datetime DEFAULT NULL,
+  `pef_ind_ecart_delai_restit` int(11) DEFAULT NULL COMMENT 'Ecart entre restitution r�elle et limite',
+  `pef_id_ecart` tinyint(4) DEFAULT NULL COMMENT 'Id dim libell� �cart',
+  `pef_trc_date_cpt_sens_tdistrib` date DEFAULT NULL,
+  `pef_trc_id_regate_sens_tdistrib` int(11) DEFAULT NULL COMMENT 'Id Code regate trace tdistrib',
+  `pef_trc_type_bordereau` varchar(5) DEFAULT NULL COMMENT 'Type de bordereau',
+  `pef_car_image_url` tinyint(4) DEFAULT NULL COMMENT 'Booleen uri stock�e',
+  `pef_ind_trc_ace_sens_code` varchar(45) DEFAULT NULL,
+  `pef_ind_trc_ace_date_flashage` date DEFAULT NULL,
+  `pef_ind_trc_re_sens_code` varchar(45) DEFAULT NULL,
+  `pef_ind_trc_re_date_flashage` date DEFAULT NULL,
+  `pef_ind_has_trc_re` tinyint(4) DEFAULT NULL,
+  `pef_ind_has_trc_ace` tinyint(4) DEFAULT NULL,
+  `pef_trc_id_re_coderegate` int(11) DEFAULT NULL COMMENT 'Id Code regate trace Reception Enseigne',
+  `pef_trc_id_ace_coderegate` int(11) DEFAULT NULL COMMENT 'Id Code regate trace Annonce Courrier Enseigne',
+  `pef_ind_is_site_egal_ace_re` tinyint(4) DEFAULT NULL,
+  `pef_id_arrivee_site` tinyint(4) DEFAULT NULL,
+  `pef_id_annoncee_site` tinyint(4) DEFAULT NULL,
+  `pef_ind_has_trc_li_rdddmo` tinyint(4) DEFAULT NULL,
+  `pef_ind_has_trc_li_rdrenr` tinyint(4) DEFAULT NULL,
+  `pef_id_li` tinyint(4) DEFAULT NULL,
+  `pef_car_id_ar` varchar(105) DEFAULT NULL COMMENT 'Identifiant AR',
+  `pef_trc_type_cab` varchar(30) DEFAULT NULL COMMENT 'Type de CAB',
+  `pef_dep_code_prodcom` varchar(30) DEFAULT NULL COMMENT 'Code produit commercial',
+  `pef_derniere_date_DMC` datetime DEFAULT NULL,
+  `pef_dernier_dmc` varchar(6) DEFAULT NULL,
+  `pef_ind_trc_CEN06_date_depart` date DEFAULT NULL,
+  `pef_ind_trc_CEN06_id_site_depart` int(11) DEFAULT NULL,
+  `pef_ind_trc_CEN06_date_arrivee` date DEFAULT NULL,
+  `pef_ind_trc_CEN06_id_site_arrivee` int(11) DEFAULT NULL,
+  `pef_ind_trc_CEN06_delai` bigint(20) DEFAULT NULL,
+  `pef_ind_trc_CEN06_id_delai` tinyint(4) DEFAULT NULL,
+  `pef_levee_reclamation` tinyint(4) DEFAULT NULL,
+  `pef_ind_trc_CEN06_date_fin_vie` bigint(20) DEFAULT NULL,
+  `pef_ind_trc_CEN06_date_PARTID` bigint(20) DEFAULT NULL,
+  `pef_id_fonctionnel_tournee` bigint(20) DEFAULT NULL
+) engine=columnstore;
+
+CREATE TABLE if not exists `poc_enveloppe_partid_fact` (
+  `pepf_id_fonctionnel_tournee` int(11) DEFAULT NULL,
+  `pepf_int_date_trc_partid` date DEFAULT NULL,
+  `pepf_int_date_trc_partid_date` bigint(20) DEFAULT NULL,
+  `pepf_env_id_env` bigint(20) DEFAULT NULL
+) engine=columnstore;
+
+CREATE TABLE if not exists `poc_tmp_calc_indic` (
+  `pef_env_id_env` bigint(20) DEFAULT NULL COMMENT 'Id Tech',
+  `pef_ind_nb_traces` int(11) DEFAULT NULL COMMENT 'Nombre de traces de enveloppe',
+  `pef_id_nb_traces` tinyint(4) DEFAULT NULL COMMENT 'Id dim libelle nb traces',
+  `pef_trc_date_cpt_sens_tdistrib` date DEFAULT NULL,
+  `pef_trc_id_regate_sens_tdistrib` int(11) DEFAULT NULL COMMENT 'Id Code regate trace tdistrib',
+  `pef_trc_type_bordereau` varchar(5) DEFAULT NULL COMMENT 'Type de bordereau',
+  `pef_ind_trc_ace_sens_code` varchar(45) DEFAULT NULL,
+  `pef_ind_trc_ace_date_flashage` date DEFAULT NULL,
+  `pef_ind_trc_re_sens_code` varchar(45) DEFAULT NULL,
+  `pef_ind_trc_re_date_flashage` date DEFAULT NULL,
+  `pef_ind_has_trc_re` tinyint(4) DEFAULT NULL,
+  `pef_ind_has_trc_ace` tinyint(4) DEFAULT NULL,
+  `pef_trc_id_re_coderegate` int(11) DEFAULT NULL COMMENT 'Id Code regate trace Reception Enseigne',
+  `pef_trc_id_ace_coderegate` int(11) DEFAULT NULL COMMENT 'Id Code regate trace Annonce Courrier Enseigne',
+  `pef_ind_is_site_egal_ace_re` tinyint(4) DEFAULT NULL,
+  `pef_id_arrivee_site` tinyint(4) DEFAULT NULL,
+  `pef_id_annoncee_site` tinyint(4) DEFAULT NULL,
+  `pef_ind_has_trc_li_rdddmo` tinyint(4) DEFAULT NULL,
+  `pef_ind_has_trc_li_rdrenr` tinyint(4) DEFAULT NULL,
+  `pef_id_li` tinyint(4) DEFAULT NULL,
+  `pef_derniere_date_DMC` datetime DEFAULT NULL,
+  `pef_dernier_dmc` varchar(6) DEFAULT NULL,
+  `pef_ind_trc_CEN06_date_depart` date DEFAULT NULL,
+  `pef_ind_trc_CEN06_id_site_depart` int(11) DEFAULT NULL,
+  `pef_ind_trc_CEN06_date_arrivee` date DEFAULT NULL,
+  `pef_ind_trc_CEN06_id_site_arrivee` int(11) DEFAULT NULL,
+  `pef_ind_trc_CEN06_delai` bigint(20) DEFAULT NULL,
+  `pef_ind_trc_CEN06_id_delai` tinyint(4) DEFAULT NULL,
+  `pef_id_fonctionnel_tournee` bigint(20) DEFAULT NULL
+) engine=columnstore;
+
+UPDATE poc_enveloppe_fact C,
+(SELECT A.pef_env_id_env, A.pef_ind_trc_CEN06_date_depart,
+A.pef_ind_trc_CEN06_date_fin_vie, MAX(B.pepf_int_date_trc_partid_date) as
+pepf_int_date_trc_partid_date, B.pepf_id_fonctionnel_tournee
+FROM poc_enveloppe_fact A, poc_enveloppe_partid_fact B, poc_tmp_calc_indic C
+WHERE A.pef_env_id_env=C.pef_env_id_env
+and A.pef_ind_trc_CEN06_date_depart is not null  
+and A.pef_ind_trc_CEN06_date_fin_vie is not null
+AND A.pef_ind_trc_CEN06_date_PARTID is null
+and A.pef_env_id_env=B.pepf_env_id_env
+GROUP BY A.pef_env_id_env, A.pef_ind_trc_CEN06_date_depart,
+A.pef_ind_trc_CEN06_date_fin_vie, B.pepf_id_fonctionnel_tournee
+Having MAX(B.pepf_int_date_trc_partid_date) between
+A.pef_ind_trc_CEN06_date_depart and A.pef_ind_trc_CEN06_date_fin_vie) D
+SET C.pef_ind_trc_CEN06_date_partid = D.pepf_int_date_trc_partid_date,
+C.pef_id_fonctionnel_tournee = D.pepf_id_fonctionnel_tournee
+WHERE C.pef_env_id_env= D.pef_env_id_env;
+
+UPDATE poc_enveloppe_fact C,
+(SELECT A.pef_env_id_env, A.pef_ind_trc_CEN06_date_depart,
+A.pef_ind_trc_CEN06_date_fin_vie, MAX(B.pepf_int_date_trc_partid_date) as
+pepf_int_date_trc_partid_date, B.pepf_id_fonctionnel_tournee
+FROM poc_enveloppe_fact A, poc_enveloppe_partid_fact B, poc_tmp_calc_indic C
+WHERE A.pef_env_id_env=C.pef_env_id_env
+and A.pef_ind_trc_CEN06_date_depart is not null  
+and A.pef_ind_trc_CEN06_date_fin_vie is not null
+AND A.pef_ind_trc_CEN06_date_PARTID is null
+and A.pef_env_id_env=B.pepf_env_id_env
+GROUP BY A.pef_env_id_env, A.pef_ind_trc_CEN06_date_depart,
+A.pef_ind_trc_CEN06_date_fin_vie, B.pepf_id_fonctionnel_tournee
+Having pepf_int_date_trc_partid_date between
+A.pef_ind_trc_CEN06_date_depart and A.pef_ind_trc_CEN06_date_fin_vie) D
+SET C.pef_ind_trc_CEN06_date_partid = D.pepf_int_date_trc_partid_date,
+C.pef_id_fonctionnel_tournee = D.pepf_id_fonctionnel_tournee
+WHERE C.pef_env_id_env= D.pef_env_id_env;
+
+drop table poc_enveloppe_fact;
+drop table poc_enveloppe_partid_fact;
+drop table poc_tmp_calc_indic;
+#
+

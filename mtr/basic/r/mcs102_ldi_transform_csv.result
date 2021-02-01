@@ -1,0 +1,29 @@
+DROP DATABASE IF EXISTS mcs102_db1;
+CREATE DATABASE mcs102_db1;
+USE mcs102_db1;
+CREATE TABLE discounts (
+id INT NOT NULL,
+title VARCHAR(255) NOT NULL,
+expired_date DATE NOT NULL,
+amount DECIMAL(10, 2) NULL
+) ENGINE=Columnstore;
+LOAD DATA INFILE '/tmp/mcs102.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
+ERROR 22007: Incorrect date value: 'Jan 04 2014' for column `mcs102_db1`.`discounts`.`expired_date` at row 1
+LOAD DATA INFILE '/tmp/mcs102.csv' INTO TABLE discounts FIELDS TERMINATED BY ','
+(id, title, @expired_date, amount)
+SET expired_date = STR_TO_DATE(@expired_date, "%M %d %Y");
+LOAD DATA LOCAL INFILE '/tmp/mcs102.csv' INTO TABLE discounts FIELDS TERMINATED BY ','
+(id, title, @expired_date, amount)
+SET expired_date = STR_TO_DATE(@expired_date, "%M %d %Y");
+SELECT * FROM discounts ORDER BY id;
+id	title	expired_date	amount
+1	Sprint Break 2014	2014-01-04	20.00
+1	Sprint Break 2014	2014-01-04	20.00
+2	Back to Scholl 2014	2014-01-09	25.00
+2	Back to Scholl 2014	2014-01-09	25.00
+3	Summer 2014	2014-06-25	10.00
+3	Summer 2014	2014-06-25	10.00
+SELECT COUNT(*) FROM discounts;
+COUNT(*)
+6
+DROP DATABASE IF EXISTS mcs102_db1;

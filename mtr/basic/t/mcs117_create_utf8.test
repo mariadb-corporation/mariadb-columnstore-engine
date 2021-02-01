@@ -1,0 +1,41 @@
+#
+# Test UTF8 names
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+set names utf8;
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs117_db;
+--enable_warnings
+
+CREATE DATABASE имя_базы_в_кодировке_утф8_длиной_больше_чем_45;
+USE имя_базы_в_кодировке_утф8_длиной_больше_чем_45;
+SELECT DATABASE();
+
+CREATE DATABASE mcs117_db;
+USE mcs117_db;
+
+SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.schemata
+WHERE schema_name='имя_базы_в_кодировке_утф8_длиной_больше_чем_45';
+
+DROP DATABASE имя_базы_в_кодировке_утф8_длиной_больше_чем_45;
+
+CREATE TABLE имя_таблицы_в_кодировке_утф8_длиной_больше_чем_48
+(
+  имя_поля_в_кодировке_утф8_длиной_больше_чем_45 INT
+)ENGINE=Columnstore;
+SHOW CREATE TABLE имя_таблицы_в_кодировке_утф8_длиной_больше_чем_48;
+
+CREATE VIEW имя_вью_кодировке_утф8_длиной_больше_чем_42 AS SELECT * FROM имя_таблицы_в_кодировке_утф8_длиной_больше_чем_48;
+SHOW CREATE VIEW  имя_вью_кодировке_утф8_длиной_больше_чем_42;
+
+select TABLE_NAME from information_schema.tables where table_schema='mcs117_db' order by 1;
+
+select COLUMN_NAME from information_schema.columns where table_schema='mcs117_db' order by 1;
+
+select TABLE_NAME from information_schema.views where table_schema='mcs117_db' order by 1;
+
+# Clean UP
+DROP DATABASE mcs117_db;

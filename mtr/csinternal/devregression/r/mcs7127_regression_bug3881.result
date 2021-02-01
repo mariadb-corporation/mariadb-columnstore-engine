@@ -1,0 +1,64 @@
+USE tpch1;
+set @a:=(select max(r_regionkey) from region);
+select @a from region;
+@a
+4
+4
+4
+4
+4
+select @a:=@a+1 from region;
+@a:=@a+1
+5
+6
+7
+8
+9
+select @a, n_regionkey from nation order by 1,2;
+@a	n_regionkey
+9	0
+9	0
+9	0
+9	0
+9	0
+9	1
+9	1
+9	1
+9	1
+9	1
+9	2
+9	2
+9	2
+9	2
+9	2
+9	3
+9	3
+9	3
+9	3
+9	3
+9	4
+9	4
+9	4
+9	4
+9	4
+select @a, n_regionkey from nation group by n_regionkey order by 1,2;
+@a	n_regionkey
+9	0
+9	1
+9	2
+9	3
+9	4
+select @a:=@a+1, n_regionkey from nation group by 2 order by 2;
+@a:=@a+1	n_regionkey
+10	0
+11	1
+18	2
+16	3
+14	4
+select @a:=@a+2 as c1, n_regionkey as c2, 1 as c3, '' as c4 from nation group by c2 order by 2;
+c1	c2	c3	c4
+16	0	1	
+18	1	1	
+32	2	1	
+28	3	1	
+24	4	1	

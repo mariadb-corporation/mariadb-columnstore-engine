@@ -1,0 +1,29 @@
+#
+# Test QUARTER() function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs223_db;
+--enable_warnings
+
+CREATE DATABASE mcs223_db;
+USE mcs223_db;
+
+CREATE TABLE t1(t1_d DATE, t1_t TIME, t1_dt DATETIME)ENGINE=Columnstore;
+INSERT INTO t1 VALUES(NULL, NULL, NULL);
+INSERT INTO t1 VALUES('2222-11-11', '12:12:12', '2020-11-11 12:12:12');
+INSERT INTO t1 VALUES('2020-01-01', '11:11:11', '2020-12-31 12:34:56');
+INSERT INTO t1 VALUES('2016-02-01', '11:11:11', '2017-02-01 12:12:12');
+
+SELECT QUARTER('2020:1:1');
+SELECT QUARTER('2020/11/1');
+SELECT QUARTER('2020-6-21');
+SELECT QUARTER('20200701');
+
+SELECT t1_dt, QUARTER(t1_dt) FROM t1 ORDER BY 1;
+SELECT t1_d, QUARTER(t1_d) FROM t1 ORDER BY 1;
+
+# Clean UP
+DROP DATABASE mcs223_db;

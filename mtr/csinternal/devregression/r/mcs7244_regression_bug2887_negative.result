@@ -1,0 +1,4 @@
+USE tpch1;
+select avg(hour(cdatetime)+1) from datatypetestm;
+avg(hour(cdatetime)+1)
+13.5455

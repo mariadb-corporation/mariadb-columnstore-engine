@@ -1,0 +1,35 @@
+USE tpch1;
+select n_nationkey, n_name into outfile '/tmp/bug3935_outfile.txt'
+FIELDS TERMINATED BY '|' LINES TERMINATED BY '/n' from nation;
+select n_nationkey, n_name from nation into outfile '/tmp/bug3935_outfile.txt'
+FIELDS TERMINATED BY '|' LINES TERMINATED BY '/n';
+Warnings:
+Warning	1287	'<select expression> INTO <destination>;' is deprecated and will be removed in a future release. Please use 'SELECT <select list> INTO <destination> FROM...' instead
+select n_nationkey, n_name into outfile '/tmp/bug3935_outfile.txt'
+FIELDS TERMINATED BY '|' OPTIONALLY ENCLOSED BY '"' LINES TERMINATED BY '/n'
+from nation;
+SELECT 'ID', 'Name' UNION (SELECT n_nationkey, n_name
+FROM nation ORDER BY n_name DESC) INTO OUTFILE
+'/tmp/bug3935_outfile.txt' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n';
+Warnings:
+Warning	1287	'<select expression> INTO <destination>;' is deprecated and will be removed in a future release. Please use 'SELECT <select list> INTO <destination> FROM...' instead
+SELECT 'ID', 'Name' UNION (SELECT n_nationkey, n_name
+FROM nation ORDER BY n_name DESC) INTO OUTFILE
+'/tmp/bug3935_outfile.txt' FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"'
+LINES TERMINATED BY '\n';
+Warnings:
+Warning	1287	'<select expression> INTO <destination>;' is deprecated and will be removed in a future release. Please use 'SELECT <select list> INTO <destination> FROM...' instead
+SELECT *
+INTO OUTFILE '/tmp/bug3935_outfile.txt'
+FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"'
+LINES TERMINATED BY '\n'
+FROM (SELECT 'ID', 'Name'
+       UNION
+SELECT n_nationkey, n_name from nation) a;
+SELECT a.*
+INTO OUTFILE '/tmp/bug3935_outfile.txt'
+FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"'
+LINES TERMINATED BY '\n'
+FROM (SELECT 'ID', 'Name'
+UNION
+SELECT n_nationkey, n_name from nation order by 2 desc) a;

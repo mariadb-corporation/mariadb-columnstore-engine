@@ -1,0 +1,17 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3952.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists bug3952;
+create table bug3952 (id int, name varchar(25));
+insert into bug3952 values (1,'aaa'),(2,'bbb');
+select * from bug3952 n1, (select * from bug3952)n2 where n1.id=n2.id;
+drop table bug3952;
+#
+

@@ -1,0 +1,15 @@
+#
+# Test case migrated from regression test suite:
+# ./mysql/queries/100GB/dataValidation/dataval.001.sql
+#
+# Author: Susil, susil.behera@mariadb.com
+#
+
+-- source ../include/have_columnstore.inc
+
+USE tpch1;
+
+select * 
+from lineitem
+where l_orderkey in (1248, 315118979, 315119076, 315119136, 315119777, 315119878, 120957670, 235282085, 341482786, 426406758, 521332416, 578786432, 599692096)
+order by l_orderkey, l_linenumber;

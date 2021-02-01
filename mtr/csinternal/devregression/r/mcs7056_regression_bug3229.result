@@ -1,0 +1,47 @@
+USE tpch1;
+drop table if exists testnulldate;
+Warnings:
+Note	1051	Unknown table 'tpch1.testnulldate'
+create table testnulldate (id int, time_stamp datetime) engine=columnstore;
+insert into testnulldate values (1, '2010-11-08 17:46:44');
+insert into testnulldate values (2, null);
+insert into testnulldate values (3, SUBDATE('2010-11-08 17:46:44', 1));
+select
+id,
+`time_stamp`,
+DATE(`time_stamp`) as `Date`,
+case when `time_stamp` is null then 'N/A' else DATE(`time_stamp`) end as
+`Test1`,
+ifnull((DATE(`time_stamp`)),'N/A') as `Test2`,
+if(`time_stamp` is null, 'N/A', DATE(`time_stamp`)) as `Test3`,
+if(`time_stamp`<='2010-11-08 17:46:44',DATE(`time_stamp`),'N/A') as `Test4`,
+if(`time_stamp`<='2010-11-08 17:46:44',DATE(`time_stamp`),DATE('2010-11-08 17:46:44')) as `Test5`
+from testnulldate;
+id	time_stamp	Date	Test1	Test2	Test3	Test4	Test5
+1	2010-11-08 17:46:44	2010-11-08	2010-11-08	2010-11-08	2010-11-08	2010-11-08	2010-11-08
+2	NULL	NULL	N/A	N/A	N/A	N/A	2010-11-08
+3	2010-11-07 17:46:44	2010-11-07	2010-11-07	2010-11-07	2010-11-07	2010-11-07	2010-11-07
+select
+id,
+`time_stamp`,
+YEAR(`time_stamp`) as `Date`,
+case when `time_stamp` is null then 'N/A' else YEAR(`time_stamp`) end as
+`Test1`,
+ifnull((YEAR(`time_stamp`)),'N/A') as `Test2`,
+if(`time_stamp` is null, 'N/A', YEAR(`time_stamp`)) as `Test3`,
+if(`time_stamp`<='2010-11-08 17:46:44',YEAR(`time_stamp`),'N/A') as `Test4`,
+if(`time_stamp`<='2010-11-08 17:46:44',YEAR(`time_stamp`),DATE('2010-11-08 17:46:44')) as `Test5`
+from testnulldate;
+id	time_stamp	Date	Test1	Test2	Test3	Test4	Test5
+1	2010-11-08 17:46:44	2010	2010	2010	2010	2010	2010
+2	NULL	NULL	N/A	N/A	N/A	N/A	2010-11-08
+3	2010-11-07 17:46:44	2010	2010	2010	2010	2010	2010
+select
+id,
+case when `time_stamp` is null then 'N/A' end as `Test1`
+from testnulldate;
+id	Test1
+1	NULL
+2	N/A
+3	NULL
+drop table if exists testnulldate;

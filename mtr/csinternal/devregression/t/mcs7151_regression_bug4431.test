@@ -1,0 +1,28 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug4431.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists bug4431_1;
+drop table if exists bug4431_2;
+drop table if exists bug4431_3;
+
+create table bug4431_1 (date int, col2 date) engine=columnstore;
+create table bug4431_2 (`date` int, col2 date) engine=columnstore;
+create table bug4431_3 (col2 date) engine=columnstore;
+alter table bug4431_3 add column date int;
+alter table bug4431_3 drop column date;
+
+insert into bug4431_1 values (1, '2012-06-06'),(2, '2012-06-06'),(3, '2012-06-06'),(4, '2012-06-06');
+select * from bug4431_1;
+
+drop table bug4431_1;
+drop table bug4431_2;
+drop table bug4431_3;
+#
+

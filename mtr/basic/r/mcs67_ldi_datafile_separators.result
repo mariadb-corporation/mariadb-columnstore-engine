@@ -1,0 +1,36 @@
+DROP DATABASE IF EXISTS mcs67_db;
+CREATE DATABASE mcs67_db;
+USE mcs67_db;
+CREATE TABLE t1(col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnstore;
+LOAD DATA LOCAL infile './suite/columnstore/std_data/100Krows.dat' INTO TABLE t1 FIELDS TERMINATED BY '|';
+SELECT COUNT(*) FROM t1;
+COUNT(*)
+100001
+TRUNCATE t1;
+LOAD DATA LOCAL infile '/tmp/100Krows.dat' INTO TABLE t1 FIELDS TERMINATED BY '\t';
+SELECT COUNT(*) FROM t1;
+COUNT(*)
+100001
+LOAD DATA LOCAL infile '/tmp/100Krows.dat' INTO TABLE t1 FIELDS TERMINATED BY '-';
+Warnings:
+Warning	1265	Data truncated for column 'col1' at row 1
+Warning	1261	Row 1 doesn't contain data for all columns
+Warning	1261	Row 1 doesn't contain data for all columns
+Warning	1265	Data truncated for column 'col1' at row 2
+Warning	1261	Row 2 doesn't contain data for all columns
+Warning	1261	Row 2 doesn't contain data for all columns
+Warning	1265	Data truncated for column 'col1' at row 3
+Warning	1261	Row 3 doesn't contain data for all columns
+Warning	1261	Row 3 doesn't contain data for all columns
+Warning	1265	Data truncated for column 'col1' at row 4
+Warning	1261	Row 4 doesn't contain data for all columns
+Warning	1261	Row 4 doesn't contain data for all columns
+Warning	1265	Data truncated for column 'col1' at row 5
+Warning	1261	Row 5 doesn't contain data for all columns
+Warning	1261	Row 5 doesn't contain data for all columns
+Warning	1261	Row 6 doesn't contain data for all columns
+Warning	1261	Row 6 doesn't contain data for all columns
+SELECT COUNT(*) FROM t1;
+COUNT(*)
+100007
+DROP DATABASE mcs67_db;

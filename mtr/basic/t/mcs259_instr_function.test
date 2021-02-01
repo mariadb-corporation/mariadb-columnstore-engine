@@ -1,0 +1,31 @@
+#
+# INSTR() function
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs259_db;
+--enable_warnings
+
+CREATE DATABASE mcs259_db;
+USE mcs259_db;
+
+CREATE TABLE t1 (a INT, b VARCHAR(30))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL, ''),(1, 'mariadb'),(2, 'columnstore'),(3, 'mariadb columnstore');
+
+SELECT INSTR('abcdefghi', 'i') FROM t1 LIMIT 1;
+SELECT INSTR('abcdefghi', 'z') FROM t1 LIMIT 1;
+SELECT INSTR('pqrstuvwxyz', 'u') FROM t1 LIMIT 1;
+SELECT INSTR('mnopmm', 'm') FROM t1 LIMIT 1;
+SELECT INSTR('mnopmm', 'mm') FROM t1 LIMIT 1;
+
+SELECT b, INSTR(b, 'mariadb') FROM t1 ORDER BY 1;
+SELECT b, INSTR(concat(b,'pqr'), 'qr') FROM t1 ORDER BY 1;
+SELECT b, INSTR(concat('pqr', b), 'qr') FROM t1 ORDER BY 1;
+
+--error ER_WRONG_PARAMCOUNT_TO_NATIVE_FCT
+SELECT b, INSTR(b) FROM t1 ORDER BY 1;
+
+# Clean UP
+DROP DATABASE mcs259_db;

@@ -1,0 +1,44 @@
+DROP DATABASE IF EXISTS mcs225_db;
+CREATE DATABASE mcs225_db;
+USE mcs225_db;
+CREATE TABLE t1 (a INT, b CHAR(20))ENGINE=Columnstore;
+INSERT INTO t1 VALUES (NULL, ''),(1, 'aaa'),(2, 'abcabc'),(3, 'cccbba'),(4, 'dddd'),(5, 'pqrs');
+SELECT REPLACE('abbcccb', 'b', 'z');
+REPLACE('abbcccb', 'b', 'z')
+azzcccz
+SELECT REPLACE('xyz', 'z', 'ppp');
+REPLACE('xyz', 'z', 'ppp')
+xyppp
+SELECT b, REPLACE(b, 'a', 'mcs') FROM t1 ORDER BY 1;
+b	REPLACE(b, 'a', 'mcs')
+NULL	NULL
+aaa	mcsmcsmcs
+abcabc	mcsbcmcsbc
+cccbba	cccbbmcs
+dddd	dddd
+pqrs	pqrs
+SELECT b, REPLACE(b, 'b', 'oo') FROM t1 ORDER BY 1;
+b	REPLACE(b, 'b', 'oo')
+NULL	NULL
+aaa	aaa
+abcabc	aoocaooc
+cccbba	cccooooa
+dddd	dddd
+pqrs	pqrs
+SELECT b, REPLACE(b, 'pqrs', 'a') FROM t1 ORDER BY 1;
+b	REPLACE(b, 'pqrs', 'a')
+NULL	NULL
+aaa	aaa
+abcabc	abcabc
+cccbba	cccbba
+dddd	dddd
+pqrs	a
+SELECT b, REPLACE(b, 'dd', 'n') FROM t1 ORDER BY 1;
+b	REPLACE(b, 'dd', 'n')
+NULL	NULL
+aaa	aaa
+abcabc	abcabc
+cccbba	cccbba
+dddd	nn
+pqrs	pqrs
+DROP DATABASE mcs225_db;

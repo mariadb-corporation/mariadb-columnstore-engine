@@ -1,0 +1,72 @@
+
+#
+# Test case migrated from regression test suite:
+# queries/working_tpch1_compareLogOnly/storedProcedures/sp.sql
+#
+# Author: Susil, susil.behera@mariadb.com
+#
+
+-- source ../include/have_columnstore.inc
+
+USE tpch1;
+
+drop procedure if exists sp_simple_select;
+drop procedure if exists sp_simple_variable;
+drop procedure if exists sp_simple_variables;
+drop procedure if exists sp_complex_variable;
+drop procedure if exists proc1;
+DROP TABLE IF EXISTS t1;
+
+DELIMITER $$;
+Create Procedure sp_simple_select( )
+begin
+	select * from part where p_partkey < 5;
+end $$
+
+# Simple SP with 1 arg
+Create Procedure sp_simple_variable(in arg_key int)
+begin
+	select * from part where p_partkey <= arg_key;
+end $$
+
+# Simple SP with multiple args
+Create Procedure sp_simple_variables(in arg_key int, in arg_string varchar(25))
+begin
+	select * from nation where n_nationkey <= arg_key and n_name > arg_string;
+end $$
+
+# Simple SP with cross table select query
+Create Procedure sp_complex_variable(in arg_key int, in arg_date date)
+begin
+	Select * from lineitem, orders where o_custkey < arg_key and
+	l_partkey < 10000 and l_shipdate>arg_date and l_orderkey = o_orderkey order by l_orderkey, l_linenumber;
+end $$
+
+# SP with DDL
+create procedure proc1()
+begin
+create table if not exists t1 (id int)engine=columnstore;
+start transaction;
+alter table t1 add column c3 integer;
+insert into t1 values (1,2);
+commit;
+end$$
+
+DELIMITER ;$$
+
+call sp_simple_select;
+call sp_simple_variable(2);
+call sp_simple_variables(10, 'AMERICA');
+call sp_complex_variable(1000, '1998-10-10');
+call proc1();
+# Should get 'Duplicate column name' error this time
+--error 1060
+call proc1();
+drop table t1;
+
+drop procedure sp_simple_select;
+drop procedure sp_simple_variable;
+drop procedure sp_simple_variables;
+drop procedure sp_complex_variable;
+drop procedure proc1;
+

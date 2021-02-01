@@ -1,0 +1,28 @@
+# -------------------------------------------------------------- #
+# Test case migrated from regression test suite: bug3270.sql
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE tpch1;
+#
+drop table if exists bug3270;
+create table bug3270 (c1 decimal(12, 6), c2 float) engine=columnstore;
+insert into bug3270 
+values	(5.240620, 5.24062e+06), (7.240620, 7.24062e+06), (9.940620, 9.94062e+06), (5.240620, 5.24062), (5.240720, 5.240720), 
+	(5.240720, 5.240720), (5.240720, 5.240720), (-4.23, -4.23), (-8.89, -8.89);
+insert into bug3270 values (-5.240620, -5.24062e+06), (-7.240620, -7.24062e+06), (-9.940620, -9.94062e+06), 
+	(-5.240620, -5.24062), (-5.240720, -5.240720), (-5.240720, -5.240720), (-5.240720, -5.240720);
+insert into bug3270 values (-18.9479, -18.9479), (45.1557, 45.1557);
+
+select floor(c1), ceil(c1), c1 from bug3270 order by 1,2,3;
+select floor(c2), ceil(c2), c2 from bug3270 order by 1,2,3;
+select truncate(c1, 0), truncate(c1, 1), truncate(c1, 2) from bug3270 order by 1,2,3;
+select truncate(c2, 0), truncate(c2, 1), truncate(c2, 2) from bug3270 order by 1,2,3;
+
+select truncate(c2 ,2), count(*) from bug3270 group by 1 order by 1, 2;
+drop table if exists bug3270;
+#
+

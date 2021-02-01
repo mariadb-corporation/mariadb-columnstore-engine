@@ -1,0 +1,41 @@
+DROP DATABASE IF EXISTS mcs104_db;
+CREATE DATABASE mcs104_db;
+USE mcs104_db;
+CREATE TABLE discounts (
+id INT NOT NULL,
+title VARCHAR(255) NOT NULL,
+amount INT NOT NULL
+) ENGINE=Columnstore;
+LOAD DATA INFILE '/tmp/mcs104.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
+LOAD DATA LOCAL INFILE '/tmp/mcs104.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
+SELECT * FROM discounts ORDER BY id;
+id	title	amount
+1	"Sprint Break - San Jose"	20
+1	"Sprint Break - San Jose"	20
+2	"Back to Scholl - San Jose"	25
+2	"Back to Scholl - San Jose"	25
+3	"Summer - San Jose"	10
+3	"Summer - San Jose"	10
+4	Spring	10
+4	Spring	10
+SELECT COUNT(*) FROM discounts;
+COUNT(*)
+8
+TRUNCATE discounts;
+LOAD DATA INFILE '/tmp/mcs104.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' ESCAPED BY '\\';
+LOAD DATA LOCAL INFILE '/tmp/mcs104.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' ESCAPED BY '\\';
+SELECT * FROM discounts ORDER BY id;
+id	title	amount
+1	Sprint Break , San Jose	20
+1	Sprint Break , San Jose	20
+2	Back to Scholl , San Jose	25
+2	Back to Scholl , San Jose	25
+3	Summer, San Jose	10
+3	Summer, San Jose	10
+SELECT COUNT(*) FROM discounts;
+COUNT(*)
+6
+TRUNCATE discounts;
+LOAD DATA INFILE '/tmp/mcs104.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' ESCAPED BY '\\';
+ERROR 22007: Incorrect integer value: ' San Jose' for column `mcs104_db`.`discounts`.`amount` at row 3
+DROP DATABASE IF EXISTS mcs104_db;

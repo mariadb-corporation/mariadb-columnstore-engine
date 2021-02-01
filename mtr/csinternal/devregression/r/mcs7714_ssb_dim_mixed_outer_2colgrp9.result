@@ -1,0 +1,628 @@
+USE ssb1;
+select  d1.d_year ,  p2_um.p_color ,  count(*)
+from  lineorder 
+join     dateinfo d1 on (lo_orderdate = d1.d_datekey) 
+left  join     part p2_um on (lo_partkey = p2_um.p_partkey) 
+join     customer c1 on (lo_custkey = c1.c_custkey) 
+left  join     part p4_um on (lo_partkey = p4_um.p_partkey) 
+left  join     customer c3_um on (lo_custkey = c3_um.c_custkey) 
+right  join     supplier s2 on (lo_suppkey = s2.s_suppkey) 
+right  join     part p1 on (lo_partkey = p1.p_partkey) 
+left  join     dateinfo d2 on (lo_orderdate = d2.d_datekey) 
+join     part p3 on (lo_partkey = p3.p_partkey) 
+where lo_orderkey > 0  and (d1.d_yearmonth is null or  d1.d_yearmonth in ('Jan1994','Feb1994','Mar1994','Apr1994'))
+and (p2_um.p_mfgr <= 'MFGR#1' or p2_um.p_mfgr is null) and (p2_um.p_size <= 3 or p2_um.p_size is null)  and (c1.c_nation is null or  c1.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','GERMANY','ROMANIA'))
+and (p4_um.p_category is null or  p4_um.p_category <= 'MFGR#13')
+and (c3_um.c_region is null or  c3_um.c_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (s2.s_city is null or  s2.s_city in ('ALGERIA  0','ALGERIA  1','ALGERIA  2','GERMANY  0','GERMANY  1','UNITED KI2','UNITED KI3'))
+and (p1.p_mfgr <= 'MFGR#1' or p1.p_mfgr is null) and (p1.p_size <= 3 or p1.p_size is null)  and (d2.d_year is null or  d2.d_year = 1994)
+and (p3.p_category is null or  p3.p_category <= 'MFGR#13')
+group by 1,2 order by 1,2 limit 10;
+d_year	p_color	count(*)
+1994	almond	1
+1994	blue	1
+1994	brown	2
+1994	dodger	1
+1994	forest	1
+1994	ivory	1
+1994	light	1
+1994	moccasin	1
+1994	pink	1
+1994	saddle	1
+select  d2.d_yearmonthnum ,  p3.p_category ,  count(*)
+from  lineorder 
+left  join     dateinfo d2 on (lo_orderdate = d2.d_datekey) 
+left  join     part p3 on (lo_partkey = p3.p_partkey) 
+left  join     customer c2_um on (lo_custkey = c2_um.c_custkey) 
+right  join     supplier s1 on (lo_suppkey = s1.s_suppkey) 
+join     customer c4 on (lo_custkey = c4.c_custkey) 
+left  join     dateinfo d1 on (lo_orderdate = d1.d_datekey) 
+right  join     part p2_um on (lo_partkey = p2_um.p_partkey) 
+left  join     customer c1 on (lo_custkey = c1.c_custkey) 
+join     part p4_um on (lo_partkey = p4_um.p_partkey) 
+where lo_orderkey > 0  and (d2.d_year is null or  d2.d_year = 1994)
+and (p3.p_category is null or  p3.p_category <= 'MFGR#13')
+and (c2_um.c_nation is null or  c2_um.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','INDONESIA','GERMANY','ROMANIA'))
+and (s1.s_region is null or  s1.s_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (c4.c_region is null or  c4.c_region in ('EUROPE'))
+and (d1.d_yearmonth is null or  d1.d_yearmonth in ('Jan1994','Feb1994','Mar1994','Apr1994'))
+and (p2_um.p_mfgr <= 'MFGR#1' or p2_um.p_mfgr is null) and (p2_um.p_size <= 3 or p2_um.p_size is null)  and (c1.c_nation is null or  c1.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','GERMANY','ROMANIA'))
+and (p4_um.p_category is null or  p4_um.p_category <= 'MFGR#13')
+group by 1,2 order by 1,2 limit 10;
+d_yearmonthnum	p_category	count(*)
+199401	MFGR#11	15
+199401	MFGR#12	19
+199401	MFGR#13	13
+199402	MFGR#11	14
+199402	MFGR#12	14
+199402	MFGR#13	12
+199403	MFGR#11	23
+199403	MFGR#12	19
+199403	MFGR#13	12
+199404	MFGR#11	7
+select  c1.c_city ,  p4_um.p_brand1 ,  count(*)
+from  lineorder 
+join     customer c1 on (lo_custkey = c1.c_custkey) 
+right  join     part p4_um on (lo_partkey = p4_um.p_partkey) 
+left  join     customer c3_um on (lo_custkey = c3_um.c_custkey) 
+left  join     supplier s2 on (lo_suppkey = s2.s_suppkey) 
+left  join     part p1 on (lo_partkey = p1.p_partkey) 
+join     dateinfo d2 on (lo_orderdate = d2.d_datekey) 
+right  join     part p3 on (lo_partkey = p3.p_partkey) 
+right  join     customer c2_um on (lo_custkey = c2_um.c_custkey) 
+join     supplier s1 on (lo_suppkey = s1.s_suppkey) 
+where lo_orderkey > 0  and (c1.c_nation is null or  c1.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','GERMANY','ROMANIA'))
+and (p4_um.p_category is null or  p4_um.p_category <= 'MFGR#13')
+and (c3_um.c_region is null or  c3_um.c_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (s2.s_city is null or  s2.s_city in ('ALGERIA  0','ALGERIA  1','ALGERIA  2','GERMANY  0','GERMANY  1','UNITED KI2','UNITED KI3'))
+and (p1.p_mfgr <= 'MFGR#1' or p1.p_mfgr is null) and (p1.p_size <= 3 or p1.p_size is null)  and (d2.d_year is null or  d2.d_year = 1994)
+and (p3.p_category is null or  p3.p_category <= 'MFGR#13')
+and (c2_um.c_nation is null or  c2_um.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','INDONESIA','GERMANY','ROMANIA'))
+and (s1.s_region is null or  s1.s_region in ('EUROPE','MIDDLE EAST','ASIA'))
+group by 1,2 order by 1,2 limit 10;
+c_city	p_brand1	count(*)
+GERMANY  3	MFGR#1311	1
+GERMANY  9	MFGR#1316	1
+IRAQ     0	MFGR#119	1
+IRAQ     0	MFGR#1240	1
+IRAQ     1	MFGR#119	1
+IRAQ     2	MFGR#1126	1
+IRAQ     2	MFGR#1320	1
+IRAQ     5	MFGR#1111	1
+IRAQ     5	MFGR#119	1
+IRAQ     6	MFGR#1331	1
+select  c2_um.c_nation ,  s1.s_region ,  count(*)
+from  lineorder 
+left  join     customer c2_um on (lo_custkey = c2_um.c_custkey) 
+left  join     supplier s1 on (lo_suppkey = s1.s_suppkey) 
+left  join     customer c4 on (lo_custkey = c4.c_custkey) 
+join     dateinfo d1 on (lo_orderdate = d1.d_datekey) 
+right  join     part p2_um on (lo_partkey = p2_um.p_partkey) 
+left  join     customer c1 on (lo_custkey = c1.c_custkey) 
+join     part p4_um on (lo_partkey = p4_um.p_partkey) 
+right  join     customer c3_um on (lo_custkey = c3_um.c_custkey) 
+left  join     supplier s2 on (lo_suppkey = s2.s_suppkey) 
+where lo_orderkey > 0  and (c2_um.c_nation is null or  c2_um.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','INDONESIA','GERMANY','ROMANIA'))
+and (s1.s_region is null or  s1.s_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (c4.c_region is null or  c4.c_region in ('EUROPE'))
+and (d1.d_yearmonth is null or  d1.d_yearmonth in ('Jan1994','Feb1994','Mar1994','Apr1994'))
+and (p2_um.p_mfgr <= 'MFGR#1' or p2_um.p_mfgr is null) and (p2_um.p_size <= 3 or p2_um.p_size is null)  and (c1.c_nation is null or  c1.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','GERMANY','ROMANIA'))
+and (p4_um.p_category is null or  p4_um.p_category <= 'MFGR#13')
+and (c3_um.c_region is null or  c3_um.c_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (s2.s_city is null or  s2.s_city in ('ALGERIA  0','ALGERIA  1','ALGERIA  2','GERMANY  0','GERMANY  1','UNITED KI2','UNITED KI3'))
+group by 1,2 order by 1,2 limit 10;
+c_nation	s_region	count(*)
+select  c3_um.c_region ,  s2.s_city ,  count(*)
+from  lineorder 
+right  join     customer c3_um on (lo_custkey = c3_um.c_custkey) 
+join     supplier s2 on (lo_suppkey = s2.s_suppkey) 
+left  join     part p1 on (lo_partkey = p1.p_partkey) 
+right  join     dateinfo d2 on (lo_orderdate = d2.d_datekey) 
+left  join     part p3 on (lo_partkey = p3.p_partkey) 
+left  join     customer c2_um on (lo_custkey = c2_um.c_custkey) 
+left  join     supplier s1 on (lo_suppkey = s1.s_suppkey) 
+join     customer c4 on (lo_custkey = c4.c_custkey) 
+join     dateinfo d1 on (lo_orderdate = d1.d_datekey) 
+where lo_orderkey > 0  and (c3_um.c_region is null or  c3_um.c_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (s2.s_city is null or  s2.s_city in ('ALGERIA  0','ALGERIA  1','ALGERIA  2','GERMANY  0','GERMANY  1','UNITED KI2','UNITED KI3'))
+and (p1.p_mfgr <= 'MFGR#1' or p1.p_mfgr is null) and (p1.p_size <= 3 or p1.p_size is null)  and (d2.d_year is null or  d2.d_year = 1994)
+and (p3.p_category is null or  p3.p_category <= 'MFGR#13')
+and (c2_um.c_nation is null or  c2_um.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','INDONESIA','GERMANY','ROMANIA'))
+and (s1.s_region is null or  s1.s_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (c4.c_region is null or  c4.c_region in ('EUROPE'))
+and (d1.d_yearmonth is null or  d1.d_yearmonth in ('Jan1994','Feb1994','Mar1994','Apr1994'))
+group by 1,2 order by 1,2 limit 10;
+c_region	s_city	count(*)
+select  c4.c_city ,  d1.d_year ,  count(*)
+from  lineorder 
+right  join     customer c4 on (lo_custkey = c4.c_custkey) 
+right  join     dateinfo d1 on (lo_orderdate = d1.d_datekey) 
+left  join     part p2_um on (lo_partkey = p2_um.p_partkey) 
+left  join     customer c1 on (lo_custkey = c1.c_custkey) 
+left  join     part p4_um on (lo_partkey = p4_um.p_partkey) 
+left  join     customer c3_um on (lo_custkey = c3_um.c_custkey) 
+join     supplier s2 on (lo_suppkey = s2.s_suppkey) 
+left  join     part p1 on (lo_partkey = p1.p_partkey) 
+left  join     dateinfo d2 on (lo_orderdate = d2.d_datekey) 
+where lo_orderkey > 0  and (c4.c_region is null or  c4.c_region in ('EUROPE'))
+and (d1.d_yearmonth is null or  d1.d_yearmonth in ('Jan1994','Feb1994','Mar1994','Apr1994'))
+and (p2_um.p_mfgr <= 'MFGR#1' or p2_um.p_mfgr is null) and (p2_um.p_size <= 3 or p2_um.p_size is null)  and (c1.c_nation is null or  c1.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','GERMANY','ROMANIA'))
+and (p4_um.p_category is null or  p4_um.p_category <= 'MFGR#13')
+and (c3_um.c_region is null or  c3_um.c_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (s2.s_city is null or  s2.s_city in ('ALGERIA  0','ALGERIA  1','ALGERIA  2','GERMANY  0','GERMANY  1','UNITED KI2','UNITED KI3'))
+and (p1.p_mfgr <= 'MFGR#1' or p1.p_mfgr is null) and (p1.p_size <= 3 or p1.p_size is null)  and (d2.d_year is null or  d2.d_year = 1994)
+group by 1,2 order by 1,2 limit 10;
+c_city	d_year	count(*)
+GERMANY  1	1994	1
+GERMANY  3	1994	1
+ROMANIA  0	1994	1
+ROMANIA  8	1994	1
+RUSSIA   1	1994	1
+select  p1.p_brand1 ,  d2.d_yearmonthnum ,  count(*)
+from  lineorder 
+right  join     part p1 on (lo_partkey = p1.p_partkey) 
+right  join     dateinfo d2 on (lo_orderdate = d2.d_datekey) 
+right  join     part p3 on (lo_partkey = p3.p_partkey) 
+left  join     customer c2_um on (lo_custkey = c2_um.c_custkey) 
+join     supplier s1 on (lo_suppkey = s1.s_suppkey) 
+right  join     customer c4 on (lo_custkey = c4.c_custkey) 
+right  join     dateinfo d1 on (lo_orderdate = d1.d_datekey) 
+join     part p2_um on (lo_partkey = p2_um.p_partkey) 
+left  join     customer c1 on (lo_custkey = c1.c_custkey) 
+where lo_orderkey > 0  and (p1.p_mfgr <= 'MFGR#1' or p1.p_mfgr is null) and (p1.p_size <= 3 or p1.p_size is null)  and (d2.d_year is null or  d2.d_year = 1994)
+and (p3.p_category is null or  p3.p_category <= 'MFGR#13')
+and (c2_um.c_nation is null or  c2_um.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','INDONESIA','GERMANY','ROMANIA'))
+and (s1.s_region is null or  s1.s_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (c4.c_region is null or  c4.c_region in ('EUROPE'))
+and (d1.d_yearmonth is null or  d1.d_yearmonth in ('Jan1994','Feb1994','Mar1994','Apr1994'))
+and (p2_um.p_mfgr <= 'MFGR#1' or p2_um.p_mfgr is null) and (p2_um.p_size <= 3 or p2_um.p_size is null)  and (c1.c_nation is null or  c1.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','GERMANY','ROMANIA'))
+group by 1,2 order by 1,2 limit 10;
+p_brand1	d_yearmonthnum	count(*)
+MFGR#111	199403	1
+MFGR#1114	199402	2
+MFGR#1114	199404	1
+MFGR#1116	199401	1
+MFGR#1116	199403	1
+MFGR#1116	199404	1
+MFGR#1117	199401	1
+MFGR#1117	199402	1
+MFGR#1119	199403	1
+MFGR#112	199401	2
+select  p2_um.p_color ,  c1.c_city ,  count(*)
+from  lineorder 
+right  join     part p2_um on (lo_partkey = p2_um.p_partkey) 
+join     customer c1 on (lo_custkey = c1.c_custkey) 
+join     part p4_um on (lo_partkey = p4_um.p_partkey) 
+left  join     customer c3_um on (lo_custkey = c3_um.c_custkey) 
+join     supplier s2 on (lo_suppkey = s2.s_suppkey) 
+right  join     part p1 on (lo_partkey = p1.p_partkey) 
+right  join     dateinfo d2 on (lo_orderdate = d2.d_datekey) 
+left  join     part p3 on (lo_partkey = p3.p_partkey) 
+left  join     customer c2_um on (lo_custkey = c2_um.c_custkey) 
+where lo_orderkey > 0  and (p2_um.p_mfgr <= 'MFGR#1' or p2_um.p_mfgr is null) and (p2_um.p_size <= 3 or p2_um.p_size is null)  and (c1.c_nation is null or  c1.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','GERMANY','ROMANIA'))
+and (p4_um.p_category is null or  p4_um.p_category <= 'MFGR#13')
+and (c3_um.c_region is null or  c3_um.c_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (s2.s_city is null or  s2.s_city in ('ALGERIA  0','ALGERIA  1','ALGERIA  2','GERMANY  0','GERMANY  1','UNITED KI2','UNITED KI3'))
+and (p1.p_mfgr <= 'MFGR#1' or p1.p_mfgr is null) and (p1.p_size <= 3 or p1.p_size is null)  and (d2.d_year is null or  d2.d_year = 1994)
+and (p3.p_category is null or  p3.p_category <= 'MFGR#13')
+and (c2_um.c_nation is null or  c2_um.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','INDONESIA','GERMANY','ROMANIA'))
+group by 1,2 order by 1,2 limit 10;
+p_color	c_city	count(*)
+almond	IRAQ     1	1
+bisque	RUSSIA   0	1
+blanched	IRAQ     8	1
+blue	GERMANY  3	1
+brown	EGYPT    0	1
+brown	GERMANY  1	1
+burnished	RUSSIA   8	1
+coral	EGYPT    2	1
+cornflower	JAPAN    4	1
+dark	ROMANIA  8	1
+select  p3.p_category ,  c2_um.c_nation ,  count(*)
+from  lineorder 
+right  join     part p3 on (lo_partkey = p3.p_partkey) 
+right  join     customer c2_um on (lo_custkey = c2_um.c_custkey) 
+right  join     supplier s1 on (lo_suppkey = s1.s_suppkey) 
+join     customer c4 on (lo_custkey = c4.c_custkey) 
+left  join     dateinfo d1 on (lo_orderdate = d1.d_datekey) 
+left  join     part p2_um on (lo_partkey = p2_um.p_partkey) 
+right  join     customer c1 on (lo_custkey = c1.c_custkey) 
+join     part p4_um on (lo_partkey = p4_um.p_partkey) 
+join     customer c3_um on (lo_custkey = c3_um.c_custkey) 
+where lo_orderkey > 0  and (p3.p_category is null or  p3.p_category <= 'MFGR#13')
+and (c2_um.c_nation is null or  c2_um.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','INDONESIA','GERMANY','ROMANIA'))
+and (s1.s_region is null or  s1.s_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (c4.c_region is null or  c4.c_region in ('EUROPE'))
+and (d1.d_yearmonth is null or  d1.d_yearmonth in ('Jan1994','Feb1994','Mar1994','Apr1994'))
+and (p2_um.p_mfgr <= 'MFGR#1' or p2_um.p_mfgr is null) and (p2_um.p_size <= 3 or p2_um.p_size is null)  and (c1.c_nation is null or  c1.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','GERMANY','ROMANIA'))
+and (p4_um.p_category is null or  p4_um.p_category <= 'MFGR#13')
+and (c3_um.c_region is null or  c3_um.c_region in ('EUROPE','MIDDLE EAST','ASIA'))
+group by 1,2 order by 1,2 limit 10;
+p_category	c_nation	count(*)
+MFGR#11	GERMANY	14
+MFGR#11	ROMANIA	24
+MFGR#11	RUSSIA	21
+MFGR#12	GERMANY	20
+MFGR#12	ROMANIA	31
+MFGR#12	RUSSIA	16
+MFGR#13	GERMANY	22
+MFGR#13	ROMANIA	11
+MFGR#13	RUSSIA	13
+select  p4_um.p_brand1 ,  c3_um.c_region ,  count(*)
+from  lineorder 
+left  join     part p4_um on (lo_partkey = p4_um.p_partkey) 
+join     customer c3_um on (lo_custkey = c3_um.c_custkey) 
+join     supplier s2 on (lo_suppkey = s2.s_suppkey) 
+left  join     part p1 on (lo_partkey = p1.p_partkey) 
+right  join     dateinfo d2 on (lo_orderdate = d2.d_datekey) 
+left  join     part p3 on (lo_partkey = p3.p_partkey) 
+right  join     customer c2_um on (lo_custkey = c2_um.c_custkey) 
+left  join     supplier s1 on (lo_suppkey = s1.s_suppkey) 
+left  join     customer c4 on (lo_custkey = c4.c_custkey) 
+where lo_orderkey > 0  and (p4_um.p_category is null or  p4_um.p_category <= 'MFGR#13')
+and (c3_um.c_region is null or  c3_um.c_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (s2.s_city is null or  s2.s_city in ('ALGERIA  0','ALGERIA  1','ALGERIA  2','GERMANY  0','GERMANY  1','UNITED KI2','UNITED KI3'))
+and (p1.p_mfgr <= 'MFGR#1' or p1.p_mfgr is null) and (p1.p_size <= 3 or p1.p_size is null)  and (d2.d_year is null or  d2.d_year = 1994)
+and (p3.p_category is null or  p3.p_category <= 'MFGR#13')
+and (c2_um.c_nation is null or  c2_um.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','INDONESIA','GERMANY','ROMANIA'))
+and (s1.s_region is null or  s1.s_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (c4.c_region is null or  c4.c_region in ('EUROPE'))
+group by 1,2 order by 1,2 limit 10;
+p_brand1	c_region	count(*)
+MFGR#1120	EUROPE	1
+MFGR#1123	EUROPE	1
+MFGR#1240	EUROPE	1
+MFGR#1311	EUROPE	1
+MFGR#1314	EUROPE	1
+MFGR#1316	EUROPE	1
+select  s1.s_region ,  c4.c_city ,  count(*)
+from  lineorder 
+left  join     supplier s1 on (lo_suppkey = s1.s_suppkey) 
+left  join     customer c4 on (lo_custkey = c4.c_custkey) 
+join     dateinfo d1 on (lo_orderdate = d1.d_datekey) 
+left  join     part p2_um on (lo_partkey = p2_um.p_partkey) 
+right  join     customer c1 on (lo_custkey = c1.c_custkey) 
+join     part p4_um on (lo_partkey = p4_um.p_partkey) 
+right  join     customer c3_um on (lo_custkey = c3_um.c_custkey) 
+join     supplier s2 on (lo_suppkey = s2.s_suppkey) 
+right  join     part p1 on (lo_partkey = p1.p_partkey) 
+where lo_orderkey > 0  and (s1.s_region is null or  s1.s_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (c4.c_region is null or  c4.c_region in ('EUROPE'))
+and (d1.d_yearmonth is null or  d1.d_yearmonth in ('Jan1994','Feb1994','Mar1994','Apr1994'))
+and (p2_um.p_mfgr <= 'MFGR#1' or p2_um.p_mfgr is null) and (p2_um.p_size <= 3 or p2_um.p_size is null)  and (c1.c_nation is null or  c1.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','GERMANY','ROMANIA'))
+and (p4_um.p_category is null or  p4_um.p_category <= 'MFGR#13')
+and (c3_um.c_region is null or  c3_um.c_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (s2.s_city is null or  s2.s_city in ('ALGERIA  0','ALGERIA  1','ALGERIA  2','GERMANY  0','GERMANY  1','UNITED KI2','UNITED KI3'))
+and (p1.p_mfgr <= 'MFGR#1' or p1.p_mfgr is null) and (p1.p_size <= 3 or p1.p_size is null) group by 1,2 order by 1,2 limit 10;
+s_region	c_city	count(*)
+select  s2.s_city ,  p1.p_brand1 ,  count(*)
+from  lineorder 
+right  join     supplier s2 on (lo_suppkey = s2.s_suppkey) 
+left  join     part p1 on (lo_partkey = p1.p_partkey) 
+join     dateinfo d2 on (lo_orderdate = d2.d_datekey) 
+join     part p3 on (lo_partkey = p3.p_partkey) 
+left  join     customer c2_um on (lo_custkey = c2_um.c_custkey) 
+left  join     supplier s1 on (lo_suppkey = s1.s_suppkey) 
+join     customer c4 on (lo_custkey = c4.c_custkey) 
+right  join     dateinfo d1 on (lo_orderdate = d1.d_datekey) 
+left  join     part p2_um on (lo_partkey = p2_um.p_partkey) 
+where lo_orderkey > 0  and (s2.s_city is null or  s2.s_city in ('ALGERIA  0','ALGERIA  1','ALGERIA  2','GERMANY  0','GERMANY  1','UNITED KI2','UNITED KI3'))
+and (p1.p_mfgr <= 'MFGR#1' or p1.p_mfgr is null) and (p1.p_size <= 3 or p1.p_size is null)  and (d2.d_year is null or  d2.d_year = 1994)
+and (p3.p_category is null or  p3.p_category <= 'MFGR#13')
+and (c2_um.c_nation is null or  c2_um.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','INDONESIA','GERMANY','ROMANIA'))
+and (s1.s_region is null or  s1.s_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (c4.c_region is null or  c4.c_region in ('EUROPE'))
+and (d1.d_yearmonth is null or  d1.d_yearmonth in ('Jan1994','Feb1994','Mar1994','Apr1994'))
+and (p2_um.p_mfgr <= 'MFGR#1' or p2_um.p_mfgr is null) and (p2_um.p_size <= 3 or p2_um.p_size is null) group by 1,2 order by 1,2 limit 10;
+s_city	p_brand1	count(*)
+select  d1.d_year ,  c4.c_city ,  count(*)
+from  lineorder 
+join     dateinfo d1 on (lo_orderdate = d1.d_datekey) 
+left  join     customer c4 on (lo_custkey = c4.c_custkey) 
+right  join     supplier s1 on (lo_suppkey = s1.s_suppkey) 
+left  join     customer c2_um on (lo_custkey = c2_um.c_custkey) 
+left  join     part p3 on (lo_partkey = p3.p_partkey) 
+right  join     dateinfo d2 on (lo_orderdate = d2.d_datekey) 
+right  join     part p1 on (lo_partkey = p1.p_partkey) 
+left  join     supplier s2 on (lo_suppkey = s2.s_suppkey) 
+join     customer c3_um on (lo_custkey = c3_um.c_custkey) 
+where lo_orderkey > 0  and (d1.d_yearmonth is null or  d1.d_yearmonth in ('Jan1994','Feb1994','Mar1994','Apr1994'))
+and (c4.c_region is null or  c4.c_region in ('EUROPE'))
+and (s1.s_region is null or  s1.s_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (c2_um.c_nation is null or  c2_um.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','INDONESIA','GERMANY','ROMANIA'))
+and (p3.p_category is null or  p3.p_category <= 'MFGR#13')
+and (d2.d_year is null or  d2.d_year = 1994)
+and (p1.p_mfgr <= 'MFGR#1' or p1.p_mfgr is null) and (p1.p_size <= 3 or p1.p_size is null)  and (s2.s_city is null or  s2.s_city in ('ALGERIA  0','ALGERIA  1','ALGERIA  2','GERMANY  0','GERMANY  1','UNITED KI2','UNITED KI3'))
+and (c3_um.c_region is null or  c3_um.c_region in ('EUROPE','MIDDLE EAST','ASIA'))
+group by 1,2 order by 1,2 limit 10;
+d_year	c_city	count(*)
+select  d2.d_yearmonthnum ,  p1.p_brand1 ,  count(*)
+from  lineorder 
+left  join     dateinfo d2 on (lo_orderdate = d2.d_datekey) 
+join     part p1 on (lo_partkey = p1.p_partkey) 
+join     supplier s2 on (lo_suppkey = s2.s_suppkey) 
+left  join     customer c3_um on (lo_custkey = c3_um.c_custkey) 
+left  join     part p4_um on (lo_partkey = p4_um.p_partkey) 
+right  join     customer c1 on (lo_custkey = c1.c_custkey) 
+right  join     part p2_um on (lo_partkey = p2_um.p_partkey) 
+right  join     dateinfo d1 on (lo_orderdate = d1.d_datekey) 
+left  join     customer c4 on (lo_custkey = c4.c_custkey) 
+where lo_orderkey > 0  and (d2.d_year is null or  d2.d_year = 1994)
+and (p1.p_mfgr <= 'MFGR#1' or p1.p_mfgr is null) and (p1.p_size <= 3 or p1.p_size is null)  and (s2.s_city is null or  s2.s_city in ('ALGERIA  0','ALGERIA  1','ALGERIA  2','GERMANY  0','GERMANY  1','UNITED KI2','UNITED KI3'))
+and (c3_um.c_region is null or  c3_um.c_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (p4_um.p_category is null or  p4_um.p_category <= 'MFGR#13')
+and (c1.c_nation is null or  c1.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','GERMANY','ROMANIA'))
+and (p2_um.p_mfgr <= 'MFGR#1' or p2_um.p_mfgr is null) and (p2_um.p_size <= 3 or p2_um.p_size is null)  and (d1.d_yearmonth is null or  d1.d_yearmonth in ('Jan1994','Feb1994','Mar1994','Apr1994'))
+and (c4.c_region is null or  c4.c_region in ('EUROPE'))
+group by 1,2 order by 1,2 limit 10;
+d_yearmonthnum	p_brand1	count(*)
+199401	MFGR#124	1
+199401	MFGR#1331	1
+199402	MFGR#117	1
+199402	MFGR#1225	1
+199403	MFGR#1234	1
+select  c1.c_city ,  p2_um.p_color ,  count(*)
+from  lineorder 
+join     customer c1 on (lo_custkey = c1.c_custkey) 
+right  join     part p2_um on (lo_partkey = p2_um.p_partkey) 
+join     dateinfo d1 on (lo_orderdate = d1.d_datekey) 
+join     customer c4 on (lo_custkey = c4.c_custkey) 
+join     supplier s1 on (lo_suppkey = s1.s_suppkey) 
+left  join     customer c2_um on (lo_custkey = c2_um.c_custkey) 
+join     part p3 on (lo_partkey = p3.p_partkey) 
+right  join     dateinfo d2 on (lo_orderdate = d2.d_datekey) 
+join     part p1 on (lo_partkey = p1.p_partkey) 
+where lo_orderkey > 0  and (c1.c_nation is null or  c1.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','GERMANY','ROMANIA'))
+and (p2_um.p_mfgr <= 'MFGR#1' or p2_um.p_mfgr is null) and (p2_um.p_size <= 3 or p2_um.p_size is null)  and (d1.d_yearmonth is null or  d1.d_yearmonth in ('Jan1994','Feb1994','Mar1994','Apr1994'))
+and (c4.c_region is null or  c4.c_region in ('EUROPE'))
+and (s1.s_region is null or  s1.s_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (c2_um.c_nation is null or  c2_um.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','INDONESIA','GERMANY','ROMANIA'))
+and (p3.p_category is null or  p3.p_category <= 'MFGR#13')
+and (d2.d_year is null or  d2.d_year = 1994)
+and (p1.p_mfgr <= 'MFGR#1' or p1.p_mfgr is null) and (p1.p_size <= 3 or p1.p_size is null) group by 1,2 order by 1,2 limit 10;
+c_city	p_color	count(*)
+GERMANY  0	brown	1
+GERMANY  0	goldenrod	1
+GERMANY  0	light	1
+GERMANY  0	purple	1
+GERMANY  1	aquamarine	1
+GERMANY  1	cornflower	1
+GERMANY  1	dodger	1
+GERMANY  1	goldenrod	1
+GERMANY  1	lavender	1
+GERMANY  1	lawn	1
+select  c2_um.c_nation ,  p3.p_category ,  count(*)
+from  lineorder 
+left  join     customer c2_um on (lo_custkey = c2_um.c_custkey) 
+join     part p3 on (lo_partkey = p3.p_partkey) 
+join     dateinfo d2 on (lo_orderdate = d2.d_datekey) 
+left  join     part p1 on (lo_partkey = p1.p_partkey) 
+join     supplier s2 on (lo_suppkey = s2.s_suppkey) 
+left  join     customer c3_um on (lo_custkey = c3_um.c_custkey) 
+join     part p4_um on (lo_partkey = p4_um.p_partkey) 
+join     customer c1 on (lo_custkey = c1.c_custkey) 
+left  join     part p2_um on (lo_partkey = p2_um.p_partkey) 
+where lo_orderkey > 0  and (c2_um.c_nation is null or  c2_um.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','INDONESIA','GERMANY','ROMANIA'))
+and (p3.p_category is null or  p3.p_category <= 'MFGR#13')
+and (d2.d_year is null or  d2.d_year = 1994)
+and (p1.p_mfgr <= 'MFGR#1' or p1.p_mfgr is null) and (p1.p_size <= 3 or p1.p_size is null)  and (s2.s_city is null or  s2.s_city in ('ALGERIA  0','ALGERIA  1','ALGERIA  2','GERMANY  0','GERMANY  1','UNITED KI2','UNITED KI3'))
+and (c3_um.c_region is null or  c3_um.c_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (p4_um.p_category is null or  p4_um.p_category <= 'MFGR#13')
+and (c1.c_nation is null or  c1.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','GERMANY','ROMANIA'))
+and (p2_um.p_mfgr <= 'MFGR#1' or p2_um.p_mfgr is null) and (p2_um.p_size <= 3 or p2_um.p_size is null) group by 1,2 order by 1,2 limit 10;
+c_nation	p_category	count(*)
+EGYPT	MFGR#11	2
+EGYPT	MFGR#12	2
+EGYPT	MFGR#13	1
+GERMANY	MFGR#12	3
+GERMANY	MFGR#13	5
+IRAQ	MFGR#11	7
+IRAQ	MFGR#12	1
+IRAQ	MFGR#13	4
+JAPAN	MFGR#11	1
+JAPAN	MFGR#12	2
+select  c3_um.c_region ,  p4_um.p_brand1 ,  count(*)
+from  lineorder 
+right  join     customer c3_um on (lo_custkey = c3_um.c_custkey) 
+right  join     part p4_um on (lo_partkey = p4_um.p_partkey) 
+join     customer c1 on (lo_custkey = c1.c_custkey) 
+join     part p2_um on (lo_partkey = p2_um.p_partkey) 
+left  join     dateinfo d1 on (lo_orderdate = d1.d_datekey) 
+left  join     customer c4 on (lo_custkey = c4.c_custkey) 
+left  join     supplier s1 on (lo_suppkey = s1.s_suppkey) 
+join     customer c2_um on (lo_custkey = c2_um.c_custkey) 
+join     part p3 on (lo_partkey = p3.p_partkey) 
+where lo_orderkey > 0  and (c3_um.c_region is null or  c3_um.c_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (p4_um.p_category is null or  p4_um.p_category <= 'MFGR#13')
+and (c1.c_nation is null or  c1.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','GERMANY','ROMANIA'))
+and (p2_um.p_mfgr <= 'MFGR#1' or p2_um.p_mfgr is null) and (p2_um.p_size <= 3 or p2_um.p_size is null)  and (d1.d_yearmonth is null or  d1.d_yearmonth in ('Jan1994','Feb1994','Mar1994','Apr1994'))
+and (c4.c_region is null or  c4.c_region in ('EUROPE'))
+and (s1.s_region is null or  s1.s_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (c2_um.c_nation is null or  c2_um.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','INDONESIA','GERMANY','ROMANIA'))
+and (p3.p_category is null or  p3.p_category <= 'MFGR#13')
+group by 1,2 order by 1,2 limit 10;
+c_region	p_brand1	count(*)
+EUROPE	MFGR#111	1
+EUROPE	MFGR#1114	3
+EUROPE	MFGR#1116	3
+EUROPE	MFGR#1117	2
+EUROPE	MFGR#1119	1
+EUROPE	MFGR#112	3
+EUROPE	MFGR#1120	3
+EUROPE	MFGR#1121	1
+EUROPE	MFGR#1122	3
+EUROPE	MFGR#1123	1
+select  c4.c_city ,  s1.s_region ,  count(*)
+from  lineorder 
+right  join     customer c4 on (lo_custkey = c4.c_custkey) 
+join     supplier s1 on (lo_suppkey = s1.s_suppkey) 
+right  join     customer c2_um on (lo_custkey = c2_um.c_custkey) 
+right  join     part p3 on (lo_partkey = p3.p_partkey) 
+right  join     dateinfo d2 on (lo_orderdate = d2.d_datekey) 
+left  join     part p1 on (lo_partkey = p1.p_partkey) 
+right  join     supplier s2 on (lo_suppkey = s2.s_suppkey) 
+join     customer c3_um on (lo_custkey = c3_um.c_custkey) 
+join     part p4_um on (lo_partkey = p4_um.p_partkey) 
+where lo_orderkey > 0  and (c4.c_region is null or  c4.c_region in ('EUROPE'))
+and (s1.s_region is null or  s1.s_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (c2_um.c_nation is null or  c2_um.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','INDONESIA','GERMANY','ROMANIA'))
+and (p3.p_category is null or  p3.p_category <= 'MFGR#13')
+and (d2.d_year is null or  d2.d_year = 1994)
+and (p1.p_mfgr <= 'MFGR#1' or p1.p_mfgr is null) and (p1.p_size <= 3 or p1.p_size is null)  and (s2.s_city is null or  s2.s_city in ('ALGERIA  0','ALGERIA  1','ALGERIA  2','GERMANY  0','GERMANY  1','UNITED KI2','UNITED KI3'))
+and (c3_um.c_region is null or  c3_um.c_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (p4_um.p_category is null or  p4_um.p_category <= 'MFGR#13')
+group by 1,2 order by 1,2 limit 10;
+c_city	s_region	count(*)
+GERMANY  3	EUROPE	1
+GERMANY  9	EUROPE	1
+ROMANIA  2	EUROPE	1
+ROMANIA  7	EUROPE	1
+ROMANIA  8	EUROPE	1
+RUSSIA   4	EUROPE	1
+select  p1.p_brand1 ,  s2.s_city ,  count(*)
+from  lineorder 
+right  join     part p1 on (lo_partkey = p1.p_partkey) 
+join     supplier s2 on (lo_suppkey = s2.s_suppkey) 
+left  join     customer c3_um on (lo_custkey = c3_um.c_custkey) 
+right  join     part p4_um on (lo_partkey = p4_um.p_partkey) 
+right  join     customer c1 on (lo_custkey = c1.c_custkey) 
+left  join     part p2_um on (lo_partkey = p2_um.p_partkey) 
+join     dateinfo d1 on (lo_orderdate = d1.d_datekey) 
+left  join     customer c4 on (lo_custkey = c4.c_custkey) 
+join     supplier s1 on (lo_suppkey = s1.s_suppkey) 
+where lo_orderkey > 0  and (p1.p_mfgr <= 'MFGR#1' or p1.p_mfgr is null) and (p1.p_size <= 3 or p1.p_size is null)  and (s2.s_city is null or  s2.s_city in ('ALGERIA  0','ALGERIA  1','ALGERIA  2','GERMANY  0','GERMANY  1','UNITED KI2','UNITED KI3'))
+and (c3_um.c_region is null or  c3_um.c_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (p4_um.p_category is null or  p4_um.p_category <= 'MFGR#13')
+and (c1.c_nation is null or  c1.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','GERMANY','ROMANIA'))
+and (p2_um.p_mfgr <= 'MFGR#1' or p2_um.p_mfgr is null) and (p2_um.p_size <= 3 or p2_um.p_size is null)  and (d1.d_yearmonth is null or  d1.d_yearmonth in ('Jan1994','Feb1994','Mar1994','Apr1994'))
+and (c4.c_region is null or  c4.c_region in ('EUROPE'))
+and (s1.s_region is null or  s1.s_region in ('EUROPE','MIDDLE EAST','ASIA'))
+group by 1,2 order by 1,2 limit 10;
+p_brand1	s_city	count(*)
+select  p2_um.p_color ,  d1.d_year ,  count(*)
+from  lineorder 
+right  join     part p2_um on (lo_partkey = p2_um.p_partkey) 
+join     dateinfo d1 on (lo_orderdate = d1.d_datekey) 
+left  join     customer c4 on (lo_custkey = c4.c_custkey) 
+join     supplier s1 on (lo_suppkey = s1.s_suppkey) 
+left  join     customer c2_um on (lo_custkey = c2_um.c_custkey) 
+join     part p3 on (lo_partkey = p3.p_partkey) 
+right  join     dateinfo d2 on (lo_orderdate = d2.d_datekey) 
+left  join     part p1 on (lo_partkey = p1.p_partkey) 
+left  join     supplier s2 on (lo_suppkey = s2.s_suppkey) 
+where lo_orderkey > 0  and (p2_um.p_mfgr <= 'MFGR#1' or p2_um.p_mfgr is null) and (p2_um.p_size <= 3 or p2_um.p_size is null)  and (d1.d_yearmonth is null or  d1.d_yearmonth in ('Jan1994','Feb1994','Mar1994','Apr1994'))
+and (c4.c_region is null or  c4.c_region in ('EUROPE'))
+and (s1.s_region is null or  s1.s_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (c2_um.c_nation is null or  c2_um.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','INDONESIA','GERMANY','ROMANIA'))
+and (p3.p_category is null or  p3.p_category <= 'MFGR#13')
+and (d2.d_year is null or  d2.d_year = 1994)
+and (p1.p_mfgr <= 'MFGR#1' or p1.p_mfgr is null) and (p1.p_size <= 3 or p1.p_size is null)  and (s2.s_city is null or  s2.s_city in ('ALGERIA  0','ALGERIA  1','ALGERIA  2','GERMANY  0','GERMANY  1','UNITED KI2','UNITED KI3'))
+group by 1,2 order by 1,2 limit 10;
+p_color	d_year	count(*)
+select  p3.p_category ,  d2.d_yearmonthnum ,  count(*)
+from  lineorder 
+right  join     part p3 on (lo_partkey = p3.p_partkey) 
+left  join     dateinfo d2 on (lo_orderdate = d2.d_datekey) 
+left  join     part p1 on (lo_partkey = p1.p_partkey) 
+join     supplier s2 on (lo_suppkey = s2.s_suppkey) 
+left  join     customer c3_um on (lo_custkey = c3_um.c_custkey) 
+left  join     part p4_um on (lo_partkey = p4_um.p_partkey) 
+right  join     customer c1 on (lo_custkey = c1.c_custkey) 
+join     part p2_um on (lo_partkey = p2_um.p_partkey) 
+join     dateinfo d1 on (lo_orderdate = d1.d_datekey) 
+where lo_orderkey > 0  and (p3.p_category is null or  p3.p_category <= 'MFGR#13')
+and (d2.d_year is null or  d2.d_year = 1994)
+and (p1.p_mfgr <= 'MFGR#1' or p1.p_mfgr is null) and (p1.p_size <= 3 or p1.p_size is null)  and (s2.s_city is null or  s2.s_city in ('ALGERIA  0','ALGERIA  1','ALGERIA  2','GERMANY  0','GERMANY  1','UNITED KI2','UNITED KI3'))
+and (c3_um.c_region is null or  c3_um.c_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (p4_um.p_category is null or  p4_um.p_category <= 'MFGR#13')
+and (c1.c_nation is null or  c1.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','GERMANY','ROMANIA'))
+and (p2_um.p_mfgr <= 'MFGR#1' or p2_um.p_mfgr is null) and (p2_um.p_size <= 3 or p2_um.p_size is null)  and (d1.d_yearmonth is null or  d1.d_yearmonth in ('Jan1994','Feb1994','Mar1994','Apr1994'))
+group by 1,2 order by 1,2 limit 10;
+p_category	d_yearmonthnum	count(*)
+MFGR#11	199401	1
+MFGR#11	199402	2
+MFGR#11	199403	1
+MFGR#12	199401	1
+MFGR#12	199402	1
+MFGR#12	199403	2
+MFGR#13	199401	1
+MFGR#13	199403	1
+MFGR#13	199404	1
+select  p4_um.p_brand1 ,  c1.c_city ,  count(*)
+from  lineorder 
+join     part p4_um on (lo_partkey = p4_um.p_partkey) 
+left  join     customer c1 on (lo_custkey = c1.c_custkey) 
+left  join     part p2_um on (lo_partkey = p2_um.p_partkey) 
+join     dateinfo d1 on (lo_orderdate = d1.d_datekey) 
+join     customer c4 on (lo_custkey = c4.c_custkey) 
+right  join     supplier s1 on (lo_suppkey = s1.s_suppkey) 
+right  join     customer c2_um on (lo_custkey = c2_um.c_custkey) 
+left  join     part p3 on (lo_partkey = p3.p_partkey) 
+left  join     dateinfo d2 on (lo_orderdate = d2.d_datekey) 
+where lo_orderkey > 0  and (p4_um.p_category is null or  p4_um.p_category <= 'MFGR#13')
+and (c1.c_nation is null or  c1.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','GERMANY','ROMANIA'))
+and (p2_um.p_mfgr <= 'MFGR#1' or p2_um.p_mfgr is null) and (p2_um.p_size <= 3 or p2_um.p_size is null)  and (d1.d_yearmonth is null or  d1.d_yearmonth in ('Jan1994','Feb1994','Mar1994','Apr1994'))
+and (c4.c_region is null or  c4.c_region in ('EUROPE'))
+and (s1.s_region is null or  s1.s_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (c2_um.c_nation is null or  c2_um.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','INDONESIA','GERMANY','ROMANIA'))
+and (p3.p_category is null or  p3.p_category <= 'MFGR#13')
+and (d2.d_year is null or  d2.d_year = 1994)
+group by 1,2 order by 1,2 limit 10;
+p_brand1	c_city	count(*)
+MFGR#111	ROMANIA  4	1
+MFGR#1114	ROMANIA  4	1
+MFGR#1114	RUSSIA   2	1
+MFGR#1114	RUSSIA   7	1
+MFGR#1116	ROMANIA  0	1
+MFGR#1116	ROMANIA  2	1
+MFGR#1116	ROMANIA  4	1
+MFGR#1117	ROMANIA  0	1
+MFGR#1117	ROMANIA  2	1
+MFGR#1119	RUSSIA   7	1
+select  s1.s_region ,  c2_um.c_nation ,  count(*)
+from  lineorder 
+left  join     supplier s1 on (lo_suppkey = s1.s_suppkey) 
+join     customer c2_um on (lo_custkey = c2_um.c_custkey) 
+left  join     part p3 on (lo_partkey = p3.p_partkey) 
+join     dateinfo d2 on (lo_orderdate = d2.d_datekey) 
+left  join     part p1 on (lo_partkey = p1.p_partkey) 
+right  join     supplier s2 on (lo_suppkey = s2.s_suppkey) 
+right  join     customer c3_um on (lo_custkey = c3_um.c_custkey) 
+join     part p4_um on (lo_partkey = p4_um.p_partkey) 
+left  join     customer c1 on (lo_custkey = c1.c_custkey) 
+where lo_orderkey > 0  and (s1.s_region is null or  s1.s_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (c2_um.c_nation is null or  c2_um.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','INDONESIA','GERMANY','ROMANIA'))
+and (p3.p_category is null or  p3.p_category <= 'MFGR#13')
+and (d2.d_year is null or  d2.d_year = 1994)
+and (p1.p_mfgr <= 'MFGR#1' or p1.p_mfgr is null) and (p1.p_size <= 3 or p1.p_size is null)  and (s2.s_city is null or  s2.s_city in ('ALGERIA  0','ALGERIA  1','ALGERIA  2','GERMANY  0','GERMANY  1','UNITED KI2','UNITED KI3'))
+and (c3_um.c_region is null or  c3_um.c_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (p4_um.p_category is null or  p4_um.p_category <= 'MFGR#13')
+and (c1.c_nation is null or  c1.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','GERMANY','ROMANIA'))
+group by 1,2 order by 1,2 limit 10;
+s_region	c_nation	count(*)
+EUROPE	GERMANY	2
+EUROPE	IRAQ	8
+EUROPE	JAPAN	2
+EUROPE	ROMANIA	3
+EUROPE	RUSSIA	1
+select  s2.s_city ,  c3_um.c_region ,  count(*)
+from  lineorder 
+right  join     supplier s2 on (lo_suppkey = s2.s_suppkey) 
+right  join     customer c3_um on (lo_custkey = c3_um.c_custkey) 
+join     part p4_um on (lo_partkey = p4_um.p_partkey) 
+join     customer c1 on (lo_custkey = c1.c_custkey) 
+right  join     part p2_um on (lo_partkey = p2_um.p_partkey) 
+left  join     dateinfo d1 on (lo_orderdate = d1.d_datekey) 
+join     customer c4 on (lo_custkey = c4.c_custkey) 
+right  join     supplier s1 on (lo_suppkey = s1.s_suppkey) 
+left  join     customer c2_um on (lo_custkey = c2_um.c_custkey) 
+where lo_orderkey > 0  and (s2.s_city is null or  s2.s_city in ('ALGERIA  0','ALGERIA  1','ALGERIA  2','GERMANY  0','GERMANY  1','UNITED KI2','UNITED KI3'))
+and (c3_um.c_region is null or  c3_um.c_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (p4_um.p_category is null or  p4_um.p_category <= 'MFGR#13')
+and (c1.c_nation is null or  c1.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','GERMANY','ROMANIA'))
+and (p2_um.p_mfgr <= 'MFGR#1' or p2_um.p_mfgr is null) and (p2_um.p_size <= 3 or p2_um.p_size is null)  and (d1.d_yearmonth is null or  d1.d_yearmonth in ('Jan1994','Feb1994','Mar1994','Apr1994'))
+and (c4.c_region is null or  c4.c_region in ('EUROPE'))
+and (s1.s_region is null or  s1.s_region in ('EUROPE','MIDDLE EAST','ASIA'))
+and (c2_um.c_nation is null or  c2_um.c_nation in ('MOROCCO','RUSSIA','MOZAMBIQUE','EGYPT','JAPAN','IRAQ','BRAZIL','INDONESIA','GERMANY','ROMANIA'))
+group by 1,2 order by 1,2 limit 10;
+s_city	c_region	count(*)

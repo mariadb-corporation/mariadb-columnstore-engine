@@ -1,0 +1,13 @@
+USE tpch1;
+select count(*),max(l_quantity),max(l_extendedprice),max(l_discount),
+max(l_tax),max(l_shipinstruct),max(l_commitdate),max(l_receiptdate)
+from lineitem 
+where 		l_orderkey < 7009
+and l_suppkey < 70000
+and l_linenumber < 5
+and l_partkey < 7000
+and l_tax < 70500
+and l_extendedprice < 70500
+and l_discount < 28 ;
+count(*)	max(l_quantity)	max(l_extendedprice)	max(l_discount)	max(l_tax)	max(l_shipinstruct)	max(l_commitdate)	max(l_receiptdate)
+179	50.00	70275.00	0.10	0.08	TAKE BACK RETURN	1998-10-03	1998-09-30

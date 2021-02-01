@@ -1,0 +1,12 @@
+DROP DATABASE IF EXISTS mcs172_db;
+CREATE DATABASE mcs172_db;
+USE mcs172_db;
+SET default_storage_engine=Columnstore;
+CREATE TABLE t1 (a INT COMMENT'autoincrement');
+INSERT INTO t1 VALUES ();
+SELECT LAST_INSERT_ID();
+LAST_INSERT_ID()
+0
+SELECT LAST_INSERT_ID(a) FROM t1;
+ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'last_insert_id' isn't supported.
+DROP DATABASE mcs172_db;
