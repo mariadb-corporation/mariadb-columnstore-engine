@@ -438,7 +438,18 @@ cidx	CUBIGINT
 10	5223072036854775807
 11	5223000000000000000
 select cidx, CUSMALLINT from datatypetestm where LEAST(CUSMALLINT,CSMALLINT) <> CUSMALLINT;
-ERROR HY000: Internal error: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught  an exception originally thrown by PrimProc: 
+cidx	CUSMALLINT
+1	19234
+2	19235
+3	19236
+4	19237
+5	19238
+6	20763
+7	20764
+8	20765
+9	20766
+10	20767
+11	20000
 select cidx, CUBIGINT from datatypetestm where LEAST(CDECIMAL18,CUBIGINT,CUSMALLINT,CUTINYINT,10) <> CUBIGINT;
 cidx	CUBIGINT
 1	5222927963145224194
@@ -929,7 +940,13 @@ cidx	CUBIGINT
 10	72036854775806
 11	5223000000000000000
 select cidx, CUSMALLINT from datatypetestm where LEAST(CUSMALLINT,CSMALLINT) <> CUSMALLINT;
-ERROR HY000: Internal error: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught  an exception originally thrown by PrimProc: 
+cidx	CUSMALLINT
+1	19234
+2	19235
+3	19236
+4	19237
+5	19238
+11	20000
 select cidx, CUBIGINT from datatypetestm where LEAST(CDECIMAL18,CUBIGINT,CUSMALLINT,CUTINYINT,10) <> CUBIGINT;
 cidx	CUBIGINT
 1	5222927963145224194
