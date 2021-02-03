@@ -2368,7 +2368,7 @@ int ha_mcs_impl_rnd_next(uchar* buf, TABLE* table)
                 thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
                 thd->lex->sql_command == SQLCOM_TRUNCATE ||
                 thd->lex->sql_command == SQLCOM_LOAD))
-        return 0;
+        return HA_ERR_END_OF_FILE;
 
     if (((thd->lex)->sql_command == SQLCOM_UPDATE)  || ((thd->lex)->sql_command == SQLCOM_DELETE) ||
             ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
@@ -4348,7 +4348,7 @@ int ha_mcs_impl_group_by_next(TABLE* table)
                 thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
                 thd->lex->sql_command == SQLCOM_TRUNCATE ||
                 thd->lex->sql_command == SQLCOM_LOAD))
-        return 0;
+        return HA_ERR_END_OF_FILE;
 
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
@@ -5056,7 +5056,7 @@ int ha_mcs_impl_select_next(uchar* buf, TABLE* table)
                 thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
                 thd->lex->sql_command == SQLCOM_TRUNCATE ||
                 thd->lex->sql_command == SQLCOM_LOAD))
-        return 0;
+        return HA_ERR_END_OF_FILE;
 
     if (((thd->lex)->sql_command == SQLCOM_UPDATE)  || ((thd->lex)->sql_command == SQLCOM_DELETE) ||
             ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
