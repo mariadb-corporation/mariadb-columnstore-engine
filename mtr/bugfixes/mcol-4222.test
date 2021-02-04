@@ -1,0 +1,19 @@
+--source ../include/have_columnstore.inc
+--disable_warnings
+DROP DATABASE IF EXISTS `mcol 4222`;
+--enable_warnings
+CREATE DATABASE `mcol 4222`;
+USE `mcol 4222`;
+
+CREATE TABLE mcs1(i bigint)engine=Columnstore;
+CREATE TABLE mcs2(i bigint)engine=Columnstore;
+
+EXPLAIN INSERT INTO mcs2 SELECT * FROM mcs1;
+EXPLAIN INSERT INTO mcs2 SELECT * FROM (SELECT * FROM mcs1)s;
+EXPLAIN INSERT INTO mcs2 (i) SELECT i FROM (SELECT i FROM mcs1)s;
+EXPLAIN INSERT INTO mcs2 SELECT * FROM mcs1 UNION SELECT * FROM mcs1;
+EXPLAIN INSERT INTO mcs2 SELECT * FROM mcs1 EXCEPT SELECT * FROM mcs1;
+EXPLAIN INSERT INTO mcs2 SELECT * FROM mcs1 INTERSECT SELECT * FROM mcs1;
+
+# cleanup
+DROP DATABASE `mcol 4222`;
