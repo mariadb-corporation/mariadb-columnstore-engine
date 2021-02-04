@@ -1,0 +1,30 @@
+DROP DATABASE IF EXISTS `mcol 4222`;
+CREATE DATABASE `mcol 4222`;
+USE `mcol 4222`;
+CREATE TABLE mcs1(i bigint)engine=Columnstore;
+CREATE TABLE mcs2(i bigint)engine=Columnstore;
+EXPLAIN INSERT INTO mcs2 SELECT * FROM mcs1;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+1	PUSHED SELECT	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+EXPLAIN INSERT INTO mcs2 SELECT * FROM (SELECT * FROM mcs1)s;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+1	PUSHED SELECT	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+EXPLAIN INSERT INTO mcs2 (i) SELECT i FROM (SELECT i FROM mcs1)s;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+1	PUSHED SELECT	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+EXPLAIN INSERT INTO mcs2 SELECT * FROM mcs1 UNION SELECT * FROM mcs1;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+1	PRIMARY	mcs1	ALL	NULL	NULL	NULL	NULL	2000	
+2	UNION	mcs1	ALL	NULL	NULL	NULL	NULL	2000	
+NULL	UNION RESULT	<union1,2>	ALL	NULL	NULL	NULL	NULL	NULL	
+EXPLAIN INSERT INTO mcs2 SELECT * FROM mcs1 EXCEPT SELECT * FROM mcs1;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+1	PRIMARY	mcs1	ALL	NULL	NULL	NULL	NULL	2000	
+2	EXCEPT	mcs1	ALL	NULL	NULL	NULL	NULL	2000	
+NULL	EXCEPT RESULT	<except1,2>	ALL	NULL	NULL	NULL	NULL	NULL	
+EXPLAIN INSERT INTO mcs2 SELECT * FROM mcs1 INTERSECT SELECT * FROM mcs1;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+1	PRIMARY	mcs1	ALL	NULL	NULL	NULL	NULL	2000	
+2	INTERSECT	mcs1	ALL	NULL	NULL	NULL	NULL	2000	
+NULL	INTERSECT RESULT	<intersect1,2>	ALL	NULL	NULL	NULL	NULL	NULL	
+DROP DATABASE `mcol 4222`;
