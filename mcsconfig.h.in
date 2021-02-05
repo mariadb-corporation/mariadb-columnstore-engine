@@ -117,9 +117,6 @@
 /* Define to 1 if the system has the type `ptrdiff_t'. */
 #cmakedefine HAVE_PTRDIFF_T 1
 
-/* Define to 1 if you have the <readline/readline.h> header file. */
-#cmakedefine HAVE_READLINE_READLINE_H 1
-
 /* Define to 1 if you have the `regcomp' function. */
 #cmakedefine HAVE_REGCOMP 1
 
