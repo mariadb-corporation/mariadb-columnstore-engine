@@ -39,10 +39,12 @@
 #include <stdint.h>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
+#include <boost/thread/condition_variable.hpp>
+#include <boost/thread/locks.hpp>
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
+#include <boost/chrono/chrono.hpp>
 
 #include <memory>
 
@@ -54,7 +56,6 @@
 
 namespace threadpool
 {
-
 // Taken from boost::thread_group and adapted
 class ThreadPoolGroup
 {
@@ -351,8 +352,8 @@ private:
 
     uint32_t fIssued;
     boost::mutex fMutex;
-    boost::condition fThreadAvailable; // triggered when a thread is available
-    boost::condition fNeedThread;      // triggered when a thread is needed
+    boost::condition_variable fThreadAvailable; // triggered when a thread is available
+    boost::condition_variable fNeedThread;      // triggered when a thread is needed
     ThreadPoolGroup fThreads;
 
     bool 	fStop;
@@ -365,7 +366,7 @@ private:
     bool fDebug;
     boost::mutex fInitMutex;
     boost::mutex fPruneMutex;
-    boost::condition fPruneThreadEnd;
+    boost::condition_variable fPruneThreadEnd;
     boost::thread* fPruneThread;
     std::stack<boost::thread::id> fPruneThreads; // A list of stale thread IDs to be joined
 };
