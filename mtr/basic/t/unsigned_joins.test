@@ -41,12 +41,8 @@ update orders set u_custkey=o_custkey;
 # Join unsigned int to unsigned int.
 select count(*) as count1 from customer join orders on orders.u_custkey = customer.u_custkey;
 select count(*) as count2 from customer left join orders on orders.u_custkey = customer.u_custkey;
-# Bug: MCOL-4519
---error 1815
 select count(*) as count3 from customer right join orders on orders.u_custkey = customer.u_custkey;
 select count(*) as count4 from customer where exists (select u_custkey from orders where orders.u_custkey = customer.u_custkey);
-# Bug: MCOL-4519
---error 1815
 select count(*) as count5 from customer where not exists (select u_custkey from orders where orders.u_custkey = customer.u_custkey);
 
 # Join unsigned int on customer to int on orders.
@@ -54,15 +50,11 @@ select count(*) as count11 from customer join orders on orders.o_custkey = custo
 select count(*) as count12 from customer left join orders on orders.o_custkey = customer.u_custkey;
 select count(*) as count13 from customer right join orders on orders.o_custkey = customer.u_custkey;
 select count(*) as count14 from customer where exists (select u_custkey from orders where orders.o_custkey = customer.u_custkey);
-# Bug : MCOL-4519
---error 1815
 select count(*) as count15 from customer where not exists (select u_custkey from orders where orders.o_custkey = customer.u_custkey);
 
 # Join unsigned int on orders to int on customer;
 select count(*) as count11 from customer join orders on orders.u_custkey = customer.c_custkey;
 select count(*) as count12 from customer left join orders on orders.u_custkey = customer.c_custkey;
-# Bug: MCOL-4519
---error 1815
 select count(*) as count13 from customer right join orders on orders.u_custkey = customer.c_custkey;
 select count(*) as count14 from customer where exists (select u_custkey from orders where orders.u_custkey = customer.c_custkey);
 select count(*) as count15 from customer where not exists (select u_custkey from orders where orders.u_custkey = customer.c_custkey);

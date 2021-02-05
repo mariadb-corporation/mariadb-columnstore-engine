@@ -427,7 +427,7 @@ cidx	CSMALLINT	CUTINYINT	GREATEST(CSMALLINT,CUTINYINT)
 select cidx, CUBIGINT from datatypetestm where GREATEST(CUBIGINT,CSMALLINT,CUTINYINT,10) <> CUBIGINT;
 cidx	CUBIGINT
 select cidx, CUSMALLINT from datatypetestm where GREATEST(CUSMALLINT,CSMALLINT) <> CUSMALLINT;
-ERROR HY000: Internal error: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught  an exception originally thrown by PrimProc: 
+cidx	CUSMALLINT
 select cidx, CUBIGINT from datatypetestm where GREATEST(CDECIMAL18,CUBIGINT,CUSMALLINT,CUTINYINT,10) <> CUBIGINT;
 cidx	CUBIGINT
 select cidx, CDECIMAL18 from datatypetestm where GREATEST(CDECIMAL18,CUSMALLINT) <> CDECIMAL18;
@@ -867,7 +867,12 @@ cidx	CSMALLINT	CUTINYINT	GREATEST(CSMALLINT,CUTINYINT)
 select cidx, CUBIGINT from datatypetestm where GREATEST(CUBIGINT,CSMALLINT,CUTINYINT,10) <> CUBIGINT;
 cidx	CUBIGINT
 select cidx, CUSMALLINT from datatypetestm where GREATEST(CUSMALLINT,CSMALLINT) <> CUSMALLINT;
-ERROR HY000: Internal error: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught  an exception originally thrown by PrimProc: 
+cidx	CUSMALLINT
+6	762
+7	763
+8	764
+9	765
+10	766
 select cidx, CUBIGINT from datatypetestm where GREATEST(CDECIMAL18,CUBIGINT,CUSMALLINT,CUTINYINT,10) <> CUBIGINT;
 cidx	CUBIGINT
 select cidx, CDECIMAL18 from datatypetestm where GREATEST(CDECIMAL18,CUSMALLINT) <> CDECIMAL18;

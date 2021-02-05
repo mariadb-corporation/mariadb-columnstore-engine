@@ -33,20 +33,22 @@ count1
 1500
 select count(*) as count2 from customer left join orders on orders.u_custkey = customer.u_custkey;
 count2
-4472
+1550
 select count(*) as count3 from customer right join orders on orders.u_custkey = customer.u_custkey;
-ERROR HY000: Internal error: st: 1 TupleBPS::receiveMultiPrimitiveMessages() caught  an exception originally thrown by PrimProc: 
+count3
+1500
 select count(*) as count4 from customer where exists (select u_custkey from orders where orders.u_custkey = customer.u_custkey);
 count4
 100
 select count(*) as count5 from customer where not exists (select u_custkey from orders where orders.u_custkey = customer.u_custkey);
-ERROR HY000: Internal error: st: 1 TupleBPS::receiveMultiPrimitiveMessages() caught  an exception originally thrown by PrimProc: 
+count5
+50
 select count(*) as count11 from customer join orders on orders.o_custkey = customer.u_custkey;
 count11
 1500
 select count(*) as count12 from customer left join orders on orders.o_custkey = customer.u_custkey;
 count12
-4472
+1550
 select count(*) as count13 from customer right join orders on orders.o_custkey = customer.u_custkey;
 count13
 1500
@@ -54,7 +56,8 @@ select count(*) as count14 from customer where exists (select u_custkey from ord
 count14
 100
 select count(*) as count15 from customer where not exists (select u_custkey from orders where orders.o_custkey = customer.u_custkey);
-ERROR HY000: Internal error: st: 1 TupleBPS::receiveMultiPrimitiveMessages() caught  an exception originally thrown by PrimProc: 
+count15
+50
 select count(*) as count11 from customer join orders on orders.u_custkey = customer.c_custkey;
 count11
 1500
@@ -62,7 +65,8 @@ select count(*) as count12 from customer left join orders on orders.u_custkey = 
 count12
 1550
 select count(*) as count13 from customer right join orders on orders.u_custkey = customer.c_custkey;
-ERROR HY000: Internal error: st: 1 TupleBPS::receiveMultiPrimitiveMessages() caught  an exception originally thrown by PrimProc: 
+count13
+1500
 select count(*) as count14 from customer where exists (select u_custkey from orders where orders.u_custkey = customer.c_custkey);
 count14
 100
