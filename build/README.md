@@ -11,7 +11,6 @@ Along with a working C++ compiler and GNU software development tools you will ne
   * zlib-devel
   * ncurses-devel
   * libxml2-devel
-  * readline-devel
 
 Clone or download this repository.
 
