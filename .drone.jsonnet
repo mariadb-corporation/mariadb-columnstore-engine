@@ -1,35 +1,40 @@
 local platforms = {
-  develop: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
+  'develop': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
   'develop-5': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
 };
 
 local server_ref_map = {
-  develop: '10.6 https://github.com/MariaDB/server',
+  'develop': '10.6 https://github.com/MariaDB/server',
   'develop-5': '10.5 https://github.com/MariaDB/server',
 };
 
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
-local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_XPAND=NO -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO -DWITH_WSREP=OFF';
+
+// This is stupid use of PLUGIN_*=NO syntax. It should just skip building
+// _everything_ else apart from the things that ColumnStore actually needs.
+local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_XPAND=NO -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO ' +
+                   '-DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
+                   '-DWITH_EMBEDDED_SERVER=OFF -DWITH_WSREP=OFF ' +
+                   '-DBUILD_CONFIG=mysql_release';
 
 local rpm_build_deps = 'install -y systemd-devel git make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect createrepo';
 
-local deb_build_deps = 'apt update && apt install --yes --no-install-recommends dpkg-dev systemd libsystemd-dev git ca-certificates devscripts equivs build-essential libboost-all-dev libdistro-info-perl flex pkg-config automake libtool lsb-release bison chrpath cmake dh-apparmor dh-systemd gdb libaio-dev libcrack2-dev libjemalloc-dev libjudy-dev libkrb5-dev libncurses5-dev libpam0g-dev libpcre3-dev libsnappy-dev libssl-dev libsystemd-dev libxml2-dev unixodbc-dev uuid-dev zlib1g-dev libcurl4-openssl-dev dh-exec libpcre2-dev libzstd-dev psmisc socat expect net-tools rsync lsof libdbi-perl iproute2 gawk && mk-build-deps debian/control && dpkg -i mariadb-10*.deb || true && apt install -fy --no-install-recommends';
+// All build dependencies for .deb packages are defined in debian/control. Do no
+// repeat them here manually, it would only increase the amount of maintenance
+// work needed when updating the dependencies in the future.
+local deb_build_deps = 'apt update && apt install --yes --no-install-recommends build-essential devscripts ccache equivs && ' +
+                       'mk-build-deps debian/control -t "apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends" -r -i';
 
 local platformMap(branch, platform) =
-  local branch_cmakeflags_map = {
-    develop: ' -DBUILD_CONFIG=mysql_release',
-    'develop-5': ' -DBUILD_CONFIG=mysql_release',
-  };
-
   local platform_map = {
-    'opensuse/leap:15': 'zypper ' + rpm_build_deps + ' cmake libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel gcc-fortran && cmake ' + cmakeflags + branch_cmakeflags_map[branch] + ' -DRPM=sles15 && make -j$(nproc) package',
-    'centos:7': 'yum install -y epel-release && yum install -y cmake3 && ln -s /usr/bin/cmake3 /usr/bin/cmake && yum ' + rpm_build_deps + ' libquadmath libquadmath-devel && cmake ' + cmakeflags + branch_cmakeflags_map[branch] + ' -DRPM=centos7 && make -j$(nproc) package',
-    'centos:8': "yum install -y libgcc && sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/*PowerTools.repo && yum " + rpm_build_deps + ' cmake libquadmath libquadmath-devel && cmake ' + cmakeflags + branch_cmakeflags_map[branch] + ' -DRPM=centos8 && make -j$(nproc) package',
-    'debian:9': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + branch_cmakeflags_map[branch] + " -DDEB=stretch' debian/autobake-deb.sh",
-    'debian:10': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + branch_cmakeflags_map[branch] + " -DDEB=buster' debian/autobake-deb.sh",
-    'ubuntu:16.04': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + branch_cmakeflags_map[branch] + " -DDEB=xenial' debian/autobake-deb.sh",
-    'ubuntu:18.04': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + branch_cmakeflags_map[branch] + " -DDEB=bionic' debian/autobake-deb.sh",
-    'ubuntu:20.04': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + branch_cmakeflags_map[branch] + " -DDEB=focal' debian/autobake-deb.sh",
+    'opensuse/leap:15': 'zypper ' + rpm_build_deps + ' cmake libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel gcc-fortran && cmake ' + cmakeflags + ' -DRPM=sles15 && make -j$(nproc) package',
+    'centos:7': 'yum install -y epel-release && yum install -y cmake3 && ln -s /usr/bin/cmake3 /usr/bin/cmake && yum ' + rpm_build_deps + ' libquadmath libquadmath-devel && cmake ' + cmakeflags + ' -DRPM=centos7 && make -j$(nproc) package',
+    'centos:8': "yum install -y libgcc && sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/*PowerTools.repo && yum " + rpm_build_deps + ' cmake libquadmath libquadmath-devel && cmake ' + cmakeflags + ' -DRPM=centos8 && make -j$(nproc) package',
+    'debian:9': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=stretch' debian/autobake-deb.sh",
+    'debian:10': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=buster' debian/autobake-deb.sh",
+    'ubuntu:16.04': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=xenial' debian/autobake-deb.sh",
+    'ubuntu:18.04': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=bionic' debian/autobake-deb.sh",
+    'ubuntu:20.04': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=focal' debian/autobake-deb.sh",
   };
 
   platform_map[platform];
@@ -295,22 +300,28 @@ local Pipeline(branch, platform, event) = {
              volumes: [pipeline._volumes.mdb],
              environment: {
                DEBIAN_FRONTEND: 'noninteractive',
-               TRAVIS: 'true',
+               BUILDPACKAGE_FLAGS: '-b', // Save time and produce only binary packages, not source
              },
              commands: [
                'cd /mdb/' + builddir,
-               // Unstrip columnstore while using TRAVIS flag (for speeding up builds)
-               "sed -i '/DPLUGIN_COLUMNSTORE=NO|/d' debian/autobake-deb.sh",
-               "sed -i '/Package: mariadb-plugin-columnstore/d' debian/autobake-deb.sh",
+               // Remove Debian build flags that could prevent ColumnStore from building
+               "sed '/-DPLUGIN_COLUMNSTORE=NO/d' -i debian/rules",
                // Tweak debian packaging stuff
                "sed -i -e '/Package: mariadb-backup/,/^$/d' debian/control",
                "sed -i -e '/Package: mariadb-plugin-connect/,/^$/d' debian/control",
                "sed -i -e '/Package: mariadb-plugin-gssapi*/,/^$/d' debian/control",
                "sed -i -e '/Package: mariadb-plugin-xpand*/,/^$/d' debian/control",
-               "sed -i -e '/wsrep/d' debian/mariadb-server-*.install",
-               // Disable galera
+               'sed "/Package: mariadb-plugin-mroonga/,/^$/d" -i debian/control',
+               'sed "/Package: mariadb-plugin-rocksdb/,/^$/d" -i debian/control',
+               'sed "/Package: mariadb-plugin-spider/,/^$/d" -i debian/control',
+               'sed "/Package: mariadb-plugin-oqgraph/,/^$/d" -i debian/control',
+               'sed "/ha_sphinx.so/d" -i debian/mariadb-server-*.install',
+               'sed "/Package: libmariadbd19/,/^$/d" -i debian/control',
+               'sed "/Package: libmariadbd-dev/,/^$/d" -i debian/control',
+               // Disable Galera
                "sed -i -e 's/Depends: galera.*/Depends:/' debian/control",
                "sed -i -e 's/\"galera-enterprise-4\"//' cmake/cpack_rpm.cmake",
+               "sed -i -e '/wsrep/d' debian/mariadb-server-*.install",
                // Leave test package for mtr
                "sed -i '/(mariadb|mysql)-test/d;/-test/d' debian/autobake-deb.sh",
                "sed -i '/test-embedded/d' debian/mariadb-test.install",
