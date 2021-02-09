@@ -111,86 +111,9 @@ void OamCache::checkReload()
     // Restore for Windows when we support multiple PMs
     while (it != uniquePids.end())
     {
-        // Disable legacy-OAM.
-/*
-        if (getenv("SKIP_OAM_INIT") == NULL)
-        {
-            try
-            {
-                int state = oam::MAN_INIT;
-                bool degraded;
-                char num[80];
-                int retry = 0;
-
-                // MCOL-259 retry for 5 seconds if the PM is in some INIT mode.
-                while ((   state == oam::BUSY_INIT
-                           || state == oam::MAN_INIT
-                           || state == oam::PID_UPDATE)
-                        && retry < 5)
-                {
-                    snprintf(num, 80, "%d", *it);
-
-                    try
-                    {
-                        oam.getModuleStatus(string("pm") + num, state, degraded);
-                    }
-                    catch (std::exception& e)
-                    {
-                        ostringstream os;
-                        os << "OamCache::checkReload exception while getModuleStatus pm" << num << " " << e.what();
-                        oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
-                        break;
-                    }
-                    catch (...)
-                    {
-                        ostringstream os;
-                        os << "OamCache::checkReload exception while getModuleStatus pm" << num;
-                        oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
-                        break;
-                    }
-
-                    if (state == oam::ACTIVE || state == oam::DEGRADED)
-                    {
-                        pmToConnectionMap[*it] = i++;
-                        moduleIds.push_back(*it);
-                        break;
-                    }
-
-                    sleep(1);
-                    ++retry;
-                    //cout << "pm " << *it << " -> connection " << (i-1) << endl;
-                }
-
-                if (state != oam::ACTIVE)
-                {
-                    ostringstream os;
-                    os << "OamCache::checkReload shows state for pm" << num << " as " << oamState[state];
-                    oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
-                }
-            }
-            catch (std::exception& e)
-            {
-                ostringstream os;
-                os << "OamCache::checkReload final exception while getModuleStatus " << e.what();
-                oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
-                break;
-            }
-            catch (...)
-            {
-                ostringstream os;
-                os << "OamCache::checkReload final exception while getModuleStatus";
-                oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
-                break;
-            }
-        }
-        else
-*/
-        {
-            pmToConnectionMap[*it] = i++;
-            moduleIds.push_back(*it);
-        }
+        pmToConnectionMap[*it] = i++;
+        moduleIds.push_back(*it);
         it++;
-
     }
 
 #endif

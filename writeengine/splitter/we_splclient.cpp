@@ -50,9 +50,6 @@ using namespace messageqcpp;
 #include "liboamcpp.h"
 using namespace oam;
 
-#include "alarmmanager.h"
-using namespace alarmmanager;
-
 #include "we_sdhandler.h"
 #include "we_splclient.h"
 
@@ -428,12 +425,12 @@ void WESplClient::onDisconnect()
 
     try
     {
-        // send alarm
-        ALARMManager alarmMgr;
+        // BT Should log this probably instead
+        // ALARMManager alarmMgr;
         //std::string alarmItem = sin_addr2String(fClnt->serv_addr().sin_addr);
         std::string alarmItem = fClnt->addr2String();
         alarmItem.append(" WriteEngineServer");
-        alarmMgr.sendAlarmReport(alarmItem.c_str(), oam::CONN_FAILURE, SET);
+        //alarmMgr.sendAlarmReport(alarmItem.c_str(), oam::CONN_FAILURE, SET);
     }
     catch (...)
     {

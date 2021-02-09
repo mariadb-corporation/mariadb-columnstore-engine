@@ -290,7 +290,6 @@ extern "C"
         long long rtn = 0;
         Oam oam;
         DBRM dbrm(true);
-        SystemStatus systemstatus;
 
         try
         {

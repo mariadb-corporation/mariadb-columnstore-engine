@@ -154,17 +154,6 @@ int main(int argc, char** argv)
     //get number of pms
     string count = cf->getConfig("PrimitiveServers", "Count");
 
-    try
-    {
-        oam.distributeConfigFile();
-        //sleep to give time for change to be distributed
-        sleep(atoi(count.c_str()));
-    }
-    catch (...)
-    {
-        return 1;
-    }
-
     return 0;
 }
 // vim:ts=4 sw=4:
