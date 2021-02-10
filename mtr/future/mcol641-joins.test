@@ -23,14 +23,16 @@ INSERT INTO cs2 VALUES (0.12345678901234567890123456789, 1.1234567891);
 SELECT cs1.d1, cs1.d2, cs2.de1 FROM cs1 INNER JOIN cs2 ON cs1.d2 = cs2.de2 ORDER BY 1;
 SELECT cs2.de1, cs1.d1, cs1.d2 FROM cs1 INNER JOIN cs2 ON cs1.d3 = cs2.de1 ORDER BY 1;
 
-SELECT cs2.de2, cs1.d1, cs1.d3, cs2.de1 FROM cs1 LEFT JOIN cs2 ON cs1.d2 = cs2.de2 ORDER BY 1;
+SELECT cs2.de2, cs1.d1, cs1.d3, cs2.de1 FROM cs1 LEFT JOIN cs2 ON cs1.d2 = cs2.de2 ORDER BY 2;
 SELECT cs1.d3, cs1.d1, cs1.d2, cs2.de2 FROM cs1 LEFT JOIN cs2 ON cs1.d3 = cs2.de1 ORDER BY 1;
 
-SELECT cs1.d1, cs1.d3, cs2.de1, cs2.de2 FROM cs1 RIGHT JOIN cs2 ON cs1.d2 = cs2.de2 ORDER BY 1;
+SELECT cs1.d1, cs1.d3, cs2.de1, cs2.de2 FROM cs1 RIGHT JOIN cs2 ON cs1.d2 = cs2.de2 ORDER BY 3;
 SELECT cs2.de1, cs2.de2, cs1.d1, cs1.d2 FROM cs1 RIGHT JOIN cs2 ON cs1.d3 = cs2.de1 ORDER BY 1;
 
-SELECT * FROM cs1 WHERE cs1.d2 IN (SELECT cs2.de2 FROM cs2) ORDER BY 1;
-SELECT * FROM cs2 WHERE cs2.de1 IN (SELECT cs1.d3 FROM cs1) ORDER BY 1;
+SELECT * FROM cs1 WHERE cs1.d2 IN (SELECT cs2.de2 FROM cs2 WHERE cs2.de2 = cs1.d2) ORDER BY 1;
+SELECT * FROM cs2 WHERE cs2.de2 IN (SELECT cs1.d2 FROM cs1 WHERE cs1.d2 = cs2.de2) ORDER BY 1;
+SELECT * FROM cs1 WHERE cs1.d3 IN (SELECT cs2.de1 FROM cs2 WHERE cs2.de1 = cs1.d3) ORDER BY 1;
+SELECT * FROM cs2 WHERE cs2.de1 IN (SELECT cs1.d3 FROM cs1 WHERE cs1.d3 = cs2.de1) ORDER BY 1;
 
 SELECT count(*) FROM cs1 where exists (SELECT cs2.de2 FROM cs2 WHERE cs1.d2=cs2.de2);
 SELECT count(*) FROM cs2 where not exists (SELECT cs1.d2 FROM cs1 WHERE cs1.d2=cs2.de2);
