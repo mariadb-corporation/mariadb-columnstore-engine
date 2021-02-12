@@ -1354,27 +1354,9 @@ void added_a_pm(int)
 
     if (ec)
     {
-        //set BUSY_INIT state while processing the add pm configuration change
-        oam::Oam oam;
-
-        try
-        {
-            oam.processInitComplete("ExeMgr", oam::BUSY_INIT);
-        }
-        catch (...)
-        {}
-
         oam::OamCache* oamCache = oam::OamCache::makeOamCache();
         oamCache->forceReload();
         ec->Setup();
-
-        //set ACTIVE state
-        try
-        {
-            oam.processInitComplete("ExeMgr");
-        }
-        catch (...)
-        {}
     }
 }
 
@@ -1514,19 +1496,6 @@ int ServiceExeMgr::Child()
 
     gDebug= m_debug;
 
-    //set BUSY_INIT state
-    {
-        oam::Oam oam;
-
-        try
-        {
-            oam.processInitComplete("ExeMgr", oam::BUSY_INIT);
-        }
-        catch (...)
-        {
-        }
-    }
-
 #ifdef _MSC_VER
     //FIXME:
 #else
@@ -1575,14 +1544,6 @@ int ServiceExeMgr::Child()
         logging::MessageLog ml(lid);
         ml.logCriticalMessage( message );
         std::cerr << errMsg << std::endl;
-
-        try
-        {
-            oam.processInitFailure();
-        }
-        catch (...)
-        {
-        }
 
         NotifyServiceInitializationFailed();
         return 2;
@@ -1685,19 +1646,6 @@ int ServiceExeMgr::Child()
     std::cout << "Starting ExeMgr: st = " << serverThreads <<
          ", qs = " << rm->getEmExecQueueSize() << ", mx = " << maxPct << ", cf = " <<
          rm->getConfig()->configFile() << std::endl;
-
-    //set ACTIVE state
-    {
-        oam::Oam oam;
-
-        try
-        {
-            oam.processInitComplete("ExeMgr");
-        }
-        catch (...)
-        {
-        }
-    }
 
     {
         BRM::DBRM *dbrm = new BRM::DBRM();
