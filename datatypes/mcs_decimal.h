@@ -29,6 +29,7 @@
 #include "mcs_float128.h"
 #include "checks.h"
 #include "branchpred.h"
+#include "mcs_data_condition.h"
 
 
 namespace datatypes
@@ -301,6 +302,9 @@ class Decimal: public TSInt128
             precision(p)
         { }
 
+
+        Decimal(const char *str, size_t length, DataCondition & error,
+                int8_t s, uint8_t p);
 
         int decimalComp(const Decimal& d) const
         {

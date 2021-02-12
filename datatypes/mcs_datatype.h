@@ -18,10 +18,11 @@
 #ifndef MCS_DATATYPE_H_INCLUDED
 #define MCS_DATATYPE_H_INCLUDED
 
-#include <limits>
 #include <sstream>
 #include <boost/any.hpp>
 #include "exceptclasses.h"
+#include "mcs_numeric_limits.h"
+#include "mcs_data_condition.h"
 #include "mcs_decimal.h"
 
 
@@ -103,6 +104,24 @@ namespace execplan
   struct SimpleColumn;
 };
 
+
+
+namespace datatypes
+{
+
+template <typename T>
+struct make_unsigned
+{
+  typedef struct { } type;
+};
+
+template<> struct make_unsigned<int8_t>   { typedef uint8_t type;  };
+template<> struct make_unsigned<int16_t>  { typedef uint16_t type;  };
+template<> struct make_unsigned<int32_t>  { typedef uint32_t type;  };
+template<> struct make_unsigned<int64_t>  { typedef uint64_t type;  };
+template<> struct make_unsigned<int128_t> { typedef uint128_t type; };
+
+} // namespace datatypes
 
 
 namespace datatypes
