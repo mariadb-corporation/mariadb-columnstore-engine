@@ -666,6 +666,11 @@ inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf,
     {
         if (!regex.used && !rf)
         {
+            // A temporary hack for xxx_nopad_bin collations
+            // TODO: MCOL-4534 Improve comparison performance in 8bit nopad_bin collations
+            if ((typeHolder.getCharset().state & (MY_CS_BINSORT|MY_CS_NOPAD)) ==
+                (MY_CS_BINSORT|MY_CS_NOPAD))
+              return colCompare_(order_swap(val1), order_swap(val2), COP);
             utils::ConstString s1 = {reinterpret_cast<const char*>(&val1), 8};
             utils::ConstString s2 = {reinterpret_cast<const char*>(&val2), 8};
             return colCompareStr(typeHolder, COP, s1.rtrimZero(), s2.rtrimZero());
