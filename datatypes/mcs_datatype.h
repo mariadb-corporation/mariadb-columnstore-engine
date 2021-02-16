@@ -402,6 +402,33 @@ inline bool isNumeric(const datatypes::SystemCatalog::ColDataType type)
   }
 }
 
+inline bool isInteger(const datatypes::SystemCatalog::ColDataType type)
+{
+  switch (type)
+  {
+    case datatypes::SystemCatalog::TINYINT:
+    case datatypes::SystemCatalog::SMALLINT:
+    case datatypes::SystemCatalog::MEDINT:
+    case datatypes::SystemCatalog::INT:
+    case datatypes::SystemCatalog::BIGINT:
+    case datatypes::SystemCatalog::UTINYINT:
+    case datatypes::SystemCatalog::USMALLINT:
+    case datatypes::SystemCatalog::UMEDINT:
+    case datatypes::SystemCatalog::UINT:
+    case datatypes::SystemCatalog::UBIGINT:
+        return true;
+
+    default:
+        return false;
+  }
+}
+
+
+inline bool isLongDouble(const datatypes::SystemCatalog::ColDataType type)
+{
+  return type == datatypes::SystemCatalog::LONGDOUBLE;
+}
+
 inline bool isDecimal(const datatypes::SystemCatalog::ColDataType type)
 {
   return (type == datatypes::SystemCatalog::DECIMAL ||

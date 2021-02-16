@@ -44,6 +44,10 @@
 namespace joiner
 {
 
+uint32_t calculateKeyLength(const std::vector<uint32_t>& aKeyColumnsIds,
+                            const rowgroup::RowGroup& aRowGroup,
+                            const rowgroup::RowGroup* aLargeRowGroup = nullptr);
+
 class TypelessData
 {
 public:
@@ -56,7 +60,9 @@ public:
     void deserialize(messageqcpp::ByteStream&, utils::FixedAllocator&);
     void deserialize(messageqcpp::ByteStream&, utils::PoolAllocator&);
     std::string toString() const;
-    uint32_t hash(const rowgroup::RowGroup&, const std::vector<uint32_t>& keyCols) const;
+    uint64_t hash(const rowgroup::RowGroup&,
+                  const std::vector<uint32_t>& keyCols,
+                  const std::vector<uint32_t>* smallSideColWidths = nullptr) const;
     static int cmp(const rowgroup::RowGroup&, const std::vector<uint32_t>& keyCols,
                    const TypelessData &a,
                    const TypelessData &b);
@@ -151,13 +157,16 @@ public:
     struct TypelessDataHasher: public TypelessDataStructure
     {
         TypelessDataHasher(const rowgroup::RowGroup *rg,
-                           const std::vector<uint32_t> *map)
-           :TypelessDataStructure(rg, map)
+                           const std::vector<uint32_t> *map,
+                           const std::vector<uint32_t> *smallSideColWidths)
+           :TypelessDataStructure(rg, map), mSmallSideColWidths(smallSideColWidths)
         { }
         inline size_t operator()(const TypelessData& e) const
         {
-            return e.hash(*mRowGroup, *mMap);
+            return e.hash(*mRowGroup, *mMap, mSmallSideColWidths);
         }
+
+        const std::vector<uint32_t>* mSmallSideColWidths;
     };
 
     struct TypelessDataComparator: public TypelessDataStructure
@@ -366,6 +375,12 @@ public:
         return nullValueForJoinColumn;
     }
 
+    // Wide-DECIMAL JOIN
+    bool hasDifferentKeylengthAtBothSides() const;
+    inline const vector<uint32_t>& getSmallSideColumnsWidths() const
+    {
+        return smallRG.getColWidths();
+    }
     // Disk-based join support
     void clearData();
     boost::shared_ptr<TupleJoiner> copyForDiskJoin();

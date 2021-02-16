@@ -42,6 +42,7 @@ using namespace joblist;
 namespace joiner
 {
 
+// Typed joiner ctor
 TupleJoiner::TupleJoiner(
     const rowgroup::RowGroup& smallInput,
     const rowgroup::RowGroup& largeInput,
@@ -145,6 +146,7 @@ TupleJoiner::TupleJoiner(
     nullValueForJoinColumn = smallNullRow.getSignedNullValue(smallJoinColumn);
 }
 
+// Typeless joiner ctor
 TupleJoiner::TupleJoiner(
     const rowgroup::RowGroup& smallInput,
     const rowgroup::RowGroup& largeInput,
@@ -182,28 +184,10 @@ TupleJoiner::TupleJoiner(
         smallNullRow.initToNull();
     }
 
-    for (i = keyLength = 0; i < smallKeyColumns.size(); i++)
+    keyLength = calculateKeyLength(smallKeyColumns, smallRG, &largeRG);
+
+    for (i = 0; i < smallKeyColumns.size(); i++)
     {
-        if (smallRG.getColTypes()[smallKeyColumns[i]] == CalpontSystemCatalog::CHAR ||
-                smallRG.getColTypes()[smallKeyColumns[i]] == CalpontSystemCatalog::VARCHAR
-                ||
-                smallRG.getColTypes()[smallKeyColumns[i]] == CalpontSystemCatalog::TEXT)
-        {
-            keyLength += smallRG.getColumnWidth(smallKeyColumns[i]) + 2;  // +2 for length
-
-            // MCOL-698: if we don't do this LONGTEXT allocates 32TB RAM
-            if (keyLength > 65536)
-                keyLength = 65536;
-        }
-        else if (smallRG.getColTypes()[smallKeyColumns[i]] == CalpontSystemCatalog::LONGDOUBLE)
-        {
-            keyLength += sizeof(long double);
-        }
-        else
-        {
-            keyLength += 8;
-        }
-
         // Set bSignedUnsignedJoin if one or more join columns are signed to unsigned compares.
         if (smallRG.isUnsigned(smallKeyColumns[i]) != largeRG.isUnsigned(largeKeyColumns[i]))
         {
@@ -806,6 +790,7 @@ void TupleJoiner::doneInserting()
                      smallRow.getColType(smallKeyColumns[col]),
                      smallRow.getColumnWidth(smallKeyColumns[col])))
             {
+                // WIP MCOL-4173
                 uniquer.insert(*((int128_t*)smallRow.getBinaryField<int128_t>(smallKeyColumns[col])));
             }
             else if (smallRow.isUnsigned(smallKeyColumns[col]))
@@ -1320,7 +1305,83 @@ public:
     }
 };
 
+class WideDecimalKeyEncoder
+{
+    const Row* mR;
+    const uint32_t mKeyColId;
+    uint32_t width;
+    uint64_t convertedValue;
+public:
+    WideDecimalKeyEncoder(const Row& r, 
+                          const uint32_t keyColId): mR(&r),
+                                                    mKeyColId(keyColId),
+                                                    width(datatypes::MAXDECIMALWIDTH)
+    { }
+    template <typename T, typename AT>
+    bool numericRangeCheckAndConvert(const AT& value)
+    {
+        if (value > AT(std::numeric_limits<T>::max()) ||
+            value < AT(std::numeric_limits<T>::min()))
+            return true;
 
+        convertedValue = (uint64_t) static_cast<T>(value);
+        return false;
+    }
+    
+    // As of MCS 6.x there is an asumption MCS can't join having
+    // INTEGER and non-INTEGER keys,e.g. BIGINT vs DECIMAL(38,1).
+    // It can only do BIGINT vs DECIMAL(38).
+    // convert() checks if wide-DECIMAL overflows INTEGER type range
+    // and sets internal width to 0 if it is. If not width is set to 8
+    // and convertedValue is casted to INTEGER type.
+    inline WideDecimalKeyEncoder&
+    convert(const bool otherSideIsInt,
+            const execplan::CalpontSystemCatalog::ColDataType otherSideType)
+    {
+        if (otherSideIsInt)
+        {
+            datatypes::TSInt128 integralPart = mR->getTSInt128Field(mKeyColId);
+            bool isUnsigned = datatypes::isUnsigned(otherSideType);
+            width = (isUnsigned &&
+                     numericRangeCheckAndConvert<uint64_t>(integralPart)) ? 0 : datatypes::MAXLEGACYWIDTH;
+            width = (!isUnsigned &&
+                     numericRangeCheckAndConvert<int64_t>(integralPart)) ? 0 : datatypes::MAXLEGACYWIDTH;
+        }
+        return *this;
+    }
+
+    inline bool store(TypelessData& typelessData,
+                      uint32_t& off,
+                      const uint32_t keylen) const
+    {
+        // A note from convert() if there is otherSide column type range
+        // overflow. If so return .len = 0. This tells MCS to pass this
+        // key b/c it won't match.
+        if (!width)
+        {
+            typelessData.len = 0;
+            return false;
+        }
+        if (off + width > keylen)
+            return true;
+        switch (width)
+        {
+            case datatypes::MAXDECIMALWIDTH:
+            {
+                mR->getInt128Field(mKeyColId, typelessData.data);
+                break;
+            }
+            default:
+            {
+                *((uint64_t*) &typelessData.data[off]) = convertedValue;
+            }
+        }
+        off += width;
+        return false;
+    }
+};
+
+// Called in PrimProc
 TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols,
                              uint32_t keylen, FixedAllocator* fa)
 {
@@ -1334,15 +1395,25 @@ TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols,
     {
         type = r.getColTypes()[keyCols[i]];
 
-        if (type == CalpontSystemCatalog::VARCHAR ||
-                type == CalpontSystemCatalog::CHAR ||
-                type == CalpontSystemCatalog::TEXT)
+        if (datatypes::isCharType(type))
         {
             // this is a string, copy a normalized version
             const uint8_t* str = r.getStringPointer(keyCols[i]);
             uint32_t width = r.getStringLength(keyCols[i]);
             if (TypelessDataStringEncoder(str, width).store(ret.data, off, keylen))
                 goto toolong;
+        }
+        else if (datatypes::isDecimal(type))
+        {
+            // We don't need to strip fractional part of the DECIMAL
+            // b/c MCS joins ints and DECIMAL with 0 scale only.
+            if (WideDecimalKeyEncoder(r, keyCols[i]).store(ret, off, keylen))
+/*            if (WideDecimalKeyEncoder(r, keyCols[i])
+                                     .store(ret, off, r.getColumnWidth(keyCols[i])))
+*/
+            {
+                goto toolong;
+            }
         }
         else if (r.isUnsigned(keyCols[i]))
         {
@@ -1370,26 +1441,35 @@ toolong:
 }
 
 
-uint32 TypelessData::hash(const RowGroup& r,
-                          const std::vector<uint32_t>& keyCols) const
+uint64_t TypelessData::hash(const RowGroup& r,
+                            const std::vector<uint32_t>& keyCols,
+                            const std::vector<uint32_t>* smallSideColWidths) const
 {
     TypelessDataDecoder decoder(*this);
     datatypes::MariaDBHasher hasher;
-    for (uint32_t i = 0; i < keyCols.size(); i++)
+    for (auto keyColId: keyCols)
     {
-        switch (r.getColTypes()[keyCols[i]])
+        switch (r.getColTypes()[keyColId])
         {
             case CalpontSystemCatalog::VARCHAR:
             case CalpontSystemCatalog::CHAR:
             case CalpontSystemCatalog::TEXT:
             {
-                CHARSET_INFO *cs= const_cast<RowGroup&>(r).getCharset(keyCols[i]);
+                CHARSET_INFO *cs= const_cast<RowGroup&>(r).getCharset(keyColId);
                 hasher.add(cs, decoder.scanString());
+                break;
+            }
+            case CalpontSystemCatalog::DECIMAL:
+            {
+                uint32_t width = (smallSideColWidths) ? smallSideColWidths->operator[](keyColId)
+                                                      : datatypes::MAXDECIMALWIDTH;
+                hasher.add(&my_charset_bin,
+                           decoder.scanGeneric(width));
                 break;
             }
             default:
             {
-                hasher.add(&my_charset_bin, decoder.scanGeneric(8));
+                hasher.add(&my_charset_bin, decoder.scanGeneric(datatypes::MAXLEGACYWIDTH));
                 break;
             }
         }
@@ -1419,6 +1499,17 @@ int TypelessData::cmp(const RowGroup& r, const std::vector<uint32_t>& keyCols,
                     return rc;
                 break;
             }
+            case CalpontSystemCatalog::DECIMAL:
+            {
+                // Use min for INT vs DECIMAL comparisons
+                // The length can be 8 or 16 bytes.
+                // Looking at the tradeof b/w speed and stability I deliberately reduce
+                // a number of checks to speed up processing.
+                // WIP MCOL-4174 
+                if (int rc = memcmp(da.data, db.data, std::min(da.len, db.len)))
+                    return rc;
+                break;
+            }
             default:
             {
                 ConstString ta = a.scanGeneric(8);
@@ -1435,6 +1526,7 @@ int TypelessData::cmp(const RowGroup& r, const std::vector<uint32_t>& keyCols,
 
 
 
+// Called in joblist code
 TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols,
                              uint32_t keylen, FixedAllocator* fa,
                              const rowgroup::RowGroup& otherSideRG, const std::vector<uint32_t>& otherKeyCols)
@@ -1449,17 +1541,29 @@ TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols,
     {
         type = r.getColTypes()[keyCols[i]];
 
-        if (type == CalpontSystemCatalog::VARCHAR ||
-                type == CalpontSystemCatalog::CHAR ||
-                type == CalpontSystemCatalog::TEXT)
+        if (datatypes::isCharType(type))
         {
             // this is a string, copy a normalized version
             const uint8_t* str = r.getStringPointer(keyCols[i]);
             uint32_t width = r.getStringLength(keyCols[i]);
+            // WIP MCOL-4173 store must use a str length not keylen
             if (TypelessDataStringEncoder(str, width).store(ret.data, off, keylen))
                 goto toolong;
         }
-        else if (r.getColType(keyCols[i]) == CalpontSystemCatalog::LONGDOUBLE)
+        else if (datatypes::isDecimal(type))
+        {
+            bool otherSideIsInt = isInteger(otherSideRG.getColType(otherKeyCols[i]));
+            // useless if otherSideIsInt is false
+            auto otherSideType = (otherSideIsInt) ? otherSideRG.getColType(otherKeyCols[i])
+                                                  : datatypes::SystemCatalog::UNDEFINED;
+            // WIP MCOL-4173 store must use a width not keylen
+            if (WideDecimalKeyEncoder(r, keyCols[i]).convert(otherSideIsInt, otherSideType)
+                                                    .store(ret, off, keylen))
+            {
+                goto toolong;
+            }
+        }
+        else if (datatypes::isLongDouble(type))
         {
             if (off + sizeof(long double) > keylen)
                 goto toolong;
@@ -1543,115 +1647,7 @@ toolong:
     return ret;
 }
 
-TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols, PoolAllocator* fa,
-                             const rowgroup::RowGroup& otherSideRG, const std::vector<uint32_t>& otherKeyCols)
-{
-    TypelessData ret;
-    uint32_t off = 0, i;
-    execplan::CalpontSystemCatalog::ColDataType type;
-
-    uint32_t keylen = 0;
-
-    /* get the length of the normalized key... */
-    for (i = 0; i < keyCols.size(); i++)
-    {
-        type = r.getColTypes()[keyCols[i]];
-
-        if (r.getColType(keyCols[i]) == CalpontSystemCatalog::LONGDOUBLE
-         && otherSideRG.getColType(otherKeyCols[i]) == CalpontSystemCatalog::LONGDOUBLE)
-        {
-            keylen += sizeof(long double);
-        }
-        else if (r.isCharType(keyCols[i]))
-            keylen += r.getStringLength(keyCols[i]) + 2;
-        else
-            keylen += 8;
-    }
-
-    ret.data = (uint8_t*) fa->allocate(keylen);
-
-    for (i = 0; i < keyCols.size(); i++)
-    {
-        type = r.getColTypes()[keyCols[i]];
-
-        if (type == CalpontSystemCatalog::VARCHAR ||
-                type == CalpontSystemCatalog::CHAR ||
-                type == CalpontSystemCatalog::TEXT)
-        {
-            // this is a string, copy a normalized version
-            const uint8_t* str = r.getStringPointer(keyCols[i]);
-            uint32_t width = r.getStringLength(keyCols[i]);
-            TypelessDataStringEncoder(str, width).store(ret.data, off, keylen);
-        }
-        else if (type == CalpontSystemCatalog::LONGDOUBLE)
-        {
-            // Small side is a long double. Since CS can't store larger than DOUBLE,
-            // we need to convert to whatever type large side is -- double or int64
-            long double keyld = r.getLongDoubleField(keyCols[i]);
-            switch (otherSideRG.getColType(otherKeyCols[i]))
-            {
-                case CalpontSystemCatalog::DOUBLE:
-                case CalpontSystemCatalog::UDOUBLE:
-                case CalpontSystemCatalog::FLOAT:
-                case CalpontSystemCatalog::UFLOAT:
-                {
-                    if (keyld > MAX_DOUBLE || keyld < MIN_DOUBLE)
-                    {
-                        ret.len = 0;
-                        return ret;
-                    }
-                    else
-                    {
-                        double d = (double)keyld;
-                        *((int64_t*) &ret.data[off]) = *(int64_t*)&d;
-                        off += 8;
-                    }
-                    break;
-                }
-                case CalpontSystemCatalog::LONGDOUBLE:
-                {
-                    *((long double*) &ret.data[off]) = keyld;
-                    off += sizeof(long double);
-                    break;
-                }
-                default:
-                {
-                    if (r.isUnsigned(keyCols[i]) && keyld > MAX_UBIGINT)
-                    {
-                        ret.len = 0;
-                        return ret;
-                    }
-                    else if (keyld > MAX_BIGINT || keyld < MIN_BIGINT)
-                    {
-                        ret.len = 0;
-                        return ret;
-                    }
-                    else
-                    {
-                        *((int64_t*) &ret.data[off]) = (int64_t)keyld;
-                        off += 8;
-                    }
-                    break;
-                }
-            }
-        }
-        else if (r.isUnsigned(keyCols[i]))
-        {
-            *((uint64_t*)&ret.data[off]) = r.getUintField(keyCols[i]);
-            off += 8;
-        }
-        else
-        {
-            *((int64_t*)&ret.data[off]) = r.getIntField(keyCols[i]);
-            off += 8;
-        }
-    }
-
-    assert(off == keylen);
-    ret.len = off;
-    return ret;
-}
-
+// WIP MCOL-4173
 uint64_t getHashOfTypelessKey(const Row& r, const vector<uint32_t>& keyCols, uint32_t seed)
 {
     Hasher_r hasher;
@@ -1894,9 +1890,69 @@ boost::shared_ptr<TupleJoiner> TupleJoiner::copyForDiskJoin()
     return ret;
 }
 
+bool TupleJoiner::hasDifferentKeylengthAtBothSides() const
+{
+    for (auto smallSideTypeIter = smallRG.getColTypes().begin(), largeSideTypeIter = largeRG.getColTypes().begin();
+         smallSideTypeIter != smallRG.getColTypes().end() && largeSideTypeIter != largeRG.getColTypes().end();
+         smallSideTypeIter++, largeSideTypeIter++)
+    {
+        if ((datatypes::isDecimal(*smallSideTypeIter) ||
+           (datatypes::isDecimal(*largeSideTypeIter))) &&
+           (*smallSideTypeIter != *largeSideTypeIter))
+        {
+                return true;
+        }
+    }
+    return false;
+}
+
 void TupleJoiner::setConvertToDiskJoin()
 {
     _convertToDiskJoin = true;
+}
+
+// The method is made to reuse the code from Typeless TupleJoiner ctor.
+// It is used in the mentioned ctor and in initBPP() to calculate
+// Typeless key length in case of a JOIN when large side column is INT
+// and small side column is wide-DECIMAL.
+// An important assumption is that if the type is DECIMAL than it must
+// be wide-DECIMAL b/c MCS calls the function running Typeless TupleJoiner
+// ctor.
+uint32_t calculateKeyLength(const std::vector<uint32_t>& aKeyColumnsIds,
+                            const rowgroup::RowGroup& aSmallRowGroup,
+                            const rowgroup::RowGroup* aLargeRowGroup)
+{
+    uint32_t keyLength = 0;
+    for (auto keyColumnId: aKeyColumnsIds)
+    {
+        const auto& smallKeyColumnType = aSmallRowGroup.getColTypes()[keyColumnId];
+        // Not used if aLargeRowGroup is 0 that happens in PrimProc.
+        const auto& largeKeyColumntype = (aLargeRowGroup) ? aLargeRowGroup->getColTypes()[keyColumnId]
+                                                          : datatypes::SystemCatalog::UNDEFINED;
+        if (datatypes::isCharType(smallKeyColumnType))
+        {
+            keyLength += aSmallRowGroup.getColumnWidth(keyColumnId) + 2;  // +2 for length
+
+            // MCOL-698: if we don't do this LONGTEXT allocates 32TB RAM
+            if (keyLength > 65536)
+                keyLength = 65536;
+        }
+        else if (datatypes::isLongDouble(smallKeyColumnType))
+        {
+            keyLength += sizeof(long double);
+        }
+        else if (datatypes::isDecimal(smallKeyColumnType) ||
+                 (aLargeRowGroup && datatypes::isDecimal(largeKeyColumntype)))
+        {
+            keyLength += (smallKeyColumnType != largeKeyColumntype) ? datatypes::MAXLEGACYWIDTH
+                                                                    : datatypes::MAXDECIMALWIDTH;
+        }
+        else
+        {
+            keyLength += datatypes::MAXLEGACYWIDTH;
+        }
+    }
+    return keyLength;
 }
 
 };

@@ -285,6 +285,16 @@ class TSInt128
       return TSInt128(s128Value + rhs.s128Value);
     }
 
+    inline bool operator>(const TSInt128& rhs) const
+    {
+      return s128Value > rhs.s128Value;
+    }
+
+    inline bool operator<(const TSInt128& rhs) const
+    {
+      return !(*this > rhs);
+    }
+
     inline TFloat128 toTFloat128() const
     {
       return TFloat128(s128Value);

@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2019 MariaDB Corporation
+   Copyright (C) 2019-2021 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -1479,10 +1479,8 @@ bool addFunctionJoin(vector<uint32_t>& joinedTables, JobStepVector& joinSteps,
             TupleInfo ti1 = getTupleInfo(key1, jobInfo);
             TupleInfo ti2 = getTupleInfo(key2, jobInfo);
 
-            if (ti1.dtype == CalpontSystemCatalog::CHAR 
-             || ti1.dtype == CalpontSystemCatalog::VARCHAR 
-             || ti1.dtype == CalpontSystemCatalog::TEXT)
-//             || ti1.dtype == CalpontSystemCatalog::LONGDOUBLE)
+            if (datatypes::isCharType(ti1.dtype) ||
+                datatypes::isWideDecimalType(ti1.dtype, ti1.width))
                 m1->second.fTypeless = m2->second.fTypeless = true;  // ti2 is compatible
             else
                 m1->second.fTypeless = m2->second.fTypeless = false;

@@ -1121,6 +1121,10 @@ void BatchPrimitiveProcessorJL::createBPP(ByteStream& bs) const
                 {
                     serializeVector<uint32_t>(bs, tJoiners[i]->getLargeKeyColumns());
                     bs << (uint32_t) tJoiners[i]->getKeyLength();
+                    // Notify PP if there is a key length difference b/w small and large sides.
+                    bs << tJoiners[i]->hasDifferentKeylengthAtBothSides();
+                    if (tJoiners[i]->hasDifferentKeylengthAtBothSides())
+                        serializeVector<uint32_t>(bs, tJoiners[i]->getSmallSideColumnsWidths());
                 }
             }
 
@@ -1606,17 +1610,6 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
 
         smallSide.setRowCount(toSend);
         tmpData.serialize(bs, smallSide.getDataSize());
-
-        /*
-        uint32_t lpos;
-        uint8_t *buf;
-
-        bs.needAtLeast(r.getSize() * toSend);
-        buf = (uint8_t *) bs.getInputPtr();
-        //for (i = pos, lpos = 0; i < pos + toSend; i++, lpos += r.getSize())
-        //	memcpy(&buf[lpos], (*tSmallSide)[i], r.getSize());
-        bs.advanceInputPtr(r.getSize() * toSend);
-        */
     }
 
     pos += toSend;
