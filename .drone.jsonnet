@@ -316,6 +316,8 @@ local Pipeline(branch, platform, event) = {
                "sed -i '/test-embedded/d' debian/mariadb-test.install",
                // Change plugin_maturity level
                // "sed -i 's/BETA/GAMMA/' storage/columnstore/CMakeLists.txt",
+               // Workaround till upstream removes 4535 workaround (workaround for workaround!)
+               "sed -i '/MCOL-4535/,/^$/d' debian/autobake-deb.sh",
                platformMap(branch, platform),
                if (pkg_format == 'rpm') then 'createrepo .' else 'dpkg-scanpackages ../ | gzip > ../Packages.gz',
              ],
