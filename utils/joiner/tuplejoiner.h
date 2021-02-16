@@ -40,32 +40,77 @@
 #include "hasher.h"
 #include "threadpool.h"
 #include "columnwidth.h"
+#include "mcs_string.h"
 
 namespace joiner
 {
 
+uint32_t calculateKeyLength(const std::vector<uint32_t>& aKeyColumnsIds,
+                            const rowgroup::RowGroup& aRowGroup,
+                            const std::vector<uint32_t>* aLargeKeyColumnsIds = nullptr,
+                            const rowgroup::RowGroup* aLargeRowGroup = nullptr);
+
+constexpr uint8_t IS_SMALLSIDE = 0x01; // SmallSide of a JOIN w/o a skew in key columns widths
+constexpr uint8_t IS_SMALLSIDE_SKEWED = 0x02; // SmallSide of a JOIN with a skew in key cols widths
+class TypelessDataDecoder;
+
 class TypelessData
 {
 public:
-    uint8_t* data;
+    union {
+        uint8_t* data;
+        const rowgroup::Row *mRowPtr;
+    };
     uint32_t len;
-    const rowgroup::Row *mRowPtr;
+    // The flags are locally significant in PP now so serialize doesn't send it over the wire.
+    uint32_t mFlags;
 
-    TypelessData() : data(NULL), len(0), mRowPtr(nullptr) { }
-    TypelessData(const rowgroup::Row *rowPtr) : data(NULL), len(0), mRowPtr(rowPtr) { }
+    TypelessData() : data(nullptr), len(0), mFlags(0) { }
+    TypelessData(const rowgroup::Row *rowPtr) : mRowPtr(rowPtr), len(0), mFlags(0) { }
+    TypelessData(messageqcpp::ByteStream& bs, utils::PoolAllocator& memAllocator) : data(nullptr), len(0), mFlags(0)
+    {
+        deserialize(bs, memAllocator);
+    }
     inline bool operator==(const TypelessData&) const;
     void serialize(messageqcpp::ByteStream&) const;
     void deserialize(messageqcpp::ByteStream&, utils::FixedAllocator&);
     void deserialize(messageqcpp::ByteStream&, utils::PoolAllocator&);
     std::string toString() const;
-    uint32_t hash(const rowgroup::RowGroup&, const std::vector<uint32_t>& keyCols) const;
-    static int cmp(const rowgroup::RowGroup&, const std::vector<uint32_t>& keyCols,
+    uint32_t hash(const rowgroup::RowGroup&,
+                  const std::vector<uint32_t>& keyCols,
+                  const std::vector<uint32_t> *smallSideKeyColumnsIds,
+                  const rowgroup::RowGroup *smallSideRG) const;
+    static int cmp(const rowgroup::RowGroup&,
+                   const std::vector<uint32_t>& keyCols,
                    const TypelessData &a,
-                   const TypelessData &b);
-    int cmpToRow(const rowgroup::RowGroup& r, const std::vector<uint32_t>& keyCols,
-                 const rowgroup::Row &db) const;
+                   const TypelessData &b,
+                   const std::vector<uint32_t> *smallSideKeyColumnsIds,
+                   const rowgroup::RowGroup *smallSideRG);
+    int cmpToRow(const rowgroup::RowGroup& r,
+                 const std::vector<uint32_t>& keyCols,
+                 const rowgroup::Row &row,
+                 const std::vector<uint32_t> *smallSideKeyColumnsIds,
+                 const rowgroup::RowGroup *smallSideRG) const;
+    inline void setSmallSide()
+    {
+        mFlags |= IS_SMALLSIDE;
+    }
+    inline void setSmallSideWithSkewedData()
+    {
+        mFlags |= IS_SMALLSIDE_SKEWED;
+    }
+    inline bool isSmallSide() const
+    {
+        return mFlags & (IS_SMALLSIDE_SKEWED | IS_SMALLSIDE);
+    }
+    inline bool isSmallSideWithSkewedData() const
+    {
+        return mFlags & IS_SMALLSIDE_SKEWED;
+    }
 };
 
+// This operator is used in EM only so it doesn't support TD cmp operation
+// using Row pointers.
 inline bool TypelessData::operator==(const TypelessData& t) const
 {
     if (len != t.len)
@@ -76,6 +121,57 @@ inline bool TypelessData::operator==(const TypelessData& t) const
 
     return (memcmp(data, t.data, len) == 0);
 }
+
+class TypelessDataDecoder
+{
+    const uint8_t *mPtr;
+    const uint8_t *mEnd;
+    void checkAvailableData(uint32_t nbytes) const
+    {
+        if (mPtr + nbytes > mEnd)
+            throw runtime_error("TypelessData is too short");
+    }
+public:
+    TypelessDataDecoder(const uint8_t* ptr, size_t length)
+        :mPtr(ptr), mEnd(ptr + length)
+    { }
+    TypelessDataDecoder(const TypelessData &data)
+        :TypelessDataDecoder(data.data, data.len)
+    { }
+    utils::ConstString scanGeneric(uint32_t length)
+    {
+        checkAvailableData(length);
+        utils::ConstString res((const char *) mPtr, length);
+        mPtr += length;
+        return res;
+    }
+    uint32_t scanStringLength()
+    {
+        checkAvailableData(2);
+        uint32_t res = ((uint32_t) mPtr[0]) * 255 + mPtr[1];
+        mPtr += 2;
+        return res;
+    }
+    utils::ConstString scanString()
+    {
+        return scanGeneric(scanStringLength());
+    }
+    int64_t scanTInt64()
+    {
+        checkAvailableData(sizeof(int64_t));
+        int64_t res = *reinterpret_cast<const int64_t*>(mPtr);
+        mPtr += sizeof(int64_t);
+        return res;
+    }
+    datatypes::TSInt128 scanTInt128()
+    {
+        checkAvailableData(datatypes::MAXDECIMALWIDTH);
+        datatypes::TSInt128 res(mPtr);
+        mPtr += datatypes::MAXDECIMALWIDTH;
+        return res;
+    }
+
+};
 
 // Comparator for long double in the hash
 class LongDoubleEq
@@ -104,10 +200,16 @@ class TypelessDataStructure
 public:
    const rowgroup::RowGroup *mRowGroup;
    const std::vector<uint32_t> *mMap;
+   const std::vector<uint32_t> *mSmallSideKeyColumnsIds;
+   const rowgroup::RowGroup *mSmallSideRG;
    TypelessDataStructure(const rowgroup::RowGroup *rg,
-                         const std::vector<uint32_t> *map)
+                         const std::vector<uint32_t> *map,
+                         const std::vector<uint32_t> *smallSideKeyColumnsIds,
+                         const rowgroup::RowGroup *smallSideRG)
        :mRowGroup(rg),
-        mMap(map)
+        mMap(map),
+        mSmallSideKeyColumnsIds(smallSideKeyColumnsIds),
+        mSmallSideRG(smallSideRG)
    { }
 };
 
@@ -150,12 +252,14 @@ public:
     struct TypelessDataHasher: public TypelessDataStructure
     {
         TypelessDataHasher(const rowgroup::RowGroup *rg,
-                           const std::vector<uint32_t> *map)
-           :TypelessDataStructure(rg, map)
+                           const std::vector<uint32_t> *map,
+                           const std::vector<uint32_t> *smallSideKeyColumnsIds,
+                           const rowgroup::RowGroup *smallSideRG)
+           :TypelessDataStructure(rg, map, smallSideKeyColumnsIds, smallSideRG)
         { }
         inline size_t operator()(const TypelessData& e) const
         {
-            return e.hash(*mRowGroup, *mMap);
+            return e.hash(*mRowGroup, *mMap, mSmallSideKeyColumnsIds, mSmallSideRG);
         }
     };
 
@@ -163,12 +267,14 @@ public:
     {
     public:
         TypelessDataComparator(const rowgroup::RowGroup *rg,
-                               const std::vector<uint32_t> *map)
-           :TypelessDataStructure(rg, map)
+                               const std::vector<uint32_t> *map,
+                               const std::vector<uint32_t> *smallSideKeyColumnsIds,
+                               const rowgroup::RowGroup *smallSideRG)
+           :TypelessDataStructure(rg, map, smallSideKeyColumnsIds, smallSideRG)
         { }
         bool operator()(const TypelessData& a, const TypelessData& b) const
         {
-            return !TypelessData::cmp(*mRowGroup, *mMap, a, b);
+            return !TypelessData::cmp(*mRowGroup, *mMap, a, b, mSmallSideKeyColumnsIds, mSmallSideRG);
         }
     };
 
@@ -365,6 +471,12 @@ public:
         return nullValueForJoinColumn;
     }
 
+    // Wide-DECIMAL JOIN
+    bool joinHasSkewedKeyColumn();
+    inline const vector<uint32_t>& getSmallSideColumnsWidths() const
+    {
+        return smallRG.getColWidths();
+    }
     // Disk-based join support
     void clearData();
     boost::shared_ptr<TupleJoiner> copyForDiskJoin();

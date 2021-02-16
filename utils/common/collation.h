@@ -126,7 +126,7 @@ public:
     }
     uint32_t finalize() const
     {
-        return (uint32_t) mPart1;
+        return (uint32_t)mPart1;
     }
 };
 
