@@ -434,6 +434,7 @@ public:
                                   getPrecision(colIndex));
     }
     inline long double getLongDoubleField(uint32_t colIndex) const;
+    inline void storeInt128FieldIntoPtr(uint32_t colIndex, uint8_t* x) const;
     inline void getInt128Field(uint32_t colIndex, int128_t& x) const;
     inline datatypes::TSInt128 getTSInt128Field(uint32_t colIndex) const;
 
@@ -1056,6 +1057,11 @@ inline long double Row::getLongDoubleField(uint32_t colIndex) const
     return *((long double*) &data[offsets[colIndex]]);
 }
 
+inline void Row::storeInt128FieldIntoPtr(uint32_t colIndex, uint8_t* x) const
+{
+    datatypes::TSInt128::assignPtrPtr(x, &data[offsets[colIndex]]);
+}
+
 inline void Row::getInt128Field(uint32_t colIndex, int128_t& x) const
 {
     datatypes::TSInt128::assignPtrPtr(&x, &data[offsets[colIndex]]);
@@ -1448,6 +1454,8 @@ public:
 
     /** @brief Assignment operator.  It copies metadata, not the row data */
     RowGroup& operator=(const RowGroup&);
+
+    explicit RowGroup(messageqcpp::ByteStream& bs);
 
     ~RowGroup();
 

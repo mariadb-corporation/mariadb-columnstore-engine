@@ -1204,7 +1204,7 @@ void RowAggregation::makeAggFieldsNull(Row& row)
             case execplan::CalpontSystemCatalog::DECIMAL:
             case execplan::CalpontSystemCatalog::UDECIMAL:
             {
-                int colWidth = fRowGroupOut->getColumnWidth(colOut);
+                uint32_t colWidth = fRowGroupOut->getColumnWidth(colOut);
                 if (LIKELY(colWidth == datatypes::MAXDECIMALWIDTH))
                 {
                     uint32_t offset = row.getOffset(colOut);
@@ -1231,7 +1231,7 @@ void RowAggregation::makeAggFieldsNull(Row& row)
             case execplan::CalpontSystemCatalog::VARBINARY:
             case execplan::CalpontSystemCatalog::BLOB:
             {
-                int colWidth = fRowGroupOut->getColumnWidth(colOut);
+                uint32_t colWidth = fRowGroupOut->getColumnWidth(colOut);
 
                 if (colWidth <= datatypes::MAXLEGACYWIDTH)
                 {

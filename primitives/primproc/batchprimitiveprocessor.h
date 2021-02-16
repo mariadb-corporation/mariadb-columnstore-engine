@@ -87,7 +87,6 @@ public:
         std::runtime_error(s) { }
 };
 
-
 class BatchPrimitiveProcessor
 {
 public:
@@ -184,6 +183,8 @@ private:
     void writeProjectionPreamble();
     void makeResponse();
     void sendResponse();
+    joiner::TypelessData makeTypelessKey(const rowgroup::Row r,
+                                         const size_t joinerIdx) const;
 
     /* Used by scan operations to increment the LBIDs in successive steps */
     void nextLBID();
@@ -349,12 +350,16 @@ private:
     boost::shared_array<bool> typelessJoin;
     boost::shared_array<std::vector<uint32_t> > tlLargeSideKeyColumns;
     boost::shared_array<boost::shared_array<boost::shared_ptr<TLJoiner> > > tlJoiners;
-    boost::shared_array<uint32_t> tlKeyLengths;
+    boost::shared_array<uint32_t> tlSmallSideKeyLengths;
+    boost::shared_array<uint32_t> tlLargeSideKeyLengths;
+    // True if smallSide and largeSide TypelessData key column differs,e.g BIGINT vs DECIMAL(38).
+    bool mHasDifferentKeylengthAtBothSides; 
     inline void getJoinResults(const rowgroup::Row& r, uint32_t jIndex, std::vector<uint32_t>& v);
     // these allocators hold the memory for the keys stored in tlJoiners
     boost::shared_array<utils::PoolAllocator> storedKeyAllocators;
     // these allocators hold the memory for the large side keys which are short-lived
-    boost::scoped_array<utils::FixedAllocator> tmpKeyAllocators;
+    boost::scoped_array<utils::FixedAllocator> mTmpSmallSideKeyAllocators;
+    boost::scoped_array<utils::FixedAllocator> mTmpLargeSideKeyAllocators;
 
     /* PM Aggregation */
     rowgroup::RowGroup joinedRG;  // if there's a join, the rows are formatted with this

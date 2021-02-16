@@ -1736,13 +1736,13 @@ void TupleHashJoinStep::joinOneRG(uint32_t threadID, vector<RGData>* out,
         {
             (*tjoiners)[j]->match(largeSideRow, k, threadID, &joinMatches[j]);
             /* Debugging code to print the matches
-            	Row r;
-            	smallRGs[j].initRow(&r);
-            	cout << joinMatches[j].size() << " matches: \n";
-            	for (uint32_t z = 0; z < joinMatches[j].size(); z++) {
-            		r.setData(joinMatches[j][z]);
-            		cout << "  " << r.toString() << endl;
-            	}
+               Row r;
+               smallRGs[j].initRow(&r);
+               cout << joinMatches[j].size() << " matches: \n";
+               for (uint32_t z = 0; z < joinMatches[j].size(); z++) {
+                   r.setData(joinMatches[j][z]);
+                   cout << "  " << r.toString() << endl;
+               }
             */
             matchCount = joinMatches[j].size();
 

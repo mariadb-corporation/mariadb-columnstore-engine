@@ -170,6 +170,14 @@ ByteStream& ByteStream::operator<<(const uint8_t b)
     return *this;
 }
 
+ByteStream& ByteStream::operator<<(const bool b)
+{
+    add(b);
+
+    return *this;
+}
+
+
 ByteStream& ByteStream::operator<<(const int16_t d)
 {
     if (fBuf == 0 || (fCurInPtr - fBuf + 2U > fMaxLen + ISSOverhead))
@@ -296,6 +304,14 @@ ByteStream& ByteStream::operator>>(uint8_t& b)
     return *this;
 }
 
+ByteStream& ByteStream::operator>>(bool& b)
+{
+    peek(b);
+    fCurOutPtr++;
+    return *this;
+}
+
+
 ByteStream& ByteStream::operator>>(int16_t& d)
 {
     peek(d);
@@ -381,6 +397,15 @@ void ByteStream::peek(uint8_t& b) const
 
     b = *((int8_t*)fCurOutPtr);
 }
+
+void ByteStream::peek(bool& b) const
+{
+    if (length() < 1)
+        throw underflow_error("ByteStream::peek(bool): not enough data in stream to fill datatype");
+
+    b = *((bool*)fCurOutPtr);
+}
+
 
 void ByteStream::peek(int16_t& d) const
 {

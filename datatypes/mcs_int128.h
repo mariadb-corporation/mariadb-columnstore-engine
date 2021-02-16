@@ -285,6 +285,16 @@ class TSInt128
       return TSInt128(s128Value + rhs.s128Value);
     }
 
+    inline bool operator>(const TSInt128& rhs) const
+    {
+      return s128Value > rhs.s128Value;
+    }
+
+    inline bool operator<(const TSInt128& rhs) const
+    {
+      return !(*this > rhs);
+    }
+
     inline TFloat128 toTFloat128() const
     {
       return TFloat128(s128Value);
@@ -293,6 +303,12 @@ class TSInt128
     inline const int128_t& getValue() const
     {
       return s128Value;
+    }
+
+    inline uint64_t getFirst8Bytes() const
+    {
+      uint64_t* ptr = (uint64_t*)&s128Value;
+      return ptr[0];
     }
 
     //    print int128_t parts represented as PODs

@@ -1317,6 +1317,12 @@ RowGroup& RowGroup::operator=(const RowGroup& r)
     return *this;
 }
 
+RowGroup::RowGroup(ByteStream& bs): columnCount(0), data(nullptr), rgData(nullptr), strings(nullptr),
+    useStringTable(true), hasCollation(false), hasLongStringField(false), sTableThreshold(20)
+{
+    this->deserialize(bs);
+}
+
 RowGroup::~RowGroup()
 {
 }

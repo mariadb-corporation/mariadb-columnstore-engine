@@ -51,6 +51,11 @@ public:
   {
     return mValue;
   }
+
+  void store(uint8_t* dst) const
+  {
+    *(uint64_t*) dst = mValue;
+  }
 };
 
 

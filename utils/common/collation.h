@@ -124,9 +124,9 @@ public:
     {
         return add(cs, str.str(), str.length());
     }
-    uint32_t finalize() const
+    uint64_t finalize() const
     {
-        return (uint32_t) mPart1;
+        return mPart1;
     }
 };
 

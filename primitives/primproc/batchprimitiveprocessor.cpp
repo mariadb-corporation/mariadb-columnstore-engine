@@ -129,6 +129,7 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor() :
     hasFilterStep(false),
     filtOnString(false),
     prefetchThreshold(0),
+    mHasDifferentKeylengthAtBothSides(false),
     hasDictStep(false),
     sockIndex(0),
     endOfJoinerRan(false),
@@ -175,6 +176,7 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor(ByteStream& b, double prefetch,
     hasFilterStep(false),
     filtOnString(false),
     prefetchThreshold(prefetch),
+    mHasDifferentKeylengthAtBothSides(false),
     hasDictStep(false),
     sockIndex(0),
     endOfJoinerRan(false),
@@ -215,6 +217,26 @@ BatchPrimitiveProcessor::~BatchPrimitiveProcessor()
 
     counterLock.unlock();
     pthread_mutex_destroy(&objLock);
+}
+
+// joiner::makeTypelessKey wrapper to take a potential
+// TL key columns widths difference into account.
+joiner::TypelessData BatchPrimitiveProcessor::makeTypelessKey(const rowgroup::Row r,
+                                                              const size_t joinerIdx) const
+{
+    if (mHasDifferentKeylengthAtBothSides)
+    {
+        return joiner::makeTypelessKey(r,
+                                       tlLargeSideKeyColumns[joinerIdx],
+                                       tlLargeSideKeyLengths[joinerIdx],
+                                       &mTmpLargeSideKeyAllocators[joinerIdx],
+                                       &smallSideRGs[0].getColWidths());
+    }
+    return joiner::makeTypelessKey(r,
+                                   tlLargeSideKeyColumns[joinerIdx],
+                                   tlSmallSideKeyLengths[joinerIdx],
+                                   &mTmpSmallSideKeyAllocators[joinerIdx],
+                                   nullptr);
 }
 
 /**
@@ -297,7 +319,6 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
             for (uint j = 0; j < joinerCount; ++j)
                 tJoiners[j].reset(new boost::shared_ptr<TJoiner>[processorThreads]);
 
-            //_pools.reset(new boost::shared_ptr<utils::SimplePool>[joinerCount]);
             tlJoiners.reset(new boost::shared_array<boost::shared_ptr<TLJoiner> >[joinerCount]);
             for (uint j = 0; j < joinerCount; ++j)
                 tlJoiners[j].reset(new boost::shared_ptr<TLJoiner>[processorThreads]);
@@ -311,7 +332,8 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
             largeSideKeyColumns.reset(new uint32_t[joinerCount]);
             tlLargeSideKeyColumns.reset(new vector<uint32_t>[joinerCount]);
             typelessJoin.reset(new bool[joinerCount]);
-            tlKeyLengths.reset(new uint32_t[joinerCount]);
+            tlSmallSideKeyLengths.reset(new uint32_t[joinerCount]);
+            tlLargeSideKeyLengths.reset(new uint32_t[joinerCount]);
 
             storedKeyAllocators.reset(new PoolAllocator[joinerCount]);
             for (uint j = 0; j < joinerCount; ++j)
@@ -322,6 +344,7 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
             joinFEFilters.reset(new scoped_ptr<FuncExpWrapper>[joinerCount]);
             hasJoinFEFilters = false;
             hasSmallOuterJoin = false;
+            bool smallSideRGRecvd = false;
 
             for (i = 0; i < joinerCount; i++)
             {
@@ -356,14 +379,27 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
                 else
                 {
                     deserializeVector<uint32_t>(bs, tlLargeSideKeyColumns[i]);
-                    bs >> tlKeyLengths[i];
-                    //storedKeyAllocators[i] = PoolAllocator();
+                    bs >> tlSmallSideKeyLengths[i];
+                    bs >> mHasDifferentKeylengthAtBothSides;
+                    tlLargeSideKeyLengths[i] = (mHasDifferentKeylengthAtBothSides) ? joiner::calculateKeyLength(tlLargeSideKeyColumns[i], outputRG)
+                                                                                   : tlSmallSideKeyLengths[i];
+                    // Deser smallSideRG if key data types are different, e.g. INT vs wide-DECIMAL.
+                    if (mHasDifferentKeylengthAtBothSides && !smallSideRGRecvd)
+                    {
+                        smallSideRGs.emplace_back(rowgroup::RowGroup(bs));
+                        smallSideRGRecvd = true;
+                    }
                     for (uint j = 0; j < processorThreads; ++j)
-                        tlJoiners[i][j].reset(new TLJoiner(10,
-                                                           TupleJoiner::TypelessDataHasher(&outputRG,
-                                                                               &tlLargeSideKeyColumns[i]),
-                                                           TupleJoiner::TypelessDataComparator(&outputRG,
-                                                                                   &tlLargeSideKeyColumns[i])));
+                    {
+                        auto* smallSideColumnsWidthsPtr = (mHasDifferentKeylengthAtBothSides) ? &smallSideRGs[0].getColWidths()
+                                                                                              : nullptr;
+                        auto tlHasher = TupleJoiner::TypelessDataHasher(&outputRG,
+                                                                        &tlLargeSideKeyColumns[i],
+                                                                        smallSideColumnsWidthsPtr);
+                        auto tlComparator = TupleJoiner::TypelessDataComparator(&outputRG,
+                                                                                &tlLargeSideKeyColumns[i]);
+                        tlJoiners[i][j].reset(new TLJoiner(10, tlHasher, tlComparator));
+                    }
                 }
             }
 
@@ -621,8 +657,16 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
                 if (nullFlag == 0)
                 {
                     tlLargeKey.deserialize(bs, storedKeyAllocator);
+                    if (mHasDifferentKeylengthAtBothSides)
+                        tlLargeKey.setSmallSideFlag();
                     bs >> tlIndex;
-                    bucket = tlLargeKey.hash(outputRG, tlLargeSideKeyColumns[joinerNum]) & ptMask;
+                    auto* smallSideColumnsWidthsPtr = (mHasDifferentKeylengthAtBothSides) ? &smallSideRGs[0].getColWidths()
+                                                                                          : nullptr;
+                    // The bucket number corresponds with the index used later inserting TL keys into permanent JOIN hash map.
+                    auto ha = tlLargeKey.hash(outputRG,
+                                             tlLargeSideKeyColumns[joinerNum],
+                                             smallSideColumnsWidthsPtr); 
+                    bucket = ha & ptMask;
                     tmpBuckets[bucket].push_back(make_pair(tlLargeKey, tlIndex));
                 }
                 else
@@ -914,11 +958,25 @@ void BatchPrimitiveProcessor::initProcessor()
         {
             outputRG.initRow(&oldRow);
             outputRG.initRow(&newRow);
-            tmpKeyAllocators.reset(new FixedAllocator[joinerCount]);
+            mTmpSmallSideKeyAllocators.reset(new FixedAllocator[joinerCount]);
+            // SmallSide key length differs from LargeSide keylength so MCS
+            // adds another FixedAllocator.
+            if (mHasDifferentKeylengthAtBothSides)
+                mTmpLargeSideKeyAllocators.reset(new FixedAllocator[joinerCount]);
 
             for (i = 0; i < joinerCount; i++)
+            {
                 if (typelessJoin[i])
-                    tmpKeyAllocators[i] = FixedAllocator(tlKeyLengths[i], true);
+                {
+                    // MCS has two different FixedAllocators
+                    // for Typeless keys to manage with the case
+                    // when key size differs, e.g. INT vs wide-DECIMAL.
+                    if (mHasDifferentKeylengthAtBothSides)
+                        mTmpLargeSideKeyAllocators[i] = FixedAllocator(tlLargeSideKeyLengths[i], true); 
+
+                    mTmpSmallSideKeyAllocators[i] = FixedAllocator(tlSmallSideKeyLengths[i], true);
+                }
+            }
 
             tSmallSideMatches.reset(new MatchedData[joinerCount]);
             keyColumnProj.reset(new bool[projectCount]);
@@ -1126,7 +1184,6 @@ void BatchPrimitiveProcessor::executeTupleJoin()
     uint32_t newRowCount = 0, i, j;
     vector<uint32_t> matches;
     uint64_t largeKey;
-    TypelessData tlLargeKey;
 
     outputRG.getRow(0, &oldRow);
     outputRG.getRow(0, &newRow);
@@ -1195,9 +1252,9 @@ void BatchPrimitiveProcessor::executeTupleJoin()
             {
                 //cout << " typeless join\n";
                 // the null values are not sent by UM in typeless case.  null -> !found
-                tlLargeKey = makeTypelessKey(oldRow, tlLargeSideKeyColumns[j], tlKeyLengths[j],
-                                             &tmpKeyAllocators[j]);
-                uint bucket = tlLargeKey.hash(outputRG, tlLargeSideKeyColumns[j]) & ptMask;
+                TypelessData tlLargeKey = makeTypelessKey(oldRow, j);
+                auto ha = tlLargeKey.hash(outputRG, tlLargeSideKeyColumns[j]); 
+                uint bucket = ha & ptMask;
                 found = tlJoiners[j][bucket]->find(tlLargeKey) != tlJoiners[j][bucket]->end();
 
                 if ((!found && !(joinTypes[j] & (LARGEOUTER | ANTI))) ||
@@ -1336,21 +1393,23 @@ void BatchPrimitiveProcessor::executeTupleJoin()
             /* Finally, copy the row into the output */
             if (j == joinerCount)
             {
+                // We need to update 8 and 16 bytes in values and wide128Values buffers
+                // otherwise unrelated values will be observed in the JOIN-ed output RGData.
                 if (i != newRowCount)
                 {
                     values[newRowCount] = values[i];
+                    if (mHasDifferentKeylengthAtBothSides)
+                        wide128Values[newRowCount] = wide128Values[i];
                     relRids[newRowCount] = relRids[i];
                     copyRow(oldRow, &newRow);
-                    //cout << "joined row: " << newRow.toString() << endl;
-                    //memcpy(newRow.getData(), oldRow.getData(), oldRow.getSize());
+                    //cout << "joined row: " << newRow.toString() << endl; 
                 }
 
                 newRowCount++;
                 newRow.nextRow();
             }
-
             //else
-            //	cout << "j != joinerCount\n";
+            // cout << "j != joinerCount\n";
         }
     }
 
@@ -2221,7 +2280,6 @@ int BatchPrimitiveProcessor::operator()()
         }
         catch (std::exception& e)
         {
-            cerr << "BPP::sendResponse(): " << e.what() << endl;
             break;  // If we make this throw, be sure to do the cleanup at the end
         }
 
@@ -2384,12 +2442,19 @@ SBPP BatchPrimitiveProcessor::duplicate()
         bpp->typelessJoin = typelessJoin;
         bpp->tlLargeSideKeyColumns = tlLargeSideKeyColumns;
         bpp->tlJoiners = tlJoiners;
-        bpp->tlKeyLengths = tlKeyLengths;
+        bpp->tlSmallSideKeyLengths = tlSmallSideKeyLengths;
+        bpp->tlLargeSideKeyLengths = tlLargeSideKeyLengths;
         bpp->storedKeyAllocators = storedKeyAllocators;
         bpp->joinNullValues = joinNullValues;
         bpp->doMatchNulls = doMatchNulls;
         bpp->hasJoinFEFilters = hasJoinFEFilters;
         bpp->hasSmallOuterJoin = hasSmallOuterJoin;
+        bpp->mHasDifferentKeylengthAtBothSides = mHasDifferentKeylengthAtBothSides;
+        if (!getTupleJoinRowGroupData && mHasDifferentKeylengthAtBothSides)
+        {
+            idbassert(!smallSideRGs.empty());
+            bpp->smallSideRGs.push_back(smallSideRGs[0]);
+        }
 
         if (hasJoinFEFilters)
         {
@@ -2713,9 +2778,7 @@ inline void BatchPrimitiveProcessor::getJoinResults(const Row& r, uint32_t jInde
                 return;
             }
         }
-
-        TypelessData largeKey = makeTypelessKey(r, tlLargeSideKeyColumns[jIndex],
-                                                tlKeyLengths[jIndex], &tmpKeyAllocators[jIndex]);
+        TypelessData largeKey = makeTypelessKey(r, jIndex);
         pair<TLJoiner::iterator, TLJoiner::iterator> range;
         bucket = largeKey.hash(outputRG, tlLargeSideKeyColumns[jIndex]) & ptMask;
         range = tlJoiners[jIndex][bucket]->equal_range(largeKey);

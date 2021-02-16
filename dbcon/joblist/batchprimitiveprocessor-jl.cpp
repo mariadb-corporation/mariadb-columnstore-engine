@@ -1093,6 +1093,7 @@ void BatchPrimitiveProcessorJL::createBPP(ByteStream& bs) const
             cout << "PMJoinerCount = " << PMJoinerCount << endl;
 #endif
 
+            bool smallSideRGSent = false;
             for (i = 0; i < PMJoinerCount; i++)
             {
                 bs << (uint32_t) tJoiners[i]->size();
@@ -1121,6 +1122,15 @@ void BatchPrimitiveProcessorJL::createBPP(ByteStream& bs) const
                 {
                     serializeVector<uint32_t>(bs, tJoiners[i]->getLargeKeyColumns());
                     bs << (uint32_t) tJoiners[i]->getKeyLength();
+                    // MCOL-4173 Notify PP if smallSide and largeSide have different column widths
+                    // and send smallSide RG to PP.
+                    bs << tJoiners[i]->largeSideIsWideSmallSideIsNarrow();
+                    if (!smallSideRGSent && tJoiners[i]->largeSideIsWideSmallSideIsNarrow())
+                    {
+                        idbassert(!smallSideRGs.empty());
+                        bs << smallSideRGs[0];
+                        smallSideRGSent = true;
+                    }
                 }
             }
 
@@ -1606,17 +1616,6 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
 
         smallSide.setRowCount(toSend);
         tmpData.serialize(bs, smallSide.getDataSize());
-
-        /*
-        uint32_t lpos;
-        uint8_t *buf;
-
-        bs.needAtLeast(r.getSize() * toSend);
-        buf = (uint8_t *) bs.getInputPtr();
-        //for (i = pos, lpos = 0; i < pos + toSend; i++, lpos += r.getSize())
-        //	memcpy(&buf[lpos], (*tSmallSide)[i], r.getSize());
-        bs.advanceInputPtr(r.getSize() * toSend);
-        */
     }
 
     pos += toSend;
