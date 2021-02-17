@@ -40,6 +40,7 @@ SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 
 SET (ENGINE_SYSCONFDIR "/etc")
 SET (ENGINE_DATADIR    "/var/lib/columnstore")
+SET (ENGINE_LOGDIR    "/var/log/mariadb/columnstore")
 
 IF (INSTALL_LAYOUT)
     # We are building from MariaDB server submodule if this is set

@@ -53,6 +53,7 @@
 #include "idbcompress.h"
 #include "calpontsystemcatalog.h"
 #include "we_ddlcommandclient.h"
+#include "mcsconfig.h"
 
 
 using namespace std;
@@ -76,7 +77,6 @@ namespace WriteEngine
 /* static */ const std::string   BulkLoad::DIR_BULK_JOB("job");
 /* static */ const std::string   BulkLoad::DIR_BULK_TEMP_JOB("tmpjob");
 /* static */ const std::string   BulkLoad::DIR_BULK_IMPORT("/data/import/");
-/* static */ const std::string   BulkLoad::DIR_BULK_LOG("/log/");
 /* static */ bool     			 BulkLoad::fNoConsoleOutput = false;
 
 //------------------------------------------------------------------------------
@@ -275,9 +275,9 @@ int BulkLoad::loadJobInfo(
 
     const Job& curJob = fJobInfo.getJob();
     string     logFile, errlogFile;
-    logFile = fRootDir + DIR_BULK_LOG + "Job_" +
+    logFile = std::string(MCSLOGDIR) + "/cpimport/" + "Job_" +
               Convertor::int2Str( curJob.id ) + LOG_SUFFIX;
-    errlogFile = fRootDir + DIR_BULK_LOG + "Job_" +
+    errlogFile = std::string(MCSLOGDIR) + "/cpimport/" + "Job_" +
                  Convertor::int2Str( curJob.id ) + ERR_LOG_SUFFIX;
 
     if (disableConsoleOutput())
@@ -1055,7 +1055,7 @@ int BulkLoad::processJob( )
                 (fBulkMode == BULK_MODE_REMOTE_MULTIPLE_SRC))
             tableInfo->setBulkLoadMode( fBulkMode, fBRMRptFileName );
 
-        tableInfo->setErrorDir(getErrorDir());
+        tableInfo->setErrorDir(string(getErrorDir()));
         tableInfo->setTruncationAsError(getTruncationAsError());
         rc = manageImportDataFileList( curJob, i, tableInfo );
 

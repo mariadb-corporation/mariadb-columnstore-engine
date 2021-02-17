@@ -41,6 +41,7 @@ namespace fs = boost::filesystem;
 #include "liboamcpp.h"
 #include "messagelog.h"
 #include "messageids.h"
+#include "mcsconfig.h"
 
 // Testing definitions.  These should never be commented out in checked in code.
 #define OAM_AVAILABLE		// Comment out to skip the OAM calls to get log file locations and turn on/off logging.
@@ -386,7 +387,7 @@ list<string> ReplayTxnLog::getLogFileNames()
     		oam.getLogFile("pm1", "data", fullLogFileName);
     	#else
     */
-    fullLogFileName = "/var/log/mariadb/columnstore/data/data_mods.log";
+    fullLogFileName = string(MCSLOGDIR) + "/data/data_mods.log";
     /*
     	#endif
     */

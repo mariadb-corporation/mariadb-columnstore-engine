@@ -29,6 +29,7 @@
 #include "we_config.h"
 #include "we_xmltag.h"
 #include "we_xmlgendata.h"
+#include "mcsconfig.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem/path.hpp>
@@ -39,7 +40,6 @@ namespace
 const char*  DICT_TYPE("D");
 const char*  ENCODING("UTF-8");
 const char*  LOGNAME("Jobxml_");
-const std::string LOGDIR("/log/");
 const char*  JOBNAME("Job_");
 }
 
@@ -60,9 +60,9 @@ XMLGenProc::XMLGenProc(XMLGenData* mgr, bool bUseXmlLogFile, bool bSysCatRpt) :
     fSysCatRpt(bSysCatRpt),
     fUseXmlLogFile(bUseXmlLogFile)
 {
-    std::string logFile(Config::getBulkRoot() + std::string(LOGDIR) + LOGNAME +
+    std::string logFile(std::string(MCSLOGDIR) + "/cpimport/" + LOGNAME +
                         fInputMgr->getParm(XMLGenData::JOBID) + ".log" );
-    std::string errFile(Config::getBulkRoot() + std::string(LOGDIR) + LOGNAME +
+    std::string errFile(std::string(MCSLOGDIR) + "/cpimport/" + LOGNAME +
                         fInputMgr->getParm(XMLGenData::JOBID) + ".err" );
     fErrorString.append(errFile + "\n");
 

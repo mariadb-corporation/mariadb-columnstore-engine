@@ -50,7 +50,7 @@ columnstoreSyslogFile=@ENGINE_SUPPORTDIR@/columnstoreSyslog
 columnstoreSyslogFile7=@ENGINE_SUPPORTDIR@/columnstoreSyslog7
 
 #get temp directory
-tmpDir=`@ENGINE_BINDIR@/mcsGetConfig SystemConfig SystemTempFileDir`
+tmpDir=@ENGINE_LOGDIR@/install
 
 checkSyslog() {
 #check which syslog daemon is being used
@@ -159,16 +159,16 @@ fi
 }
 
 makeDir() {
-	if [ ! -d /var/log/mariadb/columnstore ]; then
-		mkdir -p /var/log/mariadb/columnstore >/dev/null 2>&1
-		test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
-		test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
-		test -d /var/log/mariadb/columnstore/trace || mkdir /var/log/mariadb/columnstore/trace >/dev/null 2>&1
+	if [ ! -d @ENGINE_LOGDIR@ ]; then
+		mkdir -p @ENGINE_LOGDIR@ >/dev/null 2>&1
+		test -d @ENGINE_LOGDIR@/archive || mkdir @ENGINE_LOGDIR@/archive >/dev/null 2>&1
+		test -d @ENGINE_LOGDIR@/corefiles || mkdir @ENGINE_LOGDIR@/corefiles >/dev/null 2>&1
+		test -d @ENGINE_LOGDIR@/trace || mkdir @ENGINE_LOGDIR@/trace >/dev/null 2>&1
 		chown $username:$groupname -R /var/log/mariadb
 	else
-		test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
-		test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
-		test -d /var/log/mariadb/columnstore/trace || mkdir /var/log/mariadb/columnstore/trace >/dev/null 2>&1
+		test -d @ENGINE_LOGDIR@/archive || mkdir @ENGINE_LOGDIR@/archive >/dev/null 2>&1
+		test -d @ENGINE_LOGDIR@/corefiles || mkdir @ENGINE_LOGDIR@/corefiles >/dev/null 2>&1
+		test -d @ENGINE_LOGDIR@/trace || mkdir @ENGINE_LOGDIR@/trace >/dev/null 2>&1
 	fi
 }
 
@@ -220,19 +220,18 @@ if [ ! -z "$syslog_conf" ] ; then
 	fi
 	
 	#log install message and find the least permission that allows logging to work
-	CHMOD_LIST=("750" "770" "775" "777")
+	CHMOD_LIST=("755" "775" "777")
 	for CHMOD in "${CHMOD_LIST[@]}"; do
 		chmod $CHMOD /var/log/mariadb
-		chmod $CHMOD /var/log/mariadb/columnstore
-		chmod $CHMOD /var/log/mariadb/columnstore/archive
-		chmod $CHMOD /var/log/mariadb/columnstore/corefiles
-		chmod $CHMOD /var/log/mariadb/columnstore/trace
+		chmod $CHMOD @ENGINE_LOGDIR@
+		chmod $CHMOD @ENGINE_LOGDIR@/archive
+		chmod $CHMOD @ENGINE_LOGDIR@/corefiles
+		chmod $CHMOD @ENGINE_LOGDIR@/trace
 
-		. columnstore_functions
-		LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib cplogger -i 19 "***** MariaDB Columnstore Installed *****"
+		cplogger -i 19 "***** MariaDB Columnstore Installed *****"
 		
-		if [ -f /var/log/mariadb/columnstore/info.log ]; then
-			if [ -s /var/log/mariadb/columnstore/info.log ]; then
+		if [ -f @ENGINE_LOGDIR@/info.log ]; then
+			if [ -s @ENGINE_LOGDIR@/info.log ]; then
 				exit 0
 			fi
 		fi
@@ -290,7 +289,7 @@ check() {
 number=$RANDOM
 cplogger -i 104 "MariaDB Columnstore Log Test: $number"
 sleep 3
-egrep -qs "MariaDB Columnstore Log Test: $number" /var/log/mariadb/columnstore/info.log
+egrep -qs "MariaDB Columnstore Log Test: $number" @ENGINE_LOGDIR@/info.log
 if [ $? -eq 0 ]; then
 	echo "MariaDB Columnstore System Logging working"
 	exit 0

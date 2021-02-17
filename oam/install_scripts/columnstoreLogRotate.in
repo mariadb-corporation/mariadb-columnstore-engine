@@ -3,13 +3,13 @@
 # as part of the package installation
 # 
 
-/var/log/mariadb/columnstore/*.log {
+@ENGINE_LOGDIR@/*.log {
     missingok
     rotate 7
     daily
     dateext
     copytruncate
-    olddir /var/log/mariadb/columnstore/archive
+    olddir @ENGINE_LOGDIR@/archive
     su root root 
 }
 @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml {

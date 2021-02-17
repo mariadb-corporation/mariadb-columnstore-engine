@@ -3,7 +3,6 @@ SET (DEFAULT_GROUP "mysql")
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/columnstoreSyslogSetup.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/columnstoreSyslogSetup.sh" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/columnstore-post-install.in" "${CMAKE_CURRENT_SOURCE_DIR}/columnstore-post-install" @ONLY)
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/columnstore.in" "${CMAKE_CURRENT_SOURCE_DIR}/columnstore" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/columnstore-pre-uninstall.in" "${CMAKE_CURRENT_SOURCE_DIR}/columnstore-pre-uninstall" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/columnstoreLogRotate.in" "${CMAKE_CURRENT_SOURCE_DIR}/columnstoreLogRotate" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mariadb-columnstore.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/mariadb-columnstore.service" @ONLY)
@@ -27,7 +26,6 @@ install(PROGRAMS columnstore-post-install
                 columnstore_run.sh 
                 post-mysql-install 
                 post-mysqld-install 
-                columnstore 
                 columnstoreSyslogSetup.sh  
                 mcs-stop-controllernode.sh
                 mcs-loadbrm.py
