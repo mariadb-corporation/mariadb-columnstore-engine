@@ -41,6 +41,7 @@
 #include "stats.h"
 #include "configcpp.h"
 #include "filebuffermgr.h"
+#include "mcsconfig.h"
 
 using namespace config;
 using namespace boost;
@@ -73,7 +74,7 @@ FileBufferMgr::FileBufferMgr(const uint32_t numBlcks, const uint32_t blkSz, cons
 #ifdef _MSC_VER
     fLog.open("C:/Calpont/log/trace/bc", ios_base::app | ios_base::ate);
 #else
-    fLog.open("/var/log/mariadb/columnstore/trace/bc", ios_base::app | ios_base::ate);
+    fLog.open(string(MCSLOGDIR) + "/trace/bc", ios_base::app | ios_base::ate);
 #endif
 }
 

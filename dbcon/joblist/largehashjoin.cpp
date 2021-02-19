@@ -36,6 +36,8 @@ using namespace execplan;
 #include "elementtype.h"
 using namespace joblist;
 
+#include "mcsconfig.h"
+
 boost::mutex fileLock_g;
 
 namespace
@@ -43,7 +45,10 @@ namespace
 void logDiskIoInfo(uint64_t stepId, const AnyDataListSPtr& spdl)
 {
     boost::mutex::scoped_lock lk(fileLock_g);
-    ofstream umDiskIoFile("/var/log/mariadb/columnstore/trace/umdiskio.log", ios_base::app);
+    string umDiskioLog = string(MCSLOGDIR) + "/trace/umdiskio.log";
+    string umDiskioBak = string(MCSLOGDIR) + "/trace/umdiskio.bak";
+
+    ofstream umDiskIoFile(umDiskioLog.c_str(), ios_base::app);
 
     CalpontSystemCatalog::OID oid;
     uint64_t maxBuckets = 0;
@@ -107,7 +112,8 @@ void logDiskIoInfo(uint64_t stepId, const AnyDataListSPtr& spdl)
     // move the current file to bak when size above .5 G, so total log is 1 G
     if (curPos > 0x20000000)
     {
-        (void)system("/bin/mv /var/log/mariadb/columnstore/trace/umdiskio.log /var/log/mariadb/columnstore/trace/umdiskio.bak");
+        string cmd = "/bin/mv " + umDiskioLog + " " + umDiskioBak;
+        (void)system(cmd.c_str());
     }
 }
 

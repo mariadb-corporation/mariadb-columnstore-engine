@@ -52,6 +52,7 @@
 #include "IDBPolicy.h"
 #include "MonitorProcMem.h"
 #include "dataconvert.h"
+#include "mcsconfig.h"
 
 using namespace std;
 using namespace WriteEngine;
@@ -1149,7 +1150,8 @@ int main(int argc, char** argv)
     int        rc                 = NO_ERROR;
     std::string exceptionMsg;
     TASK       task;                // track tasks being performed
-
+    // set this upfront
+    curJob.setErrorDir(string(MCSLOGDIR) + "/cpimport/");
     try
     {
         //--------------------------------------------------------------------------

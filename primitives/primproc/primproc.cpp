@@ -331,16 +331,12 @@ void* waitForSIGUSR1(void* p)
 
         if (rec_sig == SIGUSR1)
         {
-#ifdef _MSC_VER
-            ofstream out("C:/Calpont/log/trace/pplru.dat");
-#else
-            ofstream out("/var/log/mariadb/columnstore/trace/pplru.dat");
-#endif
+            ostringstream out;
 
             for (int i = 0; i < cacheCount; i++)
             {
                 BRPp[i]->formatLRUList(out);
-                out << "###" << endl;
+                cout << out.str() << "###" << endl;
             }
         }
         else if (rec_sig == SIGUSR2)
