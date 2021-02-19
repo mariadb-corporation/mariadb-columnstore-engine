@@ -149,7 +149,9 @@ mcsv1_UDAF::ReturnCode covar_pop::evaluate(mcsv1Context* context, static_any::an
         long double sumy = data->sumy;
         long double sumxy = data->sumxy;
 
-        long double covar_pop = (sumxy - ((sumx * sumy) / N)) / N ;
+        long double covar_pop = (sumxy - ((sumx * sumy) / N)) / N;
+        if (covar_pop < 0)  // might be -0
+            covar_pop = 0;
         valOut = static_cast<double>(covar_pop);
     }
     return mcsv1_UDAF::SUCCESS;

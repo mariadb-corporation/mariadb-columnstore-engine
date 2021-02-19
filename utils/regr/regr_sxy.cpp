@@ -146,6 +146,8 @@ mcsv1_UDAF::ReturnCode regr_sxy::evaluate(mcsv1Context* context, static_any::any
     if (N > 0)
     {
         long double regr_sxy = (data->sumxy - ((data->sumx * data->sumy) / N));
+        if (regr_sxy < 0)
+            regr_sxy = 0;
         valOut = static_cast<double>(regr_sxy);
     }
     return mcsv1_UDAF::SUCCESS;

@@ -129,6 +129,8 @@ mcsv1_UDAF::ReturnCode regr_syy::evaluate(mcsv1Context* context, static_any::any
     if (N > 0)
     {
         long double var_popy = (data->sumy2 - (data->sumy * data->sumy / N));
+        if (var_popy < 0)  // might be -0
+            var_popy = 0;
         valOut = static_cast<double>(var_popy);
     }
     return mcsv1_UDAF::SUCCESS;

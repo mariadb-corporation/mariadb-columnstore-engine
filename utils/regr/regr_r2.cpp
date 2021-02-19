@@ -160,13 +160,13 @@ mcsv1_UDAF::ReturnCode regr_r2::evaluate(mcsv1Context* context, static_any::any&
         long double sumxy = data->sumxy;
 
         long double var_popx = (sumx2 - (sumx * sumx / N)) / N;
-        if (var_popx == 0)
+        if (var_popx <= 0)  // Catch -0
         {
             // When var_popx is 0, NULL is the result.
             return mcsv1_UDAF::SUCCESS;
         }
         double var_popy = (sumy2 - (sumy * sumy / N)) / N;
-        if (var_popy == 0)
+        if (var_popy <= 0)  // Catch -0
         {
             // When var_popy is 0, 1 is the result
             valOut = 1.0;

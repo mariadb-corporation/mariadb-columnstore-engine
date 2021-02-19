@@ -154,7 +154,7 @@ mcsv1_UDAF::ReturnCode regr_intercept::evaluate(mcsv1Context* context, static_an
         long double sumxy = data->sumxy;
         long double numerator = sumy * sumx2 - sumx * sumxy;
         long double var_pop = (N * sumx2) - (sumx * sumx);
-        if (var_pop != 0)
+        if (var_pop != 0 && var_pop != -0)
         {
             valOut = static_cast<double>(numerator / var_pop);
         }

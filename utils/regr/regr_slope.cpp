@@ -154,7 +154,7 @@ mcsv1_UDAF::ReturnCode regr_slope::evaluate(mcsv1Context* context, static_any::a
         long double sumxy = data->sumxy;
         long double covar_pop = N * sumxy - sumx * sumy;
         long double var_pop = N * sumx2 - sumx * sumx;
-        if (var_pop != 0)
+        if (var_pop != 0 && var_pop != -0)
         {
             long double slope = covar_pop / var_pop;
             valOut = static_cast<double>(slope);
