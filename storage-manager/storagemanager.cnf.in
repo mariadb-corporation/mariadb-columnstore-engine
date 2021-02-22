@@ -125,6 +125,12 @@ bucket = some_bucket
 # sts_region = 
 # sts_endpoint =
 
+# If running on AWS EC2 instance the value ec2_iam_mode can be set
+# 'enabled' and allow StorageManager to detect IAM role assigned 
+# to EC2 instances. This will then use the the temporary credentials
+# provided by EC2 metadata for S3 authentication access/secret keys.
+# ec2_iam_mode=enabled
+
 # The LocalStorage section configures the 'local storage' module
 # if specified by ObjectStorage/service.
 [LocalStorage]

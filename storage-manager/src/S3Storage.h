@@ -23,6 +23,8 @@
 #include <map>
 #include "CloudStorage.h"
 #include "libmarias3/marias3.h"
+#include "Config.h"
+#include <curl/curl.h>
 
 namespace storagemanager
 {
@@ -43,6 +45,8 @@ class S3Storage : public CloudStorage
         int exists(const std::string &key, bool *out);
 
     private:
+        bool getIAMRoleFromMetadataEC2();
+        bool getCredentialsFromMetadataEC2();
         void testConnectivityAndPerms();
         ms3_st *getConnection();
         void returnConnection(ms3_st *);
@@ -54,10 +58,13 @@ class S3Storage : public CloudStorage
         std::string region;
         std::string key;
         std::string secret;
+        std::string token;
         std::string endpoint;
         std::string IAMrole;
         std::string STSendpoint;
         std::string STSregion;
+        bool isEC2Instance;
+        bool ec2iamEnabled;
         
         struct Connection
         {
