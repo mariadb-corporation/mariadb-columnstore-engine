@@ -1494,7 +1494,7 @@ void WECmdArgs::checkJobIdCase()
         snprintf(aBuff, sizeof(aBuff), "%s/Job_%s.xml", fJobPath.c_str(),
                  fJobId.c_str());
     else	// for time being
-        snprintf(aBuff, sizeof(aBuff), "/var/lib/columnstore/data/bulk/job/Job_%s.xml",
+        snprintf(aBuff, sizeof(aBuff), "/var/log/mariadb/columnstore/data/bulk/job/Job_%s.xml",
                  fJobId.c_str());
 
     std::string aJobFileName(aBuff);
@@ -1933,23 +1933,6 @@ void WECmdArgs::checkForBulkLogDir(const std::string& BulkRoot)
             {
                 cout << "\nFailed to create job directory, check permissions\n" << endl;
                 throw runtime_error("Failed to create job directory, check permissions");
-            }
-        }
-
-        std::ostringstream aSS2;
-        aSS2 << BulkRoot;
-        aSS2 << "/log";
-        std::string logDir = aSS2.str();
-
-        if ( !boost::filesystem::exists(logDir.c_str()) )
-        {
-            cout << "Creating directory : " << logDir << endl;
-            bool aSuccess = boost::filesystem::create_directories(logDir.c_str());
-
-            if (!aSuccess)
-            {
-                cout << "\nFailed to create bulk log directory, check permissions\n" << endl;
-                throw runtime_error("Failed to create bulk log directory, check permissions");
             }
         }
     }

@@ -78,23 +78,6 @@ int main(int argc, char** argv)
                     return -1;
                 }
             }
-
-            std::ostringstream aSS2;
-            aSS2 << aBulkRoot;
-            aSS2 << "/log";
-            std::string logDir = aSS2.str();
-
-            if (!boost::filesystem::exists(logDir.c_str()))
-            {
-                cout << "Creating directory : " << logDir << endl;
-                bool aSuccess = boost::filesystem::create_directories(logDir.c_str());
-
-                if (!aSuccess)
-                {
-                    cout << "\nFailed to create directory, please check permissions\n" << endl;
-                    return -1;
-                }
-            }
         }
         else
         {

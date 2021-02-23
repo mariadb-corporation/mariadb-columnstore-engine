@@ -18,7 +18,7 @@
     copy
     olddir @ENGINE_SYSCONFDIR@/columnstore
 }
-@ENGINE_DATADIR@/data/bulk/job/*.xml {
+@ENGINE_LOGDIR@/data/bulk/job/*.xml {
     missingok
     daily
     rotate 1
@@ -26,7 +26,7 @@
     maxage 30 
     nocreate
 }
-@ENGINE_DATADIR@/data/bulk/log/*.err {
+@ENGINE_LOGDIR@/data/bulk/log/*.err {
     missingok
     daily
     rotate 1
@@ -34,7 +34,7 @@
     maxage 30 
     nocreate
 }
-@ENGINE_DATADIR@/data/bulk/log/*.log {
+@ENGINE_LOGDIR@/data/bulk/log/*.log {
     missingok
     daily
     rotate 1
