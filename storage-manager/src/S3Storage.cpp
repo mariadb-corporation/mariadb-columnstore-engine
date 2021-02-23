@@ -223,7 +223,7 @@ bool S3Storage::getIAMRoleFromMetadataEC2()
       return false;
     }
     IAMrole = readBuffer;
-    logger->log(LOG_INFO, "S3Storage: IAM Role Name = %s",IAMrole.c_str());
+    //logger->log(LOG_INFO, "S3Storage: IAM Role Name = %s",IAMrole.c_str());
 
     return true;
 }
@@ -250,7 +250,7 @@ bool S3Storage::getCredentialsFromMetadataEC2()
     key = pt.get<string>("AccessKeyId");
     secret = pt.get<string>("SecretAccessKey");
     token = pt.get<string>("Token");
-    logger->log(LOG_INFO, "S3Storage: key = %s secret = %s token = %s",key.c_str(),secret.c_str(),token.c_str());
+    //logger->log(LOG_INFO, "S3Storage: key = %s secret = %s token = %s",key.c_str(),secret.c_str(),token.c_str());
 
     return true;
 }
