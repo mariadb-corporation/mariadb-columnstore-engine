@@ -122,14 +122,13 @@ api_port, api_version, e)
                         raise RuntimeError("Error requesting {} from the primary \
 node.".format(e))
 
-                    # To avoid SM storing BRM files
-                    if storage.lower() == 's3' and bucket.lower() != 'some_bucket':
-                        dbrmroot = BYPASS_SM_PATH
+                    # Store BRM files locally to load them up
+                    dbrmroot = BYPASS_SM_PATH
 
-                        if not os.path.exists(dbrmroot):
-                            os.makedirs(dbrmroot)
-                            if use_systemd:
-                                shutil.chown(dbrmroot, USER, GROUP)
+                    if not os.path.exists(dbrmroot):
+                        os.makedirs(dbrmroot)
+                        if use_systemd:
+                            shutil.chown(dbrmroot, USER, GROUP)
 
                     current_name = '{}_{}'.format(dbrmroot, e)
 
