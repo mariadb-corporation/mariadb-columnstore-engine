@@ -145,8 +145,6 @@ void DictStep::prep(int8_t outputType, bool makeAbsRids)
                            ? OT_RID : OT_RID | OT_DATAVALUE);
     primMsg->NOPS = (eqFilter ? 0 : filterCount);
     primMsg->NVALS = 0;
-
-    likeFilter = bpp->pp.makeLikeFilter((DictFilterElement*) filterString.buf(), primMsg->NOPS);
 }
 
 void DictStep::issuePrimitive(bool isFilter)
@@ -174,7 +172,6 @@ void DictStep::issuePrimitive(bool isFilter)
         bpp->touchedBlocks++;
     }
 
-    bpp->pp.setLikeFilter(likeFilter);
     bpp->pp.p_Dictionary(primMsg, &result, isFilter, charsetNumber, eqFilter, eqOp);
 }
 

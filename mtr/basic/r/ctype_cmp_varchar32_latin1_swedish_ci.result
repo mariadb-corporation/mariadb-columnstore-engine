@@ -140,6 +140,18 @@ CALL exec('SELECT * FROM t1, t2 WHERE t1.c2=t2.c2');
 CALL exec('DROP TABLE t1');
 END;
 $$
+CREATE PROCEDURE test04_like(len INT, datatype TEXT)
+BEGIN
+CALL exec(REPLACE('CREATE TABLE t1 (c1 DATATYPE)', 'DATATYPE', datatype));
+CALL exec(REPLACE('INSERT INTO t1 VALUES (REPEAT(''a'',LEN))','LEN',len));
+CALL exec(REPLACE('INSERT INTO t1 VALUES (REPEAT(''A'',LEN))','LEN',len));
+CALL exec('SELECT * FROM t1 WHERE c1 LIKE ''a%'' ORDER BY BINARY c1');
+CALL exec('SELECT * FROM t1 WHERE c1 LIKE ''A%'' ORDER BY BINARY c1');
+CALL exec(REPLACE('SELECT * FROM t1 WHERE c1 LIKE ''VAL%'' ORDER BY BINARY c1','VAL',REPEAT('a',len)));
+CALL exec(REPLACE('SELECT * FROM t1 WHERE c1 LIKE ''VAL%'' ORDER BY BINARY c1','VAL',REPEAT('A',len)));
+CALL exec('DROP TABLE t1');
+END;
+$$
 SET NAMES utf8;
 SET @datatype='VARCHAR(32) CHARACTER SET latin1 COLLATE latin1_swedish_ci';
 CREATE TABLE t1 (c1 VARCHAR(32) CHARACTER SET latin1 COLLATE latin1_swedish_ci);
@@ -1656,6 +1668,35 @@ c1	c2	c1	c2
 Hellooooooooooooooooooo	hellooooooooooooooooooo	Hellooooooooooooooooooo	hellooooooooooooooooooo
 
 DROP TABLE t1
+CALL test04_like(32,@datatype);
+
+CREATE TABLE t1 (c1 VARCHAR(32) CHARACTER SET latin1 COLLATE latin1_swedish_ci)
+
+INSERT INTO t1 VALUES (REPEAT('a',32))
+
+INSERT INTO t1 VALUES (REPEAT('A',32))
+
+SELECT * FROM t1 WHERE c1 LIKE 'a%' ORDER BY BINARY c1
+c1
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+SELECT * FROM t1 WHERE c1 LIKE 'A%' ORDER BY BINARY c1
+c1
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+SELECT * FROM t1 WHERE c1 LIKE 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa%' ORDER BY BINARY c1
+c1
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+SELECT * FROM t1 WHERE c1 LIKE 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%' ORDER BY BINARY c1
+c1
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+DROP TABLE t1
 DROP PROCEDURE exec;
 DROP PROCEDURE test01_execval;
 DROP PROCEDURE test01_populate;
@@ -1668,6 +1709,7 @@ DROP PROCEDURE test02_same_table_populate;
 DROP PROCEDURE test02_same_table_cmp_field_field_op;
 DROP PROCEDURE test02_same_table_cmp_field_field;
 DROP PROCEDURE test03;
+DROP PROCEDURE test04_like;
 EXECUTE IMMEDIATE CONCAT('DROP DATABASE ', @database);
 USE test;
 SET @@default_storage_engine=DEFAULT;

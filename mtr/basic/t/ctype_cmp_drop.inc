@@ -10,6 +10,7 @@ DROP PROCEDURE test02_same_table_populate;
 DROP PROCEDURE test02_same_table_cmp_field_field_op;
 DROP PROCEDURE test02_same_table_cmp_field_field;
 DROP PROCEDURE test03;
+DROP PROCEDURE test04_like;
 EXECUTE IMMEDIATE CONCAT('DROP DATABASE ', @database);
 USE test;
 SET @@default_storage_engine=DEFAULT;

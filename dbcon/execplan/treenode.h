@@ -441,16 +441,6 @@ public:
         return fResult;
     }
 
-    // regex mutator and accessor
-    virtual void regex(SP_IDB_Regex regex)
-    {
-        fRegex = regex;
-    }
-    virtual SP_IDB_Regex regex() const
-    {
-        return fRegex;
-    }
-
     uint32_t charsetNumber() const
     {
         return fResultType.charsetNumber;
@@ -465,7 +455,6 @@ protected:
     Result fResult;
     execplan::CalpontSystemCatalog::ColType fResultType; // mapped from mysql data type
     execplan::CalpontSystemCatalog::ColType fOperationType; // operator type, could be different from the result type
-    SP_IDB_Regex fRegex;
 
     // double's range is +/-1.7E308 with at least 15 digits of precision
     char tmp[312]; // for conversion use
