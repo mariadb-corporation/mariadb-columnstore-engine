@@ -360,6 +360,14 @@ public:
         return fColumnMap;
     }
 
+    /** column map
+     * all the columns appeared on query
+     */
+    ColumnMap& columnMap()
+    {
+        return fColumnMap;
+    }
+
     /** assign the static fColMap to non-static fColumnMap. map-wise copy */
     void columnMap (const ColumnMap& columnMap);
 
