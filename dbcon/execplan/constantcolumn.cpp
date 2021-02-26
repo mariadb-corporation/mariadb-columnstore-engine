@@ -208,17 +208,6 @@ ConstantColumn::ConstantColumn( const ConstantColumn& rhs):
     fAlias = rhs.alias();
     fResult = rhs.fResult;
     fResultType = rhs.fResultType;
-
-    if (fRegex.get() != NULL)
-    {
-        fRegex.reset(new CNX_Regex());
-#ifdef POSIX_REGEX
-        string str = dataconvert::DataConvert::constructRegexp(fResult.strVal);
-        regcomp(fRegex.get(), str.c_str(), REG_NOSUB | REG_EXTENDED);
-#else
-        *fRegex = dataconvert::DataConvert::constructRegexp(fResult.strVal);
-#endif
-    }
 }
 
 ConstantColumn::ConstantColumn(const int64_t val, TYPE type) :
@@ -268,12 +257,6 @@ ConstantColumn::ConstantColumn(const uint64_t val, TYPE type,
 
 ConstantColumn::~ConstantColumn()
 {
-#ifdef POSIX_REGEX
-
-    if (fRegex.get() != NULL)
-        regfree(fRegex.get());
-
-#endif
 }
 
 const string ConstantColumn::toString() const
@@ -407,18 +390,6 @@ bool ConstantColumn::operator!=(const ConstantColumn& t) const
 bool ConstantColumn::operator!=(const TreeNode* t) const
 {
     return (!(*this == t));
-}
-
-void ConstantColumn::constructRegex()
-{
-    //fRegex = new regex_t();
-    fRegex.reset(new CNX_Regex());
-#ifdef POSIX_REGEX
-    string str = dataconvert::DataConvert::constructRegexp(fResult.strVal);
-    regcomp(fRegex.get(), str.c_str(), REG_NOSUB | REG_EXTENDED);
-#else
-    *fRegex = dataconvert::DataConvert::constructRegexp(fResult.strVal);
-#endif
 }
 
 }

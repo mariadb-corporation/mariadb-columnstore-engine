@@ -1037,12 +1037,7 @@ public:
     EXPORT static bool      isColumnTimeValid( int64_t time );
     EXPORT static bool      isColumnTimeStampValid( int64_t timeStamp );
 
-    static inline std::string constructRegexp(const std::string& str);
     static inline void trimWhitespace(int64_t& charData);
-    static inline bool isEscapedChar(char c)
-    {
-        return ('%' == c || '_' == c);
-    }
 
     // convert string to date
     EXPORT static int64_t stringToDate(const std::string& data);
@@ -1303,87 +1298,6 @@ inline void DataConvert::trimWhitespace(int64_t& charData)
     }
 }
 
-//FIXME: copy/pasted from dictionary.cpp: refactor
-inline std::string DataConvert::constructRegexp(const std::string& str)
-{
-    //In the worst case, every char is quadrupled, plus some leading/trailing cruft...
-    char* cBuf = new char[(4 * str.length()) + 3];
-    char c;
-    uint32_t i, cBufIdx = 0;
-    // translate to regexp symbols
-    cBuf[cBufIdx++] = '^';  // implicit leading anchor
-
-    for (i = 0; i < str.length(); i++)
-    {
-        c = (char) str.c_str()[i];
-
-        switch (c)
-        {
-
-            // chars to substitute
-            case '%':
-                cBuf[cBufIdx++] = '.';
-                cBuf[cBufIdx++] = '*';
-                break;
-
-            case '_':
-                cBuf[cBufIdx++] = '.';
-                break;
-
-            // escape the chars that are special in regexp's but not in SQL
-            // default special characters in perl: .[{}()\*+?|^$
-            case '.':
-            case '*':
-            case '^':
-            case '$':
-            case '?':
-            case '+':
-            case '|':
-            case '[':
-            case '{':
-            case '}':
-            case '(':
-            case ')':
-                cBuf[cBufIdx++] = '\\';
-                cBuf[cBufIdx++] = c;
-                break;
-
-            case '\\':  //this is the sql escape char
-                if ( i + 1 < str.length())
-                {
-                    if (isEscapedChar(str.c_str()[i + 1]))
-                    {
-                        cBuf[cBufIdx++] = str.c_str()[++i];
-                        break;
-                    }
-                    else if ('\\' == str.c_str()[i + 1])
-                    {
-                        cBuf[cBufIdx++] = c;
-                        cBuf[cBufIdx++] = str.c_str()[++i];
-                        break;
-                    }
-
-                }  //single slash
-
-                cBuf[cBufIdx++] = '\\';
-                cBuf[cBufIdx++] = c;
-                break;
-
-            default:
-                cBuf[cBufIdx++] = c;
-        }
-    }
-
-    cBuf[cBufIdx++] = '$';  // implicit trailing anchor
-    cBuf[cBufIdx++] = '\0';
-
-#ifdef VERBOSE
-    cerr << "regexified string is " << cBuf << endl;
-#endif
-    std::string ret(cBuf);
-    delete [] cBuf;
-    return ret;
-}
 
 inline int128_t add128(int128_t a, int128_t b)
 {

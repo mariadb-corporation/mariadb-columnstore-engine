@@ -245,10 +245,6 @@ public:
     /**
      * F&E
      */
-    virtual void constructRegex();
-    /**
-     * F&E
-     */
     virtual bool getBoolVal(rowgroup::Row& row, bool& isNull)
     {
         isNull = isNull || (fType == NULLDATA);
