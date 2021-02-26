@@ -50,7 +50,6 @@ TreeNode::TreeNode(const TreeNode& rhs):
     fResult(rhs.fResult),
     fResultType(rhs.resultType()),
     fOperationType(rhs.operationType()),
-    fRegex (rhs.regex()),
     fDerivedTable (rhs.derivedTable()),
     fRefCount(rhs.refCount()),
     fDerivedRefCol(rhs.derivedRefCol())

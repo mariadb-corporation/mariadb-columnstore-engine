@@ -381,40 +381,15 @@ bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, ReturnedCol
     // like operator. both sides are string.
     if (fOp == OP_LIKE || fOp == OP_NOTLIKE)
     {
-        SP_CNX_Regex regex = rop->regex();
-
-        // Ugh. The strings returned by getStrVal have null padding out to the col width. boost::regex
-        //  considers these nulls significant, but they're not in the pattern, so we need to strip
-        //   them off...
-        const std::string& v = lop->getStrVal(row, isNull);
-//        char* c = (char*)alloca(v.length() + 1);
-//        memcpy(c, v.c_str(), v.length());
-//        c[v.length()] = 0;
-//        std::string vv(c);
-
-        if (regex)
-        {
-#ifdef POSIX_REGEX
-            bool ret = regexec(regex.get(), v.c_str(), 0, NULL, 0) == 0;
-#else
-            bool ret = boost::regex_match(v.c_str(), *regex);
-#endif
-            return (((fOp == OP_LIKE) ? ret : !ret) && !isNull);
-        }
-        else
-        {
-#ifdef POSIX_REGEX
-            regex_t regex;
-            std::string str = dataconvert::DataConvert::constructRegexp(rop->getStrVal(row, isNull));
-            regcomp(&regex, str.c_str(), REG_NOSUB | REG_EXTENDED);
-            bool ret = regexec(&regex, v.c_str(), 0, NULL, 0) == 0;
-            regfree(&regex);
-#else
-            boost::regex regex(dataconvert::DataConvert::constructRegexp(rop->getStrVal(row, isNull)));
-            bool ret = boost::regex_match(v.c_str(), regex);
-#endif
-            return (((fOp == OP_LIKE) ? ret : !ret) && !isNull);
-        }
+        const std::string & subject = lop->getStrVal(row, isNull);
+        if (isNull)
+            return false;
+        const std::string & pattern = rop->getStrVal(row, isNull);
+        if (isNull)
+            return false;
+        return datatypes::Charset(cs).like(fOp == OP_NOTLIKE,
+                                           utils::ConstString(subject),
+                                           utils::ConstString(pattern));
     }
 
     // fOpType should have already been set on the connector during parsing
