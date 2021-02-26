@@ -125,26 +125,6 @@ public:
 };
 
 
-struct idb_regex_t
-{
-#ifdef POSIX_REGEX
-    regex_t regex;
-#else
-    boost::regex regex;
-#endif
-    bool used;
-    idb_regex_t() : used(false) { }
-    ~idb_regex_t()
-    {
-#ifdef POSIX_REGEX
-
-        if (used)
-            regfree(&regex);
-
-#endif
-    }
-};
-
 struct ParsedColumnFilter
 {
     ColumnFilterMode columnFilterMode;
@@ -154,8 +134,6 @@ struct ParsedColumnFilter
     boost::shared_array<uint8_t> prestored_rfs;
     boost::shared_ptr<prestored_set_t> prestored_set;
     boost::shared_ptr<prestored_set_t_128> prestored_set_128;
-    boost::shared_array<idb_regex_t> prestored_regex;
-    uint8_t  likeOps;
 
     ParsedColumnFilter();
     ~ParsedColumnFilter();
@@ -316,23 +294,15 @@ public:
         logicalBlockMode = b;
     }
 
-
-
-    static int convertToRegexp(idb_regex_t* regex, const p_DataValue* str);
-    inline static bool isEscapedChar(char c);
-    boost::shared_array<idb_regex_t> makeLikeFilter(const DictFilterElement* inputMsg, uint32_t count);
-    void setLikeFilter(boost::shared_array<idb_regex_t> filter)
-    {
-        parsedLikeFilter = filter;
-    }
-
 private:
     PrimitiveProcessor(const PrimitiveProcessor& rhs);
     PrimitiveProcessor& operator=(const PrimitiveProcessor& rhs);
 
     int* block;
 
-    bool compare(int cmpResult, uint8_t COP, int len1, int len2) throw();
+    bool compare(const datatypes::Charset &cs, uint8_t COP,
+                 const char *str1, size_t length1,
+                 const char *str2, size_t length2) throw();
     int compare(int val1, int val2, uint8_t COP, bool lastStage) throw();
     void indexWalk_1(const IndexWalkHeader* in, std::vector<IndexWalkHeader*>* out) throw();
     void indexWalk_2(const IndexWalkHeader* in, std::vector<IndexWalkHeader*>* out) throw();
@@ -341,7 +311,6 @@ private:
 
     void nextSig(int NVALS, const PrimToken* tokens, p_DataValue* ret,
                  uint8_t outputFlags = 0, bool oldGetSigBehavior = false, bool skipNulls = false) throw();
-    bool isLike(const p_DataValue* dict, const idb_regex_t* arg) throw();
 
 //	void do_sum8(NewColAggResultHeader *out, int64_t val);
 //    void do_unsignedsum8(NewColAggResultHeader *out, int64_t val);
@@ -354,7 +323,6 @@ private:
     bool logicalBlockMode;
 
     boost::shared_ptr<ParsedColumnFilter> parsedColumnFilter;
-    boost::shared_array<idb_regex_t> parsedLikeFilter;
 
     friend class ::PrimTest;
 };
