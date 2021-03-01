@@ -64,7 +64,6 @@
 #include <net/if.h>
 
 #include <readline.h>
-#include <readline/history.h>
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
