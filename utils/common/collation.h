@@ -87,11 +87,14 @@ namespace datatypes
 
 class MariaDBHasher
 {
+    static const ulong mPart1DefValue = 1;
+    static const ulong mPart2DefValue = 4;
+
     ulong mPart1;
     ulong mPart2;
 public:
     MariaDBHasher()
-        :mPart1(1), mPart2(4)
+        :mPart1(mPart1DefValue), mPart2(mPart2DefValue)
     { }
     MariaDBHasher & add(CHARSET_INFO * cs, const char *str, size_t length)
     {
@@ -102,9 +105,13 @@ public:
     {
         return add(cs, str.str(), str.length());
     }
-    uint32_t finalize() const
+    uint64_t finalize() const
     {
-        return (uint32_t) mPart1;
+        return mPart1;
+    }
+    bool wasUsed() const
+    {
+        return mPart1 != mPart1DefValue || mPart2 != mPart2DefValue;
     }
 };
 

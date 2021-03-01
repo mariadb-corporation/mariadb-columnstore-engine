@@ -59,6 +59,7 @@
 #include "../winport/winport.h"
 
 #include "collation.h"
+#include "common/hashfamily.h"
 
 
 // Workaround for my_global.h #define of isnan(X) causing a std::std namespace
@@ -488,7 +489,10 @@ public:
     // a fcn to check the type defs seperately doesn't exist yet.  No normalization.
     inline uint64_t hash(uint32_t lastCol) const;  // generates a hash for cols [0-lastCol]
     inline uint64_t hash() const;  // generates a hash for all cols
-    inline void colUpdateMariaDBHasher(datatypes::MariaDBHasher &hasher, uint32_t col) const;
+    inline void colUpdateMariaDBHasher(datatypes::MariaDBHasher &hM,
+                                       const utils::Hasher_r& h,
+                                       const uint32_t col,
+                                       uint32_t& intermediateHash) const;
 
     bool equals(const Row&, const std::vector<uint32_t>& keyColumns) const;
     bool equals(const Row&, uint32_t lastCol) const;
@@ -805,7 +809,10 @@ inline utils::ConstString Row::getConstString(uint32_t colIndex) const
 }
 
 
-inline void Row::colUpdateMariaDBHasher(datatypes::MariaDBHasher &h, uint32_t col) const
+inline void Row::colUpdateMariaDBHasher(datatypes::MariaDBHasher &hM,
+                                        const utils::Hasher_r& h,
+                                        const uint32_t col,
+                                        uint32_t& intermediateHash) const
 {
     switch (getColType(col))
     {
@@ -815,12 +822,14 @@ inline void Row::colUpdateMariaDBHasher(datatypes::MariaDBHasher &h, uint32_t co
         case execplan::CalpontSystemCatalog::TEXT:
         {
             CHARSET_INFO *cs = getCharset(col);
-            h.add(cs, getConstString(col));
+            hM.add(cs, getConstString(col));
             break;
         }
         default:
-            h.add(&my_charset_bin, getShortConstString(col));
+        {
+            intermediateHash = h((const char*) &data[offsets[col]], colWidths[col], intermediateHash);
             break;
+        }
     }
 }
 
@@ -1206,17 +1215,21 @@ inline uint64_t Row::hash() const
 
 inline uint64_t Row::hash(uint32_t lastCol) const
 {
-    datatypes::MariaDBHasher h;
-
+    // Use two hash classes. MariaDBHasher for text-based
+    // collation-aware data types and Hasher_r for all other data types.
+    // We deliver a hash that is a combination of both hashers' results.
+    utils::Hasher_r h;
+    datatypes::MariaDBHasher hM;
+    uint32_t intermediateHash = 0;
     // Sometimes we ask this to hash 0 bytes, and it comes through looking like
     // lastCol = -1.  Return 0.
     if (lastCol >= columnCount)
         return 0;
 
     for (uint32_t i = 0; i <= lastCol; i++)
-      colUpdateMariaDBHasher(h, i);
+        colUpdateMariaDBHasher(hM, h, i, intermediateHash);
 
-    return h.finalize();
+    return utils::HashFamily(h, intermediateHash, lastCol << 2, hM).finalize();
 }
 
 inline bool Row::equals(const Row& r2) const
