@@ -1,0 +1,194 @@
+--source ../include/have_columnstore.inc
+--source ../include/combinations.myisam-columnstore.inc
+
+#CREATE TABLE t1 (a INT) ENGINE=ColumnStore COMMENT='SCHEMA SYNC ONLY';
+#DROP TABLE t1;
+
+--echo #
+--echo # MCOL-4531 New string-to-decimal conversion implementation
+--echo #
+
+--echo # Garbage at various places of the grammar
+
+CREATE TABLE t1 (a VARCHAR(128));
+
+INSERT INTO t1 VALUES
+(' '),
+(' garbage'),
+('garbage');
+
+# <signed numeric literal> := [ <sign> ] <unsigned numeric literal>
+INSERT INTO t1 VALUES
+('+garbage'),
+('-garbage'),
+('1garbage'),
+('+1garbage'),
+('-1garbage');
+
+# <unsigned numeric literal>  ::=   <exact numeric literal> [ E <exponent> ]
+INSERT INTO t1 VALUES
+('1garbage'),
+('1egarbage'),
+('1Egarbage'),
+('1e+garbage'),
+('1E-garbage'),
+('1e+0garbage'),
+('1E-0garbage');
+
+
+# <exact numeric literal>    ::=
+#                    <unsigned integer> [ <period> [ <unsigned integer> ] ]
+#                |   <period> <unsigned integer>
+
+INSERT INTO t1 VALUES
+('1.garbage'),
+('1.1garbage');
+
+INSERT INTO t1 VALUES
+('.garbage'),
+('.1garbage');
+
+--disable_warnings
+SELECT CAST(a AS DECIMAL(20,2)), a FROM t1;
+--enable_warnings
+
+DROP TABLE t1;
+
+
+--echo # Testing various mantissa values
+
+CREATE TABLE t1 (a VARCHAR(128));
+
+BEGIN;
+DELIMITER $$;
+FOR i IN 1..40 DO
+  INSERT INTO t1 VALUES (REPEAT('9',i));
+  INSERT INTO t1 VALUES (REPEAT('8',i));
+  INSERT INTO t1 VALUES (REPEAT('7',i));
+  INSERT INTO t1 VALUES (REPEAT('6',i));
+  INSERT INTO t1 VALUES (REPEAT('5',i));
+  INSERT INTO t1 VALUES (REPEAT('4',i));
+  INSERT INTO t1 VALUES (REPEAT('3',i));
+  INSERT INTO t1 VALUES (REPEAT('2',i));
+  INSERT INTO t1 VALUES (REPEAT('1',i));
+END FOR;
+$$
+DELIMITER ;$$
+COMMIT;
+
+--disable_warnings
+SELECT LENGTH(a), a, CAST(a AS DECIMAL(38,2)) FROM t1 ORDER BY LENGTH(a), a;
+SELECT LENGTH(a), a, CAST(CONCAT('+',a) AS DECIMAL(38,2)) FROM t1 ORDER BY LENGTH(a), a;
+SELECT LENGTH(a), a, CAST(CONCAT('-',a) AS DECIMAL(38,2)) FROM t1 ORDER BY LENGTH(a), a;
+--enable_warnings
+
+DROP TABLE t1;
+
+
+--echo # Testing various exponent values
+
+CREATE TABLE t1 (mantissa VARCHAR(128));
+
+BEGIN;
+INSERT INTO t1 VALUES ('10000000000000000000000000000000000000');
+INSERT INTO t1 VALUES ('10000000000000');
+INSERT INTO t1 VALUES ('1000');
+INSERT INTO t1 VALUES ('10');
+INSERT INTO t1 VALUES ('1');
+INSERT INTO t1 VALUES ('0');
+INSERT INTO t1 VALUES ('.1');
+INSERT INTO t1 VALUES ('.01');
+INSERT INTO t1 VALUES ('.0001');
+INSERT INTO t1 VALUES ('.00000000000001');
+INSERT INTO t1 VALUES ('.00000000000000000000000000000000000001');
+COMMIT;
+
+--disable_warnings
+DELIMITER $$;
+FOR exponent IN -50..50 DO
+  SELECT LPAD(CONCAT(mantissa, 'e', exponent),50) AS a, CAST(CONCAT(mantissa, 'e', exponent) AS DECIMAL(38,0)) AS d38_0 FROM t1 ORDER BY CAST(mantissa AS DOUBLE);
+END FOR;
+$$
+DELIMITER ;$$
+--enable_warnings
+
+
+--disable_warnings
+DELIMITER $$;
+FOR i IN 1..40 DO
+  BEGIN
+    DECLARE exponent VARCHAR(128) DEFAULT CONCAT('-',REPEAT('1',i));
+    SELECT LPAD(CONCAT(mantissa, 'e', exponent),80) AS a, CAST(CONCAT(mantissa, 'e', exponent) AS DECIMAL(38,0)) AS d38_0 FROM t1 ORDER BY CAST(mantissa AS DOUBLE);
+  END;
+END FOR;
+$$
+DELIMITER ;$$
+--enable_warnings
+
+
+--disable_warnings
+DELIMITER $$;
+FOR i IN 1..40 DO
+  BEGIN
+    DECLARE exponent VARCHAR(128) DEFAULT REPEAT('1',i);
+    SELECT LPAD(CONCAT(mantissa, 'e', exponent),80) AS a, CAST(CONCAT(mantissa, 'e', exponent) AS DECIMAL(38,0)) AS d38_0 FROM t1 ORDER BY CAST(mantissa AS DOUBLE);
+  END;
+END FOR;
+$$
+DELIMITER ;$$
+--enable_warnings
+
+DROP TABLE t1;
+
+
+--echo #
+--echo # MCOL-4532 CAST(AS DECIMAL) returns a garbage for large values
+--echo #
+
+CREATE TABLE t1 (a VARCHAR(64)) ENGINE=ColumnStore;
+DELIMITER $$;
+FOR i IN 1..9 DO
+  INSERT INTO t1 VALUES (REPEAT(i,37));
+  INSERT INTO t1 VALUES (REPEAT(i,38));
+  INSERT INTO t1 VALUES (REPEAT(i,39));
+END FOR;
+$$
+DELIMITER ;$$
+SELECT LENGTH(a), a, CAST(a AS DECIMAL(37,1)) FROM t1 ORDER BY LENGTH(a), a;
+SELECT LENGTH(a), a, CAST(a AS DECIMAL(37,2)) FROM t1 ORDER BY LENGTH(a), a;
+SELECT LENGTH(a), a, CAST(a AS DECIMAL(38,0)) FROM t1 ORDER BY LENGTH(a), a;
+SELECT LENGTH(a), a, CAST(a AS DECIMAL(38,1)) FROM t1 ORDER BY LENGTH(a), a;
+SELECT LENGTH(a), a, CAST(a AS DECIMAL(38,2)) FROM t1 ORDER BY LENGTH(a), a;
+DROP TABLE t1;
+
+
+--echo #
+--echo # MCOL-4500 Bit functions processing throws internally trying to cast char into decimal representation
+--echo #
+
+CREATE TABLE t1 (d decimal(18,2), c char(1));
+INSERT INTO t1 VALUES (42, 'z');
+--disable_warnings
+SELECT d & c FROM t1;
+--enable_warnings
+DROP TABLE t1;
+
+
+--echo #
+--echo # MDEV-24790 CAST('0e1111111111' AS DECIMAL(38,0)) returns a wrong result
+--echo #
+
+CREATE TABLE t1 (a VARCHAR(128));
+INSERT INTO t1 VALUES
+('0e111111111'),
+('0e1111111111'),
+('.00000000000000000000000000000000000000e111111111111111111111'),
+('.00000000000000000000000000000000000001e111111111111111111111'),
+('0e-111111111'),
+('0e-1111111111'),
+('.00000000000000000000000000000000000000e-111111111111111111111'),
+('.00000000000000000000000000000000000001e-111111111111111111111');
+--disable_warnings
+SELECT a, CAST(a AS DECIMAL(38,0)) FROM t1 ORDER BY LENGTH(a), a;
+--enable_warnings
+DROP TABLE t1;
