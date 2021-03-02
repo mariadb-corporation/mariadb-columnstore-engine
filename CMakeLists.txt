@@ -333,11 +333,6 @@ ADD_SUBDIRECTORY(storage-manager)
 ADD_SUBDIRECTORY(datatypes)
 ADD_SUBDIRECTORY(tests)
 
-# WriteEngine component tests
-IF( WITH_SHARED_COMP_TESTS )
-    ADD_SUBDIRECTORY(writeengine/shared)
-ENDIF( WITH_SHARED_COMP_TESTS )
-
 find_package(Git QUIET)
 
 IF (GIT_FOUND AND EXISTS ${ENGINE_SRC_DIR}/.git)
