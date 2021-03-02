@@ -766,7 +766,7 @@ int main(int argc, char* argv[])
             //check for mysql password set
             string pwprompt = " ";
 
-            if (oam.checkLogStatus(logFile, "ERROR 1045") )
+            if (checkLogStatus(logFile, "ERROR 1045") )
             {
                 cout << "NOTE: MariaDB Columnstore root user password is set" << endl;
 
@@ -823,7 +823,7 @@ int main(int argc, char* argv[])
                 string cmd = columnstoreMysql + pwprompt + " -e 'status' > " + logFile + " 2>&1";
                 system(cmd.c_str());
 
-                if (oam.checkLogStatus(logFile, "ERROR 1045") )
+                if (checkLogStatus(logFile, "ERROR 1045") )
                 {
                     cout << "FAILED: Failed login using MariaDB Columnstore root user password '" << mysqlpw << "'" << endl;
                     FAILED = true;

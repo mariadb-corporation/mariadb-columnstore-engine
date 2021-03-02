@@ -1577,9 +1577,9 @@ void TableInfo::writeBadRows( const std::vector<std::string>* errorDatRows,
                 rejectFileNameToLog = fRejectDataFileName;
             }
 
-            oss << "Number of rows with errors = " << fRejectDataCnt <<
-                ".  Exact error rows are listed in file " <<
-                rejectFileNameToLog;
+            oss << "Number of rows with bad data = " << fRejectDataCnt <<
+                ".  Exact rows are listed in file located here: " <<
+                fErrorDir;
             fLog->logMsg(oss.str(), MSGLVL_INFO1);
 
             fRejectDataCnt = 0;
@@ -1691,9 +1691,9 @@ void  TableInfo::writeErrReason( const std::vector< std::pair<RID,
                 errFileNameToLog = fRejectErrFileName;
             }
 
-            oss << "Number of rows with errors = " << fRejectErrCnt <<
-                ".  Row numbers with error reasons are listed in file " <<
-                errFileNameToLog;
+            oss << "Number of rows with errors = " << fRejectDataCnt <<
+                ".  Exact rows are listed in file located here: " <<
+                fErrorDir;
             fLog->logMsg(oss.str(), MSGLVL_INFO1);
 
             fRejectErrCnt = 0;

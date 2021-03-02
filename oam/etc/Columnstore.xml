@@ -249,10 +249,6 @@
 		<ExternalCriticalThreshold>90</ExternalCriticalThreshold>
 		<ExternalMajorThreshold>80</ExternalMajorThreshold>
 		<ExternalMinorThreshold>70</ExternalMinorThreshold>
-		<!-- <TempDiskPath>/tmp</TempDiskPath>
-		<WorkingDir>/tmp</WorkingDir>
-		<TempFileDir>/tmp/columnstore_tmp_files</TempFileDir>
-		-->
 		<TransactionArchivePeriod>10</TransactionArchivePeriod>
 		<NMSIPAddress>0.0.0.0</NMSIPAddress>
 		<TempSaveSize>128M</TempSaveSize> <!-- default SWSDL max element save size -->
@@ -363,7 +359,7 @@
 		<FirstOID>3000</FirstOID>
 	</OIDManager>
 	<WriteEngine>
-        <BulkRoot>/var/lib/columnstore/data/bulk</BulkRoot>
+        <BulkRoot>/var/log/mariadb/columnstore/data/bulk</BulkRoot>
         <BulkRollbackDir>/var/lib/columnstore/data1/systemFiles/bulkRollback</BulkRollbackDir>
 		<MaxFileSystemDiskUsagePct>98</MaxFileSystemDiskUsagePct>
 		<CompressedPaddingBlocks>1</CompressedPaddingBlocks> <!-- Number of blocks used to pad compressed chunks -->

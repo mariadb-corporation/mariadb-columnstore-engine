@@ -49,8 +49,7 @@ if [ -n "$(pgrep -x ProcMon)" ] || [ -n "$(pgrep -x ProcMgr)" ];then
 fi
 
 rm -f /etc/profile.d/columnstoreAlias.sh
-rm -f /var/log/mariadb/columnstore/activeAlarms > /dev/null 2>&1
-rm -f /var/log/mariadb/columnstore/*.log1 > /dev/null 2>&1
+rm -f @ENGINE_LOGDIR@/*.log1 > /dev/null 2>&1
 
 #get temp directory
 tmpDir=`@ENGINE_BINDIR@/mcsGetConfig SystemConfig SystemTempFileDir`
@@ -59,11 +58,11 @@ if [[ $tmpDir = *"tmp" ]]; then
 	rm -rf $tmpDir/*
 fi
 
-rm -f /var/lib/columnstore/local/*.columnstore
-rm -rf /var/lib/columnstore/local/etc/
-rm -f /var/lib/columnstore/data/bulk/tmp/job/* >/dev/null 2>&1
-rm -f /var/lib/columnstore/local/moveDbrootTransactionLog
-rm -rf /var/log/mariadb/columnstore/
+rm -f @ENGINE_DATADIR@/local/*.columnstore
+rm -rf @ENGINE_DATADIR@/local/etc/
+rm -f @ENGINE_DATADIR@/data/bulk/tmp/job/* >/dev/null 2>&1
+rm -f @ENGINE_DATADIR@/local/moveDbrootTransactionLog
+rm -rf @ENGINE_LOGDIR@
 rm -rf /tmp/columnstore_tmp_files
 
 lockdir=`@ENGINE_BINDIR@/mcsGetConfig Installation LockFileDirectory`
@@ -111,7 +110,7 @@ if [ -n "$systemctl" ] && [ $(running_systemd) -eq 0 ]; then
 
     systemctl daemon-reload
     # remove flag to prevent clusters using shared storage from initializing columnstore more than once
-    IFLAG=/var/lib/columnstore/storagemanager/storagemanager-lock
+    IFLAG=@ENGINE_DATADIR@/storagemanager/storagemanager-lock
     if [ -e $IFLAG ]; then
         rm $IFLAG
     fi
@@ -137,7 +136,7 @@ fi
 rm -f @ENGINE_SYSCONFDIR@/columnstore/AlarmConfig.xml.installSave
 
 #remove OAMdbrootCheck file
-rm -f /var/lib/columnstore/data*/OAMdbrootCheck > /dev/null 2>&1
+rm -f @ENGINE_DATADIR@/data*/OAMdbrootCheck > /dev/null 2>&1
 
 rm -f /etc/rsyslog.d/49-columnstore.conf > /dev/null 2>&1
 rm -rf /tmp/columnstore_tmp_files > /dev/null 2>&1

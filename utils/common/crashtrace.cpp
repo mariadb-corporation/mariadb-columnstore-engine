@@ -23,12 +23,13 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "mcsconfig.h"
 
 void fatalHandler(int sig)
 {
     char filename[128];
     void* addrs[128];
-    snprintf(filename, 128, "/var/log/mariadb/columnstore/trace/%s.%d.log", program_invocation_short_name, getpid());
+    snprintf(filename, 128, "%s/trace/%s.%d.log", MCSLOGDIR, program_invocation_short_name, getpid());
     FILE* logfile = fopen(filename, "w");
     char s[30];
     struct tm tim;

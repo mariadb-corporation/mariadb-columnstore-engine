@@ -29,8 +29,6 @@
 //#include "boost/filesystem/path.hpp"
 using namespace std;
 
-#include "alarmglobal.h"
-#include "alarmmanager.h"
 #include "liboamcpp.h"
 
 #include <boost/scoped_ptr.hpp>
@@ -216,14 +214,6 @@ void rollbackAll(DBRM* dbrm)
 {
     Oam oam;
 
-    try
-    {
-        alarmmanager::ALARMManager alarmMgr;
-        alarmMgr.sendAlarmReport("System", oam::ROLLBACK_FAILURE, alarmmanager::CLEAR);
-    }
-    catch (...)
-    {}
-
     //Log a message in info.log
     logging::Message::Args args;
     logging::Message message(2);
@@ -256,14 +246,6 @@ void rollbackAll(DBRM* dbrm)
     catch (std::exception&)
     {
         throw std::runtime_error(IDBErrorInfo::instance()->errorMsg(ERR_HARD_FAILURE));
-    }
-
-    // If there are tables to rollback, set to ROLLBACK_INIT.
-    // This tells ProcMgr that we are rolling back and will be
-    // a while. A message to this effect should be printed.
-    if (tableLocks.size() > 0)
-    {
-        oam.processInitComplete("DMLProc", oam::ROLLBACK_INIT);
     }
 
     uint64_t uniqueId = dbrm->getUnique64();
@@ -368,15 +350,6 @@ void rollbackAll(DBRM* dbrm)
                 oss << " problem with rollback transaction " << tableLocks[i].ownerTxnID << "and DBRM is setting to readonly and table lock is not released: " << errorMsg;
                 rc = dbrm->setReadOnly(true);
 
-                //Raise an alarm
-                try
-                {
-                    alarmmanager::ALARMManager alarmMgr;
-                    alarmMgr.sendAlarmReport("System", oam::ROLLBACK_FAILURE, alarmmanager::SET);
-                }
-                catch (...)
-                {}
-
                 //Log to critical log
                 logging::Message::Args args6;
                 logging::Message message6(2);
@@ -464,7 +437,6 @@ void rollbackAll(DBRM* dbrm)
 
     if (txnList.size() > 0)
     {
-        oam.processInitComplete("DMLProc", oam::ROLLBACK_INIT);
         ostringstream oss;
         oss << "DMLProc will rollback " << txnList.size() << " transactions.";
         logging::Message::Args args2;
@@ -508,15 +480,6 @@ void rollbackAll(DBRM* dbrm)
                 ostringstream oss;
                 oss << " problem with rollback transaction " << txnId.id << "and DBRM is setting to readonly and table lock is not released: " << errorMsg;
                 rc = dbrm->setReadOnly(true);
-
-                //Raise an alarm
-                try
-                {
-                    alarmmanager::ALARMManager alarmMgr;
-                    alarmMgr.sendAlarmReport("System", oam::ROLLBACK_FAILURE, alarmmanager::SET);
-                }
-                catch (...)
-                {}
 
                 //Log to critical log
                 logging::Message::Args args6;
@@ -637,39 +600,6 @@ int ServiceDMLProc::Child()
     idbdatafile::IDBPolicy::configIDBPolicy();
 #endif
 
-    try
-    {
-        // At first we set to BUSY_INIT
-        oam.processInitComplete("DMLProc", oam::BUSY_INIT);
-    }
-    catch (std::exception& ex)
-    {
-        cerr << ex.what() << endl;
-        LoggingID logid(21, 0, 0);
-        logging::Message::Args args1;
-        logging::Message msg(1);
-        args1.add("DMLProc init caught exception: ");
-        args1.add(ex.what());
-        msg.format( args1 );
-        logging::Logger logger(logid.fSubsysID);
-        logger.logMessage(LOG_TYPE_CRITICAL, msg, logid);
-        NotifyServiceInitializationFailed();
-        return 1;
-    }
-    catch (...)
-    {
-        cerr << "Caught unknown exception in init!" << endl;
-        LoggingID logid(21, 0, 0);
-        logging::Message::Args args1;
-        logging::Message msg(1);
-        args1.add("DMLProc init caught unknown exception");
-        msg.format( args1 );
-        logging::Logger logger(logid.fSubsysID);
-        logger.logMessage(LOG_TYPE_CRITICAL, msg, logid);
-        NotifyServiceInitializationFailed();
-        return 1;
-    }
-
     //@Bug 1627
     try
     {
@@ -677,15 +607,6 @@ int ServiceDMLProc::Child()
     }
     catch ( std::exception& e )
     {
-        //@Bug 2299 Set DMLProc process to fail and log a message
-        try
-        {
-            oam.processInitFailure();
-        }
-        catch (...)
-        {
-        }
-
         logging::Message::Args args;
         logging::Message message(2);
         args.add("DMLProc failed to start due to :");
@@ -758,37 +679,6 @@ int ServiceDMLProc::Child()
         JobStep::jobstepThreadPool.invoke(threadpool::ThreadPoolMonitor(&JobStep::jobstepThreadPool));
         DMLServer::fDmlPackagepool.setDebug(true);
         DMLServer::fDmlPackagepool.invoke(threadpool::ThreadPoolMonitor(&DMLServer::fDmlPackagepool));
-    }
-
-    //set ACTIVE state
-    try
-    {
-        oam.processInitComplete("DMLProc", ACTIVE);
-    }
-    catch (std::exception& ex)
-    {
-        cerr << ex.what() << endl;
-        LoggingID logid(21, 0, 0);
-        logging::Message::Args args1;
-        logging::Message msg(1);
-        args1.add("DMLProc init caught exception: ");
-        args1.add(ex.what());
-        msg.format( args1 );
-        logging::Logger logger(logid.fSubsysID);
-        logger.logMessage(LOG_TYPE_CRITICAL, msg, logid);
-        return 1;
-    }
-    catch (...)
-    {
-        cerr << "Caught unknown exception in init!" << endl;
-        LoggingID logid(21, 0, 0);
-        logging::Message::Args args1;
-        logging::Message msg(1);
-        args1.add("DMLProc init caught unknown exception");
-        msg.format( args1 );
-        logging::Logger logger(logid.fSubsysID);
-        logger.logMessage(LOG_TYPE_CRITICAL, msg, logid);
-        return 1;
     }
 
     Dec = DistributedEngineComm::instance(rm);

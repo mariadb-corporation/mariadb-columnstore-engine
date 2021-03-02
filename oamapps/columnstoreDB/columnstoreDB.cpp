@@ -41,10 +41,13 @@
 #include "liboamcpp.h"
 #include "configcpp.h"
 #include "installdir.h"
+#include "mcsconfig.h"
 
 using namespace std;
 using namespace oam;
 using namespace config;
+#include "calpontsystemcatalog.h"
+using namespace execplan;
 
 namespace
 {
@@ -65,6 +68,213 @@ void usage(char* prog)
     cout << "-c <command>   Command: suspend or resume" << endl << endl;
     cout << "-h             Display this help." << endl << endl;
 }
+}
+
+/******************************************************************************************
+ * @brief   DisplayLockedTables
+ *
+ * purpose: Show the details of all the locks in tableLocks
+ *          Used when attempting to suspend or stop the
+ *          database, but there are table locks.
+ *
+ ******************************************************************************************/
+void DisplayLockedTables(std::vector<BRM::TableLockInfo>& tableLocks, BRM::DBRM* pDBRM)
+{
+    cout << "The following tables are locked:" << endl;
+
+    // Initial widths of columns to display. We pass thru the table
+    // and see if we need to grow any of these.
+    unsigned int lockIDColumnWidth    = 6;  // "LockID"
+    unsigned int tableNameColumnWidth = 12; // "Name"
+    unsigned int ownerColumnWidth     = 7;  // "Process"
+    unsigned int pidColumnWidth       = 3;  // "PID"
+    unsigned int sessionIDColumnWidth = 7;  // "Session"
+    unsigned int createTimeColumnWidth = 12; // "CreationTime"
+    unsigned int dbrootColumnWidth        = 7;  // "DBRoots"
+    unsigned int stateColumnWidth     = 9;  // "State"
+
+    // Initialize System Catalog object used to get table name
+    boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatalogPtr =
+        execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(0);
+
+    std::string fullTblName;
+    const char* tableState;
+
+    // Make preliminary pass through the table locks in order to determine our
+    // output column widths based on the data.  Min column widths are based on
+    // the width of the column heading (except for the 'state' column).
+    uint64_t maxLockID                = 0;
+    uint32_t maxPID                   = 0;
+    int32_t  maxSessionID             = 0;
+    int32_t  minSessionID             = 0;
+    std::vector<std::string> createTimes;
+    std::vector<std::string> pms;
+    char cTimeBuffer[64];
+
+    execplan::CalpontSystemCatalog::TableName tblName;
+
+    for (unsigned idx = 0; idx < tableLocks.size(); idx++)
+    {
+        if (tableLocks[idx].id > maxLockID)
+        {
+            maxLockID = tableLocks[idx].id;
+        }
+
+        try
+        {
+            tblName = systemCatalogPtr->tableName(tableLocks[idx].tableOID);
+        }
+        catch (...)
+        {
+            tblName.schema.clear();
+            tblName.table.clear();
+        }
+
+        fullTblName = tblName.toString();
+
+        if (fullTblName.size() > tableNameColumnWidth)
+        {
+            tableNameColumnWidth = fullTblName.size();
+        }
+
+        if (tableLocks[idx].ownerName.length() > ownerColumnWidth)
+        {
+            ownerColumnWidth = tableLocks[idx].ownerName.length();
+        }
+
+        if (tableLocks[idx].ownerPID > maxPID)
+        {
+            maxPID = tableLocks[idx].ownerPID;
+        }
+
+        if (tableLocks[idx].ownerSessionID > maxSessionID)
+        {
+            maxSessionID = tableLocks[idx].ownerSessionID;
+        }
+
+        if (tableLocks[idx].ownerSessionID < minSessionID)
+        {
+            minSessionID = tableLocks[idx].ownerSessionID;
+        }
+
+        // Creation Time.
+        // While we're at it, we save the time string off into a vector
+        // so we can display it later without recalcing it.
+        struct tm timeTM;
+        localtime_r(&tableLocks[idx].creationTime, &timeTM);
+        ctime_r(&tableLocks[idx].creationTime, cTimeBuffer);
+        strftime(cTimeBuffer, 64, "%F %r:", &timeTM);
+        cTimeBuffer[strlen(cTimeBuffer) - 1] = '\0'; // strip trailing '\n'
+        std::string cTimeStr( cTimeBuffer );
+
+        if (cTimeStr.length() > createTimeColumnWidth)
+        {
+            createTimeColumnWidth = cTimeStr.length();
+        }
+
+        createTimes.push_back(cTimeStr);
+    }
+
+    tableNameColumnWidth  += 1;
+    ownerColumnWidth      += 1;
+    createTimeColumnWidth += 1;
+
+    std::ostringstream idString;
+    idString << maxLockID;
+
+    if (idString.str().length() > lockIDColumnWidth)
+        lockIDColumnWidth = idString.str().length();
+
+    lockIDColumnWidth += 1;
+
+    std::ostringstream pidString;
+    pidString << maxPID;
+
+    if (pidString.str().length() > pidColumnWidth)
+        pidColumnWidth = pidString.str().length();
+
+    pidColumnWidth += 1;
+
+    const std::string sessionNoneStr("BulkLoad");
+    std::ostringstream sessionString;
+    sessionString << maxSessionID;
+
+    if (sessionString.str().length() > sessionIDColumnWidth)
+        sessionIDColumnWidth = sessionString.str().length();
+
+    if ((minSessionID < 0) &&
+            (sessionNoneStr.length() > sessionIDColumnWidth))
+        sessionIDColumnWidth = sessionNoneStr.length();
+
+    sessionIDColumnWidth += 1;
+
+    // write the column headers before the first entry
+    cout.setf(ios::left, ios::adjustfield);
+    cout << setw(lockIDColumnWidth)     << "LockID"       <<
+         setw(tableNameColumnWidth)  << "Name"         <<
+         setw(ownerColumnWidth)      << "Process"      <<
+         setw(pidColumnWidth)        << "PID"          <<
+         setw(sessionIDColumnWidth)  << "Session"      <<
+         setw(createTimeColumnWidth) << "CreationTime" <<
+         setw(stateColumnWidth)      << "State"        <<
+         setw(dbrootColumnWidth)     << "DBRoots"      << endl;
+
+    for (unsigned idx = 0; idx < tableLocks.size(); idx++)
+    {
+        try
+        {
+
+            tblName = systemCatalogPtr->tableName(tableLocks[idx].tableOID);
+        }
+        catch (...)
+        {
+            tblName.schema.clear();
+            tblName.table.clear();
+        }
+
+        fullTblName = tblName.toString();
+        cout <<
+             setw(lockIDColumnWidth)    << tableLocks[idx].id         <<
+             setw(tableNameColumnWidth) << fullTblName                <<
+             setw(ownerColumnWidth)     << tableLocks[idx].ownerName  <<
+             setw(pidColumnWidth)       << tableLocks[idx].ownerPID;
+
+        // Log session ID, or "BulkLoad" if session is -1
+        if (tableLocks[idx].ownerSessionID < 0)
+            cout << setw(sessionIDColumnWidth) << sessionNoneStr;
+        else
+            cout << setw(sessionIDColumnWidth) <<
+                 tableLocks[idx].ownerSessionID;
+
+        // Creation Time
+        cout << setw(createTimeColumnWidth) << createTimes[idx];
+
+        // Processor State
+        if (pDBRM && !pDBRM->checkOwner(tableLocks[idx].id))
+        {
+            tableState = "Abandoned";
+        }
+        else
+        {
+            tableState = ((tableLocks[idx].state == BRM::LOADING) ?
+                          "LOADING" : "CLEANUP");
+        }
+
+        cout << setw(stateColumnWidth) << tableState;
+
+        // PM List
+        cout << setw(dbrootColumnWidth);
+
+        for (unsigned k = 0; k < tableLocks[idx].dbrootList.size(); k++)
+        {
+            if (k > 0)
+                cout << ',';
+
+            cout << tableLocks[idx].dbrootList[k];
+        }
+
+        cout << endl;
+    } // end of loop through table locks
 }
 
 int main(int argc, char** argv)
@@ -104,13 +314,13 @@ int main(int argc, char** argv)
 
             if (!tableLocks.empty())
             {
-                oam.DisplayLockedTables(tableLocks, &dbrm);
+                DisplayLockedTables(tableLocks, &dbrm);
             }
             else
             {
                 dbrm.setSystemSuspended(true);
                 sleep(5);
-                string cmd = "save_brm  > /var/log/mariadb/columnstore/save_brm.log1 2>&1";
+                string cmd = "save_brm  > " + string(MCSLOGDIR) + "/save_brm.log1 2>&1";
                 int rtnCode = system(cmd.c_str());
 
                 if (rtnCode == 0)

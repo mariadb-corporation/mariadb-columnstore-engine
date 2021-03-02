@@ -1,0 +1,43 @@
+SET NAMES utf8;
+#
+# MCOL-4539 WHERE short_char_column='literal' ignores the collation on a huge table
+#
+DROP DATABASE IF EXISTS mcs_ctype_cmp_char4_latin1_bin;
+CREATE DATABASE mcs_ctype_cmp_char4_latin1_bin;
+USE mcs_ctype_cmp_char4_latin1_bin;
+CREATE TABLE t1 (id INT, c CHAR(4) CHARACTER SET latin1 COLLATE latin1_bin);
+INSERT INTO t1 VALUES (0,'aaaa');
+INSERT INTO t1 VALUES (0,'bbbb');
+INSERT INTO t1 VALUES (0,'AAAA');
+INSERT INTO t1 VALUES (0,'BBBB');
+INSERT INTO t1 VALUES (0,'aaaa');
+INSERT INTO t1 VALUES (0,'bbbb');
+INSERT INTO t1 VALUES (0,'AAAA');
+INSERT INTO t1 VALUES (0,'BBBB');
+CREATE TABLE t2 (c CHAR(4) CHARACTER SET latin1 COLLATE latin1_bin);
+INSERT INTO t2 SELECT t1_5.c FROM
+t1 t1_0
+JOIN t1 t1_1 USING (id)
+JOIN t1 t1_2 USING (id)
+JOIN t1 t1_3 USING (id)
+JOIN t1 t1_4 USING (id)
+JOIN t1 t1_5 USING (id)
+;
+SELECT COUNT(*) FROM t2;
+COUNT(*)
+262144
+SELECT DISTINCT c FROM t2 WHERE c='aaaa';
+c
+aaaa
+SELECT DISTINCT c FROM t2 WHERE c='AAAA';
+c
+AAAA
+CREATE TABLE t3 LIKE t2;
+INSERT INTO t3 SELECT * FROM t2 WHERE c='aaaa';
+SELECT c, MIN(c), MAX(c), COUNT(*) FROM t3 GROUP BY c;
+c	MIN(c)	MAX(c)	COUNT(*)
+aaaa	aaaa	aaaa	65536
+DROP TABLE t3;
+DROP TABLE t2;
+DROP TABLE t1;
+DROP DATABASE mcs_ctype_cmp_char4_latin1_bin;

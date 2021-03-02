@@ -41,6 +41,8 @@ using namespace logging;
 #include "mcs_int64.h"
 #include "mcs_decimal.h"
 #include "dataconvert.h"
+#include "numericliteral.h"
+
 using namespace dataconvert;
 
 namespace
@@ -163,14 +165,14 @@ datatypes::TUInt64Null GenericToBitOperand(
             const string& str = parm->data()->getStrVal(row, tmpIsNull);
             if (tmpIsNull)
                 return datatypes::TUInt64Null();
-            static const datatypes::SystemCatalog::TypeAttributesStd
-              attr(datatypes::MAXDECIMALWIDTH, 6, datatypes::INT128MAXPRECISION);
-            int128_t val = attr.decimal128FromString(str);
-            datatypes::Decimal d(0, attr.scale, attr.precision, &val);
-            val = d.getPosNegRoundedIntegralPart(0).getValue();
-            return ConvertToBitOperand<int128_t>(val);
-        }
 
+            datatypes::DataCondition cnverr;
+            literal::Converter<literal::SignedNumericLiteral> cnv(str, cnverr);
+            cnv.normalize();
+            return cnv.negative() ?
+              datatypes::TUInt64Null((uint64_t)cnv.toPackedSDecimal<int64_t>(0, cnverr)) :
+              datatypes::TUInt64Null(cnv.toPackedUDecimal<uint64_t>(0, cnverr));
+        }
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
             return DecimalToBitOperand(row, parm, thisFunc);

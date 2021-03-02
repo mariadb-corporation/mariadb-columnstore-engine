@@ -32,22 +32,22 @@ fi
 
 checkForError() {
 	# check for password error
-	grep "ERROR 1045" ${tmpDir}/mysql_install.log > ${tmpDir}/error.check
-	if [ `cat ${tmpDir}/error.check | wc -c` -ne 0 ]; then
+	grep "ERROR 1045" ${installLogDir}/mysql_install.log > ${installLogDir}/error.check
+	if [ `cat ${installLogDir}/error.check | wc -c` -ne 0 ]; then
 		  echo "There were authentication issues running install_mcs_mysql.sh \
-script. The log is available in ${tmpDir}/mysql_install.log. Please re-run \
+script. The log is available in ${installLogDir}/mysql_install.log. Please re-run \
 columnstore-post-install manually after solving the authentication issues."
-		  rm -f ${tmpDir}/error.check
+		  rm -f ${installLogDir}/error.check
 		  return 2;
 	fi
 
-	rm -f ${tmpDir}/error.check
+	rm -f ${installLogDir}/error.check
 
         #---------------------------------------------------------------------------
         # See if engine columnstore exist
         #---------------------------------------------------------------------------
         echo "checking for engine columnstore..."
-        $MDB --execute="show engines" 2> ${tmpDir}/post-mysql-install.log | grep -i columnstore >> ${tmpDir}/post-mysql-install.log 2>&1
+        $MDB --execute="show engines" 2> ${installLogDir}/post-mysql-install.log | grep -i columnstore >> ${installLogDir}/post-mysql-install.log 2>&1
 
         #
         # Add compressiontype column to SYSCOLUMN if applicable
@@ -103,35 +103,50 @@ profileFile="/etc/profile.d/columnstoreAlias.sh"
 /bin/cp -f @ENGINE_SUPPORTDIR@/columnstoreAlias /etc/profile.d/columnstoreAlias.sh
 chmod 644 /etc/profile.d/columnstoreAlias.sh >/dev/null 2>&1
 
-test -d /var/log/mariadb/columnstore || mkdir -p /var/log/mariadb/columnstore >/dev/null 2>&1
-test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
-test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
-test -d /var/log/mariadb/columnstore/trace || mkdir /var/log/mariadb/columnstore/trace >/dev/null 2>&1
-test -h /var/log/mariadb/columnstore/data && rm -f /var/log/mariadb/columnstore/data
-chmod 755 /var/log/mariadb/columnstore/corefiles > /dev/null 2>&1
+test -d @ENGINE_LOGDIR@ || mkdir -p @ENGINE_LOGDIR@ >/dev/null 2>&1
+test -d @ENGINE_LOGDIR@/archive || mkdir @ENGINE_LOGDIR@/archive >/dev/null 2>&1
+test -d @ENGINE_LOGDIR@/corefiles || mkdir @ENGINE_LOGDIR@/corefiles >/dev/null 2>&1
+test -d @ENGINE_LOGDIR@/trace || mkdir @ENGINE_LOGDIR@/trace >/dev/null 2>&1
+test -d @ENGINE_LOGDIR@/cpimport || mkdir @ENGINE_LOGDIR@/cpimport >/dev/null 2>&1
+test -d @ENGINE_LOGDIR@/install || mkdir @ENGINE_LOGDIR@/install >/dev/null 2>&1
+test -h @ENGINE_LOGDIR@/data && rm -f @ENGINE_LOGDIR@/data
+chmod 755 @ENGINE_LOGDIR@/corefiles > /dev/null 2>&1
+chmod 777 @ENGINE_LOGDIR@/cpimport
+chmod 777 @ENGINE_LOGDIR@/install
+installLogDir=@ENGINE_LOGDIR@/install
 
 # make sure trace dir is world-writable and sticky
-test -d /var/lib/columnstore/data || mkdir -p /var/lib/columnstore/data
-test -d /var/lib/columnstore/data1/systemFiles/dbrm || mkdir -p /var/lib/columnstore/data1/systemFiles/dbrm
-test -d /var/lib/columnstore/local || mkdir -p /var/lib/columnstore/local
-test -d /var/lib/columnstore/data1/systemFiles/dataTransaction || rmdir /var/lib/columnstore/data1/systemFiles/dataTransaction >/dev/null 2>&1
-test -d /var/lib/columnstore/data1/systemFiles/dataTransaction/archive || rmdir /var/lib/columnstore/data1/systemFiles/dataTransaction/archive >/dev/null 2>&1
-chmod 1755 /var/lib/columnstore/data1 >/dev/null 2>&1
-chmod -R 1755 /var/lib/columnstore/data1/systemFiles >/dev/null 2>&1
+test -d @ENGINE_DATADIR@/data || mkdir -p @ENGINE_DATADIR@/data
+test -d @ENGINE_DATADIR@/data1/systemFiles/dbrm || mkdir -p @ENGINE_DATADIR@/data1/systemFiles/dbrm
+test -d @ENGINE_DATADIR@/local || mkdir -p @ENGINE_DATADIR@/local
+test -d @ENGINE_DATADIR@/data1/systemFiles/dataTransaction || rmdir @ENGINE_DATADIR@/data1/systemFiles/dataTransaction >/dev/null 2>&1
+test -d @ENGINE_DATADIR@/data1/systemFiles/dataTransaction/archive || rmdir @ENGINE_DATADIR@/data1/systemFiles/dataTransaction/archive >/dev/null 2>&1
+chmod 1755 @ENGINE_DATADIR@/data1 >/dev/null 2>&1
+chmod -R 1755 @ENGINE_DATADIR@/data1/systemFiles >/dev/null 2>&1
 chmod 1755 @ENGINE_SYSCONFDIR@/columnstore > /dev/null 2>&1
 
 #create the bulk-load dirs
-mkdir -p /var/lib/columnstore/data/bulk/data/import >/dev/null 2>&1
-mkdir -p /var/lib/columnstore/data/bulk/log >/dev/null 2>&1
-mkdir -p /var/lib/columnstore/data/bulk/job >/dev/null 2>&1
-mkdir -p /var/lib/columnstore/data/bulk/rollback >/dev/null 2>&1
-mkdir -p /var/lib/columnstore/data/bulk/tmpjob >/dev/null 2>&1
-rm -f /var/lib/columnstore/data/bulk/tmpjob/* >/dev/null 2>&1
+mkdir -p @ENGINE_DATADIR@/data/bulk/data/import >/dev/null 2>&1
+mkdir -p @ENGINE_DATADIR@/data/bulk/log >/dev/null 2>&1
+mkdir -p @ENGINE_DATADIR@/data/bulk/job >/dev/null 2>&1
+mkdir -p @ENGINE_DATADIR@/data/bulk/rollback >/dev/null 2>&1
+mkdir -p @ENGINE_DATADIR@/data/bulk/tmpjob >/dev/null 2>&1
+mkdir -p @ENGINE_LOGDIR@/data/bulk/data/import >/dev/null 2>&1
+mkdir -p @ENGINE_LOGDIR@/data/bulk/log >/dev/null 2>&1
+mkdir -p @ENGINE_LOGDIR@/data/bulk/job >/dev/null 2>&1
+mkdir -p @ENGINE_LOGDIR@/data/bulk/rollback >/dev/null 2>&1
+mkdir -p @ENGINE_LOGDIR@/data/bulk/tmpjob >/dev/null 2>&1
+rm -f @ENGINE_DATADIR@/data/bulk/tmpjob/* >/dev/null 2>&1
+rm -f @ENGINE_LOGDIR@/data/bulk/tmpjob/* >/dev/null 2>&1
+chmod -R 777 @ENGINE_LOGDIR@/data
 
 #get columnstore temp file directory name
-tmpDir=/tmp/columnstore_tmp_files
+tmpDir=`@ENGINE_BINDIR@/mcsGetConfig SystemConfig SystemTempFileDir`
+scratchDir=$tmpDir`@ENGINE_BINDIR@/mcsGetConfig SystemConfig hdfsRdwrScratch`
 mkdir $tmpDir >/dev/null 2>&1
+mkdir $scratchDir >/dev/null 2>&1
 chmod 777 $tmpDir
+chmod 777 $scratchDir
 
 #create mount directories
 mkdir /mnt/tmp > /dev/null 2>&1
@@ -196,12 +211,12 @@ if [ $user = "root" ]; then
 fi
 
 if [ $user = "root" ]; then
-    columnstoreSyslogSetup.sh install > $tmpDir/syslog_install.log 2>&1
+    columnstoreSyslogSetup.sh install > $installLogDir/syslog_install.log 2>&1
 
     #check if MariaDB Columnstore system logging was setup
-    cat $tmpDir/syslog_install.log | grep 'No System Logging' >/dev/null 2>&1
+    cat $installLogDir/syslog_install.log | grep 'No System Logging' >/dev/null 2>&1
     if [ $? -eq 0 ]; then
-        cat $tmpDir/syslog_install.log
+        cat $installLogDir/syslog_install.log
     fi
 else
     chown $user:$user @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml
@@ -231,7 +246,7 @@ rm -f $lockdir/columnstore
 
 # This was the last place of postConfigure. RIP
 
-@ENGINE_SBINDIR@/install_mcs_mysql.sh --tmpdir=$tmpDir
+@ENGINE_SBINDIR@/install_mcs_mysql.sh --tmpdir=$installLogDir
 
 # Restart MDB to enable plugin
 systemctl cat mariadb.service > /dev/null 2>&1
@@ -326,23 +341,22 @@ fi
 #change ownership/permissions to be able to run columnstore as non-root
 # TODO: Remove conditional once container dispatcher uses non-root by default
 if [ $(running_systemd) -eq 0 ]; then
-    chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ /var/log/mariadb/columnstore
+    chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ @ENGINE_LOGDIR@
     chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ /etc/columnstore
-    chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ /var/lib/columnstore
-    chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ /tmp/columnstore_tmp_files
-    chmod 777 /tmp/columnstore_tmp_files
+    chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ @ENGINE_DATADIR@
+    chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ $tmpDir
     chmod 777 /dev/shm
 fi
 
 systemctl cat mariadb-columnstore.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
-    mkdir -p /var/lib/columnstore/storagemanager
-    chown -R mysql:mysql /var/lib/columnstore/storagemanager
-    IFLAG=/var/lib/columnstore/storagemanager/storagemanager-lock
+    mkdir -p @ENGINE_DATADIR@/storagemanager
+    chown -R mysql:mysql @ENGINE_DATADIR@/storagemanager
+    IFLAG=@ENGINE_DATADIR@/storagemanager/storagemanager-lock
 
     # shared dbroot1 synchronization
     # prevents dbbuilder from processing simultaneously on two or more nodes
-    exec {fd_lock}>/var/lib/columnstore/data1/dbroot1-lock
+    exec {fd_lock}>@ENGINE_DATADIR@/data1/dbroot1-lock
     flock -x "$fd_lock"
 
     # shared storagemanager data corruption prevention

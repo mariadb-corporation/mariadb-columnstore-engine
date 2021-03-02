@@ -27,8 +27,6 @@
 
 #include "sessionmanager.h"
 #include "socketclosed.h"
-#include "alarmglobal.h"
-#include "alarmmanager.h"
 #include "liboamcpp.h"
 #include "stopwatch.h"
 #include "masterdbrmnode.h"
@@ -68,24 +66,6 @@
 	delete p; \
 	for (it = responses.begin(); it != responses.end(); it++) \
 		delete *it; }
-
-#if 1
-#define SEND_ALARM \
-	try { \
-		alarmmanager::ALARMManager alarmMgr; \
-		alarmMgr.sendAlarmReport("System", oam::DBRM_READ_ONLY, alarmmanager::SET); \
-	} \
-	catch (...) { }
-#define CLEAR_ALARM \
-	try { \
-		alarmmanager::ALARMManager alarmMgr; \
-		alarmMgr.sendAlarmReport("System", oam::DBRM_READ_ONLY, alarmmanager::CLEAR); \
-	} \
-	catch (...) { }
-#else
-#define SEND_ALARM
-#define CLEAR_ALARM
-#endif
 
 using namespace std;
 using namespace messageqcpp;
@@ -301,8 +281,6 @@ void MasterDBRMNode::run()
     ByteStream msg;
     IOSocket* s;
     boost::thread* reader;
-
-    CLEAR_ALARM
 
     while (!die)
     {
@@ -648,7 +626,6 @@ retrycmd:
 
         if (readOnly)
         {
-            SEND_ALARM
             slaveLock.unlock();
             sendError(p->sock, ERR_READONLY);
             goto out;
@@ -762,7 +739,6 @@ retrycmd:
             {
                 if (!halting)
                 {
-                    SEND_ALARM
                     undo();
                     readOnly = true;
                     slaveLock.unlock();
@@ -850,7 +826,6 @@ retrycmd:
         {
             if (!halting)
             {
-                SEND_ALARM
                 ostringstream ostr;
                 ostr << "DBRM Controller: Caught network error.  "
                      "Confirming command " << (uint32_t)cmd <<
@@ -1034,8 +1009,6 @@ int MasterDBRMNode::compareResponses(uint8_t cmd,
     }
     catch (exception&)
     {
-        SEND_ALARM
-
         readOnly = true;
         ostringstream os;
         os << "DBRM Controller: Network error on node 1.  "
@@ -1055,8 +1028,6 @@ int MasterDBRMNode::compareResponses(uint8_t cmd,
     for (it = responses.begin(), it2 = it + 1, i = 2; it2 != responses.end(); it++, it2++, i++)
         if (**it != **it2 && !halting)
         {
-            SEND_ALARM
-
             ostringstream ostr;
 #ifdef BRM_VERBOSE
             cerr << "DBRM Controller: error: response from node " << i << " is different" << endl;

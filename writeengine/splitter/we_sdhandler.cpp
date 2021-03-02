@@ -49,9 +49,6 @@ using namespace config;
 
 //-----
 
-#include "alarmmanager.h"
-using namespace alarmmanager;
-
 #include "messagequeue.h"
 #include "bytestream.h"
 using namespace messageqcpp;
@@ -477,20 +474,20 @@ void WESDHandler::setup()
     std::string aErrLogName;
 
     if (fRef.fCmdArgs.isJobLogOnly())
-        aLogName = fRef.fCmdArgs.getBulkRootDir() + "/log/" +
+        aLogName = std::string(MCSLOGDIR) + "/cpimport/" +
                    "cpimport_Job_" + fRef.fCmdArgs.getJobId() + ".log";
     else
-        aLogName = fRef.fCmdArgs.getBulkRootDir() + "/log/" +
+        aLogName = std::string(MCSLOGDIR) + "/cpimport/" +
                    "cpimport_" + aTimeStamp + "_" + aPid.str() + ".log";
 
 
     if (getDebugLvl() > 1) cout << "LogName : " << aLogName << endl;
 
     if (fRef.fCmdArgs.isJobLogOnly())
-        aErrLogName = fRef.fCmdArgs.getBulkRootDir() + "/log/" +
+        aErrLogName = std::string(MCSLOGDIR) + "/cpimport/" +
                       "cpimport_Job_" + fRef.fCmdArgs.getJobId() + ".err";
     else
-        aErrLogName = fRef.fCmdArgs.getBulkRootDir() + "/log/" +
+        aErrLogName = std::string(MCSLOGDIR) + "/cpimport/" +
                       "cpimport_" + aTimeStamp + "_" + aPid.str() + ".err";
 
 
@@ -1532,7 +1529,7 @@ void WESDHandler::onErrorFile(int PmId, messageqcpp::SBS& Sbs)
     {
         std::string aFile = aTmpFileName.substr(aPos + 1); //+1 to pass '/'
 
-        std::string aInFile = fRef.getLocFile(); // input file
+        std::string aInFile = fRef.fCmdArgs.getErrorDir();
 
         if (aInFile != "/dev/stdin")
         {
@@ -1630,7 +1627,7 @@ void WESDHandler::onBadFile(int PmId, messageqcpp::SBS& Sbs)
     {
         std::string aFile = aTmpFileName.substr(aPos + 1); //+1 to pass '/'
 
-        std::string aInFile = fRef.getLocFile(); // input file
+        std::string aInFile = fRef.fCmdArgs.getErrorDir();
 
         if (aInFile != "/dev/stdin")
         {

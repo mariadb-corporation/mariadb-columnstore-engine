@@ -22,6 +22,7 @@
 #include <cfloat>
 #include <cstdint>
 #include <cstring>
+#include "mcs_numeric_limits.h"
 
 #ifdef __aarch64__
 using float128_t = long double;
@@ -98,8 +99,6 @@ using int128_t = __int128;
 
 static const float128_t mcs_fl_one = 1.0, mcs_fl_Zero[] = {0.0, -0.0,};
 
-template<typename T>
-class numeric_limits { };
 // Copy from boost::multiprecision::float128
 template<> class numeric_limits<float128_t> {
   public:

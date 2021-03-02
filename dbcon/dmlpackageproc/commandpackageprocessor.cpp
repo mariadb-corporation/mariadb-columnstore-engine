@@ -36,8 +36,6 @@
 #include "we_messages.h"
 #include "we_ddlcommandclient.h"
 #include "oamcache.h"
-#include "alarmglobal.h"
-#include "alarmmanager.h"
 #include "liboamcpp.h"
 using namespace std;
 using namespace WriteEngine;

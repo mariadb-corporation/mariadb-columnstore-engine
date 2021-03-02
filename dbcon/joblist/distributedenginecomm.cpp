@@ -61,8 +61,6 @@ using namespace config;
 using namespace logging;
 
 #include "liboamcpp.h"
-#include "alarmmanager.h"
-using namespace alarmmanager;
 using namespace oam;
 
 #include "jobstep.h"
