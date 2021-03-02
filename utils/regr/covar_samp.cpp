@@ -150,8 +150,6 @@ mcsv1_UDAF::ReturnCode covar_samp::evaluate(mcsv1Context* context, static_any::a
         long double sumxy = data->sumxy;
 
         long double covar_samp = (sumxy - ((sumx * sumy) / N)) / (N - 1);
-        if (covar_samp < 0)  // might be -0
-            covar_samp = 0;
         valOut = static_cast<double>(covar_samp);
     }
     else
