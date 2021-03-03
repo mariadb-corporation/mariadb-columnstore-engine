@@ -479,7 +479,7 @@ void WESplitterApp::invokeCpimport()
 
     std::istringstream ss(aCmdLineStr);
     std::string arg;
-    std::vector<std::string> v2(20, "");
+    std::vector<std::string> v2(50, "");
     unsigned int i = 0;
 
     while (ss >> arg)
