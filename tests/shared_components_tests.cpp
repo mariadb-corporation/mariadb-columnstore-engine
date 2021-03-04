@@ -396,7 +396,7 @@ public:
 
         int width = blockOp.getCorrectRowWidth( execplan::CalpontSystemCatalog::BIGINT, 8 );
         int nBlocks = INITIAL_EXTENT_ROWS_TO_DISK / BYTE_PER_BLOCK * width;
-        uint64_t emptyVal = blockOp.getEmptyRowValue( execplan::CalpontSystemCatalog::BIGINT, 8 );
+        const uint8_t* emptyVal = blockOp.getEmptyRowValue( execplan::CalpontSystemCatalog::BIGINT, 8 );
         // createFile runs IDBDataFile::open + initAbrevCompColumnExtent
         // under the hood
         // bigint column file
@@ -979,7 +979,7 @@ public:
 
         int width = blockOp.getCorrectRowWidth( execplan::CalpontSystemCatalog::BIGINT, 8 );
         int nBlocks = INITIAL_EXTENT_ROWS_TO_DISK / BYTE_PER_BLOCK * width;
-        uint64_t emptyVal = blockOp.getEmptyRowValue( execplan::CalpontSystemCatalog::BIGINT, 8 );
+        const uint8_t* emptyVal = blockOp.getEmptyRowValue( execplan::CalpontSystemCatalog::BIGINT, 8 );
         // createFile runs IDBDataFile::open + initAbrevCompColumnExtent
         // under the hood
         // bigint column file
@@ -1542,7 +1542,7 @@ public:
         }
 
     }
-*/
+
     template<uint8_t W> struct binary;
     typedef binary<16> binary16;
     typedef binary<32> binary32;
@@ -1715,6 +1715,7 @@ public:
         CPPUNIT_ASSERT(fileOp.exists(fileName) == false);
         cout << endl << "End of test";
     }
+    */
     
     void testCleanup()
     {
