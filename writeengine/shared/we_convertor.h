@@ -82,6 +82,9 @@ public:
                                    char dbDirName[][MAX_DB_DIR_NAME_SIZE],
                                    uint32_t partition, uint16_t segment);
 
+    EXPORT static int fileName2Oid(const std::string &fullFileName,
+                                   uint32_t &oid, uint32_t &partition,
+                                   uint32_t &segment);
     /**
      * @brief Convert specified errno to associated error msg string
      *
@@ -139,7 +142,8 @@ private:
     struct dmFilePathArgs_t;
     static int dmOid2FPath(uint32_t oid, uint32_t partition, uint32_t segment,
                            dmFilePathArgs_t* pArgs);
-
+    static int32_t dmFPath2Oid(dmFilePathArgs_t* pArgs, uint32_t& oid,
+                               uint32_t& partition, uint32_t& segment);
 };
 
 } //end of namespace
