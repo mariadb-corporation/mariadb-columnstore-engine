@@ -69,6 +69,8 @@ struct CompressedDBFileHeader
     uint64_t fCompressionType;
     uint64_t fHeaderSize;
     uint64_t fBlockCount;
+    uint64_t fColumnWidth;
+    execplan::CalpontSystemCatalog::ColDataType fColDataType;
 };
 
 // Make the header to be 4K, regardless number of fields being defined/used in header.
@@ -86,6 +88,23 @@ void initCompressedDBFileHeader(void* hdrBuf, int compressionType, int hdrSize)
     hdr->fHeader.fCompressionType = compressionType;
     hdr->fHeader.fBlockCount      = 0;
     hdr->fHeader.fHeaderSize      = hdrSize;
+    hdr->fHeader.fColumnWidth     = 0;
+    hdr->fHeader.fColDataType     = execplan::CalpontSystemCatalog::ColDataType::UNDEFINED;
+}
+
+void initCompressedDBFileHeader(
+    void* hdrBuf, uint32_t columnWidth,
+    execplan::CalpontSystemCatalog::ColDataType colDataType,
+    int compressionType, int hdrSize)
+{
+    CompressedDBFileHeaderBlock* hdr = reinterpret_cast<CompressedDBFileHeaderBlock*>(hdrBuf);
+    hdr->fHeader.fMagicNumber     = MAGIC_NUMBER;
+    hdr->fHeader.fVersionNum      = VERSION_NUM2;
+    hdr->fHeader.fCompressionType = compressionType;
+    hdr->fHeader.fBlockCount      = 0;
+    hdr->fHeader.fHeaderSize      = hdrSize;
+    hdr->fHeader.fColumnWidth     = columnWidth;
+    hdr->fHeader.fColDataType     = colDataType;
 }
 
 } // namespace
@@ -349,6 +368,19 @@ void IDBCompressInterface::initHdr(void* hdrBuf, void* ptrBuf, int compressionTy
     memset(hdrBuf, 0, HDR_BUF_LEN);
     memset(ptrBuf, 0, hdrSize - HDR_BUF_LEN);
     initCompressedDBFileHeader(hdrBuf, compressionType, hdrSize);
+}
+
+//------------------------------------------------------------------------------
+// Initialize the header blocks to be written at the start of a column file.
+//------------------------------------------------------------------------------
+void IDBCompressInterface::initHdr(
+    void* hdrBuf, uint32_t columnWidth,
+    execplan::CalpontSystemCatalog::ColDataType columnType,
+    int compressionType) const
+{
+    memset(hdrBuf, 0, HDR_BUF_LEN * 2);
+    initCompressedDBFileHeader(hdrBuf, columnWidth, columnType,
+                               compressionType, HDR_BUF_LEN * 2);
 }
 
 //------------------------------------------------------------------------------

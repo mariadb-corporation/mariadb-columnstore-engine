@@ -544,6 +544,7 @@ int ColumnInfoCompressed::extendColumnOldExtent(
                  curCol.dataFile.fDbRoot,
                  curCol.dataFile.fPartition,
                  curCol.dataFile.fSegment,
+                 curCol.colDataType,
                  curCol.dataFile.hwm,
                  segFileName,
                  errTask);

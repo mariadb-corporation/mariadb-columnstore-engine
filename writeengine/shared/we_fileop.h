@@ -43,6 +43,7 @@
 #include "we_config.h"
 #include "we_stats.h"
 #include "idbcompress.h"
+#include "calpontsystemcatalog.h"
 
 #if defined(_MSC_VER) && defined(WRITEENGINE_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
@@ -101,6 +102,7 @@ public:
      */
     int                 createFile( const char* fileName, int fileSize,
                                     const uint8_t* emptyVal, int width,
+                                    execplan::CalpontSystemCatalog::ColDataType colDataType,
                                     uint16_t dbRoot );
 
     /**
@@ -159,12 +161,14 @@ public:
      * @param dbRoot   DBRoot of the file being updated.
      * @param emptyVal Empty value used in initializing extents for this column
      * @param width    Width of this column (in bytes)
+     * @param colDataType Column data type.
      */
     EXPORT virtual int  expandAbbrevColumnExtent(
         IDBDataFile*    pFile,
         uint16_t dbRoot,
         const uint8_t*  emptyVal,
-        int      width );
+        int      width,
+        execplan::CalpontSystemCatalog::ColDataType colDataType);
 
     /**
      * @brief Add an extent to the specified Column OID and DBRoot.
@@ -200,6 +204,7 @@ public:
      */
     EXPORT int          extendFile(OID oid, const uint8_t* emptyVal,
                                    int          width,
+                                   execplan::CalpontSystemCatalog::ColDataType colDataType,
                                    HWM          hwm,
                                    BRM::LBID_t  startLbid,
                                    int          allocSize,
@@ -246,6 +251,7 @@ public:
      * @param dbRoot DBRoot of the extent to be filled
      * @param partition Partition of the extent to be filled
      * @param segment Segment file number of the extent to be filled
+     * @param colDataType Column data type
      * @param hwm New HWM blk setting for the segment file after extent is padded
      * @param segFile (out) Name of updated segment file
      * @param errTask (out) Task that failed if error occurs
@@ -257,6 +263,7 @@ public:
             uint16_t     dbRoot,
             uint32_t     partition,
             uint16_t     segment,
+            execplan::CalpontSystemCatalog::ColDataType colDataType,
             HWM          hwm,
             std::string& segFile,
             std::string& errTask);
@@ -499,6 +506,7 @@ public:
                                           int      nBlocks,
                                           const uint8_t* emptyVal,
                                           int      width,
+                                          execplan::CalpontSystemCatalog::ColDataType colDataType,
                                           bool     bNewFile,
                                           bool     bExpandExtent,
                                           bool     bAbbrevExtent,
@@ -524,21 +532,18 @@ private:
             const compress::CompChunkPtr& chunkInPtr,
             compress::CompChunkPtr& chunkOutPt);
 
-    int                 initAbbrevCompColumnExtent( IDBDataFile* pFile,
-            uint16_t dbRoot,
-            int      nBlocks,
-            const uint8_t*      emptyVal,
-            int      width);
+    int initAbbrevCompColumnExtent(
+        IDBDataFile* pFile, uint16_t dbRoot, int nBlocks,
+        const uint8_t* emptyVal, int width,
+        execplan::CalpontSystemCatalog::ColDataType colDataType);
 
     static void         initDbRootExtentMutexes();
     static void         removeDbRootExtentMutexes();
 
-    int                 writeInitialCompColumnChunk( IDBDataFile* pFile,
-            int      nBlocksAllocated,
-            int      nRows,
-            const uint8_t* emptyVal,
-            int      width,
-            char*    hdrs);
+    int writeInitialCompColumnChunk(
+        IDBDataFile* pFile, int nBlocksAllocated, int nRows,
+        const uint8_t* emptyVal, int width,
+        execplan::CalpontSystemCatalog::ColDataType colDataType, char* hdrs);
 
     TxnID       m_transId;
     bool 		m_isBulk;
