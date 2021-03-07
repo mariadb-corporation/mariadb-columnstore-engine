@@ -498,7 +498,7 @@ uint32_t FileBufferMgr::bulkFind(const BRM::LBID_t* lbids, const BRM::VER_t* ver
         }
     }
 
-    boost::mutex::scoped_lock lk(fWLock);
+//    boost::mutex::scoped_lock lk(fWLock);
 
     if (gPMProfOn && gPMStatsPtr)
     {
@@ -531,7 +531,7 @@ uint32_t FileBufferMgr::bulkFind(const BRM::LBID_t* lbids, const BRM::VER_t* ver
         }
     }
 
-    lk.unlock();
+//    lk.unlock();
 
     for (i = 0; i < count; i++)
     {
