@@ -1459,9 +1459,9 @@ void TupleAggregateStep::prep1PhaseAggregate(
         }
     }
 
-    // there is avg(k), but no count(k) in the select list
-    uint64_t lastCol = returnedColVec.size();
+    uint64_t lastCol = outIdx;
 
+    // there is avg(k), but no count(k) in the select list
     for (map<uint32_t, SP_ROWAGG_FUNC_t>::iterator k = avgFuncMap.begin(); k != avgFuncMap.end(); k++)
     {
         if (k->second->fAuxColumnIndex == (uint32_t) - 1)
