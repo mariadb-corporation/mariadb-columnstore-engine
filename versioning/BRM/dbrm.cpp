@@ -874,6 +874,17 @@ reconnect:
 
     try
     {
+        if (msgClient && !msgClient->isConnected())
+        {
+            if (!msgClient->connect())
+            {
+                cerr << "class DBRM failed to connect to MessageQueueClient: " << endl;
+                msgClient = nullptr;
+                mutex.unlock();
+                return ERR_NETWORK;
+            }
+        }
+
         msgClient->write(in);
         out = msgClient->read();
     }
