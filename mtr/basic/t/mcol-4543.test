@@ -51,7 +51,12 @@ SELECT tab1.a, tab2.b FROM t1 tab1 JOIN (SELECT * FROM t1) tab2 ON tab1.a=tab2.a
 # Test subquery columns referenced/not-referenced when subqueries contain unions
 SELECT COUNT(a) FROM (SELECT * FROM t1 UNION ALL SELECT * FROM t1) q;
 SELECT COUNT(b) FROM (SELECT * FROM t1 UNION ALL SELECT * FROM t1) q;
+SELECT COUNT(b), COUNT(a) FROM (SELECT * FROM t1 UNION ALL SELECT * FROM t1) q;
 SELECT COUNT(a) FROM (SELECT * FROM t1 UNION ALL SELECT * FROM t1) q GROUP BY b ORDER BY b;
+SELECT q1.a FROM (SELECT * FROM (SELECT * FROM t1 UNION ALL SELECT * FROM t1) q1_1) q1 JOIN
+(SELECT * FROM (SELECT * FROM t1 UNION ALL SELECT * FROM t1) q2_1) q2 ON q1.a=q2.a ORDER BY 1;
+SELECT q1.a, q2.b FROM (SELECT * FROM (SELECT * FROM t1 UNION ALL SELECT * FROM t1) q1_1) q1 JOIN
+(SELECT * FROM (SELECT * FROM t1 UNION ALL SELECT * FROM t1) q2_1) q2 ON q1.a=q2.a ORDER BY 2 desc, 1 asc;
 
 # Patch for MCOL-4543 also optimizes out an unnecessary BPS projection in PrimProc
 # that was happening earlier. The following 2 queries trigger this optimization.
@@ -59,4 +64,4 @@ SELECT COUNT(a) FROM (SELECT * FROM t1 UNION ALL SELECT * FROM t1) q GROUP BY b 
 SELECT "123" FROM (SELECT * FROM t1) q GROUP BY b ORDER BY b;
 SELECT "123" FROM (SELECT * FROM t1) q GROUP BY b;
 
-DROP DATABASE IF EXISTS mcol4543;
+DROP DATABASE mcol4543;
