@@ -874,14 +874,15 @@ reconnect:
 
     try
     {
-        if (msgClient && !msgClient->isConnected())
+        // master has changed but mariadbd kept old connection; reconnect
+        if (config->getConfig(masterName, "IPAddr") != msgClient->otherEnd())
         {
-            if (!msgClient->connect())
+            if (firstAttempt)
             {
-                cerr << "class DBRM failed to connect to MessageQueueClient: " << endl;
-                msgClient = nullptr;
-                mutex.unlock();
-                return ERR_NETWORK;
+                firstAttempt = false;
+                MessageQueueClientPool::releaseInstance(msgClient);
+                msgClient = NULL;
+                goto reconnect;
             }
         }
 
