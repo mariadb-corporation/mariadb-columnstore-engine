@@ -404,6 +404,7 @@ public:
             nBlocks, // number of blocks
             emptyVal, // NULL value
             width, // width
+            execplan::CalpontSystemCatalog::BIGINT,
             1 ); // dbroot
         CPPUNIT_ASSERT( rc == NO_ERROR );
 
@@ -987,6 +988,7 @@ public:
             nBlocks, // number of blocks
             emptyVal, // NULL value
             width, // width
+            execplan::CalpontSystemCatalog::BIGINT,
             dbRoot ); // dbroot
         CPPUNIT_ASSERT( rc == NO_ERROR );
 
@@ -1011,6 +1013,7 @@ public:
            BYTE_PER_BLOCK, // number of blocks
            emptyVal,
            width,
+           execplan::CalpontSystemCatalog::BIGINT,
            false, // use existing file
            true,  // expand the extent
            false, // add full (not abbreviated) extent
@@ -1031,6 +1034,7 @@ public:
             nBlocks, // number of blocks
             emptyVal, // NULL value
             width, // width
+            execplan::CalpontSystemCatalog::BIGINT,
             dbRoot ); // dbroot
         CPPUNIT_ASSERT( rc == NO_ERROR );
 
@@ -1054,6 +1058,7 @@ public:
            BYTE_PER_BLOCK, // number of blocks
            emptyVal,
            width,
+           execplan::CalpontSystemCatalog::BIGINT,
            false, // use existing file
            true,  // expand the extent
            false, // add full (not abbreviated) extent

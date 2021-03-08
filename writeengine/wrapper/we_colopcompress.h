@@ -27,6 +27,7 @@
 
 #include "we_colop.h"
 #include "we_chunkmanager.h"
+#include "calpontsystemcatalog.h"
 
 #if defined(_MSC_VER) && defined(WRITEENGINE_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
@@ -111,7 +112,9 @@ public:
     /**
     * @brief virtual method in FileOp
     */
-    int expandAbbrevColumnExtent(IDBDataFile* pFile, uint16_t dbRoot, const uint8_t* emptyVal, int width);
+    int expandAbbrevColumnExtent(
+        IDBDataFile* pFile, uint16_t dbRoot, const uint8_t* emptyVal,
+        int width, execplan::CalpontSystemCatalog::ColDataType colDataType);
 
     /**
     * @brief virtual method in ColumnOp
