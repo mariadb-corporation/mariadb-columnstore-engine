@@ -2906,15 +2906,46 @@ SimpleColumn* getSmallestColumn(boost::shared_ptr<CalpontSystemCatalog> csc,
 
             if (tan.alias == csep->derivedTbAlias())
             {
-                assert (!csep->returnedCols().empty());
-                ReturnedColumn* rc = dynamic_cast<ReturnedColumn*>(csep->returnedCols()[0].get());
+                const CalpontSelectExecutionPlan::ReturnedColumnList& cols = csep->returnedCols();
+
+                CalpontSelectExecutionPlan::ReturnedColumnList::const_iterator iter;
+
+                ReturnedColumn* rc;
+
+                for (iter = cols.begin(); iter != cols.end(); iter++)
+                {
+                    if ((*iter)->refCount() != 0)
+                    {
+                        rc = dynamic_cast<ReturnedColumn*>(iter->get());
+                        break;
+                    }
+                }
+
+                if (iter == cols.end())
+                {
+                    assert (!cols.empty());
+
+                    // We take cols[0] here due to the optimization happening in
+                    // derivedTableOptimization. All cols with refCount 0 from
+                    // the end of the cols list are optimized out, until the
+                    // first column with non-zero refCount is encountered. So
+                    // here, if instead of cols[0], we take cols[1] (based on
+                    // some logic) and increment it's refCount, then cols[0] is
+                    // not optimized out in derivedTableOptimization and is
+                    // added as a ConstantColumn to the derived table's returned
+                    // column list. This later causes an ineffective row group
+                    // with row of the form (1, cols[1]_value1) to be created in ExeMgr.
+                    rc = dynamic_cast<ReturnedColumn*>(cols[0].get());
+
+                    // @bug5634 derived table optimization.
+                    rc->incRefCount();
+                }
+
                 SimpleColumn* sc = new SimpleColumn();
                 sc->columnName(rc->alias());
                 sc->sequence(0);
                 sc->tableAlias(tan.alias);
                 sc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
-                // @bug5634 derived table optimization.
-                rc->incRefCount();
                 sc->derivedTable(csep->derivedTbAlias());
                 sc->derivedRefCol(rc);
                 return sc;
