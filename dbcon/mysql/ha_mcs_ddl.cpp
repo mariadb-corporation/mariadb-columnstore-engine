@@ -2424,14 +2424,14 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
         (thd->lex->create_info.like()))
 	{
 		TABLE_SHARE *share = table_arg->s;
-		MY_BITMAP *old_map;			// To save the read_set
+		my_bitmap_map *old_map;			// To save the read_set
 		char datatype_buf[MAX_FIELD_WIDTH], def_value_buf[MAX_FIELD_WIDTH];
 		String datatype, def_value;
 		ostringstream  oss;
         string tbl_name = string(share->db.str) + "." + string(share->table_name.str);
 
 		// Save the current read_set map and mark it for read
-		old_map= tmp_use_all_columns(table_arg, &table_arg->read_set);
+		old_map= tmp_use_all_columns(table_arg, table_arg->read_set);
 
 		oss << "CREATE TABLE " << tbl_name  << " (";
 
@@ -2509,7 +2509,7 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
 		oss << ";";
 		stmt = oss.str();
 
-		tmp_restore_column_map(&table_arg->read_set, old_map);
+		tmp_restore_column_map(table_arg->read_set, old_map);
 	}
 
     rc = ProcessDDLStatement(stmt, db, tbl, tid2sid(thd->thread_id), emsg, compressiontype, isAnyAutoincreCol, startValue, columnName);
