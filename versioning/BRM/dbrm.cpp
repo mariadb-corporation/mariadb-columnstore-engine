@@ -874,6 +874,18 @@ reconnect:
 
     try
     {
+        // master has changed but mariadbd kept old connection; reconnect
+        if (config->getConfig(masterName, "IPAddr") != msgClient->addr2String())
+        {
+            if (firstAttempt)
+            {
+                firstAttempt = false;
+                MessageQueueClientPool::releaseInstance(msgClient);
+                msgClient = NULL;
+                goto reconnect;
+            }
+        }
+
         msgClient->write(in);
         out = msgClient->read();
     }
