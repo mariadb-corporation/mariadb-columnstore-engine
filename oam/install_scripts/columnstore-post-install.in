@@ -202,6 +202,14 @@ if [ $user = "root" ]; then
     fi
 fi
 
+# upgrade the columnstore.cnf file
+if [ -f @MARIADB_MYCNFDIR@/columnstore.cnf.rpmsave ]; then
+    @ENGINE_BINDIR@/mycnfUpgrade > @ENGINE_LOGDIR@/install/mycnfUpgrade.log 2>&1
+    if [ $? -ne 0 ]; then
+        echo "Error: Problem upgrade columnstore.cnf, check @ENGINE_LOGDIR@/install/mycnfUpgrade.log"
+    fi
+fi
+
 if [ $user = "root" ]; then
     columnstoreSyslogSetup.sh install > $installLogDir/syslog_install.log 2>&1
 
