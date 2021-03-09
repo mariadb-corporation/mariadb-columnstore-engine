@@ -145,16 +145,18 @@ mcsv1_UDAF::ReturnCode regr_intercept::subEvaluate(mcsv1Context* context, const 
 mcsv1_UDAF::ReturnCode regr_intercept::evaluate(mcsv1Context* context, static_any::any& valOut)
 {
     struct regr_intercept_data* data = (struct regr_intercept_data*)context->getUserData()->data;
-    double N = data->cnt;
+    long double N = data->cnt;
     if (N > 1)
     {
         long double sumx = data->sumx;
         long double sumy = data->sumy;
         long double sumx2 = data->sumx2;
         long double sumxy = data->sumxy;
+        // regr_intercept is AVG(y) - slope(y,x)*avg(x)
+        // We do some algebra and we can get a slightly smaller calculation
         long double numerator = sumy * sumx2 - sumx * sumxy;
-        long double var_pop = (N * sumx2) - (sumx * sumx);
-        if (var_pop != 0)
+        long double var_pop = (N * sumx2) - (sumx * sumx); // Not realy var_pop, but sort of after some reductions
+        if (var_pop > 0)
         {
             valOut = static_cast<double>(numerator / var_pop);
         }
