@@ -396,7 +396,7 @@ public:
 
         int width = blockOp.getCorrectRowWidth( execplan::CalpontSystemCatalog::BIGINT, 8 );
         int nBlocks = INITIAL_EXTENT_ROWS_TO_DISK / BYTE_PER_BLOCK * width;
-        uint64_t emptyVal = blockOp.getEmptyRowValue( execplan::CalpontSystemCatalog::BIGINT, 8 );
+        const uint8_t* emptyVal = blockOp.getEmptyRowValue( execplan::CalpontSystemCatalog::BIGINT, 8 );
         // createFile runs IDBDataFile::open + initAbrevCompColumnExtent
         // under the hood
         // bigint column file
@@ -404,6 +404,7 @@ public:
             nBlocks, // number of blocks
             emptyVal, // NULL value
             width, // width
+            execplan::CalpontSystemCatalog::BIGINT,
             1 ); // dbroot
         CPPUNIT_ASSERT( rc == NO_ERROR );
 
@@ -979,7 +980,7 @@ public:
 
         int width = blockOp.getCorrectRowWidth( execplan::CalpontSystemCatalog::BIGINT, 8 );
         int nBlocks = INITIAL_EXTENT_ROWS_TO_DISK / BYTE_PER_BLOCK * width;
-        uint64_t emptyVal = blockOp.getEmptyRowValue( execplan::CalpontSystemCatalog::BIGINT, 8 );
+        const uint8_t* emptyVal = blockOp.getEmptyRowValue( execplan::CalpontSystemCatalog::BIGINT, 8 );
         // createFile runs IDBDataFile::open + initAbrevCompColumnExtent
         // under the hood
         // bigint column file
@@ -987,6 +988,7 @@ public:
             nBlocks, // number of blocks
             emptyVal, // NULL value
             width, // width
+            execplan::CalpontSystemCatalog::BIGINT,
             dbRoot ); // dbroot
         CPPUNIT_ASSERT( rc == NO_ERROR );
 
@@ -1011,6 +1013,7 @@ public:
            BYTE_PER_BLOCK, // number of blocks
            emptyVal,
            width,
+           execplan::CalpontSystemCatalog::BIGINT,
            false, // use existing file
            true,  // expand the extent
            false, // add full (not abbreviated) extent
@@ -1031,6 +1034,7 @@ public:
             nBlocks, // number of blocks
             emptyVal, // NULL value
             width, // width
+            execplan::CalpontSystemCatalog::BIGINT,
             dbRoot ); // dbroot
         CPPUNIT_ASSERT( rc == NO_ERROR );
 
@@ -1054,6 +1058,7 @@ public:
            BYTE_PER_BLOCK, // number of blocks
            emptyVal,
            width,
+           execplan::CalpontSystemCatalog::BIGINT,
            false, // use existing file
            true,  // expand the extent
            false, // add full (not abbreviated) extent
@@ -1542,7 +1547,7 @@ public:
         }
 
     }
-*/
+
     template<uint8_t W> struct binary;
     typedef binary<16> binary16;
     typedef binary<32> binary32;
@@ -1715,6 +1720,7 @@ public:
         CPPUNIT_ASSERT(fileOp.exists(fileName) == false);
         cout << endl << "End of test";
     }
+    */
     
     void testCleanup()
     {

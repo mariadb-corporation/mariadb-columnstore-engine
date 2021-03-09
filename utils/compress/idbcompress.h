@@ -27,6 +27,8 @@
 #include <vector>
 #include <utility>
 
+#include "calpontsystemcatalog.h"
+
 #if defined(_MSC_VER) && defined(xxxIDBCOMP_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
 #else
@@ -113,6 +115,15 @@ public:
     * @warning ptrBuf must be at least (hdrSize-HDR_BUF_LEN) bytes
     */
     EXPORT void initHdr(void* hdrBuf, void* ptrBuf, int compressionType, int hdrSize) const;
+
+    /**
+     * Initialize header buffer at start of compressed db file.
+     *
+     * @warning hdrBuf must be at least HDR_BUF_LEN*2 bytes
+     */
+    EXPORT void initHdr(void* hdrBuf, uint32_t columnWidth,
+                        execplan::CalpontSystemCatalog::ColDataType columnType,
+                        int compressionType) const;
 
     /**
     * Verify the passed in buffer contains a compressed db file header.
@@ -277,6 +288,7 @@ inline int IDBCompressInterface::uncompress(const char* in, size_t inLen, char* 
 }
 inline void IDBCompressInterface::initHdr(void*, int) const {}
 inline void IDBCompressInterface::initHdr(void*, void*, int, int) const {}
+inline void initHdr(void*, uint32_t, execplan::CalpontSystemCatalog::ColDataType, int) const {}
 inline int IDBCompressInterface::verifyHdr(const void*) const
 {
     return -1;

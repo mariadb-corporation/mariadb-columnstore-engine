@@ -60,7 +60,6 @@ fi
 
 rm -f @ENGINE_DATADIR@/local/*.columnstore
 rm -rf @ENGINE_DATADIR@/local/etc/
-rm -f @ENGINE_DATADIR@/data/bulk/tmp/job/* >/dev/null 2>&1
 rm -f @ENGINE_DATADIR@/local/moveDbrootTransactionLog
 rm -rf @ENGINE_LOGDIR@
 rm -rf /tmp/columnstore_tmp_files

@@ -116,7 +116,6 @@ chmod 777 @ENGINE_LOGDIR@/install
 installLogDir=@ENGINE_LOGDIR@/install
 
 # make sure trace dir is world-writable and sticky
-test -d @ENGINE_DATADIR@/data || mkdir -p @ENGINE_DATADIR@/data
 test -d @ENGINE_DATADIR@/data1/systemFiles/dbrm || mkdir -p @ENGINE_DATADIR@/data1/systemFiles/dbrm
 test -d @ENGINE_DATADIR@/local || mkdir -p @ENGINE_DATADIR@/local
 test -d @ENGINE_DATADIR@/data1/systemFiles/dataTransaction || rmdir @ENGINE_DATADIR@/data1/systemFiles/dataTransaction >/dev/null 2>&1
@@ -126,17 +125,10 @@ chmod -R 1755 @ENGINE_DATADIR@/data1/systemFiles >/dev/null 2>&1
 chmod 1755 @ENGINE_SYSCONFDIR@/columnstore > /dev/null 2>&1
 
 #create the bulk-load dirs
-mkdir -p @ENGINE_DATADIR@/data/bulk/data/import >/dev/null 2>&1
-mkdir -p @ENGINE_DATADIR@/data/bulk/log >/dev/null 2>&1
-mkdir -p @ENGINE_DATADIR@/data/bulk/job >/dev/null 2>&1
-mkdir -p @ENGINE_DATADIR@/data/bulk/rollback >/dev/null 2>&1
-mkdir -p @ENGINE_DATADIR@/data/bulk/tmpjob >/dev/null 2>&1
 mkdir -p @ENGINE_LOGDIR@/data/bulk/data/import >/dev/null 2>&1
-mkdir -p @ENGINE_LOGDIR@/data/bulk/log >/dev/null 2>&1
 mkdir -p @ENGINE_LOGDIR@/data/bulk/job >/dev/null 2>&1
 mkdir -p @ENGINE_LOGDIR@/data/bulk/rollback >/dev/null 2>&1
 mkdir -p @ENGINE_LOGDIR@/data/bulk/tmpjob >/dev/null 2>&1
-rm -f @ENGINE_DATADIR@/data/bulk/tmpjob/* >/dev/null 2>&1
 rm -f @ENGINE_LOGDIR@/data/bulk/tmpjob/* >/dev/null 2>&1
 chmod -R 777 @ENGINE_LOGDIR@/data
 

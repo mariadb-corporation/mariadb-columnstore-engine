@@ -162,6 +162,7 @@ int FileOp::createDir( const char* dirName, mode_t mode ) const
  ***********************************************************/
 int FileOp::createFile( const char* fileName, int numOfBlock,
                         const uint8_t* emptyVal, int width,
+                        execplan::CalpontSystemCatalog::ColDataType colDataType,
                         uint16_t dbRoot )
 {
     IDBDataFile* pFile =
@@ -183,7 +184,8 @@ int FileOp::createFile( const char* fileName, int numOfBlock,
                                              dbRoot,
                                              numOfBlock,
                                              emptyVal,
-                                             width );
+                                             width,
+                                             colDataType );
         }
         else
         {
@@ -192,6 +194,7 @@ int FileOp::createFile( const char* fileName, int numOfBlock,
                                    numOfBlock,
                                    emptyVal,
                                    width,
+                                   colDataType,
                                    true,    // new file
                                    false,   // don't expand; add new extent
                                    true );  // add abbreviated extent
@@ -281,7 +284,7 @@ int FileOp::createFile(FID fid,
 
 //timer.stop( "allocateColExtent" );
 
-    return createFile( fileName, totalSize, emptyVal, width, dbRoot );
+    return createFile( fileName, totalSize, emptyVal, width, colDataType, dbRoot );
 }
 
 /***********************************************************
@@ -571,6 +574,7 @@ int FileOp::extendFile(
     OID          oid,
     const uint8_t*     emptyVal,
     int          width,
+    execplan::CalpontSystemCatalog::ColDataType colDataType,
     HWM          hwm,
     BRM::LBID_t  startLbid,
     int          allocSize,
@@ -687,15 +691,9 @@ int FileOp::extendFile(
 
                 pFile = NULL;
                 string failedTask;  // For return error message, if any.
-                rc = FileOp::fillCompColumnExtentEmptyChunks(oid,
-                        width,
-                        emptyVal,
-                        dbRoot,
-                        partition,
-                        segment,
-                        hwm,
-                        segFile,
-                        failedTask);
+                rc = FileOp::fillCompColumnExtentEmptyChunks(
+                    oid, width, emptyVal, dbRoot, partition, segment,
+                    colDataType, hwm, segFile, failedTask);
 
                 if (rc != NO_ERROR)
                 {
@@ -756,7 +754,8 @@ int FileOp::extendFile(
                 // This generally won't ever happen, as uncompressed files
                 // are created with full extents.
                 rc = FileOp::expandAbbrevColumnExtent( pFile, dbRoot,
-                                                       emptyVal, width);
+                                                       emptyVal, width,
+                                                       colDataType );
 
                 if (rc != NO_ERROR)
                 {
@@ -815,7 +814,7 @@ int FileOp::extendFile(
         if ((m_compressionType) && (hdrs))
         {
             IDBCompressInterface compressor;
-            compressor.initHdr(hdrs, m_compressionType);
+            compressor.initHdr(hdrs, width, colDataType, m_compressionType);
         }
     }
 
@@ -846,6 +845,7 @@ int FileOp::extendFile(
                            allocSize,
                            emptyVal,
                            width,
+                           colDataType,
                            newFile, // new or existing file
                            false,   // don't expand; new extent
                            false,   // add full (not abbreviated) extent
@@ -972,7 +972,7 @@ int FileOp::addExtentExactFile(
         if ((m_compressionType) && (hdrs))
         {
             IDBCompressInterface compressor;
-            compressor.initHdr(hdrs, m_compressionType);
+            compressor.initHdr(hdrs, width, colDataType, m_compressionType);
         }
     }
 
@@ -1004,6 +1004,7 @@ int FileOp::addExtentExactFile(
                            allocSize,
                            emptyVal,
                            width,
+                           colDataType,
                            newFile, // new or existing file
                            false,   // don't expand; new extent
                            false ); // add full (not abbreviated) extent
@@ -1047,6 +1048,7 @@ int FileOp::initColumnExtent(
     int      nBlocks,
     const uint8_t* emptyVal,
     int      width,
+    execplan::CalpontSystemCatalog::ColDataType colDataType,
     bool     bNewFile,
     bool     bExpandExtent,
     bool     bAbbrevExtent,
@@ -1056,7 +1058,7 @@ int FileOp::initColumnExtent(
     {
         char hdrs[IDBCompressInterface::HDR_BUF_LEN * 2];
         IDBCompressInterface compressor;
-        compressor.initHdr(hdrs, m_compressionType);
+        compressor.initHdr(hdrs, width, colDataType, m_compressionType);
 
         if (bAbbrevExtent)
             compressor.setBlockCount(hdrs, nBlocks);
@@ -1226,7 +1228,8 @@ int FileOp::initAbbrevCompColumnExtent(
     uint16_t dbRoot,
     int      nBlocks,
     const uint8_t* emptyVal,
-    int      width)
+    int      width,
+    execplan::CalpontSystemCatalog::ColDataType colDataType)
 {
     // Reserve disk space for optimized abbreviated extent
     int rc = initColumnExtent( pFile,
@@ -1234,6 +1237,7 @@ int FileOp::initAbbrevCompColumnExtent(
                                nBlocks,
                                emptyVal,
                                width,
+                               colDataType,
                                true,   // new file
                                false,  // don't expand; add new extent
                                true,   // add abbreviated extent
@@ -1253,6 +1257,7 @@ int FileOp::initAbbrevCompColumnExtent(
                                       INITIAL_EXTENT_ROWS_TO_DISK,
                                       emptyVal,
                                       width,
+                                      colDataType,
                                       hdrs );
 
     if (rc != NO_ERROR)
@@ -1287,6 +1292,7 @@ int FileOp::writeInitialCompColumnChunk(
     int      nRows,
     const uint8_t* emptyVal,
     int      width,
+    execplan::CalpontSystemCatalog::ColDataType colDataType,
     char*    hdrs)
 {
     const int INPUT_BUFFER_SIZE     = nRows * width;
@@ -1328,7 +1334,7 @@ int FileOp::writeInitialCompColumnChunk(
 //      "; blkAllocCnt: "   << nBlocksAllocated  <<
 //      "; compressedByteCnt: "  << outputLen << std::endl;
 
-    compressor.initHdr(hdrs, m_compressionType);
+    compressor.initHdr(hdrs, width, colDataType, m_compressionType);
     compressor.setBlockCount(hdrs, nBlocksAllocated);
 
     // Store compression pointers in the header
@@ -1352,15 +1358,16 @@ int FileOp::writeInitialCompColumnChunk(
  * DESCRIPTION:
  *    Fill specified compressed extent with empty value chunks.
  * PARAMETERS:
- *    oid        - OID for relevant column
- *    colWidth   - width in bytes of this column
- *    emptyVal   - empty value to be used in filling empty chunks
- *    dbRoot     - DBRoot of extent to be filled
- *    partition  - partition of extent to be filled
- *    segment    - segment file number of extent to be filled
- *    hwm        - proposed new HWM of filled in extent
- *    segFile    - (out) name of updated segment file
- *    failedTask - (out) if error occurs, this is the task that failed
+ *    oid         - OID for relevant column
+ *    colWidth    - width in bytes of this column
+ *    emptyVal    - empty value to be used in filling empty chunks
+ *    dbRoot      - DBRoot of extent to be filled
+ *    partition   - partition of extent to be filled
+ *    segment     - segment file number of extent to be filled
+ *    colDataType - Column data type
+ *    hwm         - proposed new HWM of filled in extent
+ *    segFile     - (out) name of updated segment file
+ *    failedTask  - (out) if error occurs, this is the task that failed
  * RETURN:
  *    returns NO_ERROR if success.
  ***********************************************************/
@@ -1370,6 +1377,7 @@ int FileOp::fillCompColumnExtentEmptyChunks(OID oid,
         uint16_t     dbRoot,
         uint32_t     partition,
         uint16_t     segment,
+        execplan::CalpontSystemCatalog::ColDataType colDataType,
         HWM          hwm,
         std::string& segFile,
         std::string& failedTask)
@@ -1459,7 +1467,8 @@ int FileOp::fillCompColumnExtentEmptyChunks(OID oid,
         }
 
         off64_t   endHdrsOffset = pFile->tell();
-        rc = expandAbbrevColumnExtent( pFile, dbRoot, emptyVal, colWidth );
+        rc = expandAbbrevColumnExtent(pFile, dbRoot, emptyVal, colWidth,
+                                      colDataType);
 
         if (rc != NO_ERROR)
         {
@@ -2846,7 +2855,8 @@ int FileOp::expandAbbrevColumnExtent(
     IDBDataFile* pFile,   // FILE ptr to file where abbrev extent is to be expanded
     uint16_t dbRoot,  // The DBRoot of the file with the abbreviated extent
     const uint8_t* emptyVal,// Empty value to be used in expanding the extent
-    int      width )  // Width of the column (in bytes)
+    int      width,   // Width of the column (in bytes)
+    execplan::CalpontSystemCatalog::ColDataType colDataType) // Column data type.
 {
     // Based on extent size, see how many blocks to add to fill the extent
     int blksToAdd = ( ((int)BRMWrapper::getInstance()->getExtentRows() -
@@ -2862,11 +2872,12 @@ int FileOp::expandAbbrevColumnExtent(
     }
 
     // Add blocks to turn the abbreviated extent into a full extent.
-    int rc = FileOp::initColumnExtent(pFile, dbRoot, blksToAdd, emptyVal, width,
-                                      false,   // existing file
-                                      true,    // expand existing extent
-                                      false,  // n/a since not adding new extent
-                                      true);  // optimize segment file extension
+    int rc = FileOp::initColumnExtent(pFile, dbRoot, blksToAdd, emptyVal,
+                                      width, colDataType,
+                                      false, // existing file
+                                      true,  // expand existing extent
+                                      false, // n/a since not adding new extent
+                                      true); // optimize segment file extension
 
     return rc;
 }

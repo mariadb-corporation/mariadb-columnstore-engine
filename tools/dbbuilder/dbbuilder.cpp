@@ -176,9 +176,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-	//get tmp log directory
-    tmpDir = startup::StartUp::tmpDir();
-    logFile = tmpDir + "/dbbuilder.status";
+    logFile = string(MCSLOGDIR) + "/install/dbbuilder.status";
 
     buildOption = atoi(argv[optind++]);
 
