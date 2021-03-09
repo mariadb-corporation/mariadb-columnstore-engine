@@ -32,6 +32,7 @@
 #include "mcsconfig.h"
 
 #include "we_convertor.h"
+#include "numericliteral.h"
 
 using namespace std;
 using namespace execplan;
@@ -105,6 +106,39 @@ int _doFile(char* pBuffer, int blen, unsigned char val)
 
 /*******************************************************************************
  * DESCRIPTION:
+ *    Takes a buffer in ColumnStore `text` format and converts it to an
+ *    integer.
+ * PARAMETERS:
+ *    buffer(input)  - a pointer to the input buffer.
+ *    fmt   (input)  - a pointer to the format buffer.
+ *    offset(input)  - an offset.
+ *    val   (output) - converted integer.
+ * RETURN:
+ *   0 is returned on success, -1 is returned on error.
+ ******************************************************************************/
+int32_t _fromText(const char* buffer, const char* fmt, uint32_t offset,
+                  uint32_t& val)
+{
+    int32_t rc = -1;
+    // Number length in characters.
+    const uint32_t numberLen = 3;
+
+    // Check that buffer is in the correct `directory` format.
+    if (buffer && (fnmatch(fmt, buffer, 0) == 0))
+    {
+        datatypes::DataCondition error;
+        val = literal::UnsignedInteger(buffer + offset, numberLen)
+                  .toXIntPositive<uint32_t>(error);
+        // The number cannot exceed 0xff.
+        if (!error && val < 256)
+            rc = 0;
+    }
+
+    return rc;
+}
+
+/*******************************************************************************
+ * DESCRIPTION:
  *    Takes a buffer in ColumnStore `directory` format and converts it to an
  *    integer.
  * PARAMETERS:
@@ -115,25 +149,7 @@ int _doFile(char* pBuffer, int blen, unsigned char val)
  ******************************************************************************/
 int32_t _fromDir(const char* buffer, uint32_t& val)
 {
-    int32_t rc = -1;
-    // Number length in characters.
-    const uint32_t numberLen = 3;
-
-    // Check that buffer is in the correct `directory` format.
-    if (buffer && (fnmatch(CS_DIR_FORMAT, buffer, 0) == 0))
-    {
-        char num[numberLen + 1];
-        strncpy(num, buffer, numberLen);
-        num[numberLen] = '\0';
-        val = atoi(num);
-        // The number cannot exceed 0xff.
-        if (val < 256)
-        {
-            rc = 0;
-        }
-    }
-
-    return rc;
+    return _fromText(buffer, CS_DIR_FORMAT, 0, val);
 }
 
 /*******************************************************************************
@@ -148,27 +164,7 @@ int32_t _fromDir(const char* buffer, uint32_t& val)
  ******************************************************************************/
 int32_t _fromFile(const char* buffer, uint32_t& val)
 {
-    int32_t rc = -1;
-    // Offset from the beggining e.g. `FILE000.cdf`.
-    const uint32_t offset = 4;
-    // Number length in characters.
-    const uint32_t numberLen = 3;
-
-    // Check that buffer is in the correct `file` format.
-    if (buffer && (fnmatch(CS_FILE_FORMAT, buffer, 0) == 0))
-    {
-        char num[numberLen + 1];
-        strncpy(num, buffer + offset, numberLen);
-        num[numberLen] = '\0';
-        val = atoi(num);
-        // The number cannot exceed 0xff.
-        if (val < 256)
-        {
-            rc = 0;
-        }
-    }
-
-    return rc;
+    return _fromText(buffer, CS_FILE_FORMAT, 4, val);
 }
 
 }
@@ -485,7 +481,7 @@ int Convertor::fileName2Oid(const std::string& fullFileName, uint32_t& oid,
 
     // FIXME: Currently used ERR_DM_CONVERT_OID, should we introduce new error
     // code?
-    RETURN_ON_WE_ERROR(dmFPath2Oid(&args, oid, partition, segment),
+    RETURN_ON_WE_ERROR(dmFPath2Oid(args, oid, partition, segment),
                        ERR_DM_CONVERT_OID);
 
     return NO_ERROR;
@@ -1134,7 +1130,7 @@ int Convertor::dmOid2FPath(uint32_t oid, uint32_t partition, uint32_t segment,
  * and segment.
  *
  * PARAMETERS:
- *    pArgs     INPUT --  a pointer to `dmFilePathArgs_t` struct.
+ *    pArgs     INPUT --  a const reference to `dmFilePathArgs_t` struct.
  *    oid       OUTPUT -- oid for the given file name.
  *    partition OUTPUT -- partition for the given file name.
  *    segment   OUTPUT -- segment for the given filename.
@@ -1142,7 +1138,7 @@ int Convertor::dmOid2FPath(uint32_t oid, uint32_t partition, uint32_t segment,
  * RETURN:
  *    return 0 if everything went OK.  -1 if an error occured.
  ******************************************************************************/
-int32_t Convertor::dmFPath2Oid(dmFilePathArgs_t* pArgs, uint32_t& oid,
+int32_t Convertor::dmFPath2Oid(const dmFilePathArgs_t& pArgs, uint32_t& oid,
                                uint32_t& partition, uint32_t& segment)
 {
     uint32_t val = 0;
@@ -1150,41 +1146,42 @@ int32_t Convertor::dmFPath2Oid(dmFilePathArgs_t* pArgs, uint32_t& oid,
     // OID.
     // Directory A.
     oid = 0;
-    if ((pArgs->Arc = _fromDir(pArgs->pDirA, val)) == -1)
+    int32_t rc;
+    if ((rc = _fromDir(pArgs.pDirA, val)) == -1)
     {
         return -1;
     }
     oid = val << 24;
 
     // Directory B.
-    if ((pArgs->Brc = _fromDir(pArgs->pDirB, val)) == -1)
+    if ((rc = _fromDir(pArgs.pDirB, val)) == -1)
     {
         return -1;
     }
     oid |= val << 16;
 
     // Directory C.
-    if ((pArgs->Crc = _fromDir(pArgs->pDirC, val)) == -1)
+    if ((rc = _fromDir(pArgs.pDirC, val)) == -1)
     {
         return -1;
     }
     oid |= val << 8;
 
     // Directory D.
-    if ((pArgs->Drc = _fromDir(pArgs->pDirD, val)) == -1)
+    if ((rc = _fromDir(pArgs.pDirD, val)) == -1)
     {
         return -1;
     }
     oid |= val;
 
     // Partition.
-    if ((pArgs->Erc = _fromDir(pArgs->pDirE, partition)) == -1)
+    if ((rc = _fromDir(pArgs.pDirE, partition)) == -1)
     {
         return -1;
     }
 
     // Segment.
-    if ((pArgs->FNrc = _fromFile(pArgs->pFName, segment)) == -1)
+    if ((rc = _fromFile(pArgs.pFName, segment)) == -1)
     {
         return -1;
     }

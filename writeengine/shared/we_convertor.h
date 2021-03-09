@@ -142,7 +142,7 @@ private:
     struct dmFilePathArgs_t;
     static int dmOid2FPath(uint32_t oid, uint32_t partition, uint32_t segment,
                            dmFilePathArgs_t* pArgs);
-    static int32_t dmFPath2Oid(dmFilePathArgs_t* pArgs, uint32_t& oid,
+    static int32_t dmFPath2Oid(const dmFilePathArgs_t& pArgs, uint32_t& oid,
                                uint32_t& partition, uint32_t& segment);
 };
 
