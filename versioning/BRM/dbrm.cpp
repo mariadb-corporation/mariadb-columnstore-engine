@@ -880,7 +880,7 @@ reconnect:
             if (firstAttempt)
             {
                 firstAttempt = false;
-                MessageQueueClientPool::releaseInstance(msgClient);
+                MessageQueueClientPool::deleteInstance(msgClient);
                 msgClient = NULL;
                 goto reconnect;
             }
