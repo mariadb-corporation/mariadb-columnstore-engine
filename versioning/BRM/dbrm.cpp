@@ -874,8 +874,11 @@ reconnect:
 
     try
     {
-        // master has changed but mariadbd kept old connection; reconnect
-        if (config->getConfig(masterName, "IPAddr") != msgClient->addr2String())
+        // master may have changed but old msgclient connection might be in use
+        // comparing to ModuleIPAddr1-1-3 in case DBRM_Controller is a hostname
+        string clientAddr = msgClient->addr2String();
+        if ((config->getConfig(masterName, "IPAddr") != clientAddr) &&
+            (config->getConfig("SystemModuleConfig", "ModuleIPAddr1-1-3") != clientAddr))
         {
             if (firstAttempt)
             {
