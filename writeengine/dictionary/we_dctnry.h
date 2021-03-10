@@ -305,7 +305,8 @@ protected:
     // methods to be overriden by compression classes
     // (width argument in createDctnryFile() is string width, not token width)
     virtual IDBDataFile* createDctnryFile(const char* name, int width,
-                                          const char* mode, int ioBuffSize);
+                                          const char* mode, int ioBuffSize,
+                                          BRM::LBID_t lbid = -1);
     virtual IDBDataFile* openDctnryFile(bool useTmpSuffix);
     virtual void  closeDctnryFile(bool doFlush, std::map<FID, FID>& oids);
     virtual int   numOfBlocksInFile();

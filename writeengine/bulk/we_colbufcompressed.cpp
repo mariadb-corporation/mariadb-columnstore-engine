@@ -582,11 +582,23 @@ int ColumnBufferCompressed::saveCompressionHeaders( )
 {
     // Construct the header records
     char hdrBuf[IDBCompressInterface::HDR_BUF_LEN * 2];
+    RETURN_ON_ERROR(fColInfo->colOp->readHeaders(fFile, hdrBuf));
+
+    auto lbid = fCompressor->getLBID0(hdrBuf);
     fCompressor->initHdr(hdrBuf, fColInfo->column.width,
                          fColInfo->column.dataType,
                          fColInfo->column.compressionType);
     fCompressor->setBlockCount(hdrBuf,
                                (fColInfo->getFileSize() / BYTE_PER_BLOCK) );
+    if (lbid)
+    {
+        fCompressor->setLBID0(hdrBuf, lbid);
+        fCompressor->setLBID1(hdrBuf, fColInfo->getLastUpdatedLBID());
+    }
+    else
+    {
+        fCompressor->setLBID0(hdrBuf, fColInfo->getLastUpdatedLBID());
+    }
 
     std::vector<uint64_t> ptrs;
 

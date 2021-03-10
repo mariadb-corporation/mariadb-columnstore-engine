@@ -163,7 +163,8 @@ int FileOp::createDir( const char* dirName, mode_t mode ) const
 int FileOp::createFile( const char* fileName, int numOfBlock,
                         const uint8_t* emptyVal, int width,
                         execplan::CalpontSystemCatalog::ColDataType colDataType,
-                        uint16_t dbRoot )
+                        uint16_t dbRoot,
+                        BRM::LBID_t startLbid )
 {
     IDBDataFile* pFile =
         IDBDataFile::open(
@@ -185,6 +186,7 @@ int FileOp::createFile( const char* fileName, int numOfBlock,
                                              numOfBlock,
                                              emptyVal,
                                              width,
+                                             startLbid,
                                              colDataType );
         }
         else
@@ -284,7 +286,8 @@ int FileOp::createFile(FID fid,
 
 //timer.stop( "allocateColExtent" );
 
-    return createFile( fileName, totalSize, emptyVal, width, colDataType, dbRoot );
+    return createFile(fileName, totalSize, emptyVal, width, colDataType,
+                      dbRoot, startLbid);
 }
 
 /***********************************************************
@@ -815,6 +818,7 @@ int FileOp::extendFile(
         {
             IDBCompressInterface compressor;
             compressor.initHdr(hdrs, width, colDataType, m_compressionType);
+            compressor.setLBID0(hdrs, startLbid);
         }
     }
 
@@ -849,7 +853,8 @@ int FileOp::extendFile(
                            newFile, // new or existing file
                            false,   // don't expand; new extent
                            false,   // add full (not abbreviated) extent
-                           true);   // try to optimize extent creation
+                           true,    // try to optimize extent creation
+                           startLbid );
 
     return rc;
 }
@@ -973,6 +978,7 @@ int FileOp::addExtentExactFile(
         {
             IDBCompressInterface compressor;
             compressor.initHdr(hdrs, width, colDataType, m_compressionType);
+            compressor.setLBID0(hdrs, startLbid);
         }
     }
 
@@ -1007,7 +1013,8 @@ int FileOp::addExtentExactFile(
                            colDataType,
                            newFile, // new or existing file
                            false,   // don't expand; new extent
-                           false ); // add full (not abbreviated) extent
+                           false,   // add full (not abbreviated) extent
+                           startLbid );
 
     closeFile( pFile );
     return rc;
@@ -1052,13 +1059,15 @@ int FileOp::initColumnExtent(
     bool     bNewFile,
     bool     bExpandExtent,
     bool     bAbbrevExtent,
-    bool     bOptExtension)
+    bool     bOptExtension,
+    int64_t  lbid)
 {
     if ((bNewFile) && (m_compressionType))
     {
         char hdrs[IDBCompressInterface::HDR_BUF_LEN * 2];
         IDBCompressInterface compressor;
         compressor.initHdr(hdrs, width, colDataType, m_compressionType);
+        compressor.setLBID0(hdrs, lbid);
 
         if (bAbbrevExtent)
             compressor.setBlockCount(hdrs, nBlocks);
@@ -1072,7 +1081,7 @@ int FileOp::initColumnExtent(
         //@Bug 3219. update the compression header after the extent is expanded.
         if ((!bNewFile) && (m_compressionType) && (bExpandExtent))
         {
-            updateColumnExtent(pFile, nBlocks);
+            updateColumnExtent(pFile, nBlocks, lbid);
         }
 
         // @bug 2378. Synchronize here to avoid write buffer pile up too much,
@@ -1188,7 +1197,7 @@ int FileOp::initColumnExtent(
             //@Bug 3219. update the compression header after the extent is expanded.
             if ((!bNewFile) && (m_compressionType) && (bExpandExtent))
             {
-                updateColumnExtent(pFile, nBlocks);
+                updateColumnExtent(pFile, nBlocks, lbid);
             }
 
             // @bug 2378. Synchronize here to avoid write buffer pile up too much,
@@ -1229,6 +1238,7 @@ int FileOp::initAbbrevCompColumnExtent(
     int      nBlocks,
     const uint8_t* emptyVal,
     int      width,
+    BRM::LBID_t startLBID,
     execplan::CalpontSystemCatalog::ColDataType colDataType)
 {
     // Reserve disk space for optimized abbreviated extent
@@ -1241,7 +1251,8 @@ int FileOp::initAbbrevCompColumnExtent(
                                true,   // new file
                                false,  // don't expand; add new extent
                                true,   // add abbreviated extent
-                               true); // optimize the initial extent
+                               true,   // optimize the initial extent
+                               startLBID);
     if (rc != NO_ERROR)
     {
         return rc;
@@ -1257,6 +1268,7 @@ int FileOp::initAbbrevCompColumnExtent(
                                       INITIAL_EXTENT_ROWS_TO_DISK,
                                       emptyVal,
                                       width,
+                                      startLBID,
                                       colDataType,
                                       hdrs );
 
@@ -1292,6 +1304,7 @@ int FileOp::writeInitialCompColumnChunk(
     int      nRows,
     const uint8_t* emptyVal,
     int      width,
+    BRM::LBID_t   startLBID,
     execplan::CalpontSystemCatalog::ColDataType colDataType,
     char*    hdrs)
 {
@@ -1336,6 +1349,7 @@ int FileOp::writeInitialCompColumnChunk(
 
     compressor.initHdr(hdrs, width, colDataType, m_compressionType);
     compressor.setBlockCount(hdrs, nBlocksAllocated);
+    compressor.setLBID0(hdrs, startLBID);
 
     // Store compression pointers in the header
     std::vector<uint64_t> ptrs;
@@ -1841,13 +1855,14 @@ int FileOp::initDctnryExtent(
     unsigned char* blockHdrInit,
     int            blockHdrInitSize,
     bool           bExpandExtent,
-    bool           bOptExtension )
+    bool           bOptExtension,
+    int64_t        lbid)
 {
     // @bug5769 Don't initialize extents or truncate db files on HDFS
     if (idbdatafile::IDBPolicy::useHdfs())
     {
         if (m_compressionType)
-            updateDctnryExtent(pFile, nBlocks);
+            updateDctnryExtent(pFile, nBlocks, lbid);
 
         // Synchronize to avoid write buffer pile up too much, which could cause
         // controllernode to timeout later when it needs to save a snapshot.
@@ -1972,7 +1987,7 @@ int FileOp::initDctnryExtent(
         // MCOL-498 CS has to set a number of blocs in the chunk header
         if ( m_compressionType )
         {
-            updateDctnryExtent(pFile, nBlocks);
+            updateDctnryExtent(pFile, nBlocks, lbid);
         }
         pFile->flush();
     }
@@ -2897,12 +2912,12 @@ int FileOp::flushFile(int rc, std::map<FID, FID>& oids)
     return NO_ERROR;
 }
 
-int FileOp::updateColumnExtent(IDBDataFile* pFile, int nBlocks)
+int FileOp::updateColumnExtent(IDBDataFile* pFile, int nBlocks, int64_t lbid)
 {
     return NO_ERROR;
 }
 
-int FileOp::updateDctnryExtent(IDBDataFile* pFile, int nBlocks)
+int FileOp::updateDctnryExtent(IDBDataFile* pFile, int nBlocks, int64_t lbid)
 {
     return NO_ERROR;
 }

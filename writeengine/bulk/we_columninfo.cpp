@@ -146,6 +146,7 @@ ColumnInfo::ColumnInfo(Log*             logger,
     fLog(logger),
     fDelayedFileStartBlksSkipped(0),
     fSavedLbid(0),
+    fLastUpdatedLbid(0),
     fSizeWrittenStart(0),
     fSizeWritten(0),
     fLastInputRowInCurrentExtent(0),
@@ -748,6 +749,9 @@ int ColumnInfo::extendColumnNewExtent(
         "; LBID-"   << startLbid    <<
         "; file-"   << segFileNew;
     fLog->logMsg( oss.str(), MSGLVL_INFO2 );
+
+    // Update lbid.
+    fLastUpdatedLbid = startLbid;
 
     // Save the LBID with our CP extent info, so that we can update extent map
     if (saveLBIDForCP)
@@ -1397,6 +1401,9 @@ int ColumnInfo::getHWMInfoForBRM( BRMReporter& brmReporter )
     return entriesAdded;
 }
 
+// Returns last updated LBID.
+BRM::LBID_t ColumnInfo::getLastUpdatedLBID() const { return fLastUpdatedLbid; }
+
 //------------------------------------------------------------------------------
 // Setup initial extent we will begin loading at start of import.
 // DBRoot, partition, segment, etc for the starting extent are specified.
@@ -1484,6 +1491,7 @@ int ColumnInfo::setupInitialColumnExtent(
     }
 
     fSavedLbid = lbid;
+    fLastUpdatedLbid = lbid;
 
     if (bSkippedToNewExtent)
         oldHwm = hwm;

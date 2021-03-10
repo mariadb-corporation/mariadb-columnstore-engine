@@ -210,9 +210,9 @@ int ColumnOpCompress1::expandAbbrevColumnExtent(
 }
 
 
-int ColumnOpCompress1::updateColumnExtent(IDBDataFile* pFile, int nBlocks)
+int ColumnOpCompress1::updateColumnExtent(IDBDataFile* pFile, int nBlocks, int64_t lbid)
 {
-    return m_chunkManager->updateColumnExtent(pFile, nBlocks);
+    return m_chunkManager->updateColumnExtent(pFile, nBlocks, lbid);
 }
 
 
