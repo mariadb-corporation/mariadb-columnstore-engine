@@ -172,26 +172,27 @@ int32_t _fromFile(const char* buffer, uint32_t& val)
 namespace WriteEngine
 {
 
+// This struct represents a path to a segment file.
 struct Convertor::dmFilePathArgs_t
 {
-    char* pDirA;    // < OUT -- DirA's buffer
-    char* pDirB;    // < OUT -- DirB's buffer
-    char* pDirC;    // < OUT -- DirC's buffer
-    char* pDirD;    // < OUT -- DirD's buffer
-    char* pDirE;    // < OUT -- DirE's buffer
-    char* pFName;   // < OUT -- Filename buffer
-    int     ALen;   // < IN -- Size in bytes of DirA's Buffer.
-    int     BLen;   // < IN -- Size in bytes of DirB's Buffer.
-    int     CLen;   // < IN -- Size in bytes of DirC's Buffer.
-    int     DLen;   // < IN -- Size in bytes of DirD's Buffer.
-    int     ELen;   // < IN -- Size in bytes of DirE's Buffer.
-    int     FNLen;  // < IN -- Size in bytes of Filename's Buffer.
-    int     Arc;    // < OUT -- result code for formatting DirA.
-    int     Brc;    // < OUT -- result code for formatting DirB.
-    int     Crc;    // < OUT -- result code for formatting DirC.
-    int     Drc;    // < OUT -- result code for formatting DirD.
-    int     Erc;    // < OUT -- result code for formatting DirE.
-    int     FNrc;   // < OUT -- result code for formatting Filename.
+    struct dmFilePathPart_t
+    {
+        char* pName; // Name buffer.
+        int32_t len; // Size in bytes of a buffer.
+    };
+    // A, B, C, D, E and file name.
+    dmFilePathPart_t pathPart[6];
+
+    // Initialize `dmFilePathArgs_t` from the given buffer.
+    void initialize(char buff[6][MAX_DB_DIR_NAME_SIZE])
+    {
+        // A, B, C, D, E directories.
+        for (uint32_t i = 0; i < 6; ++i)
+        {
+            pathPart[i].pName = buff[i];
+            pathPart[i].len = sizeof(buff[i]);
+        }
+    }
 };
 
 /*******************************************************************************
@@ -315,48 +316,25 @@ int Convertor::oid2FileName(FID fid,
     dmFilePathArgs_t  args;
     int               rc;
 
-    char aBuff[MAX_DB_DIR_NAME_SIZE];
-    char bBuff[MAX_DB_DIR_NAME_SIZE];
-    char cBuff[MAX_DB_DIR_NAME_SIZE];
-    char dBuff[MAX_DB_DIR_NAME_SIZE];
-    char eBuff[MAX_DB_DIR_NAME_SIZE];
-    char fnBuff[MAX_DB_DIR_NAME_SIZE];
-
-    args.pDirA = aBuff;
-    args.pDirB = bBuff;
-    args.pDirC = cBuff;
-    args.pDirD = dBuff;
-    args.pDirE = eBuff;
-    args.pFName = fnBuff;
-
-    args.ALen = sizeof(aBuff);
-    args.BLen = sizeof(bBuff);
-    args.CLen = sizeof(cBuff);
-    args.DLen = sizeof(dBuff);
-    args.ELen = sizeof(eBuff);
-    args.FNLen = sizeof(fnBuff);
-
-    args.Arc = 0;
-    args.Brc = 0;
-    args.Crc = 0;
-    args.Drc = 0;
-    args.Erc = 0;
-    args.FNrc = 0;
+    // Initialize.
+    char buff[6][MAX_DB_DIR_NAME_SIZE];
+    args.initialize(buff);
 
     RETURN_ON_WE_ERROR(
         (rc = dmOid2FPath(fid, partition, segment, &args)),
         ERR_DM_CONVERT_OID);
-    sprintf(fullFileName, "%s/%s/%s/%s/%s/%s", args.pDirA,
-            args.pDirB, args.pDirC, args.pDirD, args.pDirE, args.pFName);
+    sprintf(fullFileName, "%s/%s/%s/%s/%s/%s", args.pathPart[0].pName,
+            args.pathPart[1].pName, args.pathPart[2].pName,
+            args.pathPart[3].pName, args.pathPart[4].pName,
+            args.pathPart[5].pName);
 
-    strcpy(dbDirName[0], args.pDirA);
-    strcpy(dbDirName[1], args.pDirB);
-    strcpy(dbDirName[2], args.pDirC);
-    strcpy(dbDirName[3], args.pDirD);
-    strcpy(dbDirName[4], args.pDirE);
-    strcpy(dbDirName[5], args.pFName);
-//  std::cout << "OID: " << fid <<
-//       " mapping to file: " << fullFileName <<std::endl;
+    for (uint32_t i = 0; i < 6; ++i)
+    {
+        strcpy(dbDirName[i], args.pathPart[i].pName);
+    }
+
+    //  std::cout << "OID: " << fid <<
+    //       " mapping to file: " << fullFileName <<std::endl;
 
     return NO_ERROR;
 }
@@ -441,43 +419,17 @@ int Convertor::fileName2Oid(const std::string& fullFileName, uint32_t& oid,
     }
 
     // Initialize `dmFilePathArgs_t` struct.
+    char buff[6][MAX_DB_DIR_NAME_SIZE];
+
     dmFilePathArgs_t args;
-
-    char aBuff[MAX_DB_DIR_NAME_SIZE];
-    char bBuff[MAX_DB_DIR_NAME_SIZE];
-    char cBuff[MAX_DB_DIR_NAME_SIZE];
-    char dBuff[MAX_DB_DIR_NAME_SIZE];
-    char eBuff[MAX_DB_DIR_NAME_SIZE];
-    char fnBuff[MAX_DB_DIR_NAME_SIZE];
-
-    args.pDirA = aBuff;
-    args.pDirB = bBuff;
-    args.pDirC = cBuff;
-    args.pDirD = dBuff;
-    args.pDirE = eBuff;
-    args.pFName = fnBuff;
-
-    args.ALen = sizeof(aBuff);
-    args.BLen = sizeof(bBuff);
-    args.CLen = sizeof(cBuff);
-    args.DLen = sizeof(dBuff);
-    args.ELen = sizeof(eBuff);
-    args.FNLen = sizeof(fnBuff);
-
-    args.Arc = 0;
-    args.Brc = 0;
-    args.Crc = 0;
-    args.Drc = 0;
-    args.Erc = 0;
-    args.FNrc = 0;
+    args.initialize(buff);
 
     // Populate `dmFilePathArgs_t` struct with the given names.
-    strcpy(args.pFName, dirNames[0].c_str());
-    strcpy(args.pDirE, dirNames[1].c_str());
-    strcpy(args.pDirD, dirNames[2].c_str());
-    strcpy(args.pDirC, dirNames[3].c_str());
-    strcpy(args.pDirB, dirNames[4].c_str());
-    strcpy(args.pDirA, dirNames[5].c_str());
+    // Starting from the E directory.
+    for (uint32_t i = 0, dirCount = 5; i <= dirCount; ++i)
+    {
+        strcpy(args.pathPart[dirCount - i].pName, dirNames[i].c_str());
+    }
 
     // FIXME: Currently used ERR_DM_CONVERT_OID, should we introduce new error
     // code?
@@ -1060,68 +1012,56 @@ int Convertor::getCorrectRowWidth(CalpontSystemCatalog::ColDataType dataType, in
 int Convertor::dmOid2FPath(uint32_t oid, uint32_t partition, uint32_t segment,
                            dmFilePathArgs_t* pArgs)
 {
-    pArgs->Arc = _doDir(
-                     pArgs->pDirA,
-                     pArgs->ALen,
-                     (unsigned int)oid >> 24);
-
-    pArgs->Brc = _doDir(
-                     pArgs->pDirB,
-                     pArgs->BLen,
-                     (unsigned int)(oid & 0x00ff0000) >> 16);
-
-    pArgs->Crc = _doDir(
-                     pArgs->pDirC,
-                     pArgs->CLen,
-                     (unsigned int)(oid & 0x0000ff00) >> 8);
+    int32_t retCodes[6];
+    // A, B, C directories.
+    for (uint32_t i = 0, shift = 24, mask = 0xff000000; i < 3;
+         ++i, shift -= 8, mask >>= 8)
+    {
+        retCodes[i] = _doDir(pArgs->pathPart[i].pName, pArgs->pathPart[i].len,
+                             (uint32_t)((oid & mask) >> shift));
+    }
 
     // include partition and seg num in the file path if they are present
-    if (pArgs->DLen > 0)
+    if (pArgs->pathPart[3].len > 0)
     {
-        pArgs->Drc = _doDir(
-                         pArgs->pDirD,
-                         pArgs->DLen,
-                         (unsigned int)(oid & 0x000000ff));
+        // D directory.
+        retCodes[3] = _doDir(pArgs->pathPart[3].pName, pArgs->pathPart[3].len,
+                             (uint32_t)(oid & 0x000000ff));
 
-        pArgs->Erc = _doDir(
-                         pArgs->pDirE,
-                         pArgs->ELen,
-                         partition);
+        // E directory - partition.
+        retCodes[4] = _doDir(pArgs->pathPart[4].pName, pArgs->pathPart[4].len,
+                             partition);
+        // File - segment.
+        retCodes[5] =
+            _doFile(pArgs->pathPart[5].pName, pArgs->pathPart[5].len, segment);
 
-        pArgs->FNrc = _doFile(
-                          pArgs->pFName,
-                          pArgs->FNLen,
-                          segment);
-
-        if ( (pArgs->Drc < 0) ||
-                (pArgs->Erc < 0) )
+        // D.rc < 0 || E.rc < 0
+        if ((retCodes[3] < 0) || (retCodes[4] < 0))
             return -1;
 
-        if ( (pArgs->Drc >= pArgs->ALen) ||
-                (pArgs->Erc >= pArgs->ALen) )
+        // D.rc >= A.len || E.rc >= A.len
+        if ((retCodes[3] >= pArgs->pathPart[0].len) ||
+            (retCodes[4] >= pArgs->pathPart[0].len))
             return -1;
     }
     else
     {
-        pArgs->FNrc = _doFile(
-                          pArgs->pFName,
-                          pArgs->FNLen,
-                          (unsigned int)(oid & 0x000000ff));
+        retCodes[5] = _doFile(pArgs->pathPart[5].pName, pArgs->pathPart[5].len,
+                              (uint32_t)(oid & 0x000000ff));
     }
 
-    if ( (pArgs->Arc < 0) ||
-            (pArgs->Brc < 0) ||
-            (pArgs->Crc < 0) ||
-            (pArgs->FNrc < 0) )
+    // A.rc < 0 || B.rc < 0 || C.rc < 0
+    // A.rc >= A.len || B.rc >= B.len || C.rc >= C.len
+    for (uint32_t i = 0; i < 3; ++i)
+    {
+        if ((retCodes[i] < 0) || (retCodes[i] >= pArgs->pathPart[i].len))
+            return -1;
+    }
+    // F.rc < 0 || F.rc >= F.len
+    if ((retCodes[5] < 0) || (retCodes[5] >= pArgs->pathPart[5].len))
         return -1;
 
-    if ( (pArgs->Arc >= pArgs->ALen) ||
-            (pArgs->Brc >= pArgs->BLen) ||
-            (pArgs->Crc >= pArgs->CLen) ||
-            (pArgs->FNrc >= pArgs->FNLen) )
-        return -1;
-    else
-        return 0;
+    return 0;
 }
 
 /*******************************************************************************
@@ -1141,53 +1081,29 @@ int Convertor::dmOid2FPath(uint32_t oid, uint32_t partition, uint32_t segment,
 int32_t Convertor::dmFPath2Oid(const dmFilePathArgs_t& pArgs, uint32_t& oid,
                                uint32_t& partition, uint32_t& segment)
 {
-    uint32_t val = 0;
-
-    // OID.
-    // Directory A.
     oid = 0;
-    int32_t rc;
-    if ((rc = _fromDir(pArgs.pDirA, val)) == -1)
+    // A, B, C, D - directories.
+    for (uint32_t i = 0, shift = 24; i < 4; ++i, shift -= 8)
     {
-        return -1;
-    }
-    oid = val << 24;
+        uint32_t val = 0;
+        auto rc = _fromDir(pArgs.pathPart[i].pName, val);
+        if (rc == -1)
+            return rc;
 
-    // Directory B.
-    if ((rc = _fromDir(pArgs.pDirB, val)) == -1)
-    {
-        return -1;
+        oid |= val << shift;
     }
-    oid |= val << 16;
-
-    // Directory C.
-    if ((rc = _fromDir(pArgs.pDirC, val)) == -1)
-    {
-        return -1;
-    }
-    oid |= val << 8;
-
-    // Directory D.
-    if ((rc = _fromDir(pArgs.pDirD, val)) == -1)
-    {
-        return -1;
-    }
-    oid |= val;
 
     // Partition.
-    if ((rc = _fromDir(pArgs.pDirE, partition)) == -1)
-    {
-        return -1;
-    }
+    auto rc = _fromDir(pArgs.pathPart[4].pName, partition);
+    if (rc == -1)
+        return rc;
 
     // Segment.
-    if ((rc = _fromFile(pArgs.pFName, segment)) == -1)
-    {
-        return -1;
-    }
+    rc = _fromFile(pArgs.pathPart[5].pName, segment);
+    if (rc == -1)
+        return rc;
 
     return 0;
 }
-
 } //end of namespace
 
