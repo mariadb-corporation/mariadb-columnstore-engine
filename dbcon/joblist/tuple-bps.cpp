@@ -2113,7 +2113,7 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
             if (size == 0)
             {
                 tplLock.unlock();
-                usleep(2000 * fNumThreads);
+                usleep(1 * fNumThreads);
                 tplLock.lock();
                 continue;
             }

@@ -1,5 +1,5 @@
-SET (DEFAULT_USER "mysql")
-SET (DEFAULT_GROUP "mysql")
+SET (DEFAULT_USER "root")
+SET (DEFAULT_GROUP "root")
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/columnstoreSyslogSetup.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/columnstoreSyslogSetup.sh" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/columnstore-post-install.in" "${CMAKE_CURRENT_SOURCE_DIR}/columnstore-post-install" @ONLY)
