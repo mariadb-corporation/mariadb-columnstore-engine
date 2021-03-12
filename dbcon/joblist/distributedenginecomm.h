@@ -42,6 +42,8 @@
 #include <boost/thread/condition.hpp>
 #include <boost/scoped_array.hpp>
 
+#include <oneapi/tbb/concurrent_hash_map.h>
+
 #include "bytestream.h"
 #include "primitivemsg.h"
 #include "threadsafequeue.h"
@@ -56,6 +58,23 @@ class TestDistributedEngineComm;
 #else
 #define EXPORT
 #endif
+
+/*
+namespace concurrent
+{
+template <typename Key, typename T,
+          typename HashCompare = tbb::tbb_hash_compare<Key>,
+          typename Allocator = tbb::tbb_allocator<std::pair<const Key, T>>>
+class concurrent_hash_map: private tbb::concurrent_hash_map<Key, T, HashCompare, Allocator>
+{
+    using tbb::concurrent_hash_map<Key, T, HashCompare, Allocator>::find;
+    using tbb::concurrent_hash_map<Key, T, HashCompare, Allocator>::insert; 
+    using tbb::concurrent_hash_map<Key, T, HashCompare, Allocator>::erase; 
+    using tbb::concurrent_hash_map<Key, T, HashCompare, Allocator>::begin; 
+    using tbb::concurrent_hash_map<Key, T, HashCompare, Allocator>::end; 
+    using tbb::concurrent_hash_map<Key, T, HashCompare, Allocator>::cend; 
+};
+}*/
 
 namespace messageqcpp
 {
@@ -107,9 +126,11 @@ public:
         return 0;
     }
 
+    void notifyClientsThatStreamEnds(); 
+
     EXPORT void addQueue(uint32_t key, bool sendACKs = false);
     EXPORT void removeQueue(uint32_t key);
-    EXPORT void shutdownQueue(uint32_t key);
+    EXPORT void shutdownQueue(uint32_t key, bool aErase = false);
 
     /** @brief read a primitive response
      *
@@ -240,7 +261,9 @@ private:
     };
 
     //The mapping of session ids to StepMsgQueueLists
-    typedef std::map<unsigned, boost::shared_ptr<MQE> > MessageQueueMap;
+    //typedef std::map<unsigned, boost::shared_ptr<MQE> > MessageQueueMap;
+    
+    typedef tbb::concurrent_hash_map<unsigned, boost::shared_ptr<MQE>> MessageQueueMap;
 
     explicit DistributedEngineComm(ResourceManager* rm, bool isExeMgr);
 
@@ -294,7 +317,21 @@ private:
     void setFlowControl(bool enable, uint32_t uniqueID, boost::shared_ptr<MQE> mqe);
     void doHasBigMsgs(boost::shared_ptr<MQE> mqe, uint64_t targetSize);
     boost::mutex ackLock;
-
+  public:
+    template<typename AccessorType>
+    inline boost::shared_ptr<MQE> getMqeForRead(AccessorType& a,
+                                         uint32_t key,
+                                         const std::string& methodName)
+    {
+        // The queue itself is thread-safe so searching for a const_accessor.
+        if (!fSessionMessages.find(a, key))
+        {
+            std::ostringstream os;
+            os << "DEC: " << methodName << "() searches fom a nonexistent queue.\n";
+            throw std::runtime_error(os.str());
+        }
+        return a->second;
+    }
 };
 
 }
