@@ -4,6 +4,7 @@ local platforms = {
   develop: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
   'develop-5': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
   'develop-1.4': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
+  'ci-upd-develop-1.4': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
 };
 
 local platforms_arm = {
@@ -14,6 +15,7 @@ local server_ref_map = {
   develop: '10.6 https://github.com/MariaDB/server',
   'develop-5': '10.5 https://github.com/MariaDB/server',
   'develop-1.4': '10.4 https://github.com/MariaDB/server',
+  'ci-upd-develop-1.4': '10.4 https://github.com/MariaDB/server',
 };
 
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
@@ -351,8 +353,8 @@ local Pipeline(branch, platform, event, arch='amd64') = {
          // (if (platform == 'centos:8' && event == 'cron') then [pipeline.dockerfile] + [pipeline.docker] + [pipeline.ecr] else []) +
          [pipeline.smoke] +
          [pipeline.smokelog] +
-         (if (pkg_format == 'rpm' &&  branch != 'develop-1.4') then [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish('mtr')] else []) +
-         (if (event == 'cron' && pkg_format == 'rpm' && branch != 'develop-1.4') || (event == 'push' && branch != 'develop-1.4') then [pipeline.publish('mtr latest', 'latest')] else []) +
+         // (if (pkg_format == 'rpm' &&  branch != 'develop-1.4') then [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish('mtr')] else []) +
+         // (if (event == 'cron' && pkg_format == 'rpm' && branch != 'develop-1.4') || (event == 'push' && branch != 'develop-1.4') then [pipeline.publish('mtr latest', 'latest')] else []) +
          [pipeline.regression] +
          [pipeline.regressionlog] +
          [pipeline.publish('regression')] +
