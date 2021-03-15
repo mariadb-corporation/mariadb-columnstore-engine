@@ -35,6 +35,8 @@
 #endif
 #include <boost/thread.hpp>
 
+#include <oneapi/tbb/concurrent_hash_map.h>
+
 #include "threadpool.h"
 #include "../../utils/threadpool/prioritythreadpool.h"
 #include "messagequeue.h"
@@ -96,7 +98,7 @@ private:
 };
 
 typedef boost::shared_ptr<BPPV> SBPPV;
-typedef std::map<uint32_t, SBPPV> BPPMap;
+using BPPMap =  tbb::concurrent_hash_map<uint32_t, SBPPV>;
 extern BPPMap bppMap;
 
 void prefetchBlocks(uint64_t lbid, const int compType, uint32_t* rCount);
