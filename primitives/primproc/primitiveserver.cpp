@@ -1274,29 +1274,23 @@ struct BPPHandler
     // threads lying around
     std::vector<uint32_t> bppKeys;
     std::vector<uint32_t>::iterator bppKeysIt;
-    
+
     ~BPPHandler()
     {
-        boost::mutex::scoped_lock scoped(bppLock);
-
         for (bppKeysIt = bppKeys.begin() ; bppKeysIt != bppKeys.end(); ++bppKeysIt)
         {
-            uint32_t key = *bppKeysIt;
-            BPPMap::iterator it;
-
-            it = bppMap.find(key);
-
-            if (it != bppMap.end())
+            auto key = *bppKeysIt;
+            BPPMap::accessor a;
+            if (bppMap.find(a, key))
             {
-                it->second->abort();
-                bppMap.erase(it);
+                a->second->abort();
+                bppMap.erase(a);
+                a.release();
             }
-
+    
             fPrimitiveServerPtr->getProcessorThreadPool()->removeJobs(key);
             OOBPool->removeJobs(key);
         }
-
-        scoped.unlock();
     }
 
     struct BPPHandlerFunctor : public PriorityThreadPool::Functor
@@ -1387,13 +1381,14 @@ struct BPPHandler
         {
             bppKeys.erase(bppKeysIt);
         }
+        scoped.unlock();
 
-        it = bppMap.find(key);
-
-        if (it != bppMap.end())
+        BPPMap::accessor a;
+        if (bppMap.find(a, key))
         {
-            it->second->abort();
-            bppMap.erase(it);
+            a->second->abort();
+            bppMap.erase(a);
+            a.release();
         }
         else
         {
@@ -1405,7 +1400,7 @@ struct BPPHandler
                 return -1;
         }
 
-        scoped.unlock();
+        //scoped.unlock();
         fPrimitiveServerPtr->getProcessorThreadPool()->removeJobs(key);
         OOBPool->removeJobs(key);
         return 0;
@@ -1475,12 +1470,10 @@ struct BPPHandler
         boost::mutex::scoped_lock scoped(bppLock);
         key = bpp->getUniqueID();
         bppKeys.push_back(key);
-        bool newInsert;
-        newInsert = bppMap.insert(pair<uint32_t, SBPPV>(key, bppv)).second;
         //cout << "creating BPP # " << key << endl;
         scoped.unlock();
 
-        if (!newInsert)
+        if (!bppMap.insert(pair<uint32_t, SBPPV>(key, bppv)))
         {
             if (bpp->getSessionID() & 0x80000000)
                 cerr << "warning: createBPP() tried to clobber a BPP with duplicate sessionID & stepID. sessionID=" <<
@@ -1494,18 +1487,21 @@ struct BPPHandler
 
     inline SBPPV grabBPPs(uint32_t uniqueID)
     {
-        BPPMap::iterator it;
         /*
         		uint32_t failCount = 0;
         		uint32_t maxFailCount = (fatal ? 500 : 5000);
         */
         SBPPV ret;
 
-        boost::mutex::scoped_lock scoped(bppLock);
-        it = bppMap.find(uniqueID);
+        //boost::mutex::scoped_lock scoped(bppLock);
+        BPPMap::const_accessor a;
+        bppMap.find(a, uniqueID);
 
-        if (it != bppMap.end())
-            return it->second;
+        if (bppMap.find(a, uniqueID))
+        {
+            ret = a->second;
+            return ret;
+        }
         else
             return SBPPV();
 
@@ -1659,17 +1655,17 @@ struct BPPHandler
         {
             bppKeys.erase(bppKeysIt);
         }
+        scoped.unlock();
 
-        it = bppMap.find(uniqueID);
-
-        if (it != bppMap.end())
+        BPPMap::accessor a;
+        if (bppMap.find(a, uniqueID))
         {
-            boost::shared_ptr<BPPV> bppv = it->second;
+            auto bppv = a->second;
 
             if (bppv->joinDataReceived)
             {
                 bppv->abort();
-                bppMap.erase(it);
+                bppMap.erase(a);
             }
             else
             {
@@ -1712,22 +1708,6 @@ struct BPPHandler
         lk.unlock();
         deleteDJLock(uniqueID);
         return 0;
-    }
-
-    void setBPPToError(uint32_t uniqueID, const string& error, logging::ErrorCodeValues errorCode)
-    {
-        SBPPV bppv;
-
-        bppv = grabBPPs(uniqueID);
-
-        if (!bppv)
-            return;
-
-        for (uint32_t i = 0; i < bppv->get().size(); i++)
-            bppv->get()[i]->setError(error, errorCode);
-
-        if (bppv->get().empty() && !bppMap.empty() )
-            bppMap.begin()->second.get()->get()[0]->setError(error, errorCode);
     }
 
     // Would be good to define the structure of these msgs somewhere...

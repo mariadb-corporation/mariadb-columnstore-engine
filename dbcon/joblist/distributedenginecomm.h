@@ -59,23 +59,6 @@ class TestDistributedEngineComm;
 #define EXPORT
 #endif
 
-/*
-namespace concurrent
-{
-template <typename Key, typename T,
-          typename HashCompare = tbb::tbb_hash_compare<Key>,
-          typename Allocator = tbb::tbb_allocator<std::pair<const Key, T>>>
-class concurrent_hash_map: private tbb::concurrent_hash_map<Key, T, HashCompare, Allocator>
-{
-    using tbb::concurrent_hash_map<Key, T, HashCompare, Allocator>::find;
-    using tbb::concurrent_hash_map<Key, T, HashCompare, Allocator>::insert; 
-    using tbb::concurrent_hash_map<Key, T, HashCompare, Allocator>::erase; 
-    using tbb::concurrent_hash_map<Key, T, HashCompare, Allocator>::begin; 
-    using tbb::concurrent_hash_map<Key, T, HashCompare, Allocator>::end; 
-    using tbb::concurrent_hash_map<Key, T, HashCompare, Allocator>::cend; 
-};
-}*/
-
 namespace messageqcpp
 {
 class MessageQueueClient;
@@ -263,7 +246,7 @@ private:
     //The mapping of session ids to StepMsgQueueLists
     //typedef std::map<unsigned, boost::shared_ptr<MQE> > MessageQueueMap;
     
-    typedef tbb::concurrent_hash_map<unsigned, boost::shared_ptr<MQE>> MessageQueueMap;
+    using MessageQueueMap = tbb::concurrent_hash_map<unsigned, boost::shared_ptr<MQE>>;
 
     explicit DistributedEngineComm(ResourceManager* rm, bool isExeMgr);
 
