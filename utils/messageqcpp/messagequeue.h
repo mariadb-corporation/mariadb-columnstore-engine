@@ -269,6 +269,8 @@ public:
      */
     inline bool isSameAddr(const MessageQueueClient& rhs) const;
 
+    inline bool isSameAddr(const std::stringt& rhs) const;
+
     bool isConnected()
     {
         return fClientSock.isConnected();
@@ -319,6 +321,10 @@ inline const std::string MessageQueueClient::addr2String() const
 inline bool MessageQueueClient::isSameAddr(const MessageQueueClient& rhs) const
 {
     return fClientSock.isSameAddr(&rhs.fClientSock);
+}
+inline bool MessageQueueClient::isSameAddr(const std::string& rhs) const
+{
+    return fClientSock.addr2String() == rhs;
 }
 inline void MessageQueueClient::syncProto(bool use)
 {

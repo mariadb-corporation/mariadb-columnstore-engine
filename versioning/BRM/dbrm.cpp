@@ -875,10 +875,7 @@ reconnect:
     try
     {
         // master may have changed but old msgclient connection might be in use
-        // comparing to ModuleIPAddr1-1-3 in case DBRM_Controller is a hostname
-        string clientAddr = msgClient->addr2String();
-        if ((config->getConfig(masterName, "IPAddr") != clientAddr) &&
-            (config->getConfig("SystemModuleConfig", "ModuleIPAddr1-1-3") != clientAddr))
+        if (!msgClient->isSameAddr(config->getConfig(masterName, "IPAddr")))
         {
             if (firstAttempt)
             {
