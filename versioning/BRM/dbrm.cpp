@@ -883,6 +883,18 @@ reconnect:
 
     try
     {
+        // master may have changed but old msgclient connection might be in use
+        if (!msgClient->isSameAddr(config->getConfig(masterName, "IPAddr")))
+        {
+            if (firstAttempt)
+            {
+                firstAttempt = false;
+                MessageQueueClientPool::deleteInstance(msgClient);
+                msgClient = NULL;
+                goto reconnect;
+            }
+        }
+
         msgClient->write(in);
         out = msgClient->read();
     }
