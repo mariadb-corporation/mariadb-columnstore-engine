@@ -611,9 +611,16 @@ void pDictionaryScan::receivePrimitiveMessages()
                 break;
             }
 
-            mutex.unlock();
 
-            fDec->read(uniqueID, bs);
+            if (!fDec->read_one(uniqueID, bs))
+            {
+                mutex.unlock();
+                usleep(10);
+                mutex.lock();
+                continue;
+            }
+
+            mutex.unlock();
 
             if (fOid >= 3000 && traceOn() && dlTimes.FirstReadTime().tv_sec == 0)
                 dlTimes.setFirstReadTime();

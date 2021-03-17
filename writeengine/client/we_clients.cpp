@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
- * Copyright (C) 2016 MariaDB Corporation.
+ * Copyright (C) 2016-2021 MariaDB Corporation.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -33,6 +33,8 @@
 #endif
 #endif
 using namespace std;
+#include <mutex>
+#include <condition_variable>
 
 #include <boost/thread/mutex.hpp>
 using namespace boost;
@@ -428,8 +430,9 @@ void WEClients::addQueue(uint32_t key)
 {
     bool b;
 
-	boost::mutex* lock = new boost::mutex();
-    condition* cond = new condition();
+    std::mutex* lock = new std::mutex();
+    std::condition_variable* cond = new std::condition_variable();
+
     boost::shared_ptr<MQE> mqe(new MQE(pmCount));
 
     mqe->queue = WESMsgQueue(lock, cond);
