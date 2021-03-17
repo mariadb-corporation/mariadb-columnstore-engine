@@ -129,6 +129,7 @@ public:
      * @note: saves a copy vs read(uint32_t, uint32_t).
      */
     EXPORT void read(uint32_t key, messageqcpp::SBS&);
+    bool read_one(uint32_t key, messageqcpp::SBS&);
 
     /** @brief read a primitve response
      *
@@ -216,7 +217,7 @@ private:
     typedef std::vector<boost::shared_ptr<messageqcpp::MessageQueueClient> > ClientList;
 
     //A queue of ByteStreams coming in from PrimProc heading for a JobStep
-    typedef ThreadSafeQueue<messageqcpp::SBS> StepMsgQueue;
+    typedef ThreadSafeQueueV2<messageqcpp::SBS> StepMsgQueue;
 
     /* To keep some state associated with the connection.  These aren't copyable. */
     struct MQE : public boost::noncopyable

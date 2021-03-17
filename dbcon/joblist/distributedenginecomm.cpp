@@ -40,6 +40,9 @@
 #include <thread>
 using namespace std;
 
+#include <mutex>
+#include <condition_variable>
+
 #include <boost/scoped_array.hpp>
 #include <boost/thread.hpp>
 using namespace boost;
@@ -355,12 +358,14 @@ void DistributedEngineComm::notifyClientsThatStreamEnds()
     // eventually let jobstep error out.
     SBS sbs;
     // Concurrent hash map iterators getters aren't thread safe so MCS takes a lock.
+    // WIP useless lock
     boost::mutex::scoped_lock lk(fMlock);
     MessageQueueMap::iterator map_tok;
     sbs.reset(new ByteStream(0));
 
     for (map_tok = fSessionMessages.begin(); map_tok != fSessionMessages.end(); ++map_tok)
     {
+        // use map accessor to overcome the limitation and clean the map using iterator
         map_tok->second->queue.clear();
         (void)atomicops::atomicInc(&map_tok->second->unackedWork[0]);
         map_tok->second->queue.push(sbs);
@@ -464,19 +469,14 @@ Error:
 
 void DistributedEngineComm::addQueue(uint32_t key, bool sendACKs)
 {
-    //bool b;
-
-    boost::mutex* lock = new boost::mutex();
-    condition* cond = new condition();
+    //std::mutex* lock = new std::mutex();
+    //std::condition_variable* cond = new std::condition_variable();
+    // add a c'tor
     boost::shared_ptr<MQE> mqe(new MQE(pmCount));
-
-    mqe->queue = StepMsgQueue(lock, cond);
+    //mqe->queue = StepMsgQueue(lock, cond);
     mqe->sendACKs = sendACKs;
     mqe->throttled = false;
-/*
-    boost::mutex::scoped_lock lk ( fMlock );
-    b = fSessionMessages.insert(pair<uint32_t, boost::shared_ptr<MQE> >(key, mqe)).second;
-*/
+
     std::pair<uint32_t, boost::shared_ptr<MQE>> keyValuePair(key, mqe);
     if (!fSessionMessages.insert(keyValuePair))
     {
@@ -520,7 +520,7 @@ void DistributedEngineComm::shutdownQueue(uint32_t key, bool aErase)
     map_tok->second->queue.clear();
     */
 }
-
+/*
 void DistributedEngineComm::read(uint32_t key, SBS& bs)
 {
     const std::string methodName("read");
@@ -528,22 +528,6 @@ void DistributedEngineComm::read(uint32_t key, SBS& bs)
     boost::shared_ptr<MQE> mqe = getMqeForRead(a, key, methodName);
     a.release();
 
-    //Find the StepMsgQueueList for this session
-/*
-    boost::mutex::scoped_lock lk(fMlock);
-    MessageQueueMap::iterator map_tok = fSessionMessages.find(key);
-
-    if (map_tok == fSessionMessages.end())
-    {
-        ostringstream os;
-
-        os << "DEC: attempt to read(bs) from a nonexistent queue\n";
-        throw runtime_error(os.str());
-    }
-
-    mqe = map_tok->second;
-    lk.unlock();
-*/
     //this method can block: you can't hold any locks here...
     TSQSize_t queueSize = mqe->queue.pop(&bs);
 
@@ -562,61 +546,46 @@ void DistributedEngineComm::read(uint32_t key, SBS& bs)
     if (!bs)
         bs.reset(new ByteStream());
 }
+*/
+bool DistributedEngineComm::read_one(uint32_t key, messageqcpp::SBS& bs)
+{
+    const std::string methodName("read_one");
+    MessageQueueMap::const_accessor a;
+    boost::shared_ptr<MQE> mqe = getMqeForRead(a, key, methodName);
+    a.release();
 
+    auto queueSizeAndQueueIsEmptyFlag = mqe->queue.pop_one(&bs);
 
+    if (queueSizeAndQueueIsEmptyFlag.second)
+        return false;
+
+    if (bs && mqe->sendACKs)
+    {
+        boost::mutex::scoped_lock lk(ackLock);
+
+        if (mqe->throttled && !mqe->hasBigMsgs &&
+            queueSizeAndQueueIsEmptyFlag.first.size <= disableThreshold)
+        {
+            setFlowControl(false, key, mqe);
+        }
+
+        vector<SBS> v;
+        v.push_back(bs);
+        sendAcks(key, v, mqe, queueSizeAndQueueIsEmptyFlag.first.size);
+    }
+
+    if (!bs)
+        bs.reset(new ByteStream());
+    return true;
+}
+/*
 const ByteStream DistributedEngineComm::read(uint32_t key)
 {
     SBS sbs;
     read(key, sbs);
     return *sbs;
 }
-#if 0
-    // The queue itself is thread-safe so searching for a const_accessor.
-    MessageQueueMap::const_accessor a;
-    if (!fSessionMessages.find(a, key))
-    {
-        ostringstream os;
-        os << "DEC: attempt to read(bs) from a nonexistent queue\n";
-        throw runtime_error(os.str());
-    }
-    boost::shared_ptr<MQE> mqe = a->second;
-
-    //Find the StepMsgQueueList for this session
-    boost::mutex::scoped_lock lk(fMlock);
-    MessageQueueMap::iterator map_tok = fSessionMessages.find(key);
-
-    if (map_tok == fSessionMessages.end())
-    {
-        ostringstream os;
-
-        os << "DEC: read(): attempt to read from a nonexistent queue\n";
-        throw runtime_error(os.str());
-    }
-
-    mqe = map_tok->second;
-    lk.unlock();
-
-    TSQSize_t queueSize = mqe->queue.pop(&sbs);
-
-    if (sbs && mqe->sendACKs)
-    {
-        boost::mutex::scoped_lock lk(ackLock);
-
-        if (mqe->throttled && !mqe->hasBigMsgs && queueSize.size <= disableThreshold)
-            setFlowControl(false, key, mqe);
-
-        vector<SBS> v;
-        v.push_back(sbs);
-        sendAcks(key, v, mqe, queueSize.size);
-    }
-
-    if (!sbs)
-        sbs.reset(new ByteStream());
-
-    return *sbs;
-}
-#endif
-
+*/
 void DistributedEngineComm::read_all(uint32_t key, vector<SBS>& v)
 {
     const std::string methodName("read_all");
@@ -655,21 +624,6 @@ void DistributedEngineComm::read_some(uint32_t key, uint32_t divisor, vector<SBS
     MessageQueueMap::const_accessor a;
     boost::shared_ptr<MQE> mqe = getMqeForRead(a, key, methodName);
     a.release();
-/*
-    boost::mutex::scoped_lock lk(fMlock);
-    MessageQueueMap::iterator map_tok = fSessionMessages.find(key);
-
-    if (map_tok == fSessionMessages.end())
-    {
-        ostringstream os;
-
-        os << "DEC: read_some(): attempt to read from a nonexistent queue\n";
-        throw runtime_error(os.str());
-    }
-
-    mqe = map_tok->second;
-    lk.unlock();
-*/
     TSQSize_t queueSize = mqe->queue.pop_some(divisor, v, 1);   // need to play with the min #
 
     if (flowControlOn)
