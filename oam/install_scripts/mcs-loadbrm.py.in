@@ -117,7 +117,7 @@ file=sys.stderr)
                     print("Pulling {} from the primary node.".format(e))
                     url = "https://{}:{}/cmapi/{}/node/meta/{}".format(primary_address, \
 api_port, api_version, e)
-                    r = requests.get(url, verify=False, headers=headers, timeout=30)
+                    r = requests.get(url, verify=False, headers=headers, timeout=60)
                     if (r.status_code != 200):
                         raise RuntimeError("Error requesting {} from the primary \
 node.".format(e))
