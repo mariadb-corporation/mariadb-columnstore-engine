@@ -2082,7 +2082,7 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
             for small queries or when the UM can keep up with the PMs with
             fewer threads.  Tweak as necessary. */
 
-            if ((size > 5 || flowControlOn) && fNumThreads < fMaxNumThreads)
+            if ((size > 20 || flowControlOn) && fNumThreads < fMaxNumThreads)
                 startAggregationThread();
 
             for (uint32_t z = 0; z < size; z++)
@@ -2113,7 +2113,8 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
             if (size == 0)
             {
                 tplLock.unlock();
-                usleep(1 * fNumThreads);
+                condvar.notify_one();
+                //usleep(1 * fNumThreads);
                 tplLock.lock();
                 continue;
             }
