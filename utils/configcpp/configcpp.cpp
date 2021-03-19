@@ -51,6 +51,7 @@ namespace fs = boost::filesystem;
 #include <cstring>
 //#define NDEBUG
 #include <cassert>
+#include <atomic>
 
 #include "configcpp.h"
 
@@ -64,51 +65,53 @@ namespace fs = boost::filesystem;
 
 namespace
 {
-const fs::path defaultCalpontConfigFile("Columnstore.xml");
+  const fs::path defaultCalpontConfigFile("Columnstore.xml");
 }
 
 namespace config
 {
-Config::configMap_t Config::fInstanceMap;
-boost::mutex Config::fInstanceMapMutex;
-boost::mutex Config::fXmlLock;
-boost::mutex Config::fWriteXmlLock;
+  Config::configMap_t Config::fInstanceMap;
+  Config* globConfigInstancePtr = nullptr;
+  boost::mutex Config::fInstanceMapMutex;
+  // duplicate to that in the Config class
+  boost::mutex Config::fXmlLock;
+  // duplicate to that in the Config class
+  boost::mutex Config::fWriteXmlLock;
+  std::atomic_bool globHasConfig;
 
 Config* Config::makeConfig(const string& cf)
 {
     return makeConfig(cf.c_str());
 }
 
+// We now have only one config
 Config* Config::makeConfig(const char* cf)
 {
-    boost::mutex::scoped_lock lk(fInstanceMapMutex);
-
-    static string defaultFilePath;
-
-    if (cf == 0 || *cf == 0)
+    if (!globHasConfig.load(std::memory_order_seq_cst))
     {
-        fs::path configFilePath;
-        configFilePath = fs::path(MCSSYSCONFDIR) / fs::path("columnstore") / defaultCalpontConfigFile;
-        defaultFilePath = configFilePath.string();
+        boost::mutex::scoped_lock lk(fInstanceMapMutex);
+        static string defaultFilePath("");
 
-        if (fInstanceMap.find(defaultFilePath) == fInstanceMap.end())
+        if ((cf == 0 || *cf == 0) && defaultFilePath.empty())
         {
-            Config* instance = new Config(defaultFilePath);
-            fInstanceMap[defaultFilePath] = instance;
+            fs::path configFilePath;
+            configFilePath = fs::path(MCSSYSCONFDIR) / fs::path("columnstore") / defaultCalpontConfigFile;
+            defaultFilePath = configFilePath.string();
         }
-
-        return fInstanceMap[defaultFilePath];
+        
+        globConfigInstancePtr = !cf 
+            ? new Config(defaultFilePath)
+            : new Config(cf);
+        
+        globHasConfig.store(true, std::memory_order_seq_cst);
+/*        if (fInstanceMap.find(configFile) == fInstanceMap.end())
+        {
+            Config* instance = new Config(configFile);
+            fInstanceMap[configFile] = instance;
+        }
+*/
     }
-
-    string configFile(cf);
-
-    if (fInstanceMap.find(configFile) == fInstanceMap.end())
-    {
-        Config* instance = new Config(configFile);
-        fInstanceMap[configFile] = instance;
-    }
-
-    return fInstanceMap[configFile];
+    return globConfigInstancePtr;
 }
 
 Config::Config(const string& configFile) :
@@ -216,7 +219,7 @@ void Config::closeConfig(void)
 
 const string Config::getConfig(const string& section, const string& name)
 {
-    boost::recursive_mutex::scoped_lock lk(fLock);
+//    boost::recursive_mutex::scoped_lock lk(fLock);
 
     if (section.length() == 0 || name.length() == 0)
         throw invalid_argument("Config::getConfig: both section and name must have a length");
@@ -226,8 +229,8 @@ const string Config::getConfig(const string& section, const string& name)
         throw runtime_error("Config::getConfig: no XML document!");
     }
 
+/*
     struct stat statbuf;
-
     if (stat(fConfigFile.c_str(), &statbuf) == 0)
     {
         if (statbuf.st_mtime != fMtime)
@@ -237,13 +240,13 @@ const string Config::getConfig(const string& section, const string& name)
             parseDoc();
         }
     }
-
+*/
     return fParser.getConfig(fDoc, section, name);
 }
 
 void Config::getConfig(const string& section, const string& name, vector<string>& values)
 {
-    boost::recursive_mutex::scoped_lock lk(fLock);
+//    boost::recursive_mutex::scoped_lock lk(fLock);
 
     if (section.length() == 0)
         throw invalid_argument("Config::getConfig: section must have a length");
@@ -251,8 +254,8 @@ void Config::getConfig(const string& section, const string& name, vector<string>
     if (fDoc == 0)
         throw runtime_error("Config::getConfig: no XML document!");
 
+/*
     struct stat statbuf;
-
     if (stat(fConfigFile.c_str(), &statbuf) == 0)
     {
         if (statbuf.st_mtime != fMtime)
@@ -262,13 +265,13 @@ void Config::getConfig(const string& section, const string& name, vector<string>
             parseDoc();
         }
     }
-
+*/
     fParser.getConfig(fDoc, section, name, values);
 }
 
 void Config::setConfig(const string& section, const string& name, const string& value)
 {
-    boost::recursive_mutex::scoped_lock lk(fLock);
+//    boost::recursive_mutex::scoped_lock lk(fLock);
 
     if (section.length() == 0 || name.length() == 0 )
         throw invalid_argument("Config::setConfig: all of section and name must have a length");
@@ -281,7 +284,6 @@ void Config::setConfig(const string& section, const string& name, const string& 
     struct stat statbuf;
 
     memset(&statbuf, 0, sizeof(statbuf));
-
     if (stat(fConfigFile.c_str(), &statbuf) == 0)
     {
         if (statbuf.st_mtime != fMtime)
@@ -298,7 +300,7 @@ void Config::setConfig(const string& section, const string& name, const string& 
 
 void Config::delConfig(const string& section, const string& name)
 {
-    boost::recursive_mutex::scoped_lock lk(fLock);
+//    boost::recursive_mutex::scoped_lock lk(fLock);
 
     if (section.length() == 0 || name.length() == 0)
         throw invalid_argument("Config::delConfig: both section and name must have a length");
@@ -326,7 +328,7 @@ void Config::delConfig(const string& section, const string& name)
 
 void Config::writeConfig(const string& configFile) const
 {
-    boost::recursive_mutex::scoped_lock lk(fLock);
+//    boost::recursive_mutex::scoped_lock lk(fLock);
     FILE* fi;
 
     if (fDoc == 0)
@@ -600,8 +602,7 @@ int64_t Config::fromText(const std::string& text)
 
 time_t Config::getCurrentMTime()
 {
-    boost::recursive_mutex::scoped_lock lk(fLock);
-
+//    boost::recursive_mutex::scoped_lock lk(fLock);
     struct stat statbuf;
 
     if (stat(fConfigFile.c_str(), &statbuf) == 0)
@@ -612,7 +613,7 @@ time_t Config::getCurrentMTime()
 
 const vector<string> Config::enumConfig()
 {
-    boost::recursive_mutex::scoped_lock lk(fLock);
+//    boost::recursive_mutex::scoped_lock lk(fLock);
 
     if (fDoc == 0)
     {
@@ -636,7 +637,7 @@ const vector<string> Config::enumConfig()
 
 const vector<string> Config::enumSection(const string& section)
 {
-    boost::recursive_mutex::scoped_lock lk(fLock);
+//    boost::recursive_mutex::scoped_lock lk(fLock);
 
     if (fDoc == 0)
     {
