@@ -234,7 +234,7 @@ void StopWatch::finish()
     }
     else
     {
-        cout << oss.str();
+        std::cerr << oss.str();
     }
 
     // Clear everything out.

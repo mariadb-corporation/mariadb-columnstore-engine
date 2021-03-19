@@ -493,8 +493,8 @@ void BatchPrimitiveProcessor::resetBPP(ByteStream& bs, const SP_UM_MUTEX& w,
 
     pthread_mutex_lock(&objLock);
 
-//    writelock = w;
-    writelock.reset(new boost::mutex());
+    writelock = w;
+    //writelock.reset(new boost::mutex());
     sock = s;
     newConnection = true;
 
