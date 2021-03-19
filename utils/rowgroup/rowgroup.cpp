@@ -1157,6 +1157,8 @@ RowGroup::RowGroup() : columnCount(0), data(NULL), rgData(NULL), strings(NULL),
     oids.reserve(10);
     keys.reserve(10);
     types.reserve(10);
+    charsetNumbers.reserve(10);
+    charsets.reserve(10);
     scale.reserve(10);
     precision.reserve(10);
 }
@@ -1542,6 +1544,8 @@ RowGroup& RowGroup::operator+=(const RowGroup& rhs)
     oids.insert(oids.end(), rhs.oids.begin(), rhs.oids.end());
     keys.insert(keys.end(), rhs.keys.begin(), rhs.keys.end());
     types.insert(types.end(), rhs.types.begin(), rhs.types.end());
+    charsetNumbers.insert(charsetNumbers.end(), rhs.charsetNumbers.begin(), rhs.charsetNumbers.end());
+    charsets.insert(charsets.end(), rhs.charsets.begin(), rhs.charsets.end());
     scale.insert(scale.end(), rhs.scale.begin(), rhs.scale.end());
     precision.insert(precision.end(), rhs.precision.begin(), rhs.precision.end());
     colWidths.insert(colWidths.end(), rhs.colWidths.begin(), rhs.colWidths.end());
@@ -1791,6 +1795,8 @@ RowGroup RowGroup::truncate(uint32_t cols)
     ret.oids.resize(cols);
     ret.keys.resize(cols);
     ret.types.resize(cols);
+    ret.charsetNumbers.resize(cols);
+    ret.charsets.resize(cols);
     ret.scale.resize(cols);
     ret.precision.resize(cols);
     ret.forceInline.reset(new bool[cols]);
