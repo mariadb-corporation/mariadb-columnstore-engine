@@ -3133,15 +3133,19 @@ void TupleBPS::rgDataToDl(RGData& rgData, RowGroup& rg, RowGroupDL* dlp)
 
 void TupleBPS::rgDataVecToDl(vector<RGData>& rgDatav, RowGroup& rg, RowGroupDL* dlp)
 {
-    uint64_t size = rgDatav.size();
-
-    if (size > 0 && !cancelled())
+    if (!rgDatav.empty() && !cancelled())
     {
-        dlMutex.lock();
-
-        for (uint64_t i = 0; i < size; i++)
+        if (dupColumns.size() > 0)
         {
-            rgDataToDl(rgDatav[i], rg, dlp);
+            for (auto& rgData: rgDatav)
+                dupOutputColumns(rgData, rg);
+        }
+
+        dlMutex.lock();
+        for (auto& rgData: rgDatav)
+        {
+            dlp->insert(rgData);
+            //rgDataToDl(rgDatav[i], rg, dlp);
         }
 
         dlMutex.unlock();
