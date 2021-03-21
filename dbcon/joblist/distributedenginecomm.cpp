@@ -631,15 +631,16 @@ void DistributedEngineComm::read_some(uint32_t key, uint32_t divisor, vector<SBS
 
     if (mqe->sendACKs)
     {
-        boost::mutex::scoped_lock lk(ackLock);
+        //boost::mutex::scoped_lock lk(ackLock);
 
-        if (mqe->throttled && !mqe->hasBigMsgs && queueSize.size <= disableThreshold)
-            setFlowControl(false, key, mqe);
+        //if (mqe->throttled && !mqe->hasBigMsgs && queueSize.size <= disableThreshold)
+        //    setFlowControl(false, key, mqe);
 
+        // mqe->throttled must be false so we'll have an early quit from sendAcks
         sendAcks(key, v, mqe, queueSize.size);
 
-        if (flowControlOn)
-            *flowControlOn = mqe->throttled;
+        //if (flowControlOn)
+        //    *flowControlOn = mqe->throttled;
     }
 }
 
@@ -652,7 +653,7 @@ void DistributedEngineComm::sendAcks(uint32_t uniqueID, const vector<SBS>& msgs,
     /* If the current queue size > target, do nothing.
      * If the original queue size > target, ACK the msgs below the target.
      */
-    if (!mqe->throttled || queueSize >= mqe->targetQueueSize)
+//    if (!mqe->throttled || queueSize >= mqe->targetQueueSize)
     {
         /* no acks will be sent, but update unackedwork to keep the #s accurate */
         uint16_t numack = 0;
@@ -979,8 +980,9 @@ void DistributedEngineComm::addDataToOutput(SBS sbs, uint32_t connIndex, Stats* 
             doHasBigMsgs(mqe, (300 * 1024 * 1024 > 3 * msgSize ?
                                300 * 1024 * 1024 : 3 * msgSize)); //buffer at least 3 big msgs
 
-        if (!mqe->throttled && queueSize.size >= mqe->targetQueueSize)
-            setFlowControl(true, uniqueId, mqe);
+// WIP Effectively disable flow control
+//        if (!mqe->throttled && queueSize.size >= mqe->targetQueueSize)
+//            setFlowControl(true, uniqueId, mqe);
     }
 
     if (stats)
