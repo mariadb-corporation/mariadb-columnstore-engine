@@ -354,6 +354,15 @@ bool WEBrmUpdater::prepareCasualPartitionInfo()
             pTok = strtok(NULL, " ");
 
             if (pTok)
+                cpInfoMerge.colWidth = boost::lexical_cast<int32_t>(pTok);
+            else
+            {
+                //cout << "CP Entry : " << aEntry << endl;
+                throw (runtime_error("Bad column width in CP entry string"));
+            }
+            pTok = strtok(NULL, " ");
+
+            if (pTok)
                 cpInfoMerge.newExtent = (atoi(pTok) != 0);
             else
             {
