@@ -86,36 +86,13 @@ mcsv1_UDAF::ReturnCode regr_slope::reset(mcsv1Context* context)
 
 mcsv1_UDAF::ReturnCode regr_slope::nextValue(mcsv1Context* context, ColumnDatum* valsIn)
 {
-    static_any::any& valIn_y = valsIn[0].columnData;
-    static_any::any& valIn_x = valsIn[1].columnData;
+    double valy = toDouble(valsIn[0]);
+    double valx = toDouble(valsIn[1]);
     struct  regr_slope_data* data = (struct regr_slope_data*)context->getUserData()->data;
-    double valx = 0.0;
-    double valy = 0.0;
-
-    valx = convertAnyTo<double>(valIn_x);
-    valy = convertAnyTo<double>(valIn_y);
-
-    // For decimal types, we need to move the decimal point.
-    uint32_t scaley = valsIn[0].scale;
-
-    if (valy != 0 && scaley > 0)
-    {
-        valy /= pow(10.0, (double)scaley);
-    }
 
     data->sumy += valy;
-
-    // For decimal types, we need to move the decimal point.
-    uint32_t scalex = valsIn[1].scale;
-
-    if (valx != 0 && scalex > 0)
-    {
-        valx /= pow(10.0, (double)scalex);
-    }
-
     data->sumx += valx;
     data->sumx2 += valx*valx;
-
     data->sumxy += valx*valy;
     ++data->cnt;
     
@@ -167,37 +144,13 @@ mcsv1_UDAF::ReturnCode regr_slope::evaluate(mcsv1Context* context, static_any::a
 
 mcsv1_UDAF::ReturnCode regr_slope::dropValue(mcsv1Context* context, ColumnDatum* valsDropped)
 {
-    static_any::any& valIn_y = valsDropped[0].columnData;
-    static_any::any& valIn_x = valsDropped[1].columnData;
+    double valy = toDouble(valsDropped[0]);
+    double valx = toDouble(valsDropped[1]);
     struct regr_slope_data* data = (struct regr_slope_data*)context->getUserData()->data;
 
-    double valx = 0.0;
-    double valy = 0.0;
-
-    valx = convertAnyTo<double>(valIn_x);
-    valy = convertAnyTo<double>(valIn_y);
-
-    // For decimal types, we need to move the decimal point.
-    uint32_t scaley = valsDropped[0].scale;
-
-    if (valy != 0 && scaley > 0)
-    {
-        valy /= pow(10.0, (double)scaley);
-    }
-
     data->sumy -= valy;
-
-    // For decimal types, we need to move the decimal point.
-    uint32_t scalex = valsDropped[1].scale;
-
-    if (valx != 0 && scalex > 0)
-    {
-        valx /= pow(10.0, (double)scalex);
-    }
-
     data->sumx -= valx;
     data->sumx2 -= valx*valx;
-
     data->sumxy -= valx*valy;
     --data->cnt;
 

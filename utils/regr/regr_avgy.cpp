@@ -84,16 +84,8 @@ mcsv1_UDAF::ReturnCode regr_avgy::reset(mcsv1Context* context)
 
 mcsv1_UDAF::ReturnCode regr_avgy::nextValue(mcsv1Context* context, ColumnDatum* valsIn)
 {
-    static_any::any& valIn_y = valsIn[0].columnData;
+    double val = toDouble(valsIn[0]);
     struct  regr_avgy_data* data = (struct regr_avgy_data*)context->getUserData()->data;
-    double val = convertAnyTo<double>(valIn_y);
-
-    // For decimal types, we need to move the decimal point.
-    uint32_t scale = valsIn[0].scale;
-    if (val != 0 && scale > 0)
-    {
-        val /= pow(10.0, (double)scale);
-    }
 
     data->sum += val;
     ++data->cnt;
@@ -130,16 +122,8 @@ mcsv1_UDAF::ReturnCode regr_avgy::evaluate(mcsv1Context* context, static_any::an
 
 mcsv1_UDAF::ReturnCode regr_avgy::dropValue(mcsv1Context* context, ColumnDatum* valsDropped)
 {
-    static_any::any& valIn_y = valsDropped[0].columnData;
+    double val = toDouble(valsDropped[0]);
     struct regr_avgy_data* data = (struct regr_avgy_data*)context->getUserData()->data;
-    double val = convertAnyTo<double>(valIn_y);
-
-    // For decimal types, we need to move the decimal point.
-    uint32_t scale = valsDropped[0].scale;
-    if (val != 0 && scale > 0)
-    {
-        val /= pow(10.0, (double)scale);
-    }
 
     data->sum -= val;
     --data->cnt;
