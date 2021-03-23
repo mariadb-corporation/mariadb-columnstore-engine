@@ -84,16 +84,8 @@ mcsv1_UDAF::ReturnCode regr_avgx::reset(mcsv1Context* context)
 
 mcsv1_UDAF::ReturnCode regr_avgx::nextValue(mcsv1Context* context, ColumnDatum* valsIn)
 {
-    static_any::any& valIn_x = valsIn[1].columnData;
+    DATATYPE val = toDouble(valsIn[1]);
     struct  regr_avgx_data* data = (struct regr_avgx_data*)context->getUserData()->data;
-    DATATYPE val = convertAnyTo<double>(valIn_x);
-
-    // For decimal types, we need to move the decimal point.
-    uint32_t scale = valsIn[1].scale;
-    if (val != 0 && scale > 0)
-    {
-        val /= pow(10.0, (double)scale);
-    }
 
     data->sum += val;
     ++data->cnt;
@@ -133,16 +125,8 @@ mcsv1_UDAF::ReturnCode regr_avgx::evaluate(mcsv1Context* context, static_any::an
 
 mcsv1_UDAF::ReturnCode regr_avgx::dropValue(mcsv1Context* context, ColumnDatum* valsDropped)
 {
-    static_any::any& valIn_x = valsDropped[1].columnData;
+    double val = toDouble(valsDropped[1]);
     struct regr_avgx_data* data = (struct regr_avgx_data*)context->getUserData()->data;
-    double val = convertAnyTo<double>(valIn_x);
-
-    // For decimal types, we need to move the decimal point.
-    uint32_t scale = valsDropped[1].scale;
-    if (val != 0 && scale > 0)
-    {
-        val /= pow(10.0, (double)scale);
-    }
 
     data->sum -= val;
     --data->cnt;

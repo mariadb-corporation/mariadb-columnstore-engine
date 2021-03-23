@@ -83,19 +83,8 @@ mcsv1_UDAF::ReturnCode regr_sxx::reset(mcsv1Context* context)
 
 mcsv1_UDAF::ReturnCode regr_sxx::nextValue(mcsv1Context* context, ColumnDatum* valsIn)
 {
-    static_any::any& valIn_x = valsIn[1].columnData;
+    double valx = toDouble(valsIn[1]);
     struct  regr_sxx_data* data = (struct regr_sxx_data*)context->getUserData()->data;
-    double valx = 0.0;
-
-    valx = convertAnyTo<double>(valIn_x);
-
-    // For decimal types, we need to move the decimal point.
-    uint32_t scalex = valsIn[1].scale;
-
-    if (valx != 0 && scalex > 0)
-    {
-        valx /= pow(10.0, (double)scalex);
-    }
 
     data->sumx += valx;
     data->sumx2 += valx*valx;
@@ -138,20 +127,8 @@ mcsv1_UDAF::ReturnCode regr_sxx::evaluate(mcsv1Context* context, static_any::any
 
 mcsv1_UDAF::ReturnCode regr_sxx::dropValue(mcsv1Context* context, ColumnDatum* valsDropped)
 {
-    static_any::any& valIn_x = valsDropped[1].columnData;
+    double valx = toDouble(valsDropped[1]);
     struct regr_sxx_data* data = (struct regr_sxx_data*)context->getUserData()->data;
-
-    double valx = 0.0;
-
-    valx = convertAnyTo<double>(valIn_x);
-
-    // For decimal types, we need to move the decimal point.
-    uint32_t scalex = valsDropped[1].scale;
-
-    if (valx != 0 && scalex > 0)
-    {
-        valx /= pow(10.0, (double)scalex);
-    }
 
     data->sumx -= valx;
     data->sumx2 -= valx*valx;

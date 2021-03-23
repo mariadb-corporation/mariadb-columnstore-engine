@@ -73,23 +73,14 @@ mcsv1_UDAF::ReturnCode avgx::reset(mcsv1Context* context)
 
 mcsv1_UDAF::ReturnCode avgx::nextValue(mcsv1Context* context, ColumnDatum* valsIn)
 {
-    static_any::any& valIn_x = valsIn[0].columnData;
     struct  avgx_data* data = (struct avgx_data*)context->getUserData()->data;
 
-    if (valIn_x.empty())
+    if (valsIn[0].columnData.empty())
     {
         return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
     }
 
-    DATATYPE val = convertAnyTo<double>(valIn_x);
-
-    // For decimal types, we need to move the decimal point.
-    uint32_t scale = valsIn[0].scale;
-
-    if (val != 0 && scale > 0)
-    {
-        val /= pow(10.0, (double)scale);
-    }
+    DATATYPE val = toDouble(valsIn[0]);
 
     data->sum += val;
     ++data->cnt;
@@ -125,23 +116,14 @@ mcsv1_UDAF::ReturnCode avgx::evaluate(mcsv1Context* context, static_any::any& va
 
 mcsv1_UDAF::ReturnCode avgx::dropValue(mcsv1Context* context, ColumnDatum* valsDropped)
 {
-    static_any::any& valIn_x = valsDropped[0].columnData;
     struct avgx_data* data = (struct avgx_data*)context->getUserData()->data;
 
-    if (valIn_x.empty())
+    if (valsDropped[0].columnData.empty())
     {
         return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
     }
 
-    DATATYPE val = convertAnyTo<double>(valIn_x);
-
-    // For decimal types, we need to move the decimal point.
-    uint32_t scale = valsDropped[0].scale;
-
-    if (val != 0 && scale > 0)
-    {
-        val /= pow(10.0, (double)scale);
-    }
+    DATATYPE val = toDouble(valsDropped[0]);
 
     data->sum -= val;
     --data->cnt;

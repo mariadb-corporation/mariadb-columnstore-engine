@@ -83,23 +83,14 @@ mcsv1_UDAF::ReturnCode ssq::reset(mcsv1Context* context)
 
 mcsv1_UDAF::ReturnCode ssq::nextValue(mcsv1Context* context, ColumnDatum* valsIn)
 {
-    static_any::any& valIn = valsIn[0].columnData;
     struct ssq_data* data = (struct ssq_data*)context->getUserData()->data;
 
-    if (context->isParamNull(0) || valIn.empty())
+    if (context->isParamNull(0) || valsIn[0].columnData.empty())
     {
         return mcsv1_UDAF::SUCCESS;
     }
 
-    DATATYPE val = convertAnyTo<double>(valIn);
-
-    // For decimal types, we need to move the decimal point.
-    uint32_t scale = valsIn[0].scale;
-
-    if (val != 0 && scale > 0)
-    {
-        val /= pow(10.0, (double)scale);
-    }
+    DATATYPE val = toDouble(valsIn[0]);
 
     data->sumsq += val * val;
     return mcsv1_UDAF::SUCCESS;
@@ -132,23 +123,14 @@ mcsv1_UDAF::ReturnCode ssq::evaluate(mcsv1Context* context, static_any::any& val
 
 mcsv1_UDAF::ReturnCode ssq::dropValue(mcsv1Context* context, ColumnDatum* valsDropped)
 {
-    static_any::any& valIn = valsDropped[0].columnData;
     struct ssq_data* data = (struct ssq_data*)context->getUserData()->data;
 
-    if (valIn.empty())
+    if (valsDropped[0].columnData.empty())
     {
         return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
     }
 
-    DATATYPE val = convertAnyTo<double>(valIn);
-
-    // For decimal types, we need to move the decimal point.
-    uint32_t scale = valsDropped[0].scale;
-
-    if (val != 0 && scale > 0)
-    {
-        val /= pow(10.0, (double)scale);
-    }
+    DATATYPE val = toDouble(valsDropped[0]);
 
     data->sumsq -= val * val;
     return mcsv1_UDAF::SUCCESS;

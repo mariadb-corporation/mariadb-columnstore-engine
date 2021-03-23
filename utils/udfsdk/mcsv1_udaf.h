@@ -628,9 +628,18 @@ public:
     virtual ReturnCode createUserData(UserData*& userdata, int32_t& length);
 
 protected:
+
+    double toDouble(ColumnDatum &datum) const
+    {
+        double val = convertAnyTo<double>(datum.columnData);
+        if (val != 0 && datum.scale > 0)
+            val /= pow(10.0, (double) datum.scale);
+        return val;
+    }
+
     // some handy conversion routines
     template<typename T>
-    T convertAnyTo(static_any::any&);
+    T convertAnyTo(static_any::any&) const;
     // These are handy for testing the actual type of static_any
     static const static_any::any& charTypeId;
     static const static_any::any& scharTypeId;
@@ -1015,7 +1024,7 @@ inline mcsv1_UDAF::ReturnCode mcsv1_UDAF::createUserData(UserData*& userData, in
 
 // Handy helper functions
 template<typename T>
-inline T mcsv1_UDAF::convertAnyTo(static_any::any& valIn)
+inline T mcsv1_UDAF::convertAnyTo(static_any::any& valIn) const
 {
     T val = 0;
     if (valIn.compatible(longTypeId))

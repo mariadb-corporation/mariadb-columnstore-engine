@@ -83,19 +83,8 @@ mcsv1_UDAF::ReturnCode regr_syy::reset(mcsv1Context* context)
 
 mcsv1_UDAF::ReturnCode regr_syy::nextValue(mcsv1Context* context, ColumnDatum* valsIn)
 {
-    static_any::any& valIn_y = valsIn[0].columnData;
+    double valy = toDouble(valsIn[0]);
     struct  regr_syy_data* data = (struct regr_syy_data*)context->getUserData()->data;
-    double valy = 0.0;
-
-    valy = convertAnyTo<double>(valIn_y);
-
-    // For decimal types, we need to move the decimal point.
-    uint32_t scaley = valsIn[0].scale;
-
-    if (valy != 0 && scaley > 0)
-    {
-        valy /= pow(10.0, (double)scaley);
-    }
 
     data->sumy += valy;
     data->sumy2 += valy*valy;
@@ -138,20 +127,8 @@ mcsv1_UDAF::ReturnCode regr_syy::evaluate(mcsv1Context* context, static_any::any
 
 mcsv1_UDAF::ReturnCode regr_syy::dropValue(mcsv1Context* context, ColumnDatum* valsDropped)
 {
-    static_any::any& valIn_y = valsDropped[0].columnData;
+    double valy = toDouble(valsDropped[0]);
     struct regr_syy_data* data = (struct regr_syy_data*)context->getUserData()->data;
-
-    double valy = 0.0;
-
-    valy = convertAnyTo<double>(valIn_y);
-
-    // For decimal types, we need to move the decimal point.
-    uint32_t scaley = valsDropped[0].scale;
-
-    if (valy != 0 && scaley > 0)
-    {
-        valy /= pow(10.0, (double)scaley);
-    }
 
     data->sumy -= valy;
     data->sumy2 -= valy*valy;
