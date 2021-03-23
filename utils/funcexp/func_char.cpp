@@ -136,26 +136,7 @@ string Func_char::getStrVal(Row& row,
             case execplan::CalpontSystemCatalog::DECIMAL:
             case execplan::CalpontSystemCatalog::UDECIMAL:
             {
-                IDB_Decimal d = rc->getDecimalVal(row, isNull);
-
-                uint8_t roundingFactor = 4;
-                if (ct.colWidth == datatypes::MAXDECIMALWIDTH)
-                {
-                    if (d.s128Value < 0)
-                        return "";
-                    // rounding by the left over
-                    value = static_cast<int32_t>(d.getRoundedIntegralPart(roundingFactor));
-                }
-                else
-                {
-                    double dscale = d.scale;
-                    // get decimal and round up
-                    value = d.value / pow(10.0, dscale);
-                    uint8_t lefto = (d.value - value * pow(10.0, dscale)) / pow(10.0, dscale - 1);
-
-                    if ( lefto > roundingFactor )
-                        value++;
-                }
+                value = static_cast<int32_t>(rc->getDecimalVal(row, isNull).toSInt64Round());
             }
             break;
 

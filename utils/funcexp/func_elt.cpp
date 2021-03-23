@@ -73,25 +73,7 @@ string Func_elt::getStrVal(rowgroup::Row& row,
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
         {
-            IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-
-            if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
-            {
-                number = static_cast<int64_t>(d.getPosNegRoundedIntegralPart(4));
-            }
-            else
-            {
-                double dscale = d.scale;
-                number = d.value / pow(10.0, dscale);
-                int lefto = (d.value - number * pow(10.0, dscale)) / pow(10.0, dscale - 1);
-
-                if ( utils::is_nonnegative(number) && lefto > 4 )
-                    number++;
-
-                if ( utils::is_negative(number) && lefto < -4 )
-                    number--;
-            }
-
+            number = static_cast<uint64_t>(parm[0]->data()->getDecimalVal(row, isNull).toSInt64Round());
             break;
         }
 

@@ -68,25 +68,7 @@ uint64_t makedate(rowgroup::Row& row,
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
         {
-            IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-
-            if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
-            {
-                year = static_cast<int64_t>(d.getPosNegRoundedIntegralPart(4));
-            }
-            else
-            {
-                double dscale = d.scale;
-                year = d.value / pow(10.0, dscale);
-                int lefto = (d.value - year * pow(10.0, dscale)) / pow(10.0, dscale - 1);
-
-                if ( year >= 0 && lefto > 4 )
-                    year++;
-
-                if ( year < 0 && lefto < -4 )
-                    year--;
-            }
-
+            year = parm[0]->data()->getDecimalVal(row, isNull).toSInt64Round();
             break;
         }
 
@@ -137,39 +119,13 @@ uint64_t makedate(rowgroup::Row& row,
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
         {
-            IDB_Decimal d = parm[1]->data()->getDecimalVal(row, isNull);
-
-            if (parm[1]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+            int64_t tmp = parm[1]->data()->getDecimalVal(row, isNull).toSInt64Round();
+            if (tmp < 1)
             {
-                int64_t tmpval = static_cast<int64_t>(d.getPosNegRoundedIntegralPart(4));
-                if (tmpval < 1)
-                {
-                    isNull = true;
-                    return 0;
-                }
-
-                dayofyear = helpers::intToString(tmpval);
+                isNull = true;
+                return 0;
             }
-            else
-            {
-                double dscale = d.scale;
-                int64_t tmp = d.value / pow(10.0, dscale);
-                int lefto = (d.value - tmp * pow(10.0, dscale)) / pow(10.0, dscale - 1);
-
-                if (tmp >= 0 && lefto > 4)
-                    tmp++;
-
-                if (tmp < 0 && lefto < -4)
-                    tmp--;
-
-                if (tmp < 1)
-                {
-                    isNull = true;
-                    return 0;
-                }
-
-                dayofyear = helpers::intToString(tmp);
-            }
+            dayofyear = helpers::intToString(tmp);
             break;
         }
 

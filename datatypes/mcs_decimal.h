@@ -179,41 +179,87 @@ inline lldiv_t_128 lldiv128(const int128_t& dividend, const int128_t& divisor)
     return lldiv_t_128(dividend / divisor, dividend % divisor);
 }
 
+
+// TODO: derive it from TSInt64 eventually
+class TDecimal64
+{
+public:
+    int64_t value;
+public:
+    static constexpr uint8_t MAXLENGTH8BYTES = 23;
+
+public:
+    TDecimal64()
+     :value(0)
+    { }
+    explicit TDecimal64(int64_t val)
+     :value(val)
+    { }
+    // Divide to the scale divisor with rounding
+    int64_t toSInt64Round(uint32_t scale) const
+    {
+        double dscale = scale;
+        int64_t tmp = value / pow(10.0, dscale);
+        int lefto = (value - tmp * pow(10.0, dscale)) / pow(10.0, dscale - 1);
+        if (tmp >= 0 && lefto > 4)
+            return tmp + 1;
+        if (tmp < 0 && lefto < -4)
+            return tmp - 1;
+        return tmp;
+    }
+};
+
+
+class TDecimal128: public TSInt128
+{
+public:
+    static constexpr uint8_t MAXLENGTH16BYTES = TSInt128::maxLength();
+    static constexpr int128_t minInt128 = TFloat128::minInt128;
+    static constexpr int128_t maxInt128 = TFloat128::maxInt128;
+
+    static inline bool isWideDecimalNullValue(const int128_t& val)
+    {
+        return (val == TSInt128::NullValue);
+    }
+
+    static inline bool isWideDecimalEmptyValue(const int128_t& val)
+    {
+        return (val == TSInt128::EmptyValue);
+    }
+
+    static inline void setWideDecimalNullValue(int128_t& val)
+    {
+        val = TSInt128::NullValue;
+    }
+
+    static inline void setWideDecimalEmptyValue(int128_t& val)
+    {
+        val = TSInt128::EmptyValue;
+    }
+
+public:
+    TDecimal128()
+    { }
+    explicit TDecimal128(const int128_t &val)
+       :TSInt128(val)
+    { }
+    explicit TDecimal128(const TSInt128& val)
+       :TSInt128(val)
+    { }
+    explicit TDecimal128(const int128_t* valPtr)
+       :TSInt128(valPtr)
+    { }
+};
+
+
 // @brief The class for Decimal related operations
-// The class contains Decimal related operations are scale and
-// precision aware.
-// This class will inherit from:
-//      DecimalMeta class that stores scale and precision
-//      Storage classes TSInt128 and int64
-// !!! There are some static classes that will exists during transition period. 
-class Decimal: public TSInt128
+// The methods and operators implemented in this class are
+// scale and precision aware.
+// We should eventually move the members "scale" and "precision"
+// into a separate class DecimalMeta and derive Decimal from it.
+class Decimal: public TDecimal128, public TDecimal64
 {
     public:
-        static constexpr uint8_t MAXLENGTH16BYTES = TSInt128::maxLength();
-        static constexpr uint8_t MAXLENGTH8BYTES = 23;
-        static constexpr int128_t minInt128 = TFloat128::minInt128;
-        static constexpr int128_t maxInt128 = TFloat128::maxInt128;
-
-        static inline bool isWideDecimalNullValue(const int128_t& val)
-        {
-            return (val == TSInt128::NullValue);
-        }
-
-        static inline bool isWideDecimalEmptyValue(const int128_t& val)
-        {
-            return (val == TSInt128::EmptyValue);
-        }
-
-        static inline void setWideDecimalNullValue(int128_t& val)
-        {
-            val = TSInt128::NullValue;
-        }
-
-        static inline void setWideDecimalEmptyValue(int128_t& val)
-        {
-            val = TSInt128::EmptyValue;
-        }
-
         /**
             @brief Compares two Decimal taking scale into account. 
         */
@@ -277,27 +323,26 @@ class Decimal: public TSInt128
             precision += (precisionAvailable >= MAXSCALEINC4AVG) ? MAXSCALEINC4AVG : precisionAvailable;
         }
 
-        Decimal(): value(0), scale(0), precision(0)
+        Decimal(): scale(0), precision(0)
         {
         }
 
         Decimal(int64_t val, int8_t s, uint8_t p, const int128_t &val128 = 0) :
-            TSInt128(val128),
-            value(val),
+            TDecimal128(val128),
+            TDecimal64(val),
             scale(s),
             precision(p)
         { }
 
         Decimal(int64_t unused, int8_t s, uint8_t p, const int128_t* val128Ptr) :
-            TSInt128(val128Ptr),
-            value(unused),
+            TDecimal128(val128Ptr),
+            TDecimal64(unused),
             scale(s),
             precision(p)
         { }
 
         Decimal(const TSInt128& val128, int8_t s, uint8_t p) :
-            TSInt128(val128),
-            value(0),
+            TDecimal128(val128),
             scale(s),
             precision(p)
         { }
@@ -481,6 +526,13 @@ class Decimal: public TSInt128
             return intg;
         }
 
+        int64_t toSInt64Round() const
+        {
+            return isWideDecimalTypeByPrecision(precision) ?
+                static_cast<int64_t>(getPosNegRoundedIntegralPart(4)) :
+                TDecimal64::toSInt64Round((uint32_t) scale);
+        }
+
         // MOD operator for an integer divisor to be used
         // for integer rhs
         inline TSInt128 operator%(const TSInt128& div) const
@@ -627,7 +679,6 @@ class Decimal: public TSInt128
         std::string toString(bool hasTSInt128 = false) const;
         friend std::ostream& operator<<(std::ostream& os, const Decimal& dec);
 
-        int64_t value;
         int8_t  scale;	  // 0~38
         uint8_t precision;  // 1~38
 

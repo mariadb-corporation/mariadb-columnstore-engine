@@ -74,25 +74,7 @@ string Func_maketime::getStrVal(rowgroup::Row& row,
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
         {
-            IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-
-            if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
-            {
-                hour = static_cast<int64_t>(d.getPosNegRoundedIntegralPart(4));
-            }
-            else
-            {
-                double dscale = d.scale;
-                hour = d.value / pow(10.0, dscale);
-                int lefto = (d.value - hour * pow(10.0, dscale)) / pow(10.0, dscale - 1);
-
-                if ( hour >= 0 && lefto > 4 )
-                    hour++;
-
-                if ( hour < 0 && lefto < -4 )
-                    hour--;
-            }
-
+            hour = parm[0]->data()->getDecimalVal(row, isNull).toSInt64Round();
             break;
         }
 
@@ -123,25 +105,7 @@ string Func_maketime::getStrVal(rowgroup::Row& row,
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
         {
-            IDB_Decimal d = parm[1]->data()->getDecimalVal(row, isNull);
-
-            if (parm[1]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
-            {
-                min = static_cast<int64_t>(d.getPosNegRoundedIntegralPart(4));
-            }
-            else
-            {
-                double dscale = d.scale;
-                min = d.value / pow(10.0, dscale);
-                int lefto = (d.value - min * pow(10.0, dscale)) / pow(10.0, dscale - 1);
-
-                if ( min >= 0 && lefto > 4 )
-                    min++;
-
-                if ( min < 0 && lefto < -4 )
-                    min--;
-            }
-
+            min = parm[1]->data()->getDecimalVal(row, isNull).toSInt64Round();
             break;
         }
 
@@ -178,25 +142,7 @@ string Func_maketime::getStrVal(rowgroup::Row& row,
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
         {
-            IDB_Decimal d = parm[2]->data()->getDecimalVal(row, isNull);
-
-            if (parm[2]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
-            {
-                sec = static_cast<int64_t>(d.getPosNegRoundedIntegralPart(4));
-            }
-            else
-            {
-                double dscale = d.scale;
-                sec = d.value / pow(10.0, dscale);
-                int lefto = (d.value - sec * pow(10.0, dscale)) / pow(10.0, dscale - 1);
-
-                if ( sec >= 0 && lefto > 4 )
-                    sec++;
-
-                if ( sec < 0 && lefto < -4 )
-                    sec--;
-            }
-
+            sec = parm[2]->data()->getDecimalVal(row, isNull).toSInt64Round();
             break;
         }
 
