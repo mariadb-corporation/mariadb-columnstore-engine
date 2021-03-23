@@ -81,9 +81,9 @@ if (${REDHAT_VERSION_NUMBER} EQUAL 6)
     # Disable auto require as this will also try to pull Boost via RPM
     SET(CPACK_RPM_PACKAGE_AUTOREQPROV " no")
 elseif (${SUSE_VERSION_NUMBER} EQUAL 12)
-    SETA(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "boost-devel >= 1.54.0" "libsnappy1" "net-tools" "MariaDB-server" "python3")
+    SETA(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "boost-devel >= 1.54.0" "libsnappy1" "net-tools" "MariaDB-server" "python3" "jemalloc")
 else ()
-    SETA(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "boost >= 1.53.0" "snappy" "net-tools" "MariaDB-server" "python3")
+    SETA(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "boost >= 1.53.0" "snappy" "net-tools" "MariaDB-server" "python3" "jemalloc")
 endif()
 
 SET(CPACK_RPM_columnstore-engine_PRE_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/preInstall_storage_engine.sh)
