@@ -183,26 +183,7 @@ int64_t Func_cast_signed::getIntVal(Row& row,
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
-            IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-
-            if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
-            {
-                return static_cast<int64_t>(d.getPosNegRoundedIntegralPart(4));
-            }
-            else
-            {
-                double dscale = d.scale;
-                int64_t value = d.value / pow(10.0, dscale);
-                int lefto = (d.value - value * pow(10.0, dscale)) / pow(10.0, dscale - 1);
-
-                if ( value >= 0 && lefto > 4 )
-                    value++;
-
-                if ( value < 0 && lefto < -4 )
-                    value--;
-
-                return value;
-            }
+            return parm[0]->data()->getDecimalVal(row, isNull).toSInt64Round();
         }
         break;
 

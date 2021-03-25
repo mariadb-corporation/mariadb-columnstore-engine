@@ -173,9 +173,7 @@ namespace datatypes
 
     Decimal::Decimal(const char *str, size_t length, DataCondition & convError,
                      int8_t s, uint8_t p)
-       :TSInt128(),
-        value(0),
-        scale(s),
+       :scale(s),
         precision(p)
     {
         literal::Converter<literal::SignedNumericLiteral> conv(str, length, convError);
