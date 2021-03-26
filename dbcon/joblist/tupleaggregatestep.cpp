@@ -1971,6 +1971,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                     scaleAgg.push_back(scaleProj[colProj]);
                     precisionAgg.push_back(0);
                     typeAgg.push_back(CalpontSystemCatalog::DOUBLE);
+                    csNumAgg.push_back(8);
                     widthAgg.push_back(sizeof(double));
                     funct->fAuxColumnIndex = ++colAgg;
 
