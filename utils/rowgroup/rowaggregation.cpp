@@ -3306,6 +3306,7 @@ void RowAggregationUM::calculateUDAFColumns()
 
             // Set the returned value into the output row
             SetUDAFValue(valOut, colOut);
+            valOut.reset();
         }
 
         fRGContext.setUserData(NULL);
