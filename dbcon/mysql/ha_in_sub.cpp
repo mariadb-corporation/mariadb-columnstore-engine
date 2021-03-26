@@ -41,6 +41,7 @@ using namespace std;
 #include "simplefilter.h"
 #include "predicateoperator.h"
 #include "rowcolumn.h"
+#include "constantcolumn.h"
 using namespace execplan;
 
 #include "errorids.h"
@@ -101,6 +102,17 @@ InSub::InSub(const InSub& rhs) :
 InSub::~InSub()
 {}
 
+inline void setCorrelatedFlag(execplan::ReturnedColumn* col, gp_walk_info* gwip)
+{
+    ConstantColumn* cc = dynamic_cast<ConstantColumn*>(col);
+
+    if (!cc)
+    {
+        col->joinInfo(col->joinInfo() | JOIN_CORRELATED | JOIN_NULLMATCH_CANDIDATE);
+        gwip->subQuery->correlated(true);
+    }
+}
+
 /** MySQL transform (NOT) IN subquery to (NOT) EXIST
  *
  */
@@ -125,10 +137,9 @@ execplan::ParseTree* InSub::transform()
     delete rhs;
     ReturnedColumn* lhs = fGwip.rcWorkStack.top();
     fGwip.rcWorkStack.pop();
-    delete lhs;
 
     fSub = (Item_subselect*)(fFunc->arguments()[1]);
-    idbassert(fSub && fFunc);
+    idbassert(fSub);
 
     SCSEP csep (new CalpontSelectExecutionPlan());
     csep->sessionID(fGwip.sessionid);
@@ -139,6 +150,24 @@ execplan::ParseTree* InSub::transform()
     gp_walk_info gwi;
     gwi.thd = fGwip.thd;
     gwi.subQuery = this;
+
+    // The below 2 fields are used later on in buildInToExistsFilter()
+    gwi.inSubQueryLHS = lhs;
+    gwi.inSubQueryLHSItem = fFunc->arguments()[0];
+
+    RowColumn* rlhs = dynamic_cast<RowColumn*>(lhs);
+
+    if (rlhs)
+    {
+        for (auto& col : rlhs->columnVec())
+        {
+            setCorrelatedFlag(col.get(), &gwi);
+        }
+    }
+    else
+    {
+        setCorrelatedFlag(lhs, &gwi);
+    }
 
     // @4827 merge table list to gwi in case there is FROM sub to be referenced
     // in the FROM sub

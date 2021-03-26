@@ -834,13 +834,6 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
                 if (isPS)
                 {
                     sel->prep_where= conds ? conds->copy_andor_structure(thd) : 0;
-
-                    if (in_subselect_rewrite(sel))
-                    {
-                        unsupported_feature = true;
-                        handler->err_msg.assign("create_columnstore_select_handler(): \
-                            Internal error occured in in_subselect_rewrite()");
-                    }
                 }
 
                 select_lex->update_used_tables();
@@ -859,15 +852,6 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
             conds->traverse_cond(cal_impl_if::debug_walk, NULL, Item::POSTFIX);
 #endif
             join->conds = conds;
-        }
-
-        // MCOL-3747 IN-TO-EXISTS rewrite inside MDB didn't add
-        // an equi-JOIN condition.
-        if (!unsupported_feature && !isPS && in_subselect_rewrite(select_lex))
-        {
-            unsupported_feature = true;
-            handler->err_msg.assign("create_columnstore_select_handler(): \
-                Internal error occured in in_subselect_rewrite()");
         }
     }
 
