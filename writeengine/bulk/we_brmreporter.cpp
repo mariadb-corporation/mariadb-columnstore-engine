@@ -314,6 +314,7 @@ void BRMReporter::sendCPToFile( )
                          fCPInfo[i].min       << ' ' <<
                          fCPInfo[i].seqNum    << ' ' <<
                          fCPInfo[i].type      << ' ' <<
+                         fCPInfo[i].colWidth  << ' ' <<
                          fCPInfo[i].newExtent << std::endl;
             }
             else
@@ -412,13 +413,13 @@ int BRMReporter::openRptFile( )
         return rc;
     }
 
-    fRptFile << "#CP:   startLBID max min seqnum type newExtent" << std::endl;
-    fRptFile << "#HWM:  oid partition segment hwm"               << std::endl;
-    fRptFile << "#ROWS: numRowsRead numRowsInserted"             << std::endl;
+    fRptFile << "#CP:   startLBID max min seqnum type colwidth newExtent"    << std::endl;
+    fRptFile << "#HWM:  oid partition segment hwm"                           << std::endl;
+    fRptFile << "#ROWS: numRowsRead numRowsInserted"                         << std::endl;
     fRptFile << "#DATA: columNum columnType columnOid numOutOfRangeValues"   << std::endl;
-    fRptFile << "#ERR:  error message file"                      << std::endl;
-    fRptFile << "#BAD:  bad data file, with rejected rows"       << std::endl;
-    fRptFile << "#MERR: critical error messages in cpimport.bin" << std::endl;
+    fRptFile << "#ERR:  error message file"                                  << std::endl;
+    fRptFile << "#BAD:  bad data file, with rejected rows"                   << std::endl;
+    fRptFile << "#MERR: critical error messages in cpimport.bin"             << std::endl;
 
     return NO_ERROR;
 }
