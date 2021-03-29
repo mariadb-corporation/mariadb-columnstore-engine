@@ -52,6 +52,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
   local config_path_prefix = if (pkg_format == 'rpm') then '/etc/my.cnf.d/' else '/etc/mysql/mariadb.conf.d/50-',
   local img = if (std.split(platform, ':')[0] == 'centos') then platform else 'romcheck/' + std.strReplace(platform, '/', '-'),
   local regression_ref = if (std.split(branch, '-')[0] == 'develop') then branch else 'develop-5',
+  local branchp = if (branch == '**') then '' else branch,
 
   local pipeline = self,
 
@@ -70,7 +71,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
         from_secret: 'aws_secret_access_key',
       },
       source: 'result',
-      target: branch + '/' + eventp + '/' + arch + '/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
+      target: branchp + '/' + eventp + '/' + arch + '/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
       delete: 'true',
     },
   },
@@ -273,7 +274,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
 
   kind: 'pipeline',
   type: 'docker',
-  name: std.join(' ', [branch + 'b', platform, event, arch]),
+  name: std.join(' ', [branchp, platform, event, arch]),
   platform: { arch: arch },
   // [if arch == 'arm64' then 'node']: { arch: 'arm64' },
   clone: { depth: 10 },
@@ -386,6 +387,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
 };
 
 local FinalPipeline(branch, event, arch='amd64') = {
+  local branchp = if (branch == '**') then '' else branch,
   kind: 'pipeline',
   name: std.join(' ', ['after', branch, event]),
   steps: [
@@ -409,7 +411,7 @@ local FinalPipeline(branch, event, arch='amd64') = {
       'failure',
     ],
   } + (if event == 'cron' then { cron: ['nightly-' + std.strReplace(branch, '.', '-')] } else {}),
-  depends_on: std.map(function(p) std.join(' ', [branch + 'b', p, event, arch]), platforms[branch]) +
+  depends_on: std.map(function(p) std.join(' ', [branchp, p, event, arch]), platforms[branch]) +
               (if branch == 'develop' then std.map(function(p) std.join(' ', [branch, p, event, 'arm64']), platforms_arm[branch]) else []),
 };
 
