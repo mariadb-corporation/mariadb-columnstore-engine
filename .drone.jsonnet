@@ -3,18 +3,18 @@ local events = ['pull_request', 'cron', 'custom'];
 local platforms = {
   develop: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
   'develop-5': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
-  'ci-any-branch-custom-event': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
+  '**': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
 };
 
 local platforms_arm = {
   develop: ['centos:8'],
-  'ci-any-branch-custom-event': ['centos:8'],
+  '**': ['centos:8'],
 };
 
 local server_ref_map = {
   develop: '10.6 https://github.com/MariaDB/server',
   'develop-5': '10.5 https://github.com/MariaDB/server',
-  'ci-any-branch-custom-event': '10.6 https://github.com/MariaDB/server',
+  '**': '10.6 https://github.com/MariaDB/server',
 };
 
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
@@ -273,7 +273,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
 
   kind: 'pipeline',
   type: 'docker',
-  name: std.join(' ', [branch, platform, event, arch]),
+  name: std.join(' ', [branch + 'b', platform, event, arch]),
   platform: { arch: arch },
   // [if arch == 'arm64' then 'node']: { arch: 'arm64' },
   clone: { depth: 10 },
