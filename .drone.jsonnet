@@ -409,7 +409,7 @@ local FinalPipeline(branch, event, arch='amd64') = {
       'failure',
     ],
   } + (if event == 'cron' then { cron: ['nightly-' + std.strReplace(branch, '.', '-')] } else {}),
-  depends_on: std.map(function(p) std.join(' ', [branch, p, event, arch]), platforms[branch]) +
+  depends_on: std.map(function(p) std.join(' ', [branch + 'b', p, event, arch]), platforms[branch]) +
               (if branch == 'develop' then std.map(function(p) std.join(' ', [branch, p, event, 'arm64']), platforms_arm[branch]) else []),
 };
 
