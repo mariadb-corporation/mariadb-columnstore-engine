@@ -29,7 +29,7 @@ local rpm_build_deps = 'install -y systemd-devel git make gcc gcc-c++ libaio-dev
 local deb_build_deps = 'apt update && apt install --yes --no-install-recommends build-essential devscripts ccache equivs eatmydata ' +
                        '&& mk-build-deps debian/control -t "apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends" -r -i';
 
-local platformMap(branch, platform) =
+local platformMap(platform) =
 
   local platform_map = {
     'opensuse/leap:15': 'zypper ' + rpm_build_deps + ' cmake libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel gcc-fortran && cmake ' + cmakeflags + ' -DRPM=sles15 && make -j$(nproc) package',
@@ -344,7 +344,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
                // "sed -i 's/BETA/GAMMA/' storage/columnstore/CMakeLists.txt",
                // Workaround till upstream removes 4535 workaround (workaround for workaround!)
                "sed -i '/MCOL-4535/,/^$/d' debian/autobake-deb.sh",
-               platformMap(branch, platform),
+               platformMap(platform),
                if (pkg_format == 'rpm') then 'createrepo .' else 'dpkg-scanpackages ../ | gzip > ../Packages.gz',
              ],
            },
@@ -429,8 +429,4 @@ local FinalPipeline(branch, event, arch='amd64') = {
   FinalPipeline(b, e)
   for b in std.objectFields(platforms)
   for e in events
-] +
-[
-  Pipeline('**', p, 'custom')
-  for p in platforms['**']
 ]
