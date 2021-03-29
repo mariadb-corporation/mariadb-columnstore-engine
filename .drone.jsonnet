@@ -6,6 +6,7 @@ local platforms = {
   '**': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
 };
 
+local tt = '123';
 local platforms_arm = {
   develop: ['centos:8'],
   '**': ['centos:8'],
