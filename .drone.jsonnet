@@ -3,15 +3,18 @@ local events = ['pull_request', 'cron', 'custom'];
 local platforms = {
   develop: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
   'develop-5': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
+  '**': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
 };
 
 local platforms_arm = {
   develop: ['centos:8'],
+  '**': ['centos:8'],
 };
 
 local server_ref_map = {
   develop: '10.6 https://github.com/MariaDB/server',
   'develop-5': '10.5 https://github.com/MariaDB/server',
+  '**': '10.6 https://github.com/MariaDB/server',
 };
 
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
@@ -426,4 +429,8 @@ local FinalPipeline(branch, event, arch='amd64') = {
   FinalPipeline(b, e)
   for b in std.objectFields(platforms)
   for e in events
+] +
+[
+  Pipeline('**', p, 'custom')
+  for p in platforms['**']
 ]
