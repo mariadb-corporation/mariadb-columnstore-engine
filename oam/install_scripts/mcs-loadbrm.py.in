@@ -8,6 +8,7 @@ import configparser
 import os
 import glob
 import shutil
+import socket
 
 API_CONFIG_PATH = '/etc/columnstore/cmapi_server.conf'
 BYPASS_SM_PATH = '/tmp/columnstore_tmp_files/rdwrscratch/BRM_saves'
@@ -54,8 +55,9 @@ if __name__ == '__main__':
     loadbrm = '@ENGINE_BINDIR@/load_brm'
 
     brm_saves_current = ''
+    use_s3 = storage.lower() == 's3' and not bucket.lower() == 'some_bucket'
 
-    if storage.lower() == 's3' and not bucket.lower() == 'some_bucket':
+    if use_s3:
         # start SM using systemd
         if use_systemd is True:
             cmd = 'systemctl start mcs-storagemanager'
@@ -80,7 +82,7 @@ if __name__ == '__main__':
                    '/etc/columnstore/Columnstore.xml')    # atomic replacement
 
     # Single-node on S3
-    if storage.lower() == 's3' and not bucket.lower() == 'some_bucket' and pmCount == 1:
+    if use_s3 and pmCount == 1:
         try:
             if use_systemd:
                 args = ['su', '-s', '/bin/sh', '-c', 'smcat {}'.format(brm), USER]
@@ -117,6 +119,33 @@ file=sys.stderr)
                     print("Pulling {} from the primary node.".format(e))
                     url = "https://{}:{}/cmapi/{}/node/meta/{}".format(primary_address, \
 api_port, api_version, e)
+
+                    if use_s3:
+                        # if using s3 we need to make sure storagemanager on primary is running
+                        success = False
+                        retry = 10
+                        while retry > 0:
+                            try:
+                                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                                sock.settimeout(10)
+                                # wait for workernode, since SM not accessible
+                                # if workernode has started, storagemanager is running
+                                result = sock.connect_ex((primary_address, 8700))
+                                if result == 0:
+                                    success = True
+                                    sock.close()
+                                    break
+                            except socket.timeout:
+                                pass
+                            else:
+                                sock.close()
+                            if not success:
+                                time.sleep(1)
+                            retry -= 1
+
+                        if not success:
+                            print('Timed out. StorageManager on {str(primary_address)} is not reachable.')
+
                     r = requests.get(url, verify=False, headers=headers, timeout=60)
                     if (r.status_code != 200):
                         raise RuntimeError("Error requesting {} from the primary \
