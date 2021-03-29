@@ -140,6 +140,19 @@ constexpr int128_t Decimal128Null = TSInt128::NullValue;
 constexpr int128_t Decimal128Empty = TSInt128::EmptyValue;
 
 
+template<typename T>
+T scaleDivisor(const uint32_t scale)
+{
+    if (scale < 19)
+        return (T) mcs_pow_10[scale];
+    if (scale > 39)
+    {
+        std::string msg = "scaleDivisor called with a wrong scale: " + std::to_string(scale);
+        throw std::invalid_argument(msg);
+    }
+    return (T) mcs_pow_10_128[scale - 19];
+}
+
 /**
     @brief The function to produce scale multiplier/divisor for
     wide decimals.
@@ -152,14 +165,7 @@ inline void getScaleDivisor(T& divisor, const int8_t scale)
         std::string msg = "getScaleDivisor called with negative scale: " + std::to_string(scale);
         throw std::invalid_argument(msg);
     }
-    else if (scale < 19)
-    {
-        divisor = mcs_pow_10[scale];
-    }
-    else
-    {
-        divisor = mcs_pow_10_128[scale-19];
-    }
+    divisor = scaleDivisor<T>((uint32_t) scale);
 }
 
 struct lldiv_t_128
@@ -198,14 +204,14 @@ public:
     // Divide to the scale divisor with rounding
     int64_t toSInt64Round(uint32_t scale) const
     {
-        double dscale = scale;
-        int64_t tmp = value / pow(10.0, dscale);
-        int lefto = (value - tmp * pow(10.0, dscale)) / pow(10.0, dscale - 1);
-        if (tmp >= 0 && lefto > 4)
-            return tmp + 1;
-        if (tmp < 0 && lefto < -4)
-            return tmp - 1;
-        return tmp;
+        auto divisor = scaleDivisor<int64_t>(scale);
+        int64_t intg = value / divisor;
+        int64_t frac2 = 2 * (value % divisor);
+        if (frac2 >= divisor)
+          return intg + 1;
+        if (frac2 <= -divisor)
+          return intg - 1;
+        return intg;
     }
 };
 
