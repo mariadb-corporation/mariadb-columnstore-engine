@@ -1120,18 +1120,11 @@ int64_t Func_cast_decimal::getIntVal(Row& row,
                                      bool& isNull,
                                      CalpontSystemCatalog::ColType& operationColType)
 {
-
     IDB_Decimal decimal = Func_cast_decimal::getDecimalVal(row,
                           parm,
                           isNull,
                           operationColType);
-
-    if (decimal.isTSInt128ByPrecision())
-    {
-        return static_cast<int64_t>(decimal.getIntegralPart());
-    }
-
-    return (int64_t) decimal.value / helpers::powerOf10_c[decimal.scale];
+    return decimal.toSInt64Round();
 }
 
 
