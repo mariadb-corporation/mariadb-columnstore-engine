@@ -721,16 +721,7 @@ inline int64_t TreeNode::getIntVal()
 
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
-        {
-            if (fResultType.colWidth == datatypes::MAXDECIMALWIDTH)
-            {
-                return static_cast<int64_t>(fResult.decimalVal.getIntegralPart());
-            }
-            else
-            {
-                return (int64_t)(fResult.decimalVal.value / pow((double)10, fResult.decimalVal.scale));
-            }
-        }
+            return fResult.decimalVal.toSInt64Round();
 
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
@@ -775,16 +766,7 @@ inline uint64_t TreeNode::getUintVal()
 
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
-        {
-            if (fResultType.colWidth == datatypes::MAXDECIMALWIDTH)
-            {
-                return static_cast<uint64_t>(fResult.decimalVal.getIntegralPart());
-            }
-            else
-            {
-                return (uint64_t)(fResult.decimalVal.value / pow((double)10, fResult.decimalVal.scale));
-            }
-        }
+            return fResult.decimalVal.toUInt64Round();
 
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:

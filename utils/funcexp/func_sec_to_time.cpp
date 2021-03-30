@@ -121,28 +121,8 @@ string Func_sec_to_time::getStrVal(rowgroup::Row& row,
 
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
-        {
-            const string& valStr = parm[0]->data()->getStrVal(row, isNull);
-
-            val = parm[0]->data()->getIntVal(row, isNull);
-            size_t x = valStr.find(".");
-
-            if (x < string::npos)
-            {
-                string tmp = valStr.substr(x + 1, 1);
-                char* ptr = &tmp[0];
-                int i = atoi(ptr);
-
-                if (i >= 5)
-                {
-                    if (val > 0)
-                        val += 1;
-                    else
-                        val -= 1;
-                }
-            }
-        }
-        break;
+            val = parm[0]->data()->getDecimalVal(row, isNull).toSInt64Round();
+            break;
 
         case execplan::CalpontSystemCatalog::CHAR:
         case execplan::CalpontSystemCatalog::VARCHAR:
