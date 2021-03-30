@@ -331,50 +331,7 @@ uint64_t Func_cast_unsigned::getUintVal(Row& row,
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-
-            if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
-            {
-                if (d.s128Value < 0)
-                {
-                    return 0;
-                }
-
-                int128_t scaleDivisor, scaleDivisor2;
-
-                datatypes::getScaleDivisor(scaleDivisor, d.scale);
-
-                scaleDivisor2 = (scaleDivisor <= 10) ? 1 : (scaleDivisor / 10);
-
-                uint128_t tmpval = d.s128Value / scaleDivisor;
-                int128_t lefto = (d.s128Value - tmpval * scaleDivisor) / scaleDivisor2;
-
-                if (utils::is_nonnegative(tmpval) && lefto > 4)
-                    tmpval++;
-
-                if (tmpval > static_cast<int128_t>(UINT64_MAX))
-                    tmpval = UINT64_MAX;
-
-                return static_cast<uint64_t>(tmpval);
-            }
-            else
-            {
-                if (d.value < 0)
-                {
-                    return 0;
-                }
-
-                double dscale = d.scale;
-
-                uint64_t value = d.value / pow(10.0, dscale);
-                int lefto = (d.value - value * pow(10.0, dscale)) / pow(10.0, dscale - 1);
-
-            if ( utils::is_nonnegative(value) && lefto > 4 )
-            {
-                value++;
-            }
-
-                return value;
-            }
+            return d.toUInt64Round();
         }
         break;
 

@@ -213,6 +213,12 @@ public:
           return intg - 1;
         return intg;
     }
+    uint64_t toUInt64Round(uint32_t scale) const
+    {
+        return value < 0 ?
+               0 :
+               static_cast<uint64_t>(toSInt64Round(scale));
+    }
 };
 
 
@@ -255,6 +261,18 @@ public:
     explicit TDecimal128(const int128_t* valPtr)
        :TSInt128(valPtr)
     { }
+    uint64_t toUInt64Round(uint32_t scale) const
+    {
+        if (s128Value <= 0)
+            return 0;
+        auto divisor = scaleDivisor<uint128_t>(scale);
+        uint128_t intg = s128Value / divisor;
+        uint128_t frac2 = 2 * (s128Value % divisor);
+        if (frac2 >= divisor)
+            intg++;
+        return intg > numeric_limits<uint64_t>::max() ? numeric_limits<uint64_t>::max() :
+                                                        static_cast<uint64_t>(intg);
+    }
 };
 
 
@@ -519,17 +537,13 @@ class Decimal: public TDecimal128, public TDecimal64
             return TSInt128(roundedValue);
         }
 
-        int64_t narrowRound() const
+        int64_t decimal64ToSInt64Round() const
         {
-            int64_t scaleDivisor;
-            getScaleDivisor(scaleDivisor, scale);
-            int64_t intg = value / scaleDivisor;
-            int64_t frac2 = 2 * (value % scaleDivisor);
-            if (frac2 >= scaleDivisor)
-              return intg + 1;
-            if (frac2 <= -scaleDivisor)
-              return intg - 1;
-            return intg;
+            return TDecimal64::toSInt64Round((uint32_t) scale);
+        }
+        uint64_t decimal64ToUInt64Round() const
+        {
+            return TDecimal64::toUInt64Round((uint32_t) scale);
         }
 
         int64_t toSInt64Round() const
@@ -537,6 +551,12 @@ class Decimal: public TDecimal128, public TDecimal64
             return isWideDecimalTypeByPrecision(precision) ?
                 static_cast<int64_t>(getPosNegRoundedIntegralPart(4)) :
                 TDecimal64::toSInt64Round((uint32_t) scale);
+        }
+        uint64_t toUInt64Round() const
+        {
+            return isWideDecimalTypeByPrecision(precision) ?
+                   TDecimal128::toUInt64Round((uint32_t) scale) :
+                   TDecimal64::toUInt64Round((uint32_t) scale);
         }
 
         // MOD operator for an integer divisor to be used

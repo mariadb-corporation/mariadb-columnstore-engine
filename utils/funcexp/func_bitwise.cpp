@@ -100,7 +100,7 @@ datatypes::TUInt64Null DecimalToBitOperand(Row&  row,
         return ConvertToBitOperand<int128_t>(val);
     }
 
-    return datatypes::TUInt64Null((uint64_t) d.narrowRound());
+    return datatypes::TUInt64Null((uint64_t) d.decimal64ToSInt64Round());
 }
 
 
