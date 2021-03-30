@@ -121,30 +121,37 @@ file=sys.stderr)
 api_port, api_version, e)
 
                     if use_s3:
+                        url = "https://{}:{}/cmapi/{}/node/primary".format(primary_address, \
+api_port, api_version)
                         # if using s3 we need to make sure storagemanager on primary is running
-                        success = False
-                        retry = 10
-                        while retry > 0:
-                            try:
-                                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                                sock.settimeout(10)
-                                # wait for workernode, since SM not accessible
-                                # if workernode has started, storagemanager is running
-                                result = sock.connect_ex((primary_address, 8700))
-                                if result == 0:
-                                    success = True
-                                    sock.close()
-                                    break
-                            except socket.timeout:
-                                pass
-                            else:
-                                sock.close()
-                            if not success:
-                                time.sleep(1)
-                            retry -= 1
+                        r = requests.get(url, verify=False, headers=headers, timeout=10)
+                        is_primary = False
+                        if (r.status_code == 200):
+                            is_primary = r.json().get('is_primary', False)
 
-                        if not success:
-                            print('Timed out. StorageManager on {str(primary_address)} is not reachable.')
+                        if not is_primary:
+                            success = False
+                            retry = 10
+                            while not success and retry > 0:
+                                try:
+                                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                                    sock.settimeout(1)
+                                    # wait for workernode, since SM not accessible
+                                    # if workernode has started, storagemanager is running
+                                    result = sock.connect_ex((primary_address, 8700))
+                                    if result == 0:
+                                        success = True
+                                        sock.close()
+                                except socket.timeout:
+                                    pass
+                                else:
+                                    sock.close()
+                                if not success:
+                                    time.sleep(1)
+                                retry -= 1
+
+                            if not success:
+                                print('Timed out. StorageManager on {str(primary_address)} is not reachable.')
 
                     r = requests.get(url, verify=False, headers=headers, timeout=60)
                     if (r.status_code != 200):
