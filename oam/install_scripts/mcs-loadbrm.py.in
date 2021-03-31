@@ -116,10 +116,6 @@ file=sys.stderr)
                 api_port = get_port()
                 elems = ['em', 'journal', 'vbbm', 'vss']
                 for e  in elems:
-                    print("Pulling {} from the primary node.".format(e))
-                    url = "https://{}:{}/cmapi/{}/node/meta/{}".format(primary_address, \
-api_port, api_version, e)
-
                     if use_s3:
                         url = "https://{}:{}/cmapi/{}/node/primary".format(primary_address, \
 api_port, api_version)
@@ -152,6 +148,10 @@ api_port, api_version)
 
                             if not success:
                                 print('Timed out. StorageManager on {str(primary_address)} is not reachable.')
+
+                    print("Pulling {} from the primary node.".format(e))
+                    url = "https://{}:{}/cmapi/{}/node/meta/{}".format(primary_address, \
+api_port, api_version, e)
 
                     r = requests.get(url, verify=False, headers=headers, timeout=60)
                     if (r.status_code != 200):
