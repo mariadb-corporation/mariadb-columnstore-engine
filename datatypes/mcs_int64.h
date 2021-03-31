@@ -67,6 +67,10 @@ public:
   {
     return mValue;
   }
+  explicit operator uint64_t () const
+  {
+    return mValue < 0 ? 0 : static_cast<uint64_t>(mValue);
+  }
 };
 
 

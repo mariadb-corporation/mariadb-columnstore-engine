@@ -138,16 +138,7 @@ int64_t Func_floor::getIntVal(Row& row,
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
         {
-            IDB_Decimal tmp = getDecimalVal(row, parm, isNull, op_ct);
-
-            if (op_ct.colWidth == datatypes::MAXDECIMALWIDTH)
-            {
-                ret = static_cast<int64_t>(tmp.toTSInt128());
-            }
-            else
-            {
-                ret = tmp.value;
-            }
+            ret = parm[0]->data()->getDecimalVal(row, isNull).toSInt64Floor();
             break;
         }
 
@@ -177,8 +168,6 @@ uint64_t Func_floor::getUintVal(Row& row,
         case execplan::CalpontSystemCatalog::MEDINT:
         case execplan::CalpontSystemCatalog::TINYINT:
         case execplan::CalpontSystemCatalog::SMALLINT:
-        case execplan::CalpontSystemCatalog::DECIMAL:
-        case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             ret = parm[0]->data()->getIntVal(row, isNull);
         }
@@ -267,6 +256,13 @@ uint64_t Func_floor::getUintVal(Row& row,
                 ret = strtoull(str.c_str(), NULL, 10);
         }
         break;
+
+        case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::UDECIMAL:
+        {
+            ret = parm[0]->data()->getDecimalVal(row, isNull).toUInt64Floor();
+            break;
+        }
 
         default:
         {
@@ -483,26 +479,7 @@ IDB_Decimal Func_floor::getDecimalVal(Row& row,
                     throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
                 }
 
-                if (op_ct.colWidth == datatypes::MAXDECIMALWIDTH)
-                {
-                    int128_t tmp = ret.s128Value;
-                    int128_t scaleDivisor;
-                    datatypes::getScaleDivisor(scaleDivisor, ret.scale);
-                    ret.s128Value /= scaleDivisor;
-
-                    // Largest integer value not greater than X.
-                    if (tmp < 0 && tmp < ret.s128Value)
-                        ret.s128Value -= 1;
-                }
-                else
-                {
-                    int64_t tmp = ret.value;
-                    ret.value /= helpers::powerOf10_c[ret.scale];
-
-                    // Largest integer value not greater than X.
-                    if (tmp < 0 && tmp < ret.value)
-                        ret.value -= 1;
-                }
+                return ret.floor();
             }
         }
         break;

@@ -26,6 +26,7 @@
 #include "exceptclasses.h"
 #include "widedecimalutils.h"
 #include "mcs_int128.h"
+#include "mcs_int64.h"
 #include "mcs_float128.h"
 #include "checks.h"
 #include "branchpred.h"
@@ -153,6 +154,47 @@ T scaleDivisor(const uint32_t scale)
     return (T) mcs_pow_10_128[scale - 19];
 }
 
+
+// Decomposed Decimal representation
+// T - storage data type (int64_t, int128_t)
+template<typename T>class DecomposedDecimal
+{
+    T mDivisor;
+    T mIntegral;
+    T mFractional;
+public:
+    DecomposedDecimal(T value, uint32_t scale)
+        :mDivisor(scaleDivisor<T>(scale)),
+         mIntegral(value / mDivisor),
+         mFractional(value % mDivisor)
+    { }
+    T toSIntRound() const
+    {
+        T frac2 = 2 * mFractional;
+        if (frac2 >= mDivisor)
+            return mIntegral + 1;
+        if (frac2 <= -mDivisor)
+            return mIntegral - 1;
+        return mIntegral;
+    }
+    T toSIntRoundPositive() const
+    {
+        T frac2 = 2 * mFractional;
+        if (frac2 >= mDivisor)
+            return mIntegral + 1;
+        return mIntegral;
+    }
+    T toSIntFloor() const
+    {
+      return mFractional < 0 ? mIntegral - 1 : mIntegral;
+    }
+    T toSIntCeil() const
+    {
+      return mFractional > 0 ? mIntegral + 1 : mIntegral;
+    }
+};
+
+
 /**
     @brief The function to produce scale multiplier/divisor for
     wide decimals.
@@ -201,23 +243,29 @@ public:
     explicit TDecimal64(int64_t val)
      :value(val)
     { }
+    explicit TDecimal64(const TSInt64 &val)
+     :value(static_cast<int64_t>(val))
+    { }
     // Divide to the scale divisor with rounding
     int64_t toSInt64Round(uint32_t scale) const
     {
-        auto divisor = scaleDivisor<int64_t>(scale);
-        int64_t intg = value / divisor;
-        int64_t frac2 = 2 * (value % divisor);
-        if (frac2 >= divisor)
-          return intg + 1;
-        if (frac2 <= -divisor)
-          return intg - 1;
-        return intg;
+        return DecomposedDecimal<int64_t>(value, scale).toSIntRound();
     }
     uint64_t toUInt64Round(uint32_t scale) const
     {
         return value < 0 ?
                0 :
                static_cast<uint64_t>(toSInt64Round(scale));
+    }
+
+    int64_t toSInt64Floor(uint32_t scale) const
+    {
+        return DecomposedDecimal<int64_t>(value, scale).toSIntFloor();
+    }
+
+    int64_t toSInt64Ceil(uint32_t scale) const
+    {
+        return DecomposedDecimal<int64_t>(value, scale).toSIntCeil();
     }
 };
 
@@ -265,13 +313,20 @@ public:
     {
         if (s128Value <= 0)
             return 0;
-        auto divisor = scaleDivisor<uint128_t>(scale);
-        uint128_t intg = s128Value / divisor;
-        uint128_t frac2 = 2 * (s128Value % divisor);
-        if (frac2 >= divisor)
-            intg++;
+        int128_t intg = DecomposedDecimal<int128_t>(s128Value, scale).
+                          toSIntRoundPositive();
         return intg > numeric_limits<uint64_t>::max() ? numeric_limits<uint64_t>::max() :
                                                         static_cast<uint64_t>(intg);
+    }
+
+    int128_t toSInt128Floor(uint32_t scale) const
+    {
+        return DecomposedDecimal<int128_t>(s128Value, scale).toSIntFloor();
+    }
+
+    int128_t toSInt128Ceil(uint32_t scale) const
+    {
+        return DecomposedDecimal<int128_t>(s128Value, scale).toSIntCeil();
     }
 };
 
@@ -353,6 +408,12 @@ class Decimal: public TDecimal128, public TDecimal64
 
         Decimal(int64_t val, int8_t s, uint8_t p, const int128_t &val128 = 0) :
             TDecimal128(val128),
+            TDecimal64(val),
+            scale(s),
+            precision(p)
+        { }
+
+        Decimal(const TSInt64 &val, int8_t s, uint8_t p) :
             TDecimal64(val),
             scale(s),
             precision(p)
@@ -502,23 +563,6 @@ class Decimal: public TDecimal128, public TDecimal64
             return TSInt128(getIntegralPartNegativeScale(scaleDivisor));
         }
 
-        // !!! This is a very hevyweight rouding style
-        // Argument determines if it is a ceil
-        // rounding or not. 0 - ceil rounding
-        inline TSInt128 getRoundedIntegralPart(const uint8_t roundingFactor = 0) const
-        {
-            int128_t flooredScaleDivisor = 0;
-            int128_t roundedValue = getIntegralPartNonNegativeScale(flooredScaleDivisor);
-            int128_t ceiledScaleDivisor = (flooredScaleDivisor <= 10) ? 1 : (flooredScaleDivisor / 10);
-            int128_t leftO = (s128Value - roundedValue * flooredScaleDivisor) / ceiledScaleDivisor;
-            if (leftO > roundingFactor)
-            {
-                roundedValue++;
-            }
-
-            return TSInt128(roundedValue);
-        }
-
         inline TSInt128 getPosNegRoundedIntegralPart(const uint8_t roundingFactor = 0) const
         {
             int128_t flooredScaleDivisor = 0;
@@ -559,13 +603,57 @@ class Decimal: public TDecimal128, public TDecimal64
                    TDecimal64::toUInt64Round((uint32_t) scale);
         }
 
+        // FLOOR related routines
+        int64_t toSInt64Floor() const
+        {
+            return isWideDecimalTypeByPrecision(precision) ?
+              static_cast<int64_t>(TSInt128(TDecimal128::toSInt128Floor((uint32_t) scale))) :
+              TDecimal64::toSInt64Floor((uint32_t) scale);
+        }
+
+        uint64_t toUInt64Floor() const
+        {
+            return isWideDecimalTypeByPrecision(precision) ?
+              static_cast<uint64_t>(TSInt128(TDecimal128::toSInt128Floor((uint32_t) scale))) :
+              static_cast<uint64_t>(TSInt64(TDecimal64::toSInt64Floor((uint32_t) scale)));
+        }
+
+        Decimal floor() const
+        {
+            return isWideDecimalTypeByPrecision(precision)?
+              Decimal(TSInt128(TDecimal128::toSInt128Floor((uint32_t) scale)), 0, precision) :
+              Decimal(TSInt64(TDecimal64::toSInt64Floor((uint32_t) scale)), 0, precision);
+        }
+
+        // CEIL related routines
+        int64_t toSInt64Ceil() const
+        {
+            return isWideDecimalTypeByPrecision(precision) ?
+              static_cast<int64_t>(TSInt128(TDecimal128::toSInt128Ceil((uint32_t) scale))) :
+              static_cast<int64_t>(TSInt64(TDecimal64::toSInt64Ceil((uint32_t) scale)));
+        }
+
+        uint64_t toUInt64Ceil() const
+        {
+            return isWideDecimalTypeByPrecision(precision) ?
+              static_cast<uint64_t>(TSInt128(TDecimal128::toSInt128Ceil((uint32_t) scale))) :
+              static_cast<uint64_t>(TSInt64(TDecimal64::toSInt64Ceil((uint32_t) scale)));
+        }
+
+        Decimal ceil() const
+        {
+            return isWideDecimalTypeByPrecision(precision) ?
+              Decimal(TSInt128(TDecimal128::toSInt128Ceil((uint32_t) scale)), 0, precision) :
+              Decimal(TSInt64(TDecimal64::toSInt64Ceil((uint32_t) scale)), 0, precision);
+        }
+
         // MOD operator for an integer divisor to be used
         // for integer rhs
         inline TSInt128 operator%(const TSInt128& div) const
         {
             if (!isScaled())
             {
-                return s128Value % div.getValue();
+                return TSInt128(s128Value % div.getValue());
             }
             // Scale the value and calculate
             // (LHS.value % RHS.value) * LHS.scaleMultiplier + LHS.scale_div_remainder

@@ -97,22 +97,7 @@ int64_t Func_ceil::getIntVal(Row& row,
                     throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
                 }
 
-                if (op_ct.colWidth == datatypes::MAXDECIMALWIDTH)
-                {
-                    ret = static_cast<int64_t>(d.getRoundedIntegralPart());
-                }
-                else
-                {
-                    int64_t tmp = d.value;
-                    d.value /= helpers::powerOf10_c[d.scale];
-
-                    // Add 1 if this is a positive number and there were values to the right of the
-                    // decimal point so that we return the largest integer value not less than X.
-                    if ((tmp - (d.value * helpers::powerOf10_c[d.scale])) > 0)
-                        d.value += 1;
-
-                    ret = d.value;
-                }
+                ret = d.toSInt64Ceil();
             }
         }
         break;
@@ -240,22 +225,7 @@ uint64_t Func_ceil::getUintVal(Row& row,
                     throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
                 }
 
-                if (op_ct.colWidth == datatypes::MAXDECIMALWIDTH)
-                {
-                    ret = static_cast<uint64_t>(d.getRoundedIntegralPart());
-                }
-                else
-                {
-                    int64_t tmp = d.value;
-                    d.value /= helpers::powerOf10_c[d.scale];
-
-                    // Add 1 if this is a positive number and there were values to the right of the
-                    // decimal point so that we return the largest integer value not less than X.
-                    if ((tmp - (d.value * helpers::powerOf10_c[d.scale])) > 0)
-                        d.value += 1;
-
-                    ret = (uint64_t) d.value;
-                }
+                ret = d.toUInt64Ceil();
             }
         }
         break;
@@ -562,23 +532,7 @@ IDB_Decimal Func_ceil::getDecimalVal(Row& row,
                         << " with scale " << (int) ret.scale << " is beyond supported scale";
                     throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
                 }
-
-                if (op_ct.colWidth == datatypes::MAXDECIMALWIDTH)
-                {
-                    ret = IDB_Decimal(ret.getRoundedIntegralPart(),
-                                      ret.scale,
-                                      ret.precision);
-                }
-                else
-                {
-                    int64_t tmp = ret.value;
-                    ret.value /= helpers::powerOf10_c[ret.scale];
-
-                    // Add 1 if this is a positive number and there were values to the right of the
-                    // decimal point so that we return the largest integer value not less than X.
-                    if ((tmp - (ret.value * helpers::powerOf10_c[ret.scale])) > 0)
-                        ret.value += 1;
-                }
+                return ret.ceil();
             }
         }
         break;

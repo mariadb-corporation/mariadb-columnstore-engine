@@ -144,13 +144,13 @@ class TSInt128
     TSInt128(const TSInt128& other): s128Value(other.s128Value) { }
 
     //    aligned argument
-    TSInt128(const int128_t& x) { s128Value = x; }
+    explicit TSInt128(const int128_t& x) { s128Value = x; }
 
     //    unaligned argument
-    TSInt128(const int128_t* x) { assignPtrPtr(&s128Value, x); }
+    explicit TSInt128(const int128_t* x) { assignPtrPtr(&s128Value, x); }
 
     //    unaligned argument
-    TSInt128(const unsigned char* x) { assignPtrPtr(&s128Value, x); }
+    explicit TSInt128(const unsigned char* x) { assignPtrPtr(&s128Value, x); }
 
     //    Method returns max length of a string representation
     static constexpr uint8_t maxLength()
