@@ -314,26 +314,6 @@ bool WEBrmUpdater::prepareCasualPartitionInfo()
             pTok = strtok(NULL, " ");
 
             if (pTok)
-                cpInfoMerge.max = boost::lexical_cast<int64_t>(pTok);
-            else
-            {
-                //cout << "CP Entry : " << aEntry << endl;
-                throw (runtime_error("Bad MAX in CP entry string"));
-            }
-
-            pTok = strtok(NULL, " ");
-
-            if (pTok)
-                cpInfoMerge.min = boost::lexical_cast<int64_t>(pTok);
-            else
-            {
-                //cout << "CP Entry : " << aEntry << endl;
-                throw (runtime_error("Bad MIN in CP entry string"));
-            }
-
-            pTok = strtok(NULL, " ");
-
-            if (pTok)
                 cpInfoMerge.seqNum = atoi(pTok);
             else
             {
@@ -360,6 +340,55 @@ bool WEBrmUpdater::prepareCasualPartitionInfo()
                 //cout << "CP Entry : " << aEntry << endl;
                 throw (runtime_error("Bad column width in CP entry string"));
             }
+
+            if (datatypes::isWideDecimalType(cpInfoMerge.type, cpInfoMerge.colWidth))
+            {
+                datatypes::SystemCatalog::TypeAttributesStd tyAttr(cpInfoMerge.colWidth, 0, 38);
+
+                pTok = strtok(NULL, " ");
+
+                if (pTok)
+                    cpInfoMerge.bigMax = tyAttr.decimal128FromString(std::string(pTok), NULL);
+                else
+                {
+                    //cout << "CP Entry : " << aEntry << endl;
+                    throw (runtime_error("Bad MAX in CP entry string"));
+                }
+
+                pTok = strtok(NULL, " ");
+
+                if (pTok)
+                    cpInfoMerge.bigMin = tyAttr.decimal128FromString(std::string(pTok), NULL);
+                else
+                {
+                    //cout << "CP Entry : " << aEntry << endl;
+                    throw (runtime_error("Bad MIN in CP entry string"));
+                }
+            }
+            else
+            {
+
+                pTok = strtok(NULL, " ");
+
+                if (pTok)
+                    cpInfoMerge.max = boost::lexical_cast<int64_t>(pTok);
+                else
+                {
+                    //cout << "CP Entry : " << aEntry << endl;
+                    throw (runtime_error("Bad MAX in CP entry string"));
+                }
+
+                pTok = strtok(NULL, " ");
+
+                if (pTok)
+                    cpInfoMerge.min = boost::lexical_cast<int64_t>(pTok);
+                else
+                {
+                    //cout << "CP Entry : " << aEntry << endl;
+                    throw (runtime_error("Bad MIN in CP entry string"));
+                }
+            }
+
             pTok = strtok(NULL, " ");
 
             if (pTok)
