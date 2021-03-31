@@ -357,7 +357,6 @@ private:
     /* extra typeless join vars & fcns*/
     boost::shared_array<bool> typelessJoin;
     boost::shared_array<std::vector<uint32_t> > tlLargeSideKeyColumns;
-    boost::shared_array<std::vector<uint32_t> > tlSmallSideColumnsWidths;
     boost::shared_array<boost::shared_array<boost::shared_ptr<TLJoiner> > > tlJoiners;
     boost::shared_array<uint32_t> tlSmallSideKeyLengths;
     boost::shared_array<uint32_t> tlLargeSideKeyLengths;

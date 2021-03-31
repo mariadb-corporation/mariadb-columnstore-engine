@@ -305,6 +305,18 @@ class TSInt128
       return s128Value;
     }
 
+    inline int64_t getFirst8Bytes() const
+    {
+      int64_t* ptr = (int64_t*)&s128Value;
+      return ptr[0];
+    }
+
+    inline int64_t getLast8Bytes() const
+    {
+      int64_t* ptr = (int64_t*)&s128Value;
+      return ptr[1];
+    }
+
     //    print int128_t parts represented as PODs
     uint8_t printPodParts(char* buf,
                           const int128_t& high,

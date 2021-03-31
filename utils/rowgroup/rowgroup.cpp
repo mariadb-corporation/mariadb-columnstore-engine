@@ -1371,6 +1371,42 @@ RowGroup& RowGroup::operator=(const RowGroup& r)
     return *this;
 }
 
+RowGroup::RowGroup(ByteStream& bs): columnCount(0), data(nullptr), rgData(nullptr), strings(nullptr),
+    useStringTable(true), hasCollation(false), hasLongStringField(false), sTableThreshold(20)
+{
+    uint8_t tmp8;
+
+    bs >> columnCount;
+    deserializeInlineVector<uint32_t>(bs, oldOffsets);
+    deserializeInlineVector<uint32_t>(bs, stOffsets);
+    deserializeInlineVector<uint32_t>(bs, colWidths);
+    deserializeInlineVector<uint32_t>(bs, oids);
+    deserializeInlineVector<uint32_t>(bs, keys);
+    deserializeInlineVector<CalpontSystemCatalog::ColDataType>(bs, types);
+    deserializeInlineVector<uint32_t>(bs, charsetNumbers);
+    deserializeInlineVector<uint32_t>(bs, scale);
+    deserializeInlineVector<uint32_t>(bs, precision);
+    bs >> tmp8;
+    useStringTable = (bool) tmp8;
+    bs >> tmp8;
+    hasCollation = (bool) tmp8;
+    bs >> tmp8;
+    hasLongStringField = (bool) tmp8;
+    bs >> sTableThreshold;
+    forceInline.reset(new bool[columnCount]);
+    memcpy(&forceInline[0], bs.buf(), sizeof(bool) * columnCount);
+    bs.advance(sizeof(bool) * columnCount);
+    offsets = 0;
+
+    if (useStringTable && !stOffsets.empty())
+        offsets = &stOffsets[0];
+    else if (!useStringTable && !oldOffsets.empty())
+        offsets = &oldOffsets[0];
+
+    // Set all the charsets to nullptr for jit initialization.
+    charsets.insert(charsets.begin(), charsetNumbers.size(), nullptr);
+}
+
 RowGroup::~RowGroup()
 {
 }

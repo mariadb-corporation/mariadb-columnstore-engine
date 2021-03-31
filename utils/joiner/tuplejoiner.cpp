@@ -30,7 +30,6 @@
 #include "lbidlist.h"
 #include "spinlock.h"
 #include "vlarray.h"
-#include "mcs_string.h"
 
 
 using namespace std;
@@ -184,7 +183,7 @@ TupleJoiner::TupleJoiner(
         smallNullRow.initToNull();
     }
 
-    keyLength = calculateKeyLength(smallKeyColumns, smallRG, &largeRG);
+    keyLength = calculateKeyLength(smallKeyColumns, smallRG, &largeKeyColumns, &largeRG);
 
     for (i = 0; i < smallKeyColumns.size(); i++)
     {
@@ -1268,54 +1267,19 @@ public:
     }
 };
 
-
-class TypelessDataDecoder
-{
-    const uint8_t *mPtr;
-    const uint8_t *mEnd;
-    void checkAvailableData(uint32_t nbytes) const
-    {
-        if (mPtr + nbytes > mEnd)
-            throw runtime_error("TypelessData is too short");
-    }
-public:
-    TypelessDataDecoder(const uint8_t* ptr, size_t length)
-        :mPtr(ptr), mEnd(ptr + length)
-    { }
-    TypelessDataDecoder(const TypelessData &data)
-        :TypelessDataDecoder(data.data, data.len)
-    { }
-    ConstString scanGeneric(uint32_t length)
-    {
-        checkAvailableData(length);
-        ConstString res((const char *) mPtr, length);
-        mPtr += length;
-        return res;
-    }
-    uint32_t scanStringLength()
-    {
-        checkAvailableData(2);
-        uint32_t res = ((uint32_t) mPtr[0]) * 255 + mPtr[1];
-        mPtr += 2;
-        return res;
-    }
-    ConstString scanString()
-    {
-        return scanGeneric(scanStringLength());
-    }
-};
-
 class WideDecimalKeyEncoder
 {
     const Row* mR;
     const uint32_t mKeyColId;
     uint32_t width;
     uint64_t convertedValue;
+    bool reduceToSmallSide;
 public:
     WideDecimalKeyEncoder(const Row& r, 
                           const uint32_t keyColId): mR(&r),
                                                     mKeyColId(keyColId),
-                                                    width(datatypes::MAXDECIMALWIDTH)
+                                                    width(datatypes::MAXDECIMALWIDTH),
+                                                    reduceToSmallSide(false)
     { }
     template <typename T, typename AT>
     bool numericRangeCheckAndConvert(const AT& value)
@@ -1340,12 +1304,33 @@ public:
     {
         if (otherSideIsInt)
         {
+            // WIP
             datatypes::TSInt128 integralPart = mR->getTSInt128Field(mKeyColId);
+
             bool isUnsigned = datatypes::isUnsigned(otherSideType);
             width = (isUnsigned &&
                      numericRangeCheckAndConvert<uint64_t>(integralPart)) ? 0 : datatypes::MAXLEGACYWIDTH;
             width = (!isUnsigned &&
                      numericRangeCheckAndConvert<int64_t>(integralPart)) ? 0 : datatypes::MAXLEGACYWIDTH;
+        }
+        return *this;
+    }
+
+    // A simplier version of convert routine when PP only has a vector of small side key column widths.
+    inline WideDecimalKeyEncoder&
+    convert(const std::vector<uint32_t>* aSmallSideColumnsWidths)
+    {
+        // MCS will reduce the key width and value type to the smallest of two sides.
+        if (aSmallSideColumnsWidths && width != aSmallSideColumnsWidths->operator[](mKeyColId))
+        {
+            // WIP potential bug
+            datatypes::TSInt128 integralPart = mR->getTSInt128Field(mKeyColId);
+            if (std::numeric_limits<uint64_t>::max() >= integralPart.s128Value ||
+                std::numeric_limits<int64_t>::min() <= integralPart.s128Value)
+            {
+                convertedValue = mR->getTSInt128Field(mKeyColId).getFirst8Bytes();
+                reduceToSmallSide = true;
+            }
         }
         return *this;
     }
@@ -1368,7 +1353,16 @@ public:
         {
             case datatypes::MAXDECIMALWIDTH:
             {
-                mR->getInt128Field(mKeyColId, typelessData.data);
+                if (reduceToSmallSide)
+                {
+                    // WIP
+                    *((int128_t*) &typelessData.data[off]) = convertedValue;
+                    typelessData.setLargeSideReducedToSmall();
+                }
+                else
+                {
+                    mR->getInt128Field(mKeyColId, &typelessData.data[off]);
+                }
                 break;
             }
             default:
@@ -1381,9 +1375,12 @@ public:
     }
 };
 
-// Called in PrimProc
+// Called in PrimProc for LargeSide rows.
+// In case of a column widths skew,e.g. INT vs wide-DECIMAL
+// add an addition byte to notify TypelessData::hash() this is a largeSide key.
 TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols,
-                             uint32_t keylen, FixedAllocator* fa)
+                             uint32_t keylen, FixedAllocator* fa,
+                             const std::vector<uint32_t>* aSmallSideColumnsWidths)
 {
     TypelessData ret;
     uint32_t off = 0, i;
@@ -1407,10 +1404,9 @@ TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols,
         {
             // We don't need to strip fractional part of the DECIMAL
             // b/c MCS joins ints and DECIMAL with 0 scale only.
-            if (WideDecimalKeyEncoder(r, keyCols[i]).store(ret, off, keylen))
-/*            if (WideDecimalKeyEncoder(r, keyCols[i])
-                                     .store(ret, off, r.getColumnWidth(keyCols[i])))
-*/
+            //if (WideDecimalKeyEncoder(r, keyCols[i]).store(ret, off, keylen))
+            if (WideDecimalKeyEncoder(r, keyCols[i]).convert(aSmallSideColumnsWidths)
+                                                    .store(ret, off, keylen))
             {
                 goto toolong;
             }
@@ -1440,7 +1436,29 @@ toolong:
     return ret;
 }
 
+// The routine is used to compare LargeSide and SmallSide TypelessDatas when
+// when their widths are different, e.g. 16 and 8.
+int32_t TypelessData::compareDecimalsWSkewedWidths(TypelessDataDecoder& smallSide,
+                                                   TypelessDataDecoder& largeSide,
+                                                   const bool isLargeSideReducedToSmall,
+                                                   const int32_t largeSideIsGreaterRC)
+{
+    // This happens when LargeSide value is greater than SmallSide max value.
+    if (!isLargeSideReducedToSmall)
+        return largeSideIsGreaterRC;
+    // SmallSide is always 8 bytes when the widths are skewed.
+    // See makeTypelessKey() method used in EM for details.
+    ConstString ta = smallSide.scanGeneric(datatypes::MAXLEGACYWIDTH);
+    // LargeSide is 16 bytes but the actual value fits into 8 byte.
+    ConstString tb = largeSide.scanGeneric(datatypes::MAXDECIMALWIDTH,
+                                           datatypes::MAXLEGACYWIDTH);
+    return memcmp(ta.str(), tb.str(), datatypes::MAXLEGACYWIDTH);
+}
 
+// smallSideColWidths is non nullptr valid pointer only
+// if there is a skew b/w small and large side columns widths.
+// hash() looks at the last additional byte to detect which side
+// this key belongs to.
 uint64_t TypelessData::hash(const RowGroup& r,
                             const std::vector<uint32_t>& keyCols,
                             const std::vector<uint32_t>* smallSideColWidths) const
@@ -1461,22 +1479,32 @@ uint64_t TypelessData::hash(const RowGroup& r,
             }
             case CalpontSystemCatalog::DECIMAL:
             {
-                uint32_t width = (smallSideColWidths) ? smallSideColWidths->operator[](keyColId)
-                                                      : datatypes::MAXDECIMALWIDTH;
-                hasher.add(&my_charset_bin,
-                           decoder.scanGeneric(width));
+                // Choose a width used to create hash argument.
+                const uint32_t width = isSmallSideWithSkewedData()
+                    ? std::max(smallSideColWidths->operator[](keyColId), datatypes::MAXLEGACYWIDTH)
+                    : r.getColWidths()[keyColId];
+                if (isLargeSideReducedToSmall())
+                {
+                    hasher.add(&my_charset_bin,
+                               decoder.scanGeneric(r.getColWidths()[keyColId],
+                                                   datatypes::MAXLEGACYWIDTH));
+                }
+                else
+                {
+                    hasher.add(&my_charset_bin, decoder.scanGeneric(width));
+                }
                 break;
             }
             default:
             {
-                hasher.add(&my_charset_bin, decoder.scanGeneric(datatypes::MAXLEGACYWIDTH));
+                hasher.add(&my_charset_bin,
+                           decoder.scanGeneric(datatypes::MAXLEGACYWIDTH));
                 break;
             }
         }
     }
     return hasher.finalize();
 }
-
 
 int TypelessData::cmp(const RowGroup& r, const std::vector<uint32_t>& keyCols,
                       const TypelessData &da, const TypelessData &db)
@@ -1501,20 +1529,33 @@ int TypelessData::cmp(const RowGroup& r, const std::vector<uint32_t>& keyCols,
             }
             case CalpontSystemCatalog::DECIMAL:
             {
-                // Use min for INT vs DECIMAL comparisons
-                // The length can be 8 or 16 bytes.
-                // Looking at the tradeof b/w speed and stability I deliberately reduce
-                // a number of checks to speed up processing.
-                // WIP MCOL-4174 
-                if (int rc = memcmp(da.data, db.data, std::min(da.len, db.len)))
-                    return rc;
+                if (da.isSmallSideWithSkewedData())
+                {
+                    if (int rc = compareDecimalsWSkewedWidths(a, b, db.isLargeSideReducedToSmall(), -1))
+                        return rc;
+                }
+                else if (db.isSmallSideWithSkewedData())
+                {
+                    if (int rc = compareDecimalsWSkewedWidths(b, a, da.isLargeSideReducedToSmall(), 1))
+                        return rc;
+                }
+                else
+                {
+                    auto width = r.getColWidths()[keyCols[i]];
+                    ConstString ta = a.scanGeneric(width);
+                    ConstString tb = b.scanGeneric(width);
+                    if (int rc= memcmp(ta.str(), tb.str(), width))
+                        return rc;
+                }
+                
                 break;
             }
             default:
             {
-                ConstString ta = a.scanGeneric(8);
-                ConstString tb = b.scanGeneric(8);
+                ConstString ta = a.scanGeneric(datatypes::MAXLEGACYWIDTH);
+                ConstString tb = b.scanGeneric(datatypes::MAXLEGACYWIDTH);
                 idbassert(ta.length() == tb.length());
+                // Potential error, e.g. uint64 vs negative int64
                 if (int rc= memcmp(ta.str(), tb.str() , ta.length()))
                     return rc;
                 break;
@@ -1526,16 +1567,18 @@ int TypelessData::cmp(const RowGroup& r, const std::vector<uint32_t>& keyCols,
 
 
 
-// Called in joblist code
+// Called in joblist code to produce SmallSide TypelessData to be sent to PP.
 TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols,
                              uint32_t keylen, FixedAllocator* fa,
-                             const rowgroup::RowGroup& otherSideRG, const std::vector<uint32_t>& otherKeyCols)
+                             const rowgroup::RowGroup& otherSideRG,
+                             const std::vector<uint32_t>& otherKeyCols)
 {
     TypelessData ret;
     uint32_t off = 0, i;
     execplan::CalpontSystemCatalog::ColDataType type;
 
     ret.data = (uint8_t*) fa->allocate();
+    idbassert(keyCols.size() == otherKeyCols.size());
 
     for (i = 0; i < keyCols.size(); i++)
     {
@@ -1546,7 +1589,6 @@ TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols,
             // this is a string, copy a normalized version
             const uint8_t* str = r.getStringPointer(keyCols[i]);
             uint32_t width = r.getStringLength(keyCols[i]);
-            // WIP MCOL-4173 store must use a str length not keylen
             if (TypelessDataStringEncoder(str, width).store(ret.data, off, keylen))
                 goto toolong;
         }
@@ -1556,7 +1598,6 @@ TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols,
             // useless if otherSideIsInt is false
             auto otherSideType = (otherSideIsInt) ? otherSideRG.getColType(otherKeyCols[i])
                                                   : datatypes::SystemCatalog::UNDEFINED;
-            // WIP MCOL-4173 store must use a width not keylen
             if (WideDecimalKeyEncoder(r, keyCols[i]).convert(otherSideIsInt, otherSideType)
                                                     .store(ret, off, keylen))
             {
@@ -1723,14 +1764,6 @@ void TypelessData::serialize(messageqcpp::ByteStream& b) const
     b.append(data, len);
 }
 
-void TypelessData::deserialize(messageqcpp::ByteStream& b, utils::FixedAllocator& fa)
-{
-    b >> len;
-    data = (uint8_t*) fa.allocate(len);
-    memcpy(data, b.buf(), len);
-    b.advance(len);
-}
-
 void TypelessData::deserialize(messageqcpp::ByteStream& b, utils::PoolAllocator& fa)
 {
     b >> len;
@@ -1890,14 +1923,15 @@ boost::shared_ptr<TupleJoiner> TupleJoiner::copyForDiskJoin()
     return ret;
 }
 
-bool TupleJoiner::hasDifferentKeylengthAtBothSides() const
+// Used for Typeless JOIN to detect if there is a JOIN when largeSide is wide-DECIMAL and
+// smallSide is a smaller data type, e.g. INT or narrow-DECIMAL.
+bool TupleJoiner::largeSideIsWideSmallSideIsNarrow() const
 {
     for (auto smallSideTypeIter = smallRG.getColTypes().begin(), largeSideTypeIter = largeRG.getColTypes().begin();
          smallSideTypeIter != smallRG.getColTypes().end() && largeSideTypeIter != largeRG.getColTypes().end();
          smallSideTypeIter++, largeSideTypeIter++)
     {
-        if ((datatypes::isDecimal(*smallSideTypeIter) ||
-           (datatypes::isDecimal(*largeSideTypeIter))) &&
+        if ((datatypes::isDecimal(*largeSideTypeIter)) &&
            (*smallSideTypeIter != *largeSideTypeIter))
         {
                 return true;
@@ -1920,18 +1954,23 @@ void TupleJoiner::setConvertToDiskJoin()
 // ctor.
 uint32_t calculateKeyLength(const std::vector<uint32_t>& aKeyColumnsIds,
                             const rowgroup::RowGroup& aSmallRowGroup,
+                            const std::vector<uint32_t>* aLargeKeyColumnsIds,
                             const rowgroup::RowGroup* aLargeRowGroup)
 {
     uint32_t keyLength = 0;
-    for (auto keyColumnId: aKeyColumnsIds)
+    for (size_t keyColumnIdx = 0; keyColumnIdx < aKeyColumnsIds.size(); ++keyColumnIdx)
     {
-        const auto& smallKeyColumnType = aSmallRowGroup.getColTypes()[keyColumnId];
+        auto smallSideKeyColumnId = aKeyColumnsIds[keyColumnIdx];
+        auto largeSideKeyColumnId = (aLargeRowGroup)
+                                        ? aLargeKeyColumnsIds->operator[](keyColumnIdx)
+                                        : std::numeric_limits<uint64_t>::max();
+        const auto& smallKeyColumnType = aSmallRowGroup.getColTypes()[smallSideKeyColumnId];
         // Not used if aLargeRowGroup is 0 that happens in PrimProc.
-        const auto& largeKeyColumntype = (aLargeRowGroup) ? aLargeRowGroup->getColTypes()[keyColumnId]
+        const auto& largeKeyColumntype = (aLargeRowGroup) ? aLargeRowGroup->getColTypes()[largeSideKeyColumnId]
                                                           : datatypes::SystemCatalog::UNDEFINED;
         if (datatypes::isCharType(smallKeyColumnType))
         {
-            keyLength += aSmallRowGroup.getColumnWidth(keyColumnId) + 2;  // +2 for length
+            keyLength += aSmallRowGroup.getColumnWidth(keyColumnIdx) + 2;  // +2 for length
 
             // MCOL-698: if we don't do this LONGTEXT allocates 32TB RAM
             if (keyLength > 65536)
@@ -1944,8 +1983,13 @@ uint32_t calculateKeyLength(const std::vector<uint32_t>& aKeyColumnsIds,
         else if (datatypes::isDecimal(smallKeyColumnType) ||
                  (aLargeRowGroup && datatypes::isDecimal(largeKeyColumntype)))
         {
-            keyLength += (smallKeyColumnType != largeKeyColumntype) ? datatypes::MAXLEGACYWIDTH
-                                                                    : datatypes::MAXDECIMALWIDTH;
+            if (largeKeyColumntype != datatypes::SystemCatalog::UNDEFINED)
+            {
+                keyLength += (smallKeyColumnType != largeKeyColumntype) ? datatypes::MAXLEGACYWIDTH
+                                                                        : datatypes::MAXDECIMALWIDTH;
+            }
+            else
+                keyLength += datatypes::MAXDECIMALWIDTH;
         }
         else
         {
