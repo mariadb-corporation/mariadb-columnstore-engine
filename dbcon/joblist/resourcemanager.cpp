@@ -255,6 +255,10 @@ ResourceManager::ResourceManager(bool runningInExeMgr) :
         fUseHdfs = true;
     else
         fUseHdfs = false;
+
+    fAllowedDiskAggregation = getBoolVal(fRowAggregationStr,
+                                         "AllowDiskBasedAggregation",
+                                         defaultAllowDiskAggregation);
 }
 
 int ResourceManager::getEmPriority() const

@@ -178,9 +178,9 @@ public:
         return  getIntVal(fExeMgrStr, "ExecQueueSize", defaultEMExecQueueSize);
     }
 
-    int         getAllowDiskAggregation() const
+    bool         getAllowDiskAggregation() const
     {
-        return getBoolVal(fRowAggregationStr, "AllowDiskBasedAggregation", defaultAllowDiskAggregation);
+        return fAllowedDiskAggregation;
     }
 
     int	      	getHjMaxBuckets() const
@@ -610,6 +610,7 @@ private:
 
     bool isExeMgr;
     bool fUseHdfs;
+    bool fAllowedDiskAggregation{false};
 };
 
 

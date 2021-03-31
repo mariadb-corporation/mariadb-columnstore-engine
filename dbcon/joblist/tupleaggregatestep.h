@@ -105,6 +105,7 @@ private:
     uint64_t doThreadedAggregate(messageqcpp::ByteStream& bs, RowGroupDL* dlp);
     void aggregateRowGroups();
     void threadedAggregateRowGroups(uint32_t threadID);
+    void threadedAggregateFinalize(uint32_t threadID);
     void doThreadedSecondPhaseAggregate(uint32_t threadID);
     bool nextDeliveredRowGroup();
     void pruneAuxColumns();
@@ -161,6 +162,26 @@ private:
             utils::setThreadName(t.c_str());
             //utils::setThreadName("TASThrAggr");
             fStep->threadedAggregateRowGroups(fThreadID);
+        }
+
+        TupleAggregateStep* fStep;
+        uint32_t fThreadID;
+    };
+
+    class ThreadedAggregateFinalizer
+    {
+    public:
+        ThreadedAggregateFinalizer(TupleAggregateStep* step, uint32_t threadID) :
+            fStep(step),
+            fThreadID(threadID)
+        {}
+
+        void operator()()
+        {
+            std::string t{"TASThrFin"};
+            t.append(std::to_string(fThreadID));
+            utils::setThreadName(t.c_str());
+            fStep->threadedAggregateFinalize(fThreadID);
         }
 
         TupleAggregateStep* fStep;

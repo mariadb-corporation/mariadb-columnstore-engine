@@ -1471,7 +1471,7 @@ void cleanTempDir()
         logging::LoggingID logid(16, 0, 0);
         logging::Message::Args args;
         logging::Message message(8);
-        args.add("Execption whilst cleaning tmpdir: ");
+        args.add("Exception whilst cleaning tmpdir: ");
         args.add(ex.what());
         message.format( args );
         logging::Logger logger(logid.fSubsysID);
@@ -1483,7 +1483,7 @@ void cleanTempDir()
         logging::LoggingID logid(16, 0, 0);
         logging::Message::Args args;
         logging::Message message(8);
-        args.add("Unknown execption whilst cleaning tmpdir");
+        args.add("Unknown exception whilst cleaning tmpdir");
         message.format( args );
         logging::Logger logger(logid.fSubsysID);
         logger.logMessage(logging::LOG_TYPE_WARNING, message, logid);

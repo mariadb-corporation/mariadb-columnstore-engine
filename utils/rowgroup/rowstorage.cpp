@@ -1,6 +1,19 @@
-//
-// Created by kemm on 05.03.2021.
-//
+/* Copyright (C) 2021 MariaDB Corporation
+
+   This program is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License
+   as published by the Free Software Foundation; version 2 of
+   the License.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+   MA 02110-1301, USA. */
 
 #include <unistd.h>
 #include <sys/stat.h>
@@ -12,6 +25,53 @@
 
 namespace
 {
+
+bool writeData(int fd, const char* buf, size_t sz)
+{
+  if (sz == 0)
+    return true;
+
+  auto to_write = sz;
+  while (to_write > 0)
+  {
+    auto r = write(fd, buf + sz - to_write, to_write);
+    if (UNLIKELY(r < 0))
+    {
+      if (errno == EAGAIN)
+        continue;
+
+      return false;
+    }
+    assert(size_t(r) <= to_write);
+    to_write -= r;
+  }
+
+  return true;
+}
+
+bool readData(int fd, char* buf, size_t sz)
+{
+  if (sz == 0)
+    return true;
+
+  auto to_read = sz;
+  while (to_read > 0)
+  {
+    auto r = read(fd, buf + sz - to_read, to_read);
+    if (UNLIKELY(r < 0))
+    {
+      if (errno == EAGAIN)
+        continue;
+
+      return false;
+    }
+
+    assert(size_t(r) <= to_read);
+    to_read -= r;
+  }
+
+  return true;
+}
 
 inline uint64_t hashData(const void* ptr, uint32_t len, uint64_t x = 0ULL)
 {
@@ -210,6 +270,8 @@ public:
     return std::numeric_limits<int64_t>::max();
   }
 
+  virtual bool isStrict() const { return false; }
+
   virtual MemManager* clone() const { return new MemManager(); }
 
 protected:
@@ -235,6 +297,8 @@ public:
   {
     return std::min(fRm->availableMemory(), *fSessLimit);
   }
+
+  bool isStrict() const final { return fStrict; }
 
   MemManager* clone() const final
   {
@@ -274,6 +338,7 @@ public:
 public:
   /** @brief Default constructor
    *
+   * @param tmpDir(in)          directory for tmp data
    * @param rowGroupOut(in,out) RowGroup metadata
    * @param maxRows(in)         number of rows per rowgroup
    * @param rm                  ResourceManager to use or nullptr if we don't
@@ -284,7 +349,8 @@ public:
    * @param strict              true  -> throw an exception if not enough memory
    *                            false -> deal with it later
    */
-  RowGroupStorage(RowGroup* rowGroupOut,
+  RowGroupStorage(const std::string& tmpDir,
+                  RowGroup* rowGroupOut,
                   size_t maxRows,
                   joblist::ResourceManager* rm = nullptr,
                   boost::shared_ptr<int64_t> sessLimit = {},
@@ -293,8 +359,9 @@ public:
       : fRowGroupOut(rowGroupOut)
       , fMaxRows(maxRows)
       , fRGDatas()
+      , fUniqId(this)
+      , fTmpDir(tmpDir)
   {
-    auto* curRG = new RGData(*fRowGroupOut, fMaxRows);
     if (rm)
     {
       fMM = std::unique_ptr<MemManager>(new RMMemManager(rm, sessLimit, wait, strict));
@@ -312,6 +379,7 @@ public:
       fMM = std::unique_ptr<MemManager>(new MemManager());
       fLRU = std::unique_ptr<LRUIface>(new LRUIface());
     }
+    auto* curRG = new RGData(*fRowGroupOut, fMaxRows);
     fRowGroupOut->setData(curRG);
     fRowGroupOut->resetRowGroup(0);
     fRGDatas.emplace_back(curRG);
@@ -327,7 +395,8 @@ public:
    *
    * @param o RowGroupStorage to take from
    */
-  void append(std::unique_ptr<RowGroupStorage> o)
+  void append(std::unique_ptr<RowGroupStorage> o) { return append(o.get()); }
+  void append(RowGroupStorage* o)
   {
     std::unique_ptr<RGData> rgd;
     std::string ofname;
@@ -358,6 +427,8 @@ public:
                                    logging::ERR_DISKAGG_FILEIO_ERROR);
         }
       }
+      rgd.reset();
+      ofname.clear();
     }
   }
 
@@ -367,21 +438,26 @@ public:
    */
   std::unique_ptr<RGData> getNextRGData()
   {
-    if (fRGDatas.empty())
-      return {};
+    while (!fRGDatas.empty())
+    {
+      uint64_t rgid = fRGDatas.size() - 1;
+      if (!fRGDatas[rgid])
+        loadRG(rgid, fRGDatas[rgid], true);
+      unlink(makeRGFilename(rgid).c_str());
 
-    uint64_t rgid = fRGDatas.size() - 1;
-    if (!fRGDatas[rgid])
-      loadRG(rgid);
+      auto rgdata = std::move(fRGDatas[rgid]);
+      fRGDatas.pop_back();
 
-    auto rgdata = std::move(fRGDatas[rgid]);
-    fRGDatas.pop_back();
+      fRowGroupOut->setData(rgdata.get());
+      int64_t memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
+      fMM->release(memSz);
+      fLRU->remove(rgid);
+      if (fRowGroupOut->getRowCount() == 0)
+        continue;
+      return rgdata;
+    }
 
-    fRowGroupOut->setData(rgdata.get());
-    int64_t memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
-    fMM->release(memSz);
-    fLRU->remove(rgid);
-    return rgdata;
+    return {};
   }
 
   void initRow(Row& row) const
@@ -414,7 +490,11 @@ public:
   void putRow(uint64_t& idx, Row& row)
   {
     bool need_new = false;
-    if (UNLIKELY(!fRGDatas[fCurRgid]))
+    if (UNLIKELY(fRGDatas.empty()))
+    {
+      need_new = true;
+    }
+    else if (UNLIKELY(!fRGDatas[fCurRgid]))
     {
       need_new = true;
     }
@@ -539,9 +619,144 @@ public:
     return true;
   }
 
+  /** @brief Dump all data, clear state and start over */
+  void startNewGeneration()
+  {
+    dumpAll();
+    fLRU->clear();
+    fMM->release();
+    fRGDatas.clear();
+    ++fGeneration;
+  }
+
+  /** @brief Save "finalized" bitmap to disk for future use */
+  void dumpFinalizedInfo() const
+  {
+    auto fname = makeFinalizedFilename();
+    int fd = open(fname.c_str(),
+                  O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (UNLIKELY(fd < 0))
+    {
+      throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
+          logging::ERR_DISKAGG_FILEIO_ERROR),
+                               logging::ERR_DISKAGG_FILEIO_ERROR);
+    }
+    uint64_t sz = fRGDatas.size();
+    uint64_t finsz = fFinalizedRows.size();
+
+    if (!writeData(fd, (const char*)&sz, sizeof(sz)) ||
+        !writeData(fd, (const char*)&finsz, sizeof(finsz)) ||
+        !writeData(fd, (const char*)fFinalizedRows.data(), finsz * sizeof(uint64_t)))
+    {
+      close(fd);
+      unlink(fname.c_str());
+      throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
+          logging::ERR_DISKAGG_FILEIO_ERROR),
+                               logging::ERR_DISKAGG_FILEIO_ERROR);
+    }
+    close(fd);
+  }
+
+  /** @brief Load "finalized" bitmap */
+  void loadFinalizedInfo()
+  {
+    auto fname = makeFinalizedFilename();
+    int fd = open(fname.c_str(), O_RDONLY);
+    if (fd < 0)
+    {
+      throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
+          logging::ERR_DISKAGG_FILEIO_ERROR),
+                               logging::ERR_DISKAGG_FILEIO_ERROR);
+    }
+    uint64_t sz;
+    uint64_t finsz;
+    if (!readData(fd, (char*)&sz, sizeof(sz)) ||
+        !readData(fd, (char*)&finsz, sizeof(finsz)))
+    {
+      close(fd);
+      unlink(fname.c_str());
+      throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
+          logging::ERR_DISKAGG_FILEIO_ERROR),
+                               logging::ERR_DISKAGG_FILEIO_ERROR);
+    }
+    fRGDatas.resize(sz);
+    fFinalizedRows.resize(finsz);
+    if (!readData(fd, (char*)fFinalizedRows.data(), finsz * sizeof(uint64_t)))
+    {
+      close(fd);
+      unlink(fname.c_str());
+      throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
+          logging::ERR_DISKAGG_FILEIO_ERROR),
+                               logging::ERR_DISKAGG_FILEIO_ERROR);
+    }
+    close(fd);
+    unlink(fname.c_str());
+  }
+
+  /** @brief Save all RGData to disk */
+  void dumpAll(bool dumpFin = true) const
+  {
+#ifdef DISK_AGG_DEBUG
+    dumpMeta();
+#endif
+    for (uint64_t i = 0; i < fRGDatas.size(); ++i)
+    {
+      if (fRGDatas[i])
+        saveRG(i, fRGDatas[i].get());
+      else
+      {
+        auto fname = makeRGFilename(i);
+        if (access(fname.c_str(), F_OK) != 0)
+          ::abort();
+      }
+    }
+    if (dumpFin)
+      dumpFinalizedInfo();
+  }
+
+  /** @brief Create new RowGroupStorage with the save LRU, MemManager & uniq ID */
+  RowGroupStorage* clone(uint16_t gen) const
+  {
+    auto* ret = new RowGroupStorage(fTmpDir, fRowGroupOut, fMaxRows);
+    ret->fRGDatas.clear();
+    ret->fLRU.reset(fLRU->clone());
+    ret->fMM.reset(fMM->clone());
+    ret->fUniqId = fUniqId;
+    ret->fGeneration = gen;
+    ret->loadFinalizedInfo();
+    return ret;
+  }
+
+  /** @brief Mark row at specified index as finalized so it should be skipped
+   */
+  void markFinalized(uint64_t idx)
+  {
+    uint64_t gid = idx / 64;
+    uint64_t rid = idx % 64;
+    if (LIKELY(fFinalizedRows.size() <= gid))
+      fFinalizedRows.resize(gid + 1, 0ULL);
+
+    fFinalizedRows[gid] |= 1ULL << rid;
+  }
+
+  /** @brief Check if row at specified index was finalized earlier */
+  bool isFinalized(uint64_t idx) const
+  {
+    uint64_t gid = idx / 64;
+    uint64_t rid = idx % 64;
+    if (LIKELY(fFinalizedRows.size() <= gid))
+      return false;
+
+    return fFinalizedRows[gid] & (1ULL << rid);
+  }
+
 private:
+
   /** @brief Get next available RGData and fill filename of the dump if it's
    *         not in the memory.
+   *
+   *   It skips finalized rows, shifting data within rowgroups
+   *
    * @param rgdata(out) RGData to return
    * @param fname(out)  Filename of the dump if it's not in the memory
    * @returns true if there is available RGData
@@ -553,21 +768,123 @@ private:
       fMM->release();
       return false;
     }
-    uint64_t rgid = fRGDatas.size() - 1;
-    rgdata = std::move(fRGDatas[rgid]);
-    fRGDatas.pop_back();
-    if (rgdata)
+    while (!fRGDatas.empty())
     {
-      fRowGroupOut->setData(rgdata.get());
-      int64_t memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
-      fMM->release(memSz);
+      uint64_t rgid = fRGDatas.size() - 1;
+      rgdata = std::move(fRGDatas[rgid]);
+      fRGDatas.pop_back();
+
+      uint64_t fgid = rgid * fMaxRows / 64;
+      uint64_t tgid = fgid + fMaxRows / 64;
+      if (fFinalizedRows.size() > fgid)
+      {
+        if (tgid >= fFinalizedRows.size())
+          fFinalizedRows.resize(tgid + 1, 0ULL);
+
+        if (!rgdata)
+        {
+          for (auto i = fgid; i < tgid; ++i)
+          {
+            if (fFinalizedRows[i] != ~0ULL)
+            {
+              loadRG(rgid, rgdata, true);
+              break;
+            }
+          }
+        }
+
+        if (!rgdata)
+        {
+          unlink(makeRGFilename(rgid).c_str());
+          continue;
+        }
+
+        uint64_t pos = 0;
+        uint64_t opos = 0;
+        fRowGroupOut->setData(rgdata.get());
+        for (auto i = fgid; i < tgid; ++i)
+        {
+          if ((i - fgid) * 64 >= fRowGroupOut->getRowCount())
+            break;
+          uint64_t mask = ~fFinalizedRows[i];
+          if ((i - fgid + 1) * 64 > fRowGroupOut->getRowCount())
+          {
+            mask &= (~0ULL) >> ((i - fgid + 1) * 64 - fRowGroupOut->getRowCount());
+          }
+          opos = (i - fgid) * 64;
+          if (mask == ~0ULL)
+          {
+            if (LIKELY(pos != opos))
+              moveRows(rgdata.get(), pos, opos, 64);
+            pos += 64;
+            continue;
+          }
+
+          if (mask == 0)
+            continue;
+
+          while (mask != 0)
+          {
+            size_t b = __builtin_ffsll(mask);
+            size_t e = __builtin_ffsll(~(mask >> b)) + b;
+            if (UNLIKELY(e >= 64))
+              mask = 0;
+            else
+              mask >>= e;
+            if (LIKELY(pos != opos + b - 1))
+              moveRows(rgdata.get(), pos, opos + b - 1, e - b);
+            pos += e - b;
+            opos += e;
+          }
+          --opos;
+        }
+
+        if (pos == 0)
+        {
+          fLRU->remove(rgid);
+          unlink(makeRGFilename(rgid).c_str());
+          continue;
+        }
+
+        fRowGroupOut->setData(rgdata.get());
+        fRowGroupOut->setRowCount(pos);
+      }
+
+      if (rgdata)
+      {
+        fRowGroupOut->setData(rgdata.get());
+        int64_t memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
+        fMM->release(memSz);
+        unlink(makeRGFilename(rgid).c_str());
+      }
+      else
+      {
+        fname = makeRGFilename(rgid);
+      }
+      fLRU->remove(rgid);
+      return true;
     }
-    else
-    {
-      fname = makeRGFilename(rgid);
-    }
-    fLRU->remove(rgid);
-    return true;
+    return false;
+  }
+
+  /** @brief Compact rowgroup with finalized rows
+   *
+   *   Move raw data from the next non-finalized row to replace finalized rows
+   *   It is safe because pointers to long string also stored inside data
+   *
+   * @param rgdata(in,out) RGData to work with
+   * @param to(in)         row num inside rgdata of the first finalized row
+   * @param from(in)       row num of the first actual row
+   * @param numRows(in)    how many rows should be moved
+   */
+  void moveRows(RGData* rgdata, uint64_t to, uint64_t from, size_t numRows)
+  {
+    const size_t rowsz = fRowGroupOut->getRowSize();
+    const size_t hdrsz = RowGroup::getHeaderSize();
+    uint8_t* data = rgdata->rowData.get() + hdrsz;
+    memmove(data + to * rowsz,
+            data + from * rowsz,
+            numRows * rowsz);
   }
 
   /** @brief Load RGData from disk dump.
@@ -582,6 +899,11 @@ private:
       return;
     }
 
+    loadRG(rgid, fRGDatas[rgid]);
+  }
+
+  void loadRG(uint64_t rgid, std::unique_ptr<RGData>& rgdata, bool unlinkDump = false)
+  {
     auto fname = makeRGFilename(rgid);
     int fd = open(fname.c_str(), O_RDONLY);
     if (UNLIKELY(fd < 0))
@@ -599,26 +921,17 @@ private:
       };
       fstat(fd, &st);
 
-      auto to_read = st.st_size;
-      bs.needAtLeast(to_read);
+      bs.needAtLeast(st.st_size);
       bs.restart();
-      while (to_read > 0)
+      if (!readData(fd, (char*)bs.getInputPtr(), st.st_size))
       {
-        errno = 0;
-        auto r = read(fd, bs.getInputPtr(), to_read);
-        if (UNLIKELY(r <= 0))
-        {
-          if (errno == EAGAIN)
-            continue;
-
-          throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
-                                       logging::ERR_DISKAGG_FILEIO_ERROR),
-                                   logging::ERR_DISKAGG_FILEIO_ERROR);
-        }
-        bs.advanceInputPtr(r);
-        to_read -= r;
-        assert(to_read >= 0);
+        close(fd);
+        unlink(fname.c_str());
+        throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
+            logging::ERR_DISKAGG_FILEIO_ERROR),
+                                 logging::ERR_DISKAGG_FILEIO_ERROR);
       }
+      bs.advanceInputPtr(st.st_size);
       close(fd);
     }
     catch (...)
@@ -627,11 +940,12 @@ private:
       throw;
     }
 
-    unlink(fname.c_str());
-    fRGDatas[rgid] = std::unique_ptr<RGData>(new RGData());
-    fRGDatas[rgid]->deserialize(bs);
+    if (unlinkDump)
+      unlink(fname.c_str());
+    rgdata.reset(new RGData());
+    rgdata->deserialize(bs);
 
-    fRowGroupOut->setData(fRGDatas[rgid].get());
+    fRowGroupOut->setData(rgdata.get());
     auto memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
 
     if (!fMM->acquire(memSz))
@@ -676,44 +990,24 @@ private:
                                    logging::ERR_DISKAGG_FILEIO_ERROR),
                                logging::ERR_DISKAGG_FILEIO_ERROR);
     }
-    auto to_write = bs.length();
-    while (to_write > 0)
+    if (!writeData(fd, (char*)bs.buf(), bs.length()))
     {
-      auto r = write(fd, bs.buf() + bs.length() - to_write, to_write);
-      if (UNLIKELY(r < 0))
-      {
-        if (errno == EAGAIN)
-          continue;
-
-        close(fd);
-        throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
-                                     logging::ERR_DISKAGG_FILEIO_ERROR),
-                                 logging::ERR_DISKAGG_FILEIO_ERROR);
-      }
-      assert(r <= to_write);
-      to_write -= r;
+      close(fd);
+      throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
+          logging::ERR_DISKAGG_FILEIO_ERROR),
+                               logging::ERR_DISKAGG_FILEIO_ERROR);
     }
     close(fd);
   }
 
 #ifdef DISK_AGG_DEBUG
-  void dumpAll() const
-  {
-    dumpMeta();
-    for (uint64_t i = 0; i < fRGDatas.size(); ++i)
-    {
-      if (fRGDatas[i])
-        saveRG(i, fRGDatas[i].get());
-    }
-  }
-
   void dumpMeta() const
   {
     messageqcpp::ByteStream bs;
     fRowGroupOut->serialize(bs);
 
     char buf[1024];
-    snprintf(buf, sizeof(buf), "/tmp/kemm/META-p%u-t%p", getpid(), this);
+    snprintf(buf, sizeof(buf), "/tmp/kemm/META-p%u-t%p", getpid(), fUniqPtr);
     int fd = open(buf, O_WRONLY | O_TRUNC | O_CREAT, 0644);
     assert(fd >= 0);
 
@@ -728,19 +1022,32 @@ private:
   std::string makeRGFilename(uint64_t rgid) const
   {
     char buf[PATH_MAX];
-    snprintf(buf, sizeof(buf), "/tmp/kemm/Agg-p%u-t%p-rg%lu", getpid(), this, rgid);
+    snprintf(buf, sizeof(buf), "%s/Agg-p%u-t%p-rg%lu-g%u",
+             fTmpDir.c_str(), getpid(), fUniqId, rgid, fGeneration);
     return buf;
   }
 
+  std::string makeFinalizedFilename() const
+  {
+    char fname[PATH_MAX];
+    snprintf(fname, sizeof(fname), "%s/AggFin-p%u-t%p-g%u",
+             fTmpDir.c_str(), getpid(), fUniqId, fGeneration);
+    return fname;
+  }
+
 private:
-  RowGroup* fRowGroupOut = nullptr;
+  friend class RowAggStorage;
+  RowGroup* fRowGroupOut{nullptr};
   const size_t fMaxRows;
   std::unique_ptr<MemManager> fMM;
   std::unique_ptr<LRUIface> fLRU;
   RGDataStorage fRGDatas;
-  std::string fNamePrefix;
+  const void* fUniqId;
 
-  uint64_t fCurRgid = 0;
+  uint64_t fCurRgid{0};
+  uint16_t fGeneration{0};
+  std::vector<uint64_t> fFinalizedRows;
+  std::string fTmpDir;
 };
 
 /** @brief Internal data for the hashmap */
@@ -753,12 +1060,15 @@ struct RowPosHash
 class RowPosHashStorage
 {
 public:
-  RowPosHashStorage(size_t maxRows,
+  RowPosHashStorage(const std::string& tmpDir,
+                    size_t maxRows,
                     size_t size,
                     joblist::ResourceManager* rm,
                     boost::shared_ptr<int64_t> sessLimit,
                     bool enableDiskAgg)
       : fMaxRows(maxRows)
+      , fUniqId(this)
+      , fTmpDir(tmpDir)
   {
     if (rm)
       fMM = new RMMemManager(rm, sessLimit, !enableDiskAgg, !enableDiskAgg);
@@ -784,6 +1094,11 @@ public:
     delete fMM;
     if (fDumpFd >= 0)
       close(fDumpFd);
+  }
+
+  void cleanup()
+  {
+    unlink(makeDumpName().c_str());
   }
 
   RowPosHash& get(uint64_t idx)
@@ -825,6 +1140,17 @@ public:
       return true;
     }
     return false;
+  }
+
+  void clearData()
+  {
+    for (auto*& ptr : fPosHashes)
+    {
+      delete[] ptr;
+      ptr = nullptr;
+    }
+    fMM->release();
+    fLRU->clear();
   }
 
   void dropOld(uint64_t gid)
@@ -882,22 +1208,53 @@ public:
     }
   }
 
-  RowPosHashStorage* clone(size_t size)
+  RowPosHashStorage* clone(size_t size, uint16_t gen)
   {
     if (UNLIKELY(fPosHashes.empty()))
     {
+      fGeneration = gen;
       init(size + 1);
       return this;
     }
-    auto* cloned = new RowPosHashStorage(fMaxRows);
+    auto* cloned = new RowPosHashStorage(fTmpDir, fMaxRows);
     cloned->fLRU = fLRU->clone();
     cloned->fMM = fMM->clone();
     cloned->init(size + 1);
+    cloned->fUniqId = fUniqId;
+    cloned->fDumpFd = -1;
+    cloned->fGeneration = gen;
     return cloned;
   }
 
+  void resetLRU()
+  {
+    delete fLRU;
+    fLRU = new LRUIface();
+  }
+
+  void startNewGeneration()
+  {
+    dumpAll();
+    ++fGeneration;
+    close(fDumpFd);
+    fDumpFd = -1;
+    for (auto* ptr : fPosHashes)
+      delete[] ptr;
+    fPosHashes.clear();
+    fMM->release();
+  }
+
+  void dumpAll()
+  {
+    for (uint64_t gid = 0; gid < fPosHashes.size(); ++gid)
+      save(gid);
+  }
+
 private:
-  explicit RowPosHashStorage(size_t maxRows) : fMaxRows(maxRows) {}
+  explicit RowPosHashStorage(const std::string& tmpDir, size_t maxRows)
+      : fMaxRows(maxRows)
+      , fTmpDir(tmpDir)
+  {}
 
   void init(size_t size)
   {
@@ -907,25 +1264,31 @@ private:
     {
       fMM->acquire(fMaxRows * sizeof(RowPosHash));
       auto *ptr = new RowPosHash[fMaxRows];
+      memset(ptr, 0, fMaxRows * sizeof(RowPosHash));
       fPosHashes.push_back(ptr);
       fLRU->add(i);
     }
+  }
+
+  std::string makeDumpName() const
+  {
+    char fname[PATH_MAX];
+    snprintf(fname, sizeof(fname), "%s/Agg-PosHash-p%u-t%p-g%u",
+             fTmpDir.c_str(), getpid(), fUniqId, fGeneration);
+    return fname;
   }
 
   int getDumpFd()
   {
     if (UNLIKELY(fDumpFd < 0))
     {
-      char fname[PATH_MAX];
-      snprintf(fname, sizeof(fname), "/tmp/kemm/Agg-PosHash-p%u-t%p", getpid(), this);
-      fDumpFd = open(fname, O_RDWR | O_CREAT | O_TRUNC, 0644);
+      fDumpFd = open(makeDumpName().c_str(), O_RDWR | O_CREAT, 0644);
       if (fDumpFd < 0)
       {
         throw logging::IDBExcept(
             logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR),
             logging::ERR_DISKAGG_FILEIO_ERROR);
       }
-      unlink(fname);
     }
 
     return fDumpFd;
@@ -979,6 +1342,7 @@ private:
                                logging::ERR_AGGREGATION_TOO_BIG);
     }
     fPosHashes[gid] = new RowPosHash[fMaxRows];
+    memset(fPosHashes[gid], 0, fMaxRows * sizeof(RowPosHash));
 
     off_t fpos = gid * fMaxRows * sizeof(RowPosHash);
     off_t buf_pos = 0;
@@ -1009,12 +1373,17 @@ private:
   }
 
 private:
+  friend class RowAggStorage;
   const size_t fMaxRows;
   MemManager* fMM{nullptr};
   LRUIface* fLRU{nullptr};
   std::vector<RowPosHash*> fPosHashes;
 
+  uint16_t fGeneration{0};
+
   int fDumpFd = -1;
+  void* fUniqId;
+  std::string fTmpDir;
 };
 
 /*---------------------------------------------------------------------------
@@ -1026,16 +1395,21 @@ private:
  * information (index and hash) in the vector of portions of the same size in
  * elements, that can be dumped on disk either.
  ----------------------------------------------------------------------------*/
-RowAggStorage::RowAggStorage(RowGroup *rowGroupOut, RowGroup *keysRowGroup,
+RowAggStorage::RowAggStorage(const std::string& tmpDir,
+                             RowGroup *rowGroupOut, RowGroup *keysRowGroup,
                              uint32_t keyCount, size_t maxRows,
                              joblist::ResourceManager *rm,
                              boost::shared_ptr<int64_t> sessLimit,
-                             bool enabledDiskAgg)
+                             bool enabledDiskAgg,
+                             bool allowGenerations)
     : fMaxRows(maxRows)
     , fExtKeys(rowGroupOut != keysRowGroup)
-    , fStorage(new RowGroupStorage(rowGroupOut, maxRows, rm, sessLimit, !enabledDiskAgg, !enabledDiskAgg))
+    , fStorage(new RowGroupStorage(tmpDir, rowGroupOut, maxRows, rm, sessLimit, !enabledDiskAgg, !enabledDiskAgg))
     , fKeysStorage(fStorage.get())
     , fLastKeyCol(keyCount - 1)
+    , fUniqId(this)
+    , fAllowGenerations(allowGenerations)
+    , fTmpDir(tmpDir)
 {
   if (rm)
   {
@@ -1051,10 +1425,10 @@ RowAggStorage::RowAggStorage(RowGroup *rowGroupOut, RowGroup *keysRowGroup,
   }
   if (fExtKeys)
   {
-    fKeysStorage = new RowGroupStorage(keysRowGroup, maxRows, rm, sessLimit, !enabledDiskAgg, !enabledDiskAgg);
+    fKeysStorage = new RowGroupStorage(tmpDir, keysRowGroup, maxRows, rm, sessLimit, !enabledDiskAgg, !enabledDiskAgg);
   }
   fKeysStorage->initRow(fKeyRow);
-  fHashes = new RowPosHashStorage(maxRows, 0, rm, sessLimit, enabledDiskAgg);
+  fHashes = new RowPosHashStorage(tmpDir, maxRows, 0, rm, sessLimit, enabledDiskAgg);
   reserve(maxRows);
 }
 
@@ -1132,7 +1506,10 @@ bool RowAggStorage::getTargetRow(const Row &row, Row &rowOut)
 
 void RowAggStorage::dump()
 {
-  while (true)
+  uint64_t i{0};
+  constexpr uint64_t ROUNDS = 20;
+  constexpr uint8_t POSHASH_DUMP_FREQ = 5;
+  while (!fAllowGenerations || ++i < ROUNDS)
   {
     if (fMM->getFree() > 1 * 1024 * 1024) // TODO: make it configurable
       break;
@@ -1141,7 +1518,7 @@ void RowAggStorage::dump()
     if (fExtKeys)
       success |= fKeysStorage->dump();
 
-    if (success)
+    if (success && i % POSHASH_DUMP_FREQ != 0)
     {
       // Try to unload only RGDatas first 'cause unloading RowHashPositions
       // causes a worse performance impact
@@ -1153,13 +1530,17 @@ void RowAggStorage::dump()
   }
 
   auto rhUsedMem = fMM->getUsed();
-  if (rhUsedMem >= size_t(fInitialMemLimit / fNumOfOuterBuckets))
+  if (rhUsedMem >= size_t(fInitialMemLimit / fNumOfOuterBuckets / 2)
+      || (fAllowGenerations && i >= ROUNDS))
   {
     // safety guard so aggregation couldn't eat all available memory
-    // TODO: shall we make several rounds of aggregation?
-    throw logging::IDBExcept(
-        logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_TOO_BIG),
-        logging::ERR_DISKAGG_TOO_BIG);
+    if (fMM->isStrict() || !fAllowGenerations)
+    {
+      throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
+                                   logging::ERR_DISKAGG_TOO_BIG),
+                               logging::ERR_DISKAGG_TOO_BIG);
+    }
+    startNewGeneration();
   }
 }
 
@@ -1168,13 +1549,38 @@ void RowAggStorage::append(RowAggStorage& other)
   // we don't need neither key rows storage nor any internal data anymore
   // neither in this RowAggStorage nor in the other
   freeData();
-  other.freeData();
-  fStorage->append(std::move(other.fStorage));
+  cleanup();
+  if (other.fGeneration == 0)
+  {
+    other.freeData();
+    fStorage->append(std::move(other.fStorage));
+    other.cleanup();
+    return;
+  }
+
+  // iff other RowAggStorage has several generations, sequential load and append
+  // them all
+  auto gen = other.fGeneration;
+  while (true)
+  {
+    fStorage->append(other.fStorage.get());
+    other.cleanup();
+    if (gen == 0)
+      break;
+    //other.loadGeneration(--gen);
+    --gen;
+    other.fGeneration = gen;
+    auto* oh = other.fHashes;
+    other.fHashes = other.fHashes->clone(other.fMask + 1, gen);
+    delete oh;
+    other.fStorage.reset(other.fStorage->clone(gen));
+  }
 }
 
 std::unique_ptr<RGData> RowAggStorage::getNextRGData()
 {
   freeData();
+  cleanup();
   return fStorage->getNextRGData();
 }
 
@@ -1268,7 +1674,8 @@ void RowAggStorage::rehashPowerOfTwo(size_t elems)
 {
   const size_t oldSz = calcSizeWithBuffer(fMask + 1);
   const uint8_t* const oldInfo = fInfo;
-  RowPosHashStorage * oldHashes = fHashes;
+  RowPosHashStorage* oldHashes = fHashes;
+  oldHashes->resetLRU();
 
   initData(elems);
 
@@ -1344,7 +1751,7 @@ void RowAggStorage::initData(size_t elems)
   const auto sizeWithBuffer = calcSizeWithBuffer(elems, fMaxSize);
   const auto bytes = calcBytes(sizeWithBuffer);
 
-  fHashes = fHashes->clone(elems);
+  fHashes = fHashes->clone(elems, fGeneration);
   fMM->acquire(bytes);
   fInfo = reinterpret_cast<uint8_t*>(calloc(1, bytes));
   fInfo[sizeWithBuffer] = 1;
@@ -1370,6 +1777,363 @@ void RowAggStorage::reserve(size_t c)
   if (newSize > fMask + 1) {
     rehashPowerOfTwo(newSize);
   }
+}
+
+void RowAggStorage::startNewGeneration()
+{
+  if (fSize == 0)
+    return;
+  // save all data and free storages' memory
+  dumpInternalData();
+  fHashes->startNewGeneration();
+  fStorage->startNewGeneration();
+  if (fExtKeys)
+    fKeysStorage->startNewGeneration();
+
+  ++fGeneration;
+  fMM->release();
+  // reinitialize internal structures
+  if (fInfo)
+  {
+    free(fInfo);
+    fInfo = nullptr;
+  }
+  fSize = 0;
+  fMask = 0;
+  fMaxSize = 0;
+  fInfoInc = INIT_INFO_INC;
+  fInfoHashShift = INIT_INFO_HASH_SHIFT;
+  reserve(fMaxRows);
+  fAggregated = false;
+}
+
+std::string RowAggStorage::makeDumpFilename(int32_t gen) const
+{
+  char fname[1024];
+  uint16_t rgen = gen < 0 ? fGeneration : gen;
+  snprintf(fname, sizeof(fname), "%s/AggMap-p%u-t%p-g%u",
+           fTmpDir.c_str(), getpid(), fUniqId, rgen);
+  return fname;
+}
+
+void RowAggStorage::dumpInternalData() const
+{
+  if (!fInfo)
+    return;
+
+  messageqcpp::ByteStream bs;
+  bs << fSize;
+  bs << fMask;
+  bs << fMaxSize;
+  bs << fInfoInc;
+  bs << fInfoHashShift;
+  bs.append(fInfo, calcBytes(calcSizeWithBuffer(fMask + 1, fMaxSize)));
+  int fd = open(makeDumpFilename().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+  if (fd < 0)
+  {
+    throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
+        logging::ERR_AGGREGATION_TOO_BIG),
+                             logging::ERR_AGGREGATION_TOO_BIG);
+  }
+  if (!writeData(fd, (const char*)bs.buf(), bs.length()))
+  {
+    close(fd);
+    throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
+        logging::ERR_AGGREGATION_TOO_BIG),
+                             logging::ERR_AGGREGATION_TOO_BIG);
+  }
+  close(fd);
+}
+
+void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
+{
+  if (fAggregated || fGeneration == 0)
+  {
+    cleanup();
+    return;
+  }
+
+  Row tmpKeyRow;
+  fKeysStorage->initRow(tmpKeyRow);
+  Row tmpRow;
+  fStorage->initRow(tmpRow);
+  dumpInternalData();
+  fHashes->dumpAll();
+  fStorage->dumpAll();
+  if (fExtKeys)
+    fKeysStorage->dumpAll();
+
+  uint16_t curGen = fGeneration + 1;
+  while (--curGen > 0)
+  {
+    bool genUpdated = false;
+    if (fSize == 0)
+    {
+      fStorage->dumpFinalizedInfo();
+      if (fExtKeys)
+        fKeysStorage->dumpFinalizedInfo();
+      cleanup(curGen);
+      loadGeneration(curGen - 1);
+      auto* oh = fHashes;
+      fHashes = fHashes->clone(fMask + 1, curGen - 1);
+      delete oh;
+      fHashes->clearData();
+      fStorage.reset(fStorage->clone(curGen - 1));
+      if (fExtKeys)
+      {
+        auto* oks = fKeysStorage;
+        fKeysStorage = oks->clone(curGen - 1);
+        delete oks;
+      }
+      else
+        fKeysStorage = fStorage.get();
+      continue;
+    }
+    std::unique_ptr<RowPosHashStorage> prevHashes;
+    size_t prevSize;
+    size_t prevMask;
+    size_t prevMaxSize;
+    uint32_t prevInfoInc;
+    uint32_t prevInfoHashShift;
+    uint8_t *prevInfo{nullptr};
+
+    std::unique_ptr<RowGroupStorage> prevRowStorage;
+    RowGroupStorage *prevKeyRowStorage{nullptr};
+
+    auto elems = calcSizeWithBuffer(fMask + 1);
+
+    for (uint16_t prevGen = 0; prevGen < curGen; ++prevGen)
+    {
+      prevRowStorage.reset(fStorage->clone(prevGen));
+      if (fExtKeys)
+      {
+        delete prevKeyRowStorage;
+        prevKeyRowStorage = fKeysStorage->clone(prevGen);
+      }
+      else
+        prevKeyRowStorage = prevRowStorage.get();
+
+      loadGeneration(prevGen, prevSize, prevMask, prevMaxSize, prevInfoInc,
+                     prevInfoHashShift, prevInfo);
+      prevHashes = std::unique_ptr<RowPosHashStorage>(fHashes->clone(prevMask + 1, prevGen));
+      prevHashes->clearData();
+
+      // iterate over current generation rows
+      uint64_t idx{};
+      uint32_t info{};
+      for (;; next(info, idx))
+      {
+        nextExisting(info, idx);
+
+        if (idx >= elems)
+        {
+          // done finalizing generation
+          break;
+        }
+
+        const auto& pos = fHashes->get(idx);
+
+        if (fKeysStorage->isFinalized(pos.idx))
+        {
+          // this row was already merged into newer generation, skip it
+          continue;
+        }
+
+        // now try to find row in the previous generation
+        uint32_t pinfo =
+            prevInfoInc + static_cast<uint32_t>((pos.hash & INFO_MASK) >> prevInfoHashShift);
+        uint64_t pidx = (pos.hash >> INIT_INFO_BITS) & prevMask;
+        while (pinfo < prevInfo[pidx])
+        {
+          ++pidx;
+          pinfo += prevInfoInc;
+        }
+        if (prevInfo[pidx] != pinfo)
+        {
+          // there is no such row
+          continue;
+        }
+
+        auto ppos = prevHashes->get(pidx);
+        while (prevInfo[pidx] == pinfo && pos.hash != ppos.hash)
+        {
+          // hashes are not equal => collision, try all matched rows
+          ++pidx;
+          pinfo += prevInfoInc;
+          ppos = prevHashes->get(pidx);
+        }
+        if (prevInfo[pidx] != pinfo || pos.hash != ppos.hash)
+        {
+          // no matches
+          continue;
+        }
+
+        bool found = false;
+        auto &keyRow = fExtKeys ? fKeyRow : rowOut;
+        fKeysStorage->getRow(pos.idx, keyRow);
+        while (!found && prevInfo[pidx] == pinfo)
+        {
+          // try to find exactly match in case of hash collision
+          if (UNLIKELY(pos.hash != ppos.hash))
+          {
+            // hashes are not equal => no such row
+            ++pidx;
+            pinfo += prevInfoInc;
+            ppos = prevHashes->get(pidx);
+            continue;
+          }
+
+          prevKeyRowStorage->getRow(ppos.idx, fExtKeys ? tmpKeyRow : tmpRow);
+          if (!keyRow.equals(fExtKeys ? tmpKeyRow : tmpRow, fLastKeyCol))
+          {
+            ++pidx;
+            pinfo += prevInfoInc;
+            ppos = prevHashes->get(pidx);
+            continue;
+          }
+          found = true;
+        }
+
+        if (!found)
+        {
+          // nothing was found, go to the next row
+          continue;
+        }
+
+        if (UNLIKELY(prevKeyRowStorage->isFinalized(ppos.idx)))
+        {
+          // just to be sure, it can NEVER happen
+          continue;
+        }
+
+        // here it is! So:
+        // 1 Get actual row datas
+        // 2 Merge it into the current generation
+        // 3 Mark generations as updated
+        // 4 Mark the prev generation row as finalized
+        if (fExtKeys)
+        {
+          prevRowStorage->getRow(ppos.idx, tmpRow);
+          fStorage->getRow(pos.idx, rowOut);
+        }
+        mergeFunc(tmpRow);
+        genUpdated = true;
+        prevKeyRowStorage->markFinalized(ppos.idx);
+        if (fExtKeys)
+        {
+          prevRowStorage->markFinalized(ppos.idx);
+        }
+      }
+
+      prevRowStorage->dumpFinalizedInfo();
+      if (fExtKeys)
+      {
+        prevKeyRowStorage->dumpFinalizedInfo();
+      }
+    }
+
+    fStorage->dumpFinalizedInfo();
+    if (fExtKeys)
+      fKeysStorage->dumpFinalizedInfo();
+    if (genUpdated)
+    {
+      // we have to save current generation data to disk 'cause we update some rows
+      // TODO: to reduce disk IO we can dump only affected rowgroups
+      fStorage->dumpAll(false);
+      if (fExtKeys)
+        fKeysStorage->dumpAll(false);
+    }
+
+    // swap current generation N with the prev generation N-1
+    cleanup(curGen);
+    fSize = prevSize;
+    fMask = prevMask;
+    fMaxSize = prevMaxSize;
+    fInfoInc = prevInfoInc;
+    fInfoHashShift = prevInfoHashShift;
+    if (fInfo)
+      free(fInfo);
+    fInfo = prevInfo;
+    if (fHashes)
+      delete fHashes;
+    fHashes = prevHashes.release();
+    fStorage = std::move(prevRowStorage);
+    if (fExtKeys)
+      delete fKeysStorage;
+    fKeysStorage = prevKeyRowStorage;
+  }
+
+  fStorage->dumpFinalizedInfo();
+  if (fExtKeys)
+    fKeysStorage->dumpFinalizedInfo();
+  auto* oh = fHashes;
+  fHashes = fHashes->clone(fMask + 1, fGeneration);
+  delete oh;
+  fHashes->clearData();
+  fStorage.reset(fStorage->clone(fGeneration));
+  if (fExtKeys)
+  {
+    auto* oks = fKeysStorage;
+    fKeysStorage = oks->clone(fGeneration);
+    delete oks;
+  }
+  else
+    fKeysStorage = fStorage.get();
+
+  fAggregated = true;
+}
+
+void RowAggStorage::loadGeneration(uint16_t gen)
+{
+  loadGeneration(gen, fSize, fMask, fMaxSize, fInfoInc, fInfoHashShift, fInfo);
+}
+
+void RowAggStorage::loadGeneration(uint16_t gen, size_t &size, size_t &mask, size_t &maxSize, uint32_t &infoInc, uint32_t &infoHashShift, uint8_t *&info)
+{
+  messageqcpp::ByteStream bs;
+  int fd = open(makeDumpFilename(gen).c_str(), O_RDONLY);
+  if (fd < 0)
+  {
+    throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
+        logging::ERR_AGGREGATION_TOO_BIG),
+                             logging::ERR_AGGREGATION_TOO_BIG);
+  }
+  struct stat st{};
+  fstat(fd, &st);
+  bs.needAtLeast(st.st_size);
+  bs.restart();
+  if (!readData(fd, (char*)bs.getInputPtr(), st.st_size))
+  {
+    close(fd);
+    throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
+        logging::ERR_AGGREGATION_TOO_BIG),
+                             logging::ERR_AGGREGATION_TOO_BIG);
+  }
+  close(fd);
+  bs.advanceInputPtr(st.st_size);
+
+  bs >> size;
+  bs >> mask;
+  bs >> maxSize;
+  bs >> infoInc;
+  bs >> infoHashShift;
+  size_t infoSz = calcBytes(calcSizeWithBuffer(mask + 1, maxSize));
+  if (info)
+    free(info);
+  info = (uint8_t*)calloc(1, infoSz);
+  bs >> info;
+}
+
+void RowAggStorage::cleanup()
+{
+  cleanup(fGeneration);
+}
+
+void RowAggStorage::cleanup(uint16_t gen)
+{
+  unlink(makeDumpFilename(gen).c_str());
+  if (fHashes)
+    fHashes->cleanup();
 }
 
 } // namespace rowgroup

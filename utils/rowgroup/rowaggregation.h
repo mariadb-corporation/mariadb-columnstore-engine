@@ -521,16 +521,23 @@ public:
         return fTimeZone;
     }
 
+    void finalAggregation()
+    {
+        return fRowAggStorage->finalize([this](Row& row) { mergeEntries(row);}, fRow);
+    }
+
 protected:
     virtual void initialize();
     virtual void initMapData(const Row& row);
     virtual void attachGroupConcatAg();
 
     virtual void updateEntry(const Row& row);
+    void mergeEntries(const Row& row);
     virtual void doMinMax(const Row&, int64_t, int64_t, int);
     virtual void doSum(const Row&, int64_t, int64_t, int);
-    virtual void doAvg(const Row&, int64_t, int64_t, int64_t);
+    virtual void doAvg(const Row&, int64_t, int64_t, int64_t, bool merge = false);
     virtual void doStatistics(const Row&, int64_t, int64_t, int64_t);
+    void mergeStatistics(const Row&, uint64_t colOut, uint64_t colAux);
     virtual void doBitOp(const Row&, int64_t, int64_t, int);
     virtual void doUDAF(const Row&, int64_t, int64_t, int64_t, uint64_t& funcColsIdx);
     virtual bool countSpecial(const RowGroup* pRG)
@@ -816,7 +823,7 @@ public:
 protected:
     // virtual methods from base
     void updateEntry(const Row& row) override;
-    void doAvg(const Row&, int64_t, int64_t, int64_t) override;
+    void doAvg(const Row&, int64_t, int64_t, int64_t, bool merge = false) override;
     void doStatistics(const Row&, int64_t, int64_t, int64_t) override;
     void doGroupConcat(const Row&, int64_t, int64_t) override;
     void doBitOp(const Row&, int64_t, int64_t, int) override;

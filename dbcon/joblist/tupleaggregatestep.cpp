@@ -457,7 +457,7 @@ void TupleAggregateStep::doThreadedSecondPhaseAggregate(uint32_t threadID)
         RowAggregationDistinct* aggDist = dynamic_cast<RowAggregationDistinct*>(fAggregators[threadID].get());
         RowAggregationMultiDistinct* multiDist = dynamic_cast<RowAggregationMultiDistinct*>(fAggregators[threadID].get());
         Row rowIn;
-        RowGroup* rowGroupIn = 0;
+        RowGroup* rowGroupIn = nullptr;
         rowGroupIn = (aggDist->aggregator()->getOutputRowGroup());
         uint32_t bucketID;
 
@@ -5194,6 +5194,25 @@ void TupleAggregateStep::aggregateRowGroups()
     }
 }
 
+void TupleAggregateStep::threadedAggregateFinalize(uint32_t threadID)
+{
+  for (uint32_t i = 0; i < fNumOfBuckets; ++i)
+  {
+    if (fAgg_mutex[i]->try_lock())
+    {
+      try
+      {
+        fAggregators[i]->finalAggregation();
+      }
+      catch (...)
+      {
+        fAgg_mutex[i]->unlock();
+        throw;
+      }
+      fAgg_mutex[i]->unlock();
+    }
+  }
+}
 
 void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
 {
@@ -5206,9 +5225,9 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
     vector<uint32_t> hashLens;
     bool locked = false;
     bool more = true;
-    RowGroupDL* dlIn = NULL;
+    RowGroupDL* dlIn = nullptr;
 
-    RowAggregationMultiDistinct* multiDist = NULL;
+    RowAggregationMultiDistinct* multiDist = nullptr;
 
     if (!fDoneAggregate)
     {
@@ -5217,7 +5236,7 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
 
         dlIn = fInputJobStepAssociation.outAt(0)->rowGroupDL();
 
-        if (dlIn == NULL)
+        if (dlIn == nullptr)
             throw logic_error("Input is not RowGroup data list in delivery step.");
 
         vector<RGData> rgDatas;
@@ -5300,35 +5319,31 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
                       fMemUsage[threadID] +=
                           fRowGroupIns[threadID].getSizeWithStrings();
 
-#if 0
-                        if (!fRm->getMemory(fRowGroupIns[threadID].getSizeWithStrings(), fSessionMemLimit))
-                        {
-                            rgDatas.clear();    // to short-cut the rest of processing
-                            more = false;
-                            fEndOfResult = true;
-
-                            if (status() == 0)
-                            {
-                                errorMessage(IDBErrorInfo::instance()->errorMsg(
-                                                 ERR_AGGREGATION_TOO_BIG));
-                                status(ERR_AGGREGATION_TOO_BIG);
-                            }
-
-                            break;
-                        }
-                        else
-                        {
-                            rgDatas.push_back(rgData);
-                        }
-#endif
-
-                      rgDatas.push_back(rgData);
+                      bool diskAggAllowed = fRm->getAllowDiskAggregation();
                       if (!fRm->getMemory(
                               fRowGroupIns[threadID].getSizeWithStrings(),
-                              fSessionMemLimit, false))
+                              fSessionMemLimit, !diskAggAllowed))
                       {
+                          if (!diskAggAllowed)
+                          {
+                              rgDatas.clear();    // to short-cut the rest of processing
+                              more = false;
+                              fEndOfResult = true;
+
+                              if (status() == 0)
+                              {
+                                  errorMessage(IDBErrorInfo::instance()->errorMsg(
+                                      ERR_AGGREGATION_TOO_BIG));
+                                  status(ERR_AGGREGATION_TOO_BIG);
+                              }
+                          }
+                          else
+                          {
+                              rgDatas.push_back(rgData);
+                          }
                           break;
                       }
+                      rgDatas.push_back(rgData);
                     }
                     else
                     {
@@ -5341,10 +5356,6 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
                 if (fAggregators.empty())
                 {
                     fAggregators.resize(fNumOfBuckets);
-
-                    int hashSkip = 0;
-                    while ((1u << hashSkip) < fNumOfBuckets)
-                      ++hashSkip;
 
                     for (uint32_t i = 0; i < fNumOfBuckets; i++)
                     {
@@ -5479,7 +5490,8 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
 
     if (!locked) fMutex.lock();
 
-    while (more) more = dlIn->next(fInputIter, &rgData);
+    while (more)
+        more = dlIn->next(fInputIter, &rgData);
 
     fMutex.unlock();
     locked = false;
@@ -5591,6 +5603,19 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
             jobstepThreadPool.join(runners);
         }
 
+        {
+            vector<uint64_t> runners;
+            // use half of the threads because finalizing requires twice as
+            // much memory on average
+            uint32_t threads = std::max(1U, fNumOfThreads / 2);
+            runners.reserve(threads);
+            for (i = 0; i < threads; ++i)
+            {
+                runners.push_back(jobstepThreadPool.invoke(ThreadedAggregateFinalizer(this, i)));
+            }
+            jobstepThreadPool.join(runners);
+        }
+
         if (dynamic_cast<RowAggregationDistinct*>(fAggregator.get()) && fAggregator->aggMapKeyLength() > 0)
         {
             // 2nd phase multi-threaded aggregate
@@ -5652,7 +5677,7 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
         }
         else
         {
-            RowAggregationDistinct* agg = dynamic_cast<RowAggregationDistinct*>(fAggregator.get());
+            auto* agg = dynamic_cast<RowAggregationDistinct*>(fAggregator.get());
 
             if (!fEndOfResult)
             {
@@ -5665,17 +5690,19 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
                             // do the final aggregtion and deliver the results
                             // at least one RowGroup for aggregate results
                             // for "distinct without group by" case
-                            if (agg != NULL)
+                            if (agg != nullptr)
                             {
-                                RowAggregationMultiDistinct* aggMultiDist =
+                                auto* aggMultiDist =
                                     dynamic_cast<RowAggregationMultiDistinct*>(fAggregators[i].get());
-                                RowAggregationDistinct* aggDist =
+                                auto* aggDist =
                                     dynamic_cast<RowAggregationDistinct*>(fAggregators[i].get());
                                 agg->aggregator(aggDist->aggregator());
 
                                 if (aggMultiDist)
+                                {
                                     (dynamic_cast<RowAggregationMultiDistinct*>(agg))
-                                    ->subAggregators(aggMultiDist->subAggregators());
+                                        ->subAggregators(aggMultiDist->subAggregators());
+                                }
 
                                 agg->doDistinctAggregation();
                             }
