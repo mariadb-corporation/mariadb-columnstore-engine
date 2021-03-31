@@ -125,13 +125,36 @@ S3Storage::S3Storage(bool skipRetry) : skipRetryableErrors(skipRetry)
     STSendpoint = config->getValue("S3", "sts_endpoint");
     STSregion = config->getValue("S3", "sts_region");
     string ec2_mode = tolower(config->getValue("S3", "ec2_iam_mode"));
+    string use_http = tolower(config->getValue("S3", "use_http"));
+    string ssl_verify = tolower(config->getValue("S3", "ssl_verify"));
+    string port_number = config->getValue("S3", "port_number");
+
+
     bool keyMissing = false;
     isEC2Instance = false;
     ec2iamEnabled = false;
+    useHTTP = false;
+    sslVerify = true;
+    portNumber = 0;
+
+    if (!port_number.empty())
+    {
+        portNumber = stoi(port_number);
+    }
 
     if (ec2_mode == "enabled")
     {
         ec2iamEnabled = true;
+    }
+
+    if (use_http == "enabled")
+    {
+        useHTTP = true;
+    }
+
+    if (ssl_verify == "disabled")
+    {
+        sslVerify = false;
     }
 
     if (key.empty())
@@ -676,9 +699,28 @@ ms3_st * S3Storage::getConnection()
     if (freeConns.empty())
     {
         ret = ms3_init(key.c_str(), secret.c_str(), region.c_str(), (endpoint.empty() ? NULL : endpoint.c_str()));
+        // Something went wrong with libmarias3 init
         if (ret == NULL)
+        {
             logger->log(LOG_ERR, "S3Storage::getConnection(): ms3_init returned NULL, no specific info to report");
-        if(!IAMrole.empty())
+        }
+        // Set option for use http instead of https
+        if (useHTTP)
+        {
+            ms3_set_option(ret, MS3_OPT_USE_HTTP, NULL);
+        }
+        // Set option to disable SSL Verification
+        if (!sslVerify)
+        {
+            ms3_set_option(ret, MS3_OPT_DISABLE_SSL_VERIFY, NULL);
+        }
+        // Port number is not 0 so it was set by cnf file
+        if (portNumber != 0)
+        {
+            ms3_set_option(ret, MS3_OPT_PORT_NUMBER, &portNumber);
+        }
+        // IAM role setup for keys
+        if (!IAMrole.empty())
         {
             if (isEC2Instance)
             {
