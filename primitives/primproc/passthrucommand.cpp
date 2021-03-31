@@ -157,6 +157,7 @@ void PassThruCommand::projectIntoRowGroup(RowGroup& rg, uint32_t col)
         case 16:
             for (i = 0; i < bpp->ridCount; i++)
             {
+                cerr << "PassThruCommand::projectIntoRowGroup " << datatypes::TSInt128(bpp->wide128Values[i]) << "\n";
                 r.setBinaryField_offset(&bpp->wide128Values[i], 16, offset);
                 r.nextRow(rowSize);
             }

@@ -1122,8 +1122,8 @@ void BatchPrimitiveProcessorJL::createBPP(ByteStream& bs) const
                     serializeVector<uint32_t>(bs, tJoiners[i]->getLargeKeyColumns());
                     bs << (uint32_t) tJoiners[i]->getKeyLength();
                     // Notify PP if there is a key length difference b/w small and large sides.
-                    bs << tJoiners[i]->hasDifferentKeylengthAtBothSides();
-                    if (tJoiners[i]->hasDifferentKeylengthAtBothSides())
+                    bs << tJoiners[i]->largeSideIsWideSmallSideIsNarrow();
+                    if (tJoiners[i]->largeSideIsWideSmallSideIsNarrow())
                         serializeVector<uint32_t>(bs, tJoiners[i]->getSmallSideColumnsWidths());
                 }
             }
