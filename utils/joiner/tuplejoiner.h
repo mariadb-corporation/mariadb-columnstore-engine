@@ -40,21 +40,29 @@
 #include "hasher.h"
 #include "threadpool.h"
 #include "columnwidth.h"
+#include "mcs_string.h"
 
 namespace joiner
 {
 
 uint32_t calculateKeyLength(const std::vector<uint32_t>& aKeyColumnsIds,
                             const rowgroup::RowGroup& aRowGroup,
+                            const std::vector<uint32_t>* aLargeKeyColumnsIds = nullptr, 
                             const rowgroup::RowGroup* aLargeRowGroup = nullptr);
+
+const static uint8_t IS_SMALLSIDE = 0x80; // bit set SMALL, unset LARGE
+const static uint8_t IS_REDUCEDTOSMALL = 0x40; // The value is 8 bytes stored in 16 bytes
+
+class TypelessDataDecoder;
 
 class TypelessData
 {
 public:
     uint8_t* data;
     uint32_t len;
+    uint8_t mFlags;
 
-    TypelessData() : data(NULL), len(0) { }
+    TypelessData() : data(nullptr), len(0), mFlags(0) { }
     inline bool operator==(const TypelessData&) const;
     void serialize(messageqcpp::ByteStream&) const;
     void deserialize(messageqcpp::ByteStream&, utils::FixedAllocator&);
@@ -66,6 +74,14 @@ public:
     static int cmp(const rowgroup::RowGroup&, const std::vector<uint32_t>& keyCols,
                    const TypelessData &a,
                    const TypelessData &b);
+    static int32_t compareDecimalsWSkewedWidths(TypelessDataDecoder& smallSide,
+                                                TypelessDataDecoder& largeSide,
+                                                const bool isLargeSideReducedToSmall,
+                                                const int32_t largeSideIsGreaterRC);
+    inline void setSmallSideFlag() { mFlags |= IS_SMALLSIDE; };
+    inline void setLargeSideReducedToSmall() { mFlags |= IS_REDUCEDTOSMALL; };
+    inline bool isLargeSideReducedToSmall() const { return mFlags & IS_REDUCEDTOSMALL; };
+    inline bool isSmallSideWithSkewedData() const { return mFlags & IS_SMALLSIDE; };
 };
 
 inline bool TypelessData::operator==(const TypelessData& t) const
@@ -78,6 +94,52 @@ inline bool TypelessData::operator==(const TypelessData& t) const
 
     return (memcmp(data, t.data, len) == 0);
 }
+
+class TypelessDataDecoder
+{
+    const uint8_t *mPtr;
+    const uint8_t *mEnd;
+    void checkAvailableData(uint32_t nbytes) const
+    {
+        if (mPtr + nbytes > mEnd)
+            throw runtime_error("TypelessData is too short");
+    }
+public:
+    TypelessDataDecoder(const uint8_t* ptr, size_t length)
+        :mPtr(ptr), mEnd(ptr + length)
+    { }
+    TypelessDataDecoder(const TypelessData &data)
+        :TypelessDataDecoder(data.data, data.len)
+    { }
+    utils::ConstString scanGeneric(uint32_t length)
+    {
+        checkAvailableData(length);
+        utils::ConstString res((const char *) mPtr, length);
+        mPtr += length;
+        return res;
+    }
+    // Routine to read 8 byte values saved into 16 bytes in case
+    // of a Typeless JOIN with a skewed key columm widths,
+    // e.g. BIGINT vs DECIMAL(38).
+    utils::ConstString scanGeneric(const uint32_t toRead, const uint32_t toSave)
+    {
+        checkAvailableData(toRead);
+        utils::ConstString res((const char *) mPtr, toSave);
+        mPtr += toRead;
+        return res;
+    }
+    uint32_t scanStringLength()
+    {
+        checkAvailableData(2);
+        uint32_t res = ((uint32_t) mPtr[0]) * 255 + mPtr[1];
+        mPtr += 2;
+        return res;
+    }
+    utils::ConstString scanString()
+    {
+        return scanGeneric(scanStringLength());
+    }
+};
 
 // Comparator for long double in the hash
 class LongDoubleEq
@@ -95,7 +157,8 @@ public:
  * signifying that it shouldn't match anything.
  */
 extern TypelessData makeTypelessKey(const rowgroup::Row&,
-                                    const std::vector<uint32_t>&, uint32_t keylen, utils::FixedAllocator* fa);
+                                    const std::vector<uint32_t>&, uint32_t keylen, utils::FixedAllocator* fa,
+                                    const std::vector<uint32_t>* aSmallSideColumnsWidths);
 // MCOL-1822 SUM/AVG as long double: pass in RG and col so we can determine type conversion
 extern TypelessData makeTypelessKey(const rowgroup::Row&,
                                     const std::vector<uint32_t>&, uint32_t keylen, utils::FixedAllocator* fa,
@@ -376,7 +439,7 @@ public:
     }
 
     // Wide-DECIMAL JOIN
-    bool hasDifferentKeylengthAtBothSides() const;
+    bool largeSideIsWideSmallSideIsNarrow() const;
     inline const vector<uint32_t>& getSmallSideColumnsWidths() const
     {
         return smallRG.getColWidths();

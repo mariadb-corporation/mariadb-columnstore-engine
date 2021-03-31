@@ -1726,29 +1726,29 @@ void TupleHashJoinStep::joinOneRG(uint32_t threadID, vector<RGData>* out,
     joinOutput.setDBRoot(inputRG.getDBRoot());
     inputRG.getRow(0, &largeSideRow);
 
-    cout << "jointype = " << (*tjoiners)[0]->getJoinType() << endl;
+    //cout << "jointype = " << (*tjoiners)[0]->getJoinType() << endl;
     for (k = 0; k < inputRG.getRowCount() && !cancelled(); k++, largeSideRow.nextRow())
     {
-        cout << "THJS: Large side row: " << largeSideRow.toString() << endl;
+        //cout << "THJS: Large side row: " << largeSideRow.toString() << endl;
         matchCount = 0;
 
         for (j = 0; j < smallSideCount; j++)
         {
             (*tjoiners)[j]->match(largeSideRow, k, threadID, &joinMatches[j]);
-             //Debugging code to print the matches
+            /* Debugging code to print the matches
             	Row r;
             	smallRGs[j].initRow(&r);
-            	cout << joinMatches[j].size() << " matches: \n";
+            	//cout << joinMatches[j].size() << " matches: \n";
             	for (uint32_t z = 0; z < joinMatches[j].size(); z++) {
             		r.setData(joinMatches[j][z]);
-            		cout << "  " << r.toString() << endl;
+            		//cout << "  " << r.toString() << endl;
             	}
-            
+            */
             matchCount = joinMatches[j].size();
 
             if ((*tjoiners)[j]->hasFEFilter() && matchCount > 0)
             {
-                cout << "doing FE filter" << endl;
+                //cout << "doing FE filter" << endl;
                 vector<Row::Pointer> newJoinMatches;
                 applyMapping((*feMappings)[smallSideCount], largeSideRow, &joinFERow);
 

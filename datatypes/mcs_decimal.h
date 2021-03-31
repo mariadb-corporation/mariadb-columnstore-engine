@@ -83,7 +83,7 @@ namespace datatypes
 constexpr uint32_t MAXDECIMALWIDTH = 16U;
 constexpr uint8_t INT64MAXPRECISION = 18U;
 constexpr uint8_t INT128MAXPRECISION = 38U;
-constexpr uint8_t MAXLEGACYWIDTH = 8U;
+constexpr uint32_t MAXLEGACYWIDTH = 8U;
 constexpr uint8_t MAXSCALEINC4AVG = 4U;
 constexpr int8_t IGNOREPRECISION = -1;
 

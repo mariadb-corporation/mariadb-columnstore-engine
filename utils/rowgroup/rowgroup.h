@@ -1451,6 +1451,8 @@ public:
     /** @brief Assignment operator.  It copies metadata, not the row data */
     RowGroup& operator=(const RowGroup&);
 
+    explicit RowGroup(messageqcpp::ByteStream& bs);
+
     ~RowGroup();
 
     inline void initRow(Row*, bool forceInlineData = false) const;
