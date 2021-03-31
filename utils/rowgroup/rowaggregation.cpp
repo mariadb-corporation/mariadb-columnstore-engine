@@ -681,25 +681,43 @@ void RowAggregation::initialize()
     // Calculate the length of the hashmap key.
     fAggMapKeyCount = fGroupByCols.size();
     bool disk_agg = fRm ? fRm->getAllowDiskAggregation() : false;
+    bool allow_gen = true;
+    for (auto& fun : fFunctionCols)
+    {
+      if (fun->fAggFunction == ROWAGG_UDAF || fun->fAggFunction == ROWAGG_GROUP_CONCAT)
+      {
+        allow_gen = false;
+        break;
+      }
+    }
+
+    config::Config* config = config::Config::makeConfig();
+    string tmpDir = config->getConfig("RowAggregation", "TempDir");
+    if (tmpDir.empty() || tmpDir == "/")
+      tmpDir.assign(config::getDefaultValue("RowAggregation", "TempDir"));
 
     if (fKeyOnHeap)
     {
-        fRowAggStorage.reset(new RowAggStorage(fRowGroupOut,
+        fRowAggStorage.reset(new RowAggStorage(tmpDir,
+                                             fRowGroupOut,
                                              &fKeyRG,
                                              fAggMapKeyCount,
                                              AGG_ROWGROUP_SIZE,
                                              fRm,
                                              fSessionMemLimit,
-                                             disk_agg));
+                                             disk_agg,
+                                             allow_gen));
     }
     else
     {
-        fRowAggStorage.reset(new RowAggStorage(fRowGroupOut,
+        fRowAggStorage.reset(new RowAggStorage(tmpDir,
+                                             fRowGroupOut,
                                              fAggMapKeyCount,
                                              AGG_ROWGROUP_SIZE,
                                              fRm,
                                              fSessionMemLimit,
-                                             disk_agg));
+                                             disk_agg,
+                                             allow_gen));
     }
 
     // Initialize the work row.
@@ -751,24 +769,43 @@ void RowAggregation::aggReset()
     fTotalRowCount = 0;
     fMaxTotalRowCount = AGG_ROWGROUP_SIZE;
     bool disk_agg = fRm ? fRm->getAllowDiskAggregation() : false;
+    bool allow_gen = true;
+    for (auto& fun : fFunctionCols)
+    {
+        if (fun->fAggFunction == ROWAGG_UDAF || fun->fAggFunction == ROWAGG_GROUP_CONCAT)
+        {
+            allow_gen = false;
+            break;
+        }
+    }
+
+    config::Config* config = config::Config::makeConfig();
+    string tmpDir = config->getConfig("RowAggregation", "TempDir");
+    if (tmpDir.empty() || tmpDir == "/")
+        tmpDir.assign(config::getDefaultValue("RowAggregation", "TempDir"));
+
     if (fKeyOnHeap)
     {
-        fRowAggStorage.reset(new RowAggStorage(fRowGroupOut,
+        fRowAggStorage.reset(new RowAggStorage(tmpDir,
+                                             fRowGroupOut,
                                              &fKeyRG,
                                              fAggMapKeyCount,
                                              AGG_ROWGROUP_SIZE,
                                              fRm,
                                              fSessionMemLimit,
-                                             disk_agg));
+                                             disk_agg,
+                                             allow_gen));
     }
     else
     {
-        fRowAggStorage.reset(new RowAggStorage(fRowGroupOut,
+        fRowAggStorage.reset(new RowAggStorage(tmpDir,
+                                             fRowGroupOut,
                                              fAggMapKeyCount,
                                              AGG_ROWGROUP_SIZE,
                                              fRm,
                                              fSessionMemLimit,
-                                             disk_agg));
+                                             disk_agg,
+                                             allow_gen));
     }
     fRowGroupOut->getRow(0, &fRow);
     copyNullRow(fRow);
@@ -1187,10 +1224,10 @@ void RowAggregation::doMinMax(const Row& rowIn, int64_t colIn, int64_t colOut, i
 //------------------------------------------------------------------------------
 void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int funcType)
 {
-    int colDataType = (fRowGroupIn.getColTypes())[colIn];
+    int colDataType = rowIn.getColType(colIn);
     long double valIn = 0;
     long double valOut = fRow.getLongDoubleField(colOut);
-    if (isNull(&fRowGroupIn, rowIn, colIn) == true)
+    if (rowIn.isNullValue(colIn))
         return;
 
     switch (colDataType)
@@ -1617,6 +1654,73 @@ void RowAggregation::updateEntry(const Row& rowIn)
     }
 }
 
+//------------------------------------------------------------------------------
+// Merge the aggregation subtotals in the internal hashmap for the specified row.
+// NULL values are recognized and ignored for all agg functions except for
+// COUNT(*), which counts all rows regardless of value.
+// rowIn(in) - Row to be included in aggregation.
+//------------------------------------------------------------------------------
+void RowAggregation::mergeEntries(const Row& rowIn)
+{
+  for (uint64_t i = 0; i < fFunctionCols.size(); i++)
+  {
+    int64_t colOut = fFunctionCols[i]->fOutputColumnIndex;
+
+    switch (fFunctionCols[i]->fAggFunction)
+    {
+    case ROWAGG_COUNT_COL_NAME:
+    case ROWAGG_COUNT_ASTERISK:
+      fRow.setUintField<8>(fRow.getUintField<8>(colOut) + rowIn.getUintField<8>(colOut), colOut);
+      break;
+
+    case ROWAGG_MIN:
+    case ROWAGG_MAX:
+      doMinMax(rowIn, colOut, colOut, fFunctionCols[i]->fAggFunction);
+      break;
+
+    case ROWAGG_SUM:
+      doSum(rowIn, colOut, colOut, fFunctionCols[i]->fAggFunction);
+      break;
+
+    case ROWAGG_AVG:
+      // count(column) for average is inserted after the sum,
+      // colOut+1 is the position of the count column.
+      doAvg(rowIn, colOut, colOut, colOut + 1, true);
+      break;
+
+    case ROWAGG_STATS:
+      mergeStatistics(rowIn, colOut, colOut + 1);
+      break;
+
+    case ROWAGG_BIT_AND:
+    case ROWAGG_BIT_OR:
+    case ROWAGG_BIT_XOR:
+      doBitOp(rowIn, colOut, colOut, fFunctionCols[i]->fAggFunction);
+      break;
+
+    case ROWAGG_COUNT_NO_OP:
+    case ROWAGG_DUP_FUNCT:
+    case ROWAGG_DUP_AVG:
+    case ROWAGG_DUP_STATS:
+    case ROWAGG_DUP_UDAF:
+    case ROWAGG_CONSTANT:
+    case ROWAGG_GROUP_CONCAT:
+      break;
+
+    case ROWAGG_UDAF:
+      doUDAF(rowIn, colOut, colOut, colOut + 1, i);
+      break;
+
+    default:
+      std::ostringstream errmsg;
+      errmsg << "RowAggregation: function (id = " <<
+             (uint64_t) fFunctionCols[i]->fAggFunction << ") is not supported.";
+      cerr << errmsg.str() << endl;
+      throw logging::QueryDataExcept(errmsg.str(), logging::aggregateFuncErr);
+      break;
+    }
+  }
+}
 
 //------------------------------------------------------------------------------
 // Update the sum and count fields for average if input is not null.
@@ -1625,12 +1729,12 @@ void RowAggregation::updateEntry(const Row& rowIn)
 // colOut(in) - column in the output row group stores the sum
 // colAux(in) - column in the output row group stores the count
 //------------------------------------------------------------------------------
-void RowAggregation::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int64_t colAux)
+void RowAggregation::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int64_t colAux, bool merge)
 {
-    if (isNull(&fRowGroupIn, rowIn, colIn) == true)
+    if (rowIn.isNullValue(colIn))
         return;
 
-    int colDataType = (fRowGroupIn.getColTypes())[colIn];
+    int colDataType = rowIn.getColType(colIn);
     long double valIn = 0;
     long double valOut = fRow.getLongDoubleField(colOut);
 
@@ -1699,16 +1803,33 @@ void RowAggregation::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int6
         }
     }
 
-    if (fRow.getUintField(colAux) == 0)
+    uint64_t cnt = fRow.getUintField(colAux);
+    if (cnt == 0)
     {
         // This is the first value
         fRow.setLongDoubleField(valIn, colOut);
-        fRow.setUintField(1, colAux);
+        if (merge)
+        {
+            auto valAux = rowIn.getUintField(colAux);
+            fRow.setUintField(valAux, colAux);
+        }
+        else
+        {
+            fRow.setUintField(1, colAux);
+        }
     }
     else
     {
         fRow.setLongDoubleField(valIn + valOut, colOut);
-        fRow.setUintField(fRow.getUintField(colAux) + 1, colAux);
+        if (merge)
+        {
+            auto valAux = rowIn.getUintField(colAux);
+            fRow.setUintField(valAux + cnt, colAux);
+        }
+        else
+        {
+            fRow.setUintField(cnt + 1, colAux);
+        }
     }
 }
 
@@ -1777,6 +1898,13 @@ void RowAggregation::doStatistics(const Row& rowIn, int64_t colIn, int64_t colOu
     fRow.setLongDoubleField(fRow.getLongDoubleField(colAux + 1) + valIn * valIn, colAux + 1);
 }
 
+void RowAggregation::mergeStatistics(const Row& rowIn, uint64_t colOut, uint64_t colAux)
+{
+  fRow.setDoubleField(fRow.getDoubleField(colOut) + rowIn.getDoubleField(colOut), colOut);
+  fRow.setLongDoubleField(fRow.getLongDoubleField(colAux) + rowIn.getLongDoubleField(colAux), colAux);
+  fRow.setLongDoubleField(fRow.getLongDoubleField(colAux + 1) + rowIn.getLongDoubleField(colAux + 1), colAux + 1);
+}
+
 void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                             int64_t colAux, uint64_t& funcColsIdx)
 {
@@ -1795,7 +1923,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
         dataFlags[i] = 0;
 
         // If this particular parameter is a constant, then we need
-        // to acces the constant value rather than a row value.
+        // to access the constant value rather than a row value.
         cc = nullptr;
 
         if (fFunctionCols[funcColsIdx]->fpConstCol)
@@ -3874,12 +4002,12 @@ void RowAggregationUMP2::updateEntry(const Row& rowIn)
 // colOut(in) - column in the output row group stores the sum
 // colAux(in) - column in the output row group stores the count
 //------------------------------------------------------------------------------
-void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int64_t colAux)
+void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int64_t colAux, bool)
 {
-    if (isNull(&fRowGroupIn, rowIn, colIn) == true)
+    if (rowIn.isNullValue(colIn))
         return;
 
-    int colDataType = (fRowGroupIn.getColTypes())[colIn];
+    int colDataType = rowIn.getColType(colIn);
     long double valIn = 0;
     long double valOut = fRow.getLongDoubleField(colOut);
 
@@ -3948,7 +4076,7 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
         }
     }
 
-    int64_t cnt = fRow.getUintField(colAux);
+    uint64_t cnt = fRow.getUintField(colAux);
     if (cnt == 0)
     {
         fRow.setLongDoubleField(valIn, colOut);
@@ -4287,6 +4415,7 @@ RowAggregationSubDistinct::RowAggregationSubDistinct(
     boost::shared_ptr<int64_t> sessionLimit) :
     RowAggregationUM(rowAggGroupByCols, rowAggFunctionCols, r, sessionLimit)
 {
+    fKeyOnHeap = false;
 }
 
 

@@ -10,5 +10,4 @@ add_subdirectory(viewtablelock)
 add_subdirectory(cleartablelock)
 add_subdirectory(ddlcleanup)
 add_subdirectory(idbmeminfo)
-add_subdirectory(rgprint)
 
