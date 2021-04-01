@@ -353,6 +353,16 @@ IF (RPM)
     INSTALL(FILES utils/jemalloc/libjemalloc.so.2 DESTINATION ${ENGINE_DATADIR} COMPONENT columnstore-engine)
 ENDIF ()
 
+INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbb.so.12.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbb_debug.so.12.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbbbind.so.3.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbbbind_2_0.so.3.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbbbind_2_0.so.3.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbbmalloc.so.2.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbbmalloc_proxy.so.2.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbbmalloc_proxy_debug.so.2.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+
+
 IF (INSTALL_LAYOUT)
     # Do this or when MariaDB builds us we don't have GenError which is required for these
     ADD_DEPENDENCIES(udf_mysql GenError)
