@@ -164,11 +164,7 @@ bool ColumnOpCompress1::abbreviatedExtent(IDBDataFile* pFile, int colWidth) cons
 
 int ColumnOpCompress1::blocksInFile(IDBDataFile* pFile) const
 {
-    CompFileHeader compFileHeader;
-    readHeaders(pFile, compFileHeader.fControlData, compFileHeader.fPtrSection);
-
-    compress::IDBCompressInterface compressor;
-    return compressor.getBlockCount(compFileHeader.fControlData);
+    return m_chunkManager->getBlockCount(pFile);
 }
 
 

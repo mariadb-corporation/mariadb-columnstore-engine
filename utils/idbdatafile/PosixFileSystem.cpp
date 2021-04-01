@@ -176,25 +176,24 @@ off64_t PosixFileSystem::compressedSize(const char* path) const
             return -1;
         }
 
-        compress::IDBCompressInterface decompressor;
+        char hdr1[compress::CompressInterface::HDR_BUF_LEN];
+        nBytes = readFillBuffer( pFile, hdr1, compress::CompressInterface::HDR_BUF_LEN);
 
-        char hdr1[compress::IDBCompressInterface::HDR_BUF_LEN];
-        nBytes = readFillBuffer( pFile, hdr1, compress::IDBCompressInterface::HDR_BUF_LEN);
-
-        if ( nBytes != compress::IDBCompressInterface::HDR_BUF_LEN )
+        if ( nBytes != compress::CompressInterface::HDR_BUF_LEN )
         {
             delete pFile;
             return -1;
         }
 
         // Verify we are a compressed file
-        if (decompressor.verifyHdr(hdr1) < 0)
+        if (compress::CompressInterface::verifyHdr(hdr1) < 0)
         {
             delete pFile;
             return -1;
         }
 
-        int64_t ptrSecSize = decompressor.getHdrSize(hdr1) - compress::IDBCompressInterface::HDR_BUF_LEN;
+        int64_t ptrSecSize = compress::CompressInterface::getHdrSize(hdr1) -
+                             compress::CompressInterface::HDR_BUF_LEN;
         char* hdr2 = new char[ptrSecSize];
         nBytes = readFillBuffer( pFile, hdr2, ptrSecSize);
 
@@ -206,7 +205,8 @@ off64_t PosixFileSystem::compressedSize(const char* path) const
         }
 
         compress::CompChunkPtrList chunkPtrs;
-        int rc = decompressor.getPtrList(hdr2, ptrSecSize, chunkPtrs);
+        int rc = compress::CompressInterface::getPtrList(hdr2, ptrSecSize,
+                                                         chunkPtrs);
         delete[] hdr2;
 
         if (rc != 0)

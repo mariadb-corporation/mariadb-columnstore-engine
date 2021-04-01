@@ -51,6 +51,8 @@ namespace WriteEngine
 BulkRollbackFileCompressed::BulkRollbackFileCompressed(BulkRollbackMgr* mgr) :
     BulkRollbackFile(mgr)
 {
+    fCompressorPool = {std::shared_ptr<compress::CompressInterface>(
+        new compress::CompressInterfaceSnappy())};
 }
 
 //------------------------------------------------------------------------------
@@ -104,7 +106,7 @@ void BulkRollbackFileCompressed::truncateSegmentFile(
     }
 
     // Read and parse the header pointers
-    char hdrs[ IDBCompressInterface::HDR_BUF_LEN * 2 ];;
+    char hdrs[ CompressInterface::HDR_BUF_LEN * 2 ];;
     CompChunkPtrList chunkPtrs;
     std::string      errMsg;
     int rc = loadColumnHdrPtrs(pFile, hdrs, chunkPtrs, errMsg);
@@ -127,7 +129,19 @@ void BulkRollbackFileCompressed::truncateSegmentFile(
     unsigned int blockOffset      = fileSizeBlocks - 1;
     unsigned int chunkIndex       = 0;
     unsigned int blkOffsetInChunk = 0;
-    fCompressor.locateBlock( blockOffset, chunkIndex, blkOffsetInChunk );
+
+    auto fCompressor = getCompressorByType(
+        compress::CompressInterface::getCompressionType(hdrs));
+    if (!fCompressor)
+    {
+        std::ostringstream oss;
+        oss << "Error, wrong compression type for segment file"
+            << ": OID-" << columnOID << "; DbRoot-" << dbRoot << "; partition-"
+            << partNum << "; segment-" << segNum << ";";
+        throw WeException(oss.str(), ERR_COMP_WRONG_COMP_TYPE);
+    }
+
+    fCompressor->locateBlock(blockOffset, chunkIndex, blkOffsetInChunk);
 
     // Truncate the extra extents that are to be aborted
     if (chunkIndex < chunkPtrs.size())
@@ -145,7 +159,7 @@ void BulkRollbackFileCompressed::truncateSegmentFile(
                            logging::M0075, columnOID, msgText2.str() );
 
         // Drop off any trailing pointers (that point beyond the last block)
-        fCompressor.setBlockCount( hdrs, fileSizeBlocks );
+        compress::CompressInterface::setBlockCount(hdrs, fileSizeBlocks);
         std::vector<uint64_t> ptrs;
 
         for (unsigned i = 0; i <= chunkIndex; i++)
@@ -155,7 +169,7 @@ void BulkRollbackFileCompressed::truncateSegmentFile(
 
         ptrs.push_back( chunkPtrs[chunkIndex].first +
                         chunkPtrs[chunkIndex].second );
-        fCompressor.storePtrs( ptrs, hdrs );
+        compress::CompressInterface::storePtrs(ptrs, hdrs);
 
         rc = fDbFile.writeHeaders( pFile, hdrs );
 
@@ -252,7 +266,7 @@ void BulkRollbackFileCompressed::reInitTruncColumnExtent(
     }
 
     // Read and parse the header pointers
-    char hdrs[ IDBCompressInterface::HDR_BUF_LEN * 2 ];
+    char hdrs[ CompressInterface::HDR_BUF_LEN * 2 ];
     CompChunkPtrList     chunkPtrs;
     std::string          errMsg;
     int rc = loadColumnHdrPtrs(pFile, hdrs, chunkPtrs, errMsg);
@@ -275,7 +289,19 @@ void BulkRollbackFileCompressed::reInitTruncColumnExtent(
     unsigned int blockOffset      = startOffsetBlk - 1;
     unsigned int chunkIndex       = 0;
     unsigned int blkOffsetInChunk = 0;
-    fCompressor.locateBlock( blockOffset, chunkIndex, blkOffsetInChunk );
+
+    auto fCompressor = getCompressorByType(
+        compress::CompressInterface::getCompressionType(hdrs));
+    if (!fCompressor)
+    {
+        std::ostringstream oss;
+        oss << "Error, wrong compression type for segment file"
+            << ": OID-" << columnOID << "; DbRoot-" << dbRoot << "; partition-"
+            << partNum << "; segment-" << segNum << ";";
+        throw WeException(oss.str(), ERR_COMP_WRONG_COMP_TYPE);
+    }
+
+    fCompressor->locateBlock(blockOffset, chunkIndex, blkOffsetInChunk);
 
     if (chunkIndex < chunkPtrs.size())
     {
@@ -401,7 +427,8 @@ void BulkRollbackFileCompressed::reInitTruncColumnExtent(
         // Watch for the special case where we are restoring a db file as an
         // empty file (chunkindex=0 and restoredChunkLen=0); in this case we
         // just restore the first pointer (set to 8192).
-        fCompressor.setBlockCount( hdrs, (startOffsetBlk + nBlocks) );
+        compress::CompressInterface::setBlockCount(hdrs,
+                                                   (startOffsetBlk + nBlocks));
         std::vector<uint64_t> newPtrs;
 
         if ((chunkIndex > 0) || (restoredChunkLen > 0))
@@ -413,7 +440,7 @@ void BulkRollbackFileCompressed::reInitTruncColumnExtent(
         }
 
         newPtrs.push_back( chunkPtrs[chunkIndex].first + restoredChunkLen );
-        fCompressor.storePtrs( newPtrs, hdrs );
+        compress::CompressInterface::storePtrs(newPtrs, hdrs);
 
         rc = fDbFile.writeHeaders( pFile, hdrs );
 
@@ -482,7 +509,7 @@ int BulkRollbackFileCompressed::loadColumnHdrPtrs(
     }
 
     // Parse the header pointers
-    int rc1 = fCompressor.getPtrList( hdrs, chunkPtrs );
+    int rc1 = compress::CompressInterface::getPtrList(hdrs, chunkPtrs);
 
     if (rc1 != 0)
     {
@@ -548,7 +575,7 @@ void BulkRollbackFileCompressed::reInitTruncDctnryExtent(
         throw WeException( oss.str(), ERR_FILE_OPEN );
     }
 
-    char controlHdr[ IDBCompressInterface::HDR_BUF_LEN ];
+    char controlHdr[ CompressInterface::HDR_BUF_LEN ];
     CompChunkPtrList chunkPtrs;
     uint64_t         ptrHdrSize;
     std::string      errMsg;
@@ -572,7 +599,19 @@ void BulkRollbackFileCompressed::reInitTruncDctnryExtent(
     unsigned int blockOffset      = startOffsetBlk - 1;
     unsigned int chunkIndex       = 0;
     unsigned int blkOffsetInChunk = 0;
-    fCompressor.locateBlock( blockOffset, chunkIndex, blkOffsetInChunk );
+
+    auto fCompressor = getCompressorByType(
+        compress::CompressInterface::getCompressionType(controlHdr));
+    if (!fCompressor)
+    {
+        std::ostringstream oss;
+        oss << "Error, wrong compression type for segment file"
+            << ": OID-" << dStoreOID << "; DbRoot-" << dbRoot << "; partition-"
+            << partNum << "; segment-" << segNum << ";";
+        throw WeException(oss.str(), ERR_COMP_WRONG_COMP_TYPE);
+    }
+
+    fCompressor->locateBlock(blockOffset, chunkIndex, blkOffsetInChunk);
 
     if (chunkIndex < chunkPtrs.size())
     {
@@ -686,7 +725,8 @@ void BulkRollbackFileCompressed::reInitTruncDctnryExtent(
         // Watch for the special case where we are restoring a db file as an
         // empty file (chunkindex=0 and restoredChunkLen=0); in this case we
         // just restore the first pointer (set to 8192).
-        fCompressor.setBlockCount( controlHdr, (startOffsetBlk + nBlocks) );
+        compress::CompressInterface::setBlockCount(controlHdr,
+                                                   (startOffsetBlk + nBlocks));
         std::vector<uint64_t> newPtrs;
 
         if ((chunkIndex > 0) || (restoredChunkLen > 0))
@@ -699,7 +739,8 @@ void BulkRollbackFileCompressed::reInitTruncDctnryExtent(
 
         newPtrs.push_back( chunkPtrs[chunkIndex].first + restoredChunkLen );
         char* pointerHdr = new char[ptrHdrSize];
-        fCompressor.storePtrs( newPtrs, pointerHdr, ptrHdrSize );
+        compress::CompressInterface::storePtrs(newPtrs, pointerHdr,
+                                               ptrHdrSize);
 
         rc = fDbFile.writeHeaders( pFile, controlHdr, pointerHdr, ptrHdrSize );
         delete[] pointerHdr;
@@ -759,7 +800,7 @@ int BulkRollbackFileCompressed::loadDctnryHdrPtrs(
     std::string& errMsg) const
 {
     int rc = fDbFile.readFile(
-                 pFile, (unsigned char*)controlHdr, IDBCompressInterface::HDR_BUF_LEN);
+                 pFile, (unsigned char*)controlHdr, CompressInterface::HDR_BUF_LEN);
 
     if (rc != NO_ERROR)
     {
@@ -771,7 +812,7 @@ int BulkRollbackFileCompressed::loadDctnryHdrPtrs(
         return rc;
     }
 
-    int rc1 = fCompressor.verifyHdr( controlHdr );
+    int rc1 = compress::CompressInterface::verifyHdr(controlHdr);
 
     if (rc1 != 0)
     {
@@ -786,8 +827,8 @@ int BulkRollbackFileCompressed::loadDctnryHdrPtrs(
         return rc;
     }
 
-    uint64_t hdrSize = fCompressor.getHdrSize(controlHdr);
-    ptrHdrSize       = hdrSize - IDBCompressInterface::HDR_BUF_LEN;
+    uint64_t hdrSize = compress::CompressInterface::getHdrSize(controlHdr);
+    ptrHdrSize       = hdrSize - CompressInterface::HDR_BUF_LEN;
     char* pointerHdr = new char[ptrHdrSize];
 
     rc = fDbFile.readFile(pFile, (unsigned char*)pointerHdr, ptrHdrSize);
@@ -804,7 +845,8 @@ int BulkRollbackFileCompressed::loadDctnryHdrPtrs(
     }
 
     // Parse the header pointers
-    rc1 = fCompressor.getPtrList( pointerHdr, ptrHdrSize, chunkPtrs );
+    rc1 = compress::CompressInterface::getPtrList(pointerHdr, ptrHdrSize,
+                                                  chunkPtrs);
     delete[] pointerHdr;
 
     if (rc1 != 0)
@@ -1032,6 +1074,18 @@ size_t BulkRollbackFileCompressed::readFillBuffer(
     }
 
     return totalBytesRead;
+}
+
+std::shared_ptr<compress::CompressInterface>
+BulkRollbackFileCompressed::getCompressorByType(uint32_t compressionType)
+{
+    switch (compressionType)
+    {
+    case 1:
+    case 2:
+        return fCompressorPool.front();
+    }
+    return nullptr;
 }
 
 } //end of namespace

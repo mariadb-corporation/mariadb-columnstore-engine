@@ -54,7 +54,7 @@ public:
     virtual const IOSocket accept(const struct timespec* timeout);
     virtual void connect(const sockaddr* addr);
 private:
-    compress::IDBCompressInterface alg;
+    std::shared_ptr<compress::CompressInterface> alg;
     bool useCompression;
 };
 

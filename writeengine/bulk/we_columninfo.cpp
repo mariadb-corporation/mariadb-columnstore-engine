@@ -667,7 +667,7 @@ int ColumnInfo::extendColumnNewExtent(
     uint16_t    segmentNew   = 0;
     BRM::LBID_t startLbid;
 
-    char hdr[ compress::IDBCompressInterface::HDR_BUF_LEN * 2 ];
+    char hdr[ compress::CompressInterface::HDR_BUF_LEN * 2 ];
 
     // Extend the column by adding an extent to the next
     // DBRoot, partition, and segment file in the rotation

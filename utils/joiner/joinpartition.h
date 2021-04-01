@@ -164,7 +164,7 @@ private:
 
     /* Compression support */
     bool useCompression;
-    compress::IDBCompressInterface compressor;
+    std::shared_ptr<compress::CompressInterface> compressor;
     /* TBD: do the reading/writing in one thread, compression/decompression in another */
 
     /* Some stats for reporting */

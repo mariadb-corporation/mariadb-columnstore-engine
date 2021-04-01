@@ -383,7 +383,7 @@ public:
         BlockOp   blockOp;
         char     fileName[20];
         int      rc;
-        char hdrs[ IDBCompressInterface::HDR_BUF_LEN * 2 ];
+        char hdrs[ CompressInterface::HDR_BUF_LEN * 2 ];
 
         printf("\nRunning testCreateDeleteFile \n");
         idbdatafile::IDBPolicy::init(true, false, "", 0);
@@ -966,7 +966,7 @@ public:
         BlockOp   blockOp;
         char     fileName[20];
         int      rc;
-        char hdrs[ IDBCompressInterface::HDR_BUF_LEN * 2 ];
+        char hdrs[ CompressInterface::HDR_BUF_LEN * 2 ];
         int dbRoot = 1;
 
         printf("\nRunning testExtensionWOPrealloc \n");
@@ -1565,7 +1565,7 @@ public:
         BlockOp blockOp;
         char fileName[20];
         int rc;
-        char hdrs[ IDBCompressInterface::HDR_BUF_LEN * 2 ];
+        char hdrs[ CompressInterface::HDR_BUF_LEN * 2 ];
         int dbRoot = 1;
 
         idbdatafile::IDBPolicy::init(true, false, "", 0);

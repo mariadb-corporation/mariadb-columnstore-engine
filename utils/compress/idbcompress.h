@@ -41,7 +41,7 @@ namespace compress
 typedef std::pair<uint64_t, uint64_t> CompChunkPtr;
 typedef std::vector<CompChunkPtr> CompChunkPtrList;
 
-class IDBCompressInterface
+class CompressInterface
 {
 public:
     static const unsigned int HDR_BUF_LEN            = 4096;
@@ -53,22 +53,23 @@ public:
     static const int ERR_DECOMPRESS = -2;
     static const int ERR_BADINPUT = -3;
     static const int ERR_BADOUTSIZE = -4;
+    static const int ERR_COMPRESS = -5;
 
     /**
-    * When IDBCompressInterface object is being used to compress a chunk, this
+    * When CompressInterface object is being used to compress a chunk, this
     * construct can be used to specify the padding added by padCompressedChunks
     */
-    EXPORT explicit IDBCompressInterface(unsigned int numUserPaddingBytes = 0);
+    EXPORT explicit CompressInterface(unsigned int numUserPaddingBytes = 0);
 
     /**
      * dtor
      */
-    EXPORT virtual ~IDBCompressInterface();
+    EXPORT virtual ~CompressInterface() = default;
 
     /**
      * see if the algo is available in this lib
      */
-    EXPORT bool isCompressionAvail(int compressionType = 0) const;
+    EXPORT static bool isCompressionAvail(int compressionType = 0);
 
     /**
     * Compresses specified "in" buffer of length "inLen" bytes.
@@ -76,37 +77,38 @@ public:
     * "out" should be sized using maxCompressedSize() to allow for incompressible data.
     * Returns 0 if success.
     */
-    EXPORT int compressBlock(const char* in,
-                             const size_t   inLen,
-                             unsigned char* out,
-                             unsigned int&  outLen) const;
+
+    EXPORT int compressBlock(const char* in, const size_t inLen,
+                             unsigned char* out, size_t& outLen) const;
 
     /**
     * outLen must be initialized with the size of the out buffer before calling uncompressBlock.
     * On return, outLen will have the number of bytes used in out.
     */
-    EXPORT int uncompressBlock(const char* in, const size_t inLen, unsigned char* out,
-                               unsigned int& outLen) const;
+    EXPORT int uncompressBlock(const char* in, const size_t inLen,
+                               unsigned char* out, size_t& outLen) const;
 
     /**
      * This fcn wraps whatever compression algorithm we're using at the time, and
      * is not specific to blocks on disk.
      */
-    EXPORT int compress(const char* in, size_t inLen, char* out, size_t* outLen) const;
+    EXPORT virtual int compress(const char* in, size_t inLen, char* out,
+                                size_t* outLen) const = 0;
 
     /**
      * This fcn wraps whatever compression algorithm we're using at the time, and
      * is not specific to blocks on disk.  The caller needs to make sure out is big
      * enough to contain the output by using getUncompressedSize().
      */
-    EXPORT int uncompress(const char* in, size_t inLen, char* out) const;
+    EXPORT virtual int uncompress(const char* in, size_t inLen, char* out,
+                                  size_t* outLen) const = 0;
 
     /**
     * Initialize header buffer at start of compressed db file.
     *
     * @warning hdrBuf must be at least HDR_BUF_LEN*2 bytes
     */
-    EXPORT void initHdr(void* hdrBuf, int compressionType) const;
+    EXPORT static void initHdr(void* hdrBuf, int compressionType);
 
     /**
     * Initialize header buffer at start of compressed db file.
@@ -114,21 +116,23 @@ public:
     * @warning hdrBuf must be at least HDR_BUF_LEN bytes
     * @warning ptrBuf must be at least (hdrSize-HDR_BUF_LEN) bytes
     */
-    EXPORT void initHdr(void* hdrBuf, void* ptrBuf, int compressionType, int hdrSize) const;
+    EXPORT static void initHdr(void* hdrBuf, void* ptrBuf, int compressionType,
+                               int hdrSize);
 
     /**
      * Initialize header buffer at start of compressed db file.
      *
      * @warning hdrBuf must be at least HDR_BUF_LEN*2 bytes
      */
-    EXPORT void initHdr(void* hdrBuf, uint32_t columnWidth,
-                        execplan::CalpontSystemCatalog::ColDataType columnType,
-                        int compressionType) const;
+    EXPORT static void
+    initHdr(void* hdrBuf, uint32_t columnWidth,
+            execplan::CalpontSystemCatalog::ColDataType columnType,
+            int compressionType);
 
     /**
     * Verify the passed in buffer contains a compressed db file header.
     */
-    EXPORT int verifyHdr(const void* hdrBuf) const;
+    EXPORT static int verifyHdr(const void* hdrBuf);
 
     /**
     * Extracts list of compression pointers from the specified ptr buffer.
@@ -136,9 +140,8 @@ public:
     * chunkPtrs is a vector of offset, size pairs for the compressed chunks.
     * Returns 0 if success.
     */
-    EXPORT int getPtrList(const char* ptrBuf,
-                          const int ptrBufSize,
-                          CompChunkPtrList& chunkPtrs) const;
+    EXPORT static int getPtrList(const char* ptrBuf, const int ptrBufSize,
+                                 CompChunkPtrList& chunkPtrs);
 
     /**
     * Extracts list of compression pointers from the specified header.
@@ -147,28 +150,28 @@ public:
     * Note: the pointer passed in is the beginning of the header,
     *       not the pointer section as above.
     */
-    EXPORT int getPtrList(const char* hdrBuf, CompChunkPtrList& chunkPtrs) const;
+    EXPORT static int getPtrList(const char* hdrBuf,
+                                 CompChunkPtrList& chunkPtrs);
 
     /**
     * Return the number of chunk pointers contained in the specified ptr buffer.
     * ptrBuf points to the pointer section taken from the headers.
     */
-    EXPORT unsigned int getPtrCount(const char* ptrBuf,
-                                    const int ptrBufSize) const;
+    EXPORT static unsigned int getPtrCount(const char* ptrBuf,
+                                           const int ptrBufSize);
 
     /**
     * Return the number of chunk pointers contained in the specified header.
     * hdrBuf points to start of 2 buffer headers from compressed db file.
     * For non-dictionary columns.
     */
-    EXPORT unsigned int getPtrCount(const char* hdrBuf) const;
+    EXPORT static unsigned int getPtrCount(const char* hdrBuf);
 
     /**
     * Store vector of pointers into the specified buffer header's pointer section.
     */
-    EXPORT void storePtrs(const std::vector<uint64_t>& ptrs,
-                          void* hdrBuf,
-                          int ptrSectionSize) const;
+    EXPORT static void storePtrs(const std::vector<uint64_t>& ptrs,
+                                 void* hdrBuf, int ptrSectionSize);
 
     /**
     * Store vector of pointers into the specified buffer header.
@@ -176,14 +179,14 @@ public:
     * Note: the pointer passed in is the beginning of the header,
     *       not the pointer section as above.
     */
-    EXPORT void storePtrs(const std::vector<uint64_t>& ptrs, void* hdrBuf) const;
+    EXPORT static void storePtrs(const std::vector<uint64_t>& ptrs,
+                                 void* hdrBuf);
 
     /**
     * Calculates the chunk, and the block offset within the chunk, for the
     * specified block number.
     */
-    EXPORT void locateBlock(unsigned int block,
-                            unsigned int& chunkIndex,
+    EXPORT void locateBlock(unsigned int block, unsigned int& chunkIndex,
                             unsigned int& blockOffsetWithinChunk) const;
 
     /**
@@ -192,9 +195,8 @@ public:
      * maxLen is the maximum size for buf.  nonzero return code means the
      * result output buffer length is > than maxLen.
      */
-    EXPORT int padCompressedChunks(unsigned char* buf,
-                                   unsigned int& len,
-                                   unsigned int  maxLen ) const;
+    EXPORT int padCompressedChunks(unsigned char* buf, size_t& len,
+                                   unsigned int maxLen) const;
 
     /*
      * Mutator methods for the block count in the file
@@ -202,12 +204,17 @@ public:
     /**
      * setBlockCount
      */
-    EXPORT void setBlockCount(void* hdrBuf, uint64_t count) const;
+    EXPORT static void setBlockCount(void* hdrBuf, uint64_t count);
 
     /**
      * getBlockCount
      */
-    EXPORT uint64_t getBlockCount(const void* hdrBuf) const;
+    EXPORT static uint64_t getBlockCount(const void* hdrBuf);
+
+    /**
+     * getCompressionType
+     */
+    EXPORT static uint64_t getCompressionType(const void* hdrBuf);
 
     /*
      * Mutator methods for the overall header size
@@ -215,12 +222,12 @@ public:
     /**
      * setHdrSize
      */
-    EXPORT void setHdrSize(void* hdrBuf, uint64_t size) const;
+    EXPORT static void setHdrSize(void* hdrBuf, uint64_t size);
 
     /**
      * getHdrSize
      */
-    EXPORT uint64_t getHdrSize(const void* hdrBuf) const;
+    EXPORT static uint64_t getHdrSize(const void* hdrBuf);
 
     /**
      * Mutator methods for the user padding bytes
@@ -245,98 +252,161 @@ public:
      * Given an input, uncompressed block, what's the maximum possible output,
      * compressed size?
      */
-    EXPORT static uint64_t maxCompressedSize(uint64_t uncompSize);
+    EXPORT virtual size_t maxCompressedSize(size_t uncompSize) const = 0;
 
     /**
      * Given a compressed block, returns the uncompressed size in outLen.
      * Returns false on error, true on success.
      */
-    EXPORT static bool getUncompressedSize(char* in, size_t inLen, size_t* outLen);
+    EXPORT virtual bool getUncompressedSize(char* in, size_t inLen,
+                                            size_t* outLen) const = 0;
 
-protected:
+  protected:
+    virtual uint8_t getChunkMagicNumber() const = 0;
 
-private:
+  private:
     //defaults okay
-    //IDBCompressInterface(const IDBCompressInterface& rhs);
-    //IDBCompressInterface& operator=(const IDBCompressInterface& rhs);
+    //CompressInterface(const CompressInterface& rhs);
+    //CompressInterface& operator=(const CompressInterface& rhs);
 
     unsigned int fNumUserPaddingBytes; // Num bytes to pad compressed chunks
 };
 
+class CompressInterfaceSnappy : public CompressInterface
+{
+  public:
+    EXPORT CompressInterfaceSnappy(uint32_t numUserPaddingBytes = 0);
+    EXPORT ~CompressInterfaceSnappy() = default;
+    /**
+     * Compress the given block using snappy compression API.
+     */
+    EXPORT int32_t compress(const char* in, size_t inLen, char* out,
+                            size_t* outLen) const override;
+    /**
+     * Uncompress the given block using snappy compression API.
+     */
+    EXPORT int32_t uncompress(const char* in, size_t inLen, char* out,
+                              size_t* outLen) const override;
+    /**
+     * Get max compressed size for the given `uncompSize` value using snappy
+     * compression API.
+     */
+    EXPORT size_t maxCompressedSize(size_t uncompSize) const override;
+
+    /**
+     * Get uncompressed size for the given block using snappy
+     * compression API.
+     */
+    EXPORT
+    bool getUncompressedSize(char* in, size_t inLen,
+                             size_t* outLen) const override;
+
+  protected:
+    uint8_t getChunkMagicNumber() const override;
+
+  private:
+    const uint8_t CHUNK_MAGIC_SNAPPY = 0xfd;
+};
+
+// Returns a pointer to the appropriate compression interface based on
+// `compressionType`. `compressionType` must be greater than 0.
+// Note: caller is responsible for memory deallocation.
+EXPORT CompressInterface*
+getCompressInterfaceByType(uint32_t compressionType,
+                           uint32_t numUserPaddingBytes = 0);
+
 #ifdef SKIP_IDB_COMPRESSION
-inline IDBCompressInterface::IDBCompressInterface(unsigned int /*numUserPaddingBytes*/) {}
-inline IDBCompressInterface::~IDBCompressInterface() {}
-inline bool IDBCompressInterface::isCompressionAvail(int c) const
+inline CompressInterface::CompressInterface(unsigned int /*numUserPaddingBytes*/) {}
+inline bool CompressInterface::isCompressionAvail(int c)
 {
     return (c == 0);
 }
-inline int IDBCompressInterface::compressBlock(const char*, const size_t, unsigned char*, unsigned int&) const
+inline int CompressInterface::compressBlock(const char*, const size_t, unsigned char*, size_t&) const
 {
     return -1;
 }
-inline int IDBCompressInterface::uncompressBlock(const char* in, const size_t inLen, unsigned char* out, unsigned int& outLen) const
+inline int CompressInterface::uncompressBlock(const char* in, const size_t inLen, unsigned char* out, size_t& outLen) const
 {
     return -1;
 }
-inline int IDBCompressInterface::compress(const char* in, size_t inLen, char* out, size_t* outLen) const
+inline void CompressInterface::initHdr(void*, int)  {}
+inline void CompressInterface::initHdr(void*, void*, int, int)  {}
+inline void initHdr(void*, uint32_t, execplan::CalpontSystemCatalog::ColDataType, int) {}
+inline int CompressInterface::verifyHdr(const void*)
 {
     return -1;
 }
-inline int IDBCompressInterface::uncompress(const char* in, size_t inLen, char* out) const
+inline int CompressInterface::getPtrList(const char*, const int, CompChunkPtrList&)
+{
+    return -1;
+}
+inline int CompressInterface::getPtrList(const char*, CompChunkPtrList&)
+{
+    return -1;
+}
+inline unsigned int CompressInterface::getPtrCount(const char*, const int)
 {
     return 0;
 }
-inline void IDBCompressInterface::initHdr(void*, int) const {}
-inline void IDBCompressInterface::initHdr(void*, void*, int, int) const {}
-inline void initHdr(void*, uint32_t, execplan::CalpontSystemCatalog::ColDataType, int) const {}
-inline int IDBCompressInterface::verifyHdr(const void*) const
-{
-    return -1;
-}
-inline int IDBCompressInterface::getPtrList(const char*, const int, CompChunkPtrList&) const
-{
-    return -1;
-}
-inline int IDBCompressInterface::getPtrList(const char*, CompChunkPtrList&) const
-{
-    return -1;
-}
-inline unsigned int IDBCompressInterface::getPtrCount(const char*, const int) const
+inline unsigned int CompressInterface::getPtrCount(const char*)
 {
     return 0;
 }
-inline unsigned int IDBCompressInterface::getPtrCount(const char*) const
+inline void CompressInterface::storePtrs(const std::vector<uint64_t>&, void*, int) {}
+inline void CompressInterface::storePtrs(const std::vector<uint64_t>&, void*) {}
+inline void
+CompressInterface::locateBlock(unsigned int block, unsigned int& chunkIndex,
+                               unsigned int& blockOffsetWithinChunk) const
 {
-    return 0;
 }
-inline void IDBCompressInterface::storePtrs(const std::vector<uint64_t>&, void*, int) const {}
-inline void IDBCompressInterface::storePtrs(const std::vector<uint64_t>&, void*) const {}
-inline void IDBCompressInterface::locateBlock(unsigned int block,
-        unsigned int& chunkIndex, unsigned int& blockOffsetWithinChunk) const {}
-inline int IDBCompressInterface::padCompressedChunks(unsigned char* buf, unsigned int& len, unsigned int maxLen) const
+inline int CompressInterface::padCompressedChunks(unsigned char* buf, unsigned int& len, unsigned int maxLen) const
 {
     return -1;
 }
-inline void IDBCompressInterface::setBlockCount(void* hdrBuf, uint64_t count) const {}
-inline uint64_t IDBCompressInterface::getBlockCount(const void* hdrBuf) const
+inline void CompressInterface::setBlockCount(void* hdrBuf, uint64_t count) {}
+inline uint64_t CompressInterface::getBlockCount(const void* hdrBuf)
 {
     return 0;
 }
-inline void IDBCompressInterface::setHdrSize(void*, uint64_t) const {}
-inline uint64_t IDBCompressInterface::getHdrSize(const void*) const
+inline uint64_t CompressInterface::getCompressionType(const void* hdrBuf)
 {
     return 0;
 }
-inline uint64_t IDBCompressInterface::maxCompressedSize(uint64_t uncompSize)
+inline void CompressInterface::setHdrSize(void*, uint64_t) {}
+inline uint64_t CompressInterface::getHdrSize(const void*)
+{
+    return 0;
+}
+CompressInterfaceSnappy::CompressInterfaceSnappy(uint32_t numUserPaddingBytes)
+    : CompressInterface(numUserPaddingBytes)
+{
+}
+int32_t CompressInterfaceSnappy::compress(const char* in, size_t inLen,
+                                          char* out, size_t* outLen) const
+{
+    return -1;
+}
+int32_t CompressInterfaceSnappy::uncompress(const char* in, size_t inLen,
+                                            char* out, size_t* outLen) const
+{
+    return -1;
+}
+size_t CompressInterfaceSnappy::maxCompressedSize(size_t uncompSize) const
 {
     return uncompSize;
 }
-inline bool IDBCompressInterface::getUncompressedSize(char* in, size_t inLen, size_t* outLen)
+bool CompressInterfaceSnappy::getUncompressedSize(char* in, size_t inLen,
+                                                  size_t* outLen) const
 {
     return false;
 }
+uint8_t getChunkMagicNumber() const { return 0; }
+CompressInterface* getCompressInterfaceByType(uint32_t compressionType,
+                                              uint32_t numUserPaddingBytes)
+{
+    return nullptr;
+}
 #endif
-
 }
 
 #undef EXPORT

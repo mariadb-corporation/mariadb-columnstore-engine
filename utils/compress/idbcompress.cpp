@@ -39,7 +39,7 @@ const uint64_t MAGIC_NUMBER = 0xfdc119a384d0778eULL;
 const uint64_t VERSION_NUM1 = 1;
 const uint64_t VERSION_NUM2 = 2;
 const int      COMPRESSED_CHUNK_INCREMENT_SIZE = 8192;
-const int      PTR_SECTION_OFFSET = compress::IDBCompressInterface::HDR_BUF_LEN;
+const int      PTR_SECTION_OFFSET = compress::CompressInterface::HDR_BUF_LEN;
 
 // version 1.1 of the chunk data has a short header
 // QuickLZ compressed data never has the high bit set on the first byte
@@ -77,7 +77,7 @@ struct CompressedDBFileHeader
 union CompressedDBFileHeaderBlock
 {
     CompressedDBFileHeader fHeader;
-    char fDummy[compress::IDBCompressInterface::HDR_BUF_LEN];
+    char fDummy[compress::CompressInterface::HDR_BUF_LEN];
 };
 
 void initCompressedDBFileHeader(void* hdrBuf, int compressionType, int hdrSize)
@@ -114,22 +114,19 @@ namespace compress
 {
 #ifndef SKIP_IDB_COMPRESSION
 
-IDBCompressInterface::IDBCompressInterface(unsigned int numUserPaddingBytes) :
+CompressInterface::CompressInterface(unsigned int numUserPaddingBytes) :
     fNumUserPaddingBytes(numUserPaddingBytes)
-{ }
-
-IDBCompressInterface::~IDBCompressInterface()
 { }
 
 /* V1 is really only available for decompression, we kill any DDL using V1 by hand.
  * Maybe should have a new api, isDecompressionAvail() ? Any request to compress
  * using V1 will silently be changed to V2.
 */
-bool IDBCompressInterface::isCompressionAvail(int compressionType) const
+/*static*/
+bool CompressInterface::isCompressionAvail(int compressionType)
 {
-    if ( (compressionType == 0) ||
-            (compressionType == 1) ||
-            (compressionType == 2) )
+    if ((compressionType == 0) || (compressionType == 1) ||
+        (compressionType == 2))
         return true;
 
     return false;
@@ -138,29 +135,33 @@ bool IDBCompressInterface::isCompressionAvail(int compressionType) const
 //------------------------------------------------------------------------------
 // Compress a block of data
 //------------------------------------------------------------------------------
-int IDBCompressInterface::compressBlock(const char* in,
-                                        const size_t   inLen,
+int CompressInterface::compressBlock(const char* in, const size_t inLen,
                                         unsigned char* out,
-                                        unsigned int&  outLen) const
+                                        size_t& outLen) const
 {
     size_t snaplen = 0;
     utils::Hasher128 hasher;
 
     // loose input checking.
-    if (outLen < snappy::MaxCompressedLength(inLen) + HEADER_SIZE)
+    if (outLen < maxCompressedSize(inLen) + HEADER_SIZE)
     {
-        cerr << "got outLen = " << outLen << " for inLen = " << inLen << ", needed " <<
-             (snappy::MaxCompressedLength(inLen) + HEADER_SIZE) << endl;
+        cerr << "got outLen = " << outLen << " for inLen = " << inLen
+             << ", needed " << (maxCompressedSize(inLen) + HEADER_SIZE)
+             << endl;
         return ERR_BADOUTSIZE;
     }
 
-    //apparently this never fails?
-    snappy::RawCompress(in, inLen, reinterpret_cast<char*>(&out[HEADER_SIZE]), &snaplen);
+    auto rc = compress(in, inLen, reinterpret_cast<char*>(&out[HEADER_SIZE]),
+                       &snaplen);
+    if (rc != ERR_OK)
+    {
+        return rc;
+    }
 
     uint8_t* signature = (uint8_t*) &out[SIG_OFFSET];
     uint32_t* checksum = (uint32_t*) &out[CHECKSUM_OFFSET];
     uint32_t* len = (uint32_t*) &out[LEN_OFFSET];
-    *signature = CHUNK_MAGIC3;
+    *signature = getChunkMagicNumber();
     *checksum = hasher((char*) &out[HEADER_SIZE], snaplen);
     *len = snaplen;
 
@@ -175,10 +176,10 @@ int IDBCompressInterface::compressBlock(const char* in,
 //------------------------------------------------------------------------------
 // Decompress a block of data
 //------------------------------------------------------------------------------
-int IDBCompressInterface::uncompressBlock(const char* in, const size_t inLen, unsigned char* out,
-        unsigned int& outLen) const
+int CompressInterface::uncompressBlock(const char* in, const size_t inLen,
+                                       unsigned char* out,
+                                       size_t& outLen) const
 {
-    bool comprc = false;
     size_t ol = 0;
 
     uint32_t realChecksum;
@@ -187,19 +188,20 @@ int IDBCompressInterface::uncompressBlock(const char* in, const size_t inLen, un
     uint8_t storedMagic;
     utils::Hasher128 hasher;
 
-    outLen = 0;
 
     if (inLen < 1)
     {
+        outLen = 0;
         return ERR_BADINPUT;
     }
 
     storedMagic = *((uint8_t*) &in[SIG_OFFSET]);
 
-    if (storedMagic == CHUNK_MAGIC3)
+    if (storedMagic == getChunkMagicNumber())
     {
         if (inLen < HEADER_SIZE)
         {
+            outLen = 0;
             return ERR_BADINPUT;
         }
 
@@ -208,6 +210,7 @@ int IDBCompressInterface::uncompressBlock(const char* in, const size_t inLen, un
 
         if (inLen < storedLen + HEADER_SIZE)
         {
+            outLen = 0;
             return ERR_BADINPUT;
         }
 
@@ -215,25 +218,26 @@ int IDBCompressInterface::uncompressBlock(const char* in, const size_t inLen, un
 
         if (storedChecksum != realChecksum)
         {
+            outLen = 0;
             return ERR_CHECKSUM;
         }
 
-        comprc = snappy::GetUncompressedLength(&in[HEADER_SIZE], storedLen, &ol) &&
-                 snappy::RawUncompress(&in[HEADER_SIZE], storedLen, reinterpret_cast<char*>(out));
+        auto rc = uncompress(&in[HEADER_SIZE], storedLen,
+                             reinterpret_cast<char*>(out), &outLen);
+        if (rc != ERR_OK)
+        {
+            outLen = 0;
+            cerr << "uncompressBlock failed!" << endl;
+            return ERR_DECOMPRESS;
+        }
     }
     else
     {
         // v1 compression or bad header
+        outLen = 0;
         return ERR_BADINPUT;
     }
 
-    if (!comprc)
-    {
-        cerr << "decomp failed!" << endl;
-        return ERR_DECOMPRESS;
-    }
-
-    outLen = ol;
     //cerr << "ub: " << inLen << " : " << outLen << endl;
 
     return ERR_OK;
@@ -242,7 +246,7 @@ int IDBCompressInterface::uncompressBlock(const char* in, const size_t inLen, un
 //------------------------------------------------------------------------------
 // Verify the passed in buffer contains a valid compression file header.
 //------------------------------------------------------------------------------
-int IDBCompressInterface::verifyHdr(const void* hdrBuf) const
+int CompressInterface::verifyHdr(const void* hdrBuf)
 {
     const CompressedDBFileHeader* hdr = reinterpret_cast<const CompressedDBFileHeader*>(hdrBuf);
 
@@ -259,9 +263,8 @@ int IDBCompressInterface::verifyHdr(const void* hdrBuf) const
 // Extract compression pointer information out of the pointer buffer that is
 // passed in.  ptrBuf points to the pointer section of the compression hdr.
 //------------------------------------------------------------------------------
-int IDBCompressInterface::getPtrList(const char* ptrBuf,
-                                     const int ptrBufSize,
-                                     CompChunkPtrList& chunkPtrs ) const
+int CompressInterface::getPtrList(const char* ptrBuf, const int ptrBufSize,
+                                  CompChunkPtrList& chunkPtrs)
 {
     int rc = 0;
     chunkPtrs.clear();
@@ -289,7 +292,7 @@ int IDBCompressInterface::getPtrList(const char* ptrBuf,
 // one for the file header, and one for the list of pointers.
 // Wrapper of above method for backward compatibility.
 //------------------------------------------------------------------------------
-int IDBCompressInterface::getPtrList(const char* hdrBuf, CompChunkPtrList& chunkPtrs ) const
+int CompressInterface::getPtrList(const char* hdrBuf, CompChunkPtrList& chunkPtrs )
 {
     return getPtrList(hdrBuf + HDR_BUF_LEN, HDR_BUF_LEN, chunkPtrs);
 }
@@ -297,8 +300,8 @@ int IDBCompressInterface::getPtrList(const char* hdrBuf, CompChunkPtrList& chunk
 //------------------------------------------------------------------------------
 // Count the number of chunk pointers in the pointer header(s)
 //------------------------------------------------------------------------------
-unsigned int IDBCompressInterface::getPtrCount(const char* ptrBuf,
-        const int ptrBufSize) const
+unsigned int CompressInterface::getPtrCount(const char* ptrBuf,
+                                            const int ptrBufSize)
 {
     unsigned int chunkCount = 0;
 
@@ -322,7 +325,7 @@ unsigned int IDBCompressInterface::getPtrCount(const char* ptrBuf,
 // This should not be used for compressed dictionary files which could have
 // more compression chunk headers.
 //------------------------------------------------------------------------------
-unsigned int IDBCompressInterface::getPtrCount(const char* hdrBuf) const
+unsigned int CompressInterface::getPtrCount(const char* hdrBuf)
 {
     return getPtrCount(hdrBuf + HDR_BUF_LEN, HDR_BUF_LEN);
 }
@@ -330,9 +333,8 @@ unsigned int IDBCompressInterface::getPtrCount(const char* hdrBuf) const
 //------------------------------------------------------------------------------
 // Store list of compression pointers into the specified header.
 //------------------------------------------------------------------------------
-void IDBCompressInterface::storePtrs(const std::vector<uint64_t>& ptrs,
-                                     void* ptrBuf,
-                                     int ptrSectionSize) const
+void CompressInterface::storePtrs(const std::vector<uint64_t>& ptrs,
+                                  void* ptrBuf, int ptrSectionSize)
 {
     memset((ptrBuf), 0, ptrSectionSize); // reset the pointer section to 0
     uint64_t* hdrPtrs = reinterpret_cast<uint64_t*>(ptrBuf);
@@ -346,7 +348,7 @@ void IDBCompressInterface::storePtrs(const std::vector<uint64_t>& ptrs,
 //------------------------------------------------------------------------------
 // Wrapper of above method for backward compatibility
 //------------------------------------------------------------------------------
-void IDBCompressInterface::storePtrs(const std::vector<uint64_t>& ptrs, void* ptrBuf) const
+void CompressInterface::storePtrs(const std::vector<uint64_t>& ptrs, void* ptrBuf)
 {
     storePtrs(ptrs, reinterpret_cast<char*>(ptrBuf) + HDR_BUF_LEN, HDR_BUF_LEN);
 }
@@ -354,7 +356,7 @@ void IDBCompressInterface::storePtrs(const std::vector<uint64_t>& ptrs, void* pt
 //------------------------------------------------------------------------------
 // Initialize the header blocks to be written at the start of a column file.
 //------------------------------------------------------------------------------
-void IDBCompressInterface::initHdr(void* hdrBuf, int compressionType) const
+void CompressInterface::initHdr(void* hdrBuf, int compressionType)
 {
     memset(hdrBuf, 0, HDR_BUF_LEN * 2);
     initCompressedDBFileHeader(hdrBuf, compressionType, HDR_BUF_LEN * 2);
@@ -363,7 +365,8 @@ void IDBCompressInterface::initHdr(void* hdrBuf, int compressionType) const
 //------------------------------------------------------------------------------
 // Initialize the header blocks to be written at the start of a dictionary file.
 //------------------------------------------------------------------------------
-void IDBCompressInterface::initHdr(void* hdrBuf, void* ptrBuf, int compressionType, int hdrSize) const
+void CompressInterface::initHdr(void* hdrBuf, void* ptrBuf,
+                                int compressionType, int hdrSize)
 {
     memset(hdrBuf, 0, HDR_BUF_LEN);
     memset(ptrBuf, 0, hdrSize - HDR_BUF_LEN);
@@ -373,10 +376,10 @@ void IDBCompressInterface::initHdr(void* hdrBuf, void* ptrBuf, int compressionTy
 //------------------------------------------------------------------------------
 // Initialize the header blocks to be written at the start of a column file.
 //------------------------------------------------------------------------------
-void IDBCompressInterface::initHdr(
+void CompressInterface::initHdr(
     void* hdrBuf, uint32_t columnWidth,
     execplan::CalpontSystemCatalog::ColDataType columnType,
-    int compressionType) const
+    int compressionType)
 {
     memset(hdrBuf, 0, HDR_BUF_LEN * 2);
     initCompressedDBFileHeader(hdrBuf, columnWidth, columnType,
@@ -386,7 +389,7 @@ void IDBCompressInterface::initHdr(
 //------------------------------------------------------------------------------
 // Set the file's block count
 //------------------------------------------------------------------------------
-void IDBCompressInterface::setBlockCount(void* hdrBuf, uint64_t count) const
+void CompressInterface::setBlockCount(void* hdrBuf, uint64_t count)
 {
     reinterpret_cast<CompressedDBFileHeader*>(hdrBuf)->fBlockCount = count;
 }
@@ -394,15 +397,24 @@ void IDBCompressInterface::setBlockCount(void* hdrBuf, uint64_t count) const
 //------------------------------------------------------------------------------
 // Get the file's block count
 //------------------------------------------------------------------------------
-uint64_t IDBCompressInterface::getBlockCount(const void* hdrBuf) const
+uint64_t CompressInterface::getBlockCount(const void* hdrBuf)
 {
     return (reinterpret_cast<const CompressedDBFileHeader*>(hdrBuf)->fBlockCount);
 }
 
 //------------------------------------------------------------------------------
+// Get the file's compression type
+//------------------------------------------------------------------------------
+uint64_t CompressInterface::getCompressionType(const void* hdrBuf)
+{
+    return (reinterpret_cast<const CompressedDBFileHeader*>(hdrBuf)
+                ->fCompressionType);
+}
+
+//------------------------------------------------------------------------------
 // Set the overall header size
 //------------------------------------------------------------------------------
-void IDBCompressInterface::setHdrSize(void* hdrBuf, uint64_t size) const
+void CompressInterface::setHdrSize(void* hdrBuf, uint64_t size)
 {
     reinterpret_cast<CompressedDBFileHeader*>(hdrBuf)->fHeaderSize = size;
 }
@@ -410,7 +422,7 @@ void IDBCompressInterface::setHdrSize(void* hdrBuf, uint64_t size) const
 //------------------------------------------------------------------------------
 // Get the overall header size
 //------------------------------------------------------------------------------
-uint64_t IDBCompressInterface::getHdrSize(const void* hdrBuf) const
+uint64_t CompressInterface::getHdrSize(const void* hdrBuf)
 {
     return (reinterpret_cast<const CompressedDBFileHeader*>(hdrBuf)->fHeaderSize);
 }
@@ -419,9 +431,9 @@ uint64_t IDBCompressInterface::getHdrSize(const void* hdrBuf) const
 // Calculates the chunk and block offset within the chunk for the specified
 // block number.
 //------------------------------------------------------------------------------
-void IDBCompressInterface::locateBlock(unsigned int block,
-                                       unsigned int& chunkIndex,
-                                       unsigned int& blockOffsetWithinChunk) const
+void CompressInterface::locateBlock(unsigned int block,
+                                    unsigned int& chunkIndex,
+                                    unsigned int& blockOffsetWithinChunk) const
 {
     const uint64_t BUFLEN  = UNCOMPRESSED_INBUF_LEN;
 
@@ -438,9 +450,8 @@ void IDBCompressInterface::locateBlock(unsigned int block,
 // also expand to allow for user requested padding.  Lastly, initialize padding
 // bytes to 0.
 //------------------------------------------------------------------------------
-int IDBCompressInterface::padCompressedChunks(unsigned char* buf,
-        unsigned int& len,
-        unsigned int  maxLen) const
+int CompressInterface::padCompressedChunks(unsigned char* buf, size_t& len,
+                                           unsigned int maxLen) const
 {
     int nPaddingBytes = 0;
     int nRem = len % COMPRESSED_CHUNK_INCREMENT_SIZE;
@@ -464,28 +475,66 @@ int IDBCompressInterface::padCompressedChunks(unsigned char* buf,
     return 0;
 }
 
-/* static */
-uint64_t IDBCompressInterface::maxCompressedSize(uint64_t uncompSize)
+CompressInterfaceSnappy::CompressInterfaceSnappy(uint32_t numUserPaddingBytes)
+    : CompressInterface(numUserPaddingBytes)
+{
+}
+
+int32_t CompressInterfaceSnappy::compress(const char* in, size_t inLen,
+                                          char* out, size_t* outLen) const
+{
+    snappy::RawCompress(in, inLen, out, outLen);
+    return ERR_OK;
+}
+
+int32_t CompressInterfaceSnappy::uncompress(const char* in, size_t inLen,
+                                            char* out, size_t* outLen) const
+{
+    size_t realOutLen = 0;
+    auto rc = snappy::GetUncompressedLength(in, inLen, &realOutLen);
+
+    if (!rc || realOutLen > *outLen)
+    {
+        cerr << "snappy::GetUncompressedLength failed. InLen: " << inLen
+             << ", outLen: " << *outLen << ", realOutLen: " << realOutLen
+             << endl;
+        return ERR_DECOMPRESS;
+    }
+
+    rc = snappy::RawUncompress(in, inLen, out);
+
+    if (!rc)
+    {
+        cerr << "snappy::RawUnompress failed. InLen: " << inLen
+             << ", outLen: " << *outLen << endl;
+        return ERR_DECOMPRESS;
+    }
+
+    return ERR_OK;
+}
+
+size_t CompressInterfaceSnappy::maxCompressedSize(size_t uncompSize) const
 {
     return (snappy::MaxCompressedLength(uncompSize) + HEADER_SIZE);
 }
 
-int IDBCompressInterface::compress(const char* in, size_t inLen, char* out,
-                                   size_t* outLen) const
-{
-    snappy::RawCompress(in, inLen, out, outLen);
-    return 0;
-}
-
-int IDBCompressInterface::uncompress(const char* in, size_t inLen, char* out) const
-{
-    return !(snappy::RawUncompress(in, inLen, out));
-}
-
-/* static */
-bool IDBCompressInterface::getUncompressedSize(char* in, size_t inLen, size_t* outLen)
+bool CompressInterfaceSnappy::getUncompressedSize(char* in, size_t inLen,
+                                                  size_t* outLen) const
 {
     return snappy::GetUncompressedLength(in, inLen, outLen);
+}
+
+uint8_t CompressInterfaceSnappy::getChunkMagicNumber() const
+{
+    return CHUNK_MAGIC_SNAPPY;
+}
+
+CompressInterface* getCompressInterfaceByType(uint32_t compressionType,
+                                              uint32_t numUserPaddingBytes)
+{
+    idbassert(compressionType > 0 && compressionType <= 2);
+    // Only one compression type is available currently.
+    return new CompressInterfaceSnappy(numUserPaddingBytes);
 }
 
 #endif

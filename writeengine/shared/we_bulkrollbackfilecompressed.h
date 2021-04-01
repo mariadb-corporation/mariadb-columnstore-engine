@@ -148,7 +148,11 @@ private:
                                 uint64_t&   ptrHdrSize,
                                 std::string& errMsg ) const;
 
-    compress::IDBCompressInterface fCompressor;
+    // Returs a compressor depending on compressionType.
+    std::shared_ptr<compress::CompressInterface>
+    getCompressorByType(uint32_t compressionType);
+
+    std::vector<std::shared_ptr<compress::CompressInterface>> fCompressorPool;
 };
 
 } //end of namespace

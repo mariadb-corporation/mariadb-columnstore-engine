@@ -296,6 +296,8 @@ struct ColStruct                        /** @brief Column Interface Struct*/
     ColStruct() : dataOid(0), colWidth(0),  /** @brief constructor */
         tokenFlag(false), colDataType(execplan::CalpontSystemCatalog::INT), colType(WR_INT),
         fColPartition(0), fColSegment(0), fColDbRoot(0),
+        // TODO: check that we specify the compression type directly in the entire code,
+        // when we have more than 1 compression algo.
         fCompressionType(idbdatafile::IDBPolicy::useHdfs() ? 2 : 0) { }
 };
 
@@ -320,7 +322,10 @@ struct DctnryStruct                     /** @brief Dctnry Interface Struct*/
     DctnryStruct() : dctnryOid(0), columnOid(0),   /** @brief constructor */
         colWidth(0),
         fColPartition(0), fColSegment(0),
-        fColDbRoot(0), fCompressionType(idbdatafile::IDBPolicy::useHdfs() ? 2 : 0) { }
+        fColDbRoot(0),
+        // TODO: check that we specify the compression type directly in the entire code,
+        // when we have more than 1 compression algo.
+        fCompressionType(idbdatafile::IDBPolicy::useHdfs() ? 2 : 0) { }
 };
 
 struct DctnryTuple                      /** @brief Dictionary Tuple struct*/
