@@ -1,0 +1,28 @@
+--source ../include/have_columnstore.inc
+--source ../include/combinations.myisam-columnstore.inc
+
+--echo #
+--echo # MCOL-4631 CAST(double AS SIGNED) returns 0 or NULL
+--echo #
+
+CREATE TABLE t1 (d1 DOUBLE, d2 DOUBLE NOT NULL);
+INSERT INTO t1 VALUES (9.2233720368547758e+18, 9.2233720368547758e+18);
+INSERT INTO t1 VALUES (18446744073709551614,18446744073709551614);
+--disable_warnings
+SELECT d1, CAST(d1 AS SIGNED), CAST(d2 AS SIGNED) FROM t1;
+--enable_warnings
+DROP TABLE t1;
+
+
+--echo #
+--echo # MCOL-4649 MCOL-4631 CAST(double AS UNSIGNED) returns 0
+--echo #
+
+CREATE TABLE t1 (d1 DOUBLE, d2 DOUBLE NOT NULL);
+INSERT INTO t1 VALUES (18446744073709551614,18446744073709551614);
+--disable_warnings
+--replace_result 18446744073709551613 18446744073709551615
+SELECT d1, CAST(d1 AS UNSIGNED), CAST(d2 AS UNSIGNED) FROM t1;
+--enable_warnings
+DROP TABLE t1;
+

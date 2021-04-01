@@ -24,7 +24,8 @@
 #include "mcs_numeric_limits.h"
 #include "mcs_data_condition.h"
 #include "mcs_decimal.h"
-
+#include "mcs_double.h"
+#include "mcs_longdouble.h"
 
 #ifdef _MSC_VER
 typedef int     mcs_sint32_t;

@@ -126,41 +126,15 @@ int64_t Func_cast_signed::getIntVal(Row& row,
         case execplan::CalpontSystemCatalog::DOUBLE:
         case execplan::CalpontSystemCatalog::UDOUBLE:
         {
-            double value = parm[0]->data()->getDoubleVal(row, isNull);
-
-            if (value > 0)
-                value += 0.5;
-            else if (value < 0)
-                value -= 0.5;
-
-            int64_t ret = (int64_t) value;
-
-            if (value > (double) numeric_limits<int64_t>::max())
-                ret = numeric_limits<int64_t>::max();
-            else if (value < (double) (numeric_limits<int64_t>::min() + 2))
-                ret = numeric_limits<int64_t>::min() + 2; // IDB min for bigint
-
-            return ret;
+            datatypes::TDouble d(parm[0]->data()->getDoubleVal(row, isNull));
+            return d.toMCSSInt64Round();
         }
         break;
 
         case execplan::CalpontSystemCatalog::LONGDOUBLE:
         {
-            long double value = parm[0]->data()->getLongDoubleVal(row, isNull);
-
-            if (value > 0)
-                value += 0.5;
-            else if (value < 0)
-                value -= 0.5;
-
-            int64_t ret = (int64_t) value;
-
-            if (value > (long double) numeric_limits<int64_t>::max())
-                ret = numeric_limits<int64_t>::max();
-            else if (value < (long double) (numeric_limits<int64_t>::min() + 2))
-                ret = numeric_limits<int64_t>::min() + 2; // IDB min for bigint
-
-            return ret;
+            datatypes::TLongDouble d(parm[0]->data()->getLongDoubleVal(row, isNull));
+            return d.toMCSSInt64Round();
         }
         break;
 
@@ -272,41 +246,15 @@ uint64_t Func_cast_unsigned::getUintVal(Row& row,
         case execplan::CalpontSystemCatalog::DOUBLE:
         case execplan::CalpontSystemCatalog::UDOUBLE:
         {
-            double value = parm[0]->data()->getDoubleVal(row, isNull);
-
-            if (value > 0)
-                value += 0.5;
-            else if (value < 0)
-                value -= 0.5;
-
-            uint64_t ret = (uint64_t) value;
-
-            if (value > (double) numeric_limits<uint64_t>::max() - 2)
-                ret = numeric_limits<int64_t>::max();
-            else if (value < 0)
-                ret = 0;
-
-            return ret;
+            datatypes::TDouble d(parm[0]->data()->getDoubleVal(row, isNull));
+            return d.toMCSUInt64Round();
         }
         break;
 
         case execplan::CalpontSystemCatalog::LONGDOUBLE:
         {
-            long double value = parm[0]->data()->getLongDoubleVal(row, isNull);
-
-            if (value > 0)
-                value += 0.5;
-            else if (value < 0)
-                value -= 0.5;
-
-            uint64_t ret = (uint64_t) value;
-
-            if (value > (long double) numeric_limits<uint64_t>::max() - 2)
-                ret = numeric_limits<int64_t>::max();
-            else if (value < 0)
-                ret = 0;
-
-            return ret;
+            datatypes::TLongDouble d(parm[0]->data()->getLongDoubleVal(row, isNull));
+            return d.toMCSUInt64Round();
         }
         break;
 
