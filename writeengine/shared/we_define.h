@@ -348,6 +348,7 @@ const int   ERR_COMP_READ_FILE      = ERR_COMPBASE + 16;// Failed to read from a
 const int   ERR_COMP_WRITE_FILE     = ERR_COMPBASE + 17;// Failed to write to a compresssed data file
 const int   ERR_COMP_CLOSE_FILE     = ERR_COMPBASE + 18;// Failed to close a compressed data file
 const int   ERR_COMP_TRUNCATE_ZERO  = ERR_COMPBASE + 19;// Invalid attempt to truncate file to 0 bytes
+const int   ERR_COMP_WRONG_COMP_TYPE = ERR_COMPBASE + 20;// Invalid compression type.
 
 //--------------------------------------------------------------------------
 // Auto-increment error

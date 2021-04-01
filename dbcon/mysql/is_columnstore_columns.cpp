@@ -183,6 +183,10 @@ static int is_columnstore_columns_fill(THD* thd, TABLE_LIST* tables, COND* cond)
                     compression_type = "Snappy";
                     break;
 
+                case 3:
+                    compression_type = "LZ4";
+                    break;
+
                 default:
                     compression_type = "Unknown";
                     break;

@@ -96,7 +96,7 @@ size_t readFillBuffer(
     return totalBytesRead;
 }
 
-off64_t getCompressedDataSize(string& fileName)
+static off64_t getCompressedDataSize(string& fileName)
 {
     off64_t dataSize = 0;
     IDBDataFile* pFile = 0;
@@ -119,21 +119,21 @@ off64_t getCompressedDataSize(string& fileName)
         throw std::runtime_error(oss.str());
     }
 
-    IDBCompressInterface decompressor;
     //--------------------------------------------------------------------------
     // Read headers and extract compression pointers
     //--------------------------------------------------------------------------
-    char hdr1[IDBCompressInterface::HDR_BUF_LEN];
-    nBytes = readFillBuffer( pFile, hdr1, IDBCompressInterface::HDR_BUF_LEN);
+    char hdr1[CompressInterface::HDR_BUF_LEN];
+    nBytes = readFillBuffer( pFile, hdr1, CompressInterface::HDR_BUF_LEN);
 
-    if ( nBytes != IDBCompressInterface::HDR_BUF_LEN )
+    if ( nBytes != CompressInterface::HDR_BUF_LEN )
     {
         std::ostringstream oss;
         oss << "Error reading first header from file " << fileName;
         throw std::runtime_error(oss.str());
     }
 
-    int64_t ptrSecSize = decompressor.getHdrSize(hdr1) - IDBCompressInterface::HDR_BUF_LEN;
+    int64_t ptrSecSize = compress::CompressInterface::getHdrSize(hdr1) -
+                         CompressInterface::HDR_BUF_LEN;
     char* hdr2 = new char[ptrSecSize];
     nBytes = readFillBuffer( pFile, hdr2, ptrSecSize);
 
@@ -145,7 +145,8 @@ off64_t getCompressedDataSize(string& fileName)
     }
 
     CompChunkPtrList chunkPtrs;
-    int rc = decompressor.getPtrList(hdr2, ptrSecSize, chunkPtrs);
+    int rc =
+        compress::CompressInterface::getPtrList(hdr2, ptrSecSize, chunkPtrs);
     delete[] hdr2;
 
     if (rc != 0)

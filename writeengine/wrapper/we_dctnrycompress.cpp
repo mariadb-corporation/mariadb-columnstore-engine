@@ -67,9 +67,9 @@ DctnryCompress0::~DctnryCompress0()
 /**
  * Constructor
  */
-DctnryCompress1::DctnryCompress1(Log* logger)
+DctnryCompress1::DctnryCompress1(uint32_t compressionType, Log* logger)
 {
-    m_compressionType = 1;
+    m_compressionType = compressionType;
     m_chunkManager = new ChunkManager();
 
     if (logger)

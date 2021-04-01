@@ -450,7 +450,7 @@ int ColumnInfo::createDelayedFileIfNeeded( const std::string& tableName )
         if (column.dctnry.fCompressionType != 0)
         {
             DctnryCompress1* tempD1;
-            tempD1 = new DctnryCompress1;
+            tempD1 = new DctnryCompress1(column.dctnry.fCompressionType);
             tempD1->setMaxActiveChunkNum(1);
             tempD1->setBulkFlag(true);
             tempD = tempD1;
@@ -668,7 +668,7 @@ int ColumnInfo::extendColumnNewExtent(
     uint16_t    segmentNew   = 0;
     BRM::LBID_t startLbid;
 
-    char hdr[ compress::IDBCompressInterface::HDR_BUF_LEN * 2 ];
+    char hdr[ compress::CompressInterface::HDR_BUF_LEN * 2 ];
 
     // Extend the column by adding an extent to the next
     // DBRoot, partition, and segment file in the rotation
@@ -1684,7 +1684,8 @@ int ColumnInfo::openDctnryStore( bool bMustExist )
 
     if ( column.dctnry.fCompressionType != 0)
     {
-        DctnryCompress1* dctnryCompress1 = new DctnryCompress1;
+        DctnryCompress1* dctnryCompress1 =
+            new DctnryCompress1(column.dctnry.fCompressionType);
         dctnryCompress1->setMaxActiveChunkNum(1);
         dctnryCompress1->setBulkFlag(true);
         fStore = dctnryCompress1;

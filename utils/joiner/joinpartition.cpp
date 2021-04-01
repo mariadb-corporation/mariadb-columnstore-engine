@@ -50,7 +50,10 @@ namespace joiner
 
 uint64_t uniqueNums = 0;
 
-JoinPartition::JoinPartition() { }
+JoinPartition::JoinPartition()
+{
+    compressor.reset(new compress::CompressInterfaceSnappy());
+}
 
 /* This is the ctor used by THJS */
 JoinPartition::JoinPartition(const RowGroup& lRG,
@@ -103,6 +106,22 @@ JoinPartition::JoinPartition(const RowGroup& lRG,
 
     for (int i = 0; i < (int) bucketCount; i++)
         buckets.push_back(boost::shared_ptr<JoinPartition>(new JoinPartition(*this, false)));
+
+    string compressionType;
+    try
+    {
+        compressionType =
+            config->getConfig("HashJoin", "TempFileCompressionType");
+    } catch (...) {}
+
+    if (compressionType == "LZ4")
+    {
+        compressor.reset(new compress::CompressInterfaceLZ4());
+    }
+    else
+    {
+        compressor.reset(new compress::CompressInterfaceSnappy());
+    }
 }
 
 /* Ctor used by JoinPartition on expansion, creates JP's in filemode */
@@ -151,6 +170,8 @@ JoinPartition::JoinPartition(const JoinPartition& jp, bool splitMode) :
     smallRG.setData(&buffer);
     smallRG.resetRowGroup(0);
     smallRG.getRow(0, &smallRow);
+
+    compressor = jp.compressor;
 }
 
 
@@ -694,6 +715,7 @@ void JoinPartition::readByteStream(int which, ByteStream* bs)
 
     fs.seekg(offset);
     fs.read((char*) &len, sizeof(len));
+
     saveErrno = errno;
 
     if (!fs)
@@ -735,12 +757,14 @@ void JoinPartition::readByteStream(int which, ByteStream* bs)
     else
     {
         size_t uncompressedSize;
+        fs.read((char*) &uncompressedSize, sizeof(uncompressedSize));
+
         boost::scoped_array<char> buf(new char[len]);
 
         fs.read(buf.get(), len);
         saveErrno = errno;
 
-        if (!fs)
+        if (!fs || !uncompressedSize)
         {
             fs.close();
             ostringstream os;
@@ -749,9 +773,9 @@ void JoinPartition::readByteStream(int which, ByteStream* bs)
         }
 
         totalBytesRead += len;
-        compressor.getUncompressedSize(buf.get(), len, &uncompressedSize);
         bs->needAtLeast(uncompressedSize);
-        compressor.uncompress(buf.get(), len, (char*) bs->getInputPtr());
+        compressor->uncompress(buf.get(), len, (char*) bs->getInputPtr(),
+                               &uncompressedSize);
         bs->advanceInputPtr(uncompressedSize);
     }
 
@@ -801,13 +825,15 @@ uint64_t JoinPartition::writeByteStream(int which, ByteStream& bs)
     }
     else
     {
-        uint64_t maxSize = compressor.maxCompressedSize(len);
-        size_t actualSize;
+        size_t maxSize = compressor->maxCompressedSize(len);
+        size_t actualSize = maxSize;
         boost::scoped_array<uint8_t> compressed(new uint8_t[maxSize]);
 
-        compressor.compress((char*) bs.buf(), len, (char*) compressed.get(), &actualSize);
-        ret = actualSize + 4;
+        compressor->compress((char*) bs.buf(), len, (char*) compressed.get(), &actualSize);
+        ret = actualSize + 4 + 8; // sizeof (size_t) == 8. Why 4?
         fs.write((char*) &actualSize, sizeof(actualSize));
+        // Save uncompressed len.
+        fs.write((char*) &len, sizeof(len));
         fs.write((char*) compressed.get(), actualSize);
         saveErrno = errno;
 
