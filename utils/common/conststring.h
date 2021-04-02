@@ -35,6 +35,7 @@ public:
       :mStr(str.data()), mLength(str.length())
   { }
   const char *str() const { return mStr; }
+  const char *end() const { return mStr + mLength; }
   size_t length() const { return mLength; }
   ConstString & rtrimZero()
   {

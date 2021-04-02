@@ -62,9 +62,6 @@ inline uint64_t order_swap(uint64_t x)
     return ret;
 }
 
-template <int W>
-inline string fixChar(int64_t intval);
-
 template <class T>
 inline int  compareBlock(  const void* a, const void* b )
 {
@@ -85,23 +82,6 @@ void logIt(int mid, int arg1, const string& arg2 = string())
 
     msg.format(args);
     logger.logErrorMessage(msg);
-}
-
-//FIXME: what are we trying to accomplish here? It looks like we just want to count
-// the chars in a string arg?
-p_DataValue convertToPDataValue(const void* val, int W)
-{
-    p_DataValue dv;
-    string str;
-
-    if (8 == W)
-        str = fixChar<8>(*reinterpret_cast<const int64_t*>(val));
-    else
-        str = reinterpret_cast<const char*>(val);
-
-    dv.len = static_cast<int>(str.length());
-    dv.data = reinterpret_cast<const uint8_t*>(val);
-    return dv;
 }
 
 
@@ -143,35 +123,14 @@ inline bool colCompareStr(const ColRequestHeaderDataType &type,
                           const utils::ConstString &val1,
                           const utils::ConstString &val2)
 {
-    int res = type.strnncollsp(val1, val2);
-
-    switch (COP)
+    int error = 0;
+    bool rc = primitives::StringComparator(type).op(&error, COP, val1, val2);
+    if (error)
     {
-        case COMPARE_NIL:
-            return false;
-
-        case COMPARE_LT:
-            return res < 0;
-
-        case COMPARE_EQ:
-            return res == 0;
-
-        case COMPARE_LE:
-            return res <= 0;
-
-        case COMPARE_GT:
-            return res > 0;
-
-        case COMPARE_NE:
-            return res != 0;
-
-        case COMPARE_GE:
-            return res >= 0;
-
-        default:
-            logIt(34, COP, "colCompareStr");
-            return false;  // throw an exception here?
+        logIt(34, COP, "colCompareStr");
+        return false;  // throw an exception here?
     }
+    return rc;
 }
 
 
@@ -207,20 +166,9 @@ inline bool colCompare_(const T& val1, const T& val2, uint8_t COP, uint8_t rf)
     }
 }
 
-bool isLike(const char* val, const idb_regex_t* regex)
-{
-    if (!regex)
-        throw runtime_error("PrimitiveProcessor::isLike: Missing regular expression for LIKE operator");
-
-#ifdef POSIX_REGEX
-    return (regexec(&regex->regex, val, 0, NULL, 0) == 0);
-#else
-    return regex_match(val, regex->regex);
-#endif
-}
 
 //@bug 1828  Like must be a string compare.
-inline bool colStrCompare_(uint64_t val1, uint64_t val2, uint8_t COP, uint8_t rf, const idb_regex_t* regex)
+inline bool colStrCompare_(uint64_t val1, uint64_t val2, uint8_t COP, uint8_t rf)
 {
     switch (COP)
     {
@@ -247,66 +195,12 @@ inline bool colStrCompare_(uint64_t val1, uint64_t val2, uint8_t COP, uint8_t rf
 
         case COMPARE_LIKE:
         case COMPARE_NLIKE:
-        {
-            /* LIKE comparisons are string comparisons so we reverse the order again.
-            	Switching the order twice is probably as efficient as evaluating a guard.  */
-            char tmp[9];
-            val1 = order_swap(val1);
-            memcpy(tmp, &val1, 8);
-            tmp[8] = '\0';
-            return (COP & COMPARE_NOT ? !isLike(tmp, regex) : isLike(tmp, regex));
-        }
-
         default:
             logIt(34, COP, "colCompare_l");
             return false;						// throw an exception here?
     }
 }
 
-#if 0
-inline bool colStrCompare_(uint64_t val1, uint64_t val2, uint8_t COP, const idb_regex_t* regex)
-{
-    switch (COP)
-    {
-        case COMPARE_NIL:
-            return false;
-
-        case COMPARE_LT:
-            return val1 < val2;
-
-        case COMPARE_LE:
-            return val1 <= val2;
-
-        case COMPARE_EQ:
-            return val1 == val2;
-
-        case COMPARE_NE:
-            return val1 != val2;
-
-        case COMPARE_GE:
-            return val1 >= val2;
-
-        case COMPARE_GT:
-            return val1 > val2;
-
-        case COMPARE_LIKE:
-        case COMPARE_NOT | COMPARE_LIKE:
-        {
-            /* LIKE comparisons are string comparisons so we reverse the order again.
-            	Switching the order twice is probably as efficient as evaluating a guard.  */
-            char tmp[9];
-            val1 = order_swap(val1);
-            memcpy(tmp, &val1, 8);
-            tmp[8] = '\0';
-            return (COP & COMPARE_NOT ? !isLike(tmp, regex) : isLike(tmp, regex));
-        }
-
-        default:
-            logIt(34, COP, "colCompare");
-            return false;						// throw an exception here?
-    }
-}
-#endif
 
 template<int>
 inline bool isEmptyVal(uint8_t type, const uint8_t* val8);
@@ -622,20 +516,10 @@ inline bool isMinMaxValid(const NewColRequestHeader* in)
     }
 }
 
-//char(8) values lose their null terminator
-template <int W>
-inline string fixChar(int64_t intval)
-{
-    char chval[W + 1];
-    memcpy(chval, &intval, W);
-    chval[W] = '\0';
-
-    return string(chval);
-}
 
 inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf,
                        const ColRequestHeaderDataType &typeHolder, uint8_t width,
-                       const idb_regex_t& regex, bool isNull = false)
+                       bool isNull = false)
 {
     uint8_t type = typeHolder.DataType;
 // 	cout << "comparing " << hex << val1 << " to " << val2 << endl;
@@ -664,7 +548,15 @@ inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf,
     else if ( (type == CalpontSystemCatalog::CHAR || type == CalpontSystemCatalog::VARCHAR ||
                type == CalpontSystemCatalog::TEXT) && !isNull )
     {
-        if (!regex.used && !rf)
+        if (COP & COMPARE_LIKE) // LIKE and NOT LIKE
+        {
+            utils::ConstString subject = {reinterpret_cast<const char*>(&val1), width};
+            utils::ConstString pattern = {reinterpret_cast<const char*>(&val2), width};
+            return typeHolder.like(COP & COMPARE_NOT, subject.rtrimZero(),
+                                                      pattern.rtrimZero());
+        }
+
+        if (!rf)
         {
             // A temporary hack for xxx_nopad_bin collations
             // TODO: MCOL-4534 Improve comparison performance in 8bit nopad_bin collations
@@ -676,7 +568,7 @@ inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf,
             return colCompareStr(typeHolder, COP, s1.rtrimZero(), s2.rtrimZero());
         }
         else
-            return colStrCompare_(order_swap(val1), order_swap(val2), COP, rf, &regex);
+            return colStrCompare_(order_swap(val1), order_swap(val2), COP, rf);
     }
 
     /* isNullVal should work on the normalized value on little endian machines */
@@ -691,7 +583,7 @@ inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf,
     }
 }
 
-inline bool colCompareUnsigned(uint64_t val1, uint64_t val2, uint8_t COP, uint8_t rf, int type, uint8_t width, const idb_regex_t& regex, bool isNull = false)
+inline bool colCompareUnsigned(uint64_t val1, uint64_t val2, uint8_t COP, uint8_t rf, int type, uint8_t width, bool isNull = false)
 {
 // 	cout << "comparing unsigned" << hex << val1 << " to " << val2 << endl;
 
@@ -1033,113 +925,7 @@ inline int64_t nextColValueHelper(int type,
     /*NOTREACHED*/
     return 0;
 }
-#if 0
-inline void p_Col_noprid(const NewColRequestHeader* in, NewColResultHeader* out,
-                         unsigned outSize, unsigned* written, int* block)
-{
 
-    int argIndex, argOffset;
-    uint16_t rid;
-    const ColArgs* args;
-    const uint8_t* in8 = reinterpret_cast<const uint8_t*>(in);
-    int64_t argVal, colVal;
-    uint64_t uargVal, ucolVal;
-
-    int8_t* val8 = reinterpret_cast<int8_t*>(block);
-    int16_t* val16 = reinterpret_cast<int16_t*>(block);
-    int32_t* val32 = reinterpret_cast<int32_t*>(block);
-    int64_t* val64 = reinterpret_cast<int64_t*>(block);
-    uint8_t* uval8 = reinterpret_cast<uint8_t*>(block);
-    uint16_t* uval16 = reinterpret_cast<uint16_t*>(block);
-    uint32_t* uval32 = reinterpret_cast<uint32_t*>(block);
-    uint64_t* uval64 = reinterpret_cast<uint64_t*>(block);
-
-    placeholderRegex.used = false;
-
-    //cout << "NOPRID" << endl;
-
-    for (argIndex = 0; argIndex < in->NVALS; argIndex++)
-    {
-        argOffset = sizeof(NewColRequestHeader) + (argIndex * (sizeof(ColArgs) +
-                    sizeof(int16_t) + in->DataSize));
-        args = reinterpret_cast<const ColArgs*>(&in8[argOffset]);
-
-        rid = *reinterpret_cast<const uint16_t*>(&in8[argOffset + sizeof(ColArgs) +
-                          in->DataSize]);
-
-        if (isUnsigned((CalpontSystemCatalog::ColDataType)in->DataType))
-        {
-            switch (in->DataSize)
-            {
-                case 1:
-                    uargVal = *reinterpret_cast<const uint8_t*>(args->val[0]);
-                    ucolVal = uval8[rid];
-                    break;
-
-                case 2:
-                    uargVal = *reinterpret_cast<const uint16_t*>(args->val);
-                    ucolVal = uval16[rid];
-                    break;
-
-                case 4:
-                    uargVal = *reinterpret_cast<const uint32_t*>(args->val);
-                    ucolVal = uval32[rid];
-                    break;
-
-                case 8:
-                    uargVal = *reinterpret_cast<const uint64_t*>(args->val);
-                    ucolVal = uval64[rid];
-                    break;
-
-                default:
-                    logIt(33, in->DataSize);
-#ifdef PRIM_DEBUG
-                    throw logic_error("PrimitiveProcessor::p_Col_noprid(): bad width");
-#endif
-                    return;
-            }
-
-            if (colCompare(ucolVal, uargVal, args->COP, args->rf, in->DataType, in->DataSize, placeholderRegex))
-                store(in, out, outSize, written, rid, reinterpret_cast<const uint8_t*>(block));
-        }
-        else
-        {
-            switch (in->DataSize)
-            {
-                case 1:
-                    argVal = args->val[0];
-                    colVal = val8[rid];
-                    break;
-
-                case 2:
-                    argVal = *reinterpret_cast<const int16_t*>(args->val);
-                    colVal = val16[rid];
-                    break;
-
-                case 4:
-                    argVal = *reinterpret_cast<const int32_t*>(args->val);
-                    colVal = val32[rid];
-                    break;
-
-                case 8:
-                    argVal = *reinterpret_cast<const int64_t*>(args->val);
-                    colVal = val64[rid];
-                    break;
-
-                default:
-                    logIt(33, in->DataSize);
-#ifdef PRIM_DEBUG
-                    throw logic_error("PrimitiveProcessor::p_Col_noprid(): bad width");
-#endif
-                    return;
-            }
-
-            if (colCompare(colVal, argVal, args->COP, args->rf, in->DataType, in->DataSize, placeholderRegex))
-                store(in, out, outSize, written, rid, reinterpret_cast<const uint8_t*>(block));
-        }
-    }
-}
-#endif
 template<int W>
 inline void p_Col_ridArray(NewColRequestHeader* in,
                            NewColResultHeader* out,
@@ -1150,9 +936,6 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
     uint16_t* ridArray = 0;
     uint8_t* in8 = reinterpret_cast<uint8_t*>(in);
     const uint8_t filterSize = sizeof(uint8_t) + sizeof(uint8_t) + W;
-    idb_regex_t placeholderRegex;
-
-    placeholderRegex.used = false;
 
     if (in->NVALS > 0)
         ridArray = reinterpret_cast<uint16_t*>(&in8[sizeof(NewColRequestHeader) +
@@ -1209,16 +992,9 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
     uint8_t* cops = NULL;
     uint8_t* rfs = NULL;
 
-    scoped_array<idb_regex_t> std_regex;
-    idb_regex_t* regex = NULL;
-    uint8_t likeOps = 0;
-
     // no pre-parsed column filter is set, parse the filter in the message
     if (parsedColumnFilter.get() == NULL)
     {
-        std_regex.reset(new idb_regex_t[in->NOPS]);
-        regex = &(std_regex[0]);
-
         if (isUnsigned((CalpontSystemCatalog::ColDataType)in->colType.DataType))
         {
             uargVals = reinterpret_cast<uint64_t*>(std_argVals);
@@ -1250,8 +1026,6 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
                         uargVals[argIndex] = *reinterpret_cast<const uint64_t*>(args->val);
                         break;
                 }
-
-                regex[argIndex].used = false;
             }
         }
         else
@@ -1298,21 +1072,6 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
                         argVals[argIndex] = *reinterpret_cast<const int64_t*>(args->val);
                         break;
                 }
-
-                if (COMPARE_LIKE & args->COP)
-                {
-                    p_DataValue dv = convertToPDataValue(&argVals[argIndex], W);
-                    int err = PrimitiveProcessor::convertToRegexp(&regex[argIndex], &dv);
-
-                    if (err)
-                    {
-                        throw runtime_error("PrimitiveProcessor::p_Col_ridarray(): Could not create regular expression for LIKE operator");
-                    }
-
-                    ++likeOps;
-                }
-                else
-                    regex[argIndex].used = false;
             }
         }
     }
@@ -1323,9 +1082,6 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
         uargVals = reinterpret_cast<uint64_t*>(parsedColumnFilter->prestored_argVals.get());
         cops = parsedColumnFilter->prestored_cops.get();
         rfs = parsedColumnFilter->prestored_rfs.get();
-        regex = parsedColumnFilter->prestored_regex.get();
-        likeOps = parsedColumnFilter->likeOps;
-
     }
 
     // else we have a pre-parsed filter, and it's an unordered set for quick == comparisons
@@ -1382,12 +1138,12 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
                 if (isUnsigned((CalpontSystemCatalog::ColDataType)in->colType.DataType))
                 {
                     cmp = colCompareUnsigned(uval, uargVals[argIndex], cops[argIndex],
-                                             rfs[argIndex], in->colType.DataType, W, regex[argIndex], isNull);
+                                             rfs[argIndex], in->colType.DataType, W, isNull);
                 }
                 else
                 {
                     cmp = colCompare(val, argVals[argIndex], cops[argIndex],
-                                     rfs[argIndex], in->colType, W, regex[argIndex], isNull);
+                                     rfs[argIndex], in->colType, W, isNull);
                 }
 
                 if (in->NOPS == 1)
@@ -1425,10 +1181,10 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
                  in->colType.DataType == CalpontSystemCatalog::BLOB ||
                  in->colType.DataType == CalpontSystemCatalog::TEXT ) && 1 < W)
             {
-                if (colCompare(out->Min, val, COMPARE_GT, false, in->colType, W, placeholderRegex))
+                if (colCompare(out->Min, val, COMPARE_GT, false, in->colType, W))
                     out->Min = val;
 
-                if (colCompare(out->Max, val, COMPARE_LT, false, in->colType, W, placeholderRegex))
+                if (colCompare(out->Max, val, COMPARE_LT, false, in->colType, W))
                     out->Max = val;
             }
             else if (isUnsigned((CalpontSystemCatalog::ColDataType)in->colType.DataType))
@@ -1570,7 +1326,6 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter
     ret->prestored_argVals.reset(new int64_t[filterCount]);
     ret->prestored_cops.reset(new uint8_t[filterCount]);
     ret->prestored_rfs.reset(new uint8_t[filterCount]);
-    ret->prestored_regex.reset(new idb_regex_t[filterCount]);
 
     /*
     for (unsigned ii = 0; ii < filterCount; ii++)
@@ -1578,7 +1333,6 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter
     	ret->prestored_argVals[ii] = 0;
     	ret->prestored_cops[ii] = 0;
     	ret->prestored_rfs[ii] = 0;
-    	ret->prestored_regex[ii].used = 0;
     }
     */
 
@@ -1665,23 +1419,6 @@ boost::shared_ptr<ParsedColumnFilter> parseColumnFilter
 
 // 		cout << "inserted* " << hex << ret->prestored_argVals[argIndex] << dec <<
 // 		  " COP = " << (int) ret->prestored_cops[argIndex] << endl;
-
-        if (COMPARE_LIKE & args->COP)
-        {
-            p_DataValue dv = convertToPDataValue(&ret->prestored_argVals[argIndex], colWidth);
-            int err = PrimitiveProcessor::convertToRegexp(&ret->prestored_regex[argIndex], &dv);
-
-            if (err)
-            {
-                throw runtime_error("PrimitiveProcessor::parseColumnFilter(): Could not create regular expression for LIKE operator");
-            }
-
-            ++ret->likeOps;
-        }
-        else
-        {
-            ret->prestored_regex[argIndex].used = false;
-        }
 
     }
 
