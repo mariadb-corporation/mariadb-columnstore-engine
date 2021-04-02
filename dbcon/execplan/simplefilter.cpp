@@ -416,19 +416,6 @@ void SimpleFilter::unserialize(messageqcpp::ByteStream& b)
         fWindowFunctionColumnList.push_back(raf);
     }
 
-    // construct regex constant for like operator
-    if (fOp->op() == OP_LIKE || fOp->op() == OP_NOTLIKE)
-    {
-        ConstantColumn* rcc = dynamic_cast<ConstantColumn*>(fRhs);
-
-        if (rcc)
-            rcc->constructRegex();
-
-        ConstantColumn* lcc = dynamic_cast<ConstantColumn*>(fLhs);
-
-        if (lcc)
-            lcc->constructRegex();
-    }
 }
 
 bool SimpleFilter::operator==(const SimpleFilter& t) const

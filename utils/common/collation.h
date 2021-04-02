@@ -137,12 +137,32 @@ public:
         return mCharset->strnncollsp(str1.str(), str1.length(),
                                      str2.str(), str2.length());
     }
+    int strnncollsp(const char *str1, size_t length1,
+                    const char *str2, size_t length2) const
+    {
+      return mCharset->strnncollsp(str1, length1, str2, length2);
+    }
+    int strnncollsp(const unsigned char *str1, size_t length1,
+                    const unsigned char *str2, size_t length2) const
+    {
+      return mCharset->strnncollsp((const char *) str1, length1,
+                                   (const char *) str2, length2);
+    }
     bool test_if_important_data(const char *str, const char *end) const
     {
         if (mCharset->state & MY_CS_NOPAD)
           return str < end;
         return str + mCharset->scan(str, end, MY_SEQ_SPACES) < end;
 
+    }
+    bool like(bool neg,
+              const utils::ConstString &subject,
+              const utils::ConstString &pattern) const
+    {
+      bool res= !mCharset->wildcmp(subject.str(), subject.end(),
+                                   pattern.str(), pattern.end(),
+                                   '\\','_','%');
+      return neg ? !res : res;
     }
 };
 

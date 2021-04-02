@@ -62,6 +62,60 @@ const int8_t COMPARE_NGE = (COMPARE_GE | COMPARE_NOT); //0x0e
 const int8_t COMPARE_LIKE = 0x10;
 const int8_t COMPARE_NLIKE = (COMPARE_LIKE | COMPARE_NOT); //0x18
 
+
+namespace primitives
+{
+
+using utils::ConstString;
+
+class StringComparator: public datatypes::Charset
+{
+public:
+    StringComparator(const Charset &cs)
+     :Charset(cs)
+    { }
+    bool op(int * error, uint8_t COP,
+            const ConstString &str1,
+            const ConstString &str2) const
+    {
+        if (COP & COMPARE_LIKE)
+           return like(COP & COMPARE_NOT, str1, str2);
+
+        int cmp = strnncollsp(str1, str2);
+
+        switch (COP)
+        {
+            case COMPARE_NIL:
+                return false;
+
+            case COMPARE_LT:
+                return cmp < 0;
+
+            case COMPARE_EQ:
+                return cmp == 0;
+
+            case COMPARE_LE:
+                return cmp <= 0;
+
+            case COMPARE_GT:
+                return cmp > 0;
+
+            case COMPARE_NE:
+                return cmp != 0;
+
+            case COMPARE_GE:
+                return cmp >= 0;
+
+            default:
+                *error |= 1;
+                return false;
+        }
+
+    }
+};
+
+} // namespace primities
+
 //      BOP (Binary Operation) values
 //          used to tell if the operations are all be true or
 //          any to be true.
