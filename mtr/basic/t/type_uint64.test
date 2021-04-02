@@ -1,0 +1,11 @@
+--source ../include/have_columnstore.inc
+--source ../include/combinations.myisam-columnstore.inc
+
+--echo #
+--echo # MCOL-4615 GROUP_CONCAT() precision loss for huge narrow decimal
+--echo #
+
+CREATE TABLE t1 (a BIGINT UNSIGNED);
+INSERT INTO t1 VALUES (18446744073709551600);
+SELECT GROUP_CONCAT(a) FROM t1;
+DROP TABLE t1;

@@ -385,9 +385,16 @@ public:
     
     inline double getDoubleField(uint32_t colIndex) const;
     inline float getFloatField(uint32_t colIndex) const;
-    inline double getDecimalField(uint32_t colIndex) const
+    inline datatypes::Decimal getDecimalField(uint32_t colIndex) const
     {
-        return 0.0;   // TODO: Do something here
+        if (LIKELY(getColumnWidth(colIndex) == datatypes::MAXDECIMALWIDTH))
+            return datatypes::Decimal(0,
+                                      (int) getScale(colIndex),
+                                      getPrecision(colIndex),
+                                      getBinaryField<int128_t>(colIndex));
+        return datatypes::Decimal(datatypes::TSInt64(getIntField(colIndex)),
+                                  (int) getScale(colIndex),
+                                  getPrecision(colIndex));
     }
     inline long double getLongDoubleField(uint32_t colIndex) const;
     inline void getInt128Field(uint32_t colIndex, int128_t& x) const;

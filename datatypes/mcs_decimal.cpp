@@ -16,6 +16,7 @@
    MA 02110-1301, USA. */
 
 #include <string>
+#include  <inttypes.h>
 
 #include "utils/common/branchpred.h"
 #include "mcs_decimal.h"
@@ -643,66 +644,15 @@ namespace datatypes
     std::string Decimal::toStringTSInt64() const
     {
         char buf[Decimal::MAXLENGTH8BYTES];
-        // Need 19 digits maxium to hold a sum result of 18 digits decimal column.
-        // We don't make a copy of value b/c we mutate its string
-        // representation.
-#ifndef __LP64__
-            snprintf(buf, sizeof(buf), "%lld", value);
-#else
-            snprintf(buf, sizeof(buf), "%ld", value);
-#endif
-
-        //we want to move the last dt_scale chars right by one spot
-        // to insert the dp we want to move the trailing null as well,
-        // so it's really dt_scale+1 chars
-        size_t l1 = strlen(buf);
-        char* ptr = &buf[0];
-
-        if (value < 0)
-        {
-            ptr++;
-            idbassert(l1 >= 2);
-            l1--;
-        }
-
-        //need to make sure we have enough leading zeros for this to work.
-        //at this point scale is always > 0
-        size_t l2 = 1;
-
-        if ((unsigned)scale > l1)
-        {
-            const char* zeros = "00000000000000000000"; //20 0's
-            size_t diff = 0;
-
-            if (value != 0)
-                diff = scale - l1; //this will always be > 0
-            else
-                diff = scale;
-
-            memmove((ptr + diff), ptr, l1 + 1); //also move null
-            memcpy(ptr, zeros, diff);
-
-            if (value != 0)
-                l1 = 0;
-            else
-                l1 = 1;
-        }
-        else if ((unsigned)scale == l1)
-        {
-            l1 = 0;
-            l2 = 2;
-        }
-        else
-        {
-            l1 -= scale;
-        }
-
-        memmove((ptr + l1 + l2), (ptr + l1), scale + 1); //also move null
-
-        if (l2 == 2)
-            *(ptr + l1++) = '0';
-
-        *(ptr + l1) = '.';
+        uint64_t divisor = scaleDivisor<uint64_t>(scale);
+        uint64_t uvalue = value < 0 ? (uint64_t) -value : (uint64_t) value;
+        uint64_t intg = uvalue / divisor;
+        uint64_t frac = uvalue % divisor;
+        int nbytes = snprintf(buf, sizeof(buf), "%s%" PRIu64,
+                              value < 0 ? "-" : "", intg);
+        if (scale > 0)
+            snprintf(buf + nbytes, sizeof(buf) - nbytes, ".%.*" PRIu64,
+                     (int) scale, frac);
         return std::string(buf);
     }
     
