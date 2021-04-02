@@ -189,6 +189,14 @@ public:
                             int size,
                             bool useTmpSuffix) const;
 
+    // @brief Retrieve a file pointer in the chunk manager.
+    //        for column/dict segment file
+    IDBDataFile* getSegmentFilePtr(
+        FID& fid, uint16_t root, uint32_t partition, uint16_t segment,
+        execplan::CalpontSystemCatalog::ColDataType colDataType,
+        uint32_t colWidth, std::string& filename, const char* mode,
+        int32_t size, bool useTmpSuffix, bool isDict) const;
+
     // @brief Create a compressed dictionary file with an appropriate header.
     IDBDataFile* createDctnryFile(const FID& fid,
                                   int64_t  width,
@@ -197,7 +205,8 @@ public:
                                   uint16_t segment,
                                   const char* filename,
                                   const char* mode,
-                                  int size);
+                                  int size,
+                                  int64_t lbid);
 
     // @brief Read a block from pFile at offset fbo.
     //        The data may copied from memory if the chunk it belongs to is already available.
@@ -217,10 +226,12 @@ public:
     int expandAbbrevColumnExtent(IDBDataFile* pFile, const uint8_t* emptyVal, int width);
 
     // @brief Update column extent
-    int updateColumnExtent(IDBDataFile* pFile, int addBlockCount);
+    int updateColumnExtent(IDBDataFile* pFile, int addBlockCount,
+                           int64_t lbid);
 
     // @brief Update dictionary extent
-    int updateDctnryExtent(IDBDataFile* pFile, int addBlockCount);
+    int updateDctnryExtent(IDBDataFile* pFile, int addBlockCount,
+                           int64_t lbid);
 
     // @brief Read in n continuous blocks to read buffer.
     //        for backing up blocks to version buffer

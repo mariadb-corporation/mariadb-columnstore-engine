@@ -104,17 +104,12 @@ public:
     /**
     * Initialize header buffer at start of compressed db file.
     *
-    * @warning hdrBuf must be at least HDR_BUF_LEN*2 bytes
-    */
-    EXPORT void initHdr(void* hdrBuf, int compressionType) const;
-
-    /**
-    * Initialize header buffer at start of compressed db file.
-    *
     * @warning hdrBuf must be at least HDR_BUF_LEN bytes
     * @warning ptrBuf must be at least (hdrSize-HDR_BUF_LEN) bytes
     */
-    EXPORT void initHdr(void* hdrBuf, void* ptrBuf, int compressionType, int hdrSize) const;
+    EXPORT void initHdr(void* hdrBuf, void* ptrBuf, uint32_t columnWidht,
+                        execplan::CalpontSystemCatalog::ColDataType columnType,
+                        int compressionType, int hdrSize) const;
 
     /**
      * Initialize header buffer at start of compressed db file.
@@ -200,6 +195,11 @@ public:
      * Mutator methods for the block count in the file
      */
     /**
+     * getVersionNumber
+     */
+    EXPORT uint64_t getVersionNumber(const void* hdrBuf) const;
+
+    /**
      * setBlockCount
      */
     EXPORT void setBlockCount(void* hdrBuf, uint64_t count) const;
@@ -221,6 +221,37 @@ public:
      * getHdrSize
      */
     EXPORT uint64_t getHdrSize(const void* hdrBuf) const;
+
+    /**
+     * getColumnType
+     */
+    EXPORT execplan::CalpontSystemCatalog::ColDataType
+    getColDataType(const void* hdrBuf) const;
+
+    /**
+     * getColumnWidth
+     */
+    EXPORT uint64_t getColumnWidth(const void* hdrBuf) const;
+
+    /**
+     * getLBID
+     */
+    EXPORT uint64_t getLBID0(const void* hdrBuf) const;
+
+    /**
+     * setBID
+     */
+    EXPORT void setLBID0(void* hdrBuf, uint64_t lbid) const;
+
+    /**
+     * getLBID
+     */
+    EXPORT uint64_t getLBID1(const void* hdrBuf) const;
+
+    /**
+     * setBID
+     */
+    EXPORT void setLBID1(void* hdrBuf, uint64_t lbid) const;
 
     /**
      * Mutator methods for the user padding bytes
@@ -286,8 +317,7 @@ inline int IDBCompressInterface::uncompress(const char* in, size_t inLen, char* 
 {
     return 0;
 }
-inline void IDBCompressInterface::initHdr(void*, int) const {}
-inline void IDBCompressInterface::initHdr(void*, void*, int, int) const {}
+inline void IDBCompressInterface::initHdr(void*, void*, uint32_t, execplan::CalpontSystemCatalog::ColDataType, int, int) const {}
 inline void initHdr(void*, uint32_t, execplan::CalpontSystemCatalog::ColDataType, int) const {}
 inline int IDBCompressInterface::verifyHdr(const void*) const
 {
@@ -317,6 +347,11 @@ inline int IDBCompressInterface::padCompressedChunks(unsigned char* buf, unsigne
 {
     return -1;
 }
+inline uint64_t
+IDBCompressInterface::getVersionNumber(const void* hdrBuf) const
+{
+    return 0;
+}
 inline void IDBCompressInterface::setBlockCount(void* hdrBuf, uint64_t count) const {}
 inline uint64_t IDBCompressInterface::getBlockCount(const void* hdrBuf) const
 {
@@ -327,10 +362,20 @@ inline uint64_t IDBCompressInterface::getHdrSize(const void*) const
 {
     return 0;
 }
+inline execplan::CalpontSystemCatalog::ColDataType
+IDBCompressInterface::getColDataType(const void* hdrBuf) const
+{
+    return execplan::CalpontSystemCatalog::ColDataType::UNDEFINED;
+}
+inline uint64_t getColumnWidth(const void* hdrBuf) const { return 0; }
 inline uint64_t IDBCompressInterface::maxCompressedSize(uint64_t uncompSize)
 {
     return uncompSize;
 }
+inline uint64_t getLBID0(const void* hdrBuf) const { return 0; }
+void setLBID0(void* hdrBuf, uint64_t lbid) const {}
+inline uint64_t getLBID1(const void* hdrBuf) const { return 0; }
+void setLBID1(void* hdrBuf, uint64_t lbid) const {}
 inline bool IDBCompressInterface::getUncompressedSize(char* in, size_t inLen, size_t* outLen)
 {
     return false;

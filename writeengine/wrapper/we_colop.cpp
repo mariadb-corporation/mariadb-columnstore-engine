@@ -483,7 +483,7 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
                 return rc;
 
             //@Bug 3164 update compressed extent
-            updateColumnExtent(newCol.dataFile.pFile, allocSize);
+            updateColumnExtent(newCol.dataFile.pFile, allocSize, /*lbid=*/0);
             //..Search first block of new extent for empty rows
             rc = readBlock(newCol.dataFile.pFile, buf, newHwm);
 

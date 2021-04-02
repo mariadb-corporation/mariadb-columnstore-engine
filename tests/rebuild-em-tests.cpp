@@ -20,6 +20,10 @@
 #include <vector>
 
 #include "we_convertor.h"
+#include "we_fileop.h"
+
+using namespace idbdatafile;
+using namespace WriteEngine;
 
 class RebuildEMTest : public ::testing::Test
 {

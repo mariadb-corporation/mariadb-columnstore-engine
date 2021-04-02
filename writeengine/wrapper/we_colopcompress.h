@@ -160,7 +160,7 @@ protected:
     /**
     * @brief virtual method in FileOp
     */
-    int updateColumnExtent(IDBDataFile* pFile, int nBlocks);
+    int updateColumnExtent(IDBDataFile* pFile, int nBlocks, int64_t lbid);
 
     /**
     * @brief virtual method in ColumnOp

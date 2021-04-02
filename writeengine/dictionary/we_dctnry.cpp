@@ -206,16 +206,31 @@ int  Dctnry::createDctnry( const OID& dctnryOID, int colWidth,
 
     if (flag)
     {
+        // Allocate extent before file creation.
+        // If we got an error while allocating dictionary store extent,
+        // we do not need to create/close the file, because it was not created
+        // yet. This logic is the same as column segment file creation - at
+        // first we allocate an extent, then we create a segment file.
+        rc = BRMWrapper::getInstance()->allocateDictStoreExtent(
+            (OID) dctnryOID, dbRoot, partition, segment, startLbid, allocSize);
+
+        if (rc != NO_ERROR)
+        {
+            return rc;
+        }
+
         m_dctnryOID   = dctnryOID;
         m_partition   = partition;
         m_segment     = segment;
         m_dbRoot      = dbRoot;
+
         RETURN_ON_ERROR( ( rc = oid2FileName( m_dctnryOID, fileName, true,
                                               m_dbRoot, m_partition, m_segment ) ) );
         m_segFileName = fileName;
 
         // if obsolete file exists, "w+b" will truncate and write over
-        m_dFile = createDctnryFile(fileName, colWidth, "w+b", DEFAULT_BUFSIZ);
+        m_dFile = createDctnryFile(fileName, colWidth, "w+b", DEFAULT_BUFSIZ,
+                                   startLbid);
 
         {
             // We presume the path will contain /
@@ -228,21 +243,17 @@ int  Dctnry::createDctnry( const OID& dctnryOID, int colWidth,
     }
     else
     {
-        RETURN_ON_ERROR( setFileOffset(m_dFile, 0, SEEK_END) );
-    }
+        rc = BRMWrapper::getInstance()->allocateDictStoreExtent(
+            (OID) m_dctnryOID, m_dbRoot, m_partition, m_segment, startLbid,
+            allocSize);
 
-    rc = BRMWrapper::getInstance()->allocateDictStoreExtent(
-             (OID)m_dctnryOID, m_dbRoot, m_partition, m_segment,
-             startLbid, allocSize);
-
-    if (rc != NO_ERROR)
-    {
-        if (flag)
+        if (rc != NO_ERROR)
         {
-            closeDctnryFile(false, oids);
+            return rc;
         }
 
-        return rc;
+        RETURN_ON_ERROR(setFileOffset(m_dFile, 0, SEEK_END));
+
     }
 
     // We allocate a full extent from BRM, but only write an abbreviated 256K
@@ -278,8 +289,8 @@ int  Dctnry::createDctnry( const OID& dctnryOID, int colWidth,
                                        m_dctnryHeader2,
                                        m_totalHdrBytes,
                                        false,
-                                       true ); // explicitly optimize
-
+                                       true, // explicitly optimize
+                                       startLbid );
         if (rc != NO_ERROR)
         {
             if (flag)
@@ -1488,8 +1499,9 @@ int  Dctnry::updateDctnry(unsigned char* sigValue, int& sigSize,
  * open dictionary file
  ******************************************************************************/
 IDBDataFile* Dctnry::createDctnryFile(
-    const char* name, int, const char* mode, int ioBuffSize)
+    const char* name, int, const char* mode, int ioBuffSize, LBID_t lbid)
 {
+    (void) lbid;
     return openFile(name, mode, ioBuffSize, false);
 }
 
