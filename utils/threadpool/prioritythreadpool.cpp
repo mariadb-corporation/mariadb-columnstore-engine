@@ -197,7 +197,7 @@ void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
 
             // no real work was done, prevent intensive busy waiting
             if (rescheduleCount == runList.size())
-                usleep(1000);
+                usleep(10);
 
             if (rescheduleCount > 0)
             {

@@ -2181,6 +2181,8 @@ struct ReadThread
                             job.uniqueID = *((uint32_t*) &buf[pos + 10]);
                             job.sock = outIos;
 
+                            //cerr << "ReadThread BATCH_PRIMITIVE_RUN outIos " << outIos->toString() << " uniqueID " << job.uniqueID << endl;
+                            //cerr << "ReadThread BATCH_PRIMITIVE_RUN outIos " << outIos << " uniqueID " << job.uniqueID << endl;
                             if (bpps->isSysCat())
                             {
 
@@ -2208,6 +2210,7 @@ struct ReadThread
                             job.uniqueID = *((uint32_t*) &buf[pos + 10]);
                             job.sock = outIos;
                             OOBPool->addJob(job);
+                            //cerr << "ReadThread BATCH_PRIMITIVE_CREATE outIos " << outIos.get().toString() << " uniqueID " << job.uniqueID << endl;
                             //fBPPHandler->createBPP(*bs);
                             break;
                         }
@@ -2448,7 +2451,7 @@ PrimitiveServer::PrimitiveServer(int serverThreads,
 
     // We're not using either the priority or the job-clustering features, just need a threadpool
     // that can reschedule jobs, and an unlimited non-blocking queue
-    OOBPool.reset(new threadpool::PriorityThreadPool(1, 5, 0, 0, 1));
+    OOBPool.reset(new threadpool::PriorityThreadPool(1, 16, 0, 0, 1));
 
     asyncCounter = 0;
 

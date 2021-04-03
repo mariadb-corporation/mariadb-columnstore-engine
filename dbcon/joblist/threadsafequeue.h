@@ -507,6 +507,11 @@ public:
         return { bytes.load(std::memory_order_acquire), (uint32_t)fImpl.unsafe_size()};
     }
 
+    size_t queueSize() const
+    {
+        return fImpl.unsafe_size();
+    }
+
     /** @brief shutdown the queue
      *
      * cause all readers blocked in front() to return a default-constructed T

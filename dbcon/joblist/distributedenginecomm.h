@@ -138,8 +138,8 @@ public:
     EXPORT void read_all(uint32_t key, std::vector<messageqcpp::SBS>& v);
 
     /** reads queuesize/divisor msgs */
-    EXPORT void read_some(uint32_t key, uint32_t divisor, std::vector<messageqcpp::SBS>& v,
-                          bool* flowControlOn = NULL);
+    EXPORT size_t read_some(uint32_t key, uint32_t divisor, std::vector<messageqcpp::SBS>& v,
+                            bool* flowControlOn = NULL);
 
     /** @brief Write a primitive message
      *
@@ -222,7 +222,7 @@ private:
     /* To keep some state associated with the connection.  These aren't copyable. */
     struct MQE : public boost::noncopyable
     {
-        MQE(uint32_t pmCount);
+        MQE(uint32_t pmCount, uint32_t initialInterleaverValue);
         messageqcpp::Stats stats;
         StepMsgQueue queue;
         uint32_t ackSocketIndex;
