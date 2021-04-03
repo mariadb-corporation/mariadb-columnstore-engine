@@ -1819,6 +1819,7 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
             startingLBID += fColType.colWidth * blocksThisJob;
             fBPP->reset();
         }
+        //std::cerr << "makeJobs this " << (uint64_t)this << " blocksPerJob << " << blocksPerJob << " uniqueID " << uniqueID << " size " << jobs->size() << std::endl;
     }
 
 }
@@ -2051,9 +2052,11 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
             if (msgsSent == msgsRecvd && finishedSending)
                 break;
 
-            bool flowControlOn;
-            fDec->read_some(uniqueID, fNumThreads, bsv, &flowControlOn);
+            bool flowControlOn = false;
+            size_t queueSizeDivisor = std::max(fNumThreads, 10U);
+            (void)fDec->read_some(uniqueID, queueSizeDivisor, bsv, &flowControlOn);
             size = bsv.size();
+            //cerr << "TupleBPS::receiveMultiPrimitiveMessages uniqueID " << uniqueID << " size " << size << endl;
 
             // @bug 4562
             if (traceOn() && fOid >= 3000 && dlTimes.FirstReadTime().tv_sec == 0)
@@ -2083,8 +2086,10 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
             fewer threads.  Tweak as necessary. */
 
             if ((size > 20 || flowControlOn) && fNumThreads < fMaxNumThreads)
+            {
+                cerr << "TupleBPS::receiveMultiPrimitiveMessages start extra agg thread uniqueID " << uniqueID << " treadID " << threadID << " fNumThreads " << fNumThreads << " size " << size << endl;
                 startAggregationThread();
-
+            }
             for (uint32_t z = 0; z < size; z++)
             {
                 if (bsv[z]->length() > 0 && fBPP->countThisMsg(*(bsv[z])))
@@ -2113,8 +2118,8 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
             if (size == 0)
             {
                 tplLock.unlock();
-                condvar.notify_one();
-                //usleep(1 * fNumThreads);
+                //cerr << "TupleBPS::receiveMultiPrimitiveMessages zero size fNumThreads " << fNumThreads << "\n";
+                usleep(threadID);
                 tplLock.lock();
                 continue;
             }
