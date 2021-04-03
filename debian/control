@@ -8,9 +8,11 @@ Depends: binutils,
          python3,
          ${misc:Depends},
          ${shlibs:Depends}
-Breaks: mariadb-columnstore-libs,
+Breaks: libthrift-dev,
+        mariadb-columnstore-libs,
         mariadb-columnstore-platform
-Replaces: mariadb-columnstore-libs,
+Replaces: libthrift-dev,
+          mariadb-columnstore-libs,
           mariadb-columnstore-platform
 Description: MariaDB ColumnStore storage engine
  The MariaDB ColumnStore storage engine is a high-performance columnar
