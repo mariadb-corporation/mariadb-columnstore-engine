@@ -149,12 +149,33 @@ if (NOT CURL_FOUND)
     return()
 endif()
 
-
 FIND_PROGRAM(AWK_EXECUTABLE awk DOC "path to the awk executable")
 if(NOT AWK_EXECUTABLE)
     MESSAGE_ONCE(CS_NO_AWK "awk not found!")
     return()
 endif()
+
+FIND_LIBRARY(TBB_LIBRARY
+    tbb
+    PATH "./tbb/lib/intel64/gcc4.8/"
+)
+
+#FIND_PATH(TBB_INCLUDE_DIR
+#    tbb.h
+#    PATH "./tbb/include/tbb/"
+#)
+
+ADD_LIBRARY(tbb INTERFACE)
+INSTALL(TARGETS tbb DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbb.so.12.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+
+#INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbb_debug.so.12.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+#INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbbbind.so.3.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+#INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbbbind_2_0.so.3.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+#INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbbbind_2_0.so.3.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+#INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbbmalloc.so.2.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+#INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbbmalloc_proxy.so.2.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+#INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbbmalloc_proxy_debug.so.2.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
 IF (NOT INSTALL_LAYOUT)
     INCLUDE(check_compiler_flag)
@@ -192,9 +213,9 @@ ELSE ()
 ENDIF()
 
 
-FIND_LIBRARY(TBB_LIBS tbb PATH "./tbb/lib/intel64/gcc4.8/")
+
 SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed")
-SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot ${Boost_LIBRARIES} xml2 pthread rt libmysql_client ${TBB_LIBS})
+SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot ${Boost_LIBRARIES} xml2 pthread rt libmysql_client ${TBB_LIBRARIES})
 SET (ENGINE_OAM_LIBS        oamcpp )
 SET (ENGINE_BRM_LIBS        brm idbdatafile cacheutils rwlock ${ENGINE_OAM_LIBS} ${ENGINE_COMMON_LIBS})
 SET (ENGINE_EXEC_LIBS       joblist execplan windowfunction joiner rowgroup funcexp udfsdk regr dataconvert common compress querystats querytele thrift threadpool ${ENGINE_BRM_LIBS})
@@ -352,15 +373,6 @@ INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine DESTINATION ${ENGINE_
 IF (RPM)
     INSTALL(FILES utils/jemalloc/libjemalloc.so.2 DESTINATION ${ENGINE_DATADIR} COMPONENT columnstore-engine)
 ENDIF ()
-
-INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbb.so.12.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
-INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbb_debug.so.12.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
-INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbbbind.so.3.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
-INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbbbind_2_0.so.3.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
-INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbbbind_2_0.so.3.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
-INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbbmalloc.so.2.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
-INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbbmalloc_proxy.so.2.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
-INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbbmalloc_proxy_debug.so.2.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
 
 IF (INSTALL_LAYOUT)
