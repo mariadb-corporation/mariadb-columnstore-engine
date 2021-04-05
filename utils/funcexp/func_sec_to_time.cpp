@@ -75,47 +75,14 @@ string Func_sec_to_time::getStrVal(rowgroup::Row& row,
 
         case execplan::CalpontSystemCatalog::DOUBLE:
         {
-            const string& valStr = parm[0]->data()->getStrVal(row, isNull);
-            val = parm[0]->data()->getIntVal(row, isNull);
-            size_t x = valStr.find(".");
-
-            if (x < string::npos)
-            {
-                string tmp = valStr.substr(x + 1, 1);
-                char* ptr = &tmp[0];
-                int i = atoi(ptr);
-
-                if (i >= 5)
-                {
-                    if (val > 0)
-                        val += 1;
-                    else
-                        val -= 1;
-                }
-            }
+            datatypes::TDouble d(parm[0]->data()->getDoubleVal(row, isNull));
+            val = d.toMCSSInt64Round();
+            break;
         }
-        break;
-
         case execplan::CalpontSystemCatalog::FLOAT:
         {
-            const string& valStr = parm[0]->data()->getStrVal(row, isNull);
-            val = parm[0]->data()->getIntVal(row, isNull);
-            size_t x = valStr.find(".");
-
-            if (x < string::npos)
-            {
-                string tmp = valStr.substr(x + 1, 1);
-                char* ptr = &tmp[0];
-                int i = atoi(ptr);
-
-                if (i >= 5)
-                {
-                    if (val > 0)
-                        val += 1;
-                    else
-                        val -= 1;
-                }
-            }
+            datatypes::TDouble d(parm[0]->data()->getFloatVal(row, isNull));
+            val = d.toMCSSInt64Round();
         }
         break;
 
