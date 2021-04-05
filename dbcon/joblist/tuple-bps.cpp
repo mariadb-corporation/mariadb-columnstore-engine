@@ -1203,7 +1203,8 @@ void TupleBPS::run()
         startPrimitiveThread();
         fProducerThreads.clear();
         fProducerThreads.reserve(fMaxNumThreads);
-        startAggregationThread();
+        for (size_t i = 0; i < fProcessorThreadsPerScan; ++i)
+            startAggregationThread();
     }
     catch (...)
     {
@@ -2087,7 +2088,7 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
 
             if ((size > 20 || flowControlOn) && fNumThreads < fMaxNumThreads)
             {
-                cerr << "TupleBPS::receiveMultiPrimitiveMessages start extra agg thread uniqueID " << uniqueID << " treadID " << threadID << " fNumThreads " << fNumThreads << " size " << size << endl;
+                //cerr << "TupleBPS::receiveMultiPrimitiveMessages start extra agg thread uniqueID " << uniqueID << " treadID " << threadID << " fNumThreads " << fNumThreads << " size " << size << endl;
                 startAggregationThread();
             }
             for (uint32_t z = 0; z < size; z++)
