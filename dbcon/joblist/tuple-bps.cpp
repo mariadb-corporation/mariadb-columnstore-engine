@@ -1393,6 +1393,7 @@ void TupleBPS::sendJobs(const vector<Job>& jobs)
 
     for (i = 0; i < jobs.size() && !cancelled(); i++)
     {
+        //cerr << "TupleBPS::sendJobs jobs.size() " << jobs.size() << endl; 
         fDec->write(uniqueID, *(jobs[i].msg));
         tplLock.lock();
         msgsSent += jobs[i].expectedResponses;
@@ -1400,7 +1401,7 @@ void TupleBPS::sendJobs(const vector<Job>& jobs)
         if (recvWaiting)
             condvar.notify_all();
 
-        while ((msgsSent - msgsRecvd > fMaxOutstandingRequests << LOGICAL_EXTENT_CONVERTER)
+        while ((msgsSent - msgsRecvd > fMaxOutstandingRequests << 6)
                 && !fDie)
         {
             sendWaiting = true;
@@ -1717,7 +1718,6 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
 
     for (i = 0; i < scannedExtents.size(); i++)
     {
-
         // the # of LBIDs to scan in this extent, if it will be scanned.
         //@bug 5322: status EXTENTSTATUSMAX+1 means single block extent.
         if ((scannedExtents[i].HWM == 0) &&
@@ -1726,6 +1726,7 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
             lbidsToScan = scannedExtents[i].range.size * 1024;
         else
             lbidsToScan = scannedExtents[i].HWM - scannedExtents[i].blockOffset + 1;
+
 
         // skip this extent if CP data rules it out or the scan has already passed
         // the last extent for that DBRoot (import may be adding extents that shouldn't
@@ -1808,6 +1809,7 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
 
         while (blocksToScan > 0)
         {
+            //cerr << " makeJobs " << blocksToScan << endl;
             uint32_t blocksThisJob = min(blocksToScan, blocksPerJob);
 
             fBPP->setLBID(startingLBID, scannedExtents[i]);
@@ -1820,7 +1822,7 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
             startingLBID += fColType.colWidth * blocksThisJob;
             fBPP->reset();
         }
-        //std::cerr << "makeJobs this " << (uint64_t)this << " blocksPerJob << " << blocksPerJob << " uniqueID " << uniqueID << " size " << jobs->size() << std::endl;
+        //std::cerr << "makeJobs this " << (uint64_t)this << " blocksPerJob << " << blocksPerJob << " uniqueID " << uniqueID << " size " << jobs->size() << " fProcessorThreadsPerScan " << fProcessorThreadsPerScan  << std::endl;
     }
 
 }
@@ -2055,7 +2057,7 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
 
             bool flowControlOn = false;
             size_t queueSizeDivisor = std::max(fNumThreads, 10U);
-            (void)fDec->read_some(uniqueID, queueSizeDivisor, bsv, &flowControlOn);
+            size_t queueSize = fDec->read_some(uniqueID, queueSizeDivisor, bsv, &flowControlOn);
             size = bsv.size();
             //cerr << "TupleBPS::receiveMultiPrimitiveMessages uniqueID " << uniqueID << " size " << size << endl;
 
@@ -2088,7 +2090,8 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
 
             if ((size > 20 || flowControlOn) && fNumThreads < fMaxNumThreads)
             {
-                //cerr << "TupleBPS::receiveMultiPrimitiveMessages start extra agg thread uniqueID " << uniqueID << " treadID " << threadID << " fNumThreads " << fNumThreads << " size " << size << endl;
+                condvar.notify_all();
+                //cerr << "TupleBPS::receiveMultiPrimitiveMessages start extra agg thread uniqueID " << uniqueID << " treadID " << threadID << " fNumThreads " << fNumThreads << " size " << size << " queueSize " << queueSize << endl;
                 startAggregationThread();
             }
             for (uint32_t z = 0; z < size; z++)
@@ -2119,8 +2122,8 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
             if (size == 0)
             {
                 tplLock.unlock();
+                usleep(3);
                 //cerr << "TupleBPS::receiveMultiPrimitiveMessages zero size fNumThreads " << fNumThreads << "\n";
-                usleep(threadID);
                 tplLock.lock();
                 continue;
             }
