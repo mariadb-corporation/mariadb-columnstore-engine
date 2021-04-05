@@ -165,9 +165,7 @@ FIND_LIBRARY(TBB_LIBRARY
 #    PATH "./tbb/include/tbb/"
 #)
 
-ADD_LIBRARY(tbb INTERFACE)
-INSTALL(TARGETS tbb DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
-INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbb.so.12.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbb.so.12.1 RENAME libtbb.so DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
 #INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbb_debug.so.12.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 #INSTALL(FILES tbb/lib/intel64/gcc4.8/libtbbbind.so.3.1 DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
@@ -373,7 +371,6 @@ INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine DESTINATION ${ENGINE_
 IF (RPM)
     INSTALL(FILES utils/jemalloc/libjemalloc.so.2 DESTINATION ${ENGINE_DATADIR} COMPONENT columnstore-engine)
 ENDIF ()
-
 
 IF (INSTALL_LAYOUT)
     # Do this or when MariaDB builds us we don't have GenError which is required for these
