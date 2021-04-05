@@ -376,7 +376,6 @@ void DistributedEngineComm::notifyClientsThatStreamEnds()
 void DistributedEngineComm::Listen(boost::shared_ptr<MessageQueueClient> client, uint32_t connIndex)
 {
     SBS sbs;
-
     try
     {
         while (Busy())
@@ -386,9 +385,7 @@ void DistributedEngineComm::Listen(boost::shared_ptr<MessageQueueClient> client,
             sbs = client->read(0, NULL, &stats);
 
             if (sbs->length() != 0)
-            {
                 addDataToOutput(sbs, connIndex, &stats);
-            }
             else // got zero bytes on read, nothing more will come
                 goto Error;
         }
@@ -653,7 +650,7 @@ void DistributedEngineComm::sendAcks(uint32_t uniqueID, const vector<SBS>& msgs,
     /* If the current queue size > target, do nothing.
      * If the original queue size > target, ACK the msgs below the target.
      */
-//    if (!mqe->throttled || queueSize >= mqe->targetQueueSize)
+    if (!mqe->throttled || queueSize >= mqe->targetQueueSize)
     {
         /* no acks will be sent, but update unackedwork to keep the #s accurate */
         uint16_t numack = 0;
@@ -945,7 +942,6 @@ void DistributedEngineComm::addDataToOutput(SBS sbs, uint32_t connIndex, Stats* 
         return;
     }
     boost::shared_ptr<MQE> mqe = a->second;
-    a.release();
 /*
     boost::shared_ptr<MQE> mqe;
 
@@ -970,6 +966,7 @@ void DistributedEngineComm::addDataToOutput(SBS sbs, uint32_t connIndex, Stats* 
     }
 
     TSQSize_t queueSize = mqe->queue.push(sbs);
+    a.release();
     //std::cerr << "DistributedEngineComm::addDataToOutput " << uniqueId << " count " << queueSize.count << std::endl;
 
     if (mqe->sendACKs)
@@ -981,9 +978,8 @@ void DistributedEngineComm::addDataToOutput(SBS sbs, uint32_t connIndex, Stats* 
             doHasBigMsgs(mqe, (300 * 1024 * 1024 > 3 * msgSize ?
                                300 * 1024 * 1024 : 3 * msgSize)); //buffer at least 3 big msgs
 
-// WIP Effectively disable flow control
-//        if (!mqe->throttled && queueSize.size >= mqe->targetQueueSize)
-//            setFlowControl(true, uniqueId, mqe);
+        if (!mqe->throttled && queueSize.size >= mqe->targetQueueSize)
+            setFlowControl(true, uniqueId, mqe);
     }
 
     if (stats)
@@ -1046,6 +1042,7 @@ int DistributedEngineComm::writeToClient(size_t index, const ByteStream& bs, uin
         if (doInterleaving)
             index = (index + (interleaver * pmCount)) % fPmConnections.size();
 
+        cerr << "DEC::writeToClient index " << index << endl;
         ClientList::value_type client = fPmConnections[index];
 
         if (!client->isAvailable()) return 0;
