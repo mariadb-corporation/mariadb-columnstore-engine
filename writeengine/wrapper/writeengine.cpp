@@ -400,7 +400,7 @@ void WriteEngineWrapper::updateMaxMinRange(const size_t totalNewRow, const size_
                 break;
             }
             default:
-                idbassert(0 && "unknown WR type tag");
+                idbassert_s(0, "unknown WR type tag");
                 return;
         }
         if (maxMin->isBinaryColumn())
@@ -4587,8 +4587,6 @@ int WriteEngineWrapper::updateColumnRec(const TxnID& txnid,
 
         rc = writeColumnRecUpdate(txnid, cscColTypeList, colStructList, colValueList, colOldValueList,
                             ridLists[extent], tableOid, true, ridLists[extent].size(), &currentExtentRangesPtrs);
-
-//        m_opType = NOOP; // XXX: WHY WAS IT HERE???!!!
 
         if (rc != NO_ERROR)
             break;
