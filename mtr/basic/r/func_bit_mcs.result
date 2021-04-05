@@ -1,0 +1,14 @@
+SET default_storage_engine=ColumnStore;
+DROP DATABASE IF EXISTS func_bit_mcs;
+CREATE DATABASE func_bit_mcs;
+USE func_bit_mcs;
+#
+# MCOL-4666 Empty set when using BIT OR and BIT AND functions in WHERE
+#
+CREATE TABLE t1 (a BLOB);
+INSERT INTO t1 VALUES ('1');
+SELECT a|1 FROM t1;
+ERROR HY000: Internal error: Illegal parameter data type blob for operation bitor
+DROP TABLE t1;
+DROP DATABASE func_bit_mcs;
+USE test;

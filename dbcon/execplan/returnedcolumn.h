@@ -328,11 +328,6 @@ public:
         return false;
     }
 
-    virtual bool fixIfNeeded()
-    {
-        return false;
-    }
-
 protected:
     // return all flag set if the other column is outer join column (+)
     bool fReturnAll;

@@ -262,8 +262,6 @@ void FuncExp::evaluate(rowgroup::Row& row, std::vector<execplan::SRCP>& expressi
     {
         isNull = false;
 
-        expression[i]->fixIfNeeded();
-
         switch (expression[i]->resultType().colDataType)
         {
             case CalpontSystemCatalog::DATE:

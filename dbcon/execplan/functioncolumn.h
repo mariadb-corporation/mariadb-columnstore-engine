@@ -309,15 +309,6 @@ public:
         return fFunctor->getTimeIntVal(row, fFunctionParms, isNull, fOperationType);
     }
 
-    bool fixIfNeeded() override
-    {
-        if (fFixed)
-            return false;
-        if (fFunctor->fix(*this))
-            return true;
-        fFixed = true;
-        return false;
-    }
     void setFunctor(funcexp::Func* functor)
     {
         fFunctor = functor;

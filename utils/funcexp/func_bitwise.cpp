@@ -50,15 +50,6 @@ namespace
 using namespace funcexp;
 
 
-void bitWiseExceptionHandler(const std::string& funcName,
-                             const CalpontSystemCatalog::ColType& colType)
-{
-    std::ostringstream oss;
-    oss << funcName << ": datatype of " << execplan::colDataTypeToString(colType.colDataType);
-    throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
-}
-
-
 bool validateBitOperandTypeOrError(execplan::FunctionColumn &col,
                                    const Func & func,
                                    uint argno)
@@ -66,7 +57,7 @@ bool validateBitOperandTypeOrError(execplan::FunctionColumn &col,
     auto & type = col.functionParms()[argno]->data()->resultType();
     if (type.canReturnXInt64())
         return false;
-    bitWiseExceptionHandler(func.funcName(), type);
+    func.raiseIllegalParameterDataTypeError(type);
     return true;
 }
 
