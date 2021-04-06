@@ -33,6 +33,7 @@
 #include "we_obj.h"
 #include<sys/time.h>
 #include "brmtypes.h"
+#include "mcs_datatype.h"
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
 
@@ -47,6 +48,42 @@ namespace WriteEngine
 {
 // forward reference
 class DbFileOp;
+
+/** @brief Extended CPInfo - with type handler for all type-related information */
+struct ExtCPInfo
+{
+    execplan::CalpontSystemCatalog::ColDataType fColType;
+    int                                         fColWidth;
+    BRM::CPInfo                                 fCPInfo;
+    ExtCPInfo(execplan::CalpontSystemCatalog::ColDataType colType, int colWidth)
+        : fColType(colType), fColWidth(colWidth)
+    {
+        fCPInfo.isBinaryColumn = colWidth > datatypes::MAXLEGACYWIDTH;
+    }
+    void toInvalid()
+    {
+        auto mm = datatypes::MinMaxInfo::invalidRange(fColType);
+        fCPInfo.max = mm.max;
+	fCPInfo.min = mm.min;
+	fCPInfo.bigMax = mm.int128Max;
+	fCPInfo.bigMin = mm.int128Min;
+    }
+
+    bool isInvalid()
+    {
+        datatypes::MinMaxInfo mm;
+	mm.max = fCPInfo.max;
+	mm.min = fCPInfo.min;
+	mm.int128Max = fCPInfo.bigMax;
+	mm.int128Min = fCPInfo.bigMin;
+	return datatypes::MinMaxInfo::isRangeInvalid(mm, fColType, fColWidth);
+    }
+    bool isBinaryColumn()
+    {
+        return fCPInfo.isBinaryColumn;
+    }
+};
+typedef std::vector<ExtCPInfo> ExtCPInfoList;
 
 /** Class BRMWrapper */
 class BRMWrapper : public WEObj
@@ -262,7 +299,7 @@ public:
     /**
      * @brief set extents CP min/max info into extent map
      */
-    int setExtentsMaxMin(const BRM::CPInfoList_t& cpinfoList);
+    int setExtentsMaxMin(const ExtCPInfoList& cpinfoList);
 
     /**
      * @brief Perform bulk rollback of any column extents that logically follow
@@ -473,6 +510,8 @@ public:
         m_useVb = val;
     }
 
+    int getExtentCPMaxMin(const BRM::LBID_t lbid, BRM::CPMaxMin& cpMaxMin);
+
 private:
     //--------------------------------------------------------------------------
     // Private methods
@@ -647,9 +686,15 @@ inline int BRMWrapper::bulkSetHWMAndCP(
     return getRC( rc, ERR_BRM_BULK_UPDATE );
 }
 
-inline int BRMWrapper::setExtentsMaxMin(const BRM::CPInfoList_t& cpinfoList)
+inline int BRMWrapper::setExtentsMaxMin(const ExtCPInfoList& extCPInfoList)
 {
-    int rc = blockRsltnMgrPtr->setExtentsMaxMin(cpinfoList);
+    BRM::CPInfoList_t toSet;
+    toSet.reserve(extCPInfoList.size());
+    for (const auto& extCPInfo : extCPInfoList)
+    {
+        toSet.push_back(extCPInfo.fCPInfo);
+    }
+    int rc = blockRsltnMgrPtr->setExtentsMaxMin(toSet);
     return getRC( rc, ERR_BRM_SET_EXTENTS_CP );
 }
 

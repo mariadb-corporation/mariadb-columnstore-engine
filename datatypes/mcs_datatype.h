@@ -176,6 +176,11 @@ public:
       UNDEFINED,            /*!< Undefined - used in UDAF API */
   };
 
+  // XXX: It is assumed here that ALL TYPES have width, scale and precision.
+  // XXX: And then some of them have the type tag itself.
+  // XXX: But, all types have type tag, some need explicit width (decimals, for example)
+  // XXX: and then some should have scale and precision (decimals, I guess).
+  // XXX: Current hierarchy is not all that straightforward to work with.
   class TypeAttributesStd
   {
   public:
@@ -608,7 +613,59 @@ public:
   {
     int128Min = datatypes::minInt128;
     int128Max = datatypes::maxInt128;
-  };
+  }
+
+  /** @brief Returns ranges that is invalid for all signed values, both small and wide. */
+  static MinMaxInfo invalidSignedRange()
+  {
+    MinMaxInfo tmp;
+    tmp.min = std::numeric_limits<int64_t>::max();
+    tmp.max = std::numeric_limits<int64_t>::min();
+    tmp.int128Max = datatypes::minInt128;
+    tmp.int128Min = datatypes::maxInt128;
+    return tmp;
+  }
+  /** @brief Returns ranges that is invalid for all unsigned values, both small and wide. */
+  static MinMaxInfo invalidUnsignedRange()
+  {
+    MinMaxInfo tmp;
+    tmp.min = static_cast<int64_t>(std::numeric_limits<uint64_t>::max());
+    tmp.max = static_cast<int64_t>(std::numeric_limits<uint64_t>::min());
+    tmp.int128Max = datatypes::minInt128; // please bear in mind that DECIMAL(38) UNSIGNED
+                                          // has representable range 0..10^38-1 which is well
+					  // inside int128 representable range.
+    tmp.int128Min = datatypes::maxInt128;
+    return tmp;
+  }
+  /** @brief convenience function for simpler access to invalid range. */
+  static MinMaxInfo invalidRange(datatypes::SystemCatalog::ColDataType colType)
+  {
+    return isUnsigned(colType) ? invalidUnsignedRange() : invalidSignedRange();
+  }
+  /** @brief Internal: type-casting comparison.  */
+  template <typename CompareAs, typename ValueType>
+  static bool greaterThan(ValueType a, ValueType b)
+  {
+    return static_cast<CompareAs>(a) > static_cast<CompareAs>(b);
+  }
+  /** @brief Check if range is valid
+   *
+   * A more general approach to check non-nullness of the range than
+   * explicit comparison with invalid bounds.
+   */
+  static bool isRangeInvalid(const MinMaxInfo& mm, datatypes::SystemCatalog::ColDataType colType, int colWidth)
+  {
+    if (colWidth > 8)
+    {
+      return isUnsigned(colType) ? greaterThan<uint128_t, int128_t>(mm.int128Min, mm.int128Max)
+                                 : greaterThan<int128_t, int128_t>(mm.int128Min, mm.int128Max);
+    }
+    else
+    {
+      return isUnsigned(colType) ? greaterThan<uint64_t, int64_t>(mm.min, mm.max)
+                                 : greaterThan<int64_t, int64_t>(mm.min, mm.max);
+    }
+  }
   bool isEmptyOrNullSInt64() const
   {
     return min == std::numeric_limits<int64_t>::max() &&

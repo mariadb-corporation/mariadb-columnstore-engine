@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016-2019 MariaDB Corporation
+   Copyright (C) 2016-2021 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -66,10 +66,10 @@ using namespace idbdatafile;
 namespace WriteEngine
 //#define PROFILE 1
 
+#define RETURN_ON_ERROR_REPORT(statement) do { int rc = (statement); if (rc != NO_ERROR) { cerr << "failed at " << __LINE__ << "function " << __FUNCTION__ << ", statement '" << #statement << "', rc " << rc << endl; return rc; } } while (0)
+
 {
 StopWatch timer;
-
-static BRM::CPInfo dummyCPInfo;
 
 /**@brief WriteEngineWrapper Constructor
 */
@@ -220,6 +220,212 @@ void WriteEngineWrapper::findSmallestColumn(uint32_t& colId, ColStructList colSt
     }
 }
 
+/** @brief Fetch values from arrays into VT-types references casting arrays to (element type) ET-typed arrays.
+ *
+ * There might be two arrays: one from which we write to buffer and one with old values written before.
+ * One of these arrays can be absent because of, well, physical absence. Insertion does not have
+ * values written before and deletion does not have values to write to.
+ */
+template <typename VT, typename ET>
+void fetchNewOldValues(VT& value, VT& oldValue, const void* array, const void* oldArray, size_t i, size_t totalNewRow)
+{
+    const ET* eArray = static_cast<const ET*>(array);
+    const ET* oldEArray = static_cast<const ET*>(oldArray);
+    if (eArray)
+    {
+        value = eArray[i < totalNewRow ? i : 0];
+    }
+    if (oldEArray)
+    {
+        oldValue = oldEArray[i];
+    }
+}
+
+static bool updateBigRangeCheckForInvalidity(ExtCPInfo* maxMin, int128_t value, int128_t oldValue, const void* valArrayVoid, const void* oldValArrayVoid)
+{
+    if (!oldValArrayVoid)
+    { // insertion. we can update range directly. range will not become invalid here.
+        maxMin->fCPInfo.bigMax = std::max(maxMin->fCPInfo.bigMax, value); // we update big range because int columns can be associated with decimals.
+        maxMin->fCPInfo.bigMin = std::min(maxMin->fCPInfo.bigMin, value);
+    }
+    else if (!valArrayVoid)
+    { // deletion. we need to check old value only, is it on (or outside) range boundary.
+        if (oldValue >= maxMin->fCPInfo.bigMax || oldValue <= maxMin->fCPInfo.bigMin)
+        {
+            maxMin->toInvalid();
+            return true; // no point working further.
+        }
+    }
+    else if (valArrayVoid && oldValArrayVoid)
+    { // update. we need to check boundaries as in deletion and extend as in insertion.
+      // check boundaries as in deletion accounting for possible extension.
+        if (    (oldValue <= maxMin->fCPInfo.bigMin && value > oldValue)
+             || (oldValue >= maxMin->fCPInfo.bigMax && value < oldValue))
+        { // we are overwriting value on the boundary with value that does not preserve or extend range.
+            maxMin->toInvalid();
+            return true;
+        }
+        maxMin->fCPInfo.bigMax = std::max(maxMin->fCPInfo.bigMax, value);
+        maxMin->fCPInfo.bigMin = std::min(maxMin->fCPInfo.bigMin, value);
+    }
+    return false;
+}
+
+
+template<typename InternalType>
+bool updateRangeCheckForInvalidity(ExtCPInfo* maxMin, InternalType value, InternalType oldValue, const void* valArrayVoid, const void* oldValArrayVoid)
+{
+    if (!oldValArrayVoid)
+    { // insertion. we can update range directly. range will not become invalid here.
+        maxMin->fCPInfo.bigMax = std::max(maxMin->fCPInfo.bigMax, (int128_t)value); // we update big range because int columns can be associated with decimals.
+        maxMin->fCPInfo.bigMin = std::min(maxMin->fCPInfo.bigMin, (int128_t)value);
+        maxMin->fCPInfo.max = std::max((InternalType)maxMin->fCPInfo.max, value);
+        maxMin->fCPInfo.min = std::min((InternalType)maxMin->fCPInfo.min, value);
+    }
+    else if (!valArrayVoid)
+    { // deletion. we need to check old value only, is it on (or outside) range boundary.
+        if (oldValue >= (InternalType)maxMin->fCPInfo.max || oldValue <= (InternalType)maxMin->fCPInfo.min)
+        {
+            maxMin->toInvalid();
+            return true; // no point working further.
+        }
+    }
+    else if (valArrayVoid && oldValArrayVoid)
+    { // update. we need to check boundaries as in deletion and extend as in insertion.
+      // check boundaries as in deletion accounting for possible extension.
+        if (    (oldValue <= (InternalType)maxMin->fCPInfo.min && value > oldValue)
+             || (oldValue >= (InternalType)maxMin->fCPInfo.max && value < oldValue))
+        { // we are overwriting value on the boundary with value that does not preserve or extend range.
+            maxMin->toInvalid();
+            return true;
+        }
+        maxMin->fCPInfo.bigMax = std::max(maxMin->fCPInfo.bigMax, (int128_t)value);
+        maxMin->fCPInfo.bigMin = std::min(maxMin->fCPInfo.bigMin, (int128_t)value);
+        maxMin->fCPInfo.max = std::max((InternalType)maxMin->fCPInfo.max, value);
+        maxMin->fCPInfo.min = std::min((InternalType)maxMin->fCPInfo.min, value);
+    }
+    return false;
+}
+
+/**
+ * There can be case with missing valArray (delete), missing oldValArray (insert) and when
+ * both arrays are present (update).
+ */
+void WriteEngineWrapper::updateMaxMinRange(const size_t totalNewRow, const size_t totalOldRow,
+                                const execplan::CalpontSystemCatalog::ColType& cscColType,
+                                const ColType colType,
+                                const void* valArrayVoid, const void* oldValArrayVoid,
+                                ExtCPInfo* maxMin, bool canStartWithInvalidRange)
+{
+    if (!maxMin)
+    {
+        return ;
+    }
+    bool isUnsigned = false; // TODO: should change with type.
+    switch (colType)
+    {
+        case WR_UBYTE:
+        case WR_USHORT:
+        case WR_UINT:
+        case WR_ULONGLONG:
+        {
+            isUnsigned = true;
+            break;
+        }
+        default: // WR_BINARY is signed.
+            break;
+    }
+    if (!canStartWithInvalidRange)
+    {
+        // check if range is invalid, we can't update it.
+        if (maxMin->isInvalid())
+        {
+            return ;
+        }
+    }
+    size_t i;
+    for (i = 0; i < totalOldRow; i++) {
+        int64_t value = 0, oldValue = 0;
+        uint64_t uvalue = 0, oldUValue = 0;
+        int128_t bvalue = 0, oldBValue = 0;
+
+        // fetching. May not assign value or oldValue variables when array is not present.
+        switch (colType)
+        {
+            case WR_BYTE:
+            {
+                fetchNewOldValues<int64_t, int8_t>(value, oldValue, valArrayVoid, oldValArrayVoid, i, totalNewRow);
+                break;
+            }
+            case WR_UBYTE:
+            {
+                fetchNewOldValues<uint64_t, uint8_t>(uvalue, oldUValue, valArrayVoid, oldValArrayVoid, i, totalNewRow);
+                break;
+            }
+            case WR_SHORT:
+            {
+                fetchNewOldValues<int64_t, int16_t>(value, oldValue, valArrayVoid, oldValArrayVoid, i, totalNewRow);
+                break;
+            }
+            case WR_USHORT:
+            {
+                fetchNewOldValues<uint64_t, uint16_t>(uvalue, oldUValue, valArrayVoid, oldValArrayVoid, i, totalNewRow);
+                break;
+            }
+            case WR_MEDINT:
+            case WR_INT:
+            {
+                fetchNewOldValues<int64_t, int>(value, oldValue, valArrayVoid, oldValArrayVoid, i, totalNewRow);
+                break;
+            }
+            case WR_UMEDINT:
+            case WR_UINT:
+            {
+                fetchNewOldValues<uint64_t, unsigned int>(uvalue, oldUValue, valArrayVoid, oldValArrayVoid, i, totalNewRow);
+                break;
+            }
+            case WR_LONGLONG:
+            {
+                fetchNewOldValues<int64_t, int64_t>(value, oldValue, valArrayVoid, oldValArrayVoid, i, totalNewRow);
+                break;
+            }
+            case WR_ULONGLONG:
+            {
+                fetchNewOldValues<uint64_t, uint64_t>(uvalue, oldUValue, valArrayVoid, oldValArrayVoid, i, totalNewRow);
+                break;
+            }
+            case WR_BINARY:
+            {
+                fetchNewOldValues<int128_t, int128_t>(bvalue, oldBValue, valArrayVoid, oldValArrayVoid, i, totalNewRow);
+                break;
+            }
+            default:
+                idbassert_s(0, "unknown WR type tag");
+                return;
+        }
+        if (maxMin->isBinaryColumn())
+        { // special case of wide decimals. They fit into int128_t range so we do not care about signedness.
+            if (updateBigRangeCheckForInvalidity(maxMin, bvalue, oldBValue, valArrayVoid, oldValArrayVoid))
+            {
+                return ;
+            } 
+        }
+        else if (isUnsigned)
+        {
+            if (updateRangeCheckForInvalidity(maxMin, uvalue, oldUValue, valArrayVoid, oldValArrayVoid))
+            {
+                return ;
+            }
+        }
+        else
+        {
+            if (updateRangeCheckForInvalidity(maxMin, value, oldValue, valArrayVoid, oldValArrayVoid))
+            {
+                return ;
+            }
+        }
+    }
+}
 /*@convertValArray - Convert interface values to internal values
  */
 /***********************************************************
@@ -244,7 +450,7 @@ void WriteEngineWrapper::convertValArray(const size_t totalRow, const CalpontSys
         for (i = 0; i < curTupleList.size(); i++)
         {
             curTuple = curTupleList[i];
-            convertValue(cscColType, colType, valArray, i, curTuple.data);
+            convertValue(cscColType, colType, valArray, i, curTuple.data, true);
         }
     } 
     else
@@ -413,7 +619,6 @@ void WriteEngineWrapper::convertValue(const execplan::CalpontSystemCatalog::ColT
     } // end of switch (colType)
 }  /*@convertValue -  The base for converting values */
 
-
 /***********************************************************
  * DESCRIPTION:
  *    The base for converting values
@@ -434,12 +639,16 @@ void WriteEngineWrapper::convertValue(const CalpontSystemCatalog::ColType& cscCo
         {
             case WriteEngine::WR_INT :
             case WriteEngine::WR_MEDINT :
+                // here we assign value to an array element and update range.
                 if (data.type() == typeid(long))
-                    ((int*)valArray)[pos] = static_cast<int>(boost::any_cast<long>(data));
+                            ((int*)valArray)[pos] = static_cast<int>(boost::any_cast<long>(data));
                 else if (data.type() == typeid(int))
-                    ((int*)valArray)[pos] = boost::any_cast<int>(data);
+                            ((int*)valArray)[pos] = boost::any_cast<int>(data);
                 else
+                {   // this interesting part is for magic values like NULL or EMPTY (marks deleted elements).
+                    // we will not put these into range.
                     ((int*)valArray)[pos] = boost::any_cast<uint32_t>(data);
+                }
 
                 break;
 
@@ -673,7 +882,7 @@ int WriteEngineWrapper::fillColumn(const TxnID& txnid, const OID& dataOid,
     Dctnry*   dctnry  = m_dctnry[op(compressionType)];
     colOpNewCol->initColumn(newCol);
     refColOp->initColumn(refCol);
-    uint16_t dbRoot = 1;	//not to be used
+    uint16_t dbRoot = 1;          //not to be used
     int newDataWidth = colType.colWidth;
     //Convert HWM of the reference column for the new column
     //Bug 1703,1705
@@ -848,6 +1057,8 @@ int WriteEngineWrapper::deleteBadRows(const TxnID& txnid, ColStructList& colStru
     Column         curCol;
     void*          valArray = NULL;
 
+    m_opType = DELETE;
+
     for (unsigned i = 0; i < colStructs.size(); i++)
     {
         ColumnOp* colOp = m_colOp[op(colStructs[i].fCompressionType)];
@@ -953,6 +1164,58 @@ static void log_this(const char *message,
 }
 #endif
 
+/** @brief Determine whether we may update a column's ranges (by type) and return nullptr if we can't */
+static ExtCPInfo*
+getCPInfoToUpdateForUpdatableType(const ColStruct& colStruct, ExtCPInfo* currentCPInfo)
+{
+    if (colStruct.tokenFlag)
+    {
+        return nullptr;
+    }
+    switch(colStruct.colDataType)
+    {
+        // here we enumerate all supported types.
+        case CalpontSystemCatalog::TINYINT:
+        case CalpontSystemCatalog::SMALLINT:
+        case CalpontSystemCatalog::DECIMAL:
+        case CalpontSystemCatalog::MEDINT:
+        case CalpontSystemCatalog::INT:
+        case CalpontSystemCatalog::BIGINT:
+        case CalpontSystemCatalog::UTINYINT:
+        case CalpontSystemCatalog::USMALLINT:
+        case CalpontSystemCatalog::UDECIMAL:
+        case CalpontSystemCatalog::UMEDINT:
+        case CalpontSystemCatalog::UINT:
+        case CalpontSystemCatalog::UBIGINT:
+        {
+            return currentCPInfo;
+        }
+        // all unsupported types must not be supported.
+        default:
+            return nullptr; // safe choice for everything we can't do.
+    }
+}
+
+/** @brief Let only valid ranges to be present.
+ *
+ * There can be a case that we have computed invalid range while computing updated ranges.
+ *
+ * These invalid ranges should not have CP_VALID in the status code. So, they must not
+ * come into final call to setCPInfos or something.
+ *
+ * To achieve that, we filter these invalid ranges here.
+ */
+static void
+setInvalidCPInfosSpecialMarks(std::vector<ExtCPInfo>& cpInfos)
+{
+    size_t i;
+    for(i=0; i < cpInfos.size(); i++) {
+        if (cpInfos[i].isInvalid())
+        {
+            cpInfos[i].fCPInfo.seqNum = SEQNUM_MARK_INVALID_SET_RANGE;
+        }
+    }
+}
 
 /*@insertColumnRecs -  Insert value(s) into a column
 */
@@ -992,16 +1255,19 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
     DctnryStructList newDctnryStructList;
     HWM            hwm = 0;
     HWM            oldHwm = 0;
-    HWM    		  newHwm = 0;
+    HWM            newHwm = 0;
     ColTupleList::size_type totalRow;
     ColStructList::size_type totalColumns;
     uint64_t rowsLeft = 0;
     bool newExtent = false;
     RIDList ridList;
     ColumnOp* colOp = NULL;
+    ColSplitMaxMinInfoList maxMins;
 
     // Set tmp file suffix to modify HDFS db file
     bool           useTmpSuffix = false;
+
+    m_opType = INSERT;
 
     if (idbdatafile::IDBPolicy::useHdfs())
     {
@@ -1026,6 +1292,12 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
     for (i = 0; i < colStructList.size(); i++)
         Convertor::convertColType(&colStructList[i]);
 
+    for (const auto& colStruct : colStructList)
+    {
+        ColSplitMaxMinInfo tmp(colStruct.colDataType, colStruct.colWidth);
+        maxMins.push_back(tmp);
+    }
+
     uint32_t colId = 0;
     // MCOL-1675: find the smallest column width to calculate the RowID from so
     // that all HWMs will be incremented by this operation
@@ -1045,7 +1317,8 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
     IDBDataFile* pFile = NULL;
     std::vector<DBRootExtentInfo> extentInfo;
     int currentDBrootIdx = 0;
-    std::vector<BRM::CreateStripeColumnExtentsArgOut> extents;
+    std::vector<BRM::CreateStripeColumnExtentsArgOut> extents; // this structure valid only when isFirstOnBatchPm is true.
+    std::vector<BRM::LBID_t> newExtentsStartingLbids; // we keep column-indexed LBIDs here for **new** extents. It is set and valid and used only when rowsLeft > 0.
 
     //--------------------------------------------------------------------------
     // For first batch on this PM:
@@ -1057,8 +1330,8 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
     //--------------------------------------------------------------------------
     if (isFirstBatchPm)
     {
-	currentDBrootIdx = dbRootExtentTrackers[colId]->getCurrentDBRootIdx();
-	extentInfo = dbRootExtentTrackers[colId]->getDBRootExtentList();
+        currentDBrootIdx = dbRootExtentTrackers[colId]->getCurrentDBRootIdx();
+        extentInfo = dbRootExtentTrackers[colId]->getDBRootExtentList();
         dbRoot = extentInfo[currentDBrootIdx].fDbRoot;
         partitionNum = extentInfo[currentDBrootIdx].fPartition;
 
@@ -1084,11 +1357,11 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
                 return rc;
 
             //Create column files
-            BRM::CPInfoList_t cpinfoList;
-            BRM::CPInfo cpInfo;
+            ExtCPInfoList cpinfoList;
 
             for ( i = 0; i < extents.size(); i++)
             {
+                ExtCPInfo cpInfo(colStructList[i].colDataType, colStructList[i].colWidth);
                 colOp = m_colOp[op(colStructList[i].fCompressionType)];
                 colOp->initColumn(curCol);
                 colOp->setColParam(curCol, colId, colStructList[i].colWidth, colStructList[i].colDataType,
@@ -1102,39 +1375,12 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
                 if (rc != NO_ERROR)
                     return rc;
 
-                cpInfo.isBinaryColumn = colStructList[i].colWidth > 8;
+                cpInfo.toInvalid();
 
-                if (!cpInfo.isBinaryColumn)
-                {
-                    if (isUnsigned(colStructList[i].colDataType))
-                    {
-                        cpInfo.max = 0;
-                        cpInfo.min = static_cast<int64_t>(numeric_limits<uint64_t>::max());
-                    }
-                    else
-                    {
-                        cpInfo.max = numeric_limits<int64_t>::min();
-                        cpInfo.min = numeric_limits<int64_t>::max();
-                    }
-                }
-                else
-                {
-                    if (isUnsigned(colStructList[i].colDataType))
-                    {
-                        cpInfo.bigMax = 0;
-                        cpInfo.bigMin = -1;
-                    }
-                    else
-                    {
-                        utils::int128Min(cpInfo.bigMax);
-                        utils::int128Max(cpInfo.bigMin);
-                    }
-                }
-
-                cpInfo.seqNum = -1;
+                cpInfo.fCPInfo.seqNum = SEQNUM_MARK_INVALID_SET_RANGE;
 
                 //mark the extents to invalid
-                cpInfo.firstLbid = extents[i].startLbid;
+                cpInfo.fCPInfo.firstLbid = extents[i].startLbid;
                 cpinfoList.push_back(cpInfo);
                 colStructList[i].fColPartition = partitionNum;
                 colStructList[i].fColSegment = segmentNum;
@@ -1355,7 +1601,7 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
 
     rc = colOp->allocRowId(txnid, bUseStartExtent,
                            curCol, (uint64_t)totalRow, rowIdArray, hwm, newExtent, rowsLeft, newHwm, newFile,
-                           newColStructList, newDctnryStructList, dbRootExtentTrackers, insertSelect, true, tableOid, isFirstBatchPm);
+                           newColStructList, newDctnryStructList, dbRootExtentTrackers, insertSelect, true, tableOid, isFirstBatchPm, &newExtentsStartingLbids);
 
     if (rc != NO_ERROR) //Clean up is already done
         return rc;
@@ -1376,9 +1622,9 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
     {
         for (unsigned k=0; k<colStructList.size(); k++)
         {
-           // Skip the selected column
-           if (k == colId)
-               continue;
+            // Skip the selected column
+            if (k == colId)
+                continue;
             Column expandCol;
             colOp = m_colOp[op(colStructList[k].fCompressionType)];
             colOp->setColParam(expandCol, 0,
@@ -1690,24 +1936,42 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
         int         curFbo = 0, curBio, lastFbo = -1;
 
         if (isFirstBatchPm && (totalRow == rowsLeft))
-        {}
+        {
+            // in this particular case we already marked extents as invalid up there.
+        }
         else
         {
+            int firstHalfCount = totalRow - rowsLeft;
             for (unsigned i = 0; i < colStructList.size(); i++)
             {
                 colOp = m_colOp[op(colStructList[i].fCompressionType)];
                 width = colStructList[i].colWidth;
-                successFlag = colOp->calculateRowId(lastRid, BYTE_PER_BLOCK / width, width, curFbo, curBio);
-
-                if (successFlag)
+                if (firstHalfCount)
                 {
-                    if (curFbo != lastFbo)
+                    ExtCPInfo* cpInfoP = getCPInfoToUpdateForUpdatableType(colStructList[i], &maxMins[i].fSplitMaxMinInfo[0]);
+                    RID thisRid = rowsLeft ? lastRid : lastRidNew;
+                    successFlag = colOp->calculateRowId(thisRid, BYTE_PER_BLOCK / width, width, curFbo, curBio);
+
+                    if (successFlag)
                     {
-                        RETURN_ON_ERROR(AddLBIDtoList(txnid,
-                                                      colStructList[i],
-                                                      curFbo,
-						      dummyCPInfo));
+                        if (curFbo != lastFbo)
+                        {
+                            RETURN_ON_ERROR(AddLBIDtoList(txnid,
+                                                          colStructList[i],
+                                                          curFbo, cpInfoP));
+                        }
                     }
+                    maxMins[i].fSplitMaxMinInfoPtrs[0] = cpInfoP;
+                }
+                if (rowsLeft)
+                {
+                    ExtCPInfo* cpInfoP = getCPInfoToUpdateForUpdatableType(colStructList[i], &maxMins[i].fSplitMaxMinInfo[1]);
+                    if (cpInfoP)
+                    {
+                        RETURN_ON_ERROR(GetLBIDRange(newExtentsStartingLbids[i], colStructList[i], *cpInfoP));
+                    }
+
+                    maxMins[i].fSplitMaxMinInfoPtrs[1] = cpInfoP;
                 }
             }
         }
@@ -1717,7 +1981,25 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
         //----------------------------------------------------------------------
         // Write row(s) to database file(s)
         //----------------------------------------------------------------------
-        rc = writeColumnRec(txnid, cscColTypeList, colStructList, colOldValueList, rowIdArray, newColStructList, colNewValueList, tableOid, useTmpSuffix); // @bug 5572 HDFS tmp file
+        std::vector<ExtCPInfo> cpinfoList;
+        for (auto& splitCPInfo : maxMins)
+        {
+            for (i = 0; i < 2; i ++)
+            {
+                ExtCPInfo* cpInfo = splitCPInfo.fSplitMaxMinInfoPtrs[i];
+                if (cpInfo)
+                {
+                    cpinfoList.push_back(*cpInfo);
+                    cpinfoList[cpinfoList.size() - 1].fCPInfo.seqNum = SEQNUM_MARK_INVALID_SET_RANGE;
+                }
+            }
+        }
+        rc = BRMWrapper::getInstance()->setExtentsMaxMin(cpinfoList);
+        if (rc != NO_ERROR)
+        {
+            return rc;
+        }
+        rc = writeColumnRec(txnid, cscColTypeList, colStructList, colOldValueList, rowIdArray, newColStructList, colNewValueList, tableOid, useTmpSuffix, true, &maxMins); // @bug 5572 HDFS tmp file
 
         if (rc == NO_ERROR)
         {
@@ -1734,7 +2016,28 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
                 if (rc != 0)
                     rc = ERR_BLKCACHE_FLUSH_LIST; // translate to WE error
             }
-       }
+
+            if (rc == NO_ERROR)
+            {
+                int index = 0;
+                for (auto& splitCPInfo : maxMins)
+                {
+                    for (i = 0; i < 2; i ++)
+                    {
+                        ExtCPInfo* cpInfo = splitCPInfo.fSplitMaxMinInfoPtrs[i];
+                        if (cpInfo)
+                        {
+                            cpinfoList[index] = *cpInfo;
+                            cpinfoList[index].fCPInfo.seqNum ++;
+                            index ++;
+                        }
+                    }
+                }
+                setInvalidCPInfosSpecialMarks(cpinfoList);
+                rc = BRMWrapper::getInstance()->setExtentsMaxMin(cpinfoList);
+            }
+
+        }
     }
 
     return rc;
@@ -1762,7 +2065,7 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
     DctnryStructList newDctnryStructList;
     HWM            hwm = 0;
     HWM            oldHwm = 0;
-    HWM    		  newHwm = 0;
+    HWM            newHwm = 0;
     size_t totalRow;
     ColStructList::size_type totalColumns;
     uint64_t rowsLeft = 0;
@@ -1773,6 +2076,8 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
 
     // Set tmp file suffix to modify HDFS db file
     bool           useTmpSuffix = false;
+
+    m_opType = INSERT;
 
     if (idbdatafile::IDBPolicy::useHdfs())
     {
@@ -1849,11 +2154,11 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
                 return rc;
 
             //Create column files
-            BRM::CPInfoList_t cpinfoList;
-            BRM::CPInfo cpInfo;
+            ExtCPInfoList cpinfoList;
 
             for ( i = 0; i < extents.size(); i++)
             {
+                ExtCPInfo cpInfo(colStructList[i].colDataType, colStructList[i].colWidth);
                 colOp = m_colOp[op(colStructList[i].fCompressionType)];
                 colOp->initColumn(curCol);
                 colOp->setColParam(curCol, 0, colStructList[i].colWidth, colStructList[i].colDataType,
@@ -1867,39 +2172,12 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
                 if (rc != NO_ERROR)
                     return rc;
 
-                cpInfo.isBinaryColumn = colStructList[i].colWidth > 8;
+                cpInfo.toInvalid();
 
-                if (!cpInfo.isBinaryColumn)
-                {
-                    if (isUnsigned(colStructList[i].colDataType))
-                    {
-                        cpInfo.max = 0;
-                        cpInfo.min = static_cast<int64_t>(numeric_limits<uint64_t>::max());
-                    }
-                    else
-                    {
-                        cpInfo.max = numeric_limits<int64_t>::min();
-                        cpInfo.min = numeric_limits<int64_t>::max();
-                    }
-                }
-                else
-                {
-                    if (isUnsigned(colStructList[i].colDataType))
-                    {
-                        cpInfo.bigMax = 0;
-                        cpInfo.bigMin = -1;
-                    }
-                    else
-                    {
-                        utils::int128Min(cpInfo.bigMax);
-                        utils::int128Max(cpInfo.bigMin);
-                    }
-                }
-
-                cpInfo.seqNum = -1;
+                cpInfo.fCPInfo.seqNum = SEQNUM_MARK_INVALID_SET_RANGE;
 
                 //mark the extents to invalid
-                cpInfo.firstLbid = extents[i].startLbid;
+                cpInfo.fCPInfo.firstLbid = extents[i].startLbid;
                 cpinfoList.push_back(cpInfo);
                 colStructList[i].fColPartition = partitionNum;
                 colStructList[i].fColSegment = segmentNum;
@@ -2124,7 +2402,7 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
 
     rc = colOp->allocRowId(txnid, bUseStartExtent,
                            curCol, (uint64_t)totalRow, rowIdArray, hwm, newExtent, rowsLeft, newHwm, newFile,
-                           newColStructList, newDctnryStructList, dbRootExtentTrackers, insertSelect, true, tableOid, isFirstBatchPm);
+                           newColStructList, newDctnryStructList, dbRootExtentTrackers, insertSelect, true, tableOid, isFirstBatchPm, NULL);
 
     //cout << "after allocrowid, total row = " <<totalRow << " newExtent is " << newExtent << endl;
     // cout << "column oid " << curColStruct.dataOid << " has hwm:newHwm = " << hwm <<":" << newHwm<< endl;
@@ -2473,8 +2751,7 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
                     {
                         RETURN_ON_ERROR(AddLBIDtoList(txnid,
                                                       colStructList[i],
-                                                      curFbo,
-						      dummyCPInfo));
+                                                      curFbo));
                     }
                 }
                 else
@@ -2495,15 +2772,14 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
                 {
                     RETURN_ON_ERROR(AddLBIDtoList(txnid,
                                                   newColStructList[i],
-                                                  curFbo,
-						  dummyCPInfo));
+                                                  curFbo));
                 }
             }
             else
                 return ERR_INVALID_PARAM;
         }
 
-	markTxnExtentsAsInvalid(txnid);
+        markTxnExtentsAsInvalid(txnid);
 
         //----------------------------------------------------------------------
         // Write row(s) to database file(s)
@@ -2547,6 +2823,8 @@ int WriteEngineWrapper::insertColumnRec_SYS(const TxnID& txnid,
 #ifdef PROFILE
     StopWatch timer;
 #endif
+
+    m_opType = INSERT;
 
     // debug information for testing
     if (isDebug(DEBUG_2))
@@ -2640,7 +2918,7 @@ int WriteEngineWrapper::insertColumnRec_SYS(const TxnID& txnid,
     bool bUseStartExtent = true;
     rc = colOp->allocRowId(txnid, bUseStartExtent,
                            curCol, (uint64_t)totalRow, rowIdArray, hwm, newExtent, rowsLeft, newHwm, newFile, newColStructList, newDctnryStructList,
-                           dbRootExtentTrackers, false, false, 0);
+                           dbRootExtentTrackers, false, false, 0, false, NULL);
 
     if ((rc == ERR_FILE_DISK_SPACE) && newExtent)
     {
@@ -3060,8 +3338,7 @@ int WriteEngineWrapper::insertColumnRec_SYS(const TxnID& txnid,
                 {
                     RETURN_ON_ERROR(AddLBIDtoList(txnid,
                                               colStructList[i],
-                                              curFbo,
-                                              dummyCPInfo));
+                                              curFbo));
                 }
             }
         }
@@ -3081,8 +3358,7 @@ int WriteEngineWrapper::insertColumnRec_SYS(const TxnID& txnid,
             {
                 RETURN_ON_ERROR(AddLBIDtoList(txnid,
                                               newColStructList[i],
-                                              curFbo,
-					      dummyCPInfo));
+                                              curFbo));
             }
         }
     }
@@ -3210,6 +3486,8 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
     StopWatch timer;
 #endif
 
+    m_opType = INSERT;
+
     // debug information for testing
     if (isDebug(DEBUG_2))
     {
@@ -3308,7 +3586,7 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
     rc = colOp->allocRowId(txnid, bUseStartExtent,
                            curCol, (uint64_t)totalRow, rowIdArray, hwm, newExtent,
                            rowsLeft, newHwm, newFile, newColStructList, newDctnryStructList,
-                           dbRootExtentTrackers, false, false, 0);
+                           dbRootExtentTrackers, false, false, 0, false, NULL);
 
     //--------------------------------------------------------------------------
     // Handle case where we ran out of disk space allocating a new extent.
@@ -3400,11 +3678,11 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
     //--------------------------------------------------------------------------
     // DMC-SHARED_NOTHING_NOTE: Is it safe to assume only part0 seg0 is abbreviated?
     if ((colStructList[colId].fColPartition == 0) &&
-	(colStructList[colId].fColSegment   == 0) &&
+        (colStructList[colId].fColSegment   == 0) &&
         ((totalRow - rowsLeft) > 0) &&
         (rowIdArray[totalRow - rowsLeft - 1] >= (RID)INITIAL_EXTENT_ROWS_TO_DISK))
     {
-	for (unsigned k=0; k<colStructList.size(); k++)
+        for (unsigned k=0; k<colStructList.size(); k++)
         {
             if (k == colId)
                continue;
@@ -3746,8 +4024,7 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
                 colDataTypes.push_back(colStructList[i].colDataType);
                 RETURN_ON_ERROR(AddLBIDtoList(txnid,
                                               colStructList[i],
-                                              curFbo,
-					      dummyCPInfo));
+                                              curFbo));
             }
         }
     }
@@ -4198,6 +4475,12 @@ int WriteEngineWrapper::updateColumnRec(const TxnID& txnid,
     DctnryStructList dctnryStructList;
     WriteEngine::CSCTypesList cscColTypeList;
     ColumnOp* colOp = NULL;
+    ExtCPInfoList infosToUpdate;
+
+    if (m_opType != DELETE)
+    {
+        m_opType = UPDATE;
+    }
 
     for (unsigned extent = 0; extent < numExtents; extent++)
     {
@@ -4223,7 +4506,7 @@ int WriteEngineWrapper::updateColumnRec(const TxnID& txnid,
 
                     if (!dctCol_iter->isNull)
                     {
-                        RETURN_ON_ERROR(tokenize(
+                        RETURN_ON_ERROR_REPORT(tokenize(
                                             txnid, dctnryStructList[i], *dctCol_iter, true)); // @bug 5572 HDFS tmp file
                         token = dctCol_iter->token;
 
@@ -4264,9 +4547,19 @@ int WriteEngineWrapper::updateColumnRec(const TxnID& txnid,
         rid_iter = ridLists[extent].begin();
         RID aRid = *rid_iter;
 
+        ExtCPInfoList currentExtentRanges;
+        for (const auto& colStruct : colStructList)
+        {
+            currentExtentRanges.push_back(ExtCPInfo(colStruct.colDataType, colStruct.colWidth)); // temporary for each extent.
+        }
+        std::vector<ExtCPInfo*> currentExtentRangesPtrs(colStructList.size(), NULL); // pointers for each extent.
+
         for (unsigned j = 0; j < colStructList.size(); j++)
         {
             colOp = m_colOp[op(colStructList[j].fCompressionType)];
+            ExtCPInfo* cpInfoP = &(currentExtentRanges[j]);
+            cpInfoP = getCPInfoToUpdateForUpdatableType(colStructList[j], cpInfoP);
+            currentExtentRangesPtrs[j] = cpInfoP;
 
             if (colStructList[j].tokenFlag)
                 continue;
@@ -4278,10 +4571,9 @@ int WriteEngineWrapper::updateColumnRec(const TxnID& txnid,
             {
                 if (curFbo != lastFbo)
                 {
-                    RETURN_ON_ERROR(AddLBIDtoList(txnid,
+                    RETURN_ON_ERROR_REPORT(AddLBIDtoList(txnid,
                                                   colStructList[j],
-                                                  curFbo,
-						  dummyCPInfo));
+                                                  curFbo, cpInfoP));
                 }
             }
         }
@@ -4289,20 +4581,38 @@ int WriteEngineWrapper::updateColumnRec(const TxnID& txnid,
 //#ifdef PROFILE
 //timer.start("markExtentsInvalid");
 //#endif
-        markTxnExtentsAsInvalid(txnid);
 
         if (m_opType != DELETE)
             m_opType = UPDATE;
 
-        rc = writeColumnRec(txnid, cscColTypeList, colStructList, colValueList, colOldValueList,
-                            ridLists[extent], tableOid, true, ridLists[extent].size());
-
-        m_opType = NOOP;
+        rc = writeColumnRecUpdate(txnid, cscColTypeList, colStructList, colValueList, colOldValueList,
+                            ridLists[extent], tableOid, true, ridLists[extent].size(), &currentExtentRangesPtrs);
 
         if (rc != NO_ERROR)
             break;
-    }
 
+        // copy updated ranges into bulk update vector.
+        for(auto cpInfoPtr : currentExtentRangesPtrs)
+        {
+            if (cpInfoPtr)
+            {
+                cpInfoPtr->fCPInfo.seqNum ++;
+                infosToUpdate.push_back(*cpInfoPtr);
+            }
+        }
+    }
+    markTxnExtentsAsInvalid(txnid);
+    if (rc == NO_ERROR)
+    {
+        ExtCPInfoList infosToDrop = infosToUpdate;
+        for (auto& cpInfo : infosToDrop)
+        {
+            cpInfo.fCPInfo.seqNum = SEQNUM_MARK_INVALID_SET_RANGE;
+        }
+        rc = BRMWrapper::getInstance()->setExtentsMaxMin(infosToDrop);
+        setInvalidCPInfosSpecialMarks(infosToUpdate);
+        rc = BRMWrapper::getInstance()->setExtentsMaxMin(infosToUpdate);
+    }
     return rc;
 }
 
@@ -4320,10 +4630,23 @@ int WriteEngineWrapper::updateColumnRecs(const TxnID& txnid,
     int curFbo = 0, curBio, lastFbo = -1;
     RID aRid = ridLists[0];
     int rc = 0;
+    ExtCPInfoList infosToUpdate;
+    for (const auto& colStruct : colExtentsStruct)
+    {
+        infosToUpdate.push_back(ExtCPInfo(colStruct.colDataType, colStruct.colWidth));
+    }
+    ExtCPInfoList bulkUpdateInfos;
+    std::vector<ExtCPInfo*> pointersToInfos; // pointersToInfos[i] points to infosToUpdate[i] and may be NULL.
+
+    m_opType = UPDATE;
 
     for (unsigned j = 0; j < colExtentsStruct.size(); j++)
     {
         colOp = m_colOp[op(colExtentsStruct[j].fCompressionType)];
+
+        ExtCPInfo* cpInfoP = &(infosToUpdate[j]);
+        cpInfoP = getCPInfoToUpdateForUpdatableType(colExtentsStruct[j], cpInfoP);
+        pointersToInfos.push_back(cpInfoP);
 
         if (colExtentsStruct[j].tokenFlag)
             continue;
@@ -4337,8 +4660,7 @@ int WriteEngineWrapper::updateColumnRecs(const TxnID& txnid,
             {
                 RETURN_ON_ERROR(AddLBIDtoList(txnid,
                                               colExtentsStruct[j],
-                                              curFbo,
-					      dummyCPInfo));
+                                              curFbo, cpInfoP));
             }
         }
     }
@@ -4348,7 +4670,39 @@ int WriteEngineWrapper::updateColumnRecs(const TxnID& txnid,
     if (m_opType != DELETE)
         m_opType = UPDATE;
 
-    rc = writeColumnRecords(txnid, cscColTypeList, colExtentsStruct, colValueList, ridLists, tableOid);
+    for (auto cpInfoP : pointersToInfos)
+    {
+        if (cpInfoP)
+        {
+            auto tmp = *cpInfoP;
+            tmp.fCPInfo.seqNum = SEQNUM_MARK_INVALID_SET_RANGE;
+            bulkUpdateInfos.push_back(tmp);
+        }
+    }
+    if (!bulkUpdateInfos.empty())
+    {
+        rc = BRMWrapper::getInstance()->setExtentsMaxMin(bulkUpdateInfos);
+    }
+
+    rc = writeColumnRecords(txnid, cscColTypeList, colExtentsStruct, colValueList, ridLists, tableOid, true, &pointersToInfos);
+
+    if (rc == NO_ERROR)
+    {
+        bulkUpdateInfos.clear();
+        for (auto cpInfoP : pointersToInfos)
+        {
+            if (cpInfoP)
+            {
+                cpInfoP->fCPInfo.seqNum ++;
+                bulkUpdateInfos.push_back(*cpInfoP);
+            }
+        }
+        if (!bulkUpdateInfos.empty())
+        {
+            setInvalidCPInfosSpecialMarks(bulkUpdateInfos);
+            rc = BRMWrapper::getInstance()->setExtentsMaxMin(bulkUpdateInfos);
+        }
+    }
     m_opType = NOOP;
     return rc;
 }
@@ -4357,11 +4711,12 @@ int WriteEngineWrapper::writeColumnRecords(const TxnID& txnid,
         const CSCTypesList& cscColTypeList,
         vector<ColStruct>& colStructList,
         ColValueList& colValueList,
-        const RIDList& ridLists, const int32_t tableOid, bool versioning)
+        const RIDList& ridLists, const int32_t tableOid, bool versioning, std::vector<ExtCPInfo*>* cpInfos)
 {
     bool           bExcp;
     int            rc = 0;
     void*          valArray = NULL;
+    void*          oldValArray = NULL;
     Column         curCol;
     ColStruct      curColStruct;
     CalpontSystemCatalog::ColType curColType;
@@ -4377,7 +4732,14 @@ int WriteEngineWrapper::writeColumnRecords(const TxnID& txnid,
 
     for (i = 0; i < totalColumn; i++)
     {
+        ExtCPInfo* cpInfo = NULL;
+        if (cpInfos)
+        {
+            cpInfo = (*cpInfos)[i];
+        }
         valArray = NULL;
+        oldValArray = NULL;
+        
         curColStruct = colStructList[i];
         curColType = cscColTypeList[i];
         curTupleList = colValueList[i];
@@ -4444,6 +4806,11 @@ int WriteEngineWrapper::writeColumnRecords(const TxnID& txnid,
 
         allocateValArray(valArray, totalRow, curColStruct.colType, curColStruct.colWidth);
 
+        if (m_opType != INSERT && cpInfo)
+        {
+            allocateValArray(oldValArray, totalRow, curColStruct.colType, curColStruct.colWidth);
+        }
+
         // convert values to valArray
         bExcp = false;
 
@@ -4465,11 +4832,13 @@ int WriteEngineWrapper::writeColumnRecords(const TxnID& txnid,
 #ifdef PROFILE
         timer.start("writeRow ");
 #endif
-        rc = colOp->writeRowsValues(curCol, totalRow, ridLists, valArray);
+        rc = colOp->writeRowsValues(curCol, totalRow, ridLists, valArray, oldValArray);
 #ifdef PROFILE
         timer.stop("writeRow ");
 #endif
         colOp->clearColumn(curCol);
+
+        updateMaxMinRange(totalRow, totalRow, cscColTypeList[i], curColStruct.colType, valArray, oldValArray, cpInfo, false);
 
         if (curColStruct.fCompressionType == 0)
         {
@@ -4489,6 +4858,11 @@ int WriteEngineWrapper::writeColumnRecords(const TxnID& txnid,
 
         if (valArray != NULL)
             free(valArray);
+
+        if (oldValArray != NULL)
+        {
+            free(oldValArray);
+        }
 
         // check error
         if (rc != NO_ERROR)
@@ -4525,11 +4899,13 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
                                        ColValueList& newColValueList,
                                        const int32_t tableOid,
                                        bool useTmpSuffix,
-                                       bool versioning)
+                                       bool versioning,
+                                       ColSplitMaxMinInfoList* maxMins)
 {
     bool           bExcp;
     int            rc = 0;
     void*          valArray;
+    void*          oldValArray;
     string         segFile;
     Column         curCol;
     ColTupleList   oldTupleList;
@@ -4563,6 +4939,7 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
             {
                 //Write the first batch
                 valArray = NULL;
+                oldValArray = NULL;
                 RID* firstPart = rowIdArray;
                 ColumnOp* colOp = m_colOp[op(colStructList[i].fCompressionType)];
 
@@ -4627,6 +5004,19 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
                 // have to init the size here
                 allocateValArray(valArray, totalRow1, colStructList[i].colType, colStructList[i].colWidth);
 
+                ExtCPInfo* cpInfo = getCPInfoToUpdateForUpdatableType(colStructList[i],
+                                                                        maxMins ?
+                                                                        ((*maxMins)[i]).fSplitMaxMinInfoPtrs[0] : NULL);
+
+                if (m_opType != INSERT && cpInfo != NULL) // we allocate space for old values only when we need them.
+                {
+                    allocateValArray(oldValArray, totalRow1, colStructList[i].colType, colStructList[i].colWidth);
+                }
+                else
+                {
+                    oldValArray = NULL;
+                }
+
                 // convert values to valArray
                 // WIP Is m_opType ever set to DELETE?
                 if (m_opType != DELETE)
@@ -4657,7 +5047,7 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
 #ifdef PROFILE
                     timer.start("writeRow ");
 #endif
-                    rc = colOp->writeRow(curCol, totalRow1, firstPart, valArray);
+                    rc = colOp->writeRow(curCol, totalRow1, firstPart, valArray, oldValArray);
 #ifdef PROFILE
                     timer.stop("writeRow ");
 #endif
@@ -4667,7 +5057,7 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
 #ifdef PROFILE
                     timer.start("writeRow ");
 #endif
-                    rc = colOp->writeRow(curCol, totalRow1, rowIdArray, valArray, true);
+                    rc = colOp->writeRow(curCol, totalRow1, rowIdArray, valArray, oldValArray, true);
 #ifdef PROFILE
                     timer.stop("writeRow ");
 #endif
@@ -4675,11 +5065,16 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
 
                 colOp->clearColumn(curCol);
 
+                updateMaxMinRange(totalRow1, totalRow1, cscColTypeList[i], colStructList[i].colType, valArray, oldValArray, cpInfo, rowIdArray[0] == 0 && m_opType == INSERT);
+
                 if (versioning)
                     BRMWrapper::getInstance()->writeVBEnd(txnid, rangeList);
 
                 if (valArray != NULL)
                     free(valArray);
+
+                if (oldValArray != NULL)
+                    free(oldValArray);
 
                 // check error
                 if (rc != NO_ERROR)
@@ -4688,6 +5083,7 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
 
             //Process the second batch
             valArray = NULL;
+            oldValArray = NULL;
 
             ColumnOp* colOp = m_colOp[op(newColStructList[i].fCompressionType)];
 
@@ -4750,7 +5146,19 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
                 }
             }
 
+            ExtCPInfo* cpInfo = getCPInfoToUpdateForUpdatableType(newColStructList[i],
+                                                                    maxMins ?
+                                                                    ((*maxMins)[i]).fSplitMaxMinInfoPtrs[1] : NULL);
             allocateValArray(valArray, totalRow2, newColStructList[i].colType, newColStructList[i].colWidth);
+
+            if (m_opType != INSERT && cpInfo != NULL) // we allocate space for old values only when we need them.
+            {
+                allocateValArray(oldValArray, totalRow1, colStructList[i].colType, colStructList[i].colWidth);
+            }
+            else
+            {
+                oldValArray = NULL;
+            }
 
             // convert values to valArray
             if (m_opType != DELETE)
@@ -4777,7 +5185,7 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
 #ifdef PROFILE
                 timer.start("writeRow ");
 #endif
-                rc = colOp->writeRow(curCol, totalRow2, secondPart, valArray);
+                rc = colOp->writeRow(curCol, totalRow2, secondPart, valArray, oldValArray); // XXX: here we use secondPart array and just below we use rowIdArray. WHY???
 #ifdef PROFILE
                 timer.stop("writeRow ");
 #endif
@@ -4787,7 +5195,7 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
 #ifdef PROFILE
                 timer.start("writeRow ");
 #endif
-                rc = colOp->writeRow(curCol, totalRow2, rowIdArray, valArray, true);
+                rc = colOp->writeRow(curCol, totalRow2, rowIdArray, valArray, oldValArray, true); // XXX: BUG: here we use rowIdArray and just above we use secondPart array. WHY???
 #ifdef PROFILE
                 timer.stop("writeRow ");
 #endif
@@ -4795,6 +5203,8 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
 
 
             colOp->clearColumn(curCol);
+
+            updateMaxMinRange(totalRow2, totalRow2, cscColTypeList[i], newColStructList[i].colType, valArray, oldValArray, cpInfo, secondPart[0] == 0 && m_opType == INSERT);
 
             if (versioning)
                 BRMWrapper::getInstance()->writeVBEnd(txnid, rangeList);
@@ -4809,8 +5219,13 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
         else
         {
             valArray = NULL;
+            oldValArray = NULL;
 
             ColumnOp* colOp = m_colOp[op(colStructList[i].fCompressionType)];
+
+            ExtCPInfo* cpInfo = getCPInfoToUpdateForUpdatableType(colStructList[i],
+                                                                    maxMins ?
+                                                                    ((*maxMins)[i]).fSplitMaxMinInfoPtrs[0] : NULL);
 
             // set params
             colOp->initColumn(curCol);
@@ -4871,6 +5286,15 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
 
             allocateValArray(valArray, totalRow1, colStructList[i].colType, colStructList[i].colWidth);
 
+            if (m_opType != INSERT && cpInfo != NULL) // we allocate space for old values only when we need them.
+            {
+                allocateValArray(oldValArray, totalRow1, colStructList[i].colType, colStructList[i].colWidth);
+            }
+            else
+            {
+                oldValArray = NULL;
+            }
+
             // convert values to valArray
             if (m_opType != DELETE)
             {
@@ -4878,7 +5302,7 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
 
                 try
                 {
-                    convertValArray(totalRow1, cscColTypeList[i], colStructList[i].colType, colValueList[i], valArray);
+                    convertValArray(totalRow1, cscColTypeList[i], colStructList[i].colType, colValueList[i], valArray, true);
                 }
                 catch (...)
                 {
@@ -4896,7 +5320,7 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
 #ifdef PROFILE
                 timer.start("writeRow ");
 #endif
-                rc = colOp->writeRow(curCol, totalRow1, rowIdArray, valArray);
+                rc = colOp->writeRow(curCol, totalRow1, rowIdArray, valArray, oldValArray);
 #ifdef PROFILE
                 timer.stop("writeRow ");
 #endif
@@ -4906,7 +5330,7 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
 #ifdef PROFILE
                 timer.start("writeRow ");
 #endif
-                rc = colOp->writeRow(curCol, totalRow1, rowIdArray, valArray, true);
+                rc = colOp->writeRow(curCol, totalRow1, rowIdArray, valArray, oldValArray, true);
 #ifdef PROFILE
                 timer.stop("writeRow ");
 #endif
@@ -4914,11 +5338,16 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
 
             colOp->clearColumn(curCol);
 
+            updateMaxMinRange(totalRow1, totalRow1, cscColTypeList[i], colStructList[i].colType, valArray, oldValArray, cpInfo, rowIdArray[0] == 0 && m_opType == INSERT);
+
             if (versioning)
                 BRMWrapper::getInstance()->writeVBEnd(txnid, rangeList);
 
             if (valArray != NULL)
                 free(valArray);
+
+            if (oldValArray != NULL)
+                free(oldValArray);
 
             // check error
             if (rc != NO_ERROR)
@@ -5279,7 +5708,7 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
     return rc;
 }
 
-int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
+int WriteEngineWrapper::writeColumnRecUpdate(const TxnID& txnid,
                                        const CSCTypesList& cscColTypeList,
                                        const ColStructList& colStructList,
                                        const ColValueList& colValueList,
@@ -5287,11 +5716,13 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
                                        const RIDList& ridList,
                                        const int32_t tableOid,
                                        bool convertStructFlag,
-                                       ColTupleList::size_type nRows)
+                                       ColTupleList::size_type nRows,
+                                       std::vector<ExtCPInfo*>* cpInfos)
 {
     bool           bExcp;
     int            rc = 0;
     void*          valArray = NULL;
+    void*          oldValArray = NULL;
     Column         curCol;
     ColStruct      curColStruct;
     ColTupleList   curTupleList, oldTupleList;
@@ -5347,6 +5778,7 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
     for (i = 0; i < totalColumn; i++)
     {
         valArray = NULL;
+        oldValArray = NULL;
         curColStruct = colStructList[i];
         curTupleList = colValueList[i]; //same value for all rows
         ColumnOp* colOp = m_colOp[op(curColStruct.fCompressionType)];
@@ -5466,6 +5898,14 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
 
         allocateValArray(valArray, 1, curColStruct.colType, curColStruct.colWidth);
 
+        ExtCPInfo* cpInfo;
+        cpInfo = cpInfos ? ((*cpInfos)[i]) : NULL;
+
+        if (cpInfo)
+        {
+            allocateValArray(oldValArray, totalRow, curColStruct.colType, curColStruct.colWidth);
+        }
+
         // convert values to valArray
         if (m_opType != DELETE)
         {
@@ -5493,7 +5933,7 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
 #ifdef PROFILE
             timer.start("writeRow ");
 #endif
-            rc = colOp->writeRows(curCol, totalRow, ridList, valArray);
+            rc = colOp->writeRows(curCol, totalRow, ridList, valArray, oldValArray);
 #ifdef PROFILE
             timer.stop("writeRow ");
 #endif
@@ -5503,18 +5943,28 @@ int WriteEngineWrapper::writeColumnRec(const TxnID& txnid,
 #ifdef PROFILE
             timer.start("writeRows ");
 #endif
-            rc = colOp->writeRows(curCol, totalRow, ridList, valArray, 0, true);
+            rc = colOp->writeRows(curCol, totalRow, ridList, valArray, oldValArray, true);
 #ifdef PROFILE
             timer.stop("writeRows ");
 #endif
         }
 
+        updateMaxMinRange(1, totalRow, cscColTypeList[i], curColStruct.colType, m_opType == DELETE ? NULL : valArray, oldValArray, cpInfo, false);
 //timer.start("Delete:closefile");
         colOp->clearColumn(curCol);
 
 //timer.stop("Delete:closefile");
         if (valArray != NULL)
+        {
             free(valArray);
+            valArray = NULL;
+        }
+
+        if (oldValArray != NULL)
+        {
+            free(oldValArray);
+            oldValArray = NULL;
+        }
 
         // check error
         if (rc != NO_ERROR)
@@ -5999,6 +6449,8 @@ int WriteEngineWrapper::updateNextValue(const TxnID txnId, const OID& columnoid,
     colType.colDataType = colStruct.colDataType =  CalpontSystemCatalog::UBIGINT;
     colStruct.fColDbRoot = dbRoot;
 
+    m_opType = UPDATE;
+
     if (idbdatafile::IDBPolicy::useHdfs())
         colStruct.fCompressionType = 2;
 
@@ -6119,6 +6571,43 @@ void WriteEngineWrapper::AddDictToList(const TxnID txnid,
 
 }
 
+// Get CPInfo for given starting LBID and column description structure.
+int WriteEngineWrapper::GetLBIDRange(const BRM::LBID_t startingLBID, const ColStruct& colStruct, ExtCPInfo& cpInfo)
+{
+    int rtn;
+    BRM::CPMaxMin maxMin;
+    rtn = BRMWrapper::getInstance()->getExtentCPMaxMin(startingLBID, maxMin);
+    bool isBinary = cpInfo.isBinaryColumn();
+    maxMin.isBinaryColumn = isBinary;
+    cpInfo.fCPInfo.firstLbid = startingLBID;
+    if (rtn)
+    {
+        cpInfo.toInvalid();
+        return rtn;
+    }
+    // if we are provided with CPInfo pointer to update, we record current range there.
+    // please note that we may fail here for unknown extents - e.g., newly allocated ones.
+    // for these we mark CPInfo as invalid (above) and proceed as usual.
+    // XXX With this logic we may end with invalid ranges for extents that were
+    //     allocated and recorded, yet not in our copy of extentmap.
+    //     As we update only part of that extent, the recorded range will be for
+    //     that part of the extent.
+    //     It should be investigated whether such situation is possible.
+    // XXX Please note that most if not all calls to AddLBIDToList are enclosed into
+    //     RETURN_ON_ERROR() macro.
+    //     If we have failed to obtain information above we will abort execution of the function
+    //     that called us.
+    //     This is potential source of bugs.
+    cpInfo.fCPInfo.bigMax = maxMin.bigMax;
+    cpInfo.fCPInfo.bigMin = maxMin.bigMin;
+    cpInfo.fCPInfo.max = maxMin.max;
+    cpInfo.fCPInfo.min = maxMin.min;
+    cpInfo.fCPInfo.seqNum = maxMin.seqNum;
+    cpInfo.fCPInfo.isBinaryColumn = maxMin.isBinaryColumn;
+    return rtn;
+}
+
+
 /***********************************************************
  * DESCRIPTION:
  *    Add an lbid to a list of lbids for sending to markExtentsInvalid.
@@ -6135,9 +6624,9 @@ void WriteEngineWrapper::AddDictToList(const TxnID txnid,
  * RETURN: 0 => OK. -1 => error
  ***********************************************************/
 int WriteEngineWrapper::AddLBIDtoList(const TxnID        txnid,
-                                      const ColStruct& colStruct,
+                                      const ColStruct&   colStruct,
                                       const int          fbo,
-				      const BRM::CPInfo& cpInfo)
+                                            ExtCPInfo*   cpInfo)
 {
     int rtn = 0;
 
@@ -6168,7 +6657,15 @@ int WriteEngineWrapper::AddLBIDtoList(const TxnID        txnid,
     if (rtn != 0)
         return -1;
 
-    spTxnLBIDRec->AddLBID(startingLBID, colStruct.colDataType);
+    // if we are given the cpInfo (column's ranges can be traced), we should update it.
+    if (cpInfo)
+    {
+        rtn = GetLBIDRange(startingLBID, colStruct, *cpInfo);
+    }
+    else
+    {
+        spTxnLBIDRec->AddLBID(startingLBID, colStruct.colDataType);
+    }
 
     return rtn;
 }

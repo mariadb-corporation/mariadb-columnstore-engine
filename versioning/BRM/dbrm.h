@@ -827,6 +827,8 @@ public:
 
     EXPORT int setExtentMaxMin(const LBID_t lbid, const int64_t max, const int64_t min, const int32_t seqNum) DBRM_THROW;
 
+    EXPORT int getExtentCPMaxMin(const LBID_t lbid, CPMaxMin& cpMaxMin) throw();
+
     /** @brief Updates the max and min casual partitioning info for the passed extents.
      *
      * @bug 1970.

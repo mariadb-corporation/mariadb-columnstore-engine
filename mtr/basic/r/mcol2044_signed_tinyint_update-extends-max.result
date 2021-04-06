@@ -1,0 +1,10 @@
+create database if not exists test_ranges;
+use test_ranges;
+drop table if exists t;
+create table t(x tinyint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=77 where x=66;
+select max_value, min_value from information_schema.columnstore_extents;
+max_value	min_value
+77	44
+drop database test_ranges;

@@ -311,6 +311,7 @@ const int   ERR_BRM_SUSPEND         = ERR_BRMBASE + 44;// BRM is set to Suspend 
 const int   ERR_BRM_GET_SUSPEND     = ERR_BRMBASE + 45;// error getting BRM Suspend flag
 const int   ERR_BRM_BAD_STRIPE_CNT  = ERR_BRMBASE + 46;// Incorrect num of cols allocated in stripe
 const int   ERR_BRM_UNSUPP_WIDTH    = ERR_BRMBASE + 47;// Non-dict column Width > allowed MAX.
+const int   ERR_BRM_GET_EXTENT_CP   = ERR_BRMBASE + 48;// Error getting extent's CPInfo
 
 //--------------------------------------------------------------------------
 // DM error

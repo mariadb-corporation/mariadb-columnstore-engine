@@ -73,9 +73,10 @@ public:
                                   ColStructList& newColStructList,
                                   DctnryStructList& newDctnryStructList,
                                   std::vector<boost::shared_ptr<DBRootExtentTracker> >&   dbRootExtentTrackers,
-                                  bool insertSelect = false,
-                                  bool isBatchInsert = false,
-                                  OID tableOid = 0, bool isFirstBatchPm = false);
+                                  bool insertSelect,
+                                  bool isBatchInsert,
+                                  OID tableOid, bool isFirstBatchPm,
+                                  std::vector<BRM::LBID_t>* newEtents);
 
     /**
      * @brief Create column file(s)
@@ -266,6 +267,7 @@ public:
                                 uint64_t totalRow,
                                 const RID* rowIdArray,
                                 const void* valArray,
+                                      void* oldValArray =0,
                                 bool bDelete = false);
 
     /**
@@ -275,7 +277,7 @@ public:
                                  uint64_t totalRow,
                                  const RIDList& ridList,
                                  const void* valArray,
-                                 const void* oldValArray = 0,
+                                       void* oldValArray = 0,
                                  bool bDelete = false);
 
     /**
@@ -284,7 +286,8 @@ public:
     EXPORT virtual int writeRowsValues(Column& curCol,
                                        uint64_t totalRow,
                                        const RIDList& ridList,
-                                       const void* valArray);
+                                       const void* valArray,
+                                             void* oldValArray = 0);
 
     /**
      * @brief Test if the pFile is an abbreviated extent.

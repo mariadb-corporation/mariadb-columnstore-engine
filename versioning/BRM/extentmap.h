@@ -907,6 +907,8 @@ public:
     template <typename T>
     EXPORT int getMaxMin(const LBID_t lbidRange, T& max, T& min, int32_t& seqNum);
 
+    EXPORT void getCPMaxMin(const LBID_t lbidRange, CPMaxMin& cpMaxMin); /** @brief Get whole record for untyped use. */
+
     inline bool empty()
     {
         if (fEMShminfo == 0)

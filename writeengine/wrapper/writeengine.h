@@ -83,13 +83,27 @@ struct TxnLBIDRec
         if ( m_LBIDSet.insert(lbid).second)
         {
             m_LBIDs.push_back(lbid);
-	    m_ColDataTypes.push_back(colDataType);
+            m_ColDataTypes.push_back(colDataType);
         }
     }
 };
 
 typedef boost::shared_ptr<TxnLBIDRec>  SP_TxnLBIDRec_t;
 typedef std::set<BRM::LBID_t> dictLBIDRec_t;
+
+/** @brief Range information for 1 or 2 extents changed by DML operation. */
+struct ColSplitMaxMinInfo {
+    ExtCPInfo    fSplitMaxMinInfo[2]; /** @brief internal to write engine: min/max ranges for data in one and, possible, second extent. */
+    ExtCPInfo*   fSplitMaxMinInfoPtrs[2]; /** @brief pointers to CPInfos in fSplitMaxMinInfo above */
+    ColSplitMaxMinInfo(execplan::CalpontSystemCatalog::ColDataType colDataType, int colWidth)
+        : fSplitMaxMinInfo { ExtCPInfo(colDataType, colWidth), ExtCPInfo(colDataType, colWidth) }
+    {
+        fSplitMaxMinInfoPtrs[0] = fSplitMaxMinInfoPtrs[1] = NULL; // disable by default.
+    }
+};
+
+typedef std::vector<ColSplitMaxMinInfo> ColSplitMaxMinInfoList;
+
 
 /** Class WriteEngineWrapper */
 class WriteEngineWrapper : public WEObj
@@ -166,6 +180,15 @@ public:
                                 const ColType colType,
                                 ColTupleList& curTupleList, void* valArray,
                                 bool bFromList = true) ;
+    /**
+     * @brief Updates range information given old range information, old values, new values and column information.
+     */
+    EXPORT void updateMaxMinRange(const size_t totalNewRow, const size_t totalOldRow,
+                                const execplan::CalpontSystemCatalog::ColType& cscColType,
+                                const ColType colType,
+                                const void* valArray, const void* oldValArray,
+                                ExtCPInfo* maxMin, bool canStartWithInvalidRange);
+
 
     /**
      * @brief Create a column, include object ids for column data and bitmap files
@@ -705,7 +728,8 @@ private:
                        ColValueList& colValueList,
                        RID* rowIdArray, const ColStructList& newColStructList,
                        ColValueList& newColValueList, const int32_t tableOid,
-                       bool useTmpSuffix, bool versioning = true);
+                       bool useTmpSuffix, bool versioning = true,
+                       ColSplitMaxMinInfoList* maxMins = NULL);
 
     int writeColumnRecBinary(const TxnID& txnid, const ColStructList& colStructList,
                              std::vector<uint64_t>& colValueList,
@@ -715,18 +739,18 @@ private:
                              bool useTmpSuffix, bool versioning = true);
 
     //@Bug 1886,2870 pass the address of ridList vector
-    int writeColumnRec(const TxnID& txnid, 
+    int writeColumnRecUpdate(const TxnID& txnid, 
                        const CSCTypesList& cscColTypeList,
                        const ColStructList& colStructList,
                        const ColValueList& colValueList, std::vector<void*>& colOldValueList,
                        const RIDList& ridList, const int32_t tableOid,
-                       bool convertStructFlag = true, ColTupleList::size_type nRows = 0);
+                       bool convertStructFlag = true, ColTupleList::size_type nRows = 0, std::vector<ExtCPInfo*>* cpInfos = NULL);
 
     //For update column from column to use
     int writeColumnRecords(const TxnID& txnid, const CSCTypesList& cscColTypeList,
                            std::vector<ColStruct>& colStructList,
                            ColValueList& colValueList, const RIDList& ridLists,
-                           const int32_t tableOid, bool versioning = true);
+                           const int32_t tableOid, bool versioning = true, std::vector<ExtCPInfo*>* cpInfos = NULL);
 
     /**
     * @brief util method to convert rowid to a column file
@@ -739,18 +763,24 @@ private:
     void AddDictToList(const TxnID txnid, std::vector<BRM::LBID_t>& lbids);
     void RemoveTxnFromDictMap(const TxnID txnid);
 
-    // Bug 4312: We use a hash set to hold the set of starting LBIDS for a given
+    // Bug 4312: We use a hash map to hold the set of starting LBIDS for a given
     // txn so that we don't waste time marking the same extent as invalid. This
     // list should be trimmed if it gets too big.
     int AddLBIDtoList(const TxnID        txnid,
                       const ColStruct& colStruct,
                       const int          fbo,
-		      const BRM::CPInfo& cpInfo // there is dummy value for you to use
-		      );
+                            ExtCPInfo*   cpInfo = NULL // provide CPInfo pointer if you want max/min updated.
+                     );
+
+    // Get CPInfo for given starting LBID and column description structure.
+    int GetLBIDRange(const BRM::LBID_t startingLBID, const ColStruct& colStruct, ExtCPInfo& cpInfo);
 
     // mark extents of the transaction as invalid. erase transaction from txn->lbidsrec map if requested.
     int markTxnExtentsAsInvalid(const TxnID txnid, bool erase = false);
 
+    // write LBID's new ranges.
+    int setExtentsNewMaxMins(const ColSplitMaxMinInfoList& maxMins, bool haveSplit);
+ 
     int RemoveTxnFromLBIDMap(const TxnID txnid);
 
     int op(int compressionType)
