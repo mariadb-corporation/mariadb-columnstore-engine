@@ -446,7 +446,6 @@ public:
         if (fShutdown.load(std::memory_order_seq_cst))
             return ret;
 
-        //std::unique_lock<std::mutex> lk(*fPimplLock);
         curSize = fImpl.unsafe_size();
 
         if (curSize < min)

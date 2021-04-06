@@ -38,11 +38,13 @@
 #include <queue>
 #include <string>
 #include <map>
+#include <mutex>
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
 #include <boost/scoped_array.hpp>
 
 #include <oneapi/tbb/concurrent_hash_map.h>
+#include <oneapi/tbb/concurrent_unordered_map.h>
 
 #include "bytestream.h"
 #include "primitivemsg.h"
@@ -50,6 +52,8 @@
 #include "rwlock_local.h"
 #include "resourcemanager.h"
 #include "messagequeue.h"
+
+#include "stopwatch.h"
 
 class TestDistributedEngineComm;
 
@@ -83,6 +87,36 @@ public:
     virtual void newPMOnline(uint32_t newConnectionNumber) = 0;
 };
 
+static constexpr uint32_t targetRecvQueueSize = 50000000;
+static constexpr uint32_t disableThreshold = 10000000;
+/* To keep some state associated with the connection.  These aren't copyable. */
+//A queue of ByteStreams coming in from PrimProc heading for a JobStep
+using StepMsgQueue = ThreadSafeQueueV2<messageqcpp::SBS>;
+
+struct MQE : public boost::noncopyable
+{
+    MQE(uint32_t pmCount, uint32_t initialInterleaverValue);
+    messageqcpp::Stats stats;
+    StepMsgQueue queue;
+    uint32_t ackSocketIndex;
+    boost::scoped_array<volatile uint32_t> unackedWork;
+    boost::scoped_array<uint32_t> interleaver;
+    uint32_t pmCount;
+    // non-BPP primitives don't do ACKs
+    bool sendACKs;
+
+    // This var will allow us to toggle flow control for BPP instances when
+    // the UM is keeping up.  Send -1 as the ACK value to disable flow control
+    // on the PM side, positive value to reenable it.  Not yet impl'd on the UM side.
+    bool throttled;
+
+    // This var signifies that the PM can return msgs big enough to keep toggling
+    // FC on and off.  We force FC on in that case and maintain a larger buffer.
+    bool hasBigMsgs;
+
+    uint64_t targetQueueSize;
+};
+
 /**
  * class DistributedEngineComm
  */
@@ -111,7 +145,7 @@ public:
 
     void notifyClientsThatStreamEnds(); 
 
-    EXPORT void addQueue(uint32_t key, bool sendACKs = false);
+    EXPORT boost::shared_ptr<joblist::MQE> addQueue(uint32_t key, bool sendACKs = false);
     EXPORT void removeQueue(uint32_t key);
     EXPORT void shutdownQueue(uint32_t key, bool aErase = false);
 
@@ -138,8 +172,12 @@ public:
     EXPORT void read_all(uint32_t key, std::vector<messageqcpp::SBS>& v);
 
     /** reads queuesize/divisor msgs */
-    EXPORT size_t read_some(uint32_t key, uint32_t divisor, std::vector<messageqcpp::SBS>& v,
-                            bool* flowControlOn = NULL);
+    EXPORT size_t read_some(uint32_t key,
+                            uint32_t divisor,
+                            std::vector<messageqcpp::SBS>& v,
+                            bool* flowControlOn,
+                            boost::shared_ptr<MQE> mqe,
+                            logging::StopWatch* timer = nullptr);
 
     /** @brief Write a primitive message
      *
@@ -216,38 +254,8 @@ private:
     typedef std::vector<boost::thread*> ReaderList;
     typedef std::vector<boost::shared_ptr<messageqcpp::MessageQueueClient> > ClientList;
 
-    //A queue of ByteStreams coming in from PrimProc heading for a JobStep
-    typedef ThreadSafeQueueV2<messageqcpp::SBS> StepMsgQueue;
-
-    /* To keep some state associated with the connection.  These aren't copyable. */
-    struct MQE : public boost::noncopyable
-    {
-        MQE(uint32_t pmCount, uint32_t initialInterleaverValue);
-        messageqcpp::Stats stats;
-        StepMsgQueue queue;
-        uint32_t ackSocketIndex;
-        boost::scoped_array<volatile uint32_t> unackedWork;
-        boost::scoped_array<uint32_t> interleaver;
-        uint32_t pmCount;
-        // non-BPP primitives don't do ACKs
-        bool sendACKs;
-
-        // This var will allow us to toggle flow control for BPP instances when
-        // the UM is keeping up.  Send -1 as the ACK value to disable flow control
-        // on the PM side, positive value to reenable it.  Not yet impl'd on the UM side.
-        bool throttled;
-
-        // This var signifies that the PM can return msgs big enough to keep toggling
-        // FC on and off.  We force FC on in that case and maintain a larger buffer.
-        bool hasBigMsgs;
-
-        uint64_t targetQueueSize;
-    };
-
     //The mapping of session ids to StepMsgQueueLists
-    //typedef std::map<unsigned, boost::shared_ptr<MQE> > MessageQueueMap;
-    
-    using MessageQueueMap = tbb::concurrent_hash_map<unsigned, boost::shared_ptr<MQE>>;
+    using MessageQueueMap = tbb::concurrent_unordered_map<unsigned, boost::shared_ptr<MQE>>;
 
     explicit DistributedEngineComm(ResourceManager* rm, bool isExeMgr);
 
@@ -262,8 +270,16 @@ private:
     *
     * Continues trying to write data to the client at the next index until all clients have been tried.
     */
-    int  writeToClient(size_t index, const messageqcpp::ByteStream& bs,
-                       uint32_t senderID = std::numeric_limits<uint32_t>::max(), bool doInterleaving = false);
+    int  writeToClient(const size_t index,
+                       const messageqcpp::ByteStream& bs,
+                       const uint32_t senderID = std::numeric_limits<uint32_t>::max(),
+                       const bool doInterleaving = false);
+
+    int  writeToClient(const size_t index,
+                       const messageqcpp::ByteStream& bs,
+                       MQE& mqe,
+                       const uint32_t senderID = std::numeric_limits<uint32_t>::max(),
+                       const bool doInterleaving = false);
 
     static DistributedEngineComm* fInstance;
     ResourceManager* fRm;
@@ -271,7 +287,7 @@ private:
     ClientList fPmConnections; // all the pm servers
     ReaderList fPmReader;	// all the reader threads for the pm servers
     MessageQueueMap fSessionMessages; // place to put messages from the pm server to be returned by the Read method
-    boost::mutex fMlock; //sessionMessages mutex
+    std::mutex fMlock; //sessionMessages mutex
     std::vector<boost::shared_ptr<boost::mutex> > fWlock; //PrimProc socket write mutexes
     bool fBusy;
     unsigned fLBIDShift;
@@ -290,31 +306,27 @@ private:
 
     // send-side throttling vars
     uint64_t throttleThreshold;
-    static const uint32_t targetRecvQueueSize = 50000000;
-    static const uint32_t disableThreshold = 10000000;
     uint32_t tbpsThreadCount;
 
     void sendAcks(uint32_t uniqueID, const std::vector<messageqcpp::SBS>& msgs,
                   boost::shared_ptr<MQE> mqe, size_t qSize);
     void nextPMToACK(boost::shared_ptr<MQE> mqe, uint32_t maxAck, uint32_t* sockIndex,
                      uint16_t* numToAck);
-    void setFlowControl(bool enable, uint32_t uniqueID, boost::shared_ptr<MQE> mqe);
+    void setFlowControl(bool enable, uint32_t uniqueID, MQE& mqe);
     void doHasBigMsgs(boost::shared_ptr<MQE> mqe, uint64_t targetSize);
     boost::mutex ackLock;
   public:
-    template<typename AccessorType>
-    inline boost::shared_ptr<MQE> getMqeForRead(AccessorType& a,
-                                         uint32_t key,
-                                         const std::string& methodName)
+    inline boost::shared_ptr<MQE> getMqeForRead(const uint32_t key,
+                                                const std::string& methodName)
     {
-        // The queue itself is thread-safe so searching for a const_accessor.
-        if (!fSessionMessages.find(a, key))
+        auto mapIter = fSessionMessages.find(key);
+        if (mapIter == fSessionMessages.end())
         {
             std::ostringstream os;
             os << "DEC: " << methodName << "() searches fom a nonexistent queue.\n";
             throw std::runtime_error(os.str());
         }
-        return a->second;
+        return mapIter->second;
     }
 };
 

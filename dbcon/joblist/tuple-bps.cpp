@@ -1201,6 +1201,8 @@ void TupleBPS::run()
 
         prepCasualPartitioning();
         startPrimitiveThread();
+        //timer.stop("TupleBPS" + std::to_string(+ std::to_string(uniqueID)));
+        //timer.finish();
         fProducerThreads.clear();
         fProducerThreads.reserve(fMaxNumThreads);
         for (size_t i = 0; i < fProcessorThreadsPerScan; ++i)
@@ -2057,7 +2059,9 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
 
             bool flowControlOn = false;
             size_t queueSizeDivisor = std::max(fNumThreads, 10U);
-            size_t queueSize = fDec->read_some(uniqueID, queueSizeDivisor, bsv, &flowControlOn);
+            //timer.start("TupleBPS" + std::to_string(uniqueID));
+            size_t queueSize = fDec->read_some(uniqueID, queueSizeDivisor, bsv, &flowControlOn, aMQEsharedPtr, &timer);
+            //timer.stop("TupleBPS" + std::to_string(uniqueID));
             size = bsv.size();
             //cerr << "TupleBPS::receiveMultiPrimitiveMessages uniqueID " << uniqueID << " size " << size << endl;
 
@@ -2122,7 +2126,7 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
             if (size == 0)
             {
                 tplLock.unlock();
-                usleep(3);
+                usleep(1);
                 //cerr << "TupleBPS::receiveMultiPrimitiveMessages zero size fNumThreads " << fNumThreads << "\n";
                 tplLock.lock();
                 continue;
@@ -2393,6 +2397,8 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
                             " TupleBPS::receiveMultiPrimitiveMessages()");
         abort_nolock();
     }
+
+    //timer.finish();
 
 out:
 
@@ -3258,12 +3264,16 @@ void TupleBPS::addCPPredicates(uint32_t OID, const vector<int64_t>& vals, bool i
 void TupleBPS::dec(DistributedEngineComm* dec)
 {
     if (fDec)
+    {
         fDec->removeQueue(uniqueID);
+    } 
 
     fDec = dec;
 
     if (fDec)
-        fDec->addQueue(uniqueID, true);
+    {
+        aMQEsharedPtr = fDec->addQueue(uniqueID, true);
+    }
 }
 
 void TupleBPS::abort_nolock()

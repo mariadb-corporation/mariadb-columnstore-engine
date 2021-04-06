@@ -67,6 +67,8 @@
 #include "rowaggregation.h"
 #include "funcexpwrapper.h"
 
+#include "stopwatch.h"
+
 namespace joblist
 {
 
@@ -889,7 +891,7 @@ public:
 
         fDec = dec;
 
-        if (fDec) fDec->addQueue(uniqueID);
+        if (fDec) (void)fDec->addQueue(uniqueID);
     }
 
     virtual execplan::CalpontSystemCatalog::OID oid() const
@@ -1517,7 +1519,8 @@ private:
     bool compareRange(uint8_t COP, int64_t min, int64_t max, int64_t val) const;
     bool hasPCFilter, hasPMFilter, hasRIDFilter, hasSegmentFilter, hasDBRootFilter, hasSegmentDirFilter,
          hasPartitionFilter, hasMaxFilter, hasMinFilter, hasLBIDFilter, hasExtentIDFilter;
-
+    logging::StopWatch timer;
+    boost::shared_ptr<joblist::MQE> aMQEsharedPtr;
 };
 
 /** @brief class FilterStep
