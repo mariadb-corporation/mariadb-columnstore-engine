@@ -203,7 +203,7 @@ if [ $user = "root" ]; then
 fi
 
 if [ $user = "root" ]; then
-    columnstoreSyslogSetup.sh install > $installLogDir/syslog_install.log 2>&1
+    @ENGINE_BINDIR@/columnstoreSyslogSetup.sh install > $installLogDir/syslog_install.log 2>&1
 
     #check if MariaDB Columnstore system logging was setup
     cat $installLogDir/syslog_install.log | grep 'No System Logging' >/dev/null 2>&1

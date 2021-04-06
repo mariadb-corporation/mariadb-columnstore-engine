@@ -228,7 +228,7 @@ if [ ! -z "$syslog_conf" ] ; then
 		chmod $CHMOD @ENGINE_LOGDIR@/corefiles
 		chmod $CHMOD @ENGINE_LOGDIR@/trace
 
-		cplogger -i 19 "***** MariaDB Columnstore Installed *****"
+		@ENGINE_BINDIR@/cplogger -i 19 "***** MariaDB Columnstore Installed *****"
 		
 		if [ -f @ENGINE_LOGDIR@/info.log ]; then
 			if [ -s @ENGINE_LOGDIR@/info.log ]; then
