@@ -1,0 +1,43 @@
+--source ../include/have_columnstore.inc
+--source ../include/combinations.myisam-columnstore.inc
+
+
+--echo #
+--echo # MCOL-4668 PERIOD_DIFF(dec_or_double1,dec_or_double2) is not as in InnoDB
+--echo #
+
+--echo # Narrow decimal rounding
+
+CREATE TABLE t1 (a DECIMAL(18,1));
+INSERT INTO t1 VALUES (200101.9);
+SELECT PERIOD_DIFF(a, 200101) FROM t1;
+DROP TABLE t1;
+
+--echo # Wide decimal rounding
+
+CREATE TABLE t1 (a DECIMAL(30,1));
+INSERT INTO t1 VALUES (200101.9);
+SELECT PERIOD_DIFF(a, 200101) FROM t1;
+DROP TABLE t1;
+
+--echo # Huge narrow decimal
+
+CREATE TABLE t1 (a DECIMAL(18,0));
+INSERT INTO t1 VALUES (999999999999999999);
+SELECT a, PERIOD_DIFF(200101,a) FROM t1;
+DROP TABLE t1;
+
+--echo # Huge wide decimal
+
+CREATE TABLE t1 (a DECIMAL(30,0));
+INSERT INTO t1 VALUES (9223372036854775807);
+SELECT a, PERIOD_DIFF(200101,a) FROM t1;
+DROP TABLE t1;
+
+--echo # Huge double
+
+CREATE TABLE t1 (a DOUBLE);
+INSERT INTO t1 VALUES (9223372036854775807.0-1000);
+INSERT INTO t1 VALUES (9223372036854775807.0+1000);
+SELECT a, PERIOD_DIFF(200101,a) FROM t1 ORDER BY 2;
+DROP TABLE t1;
