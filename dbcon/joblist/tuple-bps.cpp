@@ -83,7 +83,7 @@ extern boost::mutex fileLock_g;
 
 namespace
 {
-const uint32_t LOGICAL_EXTENT_CONVERTER = 10;  		// 10 + 13.  13 to convert to logical blocks,
+const uint32_t LOGICAL_EXTENT_CONVERTER = 6;  		// 10 + 13.  13 to convert to logical blocks,
 // 10 to convert to groups of 1024 logical blocks
 const uint32_t DEFAULT_EXTENTS_PER_SEG_FILE = 2;
 
@@ -1403,7 +1403,7 @@ void TupleBPS::sendJobs(const vector<Job>& jobs)
         if (recvWaiting)
             condvar.notify_all();
 
-        while ((msgsSent - msgsRecvd > fMaxOutstandingRequests << 6)
+        while ((msgsSent - msgsRecvd > fMaxOutstandingRequests << LOGICAL_EXTENT_CONVERTER)
                 && !fDie)
         {
             sendWaiting = true;
