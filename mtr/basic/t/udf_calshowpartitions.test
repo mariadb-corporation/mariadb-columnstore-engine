@@ -1,0 +1,16 @@
+--source include/testdb_only.inc
+--source ../include/have_columnstore.inc
+
+--echo #
+--echo # MCOL-4614 calShowPartitions() precision loss for huge narrow decimal
+--echo #
+
+CREATE FUNCTION calshowpartitions RETURNS STRING SONAME "ha_columnstore.so";
+
+CREATE TABLE t1 (a DECIMAL(17,1)) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES (-8999999999999999.9);
+SELECT * FROM t1 WHERE a=0;
+SELECT calshowpartitions('t1','a');
+DROP TABLE IF EXISTS t1;
+
+DROP FUNCTION calshowpartitions;

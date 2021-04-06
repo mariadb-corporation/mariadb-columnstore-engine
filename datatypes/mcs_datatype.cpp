@@ -767,14 +767,13 @@ TypeHandlerXDecimal::format64(const SimpleValue &v,
                               const
 {
   idbassert(isValidXDecimal64(attr));
-  ostringstream oss;
   if (attr.scale > 0)
   {
-    double d = ((double)(v.toSInt64()) / (double)pow((double)10, attr.scale));
-    oss << setprecision(attr.scale) << fixed << d;
+    datatypes::Decimal dec(TSInt64(v.toSInt64()), attr.scale, attr.precision);
+    return dec.toString();
   }
-  else
-    oss << v.toSInt64();
+  ostringstream oss;
+  oss << v.toSInt64();
   return oss.str();
 }
 

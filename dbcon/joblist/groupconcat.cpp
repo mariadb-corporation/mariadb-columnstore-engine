@@ -456,31 +456,7 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
             case CalpontSystemCatalog::DECIMAL:
             case CalpontSystemCatalog::UDECIMAL:
             {
-                int scale = (int) row.getScale(*i);
-
-                if (LIKELY(row.getColumnWidth(*i) == datatypes::MAXDECIMALWIDTH))
-                {
-                    datatypes::Decimal dec(0,
-                                            scale,
-                                            row.getPrecision(*i),
-                                            row.getBinaryField<int128_t>(*i));
-                    oss << fixed << dec;
-                }
-                else
-                {
-                    int64_t intVal = row.getIntField(*i);
-
-                    if (scale == 0)
-                    {
-                        oss << intVal;
-                    }
-                    else
-                    {
-                        long double dblVal = intVal / pow(10.0, (double)scale);
-                        oss << fixed << setprecision(scale) << dblVal;
-                    }
-                }
-
+                oss << fixed << row.getDecimalField(*i);
                 break;
             }
 
@@ -500,8 +476,9 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
                 }
                 else
                 {
-                    long double dblVal = uintVal / pow(10.0, (double)scale);
-                    oss << fixed << setprecision(scale) << dblVal;
+                    oss << fixed << datatypes::Decimal(datatypes::TSInt128((int128_t) uintVal),
+                                                       scale,
+                                                       datatypes::INT128MAXPRECISION);
                 }
 
                 break;
