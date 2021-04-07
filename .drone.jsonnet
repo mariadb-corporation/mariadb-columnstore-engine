@@ -21,7 +21,7 @@ local rpm_build_deps = 'install -y systemd-devel git make gcc gcc-c++ libaio-dev
 
 // Use ColumnStore/debian to only build ColumnStore and core server, omitting everything else as unnecessary
 // Edit dependencies in debian/control and CMake command/flags in debian/rules.
-local deb_build_command = 'apt-get update && apt-get install -y git dpkg-dev && rm -rf debian; cp -ra storage/columnstore/columnstore/debian . && find debian -ls && debian/autobake-deb.sh';
+local deb_build_command = 'apt-get update && apt-get install -y dpkg-dev && rm -rf debian; cp -ra storage/columnstore/columnstore/debian . && find debian -ls && debian/autobake-deb.sh';
 
 local platformMap(branch, platform) =
   local platform_map = {

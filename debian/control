@@ -62,7 +62,7 @@ Architecture: amd64
 Depends: binutils,
          libjemalloc1 | libjemalloc2,
          libsnappy1 | libsnappy1v5,
-         mariadb-server-10.5 (= ${server:Version}),
+         mariadb-server-10.5,
          net-tools,
          python3,
          ${misc:Depends},
