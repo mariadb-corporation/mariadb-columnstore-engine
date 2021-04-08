@@ -131,6 +131,19 @@ SELECT a, 1<<a,1>>a FROM t1;
 DROP TABLE t1;
 
 
+--echo #
+--echo # MCOL-4666 Empty set when using BIT OR and BIT AND functions in WHERE
+--echo #
+
+CREATE TABLE t1 (a DECIMAL(18,2));
+INSERT INTO t1 VALUES (3.4);
+SELECT a, a|4, a&4 FROM t1;
+SELECT * FROM t1 WHERE (a|4) <> a;
+SELECT * FROM t1 WHERE (a&4) <> a;
+DROP TABLE t1;
+
+
+
 #
 # Clean up
 #

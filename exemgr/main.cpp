@@ -594,6 +594,17 @@ private:
         }
     }
 
+    void writeCodeAndError(messageqcpp::ByteStream::quadbyte code,
+                           const std::string emsg)
+    {
+        messageqcpp::ByteStream emsgBs;
+        messageqcpp::ByteStream tbs;
+        tbs << code;
+        fIos.write(tbs);
+        emsgBs << emsg;
+        fIos.write(emsgBs);
+    }
+
 public:
 
     void operator()()
@@ -692,7 +703,18 @@ public:
                 }
 
 new_plan:
-                csep.unserialize(bs);
+                try
+                {
+                  csep.unserialize(bs);
+                }
+                catch (logging::IDBExcept &ex)
+                {
+                    // We can get here on illegal function parameter data type, e.g.
+                    //   SELECT blob_column|1 FROM t1;
+                    statementsRunningCount->decr(stmtCounted);
+                    writeCodeAndError(ex.errorCode(), std::string(ex.what()));
+                    continue;
+                }
 
                 querytele::QueryTeleStats qts;
 
@@ -781,41 +803,28 @@ new_plan:
                 {
                     try // @bug2244: try/catch around fIos.write() calls responding to makeTupleList
                     {
-                        std::string emsg("NOERROR");
-                        messageqcpp::ByteStream emsgBs;
-                        messageqcpp::ByteStream::quadbyte tflg = 0;
                         jl = joblist::JobListFactory::makeJobList(&csep, fRm, true, true);
                         // assign query stats
                         jl->queryStats(fStats);
 
-                        messageqcpp::ByteStream tbs;
 
                         if ((jl->status()) == 0 && (jl->putEngineComm(fEc) == 0))
                         {
                             usingTuples = true;
 
                             //Tell the FE that we're sending tuples back, not TableBands
-                            tbs << tflg;
-                            fIos.write(tbs);
-                            emsgBs.reset();
-                            emsgBs << emsg;
-                            fIos.write(emsgBs);
+                            writeCodeAndError(0, "NOERROR");
                             auto tjlp = dynamic_cast<joblist::TupleJobList*>(jl.get());
                             assert(tjlp);
-                            tbs.restart();
+                            messageqcpp::ByteStream tbs;
                             tbs << tjlp->getOutputRowGroup();
                             fIos.write(tbs);
                         }
                         else
                         {
+                            const std::string emsg = jl->errMsg();
                             statementsRunningCount->decr(stmtCounted);
-                            tflg = jl->status();
-                            emsg = jl->errMsg();
-                            tbs << tflg;
-                            fIos.write(tbs);
-                            emsgBs.reset();
-                            emsgBs << emsg;
-                            fIos.write(emsgBs);
+                            writeCodeAndError(jl->status(), emsg);
                             std::cerr << "ExeMgr: could not build a tuple joblist: " << emsg << std::endl;
                             continue;
                         }

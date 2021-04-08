@@ -84,6 +84,16 @@ public:
         fTimeZone = timeZone;
     }
 
+    void raiseIllegalParameterDataTypeError(const execplan::CalpontSystemCatalog::ColType& colType) const
+    {
+        std::ostringstream oss;
+        oss << "Illegal parameter data type "
+            << execplan::colDataTypeToString(colType.colDataType)
+            << " for operation "
+            << funcName();
+        throw logging::IDBExcept(oss.str(), logging::ERR_DATATYPE_NOT_SUPPORT);
+    }
+
     virtual bool fix(execplan::FunctionColumn &col) const
     {
         return false;
