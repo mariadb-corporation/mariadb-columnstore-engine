@@ -2155,11 +2155,15 @@ void BatchPrimitiveProcessor::makeResponse()
 int BatchPrimitiveProcessor::operator()()
 {
     utils::setThreadName("PPBatchPrimProc");
+#ifdef PRIMPROC_STOPWATCH
+    const static std::string msg{"BatchPrimitiveProcessor::operator()"};
+    logging::StopWatch* stopwatch = nullptr;
+#endif
+
     if (currentBlockOffset == 0)
     {
-#ifdef PRIMPROC_STOPWATCH   // TODO: needs to be brought up-to-date
-        map<pthread_t, logging::StopWatch*>::iterator stopwatchMapIter = stopwatchMap.find(pthread_self());
-        logging::StopWatch* stopwatch;
+#ifdef PRIMPROC_STOPWATCH
+        auto stopwatchMapIter = stopwatchMap.find(pthread_self());
 
         if (stopwatchMapIter != stopwatchMap.end())
         {
@@ -2169,7 +2173,7 @@ int BatchPrimitiveProcessor::operator()()
         {
             pthread_mutex_lock(&stopwatchMapMutex);
             stopwatch = new logging::StopWatch(stopwatchMap.size());
-            stopwatchMap.insert(make_pair(pthread_self(), stopwatch));
+            stopwatchMap.insert({pthread_self(), stopwatch});
 
             // Create the thread that will show timing results after five seconds of idle time.
             if (!stopwatchThreadCreated)
@@ -2186,9 +2190,6 @@ int BatchPrimitiveProcessor::operator()()
             pthread_mutex_unlock(&stopwatchMapMutex);
         }
 
-        ostringstream oss;
-        oss << "BatchPrimitiveProcessor::operator()";
-        string msg = oss.str();
         stopwatch->start(msg);
 #endif
 

@@ -32,6 +32,7 @@
 #else
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
+#include <unordered_map>
 #endif
 #include <boost/thread.hpp>
 
@@ -60,7 +61,7 @@ extern boost::mutex bppLock;
 extern uint32_t highPriorityThreads, medPriorityThreads, lowPriorityThreads;
 
 #ifdef PRIMPROC_STOPWATCH
-extern std::map<pthread_t, logging::StopWatch*> stopwatchMap;
+extern std::unordered_map<pthread_t, logging::StopWatch*> stopwatchMap;
 extern pthread_mutex_t stopwatchMapMutex;
 extern bool stopwatchThreadCreated;
 
