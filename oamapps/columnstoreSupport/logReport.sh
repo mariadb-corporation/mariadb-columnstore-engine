@@ -47,6 +47,9 @@ fi
 if  grep -q '/var/log/mariadb/columnstore/debug.log' ${configFileName}; then
     moduleConfig=${moduleConfig}' DEBUG'
 fi
+if  grep -q '/var/log/mariadb/columnstore/cmapi_server.log' ${configFileName}; then
+    moduleConfig=${moduleConfig}' DEBUG'
+fi
 echo -e ${MODULE}'\t'${moduleConfig} >> $OUT_FILE
 exit 0
 
