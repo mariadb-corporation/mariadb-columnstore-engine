@@ -2628,7 +2628,7 @@ bool BPPV::aborted()
 }
 
 #ifdef PRIMPROC_STOPWATCH
-map<pthread_t, logging::StopWatch*> stopwatchMap;
+std::unordered_map<pthread_t, logging::StopWatch*> stopwatchMap;
 pthread_mutex_t stopwatchMapMutex;
 bool stopwatchThreadCreated = false;
 
@@ -2670,7 +2670,7 @@ void* autoFinishStopwatchThread(void* arg)
         pause_(2);
         count++;
         // Iterate through the stopwatch map and see how long it's been since last activity.
-        map<pthread_t, logging::StopWatch*>::iterator stopwatchMapIter = stopwatchMap.begin();
+        auto stopwatchMapIter = stopwatchMap.begin();
         logging::StopWatch* stopwatch;
         gettimeofday(&tvCurrent, 0);
         bool primProcIdle = true;
