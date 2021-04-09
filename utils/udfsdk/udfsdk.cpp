@@ -181,16 +181,16 @@ double MCS_add::getDoubleVal(Row& row,
             else if (op1.scale >= op2.scale)
             {
                 dec.scale = op2.scale;
-                op1.value *= (int64_t)pow((double)10, op1.scale - op2.scale);
+                op1.value *= datatypes::scaleDivisor<int64_t>((uint32_t) (op1.scale - op2.scale));
             }
             else
             {
                 dec.scale = op1.scale;
-                op2.value *= (int64_t)pow((double)10, op2.scale - op1.scale);
+                op2.value *= datatypes::scaleDivisor<int64_t>((uint32_t) (op2.scale - op1.scale));
             }
 
             dec.value = op1.value + op2.value;
-            return (double)(dec.value / pow((double)10, dec.scale));
+            return dec.decimal64ToXFloat<double>();
         }
 
         default:

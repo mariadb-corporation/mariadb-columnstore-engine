@@ -376,6 +376,38 @@ public:
     inline uint64_t getUintField(uint32_t colIndex) const;
     template<int len> inline int64_t getIntField(uint32_t colIndex) const;
     inline int64_t getIntField(uint32_t colIndex) const;
+    // Get a signed 64-bit integer column value, convert to the given
+    // floating point data type T (e.g. float, double, long double)
+    // and divide it according to the scale.
+    template<typename T>
+    inline T getScaledSInt64FieldAsXFloat(uint32_t colIndex, uint32_t scale) const
+    {
+        const T d = getIntField(colIndex);
+        if (!scale)
+            return d;
+        return d / datatypes::scaleDivisor<T>(scale);
+    }
+    template<typename T>
+    inline T getScaledSInt64FieldAsXFloat(uint32_t colIndex) const
+    {
+        return getScaledSInt64FieldAsXFloat<T>(colIndex, getScale(colIndex));
+    }
+    // Get an unsigned 64-bit integer column value, convert to the given
+    // floating point data type T (e.g. float, double, long double)
+    // and divide it according to the scale.
+    template<typename T>
+    inline T getScaledUInt64FieldAsXFloat(uint32_t colIndex, uint32_t scale) const
+    {
+        const T d = getUintField(colIndex);
+        if (!scale)
+            return d;
+        return d / datatypes::scaleDivisor<T>(scale);
+    }
+    template<typename T>
+    inline T getScaledUInt64FieldAsXFloat(uint32_t colIndex) const
+    {
+        return getScaledUInt64FieldAsXFloat<T>(colIndex, getScale(colIndex));
+    }
     template<typename T>
     inline bool equals(T* value, uint32_t colIndex) const;
     template<int len> inline bool equals(uint64_t val, uint32_t colIndex) const;

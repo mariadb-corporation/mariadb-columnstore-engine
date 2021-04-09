@@ -479,45 +479,22 @@ void TupleUnion::normalize(const Row& in, Row* out)
                     case CalpontSystemCatalog::FLOAT:
                     case CalpontSystemCatalog::UFLOAT:
                     {
-                        int scale = in.getScale(i);
-
-                        if (scale != 0)
-                        {
-                            float f = in.getIntField(i);
-                            f /= (uint64_t) pow(10.0, scale);
-                            out->setFloatField(f, i);
-                        }
-                        else
-                            out->setFloatField(in.getIntField(i), i);
-
+                        auto d = in.getScaledSInt64FieldAsXFloat<double>(i);
+                        out->setFloatField((float) d, i);
                         break;
                     }
 
                     case CalpontSystemCatalog::DOUBLE:
                     case CalpontSystemCatalog::UDOUBLE:
                     {
-                        int scale = in.getScale(i);
-
-                        if (scale != 0)
-                        {
-                            double d = in.getIntField(i);
-                            d /= (uint64_t) pow(10.0, scale);
-                            out->setDoubleField(d, i);
-                        }
-                        else
-                            out->setDoubleField(in.getIntField(i), i);
-
+                        auto d = in.getScaledSInt64FieldAsXFloat<double>(i);
+                        out->setDoubleField(d, i);
                         break;
                     }
 
                     case CalpontSystemCatalog::LONGDOUBLE:
                     {
-                        int scale = in.getScale(i);
-                        long double d = in.getIntField(i);
-                        if (scale != 0)
-                        {
-                            d /= (uint64_t) pow(10.0, scale);
-                        }
+                        auto d = in.getScaledSInt64FieldAsXFloat<long double>(i);
                         out->setLongDoubleField(d, i);
                         break;
                     }
@@ -526,13 +503,30 @@ void TupleUnion::normalize(const Row& in, Row* out)
                     case CalpontSystemCatalog::UDECIMAL:
                     {
 dec1:
-                        uint64_t val = in.getIntField(i);
                         int diff = out->getScale(i) - in.getScale(i);
-
-                        if (diff < 0)
-                            val /= (uint64_t) pow((double) 10, (double) - diff);
-                        else
-                            val *= (uint64_t) pow((double) 10, (double) diff);
+                        /*
+                           Signed INT to XDecimal
+                           TODO: there are a few problems here:
+                           - This code is not wide decimal friendly.
+                             `uint64_t val` can overflow when applying a positive scale
+                             It's not possible to make a reproducible bug report
+                             at the moment: MCOL-4612 and MCOL-4613 should be fixed first.
+                           - Using uint64_t is wrong here. The data type of "in" field is
+                             signed. In case of a negative diff, the result will be wrong,
+                             because division (unlike multiplication) is sensitive to
+                             the signess of the operands.
+                             Perhaps diff cannot be negative and we can put an assert for it.
+                             Anyway, it's safer to change `uint64_t val` to `int64_t val`.
+                           - This code does not handle overflow that may happen on
+                             scale multiplication (MCOL-4613). Instead of returning a garbage
+                             we should probably apply saturation here. In long terms we
+                             should implement DECIMAL(65,x) to avoid overflow completely
+                             (so the UNION between DECIMAL and integer can choose a proper
+                              DECIMAL(M,N) result data type to guarantee that any incoming
+                              integer value can fit into it).
+                        */
+                        // TODO: isn't overflow possible below?
+                        uint64_t val = datatypes::applySignedScale<uint64_t>(in.getIntField(i), diff);
 
                         if (out->getColumnWidth(i) == datatypes::MAXDECIMALWIDTH)
                             out->setInt128Field(val, i);
@@ -606,50 +600,23 @@ dec1:
                     case CalpontSystemCatalog::FLOAT:
                     case CalpontSystemCatalog::UFLOAT:
                     {
-                        int scale = in.getScale(i);
-
-                        if (scale != 0)
-                        {
-                            float f = in.getUintField(i);
-                            f /= (uint64_t) pow(10.0, scale);
-                            out->setFloatField(f, i);
-                        }
-                        else
-                            out->setFloatField(in.getUintField(i), i);
-
+                        auto d = in.getScaledUInt64FieldAsXFloat<double>(i);
+                        out->setFloatField((float) d, i);
                         break;
                     }
 
                     case CalpontSystemCatalog::DOUBLE:
                     case CalpontSystemCatalog::UDOUBLE:
                     {
-                        int scale = in.getScale(i);
-
-                        if (scale != 0)
-                        {
-                            double d = in.getUintField(i);
-                            d /= (uint64_t) pow(10.0, scale);
-                            out->setDoubleField(d, i);
-                        }
-                        else
-                            out->setDoubleField(in.getUintField(i), i);
-
+                        auto d = in.getScaledUInt64FieldAsXFloat<double>(i);
+                        out->setDoubleField(d, i);
                         break;
                     }
 
                     case CalpontSystemCatalog::LONGDOUBLE:
                     {
-                        int scale = in.getScale(i);
-
-                        if (scale != 0)
-                        {
-                            long double d = in.getUintField(i);
-                            d /= (uint64_t) pow(10.0, scale);
-                            out->setLongDoubleField(d, i);
-                        }
-                        else
-                            out->setLongDoubleField(in.getUintField(i), i);
-
+                        auto d = in.getScaledUInt64FieldAsXFloat<long double>(i);
+                        out->setLongDoubleField(d, i);
                         break;
                     }
 
@@ -657,13 +624,16 @@ dec1:
                     case CalpontSystemCatalog::UDECIMAL:
                     {
 dec2:
-                        uint64_t val = in.getIntField(i);
                         int diff = out->getScale(i) - in.getScale(i);
-
-                        if (diff < 0)
-                            val /= (uint64_t) pow((double) 10, (double) - diff);
-                        else
-                            val *= (uint64_t) pow((double) 10, (double) diff);
+                        /*
+                          Unsigned INT to XDecimal
+                          TODO: There are a few problems here:
+                          - It should use in.getUintField() instead of in.getIntField()
+                          - All problems mentioned in the code under label "dec1:" are
+                            also applicable here.
+                        */
+                        // TODO: isn't overflow possible below?
+                        uint64_t val = datatypes::applySignedScale<uint64_t>(in.getIntField(i), diff);
 
                         if (out->getColumnWidth(i) == datatypes::MAXDECIMALWIDTH)
                             out->setInt128Field(val, i);
@@ -989,13 +959,15 @@ dec2:
                     {
 dec3:                   /* have to pick a scale to use for the double. using 5... */
                         uint32_t scale = 5;
-                        uint64_t ival = (uint64_t) (double) (val * pow((double) 10, (double) scale));
+                        uint64_t ival = (uint64_t) (double) (val * datatypes::scaleDivisor<double>(scale));
                         int diff = out->getScale(i) - scale;
-
-                        if (diff < 0)
-                            ival /= (uint64_t) pow((double) 10, (double) - diff);
-                        else
-                            ival *= (uint64_t) pow((double) 10, (double) diff);
+                        // xFLOAT or xDOUBLE to xDECIMAL conversion. Is it really possible?
+                        // TODO:
+                        // Perhaps we should add an assert here that this combination is not possible
+                        // In the current reduction all problems mentioned in the code under
+                        //  label "dec1:" are also applicable here.
+                        // TODO: isn't overflow possible below?
+                        ival = datatypes::applySignedScale<uint64_t>(ival, diff);
 
                         if (out->getColumnWidth(i) == datatypes::MAXDECIMALWIDTH)
                             out->setInt128Field(ival, i);
@@ -1070,13 +1042,15 @@ dec3:                   /* have to pick a scale to use for the double. using 5..
                     {
 dec4:                   /* have to pick a scale to use for the double. using 5... */
                         uint32_t scale = 5;
-                        uint64_t ival = (uint64_t) (double) (val * pow((double) 10, (double) scale));
+                        uint64_t ival = (uint64_t) (double) (val * datatypes::scaleDivisor<double>(scale));
                         int diff = out->getScale(i) - scale;
 
-                        if (diff < 0)
-                            ival /= (uint64_t) pow((double) 10, (double) - diff);
-                        else
-                            ival *= (uint64_t) pow((double) 10, (double) diff);
+                        // LONGDOUBLE to xDECIMAL conversions: is it really possible?
+                        // TODO:
+                        // Perhaps we should add an assert here that this combination is not possible
+                        // In the current reduction all problems mentioned in the code under
+                        //  label "dec1:" are also applicable here.
+                        ival = datatypes::applySignedScale<uint64_t>(ival, diff);
 
                         if (out->getColumnWidth(i) == datatypes::MAXDECIMALWIDTH)
                             out->setInt128Field(ival, i);

@@ -4463,8 +4463,8 @@ ConstantColumn* buildDecimalColumn(Item* item, gp_walk_info& gwi)
     if (gwi.internalDecimalScale >= 0 && idp->decimals > (uint)gwi.internalDecimalScale)
     {
         columnstore_decimal.scale = gwi.internalDecimalScale;
-        double val = (double)(columnstore_decimal.value / pow((double)10, idp->decimals - gwi.internalDecimalScale));
-        columnstore_decimal.value = (int64_t)(val > 0 ? val + 0.5 : val - 0.5);
+        uint32_t diff = (uint32_t) (idp->decimals - gwi.internalDecimalScale);
+        columnstore_decimal.value= columnstore_decimal.TDecimal64::toSInt64Round(diff);
     }
     else
         columnstore_decimal.scale = idp->decimal_scale();

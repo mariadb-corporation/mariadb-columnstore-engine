@@ -828,7 +828,7 @@ inline float TreeNode::getFloatVal()
             }
             else
             {
-                return (fResult.decimalVal.value / pow((double)10, fResult.decimalVal.scale));
+                return (float) fResult.decimalVal.decimal64ToXFloat<double>();
             }
         }
 
@@ -903,8 +903,7 @@ inline double TreeNode::getDoubleVal()
             }
             else
             {
-                // this may not be accurate. if this is problematic, change to pre-calculated power array.
-                return (double)(fResult.decimalVal.value / pow((double)10, fResult.decimalVal.scale));
+                return fResult.decimalVal.decimal64ToXFloat<double>();
             }
         }
 
@@ -979,8 +978,7 @@ inline long double TreeNode::getLongDoubleVal()
             }
             else
             {
-                // this may not be accurate. if this is problematic, change to pre-calculated power array.
-                return (long double)(fResult.decimalVal.value / pow((long double)10, fResult.decimalVal.scale));
+                return fResult.decimalVal.decimal64ToXFloat<long double>();
             }
         }
 
