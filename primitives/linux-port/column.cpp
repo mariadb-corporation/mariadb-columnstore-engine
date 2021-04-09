@@ -667,89 +667,18 @@ inline void store(const NewColRequestHeader* in,
     out->NVALS++;
 }
 
-template<int W>
-inline uint64_t nextUnsignedColValue(int type,
-                                     const uint16_t* ridArray,
-                                     int NVALS,
-                                     int* index,
-                                     bool* done,
-                                     bool* isNull,
-                                     bool* isEmpty,
-                                     uint16_t* rid,
-                                     uint8_t OutputType, uint8_t* val8, unsigned itemsPerBlk)
-{
-    const uint8_t* vp = 0;
-
-    if (ridArray == NULL)
-    {
-        while (static_cast<unsigned>(*index) < itemsPerBlk &&
-                isEmptyVal<W>(type, &val8[*index * W]) &&
-                (OutputType & OT_RID))
-        {
-            (*index)++;
-        }
-
-        if (static_cast<unsigned>(*index) >= itemsPerBlk)
-        {
-            *done = true;
-            return 0;
-        }
-
-        vp = &val8[*index * W];
-        *isNull = isNullVal<W>(type, vp);
-        *isEmpty = isEmptyVal<W>(type, vp);
-        *rid = (*index)++;
-    }
-    else
-    {
-        while (*index < NVALS &&
-                isEmptyVal<W>(type, &val8[ridArray[*index] * W]))
-        {
-            (*index)++;
-        }
-
-        if (*index >= NVALS)
-        {
-            *done = true;
-            return 0;
-        }
-
-        vp = &val8[ridArray[*index] * W];
-        *isNull = isNullVal<W>(type, vp);
-        *isEmpty = isEmptyVal<W>(type, vp);
-        *rid = ridArray[(*index)++];
-    }
-
-    // at this point, nextRid is the index to return, and index is...
-    //   if RIDs are not specified, nextRid + 1,
-    //	 if RIDs are specified, it's the next index in the rid array.
-    //Bug 838, tinyint null problem
-    switch (W)
-    {
-        case 1:
-            return reinterpret_cast<uint8_t*> (val8)[*rid];
-
-        case 2:
-            return reinterpret_cast<uint16_t*>(val8)[*rid];
-
-        case 4:
-            return reinterpret_cast<uint32_t*>(val8)[*rid];
-
-        case 8:
-            return reinterpret_cast<uint64_t*>(val8)[*rid];
-
-        default:
-            logIt(33, W);
-
-#ifdef PRIM_DEBUG
-            throw logic_error("PrimitiveProcessor::nextColValue() bad width");
-#endif
-            return -1;
-    }
-}
-
-template<int W>
-inline int64_t nextColValue(int type,
+template <int W, bool UNSIGNED,
+    typename = typename std::enable_if<W == 1 || W == 2 || W == 4 || W == 8>::type,
+    typename BaseType = typename std::conditional<W == 1, int8_t,
+        typename std::conditional<W == 2, int16_t,
+            typename std::conditional<W == 4, int32_t,
+                typename std::conditional<W == 8, int64_t, void>::type
+            >::type
+        >::type
+    >::type,
+    typename IntType = typename std::conditional<UNSIGNED, typename std::make_unsigned<BaseType>::type, BaseType>::type,
+    typename RetType = typename std::conditional<UNSIGNED, uint64_t, int64_t>::type>
+inline RetType nextColValue(int type,
                             const uint16_t* ridArray,
                             int NVALS,
                             int* index,
@@ -757,15 +686,17 @@ inline int64_t nextColValue(int type,
                             bool* isNull,
                             bool* isEmpty,
                             uint16_t* rid,
-                            uint8_t OutputType, uint8_t* val8, unsigned itemsPerBlk)
+                            uint8_t OutputType,
+                            uint8_t* val8,
+                            unsigned itemsPerBlk)
 {
-    const uint8_t* vp = 0;
+    const uint8_t* vp = nullptr;
 
-    if (ridArray == NULL)
+    if (ridArray == nullptr)
     {
-        while (static_cast<unsigned>(*index) < itemsPerBlk &&
-                isEmptyVal<W>(type, &val8[*index * W]) &&
-                (OutputType & OT_RID))
+        while ((OutputType & OT_RID) &&
+            static_cast<unsigned>(*index) < itemsPerBlk &&
+            isEmptyVal<W>(type, &val8[*index * W]))
         {
             (*index)++;
         }
@@ -778,7 +709,7 @@ inline int64_t nextColValue(int type,
 
         vp = &val8[*index * W];
         *isNull = isNullVal<W>(type, vp);
-        *isEmpty = isEmptyVal<W>(type, vp);
+        *isEmpty = (OutputType & OT_RID) ? false : isEmptyVal<W>(type, vp);
         *rid = (*index)++;
     }
     else
@@ -797,7 +728,7 @@ inline int64_t nextColValue(int type,
 
         vp = &val8[ridArray[*index] * W];
         *isNull = isNullVal<W>(type, vp);
-        *isEmpty = isEmptyVal<W>(type, vp);
+        *isEmpty = false;
         *rid = ridArray[(*index)++];
     }
 
@@ -805,125 +736,7 @@ inline int64_t nextColValue(int type,
     //   if RIDs are not specified, nextRid + 1,
     //	 if RIDs are specified, it's the next index in the rid array.
     //Bug 838, tinyint null problem
-    switch (W)
-    {
-        case 1:
-            return reinterpret_cast<int8_t*> (val8)[*rid];
-
-        case 2:
-            return reinterpret_cast<int16_t*>(val8)[*rid];
-
-        case 4:
-#if 0
-            if (type == CalpontSystemCatalog::FLOAT)
-            {
-                // convert the float to a 64-bit type, return that w/o conversion
-                int32_t* val32 = reinterpret_cast<int32_t*>(val8);
-                double dTmp;
-                dTmp = (double) * ((float*) &val32[*rid]);
-                return *((int64_t*) &dTmp);
-            }
-            else
-            {
-                return reinterpret_cast<int32_t*>(val8)[*rid];
-            }
-
-#else
-            return reinterpret_cast<int32_t*>(val8)[*rid];
-#endif
-
-        case 8:
-            return reinterpret_cast<int64_t*>(val8)[*rid];
-
-        default:
-            logIt(33, W);
-
-#ifdef PRIM_DEBUG
-            throw logic_error("PrimitiveProcessor::nextColValue() bad width");
-#endif
-            return -1;
-    }
-}
-
-
-// done should be init'd to false and
-// index should be init'd to 0 on the first call
-// done == true when there are no more elements to return.
-inline uint64_t nextUnsignedColValueHelper(int type,
-        int width,
-        const uint16_t* ridArray,
-        int NVALS,
-        int* index,
-        bool* done,
-        bool* isNull,
-        bool* isEmpty,
-        uint16_t* rid,
-        uint8_t OutputType, uint8_t* val8, unsigned itemsPerBlk)
-{
-    switch (width)
-    {
-        case 8:
-            return nextUnsignedColValue<8>(type, ridArray, NVALS, index, done, isNull, isEmpty, rid, OutputType, val8,
-                                           itemsPerBlk);
-
-        case 4:
-            return nextUnsignedColValue<4>(type, ridArray, NVALS, index, done, isNull, isEmpty, rid, OutputType, val8,
-                                           itemsPerBlk);
-
-        case 2:
-            return nextUnsignedColValue<2>(type, ridArray, NVALS, index, done, isNull, isEmpty, rid, OutputType, val8,
-                                           itemsPerBlk);
-
-        case 1:
-            return nextUnsignedColValue<1>(type, ridArray, NVALS, index, done, isNull, isEmpty, rid, OutputType, val8,
-                                           itemsPerBlk);
-
-        default:
-            idbassert(0);
-    }
-
-    /*NOTREACHED*/
-    return 0;
-}
-
-// done should be init'd to false and
-// index should be init'd to 0 on the first call
-// done == true when there are no more elements to return.
-inline int64_t nextColValueHelper(int type,
-                                  int width,
-                                  const uint16_t* ridArray,
-                                  int NVALS,
-                                  int* index,
-                                  bool* done,
-                                  bool* isNull,
-                                  bool* isEmpty,
-                                  uint16_t* rid,
-                                  uint8_t OutputType, uint8_t* val8, unsigned itemsPerBlk)
-{
-    switch (width)
-    {
-        case 8:
-            return nextColValue<8>(type, ridArray, NVALS, index, done, isNull, isEmpty, rid, OutputType, val8,
-                                   itemsPerBlk);
-
-        case 4:
-            return nextColValue<4>(type, ridArray, NVALS, index, done, isNull, isEmpty, rid, OutputType, val8,
-                                   itemsPerBlk);
-
-        case 2:
-            return nextColValue<2>(type, ridArray, NVALS, index, done, isNull, isEmpty, rid, OutputType, val8,
-                                   itemsPerBlk);
-
-        case 1:
-            return nextColValue<1>(type, ridArray, NVALS, index, done, isNull, isEmpty, rid, OutputType, val8,
-                                   itemsPerBlk);
-
-        default:
-            idbassert(0);
-    }
-
-    /*NOTREACHED*/
-    return 0;
+    return reinterpret_cast<IntType*>(val8)[*rid];
 }
 
 template<int W>
@@ -1088,12 +901,12 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
 
     if (isUnsigned((CalpontSystemCatalog::ColDataType)in->colType.DataType))
     {
-        uval = nextUnsignedColValue<W>(in->colType.DataType, ridArray, in->NVALS, &nextRidIndex, &done, &isNull,
+        uval = nextColValue<W, true>(in->colType.DataType, ridArray, in->NVALS, &nextRidIndex, &done, &isNull,
                                        &isEmpty, &rid, in->OutputType, reinterpret_cast<uint8_t*>(block), itemsPerBlk);
     }
     else
     {
-        val = nextColValue<W>(in->colType.DataType, ridArray, in->NVALS, &nextRidIndex, &done, &isNull,
+        val = nextColValue<W, false>(in->colType.DataType, ridArray, in->NVALS, &nextRidIndex, &done, &isNull,
                               &isEmpty, &rid, in->OutputType, reinterpret_cast<uint8_t*>(block), itemsPerBlk);
     }
 
@@ -1207,13 +1020,13 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
 
         if (isUnsigned((CalpontSystemCatalog::ColDataType)in->colType.DataType))
         {
-            uval = nextUnsignedColValue<W>(in->colType.DataType, ridArray, in->NVALS, &nextRidIndex, &done,
+            uval = nextColValue<W, true>(in->colType.DataType, ridArray, in->NVALS, &nextRidIndex, &done,
                                            &isNull, &isEmpty, &rid, in->OutputType, reinterpret_cast<uint8_t*>(block),
                                            itemsPerBlk);
         }
         else
         {
-            val = nextColValue<W>(in->colType.DataType, ridArray, in->NVALS, &nextRidIndex, &done,
+            val = nextColValue<W, false>(in->colType.DataType, ridArray, in->NVALS, &nextRidIndex, &done,
                                   &isNull, &isEmpty, &rid, in->OutputType, reinterpret_cast<uint8_t*>(block),
                                   itemsPerBlk);
         }
