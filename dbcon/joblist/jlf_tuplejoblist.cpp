@@ -156,10 +156,11 @@ void tupleKeyToProjectStep(uint32_t key, JobStepVector& jsv, JobInfo& jobInfo)
     }
 }
 
-
-inline void addColumnToRG(uint32_t cid, vector<uint32_t>& pos, vector<uint32_t>& oids,
-                          vector<uint32_t>& keys, vector<uint32_t>& scale, vector<uint32_t>& precision,
-                          vector<CalpontSystemCatalog::ColDataType>& types, vector<uint32_t>& csNums, JobInfo& jobInfo)
+inline void addColumnToRG(uint32_t cid, vector<uint32_t>& pos,
+                          vector<uint32_t>& oids, vector<uint32_t>& keys,
+                          vector<uint32_t>& scale, vector<uint32_t>& precision,
+                          vector<CalpontSystemCatalog::ColDataType>& types,
+                          vector<uint32_t>& csNums, JobInfo& jobInfo)
 {
     TupleInfo ti(getTupleInfo(cid, jobInfo));
     pos.push_back(pos.back() + ti.width);
@@ -294,7 +295,8 @@ void constructJoinedRowGroup(RowGroup& rg, set<uint32_t>& tableSet, TableInfoMap
         }
     }
 
-    RowGroup tmpRg(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold);
+    RowGroup tmpRg(oids.size(), pos, oids, keys, types, csNums, scale,
+                   precision, jobInfo.stringTableThreshold);
     rg = tmpRg;
 }
 
@@ -357,7 +359,8 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
         precision.push_back(v[i].precision);
     }
 
-    RowGroup rg1(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold);
+    RowGroup rg1(oids.size(), pos, oids, keys, types, csNums, scale, precision,
+                 jobInfo.stringTableThreshold);
 
     // evaluate the returned/groupby expressions if any
     JobStepVector& expSteps = jobInfo.returnedExpressions;
@@ -1606,12 +1609,13 @@ bool addFunctionJoin(vector<uint32_t>& joinedTables, JobStepVector& joinSteps,
     return added;
 }
 
-
-void spanningTreeCheck(TableInfoMap& tableInfoMap, JobStepVector joinSteps, JobInfo& jobInfo)
+static void spanningTreeCheck(TableInfoMap& tableInfoMap,
+                              JobStepVector joinSteps, JobInfo& jobInfo)
 {
     bool spanningTree = true;
     unsigned errcode = 0;
     Message::Args args;
+    jobInfo.trace = true;
 
     if (jobInfo.trace)
     {
@@ -1702,6 +1706,24 @@ void spanningTreeCheck(TableInfoMap& tableInfoMap, JobStepVector joinSteps, JobI
             cout << endl;
         }
 
+        if (true || jobInfo.trace)
+        {
+            cout << "Graph " << endl;
+            cout << "Nodes: " << endl;
+            for (const auto it : nodeSet)
+            {
+                cout << "[" << it << "] ";
+            }
+            cout << endl;
+
+            cout << "Pathes: " << endl;
+            for (const auto it : pathSet)
+            {
+                cout << "[" << it.first << " -> " << it.second << "] ";
+            }
+            cout << endl;
+        }
+
         // Check that join is compatible
         set<string> views1;
         set<string> tables1;
@@ -1711,12 +1733,21 @@ void spanningTreeCheck(TableInfoMap& tableInfoMap, JobStepVector joinSteps, JobI
 
         k = joinedTables.begin();
 
+        cout << "joineTables : " << endl;
         for (; k != joinedTables.end(); k++)
         {
             if (jobInfo.keyInfo->tupleKeyVec[*k].fView.empty())
+            {
+                std::cout << "tables1 insert: "
+                          << jobInfo.keyInfo->tupleKeyToName[*k] << endl;
                 tables1.insert(jobInfo.keyInfo->tupleKeyToName[*k]);
+            }
             else
+            {
+                cout << "views1 insert: "
+                     << jobInfo.keyInfo->tupleKeyVec[*k].fView << endl;
                 views1.insert(jobInfo.keyInfo->tupleKeyVec[*k].fView);
+            }
 
             if (jobInfo.incompatibleJoinMap.find(*k) != jobInfo.incompatibleJoinMap.end())
             {
@@ -1979,8 +2010,8 @@ void outjoinPredicateAdjust(TableInfoMap& tableInfoMap, JobInfo& jobInfo)
     }
 }
 
-
-uint32_t getLargestTable(JobInfo& jobInfo, TableInfoMap& tableInfoMap, bool overrideLargeSideEstimate)
+static uint32_t getLargestTable(JobInfo& jobInfo, TableInfoMap& tableInfoMap,
+                                bool overrideLargeSideEstimate)
 {
     // Subquery in FROM clause assumptions:
     //   hint will be ignored, if the 1st table in FROM clause is a derived table.
@@ -2068,6 +2099,9 @@ uint32_t getPrevLarge(uint32_t n, TableInfoMap& tableInfoMap)
 
 uint32_t getKeyIndex(uint32_t key, const RowGroup& rg)
 {
+    cout << "getKeyIndex " << endl;
+    std::cout << "key: " << key << endl;
+    cout << "Row group: " << rg.toString() << endl;
     vector<uint32_t>::const_iterator i = rg.getKeys().begin();
 
     for (; i != rg.getKeys().end(); ++i)
@@ -2123,6 +2157,8 @@ string joinTypeToString(const JoinType& joinType)
 SP_JoinInfo joinToLargeTable(uint32_t large, TableInfoMap& tableInfoMap,
                              JobInfo& jobInfo, vector<uint32_t>& joinOrder)
 {
+
+    cout << "joinToLargeTable " << endl;
     vector<SP_JoinInfo> smallSides;
     tableInfoMap[large].fVisited = true;
     tableInfoMap[large].fJoinedTables.insert(large);
@@ -2242,7 +2278,7 @@ SP_JoinInfo joinToLargeTable(uint32_t large, TableInfoMap& tableInfoMap,
             uint32_t stid = getTableKey(jobInfo, *k1);
             tableNames.push_back(jobInfo.keyInfo->tupleKeyVec[stid].fTable);
 
-            for (; k1 != keys1.end(); ++k1, ++k2)
+            for (; k1 != keys1.end(); ++k1, ++k2) // and k2 != keys2.end() ?
             {
                 smallIndices.push_back(getKeyIndex(*k1, info->fRowGroup));
                 largeIndices.push_back(getKeyIndex(*k2, largeSideRG));
@@ -2251,7 +2287,7 @@ SP_JoinInfo joinToLargeTable(uint32_t large, TableInfoMap& tableInfoMap,
             smallKeyIndices.push_back(smallIndices);
             largeKeyIndices.push_back(largeIndices);
 
-            if (jobInfo.trace)
+            if (false && jobInfo.trace)
             {
                 // small side column
                 ostringstream smallKey, smallIndex;
@@ -2355,6 +2391,7 @@ SP_JoinInfo joinToLargeTable(uint32_t large, TableInfoMap& tableInfoMap,
         }
 
         RowGroup rg;
+        // Actual join.
         constructJoinedRowGroup(rg, link, prevLarge, root, tableSet, tableInfoMap, jobInfo);
         thjs->setOutputRowGroup(rg);
         tableInfoMap[large].fRowGroup = rg;
@@ -2374,9 +2411,11 @@ SP_JoinInfo joinToLargeTable(uint32_t large, TableInfoMap& tableInfoMap,
         JobStepVector& expSteps = jobInfo.crossTableExpressions;
         JobStepVector::iterator eit = expSteps.begin();
 
+        std::cout << "expression steps: " << endl;
         while (eit != expSteps.end())
         {
             ExpressionStep* exp = dynamic_cast<ExpressionStep*>(eit->get());
+            std::cout << "exp: " << exp->toString() << std::endl;
 
             if (exp == NULL)
                 throw runtime_error("Not an expression.");
@@ -2516,6 +2555,7 @@ SP_JoinInfo joinToLargeTable(uint32_t large, TableInfoMap& tableInfoMap,
                 thjs->setJoinFilterInputRG(rg);
             }
 
+            // Filter here.
             // normal expression if any
             if (readyExpSteps.size() > 0)
             {
@@ -2666,6 +2706,8 @@ inline void updateJoinSides(uint32_t small, uint32_t large, map<uint32_t, SP_Joi
 void joinTablesInOrder(uint32_t largest, JobStepVector& joinSteps, TableInfoMap& tableInfoMap,
                        JobInfo& jobInfo, vector<uint32_t>& joinOrder)
 {
+
+    cout << "join tables in order" << endl;
     // populate the tableInfo for join
     map<uint32_t, SP_JoinInfo> joinInfoMap;          // <table, JoinInfo>
 
@@ -2712,6 +2754,7 @@ void joinTablesInOrder(uint32_t largest, JobStepVector& joinSteps, TableInfoMap&
 
     // sort the join steps based on join ID.
     vector<JoinOrderData> joins;
+    // join order by joinID? what's it?
     getJoinOrder(joins, joinSteps, jobInfo);
 
     // join the steps
@@ -3052,9 +3095,11 @@ void joinTablesInOrder(uint32_t largest, JobStepVector& joinSteps, TableInfoMap&
         JobStepVector& expSteps = jobInfo.crossTableExpressions;
         JobStepVector::iterator eit = expSteps.begin();
 
+        std::cout << "Expression step " << endl;
         while (eit != expSteps.end())
         {
             ExpressionStep* exp = dynamic_cast<ExpressionStep*>(eit->get());
+            cout << "exp: " << exp->toString() << endl;
 
             if (exp == NULL)
                 throw runtime_error("Not an expression.");
@@ -3068,8 +3113,10 @@ void joinTablesInOrder(uint32_t largest, JobStepVector& joinSteps, TableInfoMap&
             const vector<uint32_t>& tables = exp->tableKeys();
             uint64_t i = 0;
 
+            cout << "tables : " << endl;
             for (; i < tables.size(); i++)
             {
+                cout << "tables[i] " << tables[i] << endl;
                 if (tableInfoMap[large].fJoinedTables.find(tables[i]) ==
                         tableInfoMap[large].fJoinedTables.end())
                     break;
@@ -3324,9 +3371,12 @@ void joinTablesInOrder(uint32_t largest, JobStepVector& joinSteps, TableInfoMap&
 }
 
 
-inline void joinTables(JobStepVector& joinSteps, TableInfoMap& tableInfoMap, JobInfo& jobInfo,
-                       vector<uint32_t>& joinOrder, const bool overrideLargeSideEstimate)
+// join tables;
+inline void joinTables(JobStepVector& joinSteps, TableInfoMap& tableInfoMap,
+                       JobInfo& jobInfo, vector<uint32_t>& joinOrder,
+                       const bool overrideLargeSideEstimate)
 {
+   // Larger by rows.
     uint32_t largestTable = getLargestTable(jobInfo, tableInfoMap, overrideLargeSideEstimate);
 
     if (jobInfo.outerOnTable.size() == 0)
@@ -3357,6 +3407,7 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
                             DeliveredTableMap& deliverySteps, JobInfo& jobInfo,
                             const bool overrideLargeSideEstimate)
 {
+    jobInfo.trace = true;
     if (jobInfo.trace)
     {
         const boost::shared_ptr<TupleKeyInfo>& keyInfo = jobInfo.keyInfo;
@@ -3571,6 +3622,9 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
     JobStepVector::iterator it = querySteps.begin();
     JobStepVector::iterator end = querySteps.end();
 
+    std::cout << "query steps num: "
+              << std::distance(querySteps.begin(), querySteps.end());
+
     while (it != end)
     {
         // Separate table joins from other predicates.
@@ -3652,8 +3706,10 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
 
                 if (ti1.width > 8 || ti2.width > 8)
                 {
-                    if (ti1.dtype ==  execplan::CalpontSystemCatalog::LONGDOUBLE
-                     || ti2.dtype ==  execplan::CalpontSystemCatalog::LONGDOUBLE)
+                    if (ti1.dtype ==
+                            execplan::CalpontSystemCatalog::LONGDOUBLE ||
+                        ti2.dtype ==
+                            execplan::CalpontSystemCatalog::LONGDOUBLE)
                     {
                         m1->second.fTypeless = m2->second.fTypeless = false;
                     }
@@ -3674,7 +3730,8 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
                 m1->second.fTypeless = m2->second.fTypeless = true;
             }
 
-            if (m1 == jobInfo.tableJoinMap.end() || m2 == jobInfo.tableJoinMap.end())
+            if (m1 == jobInfo.tableJoinMap.end() ||
+                m2 == jobInfo.tableJoinMap.end())
                 throw runtime_error("Bad table map.");
 
             // Keep a map of the join (table, key) pairs
@@ -3968,7 +4025,8 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
     deliverySteps.clear();
 
     // Check if the tables and joins can be used to construct a spanning tree.
-    spanningTreeCheck(tableInfoMap, joinSteps, jobInfo);
+    // Just to check how much it could brake in current tests suite.
+    //spanningTreeCheck(tableInfoMap, joinSteps, jobInfo);
 
     // 1. combine job steps for each table
     TableInfoMap::iterator mit;
@@ -3979,6 +4037,7 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
 
     // 2. join the combined steps together to form the spanning tree
     vector<uint32_t> joinOrder;
+    // joinTables here.
     joinTables(joinSteps, tableInfoMap, jobInfo, joinOrder, overrideLargeSideEstimate);
 
     // 3. put the steps together
