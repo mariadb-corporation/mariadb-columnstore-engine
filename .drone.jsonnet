@@ -14,9 +14,9 @@ local platforms_custom = ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9'
 local platforms_arm_custom = ['centos:8'];
 
 local server_ref_map = {
-  develop: '10.6 https://github.com/MariaDB/server',
-  'develop-5': '10.5 https://github.com/MariaDB/server',
-  '**': '10.6 https://github.com/MariaDB/server',
+  develop: '10.6',
+  'develop-5': '10.5',
+  '**': '10.6',
 };
 
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
@@ -296,12 +296,14 @@ local Pipeline(branch, platform, event, arch='amd64') = {
              volumes: [pipeline._volumes.mdb],
              environment: {
                SERVER_REF: '${SERVER_REF:-' + server_ref_map[branch] + '}',
+               SERVER_REMOTE: '${SERVER_REMOTE:-https://github.com/MariaDB/server}',
              },
              commands: [
                'echo $$SERVER_REF',
+               'echo $$SERVER_REMOTE',
                'mkdir -p /mdb/' + builddir + ' && cd /mdb/' + builddir,
                'git config --global url."https://github.com/".insteadOf git@github.com:',
-               'git -c submodule."storage/rocksdb/rocksdb".update=none -c submodule."wsrep-lib".update=none -c submodule."storage/columnstore/columnstore".update=none clone  --recurse-submodules --depth 1 --branch $$SERVER_REF .',
+               'git -c submodule."storage/rocksdb/rocksdb".update=none -c submodule."wsrep-lib".update=none -c submodule."storage/columnstore/columnstore".update=none clone --recurse-submodules --depth 1 --branch $$SERVER_REF $$SERVER_REMOTE .',
                'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
                'git config cmake.update-submodules no',
                'rm -rf storage/columnstore/columnstore',
