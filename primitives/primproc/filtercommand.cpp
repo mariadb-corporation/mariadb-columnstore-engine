@@ -97,8 +97,8 @@ Command* FilterCommand::makeFilterCommand(ByteStream& bs, vector<SCommand>& cmds
 
         ColumnCommand* cmd0 = dynamic_cast<ColumnCommand*>(cmds[nc - 2].get());
         ColumnCommand* cmd1 = dynamic_cast<ColumnCommand*>(cmds[nc - 1].get());
-        int scale0 = cmd0->getScale();
-        int scale1 = cmd1->getScale();
+        uint32_t scale0 = cmd0->getScale();
+        uint32_t scale1 = cmd1->getScale();
 
         // char[] is stored as int, but cannot directly compare if length is different
         // due to endian issue
@@ -117,7 +117,8 @@ Command* FilterCommand::makeFilterCommand(ByteStream& bs, vector<SCommand>& cmds
         else
         {
             ScaledFilterCmd* sc = new ScaledFilterCmd();
-            sc->setFactor(pow(10.0, scale1) / pow(10.0, scale0));
+            sc->setFactor(datatypes::scaleDivisor<double>(scale1) /
+                          datatypes::scaleDivisor<double>(scale0));
             fc = sc;
         }
 

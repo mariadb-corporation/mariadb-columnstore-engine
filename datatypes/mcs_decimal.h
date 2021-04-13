@@ -195,6 +195,14 @@ public:
 };
 
 
+template<typename T>
+T applySignedScale(const T & val, int32_t scale)
+{
+    return scale < 0 ?
+           val / datatypes::scaleDivisor<T>((uint32_t) -scale) :
+           val * datatypes::scaleDivisor<T>((uint32_t) scale);
+}
+
 /**
     @brief The function to produce scale multiplier/divisor for
     wide decimals.
@@ -266,6 +274,14 @@ public:
     int64_t toSInt64Ceil(uint32_t scale) const
     {
         return DecomposedDecimal<int64_t>(value, scale).toSIntCeil();
+    }
+
+    // Convert to an arbitrary floating point data type,
+    // e.g. float, double, long double
+    template<typename T>
+    T toXFloat(uint32_t scale) const
+    {
+        return (T) value / scaleDivisor<T>(scale);
     }
 };
 
@@ -588,6 +604,11 @@ class Decimal: public TDecimal128, public TDecimal64
         uint64_t decimal64ToUInt64Round() const
         {
             return TDecimal64::toUInt64Round((uint32_t) scale);
+        }
+
+        template<typename T> T decimal64ToXFloat() const
+        {
+             return TDecimal64::toXFloat<T>((uint32_t) scale);
         }
 
         int64_t toSInt64Round() const

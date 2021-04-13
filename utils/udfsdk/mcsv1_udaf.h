@@ -633,7 +633,7 @@ protected:
     {
         double val = convertAnyTo<double>(datum.columnData);
         if (val != 0 && datum.scale > 0)
-            val /= pow(10.0, (double) datum.scale);
+            val /= datatypes::scaleDivisor<double>(datum.scale);
         return val;
     }
 

@@ -1519,7 +1519,7 @@ double Func_cast_decimal::getDoubleVal(Row& row,
         return static_cast<double>(decimal);
     }
 
-    return (double) decimal.value / helpers::powerOf10_c[decimal.scale];
+    return decimal.decimal64ToXFloat<double>();
 }
 
 
@@ -1631,7 +1631,7 @@ double Func_cast_double::getDoubleVal(Row& row,
             }
             else
             {
-                dblval = (double)(decimal.value / pow((double)10, decimal.scale));
+                dblval = decimal.decimal64ToXFloat<double>();
             }
         }
         break;

@@ -166,7 +166,9 @@ inline int64_t SimpleColumn_Decimal<len>:: getIntVal(rowgroup::Row& row, bool& i
     if (row.equals<len>(fNullVal, fInputIndex))
         isNull = true;
 
-    return (int64_t)(row.getIntField<len>(fInputIndex) / pow((double)10, fResultType.scale));
+    // TODO: fix double division to integer division
+    return (int64_t)(row.getIntField<len>(fInputIndex) /
+                     datatypes::scaleDivisor<double>(fResultType.scale));
 }
 
 template<int len>
@@ -175,7 +177,8 @@ inline float SimpleColumn_Decimal<len>::getFloatVal(rowgroup::Row& row, bool& is
     if (row.equals<len>(fNullVal, fInputIndex))
         isNull = true;
 
-    return (row.getIntField<len>(fInputIndex) / pow((double)10, fResultType.scale));
+    return (row.getIntField<len>(fInputIndex) /
+            datatypes::scaleDivisor<double>(fResultType.scale));
 }
 
 template<int len>
@@ -184,7 +187,8 @@ inline double SimpleColumn_Decimal<len>::getDoubleVal(rowgroup::Row& row, bool& 
     if (row.equals<len>(fNullVal, fInputIndex))
         isNull = true;
 
-    return (row.getIntField<len>(fInputIndex) / pow((double)10, fResultType.scale));
+    return (row.getIntField<len>(fInputIndex) /
+            datatypes::scaleDivisor<double>(fResultType.scale));
 }
 
 template<int len>
@@ -193,7 +197,8 @@ inline long double SimpleColumn_Decimal<len>::getLongDoubleVal(rowgroup::Row& ro
     if (row.equals<len>(fNullVal, fInputIndex))
         isNull = true;
 
-    return (row.getIntField<len>(fInputIndex) / pow((double)10, fResultType.scale));
+    return (row.getIntField<len>(fInputIndex) /
+            datatypes::scaleDivisor<long double>(fResultType.scale));
 }
 
 template<int len>

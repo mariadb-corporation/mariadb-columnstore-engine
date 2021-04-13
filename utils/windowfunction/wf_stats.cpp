@@ -191,8 +191,8 @@ void WF_stats<T>::operator()(int64_t b, int64_t e, int64_t c)
 
         if (fCount > 1)
         {
-            int scale = fRow.getScale(colIn);
-            long double factor = pow(10.0, scale);
+            uint32_t scale = fRow.getScale(colIn);
+            auto factor = datatypes::scaleDivisor<long double>(scale);
             long double ldSum1 = fSum1;
             long double ldSum2 = fSum2;
 

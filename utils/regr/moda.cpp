@@ -248,7 +248,7 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<T>::nextValue(mcsv1Context* context, ColumnDa
 
         if (val != 0 && scale > 0)
         {
-            val /= pow(10.0, (double)scale);
+            val /= datatypes::scaleDivisor<double>(scale);
         }
     }
     

@@ -1458,12 +1458,8 @@ void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int 
             }
             else if (width <= datatypes::MAXLEGACYWIDTH)
             {
-                valIn = rowIn.getIntField(colIn);
-                double scale = (double)(fRowGroupIn.getScale())[colIn];
-                if (valIn != 0 && scale > 0)
-                {
-                    valIn /= pow(10.0, scale);
-                }
+                uint32_t scale = fRowGroupIn.getScale()[colIn];
+                valIn = rowIn.getScaledSInt64FieldAsXFloat<long double>(colIn, scale);
             }
             else
             {
@@ -1938,12 +1934,8 @@ void RowAggregation::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int6
             }
             else if (width <= datatypes::MAXLEGACYWIDTH)
             {
-                valIn = rowIn.getIntField(colIn);
-                double scale = (double)(fRowGroupIn.getScale())[colIn];
-                if (valIn != 0 && scale > 0)
-                {
-                    valIn /= pow(10.0, scale);
-                }
+                uint32_t scale = fRowGroupIn.getScale()[colIn];
+                valIn = rowIn.getScaledSInt64FieldAsXFloat<long double>(colIn, scale);
             }
             else
             {
@@ -3366,8 +3358,8 @@ void RowAggregationUM::calculateStatisticsFunctions()
                     long double sum1 = fRow.getLongDoubleField(colAux);
                     long double sum2 = fRow.getLongDoubleField(colAux + 1);
 
-                    int scale = fRow.getScale(colOut);
-                    long double factor = pow(10.0, scale);
+                    uint32_t scale = fRow.getScale(colOut);
+                    auto factor = datatypes::scaleDivisor<long double>(scale);
 
                     if (scale != 0) // adjust the scale if necessary
                     {
@@ -3732,7 +3724,8 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
                     else if (width <= datatypes::MAXLEGACYWIDTH)
                     {
                         double dbl = strtod(aggData.fConstValue.c_str(), 0);
-                        double scale = pow(10.0, (double) fRowGroupOut->getScale()[i]);
+                        auto scale = datatypes::scaleDivisor<double>(fRowGroupOut->getScale()[i]);
+                        // TODO: isn't overflow possible below:
                         fRow.setIntField((int64_t)(scale * dbl), colOut);
                     }
                     else
@@ -3862,7 +3855,8 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
                     else if (width == datatypes::MAXLEGACYWIDTH)
                     {
                         double dbl = strtod(aggData.fConstValue.c_str(), 0);
-                        dbl *= pow(10.0, (double) fRowGroupOut->getScale()[i]);
+                        // TODO: isn't precision loss possible below?
+                        dbl *= datatypes::scaleDivisor<double>(fRowGroupOut->getScale()[i]);
                         dbl *= rowCnt;
  
                         if ((dbl > 0 && dbl > (double) numeric_limits<int64_t>::max()) ||
@@ -4077,9 +4071,9 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
                 case execplan::CalpontSystemCatalog::UDECIMAL:
                 {
                     double dbl = strtod(aggData.fConstValue.c_str(), 0);
-                    double scale = pow(10.0, (double) fRowGroupOut->getScale()[i]);
-                    datum.columnData = (int64_t)(scale * dbl);
-                    datum.scale = scale;
+                    // TODO: isn't overflow possible below?
+                    datum.columnData = (int64_t) (dbl * datatypes::scaleDivisor<double>(fRowGroupOut->getScale()[i]));
+                    datum.scale = fRowGroupOut->getScale()[i];
                     datum.precision = fRowGroupOut->getPrecision()[i];
                 }
                 break;
@@ -4454,12 +4448,8 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
             }
             else if (width <= datatypes::MAXLEGACYWIDTH)
             {
-                valIn = rowIn.getIntField(colIn);
-                double scale = (double)(fRowGroupIn.getScale())[colIn];
-                if (valIn != 0 && scale > 0)
-                {
-                    valIn /= pow(10.0, scale);
-                }
+                uint32_t scale = fRowGroupIn.getScale()[colIn];
+                valIn = rowIn.getScaledSInt64FieldAsXFloat<long double>(colIn, scale);
             }
             else
             {
