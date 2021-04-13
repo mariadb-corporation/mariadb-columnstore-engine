@@ -3,6 +3,17 @@ local platforms = {
   'develop-5': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
 };
 
+// This is a tad stupid, but since there is no file that in both Debian and Ubuntu
+// would have the distro code name, we need to map it manually here.
+// (Checked e.g. /var/lib/os-release, /etc/os-release, /etc/lsb-release, /etc/debian_version etc)
+local deb_distro_name_map = {
+  'debian:9': 'stretch',
+  'debian:10': 'buster',
+  'ubuntu:16.04': 'xenial',
+  'ubuntu:18.04': 'bionic',
+  'ubuntu:20.04': 'focal',
+};
+
 local server_ref_map = {
   develop: '10.6 https://github.com/MariaDB/server',
   'develop-5': '10.5 https://github.com/MariaDB/server',
@@ -84,9 +95,9 @@ local Pipeline(branch, platform, event) = {
       'docker cp result smoke$${DRONE_BUILD_NUMBER}:/',
       # platfom is e.g. "ubuntu:20.04" or "debian:10"
       if (std.split(platform, ':')[0] == 'debian' || std.split(platform, ':')[0] == 'ubuntu') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update && apt install -y rsyslog hostname curl && curl -sS https://mariadb.org/mariadb_release_signing_key.asc -o /etc/apt/trusted.gpg.d/mariadb.asc"' else '',
-      if (std.split(platform, ':')[0] == 'debian') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "source /etc/lsb-release; echo \'deb http://mirror.one.com/mariadb/repo/10.5/debian $DISTRIB_CODENAME main\' > /etc/apt/sources.list.d/mariadb.list"' else '',
-      if (std.split(platform, ':')[0] == 'ubuntu') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "source /etc/lsb-release; echo \"deb http://mirror.one.com/mariadb/repo/10.5/ubuntu $DISTRIB_CODENAME main\" > /etc/apt/sources.list.d/mariadb.list"' else '',
-      if (std.split(platform, ':')[0] == 'debian' || std.split(platform, ':')[0] == 'ubuntu') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "cat /etc/apt/sources.list.d/mariadb.list; cat /etc/lsb-release' else '',
+      if (std.split(platform, ':')[0] == 'debian') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "echo \'deb http://mirror.one.com/mariadb/repo/10.5/debian ' + deb_distro_name_map[platform] + ' main\' > /etc/apt/sources.list.d/mariadb.list"' else '',
+      if (std.split(platform, ':')[0] == 'ubuntu') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "echo \"deb http://mirror.one.com/mariadb/repo/10.5/ubuntu ' + deb_distro_name_map[platform] + ' main\" > /etc/apt/sources.list.d/mariadb.list"' else '',
+      if (std.split(platform, ':')[0] == 'debian' || std.split(platform, ':')[0] == 'ubuntu') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "cat /etc/apt/sources.list.d/mariadb.list"' else '',
       if (std.split(platform, ':')[0] == 'debian' || std.split(platform, ':')[0] == 'ubuntu') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update && apt install -y -f /result/*.' + pkg_format + '"' else '',
       if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release which rsyslog hostname && yum install -y /result/*.' + pkg_format + '"' else '',
       if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "zypper install -y which hostname rsyslog && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
