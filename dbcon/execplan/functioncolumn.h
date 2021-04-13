@@ -285,7 +285,7 @@ public:
         }
 
         decimal.scale = fResultType.scale;
-        decimal.precision = fResultType.precision;
+        decimal.precision = std::max(fResultType.precision, static_cast<int32_t>(decimal.precision));
         return decimal;
     }
     virtual bool getBoolVal(rowgroup::Row& row, bool& isNull)

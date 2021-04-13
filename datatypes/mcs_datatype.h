@@ -361,7 +361,6 @@ static inline bool isWideDecimalType(const datatypes::SystemCatalog::ColDataType
           dt == SystemCatalog::UDECIMAL);
 }
 
-
 /** convenience function to determine if column type is a char
  *  type
  */
@@ -480,25 +479,16 @@ inline bool isSignedInteger(const datatypes::SystemCatalog::ColDataType type)
   }
 }
 
-
 /**
-    @brief Returns true if all arguments have a DECIMAL/UDECIMAL type
+    @brief The method netects whether type sum and avg aggregate will have
+    wide decimal underlying type
 */
-static inline bool isDecimalOperands(const SystemCatalog::ColDataType resultDataType,
-    const SystemCatalog::ColDataType leftColDataType,
-    const SystemCatalog::ColDataType rightColDataType)
+inline bool hasUnderlyingWideDecimalForSumAndAvg(datatypes::SystemCatalog::ColDataType type)
 {
-  return ((resultDataType == SystemCatalog::DECIMAL ||
-           resultDataType == SystemCatalog::UDECIMAL) &&
-          (leftColDataType == SystemCatalog::DECIMAL ||
-           leftColDataType == SystemCatalog::UDECIMAL) &&
-          (rightColDataType == SystemCatalog::DECIMAL ||
-           rightColDataType == SystemCatalog::UDECIMAL));
+    return datatypes::isSignedInteger(type) || datatypes::isUnsigned(type);
 }
 
 } // end of namespace datatypes
-
-
 
 
 namespace datatypes
@@ -1957,7 +1947,7 @@ public:
   MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd &attr,
                              const MinMaxInfo &a,
                              const MinMaxInfo &b) const override
-  { 
+  {
     return MinMaxInfo::widenSInt64(a, b);
   }
   MinMaxPartitionInfo getExtentPartitionInfo(const SystemCatalog::TypeAttributesStd &attr,
@@ -2038,7 +2028,7 @@ public:
   MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd &attr,
                              const MinMaxInfo &a,
                              const MinMaxInfo &b) const override
-  { 
+  {
     return MinMaxInfo::widenSInt64(a, b);
   }
   MinMaxPartitionInfo getExtentPartitionInfo(const SystemCatalog::TypeAttributesStd &attr,
@@ -2123,7 +2113,7 @@ public:
   MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd &attr,
                              const MinMaxInfo &a,
                              const MinMaxInfo &b) const override
-  { 
+  {
     return MinMaxInfo::widenSInt128(a, b);
   }
   MinMaxPartitionInfo getExtentPartitionInfo(const SystemCatalog::TypeAttributesStd &attr,
@@ -2202,7 +2192,7 @@ public:
   MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd &attr,
                              const MinMaxInfo &a,
                              const MinMaxInfo &b) const override
-  { 
+  {
     return MinMaxInfo::widenSInt128(a, b);
   }
   MinMaxPartitionInfo getExtentPartitionInfo(const SystemCatalog::TypeAttributesStd &attr,
