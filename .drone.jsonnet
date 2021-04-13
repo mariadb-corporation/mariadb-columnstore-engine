@@ -95,15 +95,16 @@ local Pipeline(branch, platform, event) = {
       'docker cp result smoke$${DRONE_BUILD_NUMBER}:/',
       # platfom is e.g. "ubuntu:20.04" or "debian:10"
       if (std.split(platform, ':')[0] == 'debian' || std.split(platform, ':')[0] == 'ubuntu') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update && apt install -y rsyslog hostname curl && curl -sS https://mariadb.org/mariadb_release_signing_key.asc -o /etc/apt/trusted.gpg.d/mariadb.asc"' else '',
-      if (std.split(platform, ':')[0] == 'debian') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "echo \'deb http://mirror.one.com/mariadb/repo/10.5/debian ' + deb_distro_name_map[platform] + ' main\' > /etc/apt/sources.list.d/mariadb.list"' else '',
-      if (std.split(platform, ':')[0] == 'ubuntu') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "echo \"deb http://mirror.one.com/mariadb/repo/10.5/ubuntu ' + deb_distro_name_map[platform] + ' main\" > /etc/apt/sources.list.d/mariadb.list"' else '',
+      if (std.split(platform, ':')[0] == 'debian' || std.split(platform, ':')[0] == 'ubuntu') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "echo \'deb http://mirror.one.com/mariadb/repo/10.5/debian ' + deb_distro_name_map[platform] + ' main\' > /etc/apt/sources.list.d/mariadb.list"' else '',
       if (std.split(platform, ':')[0] == 'debian' || std.split(platform, ':')[0] == 'ubuntu') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "cat /etc/apt/sources.list.d/mariadb.list"' else '',
       if (std.split(platform, ':')[0] == 'debian' || std.split(platform, ':')[0] == 'ubuntu') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update && apt install -y -f /result/*.' + pkg_format + '"' else '',
       if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release which rsyslog hostname && yum install -y /result/*.' + pkg_format + '"' else '',
       if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "zypper install -y which hostname rsyslog && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
       // start mariadb and mariadb-columnstore services and run simple query
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl start mariadb',
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl status mariadb',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl start mariadb-columnstore',
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl status mariadb-columnstore',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} mariadb -e "create database if not exists test; create table test.t1 (a int) engine=Columnstore; insert into test.t1 values (1); select * from test.t1"',
       // restart mariadb and mariadb-columnstore services and run simple query again
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl restart mariadb',
