@@ -119,8 +119,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
       if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "zypper install -y which hostname rsyslog patch perl-Data-Dumper-Concise perl-Memoize-ExpireLRU && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
       if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release diffutils which rsyslog hostname patch perl-Data-Dumper perl-Getopt-Long perl-Memoize perl-Time-HiRes cracklib-dicts && yum install -y /result/*.' + pkg_format + '"' else '',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update && apt install -y rsyslog hostname patch && apt install -y -f /result/*.' + pkg_format + '"' else '',
-      'docker cp mtr mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/suite/',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} mv ' + mtr_path + '/suite/mtr ' + mtr_path + '/suite/columnstore',
+      'docker cp mysql-test/columnstore mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/suite/',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} chown -R mysql:mysql ' + mtr_path,
       // disable systemd 'ProtectSystem' (we need to write to /usr/share/)
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} sed -i "/ProtectSystem/d" /usr/lib/systemd/system/mariadb.service',
@@ -359,7 +358,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
              volumes: [pipeline._volumes.mdb],
              commands: [
                'cd /mdb/' + builddir,
-               'mkdir /drone/src/result',
+               'mkdir -p /drone/src/result',
                'echo "engine: $DRONE_COMMIT" > buildinfo.txt',
                'echo "server: $$(git rev-parse HEAD)" >> buildinfo.txt',
                'echo "buildNo: $DRONE_BUILD_NUMBER" >> buildinfo.txt',
