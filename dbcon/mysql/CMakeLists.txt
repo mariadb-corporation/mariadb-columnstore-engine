@@ -5,6 +5,7 @@ include_directories( ${ENGINE_COMMON_INCLUDES}
                      /usr/include/libxml2
                      ${SERVER_SOURCE_ROOT_DIR}/storage/maria )
 
+SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../../)
 
 SET ( libcalmysql_SRCS
     ../../datatypes/mcs_datatype.cpp
