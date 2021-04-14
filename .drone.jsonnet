@@ -1,10 +1,10 @@
 local platforms = {
-  'develop': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
+  develop: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
   'develop-5': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
 };
 
 local server_ref_map = {
-  'develop': '10.6 https://github.com/MariaDB/server',
+  develop: '10.6 https://github.com/MariaDB/server',
   'develop-5': '10.5 https://github.com/MariaDB/server',
 };
 
@@ -109,8 +109,7 @@ local Pipeline(branch, platform, event) = {
       if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "zypper install -y which hostname rsyslog patch perl-Data-Dumper-Concise perl-Memoize-ExpireLRU && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
       if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release diffutils which rsyslog hostname patch perl-Data-Dumper perl-Getopt-Long perl-Memoize perl-Time-HiRes cracklib-dicts && yum install -y /result/*.' + pkg_format + '"' else '',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update && apt install -y rsyslog hostname patch && apt install -y -f /result/*.' + pkg_format + '"' else '',
-      'docker cp mtr mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/suite/',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} mv ' + mtr_path + '/suite/mtr ' + mtr_path + '/suite/columnstore',
+      'docker cp mysql-test/columnstore mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/suite/',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} chown -R mysql:mysql ' + mtr_path,
       // disable systemd 'ProtectSystem' (we need to write to /usr/share/)
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} sed -i "/ProtectSystem/d" /usr/lib/systemd/system/mariadb.service',
@@ -151,13 +150,13 @@ local Pipeline(branch, platform, event) = {
       REGRESSION_REF: '${REGRESSION_REF:-' + regression_ref + '}',
       REGRESSION_TIMEOUT: {
         from_secret: 'regression_timeout',
-      }
+      },
     },
     commands: [
       // clone regression test repo
       'git clone --recurse-submodules --branch $$REGRESSION_REF --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test',
 
-      # where are we now?
+      // where are we now?
       'cd mariadb-columnstore-regression-test',
       'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
       'cd ..',
@@ -300,7 +299,7 @@ local Pipeline(branch, platform, event) = {
              volumes: [pipeline._volumes.mdb],
              environment: {
                DEBIAN_FRONTEND: 'noninteractive',
-               BUILDPACKAGE_FLAGS: '-b', // Save time and produce only binary packages, not source
+               BUILDPACKAGE_FLAGS: '-b',  // Save time and produce only binary packages, not source
              },
              commands: [
                'cd /mdb/' + builddir,
