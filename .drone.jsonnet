@@ -1,8 +1,8 @@
 local events = ['pull_request', 'cron'];
 
 local platforms = {
-  develop: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
-  'develop-5': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'],
+  develop: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
+  'develop-5': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
 };
 
 local platforms_arm = {
@@ -10,7 +10,7 @@ local platforms_arm = {
 };
 
 local any_branch = '**';
-local platforms_custom = ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04', 'ubuntu:20.04'];
+local platforms_custom = ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'];
 local platforms_arm_custom = ['centos:8'];
 
 local server_ref_map = {
@@ -39,7 +39,6 @@ local platformMap(platform) =
     'centos:8': "yum install -y libgcc && sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/*PowerTools.repo && yum " + rpm_build_deps + ' cmake && cmake ' + cmakeflags + ' -DRPM=centos8 && make -j$(nproc) package',
     'debian:9': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=stretch' debian/autobake-deb.sh",
     'debian:10': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=buster' debian/autobake-deb.sh",
-    'ubuntu:16.04': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=xenial' debian/autobake-deb.sh",
     'ubuntu:18.04': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=bionic' debian/autobake-deb.sh",
     'ubuntu:20.04': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=focal' debian/autobake-deb.sh",
   };
