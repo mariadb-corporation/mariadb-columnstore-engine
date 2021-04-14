@@ -57,7 +57,7 @@ void derivedTableOptimization(THD* thd, SCSEP& csep)
 
     for (uint i = 0; i < derivedTbList.size(); i++)
     {
-        CalpontSelectExecutionPlan* plan = dynamic_cast<CalpontSelectExecutionPlan*>(derivedTbList[i].get());
+        CalpontSelectExecutionPlan* plan = reinterpret_cast<CalpontSelectExecutionPlan*>(derivedTbList[i].get());
         CalpontSelectExecutionPlan::ReturnedColumnList cols = plan->returnedCols();
         vector<CalpontSelectExecutionPlan::ReturnedColumnList> unionColVec;
 
@@ -73,7 +73,7 @@ void derivedTableOptimization(THD* thd, SCSEP& csep)
             for (uint j = 0; j < plan->unionVec().size(); j++)
             {
                 unionColVec.push_back(
-                    dynamic_cast<CalpontSelectExecutionPlan*>(plan->unionVec()[j].get())->returnedCols());
+                    reinterpret_cast<CalpontSelectExecutionPlan*>(plan->unionVec()[j].get())->returnedCols());
             }
         }
 
@@ -82,7 +82,7 @@ void derivedTableOptimization(THD* thd, SCSEP& csep)
 
         for (uint j = 0; j < plan->unionVec().size(); j++)
         {
-            if (dynamic_cast<CalpontSelectExecutionPlan*>(plan->unionVec()[j].get())->tableList().empty())
+            if (reinterpret_cast<CalpontSelectExecutionPlan*>(plan->unionVec()[j].get())->tableList().empty())
             {
                 horizontalOptimization = false;
                 break;
@@ -93,7 +93,29 @@ void derivedTableOptimization(THD* thd, SCSEP& csep)
         {
             int64_t val = 1;
 
-            for (uint i = 0; i < cols.size(); i++)
+            // TODO MCOL-4543 Only project those columns from the subquery
+            // which are referenced in the outer select. So for example,
+            // if a table t contains 10 columns c1 ... c10 :
+            // "select count(c2) from (select * from t) q;"
+            // with p being the subquery execution plan, p->columnMap()
+            // and p->returnedCols() should both be of size 1, instead
+            // of 10, with entries for c2 in each.
+            //
+            // We are currently performing a dumb optimization:
+            // Instead of just referencing c2, we are referencing (c1,c2)
+            // for the above query. This is due to complexity associated
+            // with modifying ReturnedColumn::colPosition()
+            // (from a value of 1 to a value of 0) of the outer query
+            // which references c2. So essentially, if c2 is replaced by c10
+            // in the above query, we fallback to projecting all 10 columns
+            // of the subquery in ExeMgr.
+            // This will be addressed in future.
+            CalpontSelectExecutionPlan::ReturnedColumnList nonConstCols;
+            vector<CalpontSelectExecutionPlan::ReturnedColumnList> nonConstUnionColVec(unionColVec.size());
+
+            int64_t lastNonConstIndex = -1;
+
+            for (int64_t i = cols.size() - 1; i >= 0; i--)
             {
                 //if (cols[i]->derivedTable().empty())
                 if (cols[i]->refCount() == 0)
@@ -101,22 +123,84 @@ void derivedTableOptimization(THD* thd, SCSEP& csep)
                     if (cols[i]->derivedRefCol())
                         cols[i]->derivedRefCol()->decRefCount();
 
-                    cols[i].reset(new ConstantColumn(val));
-                    (dynamic_cast<ConstantColumn*>(cols[i].get()))->timeZone(thd->variables.time_zone->get_name()->ptr());
+                    if (lastNonConstIndex == -1)
+                    {
+                        SimpleColumn* sc = dynamic_cast<SimpleColumn*>(cols[i].get());
+
+                        if (sc && (plan->columnMap().count(sc->columnName()) == 1))
+                        {
+                            plan->columnMap().erase(sc->columnName());
+                        }
+                    }
+                    else
+                    {
+                        cols[i].reset(new ConstantColumn(val));
+                        (reinterpret_cast<ConstantColumn*>(cols[i].get()))->timeZone(thd->variables.time_zone->get_name()->ptr());
+                    }
 
                     for (uint j = 0; j < unionColVec.size(); j++)
                     {
-                        unionColVec[j][i].reset(new ConstantColumn(val));
-                        (dynamic_cast<ConstantColumn*>(unionColVec[j][i].get()))->timeZone(thd->variables.time_zone->get_name()->ptr());
+                        if (lastNonConstIndex == -1)
+                        {
+                            CalpontSelectExecutionPlan* unionSubPlan =
+                                reinterpret_cast<CalpontSelectExecutionPlan*>(plan->unionVec()[j].get());
+
+                            SimpleColumn* sc = dynamic_cast<SimpleColumn*>(unionSubPlan->returnedCols()[i].get());
+
+                            if (sc && (unionSubPlan->columnMap().count(sc->columnName()) == 1))
+                            {
+                                unionSubPlan->columnMap().erase(sc->columnName());
+                            }
+                        }
+                        else
+                        {
+                            unionColVec[j][i].reset(new ConstantColumn(val));
+                            (reinterpret_cast<ConstantColumn*>(unionColVec[j][i].get()))->timeZone(thd->variables.time_zone->get_name()->ptr());
+                        }
                     }
+                }
+                else if (lastNonConstIndex == -1)
+                {
+                    lastNonConstIndex = i;
+                }
+            }
+
+            if (lastNonConstIndex == -1)
+            {
+                // None of the subquery columns are referenced, just use the first one
+                if (!cols.empty())
+                {
+                    cols[0].reset(new ConstantColumn(val));
+                    (reinterpret_cast<ConstantColumn*>(cols[0].get()))->timeZone(thd->variables.time_zone->get_name()->ptr());
+                    nonConstCols.push_back(cols[0]);
+
+                    for (uint j = 0; j < unionColVec.size(); j++)
+                    {
+                        unionColVec[j][0].reset(new ConstantColumn(val));
+                        (reinterpret_cast<ConstantColumn*>(unionColVec[j][0].get()))->timeZone(thd->variables.time_zone->get_name()->ptr());
+                        nonConstUnionColVec[j].push_back(unionColVec[j][0]);
+                    }
+                }
+            }
+            else
+            {
+                nonConstCols.assign(cols.begin(), cols.begin() + lastNonConstIndex + 1);
+
+                for (uint j = 0; j < unionColVec.size(); j++)
+                {
+                    nonConstUnionColVec[j].assign(unionColVec[j].begin(), unionColVec[j].begin() + lastNonConstIndex + 1);
                 }
             }
 
             // set back
-            plan->returnedCols(cols);
+            plan->returnedCols(nonConstCols);
 
             for (uint j = 0; j < unionColVec.size(); j++)
-                dynamic_cast<CalpontSelectExecutionPlan*>(plan->unionVec()[j].get())->returnedCols(unionColVec[j]);
+            {
+                CalpontSelectExecutionPlan* unionSubPlan =
+                    reinterpret_cast<CalpontSelectExecutionPlan*>(plan->unionVec()[j].get());
+                unionSubPlan->returnedCols(nonConstUnionColVec[j]);
+            }
         }
     }
 
@@ -151,7 +235,7 @@ void derivedTableOptimization(THD* thd, SCSEP& csep)
 
     for (uint i = 0; i < derivedTbList.size(); i++)
     {
-        CalpontSelectExecutionPlan* plan = dynamic_cast<CalpontSelectExecutionPlan*>(derivedTbList[i].get());
+        CalpontSelectExecutionPlan* plan = reinterpret_cast<CalpontSelectExecutionPlan*>(derivedTbList[i].get());
         CalpontSelectExecutionPlan::ReturnedColumnList derivedColList = plan->returnedCols();
         mapIt = derivedTbFilterMap.find(plan->derivedTbAlias());
 
@@ -181,7 +265,7 @@ void derivedTableOptimization(THD* thd, SCSEP& csep)
             for (uint j = 0; j < plan->unionVec().size(); j++)
             {
                 CalpontSelectExecutionPlan* unionPlan =
-                    dynamic_cast<CalpontSelectExecutionPlan*>(plan->unionVec()[j].get());
+                    reinterpret_cast<CalpontSelectExecutionPlan*>(plan->unionVec()[j].get());
                 CalpontSelectExecutionPlan::ReturnedColumnList unionColList = unionPlan->returnedCols();
                 ParseTree* mainFilterForUnion = new ParseTree();
                 mainFilterForUnion->copyTree(*(mapIt->second));
