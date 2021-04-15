@@ -3,6 +3,7 @@
 # Author: Bharath, bharath.bokka@mariadb.com
 #
 -- source ../include/have_columnstore.inc
+-- source include/have_innodb.inc
 
 --disable_warnings
 DROP DATABASE IF EXISTS mcs24_db;
