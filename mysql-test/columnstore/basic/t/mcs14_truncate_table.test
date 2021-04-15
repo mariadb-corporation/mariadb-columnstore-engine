@@ -2,6 +2,7 @@
 # Test TRUNCATE TABLE in various possible scenarios.
 #
 -- source ../include/have_columnstore.inc
+-- source include/have_innodb.inc
 
 --disable_warnings
 DROP DATABASE IF EXISTS mcs14_db1;

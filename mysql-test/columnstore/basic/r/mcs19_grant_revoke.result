@@ -1,3 +1,4 @@
+SET default_storage_engine=InnoDB;
 DROP DATABASE IF EXISTS mcs19_db;
 DROP USER IF EXISTS 'user'@'localhost';
 DROP USER IF EXISTS 'user1'@'localhost';
@@ -37,7 +38,7 @@ CREATE DATABASE mcs19_db;
 USE mcs19_db;
 CREATE DATABASE mcs19_db1;
 ERROR 42000: Access denied for user 'user1'@'localhost' to database 'mcs19_db1'
-CREATE TABLE t1(col INT);
+CREATE TABLE t1(col INT) ENGINE=InnoDB;
 SHOW CREATE TABLE t1;
 Table	Create Table
 t1	CREATE TABLE `t1` (
@@ -72,9 +73,6 @@ CREATE TABLE mcs19_db.t1;
 ERROR 42000: CREATE command denied to user 'user1'@'localhost' for table 't1'
 connection default;
 SET default_storage_engine=default;
-SELECT @@default_storage_engine;
-@@default_storage_engine
-InnoDB
 DROP DATABASE mcs19_db;
 DROP USER 'user'@'localhost';
 DROP USER 'user1'@'localhost';

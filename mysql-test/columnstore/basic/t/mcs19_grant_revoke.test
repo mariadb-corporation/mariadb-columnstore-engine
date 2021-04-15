@@ -3,6 +3,9 @@
 # Author: Bharath, bharath.bokka@mariadb.com
 #
 -- source ../include/have_columnstore.inc
+-- source include/have_innodb.inc
+
+SET default_storage_engine=InnoDB;
 
 --disable_warnings
 DROP DATABASE IF EXISTS mcs19_db;
@@ -37,7 +40,7 @@ CREATE DATABASE mcs19_db;
 USE mcs19_db;
 --error ER_DBACCESS_DENIED_ERROR
 CREATE DATABASE mcs19_db1;
-CREATE TABLE t1(col INT);
+CREATE TABLE t1(col INT) ENGINE=InnoDB;
 SHOW CREATE TABLE t1;
 INSERT INTO t1 VALUES(1);
 SELECT * FROM t1;
@@ -63,7 +66,6 @@ CREATE TABLE mcs19_db.t1;
 # Clean up
 connection default;
 SET default_storage_engine=default;
-SELECT @@default_storage_engine;
 DROP DATABASE mcs19_db;
 DROP USER 'user'@'localhost';
 DROP USER 'user1'@'localhost';

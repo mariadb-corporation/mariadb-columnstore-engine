@@ -3,6 +3,9 @@
 # Author: Bharath, bharath.bokka@mariadb.com
 #
 -- source ../include/have_columnstore.inc
+-- source include/have_innodb.inc
+
+SET default_storage_engine=InnoDB;
 
 --disable_warnings
 DROP USER IF EXISTS user1@test;
@@ -45,4 +48,3 @@ DROP USER 'user'@'127.0.0.1';
 
 # Clean up
 SET default_storage_engine=default;
-SELECT @@default_storage_engine;
