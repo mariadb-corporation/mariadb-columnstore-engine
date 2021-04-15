@@ -56,6 +56,12 @@ class MessageQTestSuite;
 namespace messageqcpp
 {
 
+using AddrAndPortPair = std::pair<std::string, uint16_t>;
+// utility f-s
+// Extracts a pair of address and port from the XML configuration.
+// Used here and in DEC.
+AddrAndPortPair getAddressAndPort(config::Config* config, const std::string& fOtherEnd);
+
 /**
  * @brief a message queue server
  * This class can recieve (and send) messages
