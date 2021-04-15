@@ -30,7 +30,7 @@ cc tinytext character set utf8mb4,
 dd text character set utf8mb4,
 ee mediumtext character set utf8mb4,
 ff longtext character set utf8mb4
-) default charset=koi8r;
+) default charset=koi8r ENGINE=InnoDB;
 create table copy1 like orig;
 alter table copy1 engine=columnstore;
 create table copy2 like copy1;

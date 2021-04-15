@@ -152,3 +152,4 @@ i	c	i2
 disconnect addconroot1;
 disconnect addconroot2;
 DROP DATABASE mcs12_db1;
+DROP DATABASE mcs12_db2;

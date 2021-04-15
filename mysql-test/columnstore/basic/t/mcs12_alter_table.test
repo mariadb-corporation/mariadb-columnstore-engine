@@ -2,6 +2,7 @@
 # Test ALTER TABLE schemas in various possible ways.
 #
 -- source ../include/have_columnstore.inc
+-- source include/have_innodb.inc
 
 --disable_warnings
 DROP DATABASE IF EXISTS mcs12_db1;
@@ -84,3 +85,4 @@ disconnect addconroot1;
 disconnect addconroot2;
 
 DROP DATABASE mcs12_db1;
+DROP DATABASE mcs12_db2;

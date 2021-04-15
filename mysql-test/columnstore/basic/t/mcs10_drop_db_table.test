@@ -2,6 +2,7 @@
 #This test verifies drop databases and tables with engine=columnstore.
 #
 -- source ../include/have_columnstore.inc
+-- source include/have_innodb.inc
 
 --disable_warnings
 DROP DATABASE IF EXISTS mcs10_db1;

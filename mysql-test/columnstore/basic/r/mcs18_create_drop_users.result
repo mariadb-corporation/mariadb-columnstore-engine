@@ -1,3 +1,4 @@
+SET default_storage_engine=InnoDB;
 DROP USER IF EXISTS user1@test;
 DROP USER IF EXISTS 'user2'@'%';
 DROP USER IF EXISTS 'user'@'%';
@@ -36,6 +37,3 @@ DROP USER 'user'@'%';
 DROP USER 'user'@'localhost';
 DROP USER 'user'@'127.0.0.1';
 SET default_storage_engine=default;
-SELECT @@default_storage_engine;
-@@default_storage_engine
-InnoDB
