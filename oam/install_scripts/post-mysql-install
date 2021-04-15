@@ -23,7 +23,8 @@ checkForError() {
         #---------------------------------------------------------------------------
         echo "checking for engine columnstore..."
         su -s /bin/sh -c 'mysql --execute="show engines"' mysql 2> ${tmpdir}/post-mysql-install.log | grep -i columnstore
-
+        echo "post-mysql-install.log: "
+        cat ${installLogDir}/post-mysql-install.log
         #
         # Add compressiontype column to SYSCOLUMN if applicable
         #

@@ -110,10 +110,12 @@ local Pipeline(branch, platform, event) = {
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl status --no-pager mariadb',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl start mariadb-columnstore',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl status --no-pager mariadb-columnstore',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} mariadb -e "create database if not exists test; create table test.t1 (a int) engine=Columnstore; insert into test.t1 values (1); select * from test.t1"',
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} mariadb -e "create database if not exists test; create table test.t1 (a int) engine=Columnstore; insert into test.t1 values (1); select * from test.t1" || true',
       // restart mariadb and mariadb-columnstore services and run simple query again
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl restart mariadb',
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl status --no-pager mariadb',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl restart mariadb-columnstore',
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl status --no-pager mariadb-columnstore',
       'sleep 10',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} mariadb -e "insert into test.t1 values (2); select * from test.t1"',
     ],
