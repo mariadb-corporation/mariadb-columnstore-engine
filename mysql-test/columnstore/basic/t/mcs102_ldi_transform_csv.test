@@ -4,6 +4,8 @@
 #
 -- source ../include/have_columnstore.inc
 
+let $DATADIR= `SELECT @@datadir`;
+
 --disable_warnings
 DROP DATABASE IF EXISTS mcs102_db1;
 --enable_warnings
@@ -12,9 +14,9 @@ CREATE DATABASE mcs102_db1;
 USE mcs102_db1;
 
 # Prepare the csv file
-exec rm -f /tmp/mcs102.csv;
+exec rm -f $DATADIR/mcs102.csv;
 
-exec cat << EOF > /tmp/mcs102.csv 
+exec cat << EOF > $DATADIR/mcs102.csv 
 1,Sprint Break 2014,Jan 04 2014,20
 2,Back to Scholl 2014,Jan 09 2014,25
 3,Summer 2014,Jun 25 2014,10
@@ -28,24 +30,23 @@ CREATE TABLE discounts (
 ) ENGINE=Columnstore;
 
 # Incorrect date value
---error 1292
-LOAD DATA INFILE '/tmp/mcs102.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
+--replace_result $DATADIR DATADIR
+--error ER_TRUNCATED_WRONG_VALUE
+--eval LOAD DATA INFILE '$DATADIR/mcs102.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
 # Suspected BUG! Should fail but it is passing.
-#--error 1292
-#LOAD DATA LOCAL INFILE '/tmp/mcs102.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
+#--replace_result $DATADIR DATADIR
+#--error ER_TRUNCATED_WRONG_VALUE
+#--eval LOAD DATA LOCAL INFILE '$DATADIR/mcs102.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
 
 # Transform date value
-LOAD DATA INFILE '/tmp/mcs102.csv' INTO TABLE discounts FIELDS TERMINATED BY ','
-(id, title, @expired_date, amount)
-SET expired_date = STR_TO_DATE(@expired_date, "%M %d %Y");
-
-LOAD DATA LOCAL INFILE '/tmp/mcs102.csv' INTO TABLE discounts FIELDS TERMINATED BY ','
-(id, title, @expired_date, amount)
-SET expired_date = STR_TO_DATE(@expired_date, "%M %d %Y");
+--replace_result $DATADIR DATADIR
+--eval LOAD DATA INFILE '$DATADIR/mcs102.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' (id, title, @expired_date, amount) SET expired_date = STR_TO_DATE(@expired_date, "%M %d %Y");
+--replace_result $DATADIR DATADIR
+--eval LOAD DATA LOCAL INFILE '$DATADIR/mcs102.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' (id, title, @expired_date, amount) SET expired_date = STR_TO_DATE(@expired_date, "%M %d %Y");
 
 SELECT * FROM discounts ORDER BY id;
 SELECT COUNT(*) FROM discounts;
 
 # Clean up
-exec rm -f /tmp/mcs102.csv;
+exec rm -f $DATADIR/mcs102.csv;
 DROP DATABASE IF EXISTS mcs102_db1;

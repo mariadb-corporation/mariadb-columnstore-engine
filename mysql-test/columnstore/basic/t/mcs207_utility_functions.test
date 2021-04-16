@@ -11,6 +11,17 @@ DROP DATABASE IF EXISTS mcs207_db;
 CREATE DATABASE mcs207_db;
 USE mcs207_db;
 
+let $func_exists=`SELECT COUNT(*) FROM mysql.func WHERE name='mcssystemready'`;
+
+--disable_query_log
+if (!$func_exists)
+{
+  CREATE FUNCTION mcssystemready RETURNS INTEGER SONAME "ha_columnstore.so";
+  CREATE FUNCTION mcssystemreadonly RETURNS INTEGER SONAME "ha_columnstore.so";
+}
+--enable_query_log
+
+
 # Returns 1 if the system can accept queries, 0 if it's not ready yet
 SELECT mcsSystemReady();
 
@@ -18,6 +29,15 @@ SELECT mcsSystemReady();
 # It returns 2 if in a read only state. ColumnStore puts itself into a read only state if it detects a logic error that may have corrupted data. Generally it means a ROLLBACK operation failed. 
 # Returns 0 if the system is writable.
 SELECT mcsSystemReadOnly();
+
+--disable_query_log
+if (!$func_exists)
+{
+  DROP FUNCTION mcssystemready;
+  DROP FUNCTION mcssystemreadonly;
+}
+--enable_query_log
+
 
 # Clean UP
 DROP DATABASE mcs207_db;

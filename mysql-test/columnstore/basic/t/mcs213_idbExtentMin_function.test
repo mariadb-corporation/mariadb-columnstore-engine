@@ -12,11 +12,28 @@ CREATE DATABASE mcs213_db;
 USE mcs213_db;
 
 CREATE TABLE t1(col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnstore;
-LOAD DATA LOCAL infile './suite/columnstore/std_data/100Krows.dat' INTO TABLE t1 FIELDS TERMINATED BY '|';
+--replace_result $MTR_SUITE_DIR MTR_SUITE_DIR
+--eval LOAD DATA LOCAL infile '$MTR_SUITE_DIR/../std_data/100Krows.dat' INTO TABLE t1 FIELDS TERMINATED BY '|';
 SELECT COUNT(*) FROM t1;
+
+let $func_exists=`SELECT COUNT(*) FROM mysql.func WHERE name='idbextentmin'`;
+--disable_query_log
+if (!$func_exists)
+{
+  CREATE FUNCTION idbextentmin RETURNS STRING SONAME "ha_columnstore.so";
+}
+--enable_query_log
 
 SELECT idbExtentMin(col1) FROM t1 LIMIT 1;
 SELECT idbExtentMin(col2) FROM t1 LIMIT 1;
+
+--disable_query_log
+if (!$func_exists)
+{
+  DROP FUNCTION idbextentmin;
+}
+--enable_query_log
+
 
 # Clean UP
 DROP DATABASE mcs213_db;
