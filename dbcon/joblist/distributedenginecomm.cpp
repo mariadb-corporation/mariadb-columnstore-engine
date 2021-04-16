@@ -264,14 +264,25 @@ void DistributedEngineComm::Setup()
     //This needs to make sense when compared to the extent size
     //     fLBIDShift = static_cast<unsigned>(config::Config::uFromText(fConfig->getConfig(section, "LBID_Shift")));
 
+    auto* config = fRm->getConfig();
+    std::vector<messageqcpp::AddrAndPortPair> pmsAddressesAndPorts;
+    for (size_t i = 1; i <= newPmCount; ++i)
+    {
+        std::string pmConfigNodeName("PMS");
+        pmConfigNodeName.append(std::to_string(i));
+        // The port returned by getAddressAndPort can be 0 but this will be handled by
+        // MessageQueueClient::connect
+        pmsAddressesAndPorts.push_back(messageqcpp::getAddressAndPort(config,
+                                                                      pmConfigNodeName));
+    }
+
+    // numConnections must be calculated as number of PMs * number of connections per PM.
+    // This happens earlier in getNumConnections().
     for (unsigned i = 0; i < numConnections; i++)
     {
-        ostringstream oss;
-        oss << "PMS" << (i + 1);
-        string fServer (oss.str());
-
-        boost::shared_ptr<MessageQueueClient>
-        cl(new MessageQueueClient(fServer, fRm->getConfig()));
+        size_t connectionId = numConnections % newPmCount;
+        boost::shared_ptr<MessageQueueClient> cl(new MessageQueueClient(pmsAddressesAndPorts[connectionId].first,
+                                                                        pmsAddressesAndPorts[connectionId].second));
         boost::shared_ptr<boost::mutex> nl(new boost::mutex());
 
         try
@@ -286,7 +297,7 @@ void DistributedEngineComm::Setup()
             }
             else
             {
-                throw runtime_error("Connection refused");
+                throw runtime_error("Connection refused from PMS" + std::to_string(connectionId));
             }
         }
         catch (std::exception& ex)
@@ -294,15 +305,15 @@ void DistributedEngineComm::Setup()
             if (i < newPmCount)
                 newPmCount--;
 
-            writeToLog(__FILE__, __LINE__, "Could not connect to " + fServer + ": " + ex.what(), LOG_TYPE_ERROR);
-            cerr << "Could not connect to " << fServer << ": " << ex.what() << endl;
+            writeToLog(__FILE__, __LINE__, "Could not connect to PMS" + std::to_string(connectionId) + ": " + ex.what(), LOG_TYPE_ERROR);
+            cerr << "Could not connect to PMS" << std::to_string(connectionId) << ": " << ex.what() << endl;
         }
         catch (...)
         {
             if (i < newPmCount)
                 newPmCount--;
 
-            writeToLog(__FILE__, __LINE__, "Could not connect to " + fServer, LOG_TYPE_ERROR);
+            writeToLog(__FILE__, __LINE__, "Could not connect to PMS" + std::to_string(connectionId), LOG_TYPE_ERROR);
         }
     }
 
