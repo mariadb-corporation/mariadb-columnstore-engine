@@ -69,6 +69,11 @@ using namespace joblist;
 
 namespace primitiveprocessor
 {
+
+#ifdef PRIMPROC_STOPWATCH
+#include "poormanprofiler.inc"
+#endif
+
 // these are config parms defined in primitiveserver.cpp, initialized by PrimProc main().
 extern uint32_t blocksReadAhead;
 extern uint32_t dictBufferSize;
@@ -2112,42 +2117,14 @@ int BatchPrimitiveProcessor::operator()()
     utils::setThreadName("PPBatchPrimProc");
 #ifdef PRIMPROC_STOPWATCH
     const static std::string msg{"BatchPrimitiveProcessor::operator()"};
-    logging::StopWatch* stopwatch = nullptr;
+    logging::StopWatch* stopwatch = profiler.getTimer();
 #endif
 
     if (currentBlockOffset == 0)
     {
 #ifdef PRIMPROC_STOPWATCH
-        auto stopwatchMapIter = stopwatchMap.find(pthread_self());
-
-        if (stopwatchMapIter != stopwatchMap.end())
-        {
-            stopwatch = stopwatchMapIter->second;
-        }
-        else
-        {
-            pthread_mutex_lock(&stopwatchMapMutex);
-            stopwatch = new logging::StopWatch(stopwatchMap.size());
-            stopwatchMap.insert({pthread_self(), stopwatch});
-
-            // Create the thread that will show timing results after five seconds of idle time.
-            if (!stopwatchThreadCreated)
-            {
-                pthread_t timerThread;
-                int err = pthread_create(&timerThread, NULL, autoFinishStopwatchThread, NULL);
-
-                if (err)
-                    cout << "Error creating thread to complete Stopwatches." << endl;
-
-                stopwatchThreadCreated = true;
-            }
-
-            pthread_mutex_unlock(&stopwatchMapMutex);
-        }
-
         stopwatch->start(msg);
 #endif
-
         idbassert(count > 0);
     }
 
@@ -2217,7 +2194,6 @@ int BatchPrimitiveProcessor::operator()()
         		<< " blockNum=" << blockNum << endl;
         */
     }
-
     vssCache.clear();
 #ifndef __FreeBSD__
     pthread_mutex_unlock(&objLock);
