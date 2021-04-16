@@ -106,9 +106,9 @@ local Pipeline(branch, platform, event) = {
       if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release which rsyslog hostname && yum install -y /result/*.' + pkg_format + '"' else '',
       if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "zypper install -y which hostname rsyslog && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
       // start mariadb and mariadb-columnstore services and run simple query
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl start mariadb',
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl restart mariadb',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl status --no-pager mariadb',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl start mariadb-columnstore',
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl restart mariadb-columnstore',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl status --no-pager mariadb-columnstore',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} mariadb -e "create database if not exists test; create table test.t1 (a int) engine=Columnstore; insert into test.t1 values (1); select * from test.t1" || true',
       // restart mariadb and mariadb-columnstore services and run simple query again
