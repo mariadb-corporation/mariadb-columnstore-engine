@@ -5,8 +5,8 @@ CREATE DATABASE mcs51_db2;
 CREATE TABLE mcs51_db1.t_innodb (col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Innodb;
 CREATE TABLE mcs51_db1.t_myisam (col1 INT, col2 INT, col3 CHAR(8)) ENGINE=MyISAM;
 CREATE TABLE mcs51_db2.t_mcs (col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnstore;
-LOAD DATA LOCAL infile './suite/columnstore/std_data/100Krows.dat' INTO TABLE mcs51_db1.t_innodb FIELDS TERMINATED BY '|';
-LOAD DATA LOCAL infile './suite/columnstore/std_data/100Krows.dat' INTO TABLE mcs51_db1.t_myisam FIELDS TERMINATED BY '|';
+LOAD DATA LOCAL infile 'MTR_SUITE_DIR/../std_data/100Krows.dat' INTO TABLE mcs51_db1.t_innodb FIELDS TERMINATED BY '|';;
+LOAD DATA LOCAL infile 'MTR_SUITE_DIR/../std_data/100Krows.dat' INTO TABLE mcs51_db1.t_myisam FIELDS TERMINATED BY '|';;
 SELECT * FROM mcs51_db2.t_mcs ORDER BY col1;
 col1	col2	col3
 0	10332	PhqDBpPa

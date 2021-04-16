@@ -12,12 +12,28 @@ CREATE DATABASE mcs215_db;
 USE mcs215_db;
 
 CREATE TABLE t1(col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnstore;
-LOAD DATA LOCAL infile './suite/columnstore/std_data/100Krows.dat' INTO TABLE t1 FIELDS TERMINATED BY '|';
+--replace_result $MTR_SUITE_DIR MTR_SUITE_DIR
+--eval LOAD DATA LOCAL infile '$MTR_SUITE_DIR/../std_data/100Krows.dat' INTO TABLE t1 FIELDS TERMINATED BY '|';
 SELECT COUNT(*) FROM t1;
+
+let $func_exists=`SELECT COUNT(*) FROM mysql.func WHERE name='idbsegment'`;
+--disable_query_log
+if (!$func_exists)
+{
+  CREATE FUNCTION idbsegment RETURNS INTEGER SONAME "ha_columnstore.so";
+}
+--enable_query_log
 
 SELECT idbSegment(col1) FROM t1 WHERE col1=2 LIMIT 1;
 SELECT idbSegment(col2) FROM t1 WHERE col1=2 LIMIT 1;
 SELECT idbSegment(col3) FROM t1 WHERE col1=2 LIMIT 1;
+
+--disable_query_log
+if (!$func_exists)
+{
+  DROP FUNCTION idbsegment;
+}
+--enable_query_log
 
 # Clean UP
 DROP DATABASE mcs215_db;

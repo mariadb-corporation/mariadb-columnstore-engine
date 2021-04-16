@@ -6,8 +6,8 @@ id INT NOT NULL,
 title VARCHAR(255) NOT NULL,
 amount INT NOT NULL
 ) ENGINE=Columnstore;
-LOAD DATA INFILE '/tmp/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
-LOAD DATA LOCAL INFILE '/tmp/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
+LOAD DATA INFILE 'DATADIR/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';;
+LOAD DATA LOCAL INFILE 'DATADIR/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';;
 SELECT * FROM discounts ORDER BY id;
 id	title	amount
 1	Sprint Break - San Jose	20
@@ -22,8 +22,8 @@ SELECT COUNT(*) FROM discounts;
 COUNT(*)
 8
 TRUNCATE discounts;
-LOAD DATA INFILE '/tmp/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' IGNORE 0 ROWS;
-LOAD DATA LOCAL INFILE '/tmp/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' IGNORE 0 ROWS;
+LOAD DATA INFILE 'DATADIR/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' IGNORE 0 ROWS;;
+LOAD DATA LOCAL INFILE 'DATADIR/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' IGNORE 0 ROWS;;
 SELECT * FROM discounts ORDER BY id;
 id	title	amount
 1	Sprint Break - San Jose	20
@@ -38,8 +38,8 @@ SELECT COUNT(*) FROM discounts;
 COUNT(*)
 8
 TRUNCATE discounts;
-LOAD DATA INFILE '/tmp/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' IGNORE 1 ROWS;
-LOAD DATA LOCAL INFILE '/tmp/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' IGNORE 1 ROWS;
+LOAD DATA INFILE 'DATADIR/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' IGNORE 1 ROWS;;
+LOAD DATA LOCAL INFILE 'DATADIR/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' IGNORE 1 ROWS;;
 SELECT * FROM discounts ORDER BY id;
 id	title	amount
 1	Sprint Break - San Jose	20
@@ -54,8 +54,8 @@ SELECT COUNT(*) FROM discounts;
 COUNT(*)
 8
 TRUNCATE discounts;
-LOAD DATA INFILE '/tmp/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' IGNORE -1 ROWS;
+LOAD DATA INFILE 'DATADIR/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' IGNORE -1 ROWS;;
 ERROR 42000: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '-1 ROWS' at line 1
-LOAD DATA LOCAL INFILE '/tmp/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' IGNORE -1 ROWS;
+LOAD DATA LOCAL INFILE 'DATADIR/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' IGNORE -1 ROWS;;
 ERROR 42000: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '-1 ROWS' at line 1
 DROP DATABASE IF EXISTS mcs106_db;
