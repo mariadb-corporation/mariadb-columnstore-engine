@@ -4,6 +4,8 @@
 #
 -- source ../include/have_columnstore.inc
 
+let $DATADIR= `SELECT @@datadir`;
+
 --disable_warnings
 DROP DATABASE IF EXISTS mcs106_db;
 --enable_warnings
@@ -12,9 +14,9 @@ CREATE DATABASE mcs106_db;
 USE mcs106_db;
 
 # Prepare the csv file
-exec rm -f /tmp/mcs106.csv;
+exec rm -f $DATADIR/mcs106.csv;
 
-exec cat << EOF > /tmp/mcs106.csv 
+exec cat << EOF > $DATADIR/mcs106.csv 
 1,Sprint Break - San Jose,20
 2,Back to Scholl - San Jose,25
 3,Summer - San Jose,10
@@ -28,22 +30,28 @@ CREATE TABLE discounts (
 ) ENGINE=Columnstore;
 
 # Without ignore rows, default behavior
-LOAD DATA INFILE '/tmp/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
-LOAD DATA LOCAL INFILE '/tmp/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
+--replace_result $DATADIR DATADIR
+--eval LOAD DATA INFILE '$DATADIR/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
+
+--replace_result $DATADIR DATADIR
+--eval LOAD DATA LOCAL INFILE '$DATADIR/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
 
 SELECT * FROM discounts ORDER BY id;
 SELECT COUNT(*) FROM discounts;
 TRUNCATE discounts;
 
 # Ignore 0 rows 
-LOAD DATA INFILE '/tmp/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' IGNORE 0 ROWS;
-LOAD DATA LOCAL INFILE '/tmp/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' IGNORE 0 ROWS;
+--replace_result $DATADIR DATADIR
+--eval LOAD DATA INFILE '$DATADIR/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' IGNORE 0 ROWS;
+
+--replace_result $DATADIR DATADIR
+--eval LOAD DATA LOCAL INFILE '$DATADIR/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' IGNORE 0 ROWS;
 
 SELECT * FROM discounts ORDER BY id;
 SELECT COUNT(*) FROM discounts;
 TRUNCATE discounts;
 
-exec cat << EOF > /tmp/mcs106.csv
+exec cat << EOF > $DATADIR/mcs106.csv
 id,title,amount
 1,Sprint Break - San Jose,20
 2,Back to Scholl - San Jose,25
@@ -52,20 +60,25 @@ id,title,amount
 EOF;
 
 # Ignore 1 rows
-LOAD DATA INFILE '/tmp/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' IGNORE 1 ROWS;
-LOAD DATA LOCAL INFILE '/tmp/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' IGNORE 1 ROWS;
+--replace_result $DATADIR DATADIR
+--eval LOAD DATA INFILE '$DATADIR/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' IGNORE 1 ROWS;
+
+--replace_result $DATADIR DATADIR
+--eval LOAD DATA LOCAL INFILE '$DATADIR/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' IGNORE 1 ROWS;
 
 SELECT * FROM discounts ORDER BY id;
 SELECT COUNT(*) FROM discounts;
 TRUNCATE discounts;
 
 # Negative test. Ignore -1 rows => syntax error
---error 1064
-LOAD DATA INFILE '/tmp/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' IGNORE -1 ROWS;
+--replace_result $DATADIR DATADIR
+--error ER_PARSE_ERROR
+--eval LOAD DATA INFILE '$DATADIR/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' IGNORE -1 ROWS;
 
---error 1064
-LOAD DATA LOCAL INFILE '/tmp/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' IGNORE -1 ROWS;
+--replace_result $DATADIR DATADIR
+--error ER_PARSE_ERROR
+--eval LOAD DATA LOCAL INFILE '$DATADIR/mcs106.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' IGNORE -1 ROWS;
 
 # Clean up
-exec rm -f /tmp/mcs106.csv;
+exec rm -f $DATADIR/mcs106.csv;
 DROP DATABASE IF EXISTS mcs106_db;

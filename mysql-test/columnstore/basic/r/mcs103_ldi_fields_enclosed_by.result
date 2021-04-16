@@ -7,10 +7,10 @@ title VARCHAR(255) NOT NULL,
 expired_date DATE NOT NULL,
 amount DECIMAL(10, 2) NULL
 ) ENGINE=Columnstore;
-LOAD DATA INFILE '/tmp/mcs103.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
+LOAD DATA INFILE 'DATADIR/mcs103.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';;
 ERROR 22007: Incorrect date value: ' San Jose"' for column `mcs103_db`.`discounts`.`expired_date` at row 1
-LOAD DATA INFILE '/tmp/mcs103.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' ENCLOSED BY '"';
-LOAD DATA LOCAL INFILE '/tmp/mcs103.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+LOAD DATA INFILE 'DATADIR/mcs103.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' ENCLOSED BY '"';;
+LOAD DATA LOCAL INFILE 'DATADIR/mcs103.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' ENCLOSED BY '"';;
 SELECT * FROM discounts ORDER BY id;
 id	title	expired_date	amount
 1	Sprint Break, San Jose	2014-01-04	20.00

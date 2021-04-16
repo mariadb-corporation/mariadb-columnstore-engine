@@ -4,6 +4,8 @@
 #
 -- source ../include/have_columnstore.inc
 
+let $DATADIR= `SELECT @@datadir`;
+
 --disable_warnings
 DROP DATABASE IF EXISTS mcs104_db;
 --enable_warnings
@@ -12,9 +14,9 @@ CREATE DATABASE mcs104_db;
 USE mcs104_db;
 
 # Prepare the csv file
-exec rm -f /tmp/mcs104.csv;
+exec rm -f $DATADIR/mcs104.csv;
 
-exec cat << EOF > /tmp/mcs104.csv 
+exec cat << EOF > $DATADIR/mcs104.csv 
 1,\"Sprint Break - San Jose\",20
 2,\"Back to Scholl - San Jose\",25
 3,\"Summer - San Jose\",10
@@ -28,43 +30,50 @@ CREATE TABLE discounts (
 ) ENGINE=Columnstore;
 
 # With default escaped by char '\'
-LOAD DATA INFILE '/tmp/mcs104.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
-LOAD DATA LOCAL INFILE '/tmp/mcs104.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
+--replace_result $DATADIR DATADIR
+--eval LOAD DATA INFILE '$DATADIR/mcs104.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
+--replace_result $DATADIR DATADIR
+--eval LOAD DATA LOCAL INFILE '$DATADIR/mcs104.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
 
 SELECT * FROM discounts ORDER BY id;
 SELECT COUNT(*) FROM discounts;
 TRUNCATE discounts;
 
 # Prepare the csv file
-exec rm -f /tmp/mcs104.csv;
+exec rm -f $DATADIR/mcs104.csv;
 
-exec cat << EOF > /tmp/mcs104.csv
+exec cat << EOF > $DATADIR/mcs104.csv
 1,Sprint Break \, San Jose,20
 2,Back to Scholl \, San Jose,25
 3,Summer\, San Jose,10
 EOF;
 
-LOAD DATA INFILE '/tmp/mcs104.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' ESCAPED BY '\\';
-LOAD DATA LOCAL INFILE '/tmp/mcs104.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' ESCAPED BY '\\';
+--replace_result $DATADIR DATADIR
+--eval LOAD DATA INFILE '$DATADIR/mcs104.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' ESCAPED BY '\\\\'
+
+--replace_result $DATADIR DATADIR
+--eval LOAD DATA LOCAL INFILE '$DATADIR/mcs104.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' ESCAPED BY '\\\\';
 
 SELECT * FROM discounts ORDER BY id;
 SELECT COUNT(*) FROM discounts;
 TRUNCATE discounts;
 
 # Negative - Without escape TERMINATED BY char
-exec cat << EOF > /tmp/mcs104.csv
+exec cat << EOF > $DATADIR/mcs104.csv
 1,Sprint Break \, San Jose,20
 2,Back to Scholl \, San Jose,25
 3,Summer, San Jose,10
 EOF;
 
---error 1366
-LOAD DATA INFILE '/tmp/mcs104.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' ESCAPED BY '\\';
+--replace_result $DATADIR DATADIR
+--error ER_TRUNCATED_WRONG_VALUE_FOR_FIELD
+--eval LOAD DATA INFILE '$DATADIR/mcs104.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' ESCAPED BY '\\\\';
 #Suspected Bug. Instead of erroring it succeeds.
-##--error 1366
-##LOAD DATA LOCAL INFILE '/tmp/mcs104.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' ESCAPED BY '\\';
+##--replace_result $DATADIR DATADIR
+##--error ER_TRUNCATED_WRONG_VALUE_FOR_FIELD
+##--eval LOAD DATA LOCAL INFILE '$DATADIR/mcs104.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' ESCAPED BY '\\\\';
 
 
 # Clean up
-exec rm -f /tmp/mcs104.csv;
+exec rm -f $DATADIR/mcs104.csv;
 DROP DATABASE IF EXISTS mcs104_db;
