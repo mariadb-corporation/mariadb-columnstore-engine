@@ -4,6 +4,8 @@
 #
 -- source ../include/have_columnstore.inc
 
+let $DATADIR= `SELECT @@datadir`;
+
 --disable_warnings
 DROP DATABASE IF EXISTS mcs103_db;
 --enable_warnings
@@ -12,9 +14,9 @@ CREATE DATABASE mcs103_db;
 USE mcs103_db;
 
 # Prepare the csv file
-exec rm -f /tmp/mcs103.csv;
+exec rm -f $DATADIR/mcs103.csv;
 
-exec cat << EOF > /tmp/mcs103.csv 
+exec cat << EOF > $DATADIR/mcs103.csv
 1,"Sprint Break, San Jose",2014-01-04,20
 2,"Back to Scholl, San Jose",2014-01-09,25
 3,"Summer, San Jose",2014-06-25,10
@@ -29,19 +31,22 @@ CREATE TABLE discounts (
 ) ENGINE=Columnstore;
 
 # Incorrect date value
---error 1292
-LOAD DATA INFILE '/tmp/mcs103.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
+--replace_result $DATADIR DATADIR
+--error ER_TRUNCATED_WRONG_VALUE
+--eval LOAD DATA INFILE '$DATADIR/mcs103.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
 #Suspected Bug. The following statement is passing instead of throwing error
-#--error 1292
-#LOAD DATA LOCAL INFILE '/tmp/mcs103.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
+#--error ER_TRUNCATED_WRONG_VALUE
+#--eval LOAD DATA LOCAL INFILE '$MTR_SUITE_DIR/../std_data/mcs103.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
 
 # With enclosed by
-LOAD DATA INFILE '/tmp/mcs103.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' ENCLOSED BY '"';
-LOAD DATA LOCAL INFILE '/tmp/mcs103.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+--replace_result $DATADIR DATADIR
+--eval LOAD DATA INFILE '$DATADIR/mcs103.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+--replace_result $DATADIR DATADIR
+--eval LOAD DATA LOCAL INFILE '$DATADIR/mcs103.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' ENCLOSED BY '"';
 
 SELECT * FROM discounts ORDER BY id;
 SELECT COUNT(*) FROM discounts;
 
 # Clean up
-exec rm -f /tmp/mcs103.csv;
+exec rm -f $DATADIR/mcs103.csv;
 DROP DATABASE IF EXISTS mcs103_db;

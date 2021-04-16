@@ -4,6 +4,8 @@
 #
 -- source ../include/have_columnstore.inc
 
+let $DATADIR= `SELECT @@datadir`;
+
 --disable_warnings
 DROP DATABASE IF EXISTS mcs105_db;
 --enable_warnings
@@ -12,9 +14,9 @@ CREATE DATABASE mcs105_db;
 USE mcs105_db;
 
 # Prepare the csv file
-exec rm -f /tmp/mcs105.csv;
+exec rm -f $DATADIR/mcs105.csv;
 
-exec cat << EOF > /tmp/mcs105.csv 
+exec cat << EOF > $DATADIR/mcs105.csv 
 1,Sprint Break - San Jose
 2,Back to Scholl - San Jose
 3,Summer - San Jose
@@ -27,32 +29,41 @@ CREATE TABLE discounts (
 ) ENGINE=Columnstore;
 
 # With default char '\n'
-LOAD DATA INFILE '/tmp/mcs105.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
-LOAD DATA LOCAL INFILE '/tmp/mcs105.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
+--replace_result $DATADIR DATADIR
+--eval LOAD DATA INFILE '$DATADIR/mcs105.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
+
+--replace_result $DATADIR DATADIR
+--eval LOAD DATA LOCAL INFILE '$DATADIR/mcs105.csv' INTO TABLE discounts FIELDS TERMINATED BY ',';
 
 SELECT * FROM discounts ORDER BY id;
 SELECT COUNT(*) FROM discounts;
 TRUNCATE discounts;
 
 # explicit mention the char
-LOAD DATA INFILE '/tmp/mcs105.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n';
-LOAD DATA LOCAL INFILE '/tmp/mcs105.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n';
+--replace_result $DATADIR DATADIR
+--eval LOAD DATA INFILE '$DATADIR/mcs105.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n';
+
+--replace_result $DATADIR DATADIR
+--eval LOAD DATA LOCAL INFILE '$DATADIR/mcs105.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n';
 
 SELECT * FROM discounts ORDER BY id;
 SELECT COUNT(*) FROM discounts;
 TRUNCATE discounts;
 
-exec cat << EOF > /tmp/mcs105.csv
+exec cat << EOF > $DATADIR/mcs105.csv
 1,Sprint Break - San Jose | 2,Back to Scholl - San Jose | 3,Summer - San Jose | 4,Spring
 EOF;
 
-LOAD DATA INFILE '/tmp/mcs105.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' LINES TERMINATED BY '|';
-LOAD DATA LOCAL INFILE '/tmp/mcs105.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' LINES TERMINATED BY '|';
+--replace_result $DATADIR DATADIR
+--eval LOAD DATA INFILE '$DATADIR/mcs105.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' LINES TERMINATED BY '|';
+
+--replace_result $DATADIR DATADIR
+--eval LOAD DATA LOCAL INFILE '$DATADIR/mcs105.csv' INTO TABLE discounts FIELDS TERMINATED BY ',' LINES TERMINATED BY '|';
 
 SELECT * FROM discounts ORDER BY id;
 SELECT COUNT(*) FROM discounts;
 TRUNCATE discounts;
 
 # Clean up
-exec rm -f /tmp/mcs105.csv;
+exec rm -f $DATADIR/mcs105.csv;
 DROP DATABASE IF EXISTS mcs105_db;
