@@ -21,14 +21,6 @@ set -e
 # building the deb packages here.
 export DEB_BUILD_OPTIONS="nocheck $DEB_BUILD_OPTIONS"
 
-# General CI optimizations to keep build output smaller
-if [[ $TRAVIS ]] || [[ $GITLAB_CI ]]
-then
-  # On both Travis and Gitlab the output log must stay under 4MB so make the
-  # build less verbose
-  sed '/Add support for verbose builds/,/^$/d' -i debian/rules
-fi
-
 # From Debian Buster/Ubuntu Bionic, libcurl4 replaces libcurl3
 if ! apt-cache madison libcurl4 | grep 'libcurl4' >/dev/null 2>&1
 then
@@ -45,7 +37,7 @@ then
   then
     echo "Automatically install all build dependencies as defined in debian/control"
     apt-get update
-    apt-get install --yes --no-install-recommends build-essential devscripts ccache equivs
+    apt-get install --yes --no-install-recommends build-essential devscripts ccache equivs eatmydata
     mk-build-deps debian/control -t "apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends" -r -i
   else
     echo "ERROR: Missing build dependencies as defined in debian/control"
@@ -69,13 +61,6 @@ dch -b -D "${CODENAME}" -v "${VERSION}" "Automatic build with ${LOGSTRING}."
 
 echo "Creating package version ${VERSION} ... "
 
-# On Travis CI and Gitlab-CI, use -b to build binary only packages as there is
-# no need to waste time on generating the source package.
-if [[ $TRAVIS ]]
-then
-  BUILDPACKAGE_FLAGS="-b"
-fi
-
 # Use eatmydata is available to build faster with less I/O, skipping fsync()
 # during the entire build process (safe because a build can always be restarted)
 if which eatmydata > /dev/null
@@ -83,25 +68,23 @@ then
   BUILDPACKAGE_PREPEND=eatmydata
 fi
 
+update-ccache-symlinks; ccache -z # Zero out ccache counters
+
 # Build the package
 # Pass -I so that .git and other unnecessary temporary and source control files
 # will be ignored by dpkg-source when creating the tar.gz source package.
 fakeroot $BUILDPACKAGE_PREPEND dpkg-buildpackage -us -uc -I $BUILDPACKAGE_FLAGS
 
-# If the step above fails due to missing dependencies, you can manually run
-#   sudo mk-build-deps debian/control -r -i
+du -shc * # Show total file size of artifacts. Must stay are under 100 MB.
+ccache -s # Show ccache stats to validate it worked
 
-# Don't log package contents on Travis-CI or Gitlab-CI to save time and log size
-if [[ ! $TRAVIS ]] && [[ ! $GITLAB_CI ]]
-then
-  echo "List package contents ..."
-  cd ..
-  for package in *.deb
-  do
-    echo "$package" | cut -d '_' -f 1
-    dpkg-deb -c "$package" | awk '{print $1 " " $2 " " $6 " " $7 " " $8}' | sort -k 3
-    echo "------------------------------------------------"
-  done
-fi
+echo "List package contents ..."
+cd ..
+for package in *.deb
+do
+  echo "$package" | cut -d '_' -f 1
+  dpkg-deb -c "$package" | awk '{print $1 " " $2 " " $6 " " $7 " " $8}' | sort -k 3
+  echo "------------------------------------------------"
+done
 
 echo "Build complete"

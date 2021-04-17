@@ -60,8 +60,7 @@ ifeq ($(DEB_HOST_ARCH),s390x)
     CFLAGS += -DWC_NO_CACHE_RESISTANT
 endif
 
-# Add support for verbose builds
-MAKEFLAGS += VERBOSE=1
+# ColumnStore builds are by default verbose enough
 
 override_dh_auto_clean:
 	@echo "RULES.$@"
@@ -90,7 +89,7 @@ endif
 	    dh_auto_configure --builddirectory=$(BUILDDIR) -- \
 	    $(CMAKEFLAGS) \
 	    $(if $(filter $(DEB_BUILD_ARCH),$(DEB_HOST_ARCH)),,-DIMPORT_EXECUTABLES=$(CURDIR)/builddir-native/import_executables.cmake) \
-	    -DCOMPILATION_COMMENT="mariadb.org binary distribution" \
+	    -DCOMPILATION_COMMENT="ColumnStore binary distribution" \
 	    -DMYSQL_SERVER_SUFFIX="-$(DEB_VERSION_REVISION)" \
 	    -DSYSTEM_TYPE="debian-$(DEB_HOST_GNU_SYSTEM)" \
 	    -DCMAKE_SYSTEM_PROCESSOR=$(DEB_HOST_ARCH) \
@@ -149,6 +148,6 @@ override_dh_gencontrol:
 # white list file only starting from Debian Stretch and Ubuntu Xenial.
 # To find more, grep build logs for 'but is not installed to anywhere'.
 %:
-	dh $@ --parallel --with systemd --list-missing
+	dh $@ --parallel --with systemd
 
 # vim: ts=8
