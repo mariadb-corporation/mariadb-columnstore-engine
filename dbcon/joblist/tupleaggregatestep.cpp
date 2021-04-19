@@ -460,6 +460,7 @@ void TupleAggregateStep::doThreadedSecondPhaseAggregate(uint32_t threadID)
         RowGroup* rowGroupIn = nullptr;
         rowGroupIn = (aggDist->aggregator()->getOutputRowGroup());
         uint32_t bucketID;
+        std::vector<RGData> rgDataVec;
 
         if (multiDist)
         {
@@ -483,6 +484,8 @@ void TupleAggregateStep::doThreadedSecondPhaseAggregate(uint32_t threadID)
                 while (dynamic_cast<RowAggregationUM*>(multiDist->subAggregators()[j].get())->nextRowGroup())
                 {
                     rowGroupIn = (multiDist->subAggregators()[j]->getOutputRowGroup());
+                    rgDataVec.emplace_back(rowGroupIn->duplicate());
+                    rowGroupIn->setData(&rgDataVec.back());
                     rowGroupIn->getRow(0, &rowIn);
 
                     for (uint64_t i = 0; i < rowGroupIn->getRowCount(); ++i)
@@ -504,6 +507,8 @@ void TupleAggregateStep::doThreadedSecondPhaseAggregate(uint32_t threadID)
             while (dynamic_cast<RowAggregationUM*>(aggDist->aggregator().get())->nextRowGroup())
             {
                 rowGroupIn->setData(aggDist->aggregator()->getOutputRowGroup()->getRGData());
+                rgDataVec.emplace_back(rowGroupIn->duplicate());
+                rowGroupIn->setData(&rgDataVec.back());
                 rowGroupIn->getRow(0, &rowIn);
 
                 for (uint64_t i = 0; i < rowGroupIn->getRowCount(); ++i)
