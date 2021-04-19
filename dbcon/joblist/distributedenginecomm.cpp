@@ -278,9 +278,9 @@ void DistributedEngineComm::Setup()
 
     // numConnections must be calculated as number of PMs * number of connections per PM.
     // This happens earlier in getNumConnections().
-    for (unsigned i = 0; i < numConnections; i++)
+    for (size_t i = 0; i < numConnections; ++i)
     {
-        size_t connectionId = numConnections % newPmCount;
+        size_t connectionId = i % newPmCount;
         boost::shared_ptr<MessageQueueClient> cl(new MessageQueueClient(pmsAddressesAndPorts[connectionId].first,
                                                                         pmsAddressesAndPorts[connectionId].second));
         boost::shared_ptr<boost::mutex> nl(new boost::mutex());
