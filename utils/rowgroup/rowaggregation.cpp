@@ -1803,7 +1803,8 @@ void RowAggregation::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int6
         }
     }
 
-    if (fRow.getUintField(colAux) == 0)
+    uint64_t cnt = fRow.getUintField(colAux);
+    if (cnt == 0)
     {
         // This is the first value
         fRow.setLongDoubleField(valIn, colOut);
@@ -1823,11 +1824,11 @@ void RowAggregation::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int6
         if (merge)
         {
             auto valAux = rowIn.getUintField(colAux);
-            fRow.setUintField(valAux + fRow.getUintField(colAux), colAux);
+            fRow.setUintField(valAux + cnt, colAux);
         }
         else
         {
-            fRow.setUintField(fRow.getUintField(colAux) + 1, colAux);
+            fRow.setUintField(cnt + 1, colAux);
         }
     }
 }
@@ -4001,7 +4002,7 @@ void RowAggregationUMP2::updateEntry(const Row& rowIn)
 // colOut(in) - column in the output row group stores the sum
 // colAux(in) - column in the output row group stores the count
 //------------------------------------------------------------------------------
-void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int64_t colAux, bool merge)
+void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int64_t colAux, bool)
 {
     if (rowIn.isNullValue(colIn))
         return;
@@ -4075,18 +4076,11 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
         }
     }
 
-    int64_t cnt = fRow.getUintField(colAux);
+    uint64_t cnt = fRow.getUintField(colAux);
     if (cnt == 0)
     {
         fRow.setLongDoubleField(valIn, colOut);
-        if (merge)
-        {
-            fRow.setUintField(rowIn.getUintField(colIn + 1), colAux);
-        }
-        else
-        {
-            fRow.setUintField(rowIn.getUintField(colIn + 1), colAux);
-        }
+        fRow.setUintField(rowIn.getUintField(colIn + 1), colAux);
     }
     else
     {
