@@ -157,7 +157,7 @@ void tupleKeyToProjectStep(uint32_t key, JobStepVector& jsv, JobInfo& jobInfo)
 }
 
 
-inline void addColumnToRG(uint32_t cid, vector<uint32_t>& pos, vector<uint32_t>& oids,
+inline void addColumnToRG(uint32_t cid, vector<uint64_t>& pos, vector<uint32_t>& oids,
                           vector<uint32_t>& keys, vector<uint32_t>& scale, vector<uint32_t>& precision,
                           vector<CalpontSystemCatalog::ColDataType>& types, vector<uint32_t>& csNums, JobInfo& jobInfo)
 {
@@ -172,7 +172,7 @@ inline void addColumnToRG(uint32_t cid, vector<uint32_t>& pos, vector<uint32_t>&
 }
 
 
-inline void addColumnInExpToRG(uint32_t cid, vector<uint32_t>& pos, vector<uint32_t>& oids,
+inline void addColumnInExpToRG(uint32_t cid, vector<uint64_t>& pos, vector<uint32_t>& oids,
                                vector<uint32_t>& keys, vector<uint32_t>& scale, vector<uint32_t>& precision,
                                vector<CalpontSystemCatalog::ColDataType>& types, vector<uint32_t>& csNums, JobInfo& jobInfo)
 {
@@ -184,7 +184,7 @@ inline void addColumnInExpToRG(uint32_t cid, vector<uint32_t>& pos, vector<uint3
 }
 
 
-inline void addColumnsToRG(uint32_t tid, vector<uint32_t>& pos, vector<uint32_t>& oids,
+inline void addColumnsToRG(uint32_t tid, vector<uint64_t>& pos, vector<uint32_t>& oids,
                            vector<uint32_t>& keys, vector<uint32_t>& scale, vector<uint32_t>& precision,
                            vector<CalpontSystemCatalog::ColDataType>& types,
                            vector<uint32_t>& csNums, 
@@ -228,7 +228,7 @@ void constructJoinedRowGroup(RowGroup& rg, uint32_t large, uint32_t prev, bool r
                              set<uint32_t>& tableSet, TableInfoMap& tableInfoMap, JobInfo& jobInfo)
 {
     // Construct the output rowgroup for the join.
-    vector<uint32_t> pos;
+    vector<uint64_t> pos;
     vector<uint32_t> oids;
     vector<uint32_t> keys;
     vector<uint32_t> scale;
@@ -261,7 +261,7 @@ void constructJoinedRowGroup(RowGroup& rg, set<uint32_t>& tableSet, TableInfoMap
                              JobInfo& jobInfo)
 {
     // Construct the output rowgroup for the join.
-    vector<uint32_t> pos;
+    vector<uint64_t> pos;
     vector<uint32_t> oids;
     vector<uint32_t> keys;
     vector<uint32_t> scale;
@@ -337,7 +337,7 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
 
     // Construct a rowgroup that matches the select columns
     TupleInfoVector v = jobInfo.pjColList;
-    vector<uint32_t> pos;
+    vector<uint64_t> pos;
     vector<uint32_t> oids;
     vector<uint32_t> keys;
     vector<uint32_t> scale;
@@ -642,7 +642,7 @@ void addProjectStepsToBps(TableInfoMap::iterator& mit, BatchPrimitive* bps, JobI
         tupleKeyToProjectStep(*kit, expSteps, jobInfo);
 
     // for output rowgroup
-    vector<uint32_t> pos;
+    vector<uint64_t> pos;
     vector<uint32_t> oids;
     vector<uint32_t> keys;
     vector<uint32_t> scale;
@@ -823,7 +823,7 @@ void addExpresssionStepsToBps(TableInfoMap::iterator& mit, SJSTEP& sjsp, JobInfo
     }
 
     // rowgroup for evaluating the one table expression
-    vector<uint32_t> pos;
+    vector<uint64_t> pos;
     vector<uint32_t> oids;
     vector<uint32_t> keys;
     vector<uint32_t> scale;
@@ -1032,7 +1032,7 @@ bool combineJobStepsByTable(TableInfoMap::iterator& mit, JobInfo& jobInfo)
                 // string access predicate
                 // setup pDictionaryScan
                 pDictionaryScan* pds = dynamic_cast<pDictionaryScan*>(it->get());
-                vector<uint32_t> pos;
+                vector<uint64_t> pos;
                 vector<uint32_t> oids;
                 vector<uint32_t> keys;
                 vector<uint32_t> scale;
@@ -1350,7 +1350,7 @@ bool combineJobStepsByTable(TableInfoMap::iterator& mit, JobInfo& jobInfo)
                 }
 
                 // additional fields in the rowgroup
-                vector<uint32_t> pos;
+                vector<uint64_t> pos;
                 vector<uint32_t> oids;
                 vector<uint32_t> keys;
                 vector<uint32_t> scale;
@@ -4081,7 +4081,7 @@ SJSTEP unionQueries(JobStepVector& queries, uint64_t distinctUnionNum, JobInfo& 
         width.push_back(colType.colWidth);
     }
 
-    vector<uint32_t> pos;
+    vector<uint64_t> pos;
     pos.push_back(2);
 
     for (uint64_t i = 0; i < oids.size(); ++i)

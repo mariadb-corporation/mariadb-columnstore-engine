@@ -681,9 +681,9 @@ protected:
 
     Row                                             fRow;
     Row                                             fNullRow;
-    Row*											 tmpRow;   // used by the hashers & eq functors
-    boost::scoped_array<uint8_t>                    fNullRowData;
-    std::vector<RGData*>                           fResultDataVec;
+    Row*                                            tmpRow;   // used by the hashers & eq functors
+    boost::shared_ptr<RGData>                       fNullRowData;
+    std::vector<RGData*>                            fResultDataVec;
 
     uint64_t                                        fTotalRowCount;
     uint64_t                                        fMaxTotalRowCount;
@@ -1085,7 +1085,7 @@ protected:
 
     // for groupby columns and the aggregated distinct column
     Row                                             fDistRow;
-    boost::scoped_array<uint8_t>                    fDistRowData;
+    boost::shared_ptr<RGData>                       fDistRowData;
 };
 
 

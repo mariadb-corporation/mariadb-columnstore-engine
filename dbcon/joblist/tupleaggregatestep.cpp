@@ -786,13 +786,13 @@ void TupleAggregateStep::configDeliveredRowGroup(const JobInfo& jobInfo)
         }
     }
 
-    vector<uint32_t>::const_iterator offsets0 = fRowGroupOut.getOffsets().begin();
+    vector<uint64_t>::const_iterator offsets0 = fRowGroupOut.getOffsets().begin();
     vector<CalpontSystemCatalog::ColDataType>::const_iterator types0 =
         fRowGroupOut.getColTypes().begin();
     vector<uint32_t> csNums = fRowGroupOut.getCharsetNumbers();
     vector<uint32_t>::const_iterator precision0 = precision.begin();
     fRowGroupDelivered = RowGroup(retColCount,
-                                  vector<uint32_t>(offsets0, offsets0 + retColCount + 1),
+                                  vector<uint64_t>(offsets0, offsets0 + retColCount + 1),
                                   vector<uint32_t>(oids.begin(), oids.begin() + retColCount),
                                   vector<uint32_t>(keys.begin(), keys.begin() + retColCount),
                                   vector<CalpontSystemCatalog::ColDataType>(types0, types0 + retColCount),
@@ -1070,7 +1070,7 @@ void TupleAggregateStep::prep1PhaseAggregate(
     const vector<CalpontSystemCatalog::ColDataType>& typeProj = projRG.getColTypes();
     const vector<uint32_t>& csNumProj = projRG.getCharsetNumbers();
 
-    vector<uint32_t> posAgg;
+    vector<uint64_t> posAgg;
     vector<uint32_t> oidsAgg;
     vector<uint32_t> keysAgg;
     vector<uint32_t> scaleAgg;
@@ -1638,7 +1638,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
     const vector<CalpontSystemCatalog::ColDataType>& typeProj = projRG.getColTypes();
     const vector<uint32_t>& csNumProj = projRG.getCharsetNumbers();
 
-    vector<uint32_t> posAgg, posAggDist;
+    vector<uint64_t> posAgg, posAggDist;
     vector<uint32_t> oidsAgg, oidsAggDist;
     vector<uint32_t> keysAgg, keysAggDist;
     vector<uint32_t> scaleAgg, scaleAggDist;
@@ -2680,7 +2680,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
         rowAggDist->groupConcat(jobInfo.groupConcatInfo.groupConcat());
 
         // construct and add sub-aggregators to rowAggDist
-        vector<uint32_t> posAggGb, posAggSub;
+        vector<uint64_t> posAggGb, posAggSub;
         vector<uint32_t> oidsAggGb, oidsAggSub;
         vector<uint32_t> keysAggGb, keysAggSub;
         vector<uint32_t> scaleAggGb, scaleAggSub;
@@ -2956,7 +2956,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
     const vector<CalpontSystemCatalog::ColDataType>& typeProj = projRG.getColTypes();
     const vector<uint32_t>& csNumProj = projRG.getCharsetNumbers();
 
-    vector<uint32_t> posAggPm, posAggUm;
+    vector<uint64_t> posAggPm, posAggUm;
     vector<uint32_t> oidsAggPm, oidsAggUm;
     vector<uint32_t> keysAggPm, keysAggUm;
     vector<uint32_t> scaleAggPm, scaleAggUm;
@@ -3829,7 +3829,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
     const vector<CalpontSystemCatalog::ColDataType>& typeProj = projRG.getColTypes();
     const vector<uint32_t>& csNumProj = projRG.getCharsetNumbers();
 
-    vector<uint32_t> posAggPm, posAggUm, posAggDist;
+    vector<uint64_t> posAggPm, posAggUm, posAggDist;
     vector<uint32_t> oidsAggPm, oidsAggUm, oidsAggDist;
     vector<uint32_t> keysAggPm, keysAggUm, keysAggDist;
     vector<uint32_t> scaleAggPm, scaleAggUm, scaleAggDist;
@@ -4833,7 +4833,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
         rowAggDist.reset(multiDistinctAggregator);
 
         // construct and add sub-aggregators to rowAggDist
-        vector<uint32_t> posAggGb, posAggSub;
+        vector<uint64_t> posAggGb, posAggSub;
         vector<uint32_t> oidsAggGb, oidsAggSub;
         vector<uint32_t> keysAggGb, keysAggSub;
         vector<uint32_t> scaleAggGb, scaleAggSub;
@@ -5260,7 +5260,7 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
     RGData rgData;
     scoped_array<RowBucketVec> rowBucketVecs(new RowBucketVec[fNumOfBuckets]);
     scoped_array<Row> distRow;
-    scoped_array<shared_array<uint8_t> > distRowData;
+    scoped_array<RGData> distRowData;
     uint32_t bucketID;
     scoped_array<bool> bucketDone(new bool[fNumOfBuckets]);
     vector<uint32_t> hashLens;
@@ -5326,15 +5326,15 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
                                 rowBucketVecs[i].resize(multiDist->subAggregators().size());
 
                             distRow.reset(new Row[multiDist->subAggregators().size()]);
-                            distRowData.reset(new shared_array<uint8_t>[
-                                                  multiDist->subAggregators().size()]);
+                            distRowData.reset(new RGData[multiDist->subAggregators().size()]);
 
                             for (uint32_t j = 0; j < multiDist->subAggregators().size(); j++)
                             {
-                                multiDist->subAggregators()[j]->getOutputRowGroup()->initRow(
-                                    &distRow[j], true);
-                                distRowData[j].reset(new uint8_t[distRow[j].getSize()]);
-                                distRow[j].setData(distRowData[j].get());
+                                RowGroup* subaggRg = multiDist->subAggregators()[j]->getOutputRowGroup();
+                                bool bUseStringTable = subaggRg->getRowSizeWithStrings() > 10 * (1 << 20);
+                                distRowData[j].reinit(*subaggRg, 1, bUseStringTable);
+                                subaggRg->initRow(&distRow[j], bUseStringTable);
+                                distRowData[j].getRow(0, &distRow[j]);
                                 hashLens.push_back(multiDist->subAggregators()[j]->aggMapKeyLength());
                             }
                         }
@@ -5425,8 +5425,8 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
                                     rowIn.copyField(distRow[j], k, multiDist->subAggregators()[j]->getGroupByCols()[k].get()->fInputColumnIndex);
                                 }
 
-                                // TBD This approach could potentiall
-                                // put all values in on bucket.
+                                // TBD This approach could potentially
+                                // put all values in one bucket.
                                 bucketID = distRow[j].hash(hashLens[j] - 1) % fNumOfBuckets;
                                 rowBucketVecs[bucketID][j].push_back(rowIn.getPointer());
                                 rowIn.nextRow();
@@ -5499,7 +5499,17 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
                 rgDatas.clear();
                 fRm->returnMemory(fMemUsage[threadID], fSessionMemLimit);
                 fMemUsage[threadID] = 0;
-
+                if (multiDist)
+                {
+                    for (uint32_t j = 0; j < multiDist->subAggregators().size(); j++)
+                    {
+                        if (distRow[j].usesStringTable() && distRowData[j].getStringTableMemUsage() > 50 * (1 << 20))
+                        {
+                            distRowData[j].clearStringStore();
+                        }
+                    }
+                }
+                
                 if (cancelled())
                 {
                     fEndOfResult = true;

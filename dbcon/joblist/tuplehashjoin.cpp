@@ -1357,14 +1357,15 @@ void TupleHashJoinStep::startJoinThreads()
     if (fe2)
         fe2Mapping = makeMapping(outputRG, fe2Output);
 
-    smallNullMemory.reset(new scoped_array<uint8_t>[smallSideCount]);
-
+    // Initialize a small row Null memory array
+    smallNullMemory.reset(new boost::shared_ptr<RGData>[smallSideCount]);
     for (i = 0; i < smallSideCount; i++)
     {
         Row smallRow;
-        smallRGs[i].initRow(&smallRow, true);
-        smallNullMemory[i].reset(new uint8_t[smallRow.getSize()]);
-        smallRow.setData(smallNullMemory[i].get());
+        bool useStringTable = smallRGs[i].getRowSizeWithStrings() > 10 * (1 << 20);
+        smallNullMemory[i].reset(new RGData(smallRGs[i], 1, useStringTable));
+        smallRGs[i].initRow(&smallRow, useStringTable);
+        smallNullMemory[i]->getRow(0, &smallRow);
         smallRow.initToNull();
     }
 
@@ -1393,7 +1394,7 @@ void TupleHashJoinStep::finishSmallOuterJoin()
     vector<Row::Pointer> unmatched;
     uint32_t smallSideCount = smallDLs.size();
     uint32_t i, j, k;
-    shared_array<uint8_t> largeNullMemory;
+    RGData largeNullMemory;
     RGData joinedData;
     Row joinedBaseRow, fe2InRow, fe2OutRow;
     shared_array<Row> smallRowTemplates;
@@ -1401,7 +1402,7 @@ void TupleHashJoinStep::finishSmallOuterJoin()
     Row largeNullRow;
     RowGroup l_outputRG = outputRG;
     RowGroup l_fe2Output = fe2Output;
-
+    bool useStringTable;
     joiners[lastSmallOuterJoiner]->getUnmarkedRows(&unmatched);
 
     if (unmatched.empty())
@@ -1413,13 +1414,15 @@ void TupleHashJoinStep::finishSmallOuterJoin()
     for (i = 0; i < smallSideCount; i++)
     {
         smallRGs[i].initRow(&smallRowTemplates[i]);
-        smallRGs[i].initRow(&smallNullRows[i], true);
-        smallNullRows[i].setData(smallNullMemory[i].get());
+        useStringTable = smallRGs[i].getRowSizeWithStrings() > 10 * (1 << 20);
+        smallRGs[i].initRow(&smallNullRows[i], useStringTable);
+        smallNullMemory[i]->getRow(0, &smallNullRows[i]);
     }
 
-    largeRG.initRow(&largeNullRow, true);
-    largeNullMemory.reset(new uint8_t[largeNullRow.getSize()]);
-    largeNullRow.setData(largeNullMemory.get());
+    useStringTable = largeRG.getRowSizeWithStrings() > 10 * (1 << 20);
+    largeNullMemory.reinit(largeRG, 1, useStringTable);
+    largeRG.initRow(&largeNullRow, useStringTable);
+    largeNullMemory.getRow(0, &largeNullRow);
     largeNullRow.initToNull();
 
     joinedData.reinit(l_outputRG);
@@ -1497,9 +1500,9 @@ void TupleHashJoinStep::joinRunnerFcn(uint32_t threadID)
     uint32_t i;
 
     /* thread-local scratch space for join processing */
-    shared_array<uint8_t> joinFERowData;
+    RGData joinFERowData;
     Row largeRow, joinFERow, joinedRow, baseRow;
-    shared_array<uint8_t> baseRowData;
+    RGData baseRowData;
     vector<vector<Row::Pointer> > joinMatches;
     shared_array<Row> smallRowTemplates;
 
@@ -1513,16 +1516,19 @@ void TupleHashJoinStep::joinRunnerFcn(uint32_t threadID)
     local_outputRG = outputRG;
     local_inputRG.initRow(&largeRow);
     local_outputRG.initRow(&joinedRow);
-    local_outputRG.initRow(&baseRow, true);
-    baseRowData.reset(new uint8_t[baseRow.getSize()]);
-    baseRow.setData(baseRowData.get());
+
+    bool useStringTable = local_outputRG.getRowSizeWithStrings() > 10 * (1 << 20);
+    baseRowData.reinit(local_outputRG, 1, useStringTable);
+    local_outputRG.initRow(&baseRow, useStringTable);
+    baseRowData.getRow(0, &baseRow);
 
     if (hasJoinFE)
     {
         local_joinFERG = joinFilterRG;
-        local_joinFERG.initRow(&joinFERow, true);
-        joinFERowData.reset(new uint8_t[joinFERow.getSize()]);
-        joinFERow.setData(joinFERowData.get());
+        useStringTable =local_joinFERG.getRowSizeWithStrings() > 10 * (1 << 20);
+        joinFERowData.reinit(local_joinFERG, 1, useStringTable);
+        local_joinFERG.initRow(&joinFERow, useStringTable);
+        joinFERowData.getRow(0, &joinFERow);
     }
 
     if (fe2)
@@ -1559,6 +1565,14 @@ void TupleHashJoinStep::joinRunnerFcn(uint32_t threadID)
         processDupList(threadID, (fe2 ? local_fe2RG : local_outputRG), &joinedRowData);
         sendResult(joinedRowData);
         joinedRowData.clear();
+        if (baseRow.usesStringTable() && baseRowData.getStringTableMemUsage() > 50 * (1 << 20))
+        {
+            baseRowData.clearStringStore();
+        }
+        if (joinFERow.usesStringTable() && joinFERowData.getStringTableMemUsage() > 50 * (1 << 20))
+        {
+            joinFERowData.clearStringStore();
+        }
         grabSomeWork(&inputData);
     }
 
@@ -1697,7 +1711,7 @@ void TupleHashJoinStep::joinOneRG(uint32_t threadID, vector<RGData>* out,
                                   vector<boost::shared_ptr<joiner::TupleJoiner> >* tjoiners,
                                   boost::shared_array<boost::shared_array<int> >* rgMappings,
                                   boost::shared_array<boost::shared_array<int> >* feMappings,
-                                  boost::scoped_array<boost::scoped_array<uint8_t> >* smallNullMem
+                                  boost::scoped_array<boost::shared_ptr<RGData> >* smallNullMem
                                  )
 {
 
@@ -1775,7 +1789,7 @@ void TupleHashJoinStep::joinOneRG(uint32_t threadID, vector<RGData>* out,
                 if (matchCount == 0 && (*tjoiners)[j]->largeOuterJoin())
                 {
                     newJoinMatches.clear();
-                    newJoinMatches.push_back(Row::Pointer((*smallNullMem)[j].get()));
+                    newJoinMatches.push_back(getPointer(*(*smallNullMem)[j]));
                     matchCount = 1;
                 }
 
@@ -1796,7 +1810,7 @@ void TupleHashJoinStep::joinOneRG(uint32_t threadID, vector<RGData>* out,
             else if (!(*tjoiners)[j]->scalar() && ((*tjoiners)[j]->semiJoin() || (*tjoiners)[j]->antiJoin()))
             {
                 joinMatches[j].clear();
-                joinMatches[j].push_back(Row::Pointer((*smallNullMem)[j].get()));
+                joinMatches[j].push_back(getPointer(*(*smallNullMem)[j]));
                 matchCount = 1;
             }
 

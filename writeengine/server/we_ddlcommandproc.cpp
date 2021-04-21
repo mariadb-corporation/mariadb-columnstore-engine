@@ -491,12 +491,12 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
                 dictcol++;
 
                 //@Bug 2534. Take away the limit of 255 and set the limit to 8000.
-                if ((colDefPtr->fType->fLength > 8000) &&
+                if ((colDefPtr->fType->fLength > 65532) &&
                         (dataType != CalpontSystemCatalog::BLOB) &&
                         (dataType != CalpontSystemCatalog::TEXT))
                 {
                     ostringstream os;
-                    os << "char, varchar and varbinary length may not exceed 8000";
+                    os << "char, varchar and varbinary length may not exceed 65532";
                     throw std::runtime_error(os.str());
                 }
             }
@@ -884,12 +884,12 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
             dictOID.dictOID = dictoid;
 
             //@Bug 2534. Take away the limit of 255 and set the limit to 8000.
-            if ((colDefPtr->fType->fLength > 8000) &&
+            if ((colDefPtr->fType->fLength > 65532) &&
                     (dataType != CalpontSystemCatalog::BLOB) &&
                     (dataType != CalpontSystemCatalog::TEXT))
             {
                 ostringstream os;
-                os << "char, varchar and varbinary length may not exceed 8000";
+                os << "char, varchar and varbinary length may not exceed 65532";
                 throw std::runtime_error(os.str());
             }
         }

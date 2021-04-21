@@ -953,9 +953,10 @@ void BatchPrimitiveProcessor::initProcessor()
 
             if (hasJoinFEFilters)
             {
-                joinFERG->initRow(&joinFERow, true);
-                joinFERowData.reset(new uint8_t[joinFERow.getSize()]);
-                joinFERow.setData(joinFERowData.get());
+                bool bUseStringTable = joinFERG->getRowSizeWithStrings() > 10 * (1 << 20);
+                joinFERowData.reset(new RGData(*joinFERG.get(), 1, bUseStringTable));
+                joinFERG->initRow(&joinFERow, bUseStringTable);
+                joinFERowData->getRow(0, &joinFERow);
                 joinFEMappings.reset(new shared_array<int>[joinerCount + 1]);
 
                 for (i = 0; i < joinerCount; i++)
@@ -1010,16 +1011,20 @@ void BatchPrimitiveProcessor::initProcessor()
             gjrgPlaceHolders.reset(new uint32_t[joinerCount]);
             outputRG.initRow(&largeRow);
             joinedRG.initRow(&joinedRow);
-            joinedRG.initRow(&baseJRow, true);
             smallRows.reset(new Row[joinerCount]);
 
             for (i = 0; i < joinerCount; i++)
-                smallSideRGs[i].initRow(&smallRows[i], true);
+            {
+                bool bUseStringTable = smallSideRGs[i].getRowSizeWithStrings() > 10 * (1 << 20);
+                smallSideRGs[i].initRow(&smallRows[i], bUseStringTable);
+            }
 
-            baseJRowMem.reset(new uint8_t[baseJRow.getSize()]);
-            baseJRow.setData(baseJRowMem.get());
+            bool bUseStringTable = joinedRG.getRowSizeWithStrings() > 10 * (1 << 20);
+            baseJRowMem.reset(new RGData(joinedRG, 1, bUseStringTable));
+            joinedRG.initRow(&baseJRow, bUseStringTable);
+            baseJRowMem->getRow(0, &baseJRow);
+
             gjrgMappings.reset(new shared_array<int>[joinerCount + 1]);
-
             for (i = 0; i < joinerCount; i++)
                 gjrgMappings[i] = makeMapping(smallSideRGs[i], joinedRG);
 
@@ -1290,6 +1295,8 @@ void BatchPrimitiveProcessor::executeTupleJoin()
                                 break;
                         }
                     }
+                    if (joinFERow.usesStringTable() && joinFERowData->getStringTableMemUsage() > 50 * (1 << 20))
+                        joinFERowData->clearStringStore();
 
                     tSmallSideMatches[j][newRowCount].swap(newMatches);
                     matchCount = tSmallSideMatches[j][newRowCount].size();
@@ -1675,6 +1682,9 @@ void BatchPrimitiveProcessor::execute()
                     */
                     resetGJRG();
                     moreRGs = generateJoinedRowGroup(baseJRow);
+                    if (baseJRow.usesStringTable() && baseJRowMem->getStringTableMemUsage() > 50 * (1 << 20))
+                        baseJRowMem->clearStringStore();
+                    
                     *serialized << (uint8_t) !moreRGs;
 
                     if (fe2)

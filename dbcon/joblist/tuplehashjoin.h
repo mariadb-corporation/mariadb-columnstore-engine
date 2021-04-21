@@ -534,7 +534,7 @@ private:
                    std::vector<boost::shared_ptr<joiner::TupleJoiner> >* joiners = NULL,
                    boost::shared_array<boost::shared_array<int> >* rgMappings = NULL,
                    boost::shared_array<boost::shared_array<int> >* feMappings = NULL,
-                   boost::scoped_array<boost::scoped_array<uint8_t> >* smallNullMem = NULL
+                   boost::scoped_array<boost::shared_ptr<rowgroup::RGData> >* smallNullMem = NULL
                   );
     void finishSmallOuterJoin();
     void makeDupList(const rowgroup::RowGroup& rg);
@@ -546,7 +546,8 @@ private:
     boost::shared_array<boost::shared_array<int> > columnMappings, fergMappings;
     boost::shared_array<int> fe2Mapping;
     uint32_t joinThreadCount;
-    boost::scoped_array<boost::scoped_array<uint8_t> > smallNullMemory;
+    boost::scoped_array<boost::shared_ptr<rowgroup::RGData> >smallNullMemory;
+//    boost::scoped_array<boost::scoped_array<uint8_t> > smallNullMemory;
     uint64_t outputIt;
     bool moreInput;
     std::vector<std::pair<uint32_t, uint32_t> > dupList;

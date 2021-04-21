@@ -365,10 +365,10 @@ void SubAdapterStep::execute()
     if (fRowGroupFe.getColumnCount() > 0)
     {
         usesFE = true;
-        fRowGroupFe.initRow(&rowFe, true);
-        rowFeData = RGData(fRowGroupFe, 1);
-        fRowGroupFe.setData(&rowFeData);
-        fRowGroupFe.getRow(0, &rowFe);
+        bool useStringTable = fRowGroupFe.getRowSizeWithStrings() > 10 * (1 << 20);
+        rowFeData.reinit(fRowGroupFe, 1, useStringTable);
+        fRowGroupFe.initRow(&rowFe, useStringTable);
+        rowFeData.getRow(0, &rowFe);
     }
 
     bool more = false;
@@ -423,6 +423,9 @@ void SubAdapterStep::execute()
 
                 rowIn.nextRow();
             }
+            // MCOL-3879
+            if (usesFE && rowFe.usesStringTable() && rowFeData.getStringTableMemUsage() > 50 * (1 << 20))
+                rowFeData.clearStringStore();
 
             if (fRowGroupOut.getRowCount() > 0)
             {

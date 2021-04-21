@@ -206,7 +206,7 @@ void GroupConcatInfo::mapColumns(const RowGroup& projRG)
 
     for (vector<SP_GroupConcat>::iterator k = fGroupConcat.begin(); k != fGroupConcat.end(); k++)
     {
-        vector<uint32_t> pos;
+        vector<uint64_t> pos;
         vector<uint32_t> oids;
         vector<uint32_t> keys;
         vector<uint32_t> scale;
@@ -331,9 +331,10 @@ void GroupConcatAgUM::initialize()
 
     fConcator->initialize(fGroupConcat);
 
-    fGroupConcat->fRowGroup.initRow(&fRow, true);
-    fData.reset(new uint8_t[fRow.getSize()]);
-    fRow.setData(fData.get());
+    bool useStringTable = fGroupConcat->fRowGroup.getRowSizeWithStrings() > 10 * (1 << 20);
+    fData.reinit(fGroupConcat->fRowGroup, 1, useStringTable);
+    fGroupConcat->fRowGroup.initRow(&fRow, useStringTable);
+    fData.getRow(0, &fRow);
 }
 
 
@@ -341,6 +342,8 @@ void GroupConcatAgUM::processRow(const rowgroup::Row& inRow)
 {
     applyMapping(fGroupConcat->fMapping, inRow);
     fConcator->processRow(fRow);
+    if (fRow.usesStringTable() && fData.getStringTableMemUsage() > 50 * (1 << 20))
+        fData.clearStringStore();
 }
 
 

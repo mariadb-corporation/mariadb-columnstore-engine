@@ -314,7 +314,7 @@ private:
     uint32_t gjrgRowNumber;
     bool gjrgFull;
     rowgroup::Row largeRow, joinedRow, baseJRow;
-    boost::scoped_array<uint8_t> baseJRowMem;
+    boost::scoped_ptr<rowgroup::RGData> baseJRowMem;
     boost::scoped_ptr<rowgroup::RGData> joinedRGMem;
     boost::scoped_array<rowgroup::Row> smallRows;
     boost::shared_array<boost::shared_array<int> > gjrgMappings;
@@ -372,7 +372,7 @@ private:
     rowgroup::RowGroup fe1Input, fe2Output, *fe2Input;
     // note, joinFERG is only for metadata, and is shared between BPPs
     boost::shared_ptr<rowgroup::RowGroup> joinFERG;
-    boost::scoped_array<uint8_t> joinFERowData;
+    boost::scoped_ptr<rowgroup::RGData> joinFERowData;
     boost::scoped_ptr<rowgroup::RGData> fe1Data, fe2Data;    // can probably make these RGDatas not pointers to RGDatas
     boost::shared_array<int> projectForFE1;
     boost::shared_array<int> fe1ToProjection, fe2Mapping;   // RG mappings

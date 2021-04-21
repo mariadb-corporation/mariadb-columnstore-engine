@@ -103,7 +103,7 @@ void TupleHavingStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
     vector<uint32_t> precision, precisionIn = fRowGroupIn.getPrecision();
     vector<CalpontSystemCatalog::ColDataType> types, typesIn = fRowGroupIn.getColTypes();
     vector<uint32_t> csNums, csNumsIn = fRowGroupIn.getCharsetNumbers();
-    vector<uint32_t> pos, posIn = fRowGroupIn.getOffsets();
+    vector<uint64_t> pos, posIn = fRowGroupIn.getOffsets();
 
     size_t n = 0;
     RetColsVector::const_iterator i = jobInfo.deliveredCols.begin();

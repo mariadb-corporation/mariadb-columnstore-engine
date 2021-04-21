@@ -193,7 +193,7 @@ SJSTEP& SubQueryTransformer::makeSubQueryStep(execplan::CalpontSelectExecutionPl
     fSubQueryStep.reset(sqs);
 
     // Update the v-table columns and rowgroup
-    vector<uint32_t> pos;
+    vector<uint64_t> pos;
     vector<uint32_t> oids;
     vector<uint32_t> keys;
     vector<uint32_t> scale;
@@ -582,7 +582,8 @@ void SimpleScalarTransformer::run()
 {
     // set up receiver
     fRowGroup = dynamic_cast<SubQueryStep*>(fSubQueryStep.get())->getOutputRowGroup();
-    fRowGroup.initRow(&fRow, true);
+    bool useStringTable = fRowGroup.getRowSizeWithStrings() > 10 * (1 << 20);
+    fRowGroup.initRow(&fRow, useStringTable);
     fInputDl = fSubQueryStep->outputAssociation().outAt(0)->rowGroupDL();
     fDlIterator = fInputDl->getIterator();
 
@@ -616,8 +617,9 @@ void SimpleScalarTransformer::getScalarResult()
             Row row;
             fRowGroup.initRow(&row);
             fRowGroup.getRow(0, &row);
-            fRowData.reset(new uint8_t[fRow.getSize()]);
-            fRow.setData(fRowData.get());
+            bool useStringTable = fRowGroup.getRowSizeWithStrings() > 10 * (1 << 20);
+            fRowData.reset(new RGData(fRowGroup, 1, useStringTable));
+            fRowData->getRow(0, &fRow);
             copyRow(row, &fRow);
 
             // For exist filter, stop the query after one or more rows retrieved.

@@ -257,7 +257,7 @@ class RGData
 {
 public:
     RGData();   // useless unless followed by an = or a deserialize operation
-    RGData(const RowGroup& rg, uint32_t rowCount);   // allocates memory for rowData
+    RGData(const RowGroup& rg, uint32_t rowCount, bool useStringStore = true, bool memInit = false);   // allocates memory for rowData
     explicit RGData(const RowGroup& rg);
     RGData(const RGData&);
     virtual ~RGData();
@@ -272,10 +272,21 @@ public:
     // option can go away.
     void deserialize(messageqcpp::ByteStream&, bool hasLengthField = false); // returns the # of bytes read
 
-    inline uint64_t getStringTableMemUsage();
+    inline uint64_t getStringTableMemUsage()
+    {
+        return (strings ? strings->getSize(): 0);
+    }
+
+    // MCOL-3879.  Needed to add a way to clear only the stringstore for efficiency.
+    // Only use if you know no string pointers in the rowgroup will ever be used again.
+    void clearStringStore()
+    {
+        strings.reset();
+    }
+        
     void clear();
     void reinit(const RowGroup& rg);
-    void reinit(const RowGroup& rg, uint32_t rowCount);
+    void reinit(const RowGroup& rg, uint32_t rowCount, bool useStringStore = true, bool memInit =  false);
     inline void setStringStore(boost::shared_ptr<StringStore>& ss)
     {
         strings = ss;
@@ -311,8 +322,6 @@ public:
     boost::shared_ptr<StringStore> strings;
     boost::shared_ptr<UserDataStore> userDataStore;
 private:
-    //boost::shared_array<uint8_t> rowData;
-    //boost::shared_ptr<StringStore> strings;
 
     // Need sig to support backward compat.  RGData can deserialize both forms.
     static const uint32_t RGDATA_SIG = 0xffffffff;  //won't happen for 'old' Rowgroup data
@@ -347,18 +356,19 @@ public:
 
     //void setData(uint8_t *rowData, StringStore *ss);
     inline void setData(const Pointer&);    // convenience fcn, can go away
+    inline void setData(const RGData&);     // convenience fcn
     inline uint8_t* getData() const;
 
     inline void setPointer(const Pointer&);
     inline Pointer getPointer() const;
 
     inline void nextRow();
-    inline uint32_t getColumnWidth(uint32_t colIndex) const;
+    inline uint64_t getColumnWidth(uint32_t colIndex) const;
     inline uint32_t getColumnCount() const;
-    inline uint32_t getSize() const;		// this is only accurate if there is no string table
+    inline uint64_t getSize() const;		// this is only accurate if there is no string table
     // if a string table is being used, getRealSize() takes into account variable-length strings
-    inline uint32_t getRealSize() const;
-    inline uint32_t getOffset(uint32_t colIndex) const;
+    inline uint64_t getRealSize() const;
+    inline uint64_t getOffset(uint32_t colIndex) const;
     inline uint32_t getScale(uint32_t colIndex) const;
     inline uint32_t getPrecision(uint32_t colIndex) const;
     inline execplan::CalpontSystemCatalog::ColDataType getColType(uint32_t colIndex) const;
@@ -448,7 +458,7 @@ public:
     TODO: apply them everywhere else possible, and write equivalents
     for the other types as well as the getters.
     */
-    template<int len> void setUintField_offset(uint64_t val, uint32_t offset);
+    template<int len> void setUintField_offset(uint64_t val, uint64_t offset);
     inline void nextRow(uint32_t size);
     inline void prevRow(uint32_t size, uint64_t number);
 
@@ -571,9 +581,9 @@ private:
     uint64_t baseRid;
 
     // Note, the mem behind these pointer fields is owned by RowGroup not Row
-    uint32_t* oldOffsets;
-    uint32_t* stOffsets;
-    uint32_t* offsets;
+    uint64_t* oldOffsets;
+    uint64_t* stOffsets;
+    uint64_t* offsets;
     uint32_t* colWidths;
     execplan::CalpontSystemCatalog::ColDataType* types;
     uint32_t* charsetNumbers;
@@ -634,22 +644,22 @@ inline uint32_t Row::getColumnCount() const
     return columnCount;
 }
 
-inline uint32_t Row::getColumnWidth(uint32_t col) const
+inline uint64_t Row::getColumnWidth(uint32_t col) const
 {
     return colWidths[col];
 }
 
-inline uint32_t Row::getSize() const
+inline uint64_t Row::getSize() const
 {
     return offsets[columnCount];
 }
 
-inline uint32_t Row::getRealSize() const
+inline uint64_t Row::getRealSize() const
 {
     if (!useStringTable)
         return getSize();
 
-    uint32_t ret = 2;
+    uint64_t ret = 2;
 
     for (uint32_t i = 0; i < columnCount; i++)
     {
@@ -964,8 +974,12 @@ inline void Row::setStringField(const uint8_t* strdata, uint32_t length, uint32_
 inline std::string Row::getStringField(uint32_t colIndex) const
 {
     if (inStringTable(colIndex))
-        return strings->getString(*((uint64_t*) &data[offsets[colIndex]]));
-
+    {
+        if (strings)
+            return strings->getString(*((uint64_t*) &data[offsets[colIndex]]));
+        else
+            return joblist::CPNULLSTRMARK;
+    }
     // Not all CHAR/VARCHAR are NUL terminated so use length
     return std::string((char*) &data[offsets[colIndex]],
                        strnlen((char*) &data[offsets[colIndex]], getColumnWidth(colIndex)));
@@ -1000,7 +1014,12 @@ inline std::string Row::getVarBinaryStringField(uint32_t colIndex) const
 inline uint32_t Row::getVarBinaryLength(uint32_t colIndex) const
 {
     if (inStringTable(colIndex))
-        return strings->getStringLength(*((uint64_t*) &data[offsets[colIndex]]));;
+    {
+        if (strings)
+            return strings->getStringLength(*((uint64_t*) &data[offsets[colIndex]]));
+        else
+            return 0;
+    }
 
     return *((uint16_t*) &data[offsets[colIndex]]);
 }
@@ -1008,7 +1027,12 @@ inline uint32_t Row::getVarBinaryLength(uint32_t colIndex) const
 inline const uint8_t* Row::getVarBinaryField(uint32_t colIndex) const
 {
     if (inStringTable(colIndex))
-        return strings->getPointer(*((uint64_t*) &data[offsets[colIndex]]));
+    {
+        if (strings)
+            return strings->getPointer(*((uint64_t*) &data[offsets[colIndex]]));
+        else
+            return (const uint8_t*)"";
+    }
 
     return &data[offsets[colIndex] + 2];
 }
@@ -1017,8 +1041,16 @@ inline const uint8_t* Row::getVarBinaryField(uint32_t& len, uint32_t colIndex) c
 {
     if (inStringTable(colIndex))
     {
-        len = strings->getStringLength(*((uint64_t*) &data[offsets[colIndex]]));
-        return getVarBinaryField(colIndex);
+        if (strings)
+        {
+            len = strings->getStringLength(*((uint64_t*) &data[offsets[colIndex]]));
+            return getVarBinaryField(colIndex);
+        }
+        else
+        {
+            len = 0;
+            return (const uint8_t*)"";
+        }
     }
     else
     {
@@ -1094,13 +1126,13 @@ inline bool Row::isMarked()
 }
 
 /* Begin speculative code! */
-inline uint32_t Row::getOffset(uint32_t colIndex) const
+inline uint64_t Row::getOffset(uint32_t colIndex) const
 {
     return offsets[colIndex];
 }
 
 template<int len>
-inline void Row::setUintField_offset(uint64_t val, uint32_t offset)
+inline void Row::setUintField_offset(uint64_t val, uint64_t offset)
 {
     switch (len)
     {
@@ -1427,7 +1459,7 @@ public:
     */
 
     RowGroup(uint32_t colCount,
-             const std::vector<uint32_t>& positions,
+             const std::vector<uint64_t>& positions,
              const std::vector<uint32_t>& cOids,
              const std::vector<uint32_t>& tkeys,
              const std::vector<execplan::CalpontSystemCatalog::ColDataType>& colTypes,
@@ -1447,13 +1479,13 @@ public:
 
     ~RowGroup();
 
-    inline void initRow(Row*, bool forceInlineData = false) const;
+    inline void initRow(Row*, bool useStringStore=true) const;
     inline uint32_t getRowCount() const;
     inline void incRowCount();
     inline void setRowCount(uint32_t num);
     inline void getRow(uint32_t rowNum, Row*) const;
-    inline uint32_t getRowSize() const;
-    inline uint32_t getRowSizeWithStrings() const;
+    inline uint64_t getRowSize() const;
+    inline uint64_t getRowSizeWithStrings() const;
     inline uint64_t getBaseRid() const;
     void setData(RGData* rgd);
     inline void setData(uint8_t* d);
@@ -1466,11 +1498,12 @@ public:
     uint32_t getDBRoot() const;
     void setDBRoot(uint32_t);
 
-    uint32_t getDataSize() const;
-    uint32_t getDataSize(uint64_t n) const;
-    uint32_t getMaxDataSize() const;
-    uint32_t getMaxDataSizeWithStrings() const;
-    uint32_t getEmptySize() const;
+    uint64_t getDataSize() const;
+    uint64_t getDataSize(uint64_t n) const;
+    uint64_t getMaxDataSize() const;
+    uint64_t getDataSizeWithStrings(uint64_t n) const;
+    uint64_t getMaxDataSizeWithStrings() const;
+    uint64_t getEmptySize() const;
 
     // this returns the size of the row data with the string table
     inline uint64_t getSizeWithStrings() const;
@@ -1487,7 +1520,7 @@ public:
 
     uint32_t getColumnWidth(uint32_t col) const;
     uint32_t getColumnCount() const;
-    inline const std::vector<uint32_t>& getOffsets() const;
+    inline const std::vector<uint64_t>& getOffsets() const;
     inline const std::vector<uint32_t>& getOIDs() const;
     inline const std::vector<uint32_t>& getKeys() const;
     inline const std::vector<uint32_t>& getColWidths() const;
@@ -1562,9 +1595,9 @@ private:
     uint32_t columnCount;
     uint8_t* data;
 
-    std::vector<uint32_t> oldOffsets; //inline data offsets
-    std::vector<uint32_t> stOffsets;  //string table offsets
-    uint32_t* offsets;   //offsets either points to oldOffsets or stOffsets
+    std::vector<uint64_t> oldOffsets; //inline data offsets
+    std::vector<uint64_t> stOffsets;  //string table offsets
+    uint64_t* offsets;   //offsets either points to oldOffsets or stOffsets
     std::vector<uint32_t> colWidths;
     // oids: the real oid of the column, may have duplicates with alias.
     // This oid is necessary for front-end to decide the real column width.
@@ -1703,7 +1736,7 @@ inline bool RowGroup::operator<(const RowGroup& rhs) const
     return (getBaseRid() < rhs.getBaseRid());
 }
 
-void RowGroup::initRow(Row* r, bool forceInlineData) const
+void RowGroup::initRow(Row* r, bool useStringStore) const
 {
     r->columnCount = columnCount;
 
@@ -1716,20 +1749,17 @@ void RowGroup::initRow(Row* r, bool forceInlineData) const
         r->scale = (uint32_t*) & (scale[0]);
         r->precision = (uint32_t*) & (precision[0]);
     }
-
-    if (forceInlineData)
+    r->oldOffsets = (uint64_t*) & (oldOffsets[0]);
+    r->stOffsets = (uint64_t*) & (stOffsets[0]);
+    if (useStringStore)
     {
-        r->useStringTable = false;
-        r->oldOffsets = (uint32_t*) & (oldOffsets[0]);
-        r->stOffsets = (uint32_t*) & (stOffsets[0]);
-        r->offsets = (uint32_t*) & (oldOffsets[0]);
+        r->useStringTable = useStringTable;
+        r->offsets = offsets;
     }
     else
     {
-        r->useStringTable = useStringTable;
-        r->oldOffsets = (uint32_t*) & (oldOffsets[0]);
-        r->stOffsets = (uint32_t*) & (stOffsets[0]);
-        r->offsets = offsets;
+        r->useStringTable = false;
+        r->offsets = (uint64_t*) & (oldOffsets[0]);
     }
 
     r->hasLongStringField = hasLongStringField;
@@ -1738,12 +1768,12 @@ void RowGroup::initRow(Row* r, bool forceInlineData) const
     r->hasCollation = hasCollation;
 }
 
-inline uint32_t RowGroup::getRowSize() const
+inline uint64_t RowGroup::getRowSize() const
 {
     return offsets[columnCount];
 }
 
-inline uint32_t RowGroup::getRowSizeWithStrings() const
+inline uint64_t RowGroup::getRowSizeWithStrings() const
 {
     return oldOffsets[columnCount];
 }
@@ -1791,7 +1821,7 @@ inline bool RowGroup::usesStringTable() const
     return useStringTable;
 }
 
-inline const std::vector<uint32_t>& RowGroup::getOffsets() const
+inline const std::vector<uint64_t>& RowGroup::getOffsets() const
 {
     return oldOffsets;
 }
@@ -2137,10 +2167,23 @@ inline bool StringStore::isEmpty() const
 
 inline uint64_t StringStore::getSize() const
 {
-    uint32_t i;
+//    uint64_t i;
     uint64_t ret = 0;
     MemChunk* mc;
 
+ 
+    for (auto &chunk : mem)
+    {
+        mc = (MemChunk *) chunk.get();
+        ret += mc->capacity;
+    }
+    
+    for (auto &chunk : longStrings)
+    {
+        mc = (MemChunk *) chunk.get();
+        ret += mc->capacity;
+    }
+/*
     for (i = 0; i < mem.size(); i++)
     {
         mc = (MemChunk*) mem[i].get();
@@ -2152,7 +2195,7 @@ inline uint64_t StringStore::getSize() const
         mc = (MemChunk*) longStrings[i].get();
         ret += mc->capacity;
     }
-
+*/
     return ret;
 }
 
@@ -2168,6 +2211,14 @@ inline void RGData::getRow(uint32_t num, Row* row)
 {
     uint32_t size = row->getSize();
     row->setData(Row::Pointer(&rowData[RowGroup::getHeaderSize() + (num * size)], strings.get(), userDataStore.get()));
+}
+
+inline rowgroup::Row::Pointer getPointer(rowgroup::RGData& rgData, uint32_t num = 0, rowgroup::Row* row = NULL)
+{
+    uint32_t size  = 0;
+    if (row)
+        size = row->getSize();
+    return Row::Pointer(&rgData.rowData[RowGroup::getHeaderSize() + (num * size)], rgData.strings.get(), rgData.userDataStore.get());
 }
 
 }

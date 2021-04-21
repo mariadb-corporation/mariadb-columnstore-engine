@@ -763,19 +763,20 @@ void RowAggregation::initialize()
     fRowGroupOut->getRow(0, &fRow);
     makeAggFieldsNull(fRow);
 
-    // Keep a copy of the null row to initialize new map entries.
-    fRowGroupOut->initRow(&fNullRow, true);
-    fNullRowData.reset(new uint8_t[fNullRow.getSize()]);
-    fNullRow.setData(fNullRowData.get());
-    copyRow(fRow, &fNullRow);
-
     // save the original output rowgroup data as primary row data
     fPrimaryRowData = fRowGroupOut->getRGData();
+
+    // Keep a copy of the null row to initialize new map entries.
+    bool useStringTable = fRowGroupOut->getRowSizeWithStrings() > 10 * (1 << 20);
+    fRowGroupOut->initRow(&fNullRow, useStringTable);
+    fNullRowData.reset(new RGData(*fRowGroupOut, 1, useStringTable));
+    fNullRowData->getRow(0, &fNullRow);
+    copyRow(fRow, &fNullRow);
 
     // Lazy approach w/o a mapping b/w fFunctionCols idx and fRGContextColl idx
     fRGContextColl.resize(fFunctionCols.size());
 
-    // Need map only if groupby list is not empty.
+    // Need map only if group by list is not empty.
     if (!fGroupByCols.empty())
     {
         fHasher.reset(new AggHasher(fRow, &tmpRow, fGroupByCols.size(), this));
@@ -4888,9 +4889,10 @@ void RowAggregationSubDistinct::setInputOutput(const RowGroup& pRowGroupIn, RowG
     RowAggregation::setInputOutput(pRowGroupIn, pRowGroupOut);
 
     // initialize the aggregate row
-    fRowGroupOut->initRow(&fDistRow, true);
-    fDistRowData.reset(new uint8_t[fDistRow.getSize()]);
-    fDistRow.setData(fDistRowData.get());
+    bool useStringTable = fRowGroupOut->getRowSizeWithStrings() > 10 * (1 << 20);
+    fRowGroupOut->initRow(&fDistRow, useStringTable);
+    fDistRowData.reset(new RGData(*fRowGroupOut, 1, useStringTable));
+    fDistRowData->getRow(0, &fDistRow);
 }
 
 
@@ -4938,6 +4940,8 @@ void RowAggregationSubDistinct::addRowGroup(const RowGroup* pRows)
                 RowPosition(fResultDataVec.size() - 1, fRowGroupOut->getRowCount() - 1);
         }
     }
+    if (fDistRow.usesStringTable() && fDistRowData->getStringTableMemUsage() > 50 * (1 << 20))
+        fDistRowData->clearStringStore();
 }
 
 void RowAggregationSubDistinct::addRowGroup(const RowGroup* pRows, std::vector<Row::Pointer>& inRows)
@@ -4978,6 +4982,8 @@ void RowAggregationSubDistinct::addRowGroup(const RowGroup* pRows, std::vector<R
                 RowPosition(fResultDataVec.size() - 1, fRowGroupOut->getRowCount() - 1);
         }
     }
+    if (fDistRow.usesStringTable() && fDistRowData->getStringTableMemUsage() > 50 * (1 << 20))
+        fDistRowData->clearStringStore();
 }
 
 

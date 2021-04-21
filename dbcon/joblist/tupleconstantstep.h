@@ -21,6 +21,7 @@
 #ifndef JOBLIST_TUPLECONSTANTSTEP_H
 #define JOBLIST_TUPLECONSTANTSTEP_H
 
+#include <boost/shared_ptr.hpp>
 #include "jobstep.h"
 #include "threadnaming.h"
 
@@ -86,7 +87,7 @@ protected:
 
     // store constants
     rowgroup::Row fRowConst;
-    boost::scoped_array<uint8_t> fConstRowData;
+    boost::shared_ptr<rowgroup::RGData> fConstRowData;
 
     // for datalist
     RowGroupDL* fInputDL;

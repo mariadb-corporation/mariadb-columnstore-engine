@@ -109,7 +109,7 @@ void TupleConstantStep::initialize(const JobInfo& jobInfo, const RowGroup* rgIn)
     vector<uint32_t> precision, precisionIn = fRowGroupIn.getPrecision();
     vector<CalpontSystemCatalog::ColDataType> types, typesIn = fRowGroupIn.getColTypes();
     vector<uint32_t> csNums, csNumsIn = fRowGroupIn.getCharsetNumbers();
-    vector<uint32_t> pos;
+    vector<uint64_t> pos;
     pos.push_back(2);
 
     if (rgIn)
@@ -178,8 +178,8 @@ void TupleConstantStep::initialize(const JobInfo& jobInfo, const RowGroup* rgIn)
     fRowGroupOut = RowGroup(oids.size(), pos, oids, keys, types, csNums, scale, precision,
                             jobInfo.stringTableThreshold);
     fRowGroupOut.initRow(&fRowOut);
-    fRowGroupOut.initRow(&fRowConst, true);
-
+    bool bUseStringTable = fRowGroupOut.getRowSizeWithStrings() > 10 * (1 << 20);
+    fRowGroupOut.initRow(&fRowConst, bUseStringTable);
     constructContanstRow(jobInfo);
 }
 
@@ -187,8 +187,8 @@ void TupleConstantStep::initialize(const JobInfo& jobInfo, const RowGroup* rgIn)
 void TupleConstantStep::constructContanstRow(const JobInfo& jobInfo)
 {
     // construct a row with only the constant values
-    fConstRowData.reset(new uint8_t[fRowConst.getSize()]);
-    fRowConst.setData(fConstRowData.get());
+    fConstRowData.reset(new RGData(fRowGroupOut, 1, fRowConst.usesStringTable()));
+    fConstRowData->getRow(0, &fRowConst);
     fRowConst.initToNull(); // make sure every col is init'd to something, because later we copy the whole row
     const vector<CalpontSystemCatalog::ColDataType>& types = fRowGroupOut.getColTypes();
 
@@ -631,7 +631,7 @@ void TupleConstantOnlyStep::initialize(const JobInfo& jobInfo, const rowgroup::R
     vector<uint32_t> precision;
     vector<CalpontSystemCatalog::ColDataType> types;
     vector<uint32_t> csNums;
-    vector<uint32_t> pos;
+    vector<uint64_t> pos;
     pos.push_back(2);
 
     deliverStringTableRowGroup(false);
@@ -668,7 +668,8 @@ void TupleConstantOnlyStep::initialize(const JobInfo& jobInfo, const rowgroup::R
 
     fRowGroupOut = RowGroup(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold, false);
     fRowGroupOut.initRow(&fRowOut);
-    fRowGroupOut.initRow(&fRowConst, true);
+    bool bUseStringTable = fRowGroupOut.getRowSizeWithStrings() > 10 * (1 << 20);
+    fRowGroupOut.initRow(&fRowConst, bUseStringTable);
 
     constructContanstRow(jobInfo);
 }
@@ -775,7 +776,6 @@ void TupleConstantOnlyStep::fillInConstants()
 {
     fRowGroupOut.getRow(0, &fRowOut);
     idbassert(fRowConst.getColumnCount() == fRowOut.getColumnCount());
-    fRowOut.usesStringTable(fRowConst.usesStringTable());
     copyRow(fRowConst, &fRowOut);
     fRowGroupOut.resetRowGroup(0);
     fRowGroupOut.setRowCount(1);
@@ -817,7 +817,9 @@ void TupleConstantBooleanStep::initialize(const RowGroup& rgIn, const JobInfo&)
 {
     fRowGroupOut = rgIn;
     fRowGroupOut.initRow(&fRowOut);
-    fRowGroupOut.initRow(&fRowConst, true);
+    bool bUseStringTable = fRowGroupOut.getRowSizeWithStrings() > 10 * (1 << 20);
+    fRowGroupOut.initRow(&fRowConst, bUseStringTable);
+    
 }
 
 

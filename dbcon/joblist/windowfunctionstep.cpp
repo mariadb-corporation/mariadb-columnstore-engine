@@ -616,7 +616,7 @@ void WindowFunctionStep::initialize(const RowGroup& rg, JobInfo& jobInfo)
     // make an input map(id, index)
     map<uint64_t, uint64_t> colIndexMap;
     uint64_t colCntIn = rg.getColumnCount();
-    const vector<uint32_t>& pos = rg.getOffsets();
+    const vector<uint64_t>& pos = rg.getOffsets();
     const vector<uint32_t>& oids = rg.getOIDs();
     const vector<uint32_t>& keys = rg.getKeys();
     const vector<CalpontSystemCatalog::ColDataType>& types = rg.getColTypes();
@@ -853,7 +853,7 @@ void WindowFunctionStep::initialize(const RowGroup& rg, JobInfo& jobInfo)
     }
 
     size_t retColCount = delColIdx.size();
-    vector<uint32_t> pos1;
+    vector<uint64_t> pos1;
     vector<uint32_t> oids1;
     vector<uint32_t> keys1;
     vector<uint32_t> scales1;

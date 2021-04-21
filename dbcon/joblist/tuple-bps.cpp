@@ -1941,14 +1941,15 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
     vector<vector<Row::Pointer> > joinerOutput;   // clean usage
     Row largeSideRow, joinedBaseRow, largeNull, joinFERow;  // LSR clean
     scoped_array<Row> smallSideRows, smallNulls;
-    scoped_array<uint8_t> joinedBaseRowData;
-    scoped_array<uint8_t> joinFERowData;
+    RGData joinedBaseRowData;
+    RGData joinFERowData;
+
     shared_array<int> largeMapping;
     vector<shared_array<int> > smallMappings;
     vector<shared_array<int> > fergMappings;
     RGData joinedData;
-    scoped_array<uint8_t> largeNullMemory;
-    scoped_array<shared_array<uint8_t> > smallNullMemory;
+    RGData largeNullMemory;
+    scoped_array<RGData> smallNullMemory;
     uint32_t matchCount;
 
     /* Thread-scoped F&E 2 var */
@@ -1961,7 +1962,8 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
     sts.query_uuid = fQueryUuid;
     sts.step_uuid = fStepUuid;
     boost::unique_lock<boost::mutex> tplLock(tplMutex, boost::defer_lock);
-
+    bool useStringTable;
+    
     try
     {
         if (doJoin || fe2)
@@ -1986,12 +1988,15 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
             smallNulls.reset(new Row[smallSideCount]);
             smallMappings.resize(smallSideCount);
             fergMappings.resize(smallSideCount + 1);
-            smallNullMemory.reset(new shared_array<uint8_t>[smallSideCount]);
+            smallNullMemory.reset(new RGData[smallSideCount]);
             local_primRG.initRow(&largeSideRow);
-            local_outputRG.initRow(&joinedBaseRow, true);
-            joinedBaseRowData.reset(new uint8_t[joinedBaseRow.getSize()]);
-            joinedBaseRow.setData(joinedBaseRowData.get());
+
+            useStringTable = local_outputRG.getRowSizeWithStrings() > 10 * (1 << 20);
+            local_outputRG.initRow(&joinedBaseRow, useStringTable);
+            joinedBaseRowData.reinit(local_outputRG, 1, useStringTable);
+            joinedBaseRowData.getRow(0, &joinedBaseRow);
             joinedBaseRow.initToNull();
+ 
             largeMapping = makeMapping(local_primRG, local_outputRG);
 
             bool hasJoinFE = false;
@@ -2001,40 +2006,39 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
                 joinerMatchesRGs[i].initRow(&smallSideRows[i]);
                 smallMappings[i] = makeMapping(joinerMatchesRGs[i], local_outputRG);
 
-//			if (tjoiners[i]->semiJoin() || tjoiners[i]->antiJoin()) {
                 if (tjoiners[i]->hasFEFilter())
                 {
                     fergMappings[i] = makeMapping(joinerMatchesRGs[i], joinFERG);
                     hasJoinFE = true;
                 }
 
-//			}
+                // Make smallNull rows.
+                RowGroup l_joinerMatchesRG(joinerMatchesRGs[i]);
+                useStringTable = joinerMatchesRGs[i].getRowSizeWithStrings() > 10 * (1 << 20);
+                smallNullMemory[i].reinit(joinerMatchesRGs[i], 1, useStringTable);
+                joinerMatchesRGs[i].initRow(&smallNulls[i], useStringTable);
+                smallNullMemory[i].getRow(0, &smallNulls[i]);
+                smallNulls[i].initToNull();
+                
             }
 
             if (hasJoinFE)
             {
-                joinFERG.initRow(&joinFERow, true);
-                joinFERowData.reset(new uint8_t[joinFERow.getSize()]);
-                memset(joinFERowData.get(), 0, joinFERow.getSize());
-                joinFERow.setData(joinFERowData.get());
+                useStringTable = joinFERG.getRowSizeWithStrings() > 10 * (1 << 20);
+                joinFERowData.reinit(joinFERG, 1, useStringTable);
+                joinFERG.initRow(&joinFERow, useStringTable);
+                joinFERowData.getRow(0, &joinFERow);
                 fergMappings[smallSideCount] = makeMapping(local_primRG, joinFERG);
             }
 
-            for (i = 0; i < smallSideCount; i++)
-            {
-                joinerMatchesRGs[i].initRow(&smallNulls[i], true);
-                smallNullMemory[i].reset(new uint8_t[smallNulls[i].getSize()]);
-                smallNulls[i].setData(smallNullMemory[i].get());
-                smallNulls[i].initToNull();
-            }
-
-            local_primRG.initRow(&largeNull, true);
-            largeNullMemory.reset(new uint8_t[largeNull.getSize()]);
-            largeNull.setData(largeNullMemory.get());
+            useStringTable = local_primRG.getRowSizeWithStrings() > 10 * (1 << 20);
+            largeNullMemory.reinit(local_primRG, 1, useStringTable);
+            local_primRG.initRow(&largeNull, useStringTable);
+            largeNullMemory.getRow(0, &largeNull);
             largeNull.initToNull();
 
 #if 0
-
+            This is out of date; now serves as an example of how to do it
             if (threadID == 0)
             {
                 /* Some rowgroup debugging stuff. */
@@ -2265,11 +2269,14 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
                                         // the filter eliminated all matches, need to join with the NULL row
                                         if (matchCount == 0 && tjoiners[j]->largeOuterJoin())
                                         {
-                                            newJoinerOutput.push_back(Row::Pointer(smallNullMemory[j].get()));
+//                                            newJoinerOutput.push_back(Row::Pointer(smallNullMemory[j].get()));
+                                            newJoinerOutput.push_back(smallNulls[j].getPointer());
                                             matchCount = 1;
                                         }
 
                                         joinerOutput[j].swap(newJoinerOutput);
+                                        if (joinFERow.usesStringTable() && joinFERowData.getStringTableMemUsage() > 50 * (1 << 20))
+                                            joinFERowData.clearStringStore();
                                     }
 
                                     // XXXPAT: This has gone through enough revisions it would benefit
@@ -2290,7 +2297,7 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
                                              (tjoiners[j]->antiJoin() || tjoiners[j]->semiJoin()))
                                     {
                                         joinerOutput[j].clear();
-                                        joinerOutput[j].push_back(Row::Pointer(smallNullMemory[j].get()));
+                                        joinerOutput[j].push_back(smallNulls[j].getPointer());
                                         matchCount = 1;
                                     }
                                 }
@@ -2318,6 +2325,17 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
                                 generateJoinResultSet(joinerOutput, joinedBaseRow, smallMappings,
                                                       0, local_outputRG, joinedData, &rgDatav, smallSideRows, postJoinRow);
 
+                                // MCOL-3879.  JoinedBaseRow was originally an in-line row because of the
+                                // way its used here, as scratch space.  Values are constantly replaced.  
+                                // That was fine when columns were limited to 8KB.  Now they can be 2GB.  :D  
+                                // Unfortunately values don't get replaced in StringTables, they accumulate.  
+                                // So here, we need to check whether we've accumulated 'too much' memory and 
+                                // if so, reinit the string storage.
+                                if (joinedBaseRow.usesStringTable()&& joinedBaseRowData.getStringTableMemUsage() > 50 * (1 << 20)) 
+                                {
+                                    joinedBaseRowData.clearStringStore();
+                                }
+ 
                                 /* Bug 3510: Don't let the join results buffer get out of control.  Need
                                 to refactor this.  All post-join processing needs to go here AND below
                                 for now. */

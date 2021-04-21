@@ -391,56 +391,42 @@ RGData::RGData()
     //cout << "rgdata++ = " << __sync_add_and_fetch(&rgDataCount, 1) << endl;
 }
 
-RGData::RGData(const RowGroup& rg, uint32_t rowCount)
+RGData::RGData(const RowGroup& rg, uint32_t rowCount, bool useStringStore, bool memInit)
 {
-    //cout << "rgdata++ = " << __sync_add_and_fetch(&rgDataCount, 1) << endl;
-    rowData.reset(new uint8_t[rg.getDataSize(rowCount)]);
-
-    if (rg.usesStringTable() && rowCount > 0)
-        strings.reset(new StringStore());
-
-#ifdef VALGRIND
-    /* In a PM-join, we can serialize entire tables; not every value has been
-     * filled in yet.  Need to look into that.  Valgrind complains that
-     * those bytes are uninitialized, this suppresses that error.
-     */
-    memset(rowData.get(), 0, rg.getDataSize(rowCount));   // XXXPAT: make valgrind happy temporarily
-#endif
+    reinit(rg, rowCount, useStringStore, memInit);
 }
 
 RGData::RGData(const RowGroup& rg)
 {
-    //cout << "rgdata++ = " << __sync_add_and_fetch(&rgDataCount, 1) << endl;
-    rowData.reset(new uint8_t[rg.getMaxDataSize()]);
+    reinit(rg, 8192);
+}
 
-    if (rg.usesStringTable())
-        strings.reset(new StringStore());
-
+void RGData::reinit(const RowGroup& rg, uint32_t rowCount, bool useStringStore, bool memInit)
+{
 #ifdef VALGRIND
     /* In a PM-join, we can serialize entire tables; not every value has been
      * filled in yet.  Need to look into that.  Valgrind complains that
      * those bytes are uninitialized, this suppresses that error.
      */
-    memset(rowData.get(), 0, rg.getMaxDataSize());
-#endif
-}
+    memInit = true;
+#endif    
+    if (useStringStore && rg.usesStringTable())
+    {
+        rowData.reset(new uint8_t[rg.getDataSize(rowCount)]);
+        if (memInit)
+            memset(rowData.get(), 0, rg.getDataSize(rowCount));
+    }
+    else
+    {
+        rowData.reset(new uint8_t[rg.getDataSizeWithStrings(rowCount)]);
+        if (memInit)
+            memset(rowData.get(), 0, rg.getDataSizeWithStrings(rowCount));
+    }
 
-void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
-{
-    rowData.reset(new uint8_t[rg.getDataSize(rowCount)]);
-
-    if (rg.usesStringTable())
+    if (useStringStore && rg.usesStringTable() && rowCount > 0)
         strings.reset(new StringStore());
     else
         strings.reset();
-
-#ifdef VALGRIND
-    /* In a PM-join, we can serialize entire tables; not every value has been
-     * filled in yet.  Need to look into that.  Valgrind complains that
-     * those bytes are uninitialized, this suppresses that error.
-     */
-    memset(rowData.get(), 0, rg.getDataSize(rowCount));
-#endif
 }
 
 void RGData::reinit(const RowGroup& rg)
@@ -527,6 +513,7 @@ void RGData::clear()
 {
     rowData.reset();
     strings.reset();
+    userDataStore.reset();
 }
 
 // UserDataStore is only used for UDAF.
@@ -1260,7 +1247,7 @@ RowGroup::RowGroup() : columnCount(0), data(NULL), rgData(NULL), strings(NULL),
 }
 
 RowGroup::RowGroup(uint32_t colCount,
-                   const vector<uint32_t>& positions,
+                   const vector<uint64_t>& positions,
                    const vector<uint32_t>& roids,
                    const vector<uint32_t>& tkeys,
                    const vector<CalpontSystemCatalog::ColDataType>& colTypes,
@@ -1389,8 +1376,8 @@ void RowGroup::resetRowGroup(uint64_t rid)
 void RowGroup::serialize(ByteStream& bs) const
 {
     bs << columnCount;
-    serializeInlineVector<uint32_t>(bs, oldOffsets);
-    serializeInlineVector<uint32_t>(bs, stOffsets);
+    serializeInlineVector<uint64_t>(bs, oldOffsets);
+    serializeInlineVector<uint64_t>(bs, stOffsets);
     serializeInlineVector<uint32_t>(bs, colWidths);
     serializeInlineVector<uint32_t>(bs, oids);
     serializeInlineVector<uint32_t>(bs, keys);
@@ -1410,8 +1397,8 @@ void RowGroup::deserialize(ByteStream& bs)
     uint8_t tmp8;
 
     bs >> columnCount;
-    deserializeInlineVector<uint32_t>(bs, oldOffsets);
-    deserializeInlineVector<uint32_t>(bs, stOffsets);
+    deserializeInlineVector<uint64_t>(bs, oldOffsets);
+    deserializeInlineVector<uint64_t>(bs, stOffsets);
     deserializeInlineVector<uint32_t>(bs, colWidths);
     deserializeInlineVector<uint32_t>(bs, oids);
     deserializeInlineVector<uint32_t>(bs, keys);
@@ -1456,27 +1443,32 @@ void RowGroup::serializeRGData(ByteStream& bs) const
 //	}
 }
 
-uint32_t RowGroup::getDataSize() const
+uint64_t RowGroup::getDataSize() const
 {
     return headerSize + (getRowCount() * offsets[columnCount]);
 }
 
-uint32_t RowGroup::getDataSize(uint64_t n) const
+uint64_t RowGroup::getDataSize(uint64_t n) const
 {
     return headerSize + (n * offsets[columnCount]);
 }
 
-uint32_t RowGroup::getMaxDataSize() const
+uint64_t RowGroup::getMaxDataSize() const
 {
     return headerSize + (8192 * offsets[columnCount]);
 }
 
-uint32_t RowGroup::getMaxDataSizeWithStrings() const
+uint64_t RowGroup::getDataSizeWithStrings(uint64_t n) const
+{
+    return headerSize + (n * oldOffsets[columnCount]);
+}
+
+uint64_t RowGroup::getMaxDataSizeWithStrings() const
 {
     return headerSize + (8192 * oldOffsets[columnCount]);
 }
 
-uint32_t RowGroup::getEmptySize() const
+uint64_t RowGroup::getEmptySize() const
 {
     return headerSize;
 }

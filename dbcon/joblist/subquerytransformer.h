@@ -226,7 +226,7 @@ protected:
     int                          fDlIterator;
     rowgroup::RowGroup           fRowGroup;
     rowgroup::Row                fRow;
-    boost::scoped_array<uint8_t> fRowData;
+    boost::shared_ptr<rowgroup::RGData> fRowData;
     bool                         fEmptyResultSet;
     bool                         fExistFilter;
 

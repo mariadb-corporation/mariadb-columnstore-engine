@@ -367,26 +367,27 @@ void DiskJoinStep::joinFcn()
     boost::shared_array<Row> smallRowTemplates(new Row[1]);
     vector<boost::shared_ptr<TupleJoiner> > joiners;
     boost::shared_array<boost::shared_array<int> > colMappings, fergMappings;
-    boost::scoped_array<boost::scoped_array<uint8_t > > smallNullMem;
-    boost::scoped_array<uint8_t> joinFEMem;
+    RGData joinFEMem, baseRowMem;
+    boost::scoped_array<boost::shared_ptr<RGData> > smallNullMem;
     Row smallNullRow;
-
-    boost::scoped_array<uint8_t> baseRowMem;
 
     if (joiner->hasFEFilter())
     {
-        joinFERG.initRow(&l_joinFERow, true);
-        joinFEMem.reset(new uint8_t[l_joinFERow.getSize()]);
-        l_joinFERow.setData(joinFEMem.get());
+        bool bUseStringTable = joinFERG.getRowSizeWithStrings() > 10 * (1 << 20);
+        joinFERG.initRow(&l_joinFERow, bUseStringTable);
+        joinFEMem.reinit(joinFERG, 1, bUseStringTable);
+        joinFEMem.getRow(0, &l_joinFERow);
     }
 
-    outputRG.initRow(&l_outputRow);
-    outputRG.initRow(&baseRow, true);
+    l_outputRG.initRow(&l_outputRow);
+
+    bool bUseStringTable = l_outputRG.getRowSizeWithStrings() > 10 * (1 << 20);
+    l_outputRG.initRow(&baseRow, bUseStringTable);
+    baseRowMem.reinit(l_outputRG, 1, bUseStringTable);
+    baseRowMem.getRow(0, &baseRow);
 
     largeRG.initRow(&l_largeRow);
 
-    baseRowMem.reset(new uint8_t[baseRow.getSize()]);
-    baseRow.setData(baseRowMem.get());
     joinMatches.push_back(vector<Row::Pointer>());
     smallRG.initRow(&smallRowTemplates[0]);
     joiners.resize(1);
@@ -402,10 +403,11 @@ void DiskJoinStep::joinFcn()
         fergMappings[1] = LjoinFEMapping;
     }
 
-    l_smallRG.initRow(&smallNullRow, true);
-    smallNullMem.reset(new boost::scoped_array<uint8_t>[1]);
-    smallNullMem[0].reset(new uint8_t[smallNullRow.getSize()]);
-    smallNullRow.setData(smallNullMem[0].get());
+    bUseStringTable = l_smallRG.getRowSizeWithStrings() > 10 * (1 << 20);
+    l_smallRG.initRow(&smallNullRow, bUseStringTable);
+    smallNullMem.reset(new boost::shared_ptr<RGData>[1]);
+    smallNullMem[0].reset(new RGData(l_smallRG, 1, bUseStringTable));
+    smallNullMem[0]->getRow(0, &smallNullRow);
     smallNullRow.initToNull();
 
     try
@@ -434,6 +436,12 @@ void DiskJoinStep::joinFcn()
                     //cout << "got joined output " << l_outputRG.toString() << endl;
                     outputDL->insert(joinResults[j]);
                 }
+
+                // MCOL-3879.  Clear the string store if it's accumulated > 50MB of mem
+                if (l_joinFERow.usesStringTable() && joinFEMem.getStringTableMemUsage() > 50 * (1 << 20))
+                    joinFEMem.clearStringStore();
+                if (baseRow.usesStringTable() && baseRowMem.getStringTableMemUsage() > 50 * (1 << 20))
+                    baseRowMem.clearStringStore();
 
                 joinResults.clear();
                 largeData = in->jp->getNextLargeRGData();
@@ -465,9 +473,11 @@ void DiskJoinStep::joinFcn()
                     l_outputRG.initRow(&outputRow);
                     l_outputRG.getRow(0, &outputRow);
 
-                    l_largeRG.initRow(&l_largeRow, true);
-                    boost::scoped_array<uint8_t> largeNullMem(new uint8_t[l_largeRow.getSize()]);
-                    l_largeRow.setData(largeNullMem.get());
+                    bUseStringTable = l_largeRG.getRowSizeWithStrings() > 10 * (1 << 20);
+                    l_largeRG.initRow(&l_largeRow, bUseStringTable);
+                    RGData largeNullMem;
+                    largeNullMem.reinit(l_largeRG, 1, bUseStringTable);
+                    largeNullMem.getRow(0, &l_largeRow);
                     l_largeRow.initToNull();
 
                     in->tupleJoiner->getUnmarkedRows(&unmatched);

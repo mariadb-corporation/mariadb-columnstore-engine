@@ -425,6 +425,25 @@ void CrossEngineStep::execute()
     sts.query_uuid = fQueryUuid;
     sts.step_uuid = fStepUuid;
 
+    bool doFE1 = ((fFeFcnJoin.size() > 0) || (fFeFilters.size() > 0));
+    bool doFE3 =  (fFeSelects.size() > 0);
+    RGData fe1RGData, fe3RGData;
+    Row rowFe1, rowFe3;
+    if (doFE1)
+    {
+        bool useStringStore = fRowGroupFe1.getRowSizeWithStrings() > 10 * (1 << 20);
+        fe1RGData.reinit(fRowGroupFe1, 1, useStringStore);
+        fRowGroupFe1.initRow(&rowFe1);
+        fe1RGData.getRow(0, &rowFe1);
+    }
+    if (doFE3)
+    {
+        bool useStringStore = fRowGroupFe3.getRowSizeWithStrings() > 10 * (1 << 20);
+        fe3RGData.reinit(fRowGroupFe3, 1, useStringStore);
+        fRowGroupFe3.initRow(&rowFe3, useStringStore);
+        fe3RGData.getRow(0, &rowFe3);
+    }
+    
     try
     {
         sts.msg_type = StepTeleStats::ST_START;
@@ -464,8 +483,6 @@ void CrossEngineStep::execute()
 
         // Any functions to evaluate
         makeMappings();
-        bool doFE1 = ((fFeFcnJoin.size() > 0) || (fFeFilters.size() > 0));
-        bool doFE3 =  (fFeSelects.size() > 0);
 
         if (!doFE1 && !doFE3)
         {
@@ -480,12 +497,15 @@ void CrossEngineStep::execute()
 
         else if (doFE1 && !doFE3)  // FE in WHERE clause only
         {
+            // MCOL-3879 TODO remove this commented section
+            /*
             shared_array<uint8_t> rgDataFe1;  // functions in where clause
             Row rowFe1;                       // row for fe evaluation
             fRowGroupFe1.initRow(&rowFe1, true);
             rgDataFe1.reset(new uint8_t[rowFe1.getSize()]);
             rowFe1.setData(rgDataFe1.get());
-
+            */
+            
             while ((rowIn = mysql->nextRow()) && !cancelled())
             {
                 // Parse the columns used in FE1 first, the other column may not need be parsed.
@@ -525,17 +545,16 @@ void CrossEngineStep::execute()
                 }
 
                 addRow(rgDataDelivered);
+
+                if (rowFe1.usesStringTable() && fe1RGData.getStringTableMemUsage() > 50 * (1 << 20))
+                {
+                    fe1RGData.clearStringStore();
+                }
             }
         }
 
         else if (!doFE1 && doFE3)  // FE in SELECT clause only
         {
-            shared_array<uint8_t> rgDataFe3;  // functions in select clause
-            Row rowFe3;                       // row for fe evaluation
-            fRowGroupOut.initRow(&rowFe3, true);
-            rgDataFe3.reset(new uint8_t[rowFe3.getSize()]);
-            rowFe3.setData(rgDataFe3.get());
-
             while ((rowIn = mysql->nextRow()) && !cancelled())
             {
                 for (int i = 0; i < num_fields; i++)
@@ -546,23 +565,16 @@ void CrossEngineStep::execute()
                 applyMapping(fFeMapping3, rowFe3, &fRowDelivered);
 
                 addRow(rgDataDelivered);
+
+                if (rowFe3.usesStringTable() && fe3RGData.getStringTableMemUsage() > 50 * (1 << 20))
+                {
+                    fe3RGData.clearStringStore();
+                }
             }
         }
 
         else  // FE in SELECT clause, FE join and WHERE clause
         {
-            shared_array<uint8_t> rgDataFe1;  // functions in where clause
-            Row rowFe1;                       // row for fe1 evaluation
-            fRowGroupFe1.initRow(&rowFe1, true);
-            rgDataFe1.reset(new uint8_t[rowFe1.getSize()]);
-            rowFe1.setData(rgDataFe1.get());
-
-            shared_array<uint8_t> rgDataFe3;  // functions in select clause
-            Row rowFe3;                       // row for fe3 evaluation
-            fRowGroupOut.initRow(&rowFe3, true);
-            rgDataFe3.reset(new uint8_t[rowFe3.getSize()]);
-            rowFe3.setData(rgDataFe3.get());
-
             while ((rowIn = mysql->nextRow()) && !cancelled())
             {
                 // Parse the columns used in FE1 first, the other column may not need be parsed.
@@ -605,6 +617,15 @@ void CrossEngineStep::execute()
                 applyMapping(fFeMapping3, rowFe3, &fRowDelivered);
 
                 addRow(rgDataDelivered);
+
+                if (rowFe1.usesStringTable() && fe1RGData.getStringTableMemUsage() > 50 * (1 << 20))
+                {
+                    fe1RGData.clearStringStore();
+                }                
+                if (rowFe3.usesStringTable() && fe3RGData.getStringTableMemUsage() > 50 * (1 << 20))
+                {
+                    fe3RGData.clearStringStore();
+                }
             }
         }
 
