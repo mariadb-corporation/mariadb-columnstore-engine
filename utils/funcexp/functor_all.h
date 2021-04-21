@@ -122,6 +122,65 @@ public:
                           execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
+class Func_decode_oracle : public Func_All
+{
+public:
+    Func_decode_oracle(): Func_All("decode_oracle") {}
+    virtual ~Func_decode_oracle() {}
+
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+
+    bool getBoolVal(rowgroup::Row& row,
+                    FunctionParm& fp,
+                    bool& isNull,
+                    execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    int64_t getIntVal(rowgroup::Row& row,
+                      FunctionParm& fp,
+                      bool& isNull,
+                      execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    double getDoubleVal(rowgroup::Row& row,
+                        FunctionParm& fp,
+                        bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    long double getLongDoubleVal(rowgroup::Row& row,
+                        FunctionParm& fp,
+                        bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    std::string getStrVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row,
+                                        FunctionParm& fp,
+                                        bool& isNull,
+                                        execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    int32_t getDateIntVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    int64_t getDatetimeIntVal(rowgroup::Row& row,
+                              FunctionParm& fp,
+                              bool& isNull,
+                              execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    int64_t getTimestampIntVal(rowgroup::Row& row,
+                               FunctionParm& fp,
+                               bool& isNull,
+                               execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    int64_t getTimeIntVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
+};
+
 
 /** @brief Func_searched_case class
   */
