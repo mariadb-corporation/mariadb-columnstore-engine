@@ -162,7 +162,7 @@ inline uint64_t hashRow(const rowgroup::Row& r, std::size_t lastCol)
     }
   }
 
-  if (UNLIKELY(h.wasUsed()))
+  if (h.wasUsed())
   {
     uint64_t strhash = h.finalize();
     ret = hashData(&strhash, sizeof(strhash), ret);
@@ -1620,10 +1620,9 @@ void RowAggStorage::rowToIdx(const Row &row,
                              size_t& idx,
                              uint64_t& hash) const
 {
-  size_t h = mixHash(hashRow(row, fLastKeyCol));
-  hash = h;
-  info = fInfoInc + static_cast<uint32_t>((h & INFO_MASK) >> fInfoHashShift);
-  idx = (h >> INIT_INFO_BITS) & fMask;
+  hash = hashRow(row, fLastKeyCol);
+  info = fInfoInc + static_cast<uint32_t>((hash & INFO_MASK) >> fInfoHashShift);
+  idx = (hash >> INIT_INFO_BITS) & fMask;
 }
 
 void RowAggStorage::increaseSize()

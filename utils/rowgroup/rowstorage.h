@@ -113,15 +113,6 @@ private:
    */
   void shiftUp(size_t startIdx, size_t insIdx);
 
-  inline static size_t mixHash(size_t x) noexcept
-  {
-    size_t h1 = x * 0xA24BAED4963EE407ULL;
-    size_t h2 = ((x >> 32U) | (x << (8U * sizeof(x) - 32U))) * 0x9FB21C651E98DF25ULL;
-    size_t h3 = h1 + h2;
-    size_t h  = (h3 >> 32U) | (h3 << (8U * sizeof(x) - 32U));
-    return h;
-  }
-
   /** @brief Find best position of row and save it's hash.
    *
    * @param row(in)   input row

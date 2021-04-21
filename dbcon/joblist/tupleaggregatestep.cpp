@@ -366,11 +366,6 @@ TupleAggregateStep::TupleAggregateStep(
 {
     fRowGroupData.reinit(fRowGroupOut);
     fRowGroupOut.setData(&fRowGroupData);
-
-    fNumOfThreads = fRm->aggNumThreads();
-    fNumOfBuckets = fRm->aggNumBuckets();
-    fNumOfRowGroups = fRm->aggNumRowGroups();
-
     fAggregator->setInputOutput(fRowGroupIn, &fRowGroupOut);
 
     // decide if this needs to be multi-threaded
@@ -378,6 +373,9 @@ TupleAggregateStep::TupleAggregateStep(
     fIsMultiThread = (multiAgg || fAggregator->aggMapKeyLength() > 0);
 
     // initialize multi-thread variables
+    fNumOfThreads = fRm->aggNumThreads();
+    fNumOfBuckets = fRm->aggNumBuckets();
+    fNumOfRowGroups = fRm->aggNumRowGroups();
     fMemUsage.reset(new uint64_t[fNumOfThreads]);
     memset(fMemUsage.get(), 0, fNumOfThreads * sizeof(uint64_t));
 
