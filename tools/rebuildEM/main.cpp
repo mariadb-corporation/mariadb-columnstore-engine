@@ -85,6 +85,16 @@ int main(int argc, char** argv)
     }
 
     auto* config = config::Config::makeConfig();
+    // The part `ActiveNodes` is not present in single node config.
+    bool isMultiNode =
+        config->getConfig("ActiveNodes", "Node") == "" ? false : true;
+    if (isMultiNode)
+    {
+        std::cout << "Rebuild extent map for multi-node is not supported. "
+                  << std::endl;
+        return 0;
+    }
+
     const auto BRMSavesEM =
         config->getConfig("SystemConfig", "DBRMRoot") + "_em";
     // Check for `BRM_saves_em` file presents.
