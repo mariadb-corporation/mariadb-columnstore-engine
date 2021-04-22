@@ -132,6 +132,13 @@ SJSTEP unionQueries(JobStepVector& queries,
                     uint64_t distinctUnionNum,
                     JobInfo& jobInfo);
 
+struct JoinTableNode
+{
+    bool fVisited;
+    std::vector<uint32_t> fAdjacentList;
+    JoinTableNode() : fVisited(false) {}
+};
+
 }
 
 #endif  // JLF_TUPLEJOBLIST_H
