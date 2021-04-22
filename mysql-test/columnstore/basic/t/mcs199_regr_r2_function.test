@@ -11,6 +11,14 @@ DROP DATABASE IF EXISTS mcs199_db;
 CREATE DATABASE mcs199_db;
 USE mcs199_db;
 
+let $func_exists=`SELECT COUNT(*) FROM mysql.func WHERE name='regr_r2'`;
+--disable_query_log
+if (!$func_exists)
+{
+  --eval CREATE AGGREGATE FUNCTION regr_r2 RETURNS REAL SONAME '$LIBREGR_MYSQL_SO';
+}
+--enable_query_log
+
 CREATE TABLE t1 (x INT, y MEDIUMINT, z CHAR(5))ENGINE=Columnstore;
 INSERT INTO t1 VALUES (NULL, NULL, ''),(20, 1, 'aaa'),(39, 2, 'aaa'),(48, 3, 'bbb'),(57, 4, 'bbb'),(66, 5, 'aaa'),(75, 6, 'aaa'),(84, 7, 'bbb');
 
@@ -19,6 +27,13 @@ SELECT z, REGR_R2(y, x) FROM t1 GROUP BY z ORDER BY z;
 
 --error 1123
 SELECT REGR_R2(y) FROM t1;
+
+--disable_query_log
+if (!$func_exists)
+{
+  DROP FUNCTION regr_r2;
+}
+--enable_query_log
 
 # Clean UP
 DROP DATABASE mcs199_db;
