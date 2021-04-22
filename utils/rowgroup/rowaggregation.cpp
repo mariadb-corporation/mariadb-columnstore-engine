@@ -4415,6 +4415,7 @@ RowAggregationSubDistinct::RowAggregationSubDistinct(
     boost::shared_ptr<int64_t> sessionLimit) :
     RowAggregationUM(rowAggGroupByCols, rowAggFunctionCols, r, sessionLimit)
 {
+    fKeyOnHeap = false;
 }
 
 

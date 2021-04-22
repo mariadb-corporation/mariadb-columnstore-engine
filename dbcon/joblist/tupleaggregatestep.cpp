@@ -458,7 +458,7 @@ void TupleAggregateStep::doThreadedSecondPhaseAggregate(uint32_t threadID)
         RowGroup* rowGroupIn = nullptr;
         rowGroupIn = (aggDist->aggregator()->getOutputRowGroup());
         uint32_t bucketID;
-        std::vector<RGData> rgDataVec;
+        std::vector<std::unique_ptr<RGData>> rgDataVec;
 
         if (multiDist)
         {
@@ -478,12 +478,12 @@ void TupleAggregateStep::doThreadedSecondPhaseAggregate(uint32_t threadID)
             {
                 rowGroupIn = (multiDist->subAggregators()[j]->getOutputRowGroup());
                 rowGroupIn->initRow(&rowIn);
+                auto* subDistAgg = dynamic_cast<RowAggregationUM*>(multiDist->subAggregators()[j].get());
 
-                while (dynamic_cast<RowAggregationUM*>(multiDist->subAggregators()[j].get())->nextRowGroup())
+                while (subDistAgg->nextRowGroup())
                 {
                     rowGroupIn = (multiDist->subAggregators()[j]->getOutputRowGroup());
-                    rgDataVec.emplace_back(rowGroupIn->duplicate());
-                    rowGroupIn->setData(&rgDataVec.back());
+                    rgDataVec.emplace_back(subDistAgg->moveCurrentRGData());
                     rowGroupIn->getRow(0, &rowIn);
 
                     for (uint64_t i = 0; i < rowGroupIn->getRowCount(); ++i)
@@ -501,12 +501,12 @@ void TupleAggregateStep::doThreadedSecondPhaseAggregate(uint32_t threadID)
         else
         {
             rowGroupIn->initRow(&rowIn);
+            auto* subAgg = dynamic_cast<RowAggregationUM*>(aggDist->aggregator().get());
 
-            while (dynamic_cast<RowAggregationUM*>(aggDist->aggregator().get())->nextRowGroup())
+            while (subAgg->nextRowGroup())
             {
                 rowGroupIn->setData(aggDist->aggregator()->getOutputRowGroup()->getRGData());
-                rgDataVec.emplace_back(rowGroupIn->duplicate());
-                rowGroupIn->setData(&rgDataVec.back());
+                rgDataVec.emplace_back(subAgg->moveCurrentRGData());
                 rowGroupIn->getRow(0, &rowIn);
 
                 for (uint64_t i = 0; i < rowGroupIn->getRowCount(); ++i)

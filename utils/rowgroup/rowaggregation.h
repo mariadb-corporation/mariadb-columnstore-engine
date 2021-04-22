@@ -526,6 +526,11 @@ public:
         return fRowAggStorage->finalize([this](Row& row) { mergeEntries(row);}, fRow);
     }
 
+    std::unique_ptr<RGData> moveCurrentRGData()
+    {
+        return std::move(fCurRGData);
+    }
+
 protected:
     virtual void initialize();
     virtual void initMapData(const Row& row);
