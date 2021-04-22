@@ -11,6 +11,15 @@ DROP DATABASE IF EXISTS mcs195_db;
 CREATE DATABASE mcs195_db;
 USE mcs195_db;
 
+let $func_exists=`SELECT COUNT(*) FROM mysql.func WHERE name='regr_avgx'`;
+--disable_query_log
+if (!$func_exists)
+{
+  --eval CREATE AGGREGATE FUNCTION regr_avgx RETURNS REAL SONAME '$LIBREGR_MYSQL_SO';
+  --eval CREATE AGGREGATE FUNCTION regr_avgy RETURNS REAL SONAME '$LIBREGR_MYSQL_SO';
+}
+--enable_query_log
+
 CREATE TABLE t1 (x INT, y MEDIUMINT, z CHAR(5))ENGINE=Columnstore;
 INSERT INTO t1 VALUES (NULL, NULL, ''),(20, 1, 'aaa'),(39, 2, 'aaa'),(48, 3, 'bbb'),(57, 4, 'bbb'),(66, 5, 'aaa'),(75, 6, 'aaa'),(84, 7, 'bbb');
 
@@ -19,6 +28,14 @@ SELECT z, REGR_AVGX(y, x) FROM t1 GROUP BY z ORDER BY z;
 
 SELECT REGR_AVGY(y, x) FROM t1;
 SELECT z, REGR_AVGY(y, x) FROM t1 GROUP BY z ORDER BY z;
+
+--disable_query_log
+if (!$func_exists)
+{
+  DROP FUNCTION regr_avgx;
+  DROP FUNCTION regr_avgy;
+}
+--enable_query_log
 
 # Clean UP
 DROP DATABASE mcs195_db;

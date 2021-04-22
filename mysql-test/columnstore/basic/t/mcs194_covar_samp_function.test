@@ -11,11 +11,26 @@ DROP DATABASE IF EXISTS mcs194_db;
 CREATE DATABASE mcs194_db;
 USE mcs194_db;
 
+let $func_exists=`SELECT COUNT(*) FROM mysql.func WHERE name='covar_samp'`;
+--disable_query_log
+if (!$func_exists)
+{
+  --eval CREATE AGGREGATE FUNCTION covar_samp RETURNS REAL SONAME '$LIBREGR_MYSQL_SO';
+}
+--enable_query_log
+
 CREATE TABLE t1 (x INT, y MEDIUMINT, z CHAR(5))ENGINE=Columnstore;
 INSERT INTO t1 VALUES (NULL, NULL, ''),(20, 1, 'aaa'),(39, 2, 'aaa'),(48, 3, 'bbb'),(57, 4, 'bbb'),(66, 5, 'aaa'),(75, 6, 'aaa'),(84, 7, 'bbb');
 
 SELECT COVAR_SAMP(y, x) FROM t1;
 SELECT z, COVAR_SAMP(y, x) FROM t1 GROUP BY z ORDER BY z;
+
+--disable_query_log
+if (!$func_exists)
+{
+  DROP FUNCTION covar_samp;
+}
+--enable_query_log
 
 # Clean UP
 DROP DATABASE mcs194_db;

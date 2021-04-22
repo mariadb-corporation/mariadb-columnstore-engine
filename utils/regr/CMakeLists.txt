@@ -22,3 +22,5 @@ add_library(regr_mysql SHARED ${regr_mysql_LIB_SRCS})
 
 install(TARGETS regr_mysql DESTINATION ${MARIADB_PLUGINDIR} COMPONENT columnstore-engine)
 
+set_target_properties(regr_mysql PROPERTIES
+                      LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../../)
