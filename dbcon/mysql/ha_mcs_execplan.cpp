@@ -2970,6 +2970,7 @@ SimpleColumn* getSmallestColumn(boost::shared_ptr<CalpontSystemCatalog> csc,
     }
 
     CalpontSystemCatalog::RIDList oidlist = csc->columnRIDs(tn, true);
+    idbassert(oidlist.size() == table->s->fields);
     CalpontSystemCatalog::TableColName tcn;
     int minColWidth = -1;
     int minWidthColOffset = 0;
@@ -2994,7 +2995,7 @@ SimpleColumn* getSmallestColumn(boost::shared_ptr<CalpontSystemCatalog> csc,
     sc->viewName(tan.view);
     sc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
     sc->resultType(csc->colType(oidlist[minWidthColOffset].objnum));
-    sc->charsetNumber(3000);
+    sc->charsetNumber(table->field[minWidthColOffset]->charset()->number);
     return sc;
 }
 
