@@ -8,6 +8,15 @@
 DROP DATABASE IF EXISTS mcs193_db;
 --enable_warnings
 
+let $func_exists=`SELECT COUNT(*) FROM mysql.func WHERE name='covar_pop'`;
+--disable_query_log
+if (!$func_exists)
+{
+  --eval CREATE AGGREGATE FUNCTION covar_pop RETURNS REAL SONAME '$LIBREGR_MYSQL_SO';
+}
+--enable_query_log
+
+
 CREATE DATABASE mcs193_db;
 USE mcs193_db;
 
@@ -16,6 +25,13 @@ INSERT INTO t1 VALUES (NULL, NULL, ''),(20, 1, 'aaa'),(39, 2, 'aaa'),(48, 3, 'bb
 
 SELECT COVAR_POP(y, x) FROM t1;
 SELECT z, COVAR_POP(y, x) FROM t1 GROUP BY z ORDER BY z;
+
+--disable_query_log
+if (!$func_exists)
+{
+  DROP FUNCTION covar_pop;
+}
+--enable_query_log
 
 # Clean UP
 DROP DATABASE mcs193_db;
