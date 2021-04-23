@@ -53,7 +53,7 @@ public:
         parent select.
      */
     void transform();
-    uint32_t processOuterJoin(gp_walk_info& gwi);
+    uint32_t processJoin(gp_walk_info& gwi, std::stack<execplan::ParseTree*>&);
 
 private:
     SELECT_LEX fSelect;

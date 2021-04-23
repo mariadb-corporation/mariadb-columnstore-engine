@@ -373,7 +373,7 @@ bool buildRowColumnFilter(gp_walk_info* gwip, execplan::RowColumn* rhs, execplan
 bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip);
 void collectAllCols(gp_walk_info& gwi, Item_field* ifp);
 void buildSubselectFunc(Item_func* ifp, gp_walk_info* gwip);
-uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex);
+uint32_t buildJoin(gp_walk_info& gwi, List<TABLE_LIST>& join_list, std::stack<execplan::ParseTree*>& outerJoinStack);
 std::string getViewName(TABLE_LIST* table_ptr);
 bool buildConstPredicate(Item_func* ifp, execplan::ReturnedColumn* rhs, gp_walk_info* gwip);
 execplan::CalpontSystemCatalog::ColType fieldType_MysqlToIDB (const Field* field);
