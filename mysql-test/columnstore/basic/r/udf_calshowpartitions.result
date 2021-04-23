@@ -1,7 +1,6 @@
 #
 # MCOL-4614 calShowPartitions() precision loss for huge narrow decimal
 #
-CREATE FUNCTION calshowpartitions RETURNS STRING SONAME "ha_columnstore.so";
 CREATE TABLE t1 (a DECIMAL(17,1)) ENGINE=ColumnStore;
 INSERT INTO t1 VALUES (-8999999999999999.9);
 SELECT * FROM t1 WHERE a=0;
@@ -11,4 +10,3 @@ calshowpartitions('t1','a')
 Part#     Min                           Max                           Status
   0.0.1     -8999999999999999.9           -8999999999999999.9           Enabled
 DROP TABLE IF EXISTS t1;
-DROP FUNCTION calshowpartitions;

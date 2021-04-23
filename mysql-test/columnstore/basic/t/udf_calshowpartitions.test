@@ -1,11 +1,16 @@
---source include/testdb_only.inc
 --source ../include/have_columnstore.inc
 
 --echo #
 --echo # MCOL-4614 calShowPartitions() precision loss for huge narrow decimal
 --echo #
 
-CREATE FUNCTION calshowpartitions RETURNS STRING SONAME "ha_columnstore.so";
+let $func_exists=`SELECT COUNT(*) FROM mysql.func WHERE name='calshowpartitions'`;
+--disable_query_log
+if (!$func_exists)
+{
+  CREATE FUNCTION calshowpartitions RETURNS STRING SONAME "ha_columnstore.so";
+}
+--enable_query_log
 
 CREATE TABLE t1 (a DECIMAL(17,1)) ENGINE=ColumnStore;
 INSERT INTO t1 VALUES (-8999999999999999.9);
@@ -13,4 +18,9 @@ SELECT * FROM t1 WHERE a=0;
 SELECT calshowpartitions('t1','a');
 DROP TABLE IF EXISTS t1;
 
-DROP FUNCTION calshowpartitions;
+--disable_query_log
+if (!$func_exists)
+{
+  DROP FUNCTION calshowpartitions;
+}
+--enable_query_log
