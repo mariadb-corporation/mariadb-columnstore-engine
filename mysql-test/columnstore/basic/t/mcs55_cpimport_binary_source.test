@@ -2,6 +2,11 @@
 # Binary source import 
 # Author: Susil, susil.behera@mariadb.com
 #
+
+if (!$MYSQL_TEST_ROOT){
+  skip Should be run by root to execute cpimport;
+}
+
 -- source ../include/have_columnstore.inc
 
 --disable_warnings
