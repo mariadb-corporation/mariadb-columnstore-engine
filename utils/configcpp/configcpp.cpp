@@ -59,6 +59,9 @@ namespace fs = boost::filesystem;
 #include "installdir.h"
 #ifdef _MSC_VER
 #include "idbregistry.h"
+#include <unordered_map>
+#else
+#include <tr1/unordered_map>
 #endif
 
 #include "bytestream.h"
@@ -67,6 +70,17 @@ namespace
 {
   static const std::string configDefaultFileName("Columnstore.xml");
   const fs::path defaultConfigFilePath(configDefaultFileName);
+
+  using ValueMap = std::map<std::string, std::string>;
+  using CfgMap = std::map<std::string, ValueMap>;
+  const CfgMap defaultValues{
+    { "HashJoin", ValueMap{
+        {"TempFilePath", "/tmp/cs-diskjoin"}}
+    },
+    { "RowAggregation", ValueMap{
+        { "TempDir", "/var/lib/columnstore/disk-based-aggr-tmpdir"}}
+    }
+  };
 }
 
 namespace config
@@ -672,6 +686,17 @@ const vector<string> Config::enumSection(const string& section)
     }
 
     return fParser.enumSection(fDoc, section);
+}
+
+std::string getDefaultValue(const std::string& section, const std::string& name)
+{
+  auto sec = defaultValues.find(section);
+  if (sec == defaultValues.end())
+    return {};
+  auto val = sec->second.find(name);
+  if (val == sec->second.end())
+    return {};
+  return val->second;
 }
 
 } //namespace config

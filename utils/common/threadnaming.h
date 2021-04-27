@@ -17,8 +17,11 @@
 #ifndef H_SETTHREADNAME
 #define H_SETTHREADNAME
 
+#include <string>
+
 namespace utils
 {
     void setThreadName(const char *threadName);
+    std::string getThreadName();
 } // end of namespace
 #endif

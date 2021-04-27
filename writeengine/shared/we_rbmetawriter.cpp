@@ -452,7 +452,7 @@ std::string RBMetaWriter::openMetaFile ( uint16_t dbRoot )
         throw WeException( oss.str(), ERR_FILE_OPEN );
     }
 
-    { 
+    {
         std::ostringstream ossChown;
         idbdatafile::IDBFileSystem& fs = IDBPolicy::getFs(tmpMetaFileName.c_str());
         if (chownPath(ossChown, tmpMetaFileName, fs)
@@ -1338,7 +1338,7 @@ int RBMetaWriter::writeHWMChunk(
         return ERR_METADATABKUP_COMP_RENAME;
     }
 
-    { 
+    {
         std::ostringstream ossChown;
         idbdatafile::IDBFileSystem& fs = IDBPolicy::getFs(fileName.c_str());
         if (chownPath(ossChown, fileName, fs)
