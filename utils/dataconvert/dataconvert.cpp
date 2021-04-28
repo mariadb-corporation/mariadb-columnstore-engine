@@ -3333,6 +3333,24 @@ CalpontSystemCatalog::ColType DataConvert::convertUnionColType(vector<CalpontSys
                     case CalpontSystemCatalog::UINT:
                     case CalpontSystemCatalog::UBIGINT:
                     case CalpontSystemCatalog::UDECIMAL:
+                        // If one of the types is a BIGINT/UBIGINT and the other is
+                        // a DECIMAL/UDECIMAL, then set the unionedType to DOUBLE.
+                        if ((((types[i].colDataType == CalpontSystemCatalog::BIGINT ||
+                             types[i].colDataType == CalpontSystemCatalog::UBIGINT)) &&
+                            ((unionedType.colDataType == CalpontSystemCatalog::DECIMAL ||
+                                  unionedType.colDataType == CalpontSystemCatalog::UDECIMAL))) ||
+                           (((types[i].colDataType == CalpontSystemCatalog::DECIMAL ||
+                             types[i].colDataType == CalpontSystemCatalog::UDECIMAL)) &&
+                            ((unionedType.colDataType == CalpontSystemCatalog::BIGINT ||
+                                  unionedType.colDataType == CalpontSystemCatalog::UBIGINT))))
+                        {
+                            unionedType.colDataType = CalpontSystemCatalog::DOUBLE;
+                            unionedType.scale = (types[i].scale > unionedType.scale) ? types[i].scale : unionedType.scale;
+                            unionedType.precision = -1;
+
+                            break;
+                        }
+
                         if (types[i].colWidth > unionedType.colWidth)
                         {
                             unionedType.colDataType = types[i].colDataType;
