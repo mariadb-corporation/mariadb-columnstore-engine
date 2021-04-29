@@ -107,15 +107,15 @@ if [ "$daemon" = "syslog-ng" ]; then
 elif [ "$daemon" = "rsyslog" ]; then
 	#check if rsyslog version 7 or greater
 	 rsyslogd -v > ${tmpDir}/rsyslog.ver
-	cnt=`grep "rsyslogd 7" ${tmpDir}/rsyslog.ver | wc -l`
+	cnt=`grep "rsyslogd  7" ${tmpDir}/rsyslog.ver | wc -l`
 	if [ $cnt -gt 0 ]; then
 		rsyslog7=1
 	fi
-	cnt=`grep "rsyslogd 8" ${tmpDir}/rsyslog.ver | wc -l`
+	cnt=`grep "rsyslogd  8" ${tmpDir}/rsyslog.ver | wc -l`
 	if [ $cnt -gt 0 ]; then
 		rsyslog7=1
 	fi
-	cnt=`grep "rsyslogd 9" ${tmpDir}/rsyslog.ver | wc -l`
+	cnt=`grep "rsyslogd  9" ${tmpDir}/rsyslog.ver | wc -l`
 	if [ $cnt -gt 0 ]; then
 		rsyslog7=1
 	fi
