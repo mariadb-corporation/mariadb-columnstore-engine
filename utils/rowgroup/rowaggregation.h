@@ -461,7 +461,7 @@ public:
      * @parm pRowGroupIn(in) RowGroup to be added to aggregation.
      */
     virtual void addRowGroup(const RowGroup* pRowGroupIn);
-    virtual void addRowGroup(const RowGroup* pRowGroupIn, std::vector<Row::Pointer>& inRows);
+    virtual void addRowGroup(const RowGroup* pRowGroupIn, std::vector<std::pair<Row::Pointer, uint64_t>>& inRows);
 
     /** @brief Serialize RowAggregation object into a ByteStream.
      *
@@ -497,7 +497,7 @@ public:
 
     void append(RowAggregation* other);
 
-    virtual void aggregateRow(Row& row);
+    virtual void aggregateRow(Row& row, const uint64_t* hash = nullptr);
     inline uint32_t aggMapKeyLength() const
     {
         return fAggMapKeyCount;
@@ -860,9 +860,9 @@ public:
     void setInputOutput(const RowGroup& pRowGroupIn, RowGroup* pRowGroupOut) override;
 
     virtual void doDistinctAggregation();
-    virtual void doDistinctAggregation_rowVec(std::vector<Row::Pointer>& inRows);
+    virtual void doDistinctAggregation_rowVec(std::vector<std::pair<Row::Pointer, uint64_t>>& inRows);
     void addRowGroup(const RowGroup* pRowGroupIn) override;
-    void addRowGroup(const RowGroup* pRowGroupIn, std::vector<Row::Pointer>& inRows) override;
+    void addRowGroup(const RowGroup* pRowGroupIn, std::vector<std::pair<Row::Pointer, uint64_t>>& inRows) override;
 
     // multi-threade debug
     boost::shared_ptr<RowAggregation>& aggregator()
@@ -925,7 +925,7 @@ public:
         return new RowAggregationSubDistinct (*this);
     }
 
-    void addRowGroup(const RowGroup* pRowGroupIn, std::vector<Row::Pointer>& inRow) override;
+    void addRowGroup(const RowGroup* pRowGroupIn, std::vector<std::pair<Row::Pointer, uint64_t>>& inRow) override;
 
 protected:
     // virtual methods from RowAggregationUM
@@ -972,14 +972,14 @@ public:
     using RowAggregationDistinct::doDistinctAggregation;
     void doDistinctAggregation() override;
     using RowAggregationDistinct::doDistinctAggregation_rowVec;
-    virtual void doDistinctAggregation_rowVec(std::vector<std::vector<Row::Pointer> >& inRows);
+    virtual void doDistinctAggregation_rowVec(std::vector<std::vector<std::pair<Row::Pointer, uint64_t>> >& inRows);
 
     inline RowAggregationMultiDistinct* clone() const override
     {
         return new RowAggregationMultiDistinct (*this);
     }
 
-    void addRowGroup(const RowGroup* pRowGroupIn, std::vector<std::vector<Row::Pointer> >& inRows);
+    void addRowGroup(const RowGroup* pRowGroupIn, std::vector<std::vector<std::pair<Row::Pointer, uint64_t>>>& inRows);
 
     std::vector<boost::shared_ptr<RowAggregationUM> >& subAggregators()
     {

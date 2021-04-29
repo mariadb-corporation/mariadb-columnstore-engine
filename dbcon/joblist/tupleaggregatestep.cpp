@@ -130,7 +130,7 @@ struct cmpTuple
     }
 };
 
-typedef vector<Row::Pointer> RowBucket;
+typedef vector<std::pair<Row::Pointer, uint64_t>> RowBucket;
 typedef vector<RowBucket> RowBucketVec;
 
 // The AGG_MAP type is used to maintain a list of aggregate functions in order to
@@ -502,8 +502,9 @@ void TupleAggregateStep::doThreadedSecondPhaseAggregate(uint32_t threadID)
                         // The key is the groupby columns, which are the leading columns.
                         //uint8_t* hashMapKey = rowIn.getData() + 2;
                         //bucketID = hash.operator()(hashMapKey) & fBucketMask;
-                        bucketID = rowIn.hash(hashlen - 1) % fNumOfBuckets;
-                        rowBucketVecs[bucketID][j].push_back(rowIn.getPointer());
+                        uint64_t hash = rowgroup::hashRow(rowIn, hashlen - 1);
+                        bucketID = hash % fNumOfBuckets;
+                        rowBucketVecs[bucketID][j].emplace_back(rowIn.getPointer(), hash);
                         rowIn.nextRow();
                     }
                 }
@@ -525,8 +526,9 @@ void TupleAggregateStep::doThreadedSecondPhaseAggregate(uint32_t threadID)
                     // The key is the groupby columns, which are the leading columns.
                     //uint8_t* hashMapKey = rowIn.getData() + 2;
                     //bucketID = hash.operator()(hashMapKey) & fBucketMask;
-                    bucketID = rowIn.hash(hashlen - 1) % fNumOfBuckets;
-                    rowBucketVecs[bucketID][0].push_back(rowIn.getPointer());
+                    uint64_t hash = rowgroup::hashRow(rowIn, hashlen - 1);
+                    bucketID = hash % fNumOfBuckets;
+                    rowBucketVecs[bucketID][0].emplace_back(rowIn.getPointer(), hash);
                     rowIn.nextRow();
                 }
             }
@@ -5242,6 +5244,7 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
     bool locked = false;
     bool more = true;
     RowGroupDL* dlIn = nullptr;
+    uint32_t rgVecShift = float(fNumOfBuckets) / fNumOfThreads * threadID;
 
     RowAggregationMultiDistinct* multiDist = nullptr;
 
@@ -5408,8 +5411,9 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
 
                                 // TBD This approach could potentiall
                                 // put all values in on bucket.
-                                bucketID = distRow[j].hash(hashLens[j] - 1) % fNumOfBuckets;
-                                rowBucketVecs[bucketID][j].push_back(rowIn.getPointer());
+                                uint64_t hash = rowgroup::hashRow(distRow[j], hashLens[j] - 1);
+                                bucketID = hash % fNumOfBuckets;
+                                rowBucketVecs[bucketID][j].emplace_back(rowIn.getPointer(), hash);
                                 rowIn.nextRow();
                             }
                         }
@@ -5428,8 +5432,9 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
                             // The key is the groupby columns, which are the leading columns.
                             // TBD This approach could potential
                             // put all values in on bucket.
-                            int bucketID = rowIn.hash(hashLens[0] - 1) % fNumOfBuckets;
-                            rowBucketVecs[bucketID][0].push_back(rowIn.getPointer());
+                            uint64_t hash = rowgroup::hashRow(rowIn, hashLens[0] - 1);
+                            int bucketID = hash% fNumOfBuckets;
+                            rowBucketVecs[bucketID][0].emplace_back(rowIn.getPointer(), hash);
                             rowIn.nextRow();
                         }
                     }
@@ -5444,8 +5449,11 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
                     bool didWork = false;
                     done = true;
 
-                    for (uint32_t c = 0; c < fNumOfBuckets && !cancelled(); c++)
+                    // each thread starts from its own bucket for better distribution
+                    uint32_t shift = (rgVecShift++) % fNumOfBuckets;
+                    for (uint32_t ci = 0; ci < fNumOfBuckets && !cancelled(); ci++)
                     {
+                        uint32_t c = (ci + shift) % fNumOfBuckets;
                         if (!fEndOfResult && !bucketDone[c] && fAgg_mutex[c]->try_lock())
                         {
                             try

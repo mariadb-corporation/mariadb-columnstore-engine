@@ -34,11 +34,11 @@ uint32_t calcNumberOfBuckets(ssize_t availMem,
                              bool enabledDiskAggr);
 
 class MemManager;
-class RowPosHashStorIface;
 class RowPosHashStorage;
-class RowPosHashStorageMemOnly;
-using RowPosHashStoragePtr = std::unique_ptr<RowPosHashStorIface>;
+using RowPosHashStoragePtr = std::unique_ptr<RowPosHashStorage>;
 class RowGroupStorage;
+
+uint64_t hashRow(const rowgroup::Row& r, std::size_t lastCol);
 
 class RowAggStorage
 {
@@ -84,6 +84,7 @@ public:
    *  @returns true if new row created, false otherwise
    */
   bool getTargetRow(const Row& row, Row& rowOut);
+  bool getTargetRow(const Row& row, uint64_t row_hash, Row& rowOut);
 
   /** @brief Dump some RGDatas to disk and release memory for further use.
    */
@@ -266,13 +267,13 @@ private:
    * @param oldIdx(in)    index of "old" data
    * @param oldHashes(in) old storage of row positions and hashes
    */
-  void insertSwap(size_t oldIdx, RowPosHashStorIface* oldHashes);
+  void insertSwap(size_t oldIdx, RowPosHashStorage* oldHashes);
 
   /** @brief (Re)Initialize internal data of specified size.
    *
    * @param elems(in) number of elements
    */
-  void initData(size_t elems, const RowPosHashStorIface* oldHashes);
+  void initData(size_t elems, const RowPosHashStorage* oldHashes);
 
   /** @brief Calculate memory size of info data
    *
@@ -334,8 +335,6 @@ private:
     size_t fMaxSize{0};
     uint32_t fInfoInc{INIT_INFO_INC};
     uint32_t fInfoHashShift{INIT_INFO_HASH_SHIFT};
-    RowPosHashStorageMemOnly* fMemHashes{nullptr};
-    RowPosHashStorage* fDiskHashes{nullptr};
   };
   std::vector<std::unique_ptr<Data>> fGens;
   Data* fCurData;
@@ -352,15 +351,14 @@ private:
   Row fKeyRow;
 
   std::unique_ptr<MemManager> fMM;
-  int64_t fInitialMemLimit{0};
-  uint32_t fNumOfOuterBuckets{1};
+  uint32_t fNumOfInputRGPerThread;
   bool fAggregated = true;
   bool fAllowGenerations;
+  bool fEnabledDiskAggregation;
   std::string fTmpDir;
   bool fInitialized{false};
   rowgroup::RowGroup* fRowGroupOut;
   rowgroup::RowGroup* fKeysRowGroup;
-  std::vector<std::string> fTmpFilePrefixes;
 };
 
 } // namespace rowgroup

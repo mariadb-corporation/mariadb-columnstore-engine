@@ -592,7 +592,7 @@ void RowAggregation::addRowGroup(const RowGroup* pRows)
 }
 
 
-void RowAggregation::addRowGroup(const RowGroup* pRows, vector<Row::Pointer>& inRows)
+void RowAggregation::addRowGroup(const RowGroup* pRows, vector<std::pair<Row::Pointer, uint64_t>>& inRows)
 {
     // this function is for threaded aggregation, which is for group by and distinct.
     // if (countSpecial(pRows))
@@ -601,8 +601,8 @@ void RowAggregation::addRowGroup(const RowGroup* pRows, vector<Row::Pointer>& in
 
     for (const auto& inRow : inRows)
     {
-        rowIn.setData(inRow);
-        aggregateRow(rowIn);
+        rowIn.setData(inRow.first);
+        aggregateRow(rowIn, &inRow.second);
     }
     fRowAggStorage->dump();
 }
@@ -821,12 +821,17 @@ void RowAggregationUM::aggReset()
     RowAggregation::aggReset();
 }
 
-void RowAggregation::aggregateRow(Row& row)
+void RowAggregation::aggregateRow(Row& row, const uint64_t* hash)
 {
     // groupby column list is not empty, find the entry.
     if (!fGroupByCols.empty())
     {
-        bool is_new_row = fRowAggStorage->getTargetRow(row, fRow);
+        bool is_new_row;
+        if (hash != nullptr)
+          is_new_row = fRowAggStorage->getTargetRow(row, *hash, fRow);
+        else
+          is_new_row = fRowAggStorage->getTargetRow(row, fRow);
+
         if (is_new_row)
         {
           initMapData(row);
@@ -4247,7 +4252,7 @@ void RowAggregationDistinct::addRowGroup(const RowGroup* pRows)
 }
 
 
-void RowAggregationDistinct::addRowGroup(const RowGroup* pRows, vector<Row::Pointer>& inRows)
+void RowAggregationDistinct::addRowGroup(const RowGroup* pRows, vector<std::pair<Row::Pointer, uint64_t>>& inRows)
 {
     fAggregator->addRowGroup(pRows, inRows);
 }
@@ -4275,15 +4280,15 @@ void RowAggregationDistinct::doDistinctAggregation()
 }
 
 
-void RowAggregationDistinct::doDistinctAggregation_rowVec(vector<Row::Pointer>& inRows)
+void RowAggregationDistinct::doDistinctAggregation_rowVec(vector<std::pair<Row::Pointer, uint64_t>>& inRows)
 {
     Row rowIn;
     fRowGroupIn.initRow(&rowIn);
 
     for (uint64_t i = 0; i < inRows.size(); ++i)
     {
-        rowIn.setData(inRows[i]);
-        aggregateRow(rowIn);
+        rowIn.setData(inRows[i].first);
+        aggregateRow(rowIn, &inRows[i].second);
     }
 }
 
@@ -4464,7 +4469,7 @@ void RowAggregationSubDistinct::addRowGroup(const RowGroup* pRows)
     }
 }
 
-void RowAggregationSubDistinct::addRowGroup(const RowGroup* pRows, std::vector<Row::Pointer>& inRows)
+void RowAggregationSubDistinct::addRowGroup(const RowGroup* pRows, std::vector<std::pair<Row::Pointer, uint64_t>>& inRows)
 {
     Row rowIn;
     uint32_t i, j;
@@ -4473,7 +4478,7 @@ void RowAggregationSubDistinct::addRowGroup(const RowGroup* pRows, std::vector<R
 
     for (i = 0; i < inRows.size(); ++i, rowIn.nextRow())
     {
-        rowIn.setData(inRows[i]);
+        rowIn.setData(inRows[i].first);
 
         /* TODO: We can make the functors a little smarter and avoid doing this copy before the
          * tentative insert */
@@ -4608,7 +4613,7 @@ void RowAggregationMultiDistinct::addRowGroup(const RowGroup* pRows)
 //
 //------------------------------------------------------------------------------
 void RowAggregationMultiDistinct::addRowGroup(const RowGroup* pRowGroupIn,
-        vector<vector<Row::Pointer> >& inRows)
+        vector<vector<std::pair<Row::Pointer, uint64_t>> >& inRows)
 {
     for (uint64_t i = 0; i < fSubAggregators.size(); ++i)
     {
@@ -4658,7 +4663,7 @@ void RowAggregationMultiDistinct::doDistinctAggregation()
 }
 
 
-void RowAggregationMultiDistinct::doDistinctAggregation_rowVec(vector<vector<Row::Pointer> >& inRows)
+void RowAggregationMultiDistinct::doDistinctAggregation_rowVec(vector<vector<std::pair<Row::Pointer, uint64_t>> >& inRows)
 {
     // backup the function column vector for finalize().
     vector<SP_ROWAGG_FUNC_t> origFunctionCols = fFunctionCols;
@@ -4674,8 +4679,8 @@ void RowAggregationMultiDistinct::doDistinctAggregation_rowVec(vector<vector<Row
 
         for (uint64_t j = 0; j < inRows[i].size(); ++j)
         {
-            rowIn.setData(inRows[i][j]);
-            aggregateRow(rowIn);
+            rowIn.setData(inRows[i][j].first);
+            aggregateRow(rowIn, &inRows[i][j].second);
         }
 
         inRows[i].clear();
