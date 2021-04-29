@@ -96,6 +96,10 @@ bucket = some_bucket
 
 # Specify the endpoint to connect to if using an S3 compatible object
 # store like Google Cloud Storage or IBM's Cleversafe.
+# The default endpoint if left unchanged is "s3.amazonaws.com"
+# The default endpoint is only valid for amazon buckets located in
+# region us-east-1. All other regions require setting this to region
+# specific endpoints. Format for this is usually s3.[region].amazonaws.com
 # endpoint = storage.googleapis.com
 
 # For the best performance do not specify a prefix.  It may be useful,
