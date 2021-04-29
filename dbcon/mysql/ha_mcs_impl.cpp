@@ -2663,18 +2663,14 @@ int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_changed)
     // Error out INSERT on VIEW. It's currently not supported.
     // @note INSERT on VIEW works natually (for simple cases at least), but we choose to turn it off
     // for now - ZZ.
-    TABLE_LIST* tables = thd->lex->query_tables;
 
-    for (; tables; tables = tables->next_local)
+    if (thd->lex->query_tables->view)
     {
-        if (tables->view)
-        {
-            Message::Args args;
-            args.add("Insert");
-            string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_DML_VIEW, args);
-            setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
-            return ER_CHECK_NOT_IMPLEMENTED;
-        }
+        Message::Args args;
+        args.add("Insert");
+        string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_DML_VIEW, args);
+        setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
+        return ER_CHECK_NOT_IMPLEMENTED;
     }
 
     if (get_fe_conn_info_ptr() == nullptr)
