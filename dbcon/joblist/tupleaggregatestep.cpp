@@ -5205,7 +5205,8 @@ void TupleAggregateStep::threadedAggregateFinalize(uint32_t threadID)
     {
       try
       {
-        fAggregators[i]->finalAggregation();
+        if (fAggregators[i])
+          fAggregators[i]->finalAggregation();
       }
       catch (...)
       {
@@ -5606,6 +5607,7 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
             jobstepThreadPool.join(runners);
         }
 
+        if (!cancelled())
         {
             vector<uint64_t> runners;
             // use half of the threads because finalizing requires twice as

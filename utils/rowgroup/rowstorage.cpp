@@ -1262,7 +1262,12 @@ private:
     fPosHashes.reserve(groups);
     for (size_t i = 0; i < groups; ++i)
     {
-      fMM->acquire(fMaxRows * sizeof(RowPosHash));
+      if (!fMM->acquire(fMaxRows * sizeof(RowPosHash)))
+      {
+        throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
+            logging::ERR_AGGREGATION_TOO_BIG),
+                                 logging::ERR_AGGREGATION_TOO_BIG);
+      }
       auto *ptr = new RowPosHash[fMaxRows];
       memset(ptr, 0, fMaxRows * sizeof(RowPosHash));
       fPosHashes.push_back(ptr);
@@ -1751,7 +1756,12 @@ void RowAggStorage::initData(size_t elems)
   const auto bytes = calcBytes(sizeWithBuffer);
 
   fHashes = fHashes->clone(elems, fGeneration);
-  fMM->acquire(bytes);
+  if (!fMM->acquire(bytes))
+  {
+    throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
+                                 logging::ERR_AGGREGATION_TOO_BIG),
+                             logging::ERR_AGGREGATION_TOO_BIG);
+  }
   fInfo = reinterpret_cast<uint8_t*>(calloc(1, bytes));
   fInfo[sizeWithBuffer] = 1;
   fInfoInc = INIT_INFO_INC;
