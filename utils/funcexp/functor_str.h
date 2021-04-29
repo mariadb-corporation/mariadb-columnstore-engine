@@ -183,6 +183,22 @@ public:
 };
 
 
+/** @brief Func_concat_oracle class
+  */
+class Func_concat_oracle : public Func_Str
+{
+public:
+    Func_concat_oracle() : Func_Str("concat_operator_oracle") {}
+    virtual ~Func_concat_oracle() {}
+
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+
+    std::string getStrVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
+};
+
 /** @brief Func_substr class
   */
 class Func_substr : public Func_Str
@@ -333,6 +349,55 @@ public:
                           execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
+/** @brief Func_ltrim class
+  */
+class Func_ltrim_oracle : public Func_Str
+{
+public:
+    Func_ltrim_oracle() : Func_Str("ltrim_oracle") {}
+    virtual ~Func_ltrim_oracle() {}
+
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+
+    std::string getStrVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
+};
+
+
+/** @brief Func_rtrim class
+  */
+class Func_rtrim_oracle : public Func_Str
+{
+public:
+    Func_rtrim_oracle() : Func_Str("rtrim_oracle") {}
+    virtual ~Func_rtrim_oracle() {}
+
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+
+    std::string getStrVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
+};
+
+
+/** @brief Func_trim class
+  */
+class Func_trim_oracle : public Func_Str
+{
+public:
+    Func_trim_oracle() : Func_Str("trim_oracle") {}
+    virtual ~Func_trim_oracle() {}
+
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+
+    std::string getStrVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
+};
 
 /** @brief Func_lpad class
   */
@@ -386,6 +451,19 @@ public:
                           execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
+class Func_replace_oracle : public Func_Str
+{
+public:
+    Func_replace_oracle() : Func_Str("replace_oracle") {}
+    virtual ~Func_replace_oracle() {}
+
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+
+    std::string getStrVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
+};
 
 /** @brief Func_right class
   */

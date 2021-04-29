@@ -3,6 +3,7 @@ include_directories( ${ENGINE_COMMON_INCLUDES} )
 
 
 ########### next target ###############
+#    func_decode_oracle.cpp
 
 set(funcexp_LIB_SRCS
     functor.cpp
@@ -20,6 +21,7 @@ set(funcexp_LIB_SRCS
     func_char_length.cpp
     func_coalesce.cpp
     func_concat.cpp
+    func_concat_oracle.cpp
     func_concat_ws.cpp
     func_conv.cpp
     func_crc32.cpp
@@ -31,6 +33,7 @@ set(funcexp_LIB_SRCS
     func_dayofweek.cpp
     func_dayofyear.cpp
     func_decode.cpp
+    func_decode_oracle.cpp
     func_div.cpp
     func_elt.cpp
     func_encode.cpp
@@ -60,6 +63,7 @@ set(funcexp_LIB_SRCS
     func_length.cpp
     func_lpad.cpp
     func_ltrim.cpp
+    func_ltrim_oracle.cpp
     func_makedate.cpp
     func_maketime.cpp
     func_math.cpp
@@ -79,11 +83,13 @@ set(funcexp_LIB_SRCS
     func_regexp.cpp
     func_repeat.cpp
     func_replace.cpp
+    func_replace_oracle.cpp
     func_reverse.cpp
     func_right.cpp
     func_round.cpp
     func_rpad.cpp
     func_rtrim.cpp
+    func_rtrim_oracle.cpp
     func_second.cpp
     func_sec_to_time.cpp
     func_sha.cpp
@@ -101,6 +107,7 @@ set(funcexp_LIB_SRCS
     func_timestampdiff.cpp
     func_to_days.cpp
     func_trim.cpp
+    func_trim_oracle.cpp
     func_truncate.cpp
     func_ucase.cpp
     func_unhex.cpp
