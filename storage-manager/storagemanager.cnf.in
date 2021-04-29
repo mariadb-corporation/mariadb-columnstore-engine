@@ -96,6 +96,10 @@ bucket = some_bucket
 
 # Specify the endpoint to connect to if using an S3 compatible object
 # store like Google Cloud Storage or IBM's Cleversafe.
+# The default endpoint if left unchanged is "s3.amazonaws.com"
+# The default endpoint is only valid for amazon buckets located in
+# region us-east-1. All other regions require setting this to region
+# specific endpoints. Format for this is usually s3.[region].amazonaws.com
 # endpoint = storage.googleapis.com
 
 # For the best performance do not specify a prefix.  It may be useful,
@@ -130,6 +134,14 @@ bucket = some_bucket
 # to EC2 instances. This will then use the the temporary credentials
 # provided by EC2 metadata for S3 authentication access/secret keys.
 # ec2_iam_mode=enabled
+
+# Setting use_http to 'enabled' for host to use http instead of https
+# The default is use_http = disabled (https)
+# use_http = enabled
+
+# Setting ssl_verify to 'disabled' for how to not use SSL verification
+# Default is ssl_verify = enabled
+# ssl_verify = disabled
 
 # The LocalStorage section configures the 'local storage' module
 # if specified by ObjectStorage/service.

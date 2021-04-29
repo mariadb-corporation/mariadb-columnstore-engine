@@ -246,6 +246,8 @@ private:
 
 };
 
+std::string getDefaultValue(const std::string& section, const std::string& name);
+
 }
 
 #undef EXPORT

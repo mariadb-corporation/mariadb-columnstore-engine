@@ -1,9 +1,11 @@
 USE tpch1;
-create table if not exists bug4388(
+set default_storage_engine=columnstore;
+drop table if exists bug4388;
+create table bug4388(
 `venta_clave` int(10) DEFAULT NULL,
 `cantidad` decimal(10,3) DEFAULT NULL,
 `changev` decimal(18,4) DEFAULT NULL
-) engine=columnstore;
+);
 insert into bug4388 values (null,null,6.8000);
 select coalesce(sum(changev),0) as col1 from bug4388;
 col1
@@ -38,4 +40,50 @@ select sum(co) from ( select sum(col1) as co from (select sum(changev)
 as col1 from bug4388 ) t ) res;
 sum(co)
 6.8000
+select sum(col1) as co from  ( select 984467440737095516
+as col1 union all select coalesce(sum(changev),0) as col1 from
+bug4388 ) t;
+co
+984467440737095558.8100
+select sum(col1) as co from  ( select 18446744073709551612
+as col1 union all select coalesce(sum(changev),0) as col1 from
+bug4388 ) t;
+co
+18446744073709551622.0000
+#
+# MCOL-4613 Garbage result of a union between huge narrow DECIMAL and BIGINT
+#
+drop table if exists t1;
+drop table if exists t2;
+create table t1 (a decimal(17,1), b bigint);
+insert into t1 values (9999999999999999.9, 999999999999999999);
+select * from (select a from t1 union select b from t1) tu order by a;
+a
+10000000000000000.0
+1000000000000000000.0
+drop table t1;
+create table t1 (a decimal(18,5), b decimal(18,5) unsigned);
+create table t2 (a bigint, b bigint unsigned);
+insert into t1 values
+(-1234567890123.12345, 1234567890123.12345),
+(-1234567890123.1234, 1234567890123.1234),
+(-9999999999999.99999, 9999999999999.99999),
+(-999999999999.99999, 999999999999.99999),
+(-99999999999.99999, 99999999999.99999);
+insert into t2 values
+(-123456789012345, 123456789012345),
+(9223372036854775807, 18446744073709551613),
+(-9223372036854775806, 0);
+select * from (select a,b from t1 union select a,b from t2) tu order by a,b;
+a	b
+-9223372036854775810.00000	0.00000
+-123456789012345.00000	123456789012345.00000
+-10000000000000.00000	10000000000000.00000
+-1234567890123.12354	1234567890123.12354
+-1234567890123.12329	1234567890123.12329
+-1000000000000.00000	1000000000000.00000
+-100000000000.00000	100000000000.00000
+9223372036854775810.00000	18446744073709551600.00000
+drop table t1;
+drop table t2;
 drop table bug4388;

@@ -100,6 +100,10 @@
 
 2053	ERR_FUNC_OUT_OF_RANGE_RESULT	The result is out of range for function %1% using value(s): %2% %3%
 
+2054	ERR_DISKAGG_ERROR	Unknown error while aggregation.
+2055	ERR_DISKAGG_TOO_BIG	Not enough memory to make disk-based aggregation. Raise TotalUmMemory if possible.
+2056	ERR_DISKAGG_FILEIO_ERROR	There was an IO error during a disk-based aggregation.
+
 # Sub-query errors
 3001	ERR_NON_SUPPORT_SUB_QUERY_TYPE	This subquery type is not supported yet.
 3002	ERR_MORE_THAN_1_ROW	Subquery returns more than 1 row.

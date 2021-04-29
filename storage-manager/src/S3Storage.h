@@ -65,6 +65,9 @@ class S3Storage : public CloudStorage
         std::string STSregion;
         bool isEC2Instance;
         bool ec2iamEnabled;
+        bool useHTTP;
+        bool sslVerify;
+        int portNumber;
         
         struct Connection
         {

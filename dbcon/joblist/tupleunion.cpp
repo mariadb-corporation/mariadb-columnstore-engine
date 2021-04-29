@@ -1104,7 +1104,7 @@ dec4:					/* have to pick a scale to use for the double. using 5... */
                         if (out->getScale(i) == scale)
                             out->setIntField(val, i);
                         else if (out->getScale(i) > scale)
-                            out->setIntField(IDB_pow[out->getScale(i) - scale]*val, i);
+                            out->setIntField(IDB_pow[out->getScale(i) - scale] * val, i);
                         else // should not happen, the output's scale is the largest
                             throw logic_error("TupleUnion::normalize(): incorrect scale setting");
 
