@@ -19,6 +19,6 @@ create table customer (
 ) engine=columnstore;
 
 --replace_result $MTR_SUITE_DIR MTR_SUITE_DIR
---eval LOAD DATA LOCAL infile '$MTR_SUITE_DIR/../std_data/100Krows.dat' INTO TABLE t1 FIELDS TERMINATED BY '|'
+--eval LOAD DATA LOCAL infile '$MTR_SUITE_DIR/../std_data/100Krows.dat' INTO TABLE customer FIELDS TERMINATED BY '|'
 SELECT e.min_value, e.max_value FROM information_schema.columnstore_extents e, information_schema.columnstore_columns c;
 DROP DATABASE mcol4652;
