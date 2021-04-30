@@ -3029,6 +3029,8 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
         // This handles the mismatch
         SetUDAFAnyValue(valOut, colOut);
     }
+    // reset valOut to be ready for the next value
+    valOut.reset();
 }
 
 void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
@@ -3298,7 +3300,6 @@ void RowAggregationUM::calculateUDAFColumns()
 
             // Set the returned value into the output row
             SetUDAFValue(valOut, colOut);
-            valOut.reset();
         }
 
         fRGContext.setUserData(NULL);
