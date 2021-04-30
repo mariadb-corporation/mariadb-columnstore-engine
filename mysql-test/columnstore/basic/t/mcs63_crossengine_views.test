@@ -64,6 +64,82 @@ CREATE VIEW v7 AS SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int AND t2
 SELECT VIEW_DEFINITION FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_NAME='v7' AND TABLE_SCHEMA='mcs63_db';
 SELECT * FROM v7;
 
+DROP VIEW v0, v1, v2, v3, v4, v5, v6, v7;
+DROP TABLE t1, t2;
+
+--echo #
+--echo # MCOL-4687 Insert from view regression
+--echo #
+
+# Tesing a simple view on an InnoDB table (as a data source)
+# This is the original script reported in MCOL-4687
+CREATE TABLE t1 (id INT, fname VARCHAR(20)) ENGINE=InnoDB;
+INSERT INTO t1 VALUES (1,'Greg');
+CREATE VIEW v1 as SELECT * FROM t1;
+SELECT * FROM v1;
+CREATE TABLE t2 (id INT, fname VARCHAR(20)) ENGINE=Columnstore;
+INSERT INTO t2 SELECT * FROM (SELECT * FROM v1) t;
+SELECT * FROM t2;
+INSERT INTO t2 SELECT * FROM v1;
+SELECT * FROM t2;
+DROP TABLE t2;
+DROP VIEW v1;
+DROP TABLE t1;
+
+# Testing views on an InnoDB table with aggregates and GROUP
+
+CREATE TABLE t1 (id INT, fname VARCHAR(20)) ENGINE=InnoDB;
+INSERT INTO t1 VALUES (1,'Greg');
+INSERT INTO t1 VALUES (1,'Roman');
+CREATE TABLE tt (id INT, fname VARCHAR(20)) ENGINE=Columnstore;
+CREATE VIEW v1 as SELECT id, MAX(fname) FROM t1 GROUP BY id;
+CREATE VIEW v2 as SELECT MIN(id), GROUP_CONCAT(fname) FROM t1;
+INSERT INTO tt SELECT * FROM v1;
+SELECT * FROM tt;
+TRUNCATE TABLE tt;
+INSERT INTO tt SELECT * FROM v2;
+SELECT * FROM tt;
+DROP VIEW v1,v2;
+DROP TABLE tt,t1;
+
+
+# Testing view on a ColumnStore table with aggregates and GROUP
+
+CREATE TABLE t1 (id INT, fname VARCHAR(20)) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES (1,'Greg');
+INSERT INTO t1 VALUES (1,'Roman');
+CREATE TABLE tt (id INT, fname VARCHAR(20)) ENGINE=Columnstore;
+CREATE VIEW v1 as SELECT id, MAX(fname) FROM t1 GROUP BY id;
+CREATE VIEW v2 as SELECT MIN(id), GROUP_CONCAT(fname) FROM t1;
+INSERT INTO tt SELECT * FROM v1;
+SELECT * FROM tt;
+TRUNCATE TABLE tt;
+INSERT INTO tt SELECT * FROM v2;
+SELECT * FROM tt;
+DROP VIEW v1,v2;
+DROP TABLE tt,t1;
+
+# Testing a view containing a join between an InnoDB table and a ColumnStore table
+
+CREATE TABLE t1 (id INT, fname VARCHAR(20)) ENGINE=InnoDB;
+INSERT INTO t1 VALUES (1,'One'),(2,'Two');
+CREATE TABLE t2 (id INT, fname VARCHAR(20)) ENGINE=ColumnStore;
+INSERT INTO t2 VALUES (1,'Uno'),(2,'Due');
+CREATE VIEW v1 AS SELECT t1.id*100+t2.id,CONCAT(t1.fname,'-',t2.fname) FROM t1,t2 WHERE t1.id=t2.id;
+CREATE TABLE tt (id INT, fname VARCHAR(20)) ENGINE=ColumnStore;
+INSERT INTO tt SELECT * FROM v1;
+SELECT * FROM tt;
+DROP VIEW v1;
+
+# Testing a join between a view on an InnoDB table and a view on a ColumnStore table
+
+CREATE VIEW v1 AS SELECT * FROM t1;
+CREATE VIEW v2 AS SELECT * FROM t2;
+INSERT INTO tt SELECT v1.id*100+v1.id, CONCAT(v1.fname,'+',v2.fname) FROM v1,v2 WHERE v1.id=v2.id;
+SELECT * FROM tt;
+DROP VIEW v1,v2;
+DROP TABLE tt,t2,t1;
+
 # Clean UP
 DROP USER 'cejuser'@'localhost';
 DROP DATABASE mcs63_db;
