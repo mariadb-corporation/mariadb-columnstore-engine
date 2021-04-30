@@ -2,6 +2,11 @@
 # Bulk Load from STDIN 
 # Author: Susil, susil.behera@mariadb.com
 #
+
+if (!$MYSQL_TEST_ROOT){
+  skip Should be run by root to execute cpimport;
+}
+
 -- source ../include/have_columnstore.inc
 
 --disable_warnings
@@ -14,7 +19,7 @@ USE mcs50_db;
 CREATE TABLE t1(col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnstore;
 
 #Valid data and table
---exec cat ./suite/columnstore/std_data/100Krows.dat | cpimport mcs50_db t1 >/dev/null
+--exec cat $MTR_SUITE_DIR/../std_data/100Krows.dat | cpimport mcs50_db t1 >/dev/null
 SELECT * FROM t1 ORDER BY col1;
 SELECT COUNT(*) FROM t1;
 
@@ -23,16 +28,16 @@ TRUNCATE t1;
 #Unknown db
 #Error getting OID for table unknown.t1: IDB-2006: 'unknown.t1' does not exist in Columnstore.
 --error 1
---exec cat ./suite/columnstore/std_data/100Krows.dat | cpimport unknown t1 >/dev/null
+--exec cat $MTR_SUITE_DIR/../100Krows.dat | cpimport unknown t1 >/dev/null
 
 #Unknown table
 #Error getting OID for table mcs50_db.unknown: IDB-2006: 'mcs50_db.unknown' does not exist in Columnstore.
 --error 1
---exec cat ./suite/columnstore/std_data/100Krows.dat | cpimport mcs50_db unknown >/dev/null
+--exec cat $MTR_SUITE_DIR/../std_data/100Krows.dat | cpimport mcs50_db unknown >/dev/null
 
 #Wrong delimiter
 --error 1
---exec cat ./suite/columnstore/std_data/100Krows.dat | cpimport mcs50_db t1 -s ',' >/dev/null 
+--exec cat $MTR_SUITE_DIR/../std_data/100Krows.dat | cpimport mcs50_db t1 -s ',' >/dev/null 
 
 #Unknown file
 --exec rm -f /tmp/UNKNOWN.dat

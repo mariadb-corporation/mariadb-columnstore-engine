@@ -2,6 +2,11 @@
 # Bulk Load from a central location with single data source file 
 # Author: Susil, susil.behera@mariadb.com
 #
+
+if (!$MYSQL_TEST_ROOT){
+  skip Should be run by root to execute cpimport;
+}
+
 -- source ../include/have_columnstore.inc
 
 --disable_warnings
@@ -16,7 +21,7 @@ CREATE TABLE t1(col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnstore;
 #Bulk Load from a central location with single data source file
 #cpimport -m1
 --disable_result_log #cpimport logs thread/timestamps
---exec cpimport -m1 mcs47_db t1 './suite/columnstore/std_data/100Krows.dat';
+--exec cpimport -m1 mcs47_db t1 '$MTR_SUITE_DIR/../std_data/100Krows.dat';
 --enable_result_log
 
 #Validate data
@@ -29,7 +34,7 @@ TRUNCATE TABLE t1;
 
 #cpimport default behavior is same as -m1 option.
 --disable_result_log
---exec cpimport mcs47_db t1 './suite/columnstore/std_data/100Krows.dat';
+--exec cpimport mcs47_db t1 '$MTR_SUITE_DIR/../std_data/100Krows.dat';
 --enable_result_log
 
 let $rowcount2 = query_get_value(SELECT COUNT(*) cnt FROM t1, cnt, 1);
