@@ -112,5 +112,86 @@ NULL	NULL	NULL	NULL
 NULL	NULL	9	kkkk
 NULL	NULL	11	mm
 NULL	NULL	13	n
+DROP VIEW v0, v1, v2, v3, v4, v5, v6, v7;
+DROP TABLE t1, t2;
+#
+# MCOL-4687 Insert from view regression
+#
+CREATE TABLE t1 (id INT, fname VARCHAR(20)) ENGINE=InnoDB;
+INSERT INTO t1 VALUES (1,'Greg');
+CREATE VIEW v1 as SELECT * FROM t1;
+SELECT * FROM v1;
+id	fname
+1	Greg
+CREATE TABLE t2 (id INT, fname VARCHAR(20)) ENGINE=Columnstore;
+INSERT INTO t2 SELECT * FROM (SELECT * FROM v1) t;
+SELECT * FROM t2;
+id	fname
+1	Greg
+INSERT INTO t2 SELECT * FROM v1;
+SELECT * FROM t2;
+id	fname
+1	Greg
+1	Greg
+DROP TABLE t2;
+DROP VIEW v1;
+DROP TABLE t1;
+CREATE TABLE t1 (id INT, fname VARCHAR(20)) ENGINE=InnoDB;
+INSERT INTO t1 VALUES (1,'Greg');
+INSERT INTO t1 VALUES (1,'Roman');
+CREATE TABLE tt (id INT, fname VARCHAR(20)) ENGINE=Columnstore;
+CREATE VIEW v1 as SELECT id, MAX(fname) FROM t1 GROUP BY id;
+CREATE VIEW v2 as SELECT MIN(id), GROUP_CONCAT(fname) FROM t1;
+INSERT INTO tt SELECT * FROM v1;
+SELECT * FROM tt;
+id	fname
+1	Roman
+TRUNCATE TABLE tt;
+INSERT INTO tt SELECT * FROM v2;
+SELECT * FROM tt;
+id	fname
+1	Greg,Roman
+DROP VIEW v1,v2;
+DROP TABLE tt,t1;
+CREATE TABLE t1 (id INT, fname VARCHAR(20)) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES (1,'Greg');
+INSERT INTO t1 VALUES (1,'Roman');
+CREATE TABLE tt (id INT, fname VARCHAR(20)) ENGINE=Columnstore;
+CREATE VIEW v1 as SELECT id, MAX(fname) FROM t1 GROUP BY id;
+CREATE VIEW v2 as SELECT MIN(id), GROUP_CONCAT(fname) FROM t1;
+INSERT INTO tt SELECT * FROM v1;
+SELECT * FROM tt;
+id	fname
+1	Roman
+TRUNCATE TABLE tt;
+INSERT INTO tt SELECT * FROM v2;
+SELECT * FROM tt;
+id	fname
+1	Greg,Roman
+DROP VIEW v1,v2;
+DROP TABLE tt,t1;
+CREATE TABLE t1 (id INT, fname VARCHAR(20)) ENGINE=InnoDB;
+INSERT INTO t1 VALUES (1,'One'),(2,'Two');
+CREATE TABLE t2 (id INT, fname VARCHAR(20)) ENGINE=ColumnStore;
+INSERT INTO t2 VALUES (1,'Uno'),(2,'Due');
+CREATE VIEW v1 AS SELECT t1.id*100+t2.id,CONCAT(t1.fname,'-',t2.fname) FROM t1,t2 WHERE t1.id=t2.id;
+CREATE TABLE tt (id INT, fname VARCHAR(20)) ENGINE=ColumnStore;
+INSERT INTO tt SELECT * FROM v1;
+SELECT * FROM tt;
+id	fname
+101	One-Uno
+202	Two-Due
+DROP VIEW v1;
+CREATE VIEW v1 AS SELECT * FROM t1;
+CREATE VIEW v2 AS SELECT * FROM t2;
+INSERT INTO tt SELECT v1.id*100+v1.id, CONCAT(v1.fname,'+',v2.fname) FROM v1,v2 WHERE v1.id=v2.id;
+SELECT * FROM tt;
+id	fname
+101	One-Uno
+202	Two-Due
+101	One+Uno
+202	Two+Due
+DROP VIEW v1,v2;
+DROP TABLE tt,t2,t1;
 DROP USER 'cejuser'@'localhost';
 DROP DATABASE mcs63_db;
