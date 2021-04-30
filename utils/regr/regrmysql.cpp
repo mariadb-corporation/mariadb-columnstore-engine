@@ -537,7 +537,7 @@ extern "C"
             long double sumxy = data->sumxy;
             long double covar_pop = N * sumxy - sumx * sumy;
             long double var_pop = N * sumx2 - sumx * sumx;
-            if (var_pop != 0)
+            if (var_pop > 0)
             {
                 valOut = static_cast<double>(covar_pop / var_pop);
                 *is_null = 0;
@@ -657,7 +657,7 @@ extern "C"
             long double sumxy = data->sumxy;
             long double numerator = sumy * sumx2 - sumx * sumxy;
             long double var_pop = (N * sumx2) - (sumx * sumx);
-            if (var_pop != 0)
+            if (var_pop > 0)
             {
                 valOut = static_cast<double>(numerator / var_pop);
                 *is_null = 0;
@@ -781,14 +781,14 @@ extern "C"
             long double sumy2 = data->sumy2;
             long double sumxy = data->sumxy;
             long double var_popx = (sumx2 - (sumx * sumx / N)) / N;
-            if (var_popx == 0)
+            if (var_popx <= 0)
             {
                 // When var_popx is 0, NULL is the result.
                 *is_null = 1;
             	return 0;
             }
             long double var_popy = (sumy2 - (sumy * sumy / N)) / N;
-            if (var_popy == 0)
+            if (var_popy <= 0)
             {
                 // When var_popy is 0, 1 is the result
                 return 1;
@@ -921,14 +921,14 @@ extern "C"
             long double sumy2 = data->sumy2;
             long double sumxy = data->sumxy;
             long double var_popx = (sumx2 - (sumx * sumx / N)) / N;
-            if (var_popx == 0)
+            if (var_popx <= 0)
             {
                 // When var_popx is 0, NULL is the result.
                 *is_null = 1;
             	return 0;
             }
             long double var_popy = (sumy2 - (sumy * sumy / N)) / N;
-            if (var_popy == 0)
+            if (var_popy <= 0)
             {
                 // When var_popy is 0, 1 is the result
                 return 1;
@@ -1045,6 +1045,8 @@ extern "C"
             long double sumx = data->sumx;
             long double sumx2 = data->sumx2;
             long double var_popx = (sumx2 - (sumx * sumx / N)) / N;
+            if (var_popx < 0)
+                var_popx = 0;
             valOut = static_cast<double>(N * var_popx);
         }
         else
@@ -1152,6 +1154,8 @@ extern "C"
             long double sumy = data->sumy;
             long double sumy2 = data->sumy2;
             long double var_popy = (sumy2 - (sumy * sumy / N)) / N;
+            if (var_popy < 0)
+                var_popy = 0;
             valOut = static_cast<double>(N * var_popy);
         }
         else
@@ -1265,8 +1269,7 @@ extern "C"
             long double sumx = data->sumx;
             long double sumy = data->sumy;
             long double sumxy = data->sumxy;
-            long double covar_pop = (sumxy - ((sumx * sumy) / N)) / N;
-            long double regr_sxy = N * covar_pop;
+            long double regr_sxy = (sumxy - ((sumx * sumy) / N));
             valOut = static_cast<double>(regr_sxy);
         }
         else
@@ -1380,7 +1383,7 @@ extern "C"
             long double sumx = data->sumx;
             long double sumy = data->sumy;
             long double sumxy = data->sumxy;
-            long double covar_pop = (sumxy - ((sumx * sumy) / N)) / N ;
+            long double covar_pop = (sumxy - ((sumx * sumy) / N)) / N;
             valOut = static_cast<double>(covar_pop);
         }
         else
