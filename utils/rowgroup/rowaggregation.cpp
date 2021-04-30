@@ -2747,6 +2747,8 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
     {
         SetUDAFAnyValue(valOut, colOut);
     }
+    // reset valOut to be ready for the next value
+    valOut.reset();
 }
 
 void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
