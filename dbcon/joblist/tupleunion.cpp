@@ -504,34 +504,29 @@ void TupleUnion::normalize(const Row& in, Row* out)
                     {
 dec1:
                         int diff = out->getScale(i) - in.getScale(i);
+
+                        idbassert(diff >= 0);
                         /*
                            Signed INT to XDecimal
-                           TODO: there are a few problems here:
-                           - This code is not wide decimal friendly.
-                             `uint64_t val` can overflow when applying a positive scale
-                             It's not possible to make a reproducible bug report
-                             at the moment: MCOL-4612 and MCOL-4613 should be fixed first.
-                           - Using uint64_t is wrong here. The data type of "in" field is
-                             signed. In case of a negative diff, the result will be wrong,
-                             because division (unlike multiplication) is sensitive to
-                             the signess of the operands.
-                             Perhaps diff cannot be negative and we can put an assert for it.
-                             Anyway, it's safer to change `uint64_t val` to `int64_t val`.
+                           TODO:
                            - This code does not handle overflow that may happen on
-                             scale multiplication (MCOL-4613). Instead of returning a garbage
+                             scale multiplication. Instead of returning a garbage value
                              we should probably apply saturation here. In long terms we
                              should implement DECIMAL(65,x) to avoid overflow completely
                              (so the UNION between DECIMAL and integer can choose a proper
                               DECIMAL(M,N) result data type to guarantee that any incoming
                               integer value can fit into it).
                         */
-                        // TODO: isn't overflow possible below?
-                        uint64_t val = datatypes::applySignedScale<uint64_t>(in.getIntField(i), diff);
-
                         if (out->getColumnWidth(i) == datatypes::MAXDECIMALWIDTH)
+                        {
+                            int128_t val = datatypes::applySignedScale<int128_t>(in.getIntField(i), diff);
                             out->setInt128Field(val, i);
+                        }
                         else
+                        {
+                            int64_t val = datatypes::applySignedScale<int64_t>(in.getIntField(i), diff);
                             out->setIntField(val, i);
+                        }
 
                         break;
                     }
@@ -625,20 +620,24 @@ dec1:
                     {
 dec2:
                         int diff = out->getScale(i) - in.getScale(i);
+
+                        idbassert(diff >= 0);
                         /*
                           Unsigned INT to XDecimal
-                          TODO: There are a few problems here:
-                          - It should use in.getUintField() instead of in.getIntField()
-                          - All problems mentioned in the code under label "dec1:" are
+                          TODO:
+                          - The overflow problem mentioned in the code under label "dec1:" is
                             also applicable here.
                         */
-                        // TODO: isn't overflow possible below?
-                        uint64_t val = datatypes::applySignedScale<uint64_t>(in.getIntField(i), diff);
-
                         if (out->getColumnWidth(i) == datatypes::MAXDECIMALWIDTH)
+                        {
+                            int128_t val = datatypes::applySignedScale<int128_t>(in.getUintField(i), diff);
                             out->setInt128Field(val, i);
+                        }
                         else
-                            out->setIntField(val, i);
+                        {
+                            uint64_t val = datatypes::applySignedScale<uint64_t>(in.getUintField(i), diff);
+                            out->setUintField(val, i);
+                        }
 
                         break;
                     }
@@ -1109,9 +1108,8 @@ dec4:                   /* have to pick a scale to use for the double. using 5..
                                 out->setInt128Field(isInputWide ? val128 : val, i);
                             else if (out->getScale(i) > scale)
                             {
-                                int128_t divisor = 1;
-                                datatypes::getScaleDivisor(divisor, out->getScale(i) - scale);
-                                int128_t temp = isInputWide ? divisor*val128 : divisor*val;
+                                int128_t temp = datatypes::applySignedScale<int128_t>(
+                                    isInputWide ? val128 : val, out->getScale(i) - scale);
                                 out->setInt128Field(temp, i);
                             }
                             else // should not happen, the output's scale is the largest
@@ -1124,7 +1122,11 @@ dec4:                   /* have to pick a scale to use for the double. using 5..
                             if (out->getScale(i) == scale)
                                 out->setIntField(val, i);
                             else if (out->getScale(i) > scale)
-                                out->setIntField(IDB_pow[out->getScale(i) - scale]*val, i);
+                            {
+                                int64_t temp = datatypes::applySignedScale<int64_t>(
+                                    val, out->getScale(i) - scale);
+                                out->setIntField(temp, i);
+                            }
                             else // should not happen, the output's scale is the largest
                                 throw logic_error("TupleUnion::normalize(): incorrect scale setting");
                         }
