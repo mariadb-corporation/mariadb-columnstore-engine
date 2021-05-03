@@ -73,10 +73,14 @@ CGroupConfigurator::CGroupConfigurator()
     config = config::Config::makeConfig();
 
     cGroupName = config->getConfig("SystemConfig", "CGroup");
+    string containerMode = config->getConfig("SystemConfig", "ContainerMode");
 
     if (cGroupName.empty())
         cGroupDefined = false;
     else
+        cGroupDefined = true;
+
+    if ((containerMode == "y") || (containerMode == "Y"))
         cGroupDefined = true;
 
     totalMemory = 0;
@@ -91,7 +95,7 @@ CGroupConfigurator::~CGroupConfigurator()
 uint32_t CGroupConfigurator::getNumCoresFromCGroup()
 {
     ostringstream filename_os;
-    filename_os << "/sys/fs/cgroup/cpuset/" << cGroupName << "/cpus";
+    filename_os << "/sys/fs/cgroup/cpuset/" << cGroupName << "/cpuset.cpus";
     string filename = filename_os.str();
 
     ifstream in(filename.c_str());

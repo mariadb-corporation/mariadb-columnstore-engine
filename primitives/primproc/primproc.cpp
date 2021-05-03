@@ -403,7 +403,6 @@ int ServicePrimProc::Child()
 
     if (err < 0)
     {
-        Oam oam;
         mlp->logMessage(errMsg);
         cerr << errMsg << endl;
 
@@ -439,6 +438,16 @@ int ServicePrimProc::Child()
     int configNumCores = -1;
     uint32_t highPriorityPercentage, medPriorityPercentage, lowPriorityPercentage;
     utils::CGroupConfigurator cg;
+
+    if (cg.getTotalMemory() < 3221225472)
+    {
+        string errMsg = "Error total memory available is less than 3GB.";
+        mlp->logMessage(errMsg);
+        cerr << errMsg << endl;
+
+        NotifyServiceInitializationFailed();
+        return 2;
+    }
 
     gDebugLevel = primitiveprocessor::NONE;
 
