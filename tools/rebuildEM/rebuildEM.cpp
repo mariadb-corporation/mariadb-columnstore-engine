@@ -132,7 +132,7 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
     auto colDataType = compressor.getColDataType(fileHeader);
     auto colWidth = compressor.getColumnWidth(fileHeader);
     auto blockCount = compressor.getBlockCount(fileHeader);
-    auto lbid = compressor.getLBID0(fileHeader);
+    auto lbidCount = compressor.getLBIDCount(fileHeader);
 
     if (colDataType == execplan::CalpontSystemCatalog::UNDEFINED)
     {
@@ -146,7 +146,6 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
     auto isDict = isDictFile(colDataType, colWidth);
     if (isDict)
         colWidth = 8;
-    uint64_t hwm = 0;
 
     if (doVerbose())
     {
@@ -154,33 +153,12 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
         std::cout << "Block count: " << blockCount << std::endl;
     }
 
-    rc =
-        searchHWMInSegmentFile(oid, getDBRoot(), partition, segment,
-                               colDataType, colWidth, blockCount, isDict, hwm);
+    uint64_t hwm = 0;
+    rc = searchHWMInSegmentFile(oid, getDBRoot(), partition, segment, colDataType, colWidth,
+                                blockCount, isDict, hwm);
     if (rc != 0)
     {
         return rc;
-    }
-
-    const uint32_t extentMaxBlockCount =
-        getEM().getExtentRows() * colWidth / BLOCK_SIZE;
-
-    // We found multiple extents per one segment file.
-    if (hwm >= extentMaxBlockCount)
-    {
-        auto lbid = compressor.getLBID1(fileHeader);
-        FileId fileId(oid, partition, segment, colWidth, colDataType, lbid,
-                      hwm, isDict);
-        extentMap.push_back(fileId);
-
-        // Update HWM.
-        hwm = extentMaxBlockCount - 1;
-        if (doVerbose())
-        {
-            std::cout << "Found multiple extents per segment file "
-                      << std::endl;
-            std::cout << "FileId is collected " << fileId << std::endl;
-        }
     }
 
     if (doVerbose())
@@ -188,14 +166,42 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
         std::cout << "HWM is: " << hwm << std::endl;
     }
 
-    FileId fileId(oid, partition, segment, colWidth, colDataType, lbid, hwm,
-                  isDict);
-    extentMap.push_back(fileId);
-
-    if (doVerbose())
+    const uint32_t extentMaxBlockCount = getEM().getExtentRows() * colWidth / BLOCK_SIZE;
+    // We found multiple extents per one segment file.
+    if (hwm >= extentMaxBlockCount)
     {
-        std::cout << "FileId is collected " << fileId << std::endl;
+        for (uint32_t lbidIndex = 0; lbidIndex < lbidCount - 1; ++lbidIndex)
+        {
+            auto lbid = compressor.getLBIDByIndex(fileHeader, lbidIndex);
+            FileId fileId(oid, partition, segment, colWidth, colDataType, lbid, /*hwm*/ 0, isDict);
+            extentMap.push_back(fileId);
+        }
+
+        // Last one has an actual HWM.
+        auto lbid = compressor.getLBIDByIndex(fileHeader, lbidCount - 1);
+        FileId fileId(oid, partition, segment, colWidth, colDataType, lbid, hwm, isDict);
+        extentMap.push_back(fileId);
+
+        if (doVerbose())
+        {
+            std::cout << "Found multiple extents per segment file "
+                      << std::endl;
+            std::cout << "FileId is collected " << fileId << std::endl;
+        }
     }
+    else
+    {
+        // One extent per segment file.
+        auto lbid = compressor.getLBIDByIndex(fileHeader, 0);
+        FileId fileId(oid, partition, segment, colWidth, colDataType, lbid, hwm, isDict);
+        extentMap.push_back(fileId);
+
+        if (doVerbose())
+        {
+            std::cout << "FileId is collected " << fileId << std::endl;
+        }
+    }
+
     return 0;
 }
 

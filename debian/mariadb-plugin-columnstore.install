@@ -3,7 +3,7 @@ etc/columnstore/ErrorMessage.txt
 etc/columnstore/MessageFile.txt
 etc/columnstore/storagemanager.cnf
 etc/mysql/mariadb.conf.d/columnstore.cnf
-usr/bin/rebuildEM
+usr/bin/mcsRebuildEM
 usr/bin/DDLProc
 usr/bin/DMLProc
 usr/bin/ExeMgr

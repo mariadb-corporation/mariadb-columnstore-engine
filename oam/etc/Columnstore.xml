@@ -478,7 +478,6 @@
 		it cannot be changed!. Extent size is 8M rows.
 		-->
 		<FilesPerColumnPartition>4</FilesPerColumnPartition> <!-- should be multiple of DBRootCount -->
-		<ExtentsPerSegmentFile>2</ExtentsPerSegmentFile>
 		<BRM_UID>0x0</BRM_UID>
 	</ExtentMap>
 	<HashJoin>

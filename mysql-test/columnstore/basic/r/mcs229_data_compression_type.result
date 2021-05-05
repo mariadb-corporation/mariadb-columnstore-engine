@@ -39,11 +39,11 @@ t2	CREATE TABLE `t2` (
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
 SELECT `schema`, tablename, columnname, compressiontype FROM calpontsys.syscolumn WHERE `schema`='mcs229_db' ORDER BY 2;
 schema	tablename	columnname	compressiontype
-mcs229_db	t1	t1_int	0
-mcs229_db	t1	t1_text	0
-mcs229_db	t1	t1_date	0
-mcs229_db	t1	t1_time	0
-mcs229_db	t1	t1_decimal	0
+mcs229_db	t1	t1_int	2
+mcs229_db	t1	t1_text	2
+mcs229_db	t1	t1_date	2
+mcs229_db	t1	t1_time	2
+mcs229_db	t1	t1_decimal	2
 mcs229_db	t2	t2_date	2
 mcs229_db	t2	t2_int	2
 mcs229_db	t2	t2_text	2

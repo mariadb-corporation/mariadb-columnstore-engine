@@ -19,6 +19,7 @@
 #include <string>
 #include <ftw.h>
 #include <boost/filesystem.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
 
 #include "configcpp.h"
 #include "rebuildEM.h"
@@ -84,10 +85,36 @@ int main(int argc, char** argv)
         return 0;
     }
 
+    // MCOL-4685
+    std::cout << "The launch of mcsRebuildEM tool must be sanctioned by MariaDB support. "
+              << std::endl;
+    std::cout << "Requirement: all DBRoots must be on this node. " << std::endl;
+    std::cout << "Note: that the launch can break the cluster." << std::endl;
+    std::cout << "Do you want to continue Y/N? " << std::endl;
+    std::string confirmation;
+    cin >> confirmation;
+    if (confirmation.size() == 0)
+        return 0;
+
+    boost::algorithm::to_lower(confirmation);
+    if (!(confirmation == "y" || confirmation == "yes"))
+        return 0;
+
     auto* config = config::Config::makeConfig();
+
+    // Check for storage type.
+    const auto DBRootStorageType = config->getConfig("Installation", "DBRootStorageType");
+    if (DBRootStorageType != "internal")
+    {
+        std::cout << "Only internal DBRootStorageType is supported, provided: " << DBRootStorageType
+                  << std::endl;
+        return 0;
+    }
+
     const auto BRMSavesEM =
         config->getConfig("SystemConfig", "DBRMRoot") + "_em";
     // Check for `BRM_saves_em` file presents.
+    // TODO: Should we add force option to remove file?
     if (boost::filesystem::exists(BRMSavesEM))
     {
         std::cout << BRMSavesEM << " file exists. " << std::endl;

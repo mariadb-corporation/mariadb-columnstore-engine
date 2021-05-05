@@ -123,7 +123,10 @@ private:
     uint32_t dbroot;
 
     static const unsigned DEFAULT_FILES_PER_COLUMN_PARTITION = 32;
-    static const unsigned DEFAULT_EXTENTS_PER_SEGMENT_FILE   =  4;
+
+  public:
+    // MCOL-4685: remove the option to set more than 2 extents per file (ExtentsPreSegmentFile)
+    static const unsigned DEFAULT_EXTENTS_PER_SEGMENT_FILE = 2;
 };
 
 }

@@ -74,17 +74,13 @@ ColumnCommandJL::ColumnCommandJL(const pColScanStep& scan, vector<BRM::LBID_t> l
 
     // @Bug 2889.  Drop partition enhancement.  Read FilesPerColumnPartition and ExtentsPerSegmentFile for use in RID calculation.
     fFilesPerColumnPartition = DEFAULT_FILES_PER_COLUMN_PARTITION;
+    // MCOL-4685 remove the option to set more than 2 extents per file (ExtentsPreSegmentFile).
     fExtentsPerSegmentFile = DEFAULT_EXTENTS_PER_SEGMENT_FILE;
     config::Config* cf = config::Config::makeConfig();
     string fpc = cf->getConfig("ExtentMap", "FilesPerColumnPartition");
 
     if ( fpc.length() != 0 )
         fFilesPerColumnPartition = cf->uFromText(fpc);
-
-    string epsf = cf->getConfig("ExtentMap", "ExtentsPerSegmentFile");
-
-    if ( epsf.length() != 0 )
-        fExtentsPerSegmentFile = cf->uFromText(epsf);
 }
 
 ColumnCommandJL::ColumnCommandJL(const pColStep& step)
@@ -124,17 +120,13 @@ ColumnCommandJL::ColumnCommandJL(const pColStep& step)
 
     // @Bug 2889.  Drop partition enhancement.  Read FilesPerColumnPartition and ExtentsPerSegmentFile for use in RID calculation.
     fFilesPerColumnPartition = DEFAULT_FILES_PER_COLUMN_PARTITION;
+    // MCOL-4685 remove the option to set more than 2 extents per file (ExtentsPreSegmentFile).
     fExtentsPerSegmentFile = DEFAULT_EXTENTS_PER_SEGMENT_FILE;
     config::Config* cf = config::Config::makeConfig();
     string fpc = cf->getConfig("ExtentMap", "FilesPerColumnPartition");
 
     if ( fpc.length() != 0 )
         fFilesPerColumnPartition = cf->uFromText(fpc);
-
-    string epsf = cf->getConfig("ExtentMap", "ExtentsPerSegmentFile");
-
-    if ( epsf.length() != 0 )
-        fExtentsPerSegmentFile = cf->uFromText(epsf);
 }
 
 ColumnCommandJL::~ColumnCommandJL()

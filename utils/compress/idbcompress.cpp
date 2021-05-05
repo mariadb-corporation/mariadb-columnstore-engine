@@ -63,6 +63,9 @@ const uint8_t CHUNK_MAGIC2 = 0xfe;
  */
 const uint8_t CHUNK_MAGIC3 = 0xfd;
 
+// The max number of lbids to be stored in segment file.
+const uint32_t LBID_MAX_SIZE = 10;
+
 struct CompressedDBFileHeader
 {
     uint64_t fMagicNumber;
@@ -72,8 +75,8 @@ struct CompressedDBFileHeader
     uint64_t fBlockCount;
     uint64_t fColumnWidth;
     execplan::CalpontSystemCatalog::ColDataType fColDataType;
-    uint64_t fLBID0;
-    uint64_t fLBID1;
+    uint64_t fLBIDCount;
+    uint64_t fLBIDS[LBID_MAX_SIZE];
 };
 
 // Make the header to be 4K, regardless number of fields being defined/used in header.
@@ -96,8 +99,8 @@ void initCompressedDBFileHeader(
     hdr->fHeader.fHeaderSize      = hdrSize;
     hdr->fHeader.fColumnWidth     = columnWidth;
     hdr->fHeader.fColDataType     = colDataType;
-    hdr->fHeader.fLBID0           = 0;
-    hdr->fHeader.fLBID1           = 0;
+    hdr->fHeader.fLBIDCount       = 0;
+    std::memset(hdr->fHeader.fLBIDS, 0, sizeof(hdr->fHeader.fLBIDS));
 }
 
 } // namespace
@@ -432,37 +435,31 @@ uint64_t IDBCompressInterface::getColumnWidth(const void* hdrBuf) const
 }
 
 //------------------------------------------------------------------------------
-// Get start LBID
+// Get LBID by index
 //------------------------------------------------------------------------------
-uint64_t IDBCompressInterface::getLBID0(const void* hdrBuf) const
+uint64_t IDBCompressInterface::getLBIDByIndex(const void* hdrBuf, uint64_t index) const
 {
-    return (reinterpret_cast<const CompressedDBFileHeader*>(hdrBuf)->fLBID0);
+    if (index < LBID_MAX_SIZE)
+        return (reinterpret_cast<const CompressedDBFileHeader*>(hdrBuf)->fLBIDS[index]);
+    return 0;
 }
 
 //------------------------------------------------------------------------------
-// Set start LBID
+// Set LBID by index
 //------------------------------------------------------------------------------
-void IDBCompressInterface::setLBID0(void* hdrBuf, uint64_t lbid) const
+void IDBCompressInterface::setLBIDByIndex(void* hdrBuf, uint64_t lbid, uint64_t index) const
 {
-    if (lbid)
-        reinterpret_cast<CompressedDBFileHeader*>(hdrBuf)->fLBID0 = lbid;
+    if (lbid && index < LBID_MAX_SIZE)
+    {
+        reinterpret_cast<CompressedDBFileHeader*>(hdrBuf)->fLBIDS[index] = lbid;
+        reinterpret_cast<CompressedDBFileHeader*>(hdrBuf)->fLBIDCount =
+            std::max(index + 1, reinterpret_cast<CompressedDBFileHeader*>(hdrBuf)->fLBIDCount);
+    }
 }
 
-//------------------------------------------------------------------------------
-// Get start LBID
-//------------------------------------------------------------------------------
-uint64_t IDBCompressInterface::getLBID1(const void* hdrBuf) const
+uint64_t IDBCompressInterface::getLBIDCount(void* hdrBuf) const
 {
-    return (reinterpret_cast<const CompressedDBFileHeader*>(hdrBuf)->fLBID1);
-}
-
-//------------------------------------------------------------------------------
-// Set start LBID
-//------------------------------------------------------------------------------
-void IDBCompressInterface::setLBID1(void* hdrBuf, uint64_t lbid) const
-{
-    if (lbid)
-        reinterpret_cast<CompressedDBFileHeader*>(hdrBuf)->fLBID1 = lbid;
+    return reinterpret_cast<const CompressedDBFileHeader*>(hdrBuf)->fLBIDCount;
 }
 
 //------------------------------------------------------------------------------

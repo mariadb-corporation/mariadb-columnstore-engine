@@ -132,6 +132,7 @@ private:
     BRM::DBRM fDbrm;
     unsigned  extentsPerSegmentFile, extentRows, filesPerColumnPartition, dbrootCnt;
     Log fLog;
+    static const uint32_t DEFAULT_EXTENTS_PER_SEGMENT_FILE = 2;
 };
 
 }

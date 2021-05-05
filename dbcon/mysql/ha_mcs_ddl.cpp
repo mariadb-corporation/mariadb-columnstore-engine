@@ -189,6 +189,11 @@ int parseCompressionComment ( std::string comment )
     else
         compressiontype = MAX_INT;
 
+    // MCOL-4685: ignore [COMMENT '[compression=0] option at table or column level (no error
+    // messages, just disregard);
+    if (compressiontype == 0)
+      compressiontype = 2;
+
     return compressiontype;
 }
 
@@ -2321,7 +2326,10 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
 
     int compressiontype = get_compression_type(thd);
 
-    if (compressiontype == 1) compressiontype = 2;
+    // MCOL-4685:
+    // remove the option to declare uncompressed columns (set infinidb_compression_type = 0).
+    if (compressiontype == 1 || compressiontype == 0)
+        compressiontype = 2;
 
     //string tablecomment;
     if (table_arg->s->comment.length > 0 )
@@ -2330,8 +2338,14 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
         compressiontype = parseCompressionComment( tablecomment );
     }
 
-    if ( compressiontype == MAX_INT )
+    if (compressiontype == MAX_INT)
+    {
         compressiontype = get_compression_type(thd);
+        // MCOL-4685:
+        // remove the option to declare uncompressed columns (set infinidb_compression_type = 0).
+        if (compressiontype == 0)
+            compressiontype = 2;
+    }
     else if ( compressiontype < 0 )
     {
         string emsg = IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE);
@@ -2644,17 +2658,20 @@ extern "C"
         if ( thd->db.length )
             db = thd->db.str;
 
+        // MCOL-4685:
+        // remove the option to declare uncompressed columns (set infinidb_compression_type = 0).
         int compressiontype = get_compression_type(thd);
 
-        if (compressiontype == 1) compressiontype = 2;
-
-        if ( compressiontype == MAX_INT )
-            compressiontype = get_compression_type(thd);
-
-        //hdfs
-        if ((compressiontype == 0) && (useHdfs))
-        {
+        if (compressiontype == 1 || compressiontype == 0)
             compressiontype = 2;
+
+        if (compressiontype == MAX_INT)
+        {
+            // MCOL-4685: remove the option to declare uncompressed columns (set
+            // infinidb_compression_type = 0).
+            compressiontype = get_compression_type(thd);
+            if (compressiontype == 0)
+                compressiontype = 2;
         }
 
         if (compressiontype == 1) compressiontype = 2;
