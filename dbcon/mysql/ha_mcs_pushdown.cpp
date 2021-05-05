@@ -316,7 +316,7 @@ void check_user_var_func(const Item* item, void* arg)
     {
         const Item_func* ifp = reinterpret_cast<const Item_func*>(item);
         std::string funcname = ifp->func_name();
-        if (funcname == "set_user_var" || funcname == "get_user_var")
+        if (funcname == "set_user_var")
         {
             *unsupported_feature = true;
         }
@@ -345,6 +345,34 @@ void item_check(Item* item, bool* unsupported_feature)
             break;
         }
     }
+}
+
+bool check_user_var(SELECT_LEX* select_lex)
+{
+    List_iterator_fast<Item> it(select_lex->item_list);
+    Item* item;
+    bool is_user_var_func = false;
+
+    while ((item = it++))
+    {
+        item_check(item, &is_user_var_func);
+
+        if (is_user_var_func)
+        {
+            return true;
+        }
+    }
+
+    JOIN *join = select_lex->join;
+
+    if (join->conds)
+    {
+        Item_cond* icp = reinterpret_cast<Item_cond*>(join->conds);
+
+        icp->traverse_cond(check_user_var_func, &is_user_var_func, Item::POSTFIX);
+    }
+
+    return is_user_var_func;
 }
 
 /*@brief  create_columnstore_group_by_handler- Creates handler*/
@@ -428,17 +456,12 @@ create_columnstore_group_by_handler(THD* thd, Query* query)
                 }
             }
 
-            // Iterate and traverse through the item list and do not create GBH
-            // if the unsupported (set/get_user_var) functions are present.
-            List_iterator_fast<Item> it(select_lex->item_list);
-            Item* item;
-            while ((item = it++))
+            // Iterate and traverse through the item list and the JOIN cond
+            // and do not create GBH if the unsupported (set_user_var)
+            // function is present.
+            if (check_user_var(select_lex))
             {
-                item_check(item, &unsupported_feature);
-                if (unsupported_feature)
-                {
-                    return handler;
-                }
+                return handler;
             }
         } // unsupported features check ends here
 
@@ -470,7 +493,7 @@ create_columnstore_group_by_handler(THD* thd, Query* query)
  *    NULL in other case
  ***********************************************************/
 derived_handler*
-create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
+create_columnstore_derived_handler(THD* thd, TABLE_LIST *table_ptr)
 {
     ha_columnstore_derived_handler* handler = NULL;
 
@@ -486,7 +509,7 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
     if (thd->stmt_arena && thd->stmt_arena->is_stmt_execute())
         return handler;
 
-    SELECT_LEX_UNIT *unit= derived->derived;
+    SELECT_LEX_UNIT *unit= table_ptr->derived;
     SELECT_LEX *sl= unit->first_select();
 
     bool unsupported_feature = false;
@@ -508,15 +531,9 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
     TABLE_LIST *tl;
     for (tl = sl->get_table_list(); !unsupported_feature && tl; tl = tl->next_local)
     {
-        Item_cond* where_icp= 0;
-        Item_cond* on_icp= 0;
-        if (tl->where != 0)
+        if (tl->where)
         {
-            where_icp= reinterpret_cast<Item_cond*>(tl->where);
-        }
-
-        if (where_icp)
-        {
+            Item_cond* where_icp= reinterpret_cast<Item_cond*>(tl->where);
             where_icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
             where_icp->traverse_cond(save_join_predicates, &join_preds_list, Item::POSTFIX);
         }
@@ -525,22 +542,17 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
         // TABLE_LIST in FROM until CS meets unsupported feature
         if (tl->on_expr)
         {
-            on_icp= reinterpret_cast<Item_cond*>(tl->on_expr);
+            Item_cond* on_icp= reinterpret_cast<Item_cond*>(tl->on_expr);
             on_icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
             on_icp->traverse_cond(save_join_predicates, &join_preds_list, Item::POSTFIX);
         }
 
-        // Iterate and traverse through the item list and do not create DH
-        // if the unsupported (set/get_user_var) functions are present.
-        List_iterator_fast<Item> it(tl->select_lex->item_list);
-        Item* item;
-        while ((item = it++))
+        // Iterate and traverse through the item list and the JOIN cond
+        // and do not create DH if the unsupported (set_user_var)
+        // function is present.
+        if (check_user_var(tl->select_lex))
         {
-            item_check(item, &unsupported_feature);
-            if (unsupported_feature)
-            {
-                return handler;
-            }
+            return handler;
         }
     }
 
@@ -568,7 +580,7 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
     }
 
     if ( !unsupported_feature )
-        handler= new ha_columnstore_derived_handler(thd, derived);
+        handler= new ha_columnstore_derived_handler(thd, table_ptr);
 
   return handler;
 }
@@ -773,21 +785,15 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
         return handler;
     }
 
-    bool unsupported_feature = false;
-    // Iterate and traverse through the item list and do not create SH
-    // if the unsupported (set/get_user_var) functions are present.
+    // Iterate and traverse through the item list and the JOIN cond
+    // and do not create SH if the unsupported (set_user_var)
+    // function is present.
     TABLE_LIST* table_ptr = select_lex->get_table_list();
-    for (; !unsupported_feature && table_ptr; table_ptr = table_ptr->next_global)
+    for (; table_ptr; table_ptr = table_ptr->next_global)
     {
-        List_iterator_fast<Item> it(table_ptr->select_lex->item_list);
-        Item* item;
-        while ((item = it++))
+        if (check_user_var(table_ptr->select_lex))
         {
-            item_check(item, &unsupported_feature);
-            if (unsupported_feature)
-            {
-                return handler;
-            }
+            return handler;
         }
     }
 
@@ -796,6 +802,7 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
     // or unsupported feature.
     handler= new ha_columnstore_select_handler(thd, select_lex);
     JOIN *join= select_lex->join;
+    bool unsupported_feature = false;
     {
         Query_arena *arena, backup;
         arena= thd->activate_stmt_arena_if_needed(&backup);
