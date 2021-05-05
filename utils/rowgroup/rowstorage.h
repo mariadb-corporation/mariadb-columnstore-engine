@@ -279,6 +279,9 @@ private:
   void cleanup();
   void cleanup(uint16_t gen);
 
+  /** @brief Remove all temporary data files */
+  void cleanupAll() noexcept;
+
   std::string makeDumpFilename(int32_t gen = -1) const;
 
 private:
