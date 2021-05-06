@@ -26,7 +26,10 @@ namespace rowgroup
 {
 
 class MemManager;
+class RowPosHashStorIface;
 class RowPosHashStorage;
+class RowPosHashStorageMemOnly;
+using RowPosHashStoragePtr = std::unique_ptr<RowPosHashStorIface>;
 class RowGroupStorage;
 
 class RowAggStorage
@@ -95,6 +98,7 @@ public:
   void finalize(std::function<void(Row &)> mergeFunc, Row &rowOut);
 
 private:
+  struct Data;
   /** @brief Create new RowAggStorage with the same params and load dumped data
    *
    * @param gen(in) generation number
@@ -121,6 +125,7 @@ private:
    * @param hash(out) row hash value
    */
   void rowToIdx(const Row& row, uint32_t& info, size_t& idx, uint64_t& hash) const;
+  void rowToIdx(const Row& row, uint32_t& info, size_t& idx, uint64_t& hash, const Data* curData) const;
 
   /** @brief Find best position using precomputed hash
    *
@@ -128,10 +133,15 @@ private:
    * @param info(out) info data
    * @param idx(out)  index
    */
+  inline void rowHashToIdx(uint64_t h, uint32_t& info, size_t& idx, const Data* curData) const
+  {
+    info = curData->fInfoInc + static_cast<uint32_t>((h & INFO_MASK) >> curData->fInfoHashShift);
+    idx = (h >> INIT_INFO_BITS) & curData->fMask;
+  }
+
   inline void rowHashToIdx(uint64_t h, uint32_t& info, size_t& idx) const
   {
-    info = fInfoInc + static_cast<uint32_t>((h & INFO_MASK) >> fInfoHashShift);
-    idx = (h >> INIT_INFO_BITS) & fMask;
+    return rowHashToIdx(h, info, idx, fCurData);
   }
 
   /** @brief Iterate over internal info until info with less-or-equal distance
@@ -140,20 +150,30 @@ private:
    * @param info(in,out) info data
    * @param idx(in,out)  index
    */
+  inline void nextWhileLess(uint32_t& info, size_t& idx, const Data* curData) const noexcept
+  {
+    while (info < curData->fInfo[idx])
+    {
+      next(info, idx, curData);
+    }
+  }
+
   inline void nextWhileLess(uint32_t& info, size_t& idx) const noexcept
   {
-    while (info < fInfo[idx])
-    {
-      next(info, idx);
-    }
+    return nextWhileLess(info, idx, fCurData);
   }
 
   /** @brief Get next index and corresponding info
    */
-  inline void next(uint32_t& info, size_t& idx) const noexcept
+  inline void next(uint32_t& info, size_t& idx, const Data* curData) const noexcept
   {
     ++(idx);
-    info += fInfoInc;
+    info += curData->fInfoInc;
+  }
+
+  inline void next(uint32_t& info, size_t& idx) const noexcept
+  {
+    return next(info, idx, fCurData);
   }
 
   /** @brief Get index and info of the next non-empty entry
@@ -164,7 +184,7 @@ private:
     uint64_t data;
     while (true)
     {
-      memcpy(&data, fInfo + idx, sizeof(data));
+      memcpy(&data, fCurData->fInfo + idx, sizeof(data));
       if (data == 0)
       {
         idx += sizeof(n);
@@ -181,7 +201,7 @@ private:
     n = __builtin_ctzll(data) / sizeof(data);
 #endif
     idx += n;
-    info = fInfo[idx];
+    info = fCurData->fInfo[idx];
   }
 
   /** @brief Increase internal data size if needed
@@ -210,13 +230,13 @@ private:
    * @param oldIdx(in)    index of "old" data
    * @param oldHashes(in) old storage of row positions and hashes
    */
-  void insertSwap(size_t oldIdx, RowPosHashStorage * oldHashes);
+  void insertSwap(size_t oldIdx, RowPosHashStorIface* oldHashes);
 
   /** @brief (Re)Initialize internal data of specified size.
    *
    * @param elems(in) number of elements
    */
-  void initData(size_t elems);
+  void initData(size_t elems, const RowPosHashStorIface* oldHashes);
 
   /** @brief Calculate maximum size of hash assuming 80% fullness.
    *
@@ -290,14 +310,22 @@ private:
   static constexpr uint8_t  INIT_INFO_INC{1U << INIT_INFO_BITS};
   static constexpr size_t   INFO_MASK{INIT_INFO_INC - 1U};
   static constexpr uint8_t  INIT_INFO_HASH_SHIFT{0};
+  static constexpr uint16_t MAX_INMEMORY_GENS{4};
 
-  RowPosHashStorage* fHashes{nullptr};
-  uint8_t* fInfo{nullptr};
-  size_t fSize{0};
-  size_t fMask{0};
-  size_t fMaxSize{0};
-  uint32_t fInfoInc{INIT_INFO_INC};
-  uint32_t fInfoHashShift{INIT_INFO_HASH_SHIFT};
+  struct Data
+  {
+    RowPosHashStoragePtr fHashes;
+    uint8_t *fInfo{nullptr};
+    size_t fSize{0};
+    size_t fMask{0};
+    size_t fMaxSize{0};
+    uint32_t fInfoInc{INIT_INFO_INC};
+    uint32_t fInfoHashShift{INIT_INFO_HASH_SHIFT};
+    RowPosHashStorageMemOnly* fMemHashes{nullptr};
+    RowPosHashStorage* fDiskHashes{nullptr};
+  };
+  std::vector<std::unique_ptr<Data>> fGens;
+  Data* fCurData;
   uint32_t fMaxRows;
   const bool fExtKeys;
 
@@ -316,6 +344,9 @@ private:
   bool fAggregated = true;
   bool fAllowGenerations;
   std::string fTmpDir;
+  bool fInitialized{false};
+  rowgroup::RowGroup* fRowGroupOut;
+  rowgroup::RowGroup* fKeysRowGroup;
 };
 
 } // namespace rowgroup

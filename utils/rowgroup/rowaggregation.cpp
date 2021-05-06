@@ -69,7 +69,7 @@ namespace
 {
 
 // @bug3522, use smaller rowgroup size to conserve memory.
-const int64_t AGG_ROWGROUP_SIZE = 8192;
+const int64_t AGG_ROWGROUP_SIZE = 256;
 
 template <typename T>
 bool minMax(T d1, T d2, int type)
