@@ -17,6 +17,7 @@
 
 #include <unistd.h>
 #include <sys/stat.h>
+#include <boost/filesystem.hpp>
 #include "rowgroup.h"
 #include <resourcemanager.h>
 #include <fcntl.h>
@@ -26,10 +27,10 @@
 namespace
 {
 
-bool writeData(int fd, const char* buf, size_t sz)
+int writeData(int fd, const char* buf, size_t sz)
 {
   if (sz == 0)
-    return true;
+    return 0;
 
   auto to_write = sz;
   while (to_write > 0)
@@ -40,19 +41,19 @@ bool writeData(int fd, const char* buf, size_t sz)
       if (errno == EAGAIN)
         continue;
 
-      return false;
+      return errno;
     }
     assert(size_t(r) <= to_write);
     to_write -= r;
   }
 
-  return true;
+  return 0;
 }
 
-bool readData(int fd, char* buf, size_t sz)
+int readData(int fd, char* buf, size_t sz)
 {
   if (sz == 0)
-    return true;
+    return 0;
 
   auto to_read = sz;
   while (to_read > 0)
@@ -63,14 +64,21 @@ bool readData(int fd, char* buf, size_t sz)
       if (errno == EAGAIN)
         continue;
 
-      return false;
+      return errno;
     }
 
     assert(size_t(r) <= to_read);
     to_read -= r;
   }
 
-  return true;
+  return 0;
+}
+
+std::string errorString(int errNo)
+{
+  char tmp[1024];
+  auto* buf = strerror_r(errNo, tmp, sizeof(tmp));
+  return {buf};
 }
 
 inline uint64_t hashData(const void* ptr, uint32_t len, uint64_t x = 0ULL)
@@ -423,7 +431,7 @@ public:
         if (UNLIKELY(r < 0))
         {
           throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
-                                       logging::ERR_DISKAGG_FILEIO_ERROR),
+                                       logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errno)),
                                    logging::ERR_DISKAGG_FILEIO_ERROR);
         }
       }
@@ -638,20 +646,21 @@ public:
     if (UNLIKELY(fd < 0))
     {
       throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
-          logging::ERR_DISKAGG_FILEIO_ERROR),
+          logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errno)),
                                logging::ERR_DISKAGG_FILEIO_ERROR);
     }
     uint64_t sz = fRGDatas.size();
     uint64_t finsz = fFinalizedRows.size();
 
-    if (!writeData(fd, (const char*)&sz, sizeof(sz)) ||
-        !writeData(fd, (const char*)&finsz, sizeof(finsz)) ||
-        !writeData(fd, (const char*)fFinalizedRows.data(), finsz * sizeof(uint64_t)))
+    int errNo;
+    if ((errNo = writeData(fd, (const char*)&sz, sizeof(sz))) != 0 ||
+        (errNo = writeData(fd, (const char*)&finsz, sizeof(finsz)) != 0) ||
+        (errNo = writeData(fd, (const char*)fFinalizedRows.data(), finsz * sizeof(uint64_t)) != 0))
     {
       close(fd);
       unlink(fname.c_str());
       throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
-          logging::ERR_DISKAGG_FILEIO_ERROR),
+          logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
                                logging::ERR_DISKAGG_FILEIO_ERROR);
     }
     close(fd);
@@ -665,28 +674,29 @@ public:
     if (fd < 0)
     {
       throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
-          logging::ERR_DISKAGG_FILEIO_ERROR),
+          logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errno)),
                                logging::ERR_DISKAGG_FILEIO_ERROR);
     }
     uint64_t sz;
     uint64_t finsz;
-    if (!readData(fd, (char*)&sz, sizeof(sz)) ||
-        !readData(fd, (char*)&finsz, sizeof(finsz)))
+    int errNo;
+    if ((errNo = readData(fd, (char*)&sz, sizeof(sz)) != 0) ||
+        (errNo = readData(fd, (char*)&finsz, sizeof(finsz)) != 0))
     {
       close(fd);
       unlink(fname.c_str());
       throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
-          logging::ERR_DISKAGG_FILEIO_ERROR),
+          logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
                                logging::ERR_DISKAGG_FILEIO_ERROR);
     }
     fRGDatas.resize(sz);
     fFinalizedRows.resize(finsz);
-    if (!readData(fd, (char*)fFinalizedRows.data(), finsz * sizeof(uint64_t)))
+    if ((errNo = readData(fd, (char*)fFinalizedRows.data(), finsz * sizeof(uint64_t))) != 0)
     {
       close(fd);
       unlink(fname.c_str());
       throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
-          logging::ERR_DISKAGG_FILEIO_ERROR),
+          logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
                                logging::ERR_DISKAGG_FILEIO_ERROR);
     }
     close(fd);
@@ -748,6 +758,16 @@ public:
       return false;
 
     return fFinalizedRows[gid] & (1ULL << rid);
+  }
+
+  void getTmpFilePrefixes(std::vector<std::string>& prefixes) const
+  {
+    char buf[PATH_MAX];
+    snprintf(buf, sizeof(buf), "Agg-p%u-t%p-rg", getpid(), fUniqId);
+    prefixes.emplace_back(buf);
+
+    snprintf(buf, sizeof(buf), "AggFin-p%u-t%p-g", getpid(), fUniqId);
+    prefixes.emplace_back(buf);
   }
 
 private:
@@ -909,7 +929,7 @@ private:
     if (UNLIKELY(fd < 0))
     {
       throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
-                                   logging::ERR_DISKAGG_FILEIO_ERROR),
+                                   logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errno)),
                                logging::ERR_DISKAGG_FILEIO_ERROR);
     }
     messageqcpp::ByteStream bs;
@@ -923,12 +943,13 @@ private:
 
       bs.needAtLeast(st.st_size);
       bs.restart();
-      if (!readData(fd, (char*)bs.getInputPtr(), st.st_size))
+      int errNo;
+      if ((errNo = readData(fd, (char*)bs.getInputPtr(), st.st_size)) != 0)
       {
         close(fd);
         unlink(fname.c_str());
         throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
-            logging::ERR_DISKAGG_FILEIO_ERROR),
+            logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
                                  logging::ERR_DISKAGG_FILEIO_ERROR);
       }
       bs.advanceInputPtr(st.st_size);
@@ -943,7 +964,7 @@ private:
     if (unlinkDump)
       unlink(fname.c_str());
     rgdata.reset(new RGData());
-    rgdata->deserialize(bs);
+    rgdata->deserialize(bs, fRowGroupOut->getDataSize(fMaxRows));
 
     fRowGroupOut->setData(rgdata.get());
     auto memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
@@ -978,23 +999,26 @@ private:
    * @param rgid(in)   RGData ID
    * @param rgdata(in) pointer to RGData itself
    */
-  void saveRG(uint64_t rgid, const RGData* rgdata) const
+  void saveRG(uint64_t rgid, RGData* rgdata) const
   {
     messageqcpp::ByteStream bs;
-    rgdata->serialize(bs, fRowGroupOut->getDataSize(fMaxRows));
+    fRowGroupOut->setData(rgdata->rowData.get());
+    rgdata->serialize(bs, fRowGroupOut->getDataSize());
 
     int fd = open(makeRGFilename(rgid).c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (UNLIKELY(fd < 0))
     {
       throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
-                                   logging::ERR_DISKAGG_FILEIO_ERROR),
+                                   logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errno)),
                                logging::ERR_DISKAGG_FILEIO_ERROR);
     }
-    if (!writeData(fd, (char*)bs.buf(), bs.length()))
+
+    int errNo;
+    if ((errNo = writeData(fd, (char*)bs.buf(), bs.length())) != 0)
     {
       close(fd);
       throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
-          logging::ERR_DISKAGG_FILEIO_ERROR),
+          logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
                                logging::ERR_DISKAGG_FILEIO_ERROR);
     }
     close(fd);
@@ -1250,6 +1274,14 @@ public:
       save(gid);
   }
 
+  void getTmpFilePrefixes(std::vector<std::string> prefixes) const
+  {
+    char fname[PATH_MAX];
+    snprintf(fname, sizeof(fname), "Agg-PosHash-p%u-t%p-g",
+             getpid(), fUniqId);
+    prefixes.emplace_back(fname);
+  }
+
 private:
   explicit RowPosHashStorage(const std::string& tmpDir, size_t maxRows)
       : fMaxRows(maxRows)
@@ -1291,7 +1323,7 @@ private:
       if (fDumpFd < 0)
       {
         throw logging::IDBExcept(
-            logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR),
+            logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errno)),
             logging::ERR_DISKAGG_FILEIO_ERROR);
       }
     }
@@ -1319,7 +1351,7 @@ private:
           continue;
 
         throw logging::IDBExcept(
-            logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR),
+            logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errno)),
             logging::ERR_DISKAGG_FILEIO_ERROR);
       }
 
@@ -1365,7 +1397,7 @@ private:
           continue;
 
         throw logging::IDBExcept(
-            logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR),
+            logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errno)),
             logging::ERR_DISKAGG_FILEIO_ERROR);
       }
 
@@ -1439,6 +1471,8 @@ RowAggStorage::RowAggStorage(const std::string& tmpDir,
 
 RowAggStorage::~RowAggStorage()
 {
+  cleanupAll();
+
   if (fExtKeys)
     delete fKeysStorage;
   if (fInfo != nullptr)
@@ -1818,7 +1852,7 @@ void RowAggStorage::startNewGeneration()
 
 std::string RowAggStorage::makeDumpFilename(int32_t gen) const
 {
-  char fname[1024];
+  char fname[PATH_MAX];
   uint16_t rgen = gen < 0 ? fGeneration : gen;
   snprintf(fname, sizeof(fname), "%s/AggMap-p%u-t%p-g%u",
            fTmpDir.c_str(), getpid(), fUniqId, rgen);
@@ -1841,15 +1875,17 @@ void RowAggStorage::dumpInternalData() const
   if (fd < 0)
   {
     throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
-        logging::ERR_AGGREGATION_TOO_BIG),
-                             logging::ERR_AGGREGATION_TOO_BIG);
+        logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errno)),
+                             logging::ERR_DISKAGG_FILEIO_ERROR);
   }
-  if (!writeData(fd, (const char*)bs.buf(), bs.length()))
+
+  int errNo;
+  if ((errNo = writeData(fd, (const char*)bs.buf(), bs.length())) != 0)
   {
     close(fd);
     throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
-        logging::ERR_AGGREGATION_TOO_BIG),
-                             logging::ERR_AGGREGATION_TOO_BIG);
+        logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
+                             logging::ERR_DISKAGG_FILEIO_ERROR);
   }
   close(fd);
 }
@@ -2104,19 +2140,20 @@ void RowAggStorage::loadGeneration(uint16_t gen, size_t &size, size_t &mask, siz
   if (fd < 0)
   {
     throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
-        logging::ERR_AGGREGATION_TOO_BIG),
-                             logging::ERR_AGGREGATION_TOO_BIG);
+        logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errno)),
+                             logging::ERR_DISKAGG_FILEIO_ERROR);
   }
   struct stat st{};
   fstat(fd, &st);
   bs.needAtLeast(st.st_size);
   bs.restart();
-  if (!readData(fd, (char*)bs.getInputPtr(), st.st_size))
+  int errNo;
+  if ((errNo = readData(fd, (char*)bs.getInputPtr(), st.st_size)) != 0)
   {
     close(fd);
     throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
-        logging::ERR_AGGREGATION_TOO_BIG),
-                             logging::ERR_AGGREGATION_TOO_BIG);
+        logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
+                             logging::ERR_DISKAGG_FILEIO_ERROR);
   }
   close(fd);
   bs.advanceInputPtr(st.st_size);
@@ -2131,6 +2168,47 @@ void RowAggStorage::loadGeneration(uint16_t gen, size_t &size, size_t &mask, siz
     free(info);
   info = (uint8_t*)calloc(1, infoSz);
   bs >> info;
+}
+
+void RowAggStorage::cleanupAll() noexcept
+{
+  try
+  {
+    char fname[PATH_MAX];
+    snprintf(fname, sizeof(fname), "AggMap-p%u-t%p-g",
+             getpid(), fUniqId);
+    std::vector<std::string> prefixes;
+    prefixes.emplace_back(fname);
+    if (fHashes)
+      fHashes->getTmpFilePrefixes(prefixes);
+    if (fStorage)
+      fStorage->getTmpFilePrefixes(prefixes);
+    if (fExtKeys && fKeysStorage)
+      fKeysStorage->getTmpFilePrefixes(prefixes);
+
+    namespace fs = boost::filesystem;
+    fs::path tmpDir(fTmpDir);
+    if (!fs::is_directory(tmpDir))
+      return;
+
+    std::vector<fs::path> toDelete;
+    for (auto file_it = fs::directory_iterator(tmpDir); file_it != fs::directory_iterator(); ++file_it)
+    {
+      if (!fs::is_regular(*file_it))
+        continue;
+      if (std::any_of(prefixes.cbegin(), prefixes.cend(),
+                      [&file_it](const std::string& pref) { return boost::starts_with(file_it->path().filename().string(), pref); }))
+      {
+        toDelete.push_back(file_it->path());
+      }
+    }
+
+    for (auto&& path : toDelete)
+      fs::remove(path);
+  }
+  catch (...)
+  {
+  }
 }
 
 void RowAggStorage::cleanup()

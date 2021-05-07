@@ -270,7 +270,7 @@ public:
     // the 'hasLengthField' is there b/c PM aggregation (and possibly others) currently sends
     // inline data with a length field.  Once that's converted to string table format, that
     // option can go away.
-    void deserialize(messageqcpp::ByteStream&, bool hasLengthField = false); // returns the # of bytes read
+    void deserialize(messageqcpp::ByteStream&, uint32_t amount = 0); // returns the # of bytes read
 
     inline uint64_t getStringTableMemUsage();
     void clear();

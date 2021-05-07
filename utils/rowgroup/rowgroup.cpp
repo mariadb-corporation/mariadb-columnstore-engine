@@ -480,7 +480,7 @@ void RGData::serialize(ByteStream& bs, uint32_t amount) const
         bs << (uint8_t) 0;
 }
 
-void RGData::deserialize(ByteStream& bs, bool hasLenField)
+void RGData::deserialize(ByteStream& bs, uint32_t defAmount)
 {
     uint32_t amount, sig;
     uint8_t* buf;
@@ -492,7 +492,7 @@ void RGData::deserialize(ByteStream& bs, bool hasLenField)
     {
         bs >> sig;
         bs >> amount;
-        rowData.reset(new uint8_t[amount]);
+        rowData.reset(new uint8_t[std::max(amount, defAmount)]);
         buf = bs.buf();
         memcpy(rowData.get(), buf, amount);
         bs.advance(amount);
