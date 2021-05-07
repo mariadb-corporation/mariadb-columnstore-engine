@@ -1,0 +1,336 @@
+#
+# Test IN subquery
+#
+# Note that some queries in the tests below are commented out
+# due to differing behaviour from InnoDB. MCOL-4641 tracks this
+# issue. Uncomment the queries again once the issue is fixed.
+#
+
+--source ../include/have_columnstore.inc
+
+set default_storage_engine=columnstore;
+
+--disable_warnings
+drop database if exists test_mcol4617;
+--enable_warnings
+
+create database test_mcol4617;
+use test_mcol4617;
+
+create table cs1 (a int);
+insert into cs1 values (1), (2), (3), (4), (null);
+
+create table cs2 (b int, c int);
+insert into cs2 values (1, 100), (1, 101), (2, 200),
+(3, 300), (3, 301), (3, 302), (null, null);
+
+# Single column case
+## IN subquery
+### Basic tests
+select * from cs1 where a in (select b from cs2);
+select * from cs1 where a in (select c from cs2);
+select * from cs1 where (a+a) in (select (b+b) from cs2);
+select * from cs1 where (a+1) in (select b from cs2);
+select * from cs1 where hex(a*10) in (select hex(b*10) from cs2);
+
+### Correlated IN subquery
+select * from cs1 where a in (select b from cs2 where cs1.a=cs2.c-299);
+
+### Outer query containing additional WHERE predicates
+select * from cs1 where a is not null and a in (select b from cs2);
+select * from cs1 where a in (select b from cs2) and a is null;
+select * from cs1 where a in (select 2 from cs2) and a in (select b from cs2);
+select * from cs1 where a in (1,3) and a in (select b from cs2);
+
+### Nested IN predicates
+select * from cs1 where a in (select b from cs2 where b in (select a from cs1));
+select * from cs1 where a in (select b from cs2 where b in (select a from cs1 where a in (2,3)));
+select * from cs1 where a in (select b from cs2 where b in (select a from cs1 where a not in (2,3)));
+
+### WHERE predicates in the IN subquery
+select * from cs1 where a in (select b from cs2 where b=3);
+select * from cs1 where a in (select b from cs2 where b=3 or c=200);
+select * from cs1 where a in (select b from cs2 where b is not null);
+
+### GROUP BY and HAVING predicates in the IN subquery
+select * from cs1 where a in (select b from cs2 group by b);
+select * from cs1 where a in (select count(*) from cs2 group by b);
+select * from cs1 where a in (select count(*) from cs2 group by b having count(*) < 3);
+select * from cs1 where a in (select count(*) from cs2 where b <> 2 group by b having count(*) < 3);
+
+### Window functions in the SELECT clause of IN subquery
+select * from cs1 where a in (select count(c) over (partition by b) from cs2);
+select * from cs1 where a in (select count(*) over (partition by b) from cs2 where b is null);
+select * from cs1 where a in (select count(*) over (partition by b) from cs2 where b <> 2);
+
+### IN subquery containing joins
+select * from cs1 where a in (select t1.b from cs2 t1, cs2 t2 where t1.b=t2.b);
+select * from cs1 where a in (select t1.b from cs2 t1, cs2 t2 where t1.b=t2.b and t1.b <> 3);
+select * from cs1 where a in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.c=t2.c);
+
+### Outer query containing joins
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select b from cs2) order by 1,2,3;
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select b from cs2) and cs1.a=1;
+
+### Both IN subquery and outer queries containing joins
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1) order by 1,2,3;
+
+## NOT IN subquery
+### Basic tests
+select * from cs1 where a not in (select b from cs2);
+select * from cs1 where a not in (select c from cs2);
+select * from cs1 where (a+a) not in (select (b+b) from cs2);
+select * from cs1 where (a+1) not in (select b from cs2);
+#select * from cs1 where hex(a*10) not in (select hex(b*10) from cs2);
+
+### Outer query containing additional WHERE predicates
+select * from cs1 where a is not null and a not in (select b from cs2);
+select * from cs1 where a not in (select b from cs2) and a is null;
+select * from cs1 where a not in (select 2 from cs2) and a not in (select b from cs2);
+select * from cs1 where a in (1,3) and a not in (select b from cs2);
+
+### Nested IN predicates
+select * from cs1 where a not in (select b from cs2 where b not in (select a from cs1));
+#select * from cs1 where a not in (select b from cs2 where b not in (select a from cs1 where a in (2,3)));
+#select * from cs1 where a not in (select b from cs2 where b not in (select a from cs1 where a not in (2,3)));
+
+### WHERE predicates in the IN subquery
+#select * from cs1 where a not in (select b from cs2 where b=3);
+select * from cs1 where a not in (select b from cs2 where b=3 or c=200);
+select * from cs1 where a not in (select b from cs2 where b is not null);
+
+### GROUP BY and HAVING predicates in the IN subquery
+select * from cs1 where a not in (select b from cs2 group by b);
+select * from cs1 where a not in (select count(*) from cs2 group by b);
+select * from cs1 where a not in (select count(*) from cs2 group by b having count(*) < 3);
+select * from cs1 where a not in (select count(*) from cs2 where b <> 2 group by b having count(*) < 3);
+
+### Window functions in the SELECT clause of IN subquery
+select * from cs1 where a not in (select count(c) over (partition by b) from cs2);
+#select * from cs1 where a not in (select count(*) over (partition by b) from cs2 where b is null);
+select * from cs1 where a not in (select count(*) over (partition by b) from cs2 where b <> 2);
+
+### IN subquery containing joins
+select * from cs1 where a not in (select t1.b from cs2 t1, cs2 t2 where t1.b=t2.b);
+select * from cs1 where a not in (select t1.b from cs2 t1, cs2 t2 where t1.b=t2.b and t1.b <> 3);
+select * from cs1 where a not in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.c=t2.c);
+
+### Outer query containing joins
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select b from cs2);
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select b from cs2) and cs1.a=1;
+
+### Both IN subquery and outer queries containing joins
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1) order by 1,2,3;
+
+## NOT IN subquery without NULLs
+### Basic tests
+select * from cs1 where a not in (select b from cs2 where b is not null);
+#select * from cs1 where a not in (select c from cs2 where b is not null);
+#select * from cs1 where (a+a) not in (select (b+b) from cs2 where b is not null);
+#select * from cs1 where (a+1) not in (select b from cs2 where b is not null);
+select * from cs1 where hex(a*10) not in (select hex(b*10) from cs2 where b is not null);
+
+### Outer query containing additional WHERE predicates
+select * from cs1 where a is not null and a not in (select b from cs2 where b is not null);
+select * from cs1 where a not in (select b from cs2 where b is not null) and a is null;
+select * from cs1 where a not in (select 2 from cs2) and a not in (select b from cs2 where b is not null);
+select * from cs1 where a in (1,3) and a not in (select b from cs2 where b is not null);
+
+### Nested IN predicates
+select * from cs1 where a not in (select b from cs2 where b not in (select a from cs1 where a is not null) and b is not null);
+#select * from cs1 where a not in (select b from cs2 where b not in (select a from cs1 where a in (2,3) and a is not null) and b is not null);
+select * from cs1 where a not in (select b from cs2 where b not in (select a from cs1 where a not in (2,3) and a is not null) and b is not null);
+
+### GROUP BY and HAVING predicates in the IN subquery
+select * from cs1 where a not in (select b from cs2 where b is not null group by b);
+select * from cs1 where a not in (select count(*) from cs2 where b is not null group by b);
+select * from cs1 where a not in (select count(*) from cs2 where b is not null group by b having count(*) < 3);
+
+### Window functions in the SELECT clause of IN subquery
+select * from cs1 where a not in (select count(c) over (partition by b) from cs2 where b is not null);
+
+### IN subquery containing joins
+select * from cs1 where a not in (select t1.b from cs2 t1, cs2 t2 where t1.b=t2.b and t1.b is not null);
+select * from cs1 where a not in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.c=t2.c where t1.b is not null);
+
+### Outer query containing joins
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select b from cs2 where b is not null);
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select b from cs2 where b is not null) and cs1.a=1;
+
+### Both IN subquery and outer queries containing joins
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select t1.b from (select b from cs2 where b is not null) t1 join cs2 t2 on t1.b=t2.b and t1.b=1) order by 1,2,3;
+
+# Special cases involving NULLs
+select * from cs1 where a in (select b from cs2 where b is null);
+select * from cs1 where a in (select b from cs2 where b is not null);
+select * from cs1 where a not in (select b from cs2 where b is null);
+
+# Row column case
+drop table cs1;
+create table cs1 (a int, d int);
+insert into cs1 values (1,100), (2,201), (3,302), (4,4000), (null,null);
+
+## IN subquery
+### Basic tests
+select * from cs1 where (a,d) in (select b,c from cs2);
+select * from cs1 where ((a+a),(d+d)) in (select (b+b),(c+c) from cs2);
+select * from cs1 where ((a+1),(d+1)) in (select b,c from cs2);
+select * from cs1 where (hex(a*10),hex(d*10)) in (select hex(b*10),hex(c*10) from cs2);
+
+### Correlated IN subquery
+select * from cs1 where (a,d) in (select b,c from cs2 where cs1.a=cs2.c-299);
+
+### Outer query containing additional WHERE predicates
+select * from cs1 where a is not null and (a,d) in (select b,c from cs2);
+select * from cs1 where (a,d) in (select b,c from cs2) and a is null;
+select * from cs1 where (a,d) in (select 2,201 from cs2) and (a,d) in (select b,c from cs2);
+select * from cs1 where a in (1,3) and (a,d) in (select b,c from cs2);
+
+### Nested IN predicates
+select * from cs1 where (a,d) in (select b,c from cs2 where (b,c) in (select a,d from cs1));
+select * from cs1 where (a,d) in (select b,c from cs2 where (b,c) in (select a,d from cs1 where a in (2,3)));
+select * from cs1 where (a,d) in (select b,c from cs2 where (b,c) in (select a,d from cs1 where a not in (2,3)));
+
+### WHERE predicates in the IN subquery
+select * from cs1 where (a,d) in (select b,c from cs2 where b=3);
+select * from cs1 where (a,d) in (select b,c from cs2 where b=3 or c=200);
+select * from cs1 where (a,d) in (select b,c from cs2 where b is not null);
+
+### GROUP BY and HAVING predicates in the IN subquery
+select * from cs1 where (a,d) in (select b,c from cs2 group by b,c);
+select * from cs1 where (a,d) in (select count(*),c from cs2 group by c);
+select * from cs1 where (a,d) in (select count(*),c from cs2 group by c having count(*) < 3);
+select * from cs1 where (a,d) in (select count(*),c from cs2 where b <> 2 group by c having count(*) < 3);
+
+### Window functions in the SELECT clause of IN subquery
+select * from cs1 where (a,d) in (select count(c) over (partition by b), (count(b) over (partition by c))*100 from cs2);
+select * from cs1 where (a,d) in (select count(*) over (partition by b), (count(*) over (partition by c))*100 from cs2 where b is null);
+select * from cs1 where (a,d) in (select count(*) over (partition by b), (count(*) over (partition by c))*100 from cs2 where b <> 2);
+
+### IN subquery containing joins
+select * from cs1 where (a,d) in (select t1.b,t1.c from cs2 t1, cs2 t2 where t1.b=t2.b);
+select * from cs1 where (a,d) in (select t1.b,t1.c from cs2 t1, cs2 t2 where t1.b=t2.b and t1.b <> 3);
+select * from cs1 where (a,d) in (select t1.b,t1.c from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.c=t2.c);
+
+### Outer query containing joins
+select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select b,c from cs2) order by 1,2,3,4;
+select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select b,c from cs2) and cs1.a=1 order by 1,2,3,4;
+
+### Both IN subquery and outer queries containing joins
+select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select t1.b,t1.c from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1);
+
+# Prepared statement tests
+drop table cs1;
+create table cs1 (a int);
+insert into cs1 values (1), (2), (3), (4), (null);
+
+### Basic tests
+prepare stmt from "select * from cs1 where a in (select b from cs2)";
+execute stmt;
+execute stmt;
+prepare stmt from "select * from cs1 where a in (select c from cs2)";
+execute stmt;
+execute stmt;
+prepare stmt from "select * from cs1 where (a+a) in (select (b+b) from cs2)";
+execute stmt;
+execute stmt;
+prepare stmt from "select * from cs1 where (a+1) in (select b from cs2)";
+execute stmt;
+execute stmt;
+prepare stmt from "select * from cs1 where hex(a*10) in (select hex(b*10) from cs2)";
+execute stmt;
+execute stmt;
+
+### Correlated IN subquery
+prepare stmt from "select * from cs1 where a in (select b from cs2 where cs1.a=cs2.c-299)";
+execute stmt;
+execute stmt;
+
+### Outer query containing additional WHERE predicates
+prepare stmt from "select * from cs1 where a is not null and a in (select b from cs2)";
+execute stmt;
+execute stmt;
+prepare stmt from "select * from cs1 where a in (select b from cs2) and a is null";
+execute stmt;
+execute stmt;
+prepare stmt from "select * from cs1 where a in (select 2 from cs2) and a in (select b from cs2)";
+execute stmt;
+execute stmt;
+prepare stmt from "select * from cs1 where a in (1,3) and a in (select b from cs2)";
+execute stmt;
+execute stmt;
+
+### Nested IN predicates
+prepare stmt from "select * from cs1 where a in (select b from cs2 where b in (select a from cs1))";
+execute stmt;
+execute stmt;
+prepare stmt from "select * from cs1 where a in (select b from cs2 where b in (select a from cs1 where a in (2,3)))";
+execute stmt;
+execute stmt;
+prepare stmt from "select * from cs1 where a in (select b from cs2 where b in (select a from cs1 where a not in (2,3)))";
+execute stmt;
+execute stmt;
+
+### WHERE predicates in the IN subquery
+prepare stmt from "select * from cs1 where a in (select b from cs2 where b=3)";
+execute stmt;
+execute stmt;
+prepare stmt from "select * from cs1 where a in (select b from cs2 where b=3 or c=200)";
+execute stmt;
+execute stmt;
+prepare stmt from "select * from cs1 where a in (select b from cs2 where b is not null)";
+execute stmt;
+execute stmt;
+
+### GROUP BY and HAVING predicates in the IN subquery
+prepare stmt from "select * from cs1 where a in (select b from cs2 group by b)";
+execute stmt;
+execute stmt;
+prepare stmt from "select * from cs1 where a in (select count(*) from cs2 group by b)";
+execute stmt;
+execute stmt;
+prepare stmt from "select * from cs1 where a in (select count(*) from cs2 group by b having count(*) < 3)";
+execute stmt;
+execute stmt;
+prepare stmt from "select * from cs1 where a in (select count(*) from cs2 where b <> 2 group by b having count(*) < 3)";
+execute stmt;
+execute stmt;
+
+### Window functions in the SELECT clause of IN subquery
+prepare stmt from "select * from cs1 where a in (select count(c) over (partition by b) from cs2)";
+execute stmt;
+execute stmt;
+prepare stmt from "select * from cs1 where a in (select count(*) over (partition by b) from cs2 where b is null)";
+execute stmt;
+execute stmt;
+prepare stmt from "select * from cs1 where a in (select count(*) over (partition by b) from cs2 where b <> 2)";
+execute stmt;
+execute stmt;
+
+### IN subquery containing joins
+prepare stmt from "select * from cs1 where a in (select t1.b from cs2 t1, cs2 t2 where t1.b=t2.b)";
+execute stmt;
+execute stmt;
+prepare stmt from "select * from cs1 where a in (select t1.b from cs2 t1, cs2 t2 where t1.b=t2.b and t1.b <> 3)";
+execute stmt;
+execute stmt;
+prepare stmt from "select * from cs1 where a in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.c=t2.c)";
+execute stmt;
+execute stmt;
+
+### Outer query containing joins
+prepare stmt from "select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select b from cs2) order by 1,2,3";
+execute stmt;
+execute stmt;
+prepare stmt from "select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select b from cs2) and cs1.a=1 order by 1,2,3";
+execute stmt;
+execute stmt;
+
+### Both IN subquery and outer queries containing joins
+prepare stmt from "select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1) order by 1,2,3";
+execute stmt;
+execute stmt;
+execute stmt;
+execute stmt;
+
+drop database test_mcol4617;

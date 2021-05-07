@@ -1,0 +1,648 @@
+set default_storage_engine=columnstore;
+drop database if exists test_mcol4617;
+create database test_mcol4617;
+use test_mcol4617;
+create table cs1 (a int);
+insert into cs1 values (1), (2), (3), (4), (null);
+create table cs2 (b int, c int);
+insert into cs2 values (1, 100), (1, 101), (2, 200),
+(3, 300), (3, 301), (3, 302), (null, null);
+select * from cs1 where a in (select b from cs2);
+a
+1
+2
+3
+select * from cs1 where a in (select c from cs2);
+a
+select * from cs1 where (a+a) in (select (b+b) from cs2);
+a
+1
+2
+3
+select * from cs1 where (a+1) in (select b from cs2);
+a
+1
+2
+select * from cs1 where hex(a*10) in (select hex(b*10) from cs2);
+a
+1
+2
+3
+select * from cs1 where a in (select b from cs2 where cs1.a=cs2.c-299);
+a
+3
+select * from cs1 where a is not null and a in (select b from cs2);
+a
+1
+2
+3
+select * from cs1 where a in (select b from cs2) and a is null;
+a
+select * from cs1 where a in (select 2 from cs2) and a in (select b from cs2);
+a
+2
+select * from cs1 where a in (1,3) and a in (select b from cs2);
+a
+1
+3
+select * from cs1 where a in (select b from cs2 where b in (select a from cs1));
+a
+1
+2
+3
+select * from cs1 where a in (select b from cs2 where b in (select a from cs1 where a in (2,3)));
+a
+2
+3
+select * from cs1 where a in (select b from cs2 where b in (select a from cs1 where a not in (2,3)));
+a
+1
+select * from cs1 where a in (select b from cs2 where b=3);
+a
+3
+select * from cs1 where a in (select b from cs2 where b=3 or c=200);
+a
+2
+3
+select * from cs1 where a in (select b from cs2 where b is not null);
+a
+1
+2
+3
+select * from cs1 where a in (select b from cs2 group by b);
+a
+1
+2
+3
+select * from cs1 where a in (select count(*) from cs2 group by b);
+a
+1
+2
+3
+select * from cs1 where a in (select count(*) from cs2 group by b having count(*) < 3);
+a
+1
+2
+select * from cs1 where a in (select count(*) from cs2 where b <> 2 group by b having count(*) < 3);
+a
+2
+select * from cs1 where a in (select count(c) over (partition by b) from cs2);
+a
+1
+2
+3
+select * from cs1 where a in (select count(*) over (partition by b) from cs2 where b is null);
+a
+1
+select * from cs1 where a in (select count(*) over (partition by b) from cs2 where b <> 2);
+a
+2
+3
+select * from cs1 where a in (select t1.b from cs2 t1, cs2 t2 where t1.b=t2.b);
+a
+1
+2
+3
+select * from cs1 where a in (select t1.b from cs2 t1, cs2 t2 where t1.b=t2.b and t1.b <> 3);
+a
+1
+2
+select * from cs1 where a in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.c=t2.c);
+a
+1
+2
+3
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select b from cs2) order by 1,2,3;
+a	b	c
+1	1	100
+1	1	101
+2	2	200
+3	3	300
+3	3	301
+3	3	302
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select b from cs2) and cs1.a=1;
+a	b	c
+1	1	100
+1	1	101
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1) order by 1,2,3;
+a	b	c
+1	1	100
+1	1	101
+select * from cs1 where a not in (select b from cs2);
+a
+select * from cs1 where a not in (select c from cs2);
+a
+select * from cs1 where (a+a) not in (select (b+b) from cs2);
+a
+select * from cs1 where (a+1) not in (select b from cs2);
+a
+select * from cs1 where a is not null and a not in (select b from cs2);
+a
+select * from cs1 where a not in (select b from cs2) and a is null;
+a
+select * from cs1 where a not in (select 2 from cs2) and a not in (select b from cs2);
+a
+select * from cs1 where a in (1,3) and a not in (select b from cs2);
+a
+select * from cs1 where a not in (select b from cs2 where b not in (select a from cs1));
+a
+1
+2
+3
+4
+NULL
+select * from cs1 where a not in (select b from cs2 where b=3 or c=200);
+a
+1
+4
+select * from cs1 where a not in (select b from cs2 where b is not null);
+a
+4
+select * from cs1 where a not in (select b from cs2 group by b);
+a
+select * from cs1 where a not in (select count(*) from cs2 group by b);
+a
+4
+select * from cs1 where a not in (select count(*) from cs2 group by b having count(*) < 3);
+a
+3
+4
+select * from cs1 where a not in (select count(*) from cs2 where b <> 2 group by b having count(*) < 3);
+a
+1
+3
+4
+select * from cs1 where a not in (select count(c) over (partition by b) from cs2);
+a
+4
+select * from cs1 where a not in (select count(*) over (partition by b) from cs2 where b <> 2);
+a
+1
+4
+select * from cs1 where a not in (select t1.b from cs2 t1, cs2 t2 where t1.b=t2.b);
+a
+4
+select * from cs1 where a not in (select t1.b from cs2 t1, cs2 t2 where t1.b=t2.b and t1.b <> 3);
+a
+3
+4
+select * from cs1 where a not in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.c=t2.c);
+a
+4
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select b from cs2);
+a	b	c
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select b from cs2) and cs1.a=1;
+a	b	c
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1) order by 1,2,3;
+a	b	c
+2	2	200
+3	3	300
+3	3	301
+3	3	302
+select * from cs1 where a not in (select b from cs2 where b is not null);
+a
+4
+select * from cs1 where hex(a*10) not in (select hex(b*10) from cs2 where b is not null);
+a
+4
+select * from cs1 where a is not null and a not in (select b from cs2 where b is not null);
+a
+4
+select * from cs1 where a not in (select b from cs2 where b is not null) and a is null;
+a
+select * from cs1 where a not in (select 2 from cs2) and a not in (select b from cs2 where b is not null);
+a
+4
+select * from cs1 where a in (1,3) and a not in (select b from cs2 where b is not null);
+a
+select * from cs1 where a not in (select b from cs2 where b not in (select a from cs1 where a is not null) and b is not null);
+a
+1
+2
+3
+4
+NULL
+select * from cs1 where a not in (select b from cs2 where b not in (select a from cs1 where a not in (2,3) and a is not null) and b is not null);
+a
+1
+4
+select * from cs1 where a not in (select b from cs2 where b is not null group by b);
+a
+4
+select * from cs1 where a not in (select count(*) from cs2 where b is not null group by b);
+a
+4
+select * from cs1 where a not in (select count(*) from cs2 where b is not null group by b having count(*) < 3);
+a
+3
+4
+select * from cs1 where a not in (select count(c) over (partition by b) from cs2 where b is not null);
+a
+4
+select * from cs1 where a not in (select t1.b from cs2 t1, cs2 t2 where t1.b=t2.b and t1.b is not null);
+a
+4
+select * from cs1 where a not in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.c=t2.c where t1.b is not null);
+a
+4
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select b from cs2 where b is not null);
+a	b	c
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select b from cs2 where b is not null) and cs1.a=1;
+a	b	c
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select t1.b from (select b from cs2 where b is not null) t1 join cs2 t2 on t1.b=t2.b and t1.b=1) order by 1,2,3;
+a	b	c
+2	2	200
+3	3	300
+3	3	301
+3	3	302
+select * from cs1 where a in (select b from cs2 where b is null);
+a
+select * from cs1 where a in (select b from cs2 where b is not null);
+a
+1
+2
+3
+select * from cs1 where a not in (select b from cs2 where b is null);
+a
+drop table cs1;
+create table cs1 (a int, d int);
+insert into cs1 values (1,100), (2,201), (3,302), (4,4000), (null,null);
+select * from cs1 where (a,d) in (select b,c from cs2);
+a	d
+1	100
+3	302
+select * from cs1 where ((a+a),(d+d)) in (select (b+b),(c+c) from cs2);
+a	d
+1	100
+3	302
+select * from cs1 where ((a+1),(d+1)) in (select b,c from cs2);
+a	d
+select * from cs1 where (hex(a*10),hex(d*10)) in (select hex(b*10),hex(c*10) from cs2);
+a	d
+1	100
+3	302
+select * from cs1 where (a,d) in (select b,c from cs2 where cs1.a=cs2.c-299);
+a	d
+3	302
+select * from cs1 where a is not null and (a,d) in (select b,c from cs2);
+a	d
+1	100
+3	302
+select * from cs1 where (a,d) in (select b,c from cs2) and a is null;
+a	d
+select * from cs1 where (a,d) in (select 2,201 from cs2) and (a,d) in (select b,c from cs2);
+a	d
+select * from cs1 where a in (1,3) and (a,d) in (select b,c from cs2);
+a	d
+1	100
+3	302
+select * from cs1 where (a,d) in (select b,c from cs2 where (b,c) in (select a,d from cs1));
+a	d
+1	100
+3	302
+select * from cs1 where (a,d) in (select b,c from cs2 where (b,c) in (select a,d from cs1 where a in (2,3)));
+a	d
+3	302
+select * from cs1 where (a,d) in (select b,c from cs2 where (b,c) in (select a,d from cs1 where a not in (2,3)));
+a	d
+1	100
+select * from cs1 where (a,d) in (select b,c from cs2 where b=3);
+a	d
+3	302
+select * from cs1 where (a,d) in (select b,c from cs2 where b=3 or c=200);
+a	d
+3	302
+select * from cs1 where (a,d) in (select b,c from cs2 where b is not null);
+a	d
+1	100
+3	302
+select * from cs1 where (a,d) in (select b,c from cs2 group by b,c);
+a	d
+1	100
+3	302
+select * from cs1 where (a,d) in (select count(*),c from cs2 group by c);
+a	d
+1	100
+select * from cs1 where (a,d) in (select count(*),c from cs2 group by c having count(*) < 3);
+a	d
+1	100
+select * from cs1 where (a,d) in (select count(*),c from cs2 where b <> 2 group by c having count(*) < 3);
+a	d
+1	100
+select * from cs1 where (a,d) in (select count(c) over (partition by b), (count(b) over (partition by c))*100 from cs2);
+a	d
+1	100
+select * from cs1 where (a,d) in (select count(*) over (partition by b), (count(*) over (partition by c))*100 from cs2 where b is null);
+a	d
+1	100
+select * from cs1 where (a,d) in (select count(*) over (partition by b), (count(*) over (partition by c))*100 from cs2 where b <> 2);
+a	d
+select * from cs1 where (a,d) in (select t1.b,t1.c from cs2 t1, cs2 t2 where t1.b=t2.b);
+a	d
+1	100
+3	302
+select * from cs1 where (a,d) in (select t1.b,t1.c from cs2 t1, cs2 t2 where t1.b=t2.b and t1.b <> 3);
+a	d
+1	100
+select * from cs1 where (a,d) in (select t1.b,t1.c from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.c=t2.c);
+a	d
+1	100
+3	302
+select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select b,c from cs2) order by 1,2,3,4;
+a	d	b	c
+1	100	1	100
+1	100	1	101
+3	302	3	300
+3	302	3	301
+3	302	3	302
+select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select b,c from cs2) and cs1.a=1 order by 1,2,3,4;
+a	d	b	c
+1	100	1	100
+1	100	1	101
+select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select t1.b,t1.c from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1);
+a	d	b	c
+1	100	1	100
+1	100	1	101
+drop table cs1;
+create table cs1 (a int);
+insert into cs1 values (1), (2), (3), (4), (null);
+prepare stmt from "select * from cs1 where a in (select b from cs2)";
+execute stmt;
+a
+1
+2
+3
+execute stmt;
+a
+1
+2
+3
+prepare stmt from "select * from cs1 where a in (select c from cs2)";
+execute stmt;
+a
+execute stmt;
+a
+prepare stmt from "select * from cs1 where (a+a) in (select (b+b) from cs2)";
+execute stmt;
+a
+1
+2
+3
+execute stmt;
+a
+1
+2
+3
+prepare stmt from "select * from cs1 where (a+1) in (select b from cs2)";
+execute stmt;
+a
+1
+2
+execute stmt;
+a
+1
+2
+prepare stmt from "select * from cs1 where hex(a*10) in (select hex(b*10) from cs2)";
+execute stmt;
+a
+1
+2
+3
+execute stmt;
+a
+1
+2
+3
+prepare stmt from "select * from cs1 where a in (select b from cs2 where cs1.a=cs2.c-299)";
+execute stmt;
+a
+3
+execute stmt;
+a
+3
+prepare stmt from "select * from cs1 where a is not null and a in (select b from cs2)";
+execute stmt;
+a
+1
+2
+3
+execute stmt;
+a
+1
+2
+3
+prepare stmt from "select * from cs1 where a in (select b from cs2) and a is null";
+execute stmt;
+a
+execute stmt;
+a
+prepare stmt from "select * from cs1 where a in (select 2 from cs2) and a in (select b from cs2)";
+execute stmt;
+a
+2
+execute stmt;
+a
+2
+prepare stmt from "select * from cs1 where a in (1,3) and a in (select b from cs2)";
+execute stmt;
+a
+1
+3
+execute stmt;
+a
+1
+3
+prepare stmt from "select * from cs1 where a in (select b from cs2 where b in (select a from cs1))";
+execute stmt;
+a
+1
+2
+3
+execute stmt;
+a
+1
+2
+3
+prepare stmt from "select * from cs1 where a in (select b from cs2 where b in (select a from cs1 where a in (2,3)))";
+execute stmt;
+a
+2
+3
+execute stmt;
+a
+2
+3
+prepare stmt from "select * from cs1 where a in (select b from cs2 where b in (select a from cs1 where a not in (2,3)))";
+execute stmt;
+a
+1
+execute stmt;
+a
+1
+prepare stmt from "select * from cs1 where a in (select b from cs2 where b=3)";
+execute stmt;
+a
+3
+execute stmt;
+a
+3
+prepare stmt from "select * from cs1 where a in (select b from cs2 where b=3 or c=200)";
+execute stmt;
+a
+2
+3
+execute stmt;
+a
+2
+3
+prepare stmt from "select * from cs1 where a in (select b from cs2 where b is not null)";
+execute stmt;
+a
+1
+2
+3
+execute stmt;
+a
+1
+2
+3
+prepare stmt from "select * from cs1 where a in (select b from cs2 group by b)";
+execute stmt;
+a
+1
+2
+3
+execute stmt;
+a
+1
+2
+3
+prepare stmt from "select * from cs1 where a in (select count(*) from cs2 group by b)";
+execute stmt;
+a
+1
+2
+3
+execute stmt;
+a
+1
+2
+3
+prepare stmt from "select * from cs1 where a in (select count(*) from cs2 group by b having count(*) < 3)";
+execute stmt;
+a
+1
+2
+execute stmt;
+a
+1
+2
+prepare stmt from "select * from cs1 where a in (select count(*) from cs2 where b <> 2 group by b having count(*) < 3)";
+execute stmt;
+a
+2
+execute stmt;
+a
+2
+prepare stmt from "select * from cs1 where a in (select count(c) over (partition by b) from cs2)";
+execute stmt;
+a
+1
+2
+3
+execute stmt;
+a
+1
+2
+3
+prepare stmt from "select * from cs1 where a in (select count(*) over (partition by b) from cs2 where b is null)";
+execute stmt;
+a
+1
+execute stmt;
+a
+1
+prepare stmt from "select * from cs1 where a in (select count(*) over (partition by b) from cs2 where b <> 2)";
+execute stmt;
+a
+2
+3
+execute stmt;
+a
+2
+3
+prepare stmt from "select * from cs1 where a in (select t1.b from cs2 t1, cs2 t2 where t1.b=t2.b)";
+execute stmt;
+a
+1
+2
+3
+execute stmt;
+a
+1
+2
+3
+prepare stmt from "select * from cs1 where a in (select t1.b from cs2 t1, cs2 t2 where t1.b=t2.b and t1.b <> 3)";
+execute stmt;
+a
+1
+2
+execute stmt;
+a
+1
+2
+prepare stmt from "select * from cs1 where a in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.c=t2.c)";
+execute stmt;
+a
+1
+2
+3
+execute stmt;
+a
+1
+2
+3
+prepare stmt from "select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select b from cs2) order by 1,2,3";
+execute stmt;
+a	b	c
+1	1	100
+1	1	101
+2	2	200
+3	3	300
+3	3	301
+3	3	302
+execute stmt;
+a	b	c
+1	1	100
+1	1	101
+2	2	200
+3	3	300
+3	3	301
+3	3	302
+prepare stmt from "select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select b from cs2) and cs1.a=1 order by 1,2,3";
+execute stmt;
+a	b	c
+1	1	100
+1	1	101
+execute stmt;
+a	b	c
+1	1	100
+1	1	101
+prepare stmt from "select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1) order by 1,2,3";
+execute stmt;
+a	b	c
+1	1	100
+1	1	101
+execute stmt;
+a	b	c
+1	1	100
+1	1	101
+execute stmt;
+a	b	c
+1	1	100
+1	1	101
+execute stmt;
+a	b	c
+1	1	100
+1	1	101
+drop database test_mcol4617;
