@@ -152,6 +152,11 @@ ResourceManager::ResourceManager(bool runningInExeMgr) :
     if (temp > 0)
         fJlNumScanReceiveThreads = temp;
 
+    fDECConnectionsPerQuery = getUintVal(fJobListStr, "DECConnectionsPerQuery", 0);
+    fDECConnectionsPerQuery = (fDECConnectionsPerQuery)
+                                ? fDECConnectionsPerQuery
+                                : getPsConnectionsPerPrimProc();
+
     temp = getIntVal(fTupleWSDLStr, "NumThreads", -1);
 
     if (temp > 0)

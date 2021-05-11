@@ -217,12 +217,16 @@ private:
     /* To keep some state associated with the connection.  These aren't copyable. */
     struct MQE : public boost::noncopyable
     {
-        MQE(uint32_t pmCount);
+        MQE(const uint32_t pmCount, const uint32_t initialInterleaverValue);
+        uint32_t getNextConnectionId(const size_t pmIndex,
+                                     const size_t pmConnectionsNumber,
+                                     const uint32_t DECConnectionsPerQuery);
         messageqcpp::Stats stats;
         StepMsgQueue queue;
         uint32_t ackSocketIndex;
         boost::scoped_array<volatile uint32_t> unackedWork;
         boost::scoped_array<uint32_t> interleaver;
+        uint32_t initialConnectionId;
         uint32_t pmCount;
         // non-BPP primitives don't do ACKs
         bool sendACKs;
@@ -286,6 +290,7 @@ private:
     static const uint32_t targetRecvQueueSize = 50000000;
     static const uint32_t disableThreshold = 10000000;
     uint32_t tbpsThreadCount;
+    uint32_t fDECConnectionsPerQuery;
 
     void sendAcks(uint32_t uniqueID, const std::vector<messageqcpp::SBS>& msgs,
                   boost::shared_ptr<MQE> mqe, size_t qSize);

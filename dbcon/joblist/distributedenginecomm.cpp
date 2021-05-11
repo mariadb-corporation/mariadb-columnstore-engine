@@ -243,6 +243,7 @@ void DistributedEngineComm::Setup()
     uint32_t newPmCount = fRm->getPsCount();
     throttleThreshold = fRm->getDECThrottleThreshold();
     tbpsThreadCount = fRm->getJlNumScanReceiveThreads();
+    fDECConnectionsPerQuery = fRm->getDECConnectionsPerQuery();
     unsigned numConnections = getNumConnections();
     oam::Oam oam;
     ModuleTypeConfig moduletypeconfig;
@@ -458,7 +459,8 @@ void DistributedEngineComm::addQueue(uint32_t key, bool sendACKs)
 
     boost::mutex* lock = new boost::mutex();
     condition* cond = new condition();
-    boost::shared_ptr<MQE> mqe(new MQE(pmCount));
+    uint32_t firstPMInterleavedConnectionId = key % (fPmConnections.size() / pmCount) * fDECConnectionsPerQuery * pmCount % fPmConnections.size();
+    boost::shared_ptr<MQE> mqe(new MQE(pmCount, firstPMInterleavedConnectionId));
 
     mqe->queue = StepMsgQueue(lock, cond);
     mqe->sendACKs = sendACKs;
@@ -972,30 +974,31 @@ void DistributedEngineComm::doHasBigMsgs(boost::shared_ptr<MQE> mqe, uint64_t ta
         mqe->targetQueueSize = targetSize;
 }
 
-int DistributedEngineComm::writeToClient(size_t index, const ByteStream& bs, uint32_t sender, bool doInterleaving)
+int DistributedEngineComm::writeToClient(size_t aPMIndex, const ByteStream& bs, uint32_t senderUniqueID, bool doInterleaving)
 {
     boost::mutex::scoped_lock lk(fMlock, boost::defer_lock_t());
     MessageQueueMap::iterator it;
     // Keep mqe's stats from being freed early
     boost::shared_ptr<MQE> mqe;
     Stats* senderStats = NULL;
-    uint32_t interleaver = 0;
 
     if (fPmConnections.size() == 0)
         return 0;
 
-    if (sender != numeric_limits<uint32_t>::max())
+    uint32_t connectionId = aPMIndex;
+    if (senderUniqueID != numeric_limits<uint32_t>::max())
     {
         lk.lock();
-        it = fSessionMessages.find(sender);
+        it = fSessionMessages.find(senderUniqueID);
 
         if (it != fSessionMessages.end())
         {
             mqe = it->second;
             senderStats = &(mqe->stats);
-
-            if (doInterleaving)
-                interleaver = it->second->interleaver[index % it->second->pmCount]++;
+            size_t pmIndex = aPMIndex % mqe->pmCount;
+            connectionId = it->second->getNextConnectionId(pmIndex,
+                                                           fPmConnections.size(),
+                                                           fDECConnectionsPerQuery);
         }
 
         lk.unlock();
@@ -1003,14 +1006,11 @@ int DistributedEngineComm::writeToClient(size_t index, const ByteStream& bs, uin
 
     try
     {
-        if (doInterleaving)
-            index = (index + (interleaver * pmCount)) % fPmConnections.size();
-
-        ClientList::value_type client = fPmConnections[index];
+        ClientList::value_type client = fPmConnections[connectionId];
 
         if (!client->isAvailable()) return 0;
 
-        boost::mutex::scoped_lock lk(*(fWlock[index]));
+        boost::mutex::scoped_lock lk(*(fWlock[connectionId]));
         client->write(bs, NULL, senderStats);
         return 0;
     }
@@ -1114,13 +1114,40 @@ Stats DistributedEngineComm::getNetworkStats(uint32_t uniqueID)
     return empty;
 }
 
-DistributedEngineComm::MQE::MQE(uint32_t pCount) : ackSocketIndex(0), pmCount(pCount), hasBigMsgs(false),
-    targetQueueSize(targetRecvQueueSize)
+DistributedEngineComm::MQE::MQE(const uint32_t pCount, const uint32_t initialInterleaverValue)
+    : ackSocketIndex(0), pmCount(pCount), hasBigMsgs(false), targetQueueSize(targetRecvQueueSize)
 {
     unackedWork.reset(new volatile uint32_t[pmCount]);
     interleaver.reset(new uint32_t[pmCount]);
     memset((void*) unackedWork.get(), 0, pmCount * sizeof(uint32_t));
-    memset((void*) interleaver.get(), 0, pmCount * sizeof(uint32_t));
+    uint32_t interleaverValue = initialInterleaverValue;
+    initialConnectionId = initialInterleaverValue;
+    for (size_t pmId = 0; pmId < pmCount; ++pmId)
+    {
+        interleaver.get()[pmId] = interleaverValue++;
+    }
+}
+
+// Here is the assumed connections distribution schema in a pmConnections vector.
+// (PM1-PM2...-PMX)-(PM1-PM2..-PMX)...
+uint32_t DistributedEngineComm::MQE::getNextConnectionId(const size_t pmIndex,
+                                                         const size_t pmConnectionsNumber,
+                                                         const uint32_t DECConnectionsPerQuery)
+
+{
+    uint32_t nextConnectionId = (interleaver[pmIndex] + pmCount) % pmConnectionsNumber;
+    // Wrap around the connection id.
+    if ((nextConnectionId - pmIndex) % DECConnectionsPerQuery == 0)
+    {
+        // The sum must be < connections vector size.
+        nextConnectionId = initialConnectionId + pmIndex;
+        interleaver[pmIndex] = nextConnectionId;
+    }
+    else
+    {
+        interleaver[pmIndex] = nextConnectionId;
+    }
+    return nextConnectionId;
 }
 
 }
