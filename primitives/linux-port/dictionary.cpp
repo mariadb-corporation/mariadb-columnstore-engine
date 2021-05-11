@@ -495,6 +495,24 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in,
 
         if (eqFilter)
         {
+            // MCOL-4407.
+            // Support filters:
+            // `where key = value0 and key = value1 {and key = value2}`
+            //
+            // The problem occurs only when HWM > columnstore_string_scan_threshold - 1
+            // because in this case:
+            // CS uses `tryCombineDictionary` which combines `DictStep`s into one as result
+            // `eqFilter` has more than 1 filter and applies the logic below which is `or` by
+            // default.
+            // Note: The case HWM <= columnstore_string_scan_threshold - 1 has the same problem,
+            // function `p_TokenByScan`, but it does not occur because `tryCombineDictionaryScan`
+            // was turned off.
+            if (eqFilter->size() > 1 && in->BOP == BOP_AND && eqOp == COMPARE_EQ)
+              goto no_store;
+
+            if (eqFilter->size() > 1 && in->BOP == BOP_OR && eqOp == COMPARE_NE)
+                goto store;
+
             // MCOL-1246 Trim whitespace before match
             string strData((char*)sigptr.data, sigptr.len);
             boost::trim_right_if(strData, boost::is_any_of(" "));

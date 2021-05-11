@@ -1,0 +1,32 @@
+DROP DATABASE IF EXISTS mcol_4407;
+CREATE DATABASE mcol_4407;
+USE mcol_4407;
+DROP TABLE IF EXISTS `sictable`;
+/* Bug when HWM > scan_threshold - 1 */
+set max_recursive_iterations=6282;
+CREATE TABLE `sictable`
+  (
+`serialno`    VARCHAR(20)    NOT NULL
+)
+ENGINE=Columnstore
+DEFAULT CHARSET=utf8
+;
+INSERT INTO `sictable`  (
+with recursive series as (
+select 1 as id union all
+select id +1 as id from series
+where id < 6281)
+select lpad(id,11,'0') from series);
+SELECT  `serialno`
+FROM  `sictable`
+WHERE  `serialno` = '00000000029' AND  `serialno` = '00000006256';
+serialno
+SELECT  `serialno`
+FROM  `sictable`
+WHERE  `serialno` = '00000000029' AND  `serialno` = '00000000029';
+serialno
+00000000029
+/* Default value */
+set max_recursive_iterations=1000;
+DROP TABLE `sictable`;
+DROP DATABASE mcol_4407;
