@@ -6683,17 +6683,17 @@ int processLimitAndOffset(
         */
         if (gwi.subSelectType != CalpontSelectExecutionPlan::IN_SUBS
              && gwi.subSelectType != CalpontSelectExecutionPlan::EXISTS_SUBS
-             && select_lex.master_unit()->global_parameters()->explicit_limit)
+                          && select_lex.master_unit()->global_parameters()->limit_params.explicit_limit)
         {
-            if (select_lex.master_unit()->global_parameters()->offset_limit)
+            if (select_lex.master_unit()->global_parameters()->limit_params.offset_limit)
             {
-                Item_int* offset = (Item_int*)select_lex.master_unit()->global_parameters()->offset_limit;
+                Item_int* offset = (Item_int*)select_lex.master_unit()->global_parameters()->limit_params.offset_limit;
                 csep->limitStart(offset->val_int());
             }
 
-            if (select_lex.master_unit()->global_parameters()->select_limit)
+                        if (select_lex.master_unit()->global_parameters()->limit_params.select_limit)
             {
-                Item_int* select = (Item_int*)select_lex.master_unit()->global_parameters()->select_limit;
+                Item_int* select = (Item_int*)select_lex.master_unit()->global_parameters()->limit_params.select_limit;
                 csep->limitNum(select->val_int());
                 // MCOL-894 Activate parallel ORDER BY
                 csep->orderByThreads(get_orderby_threads(gwi.thd));
@@ -6701,19 +6701,19 @@ int processLimitAndOffset(
         }
     }
     // union with explicit select at the top level
-    else if (isUnion && select_lex.explicit_limit)
+    else if (isUnion && select_lex.limit_params.explicit_limit)
     {
         if (select_lex.braces)
         {
-            if (select_lex.offset_limit)
-                csep->limitStart(((Item_int*)select_lex.offset_limit)->val_int());
+            if (select_lex.limit_params.offset_limit)
+                csep->limitStart(((Item_int*)select_lex.limit_params.offset_limit)->val_int());
 
-            if (select_lex.select_limit)
-                csep->limitNum(((Item_int*)select_lex.select_limit)->val_int());
+            if (select_lex.limit_params.select_limit)
+                csep->limitNum(((Item_int*)select_lex.limit_params.select_limit)->val_int());
         }
     }
     // other types of queries that have explicit LIMIT
-    else if (select_lex.explicit_limit)
+    else if (select_lex.limit_params.explicit_limit)
     {
         uint32_t limitOffset = 0;
 
@@ -6723,15 +6723,15 @@ int processLimitAndOffset(
 
             // @bug5729. After upgrade, join->unit sometimes is uninitialized pointer
             // (not null though) and will cause seg fault. Prefer checking
-            // select_lex->offset_limit if not null.
+            // select_lex->limit_params.offset_limit if not null.
             if (join->select_lex &&
-                    join->select_lex->offset_limit &&
-                    join->select_lex->offset_limit->is_fixed() &&
-                    join->select_lex->select_limit &&
-                    join->select_lex->select_limit->is_fixed())
+                join->select_lex->limit_params.offset_limit &&
+                join->select_lex->limit_params.offset_limit->is_fixed() &&
+                join->select_lex->limit_params.select_limit &&
+                join->select_lex->limit_params.select_limit->is_fixed())
             {
-                limitOffset = join->select_lex->offset_limit->val_int();
-                limitNum = join->select_lex->select_limit->val_int();
+                limitOffset = join->select_lex->limit_params.offset_limit->val_int();
+                limitNum = join->select_lex->limit_params.select_limit->val_int();
             }
             else if (join->unit)
             {
@@ -6741,15 +6741,15 @@ int processLimitAndOffset(
         }
         else
         {
-            if (select_lex.master_unit()->global_parameters()->offset_limit)
+            if (select_lex.master_unit()->global_parameters()->limit_params.offset_limit)
             {
-                Item_int* offset = (Item_int*)select_lex.master_unit()->global_parameters()->offset_limit;
+                Item_int* offset = (Item_int*)select_lex.master_unit()->global_parameters()->limit_params.offset_limit;
                 limitOffset = offset->val_int();
             }
 
-            if (select_lex.master_unit()->global_parameters()->select_limit)
+            if (select_lex.master_unit()->global_parameters()->limit_params.select_limit)
             {
-                Item_int* select = (Item_int*)select_lex.master_unit()->global_parameters()->select_limit;
+                Item_int* select = (Item_int*)select_lex.master_unit()->global_parameters()->limit_params.select_limit;
                 limitNum = select->val_int();
             }
         }
@@ -9902,8 +9902,8 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
         // LIMIT and OFFSET are extracted from TABLE_LIST elements.
         // All of JOIN-ed tables contain relevant limit and offset.
         uint64_t limit = (uint64_t)-1;
-        if (gi.groupByTables->select_lex->select_limit && 
-            ( limit = static_cast<Item_int*>(gi.groupByTables->select_lex->select_limit)->val_int() ) &&
+        if (gi.groupByTables->select_lex->limit_params.select_limit && 
+            ( limit = static_cast<Item_int*>(gi.groupByTables->select_lex->limit_params.select_limit)->val_int() ) &&
             limit != (uint64_t)-1 )
         {
             csep->limitNum(limit);
@@ -9915,9 +9915,9 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             csep->limitNum((uint64_t) - 2);
         }
 
-        if (gi.groupByTables->select_lex->offset_limit)
+        if (gi.groupByTables->select_lex->limit_params.offset_limit)
         {
-            csep->limitStart(((Item_int*)gi.groupByTables->select_lex->offset_limit)->val_int());
+            csep->limitStart(((Item_int*)gi.groupByTables->select_lex->limit_params.offset_limit)->val_int());
         }
 
         // We don't currently support limit with correlated subquery
