@@ -913,7 +913,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 
         SqlStatement& stmt = *ptree.fList[0];
         bool isVarbinaryAllowed = false;
-        std::string valConfig = config::Config::makeConfig()->getConfig(
+        std::string valConfig = config::Config::makeConfig()->getFromActualConfig(
                                     "WriteEngine", "AllowVarbinary" );
         algorithm::to_upper(valConfig);
 
