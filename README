@@ -1,7 +1,4 @@
-This is MariaDB ColumnStore 5.X
+This is MariaDB ColumnStore 5.5.2-3 for MariaDB community edition 10.6.1
 It is built by porting InfiniDB 4.6.7 on MariaDB and adding entirely 
 new features not found anywhere else.
-
-A few things to notice:
-- The building of the ColumnStore engine needs a special build environment. We're working on making it available for everyone to build.
 
