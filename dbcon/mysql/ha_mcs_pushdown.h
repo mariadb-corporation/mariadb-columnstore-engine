@@ -142,6 +142,10 @@ private:
 public:
   bool rewrite_error;
   std::string err_msg;
+  // MCOL-4525 Store the original TABLE_LIST::outer_join value in a hash map.
+  // This will be used to restore to the original state later in case
+  // query execution fails using the select_handler.
+  cal_impl_if::TableOuterJoinMap tableOuterJoinMap;
   ha_columnstore_select_handler(THD* thd_arg, SELECT_LEX* sel);
   ~ha_columnstore_select_handler();
   int init_scan() override;
