@@ -18,6 +18,7 @@
 #ifndef COLLATION_H_INCLUDED
 #define COLLATION_H_INCLUDED
 
+#include "mcsconfig.h"
 #include "exceptclasses.h"
 #include "conststring.h"
 
@@ -72,6 +73,7 @@ typedef double	pfloat;		/* Mixed prototypes can't take float */
 typedef const struct charset_info_st CHARSET_INFO;
 extern "C" MYSQL_PLUGIN_IMPORT CHARSET_INFO *default_charset_info;
 
+#include "my_compiler.h"
 #include "m_ctype.h"
 
 #undef FALSE
