@@ -372,6 +372,11 @@ public:
     inline bool isShortString(uint32_t colIndex) const;
     inline bool isLongString(uint32_t colIndex) const;
 
+    bool colHasCollation(uint32_t colIndex) const
+    {
+        return datatypes::typeHasCollation(getColType(colIndex));
+    }
+
     template<int len> inline uint64_t getUintField(uint32_t colIndex) const;
     inline uint64_t getUintField(uint32_t colIndex) const;
     template<int len> inline int64_t getIntField(uint32_t colIndex) const;
@@ -555,7 +560,6 @@ public:
     inline uint64_t hash() const;  // generates a hash for all cols
     inline void colUpdateMariaDBHasher(datatypes::MariaDBHasher &hasher, uint32_t col) const;
 
-    bool equals(const Row&, const std::vector<uint32_t>& keyColumns) const;
     bool equals(const Row&, uint32_t lastCol) const;
     inline bool equals(const Row&) const;
 
@@ -1507,6 +1511,11 @@ public:
     inline bool isUnsigned(uint32_t colIndex) const;
     inline bool isShortString(uint32_t colIndex) const;
     inline bool isLongString(uint32_t colIndex) const;
+
+    bool colHasCollation(uint32_t colIndex) const
+    {
+        return datatypes::typeHasCollation(getColType(colIndex));
+    }
 
     inline const std::vector<uint32_t>& getScale() const;
     inline const std::vector<uint32_t>& getPrecision() const;
