@@ -146,6 +146,16 @@ public:
         fPackageWorkQueueSize = workQueueSize;
     }
 
+    inline bool pendingShutdown() const
+    {
+        return fShutdownFlag;
+    }
+
+    inline void startShutdown()
+    {
+        fShutdownFlag = true;
+    }
+
 private:
     //not copyable
     DMLServer(const DMLServer& rhs);
@@ -156,6 +166,7 @@ private:
 
     boost::scoped_ptr<messageqcpp::MessageQueueServer> fMqServer;
     BRM::DBRM* fDbrm;
+    bool fShutdownFlag;
 
 public:
     /** @brief the thread pool for processing dml packages

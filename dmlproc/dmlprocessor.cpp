@@ -98,7 +98,7 @@ boost::mutex PackageHandler::tableOidMutex;
 // If FORCE is set, we can't rollback.
 struct CancellationThread
 {
-    CancellationThread(DBRM* aDbrm) : fDbrm(aDbrm)
+    CancellationThread(DBRM* aDbrm, DMLServer& aServer) : fDbrm(aDbrm), fServer(aServer)
     {}
     void operator()()
     {
@@ -117,6 +117,9 @@ struct CancellationThread
             usleep(1000000);    // 1 seconds
             // Check to see if someone has ordered a shutdown or suspend with rollback.
             (void)fDbrm->getSystemShutdownPending(bRollback, bForce);
+
+            if (bForce)
+                break;
 
             if (bDoingRollback && bRollback)
             {
@@ -162,6 +165,7 @@ struct CancellationThread
                     DMLProcessor::log(oss1.str(), logging::LOG_TYPE_INFO);
                 }
 
+                // WIP Need to set cluster to read-only via CMAPI before shutting the cluster down.
                 if (fDbrm->isReadWrite())
                 {
                     continue;
@@ -288,10 +292,15 @@ struct CancellationThread
                     oss2 << "DMLProc has rolled back " << idleTransCount << " idle transactions.";
                     DMLProcessor::log(oss2.str(), logging::LOG_TYPE_INFO);
                 }
+                // Here is the end of the rollback if so DMLProc rollbacks what it can.
+                break;
             }
         }
+        // Setting the flag to tell DMLServer to exit.
+        fServer.startShutdown();
     }
     DBRM* fDbrm;
+    DMLServer& fServer;
 };
 
 PackageHandler::PackageHandler(const messageqcpp::IOSocket& ios,
@@ -1195,7 +1204,7 @@ void added_a_pm(int)
 }
 
 DMLServer::DMLServer(int packageMaxThreads, int packageWorkQueueSize, DBRM* dbrm) :
-    fPackageMaxThreads(packageMaxThreads), fPackageWorkQueueSize(packageWorkQueueSize), fDbrm(dbrm)
+    fPackageMaxThreads(packageMaxThreads), fPackageWorkQueueSize(packageWorkQueueSize), fDbrm(dbrm), fShutdownFlag(false)
 {
     fMqServer.reset(new MessageQueueServer("DMLProc"));
 
@@ -1214,14 +1223,24 @@ void DMLServer::start()
         // CancellationThread is for telling all active transactions
         // to quit working because the system is either going down
         // or going into write suspend mode
-        CancellationThread cancelObject(fDbrm);
+        CancellationThread cancelObject(fDbrm, *this);
         boost::thread cancelThread(cancelObject);
 
         cout << "DMLProc is ready..." << endl;
 
+        const static struct timespec timeout = {1, 100}; // roughly 1 second TO
         for (;;)
         {
-            ios = fMqServer->accept();
+            ios = fMqServer->accept(&timeout);
+            // MCS polls in a loop watching for a pending shutdown
+            // that is signalled via fShutdownFlag set in a
+            // CancellationThread. CT sets the flag if a cluster state
+            // has SS_SHUTDOWNPENDING value set.
+            while (!ios.hasSocketDescriptor() && !pendingShutdown())
+                ios = fMqServer->accept(&timeout);
+
+            if (pendingShutdown())
+                break;
             ios.setSockID(nextID++);
             fDmlPackagepool.invoke(DMLProcessor(ios, fDbrm));
         }
