@@ -206,6 +206,7 @@ private:
     void doGetUniqueUint32(messageqcpp::ByteStream& msg, ThreadParams* p);
     void doGetUniqueUint64(messageqcpp::ByteStream& msg, ThreadParams* p);
     void doGetSystemState(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doSetSystemState(uint32_t state, ThreadParams* p);
     void doSetSystemState(messageqcpp::ByteStream& msg, ThreadParams* p);
     void doClearSystemState(messageqcpp::ByteStream& msg, ThreadParams* p);
     void doSessionManagerReset(messageqcpp::ByteStream& msg, ThreadParams* p);
@@ -241,6 +242,9 @@ private:
     void doGetAILock(messageqcpp::ByteStream& msg, ThreadParams* p);
     void doReleaseAILock(messageqcpp::ByteStream& msg, ThreadParams* p);
     void doDeleteAISequence(messageqcpp::ByteStream& msg, ThreadParams* p);
+
+    /* Shutdown interface */
+    void doShutDown(ThreadParams* p, bool force);
 
     messageqcpp::MessageQueueServer* dbrmServer;
     std::vector<messageqcpp::MessageQueueClient*> slaves;

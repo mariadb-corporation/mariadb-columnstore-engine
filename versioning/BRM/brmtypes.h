@@ -558,7 +558,8 @@ const uint8_t RELEASE_LBID_RANGES = 91;
 const uint8_t BULK_UPDATE_DBROOT = 100;
 const uint8_t GET_SYSTEM_CATALOG = 101;
 const uint8_t BULK_WRITE_VB_ENTRY = 102;
-
+const uint8_t SET_SHUTDOWN_PENDING_ROLLBACK = 103;
+const uint8_t SET_SHUTDOWN_PENDING_FORCE = 104;
 
 /* Error codes returned by the DBRM functions. */
 /// The operation was successful

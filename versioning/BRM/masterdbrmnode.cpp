@@ -21,6 +21,7 @@
  *
  ****************************************************************************/
 
+#include <cstdint>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sstream>
@@ -602,6 +603,18 @@ void MasterDBRMNode::msgProcessor()
 
             case DELETE_AI_SEQUENCE:
                 doDeleteAISequence(msg, p);
+                continue;
+        }
+
+        /* Process ShutDown calls */
+        switch (cmd)
+        {
+            case SET_SHUTDOWN_PENDING_ROLLBACK:
+                doShutDown(p, false);
+                continue;
+
+            case SET_SHUTDOWN_PENDING_FORCE:
+                doShutDown(p, true);
                 continue;
         }
 
@@ -1864,19 +1877,14 @@ void MasterDBRMNode::doGetSystemState(ByteStream& msg, ThreadParams* p)
     catch (exception&) { }
 }
 
-void MasterDBRMNode::doSetSystemState(ByteStream& msg, ThreadParams* p)
+void MasterDBRMNode::doSetSystemState(uint32_t state, ThreadParams* p)
 {
     ByteStream reply;
-    ByteStream::byte cmd;
     ByteStream::byte err = ERR_FAILURE;
-    uint32_t ss;
 
     try
     {
-        msg >> cmd;
-        msg >> ss;
-
-        sm.setSystemState(ss);
+        sm.setSystemState(state);
 #ifdef BRM_VERBOSE
         cerr << "doSetSystemState setting " << hex << ss << dec << endl;
 #endif
@@ -1903,6 +1911,38 @@ void MasterDBRMNode::doSetSystemState(ByteStream& msg, ThreadParams* p)
         p->sock->write(reply);
     }
     catch (...) { }
+}
+
+void MasterDBRMNode::doSetSystemState(ByteStream& msg, ThreadParams* p)
+{
+    ByteStream reply;
+    ByteStream::byte cmd;
+    ByteStream::byte err = ERR_FAILURE;
+    uint32_t ss;
+
+    try
+    {
+        msg >> cmd;
+        msg >> ss;
+#ifdef BRM_VERBOSE
+        cerr << "doSetSystemState setting " << hex << ss << dec << endl;
+#endif
+    }
+    catch (exception&)
+    {
+        err = ERR_FAILURE;
+        reply << err;
+
+        try
+        {
+            p->sock->write(reply);
+        }
+        catch (...) { }
+
+        return;
+    }
+
+    doSetSystemState(ss, p)
 }
 
 void MasterDBRMNode::doClearSystemState(ByteStream& msg, ThreadParams* p)
@@ -2723,6 +2763,15 @@ void MasterDBRMNode::doDeleteAISequence(ByteStream& msg, ThreadParams* p)
         catch (...) { }
     }
 }
+
+void MasterDBRMNode::doShutDown(ThreadParams* p, bool force)
+{
+    uint32_t state = SessionManagerServer::SS_SHUTDOWN_PENDING |
+        (force ? SessionManagerServer::SS_FORCE : SessionManagerServer::SS_ROLLBACK)
+
+    doSetSystemState(state, p);
+}
+
 
 MasterDBRMNode::MsgProcessor::MsgProcessor(MasterDBRMNode* master) : m(master)
 {
