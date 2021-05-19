@@ -372,6 +372,15 @@ inline bool isCharType(const datatypes::SystemCatalog::ColDataType type)
           datatypes::SystemCatalog::TEXT == type);
 }
 
+
+inline bool typeHasCollation(const datatypes::SystemCatalog::ColDataType type)
+{
+    return datatypes::SystemCatalog::VARCHAR == type ||
+           datatypes::SystemCatalog::CHAR == type ||
+           datatypes::SystemCatalog::TEXT == type;
+}
+
+
 /** convenience function to determine if column type is a
  *  numeric type
  */

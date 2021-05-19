@@ -1,0 +1,17 @@
+--source ../include/have_columnstore.inc
+--source ctype_cmp_combinations.inc
+
+SET NAMES utf8;
+
+--echo #
+--echo # MCOL-4721 CHAR(1) is not collation-aware for GROUP/DISTINCT
+--echo #
+
+CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET latin1 COLLATE latin1_swedish_ci);
+INSERT INTO t1 VALUES ('a'),('A');
+SELECT c1, COUNT(*) FROM t1 GROUP BY c1;
+SELECT DISTINCT c1 FROM t1;
+INSERT INTO t1 VALUES ('ä'),('Ä'),('ã'),('Ã');
+SELECT c1, COUNT(*) FROM t1 GROUP BY c1 ORDER BY c1;
+SELECT DISTINCT c1 FROM t1 ORDER BY c1;
+DROP TABLE t1;
