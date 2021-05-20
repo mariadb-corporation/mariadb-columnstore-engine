@@ -662,9 +662,13 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
                     bs >> tlIndex;
                     auto* smallSideColumnsWidthsPtr = (mHasDifferentKeylengthAtBothSides) ? &smallSideRGs[0].getColWidths()
                                                                                           : nullptr;
-                    bucket = tlLargeKey.hash(outputRG,
+                    // The bucket number corresponds with the index used later inserting TL keys into permanent JOIN hash map.
+                    auto ha = tlLargeKey.hash(outputRG,
                                              tlLargeSideKeyColumns[joinerNum],
-                                             smallSideColumnsWidthsPtr) & ptMask;
+                                             smallSideColumnsWidthsPtr); 
+                    bucket = ha & ptMask;
+                    //WIP 4173
+//                    std::cout << "addToJoiner bucket " << bucket << " hash " << ha << std::endl;
                     tmpBuckets[bucket].push_back(make_pair(tlLargeKey, tlIndex));
                 }
                 else
@@ -1250,9 +1254,15 @@ void BatchPrimitiveProcessor::executeTupleJoin()
             {
                 // cout << " typeless join\n";
                 // the null values are not sent by UM in typeless case.  null -> !found
+//                std::cout << "executeTJ " << oldRow.toString() << std::endl;
                 TypelessData tlLargeKey = makeTypelessKey(oldRow, j);
-                uint bucket = tlLargeKey.hash(outputRG, tlLargeSideKeyColumns[j]) & ptMask;
+                auto ha = tlLargeKey.hash(outputRG, tlLargeSideKeyColumns[j]); 
+                uint bucket = ha & ptMask;
+                // WIP MCOL-4173
+//                std::cout << "executeTJ before hash map bucket " << bucket << " hash " << ha << std::endl;
+//                std::cout << "executeTJ joiner idx " << j << " bucket " << bucket << " bucket.size() " << tlJoiners[j][bucket]->size() << std::endl;
                 found = tlJoiners[j][bucket]->find(tlLargeKey) != tlJoiners[j][bucket]->end();
+//                std::cout << "executeTJ after hash map " << std::endl;
 
                 if ((!found && !(joinTypes[j] & (LARGEOUTER | ANTI))) ||
                         (joinTypes[j] & ANTI))
