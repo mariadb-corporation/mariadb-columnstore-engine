@@ -25,6 +25,14 @@
 namespace rowgroup
 {
 
+uint32_t calcNumberOfBuckets(ssize_t availMem,
+                             uint32_t numOfThreads,
+                             uint32_t numOfBuckets,
+                             uint32_t groupsPerThread,
+                             uint32_t inRowSize,
+                             uint32_t outRowSize,
+                             bool enabledDiskAggr);
+
 class MemManager;
 class RowPosHashStorIface;
 class RowPosHashStorage;
@@ -39,7 +47,6 @@ public:
                 RowGroup* rowGroupOut,
                 RowGroup* keysRowGroup,
                 uint32_t keyCount,
-                size_t maxRows = 256,
                 joblist::ResourceManager* rm = nullptr,
                 boost::shared_ptr<int64_t> sessLimit = {},
                 bool enabledDiskAgg = false,
@@ -48,17 +55,23 @@ public:
   RowAggStorage(const std::string& tmpDir,
                 RowGroup* rowGroupOut,
                 uint32_t keyCount,
-                size_t maxRows = 256,
                 joblist::ResourceManager* rm = nullptr,
                 boost::shared_ptr<int64_t> sessLimit = {},
                 bool enabledDiskAgg = false,
                 bool allowGenerations = false)
-      : RowAggStorage(tmpDir, rowGroupOut, rowGroupOut, keyCount, maxRows,
+      : RowAggStorage(tmpDir, rowGroupOut, rowGroupOut, keyCount,
                       rm, std::move(sessLimit),
                       enabledDiskAgg, allowGenerations)
   {}
 
   ~RowAggStorage();
+
+  static uint16_t getMaxRows(bool enabledDiskAgg)
+  {
+    return (enabledDiskAgg ? 8192 : 256);
+  }
+
+  static size_t getBucketSize();
 
   /** @brief Find or create resulting row.
    *
@@ -96,6 +109,29 @@ public:
    * @param rowOut
    */
   void finalize(std::function<void(Row &)> mergeFunc, Row &rowOut);
+
+  /** @brief Calculate maximum size of hash assuming 80% fullness.
+   *
+   * @param elems(in) number of elements
+   * @returns calculated size
+   */
+  inline static size_t calcMaxSize(size_t elems) noexcept
+  {
+    if (LIKELY(elems <= std::numeric_limits<size_t>::max() / 100))
+      return elems * 80 / 100;
+
+    return (elems / 100) * 80;
+  }
+
+  inline static size_t calcSizeWithBuffer(size_t elems, size_t maxSize) noexcept
+  {
+    return elems + std::min(maxSize, 0xFFUL);
+  }
+
+  inline static size_t calcSizeWithBuffer(size_t elems) noexcept
+  {
+    return calcSizeWithBuffer(elems, calcMaxSize(elems));
+  }
 
 private:
   struct Data;
@@ -238,29 +274,6 @@ private:
    */
   void initData(size_t elems, const RowPosHashStorIface* oldHashes);
 
-  /** @brief Calculate maximum size of hash assuming 80% fullness.
-   *
-   * @param elems(in) number of elements
-   * @returns calculated size
-   */
-  inline static size_t calcMaxSize(size_t elems) noexcept
-  {
-    if (LIKELY(elems <= std::numeric_limits<size_t>::max() / 100))
-      return elems * 80 / 100;
-
-    return (elems / 100) * 80;
-  }
-
-  inline static size_t calcSizeWithBuffer(size_t elems, size_t maxSize) noexcept
-  {
-    return elems + std::min(maxSize, 0xFFUL);
-  }
-
-  inline static size_t calcSizeWithBuffer(size_t elems) noexcept
-  {
-    return calcSizeWithBuffer(elems, calcMaxSize(elems));
-  }
-
   /** @brief Calculate memory size of info data
    *
    * @param elems(in) number of elements
@@ -347,6 +360,7 @@ private:
   bool fInitialized{false};
   rowgroup::RowGroup* fRowGroupOut;
   rowgroup::RowGroup* fKeysRowGroup;
+  std::vector<std::string> fTmpFilePrefixes;
 };
 
 } // namespace rowgroup

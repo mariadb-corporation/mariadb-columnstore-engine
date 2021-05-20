@@ -475,15 +475,6 @@ public:
      */
     void deserialize(messageqcpp::ByteStream& bs) override;
 
-    /** @brief set the memory limit for RowAggregation
-     *
-     * @parm limit(in) memory limit for both Map and secondary RowGroups
-     */
-    void setMaxMemory(uint64_t limit)
-    {
-        fMaxMemory = limit;
-    }
-
     /** @brief load result set into byte stream
      *
      * @parm bs(out) BytesStream that is to be written to.
@@ -583,11 +574,7 @@ protected:
 
     std::unique_ptr<RowAggStorage> fRowAggStorage;
 
-    uint64_t                                        fTotalRowCount;
-    uint64_t                                        fMaxTotalRowCount;
-    uint64_t                                        fMaxMemory;
-
-  // for support PM aggregation after PM hashjoin
+    // for support PM aggregation after PM hashjoin
     std::vector<RowGroup>*                          fSmallSideRGs;
     RowGroup*                                       fLargeSideRG;
     boost::shared_array<boost::shared_array<int> >  fSmallMappings;

@@ -1613,12 +1613,12 @@ private:
  ----------------------------------------------------------------------------*/
 RowAggStorage::RowAggStorage(const std::string& tmpDir,
                              RowGroup *rowGroupOut, RowGroup *keysRowGroup,
-                             uint32_t keyCount, size_t maxRows,
+                             uint32_t keyCount,
                              joblist::ResourceManager *rm,
                              boost::shared_ptr<int64_t> sessLimit,
                              bool enabledDiskAgg,
                              bool allowGenerations)
-    : fMaxRows(maxRows)
+    : fMaxRows(getMaxRows(enabledDiskAgg))
     , fExtKeys(rowGroupOut != keysRowGroup)
     , fStorage(new RowGroupStorage(tmpDir, rowGroupOut, 1, rm, sessLimit, !enabledDiskAgg, !enabledDiskAgg))
     , fKeysStorage(fStorage.get())
@@ -1650,7 +1650,7 @@ RowAggStorage::RowAggStorage(const std::string& tmpDir,
   fCurData = fGens.back().get();
   if (enabledDiskAgg)
   {
-    fCurData->fDiskHashes = new RowPosHashStorage(tmpDir, maxRows, 0, rm, sessLimit, true);
+    fCurData->fDiskHashes = new RowPosHashStorage(tmpDir, fMaxRows, 0, rm, sessLimit, true);
     fCurData->fHashes.reset(fCurData->fDiskHashes);
   }
   else
@@ -1678,14 +1678,14 @@ bool RowAggStorage::getTargetRow(const Row &row, Row &rowOut)
   if (UNLIKELY(!fInitialized))
   {
     fInitialized = true;
-    bool eda = fCurData->fDiskHashes != nullptr;
+    bool enabledDiskAgg = fCurData->fDiskHashes != nullptr;
     fStorage.reset(new RowGroupStorage(fTmpDir,
                                        fRowGroupOut,
                                        fMaxRows,
                                        fMM->getResourceManaged(),
                                        fMM->getSessionLimit(),
-                                       !eda,
-                                       !eda));
+                                       !enabledDiskAgg,
+                                       !enabledDiskAgg));
     if (fExtKeys)
     {
       fKeysStorage = new RowGroupStorage(fTmpDir,
@@ -1693,8 +1693,8 @@ bool RowAggStorage::getTargetRow(const Row &row, Row &rowOut)
                                          fMaxRows,
                                          fMM->getResourceManaged(),
                                          fMM->getSessionLimit(),
-                                         !eda,
-                                         !eda);
+                                         !enabledDiskAgg,
+                                         !enabledDiskAgg);
     }
     else
     {
@@ -1702,6 +1702,18 @@ bool RowAggStorage::getTargetRow(const Row &row, Row &rowOut)
     }
     fKeysStorage->initRow(fKeyRow);
     reserve(fMaxRows);
+
+    if (enabledDiskAgg)
+    {
+      char fname[PATH_MAX];
+      snprintf(fname, sizeof(fname), "AggMap-p%u-t%p-g", getpid(), fUniqId);
+      fTmpFilePrefixes.emplace_back(fname);
+      if (fCurData && fCurData->fDiskHashes)
+        fCurData->fDiskHashes->getTmpFilePrefixes(fTmpFilePrefixes);
+      fStorage->getTmpFilePrefixes(fTmpFilePrefixes);
+      if (fExtKeys)
+        fKeysStorage->getTmpFilePrefixes(fTmpFilePrefixes);
+    }
   }
   else if (UNLIKELY(fCurData->fSize >= fCurData->fMaxSize))
   {
@@ -1847,6 +1859,11 @@ void RowAggStorage::append(RowAggStorage& other)
   // neither in this RowAggStorage nor in the other
   cleanup();
   freeData();
+  if (!fInitialized)
+  {
+    // top-level aggregation
+    fStorage->getTmpFilePrefixes(fTmpFilePrefixes);
+  }
   if (other.fGeneration == 0 || other.fCurData->fMemHashes)
   {
     // even if there is several generations in the other RowAggStorage
@@ -1877,7 +1894,6 @@ std::unique_ptr<RGData> RowAggStorage::getNextRGData()
 {
   if (!fStorage)
   {
-    std::cerr << "Not inited" << std::endl;
     return {};
   }
   cleanup();
@@ -2488,22 +2504,10 @@ void RowAggStorage::loadGeneration(uint16_t gen, size_t &size, size_t &mask, siz
 
 void RowAggStorage::cleanupAll() noexcept
 {
-  if (!fInitialized)
+  if (fTmpFilePrefixes.empty())
     return;
   try
   {
-    char fname[PATH_MAX];
-    snprintf(fname, sizeof(fname), "AggMap-p%u-t%p-g",
-             getpid(), fUniqId);
-    std::vector<std::string> prefixes;
-    prefixes.emplace_back(fname);
-    if (fCurData && fCurData->fDiskHashes)
-      fCurData->fDiskHashes->getTmpFilePrefixes(prefixes);
-    if (fStorage)
-      fStorage->getTmpFilePrefixes(prefixes);
-    if (fExtKeys && fKeysStorage)
-      fKeysStorage->getTmpFilePrefixes(prefixes);
-
     namespace fs = boost::filesystem;
     fs::path tmpDir(fTmpDir);
     if (!fs::is_directory(tmpDir))
@@ -2514,8 +2518,11 @@ void RowAggStorage::cleanupAll() noexcept
     {
       if (!fs::is_regular(*file_it))
         continue;
-      if (std::any_of(prefixes.cbegin(), prefixes.cend(),
-                      [&file_it](const std::string& pref) { return boost::starts_with(file_it->path().filename().string(), pref); }))
+      if (std::any_of(fTmpFilePrefixes.cbegin(), fTmpFilePrefixes.cend(),
+                      [&file_it](const std::string& pref)
+                      {
+                        return boost::starts_with(file_it->path().filename().string(), pref);
+                      }))
       {
         toDelete.push_back(file_it->path());
       }
@@ -2541,6 +2548,44 @@ void RowAggStorage::cleanup(uint16_t gen)
   unlink(makeDumpFilename(gen).c_str());
   if (fCurData && fCurData->fHashes)
     fCurData->fHashes->cleanup();
+}
+
+size_t RowAggStorage::getBucketSize()
+{
+  return 1 /* info byte */ + sizeof(RowPosHash);
+}
+
+uint32_t calcNumberOfBuckets(ssize_t availMem,
+                             uint32_t numOfThreads,
+                             uint32_t numOfBuckets,
+                             uint32_t groupsPerThread,
+                             uint32_t inRowSize,
+                             uint32_t outRowSize,
+                             bool enabledDiskAggr)
+{
+  if (availMem < 0)
+  {
+    // Most likely, nothing can be processed, but we will still try
+    return 1;
+  }
+
+  if (enabledDiskAggr)
+  {
+    return numOfBuckets;
+  }
+  else
+  {
+    auto rowGroupSize = RowAggStorage::getMaxRows(false);
+    ssize_t minNeededMem = numOfThreads * groupsPerThread * inRowSize * rowGroupSize +
+                        outRowSize * rowGroupSize * 2 +
+                        RowAggStorage::calcSizeWithBuffer(rowGroupSize, rowGroupSize) * RowAggStorage::getBucketSize();
+    if (availMem / numOfBuckets < minNeededMem)
+    {
+      numOfBuckets = availMem / minNeededMem;
+    }
+  }
+
+  return numOfBuckets == 0 ? 1 : numOfBuckets;
 }
 
 } // namespace rowgroup

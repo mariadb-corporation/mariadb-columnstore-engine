@@ -376,6 +376,17 @@ TupleAggregateStep::TupleAggregateStep(
     fNumOfThreads = fRm->aggNumThreads();
     fNumOfBuckets = fRm->aggNumBuckets();
     fNumOfRowGroups = fRm->aggNumRowGroups();
+
+    auto memLimit = std::min(fRm->availableMemory(), *fSessionMemLimit);
+    fNumOfBuckets = calcNumberOfBuckets(memLimit,
+                                        fNumOfThreads,
+                                        fNumOfBuckets,
+                                        fNumOfRowGroups,
+                                        fRowGroupIn.getRowSize(),
+                                        fRowGroupOut.getRowSize(),
+                                        fRm->getAllowDiskAggregation());
+    fNumOfThreads = std::min(fNumOfThreads, fNumOfBuckets);
+
     fMemUsage.reset(new uint64_t[fNumOfThreads]);
     memset(fMemUsage.get(), 0, fNumOfThreads * sizeof(uint64_t));
 

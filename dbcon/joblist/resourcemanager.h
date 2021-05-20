@@ -398,7 +398,7 @@ public:
         atomicops::atomicAdd(&totalUmMemLimit, amount);
         atomicops::atomicAdd(sessionLimit.get(), amount);
     }
-    inline int64_t availableMemory()
+    inline int64_t availableMemory() const
     {
         return totalUmMemLimit;
     }
