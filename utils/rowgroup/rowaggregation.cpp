@@ -68,9 +68,6 @@ using namespace dataconvert;
 namespace
 {
 
-// @bug3522, use smaller rowgroup size to conserve memory.
-const int64_t AGG_ROWGROUP_SIZE = 8192;
-
 template <typename T>
 bool minMax(T d1, T d2, int type)
 {
@@ -504,8 +501,6 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
 //------------------------------------------------------------------------------
 RowAggregation::RowAggregation()
     : fRowGroupOut(nullptr)
-    , fTotalRowCount(0)
-    , fMaxTotalRowCount(AGG_ROWGROUP_SIZE)
     , fSmallSideRGs(nullptr)
     , fLargeSideRG(nullptr)
     , fSmallSideCount(0)
@@ -519,8 +514,6 @@ RowAggregation::RowAggregation(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCol
                                joblist::ResourceManager* rm,
                                boost::shared_ptr<int64_t> sl)
     : fRowGroupOut(nullptr)
-    , fTotalRowCount(0)
-    , fMaxTotalRowCount(AGG_ROWGROUP_SIZE)
     , fSmallSideRGs(nullptr)
     , fLargeSideRG(nullptr)
     , fSmallSideCount(0)
@@ -535,8 +528,6 @@ RowAggregation::RowAggregation(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCol
 
 RowAggregation::RowAggregation(const RowAggregation& rhs)
     : fRowGroupOut(nullptr)
-    , fTotalRowCount(0)
-    , fMaxTotalRowCount(AGG_ROWGROUP_SIZE)
     , fSmallSideRGs(nullptr)
     , fLargeSideRG(nullptr)
     , fSmallSideCount(0)
@@ -702,7 +693,6 @@ void RowAggregation::initialize()
                                              fRowGroupOut,
                                              &fKeyRG,
                                              fAggMapKeyCount,
-                                             AGG_ROWGROUP_SIZE,
                                              fRm,
                                              fSessionMemLimit,
                                              disk_agg,
@@ -713,7 +703,6 @@ void RowAggregation::initialize()
         fRowAggStorage.reset(new RowAggStorage(tmpDir,
                                              fRowGroupOut,
                                              fAggMapKeyCount,
-                                             AGG_ROWGROUP_SIZE,
                                              fRm,
                                              fSessionMemLimit,
                                              disk_agg,
@@ -766,8 +755,6 @@ void RowAggregation::initialize()
 //------------------------------------------------------------------------------
 void RowAggregation::aggReset()
 {
-    fTotalRowCount = 0;
-    fMaxTotalRowCount = AGG_ROWGROUP_SIZE;
     bool disk_agg = fRm ? fRm->getAllowDiskAggregation() : false;
     bool allow_gen = true;
     for (auto& fun : fFunctionCols)
@@ -790,7 +777,6 @@ void RowAggregation::aggReset()
                                              fRowGroupOut,
                                              &fKeyRG,
                                              fAggMapKeyCount,
-                                             AGG_ROWGROUP_SIZE,
                                              fRm,
                                              fSessionMemLimit,
                                              disk_agg,
@@ -801,7 +787,6 @@ void RowAggregation::aggReset()
         fRowAggStorage.reset(new RowAggStorage(tmpDir,
                                              fRowGroupOut,
                                              fAggMapKeyCount,
-                                             AGG_ROWGROUP_SIZE,
                                              fRm,
                                              fSessionMemLimit,
                                              disk_agg,
@@ -2224,7 +2209,7 @@ void RowAggregation::loadResult(messageqcpp::ByteStream& bs)
   if (sz == 0)
   {
     sz = 1;
-    RGData rgd(*fRowGroupOut, AGG_ROWGROUP_SIZE);
+    RGData rgd(*fRowGroupOut, 1);
     fRowGroupOut->setData(&rgd);
     fRowGroupOut->resetRowGroup(0);
     fRowGroupOut->serializeRGData(rgdbs);
@@ -4233,7 +4218,8 @@ void RowAggregationDistinct::setInputOutput(const RowGroup& pRowGroupIn, RowGrou
     fRowGroupIn = fRowGroupDist;
     fRowGroupOut = pRowGroupOut;
     initialize();
-    fDataForDist.reinit(fRowGroupDist, AGG_ROWGROUP_SIZE);
+    fDataForDist.reinit(fRowGroupDist,
+                        RowAggStorage::getMaxRows(fRm ? fRm->getAllowDiskAggregation() : false));
     fRowGroupDist.setData(&fDataForDist);
     fAggregator->setInputOutput(pRowGroupIn, &fRowGroupDist);
 }
@@ -4551,7 +4537,7 @@ RowAggregationMultiDistinct::RowAggregationMultiDistinct(const RowAggregationMul
                                      errorMsg(logging::ERR_AGGREGATION_TOO_BIG), logging::ERR_AGGREGATION_TOO_BIG);
 
 #endif
-        data.reset(new RGData(fSubRowGroups[i], AGG_ROWGROUP_SIZE));
+        data.reset(new RGData(fSubRowGroups[i], RowAggStorage::getMaxRows(fRm ? fRm->getAllowDiskAggregation() : false)));
         fSubRowData.push_back(data);
         fSubRowGroups[i].setData(data.get());
         agg.reset(rhs.fSubAggregators[i]->clone());
@@ -4597,7 +4583,7 @@ void RowAggregationMultiDistinct::addSubAggregator(const boost::shared_ptr<RowAg
                                  errorMsg(logging::ERR_AGGREGATION_TOO_BIG), logging::ERR_AGGREGATION_TOO_BIG);
 
 #endif
-    data.reset(new RGData(rg, AGG_ROWGROUP_SIZE));
+    data.reset(new RGData(rg, RowAggStorage::getMaxRows(fRm ? fRm->getAllowDiskAggregation() : false)));
     fSubRowData.push_back(data);
 
     //assert (agg->aggMapKeyLength() > 0);
