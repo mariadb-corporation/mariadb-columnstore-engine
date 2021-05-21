@@ -354,11 +354,11 @@ void LBIDList::UpdateMinMax(int64_t min, int64_t max, int64_t lbid,
                 if (execplan::isCharType(type.colDataType))
                 {
                     datatypes::Charset cs(const_cast<CalpontSystemCatalog::ColType &>(type).getCharset());
-                    if (datatypes::TCharShort::strnncollsp(cs, min, mmp->min) < 0 ||
+                    if (datatypes::TCharShort::strnncollsp(cs, min, mmp->min, type.colWidth) < 0 ||
                             mmp->min == numeric_limits<int64_t>::max())
                         mmp->min = min;
 
-                    if (datatypes::TCharShort::strnncollsp(cs, max, mmp->max) > 0 ||
+                    if (datatypes::TCharShort::strnncollsp(cs, max, mmp->max, type.colWidth) > 0 ||
                             mmp->max == numeric_limits<int64_t>::min())
                         mmp->max = max;
                 }
@@ -633,8 +633,8 @@ bool LBIDList::checkSingleValue(int64_t min, int64_t max, int64_t value,
     if (isCharType(type.colDataType))
     {
         datatypes::Charset cs(const_cast<execplan::CalpontSystemCatalog::ColType&>(type).getCharset());
-        return datatypes::TCharShort::strnncollsp(cs, value, min) >= 0 &&
-               datatypes::TCharShort::strnncollsp(cs, value, max) <= 0;
+        return datatypes::TCharShort::strnncollsp(cs, value, min, type.colWidth) >= 0 &&
+               datatypes::TCharShort::strnncollsp(cs, value, max, type.colWidth) <= 0;
     }
     else if (isUnsigned(type.colDataType))
     {
@@ -653,8 +653,8 @@ bool LBIDList::checkRangeOverlap(int64_t min, int64_t max, int64_t tmin, int64_t
     if (isCharType(type.colDataType))
     {
         datatypes::Charset cs(const_cast<execplan::CalpontSystemCatalog::ColType&>(type).getCharset());
-        return datatypes::TCharShort::strnncollsp(cs, tmin, max) <= 0 &&
-               datatypes::TCharShort::strnncollsp(cs, tmax, min) >= 0;
+        return datatypes::TCharShort::strnncollsp(cs, tmin, max, type.colWidth) <= 0 &&
+               datatypes::TCharShort::strnncollsp(cs, tmax, min, type.colWidth) >= 0;
     }
     else if (isUnsigned(type.colDataType))
     {
@@ -771,12 +771,12 @@ bool LBIDList::CasualPartitionPredicate(const int64_t Min,
             continue;
         }
 
-        if (bIsChar && 1 < ct.colWidth)
+        if (bIsChar)
         {
             datatypes::Charset cs(ct.charsetNumber);
-            utils::ConstString sMin((const char *) &Min, 8);
-            utils::ConstString sMax((const char *) &Max, 8);
-            utils::ConstString sVal((const char *) &value, 8);
+            utils::ConstString sMin((const char *) &Min, ct.colWidth);
+            utils::ConstString sMax((const char *) &Max, ct.colWidth);
+            utils::ConstString sVal((const char *) &value, ct.colWidth);
             scan = compareStr(cs, sMin.rtrimZero(),
                                   sMax.rtrimZero(),
                                   sVal.rtrimZero(), op, lcf);
