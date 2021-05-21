@@ -1131,13 +1131,13 @@ void TupleJoiner::updateCPData(const Row& r)
             datatypes::Charset cs(r.getCharset(colIdx));
             int64_t val = r.getIntField(colIdx);
 
-            if (datatypes::TCharShort::strnncollsp(cs, val, min) < 0 ||
+            if (datatypes::TCharShort::strnncollsp(cs, val, min, r.getColumnWidth(smallKeyColumns[col])) < 0 ||
                     ((int64_t) min) == numeric_limits<int64_t>::max())
             {
                 min = val;
             }
 
-            if (datatypes::TCharShort::strnncollsp(cs, val, max) > 0 ||
+            if (datatypes::TCharShort::strnncollsp(cs, val, max, r.getColumnWidth(smallKeyColumns[col])) > 0 ||
                     ((int64_t) max) == numeric_limits<int64_t>::min())
             {
                 max = val;

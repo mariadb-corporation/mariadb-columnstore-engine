@@ -620,8 +620,8 @@ bool StrFilterCmd::compare_cc(uint64_t i, uint64_t j)
     datatypes::Charset    cs(leftColType.getCharset());
     datatypes::TCharShort s0(bpp->fFiltCmdValues[0][i]);
     datatypes::TCharShort s1(bpp->fFiltCmdValues[1][j]);
-    return compareString(cs, static_cast<utils::ConstString>(s0),
-                             static_cast<utils::ConstString>(s1), fBOP);
+    return compareString(cs, s0.toConstString(leftColType.colWidth),
+                             s1.toConstString(rightColType.colWidth), fBOP);
 }
 
 
@@ -647,7 +647,7 @@ bool StrFilterCmd::compare_cs(uint64_t i, uint64_t j)
     datatypes::Charset    cs(leftColType.getCharset());
     datatypes::TCharShort s0(bpp->fFiltCmdValues[0][i]);
     utils::ConstString    s1(bpp->fFiltStrValues[1][j]);
-    return compareString(cs, static_cast<utils::ConstString>(s0), s1, fBOP);
+    return compareString(cs, s0.toConstString(leftColType.colWidth), s1, fBOP);
 }
 
 
@@ -660,7 +660,7 @@ bool StrFilterCmd::compare_sc(uint64_t i, uint64_t j)
     datatypes::Charset    cs(leftColType.getCharset());
     utils::ConstString    s0(bpp->fFiltStrValues[0][i]);
     datatypes::TCharShort s1(bpp->fFiltCmdValues[1][j]);
-    return compareString(cs, s0, static_cast<utils::ConstString>(s1), fBOP);
+    return compareString(cs, s0, s1.toConstString(rightColType.colWidth), fBOP);
 }
 
 

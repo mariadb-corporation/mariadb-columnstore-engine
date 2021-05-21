@@ -227,3 +227,37 @@ BEGIN
 END;
 $$
 DELIMITER ;$$
+
+
+DELIMITER $$;
+CREATE PROCEDURE test05_mcol4726(len INT, datatype TEXT)
+BEGIN
+  DECLARE small_a                VARCHAR(64) CHARACTER SET utf8 DEFAULT REPEAT('a',len);
+  DECLARE cap_a                  VARCHAR(64) CHARACTER SET utf8 DEFAULT REPEAT('A',len);
+  DECLARE small_a_with_tilde     VARCHAR(64) CHARACTER SET utf8 DEFAULT REPEAT(_latin1 0xE3,len);
+  DECLARE cap_a_with_tilde       VARCHAR(64) CHARACTER SET utf8 DEFAULT REPEAT(_latin1 0xC3,len);
+  DECLARE small_a_with_diaeresis VARCHAR(64) CHARACTER SET utf8 DEFAULT REPEAT(_latin1 0xE4,len);
+  DECLARE cap_a_with_diaeresis   VARCHAR(64) CHARACTER SET utf8 DEFAULT REPEAT(_latin1 0xC4,len);
+  DECLARE ins VARCHAR(64) CHARACTER SET utf8 DEFAULT 'INSERT INTO t1 VALUES(IVAL)';
+  DECLARE sel VARCHAR(64) CHARACTER SET utf8 DEFAULT 'SELECT c1 FROM t1 WHERE c1=IVAL ORDER BY BINARY c1';
+
+  CALL exec(REPLACE('CREATE TABLE t1 (c1 DATATYPE)', 'DATATYPE', datatype));
+  CALL exec(REPLACE(ins, 'IVAL', CONCAT('''', small_a, '''')));
+  CALL exec(REPLACE(ins, 'IVAL', CONCAT('''', cap_a, '''')));
+  CALL exec(REPLACE(ins, 'IVAL', CONCAT('''', small_a_with_tilde, '''')));
+  CALL exec(REPLACE(ins, 'IVAL', CONCAT('''', cap_a_with_tilde, '''')));
+  CALL exec(REPLACE(ins, 'IVAL', CONCAT('''', small_a_with_diaeresis, '''')));
+  CALL exec(REPLACE(ins, 'IVAL', CONCAT('''', cap_a_with_diaeresis, '''')));
+
+  CALL exec(REPLACE(sel, 'IVAL', CONCAT('''', small_a, '''')));
+  CALL exec(REPLACE(sel, 'IVAL', CONCAT('''', cap_a, '''')));
+  CALL exec(REPLACE(sel, 'IVAL', CONCAT('''', small_a_with_tilde, '''')));
+  CALL exec(REPLACE(sel, 'IVAL', CONCAT('''', cap_a_with_tilde, '''')));
+  CALL exec(REPLACE(sel, 'IVAL', CONCAT('''', small_a_with_diaeresis, '''')));
+  CALL exec(REPLACE(sel, 'IVAL', CONCAT('''', cap_a_with_diaeresis, '''')));
+
+  CALL exec('DROP TABLE t1');
+END;
+$$
+DELIMITER ;$$
+
