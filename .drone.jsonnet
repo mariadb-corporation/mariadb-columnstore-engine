@@ -32,7 +32,7 @@ local rpm_build_deps = 'install -y systemd-devel git make gcc gcc-c++ libaio-dev
 
 // Use ColumnStore/debian to only build ColumnStore and core server, omitting everything else as unnecessary
 // Edit dependencies in debian/control and CMake command/flags in debian/rules.
-local deb_build_command = 'apt-get update && apt-get install -y dpkg-dev && rm -rf debian; cp -ra storage/columnstore/columnstore/debian . && find debian -ls && debian/autobake-deb.sh';
+local deb_build_command = 'apt-get update && apt-get install -y dpkg-dev && rm -rf debian; cp -ra storage/columnstore/columnstore/debian . && sed "s/MYSQL_VERSION_PATCH=11/MYSQL_VERSION_PATCH=10/" -i VERSION && debian/autobake-deb.sh';
 
 // In Debian 9 "Stretch" we must manually add access to libmariadb3
 local deb_libmariadb_for_stretch = 'apt-get update && apt-get install --yes --no-install-recommends curl ca-certificates && ' +
@@ -111,6 +111,7 @@ local Pipeline(branch, platform, event) = {
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl restart mariadb-columnstore',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl status --no-pager mariadb-columnstore',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} mariadb -e "show plugins soname where library like \'ha_columnstore.so\';"',
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} mariadb -e "INSTALL PLUGIN Columnstore SONAME \'ha_columnstore.so\';" || true',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} mariadb -e "create database if not exists test; create table test.t1 (a int) engine=Columnstore;"',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} mariadb -e "insert into test.t1 values (1); select * from test.t1" || true',
       // restart mariadb and mariadb-columnstore services and run simple query again
