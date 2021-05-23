@@ -334,7 +334,7 @@ local Pipeline(branch, platform, event) = {
                archive_format: 'gzip',
                bucket: 'drone-cache-bucket',
                region: 'us-east-1',
-               mount: ['.ccache']
+               mount: ['/mdb/verylongdirnameforverystrangecpackbehavior/.ccache']
              }
            },
            {
@@ -368,7 +368,7 @@ local Pipeline(branch, platform, event) = {
                archive_format: 'gzip',
                bucket: 'drone-cache-bucket',
                region: 'us-east-1',
-               mount: ['.ccache']
+               mount: ['/mdb/verylongdirnameforverystrangecpackbehavior/.ccache']
              }
            },
            {
