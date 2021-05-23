@@ -320,6 +320,7 @@ local Pipeline(branch, platform, event) = {
            {
              name: 'restore-cache',
              image: 'meltwater/drone-cache:dev',
+             volumes: [pipeline._volumes.mdb],
              environment: {
                AWS_ACCESS_KEY_ID: {
                  from_secret: 'aws_access_key_id',
@@ -354,6 +355,7 @@ local Pipeline(branch, platform, event) = {
            {
              name: 'rebuild-cache',
              image: 'meltwater/drone-cache:dev',
+             volumes: [pipeline._volumes.mdb],
              environment: {
                AWS_ACCESS_KEY_ID: {
                  from_secret: 'aws_access_key_id',
