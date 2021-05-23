@@ -318,6 +318,26 @@ local Pipeline(branch, platform, event) = {
              ],
            },
            {
+             name: 'restore-cache',
+             image: 'meltwater/drone-cache:dev',
+             environment: {
+               AWS_ACCESS_KEY_ID: {
+                 from_secret: 'aws_access_key_id',
+               },
+               AWS_SECRET_ACCESS_KEY: {
+                 from_secret: 'aws_secret_access_key',
+               },
+             },
+             pull: true,
+             settings: {
+               restore: true,
+               archive_format: 'gzip',
+               bucket: 'drone-cache-bucket',
+               region: 'us-east-1',
+               mount: ['.ccache']
+             }
+           },
+           {
              name: 'build',
              image: platform,
              volumes: [pipeline._volumes.mdb],
@@ -330,6 +350,26 @@ local Pipeline(branch, platform, event) = {
                platformMap(branch, platform),
                if (pkg_format == 'rpm') then 'createrepo .' else 'dpkg-scanpackages ../ | gzip > ../Packages.gz',
              ],
+           },
+           {
+             name: 'rebuild-cache',
+             image: 'meltwater/drone-cache:dev',
+             environment: {
+               AWS_ACCESS_KEY_ID: {
+                 from_secret: 'aws_access_key_id',
+               },
+               AWS_SECRET_ACCESS_KEY: {
+                 from_secret: 'aws_secret_access_key',
+               },
+             },
+             pull: true,
+             settings: {
+               rebuild: true,
+               archive_format: 'gzip',
+               bucket: 'drone-cache-bucket',
+               region: 'us-east-1',
+               mount: ['.ccache']
+             }
            },
            {
              name: 'list pkgs',

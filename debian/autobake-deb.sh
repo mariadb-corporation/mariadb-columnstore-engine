@@ -68,6 +68,8 @@ then
   BUILDPACKAGE_PREPEND=eatmydata
 fi
 
+export CCACHE_DIR="$(pwd)/.ccache"
+
 update-ccache-symlinks; ccache -z # Zero out ccache counters
 
 # Build the package
