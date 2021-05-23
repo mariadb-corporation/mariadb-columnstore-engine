@@ -105,9 +105,26 @@ endif
 	    -DPLUGIN_SPIDER=NO \
 	    -DPLUGIN_TOKUDB=NO \
 	    -DPLUGIN_XPAND=NO \
+	    -DPLUGIN_CRACKLIB_PASSWORD_CHECK=NO \
+	    -DPLUGIN_HANDLERSOCKET=NO \
+	    -DPLUGIN_INNOBASE=NO \
+	    -DPLUGIN_PERFSCHEMA=NO \
 	    -DWITH_EMBEDDED_SERVER=OFF \
 	    -DWITH_WSREP=OFF \
+	    -DWITH_MARIABACKUP=OFF \
+	    -DWITH_MYISAM_STORAGE_ENGINE=OFF \
+	    -DWITH_HEAP_STORAGE_ENGINE=OFF \
+	    -DWITH_ARIA_STORAGE_ENGINE=OFF \
+	    -DWITH_UNIT_TESTS=OFF \
 	    -DDEB=$(DEB_VENDOR)
+
+# Does not work, fails on: error: 'krb5_xfree' was not declared in this scope; did you mean 'krb5_cred'?
+#			-DWITHOUT_SERVER=ON \
+
+# Shorter, but fails to build after 4%:
+# sed '/INSTALL_MYSQL_TEST/d' -i storage/columnstore/CMakeLists.txt
+# install -d builddir && cd builddir && cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=None -DCMAKE_INSTALL_SYSCONFDIR=/etc -DCMAKE_INSTALL_LOCALSTATEDIR=/var -DCMAKE_EXPORT_NO_PACKAGE_REGISTRY=ON -DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=ON "-GUnix Makefiles" -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_INSTALL_LIBDIR=lib/x86_64-linux-gnu -DCMAKE_BUILD_TYPE=RelWithDebInfo "-DCOMPILATION_COMMENT=mariadb.org binary distribution" -DMYSQL_SERVER_SUFFIX=-1:10.5.0 -DSYSTEM_TYPE=debian-linux-gnu -DCMAKE_SYSTEM_PROCESSOR=amd64 -DBUILD_CONFIG=mysql_release -DCMAKE_CXX_FLAGS=-I/usr/include/mariadb ../storage/columnstore/
+# make
 
 # This is needed, otherwise 'make test' will run before binaries have been built
 override_dh_auto_build:
