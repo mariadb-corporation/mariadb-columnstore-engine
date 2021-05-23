@@ -1,0 +1,5 @@
+mariadb-plugin-columnstore (1:10.6.0-6.1.1) unstable; urgency=medium
+
+  * Initial Release
+
+ -- Otto Kekäläinen <otto@debian.org>  Thu, 14 May 2020 18:00:57 +0300

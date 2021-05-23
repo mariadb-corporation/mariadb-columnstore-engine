@@ -1,3 +1,62 @@
+# This debian/control file is a copy from mariadb-server, but updated to be
+# ColumnStore specific to avoid pulling in any excess build dependencies or
+# building anything else than what is required to generate mariadb-plugin-columnstore.
+
+Source: mariadb-plugin-columnstore
+Section: database
+Priority: optional
+Maintainer: MariaDB Developers <maria-developers@lists.launchpad.net>
+Build-Depends: bison,
+               cmake,
+               cracklib-runtime <!nocheck>,
+               debhelper (>= 9),
+               dh-exec,
+               dh-systemd,
+               flex [amd64],
+               gdb <!nocheck>,
+               libaio-dev [linux-any],
+               libboost-atomic-dev [amd64],
+               libboost-chrono-dev [amd64],
+               libboost-date-time-dev [amd64],
+               libboost-dev,
+               libboost-filesystem-dev [amd64],
+               libboost-regex-dev [amd64],
+               libboost-system-dev [amd64],
+               libboost-thread-dev [amd64],
+               libcrack2-dev (>= 2.9.0),
+               libcurl4-openssl-dev | libcurl4-dev,
+               libedit-dev,
+               libedit-dev:native,
+               libjemalloc-dev [linux-any],
+               libjudy-dev,
+               libkrb5-dev,
+               liblz4-dev,
+               libmariadb-dev,
+               libncurses5-dev (>= 5.0-6~),
+               libncurses5-dev:native (>= 5.0-6~),
+               libnuma-dev [linux-any],
+               libpam0g-dev,
+               libpcre2-dev,
+               libsnappy-dev,
+               libssl-dev,
+               libssl-dev:native,
+               libsystemd-dev [linux-any],
+               libaio-dev [linux-any],
+               libxml2-dev,
+               libzstd-dev,
+               lsb-release,
+               perl:any,
+               po-debconf,
+               psmisc,
+               unixodbc-dev,
+               uuid-dev,
+               zlib1g-dev (>= 1:1.1.3-5~)
+Rules-Requires-Root: no
+Standards-Version: 4.5.0
+Homepage: https://mariadb.com/kb/en/mariadb-columnstore/
+Vcs-Browser: https://github.com/mariadb-corporation/mariadb-columnstore-engine
+Vcs-Git: https://github.com/mariadb-corporation/mariadb-columnstore-engine.git
+
 Package: mariadb-plugin-columnstore
 Architecture: amd64
 Depends: binutils,
