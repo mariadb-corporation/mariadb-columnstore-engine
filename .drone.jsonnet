@@ -1,28 +1,17 @@
-local events = ['pull_request', 'cron'];
-
 local platforms = {
   develop: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
   'develop-5': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
 };
 
-local platforms_arm = {
-  develop: ['centos:8'],
-};
-
-local any_branch = '**';
-local platforms_custom = ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'];
-local platforms_arm_custom = ['centos:8'];
-
-local platforms_mtr = ['centos:7', 'centos:8', 'ubuntu:20.04'];
-
 local server_ref_map = {
-  develop: '10.6',
-  'develop-5': '10.5',
-  '**': '10.6',
+  develop: '10.6 https://github.com/MariaDB/server',
+  'develop-5': '10.5 https://github.com/MariaDB/server',
 };
 
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
 
+// This is stupid use of PLUGIN_*=NO syntax. It should just skip building
+// _everything_ else apart from the things that ColumnStore actually needs.
 local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_XPAND=NO -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO ' +
                    '-DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
                    '-DWITH_EMBEDDED_SERVER=OFF -DWITH_WSREP=OFF ' +
@@ -30,15 +19,17 @@ local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DPLUGIN_COLUMNSTORE=YES -
 
 local rpm_build_deps = 'install -y systemd-devel git make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect createrepo';
 
-local deb_build_deps = 'apt update && apt install --yes --no-install-recommends build-essential devscripts ccache equivs eatmydata dh-systemd ' +
-                       '&& mk-build-deps debian/control -t "apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends" -r -i';
+// All build dependencies for .deb packages are defined in debian/control. Do no
+// repeat them here manually, it would only increase the amount of maintenance
+// work needed when updating the dependencies in the future.
+local deb_build_deps = 'apt update && apt install --yes --no-install-recommends build-essential devscripts ccache equivs && ' +
+                       'mk-build-deps debian/control -t "apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends" -r -i';
 
-local platformMap(platform) =
-
+local platformMap(branch, platform) =
   local platform_map = {
     'opensuse/leap:15': 'zypper ' + rpm_build_deps + ' cmake libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel gcc-fortran && cmake ' + cmakeflags + ' -DRPM=sles15 && make -j$(nproc) package',
-    'centos:7': 'yum install -y epel-release && yum install -y cmake3 && ln -s /usr/bin/cmake3 /usr/bin/cmake && yum ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=centos7 && make -j$(nproc) package',
-    'centos:8': "yum install -y libgcc && sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/*PowerTools.repo && yum " + rpm_build_deps + ' cmake && cmake ' + cmakeflags + ' -DRPM=centos8 && make -j$(nproc) package',
+    'centos:7': 'yum install -y epel-release && yum install -y cmake3 && ln -s /usr/bin/cmake3 /usr/bin/cmake && yum ' + rpm_build_deps + ' libquadmath libquadmath-devel && cmake ' + cmakeflags + ' -DRPM=centos7 && make -j$(nproc) package',
+    'centos:8': "yum install -y libgcc && sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/*PowerTools.repo && yum " + rpm_build_deps + ' cmake libquadmath libquadmath-devel && cmake ' + cmakeflags + ' -DRPM=centos8 && make -j$(nproc) package',
     'debian:9': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=stretch' debian/autobake-deb.sh",
     'debian:10': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=buster' debian/autobake-deb.sh",
     'ubuntu:18.04': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=bionic' debian/autobake-deb.sh",
@@ -47,15 +38,13 @@ local platformMap(platform) =
 
   platform_map[platform];
 
-local Pipeline(branch, platform, event, arch='amd64') = {
+local Pipeline(branch, platform, event) = {
   local pkg_format = if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'opensuse/leap') then 'rpm' else 'deb',
   local init = if (pkg_format == 'rpm') then '/usr/lib/systemd/systemd' else 'systemd',
   local mtr_path = if (pkg_format == 'rpm') then '/usr/share/mysql-test' else '/usr/share/mysql/mysql-test',
   local socket_path = if (pkg_format == 'rpm') then '/var/lib/mysql/mysql.sock' else '/run/mysqld/mysqld.sock',
-  local config_path_prefix = if (pkg_format == 'rpm') then '/etc/my.cnf.d/' else '/etc/mysql/mariadb.conf.d/50-',
   local img = if (std.split(platform, ':')[0] == 'centos') then platform else 'romcheck/' + std.strReplace(platform, '/', '-'),
   local regression_ref = if (std.split(branch, '-')[0] == 'develop') then branch else 'develop-5',
-  local branchp = if (branch == '**') then '' else branch,
 
   local pipeline = self,
 
@@ -74,7 +63,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
         from_secret: 'aws_secret_access_key',
       },
       source: 'result',
-      target: branchp + '/' + eventp + '/' + arch + '/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
+      target: branch + '/' + eventp + '/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
       delete: 'true',
     },
   },
@@ -112,7 +101,6 @@ local Pipeline(branch, platform, event, arch='amd64') = {
   mtr:: {
     name: 'mtr',
     image: 'docker:git',
-    [if arch == 'arm64' then 'failure']: 'ignore',
     volumes: [pipeline._volumes.docker],
     commands: [
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env MYSQL_TEST_DIR=' + mtr_path + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
@@ -127,9 +115,8 @@ local Pipeline(branch, platform, event, arch='amd64') = {
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl daemon-reload',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl start mariadb',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} mariadb -e "create database if not exists test;"',
-      // delay mtr for manual debugging on live instance
-      'sleep $${MTR_DELAY_SECONDS:-1s}',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --max-test-fail=0 --suite=columnstore/basic,columnstore/bugfixes --skip-test-list=suite/columnstore/basic/failed.def"',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --max-test-fail=0 --suite=columnstore/basic --skip-test-list=suite/columnstore/basic/failed.def"',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --max-test-fail=0 --suite=columnstore/bugfixes --skip-test-list=suite/columnstore/bugfixes/failed.def"',
     ],
   },
   mtrlog:: {
@@ -155,7 +142,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
   regression:: {
     name: 'regression',
     image: 'docker:git',
-    [if event == 'cron' then 'failure']: 'ignore',
+    failure: if (event == 'cron') then 'ignore' else '',
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     environment: {
       REGRESSION_TESTS: if (event == 'cron') then '' else '${REGRESSION_TESTS:-test000.sh}',
@@ -186,14 +173,10 @@ local Pipeline(branch, platform, event, arch='amd64') = {
       // copy test data for regression test suite
       'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C mariadb-columnstore-regression-test/"',
       // set mariadb lower_case_table_names=1 config option
-      'docker exec -t regression$${DRONE_BUILD_NUMBER} sed -i "/^.mariadb.$/a lower_case_table_names=1" ' + config_path_prefix + 'server.cnf',
-      // set default client character set to utf-8
-      'docker exec -t regression$${DRONE_BUILD_NUMBER} sed -i "/^.client.$/a default-character-set=utf8" ' + config_path_prefix + 'client.cnf',
+      'docker exec -t regression$${DRONE_BUILD_NUMBER} sed -i "/^.mariadb.$/a lower_case_table_names=1" /etc/' + (if (pkg_format == 'deb') then 'mysql/mariadb.conf.d/50-' else 'my.cnf.d/') + 'server.cnf',
       // start mariadb and mariadb-columnstore services
       'docker exec -t regression$${DRONE_BUILD_NUMBER} systemctl start mariadb',
       'docker exec -t regression$${DRONE_BUILD_NUMBER} systemctl start mariadb-columnstore',
-      // delay regression for manual debugging on live instance
-      'sleep $${REGRESSION_DELAY_SECONDS:-1s}',
       // run regression test000 on pull request and manual (may be overwritten by env variable parameter) build events. on other events run all tests
       'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} timeout -k 1m -s SIGKILL --preserve-status $${REGRESSION_TIMEOUT:-10h} ./go.sh --sm_unit_test_dir=/storage-manager --tests=$${REGRESSION_TESTS}',
     ],
@@ -276,10 +259,11 @@ local Pipeline(branch, platform, event, arch='amd64') = {
 
   kind: 'pipeline',
   type: 'docker',
-  name: std.join(' ', [branch, platform, event, arch]),
-  platform: { arch: arch },
-  // [if arch == 'arm64' then 'node']: { arch: 'arm64' },
-  clone: { depth: 10 },
+  name: std.join(' ', [branch, platform, event]),
+  clone: {
+    depth: 10,
+  },
+
   steps: [
            {
              name: 'submodules',
@@ -296,14 +280,12 @@ local Pipeline(branch, platform, event, arch='amd64') = {
              volumes: [pipeline._volumes.mdb],
              environment: {
                SERVER_REF: '${SERVER_REF:-' + server_ref_map[branch] + '}',
-               SERVER_REMOTE: '${SERVER_REMOTE:-https://github.com/MariaDB/server}',
              },
              commands: [
                'echo $$SERVER_REF',
-               'echo $$SERVER_REMOTE',
                'mkdir -p /mdb/' + builddir + ' && cd /mdb/' + builddir,
                'git config --global url."https://github.com/".insteadOf git@github.com:',
-               'git -c submodule."storage/rocksdb/rocksdb".update=none -c submodule."wsrep-lib".update=none -c submodule."storage/columnstore/columnstore".update=none clone --recurse-submodules --depth 1 --branch $$SERVER_REF $$SERVER_REMOTE .',
+               'git -c submodule."storage/rocksdb/rocksdb".update=none -c submodule."wsrep-lib".update=none -c submodule."storage/columnstore/columnstore".update=none clone  --recurse-submodules --depth 1 --branch $$SERVER_REF .',
                'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
                'git config cmake.update-submodules no',
                'rm -rf storage/columnstore/columnstore',
@@ -341,15 +323,11 @@ local Pipeline(branch, platform, event, arch='amd64') = {
                // Leave test package for mtr
                "sed -i '/(mariadb|mysql)-test/d;/-test/d' debian/autobake-deb.sh",
                "sed -i '/test-embedded/d' debian/mariadb-test.install",
-               // From Debian Bullseye/Ubuntu Groovy, liburing replaces libaio
-               "apt-cache madison liburing-dev | grep 'liburing-dev' || sed 's/liburing-dev/libaio-dev/g' -i debian/control && sed '/-DIGNORE_AIO_CHECK=YES/d' -i debian/rules && sed '/-DWITH_URING=yes/d' -i debian/rules",
-               // From Debian Buster/Ubuntu Focal onwards libpmem-dev is available
-               "apt-cache madison libpmem-dev | grep 'libpmem-dev' || sed '/libpmem-dev/d' -i debian/control && sed '/-DWITH_PMEM/d' -i debian/rules",
                // Change plugin_maturity level
                // "sed -i 's/BETA/GAMMA/' storage/columnstore/CMakeLists.txt",
                // Workaround till upstream removes 4535 workaround (workaround for workaround!)
                "sed -i '/MCOL-4535/,/^$/d' debian/autobake-deb.sh",
-               platformMap(platform),
+               platformMap(branch, platform),
                if (pkg_format == 'rpm') then 'createrepo .' else 'dpkg-scanpackages ../ | gzip > ../Packages.gz',
              ],
            },
@@ -359,7 +337,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
              volumes: [pipeline._volumes.mdb],
              commands: [
                'cd /mdb/' + builddir,
-               'mkdir -p /drone/src/result',
+               'mkdir /drone/src/result',
                'echo "engine: $DRONE_COMMIT" > buildinfo.txt',
                'echo "server: $$(git rev-parse HEAD)" >> buildinfo.txt',
                'echo "buildNo: $DRONE_BUILD_NUMBER" >> buildinfo.txt',
@@ -375,8 +353,8 @@ local Pipeline(branch, platform, event, arch='amd64') = {
          // (if (platform == 'centos:8' && event == 'cron') then [pipeline.dockerfile] + [pipeline.docker] + [pipeline.ecr] else []) +
          [pipeline.smoke] +
          [pipeline.smokelog] +
-         (if (std.member(platforms_mtr, platform)) then [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish('mtr')] else []) +
-         (if (event == 'cron' && std.member(platforms_mtr, platform)) || (event == 'push') then [pipeline.publish('mtr latest', 'latest')] else []) +
+         (if (pkg_format == 'rpm' && event != 'custom') then [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish('mtr')] else []) +
+         (if (event == 'cron' && pkg_format == 'rpm') || (event == 'push') then [pipeline.publish('mtr latest', 'latest')] else []) +
          [pipeline.regression] +
          [pipeline.regressionlog] +
          [pipeline.publish('regression')] +
@@ -390,7 +368,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
        } else {}),
 };
 
-local FinalPipeline(branch, event, arch='amd64') = {
+local FinalPipeline(branch, event) = {
   kind: 'pipeline',
   name: std.join(' ', ['after', branch, event]),
   steps: [
@@ -413,36 +391,20 @@ local FinalPipeline(branch, event, arch='amd64') = {
       'success',
       'failure',
     ],
-  } + (if event == 'cron' then { cron: ['nightly-' + std.strReplace(branch, '.', '-')] } else {}),
-  depends_on: std.map(function(p) std.join(' ', [branch, p, event, arch]), platforms[branch]) +
-              (if branch == 'develop' then std.map(function(p) std.join(' ', [branch, p, event, 'arm64']), platforms_arm[branch]) else []),
+  } + (if event == 'cron' then {
+         cron: ['nightly-' + std.strReplace(branch, '.', '-')],
+       } else {}),
+  depends_on: std.map(function(p) std.join(' ', [branch, p, event]), platforms[branch]),
 };
 
 [
   Pipeline(b, p, e)
-  for b in std.objectFields(platforms)
+  for b in ['develop', 'develop-5']
   for p in platforms[b]
-  for e in events
-] +
-[
-  Pipeline(b, p, e, 'arm64')
-  for b in std.objectFields(platforms_arm)
-  for p in platforms_arm[b]
-  for e in events
+  for e in ['pull_request', 'cron', 'custom']
 ] +
 [
   FinalPipeline(b, e)
-  for b in std.objectFields(platforms)
-  for e in events
-]
-
-+
-
-[
-  Pipeline(any_branch, p, 'custom')
-  for p in platforms_custom
-] +
-[
-  Pipeline(any_branch, p, 'custom', 'arm64')
-  for p in platforms_arm_custom
+  for b in ['develop', 'develop-5']
+  for e in ['pull_request', 'cron', 'custom']
 ]
