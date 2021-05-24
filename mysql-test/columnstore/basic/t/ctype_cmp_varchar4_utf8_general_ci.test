@@ -22,4 +22,6 @@ CALL test03(4,@datatype);
 
 CALL test04_like(4,@datatype);
 
+CALL test05_mcol4726(4, @datatype);
+
 --source ctype_cmp_drop.inc

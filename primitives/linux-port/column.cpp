@@ -604,8 +604,8 @@ inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf,
             if ((typeHolder.getCharset().state & (MY_CS_BINSORT|MY_CS_NOPAD)) ==
                 (MY_CS_BINSORT|MY_CS_NOPAD))
               return colCompare_(order_swap(val1), order_swap(val2), COP);
-            utils::ConstString s1 = {reinterpret_cast<const char*>(&val1), 8};
-            utils::ConstString s2 = {reinterpret_cast<const char*>(&val2), 8};
+            utils::ConstString s1 = {reinterpret_cast<const char*>(&val1), width};
+            utils::ConstString s2 = {reinterpret_cast<const char*>(&val2), width};
             return colCompareStr(typeHolder, COP, s1.rtrimZero(), s2.rtrimZero());
         }
         else
@@ -1303,10 +1303,10 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
         if (out->ValidMinMax && !isNull && !isEmpty)
         {
 
-            if ((in->colType.DataType == CalpontSystemCatalog::CHAR ||
-                 in->colType.DataType == CalpontSystemCatalog::VARCHAR ||
-                 in->colType.DataType == CalpontSystemCatalog::BLOB ||
-                 in->colType.DataType == CalpontSystemCatalog::TEXT ) && 1 < W)
+            if (in->colType.DataType == CalpontSystemCatalog::CHAR ||
+                in->colType.DataType == CalpontSystemCatalog::VARCHAR ||
+                in->colType.DataType == CalpontSystemCatalog::BLOB ||
+                in->colType.DataType == CalpontSystemCatalog::TEXT )
             {
                 if (colCompare(out->Min, val, COMPARE_GT, false, in->colType, W))
                     out->Min = val;
