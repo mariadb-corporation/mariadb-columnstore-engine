@@ -32,17 +32,17 @@ public:
     TCharShort(int64_t value)
         :mValue(value)
     { }
-    explicit operator utils::ConstString() const
+    utils::ConstString toConstString(uint32_t width) const
     {
-      utils::ConstString res = utils::ConstString((const char *) &mValue, 8);
+      utils::ConstString res = utils::ConstString((const char *) &mValue, width);
       return res.rtrimZero();
     }
-    static int strnncollsp(const datatypes::Charset &cs, int64_t a, int64_t b)
+    static int strnncollsp(const datatypes::Charset &cs, int64_t a, int64_t b, uint32_t width)
     {
       datatypes::TCharShort sa(a);
       datatypes::TCharShort sb(b);
-      return cs.strnncollsp(static_cast<utils::ConstString>(sa),
-                            static_cast<utils::ConstString>(sb));
+      return cs.strnncollsp(sa.toConstString(width),
+                            sb.toConstString(width));
     }
 };
 
