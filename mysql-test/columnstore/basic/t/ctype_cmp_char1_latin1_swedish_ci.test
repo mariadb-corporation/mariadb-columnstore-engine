@@ -1,0 +1,52 @@
+--source ../include/have_columnstore.inc
+--source ctype_cmp_combinations.inc
+--source ctype_cmp_create.inc
+
+SET NAMES utf8;
+
+
+SET @datatype='CHAR(1) CHARACTER SET latin1 COLLATE latin1_swedish_ci';
+
+CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET latin1 COLLATE latin1_swedish_ci);
+
+CALL test01_populate(1,1);
+CALL test01_field_literal(1,2);
+CALL test01_field_field();
+CALL test01_distinct();
+DROP TABLE t1;
+
+CALL test02_same_table_create_table(@datatype);
+CALL test02_same_table_populate();
+CALL test02_same_table_cmp_field_field();
+DROP TABLE t1;
+
+CALL test03(1, @datatype);
+
+CALL test04_like(1, @datatype);
+
+CALL test05_mcol4726(1, @datatype);
+
+--source ctype_cmp_drop.inc
+
+
+--echo #
+--echo # MCOL-4721 CHAR(1) is not collation-aware for GROUP/DISTINCT
+--echo #
+
+CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET latin1 COLLATE latin1_swedish_ci);
+INSERT INTO t1 VALUES ('a'),('A');
+SELECT c1, COUNT(*) FROM t1 GROUP BY c1;
+SELECT DISTINCT c1 FROM t1;
+INSERT INTO t1 VALUES ('ä'),('Ä'),('ã'),('Ã');
+SELECT c1, COUNT(*) FROM t1 GROUP BY c1 ORDER BY c1;
+SELECT DISTINCT c1 FROM t1 ORDER BY c1;
+DROP TABLE t1;
+
+--echo #
+--echo # MCOL-4726 Wrong result of WHERE char1_col='A'
+--echo #
+
+CREATE TABLE t1 (a CHAR(1) CHARACTER SET latin1);
+INSERT INTO t1 VALUES ('a'),('Ã');
+SELECT * FROM t1 WHERE a='A';
+DROP TABLE t1;

@@ -35,6 +35,7 @@
 #include "calpontselectexecutionplan.h"
 #include "resourcedistributor.h"
 #include "installdir.h"
+#include "branchpred.h"
 
 #include "atomicops.h"
 
@@ -547,7 +548,10 @@ private:
      * @param name the param name whose value is to be returned
      * @param defVal the default value returned if the value is missing
      */
-    std::string getStringVal(const std::string& section, const std::string& name, const std::string& defVal) const;
+    std::string getStringVal(const std::string& section,
+                             const std::string& name,
+                             const std::string& defVal,
+                             const bool reReadConfigIfNeeded = false) const;
 
     template<typename IntType>
     IntType getUintVal(const std::string& section, const std::string& name, IntType defval) const;
@@ -603,13 +607,20 @@ private:
 };
 
 
-inline std::string ResourceManager::getStringVal(const std::string& section, const std::string& name, const std::string& defval) const
+inline std::string ResourceManager::getStringVal(const std::string& section,
+                                                 const std::string& name,
+                                                 const std::string& defval,
+                                                 const bool reReadConfigIfNeeded) const
 {
-    std::string val = fConfig->getConfig(section, name);
+    std::string val = UNLIKELY(reReadConfigIfNeeded)
+                        ? fConfig->getFromActualConfig(section, name)
+                        : fConfig->getConfig(section, name);
 #ifdef DEBUGRM
     std::cout << "RM getStringVal for " << section << " : " << name << " val: " << val << " default: " << defval << std::endl;
 #endif
-    return (0 == val.length() ? defval : val);
+    if (val.empty())
+        val = defval;
+    return val;
 }
 
 template<typename IntType>

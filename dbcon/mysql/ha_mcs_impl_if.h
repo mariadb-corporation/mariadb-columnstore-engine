@@ -158,6 +158,12 @@ struct gp_walk_info
 
     bool isGroupByHandler;
 
+    // MCOL-4617 The below 2 fields are used for in-to-exists
+    // predicate creation and injection. See usage in InSub::transform()
+    // and buildInToExistsFilter()
+    execplan::ReturnedColumn* inSubQueryLHS;
+    Item* inSubQueryLHSItem;
+
     gp_walk_info() : sessionid(0),
         fatalParseError(false),
         condPush(false),
@@ -177,7 +183,9 @@ struct gp_walk_info
         inCaseStmt(false),
         cs_vtable_is_update_with_derive(false),
         cs_vtable_impossible_where_on_union(false),
-        isGroupByHandler(false)
+        isGroupByHandler(false),
+        inSubQueryLHS(nullptr),
+        inSubQueryLHSItem(nullptr)
     {}
 
     ~gp_walk_info() {}
@@ -373,7 +381,7 @@ bool buildRowColumnFilter(gp_walk_info* gwip, execplan::RowColumn* rhs, execplan
 bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip);
 void collectAllCols(gp_walk_info& gwi, Item_field* ifp);
 void buildSubselectFunc(Item_func* ifp, gp_walk_info* gwip);
-uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex);
+uint32_t buildJoin(gp_walk_info& gwi, List<TABLE_LIST>& join_list, std::stack<execplan::ParseTree*>& outerJoinStack);
 std::string getViewName(TABLE_LIST* table_ptr);
 bool buildConstPredicate(Item_func* ifp, execplan::ReturnedColumn* rhs, gp_walk_info* gwip);
 execplan::CalpontSystemCatalog::ColType fieldType_MysqlToIDB (const Field* field);
@@ -385,6 +393,13 @@ execplan::ParseTree* setDerivedFilter(THD* thd, execplan::ParseTree*& n,
                                       std::map<std::string, execplan::ParseTree*>& obj,
                                       execplan::CalpontSelectExecutionPlan::SelectList& derivedTbList);
 void derivedTableOptimization(THD* thd, execplan::SCSEP& csep);
+bool buildEqualityPredicate(execplan::ReturnedColumn* lhs,
+    execplan::ReturnedColumn* rhs,
+    gp_walk_info* gwip,
+    boost::shared_ptr<execplan::Operator>& sop,
+    const Item_func::Functype& funcType,
+    const std::vector<Item*>& itemList,
+    bool isInSubs = false);
 
 #ifdef DEBUG_WALK_COND
 void debug_walk(const Item* item, void* arg);

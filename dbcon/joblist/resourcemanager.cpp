@@ -365,19 +365,16 @@ void  ResourceManager::hbrPredicate() { }
 bool  ResourceManager::getMysqldInfo(
     std::string& h, std::string& u, std::string& w, unsigned int& p) const
 {
-    h = getStringVal("CrossEngineSupport", "Host", "unassigned");
+    static const std::string hostUserUnassignedValue("unassigned");
+    // MCS will read username and pass from disk if the config changed.
+    bool reReadConfig = true;
+    u = getStringVal("CrossEngineSupport", "User", hostUserUnassignedValue, reReadConfig);
+    w = getStringVal("CrossEngineSupport", "Password", "", reReadConfig);
+    // MCS will not read username and pass from disk if the config changed.
+    h = getStringVal("CrossEngineSupport", "Host", hostUserUnassignedValue);
     p = getUintVal("CrossEngineSupport", "Port", 0);
-    u = getStringVal("CrossEngineSupport", "User", "unassigned");
-    w = getStringVal("CrossEngineSupport", "Password", "");
 
-    bool rc = true;
-
-    if ((h.compare("unassigned") == 0) ||
-            (u.compare("unassigned") == 0) ||
-            (p == 0))
-        rc = false;
-
-    return rc;
+    return h != hostUserUnassignedValue && u != hostUserUnassignedValue && p;
 }
 
 bool ResourceManager::queryStatsEnabled() const

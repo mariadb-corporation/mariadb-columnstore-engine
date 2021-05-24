@@ -430,14 +430,7 @@ CommandPackageProcessor::processPackage(dmlpackage::CalpontDMLPackage& cpackage)
 
                 if (!cpInvalidated)
                 {
-		    // The code below assumes that in case of COMMIT all ranges for all touched LBIDs
-		    // are either correctly set or correctly reset.
-		    // It is also assumes that ROLLBACK or other operations but COMMIT may not return ranges
-		    // to state that is correct. This is why we invalidate extents when we are not committing.
-		    if (stmt != "COMMIT")
-		    {
-                        fDbrm->invalidateUncommittedExtentLBIDs(0, &lbidList);
-		    }
+                    fDbrm->invalidateUncommittedExtentLBIDs(0, &lbidList);
                 }
             }
         }

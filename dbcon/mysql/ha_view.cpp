@@ -44,7 +44,8 @@ using namespace execplan;
 
 namespace cal_impl_if
 {
-extern uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex);
+extern uint32_t buildJoin(gp_walk_info& gwi, List<TABLE_LIST>& join_list,
+    std::stack<execplan::ParseTree*>& outerJoinStack);
 extern string getViewName(TABLE_LIST* table_ptr);
 
 CalpontSystemCatalog::TableAliasName& View::viewName()
@@ -182,9 +183,9 @@ void View::transform()
     }
 }
 
-uint32_t View::processOuterJoin(gp_walk_info& gwi)
+uint32_t View::processJoin(gp_walk_info& gwi, std::stack<execplan::ParseTree*>& outerJoinStack)
 {
-    return buildOuterJoin(gwi, fSelect);
+    return buildJoin(gwi, fSelect.top_join_list, outerJoinStack);
 }
 
 }

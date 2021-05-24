@@ -1,0 +1,756 @@
+SELECT @mysqltest_file;
+@mysqltest_file
+ctype_cmp_char1_latin1_swedish_ci
+SET @database=CONCAT('mcs_', @mysqltest_file);
+EXECUTE IMMEDIATE CONCAT('DROP DATABASE IF EXISTS ', @database);
+EXECUTE IMMEDIATE CONCAT('CREATE DATABASE ', @database);
+CREATE PROCEDURE exec(query TEXT)
+BEGIN
+SELECT query AS '';
+EXECUTE IMMEDIATE query;
+END;
+$$
+CREATE PROCEDURE test01_execval(op VARCHAR(3) CHARACTER SET utf8,
+val VARCHAR(64) CHARACTER SET utf8)
+BEGIN
+DECLARE query TEXT DEFAULT 'SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1=''VAL''';
+SET query=REPLACE(query,'=',op);
+SET query=REPLACE(query,'VAL', val);
+CALL exec(query);
+END;
+$$
+CREATE PROCEDURE test01_populate(len1 INT, len2 INT)
+BEGIN
+-- Make sure the table is handled by a proper ENGINE
+SELECT (SELECT engine FROM information_schema.tables WHERE (table_schema,table_name)=(@database,'t1')) =
+@@default_storage_engine;
+FOR i IN len1..len2
+DO
+INSERT INTO t1 VALUES (RPAD('a',i)),(RPAD('A',i));
+-- LATIN SMALL LETTER A WITH TILDE
+-- LATIN CAPITAL LETTER A WITH TILDE
+INSERT INTO t1 VALUES (RPAD(_latin1 0xE3,i)),(RPAD(_latin1 0xC3,i));
+INSERT INTO t1 VALUES (RPAD('b',i)),(RPAD('B',i));
+END FOR;
+-- MCOL-4454 "ORDER BY BINARY a" is not like in InnoDB
+CALL exec('SELECT QUOTE(c1) FROM t1 ORDER BY c1, BINARY(c1) ASC');
+CALL exec('SELECT QUOTE(c1) FROM t1 ORDER BY c1, BINARY(c1) DESC');
+END;
+$$
+CREATE PROCEDURE test01_field_literal_op(len1 INT,
+len2 INT,
+op VARCHAR(3) CHARACTER SET utf8)
+BEGIN
+FOR i IN len1..len2
+DO
+CALL test01_execval(op,RPAD('a',i));
+CALL test01_execval(op,RPAD('A',i));
+CALL test01_execval(op,RPAD(_latin1 0xE3,i)); -- LATIN SMALL LETTER A WITH TILDE
+CALL test01_execval(op,RPAD(_latin1 0xC3,i)); -- LATIN CAPITAL LETTER A WITH TILDE
+END FOR;
+END;
+$$
+CREATE PROCEDURE test01_field_literal(len1 INT,
+len2 INT)
+BEGIN
+CALL test01_field_literal_op(len1, len2, '=');
+CALL test01_field_literal_op(len1, len2, '<=');
+CALL test01_field_literal_op(len1, len2, '<');
+CALL test01_field_literal_op(len1, len2, '>');
+CALL test01_field_literal_op(len1, len2, '>=');
+CALL test01_field_literal_op(len1, len2, '<>');
+END;
+$$
+CREATE PROCEDURE test01_field_field()
+BEGIN
+SELECT QUOTE(t1.c1), QUOTE(t2.c1) FROM t1, t1 t2 WHERE t1.c1=t2.c1 ORDER BY HEX(t1.c1), HEX(t2.c1);
+END;
+$$
+CREATE PROCEDURE test01_distinct()
+BEGIN
+DECLARE vrecno INT DEFAULT 1;
+CALL exec('SELECT GROUP_CONCAT(CONCAT(''['',c1,'']'') ORDER BY BINARY(c1) SEPARATOR '''') FROM t1 GROUP BY c1 ORDER BY c1');
+CALL exec('SELECT COUNT(DISTINCT c1) FROM t1');
+CREATE TABLE t2 AS SELECT DISTINCT c1 FROM t1;
+CALL exec('SELECT COUNT(*) FROM t2');
+CREATE TABLE t3 AS SELECT t1.c1, CAST(0 AS UNSIGNED) AS distinct_count FROM t1 LIMIT 0;
+FOR rec IN (SELECT c1 FROM t1)
+DO
+INSERT INTO t3 SELECT rec.c1, COUNT(*) FROM t2 WHERE t2.c1=rec.c1;
+END FOR;
+CALL exec('SELECT distinct_count, QUOTE(c1) FROM t3 ORDER BY c1, BINARY(c1)');
+DROP TABLE t3;
+CREATE TABLE t4 AS SELECT t1.c1, CAST(0 AS UNSIGNED) AS distinct_recno FROM t1 LIMIT 0;
+FOR rec IN (SELECT c1 FROM t2 ORDER BY c1)
+DO
+INSERT INTO t4 SELECT t1.c1, vrecno FROM t1 WHERE t1.c1=rec.c1 ORDER BY BINARY t1.c1;
+SET vrecno= vrecno+1;
+END FOR;
+CALL exec('SELECT distinct_recno, QUOTE(c1) FROM t4 ORDER BY c1, BINARY(c1)');
+DROP TABLE t4;
+DROP TABLE t2;
+END;
+$$
+CREATE PROCEDURE test02_same_table_create_table(dtype VARCHAR(128))
+BEGIN
+DECLARE tbl TEXT DEFAULT 'CREATE TABLE t1 (c1 TYPE, c2 TYPE)';
+SET tbl=REPLACE(tbl,'TYPE',dtype);
+CALL exec(tbl);
+END;
+$$
+CREATE PROCEDURE test02_same_table_populate()
+BEGIN
+INSERT INTO t1 VALUES ('a', 'A');
+INSERT INTO t1 VALUES ('a', 'A ');
+INSERT INTO t1 VALUES ('a ', 'A');
+INSERT INTO t1 VALUES ('a ', 'A ');
+END;
+$$
+CREATE PROCEDURE test02_same_table_cmp_field_field_op(op VARCHAR(2))
+BEGIN
+DECLARE query TEXT DEFAULT 'SELECT QUOTE(c1), QUOTE(c2) FROM t1 '
+                             'WHERE c1=c2 ORDER BY HEX(c1), HEX(c2)';
+SET query=REPLACE(query,'=',op);
+CALL exec(query);
+END;
+$$
+CREATE PROCEDURE test02_same_table_cmp_field_field()
+BEGIN
+CALL test02_same_table_cmp_field_field_op('=');
+CALL test02_same_table_cmp_field_field_op('<=');
+CALL test02_same_table_cmp_field_field_op('<');
+CALL test02_same_table_cmp_field_field_op('>');
+CALL test02_same_table_cmp_field_field_op('>=');
+CALL test02_same_table_cmp_field_field_op('<>');
+END;
+$$
+CREATE PROCEDURE test03(len INT, datatype TEXT)
+BEGIN
+CALL exec(REPLACE('CREATE TABLE t1 (c1 DATATYPE, c2 DATATYPE)', 'DATATYPE', datatype));
+CALL exec(REPLACE('INSERT INTO t1 VALUES (LEFT(''Hellooooooooooooooooooo'',LEN),LEFT(''hellooooooooooooooooooo'',LEN))', 'LEN', len));
+CALL exec(REPLACE('CREATE TABLE t2 (c1 DATATYPE, c2 DATATYPE)', 'DATATYPE', datatype));
+CALL exec(REPLACE('INSERT INTO t2 VALUES (LEFT(''Hellooooooooooooooooooo'',LEN),LEFT(''hellooooooooooooooooooo'',LEN))', 'LEN', len));
+CALL exec(REPLACE('SELECT * FROM t1 WHERE c1=''VAL''', 'VAL', LEFT('Hellooooooooooooooooooo', len)));
+CALL exec(REPLACE('SELECT * FROM t1 WHERE c1=''VAL''', 'VAL', LEFT('hellooooooooooooooooooo', len)));
+CALL exec('SELECT * FROM t1 WHERE c1=c2');
+CALL exec('SELECT * FROM t1, t2 WHERE t1.c1=t2.c1');
+CALL exec('SELECT * FROM t1, t2 WHERE t1.c1=t2.c2');
+CALL exec('SELECT * FROM t1, t2 WHERE t1.c2=t2.c1');
+CALL exec('SELECT * FROM t1, t2 WHERE t1.c2=t2.c2');
+CALL exec('DROP TABLE t1');
+END;
+$$
+CREATE PROCEDURE test04_like(len INT, datatype TEXT)
+BEGIN
+CALL exec(REPLACE('CREATE TABLE t1 (c1 DATATYPE)', 'DATATYPE', datatype));
+CALL exec(REPLACE('INSERT INTO t1 VALUES (REPEAT(''a'',LEN))','LEN',len));
+CALL exec(REPLACE('INSERT INTO t1 VALUES (REPEAT(''A'',LEN))','LEN',len));
+CALL exec('SELECT * FROM t1 WHERE c1 LIKE ''a%'' ORDER BY BINARY c1');
+CALL exec('SELECT * FROM t1 WHERE c1 LIKE ''A%'' ORDER BY BINARY c1');
+CALL exec(REPLACE('SELECT * FROM t1 WHERE c1 LIKE ''VAL%'' ORDER BY BINARY c1','VAL',REPEAT('a',len)));
+CALL exec(REPLACE('SELECT * FROM t1 WHERE c1 LIKE ''VAL%'' ORDER BY BINARY c1','VAL',REPEAT('A',len)));
+CALL exec('DROP TABLE t1');
+END;
+$$
+CREATE PROCEDURE test05_mcol4726(len INT, datatype TEXT)
+BEGIN
+DECLARE small_a                VARCHAR(64) CHARACTER SET utf8 DEFAULT REPEAT('a',len);
+DECLARE cap_a                  VARCHAR(64) CHARACTER SET utf8 DEFAULT REPEAT('A',len);
+DECLARE small_a_with_tilde     VARCHAR(64) CHARACTER SET utf8 DEFAULT REPEAT(_latin1 0xE3,len);
+DECLARE cap_a_with_tilde       VARCHAR(64) CHARACTER SET utf8 DEFAULT REPEAT(_latin1 0xC3,len);
+DECLARE small_a_with_diaeresis VARCHAR(64) CHARACTER SET utf8 DEFAULT REPEAT(_latin1 0xE4,len);
+DECLARE cap_a_with_diaeresis   VARCHAR(64) CHARACTER SET utf8 DEFAULT REPEAT(_latin1 0xC4,len);
+DECLARE ins VARCHAR(64) CHARACTER SET utf8 DEFAULT 'INSERT INTO t1 VALUES(IVAL)';
+DECLARE sel VARCHAR(64) CHARACTER SET utf8 DEFAULT 'SELECT c1 FROM t1 WHERE c1=IVAL ORDER BY BINARY c1';
+CALL exec(REPLACE('CREATE TABLE t1 (c1 DATATYPE)', 'DATATYPE', datatype));
+CALL exec(REPLACE(ins, 'IVAL', CONCAT('''', small_a, '''')));
+CALL exec(REPLACE(ins, 'IVAL', CONCAT('''', cap_a, '''')));
+CALL exec(REPLACE(ins, 'IVAL', CONCAT('''', small_a_with_tilde, '''')));
+CALL exec(REPLACE(ins, 'IVAL', CONCAT('''', cap_a_with_tilde, '''')));
+CALL exec(REPLACE(ins, 'IVAL', CONCAT('''', small_a_with_diaeresis, '''')));
+CALL exec(REPLACE(ins, 'IVAL', CONCAT('''', cap_a_with_diaeresis, '''')));
+CALL exec(REPLACE(sel, 'IVAL', CONCAT('''', small_a, '''')));
+CALL exec(REPLACE(sel, 'IVAL', CONCAT('''', cap_a, '''')));
+CALL exec(REPLACE(sel, 'IVAL', CONCAT('''', small_a_with_tilde, '''')));
+CALL exec(REPLACE(sel, 'IVAL', CONCAT('''', cap_a_with_tilde, '''')));
+CALL exec(REPLACE(sel, 'IVAL', CONCAT('''', small_a_with_diaeresis, '''')));
+CALL exec(REPLACE(sel, 'IVAL', CONCAT('''', cap_a_with_diaeresis, '''')));
+CALL exec('DROP TABLE t1');
+END;
+$$
+SET NAMES utf8;
+SET @datatype='CHAR(1) CHARACTER SET latin1 COLLATE latin1_swedish_ci';
+CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET latin1 COLLATE latin1_swedish_ci);
+CALL test01_populate(1,1);
+(SELECT engine FROM information_schema.tables WHERE (table_schema,table_name)=(@database,'t1')) =
+@@default_storage_engine
+1
+
+SELECT QUOTE(c1) FROM t1 ORDER BY c1, BINARY(c1) ASC
+QUOTE(c1)
+'A'
+'a'
+'Ã'
+'ã'
+'B'
+'b'
+
+SELECT QUOTE(c1) FROM t1 ORDER BY c1, BINARY(c1) DESC
+QUOTE(c1)
+'ã'
+'Ã'
+'a'
+'A'
+'b'
+'B'
+CALL test01_field_literal(1,2);
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1='a'
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1='A'
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1='ã'
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1='Ã'
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1='a '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1='A '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1='ã '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1='Ã '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<='a'
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<='A'
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<='ã'
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<='Ã'
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<='a '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<='A '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<='ã '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<='Ã '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<'a'
+HEX(c1)	QUOTE(c1)
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<'A'
+HEX(c1)	QUOTE(c1)
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<'ã'
+HEX(c1)	QUOTE(c1)
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<'Ã'
+HEX(c1)	QUOTE(c1)
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<'a '
+HEX(c1)	QUOTE(c1)
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<'A '
+HEX(c1)	QUOTE(c1)
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<'ã '
+HEX(c1)	QUOTE(c1)
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<'Ã '
+HEX(c1)	QUOTE(c1)
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>'a'
+HEX(c1)	QUOTE(c1)
+62	'b'
+42	'B'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>'A'
+HEX(c1)	QUOTE(c1)
+62	'b'
+42	'B'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>'ã'
+HEX(c1)	QUOTE(c1)
+62	'b'
+42	'B'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>'Ã'
+HEX(c1)	QUOTE(c1)
+62	'b'
+42	'B'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>'a '
+HEX(c1)	QUOTE(c1)
+62	'b'
+42	'B'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>'A '
+HEX(c1)	QUOTE(c1)
+62	'b'
+42	'B'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>'ã '
+HEX(c1)	QUOTE(c1)
+62	'b'
+42	'B'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>'Ã '
+HEX(c1)	QUOTE(c1)
+62	'b'
+42	'B'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>='a'
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>='A'
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>='ã'
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>='Ã'
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>='a '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>='A '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>='ã '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1>='Ã '
+HEX(c1)	QUOTE(c1)
+61	'a'
+41	'A'
+E3	'ã'
+C3	'Ã'
+62	'b'
+42	'B'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<>'a'
+HEX(c1)	QUOTE(c1)
+62	'b'
+42	'B'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<>'A'
+HEX(c1)	QUOTE(c1)
+62	'b'
+42	'B'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<>'ã'
+HEX(c1)	QUOTE(c1)
+62	'b'
+42	'B'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<>'Ã'
+HEX(c1)	QUOTE(c1)
+62	'b'
+42	'B'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<>'a '
+HEX(c1)	QUOTE(c1)
+62	'b'
+42	'B'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<>'A '
+HEX(c1)	QUOTE(c1)
+62	'b'
+42	'B'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<>'ã '
+HEX(c1)	QUOTE(c1)
+62	'b'
+42	'B'
+
+SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1<>'Ã '
+HEX(c1)	QUOTE(c1)
+62	'b'
+42	'B'
+CALL test01_field_field();
+QUOTE(t1.c1)	QUOTE(t2.c1)
+'A'	'A'
+'A'	'a'
+'A'	'Ã'
+'A'	'ã'
+'B'	'B'
+'B'	'b'
+'a'	'A'
+'a'	'a'
+'a'	'Ã'
+'a'	'ã'
+'b'	'B'
+'b'	'b'
+'Ã'	'A'
+'Ã'	'a'
+'Ã'	'Ã'
+'Ã'	'ã'
+'ã'	'A'
+'ã'	'a'
+'ã'	'Ã'
+'ã'	'ã'
+CALL test01_distinct();
+
+SELECT GROUP_CONCAT(CONCAT('[',c1,']') ORDER BY BINARY(c1) SEPARATOR '') FROM t1 GROUP BY c1 ORDER BY c1
+GROUP_CONCAT(CONCAT('[',c1,']') ORDER BY BINARY(c1) SEPARATOR '')
+[A][a][Ã][ã]
+[B][b]
+
+SELECT COUNT(DISTINCT c1) FROM t1
+COUNT(DISTINCT c1)
+2
+
+SELECT COUNT(*) FROM t2
+COUNT(*)
+2
+
+SELECT distinct_count, QUOTE(c1) FROM t3 ORDER BY c1, BINARY(c1)
+distinct_count	QUOTE(c1)
+1	'A'
+1	'a'
+1	'Ã'
+1	'ã'
+1	'B'
+1	'b'
+
+SELECT distinct_recno, QUOTE(c1) FROM t4 ORDER BY c1, BINARY(c1)
+distinct_recno	QUOTE(c1)
+1	'A'
+1	'a'
+1	'Ã'
+1	'ã'
+2	'B'
+2	'b'
+DROP TABLE t1;
+CALL test02_same_table_create_table(@datatype);
+
+CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET latin1 COLLATE latin1_swedish_ci, c2 CHAR(1) CHARACTER SET latin1 COLLATE latin1_swedish_ci)
+CALL test02_same_table_populate();
+CALL test02_same_table_cmp_field_field();
+
+SELECT QUOTE(c1), QUOTE(c2) FROM t1 WHERE c1=c2 ORDER BY HEX(c1), HEX(c2)
+QUOTE(c1)	QUOTE(c2)
+'a'	'A'
+'a'	'A'
+'a'	'A'
+'a'	'A'
+
+SELECT QUOTE(c1), QUOTE(c2) FROM t1 WHERE c1<=c2 ORDER BY HEX(c1), HEX(c2)
+QUOTE(c1)	QUOTE(c2)
+'a'	'A'
+'a'	'A'
+'a'	'A'
+'a'	'A'
+
+SELECT QUOTE(c1), QUOTE(c2) FROM t1 WHERE c1<c2 ORDER BY HEX(c1), HEX(c2)
+QUOTE(c1)	QUOTE(c2)
+
+SELECT QUOTE(c1), QUOTE(c2) FROM t1 WHERE c1>c2 ORDER BY HEX(c1), HEX(c2)
+QUOTE(c1)	QUOTE(c2)
+
+SELECT QUOTE(c1), QUOTE(c2) FROM t1 WHERE c1>=c2 ORDER BY HEX(c1), HEX(c2)
+QUOTE(c1)	QUOTE(c2)
+'a'	'A'
+'a'	'A'
+'a'	'A'
+'a'	'A'
+
+SELECT QUOTE(c1), QUOTE(c2) FROM t1 WHERE c1<>c2 ORDER BY HEX(c1), HEX(c2)
+QUOTE(c1)	QUOTE(c2)
+DROP TABLE t1;
+CALL test03(1, @datatype);
+
+CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET latin1 COLLATE latin1_swedish_ci, c2 CHAR(1) CHARACTER SET latin1 COLLATE latin1_swedish_ci)
+
+INSERT INTO t1 VALUES (LEFT('Hellooooooooooooooooooo',1),LEFT('hellooooooooooooooooooo',1))
+
+CREATE TABLE t2 (c1 CHAR(1) CHARACTER SET latin1 COLLATE latin1_swedish_ci, c2 CHAR(1) CHARACTER SET latin1 COLLATE latin1_swedish_ci)
+
+INSERT INTO t2 VALUES (LEFT('Hellooooooooooooooooooo',1),LEFT('hellooooooooooooooooooo',1))
+
+SELECT * FROM t1 WHERE c1='H'
+c1	c2
+H	h
+
+SELECT * FROM t1 WHERE c1='h'
+c1	c2
+H	h
+
+SELECT * FROM t1 WHERE c1=c2
+c1	c2
+H	h
+
+SELECT * FROM t1, t2 WHERE t1.c1=t2.c1
+c1	c2	c1	c2
+H	h	H	h
+
+SELECT * FROM t1, t2 WHERE t1.c1=t2.c2
+c1	c2	c1	c2
+H	h	H	h
+
+SELECT * FROM t1, t2 WHERE t1.c2=t2.c1
+c1	c2	c1	c2
+H	h	H	h
+
+SELECT * FROM t1, t2 WHERE t1.c2=t2.c2
+c1	c2	c1	c2
+H	h	H	h
+
+DROP TABLE t1
+CALL test04_like(1, @datatype);
+
+CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET latin1 COLLATE latin1_swedish_ci)
+
+INSERT INTO t1 VALUES (REPEAT('a',1))
+
+INSERT INTO t1 VALUES (REPEAT('A',1))
+
+SELECT * FROM t1 WHERE c1 LIKE 'a%' ORDER BY BINARY c1
+c1
+A
+a
+
+SELECT * FROM t1 WHERE c1 LIKE 'A%' ORDER BY BINARY c1
+c1
+A
+a
+
+SELECT * FROM t1 WHERE c1 LIKE 'a%' ORDER BY BINARY c1
+c1
+A
+a
+
+SELECT * FROM t1 WHERE c1 LIKE 'A%' ORDER BY BINARY c1
+c1
+A
+a
+
+DROP TABLE t1
+CALL test05_mcol4726(1, @datatype);
+
+CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET latin1 COLLATE latin1_swedish_ci)
+
+INSERT INTO t1 VALUES('a')
+
+INSERT INTO t1 VALUES('A')
+
+INSERT INTO t1 VALUES('ã')
+
+INSERT INTO t1 VALUES('Ã')
+
+INSERT INTO t1 VALUES('ä')
+
+INSERT INTO t1 VALUES('Ä')
+
+SELECT c1 FROM t1 WHERE c1='a' ORDER BY BINARY c1
+c1
+A
+a
+Ã
+ã
+
+SELECT c1 FROM t1 WHERE c1='A' ORDER BY BINARY c1
+c1
+A
+a
+Ã
+ã
+
+SELECT c1 FROM t1 WHERE c1='ã' ORDER BY BINARY c1
+c1
+A
+a
+Ã
+ã
+
+SELECT c1 FROM t1 WHERE c1='Ã' ORDER BY BINARY c1
+c1
+A
+a
+Ã
+ã
+
+SELECT c1 FROM t1 WHERE c1='ä' ORDER BY BINARY c1
+c1
+Ä
+ä
+
+SELECT c1 FROM t1 WHERE c1='Ä' ORDER BY BINARY c1
+c1
+Ä
+ä
+
+DROP TABLE t1
+DROP PROCEDURE exec;
+DROP PROCEDURE test01_execval;
+DROP PROCEDURE test01_populate;
+DROP PROCEDURE test01_field_literal_op;
+DROP PROCEDURE test01_field_literal;
+DROP PROCEDURE test01_field_field;
+DROP PROCEDURE test01_distinct;
+DROP PROCEDURE test02_same_table_create_table;
+DROP PROCEDURE test02_same_table_populate;
+DROP PROCEDURE test02_same_table_cmp_field_field_op;
+DROP PROCEDURE test02_same_table_cmp_field_field;
+DROP PROCEDURE test03;
+DROP PROCEDURE test04_like;
+DROP PROCEDURE test05_mcol4726;
+EXECUTE IMMEDIATE CONCAT('DROP DATABASE ', @database);
+USE test;
+SET @@default_storage_engine=DEFAULT;
+#
+# MCOL-4721 CHAR(1) is not collation-aware for GROUP/DISTINCT
+#
+CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET latin1 COLLATE latin1_swedish_ci);
+INSERT INTO t1 VALUES ('a'),('A');
+SELECT c1, COUNT(*) FROM t1 GROUP BY c1;
+c1	COUNT(*)
+a	2
+SELECT DISTINCT c1 FROM t1;
+c1
+a
+INSERT INTO t1 VALUES ('ä'),('Ä'),('ã'),('Ã');
+SELECT c1, COUNT(*) FROM t1 GROUP BY c1 ORDER BY c1;
+c1	COUNT(*)
+a	4
+ä	2
+SELECT DISTINCT c1 FROM t1 ORDER BY c1;
+c1
+a
+ä
+DROP TABLE t1;
+#
+# MCOL-4726 Wrong result of WHERE char1_col='A'
+#
+CREATE TABLE t1 (a CHAR(1) CHARACTER SET latin1);
+INSERT INTO t1 VALUES ('a'),('Ã');
+SELECT * FROM t1 WHERE a='A';
+a
+a
+Ã
+DROP TABLE t1;

@@ -3037,6 +3037,17 @@ DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd &unione
                 case datatypes::SystemCatalog::UINT:
                 case datatypes::SystemCatalog::UBIGINT:
                 case datatypes::SystemCatalog::UDECIMAL:
+
+                    unionedType.precision = std::max(type.precision, unionedType.precision);
+                    unionedType.scale = std::max(type.scale, unionedType.scale);
+
+                    if (datatypes::Decimal::isWideDecimalTypeByPrecision(unionedType.precision))
+                    {
+                        unionedType.colDataType = datatypes::SystemCatalog::DECIMAL;
+                        unionedType.colWidth = datatypes::MAXDECIMALWIDTH;
+                        break;
+                    }
+
                     if (type.colWidth > unionedType.colWidth)
                     {
                         unionedType.colDataType = type.colDataType;
@@ -3054,10 +3065,6 @@ DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd &unione
                         unionedType.colDataType = datatypes::SystemCatalog::DECIMAL;
                     }
 
-                    if (type.precision > unionedType.precision)
-                        unionedType.precision = type.precision;
-
-                    unionedType.scale = (type.scale > unionedType.scale) ? type.scale : unionedType.scale;
                     break;
 
                 case datatypes::SystemCatalog::DATE:

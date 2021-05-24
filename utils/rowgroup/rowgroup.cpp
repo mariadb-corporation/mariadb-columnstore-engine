@@ -1117,54 +1117,6 @@ bool Row::equals(const std::string& val, uint32_t col) const
     return true;
 }
 
-bool Row::equals(const Row& r2, const std::vector<uint32_t>& keyCols) const
-{
-    for (uint32_t i = 0; i < keyCols.size(); i++)
-    {
-        const uint32_t& col = keyCols[i];
-        cscDataType columnType = getColType(col);
-
-        if (UNLIKELY(columnType == execplan::CalpontSystemCatalog::VARCHAR ||
-                     (columnType == execplan::CalpontSystemCatalog::CHAR  && (colWidths[col] > 1)) ||
-                      columnType == execplan::CalpontSystemCatalog::TEXT))
-        {
-            CHARSET_INFO* cs = getCharset(col);
-            if (cs->strnncollsp(getStringPointer(col), getStringLength(col), 
-                          r2.getStringPointer(col), r2.getStringLength(col)))
-            {
-                return false;
-            }
-        }
-        else if (UNLIKELY(columnType == execplan::CalpontSystemCatalog::BLOB))
-        {
-            if (getStringLength(col) != r2.getStringLength(col))
-                return false;
-
-            if (memcmp(getStringPointer(col), r2.getStringPointer(col), getStringLength(col)))
-                return false;
-        }
-        else
-        {
-            if (UNLIKELY(columnType == execplan::CalpontSystemCatalog::LONGDOUBLE))
-            {
-                if (getLongDoubleField(col) != r2.getLongDoubleField(col))
-                    return false;
-            }
-            else if (UNLIKELY(datatypes::isWideDecimalType(columnType, colWidths[col])))
-            {
-                if (*getBinaryField<int128_t>(col) != *r2.getBinaryField<int128_t>(col))
-                    return false;
-            }
-            else if (getUintField(col) != r2.getUintField(col))
-            {
-                return false;
-            }
-        }
-    }
-
-    return true;
-}
-
 bool Row::equals(const Row& r2, uint32_t lastCol) const
 {
     // This check fires with empty r2 only.
@@ -1183,9 +1135,7 @@ bool Row::equals(const Row& r2, uint32_t lastCol) const
     for (uint32_t col = 0; col <= lastCol; col++)
     {
         cscDataType columnType = getColType(col);
-        if (UNLIKELY(columnType == execplan::CalpontSystemCatalog::VARCHAR ||
-                     (columnType == execplan::CalpontSystemCatalog::CHAR  && (colWidths[col] > 1)) ||
-                     columnType == execplan::CalpontSystemCatalog::TEXT))
+        if (UNLIKELY(typeHasCollation(columnType)))
         {
             CHARSET_INFO* cs = getCharset(col);
             if (cs->strnncollsp(getStringPointer(col), getStringLength(col), 
@@ -1291,10 +1241,7 @@ RowGroup::RowGroup(uint32_t colCount,
         else
             stOffsets[i + 1] = stOffsets[i] + colWidths[i];
 
-        execplan::CalpontSystemCatalog::ColDataType type = types[i];
-        if ((type == execplan::CalpontSystemCatalog::CHAR && (colWidths[i] > 1)) ||
-            type == execplan::CalpontSystemCatalog::VARCHAR ||
-            type == execplan::CalpontSystemCatalog::TEXT)
+        if (colHasCollation(i))
         {
             hasCollation = true;
         }
@@ -1908,10 +1855,7 @@ RowGroup RowGroup::truncate(uint32_t cols)
             ret.hasLongStringField = true;
         }
 
-        execplan::CalpontSystemCatalog::ColDataType type = types[i];
-        if ((type == execplan::CalpontSystemCatalog::CHAR && (colWidths[i] > 1)) ||
-            type == execplan::CalpontSystemCatalog::VARCHAR ||
-            type == execplan::CalpontSystemCatalog::TEXT)
+        if (colHasCollation(i))
         {
             ret.hasCollation = true;
         }

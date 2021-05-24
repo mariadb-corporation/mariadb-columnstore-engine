@@ -1,0 +1,435 @@
+--source ../include/have_columnstore.inc
+
+--echo #
+--echo # MCOL-4410 SELECT bypasses select handler if @variables
+--echo # are involved in the query projection list
+--echo #
+--echo # In MCOL-4410, we are enabling select/derived handler for
+--echo # get_user_var func but keep it disabled for set_user_var func.
+--echo #
+
+SET default_storage_engine=columnstore;
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol4410;
+--enable_warnings
+
+CREATE DATABASE mcol4410;
+USE mcol4410;
+
+CREATE TABLE t1 (a int, b varchar(5));
+INSERT INTO t1 VALUES (1, 'one'), (2, 'two'), (3, 'three');
+SET @var1=2;
+SET @var2='t';
+
+# Simple test
+EXPLAIN SELECT a + @var1, @var1 + 1, TRIM(LEADING @var2 FROM b) FROM t1;
+SELECT a + @var1, @var1 + 1, TRIM(LEADING @var2 FROM b) FROM t1;
+EXPLAIN SELECT @var1 := @var1 + a FROM t1;
+SELECT @var1 := @var1 + a FROM t1;
+EXPLAIN SELECT @var1 := @var1 + 1 FROM t1;
+SELECT @var1 := @var1 + 1 FROM t1;
+EXPLAIN SELECT TRIM(LEADING @var2 := substring(b,1,2) FROM b) FROM t1;
+SELECT TRIM(LEADING @var2 := substring(b,1,2) FROM b) FROM t1;
+
+# FROM subquery
+EXPLAIN SELECT * FROM (SELECT a + @var1, @var1 + 1, TRIM(LEADING @var2 FROM b) FROM t1) tu;
+SELECT * FROM (SELECT a + @var1, @var1 + 1, TRIM(LEADING @var2 FROM b) FROM t1) tu;
+EXPLAIN SELECT * FROM (SELECT @var1 := @var1 + a FROM t1) tu;
+SELECT * FROM (SELECT @var1 := @var1 + a FROM t1) tu;
+EXPLAIN SELECT * FROM (SELECT @var1 := @var1 + 1 FROM t1) tu;
+SELECT * FROM (SELECT @var1 := @var1 + 1 FROM t1) tu;
+EXPLAIN SELECT * FROM (SELECT TRIM(LEADING @var2 := substring(b,1,2) FROM b) FROM t1) tu;
+SELECT * FROM (SELECT TRIM(LEADING @var2 := substring(b,1,2) FROM b) FROM t1) tu;
+
+# WHERE predicate containing the @ variable
+SET @var1 = 2;
+EXPLAIN SELECT * FROM t1 WHERE a=@var1;
+SELECT * FROM t1 WHERE a=@var1;
+EXPLAIN SELECT * FROM t1 WHERE @var1 := a;
+SELECT * FROM t1 WHERE @var1 := a;
+
+# @ variable in a JOIN expression
+SET @var1 = 2;
+CREATE TABLE t2 (c int, d varchar(5));
+INSERT INTO t2 VALUES (1, 'one'), (2, 'two'), (3, 'three');
+EXPLAIN SELECT * FROM t1 JOIN t2 ON t1.a + @var1 = t2.c;
+SELECT * FROM t1 JOIN t2 ON t1.a + @var1 = t2.c;
+EXPLAIN SELECT * FROM t1 JOIN t2 ON t1.a + @var1 = t2.c AND @var1 := t1.a;
+--error 1815
+SELECT * FROM t1 JOIN t2 ON t1.a + @var1 = t2.c AND @var1 := t1.a;
+
+# @ variable in an aggregate expression
+SET @var1 = 2;
+EXPLAIN SELECT SUM(a + @var1) FROM t1;
+SELECT SUM(a + @var1) FROM t1;
+EXPLAIN SELECT SUM(@var1 := a) FROM t1;
+--error 1178
+SELECT SUM(@var1 := a) FROM t1;
+
+# The following test case is copied verbatim from MCOL-4410 issue description
+
+CREATE TABLE `cs_trans_item` (
+  `id` int(10) unsigned NOT NULL,
+  `company_id` int(10) unsigned DEFAULT NULL,
+  `store_id` int(10) unsigned DEFAULT NULL,
+  `user_id` int(10) unsigned DEFAULT NULL,
+  `drawer_id` int(10) unsigned DEFAULT NULL,
+  `hdr_id` int(10) unsigned DEFAULT NULL,
+  `loan_fee_id` int(10) unsigned DEFAULT NULL,
+  `ma_type_id` int(10) unsigned DEFAULT NULL,
+  `type_id` int(10) unsigned DEFAULT NULL,
+  `sub_type_id` int(10) unsigned DEFAULT NULL,
+  `hdr_old_status_id` int(10) unsigned DEFAULT NULL,
+  `hdr_old_sub_status_id` int(10) unsigned DEFAULT NULL,
+  `hdr_new_status_id` int(10) unsigned DEFAULT NULL,
+  `hdr_new_sub_status_id` int(10) unsigned DEFAULT NULL,
+  `seq_num` int(10) unsigned DEFAULT NULL,
+  `ma_type_seq_num` int(10) unsigned DEFAULT NULL,
+  `type_seq_num` int(10) unsigned DEFAULT NULL,
+  `bus_date` date NOT NULL,
+  `actual_dt` datetime NOT NULL,
+  `amount` decimal(14,4) DEFAULT NULL,
+  `change_due` decimal(14,4) DEFAULT NULL,
+  `int_amt_pd` decimal(14,4) DEFAULT NULL,
+  `svc_amt_pd` decimal(14,4) DEFAULT NULL,
+  `prin_amt_pd` decimal(14,4) DEFAULT NULL,
+  `other_amt_pd` decimal(14,4) DEFAULT NULL,
+  `int_amt_upd` decimal(14,4) DEFAULT NULL,
+  `svc_amt_upd` decimal(14,4) DEFAULT NULL,
+  `prin_amt_upd` decimal(14,4) DEFAULT NULL,
+  `other_amt_upd` decimal(14,4) DEFAULT NULL,
+  `over_pmt_amt` decimal(14,4) DEFAULT NULL,
+  `coupon_id` int(10) unsigned DEFAULT NULL,
+  `coupon_amount` decimal(14,4) DEFAULT NULL,
+  `coupon_svc_amt` decimal(14,4) DEFAULT NULL,
+  `coupon_int_amt` decimal(14,4) DEFAULT NULL,
+  `store_bank_id` int(10) unsigned DEFAULT NULL,
+  `co_check_num` int(10) unsigned DEFAULT NULL,
+  `payment_method` int(10) unsigned DEFAULT NULL,
+  `payment_source` int(10) NOT NULL DEFAULT 0,
+  `funding_method_id` int(10) unsigned DEFAULT NULL,
+  `is_void` tinyint(1) unsigned DEFAULT NULL,
+  `void_bus_date` date DEFAULT NULL,
+  `void_actual_dt` datetime DEFAULT NULL,
+  `void_store_id` int(10) unsigned DEFAULT NULL,
+  `void_user_id` int(10) unsigned DEFAULT NULL,
+  `void_drawer_id` int(10) unsigned DEFAULT NULL,
+  `void_hdr_new_status_id` int(10) unsigned DEFAULT NULL,
+  `batch_id` longblob DEFAULT NULL,
+  `prev_sys_id` bigint(19) DEFAULT NULL,
+  `check_num_tmp` bigint(20) DEFAULT NULL,
+  `undo_data` varchar(2048) DEFAULT NULL,
+  `tran_lookup_id` bigint(20) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+
+CREATE TABLE `tmp_tb_ldh_gpawnv3` (
+  `id` int(10) unsigned DEFAULT NULL,
+  `effective_due_date` date DEFAULT NULL,
+  `loan_model_id` int(10) unsigned DEFAULT NULL,
+  `status_id` int(10) unsigned DEFAULT NULL,
+  `bus_date_created` date DEFAULT NULL,
+  `group_id` int(10) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+
+CREATE TABLE `cs_trans_item_type` (
+  `id` int(10) unsigned DEFAULT NULL,
+  `sub_type` varchar(32) DEFAULT NULL,
+  `detail` varchar(255) DEFAULT NULL,
+  `oper` tinyint(1) DEFAULT NULL,
+  `ttl_oper` tinyint(1) DEFAULT NULL,
+  `pay_oper` tinyint(1) DEFAULT NULL,
+  `drawer_oper` tinyint(1) DEFAULT NULL,
+  `n_drawer_oper` tinyint(1) DEFAULT NULL,
+  `n_drawer_oper2` tinyint(1) DEFAULT NULL,
+  `ttl_drawer_oper` tinyint(1) DEFAULT NULL,
+  `is_internal` tinyint(1) unsigned DEFAULT NULL,
+  `has_sub_types` tinyint(1) unsigned DEFAULT NULL,
+  `has_receipt` tinyint(1) unsigned DEFAULT NULL,
+  `bal_type` smallint(5) unsigned DEFAULT NULL,
+  `pay_oper_v2` tinyint(1) DEFAULT NULL,
+  `ui_row_style` varchar(255) DEFAULT NULL,
+  `csf_timestamp` datetime DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+
+CREATE TABLE `cs_store_loan` (
+  `id` int(10) unsigned DEFAULT NULL,
+  `company_id` int(10) unsigned DEFAULT NULL,
+  `zone_id` int(10) unsigned DEFAULT NULL,
+  `division_id` int(10) unsigned DEFAULT NULL,
+  `region_id` int(10) unsigned DEFAULT NULL,
+  `district_id` int(10) unsigned DEFAULT NULL,
+  `store_id` int(10) unsigned DEFAULT NULL,
+  `loanclass_id` int(10) unsigned DEFAULT NULL,
+  `local_name` varchar(64) DEFAULT NULL,
+  `calc_engine` varchar(64) DEFAULT NULL,
+  `cp_cfg_file` varchar(64) DEFAULT NULL,
+  `lender_id` int(10) unsigned DEFAULT NULL,
+  `obs_lender_interface_id` int(10) unsigned DEFAULT NULL,
+  `lender_prod_code` varchar(16) DEFAULT NULL,
+  `duedate_template_id` int(10) unsigned DEFAULT NULL,
+  `init_duedate_type` smallint(5) unsigned DEFAULT NULL,
+  `init_due_days` smallint(5) unsigned DEFAULT NULL,
+  `init_max_due_days` smallint(5) unsigned DEFAULT NULL,
+  `duedate_type` smallint(5) unsigned DEFAULT NULL,
+  `due_days` smallint(5) unsigned DEFAULT NULL,
+  `max_due_days` smallint(5) unsigned DEFAULT NULL,
+  `due_days_offset` smallint(5) unsigned DEFAULT NULL,
+  `min_amount` decimal(14,3) DEFAULT NULL,
+  `max_amount` decimal(14,3) DEFAULT NULL,
+  `rescind_type` smallint(5) unsigned DEFAULT NULL,
+  `rescind_value` smallint(5) unsigned DEFAULT NULL,
+  `secured_by` smallint(5) unsigned DEFAULT NULL,
+  `pmtsched_src` smallint(5) unsigned DEFAULT NULL,
+  `max_credit_type` smallint(5) unsigned DEFAULT NULL,
+  `payorder` smallint(5) unsigned DEFAULT NULL,
+  `prin_pay_order` smallint(5) unsigned DEFAULT NULL,
+  `gen_ledger_output` varchar(16) DEFAULT NULL,
+  `gen_ledger_manual_entity` varchar(16) DEFAULT NULL,
+  `is_balloon` tinyint(1) unsigned DEFAULT NULL,
+  `max_disbursements` int(10) unsigned DEFAULT NULL,
+  `is_rapid_pay` tinyint(1) unsigned DEFAULT NULL,
+  `is_personal_loan` tinyint(1) unsigned DEFAULT NULL,
+  `is_reportable` tinyint(1) DEFAULT NULL,
+  `cso_lender_id` int(10) unsigned DEFAULT NULL,
+  `is_online_only` tinyint(1) DEFAULT NULL,
+  `is_auth_appraiser` tinyint(1) unsigned DEFAULT NULL,
+  `is_active` tinyint(1) unsigned DEFAULT NULL,
+  `csf_timestamp` datetime DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+
+CREATE TABLE `cs_trans_status` (
+  `id` int(10) unsigned DEFAULT NULL,
+  `sys_type_id` int(10) unsigned DEFAULT NULL,
+  `status` varchar(32) DEFAULT NULL,
+  `is_returned` tinyint(1) unsigned DEFAULT NULL,
+  `is_outstanding` tinyint(1) unsigned DEFAULT NULL,
+  `is_legal` tinyint(1) unsigned DEFAULT NULL,
+  `ach_ineligible` tinyint(1) unsigned DEFAULT NULL,
+  `csf_timestamp` datetime DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+
+CREATE TABLE `cs_trans_item_paid` (
+  `id` int(10) unsigned DEFAULT NULL,
+  `company_id` int(10) unsigned DEFAULT NULL,
+  `hdr_id` int(10) unsigned DEFAULT NULL,
+  `trans_id` int(10) unsigned DEFAULT NULL,
+  `paid_lf_id` int(10) unsigned DEFAULT NULL,
+  `paid_type_id` int(10) unsigned DEFAULT NULL,
+  `paid_sub_type_id` int(10) unsigned DEFAULT NULL,
+  `paid_user_type_id` int(10) unsigned DEFAULT NULL,
+  `paid_amt` decimal(14,4) DEFAULT NULL,
+  `coupon_amt` decimal(14,4) DEFAULT NULL,
+  `inventory_item_fee_id` int(32) DEFAULT NULL,
+  `csf_timestamp` datetime DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+
+CREATE TABLE `cs_loan_fee` (
+  `id` int(10) unsigned DEFAULT NULL,
+  `company_id` int(10) unsigned DEFAULT NULL,
+  `hdr_id` int(10) unsigned DEFAULT NULL,
+  `store_fee_id` int(10) unsigned DEFAULT NULL,
+  `fee_type_id` int(10) unsigned DEFAULT NULL,
+  `fee_subtype_id` int(10) unsigned DEFAULT NULL,
+  `fee_late_subtype_id` int(10) unsigned DEFAULT NULL,
+  `fee_template_id` int(10) unsigned DEFAULT NULL,
+  `refund_type` smallint(5) unsigned DEFAULT NULL,
+  `refund_short_pct` decimal(10,8) DEFAULT NULL,
+  `refund_days` smallint(5) unsigned DEFAULT NULL,
+  `refund_threshold` decimal(14,4) DEFAULT NULL,
+  `prepayment_charge` decimal(14,4) DEFAULT NULL,
+  `range_low` decimal(14,4) DEFAULT NULL,
+  `range_high` decimal(14,4) DEFAULT NULL,
+  `fee_dollar` decimal(14,4) DEFAULT NULL,
+  `fee_percent` decimal(14,4) DEFAULT NULL,
+  `fee_apr` decimal(14,4) DEFAULT NULL,
+  `fee_default_value` decimal(14,4) DEFAULT NULL,
+  `fee_ovrd_min` decimal(14,4) DEFAULT NULL,
+  `calc_method` smallint(6) DEFAULT NULL,
+  `per_amount` decimal(14,4) DEFAULT NULL,
+  `per_amount_rounding_method` smallint(6) DEFAULT NULL,
+  `is_per_month` tinyint(1) unsigned DEFAULT NULL,
+  `min_amount` decimal(14,4) DEFAULT NULL,
+  `max_amount` decimal(14,4) DEFAULT NULL,
+  `based_on` smallint(5) unsigned DEFAULT NULL,
+  `late_days` smallint(5) unsigned DEFAULT NULL,
+  `term_min` smallint(5) unsigned DEFAULT NULL,
+  `term_max` smallint(5) unsigned DEFAULT NULL,
+  `pay_order` smallint(5) unsigned DEFAULT NULL,
+  `group_num` smallint(5) unsigned DEFAULT NULL,
+  `start_accrue` smallint(5) unsigned DEFAULT NULL,
+  `start_accrue_days_after_maturity` smallint(5) unsigned DEFAULT NULL,
+  `stop_accrue_miss_pmt` smallint(5) unsigned DEFAULT NULL,
+  `stop_accrue_days_late` smallint(5) unsigned DEFAULT NULL,
+  `stop_accrue_days_orig` smallint(5) unsigned DEFAULT NULL,
+  `earn_daily_late` tinyint(1) unsigned DEFAULT NULL,
+  `init_calc_amt` decimal(14,4) unsigned DEFAULT NULL,
+  `effective_date` date DEFAULT NULL,
+  `nonrefund` tinyint(1) unsigned DEFAULT NULL,
+  `interest_cal` smallint(5) unsigned DEFAULT NULL,
+  `last_charge_date` date DEFAULT NULL,
+  `last_earn_date` date DEFAULT NULL,
+  `fee_edit_reason` smallint(5) unsigned DEFAULT NULL,
+  `minus_days` int(10) unsigned DEFAULT NULL,
+  `is_canceled` tinyint(1) unsigned DEFAULT NULL,
+  `earn_after_days` int(10) unsigned DEFAULT NULL,
+  `is_consumable_coverage` tinyint(1) DEFAULT NULL,
+  `consumable_coverage_carryover` int(10) unsigned DEFAULT NULL,
+  `consumable_coverage_selected` int(10) unsigned DEFAULT NULL,
+  `is_prin_reduction` tinyint(1) DEFAULT NULL,
+  `csf_timestamp` datetime DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+
+CREATE TABLE `cs_store_loan_fee` (
+  `id` int(10) unsigned DEFAULT NULL,
+  `company_id` int(10) unsigned DEFAULT NULL,
+  `store_id` int(10) unsigned DEFAULT NULL,
+  `store_loan_id` int(10) unsigned DEFAULT NULL,
+  `common_name` varchar(128) DEFAULT NULL,
+  `fee_type_id` smallint(3) unsigned DEFAULT NULL,
+  `fee_subtype_id` int(10) unsigned DEFAULT NULL,
+  `fee_late_subtype_id` int(10) unsigned DEFAULT NULL,
+  `fee_template_id` int(10) unsigned DEFAULT NULL,
+  `life_term_type` int(10) unsigned DEFAULT NULL,
+  `refund_type` smallint(5) unsigned DEFAULT NULL,
+  `refund_short_pct` decimal(14,4) DEFAULT NULL,
+  `refund_days` smallint(5) unsigned DEFAULT NULL,
+  `refund_threshold` decimal(14,4) unsigned DEFAULT NULL,
+  `refund_from_orig_date` tinyint(1) unsigned DEFAULT NULL,
+  `prepayment_charge` decimal(14,4) unsigned DEFAULT NULL,
+  `range_low` decimal(14,4) DEFAULT NULL,
+  `range_high` decimal(14,4) DEFAULT NULL,
+  `duedate_term_min` smallint(5) unsigned DEFAULT NULL,
+  `duedate_term_max` smallint(5) unsigned DEFAULT NULL,
+  `fee_percent` decimal(14,4) DEFAULT NULL,
+  `fee_dollar` decimal(14,4) DEFAULT NULL,
+  `fee_apr` decimal(14,4) DEFAULT NULL,
+  `fee_ovrd_min` decimal(14,4) DEFAULT NULL,
+  `calc_nsf_fee_method` smallint(5) DEFAULT NULL,
+  `calc_method` smallint(5) unsigned DEFAULT NULL,
+  `per_amount` decimal(14,4) DEFAULT NULL,
+  `per_amount_rounding_method` smallint(6) DEFAULT NULL,
+  `is_per_month` tinyint(1) unsigned DEFAULT NULL,
+  `min_amount` decimal(14,4) DEFAULT NULL,
+  `max_amount` decimal(14,4) DEFAULT NULL,
+  `based_on` smallint(5) unsigned DEFAULT NULL,
+  `def_coverage` decimal(14,4) DEFAULT NULL,
+  `max_ins_amount` decimal(14,4) DEFAULT NULL,
+  `num_pmts` smallint(6) unsigned DEFAULT NULL,
+  `balloon_pmt_num` smallint(6) unsigned DEFAULT NULL,
+  `late_days` smallint(6) unsigned DEFAULT NULL,
+  `term_min` smallint(5) unsigned DEFAULT NULL,
+  `term_max` smallint(5) unsigned DEFAULT NULL,
+  `age_limit` smallint(5) unsigned DEFAULT NULL,
+  `is_optional` tinyint(1) unsigned DEFAULT NULL,
+  `new_loan_only` tinyint(1) unsigned DEFAULT NULL,
+  `refi_only` tinyint(1) unsigned DEFAULT NULL,
+  `is_overridable` tinyint(1) unsigned DEFAULT NULL,
+  `fund_method` smallint(5) unsigned DEFAULT NULL,
+  `pay_to` varchar(255) DEFAULT NULL,
+  `is_active` tinyint(1) unsigned DEFAULT NULL,
+  `cooling_period` smallint(5) unsigned DEFAULT NULL,
+  `cooling_value` smallint(5) unsigned DEFAULT NULL,
+  `pay_order` smallint(5) unsigned DEFAULT NULL,
+  `group_num` smallint(5) unsigned DEFAULT NULL,
+  `start_accrue` smallint(5) unsigned DEFAULT NULL,
+  `start_accrue_days_after_maturity` smallint(5) unsigned DEFAULT NULL,
+  `stop_accrue_miss_pmt` smallint(5) unsigned DEFAULT NULL,
+  `stop_accrue_days_late` smallint(5) unsigned DEFAULT NULL,
+  `stop_accrue_days_orig` smallint(5) unsigned DEFAULT NULL,
+  `stop_accrue_maturity` tinyint(1) unsigned DEFAULT NULL,
+  `suspend_on_active_default` tinyint(1) unsigned DEFAULT NULL,
+  `resume_default` tinyint(1) unsigned DEFAULT NULL,
+  `earn_after_miss_pmt` smallint(5) unsigned DEFAULT NULL,
+  `earn_evenly` tinyint(1) unsigned DEFAULT NULL,
+  `earn_daily_late` tinyint(1) unsigned DEFAULT NULL,
+  `is_per_annum` tinyint(1) unsigned DEFAULT NULL,
+  `one_time_only` tinyint(1) unsigned DEFAULT NULL,
+  `include_odddays` tinyint(1) unsigned DEFAULT NULL,
+  `is_disburse` tinyint(1) unsigned DEFAULT NULL,
+  `nonrefund` tinyint(1) unsigned DEFAULT NULL,
+  `interest_cal` smallint(5) unsigned DEFAULT NULL,
+  `suppress_prepaid` tinyint(1) unsigned DEFAULT NULL,
+  `enable_changes` tinyint(1) unsigned DEFAULT NULL,
+  `is_void_on_rescind` tinyint(1) unsigned DEFAULT NULL,
+  `override_with_gds_rates` tinyint(1) unsigned DEFAULT NULL,
+  `cp_is_file` tinyint(1) unsigned DEFAULT NULL,
+  `cp_ah_code` smallint(5) unsigned DEFAULT NULL,
+  `cp_ah_sched` smallint(5) unsigned DEFAULT NULL,
+  `cp_life_code` smallint(5) unsigned DEFAULT NULL,
+  `cp_property_code` smallint(5) unsigned DEFAULT NULL,
+  `cp_limit_type` smallint(5) unsigned DEFAULT NULL,
+  `cp_config_file` varchar(255) DEFAULT NULL,
+  `is_insurance` tinyint(1) DEFAULT NULL,
+  `ineligible_for_discount` tinyint(1) unsigned DEFAULT NULL,
+  `minus_days` int(10) unsigned DEFAULT NULL,
+  `is_consumable_coverage` tinyint(1) DEFAULT NULL,
+  `consumable_coverage_min` int(10) unsigned DEFAULT NULL,
+  `consumable_coverage_max` int(10) unsigned DEFAULT NULL,
+  `is_prin_reduction` tinyint(1) DEFAULT NULL,
+  `ins_category_id` int(10) DEFAULT NULL,
+  `trans_status_sub_type_id` int(10) unsigned DEFAULT NULL,
+  `is_canceled` tinyint(1) unsigned DEFAULT NULL,
+  `earn_after_days` int(10) unsigned DEFAULT NULL,
+  `csf_timestamp` datetime DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+
+CREATE TABLE `cs_trans_item_sub_type` (
+  `id` int(10) unsigned DEFAULT NULL,
+  `company_id` int(10) unsigned DEFAULT NULL,
+  `item_type_id` int(10) unsigned DEFAULT NULL,
+  `type` varchar(255) DEFAULT NULL,
+  `is_pmtplan_fee` tinyint(1) unsigned DEFAULT NULL,
+  `is_attorney_fee` tinyint(1) DEFAULT NULL,
+  `status` tinyint(1) unsigned DEFAULT NULL,
+  `old_item_id` int(10) unsigned DEFAULT NULL,
+  `expense_limit` decimal(14,4) DEFAULT NULL,
+  `user_spec_pay_to` tinyint(1) unsigned DEFAULT NULL,
+  `csf_timestamp` datetime DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+
+SET @asOfDate='2020-05-21',@asOfDateOffsetMeta='2020-05-21';
+
+EXPLAIN SELECT
+            ti.type_id AS ti_type_id, ti.sub_type_id AS ti_sub_type_id,
+            th.id AS hdr_id,
+            ti.id AS ti_id,
+            IF(IFNULL(lf.id,0) >0,CONCAT(lf.id,'-',tip.paid_type_id,'-',paid_sub_type.id),CONCAT(th.id,'-',paid_type.id,'-',IFNULL(paid_sub_type.id,0))) AS lf_id,
+            sl.local_name AS lm_name,
+            IF(tip.paid_type_id IN (29,51),'Prin',
+                IF(paid_sub_type.id = 126,'Lien Fee',IF(lf.id IS NULL,paid_type.sub_type,CASE WHEN paid_sub_type.id = 271 AND tip.paid_type_id IN (31,32) THEN 'Pawn Fee' WHEN paid_sub_type.id = 282 AND tip.paid_type_id = 32 THEN 'Expired Fee' END))) AS fee_name,
+            (CASE WHEN paid_sub_type.id = 282 AND tip.paid_type_id = 32 THEN 'Expired Fee' ELSE paid_sub_type.type END) AS sub_type,
+            lf.last_earn_date,
+            lf.fee_apr,
+            IF( tip.paid_sub_type_id IN (214,215,230),0.0000, tip.paid_amt) AS paid_amt,
+            0 AS accrued_amt,
+            (
+                IF(ti.bus_date=@asOfDate AND ti_type.ttl_oper>0,tip.paid_amt,0)
+                *
+                IF( tip.paid_sub_type_id IN (214,215,230,213,282,145,144,143),0.0000, 1)
+            ) AS applied_amt,
+            IF(ti.bus_date=@asOfDateOffsetMeta AND ti_type.ttl_oper<0,tip.paid_amt,0) AS pmts_applied,
+            th.effective_due_date AS due_date,
+            DATEDIFF(@asOfDate,th.effective_due_date) AS days_late,
+            IF(ti.bus_date=@asOfDateOffsetMeta AND ti_type.ttl_oper<0,ti.over_pmt_amt,0) AS over_pmt_amt,
+            0 AS billed_amt,
+            0 AS unbilled_amt,
+            0 AS credit_limit_amt,
+            0 AS available_bal,
+            0 AS average_bal
+        FROM
+cs_trans_item ti
+INNER JOIN tmp_tb_ldh_gpawnv3 th ON ti.hdr_id=th.id
+INNER JOIN cs_trans_item_type ti_type ON ti.type_id=ti_type.id
+INNER JOIN cs_store_loan sl ON th.loan_model_id=sl.id
+INNER JOIN cs_trans_status ts ON th.status_id=ts.id
+INNER JOIN cs_trans_item_paid tip ON ti.id=tip.trans_id
+INNER JOIN cs_trans_item_type paid_type ON tip.paid_type_id=paid_type.id
+LEFT JOIN cs_loan_fee lf ON tip.paid_lf_id=lf.id
+LEFT JOIN cs_store_loan_fee slf ON lf.store_fee_id=slf.id
+LEFT JOIN cs_trans_item_sub_type AS paid_sub_type ON tip.paid_sub_type_id=paid_sub_type.id
+WHERE ti.is_void=0
+AND ti.bus_date BETWEEN '2020-08-01' AND '2020-09-21'
+AND ti_type.ttl_oper<>0;
+
+DROP DATABASE mcol4410;

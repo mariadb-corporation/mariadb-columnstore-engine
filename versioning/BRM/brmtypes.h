@@ -146,8 +146,9 @@ typedef struct _SIDTIDEntry SIDTIDEntry;
 // for multiple extents.
 
 // Special seqNum field values.
-#define SEQNUM_MARK_INVALID (-1)
-#define SEQNUM_MARK_INVALID_SET_RANGE (-2)
+#define SEQNUM_MARK_INVALID                    (-1)
+#define SEQNUM_MARK_INVALID_SET_RANGE          (-2)
+#define SEQNUM_MARK_UPDATING_INVALID_SET_RANGE (-3)
 
 // Used in vectors.
 struct CPInfo

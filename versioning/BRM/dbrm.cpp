@@ -4594,7 +4594,7 @@ void DBRM::invalidateUncommittedExtentLBIDs(execplan::CalpontSystemCatalog::SCN 
             aInfo.isBinaryColumn = false;
         }
 
-        aInfo.seqNum = SEQNUM_MARK_INVALID_SET_RANGE;
+        aInfo.seqNum = SEQNUM_MARK_UPDATING_INVALID_SET_RANGE;
         cpInfos.push_back(aInfo);
     }
 

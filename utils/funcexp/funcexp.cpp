@@ -97,6 +97,7 @@ FuncExp::FuncExp()
     fFuncMap["char_length"] = new Func_char_length();	//dlh
     fFuncMap["character_length"] = new Func_char_length();	//dlh
     fFuncMap["coalesce"] = new Func_coalesce();
+    fFuncMap["concat_operator_oracle"] = new Func_concat_oracle();
     fFuncMap["concat"] = new Func_concat();
     fFuncMap["concat_ws"] = new Func_concat_ws();
     fFuncMap["conv"] = new Func_conv();
@@ -112,6 +113,7 @@ FuncExp::FuncExp()
     fFuncMap["dayofweek"] = new Func_dayofweek();	//dlh
     fFuncMap["dayofyear"] = new Func_dayofyear();	//dlh
     fFuncMap["decode"] = new Func_decode(); // BT
+    fFuncMap["decode_oracle"] = new Func_decode_oracle(); // BT
     fFuncMap["degrees"] = new Func_degrees();
     fFuncMap["DIV"] = new Func_div(); // MySQL use upper case for this function name
     fFuncMap["elt"] = new Func_elt();
@@ -156,6 +158,7 @@ FuncExp::FuncExp()
     fFuncMap["lower"] = new Func_lcase();	//dlh
     fFuncMap["lpad"] = new Func_lpad();	//dlh
     fFuncMap["ltrim"] = new Func_ltrim();	//dlh
+    fFuncMap["ltrim_oracle"] = new Func_ltrim_oracle();   //dlh
     fFuncMap["makedate"] = new Func_makedate();
     fFuncMap["maketime"] = new Func_maketime();
     fFuncMap["microsecond"] = new Func_microsecond();
@@ -183,11 +186,13 @@ FuncExp::FuncExp()
     fFuncMap["regexp"] = new Func_regexp();	//dlh
     fFuncMap["repeat"] = new Func_repeat();	//dlh
     fFuncMap["replace"] = new Func_replace();	//dlh
+    fFuncMap["replace_oracle"] = new Func_replace_oracle();   //dlh
     fFuncMap["reverse"] = new Func_reverse();	//dlh
     fFuncMap["right"] = new Func_right();	//dlh
     fFuncMap["round"] = new Func_round();
     fFuncMap["rpad"] = new Func_rpad();	//dlh
     fFuncMap["rtrim"] = new Func_rtrim();	//dlh
+    fFuncMap["rtrim_oracle"] = new Func_rtrim_oracle();   //dlh
     fFuncMap["second"] = new Func_second();	//dlh
     fFuncMap["sec_to_time"] = new Func_sec_to_time();
     fFuncMap["sha"] = new Func_sha();
@@ -210,6 +215,7 @@ FuncExp::FuncExp()
     fFuncMap["time_to_sec"] = new Func_time_to_sec();	//dlh
     fFuncMap["to_days"] = new Func_to_days();	//dlh
     fFuncMap["trim"] = new Func_trim();	//dlh
+    fFuncMap["trim_oracle"] = new Func_trim_oracle(); //dlh
     fFuncMap["truncate"] = new Func_truncate();	//dlh
     fFuncMap["ucase"] = new Func_ucase();	//dlh
     fFuncMap["unhex"] = new Func_unhex();

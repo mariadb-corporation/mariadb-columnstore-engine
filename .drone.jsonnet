@@ -13,6 +13,8 @@ local any_branch = '**';
 local platforms_custom = ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'];
 local platforms_arm_custom = ['centos:8'];
 
+local platforms_mtr = ['centos:7', 'centos:8', 'ubuntu:20.04'];
+
 local server_ref_map = {
   develop: '10.6',
   'develop-5': '10.5',
@@ -28,7 +30,7 @@ local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DPLUGIN_COLUMNSTORE=YES -
 
 local rpm_build_deps = 'install -y systemd-devel git make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect createrepo';
 
-local deb_build_deps = 'apt update && apt install --yes --no-install-recommends build-essential devscripts ccache equivs eatmydata ' +
+local deb_build_deps = 'apt update && apt install --yes --no-install-recommends build-essential devscripts ccache equivs eatmydata dh-systemd ' +
                        '&& mk-build-deps debian/control -t "apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends" -r -i';
 
 local platformMap(platform) =
@@ -373,8 +375,8 @@ local Pipeline(branch, platform, event, arch='amd64') = {
          // (if (platform == 'centos:8' && event == 'cron') then [pipeline.dockerfile] + [pipeline.docker] + [pipeline.ecr] else []) +
          [pipeline.smoke] +
          [pipeline.smokelog] +
-         (if (pkg_format == 'rpm') then [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish('mtr')] else []) +
-         (if (event == 'cron' && pkg_format == 'rpm') || (event == 'push') then [pipeline.publish('mtr latest', 'latest')] else []) +
+         (if (std.member(platforms_mtr, platform)) then [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish('mtr')] else []) +
+         (if (event == 'cron' && std.member(platforms_mtr, platform)) || (event == 'push') then [pipeline.publish('mtr latest', 'latest')] else []) +
          [pipeline.regression] +
          [pipeline.regressionlog] +
          [pipeline.publish('regression')] +

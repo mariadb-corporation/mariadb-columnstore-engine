@@ -134,6 +134,15 @@ public:
 namespace cal_impl_if
 {
 
+CalpontSystemCatalog::TableAliasName makeTableAliasName(TABLE_LIST* table)
+{
+    return make_aliasview(
+        (table->db.length ? table->db.str : ""),
+        (table->table_name.length ? table->table_name.str : ""),
+        (table->alias.length ? table->alias.str : ""),
+        getViewName(table), true, lower_case_table_names);
+}
+
 //@bug5228. need to escape backtick `
 string escapeBackTick(const char* str)
 {
@@ -1239,245 +1248,122 @@ void debug_walk(const Item* item, void* arg)
 }
 #endif
 
-void buildNestedTableOuterJoin(gp_walk_info& gwi, TABLE_LIST* table_ptr)
+void buildNestedJoinLeafTables(List<TABLE_LIST>& join_list,
+    std::set<execplan::CalpontSystemCatalog::TableAliasName>& leafTables)
 {
-    TABLE_LIST* table;
-    List_iterator<TABLE_LIST> li(table_ptr->nested_join->join_list);
+    TABLE_LIST *table;
+    List_iterator<TABLE_LIST> li(join_list);
 
     while ((table = li++))
     {
-        gwi.innerTables.clear();
-
-        if (table->outer_join)
-        {
-            CalpontSystemCatalog::TableAliasName ta = make_aliasview(
-                        (table->db.length ? table->db.str : ""),
-                        (table->table_name.length ? table->table_name.str : ""),
-                        (table->alias.length ? table->alias.str : ""),
-                        getViewName(table), true, lower_case_table_names);
-            gwi.innerTables.insert(ta);
-        }
-
         if (table->nested_join)
+            buildNestedJoinLeafTables(table->nested_join->join_list, leafTables);
+        else
         {
-            TABLE_LIST* tab;
-            List_iterator<TABLE_LIST> li(table->nested_join->join_list);
-
-            while ((tab = li++))
-            {
-                CalpontSystemCatalog::TableAliasName ta = make_aliasview(
-                            (tab->db.length ? tab->db.str : ""),
-                            (tab->table_name.length ? tab->table_name.str : ""),
-                            (tab->alias.length ? tab->alias.str : ""),
-                            getViewName(tab), true, lower_case_table_names);
-                gwi.innerTables.insert(ta);
-            }
-        }
-
-        if (table->on_expr)
-        {
-            Item_cond* expr = reinterpret_cast<Item_cond*>(table->on_expr);
-#ifdef DEBUG_WALK_COND
-            expr->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
-#endif
-            expr->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
-        }
-
-        if (table->nested_join && &(table->nested_join->join_list))
-        {
-            buildNestedTableOuterJoin(gwi, table);
+            CalpontSystemCatalog::TableAliasName tan = makeTableAliasName(table);
+            leafTables.insert(tan);
         }
     }
 }
 
-uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
+uint32_t buildJoin(gp_walk_info& gwi, List<TABLE_LIST>& join_list,
+    std::stack<execplan::ParseTree*>& outerJoinStack)
 {
-    // check non-collapsed outer join
-    // this set contains all processed embedded joins. duplicate joins are ignored
-    set<TABLE_LIST*> embeddingSet;
-    TABLE_LIST* table_ptr = select_lex.get_table_list();
-    gp_walk_info gwi_outer = gwi;
-    gwi_outer.subQuery = NULL;
-    gwi_outer.hasSubSelect = false;
-    vector <Item_field*> tmpVec;
+    TABLE_LIST *table;
+    List_iterator<TABLE_LIST> li(join_list);
 
-    for (; table_ptr; table_ptr = table_ptr->next_local)
+    while ((table = li++))
     {
-        gwi_outer.innerTables.clear();
-        clearStacks(gwi_outer);
-        gwi_outer.subQuery = NULL;
-        gwi_outer.hasSubSelect = false;
+        // Make sure we don't process the derived table nests again,
+        // they were already handled by FromSubQuery::transform()
+        if (table->nested_join && !table->derived)
+            buildJoin(gwi, table->nested_join->join_list, outerJoinStack);
 
-        // View is already processed in view::transform
-        // @bug5319. view is sometimes treated as derived table and
-        // fromSub::transform does not build outer join filters.
-        if (!table_ptr->derived && table_ptr->view && !gwi.subQuery)
-            continue;
-
-        CalpontSystemCatalog:: TableAliasName tan = make_aliasview(
-                    (table_ptr->db.length ? table_ptr->db.str : ""),
-                    (table_ptr->table_name.length ? table_ptr->table_name.str : ""),
-                    (table_ptr->alias.length ? table_ptr->alias.str : ""),
-                    getViewName(table_ptr), true, lower_case_table_names);
-
-        if ((table_ptr->outer_join & (JOIN_TYPE_LEFT | JOIN_TYPE_RIGHT)) && table_ptr->on_expr)
+        if (table->on_expr)
         {
-            // inner tables block
-            Item_cond* expr = reinterpret_cast<Item_cond*>(table_ptr->on_expr);
-            gwi_outer.innerTables.insert(tan);
+            Item_cond* expr = reinterpret_cast<Item_cond*>(table->on_expr);
 
-            if (table_ptr->nested_join && &(table_ptr->nested_join->join_list))
+            if (table->outer_join & (JOIN_TYPE_LEFT | JOIN_TYPE_RIGHT))
             {
-                TABLE_LIST* table;
-                List_iterator<TABLE_LIST> li(table_ptr->nested_join->join_list);
+                // inner tables block
+                gp_walk_info gwi_outer = gwi;
+                gwi_outer.subQuery = NULL;
+                gwi_outer.hasSubSelect = false;
+                gwi_outer.innerTables.clear();
+                clearStacks(gwi_outer);
 
-                while ((table = li++))
+                // recursively build the leaf tables for this nested join node
+                if (table->nested_join)
+                    buildNestedJoinLeafTables(table->nested_join->join_list,
+                        gwi_outer.innerTables);
+                else // this is a leaf table
                 {
-                    CalpontSystemCatalog::TableAliasName ta = make_aliasview(
-                                (table->db.length ? table->db.str : ""),
-                                (table->table_name.length ? table->table_name.str : ""),
-                                (table->alias.length ? table->alias.str : ""),
-                                getViewName(table), true, lower_case_table_names);
-                    gwi_outer.innerTables.insert(ta);
+                    CalpontSystemCatalog::TableAliasName tan = makeTableAliasName(table);
+                    gwi_outer.innerTables.insert(tan);
                 }
-            }
 
 #ifdef DEBUG_WALK_COND
+                cerr << "inner tables: " << endl;
+                set<CalpontSystemCatalog::TableAliasName>::const_iterator it;
+                for (it = gwi_outer.innerTables.begin(); it != gwi_outer.innerTables.end(); ++it)
+                    cerr << (*it) << " ";
+                cerr << endl;
 
-            if (table_ptr->alias.length)
-                cerr << table_ptr->alias.str;
-            else if (table_ptr->alias.length)
-                cerr << table_ptr->alias.str;
-
-            cerr << " outer table expression: " << endl;
-            expr->traverse_cond(debug_walk, &gwi_outer, Item::POSTFIX);
+                cerr << " outer table expression: " << endl;
+                expr->traverse_cond(debug_walk, &gwi_outer, Item::POSTFIX);
 #endif
-            expr->traverse_cond(gp_walk, &gwi_outer, Item::POSTFIX);
-        }
-        else if (table_ptr->nested_join && &(table_ptr->nested_join->join_list))
-        {
-            buildNestedTableOuterJoin(gwi_outer, table_ptr);
-        }
-        // this part is ambiguous. Not quite sure how MySQL's lay out the outer join filters in the structure
-        else if (table_ptr->embedding && table_ptr->embedding->outer_join && table_ptr->embedding->on_expr)
-        {
-            // all the tables in nested_join are inner tables.
-            TABLE_LIST* table;
-            List_iterator<TABLE_LIST> li(table_ptr->embedding->nested_join->join_list);
-            gwi_outer.innerTables.clear();
 
-            while ((table = li++))
-            {
-                CalpontSystemCatalog:: TableAliasName ta = make_aliasview(
-                            (table->db.length ? table->db.str : ""),
-                            (table->table_name.length ? table->table_name.str : ""),
-                            (table->alias.length ? table->alias.str : ""),
-                            getViewName(table), true, lower_case_table_names);
-                gwi_outer.innerTables.insert(ta);
-            }
+                expr->traverse_cond(gp_walk, &gwi_outer, Item::POSTFIX);
 
-            if (embeddingSet.find(table_ptr->embedding) != embeddingSet.end())
-                continue;
-
-            embeddingSet.insert(table_ptr->embedding);
-            Item_cond* expr = reinterpret_cast<Item_cond*>(table_ptr->embedding->on_expr);
-
-#ifdef DEBUG_WALK_COND
-            cerr << "inner tables: " << endl;
-            set<CalpontSystemCatalog::TableAliasName>::const_iterator it;
-
-            for (it = gwi_outer.innerTables.begin(); it != gwi_outer.innerTables.end(); ++it)
-                cerr << (*it) << " ";
-
-            cerr << endl;
-            expr->traverse_cond(debug_walk, &gwi_outer, Item::POSTFIX);
-#endif
-            expr->traverse_cond(gp_walk, &gwi_outer, Item::POSTFIX);
-        }
-// *DRRTUY This part is to be removed in 1.4.3
-#if 0
-        // @bug 2849
-        /*else if (table_ptr->embedding && table_ptr->embedding->nested_join)
-        {
-            // if this is dervied table process phase, mysql may have not developed the plan
-            // completely. Return and let it finish. It will come to rnd_init again.
-            if (table_ptr->embedding->is_natural_join && table_ptr->derived)
-            {
-                if (gwi.thd->derived_tables_processing)
+                // Error out subquery in outer join on filter for now
+                if (gwi_outer.hasSubSelect)
                 {
-                    // MCOL-2178 isUnion member only assigned, never used
-                    //MIGR::infinidb_vtable.isUnion = false;
-                    gwi.cs_vtable_is_update_with_derive = true;
+                    gwi.fatalParseError = true;
+                    gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_OUTER_JOIN_SUBSELECT);
+                    setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText);
                     return -1;
                 }
-            }
 
-            if (embeddingSet.find(table_ptr->embedding) != embeddingSet.end())
-                continue;
+                // build outerjoinon filter
+                ParseTree* filters = NULL, *ptp = NULL, *rhs = NULL;
 
-            gwi_outer.innerTables.clear();
-            gwi_outer.innerTables.insert(tan);
-            embeddingSet.insert(table_ptr->embedding);
-            List<TABLE_LIST>* inners = &(table_ptr->embedding->nested_join->join_list);
-            List_iterator_fast<TABLE_LIST> li(*inners);
-            TABLE_LIST* curr;
-
-            while ((curr = li++))
-            {
-                if (curr->on_expr)
+                while (!gwi_outer.ptWorkStack.empty())
                 {
-                    if (!curr->outer_join) // only handle nested JOIN for now
-                    {
-                        gwi_outer.innerTables.clear();
-                        Item_cond* expr = reinterpret_cast<Item_cond*>(curr->on_expr);
+                    filters = gwi_outer.ptWorkStack.top();
+                    gwi_outer.ptWorkStack.pop();
 
-#ifdef DEBUG_WALK_COND
-                        expr->traverse_cond(debug_walk, &gwi_outer, Item::POSTFIX);
-#endif
-                        expr->traverse_cond(gp_walk, &gwi_outer, Item::POSTFIX);
-                    }
+                    if (gwi_outer.ptWorkStack.empty())
+                        break;
+
+                    ptp = new ParseTree(new LogicOperator("and"));
+                    ptp->left(filters);
+                    rhs = gwi_outer.ptWorkStack.top();
+                    gwi_outer.ptWorkStack.pop();
+                    ptp->right(rhs);
+                    gwi_outer.ptWorkStack.push(ptp);
+                }
+
+                // should have only 1 pt left in stack.
+                if (filters)
+                {
+                    SPTP on_sp(filters);
+                    OuterJoinOnFilter* onFilter = new OuterJoinOnFilter(on_sp);
+                    ParseTree* pt = new ParseTree(onFilter);
+                    outerJoinStack.push(pt);
                 }
             }
-        } */
+            else // inner join
+            {
+                expr->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
+
+#ifdef DEBUG_WALK_COND
+                cerr << " inner join expression: " << endl;
+                expr->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
 #endif
-        // Error out subquery in outer join on filter for now
-        if (gwi_outer.hasSubSelect)
-        {
-            gwi.fatalParseError = true;
-            gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_OUTER_JOIN_SUBSELECT);
-            setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText);
-            return -1;
-        }
-        // build outerjoinon filter
-        ParseTree* filters = NULL, *ptp = NULL, *lhs = NULL;
-
-        while (!gwi_outer.ptWorkStack.empty())
-        {
-            filters = gwi_outer.ptWorkStack.top();
-            gwi_outer.ptWorkStack.pop();
-
-            if (gwi_outer.ptWorkStack.empty())
-                break;
-
-            ptp = new ParseTree(new LogicOperator("and"));
-            ptp->right(filters);
-            lhs = gwi_outer.ptWorkStack.top();
-            gwi_outer.ptWorkStack.pop();
-            ptp->left(lhs);
-            gwi_outer.ptWorkStack.push(ptp);
-        }
-
-        // should have only 1 pt left in stack.
-        if (filters)
-        {
-            SPTP on_sp(filters);
-            OuterJoinOnFilter* onFilter = new OuterJoinOnFilter(on_sp);
-            ParseTree* pt = new ParseTree(onFilter);
-            gwi.ptWorkStack.push(pt);
+            }
         }
     }
 
-    embeddingSet.clear();
     return 0;
 }
 
@@ -1677,6 +1563,180 @@ bool buildRowColumnFilter(gp_walk_info* gwip, RowColumn* rhs, RowColumn* lhs, It
     return true;
 }
 
+void checkOuterTableColumn(gp_walk_info* gwip,
+    const CalpontSystemCatalog::TableAliasName& tan,
+    execplan::ReturnedColumn* col)
+{
+    set<CalpontSystemCatalog::TableAliasName>::const_iterator it;
+
+    bool notInner = true;
+
+    for (it = gwip->innerTables.begin(); it != gwip->innerTables.end(); ++it)
+    {
+        if (tan.alias == it->alias && tan.view == it->view)
+            notInner = false;
+    }
+
+    if (notInner)
+    {
+        col->returnAll(true);
+        IDEBUG( cerr << "setting returnAll on " << tan << endl);
+    }
+}
+
+bool buildEqualityPredicate(execplan::ReturnedColumn* lhs,
+    execplan::ReturnedColumn* rhs,
+    gp_walk_info* gwip,
+    boost::shared_ptr<Operator>& sop,
+    const Item_func::Functype& funcType,
+    const vector<Item*>& itemList,
+    bool isInSubs)
+{
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+
+    // push the column that is associated with the correlated column to the returned
+    // column list, so the materialized view have the complete projection list.
+    // e.g. tout.c1 in (select tin.c1 from tin where tin.c2=tout.c2);
+    // the projetion list of subquery will have tin.c1, tin.c2.
+    ReturnedColumn* correlatedCol = nullptr;
+    ReturnedColumn* localCol = nullptr;
+
+    if (rhs->joinInfo() & JOIN_CORRELATED)
+    {
+        correlatedCol = rhs;
+        localCol = lhs;
+    }
+    else if (lhs->joinInfo() & JOIN_CORRELATED)
+    {
+        correlatedCol = lhs;
+        localCol = rhs;
+    }
+
+    if (correlatedCol && localCol)
+    {
+        ConstantColumn* cc = dynamic_cast<ConstantColumn*>(localCol);
+
+        if ((!cc || (cc && funcType == Item_func::EQ_FUNC)) &&
+                !(localCol->joinInfo() & JOIN_CORRELATED))
+        {
+            if (isInSubs)
+                localCol->sequence(0);
+            else
+                localCol->sequence(gwip->returnedCols.size());
+
+            localCol->expressionId(ci->expressionId++);
+            ReturnedColumn* rc = localCol->clone();
+            rc->colSource(rc->colSource() | CORRELATED_JOIN);
+            gwip->additionalRetCols.push_back(SRCP(rc));
+            gwip->localCols.push_back(localCol);
+
+            if (rc->hasWindowFunc() && !isInSubs)
+                gwip->windowFuncList.push_back(rc);
+        }
+
+        // push the correlated join partner to the group by list only when there's aggregate
+        // and we don't push aggregate column to the group by
+        // @bug4756. mysql does not always give correct information about whether there is
+        // aggregate on the SELECT list. Need to figure that by ourselves and then decide
+        // to add the group by or not.
+        if (gwip->subQuery)
+        {
+            if (!localCol->hasAggregate() && !localCol->hasWindowFunc())
+                gwip->subGroupByCols.push_back(SRCP(localCol->clone()));
+        }
+
+        if (sop->op() == OP_EQ)
+        {
+            if (gwip->subSelectType == CalpontSelectExecutionPlan::IN_SUBS ||
+                    gwip->subSelectType == CalpontSelectExecutionPlan::EXISTS_SUBS)
+                correlatedCol->joinInfo(correlatedCol->joinInfo() | JOIN_SEMI);
+            else if (gwip->subSelectType == CalpontSelectExecutionPlan::NOT_IN_SUBS ||
+                     gwip->subSelectType == CalpontSelectExecutionPlan::NOT_EXISTS_SUBS)
+                correlatedCol->joinInfo(correlatedCol->joinInfo() | JOIN_ANTI);
+        }
+    }
+
+    SimpleFilter* sf = new SimpleFilter();
+    sf->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
+
+    //@bug 2101 for when there are only constants in a delete or update where clause (eg "where 5 < 6").
+    //There will be no field column and it will get here only if the comparison is true.
+    if (gwip->columnMap.empty() &&
+            ((current_thd->lex->sql_command == SQLCOM_UPDATE) ||
+             (current_thd->lex->sql_command == SQLCOM_UPDATE_MULTI) ||
+             (current_thd->lex->sql_command == SQLCOM_DELETE) ||
+             (current_thd->lex->sql_command == SQLCOM_DELETE_MULTI)))
+    {
+        IDEBUG( cerr << "deleted func with 2 const columns" << endl );
+        delete rhs;
+        delete lhs;
+        return false;
+    }
+
+    // handle noop (only for table mode)
+    if (rhs->data() == "noop" || lhs->data() == "noop")
+    {
+        sop.reset(new Operator("noop"));
+    }
+    else
+    {
+        for (uint32_t i = 0; i < itemList.size(); i++)
+        {
+            if (isPredicateFunction(itemList[i], gwip))
+            {
+                gwip->fatalParseError = true;
+                gwip->parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_SUB_EXPRESSION);
+            }
+        }
+    }
+
+    sf->op(sop);
+    sf->lhs(lhs);
+    sf->rhs(rhs);
+    sop->setOpType(lhs->resultType(), rhs->resultType());
+    sop->resultType(sop->operationType());
+
+    if (sop->op() == OP_EQ)
+    {
+        CalpontSystemCatalog::TableAliasName tan_lhs;
+        CalpontSystemCatalog::TableAliasName tan_rhs;
+        bool outerjoin = (rhs->singleTable(tan_rhs) && lhs->singleTable(tan_lhs));
+
+        // @bug 1632. Alias should be taken account to the identity of tables for selfjoin to work
+        if (outerjoin && tan_lhs != tan_rhs) // join
+        {
+            if (!gwip->condPush) // vtable
+            {
+                if (!gwip->innerTables.empty())
+                {
+                    checkOuterTableColumn(gwip, tan_lhs, lhs);
+                    checkOuterTableColumn(gwip, tan_rhs, rhs);
+                }
+
+                if (funcType == Item_func::EQ_FUNC)
+                {
+                    gwip->equiCondSFList.push_back(sf);
+                }
+
+                ParseTree* ptp = new ParseTree(sf);
+                gwip->ptWorkStack.push(ptp);
+            }
+        }
+        else
+        {
+            ParseTree* ptp = new ParseTree(sf);
+            gwip->ptWorkStack.push(ptp);
+        }
+    }
+    else
+    {
+        ParseTree* ptp = new ParseTree(sf);
+        gwip->ptWorkStack.push(ptp);
+    }
+
+    return true;
+}
+
 bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 {
     boost::shared_ptr<Operator> sop(new PredicateOperator(ifp->func_name()));
@@ -1693,9 +1753,6 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
-
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-
 
     if (ifp->functype() == Item_func::BETWEEN)
     {
@@ -2126,174 +2183,14 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
         RowColumn* rlhs = dynamic_cast<RowColumn*>(lhs);
 
         if (rrhs && rlhs)
-        {
             return buildRowColumnFilter(gwip, rrhs, rlhs, ifp);
-        }
 
-        // push the column that is associated with the correlated column to the returned
-        // column list, so the materialized view have the complete projection list.
-        // e.g. tout.c1 in (select tin.c1 from tin where tin.c2=tout.c2);
-        // the projetion list of subquery will have tin.c1, tin.c2.
-        ReturnedColumn* correlatedCol = NULL;
-        ReturnedColumn* localCol = NULL;
+        vector<Item*> itemList;
 
-        if (rhs->joinInfo() & JOIN_CORRELATED)
-        {
-            correlatedCol = rhs;
-            localCol = lhs;
-        }
-        else if (lhs->joinInfo() & JOIN_CORRELATED)
-        {
-            correlatedCol = lhs;
-            localCol = rhs;
-        }
+        for (uint32_t i = 0; i < ifp->argument_count(); i++)
+            itemList.push_back(ifp->arguments()[i]);
 
-        if (correlatedCol && localCol)
-        {
-            ConstantColumn* cc = dynamic_cast<ConstantColumn*>(localCol);
-
-            if ((!cc || (cc && ifp->functype() == Item_func::EQ_FUNC)) &&
-                    !(localCol->joinInfo() & JOIN_CORRELATED))
-            {
-                localCol->sequence(gwip->returnedCols.size());
-                localCol->expressionId(ci->expressionId++);
-                ReturnedColumn* rc = localCol->clone();
-                rc->colSource(rc->colSource() | CORRELATED_JOIN);
-                gwip->additionalRetCols.push_back(SRCP(rc));
-                gwip->localCols.push_back(localCol);
-
-                if (rc->hasWindowFunc())
-                    gwip->windowFuncList.push_back(rc);
-            }
-
-            // push the correlated join partner to the group by list only when there's aggregate
-            // and we don't push aggregate column to the group by
-            // @bug4756. mysql does not always give correct information about whether there is
-            // aggregate on the SELECT list. Need to figure that by ourselves and then decide
-            // to add the group by or not.
-            if (gwip->subQuery)
-            {
-                if (!localCol->hasAggregate() && !localCol->hasWindowFunc())
-                    gwip->subGroupByCols.push_back(SRCP(localCol->clone()));
-            }
-
-            if (sop->op() == OP_EQ)
-            {
-                if (gwip->subSelectType == CalpontSelectExecutionPlan::IN_SUBS ||
-                        gwip->subSelectType == CalpontSelectExecutionPlan::EXISTS_SUBS)
-                    correlatedCol->joinInfo(correlatedCol->joinInfo() | JOIN_SEMI);
-                else if (gwip->subSelectType == CalpontSelectExecutionPlan::NOT_IN_SUBS ||
-                         gwip->subSelectType == CalpontSelectExecutionPlan::NOT_EXISTS_SUBS)
-                    correlatedCol->joinInfo(correlatedCol->joinInfo() | JOIN_ANTI);
-            }
-        }
-
-        SimpleFilter* sf = new SimpleFilter();
-        sf->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
-
-        //@bug 2101 for when there are only constants in a delete or update where clause (eg "where 5 < 6").
-        //There will be no field column and it will get here only if the comparison is true.
-        if (gwip->columnMap.empty() &&
-                ((current_thd->lex->sql_command == SQLCOM_UPDATE) ||
-                 (current_thd->lex->sql_command == SQLCOM_UPDATE_MULTI) ||
-                 (current_thd->lex->sql_command == SQLCOM_DELETE) ||
-                 (current_thd->lex->sql_command == SQLCOM_DELETE_MULTI)))
-        {
-            IDEBUG( cerr << "deleted func with 2 const columns" << endl );
-            delete rhs;
-            delete lhs;
-            return false;
-        }
-
-        // handle noop (only for table mode)
-        if (rhs->data() == "noop" || lhs->data() == "noop")
-        {
-            sop.reset(new Operator("noop"));
-        }
-        else
-        {
-            for (uint32_t i = 0; i < ifp->argument_count(); i++)
-            {
-                if (isPredicateFunction(ifp->arguments()[i], gwip))
-                {
-                    gwip->fatalParseError = true;
-                    gwip->parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_SUB_EXPRESSION);
-                }
-            }
-        }
-
-        sf->op(sop);
-        sf->lhs(lhs);
-        sf->rhs(rhs);
-        sop->setOpType(lhs->resultType(), rhs->resultType());
-        sop->resultType(sop->operationType());
-
-        if (sop->op() == OP_EQ)
-        {
-            CalpontSystemCatalog::TableAliasName tan_lhs;
-            CalpontSystemCatalog::TableAliasName tan_rhs;
-            set<CalpontSystemCatalog::TableAliasName>::const_iterator it;
-            bool outerjoin = (rhs->singleTable(tan_rhs) && lhs->singleTable(tan_lhs));
-
-            // @bug 1632. Alias should be taken account to the identity of tables for selfjoin to work
-            if (outerjoin && tan_lhs != tan_rhs) // join
-            {
-                if (!gwip->condPush) // vtable
-                {
-                    if (!gwip->innerTables.empty())
-                    {
-                        bool notInner = true;
-
-                        for (it = gwip->innerTables.begin(); it != gwip->innerTables.end(); ++it)
-                        {
-                            if (tan_lhs.alias == it->alias && tan_lhs.view == it->view)
-                                notInner = false;
-                        }
-
-                        if (notInner)
-                        {
-                            lhs->returnAll(true);
-                            IDEBUG( cerr << "setting returnAll on " << tan_lhs << endl);
-                        }
-                    }
-
-                    if (!gwip->innerTables.empty())
-                    {
-                        bool notInner = true;
-
-                        for (it = gwip->innerTables.begin(); it != gwip->innerTables.end(); ++it)
-                        {
-                            if (tan_rhs.alias == it->alias && tan_rhs.view == it->view)
-                                notInner = false;
-                        }
-
-                        if (notInner)
-                        {
-                            rhs->returnAll(true);
-                            IDEBUG( cerr << "setting returnAll on " << tan_rhs << endl );
-                        }
-                    }
-
-                    if (ifp->functype() == Item_func::EQ_FUNC)
-                    {
-                        gwip->equiCondSFList.push_back(sf);
-                    }
-
-                    ParseTree* ptp = new ParseTree(sf);
-                    gwip->ptWorkStack.push(ptp);
-                }
-            }
-            else
-            {
-                ParseTree* ptp = new ParseTree(sf);
-                gwip->ptWorkStack.push(ptp);
-            }
-        }
-        else
-        {
-            ParseTree* ptp = new ParseTree(sf);
-            gwip->ptWorkStack.push(ptp);
-        }
+        return buildEqualityPredicate(lhs, rhs, gwip, sop, ifp->functype(), itemList);
     }
 
     return true;
@@ -2984,6 +2881,7 @@ SimpleColumn* getSmallestColumn(boost::shared_ptr<CalpontSystemCatalog> csc,
     }
 
     CalpontSystemCatalog::RIDList oidlist = csc->columnRIDs(tn, true);
+    idbassert(oidlist.size() == table->s->fields);
     CalpontSystemCatalog::TableColName tcn;
     int minColWidth = -1;
     int minWidthColOffset = 0;
@@ -3008,7 +2906,7 @@ SimpleColumn* getSmallestColumn(boost::shared_ptr<CalpontSystemCatalog> csc,
     sc->viewName(tan.view);
     sc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
     sc->resultType(csc->colType(oidlist[minWidthColOffset].objnum));
-    sc->charsetNumber(3000);
+    sc->charsetNumber(table->field[minWidthColOffset]->charset()->number);
     return sc;
 }
 
@@ -6288,16 +6186,13 @@ void setExecutionParams(gp_walk_info &gwi, SCSEP &csep)
  *  FROM part of the query.
  *  isUnion tells that CS processes FROM taken from UNION UNIT.
  *  The notion is described in MDB code.
- *  on_expr_list ON expressions used in OUTER JOINs. These are
- *  later used in processWhere()
  * RETURNS
  *  error id as an int
  ***********************************************************/
 int processFrom(bool &isUnion,
     SELECT_LEX &select_lex,
     gp_walk_info &gwi,
-    SCSEP &csep,
-    List<Item> &on_expr_list)
+    SCSEP &csep)
 {
     // populate table map and trigger syscolumn cache for all the tables (@bug 1637).
     // all tables on FROM list must have at least one col in colmap
@@ -6327,12 +6222,6 @@ int processFrom(bool &isUnion,
                 return ER_CHECK_NOT_IMPLEMENTED;
             }
           
-            // Save on_expr to use it for WHERE processing
-            if (!(table_ptr->outer_join & (JOIN_TYPE_LEFT | JOIN_TYPE_RIGHT)) && table_ptr->on_expr)
-            {
-                on_expr_list.push_back(table_ptr->on_expr);
-            } 
-
             string viewName = getViewName(table_ptr);
             if (lower_case_table_names)
             {
@@ -6482,15 +6371,12 @@ int processFrom(bool &isUnion,
  * DESCRIPTION:
  *  This function processes conditions from either JOIN->conds
  *  or SELECT_LEX->where|prep_where
- *  on_expr_list ON expressions used in OUTER JOINs. These are
- *  populated used in processFrom()
  * RETURNS
  *  error id as an int
  ***********************************************************/
 int processWhere(SELECT_LEX &select_lex,
     gp_walk_info &gwi,
     SCSEP &csep,
-    List<Item> &on_expr_list,
     const std::vector<COND*>& condStack)
 {
     JOIN* join = select_lex.join;
@@ -6608,27 +6494,6 @@ int processWhere(SELECT_LEX &select_lex,
         (dynamic_cast<ConstantColumn*>(gwi.rcWorkStack.top()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
     }
 
-#ifdef DEBUG_WALK_COND
-        std::cerr << "------------------ ON_EXPR -----------------------" << endl;
-#endif
-    // MCOL-3593 MDB now doesn't rewrite and/or consolidate ON and WHERE expressions
-    // and CS handles INNER ON expressions here.
-    if (!on_expr_list.is_empty())
-    {
-        List_iterator<Item> on_expr_it(on_expr_list);
-        Item_cond *on_expr = NULL;
-        while((on_expr = reinterpret_cast<Item_cond*>(on_expr_it++)))
-        {
-            on_expr->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
-#ifdef DEBUG_WALK_COND
-            on_expr->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
-#endif
-        }
-    }
-#ifdef DEBUG_WALK_COND
-        std::cerr << "-------------------------------------------------\n" << std::endl;
-#endif
-
     // ZZ - the followinig debug shows the structure of nested outer join. should
     // use a recursive function.
 #ifdef OUTER_JOIN_DEBUG
@@ -6693,26 +6558,31 @@ int processWhere(SELECT_LEX &select_lex,
     }
 #endif
 
-    uint32_t failed = buildOuterJoin(gwi, select_lex);
+    uint32_t failed = 0;
 
-    if (failed) return failed;
+    // InfiniDB bug5764 requires outer joins to be appended to the
+    // end of the filter list. This causes outer join filters to
+    // have a higher join id than inner join filters.
+    // TODO MCOL-4680 Figure out why this is the case, and possibly
+    // eliminate this requirement.
+    std::stack<execplan::ParseTree*> outerJoinStack;
 
-    // @bug5764. build outer join for view, make sure outerjoin filter is appended
-    // to the end of the filter list.
-    for (uint i = 0; i < gwi.viewList.size(); i++)
-    {
-        failed = gwi.viewList[i]->processOuterJoin(gwi);
-
-        if (failed)
-            break;
-    }
-
-    if (failed != 0)
+    if ((failed = buildJoin(gwi, select_lex.top_join_list, outerJoinStack)))
         return failed;
 
+    if (gwi.subQuery)
+    {
+        for (uint i = 0; i < gwi.viewList.size(); i++)
+        {
+            if ((failed = gwi.viewList[i]->processJoin(gwi, outerJoinStack)))
+                return failed;
+        }
+    }
+
     ParseTree* filters = NULL;
+    ParseTree* outerJoinFilters = NULL;
     ParseTree* ptp = NULL;
-    ParseTree* lhs = NULL;
+    ParseTree* rhs = NULL;
 
     // @bug 2932. for "select * from region where r_name" case. if icp not null and
     // ptWorkStack empty, the item is in rcWorkStack.
@@ -6733,11 +6603,43 @@ int processWhere(SELECT_LEX &select_lex,
             break;
 
         ptp = new ParseTree(new LogicOperator("and"));
-        ptp->right(filters);
-        lhs = gwi.ptWorkStack.top();
+        ptp->left(filters);
+        rhs = gwi.ptWorkStack.top();
         gwi.ptWorkStack.pop();
-        ptp->left(lhs);
+        ptp->right(rhs);
         gwi.ptWorkStack.push(ptp);
+    }
+
+    while (!outerJoinStack.empty())
+    {
+        outerJoinFilters = outerJoinStack.top();
+        outerJoinStack.pop();
+
+        if (outerJoinStack.empty())
+            break;
+
+        ptp = new ParseTree(new LogicOperator("and"));
+        ptp->left(outerJoinFilters);
+        rhs = outerJoinStack.top();
+        outerJoinStack.pop();
+        ptp->right(rhs);
+        outerJoinStack.push(ptp);
+    }
+
+    // Append outer join filters at the end of inner join filters.
+    // JLF_ExecPlanToJobList::walkTree processes ParseTree::left
+    // before ParseTree::right which is what we intend to do in the
+    // below.
+    if (filters && outerJoinFilters)
+    {
+        ptp = new ParseTree(new LogicOperator("and"));
+        ptp->left(filters);
+        ptp->right(outerJoinFilters);
+        filters = ptp;
+    }
+    else if (outerJoinFilters)
+    {
+        filters = outerJoinFilters;
     }
 
     if (filters)
@@ -6787,17 +6689,17 @@ int processLimitAndOffset(
         */
         if (gwi.subSelectType != CalpontSelectExecutionPlan::IN_SUBS
              && gwi.subSelectType != CalpontSelectExecutionPlan::EXISTS_SUBS
-             && select_lex.master_unit()->global_parameters()->explicit_limit)
+             && select_lex.master_unit()->global_parameters()->limit_params.explicit_limit)
         {
-            if (select_lex.master_unit()->global_parameters()->offset_limit)
+            if (select_lex.master_unit()->global_parameters()->limit_params.offset_limit)
             {
-                Item_int* offset = (Item_int*)select_lex.master_unit()->global_parameters()->offset_limit;
+                Item_int* offset = (Item_int*)select_lex.master_unit()->global_parameters()->limit_params.offset_limit;
                 csep->limitStart(offset->val_int());
             }
 
-            if (select_lex.master_unit()->global_parameters()->select_limit)
+            if (select_lex.master_unit()->global_parameters()->limit_params.select_limit)
             {
-                Item_int* select = (Item_int*)select_lex.master_unit()->global_parameters()->select_limit;
+                Item_int* select = (Item_int*)select_lex.master_unit()->global_parameters()->limit_params.select_limit;
                 csep->limitNum(select->val_int());
                 // MCOL-894 Activate parallel ORDER BY
                 csep->orderByThreads(get_orderby_threads(gwi.thd));
@@ -6805,19 +6707,19 @@ int processLimitAndOffset(
         }
     }
     // union with explicit select at the top level
-    else if (isUnion && select_lex.explicit_limit)
+    else if (isUnion && select_lex.limit_params.explicit_limit)
     {
         if (select_lex.braces)
         {
-            if (select_lex.offset_limit)
-                csep->limitStart(((Item_int*)select_lex.offset_limit)->val_int());
+            if (select_lex.limit_params.offset_limit)
+                csep->limitStart(((Item_int*)select_lex.limit_params.offset_limit)->val_int());
 
-            if (select_lex.select_limit)
-                csep->limitNum(((Item_int*)select_lex.select_limit)->val_int());
+            if (select_lex.limit_params.select_limit)
+                csep->limitNum(((Item_int*)select_lex.limit_params.select_limit)->val_int());
         }
     }
     // other types of queries that have explicit LIMIT
-    else if (select_lex.explicit_limit)
+    else if (select_lex.limit_params.explicit_limit)
     {
         uint32_t limitOffset = 0;
 
@@ -6827,15 +6729,15 @@ int processLimitAndOffset(
 
             // @bug5729. After upgrade, join->unit sometimes is uninitialized pointer
             // (not null though) and will cause seg fault. Prefer checking
-            // select_lex->offset_limit if not null.
+            // select_lex->limit_params.offset_limit if not null.
             if (join->select_lex &&
-                    join->select_lex->offset_limit &&
-                    join->select_lex->offset_limit->is_fixed() &&
-                    join->select_lex->select_limit &&
-                    join->select_lex->select_limit->is_fixed())
+                    join->select_lex->limit_params.offset_limit &&
+                    join->select_lex->limit_params.offset_limit->is_fixed() &&
+                    join->select_lex->limit_params.select_limit &&
+                    join->select_lex->limit_params.select_limit->is_fixed())
             {
-                limitOffset = join->select_lex->offset_limit->val_int();
-                limitNum = join->select_lex->select_limit->val_int();
+                limitOffset = join->select_lex->limit_params.offset_limit->val_int();
+                limitNum = join->select_lex->limit_params.select_limit->val_int();
             }
             else if (join->unit)
             {
@@ -6845,15 +6747,15 @@ int processLimitAndOffset(
         }
         else
         {
-            if (select_lex.master_unit()->global_parameters()->offset_limit)
+            if (select_lex.master_unit()->global_parameters()->limit_params.offset_limit)
             {
-                Item_int* offset = (Item_int*)select_lex.master_unit()->global_parameters()->offset_limit;
+                Item_int* offset = (Item_int*)select_lex.master_unit()->global_parameters()->limit_params.offset_limit;
                 limitOffset = offset->val_int();
             }
 
-            if (select_lex.master_unit()->global_parameters()->select_limit)
+            if (select_lex.master_unit()->global_parameters()->limit_params.select_limit)
             {
-                Item_int* select = (Item_int*)select_lex.master_unit()->global_parameters()->select_limit;
+                Item_int* select = (Item_int*)select_lex.master_unit()->global_parameters()->limit_params.select_limit;
                 limitNum = select->val_int();
             }
         }
@@ -6878,6 +6780,125 @@ int processLimitAndOffset(
     }
 
     return 0;
+}
+
+/*@brief Create in-to-exists predicate for an IN subquery   */
+/***********************************************************
+ * DESCRIPTION:
+ * This function processes the lhs and rhs of an IN predicate
+ * for a query such as:
+ * select col1 from t1 where col2 in (select col2' from t2);
+ * here, lhs is col2 and rhs is the in subquery "select col2' from t2".
+ * It creates a new predicate of the form "col2=col2'" which then later
+ * gets injected into the execution plan of the subquery.
+ * If lhs is of type Item::ROW_ITEM instead, such as:
+ * select col1 from t1 where (col2,col3) in (select col2',col3' from t2);
+ * the function builds an "and" filter of the form "col2=col2' and col3=col3'".
+ * RETURNS
+ *  none
+ ***********************************************************/
+void buildInToExistsFilter(gp_walk_info& gwi, SELECT_LEX& select_lex)
+{
+    RowColumn* rlhs = dynamic_cast<RowColumn*>(gwi.inSubQueryLHS);
+
+    size_t additionalRetColsBefore = gwi.additionalRetCols.size();
+
+    if (rlhs)
+    {
+        idbassert(gwi.inSubQueryLHSItem->type() == Item::ROW_ITEM);
+
+        Item_row* row = (Item_row*)gwi.inSubQueryLHSItem;
+
+        idbassert(!rlhs->columnVec().empty() &&
+            (rlhs->columnVec().size() == gwi.returnedCols.size()) &&
+            row->cols() && (row->cols() == select_lex.item_list.elements) &&
+            (row->cols() == gwi.returnedCols.size()));
+
+        List_iterator_fast<Item> it(select_lex.item_list);
+        Item* item;
+
+        int i = 0;
+
+        ParseTree* rowFilter = nullptr;
+
+        while ((item = it++))
+        {
+            boost::shared_ptr<Operator> sop(new PredicateOperator("="));
+            vector<Item*> itemList = {row->element_index(i), item};
+            ReturnedColumn* rhs = gwi.returnedCols[i]->clone();
+
+            buildEqualityPredicate(rlhs->columnVec()[i]->clone(), rhs, &gwi, sop,
+                Item_func::EQ_FUNC, itemList, true);
+
+            if (gwi.fatalParseError)
+            {
+                delete rlhs;
+                return;
+            }
+
+            ParseTree* tmpFilter = nullptr;
+
+            if (!gwi.ptWorkStack.empty())
+            {
+                tmpFilter = gwi.ptWorkStack.top();
+                gwi.ptWorkStack.pop();
+            }
+
+            if (i == 0 && tmpFilter)
+            {
+                rowFilter = tmpFilter;
+            }
+            else if (i != 0 && tmpFilter && rowFilter)
+            {
+                ParseTree* ptp = new ParseTree(new LogicOperator("and"));
+                ptp->left(rowFilter);
+                ptp->right(tmpFilter);
+                rowFilter = ptp;
+            }
+
+            i++;
+        }
+
+        delete rlhs;
+
+        if (rowFilter)
+            gwi.ptWorkStack.push(rowFilter);
+    }
+    else
+    {
+        idbassert((gwi.returnedCols.size() == 1) &&
+            (select_lex.item_list.elements == 1));
+
+        boost::shared_ptr<Operator> sop(new PredicateOperator("="));
+        vector<Item*> itemList = {gwi.inSubQueryLHSItem,
+            select_lex.item_list.head()};
+        ReturnedColumn* rhs = gwi.returnedCols[0]->clone();
+        buildEqualityPredicate(gwi.inSubQueryLHS, rhs, &gwi, sop,
+            Item_func::EQ_FUNC, itemList, true);
+
+        if (gwi.fatalParseError)
+            return;
+    }
+
+    size_t additionalRetColsAdded = gwi.additionalRetCols.size() -
+        additionalRetColsBefore;
+
+    if (gwi.returnedCols.size() &&
+        (gwi.returnedCols.size() == additionalRetColsAdded))
+    {
+        for (size_t i = 0; i < gwi.returnedCols.size(); i++)
+        {
+            gwi.returnedCols[i]->expressionId(
+                gwi.additionalRetCols[additionalRetColsBefore + i]->expressionId());
+            gwi.returnedCols[i]->colSource(
+                gwi.additionalRetCols[additionalRetColsBefore + i]->colSource());
+        }
+
+        // Delete the duplicate copy of the returned cols
+        auto iter = gwi.additionalRetCols.begin();
+        std::advance(iter, additionalRetColsBefore);
+        gwi.additionalRetCols.erase(iter, gwi.additionalRetCols.end());
+    }
 }
 
 /*@brief  Translates SELECT_LEX into CSEP                  */
@@ -6927,15 +6948,15 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     CalpontSelectExecutionPlan::SelectList derivedTbList;
     // @bug 1796. Remember table order on the FROM list.
     gwi.clauseType = FROM;
-    List<Item> on_expr_list;
-    if ((rc = processFrom(isUnion, select_lex, gwi, csep, on_expr_list)))
+    if ((rc = processFrom(isUnion, select_lex, gwi, csep)))
     {
         return rc;
     }
+
     bool unionSel = (!isUnion && select_lex.master_unit()->is_unit_op()) ? true : false;
 
     gwi.clauseType = WHERE;
-    if ((rc = processWhere(select_lex, gwi, csep, on_expr_list, condStack)))
+    if ((rc = processWhere(select_lex, gwi, csep, condStack)))
     {
         return rc;
     }
@@ -7472,6 +7493,51 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
             gwi.ptWorkStack.pop();
             ptp->right(rhs);
             gwi.ptWorkStack.push(ptp);
+        }
+    }
+
+    // MCOL-4617 If this is an IN subquery, then create the in-to-exists
+    // predicate and inject it into the csep
+    if (gwi.subQuery &&
+        gwi.subSelectType == CalpontSelectExecutionPlan::IN_SUBS &&
+        gwi.inSubQueryLHS && gwi.inSubQueryLHSItem)
+    {
+        // create the predicate
+        buildInToExistsFilter(gwi, select_lex);
+
+        if (gwi.fatalParseError)
+        {
+            setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
+            return ER_INTERNAL_ERROR;
+        }
+
+        // now inject the created predicate
+        if (!gwi.ptWorkStack.empty())
+        {
+            ParseTree* inToExistsFilter = gwi.ptWorkStack.top();
+            gwi.ptWorkStack.pop();
+
+            if (havingFilter)
+            {
+                ParseTree* ptp = new ParseTree(new LogicOperator("and"));
+                ptp->left(havingFilter);
+                ptp->right(inToExistsFilter);
+                havingFilter = ptp;
+            }
+            else
+            {
+                if (csep->filters())
+                {
+                    ParseTree* ptp = new ParseTree(new LogicOperator("and"));
+                    ptp->left(csep->filters());
+                    ptp->right(inToExistsFilter);
+                    csep->filters(ptp);
+                }
+                else
+                {
+                    csep->filters(inToExistsFilter);
+                }
+            }
         }
     }
 
@@ -8627,26 +8693,36 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
     SELECT_LEX tmp_select_lex;
     tmp_select_lex.table_list.first = gi.groupByTables;
-    uint32_t failed = buildOuterJoin(gwi, tmp_select_lex);
+
+    // InfiniDB bug5764 requires outer joins to be appended to the
+    // end of the filter list. This causes outer join filters to
+    // have a higher join id than inner join filters.
+    // TODO MCOL-4680 Figure out why this is the case, and possibly
+    // eliminate this requirement.
+    std::stack<execplan::ParseTree*> outerJoinStack;
+
+    uint32_t failed = buildJoin(gwi, tmp_select_lex.top_join_list, outerJoinStack);
 
     if (failed) return failed;
 
-    // @bug5764. build outer join for view, make sure outerjoin filter is appended
-    // to the end of the filter list.
-    for (uint i = 0; i < gwi.viewList.size(); i++)
+    if (gwi.subQuery)
     {
-        failed = gwi.viewList[i]->processOuterJoin(gwi);
+        for (uint i = 0; i < gwi.viewList.size(); i++)
+        {
+            failed = gwi.viewList[i]->processJoin(gwi, outerJoinStack);
 
-        if (failed)
-            break;
+            if (failed)
+                break;
+        }
     }
 
     if (failed != 0)
         return failed;
 
     ParseTree* filters = NULL;
+    ParseTree* outerJoinFilters = NULL;
     ParseTree* ptp = NULL;
-    ParseTree* lhs = NULL;
+    ParseTree* rhs = NULL;
 
     // @bug 2932. for "select * from region where r_name" case. if icp not null and
     // ptWorkStack empty, the item is in rcWorkStack.
@@ -8667,13 +8743,43 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             break;
 
         ptp = new ParseTree(new LogicOperator("and"));
-        //ptp->left(filters);
-        ptp->right(filters);
-        lhs = gwi.ptWorkStack.top();
+        ptp->left(filters);
+        rhs = gwi.ptWorkStack.top();
         gwi.ptWorkStack.pop();
-        //ptp->right(rhs);
-        ptp->left(lhs);
+        ptp->right(rhs);
         gwi.ptWorkStack.push(ptp);
+    }
+
+    while (!outerJoinStack.empty())
+    {
+        outerJoinFilters = outerJoinStack.top();
+        outerJoinStack.pop();
+
+        if (outerJoinStack.empty())
+            break;
+
+        ptp = new ParseTree(new LogicOperator("and"));
+        ptp->left(outerJoinFilters);
+        rhs = outerJoinStack.top();
+        outerJoinStack.pop();
+        ptp->right(rhs);
+        outerJoinStack.push(ptp);
+    }
+
+    // Append outer join filters at the end of inner join filters.
+    // JLF_ExecPlanToJobList::walkTree processes ParseTree::left
+    // before ParseTree::right which is what we intend to do in the
+    // below.
+    if (filters && outerJoinFilters)
+    {
+        ptp = new ParseTree(new LogicOperator("and"));
+        ptp->left(filters);
+        ptp->right(outerJoinFilters);
+        filters = ptp;
+    }
+    else if (outerJoinFilters)
+    {
+        filters = outerJoinFilters;
     }
 
     if (filters)
@@ -10006,8 +10112,8 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
         // LIMIT and OFFSET are extracted from TABLE_LIST elements.
         // All of JOIN-ed tables contain relevant limit and offset.
         uint64_t limit = (uint64_t)-1;
-        if (gi.groupByTables->select_lex->select_limit && 
-            ( limit = static_cast<Item_int*>(gi.groupByTables->select_lex->select_limit)->val_int() ) &&
+        if (gi.groupByTables->select_lex->limit_params.select_limit && 
+            ( limit = static_cast<Item_int*>(gi.groupByTables->select_lex->limit_params.select_limit)->val_int() ) &&
             limit != (uint64_t)-1 )
         {
             csep->limitNum(limit);
@@ -10019,9 +10125,9 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             csep->limitNum((uint64_t) - 2);
         }
 
-        if (gi.groupByTables->select_lex->offset_limit)
+        if (gi.groupByTables->select_lex->limit_params.offset_limit)
         {
-            csep->limitStart(((Item_int*)gi.groupByTables->select_lex->offset_limit)->val_int());
+            csep->limitStart(((Item_int*)gi.groupByTables->select_lex->limit_params.offset_limit)->val_int());
         }
 
         // We don't currently support limit with correlated subquery

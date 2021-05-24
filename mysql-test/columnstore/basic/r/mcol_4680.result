@@ -1,0 +1,29 @@
+#
+# FROM subquery containing nested joins returns an error
+#
+DROP DATABASE IF EXISTS mcol4680;
+CREATE DATABASE mcol4680;
+USE mcol4680;
+create table t1 (a int);
+insert into t1 values (1), (2), (3);
+create table t2 (a int);
+insert into t2 values (2);
+create table t3 (a int);
+create table t4 (a int);
+create table t5 (a int);
+select * from
+(
+select t1.a as col1, t2.a as col2 from
+t1 left join
+(
+(t2 left join t3 on t2.a=t3.a) left join
+(t4 left join t5 on t4.a=t5.a)
+on t2.a=t4.a
+)
+on t1.a=t2.a
+) h order by col1;
+col1	col2
+1	NULL
+2	2
+3	NULL
+DROP DATABASE mcol4680;
