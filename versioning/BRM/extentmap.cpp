@@ -347,8 +347,16 @@ int ExtentMap::_markInvalid(const LBID_t lbid, const execplan::CalpontSystemCata
 
                 if (isUnsigned(colDataType))
                 {
-                    fExtentMap[i].partition.cprange.bigLoVal = -1;
-                    fExtentMap[i].partition.cprange.bigHiVal = 0;
+                    if (fExtentMap[i].colWid != datatypes::MAXDECIMALWIDTH)
+                    {
+                        fExtentMap[i].partition.cprange.loVal = numeric_limits<uint64_t>::max();
+                        fExtentMap[i].partition.cprange.hiVal = numeric_limits<uint64_t>::min();
+                    }
+                    else
+                    {
+                        fExtentMap[i].partition.cprange.bigLoVal = -1; // XXX: unsigned wide decimals do not exceed rang of signed wide decimals.
+                        fExtentMap[i].partition.cprange.bigHiVal = 0;
+                    }
                 }
                 else
                 {
@@ -704,6 +712,26 @@ void ExtentMap::setExtentsMaxMin(const CPMaxMinMap_t& cpMap, bool firstNode, boo
                     incSeqNum(fExtentMap[i].partition.cprange.sequenceNum);
                     extentsUpdated++;
                 }
+                else if (it->second.seqNum == SEQNUM_MARK_UPDATING_INVALID_SET_RANGE)
+                {
+                    makeUndoRecord(&fExtentMap[i], sizeof(struct EMEntry));
+                    if (fExtentMap[i].partition.cprange.isValid == CP_UPDATING)
+                    {
+                        if (it->second.isBinaryColumn)
+                        {
+                            fExtentMap[i].partition.cprange.bigHiVal = it->second.bigMax;
+                            fExtentMap[i].partition.cprange.bigLoVal = it->second.bigMin;
+                        }
+                        else
+                        {
+                            fExtentMap[i].partition.cprange.hiVal = it->second.max;
+                            fExtentMap[i].partition.cprange.loVal = it->second.min;
+                        }
+                        fExtentMap[i].partition.cprange.isValid = CP_INVALID;
+                    }
+                    incSeqNum(fExtentMap[i].partition.cprange.sequenceNum);
+                    extentsUpdated++;
+                }
                 // else sequence has changed since start of the query.  Don't update the EM entry.
                 else
                 {
@@ -725,14 +753,14 @@ void ExtentMap::setExtentsMaxMin(const CPMaxMinMap_t& cpMap, bool firstNode, boo
         for (i = 0; i < entries; i++)
         {
             if (fExtentMap[i].range.start == it->first)
-	    {
+            {
                 break;
-	    }
-	}
-	if (i < entries)
-	{
+            }
+        }
+        if (i < entries)
+        {
             continue;
-	}
+        }
         oss << " " << it->first;
     }
 
