@@ -16,6 +16,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
+#define PREFER_MY_CONFIG_H
 #include <my_config.h>
 #ifndef _MSC_VER
 #include <unistd.h>

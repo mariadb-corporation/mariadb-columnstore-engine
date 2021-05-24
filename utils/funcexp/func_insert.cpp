@@ -37,7 +37,6 @@ using namespace joblist;
 #include "utf8.h"
 using namespace utf8;
 
-#include "collation.h"
 
 namespace funcexp
 {

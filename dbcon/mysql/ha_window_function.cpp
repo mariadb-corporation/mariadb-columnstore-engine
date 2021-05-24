@@ -21,6 +21,7 @@
 *
 *
 ***********************************************************************/
+#define PREFER_MY_CONFIG_H
 #include <my_config.h>
 #include <iostream>
 #include <string>

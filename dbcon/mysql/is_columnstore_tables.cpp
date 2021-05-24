@@ -20,6 +20,7 @@
  * MA 02110-1301, USA.
  */
 
+#define PREFER_MY_CONFIG_H
 #include "idb_mysql.h"
 #include <vector>
 

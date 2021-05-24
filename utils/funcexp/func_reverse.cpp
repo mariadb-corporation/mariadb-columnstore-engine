@@ -34,8 +34,6 @@ using namespace rowgroup;
 #include "joblisttypes.h"
 using namespace joblist;
 
-#include "collation.h"
-#include <mariadb.h> // DBUG_ASSERT
 
 namespace funcexp
 {
@@ -76,7 +74,7 @@ std::string Func_reverse::getStrVal(rowgroup::Row& row,
             if ((l = my_ismbchar(cs, pos, end)))
             {
                 tmp -= l;
-                DBUG_ASSERT(tmp >= pbuf);
+                idbassert(tmp >= pbuf);
                 memcpy(tmp, pos, l);
                 pos += l;
             }

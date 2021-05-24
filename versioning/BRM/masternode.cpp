@@ -34,7 +34,6 @@
 #include <clocale>
 #include "IDBPolicy.h"
 #include "brmtypes.h"
-#include "utils_utf8.h"
 #include "service.h"
 #include "jobstep.h"
 

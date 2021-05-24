@@ -78,7 +78,6 @@ using namespace rowgroup;
 #include "idbregistry.h"
 #endif
 
-#include "collation.h"
 
 #undef BAIL_IF_0
 #if 1

@@ -33,7 +33,6 @@ using namespace execplan;
 
 #include "rowgroup.h"
 
-#include "collation.h"
 
 namespace funcexp
 {

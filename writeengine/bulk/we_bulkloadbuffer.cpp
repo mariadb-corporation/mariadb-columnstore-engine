@@ -43,7 +43,7 @@
 
 #include "joblisttypes.h"
 
-#include "utils_utf8.h"
+#include "utils_utf8.h" // utf8_truncate_point()
 
 using namespace std;
 using namespace boost;

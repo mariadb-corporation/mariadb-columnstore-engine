@@ -47,7 +47,6 @@ using namespace oam;
 
 #include "distributedenginecomm.h"
 #include "IDBPolicy.h"
-#include "utils_utf8.h"
 #include "dbrm.h"
 
 #include "crashtrace.h"
@@ -348,7 +347,7 @@ int main(int argc, char** argv)
     // This is unset due to the way we start it
     program_invocation_short_name = const_cast<char*>("WriteEngineServ");
     // Initialize the charset library
-    my_init();
+    MY_INIT(argv[0]);
 
     return ServiceWriteEngine(opt).Run();
 }

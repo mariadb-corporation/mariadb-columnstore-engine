@@ -32,7 +32,7 @@
 #include "IDBLogger.h"
 #include "IDBFactory.h"
 #ifdef _MSC_VER
-#include "utils_utf8.h"
+#include "utils_utf8.h"  // idb_wcstombs()
 #endif
 
 #include "installdir.h"

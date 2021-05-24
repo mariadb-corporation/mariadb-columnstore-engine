@@ -27,7 +27,6 @@ using namespace std;
 
 #include "functor_str.h"
 #include "functioncolumn.h"
-#include "utils_utf8.h"
 using namespace execplan;
 
 #include "rowgroup.h"
@@ -36,9 +35,7 @@ using namespace rowgroup;
 #include "joblisttypes.h"
 using namespace joblist;
 
-#include "collation.h"
-#include <mariadb.h> // INT_MAX32
-
+#define INT_MAX32 0x7FFFFFFF
 
 namespace funcexp
 {

@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2020 MariaDB Corporation
+   Copyright (C) 2021 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -15,25 +15,20 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
-#ifndef MARIADB_MY_SYS_H_INCLUDED
-#define MARIADB_MY_SYS_H_INCLUDED
 
-// These are the common headers needed to use the MariaDB mysys library.
+/*
+  Undefine all conflicting definitions
+  (between my_config.h and mcsconfig.h)
+  so that we include:
+  - mcsconfig.h after my_config.h, or
+  - my_config.h after mcsconfig.h
+*/
 
-// This must be included after any boost headers, or anything that includes
-// boost headers. <mariadb.h> and boost are not friends.
-
-#ifndef TEST_MCSCONFIG_H
-#error mcscofig.h was not included
-#endif
-
-#include "mcsconfig_conflicting_defs_remember.h"
-#include "mcsconfig_conflicting_defs_undef.h"
-
-#include <mariadb.h>
-#undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
-#include <my_sys.h>
-
-#include "mcsconfig_conflicting_defs_restore.h"
-
-#endif
+#undef PACKAGE
+#undef PACKAGE_BUGREPORT
+#undef PACKAGE_NAME
+#undef PACKAGE_STRING
+#undef PACKAGE_TARNAME
+#undef PACKAGE_VERSION
+#undef VERSION
+#undef HAVE_STRTOLL

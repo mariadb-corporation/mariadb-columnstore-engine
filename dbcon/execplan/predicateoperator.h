@@ -39,12 +39,11 @@
 #include <cmath>
 #include <boost/regex.hpp>
 
-#include "utils_utf8.h"
 #include "expressionparser.h"
 #include "returnedcolumn.h"
 #include "dataconvert.h"
 
-#include "collation.h"
+#include "collation.h"         // CHARSET_INFO
 
 namespace messageqcpp
 {

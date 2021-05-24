@@ -48,7 +48,6 @@ using namespace rowgroup;
 
 #include "joblisttypes.h"
 #include "mcs_decimal.h"
-#include "collation.h"
 
 // See agg_arg_charsets in sql_type.h to see conversion rules for 
 // items that have different char sets

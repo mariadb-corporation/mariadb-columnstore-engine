@@ -18,6 +18,7 @@
 // $Id: jlf_graphics.cpp 9550 2013-05-17 23:58:07Z xlou $
 
 // Cross engine at the top due to MySQL includes
+#define PREFER_MY_CONFIG_H
 #include "crossenginestep.h"
 #include <iostream>
 using namespace std;

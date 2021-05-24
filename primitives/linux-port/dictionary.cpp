@@ -30,11 +30,9 @@ using namespace std;
 #include "messagelog.h"
 #include "messageobj.h"
 #include "exceptclasses.h"
-#include "utils_utf8.h"
 #include "dataconvert.h"
 #include <sstream>
 
-#include "collation.h"
 
 using namespace logging;
 

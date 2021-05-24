@@ -21,6 +21,7 @@
 
 //#define NDEBUG
 // Cross engine needs to be at top due to MySQL includes
+#define PREFER_MY_CONFIG_H
 #include "crossenginestep.h"
 
 #include <cassert>

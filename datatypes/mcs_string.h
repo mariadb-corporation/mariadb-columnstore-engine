@@ -20,7 +20,7 @@
 #define MCS_DATATYPES_STRING_H
 
 #include "conststring.h"
-#include "collation.h"
+#include "collation.h"    // class Charset
 
 namespace datatypes
 {
