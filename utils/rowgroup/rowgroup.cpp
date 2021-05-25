@@ -45,7 +45,6 @@ using namespace execplan;
 #include "dataconvert.h"
 #include "columnwidth.h"
 
-#include "collation.h"
 
 namespace rowgroup
 {

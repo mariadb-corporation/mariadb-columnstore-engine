@@ -125,7 +125,7 @@ simplify_joins_mcs(JOIN *join, List<TABLE_LIST> *join_list, COND *conds, bool to
           conds= and_conds(join->thd, conds, table->on_expr);
           conds->top_level_item();
           /* conds is always a new item as both cond and on_expr existed */
-          DBUG_ASSERT(!conds->is_fixed());
+          DBUG_ASSERT(!conds->fixed());
           conds->fix_fields(join->thd, &conds);
         }
         else

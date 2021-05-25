@@ -26,7 +26,6 @@ using namespace std;
 
 #include "functor_str.h"
 #include "functioncolumn.h"
-#include "utils_utf8.h"
 using namespace execplan;
 
 #include "rowgroup.h"

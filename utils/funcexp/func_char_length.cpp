@@ -30,7 +30,6 @@ using namespace std;
 #include "functioncolumn.h"
 #include "rowgroup.h"
 #include "calpontsystemcatalog.h"
-#include "utils_utf8.h"
 using namespace execplan;
 
 #include "dataconvert.h"
@@ -39,7 +38,6 @@ using namespace execplan;
 #include "idberrorinfo.h"
 #include "errorids.h"
 
-#include "collation.h"
 
 using namespace logging;
 

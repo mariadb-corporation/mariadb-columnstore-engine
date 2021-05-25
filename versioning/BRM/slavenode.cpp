@@ -35,7 +35,6 @@
 #include "brmtypes.h"
 #include "rwlockmonitor.h"
 
-#include "utils_utf8.h"
 #include "IDBPolicy.h"
 
 #include "crashtrace.h"

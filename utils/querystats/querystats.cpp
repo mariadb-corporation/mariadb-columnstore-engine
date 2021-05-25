@@ -21,8 +21,10 @@
 *
 ***********************************************************************/
 
+#define PREFER_MY_CONFIG_H
 #include <my_config.h>
 #include <mysql.h>
+
 #include <string>
 using namespace std;
 

@@ -14,10 +14,8 @@
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1335  USA */
 
 #include "utils_utf8.h"
-#include "collation.h"
 
 #include "mariadb_my_sys.h"
-#include <m_ctype.h>
 
 
 namespace datatypes

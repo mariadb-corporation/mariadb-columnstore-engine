@@ -30,7 +30,6 @@
 
 #include "liboamcpp.h"
 
-#include "collation.h"
 
 using namespace oam;
 

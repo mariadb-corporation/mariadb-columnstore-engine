@@ -27,8 +27,7 @@
  */
 
 #include <stdexcept>
-#include <my_global.h>
-#include <my_sys.h>
+#include "collation.h" // CHARSET_INFO
 #include "ddlpkg.h"
 
 #if defined(_MSC_VER) && defined(xxxDDLPKGSQLPARSER_DLLEXPORT)

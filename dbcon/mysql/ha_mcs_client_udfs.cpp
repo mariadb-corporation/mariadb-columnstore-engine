@@ -17,6 +17,7 @@
    MA 02110-1301, USA. */
 
 #define NEED_CALPONT_INTERFACE
+#define PREFER_MY_CONFIG_H 1
 #include "ha_mcs_impl.h"
 
 #include "ha_mcs_impl_if.h"

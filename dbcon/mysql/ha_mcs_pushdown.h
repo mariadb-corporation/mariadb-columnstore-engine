@@ -18,6 +18,7 @@
 #ifndef HA_MCS_PUSH
 #define HA_MCS_PUSH
 
+#define PREFER_MY_CONFIG_H
 #include "idb_mysql.h"
 #include "ha_mcs.h"
 #include "ha_mcs_sysvars.h"

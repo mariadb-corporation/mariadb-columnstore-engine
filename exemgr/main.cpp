@@ -68,7 +68,6 @@
 #include "MonitorProcMem.h"
 #include "liboamcpp.h"
 #include "crashtrace.h"
-#include "utils_utf8.h"
 #include "service.h"
 
 #include <mutex>
@@ -1697,7 +1696,7 @@ int main(int argc, char* argv[])
     program_invocation_short_name = const_cast<char*>("ExeMgr");
 
     // Initialize the charset library
-    my_init();
+    MY_INIT(argv[0]);
 
     return ServiceExeMgr(opt).Run();
 }

@@ -38,7 +38,6 @@ using namespace execplan;
 #include "idberrorinfo.h"
 #include "errorids.h"
 
-#include "collation.h"
 
 using namespace logging;
 

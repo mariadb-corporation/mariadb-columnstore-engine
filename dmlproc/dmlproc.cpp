@@ -76,7 +76,6 @@ using namespace messageqcpp;
 #include "distributedenginecomm.h"
 using namespace joblist;
 
-#include "utils_utf8.h"
 
 #include "crashtrace.h"
 #include "installdir.h"
@@ -701,7 +700,7 @@ int main(int argc, char** argv)
     // This is unset due to the way we start it
     program_invocation_short_name = const_cast<char*>("DMLProc");
     // Initialize the charset library
-    my_init();
+    MY_INIT(argv[0]);
 
     return ServiceDMLProc(opt).Run();
 }

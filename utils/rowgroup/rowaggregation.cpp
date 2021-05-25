@@ -49,10 +49,8 @@
 #include "funcexp.h"
 #include "rowaggregation.h"
 #include "calpontsystemcatalog.h"
-#include "utils_utf8.h"
 #include "vlarray.h"
 
-#include "collation.h"
 
 //..comment out NDEBUG to enable assertions, uncomment NDEBUG to disable
 //#define NDEBUG

@@ -26,13 +26,12 @@ using namespace std;
 
 #include "functor_str.h"
 #include "functioncolumn.h"
-#include "utils_utf8.h"
+#include "utils_utf8.h"     // idb_mbstowcs()
 using namespace execplan;
 
 #include "rowgroup.h"
 using namespace rowgroup;
 
-#include "collation.h"
 
 namespace funcexp
 {

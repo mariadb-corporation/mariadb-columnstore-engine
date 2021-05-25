@@ -29,10 +29,7 @@ using namespace std;
 #include "functor_int.h"
 #include "functioncolumn.h"
 #include "rowgroup.h"
-#include "utils_utf8.h"
 using namespace execplan;
-
-#include "collation.h"
 
 namespace funcexp
 {

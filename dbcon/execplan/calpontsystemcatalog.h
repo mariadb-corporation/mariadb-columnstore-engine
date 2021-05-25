@@ -50,7 +50,7 @@
 #undef max
 
 #include "mcs_datatype.h"
-#include "collation.h"
+#include "collation.h"     // CHARSET_INFO, class Charset
 
 
 class ExecPlanTest;
