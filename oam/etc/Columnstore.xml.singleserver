@@ -517,6 +517,7 @@
 		<!-- <RowAggrBuckets>32</RowAggrBuckets> --> <!-- Default value is number of cores * 4 -->
 		<!-- <RowAggrRowGroupsPerThread>20</RowAggrRowGroupsPerThread> --> <!-- Default value is 20 -->
 		<!-- <AllowDiskBasedAggregation>N</AllowDiskBasedAggregation> --> <!-- Default value is N -->
+		<!-- <TempDir>/var/lib/columnstore/disk-based-aggr-tmpdir</TempDir> -->
 	</RowAggregation>
 	<CrossEngineSupport>
 		<Host>127.0.0.1</Host>

@@ -1530,22 +1530,18 @@ void RowAggStorage::dump()
 
   // If the generations are allowed and there are less than half of
   // rowgroups in memory, then we start a new generation
-  if ((fAllowGenerations &&
+  if (fAllowGenerations &&
        fStorage->fLRU->size() < fStorage->fRGDatas.size() / 2 &&
-       fStorage->fRGDatas.size() > 10) ||
-      (!fAllowGenerations &&
-       freeMem < leaveFree && freeAttempts == 1))
+       fStorage->fRGDatas.size() > 10)
+  {
+    startNewGeneration();
+  }
+  else if (!fAllowGenerations && freeMem < 0 && freeAttempts == 1)
   {
     // safety guard so aggregation couldn't eat all available memory
-    if (!fAllowGenerations && fStorage->fLRU->size() >= fStorage->fRGDatas.size())
-    {
-      throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
-                                   logging::ERR_DISKAGG_TOO_BIG),
-                               logging::ERR_DISKAGG_TOO_BIG);
-    }
-
-    if (fStorage->fLRU->size() < fStorage->fRGDatas.size())
-      startNewGeneration();
+    throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
+        logging::ERR_DISKAGG_TOO_BIG),
+                             logging::ERR_DISKAGG_TOO_BIG);
   }
 }
 
