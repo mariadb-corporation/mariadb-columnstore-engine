@@ -1537,210 +1537,210 @@ Table	Create Table
 t_1utf32	CREATE TABLE `t_1utf32` (
   `name` varchar(10) DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=utf32
-CREATE TABLE t_34utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_unicode_520_nopad_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_34utf8;
+CREATE TABLE t_34utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_unicode_520_nopad_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_34utf8mb3;
 Table	Create Table
-t_34utf8	CREATE TABLE `t_34utf8` (
-  `name` varchar(10) COLLATE utf8_unicode_520_nopad_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_520_nopad_ci
-CREATE TABLE t_33utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_unicode_nopad_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_33utf8;
+t_34utf8mb3	CREATE TABLE `t_34utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_unicode_520_nopad_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_520_nopad_ci
+CREATE TABLE t_33utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_unicode_nopad_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_33utf8mb3;
 Table	Create Table
-t_33utf8	CREATE TABLE `t_33utf8` (
-  `name` varchar(10) COLLATE utf8_unicode_nopad_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_nopad_ci
-CREATE TABLE t_32utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_nopad_bin' ENGINE=Columnstore;
-SHOW CREATE TABLE t_32utf8;
+t_33utf8mb3	CREATE TABLE `t_33utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_unicode_nopad_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_nopad_ci
+CREATE TABLE t_32utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_nopad_bin' ENGINE=Columnstore;
+SHOW CREATE TABLE t_32utf8mb3;
 Table	Create Table
-t_32utf8	CREATE TABLE `t_32utf8` (
-  `name` varchar(10) COLLATE utf8_nopad_bin DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_nopad_bin
-CREATE TABLE t_31utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_general_nopad_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_31utf8;
+t_32utf8mb3	CREATE TABLE `t_32utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_nopad_bin DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_nopad_bin
+CREATE TABLE t_31utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_general_nopad_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_31utf8mb3;
 Table	Create Table
-t_31utf8	CREATE TABLE `t_31utf8` (
-  `name` varchar(10) COLLATE utf8_general_nopad_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_general_nopad_ci
-CREATE TABLE t_30utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_thai_520_w2' ENGINE=Columnstore;
-SHOW CREATE TABLE t_30utf8;
+t_31utf8mb3	CREATE TABLE `t_31utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_general_nopad_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_nopad_ci
+CREATE TABLE t_30utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_thai_520_w2' ENGINE=Columnstore;
+SHOW CREATE TABLE t_30utf8mb3;
 Table	Create Table
-t_30utf8	CREATE TABLE `t_30utf8` (
-  `name` varchar(10) COLLATE utf8_thai_520_w2 DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_thai_520_w2
-CREATE TABLE t_29utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_myanmar_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_29utf8;
+t_30utf8mb3	CREATE TABLE `t_30utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_thai_520_w2 DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_thai_520_w2
+CREATE TABLE t_29utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_myanmar_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_29utf8mb3;
 Table	Create Table
-t_29utf8	CREATE TABLE `t_29utf8` (
-  `name` varchar(10) COLLATE utf8_myanmar_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_myanmar_ci
-CREATE TABLE t_28utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_croatian_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_28utf8;
+t_29utf8mb3	CREATE TABLE `t_29utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_myanmar_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_myanmar_ci
+CREATE TABLE t_28utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_croatian_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_28utf8mb3;
 Table	Create Table
-t_28utf8	CREATE TABLE `t_28utf8` (
-  `name` varchar(10) COLLATE utf8_croatian_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_croatian_ci
-CREATE TABLE t_27utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_general_mysql500_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_27utf8;
+t_28utf8mb3	CREATE TABLE `t_28utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_croatian_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_croatian_ci
+CREATE TABLE t_27utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_general_mysql500_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_27utf8mb3;
 Table	Create Table
-t_27utf8	CREATE TABLE `t_27utf8` (
-  `name` varchar(10) COLLATE utf8_general_mysql500_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_general_mysql500_ci
-CREATE TABLE t_26utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_vietnamese_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_26utf8;
+t_27utf8mb3	CREATE TABLE `t_27utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_general_mysql500_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_mysql500_ci
+CREATE TABLE t_26utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_vietnamese_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_26utf8mb3;
 Table	Create Table
-t_26utf8	CREATE TABLE `t_26utf8` (
-  `name` varchar(10) COLLATE utf8_vietnamese_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_vietnamese_ci
-CREATE TABLE t_25utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_unicode_520_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_25utf8;
+t_26utf8mb3	CREATE TABLE `t_26utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_vietnamese_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_vietnamese_ci
+CREATE TABLE t_25utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_unicode_520_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_25utf8mb3;
 Table	Create Table
-t_25utf8	CREATE TABLE `t_25utf8` (
-  `name` varchar(10) COLLATE utf8_unicode_520_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_520_ci
-CREATE TABLE t_24utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_croatian_mysql561_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_24utf8;
+t_25utf8mb3	CREATE TABLE `t_25utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_unicode_520_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_520_ci
+CREATE TABLE t_24utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_croatian_mysql561_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_24utf8mb3;
 Table	Create Table
-t_24utf8	CREATE TABLE `t_24utf8` (
-  `name` varchar(10) COLLATE utf8_croatian_mysql561_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_croatian_mysql561_ci
-CREATE TABLE t_23utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_german2_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_23utf8;
+t_24utf8mb3	CREATE TABLE `t_24utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_croatian_mysql561_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_croatian_mysql561_ci
+CREATE TABLE t_23utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_german2_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_23utf8mb3;
 Table	Create Table
-t_23utf8	CREATE TABLE `t_23utf8` (
-  `name` varchar(10) COLLATE utf8_german2_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_german2_ci
-CREATE TABLE t_22utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_sinhala_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_22utf8;
+t_23utf8mb3	CREATE TABLE `t_23utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_german2_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_german2_ci
+CREATE TABLE t_22utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_sinhala_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_22utf8mb3;
 Table	Create Table
-t_22utf8	CREATE TABLE `t_22utf8` (
-  `name` varchar(10) COLLATE utf8_sinhala_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_sinhala_ci
-CREATE TABLE t_21utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_hungarian_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_21utf8;
+t_22utf8mb3	CREATE TABLE `t_22utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_sinhala_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_sinhala_ci
+CREATE TABLE t_21utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_hungarian_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_21utf8mb3;
 Table	Create Table
-t_21utf8	CREATE TABLE `t_21utf8` (
-  `name` varchar(10) COLLATE utf8_hungarian_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_hungarian_ci
-CREATE TABLE t_20utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_esperanto_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_20utf8;
+t_21utf8mb3	CREATE TABLE `t_21utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_hungarian_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_hungarian_ci
+CREATE TABLE t_20utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_esperanto_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_20utf8mb3;
 Table	Create Table
-t_20utf8	CREATE TABLE `t_20utf8` (
-  `name` varchar(10) COLLATE utf8_esperanto_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_esperanto_ci
-CREATE TABLE t_19utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_persian_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_19utf8;
+t_20utf8mb3	CREATE TABLE `t_20utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_esperanto_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_esperanto_ci
+CREATE TABLE t_19utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_persian_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_19utf8mb3;
 Table	Create Table
-t_19utf8	CREATE TABLE `t_19utf8` (
-  `name` varchar(10) COLLATE utf8_persian_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci
-CREATE TABLE t_18utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_roman_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_18utf8;
+t_19utf8mb3	CREATE TABLE `t_19utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_persian_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_persian_ci
+CREATE TABLE t_18utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_roman_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_18utf8mb3;
 Table	Create Table
-t_18utf8	CREATE TABLE `t_18utf8` (
-  `name` varchar(10) COLLATE utf8_roman_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_roman_ci
-CREATE TABLE t_17utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_spanish2_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_17utf8;
+t_18utf8mb3	CREATE TABLE `t_18utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_roman_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_roman_ci
+CREATE TABLE t_17utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_spanish2_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_17utf8mb3;
 Table	Create Table
-t_17utf8	CREATE TABLE `t_17utf8` (
-  `name` varchar(10) COLLATE utf8_spanish2_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci
-CREATE TABLE t_16utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_slovak_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_16utf8;
+t_17utf8mb3	CREATE TABLE `t_17utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_spanish2_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_spanish2_ci
+CREATE TABLE t_16utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_slovak_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_16utf8mb3;
 Table	Create Table
-t_16utf8	CREATE TABLE `t_16utf8` (
-  `name` varchar(10) COLLATE utf8_slovak_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_slovak_ci
-CREATE TABLE t_15utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_lithuanian_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_15utf8;
+t_16utf8mb3	CREATE TABLE `t_16utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_slovak_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_slovak_ci
+CREATE TABLE t_15utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_lithuanian_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_15utf8mb3;
 Table	Create Table
-t_15utf8	CREATE TABLE `t_15utf8` (
-  `name` varchar(10) COLLATE utf8_lithuanian_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_lithuanian_ci
-CREATE TABLE t_14utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_danish_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_14utf8;
+t_15utf8mb3	CREATE TABLE `t_15utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_lithuanian_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_lithuanian_ci
+CREATE TABLE t_14utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_danish_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_14utf8mb3;
 Table	Create Table
-t_14utf8	CREATE TABLE `t_14utf8` (
-  `name` varchar(10) COLLATE utf8_danish_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_danish_ci
-CREATE TABLE t_13utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_czech_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_13utf8;
+t_14utf8mb3	CREATE TABLE `t_14utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_danish_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_danish_ci
+CREATE TABLE t_13utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_czech_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_13utf8mb3;
 Table	Create Table
-t_13utf8	CREATE TABLE `t_13utf8` (
-  `name` varchar(10) COLLATE utf8_czech_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_czech_ci
-CREATE TABLE t_12utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_turkish_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_12utf8;
+t_13utf8mb3	CREATE TABLE `t_13utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_czech_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_czech_ci
+CREATE TABLE t_12utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_turkish_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_12utf8mb3;
 Table	Create Table
-t_12utf8	CREATE TABLE `t_12utf8` (
-  `name` varchar(10) COLLATE utf8_turkish_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_turkish_ci
-CREATE TABLE t_11utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_swedish_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_11utf8;
+t_12utf8mb3	CREATE TABLE `t_12utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_turkish_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_turkish_ci
+CREATE TABLE t_11utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_swedish_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_11utf8mb3;
 Table	Create Table
-t_11utf8	CREATE TABLE `t_11utf8` (
-  `name` varchar(10) COLLATE utf8_swedish_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_swedish_ci
-CREATE TABLE t_10utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_spanish_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_10utf8;
+t_11utf8mb3	CREATE TABLE `t_11utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_swedish_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_swedish_ci
+CREATE TABLE t_10utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_spanish_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_10utf8mb3;
 Table	Create Table
-t_10utf8	CREATE TABLE `t_10utf8` (
-  `name` varchar(10) COLLATE utf8_spanish_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci
-CREATE TABLE t_9utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_estonian_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_9utf8;
+t_10utf8mb3	CREATE TABLE `t_10utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_spanish_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_spanish_ci
+CREATE TABLE t_9utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_estonian_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_9utf8mb3;
 Table	Create Table
-t_9utf8	CREATE TABLE `t_9utf8` (
-  `name` varchar(10) COLLATE utf8_estonian_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_estonian_ci
-CREATE TABLE t_8utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_polish_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_8utf8;
+t_9utf8mb3	CREATE TABLE `t_9utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_estonian_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_estonian_ci
+CREATE TABLE t_8utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_polish_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_8utf8mb3;
 Table	Create Table
-t_8utf8	CREATE TABLE `t_8utf8` (
-  `name` varchar(10) COLLATE utf8_polish_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_polish_ci
-CREATE TABLE t_7utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_slovenian_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_7utf8;
+t_8utf8mb3	CREATE TABLE `t_8utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_polish_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_polish_ci
+CREATE TABLE t_7utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_slovenian_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_7utf8mb3;
 Table	Create Table
-t_7utf8	CREATE TABLE `t_7utf8` (
-  `name` varchar(10) COLLATE utf8_slovenian_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_slovenian_ci
-CREATE TABLE t_6utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_romanian_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_6utf8;
+t_7utf8mb3	CREATE TABLE `t_7utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_slovenian_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_slovenian_ci
+CREATE TABLE t_6utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_romanian_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_6utf8mb3;
 Table	Create Table
-t_6utf8	CREATE TABLE `t_6utf8` (
-  `name` varchar(10) COLLATE utf8_romanian_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_romanian_ci
-CREATE TABLE t_5utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_latvian_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_5utf8;
+t_6utf8mb3	CREATE TABLE `t_6utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_romanian_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_romanian_ci
+CREATE TABLE t_5utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_latvian_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_5utf8mb3;
 Table	Create Table
-t_5utf8	CREATE TABLE `t_5utf8` (
-  `name` varchar(10) COLLATE utf8_latvian_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_latvian_ci
-CREATE TABLE t_4utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_icelandic_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_4utf8;
+t_5utf8mb3	CREATE TABLE `t_5utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_latvian_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_latvian_ci
+CREATE TABLE t_4utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_icelandic_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_4utf8mb3;
 Table	Create Table
-t_4utf8	CREATE TABLE `t_4utf8` (
-  `name` varchar(10) COLLATE utf8_icelandic_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_icelandic_ci
-CREATE TABLE t_3utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_unicode_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_3utf8;
+t_4utf8mb3	CREATE TABLE `t_4utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_icelandic_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_icelandic_ci
+CREATE TABLE t_3utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_unicode_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_3utf8mb3;
 Table	Create Table
-t_3utf8	CREATE TABLE `t_3utf8` (
-  `name` varchar(10) COLLATE utf8_unicode_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci
-CREATE TABLE t_2utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_bin' ENGINE=Columnstore;
-SHOW CREATE TABLE t_2utf8;
+t_3utf8mb3	CREATE TABLE `t_3utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_unicode_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci
+CREATE TABLE t_2utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_bin' ENGINE=Columnstore;
+SHOW CREATE TABLE t_2utf8mb3;
 Table	Create Table
-t_2utf8	CREATE TABLE `t_2utf8` (
-  `name` varchar(10) COLLATE utf8_bin DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8 COLLATE=utf8_bin
-CREATE TABLE t_1utf8(name VARCHAR(10)) CHARSET utf8 COLLATE 'utf8_general_ci' ENGINE=Columnstore;
-SHOW CREATE TABLE t_1utf8;
+t_2utf8mb3	CREATE TABLE `t_2utf8mb3` (
+  `name` varchar(10) COLLATE utf8mb3_bin DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_bin
+CREATE TABLE t_1utf8mb3(name VARCHAR(10)) CHARSET utf8mb3 COLLATE 'utf8mb3_general_ci' ENGINE=Columnstore;
+SHOW CREATE TABLE t_1utf8mb3;
 Table	Create Table
-t_1utf8	CREATE TABLE `t_1utf8` (
+t_1utf8mb3	CREATE TABLE `t_1utf8mb3` (
   `name` varchar(10) DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3
 CREATE TABLE t_33utf8mb4(name VARCHAR(10)) CHARSET utf8mb4 COLLATE 'utf8mb4_unicode_520_nopad_ci' ENGINE=Columnstore;
 SHOW CREATE TABLE t_33utf8mb4;
 Table	Create Table
@@ -3473,209 +3473,209 @@ Table	Create Table
 tcol_1utf32	CREATE TABLE `tcol_1utf32` (
   `name` char(3) CHARACTER SET utf32 DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_34utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_unicode_520_nopad_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_34utf8;
+CREATE TABLE tcol_34utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_unicode_520_nopad_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_34utf8mb3;
 Table	Create Table
-tcol_34utf8	CREATE TABLE `tcol_34utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_unicode_520_nopad_ci DEFAULT NULL
+tcol_34utf8mb3	CREATE TABLE `tcol_34utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_520_nopad_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_33utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_unicode_nopad_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_33utf8;
+CREATE TABLE tcol_33utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_unicode_nopad_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_33utf8mb3;
 Table	Create Table
-tcol_33utf8	CREATE TABLE `tcol_33utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_unicode_nopad_ci DEFAULT NULL
+tcol_33utf8mb3	CREATE TABLE `tcol_33utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_nopad_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_32utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_nopad_bin') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_32utf8;
+CREATE TABLE tcol_32utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_nopad_bin') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_32utf8mb3;
 Table	Create Table
-tcol_32utf8	CREATE TABLE `tcol_32utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_nopad_bin DEFAULT NULL
+tcol_32utf8mb3	CREATE TABLE `tcol_32utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_nopad_bin DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_31utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_general_nopad_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_31utf8;
+CREATE TABLE tcol_31utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_general_nopad_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_31utf8mb3;
 Table	Create Table
-tcol_31utf8	CREATE TABLE `tcol_31utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_general_nopad_ci DEFAULT NULL
+tcol_31utf8mb3	CREATE TABLE `tcol_31utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_nopad_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_30utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_thai_520_w2') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_30utf8;
+CREATE TABLE tcol_30utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_thai_520_w2') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_30utf8mb3;
 Table	Create Table
-tcol_30utf8	CREATE TABLE `tcol_30utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_thai_520_w2 DEFAULT NULL
+tcol_30utf8mb3	CREATE TABLE `tcol_30utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_thai_520_w2 DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_29utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_myanmar_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_29utf8;
+CREATE TABLE tcol_29utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_myanmar_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_29utf8mb3;
 Table	Create Table
-tcol_29utf8	CREATE TABLE `tcol_29utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_myanmar_ci DEFAULT NULL
+tcol_29utf8mb3	CREATE TABLE `tcol_29utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_myanmar_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_28utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_croatian_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_28utf8;
+CREATE TABLE tcol_28utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_croatian_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_28utf8mb3;
 Table	Create Table
-tcol_28utf8	CREATE TABLE `tcol_28utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_croatian_ci DEFAULT NULL
+tcol_28utf8mb3	CREATE TABLE `tcol_28utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_croatian_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_27utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_general_mysql500_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_27utf8;
+CREATE TABLE tcol_27utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_general_mysql500_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_27utf8mb3;
 Table	Create Table
-tcol_27utf8	CREATE TABLE `tcol_27utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_general_mysql500_ci DEFAULT NULL
+tcol_27utf8mb3	CREATE TABLE `tcol_27utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_mysql500_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_26utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_vietnamese_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_26utf8;
+CREATE TABLE tcol_26utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_vietnamese_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_26utf8mb3;
 Table	Create Table
-tcol_26utf8	CREATE TABLE `tcol_26utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_vietnamese_ci DEFAULT NULL
+tcol_26utf8mb3	CREATE TABLE `tcol_26utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_vietnamese_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_25utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_unicode_520_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_25utf8;
+CREATE TABLE tcol_25utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_unicode_520_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_25utf8mb3;
 Table	Create Table
-tcol_25utf8	CREATE TABLE `tcol_25utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_unicode_520_ci DEFAULT NULL
+tcol_25utf8mb3	CREATE TABLE `tcol_25utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_520_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_24utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_croatian_mysql561_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_24utf8;
+CREATE TABLE tcol_24utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_croatian_mysql561_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_24utf8mb3;
 Table	Create Table
-tcol_24utf8	CREATE TABLE `tcol_24utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_croatian_mysql561_ci DEFAULT NULL
+tcol_24utf8mb3	CREATE TABLE `tcol_24utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_croatian_mysql561_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_23utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_german2_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_23utf8;
+CREATE TABLE tcol_23utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_german2_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_23utf8mb3;
 Table	Create Table
-tcol_23utf8	CREATE TABLE `tcol_23utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_german2_ci DEFAULT NULL
+tcol_23utf8mb3	CREATE TABLE `tcol_23utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_german2_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_22utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_sinhala_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_22utf8;
+CREATE TABLE tcol_22utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_sinhala_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_22utf8mb3;
 Table	Create Table
-tcol_22utf8	CREATE TABLE `tcol_22utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_sinhala_ci DEFAULT NULL
+tcol_22utf8mb3	CREATE TABLE `tcol_22utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_sinhala_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_21utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_hungarian_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_21utf8;
+CREATE TABLE tcol_21utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_hungarian_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_21utf8mb3;
 Table	Create Table
-tcol_21utf8	CREATE TABLE `tcol_21utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_hungarian_ci DEFAULT NULL
+tcol_21utf8mb3	CREATE TABLE `tcol_21utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_hungarian_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_20utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_esperanto_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_20utf8;
+CREATE TABLE tcol_20utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_esperanto_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_20utf8mb3;
 Table	Create Table
-tcol_20utf8	CREATE TABLE `tcol_20utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_esperanto_ci DEFAULT NULL
+tcol_20utf8mb3	CREATE TABLE `tcol_20utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_esperanto_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_19utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_persian_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_19utf8;
+CREATE TABLE tcol_19utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_persian_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_19utf8mb3;
 Table	Create Table
-tcol_19utf8	CREATE TABLE `tcol_19utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_persian_ci DEFAULT NULL
+tcol_19utf8mb3	CREATE TABLE `tcol_19utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_persian_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_18utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_roman_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_18utf8;
+CREATE TABLE tcol_18utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_roman_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_18utf8mb3;
 Table	Create Table
-tcol_18utf8	CREATE TABLE `tcol_18utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_roman_ci DEFAULT NULL
+tcol_18utf8mb3	CREATE TABLE `tcol_18utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_roman_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_17utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_spanish2_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_17utf8;
+CREATE TABLE tcol_17utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_spanish2_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_17utf8mb3;
 Table	Create Table
-tcol_17utf8	CREATE TABLE `tcol_17utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_spanish2_ci DEFAULT NULL
+tcol_17utf8mb3	CREATE TABLE `tcol_17utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_spanish2_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_16utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_slovak_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_16utf8;
+CREATE TABLE tcol_16utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_slovak_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_16utf8mb3;
 Table	Create Table
-tcol_16utf8	CREATE TABLE `tcol_16utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_slovak_ci DEFAULT NULL
+tcol_16utf8mb3	CREATE TABLE `tcol_16utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_slovak_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_15utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_lithuanian_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_15utf8;
+CREATE TABLE tcol_15utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_lithuanian_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_15utf8mb3;
 Table	Create Table
-tcol_15utf8	CREATE TABLE `tcol_15utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_lithuanian_ci DEFAULT NULL
+tcol_15utf8mb3	CREATE TABLE `tcol_15utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_lithuanian_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_14utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_danish_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_14utf8;
+CREATE TABLE tcol_14utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_danish_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_14utf8mb3;
 Table	Create Table
-tcol_14utf8	CREATE TABLE `tcol_14utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_danish_ci DEFAULT NULL
+tcol_14utf8mb3	CREATE TABLE `tcol_14utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_danish_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_13utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_czech_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_13utf8;
+CREATE TABLE tcol_13utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_czech_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_13utf8mb3;
 Table	Create Table
-tcol_13utf8	CREATE TABLE `tcol_13utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_czech_ci DEFAULT NULL
+tcol_13utf8mb3	CREATE TABLE `tcol_13utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_czech_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_12utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_turkish_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_12utf8;
+CREATE TABLE tcol_12utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_turkish_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_12utf8mb3;
 Table	Create Table
-tcol_12utf8	CREATE TABLE `tcol_12utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL
+tcol_12utf8mb3	CREATE TABLE `tcol_12utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_turkish_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_11utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_swedish_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_11utf8;
+CREATE TABLE tcol_11utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_swedish_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_11utf8mb3;
 Table	Create Table
-tcol_11utf8	CREATE TABLE `tcol_11utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_swedish_ci DEFAULT NULL
+tcol_11utf8mb3	CREATE TABLE `tcol_11utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_swedish_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_10utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_spanish_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_10utf8;
+CREATE TABLE tcol_10utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_spanish_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_10utf8mb3;
 Table	Create Table
-tcol_10utf8	CREATE TABLE `tcol_10utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_spanish_ci DEFAULT NULL
+tcol_10utf8mb3	CREATE TABLE `tcol_10utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_spanish_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_9utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_estonian_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_9utf8;
+CREATE TABLE tcol_9utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_estonian_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_9utf8mb3;
 Table	Create Table
-tcol_9utf8	CREATE TABLE `tcol_9utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_estonian_ci DEFAULT NULL
+tcol_9utf8mb3	CREATE TABLE `tcol_9utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_estonian_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_8utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_polish_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_8utf8;
+CREATE TABLE tcol_8utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_polish_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_8utf8mb3;
 Table	Create Table
-tcol_8utf8	CREATE TABLE `tcol_8utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_polish_ci DEFAULT NULL
+tcol_8utf8mb3	CREATE TABLE `tcol_8utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_polish_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_7utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_slovenian_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_7utf8;
+CREATE TABLE tcol_7utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_slovenian_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_7utf8mb3;
 Table	Create Table
-tcol_7utf8	CREATE TABLE `tcol_7utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_slovenian_ci DEFAULT NULL
+tcol_7utf8mb3	CREATE TABLE `tcol_7utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_slovenian_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_6utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_romanian_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_6utf8;
+CREATE TABLE tcol_6utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_romanian_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_6utf8mb3;
 Table	Create Table
-tcol_6utf8	CREATE TABLE `tcol_6utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_romanian_ci DEFAULT NULL
+tcol_6utf8mb3	CREATE TABLE `tcol_6utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_romanian_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_5utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_latvian_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_5utf8;
+CREATE TABLE tcol_5utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_latvian_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_5utf8mb3;
 Table	Create Table
-tcol_5utf8	CREATE TABLE `tcol_5utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_latvian_ci DEFAULT NULL
+tcol_5utf8mb3	CREATE TABLE `tcol_5utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_latvian_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_4utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_icelandic_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_4utf8;
+CREATE TABLE tcol_4utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_icelandic_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_4utf8mb3;
 Table	Create Table
-tcol_4utf8	CREATE TABLE `tcol_4utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_icelandic_ci DEFAULT NULL
+tcol_4utf8mb3	CREATE TABLE `tcol_4utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_icelandic_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_3utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_unicode_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_3utf8;
+CREATE TABLE tcol_3utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_unicode_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_3utf8mb3;
 Table	Create Table
-tcol_3utf8	CREATE TABLE `tcol_3utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_unicode_ci DEFAULT NULL
+tcol_3utf8mb3	CREATE TABLE `tcol_3utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_ci DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_2utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_bin') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_2utf8;
+CREATE TABLE tcol_2utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_bin') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_2utf8mb3;
 Table	Create Table
-tcol_2utf8	CREATE TABLE `tcol_2utf8` (
-  `name` char(3) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL
+tcol_2utf8mb3	CREATE TABLE `tcol_2utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
-CREATE TABLE tcol_1utf8 (name CHAR(3) CHARACTER SET utf8 COLLATE 'utf8_general_ci') ENGINE=Columnstore;
-SHOW CREATE TABLE tcol_1utf8;
+CREATE TABLE tcol_1utf8mb3 (name CHAR(3) CHARACTER SET utf8mb3 COLLATE 'utf8mb3_general_ci') ENGINE=Columnstore;
+SHOW CREATE TABLE tcol_1utf8mb3;
 Table	Create Table
-tcol_1utf8	CREATE TABLE `tcol_1utf8` (
-  `name` char(3) CHARACTER SET utf8 DEFAULT NULL
+tcol_1utf8mb3	CREATE TABLE `tcol_1utf8mb3` (
+  `name` char(3) CHARACTER SET utf8mb3 DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
 CREATE TABLE tcol_33utf8mb4 (name CHAR(3) CHARACTER SET utf8mb4 COLLATE 'utf8mb4_unicode_520_nopad_ci') ENGINE=Columnstore;
 SHOW CREATE TABLE tcol_33utf8mb4;
