@@ -58,7 +58,7 @@ struct ExtCPInfo
     ExtCPInfo(execplan::CalpontSystemCatalog::ColDataType colType, int colWidth)
         : fColType(colType), fColWidth(colWidth)
     {
-        fCPInfo.isBinaryColumn = colWidth > datatypes::MAXLEGACYWIDTH;
+        fCPInfo.isBinaryColumn = (unsigned int)colWidth > datatypes::MAXLEGACYWIDTH;
     }
     void toInvalid()
     {
