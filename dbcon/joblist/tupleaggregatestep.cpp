@@ -344,11 +344,11 @@ void wideDecimalOrLongDouble(const uint64_t colProj,
     const CalpontSystemCatalog::ColDataType type,
     const vector<uint32_t>& precisionProj,
     const vector<uint32_t>& scaleProj,
-    const vector<uint32_t>& width,
+    const vector<uint64_t>& width,
     vector<CalpontSystemCatalog::ColDataType>& typeAgg,
     vector<uint32_t>& scaleAgg,
     vector<uint32_t>& precisionAgg,
-    vector<uint32_t>& widthAgg)
+    vector<uint64_t>& widthAgg)
 {
     if ((type == CalpontSystemCatalog::DECIMAL
         || type == CalpontSystemCatalog::UDECIMAL)
@@ -1077,11 +1077,11 @@ void TupleAggregateStep::prep1PhaseAggregate(
     vector<uint32_t> precisionAgg;
     vector<CalpontSystemCatalog::ColDataType> typeAgg;
     vector<uint32_t> csNumAgg;
-    vector<uint32_t> widthAgg;
+    vector<uint64_t> widthAgg;
     vector<SP_ROWAGG_GRPBY_t> groupBy;
     vector<SP_ROWAGG_FUNC_t> functionVec;
-    uint32_t bigIntWidth = sizeof(int64_t);
-    uint32_t bigUintWidth = sizeof(uint64_t);
+    uint64_t bigIntWidth = sizeof(int64_t);
+    uint64_t bigUintWidth = sizeof(uint64_t);
     // For UDAF
     uint32_t projColsUDAFIdx = 0;
     UDAFColumn* udafc = NULL;
@@ -1090,7 +1090,7 @@ void TupleAggregateStep::prep1PhaseAggregate(
     map<uint32_t, SP_ROWAGG_FUNC_t> avgFuncMap;
 
     // collect the projected column info, prepare for aggregation
-    vector<uint32_t> width;
+    vector<uint64_t> width;
     map<uint32_t, int> projColPosMap;
 
     for (uint64_t i = 0; i < keysProj.size(); i++)
@@ -1154,7 +1154,7 @@ void TupleAggregateStep::prep1PhaseAggregate(
         {
             TupleInfo ti = getTupleInfo(key, jobInfo);
             uint32_t ptrSize = sizeof(GroupConcatAg*);
-            uint32_t width = (ti.width >= ptrSize) ? ti.width : ptrSize;
+            uint64_t width = (ti.width >= ptrSize) ? ti.width : ptrSize;
             oidsAgg.push_back(ti.oid);
             keysAgg.push_back(key);
             scaleAgg.push_back(ti.scale);
@@ -1331,7 +1331,7 @@ void TupleAggregateStep::prep1PhaseAggregate(
                 precisionAgg.push_back(precisionProj[colProj]);
                 typeAgg.push_back(typeProj[colProj]);
                 csNumAgg.push_back(csNumProj[colProj]);
-               widthAgg.push_back(width[colProj]);
+                widthAgg.push_back(width[colProj]);
             }
             break;
 
@@ -1645,10 +1645,10 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
     vector<uint32_t> precisionAgg, precisionAggDist;
     vector<CalpontSystemCatalog::ColDataType> typeAgg, typeAggDist;
     vector<uint32_t> csNumAgg, csNumAggDist;
-    vector<uint32_t> widthProj, widthAgg, widthAggDist;
+    vector<uint64_t> widthProj, widthAgg, widthAggDist;
     vector<SP_ROWAGG_GRPBY_t> groupBy, groupByNoDist;
     vector<SP_ROWAGG_FUNC_t> functionVec1, functionVec2, functionNoDistVec;
-    uint32_t bigIntWidth = sizeof(int64_t);
+    uint64_t bigIntWidth = sizeof(int64_t);
     // map key = column key, operation (enum), and UDAF pointer if UDAF.
     AGG_MAP aggFuncMap;
 //    set<uint32_t> avgSet;
@@ -1777,7 +1777,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
             if (aggOp == ROWAGG_GROUP_CONCAT)
             {
                 TupleInfo ti = getTupleInfo(aggKey, jobInfo);
-                uint32_t width = sizeof(GroupConcatAg*);
+                uint64_t width = sizeof(GroupConcatAg*);
                 oidsAgg.push_back(ti.oid);
                 keysAgg.push_back(aggKey);
                 scaleAgg.push_back(ti.scale);
@@ -2280,7 +2280,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                         precisionAggDist.push_back(precisionAgg[colAgg]);
                         typeAggDist.push_back(typeAgg[colAgg]);
                         csNumAggDist.push_back(csNumAgg[colAgg]);
-                        uint32_t width = widthAgg[colAgg];
+                        uint64_t width = widthAgg[colAgg];
 
                         if (aggOp == ROWAGG_GROUP_CONCAT)
                         {
@@ -2687,7 +2687,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
         vector<uint32_t> precisionAggGb, precisionAggSub;
         vector<CalpontSystemCatalog::ColDataType> typeAggGb, typeAggSub;
         vector<uint32_t> csNumAggGb, csNumAggSub;
-        vector<uint32_t> widthAggGb, widthAggSub;
+        vector<uint64_t> widthAggGb, widthAggSub;
 
         // populate groupby column info
         for (uint64_t i = 0; i < jobInfo.groupByColVec.size(); i++)
@@ -2963,11 +2963,11 @@ void TupleAggregateStep::prep2PhasesAggregate(
     vector<uint32_t> precisionAggPm, precisionAggUm;
     vector<CalpontSystemCatalog::ColDataType> typeAggPm, typeAggUm;
     vector<uint32_t> csNumAggPm, csNumAggUm;
-    vector<uint32_t> widthAggPm, widthAggUm;
+    vector<uint64_t> widthAggPm, widthAggUm;
     vector<SP_ROWAGG_GRPBY_t> groupByPm, groupByUm;
     vector<SP_ROWAGG_FUNC_t> functionVecPm, functionVecUm;
-    uint32_t bigIntWidth = sizeof(int64_t);
-    uint32_t bigUintWidth = sizeof(uint64_t);
+    uint64_t bigIntWidth = sizeof(int64_t);
+    uint64_t bigUintWidth = sizeof(uint64_t);
     AGG_MAP aggFuncMap;
 
     // associate the columns between projected RG and aggregate RG on PM
@@ -2977,7 +2977,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
     {
         // project only unique oids, but they may be repeated in aggregation
         // collect the projected column info, prepare for aggregation
-        vector<uint32_t> width;
+        vector<uint64_t> width;
         map<uint32_t, int> projColPosMap;
 
         for (uint64_t i = 0; i < keysProj.size(); i++)
@@ -3836,13 +3836,13 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
     vector<uint32_t> precisionAggPm, precisionAggUm, precisionAggDist;
     vector<CalpontSystemCatalog::ColDataType> typeAggPm, typeAggUm, typeAggDist;
     vector<uint32_t> csNumAggPm, csNumAggUm, csNumAggDist;
-    vector<uint32_t> widthAggPm, widthAggUm, widthAggDist;
+    vector<uint64_t> widthAggPm, widthAggUm, widthAggDist;
 
     vector<SP_ROWAGG_GRPBY_t> groupByPm, groupByUm, groupByNoDist;
     vector<SP_ROWAGG_FUNC_t> functionVecPm, functionNoDistVec, functionVecUm;
     list<uint32_t> multiParmIndexes;
 
-    uint32_t bigIntWidth = sizeof(int64_t);
+    uint64_t bigIntWidth = sizeof(int64_t);
     map<pair<uint32_t, int>, uint64_t> avgFuncDistMap;
     AGG_MAP aggFuncMap;
 
@@ -3853,7 +3853,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
     {
         // project only unique oids, but they may be repeated in aggregation
         // collect the projected column info, prepare for aggregation
-        vector<uint32_t> width;
+        vector<uint64_t> width;
         map<uint32_t, int> projColPosMap;
 
         for (uint64_t i = 0; i < keysProj.size(); i++)
@@ -4840,7 +4840,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
         vector<uint32_t> precisionAggGb, precisionAggSub;
         vector<CalpontSystemCatalog::ColDataType> typeAggGb, typeAggSub;
         vector<uint32_t> csNumAggGb, csNumAggSub;
-        vector<uint32_t> widthAggGb, widthAggSub;
+        vector<uint64_t> widthAggGb, widthAggSub;
 
         // populate groupby column info
         for (uint64_t i = 0; i < jobInfo.groupByColVec.size(); i++)

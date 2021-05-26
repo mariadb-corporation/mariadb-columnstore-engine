@@ -3586,12 +3586,14 @@ uint8_t WE_DDLCommandProc::fillNewColumn(ByteStream& bs, std::string& err)
 {
     int rc = 0;
     uint32_t tmp32;
+    uint32_t tmp64;
     uint8_t tmp8;
     int txnID;
     OID dataOid, dictOid, refColOID;
     CalpontSystemCatalog::ColDataType dataType, refColDataType;
     bool autoincrement;
-    int dataWidth, scale, precision, compressionType, refColWidth, refCompressionType;
+    int scale, precision, compressionType, refCompressionType;
+    uint64_t dataWidth, refColWidth;
     string defaultValStr;
     ColTuple defaultVal;
     string timeZone;
@@ -3606,8 +3608,8 @@ uint8_t WE_DDLCommandProc::fillNewColumn(ByteStream& bs, std::string& err)
     dataType = (CalpontSystemCatalog::ColDataType) tmp8;
     bs >> tmp8;
     autoincrement = (tmp8 != 0);
-    bs >> tmp32;
-    dataWidth = tmp32;
+    bs >> tmp64;
+    dataWidth = tmp64;
     bs >> tmp32;
     scale = tmp32;
     bs >> tmp32;
@@ -3619,8 +3621,8 @@ uint8_t WE_DDLCommandProc::fillNewColumn(ByteStream& bs, std::string& err)
     refColOID = tmp32;
     bs >> tmp8;
     refColDataType = (CalpontSystemCatalog::ColDataType) tmp8;
-    bs >> tmp32;
-    refColWidth = tmp32;
+    bs >> tmp64;
+    refColWidth = tmp64;
     bs >> tmp8;
     refCompressionType = tmp8;
     bs >> timeZone;

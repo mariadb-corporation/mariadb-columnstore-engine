@@ -588,7 +588,7 @@ private:
     uint64_t* oldOffsets;
     uint64_t* stOffsets;
     uint64_t* offsets;
-    uint32_t* colWidths;
+    uint64_t* colWidths;
     execplan::CalpontSystemCatalog::ColDataType* types;
     uint32_t* charsetNumbers;
     CHARSET_INFO** charsets;
@@ -1522,12 +1522,12 @@ public:
     void serialize(messageqcpp::ByteStream&) const;
     void deserialize(messageqcpp::ByteStream&);
 
-    uint32_t getColumnWidth(uint32_t col) const;
+    uint64_t getColumnWidth(uint32_t col) const;
     uint32_t getColumnCount() const;
     inline const std::vector<uint64_t>& getOffsets() const;
     inline const std::vector<uint32_t>& getOIDs() const;
     inline const std::vector<uint32_t>& getKeys() const;
-    inline const std::vector<uint32_t>& getColWidths() const;
+    inline const std::vector<uint64_t>& getColWidths() const;
     inline execplan::CalpontSystemCatalog::ColDataType getColType(uint32_t colIndex) const;
     inline const std::vector<execplan::CalpontSystemCatalog::ColDataType>& getColTypes() const;
     inline std::vector<execplan::CalpontSystemCatalog::ColDataType>& getColTypes();
@@ -1607,7 +1607,7 @@ private:
     std::vector<uint64_t> oldOffsets; //inline data offsets
     std::vector<uint64_t> stOffsets;  //string table offsets
     uint64_t* offsets;   //offsets either points to oldOffsets or stOffsets
-    std::vector<uint32_t> colWidths;
+    std::vector<uint64_t> colWidths;
     // oids: the real oid of the column, may have duplicates with alias.
     // This oid is necessary for front-end to decide the real column width.
     std::vector<uint32_t> oids;
@@ -1751,7 +1751,7 @@ void RowGroup::initRow(Row* r, bool useStringStore) const
 
     if (LIKELY(!types.empty()))
     {
-        r->colWidths = (uint32_t*) &colWidths[0];
+        r->colWidths = (uint64_t*) &colWidths[0];
         r->types = (execplan::CalpontSystemCatalog::ColDataType*) & (types[0]);
         r->charsetNumbers = (uint32_t*) & (charsetNumbers[0]);
         r->charsets = (CHARSET_INFO**) & (charsets[0]);
@@ -1880,7 +1880,7 @@ inline const std::vector<uint32_t>& RowGroup::getPrecision() const
     return precision;
 }
 
-inline const std::vector<uint32_t>& RowGroup::getColWidths() const
+inline const std::vector<uint64_t>& RowGroup::getColWidths() const
 {
     return colWidths;
 }

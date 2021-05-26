@@ -1325,7 +1325,7 @@ void RowGroup::serialize(ByteStream& bs) const
     bs << columnCount;
     serializeInlineVector<uint64_t>(bs, oldOffsets);
     serializeInlineVector<uint64_t>(bs, stOffsets);
-    serializeInlineVector<uint32_t>(bs, colWidths);
+    serializeInlineVector<uint64_t>(bs, colWidths);
     serializeInlineVector<uint32_t>(bs, oids);
     serializeInlineVector<uint32_t>(bs, keys);
     serializeInlineVector<CalpontSystemCatalog::ColDataType>(bs, types);
@@ -1346,7 +1346,7 @@ void RowGroup::deserialize(ByteStream& bs)
     bs >> columnCount;
     deserializeInlineVector<uint64_t>(bs, oldOffsets);
     deserializeInlineVector<uint64_t>(bs, stOffsets);
-    deserializeInlineVector<uint32_t>(bs, colWidths);
+    deserializeInlineVector<uint64_t>(bs, colWidths);
     deserializeInlineVector<uint32_t>(bs, oids);
     deserializeInlineVector<uint32_t>(bs, keys);
     deserializeInlineVector<CalpontSystemCatalog::ColDataType>(bs, types);
@@ -1430,7 +1430,7 @@ void RowGroup::setStatus(uint16_t err)
     *((uint16_t*) &data[statusOffset]) = err;
 }
 
-uint32_t RowGroup::getColumnWidth(uint32_t col) const
+uint64_t RowGroup::getColumnWidth(uint32_t col) const
 {
     return colWidths[col];
 }

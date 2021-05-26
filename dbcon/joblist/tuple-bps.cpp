@@ -540,7 +540,7 @@ void TupleBPS::setBPP(JobStep* jobStep)
 
     pColStep* pcsp = dynamic_cast<pColStep*>(jobStep);
 
-    int colWidth = 0;
+    uint64_t colWidth = 0;
 
     if (pcsp != 0)
     {
@@ -661,7 +661,7 @@ void TupleBPS::setBPP(JobStep* jobStep)
 
 void TupleBPS::setProjectBPP(JobStep* jobStep1, JobStep* jobStep2)
 {
-    int colWidth = 0;
+    uint64_t colWidth = 0;
 
     if (jobStep2 != NULL)
     {

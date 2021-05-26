@@ -102,7 +102,7 @@ inline int64_t getIntNullValue(int colType)
 }
 
 
-inline uint64_t getUintNullValue(int colType, int colWidth = 0)
+inline uint64_t getUintNullValue(int colType, uint64_t colWidth = 0)
 {
     switch (colType)
     {
@@ -453,7 +453,7 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
         case execplan::CalpontSystemCatalog::VARCHAR:
         case execplan::CalpontSystemCatalog::TEXT:
         {
-            int colWidth = pRowGroup->getColumnWidth(col);
+            uint64_t colWidth = pRowGroup->getColumnWidth(col);
 
             // bug 1853, use token to check null
             // scale here is used to indicate token, not real string.
@@ -1081,7 +1081,7 @@ void RowAggregation::initMapData(const Row& rowIn)
             case execplan::CalpontSystemCatalog::VARCHAR:
             case execplan::CalpontSystemCatalog::TEXT:
             {
-                int colWidth = fRowGroupIn.getColumnWidth(colIn);
+                uint64_t colWidth = fRowGroupIn.getColumnWidth(colIn);
 
                 if (colWidth <= 8)
                 {
@@ -1207,7 +1207,7 @@ void RowAggregation::makeAggFieldsNull(Row& row)
             case execplan::CalpontSystemCatalog::DECIMAL:
             case execplan::CalpontSystemCatalog::UDECIMAL:
             {
-                int colWidth = fRowGroupOut->getColumnWidth(colOut);
+                uint64_t colWidth = fRowGroupOut->getColumnWidth(colOut);
                 if (LIKELY(colWidth == datatypes::MAXDECIMALWIDTH))
                 {
                     uint32_t offset = row.getOffset(colOut);
@@ -1234,7 +1234,7 @@ void RowAggregation::makeAggFieldsNull(Row& row)
             case execplan::CalpontSystemCatalog::VARBINARY:
             case execplan::CalpontSystemCatalog::BLOB:
             {
-                int colWidth = fRowGroupOut->getColumnWidth(colOut);
+                uint64_t colWidth = fRowGroupOut->getColumnWidth(colOut);
 
                 if (colWidth <= datatypes::MAXLEGACYWIDTH)
                 {
