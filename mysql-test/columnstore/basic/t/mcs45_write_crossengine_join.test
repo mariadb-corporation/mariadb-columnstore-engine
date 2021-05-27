@@ -2,7 +2,14 @@
 # Update and Delete using Cross engine join
 # Author: Bharath, bharath.bokka@mariadb.com
 #
+-- source include/have_innodb.inc
 -- source ../include/have_columnstore.inc
+
+if (!$MASTER_MYPORT)
+{
+  # Running with --extern
+  let $MASTER_MYPORT=`SELECT @@port`;
+}
 
 --disable_warnings
 DROP DATABASE IF EXISTS mcs45_db;
@@ -15,8 +22,10 @@ USE mcs45_db;
 # Enable cross engine join
 # Configure user and password in Columnstore.xml file
 #
---exec /usr/bin/mcsSetConfig CrossEngineSupport User 'cejuser'
---exec /usr/bin/mcsSetConfig CrossEngineSupport Password 'Vagrant1|0000001'
+--exec $MCS_MCSSETCONFIG CrossEngineSupport User 'cejuser'
+--exec $MCS_MCSSETCONFIG CrossEngineSupport Password 'Vagrant1|0000001'
+--exec $MCS_MCSSETCONFIG CrossEngineSupport Port $MASTER_MYPORT
+
 #
 # Create corresponding in the server
 #
