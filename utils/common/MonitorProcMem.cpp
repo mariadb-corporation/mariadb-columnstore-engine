@@ -46,6 +46,8 @@ using namespace logging;
 namespace utils
 {
 
+size_t   MonitorProcMem::fMaxPrimProcPct = 0;
+uint64_t MonitorProcMem::fUsedMem = 0;
 uint64_t MonitorProcMem::fMemTotal = 1;
 uint64_t MonitorProcMem::fMemFree = 0;
 int      MonitorProcMem::fMemPctCheck = 0;
@@ -59,9 +61,12 @@ void MonitorProcMem::operator()() const
 {
     while (1)
     {
+        fUsedMem = rss();
+        //cout << "Mem Used " << fUsedMem << endl;
+/*
         if (fMaxPct > 0)
         {
-            size_t pct = rss() * 100 / fMemTotal;
+            size_t pct = fUsedMem * 100 / fMemTotal;
 
             if (pct > fMaxPct)
             {
@@ -73,9 +78,9 @@ void MonitorProcMem::operator()() const
                 msg.format(args);
                 logging::Logger logger(logid.fSubsysID);
                 logger.logMessage(LOG_TYPE_CRITICAL, msg, logid);
-                exit(1);
             }
         }
+*/
 
         fMemFree = cg.getFreeMemory();
         //calculateFreeMem();
@@ -84,12 +89,12 @@ void MonitorProcMem::operator()() const
 }
 
 //------------------------------------------------------------------------------
-// Returns the maximum memory available on the current host this process is
-// running on.
+// Modified this to account for a large portion of the total memory should
+// NOT be available to PrimProc
 //------------------------------------------------------------------------------
 size_t MonitorProcMem::memTotal() const
 {
-    return cg.getTotalMemory();
+    return ((cg.getTotalMemory()*fMaxPct)/100);
 }
 
 //------------------------------------------------------------------------------
@@ -135,7 +140,6 @@ size_t MonitorProcMem::rss() const
 
     in >> x;
     in >> rss;
-
     //rss is now in pages, convert to bytes
     rss *= fPageSize;
 #endif
@@ -151,8 +155,8 @@ void MonitorProcMem::pause_( ) const
     struct timespec req;
     struct timespec rem;
 
-    req.tv_sec  = fSleepSec;
-    req.tv_nsec = 0;
+    req.tv_sec  = 0;
+    req.tv_nsec = 500000000;
 
     rem.tv_sec  = 0;
     rem.tv_nsec = 0;
@@ -182,7 +186,17 @@ void MonitorProcMem::pause_( ) const
 //------------------------------------------------------------------------------
 unsigned MonitorProcMem::memUsedPct()
 {
-    return ((100 * (fMemTotal - fMemFree)) / fMemTotal);
+    return ((100 * fUsedMem) / fMemTotal);
+}
+
+//------------------------------------------------------------------------------
+// Returns the system used memory %
+//------------------------------------------------------------------------------
+bool MonitorProcMem::checkMemlimit()
+{
+    if (fUsedMem > fMemTotal)
+        return true;
+    return false;
 }
 
 //------------------------------------------------------------------------------
