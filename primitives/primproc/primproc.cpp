@@ -402,7 +402,6 @@ int ServicePrimProc::Child()
 
     if (err < 0)
     {
-        Oam oam;
         mlp->logMessage(errMsg);
         cerr << errMsg << endl;
 
@@ -438,6 +437,15 @@ int ServicePrimProc::Child()
     int configNumCores = -1;
     uint32_t highPriorityPercentage, medPriorityPercentage, lowPriorityPercentage;
     utils::CGroupConfigurator cg;
+
+    if (cg.getTotalMemory() < 3221225472)
+    {
+        string errMsg = "Warning total memory available is less than 3GB.";
+        mlp->logMessage(errMsg,false);
+        cerr << errMsg << endl;
+
+        NotifyServiceInitializationFailed();
+    }
 
     gDebugLevel = primitiveprocessor::NONE;
 
@@ -503,6 +511,26 @@ int ServicePrimProc::Child()
     // to accomodate 8192 values of the widest non-dict column + 8192 RIDs + ohead.
     defaultBufferSize = 150 * 1024;
 
+    int maxPct = 70; //Reusing this as a method to kill queries on high memory usage threshold
+    temp = toInt(cf->getConfig(primitiveServers, "MaxPct"));
+
+    if (temp >= 0)
+        maxPct = temp;
+
+    // @bug4507, configurable pm aggregation AggregationMemoryCheck
+    // We could use this same mechanism for other growing buffers.
+    int aggPct = 95;
+    temp = toInt(cf->getConfig("SystemConfig", "MemoryCheckPercent"));
+
+    if (temp >= 0)
+        aggPct = temp;
+
+    //...Start the thread to monitor our memory usage
+    // This is just to print a warning right now ...
+    // PrimProc should be able to grab as much as it can but
+    // warn at 75% of total memory - 500MB allowing for default
+    // TotalUMmem and saving a portion for cpimport.bin process if needed
+    new boost::thread(utils::MonitorProcMem(maxPct, aggPct, 28));
 
     // This parm controls whether we rotate through the output sockets
     // when deciding where to send response messages, or whether to simply
@@ -616,23 +644,6 @@ int ServicePrimProc::Child()
         prefetchThreshold = 0;
     else
         prefetchThreshold = temp / 100.0;
-
-    int maxPct = 0; //disable by default
-    temp = toInt(cf->getConfig(primitiveServers, "MaxPct"));
-
-    if (temp >= 0)
-        maxPct = temp;
-
-    // @bug4507, configurable pm aggregation AggregationMemoryCheck
-    // We could use this same mechanism for other growing buffers.
-    int aggPct = 95;
-    temp = toInt(cf->getConfig("SystemConfig", "MemoryCheckPercent"));
-
-    if (temp >= 0)
-        aggPct = temp;
-
-    //...Start the thread to monitor our memory usage
-    new boost::thread(utils::MonitorProcMem(maxPct, aggPct, 28));
 
     // config file priority is 40..1 (highest..lowest)
     string sPriority = cf->getConfig(primitiveServers, "Priority");

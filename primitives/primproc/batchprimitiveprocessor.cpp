@@ -1415,6 +1415,11 @@ void BatchPrimitiveProcessor::execute()
 
     try
     {
+        // Check memory up front
+        if (MonitorProcMem::checkMemlimit())
+        {
+            throw logging::IDBExcept(logging::ERR_PRIMPROC_LOW_MEMORY);
+        }
 #ifdef PRIMPROC_STOPWATCH
         stopwatch->start("BatchPrimitiveProcessor::execute first part");
 #endif
@@ -1751,6 +1756,10 @@ void BatchPrimitiveProcessor::execute()
                     {
                         //cerr <<" * serialzing " << nextRG.toString() << endl;
                         nextRG.serializeRGData(*serialized);
+                        if (MonitorProcMem::checkMemlimit())
+                        {
+                            throw logging::IDBExcept(logging::ERR_PRIMPROC_LOW_MEMORY);
+                        }
                     }
 
                     /* send the msg & reinit the BS */
@@ -1798,6 +1807,10 @@ void BatchPrimitiveProcessor::execute()
                     *serialized << (uint8_t) 1;  // the "count this msg" var
                     fe2Output.setDBRoot(dbRoot);
                     fe2Output.serializeRGData(*serialized);
+                    if (MonitorProcMem::checkMemlimit())
+                    {
+                        throw logging::IDBExcept(logging::ERR_PRIMPROC_LOW_MEMORY);
+                    }
                     //*serialized << fe2Output.getDataSize();
                     //serialized->append(fe2Output.getData(), fe2Output.getDataSize());
                 }
@@ -1838,7 +1851,10 @@ void BatchPrimitiveProcessor::execute()
                 outputRG.setDBRoot(dbRoot);
                 //cerr << "serializing " << outputRG.toString() << endl;
                 outputRG.serializeRGData(*serialized);
-
+                if (MonitorProcMem::checkMemlimit())
+                {
+                    throw logging::IDBExcept(logging::ERR_PRIMPROC_LOW_MEMORY);
+                }
                 //*serialized << outputRG.getDataSize();
                 //serialized->append(outputRG.getData(), outputRG.getDataSize());
                 if (doJoin)
@@ -2784,6 +2800,22 @@ void BatchPrimitiveProcessor::buildVSSCache(uint32_t loopCount)
             vssCache.insert(make_pair(lbidList[i], vssData[i]));
 
 //	cout << "buildVSSCache inserted " << vssCache.size() << " elements" << endl;
+}
+
+void BatchPrimitiveProcessor::resetMem()
+{
+    serialized.reset();
+    outputMsg.reset();
+    std::vector<SCommand>().swap(filterSteps);
+    std::vector<SCommand>().swap(projectSteps);
+    vssCache.clear();
+#ifndef __FreeBSD__
+    pthread_mutex_unlock(&objLock);
+#endif
+    outRowGroupData.reset();
+    fe1Data.reset();
+    fe2Data.reset();
+    joinedRGMem.reset();
 }
 
 }

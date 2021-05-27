@@ -177,6 +177,7 @@ public:
     {
         return outMsgSize;
     }
+    void resetMem();
 private:
     BatchPrimitiveProcessor();
     BatchPrimitiveProcessor(const BatchPrimitiveProcessor&);
