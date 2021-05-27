@@ -264,7 +264,10 @@
 		-->
  		<hdfsRdwrScratch>/rdwrscratch</hdfsRdwrScratch> <!-- Do not set to an hdfs file path -->
  		<TempFileDir>/columnstore_tmp_files</TempFileDir>
- 		<SystemTempFileDir>/tmp/columnstore_tmp_files</SystemTempFileDir>
+		<!-- Be careful modifying SystemTempFileDir!  On start, ExeMgr deletes
+			the entire subdirectories "joins" & "aggregates" and recreates it to make sure no
+			files are left behind. -->
+		<SystemTempFileDir>/tmp/columnstore_tmp_files</SystemTempFileDir>
 	</SystemConfig>
 	<SystemModuleConfig>
 		<ModuleType1>dm</ModuleType1>
@@ -489,10 +492,6 @@
 		<TotalUmMemory>25%</TotalUmMemory>
 		<CPUniqueLimit>100</CPUniqueLimit>
 		<AllowDiskBasedJoin>N</AllowDiskBasedJoin>
-		<!-- Be careful modifying TempFilePath!  On start, ExeMgr deletes
-			the entire directory and recreates it to make sure no
-			files are left behind.
-		<TempFilePath>/tmp/cs-diskjoin</TempFilePath>  -->
 		<TempFileCompression>Y</TempFileCompression>
 	</HashJoin>
 	<JobList>
@@ -519,11 +518,10 @@
 		<MaxBuckets>512</MaxBuckets>            <!-- Number of buckets -->
 	</TupleWSDL>
 	<RowAggregation>
-               <!-- <RowAggrThreads>4</RowAggrThreads> --> <!-- Default value is the number of cores -->
+		<!-- <RowAggrThreads>4</RowAggrThreads> --> <!-- Default value is the number of cores -->
 		<!-- <RowAggrBuckets>32</RowAggrBuckets> --> <!-- Default value is number of cores * 4 -->
 		<!-- <RowAggrRowGroupsPerThread>20</RowAggrRowGroupsPerThread> --> <!-- Default value is 20 -->
 		<!-- <AllowDiskBasedAggregation>N</AllowDiskBasedAggregation> --> <!-- Default value is N -->
-		<!-- <TempDir>/var/lib/columnstore/disk-based-aggr-tmpdir</TempDir> -->
 	</RowAggregation>
 	<CrossEngineSupport>
 		<Host>127.0.0.1</Host>

@@ -70,17 +70,6 @@ namespace
 {
   static const std::string configDefaultFileName("Columnstore.xml");
   const fs::path defaultConfigFilePath(configDefaultFileName);
-
-  using ValueMap = std::map<std::string, std::string>;
-  using CfgMap = std::map<std::string, ValueMap>;
-  const CfgMap defaultValues{
-    { "HashJoin", ValueMap{
-        {"TempFilePath", "/tmp/cs-diskjoin"}}
-    },
-    { "RowAggregation", ValueMap{
-        { "TempDir", "/var/lib/columnstore/disk-based-aggr-tmpdir"}}
-    }
-  };
 }
 
 namespace config
@@ -687,16 +676,23 @@ const vector<string> Config::enumSection(const string& section)
 
     return fParser.enumSection(fDoc, section);
 }
-
-std::string getDefaultValue(const std::string& section, const std::string& name)
+std::string Config::getTempFileDir(Config::TempDirPurpose what)
 {
-  auto sec = defaultValues.find(section);
-  if (sec == defaultValues.end())
-    return {};
-  auto val = sec->second.find(name);
-  if (val == sec->second.end())
-    return {};
-  return val->second;
+  std::string prefix = getConfig("SystemConfig", "SystemTempFileDir");
+  if (prefix.empty())
+  {
+    prefix.assign("/tmp/columnstore_tmp_files");
+  }
+  prefix.append("/");
+  switch (what)
+  {
+  case TempDirPurpose::Joins:
+    return prefix.append("joins/");
+  case TempDirPurpose::Aggregates:
+    return prefix.append("aggregates/");
+  }
+  // NOTREACHED
+  return {};
 }
 
 } //namespace config

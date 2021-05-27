@@ -683,9 +683,7 @@ void RowAggregation::initialize()
     }
 
     config::Config* config = config::Config::makeConfig();
-    string tmpDir = config->getConfig("RowAggregation", "TempDir");
-    if (tmpDir.empty() || tmpDir == "/")
-      tmpDir.assign(config::getDefaultValue("RowAggregation", "TempDir"));
+    string tmpDir = config->getTempFileDir(config::Config::TempDirPurpose::Aggregates);
 
     if (fKeyOnHeap)
     {
@@ -767,9 +765,7 @@ void RowAggregation::aggReset()
     }
 
     config::Config* config = config::Config::makeConfig();
-    string tmpDir = config->getConfig("RowAggregation", "TempDir");
-    if (tmpDir.empty() || tmpDir == "/")
-        tmpDir.assign(config::getDefaultValue("RowAggregation", "TempDir"));
+    string tmpDir = config->getTempFileDir(config::Config::TempDirPurpose::Aggregates);
 
     if (fKeyOnHeap)
     {

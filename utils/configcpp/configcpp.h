@@ -203,6 +203,14 @@ public:
      */
     EXPORT const std::vector<std::string> enumSection(const std::string& section);
 
+    enum class TempDirPurpose
+    {
+      Joins,      ///< disk joins
+      Aggregates  ///< disk-based aggregation
+    };
+    /** @brief Return temporaru directory path for the specified purpose */
+    EXPORT std::string getTempFileDir(TempDirPurpose what);
+
 protected:
     /** @brief parse the XML file
     *
@@ -245,8 +253,6 @@ private:
     XMLParser fParser;
 
 };
-
-std::string getDefaultValue(const std::string& section, const std::string& name);
 
 }
 
