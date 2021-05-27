@@ -95,6 +95,8 @@
 		<!-- <HighPriorityPercentage>60</HighPriorityPercentage> -->
 		<!-- <MediumPriorityPercentage>30</MediumPriorityPercentage> -->
 		<!-- <LowPriorityPercentage>10</LowPriorityPercentage> -->
+		<!-- MaxPct is maximum percentage of total system memory PrimProc can consume before query will report error-->
+		<!-- <MaxPct>70</MaxPct> -->
 		<DirectIO>y</DirectIO>
         <HighPriorityPercentage/>
         <MediumPriorityPercentage/>

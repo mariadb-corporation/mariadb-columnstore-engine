@@ -169,6 +169,7 @@ public:
     {
         return doJoin;
     }
+    void resetMem();
 private:
     BatchPrimitiveProcessor();
     BatchPrimitiveProcessor(const BatchPrimitiveProcessor&);
