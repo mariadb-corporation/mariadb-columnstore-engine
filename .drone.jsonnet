@@ -297,13 +297,15 @@ local Pipeline(branch, platform, event, arch='amd64') = {
              environment: {
                SERVER_REF: '${SERVER_REF:-' + server_ref_map[branch] + '}',
                SERVER_REMOTE: '${SERVER_REMOTE:-https://github.com/MariaDB/server}',
+               SERVER_SHA: '${SERVER_SHA:-' + server_ref_map[branch] + '}',
              },
              commands: [
                'echo $$SERVER_REF',
                'echo $$SERVER_REMOTE',
                'mkdir -p /mdb/' + builddir + ' && cd /mdb/' + builddir,
                'git config --global url."https://github.com/".insteadOf git@github.com:',
-               'git -c submodule."storage/rocksdb/rocksdb".update=none -c submodule."wsrep-lib".update=none -c submodule."storage/columnstore/columnstore".update=none clone --recurse-submodules --depth 1 --branch $$SERVER_REF $$SERVER_REMOTE .',
+               'git -c submodule."storage/rocksdb/rocksdb".update=none -c submodule."wsrep-lib".update=none -c submodule."storage/columnstore/columnstore".update=none clone --recurse-submodules --depth 200 --branch $$SERVER_REF $$SERVER_REMOTE .',
+               'git reset --hard $$SERVER_SHA',
                'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
                'git config cmake.update-submodules no',
                'rm -rf storage/columnstore/columnstore',
