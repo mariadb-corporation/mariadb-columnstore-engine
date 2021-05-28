@@ -1,6 +1,9 @@
+#!/usr/bin/env bash
 # MariaDB Columnstore Alias Commands
-#
-alias ma=mcsadmin
+
+mcspm1host=$(mcsGetConfig PMS1 IPaddr)
+mcsapikey=$(grep -r 'x-api-key' /etc/columnstore/cmapi_server.conf | cut -d= -f2 | xargs)
+
 alias core='cd /var/log/mariadb/columnstore/corefiles'
 alias tdebug='tail -f /var/log/mariadb/columnstore/debug.log'
 alias tinfo='tail -f /var/log/mariadb/columnstore/info.log'
@@ -8,4 +11,9 @@ alias terror='tail -f /var/log/mariadb/columnstore/err.log'
 alias twarning='tail -f /var/log/mariadb/columnstore/warning.log'
 alias tcrit='tail -f /var/log/mariadb/columnstore/crit.log'
 alias dbrm='cd /var/lib/columnstore/data1/systemFiles/dbrm'
-alias mcsmodule='cat /var/lib/columnstore/local/module'
+alias mcsModule='cat /var/lib/columnstore/local/module'
+alias mcsStatus="curl -s https://$mcspm1host:8640/cmapi/0.4.0/cluster/status --header 'Content-Type:application/json' --header 'x-api-key:$mcsapikey' -k | jq ."
+alias mcsStart="curl -s -X PUT https://$mcspm1host:8640/cmapi/0.4.0/cluster/start --header 'Content-Type:application/json' --header 'x-api-key:$mcsapikey' --data '{\"timeout\":60}' -k | jq ."
+alias mcsShutdown="curl -s -X PUT https://$mcspm1host:8640/cmapi/0.4.0/cluster/shutdown --header 'Content-Type:application/json' --header 'x-api-key:$mcsapikey' --data '{\"timeout\":60}' -k | jq ."
+alias mcsReadOnly="curl -s -X PUT https://$mcspm1host:8640/cmapi/0.4.0/cluster/mode-set --header 'Content-Type:application/json' --header 'x-api-key:$mcsapikey' --data '{\"timeout\":20, \"mode\": \"readonly\"}' -k | jq ."
+alias mcsReadWrite="curl -s -X PUT https://$mcspm1host:8640/cmapi/0.4.0/cluster/mode-set --header 'Content-Type:application/json' --header 'x-api-key:$mcsapikey' --data '{\"timeout\":20, \"mode\": \"readwrite\"}' -k | jq ."
