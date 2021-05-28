@@ -652,8 +652,8 @@ int ServiceDMLProc::Child()
 #else
         (void)::system(cmd.c_str());
 #endif
-  
-  
+
+
     }
     catch (...)
     {
@@ -685,7 +685,7 @@ int ServiceDMLProc::Child()
 
     setupChildSignalHandlers();
 
-    dmlserver.start();
+    _exit(dmlserver.start());
 
     return 1;
 }
