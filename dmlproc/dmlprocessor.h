@@ -112,7 +112,7 @@ public:
     ~DMLServer() { }
 
 
-    void start(); //Does not return
+    int start();
 
     /** @brief get the dml package thread pool size
       */
@@ -250,7 +250,7 @@ public:
                 fphp->releaseTableAccess();
         }
         bool setPackage(PackageHandler* php, dmlpackage::CalpontDMLPackage* dmlPackage)
-        {   
+        {
             if (fphp)
                 fphp->releaseTableAccess();
             fphp = php;

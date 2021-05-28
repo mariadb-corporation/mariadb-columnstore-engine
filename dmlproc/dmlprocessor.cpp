@@ -413,7 +413,7 @@ int PackageHandler::synchTableAccess(dmlpackage::CalpontDMLPackage* dmlPackage)
             msg.format(args1);
             logging::Logger logger(logid.fSubsysID);
             logger.logMessage(LOG_TYPE_DEBUG, msg, logid);
-            
+
             tableOidCond.wait(lock);
             // In case of CTRL+C, the tableOidQueue could be invalidated
             if ((tableOidMap.find(fTableOid))->second != tableOidQueue)
@@ -545,7 +545,7 @@ void PackageHandler::run()
     unsigned DMLLoggingId = 21;
     oam::OamCache* oamCache = oam::OamCache::makeOamCache();
     SynchTable synchTable;
-	
+
     try
     {
         switch ( fPackageType )
@@ -1179,7 +1179,7 @@ void PackageHandler::rollbackPending()
 
     // Force a release of the processing from MCOL-140
 #ifdef MCOL_140
-    if (fConcurrentSupport) 
+    if (fConcurrentSupport)
     {
         // MCOL-140 We're not necessarily the next in line.
         // This forces this thread to be released anyway.
@@ -1213,7 +1213,7 @@ DMLServer::DMLServer(int packageMaxThreads, int packageWorkQueueSize, DBRM* dbrm
     fDmlPackagepool.setName("DmlPackagepool");
 }
 
-void DMLServer::start()
+int DMLServer::start()
 {
     messageqcpp::IOSocket ios;
     uint32_t nextID = 1;
@@ -1246,6 +1246,7 @@ void DMLServer::start()
         }
 
         cancelThread.join();
+        return EXIT_SUCCESS;
     }
     catch (std::exception& ex)
     {
@@ -1258,6 +1259,7 @@ void DMLServer::start()
         message.format(args);
         logging::Logger logger(lid.fSubsysID);
         logger.logMessage(logging::LOG_TYPE_CRITICAL, message, lid);
+        return EXIT_FAILURE;
     }
     catch (...)
     {
@@ -1269,6 +1271,7 @@ void DMLServer::start()
         message.format(args);
         logging::Logger logger(lid.fSubsysID);
         logger.logMessage(logging::LOG_TYPE_CRITICAL, message, lid);
+        return EXIT_FAILURE;
     }
 }
 
