@@ -42,6 +42,7 @@
 #include "socket.h"
 #include "socketparms.h"
 #include "bytestream.h"
+#include "checks.h"
 
 class MessageQTestSuite;
 
@@ -198,6 +199,7 @@ public:
 
     inline virtual bool isConnected() const;
     inline virtual bool hasData() const;
+    inline bool hasSocketDescriptor() const;
 
     friend class ::MessageQTestSuite;
 
@@ -217,6 +219,12 @@ inline const sockaddr IOSocket::sa() const
 {
     return fSa;
 }
+
+inline bool IOSocket::hasSocketDescriptor() const
+{
+    return fSocket && utils::is_nonnegative(fSocket->socketParms().sd());
+}
+
 inline void IOSocket::sa(const sockaddr* sa)
 {
     fSa = *sa;
