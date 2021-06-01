@@ -129,7 +129,8 @@ JoinPartition::JoinPartition(const JoinPartition& jp, bool splitMode) :
     // Instead, each will double in size, giving a capacity of 8GB -> 16 -> 32, and so on.
 //	bucketCount = jp.bucketCount;
     bucketCount = 2;
-    filenamePrefix = startup::StartUp::tmpDir();
+    config::Config* config = config::Config::makeConfig();
+    filenamePrefix = config->getTempFileDir(config::Config::TempDirPurpose::Joins);
 
     filenamePrefix += "/Columnstore-join-data-";
 

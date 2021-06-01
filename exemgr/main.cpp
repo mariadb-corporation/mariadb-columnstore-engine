@@ -1445,22 +1445,23 @@ int setupResources()
 
 void cleanTempDir()
 {
+  using TempDirPurpose = config::Config::TempDirPurpose;
   struct Dirs
   {
     std::string section;
     std::string allowed;
-    std::string path;
+    TempDirPurpose purpose;
   };
   std::vector<Dirs> dirs{
       {
           "HashJoin",
           "AllowDiskBasedJoin",
-          "TempFilePath",
+          TempDirPurpose::Joins
       },
       {
           "RowAggregation",
           "AllowDiskBasedAggregation",
-          "TempDir",
+          TempDirPurpose::Aggregates
       }
   };
   const auto config = config::Config::makeConfig();
@@ -1468,13 +1469,10 @@ void cleanTempDir()
   for (const auto& dir : dirs)
   {
     std::string allow = config->getConfig(dir.section, dir.allowed);
-    std::string tmpPrefix = config->getConfig(dir.section, dir.path);
-
     if (allow != "Y" && allow != "y")
       continue;
 
-    if (tmpPrefix.empty())
-      tmpPrefix = config::getDefaultValue(dir.section, dir.path);
+    std::string tmpPrefix = config->getTempFileDir(dir.purpose);
 
     if (tmpPrefix.empty())
     {
@@ -1489,9 +1487,9 @@ void cleanTempDir()
       logger.logMessage(logging::LOG_TYPE_CRITICAL, message, logid);
     }
 
-    assert(tmpPrefix != "/");
-
     tmpPrefix += "/";
+
+    idbassert(tmpPrefix != "/");
 
     /* This is quite scary as ExeMgr usually runs as root */
     try
