@@ -29,6 +29,7 @@
 
 #include <sys/types.h>
 #include <unistd.h>
+
 #include "cgroupconfigurator.h"
 
 //#include "pp_logger.h"
@@ -63,7 +64,6 @@ public:
     {
         fMemPctCheck = memChk;
         fMemTotal = memTotal();
-        fMaxPrimProcPct = 100;
     }
 
     virtual ~MonitorProcMem() {};
@@ -86,7 +86,6 @@ public:
      *
      */
     static unsigned memUsedPct();
-    static bool checkMemlimit();
 
     /* return true if memory usage is below configured limit
      *
@@ -120,8 +119,6 @@ protected:
     int      fPageSize;  // page size for this host (in bytes)
 
     // @bug4507, monitor % of total used system memory
-    static size_t   fMaxPrimProcPct; // Replaces usage of fMaxPct if needed (Pct of PrimProc Memory used)
-    static uint64_t fUsedMem;
     static uint64_t fMemTotal;
     static uint64_t fMemFree;
     static int      fMemPctCheck;
