@@ -38,7 +38,7 @@ EOF;
 # Binary mode with NULLs accepted Numeric fields containing NULL will be treated
 # as NULL unless the column has a default value
 --disable_result_log #cpimport logs thread/timestamps
---exec cpimport -I1 mcs55_db t1 '/tmp/mcs55.bin';
+--exec $MCS_CPIMPORT -I1 mcs55_db t1 '/tmp/mcs55.bin';
 --enable_result_log
 
 #Validate data
@@ -49,7 +49,7 @@ TRUNCATE t1;
 
 # Binary mode with NULLs saturated NULLs in numeric fields will be saturated
 --disable_result_log #cpimport logs thread/timestamps
---exec cpimport -I2 mcs55_db t1 '/tmp/mcs55.bin';
+--exec $MCS_CPIMPORT -I2 mcs55_db t1 '/tmp/mcs55.bin';
 --enable_result_log
 
 #Validate data

@@ -14,7 +14,8 @@ USE mcs67_db;
 CREATE TABLE t1(col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnstore;
 
 #Correct delimiter
-LOAD DATA LOCAL infile './suite/columnstore/std_data/100Krows.dat' INTO TABLE t1 FIELDS TERMINATED BY '|';
+--replace_result $MTR_SUITE_DIR MTR_SUITE_DIR
+--eval LOAD DATA LOCAL infile '$MTR_SUITE_DIR/../std_data/100Krows.dat' INTO TABLE t1 FIELDS TERMINATED BY '|';
 
 #Validate data
 SELECT COUNT(*) FROM t1;
@@ -23,7 +24,7 @@ TRUNCATE t1;
 
 #Use a non-default delimiter '\t'
 --exec rm -f /tmp/100Krows.dat
---exec cp ./suite/columnstore/std_data/100Krows.dat /tmp/100Krows.dat
+--exec cp $MTR_SUITE_DIR/../std_data/100Krows.dat /tmp/100Krows.dat
 --exec sed -i 's/|/\t/g' /tmp/100Krows.dat
 LOAD DATA LOCAL infile '/tmp/100Krows.dat' INTO TABLE t1 FIELDS TERMINATED BY '\t';
 

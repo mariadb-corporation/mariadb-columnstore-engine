@@ -2,7 +2,7 @@ DROP DATABASE IF EXISTS mcs28_db1;
 CREATE DATABASE mcs28_db1;
 USE mcs28_db1;
 CREATE TABLE t1 (a DATE, b DATE, c DATE not null, d DATE) ENGINE=Columnstore;
-LOAD DATA LOCAL infile './suite/columnstore/std_data/loaddata1.dat' IGNORE INTO TABLE t1 FIELDS TERMINATED BY ',';;
+LOAD DATA LOCAL infile 'MTR_SUITE_DIR/../std_data/loaddata1.dat' IGNORE INTO TABLE t1 FIELDS TERMINATED BY ',';;
 Warnings:
 Warning	1265	Data truncated for column 'a' at row 1
 Warning	1265	Data truncated for column 'c' at row 1
@@ -10,7 +10,7 @@ Warning	1265	Data truncated for column 'd' at row 1
 Warning	1265	Data truncated for column 'a' at row 2
 Warning	1265	Data truncated for column 'b' at row 2
 Warning	1265	Data truncated for column 'd' at row 2
-LOAD DATA LOCAL infile './suite/columnstore/std_data/loaddata1.dat' INTO TABLE t1 FIELDS TERMINATED BY ',' IGNORE 2 LINES;;
+LOAD DATA LOCAL infile 'MTR_SUITE_DIR/../std_data/loaddata1.dat' INTO TABLE t1 FIELDS TERMINATED BY ',' IGNORE 2 LINES;;
 SELECT * FROM t1;
 a	b	c	d
 0000-00-00	NULL	0000-00-00	0000-00-00
@@ -18,7 +18,7 @@ a	b	c	d
 2003-03-03	2003-03-03	2003-03-03	NULL
 2003-03-03	2003-03-03	2003-03-03	NULL
 TRUNCATE TABLE t1;
-LOAD DATA LOCAL infile './suite/columnstore/std_data/loaddata1.dat' IGNORE INTO TABLE t1 FIELDS TERMINATED BY ',' LINES STARTING BY ',' (b,c,d);;
+LOAD DATA LOCAL infile 'MTR_SUITE_DIR/../std_data/loaddata1.dat' IGNORE INTO TABLE t1 FIELDS TERMINATED BY ',' LINES STARTING BY ',' (b,c,d);;
 Warnings:
 Warning	1265	Data truncated for column 'c' at row 1
 Warning	1265	Data truncated for column 'd' at row 1
@@ -31,7 +31,7 @@ NULL	0000-00-00	0000-00-00	0000-00-00
 NULL	2003-03-03	2003-03-03	NULL
 DROP TABLE t1;
 CREATE TABLE t1 (a TEXT, b TEXT) ENGINE=Columnstore;
-LOAD DATA LOCAL infile './suite/columnstore/std_data/loaddata2.dat' IGNORE INTO TABLE t1 FIELDS TERMINATED BY ',' ENCLOSED BY '''';;
+LOAD DATA LOCAL infile 'MTR_SUITE_DIR/../std_data/loaddata2.dat' IGNORE INTO TABLE t1 FIELDS TERMINATED BY ',' ENCLOSED BY '''';;
 Warnings:
 Warning	1261	Row 3 doesn't contain data for all columns
 SELECT CONCAT('|',a,'|'), CONCAT('|',b,'|') FROM t1;
@@ -43,7 +43,7 @@ Field 3,'Field 4|
 |Field 6|	| 'Field 7'|
 DROP TABLE t1;
 CREATE TABLE t1 (a INT, b CHAR(10)) ENGINE=Columnstore;
-LOAD DATA LOCAL infile './suite/columnstore/std_data/loaddata3.dat' IGNORE INTO TABLE t1 FIELDS TERMINATED BY '' ENCLOSED BY '' IGNORE 1 LINES;;
+LOAD DATA LOCAL infile 'MTR_SUITE_DIR/../std_data/loaddata3.dat' IGNORE INTO TABLE t1 FIELDS TERMINATED BY '' ENCLOSED BY '' IGNORE 1 LINES;;
 Warnings:
 Note	1265	Data truncated for column 'a' at row 1
 Note	1265	Data truncated for column 'a' at row 2
@@ -60,7 +60,7 @@ a	b
 3	row 3
 0	1234567890
 TRUNCATE TABLE t1;
-LOAD DATA LOCAL infile './suite/columnstore/std_data/loaddata4.dat' IGNORE INTO TABLE t1 FIELDS TERMINATED BY '' ENCLOSED BY '' LINES TERMINATED BY '' IGNORE 1 LINES;;
+LOAD DATA LOCAL infile 'MTR_SUITE_DIR/../std_data/loaddata4.dat' IGNORE INTO TABLE t1 FIELDS TERMINATED BY '' ENCLOSED BY '' LINES TERMINATED BY '' IGNORE 1 LINES;;
 Warnings:
 Note	1265	Data truncated for column 'a' at row 1
 Note	1265	Data truncated for column 'a' at row 2

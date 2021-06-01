@@ -15,10 +15,10 @@ CREATE TABLE t1(col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnstore;
 
 # Load fragmented data source files distributed across pm nodes, cpimport -m2
 # This test needs to be extended to cover multi-node setup
---exec yes | cp ./suite/columnstore/std_data/100Krows.dat /tmp
+--exec yes | cp $MTR_SUITE_DIR/../std_data/100Krows.dat /tmp
 
 --disable_result_log #cpimport logs thread/timestamps
---exec cpimport -m2 mcs48_db t1 -f '/tmp' -l '100Krows.dat';
+--exec $MCS_CPIMPORT -m2 mcs48_db t1 -f '/tmp' -l '100Krows.dat';
 --enable_result_log
 
 #Validate data
