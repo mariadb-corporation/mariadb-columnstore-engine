@@ -52,6 +52,7 @@ uint32_t calculateKeyLength(const std::vector<uint32_t>& aKeyColumnsIds,
 
 constexpr uint8_t IS_SMALLSIDE = 0x80; // bit set SMALL, unset LARGE
 constexpr uint8_t IS_REDUCEDTOSMALL = 0x40; // The value is 8 bytes stored in 16 bytes
+constexpr uint8_t IS_LARGE_SIDE_8BYTES = 0x20; // The value is 8 bytes stored in 16 bytes
 
 class TypelessDataDecoder;
 
@@ -77,11 +78,14 @@ public:
     static int32_t compareDecimalsWSkewedWidths(TypelessDataDecoder& smallSide,
                                                 TypelessDataDecoder& largeSide,
                                                 const bool isLargeSideReducedToSmall,
+                                                const bool flaga,
                                                 const int32_t largeSideIsGreaterRC);
     inline void setSmallSideFlag() { mFlags |= IS_SMALLSIDE; };
     inline void setLargeSideReducedToSmall() { mFlags |= IS_REDUCEDTOSMALL; };
+    inline void setLargeSide8Bytes() { mFlags |= IS_LARGE_SIDE_8BYTES; };
     inline bool isLargeSideReducedToSmall() const { return mFlags & IS_REDUCEDTOSMALL; };
     inline bool isSmallSideWithSkewedData() const { return mFlags & IS_SMALLSIDE; };
+    inline bool isSetLargeSide8Bytes() const { return mFlags & IS_LARGE_SIDE_8BYTES; };
 };
 
 inline bool TypelessData::operator==(const TypelessData& t) const
