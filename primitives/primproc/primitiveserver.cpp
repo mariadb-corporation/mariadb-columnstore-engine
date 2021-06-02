@@ -2524,6 +2524,10 @@ BPPV::BPPV()
 
 BPPV::~BPPV()
 {
+    BOOST_FOREACH( boost::shared_ptr<BatchPrimitiveProcessor> bpp, v )
+    {
+        bpp->resetMem();
+    }
 }
 
 void BPPV::add(boost::shared_ptr<BatchPrimitiveProcessor> a)
