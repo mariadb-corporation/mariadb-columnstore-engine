@@ -47,11 +47,27 @@ namespace joiner
 
 uint32_t calculateKeyLength(const std::vector<uint32_t>& aKeyColumnsIds,
                             const rowgroup::RowGroup& aRowGroup,
-                            const std::vector<uint32_t>* aLargeKeyColumnsIds = nullptr, 
+                            const std::vector<uint32_t>* aLargeKeyColumnsIds = nullptr,
                             const rowgroup::RowGroup* aLargeRowGroup = nullptr);
 
-constexpr uint8_t IS_SMALLSIDE = 0x80; // bit set SMALL, unset LARGE
-constexpr uint8_t IS_REDUCEDTOSMALL = 0x40; // The value is 8 bytes stored in 16 bytes
+// Consider changing the size of TYPELESS_BIT_OFFSETS and the value of TYPELESSDATA_FLAGS_MASK
+// if the flags values change.
+constexpr uint8_t IS_SMALLSIDE = 0x04; // bit set SMALL, unset LARGE
+constexpr uint8_t IS_REDUCEDTOSMALL = 0x02; // The value is 8 bytes stored in 16 bytes
+constexpr uint8_t IS_LARGE_SIDE_8BYTES = 0x01; // The value is 8 bytes stored in 16 bytes
+constexpr uint8_t TYPELESSDATA_FLAGS_MASK = 0x07;
+constexpr uint8_t TYPELESSDATA_FLAGS_BITSIZE = 0x03;
+
+constexpr uint8_t TYPELESS_BIT_OFFSETS[] = {0,
+                                            TYPELESSDATA_FLAGS_BITSIZE * 1,
+                                            TYPELESSDATA_FLAGS_BITSIZE * 2,
+                                            TYPELESSDATA_FLAGS_BITSIZE * 3,
+                                            TYPELESSDATA_FLAGS_BITSIZE * 4,
+                                            TYPELESSDATA_FLAGS_BITSIZE * 5,
+                                            TYPELESSDATA_FLAGS_BITSIZE * 6,
+                                            TYPELESSDATA_FLAGS_BITSIZE * 7,
+                                            TYPELESSDATA_FLAGS_BITSIZE * 8,
+                                            TYPELESSDATA_FLAGS_BITSIZE * 9,};
 
 class TypelessDataDecoder;
 
@@ -60,7 +76,10 @@ class TypelessData
 public:
     uint8_t* data;
     uint32_t len;
-    uint8_t mFlags;
+    // Consider changing the size of TYPELESS_BIT_OFFSETS if the flags values change.
+    // The flags are locally significant in PP now so serialize doesn't send it over
+    // the wire.
+    uint32_t mFlags;
 
     TypelessData() : data(nullptr), len(0), mFlags(0) { }
     inline bool operator==(const TypelessData&) const;
@@ -77,11 +96,45 @@ public:
     static int32_t compareDecimalsWSkewedWidths(TypelessDataDecoder& smallSide,
                                                 TypelessDataDecoder& largeSide,
                                                 const bool isLargeSideReducedToSmall,
+                                                const bool isLargeSide8Bytes,
                                                 const int32_t largeSideIsGreaterRC);
-    inline void setSmallSideFlag() { mFlags |= IS_SMALLSIDE; };
-    inline void setLargeSideReducedToSmall() { mFlags |= IS_REDUCEDTOSMALL; };
-    inline bool isLargeSideReducedToSmall() const { return mFlags & IS_REDUCEDTOSMALL; };
-    inline bool isSmallSideWithSkewedData() const { return mFlags & IS_SMALLSIDE; };
+    inline bool encodedValueOffsetCheck(const uint32_t mask, const uint32_t aValue) const
+    {
+        return (mFlags & mask) == aValue;
+    }
+    inline void setSmallSideWithSkewedData()
+    {
+        size_t maxFlagsNumber = sizeof(mFlags) * 8 / TYPELESSDATA_FLAGS_BITSIZE;
+        for (size_t i = 0; i < maxFlagsNumber; ++i)
+            setSmallSideWithSkewedData(i);
+    }
+    inline void setSmallSideWithSkewedData(const uint32_t offset)
+    {
+        mFlags |= IS_SMALLSIDE << TYPELESS_BIT_OFFSETS[offset];
+    };
+    inline bool isSmallSideWithSkewedData(const uint32_t offset) const
+    {
+        return encodedValueOffsetCheck(TYPELESSDATA_FLAGS_MASK << TYPELESS_BIT_OFFSETS[offset],
+                                       IS_SMALLSIDE << TYPELESS_BIT_OFFSETS[offset]);
+    }
+    inline void setLargeSideReducedToSmall(const uint32_t offset)
+    {
+        mFlags |= IS_REDUCEDTOSMALL << TYPELESS_BIT_OFFSETS[offset];
+    };
+    inline bool isLargeSideReducedToSmall(const uint32_t offset) const
+    {
+         return encodedValueOffsetCheck(TYPELESSDATA_FLAGS_MASK << TYPELESS_BIT_OFFSETS[offset],
+                                        IS_REDUCEDTOSMALL << TYPELESS_BIT_OFFSETS[offset]);
+    }
+    inline void setLargeSide8Bytes(const uint32_t offset)
+    {
+        mFlags |= IS_LARGE_SIDE_8BYTES << TYPELESS_BIT_OFFSETS[offset];
+    };
+    inline bool isSetLargeSide8Bytes(const uint32_t offset) const
+    {
+         return encodedValueOffsetCheck(TYPELESSDATA_FLAGS_MASK << TYPELESS_BIT_OFFSETS[offset],
+                                        IS_LARGE_SIDE_8BYTES << TYPELESS_BIT_OFFSETS[offset]);
+    };
 };
 
 inline bool TypelessData::operator==(const TypelessData& t) const

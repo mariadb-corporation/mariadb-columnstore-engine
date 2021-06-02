@@ -8,8 +8,12 @@ DROP DATABASE IF EXISTS mcol641_joins_db;
 CREATE DATABASE mcol641_joins_db;
 USE mcol641_joins_db;
 
-CREATE TABLE cs1 (d1 DECIMAL(38), d2 DECIMAL(37), id TINYINT)engine=Columnstore;
-CREATE TABLE cs2 (i1 SMALLINT, i2 MEDIUMINT, i3 INT, i4 BIGINT)engine=Columnstore;
+--disable_query_log
+SET default_storage_engine=ColumnStore;
+--enable_query_log
+
+CREATE TABLE cs1 (d1 DECIMAL(38), d2 DECIMAL(37), id TINYINT);
+CREATE TABLE cs2 (i1 SMALLINT, i2 MEDIUMINT, i3 INT, i4 BIGINT);
 
 INSERT INTO cs1 VALUES
 (99,0,1),

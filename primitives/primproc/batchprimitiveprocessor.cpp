@@ -658,7 +658,7 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
                 {
                     tlLargeKey.deserialize(bs, storedKeyAllocator);
                     if (mHasDifferentKeylengthAtBothSides)
-                        tlLargeKey.setSmallSideFlag();
+                        tlLargeKey.setSmallSideWithSkewedData();
                     bs >> tlIndex;
                     auto* smallSideColumnsWidthsPtr = (mHasDifferentKeylengthAtBothSides) ? &smallSideRGs[0].getColWidths()
                                                                                           : nullptr;

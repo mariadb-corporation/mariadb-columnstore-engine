@@ -1293,10 +1293,10 @@ public:
     // This convert() is called in EM to cast smallSide TypelessData
     // if the key columns has a skew, e.g. INT to DECIMAL(38).
     inline WideDecimalKeyConverter&
-    convert(const bool otherSideIsInt,
+    convert(const bool otherSideIsIntOrNarrow,
             const execplan::CalpontSystemCatalog::ColDataType otherSideType)
     {
-        if (otherSideIsInt)
+        if (otherSideIsIntOrNarrow)
         {
             datatypes::TSInt128 integralPart = mR->getTSInt128Field(mKeyColId);
 
@@ -1324,7 +1324,7 @@ public:
             if (std::numeric_limits<uint64_t>::max() >= integralPart.getValue() ||
                 std::numeric_limits<int64_t>::min() <= integralPart.getValue())
             {
-                // THe current int128_t encoding uses first 8 bytes to store lowest digits.
+                // The current int128_t encoding uses first 8 bytes to store lowest digits.
                 convertedValue = mR->getTSInt128Field(mKeyColId).getFirst8Bytes();
                 reduceToSmallSide = true;
             }
@@ -1333,9 +1333,12 @@ public:
     }
 
     // Stores the value that might had been converted.
+    // skewedKeyColumnOffset is significant called from PrimProc's
+    // version of makeTypelessKey routine.
     inline bool store(TypelessData& typelessData,
                       uint32_t& off,
-                      const uint32_t keylen) const
+                      const uint32_t keylen,
+                      const uint32_t skewedKeyColumnOffset = 0) const
     {
         // A note from convert() if there is otherSide column type range
         // overflow. If so return .len = 0. This tells MCS to pass this
@@ -1356,7 +1359,7 @@ public:
                 {
                     datatypes::TSInt128::assignPtrPtr(&typelessData.data[off],
                                                       &convertedValue); 
-                    typelessData.setLargeSideReducedToSmall();
+                    typelessData.setLargeSideReducedToSmall(skewedKeyColumnOffset);
                 }
                 else
                 {
@@ -1367,6 +1370,7 @@ public:
             default:
             {
                 datatypes::TUInt64(convertedValue).store(&typelessData.data[off]);
+                typelessData.setLargeSide8Bytes(skewedKeyColumnOffset);
             }
         }
         off += width;
@@ -1383,6 +1387,9 @@ TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols,
 {
     TypelessData ret;
     uint32_t off = 0, i;
+    // A counter for a skewed JOIN key columns.
+    // There must be less then 10 columns of the kind.
+    uint32_t skewedColumnOffset = 0;
     execplan::CalpontSystemCatalog::ColDataType type;
 
     ret.data = (uint8_t*) fa->allocate();
@@ -1404,7 +1411,7 @@ TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols,
             // We don't need to strip fractional part of the DECIMAL
             // b/c MCS joins INTs and DECIMAL with 0 scale only.
             if (WideDecimalKeyConverter(r, keyCols[i]).convert(aSmallSideColumnsWidths)
-                                                      .store(ret, off, keylen))
+                                                      .store(ret, off, keylen, skewedColumnOffset++))
             {
                 goto toolong;
             }
@@ -1422,6 +1429,11 @@ TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols,
                 goto toolong;
             *((int64_t*) &ret.data[off]) = r.getIntField(keyCols[i]);
             off += 8;
+            // The assumption here is DECIMAL is a signed data type.
+            // If a Large side of a skewed JOIN is 8 byte we need to set the flag to use it later in
+            // TypelessData::cmp to read a proper amount of bytes.
+            if (aSmallSideColumnsWidths && aSmallSideColumnsWidths->operator[](i) >= datatypes::MAXDECIMALWIDTH)
+                ret.setLargeSide8Bytes(skewedColumnOffset++);
         }
     }
 
@@ -1439,16 +1451,17 @@ toolong:
 int32_t TypelessData::compareDecimalsWSkewedWidths(TypelessDataDecoder& smallSide,
                                                    TypelessDataDecoder& largeSide,
                                                    const bool isLargeSideReducedToSmall,
+                                                   const bool isLargeSide8Bytes,
                                                    const int32_t largeSideIsGreaterRC)
 {
     // This happens when LargeSide value is greater than SmallSide max value.
-    if (!isLargeSideReducedToSmall)
+    if (!isLargeSide8Bytes && !isLargeSideReducedToSmall)
         return largeSideIsGreaterRC;
     // SmallSide is always 8 bytes when the widths are skewed.
     // See makeTypelessKey() method used in EM for details.
     ConstString ta = smallSide.scanGeneric(datatypes::MAXLEGACYWIDTH);
     // LargeSide is 16 bytes but the actual value fits into 8 byte.
-    ConstString tb = largeSide.scanGeneric(datatypes::MAXDECIMALWIDTH,
+    ConstString tb = largeSide.scanGeneric(isLargeSide8Bytes ? datatypes::MAXLEGACYWIDTH : datatypes::MAXDECIMALWIDTH,
                                            datatypes::MAXLEGACYWIDTH);
     return memcmp(ta.str(), tb.str(), datatypes::MAXLEGACYWIDTH);
 }
@@ -1463,6 +1476,9 @@ uint64_t TypelessData::hash(const RowGroup& r,
 {
     TypelessDataDecoder decoder(*this);
     datatypes::MariaDBHasher hasher;
+    // A counter for a skewed JOIN key columns.
+    // There must be less then 10 columns of the kind.
+    uint32_t skewedColumnOffset = 0;
     for (auto keyColId: keyCols)
     {
         switch (r.getColTypes()[keyColId])
@@ -1483,25 +1499,32 @@ uint64_t TypelessData::hash(const RowGroup& r,
                 // whilst largeSide might be 8/16 bytes.
                 // If there is no skew in JOIN col types, e.g. INT to DECIMAL(38)
                 // width will be 8 for narrow DECIMAL and 16 for wide DECIMAL.
-                const uint32_t width = isSmallSideWithSkewedData()
+                // The value of the argument to isSmallSideWithSkewedData is insignificant
+                // b/c SmallSide flags are all set.
+                const uint32_t width = isSmallSideWithSkewedData(skewedColumnOffset)
                                         ? datatypes::MAXLEGACYWIDTH
                                         : std::max(r.getColWidths()[keyColId], datatypes::MAXLEGACYWIDTH);
                 // Reduced value will be 8 byte saved into 16 byte.
-                if (isLargeSideReducedToSmall())
+                if (isLargeSideReducedToSmall(skewedColumnOffset))
                 {
                     hasher.add(&my_charset_bin,
                                decoder.scanGeneric(r.getColWidths()[keyColId],
                                                    datatypes::MAXLEGACYWIDTH));
+                    ++skewedColumnOffset;
                 }
                 else
                 {
                     hasher.add(&my_charset_bin, decoder.scanGeneric(width));
+                    if (isSetLargeSide8Bytes(skewedColumnOffset))
+                        ++skewedColumnOffset;
                 }
                 break;
             }
             default:
             {
                 hasher.add(&my_charset_bin, decoder.scanGeneric(datatypes::MAXLEGACYWIDTH));
+                if (isSetLargeSide8Bytes(skewedColumnOffset))
+                    ++skewedColumnOffset;
                 break;
             }
         }
@@ -1514,6 +1537,9 @@ int TypelessData::cmp(const RowGroup& r, const std::vector<uint32_t>& keyCols,
 {
     TypelessDataDecoder a(da);
     TypelessDataDecoder b(db);
+    // A counter for a skewed JOIN key columns.
+    // There must be less then 10 columns of the kind.
+    uint32_t skewedColumnOffset = 0;
 
     for (uint32_t keyColIdx : keyCols)
     {
@@ -1534,15 +1560,27 @@ int TypelessData::cmp(const RowGroup& r, const std::vector<uint32_t>& keyCols,
             {
                 // First and second branches processes skewed JOIN, e.g. INT to DECIMAL(38)
                 // Third processes decimal with common width at both small- and largeSide.
-                if (da.isSmallSideWithSkewedData())
+                // The value of the argument to isSmallSideWithSkewedData is insignificant
+                // b/c SmallSide flags are all set.
+                if (da.isSmallSideWithSkewedData(skewedColumnOffset))
                 {
-                    if (int rc = compareDecimalsWSkewedWidths(a, b, db.isLargeSideReducedToSmall(), -1))
+                    if (int rc = compareDecimalsWSkewedWidths(a,
+                                                              b,
+                                                              db.isLargeSideReducedToSmall(skewedColumnOffset),
+                                                              db.isSetLargeSide8Bytes(skewedColumnOffset),
+                                                              -1))
                         return rc;
+                    ++skewedColumnOffset;
                 }
-                else if (db.isSmallSideWithSkewedData())
+                else if (db.isSmallSideWithSkewedData(skewedColumnOffset))
                 {
-                    if (int rc = compareDecimalsWSkewedWidths(b, a, da.isLargeSideReducedToSmall(), 1))
+                    if (int rc = compareDecimalsWSkewedWidths(b,
+                                                              a,
+                                                              da.isLargeSideReducedToSmall(skewedColumnOffset),
+                                                              da.isSetLargeSide8Bytes(skewedColumnOffset),
+                                                              1))
                         return rc;
+                    ++skewedColumnOffset;
                 }
                 else
                 {
@@ -1600,12 +1638,12 @@ TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols,
         }
         else if (datatypes::isWideDecimalType(type, r.getColumnWidth(keyCols[i])))
         {
-            bool otherSideIsInt = isInteger(otherSideRG.getColType(otherKeyCols[i]));
+            bool otherSideIsIntOrNarrow = otherSideRG.getColumnWidth(otherKeyCols[i]) <= datatypes::MAXLEGACYWIDTH;
             // useless if otherSideIsInt is false
-            auto otherSideType = (otherSideIsInt) ? otherSideRG.getColType(otherKeyCols[i])
-                                                  : datatypes::SystemCatalog::UNDEFINED;
-            if (WideDecimalKeyConverter(r, keyCols[i]).convert(otherSideIsInt, otherSideType)
-                                                    .store(ret, off, keylen))
+            auto otherSideType = (otherSideIsIntOrNarrow) ? otherSideRG.getColType(otherKeyCols[i])
+                                                          : datatypes::SystemCatalog::UNDEFINED;
+            if (WideDecimalKeyConverter(r, keyCols[i]).convert(otherSideIsIntOrNarrow, otherSideType)
+                                                      .store(ret, off, keylen))
             {
                 goto toolong;
             }
@@ -1768,6 +1806,7 @@ void TypelessData::serialize(messageqcpp::ByteStream& b) const
 {
     b << len;
     b.append(data, len);
+    // Flags are not send b/c they are locally significant now.
 }
 
 void TypelessData::deserialize(messageqcpp::ByteStream& b, utils::PoolAllocator& fa)
@@ -1933,17 +1972,17 @@ boost::shared_ptr<TupleJoiner> TupleJoiner::copyForDiskJoin()
 // smallSide is a smaller data type, e.g. INT or narrow-DECIMAL.
 bool TupleJoiner::largeSideIsWideSmallSideIsNarrow() const
 {
-    for (auto smallSideTypeIter = smallRG.getColTypes().begin(), largeSideTypeIter = largeRG.getColTypes().begin();
-         smallSideTypeIter != smallRG.getColTypes().end() && largeSideTypeIter != largeRG.getColTypes().end();
-         smallSideTypeIter++, largeSideTypeIter++)
+    for (size_t i = 0; i < smallRG.getColTypes().size(); ++i)
     {
-        if ((datatypes::isDecimal(*largeSideTypeIter)) &&
-           (*smallSideTypeIter != *largeSideTypeIter))
+        bool widthIsDifferent = smallRG.getColumnWidth(i) != largeRG.getColumnWidth(i);
+        if (widthIsDifferent && (datatypes::isWideDecimalType(smallRG.getColTypes()[i], smallRG.getColumnWidth(i)) ||
+                                 datatypes::isWideDecimalType(largeRG.getColTypes()[i], largeRG.getColumnWidth(i))))
         {
-                return true;
+            return true;
         }
     }
     return false;
+
 }
 
 void TupleJoiner::setConvertToDiskJoin()
@@ -1989,13 +2028,15 @@ uint32_t calculateKeyLength(const std::vector<uint32_t>& aKeyColumnsIds,
         else if (datatypes::isWideDecimalType(smallKeyColumnType,
                                               aSmallRowGroup.getColumnWidth(keyColumnIdx)))
         {
-            keyLength += (aLargeRowGroup && largeKeyColumntype != datatypes::SystemCatalog::DECIMAL) ?
-                           datatypes::MAXLEGACYWIDTH :   // Small=Wide, Large=Narrow/xINT
-                           datatypes::MAXDECIMALWIDTH;   // Small=Wide, Large=Wide
+            keyLength += (aLargeRowGroup &&
+                          !datatypes::isWideDecimalType(largeKeyColumntype,
+                                                        aLargeRowGroup->getColumnWidth(keyColumnIdx)))
+                       ? datatypes::MAXLEGACYWIDTH     // Small=Wide, Large=Narrow/xINT
+                       : datatypes::MAXDECIMALWIDTH;   // Small=Wide, Large=Wide
         }
+        else
         // The branch covers all datatypes left including skewed DECIMAL JOIN case
         // Small=Wide, Large=Narrow
-        else
         {
             keyLength += datatypes::MAXLEGACYWIDTH;
         }
