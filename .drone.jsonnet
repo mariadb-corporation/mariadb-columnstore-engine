@@ -21,6 +21,12 @@ local server_ref_map = {
   '**': '10.6',
 };
 
+local server_remote_map = {
+  develop: 'https://github.com/MariaDB/server',
+  'develop-5': 'https://github.com/mariadb-corporation/MariaDBEnterprise',
+  '**': 'https://github.com/MariaDB/server',
+};
+
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
 
 local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_XPAND=NO -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO ' +
@@ -296,7 +302,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
              volumes: [pipeline._volumes.mdb],
              environment: {
                SERVER_REF: '${SERVER_REF:-' + server_ref_map[branch] + '}',
-               SERVER_REMOTE: '${SERVER_REMOTE:-https://github.com/MariaDB/server}',
+               SERVER_REMOTE: '${SERVER_REMOTE:-' + server_remote_map[branch] + '}',
                SERVER_SHA: '${SERVER_SHA:-' + server_ref_map[branch] + '}',
              },
              commands: [
