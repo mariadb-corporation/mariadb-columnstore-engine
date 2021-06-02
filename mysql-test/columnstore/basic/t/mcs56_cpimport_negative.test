@@ -21,7 +21,7 @@ CREATE TABLE t1(col1 INT, col2 INT) ENGINE=Columnstore;
 # Negative. Non-existing data file.
 exec rm -f /tmp/nonexisting.dat; 
 --disable_result_log #cpimport logs thread/timestamps
-exec cpimport mcs56_db t1 /tmp/nonexisting.dat 2>&1 | tee /tmp/mcs56.out;
+exec $MCS_CPIMPORT mcs56_db t1 /tmp/nonexisting.dat 2>&1 | tee /tmp/mcs56.out;
 --enable_result_log
 
 exec echo "";
@@ -35,7 +35,7 @@ DROP DATABASE IF EXISTS nonexist_tbl;
 
 # Negative. Non-existing db.
 --disable_result_log
-exec cpimport nonexist_db t1 /tmp/nonexisting.dat 2>&1 | tee /tmp/mcs56.out;
+exec $MCS_CPIMPORT nonexist_db t1 /tmp/nonexisting.dat 2>&1 | tee /tmp/mcs56.out;
 --enable_result_log
 
 exec echo "";
@@ -45,7 +45,7 @@ exec grep -q "IDB-2006: 'nonexist_db.t1' does not exist in Columnstore." /tmp/mc
 
 # Negative. Non-existing table.
 --disable_result_log
-exec cpimport mcs56_db nonexist_tbl /tmp/nonexisting.dat 2>&1 | tee /tmp/mcs56.out;
+exec $MCS_CPIMPORT mcs56_db nonexist_tbl /tmp/nonexisting.dat 2>&1 | tee /tmp/mcs56.out;
 --enable_result_log
 
 exec echo "";

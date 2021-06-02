@@ -22,7 +22,7 @@ CREATE TABLE t1(col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnstore;
 # This test needs to be extended to cover multi-node setup
 
 --disable_result_log #cpimport logs thread/timestamps
---exec cpimport -m3 mcs49_db t1 -l '$MTR_SUITE_DIR/../std_data/100Krows.dat';
+--exec $MCS_CPIMPORT -m3 mcs49_db t1 -l '$MTR_SUITE_DIR/../std_data/100Krows.dat';
 --enable_result_log
 
 #Validate data
