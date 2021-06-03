@@ -21,7 +21,6 @@
 
 void check_walk(const Item* item, void* arg);
 
-
 void disable_indices_for_CEJ(THD *thd_)
 {
     TABLE_LIST* global_list;
@@ -30,7 +29,7 @@ void disable_indices_for_CEJ(THD *thd_)
         // MCOL-652 - doing this with derived tables can cause bad things to happen
         if (!global_list->derived)
         {
-            global_list->index_hints= new (thd_->mem_root) List<Index_hint>();
+            global_list->index_hints = new (thd_->mem_root) List<Index_hint>();
 
             global_list->index_hints->push_front(new (thd_->mem_root)
                                     Index_hint(INDEX_HINT_USE,
@@ -84,8 +83,8 @@ void find_tables(const Item* item, void* arg)
 {
     if (typeid(*item) == typeid(Item_field))
     {
-        Item_field *ifp= (Item_field*)item;
-        List<TABLE> *tables_list= (List<TABLE>*)arg;
+        Item_field *ifp = (Item_field*)item;
+        List<TABLE> *tables_list = (List<TABLE>*)arg;
         tables_list->push_back(ifp->field->table);
     }
 }
@@ -109,8 +108,8 @@ bool is_joinkeys_predicate(const Item_func *ifp)
         if (ifp->arguments()[0]->type() == Item::FIELD_ITEM &&
           ifp->arguments()[1]->type() == Item::FIELD_ITEM)
         {
-            Item_field* left= reinterpret_cast<Item_field*>(ifp->arguments()[0]);
-            Item_field* right= reinterpret_cast<Item_field*>(ifp->arguments()[1]);
+            Item_field* left = reinterpret_cast<Item_field*>(ifp->arguments()[0]);
+            Item_field* right = reinterpret_cast<Item_field*>(ifp->arguments()[1]);
 
             // If MDB crashes here with non-fixed Item_field and field == NULL
             // there must be a check over on_expr for a different SELECT_LEX.
@@ -123,8 +122,8 @@ bool is_joinkeys_predicate(const Item_func *ifp)
         else
         {
             List<TABLE>llt; List<TABLE>rlt;
-            Item *left= ifp->arguments()[0];
-            Item *right= ifp->arguments()[1];
+            Item *left = ifp->arguments()[0];
+            Item *right = ifp->arguments()[1];
             // Search for tables inside left and right expressions
             // and compare them
             left->traverse_cond(find_tables, (void*)&llt, Item::POSTFIX);
@@ -133,7 +132,7 @@ bool is_joinkeys_predicate(const Item_func *ifp)
             // the idea is useless.
             if (llt.elements && rlt.elements && (llt.elem(0) != rlt.elem(0)))
             {
-                result= true;
+                result = true;
             }
         }
     }
@@ -151,7 +150,7 @@ bool is_joinkeys_predicate(const Item_func *ifp)
 ***********************************************************/
 void find_nonequi_join(const Item* item, void *arg)
 {
-    bool *unsupported_feature  = reinterpret_cast<bool*>(arg);
+    bool *unsupported_feature = reinterpret_cast<bool*>(arg);
     if ( *unsupported_feature )
         return;
 
@@ -184,7 +183,7 @@ void find_nonequi_join(const Item* item, void *arg)
 ***********************************************************/
 void find_join(const Item* item, void* arg)
 {
-    bool *unsupported_feature  = reinterpret_cast<bool*>(arg);
+    bool *unsupported_feature = reinterpret_cast<bool*>(arg);
     if ( *unsupported_feature )
         return;
 
@@ -219,10 +218,10 @@ void save_join_predicates(const Item* item, void* arg)
 {
     if (item->type() == Item::FUNC_ITEM)
     {
-        const Item_func* ifp= reinterpret_cast<const Item_func*>(item);
+        const Item_func* ifp = reinterpret_cast<const Item_func*>(item);
         if (is_joinkeys_predicate(ifp))
         {
-            List<Item> *join_preds_list= (List<Item>*)arg;
+            List<Item> *join_preds_list = (List<Item>*)arg;
             join_preds_list->push_back(const_cast<Item*>(item));
         }
     }
@@ -241,7 +240,7 @@ void save_join_predicates(const Item* item, void* arg)
 ***********************************************************/
 void check_walk(const Item* item, void* arg)
 {
-    bool *unsupported_feature  = reinterpret_cast<bool*>(arg);
+    bool *unsupported_feature = reinterpret_cast<bool*>(arg);
     if ( *unsupported_feature )
         return;
 
@@ -307,7 +306,7 @@ void check_walk(const Item* item, void* arg)
 ***********************************************************/
 void check_user_var_func(const Item* item, void* arg)
 {
-    bool* unsupported_feature  = reinterpret_cast<bool*>(arg);
+    bool* unsupported_feature = reinterpret_cast<bool*>(arg);
 
     if (*unsupported_feature)
         return;
@@ -509,8 +508,8 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *table_ptr)
     if (thd->stmt_arena && thd->stmt_arena->is_stmt_execute())
         return handler;
 
-    SELECT_LEX_UNIT *unit= table_ptr->derived;
-    SELECT_LEX *sl= unit->first_select();
+    SELECT_LEX_UNIT *unit = table_ptr->derived;
+    SELECT_LEX *sl = unit->first_select();
 
     bool unsupported_feature = false;
 
@@ -523,7 +522,7 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *table_ptr)
     }
 
     // JOIN expression from WHERE, ON expressions
-    JOIN* join= sl->join;
+    JOIN* join = sl->join;
     //TODO DRRTUY Make a proper tree traverse
     //To search for CROSS JOIN-s we use tree invariant
     //G(V,E) where [V] = [E]+1
@@ -533,7 +532,7 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *table_ptr)
     {
         if (tl->where)
         {
-            Item_cond* where_icp= reinterpret_cast<Item_cond*>(tl->where);
+            Item_cond* where_icp = reinterpret_cast<Item_cond*>(tl->where);
             where_icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
             where_icp->traverse_cond(save_join_predicates, &join_preds_list, Item::POSTFIX);
         }
@@ -542,7 +541,7 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *table_ptr)
         // TABLE_LIST in FROM until CS meets unsupported feature
         if (tl->on_expr)
         {
-            Item_cond* on_icp= reinterpret_cast<Item_cond*>(tl->on_expr);
+            Item_cond* on_icp = reinterpret_cast<Item_cond*>(tl->on_expr);
             on_icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
             on_icp->traverse_cond(save_join_predicates, &join_preds_list, Item::POSTFIX);
         }
@@ -559,7 +558,7 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *table_ptr)
     if (!unsupported_feature && !join_preds_list.elements
           && join && join->conds)
     {
-        Item_cond* conds= reinterpret_cast<Item_cond*>(join->conds);
+        Item_cond* conds = reinterpret_cast<Item_cond*>(join->conds);
         conds->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
         conds->traverse_cond(save_join_predicates, &join_preds_list, Item::POSTFIX);
     }
@@ -569,18 +568,18 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *table_ptr)
     if (!unsupported_feature && join
          && join->table_count >= 2 && !join_preds_list.elements)
     {
-        unsupported_feature= true;
+        unsupported_feature = true;
     }
 
     // CROSS JOIN with not enough JOIN predicates
     if(!unsupported_feature && join
         && join_preds_list.elements < join->table_count-1)
     {
-        unsupported_feature= true;
+        unsupported_feature = true;
     }
 
-    if ( !unsupported_feature )
-        handler= new ha_columnstore_derived_handler(thd, table_ptr);
+    if (!unsupported_feature)
+        handler = new ha_columnstore_derived_handler(thd, table_ptr);
 
   return handler;
 }
@@ -619,7 +618,7 @@ int ha_columnstore_derived_handler::init_scan()
 {
     DBUG_ENTER("ha_columnstore_derived_handler::init_scan");
 
-    mcs_handler_info mhi = mcs_handler_info(reinterpret_cast<void*>(this), DERIVED);
+    mcs_handler_info mhi(reinterpret_cast<void*>(this), DERIVED);
     // this::table is the place for the result set
     int rc = ha_mcs_impl_pushdown_init(&mhi, table);
 
@@ -747,7 +746,7 @@ int ha_mcs_group_by_handler::end_scan()
  * More details in server/sql/select_handler.h
  * PARAMETERS:
  *    thd - THD pointer.
- *    sel - SELECT_LEX* that describes the query.
+ *    select_lex - SELECT_LEX* that describes the query.
  * RETURN:
  *    select_handler if possible
  *    NULL in other case
@@ -800,13 +799,12 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
     // We apply dedicated rewrites from MDB here so MDB's data structures
     // becomes dirty and CS has to raise an error in case of any problem
     // or unsupported feature.
-    handler= new ha_columnstore_select_handler(thd, select_lex);
-    JOIN *join= select_lex->join;
+    handler = new ha_columnstore_select_handler(thd, select_lex);
+    JOIN *join = select_lex->join;
     bool unsupported_feature = false;
     {
         Query_arena *arena, backup;
-        arena= thd->activate_stmt_arena_if_needed(&backup);
-
+        arena = thd->activate_stmt_arena_if_needed(&backup);
         disable_indices_for_CEJ(thd);
 
         if (arena)
@@ -822,25 +820,20 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
         COND *conds = nullptr;
         if (!unsupported_feature)
         {
-            SELECT_LEX *sel= select_lex;
             // Rewrite once for PS
 	    // Refer to JOIN::optimize_inner() in sql/sql_select.cc
 	    // for details on the optimizations performed in this block.
-            if (sel->first_cond_optimization)
+            if (select_lex->first_cond_optimization)
             {
                 create_explain_query_if_not_exists(thd->lex, thd->mem_root);
-                arena= thd->activate_stmt_arena_if_needed(&backup);
-                sel->first_cond_optimization= false;
-
-                conds= simplify_joins_mcs(join, select_lex->join_list,
-                    join->conds, true, false);
-
-                build_bitmap_for_nested_joins_mcs(select_lex->join_list, 0);
-                sel->where= conds;
+                arena = thd->activate_stmt_arena_if_needed(&backup);
+                select_lex->first_cond_optimization= false;
+                conds = join->conds;
+                select_lex->where = conds;
 
                 if (isPS)
                 {
-                    sel->prep_where= conds ? conds->copy_andor_structure(thd) : 0;
+                    select_lex->prep_where = conds ? conds->copy_andor_structure(thd) : 0;
                 }
 
                 select_lex->update_used_tables();
@@ -849,23 +842,21 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
                     thd->restore_active_arena(arena, &backup);
 
                 // Unset SL::first_cond_optimization
-                opt_flag_unset_PS(sel);
+                opt_flag_unset_PS(select_lex);
             }
-        }
 
-        if (!unsupported_feature && conds)
-        {
 #ifdef DEBUG_WALK_COND
-            conds->traverse_cond(cal_impl_if::debug_walk, NULL, Item::POSTFIX);
+            if (conds)
+            {
+                conds->traverse_cond(cal_impl_if::debug_walk, NULL, Item::POSTFIX);
+            }
 #endif
-            join->conds = conds;
         }
     }
 
     // We shouldn't raise error now so set an error to raise it later in init_SH.
-    handler->rewrite_error= unsupported_feature;
-    // Return SH even if init fails b/c CS changed SELECT_LEX structures
-    // with simplify_joins_mcs()
+    handler->rewrite_error = unsupported_feature;
+    // Return SH even if init fails
     return handler;
 }
 
@@ -880,8 +871,8 @@ ha_columnstore_select_handler::ha_columnstore_select_handler(THD *thd,
                                                              SELECT_LEX* select_lex)
   : select_handler(thd, mcs_hton)
 {
-  select= select_lex;
-  rewrite_error= false;
+  select = select_lex;
+  rewrite_error = false;
 }
 
 /***********************************************************
@@ -913,16 +904,15 @@ int ha_columnstore_select_handler::init_scan()
         // Skip execution for EXPLAIN queries
         if (!thd->lex->describe)
         {
-            mcs_handler_info mhi= mcs_handler_info(
-                reinterpret_cast<void*>(this), SELECT);
-            rc= ha_mcs_impl_pushdown_init(&mhi, this->table);
+            mcs_handler_info mhi(reinterpret_cast<void*>(this), SELECT);
+            rc = ha_mcs_impl_pushdown_init(&mhi, this->table);
         }
     }
     else
     {
         my_printf_error(ER_INTERNAL_ERROR, "%s", MYF(0), err_msg.c_str());
         sql_print_error("%s", err_msg.c_str());
-        rc= ER_INTERNAL_ERROR;
+        rc = ER_INTERNAL_ERROR;
     }
 
     DBUG_RETURN(rc);
@@ -942,7 +932,7 @@ int ha_columnstore_select_handler::next_row()
 {
     DBUG_ENTER("ha_columnstore_select_handler::next_row");
 
-    int rc= ha_mcs_impl_select_next(table->record[0], table);
+    int rc = ha_mcs_impl_select_next(table->record[0], table);
 
     DBUG_RETURN(rc);
 }

@@ -4679,8 +4679,8 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
     sm::cpsm_conhdl_t* hndl;
     SCSEP csep;
     // Declare handlers ptrs in this scope for future use.
-    select_handler* sh = nullptr;
-    derived_handler* dh = nullptr;
+    ha_columnstore_select_handler* sh = nullptr;
+    ha_columnstore_derived_handler* dh = nullptr;
 
     // update traceFlags according to the autoswitch state.
     ci->traceFlags = (ci->traceFlags | CalpontSelectExecutionPlan::TRACE_TUPLE_OFF)^
@@ -4774,12 +4774,12 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
             int status = 42;
             if (handler_info->hndl_type == mcs_handler_types_t::SELECT)
             {
-                sh = reinterpret_cast<select_handler*>(handler_info->hndl_ptr);
+                sh = reinterpret_cast<ha_columnstore_select_handler*>(handler_info->hndl_ptr);
                 status = cs_get_select_plan(sh, thd, csep, gwi);
             }
             else if (handler_info->hndl_type == DERIVED)
             {
-                dh = reinterpret_cast<derived_handler*>(handler_info->hndl_ptr);
+                dh = reinterpret_cast<ha_columnstore_derived_handler*>(handler_info->hndl_ptr);
                 status = cs_get_derived_plan(dh, thd, csep, gwi);
             }
 

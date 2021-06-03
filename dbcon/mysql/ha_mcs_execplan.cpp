@@ -59,6 +59,7 @@ using namespace logging;
 #include "ha_mcs_impl_if.h"
 #include "ha_mcs_sysvars.h"
 #include "ha_subquery.h"
+#include "ha_mcs_pushdown.h"
 using namespace cal_impl_if;
 
 #include "calpontselectexecutionplan.h"
@@ -135,6 +136,142 @@ public:
 
 namespace cal_impl_if
 {
+
+// This is taken from Item_cond::fix_fields in sql/item_cmpfunc.cc.
+void calculateNotNullTables(const std::vector<COND*>& condList,
+    table_map& not_null_tables)
+{
+    for (Item* item : condList)
+    {
+        if (item->can_eval_in_optimize() && !item->with_sp_var() &&
+            !cond_has_datetime_is_null(item))
+        {
+            if (item->eval_const_cond())
+            {
+            }
+            else
+            {
+                not_null_tables = (table_map) 0;
+            }
+        }
+        else
+        {
+            not_null_tables |= item->not_null_tables();
+        }
+    }
+}
+
+// Recursively iterate through the join_list and store all non-null
+// TABLE_LIST::on_expr items to a hash map keyed by the TABLE_LIST ptr.
+// This is then used by convertOuterJoinToInnerJoin().
+void buildTableOnExprList(List<TABLE_LIST>* join_list,
+    TableOnExprList& tableOnExprList)
+{
+    TABLE_LIST *table;
+    NESTED_JOIN *nested_join;
+    List_iterator<TABLE_LIST> li(*join_list);
+
+    while ((table = li++))
+    {
+        if ((nested_join = table->nested_join))
+        {
+            buildTableOnExprList(&nested_join->join_list, tableOnExprList);
+        }
+
+        if (table->on_expr)
+            tableOnExprList[table].push_back(table->on_expr);
+    }
+}
+
+// This is a trimmed down version of simplify_joins() in sql/sql_select.cc.
+// Refer to that function for more details. But we have customized the
+// original implementation in simplify_joins() to avoid any changes to
+// the SELECT_LEX::JOIN::conds. Specifically, in some cases, simplify_joins()
+// would create new Item_cond_and objects. We want to avoid such changes to
+// the SELECT_LEX in a scenario where the select_handler execution has failed
+// and we want to fallback to the server execution (MCOL-4525). Here, we mimick
+// the creation of Item_cond_and using tableOnExprList and condList.
+void convertOuterJoinToInnerJoin(List<TABLE_LIST>* join_list,
+    TableOnExprList& tableOnExprList,
+    std::vector<COND*>& condList,
+    TableOuterJoinMap& tableOuterJoinMap)
+{
+    TABLE_LIST *table;
+    NESTED_JOIN *nested_join;
+    List_iterator<TABLE_LIST> li(*join_list);
+
+    while ((table = li++))
+    {
+        table_map used_tables;
+        table_map not_null_tables = (table_map) 0;
+
+        if ((nested_join = table->nested_join))
+        {
+            auto iter = tableOnExprList.find(table);
+
+            if ((iter != tableOnExprList.end()) && !iter->second.empty())
+            {
+                convertOuterJoinToInnerJoin(&nested_join->join_list,
+                    tableOnExprList, tableOnExprList[table], tableOuterJoinMap);
+            }
+
+            nested_join->used_tables = (table_map) 0;
+            nested_join->not_null_tables = (table_map) 0;
+
+            convertOuterJoinToInnerJoin(&nested_join->join_list,
+                tableOnExprList, condList, tableOuterJoinMap);
+
+            used_tables = nested_join->used_tables;
+            not_null_tables = nested_join->not_null_tables;
+        }
+        else
+        {
+            used_tables = table->get_map();
+
+            if (!condList.empty())
+            {
+                if (condList.size() == 1)
+                {
+                    not_null_tables = condList[0]->not_null_tables();
+                }
+                else
+                {
+                    calculateNotNullTables(condList, not_null_tables);
+                }
+            }
+        }
+
+        if (table->embedding)
+        {
+            table->embedding->nested_join->used_tables |= used_tables;
+            table->embedding->nested_join->not_null_tables |= not_null_tables;
+        }
+
+        if (!(table->outer_join & (JOIN_TYPE_LEFT | JOIN_TYPE_RIGHT)) ||
+            (used_tables & not_null_tables))
+        {
+            if (table->outer_join)
+            {
+                tableOuterJoinMap[table] = table->outer_join;
+            }
+
+            table->outer_join = 0;
+
+            auto iter = tableOnExprList.find(table);
+
+            if (iter != tableOnExprList.end() && !iter->second.empty())
+            {
+                // The original implementation in simplify_joins() creates
+                // an Item_cond_and object here. Instead of doing so, we
+                // append the table->on_expr to the condList and hence avoid
+                // making any permanent changes to SELECT_LEX::JOIN::conds.
+                condList.insert(condList.end(),
+                    tableOnExprList[table].begin(), tableOnExprList[table].end());
+                iter->second.clear();
+            }
+        }
+    }
+}
 
 CalpontSystemCatalog::TableAliasName makeTableAliasName(TABLE_LIST* table)
 {
@@ -1281,10 +1418,24 @@ uint32_t buildJoin(gp_walk_info& gwi, List<TABLE_LIST>& join_list,
         if (table->nested_join && !table->derived)
             buildJoin(gwi, table->nested_join->join_list, outerJoinStack);
 
-        if (table->on_expr)
-        {
-            Item_cond* expr = reinterpret_cast<Item_cond*>(table->on_expr);
+        std::vector<COND*> tableOnExprList;
 
+        auto iter = gwi.tableOnExprList.find(table);
+
+        // Check if this table's on_expr is available in the hash map
+        // built/updated during convertOuterJoinToInnerJoin().
+        if ((iter != gwi.tableOnExprList.end()) && !iter->second.empty())
+        {
+            tableOnExprList = iter->second;
+        }
+        // This table's on_expr has not been seen/processed before.
+        else if ((iter == gwi.tableOnExprList.end()) && table->on_expr)
+        {
+            tableOnExprList.push_back(table->on_expr);
+        }
+
+        if (!tableOnExprList.empty())
+        {
             if (table->outer_join & (JOIN_TYPE_LEFT | JOIN_TYPE_RIGHT))
             {
                 // inner tables block
@@ -1312,18 +1463,23 @@ uint32_t buildJoin(gp_walk_info& gwi, List<TABLE_LIST>& join_list,
                 cerr << endl;
 
                 cerr << " outer table expression: " << endl;
-                expr->traverse_cond(debug_walk, &gwi_outer, Item::POSTFIX);
+
+                for (Item* expr : tableOnExprList)
+                    expr->traverse_cond(debug_walk, &gwi_outer, Item::POSTFIX);
 #endif
 
-                expr->traverse_cond(gp_walk, &gwi_outer, Item::POSTFIX);
-
-                // Error out subquery in outer join on filter for now
-                if (gwi_outer.hasSubSelect)
+                for (Item* expr : tableOnExprList)
                 {
-                    gwi.fatalParseError = true;
-                    gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_OUTER_JOIN_SUBSELECT);
-                    setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText);
-                    return -1;
+                    expr->traverse_cond(gp_walk, &gwi_outer, Item::POSTFIX);
+
+                    // Error out subquery in outer join on filter for now
+                    if (gwi_outer.hasSubSelect)
+                    {
+                        gwi.fatalParseError = true;
+                        gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_OUTER_JOIN_SUBSELECT);
+                        setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText);
+                        return -1;
+                    }
                 }
 
                 // build outerjoinon filter
@@ -1356,11 +1512,15 @@ uint32_t buildJoin(gp_walk_info& gwi, List<TABLE_LIST>& join_list,
             }
             else // inner join
             {
-                expr->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
+                for (Item* expr : tableOnExprList)
+                {
+                    expr->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
+                }
 
 #ifdef DEBUG_WALK_COND
                 cerr << " inner join expression: " << endl;
-                expr->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
+                for (Item* expr : tableOnExprList)
+                    expr->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
 #endif
             }
         }
@@ -2665,6 +2825,22 @@ void setError(THD* thd, uint32_t errcode, string errmsg, gp_walk_info& gwi)
 {
     setError(thd, errcode, errmsg);
     clearStacks(gwi);
+}
+
+int setErrorAndReturn(gp_walk_info &gwi)
+{
+    // if this is dervied table process phase, mysql may have not developed the plan
+    // completely. Do not error and eventually mysql will call JOIN::exec() again.
+    // related to bug 2922. Need to find a way to skip calling rnd_init for derived table
+    // processing.
+    if (gwi.thd->derived_tables_processing)
+    {
+        gwi.cs_vtable_is_update_with_derive = true;
+        return -1;
+    }
+
+    setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
+    return ER_INTERNAL_ERROR;
 }
 
 const string bestTableName(const Item_field* ifp)
@@ -6364,7 +6540,6 @@ int processFrom(bool &isUnion,
         csep->distinctUnionNum(distUnionNum);
     }
 
-
     return 0;
 }
 
@@ -6382,24 +6557,24 @@ int processWhere(SELECT_LEX &select_lex,
     const std::vector<COND*>& condStack)
 {
     JOIN* join = select_lex.join;
-    Item_cond* icp = 0;
+    Item* icp = 0;
     bool isUpdateDelete = false;
 
     // Flag to indicate if this is a prepared statement
     bool isPS = gwi.thd->stmt_arena && gwi.thd->stmt_arena->is_stmt_execute();
 
     if (join != 0 && !isPS)
-        icp = reinterpret_cast<Item_cond*>(join->conds);
+        icp = join->conds;
     else if (isPS && select_lex.prep_where)
-        icp = (Item_cond*)(select_lex.prep_where);
+        icp = select_lex.prep_where;
 
     // if icp is null, try to find the where clause other where
     if (!join && gwi.thd->lex->derived_tables)
     {
         if (select_lex.prep_where)
-            icp = (Item_cond*)(select_lex.prep_where);
+            icp = select_lex.prep_where;
         else if (select_lex.where)
-            icp = (Item_cond*)(select_lex.where);
+            icp = select_lex.where;
     }
     else if (!join && ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) ||
                         ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) ||
@@ -6429,20 +6604,7 @@ int processWhere(SELECT_LEX &select_lex,
 
         if (gwi.fatalParseError)
         {
-            // if this is dervied table process phase, mysql may have not developed the plan
-            // completely. Do not error and eventually mysql will call JOIN::exec() again.
-            // related to bug 2922. Need to find a way to skip calling rnd_init for derived table
-            // processing.
-            if (gwi.thd->derived_tables_processing)
-            {
-                // MCOL-2178 isUnion member only assigned, never used
-                //MIGR::infinidb_vtable.isUnion = false;
-                gwi.cs_vtable_is_update_with_derive = true;
-                return -1;
-            }
-
-            setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
-            return ER_INTERNAL_ERROR;
+            return setErrorAndReturn(gwi);
         }
     }
     else if (isUpdateDelete)
@@ -6460,33 +6622,19 @@ int processWhere(SELECT_LEX &select_lex,
 
                 if (gwi.fatalParseError)
                 {
-                    if (gwi.thd->derived_tables_processing)
-                    {
-                        gwi.cs_vtable_is_update_with_derive = true;
-                        return -1;
-                    }
-
-                    setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
-                    return ER_INTERNAL_ERROR;
+                    return setErrorAndReturn(gwi);
                 }
             }
         }
         // if condStack is empty(), check the select_lex for where conditions
         // as a last resort
-        else if ((icp = reinterpret_cast<Item_cond*>(select_lex.where)) != 0)
+        else if ((icp = select_lex.where) != 0)
         {
             icp->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
 
             if (gwi.fatalParseError)
             {
-                if (gwi.thd->derived_tables_processing)
-                {
-                    gwi.cs_vtable_is_update_with_derive = true;
-                    return -1;
-                }
-
-                setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
-                return ER_INTERNAL_ERROR;
+                return setErrorAndReturn(gwi);
             }
         }
     }
@@ -6494,6 +6642,19 @@ int processWhere(SELECT_LEX &select_lex,
     {
         gwi.rcWorkStack.push(new ConstantColumn((int64_t)0, ConstantColumn::NUM));
         (dynamic_cast<ConstantColumn*>(gwi.rcWorkStack.top()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+    }
+
+    for (Item* item : gwi.condList)
+    {
+        if (item && (item != icp))
+        {
+            item->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
+
+            if (gwi.fatalParseError)
+            {
+                return setErrorAndReturn(gwi);
+            }
+        }
     }
 
     // ZZ - the followinig debug shows the structure of nested outer join. should
@@ -8352,9 +8513,9 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
     return 0;
 }
 
-int cs_get_derived_plan(derived_handler* handler, THD* thd, SCSEP& csep, gp_walk_info& gwi)
+int cs_get_derived_plan(ha_columnstore_derived_handler* handler, THD* thd, SCSEP& csep, gp_walk_info& gwi)
 {
-    SELECT_LEX select_lex = *handler->select;
+    SELECT_LEX& select_lex = *handler->select;
     int status = getSelectPlan(gwi, select_lex, csep, false);
 
     if (status > 0)
@@ -8372,9 +8533,20 @@ int cs_get_derived_plan(derived_handler* handler, THD* thd, SCSEP& csep, gp_walk
     return 0;
 }
 
-int cs_get_select_plan(select_handler* handler, THD* thd, SCSEP& csep, gp_walk_info& gwi)
+int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& csep, gp_walk_info& gwi)
 {
-    SELECT_LEX select_lex = *handler->select;
+    SELECT_LEX& select_lex = *handler->select;
+
+    if (select_lex.where)
+    {
+        gwi.condList.push_back(select_lex.where);
+    }
+
+    buildTableOnExprList(&select_lex.top_join_list, gwi.tableOnExprList);
+
+    convertOuterJoinToInnerJoin(&select_lex.top_join_list,
+        gwi.tableOnExprList, gwi.condList, handler->tableOuterJoinMap);
+
     int status = getSelectPlan(gwi, select_lex, csep, false, true);
 
     if (status > 0)
