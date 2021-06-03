@@ -71,13 +71,28 @@ static MYSQL_THDVAR_ULONGLONG(
     1
 );
 
-static MYSQL_THDVAR_BOOL(
+const char* mcs_select_handler_mode_values[] = {
+    "OFF",
+    "ON",
+    "AUTO",
+    NullS
+};
+
+static TYPELIB mcs_select_handler_mode_values_lib = {
+    array_elements(mcs_select_handler_mode_values) - 1,
+    "mcs_select_handler_mode_values",
+    mcs_select_handler_mode_values,
+    NULL
+};
+
+static MYSQL_THDVAR_ENUM(
     select_handler,
-    PLUGIN_VAR_NOCMDARG,
-    "Enable/Disable the MCS select_handler",
-    NULL,
-    NULL,
-    1
+    PLUGIN_VAR_RQCMDARG,
+    "Set the MCS select_handler to Disabled, Enabled, or Automatic",
+    NULL, // check
+    NULL, // update
+    1, // default
+    &mcs_select_handler_mode_values_lib // values lib
 );
 
 static MYSQL_THDVAR_BOOL(
@@ -288,17 +303,17 @@ static MYSQL_THDVAR_ULONG(
     1 // block size
 );
 
-const char* mcs_use_import_for_batchinsert_values[] = {
+const char* mcs_use_import_for_batchinsert_mode_values[] = {
     "OFF",
     "ON",
     "ALWAYS",
     NullS
 };
 
-static TYPELIB mcs_use_import_for_batchinsert_values_lib = {
-    array_elements(mcs_use_import_for_batchinsert_values) - 1,
-    "mcs_use_import_for_batchinsert_values",
-    mcs_use_import_for_batchinsert_values,
+static TYPELIB mcs_use_import_for_batchinsert_mode_values_lib = {
+    array_elements(mcs_use_import_for_batchinsert_mode_values) - 1,
+    "mcs_use_import_for_batchinsert_mode_values",
+    mcs_use_import_for_batchinsert_mode_values,
     NULL
 };
 
@@ -309,7 +324,7 @@ static MYSQL_THDVAR_ENUM(
     NULL, // check
     NULL, // update
     1, // default
-    &mcs_use_import_for_batchinsert_values_lib // values lib
+    &mcs_use_import_for_batchinsert_mode_values_lib // values lib
 );
 
 static MYSQL_THDVAR_BOOL(
@@ -412,11 +427,12 @@ void set_original_optimizer_flags(ulonglong ptr, THD* thd)
     THDVAR(current_thd, original_optimizer_flags) = (uint64_t)(ptr);
 }
 
-bool get_select_handler(THD* thd)
+mcs_select_handler_mode_t get_select_handler_mode(THD* thd)
 {
-    return ( thd == NULL ) ? false : THDVAR(thd, select_handler);
+    return ( thd == NULL ) ? mcs_select_handler_mode_t::ON :
+           (mcs_select_handler_mode_t) THDVAR(thd, select_handler);
 }
-void set_select_handler(THD* thd, bool value)
+void set_select_handler_mode(THD* thd, ulong value)
 {
     THDVAR(thd, select_handler) = value;
 }
@@ -585,12 +601,12 @@ void set_local_query(THD* thd, ulong value)
     THDVAR(thd, local_query) = value;
 }
 
-mcs_use_import_for_batchinsert_t get_use_import_for_batchinsert(THD* thd)
+mcs_use_import_for_batchinsert_mode_t get_use_import_for_batchinsert_mode(THD* thd)
 {
-    return ( thd == NULL ) ? mcs_use_import_for_batchinsert_t::ON :
-           (mcs_use_import_for_batchinsert_t) THDVAR(thd, use_import_for_batchinsert);
+    return ( thd == NULL ) ? mcs_use_import_for_batchinsert_mode_t::ON :
+           (mcs_use_import_for_batchinsert_mode_t) THDVAR(thd, use_import_for_batchinsert);
 }
-void set_use_import_for_batchinsert(THD* thd, ulong value)
+void set_use_import_for_batchinsert_mode(THD* thd, ulong value)
 {
     THDVAR(thd, use_import_for_batchinsert) = value;
 }

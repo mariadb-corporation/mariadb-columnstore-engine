@@ -1,0 +1,312 @@
+--source ../include/have_columnstore.inc
+
+--echo # MCOL-4525
+--echo # Automatic select_handler
+--echo # columnstore_select_handler=AUTO allows query execution
+--echo # to fallback to the server, in case the execution using
+--echo # select_handler fails.
+
+SET default_storage_engine=columnstore;
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol4525;
+
+CREATE DATABASE mcol4525;
+USE mcol4525;
+
+# Test case from working_tpch1/qa_fe_cnxFunctions/xor.sql.negative.sql
+CREATE TABLE t1 (a int, b int);
+INSERT INTO t1 VALUES (1, 1), (5, 0);
+SET columnstore_select_handler=ON;
+--error 1178
+SELECT a xor b FROM t1;
+SET columnstore_select_handler=AUTO;
+SELECT a xor b FROM t1;
+
+# Test case from MCOL-428
+# This also tests in-to-exists predicate creation and injection
+SET columnstore_select_handler=ON;
+--error 1815
+SELECT DISTINCT a FROM t1 WHERE a IN (SELECT a FROM t1) OR a IN (SELECT a FROM t1);
+SET columnstore_select_handler=AUTO;
+SELECT DISTINCT a FROM t1 WHERE a IN (SELECT a FROM t1) OR a IN (SELECT a FROM t1);
+DROP TABLE t1;
+
+# Test case from working_tpch1/misc/bug4767.negative.sql
+CREATE TABLE bug4767 (c1 float, c2 double);
+INSERT INTO bug4767 VALUES (1.234, 3.4556), (2.3345456, 2.3345456);
+SET columnstore_select_handler=ON;
+--error 1815
+SELECT * FROM bug4767 a JOIN bug4767 b ON (a.c1=b.c2);
+SET columnstore_select_handler=AUTO;
+SELECT * FROM bug4767 a JOIN bug4767 b ON (a.c1=b.c2);
+DROP TABLE bug4767;
+
+# Test case from working_tpch1/misc/bug5126.negative.sql
+CREATE TABLE t1 (a int);
+INSERT INTO t1 VALUES (1), (2);
+CREATE TABLE t2 (b int);
+INSERT INTO t2 VALUES (2);
+SET columnstore_select_handler=ON;
+--error 1815
+SELECT a FROM t1 WHERE a IN (SELECT a FROM t2);
+SET columnstore_select_handler=AUTO;
+SELECT a FROM t1 WHERE a IN (SELECT a FROM t2);
+DROP TABLE t1;
+DROP TABLE t2;
+
+# Test case for MCOL-1205 Circular Joins not supported
+CREATE TABLE t1 (a int);
+INSERT INTO t1 VALUES (1), (2), (3);
+CREATE TABLE t2 (a int);
+INSERT INTO t2 VALUES (2), (3);
+CREATE TABLE t3 (a int);
+INSERT INTO t3 VALUES (3);
+SET columnstore_select_handler=ON;
+--error 1815
+SELECT * FROM t1 JOIN t2 ON t1.a=t2.a JOIN t3 ON t2.a=t3.a AND t3.a=t1.a;
+SET columnstore_select_handler=AUTO;
+SELECT * FROM t1 JOIN t2 ON t1.a=t2.a JOIN t3 ON t2.a=t3.a AND t3.a=t1.a;
+DROP TABLE t1;
+DROP TABLE t2;
+DROP TABLE t3;
+
+# Test case from working_tpch1_compareLogOnly/onClauseJoins/03.sql
+CREATE TABLE l(c1 int, c2 int);
+CREATE TABLE r(c1 int, c2 int);
+CREATE TABLE s(c1 int, c2 int);
+INSERT INTO l VALUES (1, 1);
+INSERT INTO l VALUES (2, 2);
+INSERT INTO r VALUES (1, 1);
+INSERT INTO r VALUES (5, 5);
+INSERT INTO s VALUES (1, 1);
+INSERT INTO s VALUES (9, 9);
+SET columnstore_select_handler=ON;
+--error 1815
+SELECT 'q1', l.c1, r.c1 FROM l LEFT JOIN r ON l.c1 = r.c1 AND l.c1 IN (SELECT c1 FROM s) ORDER BY 1, 2, 3;
+SET columnstore_select_handler=AUTO;
+SELECT 'q1', l.c1, r.c1 FROM l LEFT JOIN r ON l.c1 = r.c1 AND l.c1 IN (SELECT c1 FROM s) ORDER BY 1, 2, 3;
+DROP TABLE l;
+DROP TABLE r;
+DROP TABLE s;
+
+# Test case from working_tpch1_compareLogOnly/having/having_mysql.sql
+CREATE TABLE t1 (col1 int, col2 varchar(5), col_t1 int);
+INSERT INTO t1 VALUES(10,'hello',10);
+INSERT INTO t1 VALUES(20,'hello',20);
+INSERT INTO t1 VALUES(30,'hello',30);
+INSERT INTO t1 VALUES(10,'bye',10);
+INSERT INTO t1 VALUES(10,'sam',10);
+INSERT INTO t1 VALUES(10,'bob',10);
+SET columnstore_select_handler=ON;
+--error 1178
+SELECT SUM(col1) AS col2 FROM t1 GROUP BY col2;
+--error 1815
+SELECT col1 c FROM t1 ORDER BY AVG(col1);
+SET columnstore_select_handler=AUTO;
+SELECT SUM(col1) AS col2 FROM t1 GROUP BY col2;
+SELECT col1 c FROM t1 ORDER BY AVG(col1);
+DROP TABLE t1;
+
+# Test case from working_tpch1_compareLogOnly/misc/bug2891_negative.sql
+CREATE TABLE t1 (a int);
+INSERT INTO t1 VALUES (1);
+SET columnstore_select_handler=ON;
+--error 1178
+SELECT minute(sleep(a)) FROM t1;
+SET columnstore_select_handler=AUTO;
+SELECT minute(sleep(a)) FROM t1;
+DROP TABLE t1;
+
+# Test case from working_tpch1_compareLogOnly/sub/g3_simple_semi_join.negative.sql
+CREATE TABLE t1 (a int);
+CREATE TABLE t2 (a int);
+INSERT INTO t1 VALUES (1), (2);
+INSERT INTO t2 VALUES (2), (3);
+SET columnstore_select_handler=ON;
+--error 1815
+SELECT SUM(a) FROM t1 WHERE EXISTS (SELECT MAX(a) FROM t2);
+# Test case from working_tpch1_compareLogOnly/sub/g2_simple_scalar.negative.sql
+--error 1815
+SELECT * FROM t1 WHERE (a,a) < (SELECT a,a FROM t2 WHERE a=2);
+SET columnstore_select_handler=AUTO;
+SELECT SUM(a) FROM t1 WHERE EXISTS (SELECT MAX(a) FROM t2);
+SELECT * FROM t1 WHERE (a,a) < (SELECT a,a FROM t2 WHERE a=2);
+DROP TABLE t1;
+DROP TABLE t2;
+
+# Test case from working_tpch1_compareLogOnly/sub/bug3767.sql
+CREATE TABLE gen (i int, i2 int);
+INSERT INTO gen VALUES (1,0), (1,1), (1,2), (1,3), (1,4), (1,5), (1,6), (1,7), (1,8), (1,9);
+SET columnstore_select_handler=ON;
+--error 1815
+SELECT i2, (SELECT MAX(g2.i2) FROM gen g2 WHERE g2.i = g1.i AND g2.i2 > g1.i2) sub FROM gen g1;
+SET columnstore_select_handler=AUTO;
+SELECT i2, (SELECT MAX(g2.i2) FROM gen g2 WHERE g2.i = g1.i AND g2.i2 > g1.i2) sub FROM gen g1;
+DROP TABLE gen;
+
+# Test case from working_tpch1_compareLogOnly/view/mts_view.30.sql
+CREATE TABLE t1(a int);
+INSERT INTO t1 VALUES (0), (1), (2), (3);
+CREATE TABLE t2 (a int);
+INSERT INTO t2 VALUES (2), (3);
+CREATE VIEW v1 AS SELECT a FROM t1 WHERE a > 1;
+SET columnstore_select_handler=ON;
+--error 1815
+SELECT * FROM t1 LEFT JOIN (t2 AS t, v1) ON v1.a=t1.a ORDER BY 1;
+SET columnstore_select_handler=AUTO;
+SELECT * FROM t1 LEFT JOIN (t2 AS t, v1) ON v1.a=t1.a ORDER BY 1;
+DROP TABLE t1;
+DROP TABLE t2;
+DROP VIEW v1;
+
+# Modified test case from MCOL-4680:
+# FROM subquery containing nested joins returns an error
+CREATE TABLE c1 (a int);
+INSERT INTO c1 VALUES (1), (2), (3);
+CREATE TABLE c2 (a int);
+INSERT INTO c2 VALUES (2);
+CREATE TABLE c3 (a int);
+CREATE TABLE c4 (a int);
+CREATE TABLE c5 (a int);
+SET columnstore_select_handler=ON;
+--error 1178
+SELECT c1.a AS col1, c2.a AS col2, c1.a xor c2.a FROM
+  c1 LEFT JOIN
+  (
+    (c2 LEFT JOIN c3 ON c2.a=c3.a) LEFT JOIN
+    (c4 JOIN c5 ON c4.a=c5.a)
+    ON c2.a=c4.a
+  )
+  ON c1.a=c2.a WHERE c2.a < 100;
+SET columnstore_select_handler=AUTO;
+SELECT c1.a AS col1, c2.a AS col2, c1.a xor c2.a FROM
+  c1 LEFT JOIN
+  (
+    (c2 LEFT JOIN c3 ON c2.a=c3.a) LEFT JOIN
+    (c4 JOIN c5 ON c4.a=c5.a)
+    ON c2.a=c4.a
+  )
+  ON c1.a=c2.a WHERE c2.a < 100;
+DROP TABLE c1;
+DROP TABLE c2;
+DROP TABLE c3;
+DROP TABLE c4;
+DROP TABLE c5;
+
+# Test case for prepared statements
+CREATE TABLE t1 (a int);
+INSERT INTO t1 VALUES (1), (2), (3), (4);
+SET columnstore_select_handler=ON;
+PREPARE stmt FROM "SELECT a, a xor 0 FROM t1 WHERE a > 1 AND a < 4";
+--error 1178
+EXECUTE stmt;
+--error 1178
+EXECUTE stmt;
+--error 1178
+EXECUTE stmt;
+--error 1178
+EXECUTE stmt;
+DROP PREPARE stmt;
+SET columnstore_select_handler=AUTO;
+PREPARE stmt FROM "SELECT a, a xor 0 FROM t1 WHERE a > 1 AND a < 4";
+EXECUTE stmt;
+EXECUTE stmt;
+EXECUTE stmt;
+EXECUTE stmt;
+EXECUTE stmt;
+DROP PREPARE stmt;
+
+# Test case for stored procedures
+SET columnstore_select_handler=ON;
+delimiter //;
+CREATE PROCEDURE mcol4525_proc()
+ BEGIN
+  SELECT a, a xor 0 FROM t1 WHERE a > 1 AND a < 4;
+ END
+//
+delimiter ;//
+--error 1178
+CALL mcol4525_proc();
+--error 1178
+CALL mcol4525_proc();
+--error 1178
+CALL mcol4525_proc();
+DROP PROCEDURE mcol4525_proc;
+SET columnstore_select_handler=AUTO;
+delimiter //;
+CREATE PROCEDURE mcol4525_proc()
+ BEGIN
+  SELECT a, a xor 0 FROM t1 WHERE a > 1 AND a < 4;
+ END
+//
+delimiter ;//
+CALL mcol4525_proc();
+CALL mcol4525_proc();
+CALL mcol4525_proc();
+DROP PROCEDURE mcol4525_proc;
+DROP TABLE t1;
+
+# Test case taken verbatim from MCOL-4525 issue description
+CREATE TABLE `giorno` (
+`giorno` date NOT NULL DEFAULT '0000-00-00',
+`giornoa` mediumint(7) DEFAULT NULL,
+`mese` mediumint(6) DEFAULT NULL,
+`settimana` mediumint(6) DEFAULT NULL,
+`quindicina` mediumint(6) DEFAULT NULL,
+`trimestre` smallint(5) DEFAULT NULL,
+`quadrimestre` smallint(5) DEFAULT NULL,
+`semestre` smallint(5) DEFAULT NULL,
+`bimestre` smallint(5) DEFAULT NULL,
+`anno` smallint(4) DEFAULT NULL,
+PRIMARY KEY (`giorno`),
+KEY `mese` (`mese`),
+KEY `quindicina` (`quindicina`),
+KEY `settimana` (`settimana`),
+KEY `trimestre` (`trimestre`),
+KEY `semestre` (`semestre`),
+KEY `bimestre` (`bimestre`),
+KEY `quadrimestre` (`quadrimestre`),
+KEY `giornoa` (`giornoa`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='Giorni';
+
+CREATE TABLE `campagna_web_codice` (
+`cwc_id` int(11) DEFAULT NULL,
+`cwc_cw_id` int(11) DEFAULT NULL,
+`cwc_cd_id` int(11) DEFAULT NULL,
+`cwc_codice` varchar(30) DEFAULT NULL,
+`cwc_va_id` int(11) DEFAULT NULL,
+`cwc_prezzo` decimal(12,2) DEFAULT NULL,
+`cwc_prezzoListino` decimal(12,2) DEFAULT NULL,
+`cwc_prezzoSpedizione` decimal(8,2) DEFAULT NULL,
+`cwc_in_id` int(11) DEFAULT NULL,
+`cwc_na_id` int(11) DEFAULT NULL,
+`cwc_desc` varchar(100) DEFAULT NULL,
+`cwc_datainizio` date DEFAULT NULL,
+`cwc_datafine` date DEFAULT NULL,
+`cwc_mo_id` int(11) DEFAULT NULL,
+`cwc_ma_id` int(11) DEFAULT NULL,
+`cwc_pd_id` int(11) DEFAULT NULL,
+`cwc_set_id` int(11) DEFAULT NULL,
+`cwc_mr_id` int(11) DEFAULT NULL,
+`cwc_ca_id` int(11) DEFAULT NULL,
+`cwc_fa_id` int(11) DEFAULT NULL,
+`cwc_ti_id` int(11) DEFAULT NULL,
+`cwc_azws` varchar(255) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+
+SET columnstore_select_handler=ON;
+--error 1815
+SELECT COUNT(DISTINCT cwc_id) npres,COUNT(DISTINCT cwc_cw_id) ncw,cwc_in_id insegna
+FROM (giorno,campagna_web_codice)
+WHERE cwc_fa_id IN (23) AND giorno BETWEEN cwc_datainizio AND cwc_datafine AND mese IN (202009)
+GROUP BY insegna;
+
+SET columnstore_select_handler=AUTO;
+SELECT COUNT(DISTINCT cwc_id) npres,COUNT(DISTINCT cwc_cw_id) ncw,cwc_in_id insegna
+FROM (giorno,campagna_web_codice)
+WHERE cwc_fa_id IN (23) AND giorno BETWEEN cwc_datainizio AND cwc_datafine AND mese IN (202009)
+GROUP BY insegna;
+
+DROP DATABASE mcol4525;
+--enable_warnings

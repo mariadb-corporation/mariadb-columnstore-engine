@@ -32,6 +32,7 @@
 #include <vector>
 
 #include "idb_mysql.h"
+#include "ha_mcs_sysvars.h"
 
 struct st_ha_create_information;
 class ha_columnstore_select_handler;
@@ -274,7 +275,7 @@ struct cal_connection_info
         filePtr(0),
         headerLength(0),
         useXbit(false),
-        useCpimport(1),
+        useCpimport(mcs_use_import_for_batchinsert_mode_t::ON),
         delimiter('\7'),
         affectedRows(0)
     {
@@ -341,7 +342,7 @@ struct cal_connection_info
     FILE* filePtr;
     uint8_t headerLength;
     bool useXbit;
-    uint8_t useCpimport;
+    mcs_use_import_for_batchinsert_mode_t useCpimport;
     char delimiter;
     char enclosed_by;
     std::vector <execplan::CalpontSystemCatalog::ColType> columnTypes;

@@ -33,11 +33,18 @@ enum mcs_compression_type_t {
     SNAPPY = 2
 };
 
-// use_import_for_batchinsert
-enum mcs_use_import_for_batchinsert_t {
+// use_import_for_batchinsert mode
+enum class mcs_use_import_for_batchinsert_mode_t {
     OFF = 0,
     ON = 1,
     ALWAYS = 2
+};
+
+// select_handler mode
+enum class mcs_select_handler_mode_t {
+    OFF = 0,
+    ON = 1,
+    AUTO = 2
 };
 
 // simple setters/getters
@@ -53,8 +60,8 @@ void set_fe_conn_info_ptr(void* ptr, THD* thd = NULL);
 ulonglong get_original_optimizer_flags(THD* thd = NULL);
 void set_original_optimizer_flags(ulonglong ptr, THD* thd = NULL);
 
-bool get_select_handler(THD* thd);
-void set_select_handler(THD* thd, bool value);
+mcs_select_handler_mode_t get_select_handler_mode(THD* thd);
+void set_select_handler_mode(THD* thd, ulong value);
 
 bool get_derived_handler(THD* thd);
 void set_derived_handler(THD* thd, bool value);
@@ -107,8 +114,8 @@ void set_decimal_overflow_check(THD* thd, bool value);
 ulong get_local_query(THD* thd);
 void set_local_query(THD* thd, ulong value);
 
-mcs_use_import_for_batchinsert_t get_use_import_for_batchinsert(THD* thd);
-void set_use_import_for_batchinsert(THD* thd, ulong value);
+mcs_use_import_for_batchinsert_mode_t get_use_import_for_batchinsert_mode(THD* thd);
+void set_use_import_for_batchinsert_mode(THD* thd, ulong value);
 
 ulong get_import_for_batchinsert_delimiter(THD* thd);
 void set_import_for_batchinsert_delimiter(THD* thd, ulong value);

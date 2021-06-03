@@ -1,0 +1,62 @@
+--source ../include/have_columnstore.inc
+
+--echo # MCOL-424
+--echo # Cross engine subquery losing where clause causing incorrect results
+
+if (!$MASTER_MYPORT)
+{
+  # Running with --extern
+  let $MASTER_MYPORT=`SELECT @@port`;
+}
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol424;
+--enable_warnings
+
+CREATE DATABASE mcol424;
+USE mcol424;
+
+#
+# Enable cross engine join
+# Configure user and password in Columnstore.xml file
+#
+--exec $MCS_MCSSETCONFIG CrossEngineSupport User 'cejuser'
+--exec $MCS_MCSSETCONFIG CrossEngineSupport Password 'Vagrant1|0000001'
+--exec $MCS_MCSSETCONFIG CrossEngineSupport Port $MASTER_MYPORT
+
+#
+# Create corresponding in the server
+#
+--disable_warnings
+CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
+--enable_warnings
+GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+FLUSH PRIVILEGES;
+
+CREATE TABLE `trans_test` (
+  `id` int(11) DEFAULT NULL,
+  `member_id` int(11) DEFAULT NULL,
+  `name` varchar(50) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1;
+
+insert  into `trans_test`(`id`,`member_id`,`name`) values (1,1,'trans 1');
+insert  into `trans_test`(`id`,`member_id`,`name`) values (2,2,'trans 2');
+insert  into `trans_test`(`id`,`member_id`,`name`) values (3,1,'trans 3');
+insert  into `trans_test`(`id`,`member_id`,`name`) values (4,2,'trans 4');
+insert  into `trans_test`(`id`,`member_id`,`name`) values (5,1,'trans 5');
+
+CREATE TABLE `member_test` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+insert  into `member_test`(`id`,`name`) values (1,'member 1');
+insert  into `member_test`(`id`,`name`) values (2,'member 2');
+insert  into `member_test`(`id`,`name`) values (3,'member 3');
+
+SELECT * FROM trans_test t WHERE t.`member_id` IN (SELECT id FROM member_test WHERE id =1);
+
+# Clean UP
+DROP USER 'cejuser'@'localhost';
+DROP DATABASE mcol424;
