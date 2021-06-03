@@ -238,7 +238,10 @@ void TupleConstantStep::constructContanstRow(const JobInfo& jobInfo)
             case CalpontSystemCatalog::DECIMAL:
             case CalpontSystemCatalog::UDECIMAL:
             {
-                fRowConst.setIntField(c.decimalVal.value, *i);
+                if (fRowGroupOut.getColWidths()[*i] > datatypes::MAXLEGACYWIDTH)
+                    fRowConst.setInt128Field(c.decimalVal.TSInt128::getValue(), *i);
+                else
+                    fRowConst.setIntField(c.decimalVal.value, *i);
                 break;
             }
 

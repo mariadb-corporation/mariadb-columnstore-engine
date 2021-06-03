@@ -192,9 +192,7 @@ ConstantColumn::ConstantColumn(const string& sql, const IDB_Decimal& val) :
     fResult.longDoubleVal = strtold(sql.c_str(), NULL);
     fResult.decimalVal = val;
     fResultType.colDataType = CalpontSystemCatalog::DECIMAL;
-    fResultType.colWidth = 8;
-    fResultType.scale = val.scale;
-    fResultType.precision = val.precision;
+    fResultType.setDecimalScalePrecision(val.precision, val.scale);
 }
 
 ConstantColumn::ConstantColumn( const ConstantColumn& rhs):
