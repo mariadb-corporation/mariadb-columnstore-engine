@@ -724,7 +724,6 @@ public:
                                logging::ERR_DISKAGG_FILEIO_ERROR);
     }
     close(fd);
-    unlink(fname.c_str());
   }
 
   /** @brief Save all RGData to disk */
