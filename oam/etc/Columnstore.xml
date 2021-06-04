@@ -449,7 +449,6 @@
 		<MySQLRep>n</MySQLRep>
 		<DBRootStorageType>internal</DBRootStorageType>
 		<UMStorageType>internal</UMStorageType>
-		<EEPackageType>binary</EEPackageType>
 		<SystemLogConfigFile>/etc/rsyslog.d/49-columnstore.conf</SystemLogConfigFile>
 		<Cloud>unassigned</Cloud>
 		<AmazonVPCNextPrivateIP>autoassign</AmazonVPCNextPrivateIP>
@@ -523,7 +522,7 @@
 		<!-- <RowAggrThreads>4</RowAggrThreads> --> <!-- Default value is the number of cores -->
 		<!-- <RowAggrBuckets>32</RowAggrBuckets> --> <!-- Default value is number of cores * 4 -->
 		<!-- <RowAggrRowGroupsPerThread>20</RowAggrRowGroupsPerThread> --> <!-- Default value is 20 -->
-		<!-- <AllowDiskBasedAggregation>N</AllowDiskBasedAggregation> --> <!-- Default value is N -->
+		<AllowDiskBasedAggregation>N</AllowDiskBasedAggregation>
 	</RowAggregation>
 	<CrossEngineSupport>
 		<Host>127.0.0.1</Host>

@@ -21,7 +21,7 @@
 *
 *
 * List of files being updated by configure:
-*		Calpont/etc/Columnstore.xml
+*		Columnstore/etc/Columnstore.xml
 *
 *
 ******************************************************************************************/
@@ -51,6 +51,8 @@
 #include "configcpp.h"
 #include "installdir.h"
 
+
+#include "mcsconfig.h"
 
 using namespace std;
 using namespace oam;
@@ -97,28 +99,19 @@ int main(int argc, char* argv[])
 
     try
     {
-        sysConfigOld = Config::makeConfig("./Columnstore.xml");		// system version
-        sysConfigNew = Config::makeConfig("./Columnstore.xml.new");	// released version
+          std::string configFilePathOld = std::string(MCSSYSCONFDIR) + std::string("/columnstore/Columnstore.xml");
+          std::string configFilePathNew = std::string(MCSSYSCONFDIR) + std::string("/columnstore/Columnstore.xml.new");
+          sysConfigOld = Config::makeConfig(configFilePathOld);          // system version
+          sysConfigNew = Config::makeConfig(configFilePathNew);  // released version    
     }
     catch (...)
     {
-        cout << "ERROR: Problem reading Columnstore.xml files";
+        cout << "ERROR: Problem reading Columnstore.xml files\n";
         exit(-1);
     }
 
     string SystemSection = "SystemConfig";
     string InstallSection = "Installation";
-
-    //set install config flag
-    try
-    {
-        sysConfigNew->setConfig(InstallSection, "InitialInstallFlag", "y");
-    }
-    catch (...)
-    {
-        cout << "ERROR: Problem setting InitialInstallFlag from the Calpont System Configuration file" << endl;
-        exit(-1);
-    }
 
     //read cloud parameter to see if OLD is a 3.0+ or pre-3.0 build being installed
     string cloud;
@@ -150,29 +143,9 @@ int main(int argc, char* argv[])
     if ( !cloud.empty() )
         build3 = true;
 
-    // build 4.0 flag
-    string CoreFileFlag;
-
-    try
-    {
-        CoreFileFlag = sysConfigNew->getConfig(InstallSection, "CoreFileFlag");
-    }
-    catch (...)
-    {}
 
     bool build40 = false;
     bool build401 = true;
-
-    //set install config flag
-    try
-    {
-        sysConfigNew->setConfig(InstallSection, "InitialInstallFlag", "y");
-    }
-    catch (...)
-    {
-        cout << "ERROR: Problem setting InitialInstallFlag from the Calpont System Configuration file" << endl;
-        exit(-1);
-    }
 
 
     //check and update PMwithUM
@@ -188,7 +161,7 @@ int main(int argc, char* argv[])
             }
             catch (...)
             {
-                cout << "ERROR: Problem setting PMwithUM in the Calpont System Configuration file" << endl;
+                cout << "ERROR: Problem setting PMwithUM in the Columnstore System Configuration file" << endl;
                 exit(-1);
             }
         }
@@ -210,7 +183,7 @@ int main(int argc, char* argv[])
             }
             catch (...)
             {
-                cout << "ERROR: Problem setting MySQLRep in the Calpont System Configuration file" << endl;
+                cout << "ERROR: Problem setting MySQLRep in the Columnstore System Configuration file" << endl;
                 exit(-1);
             }
         }
@@ -270,7 +243,7 @@ int main(int argc, char* argv[])
             }
             catch (...)
             {
-                cout << "ERROR: Problem setting FilesPerColumnPartition in the Calpont System Configuration file" << endl;
+                cout << "ERROR: Problem setting FilesPerColumnPartition in the Columnstore System Configuration file" << endl;
                 exit(-1);
             }
         }
@@ -283,29 +256,7 @@ int main(int argc, char* argv[])
             }
             catch (...)
             {
-                cout << "ERROR: Problem setting ExtentsPerSegmentFile in the Calpont System Configuration file" << endl;
-                exit(-1);
-            }
-        }
-    }
-    catch (...)
-    {
-    }
-
-    //check and update license key
-    try
-    {
-        string key = sysConfigOld->getConfig("SystemConfig", "Flags");
-
-        if ( !key.empty() )
-        {
-            try
-            {
-                sysConfigNew->setConfig("SystemConfig", "Flags", key);
-            }
-            catch (...)
-            {
-                cout << "ERROR: Problem setting Flags in the Calpont System Configuration file" << endl;
+                cout << "ERROR: Problem setting ExtentsPerSegmentFile in the Columnstore System Configuration file" << endl;
                 exit(-1);
             }
         }
@@ -333,7 +284,7 @@ int main(int argc, char* argv[])
     }
     catch (...)
     {
-        cout << "ERROR: Problem updating the Calpont System Configuration file" << endl;
+        cout << "ERROR: Problem updating the Columnstore System Configuration file" << endl;
         exit(-1);
     }
 
@@ -356,7 +307,7 @@ int main(int argc, char* argv[])
     }
     catch (...)
     {
-        cout << "ERROR: Problem setting SystemName from the Calpont System Configuration file" << endl;
+        cout << "ERROR: Problem setting SystemName from the Columnstore System Configuration file" << endl;
         exit(-1);
     }
 
@@ -390,7 +341,7 @@ int main(int argc, char* argv[])
         }
         catch (...)
         {
-            cout << "ERROR: Problem setting ProcMgr_HA from the Calpont System Configuration file" << endl;
+            cout << "ERROR: Problem setting ProcMgr_HA from the Columnstore System Configuration file" << endl;
             exit(-1);
         }
     }
@@ -426,7 +377,7 @@ int main(int argc, char* argv[])
             }
             catch (...)
             {
-                cout << "ERROR: Problem setting CMP from the Calpont System Configuration file" << endl;
+                cout << "ERROR: Problem setting CMP from the Columnstore System Configuration file" << endl;
                 exit(-1);
             }
         }
@@ -434,80 +385,10 @@ int main(int argc, char* argv[])
             break;
     }
 
-    //setup module and process monitor settings
-    string ModuleHeartbeatPeriod = "3";
-    string ModuleHeartbeatCount = "1";
-    string ProcessRestartCount = "3";
-    string ProcessRestartPeriod = "1";
-    string SwapAction = "restartSystem";
-    string ActivePmFailoverDisabled = "n";
-
-    try
-    {
-        ModuleHeartbeatPeriod = sysConfigOld->getConfig(SystemSection, "ModuleHeartbeatPeriod");
-        ModuleHeartbeatCount = sysConfigOld->getConfig(SystemSection, "ModuleHeartbeatCount");
-        ProcessRestartCount = sysConfigOld->getConfig(SystemSection, "ProcessRestartCount");
-        ProcessRestartPeriod = sysConfigOld->getConfig(SystemSection, "ProcessRestartPeriod");
-        SwapAction = sysConfigOld->getConfig(SystemSection, "SwapAction");
-        ActivePmFailoverDisabled = sysConfigOld->getConfig(SystemSection, "ActivePmFailoverDisabled");
-    }
-    catch (...)
-    { }
-
-    try
-    {
-        sysConfigNew->setConfig(SystemSection, "ModuleHeartbeatPeriod", ModuleHeartbeatPeriod);
-        sysConfigNew->setConfig(SystemSection, "ModuleHeartbeatCount", ModuleHeartbeatCount);
-        sysConfigNew->setConfig(SystemSection, "ProcessRestartCount", ProcessRestartCount);
-        sysConfigNew->setConfig(SystemSection, "ProcessRestartPeriod", ProcessRestartPeriod);
-        sysConfigNew->setConfig(SystemSection, "SwapAction", SwapAction);
-        sysConfigNew->setConfig(SystemSection, "ActivePmFailoverDisabled", ActivePmFailoverDisabled);
-    }
-    catch (...)
-    {}
-
-    //save EEPackageType
-    string EEPackageType = "rpm";
-
-    try
-    {
-        EEPackageType = sysConfigOld->getConfig(InstallSection, "EEPackageType");
-    }
-    catch (...)
-    { }
-
-    try
-    {
-        sysConfigNew->setConfig(InstallSection, "EEPackageType", EEPackageType);
-    }
-    catch (...)
-    { }
-
-    if ( EEPackageType.empty() )
-        EEPackageType = "rpm";
-
-    try
-    {
-        sysConfigNew->setConfig(InstallSection, "EEPackageType", EEPackageType);
-    }
-    catch (...)
-    {}
-
     // make DBRM backwards compatiable for pre 1.0.0.157 load
     string dbrmMainProc = "DBRM_Controller";
     string dbrmSubProc = "DBRM_Worker";
     string numSubProc = "NumWorkers";
-
-    //set system startup offline option to default 'n'
-    try
-    {
-        sysConfigNew->setConfig(InstallSection, "SystemStartupOffline", "n");
-    }
-    catch (...)
-    {
-        cout << "ERROR: Problem setting systemStartupOffline in the Calpont System Configuration file" << endl;
-        exit(-1);
-    }
 
     //CrossEngineSupport
     string Host = "";
@@ -607,16 +488,16 @@ int main(int argc, char* argv[])
     catch (...)
     {}
 
-    // @bug4507, configurable pm aggregation AggregationMemoryCheck
-    string aggMemCheck;
+    // @bug4507, configurable pm MemoryCheck
+    string memCheck;
 
     try
     {
-        aggMemCheck = sysConfigOld->getConfig("PrimitiveServers", "AggregationMemoryCheck");
+        memCheck = sysConfigOld->getConfig("SystemConfig", "MemoryCheckPercent");
 
-        if ( !( aggMemCheck.empty() || aggMemCheck == "" ) )
+        if ( !( memCheck.empty() || memCheck == "" ) )
         {
-            sysConfigNew->setConfig("PrimitiveServers", "AggregationMemoryCheck", aggMemCheck);
+            sysConfigNew->setConfig("SystemConfig", "MemoryCheckPercent", memCheck);
         }
     }
     catch (...)
@@ -693,7 +574,7 @@ int main(int argc, char* argv[])
             }
             catch (...)
             {
-                cout << "ERROR: Problem setting RotatingDestination in the Calpont System Configuration file" << endl;
+                cout << "ERROR: Problem setting RotatingDestination in the Columnstore System Configuration file" << endl;
                 exit(-1);
             }
 
@@ -719,7 +600,7 @@ int main(int argc, char* argv[])
     }
     catch (...)
     {
-        cout << "ERROR: Problem getting DB Storage Data from the Calpont System Configuration file" << endl;
+        cout << "ERROR: Problem getting DB Storage Data from the Columnstore System Configuration file" << endl;
         exit(-1);
     }
 
@@ -736,7 +617,7 @@ int main(int argc, char* argv[])
     }
     catch (...)
     {
-        cout << "ERROR: Problem setting DBRootStorageType in the Calpont System Configuration file" << endl;
+        cout << "ERROR: Problem setting DBRootStorageType in the Columnstore System Configuration file" << endl;
         exit(-1);
     }
 
@@ -746,7 +627,7 @@ int main(int argc, char* argv[])
     }
     catch (...)
     {
-        cout << "ERROR: Problem setting DBRoot Count in the Calpont System Configuration file" << endl;
+        cout << "ERROR: Problem setting DBRoot Count in the Columnstore System Configuration file" << endl;
         exit(-1);
     }
 
@@ -859,7 +740,7 @@ int main(int argc, char* argv[])
     }
     catch (...)
     {
-        cout << "ERROR: Problem reading the Calpont System Configuration file" << endl;
+        cout << "ERROR: Problem reading the Columnstore System Configuration file" << endl;
         exit(-1);
     }
 
@@ -892,7 +773,7 @@ int main(int argc, char* argv[])
                     }
                     catch (...)
                     {
-                        cout << "ERROR: Problem setting Module Count in the Calpont System Configuration file" << endl;
+                        cout << "ERROR: Problem setting Module Count in the Columnstore System Configuration file" << endl;
                         exit(-1);
                     }
                 }
@@ -905,7 +786,7 @@ int main(int argc, char* argv[])
                     }
                     catch (...)
                     {
-                        cout << "ERROR: Problem setting Module Count in the Calpont System Configuration file" << endl;
+                        cout << "ERROR: Problem setting Module Count in the Columnstore System Configuration file" << endl;
                         exit(-1);
                     }
                 }
@@ -922,7 +803,7 @@ int main(int argc, char* argv[])
                 }
                 catch (...)
                 {
-                    cout << "ERROR: Problem setting Module Count in the Calpont System Configuration file" << endl;
+                    cout << "ERROR: Problem setting Module Count in the Columnstore System Configuration file" << endl;
                     exit(-1);
                 }
 
@@ -975,7 +856,7 @@ int main(int argc, char* argv[])
             }
             catch (...)
             {
-                cout << "ERROR: Problem setting ModuleDisableState in the Calpont System Configuration file for " + moduleName << endl;
+                cout << "ERROR: Problem setting ModuleDisableState in the Columnstore System Configuration file for " + moduleName << endl;
                 exit(-1);
             }
 
@@ -1014,7 +895,7 @@ int main(int argc, char* argv[])
                 }
                 catch (...)
                 {
-                    cout << "ERROR: Problem setting Host Name in the Calpont System Configuration file" << endl;
+                    cout << "ERROR: Problem setting Host Name in the Columnstore System Configuration file" << endl;
                     exit(-1);
                 }
 
@@ -1027,7 +908,7 @@ int main(int argc, char* argv[])
                 }
                 catch (...)
                 {
-                    cout << "ERROR: Problem setting IP address in the Calpont System Configuration file" << endl;
+                    cout << "ERROR: Problem setting IP address in the Columnstore System Configuration file" << endl;
                     exit(-1);
                 }
 
@@ -1178,7 +1059,7 @@ int main(int argc, char* argv[])
                     }
                     catch (...)
                     {
-                        cout << "ERROR: Problem setting Host Name in the Calpont System Configuration file" << endl;
+                        cout << "ERROR: Problem setting Host Name in the Columnstore System Configuration file" << endl;
                         exit(-1);
                     }
 
@@ -1201,7 +1082,7 @@ int main(int argc, char* argv[])
                         }
                         catch (...)
                         {
-                            cout << "ERROR: Problem setting Host Name in the Calpont System Configuration file" << endl;
+                            cout << "ERROR: Problem setting Host Name in the Columnstore System Configuration file" << endl;
                             exit(-1);
                         }
                     }
@@ -1226,7 +1107,7 @@ int main(int argc, char* argv[])
                         }
                         catch (...)
                         {
-                            cout << "ERROR: Problem setting Host Name in the Calpont System Configuration file" << endl;
+                            cout << "ERROR: Problem setting Host Name in the Columnstore System Configuration file" << endl;
                             exit(-1);
                         }
 
@@ -1244,7 +1125,7 @@ int main(int argc, char* argv[])
                             }
                             catch (...)
                             {
-                                cout << "ERROR: Problem setting Host Name in the Calpont System Configuration file" << endl;
+                                cout << "ERROR: Problem setting Host Name in the Columnstore System Configuration file" << endl;
                                 exit(-1);
                             }
                         }
@@ -1275,7 +1156,7 @@ int main(int argc, char* argv[])
     }
     catch (...)
     {
-        cout << "ERROR: Problem setting Module Count in the Calpont System Configuration file" << endl;
+        cout << "ERROR: Problem setting Module Count in the Columnstore System Configuration file" << endl;
         exit(-1);
     }
 
@@ -1289,7 +1170,7 @@ int main(int argc, char* argv[])
     }
     catch (...)
     {
-        cout << "ERROR: Problem setting ConnectionsPerPrimProc in the Calpont System Configuration file" << endl;
+        cout << "ERROR: Problem setting ConnectionsPerPrimProc in the Columnstore System Configuration file" << endl;
         exit(-1);
     }
 
@@ -1367,7 +1248,7 @@ int main(int argc, char* argv[])
     }
     catch (...)
     {
-        cout << "ERROR: Problem getting NMSIPAddress from Calpont System Configuration file" << endl;
+        cout << "ERROR: Problem getting NMSIPAddress from Columnstore System Configuration file" << endl;
         exit(-1);
     }
 
@@ -1377,7 +1258,7 @@ int main(int argc, char* argv[])
     }
     catch (...)
     {
-        cout << "ERROR: Problem setting NMSIPAddress in the Calpont System Configuration file" << endl;
+        cout << "ERROR: Problem setting NMSIPAddress in the Columnstore System Configuration file" << endl;
         exit(-1);
     }
 
@@ -1393,7 +1274,7 @@ int main(int argc, char* argv[])
     }
     catch (...)
     {
-        cout << "ERROR: Problem getting transactionArchivePeriod from Calpont System Configuration file" << endl;
+        cout << "ERROR: Problem getting transactionArchivePeriod from Columnstore System Configuration file" << endl;
         exit(-1);
     }
 
@@ -1403,7 +1284,7 @@ int main(int argc, char* argv[])
     }
     catch (...)
     {
-        cout << "ERROR: Problem setting IP address in the Calpont System Configuration file" << endl;
+        cout << "ERROR: Problem setting IP address in the Columnstore System Configuration file" << endl;
         exit(-1);
     }
 
@@ -1487,7 +1368,7 @@ int main(int argc, char* argv[])
             }
             catch (...)
             {
-                //		cout << "ERROR: Problem setting Cloud Parameters from the Calpont System Configuration file" << endl;
+                //		cout << "ERROR: Problem setting Cloud Parameters from the Columnstore System Configuration file" << endl;
                 //		exit(-1);
             }
         }
@@ -1511,7 +1392,7 @@ int main(int argc, char* argv[])
         }
         catch (...)
         {
-            //		cout << "ERROR: Problem setting Cloud Parameters from the Calpont System Configuration file" << endl;
+            //		cout << "ERROR: Problem setting Cloud Parameters from the Columnstore System Configuration file" << endl;
             //		exit(-1);
         }
 
@@ -1581,7 +1462,7 @@ int main(int argc, char* argv[])
                 }
                 catch (...)
                 {
-                    cout << "ERROR: Problem setting DBRoot in the Calpont System Configuration file" << endl;
+                    cout << "ERROR: Problem setting DBRoot in the Columnstore System Configuration file" << endl;
                     exit(-1);
                 }
 
@@ -1677,7 +1558,7 @@ int main(int argc, char* argv[])
                 }
                 catch (...)
                 {
-                    cout << "ERROR: Problem getting '" + DBRootStorageLocID + "' from the Calpont System Configuration file" << endl;
+                    cout << "ERROR: Problem getting '" + DBRootStorageLocID + "' from the Columnstore System Configuration file" << endl;
                     exit(-1);
                 }
 
@@ -1687,7 +1568,7 @@ int main(int argc, char* argv[])
                 }
                 catch (...)
                 {
-                    cout << "ERROR: Problem setting '" + DBRootStorageLocID + "' in the Calpont System Configuration file" << endl;
+                    cout << "ERROR: Problem setting '" + DBRootStorageLocID + "' in the Columnstore System Configuration file" << endl;
                     exit(-1);
                 }
             }
@@ -1701,7 +1582,7 @@ int main(int argc, char* argv[])
             }
             catch (...)
             {
-                cout << "ERROR: Problem setting DBRoot in the Calpont System Configuration file" << endl;
+                cout << "ERROR: Problem setting DBRoot in the Columnstore System Configuration file" << endl;
                 exit(-1);
             }
         }
@@ -1764,7 +1645,7 @@ int main(int argc, char* argv[])
             }
             catch (...)
             {
-                cout << "ERROR: Problem setting ConcurrentTransactions in the Calpont System Configuration file" << endl;
+                cout << "ERROR: Problem setting ConcurrentTransactions in the Columnstore System Configuration file" << endl;
                 exit(-1);
             }
         }
@@ -1787,28 +1668,7 @@ int main(int argc, char* argv[])
             }
             catch (...)
             {
-                cout << "ERROR: Problem setting NetworkCompression in the Calpont System Configuration file" << endl;
-                exit(-1);
-            }
-        }
-    }
-    catch (...)
-    {}
-
-    // CoreFile Flag
-    try
-    {
-        CoreFileFlag = sysConfigOld->getConfig("Installation", "CoreFileFlag");
-
-        if ( !CoreFileFlag.empty() )
-        {
-            try
-            {
-                sysConfigNew->setConfig("Installation", "CoreFileFlag", CoreFileFlag);
-            }
-            catch (...)
-            {
-                cout << "ERROR: Problem setting CoreFileFlag in the Calpont System Configuration file" << endl;
+                cout << "ERROR: Problem setting NetworkCompression in the Columnstore System Configuration file" << endl;
                 exit(-1);
             }
         }
@@ -1831,7 +1691,7 @@ int main(int argc, char* argv[])
             }
             catch (...)
             {
-                cout << "ERROR: Problem setting DataFilePlugin in the Calpont System Configuration file" << endl;
+                cout << "ERROR: Problem setting DataFilePlugin in the Columnstore System Configuration file" << endl;
                 exit(-1);
             }
 
@@ -1847,7 +1707,7 @@ int main(int argc, char* argv[])
                 }
                 catch (...)
                 {
-                    cout << "ERROR: Problem setting ExtentsPerSegmentFile in the Calpont System Configuration file" << endl;
+                    cout << "ERROR: Problem setting ExtentsPerSegmentFile in the Columnstore System Configuration file" << endl;
                     exit(-1);
                 }
             }
@@ -1872,7 +1732,7 @@ int main(int argc, char* argv[])
             }
             catch (...)
             {
-                cout << "ERROR: Problem setting DataFileLog in the Calpont System Configuration file" << endl;
+                cout << "ERROR: Problem setting DataFileLog in the Columnstore System Configuration file" << endl;
                 exit(-1);
             }
         }
@@ -1882,7 +1742,6 @@ int main(int argc, char* argv[])
 
 
     string AllowDiskBasedJoin;
-    string TempFilePath;
     string TempFileCompression;
 
     try
@@ -1900,7 +1759,54 @@ int main(int argc, char* argv[])
             }
             catch (...)
             {
-                cout << "ERROR: Problem setting AllowDiskBasedJoin in the Calpont System Configuration file" << endl;
+                cout << "ERROR: Problem setting AllowDiskBasedJoin in the Columnstore System Configuration file" << endl;
+                exit(-1);
+            }
+        }
+    }
+    catch (...)
+    {}
+
+    string AllowDiskBasedAggregation;
+//    string TempFileCompression;
+
+    try
+    {
+        AllowDiskBasedAggregation = sysConfigOld->getConfig("RowAggregation", "AllowDiskBasedAggregation");
+
+        if ( !AllowDiskBasedAggregation.empty() )
+        {
+            try
+            {
+                sysConfigNew->setConfig("RowAggregation", "AllowDiskBasedAggregation", AllowDiskBasedAggregation);
+            }
+            catch (...)
+            {
+                cout << "ERROR: Problem setting AllowDiskBasedAggregation in the Columnstore System Configuration file" << endl;
+                exit(-1);
+            }
+        }
+    }
+    catch (...)
+    {}
+    
+    string SystemTempFileDir;
+
+    try
+    {
+        SystemTempFileDir = sysConfigOld->getConfig("SystemConfig", "SystemTempFileDir");
+
+        if ( !SystemTempFileDir.empty() )
+        {
+            SystemTempFileDir = sysConfigOld->getConfig("SystemConfig", "SystemTempFileDir");
+
+            try
+            {
+                sysConfigNew->setConfig("SystemConfig", "SystemTempFileDir", SystemTempFileDir);
+            }
+            catch (...)
+            {
+                cout << "ERROR: Problem setting SystemTempFileDir in the Columnstore System Configuration file" << endl;
                 exit(-1);
             }
         }
@@ -1923,7 +1829,7 @@ int main(int argc, char* argv[])
             }
             catch (...)
             {
-                cout << "ERROR: Problem setting QueryTele in the Calpont System Configuration file" << endl;
+                cout << "ERROR: Problem setting QueryTele in the Columnstore System Configuration file" << endl;
                 exit(-1);
             }
         }
@@ -1943,7 +1849,7 @@ int main(int argc, char* argv[])
             }
             catch (...)
             {
-                cout << "ERROR: Problem setting AmazonAccessKey in the Calpont System Configuration file" << endl;
+                cout << "ERROR: Problem setting AmazonAccessKey in the Columnstore System Configuration file" << endl;
                 exit(-1);
             }
         }
@@ -1963,7 +1869,7 @@ int main(int argc, char* argv[])
             }
             catch (...)
             {
-                cout << "ERROR: Problem setting AmazonSecretKey in the Calpont System Configuration file" << endl;
+                cout << "ERROR: Problem setting AmazonSecretKey in the Columnstore System Configuration file" << endl;
                 exit(-1);
             }
         }
@@ -1983,7 +1889,7 @@ int main(int argc, char* argv[])
             }
             catch (...)
             {
-                cout << "ERROR: Problem setting LockFileDirectory in the Calpont System Configuration file" << endl;
+                cout << "ERROR: Problem setting LockFileDirectory in the Columnstore System Configuration file" << endl;
                 exit(-1);
             }
         }
@@ -2020,7 +1926,60 @@ int main(int argc, char* argv[])
     }
     catch (...)
     {}
+    
+    // ExeMgr Optional settings
+    try
+    {
+        // threadpool size. This is the size the pool will idle down to if it grows bigger
+        string threadPoolSize;
+        // Time between checks to see if memory is exausted
+        string secondsBetweenMemChecks;
+        // Max percent of total memory used by everything before we kill ourself
+        string maxPct;
+        // Maximum number of concurrent queries. Any more will have to wait.
+        string execQueueSize;
+        threadPoolSize = sysConfigOld->getConfig("ExeMgr1", "ThreadPoolSize");
+        if ( !threadPoolSize.empty() )
+        {
+            sysConfigNew->setConfig("ExeMgr1", "ThreadPoolSize", threadPoolSize);
+        }
 
+        secondsBetweenMemChecks = sysConfigOld->getConfig("ExeMgr1", "SecondsBetweenMemChecks");
+        if ( !secondsBetweenMemChecks.empty() )
+        {
+            sysConfigNew->setConfig("ExeMgr1", "SecondsBetweenMemChecks", secondsBetweenMemChecks);
+        }
+        
+        maxPct = sysConfigOld->getConfig("ExeMgr1", "MaxPct");
+        if ( !maxPct.empty() )
+        {
+            sysConfigNew->setConfig("ExeMgr1", "MaxPct", maxPct);
+        }
+
+        execQueueSize = sysConfigOld->getConfig("ExeMgr1", "ExecQueueSize");
+        if ( !execQueueSize.empty() )
+        {
+            sysConfigNew->setConfig("ExeMgr1", "ExecQueueSize", execQueueSize);
+        }
+    }
+    catch (...)
+    {}
+    
+    // PrimProc optional parameters
+    // Max percent of total memory used by everything before we kill the current query
+    // For 5.6.1, this setting uses the same mechanism that ExeMgr uses to kill itself
+    try
+    {
+        string maxPct;
+        maxPct = sysConfigOld->getConfig("PrimitiveServers", "MaxPct");
+        if ( !maxPct.empty() )
+        {
+            sysConfigNew->setConfig("PrimitiveServers", "MaxPct", maxPct);
+        }
+    }
+    catch (...)
+    {}
+ 
     //Write out Updated System Configuration File
     sysConfigNew->write();
 }
