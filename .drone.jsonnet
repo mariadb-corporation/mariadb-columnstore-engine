@@ -17,8 +17,14 @@ local platforms_mtr = ['centos:7', 'centos:8', 'ubuntu:20.04'];
 
 local server_ref_map = {
   develop: '10.6',
-  'develop-5': '10.5',
+  'develop-5': '10.5-enterprise',
   '**': '10.6',
+};
+
+local server_remote_map = {
+  develop: 'https://github.com/MariaDB/server',
+  'develop-5': 'https://github.com/mariadb-corporation/MariaDBEnterprise',
+  '**': 'https://github.com/MariaDB/server',
 };
 
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
@@ -296,14 +302,16 @@ local Pipeline(branch, platform, event, arch='amd64') = {
              volumes: [pipeline._volumes.mdb],
              environment: {
                SERVER_REF: '${SERVER_REF:-' + server_ref_map[branch] + '}',
-               SERVER_REMOTE: '${SERVER_REMOTE:-https://github.com/MariaDB/server}',
+               SERVER_REMOTE: '${SERVER_REMOTE:-' + server_remote_map[branch] + '}',
+               SERVER_SHA: '${SERVER_SHA:-' + server_ref_map[branch] + '}',
              },
              commands: [
                'echo $$SERVER_REF',
                'echo $$SERVER_REMOTE',
                'mkdir -p /mdb/' + builddir + ' && cd /mdb/' + builddir,
                'git config --global url."https://github.com/".insteadOf git@github.com:',
-               'git -c submodule."storage/rocksdb/rocksdb".update=none -c submodule."wsrep-lib".update=none -c submodule."storage/columnstore/columnstore".update=none clone --recurse-submodules --depth 1 --branch $$SERVER_REF $$SERVER_REMOTE .',
+               'git -c submodule."storage/rocksdb/rocksdb".update=none -c submodule."wsrep-lib".update=none -c submodule."storage/columnstore/columnstore".update=none clone --recurse-submodules --depth 200 --branch $$SERVER_REF $$SERVER_REMOTE .',
+               'git reset --hard $$SERVER_SHA',
                'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
                'git config cmake.update-submodules no',
                'rm -rf storage/columnstore/columnstore',
