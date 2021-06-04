@@ -10,6 +10,7 @@ usr/bin/ExeMgr
 usr/bin/PrimProc
 usr/bin/StorageManager
 usr/bin/WriteEngineServer
+usr/bin/autoConfigure
 usr/bin/clearShm
 usr/bin/cleartablelock
 usr/bin/columnstore-post-install
