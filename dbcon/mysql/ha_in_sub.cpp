@@ -266,7 +266,6 @@ void InSub::handleFunc(gp_walk_info* gwip, Item_func* func)
             if (cond->argument_list()->elements == 1)
                 return;
 
-            // (cache=item or isnull(item)) case. remove "or isnull()"
             if (cond->argument_list()->elements == 2)
             {
                 // don't know how to deal with this. don't think it's a fatal error either.
@@ -278,35 +277,22 @@ void InSub::handleFunc(gp_walk_info* gwip, Item_func* func)
                 if (!pt->left() || !pt->right())
                     return;
 
-                SimpleFilter* sf = dynamic_cast<SimpleFilter*>(pt->left()->data());
+                SimpleFilter* lsf = dynamic_cast<SimpleFilter*>(pt->left()->data());
+                SimpleFilter* rsf = dynamic_cast<SimpleFilter*>(pt->right()->data());
 
-                //assert (sf && sf->op()->op() == execplan::OP_ISNULL);
-                if (!sf || sf->op()->op() != execplan::OP_ISNULL)
+                if (!lsf || !rsf)
                     return;
 
-                delete sf;
-                sf = dynamic_cast<SimpleFilter*>(pt->right()->data());
-
-                //idbassert(sf && sf->op()->op() == execplan::OP_EQ);
-                if (!sf || sf->op()->op() != execplan::OP_EQ)
-                    return;
-
-                // set NULLMATCH for both operand. It's really a setting for the join.
-                // should only set NULLMATCH when the subtype is NOT_IN. for some IN subquery
-                // with aggregation column, MySQL inefficiently convert to:
-                // (cache=item or item is null) and item is not null, which is equivalent to
-                // cache = item. Do not set NULLMATCH for this case.
-                // Because we don't know IN or NOTIN yet, set candidate bit and switch to NULLMATCH
-                // later in handleNot function.
-                if (sf->lhs()->joinInfo() & JOIN_CORRELATED)
-                    sf->lhs()->joinInfo(sf->lhs()->joinInfo() | JOIN_NULLMATCH_CANDIDATE);
-
-                if (sf->rhs()->joinInfo() & JOIN_CORRELATED)
-                    sf->rhs()->joinInfo(sf->rhs()->joinInfo() | JOIN_NULLMATCH_CANDIDATE);
-
-                pt = pt->right();
-                gwip->ptWorkStack.pop();
-                gwip->ptWorkStack.push(pt);
+                // (a=b or isnull(item))/(a=b or isnotnull(item)) case.
+                // swap the lhs and rhs operands of the OR operator.
+                if ((lsf->op()->op() == execplan::OP_ISNULL ||
+                     lsf->op()->op() == execplan::OP_ISNOTNULL) &&
+                    rsf->op()->op() == execplan::OP_EQ)
+                {
+                    ParseTree* temp = pt->left();
+                    pt->left(pt->right());
+                    pt->right(temp);
+                }
             }
         }
         else if (cond->functype() == Item_func::EQ_FUNC)
