@@ -1468,13 +1468,12 @@ void cleanTempDir()
 
   for (const auto& dir : dirs)
   {
-    std::string allow = config->getConfig(dir.section, dir.allowed);
-    if (allow != "Y" && allow != "y")
-      continue;
+    std::string allowStr = config->getConfig(dir.section, dir.allowed);
+    bool allow = (allowStr == "Y" || allowStr == "y");
 
     std::string tmpPrefix = config->getTempFileDir(dir.purpose);
 
-    if (tmpPrefix.empty())
+    if (allow && tmpPrefix.empty())
     {
       std::cerr << "Empty tmp directory name for " << dir.section << std::endl;
       logging::LoggingID logid(16, 0, 0);
@@ -1494,7 +1493,10 @@ void cleanTempDir()
     /* This is quite scary as ExeMgr usually runs as root */
     try
     {
-      boost::filesystem::remove_all(tmpPrefix);
+      if (allow)
+      {
+        boost::filesystem::remove_all(tmpPrefix);
+      }
       boost::filesystem::create_directories(tmpPrefix);
     }
     catch (const std::exception &ex)
