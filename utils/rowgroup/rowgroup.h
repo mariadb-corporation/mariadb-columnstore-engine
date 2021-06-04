@@ -1263,6 +1263,8 @@ inline void Row::setFloatField(float val, uint32_t colIndex)
         *((float*) &data[offsets[colIndex]]) = val;
 }
 
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
 inline void Row::setLongDoubleField(const long double& val, uint32_t colIndex)
 {
     uint8_t* p = &data[offsets[colIndex]];
@@ -1273,6 +1275,7 @@ inline void Row::setLongDoubleField(const long double& val, uint32_t colIndex)
         *((uint64_t*)p+1) &= 0x000000000000FFFFULL;
     }
 }
+#pragma GCC pop_options
 
 inline void Row::setInt128Field(const int128_t& val, uint32_t colIndex)
 {
