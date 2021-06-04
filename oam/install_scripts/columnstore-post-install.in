@@ -92,9 +92,14 @@ if [ -f @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf.rpmsave ]; then
     /bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf.rpmsave @ENGINE_SYSCONFDIR@/columnstore/storagemanager.cnf
 fi
 
+# Make copy of the new .xml file in 2 places so its preserved if something goes wrong in autoConfigure
+# Original Columnstore.xml will still be in .rpmsave
 if [ -f @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml.rpmsave ]; then
+    /bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml.rpmnew
     /bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml.new
     /bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml.rpmsave @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml
+    @ENGINE_BINDIR@/autoConfigure
+    mv -f @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml.new @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml
 fi
 
 touch /dev/shm/columnstore-test && rm /dev/shm/columnstore-test
