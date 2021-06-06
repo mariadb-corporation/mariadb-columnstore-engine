@@ -112,7 +112,7 @@ private:
     WriteEngineWrapper fWEWrapper;
     BRM::DBRM fDbrm;
     unsigned  extentsPerSegmentFile, extentRows, filesPerColumnPartition, dbrootCnt;
-
+    static const uint32_t DEFAULT_EXTENTS_PER_SEGMENT_FILE = 2;
 };
 }
 #undef EXPORT

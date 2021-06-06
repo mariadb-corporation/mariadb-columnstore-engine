@@ -466,7 +466,7 @@ IDBDataFile* ChunkManager::createDctnryFile(const FID& fid,
                         fileData->fFileHeader.fPtrSection,
                         /*colWidth=*/0, fileData->fColDataType,
                         fFileOp->compressionType(), hdrSize);
-    fCompressor.setLBID0(fileData->fFileHeader.fControlData, lbid);
+    fCompressor.setLBIDByIndex(fileData->fFileHeader.fControlData, lbid, 0);
 
     if (writeHeader(fileData, __LINE__) != NO_ERROR)
     {
@@ -1423,7 +1423,7 @@ int ChunkManager::updateColumnExtent(IDBDataFile* pFile, int addBlockCount, int6
     int rc = NO_ERROR;
     char* hdr = pFileData->fFileHeader.fControlData;
     fCompressor.setBlockCount(hdr, fCompressor.getBlockCount(hdr) + addBlockCount);
-    fCompressor.setLBID1(hdr, lbid);
+    fCompressor.setLBIDByIndex(hdr, lbid, 1);
     ChunkData* chunkData = (pFileData)->findChunk(0);
 
     if (chunkData != NULL)
@@ -1514,7 +1514,11 @@ int ChunkManager::updateDctnryExtent(IDBDataFile* pFile, int addBlockCount,
         fCompressor.setBlockCount(hdr, fCompressor.getBlockCount(hdr) + addBlockCount);
 
     if (currentBlockCount)
-        fCompressor.setLBID1(hdr, lbid);
+    {
+        // Append to the end.
+        uint64_t lbidCount = fCompressor.getLBIDCount(hdr);
+        fCompressor.setLBIDByIndex(hdr, lbid, lbidCount);
+    }
     return rc;
 }
 

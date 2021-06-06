@@ -180,10 +180,8 @@ void TupleBPS::initializeConfigParms()
     fNumThreads = 0;
 
     config::Config* cf = config::Config::makeConfig();
-    string epsf = cf->getConfig("ExtentMap", "ExtentsPerSegmentFile");
 
-    if ( epsf.length() != 0 )
-        fExtentsPerSegFile = cf->uFromText(epsf);
+    fExtentsPerSegFile = DEFAULT_EXTENTS_PER_SEG_FILE;
 
     if (fRequestSize >= fMaxOutstandingRequests)
         fRequestSize = 1;

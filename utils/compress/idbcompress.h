@@ -234,24 +234,19 @@ public:
     EXPORT uint64_t getColumnWidth(const void* hdrBuf) const;
 
     /**
-     * getLBID
+     * getLBIDByIndex
      */
-    EXPORT uint64_t getLBID0(const void* hdrBuf) const;
+    EXPORT uint64_t getLBIDByIndex(const void* hdrBuf, uint64_t index) const;
 
     /**
-     * setBID
+     * setLBIDByIndex
      */
-    EXPORT void setLBID0(void* hdrBuf, uint64_t lbid) const;
+    EXPORT void setLBIDByIndex(void* hdrBuf, uint64_t lbid, uint64_t index) const;
 
     /**
-     * getLBID
+     * getLBIDCount
      */
-    EXPORT uint64_t getLBID1(const void* hdrBuf) const;
-
-    /**
-     * setBID
-     */
-    EXPORT void setLBID1(void* hdrBuf, uint64_t lbid) const;
+    EXPORT uint64_t getLBIDCount(void* hdrBuf) const;
 
     /**
      * Mutator methods for the user padding bytes
@@ -367,15 +362,17 @@ IDBCompressInterface::getColDataType(const void* hdrBuf) const
 {
     return execplan::CalpontSystemCatalog::ColDataType::UNDEFINED;
 }
-inline uint64_t getColumnWidth(const void* hdrBuf) const { return 0; }
+inline uint64_t IDBCompressInterface::getColumnWidth(const void* hdrBuf) const { return 0; }
 inline uint64_t IDBCompressInterface::maxCompressedSize(uint64_t uncompSize)
 {
     return uncompSize;
 }
-inline uint64_t getLBID0(const void* hdrBuf) const { return 0; }
-void setLBID0(void* hdrBuf, uint64_t lbid) const {}
-inline uint64_t getLBID1(const void* hdrBuf) const { return 0; }
-void setLBID1(void* hdrBuf, uint64_t lbid) const {}
+inline uint64_t IDBCompressInterface::getLBIDByIndex(const void* hdrBuf, uint32_t index) const
+{
+    return 0;
+}
+void IDBCompressInterface::setLBIDByIndex(void* hdrBuf, uint64_t lbid, uint32_t index) const {}
+void IDBCompressInterface::getLBIDCount(void* hdrBuf) const {}
 inline bool IDBCompressInterface::getUncompressedSize(char* in, size_t inLen, size_t* outLen)
 {
     return false;

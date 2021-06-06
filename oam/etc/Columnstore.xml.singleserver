@@ -471,7 +471,6 @@
 		it cannot be changed!. Valid values for ExtentRows are: 64M, 8M and 1M. The default is 8M.
 		-->
 		<FilesPerColumnPartition>4</FilesPerColumnPartition> <!-- should be multiple of DBRootCount -->
-		<ExtentsPerSegmentFile>2</ExtentsPerSegmentFile>
 		<BRM_UID>0x0</BRM_UID>
 	</ExtentMap>
 	<HashJoin>

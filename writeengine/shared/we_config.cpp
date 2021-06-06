@@ -153,10 +153,6 @@ void Config::checkReload( )
     // Initialize extents per segment file
     //--------------------------------------------------------------------------
     m_ExtentsPerSegmentFile = DEFAULT_EXTENTS_PER_SEGMENT_FILE;
-    string epsf = cf->getConfig("ExtentMap", "ExtentsPerSegmentFile");
-
-    if ( epsf.length() != 0 )
-        m_ExtentsPerSegmentFile = cf->uFromText(epsf);
 
     //--------------------------------------------------------------------------
     // Initialize bulk load process priority

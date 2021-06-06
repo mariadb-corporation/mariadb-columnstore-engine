@@ -59,10 +59,8 @@ WE_DDLCommandProc::WE_DDLCommandProc()
     if (fpc.length() != 0)
         filesPerColumnPartition = cf->uFromText(fpc);
 
-    string epsf = cf->getConfig("ExtentMap", "ExtentsPerSegmentFile");
-
-    if (epsf.length() != 0)
-        extentsPerSegmentFile = cf->uFromText(epsf);
+    // MCOL-4685: remove the option to set more than 2 extents per file (ExtentsPreSegmentFile).
+    extentsPerSegmentFile = DEFAULT_EXTENTS_PER_SEGMENT_FILE;
 
     string dbct = cf->getConfig("SystemConfig", "DBRootCount");
 
