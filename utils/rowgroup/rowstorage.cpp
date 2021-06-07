@@ -1025,7 +1025,7 @@ private:
   void saveRG(uint64_t rgid, RGData* rgdata) const
   {
     messageqcpp::ByteStream bs;
-    fRowGroupOut->setData(rgdata->rowData.get());
+    fRowGroupOut->setData(rgdata);
     rgdata->serialize(bs, fRowGroupOut->getDataSize());
 
     int fd = open(makeRGFilename(rgid).c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
