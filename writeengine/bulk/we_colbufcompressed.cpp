@@ -590,10 +590,15 @@ int ColumnBufferCompressed::saveCompressionHeaders( )
                          fColInfo->column.compressionType);
     fCompressor->setBlockCount(hdrBuf,
                                (fColInfo->getFileSize() / BYTE_PER_BLOCK) );
-    // If lbid written in the header is not 0 - we are running for the next extent for column
-    // segment file.
-    if (lbid)
-        fCompressor->setLBIDByIndex(hdrBuf, fColInfo->getLastUpdatedLBID(), 1);
+    // If lbid written in the header is not 0 and not equal to `lastupdatedlbid` - we are running
+    // for the next extent for column segment file.
+    const auto lastUpdatedLbid = fColInfo->getLastUpdatedLBID();
+    if (lbid && lastUpdatedLbid != lbid)
+    {
+        // Write back lbid, after header initialization.
+        fCompressor->setLBIDByIndex(hdrBuf, lbid, 0);
+        fCompressor->setLBIDByIndex(hdrBuf, lastUpdatedLbid, 1);
+    }
     else
         fCompressor->setLBIDByIndex(hdrBuf, fColInfo->getLastUpdatedLBID(), 0);
 
