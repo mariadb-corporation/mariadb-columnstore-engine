@@ -32,6 +32,7 @@
 using namespace std;
 
 #include <boost/shared_array.hpp>
+#include <numeric>
 using namespace boost;
 
 #include "bytestream.h"
@@ -405,6 +406,7 @@ RGData::RGData(const RowGroup& rg, uint32_t rowCount)
      */
     memset(rowData.get(), 0, rg.getDataSize(rowCount));   // XXXPAT: make valgrind happy temporarily
 #endif
+  memset(rowData.get(), 0, rg.getDataSize(rowCount));   // XXXPAT: make valgrind happy temporarily
 }
 
 RGData::RGData(const RowGroup& rg)
@@ -481,7 +483,7 @@ void RGData::serialize(ByteStream& bs, uint32_t amount) const
         bs << (uint8_t) 0;
 }
 
-void RGData::deserialize(ByteStream& bs, bool hasLenField)
+void RGData::deserialize(ByteStream& bs, uint32_t defAmount)
 {
     uint32_t amount, sig;
     uint8_t* buf;
@@ -493,7 +495,7 @@ void RGData::deserialize(ByteStream& bs, bool hasLenField)
     {
         bs >> sig;
         bs >> amount;
-        rowData.reset(new uint8_t[amount]);
+        rowData.reset(new uint8_t[std::max(amount, defAmount)]);
         buf = bs.buf();
         memcpy(rowData.get(), buf, amount);
         bs.advance(amount);
@@ -577,12 +579,13 @@ Row& Row::operator=(const Row& r)
     return *this;
 }
 
-string Row::toString() const
+string Row::toString(uint32_t rownum) const
 {
     ostringstream os;
     uint32_t i;
 
     //os << getRid() << ": ";
+    os << "[" << std::setw(5) << rownum << std::setw(0) << "]: ";
     os << (int) useStringTable << ": ";
 
     for (i = 0; i < columnCount; i++)
@@ -1447,7 +1450,7 @@ uint32_t RowGroup::getColumnCount() const
     return columnCount;
 }
 
-string RowGroup::toString() const
+string RowGroup::toString(const std::vector<uint64_t>& used) const
 {
     ostringstream os;
     ostream_iterator<int> oIter1(os, "\t");
@@ -1479,6 +1482,8 @@ string RowGroup::toString() const
         os << "uses a string table\n";
     else
         os << "doesn't use a string table\n";
+    if (!used.empty())
+      os << "sparse\n";
 
     //os << "strings = " << hex << (int64_t) strings << "\n";
     //os << "data = " << (int64_t) data << "\n" << dec;
@@ -1488,14 +1493,25 @@ string RowGroup::toString() const
         initRow(&r);
         getRow(0, &r);
         os << "rowcount = " << getRowCount() << endl;
+        if (!used.empty())
+        {
+          uint64_t cnt = std::accumulate(used.begin(), used.end(), 0ULL,
+                                         [](uint64_t a, uint64_t bits) {
+                                           return a + __builtin_popcountll(bits);
+                                         });
+          os << "sparse row count = " << cnt << endl;
+        }
         os << "base rid = " << getBaseRid() << endl;
         os << "status = " << getStatus() << endl;
         os << "dbroot = " << getDBRoot() << endl;
         os << "row data...\n";
 
-        for (uint32_t i = 0; i < getRowCount(); i++)
+        uint32_t max_cnt = used.empty() ? getRowCount() : (used.size() * 64);
+        for (uint32_t i = 0; i < max_cnt; i++)
         {
-            os << r.toString() << endl;
+            if (!used.empty() && !(used[i/64] & (1ULL << (i%64))))
+              continue;
+            os << r.toString(i) << endl;
             r.nextRow();
         }
     }

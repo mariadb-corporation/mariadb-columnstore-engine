@@ -1453,49 +1453,85 @@ int setupResources()
 
 void cleanTempDir()
 {
-    const auto config = config::Config::makeConfig();
-    std::string allowDJS = config->getConfig("HashJoin", "AllowDiskBasedJoin");
-    std::string tmpPrefix = config->getConfig("HashJoin", "TempFilePath");
+  using TempDirPurpose = config::Config::TempDirPurpose;
+  struct Dirs
+  {
+    std::string section;
+    std::string allowed;
+    TempDirPurpose purpose;
+  };
+  std::vector<Dirs> dirs{
+      {
+          "HashJoin",
+          "AllowDiskBasedJoin",
+          TempDirPurpose::Joins
+      },
+      {
+          "RowAggregation",
+          "AllowDiskBasedAggregation",
+          TempDirPurpose::Aggregates
+      }
+  };
+  const auto config = config::Config::makeConfig();
 
-    if (allowDJS == "N" || allowDJS == "n")
-        return;
+  for (const auto& dir : dirs)
+  {
+    std::string allowStr = config->getConfig(dir.section, dir.allowed);
+    bool allow = (allowStr == "Y" || allowStr == "y");
 
-    if (tmpPrefix.empty())
-        tmpPrefix = "/tmp/cs-diskjoin";
+    std::string tmpPrefix = config->getTempFileDir(dir.purpose);
+
+    if (allow && tmpPrefix.empty())
+    {
+      std::cerr << "Empty tmp directory name for " << dir.section << std::endl;
+      logging::LoggingID logid(16, 0, 0);
+      logging::Message::Args args;
+      logging::Message message(8);
+      args.add("Empty tmp directory name for:");
+      args.add(dir.section);
+      message.format(args);
+      logging::Logger logger(logid.fSubsysID);
+      logger.logMessage(logging::LOG_TYPE_CRITICAL, message, logid);
+    }
 
     tmpPrefix += "/";
 
-    assert(tmpPrefix != "/");
+    idbassert(tmpPrefix != "/");
 
     /* This is quite scary as ExeMgr usually runs as root */
     try
     {
+      if (allow)
+      {
         boost::filesystem::remove_all(tmpPrefix);
-        boost::filesystem::create_directories(tmpPrefix);
+      }
+      boost::filesystem::create_directories(tmpPrefix);
     }
-    catch (const std::exception& ex)
+    catch (const std::exception &ex)
     {
-        std::cerr << ex.what() << std::endl;
-        logging::LoggingID logid(16, 0, 0);
-        logging::Message::Args args;
-        logging::Message message(8);
-        args.add("Execption whilst cleaning tmpdir: ");
-        args.add(ex.what());
-        message.format( args );
-        logging::Logger logger(logid.fSubsysID);
-        logger.logMessage(logging::LOG_TYPE_WARNING, message, logid);
+      std::cerr << ex.what() << std::endl;
+      logging::LoggingID logid(16, 0, 0);
+      logging::Message::Args args;
+      logging::Message message(8);
+      args.add("Exception whilst cleaning tmpdir: ");
+      args.add(ex.what());
+      message.format(args);
+      logging::Logger logger(logid.fSubsysID);
+      logger.logMessage(logging::LOG_TYPE_WARNING, message, logid);
     }
     catch (...)
     {
-        std::cerr << "Caught unknown exception during tmpdir cleanup" << std::endl;
-        logging::LoggingID logid(16, 0, 0);
-        logging::Message::Args args;
-        logging::Message message(8);
-        args.add("Unknown execption whilst cleaning tmpdir");
-        message.format( args );
-        logging::Logger logger(logid.fSubsysID);
-        logger.logMessage(logging::LOG_TYPE_WARNING, message, logid);
+      std::cerr << "Caught unknown exception during tmpdir cleanup"
+                << std::endl;
+      logging::LoggingID logid(16, 0, 0);
+      logging::Message::Args args;
+      logging::Message message(8);
+      args.add("Unknown exception whilst cleaning tmpdir");
+      message.format(args);
+      logging::Logger logger(logid.fSubsysID);
+      logger.logMessage(logging::LOG_TYPE_WARNING, message, logid);
     }
+  }
 }
 
 

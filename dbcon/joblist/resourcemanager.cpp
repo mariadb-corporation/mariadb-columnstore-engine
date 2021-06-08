@@ -55,6 +55,7 @@ const string ResourceManager::fExtentMapStr("ExtentMap");
 //const string ResourceManager::fDMLProcStr("DMLProc");
 //const string ResourceManager::fBatchInsertStr("BatchInsert");
 const string ResourceManager::fOrderByLimitStr("OrderByLimit");
+const string ResourceManager::fRowAggregationStr("RowAggregation");
 
 ResourceManager* ResourceManager::fInstance = NULL;
 boost::mutex mx;
@@ -254,6 +255,10 @@ ResourceManager::ResourceManager(bool runningInExeMgr) :
         fUseHdfs = true;
     else
         fUseHdfs = false;
+
+    fAllowedDiskAggregation = getBoolVal(fRowAggregationStr,
+                                         "AllowDiskBasedAggregation",
+                                         defaultAllowDiskAggregation);
 }
 
 int ResourceManager::getEmPriority() const

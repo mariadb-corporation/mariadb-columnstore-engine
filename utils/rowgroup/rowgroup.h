@@ -270,7 +270,7 @@ public:
     // the 'hasLengthField' is there b/c PM aggregation (and possibly others) currently sends
     // inline data with a length field.  Once that's converted to string table format, that
     // option can go away.
-    void deserialize(messageqcpp::ByteStream&, bool hasLengthField = false); // returns the # of bytes read
+    void deserialize(messageqcpp::ByteStream&, uint32_t amount = 0); // returns the # of bytes read
 
     inline uint64_t getStringTableMemUsage();
     void clear();
@@ -531,7 +531,7 @@ public:
     template<typename T>
     inline void copyBinaryField(Row& dest, uint32_t destIndex, uint32_t srcIndex) const;
 
-    std::string toString() const;
+    std::string toString(uint32_t rownum = 0) const;
     std::string toCSV() const;
 
     /* These fcns are used only in joins.  The RID doesn't matter on the side that
@@ -1537,7 +1537,7 @@ public:
 
     RGData duplicate();   // returns a copy of the attached RGData
 
-    std::string toString() const;
+    std::string toString(const std::vector<uint64_t>& used = {}) const;
 
     /** operator+=
     *
