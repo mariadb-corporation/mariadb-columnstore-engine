@@ -1283,7 +1283,6 @@ void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int 
     bool isWideDataType = false;
     void *wideValInPtr = nullptr;
 
-    long double valOut = fRow.getLongDoubleField(colOut);
     if (rowIn.isNullValue(colIn))
         return;
 
