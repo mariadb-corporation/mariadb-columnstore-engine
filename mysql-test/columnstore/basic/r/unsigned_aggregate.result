@@ -11,7 +11,7 @@ c_acctbal decimal(12,2),
 c_mktsegment char (10),
 c_comment varchar (117)
 ) engine=columnstore;
-LOAD DATA LOCAL infile './suite/columnstore/std_data/1m_customer.tbl' INTO TABLE customer FIELDS TERMINATED BY '|';
+LOAD DATA LOCAL infile 'MTR_SUITE_DIR/../std_data/1m_customer.tbl' INTO TABLE customer FIELDS TERMINATED BY '|';;
 ALTER TABLE customer ADD COLUMN u_custkey INT UNSIGNED;
 ALTER TABLE customer ADD COLUMN u_bigcustkey BIGINT UNSIGNED;
 UPDATE customer SET u_custkey=c_custkey * c_custkey + 4294000000;

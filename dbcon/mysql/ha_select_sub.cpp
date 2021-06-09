@@ -24,6 +24,7 @@
 /** class SelectSubQuery definition */
 
 //#define NDEBUG
+#define PREFER_MY_CONFIG_H
 #include <my_config.h>
 #include <cassert>
 using namespace std;

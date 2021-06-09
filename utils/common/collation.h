@@ -18,6 +18,23 @@
 #ifndef COLLATION_H_INCLUDED
 #define COLLATION_H_INCLUDED
 
+#if defined(PREFER_MY_CONFIG_H)
+
+  #if !defined(MY_CONFIG_H)
+  #error my_config.h was not included (but PREFER_MY_CONFIG_H was set)
+  #endif
+
+  #include "mcsconfig_conflicting_defs_remember.h"
+  #include "mcsconfig_conflicting_defs_undef.h"
+
+#else
+  #if defined(MY_CONFIG_H)
+    #error my_config.h was included before mcsconfig.h (and PREFER_MY_CONFIG_H was not set)
+  #endif
+#endif //PREFER_MY_CONFIG_H
+
+#include "mcsconfig.h"
+
 #include "exceptclasses.h"
 #include "conststring.h"
 
@@ -79,6 +96,11 @@ extern "C" MYSQL_PLUGIN_IMPORT CHARSET_INFO *default_charset_info;
 
 #ifdef DBUG_ASSERT_TEMPORARILY_DEFINED
 #undef DBUG_ASSERT
+#endif
+
+
+#if defined(PREFER_MY_CONFIG_H)
+  #include "mcsconfig_conflicting_defs_restore.h"
 #endif
 
 

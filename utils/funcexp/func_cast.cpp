@@ -42,7 +42,6 @@ using namespace logging;
 #include "dataconvert.h"
 #include "numericliteral.h"
 using namespace dataconvert;
-#include "collation.h"
 
 #include "checks.h"
 

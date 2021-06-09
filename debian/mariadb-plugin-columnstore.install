@@ -35,6 +35,7 @@ usr/bin/mcs-loadbrm.py
 usr/bin/mcs-stop-controllernode.sh
 usr/bin/mcsGetConfig
 usr/bin/mcsSetConfig
+usr/bin/mycnfUpgrade
 usr/bin/post-mysql-install
 usr/bin/post-mysqld-install
 usr/bin/reset_locks

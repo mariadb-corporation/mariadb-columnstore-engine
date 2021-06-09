@@ -49,8 +49,7 @@
 #include "ddl-gram.h"
 #endif
 
-#include "my_global.h"
-#include "my_sys.h"
+#include "mariadb_my_sys.h" // CHARSET_INFO
 
 #define scanner x->scanner
 

@@ -64,7 +64,6 @@ using namespace primitiveprocessor;
 #include "liboamcpp.h"
 using namespace oam;
 
-#include "utils_utf8.h"
 
 #include "IDBPolicy.h"
 using namespace idbdatafile;
@@ -806,7 +805,7 @@ int main(int argc, char** argv)
     // This is unset due to the way we start it
     program_invocation_short_name = const_cast<char*>("PrimProc");
     // Initialize the charset library
-    my_init();
+    MY_INIT(argv[0]);
 
     return ServicePrimProc(opt).Run();
 }

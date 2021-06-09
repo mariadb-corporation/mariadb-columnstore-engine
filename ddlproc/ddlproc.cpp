@@ -58,7 +58,6 @@ using namespace execplan;
 #include "../writeengine/client/we_clients.h"
 #include "dbrm.h"
 #include "IDBPolicy.h"
-#include "utils_utf8.h"
 
 #include "crashtrace.h"
 #include "installdir.h"
@@ -257,7 +256,7 @@ int main(int argc, char** argv)
     // This is unset due to the way we start it
     program_invocation_short_name = const_cast<char*>("DDLProc");
     // Initialize the charset library
-    my_init();
+    MY_INIT(argv[0]);
 
     return ServiceDDLProc(opt).Run();
 }

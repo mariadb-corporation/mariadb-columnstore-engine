@@ -34,6 +34,8 @@
 #include "idb_mysql.h"
 
 struct st_ha_create_information;
+class ha_columnstore_select_handler;
+class ha_columnstore_derived_handler;
 
 #include "configcpp.h"
 #include "idberrorinfo.h"
@@ -89,7 +91,8 @@ enum ClauseType
 
 typedef std::vector<JoinInfo> JoinInfoVec;
 typedef std::map<execplan::CalpontSystemCatalog::TableAliasName, std::pair<int, TABLE_LIST*> > TableMap;
-
+typedef std::tr1::unordered_map<TABLE_LIST*, std::vector<COND*>> TableOnExprList;
+typedef std::tr1::unordered_map<TABLE_LIST*, uint> TableOuterJoinMap;
 
 struct gp_walk_info
 {
@@ -163,6 +166,10 @@ struct gp_walk_info
     // and buildInToExistsFilter()
     execplan::ReturnedColumn* inSubQueryLHS;
     Item* inSubQueryLHSItem;
+
+    // The below 2 fields are required for MCOL-4525.
+    TableOnExprList tableOnExprList;
+    std::vector<COND*> condList;
 
     gp_walk_info() : sessionid(0),
         fatalParseError(false),
@@ -348,8 +355,8 @@ const std::string infinidb_err_msg = "\nThe query includes syntax that is not su
 int cp_get_plan(THD* thd, execplan::SCSEP& csep);
 int cp_get_table_plan(THD* thd, execplan::SCSEP& csep, cal_impl_if::cal_table_info& ti);
 int cp_get_group_plan(THD* thd, execplan::SCSEP& csep, cal_impl_if::cal_group_info& gi);
-int cs_get_derived_plan(derived_handler* handler, THD* thd, execplan::SCSEP& csep, gp_walk_info& gwi);
-int cs_get_select_plan(select_handler* handler, THD* thd, execplan::SCSEP& csep, gp_walk_info& gwi);
+int cs_get_derived_plan(ha_columnstore_derived_handler* handler, THD* thd, execplan::SCSEP& csep, gp_walk_info& gwi);
+int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, execplan::SCSEP& csep, gp_walk_info& gwi);
 int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, execplan::SCSEP& csep, bool isUnion = false, bool isSelectHandlerTop = false, const std::vector<COND*>& condStack = std::vector<COND*>());
 int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, execplan::SCSEP& csep, cal_group_info& gi, bool isUnion = false);
 void setError(THD* thd, uint32_t errcode, const std::string errmsg, gp_walk_info* gwi);

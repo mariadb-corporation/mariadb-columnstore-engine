@@ -20,6 +20,7 @@
  * $Id: ha_mcs_dml.cpp 9711 2013-07-23 21:01:27Z chao $
  */
 
+#define PREFER_MY_CONFIG_H
 #include <my_config.h>
 #include <string>
 #include <iostream>

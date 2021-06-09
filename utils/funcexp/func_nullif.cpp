@@ -42,10 +42,8 @@ using namespace logging;
 using namespace dataconvert;
 
 #include "funchelpers.h"
-#include "utils_utf8.h"
 using namespace funcexp;
 
-#include "collation.h"
 
 namespace funcexp
 {

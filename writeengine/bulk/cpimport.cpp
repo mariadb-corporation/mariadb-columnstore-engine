@@ -48,7 +48,6 @@
 #include "we_xmlgenproc.h"
 #include "we_tempxmlgendata.h"
 #include "liboamcpp.h"
-#include "utils_utf8.h"
 #include "IDBPolicy.h"
 #include "MonitorProcMem.h"
 #include "dataconvert.h"

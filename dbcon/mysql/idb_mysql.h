@@ -21,6 +21,10 @@
 #ifndef IDB_MYSQL_H__
 #define IDB_MYSQL_H__
 
+#ifdef TEST_MCSCONFIG_H
+#error mcsconfig.h was included before idb_mysql.h
+#endif
+
 #ifdef _MSC_VER
 #include <stdint.h>
 #if _MSC_VER >= 1800
@@ -79,6 +83,7 @@ template <class T> bool isnan(T);
 #include "my_dbug.h"
 
 // Now clean up the pollution as best we can...
+#include "mcsconfig_conflicting_defs_undef.h"
 #undef min
 #undef max
 #undef UNKNOWN
@@ -96,11 +101,6 @@ template <class T> bool isnan(T);
 #undef sleep
 #undef getpid
 #undef SIZEOF_LONG
-#undef PACKAGE_VERSION
-#undef PACKAGE_TARNAME
-#undef PACKAGE_STRING
-#undef PACKAGE_NAME
-#undef PACKAGE_BUGREPORT
 #undef DEBUG
 #undef set_bits
 #undef likely

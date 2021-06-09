@@ -53,7 +53,6 @@
 #include "mcsv1_udaf.h"
 #include "constantcolumn.h"
 
-#include "collation.h"
 
 // To do: move code that depends on joblist to a proper subsystem.
 namespace joblist

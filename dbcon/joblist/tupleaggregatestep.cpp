@@ -21,6 +21,7 @@
 
 //#define NDEBUG
 // Cross engine needs to be at top due to MySQL includes
+#define PREFER_MY_CONFIG_H
 #include "crossenginestep.h"
 
 #include <cassert>
@@ -33,6 +34,7 @@ using namespace std;
 #include <boost/shared_array.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include "boost/tuple/tuple.hpp"
 using namespace boost;
 
 #include "messagequeue.h"

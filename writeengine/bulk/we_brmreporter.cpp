@@ -310,11 +310,11 @@ void BRMReporter::sendCPToFile( )
             if (!datatypes::isWideDecimalType(fCPInfo[i].type, fCPInfo[i].colWidth))
             {
                 fRptFile << "CP: " << fCPInfo[i].startLbid << ' ' <<
-                         fCPInfo[i].max       << ' ' <<
-                         fCPInfo[i].min       << ' ' <<
                          fCPInfo[i].seqNum    << ' ' <<
                          fCPInfo[i].type      << ' ' <<
                          fCPInfo[i].colWidth  << ' ' <<
+                         fCPInfo[i].max       << ' ' <<
+                         fCPInfo[i].min       << ' ' <<
                          fCPInfo[i].newExtent << std::endl;
             }
             else
@@ -323,10 +323,11 @@ void BRMReporter::sendCPToFile( )
                 datatypes::TSInt128 bigMax(&fCPInfo[i].bigMax);
         
                 fRptFile << "CP: " << fCPInfo[i].startLbid << ' ' <<
-                         bigMax               << ' ' <<
-                         bigMin               << ' ' <<
                          fCPInfo[i].seqNum    << ' ' <<
                          fCPInfo[i].type      << ' ' <<
+                         fCPInfo[i].colWidth  << ' ' <<
+                         bigMax               << ' ' <<
+                         bigMin               << ' ' <<
                          fCPInfo[i].newExtent << std::endl;
             }
         }
@@ -413,7 +414,7 @@ int BRMReporter::openRptFile( )
         return rc;
     }
 
-    fRptFile << "#CP:   startLBID max min seqnum type colwidth newExtent"    << std::endl;
+    fRptFile << "#CP:   startLBID seqnum type colwidth max min newExtent"    << std::endl;
     fRptFile << "#HWM:  oid partition segment hwm"                           << std::endl;
     fRptFile << "#ROWS: numRowsRead numRowsInserted"                         << std::endl;
     fRptFile << "#DATA: columNum columnType columnOid numOutOfRangeValues"   << std::endl;

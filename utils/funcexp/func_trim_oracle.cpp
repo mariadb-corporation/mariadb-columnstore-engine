@@ -21,7 +21,6 @@ using namespace std;
 
 #include "functor_str.h"
 #include "functioncolumn.h"
-#include "utils_utf8.h"
 using namespace execplan;
 
 #include "rowgroup.h"
@@ -30,7 +29,6 @@ using namespace rowgroup;
 #include "joblisttypes.h"
 using namespace joblist;
 
-#include "collation.h"
 
 namespace funcexp
 {

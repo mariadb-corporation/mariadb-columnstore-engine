@@ -22,8 +22,18 @@
 
 // This must be included after any boost headers, or anything that includes
 // boost headers. <mariadb.h> and boost are not friends.
+
+#ifndef TEST_MCSCONFIG_H
+#error mcscofig.h was not included
+#endif
+
+#include "mcsconfig_conflicting_defs_remember.h"
+#include "mcsconfig_conflicting_defs_undef.h"
+
 #include <mariadb.h>
 #undef set_bits  // mariadb.h defines set_bits, which is incompatible with boost
 #include <my_sys.h>
+
+#include "mcsconfig_conflicting_defs_restore.h"
 
 #endif

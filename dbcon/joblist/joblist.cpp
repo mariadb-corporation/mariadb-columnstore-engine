@@ -19,6 +19,7 @@
 //  $Id: joblist.cpp 9655 2013-06-25 23:08:13Z xlou $
 
 // Cross engine needs to be at the top due to MySQL includes
+#define PREFER_MY_CONFIG_H
 #include "crossenginestep.h"
 #include "errorcodes.h"
 #include <iterator>

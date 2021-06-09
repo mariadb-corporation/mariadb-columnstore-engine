@@ -33,10 +33,8 @@ using namespace rowgroup;
 #include "errorids.h"
 using namespace logging;
 
-#include "utils_utf8.h"
 using namespace funcexp;
 
-#include "collation.h"
 
 namespace
 {

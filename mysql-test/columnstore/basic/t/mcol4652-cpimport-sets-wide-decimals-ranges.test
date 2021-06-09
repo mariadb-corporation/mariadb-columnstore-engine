@@ -1,0 +1,26 @@
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol4652;
+--enable_warnings
+
+CREATE DATABASE mcol4652;
+USE mcol4652;
+
+create table customer (
+        c_custkey decimal(38),
+        c_name varchar (25),
+        c_address varchar (40),
+        c_nationkey int,
+        c_phone char (15),
+        c_acctbal decimal(12,2),
+        c_mktsegment char (10),
+        c_comment varchar (117)
+) engine=columnstore;
+
+--replace_result $MTR_SUITE_DIR MTR_SUITE_DIR
+--disable_warnings
+--eval LOAD DATA LOCAL infile '$MTR_SUITE_DIR/../std_data/100Krows.dat' INTO TABLE customer FIELDS TERMINATED BY '|'
+--enable_warnings
+SELECT e.min_value, e.max_value FROM information_schema.columnstore_extents e, information_schema.columnstore_columns c where e.object_id = c.object_id and column_name = 'c_custkey';
+DROP DATABASE mcol4652;

@@ -37,10 +37,8 @@ using namespace rowgroup;
 #include "joblisttypes.h"
 using namespace joblist;
 
-#include "utils_utf8.h"
 using namespace funcexp;
 
-#include "collation.h"
 
 namespace funcexp
 {

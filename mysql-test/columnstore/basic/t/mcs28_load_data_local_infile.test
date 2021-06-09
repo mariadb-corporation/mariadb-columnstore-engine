@@ -11,30 +11,36 @@ DROP DATABASE IF EXISTS mcs28_db1;
 CREATE DATABASE mcs28_db1;
 USE mcs28_db1;
 
---let $datafile=./suite/columnstore/std_data/loaddata1.dat
+--let $datafile=$MTR_SUITE_DIR/../std_data/loaddata1.dat
 CREATE TABLE t1 (a DATE, b DATE, c DATE not null, d DATE) ENGINE=Columnstore;
+--replace_result $MTR_SUITE_DIR MTR_SUITE_DIR
 --eval LOAD DATA LOCAL infile '$datafile' IGNORE INTO TABLE t1 FIELDS TERMINATED BY ',';
+--replace_result $MTR_SUITE_DIR MTR_SUITE_DIR
 --eval LOAD DATA LOCAL infile '$datafile' INTO TABLE t1 FIELDS TERMINATED BY ',' IGNORE 2 LINES;
 SELECT * FROM t1;
 TRUNCATE TABLE t1;
 
+--replace_result $MTR_SUITE_DIR MTR_SUITE_DIR
 --eval LOAD DATA LOCAL infile '$datafile' IGNORE INTO TABLE t1 FIELDS TERMINATED BY ',' LINES STARTING BY ',' (b,c,d);
 SELECT * FROM t1;
 DROP TABLE t1;
 
---let $datafile=./suite/columnstore/std_data/loaddata2.dat
+--let $datafile=$MTR_SUITE_DIR/../std_data/loaddata2.dat
 CREATE TABLE t1 (a TEXT, b TEXT) ENGINE=Columnstore;
+--replace_result $MTR_SUITE_DIR MTR_SUITE_DIR
 --eval LOAD DATA LOCAL infile '$datafile' IGNORE INTO TABLE t1 FIELDS TERMINATED BY ',' ENCLOSED BY '''';
 SELECT CONCAT('|',a,'|'), CONCAT('|',b,'|') FROM t1;
 DROP TABLE t1;
 
---let $datafile=./suite/columnstore/std_data/loaddata3.dat
+--let $datafile=$MTR_SUITE_DIR/../std_data/loaddata3.dat
 CREATE TABLE t1 (a INT, b CHAR(10)) ENGINE=Columnstore;
+--replace_result $MTR_SUITE_DIR MTR_SUITE_DIR
 --eval LOAD DATA LOCAL infile '$datafile' IGNORE INTO TABLE t1 FIELDS TERMINATED BY '' ENCLOSED BY '' IGNORE 1 LINES;
 SELECT * FROM t1;
 TRUNCATE TABLE t1;
 
---let $datafile=./suite/columnstore/std_data/loaddata4.dat
+--let $datafile=$MTR_SUITE_DIR/../std_data/loaddata4.dat
+--replace_result $MTR_SUITE_DIR MTR_SUITE_DIR
 --eval LOAD DATA LOCAL infile '$datafile' IGNORE INTO TABLE t1 FIELDS TERMINATED BY '' ENCLOSED BY '' LINES TERMINATED BY '' IGNORE 1 LINES;
 # The empty line last comes from the end line field in the file
 SELECT * FROM t1;

@@ -42,7 +42,6 @@ using namespace execplan;
 #include "errorids.h"
 using namespace logging;
 
-#include "collation.h"
 
 namespace funcexp
 {

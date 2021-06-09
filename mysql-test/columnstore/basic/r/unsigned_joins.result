@@ -22,8 +22,8 @@ o_clerk char (15),
 o_shippriority int,
 o_comment varchar (79)
 ) engine=columnstore;
-LOAD DATA LOCAL infile './suite/columnstore/std_data/1m_customer.tbl' INTO TABLE customer FIELDS TERMINATED BY '|';
-LOAD DATA LOCAL infile './suite/columnstore/std_data/1m_orders.tbl' INTO TABLE orders FIELDS TERMINATED BY '|';
+LOAD DATA LOCAL infile 'MTR_SUITE_DIR/../std_data/1m_customer.tbl' INTO TABLE customer FIELDS TERMINATED BY '|';;
+LOAD DATA LOCAL infile 'MTR_SUITE_DIR/../std_data/1m_orders.tbl' INTO TABLE orders FIELDS TERMINATED BY '|';;
 alter table customer add column u_custkey int unsigned;
 update customer set u_custkey=c_custkey;
 alter table orders add column u_custkey int unsigned;
