@@ -179,8 +179,6 @@ void TupleBPS::initializeConfigParms()
     fProcessorThreadsPerScan = fRm->getJlProcessorThreadsPerScan();
     fNumThreads = 0;
 
-    config::Config* cf = config::Config::makeConfig();
-
     fExtentsPerSegFile = DEFAULT_EXTENTS_PER_SEG_FILE;
 
     if (fRequestSize >= fMaxOutstandingRequests)
