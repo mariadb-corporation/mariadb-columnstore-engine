@@ -593,7 +593,7 @@ int ColumnBufferCompressed::saveCompressionHeaders( )
     // If lbid written in the header is not 0 and not equal to `lastupdatedlbid` - we are running
     // for the next extent for column segment file.
     const auto lastUpdatedLbid = fColInfo->getLastUpdatedLBID();
-    if (lbid && (uint64_t)lastUpdatedLbid != lbid)
+    if (lbid && lastUpdatedLbid != lbid)
     {
         // Write back lbid, after header initialization.
         fCompressor->setLBIDByIndex(hdrBuf, lbid, 0);

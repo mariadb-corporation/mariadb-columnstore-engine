@@ -49,8 +49,10 @@ class TypelessData
 public:
     uint8_t* data;
     uint32_t len;
+    const rowgroup::Row *mRowPtr;
 
-    TypelessData() : data(NULL), len(0) { }
+    TypelessData() : data(NULL), len(0), mRowPtr(nullptr) { }
+    TypelessData(const rowgroup::Row *rowPtr) : data(NULL), len(0), mRowPtr(rowPtr) { }
     inline bool operator==(const TypelessData&) const;
     void serialize(messageqcpp::ByteStream&) const;
     void deserialize(messageqcpp::ByteStream&, utils::FixedAllocator&);
@@ -60,6 +62,8 @@ public:
     static int cmp(const rowgroup::RowGroup&, const std::vector<uint32_t>& keyCols,
                    const TypelessData &a,
                    const TypelessData &b);
+    int cmpToRow(const rowgroup::RowGroup& r, const std::vector<uint32_t>& keyCols,
+                 const rowgroup::Row &db) const;
 };
 
 inline bool TypelessData::operator==(const TypelessData& t) const
@@ -88,14 +92,9 @@ public:
  * key is limited by keylen.  Keys that are longer are assigned a length of 0 on return,
  * signifying that it shouldn't match anything.
  */
-extern TypelessData makeTypelessKey(const rowgroup::Row&,
-                                    const std::vector<uint32_t>&, uint32_t keylen, utils::FixedAllocator* fa);
 // MCOL-1822 SUM/AVG as long double: pass in RG and col so we can determine type conversion
 extern TypelessData makeTypelessKey(const rowgroup::Row&,
                                     const std::vector<uint32_t>&, uint32_t keylen, utils::FixedAllocator* fa,
-                                    const rowgroup::RowGroup&, const std::vector<uint32_t>&);
-extern TypelessData makeTypelessKey(const rowgroup::Row&,
-                                    const std::vector<uint32_t>&, utils::PoolAllocator* fa,
                                     const rowgroup::RowGroup&, const std::vector<uint32_t>&);
 extern uint64_t getHashOfTypelessKey(const rowgroup::Row&, const std::vector<uint32_t>&,
                                      uint32_t seed = 0);
