@@ -183,7 +183,7 @@ private:
     void writeProjectionPreamble();
     void makeResponse();
     void sendResponse();
-    joiner::TypelessData makeTypelessKey(const rowgroup::Row r,
+    joiner::TypelessData makeTypelessKey(const rowgroup::Row& r,
                                          const size_t joinerIdx) const;
 
     /* Used by scan operations to increment the LBIDs in successive steps */
@@ -349,6 +349,7 @@ private:
     /* extra typeless join vars & fcns*/
     boost::shared_array<bool> typelessJoin;
     boost::shared_array<std::vector<uint32_t> > tlLargeSideKeyColumns;
+    std::shared_ptr<std::vector<uint32_t>> tlSmallSideKeyColumns;
     boost::shared_array<boost::shared_array<boost::shared_ptr<TLJoiner> > > tlJoiners;
     boost::shared_array<uint32_t> tlSmallSideKeyLengths;
     boost::shared_array<uint32_t> tlLargeSideKeyLengths;

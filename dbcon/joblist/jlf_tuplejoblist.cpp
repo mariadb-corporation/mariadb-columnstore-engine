@@ -1482,7 +1482,8 @@ bool addFunctionJoin(vector<uint32_t>& joinedTables, JobStepVector& joinSteps,
 
             // Enable Typeless JOIN for char and wide decimal types.
             if (datatypes::isCharType(ti1.dtype) ||
-                datatypes::isWideDecimalType(ti1.dtype, ti1.width))
+                (datatypes::isWideDecimalType(ti1.dtype, ti1.width) ||
+                 datatypes::isWideDecimalType(ti2.dtype, ti2.width)))
                 m1->second.fTypeless = m2->second.fTypeless = true;  // ti2 is compatible
             else
                 m1->second.fTypeless = m2->second.fTypeless = false;

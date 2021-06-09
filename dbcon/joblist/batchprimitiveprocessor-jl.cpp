@@ -1124,11 +1124,13 @@ void BatchPrimitiveProcessorJL::createBPP(ByteStream& bs) const
                     bs << (uint32_t) tJoiners[i]->getKeyLength();
                     // MCOL-4173 Notify PP if smallSide and largeSide have different column widths
                     // and send smallSide RG to PP.
-                    bs << tJoiners[i]->largeSideIsWideSmallSideIsNarrow();
-                    if (!smallSideRGSent && tJoiners[i]->largeSideIsWideSmallSideIsNarrow())
+                    bool largeSideIsWideSmallSideIsNarrow = tJoiners[i]->largeSideIsWideSmallSideIsNarrow();
+                    bs << largeSideIsWideSmallSideIsNarrow;
+                    if (!smallSideRGSent && largeSideIsWideSmallSideIsNarrow)
                     {
                         idbassert(!smallSideRGs.empty());
                         bs << smallSideRGs[0];
+                        serializeVector<uint32_t>(bs, tJoiners[i]->getSmallKeyColumns());
                         smallSideRGSent = true;
                     }
                 }

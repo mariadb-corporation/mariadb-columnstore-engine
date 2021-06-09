@@ -88,8 +88,7 @@ public:
     void deserialize(messageqcpp::ByteStream&, utils::PoolAllocator&);
     std::string toString() const;
     uint64_t hash(const rowgroup::RowGroup&,
-                  const std::vector<uint32_t>& keyCols,
-                  const std::vector<uint32_t>* smallSideColWidths = nullptr) const;
+                  const std::vector<uint32_t>& keyCols) const;
     static int cmp(const rowgroup::RowGroup&, const std::vector<uint32_t>& keyCols,
                    const TypelessData &a,
                    const TypelessData &b);
@@ -211,7 +210,8 @@ public:
  */
 extern TypelessData makeTypelessKey(const rowgroup::Row&,
                                     const std::vector<uint32_t>&, uint32_t keylen, utils::FixedAllocator* fa,
-                                    const std::vector<uint32_t>* aSmallSideColumnsWidths);
+                                    const std::vector<uint32_t>* aSmallSideColumnsWidths,
+                                    const std::vector<uint32_t>* aSmallSideColumnsIds);
 // MCOL-1822 SUM/AVG as long double: pass in RG and col so we can determine type conversion
 extern TypelessData makeTypelessKey(const rowgroup::Row&,
                                     const std::vector<uint32_t>&, uint32_t keylen, utils::FixedAllocator* fa,
@@ -227,10 +227,13 @@ class TypelessDataStructure
 public:
    const rowgroup::RowGroup *mRowGroup;
    const std::vector<uint32_t> *mMap;
+   const std::vector<uint32_t> *mSmallSideKeyColumnsIds;
    TypelessDataStructure(const rowgroup::RowGroup *rg,
-                         const std::vector<uint32_t> *map)
+                         const std::vector<uint32_t> *map,
+                         const std::vector<uint32_t> *smallSideKeyColumnsIds)
        :mRowGroup(rg),
-        mMap(map)
+        mMap(map),
+        mSmallSideKeyColumnsIds(smallSideKeyColumnsIds)
    { }
 };
 
@@ -274,12 +277,13 @@ public:
     {
         TypelessDataHasher(const rowgroup::RowGroup *rg,
                            const std::vector<uint32_t> *map,
-                           const std::vector<uint32_t> *smallSideColWidths)
-           :TypelessDataStructure(rg, map), mSmallSideColWidths(smallSideColWidths)
+                           const std::vector<uint32_t> *smallSideColWidths,
+                           const std::vector<uint32_t> *smallSideKeyColumnsIds)
+           :TypelessDataStructure(rg, map, smallSideKeyColumnsIds), mSmallSideColWidths(smallSideColWidths)
         { }
         inline size_t operator()(const TypelessData& e) const
         {
-            return e.hash(*mRowGroup, *mMap, mSmallSideColWidths);
+            return e.hash(*mRowGroup, *mMap);
         }
 
         const std::vector<uint32_t>* mSmallSideColWidths;
@@ -289,8 +293,9 @@ public:
     {
     public:
         TypelessDataComparator(const rowgroup::RowGroup *rg,
-                               const std::vector<uint32_t> *map)
-           :TypelessDataStructure(rg, map)
+                               const std::vector<uint32_t> *map,
+                               const std::vector<uint32_t> *smallSideKeyColumnsIds)
+           :TypelessDataStructure(rg, map, smallSideKeyColumnsIds)
         { }
         bool operator()(const TypelessData& a, const TypelessData& b) const
         {
@@ -492,7 +497,7 @@ public:
     }
 
     // Wide-DECIMAL JOIN
-    bool largeSideIsWideSmallSideIsNarrow() const;
+    bool largeSideIsWideSmallSideIsNarrow();
     inline const vector<uint32_t>& getSmallSideColumnsWidths() const
     {
         return smallRG.getColWidths();

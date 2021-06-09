@@ -41,6 +41,17 @@ using namespace joblist;
 namespace joiner
 {
 
+// Helper to get a value from nested vector pointers.
+template<typename T>
+inline T derefFromTwoVectorPtrs(const std::vector<T>* outer,
+                         const std::vector<T>* inner,
+                         const T innerIdx)
+{
+    auto outerIdx = inner->operator[](innerIdx);
+    return outer->operator[](outerIdx); 
+}
+
+
 // Typed joiner ctor
 TupleJoiner::TupleJoiner(
     const rowgroup::RowGroup& smallInput,
@@ -1301,10 +1312,12 @@ public:
             datatypes::TSInt128 integralPart = mR->getTSInt128Field(mKeyColId);
 
             bool isUnsigned = datatypes::isUnsigned(otherSideType);
-            width = (isUnsigned &&
-                     numericRangeCheckAndConvert<uint64_t>(integralPart)) ? 0 : datatypes::MAXLEGACYWIDTH;
-            width = (!isUnsigned &&
-                     numericRangeCheckAndConvert<int64_t>(integralPart)) ? 0 : datatypes::MAXLEGACYWIDTH;
+            if (isUnsigned)
+            {
+                width = (numericRangeCheckAndConvert<uint64_t>(integralPart)) ? 0 : datatypes::MAXLEGACYWIDTH;
+                return *this;
+            }
+            width = (numericRangeCheckAndConvert<int64_t>(integralPart)) ? 0 : datatypes::MAXLEGACYWIDTH;
         }
         return *this;
     }
@@ -1314,11 +1327,15 @@ public:
     // if the key columns has a skew, e.g. INT to DECIMAL(38).
     // It doesn't change ::width. See store() for details.
     inline WideDecimalKeyConverter&
-    convert(const std::vector<uint32_t>* aSmallSideColumnsWidths)
+    convert(const std::vector<uint32_t>* aSmallSideColumnsWidths,
+            const std::vector<uint32_t>* aSmallSideKeyColumnIds,
+            const uint32_t keyIteratorIdx)
     {
         // MCS will reduce the key width and value type to the smallest of two sides.
         // The assumption here is that width is either 8 or 16 bytes.
-        if (aSmallSideColumnsWidths && width != aSmallSideColumnsWidths->operator[](mKeyColId))
+        if (aSmallSideColumnsWidths && width != derefFromTwoVectorPtrs(aSmallSideColumnsWidths,
+                                                                       aSmallSideKeyColumnIds,
+                                                                       keyIteratorIdx))
         {
             datatypes::TSInt128 integralPart = mR->getTSInt128Field(mKeyColId);
             if (std::numeric_limits<uint64_t>::max() >= integralPart.getValue() ||
@@ -1341,13 +1358,13 @@ public:
                       const uint32_t skewedKeyColumnOffset = 0) const
     {
         // A note from convert() if there is otherSide column type range
-        // overflow. If so return .len = 0. This tells MCS to pass this
+        // overflow so store() returns TD with len=0. This tells MCS to pass this
         // key b/c it won't match. This happens in EM only b/c we can skip
         // smallSide TD but can't to do the same with largeSide b/c of OUTER joins.
         if (!width)
         {
             typelessData.len = 0;
-            return false;
+            return true;
         }
         if (off + width > keylen)
             return true;
@@ -1383,7 +1400,8 @@ public:
 // add an addition byte to notify TypelessData::hash() this is a largeSide key.
 TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols,
                              uint32_t keylen, FixedAllocator* fa,
-                             const std::vector<uint32_t>* aSmallSideColumnsWidths)
+                             const std::vector<uint32_t>* aSmallSideColumnsWidths,
+                             const std::vector<uint32_t>* aSmallSideColumnsIds)
 {
     TypelessData ret;
     uint32_t off = 0, i;
@@ -1410,7 +1428,7 @@ TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols,
         {
             // We don't need to strip fractional part of the DECIMAL
             // b/c MCS joins INTs and DECIMAL with 0 scale only.
-            if (WideDecimalKeyConverter(r, keyCols[i]).convert(aSmallSideColumnsWidths)
+            if (WideDecimalKeyConverter(r, keyCols[i]).convert(aSmallSideColumnsWidths, aSmallSideColumnsIds, i)
                                                       .store(ret, off, keylen, skewedColumnOffset++))
             {
                 goto toolong;
@@ -1431,9 +1449,13 @@ TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols,
             off += 8;
             // The assumption here is DECIMAL is a signed data type.
             // If a Large side of a skewed JOIN is 8 byte we need to set the flag to use it later in
-            // TypelessData::cmp to read a proper amount of bytes.
-            if (aSmallSideColumnsWidths && aSmallSideColumnsWidths->operator[](i) >= datatypes::MAXDECIMALWIDTH)
+            // TypelessData::cmp to read a correct number of bytes.
+            if (aSmallSideColumnsWidths && derefFromTwoVectorPtrs(aSmallSideColumnsWidths,
+                                                                  aSmallSideColumnsIds,
+                                                                  i) >= datatypes::MAXDECIMALWIDTH)
+            {
                 ret.setLargeSide8Bytes(skewedColumnOffset++);
+            }
         }
     }
 
@@ -1471,8 +1493,7 @@ int32_t TypelessData::compareDecimalsWSkewedWidths(TypelessDataDecoder& smallSid
 // hash() looks at the last additional byte to detect which side
 // this key belongs to.
 uint64_t TypelessData::hash(const RowGroup& r,
-                            const std::vector<uint32_t>& keyCols,
-                            const std::vector<uint32_t>* smallSideColWidths) const
+                            const std::vector<uint32_t>& keyCols) const
 {
     TypelessDataDecoder decoder(*this);
     datatypes::MariaDBHasher hasher;
@@ -1591,7 +1612,7 @@ int TypelessData::cmp(const RowGroup& r, const std::vector<uint32_t>& keyCols,
                     if (int rc= memcmp(ta.str(), tb.str(), width))
                         return rc;
                 }
-                
+
                 break;
             }
             default:
@@ -1970,19 +1991,25 @@ boost::shared_ptr<TupleJoiner> TupleJoiner::copyForDiskJoin()
 
 // Used for Typeless JOIN to detect if there is a JOIN when largeSide is wide-DECIMAL and
 // smallSide is a smaller data type, e.g. INT or narrow-DECIMAL.
-bool TupleJoiner::largeSideIsWideSmallSideIsNarrow() const
+bool TupleJoiner::largeSideIsWideSmallSideIsNarrow()
 {
-    for (size_t i = 0; i < smallRG.getColTypes().size(); ++i)
+    std::vector<uint32_t>::const_iterator largeSideKeyColumnsIter = getLargeKeyColumns().begin();
+    std::vector<uint32_t>::const_iterator smallSideKeyColumnsIter = getSmallKeyColumns().begin();
+    idbassert(getLargeKeyColumns().size() == getSmallKeyColumns().size());
+    while (largeSideKeyColumnsIter != getLargeKeyColumns().end())
     {
-        bool widthIsDifferent = smallRG.getColumnWidth(i) != largeRG.getColumnWidth(i);
-        if (widthIsDifferent && (datatypes::isWideDecimalType(smallRG.getColTypes()[i], smallRG.getColumnWidth(i)) ||
-                                 datatypes::isWideDecimalType(largeRG.getColTypes()[i], largeRG.getColumnWidth(i))))
+        auto smallSideColumnWidth = smallRG.getColumnWidth(*smallSideKeyColumnsIter);
+        auto largeSideColumnWidth = largeRG.getColumnWidth(*largeSideKeyColumnsIter);
+        bool widthIsDifferent = smallSideColumnWidth != largeSideColumnWidth;
+        if (widthIsDifferent && (datatypes::isWideDecimalType(smallRG.getColTypes()[*smallSideKeyColumnsIter], smallSideColumnWidth) ||
+                                 datatypes::isWideDecimalType(largeRG.getColTypes()[*largeSideKeyColumnsIter], largeSideColumnWidth)))
         {
             return true;
         }
+        ++largeSideKeyColumnsIter;
+        ++smallSideKeyColumnsIter;
     }
     return false;
-
 }
 
 void TupleJoiner::setConvertToDiskJoin()
@@ -2026,11 +2053,11 @@ uint32_t calculateKeyLength(const std::vector<uint32_t>& aKeyColumnsIds,
             keyLength += sizeof(long double);
         }
         else if (datatypes::isWideDecimalType(smallKeyColumnType,
-                                              aSmallRowGroup.getColumnWidth(keyColumnIdx)))
+                                              aSmallRowGroup.getColumnWidth(smallSideKeyColumnId)))
         {
             keyLength += (aLargeRowGroup &&
                           !datatypes::isWideDecimalType(largeKeyColumntype,
-                                                        aLargeRowGroup->getColumnWidth(keyColumnIdx)))
+                                                        aLargeRowGroup->getColumnWidth(smallSideKeyColumnId)))
                        ? datatypes::MAXLEGACYWIDTH     // Small=Wide, Large=Narrow/xINT
                        : datatypes::MAXDECIMALWIDTH;   // Small=Wide, Large=Wide
         }
