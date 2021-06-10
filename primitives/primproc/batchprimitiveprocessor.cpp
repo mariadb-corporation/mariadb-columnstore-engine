@@ -1195,9 +1195,8 @@ void BatchPrimitiveProcessor::executeTupleJoin()
             {
                 //cout << " typeless join\n";
                 // the null values are not sent by UM in typeless case.  null -> !found
-                tlLargeKey = makeTypelessKey(oldRow, tlLargeSideKeyColumns[j], tlKeyLengths[j],
-                                             &tmpKeyAllocators[j]);
-                uint bucket = tlLargeKey.hash(outputRG, tlLargeSideKeyColumns[j]) & ptMask;
+                tlLargeKey = TypelessData(&oldRow);
+                uint bucket = oldRow.hashTypeless(tlLargeSideKeyColumns[j]) & ptMask;
                 found = tlJoiners[j][bucket]->find(tlLargeKey) != tlJoiners[j][bucket]->end();
 
                 if ((!found && !(joinTypes[j] & (LARGEOUTER | ANTI))) ||
@@ -2714,11 +2713,10 @@ inline void BatchPrimitiveProcessor::getJoinResults(const Row& r, uint32_t jInde
             }
         }
 
-        TypelessData largeKey = makeTypelessKey(r, tlLargeSideKeyColumns[jIndex],
-                                                tlKeyLengths[jIndex], &tmpKeyAllocators[jIndex]);
-        pair<TLJoiner::iterator, TLJoiner::iterator> range;
-        bucket = largeKey.hash(outputRG, tlLargeSideKeyColumns[jIndex]) & ptMask;
-        range = tlJoiners[jIndex][bucket]->equal_range(largeKey);
+        TypelessData largeKey(&r);
+        bucket = r.hashTypeless(tlLargeSideKeyColumns[jIndex]) & ptMask;
+        pair<TLJoiner::iterator, TLJoiner::iterator> range =
+            tlJoiners[jIndex][bucket]->equal_range(largeKey);
         for (; range.first != range.second; ++range.first)
             v.push_back(range.first->second);
     }

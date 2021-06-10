@@ -559,6 +559,14 @@ public:
     inline uint64_t hash(uint32_t lastCol) const;  // generates a hash for cols [0-lastCol]
     inline uint64_t hash() const;  // generates a hash for all cols
     inline void colUpdateMariaDBHasher(datatypes::MariaDBHasher &hasher, uint32_t col) const;
+    inline void colUpdateMariaDBHasherTypeless(datatypes::MariaDBHasher &hasher, uint32_t col) const;
+    inline uint64_t hashTypeless(const std::vector<uint32_t>& keyCols) const
+    {
+        datatypes::MariaDBHasher h;
+        for (uint32_t i = 0; i < keyCols.size(); i++)
+            colUpdateMariaDBHasherTypeless(h, keyCols[i]);
+        return h.finalize();
+    }
 
     bool equals(const Row&, uint32_t lastCol) const;
     inline bool equals(const Row&) const;
@@ -938,6 +946,38 @@ inline void Row::colUpdateMariaDBHasher(datatypes::MariaDBHasher &h, uint32_t co
         default:
             h.add(&my_charset_bin, getShortConstString(col));
             break;
+    }
+}
+
+
+inline void Row::colUpdateMariaDBHasherTypeless(datatypes::MariaDBHasher &h, uint32_t col) const
+{
+    switch (getColType(col))
+    {
+        case datatypes::SystemCatalog::CHAR:
+        case datatypes::SystemCatalog::VARCHAR:
+        case datatypes::SystemCatalog::BLOB:
+        case datatypes::SystemCatalog::TEXT:
+        {
+            CHARSET_INFO *cs = getCharset(col);
+            h.add(cs, getConstString(col));
+            break;
+        }
+        default:
+        {
+            if (isUnsigned(col))
+            {
+                uint64_t tb = getUintField(col);
+                h.add(&my_charset_bin, (const char*) &tb, 8);
+            }
+            else
+            {
+                int64_t val = getIntField(col);
+                h.add(&my_charset_bin, (const char*) &val, 8);
+            }
+
+            break;
+        }
     }
 }
 

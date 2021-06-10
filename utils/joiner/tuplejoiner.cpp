@@ -1321,58 +1321,11 @@ public:
 };
 
 
-TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols,
-                             uint32_t keylen, FixedAllocator* fa)
-{
-    TypelessData ret;
-    uint32_t off = 0, i;
-    execplan::CalpontSystemCatalog::ColDataType type;
-
-    ret.data = (uint8_t*) fa->allocate();
-
-    for (i = 0; i < keyCols.size(); i++)
-    {
-        type = r.getColTypes()[keyCols[i]];
-
-        if (type == CalpontSystemCatalog::VARCHAR ||
-                type == CalpontSystemCatalog::CHAR ||
-                type == CalpontSystemCatalog::TEXT)
-        {
-            // this is a string, copy a normalized version
-            const uint8_t* str = r.getStringPointer(keyCols[i]);
-            uint32_t width = r.getStringLength(keyCols[i]);
-            if (TypelessDataStringEncoder(str, width).store(ret.data, off, keylen))
-                goto toolong;
-        }
-        else if (r.isUnsigned(keyCols[i]))
-        {
-            if (off + 8 > keylen)
-                goto toolong;
-            *((uint64_t*) &ret.data[off]) = r.getUintField(keyCols[i]);
-            off += 8;
-        }
-        else
-        {
-            if (off + 8 > keylen)
-                goto toolong;
-            *((int64_t*) &ret.data[off]) = r.getIntField(keyCols[i]);
-            off += 8;
-        }
-    }
-
-    ret.len = off;
-    fa->truncateBy(keylen - off);
-    return ret;
-toolong:
-    fa->truncateBy(keylen);
-    ret.len = 0;
-    return ret;
-}
-
-
 uint32 TypelessData::hash(const RowGroup& r,
                           const std::vector<uint32_t>& keyCols) const
 {
+    if (mRowPtr)
+        return mRowPtr->hashTypeless(keyCols);
     TypelessDataDecoder decoder(*this);
     datatypes::MariaDBHasher hasher;
     for (uint32_t i = 0; i < keyCols.size(); i++)
@@ -1398,9 +1351,59 @@ uint32 TypelessData::hash(const RowGroup& r,
 }
 
 
+int TypelessData::cmpToRow(const RowGroup& r,
+                           const std::vector<uint32_t>& keyCols,
+                           const rowgroup::Row &row) const
+{
+    TypelessDataDecoder a(*this);
+
+    for (uint32_t i = 0; i < keyCols.size(); i++)
+    {
+        switch (r.getColTypes()[keyCols[i]])
+        {
+            case CalpontSystemCatalog::VARCHAR:
+            case CalpontSystemCatalog::CHAR:
+            case CalpontSystemCatalog::TEXT:
+            {
+                datatypes::Charset cs(*const_cast<RowGroup&>(r).getCharset(keyCols[i]));
+                ConstString ta = a.scanString();
+                ConstString tb = row.getConstString(keyCols[i]);
+                if (int rc= cs.strnncollsp(ta, tb))
+                    return rc;
+                break;
+            }
+            default:
+            {
+                ConstString ta = a.scanGeneric(datatypes::MAXLEGACYWIDTH);
+                if (r.isUnsigned(keyCols[i]))
+                {
+                    uint64_t tb = row.getUintField(keyCols[i]);
+                    if (int rc= memcmp(ta.str(), &tb , datatypes::MAXLEGACYWIDTH))
+                        return rc;
+                }
+                else
+                {
+                    int64_t tb = row.getIntField(keyCols[i]);
+                    if (int rc= memcmp(ta.str(), &tb , datatypes::MAXLEGACYWIDTH))
+                        return rc;
+                }
+                break;
+            }
+        }
+    }
+    return 0; // Equal
+}
+
+
 int TypelessData::cmp(const RowGroup& r, const std::vector<uint32_t>& keyCols,
                       const TypelessData &da, const TypelessData &db)
 {
+    idbassert((da.mRowPtr == nullptr) + (db.mRowPtr == nullptr) > 0);
+    if (da.mRowPtr)
+        return -db.cmpToRow(r, keyCols, da.mRowPtr[0]);
+    if (db.mRowPtr)
+        return da.cmpToRow(r, keyCols, db.mRowPtr[0]);
+
     TypelessDataDecoder a(da);
     TypelessDataDecoder b(db);
 
@@ -1543,114 +1546,6 @@ toolong:
     return ret;
 }
 
-TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols, PoolAllocator* fa,
-                             const rowgroup::RowGroup& otherSideRG, const std::vector<uint32_t>& otherKeyCols)
-{
-    TypelessData ret;
-    uint32_t off = 0, i;
-    execplan::CalpontSystemCatalog::ColDataType type;
-
-    uint32_t keylen = 0;
-
-    /* get the length of the normalized key... */
-    for (i = 0; i < keyCols.size(); i++)
-    {
-        type = r.getColTypes()[keyCols[i]];
-
-        if (r.getColType(keyCols[i]) == CalpontSystemCatalog::LONGDOUBLE
-         && otherSideRG.getColType(otherKeyCols[i]) == CalpontSystemCatalog::LONGDOUBLE)
-        {
-            keylen += sizeof(long double);
-        }
-        else if (r.isCharType(keyCols[i]))
-            keylen += r.getStringLength(keyCols[i]) + 2;
-        else
-            keylen += 8;
-    }
-
-    ret.data = (uint8_t*) fa->allocate(keylen);
-
-    for (i = 0; i < keyCols.size(); i++)
-    {
-        type = r.getColTypes()[keyCols[i]];
-
-        if (type == CalpontSystemCatalog::VARCHAR ||
-                type == CalpontSystemCatalog::CHAR ||
-                type == CalpontSystemCatalog::TEXT)
-        {
-            // this is a string, copy a normalized version
-            const uint8_t* str = r.getStringPointer(keyCols[i]);
-            uint32_t width = r.getStringLength(keyCols[i]);
-            TypelessDataStringEncoder(str, width).store(ret.data, off, keylen);
-        }
-        else if (type == CalpontSystemCatalog::LONGDOUBLE)
-        {
-            // Small side is a long double. Since CS can't store larger than DOUBLE,
-            // we need to convert to whatever type large side is -- double or int64
-            long double keyld = r.getLongDoubleField(keyCols[i]);
-            switch (otherSideRG.getColType(otherKeyCols[i]))
-            {
-                case CalpontSystemCatalog::DOUBLE:
-                case CalpontSystemCatalog::UDOUBLE:
-                case CalpontSystemCatalog::FLOAT:
-                case CalpontSystemCatalog::UFLOAT:
-                {
-                    if (keyld > MAX_DOUBLE || keyld < MIN_DOUBLE)
-                    {
-                        ret.len = 0;
-                        return ret;
-                    }
-                    else
-                    {
-                        double d = (double)keyld;
-                        *((int64_t*) &ret.data[off]) = *(int64_t*)&d;
-                        off += 8;
-                    }
-                    break;
-                }
-                case CalpontSystemCatalog::LONGDOUBLE:
-                {
-                    *((long double*) &ret.data[off]) = keyld;
-                    off += sizeof(long double);
-                    break;
-                }
-                default:
-                {
-                    if (r.isUnsigned(keyCols[i]) && keyld > MAX_UBIGINT)
-                    {
-                        ret.len = 0;
-                        return ret;
-                    }
-                    else if (keyld > MAX_BIGINT || keyld < MIN_BIGINT)
-                    {
-                        ret.len = 0;
-                        return ret;
-                    }
-                    else
-                    {
-                        *((int64_t*) &ret.data[off]) = (int64_t)keyld;
-                        off += 8;
-                    }
-                    break;
-                }
-            }
-        }
-        else if (r.isUnsigned(keyCols[i]))
-        {
-            *((uint64_t*)&ret.data[off]) = r.getUintField(keyCols[i]);
-            off += 8;
-        }
-        else
-        {
-            *((int64_t*)&ret.data[off]) = r.getIntField(keyCols[i]);
-            off += 8;
-        }
-    }
-
-    assert(off == keylen);
-    ret.len = off;
-    return ret;
-}
 
 uint64_t getHashOfTypelessKey(const Row& r, const vector<uint32_t>& keyCols, uint32_t seed)
 {
