@@ -498,6 +498,13 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *table_ptr)
     if (thd->stmt_arena && thd->stmt_arena->is_stmt_execute())
         return handler;
 
+    // MCOL-1482 Disable derived_handler if the multi-table update
+    // statement contains a non-columnstore table.
+    if (cal_impl_if::isUpdateHasForeignTable(thd))
+    {
+        return handler;
+    }
+
     SELECT_LEX_UNIT *unit = table_ptr->derived;
     SELECT_LEX *sl = unit->first_select();
 
@@ -750,6 +757,14 @@ create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
     // select_handler
     if ((select_handler_mode == mcs_select_handler_mode_t::OFF) ||
         ((thd->lex)->sphead && !get_select_handler_in_stored_procedures(thd)))
+    {
+        return nullptr;
+    }
+
+    // MCOL-1482 Disable select_handler for a multi-table update
+    // with a non-columnstore table as the target table of the update
+    // operation.
+    if (cal_impl_if::isForeignTableUpdate(thd))
     {
         return nullptr;
     }
