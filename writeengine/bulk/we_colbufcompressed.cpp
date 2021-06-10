@@ -584,7 +584,7 @@ int ColumnBufferCompressed::saveCompressionHeaders( )
     char hdrBuf[IDBCompressInterface::HDR_BUF_LEN * 2];
     RETURN_ON_ERROR(fColInfo->colOp->readHeaders(fFile, hdrBuf));
 
-    auto lbid = fCompressor->getLBIDByIndex(hdrBuf, 0);
+    BRM::LBID_t lbid = fCompressor->getLBIDByIndex(hdrBuf, 0);
     fCompressor->initHdr(hdrBuf, fColInfo->column.width,
                          fColInfo->column.dataType,
                          fColInfo->column.compressionType);
