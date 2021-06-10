@@ -52,6 +52,29 @@ class CalpontExecutionPlan
 public:
 
     /**
+    * Flags that can be passed to caltraceon().
+    */
+    enum TRACE_FLAGS
+    {
+        TRACE_NONE             = 0x0000,  /*!< No tracing */
+        TRACE_LOG              = 0x0001,  /*!< Full return of rows, extra debug about query in log */
+        TRACE_NO_ROWS1         = 0x0002,  /*!< Same as above, but rows not given to OCI layer */
+        TRACE_NO_ROWS2         = 0x0004,  /*!< Same as above, but rows not converted from stream */
+        TRACE_NO_ROWS3         = 0x0008,  /*!< Same as above, but rows not sent to DM from UM */
+        TRACE_NO_ROWS4         = 0x0010,  /*!< Same as above, but rows not sent to DeliveryStep */
+        TRACE_LBIDS            = 0x0020,  /*!< Enable LBID tracing in PrimProc */
+        TRACE_PLAN_ONLY        = 0x0040,  /*!< Only generate a serialized CSEP */
+        PM_PROFILE             = 0x0080,  /*!< Enable PM profiling in PrimProc */
+        IGNORE_CP              = 0x0100,  /*!< Ignore casual partitioning metadata */
+        WRITE_TO_FILE          = 0x0200,  /*!< writes table rows out to a file from the Oracle connector */
+        NOWRITE_TO_FILE        = 0x0400,  /*!< does not write table rows out to a file from the Oracle connector */
+        TRACE_DISKIO_UM        = 0x0800,  /*!< Enable UM disk I/O logging */
+        TRACE_RESRCMGR         = 0x1000,  /*!< Trace Resource Manager Usage */
+        TRACE_TUPLE_AUTOSWITCH = 0x4000,  /*!< Enable MySQL tuple-to-table auto switch */
+        TRACE_TUPLE_OFF        = 0x8000,  /*!< Enable MySQL table interface */
+    };
+
+    /**
      * Constructors
      */
     CalpontExecutionPlan();

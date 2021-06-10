@@ -12,6 +12,7 @@ set(execplan_LIB_SRCS
     calpontexecutionplan.cpp
     calpontexecutionplanfactory.cpp
     calpontselectexecutionplan.cpp
+    mcsanalyzetableexecutionplan.cpp
     clientrotator.cpp
     constantcolumn.cpp
     constantfilter.cpp

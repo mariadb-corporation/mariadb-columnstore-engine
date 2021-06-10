@@ -1,0 +1,27 @@
+DROP DATABASE IF EXISTS analyze_table_db;
+CREATE DATABASE analyze_table_db;
+USE analyze_table_db;
+create table t1 (a int, b int, c int) engine=columnstore;
+insert into t1 values (1, 2, 3), (2, 2, 2), (2, 3, 4);
+analyze table t1;
+Table	Op	Msg_type	Msg_text
+analyze_table_db.t1	analyze	status	OK
+create table t2 (a int, b double) engine=columnstore;
+insert into t2 values (2, 3), (3, 4);
+analyze table t2;
+Table	Op	Msg_type	Msg_text
+analyze_table_db.t2	analyze	status	OK
+create table t3 (a varchar(25)) engine=columnstore;
+insert into t3 values ("a"), ("b");
+analyze table t3;
+Table	Op	Msg_type	Msg_text
+analyze_table_db.t3	analyze	status	OK
+analyze table t1, t2, t3;
+Table	Op	Msg_type	Msg_text
+analyze_table_db.t1	analyze	status	OK
+analyze_table_db.t2	analyze	status	OK
+analyze_table_db.t3	analyze	status	OK
+DROP TABLE t1;
+DROP TABLE t2;
+DROP TABLE t3;
+DROP DATABASE analyze_table_db;

@@ -77,7 +77,8 @@ enum ErrorCodeValues
     dataTypeErr,
     incompatJoinCols,
     incompatFilterCols,
-    aggregateResourceErr
+    aggregateResourceErr,
+    statisticsJobListEmpty = 301
 };
 
 struct ErrorCodes
