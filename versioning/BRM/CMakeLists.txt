@@ -12,6 +12,7 @@ set(brm_LIB_SRCS
     copylocks.cpp
     dbrm.cpp
     extentmap.cpp
+    statistics.cpp
     lbidresourcegraph.cpp
     logicalpartition.cpp
     mastersegmenttable.cpp

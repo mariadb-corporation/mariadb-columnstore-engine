@@ -48,6 +48,7 @@
 #include <boost/filesystem.hpp>
 
 #include "calpontselectexecutionplan.h"
+#include "calpontanalyzetableexecutionplan.h"
 #include "activestatementcounter.h"
 #include "distributedenginecomm.h"
 #include "resourcemanager.h"
@@ -77,7 +78,7 @@
 #include "dbrm.h"
 
 #include "mariadb_my_sys.h"
-
+#include "statistics.h"
 
 class Opt
 {
@@ -690,6 +691,82 @@ public:
                         fIos.write(bs);
                         fIos.close();
                         break;
+                    }
+                    else if (qb == 6)
+                    {
+                        messageqcpp::ByteStream::quadbyte qb;
+                        execplan::CalpontAnalyzeTableExecutionPlan caep;
+
+                        bs = fIos.read();
+                        caep.unserialize(bs);
+
+                        statementsRunningCount->incr(stmtCounted);
+                        jl = joblist::JobListFactory::makeJobList(&caep, fRm, false, true);
+
+                        // Joblist is empty.
+                        if (jl->status() == -1)
+                        {
+                            if (caep.traceOn())
+                                std::cout << "JobList is empty " << std::endl;
+
+                            jl.reset();
+                            bs.restart();
+                            qb = 6;
+                            bs << qb;
+                            fIos.write(bs);
+                            bs.reset();
+                            statementsRunningCount->decr(stmtCounted);
+                            continue;
+                        }
+
+                        if (UNLIKELY(fEc->getNumConnections() != fEc->connectedPmServers()))
+                        {
+                            std::cout << "fEc setup " << std::endl;
+                            fEc->Setup();
+                        }
+
+                        if (jl->status() == 0)
+                        {
+                            std::string emsg;
+
+                            if (jl->putEngineComm(fEc) != 0)
+                                throw std::runtime_error(jl->errMsg());
+                        }
+                        else
+                        {
+                            throw std::runtime_error("ExeMgr: could not build a JobList!");
+                        }
+
+                        // Execute a joblist.
+                        jl->doQuery();
+
+                        FEMsgHandler msgHandler(jl, &fIos);
+
+                        msgHandler.start();
+                        auto rowCount = jl->projectTable(100, bs);
+                            msgHandler.stop();
+
+                        auto outRG =
+                            (static_cast<joblist::TupleJobList*>(jl.get()))->getOutputRowGroup();
+
+                        if (caep.traceOn())
+                        {
+                            std::cout << "Row count " << rowCount << std::endl;
+                            std::cout << "result row group " << std::endl;
+                            std::cout << outRG.toString() << std::endl;
+                        }
+
+                        auto* statisticManager = statistics::StatisticManager::instance();
+                        statisticManager->analyzeColumnKeyTypes(outRG, caep.traceOn());
+
+                        // Send the signal back to front-end.
+                        bs.restart();
+                        qb = 6;
+                        bs << qb;
+                        fIos.write(bs);
+                        bs.reset();
+                        statementsRunningCount->decr(stmtCounted);
+                        continue;
                     }
                     else
                     {

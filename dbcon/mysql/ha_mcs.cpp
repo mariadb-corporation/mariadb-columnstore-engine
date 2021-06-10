@@ -200,6 +200,22 @@ const char** ha_mcs::bas_ext() const
     return ha_mcs_exts;
 }
 
+int ha_mcs::analyze(THD* thd, HA_CHECK_OPT* check_opt)
+{
+    int rc;
+    try
+    {
+        rc = ha_mcs_impl_analyze(thd, table);
+    }
+    catch (std::runtime_error& e)
+    {
+        thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+        rc = ER_INTERNAL_ERROR;
+    }
+
+    DBUG_RETURN(rc);
+}
+
 /**
   @brief
   Used for opening tables. The name will be the name of the file.

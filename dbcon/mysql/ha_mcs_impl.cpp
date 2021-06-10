@@ -104,6 +104,7 @@ using namespace BRM;
 using namespace querystats;
 
 #include "calpontselectexecutionplan.h"
+#include "calpontanalyzetableexecutionplan.h"
 #include "calpontsystemcatalog.h"
 #include "simplecolumn_int.h"
 #include "simplecolumn_decimal.h"
@@ -1898,7 +1899,227 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
     return rc;
 }
 
+inline bool isSupportedToAnalyze(const execplan::CalpontSystemCatalog::ColType& colType)
+{
+    return colType.isUnsignedInteger() || colType.isSignedInteger();
+}
+
 } //anon namespace
+
+int ha_mcs_impl_analyze(THD* thd, TABLE* table)
+{
+    uint32_t sessionID = execplan::CalpontSystemCatalog::idb_tid2sid(thd->thread_id);
+    boost::shared_ptr<execplan::CalpontSystemCatalog> csc =
+        execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
+
+    csc->identity(execplan::CalpontSystemCatalog::FE);
+
+    auto table_name =
+        execplan::make_table(table->s->db.str, table->s->table_name.str, lower_case_table_names);
+
+    // Skip for now.
+    if (table->s->db.length && strcmp(table->s->db.str, "information_schema") == 0)
+        return 0;
+
+    bool columnStore = (table ? isMCSTable(table) : true);
+    // Skip non columnstore tables.
+    if (!columnStore)
+        return 0;
+
+    execplan::CalpontSystemCatalog::RIDList oidlist = csc->columnRIDs(table_name, true);
+    execplan::CalpontAnalyzeTableExecutionPlan::ReturnedColumnList returnedColumnList;
+    execplan::CalpontAnalyzeTableExecutionPlan::ColumnMap columnMap;
+
+    // Iterate over table oid list and create a `SimpleColumn` for every column with supported type.
+    for (uint32_t i = 0, e = oidlist.size(); i < e; ++i)
+    {
+        execplan::SRCP returnedColumn;
+        const auto objNum = oidlist[i].objnum;
+        auto tableColName = csc->colName(objNum);
+        auto colType = csc->colType(objNum);
+
+        if (!isSupportedToAnalyze(colType))
+            continue;
+
+        execplan::SimpleColumn* simpleColumn = new execplan::SimpleColumn();
+        simpleColumn->columnName(tableColName.column);
+        simpleColumn->tableName(tableColName.table, lower_case_table_names);
+        simpleColumn->schemaName(tableColName.schema, lower_case_table_names);
+        simpleColumn->oid(objNum);
+        simpleColumn->alias(tableColName.column);
+        simpleColumn->resultType(colType);
+        simpleColumn->timeZone(thd->variables.time_zone->get_name()->ptr());
+
+        returnedColumn.reset(simpleColumn);
+        returnedColumnList.push_back(returnedColumn);
+        columnMap.insert(execplan::CalpontSelectExecutionPlan::ColumnMap::value_type(
+            simpleColumn->columnName(), returnedColumn));
+    }
+
+    // Create execution plan and initialize it with `returned columns` and `column map`.
+    execplan::CalpontAnalyzeTableExecutionPlan* caep =
+        new execplan::CalpontAnalyzeTableExecutionPlan(returnedColumnList, columnMap);
+
+    caep->schemaName(table->s->db.str, lower_case_table_names);
+    caep->tableName(table->s->table_name.str, lower_case_table_names);
+    caep->timeZone(thd->variables.time_zone->get_name()->ptr());
+
+    SessionManager sm;
+    BRM::TxnID txnID;
+    txnID = sm.getTxnID(sessionID);
+
+    if (!txnID.valid)
+    {
+        txnID.id = 0;
+        txnID.valid = true;
+    }
+
+    QueryContext verID;
+    verID = sm.verID();
+
+    caep->txnID(txnID.id);
+    caep->verID(verID);
+    caep->sessionID(sessionID);
+
+    string query;
+    query.assign(idb_mysql_query_str(thd));
+    caep->data(query);
+
+    if (!get_fe_conn_info_ptr())
+        set_fe_conn_info_ptr(reinterpret_cast<void*>(new cal_connection_info(), thd));
+
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+    idbassert(ci != 0);
+
+    try
+    {
+        caep->priority(ci->stats.userPriority(ci->stats.fHost, ci->stats.fUser));
+    }
+    catch (std::exception& e)
+    {
+        string msg = string("Columnstore User Priority - ") + e.what();
+        push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, msg.c_str());
+    }
+
+    // FIXME: Should we send a message to ExeMgr?
+    if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
+    {
+        force_close_fep_conn(thd, ci);
+        return 0;
+    }
+
+    caep->traceFlags(ci->traceFlags);
+
+    cal_table_info ti;
+    sm::cpsm_conhdl_t* hndl;
+
+    bool localQuery = (get_local_query(thd) > 0 ? true : false);
+    caep->localQuery(localQuery);
+
+    {
+        ci->stats.reset();
+        ci->stats.setStartTime();
+
+        if (thd->main_security_ctx.user)
+        {
+            ci->stats.fUser = thd->main_security_ctx.user;
+        }
+        else
+        {
+            ci->stats.fUser = "";
+        }
+
+        if (thd->main_security_ctx.host)
+            ci->stats.fHost = thd->main_security_ctx.host;
+        else if (thd->main_security_ctx.host_or_ip)
+            ci->stats.fHost = thd->main_security_ctx.host_or_ip;
+        else
+            ci->stats.fHost = "unknown";
+
+        try
+        {
+            ci->stats.userPriority(ci->stats.fHost, ci->stats.fUser);
+        }
+        catch (std::exception& e)
+        {
+            string msg = string("Columnstore User Priority - ") + e.what();
+            ci->warningMsg = msg;
+        }
+
+        if (ci->queryState != 0)
+        {
+            sm::sm_cleanup(ci->cal_conn_hndl);
+            ci->cal_conn_hndl = 0;
+        }
+
+        sm::sm_init(sessionID, &ci->cal_conn_hndl, localQuery);
+        idbassert(ci->cal_conn_hndl != 0);
+        ci->cal_conn_hndl->csc = csc;
+        idbassert(ci->cal_conn_hndl->exeMgr != 0);
+
+        try
+        {
+            ci->cal_conn_hndl->connect();
+        }
+        catch (...)
+        {
+            setError(thd, ER_INTERNAL_ERROR,
+                     IDBErrorInfo::instance()->errorMsg(ERR_LOST_CONN_EXEMGR));
+            CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+            goto error;
+        }
+    }
+    hndl = ci->cal_conn_hndl;
+
+    if (caep->traceOn())
+        std::cout << caep->toString() << std::endl;
+
+    {
+        ByteStream msg;
+        try
+        {
+            // We use 6 to indicate that we want to run `ANALYZE TABLE` command.
+            ByteStream::quadbyte qb = 6;
+            msg << qb;
+            hndl->exeMgr->write(msg);
+            msg.restart();
+            caep->rmParms(ci->rmParms);
+
+            // Send the execution plan.
+            caep->serialize(msg);
+            hndl->exeMgr->write(msg);
+
+            // Get the status from ExeMgr.
+            msg.restart();
+            msg = hndl->exeMgr->read();
+
+            // Any return code is ok for now.
+            if (msg.length() == 0)
+            {
+                auto emsg = "Lost connection to ExeMgr. Please contact your administrator";
+                setError(thd, ER_INTERNAL_ERROR, emsg);
+                return ER_INTERNAL_ERROR;
+            }
+        }
+        catch (...)
+        {
+            goto error;
+        }
+    }
+
+    ci->rmParms.clear();
+    ci->tableMap[table] = ti;
+
+    return 0;
+error:
+
+    if (ci->cal_conn_hndl)
+    {
+        sm::sm_cleanup(ci->cal_conn_hndl);
+        ci->cal_conn_hndl = 0;
+    }
+    return ER_INTERNAL_ERROR;
+}
 
 int ha_mcs_impl_open(const char* name, int mode, uint32_t test_if_locked)
 {
