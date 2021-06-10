@@ -3054,10 +3054,15 @@ DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd &unione
                         unionedType.colWidth = type.colWidth;
                     }
 
-                    // If same size and result is signed but source is unsigned...
-                    if (type.colWidth == unionedType.colWidth && !isUnsigned(unionedType.colDataType) && isUnsigned(type.colDataType))
+                    // If same size but different signedness
+                    if (type.colWidth == unionedType.colWidth &&
+                        ((!isUnsigned(unionedType.colDataType) && isUnsigned(type.colDataType)) ||
+                         (!isUnsigned(type.colDataType) && isUnsigned(unionedType.colDataType))))
                     {
-                        unionedType.colDataType = type.colDataType;
+                        unionedType.colDataType = datatypes::SystemCatalog::DECIMAL;
+                        unionedType.colWidth = datatypes::Decimal::isWideDecimalTypeByPrecision(unionedType.precision) ?
+                                               datatypes::MAXDECIMALWIDTH :
+                                               datatypes::MAXLEGACYWIDTH;
                     }
 
                     if (type.colDataType == datatypes::SystemCatalog::DECIMAL || type.colDataType == datatypes::SystemCatalog::UDECIMAL)
