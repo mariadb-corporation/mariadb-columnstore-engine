@@ -43,62 +43,12 @@ ST_FIELD_INFO is_columnstore_tables_fields[] =
     Show::CEnd()
 };
 
-static void get_cond_item(Item_func* item, String** table, String** db)
-{
-    char tmp_char[MAX_FIELD_WIDTH];
-    Item_field* item_field = (Item_field*) item->arguments()[0]->real_item();
-
-    if (strcasecmp(item_field->field_name.str, "table_name") == 0)
-    {
-        String str_buf(tmp_char, sizeof(tmp_char), system_charset_info);
-        *table = item->arguments()[1]->val_str(&str_buf);
-        return;
-    }
-    else if (strcasecmp(item_field->field_name.str, "table_schema") == 0)
-    {
-        String str_buf(tmp_char, sizeof(tmp_char), system_charset_info);
-        *db = item->arguments()[1]->val_str(&str_buf);
-        return;
-    }
-}
-
-static void get_cond_items(COND* cond, String** table, String** db)
-{
-    if (cond->type() == Item::FUNC_ITEM)
-    {
-        Item_func* fitem = (Item_func*) cond;
-
-        if (fitem->arguments()[0]->real_item()->type() == Item::FIELD_ITEM &&
-                fitem->arguments()[1]->const_item())
-        {
-            get_cond_item(fitem, table, db);
-        }
-    }
-    else if ((cond->type() == Item::COND_ITEM) && (((Item_cond*) cond)->functype() == Item_func::COND_AND_FUNC))
-    {
-        List_iterator<Item> li(*((Item_cond*) cond)->argument_list());
-        Item* item;
-
-        while ((item = li++))
-        {
-            if (item->type() == Item::FUNC_ITEM)
-            {
-                get_cond_item((Item_func*)item, table, db);
-            }
-            else
-            {
-                get_cond_items(item, table, db);
-            }
-        }
-    }
-}
 
 static int is_columnstore_tables_fill(THD* thd, TABLE_LIST* tables, COND* cond)
 {
     CHARSET_INFO* cs = system_charset_info;
     TABLE* table = tables->table;
-    String* table_name = NULL;
-    String* db_name = NULL;
+    InformationSchemaCond isCond;
 
     boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatalogPtr =
         execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(execplan::CalpontSystemCatalog::idb_tid2sid(thd->thread_id));
@@ -107,7 +57,7 @@ static int is_columnstore_tables_fill(THD* thd, TABLE_LIST* tables, COND* cond)
 
     if (cond)
     {
-        get_cond_items(cond, &table_name, &db_name);
+        isCond.getCondItems(cond);
     }
 
     const std::vector< std::pair<execplan::CalpontSystemCatalog::OID, execplan::CalpontSystemCatalog::TableName> > catalog_tables
@@ -116,21 +66,8 @@ static int is_columnstore_tables_fill(THD* thd, TABLE_LIST* tables, COND* cond)
     for (std::vector<std::pair<execplan::CalpontSystemCatalog::OID, execplan::CalpontSystemCatalog::TableName> >::const_iterator it = catalog_tables.begin();
             it != catalog_tables.end(); ++it)
     {
-        if (db_name)
-        {
-            if ((*it).second.schema.compare(db_name->ptr()) != 0)
-            {
-                continue;
-            }
-        }
-
-        if (table_name)
-        {
-            if ((*it).second.table.compare(table_name->ptr()) != 0)
-            {
-                continue;
-            }
-        }
+        if (!isCond.match((*it).second.schema, (*it).second.table))
+            continue;
 
         try
         {
