@@ -138,10 +138,12 @@ class ha_columnstore_select_handler: public select_handler
 {
 private:
   COLUMNSTORE_SHARE *share;
+  bool prepared;
+  bool scan_ended;
 
 public:
-  bool rewrite_error;
-  std::string err_msg;
+  bool scan_initialized;
+  int pushdown_init_rc;
   // MCOL-4525 Store the original TABLE_LIST::outer_join value in a hash map.
   // This will be used to restore to the original state later in case
   // query execution fails using the select_handler.
@@ -151,6 +153,7 @@ public:
   int init_scan() override;
   int next_row() override;
   int end_scan() override;
+  bool prepare() override;
 };
 
 #endif

@@ -81,6 +81,7 @@ template <class T> bool isnan(T);
 #include "select_handler.h"
 #include "rpl_rli.h"
 #include "my_dbug.h"
+#include "sql_show.h"
 
 // Now clean up the pollution as best we can...
 #include "mcsconfig_conflicting_defs_undef.h"

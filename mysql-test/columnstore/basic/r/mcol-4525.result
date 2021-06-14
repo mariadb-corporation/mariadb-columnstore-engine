@@ -1,0 +1,337 @@
+# MCOL-4525
+# Automatic select_handler
+# columnstore_select_handler=AUTO allows query execution
+# to fallback to the server, in case the execution using
+# select_handler fails.
+SET default_storage_engine=columnstore;
+DROP DATABASE IF EXISTS mcol4525;
+CREATE DATABASE mcol4525;
+USE mcol4525;
+CREATE TABLE t1 (a int, b int);
+INSERT INTO t1 VALUES (1, 1), (5, 0);
+SET columnstore_select_handler=ON;
+SELECT a xor b FROM t1;
+ERROR 42000: The storage engine for the table doesn't support IDB-2030: Predicate and Logic operators can not be used where an expression is expected.
+SET columnstore_select_handler=AUTO;
+SELECT a xor b FROM t1;
+a xor b
+0
+1
+SET columnstore_select_handler=ON;
+SELECT DISTINCT a FROM t1 WHERE a IN (SELECT a FROM t1) OR a IN (SELECT a FROM t1);
+ERROR HY000: Internal error: IDB-3033: Correlated subquery within OR operator is currently not supported.
+SET columnstore_select_handler=AUTO;
+SELECT DISTINCT a FROM t1 WHERE a IN (SELECT a FROM t1) OR a IN (SELECT a FROM t1);
+a
+1
+5
+DROP TABLE t1;
+CREATE TABLE bug4767 (c1 float, c2 double);
+INSERT INTO bug4767 VALUES (1.234, 3.4556), (2.3345456, 2.3345456);
+SET columnstore_select_handler=ON;
+SELECT * FROM bug4767 a JOIN bug4767 b ON (a.c1=b.c2);
+ERROR HY000: Internal error: IDB-1002: 'a' and 'b' have incompatible column type specified for join condition.
+SET columnstore_select_handler=AUTO;
+SELECT * FROM bug4767 a JOIN bug4767 b ON (a.c1=b.c2);
+c1	c2	c1	c2
+DROP TABLE bug4767;
+CREATE TABLE t1 (a int);
+INSERT INTO t1 VALUES (1), (2);
+CREATE TABLE t2 (b int);
+INSERT INTO t2 VALUES (2);
+SET columnstore_select_handler=ON;
+SELECT a FROM t1 WHERE a IN (SELECT a FROM t2);
+ERROR HY000: Internal error: IDB-1000: 't1' and 't2' are not joined.
+SET columnstore_select_handler=AUTO;
+SELECT a FROM t1 WHERE a IN (SELECT a FROM t2);
+a
+1
+2
+DROP TABLE t1;
+DROP TABLE t2;
+CREATE TABLE t1 (a int);
+INSERT INTO t1 VALUES (1), (2), (3);
+CREATE TABLE t2 (a int);
+INSERT INTO t2 VALUES (2), (3);
+CREATE TABLE t3 (a int);
+INSERT INTO t3 VALUES (3);
+SET columnstore_select_handler=ON;
+SELECT * FROM t1 JOIN t2 ON t1.a=t2.a JOIN t3 ON t2.a=t3.a AND t3.a=t1.a;
+ERROR HY000: Internal error: IDB-1003: Circular joins are not supported.
+SET columnstore_select_handler=AUTO;
+SELECT * FROM t1 JOIN t2 ON t1.a=t2.a JOIN t3 ON t2.a=t3.a AND t3.a=t1.a;
+a	a	a
+3	3	3
+DROP TABLE t1;
+DROP TABLE t2;
+DROP TABLE t3;
+CREATE TABLE l(c1 int, c2 int);
+CREATE TABLE r(c1 int, c2 int);
+CREATE TABLE s(c1 int, c2 int);
+INSERT INTO l VALUES (1, 1);
+INSERT INTO l VALUES (2, 2);
+INSERT INTO r VALUES (1, 1);
+INSERT INTO r VALUES (5, 5);
+INSERT INTO s VALUES (1, 1);
+INSERT INTO s VALUES (9, 9);
+SET columnstore_select_handler=ON;
+SELECT 'q1', l.c1, r.c1 FROM l LEFT JOIN r ON l.c1 = r.c1 AND l.c1 IN (SELECT c1 FROM s) ORDER BY 1, 2, 3;
+ERROR HY000: Internal error: IDB-1015: Subquery on OUTER JOIN ON clause is currently not supported.
+SET columnstore_select_handler=AUTO;
+SELECT 'q1', l.c1, r.c1 FROM l LEFT JOIN r ON l.c1 = r.c1 AND l.c1 IN (SELECT c1 FROM s) ORDER BY 1, 2, 3;
+q1	c1	c1
+q1	1	1
+q1	2	NULL
+DROP TABLE l;
+DROP TABLE r;
+DROP TABLE s;
+CREATE TABLE t1 (col1 int, col2 varchar(5), col_t1 int);
+INSERT INTO t1 VALUES(10,'hello',10);
+INSERT INTO t1 VALUES(20,'hello',20);
+INSERT INTO t1 VALUES(30,'hello',30);
+INSERT INTO t1 VALUES(10,'bye',10);
+INSERT INTO t1 VALUES(10,'sam',10);
+INSERT INTO t1 VALUES(10,'bob',10);
+SET columnstore_select_handler=ON;
+SELECT SUM(col1) AS col2 FROM t1 GROUP BY col2;
+ERROR 42000: The storage engine for the table doesn't support IDB-2016: Non supported item 'col2' on the GROUP BY list.
+SELECT col1 c FROM t1 ORDER BY AVG(col1);
+ERROR HY000: Internal error: IDB-2021: 'c' is not in GROUP BY clause. All non-aggregate columns in the SELECT and ORDER BY clause must be included in the GROUP BY clause.
+SET columnstore_select_handler=AUTO;
+SELECT SUM(col1) AS col2 FROM t1 GROUP BY col2;
+col2
+10
+10
+60
+10
+SELECT col1 c FROM t1 ORDER BY AVG(col1);
+c
+10
+DROP TABLE t1;
+CREATE TABLE t1 (a int);
+INSERT INTO t1 VALUES (1);
+SET columnstore_select_handler=ON;
+SELECT minute(sleep(a)) FROM t1;
+ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'minute' isn't supported.
+SET columnstore_select_handler=AUTO;
+SELECT minute(sleep(a)) FROM t1;
+minute(sleep(a))
+0
+DROP TABLE t1;
+CREATE TABLE t1 (a int);
+CREATE TABLE t2 (a int);
+INSERT INTO t1 VALUES (1), (2);
+INSERT INTO t2 VALUES (2), (3);
+SET columnstore_select_handler=ON;
+SELECT SUM(a) FROM t1 WHERE EXISTS (SELECT MAX(a) FROM t2);
+ERROR HY000: Internal error: IDB-3008: Aggregate function in EXISTS subquery is currently not supported.
+SELECT * FROM t1 WHERE (a,a) < (SELECT a,a FROM t2 WHERE a=2);
+ERROR HY000: Internal error: IDB-3006: This operator cannot be used with lists.
+SET columnstore_select_handler=AUTO;
+SELECT SUM(a) FROM t1 WHERE EXISTS (SELECT MAX(a) FROM t2);
+SUM(a)
+3
+SELECT * FROM t1 WHERE (a,a) < (SELECT a,a FROM t2 WHERE a=2);
+a
+1
+DROP TABLE t1;
+DROP TABLE t2;
+CREATE TABLE gen (i int, i2 int);
+INSERT INTO gen VALUES (1,0), (1,1), (1,2), (1,3), (1,4), (1,5), (1,6), (1,7), (1,8), (1,9);
+SET columnstore_select_handler=ON;
+SELECT i2, (SELECT MAX(g2.i2) FROM gen g2 WHERE g2.i = g1.i AND g2.i2 > g1.i2) sub FROM gen g1;
+ERROR HY000: Internal error: IDB-3035: Not equal comparison between a column within a subquery with an aggregate result and a column outside of the subquery is not supported.
+SET columnstore_select_handler=AUTO;
+SELECT i2, (SELECT MAX(g2.i2) FROM gen g2 WHERE g2.i = g1.i AND g2.i2 > g1.i2) sub FROM gen g1;
+i2	sub
+0	9
+1	9
+2	9
+3	9
+4	9
+5	9
+6	9
+7	9
+8	9
+9	NULL
+DROP TABLE gen;
+CREATE TABLE t1(a int);
+INSERT INTO t1 VALUES (0), (1), (2), (3);
+CREATE TABLE t2 (a int);
+INSERT INTO t2 VALUES (2), (3);
+CREATE VIEW v1 AS SELECT a FROM t1 WHERE a > 1;
+SET columnstore_select_handler=ON;
+SELECT * FROM t1 LEFT JOIN (t2 AS t, v1) ON v1.a=t1.a ORDER BY 1;
+ERROR HY000: Internal error: IDB-1000: 'v1, t1' and 't' are not joined.
+SET columnstore_select_handler=AUTO;
+SELECT * FROM t1 LEFT JOIN (t2 AS t, v1) ON v1.a=t1.a ORDER BY 1;
+a	a	a
+0	NULL	NULL
+1	NULL	NULL
+2	2	2
+2	3	2
+3	2	3
+3	3	3
+DROP TABLE t1;
+DROP TABLE t2;
+DROP VIEW v1;
+CREATE TABLE c1 (a int);
+INSERT INTO c1 VALUES (1), (2), (3);
+CREATE TABLE c2 (a int);
+INSERT INTO c2 VALUES (2);
+CREATE TABLE c3 (a int);
+CREATE TABLE c4 (a int);
+CREATE TABLE c5 (a int);
+SET columnstore_select_handler=ON;
+SELECT c1.a AS col1, c2.a AS col2, c1.a xor c2.a FROM
+c1 LEFT JOIN
+(
+(c2 LEFT JOIN c3 ON c2.a=c3.a) LEFT JOIN
+(c4 JOIN c5 ON c4.a=c5.a)
+ON c2.a=c4.a
+)
+ON c1.a=c2.a WHERE c2.a < 100;
+ERROR 42000: The storage engine for the table doesn't support IDB-2030: Predicate and Logic operators can not be used where an expression is expected.
+SET columnstore_select_handler=AUTO;
+SELECT c1.a AS col1, c2.a AS col2, c1.a xor c2.a FROM
+c1 LEFT JOIN
+(
+(c2 LEFT JOIN c3 ON c2.a=c3.a) LEFT JOIN
+(c4 JOIN c5 ON c4.a=c5.a)
+ON c2.a=c4.a
+)
+ON c1.a=c2.a WHERE c2.a < 100;
+col1	col2	c1.a xor c2.a
+2	2	0
+DROP TABLE c1;
+DROP TABLE c2;
+DROP TABLE c3;
+DROP TABLE c4;
+DROP TABLE c5;
+CREATE TABLE t1 (a int);
+INSERT INTO t1 VALUES (1), (2), (3), (4);
+SET columnstore_select_handler=ON;
+PREPARE stmt FROM "SELECT a, a xor 0 FROM t1 WHERE a > 1 AND a < 4";
+EXECUTE stmt;
+ERROR 42000: The storage engine for the table doesn't support IDB-2030: Predicate and Logic operators can not be used where an expression is expected.
+EXECUTE stmt;
+ERROR 42000: The storage engine for the table doesn't support IDB-2030: Predicate and Logic operators can not be used where an expression is expected.
+EXECUTE stmt;
+ERROR 42000: The storage engine for the table doesn't support IDB-2030: Predicate and Logic operators can not be used where an expression is expected.
+EXECUTE stmt;
+ERROR 42000: The storage engine for the table doesn't support IDB-2030: Predicate and Logic operators can not be used where an expression is expected.
+DROP PREPARE stmt;
+SET columnstore_select_handler=AUTO;
+PREPARE stmt FROM "SELECT a, a xor 0 FROM t1 WHERE a > 1 AND a < 4";
+EXECUTE stmt;
+a	a xor 0
+2	1
+3	1
+EXECUTE stmt;
+a	a xor 0
+2	1
+3	1
+EXECUTE stmt;
+a	a xor 0
+2	1
+3	1
+EXECUTE stmt;
+a	a xor 0
+2	1
+3	1
+EXECUTE stmt;
+a	a xor 0
+2	1
+3	1
+DROP PREPARE stmt;
+SET columnstore_select_handler=ON;
+CREATE PROCEDURE mcol4525_proc()
+BEGIN
+SELECT a, a xor 0 FROM t1 WHERE a > 1 AND a < 4;
+END
+//
+CALL mcol4525_proc();
+ERROR 42000: The storage engine for the table doesn't support IDB-2030: Predicate and Logic operators can not be used where an expression is expected.
+CALL mcol4525_proc();
+ERROR 42000: The storage engine for the table doesn't support IDB-2030: Predicate and Logic operators can not be used where an expression is expected.
+CALL mcol4525_proc();
+ERROR 42000: The storage engine for the table doesn't support IDB-2030: Predicate and Logic operators can not be used where an expression is expected.
+DROP PROCEDURE mcol4525_proc;
+SET columnstore_select_handler=AUTO;
+CREATE PROCEDURE mcol4525_proc()
+BEGIN
+SELECT a, a xor 0 FROM t1 WHERE a > 1 AND a < 4;
+END
+//
+CALL mcol4525_proc();
+a	a xor 0
+2	1
+3	1
+CALL mcol4525_proc();
+a	a xor 0
+2	1
+3	1
+CALL mcol4525_proc();
+a	a xor 0
+2	1
+3	1
+DROP PROCEDURE mcol4525_proc;
+DROP TABLE t1;
+CREATE TABLE `giorno` (
+`giorno` date NOT NULL DEFAULT '0000-00-00',
+`giornoa` mediumint(7) DEFAULT NULL,
+`mese` mediumint(6) DEFAULT NULL,
+`settimana` mediumint(6) DEFAULT NULL,
+`quindicina` mediumint(6) DEFAULT NULL,
+`trimestre` smallint(5) DEFAULT NULL,
+`quadrimestre` smallint(5) DEFAULT NULL,
+`semestre` smallint(5) DEFAULT NULL,
+`bimestre` smallint(5) DEFAULT NULL,
+`anno` smallint(4) DEFAULT NULL,
+PRIMARY KEY (`giorno`),
+KEY `mese` (`mese`),
+KEY `quindicina` (`quindicina`),
+KEY `settimana` (`settimana`),
+KEY `trimestre` (`trimestre`),
+KEY `semestre` (`semestre`),
+KEY `bimestre` (`bimestre`),
+KEY `quadrimestre` (`quadrimestre`),
+KEY `giornoa` (`giornoa`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='Giorni';
+CREATE TABLE `campagna_web_codice` (
+`cwc_id` int(11) DEFAULT NULL,
+`cwc_cw_id` int(11) DEFAULT NULL,
+`cwc_cd_id` int(11) DEFAULT NULL,
+`cwc_codice` varchar(30) DEFAULT NULL,
+`cwc_va_id` int(11) DEFAULT NULL,
+`cwc_prezzo` decimal(12,2) DEFAULT NULL,
+`cwc_prezzoListino` decimal(12,2) DEFAULT NULL,
+`cwc_prezzoSpedizione` decimal(8,2) DEFAULT NULL,
+`cwc_in_id` int(11) DEFAULT NULL,
+`cwc_na_id` int(11) DEFAULT NULL,
+`cwc_desc` varchar(100) DEFAULT NULL,
+`cwc_datainizio` date DEFAULT NULL,
+`cwc_datafine` date DEFAULT NULL,
+`cwc_mo_id` int(11) DEFAULT NULL,
+`cwc_ma_id` int(11) DEFAULT NULL,
+`cwc_pd_id` int(11) DEFAULT NULL,
+`cwc_set_id` int(11) DEFAULT NULL,
+`cwc_mr_id` int(11) DEFAULT NULL,
+`cwc_ca_id` int(11) DEFAULT NULL,
+`cwc_fa_id` int(11) DEFAULT NULL,
+`cwc_ti_id` int(11) DEFAULT NULL,
+`cwc_azws` varchar(255) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+SET columnstore_select_handler=ON;
+SELECT COUNT(DISTINCT cwc_id) npres,COUNT(DISTINCT cwc_cw_id) ncw,cwc_in_id insegna
+FROM (giorno,campagna_web_codice)
+WHERE cwc_fa_id IN (23) AND giorno BETWEEN cwc_datainizio AND cwc_datafine AND mese IN (202009)
+GROUP BY insegna;
+ERROR HY000: Internal error: IDB-1000: 'giorno' and 'campagna_web_codice' are not joined.
+SET columnstore_select_handler=AUTO;
+SELECT COUNT(DISTINCT cwc_id) npres,COUNT(DISTINCT cwc_cw_id) ncw,cwc_in_id insegna
+FROM (giorno,campagna_web_codice)
+WHERE cwc_fa_id IN (23) AND giorno BETWEEN cwc_datainizio AND cwc_datafine AND mese IN (202009)
+GROUP BY insegna;
+npres	ncw	insegna
+DROP DATABASE mcol4525;

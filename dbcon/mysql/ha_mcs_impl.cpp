@@ -76,6 +76,7 @@ using namespace dataconvert;
 
 #include "sm.h"
 #include "ha_mcs_pushdown.h"
+#include "ha_mcs_sysvars.h"
 
 #include "bytestream.h"
 #include "messagequeue.h"
@@ -2692,11 +2693,12 @@ int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_changed)
     ha_rows rowsInserted = 0;
     int rc = 0;
 
-    // ci->useCpimport = 2 means ALWAYS use cpimport, whether it's in a
-    // transaction or not. User should use this option very carefully since
-    // cpimport currently does not support rollbacks
-    if (((ci->useCpimport == 2) ||
-         ((ci->useCpimport == 1) && (!(thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN))))) &&
+    // ci->useCpimport = mcs_use_import_for_batchinsert_mode_t::ALWAYS means ALWAYS use
+    // cpimport, whether it's in a transaction or not. User should use this option
+    // very carefully since cpimport currently does not support rollbacks
+    if (((ci->useCpimport == mcs_use_import_for_batchinsert_mode_t::ALWAYS) ||
+         ((ci->useCpimport == mcs_use_import_for_batchinsert_mode_t::ON) &&
+          (!(thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN))))) &&
         (!ci->singleInsert) &&
         ((ci->isLoaddataInfile) ||
          ((thd->lex)->sql_command == SQLCOM_INSERT) || ((thd->lex)->sql_command == SQLCOM_LOAD) ||
@@ -2832,20 +2834,21 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
             (thd->lex)->sql_command == SQLCOM_INSERT_SELECT ||
             ci->isCacheInsert) && !ci->singleInsert )
     {
-        ci->useCpimport = get_use_import_for_batchinsert(thd);
+        ci->useCpimport = get_use_import_for_batchinsert_mode(thd);
 
         if (((thd->lex)->sql_command == SQLCOM_INSERT) && (rows > 0))
-            ci->useCpimport = 0;
+            ci->useCpimport = mcs_use_import_for_batchinsert_mode_t::OFF;
 
         // For now, disable cpimport for cache inserts
         if (ci->isCacheInsert)
-            ci->useCpimport = 0;
+            ci->useCpimport = mcs_use_import_for_batchinsert_mode_t::OFF;
 
-        // ci->useCpimport = 2 means ALWAYS use cpimport, whether it's in a
-        // transaction or not. User should use this option very carefully since
-        // cpimport currently does not support rollbacks
-        if ((ci->useCpimport == 2) ||
-            ((ci->useCpimport == 1) && (!(thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN))))) //If autocommit on batch insert will use cpimport to load data
+        // ci->useCpimport = mcs_use_import_for_batchinsert_mode_t::ALWAYS means ALWAYS use
+        // cpimport, whether it's in a transaction or not. User should use this option
+        // very carefully since cpimport currently does not support rollbacks
+        if ((ci->useCpimport == mcs_use_import_for_batchinsert_mode_t::ALWAYS) ||
+            ((ci->useCpimport == mcs_use_import_for_batchinsert_mode_t::ON) &&
+             (!(thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN))))) //If autocommit on batch insert will use cpimport to load data
         {
             //store table info to connection info
             CalpontSystemCatalog::TableName tableName;
@@ -3315,8 +3318,9 @@ int ha_mcs_impl_end_bulk_insert(bool abort, TABLE* table)
     // @bug 2515. Check command intead of vtable state
     if ( ( ((thd->lex)->sql_command == SQLCOM_INSERT) ||  ((thd->lex)->sql_command == SQLCOM_LOAD) || (thd->lex)->sql_command == SQLCOM_INSERT_SELECT || ci->isCacheInsert) && !ci->singleInsert )
     {
-        if (((ci->useCpimport == 2) ||
-             ((ci->useCpimport == 1) && (!(thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN))))) &&
+        if (((ci->useCpimport == mcs_use_import_for_batchinsert_mode_t::ALWAYS) ||
+             ((ci->useCpimport == mcs_use_import_for_batchinsert_mode_t::ON) &&
+              (!(thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN))))) &&
             (!ci->singleInsert) &&
             ((ci->isLoaddataInfile) ||
              ((thd->lex)->sql_command == SQLCOM_INSERT) || ((thd->lex)->sql_command == SQLCOM_LOAD) ||
@@ -3526,7 +3530,7 @@ int ha_mcs_impl_end_bulk_insert(bool abort, TABLE* table)
     ci->isCacheInsert = false;
     ci->tableOid = 0;
     ci->rowsHaveInserted = 0;
-    ci->useCpimport = 1;
+    ci->useCpimport = mcs_use_import_for_batchinsert_mode_t::ON;
 
     return rc;
 }

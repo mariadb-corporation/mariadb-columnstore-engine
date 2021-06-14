@@ -73,37 +73,51 @@ void in_subselect_rewrite_walk(const Item* item_arg, void* arg)
     }
 }
 
-/* @brief  opt_flag_unset_PS() - Unsets first_cond_optimization */
+// Sets SELECT_LEX::first_cond_optimization
+void first_cond_optimization_flag_set(SELECT_LEX* select_lex)
+{
+    select_lex->first_cond_optimization = true;
+}
+
+// Unsets SELECT_LEX::first_cond_optimization
+void first_cond_optimization_flag_unset(SELECT_LEX* select_lex)
+{
+    select_lex->first_cond_optimization = false;
+}
+
+/* @brief  first_cond_optimization_flag_toggle() - Sets/Unsets first_cond_optimization */
 /************************************************************
 * DESCRIPTION:
-* This function traverses derived tables to unset
-* SELECT_LEX::first_cond_optimization: a marker to control
-* optimizations executing PS. If set it allows to apply
-* optimizations. If unset, it disables optimizations.
+* This function traverses SELECT_LEX::table_list recursively
+* to set/unset SELECT_LEX::first_cond_optimization: a marker
+* to control optimizations executing PS. If set it allows to
+* apply optimizations. If unset, it disables optimizations.
 * PARAMETERS:
 *    select_lex - SELECT_LEX* that describes the query.
+*    func - Pointer to a function which either sets/unsets
+*           SELECT_LEX::first_cond_optimization
 ***********************************************************/
-void opt_flag_unset_PS(SELECT_LEX *select_lex)
+void first_cond_optimization_flag_toggle(SELECT_LEX *select_lex, void (*func)(SELECT_LEX*))
 {
-    TABLE_LIST *tbl;
-    List_iterator_fast<TABLE_LIST> li(select_lex->leaf_tables);
-
-    while ((tbl= li++))
+    for (TABLE_LIST *tl= select_lex->get_table_list(); tl; tl= tl->next_local)
     {
-        if (tbl->is_view_or_derived())
+        if (tl->is_view_or_derived())
         {
-            SELECT_LEX_UNIT *unit= tbl->get_unit();
+            SELECT_LEX_UNIT *unit= tl->get_unit();
 
-            for (SELECT_LEX *sl= unit->first_select(); sl; sl= sl->next_select())
-                opt_flag_unset_PS(sl);
+            if (unit)
+            {
+                for (SELECT_LEX *sl= unit->first_select(); sl; sl= sl->next_select())
+                {
+                    first_cond_optimization_flag_toggle(sl, func);
+                }
+            }
         }
     }
 
-    if (select_lex->first_cond_optimization)
-    {
-        select_lex->first_cond_optimization= false;
-    }
+    (*func)(select_lex);
 }
+
 
 /* @brief  in_subselect_rewrite - Rewrites Item_in_subselect */
 /************************************************************
