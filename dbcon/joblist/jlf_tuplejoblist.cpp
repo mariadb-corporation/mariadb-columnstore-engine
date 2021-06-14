@@ -69,6 +69,7 @@ using namespace dataconvert;
 #include "windowfunctionstep.h"
 #include "configcpp.h"
 #include "jlf_tuplejoblist.h"
+#include "statistics.h"
 using namespace joblist;
 
 
@@ -1706,39 +1707,136 @@ void removeFromList(uint32_t tableId, std::vector<uint32_t>& adjList)
         adjList.erase(tableIdIt);
 }
 
-void breakCyclesAndCollectEdges(TableInfoMap& infoMap, const JobInfo& jobInfo, const Cycles& cycles,
-                                JoinEdges& edgesToTransform)
+bool isForeignKeyForeignKeyLink(TableInfoMap& infoMap, const JobInfo& jobInfo,
+                                const pair<uint32_t, uint32_t>& edge,
+                                statistics::StatisticManager* sm)
 {
-    for (const auto& cycle : cycles)
-    {
-        for (auto& edgeForward : cycle)
-        {
-            if (jobInfo.trace)
-            {
-                std::cout << "Remove " << edgeForward.first << " from adjlist of "
-                          << edgeForward.second << std::endl;
-            }
+    const auto it = jobInfo.tableJoinMap.find(edge);
+    std::vector<statistics::KeyType> leftKeys, rightKeys;
+    std::vector<uint32_t> lOid, rOid;
 
-            // Remove the first in the cycle.
+    for (auto key : it->second.fLeftKeys)
+    {
+        auto oid = jobInfo.keyInfo->tupleKeyVec[key].fId;
+        if (!sm->hasKey(oid))
+            return false;
+
+        auto keyType = sm->getKeyType(oid);
+        leftKeys.push_back(keyType);
+        lOid.push_back(oid);
+
+        if (jobInfo.trace)
+            std::cout << "OID " << oid << " with key type " << (uint32_t) keyType << std::endl;
+    }
+
+    for (auto key : it->second.fRightKeys)
+    {
+        auto oid = jobInfo.keyInfo->tupleKeyVec[key].fId;
+        if (!sm->hasKey(oid))
+            return false;
+
+        auto keyType = sm->getKeyType(oid);
+        rightKeys.push_back(keyType);
+        rOid.push_back(oid);
+
+        if (jobInfo.trace)
+            std::cout << "OID " << oid << " with key type " << (uint32_t) keyType << std::endl;
+    }
+
+    if (rightKeys.size() == 0 || leftKeys.size() == 0)
+      return false;
+
+    statistics::KeyType leftType = statistics::KeyType::PK;
+    for (auto keyType : leftKeys)
+    {
+        if (keyType == statistics::KeyType::FK)
+        {
+            leftType = keyType;
+            break;
+        }
+    }
+
+    statistics::KeyType rightType = statistics::KeyType::PK;
+    for (auto keyType : rightKeys)
+    {
+        if (keyType == statistics::KeyType::FK)
+        {
+            rightType = keyType;
+            break;
+        }
+    }
+
+    if (rightType == statistics::KeyType::FK && leftType == statistics::KeyType::FK)
+    {
+        if (jobInfo.trace)
+        {
+            std::cout << "Found FK <-> FK connection " << lOid.front() << " <-> " << rOid.front()
+                      << std::endl;
+        }
+        return true;
+    }
+
+    return false;
+}
+
+void chooseEdgeToTransform(TableInfoMap& infoMap, const JobInfo& jobInfo, Cycle& cycle,
+                           JoinEdges& edgesToTransform, std::pair<uint32_t, uint32_t>& resultEdge)
+{
+    auto* sm = statistics::StatisticManager::instance();
+
+    for (auto& edgeForward : cycle)
+    {
+        if (isForeignKeyForeignKeyLink(infoMap, jobInfo, edgeForward, sm))
+        {
             const auto edgeBackward = std::make_pair(edgeForward.second, edgeForward.first);
-            // If not present add the edge.
             if (!edgesToTransform.count(edgeForward) && !edgesToTransform.count(edgeBackward))
             {
                 edgesToTransform.insert(edgeForward);
-                auto tableInfoIt = jobInfo.tableJoinMap.find(edgeForward);
-
-                auto& firstExp2 = infoMap[edgeForward.first].fColsInExp2;
-                firstExp2.insert(firstExp2.end(), tableInfoIt->second.fLeftKeys.begin(),
-                                 tableInfoIt->second.fLeftKeys.end());
-                auto& secondExp2 = infoMap[edgeForward.second].fColsInExp2;
-                secondExp2.insert(secondExp2.end(), tableInfoIt->second.fRightKeys.begin(),
-                                  tableInfoIt->second.fRightKeys.end());
-
-                removeFromList(edgeForward.first, infoMap[edgeForward.second].fAdjacentList);
-                removeFromList(edgeForward.second, infoMap[edgeForward.first].fAdjacentList);
-                break;
+                resultEdge = edgeForward;
+                return;
             }
         }
+    }
+
+    if (jobInfo.trace)
+        std::cout << "FK FK key not found, removing the first one " << std::endl;
+
+    // FIXME: Use size of columns to possible largest cardinality.
+    // Take just a first.
+    edgesToTransform.insert(cycle.front());
+    resultEdge = cycle.front();
+}
+
+void breakCyclesAndCollectEdges(TableInfoMap& infoMap, const JobInfo& jobInfo, Cycles& cycles,
+                                JoinEdges& edgesToTransform)
+{
+    for (auto& cycle : cycles)
+    {
+        std::pair<uint32_t, uint32_t> edgeForward;
+        if (cycle.size() == 0)
+            continue;
+
+        chooseEdgeToTransform(infoMap, jobInfo, cycle, edgesToTransform, edgeForward);
+
+        if (jobInfo.trace)
+        {
+            std::cout << "Remove " << edgeForward.first << " from adjlist of " << edgeForward.second
+                      << std::endl;
+        }
+
+        const auto edgeBackward = std::make_pair(edgeForward.second, edgeForward.first);
+        // If not present add the edge.
+        auto tableInfoIt = jobInfo.tableJoinMap.find(edgeForward);
+
+        auto& firstExp2 = infoMap[edgeForward.first].fColsInExp2;
+        firstExp2.insert(firstExp2.end(), tableInfoIt->second.fLeftKeys.begin(),
+                         tableInfoIt->second.fLeftKeys.end());
+        auto& secondExp2 = infoMap[edgeForward.second].fColsInExp2;
+        secondExp2.insert(secondExp2.end(), tableInfoIt->second.fRightKeys.begin(),
+                          tableInfoIt->second.fRightKeys.end());
+
+        removeFromList(edgeForward.first, infoMap[edgeForward.second].fAdjacentList);
+        removeFromList(edgeForward.second, infoMap[edgeForward.first].fAdjacentList);
     }
 }
 

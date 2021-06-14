@@ -750,11 +750,7 @@ public:
                             (static_cast<joblist::TupleJobList*>(jl.get()))->getOutputRowGroup();
 
                         if (caep.traceOn())
-                        {
                             std::cout << "Row count " << rowCount << std::endl;
-                            std::cout << "result row group " << std::endl;
-                            std::cout << outRG.toString() << std::endl;
-                        }
 
                         auto* statisticManager = statistics::StatisticManager::instance();
                         statisticManager->analyzeColumnKeyTypes(outRG, caep.traceOn());

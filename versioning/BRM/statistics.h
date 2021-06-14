@@ -37,6 +37,8 @@ class StatisticManager
   public:
     static StatisticManager* instance();
     void analyzeColumnKeyTypes(const rowgroup::RowGroup& rowGroup, bool trace);
+    bool hasKey(uint32_t oid);
+    KeyType getKeyType(uint32_t oid);
     void toStringKeyTypes();
 
   private:

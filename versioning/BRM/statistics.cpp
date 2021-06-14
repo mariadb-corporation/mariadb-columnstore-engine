@@ -66,6 +66,10 @@ void StatisticManager::analyzeColumnKeyTypes(const rowgroup::RowGroup& rowGroup,
         toStringKeyTypes();
 }
 
+bool StatisticManager::hasKey(uint32_t oid) { return keyTypes.count(oid) > 0 ? true : false; }
+
+KeyType StatisticManager::getKeyType(uint32_t oid) { return keyTypes[oid]; }
+
 void StatisticManager::toStringKeyTypes()
 {
     for (const auto& p : keyTypes)
