@@ -128,6 +128,7 @@ const uint64_t defaultDECThrottleThreshold = 200000000;  // ~200 MB
 const uint8_t defaultUseCpimport = 1;
 
 const bool defaultAllowDiskAggregation = false;
+
 /** @brief ResourceManager
  *	Returns requested values from Config
  *
@@ -179,9 +180,14 @@ public:
         return  getIntVal(fExeMgrStr, "ExecQueueSize", defaultEMExecQueueSize);
     }
 
-    bool         getAllowDiskAggregation() const
+    bool        getAllowDiskAggregation() const
     {
         return fAllowedDiskAggregation;
+    }
+
+    uint64_t    getDECConnectionsPerQuery() const
+    {
+        return fDECConnectionsPerQuery;
     }
 
     int	      	getHjMaxBuckets() const
@@ -615,6 +621,7 @@ private:
     bool isExeMgr;
     bool fUseHdfs;
     bool fAllowedDiskAggregation{false};
+    uint64_t fDECConnectionsPerQuery;
 };
 
 
