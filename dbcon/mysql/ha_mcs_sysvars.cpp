@@ -21,7 +21,7 @@
 #include "ha_mcs_sysvars.h"
 
 const char* mcs_compression_type_names[] = {
-    "UNUSED",
+    "SNAPPY",
     "SNAPPY",
     NullS
 };
