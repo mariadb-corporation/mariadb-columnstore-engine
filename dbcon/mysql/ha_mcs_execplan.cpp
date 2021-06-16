@@ -3157,15 +3157,15 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB (const Item* item)
         case STRING_RESULT:
             ct.colDataType = CalpontSystemCatalog::VARCHAR;
 
-            // MCOL-697 the longest TEXT we deal with is 2100000000 so
+            // MCOL-697 the longest TEXT we deal with is 16777215 so
             // limit to that. Otherwise for LONGBLOB ct.colWidth ends
             // up being -1 and demons eat your data and first born
             // (or you just get truncated to 20 bytes with the 'if'
             // below)
-            if (item->max_length < 2100000000)
+            if (item->max_length < 16777215)
                 ct.colWidth = item->max_length;
             else
-                ct.colWidth = 2100000000;
+                ct.colWidth = 16777215;
 
             // force token
             if (item->type() == Item::FUNC_ITEM)
