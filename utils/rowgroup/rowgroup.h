@@ -1306,12 +1306,7 @@ inline void Row::setFloatField(float val, uint32_t colIndex)
 inline void Row::setLongDoubleField(const long double& val, uint32_t colIndex)
 {
     uint8_t* p = &data[offsets[colIndex]];
-    *((long double*)p) = val;
-    if (sizeof(long double) == 16)
-    {
-        // zero out the unused portion as there may be garbage there.
-        *((uint64_t*)p+1) &= 0x000000000000FFFFULL;
-    }
+    *reinterpret_cast<long double*>(p) = val;
 }
 
 inline void Row::setInt128Field(const int128_t& val, uint32_t colIndex)
