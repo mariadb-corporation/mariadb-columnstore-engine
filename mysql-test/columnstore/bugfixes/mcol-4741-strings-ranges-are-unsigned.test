@@ -1,0 +1,17 @@
+--disable_warnings
+DROP DATABASE IF EXISTS db4741;
+--enable_warnings
+CREATE DATABASE db4741;
+USE db4741;
+CREATE TABLE t (x VARCHAR(5) DEFAULT '') engine = columnstore;
+
+--replace_result $MTR_SUITE_DIR MTR_SUITE_DIR
+--eval LOAD DATA LOCAL infile '$MTR_SUITE_DIR/../std_data/mcol-4741-part-1-strings-and-nulls.txt' INTO TABLE t
+
+SELECT COUNT(*) FROM t WHERE x='val';
+
+--replace_result $MTR_SUITE_DIR MTR_SUITE_DIR
+--eval LOAD DATA LOCAL infile '$MTR_SUITE_DIR/../std_data/mcol-4741-part-2-empty-strings.txt' INTO TABLE t
+
+SELECT COUNT(*) FROM t WHERE x='val';
+

@@ -893,18 +893,18 @@ void ExtentMap::mergeExtentsMaxMin(CPMaxMinMergeMap_t& cpMap, bool useLock)
                             // Swap byte order to do binary string comparison
                             if (isCharType(it->second.type))
                             {
-                                int64_t newMinVal =
-                                    static_cast<int64_t>( uint64ToStr(
+                                uint64_t newMinVal =
+                                    static_cast<uint64_t>( uint64ToStr(
                                                               static_cast<uint64_t>(it->second.min)));
-                                int64_t newMaxVal =
-                                    static_cast<int64_t>( uint64ToStr(
+                                uint64_t newMaxVal =
+                                    static_cast<uint64_t>( uint64ToStr(
                                                               static_cast<uint64_t>(it->second.max)));
-                                int64_t oldMinVal =
-                                    static_cast<int64_t>( uint64ToStr(
+                                uint64_t oldMinVal =
+                                    static_cast<uint64_t>( uint64ToStr(
                                                               static_cast<uint64_t>(
                                                                   fExtentMap[i].partition.cprange.loVal)) );
-                                int64_t oldMaxVal =
-                                    static_cast<int64_t>( uint64ToStr(
+                                uint64_t oldMaxVal =
+                                    static_cast<uint64_t>( uint64ToStr(
                                                               static_cast<uint64_t>(
                                                                   fExtentMap[i].partition.cprange.hiVal)) );
 
