@@ -67,7 +67,7 @@ const int m_bigSpace  =                    // free space in an empty block
 const int START_HDR1  =                    // start loc of 2nd offset (HDR1)
     HDR_UNIT_SIZE + NEXT_PTR_BYTES + HDR_UNIT_SIZE;
 const int PSEUDO_COL_WIDTH = DICT_COL_WIDTH; // used to convert row count to block count
-const int MAX_BLOB_SIZE = 16777215; // for safety, we use an 18bit block count of 8KB blocks
+const int MAX_BLOB_SIZE = 16777215; // MCOL-4758 limit TEXT and BLOB to 16MB
 }
 
 namespace WriteEngine

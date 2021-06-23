@@ -87,11 +87,8 @@ void fix_column_length(SchemaObject* elem, const CHARSET_INFO* def_cs) {
             column->fType->fLength = 255;
         else if (column->fType->fLength <= 65535)
             column->fType->fLength = 65535;
-        else if (column->fType->fLength <= 16777215)
-            column->fType->fLength = 16777215;
         else 
             column->fType->fLength = 16777215;
-        // otherwise leave the decision to a caller code
     }
 }
 
