@@ -443,7 +443,7 @@
 		<InitialInstallFlag>y</InitialInstallFlag>
 		<SingleServerInstall>y</SingleServerInstall>
 		<ServerTypeInstall>2</ServerTypeInstall>
-		<PMwithUM>n</PMwithUM>
+		<PMwithUM>y</PMwithUM>
 		<MySQLRep>n</MySQLRep>
 		<DBRootStorageType>internal</DBRootStorageType>
 		<UMStorageType>internal</UMStorageType>
