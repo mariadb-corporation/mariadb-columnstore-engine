@@ -4737,10 +4737,11 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
         gwi.aggOnSelect = true;
 
     // Argument_count() is the # of formal parms to the agg fcn. Columnstore
-    // only supports 1 argument except UDAnF and GROUP_CONCAT
-    // TODO: Support more than one parm for COUNT(DISTINCT)
-    if (isp->argument_count() != 1 && isp->sum_func() != Item_sum::GROUP_CONCAT_FUNC
-            && isp->sum_func() != Item_sum::UDF_SUM_FUNC)
+    // only supports 1 argument except UDAnF, COUNT(DISTINC) and GROUP_CONCAT
+    if (isp->argument_count() != 1 
+        && isp->sum_func() != Item_sum::COUNT_DISTINCT_FUNC
+        && isp->sum_func() != Item_sum::GROUP_CONCAT_FUNC
+        && isp->sum_func() != Item_sum::UDF_SUM_FUNC)
     {
         gwi.fatalParseError = true;
         gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_MUL_ARG_AGG);
