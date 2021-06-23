@@ -1024,6 +1024,7 @@ public:
      * @return nothing.
     */
     EXPORT void invalidateUncommittedExtentLBIDs(execplan::CalpontSystemCatalog::SCN txnid,
+            bool allExtents,
             std::vector<LBID_t>* plbidList = NULL);
     
 private:

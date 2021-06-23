@@ -373,7 +373,7 @@ CommandPackageProcessor::processPackage(dmlpackage::CalpontDMLPackage& cpackage)
                     if (weRc == 0)
                     {
                         //@Bug 4560 invalidate cp first as bulkrollback will truncate the newly added lbids.
-                        fDbrm->invalidateUncommittedExtentLBIDs(0, &lbidList);
+                        fDbrm->invalidateUncommittedExtentLBIDs(0, true, &lbidList);
                         cpInvalidated = true;
                         weRc = rollBackBatchAutoOnTransaction(uniqueId, txnid, fSessionID, cpackage.getTableOid(), errorMsg);
 
@@ -430,7 +430,7 @@ CommandPackageProcessor::processPackage(dmlpackage::CalpontDMLPackage& cpackage)
 
                 if (!cpInvalidated)
                 {
-                    fDbrm->invalidateUncommittedExtentLBIDs(0, &lbidList);
+                    fDbrm->invalidateUncommittedExtentLBIDs(0, stmt == "ROLLBACK", &lbidList);
                 }
             }
         }

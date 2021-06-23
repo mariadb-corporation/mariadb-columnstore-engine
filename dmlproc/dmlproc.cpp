@@ -277,7 +277,7 @@ void rollbackAll(DBRM* dbrm)
             args1.add(oss.str());
             message2.format( args1 );
             ml.logInfoMessage( message2 );
-            dbrm->invalidateUncommittedExtentLBIDs(tableLocks[i].ownerTxnID);
+            dbrm->invalidateUncommittedExtentLBIDs(tableLocks[i].ownerTxnID, false);
             uint32_t sessionid = 0;
             txnId.id = tableLocks[i].ownerTxnID;
             txnId.valid = true;
@@ -447,7 +447,7 @@ void rollbackAll(DBRM* dbrm)
 
         for (curTxnID = txnList.begin(); curTxnID != txnList.end(); ++curTxnID)
         {
-            dbrm->invalidateUncommittedExtentLBIDs(*curTxnID);
+            dbrm->invalidateUncommittedExtentLBIDs(*curTxnID, false);
             txnId.id = *curTxnID;
             txnId.valid = true;
             uint32_t sessionid = 0;

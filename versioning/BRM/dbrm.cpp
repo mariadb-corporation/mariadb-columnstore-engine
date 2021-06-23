@@ -4501,7 +4501,7 @@ void DBRM::deleteAISequence(uint32_t OID)
     }
 }
 
-void DBRM::invalidateUncommittedExtentLBIDs(execplan::CalpontSystemCatalog::SCN txnid, vector<LBID_t>* plbidList)
+void DBRM::invalidateUncommittedExtentLBIDs(execplan::CalpontSystemCatalog::SCN txnid, bool allExtents, vector<LBID_t>* plbidList)
 {
     // Here we want to minimize the number of calls to dbrm
     // Given that, and the fact that we need to know the column type
@@ -4594,7 +4594,7 @@ void DBRM::invalidateUncommittedExtentLBIDs(execplan::CalpontSystemCatalog::SCN 
             aInfo.isBinaryColumn = false;
         }
 
-        aInfo.seqNum = SEQNUM_MARK_UPDATING_INVALID_SET_RANGE;
+        aInfo.seqNum = allExtents ? SEQNUM_MARK_INVALID_SET_RANGE : SEQNUM_MARK_UPDATING_INVALID_SET_RANGE;
         cpInfos.push_back(aInfo);
     }
 

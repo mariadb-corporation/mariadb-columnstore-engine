@@ -1,0 +1,27 @@
+DROP DATABASE IF EXISTS MCOL4766;
+CREATE DATABASE MCOL4766;
+USE MCOL4766;
+CREATE TABLE t(x integer) ENGINE=COLUMNSTORE;
+INSERT INTO t(x) VALUES (1), (2);
+SELECT c.table_schema, c.table_name, c.column_name, e.min_value, e.max_value FROM information_schema.columnstore_extents e, information_schema.columnstore_columns c WHERE c.table_schema='MCOL4766' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+table_schema	table_name	column_name	min_value	max_value
+MCOL4766	t	x	1	2
+START TRANSACTION;
+INSERT INTO t(x) VALUES (-1), (100);
+ROLLBACK;
+SELECT c.table_schema, c.table_name, c.column_name, e.min_value, e.max_value FROM information_schema.columnstore_extents e, information_schema.columnstore_columns c WHERE c.table_schema='MCOL4766' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+table_schema	table_name	column_name	min_value	max_value
+MCOL4766	t	x	NULL	NULL
+START TRANSACTION;
+UPDATE t SET x = 100 WHERE x = 2;
+SELECT c.table_schema, c.table_name, c.column_name, e.min_value, e.max_value FROM information_schema.columnstore_extents e, information_schema.columnstore_columns c WHERE c.table_schema='MCOL4766' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+table_schema	table_name	column_name	min_value	max_value
+MCOL4766	t	x	1	100
+ROLLBACK;
+SELECT c.table_schema, c.table_name, c.column_name, e.min_value, e.max_value FROM information_schema.columnstore_extents e, information_schema.columnstore_columns c WHERE c.table_schema='MCOL4766' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+table_schema	table_name	column_name	min_value	max_value
+MCOL4766	t	x	NULL	NULL
+SELECT * FROM t;
+x
+1
+2
