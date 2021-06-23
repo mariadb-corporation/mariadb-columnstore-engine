@@ -329,8 +329,11 @@ void DistributedEngineComm::Setup()
 
         for (j = 0; j < pmCount; j++)
         {
-            if (newClients[i]->isSameAddr(*fPmConnections[j]))
+            if (!fPmConnections.empty() && j < fPmConnections.size() &&
+                newClients[i]->isSameAddr(*fPmConnections[j]))
+            {
                 break;
+            }
         }
 
         if (j == pmCount)
