@@ -353,7 +353,7 @@ class Hash128
 public:
     inline size_t operator()(const int128_t i) const
     {
-        return *reinterpret_cast<const uint64_t*>(&i);
+        return (uint64_t)((int64_t) i);
     }
 };
 

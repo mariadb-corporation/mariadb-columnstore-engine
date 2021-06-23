@@ -105,6 +105,27 @@ bool number_value ( const string& data )
 namespace dataconvert
 {
 
+// LE stands for Little Endian
+uint32_t getUInt32LE(const char* ptr)
+{
+    return reinterpret_cast<const uint32_t*>(ptr)[0];
+}
+
+int32_t getSInt32LE(const char* ptr)
+{
+    return reinterpret_cast<const int32_t*>(ptr)[0];
+}
+
+uint64_t getUInt64LE(const char* ptr)
+{
+    return reinterpret_cast<const uint64_t*>(ptr)[0];
+}
+
+int64_t getSInt64LE(const char* ptr)
+{
+    return reinterpret_cast<const int64_t*>(ptr)[0];
+}
+
 template <typename T>
 void number_int_value(const string& data,
                       cscDataType typeCode,
@@ -1627,7 +1648,7 @@ DataConvert::StringToDate(const std::string& data, bool& pushWarning)
 
     if (stringToDateStruct(data, aDay))
     {
-        boost::any value = (*(reinterpret_cast<uint32_t*> (&aDay)));
+        boost::any value = getUInt32LE((const char*) &aDay);
         return value;
     }
     boost::any value = (uint32_t) 0;
@@ -1643,7 +1664,7 @@ DataConvert::StringToDatetime(const std::string& data, bool& pushWarning)
 
     if (stringToDatetimeStruct(data, aDatetime, 0)) // QQ: why 0?
     {
-        boost::any value = *(reinterpret_cast<uint64_t*>(&aDatetime));
+        boost::any value = getUInt64LE((const char*) &aDatetime);
         return value;
     }
     boost::any value = (uint64_t) 0;
@@ -1664,7 +1685,7 @@ DataConvert::StringToTime(const datatypes::SystemCatalog::TypeAttributesStd& col
         pushWarning = true;
     }
 
-    boost::any value = (int64_t) * (reinterpret_cast<int64_t*>(&aTime));
+    boost::any value = getSInt64LE((const char*) &aTime);
     return value;
 }
 
@@ -1681,7 +1702,7 @@ DataConvert::StringToTimestamp(const datatypes::ConvertFromStringParam &prm,
         pushWarning = true;
     }
 
-    boost::any value = (uint64_t) *(reinterpret_cast<uint64_t*>(&aTimestamp));
+    boost::any value = getUInt64LE((const char*) &aTimestamp);
     return value;
 }
 
@@ -2448,7 +2469,10 @@ int64_t DataConvert::stringToDate(const string& data)
     Date aDay;
 
     if ( stringToDateStruct( data, aDay ) )
-        return (((*(reinterpret_cast<uint32_t*> (&aDay))) & 0xFFFFFFC0) | 0x3E);
+    {
+        uint32_t temp = getUInt32LE((const char*) &aDay);
+        return ((temp & 0xFFFFFFC0) | 0x3E);
+    }
     else
         return -1;
 }
@@ -2458,7 +2482,7 @@ int64_t DataConvert::stringToDatetime(const string& data, bool* date)
     DateTime dtime;
 
     if ( stringToDatetimeStruct( data, dtime, date ) )
-        return *(reinterpret_cast<uint64_t*>(&dtime));
+        return getUInt64LE((const char*) &dtime);
     else
         return -1;
 }
@@ -2468,7 +2492,7 @@ int64_t DataConvert::stringToTimestamp(const string& data, const string& timeZon
     TimeStamp aTimestamp;
 
     if ( stringToTimestampStruct( data, aTimestamp, timeZone ) )
-        return *(reinterpret_cast<uint64_t*>(&aTimestamp));
+        return getUInt64LE((const char*) &aTimestamp);
     else
         return -1;
 }
@@ -2485,7 +2509,7 @@ int64_t DataConvert::intToDate(int64_t data)
         aday.year = 0;
         aday.month = 0;
         aday.day = 0;
-        return *(reinterpret_cast<uint32_t*>(&aday));
+        return getUInt32LE((const char*) &aday);
     }
 
     // this snprintf call causes a compiler warning b/c we're potentially copying a 20-digit #
@@ -2597,7 +2621,7 @@ int64_t DataConvert::intToDate(int64_t data)
     aday.year = y;
     aday.month = m;
     aday.day = d;
-    return *(reinterpret_cast<uint32_t*>(&aday));
+    return getUInt32LE((const char*) &aday);
 }
 
 /* This is really painful and expensive b/c it seems the input is not normalized or
@@ -2621,7 +2645,7 @@ int64_t DataConvert::intToDatetime(int64_t data, bool* date)
         if (date)
             *date = true;
 
-        return *(reinterpret_cast<uint64_t*>(&adaytime));
+        return getUInt64LE((const char*) &adaytime);
     }
 
     // this snprintf call causes a compiler warning b/c we're potentially copying a 20-digit #
@@ -2747,7 +2771,7 @@ int64_t DataConvert::intToDatetime(int64_t data, bool* date)
     if (date)
         *date = isDate;
 
-    return *(reinterpret_cast<uint64_t*>(&adaytime));
+    return getUInt64LE((const char*) &adaytime);
 }
 
 /* This is really painful and expensive b/c it seems the input is not normalized or
@@ -2767,7 +2791,7 @@ int64_t DataConvert::intToTime(int64_t data, bool fromString)
         atime.msecond = 0;
         atime.is_neg = 0;
 
-        return *(reinterpret_cast<int64_t*>(&atime));
+        return getSInt64LE((const char*) &atime);
     }
 
     // this snprintf call causes a compiler warning b/c we're potentially copying a 20-digit #
@@ -2871,7 +2895,7 @@ int64_t DataConvert::intToTime(int64_t data, bool fromString)
     atime.msecond = ms;
     atime.is_neg = isNeg;
 
-    return *(reinterpret_cast<int64_t*>(&atime));
+    return getSInt64LE((const char*) &atime);
 }
 
 int64_t DataConvert::stringToTime(const string& data)
@@ -2991,7 +3015,7 @@ int64_t DataConvert::stringToTime(const string& data)
     atime.second = sec;
     atime.msecond = msec;
     atime.is_neg = isNeg;
-    return *(reinterpret_cast<int64_t*>(&atime));
+    return getSInt64LE((const char*) &atime);
 }
 
 

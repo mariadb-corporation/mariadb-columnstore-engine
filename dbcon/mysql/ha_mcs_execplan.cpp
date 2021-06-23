@@ -5068,7 +5068,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                     {
                         ct.scale += datatypes::MAXSCALEINC4AVG;
                     }
-                    ct.precision = datatypes::IGNOREPRECISION;
+                    ct.precision = datatypes::INT64MAXPRECISION;
                 }
                 ac->resultType(ct);
             }
