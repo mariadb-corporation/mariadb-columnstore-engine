@@ -1,0 +1,40 @@
+#
+# Test COUNT(DISTINCT n, m, ...)
+# Author: David Hall, david.hall@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol_3738_db;
+--enable_warnings
+
+CREATE DATABASE mcol_3738_db;
+USE mcol_3738_db;
+CREATE TABLE `t1` (
+  idx  int(11), 
+  c1   int(11),
+  c2   int(11), 
+  c3   int(11), 
+  char1 varchar(28)
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb4;
+
+insert into t1 values   (1, 2, 2, 1, "something this way comes"), 
+                        (1, 2, 3, 1, "elsewhere this way comes"),
+                        (1, 2, 4, 1, "something this way comes"), 
+                        (1, 3, 2, 2, "something this way comes"), 
+                        (1, 3, 3, 2, "elsewhere this way comes"), 
+                        (1, 3, 4, 2, "elsewhere this way comes"), 
+                        (2, 2, 2, 3, "something this way comes"), 
+                        (2, 2, 3, 3, "elsewhere this way comes"), 
+                        (2, 2, 4, 3, "something this way comes"), 
+                        (3, 3, 2, 4, "something this way comes"), 
+                        (3, 3, 3, 4, "elsewhere this way comes"), 
+                        (4, 3, 4, 5, "elsewhere this way comes");
+
+select count(distinct c1,  c2), count(distinct char1) from t1;
+select idx, count(distinct c1,  c2), count(distinct c1, c3, char1) from t1 group by idx order by idx;
+# group_concat causes the aggregation to be performed on UM only.
+select idx, sum(c3), count(distinct c1,  c2), count(distinct c1, c3, char1), group_concat("ls_", char1) from t1 group by idx order by idx;
+
+# Clean UP
+DROP DATABASE mcol_3738_db;

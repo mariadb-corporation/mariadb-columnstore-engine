@@ -1,0 +1,38 @@
+DROP DATABASE IF EXISTS mcol_3738_db;
+CREATE DATABASE mcol_3738_db;
+USE mcol_3738_db;
+CREATE TABLE `t1` (
+idx  int(11), 
+c1   int(11),
+c2   int(11), 
+c3   int(11), 
+char1 varchar(28)
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb4;
+insert into t1 values   (1, 2, 2, 1, "something this way comes"), 
+(1, 2, 3, 1, "elsewhere this way comes"),
+(1, 2, 4, 1, "something this way comes"), 
+(1, 3, 2, 2, "something this way comes"), 
+(1, 3, 3, 2, "elsewhere this way comes"), 
+(1, 3, 4, 2, "elsewhere this way comes"), 
+(2, 2, 2, 3, "something this way comes"), 
+(2, 2, 3, 3, "elsewhere this way comes"), 
+(2, 2, 4, 3, "something this way comes"), 
+(3, 3, 2, 4, "something this way comes"), 
+(3, 3, 3, 4, "elsewhere this way comes"), 
+(4, 3, 4, 5, "elsewhere this way comes");
+select count(distinct c1,  c2), count(distinct char1) from t1;
+count(distinct c1,  c2)	count(distinct char1)
+6	2
+select idx, count(distinct c1,  c2), count(distinct c1, c3, char1) from t1 group by idx order by idx;
+idx	count(distinct c1,  c2)	count(distinct c1, c3, char1)
+1	6	4
+2	3	2
+3	2	2
+4	1	1
+select idx, sum(c3), count(distinct c1,  c2), count(distinct c1, c3, char1), group_concat("ls_", char1) from t1 group by idx order by idx;
+idx	sum(c3)	count(distinct c1,  c2)	count(distinct c1, c3, char1)	group_concat("ls_", char1)
+1	9	6	4	ls_something this way comes,ls_elsewhere this way comes,ls_something this way comes,ls_something this way comes,ls_elsewhere this way comes,ls_elsewhere this way comes
+2	9	3	2	ls_something this way comes,ls_elsewhere this way comes,ls_something this way comes
+3	8	2	2	ls_something this way comes,ls_elsewhere this way comes
+4	5	1	1	ls_elsewhere this way comes
+DROP DATABASE mcol_3738_db;
