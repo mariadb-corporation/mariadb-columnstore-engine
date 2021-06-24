@@ -60,7 +60,7 @@
 #include "../winport/winport.h"
 
 #include "collation.h"
-
+#include "common/hashfamily.h"
 
 // Workaround for my_global.h #define of isnan(X) causing a std::std namespace
 
@@ -70,57 +70,57 @@ namespace rowgroup
 const int16_t rgCommonSize = 8192;
 
 /*
-    The RowGroup family of classes encapsulate the data moved through the 
+    The RowGroup family of classes encapsulate the data moved through the
     system.
-    
+
      - RowGroup specifies the format of the data primarily (+ some other metadata),
      - RGData (aka RowGroup Data) encapsulates the data,
      - Row is used to extract fields from the data and iterate.
-    
+
     JobListFactory instantiates the RowGroups to be used by each stage of processing.
-    RGDatas are passed between stages, and their RowGroup instances are used 
+    RGDatas are passed between stages, and their RowGroup instances are used
     to interpret them.
-    
+
     Historically, row data was just a chunk of contiguous memory, a uint8_t *.
-    Every field had a fixed width, which allowed for quick offset 
+    Every field had a fixed width, which allowed for quick offset
     calculation when assigning or retrieving individual fields.  That worked
     well for a few years, but at some point it became common to declare
     all strings as max-length, and to manipulate them in queries.
-    
-    Having fixed-width fields, even for strings, required an unreasonable 
-    amount of memory.  RGData & StringStore were introduced to handle strings 
+
+    Having fixed-width fields, even for strings, required an unreasonable
+    amount of memory.  RGData & StringStore were introduced to handle strings
     more efficiently, at least with respect to memory.  The row data would
-    still be a uint8_t *, and columns would be fixed-width, but string fields 
-    above a certain width would contain a 'Pointer' that referenced a string in 
-    StringStore.  Strings are stored efficiently in StringStore, so there is 
+    still be a uint8_t *, and columns would be fixed-width, but string fields
+    above a certain width would contain a 'Pointer' that referenced a string in
+    StringStore.  Strings are stored efficiently in StringStore, so there is
     no longer wasted space.
-    
-    StringStore comes with a different inefficiency however.  When a value 
-    is overwritten, the original string cannot be freed independently of the 
-    others, so it continues to use space.  If values are only set once, as is 
-    the typical case, then StringStore is efficient.  When it is necessary 
-    to overwrite string fields, it is possible to configure these classes 
-    to use the original data format so that old string fields do not accumulate 
-    in memory.  Of course, be careful, because blobs and text fields in CS are 
+
+    StringStore comes with a different inefficiency however.  When a value
+    is overwritten, the original string cannot be freed independently of the
+    others, so it continues to use space.  If values are only set once, as is
+    the typical case, then StringStore is efficient.  When it is necessary
+    to overwrite string fields, it is possible to configure these classes
+    to use the original data format so that old string fields do not accumulate
+    in memory.  Of course, be careful, because blobs and text fields in CS are
     declared as 2GB strings!
-    
+
     A single RGData contains up to one 'logical block' worth of data,
     which is 8192 rows.  One RGData is usually treated as one unit of work by
-    PrimProc and the JobSteps, but the rows an RGData contains and how many are 
+    PrimProc and the JobSteps, but the rows an RGData contains and how many are
     treated as a work unit depend on the operation being done.
-    
-    For example, PrimProc works in units of 8192 contiguous rows 
-    that come from disk.  If half of the rows were filtered out, then the 
+
+    For example, PrimProc works in units of 8192 contiguous rows
+    that come from disk.  If half of the rows were filtered out, then the
     RGData it passes to the next stage would only contain 4096 rows.
 
-    Others build results incrementally before passing them along, such as 
-    group-by.  If one group contains 11111 values, then group-by will 
+    Others build results incrementally before passing them along, such as
+    group-by.  If one group contains 11111 values, then group-by will
     return 2 RGDatas for that group, one with 8192 rows, and one with 2919.
-    
+
     Note: There is no synchronization in any of these classes for obvious
-    performance reasons.  Likewise, although it's technically safe for many 
-    readers to access an RGData simultaneously, that would not be an 
-    efficient thing to do.  Try to stick to designs where a single RGData 
+    performance reasons.  Likewise, although it's technically safe for many
+    readers to access an RGData simultaneously, that would not be an
+    efficient thing to do.  Try to stick to designs where a single RGData
     is used by a single thread at a time.
 */
 
@@ -138,7 +138,7 @@ inline T derefFromTwoVectorPtrs(const std::vector<T>* outer,
                          const T innerIdx)
 {
     auto outerIdx = inner->operator[](innerIdx);
-    return outer->operator[](outerIdx); 
+    return outer->operator[](outerIdx);
 }
 
 class StringStore
@@ -375,7 +375,7 @@ public:
     inline execplan::CalpontSystemCatalog::ColDataType* getColTypes();
     inline const execplan::CalpontSystemCatalog::ColDataType* getColTypes() const;
     inline uint32_t getCharsetNumber(uint32_t colIndex) const;
-    
+
     // this returns true if the type is not CHAR or VARCHAR
     inline bool isCharType(uint32_t colIndex) const;
     inline bool isUnsigned(uint32_t colIndex) const;
@@ -429,7 +429,7 @@ public:
     inline bool equals(long double val, uint32_t colIndex) const;
     bool equals(const std::string& val, uint32_t colIndex) const;
     inline bool equals(const int128_t& val, uint32_t colIndex) const;
-    
+
     inline double getDoubleField(uint32_t colIndex) const;
     inline float getFloatField(uint32_t colIndex) const;
     inline datatypes::Decimal getDecimalField(uint32_t colIndex) const
@@ -513,7 +513,7 @@ public:
     inline T* getBinaryField(T* argtype, uint32_t colIndex) const;
     template <typename T>
     inline T* getBinaryField_offset(uint32_t offset) const;
-    
+
     inline boost::shared_ptr<mcsv1sdk::UserData> getUserData(uint32_t colIndex) const;
     inline void setUserData(mcsv1sdk::mcsv1Context& context,
                             boost::shared_ptr<mcsv1sdk::UserData> userData,
@@ -569,18 +569,21 @@ public:
     // a fcn to check the type defs seperately doesn't exist yet.  No normalization.
     inline uint64_t hash(uint32_t lastCol) const;  // generates a hash for cols [0-lastCol]
     inline uint64_t hash() const;  // generates a hash for all cols
-    inline void colUpdateMariaDBHasher(datatypes::MariaDBHasher &hasher, uint32_t col) const;
-    inline void colUpdateMariaDBHasherTypeless(datatypes::MariaDBHasher &hasher, uint32_t keyColsIdx,
-                                               const std::vector<uint32_t>& keyCols,
-                                               const std::vector<uint32_t>* smallSideKeyColumnsIds,
-                                               const std::vector<uint32_t>* smallSideColumnsWidths) const;
+    inline void colUpdateHasher(datatypes::MariaDBHasher& hM,
+                                const utils::Hasher_r& h,
+                                const uint32_t col,
+                                uint32_t& intermediateHash) const;
+    inline void colUpdateHasherTypeless(datatypes::MariaDBHasher &hasher, uint32_t keyColsIdx,
+                                        const std::vector<uint32_t>& keyCols,
+                                        const std::vector<uint32_t>* smallSideKeyColumnsIds,
+                                        const std::vector<uint32_t>* smallSideColumnsWidths) const;
     inline uint64_t hashTypeless(const std::vector<uint32_t>& keyCols,
                                  const std::vector<uint32_t>* smallSideKeyColumnsIds,
                                  const std::vector<uint32_t>* smallSideColumnsWidths) const
     {
         datatypes::MariaDBHasher h;
         for (uint32_t i = 0; i < keyCols.size(); i++)
-            colUpdateMariaDBHasherTypeless(h, i, keyCols, smallSideKeyColumnsIds, smallSideColumnsWidths);
+            colUpdateHasherTypeless(h, i, keyCols, smallSideKeyColumnsIds, smallSideColumnsWidths);
         return h.finalize();
     }
 
@@ -591,7 +594,7 @@ public:
     {
         userDataStore = u;
     }
-    
+
     const CHARSET_INFO* getCharset(uint32_t col) const;
 
 private:
@@ -946,7 +949,10 @@ inline utils::ConstString Row::getConstString(uint32_t colIndex) const
 }
 
 
-inline void Row::colUpdateMariaDBHasher(datatypes::MariaDBHasher &h, uint32_t col) const
+inline void Row::colUpdateHasher(datatypes::MariaDBHasher& hM,
+                                 const utils::Hasher_r& h,
+                                 const uint32_t col,
+                                 uint32_t& intermediateHash) const
 {
     switch (getColType(col))
     {
@@ -956,17 +962,19 @@ inline void Row::colUpdateMariaDBHasher(datatypes::MariaDBHasher &h, uint32_t co
         case execplan::CalpontSystemCatalog::TEXT:
         {
             CHARSET_INFO *cs = getCharset(col);
-            h.add(cs, getConstString(col));
+            hM.add(cs, getConstString(col));
             break;
         }
         default:
-            h.add(&my_charset_bin, getShortConstString(col));
+        {
+            intermediateHash = h((const char*) &data[offsets[col]], colWidths[col], intermediateHash);
             break;
+        }
     }
 }
 
 
-inline void Row::colUpdateMariaDBHasherTypeless(datatypes::MariaDBHasher &h, uint32_t keyColsIdx,
+inline void Row::colUpdateHasherTypeless(datatypes::MariaDBHasher &h, uint32_t keyColsIdx,
                                                 const std::vector<uint32_t>& keyCols,
                                                 const std::vector<uint32_t>* smallSideKeyColumnsIds,
                                                 const std::vector<uint32_t>* smallSideColumnsWidths) const
@@ -1472,7 +1480,12 @@ inline uint64_t Row::hash() const
 
 inline uint64_t Row::hash(uint32_t lastCol) const
 {
-    datatypes::MariaDBHasher h;
+    // Use two hash classes. MariaDBHasher for text-based
+    // collation-aware data types and Hasher_r for all other data types.
+    // We deliver a hash that is a combination of both hashers' results.
+    utils::Hasher_r h;
+    datatypes::MariaDBHasher hM;
+    uint32_t intermediateHash = 0;
 
     // Sometimes we ask this to hash 0 bytes, and it comes through looking like
     // lastCol = -1.  Return 0.
@@ -1480,9 +1493,9 @@ inline uint64_t Row::hash(uint32_t lastCol) const
         return 0;
 
     for (uint32_t i = 0; i <= lastCol; i++)
-      colUpdateMariaDBHasher(h, i);
+        colUpdateHasher(hM, h, i, intermediateHash);
 
-    return h.finalize();
+    return utils::HashFamily(h, intermediateHash, lastCol << 2, hM).finalize();
 }
 
 inline bool Row::equals(const Row& r2) const
@@ -1661,7 +1674,7 @@ public:
                             uint16_t* blockNum);
 
     inline void setStringStore(boost::shared_ptr<StringStore>);
-    
+
     const CHARSET_INFO* getCharset(uint32_t col);
 
 private:
@@ -1682,7 +1695,7 @@ private:
     // For string collation
     std::vector<uint32_t> charsetNumbers;
     std::vector<CHARSET_INFO*> charsets;
-    
+
     // DECIMAL support.  For non-decimal fields, the values are 0.
     std::vector<uint32_t> scale;
     std::vector<uint32_t> precision;
