@@ -1,0 +1,328 @@
+-- source ../include/have_columnstore.inc
+-- source ../include/enable_ordered_only.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol641_joins_db;
+--enable_warnings
+
+CREATE DATABASE mcol641_joins_db;
+USE mcol641_joins_db;
+
+--disable_query_log
+SET default_storage_engine=ColumnStore;
+--enable_query_log
+
+CREATE TABLE cs1 (d1 DECIMAL(38), d2 DECIMAL(37), id TINYINT);
+CREATE TABLE cs2 (i1 SMALLINT, i2 MEDIUMINT, i3 INT, i4 BIGINT);
+
+INSERT INTO cs1 VALUES
+(99,0,1),
+(255,254,2),
+(254,253,3),
+(252,253,4),
+(65535,2147483647,5),
+(65534,2147483646,6),
+(65533,65532,7),
+(2147483647,2147483636,8),
+(2147483646,2147483635,9),
+(2147483645,2147483634,10),
+(2147483645,9223372036854775804,11),
+(9223372036854775807,0,12),
+(9223372036854775807,2147483627,13),
+(9223372036854775806,2147483626,14),
+(9223372036854775805,9223372036854775704,15);
+
+INSERT INTO cs2 VALUES
+(255,254,NULL,NULL),
+(254,253,NULL,NULL),
+(251,251,NULL,NULL),
+(NULL,65535,NULL,NULL),
+(NULL,65535,2147483647,NULL),
+(NULL,65534,2147483646,NULL),
+(NULL,0,2147483641,NULL),
+(NULL,NULL,2147483647,NULL),
+(NULL,NULL,2147483647,2147483636),
+(NULL,NULL,2147483646,2147483635),
+(NULL,NULL,0,2147483641),
+(NULL,NULL,NULL,9223372036854775807),
+(NULL,NULL,2147483627,9223372036854775807),
+(NULL,NULL,2147483626,9223372036854775806),
+(NULL,NULL,0,1);
+
+# Distributed PrimProc-based JOINs
+SELECT cs1.*, cs2.* FROM cs1 INNER JOIN cs2 ON cs1.d1 = cs2.i1 ORDER BY id;
+SELECT cs1.*, cs2.* FROM cs2 INNER JOIN cs1 ON cs1.d1 = cs2.i1 ORDER BY id;
+SELECT cs1.*, cs2.* FROM cs1 INNER JOIN cs2 ON cs1.d1 = cs2.i2 ORDER BY id,i3;
+SELECT cs1.*, cs2.* FROM cs2 INNER JOIN cs1 ON cs1.d1 = cs2.i2 ORDER BY id,i3;
+SELECT cs1.*, cs2.* FROM cs1 INNER JOIN cs2 ON cs1.d1 = cs2.i3 ORDER BY id,i2,i4;
+SELECT cs1.*, cs2.* FROM cs2 INNER JOIN cs1 ON cs1.d1 = cs2.i3 ORDER BY id,i2,i4;
+SELECT cs1.*, cs2.* FROM cs1 INNER JOIN cs2 ON cs1.d1 = cs2.i4 AND cs2.i3 IS NOT NULL ORDER BY id;
+SELECT cs1.*, cs2.* FROM cs2 INNER JOIN cs1 ON cs1.d1 = cs2.i4 AND cs2.i3 IS NOT NULL ORDER BY id;
+
+# PrimProc-based composite key JOINs
+SELECT cs1.*, cs2.* FROM cs1 INNER JOIN cs2 ON cs1.d1 = cs2.i1 AND cs1.d2 = cs2.i2 ORDER BY id;
+SELECT cs1.*, cs2.* FROM cs2 INNER JOIN cs1 ON cs1.d1 = cs2.i1 AND cs1.d2 = cs2.i2 ORDER BY id;
+SELECT cs1.*, cs2.* FROM cs1 INNER JOIN cs2 ON cs1.d1 = cs2.i2 AND cs1.d2 = cs2.i3 ORDER BY id;
+SELECT cs1.*, cs2.* FROM cs2 INNER JOIN cs1 ON cs1.d1 = cs2.i2 AND cs1.d2 = cs2.i3 ORDER BY id;
+SELECT cs1.*, cs2.* FROM cs1 INNER JOIN cs2 ON cs1.d1 = cs2.i3 AND cs1.d2 = cs2.i4 ORDER BY id,i2,i4;
+SELECT cs1.*, cs2.* FROM cs2 INNER JOIN cs1 ON cs1.d1 = cs2.i3 AND cs1.d2 = cs2.i4 ORDER BY id,i2,i4;
+SELECT cs1.*, cs2.* FROM cs1 INNER JOIN cs2 ON cs1.d1 = cs2.i4 AND cs1.d2 = cs2.i3 ORDER BY id;
+SELECT cs1.*, cs2.* FROM cs2 INNER JOIN cs1 ON cs1.d1 = cs2.i4 AND cs1.d2 = cs2.i3 ORDER BY id;
+
+# ExeMgr-based JOINs
+SELECT s1.*,s2.* FROM (SELECT * FROM cs1)s1 INNER JOIN (SELECT * FROM cs2)s2 ON s1.d1=s2.i1 ORDER BY id,i2;
+SELECT s1.*,s2.* FROM (SELECT * FROM cs2)s2 INNER JOIN (SELECT * FROM cs1)s1 ON s1.d1=s2.i1 ORDER BY id,i2;
+SELECT s1.*,s2.* FROM (SELECT * FROM cs1)s1 INNER JOIN (SELECT * FROM cs2)s2 ON s1.d1=s2.i2 ORDER BY id,i3;
+SELECT s1.*,s2.* FROM (SELECT * FROM cs2)s2 INNER JOIN (SELECT * FROM cs1)s1 ON s1.d1=s2.i2 ORDER BY id,i3;
+SELECT s1.*,s2.* FROM (SELECT * FROM cs1)s1 INNER JOIN (SELECT * FROM cs2)s2 ON s1.d1=s2.i3 ORDER BY id,i2,i4;
+SELECT s1.*,s2.* FROM (SELECT * FROM cs2)s2 INNER JOIN (SELECT * FROM cs1)s1 ON s1.d1=s2.i3 ORDER BY id,i2,i4;
+SELECT s1.*,s2.* FROM (SELECT * FROM cs1)s1 INNER JOIN (SELECT * FROM cs2)s2 ON s1.d1=s2.i4 AND s2.i3 IS NOT NULL ORDER BY id,i3;
+SELECT s1.*,s2.* FROM (SELECT * FROM cs2)s2 INNER JOIN (SELECT * FROM cs1)s1 ON s1.d1=s2.i4 AND s2.i3 IS NOT NULL ORDER BY id,i3;
+
+# Functional JOIN
+# Distributed PrimProc-based functional JOINs
+SELECT cs1.*, cs2.* FROM cs1 INNER JOIN cs2 ON cs1.d1-1 = cs2.i1-1 ORDER BY id;
+SELECT cs1.*, cs2.* FROM cs2 INNER JOIN cs1 ON cs1.d1-1 = cs2.i1-1 ORDER BY id;
+SELECT cs1.*, cs2.* FROM cs1 INNER JOIN cs2 ON cs1.d1-1 = cs2.i2-1 ORDER BY id,i3;
+SELECT cs1.*, cs2.* FROM cs2 INNER JOIN cs1 ON cs1.d1-1 = cs2.i2-1 ORDER BY id,i3;
+SELECT cs1.*, cs2.* FROM cs1 INNER JOIN cs2 ON cs1.d1-1 = cs2.i3-1 ORDER BY id,i2,i4;
+SELECT cs1.*, cs2.* FROM cs2 INNER JOIN cs1 ON cs1.d1-1 = cs2.i3-1 ORDER BY id,i2,i4;
+SELECT cs1.*, cs2.* FROM cs1 INNER JOIN cs2 ON cs1.d1-1 = cs2.i4-1 AND cs2.i3 IS NOT NULL ORDER BY id;
+SELECT cs1.*, cs2.* FROM cs2 INNER JOIN cs1 ON cs1.d1-1 = cs2.i4-1 AND cs2.i3 IS NOT NULL ORDER BY id;
+
+# PrimProc-based composite key JOINs
+SELECT cs1.*, cs2.* FROM cs1 INNER JOIN cs2 ON cs1.d1-1= cs2.i1-1 AND cs1.d2-1= cs2.i2-1 ORDER BY id;
+SELECT cs1.*, cs2.* FROM cs2 INNER JOIN cs1 ON cs1.d1-1= cs2.i1-1 AND cs1.d2-1= cs2.i2-1 ORDER BY id;
+SELECT cs1.*, cs2.* FROM cs1 INNER JOIN cs2 ON cs1.d1-1= cs2.i2-1 AND cs1.d2-1= cs2.i3-1 ORDER BY id;
+SELECT cs1.*, cs2.* FROM cs2 INNER JOIN cs1 ON cs1.d1-1= cs2.i2-1 AND cs1.d2-1= cs2.i3-1 ORDER BY id;
+SELECT cs1.*, cs2.* FROM cs1 INNER JOIN cs2 ON cs1.d1-1= cs2.i3-1 AND cs1.d2-1= cs2.i4-1 ORDER BY id,i2,i4;
+SELECT cs1.*, cs2.* FROM cs2 INNER JOIN cs1 ON cs1.d1-1= cs2.i3-1 AND cs1.d2-1= cs2.i4-1 ORDER BY id,i2,i4;
+SELECT cs1.*, cs2.* FROM cs1 INNER JOIN cs2 ON cs1.d1-1= cs2.i4-1 AND cs1.d2-1= cs2.i3-1 ORDER BY id;
+SELECT cs1.*, cs2.* FROM cs2 INNER JOIN cs1 ON cs1.d1-1= cs2.i4-1 AND cs1.d2-1= cs2.i3-1 ORDER BY id;
+
+# ExeMgr-based JOINs
+SELECT s1.*,s2.* FROM (SELECT * FROM cs1)s1 INNER JOIN (SELECT * FROM cs2)s2 ON s1.d1-1=s2.i1-1 ORDER BY id,i2;
+SELECT s1.*,s2.* FROM (SELECT * FROM cs2)s2 INNER JOIN (SELECT * FROM cs1)s1 ON s1.d1-1=s2.i1-1 ORDER BY id,i2;
+SELECT s1.*,s2.* FROM (SELECT * FROM cs1)s1 INNER JOIN (SELECT * FROM cs2)s2 ON s1.d1-1=s2.i2-1 ORDER BY id,i3;
+SELECT s1.*,s2.* FROM (SELECT * FROM cs2)s2 INNER JOIN (SELECT * FROM cs1)s1 ON s1.d1-1=s2.i2-1 ORDER BY id,i3;
+SELECT s1.*,s2.* FROM (SELECT * FROM cs1)s1 INNER JOIN (SELECT * FROM cs2)s2 ON s1.d1-1=s2.i3-1 ORDER BY id,i2,i4;
+SELECT s1.*,s2.* FROM (SELECT * FROM cs2)s2 INNER JOIN (SELECT * FROM cs1)s1 ON s1.d1-1=s2.i3-1 ORDER BY id,i2,i4;
+SELECT s1.*,s2.* FROM (SELECT * FROM cs1)s1 INNER JOIN (SELECT * FROM cs2)s2 ON s1.d1-1=s2.i4-1 AND s2.i3 IS NOT NULL ORDER BY id,i3;
+SELECT s1.*,s2.* FROM (SELECT * FROM cs2)s2 INNER JOIN (SELECT * FROM cs1)s1 ON s1.d1-1=s2.i4-1 AND s2.i3 IS NOT NULL ORDER BY id,i3;
+
+-- source ../include/disable_ordered_only.inc
+
+# Skewed OUTER JOIN
+TRUNCATE cs1;
+TRUNCATE cs2;
+
+INSERT INTO cs1 VALUES
+(99,0,1),
+(255,254,2),
+(254,253,3),
+(252,253,4),
+(-252,253,5),
+(65535,2147483647,5),
+(65534,2147483646,6),
+(65533,65532,7),
+(2147483647,2147483636,8),
+(2147483646,2147483635,9),
+(2147483645,2147483634,10),
+(2147483645,9223372036854775804,11),
+(9223372036854775807,0,12),
+(9223372036854775807,2147483627,13),
+(9223372036854775806,2147483626,14),
+(9223372036854775805,9223372036854775704,15);
+
+INSERT INTO cs2 VALUES
+(255,254,NULL,NULL),
+(254,253,NULL,NULL),
+(251,251,NULL,NULL),
+(-252,253,NULL,NULL),
+(-250,253,NULL,NULL),
+(NULL,65535,NULL,NULL),
+(NULL,65535,2147483647,NULL),
+(NULL,65534,2147483646,NULL),
+(NULL,0,2147483641,NULL),
+(NULL,NULL,2147483647,NULL),
+(NULL,NULL,2147483647,2147483636),
+(NULL,NULL,2147483646,2147483635),
+(NULL,NULL,0,2147483641),
+(NULL,NULL,NULL,9223372036854775807),
+(NULL,NULL,2147483627,9223372036854775807),
+(NULL,NULL,2147483626,9223372036854775806),
+(NULL,NULL,0,1);
+
+# Distributed PrimProc-based JOINs
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs1 LEFT JOIN cs2 ON cs1.d1 = cs2.i1 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs2 LEFT JOIN cs1 ON cs1.d1 = cs2.i1 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs1 LEFT JOIN cs2 ON cs1.d1 = cs2.i2 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs2 LEFT JOIN cs1 ON cs1.d1 = cs2.i2 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs1 LEFT JOIN cs2 ON cs1.d1 = cs2.i3 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs2 LEFT JOIN cs1 ON cs1.d1 = cs2.i3 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs1 LEFT JOIN cs2 ON cs1.d1 = cs2.i4 AND cs2.i3 IS NOT NULL ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs2 LEFT JOIN cs1 ON cs1.d1 = cs2.i4 AND cs2.i3 IS NOT NULL ;
+
+# PrimProc-based composite key JOINs
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs1 LEFT JOIN cs2 ON cs1.d1 = cs2.i1 AND cs1.d2 = cs2.i2 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs2 LEFT JOIN cs1 ON cs1.d1 = cs2.i1 AND cs1.d2 = cs2.i2 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs1 LEFT JOIN cs2 ON cs1.d1 = cs2.i2 AND cs1.d2 = cs2.i3 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs2 LEFT JOIN cs1 ON cs1.d1 = cs2.i2 AND cs1.d2 = cs2.i3 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs1 LEFT JOIN cs2 ON cs1.d1 = cs2.i3 AND cs1.d2 = cs2.i4 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs2 LEFT JOIN cs1 ON cs1.d1 = cs2.i3 AND cs1.d2 = cs2.i4 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs1 LEFT JOIN cs2 ON cs1.d1 = cs2.i4 AND cs1.d2 = cs2.i3 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs2 LEFT JOIN cs1 ON cs1.d1 = cs2.i4 AND cs1.d2 = cs2.i3 ;
+
+# ExeMgr-based JOINs
+--sorted_result
+SELECT s1.*,s2.* FROM (SELECT * FROM cs1)s1 LEFT JOIN (SELECT * FROM cs2)s2 ON s1.d1=s2.i1 ;
+--sorted_result
+SELECT s1.*,s2.* FROM (SELECT * FROM cs2)s2 LEFT JOIN (SELECT * FROM cs1)s1 ON s1.d1=s2.i1 ;
+--sorted_result
+SELECT s1.*,s2.* FROM (SELECT * FROM cs1)s1 LEFT JOIN (SELECT * FROM cs2)s2 ON s1.d1=s2.i2 ;
+--sorted_result
+SELECT s1.*,s2.* FROM (SELECT * FROM cs2)s2 LEFT JOIN (SELECT * FROM cs1)s1 ON s1.d1=s2.i2 ;
+--sorted_result
+SELECT s1.*,s2.* FROM (SELECT * FROM cs1)s1 LEFT JOIN (SELECT * FROM cs2)s2 ON s1.d1=s2.i3 ;
+--sorted_result
+SELECT s1.*,s2.* FROM (SELECT * FROM cs2)s2 LEFT JOIN (SELECT * FROM cs1)s1 ON s1.d1=s2.i3 ;
+--sorted_result
+SELECT s1.*,s2.* FROM (SELECT * FROM cs1)s1 LEFT JOIN (SELECT * FROM cs2)s2 ON s1.d1=s2.i4 AND s2.i3 IS NOT NULL ;
+--sorted_result
+SELECT s1.*,s2.* FROM (SELECT * FROM cs2)s2 LEFT JOIN (SELECT * FROM cs1)s1 ON s1.d1=s2.i4 AND s2.i3 IS NOT NULL ;
+
+# Functional JOIN
+# Distributed PrimProc-based functional JOINs
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs1 LEFT JOIN cs2 ON cs1.d1-1 = cs2.i1-1 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs2 LEFT JOIN cs1 ON cs1.d1-1 = cs2.i1-1 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs1 LEFT JOIN cs2 ON cs1.d1-1 = cs2.i2-1 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs2 LEFT JOIN cs1 ON cs1.d1-1 = cs2.i2-1 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs1 LEFT JOIN cs2 ON cs1.d1-1 = cs2.i3-1 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs2 LEFT JOIN cs1 ON cs1.d1-1 = cs2.i3-1 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs1 LEFT JOIN cs2 ON cs1.d1-1 = cs2.i4-1 AND cs2.i3 IS NOT NULL ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs2 LEFT JOIN cs1 ON cs1.d1-1 = cs2.i4-1 AND cs2.i3 IS NOT NULL ;
+
+# PrimProc-based composite key JOINs
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs1 LEFT JOIN cs2 ON cs1.d1-1= cs2.i1-1 AND cs1.d2-1= cs2.i2-1 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs2 LEFT JOIN cs1 ON cs1.d1-1= cs2.i1-1 AND cs1.d2-1= cs2.i2-1 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs1 LEFT JOIN cs2 ON cs1.d1-1= cs2.i2-1 AND cs1.d2-1= cs2.i3-1 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs2 LEFT JOIN cs1 ON cs1.d1-1= cs2.i2-1 AND cs1.d2-1= cs2.i3-1 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs1 LEFT JOIN cs2 ON cs1.d1-1= cs2.i3-1 AND cs1.d2-1= cs2.i4-1 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs2 LEFT JOIN cs1 ON cs1.d1-1= cs2.i3-1 AND cs1.d2-1= cs2.i4-1 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs1 LEFT JOIN cs2 ON cs1.d1-1= cs2.i4-1 AND cs1.d2-1= cs2.i3-1 ;
+--sorted_result
+SELECT cs1.*, cs2.* FROM cs2 LEFT JOIN cs1 ON cs1.d1-1= cs2.i4-1 AND cs1.d2-1= cs2.i3-1 ;
+
+# ExeMgr-based JOINs
+--sorted_result
+SELECT s1.*,s2.* FROM (SELECT * FROM cs1)s1 LEFT JOIN (SELECT * FROM cs2)s2 ON s1.d1-1=s2.i1-1 ;
+--sorted_result
+SELECT s1.*,s2.* FROM (SELECT * FROM cs2)s2 LEFT JOIN (SELECT * FROM cs1)s1 ON s1.d1-1=s2.i1-1 ;
+--sorted_result
+SELECT s1.*,s2.* FROM (SELECT * FROM cs1)s1 LEFT JOIN (SELECT * FROM cs2)s2 ON s1.d1-1=s2.i2-1 ;
+--sorted_result
+SELECT s1.*,s2.* FROM (SELECT * FROM cs2)s2 LEFT JOIN (SELECT * FROM cs1)s1 ON s1.d1-1=s2.i2-1 ;
+--sorted_result
+SELECT s1.*,s2.* FROM (SELECT * FROM cs1)s1 LEFT JOIN (SELECT * FROM cs2)s2 ON s1.d1-1=s2.i3-1 ;
+--sorted_result
+SELECT s1.*,s2.* FROM (SELECT * FROM cs2)s2 LEFT JOIN (SELECT * FROM cs1)s1 ON s1.d1-1=s2.i3-1 ;
+--sorted_result
+SELECT s1.*,s2.* FROM (SELECT * FROM cs1)s1 LEFT JOIN (SELECT * FROM cs2)s2 ON s1.d1-1=s2.i4-1 AND s2.i3 IS NOT NULL ;
+--sorted_result
+SELECT s1.*,s2.* FROM (SELECT * FROM cs2)s2 LEFT JOIN (SELECT * FROM cs1)s1 ON s1.d1-1=s2.i4-1 AND s2.i3 IS NOT NULL ;
+
+# Misc skewed JOIN
+
+CREATE TABLE t1 (a DECIMAL(10,1), b DECIMAL(20,1));
+INSERT INTO t1 VALUES (10.1,20.1);
+CREATE TABLE t2 (a DECIMAL(20,1), b DECIMAL(10,1));
+INSERT INTO t2 VALUES (10.1,20.1);
+SELECT * FROM t1,t2 WHERE t1.a=t2.a AND t1.b=t2.b;
+
+DROP TABLE t1,t2;
+CREATE TABLE t1 (a CHAR(10), b DECIMAL(10,1));
+INSERT INTO t1 VALUES (10.1,20.1);
+CREATE TABLE t2 (a CHAR(10), b DECIMAL(20,1));
+INSERT INTO t2 VALUES (10.1,20.1);
+SELECT * FROM t1,t2 WHERE t1.a=t2.a AND t1.b=t2.b;
+SELECT * FROM t2,t1 WHERE t1.a=t2.a AND t1.b=t2.b;
+
+DROP TABLE t1,t2;
+CREATE TABLE t1 (a DECIMAL(10,1), b CHAR(10));
+INSERT INTO t1 VALUES (10.1,20.1);
+CREATE TABLE t2 (a DECIMAL(20,1), b CHAR(10));
+INSERT INTO t2 VALUES (10.1,20.1);
+SELECT * FROM t1,t2 WHERE t1.a=t2.a AND t1.b=t2.b;
+SELECT * FROM t2,t1 WHERE t1.a=t2.a AND t1.b=t2.b;
+
+SELECT * FROM t2,t1 WHERE (t1.a,t1.b)=(t2.a,t2.b);
+SELECT * FROM t1,t2 WHERE (t1.a,t1.b)=(t2.a,t2.b);
+
+SELECT * FROM t1 JOIN t2 USING (a,b);
+SELECT * FROM t2 JOIN t1 USING (a,b);
+
+# Testing the max number of skewed columns in a join.
+DROP TABLE t1,t2;
+CREATE TABLE t1 (a DECIMAL(10,1), b DECIMAL(20,1),a1 DECIMAL(10,1), b1 DECIMAL(20,1),a2 DECIMAL(10,1), b2 DECIMAL(20,1),a3 DECIMAL(10,1), b3 DECIMAL(20,1),a4 DECIMAL(10,1), b4 DECIMAL(20,1),a5 DECIMAL(10,1));
+INSERT INTO t1 VALUES (10.1,20.1,10.1,20.1,10.1,20.1,10.1,20.1,10.1,20.1,10.1);
+CREATE TABLE t2 (a DECIMAL(20,1), b DECIMAL(10,1),a1 DECIMAL(20,1), b1 DECIMAL(10,1),a2 DECIMAL(20,1), b2 DECIMAL(10,1),a3 DECIMAL(20,1), b3 DECIMAL(10,1),a4 DECIMAL(20,1), b4 DECIMAL(10,1),a5 DECIMAL(20,1));
+INSERT INTO t2 VALUES (10.1,20.1,10.1,20.1,10.1,20.1,10.1,20.1,10.1,20.1,10.1);
+# These work b/c the max is 10 columns.
+SELECT * FROM t1 INNER JOIN t2 USING(a,b,a1,b1,a2,b2,a3,b3,a4);
+SELECT * FROM t2 INNER JOIN t1 USING(a,b,a1,b1,a2,b2,a3,b3,a4);
+# These do not.
+#SELECT * FROM t1 INNER JOIN t2 USING(a,b,a1,b1,a2,b2,a3,b3,a4,b4,a5);
+#SELECT * FROM t1 INNER JOIN t2 USING(a,b,a1,b1,a2,b2,a3,b3,a4,b4,a5);
+
+# Mixing skewed columns with non-skewed.
+DROP TABLE t1,t2;
+CREATE TABLE t1 (a DECIMAL(10,1), t text, b DECIMAL(20,1), i1 int, a1 DECIMAL(10,1), b1 DECIMAL(20,1),a2 DECIMAL(10,1), b2 DECIMAL(20,1),a3 DECIMAL(10,1), b3 DECIMAL(20,1),a4 DECIMAL(10,1), b4 DECIMAL(20,1),a5 DECIMAL(10,1));
+INSERT INTO t1 VALUES (10.1,'some',20.1,42,10.1,20.1,10.1,20.1,10.1,20.1,10.1,20.1,10.1);
+CREATE TABLE t2 (a DECIMAL(20,1), b DECIMAL(10,1), t text, a1 DECIMAL(20,1), i1 int, b1 DECIMAL(10,1),a2 DECIMAL(20,1), b2 DECIMAL(10,1),a3 DECIMAL(20,1), b3 DECIMAL(10,1),a4 DECIMAL(20,1), b4 DECIMAL(10,1),a5 DECIMAL(20,1));
+INSERT INTO t2 VALUES (10.1,20.1,'some',10.1,42,20.1,10.1,20.1,10.1,20.1,10.1,20.1,10.1);
+
+# These work b/c the max is 10 columns.
+SELECT * FROM t1 INNER JOIN t2 USING(a,b,a1,b1,a2,b2,a3,b3,a4,b4,t,i1);
+SELECT * FROM t2 INNER JOIN t1 USING(a,b,a1,b1,a2,b2,a3,b3,a4,b4,t,i1);
+# These do not.
+#SELECT * FROM t1 INNER JOIN t2 USING(a,b,a1,b1,a2,b2,a3,b3,a4,b4,a5,t,i1);
+#SELECT * FROM t2 INNER JOIN t1 USING(a,b,a1,b1,a2,b2,a3,b3,a4,b4,a5,t,i1);
+
+SELECT t1.a,t1.t,t1.i1 FROM t1 INNER JOIN (SELECT * from t2) s1 USING(a,b);
+SELECT t2.a,t2.t,s1.i1 FROM t2 INNER JOIN (SELECT * from t1) s1 USING(a,b);
+SELECT t1.a,t1.t,t1.i1 FROM t1 INNER JOIN (SELECT * from t2) s1 where t1.a+1=s1.a+1 and t1.b+1=s1.b+1;
+SELECT t2.a,t2.t,t2.i1 FROM t2 INNER JOIN (SELECT * from t1) s1 where t2.a+1=s1.a+1 and t2.b+1=s1.b+1;
+
+# Clean UP
+DROP DATABASE mcol641_joins_db;

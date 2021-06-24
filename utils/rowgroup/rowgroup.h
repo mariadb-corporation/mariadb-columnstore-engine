@@ -131,6 +131,16 @@ const int16_t rgCommonSize = 8192;
 #pragma warning (disable : 4200)
 #endif
 
+// Helper to get a value from nested vector pointers.
+template<typename T>
+inline T derefFromTwoVectorPtrs(const std::vector<T>* outer,
+                         const std::vector<T>* inner,
+                         const T innerIdx)
+{
+    auto outerIdx = inner->operator[](innerIdx);
+    return outer->operator[](outerIdx); 
+}
+
 class StringStore
 {
 public:
@@ -434,6 +444,7 @@ public:
                                   getPrecision(colIndex));
     }
     inline long double getLongDoubleField(uint32_t colIndex) const;
+    inline void storeInt128FieldIntoPtr(uint32_t colIndex, uint8_t* x) const;
     inline void getInt128Field(uint32_t colIndex, int128_t& x) const;
     inline datatypes::TSInt128 getTSInt128Field(uint32_t colIndex) const;
 
@@ -559,12 +570,17 @@ public:
     inline uint64_t hash(uint32_t lastCol) const;  // generates a hash for cols [0-lastCol]
     inline uint64_t hash() const;  // generates a hash for all cols
     inline void colUpdateMariaDBHasher(datatypes::MariaDBHasher &hasher, uint32_t col) const;
-    inline void colUpdateMariaDBHasherTypeless(datatypes::MariaDBHasher &hasher, uint32_t col) const;
-    inline uint64_t hashTypeless(const std::vector<uint32_t>& keyCols) const
+    inline void colUpdateMariaDBHasherTypeless(datatypes::MariaDBHasher &hasher, uint32_t keyColsIdx,
+                                               const std::vector<uint32_t>& keyCols,
+                                               const std::vector<uint32_t>* smallSideKeyColumnsIds,
+                                               const std::vector<uint32_t>* smallSideColumnsWidths) const;
+    inline uint64_t hashTypeless(const std::vector<uint32_t>& keyCols,
+                                 const std::vector<uint32_t>* smallSideKeyColumnsIds,
+                                 const std::vector<uint32_t>* smallSideColumnsWidths) const
     {
         datatypes::MariaDBHasher h;
         for (uint32_t i = 0; i < keyCols.size(); i++)
-            colUpdateMariaDBHasherTypeless(h, keyCols[i]);
+            colUpdateMariaDBHasherTypeless(h, i, keyCols, smallSideKeyColumnsIds, smallSideColumnsWidths);
         return h.finalize();
     }
 
@@ -950,37 +966,71 @@ inline void Row::colUpdateMariaDBHasher(datatypes::MariaDBHasher &h, uint32_t co
 }
 
 
-inline void Row::colUpdateMariaDBHasherTypeless(datatypes::MariaDBHasher &h, uint32_t col) const
+inline void Row::colUpdateMariaDBHasherTypeless(datatypes::MariaDBHasher &h, uint32_t keyColsIdx,
+                                                const std::vector<uint32_t>& keyCols,
+                                                const std::vector<uint32_t>* smallSideKeyColumnsIds,
+                                                const std::vector<uint32_t>* smallSideColumnsWidths) const
 {
-    switch (getColType(col))
+    auto rowKeyColIdx = keyCols[keyColsIdx];
+    auto largeSideColType = getColType(rowKeyColIdx);
+    switch (largeSideColType)
     {
         case datatypes::SystemCatalog::CHAR:
         case datatypes::SystemCatalog::VARCHAR:
         case datatypes::SystemCatalog::BLOB:
         case datatypes::SystemCatalog::TEXT:
         {
-            CHARSET_INFO *cs = getCharset(col);
-            h.add(cs, getConstString(col));
+            CHARSET_INFO *cs = getCharset(rowKeyColIdx);
+            h.add(cs, getConstString(rowKeyColIdx));
+            break;
+        }
+        case datatypes::SystemCatalog::DECIMAL:
+        {
+            auto width = getColumnWidth(rowKeyColIdx);
+            if (datatypes::isWideDecimalType(largeSideColType,
+                                             width))
+            {
+                bool joinHasSkewedKeyColumn = (smallSideColumnsWidths);
+                datatypes::TSInt128 val = getTSInt128Field(rowKeyColIdx);
+                if (joinHasSkewedKeyColumn &&
+                    width != derefFromTwoVectorPtrs(smallSideColumnsWidths, smallSideKeyColumnsIds, keyColsIdx))
+                {
+                    if (val.getValue() >= std::numeric_limits<int64_t>::min() &&
+                        val.getValue() <= std::numeric_limits<uint64_t>::max())
+                    {
+                        h.add(&my_charset_bin, (const char*)&val.getValue(), datatypes::MAXLEGACYWIDTH);
+                    }
+                    else
+                        h.add(&my_charset_bin, (const char*)&val.getValue(), datatypes::MAXDECIMALWIDTH);
+                }
+                else
+                    h.add(&my_charset_bin, (const char*)&val.getValue(), datatypes::MAXDECIMALWIDTH);
+            }
+            else
+            {
+                int64_t val = getIntField(rowKeyColIdx);
+                h.add(&my_charset_bin, (const char*) &val, datatypes::MAXLEGACYWIDTH);
+            }
+
             break;
         }
         default:
         {
-            if (isUnsigned(col))
+            if (isUnsigned(rowKeyColIdx))
             {
-                uint64_t tb = getUintField(col);
-                h.add(&my_charset_bin, (const char*) &tb, 8);
+                uint64_t val = getUintField(rowKeyColIdx);
+                h.add(&my_charset_bin, (const char*) &val, datatypes::MAXLEGACYWIDTH);
             }
             else
             {
-                int64_t val = getIntField(col);
-                h.add(&my_charset_bin, (const char*) &val, 8);
+                int64_t val = getIntField(rowKeyColIdx);
+                h.add(&my_charset_bin, (const char*) &val, datatypes::MAXLEGACYWIDTH);
             }
 
             break;
         }
     }
 }
-
 
 inline void Row::setStringField(const uint8_t* strdata, uint32_t length, uint32_t colIndex)
 {
@@ -1094,6 +1144,11 @@ inline float Row::getFloatField(uint32_t colIndex) const
 inline long double Row::getLongDoubleField(uint32_t colIndex) const
 {
     return *((long double*) &data[offsets[colIndex]]);
+}
+
+inline void Row::storeInt128FieldIntoPtr(uint32_t colIndex, uint8_t* x) const
+{
+    datatypes::TSInt128::assignPtrPtr(x, &data[offsets[colIndex]]);
 }
 
 inline void Row::getInt128Field(uint32_t colIndex, int128_t& x) const
@@ -1488,6 +1543,8 @@ public:
 
     /** @brief Assignment operator.  It copies metadata, not the row data */
     RowGroup& operator=(const RowGroup&);
+
+    explicit RowGroup(messageqcpp::ByteStream& bs);
 
     ~RowGroup();
 

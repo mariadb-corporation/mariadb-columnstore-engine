@@ -7,6 +7,10 @@ DROP DATABASE IF EXISTS mcol641_joins_db;
 CREATE DATABASE mcol641_joins_db;
 USE mcol641_joins_db;
 
+--disable_query_log
+SET default_storage_engine=ColumnStore;
+--enable_query_log
+
 CREATE TABLE cs1 (d1 DECIMAL(38), d2 DECIMAL(38,10), d3 DECIMAL(38,38)) ENGINE=columnstore;
 CREATE TABLE cs2 (de1 DECIMAL(38,38), de2 DECIMAL(38,10)) ENGINE=columnstore;
 
