@@ -1789,7 +1789,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
             pUDAFFunc = NULL;
             uint32_t aggKey = aggColVec[i].first;
             aggOp = functionIdMap(aggColVec[i].second);
-            RowAggFunctionType stats = statsFuncIdMap(aggOp);
+            RowAggFunctionType stats = statsFuncIdMap(aggColVec[i].second);
 
             // Save the op for MULTI_PARM exclusion when COUNT(DISTINCT)
             if (aggOp != ROWAGG_MULTI_PARM)
@@ -2788,7 +2788,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
             scaleAggSub.push_back(scaleProj[j]);
             precisionAggSub.push_back(precisionProj[j]);
             typeAggSub.push_back(typeProj[j]);
-            csNumAggSub.push_back(csNumProj[i]);
+            csNumAggSub.push_back(csNumProj[j]);
             widthAggSub.push_back(widthProj[j]);
 
             // construct groupby vector
@@ -2810,6 +2810,8 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
             {
                 ++i;
                 uint32_t dColKey = -1;
+                j = -1;
+
                 // Find the entry in distinctColVec, if any
                 for (k = 0; k < jobInfo.distinctColVec.size(); k++)
                 {
@@ -2835,7 +2837,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                 scaleAggSub.push_back(scaleProj[j]);
                 precisionAggSub.push_back(precisionProj[j]);
                 typeAggSub.push_back(typeProj[j]);
-                csNumAggSub.push_back(csNumProj[i]);
+                csNumAggSub.push_back(csNumProj[j]);
                 widthAggSub.push_back(widthProj[j]);
 
                 SP_ROWAGG_GRPBY_t groupby(new RowAggGroupByCol(j, k));
@@ -5003,7 +5005,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
             scaleAggSub.push_back(scaleAggUm[j]);
             precisionAggSub.push_back(precisionAggUm[j]);
             typeAggSub.push_back(typeAggUm[j]);
-            csNumAggSub.push_back(csNumAggUm[i]);
+            csNumAggSub.push_back(csNumAggUm[j]);
             widthAggSub.push_back(widthAggUm[j]);
 
             // construct groupby vector
@@ -5025,6 +5027,8 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
             {
                 ++i;
                 uint32_t dColKey = -1;
+                j = -1;
+                
                 // Find the entry in distinctColVec, if any
                 for (k = 0; k < jobInfo.distinctColVec.size(); k++)
                 {
@@ -5050,7 +5054,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                 scaleAggSub.push_back(scaleAggUm[j]);
                 precisionAggSub.push_back(precisionAggUm[j]);
                 typeAggSub.push_back(typeAggUm[j]);
-                csNumAggSub.push_back(csNumAggUm[i]);
+                csNumAggSub.push_back(csNumAggUm[j]);
                 widthAggSub.push_back(widthAggUm[j]);
 
                 SP_ROWAGG_GRPBY_t groupby(new RowAggGroupByCol(j, k));
