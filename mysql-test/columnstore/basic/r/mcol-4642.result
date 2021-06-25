@@ -1,0 +1,49 @@
+#
+# MCOL-4642 NOT IN subquery containing an isnull in the OR predicate crashes server
+#
+DROP DATABASE IF EXISTS mcol4642;
+CREATE DATABASE mcol4642;
+USE mcol4642;
+CREATE TABLE cs1 (a int);
+INSERT INTO cs1 VALUES (1), (2), (3), (4), (null);
+CREATE TABLE cs2 (b int, c int);
+INSERT INTO cs2 VALUES (1, 100), (1, 101), (2, 200),(3, 300), (3, 301), (3, 302), (null, null);
+SELECT * FROM cs1 WHERE a NOT IN (SELECT b FROM cs2 WHERE b is not null OR b is null);
+a
+SELECT * FROM cs1 WHERE a NOT IN (SELECT b FROM cs2 WHERE b is null OR b is not null);
+a
+SELECT * FROM cs1 WHERE a IN (SELECT b FROM cs2 WHERE b is not null OR b is null);
+a
+1
+2
+3
+SELECT * FROM cs1 WHERE a IN (SELECT b FROM cs2 WHERE b is null OR b is not null);
+a
+1
+2
+3
+SELECT * FROM cs1 WHERE a NOT IN (SELECT b FROM cs2 WHERE b=123 OR b is null);
+a
+SELECT * FROM cs1 WHERE a NOT IN (SELECT b FROM cs2 WHERE b is null OR b=123);
+a
+SELECT * FROM cs1 WHERE a IN (SELECT b FROM cs2 WHERE b=123 OR b is null);
+a
+SELECT * FROM cs1 WHERE a IN (SELECT b FROM cs2 WHERE b is null OR b=123);
+a
+SELECT * FROM cs1 WHERE a NOT IN (SELECT b FROM cs2 WHERE b=123 OR b is not null);
+a
+4
+SELECT * FROM cs1 WHERE a NOT IN (SELECT b FROM cs2 WHERE b is not null OR b=123);
+a
+4
+SELECT * FROM cs1 WHERE a IN (SELECT b FROM cs2 WHERE b=123 OR b is not null);
+a
+1
+2
+3
+SELECT * FROM cs1 WHERE a IN (SELECT b FROM cs2 WHERE b is not null OR b=123);
+a
+1
+2
+3
+DROP DATABASE mcol4642;
