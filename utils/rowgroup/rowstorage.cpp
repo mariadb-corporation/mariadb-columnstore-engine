@@ -658,19 +658,6 @@ public:
     fLRU->clear();
     fMM->release();
     fRGDatas.clear();
-
-    // we need at least one RGData so create it right now
-    auto* curRG = new RGData(*fRowGroupOut, fMaxRows);
-    fRowGroupOut->setData(curRG);
-    fRowGroupOut->resetRowGroup(0);
-    fRGDatas.emplace_back(curRG);
-    auto memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
-    if (!fMM->acquire(memSz))
-    {
-      throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
-          logging::ERR_AGGREGATION_TOO_BIG),
-                               logging::ERR_AGGREGATION_TOO_BIG);
-    }
     ++fGeneration;
   }
 
