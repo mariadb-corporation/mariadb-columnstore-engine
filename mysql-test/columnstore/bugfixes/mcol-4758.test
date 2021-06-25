@@ -17,6 +17,3 @@ select * from src where c0=1 and substr(cLT, 1, 4)="This";
 
 # cleanup
 DROP DATABASE `mcol_4758`;
-
-
-

@@ -1,0 +1,27 @@
+--source ../include/have_columnstore.inc
+--disable_warnings
+DROP DATABASE IF EXISTS `mcol_3879`;
+--enable_warnings
+CREATE DATABASE `mcol_3879`;
+USE `mcol_3879`;
+
+create table t1 (
+    id bigint(20) DEFAULT NULL,
+    v1 varchar(32) DEFAULT NULL,
+    v2 varchar(100) DEFAULT NULL,
+    json1 longtext DEFAULT NULL,
+    json2 longtext DEFAULT NULL,
+    json3 longtext DEFAULT NULL)
+    ENGINE = COLUMNSTORE
+    DEFAULT CHARSET utf8mb4;
+
+insert into t1 (id,  v1,  v2) values (1, "DUP", "This is a test of a bug 1"), 
+                                     (2, "REF", "This is a test of a bug 2"), 
+                                     (1002, "REF", "This is a test of a bug 3"), 
+                                     (1002, "DUP", "This is a test of a bug 4"), 
+                                     (5, "dup", "This is a test of a bug 5");
+
+select * from t1 where v1 = "DUP" and id <> 1002;
+
+# cleanup
+DROP DATABASE `mcol_3879`;
