@@ -123,7 +123,7 @@ if __name__ == '__main__':
             if use_systemd:
                 args = ['su', '-s', '/bin/sh', '-c', '{} {}'.format(SMCAT, s3_dbroot1_brm_path), USER]
             else:
-                args = [smcat, s3_dbroot1_brm_path]
+                args = [SMCAT, s3_dbroot1_brm_path]
 
             brm_saves_current = subprocess.check_output(args)
         except subprocess.CalledProcessError as e:
