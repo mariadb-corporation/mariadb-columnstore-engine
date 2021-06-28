@@ -1782,12 +1782,18 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
         }
 
         // vectors for aggregate functions
+        RowAggFunctionType aggOp = ROWAGG_FUNCT_UNDEFINE;
+        RowAggFunctionType prevAggOp = ROWAGG_FUNCT_UNDEFINE;
         for (uint64_t i = 0; i < aggColVec.size(); i++)
         {
             pUDAFFunc = NULL;
             uint32_t aggKey = aggColVec[i].first;
-            RowAggFunctionType aggOp = functionIdMap(aggColVec[i].second);
+            aggOp = functionIdMap(aggColVec[i].second);
             RowAggFunctionType stats = statsFuncIdMap(aggColVec[i].second);
+
+            // Save the op for MULTI_PARM exclusion when COUNT(DISTINCT)
+            if (aggOp != ROWAGG_MULTI_PARM)
+                prevAggOp = aggOp;
 
             // skip if this is a constant
             if (aggOp == ROWAGG_CONSTANT)
@@ -1829,9 +1835,12 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                 throw logic_error(emsg.str());
             }
 
+            // We skip distinct aggs, including extra parms. These are handled by adding them to group by list above.
             if (aggOp == ROWAGG_DISTINCT_SUM ||
                     aggOp == ROWAGG_DISTINCT_AVG ||
                     aggOp == ROWAGG_COUNT_DISTINCT_COL_NAME)
+                continue;
+            if (aggOp == ROWAGG_MULTI_PARM && prevAggOp == ROWAGG_COUNT_DISTINCT_COL_NAME)
                 continue;
 
             uint64_t colProj = projColPosMap[aggKey];
@@ -2103,7 +2112,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                             funct->fpConstCol = udafc->aggParms()[udafcParamIdx];
                         }
                     }
-                    else
+                    else if (prevAggOp != ROWAGG_COUNT_DISTINCT_COL_NAME)
                     {
                         throw QueryDataExcept("prep1PhaseDistinctAggregate: UDAF multi function with no parms", aggregateFuncErr);
                     }
@@ -2522,6 +2531,8 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                         funct->fAggFunction = ROWAGG_DUP_STATS;
                     else if (funct->fAggFunction == ROWAGG_UDAF)
                         funct->fAggFunction = ROWAGG_DUP_UDAF;
+                    else if (funct->fAggFunction == ROWAGG_COUNT_DISTINCT_COL_NAME)  // Don't track dup for this one. Gets confused when multi-parm.
+                    {}    
                     else
                         funct->fAggFunction = ROWAGG_DUP_FUNCT;
 
@@ -2724,13 +2735,36 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
         // for distinct, each column requires seperate rowgroup
         vector<SP_ROWAGG_DIST> rowAggSubDistVec;
 
-        for (uint64_t i = 0; i < jobInfo.distinctColVec.size(); i++)
+        uint32_t distinctColKey;
+        int64_t j;
+        uint64_t k;
+        uint64_t outIdx = 0;
+        for (uint64_t i = 0; i < returnedColVec.size(); i++)
         {
-            uint32_t distinctColKey = jobInfo.distinctColVec[i];
-            uint64_t j = -1;
+            if (returnedColVec[i].second == 0)
+            {
+                ++outIdx;
+                continue;
+            }
 
+            j = -1;
+
+            distinctColKey = -1;
+            // Find the entry in distinctColVec, if any
+            for (k = 0; k < jobInfo.distinctColVec.size(); k++)
+            {
+                distinctColKey = jobInfo.distinctColVec[k];
+                if (returnedColVec[i].first  == distinctColKey)
+                    break;
+                
+            }
+            if (distinctColKey == (uint32_t)-1)
+            {
+                ++outIdx;
+                continue;
+            }
             // locate the distinct key in the row group
-            for (uint64_t k = 0; k < keysAgg.size(); k++)
+            for (k = 0; k < keysAgg.size(); k++)
             {
                 if (keysProj[k] == distinctColKey)
                 {
@@ -2739,7 +2773,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                 }
             }
 
-            idbassert(j != (uint64_t) - 1);
+            idbassert(j != -1);
 
             oidsAggSub = oidsAggGb;
             keysAggSub = keysAggGb;
@@ -2757,20 +2791,9 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
             csNumAggSub.push_back(csNumProj[j]);
             widthAggSub.push_back(widthProj[j]);
 
-            // construct sub-rowgroup
-            posAggSub.clear();
-            posAggSub.push_back(2);   // rid
-
-            for (uint64_t k = 0; k < oidsAggSub.size(); k++)
-                posAggSub.push_back(posAggSub[k] + widthAggSub[k]);
-
-            RowGroup subRg(oidsAggSub.size(), posAggSub, oidsAggSub, keysAggSub, typeAggSub,
-                           csNumAggSub, scaleAggSub, precisionAggSub, jobInfo.stringTableThreshold);
-            subRgVec.push_back(subRg);
-
             // construct groupby vector
             vector<SP_ROWAGG_GRPBY_t> groupBySub;
-            uint64_t k = 0;
+            k = 0;
 
             while (k < jobInfo.groupByColVec.size())
             {
@@ -2778,10 +2801,59 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                 groupBySub.push_back(groupby);
                 k++;
             }
-
             // add the distinct column as groupby
             SP_ROWAGG_GRPBY_t groupby(new RowAggGroupByCol(j, k));
             groupBySub.push_back(groupby);
+
+           // Add multi parm distinct
+            while ((i+1) < returnedColVec.size() && functionIdMap(returnedColVec[i+1].second) == ROWAGG_MULTI_PARM)
+            {
+                ++i;
+                uint32_t dColKey = -1;
+                j = -1;
+
+                // Find the entry in distinctColVec, if any
+                for (k = 0; k < jobInfo.distinctColVec.size(); k++)
+                {
+                    dColKey = jobInfo.distinctColVec[k];
+                    if (returnedColVec[i].first  == dColKey)
+                        break;
+                    
+                }
+                idbassert(dColKey != (uint32_t)-1);
+                // locate the distinct key in the row group
+                for (k = 0; k < keysAgg.size(); k++)
+                {
+                    if (keysProj[k] == dColKey)
+                    {
+                        j = k;
+                        break;
+                    }
+                }
+                idbassert(j != -1);
+
+                oidsAggSub.push_back(oidsProj[j]);
+                keysAggSub.push_back(keysProj[j]);
+                scaleAggSub.push_back(scaleProj[j]);
+                precisionAggSub.push_back(precisionProj[j]);
+                typeAggSub.push_back(typeProj[j]);
+                csNumAggSub.push_back(csNumProj[j]);
+                widthAggSub.push_back(widthProj[j]);
+
+                SP_ROWAGG_GRPBY_t groupby(new RowAggGroupByCol(j, k));
+                groupBySub.push_back(groupby);
+            }
+
+            // construct sub-rowgroup
+            posAggSub.clear();
+            posAggSub.push_back(2);   // rid
+
+            for ( k = 0; k < oidsAggSub.size(); k++)
+                posAggSub.push_back(posAggSub[k] + widthAggSub[k]);
+
+            RowGroup subRg(oidsAggSub.size(), posAggSub, oidsAggSub, keysAggSub, typeAggSub,
+                           csNumAggSub, scaleAggSub, precisionAggSub, jobInfo.stringTableThreshold);
+            subRgVec.push_back(subRg);
 
             // Keep a count of the parms after the first for any aggregate.
             // These will be skipped and the count needs to be subtracted
@@ -2792,37 +2864,26 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
             //   -- dummy function vector for sub-aggregator, which does distinct only
             //   -- aggregate function on this distinct column for rowAggDist
             vector<SP_ROWAGG_FUNC_t> functionSub1, functionSub2;
+            // search the function in functionVec
+            vector<SP_ROWAGG_FUNC_t>::iterator it = functionVec2.begin();
 
-            for (uint64_t k = 0; k < returnedColVec.size(); k++)
+            while (it != functionVec2.end())
             {
-                if (functionIdMap(returnedColVec[i].second) == ROWAGG_MULTI_PARM)
+                SP_ROWAGG_FUNC_t f = *it++;
+
+                if ((f->fOutputColumnIndex == outIdx) &&
+                        (f->fAggFunction == ROWAGG_COUNT_DISTINCT_COL_NAME ||
+                         f->fAggFunction == ROWAGG_DISTINCT_SUM ||
+                         f->fAggFunction == ROWAGG_DISTINCT_AVG))
                 {
-                    ++multiParms;
-                    continue;
-                }
-                if (returnedColVec[k].first != distinctColKey)
-                    continue;
-
-                // search the function in functionVec
-                vector<SP_ROWAGG_FUNC_t>::iterator it = functionVec2.begin();
-
-                while (it != functionVec2.end())
-                {
-                    SP_ROWAGG_FUNC_t f = *it++;
-
-                    if ((f->fOutputColumnIndex == k) &&
-                            (f->fAggFunction == ROWAGG_COUNT_DISTINCT_COL_NAME ||
-                             f->fAggFunction == ROWAGG_DISTINCT_SUM ||
-                             f->fAggFunction == ROWAGG_DISTINCT_AVG))
-                    {
-                        SP_ROWAGG_FUNC_t funct(new RowAggFunctionCol(
-                                                   f->fAggFunction,
-                                                   f->fStatsFunction,
-                                                   groupBySub.size() - 1,
-                                                   f->fOutputColumnIndex,
-                                                   f->fAuxColumnIndex-multiParms));
-                        functionSub2.push_back(funct);
-                    }
+                    SP_ROWAGG_FUNC_t funct(
+                        new RowAggFunctionCol(
+                            f->fAggFunction,
+                            f->fStatsFunction,
+                            groupBySub.size() - 1,
+                            f->fOutputColumnIndex,
+                            f->fAuxColumnIndex-multiParms));
+                    functionSub2.push_back(funct);
                 }
             }
 
@@ -2834,6 +2895,8 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 
             // add to rowAggDist
             multiDistinctAggregator->addSubAggregator(subAgg, subRg, functionSub2);
+
+            ++outIdx;
         }
 
         // cover any non-distinct column functions
@@ -3968,11 +4031,17 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
         }
 
         // vectors for aggregate functions
+        RowAggFunctionType aggOp = ROWAGG_FUNCT_UNDEFINE;
+        RowAggFunctionType prevAggOp = ROWAGG_FUNCT_UNDEFINE;
         for (uint64_t i = 0; i < aggColVec.size(); i++)
         {
-            // skip on PM if this is a constant
-            RowAggFunctionType aggOp = functionIdMap(aggColVec[i].second);
+            aggOp = functionIdMap(aggColVec[i].second);
 
+            // Save the op for MULTI_PARM exclusion when COUNT(DISTINCT)
+            if (aggOp != ROWAGG_MULTI_PARM)
+                prevAggOp = aggOp;
+
+            // skip on PM if this is a constant
             if (aggOp == ROWAGG_CONSTANT)
                 continue;
 
@@ -3994,17 +4063,21 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                 throw logic_error(emsg.str());
             }
 
-            RowAggFunctionType stats = statsFuncIdMap(aggColVec[i].second);
+            RowAggFunctionType stats = statsFuncIdMap(aggOp);
 
             // skip sum / count(column) if avg is also selected
             if ((aggOp == ROWAGG_SUM || aggOp == ROWAGG_COUNT_COL_NAME) &&
                     (avgSet.find(aggKey) != avgSet.end()))
                 continue;
 
+            // We skip distinct aggs, including extra parms. These are handled by adding them to group by list above.
             if (aggOp == ROWAGG_DISTINCT_SUM ||
                     aggOp == ROWAGG_DISTINCT_AVG ||
                     aggOp == ROWAGG_COUNT_DISTINCT_COL_NAME)
                 continue;
+            if (aggOp == ROWAGG_MULTI_PARM && prevAggOp == ROWAGG_COUNT_DISTINCT_COL_NAME)
+                continue;
+            
 
             uint64_t colProj = projColPosMap[aggKey];
             SP_ROWAGG_FUNC_t funct;
@@ -4273,7 +4346,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                             funct->fpConstCol = udafc->aggParms()[udafcParamIdx];
                         }
                     }
-                    else
+                    else if (prevAggOp != ROWAGG_COUNT_DISTINCT_COL_NAME)
                     {
                         throw QueryDataExcept("prep2PhasesDistinctAggregate: UDAF multi function with no parms", aggregateFuncErr);
                     }
@@ -4682,6 +4755,8 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                         funct->fAggFunction = ROWAGG_DUP_STATS;
                     else if (funct->fAggFunction == ROWAGG_UDAF)
                         funct->fAggFunction = ROWAGG_DUP_UDAF;
+                    else if (funct->fAggFunction == ROWAGG_COUNT_DISTINCT_COL_NAME)  // Don't track dup for this one. Gets confused when multi-parm.
+                    {}    
                     else
                         funct->fAggFunction = ROWAGG_DUP_FUNCT;
 
@@ -4874,16 +4949,39 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
             widthAggGb.push_back(widthAggUm[i]);
         }
 
-        // for distinct, each column requires seperate rowgroup
+        // for distinct, each column requires a seperate rowgroup
         vector<SP_ROWAGG_DIST> rowAggSubDistVec;
 
-        for (uint64_t i = 0; i < jobInfo.distinctColVec.size(); i++)
+        uint32_t distinctColKey;
+        int64_t j;
+        uint64_t k;
+        uint64_t outIdx = 0;
+        for (uint64_t i = 0; i < returnedColVec.size(); i++)
         {
-            uint32_t distinctColKey = jobInfo.distinctColVec[i];
-            uint64_t j = -1;
+            if (returnedColVec[i].second == 0)
+            {
+                ++outIdx;
+                continue;
+            }
 
+            j = -1;
+
+            distinctColKey = -1;
+            // Find the entry in distinctColVec, if any
+            for (k = 0; k < jobInfo.distinctColVec.size(); k++)
+            {
+                distinctColKey = jobInfo.distinctColVec[k];
+                if (returnedColVec[i].first  == distinctColKey)
+                    break;
+                
+            }
+            if (distinctColKey == (uint32_t)-1)
+            {
+                ++outIdx;
+                continue;
+            }
             // locate the distinct key in the row group
-            for (uint64_t k = 0; k < keysAggUm.size(); k++)
+            for (k = 0; k < keysAggUm.size(); k++)
             {
                 if (keysAggUm[k] == distinctColKey)
                 {
@@ -4892,7 +4990,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                 }
             }
 
-            idbassert(j != (uint64_t) - 1);
+            idbassert(j != -1);
 
             oidsAggSub = oidsAggGb;
             keysAggSub = keysAggGb;
@@ -4907,23 +5005,12 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
             scaleAggSub.push_back(scaleAggUm[j]);
             precisionAggSub.push_back(precisionAggUm[j]);
             typeAggSub.push_back(typeAggUm[j]);
-            csNumAggSub.push_back(csNumAggUm[i]);
+            csNumAggSub.push_back(csNumAggUm[j]);
             widthAggSub.push_back(widthAggUm[j]);
-
-            // construct sub-rowgroup
-            posAggSub.clear();
-            posAggSub.push_back(2);   // rid
-
-            for (uint64_t k = 0; k < oidsAggSub.size(); k++)
-                posAggSub.push_back(posAggSub[k] + widthAggSub[k]);
-
-            RowGroup subRg(oidsAggSub.size(), posAggSub, oidsAggSub, keysAggSub, typeAggSub,
-                           csNumAggSub, scaleAggSub, precisionAggSub, jobInfo.stringTableThreshold);
-            subRgVec.push_back(subRg);
 
             // construct groupby vector
             vector<SP_ROWAGG_GRPBY_t> groupBySub;
-            uint64_t k = 0;
+            k = 0;
 
             while (k < jobInfo.groupByColVec.size())
             {
@@ -4931,10 +5018,59 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                 groupBySub.push_back(groupby);
                 k++;
             }
-
             // add the distinct column as groupby
             SP_ROWAGG_GRPBY_t groupby(new RowAggGroupByCol(j, k));
             groupBySub.push_back(groupby);
+
+           // Add multi parm distinct
+            while ((i+1) < returnedColVec.size() && functionIdMap(returnedColVec[i+1].second) == ROWAGG_MULTI_PARM)
+            {
+                ++i;
+                uint32_t dColKey = -1;
+                j = -1;
+                
+                // Find the entry in distinctColVec, if any
+                for (k = 0; k < jobInfo.distinctColVec.size(); k++)
+                {
+                    dColKey = jobInfo.distinctColVec[k];
+                    if (returnedColVec[i].first  == dColKey)
+                        break;
+                    
+                }
+                idbassert(dColKey != (uint32_t)-1);
+                // locate the distinct key in the row group
+                for (k = 0; k < keysAggUm.size(); k++)
+                {
+                    if (keysAggUm[k] == dColKey)
+                    {
+                        j = k;
+                        break;
+                    }
+                }
+                idbassert(j != -1);
+
+                oidsAggSub.push_back(oidsAggUm[j]);
+                keysAggSub.push_back(keysAggUm[j]);
+                scaleAggSub.push_back(scaleAggUm[j]);
+                precisionAggSub.push_back(precisionAggUm[j]);
+                typeAggSub.push_back(typeAggUm[j]);
+                csNumAggSub.push_back(csNumAggUm[j]);
+                widthAggSub.push_back(widthAggUm[j]);
+
+                SP_ROWAGG_GRPBY_t groupby(new RowAggGroupByCol(j, k));
+                groupBySub.push_back(groupby);
+            }
+
+            // construct sub-rowgroup
+            posAggSub.clear();
+            posAggSub.push_back(2);   // rid
+
+            for ( k = 0; k < oidsAggSub.size(); k++)
+                posAggSub.push_back(posAggSub[k] + widthAggSub[k]);
+
+            RowGroup subRg(oidsAggSub.size(), posAggSub, oidsAggSub, keysAggSub, typeAggSub,
+                           csNumAggSub, scaleAggSub, precisionAggSub, jobInfo.stringTableThreshold);
+            subRgVec.push_back(subRg);
 
             // Keep a count of the parms after the first for any aggregate.
             // These will be skipped and the count needs to be subtracted
@@ -4945,38 +5081,26 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
             //   -- dummy function vector for sub-aggregator, which does distinct only
             //   -- aggregate function on this distinct column for rowAggDist
             vector<SP_ROWAGG_FUNC_t> functionSub1, functionSub2;
+            // search the function in functionVec
+            vector<SP_ROWAGG_FUNC_t>::iterator it = functionVecUm.begin();
 
-            for (uint64_t k = 0; k < returnedColVec.size(); k++)
+            while (it != functionVecUm.end())
             {
-                if (functionIdMap(returnedColVec[i].second) == ROWAGG_MULTI_PARM)
+                SP_ROWAGG_FUNC_t f = *it++;
+
+                if ((f->fOutputColumnIndex == outIdx) &&
+                        (f->fAggFunction == ROWAGG_COUNT_DISTINCT_COL_NAME ||
+                         f->fAggFunction == ROWAGG_DISTINCT_SUM ||
+                         f->fAggFunction == ROWAGG_DISTINCT_AVG))
                 {
-                    ++multiParms;
-                    continue;
-                }
-                if (returnedColVec[k].first != distinctColKey)
-                    continue;
-
-                // search the function in functionVec
-                vector<SP_ROWAGG_FUNC_t>::iterator it = functionVecUm.begin();
-
-                while (it != functionVecUm.end())
-                {
-                    SP_ROWAGG_FUNC_t f = *it++;
-
-                    if ((f->fOutputColumnIndex == k) &&
-                            (f->fAggFunction == ROWAGG_COUNT_DISTINCT_COL_NAME ||
-                             f->fAggFunction == ROWAGG_DISTINCT_SUM ||
-                             f->fAggFunction == ROWAGG_DISTINCT_AVG))
-                    {
-                        SP_ROWAGG_FUNC_t funct(
-                            new RowAggFunctionCol(
-                                f->fAggFunction,
-                                f->fStatsFunction,
-                                groupBySub.size() - 1,
-                                f->fOutputColumnIndex,
-                                f->fAuxColumnIndex-multiParms));
-                        functionSub2.push_back(funct);
-                    }
+                    SP_ROWAGG_FUNC_t funct(
+                        new RowAggFunctionCol(
+                            f->fAggFunction,
+                            f->fStatsFunction,
+                            groupBySub.size() - 1,
+                            f->fOutputColumnIndex,
+                            f->fAuxColumnIndex-multiParms));
+                    functionSub2.push_back(funct);
                 }
             }
 
@@ -4986,6 +5110,8 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 
             // add to rowAggDist
             multiDistinctAggregator->addSubAggregator(subAgg, subRg, functionSub2);
+
+            ++outIdx;
         }
 
         // cover any non-distinct column functions
