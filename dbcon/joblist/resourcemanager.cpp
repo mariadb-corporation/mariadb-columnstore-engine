@@ -171,6 +171,8 @@ ResourceManager::ResourceManager(bool runningInExeMgr) :
         totalUmMemLimit = pmJoinMemLimit;
     else
     {
+        // Installation.PMwithUM = y by default so RM prefers HashJoin.TotalPmUmMemory
+        // if it exists.
         string whichLimit = "TotalUmMemory";
         string pmWithUM = fConfig->getConfig("Installation", "PMwithUM");
 
