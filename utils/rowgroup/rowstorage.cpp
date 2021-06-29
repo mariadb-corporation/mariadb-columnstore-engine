@@ -673,6 +673,7 @@ public:
           logging::ERR_AGGREGATION_TOO_BIG),
                                logging::ERR_AGGREGATION_TOO_BIG);
     }
+    fCurRgid = 0;
     ++fGeneration;
   }
 
