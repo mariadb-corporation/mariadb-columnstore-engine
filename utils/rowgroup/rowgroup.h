@@ -1373,7 +1373,7 @@ inline void Row::setLongDoubleField(const long double& val, uint32_t colIndex)
     
     
     int64_t d = std::numeric_limits<long double>::digits;  // Number of base 2 digits (64 for 80 bit fpu)
-    int64_t e = std::numeric_limits<long double>::max_exponent; // max base 2 exponent digits (16384 for 80-0 bit fpu)
+    int64_t e = std::numeric_limits<long double>::max_exponent; // max base 2 exponent  (16384 for 80 bit fpu)
     
     // If long double is 16 bytes and digits and exponent are 64 and 16384 respectively, then we need to mask out the 
     // unused bits, as they contain garbage. There are times we test for equality by memcmp of a buffer containing,
