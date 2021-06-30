@@ -1370,7 +1370,17 @@ inline void Row::setLongDoubleField(const long double& val, uint32_t colIndex)
 {
     uint8_t* p = &data[offsets[colIndex]];
     *((long double*)p) = val;
-    if (sizeof(long double) == 16)
+    
+    
+    int64_t d = std::numeric_limits<long double>::digits;  // Number of base 2 digits (64 for 80 bit fpu)
+    int64_t e = std::numeric_limits<long double>::max_exponent; // max base 2 exponent digits (16384 for 80-0 bit fpu)
+    
+    // If long double is 16 bytes and digits and exponent are 64 and 16384 respectively, then we need to mask out the 
+    // unused bits, as they contain garbage. There are times we test for equality by memcmp of a buffer containing,
+    // in part, the long double set here. Garbage bytes will adversly affect that compare.
+    // Note: There may be compilers that store 80 bit floats in 12 bytes. We do not account for that here. I don't believe
+    // there are any modern Linux compilers that do that as a default. Windows uses 64 bits, so no masking is needed.
+    if (d  == 64 && e == 16384 && sizeof(long double) == 16)
     {
         // zero out the unused portion as there may be garbage there.
         *((uint64_t*)p+1) &= 0x000000000000FFFFULL;
