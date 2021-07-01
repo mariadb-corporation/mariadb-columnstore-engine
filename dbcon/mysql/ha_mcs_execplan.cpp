@@ -6326,6 +6326,48 @@ bool isMCSTable(TABLE* table_ptr)
         return false;
 }
 
+bool isForeignTableUpdate(THD* thd)
+{
+    LEX* lex = thd->lex;
+
+    if (lex->sql_command != SQLCOM_UPDATE_MULTI)
+        return false;
+
+    Item_field* item;
+    List_iterator_fast<Item> field_it(lex->first_select_lex()->item_list);
+
+    while ((item = (Item_field*) field_it++))
+    {
+        if (item->field && item->field->table && !isMCSTable(item->field->table))
+            return true;
+    }
+
+    return false;
+}
+
+// This function is different from isForeignTableUpdate()
+// above as it only checks if any of the tables involved
+// in the multi-table update statement is a foreign table,
+// irrespective of whether the update is performed on the
+// foreign table or not, as in isForeignTableUpdate().
+bool isUpdateHasForeignTable(THD* thd)
+{
+    LEX* lex = thd->lex;
+
+    if (lex->sql_command != SQLCOM_UPDATE_MULTI)
+        return false;
+
+    TABLE_LIST* table_ptr = lex->first_select_lex()->get_table_list();
+
+    for (; table_ptr; table_ptr = table_ptr->next_local)
+    {
+        if (table_ptr->table && !isMCSTable(table_ptr->table))
+            return true;
+    }
+
+    return false;
+}
+
 /*@brief  set some runtime params to run the query         */
 /***********************************************************
  * DESCRIPTION:
@@ -6577,10 +6619,7 @@ int processWhere(SELECT_LEX &select_lex,
         else if (select_lex.where)
             icp = select_lex.where;
     }
-    else if (!join && ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) ||
-                        ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) ||
-                        ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) ||
-                        ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI )))
+    else if (!join && isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
     {
         isUpdateDelete = true;
     }
@@ -7393,7 +7432,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                     }
 
                     //@Bug 3030 Add error check for dml statement
-                    if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ) )
+                    if (isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
                     {
                         if ( after_size - before_size != 0 )
                         {
@@ -7427,7 +7466,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                     case REAL_RESULT:
                     case TIME_RESULT:
                     {
-                        if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ))
+                        if (isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
                         { }
                         else
                         {
@@ -7459,7 +7498,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
 
             case Item::NULL_ITEM:
             {
-                if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ) )
+                if (isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
                 { }
                 else
                 {
@@ -9259,7 +9298,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                     }
 
                     //@Bug 3030 Add error check for dml statement
-                    if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ) )
+                    if (isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
                     {
                         if ( after_size - before_size != 0 )
                         {
@@ -9290,7 +9329,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                     case REAL_RESULT:
                     case TIME_RESULT:
                     {
-                        if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ))
+                        if (isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
                         { }
                         else
                         {
@@ -9322,7 +9361,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
             case Item::NULL_ITEM:
             {
-                if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ) )
+                if (isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
                 { }
                 else
                 {

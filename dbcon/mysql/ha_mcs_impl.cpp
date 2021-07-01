@@ -854,7 +854,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
         {
             Message::Args args;
 
-            if (((thd->lex)->sql_command == SQLCOM_UPDATE) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
+            if (isUpdateStatement(thd->lex->sql_command))
                 args.add("Update");
 #if 0
             else if (thd->rgi_slave && thd->rgi_slave->m_table_map.count() != 0) 
@@ -909,7 +909,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
     updateCP->isDML(true);
 
     //@Bug 2753. the memory already freed by destructor of UpdateSqlStatement
-    if (((thd->lex)->sql_command == SQLCOM_UPDATE) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
+    if (isUpdateStatement(thd->lex->sql_command))
     {
         ColumnAssignment* columnAssignmentPtr;
         Item_field* item;
@@ -1202,8 +1202,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
 
     // Exit early if there is nothing to update
     if (colAssignmentListPtr->empty() &&
-        (((thd->lex)->sql_command == SQLCOM_UPDATE) ||
-        ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI)))
+        isUpdateStatement(thd->lex->sql_command))
     {
         ci->affectedRows = 0;
         return 0;
@@ -1216,7 +1215,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
     CalpontSystemCatalog::TableName aTableName;
     TABLE_LIST* first_table = 0;
 
-    if (( (thd->lex)->sql_command == SQLCOM_UPDATE ) || ( (thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) )
+    if (isUpdateStatement(thd->lex->sql_command))
     {
         aTableName.schema = schemaName;
         aTableName.table = tableName;
@@ -1238,10 +1237,10 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
     IDEBUG( cout << "STMT: " << dmlStmt << " and sessionID " << thd->thread_id <<  endl );
     VendorDMLStatement dmlStatement(dmlStmt, sessionID);
 
-    if (( (thd->lex)->sql_command == SQLCOM_UPDATE ) || ( (thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) )
-        dmlStatement.set_DMLStatementType( DML_UPDATE );
+    if (isUpdateStatement(thd->lex->sql_command))
+        dmlStatement.set_DMLStatementType(DML_UPDATE);
     else
-        dmlStatement.set_DMLStatementType( DML_DELETE );
+        dmlStatement.set_DMLStatementType(DML_DELETE);
 
     TableName* qualifiedTablName = new TableName();
 
@@ -1249,7 +1248,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
     //@Bug 2753. To make sure the momory is freed.
     updateStmt.fColAssignmentListPtr = colAssignmentListPtr;
 
-    if (( (thd->lex)->sql_command == SQLCOM_UPDATE ) || ( (thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) )
+    if (isUpdateStatement(thd->lex->sql_command))
     {
         qualifiedTablName->fName = tableName;
         qualifiedTablName->fSchema = schemaName;
@@ -1343,7 +1342,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
     List<Item> items;
     SELECT_LEX select_lex;
 
-    if (( (thd->lex)->sql_command == SQLCOM_UPDATE ) || ( (thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) )
+    if (isUpdateStatement(thd->lex->sql_command))
     {
         items = (thd->lex->first_select_lex()->item_list);
         thd->lex->first_select_lex()->item_list = thd->lex->value_list;
@@ -1492,7 +1491,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
             returnedCols.push_back((updateCP->columnMap()).begin()->second);
 
         //@Bug 6123. get the correct returned columnlist
-        if (( (thd->lex)->sql_command == SQLCOM_DELETE ) || ( (thd->lex)->sql_command == SQLCOM_DELETE_MULTI ) )
+        if (isDeleteStatement(thd->lex->sql_command))
         {
             returnedCols.clear();
             //choose the smallest column to project
@@ -1543,7 +1542,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
 
         updateCP->returnedCols( returnedCols );
 
-        if (( (thd->lex)->sql_command == SQLCOM_UPDATE ) || ( (thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) )
+        if (isUpdateStatement(thd->lex->sql_command))
         {
             const ParseTree* ptsub = updateCP->filters();
 
@@ -1561,8 +1560,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
                     ptsub->walk(makeUpdateSemiJoin, &tbList[0] );
             }
 
-            if (( (thd->lex)->sql_command == SQLCOM_UPDATE ) || ( (thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) )
-                thd->lex->first_select_lex()->item_list = items;
+            thd->lex->first_select_lex()->item_list = items;
         }
 
     }
@@ -2039,10 +2037,7 @@ int ha_mcs::impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
       UPDATE innotab1 SET a=100 WHERE a NOT IN (SELECT a FROM cstab1 WHERE a=1);
     */
     if (!isReadOnly() && // make sure the current table is being modified
-        (thd->lex->sql_command == SQLCOM_UPDATE ||
-         thd->lex->sql_command == SQLCOM_DELETE ||
-         thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
-         thd->lex->sql_command == SQLCOM_UPDATE_MULTI))
+        isUpdateOrDeleteStatement(thd->lex->sql_command))
         return doUpdateDelete(thd, gwi, condStack);
 
     uint32_t sessionID = tid2sid(thd->thread_id);
@@ -2372,8 +2367,10 @@ int ha_mcs_impl_rnd_next(uchar* buf, TABLE* table)
                 thd->lex->sql_command == SQLCOM_LOAD))
         return HA_ERR_END_OF_FILE;
 
-    if (((thd->lex)->sql_command == SQLCOM_UPDATE)  || ((thd->lex)->sql_command == SQLCOM_DELETE) ||
-            ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
+    if ((thd->lex->sql_command == SQLCOM_UPDATE) ||
+        (thd->lex->sql_command == SQLCOM_DELETE) ||
+        (thd->lex->sql_command == SQLCOM_DELETE_MULTI) ||
+        ((thd->lex->sql_command == SQLCOM_UPDATE_MULTI) && !isForeignTableUpdate(thd)))
         return HA_ERR_END_OF_FILE;
 
     // @bug 2547
@@ -2461,22 +2458,15 @@ int ha_mcs_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
                 thd->lex->sql_command == SQLCOM_LOAD))
         return 0;
 
-
-    // MCOL-2178 isUnion member only assigned, never used
-    //    if (is_pushdown_hand)
-    //    {
-    //        MIGR::infinidb_vtable.isUnion = false;
-    //    }
-
     if (get_fe_conn_info_ptr() != NULL)
         ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
     if ( (thd->lex)->sql_command == SQLCOM_ALTER_TABLE )
         return rc;
 
-    if (((thd->lex)->sql_command == SQLCOM_UPDATE)  ||
-            ((thd->lex)->sql_command == SQLCOM_DELETE) ||
-            ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) ||
-            ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
+    if ((thd->lex->sql_command == SQLCOM_UPDATE) ||
+        (thd->lex->sql_command == SQLCOM_DELETE) ||
+        (thd->lex->sql_command == SQLCOM_DELETE_MULTI) ||
+        ((thd->lex->sql_command == SQLCOM_UPDATE_MULTI) && !isForeignTableUpdate(thd)))
         return rc;
 
     if (!ci)
@@ -3668,10 +3658,7 @@ COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table, std::vector<COND*>& condSt
 {
     THD* thd = current_thd;
 
-    if (((thd->lex)->sql_command == SQLCOM_UPDATE) ||
-            ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI) ||
-            ((thd->lex)->sql_command == SQLCOM_DELETE) ||
-            ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI))
+    if (isUpdateOrDeleteStatement(thd->lex->sql_command))
     {
         condStack.push_back(cond);
         return nullptr;
@@ -3920,7 +3907,6 @@ int ha_mcs_impl_group_by_init(mcs_handler_info *handler_info, TABLE* table)
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     idbassert(ci != 0);
-
 
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
@@ -4326,14 +4312,11 @@ int ha_mcs_impl_group_by_next(TABLE* table)
 {
     THD* thd = current_thd;
 
-    if (((thd->lex)->sql_command == SQLCOM_UPDATE)  || ((thd->lex)->sql_command == SQLCOM_DELETE) ||
-            ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
+    if ((thd->lex->sql_command == SQLCOM_UPDATE) ||
+        (thd->lex->sql_command == SQLCOM_DELETE) ||
+        (thd->lex->sql_command == SQLCOM_DELETE_MULTI) ||
+        (thd->lex->sql_command == SQLCOM_UPDATE_MULTI && !isForeignTableUpdate(thd)))
         return HA_ERR_END_OF_FILE;
-
-    // @bug 2547
-    //  MCOL-2178
-    //  if (MIGR::infinidb_vtable.impossibleWhereOnUnion)
-    //    return HA_ERR_END_OF_FILE;
 
     if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
@@ -4425,9 +4408,6 @@ int ha_mcs_impl_group_by_end(TABLE* table)
                 thd->lex->sql_command == SQLCOM_TRUNCATE ||
                 thd->lex->sql_command == SQLCOM_LOAD))
         return 0;
-
-    // MCOL-2178 isUnion member only assigned, never used
-    //    MIGR::infinidb_vtable.isUnion = false;
 
     if (get_fe_conn_info_ptr() != NULL)
         ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
@@ -4638,8 +4618,8 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
         return 0;
 
     // MCOL-4023 We need to test this code path.
-    //Update and delete code
-    if ( ((thd->lex)->sql_command == SQLCOM_UPDATE)  || ((thd->lex)->sql_command == SQLCOM_DELETE) || ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
+    // Update and delete code
+    if (isUpdateOrDeleteStatement(thd->lex->sql_command))
         return doUpdateDelete(thd, gwi, std::vector<COND*>());
 
     uint32_t sessionID = tid2sid(thd->thread_id);
@@ -5059,8 +5039,7 @@ int ha_mcs_impl_select_next(uchar* buf, TABLE* table)
                 thd->lex->sql_command == SQLCOM_LOAD))
         return HA_ERR_END_OF_FILE;
 
-    if (((thd->lex)->sql_command == SQLCOM_UPDATE)  || ((thd->lex)->sql_command == SQLCOM_DELETE) ||
-            ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
+    if (isUpdateOrDeleteStatement(thd->lex->sql_command))
         return rc;
 
     // @bug 2547
