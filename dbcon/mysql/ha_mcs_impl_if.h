@@ -411,10 +411,10 @@ bool buildEqualityPredicate(execplan::ReturnedColumn* lhs,
     const std::vector<Item*>& itemList,
     bool isInSubs = false);
 
-inline bool isUpdateStatement(const enum_sql_command& command)
+inline bool isUpdateStatement(const enum_sql_command& command, const bool isMCSTableUpdate = true)
 {
     return (command == SQLCOM_UPDATE) ||
-        (command == SQLCOM_UPDATE_MULTI);
+        (command == SQLCOM_UPDATE_MULTI && isMCSTableUpdate);
 }
 
 inline bool isDeleteStatement(const enum_sql_command& command)
@@ -423,9 +423,9 @@ inline bool isDeleteStatement(const enum_sql_command& command)
         (command == SQLCOM_DELETE_MULTI);
 }
 
-inline bool isUpdateOrDeleteStatement(const enum_sql_command& command)
+inline bool isUpdateOrDeleteStatement(const enum_sql_command& command, const bool isMCSTableUpdate = true)
 {
-    return isUpdateStatement(command) ||
+    return isUpdateStatement(command, isMCSTableUpdate) ||
         isDeleteStatement(command);
 }
 

@@ -2367,10 +2367,7 @@ int ha_mcs_impl_rnd_next(uchar* buf, TABLE* table)
                 thd->lex->sql_command == SQLCOM_LOAD))
         return HA_ERR_END_OF_FILE;
 
-    if ((thd->lex->sql_command == SQLCOM_UPDATE) ||
-        (thd->lex->sql_command == SQLCOM_DELETE) ||
-        (thd->lex->sql_command == SQLCOM_DELETE_MULTI) ||
-        ((thd->lex->sql_command == SQLCOM_UPDATE_MULTI) && !isForeignTableUpdate(thd)))
+    if (isUpdateOrDeleteStatement(thd->lex->sql_command, !isForeignTableUpdate(thd)))
         return HA_ERR_END_OF_FILE;
 
     // @bug 2547
@@ -2463,10 +2460,7 @@ int ha_mcs_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
     if ( (thd->lex)->sql_command == SQLCOM_ALTER_TABLE )
         return rc;
 
-    if ((thd->lex->sql_command == SQLCOM_UPDATE) ||
-        (thd->lex->sql_command == SQLCOM_DELETE) ||
-        (thd->lex->sql_command == SQLCOM_DELETE_MULTI) ||
-        ((thd->lex->sql_command == SQLCOM_UPDATE_MULTI) && !isForeignTableUpdate(thd)))
+    if (isUpdateOrDeleteStatement(thd->lex->sql_command, !isForeignTableUpdate(thd)))
         return rc;
 
     if (!ci)
@@ -4312,10 +4306,7 @@ int ha_mcs_impl_group_by_next(TABLE* table)
 {
     THD* thd = current_thd;
 
-    if ((thd->lex->sql_command == SQLCOM_UPDATE) ||
-        (thd->lex->sql_command == SQLCOM_DELETE) ||
-        (thd->lex->sql_command == SQLCOM_DELETE_MULTI) ||
-        (thd->lex->sql_command == SQLCOM_UPDATE_MULTI && !isForeignTableUpdate(thd)))
+    if (isUpdateOrDeleteStatement(thd->lex->sql_command, !isForeignTableUpdate(thd)))
         return HA_ERR_END_OF_FILE;
 
     if (get_fe_conn_info_ptr() == nullptr)
