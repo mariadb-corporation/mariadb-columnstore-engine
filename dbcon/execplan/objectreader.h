@@ -123,6 +123,9 @@ public:
         /** UDAF SDK */
         MCSV1_CONTEXT,
         UDAFCOLUMN,
+
+        /** ANALYZE TABLE */
+        MCSANALYZETBLEXECUTIONPLAN,
     };
 
     typedef uint8_t id_t;    //expand as necessary

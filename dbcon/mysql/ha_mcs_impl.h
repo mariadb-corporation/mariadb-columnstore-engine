@@ -27,6 +27,7 @@ struct mcs_handler_info;
 extern int ha_mcs_impl_discover_existence(const char* schema, const char* name);
 extern int ha_mcs_impl_create(const char* name, TABLE* table_arg, HA_CREATE_INFO* create_info);
 extern int ha_mcs_impl_delete_table(const char* name);
+extern int ha_mcs_impl_analyze(THD* thd, TABLE* table);
 extern int ha_mcs_impl_open(const char* name, int mode, uint32_t test_if_locked);
 extern int ha_mcs_impl_close(void);
 extern int ha_mcs_impl_rnd_next(uchar* buf, TABLE* table);

@@ -126,6 +126,11 @@ public:
         return (double) (stats.records + stats.deleted) / 20.0 + 10;
     }
 
+    /** @brief
+      Analyze table command.
+    */
+    int analyze(THD* thd, HA_CHECK_OPT* check_opt);
+
     /*
       Everything below are methods that we implement in ha_example.cc.
 
