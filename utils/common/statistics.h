@@ -88,6 +88,10 @@ class StatisticsManager
     void unserialize(messageqcpp::ByteStream& bs);
     // Computes hash from the current statistics data.
     uint64_t computeHashFromStats();
+    // Checks whether statistics is available for the given `oid`.
+    bool hasKey(uint32_t oid);
+    // Returns a KeyType for the given `oid`.
+    KeyType getKeyType(uint32_t oid);
 
   private:
     std::map<uint32_t, KeyType> keyTypes;

@@ -285,6 +285,10 @@ void StatisticsManager::unserialize(messageqcpp::ByteStream& bs)
     }
 }
 
+bool StatisticsManager::hasKey(uint32_t oid) { return keyTypes.count(oid) > 0 ? true : false; }
+
+KeyType StatisticsManager::getKeyType(uint32_t oid) { return keyTypes[oid]; }
+
 StatisticsDistributor* StatisticsDistributor::instance()
 {
     static StatisticsDistributor* sd = new StatisticsDistributor();
