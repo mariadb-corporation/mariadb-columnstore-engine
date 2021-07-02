@@ -108,6 +108,44 @@ namespace
 namespace execplan
 {
 
+
+ColumnCommandDataType::ColumnCommandDataType(const CalpontSystemCatalog::DataType &rhs,
+                                             bool fudge)
+    :DataType(rhs),
+     mIsDict(false)
+{
+    if (!fudge)
+        return;
+
+    //If this is a dictionary column, fudge the numbers...
+    if (colDataType == CalpontSystemCatalog::VARCHAR )
+        colWidth++;
+
+    //If this is a dictionary column, fudge the numbers...
+    if ((colDataType == CalpontSystemCatalog::VARBINARY)
+            || (colDataType == CalpontSystemCatalog::BLOB)
+            || (colDataType == CalpontSystemCatalog::TEXT))
+    {
+        colWidth = 8;
+        mIsDict = true;
+    }
+    // MCOL-641 WIP
+    else if (colWidth > 8
+        && colDataType != CalpontSystemCatalog::DECIMAL
+        && colDataType != CalpontSystemCatalog::UDECIMAL)
+    {
+        colWidth = 8;
+        mIsDict = true;
+    }
+
+    //Round colWidth up
+    if (colWidth == 3)
+        colWidth = 4;
+    else if (colWidth == 5 || colWidth == 6 || colWidth == 7)
+        colWidth = 8;
+}
+
+
 const SOP opeq(new Operator("="));
 
 const string colDataTypeToString(CalpontSystemCatalog::ColDataType cdt)
@@ -6090,43 +6128,34 @@ CalpontSystemCatalog::ColType::ColType() :
     constraintType(NO_CONSTRAINT), 
     defaultValue(""), 
     colPosition(-1), 
-    compressionType(NO_COMPRESSION), 
     columnOID(0),
     autoincrement(0), 
-    nextvalue(0),
-    cs(NULL)
+    nextvalue(0)
 {
-    charsetNumber = default_charset_info->number;
 }
 
 CalpontSystemCatalog::ColType::ColType(const ColType& rhs)
-   :TypeHolderStd(rhs)
+   :DataType(rhs)
 {
     constraintType = rhs.constraintType;
     ddn = rhs.ddn;
     defaultValue = rhs.defaultValue;
     colPosition = rhs.colPosition;
-    compressionType = rhs.compressionType;
     columnOID = rhs.columnOID;
     autoincrement = rhs.autoincrement;
     nextvalue = rhs.nextvalue;
-    charsetNumber = rhs.charsetNumber;
-    cs = rhs.cs;
 }
 
 CalpontSystemCatalog::ColType& CalpontSystemCatalog::ColType::operator=(const ColType& rhs)
 {
-    TypeHolderStd::operator=(rhs);
+    DataType::operator=(rhs);
     constraintType = rhs.constraintType;
     ddn = rhs.ddn;
     defaultValue = rhs.defaultValue;
     colPosition = rhs.colPosition;
-    compressionType = rhs.compressionType;
     columnOID = rhs.columnOID;
     autoincrement = rhs.autoincrement;
     nextvalue = rhs.nextvalue;
-    charsetNumber = rhs.charsetNumber;
-    cs = rhs.cs;
 
     return *this;
 }
@@ -6134,11 +6163,11 @@ CalpontSystemCatalog::ColType& CalpontSystemCatalog::ColType::operator=(const Co
 
 
 
-CHARSET_INFO* CalpontSystemCatalog::ColType::getCharset()
+CHARSET_INFO* CalpontSystemCatalog::DataType::getCharset()
 {
-    if (!cs)
-        cs= & datatypes::Charset(charsetNumber).getCharset();
-    return cs;
+    if (!mCharset)
+        mCharset= & datatypes::Charset(charsetNumber).getCharset();
+    return mCharset;
 }
 
 const string CalpontSystemCatalog::ColType::toString() const

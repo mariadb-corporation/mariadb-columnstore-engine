@@ -141,7 +141,7 @@ public:
     pColStep(
         execplan::CalpontSystemCatalog::OID oid,
         execplan::CalpontSystemCatalog::OID tableOid,
-        const execplan::CalpontSystemCatalog::ColType& ct,
+        const execplan::CalpontSystemCatalog::DataType& ct,
         const JobInfo& jobInfo);
 
     pColStep(const pColScanStep& rhs);
@@ -165,7 +165,7 @@ public:
 
     virtual bool isDictCol() const
     {
-        return fIsDict;
+        return fColType.isDict();
     };
     bool isExeMgr() const
     {
@@ -266,7 +266,7 @@ public:
     {
         return fBOP;
     }
-    const execplan::CalpontSystemCatalog::ColType& colType() const
+    const execplan::ColumnCommandDataType& colType() const
     {
         return fColType;
     }
@@ -353,7 +353,7 @@ private:
     boost::shared_ptr<execplan::CalpontSystemCatalog> sysCat;
     execplan::CalpontSystemCatalog::OID fOid;
     execplan::CalpontSystemCatalog::OID fTableOid;
-    execplan::CalpontSystemCatalog::ColType fColType;
+    execplan::ColumnCommandDataType fColType;
     uint32_t fFilterCount;
     int8_t fBOP;
     int8_t fOutputType;
@@ -365,7 +365,7 @@ private:
     uint32_t extentSize, divShift, modMask, ridsPerBlock, rpbShift, blockSizeShift, numExtents;
     uint64_t rpbMask;
     uint64_t msgsSent, msgsRecvd;
-    bool finishedSending, recvWaiting, fIsDict;
+    bool finishedSending, recvWaiting;
     bool isEM;
     int64_t ridCount;
     uint32_t fFlushInterval;
@@ -430,7 +430,7 @@ public:
     pColScanStep(
         execplan::CalpontSystemCatalog::OID oid,
         execplan::CalpontSystemCatalog::OID tableOid,
-        const execplan::CalpontSystemCatalog::ColType& ct,
+        const execplan::CalpontSystemCatalog::DataType& ct,
         const JobInfo& jobInfo);
 
     pColScanStep(const pColStep& rhs);
@@ -450,7 +450,7 @@ public:
 
     virtual bool isDictCol() const
     {
-        return fIsDict;
+        return fColType.isDict();
     };
 
     /** @brief The main loop for the send-side thread
@@ -535,7 +535,7 @@ public:
     {
         return fTableOid;
     }
-    const execplan::CalpontSystemCatalog::ColType& colType() const
+    const execplan::ColumnCommandDataType& colType() const
     {
         return fColType;
     }
@@ -632,7 +632,7 @@ private:
     uint32_t fFilterCount;
     execplan::CalpontSystemCatalog::OID fOid;
     execplan::CalpontSystemCatalog::OID fTableOid;
-    execplan::CalpontSystemCatalog::ColType fColType;
+    execplan::ColumnCommandDataType fColType;
     int8_t fBOP;
     int8_t fOutputType;
     uint32_t sentCount;
@@ -646,7 +646,7 @@ private:
     boost::mutex cpMutex;
     boost::condition condvar;
     boost::condition condvarWakeupProducer;
-    bool finishedSending, sendWaiting, rDoNothing, fIsDict;
+    bool finishedSending, sendWaiting, rDoNothing;
     uint32_t recvWaiting, recvExited;
 
     std::vector<struct BRM::EMEntry> extents;
@@ -1085,8 +1085,6 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
 public:
     TupleBPS(const pColStep& rhs, const JobInfo& jobInfo);
     TupleBPS(const pColScanStep& rhs, const JobInfo& jobInfo);
-    TupleBPS(const pDictionaryStep& rhs, const JobInfo& jobInfo);
-    TupleBPS(const pDictionaryScan& rhs, const JobInfo& jobInfo);
     TupleBPS(const PassThruStep& rhs, const JobInfo& jobInfo);
     virtual ~TupleBPS();
 
@@ -1201,7 +1199,7 @@ public:
     {
         return fTableOid;
     }
-    const execplan::CalpontSystemCatalog::ColType& colType() const
+    const execplan::ColumnCommandDataType & colType() const
     {
         return fColType;
     }
@@ -1376,7 +1374,7 @@ private:
     std::vector<uint64_t> fProducerThreads; // thread pool handles
     messageqcpp::ByteStream fFilterString;
     uint32_t fFilterCount;
-    execplan::CalpontSystemCatalog::ColType fColType;
+    execplan::ColumnCommandDataType fColType;
     execplan::CalpontSystemCatalog::OID fOid;
     execplan::CalpontSystemCatalog::OID fTableOid;
     uint64_t fLastTupleId;
@@ -1609,12 +1607,6 @@ class PassThruStep : public JobStep, public PrimitiveMsg
 public:
     /** @brief PassThruStep constructor
      */
-    PassThruStep(
-        execplan::CalpontSystemCatalog::OID oid,
-        execplan::CalpontSystemCatalog::OID tableOid,
-        const execplan::CalpontSystemCatalog::ColType& colType,
-        const JobInfo& jobInfo);
-
     PassThruStep(const pColStep& rhs);
     PassThruStep(const PseudoColStep& rhs);
 
@@ -1643,20 +1635,15 @@ public:
     {
         return fTableOid;
     }
-
-    uint8_t getColWidth() const
-    {
-        return colWidth;
-    }
     bool isDictCol() const
     {
-        return isDictColumn;
+        return fColType.isDict();
     }
     bool isExeMgr() const
     {
         return isEM;
     }
-    const execplan::CalpontSystemCatalog::ColType& colType() const
+    const execplan::ColumnCommandDataType & colType() const
     {
         return fColType;
     }
@@ -1688,11 +1675,9 @@ private:
     boost::shared_ptr<execplan::CalpontSystemCatalog> catalog;
     execplan::CalpontSystemCatalog::OID fOid;
     execplan::CalpontSystemCatalog::OID fTableOid;
-    uint8_t colWidth;
     uint16_t realWidth;
     uint32_t fPseudoType;
-    execplan::CalpontSystemCatalog::ColType fColType;
-    bool isDictColumn;
+    execplan::ColumnCommandDataType fColType;
     bool isEM;
 
 //	boost::thread* fPTThd;
