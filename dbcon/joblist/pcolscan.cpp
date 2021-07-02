@@ -119,7 +119,7 @@ namespace joblist
 pColScanStep::pColScanStep(
     CalpontSystemCatalog::OID o,
     CalpontSystemCatalog::OID t,
-    const CalpontSystemCatalog::ColType& ct,
+    const CalpontSystemCatalog::DataType& ct,
     const JobInfo& jobInfo) :
     JobStep(jobInfo),
     fRm(jobInfo.rm),
@@ -128,7 +128,7 @@ pColScanStep::pColScanStep(
     fFilterCount(0),
     fOid(o),
     fTableOid(t),
-    fColType(ct),
+    fColType(ct, t != 0 /* For cross-engine we preserve the exact data type */),
     fBOP(BOP_OR),
     sentCount(0),
     recvCount(0),
@@ -153,41 +153,6 @@ pColScanStep::pColScanStep(
     recvWaiting = 0;
     recvExited = 0;
     rDoNothing = false;
-    fIsDict = false;
-
-    //If this is a dictionary column, fudge the numbers...
-    if ( fColType.colDataType == CalpontSystemCatalog::VARCHAR )
-    {
-        if (8 > fColType.colWidth && 4 <= fColType.colWidth )
-            fColType.colDataType = CalpontSystemCatalog::CHAR;
-
-        fColType.colWidth++;
-    }
-
-    //If this is a dictionary column, fudge the numbers...
-    if ((fColType.colDataType == CalpontSystemCatalog::VARBINARY)
-            || (fColType.colDataType == CalpontSystemCatalog::BLOB)
-            || (fColType.colDataType == CalpontSystemCatalog::TEXT))
-    {
-        fColType.colWidth = 8;
-        fIsDict = true;
-    }
-    // MCOL-641 WIP
-    else if (fColType.colWidth > 8 
-        && fColType.colDataType != CalpontSystemCatalog::DECIMAL
-        && fColType.colDataType != CalpontSystemCatalog::UDECIMAL)
-    {
-        fColType.colWidth = 8;
-        fIsDict = true;
-        //TODO: is this right?
-        fColType.colDataType = CalpontSystemCatalog::VARCHAR;
-    }
-
-    //Round colWidth up
-    if (fColType.colWidth == 3)
-        fColType.colWidth = 4;
-    else if (fColType.colWidth == 5 || fColType.colWidth == 6 || fColType.colWidth == 7)
-        fColType.colWidth = 8;
 
     err = dbrm.lookup(fOid, lbidRanges);
 
@@ -1008,7 +973,8 @@ uint64_t pColScanStep::getFBO(uint64_t lbid)
 pColScanStep::pColScanStep(const pColStep& rhs) :
     JobStep(rhs),
     fRm(rhs.resourceManager()),
-    fMsgHeader()
+    fMsgHeader(),
+    fColType(rhs.colType())
 {
     fNumThreads = fRm->getJlNumScanReceiveThreads();
     fFilterCount = rhs.filterCount();
@@ -1016,9 +982,7 @@ pColScanStep::pColScanStep(const pColStep& rhs) :
     isFilterFeeder = rhs.getFeederFlag();
     fOid = rhs.oid();
     fTableOid = rhs.tableOid();
-    fColType = rhs.colType();
     fBOP = rhs.BOP();
-    fIsDict = rhs.isDictCol();
     sentCount = 0;
     recvCount = 0;
     fScanLbidReqLimit = fRm->getJlScanLbidReqLimit();

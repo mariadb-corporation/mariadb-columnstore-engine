@@ -524,12 +524,12 @@ inline bool isMinMaxValid(const NewColRequestHeader* in)
         switch (in->colType.DataType)
         {
             case CalpontSystemCatalog::CHAR:
-                return (in->colType.DataSize < 9);
+                return !in->colType.isDict();
 
             case CalpontSystemCatalog::VARCHAR:
             case CalpontSystemCatalog::BLOB:
             case CalpontSystemCatalog::TEXT:
-                return (in->colType.DataSize < 8);
+                return !in->colType.isDict();
 
             case CalpontSystemCatalog::TINYINT:
             case CalpontSystemCatalog::SMALLINT:

@@ -96,7 +96,7 @@ uint32_t RowEstimator::daysThroughMonth(uint32_t mth)
 
 // This function takes a column value and if necessary adjusts it based on rules defined in the requirements.
 // The values are adjusted so that one can be subtracted from another to find a range, compare, etc.
-uint64_t RowEstimator::adjustValue(const execplan::CalpontSystemCatalog::ColType& ct,
+uint64_t RowEstimator::adjustValue(const ColumnCommandDataType & ct,
                                    const uint64_t& value)
 {
     switch (ct.colDataType)
@@ -141,7 +141,7 @@ uint64_t RowEstimator::adjustValue(const execplan::CalpontSystemCatalog::ColType
 // Estimates the number of distinct values given a min/max range.  When the range has not been set,
 // rules from the requirements are used based on the column type.
 template<typename T>
-uint32_t RowEstimator::estimateDistinctValues(const execplan::CalpontSystemCatalog::ColType& ct,
+uint32_t RowEstimator::estimateDistinctValues(const ColumnCommandDataType &ct,
         const T& min,
         const T& max,
         const char cpStatus)
@@ -214,7 +214,7 @@ template<class T>
 float RowEstimator::estimateOpFactor(const T& min, const T& max, const T& value,
                                      char op, uint8_t lcf,
                                      uint32_t distinctValues, char cpStatus,
-                                     const execplan::CalpontSystemCatalog::ColType& ct)
+                                     const ColumnCommandDataType& ct)
 {
     float factor = 1.0;
 
@@ -295,7 +295,7 @@ float RowEstimator::estimateOpFactor(const T& min, const T& max, const T& value,
 float RowEstimator::estimateRowReturnFactor(const BRM::EMEntry& emEntry,
         const messageqcpp::ByteStream* bs,
         const uint16_t NOPS,
-        const execplan::CalpontSystemCatalog::ColType& ct,
+        const ColumnCommandDataType& ct,
         const uint8_t BOP,
         const uint32_t& rowsInExtent)
 {

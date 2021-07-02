@@ -62,7 +62,7 @@ public:
     {
         return filterCount;
     }
-    const execplan::CalpontSystemCatalog::ColType& getColType()
+    const execplan::ColumnCommandDataType & getColType()
     {
         return colType;
     }
@@ -110,7 +110,7 @@ protected:
 
     // we only care about the width and type fields.
     //On the PM the rest is uninitialized
-    execplan::CalpontSystemCatalog::ColType colType;
+    execplan::ColumnCommandDataType colType;
 
 private:
     ColumnCommand(const ColumnCommand&);
