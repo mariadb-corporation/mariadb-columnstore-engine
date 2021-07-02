@@ -5389,6 +5389,22 @@ void castTypeArgs(THD* thd, Item_func* ifp, FunctionParm& functionParms)
     functionParms.push_back(sptp);
 }
 
+bool isSecondArgumentConstItem(Item_func* ifp)
+{
+    return (ifp->argument_count() == 2 &&
+        ifp->arguments()[1]->type() == Item::CONST_ITEM);
+}
+
+// SELECT ... WHERE <col> NOT IN (SELECT <const_item>);
+bool isNotFuncAndConstScalarSubSelect(Item_func* ifp, const std::string& funcName)
+{
+    return (ifp->with_subquery() && funcName == "not" &&
+        ifp->argument_count() == 1 &&
+        ifp->arguments()[0]->type() == Item::FUNC_ITEM &&
+        std::string(((Item_func*)ifp->arguments()[0])->func_name()) == "=" &&
+        isSecondArgumentConstItem((Item_func*)ifp->arguments()[0]));
+}
+
 void gp_walk(const Item* item, void* arg)
 {
     gp_walk_info* gwip = reinterpret_cast<gp_walk_info*>(arg);
@@ -5564,7 +5580,28 @@ void gp_walk(const Item* item, void* arg)
                     ifp->fix_fields(gwip->thd, reinterpret_cast<Item**>(&ifp));
                 }
 
-                if (ifp->with_subquery() || funcName == "<in_optimizer>")
+                // Special handling for queries of the form:
+                // SELECT ... WHERE col1 NOT IN (SELECT <const_item>);
+                if (isNotFuncAndConstScalarSubSelect(ifp, funcName))
+                {
+                    idbassert(!gwip->ptWorkStack.empty());
+                    ParseTree* pt = gwip->ptWorkStack.top();
+                    SimpleFilter* sf = dynamic_cast<SimpleFilter*>(pt->data());
+
+                    if (sf)
+                    {
+                        boost::shared_ptr<Operator> sop(new PredicateOperator("<>"));
+                        sf->op(sop);
+                        return;
+                    }
+                }
+
+                // Do not call buildSubselectFunc() if the subquery is a const scalar
+                // subselect of the form:
+                // (SELECT <const_item>)
+                // As an example: SELECT col1 FROM t1 WHERE col2 = (SELECT 2);
+                if ((ifp->with_subquery() && !isSecondArgumentConstItem(ifp)) ||
+                    funcName == "<in_optimizer>")
                 {
                     buildSubselectFunc(ifp, gwip);
                     return;
