@@ -9,6 +9,8 @@
 drop database if exists test_mcol2000;
 -- enable_warnings
 
+SET @@SQL_MODE = CONCAT(@@SQL_MODE, ',STRICT_TRANS_TABLES');
+
 #let $saved_cs = `SELECT @@character_set_client`;
 #SET CHARSET utf8;
 

@@ -1,4 +1,5 @@
 drop database if exists test_mcol2000;
+SET @@SQL_MODE = CONCAT(@@SQL_MODE, ',STRICT_TRANS_TABLES');
 create database test_mcol2000;
 use test_mcol2000;
 drop table if exists orig;
@@ -1079,7 +1080,7 @@ g	text	65535
 h	datetime	8
 i	text	16777215
 j	datetime	8
-k	text	2100000000
+k	text	16777215
 l	datetime	8
 drop table if exists cs1;
 drop table if exists cs2;
@@ -1186,7 +1187,7 @@ g	text	65535
 h	datetime	8
 i	text	16777215
 j	datetime	8
-k	text	2100000000
+k	text	16777215
 l	datetime	8
 drop table if exists cs1;
 drop table if exists cs2;
@@ -1293,7 +1294,7 @@ g	text	65535
 h	datetime	8
 i	text	16777215
 j	datetime	8
-k	text	2100000000
+k	text	16777215
 l	datetime	8
 drop table cs1;
 drop table cs2;
