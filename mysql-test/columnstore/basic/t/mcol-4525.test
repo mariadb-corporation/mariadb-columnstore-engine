@@ -55,22 +55,6 @@ SELECT a FROM t1 WHERE a IN (SELECT a FROM t2);
 DROP TABLE t1;
 DROP TABLE t2;
 
-# Test case for MCOL-1205 Circular Joins not supported
-CREATE TABLE t1 (a int);
-INSERT INTO t1 VALUES (1), (2), (3);
-CREATE TABLE t2 (a int);
-INSERT INTO t2 VALUES (2), (3);
-CREATE TABLE t3 (a int);
-INSERT INTO t3 VALUES (3);
-SET columnstore_select_handler=ON;
---error 1815
-SELECT * FROM t1 JOIN t2 ON t1.a=t2.a JOIN t3 ON t2.a=t3.a AND t3.a=t1.a;
-SET columnstore_select_handler=AUTO;
-SELECT * FROM t1 JOIN t2 ON t1.a=t2.a JOIN t3 ON t2.a=t3.a AND t3.a=t1.a;
-DROP TABLE t1;
-DROP TABLE t2;
-DROP TABLE t3;
-
 # Test case from working_tpch1_compareLogOnly/onClauseJoins/03.sql
 CREATE TABLE l(c1 int, c2 int);
 CREATE TABLE r(c1 int, c2 int);
