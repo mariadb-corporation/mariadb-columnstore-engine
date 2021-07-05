@@ -264,7 +264,7 @@ public:
             {
                 if (scaleDiff > 0)
                 {
-                    // WIP MCOL-641 Unconditional overflow check
+                    // TODO MCOL-641 Unconditional overflow check
                     datatypes::MultiplicationNoOverflowCheck mul;
                     mul(decimal.s128Value, scaleMultiplier, decimal.s128Value);
                 }

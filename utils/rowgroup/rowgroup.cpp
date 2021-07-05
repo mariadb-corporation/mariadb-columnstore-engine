@@ -1023,14 +1023,13 @@ bool Row::isNullValue(uint32_t colIndex) const
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
         {
-            // WIP MCOL-641 Allmighty hack.
+            // TODO MCOL-641 Allmighty hack.
             switch (getColumnWidth(colIndex))
             {
                 // MCOL-641
                 case 16:
                     return isNullValue_offset
                         <execplan::CalpontSystemCatalog::DECIMAL,16>(offsets[colIndex]);
-
                 case 1 :
                     return (data[offsets[colIndex]] == joblist::TINYINTNULL);
 

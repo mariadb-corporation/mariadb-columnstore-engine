@@ -489,8 +489,9 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
                         fResult.origIntVal = row.getUintField<8>(fInputIndex);
 
                     break;
+
+                // TODO MCOL-641
                 case 16:
-                    cout << __FILE__<< ":" <<__LINE__ << " Fix  16 Bytes ?" << endl;
                     //fallthrough
                 default:
                     if (row.equals(CPNULLSTRMARK, fInputIndex))

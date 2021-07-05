@@ -455,9 +455,8 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
             dataType = convertDataType(colDefPtr->fType->fType);
 
             if (dataType == CalpontSystemCatalog::DECIMAL ||
-                    dataType == CalpontSystemCatalog::UDECIMAL)
+                dataType == CalpontSystemCatalog::UDECIMAL)
             {
-                // WIP MCOL-641
                 if (colDefPtr->fType->fPrecision > 38) // precision cannot be over 38.
                 {
                     ostringstream os;

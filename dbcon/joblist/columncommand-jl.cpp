@@ -256,9 +256,11 @@ uint8_t ColumnCommandJL::getTableColumnType()
 
         case 1:
             return TableColumn::UINT8;
+
+        // TODO MCOL-641
         case 16:
-            cout << __FILE__<< ":" <<__LINE__ << " Fix  16 Bytes ?" << endl;
             //fallthrough
+
         default:
             throw logic_error("ColumnCommandJL: bad column width");
     }

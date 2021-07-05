@@ -196,7 +196,6 @@ public:
      */
     void addFilter(int8_t COP, int64_t value, uint8_t roundFlag = 0);
     void addFilter(int8_t COP, float value);
-    // WIP MCOL-641
     void addFilter(int8_t COP, const int128_t& value, uint8_t roundFlag = 0);
 
     /** @brief Sets the DataList to get RID values from.

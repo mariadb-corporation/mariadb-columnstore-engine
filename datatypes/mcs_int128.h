@@ -265,6 +265,13 @@ class TSInt128
       return toTFloat128();
     }
 
+    //    unaligned argument
+    inline TSInt128& operator=(const int128_t* x)
+    {
+        assignPtrPtr(&s128Value, x);
+        return *this;
+    }
+
     inline TSInt128 operator%(const int64_t& rhs) const
     {
       return TSInt128(s128Value % rhs);

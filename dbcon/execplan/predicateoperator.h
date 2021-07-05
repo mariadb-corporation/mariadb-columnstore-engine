@@ -118,15 +118,15 @@ public:
     void setOpType(Type& l, Type& r);
 
 private:
-    inline bool numericCompare(IDB_Decimal& op1, IDB_Decimal& op2);
+    inline bool numericCompare(const IDB_Decimal& op1, const IDB_Decimal& op2);
     template <typename result_t>
-    inline bool numericCompare(result_t op1, result_t op2);
+    inline bool numericCompare(const result_t op1, const result_t op2);
     inline bool strTrimCompare(const std::string& op1, const std::string& op2);
     
     const CHARSET_INFO* cs;
 };
 
-inline bool PredicateOperator::numericCompare(IDB_Decimal& op1, IDB_Decimal& op2)
+inline bool PredicateOperator::numericCompare(const IDB_Decimal& op1, const IDB_Decimal& op2)
 {
     switch (fOp)
     {
@@ -158,7 +158,7 @@ inline bool PredicateOperator::numericCompare(IDB_Decimal& op1, IDB_Decimal& op2
 }
 
 template <typename result_t>
-inline bool PredicateOperator::numericCompare(result_t op1, result_t op2)
+inline bool PredicateOperator::numericCompare(const result_t op1, const result_t op2)
 {
     switch (fOp)
     {

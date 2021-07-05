@@ -1511,7 +1511,7 @@ double Func_cast_decimal::getDoubleVal(Row& row,
                           isNull,
                           operationColType);
 
-    // WIP MCOL-641 This could deliver wrong result b/c wide DECIMAL might have
+    // TODO MCOL-641 This could deliver wrong result b/c wide DECIMAL might have
     // p <= INT64MAXPRECISION || p > INT128MAXPRECISION
     if (decimal.isTSInt128ByPrecision())
     {

@@ -1484,7 +1484,7 @@ bool TupleBPS::processSingleFilterString(int8_t BOP, int8_t colWidth, T val, con
     {
         int8_t COP;
         int64_t val2;
-        int128_t bigVal2;
+        datatypes::TSInt128 bigVal2;
         bool thisPredicate;
         COP = *filterString++;
         filterString++;   // skip the round var, don't think that applies here
@@ -1512,7 +1512,7 @@ bool TupleBPS::processSingleFilterString(int8_t BOP, int8_t colWidth, T val, con
                 break;
 
             case 16:
-                bigVal2 = *((int128_t*) filterString);
+                bigVal2 = reinterpret_cast<const int128_t*>(filterString);
                 filterString += 16;
                 break;
 
@@ -1524,7 +1524,7 @@ bool TupleBPS::processSingleFilterString(int8_t BOP, int8_t colWidth, T val, con
         if (static_cast<uint8_t>(colWidth) < datatypes::MAXDECIMALWIDTH)
             thisPredicate = compareSingleValue(COP, (int64_t) val, val2);
         else
-            thisPredicate = compareSingleValue(COP, (int128_t) val, bigVal2);
+            thisPredicate = compareSingleValue(COP, (int128_t) val, bigVal2.getValue());
 
         if (j == 0)
             ret = thisPredicate;

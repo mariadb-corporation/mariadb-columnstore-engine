@@ -380,8 +380,8 @@ float RowEstimator::estimateRowReturnFactor(const BRM::EMEntry& emEntry,
                     if (ct.colDataType == execplan::CalpontSystemCatalog::DECIMAL ||
                         ct.colDataType == execplan::CalpontSystemCatalog::UDECIMAL)
                     {
-                        uint128_t val = *(uint128_t*)msgDataPtr;
-                        bigValue = static_cast<int128_t>(val);
+                        datatypes::TSInt128 val(reinterpret_cast<const int128_t*>(msgDataPtr));
+                        bigValue = val.getValue();
                         break;
                     }
                 }
@@ -426,8 +426,8 @@ float RowEstimator::estimateRowReturnFactor(const BRM::EMEntry& emEntry,
                     if (ct.colDataType == execplan::CalpontSystemCatalog::DECIMAL ||
                         ct.colDataType == execplan::CalpontSystemCatalog::UDECIMAL)
                     {
-                        int128_t val = *(int128_t*)msgDataPtr;
-                        bigValue = static_cast<int128_t>(val);
+                        datatypes::TSInt128 val(reinterpret_cast<const int128_t*>(msgDataPtr));
+                        bigValue = val.getValue();
                         break;
                     }
                 }

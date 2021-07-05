@@ -485,8 +485,6 @@ void ColumnCommand::createCommand(ByteStream& bs)
     bs >> filterCount;
     deserializeInlineVector(bs, lastLbid);
     
-//    cout <<  __func__ << " colType.colWidth " << colType.colWidth << endl;
-        
 //	cout << "lastLbid count=" << lastLbid.size() << endl;
 //	for (uint32_t i = 0; i < lastLbid.size(); i++)
 //		cout << "  " << lastLbid[i];

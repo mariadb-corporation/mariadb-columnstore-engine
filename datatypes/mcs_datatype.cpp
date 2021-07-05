@@ -663,7 +663,7 @@ int TypeHandlerBinary::storeValueToField(rowgroup::Row &row, int pos,
                                          StoreField *f) const
 {
   Field_varstring* f2 = static_cast<Field_varstring*>(f);
-  // WIP MCOL-641 Binary representation could contain \0.
+  // TODO MCOL-641 Binary representation could contain \0.
   char* binaryString = row.getBinaryField<char>(pos);
   return f2->store(binaryString, colType.colWidth, f2->charset());
 }

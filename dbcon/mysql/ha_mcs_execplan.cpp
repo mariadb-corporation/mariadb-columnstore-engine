@@ -5148,9 +5148,9 @@ because it has multiple arguments.";
 
         // adjust decimal result type according to internalDecimalScale
         bool isWideDecimal = ac->resultType().isWideDecimalType();
-        // This must be also valid for UDECIMAL
-        if (!isWideDecimal && gwi.internalDecimalScale >= 0
-            && ac->resultType().colDataType == CalpontSystemCatalog::DECIMAL)
+        if (!isWideDecimal && gwi.internalDecimalScale >= 0 &&
+            (ac->resultType().colDataType == CalpontSystemCatalog::DECIMAL ||
+             ac->resultType().colDataType == CalpontSystemCatalog::UDECIMAL))
         {
             CalpontSystemCatalog::ColType ct = ac->resultType();
             ct.scale = gwi.internalDecimalScale;
