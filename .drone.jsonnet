@@ -1,8 +1,9 @@
-local events = ['pull_request', 'cron'];
+local events = ['push'];
 
 local platforms = {
   develop: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
   'develop-5': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
+  'columnstore-5.6.2-1': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
 };
 
 local platforms_arm = {
@@ -17,14 +18,9 @@ local platforms_mtr = ['centos:7', 'centos:8', 'ubuntu:20.04'];
 
 local server_ref_map = {
   develop: '10.6',
-  'develop-5': '10.5-enterprise',
+  'develop-5': '10.5',
+  'columnstore-5.6.2-1': '10.5.10-7',
   '**': '10.6',
-};
-
-local server_remote_map = {
-  develop: 'https://github.com/MariaDB/server',
-  'develop-5': 'https://github.com/mariadb-corporation/MariaDBEnterprise',
-  '**': 'https://github.com/MariaDB/server',
 };
 
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
@@ -62,6 +58,8 @@ local Pipeline(branch, platform, event, arch='amd64') = {
   local img = if (std.split(platform, ':')[0] == 'centos') then platform else 'romcheck/' + std.strReplace(platform, '/', '-'),
   local regression_ref = if (std.split(branch, '-')[0] == 'develop') then branch else 'develop-5',
   local branchp = if (branch == '**') then '' else branch,
+
+  local server_remote = if (std.split(branch, '-')[0] == 'columnstore') then 'https://github.com/mariadb-corporation/MariaDBEnterprise' else 'https://github.com/MariaDB/server',
 
   local pipeline = self,
 
@@ -135,7 +133,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} mariadb -e "create database if not exists test;"',
       // delay mtr for manual debugging on live instance
       'sleep $${MTR_DELAY_SECONDS:-1s}',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --max-test-fail=0 --suite=columnstore/basic,columnstore/bugfixes --skip-test-list=suite/columnstore/basic/failed.def"',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --max-test-fail=0 --suite=columnstore/basic,columnstore/bugfixes"',
     ],
   },
   mtrlog:: {
@@ -232,6 +230,8 @@ local Pipeline(branch, platform, event, arch='amd64') = {
       'echo "---------- end columnstore regression short report ----------"',
       'echo',
       'docker cp regression$${DRONE_BUILD_NUMBER}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs.tgz /drone/src/result/ || echo "missing testErrorLogs.tgz"',
+      'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} bash -c "tar czf testErrorLogs2.tgz *.log /var/log/mariadb/columnstore" || echo "failed to grab regression results"',
+      'docker cp regression$${DRONE_BUILD_NUMBER}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs2.tgz /drone/src/result/ || echo "missing testErrorLogs.tgz"',
       'docker stop regression$${DRONE_BUILD_NUMBER} && docker rm regression$${DRONE_BUILD_NUMBER} || echo "cleanup regression failure"',
     ],
     when: {
@@ -302,7 +302,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
              volumes: [pipeline._volumes.mdb],
              environment: {
                SERVER_REF: '${SERVER_REF:-' + server_ref_map[branch] + '}',
-               SERVER_REMOTE: '${SERVER_REMOTE:-' + server_remote_map[branch] + '}',
+               SERVER_REMOTE: '${SERVER_REMOTE:-' + server_remote + '}',
                SERVER_SHA: '${SERVER_SHA:-' + server_ref_map[branch] + '}',
              },
              commands: [
