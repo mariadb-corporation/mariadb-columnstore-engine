@@ -1,0 +1,703 @@
+create database if not exists test_ranges;
+use test_ranges;
+drop table if exists t;
+create table t(x bigint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+delete from t where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x bigint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+delete from t where x=66;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x bigint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+delete from t where x=55;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+drop table t;
+create table t(x bigint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=66;
+insert into t(x) values (77), (22);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x bigint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x bigint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x bigint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=77 where x=66;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+77	44
+drop table t;
+create table t(x bigint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=33 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	33
+drop table t;
+create table t(x bigint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=55;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+drop table t;
+create table t(x decimal(38)) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+delete from t where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x decimal(38)) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+delete from t where x=66;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x decimal(38)) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+delete from t where x=55;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+drop table t;
+create table t(x decimal(38)) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=66;
+insert into t(x) values (77), (22);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x decimal(38)) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x decimal(38)) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x decimal(38)) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=77 where x=66;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+77	44
+drop table t;
+create table t(x decimal(38)) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=33 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	33
+drop table t;
+create table t(x decimal(38)) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=55;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+drop table t;
+create table t(x integer) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+delete from t where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x integer) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+delete from t where x=66;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x integer) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+delete from t where x=55;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+drop table t;
+create table t(x integer) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=66;
+insert into t(x) values (77), (22);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x integer) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x integer) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x integer) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=77 where x=66;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+77	44
+drop table t;
+create table t(x integer) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=33 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	33
+drop table t;
+create table t(x integer) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=55;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+drop table t;
+create table t(x smallint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+delete from t where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x smallint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+delete from t where x=66;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x smallint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+delete from t where x=55;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+drop table t;
+create table t(x smallint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=66;
+insert into t(x) values (77), (22);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x smallint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x smallint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x smallint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=77 where x=66;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+77	44
+drop table t;
+create table t(x smallint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=33 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	33
+drop table t;
+create table t(x smallint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=55;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+drop table t;
+create table t(x tinyint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+delete from t where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x tinyint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+delete from t where x=66;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x tinyint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+delete from t where x=55;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+drop table t;
+create table t(x tinyint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=66;
+insert into t(x) values (77), (22);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x tinyint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x tinyint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+NULL	NULL
+drop table t;
+create table t(x tinyint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=77 where x=66;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+77	44
+drop table t;
+create table t(x tinyint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=33 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	33
+drop table t;
+create table t(x tinyint) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=55;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+drop table t;
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+delete from t where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+delete from t where x=66;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+delete from t where x=55;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+drop table t;
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=66;
+insert into t(x) values (77), (22);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=77 where x=66;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+77	44
+drop table t;
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=33 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	33
+drop table t;
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=55;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+drop table t;
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+delete from t where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+delete from t where x=66;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+delete from t where x=55;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+drop table t;
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=66;
+insert into t(x) values (77), (22);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=77 where x=66;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+77	44
+drop table t;
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=33 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	33
+drop table t;
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=55;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+drop table t;
+create table t(x integer unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+delete from t where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x integer unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+delete from t where x=66;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x integer unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+delete from t where x=55;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+drop table t;
+create table t(x integer unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=66;
+insert into t(x) values (77), (22);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x integer unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x integer unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x integer unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=77 where x=66;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+77	44
+drop table t;
+create table t(x integer unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=33 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	33
+drop table t;
+create table t(x integer unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=55;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+drop table t;
+create table t(x smallint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+delete from t where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x smallint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+delete from t where x=66;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x smallint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+delete from t where x=55;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+drop table t;
+create table t(x smallint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=66;
+insert into t(x) values (77), (22);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x smallint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x smallint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x smallint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=77 where x=66;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+77	44
+drop table t;
+create table t(x smallint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=33 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	33
+drop table t;
+create table t(x smallint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=55;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+drop table t;
+create table t(x tinyint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+delete from t where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x tinyint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+delete from t where x=66;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x tinyint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+delete from t where x=55;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+drop table t;
+create table t(x tinyint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=66;
+insert into t(x) values (77), (22);
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x tinyint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x tinyint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+0	-1
+drop table t;
+create table t(x tinyint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=77 where x=66;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+77	44
+drop table t;
+create table t(x tinyint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=33 where x=44;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	33
+drop table t;
+create table t(x tinyint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66);
+update t set x=65 where x=55;
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+max_value	min_value
+66	44
+drop database test_ranges;
