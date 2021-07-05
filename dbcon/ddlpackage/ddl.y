@@ -87,11 +87,8 @@ void fix_column_length(SchemaObject* elem, const CHARSET_INFO* def_cs) {
             column->fType->fLength = 255;
         else if (column->fType->fLength <= 65535)
             column->fType->fLength = 65535;
-        else if (column->fType->fLength <= 16777215)
+        else 
             column->fType->fLength = 16777215;
-        else if (column->fType->fLength <= 2100000000)
-            column->fType->fLength = 2100000000;
-        // otherwise leave the decision to a caller code
     }
 }
 
@@ -1000,7 +997,7 @@ blob_type:
 	| LONGBLOB
 	{
 		$$ = new ColumnType(DDL_BLOB);
-		$$->fLength = 2100000000;
+		$$->fLength = 16777215;
 	}
 	;
 
@@ -1029,7 +1026,7 @@ text_type:
 	| LONGTEXT
 	{
 		$$ = new ColumnType(DDL_TEXT);
-		$$->fLength = 2100000000;
+		$$->fLength = 16777215;
 	}
 	;
 

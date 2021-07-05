@@ -1,0 +1,14 @@
+DROP DATABASE IF EXISTS `mcol_4758`;
+CREATE DATABASE `mcol_4758`;
+USE `mcol_4758`;
+CREATE TABLE src (c0 INT, cLB LONGBLOB,  cLT LONGTEXT)engine=columnstore default charset utf8mb4;
+SELECT column_name, data_type, column_length FROM information_schema.columnstore_columns WHERE hex(table_schema)=hex('mcol_4758') and hex(table_name)=hex('src');
+column_name	data_type	column_length
+c0	int	4
+clb	blob	16777215
+clt	text	16777215
+INSERT INTO src VALUES (1, "Pretty Bloby Thing", "This is some text");
+select * from src where c0=1 and substr(cLT, 1, 4)="This";
+c0	cLB	cLT
+1	Pretty Bloby Thing	This is some text
+DROP DATABASE `mcol_4758`;
