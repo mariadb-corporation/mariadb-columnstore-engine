@@ -3761,6 +3761,9 @@ ArithmeticColumn* buildArithmeticColumn(
         }
     }
 
+
+    mysqlType.colWidth = std::max({mysqlType.colWidth, leftColType.colWidth, rightColType.colWidth});
+
     if (get_double_for_decimal_math(current_thd) == true)
         aop->adjustResultType(mysqlType);
     else
@@ -4735,7 +4738,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 
     // Argument_count() is the # of formal parms to the agg fcn. Columnstore
     // only supports 1 argument except UDAnF, COUNT(DISTINC) and GROUP_CONCAT
-    if (isp->argument_count() != 1 
+    if (isp->argument_count() != 1
         && isp->sum_func() != Item_sum::COUNT_DISTINCT_FUNC
         && isp->sum_func() != Item_sum::GROUP_CONCAT_FUNC
         && isp->sum_func() != Item_sum::UDF_SUM_FUNC)
