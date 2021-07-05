@@ -2532,7 +2532,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                     else if (funct->fAggFunction == ROWAGG_UDAF)
                         funct->fAggFunction = ROWAGG_DUP_UDAF;
                     else if (funct->fAggFunction == ROWAGG_COUNT_DISTINCT_COL_NAME)  // Don't track dup for this one. Gets confused when multi-parm.
-                    {}    
+                    {}
                     else
                         funct->fAggFunction = ROWAGG_DUP_FUNCT;
 
@@ -2756,7 +2756,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                 distinctColKey = jobInfo.distinctColVec[k];
                 if (returnedColVec[i].first  == distinctColKey)
                     break;
-                
+
             }
             if (distinctColKey == (uint32_t)-1)
             {
@@ -2818,7 +2818,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                     dColKey = jobInfo.distinctColVec[k];
                     if (returnedColVec[i].first  == dColKey)
                         break;
-                    
+
                 }
                 idbassert(dColKey != (uint32_t)-1);
                 // locate the distinct key in the row group
@@ -3229,7 +3229,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
                 // skip if this is a duplicate
                 continue;
             }
-            
+
             functionVecPm.push_back(funct);
             aggFuncMap.insert(make_pair(boost::make_tuple(aggKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL), colAggPm));
 
@@ -4024,7 +4024,6 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
             typeAggPm.push_back(typeProj[colProj]);
             csNumAggPm.push_back(csNumProj[colProj]);
             widthAggPm.push_back(width[colProj]);
-            precisionAggPm.push_back(precisionProj[colProj]);
 
             aggFuncMap.insert(make_pair(boost::make_tuple(keysAggPm[colAggPm], 0, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL), colAggPm));
             colAggPm++;
@@ -4077,7 +4076,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                 continue;
             if (aggOp == ROWAGG_MULTI_PARM && prevAggOp == ROWAGG_COUNT_DISTINCT_COL_NAME)
                 continue;
-            
+
 
             uint64_t colProj = projColPosMap[aggKey];
             SP_ROWAGG_FUNC_t funct;
@@ -4756,7 +4755,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                     else if (funct->fAggFunction == ROWAGG_UDAF)
                         funct->fAggFunction = ROWAGG_DUP_UDAF;
                     else if (funct->fAggFunction == ROWAGG_COUNT_DISTINCT_COL_NAME)  // Don't track dup for this one. Gets confused when multi-parm.
-                    {}    
+                    {}
                     else
                         funct->fAggFunction = ROWAGG_DUP_FUNCT;
 
@@ -4973,7 +4972,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                 distinctColKey = jobInfo.distinctColVec[k];
                 if (returnedColVec[i].first  == distinctColKey)
                     break;
-                
+
             }
             if (distinctColKey == (uint32_t)-1)
             {
@@ -5028,14 +5027,14 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                 ++i;
                 uint32_t dColKey = -1;
                 j = -1;
-                
+
                 // Find the entry in distinctColVec, if any
                 for (k = 0; k < jobInfo.distinctColVec.size(); k++)
                 {
                     dColKey = jobInfo.distinctColVec[k];
                     if (returnedColVec[i].first  == dColKey)
                         break;
-                    
+
                 }
                 idbassert(dColKey != (uint32_t)-1);
                 // locate the distinct key in the row group
