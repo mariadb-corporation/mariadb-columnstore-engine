@@ -920,13 +920,12 @@ public:
         bs << (uint8_t) scale;
         bs << (uint8_t) compressionType;
         bs << (uint32_t) charsetNumber;
-        bs << (bool) mIsDict;
+        bs << (uint8_t) mIsDict;
     }
     void unserialize(messageqcpp::ByteStream& bs)
     {
         uint8_t tmp8;
         uint32_t tmp32;
-        bool tmpBool;
         bs >> tmp8;
         colDataType = (execplan::CalpontSystemCatalog::ColDataType) tmp8;
         bs >> tmp8;
@@ -938,8 +937,8 @@ public:
         bs >> tmp32;
         charsetNumber = tmp32;
         mCharset = nullptr;
-        bs >> tmpBool;
-        mIsDict = tmpBool;
+        bs >> tmp8;
+        mIsDict = static_cast<bool>(tmp8);
     }
 };
 

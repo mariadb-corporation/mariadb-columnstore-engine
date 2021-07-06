@@ -144,6 +144,7 @@ using namespace funcexp;
 
 #include "ha_mcs_datatype.h"
 #include "statistics.h"
+#include "ha_mcs_logging.h"
 
 namespace cal_impl_if
 {
@@ -177,32 +178,6 @@ bool useHdfs = false; // ResourceManager::instance()->useHdfs();
 inline uint32_t tid2sid(const uint32_t tid)
 {
     return CalpontSystemCatalog::idb_tid2sid(tid);
-}
-
-
-/**
-  @brief
-  Wrapper around logging facility.
-
-  @details
-  Reduces the boiler plate code.
-
-  Called from number of places(mostly DML) in
-  ha_mcs_impl.cpp().
-*/
-void log_this(THD *thd, const char *message,
-    logging::LOG_TYPE log_type, unsigned sid)
-{
-    // corresponds with dbcon in SubsystemID vector
-    // in messagelog.cpp
-    unsigned int subSystemId = 24;
-    logging::LoggingID logid( subSystemId, sid, 0);
-    logging::Message::Args args1;
-    logging::Message msg(1);
-    args1.add(message);
-    msg.format( args1 );
-    Logger logger(logid.fSubsysID);
-    logger.logMessage(log_type, msg, logid);
 }
 
 /**
@@ -247,7 +222,7 @@ void force_close_fep_conn(THD *thd, cal_connection_info* ci, bool check_prev_rc 
     catch (...)
     {
         // Add details into the message.
-        log_this(thd, "Exception in force_close_fep_conn().",
+        ha_mcs_impl::log_this(thd, "Exception in force_close_fep_conn().",
             logging::LOG_TYPE_DEBUG, tid2sid(thd->thread_id));
     }
 
@@ -3129,7 +3104,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
             {
                 ostringstream oss;
                 oss << "Start SQL statement: " << idb_mysql_query_str(thd) << "; |" << table->s->db.str << "|";
-                log_this(thd, oss.str().c_str(), logging::LOG_TYPE_DEBUG, tid2sid(thd->thread_id));
+                ha_mcs_impl::log_this(thd, oss.str().c_str(), logging::LOG_TYPE_DEBUG, tid2sid(thd->thread_id));
             }
 
             //start process cpimport mode 1
@@ -3168,7 +3143,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
                 {
                     setError(current_thd, ER_INTERNAL_ERROR, logging::IDBErrorInfo::instance()->errorMsg(ERR_LOCAL_QUERY_UM));
                     ci->singleInsert = true;
-                    log_this(thd, "End SQL statement", logging::LOG_TYPE_DEBUG,
+                    ha_mcs_impl::log_this(thd, "End SQL statement", logging::LOG_TYPE_DEBUG,
                     tid2sid(thd->thread_id));
                     return;
                 }
@@ -3325,8 +3300,8 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
                     errnum << "); " << errmsg;
                 setError(current_thd, ER_INTERNAL_ERROR, oss.str());
                 ci->singleInsert = true;
-                log_this(thd, oss.str(), logging::LOG_TYPE_ERROR, tid2sid(thd->thread_id));
-                log_this(thd, "End SQL statement", logging::LOG_TYPE_DEBUG, tid2sid(thd->thread_id));
+                ha_mcs_impl::log_this(thd, oss.str(), logging::LOG_TYPE_ERROR, tid2sid(thd->thread_id));
+                ha_mcs_impl::log_this(thd, "End SQL statement", logging::LOG_TYPE_DEBUG, tid2sid(thd->thread_id));
                 return;
             }
 
@@ -3347,7 +3322,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
                     errnum << "); " << strerror(errnum);
                 setError(current_thd, ER_INTERNAL_ERROR, oss.str());
                 ci->singleInsert = true;
-                log_this(thd, "End SQL statement", logging::LOG_TYPE_DEBUG, tid2sid(thd->thread_id));
+                ha_mcs_impl::log_this(thd, "End SQL statement", logging::LOG_TYPE_DEBUG, tid2sid(thd->thread_id));
                 return;
             }
 
@@ -3363,7 +3338,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
                     errnum << "); " << strerror(errnum);
                 setError(current_thd, ER_INTERNAL_ERROR, oss.str());
                 ci->singleInsert = true;
-                log_this(thd, "End SQL statement", logging::LOG_TYPE_DEBUG, tid2sid(thd->thread_id));
+                ha_mcs_impl::log_this(thd, "End SQL statement", logging::LOG_TYPE_DEBUG, tid2sid(thd->thread_id));
                 return;
             }
             else if (aChPid == 0) // we are in child
@@ -3400,7 +3375,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
 
                 setError(current_thd, ER_INTERNAL_ERROR, "Forking process cpimport failed.");
                 ci->singleInsert = true;
-                log_this(thd, "End SQL statement", logging::LOG_TYPE_DEBUG,
+                ha_mcs_impl::log_this(thd, "End SQL statement", logging::LOG_TYPE_DEBUG,
                 tid2sid(thd->thread_id));
                 exit(1);
             }
@@ -3567,7 +3542,7 @@ int ha_mcs_impl_end_bulk_insert(bool abort, TABLE* table)
                     FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, errnum, 0, errmsg, 512, NULL);
                     ostringstream oss;
                     oss << "GenerateConsoleCtrlEvent: (errno-" << errnum << "); " << errmsg;
-                    log_this(thd, oss.str(), logging::LOG_TYPE_DEBUG,0);
+                    ha_mcs_impl::log_this(thd, oss.str(), logging::LOG_TYPE_DEBUG,0);
                 }
 
                 // Close handles to the cpimport process and its primary thread.
@@ -3673,11 +3648,11 @@ int ha_mcs_impl_end_bulk_insert(bool abort, TABLE* table)
 #endif
                 if ( rc == 0)
                 {
-                    log_this(thd, "End SQL statement", logging::LOG_TYPE_DEBUG, tid2sid(thd->thread_id));
+                    ha_mcs_impl::log_this(thd, "End SQL statement", logging::LOG_TYPE_DEBUG, tid2sid(thd->thread_id));
                 }
                 else
                 {
-                    log_this(thd, "End SQL statement with error", logging::LOG_TYPE_DEBUG, tid2sid(thd->thread_id));
+                    ha_mcs_impl::log_this(thd, "End SQL statement with error", logging::LOG_TYPE_DEBUG, tid2sid(thd->thread_id));
                 }
 
                 ci->columnTypes.clear();
