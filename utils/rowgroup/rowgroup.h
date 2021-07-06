@@ -159,7 +159,6 @@ public:
     inline bool isEmpty() const;
     inline uint64_t getSize() const;
     inline bool isNullValue(uint64_t offset) const;
-    bool equals(const std::string& str, uint64_t offset, CHARSET_INFO* cs) const;
 
     void clear();
 
@@ -427,7 +426,6 @@ public:
     inline bool equals(T* value, uint32_t colIndex) const;
     template<int len> inline bool equals(uint64_t val, uint32_t colIndex) const;
     inline bool equals(long double val, uint32_t colIndex) const;
-    bool equals(const std::string& val, uint32_t colIndex) const;
     inline bool equals(const int128_t& val, uint32_t colIndex) const;
 
     inline double getDoubleField(uint32_t colIndex) const;
@@ -480,14 +478,16 @@ public:
 
     inline void setRid(uint64_t rid);
 
-    // is string efficient for this?
-    inline std::string getStringField(uint32_t colIndex) const;
-    inline const uint8_t* getStringPointer(uint32_t colIndex) const;
-    inline uint32_t getStringLength(uint32_t colIndex) const;
+    // TODO: remove this (string is not efficient for this), use getConstString() instead
+    inline std::string getStringField(uint32_t colIndex) const
+    {
+        return getConstString(colIndex).toString();
+    }
+
     inline utils::ConstString getConstString(uint32_t colIndex) const;
     inline utils::ConstString getShortConstString(uint32_t colIndex) const;
     void setStringField(const std::string& val, uint32_t colIndex);
-    inline void setStringField(const uint8_t*, uint32_t len, uint32_t colIndex);
+    inline void setStringField(const utils::ConstString &str, uint32_t colIndex);
     template<typename T>
     inline void setBinaryField(const T* value, uint32_t width, uint32_t colIndex);
     template<typename T>
@@ -687,7 +687,7 @@ inline uint32_t Row::getRealSize() const
         if (!inStringTable(i))
             ret += getColumnWidth(i);
         else
-            ret += getStringLength(i);
+            ret += getConstString(i).length();
     }
 
     return ret;
@@ -879,21 +879,6 @@ inline int64_t Row::getIntField(uint32_t colIndex) const
     }
 }
 
-inline const uint8_t* Row::getStringPointer(uint32_t colIndex) const
-{
-    if (inStringTable(colIndex))
-        return strings->getPointer(*((uint64_t*) &data[offsets[colIndex]]));
-
-    return &data[offsets[colIndex]];
-}
-
-inline uint32_t Row::getStringLength(uint32_t colIndex) const
-{
-    if (inStringTable(colIndex))
-        return strings->getStringLength(*((uint64_t*) &data[offsets[colIndex]]));
-
-    return strnlen((char*) &data[offsets[colIndex]], getColumnWidth(colIndex));
-}
 
 template<typename T>
 inline void Row::setBinaryField(const T* value, uint32_t width, uint32_t colIndex)
@@ -1040,16 +1025,18 @@ inline void Row::colUpdateHasherTypeless(datatypes::MariaDBHasher &h, uint32_t k
     }
 }
 
-inline void Row::setStringField(const uint8_t* strdata, uint32_t length, uint32_t colIndex)
+inline void Row::setStringField(const utils::ConstString &str, uint32_t colIndex)
 {
     uint64_t offset;
 
+    // TODO: add multi-byte safe truncation here
+    uint32_t length = str.length();
     if (length > getColumnWidth(colIndex))
         length = getColumnWidth(colIndex);
 
     if (inStringTable(colIndex))
     {
-        offset = strings->storeString(strdata, length);
+        offset = strings->storeString((const uint8_t*) str.str(), length);
         *((uint64_t*) &data[offsets[colIndex]]) = offset;
 //		cout << " -- stored offset " << *((uint32_t *) &data[offsets[colIndex]])
 //				<< " length " << *((uint32_t *) &data[offsets[colIndex] + 4])
@@ -1057,20 +1044,10 @@ inline void Row::setStringField(const uint8_t* strdata, uint32_t length, uint32_
     }
     else
     {
-        memcpy(&data[offsets[colIndex]], strdata, length);
+        memcpy(&data[offsets[colIndex]], str.str(), length);
         memset(&data[offsets[colIndex] + length], 0,
                offsets[colIndex + 1] - (offsets[colIndex] + length));
     }
-}
-
-inline std::string Row::getStringField(uint32_t colIndex) const
-{
-    if (inStringTable(colIndex))
-        return strings->getString(*((uint64_t*) &data[offsets[colIndex]]));
-
-    // Not all CHAR/VARCHAR are NUL terminated so use length
-    return std::string((char*) &data[offsets[colIndex]],
-                       strnlen((char*) &data[offsets[colIndex]], getColumnWidth(colIndex)));
 }
 
 template <typename T>
@@ -1094,7 +1071,7 @@ inline T* Row::getBinaryField_offset(uint32_t offset) const
 inline std::string Row::getVarBinaryStringField(uint32_t colIndex) const
 {
     if (inStringTable(colIndex))
-        return getStringField(colIndex);
+        return getConstString(colIndex).toString();
 
     return std::string((char*) &data[offsets[colIndex] + 2], *((uint16_t*) &data[offsets[colIndex]]));
 }
@@ -1440,7 +1417,7 @@ inline void Row::copyField(Row& out, uint32_t destIndex, uint32_t srcIndex) cons
     }
     else if (UNLIKELY(isLongString(srcIndex)))
     {
-        out.setStringField(getStringPointer(srcIndex), getStringLength(srcIndex), destIndex);
+        out.setStringField(getConstString(srcIndex), destIndex);
     }
     else if (UNLIKELY(isShortString(srcIndex)))
     {
@@ -2079,7 +2056,7 @@ inline void copyRow(const Row& in, Row* out, uint32_t colCount)
         }
         else if (UNLIKELY(in.isLongString(i)))
         {
-            out->setStringField(in.getStringPointer(i), in.getStringLength(i), i);
+            out->setStringField(in.getConstString(i), i);
         }
         else if (UNLIKELY(in.isShortString(i)))
         {

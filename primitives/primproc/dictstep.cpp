@@ -578,7 +578,7 @@ void DictStep::_projectToRG(RowGroup& rg, uint32_t col)
             {
                 rg.getRow(newRidList[i].pos, &r);
                 //cout << "serializing " << tmpStrings[i] << endl;
-                r.setStringField(tmpStrings[i].ptr, tmpStrings[i].len, col);
+                r.setStringField(tmpStrings[i].getConstString(), col);
             }
         }
         else

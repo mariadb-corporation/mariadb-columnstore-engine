@@ -38,9 +38,17 @@ public:
   const char *str() const { return mStr; }
   const char *end() const { return mStr + mLength; }
   size_t length() const { return mLength; }
+  std::string toString() const
+  {
+    return std::string(mStr, mLength);
+  }
   bool eq(char ch) const
   {
     return mLength == 1 && mStr[0] == ch;
+  }
+  bool eq(const ConstString &rhs) const
+  {
+    return mLength == rhs.mLength && !memcmp(mStr, rhs.mStr, mLength);
   }
   ConstString & rtrimZero()
   {

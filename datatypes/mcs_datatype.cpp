@@ -524,7 +524,7 @@ int TypeHandlerStr::storeValueToFieldCharVarchar(rowgroup::Row &row, int pos,
       return f->store_string(tmp, strlen(tmp));
     }
     default:
-      return f->store_string((const char*)row.getStringPointer(pos), row.getStringLength(pos));
+      return f->storeConstString(row.getConstString(pos));
   }
 }
 

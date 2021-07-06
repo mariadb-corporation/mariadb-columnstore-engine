@@ -83,6 +83,10 @@ private:
 
         StringPtr() : ptr(NULL), len(0) {;}
         StringPtr(const uint8_t* p, unsigned l) : ptr(p), len(l) {;}
+        utils::ConstString getConstString() const
+        {
+            return utils::ConstString((const char *) ptr, len);
+        }
     };
 
     void _execute();
