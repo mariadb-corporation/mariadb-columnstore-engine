@@ -680,8 +680,9 @@ void BatchPrimitiveProcessorJL::getTuples(messageqcpp::ByteStream& in,
                         columnData[j]++;
                         pos++;
                         break;
+
+                    // TODO MCOL-641
                     case 16:
-                        cout << __FILE__<< ":" <<__LINE__ << " Fix  16 Bytes ?" << endl;
                         //fallthrough
                     default:
                         cout << "BPP::getTuples(): bad column width of " << colWidths[j]

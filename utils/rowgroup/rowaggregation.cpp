@@ -338,7 +338,6 @@ void RowAggregation::updateStringMinMax(string val1, string val2, int64_t col, i
 inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, int64_t col)
 {
     /* TODO: Can we replace all of this with a call to row.isNullValue(col)? */
-    // WIP MCOL-641 Yes. We can
     bool ret = false;
 
     int colDataType = (pRowGroup->getColTypes())[col];

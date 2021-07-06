@@ -483,7 +483,7 @@ void SimpleColumn::setDerivedTable()
 
     // @todo make aggregate filter to having clause. not optimize it for now
     if (fDerivedRefCol &&
-            // WIP replace with typeid()
+            // TODO replace with typeid()
             (dynamic_cast<AggregateColumn*>(fDerivedRefCol) ||
              dynamic_cast<WindowFunctionColumn*>(fDerivedRefCol)))
         fDerivedTable = "";
@@ -502,7 +502,7 @@ bool SimpleColumn::singleTable(CalpontSystemCatalog::TableAliasName& tan)
 // @todo move to inline
 void SimpleColumn::evaluate(Row& row, bool& isNull)
 {
-    // WIP Move this block into an appropriate place
+    // TODO Move this block into an appropriate place
     if (UNLIKELY((int)(fInputOffset == (uint32_t)-1)))
     {
         fInputOffset = row.getOffset(fInputIndex);

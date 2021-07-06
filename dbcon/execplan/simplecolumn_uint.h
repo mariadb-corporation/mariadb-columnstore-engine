@@ -142,8 +142,8 @@ void SimpleColumn_UINT<len>::setNullVal()
         case 1:
             fNullVal = joblist::UTINYINTNULL;
             break;
+        // TODO MCOL-641
         case 16:
-            std::cout << __FILE__<< ":" <<__LINE__ << " Fix  16 Bytes ?" << std::endl;
             //fallthrough
         default:
             fNullVal = joblist::UBIGINTNULL;
@@ -245,8 +245,9 @@ void SimpleColumn_UINT<len>::serialize(messageqcpp::ByteStream& b) const
         case 8:
             b << (ObjectReader::id_t) ObjectReader::SIMPLECOLUMN_UINT8;
             break;
-        case 16:
-             std::cout << __FILE__<< ":" <<__LINE__ << " Fix  16 Bytes ?" << std::endl;
+
+        // TODO MCOL-641
+        // case 16:
     }
 
     SimpleColumn::serialize(b);
@@ -272,8 +273,9 @@ void SimpleColumn_UINT<len>::unserialize(messageqcpp::ByteStream& b)
         case 8:
             ObjectReader::checkType(b, ObjectReader::SIMPLECOLUMN_UINT8);
             break;
-        case 16:
-             std::cout << __FILE__<< ":" <<__LINE__ << " Fix  16 Bytes ?" << std::endl;
+
+        // TODO MCOL-641
+        // case 16:
     }
 
     SimpleColumn::unserialize(b);

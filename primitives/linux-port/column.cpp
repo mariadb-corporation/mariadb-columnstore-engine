@@ -209,13 +209,6 @@ template<int>
 inline bool isEmptyVal(uint8_t type, const uint8_t* val8);
 
 template<>
-inline bool isEmptyVal<32>(uint8_t type, const uint8_t* ival) // For BINARY
-{
-    std::cout << __func__ << " WARNING!!! Not implemented for 32 byte data types." << std::endl;
-    return false;
-}
-
-template<>
 inline bool isEmptyVal<16>(uint8_t type, const uint8_t* ival) // For BINARY
 {
     const int128_t* val = reinterpret_cast<const int128_t*>(ival);
@@ -352,15 +345,6 @@ inline bool isNullVal<16>(uint8_t type, const uint8_t* ival)
     // Wide-DECIMAL supplies a universal NULL/EMPTY magics for all 16 byte
     // data types.
     return *val == datatypes::Decimal128Null;
-}
-
-template<>
-inline bool isNullVal<32>(uint8_t type, const uint8_t* ival)
-{
-
-    std::cout << __func__ << " WARNING!!! Not implemented for 32 byte data types."
-<< std::endl;
-    return false;
 }
 
 template<>
@@ -505,7 +489,6 @@ inline bool isNullVal(uint32_t length, uint8_t type, const uint8_t* val8)
         case 1:
             return isNullVal<1>(type, val8);
     };
-    std::cout << __func__ << " WARNING!!! Not implemented for " << length << " bytes data types." << std::endl;
  
     return false;
 }
@@ -693,17 +676,12 @@ inline void store(const NewColRequestHeader* in,
 
         switch (in->colType.DataSize)
         {
-            case 32:
-                std::cout << __func__ << " WARNING!!! Not implemented for 32 byte data types." << std::endl;
-                break;
-
             case 16:
                 ptr2 += (rid << 4);
                 memcpy(ptr1, ptr2, 16);
                 break;
 
             default:
-                std::cout << __func__ << " WARNING!!! unspecified column width." << std::endl;
                 // fallthrough
 
             case 8:
@@ -1635,10 +1613,6 @@ void PrimitiveProcessor::p_Col(NewColRequestHeader* in, NewColResultHeader* out,
         case 16:
             p_Col_bin_ridArray<16, int128_t>(in, out, outSize, written, block, fStatsPtr, itemsPerBlk, parsedColumnFilter);
             break;
-
-        case 32:
-            std::cout << __func__ << " WARNING!!! Not implemented for 32 byte data types." << std::endl;
-            // fallthrough
 
         default:
             idbassert(0);

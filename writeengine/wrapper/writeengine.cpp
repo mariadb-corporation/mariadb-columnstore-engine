@@ -3576,7 +3576,7 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
     }
 
     bool newFile;
-    // WIP
+
 #ifdef PROFILE
     timer.start("allocRowId");
 #endif
@@ -5520,9 +5520,8 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
                         ((uint16_t*)valArray)[j] = tmp16;
                         break;
                    
-                    // WIP
                     case WriteEngine::WR_BINARY:
-                         ((uint64_t*)valArray)[j] = curValue; //FIXME maybe
+                         ((uint64_t*)valArray)[j] = curValue;
                         break;   
                    
                 }
@@ -5671,9 +5670,8 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
                         ((uint16_t*)valArray)[j] = tmp16;
                         break;
                     
-                    // WIP
                     case WriteEngine::WR_BINARY:
-                       ((uint64_t*)valArray)[j] = curValue; // FIXME maybe
+                       ((uint64_t*)valArray)[j] = curValue;
                         break;
                 }
             }

@@ -47,7 +47,7 @@ ArithmeticOperator::ArithmeticOperator(const string& operatorName): Operator(ope
 ArithmeticOperator::ArithmeticOperator(const ArithmeticOperator& rhs):
     Operator(rhs),
     fTimeZone(rhs.timeZone()),
-    fDecimalOverflowCheck(false)
+    fDecimalOverflowCheck(rhs.getOverflowCheck())
 {
 }
 

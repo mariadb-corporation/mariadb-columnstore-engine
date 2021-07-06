@@ -129,7 +129,7 @@ ColumnCommandDataType::ColumnCommandDataType(const CalpontSystemCatalog::DataTyp
         colWidth = 8;
         mIsDict = true;
     }
-    // MCOL-641 WIP
+    // TODO MCOL-641
     else if (colWidth > 8
         && colDataType != CalpontSystemCatalog::DECIMAL
         && colDataType != CalpontSystemCatalog::UDECIMAL)

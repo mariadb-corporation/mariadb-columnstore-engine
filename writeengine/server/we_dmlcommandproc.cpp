@@ -149,7 +149,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
             {
                 DMLColumn* columnPtr = *column_iterator;
                 tableColName.column = columnPtr->get_Name();
-                // WIP MCOL-641 replace with getColRidsOidsTypes()
+                // TODO MCOL-641 replace with getColRidsOidsTypes()
                 CalpontSystemCatalog::ROPair roPair = systemCatalogPtr->columnRID(tableColName);
 
                 CalpontSystemCatalog::OID oid = systemCatalogPtr->lookupOID(tableColName);
@@ -216,7 +216,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
                     const DMLColumn* columnPtr = rowPtr->get_ColumnAt(i);
 
                     tableColName.column = columnPtr->get_Name();
-                    // WIP MCOL-641 remove these calls
+                    // TODO MCOL-641 remove these calls
                     CalpontSystemCatalog::OID oid = systemCatalogPtr->lookupOID(tableColName);
 
                     CalpontSystemCatalog::ColType colType;

@@ -1885,9 +1885,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 
 #else
             bool isNull = ConstantColumn::NULLDATA == cc->type();
-            // WIP MCOL-641 width check must be a f() not a literal
-            // make a template from convertValueNum to avoid extra if
-            // this condition doesn't support UDECIMAL
+
             if (ct.isWideDecimalType())
                 convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value128);
             else

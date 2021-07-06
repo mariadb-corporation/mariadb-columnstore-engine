@@ -629,15 +629,16 @@ namespace datatypes
         // decimal part
         left = sizeof(buf) - (p - buf);
         p += writeFractionalPart(tempValue, p, left);
-
-        *p = '\0';
-
         uint8_t written = p - buf;
+
         if (sizeof(buf) <= written)
         {
             throw logging::QueryDataExcept("Decimal::toString() char buffer overflow.",
                                            logging::formatErr);
         }
+
+        *p = '\0';
+
         return std::string(buf);
     }
 

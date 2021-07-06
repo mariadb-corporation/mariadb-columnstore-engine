@@ -597,7 +597,6 @@ void pColStep::addFilter(int8_t COP, int64_t value, uint8_t roundFlag)
     fFilterCount++;
 }
 
-// WIP MCOL-641
 void pColStep::addFilter(int8_t COP, const int128_t& value, uint8_t roundFlag)
 {
     fFilterString << (uint8_t) COP;
