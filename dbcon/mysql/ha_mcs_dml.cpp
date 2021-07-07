@@ -284,6 +284,8 @@ int doProcessInsertValues ( TABLE* table, uint32_t size, cal_connection_info& ci
     ci.tableValuesMap.clear();
     ci.colNameList.clear();
 
+    pDMLPackage->set_isCacheInsert(ci.isCacheInsert);
+
     if (!pDMLPackage)
     {
         rc = -1;

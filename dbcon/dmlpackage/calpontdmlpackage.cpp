@@ -31,7 +31,9 @@ namespace dmlpackage
  */
 
 CalpontDMLPackage::CalpontDMLPackage()
-    : fPlan(new messageqcpp::ByteStream()), fTable(0), fHasFilter(0), fLogging(true), fIsInsertSelect(false), fIsBatchInsert(false), fIsAutocommitOn(false), fTableOid(0)
+    : fPlan(new messageqcpp::ByteStream()),
+      fTable(0), fHasFilter(0), fLogging(true), fIsInsertSelect(false),
+      fIsBatchInsert(false), fIsCacheInsert(false), fIsAutocommitOn(false), fIsWarnToError(false), fTableOid(0)
 {
 
 }
@@ -40,7 +42,7 @@ CalpontDMLPackage::CalpontDMLPackage( std::string schemaName, std::string tableN
                                       std::string dmlStatement, int sessionID )
     : fSchemaName(schemaName), fTableName( tableName ), fDMLStatement( dmlStatement ),
       fSessionID(sessionID), fPlan(new messageqcpp::ByteStream()), fTable(0), fHasFilter(false), fLogging(true), fIsInsertSelect(false),
-      fIsBatchInsert(false), fIsAutocommitOn(false), fIsWarnToError(false), fTableOid(0)
+      fIsBatchInsert(false), fIsCacheInsert(false), fIsAutocommitOn(false), fIsWarnToError(false), fTableOid(0)
 {
 
 }
