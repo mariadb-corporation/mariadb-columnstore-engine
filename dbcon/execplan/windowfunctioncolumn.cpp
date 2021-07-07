@@ -494,16 +494,19 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
                 case 16:
                     //fallthrough
                 default:
-                    if (row.equals(CPNULLSTRMARK, fInputIndex))
+                {
+                    const auto str = row.getConstString(fInputIndex);
+                    if (str.eq(utils::ConstString(CPNULLSTRMARK)))
                         isNull = true;
                     else
-                        fResult.strVal = row.getStringField(fInputIndex);
+                        fResult.strVal = str.toString();
 
                     // stringColVal is padded with '\0' to colWidth so can't use str.length()
                     if (strlen(fResult.strVal.c_str()) == 0)
                         isNull = true;
 
                     break;
+                }
             }
 
             if (fResultType.colDataType == CalpontSystemCatalog::STRINT)

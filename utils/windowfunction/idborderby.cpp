@@ -327,15 +327,14 @@ int StringCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
     }
     else
     {
-        int len1 = l->row1().getStringLength(fSpec.fIndex);
-        int len2 = l->row2().getStringLength(fSpec.fIndex);
-        const char* s1 = (const char*)l->row1().getStringPointer(fSpec.fIndex);
-        const char* s2 = (const char*)l->row2().getStringPointer(fSpec.fIndex);
+        auto const str1 = l->row1().getConstString(fSpec.fIndex);
+        auto const str2 = l->row2().getConstString(fSpec.fIndex);
 
         if (!cs)
             cs = l->rowGroup()->getCharset(fSpec.fIndex);
         
-        ret = fSpec.fAsc * cs->strnncollsp(s1, len1, s2, len2);
+        ret = fSpec.fAsc * cs->strnncollsp(str1.str(), str1.length(),
+                                           str2.str(), str2.length());
     }
 
     return ret;

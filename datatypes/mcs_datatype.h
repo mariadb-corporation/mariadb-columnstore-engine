@@ -21,6 +21,7 @@
 #include <sstream>
 #include <boost/any.hpp>
 #include "exceptclasses.h"
+#include "conststring.h"
 #include "mcs_numeric_limits.h"
 #include "mcs_data_condition.h"
 #include "mcs_decimal.h"
@@ -909,6 +910,11 @@ public:
   virtual int store_decimal64(const datatypes::Decimal& dec) = 0;
   virtual int store_decimal128(const datatypes::Decimal& dec) = 0;
   virtual int store_lob(const char *str, size_t length) = 0;
+
+  int storeConstString(const utils::ConstString &str)
+  {
+      return store_string(str.str(), str.length());
+  }
 };
 
 

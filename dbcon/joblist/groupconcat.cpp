@@ -375,7 +375,7 @@ void GroupConcatAgUM::applyMapping(const boost::shared_array<int>& mapping, cons
                 fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::VARCHAR ||
                 fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::TEXT)
             {
-                fRow.setStringField(row.getStringPointer(mapping[i]), row.getStringLength(mapping[i]), i);
+                fRow.setStringField(row.getConstString(mapping[i]), i);
             }
             else if (fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::LONGDOUBLE)
             {
@@ -621,8 +621,7 @@ int64_t GroupConcator::lengthEstimate(const rowgroup::Row& row)
             case CalpontSystemCatalog::VARCHAR:
             case CalpontSystemCatalog::TEXT:
             {
-                int64_t colWidth = row.getStringLength(*i);
-                fieldLen += colWidth;   // getStringLength() does the same thing as below
+                fieldLen += row.getConstString(*i).length();
                 break;
             }
 

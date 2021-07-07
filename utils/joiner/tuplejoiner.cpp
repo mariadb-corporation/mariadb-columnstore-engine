@@ -1228,6 +1228,9 @@ public:
     TypelessDataStringEncoder(const uint8_t *str, uint32_t length)
        :mStr(str), mLength(length)
     { }
+    TypelessDataStringEncoder(const utils::ConstString &str)
+       :mStr((const uint8_t*) str.str()), mLength(str.length())
+    { }
     bool store(uint8_t* to, uint32_t& off, uint32_t keylen) const
     {
         if (mLength > 0xFFFF) // We encode length into two bytes below
@@ -1563,9 +1566,8 @@ TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols,
         if (datatypes::isCharType(type))
         {
             // this is a string, copy a normalized version
-            const uint8_t* str = r.getStringPointer(keyCols[i]);
-            uint32_t width = r.getStringLength(keyCols[i]);
-            if (TypelessDataStringEncoder(str, width).store(ret.data, off, keylen))
+            const utils::ConstString str = r.getConstString(keyCols[i]);
+            if (TypelessDataStringEncoder(str).store(ret.data, off, keylen))
                 goto toolong;
         }
         else if (datatypes::isWideDecimalType(type, r.getColumnWidth(keyCols[i])))
@@ -1683,15 +1685,10 @@ uint64_t getHashOfTypelessKey(const Row& r, const vector<uint32_t>& keyCols, uin
                 type == CalpontSystemCatalog::TEXT)
         {
             // this is a string, copy a normalized version
-            const uint8_t* str = r.getStringPointer(keyCols[i]);
-            uint32_t len = r.getStringLength(keyCols[i]);
-            ret = hasher((const char*) str, len, ret);
-            /*
-            for (uint32_t j = 0; j < width && str[j] != 0; j++)
-                ret.data[off++] = str[j];
-            */
+            const utils::ConstString str = r.getConstString(keyCols[i]);
+            ret = hasher(str.str(), str.length(), ret);
             ret = hasher(&nullChar, 1, ret);
-            width += len + 1;
+            width += str.length() + 1;
         }
         else if (r.getColType(keyCols[i]) == CalpontSystemCatalog::LONGDOUBLE)
         {

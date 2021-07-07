@@ -388,7 +388,8 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
             else
             {
                 //@bug 1821
-                ret = (row.equals(string(""), col) || row.equals(joblist::CPNULLSTRMARK, col));
+                auto const str = row.getConstString(col);
+                ret = str.length() == 0 || str.eq(utils::ConstString(joblist::CPNULLSTRMARK));
             }
 
             break;
@@ -486,7 +487,8 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
         case execplan::CalpontSystemCatalog::VARBINARY:
         case execplan::CalpontSystemCatalog::BLOB:
         {
-            ret = (row.equals(string(""), col) || row.equals(joblist::CPNULLSTRMARK, col));
+            auto const str = row.getConstString(col);
+            ret = str.length() == 0 || str.eq(utils::ConstString(joblist::CPNULLSTRMARK));
             break;
         }
 
@@ -949,8 +951,7 @@ void RowAggregation::initMapData(const Row& rowIn)
                 }
                 else
                 {
-                    fRow.setStringField(rowIn.getStringPointer(colIn),
-                                        rowIn.getStringLength(colIn), colOut);
+                    fRow.setStringField(rowIn.getConstString(colIn), colOut);
                 }
 
                 break;

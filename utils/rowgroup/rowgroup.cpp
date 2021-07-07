@@ -346,45 +346,6 @@ void UserDataStore::deserialize(ByteStream& bs)
     return;
 }
 
-inline bool StringStore::equals(const std::string& str, uint64_t off, CHARSET_INFO* cs) const
-{
-    uint32_t length;
-
-    if (off == std::numeric_limits<uint64_t>::max())
-        return str == joblist::CPNULLSTRMARK;
-
-    MemChunk* mc;
-
-    if (off & 0x8000000000000000)
-    {
-        if (longStrings.size() <= (off & ~0x8000000000000000))
-            return false;
-
-        mc = (MemChunk*) longStrings[off & ~0x8000000000000000].get();
-
-        memcpy(&length, mc->data, 4);
-
-        // Not sure if this check it needed, but adds safety
-        if (length > mc->currentSize)
-            return false;
-
-        return (cs->strnncoll(str.c_str(), str.length(), (const char*)mc->data+4, length) == 0);
-    }
-
-    uint32_t chunk = off / CHUNK_SIZE;
-    uint32_t offset = off % CHUNK_SIZE;
-
-    if (mem.size() <=  chunk)
-        return false;
-
-    mc = (MemChunk*) mem[chunk].get();
-    memcpy(&length, &mc->data[offset], 4);
-
-    if ((offset + length) > mc->currentSize)
-        return false;
-
-    return (cs->strnncoll(str.c_str(), str.length(), (const char*)&mc->data[offset]+4, length) == 0);
-}
 
 RGData::RGData()
 {
@@ -598,8 +559,10 @@ string Row::toString(uint32_t rownum) const
                 case CalpontSystemCatalog::CHAR:
                 case CalpontSystemCatalog::VARCHAR:
                 {
-                    const string& tmp = getStringField(i);
-                    os << "(" << getStringLength(i) << ") '" << tmp << "' ";
+                    const utils::ConstString tmp = getConstString(i);
+                    os << "(" << tmp.length() << ") '";
+                    os.write(tmp.str(), tmp.length());
+                    os << "' ";
                     break;
                 }
 
@@ -1112,24 +1075,6 @@ int64_t Row::getSignedNullValue(uint32_t colIndex) const
     return utils::getSignedNullValue(types[colIndex], getColumnWidth(colIndex));
 }
 
-bool Row::equals(const std::string& val, uint32_t col) const
-{
-    const CHARSET_INFO* cs = getCharset(col);
-    if (UNLIKELY(getColType(col) == execplan::CalpontSystemCatalog::BLOB))
-    {
-        if (getStringLength(col) != val.length())
-            return false;
-
-        if (memcmp(getStringPointer(col), val.c_str(), val.length()))
-            return false;
-    }
-    else
-    {
-        return (cs->strnncollsp((char*)getStringPointer(col), getStringLength(col),
-                                val.c_str(), val.length()) == 0);
-    }
-    return true;
-}
 
 bool Row::equals(const Row& r2, uint32_t lastCol) const
 {
@@ -1151,19 +1096,15 @@ bool Row::equals(const Row& r2, uint32_t lastCol) const
         cscDataType columnType = getColType(col);
         if (UNLIKELY(typeHasCollation(columnType)))
         {
-            CHARSET_INFO* cs = getCharset(col);
-            if (cs->strnncollsp(getStringPointer(col), getStringLength(col), 
-                          r2.getStringPointer(col), r2.getStringLength(col)))
+            datatypes::Charset cs(getCharset(col));
+            if (cs.strnncollsp(getConstString(col), r2.getConstString(col)))
             {
                 return false;
             }
         }
         else if (UNLIKELY(columnType == execplan::CalpontSystemCatalog::BLOB))
         {
-            if (getStringLength(col) != r2.getStringLength(col))
-                return false;
-
-            if (memcmp(getStringPointer(col), r2.getStringPointer(col), getStringLength(col)))
+            if (!getConstString(col).eq(r2.getConstString(col)))
                 return false;
         }
         else
@@ -1573,7 +1514,7 @@ void applyMapping(const int* mapping, const Row& in, Row* out)
                          in.getColTypes()[i] == execplan::CalpontSystemCatalog::TEXT))
                 out->setVarBinaryField(in.getVarBinaryField(i), in.getVarBinaryLength(i), mapping[i]);
             else if (UNLIKELY(in.isLongString(i)))
-                out->setStringField(in.getStringPointer(i), in.getStringLength(i), mapping[i]);
+                out->setStringField(in.getConstString(i), mapping[i]);
             else if (UNLIKELY(in.isShortString(i)))
                 out->setUintField(in.getUintField(i), mapping[i]);
             else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::LONGDOUBLE))
