@@ -1348,7 +1348,7 @@ inline void Row::setLongDoubleField(const long double& val, uint32_t colIndex)
     uint8_t* p = &data[offsets[colIndex]];
     *reinterpret_cast<long double*>(p) = val;
 #ifdef MASK_LONGDOUBLE
-    *(reinterpret_cast<uint64_t*>(p)+1) &= 0x000000000000FFFFULL;
+    memset(p+10, 0, 6);
 #endif    
 }
 
