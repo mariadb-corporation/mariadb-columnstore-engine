@@ -112,7 +112,8 @@ class EMReBuilder
     int32_t searchHWMInSegmentFile(
         uint32_t oid, uint32_t dbRoot, uint32_t partition, uint32_t segment,
         execplan::CalpontSystemCatalog::ColDataType colDataType,
-        uint32_t width, uint64_t blocksCount, bool isDict, uint64_t& hwm);
+        uint32_t width, uint64_t blocksCount, bool isDict,
+        uint32_t compressionType, uint64_t& hwm);
 
     // Sets the dbroot to the given `number`.
     void setDBRoot(uint32_t number) { dbRoot = number; }
@@ -184,7 +185,7 @@ class ChunkManagerWrapperColumn : public ChunkManagerWrapper
     ChunkManagerWrapperColumn(
         uint32_t oid, uint32_t dbRoot, uint32_t partition, uint32_t segment,
         execplan::CalpontSystemCatalog::ColDataType colDataType,
-        uint32_t colWidth);
+        uint32_t colWidth, uint32_t compressionType);
 
     ~ChunkManagerWrapperColumn() = default;
     ChunkManagerWrapperColumn(const ChunkManagerWrapperColumn& other) = delete;
@@ -210,7 +211,7 @@ class ChunkManagerWrapperDict : public ChunkManagerWrapper
     ChunkManagerWrapperDict(
         uint32_t oid, uint32_t dbRoot, uint32_t partition, uint32_t segment,
         execplan::CalpontSystemCatalog::ColDataType colDataType,
-        uint32_t colWidth);
+        uint32_t colWidth, uint32_t compressionType);
 
     ~ChunkManagerWrapperDict() = default;
     ChunkManagerWrapperDict(const ChunkManagerWrapperDict& other) = delete;

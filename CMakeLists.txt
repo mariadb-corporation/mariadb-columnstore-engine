@@ -163,6 +163,12 @@ if(NOT AWK_EXECUTABLE)
     return()
 endif()
 
+FIND_PACKAGE(LZ4)
+if (NOT LZ4_FOUND)
+    MESSAGE_ONCE(CS_NO_LZ4 "lz4 not found")
+    return()
+endif()
+
 IF (NOT INSTALL_LAYOUT)
     INCLUDE(check_compiler_flag)
 

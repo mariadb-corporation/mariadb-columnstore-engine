@@ -21,8 +21,10 @@
 #include "ha_mcs_sysvars.h"
 
 const char* mcs_compression_type_names[] = {
-    "SNAPPY",
-    "SNAPPY",
+    "SNAPPY", // 0
+    "SNAPPY", // 1
+    "SNAPPY", // 2
+    "LZ4",    // 3
     NullS
 };
 
@@ -39,7 +41,8 @@ static MYSQL_THDVAR_ENUM(
     PLUGIN_VAR_RQCMDARG,
     "Controls compression algorithm for create tables. Possible values are: "
     "NO_COMPRESSION segment files aren't compressed; "
-    "SNAPPY segment files are Snappy compressed (default);",
+    "SNAPPY segment files are Snappy compressed (default);"
+    "LZ4 segment files are LZ4 compressed;",
     NULL, // check
     NULL, // update
     1, //default

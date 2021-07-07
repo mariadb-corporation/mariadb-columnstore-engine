@@ -64,8 +64,8 @@ namespace WriteEngine
 // forward reference
 class FileOp;
 
-const int UNCOMPRESSED_CHUNK_SIZE = compress::IDBCompressInterface::UNCOMPRESSED_INBUF_LEN;
-const int COMPRESSED_FILE_HEADER_UNIT = compress::IDBCompressInterface::HDR_BUF_LEN;
+const int UNCOMPRESSED_CHUNK_SIZE = compress::CompressInterface::UNCOMPRESSED_INBUF_LEN;
+const int COMPRESSED_FILE_HEADER_UNIT = compress::CompressInterface::HDR_BUF_LEN;
 
 // assume UNCOMPRESSED_CHUNK_SIZE > 0xBFFF (49151), 8 * 1024 bytes padding
 
@@ -136,7 +136,7 @@ class CompFileData
 public:
     CompFileData(const FileID& id, const FID& fid, const execplan::CalpontSystemCatalog::ColDataType colDataType, int colWidth) :
         fFileID(id), fFid(fid), fColDataType(colDataType), fColWidth(colWidth), fDctnryCol(false),
-        fFilePtr(NULL), fIoBSize(0) {}
+        fFilePtr(NULL), fIoBSize(0), fCompressionType(1) {}
 
     ChunkData* findChunk(int64_t cid) const;
 
@@ -152,6 +152,7 @@ protected:
     std::list<ChunkData*>   fChunkList;
     boost::scoped_array<char> fIoBuffer;
     size_t          fIoBSize;
+    uint32_t        fCompressionType;
 
     friend class ChunkManager;
 };
@@ -369,22 +370,23 @@ protected:
     std::list<std::pair<FileID, ChunkData*> >   fActiveChunks;
     unsigned int                                fMaxActiveChunkNum;  // max active chunks per file
     char*                                       fBufCompressed;
-    unsigned int                                fLenCompressed;
-    unsigned int                                fMaxCompressedBufSize;
-    unsigned int                                fUserPaddings;
+    size_t                                      fLenCompressed;
+    size_t                                      fMaxCompressedBufSize;
+    size_t                                      fUserPaddings;
     bool                                        fIsBulkLoad;
     bool                                        fDropFdCache;
     bool                                        fIsInsert;
     bool                                        fIsHdfs;
     FileOp*                                     fFileOp;
-    compress::IDBCompressInterface              fCompressor;
+    compress::CompressorPool                    fCompressorPool;
     logging::Logger*                            fSysLogger;
     TxnID                                       fTransId;
     int                                         fLocalModuleId;
     idbdatafile::IDBFileSystem&                 fFs;
     bool 										fIsFix;
+    size_t COMPRESSED_CHUNK_SIZE;
 
-private:
+  private:
 };
 
 }

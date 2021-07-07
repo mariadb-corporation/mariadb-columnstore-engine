@@ -383,7 +383,7 @@ public:
         BlockOp   blockOp;
         char     fileName[20];
         int      rc;
-        char hdrs[ IDBCompressInterface::HDR_BUF_LEN * 2 ];
+        char hdrs[ CompressInterface::HDR_BUF_LEN * 2 ];
 
         printf("\nRunning testCreateDeleteFile \n");
         idbdatafile::IDBPolicy::init(true, false, "", 0);
@@ -966,7 +966,7 @@ public:
         BlockOp   blockOp;
         char     fileName[20];
         int      rc;
-        char hdrs[ IDBCompressInterface::HDR_BUF_LEN * 2 ];
+        char hdrs[ CompressInterface::HDR_BUF_LEN * 2 ];
         int dbRoot = 1;
 
         printf("\nRunning testExtensionWOPrealloc \n");
@@ -1085,7 +1085,7 @@ public:
         int dbRoot = 1;
         int colWidth = 65535;
 
-        DctnryCompress1 m_Dctnry;
+        DctnryCompress1 m_Dctnry(/*compressionType=*/1);
         // This is the magic for the stub in FileOp::oid2FileName
         int oId = 42;
 
@@ -1565,7 +1565,7 @@ public:
         BlockOp blockOp;
         char fileName[20];
         int rc;
-        char hdrs[ IDBCompressInterface::HDR_BUF_LEN * 2 ];
+        char hdrs[ CompressInterface::HDR_BUF_LEN * 2 ];
         int dbRoot = 1;
 
         idbdatafile::IDBPolicy::init(true, false, "", 0);

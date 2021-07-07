@@ -28,6 +28,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <unordered_map>
 
 #include "we_define.h"
 #include "we_type.h"
@@ -148,7 +149,7 @@ private:
                                 uint64_t&   ptrHdrSize,
                                 std::string& errMsg ) const;
 
-    compress::IDBCompressInterface fCompressor;
+    compress::CompressorPool fCompressorPool;
 };
 
 } //end of namespace

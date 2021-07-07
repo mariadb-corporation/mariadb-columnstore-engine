@@ -492,6 +492,7 @@
 		<CPUniqueLimit>100</CPUniqueLimit>
 		<AllowDiskBasedJoin>N</AllowDiskBasedJoin>
 		<TempFileCompression>Y</TempFileCompression>
+    <TempFileCompressionType>Snappy</TempFileCompressionType> <!-- LZ4, Snappy -->
 	</HashJoin>
 	<JobList>
 		<FlushInterval>16K</FlushInterval>
@@ -539,6 +540,7 @@
 	</UserPriority>
 	<NetworkCompression>
 		<Enabled>Y</Enabled>
+    <NetworkCompressionType>Snappy</NetworkCompressionType> <!-- LZ4, Snappy -->
 	</NetworkCompression>
 	<QueryTele>
 		<Host>127.0.0.1</Host>

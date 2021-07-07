@@ -60,12 +60,11 @@ ColumnBufferCompressed::ColumnBufferCompressed( ColumnInfo* pColInfo,
     fToBeCompressedBuffer(0),
     fToBeCompressedCapacity(0),
     fNumBytes(0),
-    fCompressor(0),
     fPreLoadHWMChunk(true),
     fFlushedStartHwmChunk(false)
 {
     fUserPaddingBytes = Config::getNumCompressedPadBlks() * BYTE_PER_BLOCK;
-    fCompressor = new compress::IDBCompressInterface( fUserPaddingBytes );
+    compress::initializeCompressorPool(fCompressorPool, fUserPaddingBytes);
 }
 
 //------------------------------------------------------------------------------
@@ -79,7 +78,6 @@ ColumnBufferCompressed::~ColumnBufferCompressed()
     fToBeCompressedBuffer   = 0;
     fToBeCompressedCapacity = 0;
     fNumBytes               = 0;
-    delete fCompressor;
 }
 
 //------------------------------------------------------------------------------
@@ -91,9 +89,7 @@ int ColumnBufferCompressed::setDbFile(IDBDataFile* f, HWM startHwm, const char* 
     fFile        = f;
     fStartingHwm = startHwm;
 
-    IDBCompressInterface compressor;
-
-    if (compressor.getPtrList(hdrs, fChunkPtrs) != 0)
+    if (compress::CompressInterface::getPtrList(hdrs, fChunkPtrs) != 0)
     {
         return ERR_COMP_PARSE_HDRS;
     }
@@ -102,7 +98,15 @@ int ColumnBufferCompressed::setDbFile(IDBDataFile* f, HWM startHwm, const char* 
     // rollback), that fall after the HWM, then drop those trailing ptrs.
     unsigned int chunkIndex             = 0;
     unsigned int blockOffsetWithinChunk = 0;
-    fCompressor->locateBlock(fStartingHwm, chunkIndex, blockOffsetWithinChunk);
+
+    auto compressor = compress::getCompressorByType(
+        fCompressorPool, fColInfo->column.compressionType);
+    if (!compressor)
+    {
+        return ERR_COMP_WRONG_COMP_TYPE;
+    }
+
+    compressor->locateBlock(fStartingHwm, chunkIndex, blockOffsetWithinChunk);
 
     if ((chunkIndex + 1) < fChunkPtrs.size())
     {
@@ -127,11 +131,11 @@ int ColumnBufferCompressed::resetToBeCompressedColBuf(
     if (!fToBeCompressedBuffer)
     {
         fToBeCompressedBuffer =
-            new unsigned char[IDBCompressInterface::UNCOMPRESSED_INBUF_LEN];
+            new unsigned char[CompressInterface::UNCOMPRESSED_INBUF_LEN];
     }
 
     BlockOp::setEmptyBuf( fToBeCompressedBuffer,
-                          IDBCompressInterface::UNCOMPRESSED_INBUF_LEN,
+                          CompressInterface::UNCOMPRESSED_INBUF_LEN,
                           fColInfo->column.emptyVal,
                           fColInfo->column.width );
 
@@ -147,10 +151,10 @@ int ColumnBufferCompressed::resetToBeCompressedColBuf(
         fLog->logMsg( oss.str(), MSGLVL_INFO2 );
     }
 
-    fToBeCompressedCapacity = IDBCompressInterface::UNCOMPRESSED_INBUF_LEN;
+    fToBeCompressedCapacity = CompressInterface::UNCOMPRESSED_INBUF_LEN;
 
     // Set file offset past end of last chunk
-    startFileOffset = IDBCompressInterface::HDR_BUF_LEN * 2;
+    startFileOffset = CompressInterface::HDR_BUF_LEN * 2;
 
     if (fChunkPtrs.size() > 0)
         startFileOffset = fChunkPtrs[ fChunkPtrs.size() - 1 ].first +
@@ -223,7 +227,7 @@ int ColumnBufferCompressed::writeToFile(int startOffset, int writeSize,
 
     // Expand the compression buffer size if working with an abbrev extent, and
     // the bytes we are about to add will overflow the abbreviated extent.
-    if ((fToBeCompressedCapacity < IDBCompressInterface::UNCOMPRESSED_INBUF_LEN) &&
+    if ((fToBeCompressedCapacity < CompressInterface::UNCOMPRESSED_INBUF_LEN) &&
             ((fNumBytes + writeSize + fillUpWEmptiesWriteSize) > fToBeCompressedCapacity) )
     {
         std::ostringstream oss;
@@ -233,7 +237,7 @@ int ColumnBufferCompressed::writeToFile(int startOffset, int writeSize,
             "; part-"     << fColInfo->curCol.dataFile.fPartition <<
             "; seg-"      << fColInfo->curCol.dataFile.fSegment;
         fLog->logMsg( oss.str(), MSGLVL_INFO2 );
-        fToBeCompressedCapacity = IDBCompressInterface::UNCOMPRESSED_INBUF_LEN;
+        fToBeCompressedCapacity = CompressInterface::UNCOMPRESSED_INBUF_LEN;
     }
 
     if ((fNumBytes + writeSize + fillUpWEmptiesWriteSize) <= fToBeCompressedCapacity)
@@ -316,12 +320,12 @@ int ColumnBufferCompressed::writeToFile(int startOffset, int writeSize,
 
                 // Start over again loading a new to-be-compressed buffer
                 BlockOp::setEmptyBuf( fToBeCompressedBuffer,
-                                      IDBCompressInterface::UNCOMPRESSED_INBUF_LEN,
+                                      CompressInterface::UNCOMPRESSED_INBUF_LEN,
                                       fColInfo->column.emptyVal,
                                       fColInfo->column.width );
 
                 fToBeCompressedCapacity =
-                    IDBCompressInterface::UNCOMPRESSED_INBUF_LEN;
+                    CompressInterface::UNCOMPRESSED_INBUF_LEN;
                 bufOffset = fToBeCompressedBuffer;
 
                 fNumBytes = 0;
@@ -377,21 +381,31 @@ int ColumnBufferCompressed::writeToFile(int startOffset, int writeSize,
 //------------------------------------------------------------------------------
 int ColumnBufferCompressed::compressAndFlush( bool bFinishingFile )
 {
-    const int OUTPUT_BUFFER_SIZE = IDBCompressInterface::maxCompressedSize(fToBeCompressedCapacity) +
-                                   fUserPaddingBytes;
+    auto compressor = compress::getCompressorByType(
+        fCompressorPool, fColInfo->column.compressionType);
+    if (!compressor)
+    {
+        return ERR_COMP_WRONG_COMP_TYPE;
+    }
+
+    const size_t OUTPUT_BUFFER_SIZE =
+        compressor->maxCompressedSize(fToBeCompressedCapacity) +
+        fUserPaddingBytes +
+        // Padded len = len + COMPRESSED_SIZE_INCREMENT_CHUNK - (len %
+        // COMPRESSED_SIZE_INCREMENT_CHUNK) + usePadding
+        compress::CompressInterface::COMPRESSED_CHUNK_INCREMENT_SIZE;
+
     unsigned char* compressedOutBuf = new unsigned char[ OUTPUT_BUFFER_SIZE ];
     boost::scoped_array<unsigned char> compressedOutBufPtr(compressedOutBuf);
-    unsigned int   outputLen = OUTPUT_BUFFER_SIZE;
+    size_t outputLen = OUTPUT_BUFFER_SIZE;
 
 #ifdef PROFILE
     Stats::startParseEvent(WE_STATS_COMPRESS_COL_COMPRESS);
 #endif
 
-    int rc = fCompressor->compressBlock(
-                 reinterpret_cast<char*>(fToBeCompressedBuffer),
-                 fToBeCompressedCapacity,
-                 compressedOutBuf,
-                 outputLen );
+    int rc = compressor->compressBlock(
+        reinterpret_cast<char*>(fToBeCompressedBuffer),
+        fToBeCompressedCapacity, compressedOutBuf, outputLen);
 
     if (rc != 0)
     {
@@ -399,7 +413,7 @@ int ColumnBufferCompressed::compressAndFlush( bool bFinishingFile )
     }
 
     // Round up the compressed chunk size
-    rc = fCompressor->padCompressedChunks( compressedOutBuf,
+    rc = compressor->padCompressedChunks( compressedOutBuf,
                                            outputLen, OUTPUT_BUFFER_SIZE );
 
     if (rc != 0)
@@ -581,26 +595,24 @@ int ColumnBufferCompressed::finishFile(bool bTruncFile)
 int ColumnBufferCompressed::saveCompressionHeaders( )
 {
     // Construct the header records
-    char hdrBuf[IDBCompressInterface::HDR_BUF_LEN * 2];
+    char hdrBuf[CompressInterface::HDR_BUF_LEN * 2];
     RETURN_ON_ERROR(fColInfo->colOp->readHeaders(fFile, hdrBuf));
 
-    BRM::LBID_t lbid = fCompressor->getLBIDByIndex(hdrBuf, 0);
-    fCompressor->initHdr(hdrBuf, fColInfo->column.width,
-                         fColInfo->column.dataType,
-                         fColInfo->column.compressionType);
-    fCompressor->setBlockCount(hdrBuf,
-                               (fColInfo->getFileSize() / BYTE_PER_BLOCK) );
+    BRM::LBID_t lbid = compress::CompressInterface::getLBIDByIndex(hdrBuf, 0);
+    compress::CompressInterface::initHdr(hdrBuf, fColInfo->column.width, fColInfo->column.dataType,
+                                         fColInfo->column.compressionType);
+    compress::CompressInterface::setBlockCount(hdrBuf, (fColInfo->getFileSize() / BYTE_PER_BLOCK));
     // If lbid written in the header is not 0 and not equal to `lastupdatedlbid` - we are running
     // for the next extent for column segment file.
     const auto lastUpdatedLbid = fColInfo->getLastUpdatedLBID();
     if (lbid && lastUpdatedLbid != lbid)
     {
         // Write back lbid, after header initialization.
-        fCompressor->setLBIDByIndex(hdrBuf, lbid, 0);
-        fCompressor->setLBIDByIndex(hdrBuf, lastUpdatedLbid, 1);
+        compress::CompressInterface::setLBIDByIndex(hdrBuf, lbid, 0);
+        compress::CompressInterface::setLBIDByIndex(hdrBuf, lastUpdatedLbid, 1);
     }
     else
-        fCompressor->setLBIDByIndex(hdrBuf, fColInfo->getLastUpdatedLBID(), 0);
+        compress::CompressInterface::setLBIDByIndex(hdrBuf, fColInfo->getLastUpdatedLBID(), 0);
 
     std::vector<uint64_t> ptrs;
 
@@ -611,7 +623,7 @@ int ColumnBufferCompressed::saveCompressionHeaders( )
 
     unsigned lastIdx = fChunkPtrs.size() - 1;
     ptrs.push_back( fChunkPtrs[lastIdx].first + fChunkPtrs[lastIdx].second );
-    fCompressor->storePtrs( ptrs, hdrBuf );
+    compress::CompressInterface::storePtrs(ptrs, hdrBuf);
 
     // Write out the header records
     //char resp;
@@ -641,9 +653,9 @@ int ColumnBufferCompressed::initToBeCompressedBuffer(long long& startFileOffset)
     if (!fToBeCompressedBuffer)
     {
         fToBeCompressedBuffer =
-            new unsigned char[IDBCompressInterface::UNCOMPRESSED_INBUF_LEN];
+            new unsigned char[CompressInterface::UNCOMPRESSED_INBUF_LEN];
         BlockOp::setEmptyBuf( fToBeCompressedBuffer,
-                              IDBCompressInterface::UNCOMPRESSED_INBUF_LEN,
+                              CompressInterface::UNCOMPRESSED_INBUF_LEN,
                               fColInfo->column.emptyVal,
                               fColInfo->column.width );
         bNewBuffer = true;
@@ -656,12 +668,19 @@ int ColumnBufferCompressed::initToBeCompressedBuffer(long long& startFileOffset)
     unsigned int blockOffsetWithinChunk = 0;
     bool         bSkipStartingBlks      = false;
 
+    auto compressor = compress::getCompressorByType(
+        fCompressorPool, fColInfo->column.compressionType);
+    if (!compressor)
+    {
+        return ERR_COMP_WRONG_COMP_TYPE;
+    }
+
     if (fPreLoadHWMChunk)
     {
         if (fChunkPtrs.size() > 0)
         {
-            fCompressor->locateBlock(fStartingHwm,
-                                     chunkIndex, blockOffsetWithinChunk);
+            compressor->locateBlock(fStartingHwm, chunkIndex,
+                                     blockOffsetWithinChunk);
 
             if (chunkIndex < fChunkPtrs.size())
                 startFileOffset  = fChunkPtrs[chunkIndex].first;
@@ -718,8 +737,8 @@ int ColumnBufferCompressed::initToBeCompressedBuffer(long long& startFileOffset)
         }
 
         // Uncompress the chunk into our 4MB buffer
-        unsigned int outLen = IDBCompressInterface::UNCOMPRESSED_INBUF_LEN;
-        int rc = fCompressor->uncompressBlock(
+        size_t outLen = CompressInterface::UNCOMPRESSED_INBUF_LEN;
+        int rc = compressor->uncompressBlock(
                      compressedOutBuf,
                      fChunkPtrs[chunkIndex].second,
                      fToBeCompressedBuffer,
@@ -758,7 +777,7 @@ int ColumnBufferCompressed::initToBeCompressedBuffer(long long& startFileOffset)
         if (!bNewBuffer)
         {
             BlockOp::setEmptyBuf( fToBeCompressedBuffer,
-                                  IDBCompressInterface::UNCOMPRESSED_INBUF_LEN,
+                                  CompressInterface::UNCOMPRESSED_INBUF_LEN,
                                   fColInfo->column.emptyVal,
                                   fColInfo->column.width );
         }
@@ -775,10 +794,10 @@ int ColumnBufferCompressed::initToBeCompressedBuffer(long long& startFileOffset)
             fLog->logMsg( oss.str(), MSGLVL_INFO2 );
         }
 
-        fToBeCompressedCapacity = IDBCompressInterface::UNCOMPRESSED_INBUF_LEN;
+        fToBeCompressedCapacity = CompressInterface::UNCOMPRESSED_INBUF_LEN;
 
         // Set file offset to start after last current chunk
-        startFileOffset     = IDBCompressInterface::HDR_BUF_LEN * 2;
+        startFileOffset     = CompressInterface::HDR_BUF_LEN * 2;
 
         if (fChunkPtrs.size() > 0)
             startFileOffset = fChunkPtrs[ fChunkPtrs.size() - 1 ].first +
@@ -796,5 +815,4 @@ int ColumnBufferCompressed::initToBeCompressedBuffer(long long& startFileOffset)
 
     return NO_ERROR;
 }
-
 }

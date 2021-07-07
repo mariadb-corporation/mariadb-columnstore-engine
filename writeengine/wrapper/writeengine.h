@@ -58,9 +58,10 @@ namespace WriteEngine
 {
 
 //... Total compression operation: un_compresssed, compressed
-const int UN_COMPRESSED_OP  = 0;
-const int COMPRESSED_OP     = 1;
-const int TOTAL_COMPRESS_OP = 2;
+const int UN_COMPRESSED_OP = 0;
+const int COMPRESSED_OP_1 = 1;
+const int COMPRESSED_OP_2 = 2;
+const int TOTAL_COMPRESS_OP = 3;
 
 //...Forward class declarations
 class Log;
@@ -446,8 +447,10 @@ public:
     */
     void setIsInsert(bool bIsInsert)
     {
-        m_colOp[COMPRESSED_OP]->chunkManager()->setIsInsert(bIsInsert);
-        m_dctnry[COMPRESSED_OP]->chunkManager()->setIsInsert(true);
+        m_colOp[COMPRESSED_OP_1]->chunkManager()->setIsInsert(bIsInsert);
+        m_dctnry[COMPRESSED_OP_1]->chunkManager()->setIsInsert(true);
+        m_colOp[COMPRESSED_OP_2]->chunkManager()->setIsInsert(bIsInsert);
+        m_dctnry[COMPRESSED_OP_2]->chunkManager()->setIsInsert(true);
     }
 
     /**
@@ -458,7 +461,7 @@ public:
     */
     bool getIsInsert()
     {
-        return m_colOp[COMPRESSED_OP]->chunkManager()->getIsInsert();
+        return m_colOp[COMPRESSED_OP_1]->chunkManager()->getIsInsert();
     }
 
     std::tr1::unordered_map<TxnID, SP_TxnLBIDRec_t>&  getTxnMap()
@@ -475,10 +478,23 @@ public:
     */
     int flushChunks(int rc, const std::map<FID, FID>& columOids)
     {
-        int rtn1 = m_colOp[COMPRESSED_OP]->chunkManager()->flushChunks(rc, columOids);
-        int rtn2 = m_dctnry[COMPRESSED_OP]->chunkManager()->flushChunks(rc, columOids);
+        std::vector<int32_t> compressedOpIds = {COMPRESSED_OP_1,
+                                                COMPRESSED_OP_2};
 
-        return (rtn1 != NO_ERROR ? rtn1 : rtn2);
+        for (const auto compressedOpId : compressedOpIds)
+        {
+            auto rtn = m_colOp[compressedOpId]->chunkManager()->flushChunks(
+                rc, columOids);
+            if (rtn != NO_ERROR)
+                return rtn;
+
+            rtn = m_dctnry[compressedOpId]->chunkManager()->flushChunks(
+                rc, columOids);
+            if (rtn != NO_ERROR)
+                return rtn;
+        }
+
+        return NO_ERROR;
     }
 
     /**
@@ -524,7 +540,7 @@ public:
     int startTransaction(const TxnID& txnid)
     {
         int rc = 0;
-        rc = m_colOp[COMPRESSED_OP]->chunkManager()->startTransaction(txnid);
+        rc = m_colOp[COMPRESSED_OP_1]->chunkManager()->startTransaction(txnid);
         //if ( rc == 0)
         //	rc = m_dctnry[COMPRESSED_OP]->chunkManager()->startTransaction(txnid);
         return rc;
@@ -537,7 +553,8 @@ public:
     int confirmTransaction (const TxnID& txnid)
     {
         int rc = 0;
-        rc = m_colOp[COMPRESSED_OP]->chunkManager()->confirmTransaction (txnid);
+        rc = m_colOp[COMPRESSED_OP_1]->chunkManager()->confirmTransaction(
+            txnid);
         return rc;
     }
 
@@ -549,7 +566,8 @@ public:
     int endTransaction(const TxnID& txnid, bool success)
     {
         int rc = 0;
-        rc = m_colOp[COMPRESSED_OP]->chunkManager()->endTransaction(txnid, success);
+        rc = m_colOp[COMPRESSED_OP_1]->chunkManager()->endTransaction(txnid,
+                                                                      success);
         //if ( rc == 0)
         //	rc = m_dctnry[COMPRESSED_OP]->chunkManager()->endTransaction(txnid, success);
         return rc;
@@ -785,7 +803,16 @@ private:
 
     int op(int compressionType)
     {
-        return (compressionType > 0 ? COMPRESSED_OP : UN_COMPRESSED_OP);
+        switch (compressionType)
+        {
+        case 1:
+        case 2:
+            return COMPRESSED_OP_1;
+        case 3:
+            return COMPRESSED_OP_2;
+        }
+
+        return 0;
     }
 
 

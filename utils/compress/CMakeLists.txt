@@ -10,7 +10,7 @@ add_definitions(-DNDEBUG)
 
 add_library(compress SHARED ${compress_LIB_SRCS})
 
-target_link_libraries(compress ${SNAPPY_LIBRARIES})
+target_link_libraries(compress ${SNAPPY_LIBRARIES} ${LZ4_LIBRARIES})
 
 install(TARGETS compress DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 

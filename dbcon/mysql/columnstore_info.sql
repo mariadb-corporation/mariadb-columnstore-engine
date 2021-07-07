@@ -95,7 +95,11 @@ DROP PROCEDURE IF EXISTS `compression_ratio` //
 
 CREATE PROCEDURE compression_ratio() SQL SECURITY INVOKER
 BEGIN
-SELECT CONCAT((SELECT SUM(data_size) FROM information_schema.columnstore_extents ce left join information_schema.columnstore_columns cc on ce.object_id = cc.object_id where compression_type='Snappy') / (SELECT SUM(compressed_data_size) FROM information_schema.columnstore_files WHERE compressed_data_size IS NOT NULL), ':1') COMPRESSION_RATIO;
+
+SELECT 'Snappy' as compression_method, CONCAT((SELECT SUM(data_size) FROM information_schema.columnstore_extents ce left join information_schema.columnstore_columns cc on ce.object_id = cc.object_id where compression_type='Snappy') / (SELECT SUM(compressed_data_size) FROM information_schema.columnstore_files co left join information_schema.columnstore_columns cc on (co.object_id = cc.object_id) left join information_schema.columnstore_extents ce on (ce.object_id = co.object_id) where compression_type='Snappy' and compressed_data_size IS NOT NULL /* could be a situation when compressed_data_size != NULL but data_size == 0, in this case we will get wrong ratio */ and data_size > 0), ':1') compression_ratio
+UNION ALL
+SELECT 'LZ4' as compression_method, CONCAT((SELECT SUM(data_size) FROM information_schema.columnstore_extents ce left join information_schema.columnstore_columns cc on ce.object_id = cc.object_id where compression_type='LZ4') / (SELECT SUM(compressed_data_size) FROM information_schema.columnstore_files co left join information_schema.columnstore_columns cc on (co.object_id = cc.object_id) left join information_schema.columnstore_extents ce on (ce.object_id = co.object_id) where compression_type='LZ4' and compressed_data_size IS NOT NULL /* could be a situation when compressed_data_size != NULL but data_size == 0, in this case we will get wrong ratio */ and data_size > 0), ':1') as compression_ratio;
+
 END //
 
 create or replace procedure columnstore_upgrade() SQL SECURITY INVOKER

@@ -529,11 +529,11 @@ private:
     FileOp(const FileOp& rhs);
     FileOp& operator=(const FileOp& rhs);
 
-    int                 expandAbbrevColumnChunk( IDBDataFile* pFile,
-            const uint8_t*   emptyVal,
-            int   colWidth,
-            const compress::CompChunkPtr& chunkInPtr,
-            compress::CompChunkPtr& chunkOutPt);
+    int expandAbbrevColumnChunk(IDBDataFile* pFile, const uint8_t* emptyVal,
+                                int colWidth,
+                                const compress::CompChunkPtr& chunkInPtr,
+                                compress::CompChunkPtr& chunkOutPt,
+                                const char* hdrs = nullptr);
 
     int initAbbrevCompColumnExtent(
         IDBDataFile* pFile, uint16_t dbRoot, int nBlocks,

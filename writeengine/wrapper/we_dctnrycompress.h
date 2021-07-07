@@ -62,7 +62,7 @@ public:
     /**
     * @brief Constructor
     */
-    EXPORT DctnryCompress1(Log* logger = 0);
+    EXPORT DctnryCompress1(uint32_t compressionType, Log* logger = 0);
 
     /**
     * @brief Default Destructor

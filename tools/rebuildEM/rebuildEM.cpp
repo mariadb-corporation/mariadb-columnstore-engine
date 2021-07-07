@@ -89,7 +89,7 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
     }
 
     // Read and verify header.
-    char fileHeader[compress::IDBCompressInterface::HDR_BUF_LEN * 2];
+    char fileHeader[compress::CompressInterface::HDR_BUF_LEN * 2];
     rc = fileOp.readHeaders(dbFile.get(), fileHeader);
     if (rc != 0)
     {
@@ -116,8 +116,8 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
     }
 
     // Read the `colDataType` and `colWidth` from the given header.
-    compress::IDBCompressInterface compressor;
-    const auto versionNumber = compressor.getVersionNumber(fileHeader);
+    const auto versionNumber =
+        compress::CompressInterface::getVersionNumber(fileHeader);
     // Verify header number.
     if (versionNumber < 3)
     {
@@ -129,10 +129,11 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
         return -1;
     }
 
-    auto colDataType = compressor.getColDataType(fileHeader);
-    auto colWidth = compressor.getColumnWidth(fileHeader);
-    auto blockCount = compressor.getBlockCount(fileHeader);
-    auto lbidCount = compressor.getLBIDCount(fileHeader);
+    auto colDataType = compress::CompressInterface::getColDataType(fileHeader);
+    auto colWidth = compress::CompressInterface::getColumnWidth(fileHeader);
+    auto blockCount = compress::CompressInterface::getBlockCount(fileHeader);
+    auto lbidCount = compress::CompressInterface::getLBIDCount(fileHeader);
+    auto compressionType = compress::CompressInterface::getCompressionType(fileHeader);
 
     if (colDataType == execplan::CalpontSystemCatalog::UNDEFINED)
     {
@@ -155,7 +156,7 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
 
     uint64_t hwm = 0;
     rc = searchHWMInSegmentFile(oid, getDBRoot(), partition, segment, colDataType, colWidth,
-                                blockCount, isDict, hwm);
+                                blockCount, isDict, compressionType, hwm);
     if (rc != 0)
     {
         return rc;
@@ -172,13 +173,13 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
     {
         for (uint32_t lbidIndex = 0; lbidIndex < lbidCount - 1; ++lbidIndex)
         {
-            auto lbid = compressor.getLBIDByIndex(fileHeader, lbidIndex);
+            auto lbid = compress::CompressInterface::getLBIDByIndex(fileHeader, lbidIndex);
             FileId fileId(oid, partition, segment, colWidth, colDataType, lbid, /*hwm*/ 0, isDict);
             extentMap.push_back(fileId);
         }
 
         // Last one has an actual HWM.
-        auto lbid = compressor.getLBIDByIndex(fileHeader, lbidCount - 1);
+        auto lbid = compress::CompressInterface::getLBIDByIndex(fileHeader, lbidCount - 1);
         FileId fileId(oid, partition, segment, colWidth, colDataType, lbid, hwm, isDict);
         extentMap.push_back(fileId);
 
@@ -192,7 +193,7 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
     else
     {
         // One extent per segment file.
-        auto lbid = compressor.getLBIDByIndex(fileHeader, 0);
+        auto lbid = compress::CompressInterface::getLBIDByIndex(fileHeader, 0);
         FileId fileId(oid, partition, segment, colWidth, colDataType, lbid, hwm, isDict);
         extentMap.push_back(fileId);
 
@@ -293,7 +294,7 @@ int32_t EMReBuilder::rebuildExtentMap()
 int32_t EMReBuilder::searchHWMInSegmentFile(
     uint32_t oid, uint32_t dbRoot, uint32_t partition, uint32_t segment,
     execplan::CalpontSystemCatalog::ColDataType colDataType, uint32_t colWidth,
-    uint64_t blockCount, bool isDict, uint64_t& hwm)
+    uint64_t blockCount, bool isDict, uint32_t compressionType, uint64_t& hwm)
 {
     std::unique_ptr<ChunkManagerWrapper> chunkManagerWrapper;
     try
@@ -302,13 +303,15 @@ int32_t EMReBuilder::searchHWMInSegmentFile(
         {
             chunkManagerWrapper = std::unique_ptr<ChunkManagerWrapperDict>(
                 new ChunkManagerWrapperDict(oid, dbRoot, partition, segment,
-                                            colDataType, colWidth));
+                                            colDataType, colWidth,
+                                            compressionType));
         }
         else
         {
             chunkManagerWrapper = std::unique_ptr<ChunkManagerWrapperColumn>(
                 new ChunkManagerWrapperColumn(oid, dbRoot, partition, segment,
-                                              colDataType, colWidth));
+                                              colDataType, colWidth,
+                                              compressionType));
         }
     }
     catch (...)
@@ -401,12 +404,13 @@ int32_t ChunkManagerWrapper::readBlock(uint32_t blockNumber)
 
 ChunkManagerWrapperColumn::ChunkManagerWrapperColumn(
     uint32_t oid, uint32_t dbRoot, uint32_t partition, uint32_t segment,
-    execplan::CalpontSystemCatalog::ColDataType colDataType, uint32_t colWidth)
+    execplan::CalpontSystemCatalog::ColDataType colDataType, uint32_t colWidth,
+    uint32_t compressionType)
     : ChunkManagerWrapper(oid, dbRoot, partition, segment, colDataType,
                           colWidth)
 {
     pFileOp = std::unique_ptr<WriteEngine::ColumnOpCompress1>(
-        new WriteEngine::ColumnOpCompress1());
+        new WriteEngine::ColumnOpCompress1(compressionType));
     chunkManager.fileOp(pFileOp.get());
     // Open compressed column segment file. We will read block by block
     // from the compressed chunks.
@@ -463,12 +467,13 @@ bool ChunkManagerWrapperColumn::isEmptyValue(const uint8_t* value) const
 
 ChunkManagerWrapperDict::ChunkManagerWrapperDict(
     uint32_t oid, uint32_t dbRoot, uint32_t partition, uint32_t segment,
-    execplan::CalpontSystemCatalog::ColDataType colDataType, uint32_t colWidth)
+    execplan::CalpontSystemCatalog::ColDataType colDataType, uint32_t colWidth,
+    uint32_t compressionType)
     : ChunkManagerWrapper(oid, dbRoot, partition, segment, colDataType,
                           colWidth)
 {
     pFileOp = std::unique_ptr<WriteEngine::DctnryCompress1>(
-        new WriteEngine::DctnryCompress1());
+        new WriteEngine::DctnryCompress1(compressionType));
     chunkManager.fileOp(pFileOp.get());
     // Open compressed dict segment file.
     pFile = chunkManager.getSegmentFilePtr(oid, dbRoot, partition, segment,

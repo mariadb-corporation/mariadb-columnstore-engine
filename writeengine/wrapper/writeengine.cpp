@@ -76,19 +76,25 @@ StopWatch timer;
 WriteEngineWrapper::WriteEngineWrapper() :  m_opType(NOOP)
 {
     m_colOp[UN_COMPRESSED_OP] = new ColumnOpCompress0;
-    m_colOp[COMPRESSED_OP]    = new ColumnOpCompress1;
-
     m_dctnry[UN_COMPRESSED_OP] = new DctnryCompress0;
-    m_dctnry[COMPRESSED_OP]    = new DctnryCompress1;
+
+    m_colOp[COMPRESSED_OP_1] = new ColumnOpCompress1(/*comressionType=*/1);
+    m_dctnry[COMPRESSED_OP_1] = new DctnryCompress1(/*compressionType=*/1);
+
+    m_colOp[COMPRESSED_OP_2] = new ColumnOpCompress1(/*comressionType=*/3);
+    m_dctnry[COMPRESSED_OP_2] = new DctnryCompress1(/*compressionType=*/3);
 }
 
 WriteEngineWrapper::WriteEngineWrapper(const WriteEngineWrapper& rhs) :  m_opType(rhs.m_opType)
 {
     m_colOp[UN_COMPRESSED_OP] = new ColumnOpCompress0;
-    m_colOp[COMPRESSED_OP]    = new ColumnOpCompress1;
-
     m_dctnry[UN_COMPRESSED_OP] = new DctnryCompress0;
-    m_dctnry[COMPRESSED_OP]    = new DctnryCompress1;
+
+    m_colOp[COMPRESSED_OP_1] = new ColumnOpCompress1(/*compressionType=*/1);
+    m_dctnry[COMPRESSED_OP_1] = new DctnryCompress1(/*compressionType=*/1);
+
+    m_colOp[COMPRESSED_OP_2] = new ColumnOpCompress1(/*compressionType=*/3);
+    m_dctnry[COMPRESSED_OP_2] = new DctnryCompress1(/*compressionType=*/3);
 }
 
 /**@brief WriteEngineWrapper Constructor
@@ -96,9 +102,13 @@ WriteEngineWrapper::WriteEngineWrapper(const WriteEngineWrapper& rhs) :  m_opTyp
 WriteEngineWrapper::~WriteEngineWrapper()
 {
     delete m_colOp[UN_COMPRESSED_OP];
-    delete m_colOp[COMPRESSED_OP];
     delete m_dctnry[UN_COMPRESSED_OP];
-    delete m_dctnry[COMPRESSED_OP];
+
+    delete m_colOp[COMPRESSED_OP_1];
+    delete m_dctnry[COMPRESSED_OP_1];
+
+    delete m_colOp[COMPRESSED_OP_2];
+    delete m_dctnry[COMPRESSED_OP_2];
 }
 
 /**@brief Perform upfront initialization
