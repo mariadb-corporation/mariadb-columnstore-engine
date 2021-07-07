@@ -113,7 +113,6 @@ public:
      *	push a uint8_t onto the end of the stream
      */
     EXPORT ByteStream& operator<<(const uint8_t b);
-    EXPORT ByteStream& operator<<(const bool b);
     /**
      *	push a int16_t onto the end of the stream. The byte order is whatever the native byte order is.
      */
@@ -196,7 +195,6 @@ public:
      *	extract a uint8_t from the front of the stream.
      */
     EXPORT ByteStream& operator>>(uint8_t& b);
-    EXPORT ByteStream& operator>>(bool& b);
     /**
      *	extract a int16_t from the front of the stream. The byte order is whatever the native byte order is.
      */
@@ -275,7 +273,6 @@ public:
      *	Peek at a uint8_t from the front of the stream.
      */
     EXPORT void peek(uint8_t& b) const;
-    EXPORT void peek(bool& b) const;
     /**
      *	Peek at a int16_t from the front of the stream. The byte order is whatever the native byte order is.
      */

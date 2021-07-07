@@ -364,7 +364,8 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
                 {
                     deserializeVector<uint32_t>(bs, tlLargeSideKeyColumns[i]);
                     bs >> tlSmallSideKeyLengths[i];
-                    bs >> mJOINHasSkewedKeyColumn;
+                    bs >> tmp8;
+                    mJOINHasSkewedKeyColumn = (bool) tmp8;
                     // Deser smallSideRG if key data types are different, e.g. INT vs wide-DECIMAL.
                     if (mJOINHasSkewedKeyColumn && !smallSideRGRecvd)
                     {

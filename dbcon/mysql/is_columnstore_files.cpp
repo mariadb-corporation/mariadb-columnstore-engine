@@ -37,6 +37,7 @@
 #include "messagequeuepool.h"
 #include "we_messages.h"
 #include "is_columnstore.h"
+#include "ha_mcs_logging.h"
 
 // Required declaration as it isn't in a MairaDB include
 bool schema_table_store_record(THD* thd, TABLE* table);
@@ -52,7 +53,7 @@ ST_FIELD_INFO is_columnstore_files_fields[] =
     Show::CEnd()
 };
 
-static bool get_file_sizes(messageqcpp::MessageQueueClient* msgQueueClient, const char* fileName, off_t* fileSize, off_t* compressedFileSize)
+static bool get_file_sizes(THD* thd, messageqcpp::MessageQueueClient* msgQueueClient, const char* fileName, off_t* fileSize, off_t* compressedFileSize)
 {
     messageqcpp::ByteStream bs;
     messageqcpp::ByteStream::byte rc;
@@ -76,6 +77,13 @@ static bool get_file_sizes(messageqcpp::MessageQueueClient* msgQueueClient, cons
 
         *sbs >> rc;
         *sbs >> errMsg;
+        if (rc)
+        {
+            ha_mcs_impl::log_this(thd,
+                     "I_S::COLUMNSTORE_FILE::get_file_sizes(): WriteEngineServer returns an error().",
+                     logging::LOG_TYPE_ERROR, thd->thread_id);
+            return false;
+        }
         *sbs >> *fileSize;
         *sbs >> *compressedFileSize;
         return true;
@@ -161,7 +169,7 @@ static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* th
 
         // snprintf output truncation check 
         if (rc ==  WriteEngine::FILE_NAME_SIZE ||
-            !get_file_sizes(msgQueueClient, fullFileName, &fileSize, &compressedFileSize))
+            !get_file_sizes(thd, msgQueueClient, fullFileName, &fileSize, &compressedFileSize))
         {
             messageqcpp::MessageQueueClientPool::releaseInstance(msgQueueClient);
             delete emp;

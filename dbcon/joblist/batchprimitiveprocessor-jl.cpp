@@ -1127,7 +1127,7 @@ void BatchPrimitiveProcessorJL::createBPP(ByteStream& bs) const
                     // MCOL-4173 Notify PP if smallSide and largeSide have different column widths
                     // and send smallSide RG to PP.
                     bool joinHasSkewedKeyColumn = tJoiners[i]->joinHasSkewedKeyColumn();
-                    bs << joinHasSkewedKeyColumn;
+                    bs << (uint8_t) joinHasSkewedKeyColumn;
                     if (!smallSideRGSent && joinHasSkewedKeyColumn)
                     {
                         idbassert(!smallSideRGs.empty());
