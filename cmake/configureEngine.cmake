@@ -6,6 +6,7 @@
 INCLUDE (CheckIncludeFiles)
 INCLUDE (CheckIncludeFileCXX)
 INCLUDE (CheckCSourceCompiles)
+INCLUDE (CheckCXXSourceRuns)
 INCLUDE (CheckCXXSourceCompiles)
 INCLUDE (CheckStructHasMember)
 INCLUDE (CheckLibraryExists)
@@ -719,3 +720,20 @@ EXECUTE_PROCESS(
     COMMAND rm -f conftest.data conftest.file conftest.sym
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
+    
+CHECK_CXX_SOURCE_RUNS("
+#include <limits>
+int main()
+{
+    // If long double is 16 bytes and digits and exponent are 64 and 16384 respectively, then we need to mask out the 
+    // unused bits, as they contain garbage. There are times we test for equality by memcmp of a buffer containing,
+    // in part, the long double set here. Garbage bytes will adversly affect that compare.
+    // Note: There may be compilers that store 80 bit floats in 12 bytes. We do not account for that here. I don't believe
+    // there are any modern Linux compilers that do that as a default. Windows uses 64 bits, so no masking is needed.
+    if (std::numeric_limits<long double>::digits == 64 
+     && std::numeric_limits<long double>::max_exponent == 16384 
+     && sizeof(long double) == 16)
+        return 0;
+    return 1; 
+}"
+MASK_LONGDOUBLE)
