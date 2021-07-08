@@ -3040,9 +3040,13 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
         if (((thd->lex)->sql_command == SQLCOM_INSERT) && (rows > 0))
             ci->useCpimport = mcs_use_import_for_batchinsert_mode_t::OFF;
 
-        // For now, disable cpimport for cache inserts
         if (ci->isCacheInsert)
-            ci->useCpimport = mcs_use_import_for_batchinsert_mode_t::OFF;
+        {
+            if (get_use_cpimport_for_cache_inserts(thd))
+                ci->useCpimport = mcs_use_import_for_batchinsert_mode_t::ALWAYS;
+            else
+                ci->useCpimport = mcs_use_import_for_batchinsert_mode_t::OFF;
+        }
 
         // ci->useCpimport = mcs_use_import_for_batchinsert_mode_t::ALWAYS means ALWAYS use
         // cpimport, whether it's in a transaction or not. User should use this option

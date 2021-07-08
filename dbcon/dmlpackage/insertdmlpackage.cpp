@@ -69,6 +69,7 @@ int InsertDMLPackage::write(messageqcpp::ByteStream& bytestream)
     bytestream << fTableOid;
     bytestream << static_cast<messageqcpp::ByteStream::byte>(fIsInsertSelect);
     bytestream << static_cast<messageqcpp::ByteStream::byte>(fIsBatchInsert);
+    bytestream << static_cast<messageqcpp::ByteStream::byte>(fIsCacheInsert);
     bytestream << static_cast<messageqcpp::ByteStream::byte>(fIsAutocommitOn);
 
     if (fTable != 0)
@@ -103,6 +104,7 @@ int InsertDMLPackage::read(messageqcpp::ByteStream& bytestream)
     bytestream >> fTableOid;
     bytestream >> reinterpret_cast<messageqcpp::ByteStream::byte&>(fIsInsertSelect);
     bytestream >> reinterpret_cast<messageqcpp::ByteStream::byte&>(fIsBatchInsert);
+    bytestream >> reinterpret_cast<messageqcpp::ByteStream::byte&>(fIsCacheInsert);
     bytestream >> reinterpret_cast<messageqcpp::ByteStream::byte&>(fIsAutocommitOn);
 
     fTable = new DMLTable();
@@ -132,6 +134,7 @@ void InsertDMLPackage::readMetaData(messageqcpp::ByteStream& bytestream)
     bytestream >> fTableOid;
     bytestream >> reinterpret_cast<messageqcpp::ByteStream::byte&>(fIsInsertSelect);
     bytestream >> reinterpret_cast<messageqcpp::ByteStream::byte&>(fIsBatchInsert);
+    bytestream >> reinterpret_cast<messageqcpp::ByteStream::byte&>(fIsCacheInsert);
     bytestream >> reinterpret_cast<messageqcpp::ByteStream::byte&>(fIsAutocommitOn);
 
     fTable = new DMLTable();

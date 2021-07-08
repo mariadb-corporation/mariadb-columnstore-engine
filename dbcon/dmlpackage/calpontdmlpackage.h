@@ -320,6 +320,15 @@ public:
         fIsBatchInsert = isBatchInsert;
     }
 
+    bool get_isCacheInsert()
+    {
+        return fIsCacheInsert;
+    }
+    void set_isCacheInsert( const bool isCacheInsert )
+    {
+        fIsCacheInsert = isCacheInsert;
+    }
+
     bool get_isAutocommitOn()
     {
         return fIsAutocommitOn;
@@ -378,6 +387,7 @@ protected:
     std::string StripLeadingWhitespace( std::string value );
     bool fIsInsertSelect;
     bool fIsBatchInsert;
+    bool fIsCacheInsert;
     bool fIsAutocommitOn;
     bool fIsWarnToError;
     uint32_t fTableOid;

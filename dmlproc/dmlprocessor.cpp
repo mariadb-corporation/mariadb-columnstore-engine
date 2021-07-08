@@ -620,9 +620,14 @@ void PackageHandler::run()
                         logging::Message::Args args1;
                         logging::Message msg(1);
                         args1.add("Start SQL statement: ");
-                        ostringstream oss;
-                        oss << insertPkg.get_SQLStatement() << "; |" << insertPkg.get_SchemaName() << "|";
-                        args1.add(oss.str());
+
+                        if (!insertPkg.get_isCacheInsert())
+                        {
+                            ostringstream oss;
+                            oss << insertPkg.get_SQLStatement() << "; |" << insertPkg.get_SchemaName() << "|";
+                            args1.add(oss.str());
+                        }
+
                         msg.format( args1 );
                         logging::Logger logger(logid.fSubsysID);
                         logger.logMessage(LOG_TYPE_DEBUG, msg, logid);
