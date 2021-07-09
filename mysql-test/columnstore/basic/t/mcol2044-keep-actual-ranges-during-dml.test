@@ -1,0 +1,593 @@
+# tests updates that sets invalid range when we set value at max boundary that is less than max.
+--disable_warnings
+create database if not exists test_ranges;
+use test_ranges;
+drop table if exists t;
+--enable_warnings
+create table t(x bigint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+delete from t where x=44; # range must drop to invalid
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+
+# tests updates that range when we updating min value to value that is bigger than min.
+create table t(x bigint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+delete from t where x=66; # range must be invalid now.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+
+# tests updates within range.
+create table t(x bigint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+delete from t where x=55; # range must stay 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x bigint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=66; # range must drop to invalid
+insert into t(x) values (77), (22); # range must stay invalid.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that sets invalid range when we set value at max boundary that is less than max.
+create table t(x bigint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=44; # range must drop to invalid
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that range when we updating min value to value that is bigger than min.
+create table t(x bigint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=44; # range must be invalid now.
+
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that extend max range, for values at max.
+create table t(x bigint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=77 where x=66; # range must be 44..77
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that extend range to new min value.
+create table t(x bigint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=33 where x=44; # range must be 33..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x bigint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=55; # range must stay 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that sets invalid range when we set value at max boundary that is less than max.
+create table t(x decimal(38)) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+delete from t where x=44; # range must drop to invalid
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+
+# tests updates that range when we updating min value to value that is bigger than min.
+create table t(x decimal(38)) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+delete from t where x=66; # range must be invalid now.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+
+# tests updates within range.
+create table t(x decimal(38)) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+delete from t where x=55; # range must stay 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x decimal(38)) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=66; # range must drop to invalid
+insert into t(x) values (77), (22); # range must stay invalid.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that sets invalid range when we set value at max boundary that is less than max.
+create table t(x decimal(38)) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=44; # range must drop to invalid
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that range when we updating min value to value that is bigger than min.
+create table t(x decimal(38)) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=44; # range must be invalid now.
+
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that extend max range, for values at max.
+create table t(x decimal(38)) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=77 where x=66; # range must be 44..77
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that extend range to new min value.
+create table t(x decimal(38)) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=33 where x=44; # range must be 33..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x decimal(38)) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=55; # range must stay 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that sets invalid range when we set value at max boundary that is less than max.
+create table t(x integer) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+delete from t where x=44; # range must drop to invalid
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+
+# tests updates that range when we updating min value to value that is bigger than min.
+create table t(x integer) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+delete from t where x=66; # range must be invalid now.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x integer) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+delete from t where x=55; # range must stay 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x integer) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=66; # range must drop to invalid
+insert into t(x) values (77), (22); # range must stay invalid.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that sets invalid range when we set value at max boundary that is less than max.
+create table t(x integer) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=44; # range must drop to invalid
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that range when we updating min value to value that is bigger than min.
+create table t(x integer) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=44; # range must be invalid now.
+
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that extend max range, for values at max.
+create table t(x integer) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=77 where x=66; # range must be 44..77
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that extend range to new min value.
+create table t(x integer) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=33 where x=44; # range must be 33..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x integer) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=55; # range must stay 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that sets invalid range when we set value at max boundary that is less than max.
+create table t(x smallint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+delete from t where x=44; # range must drop to invalid
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that range when we updating min value to value that is bigger than min.
+create table t(x smallint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+delete from t where x=66; # range must be invalid now.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x smallint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+delete from t where x=55; # range must stay 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x smallint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=66; # range must drop to invalid
+insert into t(x) values (77), (22); # range must stay invalid.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that sets invalid range when we set value at max boundary that is less than max.
+create table t(x smallint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=44; # range must drop to invalid
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that range when we updating min value to value that is bigger than min.
+create table t(x smallint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=44; # range must be invalid now.
+
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that extend max range, for values at max.
+create table t(x smallint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=77 where x=66; # range must be 44..77
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that extend range to new min value.
+create table t(x smallint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=33 where x=44; # range must be 33..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x smallint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=55; # range must stay 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that sets invalid range when we set value at max boundary that is less than max.
+create table t(x tinyint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+delete from t where x=44; # range must drop to invalid
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that range when we updating min value to value that is bigger than min.
+create table t(x tinyint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+delete from t where x=66; # range must be invalid now.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x tinyint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+delete from t where x=55; # range must stay 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x tinyint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=66; # range must drop to invalid
+insert into t(x) values (77), (22); # range must stay invalid.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that sets invalid range when we set value at max boundary that is less than max.
+create table t(x tinyint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=44; # range must drop to invalid
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that range when we updating min value to value that is bigger than min.
+create table t(x tinyint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=44; # range must be invalid now.
+
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that extend max range, for values at max.
+create table t(x tinyint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=77 where x=66; # range must be 44..77
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that extend range to new min value.
+create table t(x tinyint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=33 where x=44; # range must be 33..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x tinyint) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=55; # range must stay 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that sets invalid range when we set value at max boundary that is less than max.
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+delete from t where x=44; # range must drop to invalid
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+
+drop table t;
+# tests updates that range when we updating min value to value that is bigger than min.
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+delete from t where x=66; # range must be invalid now.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+delete from t where x=55; # range must stay 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=66; # range must drop to invalid
+insert into t(x) values (77), (22); # range must stay invalid.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that sets invalid range when we set value at max boundary that is less than max.
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=44; # range must drop to invalid
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that range when we updating min value to value that is bigger than min.
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=44; # range must be invalid now.
+
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that extend max range, for values at max.
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=77 where x=66; # range must be 44..77
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that extend range to new min value.
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=33 where x=44; # range must be 33..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=55; # range must stay 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that sets invalid range when we set value at max boundary that is less than max.
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+delete from t where x=44; # range must drop to invalid
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+
+drop table t;
+# tests updates that range when we updating min value to value that is bigger than min.
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+delete from t where x=66; # range must be invalid now.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+delete from t where x=55; # range must stay 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=66; # range must drop to invalid
+insert into t(x) values (77), (22); # range must stay invalid.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that sets invalid range when we set value at max boundary that is less than max.
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=44; # range must drop to invalid
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that range when we updating min value to value that is bigger than min.
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=44; # range must be invalid now.
+
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that extend max range, for values at max.
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=77 where x=66; # range must be 44..77
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that extend range to new min value.
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=33 where x=44; # range must be 33..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x bigint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=55; # range must stay 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that sets invalid range when we set value at max boundary that is less than max.
+create table t(x integer unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+delete from t where x=44; # range must drop to invalid
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+
+drop table t;
+# tests updates that range when we updating min value to value that is bigger than min.
+create table t(x integer unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+delete from t where x=66; # range must be invalid now.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x integer unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+delete from t where x=55; # range must stay 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x integer unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=66; # range must drop to invalid
+insert into t(x) values (77), (22); # range must stay invalid.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that sets invalid range when we set value at max boundary that is less than max.
+create table t(x integer unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=44; # range must drop to invalid
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that range when we updating min value to value that is bigger than min.
+create table t(x integer unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=44; # range must be invalid now.
+
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that extend max range, for values at max.
+create table t(x integer unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=77 where x=66; # range must be 44..77
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that extend range to new min value.
+create table t(x integer unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=33 where x=44; # range must be 33..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x integer unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=55; # range must stay 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that sets invalid range when we set value at max boundary that is less than max.
+create table t(x smallint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+delete from t where x=44; # range must drop to invalid
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that range when we updating min value to value that is bigger than min.
+create table t(x smallint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+delete from t where x=66; # range must be invalid now.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x smallint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+delete from t where x=55; # range must stay 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x smallint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=66; # range must drop to invalid
+insert into t(x) values (77), (22); # range must stay invalid.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that sets invalid range when we set value at max boundary that is less than max.
+create table t(x smallint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=44; # range must drop to invalid
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that range when we updating min value to value that is bigger than min.
+create table t(x smallint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=44; # range must be invalid now.
+
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that extend max range, for values at max.
+create table t(x smallint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=77 where x=66; # range must be 44..77
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that extend range to new min value.
+create table t(x smallint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=33 where x=44; # range must be 33..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x smallint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=55; # range must stay 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that sets invalid range when we set value at max boundary that is less than max.
+create table t(x tinyint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+delete from t where x=44; # range must drop to invalid
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that range when we updating min value to value that is bigger than min.
+create table t(x tinyint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+delete from t where x=66; # range must be invalid now.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x tinyint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+delete from t where x=55; # range must stay 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x tinyint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=66; # range must drop to invalid
+insert into t(x) values (77), (22); # range must stay invalid.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that sets invalid range when we set value at max boundary that is less than max.
+create table t(x tinyint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=44; # range must drop to invalid
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that range when we updating min value to value that is bigger than min.
+create table t(x tinyint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=44; # range must be invalid now.
+
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that extend max range, for values at max.
+create table t(x tinyint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=77 where x=66; # range must be 44..77
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates that extend range to new min value.
+create table t(x tinyint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=33 where x=44; # range must be 33..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop table t;
+# tests updates within range.
+create table t(x tinyint unsigned) engine=columnstore;
+insert into t(x) values (44),(55),(66); # range must be 44..66.
+update t set x=65 where x=55; # range must stay 44..66.
+select e.max_value, e.min_value from information_schema.columnstore_extents e, information_schema.columnstore_columns c where c.table_schema='test_ranges' and c.table_name='t' and c.column_name='x' and c.object_id=e.object_id;
+drop database test_ranges;
