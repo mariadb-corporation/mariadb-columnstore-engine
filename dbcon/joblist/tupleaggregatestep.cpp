@@ -2170,6 +2170,9 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 
         // locate the return column position in aggregated rowgroup
         uint64_t outIdx = 0;
+        RowAggFunctionType prevAggOp = ROWAGG_FUNCT_UNDEFINE;
+        uint32_t prevRetKey = 0;
+
         for (uint64_t i = 0; i < returnedColVec.size(); i++)
         {
             udafc = NULL;
@@ -2181,9 +2184,30 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 
             if (aggOp == ROWAGG_MULTI_PARM)
             {
-                // Skip on final agg.: Extra parms for an aggregate have no work there.
+                // Duplicate detection doesn't work for multi-parm`
+                
+                // If this function was earlier detected as a duplicate, unduplicate it.
+                SP_ROWAGG_FUNC_t funct = functionVec2.back();
+                if (funct->fAggFunction == ROWAGG_DUP_FUNCT)
+                    funct->fAggFunction = prevAggOp;
+
+                // Remove it from aggDupFuncMap if it's in there.
+                funct->hasMultiParm = true;
+                AGG_MAP::iterator it = aggDupFuncMap.find(boost::make_tuple(prevRetKey, prevAggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL));
+                if (it != aggDupFuncMap.end())
+                {
+                    aggDupFuncMap.erase(it);
+                }
+
+                                // Skip on final agg.: Extra parms for an aggregate have no work there.
                 ++multiParms;
                 continue;
+            }
+            else
+            {
+                // Save the op for MULTI_PARM exclusion when COUNT(DISTINCT)
+                prevAggOp = aggOp;
+                prevRetKey = returnedColVec[i].first;
             }
 
             if  (find(jobInfo.distinctColVec.begin(), jobInfo.distinctColVec.end(), retKey) !=
@@ -2531,8 +2555,6 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                         funct->fAggFunction = ROWAGG_DUP_STATS;
                     else if (funct->fAggFunction == ROWAGG_UDAF)
                         funct->fAggFunction = ROWAGG_DUP_UDAF;
-                    else if (funct->fAggFunction == ROWAGG_COUNT_DISTINCT_COL_NAME)  // Don't track dup for this one. Gets confused when multi-parm.
-                    {}
                     else
                         funct->fAggFunction = ROWAGG_DUP_FUNCT;
 
@@ -2587,7 +2609,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
         // now fix the AVG distinct function, locate the count(distinct column) position
         for (uint64_t i = 0; i < functionVec2.size(); i++)
         {
-            if (functionVec2[i]->fAggFunction == ROWAGG_COUNT_DISTINCT_COL_NAME)
+            if (functionVec2[i]->fAggFunction == ROWAGG_COUNT_DISTINCT_COL_NAME && !functionVec2[i]->hasMultiParm)
             {
                 // if the count(distinct k) can be associated with an avg(distinct k)
                 map<uint32_t, SP_ROWAGG_FUNC_t>::iterator k =
@@ -2907,11 +2929,6 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 
             for (uint64_t k = 0; k < returnedColVec.size(); k++)
             {
-                if (functionIdMap(returnedColVec[k].second) == ROWAGG_MULTI_PARM)
-                {
-                    ++multiParms;
-                    continue;
-                }
                 // search non-distinct functions in functionVec
                 vector<SP_ROWAGG_FUNC_t>::iterator it = functionVec2.begin();
 
@@ -4460,6 +4477,9 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
         // locate the return column position in aggregated rowgroup from PM
         // outIdx is i without the multi-columns,
         uint64_t outIdx = 0;
+        RowAggFunctionType prevAggOp = ROWAGG_FUNCT_UNDEFINE;
+        uint32_t prevRetKey = 0;
+        
         for (uint64_t i = 0; i < returnedColVec.size(); i++)
         {
             pUDAFFunc = NULL;
@@ -4472,9 +4492,29 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 
             if (aggOp == ROWAGG_MULTI_PARM)
             {
-                // Skip on UM: Extra parms for an aggregate have no work on the UM
+                // Duplicate detection doesn't work for multi-parm`
+                
+                // If this function was earlier detected as a duplicate, unduplicate it.
+                SP_ROWAGG_FUNC_t funct = functionVecUm.back();
+                if (funct->fAggFunction == ROWAGG_DUP_FUNCT)
+                    funct->fAggFunction = prevAggOp;
+
+                // Remove it from aggDupFuncMap if it's in there.
+                funct->hasMultiParm = true;
+                AGG_MAP::iterator it = aggDupFuncMap.find(boost::make_tuple(prevRetKey, prevAggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL));
+                if (it != aggDupFuncMap.end())
+                {
+                    aggDupFuncMap.erase(it);
+                }
+                // Skip further UM porocessing of the multi-parm: Extra parms for an aggregate have no work on the UM
                 ++multiParms;
                 continue;
+            }
+            else
+            {
+                // Save the op for MULTI_PARM exclusion when COUNT(DISTINCT)
+                prevAggOp = aggOp;
+                prevRetKey = returnedColVec[i].first;
             }
 
             if (aggOp == ROWAGG_UDAF)
@@ -4754,8 +4794,6 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                         funct->fAggFunction = ROWAGG_DUP_STATS;
                     else if (funct->fAggFunction == ROWAGG_UDAF)
                         funct->fAggFunction = ROWAGG_DUP_UDAF;
-                    else if (funct->fAggFunction == ROWAGG_COUNT_DISTINCT_COL_NAME)  // Don't track dup for this one. Gets confused when multi-parm.
-                    {}
                     else
                         funct->fAggFunction = ROWAGG_DUP_FUNCT;
 
@@ -4810,7 +4848,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
         //distinct avg
         for (uint64_t i = 0; i < functionVecUm.size(); i++)
         {
-            if (functionVecUm[i]->fAggFunction == ROWAGG_COUNT_DISTINCT_COL_NAME)
+            if (functionVecUm[i]->fAggFunction == ROWAGG_COUNT_DISTINCT_COL_NAME && !functionVecUm[i]->hasMultiParm)
             {
                 map<uint32_t, SP_ROWAGG_FUNC_t>::iterator k =
                     avgDistFuncMap.find(keysAggDist[functionVecUm[i]->fOutputColumnIndex]);
@@ -5121,11 +5159,6 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 
             for (uint64_t k = 0; k < returnedColVec.size(); k++)
             {
-                if (functionIdMap(returnedColVec[k].second) == ROWAGG_MULTI_PARM)
-                {
-                    ++multiParms;
-                    continue;
-                }
                 // search non-distinct functions in functionVec
                 vector<SP_ROWAGG_FUNC_t>::iterator it = functionVecUm.begin();
 
