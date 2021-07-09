@@ -42,6 +42,7 @@ using namespace boost;
 #include "primproc.h"
 #include "dataconvert.h"
 #include "mcs_decimal.h"
+#include "mcs_string.h"
 
 using namespace logging;
 using namespace dbbc;
@@ -237,7 +238,7 @@ inline bool isEmptyVal<8>(uint8_t type, const uint8_t* ival)
         case CalpontSystemCatalog::VARBINARY:
         case CalpontSystemCatalog::BLOB:
         case CalpontSystemCatalog::TEXT:
-            return (*val == joblist::CHAR8EMPTYROW);
+            return (*val == datatypes::CHAR8EMPTYROW);
 
         case CalpontSystemCatalog::UBIGINT:
             return (joblist::UBIGINTEMPTYROW == *val);
@@ -268,7 +269,7 @@ inline bool isEmptyVal<4>(uint8_t type, const uint8_t* ival)
         case CalpontSystemCatalog::DATETIME:
         case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
-            return (joblist::CHAR4EMPTYROW == *val);
+            return (datatypes::CHAR4EMPTYROW == *val);
 
         case CalpontSystemCatalog::UINT:
         case CalpontSystemCatalog::UMEDINT:
@@ -296,7 +297,7 @@ inline bool isEmptyVal<2>(uint8_t type, const uint8_t* ival)
         case CalpontSystemCatalog::DATETIME:
         case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
-            return (joblist::CHAR2EMPTYROW == *val);
+            return (datatypes::CHAR2EMPTYROW == *val);
 
         case CalpontSystemCatalog::USMALLINT:
             return (joblist::USMALLINTEMPTYROW == *val);
@@ -323,7 +324,7 @@ inline bool isEmptyVal<1>(uint8_t type, const uint8_t* ival)
         case CalpontSystemCatalog::DATETIME:
         case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
-            return (*val == joblist::CHAR1EMPTYROW);
+            return (*val == datatypes::CHAR1EMPTYROW);
 
         case CalpontSystemCatalog::UTINYINT:
             return (*val == joblist::UTINYINTEMPTYROW);
@@ -369,7 +370,7 @@ inline bool isNullVal<8>(uint8_t type, const uint8_t* ival)
         case CalpontSystemCatalog::TEXT:
             //@bug 339 might be a token here
             //TODO: what's up with the second const here?
-            return (*val == joblist::CHAR8NULL || 0xFFFFFFFFFFFFFFFELL == *val);
+            return (*val == datatypes::CHAR8NULL || 0xFFFFFFFFFFFFFFFELL == *val);
 
         case CalpontSystemCatalog::UBIGINT:
             return (joblist::UBIGINTNULL == *val);
@@ -396,7 +397,7 @@ inline bool isNullVal<4>(uint8_t type, const uint8_t* ival)
         case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::BLOB:
         case CalpontSystemCatalog::TEXT:
-            return (joblist::CHAR4NULL == *val);
+            return (datatypes::CHAR4NULL == *val);
 
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
@@ -430,7 +431,7 @@ inline bool isNullVal<2>(uint8_t type, const uint8_t* ival)
         case CalpontSystemCatalog::DATETIME:
         case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
-            return (joblist::CHAR2NULL == *val);
+            return (datatypes::CHAR2NULL == *val);
 
         case CalpontSystemCatalog::USMALLINT:
             return (joblist::USMALLINTNULL == *val);
@@ -457,7 +458,7 @@ inline bool isNullVal<1>(uint8_t type, const uint8_t* ival)
         case CalpontSystemCatalog::DATETIME:
         case CalpontSystemCatalog::TIMESTAMP:
         case CalpontSystemCatalog::TIME:
-            return (*val == joblist::CHAR1NULL);
+            return (*val == datatypes::CHAR1NULL);
 
         case CalpontSystemCatalog::UTINYINT:
             return (joblist::UTINYINTNULL == *val);
@@ -635,6 +636,69 @@ inline bool colCompareUnsigned(uint64_t val1, uint64_t val2, uint8_t COP, uint8_
         return false;
 }
 
+
+static void
+storeInlineVarchar(const NewColRequestHeader *in, uint16_t rid,
+                  char *dst, const char *src)
+{
+    uint32_t width = in->colType.DataSize;
+    switch (width)
+    {
+        default:
+        case 8:
+            src += (rid << 3);
+            break;
+
+        case 4:
+            src += (rid << 2);
+            break;
+
+        case 2:
+            src += (rid << 1);
+            break;
+    }
+    datatypes::TVarchar(dst, width).storeAndExtendCharByPackedWidth(src, width);
+}
+
+
+// Store fixed width inline data or a dictionary pointer
+static void
+storeFixed(const NewColRequestHeader *in, uint16_t rid,
+           void *ptr1, const uint8_t *ptr2)
+{
+    switch (in->colType.DataSize)
+    {
+        case 16:
+            ptr2 += (rid << 4);
+            memcpy(ptr1, ptr2, 16);
+            break;
+
+        default:
+            // fallthrough
+
+        case 8:
+            ptr2 += (rid << 3);
+            memcpy(ptr1, ptr2, 8);
+            break;
+
+        case 4:
+            ptr2 += (rid << 2);
+            memcpy(ptr1, ptr2, 4);
+            break;
+
+        case 2:
+            ptr2 += (rid << 1);
+            memcpy(ptr1, ptr2, 2);
+            break;
+
+        case 1:
+            ptr2 += (rid << 0);
+            memcpy(ptr1, ptr2, 1);
+            break;
+    }
+}
+
+
 inline void store(const NewColRequestHeader* in,
                   NewColResultHeader* out,
                   unsigned outSize,
@@ -674,36 +738,11 @@ inline void store(const NewColRequestHeader* in,
         void* ptr1 = &out8[*written];
         const uint8_t* ptr2 = &block8[0];
 
-        switch (in->colType.DataSize)
-        {
-            case 16:
-                ptr2 += (rid << 4);
-                memcpy(ptr1, ptr2, 16);
-                break;
-
-            default:
-                // fallthrough
-
-            case 8:
-                ptr2 += (rid << 3);
-                memcpy(ptr1, ptr2, 8);
-                break;
-
-            case 4:
-                ptr2 += (rid << 2);
-                memcpy(ptr1, ptr2, 4);
-                break;
-
-            case 2:
-                ptr2 += (rid << 1);
-                memcpy(ptr1, ptr2, 2);
-                break;
-
-            case 1:
-                ptr2 += (rid << 0);
-                memcpy(ptr1, ptr2, 1);
-                break;
-        }
+        if (!in->colType.isDict() &&
+            in->colType.DataType == CalpontSystemCatalog::VARCHAR)
+            storeInlineVarchar(in, rid, (char*) ptr1, (const char *) ptr2);
+        else
+            storeFixed(in, rid, ptr1, ptr2);
 
         *written += in->colType.DataSize;
     }
@@ -1286,6 +1325,7 @@ inline void p_Col_ridArray(NewColRequestHeader* in,
                 in->colType.DataType == CalpontSystemCatalog::BLOB ||
                 in->colType.DataType == CalpontSystemCatalog::TEXT )
             {
+                // TODO: check this!
                 if (colCompare(out->Min, val, COMPARE_GT, false, in->colType, W))
                     out->Min = val;
 

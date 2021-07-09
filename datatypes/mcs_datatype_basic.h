@@ -19,6 +19,8 @@
 #ifndef MCS_DATATYPE_BASIC_H_INCLUDED
 #define MCS_DATATYPE_BASIC_H_INCLUDED
 
+#include "mcs_numeric_limits.h"
+
 /*
   This file contains simple definitions that can be
   needed in multiple mcs_TYPE.h files.
@@ -26,6 +28,24 @@
 
 namespace datatypes
 {
+
+
+// Inline RowGroup data is rounded to 1,2,4 or 8 bytes.
+// For example, CHAR(5) occupies 8 bytes.
+// This function returns the size of the unused part.
+// Note, on assignment, we need to zero the unused part
+// of a field in a RowGroup to keep data memcmp-able.
+static inline uint32_t unusedGapSizeByPackedWidth(uint32_t width)
+{
+  switch (width)
+  {
+    case 3:  return 1; // 3 is rounded to 4
+    case 5:  return 3; // 5 is rounded to 8
+    case 6:  return 2; // 6 is rounded to 8
+    case 7:  return 1; // 7 is rounded to 8
+  }
+  return 0; /*1,2,4,8,9+ do not have unused gaps */
+}
 
 
 // Convert a positive floating point value to

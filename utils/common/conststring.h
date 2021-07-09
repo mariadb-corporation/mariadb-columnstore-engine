@@ -56,6 +56,13 @@ public:
     { }
     return *this;
   }
+  // TODO: add multi-byte safe truncation
+  ConstString & truncate(size_t len)
+  {
+    if (mLength > len)
+        mLength = len;
+    return *this;
+  }
 };
 
 

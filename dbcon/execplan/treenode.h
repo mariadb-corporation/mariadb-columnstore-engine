@@ -38,6 +38,7 @@
 #include "columnwidth.h"
 #include "mcs_decimal.h"
 #include "mcs_int64.h"
+#include "mcs_string.h"
 
 namespace messageqcpp
 {
@@ -397,7 +398,7 @@ inline bool TreeNode::getBoolVal()
 
         case CalpontSystemCatalog::VARCHAR:
             if (fResultType.colWidth <= 7)
-                return (atoi((char*)(&fResult.origIntVal)) != 0);
+                return (atoi((char*)(&fResult.origIntVal) + 1) != 0);
 
             return (atoi(fResult.strVal.c_str()) != 0);
 
@@ -465,7 +466,7 @@ inline const std::string& TreeNode::getStrVal(const std::string& timeZone)
 
         case CalpontSystemCatalog::VARCHAR:
             if (fResultType.colWidth <= 7)
-                fResult.strVal = (char*)(&fResult.origIntVal);
+                fResult.strVal = datatypes::TVarcharShort(fResult.origIntVal).toString();
 
             break;
 
@@ -781,7 +782,7 @@ inline float TreeNode::getFloatVal()
 
         case CalpontSystemCatalog::VARCHAR:
             if (fResultType.colWidth <= 7)
-                return atof((char*)(&fResult.origIntVal));
+                return atof((char*)(&fResult.origIntVal) + 1);
 
             return atof(fResult.strVal.c_str());
 
@@ -856,7 +857,7 @@ inline double TreeNode::getDoubleVal()
 
         case CalpontSystemCatalog::VARCHAR:
             if (fResultType.colWidth <= 7)
-                return strtod((char*)(&fResult.origIntVal), NULL);
+                return strtod((char*)(&fResult.origIntVal) + 1, NULL);
 
             return strtod(fResult.strVal.c_str(), NULL);
 
@@ -931,7 +932,7 @@ inline long double TreeNode::getLongDoubleVal()
 
         case CalpontSystemCatalog::VARCHAR:
             if (fResultType.colWidth <= 7)
-                return strtold((char*)(&fResult.origIntVal), NULL);
+                return strtold((char*)(&fResult.origIntVal) + 1, NULL);
 
             return strtold(fResult.strVal.c_str(), NULL);
 

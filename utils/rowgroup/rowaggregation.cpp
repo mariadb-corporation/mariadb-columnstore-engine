@@ -105,22 +105,13 @@ inline uint64_t getUintNullValue(int colType, int colWidth = 0)
     switch (colType)
     {
         case execplan::CalpontSystemCatalog::CHAR:
-        {
-            if (colWidth == 1) return joblist::CHAR1NULL;
-            else if (colWidth == 2) return joblist::CHAR2NULL;
-            else if (colWidth < 5) return joblist::CHAR4NULL;
-
-            break;
-        }
+            return datatypes::TCharShort::getUintNullValueByPackedWidth(colWidth);
 
         case execplan::CalpontSystemCatalog::VARCHAR:
-        case execplan::CalpontSystemCatalog::TEXT:
-        {
-            if (colWidth < 3) return joblist::CHAR2NULL;
-            else if (colWidth < 5) return joblist::CHAR4NULL;
+            return datatypes::TVarcharShort::getUintNullValueByPackedWidth(colWidth);
 
-            break;
-        }
+        case execplan::CalpontSystemCatalog::TEXT:
+            return datatypes::CHAR8NULL;
 
         case execplan::CalpontSystemCatalog::DATE:
         {
@@ -196,7 +187,7 @@ inline uint64_t getUintNullValue(int colType, int colWidth = 0)
         }
     }
 
-    return joblist::CHAR8NULL;
+    return datatypes::CHAR8NULL;
 }
 
 
@@ -360,30 +351,20 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
         case execplan::CalpontSystemCatalog::VARCHAR:
         case execplan::CalpontSystemCatalog::TEXT:
         {
-            int colWidth = pRowGroup->getColumnWidth(col);
-
             // bug 1853, use token to check null
             // scale here is used to indicate token, not real string.
-            if ((pRowGroup->getScale())[col] > 0)
-            {
-                if (row.getIntField(col) &  joblist::BIGINTNULL)
-                    ret = true;
+            if (pRowGroup->getScale()[col] > 0 &&
+                (row.getIntField(col) &  joblist::BIGINTNULL))
+                return true;
 
-                // break the case block
-                break;
-            }
-
+            int colWidth = pRowGroup->getColumnWidth(col);
             // real string to check null
             if (colWidth <= 8)
             {
-                if (colWidth == 1)
-                    ret = ((uint8_t)row.getUintField(col) == joblist::CHAR1NULL);
-                else if (colWidth == 2)
-                    ret = ((uint16_t)row.getUintField(col) == joblist::CHAR2NULL);
-                else if (colWidth < 5)
-                    ret = ((uint32_t)row.getUintField(col) == joblist::CHAR4NULL);
-                else
-                    ret = ((uint64_t)row.getUintField(col) == joblist::CHAR8NULL);
+                return row.getUintField(col) == 
+                       (colDataType == datatypes::SystemCatalog::CHAR ?
+                           datatypes::TCharShort::getUintNullValueByPackedWidth(colWidth) :
+                           datatypes::TVarcharShort::getUintNullValueByPackedWidth(colWidth));
             }
             else
             {
@@ -939,8 +920,19 @@ void RowAggregation::initMapData(const Row& rowIn)
                 break;
             }
 
-            case execplan::CalpontSystemCatalog::CHAR:
             case execplan::CalpontSystemCatalog::VARCHAR:
+            {
+                // fRowGroupIn(colIn) and fRow(colOut) should be of the same type
+                int colWidth = fRowGroupIn.getColumnWidth(colIn);
+
+                if (colWidth <= 8 && rowIn.isNullValue(colIn))
+                    fRow.setVarcharFieldToNull(colOut);
+                else
+                    fRow.setStringField(rowIn.getConstString(colIn), colOut);
+                break;
+            }
+
+            case execplan::CalpontSystemCatalog::CHAR:
             case execplan::CalpontSystemCatalog::TEXT:
             {
                 int colWidth = fRowGroupIn.getColumnWidth(colIn);

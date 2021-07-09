@@ -1131,22 +1131,22 @@ bool pColScanStep::isEmptyVal(const uint8_t* val8) const
         case CalpontSystemCatalog::TIMESTAMP:
             if (width == 1)
             {
-                return (*val8 == joblist::CHAR1EMPTYROW);
+                return (*val8 == datatypes::CHAR1EMPTYROW);
             }
             else if (width == 2)
             {
                 const uint16_t* val16 = reinterpret_cast<const uint16_t*>(val8);
-                return (*val16 == joblist::CHAR2EMPTYROW);
+                return (*val16 == datatypes::CHAR2EMPTYROW);
             }
             else if (width <= 4)
             {
                 const uint32_t* val32 = reinterpret_cast<const uint32_t*>(val8);
-                return (*val32 == joblist::CHAR4EMPTYROW);
+                return (*val32 == datatypes::CHAR4EMPTYROW);
             }
             else if (width <= 8)
             {
                 const uint64_t* val64 = reinterpret_cast<const uint64_t*>(val8);
-                return (*val64 == joblist::CHAR8EMPTYROW);
+                return (*val64 == datatypes::CHAR8EMPTYROW);
             }
 
         default:

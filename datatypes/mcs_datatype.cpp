@@ -496,8 +496,8 @@ int TypeHandlerTimestamp::storeValueToField(rowgroup::Row &row, int pos,
 }
 
 
-int TypeHandlerStr::storeValueToFieldCharVarchar(rowgroup::Row &row, int pos,
-                                                 StoreField *f) const
+int TypeHandlerChar::storeValueToField(rowgroup::Row &row, int pos,
+                                       StoreField *f) const
 {
   int64_t intColVal;
   switch (f->colWidth())
@@ -526,6 +526,13 @@ int TypeHandlerStr::storeValueToFieldCharVarchar(rowgroup::Row &row, int pos,
     default:
       return f->storeConstString(row.getConstString(pos));
   }
+}
+
+
+int TypeHandlerVarchar::storeValueToField(rowgroup::Row &row, int pos,
+                                       StoreField *f) const
+{
+  return f->storeConstString(row.getConstString(pos));
 }
 
 
@@ -1676,14 +1683,14 @@ TypeHandlerChar::getNullValueForType(const SystemCatalog::TypeAttributesStd &att
   {
     case 1:
     {
-      //charnull = joblist::CHAR1NULL;
+      //charnull = datatypes::CHAR1NULL;
       std::string charnull = "\376";
       boost::any value = charnull;
       return value;
     }
     case 2:
     {
-      //charnull = joblist::CHAR2NULL;
+      //charnull = datatypes::CHAR2NULL;
       std::string charnull = "\377\376";
       boost::any value = charnull;
       return value;
@@ -1691,7 +1698,7 @@ TypeHandlerChar::getNullValueForType(const SystemCatalog::TypeAttributesStd &att
     case 3:
     case 4:
     {
-      //charnull = joblist::CHAR4NULL;
+      //charnull = datatypes::CHAR4NULL;
       std::string charnull = "\377\377\377\376";
       boost::any value = charnull;
       return value;
@@ -1701,7 +1708,7 @@ TypeHandlerChar::getNullValueForType(const SystemCatalog::TypeAttributesStd &att
     case 7:
     case 8:
     {
-      //charnull = joblist::CHAR8NULL;
+      //charnull = datatypes::CHAR8NULL;
       std::string charnull = "\377\377\377\377\377\377\377\376";
       boost::any value = charnull;
       return value;
@@ -1720,7 +1727,7 @@ TypeHandlerStr::getNullValueForTypeVarcharText(const SystemCatalog::TypeAttribut
   {
     case 1:
     {
-      //charnull = joblist::CHAR2NULL;
+      //charnull = datatypes::CHAR2NULL;
       std::string charnull = "\377\376";
       boost::any value = charnull;
       return value;
@@ -1728,7 +1735,7 @@ TypeHandlerStr::getNullValueForTypeVarcharText(const SystemCatalog::TypeAttribut
     case 2:
     case 3:
     {
-      //charnull = joblist::CHAR4NULL;
+      //charnull = datatypes::CHAR4NULL;
       std::string charnull = "\377\377\377\376";
       boost::any value = charnull;
       return value;
@@ -1738,7 +1745,7 @@ TypeHandlerStr::getNullValueForTypeVarcharText(const SystemCatalog::TypeAttribut
     case 6:
     case 7:
     {
-      //charnull = joblist::CHAR8NULL;
+      //charnull = datatypes::CHAR8NULL;
       std::string charnull = "\377\377\377\377\377\377\377\376";
       boost::any value = charnull;
       return value;
@@ -2225,10 +2232,10 @@ TypeHandlerSDouble::getEmptyValueForType(const SystemCatalog::TypeAttributesStd 
 const uint8_t*
 getEmptyTypeHandlerStr(const SystemCatalog::TypeAttributesStd &attr, int8_t offset)
 {
-  const static uint8_t  CHAR1EMPTYROW = joblist::CHAR1EMPTYROW;
-  const static uint16_t CHAR2EMPTYROW = joblist::CHAR2EMPTYROW;
-  const static uint32_t CHAR4EMPTYROW = joblist::CHAR4EMPTYROW;
-  const static uint64_t CHAR8EMPTYROW = joblist::CHAR8EMPTYROW;
+  const static uint8_t  CHAR1EMPTYROW = datatypes::CHAR1EMPTYROW;
+  const static uint16_t CHAR2EMPTYROW = datatypes::CHAR2EMPTYROW;
+  const static uint32_t CHAR4EMPTYROW = datatypes::CHAR4EMPTYROW;
+  const static uint64_t CHAR8EMPTYROW = datatypes::CHAR8EMPTYROW;
 
   if (attr.colWidth == (2 + offset))
     return reinterpret_cast<const uint8_t*>(&CHAR2EMPTYROW);

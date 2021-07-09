@@ -64,32 +64,16 @@ uint64_t getNullValue(CalpontSystemCatalog::ColDataType t, uint32_t colWidth)
             return joblist::TIMENULL;
 
         case CalpontSystemCatalog::CHAR:
-        case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::STRINT:
         {
-            switch (colWidth)
-            {
-                case 1:
-                    return joblist::CHAR1NULL;
+            idbassert(colWidth <= 8);
+            return datatypes::TCharShort::getUintNullValueByPackedWidth(colWidth);
+        }
 
-                case 2:
-                    return joblist::CHAR2NULL;
-
-                case 3:
-                case 4:
-                    return joblist::CHAR4NULL;
-
-                case 5:
-                case 6:
-                case 7:
-                case 8:
-                    return joblist::CHAR8NULL;
-
-                default:
-                    throw logic_error("getNullValue() Can't return the NULL string");
-            }
-
-            break;
+        case CalpontSystemCatalog::VARCHAR:
+        {
+            idbassert(colWidth <= 8);
+            return datatypes::TVarcharShort::getUintNullValueByPackedWidth(colWidth);
         }
 
         case CalpontSystemCatalog::DECIMAL:
@@ -174,31 +158,15 @@ int64_t getSignedNullValue(CalpontSystemCatalog::ColDataType t, uint32_t colWidt
             return joblist::TIMENULL;
 
         case CalpontSystemCatalog::CHAR:
-        case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::STRINT:
         {
-            switch (colWidth)
-            {
-                case 1:
-                    return (int64_t) ((int8_t) joblist::CHAR1NULL);
-
-                case 2:
-                    return (int64_t) ((int16_t) joblist::CHAR2NULL);
-
-                case 3:
-                case 4:
-                    return (int64_t) ((int32_t) joblist::CHAR4NULL);
-
-                case 5:
-                case 6:
-                case 7:
-                case 8:
-                    return joblist::CHAR8NULL;
-
-                default:
-                    throw logic_error("getSignedNullValue() Can't return the NULL string");
-            }
-            break;
+            idbassert(colWidth <= 8);
+            return datatypes::TCharShort::getSIntNullValueByPackedWidth(colWidth);
+        }
+        case CalpontSystemCatalog::VARCHAR:
+        {
+            idbassert(colWidth <= 8);
+            return datatypes::TVarcharShort::getSIntNullValueByPackedWidth(colWidth);
         }
 
         case CalpontSystemCatalog::DECIMAL:

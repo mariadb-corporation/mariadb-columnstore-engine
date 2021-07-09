@@ -753,32 +753,15 @@ void Row::initToNull()
 
                 uint32_t len = getColumnWidth(i);
 
-                switch (len)
+                if (len <= 8)
                 {
-                    case 1:
-                        data[offsets[i]] = joblist::CHAR1NULL;
-                        break;
-
-                    case 2:
-                        *((uint16_t*) &data[offsets[i]]) = joblist::CHAR2NULL;
-                        break;
-
-                    case 3:
-                    case 4:
-                        *((uint32_t*) &data[offsets[i]]) = joblist::CHAR4NULL;
-                        break;
-
-                    case 5:
-                    case 6:
-                    case 7:
-                    case 8:
-                        *((uint64_t*) &data[offsets[i]]) = joblist::CHAR8NULL;
-                        break;
-
-                    default:
-                        *((uint64_t*) &data[offsets[i]]) = *((uint64_t*) joblist::CPNULLSTRMARK.c_str());
-                        memset(&data[offsets[i] + 8], 0, len - 8);
-                        break;
+                    // CHAR and VARCHAR reuse the same NULL magic values
+                    datatypes::TXCharCommon::setNullByPackedWidth(char_ptr(i), len);
+                }
+                else
+                {
+                    *((uint64_t*) &data[offsets[i]]) = *((uint64_t*) joblist::CPNULLSTRMARK.c_str());
+                    memset(char_ptr(i) + 8, 0, len - 8);
                 }
 
                 break;
@@ -905,6 +888,44 @@ Row::isNullValue_offset<execplan::CalpontSystemCatalog::DECIMAL,1>(
     return (data[offset] == joblist::TINYINTNULL);
 }
 
+
+bool Row::isNullValueCharVarchar(uint32_t colIndex) const
+{
+    if (inStringTable(colIndex))
+        return strings->isNullValue(stringTableOffset(colIndex));
+
+    if (data[offsets[colIndex]] == 0)   // empty string
+        return true;
+
+    uint32_t len = getColumnWidth(colIndex);
+
+    if (len <= 8)
+    {
+        // CHAR and VARCHAR result the same NULL magic values
+        return datatypes::TXCharCommon::isNullByPackedWidth(char_ptr(colIndex), len);
+    }
+
+    return (*((uint64_t*) char_ptr(colIndex)) == *((uint64_t*) joblist::CPNULLSTRMARK.c_str()));
+}
+
+
+bool Row::isNullValueTextBlob(uint32_t colIndex) const
+{
+    uint32_t pos = offsets[colIndex];
+
+    if (inStringTable(colIndex))
+        return strings->isNullValue(stringTableOffset(colIndex));
+
+    if (*((uint16_t*) &data[pos]) == 0)
+        return true;
+
+    if ((strncmp((char*) &data[pos + 2], joblist::CPNULLSTRMARK.c_str(), 8) == 0) &&
+                 *((uint16_t*) &data[pos]) == joblist::CPNULLSTRMARK.length())
+        return true;
+    return false;
+}
+
+
 bool Row::isNullValue(uint32_t colIndex) const
 {
     switch (types[colIndex])
@@ -945,43 +966,7 @@ bool Row::isNullValue(uint32_t colIndex) const
         case CalpontSystemCatalog::CHAR:
         case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::STRINT:
-        {
-            uint32_t len = getColumnWidth(colIndex);
-
-            if (inStringTable(colIndex))
-            {
-                uint64_t offset;
-                offset = *((uint64_t*) &data[offsets[colIndex]]);
-                return strings->isNullValue(offset);
-            }
-
-            if (data[offsets[colIndex]] == 0)   // empty string
-                return true;
-
-            switch (len)
-            {
-                case 1:
-                    return (data[offsets[colIndex]] == joblist::CHAR1NULL);
-
-                case 2:
-                    return (*((uint16_t*) &data[offsets[colIndex]]) == joblist::CHAR2NULL);
-
-                case 3:
-                case 4:
-                    return (*((uint32_t*) &data[offsets[colIndex]]) == joblist::CHAR4NULL);
-
-                case 5:
-                case 6:
-                case 7:
-                case 8:
-                    return
-                        (*((uint64_t*) &data[offsets[colIndex]]) == joblist::CHAR8NULL);
-                default:
-                    return (*((uint64_t*) &data[offsets[colIndex]]) == *((uint64_t*) joblist::CPNULLSTRMARK.c_str()));
-            }
-
-            break;
-        }
+            return isNullValueCharVarchar(colIndex);
 
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
@@ -1012,24 +997,7 @@ bool Row::isNullValue(uint32_t colIndex) const
         case CalpontSystemCatalog::BLOB:
         case CalpontSystemCatalog::TEXT:
         case CalpontSystemCatalog::VARBINARY:
-        {
-            uint32_t pos = offsets[colIndex];
-
-            if (inStringTable(colIndex))
-            {
-                uint64_t offset;
-                offset = *((uint64_t*) &data[pos]);
-                return strings->isNullValue(offset);
-            }
-
-            if (*((uint16_t*) &data[pos]) == 0)
-                return true;
-            else if ((strncmp((char*) &data[pos + 2], joblist::CPNULLSTRMARK.c_str(), 8) == 0) &&
-                     *((uint16_t*) &data[pos]) == joblist::CPNULLSTRMARK.length())
-                return true;
-
-            break;
-        }
+            return isNullValueTextBlob(colIndex);
 
         case CalpontSystemCatalog::UTINYINT:
             return (data[offsets[colIndex]] == joblist::UTINYINTNULL);
@@ -1716,33 +1684,6 @@ RGData RowGroup::duplicate()
     return ret;
 }
 
-
-void Row::setStringField(const std::string& val, uint32_t colIndex)
-{
-    uint64_t offset;
-    uint64_t length;
-
-    //length = strlen(val.c_str()) + 1;
-    length = val.length();
-
-    if (length > getColumnWidth(colIndex))
-        length = getColumnWidth(colIndex);
-
-    if (inStringTable(colIndex))
-    {
-        offset = strings->storeString((const uint8_t*) val.data(), length);
-        *((uint64_t*) &data[offsets[colIndex]]) = offset;
-//		cout << " -- stored offset " << *((uint32_t *) &data[offsets[colIndex]])
-//				<< " length " << *((uint32_t *) &data[offsets[colIndex] + 4])
-//				<< endl;
-    }
-    else
-    {
-        memcpy(&data[offsets[colIndex]], val.data(), length);
-        memset(&data[offsets[colIndex] + length], 0,
-               offsets[colIndex + 1] - (offsets[colIndex] + length));
-    }
-}
 
 void RowGroup::append(RGData& rgd)
 {

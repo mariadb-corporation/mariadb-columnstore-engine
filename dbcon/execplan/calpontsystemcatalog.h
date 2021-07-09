@@ -981,10 +981,7 @@ inline bool isNull(int64_t val, const execplan::CalpontSystemCatalog::DataType& 
 
             if (colWidth <= 8)
             {
-                if ((colWidth == 1) && ((int8_t) joblist::CHAR1NULL == val)) ret = true ;
-                else if ((colWidth == 2) && ((int16_t) joblist::CHAR2NULL == val)) ret = true;
-                else if ((colWidth < 5) && ((int32_t) joblist::CHAR4NULL == val)) ret = true;
-                else if ((int64_t) joblist::CHAR8NULL == val) ret = true;
+                return datatypes::TCharShort::isNullByPackedWidth(val, colWidth);
             }
             else
             {
@@ -1095,9 +1092,7 @@ inline bool isNull(int64_t val, const execplan::CalpontSystemCatalog::DataType& 
 
             if (colWidth <= 8)
             {
-                if ((colWidth < 3) && ((int16_t) joblist::CHAR2NULL == val)) ret = true;
-                else if ((colWidth < 5) && ((int32_t) joblist::CHAR4NULL == val)) ret = true;
-                else if ((int64_t)joblist::CHAR8NULL == val) ret = true;
+                return datatypes::TVarcharShort::isNullByPackedWidth(val, colWidth);
             }
             else
             {

@@ -22,6 +22,8 @@
 #include <boost/any.hpp>
 #include "exceptclasses.h"
 #include "conststring.h"
+#include "conststring.h"
+#include "mcs_string.h"
 #include "mcs_numeric_limits.h"
 #include "mcs_data_condition.h"
 #include "mcs_decimal.h"
@@ -2459,8 +2461,6 @@ protected:
   boost::any getNullValueForTypeVarcharText(const SystemCatalog::TypeAttributesStd &attr)
                                                                   const;
 public:
-  int storeValueToFieldCharVarchar(rowgroup::Row &row, int pos,
-                                   StoreField *f) const;
   int storeValueToFieldBlobText(rowgroup::Row &row, int pos,
                                 StoreField *f) const;
   std::string formatPartitionInfo(const SystemCatalog::TypeAttributesStd &attr,
@@ -2506,10 +2506,7 @@ class TypeHandlerChar: public TypeHandlerStr
     return field->ColWriteBatchChar(buf, nullVal, writer);
   }
   int storeValueToField(rowgroup::Row &row, int pos,
-                        StoreField *f) const override
-  {
-    return storeValueToFieldCharVarchar(row, pos, f);
-  }
+                        StoreField *f) const override;
   std::string format(const SimpleValue &v,
                      const SystemCatalog::TypeAttributesStd &attr) const override;
   std::string formatPartitionInfo(const SystemCatalog::TypeAttributesStd &attr,
@@ -2553,10 +2550,7 @@ class TypeHandlerVarchar: public TypeHandlerStr
     return field->ColWriteBatchVarchar(buf, nullVal, writer);
   }
   int storeValueToField(rowgroup::Row &row, int pos,
-                        StoreField *f) const override
-  {
-    return storeValueToFieldCharVarchar(row, pos, f);
-  }
+                        StoreField *f) const override;
   std::string format(const SimpleValue &v,
                      const SystemCatalog::TypeAttributesStd &attr) const override;
   std::string formatPartitionInfo(const SystemCatalog::TypeAttributesStd &attr,

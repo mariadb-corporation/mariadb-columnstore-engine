@@ -455,7 +455,7 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
             switch (row.getColumnWidth(fInputIndex))
             {
                 case 1:
-                    if (row.equals<1>(CHAR1NULL, fInputIndex))
+                    if (row.equals<1>(datatypes::CHAR1NULL, fInputIndex))
                         isNull = true;
                     else
                         fResult.origIntVal = row.getUintField<1>(fInputIndex);
@@ -463,7 +463,7 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
                     break;
 
                 case 2:
-                    if (row.equals<2>(CHAR2NULL, fInputIndex))
+                    if (row.equals<2>(datatypes::CHAR2NULL, fInputIndex))
                         isNull = true;
                     else
                         fResult.origIntVal = row.getUintField<2>(fInputIndex);
@@ -472,7 +472,7 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
 
                 case 3:
                 case 4:
-                    if (row.equals<4>(CHAR4NULL, fInputIndex))
+                    if (row.equals<4>(datatypes::CHAR4NULL, fInputIndex))
                         isNull = true;
                     else
                         fResult.origIntVal = row.getUintField<4>(fInputIndex);
@@ -483,7 +483,7 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
                 case 6:
                 case 7:
                 case 8:
-                    if (row.equals<8>(CHAR8NULL, fInputIndex))
+                    if (row.equals<8>(datatypes::CHAR8NULL, fInputIndex))
                         isNull = true;
                     else
                         fResult.origIntVal = row.getUintField<8>(fInputIndex);

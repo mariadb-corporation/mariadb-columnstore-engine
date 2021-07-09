@@ -1383,40 +1383,16 @@ void TupleUnion::writeNull(Row* out, uint32_t col)
             break;
 
         case CalpontSystemCatalog::CHAR:
-        case CalpontSystemCatalog::TEXT:
-        case CalpontSystemCatalog::VARCHAR:
-        {
-            uint32_t len = out->getColumnWidth(col);
-
-            switch (len)
-            {
-                case 1:
-                    out->setUintField<1>(joblist::CHAR1NULL, col);
-                    break;
-
-                case 2:
-                    out->setUintField<2>(joblist::CHAR2NULL, col);
-                    break;
-
-                case 3:
-                case 4:
-                    out->setUintField<4>(joblist::CHAR4NULL, col);
-                    break;
-
-                case 5:
-                case 6:
-                case 7:
-                case 8:
-                    out->setUintField<8>(joblist::CHAR8NULL, col);
-                    break;
-
-                default:
-                    out->setStringField(joblist::CPNULLSTRMARK, col);
-                    break;
-            }
-
+            out->setCharFieldToNull(col);
             break;
-        }
+
+        case CalpontSystemCatalog::TEXT:
+            out->setStringField(joblist::CPNULLSTRMARK, col);
+            break;
+
+        case CalpontSystemCatalog::VARCHAR:
+            out->setVarcharFieldToNull(col);
+            break;
 
         case CalpontSystemCatalog::BLOB:
         case CalpontSystemCatalog::VARBINARY:

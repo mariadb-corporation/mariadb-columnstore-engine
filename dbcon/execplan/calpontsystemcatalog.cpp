@@ -139,10 +139,7 @@ ColumnCommandDataType::ColumnCommandDataType(const CalpontSystemCatalog::DataTyp
     }
 
     //Round colWidth up
-    if (colWidth == 3)
-        colWidth = 4;
-    else if (colWidth == 5 || colWidth == 6 || colWidth == 7)
-        colWidth = 8;
+    colWidth+= datatypes::unusedGapSizeByPackedWidth(colWidth);
 }
 
 

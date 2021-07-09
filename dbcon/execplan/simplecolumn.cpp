@@ -575,6 +575,8 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
 
             if (fResultType.colDataType == CalpontSystemCatalog::STRINT)
                 fResult.intVal = uint64ToStr(fResult.origIntVal);
+            else if (fResultType.colDataType == CalpontSystemCatalog::VARCHAR)
+                fResult.intVal = atoll((char*)&fResult.origIntVal + 1);
             else
                 fResult.intVal = atoll((char*)&fResult.origIntVal);
 

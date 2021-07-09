@@ -137,10 +137,7 @@ void TupleConstantStep::initialize(const JobInfo& jobInfo, const RowGroup* rgIn)
                 ct.colWidth++;
 
             //Round colWidth up
-            if (ct.colWidth == 3)
-                ct.colWidth = 4;
-            else if (ct.colWidth == 5 || ct.colWidth == 6 || ct.colWidth == 7)
-                ct.colWidth = 8;
+            ct.colWidth+= datatypes::unusedGapSizeByPackedWidth(ct.colWidth);
 
             oids.push_back(-1);
             keys.push_back(-1);
@@ -653,10 +650,7 @@ void TupleConstantOnlyStep::initialize(const JobInfo& jobInfo, const rowgroup::R
             ct.colWidth++;
 
         //Round colWidth up
-        if (ct.colWidth == 3)
-            ct.colWidth = 4;
-        else if (ct.colWidth == 5 || ct.colWidth == 6 || ct.colWidth == 7)
-            ct.colWidth = 8;
+        ct.colWidth += datatypes::unusedGapSizeByPackedWidth(ct.colWidth);
 
         oids.push_back(-1);
         keys.push_back(-1);

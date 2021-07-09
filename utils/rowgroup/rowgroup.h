@@ -149,6 +149,10 @@ public:
 
     inline std::string getString(uint64_t offset) const;
     uint64_t storeString(const uint8_t* data, uint32_t length);  //returns the offset
+    uint64_t storeString(const utils::ConstString &str)
+    {
+        return storeString((const uint8_t*) str.str(), str.length());
+    }
     inline const uint8_t* getPointer(uint64_t offset) const;
     inline uint32_t getStringLength(uint64_t offset) const;
     inline utils::ConstString getConstString(uint64_t offset) const
@@ -332,6 +336,17 @@ private:
 
 class Row
 {
+    // Don't make these methods public.
+    // The Row users should use data type specific update methods
+    // rather than modify it directly.
+    char *char_ptr(uint32_t colIndex) const
+    {
+        return (char*) &data[offsets[colIndex]];
+    }
+    uint64_t stringTableOffset(uint32 colIndex) const
+    {
+        return *((uint64_t*) &data[offsets[colIndex]]);
+    }
 public:
     struct Pointer
     {
@@ -467,6 +482,22 @@ public:
     inline void prevRow(uint32_t size, uint64_t number);
 
     inline void setUintField(uint64_t val, uint32_t colIndex);
+    inline void setCharFieldToNull(uint32_t colIndex)
+    {
+        uint32_t width = getColumnWidth(colIndex);
+        if (width <= 8)
+            datatypes::TChar::setNullByPackedWidth(char_ptr(colIndex), width);
+        else
+            setStringField(joblist::CPNULLSTRMARK, colIndex);
+    }
+    inline void setVarcharFieldToNull(uint32_t colIndex)
+    {
+        uint32_t width = getColumnWidth(colIndex);
+        if (width <= 8)
+            datatypes::TVarchar::setNullByPackedWidth(char_ptr(colIndex), width);
+        else
+            setStringField(joblist::CPNULLSTRMARK, colIndex);
+    }
     template<int len> void setIntField(int64_t, uint32_t colIndex);
     inline void setIntField(int64_t, uint32_t colIndex);
 
@@ -485,9 +516,20 @@ public:
     }
 
     inline utils::ConstString getConstString(uint32_t colIndex) const;
-    inline utils::ConstString getShortConstString(uint32_t colIndex) const;
-    void setStringField(const std::string& val, uint32_t colIndex);
+    inline utils::ConstString getShortConstStringChar(uint32_t colIndex) const;
+    inline utils::ConstString getShortConstStringVarchar(uint32_t colIndex) const;
+    inline utils::ConstString getShortConstString(uint32_t colIndex) const
+    {
+        return getColType(colIndex) == datatypes::SystemCatalog::VARCHAR ?
+               getShortConstStringVarchar(colIndex) :
+               getShortConstStringChar(colIndex);
+    }
+    void setStringField(const std::string& val, uint32_t colIndex)
+    {
+        setStringField(utils::ConstString(val), colIndex);
+    }
     inline void setStringField(const utils::ConstString &str, uint32_t colIndex);
+    inline void setStringField(const uint8_t*, uint32_t len, uint32_t colIndex);
     template<typename T>
     inline void setBinaryField(const T* value, uint32_t width, uint32_t colIndex);
     template<typename T>
@@ -521,6 +563,8 @@ public:
 
     uint64_t getNullValue(uint32_t colIndex) const;
     bool isNullValue(uint32_t colIndex) const;
+    bool isNullValueCharVarchar(uint32_t colIndex) const;
+    bool isNullValueTextBlob(uint32_t colIndex) const;
     template<cscDataType cscDT, int width>
     inline bool isNullValue_offset(uint32_t offset) const;
 
@@ -919,10 +963,20 @@ inline void Row::setBinaryField_offset<int128_t>(const int128_t* value, uint32_t
 }
 
 
-inline utils::ConstString Row::getShortConstString(uint32_t colIndex) const
+inline utils::ConstString Row::getShortConstStringChar(uint32_t colIndex) const
 {
     const char *src= (const char *) &data[offsets[colIndex]];
-    return utils::ConstString(src, strnlen(src, getColumnWidth(colIndex)));
+    return utils::ConstString(src, datatypes::TChar::zeroTrimmedLength(src, getColumnWidth(colIndex)));
+}
+
+
+inline utils::ConstString Row::getShortConstStringVarchar(uint32_t colIndex) const
+{
+    char *src= char_ptr(colIndex);
+    // CHAR and VARCHAR reuse the same NULL magic values
+    if (datatypes::TXCharCommon::isNullByPackedWidth(src, getColumnWidth(colIndex)))
+       return utils::ConstString(src, 0);
+    return utils::ConstString(src + 1, (unsigned char) src[0]);
 }
 
 
@@ -1027,26 +1081,27 @@ inline void Row::colUpdateHasherTypeless(datatypes::MariaDBHasher &h, uint32_t k
 
 inline void Row::setStringField(const utils::ConstString &str, uint32_t colIndex)
 {
-    uint64_t offset;
-
-    // TODO: add multi-byte safe truncation here
-    uint32_t length = str.length();
-    if (length > getColumnWidth(colIndex))
-        length = getColumnWidth(colIndex);
-
     if (inStringTable(colIndex))
     {
-        offset = strings->storeString((const uint8_t*) str.str(), length);
+        const utils::ConstString tstr = utils::ConstString(str).truncate(getColumnWidth(colIndex));
+        uint64_t offset = strings->storeString(tstr);
         *((uint64_t*) &data[offsets[colIndex]]) = offset;
 //		cout << " -- stored offset " << *((uint32_t *) &data[offsets[colIndex]])
 //				<< " length " << *((uint32_t *) &data[offsets[colIndex] + 4])
 //				<< endl;
     }
+    else if (getColType(colIndex) == datatypes::SystemCatalog::VARCHAR)
+    {
+        datatypes::TVarchar(char_ptr(colIndex), getColumnWidth(colIndex)).
+                            storeWithTruncation(str);
+    }
     else
     {
-        memcpy(&data[offsets[colIndex]], str.str(), length);
-        memset(&data[offsets[colIndex] + length], 0,
-               offsets[colIndex + 1] - (offsets[colIndex] + length));
+        idbassert(offsets[colIndex + 1] - (offsets[colIndex] ==
+                  getColumnWidth(colIndex) +
+                  datatypes::unusedGapSizeByPackedWidth(getColumnWidth(colIndex))));
+        datatypes::TChar(char_ptr(colIndex), getColumnWidth(colIndex)).
+                         storeWithTruncation(str);
     }
 }
 
