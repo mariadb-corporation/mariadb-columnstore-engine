@@ -81,13 +81,13 @@ void RTSCommand::project()
         if (bpp->absRids.get() == NULL)
             bpp->absRids.reset(new uint64_t[LOGICAL_BLOCK_RIDS]);
 
-        col.execute(tmpValues);
+        col->execute(tmpValues);
 
         if (old_rc != bpp->ridCount)
         {
             ostringstream os;
 
-            os << __FILE__ << " (token column) error on projection for oid " << col.getOID() << " lbid " << col.getLBID();
+            os << __FILE__ << " (token column) error on projection for oid " << col->getOID() << " lbid " << col->getLBID();
             os << ": input rids " << old_rc;
             os << ", output rids " << bpp->ridCount << endl;
 
@@ -127,14 +127,14 @@ void RTSCommand::projectIntoRowGroup(RowGroup& rg, uint32_t colNum)
         if (bpp->absRids.get() == NULL)
             bpp->absRids.reset(new uint64_t[LOGICAL_BLOCK_RIDS]);
 
-        col.execute(tmpValues);
+        col->execute(tmpValues);
 
         if (old_rc != bpp->ridCount)
         {
 
             ostringstream os;
 
-            os << __FILE__ << " (token column) error on projection for oid " << col.getOID() << " lbid " << col.getLBID();
+            os << __FILE__ << " (token column) error on projection for oid " << col->getOID() << " lbid " << col->getLBID();
             os << ": input rids " << old_rc;
             os << ", output rids " << bpp->ridCount << endl;
 
@@ -151,7 +151,7 @@ void RTSCommand::projectIntoRowGroup(RowGroup& rg, uint32_t colNum)
 uint64_t RTSCommand::getLBID()
 {
     if (!passThru)
-        return col.getLBID();
+        return col->getLBID();
     else
         return 0;
 }
@@ -159,13 +159,13 @@ uint64_t RTSCommand::getLBID()
 void RTSCommand::nextLBID()
 {
     if (!passThru)
-        col.nextLBID();
+        col->nextLBID();
 }
 
 void RTSCommand::prep(int8_t outputType, bool makeAbsRids)
 {
     if (!passThru)
-        col.prep(OT_BOTH, true);
+        col->prep(OT_BOTH, true);
 
     dict.prep(OT_DATAVALUE, true);
 }
@@ -177,7 +177,7 @@ void RTSCommand::createCommand(ByteStream& bs)
 
     if (!passThru)
     {
-        col.createCommand(bs);
+        col.reset(ColumnCommandFabric::createCommand(bs));
     }
 
     dict.createCommand(bs);
@@ -187,7 +187,7 @@ void RTSCommand::createCommand(ByteStream& bs)
 void RTSCommand::resetCommand(ByteStream& bs)
 {
     if (!passThru)
-        col.resetCommand(bs);
+        col->resetCommand(bs);
 
     dict.resetCommand(bs);
 }
@@ -202,7 +202,7 @@ SCommand RTSCommand::duplicate()
     rts->passThru = passThru;
 
     if (!passThru)
-        rts->col = col;
+        rts->col.reset(ColumnCommandFabric::duplicate(col));
 
     rts->dict = dict;
     rts->Command::duplicate(this);
@@ -237,7 +237,7 @@ void RTSCommand::getLBIDList(uint32_t loopCount, vector<int64_t>* lbids)
     dict.getLBIDList(loopCount, lbids);
 
     if (!passThru)
-        col.getLBIDList(loopCount, lbids);
+        col->getLBIDList(loopCount, lbids);
 }
 
 void RTSCommand::setBatchPrimitiveProcessor(BatchPrimitiveProcessor* b)
@@ -246,7 +246,7 @@ void RTSCommand::setBatchPrimitiveProcessor(BatchPrimitiveProcessor* b)
     dict.setBatchPrimitiveProcessor(b);
 
     if (!passThru)
-        col.setBatchPrimitiveProcessor(b);
+        col->setBatchPrimitiveProcessor(b);
 }
 
 };

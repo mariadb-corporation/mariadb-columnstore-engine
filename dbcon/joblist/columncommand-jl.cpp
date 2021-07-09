@@ -133,37 +133,19 @@ ColumnCommandJL::~ColumnCommandJL()
 {
 }
 
+// The other leg is in PP, its name is ColumnCommand::makeCommand.
 void ColumnCommandJL::createCommand(ByteStream& bs) const
 {
     bs << (uint8_t) COLUMN_COMMAND;
+    colType.serialize(bs);
     bs << (uint8_t) isScan;
-// 	cout << "sending lbid " << lbid << endl;
     bs << traceFlags;
     bs << filterString;
-#if 0
-    cout << "filter string: ";
-
-    for (uint32_t i = 0; i < filterString.length(); ++i)
-        cout << (int) filterString.buf()[i] << " ";
-
-    cout << endl;
-#endif
-    bs << (uint8_t) colType.colDataType;
-    bs << (uint8_t) colType.colWidth;
-    bs << (uint8_t) colType.scale;
-    bs << (uint8_t) colType.compressionType;
-    bs << (uint32_t) colType.charsetNumber;
     bs << BOP;
     bs << filterCount;
     serializeInlineVector(bs, fLastLbid);
-    //bs << (uint64_t)fLastLbid;
 
     CommandJL::createCommand(bs);
-
-    /* XXXPAT: for debugging only, we can get rid of this one */
-// 	bs << colType.columnOID;
-
-// 	cout << "filter Count is " << filterCount << " ----" << endl;
 }
 
 void ColumnCommandJL::runCommand(ByteStream& bs) const
