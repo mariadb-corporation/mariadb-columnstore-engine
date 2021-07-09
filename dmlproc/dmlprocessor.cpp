@@ -199,7 +199,7 @@ struct CancellationThread
 
                                 if ( rc == 0 )
                                 {
-                                    fDbrm->invalidateUncommittedExtentLBIDs(txnId.id);
+                                    fDbrm->invalidateUncommittedExtentLBIDs(txnId.id, false);
 
                                     //@Bug 4524. In case it is batchinsert, call bulkrollback.
                                     rc = rollbackProcessor.rollBackBatchAutoOnTransaction(uniqueId, txnId, sessionID, tableLocks[i].tableOID, errorMsg);

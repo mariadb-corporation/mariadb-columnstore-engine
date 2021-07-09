@@ -5004,7 +5004,7 @@ void WE_DDLCommandProc::purgeFDCache()
         }
 
         cacheutils::purgePrimProcFdCache(files, Config::getLocalModuleID());
-        fDbrm.invalidateUncommittedExtentLBIDs(0, &lbidList);
+        fDbrm.invalidateUncommittedExtentLBIDs(0, false, &lbidList);
     }
 
     TableMetaData::removeTableMetaData(SYSCOLUMN_BASE);

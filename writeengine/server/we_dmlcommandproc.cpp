@@ -674,7 +674,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
                     cacheutils::purgePrimProcFdCache(files, Config::getLocalModuleID());
 
                 cacheutils::flushOIDsFromCache(oidsToFlush);
-                fDbrm.invalidateUncommittedExtentLBIDs(0, &lbidList);
+                fDbrm.invalidateUncommittedExtentLBIDs(0, false, &lbidList);
 
                 try
                 {
@@ -3942,7 +3942,7 @@ uint8_t WE_DMLCommandProc::processFlushFiles(messageqcpp::ByteStream& bs, std::s
         //@Bug 5700. Purge FD cache after file swap
         cacheutils::purgePrimProcFdCache(files, Config::getLocalModuleID());
         cacheutils::flushOIDsFromCache(oidsToFlush);
-        fDbrm.invalidateUncommittedExtentLBIDs(0, &lbidList);
+        fDbrm.invalidateUncommittedExtentLBIDs(0, false, &lbidList);
     }
 
     //cout << "Purged files.size:moduleId = " << files.size() << ":"<<Config::getLocalModuleID() << endl;
