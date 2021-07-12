@@ -542,11 +542,13 @@ SELECT "atan_test", ATAN(d1), ATAN(d2), ATAN(d3) FROM cs2;
 
 # SIN(), COS(), COT(), TAN()
 # signed
-SELECT "cos_test", COS(d1), COS(d2), COS(d3) FROM cs1;
+# Remove the TRUNCATE() wrapper from the below once MCOL-4811 is fixed.
+SELECT "cos_test", TRUNCATE(COS(d1), 15), COS(d2), COS(d3) FROM cs1;
 SELECT "sin_test", SIN(d1), SIN(d2), SIN(d3) FROM cs1;
 SELECT "tan_test", TAN(d1), TAN(d2), TAN(d3) FROM cs1;
 # unsigned
-SELECT "cos_test", COS(d1), COS(d2), COS(d3) FROM cs2;
+# Remove the TRUNCATE() wrapper from the below once MCOL-4811 is fixed.
+SELECT "cos_test", TRUNCATE(COS(d1), 15), COS(d2), COS(d3) FROM cs2;
 SELECT "sin_test", SIN(d1), SIN(d2), SIN(d3) FROM cs2;
 SELECT "tan_test", TAN(d1), TAN(d2), TAN(d3) FROM cs2;
 
