@@ -34,6 +34,7 @@
 #include<sys/time.h>
 #include "brmtypes.h"
 #include "mcs_datatype.h"
+#include "dataconvert.h"
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
 
@@ -77,6 +78,11 @@ struct ExtCPInfo
 	mm.int128Max = fCPInfo.bigMax;
 	mm.int128Min = fCPInfo.bigMin;
 	return datatypes::MinMaxInfo::isRangeInvalid(mm, fColType, fColWidth);
+    }
+    void fromToChars()
+    {
+        fCPInfo.max = static_cast<int64_t>(uint64ToStr(fCPInfo.max));
+        fCPInfo.min = static_cast<int64_t>(uint64ToStr(fCPInfo.min));
     }
     bool isBinaryColumn()
     {

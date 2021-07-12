@@ -331,6 +331,11 @@ void WriteEngineWrapper::updateMaxMinRange(const size_t totalNewRow, const size_
     {
         return ;
     }
+    if (colType == WR_CHAR)
+    {
+        maxMin->toInvalid(); // simple and wrong solution.
+	return;
+    }
     bool isUnsigned = false; // TODO: should change with type.
     switch (colType)
     {
@@ -338,6 +343,7 @@ void WriteEngineWrapper::updateMaxMinRange(const size_t totalNewRow, const size_
         case WR_USHORT:
         case WR_UINT:
         case WR_ULONGLONG:
+        case WR_CHAR:
         {
             isUnsigned = true;
             break;
@@ -351,6 +357,14 @@ void WriteEngineWrapper::updateMaxMinRange(const size_t totalNewRow, const size_
         if (maxMin->isInvalid())
         {
             return ;
+        }
+    }
+    if (colType == WR_CHAR)
+    {
+        idbassert(MAX_COLUMN_BOUNDARY == sizeof(uint64_t)); // have to check that - code below depends on that.
+        if (!maxMin->isInvalid())
+        {
+            maxMin->fromToChars();
         }
     }
     size_t i;
@@ -409,6 +423,16 @@ void WriteEngineWrapper::updateMaxMinRange(const size_t totalNewRow, const size_
                 fetchNewOldValues<int128_t, int128_t>(bvalue, oldBValue, valArrayVoid, oldValArrayVoid, i, totalNewRow);
                 break;
             }
+            case WR_CHAR:
+            {
+                fetchNewOldValues<uint64_t, uint64_t>(uvalue, oldUValue, valArrayVoid, oldValArrayVoid, i, totalNewRow);
+                // for characters (strings, actually), we fetched then in LSB order, on x86, at the very least.
+                // this means most significant byte of the string, which is first, is now in LSB of uvalue/oldValue.
+                // we must perform a conversion.
+                uvalue = uint64ToStr(uvalue);
+                oldValue = uint64ToStr(oldValue);
+                break;
+            }
             default:
                 idbassert_s(0, "unknown WR type tag");
                 return;
@@ -434,6 +458,12 @@ void WriteEngineWrapper::updateMaxMinRange(const size_t totalNewRow, const size_
                 return ;
             }
         }
+    }
+    // the range will be kept.
+    // to handle character columns properly we need to convert range values back to strings.
+    if (colType == WR_CHAR)
+    {
+        maxMin->fromToChars();
     }
 }
 /*@convertValArray - Convert interface values to internal values
@@ -1182,21 +1212,21 @@ getCPInfoToUpdateForUpdatableType(const ColStruct& colStruct, ExtCPInfo* current
     {
         return nullptr;
     }
-    switch(colStruct.colDataType)
+    switch(colStruct.colType)
     {
         // here we enumerate all supported types.
-        case CalpontSystemCatalog::TINYINT:
-        case CalpontSystemCatalog::SMALLINT:
-        case CalpontSystemCatalog::DECIMAL:
-        case CalpontSystemCatalog::MEDINT:
-        case CalpontSystemCatalog::INT:
-        case CalpontSystemCatalog::BIGINT:
-        case CalpontSystemCatalog::UTINYINT:
-        case CalpontSystemCatalog::USMALLINT:
-        case CalpontSystemCatalog::UDECIMAL:
-        case CalpontSystemCatalog::UMEDINT:
-        case CalpontSystemCatalog::UINT:
-        case CalpontSystemCatalog::UBIGINT:
+        case WR_BYTE:
+        case WR_SHORT:
+        case WR_INT:
+        case WR_LONGLONG:
+        case WR_CHAR:
+        case WR_UBYTE:
+        case WR_USHORT:
+        case WR_UINT:
+        case WR_ULONGLONG:
+        case WR_MEDINT:
+        case WR_UMEDINT:
+        case WR_BINARY:
         {
             return currentCPInfo;
         }
