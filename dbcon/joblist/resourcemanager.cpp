@@ -37,6 +37,7 @@ using namespace boost;
 #include "jl_logger.h"
 #include "cgroupconfigurator.h"
 #include "liboamcpp.h"
+#include "secrets.h"
 
 using namespace config;
 
@@ -266,6 +267,11 @@ ResourceManager::ResourceManager(bool runningInExeMgr) :
     fAllowedDiskAggregation = getBoolVal(fRowAggregationStr,
                                          "AllowDiskBasedAggregation",
                                          defaultAllowDiskAggregation);
+    if (!load_encryption_keys())
+    {
+        Logger log;
+        log.logMessage(logging::LOG_TYPE_ERROR, "Error loading CEJ password encryption keys");
+    }
 }
 
 int ResourceManager::getEmPriority() const
@@ -381,7 +387,9 @@ bool  ResourceManager::getMysqldInfo(
     // MCS will read username and pass from disk if the config changed.
     bool reReadConfig = true;
     u = getStringVal("CrossEngineSupport", "User", hostUserUnassignedValue, reReadConfig);
-    w = getStringVal("CrossEngineSupport", "Password", "", reReadConfig);
+    std::string encryptedPW = getStringVal("CrossEngineSupport", "Password", "", reReadConfig);
+    //This will return back the plaintext password if there is no MCSDATADIR/.secrets file present
+    w = decrypt_password(encryptedPW);
     // MCS will not read username and pass from disk if the config changed.
     h = getStringVal("CrossEngineSupport", "Host", hostUserUnassignedValue);
     p = getUintVal("CrossEngineSupport", "Port", 0);

@@ -1,5 +1,5 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+include_directories( ${ENGINE_COMMON_INCLUDES} ${ENGINE_SRC_DIR}/tools/passwd)
 
 
 ########### next target ###############
@@ -55,7 +55,8 @@ set(joblist_LIB_SRCS
     tupleunion.cpp
     unique32generator.cpp
     virtualtable.cpp
-    windowfunctionstep.cpp)
+    windowfunctionstep.cpp
+    ${ENGINE_SRC_DIR}/tools/passwd/secrets.cpp)
 
 add_library(joblist SHARED ${joblist_LIB_SRCS})
 
