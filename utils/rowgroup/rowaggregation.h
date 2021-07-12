@@ -176,7 +176,7 @@ struct RowAggFunctionCol
     RowAggFunctionCol(RowAggFunctionType aggFunction, RowAggFunctionType stats,
                       int32_t inputColIndex, int32_t outputColIndex, int32_t auxColIndex = -1) :
         fAggFunction(aggFunction), fStatsFunction(stats), fInputColumnIndex(inputColIndex),
-        fOutputColumnIndex(outputColIndex), fAuxColumnIndex(auxColIndex) {}
+        fOutputColumnIndex(outputColIndex), fAuxColumnIndex(auxColIndex), hasMultiParm(false) {}
     virtual ~RowAggFunctionCol() = default;
 
     virtual void serialize(messageqcpp::ByteStream& bs) const;
@@ -203,6 +203,8 @@ struct RowAggFunctionCol
     // with fAggFunction == ROWAGG_MULTI_PARM. Order is important.
     // If this parameter is constant, that value is here.
     execplan::SRCP fpConstCol;
+    
+    bool hasMultiParm;
 };
 
 
