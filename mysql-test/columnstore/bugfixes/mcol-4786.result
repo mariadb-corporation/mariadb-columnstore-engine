@@ -4,7 +4,7 @@ USE mcol4786;
 CREATE TABLE `bd_dwhs_private_ex_pub_services_ins` (`age` int(11) DEFAULT NULL) ENGINE=Columnstore DEFAULT CHARSET=latin1;
 insert into bd_dwhs_private_ex_pub_services_ins select * from seq_1_to_120;
 CREATE OR REPLACE VIEW `dwhs_ins_call_detail_vw` AS select age, case when `bd_dwhs_private_ex_pub_services_ins`.`age` between 16 and 24 then '16-24' when `bd_dwhs_private_ex_pub_services_ins`.`age` between 25 and 34 then '25-34' when `bd_dwhs_private_ex_pub_services_ins`.`age` between 35 and 44 then '35-44' when `bd_dwhs_private_ex_pub_services_ins`.`age` between 45 and 54 then '45-54' when `bd_dwhs_private_ex_pub_services_ins`.`age` between 55 and 64 then '55-64' when `bd_dwhs_private_ex_pub_services_ins`.`age` between 65 and 74 then '65-74' when `bd_dwhs_private_ex_pub_services_ins`.`age` >= 75 then '75+' end AS `age_group` from `bd_dwhs_private_ex_pub_services_ins`;
-select age_group, age, count(*) from dwhs_ins_call_detail_vw where age between 16 and 24 and age_group IN ('35-44') group by age_group,age order by age_group, age;
+select age_group, age, count(*) from dwhs_ins_call_detail_vw where age between 16 and 34 and age_group IN ('35-44') group by age_group,age order by age_group, age;
 age_group	age	count(*)
 DROP VIEW `dwhs_ins_call_detail_vw`;
 DROP TABLE `bd_dwhs_private_ex_pub_services_ins`;

@@ -4427,7 +4427,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
             gwi.inCaseStmt = true;
             sptp.reset(buildParseTree((Item_func*)(item->arguments()[i]), gwi, nonSupport));
             gwi.inCaseStmt = false;
-            if (!gwi.ptWorkStack.empty() && gwi.ptWorkStack.top()->data() == sptp->data())
+            if (!gwi.ptWorkStack.empty() && *gwi.ptWorkStack.top() == *sptp.get())
             {
                 gwi.ptWorkStack.pop();
             }
