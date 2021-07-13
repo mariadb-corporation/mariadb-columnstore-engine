@@ -45,7 +45,6 @@ namespace joblist
 {
 
 ColumnCommandJL::ColumnCommandJL(const pColScanStep& scan, vector<BRM::LBID_t> lastLBID)
-    :colType(scan.fColType)
 {
     BRM::DBRM dbrm;
     isScan = true;
@@ -54,11 +53,13 @@ ColumnCommandJL::ColumnCommandJL(const pColScanStep& scan, vector<BRM::LBID_t> l
     traceFlags = scan.fTraceFlags;
     filterString = scan.fFilterString;
     filterCount = scan.fFilterCount;
+    colType = scan.fColType;
     BOP = scan.fBOP;
     extents = scan.extents;
     OID = scan.fOid;
     colName = scan.fName;
     rpbShift = scan.rpbShift;
+    fIsDict = scan.fIsDict;
     fLastLbid = lastLBID;
 
     //cout << "CCJL inherited lastlbids: ";
@@ -83,7 +84,6 @@ ColumnCommandJL::ColumnCommandJL(const pColScanStep& scan, vector<BRM::LBID_t> l
 }
 
 ColumnCommandJL::ColumnCommandJL(const pColStep& step)
-    :colType(step.fColType)
 {
     BRM::DBRM dbrm;
 
@@ -93,6 +93,7 @@ ColumnCommandJL::ColumnCommandJL(const pColStep& step)
     traceFlags = step.fTraceFlags;
     filterString = step.fFilterString;
     filterCount = step.fFilterCount;
+    colType = step.fColType;
     BOP = step.fBOP;
     extents = step.extents;
     divShift = step.divShift;
@@ -100,6 +101,7 @@ ColumnCommandJL::ColumnCommandJL(const pColStep& step)
     rpbShift = step.rpbShift;
     OID = step.fOid;
     colName = step.fName;
+    fIsDict = step.fIsDict;
     ResourceManager* rm = ResourceManager::instance();
     numDBRoots = rm->getDBRootCount();
 
@@ -146,7 +148,11 @@ void ColumnCommandJL::createCommand(ByteStream& bs) const
 
     cout << endl;
 #endif
-    colType.serialize(bs);
+    bs << (uint8_t) colType.colDataType;
+    bs << (uint8_t) colType.colWidth;
+    bs << (uint8_t) colType.scale;
+    bs << (uint8_t) colType.compressionType;
+    bs << (uint32_t) colType.charsetNumber;
     bs << BOP;
     bs << filterCount;
     serializeInlineVector(bs, fLastLbid);

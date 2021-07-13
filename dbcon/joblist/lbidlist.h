@@ -104,25 +104,25 @@ public:
 
     template <typename T>
     void UpdateMinMax(T min, T max, int64_t lbid,
-                      const execplan::ColumnCommandDataType & type, bool validData = true);
+                      const execplan::CalpontSystemCatalog::ColType & type, bool validData = true);
 
-    void UpdateAllPartitionInfo(const execplan::ColumnCommandDataType & colType);
+    void UpdateAllPartitionInfo(const execplan::CalpontSystemCatalog::ColType& colType);
 
     bool IsRangeBoundary(uint64_t lbid);
 
     bool CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
                                   const messageqcpp::ByteStream* MsgDataPtr,
                                   const uint16_t NOPS,
-                                  const execplan::ColumnCommandDataType& ct,
+                                  const execplan::CalpontSystemCatalog::ColType& ct,
                                   const uint8_t BOP);
 
     template<typename T>
     bool checkSingleValue(T min, T max, T value,
-                          const execplan::ColumnCommandDataType & type);
+                          const execplan::CalpontSystemCatalog::ColType & type);
 
     template<typename T>
     bool checkRangeOverlap(T min, T max, T tmin, T tmax,
-                           const execplan::ColumnCommandDataType & type);
+                           const execplan::CalpontSystemCatalog::ColType & type);
 
     // check the column data type and the column size to determine if it
     // is a data type  to apply casual paritioning.

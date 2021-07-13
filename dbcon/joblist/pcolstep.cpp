@@ -102,14 +102,14 @@ struct pColStepAggregator
 pColStep::pColStep(
     CalpontSystemCatalog::OID o,
     CalpontSystemCatalog::OID t,
-    const CalpontSystemCatalog::DataType& ct,
+    const CalpontSystemCatalog::ColType& ct,
     const JobInfo& jobInfo) :
     JobStep(jobInfo),
     fRm(jobInfo.rm),
     sysCat(jobInfo.csc),
     fOid(o),
     fTableOid(t),
-    fColType(ct, t != 0 /* For cross-engine we preserve the exact data type */),
+    fColType(ct),
     fFilterCount(0),
     fBOP(BOP_NONE),
     ridList(0),
@@ -117,6 +117,7 @@ pColStep::pColStep(
     msgsRecvd(0),
     finishedSending(false),
     recvWaiting(false),
+    fIsDict(false),
     isEM(jobInfo.isExeMgr),
     ridCount(0),
     fFlushInterval(jobInfo.flushInterval),
@@ -156,7 +157,40 @@ pColStep::pColStep(
         throw runtime_error(oss.str());
     }
 
-    realWidth = ct.colWidth;
+    realWidth = fColType.colWidth;
+
+    if ( fColType.colDataType == CalpontSystemCatalog::VARCHAR )
+    {
+        if (8 > fColType.colWidth && 4 <= fColType.colWidth )
+            fColType.colDataType = CalpontSystemCatalog::CHAR;
+
+        fColType.colWidth++;
+    }
+
+    //If this is a dictionary column, fudge the numbers...
+    if ((fColType.colDataType == CalpontSystemCatalog::VARBINARY)
+            || (fColType.colDataType == CalpontSystemCatalog::BLOB)
+            || (fColType.colDataType == CalpontSystemCatalog::TEXT))
+    {
+        fColType.colWidth = 8;
+        fIsDict = true;
+    }
+    // WIP MCOL-641
+    else if (fColType.colWidth > 8 
+        && fColType.colDataType != CalpontSystemCatalog::DECIMAL
+        && fColType.colDataType != CalpontSystemCatalog::UDECIMAL)
+    {
+        fColType.colWidth = 8;
+        fIsDict = true;
+        //TODO: is this right?
+        fColType.colDataType = CalpontSystemCatalog::VARCHAR;
+    }
+
+    //Round colWidth up
+    if (fColType.colWidth == 3)
+        fColType.colWidth = 4;
+    else if (fColType.colWidth == 5 || fColType.colWidth == 6 || fColType.colWidth == 7)
+        fColType.colWidth = 8;
 
     idbassert(fColType.colWidth > 0);
     ridsPerBlock = BLOCK_SIZE / fColType.colWidth;
@@ -247,6 +281,7 @@ pColStep::pColStep(const pColScanStep& rhs) :
     msgsRecvd(0),
     finishedSending(false),
     recvWaiting(false),
+    fIsDict(rhs.isDictCol()),
     ridCount(0),
     // Per Cindy, it's save to put fFlushInterval to be 0
     fFlushInterval(0),
@@ -356,6 +391,7 @@ pColStep::pColStep(const PassThruStep& rhs) :
     msgsRecvd(0),
     finishedSending(false),
     recvWaiting(false),
+    fIsDict(rhs.isDictCol()),
     ridCount(0),
     // Per Cindy, it's save to put fFlushInterval to be 0
     fFlushInterval(0),

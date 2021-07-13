@@ -84,13 +84,13 @@ private:
     * @param value	The column value.
     *
     */
-    uint64_t adjustValue(const execplan::ColumnCommandDataType & ct,
+    uint64_t adjustValue(const execplan::CalpontSystemCatalog::ColType& ct,
                          const uint64_t& value);
 
     uint32_t daysThroughMonth(uint32_t mth);
 
     template<typename T>
-    uint32_t estimateDistinctValues(const execplan::ColumnCommandDataType & ct,
+    uint32_t estimateDistinctValues(const execplan::CalpontSystemCatalog::ColType& ct,
                                     const T& min,
                                     const T& max,
                                     const char cpStatus);
@@ -108,7 +108,7 @@ private:
     template<class T>
     float estimateOpFactor(const T& min, const T& max, const T& value, char op, uint8_t lcf,
                            uint32_t distinctValues, char cpStatus,
-                           const execplan::ColumnCommandDataType & ct);
+                           const execplan::CalpontSystemCatalog::ColType& ct);
 
     /** @brief returns a factor between 0 and 1 for the estimate of rows that will qualify
     *          the given operation(s).
@@ -126,7 +126,7 @@ private:
     float estimateRowReturnFactor(const BRM::EMEntry& emEntry,
                                   const messageqcpp::ByteStream* msgDataPtr,
                                   const uint16_t NOPS,
-                                  const execplan::ColumnCommandDataType & ct,
+                                  const execplan::CalpontSystemCatalog::ColType& ct,
                                   const uint8_t BOP,
                                   const uint32_t& rowsInExtent);
 

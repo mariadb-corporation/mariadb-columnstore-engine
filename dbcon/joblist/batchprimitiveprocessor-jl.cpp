@@ -757,8 +757,7 @@ void BatchPrimitiveProcessorJL::deserializeAggregateResult(ByteStream* in,
 void BatchPrimitiveProcessorJL::getRowGroupData(ByteStream& in, vector<RGData>* out,
         bool* validCPData, uint64_t* lbid, int128_t* min, int128_t* max,
         uint32_t* cachedIO, uint32_t* physIO, uint32_t* touchedBlocks, bool* countThis,
-        uint32_t threadID, bool* hasWideColumn,
-        const ColumnCommandDataType& colType) const
+        uint32_t threadID, bool* hasWideColumn, const execplan::CalpontSystemCatalog::ColType& colType) const
 {
     uint64_t tmp64;
     int128_t tmp128;
