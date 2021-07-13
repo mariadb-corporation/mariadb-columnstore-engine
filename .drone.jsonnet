@@ -1,8 +1,9 @@
-local events = ['pull_request', 'cron'];
+local events = ['push'];
 
 local platforms = {
   develop: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
   'develop-5': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
+  'columnstore-6.1.1-2': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:9', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
 };
 
 local platforms_arm = {
@@ -18,6 +19,7 @@ local platforms_mtr = ['centos:7', 'centos:8', 'ubuntu:20.04'];
 local server_ref_map = {
   develop: '10.6',
   'develop-5': '10.5',
+  'columnstore-6.1.1-2': '10.6-enterprise',
   '**': '10.6',
 };
 
@@ -28,7 +30,7 @@ local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DPLUGIN_COLUMNSTORE=YES -
                    '-DWITH_EMBEDDED_SERVER=OFF -DWITH_WSREP=OFF ' +
                    '-DBUILD_CONFIG=mysql_release';
 
-local rpm_build_deps = 'install -y systemd-devel git make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect createrepo';
+local rpm_build_deps = 'install -y lz4 systemd-devel git make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect createrepo';
 
 local deb_build_deps = 'apt update && apt install --yes --no-install-recommends build-essential devscripts ccache equivs eatmydata dh-systemd ' +
                        '&& mk-build-deps debian/control -t "apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends" -r -i';
@@ -36,7 +38,7 @@ local deb_build_deps = 'apt update && apt install --yes --no-install-recommends 
 local platformMap(platform) =
 
   local platform_map = {
-    'opensuse/leap:15': 'zypper ' + rpm_build_deps + ' cmake libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel gcc-fortran liblz4-devel && cmake ' + cmakeflags + ' -DRPM=sles15 && make -j$(nproc) package',
+    'opensuse/leap:15': 'zypper ' + rpm_build_deps + ' liblz4-devel cmake libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel gcc-fortran && cmake ' + cmakeflags + ' -DRPM=sles15 && make -j$(nproc) package',
     'centos:7': 'yum install -y epel-release && yum install -y cmake3 && ln -s /usr/bin/cmake3 /usr/bin/cmake && yum ' + rpm_build_deps + ' lz4-devel && cmake ' + cmakeflags + ' -DRPM=centos7 && make -j$(nproc) package',
     'centos:8': "yum install -y libgcc libarchive && sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/*PowerTools.repo && yum " + rpm_build_deps + ' lz4-devel cmake && cmake ' + cmakeflags + ' -DRPM=centos8 && make -j$(nproc) package',
     'debian:9': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=stretch' debian/autobake-deb.sh",
@@ -56,6 +58,8 @@ local Pipeline(branch, platform, event, arch='amd64') = {
   local img = if (std.split(platform, ':')[0] == 'centos') then platform else 'romcheck/' + std.strReplace(platform, '/', '-'),
   local regression_ref = if (std.split(branch, '-')[0] == 'develop') then branch else 'develop-5',
   local branchp = if (branch == '**') then '' else branch,
+
+  local server_remote = if (std.split(branch, '-')[0] == 'columnstore') then 'https://github.com/mariadb-corporation/MariaDBEnterprise' else 'https://github.com/MariaDB/server',
 
   local pipeline = self,
 
@@ -298,7 +302,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
              volumes: [pipeline._volumes.mdb],
              environment: {
                SERVER_REF: '${SERVER_REF:-' + server_ref_map[branch] + '}',
-               SERVER_REMOTE: '${SERVER_REMOTE:-https://github.com/MariaDB/server}',
+               SERVER_REMOTE: '${SERVER_REMOTE:-' + server_remote + '}',
                SERVER_SHA: '${SERVER_SHA:-' + server_ref_map[branch] + '}',
              },
              commands: [
