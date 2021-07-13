@@ -827,7 +827,10 @@ void ColumnCommand::duplicate(ColumnCommand* cc)
     cc->_isScan = _isScan;
     cc->traceFlags = traceFlags;
     cc->filterString = filterString;
-    cc->colType = colType;
+    cc->colType.colDataType = colType.colDataType;
+    cc->colType.compressionType = colType.compressionType;
+    cc->colType.colWidth = colType.colWidth;
+    cc->colType.charsetNumber = colType.charsetNumber;
     cc->BOP = BOP;
     cc->filterCount = filterCount;
     cc->fFilterFeeder = fFilterFeeder;
