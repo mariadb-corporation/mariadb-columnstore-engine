@@ -198,19 +198,26 @@ public:
     typedef std::vector<DictOID> DictOIDList;
 
 
-    class DataType: public datatypes::SystemCatalog::TypeHolderStd
+    /** the structure returned by colType
+     *
+     * defaultValue is only meaningful when constraintType == DEFAULT_CONSTRAINT
+     */
+    struct ColType: public datatypes::SystemCatalog::TypeHolderStd
     {
-    public:
+        ColType();
+        ConstraintType constraintType;
+        DictOID ddn;
+        std::string defaultValue;
+        int32_t colPosition;	// temporally put here. may need to have ColInfo struct later
         int32_t compressionType;
+        OID columnOID;
+        bool	 autoincrement; //set to true if  SYSCOLUMN autoincrement is �y�
+        uint64_t nextvalue; //next autoincrement value
         uint32_t charsetNumber;
-    protected:
-        const CHARSET_INFO* mCharset;
-    public:
-        DataType()
-         :compressionType(NO_COMPRESSION),
-          charsetNumber(63), // &my_charset_bin
-          mCharset(nullptr)
-        { }
+        const CHARSET_INFO* cs;
+
+        ColType(const ColType& rhs);
+        ColType& operator=(const ColType& rhs);
 
         CHARSET_INFO* getCharset();
         // for F&E use. only serialize necessary info for now
@@ -235,27 +242,6 @@ public:
             b >> (uint32_t&)compressionType;
             b >> charsetNumber;
         }
-    };
-
-
-    /** the structure returned by colType
-     *
-     * defaultValue is only meaningful when constraintType == DEFAULT_CONSTRAINT
-     */
-    struct ColType: public DataType
-    {
-        ColType();
-        ConstraintType constraintType;
-        DictOID ddn;
-        std::string defaultValue;
-        int32_t colPosition;	// temporally put here. may need to have ColInfo struct later
-        OID columnOID;
-        bool	 autoincrement; //set to true if  SYSCOLUMN autoincrement is �y�
-        uint64_t nextvalue; //next autoincrement value
-
-        ColType(const ColType& rhs);
-        ColType& operator=(const ColType& rhs);
-
 
         /**
          * @brief convert a columns data, represnted as a string,
@@ -899,51 +885,6 @@ private:
     static uint32_t fModuleID;
 };
 
-
-class ColumnCommandDataType: public CalpontSystemCatalog::DataType
-{
-    bool mIsDict;
-public:
-    ColumnCommandDataType()
-        :DataType(),
-         mIsDict(false)
-    { }
-    explicit ColumnCommandDataType(const DataType &rhs, bool fudge);
-    bool isDict() const
-    {
-        return mIsDict;
-    }
-    void serialize(messageqcpp::ByteStream& bs) const
-    {
-        bs << (uint8_t) colDataType;
-        bs << (uint8_t) colWidth;
-        bs << (uint8_t) scale;
-        bs << (uint8_t) compressionType;
-        bs << (uint32_t) charsetNumber;
-        bs << (uint8_t) mIsDict;
-    }
-    void unserialize(messageqcpp::ByteStream& bs)
-    {
-        uint8_t tmp8;
-        uint32_t tmp32;
-        bs >> tmp8;
-        colDataType = (execplan::CalpontSystemCatalog::ColDataType) tmp8;
-        bs >> tmp8;
-        colWidth = tmp8;
-        bs >> tmp8;
-        scale = tmp8;
-        bs >> tmp8;
-        compressionType = tmp8;
-        bs >> tmp32;
-        charsetNumber = tmp32;
-        mCharset = nullptr;
-        bs >> tmp8;
-        mIsDict = static_cast<bool>(tmp8);
-    }
-};
-
-
-
 /** convenience function to make a TableColName from 3 strings
  */
 const CalpontSystemCatalog::TableColName make_tcn(const std::string& s, const std::string& t, const std::string& c, int lower_case_table_names=0);
@@ -956,12 +897,12 @@ const CalpontSystemCatalog::TableAliasName make_aliastable(const std::string& s,
 const CalpontSystemCatalog::TableAliasName make_aliasview(const std::string& s, const std::string& t, const std::string& a, const std::string& v,
                                                           const bool fisColumnStore = true, int lower_case_table_names=0);
 
-inline bool isNull(int128_t val, const execplan::CalpontSystemCatalog::DataType& ct)
+inline bool isNull(int128_t val, const execplan::CalpontSystemCatalog::ColType& ct)
 {
     return datatypes::Decimal::isWideDecimalNullValue(val);
 }
 
-inline bool isNull(int64_t val, const execplan::CalpontSystemCatalog::DataType& ct)
+inline bool isNull(int64_t val, const execplan::CalpontSystemCatalog::ColType& ct)
 {
     bool ret = false;
 

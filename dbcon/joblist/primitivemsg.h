@@ -343,27 +343,18 @@ struct ColRequestHeaderDataType: public datatypes::Charset
     int32_t CompType;
     uint16_t DataSize;
     uint8_t DataType;       // enum ColDataType defined in calpont system catalog header file
-private:
-    bool mIsDict;
-public:
     ColRequestHeaderDataType()
        :Charset(my_charset_bin),
         CompType(0),
         DataSize(0),
-        DataType(0),
-        mIsDict(false)
+        DataType(0)
     { }
-    ColRequestHeaderDataType(const execplan::ColumnCommandDataType &rhs)
+    ColRequestHeaderDataType(const execplan::CalpontSystemCatalog::ColType &rhs)
        :Charset(rhs.charsetNumber),
         CompType(rhs.compressionType),
         DataSize(rhs.colWidth),
-        DataType(rhs.colDataType),
-        mIsDict(rhs.isDict())
+        DataType(rhs.colDataType)
    { }
-   bool isDict() const
-   {
-       return mIsDict;
-   }
 };
 
 

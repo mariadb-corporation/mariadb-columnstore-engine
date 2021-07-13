@@ -246,8 +246,8 @@ SCommand FilterCommand::duplicate()
 }
 
 
-void FilterCommand::setColTypes(const execplan::ColumnCommandDataType& left,
-                                const execplan::ColumnCommandDataType& right)
+void FilterCommand::setColTypes(const execplan::CalpontSystemCatalog::ColType& left,
+                                const execplan::CalpontSystemCatalog::ColType& right)
 {
     leftColType = left;
     rightColType = right;

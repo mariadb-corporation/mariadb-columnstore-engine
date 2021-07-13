@@ -72,13 +72,13 @@ public:
     {
         return extents;
     }
-    const execplan::ColumnCommandDataType& getColType() const
+    const execplan::CalpontSystemCatalog::ColType& getColType() const
     {
         return colType;
     }
     bool isDict() const
     {
-        return colType.isDict();
+        return fIsDict;
     }
 
     void  scan(bool b)
@@ -96,7 +96,7 @@ protected:
     uint32_t currentExtentIndex;
     messageqcpp::ByteStream filterString;
     std::vector<struct BRM::EMEntry> extents;
-    execplan::ColumnCommandDataType colType;
+    execplan::CalpontSystemCatalog::ColType colType;
 
 private:
     ColumnCommandJL();
@@ -111,6 +111,8 @@ private:
     uint32_t rpbShift, divShift, modMask;
     uint16_t filterCount;
     std::vector<BRM::LBID_t> fLastLbid;
+
+    bool fIsDict;
 
     // @Bug 2889.  Added two members below for drop partition enhancement.
     // RJD: make sure that we keep enough significant digits around for partition math

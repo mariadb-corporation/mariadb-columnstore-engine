@@ -57,8 +57,8 @@ public:
     SCommand duplicate();
     void prep(int8_t outputType, bool makeAbsRids);
 
-    void setColTypes(const execplan::ColumnCommandDataType& left,
-                     const execplan::ColumnCommandDataType& right);
+    void setColTypes(const execplan::CalpontSystemCatalog::ColType& left,
+                     const execplan::CalpontSystemCatalog::ColType& right);
 
     // operator override
     bool operator==(const FilterCommand&) const;
@@ -85,8 +85,8 @@ protected:
     bool hasWideColumns;
 
     // column type for null check
-    execplan::ColumnCommandDataType leftColType;
-    execplan::ColumnCommandDataType rightColType;
+    execplan::CalpontSystemCatalog::ColType leftColType;
+    execplan::CalpontSystemCatalog::ColType rightColType;
 
 private:
     // disabled copy constructor and operator

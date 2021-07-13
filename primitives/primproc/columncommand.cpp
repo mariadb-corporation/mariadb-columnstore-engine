@@ -466,6 +466,7 @@ void ColumnCommand::processResult()
 void ColumnCommand::createCommand(ByteStream& bs)
 {
     uint8_t tmp8;
+    uint32_t tmp32;
 
     bs.advance(1);
     bs >> tmp8;
@@ -480,7 +481,16 @@ void ColumnCommand::createCommand(ByteStream& bs)
 
     cout << endl;
 #endif
-    colType.unserialize(bs);
+    bs >> tmp8;
+    colType.colDataType = (execplan::CalpontSystemCatalog::ColDataType) tmp8;
+    bs >> tmp8;
+    colType.colWidth = tmp8;
+    bs >> tmp8;
+    colType.scale = tmp8;
+    bs >> tmp8;
+    colType.compressionType = tmp8;
+    bs >> tmp32;
+    colType.charsetNumber = tmp32;
     bs >> BOP;
     bs >> filterCount;
     deserializeInlineVector(bs, lastLbid);
@@ -888,7 +898,9 @@ ColumnCommand& ColumnCommand::operator=(const ColumnCommand& c)
     _isScan = c._isScan;
     traceFlags = c.traceFlags;
     filterString = c.filterString;
-    colType = c.colType;
+    colType.colDataType = c.colType.colDataType;
+    colType.compressionType = c.colType.compressionType;
+    colType.colWidth = c.colType.colWidth;
     BOP = c.BOP;
     filterCount = c.filterCount;
     fFilterFeeder = c.fFilterFeeder;
