@@ -49,11 +49,11 @@ PassThruCommandJL::PassThruCommandJL(const PassThruStep& p)
 {
     OID = p.oid();
     colName = p.name();
-    colWidth = p.colType().colWidth;
+    colWidth = p.colWidth;
 
 // 	cout << "PassThru col width = " << (int) colWidth << " for OID " << OID << endl;
     /* Is this ever a dictionary column? */
-    if (p.isDictCol())
+    if (p.isDictColumn)
         tableColumnType = TableColumn::STRING;
     else
         switch (colWidth)

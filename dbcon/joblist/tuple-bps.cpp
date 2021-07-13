@@ -195,10 +195,7 @@ void TupleBPS::initializeConfigParms()
 }
 
 TupleBPS::TupleBPS(const pColStep& rhs, const JobInfo& jobInfo) :
-    BatchPrimitive(jobInfo),
-    fColType(rhs.colType()),
-    pThread(0),
-    fRm(jobInfo.rm)
+    BatchPrimitive(jobInfo), pThread(0), fRm(jobInfo.rm)
 {
     fInputJobStepAssociation = rhs.inputAssociation();
     fOutputJobStepAssociation = rhs.outputAssociation();
@@ -237,6 +234,7 @@ TupleBPS::TupleBPS(const pColStep& rhs, const JobInfo& jobInfo) :
     fStepCount = 1;
     fCPEvaluated = false;
     fEstimatedRows = 0;
+    fColType = rhs.colType();
     alias(rhs.alias());
     view(rhs.view());
     name(rhs.name());
@@ -282,9 +280,7 @@ TupleBPS::TupleBPS(const pColStep& rhs, const JobInfo& jobInfo) :
 }
 
 TupleBPS::TupleBPS(const pColScanStep& rhs, const JobInfo& jobInfo) :
-    BatchPrimitive(jobInfo),
-    fColType(rhs.colType()),
-    fRm(jobInfo.rm)
+    BatchPrimitive(jobInfo), fRm(jobInfo.rm)
 {
     fInputJobStepAssociation = rhs.inputAssociation();
     fOutputJobStepAssociation = rhs.outputAssociation();
@@ -321,6 +317,7 @@ TupleBPS::TupleBPS(const pColScanStep& rhs, const JobInfo& jobInfo) :
     fStepCount = 1;
     fCPEvaluated = false;
     fEstimatedRows = 0;
+    fColType = rhs.colType();
     alias(rhs.alias());
     view(rhs.view());
     name(rhs.name());
@@ -367,9 +364,7 @@ TupleBPS::TupleBPS(const pColScanStep& rhs, const JobInfo& jobInfo) :
 }
 
 TupleBPS::TupleBPS(const PassThruStep& rhs, const JobInfo& jobInfo) :
-    BatchPrimitive(jobInfo),
-    fColType(rhs.colType()),
-    fRm(jobInfo.rm)
+    BatchPrimitive(jobInfo), fRm(jobInfo.rm)
 {
     fInputJobStepAssociation = rhs.inputAssociation();
     fOutputJobStepAssociation = rhs.outputAssociation();
@@ -391,6 +386,7 @@ TupleBPS::TupleBPS(const PassThruStep& rhs, const JobInfo& jobInfo) :
     fStepCount = 1;
     fCPEvaluated = false;
     fEstimatedRows = 0;
+    fColType = rhs.colType();
     alias(rhs.alias());
     view(rhs.view());
     name(rhs.name());
@@ -435,6 +431,70 @@ TupleBPS::TupleBPS(const PassThruStep& rhs, const JobInfo& jobInfo) :
 
 }
 
+TupleBPS::TupleBPS(const pDictionaryStep& rhs, const JobInfo& jobInfo) :
+    BatchPrimitive(jobInfo), fRm(jobInfo.rm)
+{
+    fInputJobStepAssociation = rhs.inputAssociation();
+    fOutputJobStepAssociation = rhs.outputAssociation();
+    fDec = 0;
+    fOid = rhs.oid();
+    fTableOid = rhs.tableOid();
+    totalMsgs = 0;
+    msgsSent = 0;
+    msgsRecvd = 0;
+    ridsReturned = 0;
+    ridsRequested = 0;
+    fNumBlksSkipped = 0;
+    fBlockTouched = 0;
+    fMsgBytesIn = 0;
+    fMsgBytesOut = 0;
+    fExtentsPerSegFile = DEFAULT_EXTENTS_PER_SEG_FILE;
+    recvWaiting = 0;
+    fSwallowRows = false;
+    fStepCount = 1;
+    fCPEvaluated = false;
+    fEstimatedRows = 0;
+    alias(rhs.alias());
+    view(rhs.view());
+    name(rhs.name());
+    finishedSending = sendWaiting = false;
+    recvExited = 0;
+    fBPP.reset(new BatchPrimitiveProcessorJL(fRm));
+    initializeConfigParms();
+    fBPP->setSessionID(fSessionId);
+    fBPP->setStepID(fStepId);
+    fBPP->setQueryContext(fVerId);
+    fBPP->setTxnID(fTxnId);
+    fTraceFlags = rhs.fTraceFlags;
+    fBPP->setTraceFlags(fTraceFlags);
+    fBPP->setOutputType(ROW_GROUP);
+    fPhysicalIO = 0;
+    fCacheIO = 0;
+    BPPIsAllocated = false;
+    uniqueID = UniqueNumberGenerator::instance()->getUnique32();
+    fBPP->setUniqueID(uniqueID);
+    fBPP->setUuid(fStepUuid);
+    fCardinality = rhs.cardinality();
+    doJoin = false;
+    hasPMJoin = false;
+    hasUMJoin = false;
+    fRunExecuted = false;
+    isFilterFeeder = false;
+    smallOuterJoiner = -1;
+    // @1098 initialize scanFlags to be true
+    scanFlags.assign(numExtents, true);
+    runtimeCPFlags.assign(numExtents, true);
+    bop = BOP_AND;
+
+    runRan = joinRan = false;
+    fDelivery = false;
+    fExtendedInfo = "TBPS: ";
+    fQtc.stepParms().stepType = StepTeleStats::T_BPS;
+
+    hasPCFilter = hasPMFilter = hasRIDFilter = hasSegmentFilter = hasDBRootFilter = hasSegmentDirFilter =
+                                    hasPartitionFilter = hasMaxFilter = hasMinFilter = hasLBIDFilter = hasExtentIDFilter = false;
+
+}
 
 TupleBPS::~TupleBPS()
 {
@@ -3182,7 +3242,7 @@ void TupleBPS::addCPPredicates(uint32_t OID, const vector<int128_t>& vals, bool 
 
         if (cmd != NULL && cmd->getOID() == OID)
         {
-            const ColumnCommandDataType &colType = cmd->getColType();
+            const execplan::CalpontSystemCatalog::ColType& colType = cmd->getColType();
 
             if (!ll.CasualPartitionDataType(colType.colDataType, colType.colWidth)
                     || cmd->isDict())
