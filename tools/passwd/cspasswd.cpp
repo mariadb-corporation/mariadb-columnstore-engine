@@ -123,7 +123,7 @@ int main(int argc, char** argv)
 {
     std::ios::sync_with_stdio();
 
-    CSPasswdLogging* passwdLog = CSPasswdLogging::get();
+    CSPasswdLogging::get();
     const string default_directory = string(MCSDATADIR);
 
     enum class Mode

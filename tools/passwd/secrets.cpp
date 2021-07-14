@@ -299,7 +299,7 @@ ReadKeyResult secrets_readkeys(const string& filepath)
     const int binary_total_len = binary_key_len + binary_iv_len;
 
     // Before opening the file, check its size and permissions.
-    struct stat filestats { 0 };
+    struct stat filestats;
     bool stat_error = false;
     bool old_format = false;
     errno = 0;
