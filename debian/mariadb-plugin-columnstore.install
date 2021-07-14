@@ -22,6 +22,8 @@ usr/bin/controllernode
 usr/bin/cpimport
 usr/bin/cpimport.bin
 usr/bin/cplogger
+usr/bin/cspasswd
+usr/bin/cskeys
 usr/bin/dbbuilder
 usr/bin/dbrmctl
 usr/bin/ddlcleanup

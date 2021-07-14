@@ -393,4 +393,6 @@
 
 #define MCSMYCNFDIR "${MARIADB_MYCNFDIR}"
 
+#define MCSDATADIR "${ENGINE_DATADIR}"
+
 #endif
