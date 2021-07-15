@@ -19,12 +19,15 @@
 #include <my_config.h>
 #include "idb_mysql.h"
 #include "ha_mcs_sysvars.h"
+#include "mcsconfig.h"
 
 const char* mcs_compression_type_names[] = {
     "SNAPPY", // 0
     "SNAPPY", // 1
     "SNAPPY", // 2
+#ifdef HAVE_LZ4
     "LZ4",    // 3
+#endif
     NullS
 };
 
