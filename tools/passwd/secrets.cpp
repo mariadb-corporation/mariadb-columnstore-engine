@@ -30,6 +30,7 @@
 #include "mcsconfig.h"
 #include "exceptclasses.h"
 #include "columnstoreversion.h"
+#include "vlarray.h"
 
 using std::string;
 
@@ -299,7 +300,7 @@ ReadKeyResult secrets_readkeys(const string& filepath)
     const int binary_total_len = binary_key_len + binary_iv_len;
 
     // Before opening the file, check its size and permissions.
-    struct stat filestats { 0 };
+    struct stat filestats;
     bool stat_error = false;
     bool old_format = false;
     errno = 0;
@@ -351,13 +352,14 @@ ReadKeyResult secrets_readkeys(const string& filepath)
         if (file.is_open())
         {
             // Read all data from file.
-            char readbuf[binary_total_len];
-            file.read(readbuf, binary_total_len);
+            utils::VLArray<char> readbuf(binary_total_len);
+            //char readbuf[binary_total_len];
+            file.read(readbuf.data(), binary_total_len);
             if (file.good())
             {
                 // Success, copy contents to key structure.
-                rval.key.assign(readbuf, readbuf + binary_key_len);
-                rval.iv.assign(readbuf + binary_key_len, readbuf + binary_total_len);
+                rval.key.assign(readbuf.data(), readbuf.data() + binary_key_len);
+                rval.iv.assign(readbuf.data() + binary_key_len, readbuf.data() + binary_total_len);
                 rval.ok = true;
             }
             else
@@ -465,18 +467,17 @@ string decrypt_password_old(const ByteVec& key, const ByteVec& iv, const std::st
     // Convert to binary.
     size_t hex_len = input.length();
     auto bin_len = hex_len / 2;
-    unsigned char encrypted_bin[bin_len];
-    hex2bin(input.c_str(), hex_len, encrypted_bin);
-
-    unsigned char plain[bin_len];   // Decryption output cannot be longer than input data.
+    utils::VLArray<unsigned char> encrypted_bin(bin_len);
+    hex2bin(input.c_str(), hex_len, encrypted_bin.data());
+    utils::VLArray<unsigned char> plain(bin_len);
     int decrypted_len = 0;
-    if (encrypt_or_decrypt(key.data(), iv.data(), ProcessingMode::DECRYPT_IGNORE_ERRORS, encrypted_bin,
-                           bin_len, plain, &decrypted_len))
+    if (encrypt_or_decrypt(key.data(), iv.data(), ProcessingMode::DECRYPT_IGNORE_ERRORS, encrypted_bin.data(),
+                           bin_len, plain.data(), &decrypted_len))
     {
         if (decrypted_len > 0)
         {
             // Success, password was encrypted using 2.5. Decrypted data should be text.
-            auto output_data = reinterpret_cast<const char*>(plain);
+            auto output_data = reinterpret_cast<const char*>(plain.data());
             rval.assign(output_data, decrypted_len);
         }
         else
@@ -485,9 +486,9 @@ string decrypt_password_old(const ByteVec& key, const ByteVec& iv, const std::st
             AES_KEY aeskey;
             AES_set_decrypt_key(key.data(), 8 * key.size(), &aeskey);
             auto iv_copy = iv;
-            memset(plain, '\0', bin_len);
-            AES_cbc_encrypt(encrypted_bin, plain, bin_len, &aeskey, iv_copy.data(), AES_DECRYPT);
-            rval = reinterpret_cast<const char*>(plain);
+            memset(plain.data(), '\0', bin_len);
+            AES_cbc_encrypt(encrypted_bin.data(), plain.data(), bin_len, &aeskey, iv_copy.data(), AES_DECRYPT);
+            rval = reinterpret_cast<const char*>(plain.data());
         }
     }
     return rval;
@@ -502,23 +503,24 @@ string decrypt_password(const ByteVec& key, const std::string& input)
     auto ptr = input.data();
     int iv_bin_len = secrets_ivlen();
     int iv_hex_len = 2 * iv_bin_len;
-    uint8_t iv_bin[iv_bin_len];
+    utils::VLArray<uint8_t> iv_bin(iv_bin_len);
+
     if (total_hex_len >= iv_hex_len)
     {
-        hex2bin(ptr, iv_hex_len, iv_bin);
+        hex2bin(ptr, iv_hex_len, iv_bin.data());
 
         int encrypted_hex_len = total_hex_len - iv_hex_len;
         int encrypted_bin_len = encrypted_hex_len / 2;
-        unsigned char encrypted_bin[encrypted_bin_len];
-        hex2bin(ptr + iv_hex_len, encrypted_hex_len, encrypted_bin);
+        utils::VLArray<unsigned char> encrypted_bin(encrypted_bin_len);
+        hex2bin(ptr + iv_hex_len, encrypted_hex_len, encrypted_bin.data());
 
-        uint8_t decrypted[encrypted_bin_len];   // Decryption output cannot be longer than input data.
+        utils::VLArray<uint8_t> decrypted(encrypted_bin_len); // Decryption output cannot be longer than input data.
         int decrypted_len = 0;
-        if (encrypt_or_decrypt(key.data(), iv_bin, ProcessingMode::DECRYPT, encrypted_bin, encrypted_bin_len,
-                               decrypted, &decrypted_len))
+        if (encrypt_or_decrypt(key.data(), iv_bin.data(), ProcessingMode::DECRYPT, encrypted_bin.data(), encrypted_bin_len,
+                               decrypted.data(), &decrypted_len))
         {
             // Decrypted data should be text.
-            auto output_data = reinterpret_cast<const char*>(decrypted);
+            auto output_data = reinterpret_cast<const char*>(decrypted.data());
             rval.assign(output_data, decrypted_len);
         }
     }
@@ -538,18 +540,19 @@ string encrypt_password_old(const ByteVec& key, const ByteVec& iv, const string&
     string rval;
     // Output can be a block length longer than input.
     auto input_len = input.length();
-    unsigned char encrypted_bin[input_len + AES_BLOCK_SIZE];
+    utils::VLArray<unsigned char> encrypted_bin(input_len + AES_BLOCK_SIZE);
 
     // Although input is text, interpret as binary.
     auto input_data = reinterpret_cast<const uint8_t*>(input.c_str());
     int encrypted_len = 0;
     if (encrypt_or_decrypt(key.data(), iv.data(), ProcessingMode::ENCRYPT,
-                           input_data, input_len, encrypted_bin, &encrypted_len))
+                           input_data, input_len, encrypted_bin.data(), &encrypted_len))
     {
         int hex_len = 2 * encrypted_len;
-        char hex_output[hex_len + 1];
-        bin2hex(encrypted_bin, encrypted_len, hex_output);
-        rval.assign(hex_output, hex_len);
+        utils::VLArray<char> hex_output(hex_len + 1);
+
+        bin2hex(encrypted_bin.data(), encrypted_len, hex_output.data());
+        rval.assign(hex_output.data(), hex_len);
     }
     return rval;
 }
@@ -559,8 +562,8 @@ string encrypt_password(const ByteVec& key, const string& input)
     string rval;
     // Generate random IV.
     auto ivlen = secrets_ivlen();
-    unsigned char iv_bin[ivlen];
-    if (RAND_bytes(iv_bin, ivlen) != 1)
+    utils::VLArray<unsigned char> iv_bin(ivlen);
+    if (RAND_bytes(iv_bin.data(), ivlen) != 1)
     {
         printf("OpenSSL RAND_bytes() failed. %s.\n", ERR_error_string(ERR_get_error(), nullptr));
         return rval;
@@ -568,22 +571,21 @@ string encrypt_password(const ByteVec& key, const string& input)
 
     // Output can be a block length longer than input.
     auto input_len = input.length();
-    unsigned char encrypted_bin[input_len + EVP_CIPHER_block_size(secrets_cipher())];
-
+    utils::VLArray<unsigned char> encrypted_bin(input_len + EVP_CIPHER_block_size(secrets_cipher()));
     // Although input is text, interpret as binary.
     auto input_data = reinterpret_cast<const uint8_t*>(input.c_str());
     int encrypted_len = 0;
-    if (encrypt_or_decrypt(key.data(), iv_bin, ProcessingMode::ENCRYPT,
-                           input_data, input_len, encrypted_bin, &encrypted_len))
+    if (encrypt_or_decrypt(key.data(), iv_bin.data(), ProcessingMode::ENCRYPT,
+                           input_data, input_len, encrypted_bin.data(), &encrypted_len))
     {
         // Form one string with IV in front.
         int iv_hex_len = 2 * ivlen;
         int encrypted_hex_len = 2 * encrypted_len;
         int total_hex_len = iv_hex_len + encrypted_hex_len;
-        char hex_output[total_hex_len + 1];
-        bin2hex(iv_bin, ivlen, hex_output);
-        bin2hex(encrypted_bin, encrypted_len, hex_output + iv_hex_len);
-        rval.assign(hex_output, total_hex_len);
+        utils::VLArray<char> hex_output(total_hex_len + 1);
+        bin2hex(iv_bin.data(), ivlen, hex_output.data());
+        bin2hex(encrypted_bin.data(), encrypted_len, hex_output.data() + iv_hex_len);
+        rval.assign(hex_output.data(), total_hex_len);
     }
     return rval;
 }
@@ -625,14 +627,14 @@ bool load_encryption_keys()
 bool secrets_write_keys(const ByteVec& key, const string& filepath, const string& owner)
 {
     auto keylen = key.size();
-    char key_hex[2 * keylen + 1];
-    bin2hex(key.data(), keylen, key_hex);
+    utils::VLArray<char> key_hex(2 * keylen + 1);
+    bin2hex(key.data(), keylen, key_hex.data());
 
     boost::property_tree::ptree jsontree;
     jsontree.put(field_desc,desc);
     jsontree.put(field_version,columnstore_version.c_str());
     jsontree.put(field_cipher,CIPHER_NAME);
-    jsontree.put(field_key,(const char*)key_hex);
+    jsontree.put(field_key,(const char*)key_hex.data());
 
     auto filepathc = filepath.c_str();
     bool write_ok = false;
