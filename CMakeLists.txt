@@ -202,6 +202,7 @@ ELSE ()
     # fix our libraries anyway
     STRING(REPLACE "-fvisibility=hidden" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     MY_CHECK_AND_SET_COMPILER_FLAG("-D_DEBUG -O0" DEBUG)
+    MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-vla" DEBUG)
 ENDIF()
 
 IF (MASK_LONGDOUBLE)

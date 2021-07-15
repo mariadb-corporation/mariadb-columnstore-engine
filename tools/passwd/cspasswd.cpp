@@ -122,8 +122,6 @@ bool read_password(string* pPassword)
 int main(int argc, char** argv)
 {
     std::ios::sync_with_stdio();
-
-    CSPasswdLogging* passwdLog = CSPasswdLogging::get();
     const string default_directory = string(MCSDATADIR);
 
     enum class Mode
