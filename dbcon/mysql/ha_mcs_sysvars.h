@@ -21,6 +21,7 @@
 
 #include <my_config.h>
 #include "idb_mysql.h"
+#include "mcsconfig.h"
 
 extern st_mysql_sys_var* mcs_system_variables[];
 extern st_mysql_show_var mcs_status_variables[];
@@ -31,7 +32,9 @@ extern char cs_commit_hash[];
 enum mcs_compression_type_t {
     NO_COMPRESSION = 0,
     SNAPPY = 2,
+#ifdef HAVE_LZ4
     LZ4 = 3
+#endif
 };
 
 // use_import_for_batchinsert mode
