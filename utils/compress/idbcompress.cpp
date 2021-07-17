@@ -29,7 +29,14 @@ using namespace std;
 #include "logger.h"
 #include "snappy.h"
 #include "hasher.h"
+#include "mcsconfig.h"
+#ifdef HAVE_LZ4
 #include "lz4.h"
+#else
+// Taken from lz4.h.
+#define LZ4_MAX_INPUT_SIZE        0x7E000000   /* 2 113 929 216 bytes */
+#define LZ4_COMPRESSBOUND(isize)  ((unsigned)(isize) > (unsigned)LZ4_MAX_INPUT_SIZE ? 0 : (isize) + ((isize)/255) + 16)
+#endif
 
 #define IDBCOMP_DLLEXPORT
 #include "idbcompress.h"
@@ -590,6 +597,7 @@ CompressInterfaceLZ4::CompressInterfaceLZ4(uint32_t numUserPaddingBytes)
 int32_t CompressInterfaceLZ4::compress(const char* in, size_t inLen, char* out,
                                        size_t* outLen) const
 {
+#ifdef HAVE_LZ4
     auto compressedLen = LZ4_compress_default(in, out, inLen, *outLen);
 
     if (!compressedLen)
@@ -606,11 +614,15 @@ int32_t CompressInterfaceLZ4::compress(const char* in, size_t inLen, char* out,
 
     *outLen = compressedLen;
     return ERR_OK;
+#else
+    return ERR_COMPRESS;
+#endif
 }
 
 int32_t CompressInterfaceLZ4::uncompress(const char* in, size_t inLen,
                                          char* out, size_t* outLen) const
 {
+#ifdef HAVE_LZ4
     auto decompressedLen = LZ4_decompress_safe(in, out, inLen, *outLen);
 
     if (decompressedLen < 0)
@@ -629,6 +641,9 @@ int32_t CompressInterfaceLZ4::uncompress(const char* in, size_t inLen,
 #endif
 
     return ERR_OK;
+#else
+    return ERR_DECOMPRESS;
+#endif
 }
 
 size_t CompressInterfaceLZ4::maxCompressedSize(size_t uncompSize) const
