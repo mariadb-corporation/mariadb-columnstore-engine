@@ -3042,7 +3042,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
 
         if (ci->isCacheInsert)
         {
-            if (get_use_cpimport_for_cache_inserts(thd))
+            if (get_cache_use_import(thd))
                 ci->useCpimport = mcs_use_import_for_batchinsert_mode_t::ALWAYS;
             else
                 ci->useCpimport = mcs_use_import_for_batchinsert_mode_t::OFF;
