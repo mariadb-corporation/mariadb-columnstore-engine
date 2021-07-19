@@ -133,8 +133,8 @@ void set_replication_slave(THD* thd, bool value);
 bool get_cache_inserts(THD* thd);
 void set_cache_inserts(THD* thd, bool value);
 
-bool get_use_cpimport_for_cache_inserts(THD* thd);
-void set_use_cpimport_for_cache_inserts(THD* thd, bool value);
+bool get_cache_use_import(THD* thd);
+void set_cache_use_import(THD* thd, bool value);
 
 ulonglong get_cache_flush_threshold(THD* thd);
 void set_cache_flush_threshold(THD* thd, ulonglong value);

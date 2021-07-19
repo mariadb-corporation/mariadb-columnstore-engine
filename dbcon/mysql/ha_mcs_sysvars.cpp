@@ -352,7 +352,7 @@ static MYSQL_THDVAR_BOOL(
 );
 
 static MYSQL_THDVAR_BOOL(
-    use_cpimport_for_cache_inserts,
+    cache_use_import,
     PLUGIN_VAR_RQCMDARG,
     "Use cpimport for the cache flush into ColumnStore",
     NULL,
@@ -400,7 +400,7 @@ st_mysql_sys_var* mcs_system_variables[] =
   MYSQL_SYSVAR(varbin_always_hex),
   MYSQL_SYSVAR(replication_slave),
   MYSQL_SYSVAR(cache_inserts),
-  MYSQL_SYSVAR(use_cpimport_for_cache_inserts),
+  MYSQL_SYSVAR(cache_use_import),
   MYSQL_SYSVAR(cache_flush_threshold),
   NULL
 };
@@ -663,13 +663,13 @@ void set_cache_inserts(THD* thd, bool value)
     THDVAR(thd, cache_inserts) = value;
 }
 
-bool get_use_cpimport_for_cache_inserts(THD* thd)
+bool get_cache_use_import(THD* thd)
 {
-    return ( thd == NULL ) ? false : THDVAR(thd, use_cpimport_for_cache_inserts);
+    return ( thd == NULL ) ? false : THDVAR(thd, cache_use_import);
 }
-void set_use_cpimport_for_cache_inserts(THD* thd, bool value)
+void set_cache_use_import(THD* thd, bool value)
 {
-    THDVAR(thd, use_cpimport_for_cache_inserts) = value;
+    THDVAR(thd, cache_use_import) = value;
 }
 
 ulonglong get_cache_flush_threshold(THD* thd)
