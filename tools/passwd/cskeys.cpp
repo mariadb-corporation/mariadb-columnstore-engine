@@ -56,7 +56,6 @@ configuration files.
 
 int main(int argc, char** argv)
 {
-    CSPasswdLogging* keysLog = CSPasswdLogging::get();
     const string default_directory = string(MCSDATADIR);
     string username = default_user;
 
