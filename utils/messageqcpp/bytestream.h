@@ -471,6 +471,26 @@ private:
     uint32_t fMaxLen; //how big fBuf is currently
 };
 
+template<int W, typename T = void>
+struct _ByteStreamType
+{
+    typedef T type;
+};
+
+template <int W>
+struct ByteStreamType: _ByteStreamType<W> { };
+
+template <>
+struct ByteStreamType<1>: _ByteStreamType<1, ByteStream::byte> { };
+template <>
+struct ByteStreamType<2>: _ByteStreamType<2, ByteStream::doublebyte> { };
+template <>
+struct ByteStreamType<4>: _ByteStreamType<4, ByteStream::quadbyte> { };
+template <>
+struct ByteStreamType<8>: _ByteStreamType<8, ByteStream::octbyte> { };
+template <>
+struct ByteStreamType<16>: _ByteStreamType<16, ByteStream::hexbyte> { };
+
 // type descriptors to let ByteStream point out protocol errors, WIP
 static const uint8_t BS_UINT8 = 0;
 static const uint8_t BS_UINT16 = 1;
@@ -704,6 +724,12 @@ void deserializeSet(ByteStream& bs, std::set<T>& s)
         s.insert(tmp);
     }
 }
+/*
+template<>
+struct ByteStream::_ByteStreamType<1, ByteStream::byte>>
+{
+    typedef ByteStream::byte type;
+}*/
 
 }//namespace messageqcpp
 

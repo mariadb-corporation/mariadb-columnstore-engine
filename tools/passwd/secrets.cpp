@@ -601,14 +601,9 @@ bool load_encryption_keys()
         {
             if (!ret.key.empty())
             {
-                CSPasswdLogging::get()->log(LOG_INFO,"Using encrypted passwords. Encryption key read from '%s'.", path.c_str());
+                //CSPasswdLogging::get()->log(LOG_INFO,"Using encrypted passwords. Encryption key read from '%s'.", path.c_str());
                 this_unit.key = move(ret.key);
                 this_unit.iv = move(ret.iv);
-            }
-            else
-            {
-                CSPasswdLogging::get()->log(LOG_INFO,"Password encryption key file '%s' not found, using configured passwords as "
-                           "plaintext.", path.c_str());
             }
             return ret.ok;
         }
