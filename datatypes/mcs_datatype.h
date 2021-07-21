@@ -129,6 +129,25 @@ template<> struct make_unsigned<int128_t> { typedef uint128_t type; };
 namespace datatypes
 {
 
+template<int W, typename T = void>
+struct _WidthToSIntegralType
+{
+    typedef T type;
+};
+
+template <int W>
+struct WidthToSIntegralType: _WidthToSIntegralType<W> { };
+template <>
+struct WidthToSIntegralType<1>: _WidthToSIntegralType<1, int8_t> { };
+template <>
+struct WidthToSIntegralType<2>: _WidthToSIntegralType<2, int16_t> { };
+template <>
+struct WidthToSIntegralType<4>: _WidthToSIntegralType<4, int32_t> { };
+template <>
+struct WidthToSIntegralType<8>: _WidthToSIntegralType<8, int64_t> { };
+template <>
+struct WidthToSIntegralType<16>: _WidthToSIntegralType<16, int128_t> { };
+
 class SystemCatalog
 {
 public:
@@ -292,6 +311,16 @@ public:
         return (colDataType == DECIMAL ||
                 colDataType == UDECIMAL) &&
                colWidth == MAXDECIMALWIDTH;
+    }
+
+    inline bool isWide() const
+    {
+        return colWidth > static_cast<int32_t>(MAXLEGACYWIDTH);
+    }
+
+    inline bool isNarrow() const
+    {
+        return colWidth <= static_cast<int32_t>(MAXLEGACYWIDTH);
     }
 
     bool isUnsignedInteger() const

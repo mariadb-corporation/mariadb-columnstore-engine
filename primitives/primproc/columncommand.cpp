@@ -65,6 +65,12 @@ ColumnCommand::ColumnCommand() :
 {
 }
 
+ColumnCommand::ColumnCommand(execplan::CalpontSystemCatalog::ColType& aColType)
+: ColumnCommand()
+{
+    colType = aColType;
+}
+
 ColumnCommand::~ColumnCommand() { }
 
 void ColumnCommand::_execute()
@@ -142,8 +148,10 @@ void ColumnCommand::makeStepMsg()
 // 	cout << "lbid is " << lbid << endl;
 }
 
-void ColumnCommand::loadData()
+template <int W>
+void ColumnCommand::_loadData()
 {
+    using ByteStreamType = typename messageqcpp::ByteStreamType<W>::type; 
     uint32_t wasCached;
     uint32_t blocksRead;
     uint16_t _mask;
@@ -153,8 +161,8 @@ void ColumnCommand::loadData()
     uint32_t blocksToLoad = 0;
     // The number of elements allocated equals to the number of
     // iteratations of the first loop here.
-    BRM::LBID_t* lbids = (BRM::LBID_t*) alloca(colType.colWidth * sizeof(BRM::LBID_t));
-    uint8_t** blockPtrs = (uint8_t**) alloca(colType.colWidth * sizeof(uint8_t*));
+    BRM::LBID_t* lbids = (BRM::LBID_t*) alloca(W * sizeof(BRM::LBID_t));
+    uint8_t** blockPtrs = (uint8_t**) alloca(W * sizeof(uint8_t*));
     int i;
 
 
@@ -162,7 +170,7 @@ void ColumnCommand::loadData()
 // 	primMsg->RidFlags = 0xffff;   // disables selective block loading
     //cout <<__FILE__ << "::issuePrimitive() o: " << getOID() << " l:" << primMsg->LBID << " ll: " << oidLastLbid << endl;
 
-    for (i = 0; i < colType.colWidth; ++i, _mask <<= shift)
+    for (i = 0; i < W; ++i, _mask <<= shift)
     {
 
         if ((!lastBlockReached && _isScan) || (!_isScan && primMsg->RidFlags & _mask))
@@ -175,8 +183,8 @@ void ColumnCommand::loadData()
         else if (lastBlockReached && _isScan)
         {
             // fill remaining blocks with empty values when col scan
-            uint32_t blockLen = BLOCK_SIZE / colType.colWidth;
-            auto attrs = datatypes::SystemCatalog::TypeAttributesStd(colType.colWidth,
+            uint32_t blockLen = BLOCK_SIZE / W;
+            auto attrs = datatypes::SystemCatalog::TypeAttributesStd(W,
                                                                      0,
                                                                      -1);
             const auto* typeHandler = datatypes::TypeHandler::find(colType.colDataType,
@@ -185,26 +193,7 @@ void ColumnCommand::loadData()
             uint8_t* blockDataPtr = &bpp->blockData[i * BLOCK_SIZE];
 
             idbassert(blockDataPtr);
-            if (colType.colWidth == sizeof(ByteStream::byte))
-            {
-                fillEmptyBlock<ByteStream::byte>(blockDataPtr, emptyValue, blockLen);
-            }
-            if (colType.colWidth == sizeof(ByteStream::doublebyte))
-            {
-                fillEmptyBlock<ByteStream::doublebyte>(blockDataPtr, emptyValue, blockLen);
-            }
-            if (colType.colWidth == sizeof(ByteStream::quadbyte))
-            {
-                fillEmptyBlock<ByteStream::quadbyte>(blockDataPtr, emptyValue, blockLen);
-            }
-            if (colType.colWidth == sizeof(ByteStream::octbyte))
-            {
-                fillEmptyBlock<ByteStream::octbyte>(blockDataPtr, emptyValue, blockLen);
-            }
-            if (colType.colWidth == sizeof(ByteStream::hexbyte))
-            {
-                fillEmptyBlock<ByteStream::hexbyte>(blockDataPtr, emptyValue, blockLen);
-            }
+            fillEmptyBlock<ByteStreamType>(blockDataPtr, emptyValue, blockLen);
         }// else
 
         if ( (primMsg->LBID + i) == oidLastLbid)
@@ -231,7 +220,46 @@ void ColumnCommand::loadData()
     bpp->touchedBlocks += blocksToLoad;
 }
 
+void ColumnCommand::loadData()
+{
+    switch(colType.colWidth)
+    {
+        case 1:
+            _loadData<1>();
+            break;
+        case 2:
+            _loadData<2>();
+            break;
+        case 4:
+            _loadData<4>();
+            break;
+        case 8:
+            _loadData<8>();
+            break;
+        case 16:
+            _loadData<16>();
+            break;
+
+        default:
+            throw NotImplementedExcept(std::string("ColumnCommand::loadData does not support ")
+                                       + std::to_string(colType.colWidth)
+                                       + std::string(" byte width."));
+    }
+}
+
 void ColumnCommand::issuePrimitive()
+{
+    _issuePrimitive();
+    if (_isScan)
+    {
+        if (LIKELY(colType.isNarrow()))
+            updateCPDataNarrow();
+        else
+            updateCPDataWide();
+    }
+}
+
+void ColumnCommand::_issuePrimitive()
 {
     uint32_t resultSize;
 
@@ -241,125 +269,174 @@ void ColumnCommand::issuePrimitive()
         bpp->pp.setParsedColumnFilter(parsedColumnFilter);
     else
         bpp->pp.setParsedColumnFilter(emptyFilter);
-    
-    bpp->pp.p_Col(primMsg, outMsg, bpp->outMsgSize, (unsigned int*)&resultSize);
 
+    bpp->pp.p_Col(primMsg, outMsg, bpp->outMsgSize, (unsigned int*)&resultSize);
+} // _issuePrimitive()
+
+void ColumnCommand::updateCPDataNarrow()
+{
     /* Update CP data, the PseudoColumn code should always be !_isScan.  Should be safe
         to leave this here for now. */
     if (_isScan)
     {
         bpp->validCPData = (outMsg->ValidMinMax && !wasVersioned);
-        //if (wasVersioned && outMsg->ValidMinMax)
-        //	cout << "CC: versioning overriding min max data\n";
         bpp->lbidForCP = lbid;
-        if (UNLIKELY(utils::isWide(colType.colWidth)))
+        bpp->maxVal = static_cast<int64_t>(outMsg->Max);
+        bpp->minVal = static_cast<int64_t>(outMsg->Min);
+    }
+}
+
+void ColumnCommand::updateCPDataWide()
+{
+    /* Update CP data, the PseudoColumn code should always be !_isScan.  Should be safe
+        to leave this here for now. */
+    if (_isScan)
+    {
+        bpp->validCPData = (outMsg->ValidMinMax && !wasVersioned);
+        bpp->lbidForCP = lbid;
+        if (colType.isWideDecimalType())
         {
-            if (colType.isWideDecimalType())
-            {
-                bpp->hasWideColumnOut = true;
-                // colWidth is int32 and wideColumnWidthOut's
-                // value is expected to be at most uint8.
-                bpp->wideColumnWidthOut = colType.colWidth;
-                bpp->max128Val = outMsg->Max;
-                bpp->min128Val = outMsg->Min;
-            }
-            else
-            {
-                ostringstream os;
-                os << " WARNING!!! Not implemented for ";
-                os << primMsg->colType.DataSize << " column.";
-                throw PrimitiveColumnProjectResultExcept(os.str());
-            }
+            bpp->hasWideColumnOut = true;
+            // colWidth is int32 and wideColumnWidthOut's
+            // value is expected to be at most uint8.
+            bpp->wideColumnWidthOut = colType.colWidth;
+            bpp->max128Val = outMsg->Max;
+            bpp->min128Val = outMsg->Min;
         }
         else
         {
-            bpp->maxVal = static_cast<int64_t>(outMsg->Max);
-            bpp->minVal = static_cast<int64_t>(outMsg->Min);
+            throw NotImplementedExcept("ColumnCommand::updateCPDataWide(): unsupported dataType "
+                                       + std::to_string(primMsg->colType.DataType)
+                                       + " with width "
+                                       + std::to_string(colType.colWidth));
         }
     }
+}
 
-} // issuePrimitive()
+template<int W>
+void ColumnCommand::_process_OT_BOTH_wAbsRids()
+{
+    using T = typename datatypes::WidthToSIntegralType<W>::type;
+    bpp->ridCount = outMsg->NVALS;
+    bpp->ridMap = outMsg->RidFlags;
+    size_t pos = sizeof(NewColResultHeader);
+
+    for (size_t i = 0; i < outMsg->NVALS; ++i)
+    {
+        bpp->absRids[i] = *((uint16_t*) &bpp->outputMsg[pos]) + bpp->baseRid;
+
+        bpp->relRids[i] = *((uint16_t*) &bpp->outputMsg[pos]);
+        pos += 2;
+        values[i] = *((T*) &bpp->outputMsg[pos]);
+        pos += W;
+    }
+}
+
+template<>
+void ColumnCommand::_process_OT_BOTH_wAbsRids<16>()
+{
+    bpp->ridCount = outMsg->NVALS;
+    bpp->ridMap = outMsg->RidFlags;
+    size_t pos = sizeof(NewColResultHeader);
+
+    for (size_t i = 0; i < outMsg->NVALS; ++i)
+    {
+        bpp->absRids[i] = *((uint16_t*) &bpp->outputMsg[pos]) + bpp->baseRid;
+
+        bpp->relRids[i] = *((uint16_t*) &bpp->outputMsg[pos]);
+        pos += 2;
+        datatypes::TSInt128::assignPtrPtr(&wide128Values[i], &bpp->outputMsg[pos]);
+        pos += 16;
+    }
+}
+
+
+template<int W>
+void ColumnCommand::_process_OT_BOTH()
+{
+    using T = typename datatypes::WidthToSIntegralType<W>::type;
+    bpp->ridCount = outMsg->NVALS;
+    bpp->ridCount = outMsg->NVALS;
+    bpp->ridMap = outMsg->RidFlags;
+    size_t pos = sizeof(NewColResultHeader);
+
+    for (size_t i = 0; i < outMsg->NVALS; ++i)
+    {
+        bpp->relRids[i] = *((uint16_t*) &bpp->outputMsg[pos]);
+        pos += 2;
+        values[i] = *((T*) &bpp->outputMsg[pos]);
+        pos += W;
+    }
+}
+
+template<>
+void ColumnCommand::_process_OT_BOTH<16>()
+{
+    bpp->ridCount = outMsg->NVALS;
+    bpp->ridMap = outMsg->RidFlags;
+    size_t pos = sizeof(NewColResultHeader);
+
+    for (size_t i = 0; i < outMsg->NVALS; ++i)
+    {
+        bpp->relRids[i] = *((uint16_t*) &bpp->outputMsg[pos]);
+        pos += 2;
+        datatypes::TSInt128::assignPtrPtr(&wide128Values[i], &bpp->outputMsg[pos]);
+        pos += 16;
+    }
+}
 
 void ColumnCommand::process_OT_BOTH()
 {
-    uint64_t i, pos;
-
-    bpp->ridCount = outMsg->NVALS;
-    bpp->ridMap = outMsg->RidFlags;
-
-    /* this is verbose and repetative to minimize the work per row */
-    switch (colType.colWidth)
+    if (makeAbsRids)
     {
-        case 16:
-            for (i = 0, pos = sizeof(NewColResultHeader); i < outMsg->NVALS; ++i)
-            {
-                if (makeAbsRids)
-                    bpp->absRids[i] = *((uint16_t*) &bpp->outputMsg[pos]) + bpp->baseRid;
-
-                bpp->relRids[i] = *((uint16_t*) &bpp->outputMsg[pos]);
-                pos += 2;
-                datatypes::TSInt128::assignPtrPtr(&wide128Values[i], &bpp->outputMsg[pos]);
-                pos += 16;
-            }
-
-            break;
-
-        case 8:
-            for (i = 0, pos = sizeof(NewColResultHeader); i < outMsg->NVALS; ++i)
-            {
-                if (makeAbsRids)
-                    bpp->absRids[i] = *((uint16_t*) &bpp->outputMsg[pos]) + bpp->baseRid;
-
-                bpp->relRids[i] = *((uint16_t*) &bpp->outputMsg[pos]);
-                pos += 2;
-                values[i] = *((int64_t*) &bpp->outputMsg[pos]);
-                pos += 8;
-            }
-
-            break;
-
-        case 4:
-            for (i = 0, pos = sizeof(NewColResultHeader); i < outMsg->NVALS; ++i)
-            {
-                if (makeAbsRids)
-                    bpp->absRids[i] = *((uint16_t*) &bpp->outputMsg[pos]) + bpp->baseRid;
-
-                bpp->relRids[i] = *((uint16_t*) &bpp->outputMsg[pos]);
-                pos += 2;
-                values[i] = *((int32_t*) &bpp->outputMsg[pos]);
-                pos += 4;
-            }
-
-            break;
-
-        case 2:
-            for (i = 0, pos = sizeof(NewColResultHeader); i < outMsg->NVALS; ++i)
-            {
-                if (makeAbsRids)
-                    bpp->absRids[i] = *((uint16_t*) &bpp->outputMsg[pos]) + bpp->baseRid;
-
-                bpp->relRids[i] = *((uint16_t*) &bpp->outputMsg[pos]);
-                pos += 2;
-                values[i] = *((int16_t*) &bpp->outputMsg[pos]);
-                pos += 2;
-            }
-
-            break;
-
-        case 1:
-            for (i = 0, pos = sizeof(NewColResultHeader); i < outMsg->NVALS; ++i)
-            {
-                if (makeAbsRids)
-                    bpp->absRids[i] = *((uint16_t*) &bpp->outputMsg[pos]) + bpp->baseRid;
-
-                bpp->relRids[i] = *((uint16_t*) &bpp->outputMsg[pos]);
-                pos += 2;
-                values[i] = *((int8_t*) &bpp->outputMsg[pos++]);
-            }
-
-            break;
+        switch (colType.colWidth)
+        {
+            case 16:
+                _process_OT_BOTH_wAbsRids<16>();
+                break;
+            case 8:
+                _process_OT_BOTH_wAbsRids<8>();
+                break;
+            case 4:
+                _process_OT_BOTH_wAbsRids<4>();
+                break;
+            case 2:
+                _process_OT_BOTH_wAbsRids<2>();
+                break;
+            case 1:
+                _process_OT_BOTH_wAbsRids<1>();
+                break;
+            default:
+                throw NotImplementedExcept(std::string("ColumnCommand::process_OT_BOTH with ABS RIDs does not support ")
+                                           + std::to_string(colType.colWidth)
+                                           + std::string(" byte width."));
+        }
     }
-
+    else
+    {
+        switch (colType.colWidth)
+        {
+            case 16:
+                _process_OT_BOTH<16>();
+                break;
+            case 8:
+                _process_OT_BOTH<8>();
+                break;
+            case 4:
+                _process_OT_BOTH<4>();
+                break;
+            case 2:
+                _process_OT_BOTH<2>();
+                break;
+            case 1:
+                _process_OT_BOTH<1>();
+                break;
+            default:
+                throw NotImplementedExcept(std::string("ColumnCommand::process_OT_BOTH does not support ")
+                                           + std::to_string(colType.colWidth)
+                                           + std::string(" byte width."));
+        }
+    }
 }
 
 void ColumnCommand::process_OT_RID()
@@ -369,6 +446,30 @@ void ColumnCommand::process_OT_RID()
     bpp->ridMap = outMsg->RidFlags;
 }
 
+template<int W>
+void ColumnCommand::_process_OT_DATAVALUE()
+{
+    using T = typename datatypes::WidthToSIntegralType<W>::type;
+    bpp->ridCount = outMsg->NVALS;
+    T* arr = (T*) (outMsg + 1);
+    for (size_t i = 0; i < outMsg->NVALS; ++i)
+        values[i] = arr[i];
+}
+
+template<>
+void ColumnCommand::_process_OT_DATAVALUE<8>()
+{
+    bpp->ridCount = outMsg->NVALS;
+    memcpy(values, outMsg + 1, outMsg->NVALS << 3);
+}
+
+template<>
+void ColumnCommand::_process_OT_DATAVALUE<16>()
+{
+    bpp->ridCount = outMsg->NVALS;
+    memcpy(wide128Values, outMsg + 1, outMsg->NVALS << 4);
+}
+
 void ColumnCommand::process_OT_DATAVALUE()
 {
     bpp->ridCount = outMsg->NVALS;
@@ -376,46 +477,29 @@ void ColumnCommand::process_OT_DATAVALUE()
     switch (colType.colWidth)
     {
          case 16:
-         {
-            memcpy(wide128Values, outMsg + 1, outMsg->NVALS << 4);
+            _process_OT_DATAVALUE<16>();
             break;
-         }
 
         case 8:
-        {
-            memcpy(values, outMsg + 1, outMsg->NVALS << 3);
+            _process_OT_DATAVALUE<8>();
             break;
-        }
 
         case 4:
-        {
-            int32_t* arr32 = (int32_t*) (outMsg + 1);
-
-            for (uint64_t i = 0; i < outMsg->NVALS; ++i)
-                values[i] = arr32[i];
-
+            _process_OT_DATAVALUE<4>();
             break;
-        }
 
         case 2:
-        {
-            int16_t* arr16 = (int16_t*) (outMsg + 1);
-
-            for (uint64_t i = 0; i < outMsg->NVALS; ++i)
-                values[i] = arr16[i];
-
+            _process_OT_DATAVALUE<2>();
             break;
-        }
 
         case 1:
-        {
-            int8_t* arr8 = (int8_t*) (outMsg + 1);
-
-            for (uint64_t i = 0; i < outMsg->NVALS; ++i)
-                values[i] = arr8[i];
-
+            _process_OT_DATAVALUE<2>();
             break;
-        }
+
+        default:
+            throw NotImplementedExcept(std::string("ColumnCommand::process_OT_DATAVALUE does not support ")
+                                       + std::to_string(colType.colWidth)
+                                       + std::string(" byte width."));
     }
 }
 
@@ -423,9 +507,6 @@ void ColumnCommand::processResult()
 {
     /* Switch on output type, turn pCol output into something useful, store it in
        the containing BPP */
-
-// 	if (filterCount == 0 && !_isScan)
-// 		idbassert(outMsg->NVALS == bpp->ridCount);
 
     switch (outMsg->OutputType)
     {
@@ -463,44 +544,20 @@ void ColumnCommand::processResult()
     }
 }
 
+// Used by PseudoCC at least
 void ColumnCommand::createCommand(ByteStream& bs)
 {
     uint8_t tmp8;
-    uint32_t tmp32;
-
     bs.advance(1);
+    colType.unserialize(bs);
     bs >> tmp8;
     _isScan = tmp8;
     bs >> traceFlags;
     bs >> filterString;
-#if 0
-    cout << "filter string: ";
-
-    for (uint32_t i = 0; i < filterString.length(); ++i)
-        cout << (int) filterString.buf()[i] << " ";
-
-    cout << endl;
-#endif
-    bs >> tmp8;
-    colType.colDataType = (execplan::CalpontSystemCatalog::ColDataType) tmp8;
-    bs >> tmp8;
-    colType.colWidth = tmp8;
-    bs >> tmp8;
-    colType.scale = tmp8;
-    bs >> tmp8;
-    colType.compressionType = tmp8;
-    bs >> tmp32;
-    colType.charsetNumber = tmp32;
     bs >> BOP;
     bs >> filterCount;
     deserializeInlineVector(bs, lastLbid);
-    
-//	cout << "lastLbid count=" << lastLbid.size() << endl;
-//	for (uint32_t i = 0; i < lastLbid.size(); i++)
-//		cout << "  " << lastLbid[i];
 
-
-    //cout << "CreateCommand() o:" << getOID() << " lastLbid: " << lastLbid << endl;
     Command::createCommand(bs);
 
     parsedColumnFilter = primitives::parseColumnFilter(filterString.buf(), colType.colWidth,
@@ -510,10 +567,22 @@ void ColumnCommand::createCommand(ByteStream& bs)
     emptyFilter = primitives::parseColumnFilter(filterString.buf(), colType.colWidth,
                   colType.colDataType, 0, BOP);
 
-    /* XXXPAT: for debugging only */
-// 	bs >> colType.columnOID;
-// 	cout << "got filterCount " << filterCount << endl;
-// 	cout << "made a ColumnCommand OID = " << OID << endl;
+}
+
+void ColumnCommand::createCommand(execplan::CalpontSystemCatalog::ColType& aColType, ByteStream& bs)
+{
+    colType = aColType;
+    uint8_t tmp8;
+
+    bs >> tmp8;
+    _isScan = tmp8;
+    bs >> traceFlags;
+    bs >> filterString;
+    bs >> BOP;
+    bs >> filterCount;
+    deserializeInlineVector(bs, lastLbid);
+
+    Command::createCommand(bs);
 }
 
 void ColumnCommand::resetCommand(ByteStream& bs)
@@ -523,48 +592,7 @@ void ColumnCommand::resetCommand(ByteStream& bs)
 
 void ColumnCommand::prep(int8_t outputType, bool absRids)
 {
-    /* make the template NewColRequestHeader */
-    
-    baseMsgLength = sizeof(NewColRequestHeader) +
-                    (suppressFilter ? 0 : filterString.length());
-
-    if (!inputMsg)
-        inputMsg.reset(new uint8_t[baseMsgLength + (LOGICAL_BLOCK_RIDS * 2)]);
-
-    primMsg = (NewColRequestHeader*) inputMsg.get();
-    outMsg = (NewColResultHeader*) bpp->outputMsg.get();
-    makeAbsRids = absRids;
-
-    primMsg->ism.Interleave = 0;
-    primMsg->ism.Flags = 0;
-// 	primMsg->ism.Flags = PrimitiveMsg::planFlagsToPrimFlags(traceFlags);
-    primMsg->ism.Command = COL_BY_SCAN;
-    primMsg->ism.Size = sizeof(NewColRequestHeader) + (suppressFilter ? 0 : filterString.length());
-    primMsg->ism.Type = 2;
-    primMsg->hdr.SessionID = bpp->sessionID;
-    //primMsg->hdr.StatementID = 0;
-    primMsg->hdr.TransactionID = bpp->txnID;
-    primMsg->hdr.VerID = bpp->versionInfo.currentScn;
-    primMsg->hdr.StepID = bpp->stepID;
-    primMsg->colType = ColRequestHeaderDataType(colType);
-    primMsg->OutputType = outputType;
-    primMsg->BOP = BOP;
-    primMsg->NOPS = (suppressFilter ? 0 : filterCount);
-    primMsg->sort = 0;
-#if 0
-    cout << "filter length is " << filterString.length() << endl;
-
-    cout << "appending filter string: ";
-
-    for (uint32_t i = 0; i < filterString.length(); ++i)
-        cout << (int) filterString.buf()[i] << " ";
-
-    cout << endl;
-#endif
-//  made unnecessary by parsedColumnFilter, just leave empty space as if the filter
-//  were still there.
-// 	memcpy(primMsg + 1, filterString.buf(), filterString.length());
-
+    fillInPrimitiveMessageHeader(outputType, absRids);
 
     switch (colType.colWidth)
     {
@@ -592,18 +620,42 @@ void ColumnCommand::prep(int8_t outputType, bool absRids)
             shift = 1;
             mask = 0x01;
             break;
-            
+
         default:
             cout << "CC: colWidth is " << colType.colWidth << endl;
             throw logic_error("ColumnCommand: bad column width?");
     }
+}
 
-    /* TODO: re-optimize with parameterized output RG */
-// 	if (bpp->ot == ROW_GROUP) {
-// 		bpp->outputRG.initRow(&r);
-// 		rowSize = r.getSize();
-// 	}
+void ColumnCommand::fillInPrimitiveMessageHeader(const int8_t outputType, const bool absRids)
+{
+    baseMsgLength = sizeof(NewColRequestHeader) +
+                    (suppressFilter ? 0 : filterString.length());
 
+    if (!inputMsg)
+        inputMsg.reset(new uint8_t[baseMsgLength + (LOGICAL_BLOCK_RIDS * 2)]);
+
+    primMsg = (NewColRequestHeader*) inputMsg.get();
+    outMsg = (NewColResultHeader*) bpp->outputMsg.get();
+    makeAbsRids = absRids;
+
+    primMsg = (NewColRequestHeader*) inputMsg.get();
+    outMsg = (NewColResultHeader*) bpp->outputMsg.get();
+    makeAbsRids = absRids;
+    primMsg->ism.Interleave = 0;
+    primMsg->ism.Flags = 0;
+    primMsg->ism.Command = COL_BY_SCAN;
+    primMsg->ism.Size = sizeof(NewColRequestHeader) + (suppressFilter ? 0 : filterString.length());
+    primMsg->ism.Type = 2;
+    primMsg->hdr.SessionID = bpp->sessionID;
+    primMsg->hdr.TransactionID = bpp->txnID;
+    primMsg->hdr.VerID = bpp->versionInfo.currentScn;
+    primMsg->hdr.StepID = bpp->stepID;
+    primMsg->colType = ColRequestHeaderDataType(colType);
+    primMsg->OutputType = outputType;
+    primMsg->BOP = BOP;
+    primMsg->NOPS = (suppressFilter ? 0 : filterCount);
+    primMsg->sort = 0;
 }
 
 /* Assumes OT_DATAVALUE */
@@ -684,9 +736,38 @@ void ColumnCommand::removeRowsFromRowGroup(RowGroup& rg)
     primMsg->NVALS = outMsg->NVALS;
 }
 
-void ColumnCommand::projectResultRG(RowGroup& rg, uint32_t pos)
+template<int W>
+void ColumnCommand::_projectResultRGLoop(rowgroup::Row& r,
+                          uint8_t* msg8,
+                          const uint32_t gapSize,
+                          const uint32_t offset)
 {
-    uint32_t i, offset, gapSize;
+    using T = typename datatypes::WidthToSIntegralType<W>::type;
+    for (size_t i = 0; i < outMsg->NVALS; ++i, msg8 += gapSize)
+    {
+        r.setUintField_offset<W>(*((T*) msg8), offset);
+        r.nextRow(rowSize);
+    }
+}
+
+template<>
+void ColumnCommand::_projectResultRGLoop<16>(rowgroup::Row& r,
+                              uint8_t* msg8,
+                              const uint32_t gapSize,
+                              const uint32_t offset)
+{
+    using T = typename datatypes::WidthToSIntegralType<16>::type;
+    for (size_t i = 0; i < outMsg->NVALS; ++i, msg8 += gapSize)
+    {
+        r.setBinaryField_offset((T*)msg8, colType.colWidth, offset);
+        r.nextRow(rowSize);
+    }
+}
+
+template<int W>
+void ColumnCommand::_projectResultRG(RowGroup& rg, uint32_t pos)
+{
+    uint32_t offset, gapSize;
     uint8_t* msg8 = (uint8_t*) (outMsg + 1);
 
     if (noVB)
@@ -722,14 +803,7 @@ void ColumnCommand::projectResultRG(RowGroup& rg, uint32_t pos)
             os << ": ridcount " << bpp->ridCount;
 
         os << ",  output rids " << outMsg->NVALS;
-        /*
-        		BRM::VSSData entry;
-        		if (bpp->vssCache.find(lbid) != bpp->vssCache.end()) {
-        			entry = bpp->vssCache[lbid];
-        			if (entry.returnCode == 0)
-        				os << "  requested version " << entry.verID;
-        		}
-        */
+
         os << endl;
 
         if (bpp->sessionID & 0x80000000)
@@ -744,58 +818,28 @@ void ColumnCommand::projectResultRG(RowGroup& rg, uint32_t pos)
     idbassert(outMsg->NVALS == bpp->ridCount);
     rg.getRow(0, &r);
 
+    _projectResultRGLoop<W>(r, msg8, gapSize, offset);
+}
+
+void ColumnCommand::projectResultRG(RowGroup& rg, uint32_t pos)
+{
     switch (colType.colWidth)
     {
         case 1:
-        {
-            for (i = 0; i < outMsg->NVALS; ++i, msg8 += gapSize)
-            {
-                r.setUintField_offset<1>(*msg8, offset);
-                r.nextRow(rowSize);
-            }
-
+            _projectResultRG<1>(rg, pos);
             break;
-        }
-
         case 2:
-        {
-            for (i = 0; i < outMsg->NVALS; ++i, msg8 += gapSize)
-            {
-                r.setUintField_offset<2>(*((uint16_t*) msg8), offset);
-                r.nextRow(rowSize);
-            }
-
+            _projectResultRG<2>(rg, pos);
             break;
-        }
-
         case 4:
-        {
-            for (i = 0; i < outMsg->NVALS; ++i, msg8 += gapSize)
-            {
-                r.setUintField_offset<4>(*((uint32_t*) msg8), offset);
-                r.nextRow(rowSize);
-            }
+            _projectResultRG<4>(rg, pos);
             break;
-        }
         case 8:
-        {
-            for (i = 0; i < outMsg->NVALS; ++i, msg8 += gapSize)
-            {
-                r.setUintField_offset<8>(*((uint64_t*) msg8), offset);
-                r.nextRow(rowSize);
-            }
+            _projectResultRG<8>(rg, pos);
             break;
-        }
         case 16:
-        {
-            for (i = 0; i < outMsg->NVALS; ++i, msg8 += gapSize)
-            {
-                r.setBinaryField_offset((int128_t*)msg8, colType.colWidth, offset);
-                r.nextRow(rowSize);
-            }
+            _projectResultRG<16>(rg, pos);
             break;
-        }
-           
     }
 }
 
@@ -912,13 +956,6 @@ ColumnCommand& ColumnCommand::operator=(const ColumnCommand& c)
 
 bool ColumnCommand::willPrefetch()
 {
-// 	if (blockCount > 0)
-// 		cout << "load rate = " << ((double)loadCount)/((double)blockCount) << endl;
-
-//	if (!((double)loadCount)/((double)blockCount) > bpp->prefetchThreshold)
-//		cout << "suppressing prefetch\n";
-
-    //return false;
     return (blockCount == 0 || ((double)loadCount) / ((double)blockCount) >
             bpp->prefetchThreshold);
 }
@@ -949,23 +986,289 @@ int64_t ColumnCommand::getLastLbid()
         return 0;
 
     return lastLbid[bpp->dbRoot - 1];
+}
 
-#if 0
-    /* PL - each dbroot has a different HWM; need to look up the local HWM on start */
-    BRM::DBRM dbrm;
-    BRM::OID_t oid;
-    uint32_t partNum;
-    uint16_t segNum;
-    uint32_t fbo;
+ColumnCommand* ColumnCommandFabric::createCommand(messageqcpp::ByteStream& bs)
+{
+    bs.advance(1); // The higher dispatcher Command::makeCommand calls BS::peek so this increments BS ptr
+    execplan::CalpontSystemCatalog::ColType colType;
+    colType.unserialize(bs);
+    switch (colType.colWidth)
+    {
+        case 1:
+            return new ColumnCommandInt8(colType, bs);
+            break;
 
-    dbrm.lookupLocal(primMsg->LBID, bpp->versionNum, false, oid, dbRoot, partNum, segNum, fbo);
-    gotDBRoot = true;
-    cout << "I think I'm on dbroot " << dbRoot << " lbid=" << primMsg->LBID << " ver=" << bpp->versionNum << endl;
-    dbRoot--;
-    return lastLbid[dbRoot];
-#endif
+        case 2:
+           return new ColumnCommandInt16(colType, bs);
+           break;
+
+        case 4:
+           return new ColumnCommandInt32(colType, bs);
+           break;
+
+        case 8:
+           return new ColumnCommandInt64(colType, bs);
+           break;
+
+        case 16:
+           return new ColumnCommandInt128(colType, bs);
+           break;
+
+        default:
+           throw NotImplementedExcept("ColumnCommandFabric::createCommand: unsupported width " + colType.colWidth);
+    }
+
+    return nullptr;
+}
+
+ColumnCommand* ColumnCommandFabric::duplicate(const ColumnCommandUniquePtr& rhs)
+{
+    if (LIKELY(typeid(*rhs) == typeid(ColumnCommandInt64)))
+    {
+        ColumnCommandInt64* ret = new ColumnCommandInt64();
+        *ret = *dynamic_cast<ColumnCommandInt64*>(rhs.get());
+        return ret;
+    }
+    else if (typeid(*rhs) == typeid(ColumnCommandInt128))
+    {
+        ColumnCommandInt128* ret = new ColumnCommandInt128();
+        *ret = *dynamic_cast<ColumnCommandInt128*>(rhs.get());
+        return ret;
+    }
+    else if (typeid(*rhs) == typeid(ColumnCommandInt8))
+    {
+        ColumnCommandInt8* ret = new ColumnCommandInt8();
+        *ret = *dynamic_cast<ColumnCommandInt8*>(rhs.get());
+        return ret;
+    }
+    else if (typeid(*rhs) == typeid(ColumnCommandInt16))
+    {
+        ColumnCommandInt16* ret = new ColumnCommandInt16();
+        *ret = *dynamic_cast<ColumnCommandInt16*>(rhs.get());
+        return ret;
+    }
+    else if (typeid(*rhs) == typeid(ColumnCommandInt32))
+    {
+        ColumnCommandInt32* ret = new ColumnCommandInt32();
+        *ret = *dynamic_cast<ColumnCommandInt32*>(rhs.get());
+        return ret;
+    }
+    else
+        throw NotImplementedExcept("ColumnCommandFabric::duplicate: Can not detect ColumnCommand child class");
+
+    return nullptr;
+}
+
+// Code duplication here for the future patch.
+ColumnCommandInt8::ColumnCommandInt8(execplan::CalpontSystemCatalog::ColType& aColType, messageqcpp::ByteStream& bs)
+{
+    ColumnCommand::createCommand(aColType, bs);
+    parsedColumnFilter = primitives::parseColumnFilter(filterString.buf(), colType.colWidth,
+                     colType.colDataType, filterCount, BOP);
+
+    /* OR hack */
+    emptyFilter = primitives::parseColumnFilter(filterString.buf(), colType.colWidth,
+                      colType.colDataType, 0, BOP);
+}
+
+void ColumnCommandInt8::prep(int8_t outputType, bool absRids)
+{
+    shift = 16;
+    mask = 0xFFFF;
+    ColumnCommand::fillInPrimitiveMessageHeader(outputType, absRids);
+}
+
+void ColumnCommandInt8::loadData()
+{
+    _loadData<size>();
+}
+
+void ColumnCommandInt8::process_OT_BOTH()
+{
+    if (makeAbsRids)
+        _process_OT_BOTH_wAbsRids<size>();
+    else
+        _process_OT_BOTH<size>();
+}
+
+void ColumnCommandInt8::process_OT_DATAVALUE()
+{
+    _process_OT_DATAVALUE<size>();
+}
+
+void ColumnCommandInt8::projectResultRG(RowGroup& rg, uint32_t pos)
+{
+    _projectResultRG<size>(rg, pos);
+}
+
+ColumnCommandInt16::ColumnCommandInt16(execplan::CalpontSystemCatalog::ColType& aColType, messageqcpp::ByteStream& bs)
+{
+    ColumnCommand::createCommand(aColType, bs);
+    parsedColumnFilter = primitives::parseColumnFilter(filterString.buf(),
+                                                       colType.colWidth,
+                                                       colType.colDataType,
+                                                       filterCount, BOP);
+    /* OR hack */
+    emptyFilter = primitives::parseColumnFilter(filterString.buf(),
+                                                colType.colWidth,
+                                                colType.colDataType, 0, BOP);
+}
+
+void ColumnCommandInt16::prep(int8_t outputType, bool absRids)
+{
+    shift = 8;
+    mask = 0xFF;
+    ColumnCommand::fillInPrimitiveMessageHeader(outputType, absRids);
+}
+
+void ColumnCommandInt16::loadData()
+{
+    _loadData<size>();
+}
+
+void ColumnCommandInt16::process_OT_BOTH()
+{
+    if (makeAbsRids)
+        _process_OT_BOTH_wAbsRids<size>();
+    else
+        _process_OT_BOTH<size>();
+}
+
+void ColumnCommandInt16::process_OT_DATAVALUE()
+{
+    _process_OT_DATAVALUE<size>();
+}
+
+void ColumnCommandInt16::projectResultRG(RowGroup& rg, uint32_t pos)
+{
+    _projectResultRG<size>(rg, pos);
+}
+
+ColumnCommandInt32::ColumnCommandInt32(execplan::CalpontSystemCatalog::ColType& aColType, messageqcpp::ByteStream& bs)
+{
+    ColumnCommand::createCommand(aColType, bs);
+    parsedColumnFilter = primitives::parseColumnFilter(filterString.buf(), colType.colWidth,
+                     colType.colDataType, filterCount, BOP);
+
+    /* OR hack */
+    emptyFilter = primitives::parseColumnFilter(filterString.buf(), colType.colWidth,
+                      colType.colDataType, 0, BOP);
+}
+
+void ColumnCommandInt32::prep(int8_t outputType, bool absRids)
+{
+    shift = 4;
+    mask = 0x0F;
+    ColumnCommand::fillInPrimitiveMessageHeader(outputType, absRids);
+}
+
+void ColumnCommandInt32::loadData()
+{
+    _loadData<size>();
+}
+
+void ColumnCommandInt32::process_OT_BOTH()
+{
+    if (makeAbsRids)
+        _process_OT_BOTH_wAbsRids<size>();
+    else
+        _process_OT_BOTH<size>();
+}
+
+void ColumnCommandInt32::process_OT_DATAVALUE()
+{
+    _process_OT_DATAVALUE<size>();
+}
+
+void ColumnCommandInt32::projectResultRG(RowGroup& rg, uint32_t pos)
+{
+    _projectResultRG<size>(rg, pos);
+}
+
+ColumnCommandInt64::ColumnCommandInt64(execplan::CalpontSystemCatalog::ColType& aColType, messageqcpp::ByteStream& bs)
+{
+    ColumnCommand::createCommand(aColType, bs);
+    parsedColumnFilter = primitives::parseColumnFilter(filterString.buf(), colType.colWidth,
+                     colType.colDataType, filterCount, BOP);
+
+    /* OR hack */
+    emptyFilter = primitives::parseColumnFilter(filterString.buf(), colType.colWidth,
+                      colType.colDataType, 0, BOP);
+}
+
+void ColumnCommandInt64::prep(int8_t outputType, bool absRids)
+{
+    shift = 2;
+    mask = 0x03;
+    ColumnCommand::fillInPrimitiveMessageHeader(outputType, absRids);
+}
+
+void ColumnCommandInt64::loadData()
+{
+    _loadData<size>();
+}
+
+void ColumnCommandInt64::process_OT_BOTH()
+{
+    if (makeAbsRids)
+        _process_OT_BOTH_wAbsRids<size>();
+    else
+        _process_OT_BOTH<size>();
+}
+
+void ColumnCommandInt64::process_OT_DATAVALUE()
+{
+    _process_OT_DATAVALUE<size>();
+}
+
+void ColumnCommandInt64::projectResultRG(RowGroup& rg, uint32_t pos)
+{
+    _projectResultRG<size>(rg, pos);
+}
+
+ColumnCommandInt128::ColumnCommandInt128(execplan::CalpontSystemCatalog::ColType& aColType, messageqcpp::ByteStream& bs)
+{
+    ColumnCommand::createCommand(aColType, bs);
+    parsedColumnFilter = primitives::parseColumnFilter(filterString.buf(),
+                                                       colType.colWidth,
+                                                       colType.colDataType,
+                                                       filterCount, BOP);
+    /* OR hack */
+    emptyFilter = primitives::parseColumnFilter(filterString.buf(),
+                                                colType.colWidth,
+                                                colType.colDataType, 0, BOP);
+}
+
+void ColumnCommandInt128::prep(int8_t outputType, bool absRids)
+{
+    shift = 1;
+    mask = 0x01;
+    ColumnCommand::fillInPrimitiveMessageHeader(outputType, absRids);
+}
+
+void ColumnCommandInt128::loadData()
+{
+    _loadData<size>();
+}
+
+void ColumnCommandInt128::process_OT_BOTH()
+{
+    if (makeAbsRids)
+        _process_OT_BOTH_wAbsRids<size>();
+    else
+        _process_OT_BOTH<size>();
+}
+
+void ColumnCommandInt128::process_OT_DATAVALUE()
+{
+    _process_OT_DATAVALUE<size>();
+}
+
+void ColumnCommandInt128::projectResultRG(RowGroup& rg, uint32_t pos)
+{
+    _projectResultRG<size>(rg, pos);
 }
 
 }
 // vim:ts=4 sw=4:
-

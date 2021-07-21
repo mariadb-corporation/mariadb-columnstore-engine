@@ -33,9 +33,11 @@
 
 #include "command.h"
 #include <boost/scoped_ptr.hpp>
+#include <memory>
 
 namespace primitiveprocessor
 {
+
 
 class RTSCommand : public Command
 {
@@ -76,7 +78,7 @@ public:
 private:
     RTSCommand(const RTSCommand&);
 
-    ColumnCommand col;
+    ColumnCommandUniquePtr col;
     DictStep dict;
     uint8_t passThru;
     bool absNull;

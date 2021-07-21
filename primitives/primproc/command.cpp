@@ -53,7 +53,7 @@ Command* Command::makeCommand(ByteStream& bs, CommandType* type, vector<SCommand
     switch (*type)
     {
         case COLUMN_COMMAND:
-            ret = new ColumnCommand();
+            return ColumnCommandFabric::createCommand(bs);
             break;
 
         case DICT_STEP:
