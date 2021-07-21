@@ -1233,6 +1233,9 @@ static void create_cache_name(char *to, const char *name)
 my_bool get_status_and_flush_cache(void *param,
                                    my_bool concurrent_insert)
 {
+  if (current_thd->slave_thread && !get_replication_slave(current_thd))
+    return (0);
+
   ha_mcs_cache *cache= (ha_mcs_cache*) param;
   int error;
   enum_sql_command sql_command= cache->table->in_use->lex->sql_command;
@@ -1782,6 +1785,9 @@ int ha_mcs_cache::repair(THD *thd, HA_CHECK_OPT *check_opt)
 */
 int ha_mcs_cache::write_row(const uchar *buf)
 {
+  if (current_thd->slave_thread && !get_replication_slave(current_thd))
+    return (0);
+
   if (get_cache_inserts(current_thd) && !isSysCatTable && insert_command)
   {
     DBUG_ASSERT(share->cached_rows == cache_handler->file->state->records);
@@ -1794,6 +1800,9 @@ int ha_mcs_cache::write_row(const uchar *buf)
 
 void ha_mcs_cache::start_bulk_insert(ha_rows rows, uint flags)
 {
+  if (current_thd->slave_thread && !get_replication_slave(current_thd))
+    return;
+
   if (get_cache_inserts(current_thd) && !isSysCatTable)
   {
     if (insert_command)
@@ -1821,6 +1830,9 @@ void ha_mcs_cache::start_bulk_insert(ha_rows rows, uint flags)
 
 int ha_mcs_cache::end_bulk_insert()
 {
+  if (current_thd->slave_thread && !get_replication_slave(current_thd))
+    return (0);
+
   if (get_cache_inserts(current_thd) && !isSysCatTable && insert_command)
     return cache_handler->end_bulk_insert();
   return parent::end_bulk_insert();
