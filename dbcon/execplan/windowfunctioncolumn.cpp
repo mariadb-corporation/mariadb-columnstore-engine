@@ -71,11 +71,19 @@ void getWindowFunctionCols(execplan::ParseTree* n, void* obj)
     if (afc)
         list->push_back(afc);
     else if (ac)
-        list->insert(list->end(), ac->windowfunctionColumnList().begin(), ac->windowfunctionColumnList().end());
+    {
+        if (ac->hasWindowFunc())  // adds window functions to list
+            list->insert(list->end(), ac->windowfunctionColumnList().begin(), ac->windowfunctionColumnList().end());
+    }
     else if (fc)
-        list->insert(list->end(), fc->windowfunctionColumnList().begin(), fc->windowfunctionColumnList().end());
+    {
+        if (fc->hasWindowFunc())
+            list->insert(list->end(), fc->windowfunctionColumnList().begin(), fc->windowfunctionColumnList().end());
+    }
     else if (sf)
+    {
         list->insert(list->end(), sf->windowfunctionColumnList().begin(), sf->windowfunctionColumnList().end());
+    }
 }
 
 /**

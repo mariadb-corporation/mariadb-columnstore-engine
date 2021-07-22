@@ -471,21 +471,24 @@ bool SimpleColumn::sameColumn(const ReturnedColumn* rc) const
 
 void SimpleColumn::setDerivedTable()
 {
-    if (hasAggregate())
+    if (hasAggregate() || hasWindowFunc())
     {
         fDerivedTable = "";
         return;
     }
+    ReturnedColumn* rc = dynamic_cast<ReturnedColumn*>(fDerivedRefCol);
+    // @todo make aggregate filter to having clause. not optimize it for now
+    if (rc)
+    {
+        if (rc->hasAggregate() || rc->hasWindowFunc())
+        {
+            fDerivedTable = "";
+            return;
+        }
+    }
 
     // fDerivedTable is set at the parsing phase
     if (!fSchemaName.empty())
-        fDerivedTable = "";
-
-    // @todo make aggregate filter to having clause. not optimize it for now
-    if (fDerivedRefCol &&
-            // TODO replace with typeid()
-            (dynamic_cast<AggregateColumn*>(fDerivedRefCol) ||
-             dynamic_cast<WindowFunctionColumn*>(fDerivedRefCol)))
         fDerivedTable = "";
 }
 
