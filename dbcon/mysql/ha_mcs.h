@@ -296,6 +296,16 @@ class ha_mcs_cache :public ha_mcs
   // calpontsys.syscolumn system catalog tables
   bool isSysCatTable;
 
+  // True if the ColumnStore table is not cached (i.e. when the table
+  // was created with columnstore_cache_inserts=OFF).
+  bool isCacheDisabled;
+
+  bool isCacheEnabled() const
+  {
+    return (get_cache_inserts(current_thd) && !isSysCatTable &&
+      !isCacheDisabled);
+  }
+
 public:
   uint lock_counter;
   ha_maria *cache_handler;
