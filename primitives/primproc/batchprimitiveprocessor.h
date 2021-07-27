@@ -169,6 +169,14 @@ public:
     {
         return doJoin;
     }
+    primitives::PrimitiveProcessor& getPrimitiveProcessor()
+    {
+        return pp;
+    }
+    uint32_t getOutMsgSize() const
+    {
+        return outMsgSize;
+    }
 private:
     BatchPrimitiveProcessor();
     BatchPrimitiveProcessor(const BatchPrimitiveProcessor&);

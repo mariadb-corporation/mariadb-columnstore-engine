@@ -760,6 +760,32 @@ struct NewColRequestHeader
     // QQ: The below constructor is never used.
     // This struct is used in a cast only, in a hackish way.
     NewColRequestHeader();
+    inline uint16_t* getRIDArrayPtr(const int width) const
+    {
+        return (NVALS > 0) ? reinterpret_cast<uint16_t*>((uint8_t*)this +
+                                                         sizeof(NewColRequestHeader) +
+                                                         (NOPS * getFilterSize(width)))
+                           : nullptr;
+    }
+    // WIP change to unsigned if needed
+    inline int getFilterSize(const int width) const
+    {
+        return sizeof(uint8_t) + sizeof(uint8_t) + width;
+    }
+    inline uint8_t* getFilterStringPtr()
+    {
+        return reinterpret_cast<uint8_t*>(this) + sizeof(NewColRequestHeader);
+    }
+    inline void sortRIDArrayIfNeeded(const int width)
+    {
+        // NVALS means number of RIDs in the context of the f().
+        if (NVALS > 0)
+        {
+            uint16_t* ridArray = getRIDArrayPtr(width);
+            if (sort == 1)
+                std::sort(ridArray, ridArray + NVALS);
+        }
+    }
 };
 
 struct NewColAggRequestHeader

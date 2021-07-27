@@ -123,12 +123,6 @@ template<> struct make_unsigned<int32_t>  { typedef uint32_t type;  };
 template<> struct make_unsigned<int64_t>  { typedef uint64_t type;  };
 template<> struct make_unsigned<int128_t> { typedef uint128_t type; };
 
-} // namespace datatypes
-
-
-namespace datatypes
-{
-
 template<int W, typename T = void>
 struct _WidthToSIntegralType
 {
