@@ -129,7 +129,7 @@ class FilterDriver : public CppUnit::TestFixture
     CPPUNIT_TEST_SUITE_END();
 
 private:
-    // The tests creates an RG with 1 column of the cscDt type 
+    // The tests creates an RG with 1 column of the cscDt type
     // then initialize RGData. After that it adds two numeric values (v1 < v2)and two NULL.
     // Then creates comparator structures and run a number of tests. v1 < v2
     void testComparatorWithDT(execplan::CalpontSystemCatalog::ColDataType cscDt,
@@ -381,31 +381,32 @@ private:
         idbCompare.initialize(inRG);
         ordering::OrderByData odbData = ordering::OrderByData(specVect, inRG);
         bool result = odbData(r1.getPointer(), r2.getPointer());
-        std::cout << r1.toString() << " < " << r2.toString() << " is " 
+        std::cout << r1.toString() << " < " << r2.toString() << " is "
             << ((result) ? "true" : "false") << std::endl;
         CPPUNIT_ASSERT(result == true);
         result = odbData(r2.getPointer(), r1.getPointer());
-        std::cout << r2.toString() << " < " << r1.toString() << " is " 
+        std::cout << r2.toString() << " < " << r1.toString() << " is "
             << ((result) ? "true" : "false") << std::endl;
         CPPUNIT_ASSERT(result == false);
         result = odbData(r2.getPointer(), r2.getPointer());
-        std::cout << r2.toString() << " < " << r2.toString() << " is " 
+        std::cout << r2.toString() << " < " << r2.toString() << " is "
             << ((result) ? "true" : "false") << std::endl;
         CPPUNIT_ASSERT(result == false);
-        // Compare value with NULL. if spec.fNf then NULLs goes first 
+        // Compare value with NULL. if spec.fNf then NULLs goes first
         result = odbData(r3.getPointer(), r1.getPointer());
-        std::cout << r3.toString() << " < " << r1.toString() << " is " 
+        std::cout << r3.toString() << " < " << r1.toString() << " is "
             << ((result) ? "true" : "false") << std::endl;
         CPPUNIT_ASSERT(result == true);
         // Compare NULL with NULL
         result = odbData(r3.getPointer(), r1.getPointer());
-        std::cout << r3.toString() << " < " << r3.toString() << " is " 
+        std::cout << r3.toString() << " < " << r3.toString() << " is "
             << ((result) ? "true" : "false") << std::endl;
         CPPUNIT_ASSERT(result == true);
     }
 
     void INT_TEST()
     {
+#ifdef __x86_64__
         //bool generateValues = true;
         bool fixedValues = false;
         testComparatorWithDT(execplan::CalpontSystemCatalog::UTINYINT, 1, fixedValues, 20);
@@ -424,6 +425,10 @@ private:
         testComparatorWithDT(execplan::CalpontSystemCatalog::FLOAT, 4, fixedValues, 20);
         testComparatorWithDT(execplan::CalpontSystemCatalog::DOUBLE, 8, fixedValues, 20);
         testComparatorWithDT(execplan::CalpontSystemCatalog::LONGDOUBLE, 8, fixedValues, 20);
+#elif __arm__
+        // TODO: add arm tests
+#endif
+
     }
 
     void FLOAT_TEST()
