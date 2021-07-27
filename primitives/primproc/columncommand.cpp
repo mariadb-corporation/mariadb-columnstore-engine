@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016-2021 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -249,7 +250,36 @@ void ColumnCommand::loadData()
 
 void ColumnCommand::issuePrimitive()
 {
-    _issuePrimitive();
+    loadData();
+
+    if (!suppressFilter)
+        bpp->getPrimitiveProcessor().setParsedColumnFilter(parsedColumnFilter);
+    else
+        bpp->getPrimitiveProcessor().setParsedColumnFilter(emptyFilter);
+
+    switch(colType.colWidth)
+    {
+        case 1:
+            _issuePrimitive<1>();
+            break;
+        case 2:
+            _issuePrimitive<2>();
+            break;
+        case 4:
+            _issuePrimitive<4>();
+            break;
+        case 8:
+            _issuePrimitive<8>();
+            break;
+        case 16:
+            _issuePrimitive<16>();
+            break;
+        default:
+            throw NotImplementedExcept(std::string("ColumnCommand::_issuePrimitive does not support ")
+                                       + std::to_string(colType.colWidth)
+                                       + std::string(" byte width."));
+    }
+
     if (_isScan)
     {
         if (LIKELY(colType.isNarrow()))
@@ -259,18 +289,29 @@ void ColumnCommand::issuePrimitive()
     }
 }
 
-void ColumnCommand::_issuePrimitive()
+template<int W>
+void ColumnCommand::_issuePrimitiveNarrow()
 {
-    uint32_t resultSize;
-
-    loadData();
+    _loadData<W>();
 
     if (!suppressFilter)
-        bpp->pp.setParsedColumnFilter(parsedColumnFilter);
+        bpp->getPrimitiveProcessor().setParsedColumnFilter(parsedColumnFilter);
     else
-        bpp->pp.setParsedColumnFilter(emptyFilter);
+        bpp->getPrimitiveProcessor().setParsedColumnFilter(emptyFilter);
 
-    bpp->pp.p_Col(primMsg, outMsg, bpp->outMsgSize, (unsigned int*)&resultSize);
+    _issuePrimitive<W>();
+
+    if (_isScan)
+        updateCPDataNarrow();
+}
+
+
+template<int W>
+void ColumnCommand::_issuePrimitive()
+{
+    using IntegralType = typename datatypes::WidthToSIntegralType<W>::type;
+    uint32_t resultSize;
+    bpp->getPrimitiveProcessor().columnScanAndFilter<IntegralType>(primMsg, outMsg, bpp->getOutMsgSize(), (unsigned int*)&resultSize);
 } // _issuePrimitive()
 
 void ColumnCommand::updateCPDataNarrow()
@@ -559,14 +600,33 @@ void ColumnCommand::createCommand(ByteStream& bs)
     deserializeInlineVector(bs, lastLbid);
 
     Command::createCommand(bs);
+    switch (colType.colWidth)
+    {
+        case 1:
+            createColumnFilter<datatypes::WidthToSIntegralType<1>::type>();
+            break;
 
-    parsedColumnFilter = primitives::parseColumnFilter(filterString.buf(), colType.colWidth,
-                         colType.colDataType, filterCount, BOP);
+        case 2:
+            createColumnFilter<datatypes::WidthToSIntegralType<2>::type>();
+            break;
 
-    /* OR hack */
-    emptyFilter = primitives::parseColumnFilter(filterString.buf(), colType.colWidth,
-                  colType.colDataType, 0, BOP);
+        case 4:
+            createColumnFilter<datatypes::WidthToSIntegralType<4>::type>();
+            break;
 
+        case 8:
+            createColumnFilter<datatypes::WidthToSIntegralType<8>::type>();
+            break;
+
+        case 16:
+            createColumnFilter<datatypes::WidthToSIntegralType<16>::type>();
+            break;
+
+        default:
+            throw NotImplementedExcept(std::string("ColumnCommand::createCommand does not support ")
+                                       + std::to_string(colType.colWidth)
+                                       + std::string(" byte width."));
+    }
 }
 
 void ColumnCommand::createCommand(execplan::CalpontSystemCatalog::ColType& aColType, ByteStream& bs)
@@ -1023,6 +1083,18 @@ ColumnCommand* ColumnCommandFabric::createCommand(messageqcpp::ByteStream& bs)
     return nullptr;
 }
 
+template<typename T>
+void ColumnCommand::createColumnFilter()
+{
+    parsedColumnFilter = primitives::_parseColumnFilter<T>(filterString.buf(),
+                                                           colType.colDataType,
+                                                           filterCount, BOP);
+    /* OR hack */
+    emptyFilter = primitives::_parseColumnFilter<T>(filterString.buf(),
+                                                    colType.colDataType,
+                                                    0, BOP);
+}
+
 ColumnCommand* ColumnCommandFabric::duplicate(const ColumnCommandUniquePtr& rhs)
 {
     auto & command = *rhs;
@@ -1066,12 +1138,7 @@ ColumnCommand* ColumnCommandFabric::duplicate(const ColumnCommandUniquePtr& rhs)
 ColumnCommandInt8::ColumnCommandInt8(execplan::CalpontSystemCatalog::ColType& aColType, messageqcpp::ByteStream& bs)
 {
     ColumnCommand::createCommand(aColType, bs);
-    parsedColumnFilter = primitives::parseColumnFilter(filterString.buf(), colType.colWidth,
-                     colType.colDataType, filterCount, BOP);
-
-    /* OR hack */
-    emptyFilter = primitives::parseColumnFilter(filterString.buf(), colType.colWidth,
-                      colType.colDataType, 0, BOP);
+    createColumnFilter<IntegralType>();
 }
 
 void ColumnCommandInt8::prep(int8_t outputType, bool absRids)
@@ -1104,17 +1171,15 @@ void ColumnCommandInt8::projectResultRG(RowGroup& rg, uint32_t pos)
     _projectResultRG<size>(rg, pos);
 }
 
+void ColumnCommandInt8::issuePrimitive()
+{
+    _issuePrimitiveNarrow<size>();
+}
+
 ColumnCommandInt16::ColumnCommandInt16(execplan::CalpontSystemCatalog::ColType& aColType, messageqcpp::ByteStream& bs)
 {
     ColumnCommand::createCommand(aColType, bs);
-    parsedColumnFilter = primitives::parseColumnFilter(filterString.buf(),
-                                                       colType.colWidth,
-                                                       colType.colDataType,
-                                                       filterCount, BOP);
-    /* OR hack */
-    emptyFilter = primitives::parseColumnFilter(filterString.buf(),
-                                                colType.colWidth,
-                                                colType.colDataType, 0, BOP);
+    createColumnFilter<IntegralType>();
 }
 
 void ColumnCommandInt16::prep(int8_t outputType, bool absRids)
@@ -1147,15 +1212,15 @@ void ColumnCommandInt16::projectResultRG(RowGroup& rg, uint32_t pos)
     _projectResultRG<size>(rg, pos);
 }
 
+void ColumnCommandInt16::issuePrimitive()
+{
+    _issuePrimitiveNarrow<size>();
+}
+
 ColumnCommandInt32::ColumnCommandInt32(execplan::CalpontSystemCatalog::ColType& aColType, messageqcpp::ByteStream& bs)
 {
     ColumnCommand::createCommand(aColType, bs);
-    parsedColumnFilter = primitives::parseColumnFilter(filterString.buf(), colType.colWidth,
-                     colType.colDataType, filterCount, BOP);
-
-    /* OR hack */
-    emptyFilter = primitives::parseColumnFilter(filterString.buf(), colType.colWidth,
-                      colType.colDataType, 0, BOP);
+    createColumnFilter<IntegralType>();
 }
 
 void ColumnCommandInt32::prep(int8_t outputType, bool absRids)
@@ -1188,15 +1253,15 @@ void ColumnCommandInt32::projectResultRG(RowGroup& rg, uint32_t pos)
     _projectResultRG<size>(rg, pos);
 }
 
+void ColumnCommandInt32::issuePrimitive()
+{
+    _issuePrimitiveNarrow<size>();
+}
+
 ColumnCommandInt64::ColumnCommandInt64(execplan::CalpontSystemCatalog::ColType& aColType, messageqcpp::ByteStream& bs)
 {
     ColumnCommand::createCommand(aColType, bs);
-    parsedColumnFilter = primitives::parseColumnFilter(filterString.buf(), colType.colWidth,
-                     colType.colDataType, filterCount, BOP);
-
-    /* OR hack */
-    emptyFilter = primitives::parseColumnFilter(filterString.buf(), colType.colWidth,
-                      colType.colDataType, 0, BOP);
+    createColumnFilter<IntegralType>();
 }
 
 void ColumnCommandInt64::prep(int8_t outputType, bool absRids)
@@ -1229,17 +1294,15 @@ void ColumnCommandInt64::projectResultRG(RowGroup& rg, uint32_t pos)
     _projectResultRG<size>(rg, pos);
 }
 
+void ColumnCommandInt64::issuePrimitive()
+{
+    _issuePrimitiveNarrow<size>();
+}
+
 ColumnCommandInt128::ColumnCommandInt128(execplan::CalpontSystemCatalog::ColType& aColType, messageqcpp::ByteStream& bs)
 {
     ColumnCommand::createCommand(aColType, bs);
-    parsedColumnFilter = primitives::parseColumnFilter(filterString.buf(),
-                                                       colType.colWidth,
-                                                       colType.colDataType,
-                                                       filterCount, BOP);
-    /* OR hack */
-    emptyFilter = primitives::parseColumnFilter(filterString.buf(),
-                                                colType.colWidth,
-                                                colType.colDataType, 0, BOP);
+    createColumnFilter<IntegralType>();
 }
 
 void ColumnCommandInt128::prep(int8_t outputType, bool absRids)
@@ -1270,6 +1333,20 @@ void ColumnCommandInt128::process_OT_DATAVALUE()
 void ColumnCommandInt128::projectResultRG(RowGroup& rg, uint32_t pos)
 {
     _projectResultRG<size>(rg, pos);
+}
+
+void ColumnCommandInt128::issuePrimitive()
+{
+    loadData();
+
+    if (!suppressFilter)
+        bpp->getPrimitiveProcessor().setParsedColumnFilter(parsedColumnFilter);
+    else
+        bpp->getPrimitiveProcessor().setParsedColumnFilter(emptyFilter);
+
+    _issuePrimitive<size>();
+    if (_isScan)
+        updateCPDataWide();
 }
 
 }

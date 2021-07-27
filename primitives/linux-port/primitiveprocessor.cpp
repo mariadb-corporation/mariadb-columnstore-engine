@@ -58,8 +58,15 @@ void PrimitiveProcessor::setParsedColumnFilter(boost::shared_ptr<ParsedColumnFil
     parsedColumnFilter = pcf;
 }
 
-ParsedColumnFilter::ParsedColumnFilter() : columnFilterMode(STANDARD)
+ParsedColumnFilter::ParsedColumnFilter() : columnFilterMode(ALWAYS_TRUE), mFilterCount(0) 
 {
+}
+
+ParsedColumnFilter::ParsedColumnFilter(const uint32_t aFilterCount)
+    : columnFilterMode(ALWAYS_TRUE), mFilterCount(aFilterCount)
+{
+    prestored_rfs.reset(new uint8_t[mFilterCount]);
+    prestored_cops.reset(new uint8_t[mFilterCount]);
 }
 
 ParsedColumnFilter::~ParsedColumnFilter()
