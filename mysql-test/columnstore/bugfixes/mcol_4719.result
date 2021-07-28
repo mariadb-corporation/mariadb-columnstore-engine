@@ -1,0 +1,17 @@
+DROP DATABASE IF EXISTS mcol_4719;
+CREATE DATABASE mcol_4719;
+USE mcol_4719;
+CREATE TABLE test_table (category CHAR(1), count INTEGER(1))ENGINE=COLUMNSTORE;
+INSERT INTO test_table (category, count) VALUES ('A', 1);
+INSERT INTO test_table (category, count) VALUES ('A', 2);
+INSERT INTO test_table (category, count) VALUES ('B', 3);
+INSERT INTO test_table (category, count) VALUES ('B', 4);
+select * FROM (SELECT count / SUM(count) OVER (PARTITION BY category) AS ratio FROM test_table) a where ratio > .5;
+ratio
+0.6667
+0.5714
+select * FROM (SELECT round(0+SUM(count) OVER (PARTITION BY category),3) AS x FROM test_table ) a where x>3;
+x
+7.000
+7.000
+DROP DATABASE mcol_4719;
