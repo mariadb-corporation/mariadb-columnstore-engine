@@ -161,15 +161,4 @@ bool Command::operator==(const Command& c) const
     return true;
 }
 
-void Command::duplicate(Command* c)
-{
-    bpp = c->bpp;
-    cmdType = c->cmdType;
-    fFilterFeeder = c->fFilterFeeder;
-    OID = c->OID;
-    tupleKey = c->tupleKey;
-    queryUuid = c->queryUuid;
-    stepUuid = c->stepUuid;
-}
-
 }
