@@ -88,9 +88,10 @@ protected:
     execplan::CalpontSystemCatalog::ColType leftColType;
     execplan::CalpontSystemCatalog::ColType rightColType;
 
+    FilterCommand(const FilterCommand&rhs) = default;
+
 private:
-    // disabled copy constructor and operator
-    FilterCommand(const FilterCommand&);
+    // disabled copy operator
     FilterCommand& operator=(const FilterCommand&);
 };
 
@@ -156,9 +157,10 @@ protected:
     // colWidth of columns the don't need a dictionary
     size_t fCharLength;
 
+    StrFilterCmd(const StrFilterCmd &rhs) = default;
+
 private:
-    // disabled copy constructor and operator
-    StrFilterCmd(const StrFilterCmd&);
+    // disabled copy operator
     StrFilterCmd& operator=(const StrFilterCmd&);
 };
 

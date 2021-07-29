@@ -117,12 +117,8 @@ protected:
     boost::uuids::uuid queryUuid;
     boost::uuids::uuid stepUuid;
 
-    void duplicate(Command*);
-
-private:
-    Command();
-    Command(const Command&);
-
+    Command(const Command &rhs) = default;
+    Command & operator=(const Command & rhs) = default;
 };
 
 }
