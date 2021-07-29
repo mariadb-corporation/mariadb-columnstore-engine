@@ -191,7 +191,7 @@ SCommand PassThruCommand::duplicate()
     ret.reset(new PassThruCommand());
     p = (PassThruCommand*) ret.get();
     p->colWidth = colWidth;
-    p->Command::duplicate(this);
+    p->Command::operator=(*this);
     return ret;
 }
 

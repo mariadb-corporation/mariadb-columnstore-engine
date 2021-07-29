@@ -233,16 +233,7 @@ void FilterCommand::nextLBID()
 
 SCommand FilterCommand::duplicate()
 {
-    SCommand ret;
-    FilterCommand* filterCmd;
-
-    ret.reset(new FilterCommand());
-    filterCmd = (FilterCommand*) ret.get();
-    filterCmd->fBOP = fBOP;
-    filterCmd->leftColType = leftColType;
-    filterCmd->rightColType = rightColType;
-    filterCmd->Command::duplicate(this);
-    return ret;
+    return SCommand(new FilterCommand(*this));
 }
 
 
@@ -516,16 +507,7 @@ StrFilterCmd::~StrFilterCmd()
 
 SCommand StrFilterCmd::duplicate()
 {
-    SCommand ret;
-    StrFilterCmd* filterCmd;
-
-    ret.reset(new StrFilterCmd());
-    filterCmd = (StrFilterCmd*) ret.get();
-    filterCmd->fBOP = fBOP;
-    filterCmd->fCompare = fCompare;
-    filterCmd->fCharLength = fCharLength;
-
-    return ret;
+    return SCommand(new StrFilterCmd(*this));
 }
 
 
