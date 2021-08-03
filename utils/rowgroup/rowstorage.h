@@ -20,6 +20,7 @@
 
 #include "resourcemanager.h"
 #include "rowgroup.h"
+#include "idbcompress.h"
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -51,7 +52,8 @@ public:
                 joblist::ResourceManager* rm = nullptr,
                 boost::shared_ptr<int64_t> sessLimit = {},
                 bool enabledDiskAgg = false,
-                bool allowGenerations = false);
+                bool allowGenerations = false,
+                compress::CompressInterface* compressor = nullptr);
 
   RowAggStorage(const std::string& tmpDir,
                 RowGroup* rowGroupOut,
@@ -59,10 +61,11 @@ public:
                 joblist::ResourceManager* rm = nullptr,
                 boost::shared_ptr<int64_t> sessLimit = {},
                 bool enabledDiskAgg = false,
-                bool allowGenerations = false)
+                bool allowGenerations = false,
+                compress::CompressInterface* compressor = nullptr)
       : RowAggStorage(tmpDir, rowGroupOut, rowGroupOut, keyCount,
                       rm, std::move(sessLimit),
-                      enabledDiskAgg, allowGenerations)
+                      enabledDiskAgg, allowGenerations, compressor)
   {}
 
   ~RowAggStorage();
@@ -356,6 +359,7 @@ private:
   bool fAggregated = true;
   bool fAllowGenerations;
   bool fEnabledDiskAggregation;
+  std::unique_ptr<compress::CompressInterface> fCompressor;
   std::string fTmpDir;
   bool fInitialized{false};
   rowgroup::RowGroup* fRowGroupOut;
