@@ -1,0 +1,67 @@
+--source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs_type_string;
+--enable_warnings
+CREATE DATABASE mcs_type_string;
+
+
+--echo #
+--echo # MCOL-4823 WHERE char_col<varchar_col returns a wrong result of a large table
+--echo #
+
+CREATE TABLE t1
+(
+  l_returnflag char(1) CHARACTER SET latin1 COLLATE latin1_bin,
+  l_shipinstruct char(25) CHARACTER SET latin1 COLLATE latin1_bin,
+  l_comment varchar(44) CHARACTER SET latin1 COLLATE latin1_bin
+) ENGINE=MyISAM;
+
+DELIMITER $$;
+BEGIN NOT ATOMIC
+  DECLARE ins TEXT DEFAULT 'INSERT INTO t1 VALUES <rows>';
+  DECLARE onerow TEXT DEFAULT '(''a'',''aaaa'',''AAAA'')';
+  DECLARE rows256 TEXT DEFAULT CONCAT(REPEAT(CONCAT(onerow, ','), 255), onerow);
+
+  -- The problem was repeatable with at least 122881 records
+  -- For faster data loading, insert 256 records at a time 480 times
+  -- That gives 480*256=122880 records
+  FOR i IN 1..480
+  DO
+    EXECUTE IMMEDIATE REPLACE(ins, '<rows>', rows256);
+  END FOR;
+
+  -- Now insert one more record to make 122881 records
+  EXECUTE IMMEDIATE REPLACE(ins, '<rows>', onerow);
+END
+$$
+DELIMITER ;$$
+
+SELECT count(*) FROM t1 WHERE l_comment < l_shipinstruct;
+SELECT count(*) FROM t1 WHERE l_comment <= l_shipinstruct;
+SELECT count(*) FROM t1 WHERE l_comment >= l_shipinstruct;
+SELECT count(*) FROM t1 WHERE l_comment > l_shipinstruct;
+SELECT count(*) FROM t1 WHERE l_shipinstruct < l_comment;
+SELECT count(*) FROM t1 WHERE l_shipinstruct <= l_comment;
+SELECT count(*) FROM t1 WHERE l_shipinstruct >= l_comment;
+SELECT count(*) FROM t1 WHERE l_shipinstruct > l_comment;
+
+CREATE TABLE t2 LIKE t1;
+ALTER TABLE t2 ENGINE=ColumnStore;
+INSERT INTO t2 SELECT * FROM t1;
+
+SELECT count(*) FROM t2 WHERE l_comment < l_shipinstruct;
+SELECT count(*) FROM t2 WHERE l_comment <= l_shipinstruct;
+SELECT count(*) FROM t2 WHERE l_comment >= l_shipinstruct;
+SELECT count(*) FROM t2 WHERE l_comment > l_shipinstruct;
+SELECT count(*) FROM t2 WHERE l_shipinstruct < l_comment;
+SELECT count(*) FROM t2 WHERE l_shipinstruct <= l_comment;
+SELECT count(*) FROM t2 WHERE l_shipinstruct >= l_comment;
+SELECT count(*) FROM t2 WHERE l_shipinstruct > l_comment;
+
+
+DROP TABLE t2;
+DROP TABLE t1;
+
+
+DROP DATABASE mcs_type_string;

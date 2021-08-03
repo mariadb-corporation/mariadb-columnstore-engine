@@ -893,7 +893,7 @@ void ColumnCommand::duplicate(ColumnCommand* cc)
     cc->lastLbid = lastLbid;
     cc->r = r;
     cc->rowSize = rowSize;
-    cc->Command::duplicate(this);
+    cc->Command::operator=(*this);
 }
 
 SCommand ColumnCommand::duplicate()

@@ -697,7 +697,7 @@ SCommand DictStep::duplicate()
     ds->filterString = filterString;
     ds->filterCount = filterCount;
     ds->charsetNumber = charsetNumber;
-    ds->Command::duplicate(this);
+    ds->Command::operator=(*this);
     return ret;
 }
 

@@ -205,7 +205,7 @@ SCommand RTSCommand::duplicate()
         rts->col.reset(ColumnCommandFabric::duplicate(col));
 
     rts->dict = dict;
-    rts->Command::duplicate(this);
+    rts->Command::operator=(*this);
     return ret;
 }
 
