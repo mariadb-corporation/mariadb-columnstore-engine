@@ -2,6 +2,15 @@
 #ifndef TEST_MCSCONFIG_H
 #define TEST_MCSCONFIG_H
 
+#include <my_config.h>
+#undef PACKAGE
+#undef PACKAGE_BUGREPORT
+#undef PACKAGE_NAME
+#undef PACKAGE_STRING
+#undef PACKAGE_TARNAME
+#undef PACKAGE_VERSION
+#undef VERSION
+
 /* Define to 1 if you have the `alarm' function. */
 #cmakedefine HAVE_ALARM 1
 
