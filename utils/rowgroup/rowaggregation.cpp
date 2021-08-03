@@ -686,6 +686,8 @@ void RowAggregation::initialize()
 
     config::Config* config = config::Config::makeConfig();
     string tmpDir = config->getTempFileDir(config::Config::TempDirPurpose::Aggregates);
+    string compStr = config->getConfig("RowAggregation", "Compression");
+    auto* compressor = compress::getCompressInterfaceByName(compStr);
 
     if (fKeyOnHeap)
     {
@@ -696,7 +698,8 @@ void RowAggregation::initialize()
                                              fRm,
                                              fSessionMemLimit,
                                              disk_agg,
-                                             allow_gen));
+                                             allow_gen,
+                                             compressor));
     }
     else
     {
@@ -706,7 +709,8 @@ void RowAggregation::initialize()
                                              fRm,
                                              fSessionMemLimit,
                                              disk_agg,
-                                             allow_gen));
+                                             allow_gen,
+                                             compressor));
     }
 
     // Initialize the work row.
@@ -771,6 +775,8 @@ void RowAggregation::aggReset()
 
     config::Config* config = config::Config::makeConfig();
     string tmpDir = config->getTempFileDir(config::Config::TempDirPurpose::Aggregates);
+    string compStr = config->getConfig("RowAggregation", "Compression");
+    auto* compressor = compress::getCompressInterfaceByName(compStr);
 
     if (fKeyOnHeap)
     {
@@ -781,7 +787,8 @@ void RowAggregation::aggReset()
                                              fRm,
                                              fSessionMemLimit,
                                              disk_agg,
-                                             allow_gen));
+                                             allow_gen,
+                                             compressor));
     }
     else
     {
@@ -791,7 +798,8 @@ void RowAggregation::aggReset()
                                              fRm,
                                              fSessionMemLimit,
                                              disk_agg,
-                                             allow_gen));
+                                             allow_gen,
+                                             compressor));
     }
     fRowGroupOut->getRow(0, &fRow);
     copyNullRow(fRow);
