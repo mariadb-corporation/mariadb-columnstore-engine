@@ -21,6 +21,7 @@
 #include "rowgroup.h"
 #include <resourcemanager.h>
 #include <fcntl.h>
+#include "idbcompress.h"
 #include "rowstorage.h"
 #include "robin_hood.h"
 
@@ -69,6 +70,101 @@ int readData(int fd, char* buf, size_t sz)
 
     assert(size_t(r) <= to_read);
     to_read -= r;
+  }
+
+  return 0;
+}
+
+int writeFile(const char* fname, const char* buf, size_t sz,
+              const std::unique_ptr<compress::IDBCompressInterface>& compressor)
+{
+  if (sz == 0)
+    return 0;
+
+  int fd = open(fname, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+  if (UNLIKELY(fd < 0))
+    return errno;
+
+  const char* tmpbuf;
+  std::vector<char> tmpvec;
+  if (compressor)
+  {
+    auto len = compressor->maxCompressedSize(sz);
+    tmpvec.resize(len);
+    compressor->compress(buf, sz, tmpvec.data(), &len);
+    tmpbuf = tmpvec.data();
+    sz = len;
+  }
+  else
+  {
+    tmpbuf = buf;
+  }
+
+  auto to_write = sz;
+  while (to_write > 0)
+  {
+    auto r = write(fd, tmpbuf + sz - to_write, to_write);
+    if (UNLIKELY(r < 0))
+    {
+      if (errno == EAGAIN)
+        continue;
+
+      close(fd);
+      return errno;
+    }
+    assert(size_t(r) <= to_write);
+    to_write -= r;
+  }
+
+  close(fd);
+  return 0;
+}
+
+int readFile(const char* fname, std::vector<char>& buf,
+             const std::unique_ptr<compress::IDBCompressInterface>& compressor)
+{
+  int fd = open(fname, O_RDONLY);
+  if (UNLIKELY(fd < 0))
+    return errno;
+
+  struct stat st{};
+  fstat(fd, &st);
+  size_t sz = st.st_size;
+
+  std::vector<char> tmpbuf;
+  tmpbuf.resize(sz);
+
+  auto to_read = sz;
+  while (to_read > 0)
+  {
+    auto r = read(fd, tmpbuf.data() + sz - to_read, to_read);
+    if (UNLIKELY(r < 0))
+    {
+      if (errno == EAGAIN)
+        continue;
+
+      close(fd);
+      return errno;
+    }
+
+    assert(size_t(r) <= to_read);
+    to_read -= r;
+  }
+  close(fd);
+
+  if (compressor)
+  {
+    size_t len;
+    if (!compressor->getUncompressedSize(tmpbuf.data(), sz, &len))
+    {
+      return EPROTO;
+    }
+    buf.resize(len);
+    compressor->uncompress(tmpbuf.data(), sz, buf.data());
+  }
+  else
+  {
+    tmpbuf.swap(buf);
   }
 
   return 0;
@@ -363,6 +459,7 @@ public:
    *                            right now?
    * @param strict              true  -> throw an exception if not enough memory
    *                            false -> deal with it later
+   * @param compress
    */
   RowGroupStorage(const std::string& tmpDir,
                   RowGroup* rowGroupOut,
@@ -370,7 +467,8 @@ public:
                   joblist::ResourceManager* rm = nullptr,
                   boost::shared_ptr<int64_t> sessLimit = {},
                   bool wait = false,
-                  bool strict = false)
+                  bool strict = false,
+                  bool compress = false)
       : fRowGroupOut(rowGroupOut)
       , fMaxRows(maxRows)
       , fRGDatas()
@@ -394,6 +492,12 @@ public:
       fMM.reset(new MemManager());
       fLRU = std::unique_ptr<LRUIface>(new LRUIface());
     }
+
+    if (compress)
+    {
+      fCompressor.reset(new compress::IDBCompressInterface);
+    }
+
     auto* curRG = new RGData(*fRowGroupOut, fMaxRows);
     fRowGroupOut->setData(curRG);
     fRowGroupOut->resetRowGroup(0);
@@ -770,6 +874,8 @@ public:
     ret->fMM.reset(fMM->clone());
     ret->fUniqId = fUniqId;
     ret->fGeneration = gen;
+    if (fCompressor)
+        ret->fCompressor.reset(new compress::IDBCompressInterface);
     ret->loadFinalizedInfo();
     return ret;
   }
@@ -962,41 +1068,18 @@ private:
   void loadRG(uint64_t rgid, std::unique_ptr<RGData>& rgdata, bool unlinkDump = false)
   {
     auto fname = makeRGFilename(rgid);
-    int fd = open(fname.c_str(), O_RDONLY);
-    if (UNLIKELY(fd < 0))
+
+    std::vector<char> data;
+    int errNo;
+    if ((errNo = readFile(fname.c_str(), data, fCompressor)) != 0)
     {
+      unlink(fname.c_str());
       throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
-                                   logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errno)),
+          logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
                                logging::ERR_DISKAGG_FILEIO_ERROR);
     }
-    messageqcpp::ByteStream bs;
 
-    try
-    {
-      struct stat st
-      {
-      };
-      fstat(fd, &st);
-
-      bs.needAtLeast(st.st_size);
-      bs.restart();
-      int errNo;
-      if ((errNo = readData(fd, (char*)bs.getInputPtr(), st.st_size)) != 0)
-      {
-        close(fd);
-        unlink(fname.c_str());
-        throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
-            logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
-                                 logging::ERR_DISKAGG_FILEIO_ERROR);
-      }
-      bs.advanceInputPtr(st.st_size);
-      close(fd);
-    }
-    catch (...)
-    {
-      close(fd);
-      throw;
-    }
+    messageqcpp::ByteStream bs(reinterpret_cast<uint8_t*>(data.data()), data.size());
 
     if (unlinkDump)
       unlink(fname.c_str());
@@ -1042,23 +1125,13 @@ private:
     fRowGroupOut->setData(rgdata);
     rgdata->serialize(bs, fRowGroupOut->getDataSize());
 
-    int fd = open(makeRGFilename(rgid).c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if (UNLIKELY(fd < 0))
-    {
-      throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
-                                   logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errno)),
-                               logging::ERR_DISKAGG_FILEIO_ERROR);
-    }
-
     int errNo;
-    if ((errNo = writeData(fd, (char*)bs.buf(), bs.length())) != 0)
+    if ((errNo = writeFile(makeRGFilename(rgid).c_str(), (char*)bs.buf(), bs.length(), fCompressor)) != 0)
     {
-      close(fd);
       throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
-          logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
+                                   logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
                                logging::ERR_DISKAGG_FILEIO_ERROR);
     }
-    close(fd);
   }
 
 #ifdef DISK_AGG_DEBUG
@@ -1109,6 +1182,7 @@ private:
   uint16_t fGeneration{0};
   std::vector<uint64_t> fFinalizedRows;
   std::string fTmpDir;
+  std::unique_ptr<compress::IDBCompressInterface> fCompressor;
 };
 
 /** @brief Internal data for the hashmap */
@@ -1334,13 +1408,15 @@ RowAggStorage::RowAggStorage(const std::string& tmpDir,
                              joblist::ResourceManager *rm,
                              boost::shared_ptr<int64_t> sessLimit,
                              bool enabledDiskAgg,
-                             bool allowGenerations)
+                             bool allowGenerations,
+                             bool compress)
     : fMaxRows(getMaxRows(enabledDiskAgg))
     , fExtKeys(rowGroupOut != keysRowGroup)
     , fLastKeyCol(keyCount - 1)
     , fUniqId(this)
     , fAllowGenerations(allowGenerations)
     , fEnabledDiskAggregation(enabledDiskAgg)
+    , fCompress(compress)
     , fTmpDir(tmpDir)
     , fRowGroupOut(rowGroupOut)
     , fKeysRowGroup(keysRowGroup)
@@ -1361,10 +1437,10 @@ RowAggStorage::RowAggStorage(const std::string& tmpDir,
     fMM.reset(new MemManager());
     fNumOfInputRGPerThread = 1;
   }
-  fStorage.reset(new RowGroupStorage(fTmpDir, rowGroupOut, 1, rm, sessLimit, !enabledDiskAgg, !enabledDiskAgg));
+  fStorage.reset(new RowGroupStorage(fTmpDir, rowGroupOut, 1, rm, sessLimit, !enabledDiskAgg, !enabledDiskAgg, compress));
   if (fExtKeys)
   {
-    fKeysStorage = new RowGroupStorage(fTmpDir, keysRowGroup, 1, rm, sessLimit, !enabledDiskAgg, !enabledDiskAgg);
+    fKeysStorage = new RowGroupStorage(fTmpDir, keysRowGroup, 1, rm, sessLimit, !enabledDiskAgg, !enabledDiskAgg, compress);
   }
   else
   {
@@ -1406,7 +1482,8 @@ bool RowAggStorage::getTargetRow(const Row &row, uint64_t hash, Row &rowOut)
                                        fMM->getResourceManaged(),
                                        fMM->getSessionLimit(),
                                        !fEnabledDiskAggregation,
-                                       !fEnabledDiskAggregation));
+                                       !fEnabledDiskAggregation,
+                                       fCompress));
     if (fExtKeys)
     {
       fKeysStorage = new RowGroupStorage(fTmpDir,
@@ -1415,7 +1492,8 @@ bool RowAggStorage::getTargetRow(const Row &row, uint64_t hash, Row &rowOut)
                                          fMM->getResourceManaged(),
                                          fMM->getSessionLimit(),
                                          !fEnabledDiskAggregation,
-                                         !fEnabledDiskAggregation);
+                                         !fEnabledDiskAggregation,
+                                         fCompress);
     }
     else
     {

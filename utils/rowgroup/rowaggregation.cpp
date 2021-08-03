@@ -675,15 +675,21 @@ void RowAggregation::initialize()
     bool allow_gen = true;
     for (auto& fun : fFunctionCols)
     {
-      if (fun->fAggFunction == ROWAGG_UDAF || fun->fAggFunction == ROWAGG_GROUP_CONCAT)
-      {
-        allow_gen = false;
-        break;
-      }
+        if (fun->fAggFunction == ROWAGG_UDAF || fun->fAggFunction == ROWAGG_GROUP_CONCAT)
+        {
+            allow_gen = false;
+            break;
+        }
     }
 
     config::Config* config = config::Config::makeConfig();
     string tmpDir = config->getTempFileDir(config::Config::TempDirPurpose::Aggregates);
+    bool compress = false;
+    string compStr = config->getConfig("RowAggregation", "Compression");
+    if (compStr == "SNAPPY")
+    {
+        compress = true;
+    }
 
     if (fKeyOnHeap)
     {
@@ -694,7 +700,8 @@ void RowAggregation::initialize()
                                              fRm,
                                              fSessionMemLimit,
                                              disk_agg,
-                                             allow_gen));
+                                             allow_gen,
+                                             compress));
     }
     else
     {
@@ -704,7 +711,8 @@ void RowAggregation::initialize()
                                              fRm,
                                              fSessionMemLimit,
                                              disk_agg,
-                                             allow_gen));
+                                             allow_gen,
+                                             compress));
     }
 
     // Initialize the work row.
@@ -766,6 +774,12 @@ void RowAggregation::aggReset()
 
     config::Config* config = config::Config::makeConfig();
     string tmpDir = config->getTempFileDir(config::Config::TempDirPurpose::Aggregates);
+    bool compress = false;
+    string compStr = config->getConfig("RowAggregation", "Compression");
+    if (compStr == "SNAPPY")
+    {
+        compress = true;
+    }
 
     if (fKeyOnHeap)
     {
@@ -776,7 +790,8 @@ void RowAggregation::aggReset()
                                              fRm,
                                              fSessionMemLimit,
                                              disk_agg,
-                                             allow_gen));
+                                             allow_gen,
+                                             compress));
     }
     else
     {
@@ -786,7 +801,8 @@ void RowAggregation::aggReset()
                                              fRm,
                                              fSessionMemLimit,
                                              disk_agg,
-                                             allow_gen));
+                                             allow_gen,
+                                             compress));
     }
     fRowGroupOut->getRow(0, &fRow);
     copyNullRow(fRow);

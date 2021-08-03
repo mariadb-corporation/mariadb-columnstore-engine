@@ -50,7 +50,8 @@ public:
                 joblist::ResourceManager* rm = nullptr,
                 boost::shared_ptr<int64_t> sessLimit = {},
                 bool enabledDiskAgg = false,
-                bool allowGenerations = false);
+                bool allowGenerations = false,
+                bool compress = false);
 
   RowAggStorage(const std::string& tmpDir,
                 RowGroup* rowGroupOut,
@@ -58,10 +59,11 @@ public:
                 joblist::ResourceManager* rm = nullptr,
                 boost::shared_ptr<int64_t> sessLimit = {},
                 bool enabledDiskAgg = false,
-                bool allowGenerations = false)
+                bool allowGenerations = false,
+                bool compress = false)
       : RowAggStorage(tmpDir, rowGroupOut, rowGroupOut, keyCount,
                       rm, std::move(sessLimit),
-                      enabledDiskAgg, allowGenerations)
+                      enabledDiskAgg, allowGenerations, compress)
   {}
 
   ~RowAggStorage();
@@ -355,6 +357,7 @@ private:
   bool fAggregated = true;
   bool fAllowGenerations;
   bool fEnabledDiskAggregation;
+  bool fCompress;
   std::string fTmpDir;
   bool fInitialized{false};
   rowgroup::RowGroup* fRowGroupOut;
