@@ -2191,6 +2191,17 @@ int ha_mcs::impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
     gp_walk_info gwi;
     gwi.thd = thd;
 
+    if (thd->slave_thread && !get_replication_slave(thd) && (
+                thd->lex->sql_command == SQLCOM_INSERT ||
+                thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
+                thd->lex->sql_command == SQLCOM_UPDATE ||
+                thd->lex->sql_command == SQLCOM_UPDATE_MULTI ||
+                thd->lex->sql_command == SQLCOM_DELETE ||
+                thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
+                thd->lex->sql_command == SQLCOM_TRUNCATE ||
+                thd->lex->sql_command == SQLCOM_LOAD))
+        return 0;
+
     //check whether the system is ready to process statement.
 #ifndef _MSC_VER
     static DBRM dbrm(true);
@@ -2216,19 +2227,6 @@ int ha_mcs::impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
     {
         thd_set_ha_data(thd, mcs_hton, reinterpret_cast<void*>(0x42));
     }
-
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-
-    if (thd->slave_thread && !get_replication_slave(thd) && (
-                thd->lex->sql_command == SQLCOM_INSERT ||
-                thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
-                thd->lex->sql_command == SQLCOM_UPDATE ||
-                thd->lex->sql_command == SQLCOM_UPDATE_MULTI ||
-                thd->lex->sql_command == SQLCOM_DELETE ||
-                thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
-                thd->lex->sql_command == SQLCOM_TRUNCATE ||
-                thd->lex->sql_command == SQLCOM_LOAD))
-        return 0;
 
 #if 0
     if (thd->rgi_slave && thd->rgi_slave->m_table_map.count() != 0)
@@ -2263,6 +2261,8 @@ int ha_mcs::impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
 
     if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
+
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     idbassert(ci != 0);
 
@@ -2571,8 +2571,6 @@ int ha_mcs_impl_rnd_next(uchar* buf, TABLE* table)
 {
     THD* thd = current_thd;
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-
     if (thd->slave_thread && !get_replication_slave(thd) && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
                 thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
@@ -2594,6 +2592,8 @@ int ha_mcs_impl_rnd_next(uchar* buf, TABLE* table)
 
     if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
+
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
@@ -2656,10 +2656,6 @@ int ha_mcs_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
 {
     int rc = 0;
     THD* thd = current_thd;
-    cal_connection_info* ci = nullptr;
-
-    if (get_fe_conn_info_ptr() != NULL)
-        ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     if (thd->slave_thread && !get_replication_slave(thd) && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
@@ -2672,8 +2668,11 @@ int ha_mcs_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
                 thd->lex->sql_command == SQLCOM_LOAD))
         return 0;
 
+    cal_connection_info* ci = nullptr;
+
     if (get_fe_conn_info_ptr() != NULL)
         ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+
     if ( (thd->lex)->sql_command == SQLCOM_ALTER_TABLE )
         return rc;
 
@@ -2863,6 +2862,10 @@ int ha_mcs_impl_delete_table(const char* name)
 int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_changed)
 {
     THD* thd = current_thd;
+
+    if (thd->slave_thread && !get_replication_slave(thd))
+        return 0;
+
     // Error out INSERT on VIEW. It's currently not supported.
     // @note INSERT on VIEW works natually (for simple cases at least), but we choose to turn it off
     // for now - ZZ.
@@ -2886,10 +2889,8 @@ int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_changed)
     if (rows_changed == 0)
         ci->tableValuesMap.clear();
 
-    if (thd->slave_thread && !get_replication_slave(thd))
+    if (ci->alterTableState > 0)
         return 0;
-
-    if (ci->alterTableState > 0) return 0;
 
     ha_rows rowsInserted = 0;
     int rc = 0;
@@ -2960,6 +2961,9 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
 {
     THD* thd = current_thd;
 
+    if (thd->slave_thread && !get_replication_slave(thd))
+        return;
+
     if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
@@ -2968,9 +2972,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
     // clear rows variable
     ci->rowsHaveInserted = 0;
 
-    if (ci->alterTableState > 0) return;
-
-    if (thd->slave_thread && !get_replication_slave(thd))
+    if (ci->alterTableState > 0)
         return;
 
     //@bug 5660. Error out DDL/DML on slave node, or on local query node
@@ -3504,15 +3506,15 @@ int ha_mcs_impl_end_bulk_insert(bool abort, TABLE* table)
     bitmap_clear_all(table->read_set);
     THD* thd = current_thd;
 
+    if (thd->slave_thread && !get_replication_slave(thd))
+        return 0;
+
     std::string aTmpDir(startup::StartUp::tmpDir());
 
     if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-
-    if (thd->slave_thread && !get_replication_slave(thd))
-        return 0;
 
     int rc = 0;
 
@@ -4527,14 +4529,6 @@ int ha_mcs_impl_group_by_next(TABLE* table)
 {
     THD* thd = current_thd;
 
-    if (isUpdateOrDeleteStatement(thd->lex->sql_command, !isForeignTableUpdate(thd)))
-        return HA_ERR_END_OF_FILE;
-
-    if (get_fe_conn_info_ptr() == nullptr)
-        set_fe_conn_info_ptr((void*)new cal_connection_info());
-
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-
     if (thd->slave_thread && !get_replication_slave(thd) && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
                 thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
@@ -4545,6 +4539,14 @@ int ha_mcs_impl_group_by_next(TABLE* table)
                 thd->lex->sql_command == SQLCOM_TRUNCATE ||
                 thd->lex->sql_command == SQLCOM_LOAD))
         return HA_ERR_END_OF_FILE;
+
+    if (isUpdateOrDeleteStatement(thd->lex->sql_command, !isForeignTableUpdate(thd)))
+        return HA_ERR_END_OF_FILE;
+
+    if (get_fe_conn_info_ptr() == nullptr)
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
+
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
@@ -4608,7 +4610,6 @@ int ha_mcs_impl_group_by_end(TABLE* table)
 {
     int rc = 0;
     THD* thd = current_thd;
-    cal_connection_info* ci = nullptr;
 
     if (thd->slave_thread && !get_replication_slave(thd) && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
@@ -4621,20 +4622,22 @@ int ha_mcs_impl_group_by_end(TABLE* table)
                 thd->lex->sql_command == SQLCOM_LOAD))
         return 0;
 
+    cal_connection_info* ci = nullptr;
+
     if (get_fe_conn_info_ptr() != NULL)
         ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+
+    if (!ci)
+    {
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
+        ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+    }
 
     if (((thd->lex)->sql_command == SQLCOM_INSERT) ||
             ((thd->lex)->sql_command == SQLCOM_INSERT_SELECT) )
     {
         force_close_fep_conn(thd, ci, true); // with checking prev command rc
         return rc;
-    }
-
-    if (!ci)
-    {
-        set_fe_conn_info_ptr((void*)new cal_connection_info());
-        ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
     }
 
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
@@ -4783,6 +4786,17 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
     IDEBUG( cout << "pushdown_init for table " << endl );
     THD* thd = current_thd;
 
+    if (thd->slave_thread && !get_replication_slave(thd) && (
+                thd->lex->sql_command == SQLCOM_INSERT ||
+                thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
+                thd->lex->sql_command == SQLCOM_UPDATE ||
+                thd->lex->sql_command == SQLCOM_UPDATE_MULTI ||
+                thd->lex->sql_command == SQLCOM_DELETE ||
+                thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
+                thd->lex->sql_command == SQLCOM_TRUNCATE ||
+                thd->lex->sql_command == SQLCOM_LOAD))
+        return 0;
+
     gp_walk_info gwi;
     gwi.thd = thd;
     bool err = false;
@@ -4817,17 +4831,6 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
     {
         return 0;
     }
-
-    if (thd->slave_thread && !get_replication_slave(thd) && (
-                thd->lex->sql_command == SQLCOM_INSERT ||
-                thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
-                thd->lex->sql_command == SQLCOM_UPDATE ||
-                thd->lex->sql_command == SQLCOM_UPDATE_MULTI ||
-                thd->lex->sql_command == SQLCOM_DELETE ||
-                thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
-                thd->lex->sql_command == SQLCOM_TRUNCATE ||
-                thd->lex->sql_command == SQLCOM_LOAD))
-        return 0;
 
     // MCOL-4023 We need to test this code path.
     // Update and delete code
@@ -5232,13 +5235,7 @@ internal_error:
 
 int ha_mcs_impl_select_next(uchar* buf, TABLE* table)
 {
-    int rc = HA_ERR_END_OF_FILE;
     THD* thd = current_thd;
-
-    if (get_fe_conn_info_ptr() == nullptr)
-        set_fe_conn_info_ptr((void*)new cal_connection_info());
-
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     if (thd->slave_thread && !get_replication_slave(thd) && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
@@ -5250,6 +5247,13 @@ int ha_mcs_impl_select_next(uchar* buf, TABLE* table)
                 thd->lex->sql_command == SQLCOM_TRUNCATE ||
                 thd->lex->sql_command == SQLCOM_LOAD))
         return HA_ERR_END_OF_FILE;
+
+    int rc = HA_ERR_END_OF_FILE;
+
+    if (get_fe_conn_info_ptr() == nullptr)
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
+
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     if (isUpdateOrDeleteStatement(thd->lex->sql_command))
         return rc;
