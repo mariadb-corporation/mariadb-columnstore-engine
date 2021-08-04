@@ -2215,6 +2215,9 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
 #endif
     THD* thd = current_thd;
 
+    if (thd->slave_thread && !get_replication_slave(thd))
+        return 0;
+
     char* query = thd->query();
 
     if (!query)
@@ -2311,9 +2314,6 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
 
     // Don't do the DDL (only for create table if this is SSO. Should only get here on ATAC w/SSO.
     if ( schemaSyncOnly && isCreate)
-        return rc;
-
-    if (thd->slave_thread && !get_replication_slave(thd))
         return rc;
 
     //@bug 5660. Error out REAL DDL/DML on slave node.
@@ -2529,6 +2529,10 @@ int ha_mcs_impl_delete_table_(const char* db, const char* name, cal_connection_i
     cout << "ha_mcs_impl_delete_table: " << db << name << endl;
 #endif
     THD* thd = current_thd;
+
+    if (thd->slave_thread && !get_replication_slave(thd))
+        return 0;
+
     char* query = thd->query();
 
     if (!query)
@@ -2547,9 +2551,6 @@ int ha_mcs_impl_delete_table_(const char* db, const char* name, cal_connection_i
     {
         return 0;
     }
-
-    if (thd->slave_thread && !get_replication_slave(thd))
-        return 0;
 
     //@bug 5660. Error out REAL DDL/DML on slave node.
     // When the statement gets here, it's NOT SSO or RESTRICT
@@ -2588,6 +2589,10 @@ int ha_mcs_impl_delete_table_(const char* db, const char* name, cal_connection_i
 int ha_mcs_impl_rename_table_(const char* from, const char* to, cal_connection_info& ci)
 {
     THD* thd = current_thd;
+
+    if (thd->slave_thread && !get_replication_slave(thd))
+        return 0;
+
     string emsg;
 
     string tblFrom (from+2);
@@ -2601,9 +2606,6 @@ int ha_mcs_impl_rename_table_(const char* from, const char* to, cal_connection_i
     tblTo = tblTo.erase(0, pos + 1);
 
     string stmt;
-
-    if (thd->slave_thread && !get_replication_slave(thd))
-        return 0;
 
     // This is a temporary table rename, we don't use the temporary table name
     // so this is a NULL op

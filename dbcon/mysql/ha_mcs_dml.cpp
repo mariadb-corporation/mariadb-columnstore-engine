@@ -948,10 +948,10 @@ std::string  ha_mcs_impl_cleartablelock(
 
 int ha_mcs_impl_commit_ (handlerton* hton, THD* thd, bool all, cal_connection_info& ci )
 {
-    int rc = 0;
-
     if (thd->slave_thread && !get_replication_slave(thd))
         return 0;
+
+    int rc = 0;
 
     std::string command("COMMIT");
 #ifdef INFINIDB_DEBUG
