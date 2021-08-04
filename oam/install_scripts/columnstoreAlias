@@ -2,7 +2,7 @@
 # MariaDB Columnstore Alias Commands
 
 mcspm1host=$(mcsGetConfig PMS1 IPaddr)
-mcsapikey=$(grep -r 'x-api-key' /etc/columnstore/cmapi_server.conf | cut -d= -f2 | xargs)
+mcsapikey=$(grep -r 'x-api-key' /etc/columnstore/cmapi_server.conf | cut -d= -f2- | xargs)
 
 alias core='cd /var/log/mariadb/columnstore/corefiles'
 alias tdebug='tail -f /var/log/mariadb/columnstore/debug.log'
