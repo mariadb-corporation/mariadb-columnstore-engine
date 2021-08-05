@@ -2228,8 +2228,6 @@ int ha_mcs::impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
         thd_set_ha_data(thd, mcs_hton, reinterpret_cast<void*>(0x42));
     }
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-
 #if 0
     if (thd->rgi_slave && thd->rgi_slave->m_table_map.count() != 0)
     {
@@ -2263,6 +2261,8 @@ int ha_mcs::impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
 
     if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
+
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     idbassert(ci != 0);
 
@@ -2582,8 +2582,6 @@ int ha_mcs_impl_rnd_next(uchar* buf, TABLE* table)
                 thd->lex->sql_command == SQLCOM_LOAD))
         return HA_ERR_END_OF_FILE;
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-
     if (isUpdateOrDeleteStatement(thd->lex->sql_command, !isForeignTableUpdate(thd)))
         return HA_ERR_END_OF_FILE;
 
@@ -2594,6 +2592,8 @@ int ha_mcs_impl_rnd_next(uchar* buf, TABLE* table)
 
     if (get_fe_conn_info_ptr() == nullptr)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
+
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
@@ -4627,17 +4627,17 @@ int ha_mcs_impl_group_by_end(TABLE* table)
     if (get_fe_conn_info_ptr() != NULL)
         ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
+    if (!ci)
+    {
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
+        ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+    }
+
     if (((thd->lex)->sql_command == SQLCOM_INSERT) ||
             ((thd->lex)->sql_command == SQLCOM_INSERT_SELECT) )
     {
         force_close_fep_conn(thd, ci, true); // with checking prev command rc
         return rc;
-    }
-
-    if (!ci)
-    {
-        set_fe_conn_info_ptr((void*)new cal_connection_info());
-        ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
     }
 
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
