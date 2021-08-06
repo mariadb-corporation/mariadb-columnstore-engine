@@ -53,14 +53,6 @@ double Func_rand::getRand()
         fSeed1 += 23;
 
     fSeed2 = (fSeed1 + fSeed2 + 33) % maxValue;
-    if (fSeeds.size() > fSeedIndex) 
-    {
-        fSeeds[fSeedIndex] = std::make_pair(fSeed1, fSeed2);
-    }
-    else
-    {
-        fSeeds.push_back(std::make_pair(fSeed1, fSeed2));
-    }
 
     return (((double) fSeed1) / (double)maxValue);
 }
@@ -79,37 +71,6 @@ double Func_rand::getDoubleVal(rowgroup::Row& row,
     // NOTE: this function needs to use 32bit ints otherwise it will break for negative values
     uint32_t seedParm = 0;
 
-    // Still on first row, multiple rands exist in statement. Need an additional seed.
-    if(fFirstRow == row.getData())
-    {
-        fSeedSet = false;
-        fSeedIndex += 1;
-    }
-    else if (fFirstRow == nullptr)
-    {
-        // Store first row
-        fFirstRow = row.getData();
-        fSeedIndex = 0;
-    }
-    else
-    {
-        // No longer on first row. Disable additional seeding
-        if (!fMultipleSeedsSet)
-        {
-            fMultipleSeedsSet = true;
-            fSeedIndex = 0;
-        }
-        else
-        {
-            fSeedIndex += 1;
-
-            if (fSeedIndex == fSeeds.size())
-            {
-                fSeedIndex = 0;
-            }
-        }
-    }
-
     // rand with parameter. if the parm is constanct, then a column is attached for fetching
     if (parm.size() == 1 || parm.size() == 2)
     {
@@ -122,28 +83,17 @@ double Func_rand::getDoubleVal(rowgroup::Row& row,
             fSeed1 = (uint32_t)(seedParm * 0x10001L + 55555555L);
             fSeed2 = (uint32_t)(seedParm * 0x10000001L);
             fSeedSet = true;
-            fSeeds.push_back(std::make_pair(fSeed1, fSeed2));
-        }
-        else
-        {
-            const std::pair<uint64_t, uint64_t> &seedPair = fSeeds[fSeedIndex];
-            fSeed1 = seedPair.first;
-            fSeed2 = seedPair.second;
         }
     }
     // rand without parameter. thd->rand are passed in. The 3rd is a simple column for fetching
     else
     {
         idbassert(parm.size() == 3);
-
-        if (fSeed1 == 0)
+        if (fSeedSet)
         {
             fSeed1 = parm[0]->data()->getIntVal(row, isNull);
             fSeed2 = parm[1]->data()->getIntVal(row, isNull);
             fSeedSet = true;
-
-            // Special case: statement such as select rand(), rand(1) so need to keep rand(1) seeded correctly
-            fSeeds.push_back(std::make_pair(fSeed1, fSeed2));
         }
     }
 
