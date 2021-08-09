@@ -210,7 +210,7 @@ string IDBErrorInfo::lookupError(const unsigned eid)
         msgstr = iter->second;
 
     ostringstream oss;
-    oss << "IDB-" << setw(4) << setfill('0') << eid << ": " << msgstr;
+    oss << "MCS-" << setw(4) << setfill('0') << eid << ": " << msgstr;
     return oss.str();
 }
 
