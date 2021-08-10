@@ -16,9 +16,9 @@ year	SUM(sales)
 SELECT year, SUM(sales) FROM booksales GROUP BY year WITH ROLLUP ORDER BY year;
 ERROR HY000: Incorrect usage of CUBE/ROLLUP and ORDER BY
 SELECT year, SUM(sales) FROM booksales GROUP BY year WITH ROLLUP;
-ERROR 42000: The storage engine for the table doesn't support IDB-1014: Rollup is currently not supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1014: Rollup is currently not supported.
 SELECT year, SUM(sales) FROM booksales GROUP BY year ASC WITH ROLLUP;
-ERROR 42000: The storage engine for the table doesn't support IDB-1014: Rollup is currently not supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1014: Rollup is currently not supported.
 SELECT year, SUM(sales) FROM booksales GROUP BY year DESC WITH ROLLUP;
-ERROR 42000: The storage engine for the table doesn't support IDB-1014: Rollup is currently not supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1014: Rollup is currently not supported.
 DROP DATABASE IF EXISTS mcs84_db;

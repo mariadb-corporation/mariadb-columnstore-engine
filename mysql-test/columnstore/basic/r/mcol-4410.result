@@ -108,7 +108,7 @@ EXPLAIN SELECT * FROM t1 JOIN t2 ON t1.a + @var1 = t2.c AND @var1 := t1.a;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 1	PUSHED SELECT	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 SELECT * FROM t1 JOIN t2 ON t1.a + @var1 = t2.c AND @var1 := t1.a;
-ERROR HY000: Internal error: IDB-1001: Function 'set_user_var' isn't supported.
+ERROR HY000: Internal error: MCS-1001: Function 'set_user_var' isn't supported.
 SET @var1 = 2;
 EXPLAIN SELECT SUM(a + @var1) FROM t1;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
@@ -120,7 +120,7 @@ EXPLAIN SELECT SUM(@var1 := a) FROM t1;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 1	PUSHED SELECT	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 SELECT SUM(@var1 := a) FROM t1;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'set_user_var' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'set_user_var' isn't supported.
 CREATE TABLE `cs_trans_item` (
 `id` int(10) unsigned NOT NULL,
 `company_id` int(10) unsigned DEFAULT NULL,
