@@ -56,7 +56,7 @@ NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 SELECT * FROM t1 GROUP BY t1_tinyint;
-ERROR HY000: Internal error: IDB-2021: '`mcs35_db1`.`t1`.`t1_int`' is not in GROUP BY clause. All non-aggregate columns in the SELECT and ORDER BY clause must be included in the GROUP BY clause.
+ERROR HY000: Internal error: MCS-2021: '`mcs35_db1`.`t1`.`t1_int`' is not in GROUP BY clause. All non-aggregate columns in the SELECT and ORDER BY clause must be included in the GROUP BY clause.
 SELECT COUNT(*) FROM t1 GROUP BY t1_tinyint;
 COUNT(*)
 11

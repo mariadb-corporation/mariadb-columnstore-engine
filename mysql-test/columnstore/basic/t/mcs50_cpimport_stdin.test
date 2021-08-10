@@ -26,12 +26,12 @@ SELECT COUNT(*) FROM t1;
 TRUNCATE t1;
 
 #Unknown db
-#Error getting OID for table unknown.t1: IDB-2006: 'unknown.t1' does not exist in Columnstore.
+#Error getting OID for table unknown.t1: MCS-2006: 'unknown.t1' does not exist in Columnstore.
 --error 1
 --exec cat $MTR_SUITE_DIR/../100Krows.dat | $MCS_CPIMPORT unknown t1 >/dev/null
 
 #Unknown table
-#Error getting OID for table mcs50_db.unknown: IDB-2006: 'mcs50_db.unknown' does not exist in Columnstore.
+#Error getting OID for table mcs50_db.unknown: MCS-2006: 'mcs50_db.unknown' does not exist in Columnstore.
 --error 1
 --exec cat $MTR_SUITE_DIR/../std_data/100Krows.dat | $MCS_CPIMPORT mcs50_db unknown >/dev/null
 

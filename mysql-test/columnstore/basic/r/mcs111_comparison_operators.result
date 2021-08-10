@@ -34,19 +34,19 @@ SELECT 'a' <= 'b' FROM t1 LIMIT 1;
 'a' <= 'b'
 1
 SELECT t1_INT, t1_DECIMAL, t1_INT > t1_DECIMAL FROM t1 ORDER BY 1;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function '>' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function '>' isn't supported.
 SELECT t1_INT, t1_DECIMAL, t1_INT < t1_DECIMAL FROM t1 ORDER BY 1;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function '<' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function '<' isn't supported.
 SELECT t1_INT, t1_DECIMAL, t1_INT >= t1_DECIMAL FROM t1 ORDER BY 1;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function '>=' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function '>=' isn't supported.
 SELECT t1_INT, t1_DECIMAL, t1_INT <= t1_DECIMAL FROM t1 ORDER BY 1;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function '<=' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function '<=' isn't supported.
 SELECT t1_INT, t1_DECIMAL, t1_INT <> t1_DECIMAL FROM t1 ORDER BY 1;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function '<>' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function '<>' isn't supported.
 SELECT t1_INT, t1_DECIMAL, t1_INT = t1_DECIMAL FROM t1 ORDER BY 1;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function '=' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function '=' isn't supported.
 SELECT t1_INT, t1_DECIMAL, t1_INT != t1_DECIMAL FROM t1 ORDER BY 1;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function '<>' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function '<>' isn't supported.
 SELECT t1_INT, t1_DECIMAL from t1 WHERE t1_INT != t1_DECIMAL ORDER BY 1;
 t1_INT	t1_DECIMAL
 -7299	111.99000

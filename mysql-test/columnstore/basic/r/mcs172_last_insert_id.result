@@ -8,5 +8,5 @@ SELECT LAST_INSERT_ID();
 LAST_INSERT_ID()
 0
 SELECT LAST_INSERT_ID(a) FROM t1;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'last_insert_id' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'last_insert_id' isn't supported.
 DROP DATABASE mcs172_db;

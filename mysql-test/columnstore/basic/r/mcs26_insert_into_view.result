@@ -23,9 +23,9 @@ a_id	b_id	ta_id	v1	v2
 INSERT INTO v (a_id, b_id, ta_id, v1, v2) VALUES (3, 5, 3, 30, 500);
 ERROR HY000: Can not modify more than one base table through a join view 'mcs26_db.v'
 INSERT INTO v (a_id, v1) VALUES (3, 30);
-ERROR 42000: The storage engine for the table doesn't support IDB-1011: Insert on VIEW is currently not supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1011: Insert on VIEW is currently not supported.
 INSERT INTO v (b_id, ta_id, v2) VALUES (5, 3, 500);
-ERROR 42000: The storage engine for the table doesn't support IDB-1011: Insert on VIEW is currently not supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1011: Insert on VIEW is currently not supported.
 SELECT * FROM v;
 a_id	b_id	ta_id	v1	v2
 1	1	1	10	100
