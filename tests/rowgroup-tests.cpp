@@ -163,7 +163,7 @@ protected:
   std::vector<int64_t> s16ValueVector;
   std::vector<int64_t> s32ValueVector;
   std::vector<int64_t> s64ValueVector;
-  std::vector<uint32_t> offsets; 
+  std::vector<uint32_t> offsets;
 };
 
 TEST_F(RowDecimalTest, NonNullValueCheck)
@@ -219,11 +219,11 @@ TEST_F(RowDecimalTest, ToStringCheck)
 {
     std::vector<std::string> exemplarVector;
 
-    exemplarVector.push_back(std::string("0: NULL NULL NULL NULL NULL NULL "));
-    exemplarVector.push_back(std::string("0: -42 42 -121 -121 -121 -121 "));
-    exemplarVector.push_back(std::string("0: -79228162495817593515539431425 -79228162495817593515539431425 0 0 0 0 "));
-    exemplarVector.push_back(std::string("0: 0 0 129 129 129 -127 "));
-    exemplarVector.push_back(std::string("0: 170141183460469231731687303715884105727 170141183460469231731687303715884105727 9223372036854775807 2147483647 32767 127 "));
+    exemplarVector.push_back(std::string("[    0]: 0: NULL NULL NULL NULL NULL NULL "));
+    exemplarVector.push_back(std::string("[    0]: 0: -42 42 -121 -121 -121 -121 "));
+    exemplarVector.push_back(std::string("[    0]: 0: -79228162495817593515539431425 -79228162495817593515539431425 0 0 0 0 "));
+    exemplarVector.push_back(std::string("[    0]: 0: 0 0 129 129 129 -127 "));
+    exemplarVector.push_back(std::string("[    0]: 0: 170141183460469231731687303715884105727 170141183460469231731687303715884105727 9223372036854775807 2147483647 32767 127 "));
 
     rg.getRow(0, &r);
     r.initToNull();
