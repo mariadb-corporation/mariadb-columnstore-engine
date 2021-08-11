@@ -237,6 +237,9 @@ protected:
 
     void do_write(const ByteStream& msg, uint32_t magic, Stats* stats = NULL) const;
     ssize_t written(int fd, const uint8_t* ptr, size_t nbytes) const;
+    bool readFixedSizeData(struct pollfd* pfd, uint8_t* buffer, const size_t numberOfBytes,
+                           const struct ::timespec* timeout, bool* isTimeOut, Stats* stats,
+                           int64_t msec) const;
 
     SocketParms fSocketParms;	/// The socket parms
     size_t fBlocksize;
