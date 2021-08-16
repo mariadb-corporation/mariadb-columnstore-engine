@@ -97,7 +97,7 @@ namespace BRM
 
 namespace rowgroup
 {
-  struct Row;
+  class Row;
 };
 
 

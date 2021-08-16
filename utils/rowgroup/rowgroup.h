@@ -290,6 +290,11 @@ public:
         strings = ss;
     }
 
+    bool hasData() const
+    {
+        return rowData.get() != nullptr;
+    }
+
     // this will use the pre-configured Row to figure out where row # num is, then set the Row
     // to point to it.  It's a shortcut around using a RowGroup to do the same thing for cases
     // where it's inconvenient to instantiate one.
@@ -316,17 +321,16 @@ public:
         return (userDataStore ? (userDataStore->useUserDataMutex()) : false);
     }
 
+private:
     boost::shared_array<uint8_t> rowData;
     boost::shared_ptr<StringStore> strings;
     boost::shared_ptr<UserDataStore> userDataStore;
-private:
-    //boost::shared_array<uint8_t> rowData;
-    //boost::shared_ptr<StringStore> strings;
 
     // Need sig to support backward compat.  RGData can deserialize both forms.
     static const uint32_t RGDATA_SIG = 0xffffffff;  //won't happen for 'old' Rowgroup data
 
     friend class RowGroup;
+    friend class RowGroupStorage;
 };
 
 
@@ -1349,7 +1353,7 @@ inline void Row::setLongDoubleField(const long double& val, uint32_t colIndex)
     *reinterpret_cast<long double*>(p) = val;
 #ifdef MASK_LONGDOUBLE
     memset(p+10, 0, 6);
-#endif    
+#endif
 }
 
 inline void Row::setInt128Field(const int128_t& val, uint32_t colIndex)

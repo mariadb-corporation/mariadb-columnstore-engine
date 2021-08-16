@@ -14,14 +14,16 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA. 
-*/ 
+   MA 02110-1301, USA.
+*/
 #ifndef MCS_TSFLOAT128_H_INCLUDED
 #define MCS_TSFLOAT128_H_INCLUDED
 
 #include <cfloat>
+#include <cctype>
 #include <cstdint>
 #include <cstring>
+#include <string>
 #include "mcs_numeric_limits.h"
 
 #ifdef __aarch64__

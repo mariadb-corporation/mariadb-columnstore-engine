@@ -337,7 +337,7 @@ void WindowFunctionStep::AddSimplColumn(const vector<SimpleColumn*>& scs,
             jobInfo.windowDels.push_back(SRCP((*i)->clone()));
 // MCOL-3343 Enable this if we decide to allow Window Functions to run with
 // aggregates with no group by. MariaDB allows this. Nobody else in the world does.
-// There will be more work to get it to function if we try this.                
+// There will be more work to get it to function if we try this.
 //            jobInfo.windowSet.insert(getTupleKey(jobInfo, *i, true));
             scProjected.insert(UniqId(*i));
         }
@@ -499,7 +499,7 @@ void WindowFunctionStep::checkWindowFunction(CalpontSelectExecutionPlan* csep, J
             if (colSet.find(key) == colSet.end())
             {
                 jobInfo.deliveredCols.push_back(*j);
-                // MCOL-3435 Allow Window Functions to run with aggregates with 
+                // MCOL-3435 Allow Window Functions to run with aggregates with
                 // no group by by inserting a group by for window parameters.
                 if (hasAggregation)
                 {
@@ -507,7 +507,7 @@ void WindowFunctionStep::checkWindowFunction(CalpontSelectExecutionPlan* csep, J
                     if (dynamic_cast<AggregateColumn*>(j->get()) == NULL)
                     {
                         bool bFound = false;
-                        for (std::vector<SRCP>::iterator igpc = csep->groupByCols().begin(); 
+                        for (std::vector<SRCP>::iterator igpc = csep->groupByCols().begin();
                                                          igpc < csep->groupByCols().end();
                                                          ++igpc)
                         {
@@ -1096,7 +1096,7 @@ void WindowFunctionStep::doPostProcessForSelect()
 
     for (int64_t i = begin; i < end; i++)
     {
-        if (rgData.rowData.get() == NULL)
+        if (rgData.hasData())
         {
             rgCapacity = ((rowsLeft > 8192) ? 8192 : rowsLeft);
             rowsLeft -= rgCapacity;
