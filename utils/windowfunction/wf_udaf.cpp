@@ -65,7 +65,7 @@ boost::shared_ptr<WindowFunctionType> WF_udaf::makeFunction(int id, const string
     // Get the UDAnF function object
     WF_udaf* wfUDAF = (WF_udaf*)func.get();
     mcsv1sdk::mcsv1Context& udafContext = wfUDAF->getContext();
-    udafContext.setInterrupted(wfUDAF->getInterrupted());
+    udafContext.setInterrupted(wfUDAF->getInterruptedPtr());
     wfUDAF->resetData();
     return func;
 }
@@ -76,7 +76,7 @@ WF_udaf::WF_udaf(WF_udaf& rhs) :
     bInterrupted(rhs.getInterrupted()),
     fDistinct(rhs.getDistinct())
 {
-    getContext().setInterrupted(getInterrupted());
+    getContext().setInterrupted(getInterruptedPtr());
 }
 
 WindowFunctionType* WF_udaf::clone() const
