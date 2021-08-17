@@ -1096,7 +1096,7 @@ void WindowFunctionStep::doPostProcessForSelect()
 
     for (int64_t i = begin; i < end; i++)
     {
-        if (rgData.hasData())
+        if (!rgData.hasData())
         {
             rgCapacity = ((rowsLeft > 8192) ? 8192 : rowsLeft);
             rowsLeft -= rgCapacity;
