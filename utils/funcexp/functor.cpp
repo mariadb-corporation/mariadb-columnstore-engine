@@ -61,7 +61,7 @@ void Func::init()
     double* dp = reinterpret_cast<double*>(&dni);
     fDoubleNullVal = *dp;
 
-    fDoubleNullVal = joblist::LONGDOUBLENULL;
+    fLongDoubleNullVal = joblist::LONGDOUBLENULL;
 }
 
 
