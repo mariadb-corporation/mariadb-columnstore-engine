@@ -45,31 +45,15 @@ using namespace std;
 namespace
 {
 const uint64_t MAGIC_NUMBER = 0xfdc119a384d0778eULL;
-const uint64_t VERSION_NUM1 = 1;
-const uint64_t VERSION_NUM2 = 2;
 const uint64_t VERSION_NUM3 = 3;
-const int      PTR_SECTION_OFFSET = compress::CompressInterface::HDR_BUF_LEN;
+
 
 // version 1.1 of the chunk data has a short header
 // QuickLZ compressed data never has the high bit set on the first byte
-const uint8_t CHUNK_MAGIC1 = 0xff;
 const int SIG_OFFSET = 0;
 const int CHECKSUM_OFFSET = 1;
 const int LEN_OFFSET = 5;
 const unsigned HEADER_SIZE = 9;
-
-/* version 1.2 of the chunk data changes the hash function used to calculate
- * checksums.  We can no longer use the algorithm used in ver 1.1.  Everything
- * else is the same
- */
-const uint8_t CHUNK_MAGIC2 = 0xfe;
-
-/* version 2.0 of the chunk data uses a new compression algo. For us, because of
- * the finite number of block sizes we compress, the first byte of the compressed
- * data will always be 0x80, so it can't be confused with V1.0 data (that has no
- * header).
- */
-const uint8_t CHUNK_MAGIC3 = 0xfd;
 
 // The max number of lbids to be stored in segment file.
 const uint32_t LBID_MAX_SIZE = 10;

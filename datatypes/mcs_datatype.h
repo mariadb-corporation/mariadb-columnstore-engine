@@ -103,7 +103,7 @@ namespace rowgroup
 
 namespace execplan
 {
-  struct SimpleColumn;
+  class SimpleColumn;
 };
 
 

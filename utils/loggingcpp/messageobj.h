@@ -159,7 +159,7 @@ private:
 
 namespace std
 {
-template<> inline void swap<logging::Message>(logging::Message& lhs, logging::Message& rhs)
+template<> inline void swap<logging::Message>(logging::Message& lhs, logging::Message& rhs) noexcept
 {
     lhs.swap(rhs);
 }

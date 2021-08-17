@@ -166,6 +166,12 @@ protected:
   std::vector<uint32_t> offsets;
 };
 
+TEST (RRRR, NonNullTest)
+{
+    const int128_t intPtr = -42;
+    EXPECT_FALSE (datatypes::Decimal::isWideDecimalNullValue (intPtr));
+}
+
 TEST_F(RowDecimalTest, NonNullValueCheck)
 {
     rg.getRow(1, &r);

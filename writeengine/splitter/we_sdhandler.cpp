@@ -742,7 +742,7 @@ void WESDHandler::setup()
                 else
                 {
                     std::string aStr;
-                    aStr = "Encountered NULL WESplClient : " + PmId;
+                    aStr = std::string("Encountered NULL WESplClient : ") + std::to_string(PmId);
                     cout << aStr << endl;
                     fLog.logMsg( aStr, MSGLVL_ERROR );
                     throw WESdHandlerException(aStr);
@@ -974,7 +974,7 @@ void WESDHandler::checkForConnections()
             if (aNow - fWeSplClients[PmId]->getLastInTime() > 180)
             {
                 std::string aStr;
-                aStr = "Heartbeats missed - Non Responsive PM" + PmId;
+                aStr = std::string("Heartbeats missed - Non Responsive PM") + std::to_string(PmId);
                 fLog.logMsg( aStr, MSGLVL_ERROR );
                 fWeSplClients[PmId]->onDisconnect();
                 exit(1); //Otherwise; have to wait till write() comes out

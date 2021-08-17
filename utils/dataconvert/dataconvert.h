@@ -246,7 +246,7 @@ bool timeZoneToOffset(const char *str, std::string::size_type length, long *offs
         return 1;
 
     *offset = offset_tmp;
- 
+
     return 0;
 }
 
@@ -731,11 +731,11 @@ struct Time
     signed is_neg  : 1;
 
     // NULL column value = 0xFFFFFFFFFFFFFFFE
-    Time() : msecond (0xFFFFFE),
-        second (0xFF),
-        minute (0xFF),
-        hour (0xFFF),
-        day (0x7FF),
+    Time() : msecond (-2),
+        second (-1),
+        minute (-1),
+        hour (-1),
+        day (-1),
         is_neg (0b1)
     {}
 
@@ -763,12 +763,12 @@ struct Time
 inline
 void    Time::reset()
 {
-    msecond = 0xFFFFFE;
-    second  = 0xFF;
-    minute  = 0xFF;
-    hour    = 0xFFF;
+    msecond = -2;
+    second  = -1;
+    minute  = -1;
+    hour    = -1;
     is_neg  = 0b1;
-    day     = 0x7FF;
+    day     = -1;
 }
 
 inline
@@ -1326,13 +1326,13 @@ inline int128_t strtoll128(const char* data, bool& saturate, char** ep)
 
     if (*data == '\0')
     {
-        if (ep) 
+        if (ep)
             *ep = (char*)data;
         return res;
     }
 
     // skip leading whitespace characters
-    while (*data != '\0' && 
+    while (*data != '\0' &&
            (*data == ' ' || *data == '\t' || *data == '\n'))
         data++;
 

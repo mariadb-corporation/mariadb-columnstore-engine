@@ -210,10 +210,10 @@ public:
     {
         fBytesRcv = BytesRcv;
     }
-    void setBytesTx(uint32_t BytesTx)
+    void setBytesTx(uint32_t fBytes)
     {
         boost::mutex::scoped_lock aLock(fTxMutex);
-        fBytesTx = BytesTx;
+        fBytesTx = fBytes;
         aLock.unlock();
     }
     void updateBytesTx(uint32_t fBytes)

@@ -34,7 +34,7 @@
 namespace WriteEngine
 {
 class Log;
-struct ColumnInfo;
+class ColumnInfo;
 
 /** @brief A buffer class to store data written to column files
  *

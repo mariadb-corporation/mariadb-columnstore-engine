@@ -105,7 +105,7 @@ static const float128_t mcs_fl_one = 1.0, mcs_fl_Zero[] = {0.0, -0.0,};
 template<> class numeric_limits<float128_t> {
   public:
     static constexpr bool is_specialized = true;
-    static constexpr float128_t max()
+    static float128_t max()
     {
       return mcs_ieee854_float128{ .ieee = {0xffffffff,
                                             0xffffffff,
@@ -114,7 +114,7 @@ template<> class numeric_limits<float128_t> {
                                             0x7ffe,
                                             0x0}}.value;
     }
-    static constexpr float128_t min()
+    static float128_t min()
     {
       return mcs_ieee854_float128{ .ieee = {0x0,
                                             0x0,

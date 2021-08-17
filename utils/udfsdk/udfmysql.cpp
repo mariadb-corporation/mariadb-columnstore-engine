@@ -33,68 +33,6 @@ inline double cvtArgToDouble(int t, const char* v)
 
     return d;
 }
-inline long long cvtArgToInt(int t, const char* v)
-{
-    long long ll = 0;
-
-    switch (t)
-    {
-        case INT_RESULT:
-            ll = *((long long*)v);
-            break;
-
-        case REAL_RESULT:
-            ll = (long long)(*((double*)v));
-            break;
-
-        case DECIMAL_RESULT:
-        case STRING_RESULT:
-            ll = strtoll(v, 0, 0);
-            break;
-
-        case ROW_RESULT:
-            break;
-    }
-
-    return ll;
-}
-inline string cvtArgToString(int t, const char* v)
-{
-    string str;
-
-    switch (t)
-    {
-        case INT_RESULT:
-        {
-            long long ll;
-            ll = *((long long*)v);
-            ostringstream oss;
-            oss << ll;
-            str = oss.str();
-            break;
-        }
-
-        case REAL_RESULT:
-        {
-            double d;
-            d = *((double*)v);
-            ostringstream oss;
-            oss << d;
-            str = oss.str();
-            break;
-        }
-
-        case DECIMAL_RESULT:
-        case STRING_RESULT:
-            str = v;
-            break;
-
-        case ROW_RESULT:
-            break;
-    }
-
-    return str;
-}
 }
 
 /****************************************************************************
@@ -494,16 +432,16 @@ extern "C"
 //=======================================================================
 
     /**
-     * avgx connector stub. Exactly the same functionality as the 
-     * built in avg() function. Use to test the performance of the 
-     * API 
+     * avgx connector stub. Exactly the same functionality as the
+     * built in avg() function. Use to test the performance of the
+     * API
      */
     struct avgx_data
     {
       double	sumx;
       int64_t   cnt;
     };
-     
+
     #ifdef _MSC_VER
     __declspec(dllexport)
     #endif
@@ -534,7 +472,7 @@ extern "C"
     void avgx_deinit(UDF_INIT* initid)
     {
     	free(initid->ptr);
-    }	
+    }
 
     #ifdef _MSC_VER
     __declspec(dllexport)
@@ -596,7 +534,7 @@ extern "C"
     void distinct_count_deinit(UDF_INIT* initid)
     {
     //	free(initid->ptr);
-    }	
+    }
 
     #ifdef _MSC_VER
     __declspec(dllexport)

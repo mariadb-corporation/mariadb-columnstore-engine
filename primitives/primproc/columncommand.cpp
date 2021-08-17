@@ -151,7 +151,7 @@ void ColumnCommand::makeStepMsg()
 template <int W>
 void ColumnCommand::_loadData()
 {
-    using ByteStreamType = typename messageqcpp::ByteStreamType<W>::type; 
+    using ByteStreamType = typename messageqcpp::ByteStreamType<W>::type;
     uint32_t wasCached;
     uint32_t blocksRead;
     uint16_t _mask;
@@ -1016,7 +1016,8 @@ ColumnCommand* ColumnCommandFabric::createCommand(messageqcpp::ByteStream& bs)
            break;
 
         default:
-           throw NotImplementedExcept("ColumnCommandFabric::createCommand: unsupported width " + colType.colWidth);
+           throw NotImplementedExcept(std::string("ColumnCommandFabric::createCommand: unsupported width ")
+                                        + std::to_string(colType.colWidth));
     }
 
     return nullptr;
@@ -1024,31 +1025,32 @@ ColumnCommand* ColumnCommandFabric::createCommand(messageqcpp::ByteStream& bs)
 
 ColumnCommand* ColumnCommandFabric::duplicate(const ColumnCommandUniquePtr& rhs)
 {
-    if (LIKELY(typeid(*rhs) == typeid(ColumnCommandInt64)))
+    auto & command = *rhs;
+    if (LIKELY(typeid(command) == typeid(ColumnCommandInt64)))
     {
         ColumnCommandInt64* ret = new ColumnCommandInt64();
         *ret = *dynamic_cast<ColumnCommandInt64*>(rhs.get());
         return ret;
     }
-    else if (typeid(*rhs) == typeid(ColumnCommandInt128))
+    else if (typeid(command) == typeid(ColumnCommandInt128))
     {
         ColumnCommandInt128* ret = new ColumnCommandInt128();
         *ret = *dynamic_cast<ColumnCommandInt128*>(rhs.get());
         return ret;
     }
-    else if (typeid(*rhs) == typeid(ColumnCommandInt8))
+    else if (typeid(command) == typeid(ColumnCommandInt8))
     {
         ColumnCommandInt8* ret = new ColumnCommandInt8();
         *ret = *dynamic_cast<ColumnCommandInt8*>(rhs.get());
         return ret;
     }
-    else if (typeid(*rhs) == typeid(ColumnCommandInt16))
+    else if (typeid(command) == typeid(ColumnCommandInt16))
     {
         ColumnCommandInt16* ret = new ColumnCommandInt16();
         *ret = *dynamic_cast<ColumnCommandInt16*>(rhs.get());
         return ret;
     }
-    else if (typeid(*rhs) == typeid(ColumnCommandInt32))
+    else if (typeid(command) == typeid(ColumnCommandInt32))
     {
         ColumnCommandInt32* ret = new ColumnCommandInt32();
         *ret = *dynamic_cast<ColumnCommandInt32*>(rhs.get());

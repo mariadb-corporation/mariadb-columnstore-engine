@@ -32,10 +32,10 @@ class StoreFieldMariaDB: public StoreField
   Field *m_field;
   const CalpontSystemCatalog::ColType &m_type;
 public:
-  StoreFieldMariaDB(Field *f, CalpontSystemCatalog::ColType &type)
+  StoreFieldMariaDB(Field *f, const CalpontSystemCatalog::ColType &type)
    :m_field(f), m_type(type)
   { }
-  const CalpontSystemCatalog::ColType &type() const { return m_type; }
+  //const CalpontSystemCatalog::ColType &type() const { return m_type; }
   int32_t colWidth() const override { return m_type.colWidth; }
   int32_t precision() const override { return m_type.precision; }
   int32_t scale() const override { return m_type.scale; }
