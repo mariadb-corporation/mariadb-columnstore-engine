@@ -40,7 +40,7 @@
                               src_restrictions, \
                               clobb) \
         ::memcpy((dst), (src), sizeof(int128_t));
-#elif defined(__GNUC__) && (__GNUC___ > 7)
+#elif defined(__GNUC__) && (__GNUC___ > 7) || defined(__clang__)
     #define MACRO_VALUE_PTR_128(dst, \
                                 dst_restrictions, \
                                 src, \
