@@ -61,6 +61,7 @@ using namespace logging;
 #include "ha_mcs_sysvars.h"
 #include "ha_subquery.h"
 #include "ha_mcs_pushdown.h"
+#include "ha_tzinfo.h"
 using namespace cal_impl_if;
 
 #include "calpontselectexecutionplan.h"
@@ -4177,6 +4178,63 @@ ReturnedColumn* buildFunctionColumn(
             }
         }
 
+        // Take the value of to/from TZ data and check if its a description or offset via
+        // my_tzinfo_find. Offset value will leave the corresponding tzinfo funcParms empty.
+        // while descriptions will lookup the time_zone_info structure and serialize for use
+        // in primproc func_convert_tz
+        if (funcName == "convert_tz")
+        {
+            messageqcpp::ByteStream bs;
+            string tzinfo;
+            SimpleColumn* scCheck;
+            // MCOL-XXXX There is no way currently to perform this lookup when the timezone description
+            // comes from another table of timezone descriptions.
+            // 1. Move proc code into plugin where it will have access to this table data
+            // 2. Create a library that primproc can use to access the time zone data tables.
+            // for now throw a message that this is not supported
+            scCheck = dynamic_cast<SimpleColumn*>(funcParms[1]->data());
+            if (scCheck)
+            {
+                gwi.fatalParseError = true;
+                gwi.parseErrorText = "convert_tz with parameter column_name in a Columnstore table";
+                setError(gwi.thd, ER_NOT_SUPPORTED_YET, gwi.parseErrorText, gwi);
+                return NULL;
+            }
+            scCheck = dynamic_cast<SimpleColumn*>(funcParms[2]->data());
+            if (scCheck)
+            {
+                gwi.fatalParseError = true;
+                gwi.parseErrorText = "convert_tz with parameter column_name in a Columnstore table";
+                setError(gwi.thd, ER_NOT_SUPPORTED_YET, gwi.parseErrorText, gwi);
+                return NULL;
+            }
+            dataconvert::TIME_ZONE_INFO* from_tzinfo = my_tzinfo_find(gwi.thd, ifp->arguments()[1]->val_str());
+            dataconvert::TIME_ZONE_INFO* to_tzinfo = my_tzinfo_find(gwi.thd, ifp->arguments()[2]->val_str());
+            if (from_tzinfo)
+            {
+                serializeTimezoneInfo(bs,from_tzinfo);
+                uint32_t length = bs.length();
+                uint8_t *buf = new uint8_t[length];
+                bs >> buf;
+                tzinfo = string((char*)buf, length);
+            }
+            sptp.reset(new ParseTree(new ConstantColumn(tzinfo)));
+            (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+            funcParms.push_back(sptp);
+            tzinfo.clear();
+            if (to_tzinfo)
+            {
+                serializeTimezoneInfo(bs,to_tzinfo);
+                uint32_t length = bs.length();
+                uint8_t *buf = new uint8_t[length];
+                bs >> buf;
+                tzinfo = string((char*)buf, length);
+            }
+            sptp.reset(new ParseTree(new ConstantColumn(tzinfo)));
+            (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+            funcParms.push_back(sptp);
+            tzinfo.clear();
+        }
         if (funcName == "sysdate")
         {
             gwi.no_parm_func_list.push_back(fc);

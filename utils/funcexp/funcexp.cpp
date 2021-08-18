@@ -104,6 +104,7 @@ FuncExp::FuncExp()
     fFuncMap["cos"] = new Func_cos();
     fFuncMap["cot"] = new Func_cot();
     fFuncMap["convert"] = new Func_cast_char();	//dlh
+    fFuncMap["convert_tz"] = new Func_convert_tz(); //BT
     fFuncMap["crc32"] = new Func_crc32();
     fFuncMap["date_add_interval"] = new Func_date_add(); //dlh
     fFuncMap["date_format"] = new Func_date_format();
