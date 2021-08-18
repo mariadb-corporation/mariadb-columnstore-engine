@@ -460,7 +460,7 @@ int RedistributeControlThread::makeRedistributePlan()
                     {
                         if (targetDbroot == targetDbroots.end())
                         {
-                            targetDbroot == targetDbroots.begin();
+                            targetDbroot = targetDbroots.begin();
                         }
 
                         if (dbPartVec[*targetDbroot].size() < partCount)
