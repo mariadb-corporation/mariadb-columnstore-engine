@@ -213,7 +213,7 @@ public:
     void setBytesTx(uint32_t BytesTx)
     {
         boost::mutex::scoped_lock aLock(fTxMutex);
-        BytesTx = BytesTx;
+        fBytesTx = BytesTx;
         aLock.unlock();
     }
     void updateBytesTx(uint32_t fBytes)
