@@ -74,7 +74,7 @@ public:
     {
         return bInterrupted;
     }
-    bool getInterruptedPtr()
+    bool * getInterruptedPtr()
     {
         return &bInterrupted;
     }
@@ -98,7 +98,7 @@ protected:
     bool bHasDropValue;                   // Set to false when we discover the UDAnF doesn't implement dropValue.
     // To hold distinct values and their counts
 	typedef std::tr1::unordered_map<static_any::any, uint64_t, DistinctHasher, DistinctEqual> DistinctMap;
-	DistinctMap fDistinctMap;             
+	DistinctMap fDistinctMap;
 
     static_any::any fValOut;              // The return value
 
