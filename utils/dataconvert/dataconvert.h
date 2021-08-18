@@ -53,6 +53,9 @@
 #include "common/branchpred.h"
 
 
+#include "bytestream.h"
+#include "errorids.h"
+
 // remove this block if the htonll is defined in library
 #ifdef __linux__
 #include <endian.h>
@@ -79,6 +82,9 @@ inline uint64_t htonll(uint64_t n)
 }
 #endif //_MSC_VER
 #endif //__linux__
+
+#define LEAPS_THRU_END_OF(y)  ((y) / 4 - (y) / 100 + (y) / 400)
+#define isleap(y) (((y) % 4) == 0 && (((y) % 100) != 0 || ((y) % 400) == 0))
 
 // this method evalutes the uint64 that stores a char[] to expected value
 inline uint64_t uint64ToStr(uint64_t n)
@@ -181,6 +187,116 @@ struct MySQLTime
         hour = minute = second = second_part = 0;
         time_type = CALPONTDATETIME_ENUM;
     }
+};
+
+/* Structure describing local time type (e.g. Moscow summer time (MSD)) */
+typedef struct ttinfo
+{
+  long tt_gmtoff; // Offset from UTC in seconds
+  uint tt_isdst;   // Is daylight saving time or not. Used to set tm_isdst
+#ifdef ABBR_ARE_USED
+  uint tt_abbrind; // Index of start of abbreviation for this time type.
+#endif
+  /*
+    We don't use tt_ttisstd and tt_ttisgmt members of original elsie-code
+    struct since we don't support POSIX-style TZ descriptions in variables.
+  */
+} TRAN_TYPE_INFO;
+
+/* Structure describing leap-second corrections. */
+typedef struct lsinfo
+{
+  int64_t   ls_trans; // Transition time
+  long      ls_corr;  // Correction to apply
+} LS_INFO;
+
+/*
+  Structure with information describing ranges of my_time_t shifted to local
+  time (my_time_t + offset). Used for local MYSQL_TIME -> my_time_t conversion.
+  See comments for TIME_to_gmt_sec() for more info.
+*/
+typedef struct revtinfo
+{
+  long rt_offset; // Offset of local time from UTC in seconds
+  uint rt_type;    // Type of period 0 - Normal period. 1 - Spring time-gap
+} REVT_INFO;
+
+/*
+  Structure which fully describes time zone which is
+  described in our db or in zoneinfo files.
+*/
+typedef struct st_time_zone_info
+{
+  uint leapcnt;  // Number of leap-second corrections
+  uint timecnt;  // Number of transitions between time types
+  uint typecnt;  // Number of local time types
+  uint charcnt;  // Number of characters used for abbreviations
+  uint revcnt;   // Number of transition descr. for TIME->my_time_t conversion
+  /* The following are dynamical arrays are allocated in MEM_ROOT */
+  int64_t *ats;       // Times of transitions between time types
+  unsigned char *types; // Local time types for transitions
+  TRAN_TYPE_INFO *ttis; // Local time types descriptions
+#ifdef ABBR_ARE_USED
+  /* Storage for local time types abbreviations. They are stored as ASCIIZ */
+  char *chars;
+#endif
+  /*
+    Leap seconds corrections descriptions, this array is shared by
+    all time zones who use leap seconds.
+  */
+  LS_INFO *lsis;
+  /*
+    Starting points and descriptions of shifted my_time_t (my_time_t + offset)
+    ranges on which shifted my_time_t -> my_time_t mapping is linear or undefined.
+    Used for tm -> my_time_t conversion.
+  */
+  int64_t   *revts;
+  REVT_INFO *revtis;
+  /*
+    Time type which is used for times smaller than first transition or if
+    there are no transitions at all.
+  */
+  TRAN_TYPE_INFO *fallback_tti;
+
+} TIME_ZONE_INFO;
+
+inline void serializeTimezoneInfo(messageqcpp::ByteStream& bs, TIME_ZONE_INFO* tz)
+{
+    bs << (uint) tz->leapcnt;
+    bs << (uint) tz->timecnt;
+    bs << (uint) tz->typecnt;
+    bs << (uint) tz->charcnt;
+    bs << (uint) tz->revcnt;
+
+    // going to put size in front of these dynamically sized arrays
+    // and use deserializeInlineVector on the other side
+    bs << (uint64_t) tz->timecnt;
+    bs.append((uint8_t*)tz->ats,(tz->timecnt*sizeof(int64_t)));
+    bs << (uint64_t) tz->timecnt;
+    bs.append((uint8_t*)tz->types,tz->timecnt);
+    bs << (uint64_t) tz->typecnt;
+    bs.append((uint8_t*)tz->ttis,(tz->typecnt*sizeof(TRAN_TYPE_INFO)));
+#ifdef ABBR_ARE_USED
+    bs << (uint) tz->charcnt;
+    bs.append((uint8_t*)tz->chars,tz->charcnt);
+#endif
+    bs << (uint64_t) tz->leapcnt;
+    bs.append((uint8_t*)tz->lsis,(tz->leapcnt*sizeof(LS_INFO)));
+    bs << (uint64_t) (tz->revcnt + 1);
+    bs.append((uint8_t*)tz->revts,((tz->revcnt + 1)*sizeof(int64_t)));
+    bs << (uint64_t) tz->revcnt;
+    bs.append((uint8_t*)tz->revtis,(tz->revcnt*sizeof(REVT_INFO)));
+    bs << (uint64_t) tz->typecnt;
+    bs.append((uint8_t*)tz->fallback_tti,(tz->typecnt*sizeof(TRAN_TYPE_INFO)));
+};
+
+inline void unserializeTimezoneInfo(messageqcpp::ByteStream& bs, TIME_ZONE_INFO* tz)
+{
+    bs >> (uint&)tz->leapcnt;
+    bs >> (uint&)tz->timecnt;
+    bs >> (uint&)tz->typecnt;
+    bs >> (uint&)tz->charcnt;
+    bs >> (uint&)tz->revcnt;
 };
 
 /**
@@ -631,12 +747,11 @@ inline int64_t mySQLTimeToGmtSec(const MySQLTime& time,
         if (timeZoneToOffset(timeZone.c_str(), timeZone.size(), &offset))
         {
             isValid = false;
-            return 0;
+            return -1;
         }
         seconds = secSinceEpoch(time.year, time.month, time.day,
                                 time.hour, time.minute, time.second) - offset;
     }
-
     /* make sure we have legit timestamps (i.e. we didn't over/underflow anywhere above) */
     if (seconds >= MIN_TIMESTAMP_VALUE && seconds <= MAX_TIMESTAMP_VALUE)
         return seconds;
@@ -646,6 +761,271 @@ inline int64_t mySQLTimeToGmtSec(const MySQLTime& time,
 
 }
 
+
+inline uint find_time_range(int64_t t, const int64_t *range_boundaries, uint higher_bound)
+{
+  uint i, lower_bound= 0;
+
+  /*
+    Function will work without this assertion but result would be meaningless.
+  */
+  idbassert(higher_bound > 0 && t >= range_boundaries[0]);
+
+  /*
+    Do binary search for minimal interval which contain t. We preserve:
+    range_boundaries[lower_bound] <= t < range_boundaries[higher_bound]
+    invariant and decrease this higher_bound - lower_bound gap twice
+    times on each step.
+  */
+
+  while (higher_bound - lower_bound > 1)
+  {
+    i= (lower_bound + higher_bound) >> 1;
+    if (range_boundaries[i] <= t)
+      lower_bound= i;
+    else
+      higher_bound= i;
+  }
+  return lower_bound;
+}
+
+inline int64_t TIME_to_gmt_sec(const MySQLTime& time, const TIME_ZONE_INFO *sp, uint32_t* error_code)
+{
+  int64_t local_t;
+  uint saved_seconds;
+  uint i;
+  int shift= 0;
+  //DBUG_ENTER("TIME_to_gmt_sec");
+
+  if (!validateTimestampRange(time))
+  {
+    //*error_code= ER_WARN_DATA_OUT_OF_RANGE;
+    //DBUG_RETURN(0);
+      *error_code = logging::ERR_FUNC_OUT_OF_RANGE_RESULT;
+      return 0;
+  }
+
+  /* We need this for correct leap seconds handling */
+  if (time.second < SECS_PER_MIN)
+    saved_seconds= 0;
+  else
+    saved_seconds= time.second;
+
+  /*
+    NOTE: to convert full my_time_t range we do a shift of the
+    boundary dates here to avoid overflow of my_time_t.
+    We use alike approach in my_system_gmt_sec().
+
+    However in that function we also have to take into account
+    overflow near 0 on some platforms. That's because my_system_gmt_sec
+    uses localtime_r(), which doesn't work with negative values correctly
+    on platforms with unsigned time_t (QNX). Here we don't use localtime()
+    => we negative values of local_t are ok.
+  */
+
+  if ((time.year == MAX_TIMESTAMP_YEAR) && (time.month == 1) && time.day > 4)
+  {
+    /*
+      We will pass (time.day - shift) to sec_since_epoch(), and
+      want this value to be a positive number, so we shift
+      only dates > 4.01.2038 (to avoid owerflow).
+    */
+    shift= 2;
+  }
+
+
+  local_t= secSinceEpoch(time.year, time.month, (time.day - shift),
+                           time.hour, time.minute,
+                           saved_seconds ? 0 : time.second);
+
+  /* We have at least one range */
+  idbassert(sp->revcnt >= 1);
+
+  if (local_t < sp->revts[0] || local_t > sp->revts[sp->revcnt])
+  {
+    /*
+      This means that source time can't be represented as my_time_t due to
+      limited my_time_t range.
+    */
+      *error_code = logging::ERR_FUNC_OUT_OF_RANGE_RESULT;
+      return 0;
+  }
+
+  /* binary search for our range */
+  i= find_time_range(local_t, sp->revts, sp->revcnt);
+
+  /*
+    As there are no offset switches at the end of TIMESTAMP range,
+    we could simply check for overflow here (and don't need to bother
+    about DST gaps etc)
+  */
+  if (shift)
+  {
+    if (local_t > (int64_t) (MAX_TIMESTAMP_VALUE - shift * SECS_PER_DAY +
+                               sp->revtis[i].rt_offset - saved_seconds))
+    {
+        *error_code = logging::ERR_FUNC_OUT_OF_RANGE_RESULT;
+        return 0;                         /* my_time_t overflow */
+    }
+    local_t+= shift * SECS_PER_DAY;
+  }
+
+  if (sp->revtis[i].rt_type)
+  {
+    /*
+      Oops! We are in spring time gap.
+      May be we should return error here?
+      Now we are returning my_time_t value corresponding to the
+      beginning of the gap.
+    */
+    //*error_code= ER_WARN_INVALID_TIMESTAMP;
+    local_t= sp->revts[i] - sp->revtis[i].rt_offset + saved_seconds;
+  }
+  else
+    local_t= local_t - sp->revtis[i].rt_offset + saved_seconds;
+
+  /* check for TIMESTAMP_MAX_VALUE was already done above */
+  if (local_t < MIN_TIMESTAMP_VALUE)
+  {
+      *error_code= logging::ERR_FUNC_OUT_OF_RANGE_RESULT;
+      return 0;
+  }
+
+  return local_t;
+}
+
+static const TRAN_TYPE_INFO* find_transition_type(int64_t t, const TIME_ZONE_INFO *sp)
+{
+  if ((sp->timecnt == 0 || t < sp->ats[0]))
+  {
+    /*
+      If we have not any transitions or t is before first transition let
+      us use fallback time type.
+    */
+    return sp->fallback_tti;
+  }
+
+  /*
+    Do binary search for minimal interval between transitions which
+    contain t. With this localtime_r on real data may takes less
+    time than with linear search (I've seen 30% speed up).
+  */
+  return &(sp->ttis[sp->types[find_time_range(t, sp->ats, sp->timecnt)]]);
+}
+
+static void sec_to_TIME(MySQLTime * tmp, int64_t t, long offset)
+{
+  long days;
+  long rem;
+  int y;
+  int yleap;
+  const uint *ip;
+
+  days= (long) (t / SECS_PER_DAY);
+  rem=  (long) (t % SECS_PER_DAY);
+
+  /*
+    We do this as separate step after dividing t, because this
+    allows us handle times near my_time_t bounds without overflows.
+  */
+  rem+= offset;
+  while (rem < 0)
+  {
+    rem+= SECS_PER_DAY;
+    days--;
+  }
+  while (rem >= SECS_PER_DAY)
+  {
+    rem -= SECS_PER_DAY;
+    days++;
+  }
+  tmp->hour= (uint)(rem / SECS_PER_HOUR);
+  rem= rem % SECS_PER_HOUR;
+  tmp->minute= (uint)(rem / SECS_PER_MIN);
+  /*
+    A positive leap second requires a special
+    representation.  This uses "... ??:59:60" et seq.
+  */
+  tmp->second= (uint)(rem % SECS_PER_MIN);
+
+  y= EPOCH_YEAR;
+  while (days < 0 || days >= (long)year_lengths[yleap= isleap(y)])
+  {
+    int newy;
+
+    newy= y + days / DAYS_PER_NYEAR;
+    if (days < 0)
+      newy--;
+    days-= (newy - y) * DAYS_PER_NYEAR +
+           LEAPS_THRU_END_OF(newy - 1) -
+           LEAPS_THRU_END_OF(y - 1);
+    y= newy;
+  }
+  tmp->year= y;
+
+  ip= mon_lengths[yleap];
+  for (tmp->month= 0; days >= (long) ip[tmp->month]; tmp->month++)
+    days= days - (long) ip[tmp->month];
+  tmp->month++;
+  tmp->day= (uint)(days + 1);
+
+  /* filling MySQL specific MYSQL_TIME members */
+  tmp->second_part= 0;
+  tmp->time_type= CALPONTDATETIME_ENUM;
+}
+
+inline void gmt_sec_to_TIME(MySQLTime *tmp, int64_t sec_in_utc, const TIME_ZONE_INFO *sp)
+{
+  const TRAN_TYPE_INFO *ttisp;
+  const LS_INFO *lp;
+  long  corr= 0;
+  int   hit= 0;
+  int   i;
+
+  /*
+    Find proper transition (and its local time type) for our sec_in_utc value.
+    Funny but again by separating this step in function we receive code
+    which very close to glibc's code. No wonder since they obviously use
+    the same base and all steps are sensible.
+  */
+  ttisp= find_transition_type(sec_in_utc, sp);
+
+  /*
+    Let us find leap correction for our sec_in_utc value and number of extra
+    secs to add to this minute.
+    This loop is rarely used because most users will use time zones without
+    leap seconds, and even in case when we have such time zone there won't
+    be many iterations (we have about 22 corrections at this moment (2004)).
+  */
+  for ( i= sp->leapcnt; i-- > 0; )
+  {
+    lp= &sp->lsis[i];
+    if (sec_in_utc >= lp->ls_trans)
+    {
+      if (sec_in_utc == lp->ls_trans)
+      {
+        hit= ((i == 0 && lp->ls_corr > 0) ||
+              lp->ls_corr > sp->lsis[i - 1].ls_corr);
+        if (hit)
+        {
+          while (i > 0 &&
+                 sp->lsis[i].ls_trans == sp->lsis[i - 1].ls_trans + 1 &&
+                 sp->lsis[i].ls_corr == sp->lsis[i - 1].ls_corr + 1)
+          {
+            hit++;
+            i--;
+          }
+        }
+      }
+      corr= lp->ls_corr;
+      break;
+    }
+  }
+
+  sec_to_TIME(tmp, sec_in_utc, ttisp->tt_gmtoff - corr);
+
+  tmp->second+= hit;
+}
 
 /** @brief a structure to hold a date
  */
