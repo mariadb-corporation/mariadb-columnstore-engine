@@ -87,13 +87,13 @@
 namespace mcsv1sdk
 {
 // The return type of the CREATE AGGREGATE statement
-enum enum_mariadb_return_type { 
+enum enum_mariadb_return_type {
     MYSQL_TYPE_DOUBLE = 5,
     MYSQL_TYPE_LONGLONG = 8,
     MYSQL_TYPE_VARCHAR=15,
     MYSQL_TYPE_NEWDECIMAL = 246
 };
-    
+
 /**
  * A map from name to function object.
  *
@@ -363,13 +363,13 @@ public:
 
     // Get the name of the function
     EXPORT const std::string& getName() const;
-    
+
     // Get the return type as set by CREATE AGGREGATE FUNCTION
     EXPORT enum_mariadb_return_type getMariaDBReturnType() const;
 
     EXPORT mcsv1Context& operator=(const mcsv1Context& rhs);
     EXPORT mcsv1Context& copy(const mcsv1Context& rhs);
-    
+
     // Character collation support
     EXPORT void setCharsetNumber(uint32_t csNum);
     EXPORT uint32_t getCharsetNumber(); // Returns the unique ID for the language/collation
@@ -446,7 +446,7 @@ struct ColumnDatum
     uint32_t    precision; // If dataType is a DECIMAL type
     std::string alias;     // Only filled in for init()
     uint32_t    charsetNumber; // For string collations
-    ColumnDatum() : dataType(execplan::CalpontSystemCatalog::UNDEFINED), 
+    ColumnDatum() : dataType(execplan::CalpontSystemCatalog::UNDEFINED),
                     scale(0), precision(-1), charsetNumber(8) {};
 };
 
@@ -860,12 +860,7 @@ inline void mcsv1Context::setInterrupted(bool* interrupted)
 
 inline bool mcsv1Context::getInterrupted() const
 {
-    if (bInterrupted)
-    {
-        return bInterrupted;
-    }
-
-    return false;
+    return bInterrupted && *bInterrupted;
 }
 
 inline void mcsv1Context::setUserDataSize(int bytes)
