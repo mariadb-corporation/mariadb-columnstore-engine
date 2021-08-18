@@ -1211,7 +1211,7 @@ string BetweenPredicate::getPredicateString() const
     between_predicate += fRH1ScalarExpression;
     between_predicate += " ";
     between_predicate += fOperator2;
-    between_predicate + " ";
+    between_predicate += " ";
     between_predicate += fRH2ScalarExpression;
 
     return between_predicate;
