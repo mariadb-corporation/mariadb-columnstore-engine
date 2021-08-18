@@ -290,9 +290,9 @@ b	17	b
 b	18	b
 a	19	a
 SELECT a, b, PERCENTILE_DISC(-0.9) WITHIN GROUP(ORDER BY b DESC) OVER(PARTITION BY b DESC) pd FROM t1;
-ERROR HY000: Internal error: IDB-9027: Argument '-0.9' is out of range.
+ERROR HY000: Internal error: MCS-9027: Argument '-0.9' is out of range.
 SELECT a, b, PERCENTILE_DISC(-1) WITHIN GROUP(ORDER BY b DESC) OVER(PARTITION BY b DESC) pd FROM t1;
-ERROR HY000: Internal error: IDB-9027: Argument '-1' is out of range.
+ERROR HY000: Internal error: MCS-9027: Argument '-1' is out of range.
 SELECT a, b, PERCENTILE_DISC(1.1) WITHIN GROUP(ORDER BY b DESC) OVER(PARTITION BY b DESC) pd FROM t1;
-ERROR HY000: Internal error: IDB-9027: Argument '1.1' is out of range.
+ERROR HY000: Internal error: MCS-9027: Argument '1.1' is out of range.
 DROP DATABASE mcs133_db;

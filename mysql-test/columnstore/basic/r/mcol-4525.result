@@ -11,7 +11,7 @@ CREATE TABLE t1 (a int, b int);
 INSERT INTO t1 VALUES (1, 1), (5, 0);
 SET columnstore_select_handler=ON;
 SELECT a xor b FROM t1;
-ERROR 42000: The storage engine for the table doesn't support IDB-2030: Predicate and Logic operators can not be used where an expression is expected.
+ERROR 42000: The storage engine for the table doesn't support MCS-2030: Predicate and Logic operators can not be used where an expression is expected.
 SET columnstore_select_handler=AUTO;
 SELECT a xor b FROM t1;
 a xor b
@@ -19,7 +19,7 @@ a xor b
 1
 SET columnstore_select_handler=ON;
 SELECT DISTINCT a FROM t1 WHERE a IN (SELECT a FROM t1) OR a IN (SELECT a FROM t1);
-ERROR HY000: Internal error: IDB-3033: Correlated subquery within OR operator is currently not supported.
+ERROR HY000: Internal error: MCS-3033: Correlated subquery within OR operator is currently not supported.
 SET columnstore_select_handler=AUTO;
 SELECT DISTINCT a FROM t1 WHERE a IN (SELECT a FROM t1) OR a IN (SELECT a FROM t1);
 a
@@ -30,7 +30,7 @@ CREATE TABLE bug4767 (c1 float, c2 double);
 INSERT INTO bug4767 VALUES (1.234, 3.4556), (2.3345456, 2.3345456);
 SET columnstore_select_handler=ON;
 SELECT * FROM bug4767 a JOIN bug4767 b ON (a.c1=b.c2);
-ERROR HY000: Internal error: IDB-1002: 'a' and 'b' have incompatible column type specified for join condition.
+ERROR HY000: Internal error: MCS-1002: 'a' and 'b' have incompatible column type specified for join condition.
 SET columnstore_select_handler=AUTO;
 SELECT * FROM bug4767 a JOIN bug4767 b ON (a.c1=b.c2);
 c1	c2	c1	c2
@@ -41,7 +41,7 @@ CREATE TABLE t2 (b int);
 INSERT INTO t2 VALUES (2);
 SET columnstore_select_handler=ON;
 SELECT a FROM t1 WHERE a IN (SELECT a FROM t2);
-ERROR HY000: Internal error: IDB-1000: 't1' and 't2' are not joined.
+ERROR HY000: Internal error: MCS-1000: 't1' and 't2' are not joined.
 SET columnstore_select_handler=AUTO;
 SELECT a FROM t1 WHERE a IN (SELECT a FROM t2);
 a
@@ -60,7 +60,7 @@ INSERT INTO s VALUES (1, 1);
 INSERT INTO s VALUES (9, 9);
 SET columnstore_select_handler=ON;
 SELECT 'q1', l.c1, r.c1 FROM l LEFT JOIN r ON l.c1 = r.c1 AND l.c1 IN (SELECT c1 FROM s) ORDER BY 1, 2, 3;
-ERROR HY000: Internal error: IDB-1015: Subquery on OUTER JOIN ON clause is currently not supported.
+ERROR HY000: Internal error: MCS-1015: Subquery on OUTER JOIN ON clause is currently not supported.
 SET columnstore_select_handler=AUTO;
 SELECT 'q1', l.c1, r.c1 FROM l LEFT JOIN r ON l.c1 = r.c1 AND l.c1 IN (SELECT c1 FROM s) ORDER BY 1, 2, 3;
 q1	c1	c1
@@ -78,9 +78,9 @@ INSERT INTO t1 VALUES(10,'sam',10);
 INSERT INTO t1 VALUES(10,'bob',10);
 SET columnstore_select_handler=ON;
 SELECT SUM(col1) AS col2 FROM t1 GROUP BY col2;
-ERROR 42000: The storage engine for the table doesn't support IDB-2016: Non supported item 'col2' on the GROUP BY list.
+ERROR 42000: The storage engine for the table doesn't support MCS-2016: Non supported item 'col2' on the GROUP BY list.
 SELECT col1 c FROM t1 ORDER BY AVG(col1);
-ERROR HY000: Internal error: IDB-2021: 'c' is not in GROUP BY clause. All non-aggregate columns in the SELECT and ORDER BY clause must be included in the GROUP BY clause.
+ERROR HY000: Internal error: MCS-2021: 'c' is not in GROUP BY clause. All non-aggregate columns in the SELECT and ORDER BY clause must be included in the GROUP BY clause.
 SET columnstore_select_handler=AUTO;
 SELECT SUM(col1) AS col2 FROM t1 GROUP BY col2;
 col2
@@ -96,7 +96,7 @@ CREATE TABLE t1 (a int);
 INSERT INTO t1 VALUES (1);
 SET columnstore_select_handler=ON;
 SELECT minute(sleep(a)) FROM t1;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'minute' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'minute' isn't supported.
 SET columnstore_select_handler=AUTO;
 SELECT minute(sleep(a)) FROM t1;
 minute(sleep(a))
@@ -108,9 +108,9 @@ INSERT INTO t1 VALUES (1), (2);
 INSERT INTO t2 VALUES (2), (3);
 SET columnstore_select_handler=ON;
 SELECT SUM(a) FROM t1 WHERE EXISTS (SELECT MAX(a) FROM t2);
-ERROR HY000: Internal error: IDB-3008: Aggregate function in EXISTS subquery is currently not supported.
+ERROR HY000: Internal error: MCS-3008: Aggregate function in EXISTS subquery is currently not supported.
 SELECT * FROM t1 WHERE (a,a) < (SELECT a,a FROM t2 WHERE a=2);
-ERROR HY000: Internal error: IDB-3006: This operator cannot be used with lists.
+ERROR HY000: Internal error: MCS-3006: This operator cannot be used with lists.
 SET columnstore_select_handler=AUTO;
 SELECT SUM(a) FROM t1 WHERE EXISTS (SELECT MAX(a) FROM t2);
 SUM(a)
@@ -124,7 +124,7 @@ CREATE TABLE gen (i int, i2 int);
 INSERT INTO gen VALUES (1,0), (1,1), (1,2), (1,3), (1,4), (1,5), (1,6), (1,7), (1,8), (1,9);
 SET columnstore_select_handler=ON;
 SELECT i2, (SELECT MAX(g2.i2) FROM gen g2 WHERE g2.i = g1.i AND g2.i2 > g1.i2) sub FROM gen g1;
-ERROR HY000: Internal error: IDB-3035: Not equal comparison between a column within a subquery with an aggregate result and a column outside of the subquery is not supported.
+ERROR HY000: Internal error: MCS-3035: Not equal comparison between a column within a subquery with an aggregate result and a column outside of the subquery is not supported.
 SET columnstore_select_handler=AUTO;
 SELECT i2, (SELECT MAX(g2.i2) FROM gen g2 WHERE g2.i = g1.i AND g2.i2 > g1.i2) sub FROM gen g1;
 i2	sub
@@ -146,7 +146,7 @@ INSERT INTO t2 VALUES (2), (3);
 CREATE VIEW v1 AS SELECT a FROM t1 WHERE a > 1;
 SET columnstore_select_handler=ON;
 SELECT * FROM t1 LEFT JOIN (t2 AS t, v1) ON v1.a=t1.a ORDER BY 1;
-ERROR HY000: Internal error: IDB-1000: 'v1, t1' and 't' are not joined.
+ERROR HY000: Internal error: MCS-1000: 'v1, t1' and 't' are not joined.
 SET columnstore_select_handler=AUTO;
 SELECT * FROM t1 LEFT JOIN (t2 AS t, v1) ON v1.a=t1.a ORDER BY 1;
 a	a	a
@@ -175,7 +175,7 @@ c1 LEFT JOIN
 ON c2.a=c4.a
 )
 ON c1.a=c2.a WHERE c2.a < 100;
-ERROR 42000: The storage engine for the table doesn't support IDB-2030: Predicate and Logic operators can not be used where an expression is expected.
+ERROR 42000: The storage engine for the table doesn't support MCS-2030: Predicate and Logic operators can not be used where an expression is expected.
 SET columnstore_select_handler=AUTO;
 SELECT c1.a AS col1, c2.a AS col2, c1.a xor c2.a FROM
 c1 LEFT JOIN
@@ -197,13 +197,13 @@ INSERT INTO t1 VALUES (1), (2), (3), (4);
 SET columnstore_select_handler=ON;
 PREPARE stmt FROM "SELECT a, a xor 0 FROM t1 WHERE a > 1 AND a < 4";
 EXECUTE stmt;
-ERROR 42000: The storage engine for the table doesn't support IDB-2030: Predicate and Logic operators can not be used where an expression is expected.
+ERROR 42000: The storage engine for the table doesn't support MCS-2030: Predicate and Logic operators can not be used where an expression is expected.
 EXECUTE stmt;
-ERROR 42000: The storage engine for the table doesn't support IDB-2030: Predicate and Logic operators can not be used where an expression is expected.
+ERROR 42000: The storage engine for the table doesn't support MCS-2030: Predicate and Logic operators can not be used where an expression is expected.
 EXECUTE stmt;
-ERROR 42000: The storage engine for the table doesn't support IDB-2030: Predicate and Logic operators can not be used where an expression is expected.
+ERROR 42000: The storage engine for the table doesn't support MCS-2030: Predicate and Logic operators can not be used where an expression is expected.
 EXECUTE stmt;
-ERROR 42000: The storage engine for the table doesn't support IDB-2030: Predicate and Logic operators can not be used where an expression is expected.
+ERROR 42000: The storage engine for the table doesn't support MCS-2030: Predicate and Logic operators can not be used where an expression is expected.
 DROP PREPARE stmt;
 SET columnstore_select_handler=AUTO;
 PREPARE stmt FROM "SELECT a, a xor 0 FROM t1 WHERE a > 1 AND a < 4";
@@ -235,11 +235,11 @@ SELECT a, a xor 0 FROM t1 WHERE a > 1 AND a < 4;
 END
 //
 CALL mcol4525_proc();
-ERROR 42000: The storage engine for the table doesn't support IDB-2030: Predicate and Logic operators can not be used where an expression is expected.
+ERROR 42000: The storage engine for the table doesn't support MCS-2030: Predicate and Logic operators can not be used where an expression is expected.
 CALL mcol4525_proc();
-ERROR 42000: The storage engine for the table doesn't support IDB-2030: Predicate and Logic operators can not be used where an expression is expected.
+ERROR 42000: The storage engine for the table doesn't support MCS-2030: Predicate and Logic operators can not be used where an expression is expected.
 CALL mcol4525_proc();
-ERROR 42000: The storage engine for the table doesn't support IDB-2030: Predicate and Logic operators can not be used where an expression is expected.
+ERROR 42000: The storage engine for the table doesn't support MCS-2030: Predicate and Logic operators can not be used where an expression is expected.
 DROP PROCEDURE mcol4525_proc;
 SET columnstore_select_handler=AUTO;
 CREATE PROCEDURE mcol4525_proc()
@@ -311,7 +311,7 @@ SELECT COUNT(DISTINCT cwc_id) npres,COUNT(DISTINCT cwc_cw_id) ncw,cwc_in_id inse
 FROM (giorno,campagna_web_codice)
 WHERE cwc_fa_id IN (23) AND giorno BETWEEN cwc_datainizio AND cwc_datafine AND mese IN (202009)
 GROUP BY insegna;
-ERROR HY000: Internal error: IDB-1000: 'giorno' and 'campagna_web_codice' are not joined.
+ERROR HY000: Internal error: MCS-1000: 'giorno' and 'campagna_web_codice' are not joined.
 SET columnstore_select_handler=AUTO;
 SELECT COUNT(DISTINCT cwc_id) npres,COUNT(DISTINCT cwc_cw_id) ncw,cwc_in_id insegna
 FROM (giorno,campagna_web_codice)

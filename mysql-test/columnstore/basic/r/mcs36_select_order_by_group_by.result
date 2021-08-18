@@ -69,7 +69,7 @@ spID	userid	MIN(t1.score)
 3	3	3
 SELECT t1.spID, t2.userid, MIN(t1.score) 
 FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY t2.userid, t1.spID ORDER BY t1.date;
-ERROR HY000: Internal error: IDB-2021: 'mcs36_db1.t1.date' is not in GROUP BY clause. All non-aggregate columns in the SELECT and ORDER BY clause must be included in the GROUP BY clause.
+ERROR HY000: Internal error: MCS-2021: 'mcs36_db1.t1.date' is not in GROUP BY clause. All non-aggregate columns in the SELECT and ORDER BY clause must be included in the GROUP BY clause.
 SELECT t2.userid, MIN(t1.score)
 FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY unknown ORDER BY t2.userid;
 ERROR 42S22: Unknown column 'unknown' in 'group statement'
@@ -78,5 +78,5 @@ FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY t2.userid ORDER BY unknown;
 ERROR 42S22: Unknown column 'unknown' in 'order clause'
 SELECT t2.userid, MIN(t1.score)
 FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY t2.userid ORDER BY NULL;
-ERROR HY000: Internal error: IDB-2021: 'unknown db.unknown table.unknown field' is not in GROUP BY clause. All non-aggregate columns in the SELECT and ORDER BY clause must be included in the GROUP BY clause.
+ERROR HY000: Internal error: MCS-2021: 'unknown db.unknown table.unknown field' is not in GROUP BY clause. All non-aggregate columns in the SELECT and ORDER BY clause must be included in the GROUP BY clause.
 DROP DATABASE IF EXISTS mcs36_db1;

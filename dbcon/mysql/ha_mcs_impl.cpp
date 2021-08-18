@@ -1397,7 +1397,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
             // avoid double set IDB error
             string emsg;
 
-            if (gwi.parseErrorText.find("IDB-") == string::npos)
+            if (gwi.parseErrorText.find("MCS-") == string::npos)
             {
                 Message::Args args;
                 args.add(gwi.parseErrorText);
