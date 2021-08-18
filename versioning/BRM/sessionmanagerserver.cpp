@@ -100,7 +100,7 @@ SessionManagerServer::SessionManagerServer() : unique32(0), unique64(0)
     catch (const std::exception& e)
     {
         cout << e.what() << endl;
-        stmp.empty();
+        stmp.clear();
     }
 
     if (stmp != "")
