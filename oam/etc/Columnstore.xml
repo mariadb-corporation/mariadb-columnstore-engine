@@ -9,72 +9,18 @@
 		<Port>8601</Port>
 		<Module>unassigned</Module>
 	</ExeMgr1>
-	<JobProc>
-		<IPAddr>0.0.0.0</IPAddr>
-		<Port>8602</Port>
-	</JobProc>
-	<ProcMgr>
-		<IPAddr>127.0.0.1</IPAddr>
-		<Port>8603</Port>
-	</ProcMgr>
-	<ProcMgr_Alarm>
-		<IPAddr>127.0.0.1</IPAddr>
-		<Port>8606</Port>
-	</ProcMgr_Alarm>
-	<ProcStatusControl>
-		<IPAddr>127.0.0.1</IPAddr>
-		<Port>8604</Port>
-	</ProcStatusControl>
-	<ProcStatusControlStandby>
-		<IPAddr>0.0.0.0</IPAddr>
-		<Port>8605</Port>
-	</ProcStatusControlStandby>
-	<!-- Disabled
-	<ProcHeartbeatControl>
-		<IPAddr>0.0.0.0</IPAddr>
-		<Port>8605</Port>
-	</ProcHeartbeatControl>
-	-->
-	<!-- ProcessMonitor Port: 8800 - 8820 is reserved to support External Modules-->
-	<localhost_ProcessMonitor>
-		<IPAddr>127.0.0.1</IPAddr>
-		<Port>8800</Port>
-	</localhost_ProcessMonitor>
-	<dm1_ProcessMonitor>
-		<IPAddr>0.0.0.0</IPAddr>
-		<Port>8800</Port>
-	</dm1_ProcessMonitor>
-	<um1_ProcessMonitor>
-		<IPAddr>0.0.0.0</IPAddr>
-		<Port>8800</Port>
-	</um1_ProcessMonitor>
-	<pm1_ProcessMonitor>
-		<IPAddr>127.0.0.1</IPAddr>
-		<Port>8800</Port>
-	</pm1_ProcessMonitor>
-	<dm1_ServerMonitor>
-		<IPAddr>0.0.0.0</IPAddr>
-		<Port>8622</Port>
-	</dm1_ServerMonitor>
-	<um1_ServerMonitor>
-		<IPAddr>0.0.0.0</IPAddr>
-		<Port>8622</Port>
-	</um1_ServerMonitor>
-	<pm1_ServerMonitor>
-		<IPAddr>127.0.0.1</IPAddr>
-		<Port>8622</Port>
-	</pm1_ServerMonitor>
-	<pm1_WriteEngineServer>
-		<IPAddr>127.0.0.1</IPAddr>
-		<Port>8630</Port>
-	</pm1_WriteEngineServer>
-	<DDLProc>
-		<IPAddr>127.0.0.1</IPAddr>
-		<Port>8612</Port>
-	</DDLProc>
-	<DMLProc>
-		<IPAddr>127.0.0.1</IPAddr>
-		<Port>8614</Port>
+    <pm1_WriteEngineServer>
+        <IPAddr>127.0.0.1</IPAddr>
+        <Port>8630</Port>
+    </pm1_WriteEngineServer>
+    <DDLProc>
+        <IPAddr>127.0.0.1</IPAddr>
+        <Port>8612</Port>
+    </DDLProc>
+    <DMLProc>
+        <IPAddr>127.0.0.1</IPAddr>
+        <Port>8614</Port>
+        <!-- <MaxDeleteRows>262144</MaxDeleteRows> -->
 	</DMLProc>
 	<BatchInsert>
 		<RowsPerBatch>10000</RowsPerBatch>
@@ -85,7 +31,6 @@
 		<ProcessorThreshold>128</ProcessorThreshold>
 		<ProcessorQueueSize>10K</ProcessorQueueSize> <!-- minimum of extent size 8192 -->
 		<DebugLevel>0</DebugLevel>
-		<LBID_Shift>13</LBID_Shift>
 		<ColScanBufferSizeBlocks>512</ColScanBufferSizeBlocks>
 		<ColScanReadAheadBlocks>512</ColScanReadAheadBlocks> <!-- s/b factor of extent size 8192 -->
 		<!-- <BPPCount>16</BPPCount> --> <!-- Default num cores * 2.  A cap on the number of simultaneous primitives per jobstep -->
@@ -233,12 +178,6 @@
 		<ParentOAMModuleName>pm1</ParentOAMModuleName>
 		<StandbyOAMModuleName>unassigned</StandbyOAMModuleName>
 		<PrimaryUMModuleName>pm1</PrimaryUMModuleName>
-		<ModuleHeartbeatPeriod>1</ModuleHeartbeatPeriod>
-		<ModuleHeartbeatCount>3</ModuleHeartbeatCount>
-		<ModuleProcMonWaitCount>12</ModuleProcMonWaitCount>	// 2.5 minutes
-		<!-- Disabled
-		<ProcessHeartbeatPeriod>-1</ProcessHeartbeatPeriod>
-		-->
 		<!-- Warning: Do not change this value once database is built -->
 		<DBRootCount>1</DBRootCount>
         <DBRoot1>/var/lib/columnstore/data1</DBRoot1>
@@ -246,17 +185,7 @@
         <TableLockSaveFile>/var/lib/columnstore/data1/systemFiles/dbrm/tablelocks</TableLockSaveFile>
 		<DBRMTimeOut>15</DBRMTimeOut> <!-- in seconds -->
 		<DBRMSnapshotInterval>100000</DBRMSnapshotInterval>
-		<ExternalCriticalThreshold>90</ExternalCriticalThreshold>
-		<ExternalMajorThreshold>80</ExternalMajorThreshold>
-		<ExternalMinorThreshold>70</ExternalMinorThreshold>
-		<TransactionArchivePeriod>10</TransactionArchivePeriod>
-		<NMSIPAddress>0.0.0.0</NMSIPAddress>
-		<TempSaveSize>128M</TempSaveSize> <!-- default SWSDL max element save size -->
 		<WaitPeriod>10</WaitPeriod> <!-- in seconds -->
-		<ProcessRestartCount>10</ProcessRestartCount>
-		<ProcessRestartPeriod>120</ProcessRestartPeriod>
-		<SwapAction>restartSystem</SwapAction>	<!-- OAM command (or 'none') to run when swap space exceeds Major Threshold -->
-		<ActivePmFailoverDisabled>n</ActivePmFailoverDisabled>
 		<MemoryCheckPercent>95</MemoryCheckPercent> <!-- Max real memory to limit growth of buffers to -->
 		<DataFileLog>OFF</DataFileLog>
 		<!-- enable if you want to limit how much memory may be used for hdfs read/write memory buffers.
@@ -270,8 +199,8 @@
 		<SystemTempFileDir>/tmp/columnstore_tmp_files</SystemTempFileDir>
 	</SystemConfig>
 	<SystemModuleConfig>
-		<ModuleType1>dm</ModuleType1>
-		<ModuleDesc1>Director Module</ModuleDesc1>
+		<ModuleType1>um</ModuleType1>
+		<ModuleDesc1>User Module</ModuleDesc1>
 		<RunType1>SIMPLEX</RunType1>
 		<ModuleCount1>0</ModuleCount1>
 		<ModuleIPAddr1-1-1>0.0.0.0</ModuleIPAddr1-1-1>
@@ -290,15 +219,15 @@
 		<ModuleSwapCriticalThreshold1>90</ModuleSwapCriticalThreshold1>
 		<ModuleSwapMajorThreshold1>80</ModuleSwapMajorThreshold1>
 		<ModuleSwapMinorThreshold1>70</ModuleSwapMinorThreshold1>
-		<ModuleDiskMonitorFileSystem1-1>/</ModuleDiskMonitorFileSystem1-1>
+		<ModuleDiskMonitorFileSystem1-1>/</ModuleDiskMonitorFileSystem1-1>	
 		<ModuleDBRootCount1-1>unassigned</ModuleDBRootCount1-1>
 		<ModuleDBRootID1-1-1>unassigned</ModuleDBRootID1-1-1>
-		<ModuleType2>um</ModuleType2>
-		<ModuleDesc2>User Module</ModuleDesc2>
+		<ModuleType2>pm</ModuleType2>
+		<ModuleDesc2>Performance Module</ModuleDesc2>
 		<RunType2>SIMPLEX</RunType2>
-		<ModuleCount2>0</ModuleCount2>
-		<ModuleIPAddr1-1-2>0.0.0.0</ModuleIPAddr1-1-2>
-		<ModuleHostName1-1-2>unassigned</ModuleHostName1-1-2>
+		<ModuleCount2>1</ModuleCount2>
+		<ModuleIPAddr1-1-2>127.0.0.1</ModuleIPAddr1-1-2>
+		<ModuleHostName1-1-2>localhost</ModuleHostName1-1-2>
 		<ModuleDisableState1-2>ENABLED</ModuleDisableState1-2>
 		<ModuleCPUCriticalThreshold2>0</ModuleCPUCriticalThreshold2>
 		<ModuleCPUMajorThreshold2>0</ModuleCPUMajorThreshold2>
@@ -313,39 +242,10 @@
 		<ModuleSwapCriticalThreshold2>90</ModuleSwapCriticalThreshold2>
 		<ModuleSwapMajorThreshold2>80</ModuleSwapMajorThreshold2>
 		<ModuleSwapMinorThreshold2>70</ModuleSwapMinorThreshold2>
-		<ModuleDiskMonitorFileSystem1-2>/</ModuleDiskMonitorFileSystem1-2>	
-		<ModuleDBRootCount1-2>unassigned</ModuleDBRootCount1-2>
-		<ModuleDBRootID1-1-2>unassigned</ModuleDBRootID1-1-2>
-		<ModuleType3>pm</ModuleType3>
-		<ModuleDesc3>Performance Module</ModuleDesc3>
-		<RunType3>SIMPLEX</RunType3>
-		<ModuleCount3>1</ModuleCount3>
-		<ModuleIPAddr1-1-3>127.0.0.1</ModuleIPAddr1-1-3>
-		<ModuleHostName1-1-3>localhost</ModuleHostName1-1-3>
-		<ModuleDisableState1-3>ENABLED</ModuleDisableState1-3>
-		<ModuleCPUCriticalThreshold3>0</ModuleCPUCriticalThreshold3>
-		<ModuleCPUMajorThreshold3>0</ModuleCPUMajorThreshold3>
-		<ModuleCPUMinorThreshold3>0</ModuleCPUMinorThreshold3>
-		<ModuleCPUMinorClearThreshold3>0</ModuleCPUMinorClearThreshold3>
-		<ModuleDiskCriticalThreshold3>90</ModuleDiskCriticalThreshold3>
-		<ModuleDiskMajorThreshold3>80</ModuleDiskMajorThreshold3>
-		<ModuleDiskMinorThreshold3>70</ModuleDiskMinorThreshold3>
-		<ModuleMemCriticalThreshold3>90</ModuleMemCriticalThreshold3>
-		<ModuleMemMajorThreshold3>0</ModuleMemMajorThreshold3>
-		<ModuleMemMinorThreshold3>0</ModuleMemMinorThreshold3>
-		<ModuleSwapCriticalThreshold3>90</ModuleSwapCriticalThreshold3>
-		<ModuleSwapMajorThreshold3>80</ModuleSwapMajorThreshold3>
-		<ModuleSwapMinorThreshold3>70</ModuleSwapMinorThreshold3>
-		<ModuleDiskMonitorFileSystem1-3>/</ModuleDiskMonitorFileSystem1-3>
-		<ModuleDBRootCount1-3>1</ModuleDBRootCount1-3>
-		<ModuleDBRootID1-1-3>1</ModuleDBRootID1-1-3>
+		<ModuleDiskMonitorFileSystem1-2>/</ModuleDiskMonitorFileSystem1-2>
+		<ModuleDBRootCount1-2>1</ModuleDBRootCount1-2>
+		<ModuleDBRootID1-1-2>1</ModuleDBRootID1-1-2>
 	</SystemModuleConfig>
-	<SystemExtDeviceConfig>
-		<Count>0</Count>
-		<Name1>unassigned</Name1>
-		<IPAddr1>0.0.0.0</IPAddr1>
-		<DisableState1>ENABLED</DisableState1>
-	</SystemExtDeviceConfig>
 	<SessionManager>
 		<MaxConcurrentTransactions>1000</MaxConcurrentTransactions>
         <TxnIDFile>/var/lib/columnstore/data1/systemFiles/dbrm/SMTxnID</TxnIDFile>
@@ -439,41 +339,16 @@
 		<NumBlocksPct>50</NumBlocksPct>
 	</DBBC>
 	<Installation>
-		<SystemStartupOffline>n</SystemStartupOffline>
-		<InitialInstallFlag>y</InitialInstallFlag>
-		<SingleServerInstall>y</SingleServerInstall>
 		<ServerTypeInstall>2</ServerTypeInstall>
 		<PMwithUM>y</PMwithUM>
 		<MySQLRep>n</MySQLRep>
 		<DBRootStorageType>internal</DBRootStorageType>
 		<UMStorageType>internal</UMStorageType>
-		<EEPackageType>binary</EEPackageType>
-		<SystemLogConfigFile>/etc/rsyslog.d/49-columnstore.conf</SystemLogConfigFile>
 		<Cloud>unassigned</Cloud>
-		<AmazonVPCNextPrivateIP>autoassign</AmazonVPCNextPrivateIP>
-		<UMInstanceType>unassigned</UMInstanceType>
-		<UMSecurityGroup>unassigned</UMSecurityGroup>
-		<UMVolumeSize>unassigned</UMVolumeSize>
-		<UMVolumeType>gp2</UMVolumeType>
-		<UMVolumeIOPS>unassigned</UMVolumeIOPS>
-		<PMInstanceType>unassigned</PMInstanceType>
-		<PMVolumeSize>unassigned</PMVolumeSize>
-		<PMVolumeType>gp2</PMVolumeType>
-		<PMVolumeIOPS>unassigned</PMVolumeIOPS>
-		<AmazonPMFailover>y</AmazonPMFailover>
-		<AmazonAutoTagging>y</AmazonAutoTagging>
-		<AmazonElasticIPCount>0</AmazonElasticIPCount>
-		<AmazonElasticIPAddr1>unassigned</AmazonElasticIPAddr1>
-		<AmazonElasticModule1>unassigned</AmazonElasticModule1>
 		<DataRedundancyConfig>n</DataRedundancyConfig>
 		<DataRedundancyCopies>0</DataRedundancyCopies>
 		<DataRedundancyStorageType>unassigned</DataRedundancyStorageType>
-		<CoreFileFlag>n</CoreFileFlag>
 		<MySQLPort>3306</MySQLPort>
-		<AmazonDeviceName>/dev/xvd</AmazonDeviceName>
-		<LockFileDirectory>/var/lock/subsys</LockFileDirectory>
-		<ProfileFile>/etc/profile.d/columnstoreAlias.sh</ProfileFile>
-        <DataRedundancyNetworkType/>
 	</Installation>
 	<ExtentMap>
 		<!--
@@ -486,17 +361,16 @@
 	<HashJoin>
 		<MaxBuckets>128</MaxBuckets>
 		<MaxElems>128K</MaxElems>  <!-- 128 buckets * 128K * 16 = 256 MB -->
-		<FifoSizeLargeSide>64</FifoSizeLargeSide>
 		<PmMaxMemorySmallSide>1G</PmMaxMemorySmallSide>
 		<TotalUmMemory>25%</TotalUmMemory>
 		<CPUniqueLimit>100</CPUniqueLimit>
 		<AllowDiskBasedJoin>N</AllowDiskBasedJoin>
 		<TempFileCompression>Y</TempFileCompression>
-    <TempFileCompressionType>Snappy</TempFileCompressionType> <!-- LZ4, Snappy -->
+        <TempFileCompressionType>Snappy</TempFileCompressionType> <!-- LZ4, Snappy -->
 	</HashJoin>
 	<JobList>
 		<FlushInterval>16K</FlushInterval>
-		<FifoSize>16</FifoSize>
+		<FifoSize>16</FifoSize>1
 		<RequestSize>1</RequestSize>  <!-- Number of extents per request, should be 
 			  less than MaxOutstandingRequests. Otherwise, default value 1 is used. -->
 		<!--  ProcessorThreadsPerScan is the number of jobs issued to process
@@ -512,11 +386,6 @@
 		<!-- <MaxOutstandingRequests>20</MaxOutstandingRequests>  -->
 		<ThreadPoolSize>100</ThreadPoolSize>
 	</JobList>
-	<TupleWSDL>
-		<MaxSize>1M</MaxSize>                   <!-- Max size in bytes per bucket -->
-		<InitialCapacity>1M</InitialCapacity>   <!-- Initial capacity per bucket -->
-		<MaxBuckets>512</MaxBuckets>            <!-- Number of buckets -->
-	</TupleWSDL>
 	<RowAggregation>
 		<!-- <RowAggrThreads>4</RowAggrThreads> --> <!-- Default value is the number of cores -->
 		<!-- <RowAggrBuckets>32</RowAggrBuckets> --> <!-- Default value is number of cores * 4 -->

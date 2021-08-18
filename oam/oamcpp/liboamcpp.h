@@ -72,7 +72,7 @@ const int MAX_DBROOT = 10240;
 
 /** @brief Maximum Number of Modules Types within the Calpont System
   */
-const int MAX_MODULE_TYPE = 3;
+const int MAX_MODULE_TYPE = 2;
 
 /** @brief Maximum Number of External Devices within the Calpont System
  */
@@ -118,7 +118,6 @@ const std::string UnassignedName = "unassigned";
 const std::string configSections[] = {	"SystemConfig",
                                         "SystemModuleConfig",
                                         "SystemModuleConfig",
-                                        "SystemExtDeviceConfig",
                                         "SessionManager",
                                         "VersionBuffer",
                                         "OIDManager",

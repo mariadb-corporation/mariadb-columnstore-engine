@@ -46,12 +46,9 @@ namespace joblist
 
 //const string ResourceManager::fExeMgrStr("ExeMgr1");
 const string ResourceManager::fHashJoinStr("HashJoin");
-const string ResourceManager::fHashBucketReuseStr("HashBucketReuse");
 const string ResourceManager::fJobListStr("JobList");
 const string ResourceManager::fPrimitiveServersStr("PrimitiveServers");
 //const string ResourceManager::fSystemConfigStr("SystemConfig");
-const string ResourceManager::fTupleWSDLStr("TupleWSDL");
-const string ResourceManager::fZDLStr("ZDL");
 const string ResourceManager::fExtentMapStr("ExtentMap");
 //const string ResourceManager::fDMLProcStr("DMLProc");
 //const string ResourceManager::fBatchInsertStr("BatchInsert");
@@ -81,7 +78,6 @@ ResourceManager::ResourceManager(bool runningInExeMgr) :
     fHjNumThreads(defaultNumThreads),
     fJlProcessorThreadsPerScan(defaultProcessorThreadsPerScan),
     fJlNumScanReceiveThreads(defaultScanReceiveThreads),
-    fTwNumThreads(defaultNumThreads),
     fJlMaxOutstandingRequests(defaultMaxOutstandingRequests),
     fHJUmMaxMemorySmallSideDistributor(fHashJoinStr,
                                        "UmMaxMemorySmallSide",
@@ -119,7 +115,6 @@ ResourceManager::ResourceManager(bool runningInExeMgr) :
     {
         fHjNumThreads = fNumCores;
         fJlNumScanReceiveThreads = fNumCores;
-        fTwNumThreads = fNumCores;
     }
 
     //possibly override any calculated values
@@ -157,11 +152,6 @@ ResourceManager::ResourceManager(bool runningInExeMgr) :
     fDECConnectionsPerQuery = (fDECConnectionsPerQuery)
                                 ? fDECConnectionsPerQuery
                                 : getPsConnectionsPerPrimProc();
-
-    temp = getIntVal(fTupleWSDLStr, "NumThreads", -1);
-
-    if (temp > 0)
-        fTwNumThreads = temp;
 
     pmJoinMemLimit = getUintVal(fHashJoinStr, "PmMaxMemorySmallSide",
                                defaultHJPmMaxMemorySmallSide);
@@ -274,6 +264,7 @@ ResourceManager::ResourceManager(bool runningInExeMgr) :
     }
 }
 
+// Used only for WIndows
 int ResourceManager::getEmPriority() const
 {
     int temp = getIntVal(fExeMgrStr, "Priority", defaultEMPriority);
@@ -339,46 +330,6 @@ void ResourceManager::logResourceChangeMessage(logging::LOG_TYPE logType, uint32
     Logger log;
     log.logMessage(logType,  mid, args, logging::LoggingID(5, sessionID));
 }
-
-void	ResourceManager::emServerThreads() {  }
-void	ResourceManager::emServerQueueSize() {  }
-void	ResourceManager::emSecondsBetweenMemChecks() {  }
-void	ResourceManager::emMaxPct()  	{  }
-void	ResourceManager::emPriority() 	{  }
-void	ResourceManager::emExecQueueSize()	{ }
-
-void  ResourceManager::hjNumThreads() { }
-void	ResourceManager::hjMaxBuckets() { }
-void	ResourceManager::hjMaxElems()  { }
-void	ResourceManager::hjFifoSizeLargeSide() { }
-void	ResourceManager::hjPmMaxMemorySmallSide() { }
-
-void	ResourceManager::jlFlushInterval() { }
-void	ResourceManager::jlFifoSize() { }
-void	ResourceManager::jlScanLbidReqLimit() { }
-void	ResourceManager::jlScanLbidReqThreshold() { }
-void	ResourceManager::jlProjectBlockReqLimit() { }
-void	ResourceManager::jlProjectBlockReqThreshold() { }
-void	ResourceManager::jlNumScanReceiveThreads() { }
-
-
-void	ResourceManager::psCount() { }
-void	ResourceManager::psConnectionsPerPrimProc() { }
-void	ResourceManager::psLBID_Shift() { }
-
-void	ResourceManager::scTempDiskPath() { }
-void	ResourceManager::scTempSaveSize() { }
-void	ResourceManager::scWorkingDir() { }
-
-
-void	ResourceManager::twMaxSize() { }
-void	ResourceManager::twInitialCapacity() { }
-void	ResourceManager::twMaxBuckets	() { }
-void	ResourceManager::twNumThreads() { }
-void	ResourceManager::zdl_MaxElementsInMem() { }
-void	ResourceManager::zdl_MaxElementsPerBucket () { }
-
-void  ResourceManager::hbrPredicate() { }
 
 bool  ResourceManager::getMysqldInfo(
     std::string& h, std::string& u, std::string& w, unsigned int& p) const

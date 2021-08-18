@@ -375,21 +375,16 @@ void getStorageConfig(FILE * pOutputFile)
                     string deviceNameID = "PMVolumeDeviceName" + oam.itoa(*pt);
                     string deviceName = oam::UnassignedName;
                     string amazonDeviceNameID = "PMVolumeAmazonDeviceName" + oam.itoa(*pt);
-                    string amazondeviceName = oam::UnassignedName;
 
                     try
                     {
                         oam.getSystemConfig( volumeNameID, volumeName);
                         oam.getSystemConfig( deviceNameID, deviceName);
-                        oam.getSystemConfig( amazonDeviceNameID, amazondeviceName);
                     }
                     catch (...)
                     {
                         continue;
                     }
-
-                    fprintf(pOutputFile,"Amazon EC2 Volume Name/Device Name/Amazon Device Name for DBRoot%u: %s, %s, %s",*pt,volumeName.c_str(),deviceName.c_str(),amazondeviceName.c_str());
-
                 }
             }
             catch (exception& e)
@@ -407,20 +402,16 @@ void getStorageConfig(FILE * pOutputFile)
                 string deviceNameID = "PMVolumeDeviceName" + oam.itoa(*pt1);
                 string deviceName = oam::UnassignedName;
                 string amazonDeviceNameID = "PMVolumeAmazonDeviceName" + oam.itoa(*pt1);
-                string amazondeviceName = oam::UnassignedName;
 
                 try
                 {
                     oam.getSystemConfig( volumeNameID, volumeName);
                     oam.getSystemConfig( deviceNameID, deviceName);
-                    oam.getSystemConfig( amazonDeviceNameID, amazondeviceName);
                 }
                 catch (...)
                 {
                     continue;
                 }
-
-                fprintf(pOutputFile,"Amazon EC2 Volume Name/Device Name/Amazon Device Name for DBRoot%u: %s, %s, %s",*pt1,volumeName.c_str(),deviceName.c_str(),amazondeviceName.c_str());
             }*/
         }
 
