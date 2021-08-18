@@ -40,7 +40,7 @@ exec $MCS_CPIMPORT nonexist_db t1 /tmp/nonexisting.dat 2>&1 | tee /tmp/mcs56.out
 
 exec echo "";
 exec echo "Check for the correct error message:";
-exec grep -q "IDB-2006: 'nonexist_db.t1' does not exist in Columnstore." /tmp/mcs56.out;
+exec grep -q "MCS-2006: 'nonexist_db.t1' does not exist in Columnstore." /tmp/mcs56.out;
 
 
 # Negative. Non-existing table.
@@ -50,7 +50,7 @@ exec $MCS_CPIMPORT mcs56_db nonexist_tbl /tmp/nonexisting.dat 2>&1 | tee /tmp/mc
 
 exec echo "";
 exec echo "Check for the correct error message:";
-exec grep -q "IDB-2006: 'mcs56_db.nonexist_tbl' does not exist in Columnstore." /tmp/mcs56.out;
+exec grep -q "MCS-2006: 'mcs56_db.nonexist_tbl' does not exist in Columnstore." /tmp/mcs56.out;
 
 # Clean UP
 DROP DATABASE mcs56_db;

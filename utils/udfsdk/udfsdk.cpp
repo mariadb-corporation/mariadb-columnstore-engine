@@ -260,7 +260,7 @@ IDB_Decimal MCS_add::getDecimalVal(Row& row,
 /**
  * This API should never be called for MCS_add, because the latter
  * is not for date/datetime values addition. In such case, one can
- * either not implement this API and an IDB-5001 error will be thrown,
+ * either not implement this API and an MCS5001 error will be thrown,
  * or throw a customized exception here.
  */
 int32_t MCS_add::getDateIntVal(Row& row,
@@ -274,7 +274,7 @@ int32_t MCS_add::getDateIntVal(Row& row,
 /**
  * This API should never be called for MCS_add, because the latter
  * is not for date/datetime values addition. In such case, one can
- * either not implement this API and an IDB-5001 error will be thrown,
+ * either not implement this API and an MCS-5001 error will be thrown,
  * or throw a customized exception here.
  */
 int64_t MCS_add::getDatetimeIntVal(Row& row,

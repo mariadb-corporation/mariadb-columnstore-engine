@@ -12,9 +12,9 @@ ERROR 42S22: Unknown column 'nonexistingColumn' in 'field list'
 UPDATE t2 SET a = (SELECT nonexistingColumn FROM t1);
 ERROR 42S22: Unknown column 'nonexistingColumn' in 'field list'
 UPDATE t1 SET a = NULL;
-ERROR HY000: Internal error: CAL0002: Update Failed:  IDB-4015: Column 'a' cannot be null.
+ERROR HY000: Internal error: CAL0002: Update Failed:  MCS-4015: Column 'a' cannot be null.
 UPDATE t1 SET a = NULL, b =1;
-ERROR HY000: Internal error: CAL0002: Update Failed:  IDB-4015: Column 'a' cannot be null.
+ERROR HY000: Internal error: CAL0002: Update Failed:  MCS-4015: Column 'a' cannot be null.
 UPDATE t1 SET a =     ;
 ERROR 42000: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '' at line 1
 SELECT * FROm t1 ORDER BY a;

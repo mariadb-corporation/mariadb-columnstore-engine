@@ -20,13 +20,13 @@ select 'q3', utest1.* from utest1 where ukey=7;
 q3	ukey	c1	c2	c3	c4
 q3	7	NULL	NULL	NULL	NULL
 update utest1 set c4=-9223372036854775806 where ukey=1;
-ERROR 22003: CAL0002: IDB-2025: Data truncated for column 'c4' 
+ERROR 22003: CAL0002: MCS-2025: Data truncated for column 'c4' 
 update utest1 set c3=-2147483646 where ukey=1;
-ERROR 22003: CAL0002: IDB-2025: Data truncated for column 'c3' 
+ERROR 22003: CAL0002: MCS-2025: Data truncated for column 'c3' 
 update utest1 set c2=-32766 where ukey=1;
-ERROR 22003: CAL0002: IDB-2025: Data truncated for column 'c2' 
+ERROR 22003: CAL0002: MCS-2025: Data truncated for column 'c2' 
 update utest1 set c1=-254 where ukey between 0 and 2;
-ERROR 22003: CAL0002: IDB-2025: Data truncated for column 'c1' 
+ERROR 22003: CAL0002: MCS-2025: Data truncated for column 'c1' 
 select 'q4', utest1.* from utest1 where ukey<2;
 q4	ukey	c1	c2	c3	c4
 q4	1	2	3	4	5
@@ -89,7 +89,7 @@ INSERT INTO utest3 VALUES (0,2);
 INSERT INTO utest3 VALUES (0,3);
 INSERT INTO utest3 VALUES (0,4);
 INSERT INTO utest3 VALUES (0,5);
-ERROR HY000: Internal error: CAL0001: Insert Failed:  IDB-4012: The maximum allowed value has been exceeded for the autoincrement column data type.  
+ERROR HY000: Internal error: CAL0001: Insert Failed:  MCS-4012: The maximum allowed value has been exceeded for the autoincrement column data type.  
 SELECT 'q13', utest3.* FROM utest3 ORDER BY utest3.ukey;
 q13	ukey	c1
 q13	250	1
@@ -103,7 +103,7 @@ INSERT INTO utest3 VALUES (0,2);
 INSERT INTO utest3 VALUES (0,3);
 INSERT INTO utest3 VALUES (0,4);
 INSERT INTO utest3 VALUES (0,5);
-ERROR HY000: Internal error: CAL0001: Insert Failed:  IDB-4012: The maximum allowed value has been exceeded for the autoincrement column data type.  
+ERROR HY000: Internal error: CAL0001: Insert Failed:  MCS-4012: The maximum allowed value has been exceeded for the autoincrement column data type.  
 SELECT 'q13', utest3.* FROM utest3 ORDER BY utest3.ukey;
 q13	ukey	c1
 q13	65530	1
@@ -117,7 +117,7 @@ INSERT INTO utest3 VALUES (0,2);
 INSERT INTO utest3 VALUES (0,3);
 INSERT INTO utest3 VALUES (0,4);
 INSERT INTO utest3 VALUES (0,5);
-ERROR HY000: Internal error: CAL0001: Insert Failed:  IDB-4012: The maximum allowed value has been exceeded for the autoincrement column data type.  
+ERROR HY000: Internal error: CAL0001: Insert Failed:  MCS-4012: The maximum allowed value has been exceeded for the autoincrement column data type.  
 SELECT 'q13', utest3.* FROM utest3 ORDER BY utest3.ukey;
 q13	ukey	c1
 q13	4294967290	1
@@ -131,7 +131,7 @@ INSERT INTO utest3 VALUES (0,2);
 INSERT INTO utest3 VALUES (0,3);
 INSERT INTO utest3 VALUES (0,4);
 INSERT INTO utest3 VALUES (0,5);
-ERROR HY000: Internal error: CAL0001: Insert Failed:  IDB-4012: The maximum allowed value has been exceeded for the autoincrement column data type.  
+ERROR HY000: Internal error: CAL0001: Insert Failed:  MCS-4012: The maximum allowed value has been exceeded for the autoincrement column data type.  
 SELECT 'q13', utest3.* FROM utest3 ORDER BY utest3.ukey;
 q13	ukey	c1
 q13	18446744073709551610	1

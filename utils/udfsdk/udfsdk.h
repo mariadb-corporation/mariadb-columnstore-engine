@@ -99,7 +99,7 @@ private:
  * getIntVal() will be called, because MCS_add() is passed as the third argument
  * to substr function, and an integer result is expected.
  *
- * If one API is not implemented but called for a function, IDB-5001 error will
+ * If one API is not implemented but called for a function, MCS-5001 error will
  * be returned.
  */
 class MCS_add : public funcexp::Func

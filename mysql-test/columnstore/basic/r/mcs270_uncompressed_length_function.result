@@ -37,13 +37,13 @@ SELECT UNCOMPRESSED_LENGTH(COMPRESS('!@')) FROM t1 LIMIT 1;
 UNCOMPRESSED_LENGTH(COMPRESS('!@'))
 2
 SELECT t1_INT, UNCOMPRESSED_LENGTH(COMPRESS(t1_INT)) FROM t1 ORDER BY 1;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'uncompressed_length' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'uncompressed_length' isn't supported.
 SELECT t1_DECIMAL, UNCOMPRESSED_LENGTH(COMPRESS(t1_DECIMAL)) FROM t1 ORDER BY 1;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'uncompressed_length' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'uncompressed_length' isn't supported.
 SELECT t1_TEXT, UNCOMPRESSED_LENGTH(COMPRESS(t1_TEXT)) FROM t1 ORDER BY 1;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'uncompressed_length' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'uncompressed_length' isn't supported.
 SELECT t1_DATE, UNCOMPRESSED_LENGTH(COMPRESS(t1_DATE)) FROM t1 ORDER BY 1;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'uncompressed_length' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'uncompressed_length' isn't supported.
 SELECT t1_TIME, UNCOMPRESSED_LENGTH(COMPRESS(t1_TIME)) FROM t1 ORDER BY 1;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'uncompressed_length' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'uncompressed_length' isn't supported.
 DROP DATABASE mcs270_db;
