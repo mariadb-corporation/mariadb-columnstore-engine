@@ -24,6 +24,7 @@ set(funcexp_LIB_SRCS
     func_concat_oracle.cpp
     func_concat_ws.cpp
     func_conv.cpp
+    func_convert_tz.cpp
     func_crc32.cpp
     func_date.cpp
     func_date_add.cpp
