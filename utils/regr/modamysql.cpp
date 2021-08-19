@@ -3,7 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <string.h>
-#include <tr1/unordered_map>
+#include <unordered_map>
 #include <algorithm>
 
 #include "idb_mysql.h"
@@ -31,10 +31,11 @@ struct moda_data
 {
     long double fSum;
     uint64_t    fCount;
-    enum Item_result    fReturnType; 
-    std::tr1::unordered_map<int64_t, uint32_t> mapINT;
-    std::tr1::unordered_map<double, uint32_t> mapREAL;
-    std::tr1::unordered_map<long double, uint32_t> mapDECIMAL;
+    enum Item_result    fReturnType;
+    std::unordered_map<int64_t, uint32_t> mapINT;
+    std::unordered_map<double, uint32_t> mapREAL;
+    std::unordered_map<long double, uint32_t> mapDECIMAL;
+    std::string result;
     void clear()
     {
         fSum = 0.0;
@@ -44,8 +45,38 @@ struct moda_data
         mapDECIMAL.clear();
     }
 };
-
 }
+
+template<class TYPE, class CONTAINER>
+char * moda(CONTAINER & container, struct moda_data* data)
+{
+    TYPE avg = (TYPE)data->fCount ? data->fSum / data->fCount : 0;
+    TYPE val = 0.0;
+    uint32_t maxCnt = 0.0;
+
+    for (auto iter = container.begin(); iter != container.end(); ++iter)
+    {
+        if (iter->second > maxCnt)
+        {
+            val = iter->first;
+            maxCnt = iter->second;
+        }
+        else if (iter->second == maxCnt)
+        {
+            // Tie breaker: choose the closest to avg. If still tie, choose smallest
+            if ((abs(val-avg) > abs(iter->first-avg))
+            || ((abs(val-avg) == abs(iter->first-avg)) && (abs(val) > abs(iter->first))))
+            {
+                val = iter->first;
+            }
+        }
+    }
+
+    data->result = std::to_string(val);
+
+    return const_cast<char*>(data->result.c_str());
+}
+
 
 extern "C"
 {
@@ -83,7 +114,7 @@ void moda_deinit(UDF_INIT* initid)
     struct moda_data* data = (struct moda_data*)initid->ptr;
     data->clear();
     delete data;
-}   
+}
 
 #ifdef _MSC_VER
 __declspec(dllexport)
@@ -98,7 +129,7 @@ void moda_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
 #ifdef _MSC_VER
 __declspec(dllexport)
 #endif
-void moda_add(UDF_INIT* initid, 
+void moda_add(UDF_INIT* initid,
               UDF_ARGS* args,
               char* is_null,
               char* message __attribute__((unused)))
@@ -188,101 +219,22 @@ void moda_remove(UDF_INIT* initid, UDF_ARGS* args,
 #ifdef _MSC_VER
 __declspec(dllexport)
 #endif
-char* moda(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)),
-           char* is_null, char* error __attribute__((unused)))
+char* moda(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error __attribute__((unused)))
 {
     struct moda_data* data = (struct moda_data*)initid->ptr;
-    uint32_t maxCnt = 0.0;
-
     switch (args->arg_type[0])
     {
         case INT_RESULT:
-        {
-            typename std::tr1::unordered_map<int64_t, uint32_t>::iterator iter;
-            int64_t avg = (int64_t)data->fCount ? data->fSum / data->fCount : 0;
-            int64_t val = 0.0;
-            for (iter = data->mapINT.begin(); iter != data->mapINT.end(); ++iter)
-            {
-                if (iter->second > maxCnt)
-                {
-                    val = iter->first;
-                    maxCnt = iter->second;
-                }
-                else if (iter->second == maxCnt)
-                {
-                    // Tie breaker: choose the closest to avg. If still tie, choose smallest
-                    if ((abs(val-avg) > abs(iter->first-avg))
-                    || ((abs(val-avg) == abs(iter->first-avg)) && (abs(val) > abs(iter->first))))
-                    {
-                        val = iter->first;
-                    }
-                }
-            }
-            std::ostringstream oss;
-            oss << val;
-            return const_cast<char*>(oss.str().c_str());
-            break;
-        }
+            return moda<int64_t>(data->mapINT, data);
         case REAL_RESULT:
-        {
-            typename std::tr1::unordered_map<double, uint32_t>::iterator iter;
-            double avg = data->fCount ? data->fSum / data->fCount : 0;
-            double val = 0.0;
-            for (iter = data->mapREAL.begin(); iter != data->mapREAL.end(); ++iter)
-            {
-                if (iter->second > maxCnt)
-                {
-                    val = iter->first;
-                    maxCnt = iter->second;
-                }
-                else if (iter->second == maxCnt)
-                {
-                    // Tie breaker: choose the closest to avg. If still tie, choose smallest
-                    if ((abs(val-avg) > abs(iter->first-avg))
-                    || ((abs(val-avg) == abs(iter->first-avg)) && (abs(val) > abs(iter->first))))
-                    {
-                        val = iter->first;
-                    }
-                }
-            }
-            std::ostringstream oss;
-            oss << val;
-            return const_cast<char*>(oss.str().c_str());
-            break;
-        }
+            return moda<double>(data->mapREAL, data);
         case DECIMAL_RESULT:
         case STRING_RESULT:
-        {
-            typename std::tr1::unordered_map<long double, uint32_t>::iterator iter;
-            long double avg = data->fCount ? data->fSum / data->fCount : 0;
-            long double val = 0.0;
-            for (iter = data->mapDECIMAL.begin(); iter != data->mapDECIMAL.end(); ++iter)
-            {
-                if (iter->second > maxCnt)
-                {
-                    val = iter->first;
-                    maxCnt = iter->second;
-                }
-                else if (iter->second == maxCnt)
-                {
-                    long double thisVal = iter->first;
-                    // Tie breaker: choose the closest to avg. If still tie, choose smallest
-                    if ((abs(val-avg) > abs(thisVal-avg))
-                    || ((abs(val-avg) == abs(thisVal-avg)) && (abs(val) > abs(thisVal))))
-                    {
-                        val = thisVal;
-                    }
-                }
-            }
-            std::ostringstream oss;
-            oss << val;
-            return const_cast<char*>(oss.str().c_str());
-            break;
-        }
+            return moda<long double>(data->mapDECIMAL, data);
         default:
-            break;
+            return NULL;
     }
+
     return NULL;
 }
-
 } // Extern "C"

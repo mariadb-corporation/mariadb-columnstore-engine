@@ -159,16 +159,16 @@ uint32_t RowEstimator::estimateDistinctValues(const execplan::CalpontSystemCatal
 
             // Return limit/2 for integers where limit is number of possible values.
             case CalpontSystemCatalog::TINYINT:
-                return (2 ^ 8) / 2;
+                return (1 << 8) / 2;
 
             case CalpontSystemCatalog::UTINYINT:
-                return (2 ^ 8);
+                return (1 << 8);
 
             case CalpontSystemCatalog::SMALLINT:
-                return (2 ^ 16) / 2;
+                return (1 << 16) / 2;
 
             case CalpontSystemCatalog::USMALLINT:
-                return (2 ^ 16);
+                return (1 << 16);
 
             // Next group all have range greater than 8M (# of rows in an extent), use 8M/2 as the estimate.
             case CalpontSystemCatalog::MEDINT:

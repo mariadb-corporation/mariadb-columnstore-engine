@@ -202,11 +202,11 @@ class WriteBatchFieldMariaDB: public WriteBatchField
 
 
 public:
-  Field *m_field;
-  const CalpontSystemCatalog::ColType &m_type;
+  Field * m_field;
+  const CalpontSystemCatalog::ColType & m_type;
   uint32_t m_mbmaxlen;
   WriteBatchFieldMariaDB(Field *field,
-                         const CalpontSystemCatalog::ColType type,
+                         const CalpontSystemCatalog::ColType & type,
                          uint32_t mbmaxlen)
    :m_field(field), m_type(type), m_mbmaxlen(mbmaxlen)
   { }
@@ -423,7 +423,7 @@ public:
     return 8;
   }
 
-  size_t ColWriteBatchUInt64(const uchar *buf, bool nullVal, ColBatchWriter &ci) override 
+  size_t ColWriteBatchUInt64(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
       fprintf(ci.filePtr(), "%c", ci.delimiter());
@@ -433,7 +433,7 @@ public:
   }
 
 
-  size_t ColWriteBatchSInt32(const uchar *buf, bool nullVal, ColBatchWriter &ci) override 
+  size_t ColWriteBatchSInt32(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
       fprintf(ci.filePtr(), "%c", ci.delimiter());
@@ -442,7 +442,7 @@ public:
     return 4;
   }
 
-  size_t ColWriteBatchUInt32(const uchar *buf, bool nullVal, ColBatchWriter &ci) override 
+  size_t ColWriteBatchUInt32(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
       fprintf(ci.filePtr(), "%c", ci.delimiter());
@@ -451,7 +451,7 @@ public:
     return 4;
   }
 
-  size_t ColWriteBatchSInt16(const uchar *buf, bool nullVal, ColBatchWriter &ci) override 
+  size_t ColWriteBatchSInt16(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
       fprintf(ci.filePtr(), "%c", ci.delimiter());
@@ -460,7 +460,7 @@ public:
     return 2;
   }
 
-  size_t ColWriteBatchUInt16(const uchar *buf, bool nullVal, ColBatchWriter &ci) override 
+  size_t ColWriteBatchUInt16(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
       fprintf(ci.filePtr(), "%c", ci.delimiter());
@@ -469,7 +469,7 @@ public:
     return 2;
   }
 
-  size_t ColWriteBatchSInt8(const uchar *buf, bool nullVal, ColBatchWriter &ci) override 
+  size_t ColWriteBatchSInt8(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
       fprintf(ci.filePtr(), "%c", ci.delimiter());
@@ -478,7 +478,7 @@ public:
     return 1;
   }
 
-  size_t ColWriteBatchUInt8(const uchar *buf, bool nullVal, ColBatchWriter &ci) override 
+  size_t ColWriteBatchUInt8(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
       fprintf(ci.filePtr(), "%c", ci.delimiter());
@@ -488,7 +488,7 @@ public:
   }
 
 
-  size_t ColWriteBatchXFloat(const uchar *buf, bool nullVal, ColBatchWriter &ci) override 
+  size_t ColWriteBatchXFloat(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
       fprintf(ci.filePtr(), "%c", ci.delimiter());
@@ -513,7 +513,7 @@ public:
   }
 
 
-  size_t ColWriteBatchXDouble(const uchar *buf, bool nullVal, ColBatchWriter &ci) override 
+  size_t ColWriteBatchXDouble(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
       fprintf(ci.filePtr(), "%c", ci.delimiter());
@@ -527,7 +527,7 @@ public:
   }
 
 
-  size_t ColWriteBatchSLongDouble(const uchar *buf, bool nullVal, ColBatchWriter &ci) override 
+  size_t ColWriteBatchSLongDouble(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
       fprintf(ci.filePtr(), "%c", ci.delimiter());
@@ -537,7 +537,7 @@ public:
   }
 
 
-  size_t ColWriteBatchXDecimal(const uchar *buf, bool nullVal, ColBatchWriter &ci) override 
+  size_t ColWriteBatchXDecimal(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
   {
     uint bytesBefore = numDecimalBytes(m_type.precision - m_type.scale);
     uint totalBytes = bytesBefore + numDecimalBytes(m_type.scale);
@@ -838,13 +838,13 @@ public:
   }
 
 
-  size_t ColWriteBatchVarbinary(const uchar *buf0, bool nullVal, ColBatchWriter &ci) override 
+  size_t ColWriteBatchVarbinary(const uchar *buf0, bool nullVal, ColBatchWriter &ci) override
   {
     return ColWriteBatchString(buf0, nullVal, ci, &ColWriteBatchBlobString);
   }
 
 
-  size_t ColWriteBatchBlob(const uchar *buf0, bool nullVal, ColBatchWriter &ci) override 
+  size_t ColWriteBatchBlob(const uchar *buf0, bool nullVal, ColBatchWriter &ci) override
   {
     return (UNLIKELY(m_type.colDataType == CalpontSystemCatalog::BLOB)) ?
       ColWriteBatchString(buf0, nullVal, ci, &ColWriteBatchBlobString) :
