@@ -551,7 +551,32 @@ public:
                           execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
+class Func_convert_tz: public Func_Dtm
+{
+public:
+    Func_convert_tz() : Func_Dtm("convert_tz") {}
+    virtual ~Func_convert_tz() {}
 
+    //bool from_tz_cached, to_tz_cached;
+    //Time_zone *from_tz, *to_tz;
+
+    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+
+    int64_t getIntVal(rowgroup::Row& row,
+                      FunctionParm& fp,
+                      bool& isNull,
+                      execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    int64_t getDatetimeIntVal(rowgroup::Row& row,
+            FunctionParm& parm,
+            bool& isNull,
+            execplan::CalpontSystemCatalog::ColType& ct);
+
+    std::string getStrVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
+};
 
 }
 

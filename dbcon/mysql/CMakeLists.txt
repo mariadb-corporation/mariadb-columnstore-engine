@@ -27,6 +27,7 @@ SET ( libcalmysql_SRCS
     ha_window_function.cpp
     ha_mcs_partition.cpp
     ha_pseudocolumn.cpp
+    ha_tzinfo.cpp
     is_columnstore_tables.cpp
     is_columnstore_columns.cpp
     is_columnstore_files.cpp
