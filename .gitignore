@@ -169,3 +169,4 @@ storage-manager/unit_tests
 .drone.yml
 result/
 mariadb-columnstore-regression-test/
+build/Testing/

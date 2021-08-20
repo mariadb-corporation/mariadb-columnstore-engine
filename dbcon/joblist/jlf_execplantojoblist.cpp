@@ -87,6 +87,14 @@ using namespace logging;
 #include "jlf_tuplejoblist.h"
 #include "mcs_decimal.h"
 
+
+#ifdef __clang__
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wpotentially-evaluated-expression"
+    // for warnings on typeid :expression with side effects will be evaluated despite being used as an operand to 'typeid'
+#endif
+
+
 namespace
 {
 using namespace joblist;
@@ -3558,3 +3566,6 @@ void JLF_ExecPlanToJobList::addJobSteps(JobStepVector& nsv, JobInfo& jobInfo, bo
 } // end of joblist namespace
 // vim:ts=4 sw=4:
 
+#ifdef __clang__
+    #pragma clang diagnostic pop
+#endif

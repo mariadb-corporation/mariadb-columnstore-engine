@@ -255,18 +255,6 @@ struct FdCountEntry
     uint16_t segNum;
     uint32_t cnt;
     FdCacheType_t::iterator fdit;
-
-    friend ostream& operator<<(ostream& out, const FdCountEntry& o)
-    {
-        out << " o: " << o.oid
-            << " d: " << o.dbroot
-            << " p: " << o.partNum
-            << " s: " << o.segNum
-            << " c: " << o.cnt;
-
-        return out;
-    }
-
 }; // FdCountEntry
 
 typedef FdCountEntry FdCountEntry_t;
@@ -1380,7 +1368,7 @@ void ioManager::buildOidFileName(const BRM::OID_t oid, uint16_t dbRoot, const ui
     // when it's a request for the version buffer, the dbroot comes in as 0 for legacy reasons
     if (dbRoot == 0 && oid < 1000)
         dbRoot = fdbrm.getDBRootOfVBOID(oid);
-    
+
     fFileOp.getFileNameForPrimProc(oid, file_name, dbRoot, partNum, segNum);
 }
 

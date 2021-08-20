@@ -34,7 +34,7 @@
 
 namespace WriteEngine
 {
-struct ColumnInfo;
+class  ColumnInfo;
 class Log;
 
 //------------------------------------------------------------------------------

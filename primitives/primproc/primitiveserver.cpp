@@ -147,7 +147,6 @@ uint32_t lowPriorityThreads;
 int  directIOFlag = O_DIRECT;
 int  noVB = 0;
 
-const uint8_t fMaxColWidth(8);
 BPPMap bppMap;
 boost::mutex bppLock;
 
@@ -1287,7 +1286,7 @@ struct BPPHandler
     // threads lying around
     std::vector<uint32_t> bppKeys;
     std::vector<uint32_t>::iterator bppKeysIt;
-    
+
     ~BPPHandler()
     {
         boost::mutex::scoped_lock scoped(bppLock);
@@ -1553,7 +1552,7 @@ struct BPPHandler
             return *ret->second;
         }
     }
-    
+
     inline void deleteDJLock(uint32_t uniqueID)
     {
         boost::mutex::scoped_lock lk(djMutex);
@@ -1564,7 +1563,7 @@ struct BPPHandler
             djLock.erase(it);
         }
     }
-    
+
     int addJoinerToBPP(ByteStream& bs, const posix_time::ptime& dieTime)
     {
         SBPPV bppv;
@@ -1618,8 +1617,8 @@ struct BPPHandler
         }
 
         boost::unique_lock<shared_mutex> lk(getDJLock(uniqueID));
-        
-        
+
+
         for (i = 0; i < bppv->get().size(); i++)
         {
             err = bppv->get()[i]->endOfJoiner();
@@ -1699,7 +1698,7 @@ struct BPPHandler
 
             if (posix_time::second_clock::universal_time() > dieTime)
             {
-                // XXXPAT: going to let this fall through and delete jobs for 
+                // XXXPAT: going to let this fall through and delete jobs for
 				// uniqueID if there are any.  Not clear what the downside is.
 				/*
                 lk.unlock();

@@ -51,68 +51,6 @@ inline double cvtArgToDouble(int t, const char* v)
 
     return d;
 }
-inline long long cvtArgToInt(int t, const char* v)
-{
-    long long ll = 0;
-
-    switch (t)
-    {
-        case INT_RESULT:
-            ll = *((long long*)v);
-            break;
-
-        case REAL_RESULT:
-            ll = (long long)(*((double*)v));
-            break;
-
-        case DECIMAL_RESULT:
-        case STRING_RESULT:
-            ll = strtoll(v, 0, 0);
-            break;
-
-        case ROW_RESULT:
-            break;
-    }
-
-    return ll;
-}
-inline string cvtArgToString(int t, const char* v)
-{
-    string str;
-
-    switch (t)
-    {
-        case INT_RESULT:
-        {
-            long long ll;
-            ll = *((long long*)v);
-            ostringstream oss;
-            oss << ll;
-            str = oss.str();
-            break;
-        }
-
-        case REAL_RESULT:
-        {
-            double d;
-            d = *((double*)v);
-            ostringstream oss;
-            oss << d;
-            str = oss.str();
-            break;
-        }
-
-        case DECIMAL_RESULT:
-        case STRING_RESULT:
-            str = v;
-            break;
-
-        case ROW_RESULT:
-            break;
-    }
-
-    return str;
-}
 }
 
 /****************************************************************************
@@ -143,14 +81,14 @@ extern "C"
 //=======================================================================
 
     /**
-     * regr_avgx 
+     * regr_avgx
      */
     struct regr_avgx_data
     {
       long double sumx;
       int64_t   cnt;
     };
-     
+
     #ifdef _MSC_VER
     __declspec(dllexport)
     #endif
@@ -171,7 +109,7 @@ extern "C"
         {
             initid->decimals += 4;
         }
-        
+
         if (!(data = (struct regr_avgx_data*) malloc(sizeof(struct regr_avgx_data))))
     	{
             strmov(message,"Couldn't allocate memory");
@@ -190,7 +128,7 @@ extern "C"
     void regr_avgx_deinit(UDF_INIT* initid)
     {
     	free(initid->ptr);
-    }	
+    }
 
     #ifdef _MSC_VER
     __declspec(dllexport)
@@ -239,21 +177,21 @@ extern "C"
         {
             *is_null = 1;
         }
-        
+
         return valOut;
     }
 
 //=======================================================================
 
     /**
-     * regr_avgy 
+     * regr_avgy
      */
     struct regr_avgy_data
     {
         long double sumy;
         int64_t   cnt;
     };
-     
+
     #ifdef _MSC_VER
     __declspec(dllexport)
     #endif
@@ -275,7 +213,7 @@ extern "C"
         {
             initid->decimals += 4;
         }
-                        
+
         if (!(data = (struct regr_avgy_data*) malloc(sizeof(struct regr_avgy_data))))
     	{
             strmov(message,"Couldn't allocate memory");
@@ -294,7 +232,7 @@ extern "C"
     void regr_avgy_deinit(UDF_INIT* initid)
     {
     	free(initid->ptr);
-    }	
+    }
 
     #ifdef _MSC_VER
     __declspec(dllexport)
@@ -349,13 +287,13 @@ extern "C"
 //=======================================================================
 
     /**
-     * regr_count 
+     * regr_count
      */
     struct regr_count_data
     {
       int64_t   cnt;
     };
-     
+
     #ifdef _MSC_VER
     __declspec(dllexport)
     #endif
@@ -385,7 +323,7 @@ extern "C"
     void regr_count_deinit(UDF_INIT* initid)
     {
     	free(initid->ptr);
-    }	
+    }
 
     #ifdef _MSC_VER
     __declspec(dllexport)
@@ -428,7 +366,7 @@ extern "C"
 //=======================================================================
 
     /**
-     * regr_slope 
+     * regr_slope
      */
     struct regr_slope_data
     {
@@ -438,7 +376,7 @@ extern "C"
         long double sumy;
         long double sumxy;  // sum of (x*y)
     };
-     
+
     #ifdef _MSC_VER
     __declspec(dllexport)
     #endif
@@ -457,7 +395,7 @@ extern "C"
         }
 
         initid->decimals = DECIMAL_NOT_SPECIFIED;
-                
+
     	if (!(data = (struct regr_slope_data*) malloc(sizeof(struct regr_slope_data))))
     	{
             strmov(message,"Couldn't allocate memory");
@@ -479,7 +417,7 @@ extern "C"
     void regr_slope_deinit(UDF_INIT* initid)
     {
     	free(initid->ptr);
-    }	
+    }
 
     #ifdef _MSC_VER
     __declspec(dllexport)
@@ -549,7 +487,7 @@ extern "C"
 //=======================================================================
 
     /**
-     * regr_intercept 
+     * regr_intercept
      */
     struct regr_intercept_data
     {
@@ -559,7 +497,7 @@ extern "C"
         long double sumy;
         long double sumxy;  // sum of (x*y)
     };
-     
+
     #ifdef _MSC_VER
     __declspec(dllexport)
     #endif
@@ -599,7 +537,7 @@ extern "C"
     void regr_intercept_deinit(UDF_INIT* initid)
     {
     	free(initid->ptr);
-    }	
+    }
 
     #ifdef _MSC_VER
     __declspec(dllexport)
@@ -680,7 +618,7 @@ extern "C"
         long double sumy2;  // sum of (y squared)
         long double sumxy;  // sum of (x*y)
     };
-     
+
     #ifdef _MSC_VER
     __declspec(dllexport)
     #endif
@@ -722,7 +660,7 @@ extern "C"
     void regr_r2_deinit(UDF_INIT* initid)
     {
     	free(initid->ptr);
-    }	
+    }
 
     #ifdef _MSC_VER
     __declspec(dllexport)
@@ -820,7 +758,7 @@ extern "C"
         long double sumy2;  // sum of (y squared)
         long double sumxy;  // sum of (x*y)
     };
-     
+
     #ifdef _MSC_VER
     __declspec(dllexport)
     #endif
@@ -839,7 +777,7 @@ extern "C"
         }
 
         initid->decimals = DECIMAL_NOT_SPECIFIED;
-        
+
         if (!(data = (struct corr_data*) malloc(sizeof(struct corr_data))))
     	{
             strmov(message,"Couldn't allocate memory");
@@ -862,7 +800,7 @@ extern "C"
     void corr_deinit(UDF_INIT* initid)
     {
     	free(initid->ptr);
-    }	
+    }
 
     #ifdef _MSC_VER
     __declspec(dllexport)
@@ -957,7 +895,7 @@ extern "C"
         long double sumx;
         long double sumx2;  // sum of (x squared)
     };
-     
+
     #ifdef _MSC_VER
     __declspec(dllexport)
     #endif
@@ -996,7 +934,7 @@ extern "C"
     void regr_sxx_deinit(UDF_INIT* initid)
     {
     	free(initid->ptr);
-    }	
+    }
 
     #ifdef _MSC_VER
     __declspec(dllexport)
@@ -1066,7 +1004,7 @@ extern "C"
         long double sumy;
         long double sumy2;  // sum of (y squared)
     };
-     
+
     #ifdef _MSC_VER
     __declspec(dllexport)
     #endif
@@ -1085,7 +1023,7 @@ extern "C"
         }
 
         initid->decimals = DECIMAL_NOT_SPECIFIED;
-        
+
         if (!(data = (struct regr_syy_data*) malloc(sizeof(struct regr_syy_data))))
     	{
             strmov(message,"Couldn't allocate memory");
@@ -1105,7 +1043,7 @@ extern "C"
     void regr_syy_deinit(UDF_INIT* initid)
     {
     	free(initid->ptr);
-    }	
+    }
 
     #ifdef _MSC_VER
     __declspec(dllexport)
@@ -1177,7 +1115,7 @@ extern "C"
         long double sumy;
         long double sumxy;  // sum of (x*y)
     };
-     
+
     #ifdef _MSC_VER
     __declspec(dllexport)
     #endif
@@ -1196,7 +1134,7 @@ extern "C"
         }
 
         initid->decimals = DECIMAL_NOT_SPECIFIED;
-        
+
         if (!(data = (struct regr_sxy_data*) malloc(sizeof(struct regr_sxy_data))))
     	{
             strmov(message,"Couldn't allocate memory");
@@ -1217,7 +1155,7 @@ extern "C"
     void regr_sxy_deinit(UDF_INIT* initid)
     {
     	free(initid->ptr);
-    }	
+    }
 
     #ifdef _MSC_VER
     __declspec(dllexport)
@@ -1291,7 +1229,7 @@ extern "C"
         long double sumy;
         long double sumxy;  // sum of (x*y)
     };
-     
+
     #ifdef _MSC_VER
     __declspec(dllexport)
     #endif
@@ -1310,7 +1248,7 @@ extern "C"
         }
 
         initid->decimals = DECIMAL_NOT_SPECIFIED;
-        
+
         if (!(data = (struct covar_pop_data*) malloc(sizeof(struct covar_pop_data))))
     	{
             strmov(message,"Couldn't allocate memory");
@@ -1331,7 +1269,7 @@ extern "C"
     void covar_pop_deinit(UDF_INIT* initid)
     {
     	free(initid->ptr);
-    }	
+    }
 
     #ifdef _MSC_VER
     __declspec(dllexport)
@@ -1404,7 +1342,7 @@ extern "C"
         long double sumy;
         long double sumxy;  // sum of (x*y)
     };
-     
+
     #ifdef _MSC_VER
     __declspec(dllexport)
     #endif
@@ -1423,7 +1361,7 @@ extern "C"
         }
 
         initid->decimals = DECIMAL_NOT_SPECIFIED;
-        
+
         if (!(data = (struct covar_samp_data*) malloc(sizeof(struct covar_samp_data))))
     	{
             strmov(message,"Couldn't allocate memory");
@@ -1444,7 +1382,7 @@ extern "C"
     void covar_samp_deinit(UDF_INIT* initid)
     {
     	free(initid->ptr);
-    }	
+    }
 
     #ifdef _MSC_VER
     __declspec(dllexport)

@@ -23,7 +23,7 @@
  * @file
  */
 #ifndef JOBLIST_RESOURCEDISTRIBUTER_H
-#define JOBLIST_RESOURCEMANAGER_H
+#define JOBLIST_RESOURCEDISTRIBUTER_H
 
 #include <unistd.h>
 #include <list>

@@ -369,7 +369,7 @@ public:
     uint64_t getUintVal(rowgroup::Row& row,
                         FunctionParm& fp,
                         bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 

@@ -63,7 +63,6 @@ namespace
 typedef messageqcpp::ByteStream::quadbyte quadbyte;
 
 const quadbyte UNRECOGNIZED_PACKAGE_TYPE = 100;
-const quadbyte NO_PKNAME_AVAILABLE = 101;
 
 const std::string DDLProcName = "DDLProc";
 

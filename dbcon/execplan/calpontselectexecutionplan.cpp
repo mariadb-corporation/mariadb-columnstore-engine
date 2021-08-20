@@ -414,7 +414,6 @@ string CalpontSelectExecutionPlan::queryTypeToString(const uint32_t queryType)
 void CalpontSelectExecutionPlan::serialize(messageqcpp::ByteStream& b) const
 {
     ReturnedColumnList::const_iterator rcit;
-    vector<ReturnedColumn*>::const_iterator it;
     ColumnMap::const_iterator mapiter;
     TableList::const_iterator tit;
 
@@ -727,7 +726,6 @@ bool CalpontSelectExecutionPlan::operator==(const CalpontSelectExecutionPlan& t)
 
     ReturnedColumnList::const_iterator rcit;
     ReturnedColumnList::const_iterator rcit2;
-    vector<ReturnedColumn*>::const_iterator it, it2;
     SelectList::const_iterator sit, sit2;
     ColumnMap::const_iterator map_it, map_it2;
 

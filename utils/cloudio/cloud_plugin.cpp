@@ -21,7 +21,7 @@
 
 using namespace idbdatafile;
 
-extern "C"
+extern "C++"
 {
     FileFactoryEnt plugin_instance()
     {

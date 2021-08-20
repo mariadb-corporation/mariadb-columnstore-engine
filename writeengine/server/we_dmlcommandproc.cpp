@@ -19,7 +19,6 @@
 // $Id: we_dmlcommandproc.cpp 3082 2011-09-26 22:00:38Z chao $
 
 #include <unistd.h>
-using namespace std;
 #include "bytestream.h"
 using namespace messageqcpp;
 
@@ -53,6 +52,8 @@ using namespace BRM;
 #include "IDBPolicy.h"
 #include "checks.h"
 #include "columnwidth.h"
+
+using namespace std;
 
 namespace WriteEngine
 {
@@ -1897,7 +1898,8 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
                                 bs >> val64;
                                 memcpy(&valD, &val64, 8);
 
-                                if (valD < 0.0 && valD != joblist::DOUBLEEMPTYROW && valD != joblist::DOUBLENULL)
+                                if (valD < 0.0 && valD != static_cast<double>(joblist::DOUBLEEMPTYROW)
+                                    && valD != static_cast<double>(joblist::DOUBLENULL))
                                 {
                                     valD = 0.0;
                                     pushWarning = true;
@@ -1915,7 +1917,8 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
                                 bs >> val32;
                                 memcpy(&valF, &val32, 4);
 
-                                if (valF < 0.0 && valF != joblist::FLOATEMPTYROW && valF != joblist::FLOATNULL)
+                                if (valF < 0.0 && valF != static_cast<float>(joblist::FLOATEMPTYROW)
+                                    && valF != static_cast<float>(joblist::FLOATNULL))
                                 {
                                     valF = 0.0;
                                     pushWarning = true;
@@ -2585,7 +2588,7 @@ uint8_t WE_DMLCommandProc::rollbackBatchAutoOn(messageqcpp::ByteStream& bs, std:
     }
     catch ( ... )
     {
-        err = "No such table for oid " + tableOid;
+        err = std::string("No such table for oid ") + std::to_string(tableOid);
         rc = 1;
         return rc;
     }
@@ -2813,7 +2816,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                 }
 
 		int rrid = (int) relativeRID / (BYTE_PER_BLOCK / colWidth);
-                // populate stats.blocksChanged 
+                // populate stats.blocksChanged
 		if (rrid > preBlkNums[j])
                 {
 		    preBlkNums[j] = rrid ;
@@ -3847,7 +3850,7 @@ uint8_t WE_DMLCommandProc::processFlushFiles(messageqcpp::ByteStream& bs, std::s
         }
         catch ( ... )
         {
-            err = "Systemcatalog error for tableoid " + tableOid;
+            err = std::string("Systemcatalog error for tableoid ") + std::to_string(tableOid);
             rc = 1;
             return rc;
         }

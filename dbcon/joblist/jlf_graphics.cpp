@@ -35,6 +35,14 @@ using namespace joblist;
 
 #include "jlf_graphics.h"
 
+
+#ifdef __clang__
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wpotentially-evaluated-expression"
+    // for warnings on typeid :expression with side effects will be evaluated despite being used as an operand to 'typeid'
+#endif
+
+
 namespace jlf_graphics
 {
 
@@ -411,3 +419,6 @@ ostream& writeDotCmds(ostream& dotFile, const JobStepVector& query, const JobSte
 
 // vim:ts=4 sw=4 syntax=cpp:
 
+#ifdef __clang__
+    #pragma clang diagnostic pop
+#endif

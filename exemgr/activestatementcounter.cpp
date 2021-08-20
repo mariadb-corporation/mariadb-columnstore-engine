@@ -19,8 +19,6 @@
 //
 
 #include <unistd.h>
-using namespace std;
-
 #include <boost/thread/mutex.hpp>
 using namespace boost;
 

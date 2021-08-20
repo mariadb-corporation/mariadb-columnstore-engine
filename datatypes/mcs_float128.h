@@ -14,14 +14,16 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA. 
-*/ 
+   MA 02110-1301, USA.
+*/
 #ifndef MCS_TSFLOAT128_H_INCLUDED
 #define MCS_TSFLOAT128_H_INCLUDED
 
 #include <cfloat>
+#include <cctype>
 #include <cstdint>
 #include <cstring>
+#include <string>
 #include "mcs_numeric_limits.h"
 
 #ifdef __aarch64__
@@ -103,7 +105,7 @@ static const float128_t mcs_fl_one = 1.0, mcs_fl_Zero[] = {0.0, -0.0,};
 template<> class numeric_limits<float128_t> {
   public:
     static constexpr bool is_specialized = true;
-    static constexpr float128_t max()
+    static float128_t max()
     {
       return mcs_ieee854_float128{ .ieee = {0xffffffff,
                                             0xffffffff,
@@ -112,7 +114,7 @@ template<> class numeric_limits<float128_t> {
                                             0x7ffe,
                                             0x0}}.value;
     }
-    static constexpr float128_t min()
+    static float128_t min()
     {
       return mcs_ieee854_float128{ .ieee = {0x0,
                                             0x0,

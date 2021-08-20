@@ -146,7 +146,7 @@ std::string WECmdArgs::getCpImportCmdLine()
         else if (0 == fLocFile.length()) //No filename given, from job file
             aSS << " -f " << fPmFilePath;
     }
-    
+
     if (fErrorDir.length() > 0)
         aSS << " -L " << fErrorDir;
 
@@ -957,7 +957,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
 
             default:
             {
-                std::string aErr = "Unknown command line option " + aCh;
+                std::string aErr = std::string("Unknown command line option ") + std::to_string(aCh);
                 //cout << "Unknown command line option " << aCh << endl;
                 throw (runtime_error(aErr));
             }
@@ -1256,7 +1256,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
             throw (runtime_error("No schema or local filename specified."));
         }
     }
-    
+
     /* check for all-or-nothing cmdline args to enable S3 import */
     int s3Tmp = (fS3Key.empty() ? 0 : 1) + (fS3Bucket.empty() ? 0 : 1) +
         (fS3Secret.empty() ? 0 : 1) + (fS3Region.empty() ? 0 : 1);
@@ -1551,7 +1551,7 @@ unsigned int WECmdArgs::getBatchQuantity()
 
 void WECmdArgs::setEnclByAndEscCharFromJobFile(std::string& JobName)
 {
-    if ((fEnclosedChar == 0))	// check anything in Jobxml file
+    if (fEnclosedChar == 0)	// check anything in Jobxml file
     {
         WEXmlgetter aXmlGetter(JobName);
         vector<string> aSections;

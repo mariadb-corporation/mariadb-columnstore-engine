@@ -37,7 +37,7 @@
 namespace WriteEngine
 {
 class Log;
-struct ColumnInfo;
+class ColumnInfo;
 
 /** @brief A buffer class to store data written to compressed column files
  *
@@ -83,10 +83,10 @@ public:
      *
      * @param startOffset The buffer offset from where the write should begin
      * @param writeSize   The number of bytes to be written to the file
-     * @param fillUpWEmpties The flag to fill the buffer with empty magic 
+     * @param fillUpWEmpties The flag to fill the buffer with empty magic
      *                       values up to the block boundary.
      */
-    virtual int writeToFile(int startOffset, int writeSize, 
+    virtual int writeToFile(int startOffset, int writeSize,
                             bool fillUpWEmpties = false);
 
 private:
