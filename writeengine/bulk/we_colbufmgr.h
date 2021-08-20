@@ -40,7 +40,7 @@ namespace WriteEngine
 {
 class Log;
 
-struct ColumnInfo;
+class ColumnInfo;
 
 /**
  * ColumnBufferManager class provides the functionality for multiple threads to
@@ -194,7 +194,7 @@ protected:
      * @param startOffset The buffer offset where the write should begin
      * @param writeSize   The number of bytes to be written to the file
      * @param fillUpWEmpties The flag to fill the buffer with NULLs up to
-     *                      the block boundary.  
+     *                      the block boundary.
      * @return success or fail status
      */
     virtual int writeToFileExtentCheck(uint32_t startOffset, uint32_t writeSize,

@@ -153,7 +153,6 @@ uint32_t RowEstimator::estimateDistinctValues(const execplan::CalpontSystemCatal
     {
         switch (ct.colDataType)
         {
-
             case CalpontSystemCatalog::BIT:
                 return 2;
 

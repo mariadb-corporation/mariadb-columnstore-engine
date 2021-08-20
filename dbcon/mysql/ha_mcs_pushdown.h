@@ -118,7 +118,7 @@ public:
   int init_scan() override;
   int next_row() override;
   int end_scan() override;
-  void print_error(int, unsigned long);
+  void print_error(int, unsigned long) override;
 };
 
 /*@brief select_handler class*/

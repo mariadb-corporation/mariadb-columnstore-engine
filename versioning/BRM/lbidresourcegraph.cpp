@@ -81,7 +81,7 @@ void LBIDResourceGraph::connectResources(LBID_t start, LBID_t end,
 {
     vector<ResourceNode*> intersection, reserveList;
     RNodes_t::iterator sit;
-    vector<ResourceNode*>::iterator it, next;
+    vector<ResourceNode*>::iterator it;
     LBID_t i;
 
 #if 0

@@ -78,7 +78,7 @@ XMLGenData::XMLGenData( )
     br = Config::getBulkRoot();
     boost::filesystem::path p(br);
 #else
-    boost::filesystem::path p( std::string(Config::getBulkRoot()) );
+    boost::filesystem::path p{ std::string(Config::getBulkRoot()) };
 #endif
     p /= JOBDIR;
     fParms.insert(ParmList::value_type(PATH, p.string()));

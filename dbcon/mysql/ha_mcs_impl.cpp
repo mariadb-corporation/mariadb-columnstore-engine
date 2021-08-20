@@ -169,8 +169,6 @@ static const string interval_names[] =
     "second_microsecond"
 };
 
-const unsigned NONSUPPORTED_ERR_THRESH = 2000;
-
 // HDFS is never used nowadays, so don't bother
 bool useHdfs = false; // ResourceManager::instance()->useHdfs();
 
@@ -834,7 +832,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
             if (isUpdateStatement(thd->lex->sql_command))
                 args.add("Update");
 #if 0
-            else if (thd->rgi_slave && thd->rgi_slave->m_table_map.count() != 0) 
+            else if (thd->rgi_slave && thd->rgi_slave->m_table_map.count() != 0)
                 args.add("Row based replication event");
 #endif
             else
@@ -1816,7 +1814,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
                 errorMsg = "Unknown error caught";
                 b = 1;
             }
-            
+
             // Clear tableOid for the next SQL statement
             ci->tableOid = 0;
         }
@@ -1829,7 +1827,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
         //@Bug 2540. Set error status instead of warning
         thd->raise_error_printf(ER_INTERNAL_ERROR, errorMsg.c_str());
         ci->rc = b;
-        rc = ER_INTERNAL_ERROR; 
+        rc = ER_INTERNAL_ERROR;
     }
 
     if (b == dmlpackageprocessor::DMLPackageProcessor::IDBRANGE_WARNING)
@@ -1840,7 +1838,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
             ci->rc = b;
             // Turn this on as MariaDB doesn't do it until the next phase
             thd->abort_on_warning = thd->is_strict_mode();
-            rc = ER_INTERNAL_ERROR; 
+            rc = ER_INTERNAL_ERROR;
         }
         else
         {

@@ -92,10 +92,16 @@ using namespace rowgroup;
 
 #include "mcsv1_udaf.h"
 
+#ifdef __clang__
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wpotentially-evaluated-expression"
+    // for warnings on typeid :expression with side effects will be evaluated despite being used as an operand to 'typeid'
+#endif
+
+
 namespace
 {
 using namespace joblist;
-
 
 void projectSimpleColumn(const SimpleColumn* sc, JobStepVector& jsv, JobInfo& jobInfo)
 {
@@ -279,7 +285,7 @@ const JobStepVector doProject(const RetColsVector& retCols, JobInfo& jobInfo)
 
             if (retCols[i]->windowfunctionColumnList().size() > 0)
                 jobInfo.expressionVec.push_back(key);
-            else if (find(jobInfo.expressionVec.begin(), jobInfo.expressionVec.end(), key) 
+            else if (find(jobInfo.expressionVec.begin(), jobInfo.expressionVec.end(), key)
                      == jobInfo.expressionVec.end())
             {
                 jobInfo.returnedExpressions.push_back(sjstep);
@@ -887,7 +893,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
         AggregateColumn* aggc = dynamic_cast<AggregateColumn*>(srcp.get());
         bool doDistinct = (csep->distinct() && csep->groupByCols().empty());
     //    Use this instead of the above line to mimic MariaDB's sql_mode = 'ONLY_FULL_GROUP_BY'
-    //    bool doDistinct = (csep->distinct() && 
+    //    bool doDistinct = (csep->distinct() &&
     //                       csep->groupByCols().empty() &&
     //                       !jobInfo.hasAggregation);
         uint32_t tupleKey = -1;
@@ -2346,3 +2352,6 @@ SJLP JobListFactory::makeJobList(
 }
 // vim:ts=4 sw=4:
 
+#ifdef __clang__
+    #pragma clang diagnostic pop
+#endif

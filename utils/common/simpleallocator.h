@@ -31,6 +31,7 @@
 #include <list>
 #include <stdint.h>
 #include <limits>
+#include <memory>
 
 #undef min
 #undef max
@@ -102,7 +103,7 @@ public:
     };
 
     SimpleAllocator() throw() {}
-    SimpleAllocator(boost::shared_ptr<SimplePool> pool) throw()
+    SimpleAllocator(std::shared_ptr<SimplePool> pool) throw()
     {
         fPool = pool;
     }
@@ -158,10 +159,10 @@ public:
 
     inline void setPool(SimplePool* pool)
     {
-        fPool = pool;
+        fPool.reset(pool);
     }
 
-    boost::shared_ptr<SimplePool> fPool;
+    std::shared_ptr<SimplePool> fPool;
 };
 
 

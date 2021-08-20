@@ -69,10 +69,10 @@ void printUsage() {
 
 struct scoped_closer {
     scoped_closer(int f) : fd(f) { }
-    ~scoped_closer() { 
+    ~scoped_closer() {
         int s_errno = errno;
         ::close(fd);
-        errno = s_errno; 
+        errno = s_errno;
     }
     int fd;
 };
@@ -83,7 +83,7 @@ void makeTestObject(const char *dest)
     int objFD = open(dest, O_WRONLY | O_CREAT | O_TRUNC, 0600);
     assert(objFD >= 0);
     scoped_closer s1(objFD);
-    
+
     for (int i = 0; i < 2048; i++)
         assert(write(objFD, &i, 4) == 4);
 }
@@ -95,7 +95,7 @@ void makeTestJournal(const char *dest)
     int journalFD = open(dest, O_WRONLY | O_CREAT | O_TRUNC, 0600);
     assert(journalFD >= 0);
     scoped_closer s2(journalFD);
-    
+
     char header[] = "{ \"version\" : 1, \"max_offset\": 39 }";
     size_t result = write(journalFD, header, strlen(header) + 1);
     assert(result==(strlen(header) + 1));
@@ -149,7 +149,7 @@ int getSocket()
 }
 
 int sessionSock = -1;  // tester uses this end of the connection
-int serverSock = -1;   
+int serverSock = -1;
 int clientSock = -1;   // have the Tasks use this end of the connection
 
 void acceptConnection()
@@ -162,13 +162,13 @@ void acceptConnection()
         memset(&sa, 0, sizeof(sa));
         sa.sun_family = AF_UNIX;
         memcpy(&sa.sun_path[1], "testing", 7);
-        
+
         err = ::bind(serverSock, (struct sockaddr *) &sa, sizeof(sa));
         assert(err == 0);
         err = ::listen(serverSock, 2);
         assert(err == 0);
     }
-    
+
     sessionSock = ::accept(serverSock, NULL, NULL);
     assert(sessionSock > 0);
 }
@@ -181,7 +181,7 @@ void makeConnection()
     memset(&sa, 0, sizeof(sa));
     sa.sun_family = AF_UNIX;
     memcpy(&sa.sun_path[1], "testing", 7);
-    
+
     clientSock = ::socket(AF_UNIX, SOCK_STREAM, 0);
     assert(clientSock > 0);
     sleep(1);   // let server thread get to accept()
@@ -189,7 +189,7 @@ void makeConnection()
     assert(err == 0);
     t.join();
 }
-    
+
 bool opentask(bool connectionTest=false)
 {
     // going to rely on msgs being smaller than the buffer here
@@ -199,18 +199,18 @@ bool opentask(bool connectionTest=false)
     open_cmd *cmd = (open_cmd *) &hdr[1];
     string testFile = "metadataJournalTest";
     // open/create a file named 'opentest1'
-    const char *filename = string(homepath.string()+"/"+prefix+"/"+testFile).c_str();
+    std::string filename = homepath.string()+"/"+prefix+"/"+testFile;
     hdr->type = SM_MSG_START;
     hdr->flags = 0;
-    hdr->payloadLen = sizeof(*cmd) + strlen(filename);
+    hdr->payloadLen = sizeof(*cmd) + filename.size();
     cmd->opcode = OPEN;
     cmd->openmode = O_WRONLY | O_CREAT;
     cmd->flen = 19;
-    strcpy((char *) cmd->filename, filename);
-    
+    strcpy((char *) cmd->filename, filename.c_str());
+
     cout << "open file " << filename << endl;
-    ::unlink(filename);
-    
+    ::unlink(filename.c_str());
+
     // set payload to be shorter than actual message lengh
     // and send a shortened message.
     if (connectionTest)
@@ -288,7 +288,7 @@ bool replicatorTest()
 
     // test newObject
     repli->newObject(newobject,data,0,10);
-    
+
     //check file contents
     fd = ::open(newObjectCacheFullPath.c_str(), O_RDONLY);
     err = ::read(fd, buf, sizeof(buf));
@@ -414,7 +414,7 @@ bool writetask()
     int fd = ::open(filename, O_CREAT | O_RDWR, 0666);
     assert(fd > 0);
     scoped_closer f(fd);
- 
+
     uint8_t buf[1024];
     sm_msg_header *hdr = (sm_msg_header *) buf;
     write_cmd *cmd = (write_cmd *) &hdr[1];
@@ -436,7 +436,7 @@ bool writetask()
     assert(result == static_cast<ssize_t>(hdr->payloadLen));
 
     w.run();
-    
+
     // verify response
     int err = ::recv(sessionSock, buf, sizeof(buf), MSG_DONTWAIT);
     sm_response *resp = (sm_response *) buf;
@@ -467,26 +467,26 @@ bool appendtask()
     scoped_closer f(fd);
     int err = ::write(fd, "testjunk", 8);
     assert(err == 8);
- 
+
     uint8_t buf[1024];
     append_cmd *cmd = (append_cmd *) buf;
     uint8_t *data;
-    
+
     cmd->opcode = APPEND;
     cmd->count = 9;
     cmd->flen = 11;
     memcpy(&cmd->filename, filename, cmd->flen);
     data = (uint8_t *) &cmd->filename[cmd->flen];
     memcpy(data, "123456789", cmd->count);
-    
+
     int payloadLen = sizeof(*cmd) + cmd->flen + cmd->count;
-    
+
     AppendTask a(clientSock, payloadLen);
     ssize_t result = ::write(sessionSock, cmd, payloadLen);
     assert(result==(payloadLen));
 
     a.run();
-    
+
     // verify response
     err = ::recv(sessionSock, buf, sizeof(buf), MSG_DONTWAIT);
     sm_response *resp = (sm_response *) buf;
@@ -495,7 +495,7 @@ bool appendtask()
     assert(resp->header.payloadLen == sizeof(ssize_t));
     assert(resp->header.flags == 0);
     assert(resp->returnCode == 9);
-    
+
     //check file contents
     ::lseek(fd, 0, SEEK_SET);
     err = ::read(fd, buf, sizeof(buf));
@@ -524,14 +524,14 @@ void unlinktask(bool connectionTest=false)
     meta.writeMetadata();
 
     assert(bf::exists(fullPathMeta));
-    
+
     uint8_t buf[1024];
     unlink_cmd *cmd = (unlink_cmd *) buf;
-    
+
     cmd->opcode = UNLINK;
     cmd->flen = strlen(filename);
     memcpy(&cmd->filename, filename, cmd->flen);
-    
+
     // set payload to be shorter than actual message lengh
     // and send a shortened message.
     if (connectionTest)
@@ -575,11 +575,11 @@ void unlinktask(bool connectionTest=false)
         // confirm it no longer exists
         assert(!bf::exists(fullPathMeta));
     }
-    
+
     // delete it again, make sure we get an error message & reasonable error code
     // Interesting.  boost::filesystem::remove() doesn't consider it an error if the file doesn't
     // exist.  Need to look into the reasoning for that, and decide whether IOC
-    // should return an error anyway.  For now, this test below doesn't get 
+    // should return an error anyway.  For now, this test below doesn't get
     // an error msg.
     #if 0
     memset(buf, 0, 1024);
@@ -592,7 +592,7 @@ void unlinktask(bool connectionTest=false)
     assert(result==(sizeof(unlink_cmd) + cmd->flen));
 
     u2.run();
-    
+
     // verify response
     err = ::recv(sessionSock, buf, 1024, MSG_DONTWAIT);
     resp = (sm_response *) buf;
@@ -604,7 +604,7 @@ void unlinktask(bool connectionTest=false)
     err = (*(int *) resp->payload);
     assert(err == ENOENT);
     #endif
-    
+
     cout << "unlink task OK" << endl;
 }
 
@@ -616,17 +616,17 @@ bool stattask(bool connectionTest=false)
     string Metafilename = prefix + "/stattest1";
 
     string fullFilename = Config::get()->getValue("ObjectStorage", "metadata_path") + "/" + Metafilename + ".meta";
-    
+
     ::unlink(fullFilename.c_str());
     makeTestMetadata(fullFilename.c_str(),testObjKey);
 
     uint8_t buf[1024];
     stat_cmd *cmd = (stat_cmd *) buf;
-    
+
     cmd->opcode = STAT;
     cmd->flen = filename.length();
     strcpy((char *) cmd->filename, filename.c_str());
-    
+
     // set payload to be shorter than actual message lengh
     // and send a shortened message.
     if (connectionTest)
@@ -694,15 +694,15 @@ bool IOCTruncate()
     }
     Cache *cache = Cache::get();
     cache->reset();
-    
+
     bf::path cachePath = ioc->getCachePath();
     bf::path journalPath = ioc->getJournalPath();
     bf::path metaPath = ioc->getMetadataPath();
-    bf::path cloudPath = ls->getPrefix(); 
-    
+    bf::path cloudPath = ls->getPrefix();
+
     // metaPath doesn't necessarily exist until a MetadataFile instance is created
     bf::create_directories(metaPath);
-    
+
     /*  start with one object in cloud storage
         truncate past the end of the object
         verify nothing changed & got success
@@ -712,14 +712,14 @@ bool IOCTruncate()
         truncate at 0 bytes
         verify file now looks empty
         verify the object was deleted
-        
+
         add 2 8k test objects and a journal against the second one
         truncate @ 10000 bytes
         verify all files still exist
         truncate @ 6000 bytes, 2nd object & journal were deleted
         truncate @ 0 bytes, verify no files are left
     */
-    
+
     bf::path metadataFile = metaPath/prefix/"test-file.meta";
     bf::path objectPath = cloudPath/testObjKey;
     bf::path cachedObjectPath = cachePath/prefix/testObjKey;
@@ -729,7 +729,7 @@ bool IOCTruncate()
     int err;
     uint8_t buf[1<<14];
     int *buf32 = (int *) buf;
-    
+
     /* Need to enable this later.
     // Extend the test file to 10000 bytes
     err = ioc->truncate(testFile, 10000);
@@ -742,12 +742,12 @@ bool IOCTruncate()
     for (int i = 2048; i < 2500; i++)
         assert(buf32[i] == 0);
     */
-    
+
     err = ioc->truncate(testFile, 4000);
     assert(!err);
     MetadataFile meta(metaTestFile);
     assert(meta.getLength() == 4000);
-    
+
     // read the data, make sure there are only 4000 bytes & the object still exists
     err = ioc->read(testFile, buf, 0, 8192);
     assert(err == 4000);
@@ -756,7 +756,7 @@ bool IOCTruncate()
     err = ioc->read(testFile, buf, 4005, 1);
     assert(err == 0);
     assert(bf::exists(objectPath));
-    
+
     // truncate to 0 bytes, make sure everything is consistent with that, and the object no longer exists
     err = ioc->truncate(testFile, 0);
     assert(!err);
@@ -769,18 +769,18 @@ bool IOCTruncate()
     sync->forceFlush();
     sleep(1);  // give Sync a chance to delete the object from the cloud
     assert(!bf::exists(objectPath));
-    
+
     // recreate the meta file, make a 2-object version
     ioc->unlink(testFile);
     makeTestMetadata(metadataFile.string().c_str(),testObjKey);
     makeTestObject(objectPath.string().c_str());
-    
+
     meta = MetadataFile(metaTestFile);
     bf::path secondObjectPath = cloudPath / meta.addMetadataObject(testFile, 8192).key;
     bf::path cachedSecondObject = cachePath/prefix/secondObjectPath.filename();
     makeTestObject(secondObjectPath.string().c_str());
     meta.writeMetadata();
-    
+
     // make sure there are 16k bytes, and the data is valid before going forward
     memset(buf, 0, sizeof(buf));
     err = ioc->read(testFile, buf, 0, sizeof(buf));
@@ -789,7 +789,7 @@ bool IOCTruncate()
         assert(buf32[i] == (i % 2048));
     assert(bf::exists(cachedSecondObject));
     assert(bf::exists(cachedObjectPath));
-    
+
     // truncate to 10k, make sure everything looks right
     err = ioc->truncate(testFile, 10240);
     assert(!err);
@@ -801,7 +801,7 @@ bool IOCTruncate()
         assert(buf32[i] == (i % 2048));
     err = ioc->read(testFile, buf, 10239, 10);
     assert(err == 1);
-    
+
     // truncate to 6000 bytes, make sure second object got deleted
     err = ioc->truncate(testFile, 6000);
     meta = MetadataFile(metaTestFile);
@@ -812,7 +812,7 @@ bool IOCTruncate()
     sleep(1);   // give Synchronizer a chance to delete the file from the 'cloud'
     assert(!bf::exists(secondObjectPath));
     assert(!bf::exists(cachedSecondObject));
-    
+
     cache->reset();
     ioc->unlink(testFile);
 
@@ -839,12 +839,12 @@ bool truncatetask(bool connectionTest=false)
 
     uint8_t buf[1024];
     truncate_cmd *cmd = (truncate_cmd *) buf;
-    
+
     cmd->opcode = TRUNCATE;
     cmd->length = 1000;
     cmd->flen = strlen(filename);
     strcpy((char *) cmd->filename, filename);
-    
+
     // set payload to be shorter than actual message lengh
     // and send a shortened message.
     if (connectionTest)
@@ -852,7 +852,7 @@ bool truncatetask(bool connectionTest=false)
 
     size_t result = ::write(sessionSock, cmd, sizeof(*cmd) + cmd->flen);
     assert(result==(sizeof(*cmd) + cmd->flen));
-    
+
     // set payload to be correct length again
     if (connectionTest)
         cmd->flen += 2;
@@ -889,7 +889,7 @@ bool truncatetask(bool connectionTest=false)
         meta = MetadataFile(Metafilename);
         assert(meta.getLength() == 1000);
     }
-    
+
     cache->reset();
     ::unlink(metaFullName.c_str());
     cout << "truncate task OK" << endl;
@@ -906,12 +906,12 @@ bool listdirtask(bool connectionTest=false)
     const char *MetarelPath = metaStr.c_str();
 
     bf::path tmpPath = metaPath/MetarelPath;
-    
+
     // make some dummy files, make sure they are in the list returned.
     set<string> files;
     int err;
     vector<SharedCloser> fdMinders;
-    
+
     bf::create_directories(tmpPath);
     for (int i = 0; i < 10; i++) {
         string file(tmpPath.string() + "/dummy" + to_string(i));
@@ -921,11 +921,11 @@ bool listdirtask(bool connectionTest=false)
         assert(err >= 0);
         fdMinders.push_back(err);
     }
-    
+
     uint8_t buf[8192];
     memset(buf,0,sizeof(buf));
     listdir_cmd *cmd = (listdir_cmd *) buf;
-    
+
     cmd->opcode = LIST_DIRECTORY;
     cmd->plen = strlen(relPath);
     memcpy(cmd->path, relPath, cmd->plen);
@@ -1001,12 +1001,12 @@ void pingtask()
     uint8_t buf[1024];
     ping_cmd *cmd = (ping_cmd *) buf;
     cmd->opcode = PING;
-    
+
     size_t len = sizeof(*cmd);
 
     ssize_t result = ::write(sessionSock, cmd, sizeof(*cmd));
     assert(result==(sizeof(*cmd)));
-    
+
 
     // process task will look for the full length and
     // will wait on the rest of the message.
@@ -1029,7 +1029,7 @@ void pingtask()
 
 bool copytask(bool connectionTest=false)
 {
-    /*  
+    /*
         make a file
         copy it
         verify it exists
@@ -1046,7 +1046,7 @@ bool copytask(bool connectionTest=false)
 
 
     MetadataFile meta1(Metasource);
-    
+
     uint8_t buf[1024];
     copy_cmd *cmd = (copy_cmd *) buf;
     cmd->opcode = COPY;
@@ -1055,7 +1055,7 @@ bool copytask(bool connectionTest=false)
     f_name *file2 = (f_name *) &cmd->file1.filename[cmd->file1.flen];
     file2->flen = strlen(dest);
     strncpy(file2->filename, dest, file2->flen);
-    
+
     uint len = (uint64_t) &file2->filename[file2->flen] - (uint64_t) buf;
 
     // set payload to be shorter than actual message lengh
@@ -1115,7 +1115,7 @@ bool copytask(bool connectionTest=false)
 bool localstorageTest1()
 {
     LocalStorage ls;
-    
+
     /* TODO: Some stuff */
     cout << "local storage test 1 OK" << endl;
     return true;
@@ -1131,15 +1131,15 @@ bool cacheTest1()
         cout << "Cache test 1 requires using local storage" << endl;
         return false;
     }
-    
+
     cache->reset();
     assert(cache->getCurrentCacheSize() == 0);
-    
+
     bf::path storagePath = ls->getPrefix();
     bf::path cachePath = cache->getCachePath() / prefix;
     vector<string> v_bogus;
     vector<bool> exists;
-    
+
     // make sure nothing shows up in the cache path for files that don't exist
     v_bogus.push_back("does-not-exist");
     cache->read(prefix, v_bogus);
@@ -1147,7 +1147,7 @@ bool cacheTest1()
     cache->exists(prefix, v_bogus, &exists);
     assert(exists.size() == 1);
     assert(!exists[0]);
-    
+
     // make sure a file that does exist does show up in the cache path
 
     makeTestObject((storagePath/testObjKey).string().c_str());
@@ -1161,7 +1161,7 @@ bool cacheTest1()
     assert(exists[0]);
     size_t currentSize = cache->getCurrentCacheSize();
     assert(currentSize == bf::file_size(cachePath / testObjKey));
-    
+
     // lie about the file being deleted and then replaced
     cache->deletedObject(prefix, testObjKey, currentSize);
     assert(cache->getCurrentCacheSize() == 0);
@@ -1170,7 +1170,7 @@ bool cacheTest1()
     cache->exists(prefix, v_bogus, &exists);
     assert(exists.size() == 1);
     assert(exists[0]);
-    
+
     // cleanup
     bf::remove(cachePath / testObjKey);
     bf::remove(storagePath / testObjKey);
@@ -1185,10 +1185,10 @@ bool mergeJournalTest()
         call mergeJournal to process it with various params
         verify the expected values
     */
-    
+
     makeTestObject("test-object");
     makeTestJournal("test-journal");
-    
+
     int i;
     IOCoordinator *ioc = IOCoordinator::get();
     size_t len = 8192, tmp;
@@ -1201,7 +1201,7 @@ bool mergeJournalTest()
         assert(idata[i] == i-5);
     for (; i < 2048; i++)
         assert(idata[i] == i);
-        
+
     // try different range parameters
     // read at the beginning of the change
     len = 40;
@@ -1212,7 +1212,7 @@ bool mergeJournalTest()
         assert(idata[i] == i);
     for (; i < 10; i++)
         assert(idata[i] == i+5);
-    
+
     // read s.t. beginning of the change is in the middle of the range
     len = 24;
     data = ioc->mergeJournal("test-object", "test-journal", 8, len, &tmp);
@@ -1222,7 +1222,7 @@ bool mergeJournalTest()
         assert(idata[i] == i + 2);
     for (; i < 6; i++)
         assert(idata[i] == i - 3);
-    
+
     // read s.t. end of the change is in the middle of the range
     len = 20;
     data = ioc->mergeJournal("test-object", "test-journal", 28, len, &tmp);
@@ -1232,7 +1232,7 @@ bool mergeJournalTest()
         assert(idata[i] == i + 2);
     for (; i < 3; i++)
         assert(idata[i] == i + 7);
-    
+
     // cleanup
     bf::remove("test-object");
     bf::remove("test-journal");
@@ -1253,60 +1253,60 @@ bool syncTest1()
         cout << "syncTest1() requires using local storage at the moment." << endl;
         return true;
     }
-    
+
     cache->reset();
-    
+
     // delete everything in the fake cloud to make it easier to list later
     bf::path fakeCloudPath = ls->getPrefix();
     cout << "fakeCLoudPath = " << fakeCloudPath << endl;
     for (bf::directory_iterator dir(fakeCloudPath); dir != bf::directory_iterator(); ++dir)
         bf::remove(dir->path());
-    
+
     bf::path cachePath = sync->getCachePath();
     bf::path journalPath = sync->getJournalPath();
-    
+
     string stmp = config->getValue("ObjectStorage", "metadata_path");
     assert(!stmp.empty());
     bf::path metaPath = stmp;
     // nothing creates the dir yet
     bf::create_directories(metaPath);
-    
+
     // make the test obj, journal, and metadata
     string journalName = prefix + "/" + testObjKey + ".journal";
-    
+
     makeTestObject((cachePath/prefix/testObjKey).string().c_str());
     makeTestJournal((journalPath/journalName).string().c_str());
     makeTestMetadata((metaPath/string(metaTestFile + ".meta")).string().c_str(),testObjKey);
-    
+
     cache->newObject(prefix, testObjKey, bf::file_size(cachePath/prefix/testObjKey));
     cache->newJournalEntry(prefix, bf::file_size(journalPath/journalName));
 
     vector<string> vObj;
     vObj.push_back(testObjKey);
-    
+
     sync->newObjects(prefix, vObj);
     sync->forceFlush();
     sleep(2);  // wait for the job to run
-    
+
     // make sure that it made it to the cloud
     bool exists = false;
     int err = cs->exists(testObjKey, &exists);
     assert(!err);
     assert(exists);
-    
+
     sync->newJournalEntry(prefix, testObjKey, 0);
     sync->forceFlush();
     sleep(1);  // let it do what it does
-    
+
     // check that the original objects no longer exist
     assert(!cache->exists(prefix, testObjKey));
     assert(!bf::exists(journalPath/journalName));
-    
+
     // Replicator doesn't implement all of its functionality yet, need to delete key from the cache manually for now
     bf::remove(cachePath/testObjKey);
-    
+
     // check that a new version of object exists in cloud storage
-    // D'oh, this would have to list the objects to find it, not going to implement 
+    // D'oh, this would have to list the objects to find it, not going to implement
     // that everywhere just now.  For now, making this test require LocalStorage.
     bool foundIt = false;
     string newKey;
@@ -1321,22 +1321,22 @@ bool syncTest1()
             break;
         }
     }
-    
+
     assert(foundIt);
     cache->makeSpace(prefix, cache->getMaxCacheSize());   // clear the cache & make it call sync->flushObject()
-    
+
     // the key should now be back in cloud storage and deleted from the cache
     assert(!cache->exists(prefix, newKey));
     err = cs->exists(newKey, &exists);
     assert(!err && exists);
-    
+
     // make the journal again, call sync->newJournalObject()
     makeTestJournal((journalPath / prefix / (newKey + ".journal")).string().c_str());
     cache->newJournalEntry(prefix, bf::file_size(journalPath / prefix / (newKey + ".journal")));
     sync->newJournalEntry(prefix, newKey, 0);
     sync->forceFlush();
     sleep(1);
-    
+
     // verify that newkey is no longer in cloud storage, and that another permutation is
     err = cs->exists(newKey, &exists);
     assert(!err && !exists);
@@ -1347,9 +1347,9 @@ bool syncTest1()
         foundIt = (MetadataFile::getSourceFromKey(testObjKey) == metaTestFile);
     }
     assert(foundIt);
-    
+
     // TODO test error paths, pass in some junk
-    
+
     // cleanup, just blow away everything for now
     cache->reset();
     vector<string> keys;
@@ -1359,7 +1359,7 @@ bool syncTest1()
     sync->forceFlush();
     sleep(1);
     ioc->unlink(testFile);
-    
+
     cout << "Sync test 1 OK" << endl;
     return true;
 }
@@ -1378,7 +1378,7 @@ void metadataUpdateTest()
     string metaFilePath = metaPath + "/" + "metadataUpdateTest.meta";
     ::unlink(metaFilePath.c_str());
 
-}    
+}
 
 void s3storageTest1()
 {
@@ -1467,10 +1467,10 @@ void IOCReadTest1()
 {
     /*  Generate the test object & metadata
         read it, verify result
-        
+
         Generate the journal object
         read it, verify the merged result
-        
+
         TODO: do partial reads with an offset similar to what the mergeJournal tests do
         TODO: some error path testing
     */
@@ -1494,11 +1494,11 @@ void IOCReadTest1()
     bf::path metaPath = config->getValue("ObjectStorage", "metadata_path");
     assert(!metaPath.empty());
     bf::create_directories(metaPath/prefix);
-    
+
     string objFilename = (storagePath/testObjKey).string();
     string journalFilename = (journalPath/prefix/testObjKey).string() + ".journal";
     string metaFilename = (metaPath/metaTestFile).string() + ".meta";
-    
+
     boost::scoped_array<uint8_t> data(new uint8_t[1<<20]);
 
     memset(data.get(), 0, 1<<20);
@@ -1512,7 +1512,7 @@ void IOCReadTest1()
     size_t objSize = bf::file_size(objFilename);
     err = ioc->read(testFile, data.get(), 0, 1<<20);
     assert(err == (int) objSize);
-    
+
     // verify the data
     int *data32 = (int *) data.get();
     int i;
@@ -1520,9 +1520,9 @@ void IOCReadTest1()
         assert(data32[i] == i);
     for (; i < (1<<20)/4; i++)
         assert(data32[i] == 0);
-        
+
     makeTestJournal(journalFilename.c_str());
-    
+
     err = ioc->read(testFile, data.get(), 0, 1<<20);
     assert(err == (int) objSize);
     for (i = 0; i < 5; i++)
@@ -1533,14 +1533,14 @@ void IOCReadTest1()
         assert(data32[i] == i);
     for (; i < (1<<20)/4; i++)
         assert(data32[i] == 0);
-    
+
     err = ioc->read(testFile, data.get(), 9000, 4000);
     assert(err==0);
 
     cache->reset();
     err = ioc->unlink(testFile);
     assert(err>= 0);
-    
+
     cout << "IOC read test 1 OK" << endl;
 }
 
@@ -1550,17 +1550,17 @@ void IOCUnlink()
     CloudStorage *cs = CloudStorage::get();
     Cache *cache = Cache::get();
     Synchronizer *sync = Synchronizer::get();
-    
+
     cache->reset();
-    
-    /* 
+
+    /*
         Make a metadata file with a complex path
         make the test object and test journal
         delete it at the parent dir level
         make sure the parent dir was deleted
         make sure the object and journal were deleted
     */
-    
+
     bf::path metaPath = ioc->getMetadataPath();
     bf::path cachePath = ioc->getCachePath();
     bf::path journalPath = ioc->getJournalPath();
@@ -1570,7 +1570,7 @@ void IOCUnlink()
     makeTestMetadata(metadataFile.string().c_str(),testObjKey);
     makeTestObject(cachedObjPath.string().c_str());
     makeTestJournal(cachedJournalPath.string().c_str());
-    
+
     cache->newObject(prefix, cachedObjPath.filename().string(), bf::file_size(cachedObjPath));
     cache->newJournalEntry(prefix, bf::file_size(cachedJournalPath));
     vector<string> keys;
@@ -1579,7 +1579,7 @@ void IOCUnlink()
     //sync->newJournalEntry(keys[0]);    don't want to end up renaming it
     sync->forceFlush();
     sleep(1);
-    
+
     // ok, they should be fully 'in the system' now.
     // verify that they are
     assert(bf::exists(metadataFile));
@@ -1588,10 +1588,10 @@ void IOCUnlink()
     bool exists;
     cs->exists(cachedObjPath.filename().string(), &exists);
     assert(exists);
-    
+
     int err = ioc->unlink(testFile);
     assert(err == 0);
-    
+
     assert(!bf::exists(metadataFile));
     assert(!bf::exists(cachedObjPath));
     assert(!bf::exists(cachedJournalPath));
@@ -1600,7 +1600,7 @@ void IOCUnlink()
     cs->exists(cachedObjPath.filename().string(), &exists);
     assert(!exists);
     assert(cache->getCurrentCacheSize() == 0);
-    
+
     cout << "IOC unlink test OK" << endl;
 }
 
@@ -1666,7 +1666,7 @@ void IOCCopyFile2()
 {
     // call IOC::copyFile() with non-existant file
     IOCoordinator *ioc = IOCoordinator::get();
-    
+
     bf::path fullPath = homepath / prefix / "not-there";
     const char *source = fullPath.string().c_str();
     bf::path fullPath2 = homepath / prefix / "not-there2";
@@ -1675,13 +1675,13 @@ void IOCCopyFile2()
     bf::path metaPath = ioc->getMetadataPath();
     bf::remove(metaPath/prefix/"not-there.meta");
     bf::remove(metaPath/prefix/"not-there2.meta");
-    
+
     int err = ioc->copyFile(source, dest);
     assert(err);
     assert(errno == ENOENT);
     assert(!bf::exists(metaPath/"not-there.meta"));
     assert(!bf::exists(metaPath/"not-there2.meta"));
-    
+
     cout << "IOC copy file 2 OK" << endl;
 }
 
@@ -1704,7 +1704,7 @@ void IOCCopyFile3()
     bf::path destPath = metaPath/prefix/"dest.meta";
     bf::path l_sourceFile = homepath / prefix / string("source");
     bf::path l_destFile = homepath / prefix / string("dest");
-    
+
     cache->reset();
 
     makeTestObject((cachePath/prefix/copyfileObjKey).string().c_str());
@@ -1722,7 +1722,7 @@ void IOCCopyFile3()
     err = ioc->read(l_destFile.string().c_str(), buf2, 0, sizeof(buf2));
     assert(err == sizeof(buf2));
     assert(memcmp(buf1, buf2, 8192) == 0);
-    
+
     assert(ioc->unlink(l_sourceFile.string().c_str()) == 0);
     assert(ioc->unlink(l_destFile.string().c_str()) == 0);
     sync->forceFlush();
@@ -1770,8 +1770,8 @@ void bigMergeJournal1()
     buf = ioc->mergeJournal(fNamePath.string().c_str(), jNamePath.string().c_str(), 100, 10, &tmp);
     assert(buf);
 }
-    
-    
+
+
 // This should write an incomplete msg(s) to make sure SM does the right thing.  Not
 // done yet, handing this off to Ben.
 void shortMsg()
@@ -1786,7 +1786,7 @@ void shortMsg()
 
     size_t size = 27;
     std::vector<uint8_t> bufWrite(sizeof(write_cmd)+std::strlen(filename)+size);
- 
+
     sm_msg_header *hdrWrite = (sm_msg_header *) bufWrite.data();
     write_cmd *cmdWrite = (write_cmd *) &hdrWrite[1];
     uint8_t *dataWrite;
@@ -1807,7 +1807,7 @@ void shortMsg()
     assert(result==static_cast<ssize_t>(hdrWrite->payloadLen));
 
     w.run();
-    
+
     // verify response
     uint8_t bufRead[1024];
     int err = ::recv(sessionSock, bufRead, sizeof(bufRead), MSG_DONTWAIT);
@@ -1817,7 +1817,7 @@ void shortMsg()
     assert(resp->header.payloadLen == sizeof(ssize_t));
     assert(resp->header.flags == 0);
     assert(resp->returnCode == 9);
-    
+
 
     std::vector<uint8_t> bufAppend(sizeof(append_cmd)+std::strlen(filename)+size);
     uint8_t *dataAppend;
@@ -1851,9 +1851,9 @@ void shortMsg()
 }
 
 // write and append are the biggest vulnerabilities here b/c those msgs could be sent in multiple
-// pieces, are much larger, and thus if there is a crash mid-message it's most likely to happen 
+// pieces, are much larger, and thus if there is a crash mid-message it's most likely to happen
 // during a call to write/append().
-// it may not even be possible for CS to write a partial open/stat/read/etc msg, but that should be 
+// it may not even be possible for CS to write a partial open/stat/read/etc msg, but that should be
 // tested as well.
 void shortMsgTests()
 {
@@ -1900,7 +1900,7 @@ int main(int argc, char* argv[])
     bf::remove_all(config->getValue("ObjectStorage", "journal_path"));
     bf::remove_all(config->getValue("LocalStorage", "path"));
     bf::remove_all(config->getValue("Cache", "path"));
-    
+
     cout << "connecting" << endl;
     makeConnection();
     cout << "connected" << endl;
@@ -1942,7 +1942,7 @@ int main(int argc, char* argv[])
     listdirtask();
     pingtask();
     copytask();
-    
+
     localstorageTest1();
     cacheTest1();
     mergeJournalTest();
@@ -1954,18 +1954,18 @@ int main(int argc, char* argv[])
     IOCUnlink();
     IOCCopyFile();
     shortMsgTests();
-    
+
     // For the moment, this next one just verifies no error happens as reported by the fcns called.
     // It doesn't verify the result yet.
     bigMergeJournal1();
-    
+
     // skip the s3 test if s3 is not configured
     if (config->getValue("S3", "region") != "")
     {
         s3storageTest1();
     }
     else
-        cout << "To run the S3Storage unit tests, configure the S3 section of test-data/storagemanager.cnf" 
+        cout << "To run the S3Storage unit tests, configure the S3 section of test-data/storagemanager.cnf"
             << endl;
 
     cout << "Cleanup";

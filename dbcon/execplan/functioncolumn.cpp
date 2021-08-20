@@ -279,7 +279,6 @@ void FunctionColumn::unserialize(messageqcpp::ByteStream& b)
     uint32_t size, i;
     //SRCP rc;
     SPTP pt;
-    FunctionParm::iterator it;
 
     fFunctionParms.erase(fFunctionParms.begin(), fFunctionParms.end());
     fSimpleColumnList.clear();
