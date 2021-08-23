@@ -487,7 +487,7 @@ public:
 
 public:
     friend class BulkLoad;
-    friend struct ColumnInfo;
+    friend class ColumnInfo;
     friend class ColumnInfoCompressed;
 
 };

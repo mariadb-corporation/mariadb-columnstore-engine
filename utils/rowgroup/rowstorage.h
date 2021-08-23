@@ -18,6 +18,7 @@
 #ifndef ROWSTORAGE_H
 #define ROWSTORAGE_H
 
+#include "resourcemanager.h"
 #include "rowgroup.h"
 #include <sys/stat.h>
 #include <unistd.h>

@@ -105,7 +105,7 @@ public:
     // The param noBRMFcns suppresses init of the ExtentMap, VSS, VBBM, and CopyLocks.
     // It can speed up init if the caller only needs the other structures.
     EXPORT DBRM(bool noBRMFcns = false);
-    EXPORT ~DBRM();
+    EXPORT ~DBRM() throw();
 
     EXPORT static void refreshShm()
     {
@@ -113,7 +113,7 @@ public:
         ExtentMapImpl::refreshShm();
         FreeListImpl::refreshShm();
     }
-    
+
     // @bug 1055+ - Added functions below for multiple files per OID enhancement.
 
     /** @brief Get the OID, offset, db root, partition, and segment of a logical block ID.
@@ -1026,7 +1026,7 @@ public:
     EXPORT void invalidateUncommittedExtentLBIDs(execplan::CalpontSystemCatalog::SCN txnid,
             bool allExtents,
             std::vector<LBID_t>* plbidList = NULL);
-    
+
 private:
     DBRM(const DBRM& brm);
     DBRM& operator=(const DBRM& brm);

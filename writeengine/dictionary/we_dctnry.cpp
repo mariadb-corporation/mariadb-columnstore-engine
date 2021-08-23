@@ -58,12 +58,8 @@ namespace
 // variable name later (to remove the m_ prefix) as time allows.
 const uint16_t m_endHeader = DCTNRY_END_HEADER; // end of header flag (0xffff)
 const uint16_t m_offSetZero = BYTE_PER_BLOCK;   // value for 0 offset (8192)
-const int m_lastOffSet = BYTE_PER_BLOCK;   // end of last offset
 const int m_totalHdrBytes =                // # bytes in header
     HDR_UNIT_SIZE + NEXT_PTR_BYTES + HDR_UNIT_SIZE + HDR_UNIT_SIZE;
-const int m_bigSpace  =                    // free space in an empty block
-    BYTE_PER_BLOCK - (m_totalHdrBytes + HDR_UNIT_SIZE);
-
 const int START_HDR1  =                    // start loc of 2nd offset (HDR1)
     HDR_UNIT_SIZE + NEXT_PTR_BYTES + HDR_UNIT_SIZE;
 const int PSEUDO_COL_WIDTH = DICT_COL_WIDTH; // used to convert row count to block count

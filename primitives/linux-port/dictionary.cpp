@@ -102,9 +102,9 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h,
 
     retTokens = reinterpret_cast<PrimToken*>(&niceRet[rdvOffset]);
     retDataValues = reinterpret_cast<DataValue*>(&niceRet[rdvOffset]);
-    
+
     {
-        void *retp = static_cast<void*>(ret); 
+        void *retp = static_cast<void*>(ret);
         memcpy(retp, h, sizeof(PrimitiveHeader) + sizeof(ISMPacketHeader));
     }
     ret->NVALS = 0;
@@ -405,14 +405,12 @@ again:
 
     dict_OffsetIndex++;
 }
-const char backslash = '\\';
 
-
-void PrimitiveProcessor::p_Dictionary(const DictInput* in, 
+void PrimitiveProcessor::p_Dictionary(const DictInput* in,
                                       vector<uint8_t>* out,
-                                      bool skipNulls, 
+                                      bool skipNulls,
                                       uint32_t charsetNumber,
-                                      boost::shared_ptr<DictEqualityFilter> eqFilter, 
+                                      boost::shared_ptr<DictEqualityFilter> eqFilter,
                                       uint8_t eqOp)
 {
     PrimToken* outToken;

@@ -147,7 +147,6 @@ pColScanStep::pColScanStep(
         return;
 
     int err, i, mask;
-    BRM::LBIDRange_v::iterator it;
 
     finishedSending = false;
     recvWaiting = 0;
@@ -173,7 +172,7 @@ pColScanStep::pColScanStep(
         fIsDict = true;
     }
     // MCOL-641 WIP
-    else if (fColType.colWidth > 8 
+    else if (fColType.colWidth > 8
         && fColType.colDataType != CalpontSystemCatalog::DECIMAL
         && fColType.colDataType != CalpontSystemCatalog::UDECIMAL)
     {

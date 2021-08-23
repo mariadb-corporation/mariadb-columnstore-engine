@@ -111,7 +111,7 @@ public:
     {
         log(logging::LOG_TYPE_CRITICAL, strerror(errno));
     }
-    void ParentLogChildMessage(const std::string &str)
+    void ParentLogChildMessage(const std::string &str) override
     {
         log(logging::LOG_TYPE_INFO, str);
     }

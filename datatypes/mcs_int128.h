@@ -14,8 +14,8 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA. 
-*/ 
+   MA 02110-1301, USA.
+*/
 #ifndef MCS_INT128_H_INCLUDED
 #define MCS_INT128_H_INCLUDED
 
@@ -40,7 +40,7 @@
                               src_restrictions, \
                               clobb) \
         ::memcpy((dst), (src), sizeof(int128_t));
-#elif defined(__GNUC__) && (__GNUC___ > 7)
+#elif defined(__GNUC__) && (__GNUC___ > 7) || defined(__clang__)
     #define MACRO_VALUE_PTR_128(dst, \
                                 dst_restrictions, \
                                 src, \
@@ -114,7 +114,7 @@ template<>
 struct is_int128_t<int128_t> {
   static const bool value = true;
 };
-  
+
 template <typename T>
 struct is_uint128_t {
   static const bool value = false;
@@ -129,7 +129,7 @@ inline int128_t abs(int128_t x)
 {
   return (x >= 0) ? x : -x;
 }
- 
+
 class TSInt128
 {
   public:
@@ -142,6 +142,12 @@ class TSInt128
 
     // Copy ctor
     TSInt128(const TSInt128& other): s128Value(other.s128Value) { }
+
+    TSInt128& operator=(const TSInt128& other)
+    {
+        s128Value = other.s128Value;
+        return *this;
+    }
 
     //    aligned argument
     explicit TSInt128(const int128_t& x) { s128Value = x; }
@@ -335,7 +341,7 @@ class TSInt128
 
     int128_t s128Value;
   }; // end of class
-    
+
 
 } //end of namespace datatypes
 

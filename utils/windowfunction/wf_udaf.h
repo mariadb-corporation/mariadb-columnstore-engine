@@ -70,14 +70,17 @@ public:
     {
         return fUDAFContext;
     }
+
     bool getInterrupted()
     {
         return bInterrupted;
     }
+
     bool * getInterruptedPtr()
     {
         return &bInterrupted;
     }
+
     bool getDistinct()
     {
         return fDistinct;

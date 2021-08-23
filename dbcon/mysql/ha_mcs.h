@@ -65,7 +65,7 @@ public:
     /** @brief
       The name that will be used for display purposes.
      */
-    const char* table_type() const
+    const char* table_type() const override
     {
         return "ColumnStore";
     }
@@ -85,7 +85,7 @@ public:
       This is a list of flags that indicate what functionality the storage engine
       implements. The current table flags are documented in handler.h
     */
-    ulonglong table_flags() const
+    ulonglong table_flags() const override
     {
         return int_table_flags;
     }
@@ -100,7 +100,7 @@ public:
       If all_parts is set, MySQL wants to know the flags for the combined
       index, up to and including 'part'.
     */
-    ulong index_flags(uint32_t inx, uint32_t part, bool all_parts) const
+    ulong index_flags(uint32_t inx, uint32_t part, bool all_parts) const override
     {
         return 0;
     }
@@ -113,7 +113,7 @@ public:
       send. Return *real* limits of your storage engine here; MySQL will do
       min(your_limits, MySQL_limits) automatically.
      */
-    uint32_t max_supported_record_length() const
+    uint32_t max_supported_record_length() const override
     {
         return HA_MAX_REC_LENGTH;
     }
@@ -121,7 +121,7 @@ public:
     /** @brief
       Called in test_quick_select to determine if indexes should be used.
     */
-    virtual double scan_time()
+    virtual double scan_time() override
     {
         return (double) (stats.records + stats.deleted) / 20.0 + 10;
     }
@@ -129,7 +129,7 @@ public:
     /** @brief
       Analyze table command.
     */
-    int analyze(THD* thd, HA_CHECK_OPT* check_opt);
+    int analyze(THD* thd, HA_CHECK_OPT* check_opt) override;
 
     /*
       Everything below are methods that we implement in ha_example.cc.
@@ -141,7 +141,7 @@ public:
     /** @brief
       We implement this in ha_example.cc; it's a required method.
     */
-    int open(const char* name, int mode, uint32_t test_if_locked);    // required
+    int open(const char* name, int mode, uint32_t test_if_locked) override;    // required
 
     // MCOL-4282 This function is called by open_tables in sql_base.cc.
     // We mutate the optimizer flags here for prepared statements as this
@@ -160,71 +160,71 @@ public:
     /** @brief
       We implement this in ha_example.cc; it's a required method.
     */
-    int close(void);                                              // required
+    int close(void) override;  // required
 
     /** @brief
       We implement this in ha_example.cc. It's not an obligatory method;
       skip it and and MySQL will treat it as not implemented.
     */
-    int write_row(const uchar* buf);
+    int write_row(const uchar* buf) override;
 
     /** @brief
       We implement this in ha_example.cc. It's not an obligatory method;
       skip it and and MySQL will treat it as not implemented.
     */
-    void start_bulk_insert(ha_rows rows, uint flags = 0) ;
-    void start_bulk_insert_from_cache(ha_rows rows, uint flags = 0) ;
+    void start_bulk_insert(ha_rows rows, uint flags = 0) override;
+    void start_bulk_insert_from_cache(ha_rows rows, uint flags = 0);
 
     /**@bug 2461 - Overloaded end_bulk_insert.  MariaDB uses the abort bool, mysql does not. */
-    int end_bulk_insert() ;
+    int end_bulk_insert() override;
 
     /** @brief
       We implement this in ha_example.cc. It's not an obligatory method;
       skip it and and MySQL will treat it as not implemented.
     */
     int update_row(const uchar* old_data, const uchar* new_data) override;
-    int direct_update_rows_init(List<Item> *update_fields);
+    int direct_update_rows_init(List<Item> *update_fields) override;
     int direct_update_rows(ha_rows *update_rows);
-    int direct_update_rows(ha_rows *update_rows, ha_rows *found_rows);
+    int direct_update_rows(ha_rows *update_rows, ha_rows *found_rows) override;
 
     /** @brief
       We implement this in ha_example.cc. It's not an obligatory method;
       skip it and and MySQL will treat it as not implemented.
     */
-    int delete_row(const uchar* buf);
-    int direct_delete_rows_init();
-    int direct_delete_rows(ha_rows *deleted_rows);
+    int delete_row(const uchar* buf) override;
+    int direct_delete_rows_init() override;
+    int direct_delete_rows(ha_rows *deleted_rows) override;
 
     /** @brief
       We implement this in ha_example.cc. It's not an obligatory method;
       skip it and and MySQL will treat it as not implemented.
     */
     int index_read_map(uchar* buf, const uchar* key,
-                       key_part_map keypart_map, enum ha_rkey_function find_flag);
+                       key_part_map keypart_map, enum ha_rkey_function find_flag) override;
 
     /** @brief
       We implement this in ha_example.cc. It's not an obligatory method;
       skip it and and MySQL will treat it as not implemented.
     */
-    int index_next(uchar* buf);
+    int index_next(uchar* buf) override;
 
     /** @brief
       We implement this in ha_example.cc. It's not an obligatory method;
       skip it and and MySQL will treat it as not implemented.
     */
-    int index_prev(uchar* buf);
+    int index_prev(uchar* buf) override;
 
     /** @brief
       We implement this in ha_example.cc. It's not an obligatory method;
       skip it and and MySQL will treat it as not implemented.
     */
-    int index_first(uchar* buf);
+    int index_first(uchar* buf) override;
 
     /** @brief
       We implement this in ha_example.cc. It's not an obligatory method;
       skip it and and MySQL will treat it as not implemented.
     */
-    int index_last(uchar* buf);
+    int index_last(uchar* buf) override;
 
     /** @brief
       Unlike index_init(), rnd_init() can be called two consecutive times
@@ -234,34 +234,34 @@ public:
       cursor to the start of the table; no need to deallocate and allocate
       it again. This is a required method.
     */
-    int rnd_init(bool scan);                                      //required
-    int rnd_end();
-    int rnd_next(uchar* buf);                                     ///< required
-    int rnd_pos(uchar* buf, uchar* pos);                          ///< required
+    int rnd_init(bool scan) override;                             //required
+    int rnd_end() override;
+    int rnd_next(uchar* buf) override;                            ///< required
+    int rnd_pos(uchar* buf, uchar* pos) override;                 ///< required
     int reset() override;
-    void position(const uchar* record);                           ///< required
-    int info(uint32_t);                                               ///< required
-    int extra(enum ha_extra_function operation);
-    int external_lock(THD* thd, int lock_type);                   ///< required
-    int delete_all_rows(void);
+    void position(const uchar* record) override;                       ///< required
+    int info(uint32_t) override;                                       ///< required
+    int extra(enum ha_extra_function operation) override;
+    int external_lock(THD* thd, int lock_type) override;               ///< required
+    int delete_all_rows(void) override;
     ha_rows records_in_range(uint32_t inx, const key_range* min_key,
                              const key_range* max_key, page_range* res) override;
-    int delete_table(const char* from);
-    int rename_table(const char* from, const char* to);
+    int delete_table(const char* from) override;
+    int rename_table(const char* from, const char* to) override;
     int create(const char* name, TABLE* form,
-               HA_CREATE_INFO* create_info);                      ///< required
+               HA_CREATE_INFO* create_info) override;                      ///< required
 
     THR_LOCK_DATA** store_lock(THD* thd, THR_LOCK_DATA** to,
-                               enum thr_lock_type lock_type);     ///< required
-    const COND* cond_push(const COND* cond);
+                               enum thr_lock_type lock_type) override;     ///< required
+    const COND* cond_push(const COND* cond) override;
     void cond_pop() override;
-    uint8 table_cache_type()
+    uint8 table_cache_type() override
     {
         return HA_CACHE_TBL_NOCACHE;
     }
 
-    int repair(THD* thd, HA_CHECK_OPT* check_opt);
-    bool is_crashed() const;
+    int repair(THD* thd, HA_CHECK_OPT* check_opt) override;
+    bool is_crashed() const override;
 
     bool isReadOnly() const
     {

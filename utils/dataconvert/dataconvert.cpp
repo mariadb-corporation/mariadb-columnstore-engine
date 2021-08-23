@@ -1378,7 +1378,7 @@ DataConvert::StringToUDecimal(const datatypes::SystemCatalog::TypeAttributesStd&
                               const std::string& data, bool& pushWarning)
 {
     const cscDataType typeCode= datatypes::SystemCatalog::UDECIMAL;
-    
+
     // UDECIMAL numbers may not be negative
     if (LIKELY(colType.colWidth == 16))
     {
@@ -1532,8 +1532,8 @@ DataConvert::StringToFloat(cscDataType typeCode,
 
         if (floatvalue < 0.0 &&
                 typeCode == datatypes::SystemCatalog::UFLOAT &&
-                floatvalue != joblist::FLOATEMPTYROW &&
-                floatvalue != joblist::FLOATNULL)
+                floatvalue != static_cast<float>(joblist::FLOATEMPTYROW) &&
+                floatvalue != static_cast<float>(joblist::FLOATNULL))
         {
             value = 0.0; // QQ: should it assign floatvalue?
             pushWarning = true;
@@ -1595,8 +1595,8 @@ DataConvert::StringToDouble(cscDataType typeCode,
 
         if (doublevalue < 0.0 &&
                 typeCode == datatypes::SystemCatalog::UDOUBLE &&
-                doublevalue != joblist::DOUBLEEMPTYROW &&
-                doublevalue != joblist::DOUBLENULL)
+                doublevalue != static_cast<double>(joblist::DOUBLEEMPTYROW) &&
+                doublevalue != static_cast<double>(joblist::DOUBLENULL))
         {
             doublevalue = 0.0; // QQ: should it assign "value" ?
             pushWarning = true;

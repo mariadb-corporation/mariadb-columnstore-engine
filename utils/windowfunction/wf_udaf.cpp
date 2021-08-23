@@ -1194,9 +1194,6 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
 
     fPrev = c;
 }
-
-boost::shared_ptr<WindowFunctionType> WF_udaf::makeFunction(int id, const string& name, int ct, mcsv1sdk::mcsv1Context& context, WindowFunctionColumn*);
-
 }   //namespace
 // vim:ts=4 sw=4:
 
