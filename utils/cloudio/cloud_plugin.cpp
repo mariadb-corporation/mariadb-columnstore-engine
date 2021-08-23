@@ -21,6 +21,11 @@
 
 using namespace idbdatafile;
 
+#ifdef __clang__
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#endif
+
 extern "C"
 {
     FileFactoryEnt plugin_instance()
@@ -28,3 +33,7 @@ extern "C"
         return FileFactoryEnt(IDBDataFile::CLOUD, "cloud", new SMFileFactory(), new SMFileSystem());
     }
 }
+
+#ifdef __clang__
+    #pragma clang diagnostic pop
+#endif

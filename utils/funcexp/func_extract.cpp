@@ -128,7 +128,7 @@ long long dateGet( uint64_t time, IntervalColumn::interval_type unit, bool dateT
             return (sec * 1000000) + msec;
 
         default:
-            throw runtime_error("unit type is not supported: " + unit);
+            throw runtime_error(std::string("unit type is not supported: ") + std::to_string(unit));
     };
 }
 
@@ -215,12 +215,10 @@ long long timeGet( uint64_t time, IntervalColumn::interval_type unit )
             return (sec * 1000000) + msec;
 
         default:
-            throw runtime_error("unit type is not supported: " + unit);
-    };
+            throw runtime_error(std::string("unit type is not supported: ") + std::to_string(unit));
+    };    };
 }
 
-
-}
 
 namespace funcexp
 {

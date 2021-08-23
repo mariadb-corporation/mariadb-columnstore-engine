@@ -62,6 +62,14 @@ using namespace cacheutils;
 #include "IDBPolicy.h"
 using namespace idbdatafile;
 
+
+#ifdef __clang__
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wpotentially-evaluated-expression"
+    // for warnings on typeid :expression with side effects will be evaluated despite being used as an operand to 'typeid'
+#endif
+
+
 //TODO: this should be in a common header somewhere
 struct extentInfo
 {
@@ -2504,3 +2512,6 @@ void AlterTableProcessor::renameColumn(uint32_t sessionID, execplan::CalpontSyst
 }
 // vim:ts=4 sw=4:
 
+#ifdef __clang__
+    #pragma clang diagnostic pop
+#endif

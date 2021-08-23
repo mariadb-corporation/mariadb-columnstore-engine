@@ -489,7 +489,7 @@ inline bool isNullVal(uint32_t length, uint8_t type, const uint8_t* val8)
         case 1:
             return isNullVal<1>(type, val8);
     };
- 
+
     return false;
 }
 
@@ -947,87 +947,6 @@ inline int64_t nextColValue(int type,
 #endif
             return -1;
     }
-}
-
-
-// done should be init'd to false and
-// index should be init'd to 0 on the first call
-// done == true when there are no more elements to return.
-inline uint64_t nextUnsignedColValueHelper(int type,
-        int width,
-        const uint16_t* ridArray,
-        int NVALS,
-        int* index,
-        bool* done,
-        bool* isNull,
-        bool* isEmpty,
-        uint16_t* rid,
-        uint8_t OutputType, uint8_t* val8, unsigned itemsPerBlk)
-{
-    switch (width)
-    {
-        case 8:
-            return nextUnsignedColValue<8>(type, ridArray, NVALS, index, done, isNull, isEmpty, rid, OutputType, val8,
-                                           itemsPerBlk);
-
-        case 4:
-            return nextUnsignedColValue<4>(type, ridArray, NVALS, index, done, isNull, isEmpty, rid, OutputType, val8,
-                                           itemsPerBlk);
-
-        case 2:
-            return nextUnsignedColValue<2>(type, ridArray, NVALS, index, done, isNull, isEmpty, rid, OutputType, val8,
-                                           itemsPerBlk);
-
-        case 1:
-            return nextUnsignedColValue<1>(type, ridArray, NVALS, index, done, isNull, isEmpty, rid, OutputType, val8,
-                                           itemsPerBlk);
-
-        default:
-            idbassert(0);
-    }
-
-    /*NOTREACHED*/
-    return 0;
-}
-
-// done should be init'd to false and
-// index should be init'd to 0 on the first call
-// done == true when there are no more elements to return.
-inline int64_t nextColValueHelper(int type,
-                                  int width,
-                                  const uint16_t* ridArray,
-                                  int NVALS,
-                                  int* index,
-                                  bool* done,
-                                  bool* isNull,
-                                  bool* isEmpty,
-                                  uint16_t* rid,
-                                  uint8_t OutputType, uint8_t* val8, unsigned itemsPerBlk)
-{
-    switch (width)
-    {
-        case 8:
-            return nextColValue<8>(type, ridArray, NVALS, index, done, isNull, isEmpty, rid, OutputType, val8,
-                                   itemsPerBlk);
-
-        case 4:
-            return nextColValue<4>(type, ridArray, NVALS, index, done, isNull, isEmpty, rid, OutputType, val8,
-                                   itemsPerBlk);
-
-        case 2:
-            return nextColValue<2>(type, ridArray, NVALS, index, done, isNull, isEmpty, rid, OutputType, val8,
-                                   itemsPerBlk);
-
-        case 1:
-            return nextColValue<1>(type, ridArray, NVALS, index, done, isNull, isEmpty, rid, OutputType, val8,
-                                   itemsPerBlk);
-
-        default:
-            idbassert(0);
-    }
-
-    /*NOTREACHED*/
-    return 0;
 }
 
 

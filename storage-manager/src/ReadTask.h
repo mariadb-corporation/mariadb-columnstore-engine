@@ -18,7 +18,7 @@
 
 
 #ifndef READTASK_H_
-#define READTASH_H_
+#define READTASK_H_
 
 #include "PosixTask.h"
 
@@ -30,9 +30,9 @@ class ReadTask : public PosixTask
     public:
         ReadTask(int sock, uint length);
         virtual ~ReadTask();
-        
+
         bool run();
-    
+
     private:
         ReadTask();
 };

@@ -155,14 +155,12 @@ private:
     config::Config* fConfig; /// config file ptr
 };
 
-}//namespace logging
-
-namespace std
-{
-template<> inline void swap<logging::Message>(logging::Message& lhs, logging::Message& rhs)
+inline void swap(logging::Message& lhs, logging::Message& rhs)
 {
     lhs.swap(rhs);
 }
-}//namespace std
+
+}//namespace logging
+
 
 #endif

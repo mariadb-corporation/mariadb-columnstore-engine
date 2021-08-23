@@ -47,6 +47,13 @@ using namespace execplan;
 
 #include "atomicops.h"
 
+
+#ifdef __clang__
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wpotentially-evaluated-expression"
+    // for warnings on typeid :expression with side effects will be evaluated despite being used as an operand to 'typeid'
+#endif
+
 namespace joblist
 {
 int  JobList::fPmsConfigured = 0;
@@ -1217,6 +1224,10 @@ void TupleJobList::abort()
 
 
 }
+
+#ifdef __clang__
+    #pragma clang diagnostic pop
+#endif
 
 // vim:ts=4 sw=4:
 

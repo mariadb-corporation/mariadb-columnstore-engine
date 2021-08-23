@@ -73,6 +73,14 @@ using namespace joblist;
 
 #include "statistics.h"
 
+
+#ifdef __clang__
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wpotentially-evaluated-expression"
+    // for warnings on typeid :expression with side effects will be evaluated despite being used as an operand to 'typeid'
+#endif
+
+
 namespace
 {
 
@@ -189,7 +197,7 @@ inline void addColumnInExpToRG(uint32_t cid, vector<uint32_t>& pos, vector<uint3
 inline void addColumnsToRG(uint32_t tid, vector<uint32_t>& pos, vector<uint32_t>& oids,
                            vector<uint32_t>& keys, vector<uint32_t>& scale, vector<uint32_t>& precision,
                            vector<CalpontSystemCatalog::ColDataType>& types,
-                           vector<uint32_t>& csNums, 
+                           vector<uint32_t>& csNums,
                            TableInfoMap& tableInfoMap, JobInfo& jobInfo)
 {
     // -- the selected columns
@@ -494,7 +502,7 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
         deliverySteps[CNX_VTABLE_ID] = ws;
     }
 
-    // TODO MCOL-894 we don't need to run sorting|distinct 
+    // TODO MCOL-894 we don't need to run sorting|distinct
     // every time
 //    if ((jobInfo.limitCount != (uint64_t) - 1) ||
 //            (jobInfo.constantCol == CONST_COL_EXIST) ||
@@ -532,7 +540,7 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
 
         AnyDataListSPtr spdlIn(new AnyDataList());
         RowGroupDL* dlIn;
-        if (jobInfo.orderByColVec.size() > 0) 
+        if (jobInfo.orderByColVec.size() > 0)
             dlIn = new RowGroupDL(jobInfo.orderByThreads, jobInfo.fifoSize);
         else
             dlIn = new RowGroupDL(1, jobInfo.fifoSize);
@@ -2610,7 +2618,7 @@ SP_JoinInfo joinToLargeTable(uint32_t large, TableInfoMap& tableInfoMap, JobInfo
         // @bug6158, try to put BPS on large side if possible
         if (tsas && smallSides.size() == 1)
         {
-            SJSTEP sspjs = tableInfoMap[cId].fQuerySteps.back(), get();
+            SJSTEP sspjs = tableInfoMap[cId].fQuerySteps.back();
             BatchPrimitive* sbps = dynamic_cast<BatchPrimitive*>(sspjs.get());
             TupleHashJoinStep* sthjs = dynamic_cast<TupleHashJoinStep*>(sspjs.get());
 
@@ -4520,7 +4528,7 @@ SJSTEP unionQueries(JobStepVector& queries, uint64_t distinctUnionNum, JobInfo& 
         const vector<uint32_t>& precisionIn = rg.getPrecision();
         const vector<CalpontSystemCatalog::ColDataType>& typesIn = rg.getColTypes();
         const vector<uint32_t>& csNumsIn = rg.getCharsetNumbers();
-        
+
         for (uint64_t j = 0; j < colCount; ++j)
         {
             queryColTypes[j][i].colDataType = typesIn[j];
@@ -4622,4 +4630,8 @@ SJSTEP unionQueries(JobStepVector& queries, uint64_t distinctUnionNum, JobInfo& 
 
 }
 // vim:ts=4 sw=4:
+
+#ifdef __clang__
+    #pragma clang diagnostic pop
+#endif
 

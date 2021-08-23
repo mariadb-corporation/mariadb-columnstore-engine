@@ -95,7 +95,6 @@ const HexLookupTable hex_lookup_table = init_hex_lookup_table();
 
 /* used in the bin2hex function */
 const char hex_upper[] = "0123456789ABCDEF";
-const char hex_lower[] = "0123456789abcdef";
 
 HexLookupTable init_hex_lookup_table() noexcept
 {

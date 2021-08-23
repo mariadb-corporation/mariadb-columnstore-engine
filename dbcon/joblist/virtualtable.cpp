@@ -117,7 +117,8 @@ void VirtualTable::addColumn(const SRCP& column)
     }
     else // new column type has added, but this code is not updated.
     {
-        oss << "not supported column type: " << typeid(*(column.get())).name();
+        auto & columnType = *(column.get());
+        oss << "not supported column type: " << typeid(columnType).name();
         throw runtime_error(oss.str());
     }
 

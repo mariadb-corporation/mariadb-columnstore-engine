@@ -165,18 +165,6 @@ struct QueueShutdown : public unary_function<T&, void>
         x.shutdown();
     }
 };
-
-inline const string sin_addr2String(const in_addr src)
-{
-    string s;
-#ifdef _MSC_VER
-    s = inet_ntoa(src);
-#else
-    char dst[INET_ADDRSTRLEN];
-    s = inet_ntop(AF_INET, &src, dst, INET_ADDRSTRLEN);
-#endif
-    return s;
-}
 }
 
 namespace WriteEngine
