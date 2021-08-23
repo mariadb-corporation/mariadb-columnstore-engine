@@ -179,8 +179,8 @@ public:
     // and alloc'd in one chunk.  data can't be a separate dynamic chunk.
     struct MemChunk
     {
-        uint32_t currentSize;
-        uint32_t capacity;
+        uint32_t currentSize = 0;
+        uint32_t capacity = 0;
         uint8_t data[];
     };
 
@@ -195,7 +195,7 @@ private:
 
     // To store strings > 64KB (BLOB/TEXT)
     std::vector<boost::shared_array<uint8_t> > longStrings;
-    bool empty;
+    bool empty = false;
     bool fUseStoreStringMutex; //@bug6065, make StringStore::storeString() thread safe
     boost::mutex fMutex;
 };
@@ -250,7 +250,7 @@ private:
 
     std::vector<StoreData> vStoreData;
 
-    bool fUseUserDataMutex;
+    bool fUseUserDataMutex = false;
     boost::mutex fMutex;
 };
 
@@ -285,9 +285,14 @@ public:
     void clear();
     void reinit(const RowGroup& rg);
     void reinit(const RowGroup& rg, uint32_t rowCount);
-    inline void setStringStore(boost::shared_ptr<StringStore>& ss)
+    void setStringStore(boost::shared_ptr<StringStore>& ss)
     {
         strings = ss;
+    }
+
+    bool hasData() const
+    {
+        return rowData.get() != nullptr;
     }
 
     // this will use the pre-configured Row to figure out where row # num is, then set the Row
@@ -316,17 +321,16 @@ public:
         return (userDataStore ? (userDataStore->useUserDataMutex()) : false);
     }
 
+private:
     boost::shared_array<uint8_t> rowData;
     boost::shared_ptr<StringStore> strings;
     boost::shared_ptr<UserDataStore> userDataStore;
-private:
-    //boost::shared_array<uint8_t> rowData;
-    //boost::shared_ptr<StringStore> strings;
 
     // Need sig to support backward compat.  RGData can deserialize both forms.
     static const uint32_t RGDATA_SIG = 0xffffffff;  //won't happen for 'old' Rowgroup data
 
     friend class RowGroup;
+    friend class RowGroupStorage;
 };
 
 
@@ -335,26 +339,26 @@ class Row
 public:
     struct Pointer
     {
-        inline Pointer() : data(NULL), strings(NULL), userDataStore(NULL) { }
+        inline Pointer() = default;
 
         // Pointer(uint8_t*) implicitly makes old code compatible with the string table impl;
-        inline Pointer(uint8_t* d) : data(d), strings(NULL), userDataStore(NULL) { }
-        inline Pointer(uint8_t* d, StringStore* s) : data(d), strings(s), userDataStore(NULL) { }
+        inline Pointer(uint8_t* d) : data(d) { }
+        inline Pointer(uint8_t* d, StringStore* s) : data(d), strings(s) { }
         inline Pointer(uint8_t* d, StringStore* s, UserDataStore* u) :
             data(d), strings(s), userDataStore(u) { }
-        uint8_t* data;
-        StringStore* strings;
-        UserDataStore* userDataStore;
+
+        uint8_t* data = nullptr;
+        StringStore* strings = nullptr;
+        UserDataStore* userDataStore = nullptr;
     };
 
-    Row();
+    Row() = default;
     Row(const Row&);
-    ~Row();
+    ~Row() = default;
 
     Row& operator=(const Row&);
     bool operator==(const Row&) const;
 
-    //void setData(uint8_t *rowData, StringStore *ss);
     inline void setData(const Pointer&);    // convenience fcn, can go away
     inline uint8_t* getData() const;
 
@@ -597,32 +601,33 @@ public:
     }
 
     const CHARSET_INFO* getCharset(uint32_t col) const;
-
 private:
-    uint32_t columnCount;
-    uint64_t baseRid;
+    inline bool inStringTable(uint32_t col) const;
+private:
+    uint32_t columnCount = 0;
+    uint64_t baseRid = 0;
 
     // Note, the mem behind these pointer fields is owned by RowGroup not Row
-    uint32_t* oldOffsets;
-    uint32_t* stOffsets;
-    uint32_t* offsets;
-    uint32_t* colWidths;
-    execplan::CalpontSystemCatalog::ColDataType* types;
-    uint32_t* charsetNumbers;
-    CHARSET_INFO** charsets;
-    uint8_t* data;
-    uint32_t* scale;
-    uint32_t* precision;
+    uint32_t* oldOffsets = nullptr;
+    uint32_t* stOffsets = nullptr;
+    uint32_t* offsets = nullptr;
+    uint32_t* colWidths = nullptr;
+    execplan::CalpontSystemCatalog::ColDataType* types = nullptr;
+    uint32_t* charsetNumbers = nullptr;
+    CHARSET_INFO** charsets = nullptr;
+    uint8_t* data = nullptr;
+    uint32_t* scale = nullptr;
+    uint32_t* precision = nullptr;
 
-    StringStore* strings;
-    bool useStringTable;
-    bool hasCollation;
-    bool hasLongStringField;
-    uint32_t sTableThreshold;
+    StringStore* strings = nullptr;
+    bool useStringTable = false;
+    bool hasCollation = false;
+    bool hasLongStringField = false;
+    uint32_t sTableThreshold = 20;
     boost::shared_array<bool> forceInline;
-    inline bool inStringTable(uint32_t col) const;
 
-    UserDataStore* userDataStore; // For UDAF
+
+    UserDataStore* userDataStore = nullptr; // For UDAF
 
     friend class RowGroup;
 };
@@ -1356,7 +1361,7 @@ inline void Row::setLongDoubleField(const long double& val, uint32_t colIndex)
     *reinterpret_cast<long double*>(p) = val;
 #ifdef MASK_LONGDOUBLE
     memset(p+10, 0, 6);
-#endif    
+#endif
 }
 
 inline void Row::setInt128Field(const int128_t& val, uint32_t colIndex)
@@ -1552,7 +1557,6 @@ public:
     inline uint32_t getRowSizeWithStrings() const;
     inline uint64_t getBaseRid() const;
     void setData(RGData* rgd);
-    inline void setData(uint8_t* d);
     inline uint8_t* getData() const;
     inline RGData* getRGData() const;
 
@@ -1660,12 +1664,12 @@ public:
     const CHARSET_INFO* getCharset(uint32_t col);
 
 private:
-    uint32_t columnCount;
-    uint8_t* data;
+    uint32_t columnCount = 0;
+    uint8_t* data = nullptr;
 
     std::vector<uint32_t> oldOffsets; //inline data offsets
     std::vector<uint32_t> stOffsets;  //string table offsets
-    uint32_t* offsets;   //offsets either points to oldOffsets or stOffsets
+    uint32_t* offsets = nullptr;   //offsets either points to oldOffsets or stOffsets
     std::vector<uint32_t> colWidths;
     // oids: the real oid of the column, may have duplicates with alias.
     // This oid is necessary for front-end to decide the real column width.
@@ -1683,12 +1687,12 @@ private:
     std::vector<uint32_t> precision;
 
     // string table impl
-    RGData* rgData;
-    StringStore* strings;   // note, strings and data belong to rgData
-    bool useStringTable;
-    bool hasCollation;
-    bool hasLongStringField;
-    uint32_t sTableThreshold;
+    RGData* rgData = nullptr;
+    StringStore* strings = nullptr;   // note, strings and data belong to rgData
+    bool useStringTable = false;
+    bool hasCollation = false;
+    bool hasLongStringField = false;
+    uint32_t sTableThreshold = 20;
     boost::shared_array<bool> forceInline;
 
     static const uint32_t headerSize = 18;
@@ -1751,14 +1755,6 @@ inline void RowGroup::getRow(uint32_t rowNum, Row* r) const
     r->data = &(data[headerSize + (rowNum * offsets[columnCount])]);
     r->strings = strings;
     r->userDataStore = rgData->userDataStore.get();
-}
-
-inline void RowGroup::setData(uint8_t* d)
-{
-    data = d;
-    strings = NULL;
-    rgData = NULL;
-    setUseStringTable(false);
 }
 
 inline void RowGroup::setData(RGData* rgd)

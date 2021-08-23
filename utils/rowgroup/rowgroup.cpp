@@ -483,19 +483,15 @@ UserDataStore* RGData::getUserDataStore()
     return userDataStore.get();
 }
 
-Row::Row() : data(NULL), strings(NULL), userDataStore(NULL) { }
-
 Row::Row(const Row& r) : columnCount(r.columnCount), baseRid(r.baseRid),
     oldOffsets(r.oldOffsets), stOffsets(r.stOffsets),
-    offsets(r.offsets), colWidths(r.colWidths), types(r.types), 
+    offsets(r.offsets), colWidths(r.colWidths), types(r.types),
     charsetNumbers(r.charsetNumbers), charsets(r.charsets),
     data(r.data), scale(r.scale), precision(r.precision), strings(r.strings),
     useStringTable(r.useStringTable), hasCollation(r.hasCollation),
     hasLongStringField(r.hasLongStringField), sTableThreshold(r.sTableThreshold),
-    forceInline(r.forceInline), userDataStore(NULL)
+    forceInline(r.forceInline)
 { }
-
-Row::~Row() { }
 
 Row& Row::operator=(const Row& r)
 {
@@ -842,7 +838,7 @@ inline bool Row::isNullValue_offset(uint32_t offset) const
 }
 
 template<>
-inline bool 
+inline bool
 Row::isNullValue_offset<execplan::CalpontSystemCatalog::DECIMAL,16>(
     uint32_t offset) const
 {
@@ -1104,7 +1100,7 @@ bool Row::equals(const Row& r2, uint32_t lastCol) const
                 return false;
             }
         }
-    }        
+    }
     return true;
 }
 
@@ -1117,8 +1113,7 @@ const CHARSET_INFO* Row::getCharset(uint32_t col) const
     return charsets[col];
 }
 
-RowGroup::RowGroup() : columnCount(0), data(NULL), rgData(NULL), strings(NULL),
-    useStringTable(true), hasCollation(false), hasLongStringField(false), sTableThreshold(20)
+RowGroup::RowGroup()
 {
     // 1024 is too generous to waste.
     oldOffsets.reserve(10);
@@ -1143,8 +1138,8 @@ RowGroup::RowGroup(uint32_t colCount,
                    bool stringTable,
                    const vector<bool>& forceInlineData
                   ) :
-    columnCount(colCount), data(NULL), oldOffsets(positions), oids(roids), keys(tkeys),
-    types(colTypes), charsetNumbers(csNumbers), scale(cscale), precision(cprecision), rgData(NULL), strings(NULL),
+    columnCount(colCount), oldOffsets(positions), oids(roids), keys(tkeys),
+    types(colTypes), charsetNumbers(csNumbers), scale(cscale), precision(cprecision),
     sTableThreshold(stringTableThreshold)
 {
     uint32_t i;
@@ -1184,7 +1179,7 @@ RowGroup::RowGroup(uint32_t colCount,
 
     useStringTable = (stringTable && hasLongStringField);
     offsets = (useStringTable ? &stOffsets[0] : &oldOffsets[0]);
-    
+
     // Set all the charsets to NULL for jit initialization.
     charsets.insert(charsets.begin(), charsetNumbers.size(), NULL);
 }
@@ -1192,7 +1187,7 @@ RowGroup::RowGroup(uint32_t colCount,
 RowGroup::RowGroup(const RowGroup& r) :
     columnCount(r.columnCount), data(r.data), oldOffsets(r.oldOffsets),
     stOffsets(r.stOffsets), colWidths(r.colWidths),
-    oids(r.oids), keys(r.keys), types(r.types), charsetNumbers(r.charsetNumbers), 
+    oids(r.oids), keys(r.keys), types(r.types), charsetNumbers(r.charsetNumbers),
     charsets(r.charsets), scale(r.scale), precision(r.precision),
     rgData(r.rgData), strings(r.strings), useStringTable(r.useStringTable),
     hasCollation(r.hasCollation), hasLongStringField(r.hasLongStringField),
@@ -1314,7 +1309,7 @@ void RowGroup::deserialize(ByteStream& bs)
 
     // Set all the charsets to NULL for jit initialization.
     charsets.insert(charsets.begin(), charsetNumbers.size(), NULL);
-    
+
 }
 
 void RowGroup::serializeRGData(ByteStream& bs) const
@@ -1619,7 +1614,7 @@ void RowGroup::addToSysDataList(execplan::CalpontSystemCatalog::NJLSysDataList& 
                             cr->PutData(row.getUintField<8>(j));
                             break;
                         case 16:
-                        
+
                         default:
                         {
                             string s = row.getStringField(j);
