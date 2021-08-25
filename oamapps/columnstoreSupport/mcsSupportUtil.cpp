@@ -374,7 +374,6 @@ void getStorageConfig(FILE * pOutputFile)
                     string volumeName = oam::UnassignedName;
                     string deviceNameID = "PMVolumeDeviceName" + oam.itoa(*pt);
                     string deviceName = oam::UnassignedName;
-                    string amazonDeviceNameID = "PMVolumeAmazonDeviceName" + oam.itoa(*pt);
 
                     try
                     {
@@ -401,7 +400,6 @@ void getStorageConfig(FILE * pOutputFile)
                 string volumeName = oam::UnassignedName;
                 string deviceNameID = "PMVolumeDeviceName" + oam.itoa(*pt1);
                 string deviceName = oam::UnassignedName;
-                string amazonDeviceNameID = "PMVolumeAmazonDeviceName" + oam.itoa(*pt1);
 
                 try
                 {

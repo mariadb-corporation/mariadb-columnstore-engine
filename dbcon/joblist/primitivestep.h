@@ -281,7 +281,7 @@ protected:
 
 private:
 
-    /** @brief constructor for completeBOPness
+    /** @brief constructor for completeness
      */
     explicit pColStep();
 
@@ -349,7 +349,7 @@ private:
  *  c) send messages to the primitive server as quickly as possible
  */
 
-class pColScanStep : public JobStep //, public PrimitiveMsg
+class pColScanStep : public JobStep
 {
 public:
     /** @brief pColScanStep constructor

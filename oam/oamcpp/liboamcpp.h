@@ -72,7 +72,7 @@ const int MAX_DBROOT = 10240;
 
 /** @brief Maximum Number of Modules Types within the Calpont System
   */
-const int MAX_MODULE_TYPE = 2;
+const int MAX_MODULE_TYPE = 3;
 
 /** @brief Maximum Number of External Devices within the Calpont System
  */
