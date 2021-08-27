@@ -65,9 +65,7 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
     auto rc = WriteEngine::Convertor::fileName2Oid(fullFileName, oid,
                                                    partition, segment);
     if (rc != 0)
-    {
         return rc;
-    }
 
     // Open the given file.
     std::unique_ptr<IDBDataFile> dbFile(IDBDataFile::open(
@@ -97,12 +95,11 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
         // have a header block, so header verification fails in this case,
         // currently we skip it, because we cannot deduce needed data to create
         // a column extent from the blob file.
-        if (doVerbose())
+        // Skip fileID from system catalog.
+        if (doVerbose() && oid > 3000)
         {
-            std::cerr
-                << "Cannot read file header from the file " << fullFileName
-                << ", probably this file was created without compression. "
-                << std::endl;
+            std::cerr << "Cannot read file header from the file " << fullFileName
+                      << ", probably this file was created without compression. " << std::endl;
         }
         return rc;
     }
@@ -138,9 +135,8 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
     if (colDataType == execplan::CalpontSystemCatalog::UNDEFINED)
     {
         if (doVerbose())
-        {
             std::cout << "File header has invalid data. " << std::endl;
-        }
+
         return -1;
     }
 
@@ -158,14 +154,10 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
     rc = searchHWMInSegmentFile(oid, getDBRoot(), partition, segment, colDataType, colWidth,
                                 blockCount, isDict, compressionType, hwm);
     if (rc != 0)
-    {
         return rc;
-    }
 
     if (doVerbose())
-    {
         std::cout << "HWM is: " << hwm << std::endl;
-    }
 
     const uint32_t extentMaxBlockCount = getEM().getExtentRows() * colWidth / BLOCK_SIZE;
     // We found multiple extents per one segment file.
@@ -198,9 +190,7 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
         extentMap.push_back(fileId);
 
         if (doVerbose())
-        {
             std::cout << "FileId is collected " << fileId << std::endl;
-        }
     }
 
     return 0;
