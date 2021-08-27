@@ -89,8 +89,7 @@ int main(int argc, char** argv)
     std::cout << "The launch of mcsRebuildEM tool must be sanctioned by MariaDB support. "
               << std::endl;
     std::cout << "Requirement: all DBRoots must be on this node. " << std::endl;
-    std::cout << "Note: that the launch can break the cluster." << std::endl;
-    std::cout << "Do you want to continue Y/N? " << std::endl;
+    std::cout << "Do you want to continue Y/N? ";
     std::string confirmation;
     cin >> confirmation;
     if (confirmation.size() == 0)
@@ -124,6 +123,7 @@ int main(int argc, char** argv)
         std::cout << "If `BRM_saves_em` "
                      "exists extent map will be restored from it. "
                   << std::endl;
+        std::cout << "Exiting. " << std::endl;
         return 0;
     }
 
@@ -131,6 +131,8 @@ int main(int argc, char** argv)
     auto rc = emReBuilder.initializeSystemExtents();
     if (rc == -1)
     {
+        std::cerr << "Cannot initialize system extents from binary blob." << std::endl;
+        std::cerr << "Exiting. " << std::endl;
         return 1;
     }
 
@@ -151,5 +153,8 @@ int main(int argc, char** argv)
         emReBuilder.clear();
     }
 
+    // Save restored extent map.
+    emReBuilder.getEM().save(BRMSavesEM);
+    std::cout << "Completed." << std::endl;
     return 0;
 }
