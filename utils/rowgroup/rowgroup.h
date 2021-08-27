@@ -175,13 +175,6 @@ public:
         return fUseStoreStringMutex;
     }
 
-private:
-    std::string empty_str;
-
-    StringStore(const StringStore&);
-    StringStore& operator=(const StringStore&);
-    static const uint32_t CHUNK_SIZE = 64 * 1024;  // allocators like powers of 2
-
     // This is an overlay b/c the underlying data needs to be any size,
     // and alloc'd in one chunk.  data can't be a separate dynamic chunk.
     struct MemChunk
@@ -191,7 +184,14 @@ private:
         uint8_t data[];
     };
 
-    std::vector<boost::shared_array<uint8_t> > mem;
+private:
+    std::string empty_str;
+
+    StringStore(const StringStore&);
+    StringStore& operator=(const StringStore&);
+    static constexpr const uint32_t CHUNK_SIZE = 64 * 1024; // allocators like powers of 2
+
+    std::vector<boost::shared_array<uint8_t>> mem;
 
     // To store strings > 64KB (BLOB/TEXT)
     std::vector<boost::shared_array<uint8_t> > longStrings;

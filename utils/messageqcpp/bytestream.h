@@ -28,6 +28,7 @@
 #include <vector>
 #include <set>
 #include <boost/shared_ptr.hpp>
+#include <boost/shared_array.hpp>
 #include <boost/version.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <stdint.h>
@@ -445,7 +446,13 @@ public:
     EXPORT static const uint32_t BlockSize = 4096;
 
     /** size of the space we want in front of the data */
-    EXPORT static const uint32_t ISSOverhead = 2 * sizeof(uint32_t); //space for the BS magic & length
+    EXPORT static const uint32_t ISSOverhead =
+        3 * sizeof(uint32_t); // space for the BS magic & length & number of long strings.
+
+    // Methods to get and set `long strings`.
+    EXPORT std::vector<boost::shared_array<uint8_t>>& getLongStrings();
+    EXPORT const std::vector<boost::shared_array<uint8_t>>& getLongStrings() const;
+    EXPORT void setLongStrings(const std::vector<boost::shared_array<uint8_t>>& other);
 
     friend class ::ByteStreamTestSuite;
 
@@ -469,6 +476,8 @@ private:
     uint8_t* fCurInPtr; //the point in fBuf where data is inserted next
     uint8_t* fCurOutPtr; //the point in fBuf where data is extracted from next
     uint32_t fMaxLen; //how big fBuf is currently
+    // Stores `long strings`.
+    std::vector<boost::shared_array<uint8_t>> longStrings;
 };
 
 template<int W, typename T = void>
