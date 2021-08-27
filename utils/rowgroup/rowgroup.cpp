@@ -173,14 +173,7 @@ void StringStore::serialize(ByteStream& bs) const
         bs.append(mc->data, mc->currentSize);
     }
 
-    bs << (uint64_t) longStrings.size();
-
-    for (i = 0; i < longStrings.size(); i++)
-    {
-        mc = (MemChunk*) longStrings[i].get();
-        bs << (uint64_t) mc->currentSize;
-        bs.append(mc->data, mc->currentSize);
-    }
+    bs.setLongStrings(longStrings);
 }
 
 void StringStore::deserialize(ByteStream& bs)
@@ -211,20 +204,7 @@ void StringStore::deserialize(ByteStream& bs)
         bs.advance(size);
     }
 
-    bs >> count;
-    longStrings.resize(count);
-
-    for (i = 0; i < count; i++)
-    {
-        bs >> size;
-        buf = bs.buf();
-        longStrings[i].reset(new uint8_t[size + sizeof(MemChunk)]);
-        mc = (MemChunk*) longStrings[i].get();
-        mc->capacity = mc->currentSize = size;
-        memcpy(mc->data, buf, size);
-        bs.advance(size);
-    }
-
+    longStrings = bs.getLongStrings();
     return;
 }
 

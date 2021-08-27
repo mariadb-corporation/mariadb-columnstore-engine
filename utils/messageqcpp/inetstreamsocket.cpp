@@ -84,6 +84,8 @@ using namespace std;
 #include <boost/scoped_array.hpp>
 using boost::scoped_array;
 
+#include <boost/shared_array.hpp>
+
 #define INETSTREAMSOCKET_DLLEXPORT
 #include "inetstreamsocket.h"
 #undef INETSTREAMSOCKET_DLLEXPORT
@@ -94,6 +96,7 @@ using boost::scoped_array;
 #include "logger.h"
 #include "loggingid.h"
 #include "idbcompress.h"
+#include "rowgroup.h"
 
 // some static functions
 namespace
@@ -471,43 +474,19 @@ retry:
     return true;
 }
 
-const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeOut, Stats* stats) const
+bool InetStreamSocket::readFixedSizeData(struct pollfd* pfd, uint8_t* buffer,
+                                         const size_t numberOfBytes,
+                                         const struct ::timespec* timeout, bool* isTimeOut,
+                                         Stats* stats, int64_t msecs) const
 {
-    long msecs = -1;
-
-    struct pollfd pfd[1];
-    pfd[0].fd = fSocketParms.sd();
-    pfd[0].events = POLLIN;
-
-    if (timeout != 0)
-        msecs = timeout->tv_sec * 1000 + timeout->tv_nsec / 1000000;
-
-    // we need to read the 4-byte message length first.
-    uint32_t msglen;
-    uint8_t* msglenp = reinterpret_cast<uint8_t*>(&msglen);
-    size_t mlread = 0;
-
-    if (readToMagic(msecs, isTimeOut, stats) == false)	//indicates a timeout or EOF
+    size_t bytesRead = 0;
+    while (bytesRead < numberOfBytes)
     {
-        // MCOL-480 The connector calls with timeout in a loop so that
-        // it can check a killed flag. This means that for a long running query,
-        // the following fills the warning log.
-//		if (isTimeOut && *isTimeOut)
-//		{
-//			logIoError("InetStreamSocket::read: timeout during readToMagic", 0);
-//		}
-        return SBS(new ByteStream(0));
-    }
-
-    //FIXME: This seems like a lot of work to read 4 bytes...
-    while (mlread < sizeof(msglen))
-    {
-        ssize_t t;
+        ssize_t currentBytesRead;
+        int err;
 
         if (timeout != NULL)
         {
-            int err;
-
             pfd[0].revents = 0;
             err = poll(pfd, 1, msecs);
 
@@ -525,152 +504,131 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
                     *isTimeOut = true;
 
                 logIoError("InetStreamSocket::read: timeout during first poll", 0);
-                return SBS(new ByteStream(0));
+                return false;
             }
         }
 
 #ifdef _MSC_VER
-        t = ::recv(fSocketParms.sd(), (char*)(msglenp + mlread), sizeof(msglen) - mlread, 0);
+        currentBytesRead =
+            ::recv(fSocketParms.sd(), (char*) (buffer + bytesRead),
+                   std::min(numberOfBytes - bytesRead, reinterpret_cast<size_t>(MaxSendPacketSize));
+                   readAmoumt, 0);
 #else
-        t = ::read(fSocketParms.sd(), msglenp + mlread, sizeof(msglen) - mlread);
+        currentBytesRead = ::read(fSocketParms.sd(), buffer + bytesRead, numberOfBytes - bytesRead);
 #endif
 
-        if (t == 0)
+        if (currentBytesRead == 0)
         {
             if (timeout == NULL)
             {
                 logIoError("InetStreamSocket::read: timeout during first read", 0);
-                return SBS(new ByteStream(0));  // don't return an incomplete message
+                return false;
             }
             else
                 throw SocketClosed("InetStreamSocket::read: Remote is closed");
         }
 
-        if (t < 0)
+        if (currentBytesRead < 0)
         {
-            int e = errno;
+            err = errno;
 
-            if (e == EINTR)
-            {
+            if (err == EINTR)
                 continue;
-            }
 
-            if (e == KERR_ERESTARTSYS)
+            if (err == KERR_ERESTARTSYS)
             {
-                logIoError("InetStreamSocket::read: I/O error2", e);
+                logIoError("InetStreamSocket::read: I/O error2", err);
                 continue;
             }
 
             ostringstream oss;
-            oss << "InetStreamSocket::read: I/O error2: " <<
-                strerror(e);
+            oss << "InetStreamSocket::read: I/O error2: " << strerror(err);
             throw runtime_error(oss.str());
         }
 
-        mlread += t;
+        bytesRead += currentBytesRead;
     }
 
     if (stats)
-        stats->dataRecvd(sizeof(msglen));
+        stats->dataRecvd(bytesRead);
 
-    SBS res(new ByteStream(msglen));
-    uint8_t* bufp = res->getInputPtr();
+    return true;
+}
 
-    size_t nread = 0;
+const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeOut,
+                                 Stats* stats) const
+{
+    int64_t msecs = -1;
 
-    //Finally read the actual message...
-    while (nread < msglen)
+    struct pollfd pfd[1];
+    pfd[0].fd = fSocketParms.sd();
+    pfd[0].events = POLLIN;
+
+    if (timeout != 0)
+        msecs = timeout->tv_sec * 1000 + timeout->tv_nsec / 1000000;
+
+    if (readToMagic(msecs, isTimeOut, stats) == false) // indicates a timeout or EOF
     {
-        ssize_t t;
-
-        if (timeout != NULL)
-        {
-            int err;
-
-            pfd[0].revents = 0;
-            err = poll(pfd, 1, msecs);
-
-            if (err < 0 || pfd[0].revents & (POLLERR | POLLHUP | POLLNVAL))
-            {
-                ostringstream oss;
-                oss << "InetStreamSocket::read: I/O error3: " <<
-                    strerror(errno);
-                throw runtime_error(oss.str());
-            }
-
-            if (err == 0)  // timeout
-            {
-                if (isTimeOut)
-                {
-                    logIoError("InetStreamSocket::read: timeout during second poll", 0);
-                    *isTimeOut = true;
-                }
-
-                if (stats)
-                    stats->dataRecvd(nread);
-
-                return SBS(new ByteStream(0));
-            }
-        }
-
-#ifdef _MSC_VER
-        int readAmount = std::min((int)msglen - (int)nread, MaxSendPacketSize);
-        t = ::recv(fSocketParms.sd(), (char*)(bufp + nread), readAmount, 0);
-#else
-        t = ::read(fSocketParms.sd(), bufp + nread, msglen - nread);
-#endif
-
-        if (t == 0)
-        {
-            if (stats)
-                stats->dataRecvd(nread);
-
-            if (timeout == NULL)
-                return SBS(new ByteStream(0));	// don't return an incomplete message
-            else
-            {
-                logIoError("InetStreamSocket::read: timeout during second read", 0);
-                throw SocketClosed("InetStreamSocket::read: Remote is closed");
-            }
-        }
-
-        if (t < 0)
-        {
-            ostringstream oss;
-#ifdef _MSC_VER
-            int e = WSAGetLastError();
-            oss << "InetStreamSocket::read: I/O error4: WSA: " << e;
-#else
-            int e = errno;
-
-            if (e == EINTR)
-            {
-                continue;
-            }
-
-            if (e == KERR_ERESTARTSYS)
-            {
-                logIoError("InetStreamSocket::read: I/O error4", e);
-                continue;
-            }
-
-            oss << "InetStreamSocket::read: I/O error4: " <<
-                strerror(e);
-#endif
-
-            if (stats)
-                stats->dataRecvd(nread);
-
-            throw runtime_error(oss.str());
-        }
-
-        nread += t;
+        // MCOL-480 The connector calls with timeout in a loop so that
+        // it can check a killed flag. This means that for a long running query,
+        // the following fills the warning log.
+        //		if (isTimeOut && *isTimeOut)
+        //		{
+        //			logIoError("InetStreamSocket::read: timeout during readToMagic", 0);
+        //		}
+        return SBS(new ByteStream(0));
     }
 
-    if (stats)
-        stats->dataRecvd(msglen);
+    // we need to read the 4-byte message length first.
+    uint32_t msglen;
+    if (!readFixedSizeData(pfd, reinterpret_cast<uint8_t*>(&msglen), sizeof(msglen), timeout,
+                           isTimeOut, stats, msecs))
+        return SBS(new ByteStream(0));
 
+    // Read the number of the `long strings`.
+    uint32_t longStringSize;
+    if (!readFixedSizeData(pfd, reinterpret_cast<uint8_t*>(&longStringSize), sizeof(longStringSize),
+                           timeout, isTimeOut, stats, msecs))
+        return SBS(new ByteStream(0));
+
+    // Read the actual data of the `ByteStream`.
+    SBS res(new ByteStream(msglen));
+    if (!readFixedSizeData(pfd, res->getInputPtr(), msglen, timeout, isTimeOut, stats, msecs))
+        return SBS(new ByteStream(0));
     res->advanceInputPtr(msglen);
+
+    std::vector<boost::shared_array<uint8_t>> longStrings;
+    longStrings.reserve(longStringSize);
+
+    for (uint32_t i = 0; i < longStringSize; ++i)
+    {
+        // Read `MemChunk`.
+        rowgroup::StringStore::MemChunk memChunk;
+        if (!readFixedSizeData(pfd, reinterpret_cast<uint8_t*>(&memChunk),
+                               sizeof(rowgroup::StringStore::MemChunk), timeout, isTimeOut, stats,
+                               msecs))
+            return SBS(new ByteStream(0));
+
+        // Allocate new memory for the `long string`.
+        boost::shared_array<uint8_t> longString(
+            new uint8_t[sizeof(rowgroup::StringStore::MemChunk) + memChunk.currentSize]);
+
+        uint8_t* longStringData = longString.get();
+        // Initialize memchunk with `current size` and `capacity`.
+        auto* memChunkPointer = reinterpret_cast<rowgroup::StringStore::MemChunk*>(longStringData);
+        memChunkPointer->currentSize = memChunk.currentSize;
+        memChunkPointer->capacity = memChunk.capacity;
+
+        // Read the `long string`.
+        if (!readFixedSizeData(pfd, memChunkPointer->data, memChunkPointer->currentSize, timeout,
+                               isTimeOut, stats, msecs))
+            return SBS(new ByteStream(0));
+
+        longStrings.push_back(longString);
+    }
+
+    res->setLongStrings(longStrings);
+
     return res;
 }
 
@@ -692,16 +650,32 @@ void InetStreamSocket::do_write(const ByteStream& msg, uint32_t whichMagic, Stat
 
     if (msglen == 0) return;
 
+    const auto& longStrings = msg.getLongStrings();
     /* buf.fCurOutPtr points to the data to send; ByteStream guarantees that there
-       are at least 8 bytes before that for the magic & length fields */
+       are at least 12 bytes before that for the magic & length fields */
     realBuf = (uint32_t*)msg.buf();
-    realBuf -= 2;
+    realBuf -= 3;
     realBuf[0] = magic;
     realBuf[1] = msglen;
+    realBuf[2] = longStrings.size();
 
     try
     {
-        written(fSocketParms.sd(), (const uint8_t*)realBuf, msglen + sizeof(msglen) + sizeof(magic));
+        auto bytesToWrite = sizeof(msglen) + sizeof(magic) + sizeof(uint32_t) + msglen;
+        written(fSocketParms.sd(), (const uint8_t*) realBuf, bytesToWrite);
+
+        for (const auto& longString : longStrings)
+        {
+            const rowgroup::StringStore::MemChunk* memChunk =
+                reinterpret_cast<rowgroup::StringStore::MemChunk*>(longString.get());
+            const auto writeSize = memChunk->currentSize + sizeof(rowgroup::StringStore::MemChunk);
+            written(fSocketParms.sd(), (const uint8_t*) longString.get(), writeSize);
+            // For stats.
+            bytesToWrite += writeSize;
+        }
+
+        if (stats)
+            stats->dataSent(bytesToWrite);
     }
     catch (std::exception& ex)
     {
@@ -709,9 +683,6 @@ void InetStreamSocket::do_write(const ByteStream& msg, uint32_t whichMagic, Stat
         errorMsg += " -- write from " + toString();
         throw runtime_error(errorMsg);
     }
-
-    if (stats)
-        stats->dataSent(msglen + sizeof(msglen) + sizeof(magic));
 }
 
 void InetStreamSocket::write(const ByteStream& msg, Stats* stats)
