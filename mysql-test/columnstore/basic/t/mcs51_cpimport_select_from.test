@@ -30,14 +30,16 @@ CREATE TABLE mcs51_db2.t_mcs (col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnsto
 #Bulk load deom Innodb table
 SELECT COUNT(*) FROM mcs51_db1.t_innodb;
 --exec $MYSQL -q -e 'SELECT * FROM mcs51_db1.t_innodb;' -N  | $MCS_CPIMPORT -s '\t' mcs51_db2 t_mcs >/dev/null
-SELECT * FROM mcs51_db2.t_mcs ORDER BY col1, col2;
+--sorted_result
+SELECT * FROM mcs51_db2.t_mcs;
 SELECT COUNT(*) FROM mcs51_db2.t_mcs;
 TRUNCATE mcs51_db2.t_mcs;
 
 #Bulk load deom MyISAM table
 SELECT COUNT(*) FROM mcs51_db1.t_myisam;
 --exec $MYSQL -q -e 'SELECT * FROM mcs51_db1.t_myisam;' -N  | $MCS_CPIMPORT -s '\t' mcs51_db2 t_mcs >/dev/null
-SELECT * FROM mcs51_db2.t_mcs ORDER BY col1, col2;
+--sorted_result
+SELECT * FROM mcs51_db2.t_mcs;
 SELECT COUNT(*) FROM mcs51_db2.t_mcs;
 TRUNCATE mcs51_db2.t_mcs;
 
