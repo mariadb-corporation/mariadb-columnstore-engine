@@ -25,6 +25,7 @@ CREATE TABLE t1(col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnstore;
 --enable_result_log
 
 #Validate data
+--sorted_result
 SELECT * FROM t1;
 SELECT COUNT(*) FROM t1;
 
