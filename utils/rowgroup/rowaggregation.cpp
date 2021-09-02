@@ -1258,7 +1258,7 @@ void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int 
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
             valIn = rowIn.getIntField(colIn);
-            auto scale = (double)(fRowGroupIn.getScale())[colIn];
+            auto scale = (double)(rowIn.getScale(colIn));
             if (valIn != 0 && scale > 0)
             {
                 valIn /= pow(10.0, scale);
@@ -1686,12 +1686,11 @@ void RowAggregation::mergeEntries(const Row& rowIn)
 
     case ROWAGG_AVG:
       // count(column) for average is inserted after the sum,
-      // colOut+1 is the position of the count column.
-      doAvg(rowIn, colOut, colOut, colOut + 1, true);
+      doAvg(rowIn, colOut, colOut, fFunctionCols[i]->fAuxColumnIndex, true);
       break;
 
     case ROWAGG_STATS:
-      mergeStatistics(rowIn, colOut, colOut + 1);
+      mergeStatistics(rowIn, colOut, fFunctionCols[i]->fAuxColumnIndex);
       break;
 
     case ROWAGG_BIT_AND:
@@ -4006,7 +4005,7 @@ void RowAggregationUMP2::updateEntry(const Row& rowIn)
 // colOut(in) - column in the output row group stores the sum
 // colAux(in) - column in the output row group stores the count
 //------------------------------------------------------------------------------
-void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int64_t colAux, bool)
+void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int64_t colAux, bool merge)
 {
     if (rowIn.isNullValue(colIn))
         return;
@@ -4042,7 +4041,7 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
         {
             valIn = rowIn.getIntField(colIn);
             break;
-            auto scale = (double)(fRowGroupIn.getScale())[colIn];
+            auto scale = (double)(rowIn.getScale(colIn));
             if (valIn != 0 && scale > 0)
             {
                 valIn /= pow(10.0, scale);
@@ -4081,15 +4080,16 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
     }
 
     uint64_t cnt = fRow.getUintField(colAux);
+    auto colAuxIn = merge ? colAux : (colIn + 1);
     if (cnt == 0)
     {
         fRow.setLongDoubleField(valIn, colOut);
-        fRow.setUintField(rowIn.getUintField(colIn + 1), colAux);
+        fRow.setUintField(rowIn.getUintField(colAuxIn), colAux);
     }
     else
     {
         fRow.setLongDoubleField(valIn + valOut, colOut);
-        fRow.setUintField(rowIn.getUintField(colIn + 1) + cnt, colAux);
+        fRow.setUintField(rowIn.getUintField(colAuxIn) + cnt, colAux);
     }
 }
 

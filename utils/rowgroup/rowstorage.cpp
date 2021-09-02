@@ -75,101 +75,6 @@ int readData(int fd, char* buf, size_t sz)
   return 0;
 }
 
-int writeFile(const char* fname, const char* buf, size_t sz,
-              const std::unique_ptr<compress::IDBCompressInterface>& compressor)
-{
-  if (sz == 0)
-    return 0;
-
-  int fd = open(fname, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-  if (UNLIKELY(fd < 0))
-    return errno;
-
-  const char* tmpbuf;
-  std::vector<char> tmpvec;
-  if (compressor)
-  {
-    auto len = compressor->maxCompressedSize(sz);
-    tmpvec.resize(len);
-    compressor->compress(buf, sz, tmpvec.data(), &len);
-    tmpbuf = tmpvec.data();
-    sz = len;
-  }
-  else
-  {
-    tmpbuf = buf;
-  }
-
-  auto to_write = sz;
-  while (to_write > 0)
-  {
-    auto r = write(fd, tmpbuf + sz - to_write, to_write);
-    if (UNLIKELY(r < 0))
-    {
-      if (errno == EAGAIN)
-        continue;
-
-      close(fd);
-      return errno;
-    }
-    assert(size_t(r) <= to_write);
-    to_write -= r;
-  }
-
-  close(fd);
-  return 0;
-}
-
-int readFile(const char* fname, std::vector<char>& buf,
-             const std::unique_ptr<compress::IDBCompressInterface>& compressor)
-{
-  int fd = open(fname, O_RDONLY);
-  if (UNLIKELY(fd < 0))
-    return errno;
-
-  struct stat st{};
-  fstat(fd, &st);
-  size_t sz = st.st_size;
-
-  std::vector<char> tmpbuf;
-  tmpbuf.resize(sz);
-
-  auto to_read = sz;
-  while (to_read > 0)
-  {
-    auto r = read(fd, tmpbuf.data() + sz - to_read, to_read);
-    if (UNLIKELY(r < 0))
-    {
-      if (errno == EAGAIN)
-        continue;
-
-      close(fd);
-      return errno;
-    }
-
-    assert(size_t(r) <= to_read);
-    to_read -= r;
-  }
-  close(fd);
-
-  if (compressor)
-  {
-    size_t len;
-    if (!compressor->getUncompressedSize(tmpbuf.data(), sz, &len))
-    {
-      return EPROTO;
-    }
-    buf.resize(len);
-    compressor->uncompress(tmpbuf.data(), sz, buf.data());
-  }
-  else
-  {
-    tmpbuf.swap(buf);
-  }
-
-  return 0;
-}
-
 std::string errorString(int errNo)
 {
   char tmp[1024];
@@ -427,6 +332,7 @@ protected:
 
     return true;
   }
+
   void releaseImpl(size_t amount) override {
     MemManager::releaseImpl(amount);
     fRm->returnMemory(amount, fSessLimit);
@@ -436,7 +342,123 @@ private:
   joblist::ResourceManager* fRm = nullptr;
   boost::shared_ptr<int64_t> fSessLimit;
   const bool fWait;
-  const bool fStrict;
+    const bool fStrict;
+};
+
+class Dumper {
+public:
+  Dumper(const compress::IDBCompressInterface* comp, MemManager* mm)
+    : fCompressor(comp)
+    , fMM(mm->clone())
+  {}
+
+  int write(const std::string &fname, const char *buf, size_t sz) {
+    if (sz == 0)
+      return 0;
+
+    int fd = open(fname.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (UNLIKELY(fd < 0))
+      return errno;
+
+    const char *tmpbuf;
+    if (fCompressor) {
+      auto len = fCompressor->maxCompressedSize(sz);
+      checkBuffer(len);
+      fCompressor->compress(buf, sz, fTmpBuf.data(), &len);
+      tmpbuf = fTmpBuf.data();
+      sz = len;
+    } else {
+      tmpbuf = buf;
+    }
+
+    auto to_write = sz;
+    int ret = 0;
+    while (to_write > 0) {
+      auto r = ::write(fd, tmpbuf + sz - to_write, to_write);
+      if (UNLIKELY(r < 0)) {
+        if (errno == EAGAIN)
+          continue;
+
+        ret = errno;
+        close(fd);
+        return ret;
+      }
+      assert(size_t(r) <= to_write);
+      to_write -= r;
+    }
+
+    close(fd);
+    return ret;
+  }
+
+  int read(const std::string &fname, std::vector<char> &buf) {
+    int fd = open(fname.c_str(), O_RDONLY);
+    if (UNLIKELY(fd < 0))
+      return errno;
+
+    struct stat st{};
+    fstat(fd, &st);
+    size_t sz = st.st_size;
+    std::vector<char>* tmpbuf;
+    if (fCompressor) {
+      tmpbuf = &fTmpBuf;
+      checkBuffer(sz);
+    } else {
+      tmpbuf = &buf;
+      buf.resize(sz);
+    }
+
+    auto to_read = sz;
+    int ret = 0;
+    while (to_read > 0) {
+      auto r = ::read(fd, tmpbuf->data() + sz - to_read, to_read);
+      if (UNLIKELY(r < 0)) {
+        if (errno == EAGAIN)
+          continue;
+
+        ret = errno;
+        close(fd);
+        return ret;
+      }
+
+      assert(size_t(r) <= to_read);
+      to_read -= r;
+    }
+
+    if (fCompressor) {
+      size_t len;
+      if (!fCompressor->getUncompressedSize(tmpbuf->data(), sz, &len)) {
+        ret = EPROTO;
+        close(fd);
+        return ret;
+      }
+
+      buf.resize(len);
+      fCompressor->uncompress(tmpbuf->data(), sz, buf.data());
+    }
+
+    close(fd);
+    return ret;
+  }
+
+  size_t size() const {
+    return fTmpBuf.size();
+  }
+
+private:
+  void checkBuffer(size_t len) {
+    if (fTmpBuf.size() < len) {
+      size_t newtmpsz = (len + 8191) / 8192 * 8192;
+      std::vector<char> tmpvec(newtmpsz);
+      fMM->acquire(newtmpsz - fTmpBuf.size());
+      fTmpBuf.swap(tmpvec);
+    }
+  }
+
+private:
+  const compress::IDBCompressInterface* fCompressor;
+  std::unique_ptr<MemManager> fMM;
+  std::vector<char> fTmpBuf;
 };
 
 /** @brief Storage for RGData with LRU-cache & memory management
@@ -468,12 +490,13 @@ public:
                   boost::shared_ptr<int64_t> sessLimit = {},
                   bool wait = false,
                   bool strict = false,
-                  bool compress = false)
+                  compress::IDBCompressInterface* compressor = nullptr)
       : fRowGroupOut(rowGroupOut)
       , fMaxRows(maxRows)
       , fRGDatas()
       , fUniqId(this)
       , fTmpDir(tmpDir)
+      , fCompressor(compressor)
   {
     if (rm)
     {
@@ -493,10 +516,7 @@ public:
       fLRU = std::unique_ptr<LRUIface>(new LRUIface());
     }
 
-    if (compress)
-    {
-      fCompressor.reset(new compress::IDBCompressInterface);
-    }
+    fDumper.reset(new Dumper(fCompressor, fMM.get()));
 
     auto* curRG = new RGData(*fRowGroupOut, fMaxRows);
     fRowGroupOut->setData(curRG);
@@ -874,8 +894,8 @@ public:
     ret->fMM.reset(fMM->clone());
     ret->fUniqId = fUniqId;
     ret->fGeneration = gen;
-    if (fCompressor)
-        ret->fCompressor.reset(new compress::IDBCompressInterface);
+    ret->fCompressor = fCompressor;
+    ret->fDumper.reset(new Dumper(fCompressor, fMM.get()));
     ret->loadFinalizedInfo();
     return ret;
   }
@@ -1071,7 +1091,7 @@ private:
 
     std::vector<char> data;
     int errNo;
-    if ((errNo = readFile(fname.c_str(), data, fCompressor)) != 0)
+    if ((errNo = fDumper->read(fname, data)) != 0)
     {
       unlink(fname.c_str());
       throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
@@ -1126,7 +1146,7 @@ private:
     rgdata->serialize(bs, fRowGroupOut->getDataSize());
 
     int errNo;
-    if ((errNo = writeFile(makeRGFilename(rgid).c_str(), (char*)bs.buf(), bs.length(), fCompressor)) != 0)
+    if ((errNo = fDumper->write(makeRGFilename(rgid), (char*)bs.buf(), bs.length())) != 0)
     {
       throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
                                    logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
@@ -1182,7 +1202,8 @@ private:
   uint16_t fGeneration{0};
   std::vector<uint64_t> fFinalizedRows;
   std::string fTmpDir;
-  std::unique_ptr<compress::IDBCompressInterface> fCompressor;
+  compress::IDBCompressInterface* fCompressor;
+  std::unique_ptr<Dumper> fDumper;
 };
 
 /** @brief Internal data for the hashmap */
@@ -1214,14 +1235,18 @@ public:
                     size_t size,
                     joblist::ResourceManager* rm,
                     boost::shared_ptr<int64_t> sessLimit,
-                    bool enableDiskAgg)
+                    bool enableDiskAgg,
+                    compress::IDBCompressInterface* compressor)
       : fUniqId(this)
       , fTmpDir(tmpDir)
+      , fCompressor(compressor)
   {
     if (rm)
       fMM.reset(new RMMemManager(rm, sessLimit, !enableDiskAgg, !enableDiskAgg));
     else
       fMM.reset(new MemManager());
+
+    fDumper.reset(new Dumper(fCompressor, fMM.get()));
 
     if (size != 0)
       init(size);
@@ -1288,6 +1313,8 @@ public:
     cloned->init(size);
     cloned->fUniqId = fUniqId;
     cloned->fGeneration = gen;
+    cloned->fCompressor = fCompressor;
+    cloned->fDumper.reset(new Dumper(fCompressor, cloned->fMM.get()));
     if (loadDump)
       cloned->load();
     return cloned;
@@ -1312,27 +1339,15 @@ public:
 
   void dump()
   {
-    int fd = open(makeDumpName().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if (fd < 0)
-    {
-      throw logging::IDBExcept(
-          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR,
-                                                      errorString(errno)),
-          logging::ERR_DISKAGG_FILEIO_ERROR);
-    }
-
     int errNo;
     size_t sz = fPosHashes.size() * sizeof(decltype(fPosHashes)::value_type);
-    if ((errNo = writeData(fd, (char*)fPosHashes.data(), sz)) != 0)
+    if ((errNo = fDumper->write(makeDumpName(), (char*)fPosHashes.data(), sz)) != 0)
     {
-      close(fd);
       throw logging::IDBExcept(
           logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR,
                                                       errorString(errNo)),
           logging::ERR_DISKAGG_FILEIO_ERROR);
     }
-
-    close(fd);
   }
 
 private:
@@ -1360,29 +1375,18 @@ private:
 
   void load()
   {
-    int fd = open(makeDumpName().c_str(), O_RDONLY);
-    if (fd < 0)
-    {
-      throw logging::IDBExcept(
-          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR,
-                                                      errorString(errno)),
-          logging::ERR_DISKAGG_FILEIO_ERROR);
-    }
-
-    struct stat st;
-    fstat(fd, &st);
-    fPosHashes.resize(st.st_size / sizeof(decltype(fPosHashes)::value_type));
     int errNo;
-    if ((errNo = readData(fd, (char*)fPosHashes.data(), st.st_size)) != 0)
+    std::vector<char> data;
+    if ((errNo = fDumper->read(makeDumpName(), data)) != 0)
     {
-      close(fd);
       throw logging::IDBExcept(
           logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR,
                                                       errorString(errNo)),
           logging::ERR_DISKAGG_FILEIO_ERROR);
     }
 
-    close(fd);
+    fPosHashes.resize(data.size() / sizeof(decltype(fPosHashes)::value_type));
+    memcpy(fPosHashes.data(), data.data(), data.size());
   }
 
 private:
@@ -1391,6 +1395,8 @@ private:
   uint16_t fGeneration{0};              ///< current aggregation generation
   void* fUniqId;                        ///< uniq ID to make an uniq dump filename
   std::string fTmpDir;
+  compress::IDBCompressInterface* fCompressor;
+  std::unique_ptr<Dumper> fDumper;
 };
 
 /*---------------------------------------------------------------------------
@@ -1416,7 +1422,6 @@ RowAggStorage::RowAggStorage(const std::string& tmpDir,
     , fUniqId(this)
     , fAllowGenerations(allowGenerations)
     , fEnabledDiskAggregation(enabledDiskAgg)
-    , fCompress(compress)
     , fTmpDir(tmpDir)
     , fRowGroupOut(rowGroupOut)
     , fKeysRowGroup(keysRowGroup)
@@ -1437,10 +1442,17 @@ RowAggStorage::RowAggStorage(const std::string& tmpDir,
     fMM.reset(new MemManager());
     fNumOfInputRGPerThread = 1;
   }
-  fStorage.reset(new RowGroupStorage(fTmpDir, rowGroupOut, 1, rm, sessLimit, !enabledDiskAgg, !enabledDiskAgg, compress));
+
+  if (compress)
+    fCompressor.reset(new compress::IDBCompressInterface);
+
+  fStorage.reset(new RowGroupStorage(fTmpDir, rowGroupOut, 1, rm, sessLimit,
+                                     !enabledDiskAgg, !enabledDiskAgg, fCompressor.get()));
   if (fExtKeys)
   {
-    fKeysStorage = new RowGroupStorage(fTmpDir, keysRowGroup, 1, rm, sessLimit, !enabledDiskAgg, !enabledDiskAgg, compress);
+    fRealKeysStorage.reset(new RowGroupStorage(fTmpDir, keysRowGroup, 1, rm, sessLimit,
+                                               !enabledDiskAgg, !enabledDiskAgg, fCompressor.get()));
+    fKeysStorage = fRealKeysStorage.get();
   }
   else
   {
@@ -1449,20 +1461,12 @@ RowAggStorage::RowAggStorage(const std::string& tmpDir,
   fKeysStorage->initRow(fKeyRow);
   fGens.emplace_back(new Data);
   fCurData = fGens.back().get();
-  fCurData->fHashes.reset(new RowPosHashStorage(fTmpDir, 0, rm, sessLimit, fEnabledDiskAggregation));
+  fCurData->fHashes.reset(new RowPosHashStorage(fTmpDir, 0, rm, sessLimit, fEnabledDiskAggregation, fCompressor.get()));
 }
 
 RowAggStorage::~RowAggStorage()
 {
   cleanupAll();
-
-  if (fExtKeys)
-    delete fKeysStorage;
-  for (auto& data : fGens)
-  {
-    if (data->fInfo != nullptr)
-      free(data->fInfo);
-  }
 }
 
 bool RowAggStorage::getTargetRow(const Row &row, Row &rowOut)
@@ -1483,7 +1487,7 @@ bool RowAggStorage::getTargetRow(const Row &row, uint64_t hash, Row &rowOut)
                                        fMM->getSessionLimit(),
                                        !fEnabledDiskAggregation,
                                        !fEnabledDiskAggregation,
-                                       fCompress));
+                                       fCompressor.get()));
     if (fExtKeys)
     {
       fKeysStorage = new RowGroupStorage(fTmpDir,
@@ -1493,7 +1497,7 @@ bool RowAggStorage::getTargetRow(const Row &row, uint64_t hash, Row &rowOut)
                                          fMM->getSessionLimit(),
                                          !fEnabledDiskAggregation,
                                          !fEnabledDiskAggregation,
-                                         fCompress);
+                                         fCompressor.get());
     }
     else
     {
@@ -1681,11 +1685,6 @@ std::unique_ptr<RGData> RowAggStorage::getNextRGData()
 
 void RowAggStorage::freeData()
 {
-  if (fExtKeys && fKeysStorage)
-  {
-    delete fKeysStorage;
-    fKeysStorage = nullptr;
-  }
   for (auto& data : fGens)
   {
     data->fHashes.reset();
@@ -1693,8 +1692,7 @@ void RowAggStorage::freeData()
     {
       const size_t memSz = calcSizeWithBuffer(data->fMask + 1);
       fMM->release(memSz);
-      free(data->fInfo);
-      data->fInfo = nullptr;
+      data->fInfo.reset();
     }
   }
   fGens.clear();
@@ -1780,9 +1778,9 @@ bool RowAggStorage::tryIncreaseInfo()
   for (size_t i = 0; i < elems; i += 8)
   {
     uint64_t val;
-    memcpy(&val, fCurData->fInfo + i, sizeof(val));
+    memcpy(&val, fCurData->fInfo.get() + i, sizeof(val));
     val = (val >> 1U) & 0x7f7f7f7f7f7f7f7fULL;
-    memcpy(fCurData->fInfo + i, &val, sizeof(val));
+    memcpy(fCurData->fInfo.get() + i, &val, sizeof(val));
   }
 
   fCurData->fInfo[elems] = 1;
@@ -1793,37 +1791,22 @@ bool RowAggStorage::tryIncreaseInfo()
 void RowAggStorage::rehashPowerOfTwo(size_t elems)
 {
   const size_t oldSz = calcSizeWithBuffer(fCurData->fMask + 1);
-  const uint8_t* const oldInfo = fCurData->fInfo;
+  auto oldInfo = std::move(fCurData->fInfo);
   auto oldHashes = std::move(fCurData->fHashes);
   fMM->release(calcBytes(oldSz));
 
-  try
-  {
-    initData(elems, oldHashes.get());
-    oldHashes->releaseMemory();
+  initData(elems, oldHashes.get());
+  oldHashes->releaseMemory();
 
-    if (oldSz > 1)
+  if (oldSz > 1)
+  {
+    for (size_t i = 0; i < oldSz; ++i)
     {
-      for (size_t i = 0; i < oldSz; ++i)
+      if (UNLIKELY(oldInfo[i] != 0))
       {
-        if (UNLIKELY(oldInfo[i] != 0))
-        {
-          insertSwap(i, oldHashes.get());
-        }
+        insertSwap(i, oldHashes.get());
       }
     }
-  }
-  catch (...)
-  {
-    if (oldInfo != nullptr && oldInfo != fCurData->fInfo)
-    {
-      free((void *)oldInfo);
-    }
-    throw;
-  }
-  if (oldInfo != nullptr && oldInfo != fCurData->fInfo)
-  {
-    free((void *)oldInfo);
   }
 }
 
@@ -1882,7 +1865,7 @@ void RowAggStorage::initData(size_t elems, const RowPosHashStorage* oldHashes)
                              logging::ERR_AGGREGATION_TOO_BIG);
   }
   fCurData->fHashes = oldHashes->clone(elems, fGeneration);
-  fCurData->fInfo = reinterpret_cast<uint8_t*>(calloc(1, bytes));
+  fCurData->fInfo.reset(new uint8_t[bytes]());
   fCurData->fInfo[sizeWithBuffer] = 1;
   fCurData->fInfoInc = INIT_INFO_INC;
   fCurData->fInfoHashShift = INIT_INFO_HASH_SHIFT;
@@ -1933,11 +1916,7 @@ void RowAggStorage::startNewGeneration()
   ++fGeneration;
   fMM->release();
   // reinitialize internal structures
-  if (fCurData->fInfo)
-  {
-    free(fCurData->fInfo);
-    fCurData->fInfo = nullptr;
-  }
+  fCurData->fInfo.reset();
   fCurData->fSize = 0;
   fCurData->fMask = 0;
   fCurData->fMaxSize = 0;
@@ -1967,7 +1946,7 @@ void RowAggStorage::dumpInternalData() const
   bs << fCurData->fMaxSize;
   bs << fCurData->fInfoInc;
   bs << fCurData->fInfoHashShift;
-  bs.append(fCurData->fInfo, calcBytes(calcSizeWithBuffer(fCurData->fMask + 1, fCurData->fMaxSize)));
+  bs.append(fCurData->fInfo.get(), calcBytes(calcSizeWithBuffer(fCurData->fMask + 1, fCurData->fMaxSize)));
   int fd = open(makeDumpFilename().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
   if (fd < 0)
   {
@@ -2021,9 +2000,8 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
       fStorage.reset(fStorage->clone(curGen - 1));
       if (fExtKeys)
       {
-        auto* oks = fKeysStorage;
-        fKeysStorage = oks->clone(curGen - 1);
-        delete oks;
+        fRealKeysStorage.reset(fRealKeysStorage->clone(curGen - 1));
+        fKeysStorage = fRealKeysStorage.get();
       }
       else
         fKeysStorage = fStorage.get();
@@ -2035,9 +2013,10 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
     size_t prevMaxSize;
     uint32_t prevInfoInc;
     uint32_t prevInfoHashShift;
-    uint8_t *prevInfo{nullptr};
+    std::unique_ptr<uint8_t[]> prevInfo;
 
     std::unique_ptr<RowGroupStorage> prevRowStorage;
+    std::unique_ptr<RowGroupStorage> prevRealKeyRowStorage;
     RowGroupStorage *prevKeyRowStorage{nullptr};
 
     auto elems = calcSizeWithBuffer(fCurData->fMask + 1);
@@ -2047,8 +2026,8 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
       prevRowStorage.reset(fStorage->clone(prevGen));
       if (fExtKeys)
       {
-        delete prevKeyRowStorage;
-        prevKeyRowStorage = fKeysStorage->clone(prevGen);
+        prevRealKeyRowStorage.reset(fKeysStorage->clone(prevGen));
+        prevKeyRowStorage = prevRealKeyRowStorage.get();
       }
       else
         prevKeyRowStorage = prevRowStorage.get();
@@ -2189,14 +2168,15 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
     fCurData->fMaxSize = prevMaxSize;
     fCurData->fInfoInc = prevInfoInc;
     fCurData->fInfoHashShift = prevInfoHashShift;
-    if (fCurData->fInfo)
-      free(fCurData->fInfo);
-    fCurData->fInfo = prevInfo;
+    fCurData->fInfo = std::move(prevInfo);
     fCurData->fHashes = std::move(prevHashes);
     fStorage = std::move(prevRowStorage);
-    if (fExtKeys)
-      delete fKeysStorage;
-    fKeysStorage = prevKeyRowStorage;
+    if (fExtKeys) {
+      fRealKeysStorage = std::move(prevRealKeyRowStorage);
+      fKeysStorage = fRealKeysStorage.get();
+    }
+    else
+      fKeysStorage = prevKeyRowStorage;
   }
 
   fStorage->dumpFinalizedInfo();
@@ -2207,9 +2187,8 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
   fStorage.reset(fStorage->clone(fGeneration));
   if (fExtKeys)
   {
-    auto* oks = fKeysStorage;
-    fKeysStorage = oks->clone(fGeneration);
-    delete oks;
+    fRealKeysStorage.reset(fRealKeysStorage->clone(fGeneration));
+    fKeysStorage = fRealKeysStorage.get();
   }
   else
     fKeysStorage = fStorage.get();
@@ -2222,7 +2201,13 @@ void RowAggStorage::loadGeneration(uint16_t gen)
   loadGeneration(gen, fCurData->fSize, fCurData->fMask, fCurData->fMaxSize, fCurData->fInfoInc, fCurData->fInfoHashShift, fCurData->fInfo);
 }
 
-void RowAggStorage::loadGeneration(uint16_t gen, size_t &size, size_t &mask, size_t &maxSize, uint32_t &infoInc, uint32_t &infoHashShift, uint8_t *&info)
+void RowAggStorage::loadGeneration(uint16_t gen,
+                                   size_t& size,
+                                   size_t& mask,
+                                   size_t& maxSize,
+                                   uint32_t& infoInc,
+                                   uint32_t& infoHashShift,
+                                   std::unique_ptr<uint8_t[]>& info)
 {
   messageqcpp::ByteStream bs;
   int fd = open(makeDumpFilename(gen).c_str(), O_RDONLY);
@@ -2253,10 +2238,9 @@ void RowAggStorage::loadGeneration(uint16_t gen, size_t &size, size_t &mask, siz
   bs >> infoInc;
   bs >> infoHashShift;
   size_t infoSz = calcBytes(calcSizeWithBuffer(mask + 1, maxSize));
-  if (info)
-    free(info);
-  info = (uint8_t*)calloc(1, infoSz);
-  bs >> info;
+  info.reset(new uint8_t[infoSz]());
+  uint8_t* tmp = info.get();
+  bs >> tmp;
 }
 
 void RowAggStorage::cleanupAll() noexcept
