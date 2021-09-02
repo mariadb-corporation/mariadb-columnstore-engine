@@ -2699,7 +2699,10 @@ void BatchPrimitiveProcessor::initGJRG()
 inline void BatchPrimitiveProcessor::getJoinResults(const Row& r, uint32_t jIndex, vector<uint32_t>& v)
 {
     uint bucket;
-
+    if (MonitorProcMem::checkMemlimit())
+    {
+        throw logging::IDBExcept(logging::ERR_PRIMPROC_LOW_MEMORY);
+    }
     if (!typelessJoin[jIndex])
     {
         if (r.isNullValue(largeSideKeyColumns[jIndex]))
