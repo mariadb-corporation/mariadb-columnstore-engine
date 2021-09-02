@@ -225,7 +225,7 @@ private:
     uint64_t data;
     while (true)
     {
-      memcpy(&data, fCurData->fInfo + idx, sizeof(data));
+      memcpy(&data, fCurData->fInfo.get() + idx, sizeof(data));
       if (data == 0)
       {
         idx += sizeof(n);
@@ -311,7 +311,13 @@ private:
    */
   void loadGeneration(uint16_t gen);
   /** @brief Load previously dumped data into the tmp storage */
-  void loadGeneration(uint16_t gen, size_t& size, size_t& mask, size_t& maxSize, uint32_t& infoInc, uint32_t& infoHashShift, uint8_t*& info);
+  void loadGeneration(uint16_t gen,
+                      size_t& size,
+                      size_t& mask,
+                      size_t& maxSize,
+                      uint32_t& infoInc,
+                      uint32_t& infoHashShift,
+                      std::unique_ptr<uint8_t[]>& info);
 
   /** @brief Remove temporary data files */
   void cleanup();
@@ -333,7 +339,7 @@ private:
   struct Data
   {
     RowPosHashStoragePtr fHashes;
-    uint8_t *fInfo{nullptr};
+    std::unique_ptr<uint8_t[]> fInfo;
     size_t fSize{0};
     size_t fMask{0};
     size_t fMaxSize{0};
@@ -346,6 +352,7 @@ private:
   const bool fExtKeys;
 
   std::unique_ptr<RowGroupStorage> fStorage;
+  std::unique_ptr<RowGroupStorage> fRealKeysStorage;
   RowGroupStorage* fKeysStorage;
   uint32_t fLastKeyCol;
 
