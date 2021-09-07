@@ -20,10 +20,21 @@
 #include "datatypes/mcs_datatype.h"
 #include "stats.h"
 #include "primitives/linux-port/primitiveprocessor.h"
+#include "col1block.h"
+#include "col2block.h"
+#include "col4block.h"
+#include "col8block.h"
+#include "col_float_block.h"
+#include "col_double_block.h"
+#include "col_neg_float.h"
+#include "col_neg_double.h"
 
 using namespace primitives;
 using namespace datatypes;
 using namespace std;
+
+// If a test crashes check if there is a corresponding literal binary array in 
+// readBlockFromLiteralArray.
 
 class ColumnScanFilterTest : public ::testing::Test
 {
@@ -82,7 +93,29 @@ class ColumnScanFilterTest : public ::testing::Test
     close(fd);
     return block;
   }
+ uint8_t* readBlockFromLiteralArray(const std::string& fileName, uint8_t* block)
+ {
+    if (fileName == std::string("col1block.cdf"))
+      return &__col1block_cdf[0];
+    else if (fileName == std::string("col2block.cdf"))
+      return &__col2block_cdf[0];
+    else if (fileName == std::string("col4block.cdf"))
+      return &__col4block_cdf[0];
+    else if (fileName == std::string("col8block.cdf"))
+      return &___bin_col8block_cdf[0];
+    else if (fileName == std::string("col_float_block.cdf"))
+      return &___bin_col_float_block_cdf[0];
+    else if (fileName == std::string("col_double_block.cdf"))
+      return &___bin_col_double_block_cdf[0];
+    else if (fileName == std::string("col_neg_float.cdf"))
+      return &___bin_col_neg_float_cdf[0];
+    else if (fileName == std::string("col_neg_double.cdf"))
+      return &___bin_col_neg_double_cdf[0];
+
+    return nullptr;
+ }
 };
+
 
 TEST_F(ColumnScanFilterTest, ColumnScan1Byte)
 {
@@ -96,7 +129,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan1Byte)
   in->NOPS = 0;
   in->NVALS = 0;
 
-  pp.setBlockPtr((int*) readBlockFromFile("col1block.cdf", block));
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col1block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out, 4 * BLOCK_SIZE, &written);
 
   results = &output[sizeof(NewColResultHeader)];
@@ -118,7 +151,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan2Bytes)
   in->NOPS = 0;
   in->NVALS = 0;
 
-  pp.setBlockPtr((int*) readBlockFromFile("col2block.cdf", block));
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col2block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out, 4 * BLOCK_SIZE, &written);
 
   results = reinterpret_cast<uint16_t*>(&output[sizeof(NewColResultHeader)]);
@@ -139,7 +172,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan4Bytes)
   in->NOPS = 0;
   in->NVALS = 0;
 
-  pp.setBlockPtr((int*) readBlockFromFile("col4block.cdf", block));
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col4block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out, 4 * BLOCK_SIZE, &written);
 
   results = reinterpret_cast<uint32_t*>(&output[sizeof(NewColResultHeader)]);
@@ -160,7 +193,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan8Bytes)
   in->NOPS = 0;
   in->NVALS = 0;
 
-  pp.setBlockPtr((int*) readBlockFromFile("col8block.cdf", block));
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col8block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out, 4 * BLOCK_SIZE, &written);
 
   results = reinterpret_cast<u_int64_t*>(&output[sizeof(NewColResultHeader)]);
@@ -183,7 +216,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan1ByteUsingRID)
   rids[0] = 20;
   rids[1] = 17;
 
-  pp.setBlockPtr((int*) readBlockFromFile("col1block.cdf", block));
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col1block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out, 4 * BLOCK_SIZE, &written);
 
   results = reinterpret_cast<uint8_t*>(&output[sizeof(NewColResultHeader)]);
@@ -215,7 +248,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan4Bytes1Filter)
   tmp = 10;
   memcpy(args->val, &tmp, in->colType.DataSize);
 
-  pp.setBlockPtr((int*) readBlockFromFile("col4block.cdf", block));
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col4block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out, 4 * BLOCK_SIZE, &written);
 
   results = reinterpret_cast<uint32_t*>(&output[sizeof(NewColResultHeader)]);
@@ -249,7 +282,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan8Bytes2CompFilters)
   tmp = 1000;
   memcpy(args->val, &tmp, in->colType.DataSize);
 
-  pp.setBlockPtr((int*) readBlockFromFile("col8block.cdf", block));
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col8block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out, 4 * BLOCK_SIZE, &written);
 
   results = reinterpret_cast<u_int64_t*>(&output[sizeof(NewColResultHeader)]);
@@ -282,7 +315,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan8Bytes2EqFilters)
   tmp = 1000;
   memcpy(args->val, &tmp, in->colType.DataSize);
 
-  pp.setBlockPtr((int*) readBlockFromFile("col8block.cdf", block));
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col8block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out, 4 * BLOCK_SIZE, &written);
 
   results = reinterpret_cast<u_int64_t*>(&output[sizeof(NewColResultHeader)]);
@@ -321,7 +354,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan8Bytes2EqFiltersRID)
   rids[0] = 10;
   rids[1] = 100;
 
-  pp.setBlockPtr((int*) readBlockFromFile("col8block.cdf", block));
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col8block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out, 4 * BLOCK_SIZE, &written);
 
   results = reinterpret_cast<u_int64_t*>(&output[sizeof(NewColResultHeader)]);
@@ -352,7 +385,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan8Bytes2EqFiltersRIDOutputRid)
   tmp = 1000;
   memcpy(args->val, &tmp, in->colType.DataSize);
 
-  pp.setBlockPtr((int*) readBlockFromFile("col8block.cdf", block));
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col8block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out, 4 * BLOCK_SIZE, &written);
 
   results = reinterpret_cast<int16_t*>(&output[sizeof(NewColResultHeader)]);
@@ -386,7 +419,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan8Bytes2EqFiltersRIDOutputBoth)
   tmp = 1000;
   memcpy(args->val, &tmp, in->colType.DataSize);
 
-  pp.setBlockPtr((int*) readBlockFromFile("col8block.cdf", block));
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col8block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out, 4 * BLOCK_SIZE, &written);
 
   ASSERT_EQ(out->NVALS, 33);
@@ -423,7 +456,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan1Byte2CompFilters)
   args->COP = COMPARE_LT;
   args->val[0] = '4';
 
-  pp.setBlockPtr((int*) readBlockFromFile("col1block.cdf", block));
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col1block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out, 4 * BLOCK_SIZE, &written);
 
   results = &output[sizeof(NewColResultHeader)];
@@ -472,7 +505,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan4Bytes2CompFiltersOutputRID)
   memcpy(args->val, &tmp, in->colType.DataSize);
   memcpy(&args->val[in->colType.DataSize], &ridTmp, 2);
 
-  pp.setBlockPtr((int*) readBlockFromFile("col4block.cdf", block));
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col4block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out, 4 * BLOCK_SIZE, &written);
 
   results = reinterpret_cast<int16_t*>(&output[sizeof(NewColResultHeader)]);
@@ -504,7 +537,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan8BytesDouble2CompFilters)
   args->COP = COMPARE_LT;
   memcpy(args->val, &tmp, sizeof(tmp));
 
-  pp.setBlockPtr((int*) readBlockFromFile("col_double_block.cdf", block));
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col_double_block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out, 4 * BLOCK_SIZE, &written);
 
   results = reinterpret_cast<double*>(&output[sizeof(NewColResultHeader)]);
@@ -538,7 +571,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan4BytesFloat2CompFiltersOutputBoth)
   args->COP = COMPARE_LT;
   memcpy(args->val, &tmp, sizeof(tmp));
 
-  pp.setBlockPtr((int*) readBlockFromFile("col_float_block.cdf", block));
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col_float_block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out, 4 * BLOCK_SIZE, &written);
 
   ASSERT_EQ(out->NVALS, 8);
@@ -576,7 +609,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan4BytesNegFloat2CompFiltersOutputBoth)
   args->COP = COMPARE_LT;
   memcpy(args->val, &tmp, sizeof(tmp));
 
-  pp.setBlockPtr((int*) readBlockFromFile("col_neg_float.cdf", block));
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col_neg_float.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out, 4 * BLOCK_SIZE, &written);
   ASSERT_EQ(out->NVALS, 19);
 
@@ -612,7 +645,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan4BytesNegDouble2CompFilters)
   args->COP = COMPARE_LT;
   memcpy(args->val, &tmp, sizeof(tmp));
 
-  pp.setBlockPtr((int*) readBlockFromFile("col_neg_double.cdf", block));
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col_neg_double.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out, 4 * BLOCK_SIZE, &written);
 
   results = reinterpret_cast<double*>(&output[sizeof(NewColResultHeader)]);

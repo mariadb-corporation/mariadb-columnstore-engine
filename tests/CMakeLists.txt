@@ -1,4 +1,4 @@
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+include_directories( ${ENGINE_COMMON_INCLUDES} ${ENGINE_BLOCKCACHE_INCLUDE} ${ENGINE_PRIMPROC_INCLUDE})
 
 if (WITH_UNITTESTS)
     enable_testing()
@@ -9,10 +9,6 @@ if (WITH_UNITTESTS)
     add_executable(rowgroup_tests rowgroup-tests.cpp)
     target_link_libraries(rowgroup_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS} ${MARIADB_CLIENT_LIBS})
     gtest_discover_tests(rowgroup_tests TEST_PREFIX columnstore:)
-
-    add_executable(arithmeticoperator_tests arithmeticoperator-tests.cpp)
-    target_link_libraries(arithmeticoperator_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS} ${MARIADB_CLIENT_LIBS})
-    gtest_discover_tests(arithmeticoperator_tests TEST_PREFIX columnstore:)
 
     add_executable(mcs_decimal_tests mcs_decimal-tests.cpp)
     target_link_libraries(mcs_decimal_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS} ${MARIADB_CLIENT_LIBS})
@@ -30,6 +26,10 @@ if (WITH_UNITTESTS)
     target_link_libraries(compression_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS})
     gtest_discover_tests(compression_tests TEST_PREFIX columnstore:)
 
+    add_executable(column_scan_filter_tests primitives_column_scan_and_filter.cpp)
+    target_link_libraries(column_scan_filter_tests ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
+    gtest_discover_tests(column_scan_filter_tests TEST_PREFIX columnstore:)
+
     # CPPUNIT TESTS
     add_executable(we_shared_components_tests shared_components_tests.cpp)
     add_dependencies(we_shared_components_tests loggingcpp)
@@ -40,11 +40,5 @@ if (WITH_UNITTESTS)
     add_executable(comparators_tests comparators-tests.cpp)
     target_link_libraries(comparators_tests ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
     add_test(NAME columnstore:comparators_tests, COMMAND comparators_tests)
-endif()
 
-if (WITH_PP_SCAN_UT)
-    add_executable(column-scan-filter-tests primitives_column_scan_and_filter.cpp)
-    target_include_directories(column-scan-filter-tests PUBLIC ${ENGINE_COMMON_INCLUDES} ${ENGINE_BLOCKCACHE_INCLUDE} ${ENGINE_PRIMPROC_INCLUDE} )
-    target_link_libraries(column-scan-filter-tests ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
-    install(TARGETS column-scan-filter-tests DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
 endif()
