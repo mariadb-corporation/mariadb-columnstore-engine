@@ -189,10 +189,11 @@ private:
     void sleepMS(long int ms);          // Sleep method
     // Compare column HWM with the examplar HWM.
     int compareHWMs(const int smallestColumnId,
-                               const int widerColumnId,
-                               const size_t widerColumnWidth,
-                               const std::vector<DBRootExtentInfo>& segFileInfo,
-                               int& colIdx);
+                    const int widerColumnId,
+                    const uint32_t smallerColumnWidth,
+                    const uint32_t widerColumnWidth,
+                    const std::vector<DBRootExtentInfo>& segFileInfo,
+                    int& colIdx);
 
     int synchronizeAutoInc();           // Sychronize AutoInc in BRM with syscat
 
