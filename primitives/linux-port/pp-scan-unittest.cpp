@@ -3238,7 +3238,7 @@ public:
         args->COP = COMPARE_LT;
         memcpy(args->val, &tmp, in->DataSize);
         args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader) +
-                                                                      sizeof(ColArgs) + in->DataSize]);
+                                                 sizeof(ColArgs) + in->DataSize]);
         args->COP = COMPARE_GT;
         tmp = 1000;
         memcpy(args->val, &tmp, in->DataSize);
