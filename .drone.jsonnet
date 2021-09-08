@@ -29,7 +29,7 @@ local builddir = 'verylongdirnameforverystrangecpackbehavior';
 local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_XPAND=NO -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO ' +
                    '-DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
                    '-DWITH_EMBEDDED_SERVER=OFF -DWITH_WSREP=OFF ' +
-                   '-DBUILD_CONFIG=mysql_release';
+                   '-DBUILD_CONFIG=mysql_release -DWITH_UNITTESTS=YES';
 
 local rpm_build_deps = 'install -y lz4 systemd-devel git make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect createrepo';
 
@@ -37,7 +37,6 @@ local deb_build_deps = 'apt update --yes && apt install --yes --no-install-recom
                        '&& mk-build-deps debian/control -t "apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends" -r -i';
 
 local platformMap(platform) =
-
   local platform_map = {
     'opensuse/leap:15': 'zypper ' + rpm_build_deps + ' liblz4-devel cmake libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel gcc-fortran && cmake ' + cmakeflags + ' -DRPM=sles15 && make -j$(nproc) package',
     'centos:7': 'yum install -y epel-release && yum install -y cmake3 && ln -s /usr/bin/cmake3 /usr/bin/cmake && yum ' + rpm_build_deps + ' lz4-devel && cmake ' + cmakeflags + ' -DRPM=centos7 && make -j$(nproc) package',
@@ -46,8 +45,32 @@ local platformMap(platform) =
     'ubuntu:18.04': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=bionic' debian/autobake-deb.sh",
     'ubuntu:20.04': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=focal' debian/autobake-deb.sh",
   };
-
   platform_map[platform];
+
+
+local testRun(platform) =
+  local platform_map = {
+    'opensuse/leap:15': 'ctest -R columnstore: -j $(nproc) --output-on-failure',
+    'centos:7': 'ctest3 -R columnstore: -j $(nproc) --output-on-failure',
+    'centos:8': 'ctest3 -R columnstore: -j $(nproc) --output-on-failure',
+    'debian:10': 'cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure',
+    'ubuntu:18.04': 'cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure',
+    'ubuntu:20.04': 'cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure',
+  };
+  platform_map[platform];
+
+
+local testPreparation(platform) =
+  local platform_map = {
+    'opensuse/leap:15': 'zypper install -y gtest boost-devel libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel cppunit-devel snappy-devel cmake',
+    'centos:7': 'yum -y install epel-release && yum install -y gtest-devel cppunit-devel cmake3 boost-devel snappy-devel',
+    'centos:8': 'yum install -y dnf-plugins-core libarchive && yum config-manager --set-enabled powertools && yum install -y lz4 gtest-devel cppunit-devel cmake3 boost-devel snappy-devel',
+    'debian:10': 'apt update && apt install --yes libboost-all-dev libgtest-dev libcppunit-dev libsnappy-dev googletest cmake',
+    'ubuntu:18.04': 'apt update && apt install --yes libboost-all-dev libgtest-dev libcppunit-dev googletest libsnappy-dev cmake g++ && cd /usr/src/googletest; cmake . && cmake --build . --target install; cd -' ,
+    'ubuntu:20.04': 'apt update && apt install --yes libboost-all-dev libgtest-dev libcppunit-dev googletest libsnappy-dev cmake',
+  };
+  platform_map[platform];
+
 
 local Pipeline(branch, platform, event, arch='amd64') = {
   local pkg_format = if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'opensuse/leap') then 'rpm' else 'deb',
@@ -362,8 +385,22 @@ local Pipeline(branch, platform, event, arch='amd64') = {
                // "sed -i 's/BETA/GAMMA/' storage/columnstore/CMakeLists.txt",
                // Workaround till upstream removes 4535 workaround (workaround for workaround!)
                "sed -i '/MCOL-4535/,/^$/d' debian/autobake-deb.sh",
+               testPreparation(platform),
                platformMap(platform),
                if (pkg_format == 'rpm') then 'createrepo .' else 'dpkg-scanpackages ../ | gzip > ../Packages.gz',
+             ],
+           },
+           {
+             name: 'unittests',
+             image: platform,
+             volumes: [pipeline._volumes.mdb],
+              environment: {
+               DEBIAN_FRONTEND: 'noninteractive',
+             },
+             commands: [
+               'cd /mdb/' + builddir,
+               testPreparation(platform),
+               testRun(platform)
              ],
            },
            {
