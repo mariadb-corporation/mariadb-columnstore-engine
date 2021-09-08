@@ -46,3 +46,12 @@ if (WITH_UNITTESTS)
     add_test(NAME columnstore:comparators_tests, COMMAND comparators_tests)
 
 endif()
+
+if (WITH_MICROBENCHMARKS)
+    find_package(benchmark REQUIRED)
+    add_executable(primitives_scan_bench primitives_scan_bench.cpp)
+    target_include_directories(primitives_scan_bench PUBLIC ${ENGINE_COMMON_INCLUDES} ${ENGINE_BLOCKCACHE_INCLUDE} ${ENGINE_PRIMPROC_INCLUDE} )                                           
+    target_link_libraries(primitives_scan_bench ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc benchmark::benchmark)
+    install(TARGETS primitives_scan_bench DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
+endif()
+

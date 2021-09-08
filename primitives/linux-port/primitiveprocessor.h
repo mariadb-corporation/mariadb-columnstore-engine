@@ -60,6 +60,9 @@ namespace primitives
 
 enum ColumnFilterMode
 {
+    STANDARD,
+    TWO_ARRAYS,
+    UNORDERED_SET,
     ALWAYS_TRUE,            // empty filter is always true
     SINGLE_COMPARISON,      // exactly one comparison operation
     ANY_COMPARISON_TRUE,    // ANY comparison is true (BOP_OR)
