@@ -283,7 +283,6 @@ int DbFileOp::writeDBFile( CommBlock& cb, const unsigned char* writeBuf,
 {
     CacheKey key;
     int ret;
-
     if ( Cache::getUseCache() )
     {
         if ( Cache::cacheKeyExist( cb.file.oid, lbid ) )

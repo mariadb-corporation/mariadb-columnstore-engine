@@ -826,7 +826,7 @@ namespace primitives
 
     inline primitives::RIDType* getRIDArrayPosition(uint8_t* out, const NVALSType offset)
     {
-        return getValuesArrayPosition<NVALSType>(out, offset);
+        return getValuesArrayPosition<RIDType>(out, offset);
     }
 
     inline uint8_t* getFirstValueArrayPosition(ColResultHeader* outMsg)

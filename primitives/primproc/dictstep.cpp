@@ -154,7 +154,7 @@ void DictStep::issuePrimitive(bool isFilter)
 
     if (!(primMsg->LBID & 0x8000000000000000LL))
     {
-        //cout << "DS issuePrimitive lbid: " << (uint64_t)primMsg->LBID << endl;
+        //std::cerr << "DS issuePrimitive lbid: " << (uint64_t)primMsg->LBID << endl;
         primitiveprocessor::loadBlock(primMsg->LBID,
                                       bpp->versionInfo,
                                       bpp->txnID,
@@ -577,7 +577,7 @@ void DictStep::_projectToRG(RowGroup& rg, uint32_t col)
             for (i = curResultCounter; i < tmpResultCounter; i++)
             {
                 rg.getRow(newRidList[i].pos, &r);
-                //cout << "serializing " << tmpStrings[i] << endl;
+                //std::cerr << "serializing " << tmpStrings[i] << endl;
                 r.setStringField(tmpStrings[i].getConstString(), col);
             }
         }
