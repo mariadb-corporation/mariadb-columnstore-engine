@@ -15,6 +15,7 @@ ADD_CUSTOM_COMMAND(
     DEPENDS genErrId.pl
      )
 
+set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/messageids.h PROPERTIES GENERATED TRUE)
 set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/errorids.h PROPERTIES GENERATED TRUE)
 
 add_library(loggingcpp SHARED
