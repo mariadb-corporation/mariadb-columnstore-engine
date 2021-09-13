@@ -1982,12 +1982,14 @@ inline uint64_t StringStore::getSize() const
     uint64_t ret = 0;
     MemChunk* mc;
 
+    ret += sizeof(MemChunk) * mem.size();
     for (i = 0; i < mem.size(); i++)
     {
         mc = (MemChunk*) mem[i].get();
         ret += mc->capacity;
     }
 
+    ret += sizeof(MemChunk) * longStrings.size();
     for (i = 0; i < longStrings.size(); i++)
     {
         mc = (MemChunk*) longStrings[i].get();
