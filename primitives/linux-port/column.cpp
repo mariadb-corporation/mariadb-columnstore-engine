@@ -38,6 +38,7 @@ using namespace boost;
 #include "primproc.h"
 #include "dataconvert.h"
 #include "mcs_decimal.h"
+#include "simd_sse.h"
 
 using namespace logging;
 using namespace dbbc;
@@ -55,6 +56,8 @@ enum ENUM_KIND {KIND_DEFAULT,   // compared as signed integers
                 KIND_UNSIGNED,  // compared as unsigned integers
                 KIND_FLOAT,     // compared as floating-point numbers
                 KIND_TEXT};     // whitespace-trimmed and then compared as signed integers
+
+enum ENUM_VSIZE {BITS128, };
 
 inline uint64_t order_swap(uint64_t x)
 {
@@ -953,6 +956,114 @@ inline void writeColValue(
     }
 }
 
+/*****************************************************************************
+ *** RUN DATA THROUGH A COLUMN FILTER ****************************************
+ *****************************************************************************/
+
+template<typename T, ENUM_KIND KIND, typename FT, ENUM_VSIZE VSIZE>
+void vectorizedFiltering(NewColRequestHeader* in, NewColResultHeader* out,
+                                      const T emptyValue, const T nullValue, const bool isNullValueMatches, const T* srcArray,
+                                      const uint32_t srcSize, uint16_t* ridArray,
+                                      const uint16_t ridSize,
+                                      FT* filterValues, ParsedColumnFilter::CopsType* filterCOPs,
+                                      unsigned* written)
+{
+    constexpr const uint8_t WIDTH = sizeof(T);
+    simd::SimdFilterProcessor<simd::vi128_wr> simdProcessor;
+    simd::vi128_t dataVec, filterArgVec, vectorMask;
+    uint16_t writeMask;
+    char* dst = reinterpret_cast<char*>(out) + *written;
+
+    //uint32_t filterCount = in->NOPS;
+    //uint8_t  outputType  = in->OutputType;
+
+    constexpr uint16_t VECTOR_SIZE = simd::SimdFilterProcessor<simd::vi128_wr>::vecBitSize / WIDTH;
+    uint16_t iterNumber = srcSize / VECTOR_SIZE;
+    for (uint16_t i = 0; i < iterNumber; ++i)
+    {
+        // empty check
+        // WIP
+        dataVec = simdProcessor.load8BitsFrom(reinterpret_cast<const char*>(srcArray));
+        filterArgVec = simdProcessor.load8BitsValue(emptyValue);
+        // replace with NE
+        vectorMask = simdProcessor.cmpEq8Bits(dataVec, filterArgVec);
+        // TODO convert filter values to fit into T so that filter values is of type and not fixed
+        // int64_t
+        writeMask = simdProcessor.convertVectorToBitMask(vectorMask);
+        // to negate cmp(dataVec, emptyValuesVec) results
+        writeMask ^= writeMask;
+
+        // filters
+        filterArgVec = simdProcessor.load8BitsValue(static_cast<int8_t>(filterValues[0]));
+        // EQ filter
+        vectorMask = simdProcessor.cmpEq8Bits(dataVec, filterArgVec);
+        writeMask &= simdProcessor.convertVectorToBitMask(vectorMask);
+
+        // use filterArgVec as temporary dst vector
+        // iterate over writeMask and make a permute map
+        //auto* permuteIdxPtr = &lPermuteIdx[0];
+        //uint32_t lPermuteIdx = 0, rPermuteIdx = VECTOR_SIZE - 1;
+        int8_t* dataVecInt8Ptr = reinterpret_cast<int8_t*>(&dataVec);
+        // Use set intr ?
+        filterArgVec = simdProcessor.setToZero();
+        int8_t* tmpDstVecInt8Ptr = reinterpret_cast<int8_t*>(&filterArgVec);
+        for (uint32_t it = 0; it < VECTOR_SIZE; ++it)
+        {
+/*
+            if (writeMask & (1 << it))
+                permuteIdxPtr[lPermuteIdx++] = it;
+            else
+                permuteIdxPtr[rPermuteIdx--] = it;
+*/
+            if (writeMask & (1 << it))
+            {
+                *tmpDstVecInt8Ptr = dataVecInt8Ptr[it];
+                ++tmpDstVecInt8Ptr;
+            }
+        }
+        // Store
+        simdProcessor.store(dst, dataVec);
+        *written += (tmpDstVecInt8Ptr - reinterpret_cast<int8_t*>(&filterArgVec)) * WIDTH;
+        // RID store if needed
+        // Min/Max processing
+        // Update out->NVALS using written
+    }
+
+    //uint16_t processedSoFar = iterNumber * VECTOR_SIZE;
+    //for (uint16_t i = processedSoFar; i < srcSize; ++i)
+/*
+    for (uint32_t i = processedSoFar;
+         nextColValue<T, COL_WIDTH>(curValue, &isEmpty,
+                                    &i, &rid,
+                                    srcArray, srcSize, ridArray, ridSize,
+                                    outputType, emptyValue); )
+    {
+        if (isEmpty)
+            continue;
+        else if (isNullValue<KIND,T>(curValue, nullValue))
+        {
+            // If NULL values match the filter, write curValue to the output buffer
+            if (isNullValueMatches)
+                writeColValue<T>(outputType, out, outSize, written, rid, srcArray);
+        }
+        else
+        {
+            // If curValue matches the filter, write it to the output buffer
+            if (matchingColValue<KIND, COL_WIDTH, false>(curValue, columnFilterMode, filterSet, filterCount,
+                                filterCOPs, filterValues, filterRFs, in->colType, nullValue))
+            {
+                writeColValue<T>(outputType, out, outSize, written, rid, srcArray);
+            }
+
+            // Update Min and Max if necessary.  EMPTY/NULL values are processed in other branches.
+            if (ValidMinMax)
+                updateMinMax<KIND>(Min, Max, curValue, in);
+        }
+    }
+*/
+    // process the tail
+}
+
 // These two are templates update min/max values in the loop iterating the values in filterColumnData.
 template<ENUM_KIND KIND, typename T,
          typename std::enable_if<KIND == KIND_TEXT, T>::type* = nullptr>
@@ -1015,32 +1126,38 @@ void filterColumnData(
     auto filterRFs   = filterCount==0 ? nullptr : parsedColumnFilter->prestored_rfs.get();
     ST* filterSet    = filterCount==0 ? nullptr : parsedColumnFilter->getFilterSet<ST>();
 
-    // ###########################
     // Bit patterns in srcArray[i] representing EMPTY and NULL values
-    T EMPTY_VALUE = getEmptyValue<T>(dataType);
-    T NULL_VALUE  = getNullValue<T>(dataType);
+    T emptyValue = getEmptyValue<T>(dataType);
+    T nullValue  = getNullValue<T>(dataType);
 
     // Precompute filter results for NULL values
-    bool isNullValueMatches = matchingColValue<KIND, COL_WIDTH, true>(NULL_VALUE, columnFilterMode,
-        filterSet, filterCount, filterCOPs, filterValues, filterRFs, in->colType, NULL_VALUE);
+    bool isNullValueMatches = matchingColValue<KIND, COL_WIDTH, true>(nullValue, columnFilterMode,
+        filterSet, filterCount, filterCOPs, filterValues, filterRFs, in->colType, nullValue);
 
+    // ###########################
     // Boolean indicating whether to capture the min and max values
     bool ValidMinMax = isMinMaxValid(in);
     // Local vars to capture the min and max values
     T Min = datatypes::numeric_limits<T>::max();
     T Max = (KIND == KIND_UNSIGNED) ? 0 : datatypes::numeric_limits<T>::min();
 
-/* WIP add vertical processing
     // If possible, use faster "vertical" filtering approach
-    if (KIND != KIND_TEXT)
+    // WIP
+    if (KIND != KIND_DEFAULT && (COL_WIDTH == 1 && dataType == joblist::TINYINTEMPTYROW && columnFilterMode == SINGLE_COMPARISON))
     {
         bool canUseFastFiltering = true;
-        for (int i = 0; i < filterCount; ++i)
+        for (uint32_t i = 0; i < filterCount; ++i)
             if (filterRFs[i] != 0)
             canUseFastFiltering = false;
 
         if (canUseFastFiltering)
         {
+            vectorizedFiltering<T, KIND, FT, BITS128>(in, out, emptyValue, nullValue,
+                                        isNullValueMatches,
+                                         srcArray, srcSize, ridArray, ridSize,
+                                             filterValues, filterCOPs,
+                                             written);
+/*
             processArray<T, KIND, T>(srcArray, srcSize, ridArray, ridSize,
                          in->BOP, filterSet, filterCount, filterCOPs, filterValues,
                          reinterpret_cast<uint8_t*>(out) + *written,
@@ -1051,10 +1168,10 @@ void filterColumnData(
                          EMPTY_VALUE,
                          isNullValueMatches, NULL_VALUE,
                          ValidMinMax, &Min, &Max);
+*/
             return;
         }
     }
-*/
 
     // Loop-local variables
     T curValue = 0;
@@ -1066,11 +1183,11 @@ void filterColumnData(
          nextColValue<T, COL_WIDTH>(curValue, &isEmpty,
                                     &i, &rid,
                                     srcArray, srcSize, ridArray, ridSize,
-                                    outputType, EMPTY_VALUE); )
+                                    outputType, emptyValue); )
     {
         if (isEmpty)
             continue;
-        else if (isNullValue<KIND,T>(curValue, NULL_VALUE))
+        else if (isNullValue<KIND,T>(curValue, nullValue))
         {
             // If NULL values match the filter, write curValue to the output buffer
             if (isNullValueMatches)
@@ -1080,7 +1197,7 @@ void filterColumnData(
         {
             // If curValue matches the filter, write it to the output buffer
             if (matchingColValue<KIND, COL_WIDTH, false>(curValue, columnFilterMode, filterSet, filterCount,
-                                filterCOPs, filterValues, filterRFs, in->colType, NULL_VALUE))
+                                filterCOPs, filterValues, filterRFs, in->colType, nullValue))
             {
                 writeColValue<T>(outputType, out, rid, srcArray);
             }
@@ -1090,7 +1207,6 @@ void filterColumnData(
                 updateMinMax<KIND>(Min, Max, curValue, in);
         }
     }
-
 
     // Write captured Min/Max values to *out
     out->ValidMinMax = ValidMinMax;
@@ -1760,7 +1876,7 @@ inline bool isNullVal(uint32_t length, uint8_t type, const uint8_t* val8)
         case 1:
             return isNullVal<1>(type, val8);
     };
- 
+
     return false;
 }
 
