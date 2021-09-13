@@ -686,6 +686,8 @@ void RowAggregation::initialize()
 
     config::Config* config = config::Config::makeConfig();
     string tmpDir = config->getTempFileDir(config::Config::TempDirPurpose::Aggregates);
+    string compStr = config->getConfig("RowAggregation", "Compression");
+    auto* compressor = compress::getCompressInterfaceByName(compStr);
 
     if (fKeyOnHeap)
     {
@@ -696,7 +698,8 @@ void RowAggregation::initialize()
                                              fRm,
                                              fSessionMemLimit,
                                              disk_agg,
-                                             allow_gen));
+                                             allow_gen,
+                                             compressor));
     }
     else
     {
@@ -706,7 +709,8 @@ void RowAggregation::initialize()
                                              fRm,
                                              fSessionMemLimit,
                                              disk_agg,
-                                             allow_gen));
+                                             allow_gen,
+                                             compressor));
     }
 
     // Initialize the work row.
@@ -771,6 +775,8 @@ void RowAggregation::aggReset()
 
     config::Config* config = config::Config::makeConfig();
     string tmpDir = config->getTempFileDir(config::Config::TempDirPurpose::Aggregates);
+    string compStr = config->getConfig("RowAggregation", "Compression");
+    auto* compressor = compress::getCompressInterfaceByName(compStr);
 
     if (fKeyOnHeap)
     {
@@ -781,7 +787,8 @@ void RowAggregation::aggReset()
                                              fRm,
                                              fSessionMemLimit,
                                              disk_agg,
-                                             allow_gen));
+                                             allow_gen,
+                                             compressor));
     }
     else
     {
@@ -791,7 +798,8 @@ void RowAggregation::aggReset()
                                              fRm,
                                              fSessionMemLimit,
                                              disk_agg,
-                                             allow_gen));
+                                             allow_gen,
+                                             compressor));
     }
     fRowGroupOut->getRow(0, &fRow);
     copyNullRow(fRow);
@@ -1311,7 +1319,7 @@ void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int 
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
-            uint32_t width = fRowGroupIn.getColumnWidth(colIn);
+            uint32_t width = rowIn.getColumnWidth(colIn);
             isWideDataType = width == datatypes::MAXDECIMALWIDTH;
             if(LIKELY(isWideDataType))
             {
@@ -1320,7 +1328,7 @@ void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int 
             }
             else if (width <= datatypes::MAXLEGACYWIDTH)
             {
-                uint32_t scale = fRowGroupIn.getScale()[colIn];
+                uint32_t scale = rowIn.getScale(colIn);
                 valIn = rowIn.getScaledSInt64FieldAsXFloat<long double>(colIn, scale);
             }
             else
@@ -1787,12 +1795,11 @@ void RowAggregation::mergeEntries(const Row& rowIn)
 
     case ROWAGG_AVG:
       // count(column) for average is inserted after the sum,
-      // colOut+1 is the position of the count column.
-      doAvg(rowIn, colOut, colOut, colOut + 1, true);
+      doAvg(rowIn, colOut, colOut, fFunctionCols[i]->fAuxColumnIndex, true);
       break;
 
     case ROWAGG_STATS:
-      mergeStatistics(rowIn, colOut, colOut + 1);
+      mergeStatistics(rowIn, colOut, fFunctionCols[i]->fAuxColumnIndex);
       break;
 
     case ROWAGG_BIT_AND:
@@ -4305,7 +4312,7 @@ void RowAggregationUMP2::updateEntry(const Row& rowIn,
 // colOut(in) - column in the output row group stores the sum
 // colAux(in) - column in the output row group stores the count
 //------------------------------------------------------------------------------
-void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int64_t colAux, bool)
+void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int64_t colAux, bool merge)
 {
     if (rowIn.isNullValue(colIn))
         return;
@@ -4340,7 +4347,7 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
-            uint32_t width = fRowGroupIn.getColumnWidth(colIn);
+            uint32_t width = rowIn.getColumnWidth(colIn);
             isWideDataType = width == datatypes::MAXDECIMALWIDTH;
             if(LIKELY(isWideDataType))
             {
@@ -4349,7 +4356,7 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
             }
             else if (width <= datatypes::MAXLEGACYWIDTH)
             {
-                uint32_t scale = fRowGroupIn.getScale()[colIn];
+                uint32_t scale = rowIn.getScale(colIn);
                 valIn = rowIn.getScaledSInt64FieldAsXFloat<long double>(colIn, scale);
             }
             else
@@ -4392,6 +4399,7 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
     }
 
     uint64_t cnt = fRow.getUintField(colAux);
+    auto colAuxIn = merge ? colAux : (colIn + 1);
 
     if (datatypes::hasUnderlyingWideDecimalForSumAndAvg(colDataType) && !isWideDataType)
     {
@@ -4400,13 +4408,13 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
             int128_t *valOutPtr = fRow.getBinaryField<int128_t>(colOut);
             int128_t sum = valIn + *valOutPtr;
             fRow.setBinaryField(&sum, colOut);
-            fRow.setUintField(rowIn.getUintField(colIn + 1) + cnt, colAux);
+            fRow.setUintField(rowIn.getUintField(colAuxIn) + cnt, colAux);
         }
         else
         {
             int128_t sum = valIn;
             fRow.setBinaryField(&sum, colOut);
-            fRow.setUintField(rowIn.getUintField(colIn + 1), colAux);
+            fRow.setUintField(rowIn.getUintField(colAuxIn), colAux);
         }
     }
     else if (isWideDataType)
@@ -4417,12 +4425,12 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
             int128_t *valOutPtr = fRow.getBinaryField<int128_t>(colOut);
             int128_t sum = *valOutPtr + *dec;
             fRow.setBinaryField(&sum, colOut);
-            fRow.setUintField(rowIn.getUintField(colIn + 1) + cnt, colAux);
+            fRow.setUintField(rowIn.getUintField(colAuxIn) + cnt, colAux);
         }
         else
         {
             fRow.setBinaryField(dec, colOut);
-            fRow.setUintField(rowIn.getUintField(colIn + 1), colAux);
+            fRow.setUintField(rowIn.getUintField(colAuxIn), colAux);
         }
     }
     else
@@ -4431,12 +4439,12 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
         {
             long double valOut = fRow.getLongDoubleField(colOut);
             fRow.setLongDoubleField(valIn + valOut, colOut);
-            fRow.setUintField(rowIn.getUintField(colIn + 1) + cnt, colAux);
+            fRow.setUintField(rowIn.getUintField(colAuxIn) + cnt, colAux);
         }
         else
         {
             fRow.setLongDoubleField(valIn, colOut);
-            fRow.setUintField(rowIn.getUintField(colIn + 1), colAux);
+            fRow.setUintField(rowIn.getUintField(colAuxIn), colAux);
         }
     }
 }
