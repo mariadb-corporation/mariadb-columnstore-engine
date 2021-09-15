@@ -42,7 +42,7 @@ namespace
 {
 char digit_upper[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-void octet2hex(char* to, const char* str, uint32_t len)
+void octet_to_hex(char* to, const char* str, uint32_t len)
 {
     const char* str_end = str + len;
 
@@ -84,7 +84,7 @@ string Func_hex::getStrVal(rowgroup::Row& row,
         {
             const string& arg = parm[0]->data()->getStrVal(row, isNull);
             scoped_array<char> hexPtr(new char[strlen(arg.c_str()) * 2 + 1]);
-            octet2hex(hexPtr.get(), arg.c_str(), strlen(arg.c_str()));
+            octet_to_hex(hexPtr.get(), arg.c_str(), strlen(arg.c_str()));
             return string(hexPtr.get(), strlen(arg.c_str()) * 2);
         }
 
@@ -127,7 +127,7 @@ string Func_hex::getStrVal(rowgroup::Row& row,
             const string& arg = parm[0]->data()->getStrVal(row, isNull);
             uint64_t hexLen = arg.size() * 2;
             scoped_array<char> hexPtr(new char[hexLen + 1]);  // "+ 1" for the last \0
-            octet2hex(hexPtr.get(), arg.data(), arg.size());
+            octet_to_hex(hexPtr.get(), arg.data(), arg.size());
             return string(hexPtr.get(), hexLen);
         }
 
