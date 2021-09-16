@@ -140,6 +140,38 @@ TEST_F(ColumnScanFilterTest, ColumnScan1Byte)
 
 }
 
+TEST_F(ColumnScanFilterTest, ColumnScan1ByteVectorized)
+{
+  constexpr const uint8_t W = 1;
+  using IntegralType = datatypes::WidthToSIntegralType<W>::type;
+  using UIntegralType = datatypes::make_unsigned<IntegralType>::type;
+  datatypes::make_unsigned<IntegralType>::type* results;
+  in->colType = ColRequestHeaderDataType();
+  in->colType.DataSize = 1;
+  in->colType.DataType = SystemCatalog::TINYINT;
+  in->OutputType = OT_DATAVALUE;
+  in->NOPS = 0;
+  in->NVALS = 0;
+
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col1block.cdf", block));
+  pp.columnScanAndFilter<IntegralType>(in, out, 4 * BLOCK_SIZE, &written);
+
+  results = reinterpret_cast<UIntegralType*>(&output[sizeof(NewColResultHeader)]);
+  EXPECT_EQ(out->NVALS, 8160);
+
+  for (i = 0; i < 128; ++i)
+    EXPECT_EQ(results[i],i);
+
+  for (i = 129; i < 255; ++i)
+    EXPECT_EQ(results[i],i + 1);
+
+  EXPECT_EQ(results[8032], 0x7F);
+  EXPECT_EQ(results[8033], 0x80);
+
+  for (i = 8034; i < 8160; ++i)
+    EXPECT_EQ(results[i],i % 255 + 1);
+}
+
 TEST_F(ColumnScanFilterTest, ColumnScan2Bytes)
 {
   constexpr const uint8_t W = 2;
@@ -230,7 +262,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan1ByteUsingRID)
       ASSERT_EQ(results[i], rids[i]);
 }
 
-TEST_F(ColumnScanFilterTest, ColumnScan4Bytes1Filter)
+TEST_F(ColumnScanFilterTest, ColumnScan4Bytes2Filters)
 {
   constexpr const uint8_t W = 4;
   using IntegralType = datatypes::WidthToSIntegralType<W>::type;

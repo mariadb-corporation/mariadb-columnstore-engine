@@ -202,7 +202,7 @@ namespace simd
   class SimdFilterProcessor<vi128_wr>
   {
    public:
-    constexpr static const uint16_t vecBitSize = 128U;
+    constexpr static const uint16_t vecByteSize = 16U;
     // Load value
     MCS_FORCE_INLINE vi128_t load8BitsValue(const char fill)
     {
@@ -233,43 +233,43 @@ namespace simd
     // Compare EQ
     MCS_FORCE_INLINE vi128_t cmpGt8Bits(vi128_t& x, vi128_t& y)
     {
-      return _mm_cmpeq_epi8(x, y);
+      return _mm_cmpgt_epi8(x, y);
     }
 
     MCS_FORCE_INLINE vi128_t cmpGt16Bits(vi128_t& x, vi128_t& y)
     {
-      return _mm_cmpeq_epi16(x, y);
+      return _mm_cmpgt_epi16(x, y);
     }
 
     MCS_FORCE_INLINE vi128_t cmpGt32Bits(vi128_t& x, vi128_t& y)
     {
-      return _mm_cmpeq_epi32(x, y);
+      return _mm_cmpgt_epi32(x, y);
     }
 
     MCS_FORCE_INLINE vi128_t cmpGt64Bits(vi128_t& x, vi128_t& y)
     {
-      return _mm_cmpeq_epi64(x, y);
+      return _mm_cmpgt_epi64(x, y);
     }
 
     // Compare GT
     MCS_FORCE_INLINE vi128_t cmpEq8Bits(vi128_t& x, vi128_t& y)
     {
-      return _mm_cmpgt_epi8(x, y);
+      return _mm_cmpeq_epi8(x, y);
     }
 
     MCS_FORCE_INLINE vi128_t cmpEq16Bits(vi128_t& x, vi128_t& y)
     {
-      return _mm_cmpgt_epi16(x, y);
+      return _mm_cmpeq_epi16(x, y);
     }
 
     MCS_FORCE_INLINE vi128_t cmpEq32Bits(vi128_t& x, vi128_t& y)
     {
-      return _mm_cmpgt_epi32(x, y);
+      return _mm_cmpeq_epi32(x, y);
     }
 
     MCS_FORCE_INLINE vi128_t cmpEq64Bits(vi128_t& x, vi128_t& y)
     {
-      return _mm_cmpgt_epi64(x, y);
+      return _mm_cmpeq_epi64(x, y);
     }
 
     // permute

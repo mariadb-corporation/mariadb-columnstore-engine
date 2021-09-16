@@ -169,6 +169,7 @@ class ParsedColumnFilter
 {
   public:
     using CopsType = uint8_t;
+    using RFsType = uint8_t;
     static constexpr uint32_t noSetFilterThreshold = 8;
     ColumnFilterMode columnFilterMode;
     boost::shared_array<int64_t> prestored_argVals;
