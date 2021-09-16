@@ -375,6 +375,83 @@ public:
 
 };
 
+
+class ConstantColumnNull: public ConstantColumn
+{
+public:
+    ConstantColumnNull()
+     :ConstantColumn("", ConstantColumn::NULLDATA)
+    { }
+};
+
+
+class ConstantColumnString: public ConstantColumn
+{
+public:
+    ConstantColumnString(const std::string &str)
+     :ConstantColumn(str, ConstantColumn::LITERAL)
+    { }
+};
+
+
+class ConstantColumnNum: public ConstantColumn
+{
+public:
+    ConstantColumnNum(const CalpontSystemCatalog::ColType &type,
+                      const std::string &str)
+     :ConstantColumn(str, ConstantColumn::NUM)
+    {
+      resultType(type);
+    }
+};
+
+
+class ConstantColumnUInt: public ConstantColumn
+{
+public:
+    ConstantColumnUInt(uint64_t val, int8_t scale, uint8_t precision)
+     :ConstantColumn(val, ConstantColumn::NUM, scale, precision)
+    { }
+};
+
+
+class ConstantColumnSInt: public ConstantColumn
+{
+public:
+    ConstantColumnSInt(const CalpontSystemCatalog::ColType &type,
+                       const std::string &str, int64_t val)
+     :ConstantColumn(str, val, ConstantColumn::NUM)
+    {
+      resultType(type);
+    }
+};
+
+
+class ConstantColumnReal: public ConstantColumn
+{
+public:
+    ConstantColumnReal(const CalpontSystemCatalog::ColType &type,
+                       const std::string &str,
+                       double val)
+     :ConstantColumn(str, val)
+    {
+        resultType(type);
+    }  
+};
+
+
+class ConstantColumnTemporal: public ConstantColumn
+{
+public:
+    ConstantColumnTemporal(const CalpontSystemCatalog::ColType &type,
+                           const std::string &str)
+     :ConstantColumn(str)
+    {
+        resultType(type);
+    }
+};
+
+
 /**
  * ostream operator
  */
