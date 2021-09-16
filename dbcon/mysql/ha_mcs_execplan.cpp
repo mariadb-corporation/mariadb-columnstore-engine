@@ -3250,6 +3250,190 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB (const Item* item)
     return ct;
 }
 
+
+ReturnedColumn *
+buildReturnedColumnNull(gp_walk_info& gwi)
+{
+    if (gwi.condPush)
+        return new SimpleColumn("noop");
+    ConstantColumn *rc = new ConstantColumnNull();
+    if (rc)
+        rc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+    return rc;
+}
+
+
+class ValStrStdString: public string
+{
+    bool mIsNull;
+public:
+    ValStrStdString(Item *item)
+    {
+        String val, *str = item->val_str(&val);
+        mIsNull = (str == nullptr);
+        DBUG_ASSERT(mIsNull == item->null_value);
+        if (!mIsNull)
+            assign(str->ptr(), str->length());
+    }
+    bool isNull() const { return mIsNull; }
+};
+
+
+/*
+  Create a ConstantColumn according to cmp_type().
+  But do not set the time zone yet.
+
+  Handles NOT NULL values.
+
+  Three ways of value extraction are used depending on the data type:
+  1. Using a native val_xxx().
+  2. Using val_str() with further convertion to the native representation.
+  3. Using both val_str() and a native val_xxx().
+
+  We should eventually get rid of N2 and N3 and use N1 for all data types:
+  - N2 contains a redundant code for str->native conversion.
+    It should be replaced to an existing code (a Type_handler method call?).
+  - N3 performs double evalation of the value, which may cause
+    various negative effects (double side effects or double warnings).
+*/
+static ConstantColumn *
+newConstantColumnNotNullUsingValNativeNoTz(Item *item, gp_walk_info& gwi)
+{
+    DBUG_ASSERT(item->const_item());
+
+    switch (item->cmp_type())
+    {
+        case INT_RESULT:
+        {
+            if (item->unsigned_flag)
+                return new ConstantColumnUInt((uint64_t) item->val_uint(),
+                                              (int8_t) item->decimal_scale(),
+                                              (uint8_t) item->decimal_precision());
+            ValStrStdString str(item);
+            DBUG_ASSERT(!str.isNull());
+            return new ConstantColumnSInt(colType_MysqlToIDB(item), str,
+                                          (int64_t) item->val_int());
+        }
+        case STRING_RESULT:
+        {
+            // Special handling for 0xHHHH literals
+            if (item->type_handler() == &type_handler_hex_hybrid)
+                return new ConstantColumn((int64_t)item->val_int(),
+                                          ConstantColumn::NUM);
+            ValStrStdString str(item);
+            DBUG_ASSERT(!str.isNull());
+            return new ConstantColumnString(str);
+        }
+        case REAL_RESULT:
+        {
+            ValStrStdString str(item);
+            DBUG_ASSERT(!str.isNull());
+            return new ConstantColumnReal(colType_MysqlToIDB(item),
+                                          str, item->val_real());
+        }
+        case DECIMAL_RESULT:
+        {
+            ValStrStdString str(item);
+            DBUG_ASSERT(!str.isNull());
+            return buildDecimalColumn(item, str, gwi);
+        }
+        case TIME_RESULT:
+        {
+            ValStrStdString str(item);
+            DBUG_ASSERT(!str.isNull());
+            return new ConstantColumnTemporal(colType_MysqlToIDB(item), str);
+        }
+        default:
+        {
+            gwi.fatalParseError = true;
+            gwi.parseErrorText = "Unknown item type";
+            break;
+        }
+    }
+
+    return nullptr;
+}
+
+
+/*
+  Create a ConstantColumn according to cmp_type().
+  But do not set the time zone yet.
+
+  Handles NULL and NOT NULL values.
+
+  Uses a simplified logic regarding to data types:
+    always extracts the value through val_str().
+
+  Should probably be joined with the previous function, to have
+  a single function which can at the same time:
+  a. handle both NULL and NOT NULL values
+  b. extract values using a native val_xxx() method,
+     to avoid possible negative effects mentioned in the comments
+     to newConstantColumnNotNullUsingValNativeNoTz().
+*/
+static ConstantColumn *
+newConstantColumnMaybeNullFromValStrNoTz(const Item *item,
+                                         const ValStrStdString &valStr,
+                                         gp_walk_info& gwi)
+{
+    if (valStr.isNull())
+        return new ConstantColumnNull();
+
+    switch (item->result_type())
+    {
+        case STRING_RESULT:
+            return new ConstantColumnString(valStr);
+        case DECIMAL_RESULT:
+            return buildDecimalColumn(item, valStr, gwi);
+        case TIME_RESULT:
+        case INT_RESULT:
+        case REAL_RESULT:
+        case ROW_RESULT:
+            return new ConstantColumnNum(colType_MysqlToIDB(item), valStr);
+    }
+    return nullptr;
+}
+
+
+// Create a ConstantColumn from a previously evaluated val_str() result,
+// Supports both NULL and NOT NULL values.
+// Sets the time zone according to gwi.
+
+static ConstantColumn *
+buildConstantColumnMaybeNullFromValStr(const Item *item,
+                                       const ValStrStdString &valStr,
+                                       gp_walk_info& gwi)
+{
+    ConstantColumn *rc= newConstantColumnMaybeNullFromValStrNoTz(item, valStr, gwi);
+    if (rc)
+        rc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+    return rc;
+}
+
+
+// Create a ConstantColumn by calling val_str().
+// Supports both NULL and NOT NULL values.
+// Sets the time zone according to gwi.
+
+static ConstantColumn *
+buildConstantColumnMaybeNullUsingValStr(Item *item, gp_walk_info& gwi)
+{
+    return buildConstantColumnMaybeNullFromValStr(item, ValStrStdString(item), gwi);
+}
+
+
+// Create a ConstantColumn for a NOT NULL expression.
+// Sets the time zone according to gwi.
+static ConstantColumn *
+buildConstantColumnNotNullUsingValNative(Item *item, gp_walk_info& gwi)
+{
+    ConstantColumn *rc = newConstantColumnNotNullUsingValNativeNoTz(item, gwi);
+    if (rc)
+        rc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+    return rc; 
+}
+
+
 ReturnedColumn* buildReturnedColumn(
     Item* item, gp_walk_info& gwi,
     bool& nonSupport,
@@ -3281,82 +3465,20 @@ ReturnedColumn* buildReturnedColumn(
 
             return buildSimpleColumn(ifp, gwi);
         }
+        case Item::NULL_ITEM:
+            return buildReturnedColumnNull(gwi);
         case Item::CONST_ITEM:
         {
-            switch (item->cmp_type())
-            {
-                case INT_RESULT:
-                {
-                    String val, *str = item->val_str(&val);
-                    string valStr;
-                    valStr.assign(str->ptr(), str->length());
-
-                    if (item->unsigned_flag)
-                    {
-                        rc = new ConstantColumn((uint64_t)item->val_uint(), ConstantColumn::NUM,
-                                                (int8_t) item->decimal_scale(), (uint8_t) item->decimal_precision());
-                    }
-                    else
-                    {
-                        rc = new ConstantColumn(valStr, (int64_t)item->val_int(), ConstantColumn::NUM);
-                    }
-
-                    break;
-                }
-                case STRING_RESULT:
-                {
-                    // Special handling for 0xHHHH literals
-                    if (item->type_handler() == &type_handler_hex_hybrid)
-                    {
-                        Item_hex_hybrid *hip = reinterpret_cast<Item_hex_hybrid*>(const_cast<Item*>(item));
-                        rc = new ConstantColumn((int64_t)hip->val_int(), ConstantColumn::NUM);
-                        break;
-                    }
-
-                    String val, *str = item->val_str(&val);
-                    string valStr;
-                    valStr.assign(str->ptr(), str->length());
-                    rc = new ConstantColumn(valStr);
-                    break;
-                }
-                case REAL_RESULT:
-                {
-                    String val, *str = item->val_str(&val);
-                    string valStr;
-                    valStr.assign(str->ptr(), str->length());
-                    rc = new ConstantColumn(valStr, item->val_real());
-                    break;
-                }
-                case DECIMAL_RESULT:
-                {
-                    rc = buildDecimalColumn(item, gwi);
-                    break;
-                }
-                case TIME_RESULT:
-                {
-                    String val, *str = item->val_str(&val);
-                    string valStr;
-                    valStr.assign(str->ptr(), str->length());
-                    rc = new ConstantColumn(valStr);
-                    break;
-                }
-                default:
-                {
-                    gwi.fatalParseError = true;
-                    gwi.parseErrorText = "Unknown item type";
-                    break;
-                }
-            }
-
-            if (rc && (item->cmp_type() != DECIMAL_RESULT))
-            {
-                (dynamic_cast<ConstantColumn*>(rc))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
-            }
-
+            rc = buildConstantColumnNotNullUsingValNative(item, gwi);
             break;
         }
         case Item::FUNC_ITEM:
         {
+            if (item->const_item())
+            {
+                rc = buildConstantColumnMaybeNullUsingValStr(item, gwi);
+                break;
+            }
             Item_func* ifp = (Item_func*)item;
             string func_name = ifp->func_name();
 
@@ -3379,34 +3501,7 @@ ReturnedColumn* buildReturnedColumn(
                     !(parseInfo & AF_BIT) &&
                     (tmpVec.size() == 0))
             {
-                String val, *str = ifp->val_str(&val);
-                string valStr;
-
-                if (str)
-                {
-                    valStr.assign(str->ptr(), str->length());
-                }
-
-                if (!str)
-                {
-                    rc = new ConstantColumn("", ConstantColumn::NULLDATA);
-                    (dynamic_cast<ConstantColumn*>(rc))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
-                }
-                else if (ifp->result_type() == STRING_RESULT)
-                {
-                    rc = new ConstantColumn(valStr, ConstantColumn::LITERAL);
-                    (dynamic_cast<ConstantColumn*>(rc))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
-                    rc->resultType(colType_MysqlToIDB(item));
-                }
-                else if (ifp->result_type() == DECIMAL_RESULT)
-                    rc = buildDecimalColumn(ifp, gwi);
-                else
-                {
-                    rc = new ConstantColumn(valStr, ConstantColumn::NUM);
-                    (dynamic_cast<ConstantColumn*>(rc))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
-                    rc->resultType(colType_MysqlToIDB(item));
-                }
-
+                rc = buildConstantColumnMaybeNullUsingValStr(item, gwi);
                 break;
             }
 
@@ -3452,19 +3547,8 @@ ReturnedColumn* buildReturnedColumn(
                     gwi.parseErrorText = "Unknown REF item";
                     break;
             }
+            return buildReturnedColumnNull(gwi);
         }
-        /* fall through */
-
-        case Item::NULL_ITEM:
-        {
-            if (gwi.condPush)
-                return new SimpleColumn("noop");
-
-            ConstantColumn *tmp = new ConstantColumn("", ConstantColumn::NULLDATA);
-            tmp->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
-            return tmp;
-        }
-
         case Item::CACHE_ITEM:
         {
             Item* col = ((Item_cache*)item)->get_example();
@@ -4579,19 +4663,17 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
     return fc;
 }
 
-ConstantColumn* buildDecimalColumn(Item* item, gp_walk_info& gwi)
+ConstantColumn* buildDecimalColumn(const Item *idp,
+                                   const std::string &valStr,
+                                   gp_walk_info& gwi)
 {
-    Item_decimal* idp = (Item_decimal*)item;
     IDB_Decimal columnstore_decimal;
-    String val, *str = item->val_str(&val);
-    string valStr;
-    valStr.assign(str->ptr(), str->length());
     ostringstream columnstore_decimal_val;
     uint32_t i = 0;
 
-    if (str->ptr()[0] == '+' || str->ptr()[0] == '-')
+    if (valStr[0] == '+' || valStr[0] == '-')
     {
-        columnstore_decimal_val << str->ptr()[0];
+        columnstore_decimal_val << valStr[0];
         i = 1;
     }
 
@@ -4599,16 +4681,16 @@ ConstantColumn* buildDecimalColumn(Item* item, gp_walk_info& gwi)
 
     // handle the case when the constant value is 0.12345678901234567890123456789012345678
     // In this case idp->decimal_precision() = 39, but we can
-    if (((i + 1) < str->length()) &&
-        str->ptr()[i] == '0' && str->ptr()[i + 1] == '.')
+    if (((i + 1) < valStr.length()) &&
+        valStr[i] == '0' && valStr[i + 1] == '.')
         specialPrecision = true;
 
-    for (; i < str->length(); i++)
+    for (; i < valStr.length(); i++)
     {
-        if (str->ptr()[i] == '.')
+        if (valStr[i] == '.')
             continue;
 
-        columnstore_decimal_val << str->ptr()[i];
+        columnstore_decimal_val << valStr[i];
     }
 
     if (idp->decimal_precision() <= datatypes::INT64MAXPRECISION)
@@ -4635,7 +4717,6 @@ ConstantColumn* buildDecimalColumn(Item* item, gp_walk_info& gwi)
     columnstore_decimal.precision = (idp->decimal_precision() > datatypes::INT128MAXPRECISION) ?
                                      datatypes::INT128MAXPRECISION : idp->decimal_precision();
     ConstantColumn* cc = new ConstantColumn(valStr, columnstore_decimal);
-    cc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
     cc->charsetNumber(idp->collation.collation->number);
     return cc;
 }
@@ -4770,15 +4851,104 @@ ParseTree* buildParseTree(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
     return pt;
 }
 
+class ConstArgParam
+{
+public:
+    unsigned int precision;
+    unsigned int scale;
+    bool bIsConst;
+    bool hasDecimalConst;
+    ConstArgParam()
+     :precision(0),
+      scale(0),
+      bIsConst(false),
+      hasDecimalConst(false)
+    { }
+};
+
+
+static bool
+isSupportedAggregateWithOneConstArg(const Item_sum *item, Item ** orig_args)
+{
+    if (item->argument_count() != 1 || !orig_args[0]->const_item())
+      return false;
+    switch(orig_args[0]->cmp_type())
+    {
+        case INT_RESULT:
+        case STRING_RESULT:
+        case REAL_RESULT:
+        case DECIMAL_RESULT:
+          return true;
+        default:
+          break;
+    }
+    return false;
+}
+
+
+static void
+processAggregateColumnConstArg(gp_walk_info& gwi, SRCP &parm,
+                               AggregateColumn* ac, Item *sfitemp,
+                               ConstArgParam & constParam)
+{
+    DBUG_ASSERT(sfitemp->const_item());
+    switch(sfitemp->cmp_type())
+    {
+        case INT_RESULT:
+        case STRING_RESULT:
+        case REAL_RESULT:
+        case DECIMAL_RESULT:
+        {
+            ReturnedColumn *rt = buildReturnedColumn(sfitemp, gwi, gwi.fatalParseError);
+            if (!rt)
+            {
+                gwi.fatalParseError = true;
+                return;
+            }
+            ConstantColumn *cc;
+            if ((cc= dynamic_cast<ConstantColumn*>(rt)) &&
+                cc->type() == ConstantColumn::NULLDATA)
+            {
+                // Explicit NULL or a const function that evaluated to NULL
+                cc = new ConstantColumnNull();
+                cc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+                parm.reset(cc);
+                ac->constCol(SRCP(rt));
+                return;
+            }
+
+            // treat as count(*)
+            if (ac->aggOp() == AggregateColumn::COUNT)
+                ac->aggOp(AggregateColumn::COUNT_ASTERISK);
+
+            parm.reset(rt);
+            ac->constCol(parm);
+            constParam.bIsConst = true;
+            if (sfitemp->cmp_type() == DECIMAL_RESULT)
+            {
+                constParam.hasDecimalConst = true;
+                constParam.precision = sfitemp->decimal_precision();
+                constParam.scale = sfitemp->decimal_scale();
+            }
+            break;
+        }
+        case TIME_RESULT:
+            // QQ: why temporal constants are not handled?
+        case ROW_RESULT:
+        {
+            gwi.fatalParseError = true;
+        }
+    }
+}
+
+
 ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 {
     // MCOL-1201 For UDAnF multiple parameters
     vector<SRCP> selCols;
     vector<SRCP> orderCols;
-    bool bIsConst = false;
-    unsigned int constValPrecision = 0;
-    unsigned int constValScale = 0;
-    bool hasDecimalConst = false;
+    ConstArgParam constArgParam;
+
     if (get_fe_conn_info_ptr() == NULL)
         set_fe_conn_info_ptr((void*)new cal_connection_info());
 
@@ -4920,6 +5090,10 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                 (dynamic_cast<GroupConcatColumn*>(ac))->separator(separator);
             }
         }
+        else if (isSupportedAggregateWithOneConstArg(isp, sfitempp))
+        {
+            processAggregateColumnConstArg(gwi, parm, ac, sfitempp[0], constArgParam);
+        }
         else
         {
             for (uint32_t i = 0; i < isp->argument_count(); i++)
@@ -4948,43 +5122,11 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                     }
 
                     case Item::CONST_ITEM:
-                    {
-                        switch(sfitemp->cmp_type())
-                        {
-                            case INT_RESULT:
-                            case STRING_RESULT:
-                            case REAL_RESULT:
-                            case DECIMAL_RESULT:
-                            {
-                                // treat as count(*)
-                                if (ac->aggOp() == AggregateColumn::COUNT)
-                                    ac->aggOp(AggregateColumn::COUNT_ASTERISK);
-
-                                parm.reset(buildReturnedColumn(sfitemp, gwi, gwi.fatalParseError));
-                                ac->constCol(parm);
-                                bIsConst = true;
-                                if (sfitemp->cmp_type() == DECIMAL_RESULT)
-                                {
-                                    hasDecimalConst = true;
-                                    Item_decimal* idp = (Item_decimal*)sfitemp;
-                                    constValPrecision = idp->decimal_precision();
-                                    constValScale = idp->decimal_scale();
-                                }
-                                break;
-                            }
-                            default:
-                            {
-                                gwi.fatalParseError = true;
-                            }
-                        }
-                        break;
-                    }
-
                     case Item::NULL_ITEM:
                     {
-                        parm.reset(new ConstantColumn("", ConstantColumn::NULLDATA));
-                        (dynamic_cast<ConstantColumn*>(parm.get()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
-                        ac->constCol(SRCP(buildReturnedColumn(sfitemp, gwi, gwi.fatalParseError)));
+                        processAggregateColumnConstArg(gwi, parm,
+                                                       ac, sfitemp,
+                                                       constArgParam);
                         break;
                     }
 
@@ -5096,7 +5238,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 
         // Get result type
         // Modified for MCOL-1201 multi-argument aggregate
-        if (!bIsConst && ac->aggParms().size() > 0)
+        if (!constArgParam.bIsConst && ac->aggParms().size() > 0)
         {
             // These are all one parm functions, so we can safely
             // use the first parm for result type.
@@ -5202,13 +5344,13 @@ because it has multiple arguments.";
                 return nullptr;
             }
         }
-        else if (bIsConst && hasDecimalConst && isAvg)
+        else if (constArgParam.bIsConst && constArgParam.hasDecimalConst && isAvg)
         {
             CalpontSystemCatalog::ColType ct = parm->resultType();
-            if (datatypes::Decimal::isWideDecimalTypeByPrecision(constValPrecision))
+            if (datatypes::Decimal::isWideDecimalTypeByPrecision(constArgParam.precision))
             {
-                ct.precision = constValPrecision;
-                ct.scale = constValScale;
+                ct.precision = constArgParam.precision;
+                ct.scale = constArgParam.scale;
                 ct.colWidth = datatypes::MAXDECIMALWIDTH;
             }
             ac->resultType(ct);
@@ -5739,34 +5881,9 @@ void gp_walk(const Item* item, void* arg)
                     tmpVec.size() == 0 &&
                     ifp->functype() != Item_func::MULT_EQUAL_FUNC)
             {
-                String val, *str = ifp->val_str(&val);
-                string valStr;
+                ValStrStdString valStr(ifp);
 
-                if (str)
-                    valStr.assign(str->ptr(), str->length());
-
-                ConstantColumn* cc = NULL;
-
-                if (!str) //@ bug 2844 check whether parameter is defined
-                {
-                    cc = new ConstantColumn("", ConstantColumn::NULLDATA);
-                    cc->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
-                }
-                else if (ifp->result_type() == STRING_RESULT)
-                {
-                    cc = new ConstantColumn(valStr, ConstantColumn::LITERAL);
-                    cc->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
-                }
-                else if (ifp->result_type() == DECIMAL_RESULT)
-                {
-                    cc = buildDecimalColumn(ifp, *gwip);
-                }
-                else
-                {
-                    cc = new ConstantColumn(valStr, ConstantColumn::NUM);
-                    cc->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
-                    cc->resultType(colType_MysqlToIDB(item));
-                }
+                ConstantColumn* cc = buildConstantColumnMaybeNullFromValStr(ifp, valStr, *gwip);
 
 				for (uint32_t i = 0; i < ifp->argument_count() && !gwip->rcWorkStack.empty(); i++)
 				{
@@ -5782,7 +5899,7 @@ void gp_walk(const Item* item, void* arg)
                 else
                     gwip->rcWorkStack.push(cc);
 
-                if (str)
+                if (!valStr.isNull())
                     IDEBUG( cerr << "Const F&E " << item->full_name() << " evaluate: " << valStr << endl );
 
                 break;
@@ -6297,14 +6414,7 @@ void parse_item (Item* item, vector<Item_field*>& field_vec,
                     Item** sfitempp = isp->arguments();
 
                     // special handling for count(*). This should not be treated as constant.
-                    if (isp->argument_count() == 1 &&
-                            ( sfitempp[0]->type() == Item::CONST_ITEM &&
-                                (sfitempp[0]->cmp_type() == INT_RESULT ||
-                                 sfitempp[0]->cmp_type() == STRING_RESULT ||
-                                 sfitempp[0]->cmp_type() == REAL_RESULT	||
-                                 sfitempp[0]->cmp_type() == DECIMAL_RESULT)
-                            )
-                        )
+                    if (isSupportedAggregateWithOneConstArg(isp, sfitempp))
                     {
                         field_vec.push_back((Item_field*)item); //dummy
                     }
@@ -7449,7 +7559,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 if (rc)
                 {
                     // MCOL-2178 CS has to process determenistic functions with constant arguments.
-                    if (!hasNonSupportItem && !nonConstFunc(ifp) && !(parseInfo & AF_BIT) && tmpVec.size() == 0)
+                    if (!hasNonSupportItem && ifp->const_item() && !(parseInfo & AF_BIT) && tmpVec.size() == 0)
                     {
                         srcp.reset(buildReturnedColumn(item, gwi, gwi.fatalParseError));
                         gwi.returnedCols.push_back(srcp);
@@ -7475,34 +7585,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                     if (!hasNonSupportItem && (after_size - before_size) == 0 &&
                             !(parseInfo & AGG_BIT) && !(parseInfo & SUB_BIT))
                     {
-                        String val, *str = ifp->val_str(&val);
-                        string valStr;
-
-                        if (str)
-                            valStr.assign(str->ptr(), str->length());
-
-                        ConstantColumn* cc = NULL;
-
-                        if (!str)
-                        {
-                            cc = new ConstantColumn("", ConstantColumn::NULLDATA);
-                            cc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
-                        }
-                        else if (ifp->result_type() == STRING_RESULT)
-                        {
-                            cc = new ConstantColumn(valStr, ConstantColumn::LITERAL);
-                            cc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
-                        }
-                        else if (ifp->result_type() == DECIMAL_RESULT)
-                        {
-                            cc = buildDecimalColumn(ifp, gwi);
-                        }
-                        else
-                        {
-                            cc = new ConstantColumn(valStr, ConstantColumn::NUM);
-                            cc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
-                            cc->resultType(colType_MysqlToIDB(item));
-                        }
+                        ConstantColumn* cc = buildConstantColumnMaybeNullUsingValStr(ifp, gwi);
 
                         SRCP srcp(cc);
 
@@ -9341,34 +9424,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                             !(parseInfo & AGG_BIT) && !(parseInfo & SUB_BIT)
                        )
                     {
-                        String val, *str = ifp->val_str(&val);
-                        string valStr;
-
-                        if (str)
-                            valStr.assign(str->ptr(), str->length());
-
-                        ConstantColumn* cc = NULL;
-
-                        if (!str)
-                        {
-                            cc = new ConstantColumn("", ConstantColumn::NULLDATA);
-                            cc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
-                        }
-                        else if (ifp->result_type() == STRING_RESULT)
-                        {
-                            cc = new ConstantColumn(valStr, ConstantColumn::LITERAL);
-                            cc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
-                        }
-                        else if (ifp->result_type() == DECIMAL_RESULT)
-                        {
-                            cc = buildDecimalColumn(ifp, gwi);
-                        }
-                        else
-                        {
-                            cc = new ConstantColumn(valStr, ConstantColumn::NUM);
-                            cc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
-                            cc->resultType(colType_MysqlToIDB(item));
-                        }
+                        ConstantColumn* cc = buildConstantColumnMaybeNullUsingValStr(ifp, gwi);
 
                         SRCP srcp(cc);
 

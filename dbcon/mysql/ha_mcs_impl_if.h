@@ -373,7 +373,7 @@ bool isUpdateHasForeignTable(THD* thd);
 execplan::ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport, bool isRefItem = false);
 execplan::ReturnedColumn* buildFunctionColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport, bool selectBetweenIn = false);
 execplan::ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport);
-execplan::ConstantColumn* buildDecimalColumn(Item* item, gp_walk_info& gwi);
+execplan::ConstantColumn* buildDecimalColumn(const Item *item, const std::string &str, gp_walk_info& gwi);
 execplan::SimpleColumn* buildSimpleColumn(Item_field* item, gp_walk_info& gwi);
 execplan::FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonSupport);
 execplan::ParseTree* buildParseTree(Item_func* item, gp_walk_info& gwi, bool& nonSupport);
