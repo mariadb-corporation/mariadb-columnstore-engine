@@ -90,7 +90,7 @@ static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* th
                 else
                 {
                     table->field[4]->set_notnull();
-                    table->field[4]->store(iter->partition.cprange.loVal);
+                    table->field[4]->store((longlong) iter->partition.cprange.loVal, false);
                 }
 
                 if (iter->partition.cprange.hiVal <= (std::numeric_limits<int64_t>::min() + 1))
@@ -100,7 +100,7 @@ static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* th
                 else
                 {
                     table->field[5]->set_notnull();
-                    table->field[5]->store(iter->partition.cprange.hiVal);
+                    table->field[5]->store((longlong) iter->partition.cprange.hiVal, false);
                 }
             }
             else

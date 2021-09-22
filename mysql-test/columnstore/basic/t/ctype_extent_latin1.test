@@ -1,0 +1,99 @@
+--source ../include/have_columnstore.inc
+--source ../include/func_caltrace_create_if_needed.inc
+--disable_warnings
+DROP DATABASE IF EXISTS mcs_ctype_extent_latin1;
+--enable_warnings
+CREATE DATABASE mcs_ctype_extent_latin1;
+USE mcs_ctype_extent_latin1;
+SET default_storage_engine=ColumnStore;
+--source ../include/ctype_extent_proc_create.inc
+
+--echo #
+--echo # MCOL-4871 Extent elimination for short CHAR does not work well
+--echo #
+
+SET NAMES utf8;
+
+DELIMITER $$;
+CREATE PROCEDURE test(collation VARCHAR(64))
+BEGIN
+  DECLARE stmt TEXT;
+  DECLARE CONTINUE HANDLER FOR 9999
+  BEGIN
+    GET DIAGNOSTICS CONDITION 1 @errmsg = MESSAGE_TEXT;
+    SET @errmsg=caltrace_extract_block_diagnostics(@errmsg);
+    RESIGNAL SET MESSAGE_TEXT=@errmsg;
+  END;
+
+  DO calsettrace(1);
+
+  SET stmt='CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET latin1 COLLATE latin1_swedish_ci)';
+  SET stmt=REPLACE(stmt,'latin1_swedish_ci', collation);
+  SELECT stmt AS ``;
+  EXECUTE IMMEDIATE stmt;
+  INSERT INTO t1 VALUES (0xE9);
+  SELECT c1, HEX(c1) FROM t1;
+  CALL show_extent_min_max(database(),'t1','c1');
+  SELECT * FROM t1 WHERE c1=x'E9';
+  SHOW WARNINGS;
+  SELECT * FROM t1 WHERE c1='o';
+  SHOW WARNINGS;
+  DROP TABLE t1;
+
+  SET stmt='CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET latin1 COLLATE latin1_swedish_ci)';
+  SET stmt=REPLACE(stmt,'latin1_swedish_ci', collation);
+  SELECT stmt AS ``;
+  EXECUTE IMMEDIATE stmt;
+  INSERT INTO t1 VALUES ('ÿ€' /*_latin1 x'FF80'*/);
+  SELECT c1, HEX(c1) FROM t1;
+  CALL show_extent_min_max(database(),'t1','c1');
+  SELECT * FROM t1 WHERE c1='ÿ€';
+  SHOW WARNINGS;
+  SELECT * FROM t1 WHERE c1=x'FF7F' /* 'ÿ<DEL>' */;
+  SHOW WARNINGS;
+  DROP TABLE t1;
+
+  SET stmt='CREATE TABLE t1 (c1 CHAR(4) CHARACTER SET latin1 COLLATE latin1_swedish_ci)';
+  SET stmt=REPLACE(stmt,'latin1_swedish_ci', collation);
+  SELECT stmt AS ``;
+  EXECUTE IMMEDIATE stmt;
+  INSERT INTO t1 VALUES ('ÿÿÿ€' /*_latin1 x'FFFFFF80'*/);
+  SELECT c1, HEX(c1) FROM t1;
+  CALL show_extent_min_max(database(),'t1','c1');
+  SELECT * FROM t1 WHERE c1='ÿÿÿ€';
+  SHOW WARNINGS;
+  SELECT * FROM t1 WHERE c1=x'FFFFFF7F' /* 'ÿÿÿ<DEL>' */;
+  SHOW WARNINGS;
+  DROP TABLE t1;
+
+  SET stmt='CREATE TABLE t1 (c1 CHAR(8) CHARACTER SET latin1 COLLATE latin1_swedish_ci)';
+  SET stmt=REPLACE(stmt,'latin1_swedish_ci', collation);
+  SELECT stmt AS ``;
+  EXECUTE IMMEDIATE stmt;
+  INSERT INTO t1 VALUES ('ÿÿÿÿÿÿÿ€' /*_latin1 x'FFFFFFFFFFFFFF80'*/);
+  SELECT c1, HEX(c1) FROM t1;
+  CALL show_extent_min_max(database(),'t1','c1');
+  SELECT * FROM t1 WHERE c1='ÿÿÿÿÿÿÿ€';
+  SHOW WARNINGS;
+  SELECT * FROM t1 WHERE c1=x'FFFFFFFFFFFFFF7F' /* 'ÿÿÿÿÿÿÿ<DEL>' */;
+  SHOW WARNINGS;
+  DROP TABLE t1;
+
+  DO calsettrace(0);
+
+END;
+$$
+DELIMITER ;$$
+
+CALL test('latin1_swedish_ci');
+CALL test('latin1_swedish_nopad_ci');
+CALL test('latin1_bin');
+CALL test('latin1_nopad_bin');
+
+DROP PROCEDURE test;
+
+
+--source ../include/ctype_extent_proc_drop.inc
+--source ../include/func_caltrace_drop_if_needed.inc
+DROP DATABASE mcs_ctype_extent_latin1;
+USE test;

@@ -1240,6 +1240,14 @@ void filterColumnData(
     T Min = datatypes::numeric_limits<T>::max();
     T Max = (KIND == KIND_UNSIGNED) ? 0 : datatypes::numeric_limits<T>::min();
 
+   if (KIND == KIND_TEXT)
+   {
+     const CHARSET_INFO &cs = in->colType.getCharset();
+     Min = Max = 0;
+     cs.max_str((uchar*) &Min, sizeof(Min), sizeof(Min));
+     cs.min_str((uchar*) &Max, sizeof(Max), sizeof(Max));
+   }
+
 /* WIP add vertical processing
     // If possible, use faster "vertical" filtering approach
     if (KIND != KIND_TEXT)
