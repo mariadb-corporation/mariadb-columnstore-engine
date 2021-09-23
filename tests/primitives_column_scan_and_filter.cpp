@@ -147,7 +147,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan1ByteVectorized)
   using UIntegralType = datatypes::make_unsigned<IntegralType>::type;
   datatypes::make_unsigned<IntegralType>::type* results;
   in->colType = ColRequestHeaderDataType();
-  in->colType.DataSize = 1;
+  in->colType.DataSize = W;
   in->colType.DataType = SystemCatalog::TINYINT;
   in->OutputType = OT_DATAVALUE;
   in->NOPS = 0;
@@ -238,6 +238,36 @@ TEST_F(ColumnScanFilterTest, ColumnScan8Bytes)
       ASSERT_EQ(results[i], (uint32_t) i);
 }
 
+TEST_F(ColumnScanFilterTest, ColumnScan2Bytes1EqFilter)
+{
+  constexpr const uint8_t W = 2;
+  using IntegralType = datatypes::WidthToSIntegralType<W>::type;
+  using UIntegralType = datatypes::make_unsigned<IntegralType>::type;
+  UIntegralType* results;
+  IntegralType tmp;
+
+  in->colType.DataSize = W;
+  in->colType.DataType = SystemCatalog::INT;
+  in->OutputType = OT_DATAVALUE;
+  in->NOPS = 1;
+  in->BOP = BOP_AND;
+  in->NVALS = 0;
+  
+  tmp = 50;
+  args->COP = COMPARE_LE;
+  memcpy(args->val, &tmp, in->colType.DataSize);
+  args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader) +
+                                           sizeof(ColArgs) + in->colType.DataSize]);
+
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col2block.cdf", block));
+  pp.columnScanAndFilter<IntegralType>(in, out, 4 * BLOCK_SIZE, &written);
+
+  results = reinterpret_cast<UIntegralType*>(&output[sizeof(NewColResultHeader)]);
+  ASSERT_EQ(out->NVALS, 51);
+  for (i = 0; i < out->NVALS; i++)
+    ASSERT_EQ(results[i], i);
+}
+
 TEST_F(ColumnScanFilterTest, ColumnScan1ByteUsingRID)
 {
   constexpr const uint8_t W = 1;
@@ -260,6 +290,36 @@ TEST_F(ColumnScanFilterTest, ColumnScan1ByteUsingRID)
 
   for (i = 0; i < out->NVALS; i++)
       ASSERT_EQ(results[i], rids[i]);
+}
+
+TEST_F(ColumnScanFilterTest, ColumnScan4Bytes1EqFilter)
+{
+  constexpr const uint8_t W = 4;
+  using IntegralType = datatypes::WidthToSIntegralType<W>::type;
+  using UIntegralType = datatypes::make_unsigned<IntegralType>::type;
+  UIntegralType* results;
+  IntegralType tmp;
+
+  in->colType.DataSize = W;
+  in->colType.DataType = SystemCatalog::INT;
+  in->OutputType = OT_DATAVALUE;
+  in->NOPS = 1;
+  in->BOP = BOP_AND;
+  in->NVALS = 0;
+  
+  tmp = 2040;
+  args->COP = COMPARE_GE;
+  memcpy(args->val, &tmp, in->colType.DataSize);
+  args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader) +
+                                           sizeof(ColArgs) + in->colType.DataSize]);
+
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col4block.cdf", block));
+  pp.columnScanAndFilter<IntegralType>(in, out, 4 * BLOCK_SIZE, &written);
+
+  results = reinterpret_cast<UIntegralType*>(&output[sizeof(NewColResultHeader)]);
+  ASSERT_EQ(out->NVALS, 8);
+  for (i = 0; i < out->NVALS; i++)
+    ASSERT_EQ(results[i], i + 2040);
 }
 
 TEST_F(ColumnScanFilterTest, ColumnScan4Bytes2Filters)
@@ -293,6 +353,35 @@ TEST_F(ColumnScanFilterTest, ColumnScan4Bytes2Filters)
 
   for (i = 0; i < out->NVALS; i++)
       ASSERT_EQ(results[i], 11 + (uint32_t)i);
+}
+
+TEST_F(ColumnScanFilterTest, ColumnScan8Bytes1EqFilter)
+{
+  constexpr const uint8_t W = 8;
+  using IntegralType = datatypes::WidthToSIntegralType<W>::type;
+  datatypes::make_unsigned<IntegralType>::type* results;
+  IntegralType tmp;
+
+  in->colType.DataSize = W;
+  in->colType.DataType = SystemCatalog::INT;
+  in->OutputType = OT_DATAVALUE;
+  in->NOPS = 1;
+  in->BOP = BOP_AND;
+  in->NVALS = 0;
+  
+  tmp = 11;
+  args->COP = COMPARE_LT;
+  memcpy(args->val, &tmp, in->colType.DataSize);
+  args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader) +
+                                           sizeof(ColArgs) + in->colType.DataSize]);
+
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col8block.cdf", block));
+  pp.columnScanAndFilter<IntegralType>(in, out, 4 * BLOCK_SIZE, &written);
+
+  results = reinterpret_cast<uint64_t*>(&output[sizeof(NewColResultHeader)]);
+  ASSERT_EQ(out->NVALS, 11);
+  for (i = 0; i < out->NVALS; i++)
+    ASSERT_EQ(results[i], i);
 }
 
 //void p_Col_7()

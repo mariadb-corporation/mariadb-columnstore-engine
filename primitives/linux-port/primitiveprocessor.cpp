@@ -62,8 +62,8 @@ ParsedColumnFilter::ParsedColumnFilter() : columnFilterMode(ALWAYS_TRUE), mFilte
 {
 }
 
-ParsedColumnFilter::ParsedColumnFilter(const uint32_t aFilterCount)
-    : columnFilterMode(ALWAYS_TRUE), mFilterCount(aFilterCount)
+ParsedColumnFilter::ParsedColumnFilter(const uint32_t aFilterCount, const int BOP)
+    : columnFilterMode(ALWAYS_TRUE), mFilterCount(aFilterCount), mBOP(BOP)
 {
     prestored_rfs.reset(new uint8_t[mFilterCount]);
     prestored_cops.reset(new uint8_t[mFilterCount]);

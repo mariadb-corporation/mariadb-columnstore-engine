@@ -21,6 +21,7 @@
 //#define NDEBUG
 #include <cassert>
 #include <cmath>
+#include <functional>
 #ifndef _MSC_VER
 #include <pthread.h>
 #else
@@ -121,7 +122,7 @@ inline bool colCompare_(const T& val1, const T& val2, uint8_t COP)
             return val1 >= val2;
 
         default:
-            logIt(34, COP, "colCompare");
+            logIt(34, COP, "colCompare_");
             return false;						// throw an exception here?
     }
 }
@@ -985,80 +986,155 @@ inline void updateMinMax(T& Min, T& Max, const T curValue, NewColRequestHeader* 
 
 template<typename T, ENUM_KIND KIND, typename FT, typename ST, ENUM_VSIZE VSIZE>
 void vectorizedFiltering(NewColRequestHeader* in, NewColResultHeader* out,
-                                      const T emptyValue, const T nullValue, const bool isNullValueMatches, const T* srcArray,
-                                      const uint32_t srcSize, uint16_t* ridArray,
-                                      const uint16_t ridSize,
-                                      const FT* filterValues, const ParsedColumnFilter::CopsType* filterCOPs,
-                                      unsigned* written, const bool validMinMax,
-                                      const ColumnFilterMode columnFilterMode, const ST* filterSet,
-                                      const ParsedColumnFilter::RFsType* filterRFs)
+                          const T emptyValue, const T nullValue, const bool isNullValueMatches, const T* srcArray,
+                          const uint32_t srcSize, uint16_t* ridArray,
+                          const uint16_t ridSize, ParsedColumnFilter* parsedColumnFilter,
+                        unsigned* written, const bool validMinMax) 
 {
     constexpr const uint8_t WIDTH = sizeof(T);
-    simd::SimdFilterProcessor<simd::vi128_wr> simdProcessor;
-    simd::vi128_t dataVec, filterArgVec, vectorMask;
-    uint16_t writeMask;
+    using VT = typename simd::SimdFilterProcessor<simd::vi128_wr, WIDTH>;
+    using MT = uint16_t;
+    VT simdProcessor;
+    simd::vi128_t dataVec, filterArgVec;
+    simd::vi128_t emptyFilterArgVec = simdProcessor.loadValue(emptyValue);
+    MT writeMask;
+    MT initFilterMask = 0xFFFF;
     uint16_t rid = 0;
     char* dstArray = reinterpret_cast<char*>(out) + *written;
     char* origDstArrayPtr = dstArray;
     unsigned origWritten = *written;
+    const FT* filterValues = nullptr;
+    const ParsedColumnFilter::CopsType* filterCOPs = nullptr;
+    ColumnFilterMode columnFilterMode = ALWAYS_TRUE;
+    const ST* filterSet = nullptr;
+    const ParsedColumnFilter::RFsType* filterRFs = nullptr;
 
     // Local vars to capture the min and max values
     T Min = datatypes::numeric_limits<T>::max();
     T Max = (KIND == KIND_UNSIGNED) ? 0 : datatypes::numeric_limits<T>::min();
 
-    uint32_t filterCount = in->NOPS;
     uint8_t  outputType  = in->OutputType;
 
-    constexpr uint16_t VECTOR_SIZE = simd::SimdFilterProcessor<simd::vi128_wr>::vecByteSize / WIDTH;
+    constexpr uint16_t VECTOR_SIZE = VT::vecByteSize / WIDTH;
     uint16_t iterNumber = srcSize / VECTOR_SIZE;
+    uint32_t filterCount = 0; 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wignored-attributes"
+    auto ptrA = std::mem_fn(&VT::cmpEq);
+    using COPType = decltype(ptrA);
+    std::vector<COPType> copFunctorVec;
+#pragma GCC diagnostic pop
+    using BOPType = std::function<MT(MT, MT)>;
+    BOPType bopFunctor;
+    // filter comparators and logical function compilation.
+    if (parsedColumnFilter != nullptr)
+    {
+        filterValues = parsedColumnFilter->getFilterVals<FT>();
+        filterCOPs = parsedColumnFilter->prestored_cops.get();
+        columnFilterMode = parsedColumnFilter->columnFilterMode;
+        filterSet = parsedColumnFilter->getFilterSet<ST>();
+        filterRFs = parsedColumnFilter->prestored_rfs.get();
+        filterCount = parsedColumnFilter->getFilterCount();
+        copFunctorVec.reserve(filterCount);
+        switch(parsedColumnFilter->getBOP())
+        {
+            case BOP_OR:
+                bopFunctor = std::bit_or<MT>();
+                initFilterMask = 0;
+                break;
+            case BOP_AND:
+                bopFunctor = std::bit_and<MT>();
+                break;
+            case BOP_XOR:
+                bopFunctor = std::bit_or<MT>();
+                initFilterMask = 0;
+                break;
+            case BOP_NONE:
+                // WIP
+                bopFunctor = std::bit_and<MT>();
+                break;
+            default:
+                idbassert(false);
+        }    
+        for (uint32_t j = 0; j < filterCount; ++j)
+        {
+            switch(filterCOPs[j])
+            {
+                case(COMPARE_EQ):
+                    copFunctorVec.push_back(std::mem_fn(&VT::cmpEq));
+                    break;
+                case(COMPARE_GE):
+                    copFunctorVec.push_back(std::mem_fn(&VT::cmpGe));
+                    break;
+                case(COMPARE_GT):
+                    copFunctorVec.push_back(std::mem_fn(&VT::cmpGt));
+                    break;
+                case(COMPARE_LE):
+                    copFunctorVec.push_back(std::mem_fn(&VT::cmpLe));
+                    break;
+                case(COMPARE_LT):
+                    copFunctorVec.push_back(std::mem_fn(&VT::cmpLt));
+                    break;
+                case(COMPARE_NE):
+                    copFunctorVec.push_back(std::mem_fn(&VT::cmpNe));
+                    break;
+
+                default:
+                    idbassert(false);
+            }
+        }
+    }
+
+    // main loop
     for (uint16_t i = 0; i < iterNumber; ++i)
     {
         // empty check
-        dataVec = simdProcessor.load8BitsFrom(reinterpret_cast<const char*>(srcArray));
-        filterArgVec = simdProcessor.load8BitsValue(emptyValue);
-        // replace with NE
-        vectorMask = simdProcessor.cmpEq8Bits(dataVec, filterArgVec);
-        // TODO convert filter values to fit into T so that filter values is of type and not fixed
-        // int64_t
-        writeMask = simdProcessor.convertVectorToBitMask(vectorMask);
-        // to negate cmp(dataVec, emptyValuesVec) results
-        writeMask ^= 0xFFFF;
-        // WIP
+        // This won't work for RID processing
+        dataVec = simdProcessor.loadFrom(reinterpret_cast<const char*>(srcArray));
+        // replace with NE if possible
+        writeMask = simdProcessor.cmpNe(dataVec, emptyFilterArgVec);
         // filters
+        MT prevFilterMask = initFilterMask;
+        MT filterMask = 0xFFFF;
         for (uint32_t j = 0; j < filterCount; ++j)
         {
-
-            filterArgVec = simdProcessor.load8BitsValue(static_cast<int8_t>(filterValues[0]));
-            // EQ filter
-            vectorMask = simdProcessor.cmpEq8Bits(dataVec, filterArgVec);
-            // AND BOP
-            writeMask &= simdProcessor.convertVectorToBitMask(vectorMask);
+            // WIP load this only once
+            filterArgVec = simdProcessor.loadValue(filterValues[j]);
+            // filter
+            filterMask = copFunctorVec[j](simdProcessor, dataVec, filterArgVec);
+            std::cout << " iterNumber " << i << " filterMask " << filterMask << " prevFilterMask " << prevFilterMask << "\n";
+            filterMask = bopFunctor(prevFilterMask, filterMask);
+            prevFilterMask = filterMask;
+            std::cout << " iterNumber " << i << " filterMask " << filterMask << "\n";
         }
+        writeMask = writeMask & filterMask;
 
-        // WIP skip if all zeros ??
+        std::cout << " iterNumber " << i << " final writeMask " << writeMask << "\n";
         // use filterArgVec as temporary dst vector
-        // iterate over writeMask and make a permute map
         T* dataVecTPtr = reinterpret_cast<T*>(&dataVec);
         filterArgVec = simdProcessor.setToZero();
         T* tmpDstVecTPtr = reinterpret_cast<T*>(&filterArgVec);
         // Saving values based on writeMask into tmp vec.
         // Min/Max processing.
-        std::cout << "vectorizedFiltering i " << i << " ";
-        for (uint32_t it = 0; it < VECTOR_SIZE; ++it)
+        //std::cout << "vectorizedFiltering i " << i << " ";
+        // The mask is 16 bit long and it describes N elements.
+        // N = sizeof(vector type) / WIDTH.
+        uint32_t j = 0;
+        for (uint32_t it = 0; it < VT::vecByteSize; ++j, it += WIDTH)
         {
             if (writeMask & (1 << it))
             {
-                *tmpDstVecTPtr = dataVecTPtr[it];
+                *tmpDstVecTPtr = dataVecTPtr[j];
                 // Measure the impact
                 if (validMinMax)
                     updateMinMax<KIND>(Min, Max, *tmpDstVecTPtr, in);
                 ++tmpDstVecTPtr;
-                std::cout << 1;
+                //std::cout << 1;
             }
-            else
-                std::cout << 0;
+            //else
+            //    std::cout << 0;
         }
-        std::cout << "\n";
+        //std::cout << "\n";
 
         // Store OT_BOTH ?
         //if (OutputType & (OT_TOKEN | OT_DATAVALUE))
@@ -1068,7 +1144,7 @@ void vectorizedFiltering(NewColRequestHeader* in, NewColResultHeader* out,
 
         // Calculate bytes written
         uint16_t bytesWritten = (tmpDstVecTPtr - reinterpret_cast<T*>(&filterArgVec)) * WIDTH;
-        std::cout << "vectorizedFiltering i " << bytesWritten << "\n";
+        //std::cout << "vectorizedFiltering i " << bytesWritten << "\n";
         //*written += bytesWritten;
         dstArray += bytesWritten;
         // RID store if needed and there were values.
@@ -1203,7 +1279,7 @@ void filterColumnData(
 
     // If possible, use faster "vertical" filtering approach
     // WIP
-    if (KIND == KIND_DEFAULT && ((WIDTH < 16) && dataType == datatypes::SystemCatalog::TINYINT && (columnFilterMode == SINGLE_COMPARISON || columnFilterMode == ALWAYS_TRUE)))
+    if (in->NOPS != 0 && KIND == KIND_DEFAULT && WIDTH < 16)// && (dataType == datatypes::SystemCatalog::TINYINT || dataType == datatypes::SystemCatalog::INT) && (columnFilterMode == SINGLE_COMPARISON || columnFilterMode == ALWAYS_TRUE)))
     {
         bool canUseFastFiltering = true;
         for (uint32_t i = 0; i < filterCount; ++i)
@@ -1215,9 +1291,8 @@ void filterColumnData(
             vectorizedFiltering<T, KIND, FT, ST, BITS128>(in, out, emptyValue, nullValue,
                                         isNullValueMatches,
                                          srcArray, srcSize, ridArray, ridSize,
-                                             filterValues, filterCOPs,
-                                             written, validMinMax, columnFilterMode,
-                                            filterSet, filterRFs);
+                                         parsedColumnFilter.get(),
+                                         written, validMinMax);
 /*
             processArray<T, KIND, T>(srcArray, srcSize, ridArray, ridSize,
                          in->BOP, filterSet, filterCount, filterCOPs, filterValues,

@@ -180,7 +180,7 @@ class ParsedColumnFilter
     boost::shared_ptr<prestored_set_t_128> prestored_set_128;
 
     ParsedColumnFilter();
-    ParsedColumnFilter(const uint32_t aFilterCount);
+    ParsedColumnFilter(const uint32_t aFilterCount, const int BOP);
     ~ParsedColumnFilter();
 
     template<typename T,
@@ -264,8 +264,19 @@ class ParsedColumnFilter
                 prestored_set->insert(prestored_argVals[argIndex]);
     }
 
+    inline int getBOP() const
+    {
+        return mBOP;
+    }
+
+    inline int getFilterCount() const
+    {
+        return mFilterCount;
+    }
+
   private:
     uint32_t mFilterCount;
+    int mBOP;
 };
 
 //@bug 1828 These need to be public so that column operations can use it for 'like'
@@ -496,7 +507,7 @@ boost::shared_ptr<ParsedColumnFilter> _parseColumnFilter(
 
     // Allocate the compiled filter structure with space for filterCount filters.
     // No need to init arrays since they will be filled on the fly.
-    ret.reset(new ParsedColumnFilter(filterCount));
+    ret.reset(new ParsedColumnFilter(filterCount, BOP));
     ret->allocateSpaceForFilterArgs<T>();
 
     // Choose initial filter mode based on operation and number of filter elements

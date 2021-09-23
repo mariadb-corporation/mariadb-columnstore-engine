@@ -397,7 +397,6 @@ BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan8Byte1FilterTemplatedCode)(b
 
 BENCHMARK_REGISTER_F(FilterBenchFixture, BM_ColumnScan8Byte1FilterTemplatedCode);
 
-
 BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan8ByteVectorizedCode)(benchmark::State& state)
 {
   for (auto _ : state)

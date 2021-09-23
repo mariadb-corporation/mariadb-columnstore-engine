@@ -33,252 +33,80 @@
   #define MCS_FORCE_INLINE inline
 #endif
 
+#include <mcs_datatype.h>
+
 namespace simd
 {
   using vi128_t = __m128i;
   using msk128_t = uint16_t;
+  using int128_t = __int128;
+  using MT = uint16_t;
+  // This ugly wrapper used to allow to use __m128i as a template class parameter argument
   struct vi128_wr
   {
     __m128i v;
   };
-/*
-  // Load value
-  MCS_FORCE_INLINE vi128_t load8BitsValue(const char fill)
-  {
-    return _mm_set1_epi8(fill);
-  }
 
-  MCS_FORCE_INLINE vi128_t load16BitsValue(const int16_t fill)
-  {
-    return _mm_set1_epi16(fill);
-  }
-
-  MCS_FORCE_INLINE vi128_t load32BitsValue(const int32_t fill)
-  {
-    return _mm_set1_epi32(fill);
-  }
-
-  MCS_FORCE_INLINE vi128_t load64BitsValue(const int64_t fill)
-  {
-    return _mm_set1_epi32(fill);
-  }
-
-  // Load from
-  MCS_FORCE_INLINE vi128_t load8BitsFrom(const uint8_t* from)
-  {
-    return _mm_loadu_si128 (reinterpret_cast<const vi128_t*>(from));
-  }
-
-  // Compare EQ
-  MCS_FORCE_INLINE vi128_t cmpGt8Bits(vi128_t& x, vi128_t& y)
-  {
-    return _mm_cmpeq_epi8(x, y);
-  }
-
-  MCS_FORCE_INLINE vi128_t cmpGt16Bits(vi128_t& x, vi128_t& y)
-  {
-    return _mm_cmpeq_epi16(x, y);
-  }
-
-  MCS_FORCE_INLINE vi128_t cmpGt32Bits(vi128_t& x, vi128_t& y)
-  {
-    return _mm_cmpeq_epi32(x, y);
-  }
-
-  MCS_FORCE_INLINE vi128_t cmpGt64Bits(vi128_t& x, vi128_t& y)
-  {
-    return _mm_cmpeq_epi64(x, y);
-  }
-
-  // Compare GT
-  MCS_FORCE_INLINE vi128_t cmpEq8Bits(vi128_t& x, vi128_t& y)
-  {
-    return _mm_cmpgt_epi8(x, y);
-  }
-
-  MCS_FORCE_INLINE vi128_t cmpEq16Bits(vi128_t& x, vi128_t& y)
-  {
-    return _mm_cmpgt_epi16(x, y);
-  }
-
-  MCS_FORCE_INLINE vi128_t cmpEq32Bits(vi128_t& x, vi128_t& y)
-  {
-    return _mm_cmpgt_epi32(x, y);
-  }
-
-  MCS_FORCE_INLINE vi128_t cmpEq64Bits(vi128_t& x, vi128_t& y)
-  {
-    return _mm_cmpgt_epi64(x, y);
-  }
-
-  // misc
-  MCS_FORCE_INLINE uint16_t convertVectorToBitMask(vi128_t& vmask)
-  {
-    return _mm_movemask_epi8(vmask);
-  }
-*/
-  template<typename T>
+  template<typename VT, int WIDTH>
   class SimdFilterProcessor
-  {
-/*
-     // Load value
-    MCS_FORCE_INLINE T load8BitsValue(const char fill)
-    {
-      return _mm_set1_epi8(fill);
-    }
-
-    MCS_FORCE_INLINE T load16BitsValue(const int16_t fill)
-    {
-      return _mm_set1_epi16(fill);
-    }
-
-    MCS_FORCE_INLINE T load32BitsValue(const int32_t fill)
-    {
-      return _mm_set1_epi32(fill);
-    }
-
-    MCS_FORCE_INLINE T load64BitsValue(const int64_t fill)
-    {
-      return _mm_set1_epi32(fill);
-    }
-
-    // Load from
-    MCS_FORCE_INLINE T load8BitsFrom(const uint8_t* from)
-    {
-      return _mm_loadu_si128 (reinterpret_cast<const T*>(from));
-    }
-
-    // Compare EQ
-    MCS_FORCE_INLINE T cmpGt8Bits(T& x, T& y)
-    {
-      return _mm_cmpeq_epi8(x, y);
-    }
-
-    MCS_FORCE_INLINE T cmpGt16Bits(T& x, T& y)
-    {
-      return _mm_cmpeq_epi16(x, y);
-    }
-
-    MCS_FORCE_INLINE T cmpGt32Bits(T& x, T& y)
-    {
-      return _mm_cmpeq_epi32(x, y);
-    }
-
-    MCS_FORCE_INLINE T cmpGt64Bits(T& x, T& y)
-    {
-      return _mm_cmpeq_epi64(x, y);
-    }
-
-    // Compare GT
-    MCS_FORCE_INLINE T cmpEq8Bits(T& x, T& y)
-    {
-      return _mm_cmpgt_epi8(x, y);
-    }
-
-    MCS_FORCE_INLINE T cmpEq16Bits(T& x, T& y)
-    {
-      return _mm_cmpgt_epi16(x, y);
-    }
-
-    MCS_FORCE_INLINE T cmpEq32Bits(T& x, T& y)
-    {
-      return _mm_cmpgt_epi32(x, y);
-    }
-
-    MCS_FORCE_INLINE T cmpEq64Bits(T& x, T& y)
-    {
-      return _mm_cmpgt_epi64(x, y);
-    }
-
-    // misc
-    MCS_FORCE_INLINE uint16_t convertVectorToBitMask(T& vmask)
-    {
-      return _mm_movemask_epi8(vmask);
-    }
-*/
-  };
+  { };
 
   template<>
-  class SimdFilterProcessor<vi128_wr>
+  class SimdFilterProcessor<vi128_wr, 16>
   {
+   // The class is not ready !!!!!!!!!
    public:
     constexpr static const uint16_t vecByteSize = 16U;
+    constexpr static const uint16_t vecBitSize = 128U;
+    using T = int128_t;
     // Load value
-    MCS_FORCE_INLINE vi128_t load8BitsValue(const char fill)
+    MCS_FORCE_INLINE vi128_t loadValue(const T fill)
     {
-      return _mm_set1_epi8(fill);
-    }
-
-    MCS_FORCE_INLINE vi128_t load16BitsValue(const int16_t fill)
-    {
-      return _mm_set1_epi16(fill);
-    }
-
-    MCS_FORCE_INLINE vi128_t load32BitsValue(const int32_t fill)
-    {
-      return _mm_set1_epi32(fill);
-    }
-
-    MCS_FORCE_INLINE vi128_t load64BitsValue(const int64_t fill)
-    {
-      return _mm_set1_epi32(fill);
+      return _mm_loadu_si128(reinterpret_cast<const vi128_t*>(&fill));
     }
 
     // Load from
-    MCS_FORCE_INLINE vi128_t load8BitsFrom(const char* from)
+    MCS_FORCE_INLINE vi128_t loadFrom(const char* from)
     {
-      return _mm_loadu_si128 (reinterpret_cast<const vi128_t*>(from));
+      return _mm_loadu_si128(reinterpret_cast<const vi128_t*>(from));
     }
 
-    // Compare EQ
-    MCS_FORCE_INLINE vi128_t cmpGt8Bits(vi128_t& x, vi128_t& y)
+    // WIP
+    MCS_FORCE_INLINE MT cmpDummy(vi128_t& x, vi128_t& y)
     {
-      return _mm_cmpgt_epi8(x, y);
+      return 0xFFFF;
+    }
+    // Compare
+    MCS_FORCE_INLINE MT cmpEq(vi128_t& x, vi128_t& y)
+    {
+      return cmpDummy(x, y);
     }
 
-    MCS_FORCE_INLINE vi128_t cmpGt16Bits(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpGe(vi128_t& x, vi128_t& y)
     {
-      return _mm_cmpgt_epi16(x, y);
+      return cmpDummy(x, y);
     }
 
-    MCS_FORCE_INLINE vi128_t cmpGt32Bits(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpGt(vi128_t& x, vi128_t& y)
     {
-      return _mm_cmpgt_epi32(x, y);
+      return cmpDummy(x, y);
     }
 
-    MCS_FORCE_INLINE vi128_t cmpGt64Bits(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpLt(vi128_t& x, vi128_t& y)
     {
-      return _mm_cmpgt_epi64(x, y);
+      return cmpDummy(x, y);
     }
 
-    // Compare GT
-    MCS_FORCE_INLINE vi128_t cmpEq8Bits(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpLe(vi128_t& x, vi128_t& y)
     {
-      return _mm_cmpeq_epi8(x, y);
+      return cmpDummy(x, y);
     }
 
-    MCS_FORCE_INLINE vi128_t cmpEq16Bits(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpNe(vi128_t& x, vi128_t& y)
     {
-      return _mm_cmpeq_epi16(x, y);
+      return cmpDummy(x, y);
     }
 
-    MCS_FORCE_INLINE vi128_t cmpEq32Bits(vi128_t& x, vi128_t& y)
-    {
-      return _mm_cmpeq_epi32(x, y);
-    }
-
-    MCS_FORCE_INLINE vi128_t cmpEq64Bits(vi128_t& x, vi128_t& y)
-    {
-      return _mm_cmpeq_epi64(x, y);
-    }
-
-    // permute
-/* Available in AVX-512
-    MCS_FORCE_INLINE vi128_t perm8Bits(vi128_t& x, vi128_t& idx)
-    {
-      return _mm_permutexvar_epi8(x, idx);
-    }
-*/
     // misc
     MCS_FORCE_INLINE uint16_t convertVectorToBitMask(vi128_t& vmask)
     {
@@ -300,7 +128,312 @@ namespace simd
     {
       _mm_storeu_si128(reinterpret_cast<vi128_t*>(dst), x);
     }
-};
+  };
+
+  template<>
+  class SimdFilterProcessor<vi128_wr, 8>
+  {
+   public:
+    constexpr static const uint16_t vecByteSize = 16U;
+    constexpr static const uint16_t vecBitSize = 128U;
+    using T = datatypes::WidthToSIntegralType<8>::type;
+    // Load value
+    MCS_FORCE_INLINE vi128_t loadValue(const T fill)
+    {
+      // questionable thing
+      return _mm_set_epi64x(fill, fill);
+    }
+
+    // Load from
+    MCS_FORCE_INLINE vi128_t loadFrom(const char* from)
+    {
+      return _mm_loadu_si128(reinterpret_cast<const vi128_t*>(from));
+    }
+
+    // Compare
+    MCS_FORCE_INLINE MT cmpGe(vi128_t& x, vi128_t& y)
+    {
+      return _mm_movemask_epi8(_mm_or_si128(_mm_cmpgt_epi64(x, y),_mm_cmpeq_epi64(x, y)));
+      // WIP Test another impl
+      // return cmpGt(x, y) | cmpEq(x ,y);
+    }
+
+    MCS_FORCE_INLINE MT cmpGt(vi128_t& x, vi128_t& y)
+    {
+      return _mm_movemask_epi8(_mm_cmpgt_epi64(x, y));
+    }
+
+    MCS_FORCE_INLINE MT cmpEq(vi128_t& x, vi128_t& y)
+    {
+      return _mm_movemask_epi8(_mm_cmpeq_epi64(x, y));
+    }
+
+    MCS_FORCE_INLINE MT cmpLe(vi128_t& x, vi128_t& y)
+    {
+      return cmpGt(x, y) ^ 0xFFFF;
+    }
+
+    MCS_FORCE_INLINE MT cmpLt(vi128_t& x, vi128_t& y)
+    {
+      // WIP what's the logic. Might be too expensive. Might be wrong
+      //return _mm_movemask_epi8(_mm_andnot_si128(_mm_cmpeq_epi64(x, y), _mm_set1_epi32(0xffffffff)));
+      // potential workaround
+      return cmpNe(x, y) ^ cmpGt(x, y);
+    }
+
+    MCS_FORCE_INLINE MT cmpNe(vi128_t& x, vi128_t& y)
+    {
+      return _mm_movemask_epi8(_mm_cmpeq_epi64(x, y)) ^ 0xFFFF;
+    }
+
+    // misc
+    MCS_FORCE_INLINE MT convertVectorToBitMask(vi128_t& vmask)
+    {
+      return _mm_movemask_epi8(vmask);
+    }
+
+    MCS_FORCE_INLINE vi128_t setToZero()
+    {
+      return _mm_setzero_si128();
+    }
+
+    // store
+    MCS_FORCE_INLINE void storeWMask(vi128_t& x, vi128_t& vmask, char* dst)
+    {
+      _mm_maskmoveu_si128(x, vmask, dst);
+    }
+
+    MCS_FORCE_INLINE void store(char* dst, vi128_t& x)
+    {
+      _mm_storeu_si128(reinterpret_cast<vi128_t*>(dst), x);
+    }
+  };
+
+  template<>
+  class SimdFilterProcessor<vi128_wr, 4>
+  {
+   public:
+    constexpr static const uint16_t vecByteSize = 16U;
+    constexpr static const uint16_t vecBitSize = 128U;
+    using T = datatypes::WidthToSIntegralType<4>::type;
+    // Load value
+    MCS_FORCE_INLINE vi128_t loadValue(const T fill)
+    {
+      return _mm_set1_epi32(fill);
+    }
+
+    // Load from
+    MCS_FORCE_INLINE vi128_t loadFrom(const char* from)
+    {
+      return _mm_loadu_si128(reinterpret_cast<const vi128_t*>(from));
+    }
+
+    // Compare
+    MCS_FORCE_INLINE MT cmpEq(vi128_t& x, vi128_t& y)
+    {
+      return _mm_movemask_epi8(_mm_cmpeq_epi32(x, y));
+    }
+
+    MCS_FORCE_INLINE MT cmpGe(vi128_t& x, vi128_t& y)
+    {
+      return cmpLt(x, y) ^ 0xFFFF;
+    }
+
+    MCS_FORCE_INLINE MT cmpGt(vi128_t& x, vi128_t& y)
+    {
+      return _mm_movemask_epi8(_mm_cmpgt_epi32(x, y));
+    }
+
+    MCS_FORCE_INLINE MT cmpLe(vi128_t& x, vi128_t& y)
+    {
+      return cmpGt(x, y) ^ 0xFFFF;
+    }
+
+    MCS_FORCE_INLINE MT cmpLt(vi128_t& x, vi128_t& y)
+    {
+      return _mm_movemask_epi8(_mm_cmplt_epi32(x, y));
+    }
+
+    MCS_FORCE_INLINE MT cmpNe(vi128_t& x, vi128_t& y)
+    {
+      return _mm_movemask_epi8(_mm_cmpeq_epi32(x, y)) ^ 0xFFFF;
+    }
+
+    // misc
+    MCS_FORCE_INLINE MT convertVectorToBitMask(vi128_t& vmask)
+    {
+      return _mm_movemask_epi8(vmask);
+    }
+
+    MCS_FORCE_INLINE vi128_t setToZero()
+    {
+      return _mm_setzero_si128();
+    }
+
+    // store
+    MCS_FORCE_INLINE void storeWMask(vi128_t& x, vi128_t& vmask, char* dst)
+    {
+      _mm_maskmoveu_si128(x, vmask, dst);
+    }
+
+    MCS_FORCE_INLINE void store(char* dst, vi128_t& x)
+    {
+      _mm_storeu_si128(reinterpret_cast<vi128_t*>(dst), x);
+    }
+  };
+
+  template<>
+  class SimdFilterProcessor<vi128_wr, 2>
+  {
+   public:
+    constexpr static const uint16_t vecByteSize = 16U;
+    constexpr static const uint16_t vecBitSize = 128U;
+    using T = datatypes::WidthToSIntegralType<2>::type;
+    // Load value
+    MCS_FORCE_INLINE vi128_t loadValue(const T fill)
+    {
+      return _mm_set1_epi16(fill);
+    }
+
+    // Load from
+    MCS_FORCE_INLINE vi128_t loadFrom(const char* from)
+    {
+      return _mm_loadu_si128(reinterpret_cast<const vi128_t*>(from));
+    }
+
+    // Compare
+    MCS_FORCE_INLINE MT cmpEq(vi128_t& x, vi128_t& y)
+    {
+      return _mm_movemask_epi8(_mm_cmpeq_epi16(x, y));
+    }
+
+    MCS_FORCE_INLINE MT cmpGe(vi128_t& x, vi128_t& y)
+    {
+      return cmpLt(x, y) ^ 0xFFFF;
+    }
+
+    MCS_FORCE_INLINE MT cmpGt(vi128_t& x, vi128_t& y)
+    {
+      return _mm_movemask_epi8(_mm_cmpgt_epi16(x, y));
+    }
+
+    MCS_FORCE_INLINE MT cmpLe(vi128_t& x, vi128_t& y)
+    {
+      return cmpGt(x, y) ^ 0xFFFF;
+    }
+
+    MCS_FORCE_INLINE MT cmpLt(vi128_t& x, vi128_t& y)
+    {
+      return _mm_movemask_epi8(_mm_cmplt_epi16(x, y));
+    }
+
+    MCS_FORCE_INLINE MT cmpNe(vi128_t& x, vi128_t& y)
+    {
+      return _mm_movemask_epi8(_mm_cmpeq_epi16(x, y)) ^ 0xFFFF;
+    }
+
+    // misc
+    MCS_FORCE_INLINE MT convertVectorToBitMask(vi128_t& vmask)
+    {
+      return _mm_movemask_epi8(vmask);
+    }
+
+    MCS_FORCE_INLINE vi128_t setToZero()
+    {
+      return _mm_setzero_si128();
+    }
+
+    // store
+    MCS_FORCE_INLINE void storeWMask(vi128_t& x, vi128_t& vmask, char* dst)
+    {
+      _mm_maskmoveu_si128(x, vmask, dst);
+    }
+
+    MCS_FORCE_INLINE void store(char* dst, vi128_t& x)
+    {
+      _mm_storeu_si128(reinterpret_cast<vi128_t*>(dst), x);
+    }
+  };
+
+  template<>
+  class SimdFilterProcessor<vi128_wr, 1>
+  {
+   public:
+    constexpr static const uint16_t vecByteSize = 16U;
+    constexpr static const uint16_t vecBitSize = 128U;
+    using T = datatypes::WidthToSIntegralType<1>::type;
+    // Load value
+    MCS_FORCE_INLINE vi128_t loadValue(const T fill)
+    {
+      return _mm_set1_epi8(fill);
+    }
+
+    // Load from
+    MCS_FORCE_INLINE vi128_t loadFrom(const char* from)
+    {
+      return _mm_loadu_si128(reinterpret_cast<const vi128_t*>(from));
+    }
+
+    // Compare
+    MCS_FORCE_INLINE MT cmpEq(vi128_t& x, vi128_t& y)
+    {
+      return _mm_movemask_epi8(_mm_cmpeq_epi8(x, y));
+    }
+
+    MCS_FORCE_INLINE MT cmpGe(vi128_t& x, vi128_t& y)
+    {
+      return cmpLt(x, y) ^ 0xFFFF;
+    }
+
+    MCS_FORCE_INLINE MT cmpGt(vi128_t& x, vi128_t& y)
+    {
+      return _mm_movemask_epi8(_mm_cmpgt_epi8(x, y));
+    }
+
+    MCS_FORCE_INLINE MT cmpLe(vi128_t& x, vi128_t& y)
+    {
+      return cmpGt(x, y) ^ 0xFFFF;
+    }
+
+    MCS_FORCE_INLINE MT cmpLt(vi128_t& x, vi128_t& y)
+    {
+      return _mm_movemask_epi8(_mm_cmplt_epi8(x, y));
+    }
+
+    MCS_FORCE_INLINE MT cmpNe(vi128_t& x, vi128_t& y)
+    {
+      return _mm_movemask_epi8(_mm_cmpeq_epi8(x, y)) ^ 0xFFFF;
+    }
+
+    // permute
+/* Available in AVX-512
+    MCS_FORCE_INLINE vi128_t perm8Bits(vi128_t& x, vi128_t& idx)
+    {
+      return _mm_permutexvar_epi8(x, idx);
+    }
+*/
+    // misc
+    MCS_FORCE_INLINE MT convertVectorToBitMask(vi128_t& vmask)
+    {
+      return _mm_movemask_epi8(vmask);
+    }
+
+    MCS_FORCE_INLINE vi128_t setToZero()
+    {
+      return _mm_setzero_si128();
+    }
+
+    // store
+    MCS_FORCE_INLINE void storeWMask(vi128_t& x, vi128_t& vmask, char* dst)
+    {
+      _mm_maskmoveu_si128(x, vmask, dst);
+    }
+
+    MCS_FORCE_INLINE void store(char* dst, vi128_t& x)
+    {
+      _mm_storeu_si128(reinterpret_cast<vi128_t*>(dst), x);
+    }
+  };
 
 } // end of simd
 
