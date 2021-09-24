@@ -491,7 +491,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan8Bytes2EqFiltersRID)
   ASSERT_EQ(results[0], 10);
 }
 
-TEST_F(ColumnScanFilterTest, ColumnScan8Bytes2EqFiltersRIDOutputRid)
+TEST_F(ColumnScanFilterTest, ColumnScan8Bytes2FiltersRIDOutputRid)
 {
   constexpr const uint8_t W = 8;
   using IntegralType = datatypes::WidthToSIntegralType<W>::type;

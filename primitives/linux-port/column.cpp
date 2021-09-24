@@ -1090,6 +1090,7 @@ void vectorizedFiltering(NewColRequestHeader* in, NewColResultHeader* out,
     {
         // empty check
         // This won't work for RID processing
+        // load must be a template
         dataVec = simdProcessor.loadFrom(reinterpret_cast<const char*>(srcArray));
         // replace with NE if possible
         writeMask = simdProcessor.cmpNe(dataVec, emptyFilterArgVec);
@@ -1102,14 +1103,14 @@ void vectorizedFiltering(NewColRequestHeader* in, NewColResultHeader* out,
             filterArgVec = simdProcessor.loadValue(filterValues[j]);
             // filter
             filterMask = copFunctorVec[j](simdProcessor, dataVec, filterArgVec);
-            std::cout << " iterNumber " << i << " filterMask " << filterMask << " prevFilterMask " << prevFilterMask << "\n";
+            //std::cout << " iterNumber " << i << " filterMask " << filterMask << " prevFilterMask " << prevFilterMask << "\n";
             filterMask = bopFunctor(prevFilterMask, filterMask);
             prevFilterMask = filterMask;
-            std::cout << " iterNumber " << i << " filterMask " << filterMask << "\n";
+            //std::cout << " iterNumber " << i << " filterMask " << filterMask << "\n";
         }
         writeMask = writeMask & filterMask;
 
-        std::cout << " iterNumber " << i << " final writeMask " << writeMask << "\n";
+        //std::cout << " iterNumber " << i << " final writeMask " << writeMask << "\n";
         // use filterArgVec as temporary dst vector
         T* dataVecTPtr = reinterpret_cast<T*>(&dataVec);
         filterArgVec = simdProcessor.setToZero();
@@ -1137,6 +1138,7 @@ void vectorizedFiltering(NewColRequestHeader* in, NewColResultHeader* out,
         //std::cout << "\n";
 
         // Store OT_BOTH ?
+        // store must be a template
         //if (OutputType & (OT_TOKEN | OT_DATAVALUE))
         {
             simdProcessor.store(dstArray, filterArgVec);
@@ -1279,7 +1281,9 @@ void filterColumnData(
 
     // If possible, use faster "vertical" filtering approach
     // WIP
-    if (in->NOPS != 0 && KIND == KIND_DEFAULT && WIDTH < 16)// && (dataType == datatypes::SystemCatalog::TINYINT || dataType == datatypes::SystemCatalog::INT) && (columnFilterMode == SINGLE_COMPARISON || columnFilterMode == ALWAYS_TRUE)))
+    // in->NVALS protects from RID input
+    // Execution mustn't get here if there are less then X values.
+    if (in->NVALS == 0 && KIND == KIND_DEFAULT && WIDTH < 16)
     {
         bool canUseFastFiltering = true;
         for (uint32_t i = 0; i < filterCount; ++i)
@@ -1288,6 +1292,7 @@ void filterColumnData(
 
         if (canUseFastFiltering)
         {
+            std::cout << "run vectors\n";
             vectorizedFiltering<T, KIND, FT, ST, BITS128>(in, out, emptyValue, nullValue,
                                         isNullValueMatches,
                                          srcArray, srcSize, ridArray, ridSize,
