@@ -463,6 +463,7 @@ public:
     for the other types as well as the getters.
     */
     template<int len> void setUintField_offset(uint64_t val, uint32_t offset);
+    template<typename T>void setIntField_offset(const T val, const uint32_t offset);
     inline void nextRow(uint32_t size);
     inline void prevRow(uint32_t size, uint64_t number);
 
@@ -1208,6 +1209,12 @@ inline void Row::setUintField_offset(uint64_t val, uint32_t offset)
             idbassert(0);
             throw std::logic_error("Row::setUintField called on a non-uint32_t field");
     }
+}
+
+template<typename T>
+inline void Row::setIntField_offset(const T val, const uint32_t offset)
+{
+    *((T*) &data[offset]) = val;
 }
 
 inline void Row::nextRow(uint32_t size)
