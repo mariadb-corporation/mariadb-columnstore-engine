@@ -2472,7 +2472,7 @@ public:
         PrimitiveProcessor pp;
         uint8_t input[BLOCK_SIZE], output[4 * BLOCK_SIZE], block[BLOCK_SIZE];
         NewColRequestHeader* in;
-        NewColResultHeader* out;
+        ColResultHeader* out;
         uint8_t* results;
         int fd;
         uint32_t i, written;
@@ -2506,7 +2506,7 @@ public:
         memset(output, 0, 4 * BLOCK_SIZE);
 
         in = reinterpret_cast<NewColRequestHeader*>(input);
-        out = reinterpret_cast<NewColResultHeader*>(output);
+        out = reinterpret_cast<ColResultHeader*>(output);
 
         in->DataSize = 1;
         in->DataType = CalpontSystemCatalog::CHAR;
@@ -2518,7 +2518,7 @@ public:
         pp.setBlockPtr((int*) block);
         pp.p_Col(in, out, 4 * BLOCK_SIZE, &written);
 
-        results = &output[sizeof(NewColResultHeader)];
+        results = &output[sizeof(ColResultHeader)];
 // 	cout << "NVALS = " << out->NVALS << endl;
         CPPUNIT_ASSERT(out->NVALS == 8160);
 
@@ -2536,7 +2536,7 @@ public:
         PrimitiveProcessor pp;
         uint8_t input[BLOCK_SIZE], output[4 * BLOCK_SIZE], block[BLOCK_SIZE];
         NewColRequestHeader* in;
-        NewColResultHeader* out;
+        ColResultHeader* out;
         uint16_t* results;
         uint32_t written, i;
         int fd;
@@ -2570,7 +2570,7 @@ public:
         memset(output, 0, 4 * BLOCK_SIZE);
 
         in = reinterpret_cast<NewColRequestHeader*>(input);
-        out = reinterpret_cast<NewColResultHeader*>(output);
+        out = reinterpret_cast<ColResultHeader*>(output);
 
         in->DataSize = 2;
         in->DataType = CalpontSystemCatalog::INT;
@@ -2582,7 +2582,7 @@ public:
         pp.setBlockPtr((int*) block);
         pp.p_Col(in, out, 4 * BLOCK_SIZE, &written);
 
-        results = reinterpret_cast<uint16_t*>(&output[sizeof(NewColResultHeader)]);
+        results = reinterpret_cast<uint16_t*>(&output[sizeof(ColResultHeader)]);
 //  	cout << "NVALS = " << out->NVALS << endl;
         CPPUNIT_ASSERT(out->NVALS == 4096);
 
@@ -2600,7 +2600,7 @@ public:
         PrimitiveProcessor pp;
         uint8_t input[BLOCK_SIZE], output[4 * BLOCK_SIZE], block[BLOCK_SIZE];
         NewColRequestHeader* in;
-        NewColResultHeader* out;
+        ColResultHeader* out;
         uint32_t* results;
         uint32_t written, i;
         int fd;
@@ -2634,7 +2634,7 @@ public:
         memset(output, 0, 4 * BLOCK_SIZE);
 
         in = reinterpret_cast<NewColRequestHeader*>(input);
-        out = reinterpret_cast<NewColResultHeader*>(output);
+        out = reinterpret_cast<ColResultHeader*>(output);
 
         in->DataSize = 4;
         in->DataType = CalpontSystemCatalog::INT;
@@ -2646,7 +2646,7 @@ public:
         pp.setBlockPtr((int*) block);
         pp.p_Col(in, out, 4 * BLOCK_SIZE, &written);
 
-        results = reinterpret_cast<uint32_t*>(&output[sizeof(NewColResultHeader)]);
+        results = reinterpret_cast<uint32_t*>(&output[sizeof(ColResultHeader)]);
 //  	cout << "NVALS = " << out->NVALS << endl;
         CPPUNIT_ASSERT(out->NVALS == 2048);
 
@@ -2664,7 +2664,7 @@ public:
         PrimitiveProcessor pp;
         uint8_t input[BLOCK_SIZE], output[4 * BLOCK_SIZE], block[BLOCK_SIZE];
         NewColRequestHeader* in;
-        NewColResultHeader* out;
+        ColResultHeader* out;
         u_int64_t* results;
         uint32_t written, i;
         int fd;
@@ -2698,7 +2698,7 @@ public:
         memset(output, 0, 4 * BLOCK_SIZE);
 
         in = reinterpret_cast<NewColRequestHeader*>(input);
-        out = reinterpret_cast<NewColResultHeader*>(output);
+        out = reinterpret_cast<ColResultHeader*>(output);
 
         in->DataSize = 8;
         in->DataType = CalpontSystemCatalog::INT;
@@ -2710,7 +2710,7 @@ public:
         pp.setBlockPtr((int*) block);
         pp.p_Col(in, out, 4 * BLOCK_SIZE, &written);
 
-        results = reinterpret_cast<u_int64_t*>(&output[sizeof(NewColResultHeader)]);
+        results = reinterpret_cast<u_int64_t*>(&output[sizeof(ColResultHeader)]);
 //   	cout << "NVALS = " << out->NVALS << endl;
         CPPUNIT_ASSERT(out->NVALS == 1024);
 
@@ -2728,7 +2728,7 @@ public:
         PrimitiveProcessor pp;
         uint8_t input[BLOCK_SIZE], output[4 * BLOCK_SIZE], block[BLOCK_SIZE];
         NewColRequestHeader* in;
-        NewColResultHeader* out;
+        ColResultHeader* out;
         uint8_t* results;
         uint16_t* rids;
         uint32_t written, i;
@@ -2763,7 +2763,7 @@ public:
         memset(output, 0, 4 * BLOCK_SIZE);
 
         in = reinterpret_cast<NewColRequestHeader*>(input);
-        out = reinterpret_cast<NewColResultHeader*>(output);
+        out = reinterpret_cast<ColResultHeader*>(output);
         rids = reinterpret_cast<uint16_t*>(&in[1]);
 
         in->DataSize = 1;
@@ -2778,7 +2778,7 @@ public:
         pp.setBlockPtr((int*) block);
         pp.p_Col(in, out, 4 * BLOCK_SIZE, &written);
 
-        results = reinterpret_cast<uint8_t*>(&output[sizeof(NewColResultHeader)]);
+        results = reinterpret_cast<uint8_t*>(&output[sizeof(ColResultHeader)]);
 //    	cout << "NVALS = " << out->NVALS << endl;
         CPPUNIT_ASSERT(out->NVALS == 2);
 
@@ -2796,7 +2796,7 @@ public:
         PrimitiveProcessor pp;
         uint8_t input[BLOCK_SIZE], output[4 * BLOCK_SIZE], block[BLOCK_SIZE];
         NewColRequestHeader* in;
-        NewColResultHeader* out;
+        ColResultHeader* out;
         ColArgs* args;
         uint32_t* results;
         uint32_t written, i;
@@ -2831,7 +2831,7 @@ public:
         memset(output, 0, 4 * BLOCK_SIZE);
 
         in = reinterpret_cast<NewColRequestHeader*>(input);
-        out = reinterpret_cast<NewColResultHeader*>(output);
+        out = reinterpret_cast<ColResultHeader*>(output);
         args = reinterpret_cast<ColArgs*>(&in[1]);
 
         in->DataSize = 4;
@@ -2854,7 +2854,7 @@ public:
         pp.setBlockPtr((int*) block);
         pp.p_Col(in, out, 4 * BLOCK_SIZE, &written);
 
-        results = reinterpret_cast<uint32_t*>(&output[sizeof(NewColResultHeader)]);
+        results = reinterpret_cast<uint32_t*>(&output[sizeof(ColResultHeader)]);
 //    	cout << "NVALS = " << out->NVALS << endl;
         CPPUNIT_ASSERT(out->NVALS == 9);
 
@@ -2872,7 +2872,7 @@ public:
         PrimitiveProcessor pp;
         uint8_t input[BLOCK_SIZE], output[4 * BLOCK_SIZE], block[BLOCK_SIZE];
         NewColRequestHeader* in;
-        NewColResultHeader* out;
+        ColResultHeader* out;
         ColArgs* args;
         u_int64_t* results;
         uint32_t written, i;
@@ -2908,7 +2908,7 @@ public:
         memset(output, 0, 4 * BLOCK_SIZE);
 
         in = reinterpret_cast<NewColRequestHeader*>(input);
-        out = reinterpret_cast<NewColResultHeader*>(output);
+        out = reinterpret_cast<ColResultHeader*>(output);
         args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader)]);
 
         in->DataSize = 8;
@@ -2931,7 +2931,7 @@ public:
         pp.setBlockPtr((int*) block);
         pp.p_Col(in, out, 4 * BLOCK_SIZE, &written);
 
-        results = reinterpret_cast<u_int64_t*>(&output[sizeof(NewColResultHeader)]);
+        results = reinterpret_cast<u_int64_t*>(&output[sizeof(ColResultHeader)]);
 //    	cout << "NVALS = " << out->NVALS << endl;
         CPPUNIT_ASSERT(out->NVALS == 33);
 
@@ -2949,7 +2949,7 @@ public:
         PrimitiveProcessor pp;
         uint8_t input[BLOCK_SIZE], output[4 * BLOCK_SIZE], block[BLOCK_SIZE];
         NewColRequestHeader* in;
-        NewColResultHeader* out;
+        ColResultHeader* out;
         ColArgs* args;
         u_int64_t* results;
         uint32_t written, i;
@@ -2985,7 +2985,7 @@ public:
         memset(output, 0, 4 * BLOCK_SIZE);
 
         in = reinterpret_cast<NewColRequestHeader*>(input);
-        out = reinterpret_cast<NewColResultHeader*>(output);
+        out = reinterpret_cast<ColResultHeader*>(output);
         args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader)]);
 
         in->DataSize = 8;
@@ -3008,7 +3008,7 @@ public:
         pp.setBlockPtr((int*) block);
         pp.p_Col(in, out, 4 * BLOCK_SIZE, &written);
 
-        results = reinterpret_cast<u_int64_t*>(&output[sizeof(NewColResultHeader)]);
+        results = reinterpret_cast<u_int64_t*>(&output[sizeof(ColResultHeader)]);
 //    	cout << "NVALS = " << out->NVALS << endl;
         CPPUNIT_ASSERT(out->NVALS == 2);
         CPPUNIT_ASSERT(results[0] == 10);
@@ -3026,7 +3026,7 @@ public:
         PrimitiveProcessor pp;
         uint8_t input[BLOCK_SIZE], output[4 * BLOCK_SIZE], block[BLOCK_SIZE];
         NewColRequestHeader* in;
-        NewColResultHeader* out;
+        ColResultHeader* out;
         ColArgs* args;
         uint16_t* rids;
         u_int64_t* results;
@@ -3063,7 +3063,7 @@ public:
         memset(output, 0, 4 * BLOCK_SIZE);
 
         in = reinterpret_cast<NewColRequestHeader*>(input);
-        out = reinterpret_cast<NewColResultHeader*>(output);
+        out = reinterpret_cast<ColResultHeader*>(output);
         args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader)]);
 
         in->DataSize = 8;
@@ -3092,7 +3092,7 @@ public:
         pp.setBlockPtr((int*) block);
         pp.p_Col(in, out, 4 * BLOCK_SIZE, &written);
 
-        results = reinterpret_cast<u_int64_t*>(&output[sizeof(NewColResultHeader)]);
+        results = reinterpret_cast<u_int64_t*>(&output[sizeof(ColResultHeader)]);
 //    	cout << "NVALS = " << out->NVALS << endl;
         CPPUNIT_ASSERT(out->NVALS == 1);
         CPPUNIT_ASSERT(results[0] == 10);
@@ -3109,7 +3109,7 @@ public:
         PrimitiveProcessor pp;
         uint8_t input[BLOCK_SIZE], output[4 * BLOCK_SIZE], block[BLOCK_SIZE];
         NewColRequestHeader* in;
-        NewColResultHeader* out;
+        ColResultHeader* out;
         ColArgs* args;
         int16_t* results;
         uint32_t written, i;
@@ -3145,7 +3145,7 @@ public:
         memset(output, 0, 4 * BLOCK_SIZE);
 
         in = reinterpret_cast<NewColRequestHeader*>(input);
-        out = reinterpret_cast<NewColResultHeader*>(output);
+        out = reinterpret_cast<ColResultHeader*>(output);
         args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader)]);
 
         in->DataSize = 8;
@@ -3168,7 +3168,7 @@ public:
         pp.setBlockPtr((int*) block);
         pp.p_Col(in, out, 4 * BLOCK_SIZE, &written);
 
-        results = reinterpret_cast<int16_t*>(&output[sizeof(NewColResultHeader)]);
+        results = reinterpret_cast<int16_t*>(&output[sizeof(ColResultHeader)]);
 //    	cout << "NVALS = " << out->NVALS << endl;
         CPPUNIT_ASSERT(out->NVALS == 33);
 
@@ -3186,7 +3186,7 @@ public:
         PrimitiveProcessor pp;
         uint8_t input[BLOCK_SIZE], output[4 * BLOCK_SIZE], block[BLOCK_SIZE];
         NewColRequestHeader* in;
-        NewColResultHeader* out;
+        ColResultHeader* out;
         ColArgs* args;
         int16_t* resultRid;
         int64_t* resultVal;
@@ -3223,7 +3223,7 @@ public:
         memset(output, 0, 4 * BLOCK_SIZE);
 
         in = reinterpret_cast<NewColRequestHeader*>(input);
-        out = reinterpret_cast<NewColResultHeader*>(output);
+        out = reinterpret_cast<ColResultHeader*>(output);
         args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader)]);
 
         in->DataSize = 8;
@@ -3252,7 +3252,7 @@ public:
         for (i = 0; i < out->NVALS; i++)
         {
             resultRid = reinterpret_cast<int16_t*>(&output[
-            sizeof(NewColResultHeader) + i * (sizeof(Int16) + in->DataSize)]);
+            sizeof(ColResultHeader) + i * (sizeof(Int16) + in->DataSize)]);
             resultVal = reinterpret_cast<int64_t*>(&resultRid[1]);
 
 //    		cout << i << ":   rid:" << (int) *resultRid << " val:" << *resultVal << endl;
@@ -3268,7 +3268,7 @@ public:
         PrimitiveProcessor pp;
         uint8_t input[BLOCK_SIZE], output[4 * BLOCK_SIZE], block[BLOCK_SIZE];
         NewColRequestHeader* in;
-        NewColResultHeader* out;
+        ColResultHeader* out;
         ColArgs* args;
         uint8_t* results;
         uint32_t written, i;
@@ -3303,7 +3303,7 @@ public:
         memset(output, 0, 4 * BLOCK_SIZE);
 
         in = reinterpret_cast<NewColRequestHeader*>(input);
-        out = reinterpret_cast<NewColResultHeader*>(output);
+        out = reinterpret_cast<ColResultHeader*>(output);
 
         in->DataSize = 1;
         in->DataType = CalpontSystemCatalog::CHAR;
@@ -3326,7 +3326,7 @@ public:
         pp.setBlockPtr((int*) block);
         pp.p_Col(in, out, 4 * BLOCK_SIZE, &written);
 
-        results = &output[sizeof(NewColResultHeader)];
+        results = &output[sizeof(ColResultHeader)];
 //  	cout << "NVALS = " << out->NVALS << endl;
         CPPUNIT_ASSERT(out->NVALS == 32);
 
@@ -3346,7 +3346,7 @@ public:
         PrimitiveProcessor pp;
         uint8_t input[BLOCK_SIZE], output[4 * BLOCK_SIZE], block[BLOCK_SIZE];
         NewColRequestHeader* in;
-        NewColResultHeader* out;
+        ColResultHeader* out;
         ColArgs* args;
         int16_t* results;
         uint32_t written, i;
@@ -3383,7 +3383,7 @@ public:
         memset(output, 0, 4 * BLOCK_SIZE);
 
         in = reinterpret_cast<NewColRequestHeader*>(input);
-        out = reinterpret_cast<NewColResultHeader*>(output);
+        out = reinterpret_cast<ColResultHeader*>(output);
         args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader)]);
 
         in->DataSize = 4;
@@ -3420,7 +3420,7 @@ public:
         pp.setBlockPtr((int*) block);
         pp.p_Col(in, out, 4 * BLOCK_SIZE, &written);
 
-        results = reinterpret_cast<int16_t*>(&output[sizeof(NewColResultHeader)]);
+        results = reinterpret_cast<int16_t*>(&output[sizeof(ColResultHeader)]);
 //    	cout << "NVALS = " << out->NVALS << endl;
         CPPUNIT_ASSERT(out->NVALS == 2);
         CPPUNIT_ASSERT(results[0] == 8);
@@ -3438,7 +3438,7 @@ public:
         PrimitiveProcessor pp;
         uint8_t input[BLOCK_SIZE], output[4 * BLOCK_SIZE], block[BLOCK_SIZE];
         NewColRequestHeader* in;
-        NewColResultHeader* out;
+        ColResultHeader* out;
         ColArgs* args;
         double* results;
         uint32_t written, i;
@@ -3474,7 +3474,7 @@ public:
         memset(output, 0, 4 * BLOCK_SIZE);
 
         in = reinterpret_cast<NewColRequestHeader*>(input);
-        out = reinterpret_cast<NewColResultHeader*>(output);
+        out = reinterpret_cast<ColResultHeader*>(output);
 
         in->DataSize = 8;
         in->DataType = CalpontSystemCatalog::DOUBLE;
@@ -3496,7 +3496,7 @@ public:
         pp.setBlockPtr((int*) block);
         pp.p_Col(in, out, 4 * BLOCK_SIZE, &written);
 
-        results = reinterpret_cast<double*>(&output[sizeof(NewColResultHeader)]);
+        results = reinterpret_cast<double*>(&output[sizeof(ColResultHeader)]);
 //   	cout << "NVALS = " << out->NVALS << endl;
         CPPUNIT_ASSERT(out->NVALS == 8);
 
@@ -3514,7 +3514,7 @@ public:
         PrimitiveProcessor pp;
         uint8_t input[BLOCK_SIZE], output[4 * BLOCK_SIZE], block[BLOCK_SIZE];
         NewColRequestHeader* in;
-        NewColResultHeader* out;
+        ColResultHeader* out;
         ColArgs* args;
         float* resultVal;
         uint32_t written, i;
@@ -3551,7 +3551,7 @@ public:
         memset(output, 0, 4 * BLOCK_SIZE);
 
         in = reinterpret_cast<NewColRequestHeader*>(input);
-        out = reinterpret_cast<NewColResultHeader*>(output);
+        out = reinterpret_cast<ColResultHeader*>(output);
 
         in->DataSize = 4;
         in->DataType = CalpontSystemCatalog::FLOAT;
@@ -3579,7 +3579,7 @@ public:
         for (i = 0; i < out->NVALS; i++)
         {
             resultRid = reinterpret_cast<int16_t*>(&output[
-            sizeof(NewColResultHeader) + i * (sizeof(Int16) + in->DataSize)]);
+            sizeof(ColResultHeader) + i * (sizeof(Int16) + in->DataSize)]);
             resultVal = reinterpret_cast<float*>(&resultRid[1]);
 
 //     		cout << i << ":   rid:" << (int) *resultRid << " val:" << *resultVal << endl;
@@ -3595,7 +3595,7 @@ public:
         PrimitiveProcessor pp;
         uint8_t input[BLOCK_SIZE], output[4 * BLOCK_SIZE], block[BLOCK_SIZE];
         NewColRequestHeader* in;
-        NewColResultHeader* out;
+        ColResultHeader* out;
         ColArgs* args;
         float* resultVal;
         int16_t* resultRid;
@@ -3632,7 +3632,7 @@ public:
         memset(output, 0, 4 * BLOCK_SIZE);
 
         in = reinterpret_cast<NewColRequestHeader*>(input);
-        out = reinterpret_cast<NewColResultHeader*>(output);
+        out = reinterpret_cast<ColResultHeader*>(output);
 
         in->DataSize = 4;
         in->DataType = CalpontSystemCatalog::FLOAT;
@@ -3661,7 +3661,7 @@ public:
         for (i = 0; i < out->NVALS; i++)
         {
             resultRid = reinterpret_cast<int16_t*>(&output[
-            sizeof(NewColResultHeader) + i * (sizeof(Int16) + in->DataSize)]);
+            sizeof(ColResultHeader) + i * (sizeof(Int16) + in->DataSize)]);
             resultVal = reinterpret_cast<float*>(&resultRid[1]);
 
 //     		cout << i << ":   rid:" << (int) *resultRid << " val:" << *resultVal << endl;
@@ -3677,7 +3677,7 @@ public:
         PrimitiveProcessor pp;
         uint8_t input[BLOCK_SIZE], output[4 * BLOCK_SIZE], block[BLOCK_SIZE];
         NewColRequestHeader* in;
-        NewColResultHeader* out;
+        ColResultHeader* out;
         ColArgs* args;
         double* results;
         uint32_t written, i;
@@ -3713,7 +3713,7 @@ public:
         memset(output, 0, 4 * BLOCK_SIZE);
 
         in = reinterpret_cast<NewColRequestHeader*>(input);
-        out = reinterpret_cast<NewColResultHeader*>(output);
+        out = reinterpret_cast<ColResultHeader*>(output);
 
         in->DataSize = 8;
         in->DataType = CalpontSystemCatalog::DOUBLE;
@@ -3735,7 +3735,7 @@ public:
         pp.setBlockPtr((int*) block);
         pp.p_Col(in, out, 4 * BLOCK_SIZE, &written);
 
-        results = reinterpret_cast<double*>(&output[sizeof(NewColResultHeader)]);
+        results = reinterpret_cast<double*>(&output[sizeof(ColResultHeader)]);
 //    	cout << "NVALS = " << out->NVALS << endl;
         CPPUNIT_ASSERT(out->NVALS == 19);
 
@@ -3764,7 +3764,7 @@ public:
         PrimitiveProcessor pp;
         uint8_t input[BLOCK_SIZE], output[4 * BLOCK_SIZE], block[BLOCK_SIZE];
         NewColRequestHeader* in;
-        NewColResultHeader* out;
+        ColResultHeader* out;
         ColArgs* args;
         binary16* results;
         uint32_t written, i;
@@ -3797,7 +3797,7 @@ public:
         memset(output, 0, 4 * BLOCK_SIZE);
 
         in = reinterpret_cast<NewColRequestHeader*>(input);
-        out = reinterpret_cast<NewColResultHeader*>(output);
+        out = reinterpret_cast<ColResultHeader*>(output);
         args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader)]);
 
         in->DataSize = sizeof(binary16);
@@ -3825,7 +3825,7 @@ public:
         pp.setBlockPtr((int*) block);
         pp.p_Col(in, out, 4 * BLOCK_SIZE, &written);
 
-        results = reinterpret_cast<binary16*>(&output[sizeof(NewColResultHeader)]);
+        results = reinterpret_cast<binary16*>(&output[sizeof(ColResultHeader)]);
 //    	cout << "NVALS = " << out->NVALS << endl;
         CPPUNIT_ASSERT_EQUAL((uint16_t)3, out->NVALS);
         CPPUNIT_ASSERT_EQUAL((u_int64_t)10, results[0].uint64(0));
@@ -3841,7 +3841,7 @@ public:
         PrimitiveProcessor pp;
         uint8_t input[2 * BLOCK_SIZE], output[8 * BLOCK_SIZE], block[BLOCK_SIZE];
         NewColRequestHeader* in;
-        NewColResultHeader* out;
+        ColResultHeader* out;
         ColArgs* args;
         binary32* results;
         uint32_t written, i;
@@ -3876,7 +3876,7 @@ public:
         memset(output, 0, 4 * BLOCK_SIZE);
 
         in = reinterpret_cast<NewColRequestHeader*>(input);
-        out = reinterpret_cast<NewColResultHeader*>(output);
+        out = reinterpret_cast<ColResultHeader*>(output);
         args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader)]);
         
         in->DataSize = sizeof(binary32);
@@ -3907,7 +3907,7 @@ public:
         pp.setBlockPtr((int*) block);
         pp.p_Col(in, out, 4 * BLOCK_SIZE, &written);
 
-        results = reinterpret_cast<binary32*>(&output[sizeof(NewColResultHeader)]);
+        results = reinterpret_cast<binary32*>(&output[sizeof(ColResultHeader)]);
 //    	cout << "NVALS = " << out->NVALS << endl;
         CPPUNIT_ASSERT_EQUAL((uint16_t)3, out->NVALS);
 //        CPPUNIT_ASSERT_EQUAL((u_int64_t)10, results[0].uint64(0));

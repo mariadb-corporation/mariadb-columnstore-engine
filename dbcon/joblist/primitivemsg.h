@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016-2021 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -30,11 +31,7 @@
 #include "calpontsystemcatalog.h"
 #include "joblisttypes.h"
 
-#ifdef __cplusplus
 #include <vector>
-extern "C"
-{
-#endif
 
 #pragma pack(push,1)
 
@@ -66,6 +63,8 @@ const int8_t COMPARE_NLIKE = (COMPARE_LIKE | COMPARE_NOT); //0x18
 namespace primitives
 {
 
+using RIDType = uint16_t;
+using NVALSType = uint16_t;
 using utils::ConstString;
 
 class StringComparator: public datatypes::Charset
@@ -288,6 +287,7 @@ struct VBCPacketHeader
 
 //      Packet Header for ISM SubBlock EU
 
+// Changing this structure one !MUST! align ColResultHeader
 struct ISMPacketHeader
 {
     ISMPacketHeader(): Interleave(0), Flags(0), Command(0), Size(0), Type(0), MsgCount(0), Status(0) {}
@@ -303,6 +303,7 @@ struct ISMPacketHeader
 
 //      Primitive request/response structure Header
 //@Bug 2744 changed all variables to 32 bit, and took out StatementID
+// Changing this structure one !MUST! align ColResultHeader
 struct PrimitiveHeader
 {
     uint32_t SessionID;     // Front end Session Identifier
@@ -459,19 +460,6 @@ struct LoopbackResultHeader
 
 //      Column Results
 
-struct ColResultHeader
-{
-    PrimitiveHeader Hdr;
-    uint64_t LBID;
-    uint16_t RidFlags;
-    uint16_t NVALS;
-    uint16_t ValidMinMax; 			  // 1 if Min/Max are valid, otherwise 0
-    uint32_t OutputType;
-    int64_t Min; 				  // Minimum value in this block (signed)
-    int64_t Max; 				  // Maximum value in this block (signed)
-    uint32_t CacheIO;				  // I/O count from buffer cache
-    uint32_t PhysicalIO;			  // Physical I/O count from disk
-};
 
 //      Column Aggregate results
 
@@ -805,23 +793,52 @@ struct NewColAggRequestHeader
     NewColAggRequestHeader(); // QQ: not used
 };
 
-struct NewColResultHeader
+// The size of the structure !MUST! be aligned by the max(sizeof(DataType)) supported by MCS.
+struct ColResultHeader
 {
-    ISMPacketHeader ism;
     PrimitiveHeader hdr;
-    uint64_t LBID;
-    uint16_t RidFlags;
-    uint16_t NVALS;
-    uint16_t ValidMinMax;		// 1 if Min/Max are valid, otherwise 0
-    uint32_t OutputType;
     int128_t Min; 			    // Minimum value in this block for signed data types
     int128_t Max; 			    // Maximum value in this block for signed data types
+    ISMPacketHeader ism;
+    uint64_t LBID;
+    uint16_t RidFlags;
+    primitives::NVALSType NVALS;
+    uint16_t ValidMinMax;		// 1 if Min/Max are valid, otherwise 0
+    uint32_t OutputType;
     uint32_t CacheIO;			// I/O count from buffer cache
     uint32_t PhysicalIO;		// Physical I/O count from disk
+    char padding[34];
     // if OutputType was OT_DATAVALUE, what follows is DataType[NVALS]
     // if OutputType was OT_RID, what follows is uint16_t Rids[NVALS]
-    // if OutputType was OT_BOTH, what follows is NVALS <Rid, DataType> pairs
+    // if OutputType was OT_BOTH, what follows is uint16_t Rids[NVALS] DataType[NVALS]
 };
+
+namespace primitives
+{
+    constexpr static uint32_t ColResultHeaderFirstValueOffset = sizeof(ColResultHeader) + sizeof(RIDType) * BLOCK_SIZE;
+    constexpr static uint32_t RID2FirstValueOffset = sizeof(RIDType) * BLOCK_SIZE;
+
+    template<typename T>
+    inline T* getValuesArrayPosition(uint8_t* out, const NVALSType offset)
+    {
+        return reinterpret_cast<T*>(out + offset * sizeof(T));
+    }
+
+    inline primitives::RIDType* getRIDArrayPosition(uint8_t* out, const NVALSType offset)
+    {
+        return getValuesArrayPosition<NVALSType>(out, offset);
+    }
+
+    inline uint8_t* getFirstValueArrayPosition(ColResultHeader* outMsg)
+    {
+        return reinterpret_cast<uint8_t*>(outMsg) + ColResultHeaderFirstValueOffset;
+    }
+
+    inline uint8_t* getFirstRIDArrayPosition(ColResultHeader* outMsg)
+    {
+        return reinterpret_cast<uint8_t*>(&outMsg[1]);
+    }
+}
 
 /* additional types to support p_dictionary */
 struct DictFilterElement
@@ -890,10 +907,6 @@ struct LbidAtVer
 #endif
 
 #pragma pack(pop)
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif //JOBLIST_PRIMITIVE_H
 // vim:ts=4 sw=4:

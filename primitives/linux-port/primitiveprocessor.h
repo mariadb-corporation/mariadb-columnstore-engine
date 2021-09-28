@@ -376,7 +376,7 @@ public:
      * 		an array of 'NOPS' defining the filter to apply (optional),
      * 		followed by an array of RIDs to apply the filter to (optional).
      * @param out The buffer that will contain the results.  On return, it will start with
-     * a NewColResultHeader, followed by the output type specified by in->OutputType.
+     * a ColResultHeader, followed by the output type specified by in->OutputType.
      * \li If OT_RID, it will be an array of RIDs
      * \li If OT_DATAVALUE, it will be an array of matching data values stored in the column
      * \li If OT_BOTH, it will be an array of <RID, DataValue> pairs
@@ -385,38 +385,32 @@ public:
      * number of bytes written to out.
      * @note See PrimitiveMsg.h for the type definitions.
      */
-    void p_Col(NewColRequestHeader* in, NewColResultHeader* out, unsigned outSize,
+    void p_Col(NewColRequestHeader* in, ColResultHeader* out, unsigned outSize,
                unsigned* written);
 
     template<typename T,
              typename std::enable_if<sizeof(T) == sizeof(int8_t) ||
                                      sizeof(T) == sizeof(int16_t) ||
                                      sizeof(T) == sizeof(int128_t), T>::type* = nullptr>
-    void scanAndFilterTypeDispatcher(NewColRequestHeader* in, NewColResultHeader* out,
-                                    unsigned outSize, unsigned* written);
+    void scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out);
 
     template<typename T,
              typename std::enable_if<sizeof(T) == sizeof(int32_t), T>::type* = nullptr>
-    void scanAndFilterTypeDispatcher(NewColRequestHeader* in, NewColResultHeader* out,
-                                     unsigned outSize, unsigned* written);
+    void scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out);
     template<typename T,
              typename std::enable_if<sizeof(T) == sizeof(int64_t), T>::type* = nullptr>
-    void scanAndFilterTypeDispatcher(NewColRequestHeader* in, NewColResultHeader* out,
-                                     unsigned outSize, unsigned* written);
+    void scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out);
     
     template<typename T,
              typename std::enable_if<sizeof(T) <= sizeof(int64_t), T>::type* = nullptr>
-    void _scanAndFilterTypeDispatcher(NewColRequestHeader* in, NewColResultHeader* out,
-                                    unsigned outSize, unsigned* written);
+    void _scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out);
 
     template<typename T,
              typename std::enable_if<sizeof(T) == sizeof(int128_t), T>::type* = nullptr>
-    void _scanAndFilterTypeDispatcher(NewColRequestHeader* in, NewColResultHeader* out,
-                                    unsigned outSize, unsigned* written);
+    void _scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out);
  
     template<typename T>
-    void columnScanAndFilter(NewColRequestHeader* in, NewColResultHeader* out,
-                             unsigned outSize, unsigned* written);
+    void columnScanAndFilter(NewColRequestHeader* in, ColResultHeader* out);
 
     boost::shared_ptr<ParsedColumnFilter> parseColumnFilter(const uint8_t* filterString,
                                                             uint32_t colWidth,
