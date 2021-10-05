@@ -926,240 +926,32 @@ inline bool nextColValue(
 /// WRITE COLUMN VALUES
 ///
 
-// Append value to the output buffer with debug-time check for buffer overflow
-template<typename T>
-inline void checkedWriteValue(
-    void* out,
-    unsigned outSize,
-    unsigned* outPos,
-    const T* src,
-    int errSubtype)
-{
-#ifdef PRIM_DEBUG
-    if (sizeof(T) > outSize - *outPos)
-    {
-        logIt(35, errSubtype);
-        throw logic_error("PrimitiveProcessor::checkedWriteValue(): output buffer is too small");
-    }
-#endif
-    uint8_t* out8 = reinterpret_cast<uint8_t*>(out);
-    memcpy(out8 + *outPos, src, sizeof(T));
-    *outPos += sizeof(T);
-}
-
 // Write the value index in srcArray and/or the value itself, depending on bits in OutputType,
 // into the output buffer and update the output pointer.
+// TODO Introduce another dispatching layer based on OutputType.
 template<typename T>
 inline void writeColValue(
     uint8_t OutputType,
-    NewColResultHeader* out,
-    unsigned outSize,
-    unsigned* written,
+    ColResultHeader* out,
     uint16_t rid,
     const T* srcArray)
 {
+    uint8_t* outPtr = reinterpret_cast<uint8_t*>(&out[1]);
+    auto idx = out->NVALS++;
     if (OutputType & OT_RID)
     {
-        checkedWriteValue(out, outSize, written, &rid, 1);
+        auto* outPos = getRIDArrayPosition(outPtr, idx);
+        *outPos = rid;
         out->RidFlags |= (1 << (rid >> 9)); // set the (row/512)'th bit
     }
 
     if (OutputType & (OT_TOKEN | OT_DATAVALUE))
     {
-        checkedWriteValue(out, outSize, written, &srcArray[rid], 2);
-    }
-
-    out->NVALS++;   //TODO: Can be computed at the end from *written value
-}
-
-/* WIP
-template <bool WRITE_RID, bool WRITE_DATA, bool IS_NULL_VALUE_MATCHES, typename FILTER_ARRAY_T, typename RID_T, typename T>
-void writeArray(
-    size_t dataSize,
-    const T* dataArray,
-    const RID_T* dataRid,
-    const FILTER_ARRAY_T *filterArray,
-    uint8_t* outbuf,
-    unsigned* written,
-    uint16_t* NVALS,
-    uint8_t* RidFlagsPtr,
-    T NULL_VALUE)
-{
-    uint8_t* out = outbuf;
-    uint8_t RidFlags = *RidFlagsPtr;
-
-    for (size_t i = 0; i < dataSize; ++i)
-    {
-        //TODO: optimize handling of NULL values and flags by avoiding non-predictable jumps
-        if (dataArray[i]==NULL_VALUE? IS_NULL_VALUE_MATCHES : filterArray[i])
-        {
-            if (WRITE_RID)
-            {
-                copyValue(out, &dataRid[i], sizeof(RID_T));
-                out += sizeof(RID_T);
-
-                RidFlags |= (1 << (dataRid[i] >> 10)); // set the (row/1024)'th bit
-            }
-
-            if (WRITE_DATA)
-            {
-                copyValue(out, &dataArray[i], sizeof(T));
-                out += sizeof(T);
-            }
-        }
-    }
-
-    // Update number of written values, number of written bytes and out->RidFlags
-    int size1 = (WRITE_RID? sizeof(RID_T) : 0) + (WRITE_DATA? sizeof(T) : 0);
-    *NVALS += (out - outbuf) / size1;
-    *written += out - outbuf;
-    *RidFlagsPtr = RidFlags;
-}
-*/
-
-/*****************************************************************************
- *** RUN DATA THROUGH A COLUMN FILTER ****************************************
- *****************************************************************************/
-
-/* "Vertical" processing of the column filter:
-   1. load all data into temporary vector
-   2. process one filter element over entire vector before going to a next one
-   3. write records, that succesfully passed through the filter, to outbuf
-*/
-/*
-template<typename T, ENUM_KIND KIND, typename VALTYPE>
-void processArray(
-    // Source data
-    const T* srcArray,
-    size_t srcSize,
-    uint16_t* ridArray,
-    size_t ridSize,                 // Number of values in ridArray
-    // Filter description
-    int BOP,
-    prestored_set_t* filterSet,     // Set of values for simple filters (any of values / none of them)
-    uint32_t filterCount,           // Number of filter elements, each described by one entry in the following arrays:
-    uint8_t* filterCOPs,            //   comparison operation
-    int64_t* filterValues,          //   value to compare to
-    // Output buffer/stats
-    uint8_t* outbuf,                // Pointer to the place for output data
-    unsigned* written,              // Number of written bytes, that we need to update
-    uint16_t* NVALS,                // Number of written values, that we need to update
-    uint8_t* RidFlagsPtr,           // Pointer to out->RidFlags
-    // Processing parameters
-    bool WRITE_RID,
-    bool WRITE_DATA,
-    bool SKIP_EMPTY_VALUES,
-    T EMPTY_VALUE,
-    bool IS_NULL_VALUE_MATCHES,
-    T NULL_VALUE,
-    // Min/Max search
-    bool ValidMinMax,
-    VALTYPE* MinPtr,
-    VALTYPE* MaxPtr)
-{
-    // Alloc temporary arrays
-    size_t inputSize = (ridArray? ridSize : srcSize);
-
-    // Temporary array with data to filter
-    std::vector<T> dataVec(inputSize);
-    auto dataArray = dataVec.data();
-
-    // Temporary array with RIDs of corresponding dataArray elements
-    std::vector<RID_T> dataRidVec(WRITE_RID? inputSize : 0);
-    auto dataRid = dataRidVec.data();
-
-
-    // Copy input data into temporary array, opt. storing RIDs, opt. skipping EMPTYs
-    size_t dataSize;  // number of values copied into dataArray
-    if (ridArray != NULL)
-    {
-        SKIP_EMPTY_VALUES = true;  // let findMinMaxArray() know that empty values will be skipped
-
-        dataSize = WRITE_RID? readArray<true, true,true>(srcArray, srcSize, dataArray, dataRid, ridArray, ridSize, EMPTY_VALUE)
-                            : readArray<false,true,true>(srcArray, srcSize, dataArray, dataRid, ridArray, ridSize, EMPTY_VALUE);
-    }
-    else if (SKIP_EMPTY_VALUES)
-    {
-        dataSize = WRITE_RID? readArray<true, false,true>(srcArray, srcSize, dataArray, dataRid, ridArray, ridSize, EMPTY_VALUE)
-                            : readArray<false,false,true>(srcArray, srcSize, dataArray, dataRid, ridArray, ridSize, EMPTY_VALUE);
-    }
-    else
-    {
-        dataSize = WRITE_RID? readArray<true, false,false>(srcArray, srcSize, dataArray, dataRid, ridArray, ridSize, EMPTY_VALUE)
-                            : readArray<false,false,false>(srcArray, srcSize, dataArray, dataRid, ridArray, ridSize, EMPTY_VALUE);
-    }
-
-    // If required, find Min/Max values of the data
-    if (ValidMinMax)
-    {
-        SKIP_EMPTY_VALUES? findMinMaxArray<true> (dataSize, dataArray, MinPtr, MaxPtr, EMPTY_VALUE, NULL_VALUE)
-                         : findMinMaxArray<false>(dataSize, dataArray, MinPtr, MaxPtr, EMPTY_VALUE, NULL_VALUE);
-    }
-
-
-    // Choose initial filterArray[i] value depending on the operation
-    bool initValue = false;
-    if      (filterCount == 0) {initValue = true;}
-    else if (BOP_NONE == BOP)  {initValue = false;  BOP = BOP_OR;}
-    else if (BOP_OR   == BOP)  {initValue = false;}
-    else if (BOP_XOR  == BOP)  {initValue = false;}
-    else if (BOP_AND  == BOP)  {initValue = true;}
-
-    // Temporary array accumulating results of filtering for each record
-    std::vector<uint8_t> filterVec(dataSize, initValue);
-    auto filterArray = filterVec.data();
-
-    // Real type of column data, may be floating-point (used only for comparisons in the filtering)
-    using FLOAT_T = typename std::conditional<sizeof(T) == 8, double, float>::type;
-    using DATA_T  = typename std::conditional<KIND_FLOAT == KIND, FLOAT_T, T>::type;
-    auto realDataArray = reinterpret_cast<DATA_T*>(dataArray);
-
-
-    // Evaluate column filter on elements of dataArray and store results into filterArray
-    if (filterSet != NULL  &&  BOP == BOP_OR)
-    {
-        applySetFilter<BOP_OR>(dataSize, dataArray, filterSet, filterArray);
-    }
-    else if (filterSet != NULL  &&  BOP == BOP_AND)
-    {
-        applySetFilter<BOP_AND>(dataSize, dataArray, filterSet, filterArray);
-    }
-    else
-
-        for (int i = 0; i < filterCount; ++i)
-        {
-            DATA_T cmp_value;   // value for comparison, may be floating-point
-            copyValue(&cmp_value, &filterValues[i], sizeof(cmp_value));
-
-            switch(BOP)
-            {
-                case BOP_AND:  applyFilterElement<BOP_AND>(filterCOPs[i], dataSize, realDataArray, cmp_value, filterArray);  break;
-                case BOP_OR:   applyFilterElement<BOP_OR> (filterCOPs[i], dataSize, realDataArray, cmp_value, filterArray);  break;
-                case BOP_XOR:  applyFilterElement<BOP_XOR>(filterCOPs[i], dataSize, realDataArray, cmp_value, filterArray);  break;
-                default:       idbassert(0);
-            }
-        }
-    }
-
-
-    // Copy filtered data and/or their RIDs into output buffer
-    if (WRITE_RID && WRITE_DATA)
-    {
-        IS_NULL_VALUE_MATCHES? writeArray<true,true,true> (dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS, RidFlagsPtr, NULL_VALUE)
-                             : writeArray<true,true,false>(dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS, RidFlagsPtr, NULL_VALUE);
-    }
-    else if (WRITE_RID)
-    {
-        IS_NULL_VALUE_MATCHES? writeArray<true,false,true> (dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS, RidFlagsPtr, NULL_VALUE)
-                             : writeArray<true,false,false>(dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS, RidFlagsPtr, NULL_VALUE);
-    }
-    else
-    {
-        IS_NULL_VALUE_MATCHES? writeArray<false,true,true> (dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS, RidFlagsPtr, NULL_VALUE)
-                             : writeArray<false,true,false>(dataSize, dataArray, dataRid, filterArray, outbuf, written, NVALS, RidFlagsPtr, NULL_VALUE);
+        T* outPos = getValuesArrayPosition<T>(primitives::getFirstValueArrayPosition(out), idx);
+        // TODO check bytecode for the 16 byte type
+        *outPos = srcArray[rid];
     }
 }
-*/
 
 // These two are templates update min/max values in the loop iterating the values in filterColumnData.
 template<ENUM_KIND KIND, typename T,
@@ -1194,9 +986,7 @@ inline void updateMinMax(T& Min, T& Max, T& curValue, NewColRequestHeader* in)
 template<typename T, ENUM_KIND KIND>
 void filterColumnData(
     NewColRequestHeader* in,
-    NewColResultHeader* out,
-    unsigned outSize,
-    unsigned* written,
+    ColResultHeader* out,
     uint16_t* ridArray,
     const uint16_t ridSize,                // Number of values in ridArray
     int* srcArray16,
@@ -1284,7 +1074,7 @@ void filterColumnData(
         {
             // If NULL values match the filter, write curValue to the output buffer
             if (isNullValueMatches)
-                writeColValue<T>(outputType, out, outSize, written, rid, srcArray);
+                writeColValue<T>(outputType, out, rid, srcArray);
         }
         else
         {
@@ -1292,7 +1082,7 @@ void filterColumnData(
             if (matchingColValue<KIND, COL_WIDTH, false>(curValue, columnFilterMode, filterSet, filterCount,
                                 filterCOPs, filterValues, filterRFs, in->colType, NULL_VALUE))
             {
-                writeColValue<T>(outputType, out, outSize, written, rid, srcArray);
+                writeColValue<T>(outputType, out, rid, srcArray);
             }
 
             // Update Min and Max if necessary.  EMPTY/NULL values are processed in other branches.
@@ -1347,9 +1137,7 @@ template<typename T,
          typename std::enable_if<sizeof(T) == sizeof(int32_t), T>::type* = nullptr>
 #endif
 void PrimitiveProcessor::scanAndFilterTypeDispatcher(NewColRequestHeader* in,
-    NewColResultHeader* out,
-    unsigned outSize,
-    unsigned* written)
+    ColResultHeader* out)
 {
     constexpr int W = sizeof(T);
     auto dataType = (execplan::CalpontSystemCatalog::ColDataType) in->colType.DataType;
@@ -1360,10 +1148,10 @@ void PrimitiveProcessor::scanAndFilterTypeDispatcher(NewColRequestHeader* in,
         uint16_t* ridArray = in->getRIDArrayPtr(W);
         const uint32_t itemsPerBlock = logicalBlockMode ? BLOCK_SIZE
                                                         : BLOCK_SIZE / W;
-        filterColumnData<T, KIND_FLOAT>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
+        filterColumnData<T, KIND_FLOAT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
         return;
     }
-    _scanAndFilterTypeDispatcher<T>(in, out, outSize, written);
+    _scanAndFilterTypeDispatcher<T>(in, out);
 }
 
 template<typename T,
@@ -1377,9 +1165,7 @@ template<typename T,
          typename std::enable_if<sizeof(T) == sizeof(int64_t), T>::type* = nullptr>
 #endif
 void PrimitiveProcessor::scanAndFilterTypeDispatcher(NewColRequestHeader* in,
-    NewColResultHeader* out,
-    unsigned outSize,
-    unsigned* written)
+    ColResultHeader* out)
 {
     constexpr int W = sizeof(T);
     auto dataType = (execplan::CalpontSystemCatalog::ColDataType) in->colType.DataType;
@@ -1389,10 +1175,10 @@ void PrimitiveProcessor::scanAndFilterTypeDispatcher(NewColRequestHeader* in,
         uint16_t* ridArray = in->getRIDArrayPtr(W);
         const uint32_t itemsPerBlock = logicalBlockMode ? BLOCK_SIZE
                                                         : BLOCK_SIZE / W;
-        filterColumnData<T, KIND_FLOAT>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
+        filterColumnData<T, KIND_FLOAT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
         return;
     }
-    _scanAndFilterTypeDispatcher<T>(in, out, outSize, written);
+    _scanAndFilterTypeDispatcher<T>(in, out);
 }
 
 template<typename T,
@@ -1408,11 +1194,9 @@ template<typename T,
                                  sizeof(T) == sizeof(int128_t), T>::type* = nullptr>
 #endif
 void PrimitiveProcessor::scanAndFilterTypeDispatcher(NewColRequestHeader* in,
-    NewColResultHeader* out,
-    unsigned outSize,
-    unsigned* written)
+    ColResultHeader* out)
 {
-    _scanAndFilterTypeDispatcher<T>(in, out, outSize, written);
+    _scanAndFilterTypeDispatcher<T>(in, out);
 }
 
 template<typename T,
@@ -1426,9 +1210,7 @@ template<typename T,
          typename std::enable_if<sizeof(T) == sizeof(int128_t), T>::type* = nullptr>
 #endif
 void PrimitiveProcessor::_scanAndFilterTypeDispatcher(NewColRequestHeader* in,
-    NewColResultHeader* out,
-    unsigned outSize,
-    unsigned* written)
+    ColResultHeader* out)
 {
     constexpr int W = sizeof(T);
     const uint16_t ridSize = in->NVALS;
@@ -1436,7 +1218,7 @@ void PrimitiveProcessor::_scanAndFilterTypeDispatcher(NewColRequestHeader* in,
     const uint32_t itemsPerBlock = logicalBlockMode ? BLOCK_SIZE
                                                     : BLOCK_SIZE / W;
 
-    filterColumnData<T, KIND_DEFAULT>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
+    filterColumnData<T, KIND_DEFAULT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
 }
 
 template<typename T,
@@ -1450,9 +1232,7 @@ template<typename T,
          typename std::enable_if<sizeof(T) <= sizeof(int64_t), T>::type* = nullptr>
 #endif
 void PrimitiveProcessor::_scanAndFilterTypeDispatcher(NewColRequestHeader* in,
-    NewColResultHeader* out,
-    unsigned outSize,
-    unsigned* written)
+    ColResultHeader* out)
 {
     constexpr int W = sizeof(T);
     const uint16_t ridSize = in->NVALS;
@@ -1466,24 +1246,23 @@ void PrimitiveProcessor::_scanAndFilterTypeDispatcher(NewColRequestHeader* in,
         dataType == execplan::CalpontSystemCatalog::TEXT) &&
         !isDictTokenScan(in))
     {
-        filterColumnData<T, KIND_TEXT>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
+        filterColumnData<T, KIND_TEXT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
         return;
     }
 
     if (datatypes::isUnsigned(dataType))
     {
         using UT = typename std::conditional<std::is_unsigned<T>::value || datatypes::is_uint128_t<T>::value, T, typename datatypes::make_unsigned<T>::type>::type;
-        filterColumnData<UT, KIND_UNSIGNED>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
+        filterColumnData<UT, KIND_UNSIGNED>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
         return;
     }
-    filterColumnData<T, KIND_DEFAULT>(in, out, outSize, written, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
+    filterColumnData<T, KIND_DEFAULT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
 }
 
 // The entrypoint for block scanning and filtering.
 // The block is in in msg, out msg is used to store values|RIDs matched.
 template<typename T>
-void PrimitiveProcessor::columnScanAndFilter(NewColRequestHeader* in, NewColResultHeader* out,
-                                             unsigned outSize, unsigned* written)
+void PrimitiveProcessor::columnScanAndFilter(NewColRequestHeader* in, ColResultHeader* out)
 {
 #ifdef PRIM_DEBUG
     auto markEvent = [&] (char eventChar)
@@ -1501,7 +1280,6 @@ void PrimitiveProcessor::columnScanAndFilter(NewColRequestHeader* in, NewColResu
     out->ism.Command = COL_RESULTS;
     out->OutputType = in->OutputType;
     out->RidFlags = 0;
-    *written = sizeof(NewColResultHeader);
     //...Initialize I/O counts;
     out->CacheIO    = 0;
     out->PhysicalIO = 0;
@@ -1523,22 +1301,22 @@ void PrimitiveProcessor::columnScanAndFilter(NewColRequestHeader* in, NewColResu
 
     // Sort ridArray (the row index array) if there are RIDs with this in msg
     in->sortRIDArrayIfNeeded(W);
-    scanAndFilterTypeDispatcher<T>(in, out, outSize, written);
+    scanAndFilterTypeDispatcher<T>(in, out);
 #ifdef PRIM_DEBUG
     markEvent('C');
 #endif
 }
 
 template
-void primitives::PrimitiveProcessor::columnScanAndFilter<int8_t>(NewColRequestHeader*, NewColResultHeader*, unsigned, unsigned*);
+void primitives::PrimitiveProcessor::columnScanAndFilter<int8_t>(NewColRequestHeader*, ColResultHeader*);
 template
-void primitives::PrimitiveProcessor::columnScanAndFilter<int16_t>(NewColRequestHeader*, NewColResultHeader*, unsigned int, unsigned int*);
+void primitives::PrimitiveProcessor::columnScanAndFilter<int16_t>(NewColRequestHeader*, ColResultHeader*);
 template
-void primitives::PrimitiveProcessor::columnScanAndFilter<int32_t>(NewColRequestHeader*, NewColResultHeader*, unsigned int, unsigned int*);
+void primitives::PrimitiveProcessor::columnScanAndFilter<int32_t>(NewColRequestHeader*, ColResultHeader*);
 template
-void primitives::PrimitiveProcessor::columnScanAndFilter<int64_t>(NewColRequestHeader*, NewColResultHeader*, unsigned int, unsigned int*);
+void primitives::PrimitiveProcessor::columnScanAndFilter<int64_t>(NewColRequestHeader*, ColResultHeader*);
 template
-void primitives::PrimitiveProcessor::columnScanAndFilter<int128_t>(NewColRequestHeader*, NewColResultHeader*, unsigned int, unsigned int*);
+void primitives::PrimitiveProcessor::columnScanAndFilter<int128_t>(NewColRequestHeader*, ColResultHeader*);
 
 } // namespace primitives
 // vim:ts=4 sw=4:

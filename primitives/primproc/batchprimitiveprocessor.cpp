@@ -37,6 +37,7 @@
 #include <string>
 #include <sstream>
 #include <set>
+#include <stdlib.h>
 using namespace std;
 
 #include <boost/thread.hpp>
@@ -919,7 +920,7 @@ void BatchPrimitiveProcessor::initProcessor()
         strValues.reset(new string[LOGICAL_BLOCK_RIDS]);
 
     outMsgSize = defaultBufferSize;
-    outputMsg.reset(new uint8_t[outMsgSize]);
+    outputMsg.reset(reinterpret_cast<uint8_t*>(aligned_alloc(utils::MAXCOLUMNWIDTH, outMsgSize)));
 
     if (ot == ROW_GROUP)
     {

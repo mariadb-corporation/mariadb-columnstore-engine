@@ -225,7 +225,7 @@ private:
     uint16_t wideColumnsWidths;
 
     /* Common space for primitive data */
-    uint8_t blockData[BLOCK_SIZE * utils::MAXCOLUMNWIDTH];
+    alignas(utils::MAXCOLUMNWIDTH) uint8_t blockData[BLOCK_SIZE * utils::MAXCOLUMNWIDTH];
     boost::scoped_array<uint8_t> outputMsg;
     uint32_t outMsgSize;
 

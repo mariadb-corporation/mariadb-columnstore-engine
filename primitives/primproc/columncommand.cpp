@@ -310,8 +310,9 @@ template<int W>
 void ColumnCommand::_issuePrimitive()
 {
     using IntegralType = typename datatypes::WidthToSIntegralType<W>::type;
-    uint32_t resultSize;
-    bpp->getPrimitiveProcessor().columnScanAndFilter<IntegralType>(primMsg, outMsg, bpp->getOutMsgSize(), (unsigned int*)&resultSize);
+    // Down the call stack the code presumes outMsg buffer has enough space to store
+    // ColRequestHeader + uint16_t Rids[8192] + IntegralType[8192].
+    bpp->getPrimitiveProcessor().columnScanAndFilter<IntegralType>(primMsg, outMsg);
 } // _issuePrimitive()
 
 void ColumnCommand::updateCPDataNarrow()
@@ -360,34 +361,33 @@ void ColumnCommand::_process_OT_BOTH_wAbsRids()
     using T = typename datatypes::WidthToSIntegralType<W>::type;
     bpp->ridCount = outMsg->NVALS;
     bpp->ridMap = outMsg->RidFlags;
-    size_t pos = sizeof(NewColResultHeader);
+    uint8_t* outPtr = reinterpret_cast<uint8_t*>(&outMsg[1]);
+    auto* ridPos = primitives::getRIDArrayPosition(outPtr, 0);
+    T* valuesPos = primitives::getValuesArrayPosition<T>(primitives::getFirstValueArrayPosition(outMsg), 0);
 
     for (size_t i = 0; i < outMsg->NVALS; ++i)
     {
-        bpp->absRids[i] = *((uint16_t*) &bpp->outputMsg[pos]) + bpp->baseRid;
-
-        bpp->relRids[i] = *((uint16_t*) &bpp->outputMsg[pos]);
-        pos += 2;
-        values[i] = *((T*) &bpp->outputMsg[pos]);
-        pos += W;
+        bpp->relRids[i] = ridPos[i];
+        bpp->absRids[i] = ridPos[i] + bpp->baseRid;
+        values[i] = valuesPos[i];
     }
 }
 
 template<>
 void ColumnCommand::_process_OT_BOTH_wAbsRids<16>()
 {
+    using T = typename datatypes::WidthToSIntegralType<16>::type;
     bpp->ridCount = outMsg->NVALS;
     bpp->ridMap = outMsg->RidFlags;
-    size_t pos = sizeof(NewColResultHeader);
+    uint8_t* outPtr = reinterpret_cast<uint8_t*>(&outMsg[1]);
+    auto* ridPos = primitives::getRIDArrayPosition(outPtr, 0);
+    int128_t* valuesPos = primitives::getValuesArrayPosition<T>(primitives::getFirstValueArrayPosition(outMsg), 0);
 
     for (size_t i = 0; i < outMsg->NVALS; ++i)
     {
-        bpp->absRids[i] = *((uint16_t*) &bpp->outputMsg[pos]) + bpp->baseRid;
-
-        bpp->relRids[i] = *((uint16_t*) &bpp->outputMsg[pos]);
-        pos += 2;
-        datatypes::TSInt128::assignPtrPtr(&wide128Values[i], &bpp->outputMsg[pos]);
-        pos += 16;
+        bpp->relRids[i] = ridPos[i];
+        bpp->absRids[i] = ridPos[i] + bpp->baseRid;
+        datatypes::TSInt128::assignPtrPtr(&wide128Values[i], &valuesPos[i]);
     }
 }
 
@@ -399,30 +399,31 @@ void ColumnCommand::_process_OT_BOTH()
     bpp->ridCount = outMsg->NVALS;
     bpp->ridCount = outMsg->NVALS;
     bpp->ridMap = outMsg->RidFlags;
-    size_t pos = sizeof(NewColResultHeader);
+    uint8_t* outPtr = reinterpret_cast<uint8_t*>(&outMsg[1]);
+    auto* ridPos = primitives::getRIDArrayPosition(outPtr, 0);
+    T* valuesPos = primitives::getValuesArrayPosition<T>(primitives::getFirstValueArrayPosition(outMsg), 0);
 
     for (size_t i = 0; i < outMsg->NVALS; ++i)
     {
-        bpp->relRids[i] = *((uint16_t*) &bpp->outputMsg[pos]);
-        pos += 2;
-        values[i] = *((T*) &bpp->outputMsg[pos]);
-        pos += W;
+        bpp->relRids[i] = ridPos[i];
+        values[i] = valuesPos[i];
     }
 }
 
 template<>
 void ColumnCommand::_process_OT_BOTH<16>()
 {
+    using T = typename datatypes::WidthToSIntegralType<16>::type;
     bpp->ridCount = outMsg->NVALS;
     bpp->ridMap = outMsg->RidFlags;
-    size_t pos = sizeof(NewColResultHeader);
+    uint8_t* outPtr = reinterpret_cast<uint8_t*>(&outMsg[1]);
+    auto* ridPos = primitives::getRIDArrayPosition(outPtr, 0);
+    T* valuesPos = primitives::getValuesArrayPosition<T>(primitives::getFirstValueArrayPosition(outMsg), 0);
 
     for (size_t i = 0; i < outMsg->NVALS; ++i)
     {
-        bpp->relRids[i] = *((uint16_t*) &bpp->outputMsg[pos]);
-        pos += 2;
-        datatypes::TSInt128::assignPtrPtr(&wide128Values[i], &bpp->outputMsg[pos]);
-        pos += 16;
+        bpp->relRids[i] = ridPos[i];
+        datatypes::TSInt128::assignPtrPtr(&wide128Values[i], &valuesPos[i]);
     }
 }
 
@@ -487,6 +488,8 @@ void ColumnCommand::process_OT_RID()
     bpp->ridMap = outMsg->RidFlags;
 }
 
+// TODO This spec makes an impicit type conversion to fit types with sizeof(type) <= 4
+// into 8 bytes. Treat values as a buffer and use memcpy to store the values in one go.
 template<int W>
 void ColumnCommand::_process_OT_DATAVALUE()
 {
@@ -689,18 +692,17 @@ void ColumnCommand::prep(int8_t outputType, bool absRids)
 
 void ColumnCommand::fillInPrimitiveMessageHeader(const int8_t outputType, const bool absRids)
 {
+    // WIP Align this structure or move input RIDs away.
     baseMsgLength = sizeof(NewColRequestHeader) +
                     (suppressFilter ? 0 : filterString.length());
+    size_t inputMsgBufSize = baseMsgLength + (LOGICAL_BLOCK_RIDS * sizeof(primitives::RIDType));
 
     if (!inputMsg)
-        inputMsg.reset(new uint8_t[baseMsgLength + (LOGICAL_BLOCK_RIDS * 2)]);
+        inputMsg.reset(reinterpret_cast<uint8_t*>(aligned_alloc(utils::MAXCOLUMNWIDTH,
+                                                  inputMsgBufSize)));
 
     primMsg = (NewColRequestHeader*) inputMsg.get();
-    outMsg = (NewColResultHeader*) bpp->outputMsg.get();
-    makeAbsRids = absRids;
-
-    primMsg = (NewColRequestHeader*) inputMsg.get();
-    outMsg = (NewColResultHeader*) bpp->outputMsg.get();
+    outMsg = (ColResultHeader*) bpp->outputMsg.get();
     makeAbsRids = absRids;
     primMsg->ism.Interleave = 0;
     primMsg->ism.Flags = 0;
@@ -721,7 +723,8 @@ void ColumnCommand::fillInPrimitiveMessageHeader(const int8_t outputType, const 
 /* Assumes OT_DATAVALUE */
 void ColumnCommand::projectResult()
 {
-    if (primMsg->NVALS != outMsg->NVALS || outMsg->NVALS != bpp->ridCount )
+    auto nvals = outMsg->NVALS;
+    if (primMsg->NVALS != nvals || nvals != bpp->ridCount )
     {
         ostringstream os;
         BRM::DBRM brm;
@@ -739,19 +742,20 @@ void ColumnCommand::projectResult()
         else
             os << ": ridcount " << bpp->ridCount;
 
-        os << ", output rids " << outMsg->NVALS << endl;
+        os << ", output rids " << nvals << endl;
 
         //cout << os.str();
         if (bpp->sessionID & 0x80000000)
             throw NeedToRestartJob(os.str());
         else
-            throw PrimitiveColumnProjectResultExcept(os.str());
+        throw PrimitiveColumnProjectResultExcept(os.str());
     }
 
-    idbassert(primMsg->NVALS == outMsg->NVALS);
-    idbassert(outMsg->NVALS == bpp->ridCount);
-    *bpp->serialized << (uint32_t) (outMsg->NVALS * colType.colWidth);
-    bpp->serialized->append((uint8_t*) (outMsg + 1), outMsg->NVALS * colType.colWidth);
+    idbassert(primMsg->NVALS == nvals);
+    idbassert(bpp->ridCount == nvals);
+    uint32_t valuesByteSize = nvals * colType.colWidth;
+    *bpp->serialized << valuesByteSize;
+    bpp->serialized->append(primitives::getFirstValueArrayPosition(outMsg), valuesByteSize);
 }
 
 void ColumnCommand::removeRowsFromRowGroup(RowGroup& rg)
@@ -796,30 +800,26 @@ void ColumnCommand::removeRowsFromRowGroup(RowGroup& rg)
     primMsg->NVALS = outMsg->NVALS;
 }
 
-template<int W>
+template<typename T>
 void ColumnCommand::_projectResultRGLoop(rowgroup::Row& r,
-                          uint8_t* msg8,
-                          const uint32_t gapSize,
-                          const uint32_t offset)
+                                         const T* valuesArray,
+                                         const uint32_t offset)
 {
-    using T = typename datatypes::WidthToSIntegralType<W>::type;
-    for (size_t i = 0; i < outMsg->NVALS; ++i, msg8 += gapSize)
+    for (size_t i = 0; i < outMsg->NVALS; ++i)
     {
-        r.setUintField_offset<W>(*((T*) msg8), offset);
+        r.setIntField_offset(valuesArray[i], offset);
         r.nextRow(rowSize);
     }
 }
 
 template<>
-void ColumnCommand::_projectResultRGLoop<16>(rowgroup::Row& r,
-                              uint8_t* msg8,
-                              const uint32_t gapSize,
-                              const uint32_t offset)
+void ColumnCommand::_projectResultRGLoop<int128_t>(rowgroup::Row& r,
+                                                   const int128_t* valuesArray,
+                                                   const uint32_t offset)
 {
-    using T = typename datatypes::WidthToSIntegralType<16>::type;
-    for (size_t i = 0; i < outMsg->NVALS; ++i, msg8 += gapSize)
+    for (size_t i = 0; i < outMsg->NVALS; ++i)
     {
-        r.setBinaryField_offset((T*)msg8, colType.colWidth, offset);
+        r.setBinaryField_offset(&valuesArray[i], colType.colWidth, offset);
         r.nextRow(rowSize);
     }
 }
@@ -827,24 +827,16 @@ void ColumnCommand::_projectResultRGLoop<16>(rowgroup::Row& r,
 template<int W>
 void ColumnCommand::_projectResultRG(RowGroup& rg, uint32_t pos)
 {
-    uint32_t offset, gapSize;
-    uint8_t* msg8 = (uint8_t*) (outMsg + 1);
+    using T = typename datatypes::WidthToSIntegralType<W>::type;
+    T* valuesArray = primitives::getValuesArrayPosition<T>(primitives::getFirstValueArrayPosition(outMsg), 0);
+    uint32_t offset;
+    auto nvals = outMsg->NVALS;
 
-    if (noVB)
-    {
-        // outMsg has rids in this case
-        msg8 += 2;
-        gapSize = colType.colWidth + 2;
-    }
-    else
-        gapSize = colType.colWidth;
-
-    /* TODO: reoptimize these away */
     rg.initRow(&r);
     offset = r.getOffset(pos);
     rowSize = r.getSize();
 
-    if ((primMsg->NVALS != outMsg->NVALS || outMsg->NVALS != bpp->ridCount) && (!noVB || bpp->sessionID & 0x80000000))
+    if ((primMsg->NVALS != nvals || nvals != bpp->ridCount) && (!noVB || bpp->sessionID & 0x80000000))
     {
         ostringstream os;
         BRM::DBRM brm;
@@ -857,12 +849,12 @@ void ColumnCommand::_projectResultRG(RowGroup& rg, uint32_t pos)
 
         os << __FILE__ << " error on projectResultRG for oid " << oid << " lbid " << lbid;
 
-        if (primMsg->NVALS != outMsg->NVALS )
+        if (primMsg->NVALS != nvals )
             os << ": input rids " << primMsg->NVALS;
         else
             os << ": ridcount " << bpp->ridCount;
 
-        os << ",  output rids " << outMsg->NVALS;
+        os << ",  output rids " << nvals;
 
         os << endl;
 
@@ -871,14 +863,14 @@ void ColumnCommand::_projectResultRG(RowGroup& rg, uint32_t pos)
         else
             throw PrimitiveColumnProjectResultExcept(os.str());
     }
-    else if (primMsg->NVALS != outMsg->NVALS || outMsg->NVALS != bpp->ridCount)
+    else if (primMsg->NVALS != nvals || nvals != bpp->ridCount)
         removeRowsFromRowGroup(rg);
 
-    idbassert(primMsg->NVALS == outMsg->NVALS);
-    idbassert(outMsg->NVALS == bpp->ridCount);
+    idbassert(primMsg->NVALS == nvals);
+    idbassert(bpp->ridCount == nvals);
     rg.getRow(0, &r);
 
-    _projectResultRGLoop<W>(r, msg8, gapSize, offset);
+    _projectResultRGLoop(r, valuesArray, offset);
 }
 
 void ColumnCommand::projectResultRG(RowGroup& rg, uint32_t pos)

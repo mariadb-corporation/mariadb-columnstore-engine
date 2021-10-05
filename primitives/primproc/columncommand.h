@@ -143,10 +143,9 @@ protected:
     void _process_OT_DATAVALUE();
     void process_OT_ROWGROUP();
     void projectResult();
-    template<int W>
+    template<typename T>
     void _projectResultRGLoop(rowgroup::Row& r,
-                              uint8_t* msg8,
-                              const uint32_t gapSize,
+                              const T* valuesArray,
                               const uint32_t offset);
     template<int W>
     void _projectResultRG(rowgroup::RowGroup& rg, uint32_t pos);
@@ -164,7 +163,7 @@ protected:
 
     boost::scoped_array<uint8_t> inputMsg;
     NewColRequestHeader* primMsg;
-    NewColResultHeader* outMsg;
+    ColResultHeader* outMsg;
 
     // the length of base prim msg, which is everything up to the
     // rid array for the pCol message
