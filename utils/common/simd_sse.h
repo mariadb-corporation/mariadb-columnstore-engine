@@ -59,6 +59,8 @@ namespace simd
     constexpr static const uint16_t vecByteSize = 16U;
     constexpr static const uint16_t vecBitSize = 128U;
     using T = int128_t;
+    using SIMD_WRAPPER_TYPE = simd::vi128_wr;
+    using SIMD_TYPE = simd::vi128_t;
     // Load value
     MCS_FORCE_INLINE vi128_t loadValue(const T fill)
     {
@@ -137,6 +139,8 @@ namespace simd
     constexpr static const uint16_t vecByteSize = 16U;
     constexpr static const uint16_t vecBitSize = 128U;
     using T = datatypes::WidthToSIntegralType<8>::type;
+    using SIMD_WRAPPER_TYPE = simd::vi128_wr;
+    using SIMD_TYPE = simd::vi128_t;
     // Load value
     MCS_FORCE_INLINE vi128_t loadValue(const T fill)
     {
@@ -216,6 +220,8 @@ namespace simd
     constexpr static const uint16_t vecByteSize = 16U;
     constexpr static const uint16_t vecBitSize = 128U;
     using T = datatypes::WidthToSIntegralType<4>::type;
+    using SIMD_WRAPPER_TYPE = simd::vi128_wr;
+    using SIMD_TYPE = simd::vi128_t;
     // Load value
     MCS_FORCE_INLINE vi128_t loadValue(const T fill)
     {
@@ -289,6 +295,8 @@ namespace simd
     constexpr static const uint16_t vecByteSize = 16U;
     constexpr static const uint16_t vecBitSize = 128U;
     using T = datatypes::WidthToSIntegralType<2>::type;
+    using SIMD_WRAPPER_TYPE = simd::vi128_wr;
+    using SIMD_TYPE = simd::vi128_t;
     // Load value
     MCS_FORCE_INLINE vi128_t loadValue(const T fill)
     {
@@ -362,6 +370,8 @@ namespace simd
     constexpr static const uint16_t vecByteSize = 16U;
     constexpr static const uint16_t vecBitSize = 128U;
     using T = datatypes::WidthToSIntegralType<1>::type;
+    using SIMD_WRAPPER_TYPE = simd::vi128_wr;
+    using SIMD_TYPE = simd::vi128_t;
     // Load value
     MCS_FORCE_INLINE vi128_t loadValue(const T fill)
     {
