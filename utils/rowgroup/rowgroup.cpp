@@ -387,7 +387,7 @@ void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
 
 void RGData::reinit(const RowGroup& rg)
 {
-    reinit(rg, 8192);
+    reinit(rg, rgCommonSize);
 }
 
 RGData::RGData(const RGData& r) : rowData(r.rowData), strings(r.strings), userDataStore(r.userDataStore)
@@ -1345,12 +1345,12 @@ uint32_t RowGroup::getDataSize(uint64_t n) const
 
 uint32_t RowGroup::getMaxDataSize() const
 {
-    return headerSize + (8192 * offsets[columnCount]);
+    return headerSize + (rgCommonSize * offsets[columnCount]);
 }
 
 uint32_t RowGroup::getMaxDataSizeWithStrings() const
 {
-    return headerSize + (8192 * oldOffsets[columnCount]);
+    return headerSize + (rgCommonSize * oldOffsets[columnCount]);
 }
 
 uint32_t RowGroup::getEmptySize() const
