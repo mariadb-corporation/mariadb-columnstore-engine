@@ -1326,6 +1326,13 @@ void RowGroup::serializeRGData(ByteStream& bs) const
 //	}
 }
 
+void RowGroup::serializeColumnData(messageqcpp::ByteStream& bs) const
+{
+    uint32_t rgSize = getDataSize();
+    bs << rgSize;
+    bs.append(data, rgSize);
+}
+
 uint32_t RowGroup::getDataSize() const
 {
     return headerSize + (getRowCount() * offsets[columnCount]);

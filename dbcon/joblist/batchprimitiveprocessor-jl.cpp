@@ -424,7 +424,7 @@ void BatchPrimitiveProcessorJL::addElementType(const StringElementType& et, uint
 // TODO MCOL-641 Add support here. Refer to BatchPrimitiveProcessor::makeResponse()
 void BatchPrimitiveProcessorJL::getElementTypes(ByteStream& in,
         vector<ElementType>* out, bool* validCPData, uint64_t* lbid, int64_t* min,
-        int64_t* max, uint32_t* cachedIO, uint32_t* physIO, 
+        int64_t* max, uint32_t* cachedIO, uint32_t* physIO,
         uint32_t* touchedBlocks) const
 {
     uint32_t i;
@@ -1269,9 +1269,7 @@ void BatchPrimitiveProcessorJL::runBPP(ByteStream& bs, uint32_t pmNum)
 
     if (sendRowGroups)
     {
-        uint32_t rgSize = inputRG.getDataSize();
-        bs << rgSize;
-        bs.append(inputRG.getData(), rgSize);
+        inputRG.serializeColumnData(bs);
     }
     else
     {
@@ -1393,7 +1391,7 @@ bool BatchPrimitiveProcessorJL::pickNextJoinerNum()
     pos = posByJoinerNum[joinerNum];
     return true;
 }
-    
+
 /* This algorithm relies on the joiners being sorted by size atm */
 /* XXXPAT: Going to interleave across joiners to take advantage of the new locking env in PrimProc */
 bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
@@ -1408,9 +1406,9 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
     uint64_t smallkey;
     bool isNull;
     bool bSignedUnsigned;
-    
+
     bool moreMsgs = pickNextJoinerNum();
-    
+
     if (!moreMsgs)
     {
         /* last message */
@@ -1422,7 +1420,7 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
         bs << uniqueID;
         return false;
     }
-    
+
     memset((void*)&ism, 0, sizeof(ism));
     tSmallSide = tJoiners[joinerNum]->getSmallSide();
     size = tSmallSide->size();
@@ -1448,7 +1446,7 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
         pos = 0;
     }
 #endif
-    
+
     ism.Command = BATCH_PRIMITIVE_ADD_JOINER;
     bs.load((uint8_t*) &ism, sizeof(ism));
     bs << (messageqcpp::ByteStream::quadbyte)sessionID;
@@ -1566,7 +1564,7 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
                         break;
                     }
                     default:
-                    {   
+                    {
                         if (r.isUnsigned(smallKeyCol) && smallkeyld > MAX_UBIGINT)
                         {
                             smallkey = joblist::UBIGINTEMPTYROW;

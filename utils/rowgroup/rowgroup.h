@@ -1557,7 +1557,7 @@ public:
     inline uint32_t getRowSizeWithStrings() const;
     inline uint64_t getBaseRid() const;
     void setData(RGData* rgd);
-    inline uint8_t* getData() const;
+
     inline RGData* getRGData() const;
 
     uint32_t getStatus() const;
@@ -1624,6 +1624,7 @@ public:
 //	RGData *convertToStringTable(uint64_t *size = NULL) const;
 //	void convertToStringTableInPlace();
     void serializeRGData(messageqcpp::ByteStream&) const;
+    void serializeColumnData(messageqcpp::ByteStream&) const;
     inline uint32_t getStringTableThreshold() const;
 
     void append(RGData&);
@@ -1762,12 +1763,6 @@ inline void RowGroup::setData(RGData* rgd)
     data = rgd->rowData.get();
     strings = rgd->strings.get();
     rgData = rgd;
-}
-
-inline uint8_t* RowGroup::getData() const
-{
-    //assert(!useStringTable);
-    return data;
 }
 
 inline RGData* RowGroup::getRGData() const
