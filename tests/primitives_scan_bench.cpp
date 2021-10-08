@@ -70,7 +70,7 @@ class FilterBenchFixture : public benchmark::Fixture
   uint32_t i;
   uint32_t written;
   NewColRequestHeader* in;
-  NewColResultHeader* out;
+  ColResultHeader* out;
   ColArgs* args;
 
   void SetUp(benchmark::State& state)
@@ -78,7 +78,7 @@ class FilterBenchFixture : public benchmark::Fixture
     memset(input, 0, BLOCK_SIZE);
     memset(output, 0, 4 * BLOCK_SIZE);
     in = reinterpret_cast<NewColRequestHeader*>(input);
-    out = reinterpret_cast<NewColResultHeader*>(output);
+    out = reinterpret_cast<ColResultHeader*>(output);
     rids = reinterpret_cast<uint16_t*>(&in[1]);
     args = reinterpret_cast<ColArgs*>(&in[1]);
   }
@@ -108,7 +108,7 @@ class FilterBenchFixture : public benchmark::Fixture
   void runFilterBenchTemplated()
   {
     using IntegralType = typename datatypes::WidthToSIntegralType<W>::type;
-    pp.columnScanAndFilter<IntegralType>(in, out, 4 * BLOCK_SIZE, &written);
+    pp.columnScanAndFilter<IntegralType>(in, out);
   }
 
   template<int W>
