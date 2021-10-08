@@ -1060,25 +1060,26 @@ void scalarFiltering(NewColRequestHeader* in, ColResultHeader* out,
 template <typename VT, typename SIMD_WRAPPER_TYPE, bool HAS_INPUT_RIDS, typename T,
           typename std::enable_if<HAS_INPUT_RIDS == false, T>::type* = nullptr>
 inline SIMD_WRAPPER_TYPE simdDataLoadTemplate(VT& processor, const T* srcArray,
-    const primitives::RIDType* ridArray, const uint16_t iter)
+    const T* origSrcArray, const primitives::RIDType* ridArray, const uint16_t iter)
 {
     return {processor.loadFrom(reinterpret_cast<const char*>(srcArray))};
 }
 
+// Scatter-gather implementation
 template <typename VT, typename SIMD_WRAPPER_TYPE, bool HAS_INPUT_RIDS, typename T,
           typename std::enable_if<HAS_INPUT_RIDS == true, T>::type* = nullptr>
 inline SIMD_WRAPPER_TYPE simdDataLoadTemplate(VT& processor, const T* srcArray,
-    const primitives::RIDType* ridArray, const uint16_t iter)
+    const T* origSrcArray, const primitives::RIDType* ridArray, const uint16_t iter)
 {
     constexpr const uint16_t WIDTH = sizeof(T);
     constexpr const uint16_t VECTOR_SIZE = VT::vecByteSize / WIDTH;
     using SIMD_TYPE = typename VT::SIMD_TYPE;
     SIMD_TYPE result;
     T* resultTypedPtr = reinterpret_cast<T*>(&result);
-    uint16_t ridArrayOffset = iter * VECTOR_SIZE;
-    for (uint32_t i = 0; i < VECTOR_SIZE; ++i, ++ridArrayOffset)
+    for (uint32_t i = 0; i < VECTOR_SIZE; ++i)
     {
-        resultTypedPtr[i] = srcArray[ridArray[ridArrayOffset]];
+        //std::cout << " simdDataLoadTemplate ridArray[ridArrayOffset] " << (int8_t) origSrcArray[ridArray[i]] << " ridArray[i] " << ridArray[i] << "\n";
+        resultTypedPtr[i] = origSrcArray[ridArray[i]];
     }
 
     return {result};
@@ -1112,6 +1113,8 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
     primitives::RIDType rid = 0;
     uint16_t totalValuesWritten = 0;
     char* dstArray = reinterpret_cast<char*>(primitives::getFirstValueArrayPosition(out));
+    const T* origSrcArray = srcArray;
+    uint16_t* origRidArray = ridArray;
     const FT* filterValues = nullptr;
     const ParsedColumnFilter::CopsType* filterCOPs = nullptr;
     ColumnFilterMode columnFilterMode = ALWAYS_TRUE;
@@ -1198,8 +1201,8 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
     // main loop
     for (uint16_t i = 0; i < iterNumber; ++i)
     {
-        assert(HAS_INPUT_RIDS && ridSize <= i * VECTOR_SIZE);
-        dataVec = simdDataLoadTemplate<VT, SIMD_WRAPPER_TYPE, HAS_INPUT_RIDS, T>(simdProcessor, srcArray, ridArray, i).v;
+        assert(!HAS_INPUT_RIDS || (HAS_INPUT_RIDS && ridSize >= i * VECTOR_SIZE));
+        dataVec = simdDataLoadTemplate<VT, SIMD_WRAPPER_TYPE, HAS_INPUT_RIDS, T>(simdProcessor, srcArray, origSrcArray, ridArray, i).v;
 /*
         dataVec = simdProcessor.loadFrom(reinterpret_cast<const char*>(srcArray));
 */
@@ -1272,6 +1275,7 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
         }
         rid += VECTOR_SIZE;
         srcArray += VECTOR_SIZE;
+        ridArray += VECTOR_SIZE;
     }
 
     out->NVALS = totalValuesWritten;
@@ -1279,7 +1283,7 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
     // process the tail
     uint32_t processedSoFar = rid;
     scalarFiltering<T, FT, ST, KIND>(in, out, columnFilterMode, filterSet, filterCount, filterCOPs,
-                                     filterValues, filterRFs, in->colType, srcArray, srcSize, ridArray,
+                                     filterValues, filterRFs, in->colType, origSrcArray, srcSize, origRidArray,
                                      ridSize, processedSoFar, outputType, validMinMax, emptyValue, nullValue);
 }
 
@@ -1412,7 +1416,7 @@ void filterColumnData(
     // WIP
     // in->NVALS protects from RID input
     // Execution mustn't get here if there are less then X values.
-    if (in->NVALS == 0 && KIND == KIND_DEFAULT && in->OutputType == OT_DATAVALUE && WIDTH < 16)
+    if (KIND == KIND_DEFAULT && in->OutputType == OT_DATAVALUE && WIDTH < 16)
     {
         bool canUseFastFiltering = true;
         for (uint32_t i = 0; i < filterCount; ++i)
@@ -1424,13 +1428,6 @@ void filterColumnData(
             std::cout << "run vectors\n";
             vectorizedFilteringDispatcher<T, KIND, FT, ST>(in, out, srcArray, srcSize, ridArray, ridSize,
                                          parsedColumnFilter.get(), validMinMax, emptyValue, nullValue);
-/*
-            vectorizedFiltering<T, KIND, FT, ST, BITS128>(in, out, emptyValue, nullValue,
-                                        isNullValueMatches,
-                                         srcArray, srcSize, ridArray, ridSize,
-                                         parsedColumnFilter.get(),
-                                         written, validMinMax);
-*/
             return;
         }
     }
@@ -1438,54 +1435,6 @@ void filterColumnData(
     scalarFiltering<T, FT, ST, KIND>(in, out, columnFilterMode, filterSet, filterCount, filterCOPs,
                                      filterValues, filterRFs, in->colType, srcArray, srcSize, ridArray,
                                      ridSize, initialRID, outputType, validMinMax, emptyValue, nullValue);
-/*
-    // Loop-local variables
-    T curValue = 0;
-    uint16_t rid = 0;
-    bool isEmpty = false;
-    // Local vars to capture the min and max values
-    T Min = datatypes::numeric_limits<T>::max();
-    T Max = (KIND == KIND_UNSIGNED) ? 0 : datatypes::numeric_limits<T>::min();
-
-    // Loop over the column values, storing those matching the filter, and updating the min..max range
-    for (uint32_t i = 0;
-         nextColValue<T, WIDTH>(curValue, &isEmpty,
-                                &i, &rid,
-                                srcArray, srcSize, ridArray, ridSize,
-                                outputType, emptyValue); )
-    {
-        if (isEmpty)
-            continue;
-        else if (isNullValue<KIND,T>(curValue, nullValue))
-        {
-            // If NULL values match the filter, write curValue to the output buffer
-            if (isNullValueMatches)
-                writeColValue<T>(outputType, out, rid, srcArray);
-        }
-        else
-        {
-            // If curValue matches the filter, write it to the output buffer
-            if (matchingColValue<KIND, WIDTH, false>(curValue, columnFilterMode, filterSet, filterCount,
-                                filterCOPs, filterValues, filterRFs, in->colType, nullValue))
-            {
-                writeColValue<T>(outputType, out, rid, srcArray);
-            }
-
-            // Update Min and Max if necessary.  EMPTY/NULL values are processed in other branches.
-            if (validMinMax)
-                updateMinMax<KIND>(Min, Max, curValue, in);
-        }
-    }
-
-    // Write captured Min/Max values to *out
-    out->ValidMinMax = validMinMax;
-    if (validMinMax)
-    {
-        out->Min = Min;
-        out->Max = Max;
-    }
-*/
-
 } // end of filterColumnData
 
 } //namespace anon

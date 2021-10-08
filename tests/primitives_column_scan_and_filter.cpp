@@ -17,13 +17,16 @@
 
 #include <iostream>
 #include <gtest/gtest.h>
+
 #include "datatypes/mcs_datatype.h"
+#include "datatypes/mcs_int128.h"
 #include "stats.h"
 #include "primitives/linux-port/primitiveprocessor.h"
 #include "col1block.h"
 #include "col2block.h"
 #include "col4block.h"
 #include "col8block.h"
+#include "col16block.h"
 #include "col_float_block.h"
 #include "col_double_block.h"
 #include "col_neg_float.h"
@@ -33,7 +36,7 @@ using namespace primitives;
 using namespace datatypes;
 using namespace std;
 
-// If a test crashes check if there is a corresponding literal binary array in 
+// If a test crashes check if there is a corresponding literal binary array in
 // readBlockFromLiteralArray.
 
 class ColumnScanFilterTest : public ::testing::Test
@@ -91,7 +94,7 @@ protected:
 
     close(fd);
     return block;
-  }
+ }
  uint8_t* readBlockFromLiteralArray(const std::string& fileName, uint8_t* block)
  {
     if (fileName == std::string("col1block.cdf"))
@@ -102,6 +105,8 @@ protected:
       return &__col4block_cdf[0];
     else if (fileName == std::string("col8block.cdf"))
       return &___bin_col8block_cdf[0];
+    else if (fileName == std::string("col16block.cdf"))
+      return &___bin_col16block_cdf[0];
     else if (fileName == std::string("col_float_block.cdf"))
       return &___bin_col_float_block_cdf[0];
     else if (fileName == std::string("col_double_block.cdf"))
@@ -114,7 +119,6 @@ protected:
     return nullptr;
  }
 };
-
 
 TEST_F(ColumnScanFilterTest, ColumnScan1Byte)
 {
@@ -288,8 +292,38 @@ TEST_F(ColumnScanFilterTest, ColumnScan1ByteUsingRID)
   results = getValuesArrayPosition<UT>(getFirstValueArrayPosition(out), 0);
   ASSERT_EQ(out->NVALS, 2);
 
-  for (i = 0; i < out->NVALS; i++)
+  for (i = 0; i < out->NVALS; ++i)
       ASSERT_EQ(results[i], rids[i]);
+}
+
+TEST_F(ColumnScanFilterTest, ColumnScan1ByteUsingMultipleRIDs)
+{
+  constexpr const uint8_t W = 1;
+  using IntegralType = datatypes::WidthToSIntegralType<W>::type;
+  using UT = datatypes::make_unsigned<IntegralType>::type;
+  UT* results;
+  const size_t expectedNVALS = 127;
+
+  in->colType.DataSize = W;
+  in->colType.DataType = SystemCatalog::INT;
+  in->OutputType = OT_DATAVALUE;
+  in->NOPS = 0;
+  in->NVALS = expectedNVALS;
+  for (i = 0; i < expectedNVALS; ++i)
+    rids[i] = i;
+  rids[0] = 20;
+  rids[1] = 17;
+  rids[126] = 8189;
+
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col1block.cdf", block));
+  pp.columnScanAndFilter<IntegralType>(in, out);
+
+  results = getValuesArrayPosition<UT>(getFirstValueArrayPosition(out), 0);
+  ASSERT_EQ(out->NVALS, expectedNVALS);
+
+  for (i = 0; i < expectedNVALS - 1; ++i)
+    ASSERT_EQ(results[i], rids[i]);
+  ASSERT_EQ(results[126], 253);
 }
 
 TEST_F(ColumnScanFilterTest, ColumnScan4Bytes1EqFilter)
@@ -320,6 +354,36 @@ TEST_F(ColumnScanFilterTest, ColumnScan4Bytes1EqFilter)
   ASSERT_EQ(out->NVALS, 8);
   for (i = 0; i < out->NVALS; i++)
     ASSERT_EQ(results[i], i + 2040);
+}
+
+TEST_F(ColumnScanFilterTest, ColumnScan4BytesUsingMultipleRIDs)
+{
+  constexpr const uint8_t W = 4;
+  using IntegralType = datatypes::WidthToSIntegralType<W>::type;
+  using UT = datatypes::make_unsigned<IntegralType>::type;
+  UT* results;
+  const size_t expectedNVALS = 127;
+
+  in->colType.DataSize = W;
+  in->colType.DataType = SystemCatalog::INT;
+  in->OutputType = OT_DATAVALUE;
+  in->NOPS = 0;
+  in->NVALS = expectedNVALS;
+  for (i = 0; i < expectedNVALS; ++i)
+    rids[i] = i;
+  rids[0] = 20;
+  rids[1] = 17;
+  rids[126] = 1020;
+ 
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col4block.cdf", block));
+  pp.columnScanAndFilter<IntegralType>(in, out);
+
+  results = getValuesArrayPosition<UT>(getFirstValueArrayPosition(out), 0);
+
+  ASSERT_EQ(out->NVALS, expectedNVALS);
+  for (i = 0; i < expectedNVALS - 1; ++i)
+    ASSERT_EQ(results[i], rids[i]);
+  ASSERT_EQ(results[126], 1020);
 }
 
 TEST_F(ColumnScanFilterTest, ColumnScan4Bytes2Filters)
@@ -383,6 +447,36 @@ TEST_F(ColumnScanFilterTest, ColumnScan8Bytes1EqFilter)
   ASSERT_EQ(out->NVALS, 11);
   for (i = 0; i < out->NVALS; i++)
     ASSERT_EQ(results[i], i);
+}
+
+TEST_F(ColumnScanFilterTest, ColumnScan8BytesUsingMultipleRIDs)
+{
+  constexpr const uint8_t W = 8;
+  using IntegralType = datatypes::WidthToSIntegralType<W>::type;
+  using UT = datatypes::make_unsigned<IntegralType>::type;
+  UT* results;
+  const size_t expectedNVALS = 127;
+
+  in->colType.DataSize = W;
+  in->colType.DataType = SystemCatalog::INT;
+  in->OutputType = OT_DATAVALUE;
+  in->NOPS = 0;
+  in->NVALS = expectedNVALS;
+  for (i = 0; i < expectedNVALS; ++i)
+    rids[i] = i;
+  rids[0] = 20;
+  rids[1] = 17;
+  rids[126] = 1020;
+ 
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col8block.cdf", block));
+  pp.columnScanAndFilter<IntegralType>(in, out);
+
+  results = getValuesArrayPosition<UT>(getFirstValueArrayPosition(out), 0);
+
+  ASSERT_EQ(out->NVALS, expectedNVALS);
+  for (i = 0; i < expectedNVALS - 1; ++i)
+    ASSERT_EQ(results[i], rids[i]);
+  ASSERT_EQ(results[126], 1020);
 }
 
 //void p_Col_7()
@@ -771,7 +865,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan4BytesNegDouble2CompFilters)
   pp.setBlockPtr((int*) readBlockFromLiteralArray("col_neg_double.cdf", block));
   pp.columnScanAndFilter<int64_t>(in, out);
 
-  //ASSERT_EQ(out->NVALS, 19);
+  ASSERT_EQ(out->NVALS, 19);
 
   for (i = 0; i < out->NVALS; i++)
   {
@@ -779,8 +873,61 @@ TEST_F(ColumnScanFilterTest, ColumnScan4BytesNegDouble2CompFilters)
   }
 }
 
+TEST_F(ColumnScanFilterTest, ColumnScan16Bytes)
+{
+  constexpr const uint8_t W = 16;
+  using IntegralType = datatypes::WidthToSIntegralType<W>::type;
+  IntegralType* results;
+
+  in->colType.DataSize = W;
+  in->colType.DataType = SystemCatalog::DECIMAL;
+  in->OutputType = OT_DATAVALUE;
+  in->NOPS = 0;
+  in->BOP = BOP_OR;
+  in->NVALS = 0;
+
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col16block.cdf", block));
+  pp.columnScanAndFilter<IntegralType>(in, out);
+
+  results = getValuesArrayPosition<IntegralType>(getFirstValueArrayPosition(out), 0);
+
+  ASSERT_EQ(out->NVALS, 511);
+  int128_t NullValue = int128_t(0x8000000000000000LL) << 64;
+  ASSERT_EQ(results[0], NullValue);
+  for (i = 1; i < out->NVALS; ++i)
+    ASSERT_EQ(results[i], i+1);
+}
+
 TEST_F(ColumnScanFilterTest, ColumnScan16Bytes2CompFilters)
 {
-//TBD
+  constexpr const uint8_t W = 16;
+  using IntegralType = datatypes::WidthToSIntegralType<W>::type;
+  IntegralType* results;
+  IntegralType tmp;
+
+  in->colType.DataSize = W;
+  in->colType.DataType = SystemCatalog::DECIMAL;
+  in->OutputType = OT_DATAVALUE;
+  in->NOPS = 2;
+  in->BOP = BOP_OR;
+  in->NVALS = 0;
+
+  tmp = 10;
+  args->COP = COMPARE_EQ;
+  memcpy(args->val, &tmp, in->colType.DataSize);
+  args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader) +
+                                    sizeof(ColArgs) + in->colType.DataSize]);
+  args->COP = COMPARE_EQ;
+  tmp = 510;
+  memcpy(args->val, &tmp, in->colType.DataSize);
+
+  pp.setBlockPtr((int*) readBlockFromLiteralArray("col16block.cdf", block));
+  pp.columnScanAndFilter<IntegralType>(in, out);
+
+  results = getValuesArrayPosition<IntegralType>(getFirstValueArrayPosition(out), 0);
+
+  ASSERT_EQ(out->NVALS, 2);
+  ASSERT_EQ(results[0], 10);
+  ASSERT_EQ(results[1], 510);
 }
 // vim:ts=2 sw=2:
