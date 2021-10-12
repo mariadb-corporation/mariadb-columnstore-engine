@@ -18,6 +18,7 @@
 #include <iostream>
 #include <gtest/gtest.h>
 
+#include "utils/common/columnwidth.h"
 #include "datatypes/mcs_datatype.h"
 #include "datatypes/mcs_int128.h"
 #include "stats.h"
@@ -44,8 +45,8 @@ class ColumnScanFilterTest : public ::testing::Test
 protected:
   PrimitiveProcessor pp;
   uint8_t input[BLOCK_SIZE];
-  uint8_t output[4 * BLOCK_SIZE];
-  uint8_t block[BLOCK_SIZE];
+  alignas(utils::MAXCOLUMNWIDTH) uint8_t output[4 * BLOCK_SIZE];
+  alignas(utils::MAXCOLUMNWIDTH) uint8_t block[BLOCK_SIZE];
   uint16_t* rids;
   uint32_t i;
   NewColRequestHeader* in;
@@ -616,7 +617,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan8Bytes2FiltersRIDOutputRid)
   ASSERT_EQ(out->NVALS, 33);
 
   for (i = 0; i < out->NVALS; i++)
-      ASSERT_EQ(results[i], (i < 10 ? i : i - 10 + 1001));
+    ASSERT_EQ(results[i], (i < 10 ? i : i - 10 + 1001));
 }
 
 TEST_F(ColumnScanFilterTest, ColumnScan8Bytes2EqFiltersRIDOutputBoth)
