@@ -170,3 +170,5 @@ storage-manager/unit_tests
 result/
 mariadb-columnstore-regression-test/
 build/Testing/
+tests/*\[1\]_tests.cmake
+tests/*\[1\]_include.cmake

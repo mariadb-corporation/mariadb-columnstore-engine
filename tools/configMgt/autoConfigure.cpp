@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
           std::string configFilePathOld = std::string(MCSSYSCONFDIR) + std::string("/columnstore/Columnstore.xml");
           std::string configFilePathNew = std::string(MCSSYSCONFDIR) + std::string("/columnstore/Columnstore.xml.new");
           sysConfigOld = Config::makeConfig(configFilePathOld);          // system version
-          sysConfigNew = Config::makeConfig(configFilePathNew);  // released version    
+          sysConfigNew = Config::makeConfig(configFilePathNew);  // released version
     }
     catch (...)
     {
@@ -322,7 +322,7 @@ int main(int argc, char* argv[])
     }
     catch (...)
     { }
-                          
+
     //setup HA IP Address
     string HA_IPadd;
 
@@ -1035,10 +1035,10 @@ int main(int argc, char* argv[])
 
                 //if ( moduleDisableState == oam::ENABLEDSTATE )
                 //{
-                    DBRMworkernodeID++;
-                    string DBRMSection = dbrmSubProc + oam.itoa(DBRMworkernodeID);
-                    sysConfigNew->setConfig(DBRMSection, "IPAddr", moduleIPAddr);
-                    sysConfigNew->setConfig(DBRMSection, "Module", moduleName);
+                DBRMworkernodeID++;
+                string DBRMSection = dbrmSubProc + oam.itoa(DBRMworkernodeID);
+                sysConfigNew->setConfig(DBRMSection, "IPAddr", moduleIPAddr);
+                sysConfigNew->setConfig(DBRMSection, "Module", moduleName);
                 //}
             } //end of nicID loop
 
@@ -1789,7 +1789,7 @@ int main(int argc, char* argv[])
     }
     catch (...)
     {}
-    
+
     string SystemTempFileDir;
 
     try
@@ -1896,7 +1896,7 @@ int main(int argc, char* argv[])
     }
     catch (...)
     {}
-    
+
 
     // add entries from tuning guide
 
@@ -1926,7 +1926,7 @@ int main(int argc, char* argv[])
     }
     catch (...)
     {}
-    
+
     // ExeMgr Optional settings
     try
     {
@@ -1949,7 +1949,7 @@ int main(int argc, char* argv[])
         {
             sysConfigNew->setConfig("ExeMgr1", "SecondsBetweenMemChecks", secondsBetweenMemChecks);
         }
-        
+
         maxPct = sysConfigOld->getConfig("ExeMgr1", "MaxPct");
         if ( !maxPct.empty() )
         {
@@ -1964,7 +1964,7 @@ int main(int argc, char* argv[])
     }
     catch (...)
     {}
-    
+
     // PrimProc optional parameters
     // Max percent of total memory used by everything before we kill the current query
     // For 5.6.1, this setting uses the same mechanism that ExeMgr uses to kill itself
@@ -1979,7 +1979,7 @@ int main(int argc, char* argv[])
     }
     catch (...)
     {}
- 
+
     //Write out Updated System Configuration File
     sysConfigNew->write();
 }
