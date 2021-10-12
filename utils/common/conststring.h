@@ -20,6 +20,9 @@
 #define MARIADB_CONSTSTRING_H
 
 
+#include <cstddef>
+#include <cstring>
+#include <string>
 namespace utils
 {
 

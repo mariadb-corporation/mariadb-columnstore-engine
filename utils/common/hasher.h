@@ -27,8 +27,9 @@
 #ifndef UTILS_HASHER_H
 #define UTILS_HASHER_H
 
+#include <cstring>
 #include <stdint.h>
-#include <string.h>
+#include <string>
 #include "mcs_basic_types.h"
 
 namespace utils

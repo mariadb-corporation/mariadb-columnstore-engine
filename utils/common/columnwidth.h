@@ -1,4 +1,4 @@
-/* Copyright (C) 2020 MariaDB Corporation 
+/* Copyright (C) 2020 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -19,6 +19,7 @@
 #define UTILS_COLWIDTH_H
 
 #include "branchpred.h"
+#include <cstdint>
 
 namespace utils
 {
@@ -57,7 +58,7 @@ namespace utils
             case 8:
             case 9:
                 return 4;
-            
+
             case 10:
             case 11:
             case 12:
@@ -68,7 +69,7 @@ namespace utils
             case 17:
             case 18:
                 return 8;
-            
+
             default:
             return 16;
         }
