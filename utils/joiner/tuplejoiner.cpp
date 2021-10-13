@@ -908,8 +908,7 @@ void TupleJoiner::setInUM(vector<RGData> &rgs)
     }
 }
 
-void TupleJoiner::setPMJoinResults(boost::shared_array<vector<uint32_t> > jr,
-                                   uint32_t threadID)
+void TupleJoiner::setPMJoinResults(boost::shared_array<vector<uint32_t>> jr, uint32_t threadID)
 {
     pmJoinResults[threadID] = jr;
 }
@@ -950,7 +949,7 @@ boost::shared_array<std::vector<uint32_t> > TupleJoiner::getPMJoinArrays(uint32_
 void TupleJoiner::setThreadCount(uint32_t cnt)
 {
     threadCount = cnt;
-    pmJoinResults.reset(new boost::shared_array<vector<uint32_t> >[cnt]);
+    pmJoinResults.reset(new boost::shared_array<vector<uint32_t>>[cnt]);
     smallRow.reset(new Row[cnt]);
 
     for (uint32_t i = 0; i < cnt; i++)
