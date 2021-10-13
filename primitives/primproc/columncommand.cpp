@@ -397,7 +397,6 @@ void ColumnCommand::_process_OT_BOTH()
 {
     using T = typename datatypes::WidthToSIntegralType<W>::type;
     bpp->ridCount = outMsg->NVALS;
-    bpp->ridCount = outMsg->NVALS;
     bpp->ridMap = outMsg->RidFlags;
     uint8_t* outPtr = reinterpret_cast<uint8_t*>(&outMsg[1]);
     auto* ridPos = primitives::getRIDArrayPosition(outPtr, 0);
