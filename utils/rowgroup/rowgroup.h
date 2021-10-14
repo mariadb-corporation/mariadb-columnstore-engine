@@ -177,6 +177,7 @@ public:
 
     // This is an overlay b/c the underlying data needs to be any size,
     // and alloc'd in one chunk.  data can't be a separate dynamic chunk.
+    // NOTE: Change here, requires a change in 'bytestream.h'.
     struct MemChunk
     {
         uint32_t currentSize;
