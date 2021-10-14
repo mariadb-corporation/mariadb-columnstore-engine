@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <boost/scoped_array.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <unordered_map>
 using namespace std;
 
 #include "joblisttypes.h"
@@ -70,6 +71,7 @@ namespace WriteEngine
 
 {
 StopWatch timer;
+using OidToIdxMap = std::unordered_map<OID, ColStructList::size_type>;
 
 /**@brief WriteEngineWrapper Constructor
 */
@@ -1323,7 +1325,7 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
     // debug information for testing
     if (isDebug(DEBUG_2))
     {
-        printInputValue(colStructList, colValueList, ridList);
+        printInputValue(colStructList, colValueList, ridList, dctnryStructList, dictStrList);
     }
 
     // end
@@ -2869,7 +2871,7 @@ int WriteEngineWrapper::insertColumnRec_SYS(const TxnID& txnid,
     // debug information for testing
     if (isDebug(DEBUG_2))
     {
-        printInputValue(colStructList, colValueList, ridList);
+        printInputValue(colStructList, colValueList, ridList, dctnryStructList, dictStrList);
     }
 
     // end
@@ -3531,7 +3533,7 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
     // debug information for testing
     if (isDebug(DEBUG_2))
     {
-        printInputValue(colStructList, colValueList, ridList);
+        printInputValue(colStructList, colValueList, ridList, dctnryStructList, dictStrList);
     }
 
     //Convert data type and column width to write engine specific
@@ -3930,6 +3932,13 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
         }     // tokenize dictionary columns
     }         // loop through columns to see which ones need tokenizing
 
+    // debug token information for testing
+    if (isDebug(DEBUG_2))
+    {
+        printInputValue(colStructList, colValueList, ridList, dctnryStructList, dictStrList);
+    }
+
+
     //----------------------------------------------------------------------
     // Update column info structure @Bug 1862 set hwm, and
     // Prepare ValueList for new extent (if applicable)
@@ -4188,35 +4197,41 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
  ***********************************************************/
 void WriteEngineWrapper::printInputValue(const ColStructList& colStructList,
         const ColValueList& colValueList,
-        const RIDList& ridList) const
+        const RIDList& ridList,
+        const DctnryStructList& dctnryStructList,
+        const DictStrList& dictStrList) const
 {
     ColTupleList   curTupleList;
     ColStruct      curColStruct;
     ColTuple       curTuple;
     string         curStr;
     ColStructList::size_type i;
-    ColTupleList::size_type  j;
+    size_t  j;
+    OidToIdxMap    oidToIdxMap;
 
-    printf("\n=========================\n");
-//      printf("\nTable OID : %d \n", tableOid);
+    std::cerr << std::endl << "=========================" << std::endl;
 
-    printf("\nTotal RIDs: %zu\n", ridList.size());
+    std::cerr << "Total RIDs: " << ridList.size() << std::endl;
 
     for (i = 0; i < ridList.size(); i++)
-        cout << "RID[" << i << "] : " << ridList[i] << "\n";
+        std::cerr << "RID[" << i << "] : " << ridList[i] << std::endl;
 
-    printf("\nTotal Columns: %zu\n", colStructList.size());
-
+    std::cerr << "Total Columns: " << colStructList.size() << std::endl;
 
     for (i = 0; i < colStructList.size(); i++)
     {
         curColStruct = colStructList[i];
         curTupleList = colValueList[i];
+        if (curColStruct.tokenFlag)
+        {
+            oidToIdxMap.insert({curColStruct.dataOid, i});
+            continue;
+        }
 
-        printf("\nColumn[%zu]", i);
-        printf("\nData file OID : %d \t", curColStruct.dataOid);
-        printf("\tWidth : %d \t Type: %d", curColStruct.colWidth, curColStruct.colDataType);
-        printf("\nTotal values : %zu \n", curTupleList.size());
+        std::cerr << "Column[" << i << "]";
+        std::cerr << "Data file OID : " << curColStruct.dataOid << "\t";
+        std::cerr << "Width : " << curColStruct.colWidth << "\t" << " Type: " << curColStruct.colDataType << std::endl;
+        std::cerr << "Total values : " << curTupleList.size() << std::endl;
 
         for (j = 0; j < curTupleList.size(); j++)
         {
@@ -4226,19 +4241,22 @@ void WriteEngineWrapper::printInputValue(const ColStructList& colStructList,
             {
                 if (curTuple.data.type() == typeid(int))
                     curStr = boost::lexical_cast<string>(boost::any_cast<int>(curTuple.data));
+                else if (curTuple.data.type() == typeid(unsigned int))
+                    curStr = boost::lexical_cast<string>(boost::any_cast<unsigned int>(curTuple.data));
                 else if (curTuple.data.type() == typeid(float))
                     curStr = boost::lexical_cast<string>(boost::any_cast<float>(curTuple.data));
                 else if (curTuple.data.type() == typeid(long long))
                     curStr = boost::lexical_cast<string>(boost::any_cast<long long>(curTuple.data));
+                else if (curTuple.data.type() == typeid(unsigned long long))
+                    curStr = boost::lexical_cast<string>(boost::any_cast<unsigned long long>(curTuple.data));
                 else if (curTuple.data.type() == typeid(int128_t))
-                {
-                    datatypes::TSInt128 val(boost::any_cast<int128_t>(curTuple.data));
-                    curStr = val.toString();
-                }
+                    curStr = datatypes::TSInt128(boost::any_cast<int128_t>(curTuple.data)).toString();
                 else if (curTuple.data.type() == typeid(double))
                     curStr = boost::lexical_cast<string>(boost::any_cast<double>(curTuple.data));
                 else if (curTuple.data.type() == typeid(short))
                     curStr = boost::lexical_cast<string>(boost::any_cast<short>(curTuple.data));
+                else if (curTuple.data.type() == typeid(unsigned short))
+                    curStr = boost::lexical_cast<string>(boost::any_cast<unsigned short>(curTuple.data));
                 else if (curTuple.data.type() == typeid(char))
                     curStr = boost::lexical_cast<string>(boost::any_cast<char>(curTuple.data));
                 else
@@ -4249,12 +4267,36 @@ void WriteEngineWrapper::printInputValue(const ColStructList& colStructList,
             }
 
             if (isDebug(DEBUG_3))
-                printf("Value[%zu] : %s\n", j, curStr.c_str());
+                std::cerr << "Value[" << j << "]: " << curStr.c_str() << std::endl;
         }
-
+    }
+    for (i = 0; i < dctnryStructList.size(); ++i)
+    {
+        if (dctnryStructList[i].dctnryOid == 0)
+            continue;
+        std::cerr << "Dict[" << i << "]";
+        std::cerr << " file OID : " << dctnryStructList[i].dctnryOid << " Token file OID: " << dctnryStructList[i].columnOid << "\t";
+        std::cerr << "Width : " << dctnryStructList[i].colWidth << "\t" << " Type: " << dctnryStructList[i].fCompressionType << std::endl;
+        std::cerr << "Total values : " << dictStrList.size() << std::endl;
+        if (isDebug(DEBUG_3))
+        {
+            for (j = 0; j < dictStrList[i].size(); ++j)
+            {
+                // We presume there will be a value.
+                auto tokenOidIdx = oidToIdxMap[dctnryStructList[i].columnOid];
+                std::cerr << "string [" << dictStrList[i][j] << "]" << std::endl;
+                bool isToken = colStructList[tokenOidIdx].colType == WriteEngine::WR_TOKEN &&
+                               colStructList[tokenOidIdx].tokenFlag;
+                if (isToken && !colValueList[tokenOidIdx][j].data.empty())
+                {
+                    Token t = boost::any_cast<Token>(colValueList[tokenOidIdx][j].data);
+                    std::cerr << "Token: block pos:[" << t.op << "] fbo: [" << t.fbo << "] bc: [" << t.bc << "]" << std::endl;
+                }
+            }
+        }
     }
 
-    printf("\n=========================\n");
+    std::cerr << "=========================" << std::endl;
 }
 
 /***********************************************************
@@ -6046,7 +6088,6 @@ int WriteEngineWrapper::tokenize(const TxnID& txnid, DctnryTuple& dctnryTuple, i
 {
     int cop = op(ct);
     m_dctnry[cop]->setTransId(txnid);
-    //cout << "Tokenizing dctnryTuple.sigValue " << dctnryTuple.sigValue << endl;
     return m_dctnry[cop]->updateDctnry(dctnryTuple.sigValue, dctnryTuple.sigSize, dctnryTuple.token);
 }
 

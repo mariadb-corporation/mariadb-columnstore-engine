@@ -716,7 +716,7 @@ private:
     /**
      * @brief Print input value from DDL/DML processors
      */
-    void printInputValue(const ColStructList& colStructList, const ColValueList& colValueList, const RIDList& ridList) const;
+    void printInputValue(const ColStructList& colStructList, const ColValueList& colValueList, const RIDList& ridList, const DctnryStructList& dctnryStructList, const DictStrList& dictStrList) const;
 
     /**
      * @brief Process version buffer
@@ -826,7 +826,6 @@ private:
     ColumnOp*      m_colOp[TOTAL_COMPRESS_OP];          // column operations
     Dctnry*        m_dctnry[TOTAL_COMPRESS_OP];         // dictionary operations
     OpType         m_opType;                            // operation type
-    DebugLevel     m_debugLevel;                        // debug level
 };
 
 } //end of namespace
