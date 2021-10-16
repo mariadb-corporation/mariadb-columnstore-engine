@@ -197,10 +197,10 @@ RowGroup::~RowGroup()
 
 void RowGroup::resetRowGroup(uint64_t rid)
 {
-    *((uint32_t*)&data[rowCountOffset]) = 0;
-    *((uint64_t*)&data[baseRidOffset]) = rid;
-    *((uint16_t*)&data[statusOffset]) = 0;
-    *((uint32_t*)&data[dbRootOffset]) = 0;
+    rgData->setRowCount(0);
+    rgData->setBaseRid(rid);
+    rgData->setDbRoot(0);
+    rgData->setStatus(0);
 
     if (strings)
         strings->clear();
@@ -284,37 +284,37 @@ void RowGroup::serializeColumnData(messageqcpp::ByteStream& bs) const
 
 uint32_t RowGroup::getDataSize() const
 {
-    return headerSize + (getRowCount() * offsets[columnCount]);
+    return getRowCount() * offsets[columnCount];
 }
 
 uint32_t RowGroup::getDataSize(uint64_t n) const
 {
-    return headerSize + (n * offsets[columnCount]);
+    return n * offsets[columnCount];
 }
 
 uint32_t RowGroup::getMaxDataSize() const
 {
-    return headerSize + (rgCommonSize * offsets[columnCount]);
+    return rgCommonSize * offsets[columnCount];
 }
 
 uint32_t RowGroup::getMaxDataSizeWithStrings() const
 {
-    return headerSize + (rgCommonSize * oldOffsets[columnCount]);
+    return rgCommonSize * oldOffsets[columnCount];
 }
 
 uint32_t RowGroup::getEmptySize() const
 {
-    return headerSize;
+    return 0;
 }
 
 uint32_t RowGroup::getStatus() const
 {
-    return *((uint16_t*)&data[statusOffset]);
+    return rgData->getStatus();
 }
 
 void RowGroup::setStatus(uint16_t err)
 {
-    *((uint16_t*)&data[statusOffset]) = err;
+    rgData->setStatus(err);
 }
 
 uint32_t RowGroup::getColumnWidth(uint32_t col) const
@@ -516,7 +516,7 @@ RowGroup operator+(const RowGroup& lhs, const RowGroup& rhs)
 
 uint32_t RowGroup::getDBRoot() const
 {
-    return *((uint32_t*)&data[dbRootOffset]);
+    return rgData->getDbRoot();
 }
 
 void RowGroup::addToSysDataList(execplan::CalpontSystemCatalog::NJLSysDataList& sysDataList)
@@ -599,7 +599,7 @@ const CHARSET_INFO* RowGroup::getCharset(uint32_t col)
 
 void RowGroup::setDBRoot(uint32_t dbroot)
 {
-    *((uint32_t*)&data[dbRootOffset]) = dbroot;
+    rgData->setDbRoot(dbroot);
 }
 
 RGData RowGroup::duplicate()
@@ -729,21 +729,17 @@ RowGroup RowGroup::truncate(uint32_t cols)
 every row, they're a measurable performance penalty */
 uint32_t RowGroup::getRowCount() const
 {
-    // 	idbassert(data);
-    // 	if (!data) throw std::logic_error("RowGroup::getRowCount(): data is NULL!");
-    return *((uint32_t*)&data[rowCountOffset]);
+    return rgData->getRowCount();
 }
 
 void RowGroup::incRowCount()
 {
-    // 	idbassert(data);
-    ++(*((uint32_t*)&data[rowCountOffset]));
+    rgData->setRowCount(rgData->getRowCount() + 1);
 }
 
 void RowGroup::setRowCount(uint32_t num)
 {
-    // 	idbassert(data);
-    *((uint32_t*)&data[rowCountOffset]) = num;
+    rgData->setRowCount(num);
 }
 
 void RowGroup::getRow(uint32_t rowNum, Row* r) const
@@ -753,7 +749,7 @@ void RowGroup::getRow(uint32_t rowNum, Row* r) const
         initRow(r);
 
     r->baseRid = getBaseRid();
-    r->data = &(data[headerSize + (rowNum * offsets[columnCount])]);
+    r->data = &(data[rowNum * offsets[columnCount]]);
     r->strings = strings;
     r->userDataStore = rgData->userDataStore.get();
 }
@@ -787,7 +783,7 @@ void RowGroup::setUseStringTable(bool b)
 
 uint64_t RowGroup::getBaseRid() const
 {
-    return *((uint64_t*)&data[baseRidOffset]);
+    return rgData->getBaseRid();
 }
 
 bool RowGroup::operator<(const RowGroup& rhs) const
@@ -1013,7 +1009,7 @@ void copyRow(const Row& in, Row* out)
 void RowGroup::setBaseRid(const uint32_t& partNum, const uint16_t& segNum, const uint8_t& extentNum,
                           const uint16_t& blockNum)
 {
-    *((uint64_t*)&data[baseRidOffset]) = convertToRid(partNum, segNum, extentNum, blockNum);
+    rgData->setBaseRid(convertToRid(partNum, segNum, extentNum, blockNum));
 }
 
 uint32_t RowGroup::getStringTableThreshold() const

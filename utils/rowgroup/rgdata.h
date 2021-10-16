@@ -23,6 +23,7 @@
 #include <boost/smart_ptr/shared_array.hpp>
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <cstdint>
+#include <vector>
 
 #include "serializeable.h"
 
@@ -39,10 +40,10 @@ class RGData
     RGData() = default;  // useless unless followed by an = or a deserialize operation
     RGData(const RowGroup& rg, uint32_t rowCount);  // allocates memory for rowData
     explicit RGData(const RowGroup& rg);
-    RGData(const RGData&);
-    virtual ~RGData() = default;
 
-    RGData& operator=(const RGData&);
+    RGData(const RGData&) = default;
+    RGData& operator=(const RGData&) = default;
+    virtual ~RGData() = default;
 
     // amount should be the # returned by RowGroup::getDataSize()
     void serialize(messageqcpp::ByteStream&, uint32_t amount) const;
@@ -73,7 +74,24 @@ class RGData
     void useUserDataMutex(bool b);
     bool useUserDataMutex() const;
 
+    uint64_t getBaseRid() const { return baseRid; }
+    void setBaseRid(uint64_t baseRid_) { baseRid = baseRid_; }
+
+    uint32_t getRowCount() const { return rowCount; }
+    void setRowCount(uint32_t rowCount_) { rowCount = rowCount_; }
+
+    uint32_t getDbRoot() const { return dbRoot; }
+    void setDbRoot(uint32_t dbRoot_) { dbRoot = dbRoot_; }
+
+    uint16_t getStatus() const { return status; }
+    void setStatus(uint16_t status_) { status = status_; }
+
   private:
+    uint64_t baseRid = 0;
+    uint32_t rowCount = 0;
+    uint32_t dbRoot = 0;
+    uint16_t status = 0;
+
     boost::shared_array<uint8_t> rowData;
     boost::shared_ptr<StringStore> strings;
     boost::shared_ptr<UserDataStore> userDataStore;

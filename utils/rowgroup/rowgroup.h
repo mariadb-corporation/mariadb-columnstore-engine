@@ -219,7 +219,7 @@ class RowGroup : public messageqcpp::Serializeable
     boost::shared_array<bool>& getForceInline();
     static inline uint32_t getHeaderSize()
     {
-        return headerSize;
+        return 0;
     }
 
     // this returns true if the type is CHAR or VARCHAR
@@ -313,12 +313,6 @@ class RowGroup : public messageqcpp::Serializeable
     bool hasLongStringField = false;
     uint32_t sTableThreshold = 20;
     boost::shared_array<bool> forceInline;
-
-    static const uint32_t headerSize = 18;
-    static const uint32_t rowCountOffset = 0;
-    static const uint32_t baseRidOffset = 4;
-    static const uint32_t statusOffset = 12;
-    static const uint32_t dbRootOffset = 14;
 };
 
 uint64_t convertToRid(const uint32_t& partNum, const uint16_t& segNum, const uint8_t& extentNum,

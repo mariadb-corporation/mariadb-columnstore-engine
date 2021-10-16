@@ -76,14 +76,6 @@ RGData::RGData(const RowGroup& rg)
 #endif
 }
 
-RGData& RGData::operator=(const RGData& r)
-{
-    rowData = r.rowData;
-    strings = r.strings;
-    userDataStore = r.userDataStore;
-    return *this;
-}
-
 void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
 {
     rowData.reset(new uint8_t[rg.getDataSize(rowCount)]);
@@ -107,16 +99,16 @@ void RGData::reinit(const RowGroup& rg)
     reinit(rg, rgCommonSize);
 }
 
-RGData::RGData(const RGData& r) : rowData(r.rowData), strings(r.strings), userDataStore(r.userDataStore)
-{
-    // cout << "rgdata++ = " << __sync_add_and_fetch(&rgDataCount, 1) << endl;
-}
-
 void RGData::serialize(messageqcpp::ByteStream& bs, uint32_t amount) const
 {
     // cout << "serializing!\n";
     bs << (uint32_t)RGDATA_SIG;
+    bs << (uint64_t)baseRid;
+    bs << (uint32_t)rowCount;
+    bs << (uint32_t)dbRoot;
+    bs << (uint16_t)status;
     bs << (uint32_t)amount;
+
     bs.append(rowData.get(), amount);
 
     if (strings)
@@ -147,7 +139,12 @@ void RGData::deserialize(messageqcpp::ByteStream& bs, uint32_t defAmount)
     if (sig == RGDATA_SIG)
     {
         bs >> sig;
+        bs >> baseRid;
+        bs >> rowCount;
+        bs >> dbRoot;
+        bs >> status;
         bs >> amount;
+
         rowData.reset(new uint8_t[std::max(amount, defAmount)]);
         buf = bs.buf();
         memcpy(rowData.get(), buf, amount);
@@ -179,8 +176,13 @@ void RGData::deserialize(messageqcpp::ByteStream& bs, uint32_t defAmount)
 
 void RGData::clear()
 {
+    baseRid = 0;
+    rowCount = 0;
+    dbRoot = 0;
+    status = 0;
     rowData.reset();
     strings.reset();
+    // TODO: why we skip userDataStore here?
 }
 
 // UserDataStore is only used for UDAF.
