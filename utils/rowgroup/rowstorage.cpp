@@ -1064,8 +1064,8 @@ private:
   void moveRows(RGData* rgdata, uint64_t to, uint64_t from, size_t numRows)
   {
     const size_t rowsz = fRowGroupOut->getRowSize();
-    const size_t hdrsz = RowGroup::getHeaderSize();
-    uint8_t* data = rgdata->rowData.get() + hdrsz;
+
+    uint8_t* data = rgdata->rowData.get();
     memmove(data + to * rowsz,
             data + from * rowsz,
             numRows * rowsz);

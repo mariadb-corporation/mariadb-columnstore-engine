@@ -179,14 +179,6 @@ RowGroup& RowGroup::operator=(const RowGroup& r)
 }
 
 RowGroup::RowGroup(messageqcpp::ByteStream& bs)
-  : columnCount(0)
-  , data(nullptr)
-  , rgData(nullptr)
-  , strings(nullptr)
-  , useStringTable(true)
-  , hasCollation(false)
-  , hasLongStringField(false)
-  , sTableThreshold(20)
 {
     this->deserialize(bs);
 }
@@ -300,11 +292,6 @@ uint32_t RowGroup::getMaxDataSize() const
 uint32_t RowGroup::getMaxDataSizeWithStrings() const
 {
     return rgCommonSize * oldOffsets[columnCount];
-}
-
-uint32_t RowGroup::getEmptySize() const
-{
-    return 0;
 }
 
 uint32_t RowGroup::getStatus() const
@@ -630,8 +617,13 @@ RGData RowGroup::duplicate()
         }
     }
     else
+    {
+        ret.setRowCount(getRowCount());
+        ret.setBaseRid(getBaseRid());
+        ret.setDbRoot(getDBRoot());
+        ret.setStatus(getStatus());
         memcpy(ret.rowData.get(), data, getDataSize());
-
+    }
     return ret;
 }
 
@@ -734,7 +726,8 @@ uint32_t RowGroup::getRowCount() const
 
 void RowGroup::incRowCount()
 {
-    rgData->setRowCount(rgData->getRowCount() + 1);
+    int32_t num = rgData->getRowCount() + 1;
+    rgData->setRowCount(num);
 }
 
 void RowGroup::setRowCount(uint32_t num)
@@ -788,7 +781,7 @@ uint64_t RowGroup::getBaseRid() const
 
 bool RowGroup::operator<(const RowGroup& rhs) const
 {
-    return (getBaseRid() < rhs.getBaseRid());
+    return getBaseRid() < rhs.getBaseRid();
 }
 
 void RowGroup::initRow(Row* r, bool forceInlineData) const

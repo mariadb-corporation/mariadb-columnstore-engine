@@ -36,8 +36,10 @@ class UserDataStore;
 class Row
 {
   public:
-    struct Pointer
+    class Pointer
     {
+        friend class Row;
+      public:
         Pointer() = default;
 
         // Pointer(uint8_t*) implicitly makes old code compatible with the string table impl;
@@ -51,6 +53,7 @@ class Row
         {
         }
 
+      private:
         uint8_t* data = nullptr;
         StringStore* strings = nullptr;
         UserDataStore* userDataStore = nullptr;

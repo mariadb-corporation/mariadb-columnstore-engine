@@ -90,7 +90,7 @@ void View::transform()
                 continue;
 
             string viewName = getViewName(table_ptr);
-            if (lower_case_table_names)
+            if (lower_case_tabfle_names)
             {
                 boost::algorithm::to_lower(viewName);
             }

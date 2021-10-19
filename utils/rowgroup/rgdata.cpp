@@ -32,7 +32,7 @@ void RGData::getRow(uint32_t num, Row* row)
 {
     uint32_t size = row->getSize();
     row->setData(
-        Row::Pointer(&rowData[RowGroup::getHeaderSize() + (num * size)], strings.get(), userDataStore.get()));
+        Row::Pointer(&rowData[num * size], strings.get(), userDataStore.get()));
 }
 
 void RGData::useStoreStringMutex(bool b)
@@ -44,7 +44,10 @@ void RGData::useStoreStringMutex(bool b)
 RGData::RGData(const RowGroup& rg, uint32_t rowCount)
 {
     // cout << "rgdata++ = " << __sync_add_and_fetch(&rgDataCount, 1) << endl;
-    rowData.reset(new uint8_t[rg.getDataSize(rowCount)]);
+    if (LIKELY(rowCount > 0))
+        rowData.reset(new uint8_t[rg.getDataSize(rowCount)]);
+    else
+        rowData = nullptr;
 
     if (rg.usesStringTable() && rowCount > 0)
         strings.reset(new StringStore());
@@ -78,7 +81,14 @@ RGData::RGData(const RowGroup& rg)
 
 void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
 {
-    rowData.reset(new uint8_t[rg.getDataSize(rowCount)]);
+    if(LIKELY(rowCount))
+    {
+        rowData.reset(new uint8_t[rg.getDataSize(rowCount)]);
+    }
+    else
+    {
+        rowData = nullptr;
+    }
 
     if (rg.usesStringTable())
         strings.reset(new StringStore());

@@ -52,8 +52,6 @@ class RGData
     // inline data with a length field.  Once that's converted to string table format, that
     // option can go away.
     void deserialize(messageqcpp::ByteStream&, uint32_t amount = 0);  // returns the # of bytes read
-
-    uint64_t getStringTableMemUsage();
     void clear();
     void reinit(const RowGroup& rg);
     void reinit(const RowGroup& rg, uint32_t rowCount);
@@ -74,17 +72,42 @@ class RGData
     void useUserDataMutex(bool b);
     bool useUserDataMutex() const;
 
-    uint64_t getBaseRid() const { return baseRid; }
-    void setBaseRid(uint64_t baseRid_) { baseRid = baseRid_; }
+  private:
+    uint64_t getBaseRid() const
+    {
+        return baseRid;
+    }
+    void setBaseRid(uint64_t baseRid_)
+    {
+        baseRid = baseRid_;
+    }
 
-    uint32_t getRowCount() const { return rowCount; }
-    void setRowCount(uint32_t rowCount_) { rowCount = rowCount_; }
+    uint32_t getRowCount() const
+    {
+        return rowCount;
+    }
+    void setRowCount(uint32_t rowCount_)
+    {
+        rowCount = rowCount_;
+    }
 
-    uint32_t getDbRoot() const { return dbRoot; }
-    void setDbRoot(uint32_t dbRoot_) { dbRoot = dbRoot_; }
+    uint32_t getDbRoot() const
+    {
+        return dbRoot;
+    }
+    void setDbRoot(uint32_t dbRoot_)
+    {
+        dbRoot = dbRoot_;
+    }
 
-    uint16_t getStatus() const { return status; }
-    void setStatus(uint16_t status_) { status = status_; }
+    uint16_t getStatus() const
+    {
+        return status;
+    }
+    void setStatus(uint16_t status_)
+    {
+        status = status_;
+    }
 
   private:
     uint64_t baseRid = 0;

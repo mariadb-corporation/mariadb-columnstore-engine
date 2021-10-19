@@ -35,7 +35,6 @@
 
 #include <boost/shared_array.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/thread/mutex.hpp>
 #include <cassert>
 #include <cfloat>
 #include <cmath>
@@ -190,7 +189,6 @@ class RowGroup : public messageqcpp::Serializeable
     uint32_t getDataSize(uint64_t n) const;
     uint32_t getMaxDataSize() const;
     uint32_t getMaxDataSizeWithStrings() const;
-    uint32_t getEmptySize() const;
 
     // this returns the size of the row data with the string table
     uint64_t getSizeWithStrings() const;
@@ -217,10 +215,6 @@ class RowGroup : public messageqcpp::Serializeable
     const std::vector<uint32_t>& getCharsetNumbers() const;
     uint32_t getCharsetNumber(uint32_t colIndex) const;
     boost::shared_array<bool>& getForceInline();
-    static inline uint32_t getHeaderSize()
-    {
-        return 0;
-    }
 
     // this returns true if the type is CHAR or VARCHAR
     bool isCharType(uint32_t colIndex) const;
@@ -308,7 +302,7 @@ class RowGroup : public messageqcpp::Serializeable
     // string table impl
     RGData* rgData = nullptr;
     StringStore* strings = nullptr;  // note, strings and data belong to rgData
-    bool useStringTable = false;
+    bool useStringTable = true;
     bool hasCollation = false;
     bool hasLongStringField = false;
     uint32_t sTableThreshold = 20;

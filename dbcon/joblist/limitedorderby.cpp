@@ -85,7 +85,7 @@ void LimitedOrderBy::initialize(const RowGroup& rg, const JobInfo& jobInfo, bool
     if (isMultiThreaded)
     {
         // CS can't apply offset at the first stage
-        // otherwise it looses records. 
+        // otherwise it looses records.
         fStart = 0;
         fCount = jobInfo.limitStart+jobInfo.limitCount;
     }
@@ -147,7 +147,7 @@ void LimitedOrderBy::processRow(const rowgroup::Row& row)
         if (fRowGroup.getRowCount() >= fRowsPerRG)
         {
             fDataQueue.push(fData);
-            uint64_t newSize = fRowGroup.getSizeWithStrings() - fRowGroup.getHeaderSize();
+            uint64_t newSize = fRowGroup.getSizeWithStrings();
             fMemSize += newSize;
 
             if (!fRm->getMemory(newSize, fSessionMemLimit))
@@ -182,10 +182,10 @@ void LimitedOrderBy::processRow(const rowgroup::Row& row)
 }
 
 /*
- * The f() copies top element from an ordered queue into a row group. It 
+ * The f() copies top element from an ordered queue into a row group. It
  * does this backwards to syncronise sorting orientation with the server.
  * The top row from the queue goes last into the returned set.
- */ 
+ */
 void LimitedOrderBy::finalize()
 {
     if (fUncommitedMemory > 0)
@@ -208,7 +208,7 @@ void LimitedOrderBy::finalize()
     {
         // *DRRTUY Very memory intensive. CS needs to account active
         // memory only and release memory if needed.
-        uint64_t memSizeInc = fRowGroup.getSizeWithStrings() - fRowGroup.getHeaderSize();
+        uint64_t memSizeInc = fRowGroup.getSizeWithStrings();
         fMemSize += memSizeInc;
 
         if (!fRm->getMemory(memSizeInc, fSessionMemLimit))
@@ -217,7 +217,7 @@ void LimitedOrderBy::finalize()
                  << " @" << __FILE__ << ":" << __LINE__;
             throw IDBExcept(fErrorCode);
         }
-        
+
         uint64_t offset = 0;
         uint64_t i = 0;
         // Reduce queue size by an offset value if it applicable.
@@ -250,7 +250,7 @@ void LimitedOrderBy::finalize()
         // OFSET > fRowsPerRG
         offset = offset != 0 ? offset - 1 : offset;
         fRowGroup.getRow(offset, &fRow0);
-        
+
         while ((fOrderByQueue.size() > fStart) && (i++ < fCount))
         {
             const OrderByRow& topRow = fOrderByQueue.top();
@@ -260,7 +260,7 @@ void LimitedOrderBy::finalize()
             offset--;
             fRow0.prevRow(rSize);
             fOrderByQueue.pop();
-            
+
             // if RG has fRowsPerRG rows
             if(offset == (uint64_t)-1)
             {
@@ -273,7 +273,7 @@ void LimitedOrderBy::finalize()
                          << " @" << __FILE__ << ":" << __LINE__;
                     throw IDBExcept(fErrorCode);
                 }
-                
+
                 fData.reinit(fRowGroup, fRowsPerRG);
                 fRowGroup.setData(&fData);
                 fRowGroup.resetRowGroup(0); // ?
@@ -284,10 +284,10 @@ void LimitedOrderBy::finalize()
         // Push the last/only group into the queue.
         if (fRowGroup.getRowCount() > 0)
             tempRGDataList.push_front(fData);
-        
+
         for(tempListIter = tempRGDataList.begin(); tempListIter != tempRGDataList.end(); tempListIter++)
             tempQueue.push(*tempListIter);
-        
+
         fDataQueue = tempQueue;
     }
 }

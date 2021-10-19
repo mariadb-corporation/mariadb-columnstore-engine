@@ -335,7 +335,6 @@ private:
     boost::shared_array<rowgroup::RGData> smallSideRowData;
     boost::shared_array<rowgroup::RGData> smallNullRowData;
     boost::shared_array<rowgroup::Row::Pointer> smallNullPointers;
-    boost::shared_array<uint64_t> ssrdPos;  // this keeps track of position when building smallSideRowData
     boost::shared_array<uint32_t> smallSideRowLengths;
     boost::shared_array<joblist::JoinType> joinTypes;
     uint32_t joinerCount;

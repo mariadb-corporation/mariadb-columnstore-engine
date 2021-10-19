@@ -408,7 +408,6 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
                 smallSideRowData.reset(new RGData[joinerCount]);
                 smallNullRowData.reset(new RGData[joinerCount]);
                 smallNullPointers.reset(new Row::Pointer[joinerCount]);
-                ssrdPos.reset(new uint64_t[joinerCount]);
 
                 for (i = 0; i < joinerCount; i++)
                 {
@@ -419,7 +418,6 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
 //					  (uint64_t) smallSideRowLengths[i] * tJoinerSizes[i]]);
                     smallSideRGs[i].setData(&smallSideRowData[i]);
                     smallSideRGs[i].resetRowGroup(0);
-                    ssrdPos[i] = smallSideRGs[i].getEmptySize();
 
                     if (joinTypes[i] & (LARGEOUTER | SEMI | ANTI))
                     {
@@ -1200,7 +1198,7 @@ void BatchPrimitiveProcessor::executeTupleJoin()
                     largeKey = oldRow.getIntField(colIndex);
                 uint bucket = bucketPicker((char *) &largeKey, 8, bpSeed) & ptMask;
 
-                bool joinerIsEmpty = tJoiners[j][bucket]->empty() ? true : false; 
+                bool joinerIsEmpty = tJoiners[j][bucket]->empty() ? true : false;
 
                 found = (tJoiners[j][bucket]->find(largeKey) != tJoiners[j][bucket]->end());
                 isNull = oldRow.isNullValue(colIndex);
@@ -1375,7 +1373,7 @@ void BatchPrimitiveProcessor::executeTupleJoin()
                         wide128Values[newRowCount] = wide128Values[i];
                     relRids[newRowCount] = relRids[i];
                     copyRow(oldRow, &newRow);
-                    //cout << "joined row: " << newRow.toString() << endl; 
+                    //cout << "joined row: " << newRow.toString() << endl;
                 }
 
                 newRowCount++;
