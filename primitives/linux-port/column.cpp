@@ -1372,15 +1372,11 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
         valuesWritten = vectWriteRIDValues<T, VT, OUTPUT_TYPE, KIND>(simdProcessor, dataVecTPtr, ridDstArray, valuesWritten, writeMask, Min, Max, validMinMax, in, ridOffset, out);
 
         // Calculate bytes written
-        //uint16_t valuesWritten = (tmpDstVecTPtr - reinterpret_cast<T*>(&filterArgVec));
         uint16_t bytesWritten = valuesWritten * WIDTH;
         totalValuesWritten += valuesWritten;
         ridDstArray += valuesWritten;
         dstArray += bytesWritten;
-        // RID store if needed and there were values.
-        // WIP What if we make this unconditional ?
         rid += VECTOR_SIZE;
-        // WIP replace with a local copy of the var
         srcArray += VECTOR_SIZE;
         ridArray += VECTOR_SIZE;
     }
@@ -1399,7 +1395,14 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
     scalarFiltering<T, FT, ST, KIND>(in, out, columnFilterMode, filterSet, filterCount, filterCOPs,
                                      filterValues, filterRFs, in->colType, origSrcArray, srcSize, origRidArray,
                                      ridSize, processedSoFar, outputType, validMinMax, emptyValue, nullValue);
-    //std::cerr << "vectorizedFiltering 2 out->NVALS " << out->NVALS << std::endl;
+    /*std::cerr << "vectorizedFiltering 2 out->NVALS " << out->NVALS << std::endl;
+    T* results = getValuesArrayPosition<T>(getFirstValueArrayPosition(out), 0);
+    for(size_t j = 0; j < out->NVALS; ++j)
+    {
+        uint64_t t = results[j];
+        std::cerr << "vectorizedFiltering j " << j << " value [" << t << "]" << std::endl;
+    }*/
+
 }
 
 // This routine dispatches calls to leverage templates to reduce branching

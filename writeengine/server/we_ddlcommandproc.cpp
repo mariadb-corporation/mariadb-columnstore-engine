@@ -49,6 +49,7 @@ namespace WriteEngine
 {
 WE_DDLCommandProc::WE_DDLCommandProc()
 {
+    //fWEWrapper.setDebugLevel(DEBUG_3);
     filesPerColumnPartition = 8;
     extentsPerSegmentFile = 1;
     dbrootCnt = 1;

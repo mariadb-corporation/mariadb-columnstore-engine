@@ -1125,6 +1125,8 @@ int Dctnry::insertDctnry(const int& sgnature_size,
     cb.file.oid = m_dctnryOID;
     cb.file.pFile = m_dFile;
 
+    //WIP
+    //std::cerr << "Dctnry::insertDctnry  m_dctnryOID " << m_dctnryOID << std::endl;
     size = sgnature_size;
     value = (unsigned char*)sgnature_value;
     token.bc = 0;
@@ -1263,6 +1265,11 @@ void Dctnry::insertDctnryHdr( unsigned char* blockBuf,
     memcpy(&blockBuf[nextOffsetLoc], &nextOffset, HDR_UNIT_SIZE);
     m_newStartOffset = nextOffset;
     m_curOp++;
+    //uint16_t* offsetArray = (uint16_t*)&blockBuf[START_HDR1];
+    for (size_t i = 0; i < 15; ++i)
+    {
+        //std::cerr << "Dctnry::insertDctnryHdr i " << i << " offset " << offsetArray[i] << std::endl;
+    }
 }
 
 /*******************************************************************************
@@ -1285,6 +1292,13 @@ void Dctnry::insertSgnture(unsigned char* blockBuf,
 {
     //m_newStartLoc is calculated from the header insertion code
     memcpy(&blockBuf[m_newStartOffset], value, size);
+
+    //std::cerr << "Dctnry::insertSgnture m_newStartOffsset " << m_newStartOffset << std::endl;
+    //uint16_t* offsetArray = (uint16_t*)&blockBuf[START_HDR1];
+    for (size_t i = 0; i < 15; ++i)
+    {
+        //std::cerr << "Dctnry::insertDctnryHdr i " << i << " offset " << offsetArray[i] << std::endl;
+    }
 }
 
 /*******************************************************************************

@@ -60,6 +60,7 @@ namespace WriteEngine
 //StopWatch timer;
 WE_DMLCommandProc::WE_DMLCommandProc()
 {
+    //fWEWrapper.setDebugLevel(WriteEngine::DEBUG_3);
     fIsFirstBatchPm = true;
     filesPerColumnPartition = 8;
     extentsPerSegmentFile = 1;
@@ -1287,7 +1288,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
     // call the write engine to write the rows
     int error = NO_ERROR;
 
-    //fWriteEngine.setDebugLevel(WriteEngine::DEBUG_3);
+    //fWEWrapper.setDebugLevel(WriteEngine::DEBUG_3);
     if (colValuesList.size() > 0)
     {
         if (colValuesList[0].size() > 0)
