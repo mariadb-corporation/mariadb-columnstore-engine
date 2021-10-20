@@ -283,8 +283,6 @@ int DbFileOp::writeDBFile( CommBlock& cb, const unsigned char* writeBuf,
 {
     CacheKey key;
     int ret;
-    //WIP
-    std::cerr << "DbFileOp::writeDBFile enters " << std::endl;
     if ( Cache::getUseCache() )
     {
         if ( Cache::cacheKeyExist( cb.file.oid, lbid ) )
@@ -297,12 +295,10 @@ int DbFileOp::writeDBFile( CommBlock& cb, const unsigned char* writeBuf,
 
     if (BRMWrapper::getUseVb())
     {
-        std::cerr << "DbFileOp::writeDBFile writeVB " << std::endl;
         RETURN_ON_ERROR( writeVB( cb.file.pFile, cb.file.oid, lbid ) );
     }
 
     ret = writeDBFile( cb.file.pFile, writeBuf, lbid, numOfBlock );
-    std::cerr << "DbFileOp::writeDBFile writeDBFile ret " << ret << std::endl;
 
     if (BRMWrapper::getUseVb())
     {

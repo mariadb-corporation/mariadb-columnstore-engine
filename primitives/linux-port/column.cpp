@@ -1535,7 +1535,9 @@ void filterColumnData(
     // Vectorized scanning/filtering for all numerics except float/double types.
     // If the total number of input values can't fill a vector the vector path
     // applies scalar filtering.
-    if (KIND == KIND_DEFAULT && WIDTH < 16)
+    // Syscat queries mustn't follow vectorized processing path b/c PP must return
+    // all values w/o any filter(even empty values filter) applied.
+    if (!(in->hdr.SessionID & 0x80000000) && KIND == KIND_DEFAULT && WIDTH < 16)
     {
         bool canUseFastFiltering = true;
         for (uint32_t i = 0; i < filterCount; ++i)
