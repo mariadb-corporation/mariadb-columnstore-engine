@@ -703,4 +703,6 @@ unsigned char ___bin_col8block_cdf[] = {
   0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 unsigned int ___bin_col8block_cdf_len = 8192;
+constexpr int __col8block_cdf_umin = 0;
+constexpr int __col8block_cdf_umax = 1023;
 #endif

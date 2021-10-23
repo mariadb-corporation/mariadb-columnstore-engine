@@ -703,4 +703,6 @@ unsigned char ___bin_col16block_cdf[] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 unsigned int ___bin_col16block_cdf_len = 8192;
+constexpr int __col16block_cdf_umin = 2;
+constexpr int __col16block_cdf_umax = 511;
 #endif

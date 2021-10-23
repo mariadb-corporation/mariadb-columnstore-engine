@@ -168,12 +168,12 @@ void ColumnCommand::_loadData()
 
 
     _mask = mask;
-// 	primMsg->RidFlags = 0xffff;   // disables selective block loading
-    //cout <<__FILE__ << "::issuePrimitive() o: " << getOID() << " l:" << primMsg->LBID << " ll: " << oidLastLbid << endl;
+ 	//primMsg->RidFlags = 0xffff;   // disables selective block loading
+    //cerr << "::ColumnCommand::_loadData OID " << getOID() << " l:" << primMsg->LBID << " ll: " << oidLastLbid << " primMsg->RidFlags " << primMsg->RidFlags << endl;
 
     for (i = 0; i < W; ++i, _mask <<= shift)
     {
-
+        //cerr << "::ColumnCommand::_loadData OID " << "_mask " << _mask << endl;
         if ((!lastBlockReached && _isScan) || (!_isScan && primMsg->RidFlags & _mask))
         {
             lbids[blocksToLoad] = primMsg->LBID + i;
