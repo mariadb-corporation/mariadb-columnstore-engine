@@ -42,6 +42,7 @@ using namespace std;
 using namespace logging;
 
 #include "MonitorProcMem.h"
+#include "threadnaming.h"
 
 namespace utils
 {
@@ -57,6 +58,7 @@ int      MonitorProcMem::fMemPctCheck = 0;
 //------------------------------------------------------------------------------
 void MonitorProcMem::operator()() const
 {
+    utils::setThreadName("MonitorProcMem");
     while (1)
     {
         if (fMaxPct > 0)

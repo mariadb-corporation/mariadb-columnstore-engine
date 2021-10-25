@@ -2445,9 +2445,7 @@ void TupleBPS::receiveMultiPrimitiveMessages()
         abort_nolock();
     }
 
-out:
-
-    // We have on thread here and do not need to notify any waiting producer threads, because we are done of
+    // We have one thread here and do not need to notify any waiting producer threads, because we are done with
     // consuming messages from queue.
     tplLock.unlock();
 

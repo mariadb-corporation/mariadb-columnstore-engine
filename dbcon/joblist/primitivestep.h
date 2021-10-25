@@ -1448,18 +1448,21 @@ private:
   bool BPPIsAllocated;
   uint32_t uniqueID;
   ResourceManager* fRm;
-
+  boost::shared_ptr<int64_t> fJoinMemLimit;
+  
   /* HashJoin support */
 
   void serializeJoiner();
   void serializeJoiner(uint32_t connectionNumber);
 
-  void generateJoinResultSet(const std::vector<std::vector<rowgroup::Row::Pointer>>& joinerOutput,
-                             rowgroup::Row& baseRow, const std::vector<boost::shared_array<int>>& mappings,
-                             const uint32_t depth, rowgroup::RowGroup& outputRG, rowgroup::RGData& rgData,
-                             std::vector<rowgroup::RGData>* outputData,
-                             const boost::scoped_array<rowgroup::Row>& smallRows, rowgroup::Row& joinedRow);
-
+  uint64_t generateJoinResultSet(const std::vector<std::vector<rowgroup::Row::Pointer> >& joinerOutput,
+                                 rowgroup::Row& baseRow, const std::vector<boost::shared_array<int> >& mappings,
+                                 const uint32_t depth, rowgroup::RowGroup& outputRG, rowgroup::RGData& rgData,
+                                 std::vector<rowgroup::RGData>& outputData,
+                                 const boost::scoped_array<rowgroup::Row>& smallRows, rowgroup::Row& joinedRow,
+                                 RowGroupDL* dlp, rowgroup::RowGroup& fe2OutputRG, rowgroup::Row& fe2OutRow,
+                                 funcexp::FuncExpWrapper& fe2);
+  
   std::vector<boost::shared_ptr<joiner::TupleJoiner>> tjoiners;
   bool doJoin, hasPMJoin, hasUMJoin;
   std::vector<rowgroup::RowGroup> joinerMatchesRGs; // parses the small-side matches from joiner
