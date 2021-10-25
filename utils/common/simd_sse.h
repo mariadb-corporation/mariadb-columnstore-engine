@@ -18,6 +18,8 @@
 #ifndef UTILS_SIMD_SSE_H
 #define UTILS_SIMD_SSE_H
 
+#if defined(__x86_64__ )
+
 #include <cstdint>
 #include <type_traits>
 
@@ -73,7 +75,6 @@ namespace simd
       return _mm_loadu_si128(reinterpret_cast<const vi128_t*>(from));
     }
 
-    // WIP
     MCS_FORCE_INLINE MT cmpDummy(vi128_t& x, vi128_t& y)
     {
       return 0xFFFF;
@@ -107,6 +108,11 @@ namespace simd
     MCS_FORCE_INLINE MT cmpNe(vi128_t& x, vi128_t& y)
     {
       return cmpDummy(x, y);
+    }
+
+    MCS_FORCE_INLINE MT cmpAlwaysFalse(vi128_t& x, vi128_t& y)
+    {
+      return 0;
     }
 
     // misc
@@ -190,6 +196,11 @@ namespace simd
       return _mm_movemask_epi8(_mm_cmpeq_epi64(x, y)) ^ 0xFFFF;
     }
 
+    MCS_FORCE_INLINE MT cmpAlwaysFalse(vi128_t& x, vi128_t& y)
+    {
+      return 0;
+    }
+
     // misc
     MCS_FORCE_INLINE MT convertVectorToBitMask(vi128_t& vmask)
     {
@@ -263,6 +274,11 @@ namespace simd
     MCS_FORCE_INLINE MT cmpNe(vi128_t& x, vi128_t& y)
     {
       return _mm_movemask_epi8(_mm_cmpeq_epi32(x, y)) ^ 0xFFFF;
+    }
+
+    MCS_FORCE_INLINE MT cmpAlwaysFalse(vi128_t& x, vi128_t& y)
+    {
+      return 0;
     }
 
     // misc
@@ -340,6 +356,11 @@ namespace simd
       return _mm_movemask_epi8(_mm_cmpeq_epi16(x, y)) ^ 0xFFFF;
     }
 
+    MCS_FORCE_INLINE MT cmpAlwaysFalse(vi128_t& x, vi128_t& y)
+    {
+      return 0;
+    }
+
     // misc
     MCS_FORCE_INLINE MT convertVectorToBitMask(vi128_t& vmask)
     {
@@ -415,6 +436,11 @@ namespace simd
       return _mm_movemask_epi8(_mm_cmpeq_epi8(x, y)) ^ 0xFFFF;
     }
 
+    MCS_FORCE_INLINE MT cmpAlwaysFalse(vi128_t& x, vi128_t& y)
+    {
+      return 0;
+    }
+
     // permute
 /* Available in AVX-512
     MCS_FORCE_INLINE vi128_t perm8Bits(vi128_t& x, vi128_t& idx)
@@ -446,6 +472,8 @@ namespace simd
   };
 
 } // end of simd
+
+#endif // if defined(__x86_64__ )
 
 #endif
 // vim:ts=2 sw=2:

@@ -991,6 +991,7 @@ inline void writeColValue(
     }
 }
 
+#if defined(__x86_64__ )
 // No RIDs only values
 template<typename T, typename VT, int OUTPUT_TYPE, ENUM_KIND KIND, bool HAS_INPUT_RIDS,
          typename std::enable_if<OUTPUT_TYPE & (OT_TOKEN | OT_DATAVALUE) && !(OUTPUT_TYPE & OT_RID), T>::type* = nullptr>
@@ -1123,6 +1124,7 @@ inline uint16_t vectWriteRIDValues(VT& processor, T* dataVecTPtr, primitives::RI
 {
     return valuesWritten;
 }
+#endif
 
 /*****************************************************************************
  *** RUN DATA THROUGH A COLUMN FILTER ****************************************
@@ -1199,6 +1201,7 @@ void scalarFiltering(NewColRequestHeader* in, ColResultHeader* out,
     //std::cerr << "scalarFiltering out->NVALS " << out->NVALS << std::endl;
 }
 
+#if defined(__x86_64__ )
 template <typename VT, typename SIMD_WRAPPER_TYPE, bool HAS_INPUT_RIDS, typename T,
           typename std::enable_if<HAS_INPUT_RIDS == false, T>::type* = nullptr>
 inline SIMD_WRAPPER_TYPE simdDataLoadTemplate(VT& processor, const T* srcArray,
@@ -1249,7 +1252,7 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
     using SIMD_TYPE = typename VT::SIMD_TYPE;
     using SIMD_WRAPPER_TYPE = typename VT::SIMD_WRAPPER_TYPE;
     VT simdProcessor;
-    SIMD_TYPE dataVec, filterArgVec;
+    SIMD_TYPE dataVec;
     SIMD_TYPE emptyFilterArgVec = simdProcessor.loadValue(emptyValue);
     SIMD_TYPE nullFilterArgVec = simdProcessor.loadValue(nullValue);
     MT writeMask, nonEmptyMask, nonNullMask, nonNullOrEmptyMask;
@@ -1271,10 +1274,13 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
     constexpr uint16_t VECTOR_SIZE = VT::vecByteSize / WIDTH;
     // If there are RIDs use its number to get a number of vectorized iterations.
     uint16_t iterNumber = HAS_INPUT_RIDS ? ridSize / VECTOR_SIZE : srcSize / VECTOR_SIZE;
-    std::cerr << "vectorizedFiltering HAS_INPUT_RIDS " <<  HAS_INPUT_RIDS << " iterNumber " << iterNumber << std::endl;
+    //std::cerr << "vectorizedFiltering HAS_INPUT_RIDS " <<  HAS_INPUT_RIDS << " iterNumber " << iterNumber << std::endl;
     uint32_t filterCount = 0;
+    // These pragmas are to silence GCC warnings
+    //  warning: ignoring attributes on template argument
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wignored-attributes"
+    std::vector<SIMD_TYPE> filterArgsVectors;
     auto ptrA = std::mem_fn(&VT::cmpEq);
     using COPType = decltype(ptrA);
     std::vector<COPType> copFunctorVec;
@@ -1307,14 +1313,18 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
                     initFilterMask = 0;
                     break;
                 case BOP_NONE:
-                    // WIP
+                    // According with the comments in linux-port/primitiveprocessor.h
+                    // there can't be BOP_NONE with filterCount > 0
                     bopFunctor = std::bit_and<MT>();
                     break;
                 default:
                     idbassert(false);
             }
+            filterArgsVectors.reserve(filterCount);
             for (uint32_t j = 0; j < filterCount; ++j)
             {
+                // Preload filter argument values only once.
+                filterArgsVectors[j] = simdProcessor.loadValue(filterValues[j]);
                 switch(filterCOPs[j])
                 {
                     case(COMPARE_EQ):
@@ -1335,6 +1345,12 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
                     case(COMPARE_NE):
                         copFunctorVec.push_back(std::mem_fn(&VT::cmpNe));
                         break;
+                    case(COMPARE_NIL):
+                        copFunctorVec.push_back(std::mem_fn(&VT::cmpAlwaysFalse));
+                        break;
+                    // There are couple other COP, e.g. COMPARE_NOT however they can't be met here
+                    // b/c MCS 6.x uses COMPARE_NOT for strings with OP_LIKE only. See op2num() for
+                    // details.
 
                     default:
                         idbassert(false);
@@ -1366,10 +1382,8 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
         MT filterMask = 0xFFFF;
         for (uint32_t j = 0; j < filterCount; ++j)
         {
-            // WIP load this only once
-            filterArgVec = simdProcessor.loadValue(filterValues[j]);
-            // filter
-            filterMask = copFunctorVec[j](simdProcessor, dataVec, filterArgVec);
+            // filter using compiled filter and preloaded filter argument
+            filterMask = copFunctorVec[j](simdProcessor, dataVec, filterArgsVectors[j]);
             //std::cerr << " iterNumber " << i << " filterMask " << filterMask << " prevFilterMask " << prevFilterMask << std::endl;
             filterMask = bopFunctor(prevFilterMask, filterMask);
             prevFilterMask = filterMask;
@@ -1509,6 +1523,7 @@ void vectorizedFilteringDispatcher(NewColRequestHeader* in, ColResultHeader* out
         }
     }
 }
+#endif
 
 // TBD Make changes in Command class ancestors to threat BPP::values as buffer.
 // TBD this will allow to copy values only once from BPP::blockData to the destination.
@@ -1569,6 +1584,7 @@ void filterColumnData(
     // Syscat queries mustn't follow vectorized processing path b/c PP must return
     // all values w/o any filter(even empty values filter) applied.
 
+#if defined(__x86_64__ )
     if (!(in->hdr.SessionID & 0x80000000) && KIND == KIND_DEFAULT && WIDTH < 16)
     {
         bool canUseFastFiltering = true;
@@ -1585,7 +1601,7 @@ void filterColumnData(
             return;
         }
     }
-
+#endif
     uint32_t initialRID = 0;
     scalarFiltering<T, FT, ST, KIND>(in, out, columnFilterMode, filterSet, filterCount, filterCOPs,
                                      filterValues, filterRFs, in->colType, srcArray, srcSize, ridArray,
