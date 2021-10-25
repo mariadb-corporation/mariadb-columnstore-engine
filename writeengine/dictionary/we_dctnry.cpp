@@ -1125,8 +1125,6 @@ int Dctnry::insertDctnry(const int& sgnature_size,
     cb.file.oid = m_dctnryOID;
     cb.file.pFile = m_dFile;
 
-    //WIP
-    //std::cerr << "Dctnry::insertDctnry  m_dctnryOID " << m_dctnryOID << std::endl;
     size = sgnature_size;
     value = (unsigned char*)sgnature_value;
     token.bc = 0;

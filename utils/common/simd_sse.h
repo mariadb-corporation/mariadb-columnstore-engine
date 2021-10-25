@@ -56,7 +56,7 @@ namespace simd
   template<>
   class SimdFilterProcessor<vi128_wr, 16>
   {
-   // The class is not ready !!!!!!!!!
+   // This is a dummy class that is not currently used.
    public:
     constexpr static const uint16_t vecByteSize = 16U;
     constexpr static const uint16_t vecBitSize = 128U;
@@ -150,7 +150,6 @@ namespace simd
     // Load value
     MCS_FORCE_INLINE vi128_t loadValue(const T fill)
     {
-      // questionable thing
       return _mm_set_epi64x(fill, fill);
     }
 
@@ -164,8 +163,6 @@ namespace simd
     MCS_FORCE_INLINE MT cmpGe(vi128_t& x, vi128_t& y)
     {
       return _mm_movemask_epi8(_mm_or_si128(_mm_cmpgt_epi64(x, y),_mm_cmpeq_epi64(x, y)));
-      // WIP Test another impl
-      // return cmpGt(x, y) | cmpEq(x ,y);
     }
 
     MCS_FORCE_INLINE MT cmpGt(vi128_t& x, vi128_t& y)
@@ -185,9 +182,6 @@ namespace simd
 
     MCS_FORCE_INLINE MT cmpLt(vi128_t& x, vi128_t& y)
     {
-      // WIP what's the logic. Might be too expensive. Might be wrong
-      //return _mm_movemask_epi8(_mm_andnot_si128(_mm_cmpeq_epi64(x, y), _mm_set1_epi32(0xffffffff)));
-      // potential workaround
       return cmpNe(x, y) ^ cmpGt(x, y);
     }
 
@@ -442,7 +436,7 @@ namespace simd
     }
 
     // permute
-/* Available in AVX-512
+/* TODO Available in AVX-512
     MCS_FORCE_INLINE vi128_t perm8Bits(vi128_t& x, vi128_t& idx)
     {
       return _mm_permutexvar_epi8(x, idx);

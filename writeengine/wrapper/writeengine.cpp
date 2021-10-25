@@ -3932,13 +3932,6 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
         }     // tokenize dictionary columns
     }         // loop through columns to see which ones need tokenizing
 
-    // debug token information for testing
-    if (isDebug(DEBUG_2))
-    {
-        printInputValue(colStructList, colValueList, ridList, dctnryStructList, dictStrList);
-    }
-
-
     //----------------------------------------------------------------------
     // Update column info structure @Bug 1862 set hwm, and
     // Prepare ValueList for new extent (if applicable)

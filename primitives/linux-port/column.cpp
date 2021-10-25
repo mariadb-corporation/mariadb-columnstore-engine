@@ -968,7 +968,6 @@ inline void writeColValue(
     uint16_t rid,
     const T* srcArray)
 {
-    //std::cerr << "writeColValue OutputType OutputType" << (uint32_t)(OutputType + 1 - 1) << " rid " << rid << std::endl;
     // TODO move base ptr calculation one level up.
     uint8_t* outPtr = reinterpret_cast<uint8_t*>(&out[1]);
     auto idx = out->NVALS++;
@@ -976,7 +975,6 @@ inline void writeColValue(
     {
         auto* outPos = getRIDArrayPosition(outPtr, idx);
         *outPos = rid;
-        //std::cerr << "writeColValue RID *outPos " << *outPos << "\n";
         out->RidFlags |= (1 << (rid >> 9)); // set the (row/512)'th bit
     }
 
@@ -986,16 +984,66 @@ inline void writeColValue(
         T* outPos = getValuesArrayPosition<T>(primitives::getFirstValueArrayPosition(out), idx);
         // TODO check bytecode for the 16 byte type
         *outPos = srcArray[rid];
-        //uint64_t vala = *outPos;
-        //std::cerr << "writeColValue outputType " << (uint32_t)OutputType << " *outPos " << vala << "\n";
     }
 }
 
 #if defined(__x86_64__ )
+template<typename T, ENUM_KIND KIND, bool HAS_INPUT_RIDS,
+         typename std::enable_if<HAS_INPUT_RIDS == true, T>::type* = nullptr>
+inline void vectUpdateMinMax(const bool validMinMax, const bool isNonNullOrEmpty,
+                             T& Min, T& Max, T curValue, NewColRequestHeader* in)
+{
+    if (validMinMax && isNonNullOrEmpty)
+        updateMinMax<KIND>(Min, Max, curValue, in);
+}
+
+// MCS won't update Min/Max for a block if it doesn't read all values in a block.
+// This happens if in->NVALS > 0(HAS_INPUT_RIDS is set).
+template<typename T, ENUM_KIND KIND, bool HAS_INPUT_RIDS,
+         typename std::enable_if<HAS_INPUT_RIDS == false, T>::type* = nullptr>
+inline void vectUpdateMinMax(const bool validMinMax, const bool isNonNullOrEmpty,
+                             T& Min, T& Max, T curValue, NewColRequestHeader* in)
+{
+    //
+}
+
+template<typename T, bool HAS_INPUT_RIDS,
+         typename std::enable_if<HAS_INPUT_RIDS == false, T>::type* = nullptr>
+void vectWriteColValuesLoopRIDAsignment(primitives::RIDType* ridDstArray, ColResultHeader* out,
+                                        const primitives::RIDType calculatedRID,
+                                        const primitives::RIDType* ridSrcArray, const uint32_t srcRIDIdx)
+{
+    *ridDstArray = calculatedRID;
+    out->RidFlags |= (1 << (calculatedRID >> 9)); // set the (row/512)'th bit
+}
+
+template<typename T, bool HAS_INPUT_RIDS,
+         typename std::enable_if<HAS_INPUT_RIDS == true, T>::type* = nullptr>
+void vectWriteColValuesLoopRIDAsignment(primitives::RIDType* ridDstArray, ColResultHeader* out,
+                                        const primitives::RIDType calculatedRID,
+                                        const primitives::RIDType* ridSrcArray, const uint32_t srcRIDIdx)
+{
+    *ridDstArray = ridSrcArray[srcRIDIdx];
+    out->RidFlags |= (1 << (ridSrcArray[srcRIDIdx] >> 9)); // set the (row/512)'th bit
+}
+
+// The set of SFINAE templates are used to write values/RID into the output buffer based on
+// a number of template parameters
 // No RIDs only values
 template<typename T, typename VT, int OUTPUT_TYPE, ENUM_KIND KIND, bool HAS_INPUT_RIDS,
          typename std::enable_if<OUTPUT_TYPE & (OT_TOKEN | OT_DATAVALUE) && !(OUTPUT_TYPE & OT_RID), T>::type* = nullptr>
-inline uint16_t vectWriteColValues(VT& simdProcessor, T* dataVecTPtr, char* dstArray, MT writeMask, T& Min, T&Max, const bool validMinMax, NewColRequestHeader* in, primitives::RIDType* ridDstArray, primitives::RIDType ridOffset, ColResultHeader* out, MT nonNullOrEmptyMask, primitives::RIDType* ridSrcArray)
+inline uint16_t vectWriteColValues(VT& simdProcessor, // SIMD processor
+    const MT writeMask,                               // SIMD intrinsics bitmask for values to write
+    const MT nonNullOrEmptyMask,                      // SIMD intrinsics inverce bitmask for NULL/EMPTY values
+    const bool validMinMax,                           // The flag to update Min/Max for a block or not
+    const primitives::RIDType ridOffset,              // The first RID value of the dataVecTPtr
+    T* dataVecTPtr,                                   // Typed SIMD vector from the input block
+    char* dstArray,                                   // the actual char dst array ptr to start writing values
+    T& Min, T&Max,                                    // Min/Max of the extent
+    NewColRequestHeader* in,                          // Proto message
+    ColResultHeader* out,                             // Proto message
+    primitives::RIDType* ridDstArray,                 // The actual dst arrray ptr to start writing RIDs
+    primitives::RIDType* ridSrcArray)                 // The actual src array ptr to read RIDs
 {
     constexpr const uint16_t WIDTH = sizeof(T);
     using SIMD_TYPE = typename VT::SIMD_TYPE;
@@ -1008,18 +1056,18 @@ inline uint16_t vectWriteColValues(VT& simdProcessor, T* dataVecTPtr, char* dstA
     uint32_t j = 0;
     for (uint32_t it = 0; it < VT::vecByteSize; ++j, it += WIDTH)
     {
-        MT bit = 1 << it;
-        if (writeMask & bit)
+        MT bitMapPosition = 1 << it;
+        if (writeMask & bitMapPosition)
         {
             *tmpDstVecTPtr = dataVecTPtr[j];
-            //uint64_t vala = *tmpDstVecTPtr;
-            //std::cerr << " vectWriteColValues type " << OUTPUT_TYPE << " j " << j << " *tmpDstVecTPtr " <<  vala << "\n";
-            // Measure the impact
             ++tmpDstVecTPtr;
         }
-        if (validMinMax && nonNullOrEmptyMask & bit)
-            updateMinMax<KIND>(Min, Max, dataVecTPtr[j], in);
+        vectUpdateMinMax<T, KIND, HAS_INPUT_RIDS>(validMinMax, nonNullOrEmptyMask & bitMapPosition,
+                                                  Min, Max, dataVecTPtr[j], in);
     }
+    // Store the whole vector however one level up the stack
+    // vectorizedFiltering() increases the dstArray by a number of
+    // actual values written that is the result of this function.
     simdProcessor.store(dstArray, tmpStorageVector);
 
     return tmpDstVecTPtr - reinterpret_cast<T*>(&tmpStorageVector);
@@ -1028,7 +1076,18 @@ inline uint16_t vectWriteColValues(VT& simdProcessor, T* dataVecTPtr, char* dstA
 // RIDs no values
 template<typename T, typename VT, int OUTPUT_TYPE, ENUM_KIND KIND, bool HAS_INPUT_RIDS,
          typename std::enable_if<OUTPUT_TYPE & OT_RID && !(OUTPUT_TYPE & OT_TOKEN), T>::type* = nullptr>
-inline uint16_t vectWriteColValues(VT& simdProcessor, T* dataVecTPtr, char* dstArray, MT writeMask, T& Min, T&Max, const bool validMinMax, NewColRequestHeader* in, primitives::RIDType* ridDstArray, primitives::RIDType ridOffset, ColResultHeader* out, MT nonNullOrEmptyMask, primitives::RIDType* ridSrcArray)
+inline uint16_t vectWriteColValues(VT& simdProcessor, // SIMD processor
+    const MT writeMask,                               // SIMD intrinsics bitmask for values to write
+    const MT nonNullOrEmptyMask,                      // SIMD intrinsics inverce bitmask for NULL/EMPTY values
+    const bool validMinMax,                           // The flag to update Min/Max for a block or not
+    const primitives::RIDType ridOffset,              // The first RID value of the dataVecTPtr
+    T* dataVecTPtr,                                   // Typed SIMD vector from the input block
+    char* dstArray,                                   // the actual char dst array ptr to start writing values
+    T& Min, T&Max,                                    // Min/Max of the extent
+    NewColRequestHeader* in,                          // Proto message
+    ColResultHeader* out,                             // Proto message
+    primitives::RIDType* ridDstArray,                 // The actual dst arrray ptr to start writing RIDs
+    primitives::RIDType* ridSrcArray)                 // The actual src array ptr to read RIDs
 {
     return 0;
 }
@@ -1036,7 +1095,18 @@ inline uint16_t vectWriteColValues(VT& simdProcessor, T* dataVecTPtr, char* dstA
 // Both RIDs and values
 template<typename T, typename VT, int OUTPUT_TYPE, ENUM_KIND KIND, bool HAS_INPUT_RIDS,
          typename std::enable_if<OUTPUT_TYPE == OT_BOTH, T>::type* = nullptr>
-inline uint16_t vectWriteColValues(VT& simdProcessor, T* dataVecTPtr, char* dstArray, MT writeMask, T& Min, T&Max, const bool validMinMax, NewColRequestHeader* in, primitives::RIDType* ridDstArray, primitives::RIDType ridOffset, ColResultHeader* out, MT nonNullOrEmptyMask, primitives::RIDType* ridSrcArray)
+inline uint16_t vectWriteColValues(VT& simdProcessor, // SIMD processor
+    const MT writeMask,                               // SIMD intrinsics bitmask for values to write
+    const MT nonNullOrEmptyMask,                      // SIMD intrinsics inverce bitmask for NULL/EMPTY values
+    const bool validMinMax,                           // The flag to update Min/Max for a block or not
+    const primitives::RIDType ridOffset,              // The first RID value of the dataVecTPtr
+    T* dataVecTPtr,                                   // Typed SIMD vector from the input block
+    char* dstArray,                                   // the actual char dst array ptr to start writing values
+    T& Min, T&Max,                                    // Min/Max of the extent
+    NewColRequestHeader* in,                          // Proto message
+    ColResultHeader* out,                             // Proto message
+    primitives::RIDType* ridDstArray,                 // The actual dst arrray ptr to start writing RIDs
+    primitives::RIDType* ridSrcArray)                 // The actual src array ptr to read RIDs
 {
     constexpr const uint16_t WIDTH = sizeof(T);
     using SIMD_TYPE = typename VT::SIMD_TYPE;
@@ -1049,27 +1119,21 @@ inline uint16_t vectWriteColValues(VT& simdProcessor, T* dataVecTPtr, char* dstA
     uint32_t j = 0;
     for (uint32_t it = 0; it < VT::vecByteSize; ++j, it += WIDTH)
     {
-        MT bit = 1 << it;
-        if (writeMask & bit)
+        MT bitMapPosition = 1 << it;
+        if (writeMask & bitMapPosition)
         {
             *tmpDstVecTPtr = dataVecTPtr[j];
-            //uint64_t vala = *tmpDstVecTPtr;
-            //std::cerr << " vectWriteColValues BOTH j " << j << " *tmpDstVecTPtr " <<  vala << std::endl;
-            // WIP
-            if (HAS_INPUT_RIDS)
-                *ridDstArray = ridSrcArray[j];
-            else
-                *ridDstArray = ridOffset + j;
-            // WIP search for all of such patterns
-            out->RidFlags |= (1 << (*ridDstArray >> 9)); // set the (row/512)'th bit
-            //std::cerr << " vectWriteColValues BOTH j " << j << " *ridDstArray " << *ridDstArray << std::endl;
-            ++ridDstArray;
-            // TODO Measure the impact
             ++tmpDstVecTPtr;
+           vectWriteColValuesLoopRIDAsignment<T, HAS_INPUT_RIDS>(ridDstArray, out, ridOffset + j,
+                                                                 ridSrcArray, j);
+            ++ridDstArray;
         }
-        if (validMinMax && nonNullOrEmptyMask & bit)
-            updateMinMax<KIND>(Min, Max, dataVecTPtr[j], in);
+        vectUpdateMinMax<T, KIND, HAS_INPUT_RIDS>(validMinMax, nonNullOrEmptyMask & bitMapPosition,
+                                                  Min, Max, dataVecTPtr[j], in);
     }
+    // Store the whole vector however one level up the stack
+    // vectorizedFiltering() increases the dstArray by a number of
+    // actual values written that is the result of this function.
     simdProcessor.store(dstArray, tmpStorageVector);
 
     return tmpDstVecTPtr - reinterpret_cast<T*>(&tmpStorageVector);
@@ -1078,32 +1142,36 @@ inline uint16_t vectWriteColValues(VT& simdProcessor, T* dataVecTPtr, char* dstA
 // RIDs no values
 template<typename T, typename VT, int OUTPUT_TYPE, ENUM_KIND KIND, bool HAS_INPUT_RIDS,
          typename std::enable_if<!(OUTPUT_TYPE & (OT_TOKEN | OT_DATAVALUE)) && OUTPUT_TYPE & OT_RID, T>::type* = nullptr>
-inline uint16_t vectWriteRIDValues(VT& processor, T* dataVecTPtr, primitives::RIDType* ridDstArray, const uint16_t valuesWritten, MT writeMask, T& Min, T&Max, const bool validMinMax, NewColRequestHeader* in, const primitives::RIDType ridOffset, ColResultHeader* out, MT nonNullOrEmptyMask, primitives::RIDType* ridSrcArray)
+inline uint16_t vectWriteRIDValues(VT& processor,   // SIMD processor
+    T* dataVecTPtr,                                 // Typed SIMD vector from the input block
+    primitives::RIDType* ridDstArray,               // The actual dst arrray ptr to start writing RIDs
+    const uint16_t valuesWritten,                   // The number of values written to in certain SFINAE cases
+    MT writeMask,                                   // SIMD intrinsics bitmask for values to write
+    T& Min, T&Max,                                  // Min/Max of the extent
+    const bool validMinMax,                         // The flag to update Min/Max for a block or not
+    NewColRequestHeader* in,                        // Proto message
+    const primitives::RIDType ridOffset,            // The first RID value of the dataVecTPtr
+    ColResultHeader* out,                           // Proto message
+    MT nonNullOrEmptyMask,                          // SIMD intrinsics inverce bitmask for NULL/EMPTY values
+    primitives::RIDType* ridSrcArray)               // The actual src array ptr to read RIDs
 {
     constexpr const uint16_t WIDTH = sizeof(T);
     primitives::RIDType* origRIDDstArray = ridDstArray;
     // Saving values based on writeMask into tmp vec.
     // Min/Max processing.
-    // The mask is 16 bit long and it describes N elements.
-    // N = sizeof(vector type) / WIDTH.
+    // The mask is 16 bit long and it describes N elements where N = sizeof(vector type) / WIDTH.
     uint16_t j = 0;
     for (uint32_t it = 0; it < VT::vecByteSize; ++j, it += WIDTH)
     {
-        MT bit = 1 << it;
+        MT bitMapPosition = 1 << it;
         if (writeMask & (1 << it))
         {
-            // WIP
-            if (HAS_INPUT_RIDS)
-                *ridDstArray = ridSrcArray[j];
-            else
-                *ridDstArray = ridOffset + j;
-            out->RidFlags |= (1 << (*ridDstArray >> 9)); // set the (row/512)'th bit
-            // WIP
-            //std::cerr << " vectWriteColValues RID j " << j << " *ridDstArray " << *ridDstArray << std::endl;
+            vectWriteColValuesLoopRIDAsignment<T, HAS_INPUT_RIDS>(ridDstArray, out, ridOffset + j,
+                                                                  ridSrcArray, j);
             ++ridDstArray;
         }
-        if (validMinMax && nonNullOrEmptyMask & bit)
-            updateMinMax<KIND>(Min, Max, dataVecTPtr[j], in);
+        vectUpdateMinMax<T, KIND, HAS_INPUT_RIDS>(validMinMax, nonNullOrEmptyMask & bitMapPosition,
+                                                  Min, Max, dataVecTPtr[j], in);
     }
     return ridDstArray - origRIDDstArray;
 }
@@ -1384,19 +1452,39 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
         {
             // filter using compiled filter and preloaded filter argument
             filterMask = copFunctorVec[j](simdProcessor, dataVec, filterArgsVectors[j]);
-            //std::cerr << " iterNumber " << i << " filterMask " << filterMask << " prevFilterMask " << prevFilterMask << std::endl;
             filterMask = bopFunctor(prevFilterMask, filterMask);
             prevFilterMask = filterMask;
-            //std::cerr << " iterNumber " << i << " filterMask 2 " << filterMask << std::endl;
         }
         writeMask = writeMask & filterMask;
 
         T* dataVecTPtr = reinterpret_cast<T*>(&dataVec);
 
-        // Iterate over the values in the vec to store values/RIDs.
-        // The routines take NULL bitmap into account.
-        uint16_t valuesWritten = vectWriteColValues<T, VT, OUTPUT_TYPE, KIND, HAS_INPUT_RIDS>(simdProcessor, dataVecTPtr, dstArray, writeMask, Min, Max, validMinMax, in, ridDstArray, ridOffset, out, nonNullOrEmptyMask, ridArray);
-        valuesWritten = vectWriteRIDValues<T, VT, OUTPUT_TYPE, KIND, HAS_INPUT_RIDS>(simdProcessor, dataVecTPtr, ridDstArray, valuesWritten, writeMask, Min, Max, validMinMax, in, ridOffset, out, nonNullOrEmptyMask, ridArray);
+        // vectWriteColValues iterates over the values in the source vec
+        // to store values/RIDs into dstArray/ridDstArray.
+        // It also sets Min/Max values for the block if eligible.
+        // !!! vectWriteColValues increases ridDstArray internally but it doesn't go
+        // outside the scope of the memory allocated to out msg.
+        uint16_t valuesWritten =
+            vectWriteColValues<T, VT, OUTPUT_TYPE, KIND, HAS_INPUT_RIDS>(simdProcessor,
+                                                                         writeMask,
+                                                                         nonNullOrEmptyMask,
+                                                                         validMinMax,
+                                                                         ridOffset,
+                                                                         dataVecTPtr,
+                                                                         dstArray,
+                                                                         Min, Max,
+                                                                         in, out, ridDstArray,
+                                                                         ridArray);
+        valuesWritten =
+            vectWriteRIDValues<T, VT, OUTPUT_TYPE, KIND, HAS_INPUT_RIDS>(simdProcessor,
+                                                                         dataVecTPtr,
+                                                                         ridDstArray,
+                                                                         valuesWritten,
+                                                                         writeMask,
+                                                                         Min, Max,
+                                                                         validMinMax,
+                                                                         in, ridOffset, out,
+                                                                         nonNullOrEmptyMask, ridArray);
 
         // Calculate bytes written
         uint16_t bytesWritten = valuesWritten * WIDTH;
@@ -1408,43 +1496,23 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
         ridArray += VECTOR_SIZE;
     }
 
+    // WIP 
     if (validMinMax)
     {
         out->Min = Min;
         out->Max = Max;
     }
-    //std::cerr << "vectorizedFiltering 1 width " << WIDTH << " out->Max " << datatypes::TSInt128(out->Max).toString() << " Min " << datatypes::TSInt128(out->Min).toString() << std::endl;
     out->NVALS = totalValuesWritten;
     out->ValidMinMax = validMinMax;
-/*
-    std::cerr << "vectorizedFiltering 1 WIDTH " << WIDTH << " out->NVALS " << out->NVALS << std::endl;
-    primitives::RIDType* ridDstArrayPO = reinterpret_cast<primitives::RIDType*>(getFirstRIDArrayPosition(out));
-    auto* dstArrayPO = primitives::getFirstValueArrayPosition(out);
-    for(size_t j = 0; j < out->NVALS; ++j)
-    {
-        std::cerr << "vectorizedFiltering 2 WIDTH " << WIDTH << " j " << j << " dstArrayPO[j] " << datatypes::TSInt128(*(T*)(dstArrayPO + j*WIDTH)) << " ridDstArrayPO[j] " << ridDstArrayPO[j] << std::endl;
-    }
-*/
-    // process the tail
+    // process the tail. scalarFiltering changes out contents, e.g. Min/Max, NVALS, RIDs and values array
     uint32_t processedSoFar = rid;
     scalarFiltering<T, FT, ST, KIND>(in, out, columnFilterMode, filterSet, filterCount, filterCOPs,
                                      filterValues, filterRFs, in->colType, origSrcArray, srcSize, origRidArray,
                                      ridSize, processedSoFar, outputType, validMinMax, emptyValue, nullValue,
                                      Min, Max, isNullValueMatches);
-    //std::cerr << "vectorizedFiltering 2 width " << WIDTH << " out->Max " << datatypes::TSInt128(out->Max).toString() << " Min " << datatypes::TSInt128(out->Min).toString() << std::endl;
-/*
-    std::cerr << "vectorizedFiltering 3 out->NVALS " << out->NVALS << std::endl;
-    ridDstArrayPO = reinterpret_cast<primitives::RIDType*>(getFirstRIDArrayPosition(out));
-    dstArrayPO = primitives::getFirstValueArrayPosition(out);
-    for(size_t j = 0; j < out->NVALS; ++j)
-    {
-        std::cerr << "vectorizedFiltering 4 WIDTH " << WIDTH << " j " << j << " dstArrayPO[j] " << datatypes::TSInt128(*(T*)(dstArrayPO + j*WIDTH)) << " ridDstArrayPO[j] " << ridDstArrayPO[j] << std::endl;
-    }
-*/
 }
 
-// This routine dispatches calls to leverage templates to reduce branching
-// and generate parameter-specific code.
+// This routine dispatches template function calls to reduce branching.
 template<typename T, ENUM_KIND KIND, typename FT, typename ST>
 void vectorizedFilteringDispatcher(NewColRequestHeader* in, ColResultHeader* out,
     const T* srcArray, const uint32_t srcSize, uint16_t* ridArray,
@@ -1459,7 +1527,6 @@ void vectorizedFilteringDispatcher(NewColRequestHeader* in, ColResultHeader* out
     bool hasInputRIDs = (in->NVALS > 0) ? true : false;
     if (hasInputRIDs)
     {
-        //std::cerr << "vectorizedFilteringDispatcher hasInputRIDs KIND " << KIND << std::endl;
         constexpr const bool hasInput = true;
         switch (in->OutputType)
         {
@@ -1491,7 +1558,6 @@ void vectorizedFilteringDispatcher(NewColRequestHeader* in, ColResultHeader* out
     }
     else
     {
-        //std::cerr << "vectorizedFilteringDispatcher hasNoInputRIDs KIND " << KIND << std::endl;
         constexpr const bool hasNoInput = false;
         switch (in->OutputType)
         {
@@ -1573,7 +1639,6 @@ void filterColumnData(
 
     // ###########################
     // Boolean indicating whether to capture the min and max values
-    // WIP optimize this away
     bool validMinMax = isMinMaxValid(in);
     T Min = datatypes::numeric_limits<T>::max();
     T Max = (KIND == KIND_UNSIGNED) ? 0 : datatypes::numeric_limits<T>::min();
@@ -1585,6 +1650,8 @@ void filterColumnData(
     // all values w/o any filter(even empty values filter) applied.
 
 #if defined(__x86_64__ )
+    // Don't use vectorized filtering for syscat and non-integer based data types
+    // wider than 16 bytes
     if (!(in->hdr.SessionID & 0x80000000) && KIND == KIND_DEFAULT && WIDTH < 16)
     {
         bool canUseFastFiltering = true;
@@ -1594,10 +1661,9 @@ void filterColumnData(
 
         if (canUseFastFiltering)
         {
-            //std::cerr << "run vectors" << std::endl;
             vectorizedFilteringDispatcher<T, KIND, FT, ST>(in, out, srcArray, srcSize, ridArray, ridSize,
-                                         parsedColumnFilter.get(), validMinMax, emptyValue, nullValue, Min, Max,
-                                         isNullValueMatches);
+                                                           parsedColumnFilter.get(), validMinMax, emptyValue,
+                                                           nullValue, Min, Max, isNullValueMatches);
             return;
         }
     }
