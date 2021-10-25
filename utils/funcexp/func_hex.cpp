@@ -38,7 +38,7 @@ using namespace execplan;
 
 #include "funchelpers.h"
 
-namespace
+namespace funcexp
 {
 char digit_upper[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -54,10 +54,7 @@ void octet2hex(char* to, const char* str, uint32_t len)
 
     *to = '\0';
 }
-}
 
-namespace funcexp
-{
 CalpontSystemCatalog::ColType Func_hex::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
 {
     return resultType;
