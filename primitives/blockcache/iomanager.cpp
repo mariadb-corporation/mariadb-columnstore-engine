@@ -104,6 +104,7 @@ using namespace compress;
 using namespace idbdatafile;
 
 #include "mcsconfig.h"
+#include "threadnaming.h"
 
 typedef tr1::unordered_set<BRM::OID_t> USOID;
 
@@ -394,6 +395,7 @@ static int updateptrs(char* ptr, FdCacheType_t::iterator fdit)
 
 void* thr_popper(ioManager* arg)
 {
+    utils::setThreadName("thr_popper");
     ioManager* iom = arg;
     FileBufferMgr* fbm;
     int totalRqst = 0;

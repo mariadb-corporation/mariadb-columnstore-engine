@@ -24,7 +24,7 @@
 #include <unistd.h>
 #include <stdexcept>
 #include "bppsendthread.h"
-
+#include "resourcemanager.h"
 using namespace std;
 using namespace boost;
 
@@ -32,19 +32,19 @@ using namespace boost;
 
 namespace primitiveprocessor
 {
-
 extern uint32_t connectionsPerUM;
+uint64_t BPPSendThread::maxByteSize = joblist::ResourceManager::instance()->getMaxBPPSendQueue();
 
 BPPSendThread::BPPSendThread() : die(false), gotException(false), mainThreadWaiting(false),
     sizeThreshold(100), msgsLeft(-1), waiting(false), sawAllConnections(false),
-    fcEnabled(false), currentByteSize(0), maxByteSize(25000000)
+    fcEnabled(false), currentByteSize(0)
 {
     runner = boost::thread(Runner_t(this));
 }
 
 BPPSendThread::BPPSendThread(uint32_t initMsgsLeft) : die(false), gotException(false),
     mainThreadWaiting(false), sizeThreshold(100), msgsLeft(initMsgsLeft), waiting(false),
-    sawAllConnections(false), fcEnabled(false), currentByteSize(0), maxByteSize(25000000)
+    sawAllConnections(false), fcEnabled(false), currentByteSize(0)
 {
     runner = boost::thread(Runner_t(this));
 }
@@ -53,29 +53,36 @@ BPPSendThread::~BPPSendThread()
 {
     boost::mutex::scoped_lock sl(msgQueueLock);
     boost::mutex::scoped_lock sl2(ackLock);
+    boost::mutex::scoped_lock sl3(respondLock);
     die = true;
     queueNotEmpty.notify_one();
     okToSend.notify_one();
+    okToRespond.notify_one();
     sl.unlock();
     sl2.unlock();
+    sl3.unlock();
     runner.join();
-}
-
-bool BPPSendThread::okToProceed()
-{
-    // keep the queue size below the 100 msg threshold & below the 25MB mark,
-    // but at least 2 msgs so there is always 1 ready to be sent.
-    return ((msgQueue.size() < sizeThreshold && currentByteSize < maxByteSize)
-            || msgQueue.size() < 3) && !die;
 }
 
 void BPPSendThread::sendResult(const Msg_t& msg, bool newConnection)
 {
+    // Wait for the queue to empty out a bit if it's stuffed full
+    if (sizeTooBig())
+    {
+        boost::mutex::scoped_lock sl1(respondLock);
+        while (currentByteSize >= maxByteSize && msgsLeft > 3 && !die)
+        {
+            respondWait = true;
+            okToRespond.wait(sl1);
+            respondWait = false;
+        }
+        sl1.unlock();
+    }
     if (die)
         return;
-
+    
     boost::mutex::scoped_lock sl(msgQueueLock);
-
+    
     if (gotException)
         throw runtime_error(exceptionString);
 
@@ -105,6 +112,18 @@ void BPPSendThread::sendResult(const Msg_t& msg, bool newConnection)
 
 void BPPSendThread::sendResults(const vector<Msg_t>& msgs, bool newConnection)
 {
+    // Wait for the queue to empty out a bit if it's stuffed full
+    if (sizeTooBig())
+    {
+        boost::mutex::scoped_lock sl1(respondLock);
+        while (currentByteSize >= maxByteSize && msgsLeft > 3 && !die)
+        {
+            respondWait = true;
+            okToRespond.wait(sl1);
+            respondWait = false;
+        }
+        sl1.unlock();
+    }
     if (die)
         return;
 
@@ -254,6 +273,12 @@ void BPPSendThread::mainLoop()
                 (void)atomicops::atomicSub(&currentByteSize, bsSize);
                 msg[msgsSent].msg.reset();
             }
+
+            if (respondWait && currentByteSize < maxByteSize)
+            {
+                boost::mutex::scoped_lock sl1(respondLock);
+                okToRespond.notify_one();
+            }
         }
     }
 }
@@ -262,11 +287,14 @@ void BPPSendThread::abort()
 {
     boost::mutex::scoped_lock sl(msgQueueLock);
     boost::mutex::scoped_lock sl2(ackLock);
+    boost::mutex::scoped_lock sl3(respondLock);
     die = true;
     queueNotEmpty.notify_one();
     okToSend.notify_one();
+    okToRespond.notify_all();
     sl.unlock();
     sl2.unlock();
+    sl3.unlock();
 }
 
 }

@@ -28,6 +28,7 @@ using namespace std;
 
 #include "messageobj.h"
 #include "messagelog.h"
+#include "threadnaming.h"
 using namespace logging;
 
 #include "prioritythreadpool.h"
@@ -139,6 +140,7 @@ PriorityThreadPool::Priority PriorityThreadPool::pickAQueue(Priority preference)
 
 void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
 {
+    utils::setThreadName("Idle");
     Priority queue = LOW;
     uint32_t weight, i = 0;
     vector<Job> runList;
@@ -194,7 +196,8 @@ void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
                 if (reschedule[i])
                     rescheduleCount++;
             }
-
+            utils::setThreadName("Idle");
+                
             // no real work was done, prevent intensive busy waiting
             if (rescheduleCount == runList.size())
                 usleep(1000);

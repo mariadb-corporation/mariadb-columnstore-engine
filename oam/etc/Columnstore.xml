@@ -96,6 +96,7 @@
 		<!-- <MediumPriorityPercentage>30</MediumPriorityPercentage> -->
 		<!-- <LowPriorityPercentage>10</LowPriorityPercentage> -->
 		<DirectIO>y</DirectIO>
+        <MaxBPPSendQueue>250M</MaxBPPSendQueue>
         <HighPriorityPercentage/>
         <MediumPriorityPercentage/>
         <LowPriorityPercentage/>
@@ -486,10 +487,10 @@
 		<MaxBuckets>128</MaxBuckets>
 		<MaxElems>128K</MaxElems>  <!-- 128 buckets * 128K * 16 = 256 MB -->
 		<FifoSizeLargeSide>64</FifoSizeLargeSide>
-		<PmMaxMemorySmallSide>1G</PmMaxMemorySmallSide>
+		<PmMaxMemorySmallSide>100M</PmMaxMemorySmallSide>
 		<TotalUmMemory>25%</TotalUmMemory>
 		<CPUniqueLimit>100</CPUniqueLimit>
-		<AllowDiskBasedJoin>N</AllowDiskBasedJoin>
+		<AllowDiskBasedJoin>Y</AllowDiskBasedJoin>
 		<TempFileCompression>Y</TempFileCompression>
     <TempFileCompressionType>Snappy</TempFileCompressionType> <!-- LZ4, Snappy -->
 	</HashJoin>

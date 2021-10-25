@@ -82,6 +82,7 @@ const uint32_t defaultRequestSize  = 1;
 const uint32_t defaultMaxOutstandingRequests = 20;
 const uint32_t defaultProcessorThreadsPerScan = 16;
 const uint32_t defaultJoinerChunkSize = 16 * 1024 * 1024;
+const uint64_t defaultMaxBPPSendQueue = 250000000; // 250MB
 
 //bucketreuse
 const std::string defaultTempDiskPath = "/tmp";
@@ -381,6 +382,11 @@ public:
         return getUintVal(fJobListStr, "DECThrottleThreshold", defaultDECThrottleThreshold);
     }
 
+    uint64_t    getMaxBPPSendQueue() const
+    {
+        return getUintVal(fPrimitiveServersStr, "MaxBPPSendQueue", defaultMaxBPPSendQueue);
+    }
+    
     EXPORT void  emServerThreads();
     EXPORT void  emServerQueueSize();
     EXPORT void  emSecondsBetweenMemChecks();
@@ -402,7 +408,7 @@ public:
     inline void returnMemory(int64_t amount, boost::shared_ptr<int64_t> sessionLimit)
     {
         atomicops::atomicAdd(&totalUmMemLimit, amount);
-        atomicops::atomicAdd(sessionLimit.get(), amount);
+        sessionLimit? atomicops::atomicAdd(sessionLimit.get(), amount): 0;
     }
     inline int64_t availableMemory() const
     {
@@ -673,3 +679,4 @@ inline bool ResourceManager::getBoolVal(const std::string& section, const std::s
 #undef EXPORT
 
 #endif
+

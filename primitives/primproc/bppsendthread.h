@@ -28,6 +28,7 @@
 #include <set>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/condition.hpp>
+#include "threadnaming.h"
 
 #ifndef BPPSENDTHREAD_H
 #define BPPSENDTHREAD_H
@@ -63,7 +64,15 @@ public:
             msg(m), sock(so), sockLock(sl), sockIndex(si) { }
     };
 
-    bool okToProceed();
+    bool sizeTooBig()
+    {
+      // keep the queue size below the 100 msg threshold & below the 250MB mark,
+      // but at least 2 msgs so there is always 1 ready to be sent.
+      return (msgQueue.size() > sizeThreshold 
+                  || (currentByteSize >= maxByteSize && msgQueue.size() > 3)) && !die;
+    }
+    
+    
     void sendMore(int num);
     void sendResults(const std::vector<Msg_t>& msgs, bool newConnection);
     void sendResult(const Msg_t& msg, bool newConnection);
@@ -85,6 +94,7 @@ private:
         Runner_t(BPPSendThread* b) : bppst(b) { }
         void operator()()
         {
+            utils::setThreadName("BPPSendThread");
             bppst->mainLoop();
         }
     };
@@ -100,7 +110,11 @@ private:
     bool waiting;
     boost::mutex ackLock;
     boost::condition okToSend;
-
+    // Condition to prevent run away queue
+    bool respondWait;
+    boost::mutex respondLock;
+    boost::condition okToRespond;
+    
     /* Load balancing structures */
     struct Connection_t
     {
@@ -124,7 +138,7 @@ private:
 
     /* secondary queue size restriction based on byte size */
     volatile uint64_t currentByteSize;
-    uint64_t maxByteSize;
+    static uint64_t maxByteSize;
 };
 
 }

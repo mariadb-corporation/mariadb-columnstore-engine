@@ -79,6 +79,7 @@
 
 #include "mariadb_my_sys.h"
 #include "statistics.h"
+#include "threadnaming.h"
 
 class Opt
 {
@@ -640,8 +641,6 @@ private:
 
         if (jl->status() == 0)
         {
-            std::string emsg;
-
             if (jl->putEngineComm(fEc) != 0)
                 throw std::runtime_error(jl->errMsg());
         }
@@ -738,6 +737,7 @@ private:
 
     void operator()()
     {
+        utils::setThreadName("SessionThread");
         messageqcpp::ByteStream bs, inbs;
         execplan::CalpontSelectExecutionPlan csep;
         csep.sessionID(0);

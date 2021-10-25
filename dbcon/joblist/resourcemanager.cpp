@@ -411,22 +411,35 @@ bool ResourceManager::userPriorityEnabled() const
     return "Y" == val;
 }
 
+// Counts memory. This funtion doesn't actually malloc, just counts against two limits
+// totalUmMemLimit for overall UM counting and (optional) sessionLimit for a single session.
+// If both have space, return true.
 bool ResourceManager::getMemory(int64_t amount, boost::shared_ptr<int64_t> sessionLimit, bool patience)
 {
     bool ret1 = (atomicops::atomicSub(&totalUmMemLimit, amount) >= 0);
-    bool ret2 = (atomicops::atomicSub(sessionLimit.get(), amount) >= 0);
+    bool ret2 = sessionLimit ? (atomicops::atomicSub(sessionLimit.get(), amount) >= 0) : ret1;
 
     uint32_t retryCounter = 0, maxRetries = 20;   // 10s delay
 
     while (patience && !(ret1 && ret2) && retryCounter++ < maxRetries)
     {
         atomicops::atomicAdd(&totalUmMemLimit, amount);
-        atomicops::atomicAdd(sessionLimit.get(), amount);
+        sessionLimit ? atomicops::atomicAdd(sessionLimit.get(), amount) : 0;
         usleep(500000);
         ret1 = (atomicops::atomicSub(&totalUmMemLimit, amount) >= 0);
-        ret2 = (atomicops::atomicSub(sessionLimit.get(), amount) >= 0);
+        ret2 = sessionLimit ? (atomicops::atomicSub(sessionLimit.get(), amount) >= 0) : ret1;
     }
-
+    if  (!(ret1 && ret2))
+    {
+        // If  we  didn't  get any memory, restore the counters.
+        atomicops::atomicAdd(&totalUmMemLimit, amount);
+        sessionLimit ? atomicops::atomicAdd(sessionLimit.get(), amount) : 0;
+    }
+    // Debug: a place to put a breakpoint if totalUMMemLimit drops below 0. It should enver do that.
+    if  (totalUmMemLimit < 0)
+    {
+        return (ret1 && ret2);
+    }
     return (ret1 && ret2);
 }
 
