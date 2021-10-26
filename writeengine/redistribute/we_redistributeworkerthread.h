@@ -89,7 +89,7 @@ private:
     int   connectToWes(int);
     int   updateDbrm();
     void  confirmToPeer();
-    bool  checkDataTransferAck(SBS&, size_t);
+    bool  checkDataTransferAck(messageqcpp::SBS&, size_t);
 
     void  sendResponse(uint32_t);
 
