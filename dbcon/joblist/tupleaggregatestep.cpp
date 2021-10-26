@@ -80,7 +80,7 @@ namespace
 struct cmpTuple
 {
     bool operator()(boost::tuple<uint32_t, int, mcsv1sdk::mcsv1_UDAF*, std::vector<uint32_t>* > a,
-                    boost::tuple<uint32_t, int, mcsv1sdk::mcsv1_UDAF*, std::vector<uint32_t>* > b)
+                    boost::tuple<uint32_t, int, mcsv1sdk::mcsv1_UDAF*, std::vector<uint32_t>* > b) const
     {
         uint32_t keya = boost::get<0>(a);
         uint32_t keyb = boost::get<0>(b);
@@ -2199,7 +2199,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
             if (aggOp == ROWAGG_MULTI_PARM)
             {
                 // Duplicate detection doesn't work for multi-parm`
-                
+
                 // If this function was earlier detected as a duplicate, unduplicate it.
                 SP_ROWAGG_FUNC_t funct = functionVec2.back();
                 if (funct->fAggFunction == ROWAGG_DUP_FUNCT)
@@ -4490,7 +4490,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
         uint64_t outIdx = 0;
         RowAggFunctionType prevAggOp = ROWAGG_FUNCT_UNDEFINE;
         uint32_t prevRetKey = 0;
-        
+
         for (uint64_t i = 0; i < returnedColVec.size(); i++)
         {
             pUDAFFunc = NULL;
@@ -4504,7 +4504,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
             if (aggOp == ROWAGG_MULTI_PARM)
             {
                 // Duplicate detection doesn't work for multi-parm`
-                
+
                 // If this function was earlier detected as a duplicate, unduplicate it.
                 SP_ROWAGG_FUNC_t funct = functionVecUm.back();
                 if (funct->fAggFunction == ROWAGG_DUP_FUNCT)

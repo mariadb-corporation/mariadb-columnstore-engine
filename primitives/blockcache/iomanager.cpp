@@ -261,7 +261,7 @@ typedef FdCountEntry FdCountEntry_t;
 
 struct fdCountCompare
 {
-    bool operator() (const FdCountEntry_t& lhs, const FdCountEntry_t& rhs)
+    bool operator() (const FdCountEntry_t& lhs, const FdCountEntry_t& rhs) const
     {
         return lhs.cnt > rhs.cnt;
     }
