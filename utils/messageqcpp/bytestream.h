@@ -471,6 +471,13 @@ protected:
     void doCopy(const ByteStream& rhs);
 
 private:
+    // Put struct `MemChunk` declaration here, to avoid circular dependency.
+    struct MemChunk
+    {
+        uint32_t currentSize;
+        uint32_t capacity;
+        uint8_t data[];
+    };
 
     uint8_t* fBuf; ///the start of the allocated buffer
     uint8_t* fCurInPtr; //the point in fBuf where data is inserted next
