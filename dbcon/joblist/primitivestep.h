@@ -963,7 +963,7 @@ public:
     void appendFilter(const messageqcpp::ByteStream& filter, unsigned count);
 
     virtual void abort();
-    
+
     const execplan::CalpontSystemCatalog::ColType& colType() const
     {
         return fColType;

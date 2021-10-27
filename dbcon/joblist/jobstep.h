@@ -485,7 +485,7 @@ protected:
     bool        fDelivery;
     bool        fOnClauseFilter;
     volatile bool fDie;
-    volatile uint32_t fWaitToRunStepCnt;
+    uint32_t fWaitToRunStepCnt;
     std::string fExtendedInfo;
     std::string fMiniInfo;
 
