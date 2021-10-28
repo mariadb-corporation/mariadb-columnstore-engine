@@ -303,8 +303,8 @@ float RowEstimator::estimateRowReturnFactor(const BRM::EMEntry& emEntry,
     float tempFactor = 1.0;
 
     uint64_t adjustedMin = 0, adjustedMax = 0;
-    uint128_t adjustedBigMin, adjustedBigMax;
-    uint32_t distinctValuesEstimate;
+    uint128_t adjustedBigMin = 0, adjustedBigMax = 0;
+    uint32_t distinctValuesEstimate = 0;
 
     // Adjust values based on column type and estimate the
     if (!ct.isWideDecimalType())

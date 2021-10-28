@@ -23,7 +23,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <string>
-
+#include <boost/any.hpp>
 
 namespace logging
 {
@@ -31,7 +31,7 @@ namespace logging
 template <class T, class Iter>
 void formatOne(std::string &errMsg, Iter iter, uint32_t position)
 {
-    T arg = any_cast<T>(*iter);
+    T arg = boost::any_cast<T>(*iter);
     std::string token = std::string("%") + std::to_string(position) + std::string("%");
     size_t index = 0;
 
