@@ -32,15 +32,19 @@ using namespace std;
 #include "mcsconfig.h"
 
 #ifdef HAVE_LZ4
-#include "lz4.h"
-#else
+  #include "lz4.h"
+#endif
+
 // Taken from lz4.h.
-#define LZ4_MAX_INPUT_SIZE        0x7E000000   /* 2 113 929 216 bytes */
-#define LZ4_COMPRESSBOUND(isize)  ((unsigned)(isize) > (unsigned)LZ4_MAX_INPUT_SIZE ? 0 : (isize) + ((isize)/255) + 16)
+#ifndef LZ4_MAX_INPUT_SIZE
+  #define LZ4_MAX_INPUT_SIZE        0x7E000000   /* 2 113 929 216 bytes */
+#endif
+#ifndef LZ4_COMPRESSBOUND
+  #define LZ4_COMPRESSBOUND(isize)  ((unsigned)(isize) > (unsigned)LZ4_MAX_INPUT_SIZE ? 0 : (isize) + ((isize)/255) + 16)
 #endif
 
 #define IDBCOMP_DLLEXPORT
-#include "idbcompress.h"
+  #include "idbcompress.h"
 #undef IDBCOMP_DLLEXPORT
 
 namespace
