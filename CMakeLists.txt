@@ -220,8 +220,9 @@ ENDIF()
 
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-enum-enum-conversion")
+    MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-enum-enum-conversion -Wno-register")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-register")
 endif()
 
 
