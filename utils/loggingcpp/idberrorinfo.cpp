@@ -158,24 +158,6 @@ string IDBErrorInfo::logError(const logging::LOG_TYPE logLevel,
     return logger.logMessage(logLevel, message, logid);
 }
 
-template <class T>
-void formatOne(string &errMsg, Message::Args::AnyVec::const_iterator iter, uint32_t position)
-{
-    T arg = any_cast<T>(*iter);
-    std::string token = std::string("%") + std::to_string(position) + std::string("%");
-    size_t index = 0;
-    while (true)
-    {
-        index = errMsg.find(token, index);
-        if (index == std::string::npos)
-            break;
-
-        errMsg.replace(index, token.length(), std::to_string(arg));
-
-      index += token.length();
-    }
-}
-
 void IDBErrorInfo::format(string& errMsg, const Message::Args& args)
 {
     formatMany(errMsg, args.args());

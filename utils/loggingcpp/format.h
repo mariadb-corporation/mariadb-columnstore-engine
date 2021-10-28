@@ -24,6 +24,10 @@
 #include <stdexcept>
 #include <string>
 
+
+namespace logging
+{
+
 template <class T, class Iter>
 void formatOne(std::string &errMsg, Iter iter, uint32_t position)
 {
@@ -77,9 +81,11 @@ void formatMany(std::string& errMsg, const T& args)
         }
         else
         {
-            throw std::logic_error("IDBErrorInfo::format: unexpected type in argslist");
+            throw std::logic_error("logggin::format: unexpected type in argslist");
         }
         ++iter;
         ++position;
     }
 }
+
+} // namespace logging
