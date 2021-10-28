@@ -10,9 +10,9 @@ or if you are not a github user,
 
 	git clone https://github.com/MariaDB/server.git
 
-branch 10.5 was suggested despite the fact that develop branch of the engine will eventually work with 10.6
+The MCS engine repo has a number of develop-X branches where X is a number and it equals with the last number of MariaDB server major release, e.g develop-6 must be used with 10.6 of the server. There is single exception, namely develop branch of the engine must be compile with a current develop version of the server.
 
-	git checkout -b 10.5 origin/10.5
+	git checkout -b 10.6 origin/10.6
 
 MariaDB server contains many git submodules that need to be checked out with,
 
