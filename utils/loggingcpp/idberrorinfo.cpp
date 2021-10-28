@@ -19,6 +19,7 @@
 * $Id: idberrorinfo.cpp 3626 2013-03-11 15:36:08Z xlou $
 *
 ******************************************************************************************/
+#include <cstdint>
 #include <iostream>
 #include <iomanip>
 #include <string>
@@ -29,7 +30,6 @@
 #include <fstream>
 using namespace std;
 
-#include <boost/format.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/thread.hpp>
 using namespace boost;
@@ -37,6 +37,7 @@ using namespace boost;
 #include "mcsconfig.h"
 #include "configcpp.h"
 using namespace config;
+#include "format.h"
 #include "loggingid.h"
 #include "logger.h"
 #include "idberrorinfo.h"
@@ -157,45 +158,27 @@ string IDBErrorInfo::logError(const logging::LOG_TYPE logLevel,
     return logger.logMessage(logLevel, message, logid);
 }
 
+template <class T>
+void formatOne(string &errMsg, Message::Args::AnyVec::const_iterator iter, uint32_t position)
+{
+    T arg = any_cast<T>(*iter);
+    std::string token = std::string("%") + std::to_string(position) + std::string("%");
+    size_t index = 0;
+    while (true)
+    {
+        index = errMsg.find(token, index);
+        if (index == std::string::npos)
+            break;
+
+        errMsg.replace(index, token.length(), std::to_string(arg));
+
+      index += token.length();
+    }
+}
+
 void IDBErrorInfo::format(string& errMsg, const Message::Args& args)
 {
-    Message::Args::AnyVec::const_iterator iter = args.args().begin();
-    Message::Args::AnyVec::const_iterator end = args.args().end();
-
-    boost::format fmt(errMsg);
-    fmt.exceptions(boost::io::no_error_bits);
-
-    while (iter != end)
-    {
-        if (iter->type() == typeid(long))
-        {
-            long l = any_cast<long>(*iter);
-            fmt % l;
-        }
-        else if (iter->type() == typeid(uint64_t))
-        {
-            uint64_t u64 = any_cast<uint64_t>(*iter);
-            fmt % u64;
-        }
-        else if (iter->type() == typeid(double))
-        {
-            double d = any_cast<double>(*iter);
-            fmt % d;
-        }
-        else if (iter->type() == typeid(string))
-        {
-            string s = any_cast<string>(*iter);
-            fmt % s;
-        }
-        else
-        {
-            throw logic_error("IDBErrorInfo::format: unexpected type in argslist");
-        }
-
-        ++iter;
-    }
-
-    errMsg = fmt.str();
+    formatMany(errMsg, args.args());
 }
 
 /* static */

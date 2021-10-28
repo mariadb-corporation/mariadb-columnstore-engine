@@ -29,10 +29,11 @@
 #include <fstream>
 using namespace std;
 
-#include <boost/format.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/thread.hpp>
 using namespace boost;
+
+#include "format.h"
 
 #include "mcsconfig.h"
 #include "configcpp.h"
@@ -146,43 +147,7 @@ void Message::Args::reset()
 
 void Message::format(const Args& args)
 {
-    Args::AnyVec::const_iterator iter = args.args().begin();
-    Args::AnyVec::const_iterator end = args.args().end();
-
-    boost::format fmt(fMsg);
-    fmt.exceptions(boost::io::no_error_bits);
-
-    while (iter != end)
-    {
-        if (iter->type() == typeid(long))
-        {
-            long l = any_cast<long>(*iter);
-            fmt % l;
-        }
-        else if (iter->type() == typeid(uint64_t))
-        {
-            uint64_t u64 = any_cast<uint64_t>(*iter);
-            fmt % u64;
-        }
-        else if (iter->type() == typeid(double))
-        {
-            double d = any_cast<double>(*iter);
-            fmt % d;
-        }
-        else if (iter->type() == typeid(string))
-        {
-            string s = any_cast<string>(*iter);
-            fmt % s;
-        }
-        else
-        {
-            throw logic_error("Message::format: unexpected type in argslist");
-        }
-
-        ++iter;
-    }
-
-    fMsg = fmt.str();
+    formatMany(fMsg, args.args());
 }
 
 /* static */
