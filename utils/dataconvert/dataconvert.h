@@ -44,7 +44,7 @@
 #ifdef POSIX_REGEX
 #include <regex.h>
 #else
-#include <boost/regex.hpp>
+#include <regex>
 #endif
 
 #include "mcs_datatype.h"

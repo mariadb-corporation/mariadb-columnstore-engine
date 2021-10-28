@@ -28,7 +28,7 @@ using namespace std;
 #ifdef __linux__
 #include <regex.h>
 #else
-#include <boost/regex.hpp>
+#include <regex>
 using namespace boost;
 #endif
 
@@ -229,8 +229,8 @@ inline bool getBool(rowgroup::Row& row,
         return false;
 
 #else
-    regex pat(pattern.c_str());
-    return regex_search(expr.c_str(), pat);
+    std::regex pat(pattern);
+    return std::regex_search(expr, pat);
 #endif
 
 

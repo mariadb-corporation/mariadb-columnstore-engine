@@ -30,6 +30,7 @@ using namespace std;
 #include "snappy.h"
 #include "hasher.h"
 #include "mcsconfig.h"
+
 #ifdef HAVE_LZ4
 #include "lz4.h"
 #else

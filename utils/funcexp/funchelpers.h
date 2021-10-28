@@ -33,7 +33,6 @@
 
 #include <inttypes.h>
 #include <boost/algorithm/string/case_conv.hpp>
-#include <boost/regex.hpp>
 #include <boost/tokenizer.hpp>
 
 #include "dataconvert.h"
@@ -410,9 +409,9 @@ inline bool calc_time_diff(int64_t time1, int64_t time2, int l_sign, long long* 
         hour2 = (uint32_t)((time2 >> 32) & 0x3f);
         min2 = (uint32_t)((time2 >> 26) & 0x3f);
         sec2 = (uint32_t)((time2 >> 20) & 0x3f);
-        msec2 = (uint32_t)(time2 & 0xfffff); 
+        msec2 = (uint32_t)(time2 & 0xfffff);
     }
-    else 
+    else
     {
         year1 = 0;
         month1 = 0;

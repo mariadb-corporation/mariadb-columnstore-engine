@@ -34,6 +34,7 @@
 #include <sstream>
 #include <cerrno>
 #include <cstring>
+#include <regex>
 #ifdef _MSC_VER
 #include <unordered_set>
 #else
@@ -45,7 +46,6 @@ using namespace std;
 
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
-#include <boost/regex.hpp>
 #include <boost/tokenizer.hpp>
 using namespace boost;
 
@@ -147,15 +147,15 @@ CalpontSystemCatalog::ColDataType convertDataType(const ddlpackage::ColumnType &
 int parseCompressionComment ( std::string comment )
 {
     algorithm::to_upper(comment);
-    regex compat("[[:space:]]*COMPRESSION[[:space:]]*=[[:space:]]*", regex_constants::extended);
+    std::regex compat("[[:space:]]*COMPRESSION[[:space:]]*=[[:space:]]*", std::regex_constants::extended);
     int compressiontype = 0;
-    boost::match_results<std::string::const_iterator> what;
+    std::match_results<std::string::const_iterator> what;
     std::string::const_iterator start, end;
     start = comment.begin();
     end = comment.end();
-    boost::match_flag_type flags = boost::match_default;
+    std::regex_constants::match_flag_type flags = std::regex_constants::match_default;
 
-    if (boost::regex_search(start, end, what, compat, flags))
+    if (std::regex_search(start, end, what, compat, flags))
     {
         //Find the pattern, now get the compression type
         string compType (&(*(what[0].second)));
@@ -1347,9 +1347,9 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
                     {
                         //@Bug 3782 This is for synchronization after calonlinealter to use
                         algorithm::to_upper(comment);
-                        regex pat("[[:space:]]*SCHEMA[[:space:]]+SYNC[[:space:]]+ONLY", regex_constants::extended);
+                        std::regex pat("[[:space:]]*SCHEMA[[:space:]]+SYNC[[:space:]]+ONLY", std::regex_constants::extended);
 
-                        if (regex_search(comment, pat))
+                        if (std::regex_search(comment, pat))
                         {
                             return 0;
                         }
@@ -2193,7 +2193,7 @@ static bool get_field_default_value(THD *thd, Field *field, String *def_value,
 }
 
 /*
-    Utility function search for ZEROFILL 
+    Utility function search for ZEROFILL
 */
 
 bool hasZerofillDecimal(TABLE *table_arg)
@@ -2262,14 +2262,14 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
     bool schemaSyncOnly = false;
     bool isCreate = true;
 
-    regex pat("[[:space:]]*SCHEMA[[:space:]]+SYNC[[:space:]]+ONLY", regex_constants::extended);
+    std::regex pat("[[:space:]]*SCHEMA[[:space:]]+SYNC[[:space:]]+ONLY", std::regex_constants::extended);
 
-    if (regex_search(tablecomment, pat))
+    if (std::regex_search(tablecomment, pat))
     {
         schemaSyncOnly = true;
         pat = createpatstr;
 
-        if (!regex_search(stmt, pat))
+        if (!std::regex_search(stmt, pat))
         {
             isCreate = false;
         }
@@ -2298,7 +2298,7 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
 
     pat = alterpatstr;
 
-    if (regex_search(stmt, pat))
+    if (std::regex_search(stmt, pat))
     {
         ci.isAlter = true;
         ci.alterTableState = cal_connection_info::ALTER_FIRST_RENAME;

@@ -44,8 +44,6 @@
 using namespace std;
 
 #include <boost/thread.hpp>
-#include <boost/regex.hpp>
-#include <boost/tokenizer.hpp>
 using namespace boost;
 
 #include "configcpp.h"
@@ -714,7 +712,7 @@ int ServicePrimProc::Child()
     }
 
     BPPCount = highPriorityThreads + medPriorityThreads + lowPriorityThreads;
-    
+
     // let the user override if they want
     temp = toInt(cf->getConfig(primitiveServers, "BPPCount"));
 

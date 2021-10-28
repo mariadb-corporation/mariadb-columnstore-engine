@@ -27,28 +27,30 @@
  */
 
 
-#include <unistd.h>
-#include <iterator>
-#include <numeric>
-#include <deque>
-#include <iostream>
-#include <ostream>
-#include <fstream>
-#include <cstdlib>
-#include <string>
-#include <limits.h>
-#include <sstream>
-#include <exception>
-#include <stdexcept>
-#include <vector>
-#include <stdio.h>
-#include <ctype.h>
-#include <netdb.h>
-#include <sys/sysinfo.h>
 #include <climits>
+#include <cstdlib>
 #include <cstring>
+#include <ctype.h>
+#include <deque>
+#include <exception>
+#include <fstream>
 #include <glob.h>
-#include <boost/regex.hpp>
+#include <iostream>
+#include <iterator>
+#include <limits.h>
+#include <netdb.h>
+#include <numeric>
+#include <ostream>
+#include <regex>
+#include <sstream>
+#include <stdexcept>
+#include <stdio.h>
+#include <string>
+#include <unistd.h>
+#include <vector>
+
+#include <sys/sysinfo.h>
+
 #include "liboamcpp.h"
 #include "installdir.h"
 #include "mcsconfig.h"
@@ -57,7 +59,7 @@ using namespace std;
 using namespace oam;
 
 
-/* MCOL-1844.  On an upgrade, the user may have customized options in their old 
+/* MCOL-1844.  On an upgrade, the user may have customized options in their old
  * myCnf-include-args.text file.  Merge it with the packaged version, and then process as we
  * have before.
  */
@@ -68,7 +70,7 @@ string rtrim(const string &in) {
 	return string(in.begin(), rbegin.base());
 }
 
-void mergeMycnfIncludeArgs() 
+void mergeMycnfIncludeArgs()
 {
 	string userArgsFilename = std::string(MCSSUPPORTDIR) + "/myCnf-include-args.text.rpmsave";
 	string packagedArgsFilename = std::string(MCSSUPPORTDIR) + "/myCnf-include-args.text";
@@ -96,10 +98,10 @@ void mergeMycnfIncludeArgs()
         else if (line.size() > 0)
             argMerger.insert(line);
     }
-	userArgs.close();	
+	userArgs.close();
 	packagedArgs.close();
 
-	// write the merged version, comments first.  They'll get ordered 
+	// write the merged version, comments first.  They'll get ordered
 	// alphabetically but, meh.
 	packagedArgs.open(packagedArgsFilename.c_str(), ios::out | ios::trunc);
 	for (set<string>::iterator it = comments.begin(); it != comments.end(); it++)
@@ -145,7 +147,7 @@ int main(int argc, char* argv[])
         exit (1);
     }
 
-	// MCOL-1844.  The user may have added options to their myCnf-include-args file.  Merge 
+	// MCOL-1844.  The user may have added options to their myCnf-include-args file.  Merge
 	// myCnf-include-args.text with myCnf-include-args.text.rpmsave, save in myCnf-include-args.text
 	mergeMycnfIncludeArgs();
 
@@ -177,7 +179,7 @@ int main(int argc, char* argv[])
     {
         includeArg = line;
 
-        boost::regex icludeArgRegEx("^#*\\s*" + includeArg + "\\s*=");
+        std::regex icludeArgRegEx("^#*\\s*" + includeArg + "\\s*=");
         //see if in columnstore.cnf.rpmsave
         ifstream mycnfsavefile (mycnfsaveFile.c_str());
         char line[200];
@@ -187,7 +189,7 @@ int main(int argc, char* argv[])
         {
             oldbuf = line;
 
-            if ( boost::regex_search(oldbuf.begin(), oldbuf.end(), icludeArgRegEx) )
+            if ( std::regex_search(oldbuf.begin(), oldbuf.end(), icludeArgRegEx) )
             {
                 //found in columnstore.cnf.rpmsave, check if this is commented out
                 if ( line[0] != '#' )
@@ -204,7 +206,7 @@ int main(int argc, char* argv[])
                     {
                         newbuf = line1;
 
-                        if ( boost::regex_search(newbuf.begin(), newbuf.end(), icludeArgRegEx) )
+                        if ( std::regex_search(newbuf.begin(), newbuf.end(), icludeArgRegEx) )
                         {
                             newbuf = oldbuf;
                             cout << "Updated argument: " << includeArg << endl;
@@ -239,9 +241,9 @@ int main(int argc, char* argv[])
                         while (mycnffile.getline(line1, 200))
                         {
                             newbuf = line1;
-                            boost::regex mysqldSectionRegEx("\\[mysqld\\]");
+                            std::regex mysqldSectionRegEx("\\[mysqld\\]");
 
-                            if ( boost::regex_search(newbuf.begin(), newbuf.end(), mysqldSectionRegEx) )
+                            if ( std::regex_search(newbuf.begin(), newbuf.end(), mysqldSectionRegEx) )
                             {
                                 lines.push_back(newbuf);
                                 newbuf = oldbuf;
@@ -272,7 +274,7 @@ int main(int argc, char* argv[])
     }
 
 	string USER = "mysql";
-	
+
     char* p = getenv("USER");
 
     if (p && *p)

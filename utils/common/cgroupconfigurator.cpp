@@ -20,7 +20,6 @@
 #include "logger.h"
 #include <fstream>
 #include <iostream>
-#include <boost/regex.hpp>
 #ifdef _MSC_VER
 #include "unistd.h"
 #include "sysinfo.h"

@@ -24,14 +24,15 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/regex.hpp>
 
+#include <iostream>
+#include <regex>
 #include <stdlib.h>
+#include <unistd.h>
 #include <vector>
+
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
-#include <iostream>
 
 #include "SMLogging.h"
 
@@ -43,7 +44,7 @@ namespace
     boost::mutex m;
     storagemanager::Config *inst = NULL;
 }
-    
+
 namespace storagemanager
 {
 
@@ -75,23 +76,23 @@ Config::Config() : die(false)
        then $COLUMNSTORE_INSTALL_DIR/etc,
        then /etc
        looking for storagemanager.cnf
-       
+
        We can change this however we need later.
     */
     //char *cs_install_dir = getenv("COLUMNSTORE_INSTALL_DIR");
-    
+
     vector<string> paths;
-    
+
     // the paths to search in order
     paths.push_back(".");
     paths.push_back(string(MCSSYSCONFDIR) + "/columnstore");
     paths.push_back("/etc");
-    
+
     for (uint i = 0; i < paths.size(); i++)
     {
         //cout << "Config: searching '" << paths[i] << "'" << endl;
         if (boost::filesystem::exists(paths[i] + "/storagemanager.cnf"))
-        {  
+        {
             filename = paths[i] + "/storagemanager.cnf";
             SMLogging::get()->log(LOG_DEBUG, "Using the config file found at %s", filename.c_str());
             break;
@@ -99,7 +100,7 @@ Config::Config() : die(false)
     }
     if (filename.empty())
         throw runtime_error("Config: Could not find the config file for StorageManager");
-    
+
     reloadInterval = boost::posix_time::seconds(60);
     last_mtime = {0, 0};
     reload();
@@ -110,7 +111,7 @@ Config::Config(const string &configFile) : filename(configFile), die(false)
 {
     if (!bf::is_regular_file(configFile))
         throw runtime_error("Config: Could not find the config file for StorageManager");
-    
+
     reloadInterval = boost::posix_time::seconds(60);
     last_mtime = {0, 0};
     reload();
@@ -166,13 +167,13 @@ bool Config::reload()
     return rtn;
 }
 
-string use_envvar(const boost::smatch &envvar)
+string use_envvar(const std::smatch &envvar)
 {
     char *env = getenv(envvar[1].str().c_str());
     return (env ? env : "");
 }
 
-string expand_numbers(const boost::smatch &match)
+string expand_numbers(const std::smatch &match)
 {
     long long num = stol(match[1].str());
     char suffix = (char) ::tolower(match[2].str()[0]);
@@ -187,7 +188,22 @@ string expand_numbers(const boost::smatch &match)
         num <<= 10;
     return ::to_string(num);
 }
-    
+
+
+std::string regex_replace_with_format(const std::string& input,
+                                      const std::regex& regex,
+                                      std::function<std::string(std::smatch const& match)> format)
+{
+
+    std::ostringstream output;
+    std::sregex_iterator begin(input.begin(), input.end(), regex), end;
+    for(; begin != end; begin++){
+        output << begin->prefix() << format(*begin);
+    }
+    output << input.substr(input.size() - begin->position());
+    return output.str();
+}
+
 string Config::getValue(const string &section, const string &key) const
 {
     // if we care, move this envvar substition stuff to where the file is loaded
@@ -200,17 +216,17 @@ string Config::getValue(const string &section, const string &key) const
         return "";   // debating whether it's necessary to tell the caller there was no entry.
     }
     s.unlock();
-    
-    boost::regex re("\\$\\{(.+)\\}");
-    
-    ret = boost::regex_replace(ret, re, use_envvar);
-    
+
+    std::regex re("\\$\\{(.+)\\}");
+
+    ret = regex_replace_with_format(ret, re, use_envvar);
+
     // do the numeric substitutions.  ex, the suffixes m, k, g
     // ehhhhh.  going to end up turning a string to a number, to a string, and then to a number again
     // don't like that.  OTOH who cares.
-    boost::regex num_re("^([[:digit:]]+)([mMkKgG])$", boost::regex::extended);
-    ret = boost::regex_replace(ret, num_re, expand_numbers);
-    
+    std::regex num_re("^([[:digit:]]+)([mMkKgG])$", std::regex::extended);
+    ret = regex_replace_with_format(ret, num_re, expand_numbers);
+
     return ret;
 }
 

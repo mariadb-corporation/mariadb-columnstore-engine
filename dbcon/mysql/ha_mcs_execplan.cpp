@@ -45,7 +45,6 @@ using namespace std;
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
-#include <boost/regex.hpp>
 #include <boost/thread.hpp>
 
 #include "errorids.h"
@@ -3430,7 +3429,7 @@ buildConstantColumnNotNullUsingValNative(Item *item, gp_walk_info& gwi)
     ConstantColumn *rc = newConstantColumnNotNullUsingValNativeNoTz(item, gwi);
     if (rc)
         rc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
-    return rc; 
+    return rc;
 }
 
 

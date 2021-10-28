@@ -37,7 +37,6 @@
 #endif
 #include <cstring>
 #include <cmath>
-#include <boost/regex.hpp>
 
 #include "expressionparser.h"
 #include "returnedcolumn.h"
@@ -122,7 +121,7 @@ private:
     template <typename result_t>
     inline bool numericCompare(const result_t op1, const result_t op2);
     inline bool strTrimCompare(const std::string& op1, const std::string& op2);
-    
+
     const CHARSET_INFO* cs;
 };
 

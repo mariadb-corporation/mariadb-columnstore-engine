@@ -41,7 +41,7 @@
 #ifdef POSIX_REGEX
 #include <regex.h>
 #else
-#include <boost/regex.hpp>
+#include <regex>
 #endif
 #include <cstddef>
 #include <boost/shared_ptr.hpp>
@@ -420,7 +420,7 @@ public:
     template<typename T,
              typename std::enable_if<sizeof(T) == sizeof(int128_t), T>::type* = nullptr>
     void _scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out);
- 
+
     template<typename T>
     void columnScanAndFilter(NewColRequestHeader* in, ColResultHeader* out);
 

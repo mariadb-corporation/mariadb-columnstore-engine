@@ -54,7 +54,6 @@ using namespace std;
 
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
-#include <boost/regex.hpp>
 #include <boost/thread.hpp>
 
 #include "mcs_basic_types.h"
