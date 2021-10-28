@@ -28,11 +28,12 @@
 #include <errno.h>
 #include <sys/sendfile.h>
 #include <boost/filesystem.hpp>
-#define BOOST_SPIRIT_THREADSAFE
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/shared_array.hpp>
 #include <boost/format.hpp>
 #include <iostream>
+
+#include "utils/json/json.hpp"
+
 
 using namespace std;
 
@@ -159,20 +160,20 @@ ssize_t Replicator::_pwrite(int fd, const void *data, size_t length, off_t offse
     ssize_t err;
     size_t count = 0;
     uint8_t *bData = (uint8_t *) data;
-    
-    do 
+
+    do
     {
         err = ::pwrite(fd, &bData[count], length - count, offset + count);
         if (err < 0 || (err == 0 && errno != EINTR))
         {
             if (count > 0)
                 return count;
-            else 
+            else
                 return err;
         }
         count += err;
     } while (count < length);
-    
+
     return count;
 }
 
@@ -181,38 +182,38 @@ ssize_t Replicator::_write(int fd, const void *data, size_t length)
     ssize_t err;
     size_t count = 0;
     uint8_t *bData = (uint8_t *) data;
-    
-    do 
+
+    do
     {
         err = ::write(fd, &bData[count], length - count);
         if (err < 0 || (err == 0 && errno != EINTR))
         {
             if (count > 0)
                 return count;
-            else 
+            else
                 return err;
         }
         count += err;
     } while (count < length);
-    
+
     return count;
 }
 
-/* XXXPAT: I think we'll have to rewrite this function some; we'll have to at least clearly define 
-   what happens in the various error scenarios.  
-   
+/* XXXPAT: I think we'll have to rewrite this function some; we'll have to at least clearly define
+   what happens in the various error scenarios.
+
    To be more resilent in the face of hard errors, we may also want to redefine what a journal file is.
-   If/when we cannot fix the journal file in the face of an error, there are scenarios that the read code 
-   will not be able to cope with.  Ex, a journal entry that says it's 200 bytes long, but there are only 
+   If/when we cannot fix the journal file in the face of an error, there are scenarios that the read code
+   will not be able to cope with.  Ex, a journal entry that says it's 200 bytes long, but there are only
    really 100 bytes.  The read code has no way to tell the difference if there is an entry that follows
    the bad entry, and that will cause an unrecoverable error.
-   
-   Initial thought on a sol'n.  Make each journal entry its own file in a tmp dir, ordered by a sequence 
+
+   Initial thought on a sol'n.  Make each journal entry its own file in a tmp dir, ordered by a sequence
    number in the filename.  Then, one entry cannot affect the others, and the end of the file is unambiguously
-   the end of the data.  On successful write, move the file to where it should be.  This would also prevent 
+   the end of the data.  On successful write, move the file to where it should be.  This would also prevent
    the readers from ever seeing bad data, and possibly reduce the size of some critical sections.
-   
-   Benefits would be data integrity, and possibly add'l parallelism.  The downside is of course, a higher 
+
+   Benefits would be data integrity, and possibly add'l parallelism.  The downside is of course, a higher
    number of IO ops for the same operation.
 */
 int Replicator::addJournalEntry(const boost::filesystem::path &filename, const uint8_t *data, off_t offset, size_t length)
@@ -232,7 +233,7 @@ int Replicator::addJournalEntry(const boost::filesystem::path &filename, const u
     uint64_t currentMaxOffset = 0;
     bool exists = boost::filesystem::exists(journalFilename);
     OPEN(journalFilename.c_str(), (exists ? O_RDWR : O_WRONLY | O_CREAT))
-    
+
     if (!exists)
     {
         bHeaderChanged = true;
@@ -244,7 +245,7 @@ int Replicator::addJournalEntry(const boost::filesystem::path &filename, const u
         if ((uint)err != (header.length() + 1))
         {
             // return the error because the header for this entry on a new journal file failed
-            mpLogger->log(LOG_CRIT, "Replicator::addJournalEntry: Writing journal header failed (%s).", 
+            mpLogger->log(LOG_CRIT, "Replicator::addJournalEntry: Writing journal header failed (%s).",
                 strerror_r(l_errno, errbuf, 80));
             errno = l_errno;
             return err;
@@ -276,12 +277,14 @@ int Replicator::addJournalEntry(const boost::filesystem::path &filename, const u
         stringstream ss;
         ss << headertxt.get();
         headerRollback = headertxt.get();
-		boost::property_tree::ptree header;
+
+
+		nlohmann::json header;
 		try
 		{
-			boost::property_tree::json_parser::read_json(ss, header);
+			header = nlohmann::json::parse(ss);
 		}
-		catch (const boost::property_tree::json_parser::json_parser_error& e)
+		catch (const nlohmann::json::exception& e)
 		{
 			mpLogger->log(LOG_CRIT,"%s",e.what());
 			errno = EIO;
@@ -293,8 +296,9 @@ int Replicator::addJournalEntry(const boost::filesystem::path &filename, const u
 			errno = EIO;
 			return -1;
 		}
-        assert(header.get<int>("version") == 1);
-        uint64_t currentMaxOffset = header.get<uint64_t>("max_offset");
+        assert(header["version"] == 1);
+
+        uint64_t currentMaxOffset = header["max_offset"];
         if (thisEntryMaxOffset > currentMaxOffset)
         {
             bHeaderChanged = true;
@@ -322,7 +326,7 @@ int Replicator::addJournalEntry(const boost::filesystem::path &filename, const u
     }
 
     off_t entryHeaderOffset = ::lseek(fd, 0, SEEK_END);
-    
+
     err = _write(fd, offlen, JOURNAL_ENTRY_HEADER_SIZE);
     l_errno = errno;
     repHeaderDataWritten += JOURNAL_ENTRY_HEADER_SIZE;
@@ -341,7 +345,7 @@ int Replicator::addJournalEntry(const boost::filesystem::path &filename, const u
 				errno = l_errno;
                 if (err < 0)
                     return err;
-                else 
+                else
                     return 0;
 			}
         }
@@ -353,7 +357,7 @@ int Replicator::addJournalEntry(const boost::filesystem::path &filename, const u
             errno = l_errno;
             if (err < 0)
                 return err;
-            else 
+            else
                 return 0;
 		}
         l_errno = errno;
@@ -444,10 +448,10 @@ int Replicator::addJournalEntry(const boost::filesystem::path &filename, const u
 int Replicator::remove(const boost::filesystem::path &filename, Flags flags)
 {
     int ret = 0;
-    
+
     if (flags & NO_LOCAL)
         return 0;  // not implemented yet
-        
+
     try
     {
         //#ifndef NDEBUG

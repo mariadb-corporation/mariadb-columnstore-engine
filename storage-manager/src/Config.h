@@ -42,9 +42,9 @@ class Config : public boost::noncopyable
     public:
         static Config *get();
         virtual ~Config();
-        
+
         std::string getValue(const std::string &section, const std::string &key) const;
-        
+
         // for testing, lets caller specify a config file to use
         static Config *get(const std::string &);
 
@@ -54,7 +54,7 @@ class Config : public boost::noncopyable
     private:
         Config();
         Config(const std::string &);
-        
+
         bool reload();
         void reloadThreadFcn();
         std::vector<ConfigListener *> configListeners;
@@ -62,7 +62,7 @@ class Config : public boost::noncopyable
         mutable boost::mutex mutex;
         boost::thread reloader;
         boost::posix_time::time_duration reloadInterval;
-        
+
         std::string filename;
         boost::property_tree::ptree contents;
         bool die;

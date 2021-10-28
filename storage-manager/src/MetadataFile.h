@@ -29,6 +29,8 @@
 #include <unordered_map>
 #include <boost/filesystem/path.hpp>
 
+#include <utils/json/json.hpp>
+
 namespace storagemanager
 {
 
@@ -49,7 +51,7 @@ class MetadataFile
         MetadataFile();
         MetadataFile(const boost::filesystem::path &filename);
         MetadataFile(const boost::filesystem::path &path, no_create_t,bool appendExt);   // this one won't create it if it doesn't exist
-        
+
         // this ctor is 'special'.  It will take an absolute path, and it will assume it points to a metafile
         // meaning, that it doesn't need the metadata prefix prepended, or the .meta extension appended.
         // aside from that, it will behave like the no_create ctor variant above
@@ -65,7 +67,7 @@ class MetadataFile
         // updates the metadatafile with new object
         //int writeMetadata(const boost::filesystem::path &filename);
         int writeMetadata();
-        
+
         // updates the name and length fields of an entry, given the offset
         void updateEntry(off_t offset, const std::string &newName, size_t newLength);
         void updateEntryLength(off_t offset, size_t newLength);
@@ -73,10 +75,10 @@ class MetadataFile
         bool getEntry(off_t offset, metadataObject *out) const;
         void removeEntry(off_t offset);
         void removeAllEntries();
-        
+
         // removes p from the json cache.  p should be a fully qualified metadata file
         static void deletedMeta(const boost::filesystem::path &p);
-        
+
         static std::string getNewKeyFromOldKey(const std::string &oldKey, size_t length=0);
         static std::string getNewKey(std::string sourceName, size_t offset, size_t length);
         static off_t getOffsetFromKey(const std::string &key);
@@ -84,10 +86,10 @@ class MetadataFile
         static size_t getLengthFromKey(const std::string &key);
         static void setOffsetInKey(std::string &key, off_t newOffset);
         static void setLengthInKey(std::string &key, size_t newLength);
-        
+
         // breaks a key into its consitituent fields
         static void breakout(const std::string &key, std::vector<std::string> &out);
-        
+
         off_t getMetadataNewObjectOffset();
         // this will be a singleton, which stores the config used
         // by all MetadataFile instances so we don't have to keep bothering Config.
@@ -98,14 +100,14 @@ class MetadataFile
                 static MetadataConfig *get();
                 size_t mObjectSize;
                 boost::filesystem::path msMetadataPath;
-            
+
             private:
                 MetadataConfig();
         };
-  
+
         static void printKPIs();
-              
-        typedef boost::shared_ptr<boost::property_tree::ptree> Jsontree_t;
+
+        typedef boost::shared_ptr<nlohmann::json> Jsontree_t;
     private:
         MetadataConfig *mpConfig;
         SMLogging *mpLogger;
@@ -116,7 +118,7 @@ class MetadataFile
         //std::set<metadataObject> mObjects;
         bool _exists;
         void makeEmptyJsonTree();
-        
+
         class MetadataCache
         {
         public:
@@ -135,7 +137,7 @@ class MetadataFile
             boost::mutex mutex;
         };
         static MetadataCache jsonCache;
-        
+
 };
 
 

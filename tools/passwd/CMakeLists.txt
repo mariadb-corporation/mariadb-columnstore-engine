@@ -1,5 +1,5 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+include_directories( ${ENGINE_COMMON_INCLUDES} ${ENGINE_UTILS_COMMON_INCLUDE})
 
 ########### next target ###############
 
