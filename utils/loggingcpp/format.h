@@ -21,6 +21,7 @@
 #pragma once
 
 #include <cstdint>
+#include <regex>
 #include <stdexcept>
 #include <string>
 #include <boost/any.hpp>
@@ -86,6 +87,8 @@ void formatMany(std::string& errMsg, const T& args)
         ++iter;
         ++position;
     }
+    static std::regex restToken("%[0-9]%");
+    errMsg = std::regex_replace(errMsg, restToken, "");
 }
 
 } // namespace logging
