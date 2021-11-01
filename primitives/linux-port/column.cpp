@@ -1547,10 +1547,9 @@ void vectorizedFilteringDispatcher(NewColRequestHeader* in, ColResultHeader* out
     const bool validMinMax, const T emptyValue, const T nullValue,
     T Min, T Max, const bool isNullValueMatches)
 {
-    //constexpr const uint8_t WIDTH = sizeof(T);
     // TODO make a SFINAE template switch for the class template spec.
     using SIMD_TYPE = simd::vi128_wr;
-    using VT = typename simd::SimdFilterProcessorA<SIMD_TYPE, T>;
+    using VT = typename simd::SimdFilterProcessor<SIMD_TYPE, T>;
     bool hasInputRIDs = (in->NVALS > 0) ? true : false;
     if (hasInputRIDs)
     {
@@ -1678,7 +1677,7 @@ void filterColumnData(
 
 #if defined(__x86_64__ )
     // Don't use vectorized filtering for non-integer based data types wider than 16 bytes.
-    if (KIND < KIND_FLOAT && WIDTH < 16)
+    if (KIND <= KIND_FLOAT && WIDTH < 16)
     {
         bool canUseFastFiltering = true;
         for (uint32_t i = 0; i < filterCount; ++i)
