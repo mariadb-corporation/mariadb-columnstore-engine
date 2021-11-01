@@ -703,4 +703,6 @@ unsigned char __col2block_cdf[] = {
   0xfc, 0x0f, 0xfd, 0x0f, 0xfe, 0x0f, 0xff, 0x0f
 };
 unsigned int __col2block_cdf_len = 8192;
+constexpr int __col2block_cdf_umin = 0;
+constexpr int __col2block_cdf_umax = 4095;
 #endif
