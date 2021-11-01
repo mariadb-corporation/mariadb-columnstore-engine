@@ -102,8 +102,8 @@ RedistributeControl::RedistributeControl() : fInfoFilePtr(NULL), fPlanFilePtr(NU
 
     //struct stat st;
     //if (stat(fRedistributeDir.c_str(), &st) != 0)
-    //filesystem::path dirPath(fRedistributeDir);
-    if (filesystem::exists(fRedistributeDir))
+    //boost::filesystem::path dirPath(fRedistributeDir);
+    if (boost::filesystem::exists(fRedistributeDir))
     {
         // try to open info file for update if dir exists
         RedistributeInfo info;
@@ -521,7 +521,7 @@ void RedistributeControl::updateState(uint32_t s)
 
         try
         {
-            if (filesystem::exists(fInfoFilePath) && filesystem::exists(fPlanFilePath))
+            if (boost::filesystem::exists(fInfoFilePath) && boost::filesystem::exists(fPlanFilePath))
             {
                 bool mergeOk = false;
                 FILE* infoPtr = fopen(fInfoFilePath.c_str(), "r+b");
@@ -559,19 +559,19 @@ void RedistributeControl::updateState(uint32_t s)
                     fclose(entryPtr);
 
                 if (mergeOk)
-                    filesystem::remove(fPlanFilePath);
+                    boost::filesystem::remove(fPlanFilePath);
             }
 
-            if (filesystem::exists(fInfoFilePath))
+            if (boost::filesystem::exists(fInfoFilePath))
             {
                 string newInfoPath = fRedistributeDir + "/archive" + InfoFileName + "." + oss.str();
-                filesystem::rename(fInfoFilePath, newInfoPath);
+                boost::filesystem::rename(fInfoFilePath, newInfoPath);
             }
 
-            if (filesystem::exists(fPlanFilePath))
+            if (boost::filesystem::exists(fPlanFilePath))
             {
                 string newPlanPath = fRedistributeDir + "/archive" + PlanFileName + "." + oss.str();
-                filesystem::rename(fPlanFilePath, newPlanPath);
+                boost::filesystem::rename(fPlanFilePath, newPlanPath);
             }
         }
         catch (const std::exception&)
@@ -592,15 +592,15 @@ void RedistributeControl::updateState(uint32_t s)
     // in IDLE state there is no redistribute.info file
     if (s == RED_STATE_ACTIVE)
     {
-//		filesystem::path dirPath(fRedistributeDir);
-//		if (filesystem::exists(fRedistributeDir) && !filesystem::is_directory(fRedistributeDir))
-//			filesystem::remove(fRedistributeDir);
-        if (!filesystem::exists(fRedistributeDir))
+//		boost::filesystem::path dirPath(fRedistributeDir);
+//		if (boost::filesystem::exists(fRedistributeDir) && !boost::filesystem::is_directory(fRedistributeDir))
+//			boost::filesystem::remove(fRedistributeDir);
+        if (!boost::filesystem::exists(fRedistributeDir))
         {
             errno = 0;
-            filesystem::create_directory(fRedistributeDir);
+            boost::filesystem::create_directory(fRedistributeDir);
 
-            if (!filesystem::exists(fRedistributeDir))
+            if (!boost::filesystem::exists(fRedistributeDir))
             {
                 int e = errno;
                 ostringstream oss;
@@ -610,10 +610,10 @@ void RedistributeControl::updateState(uint32_t s)
             }
 
             errno = 0;
-            filesystem::path archivePath(fRedistributeDir + "/archive");
-            filesystem::create_directory(archivePath);
+            boost::filesystem::path archivePath(fRedistributeDir + "/archive");
+            boost::filesystem::create_directory(archivePath);
 
-            if (!filesystem::exists(archivePath))
+            if (!boost::filesystem::exists(archivePath))
             {
                 int e = errno;
                 ostringstream oss;

@@ -800,13 +800,13 @@ int RedistributeWorkerThread::sendData()
                     // msg that IDBFileSystem::copyFile() currently swallows.
                     try
                     {
-                        filesystem::copy_file(sourceName, destName);
+                        boost::filesystem::copy_file(sourceName, destName);
                     }
 
 #if BOOST_VERSION >= 105200
-                    catch (filesystem::filesystem_error& e)
+                    catch (boost::filesystem::filesystem_error& e)
 #else
-                    catch (filesystem::basic_filesystem_error<filesystem::path>& e)
+                    catch (boost::filesystem::basic_filesystem_error<filesystem::path>& e)
 #endif
                     {
                         fErrorCode = RED_EC_COPY_FILE_FAIL;
