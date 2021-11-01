@@ -545,6 +545,7 @@ void ByteStream::swap(ByteStream& rhs)
     std::swap(fCurInPtr, rhs.fCurInPtr);
     std::swap(fCurOutPtr, rhs.fCurOutPtr);
     std::swap(fMaxLen, rhs.fMaxLen);
+    std::swap(longStrings, rhs.longStrings);
 }
 
 ifstream& operator>>(ifstream& ifs, ByteStream& bs)
@@ -564,7 +565,31 @@ bool ByteStream::operator==(const ByteStream& b) const
     if (b.length() != length())
         return false;
 
-    return (memcmp(fCurOutPtr, b.fCurOutPtr, length()) == 0);
+    if (memcmp(fCurOutPtr, b.fCurOutPtr, length()) != 0)
+      return false;
+
+    // Check the `longString` sizes.
+    if (longStrings.size() != b.longStrings.size())
+        return false;
+
+    // For each `longString`.
+    for (uint32_t i = 0, e = b.longStrings.size(); i < e; ++i)
+    {
+        const auto* leftMemChunk = reinterpret_cast<MemChunk*>(longStrings[i].get());
+        const auto* rightMemChunk = reinterpret_cast<MemChunk*>(b.longStrings[i].get());
+        if (leftMemChunk == nullptr || rightMemChunk == nullptr)
+            return false;
+
+        const uint32_t leftSize = leftMemChunk->currentSize;
+        const uint32_t rightSize = rightMemChunk->currentSize;
+        if (leftSize != rightSize)
+            return false;
+
+        if (memcmp(leftMemChunk->data, rightMemChunk->data, leftSize) != 0)
+            return false;
+    }
+
+    return true;
 }
 
 bool ByteStream::operator!=(const ByteStream& b) const
