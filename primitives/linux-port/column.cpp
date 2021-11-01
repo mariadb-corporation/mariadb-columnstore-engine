@@ -1547,10 +1547,10 @@ void vectorizedFilteringDispatcher(NewColRequestHeader* in, ColResultHeader* out
     const bool validMinMax, const T emptyValue, const T nullValue,
     T Min, T Max, const bool isNullValueMatches)
 {
-    constexpr const uint8_t WIDTH = sizeof(T);
+    //constexpr const uint8_t WIDTH = sizeof(T);
     // TODO make a SFINAE template switch for the class template spec.
     using SIMD_TYPE = simd::vi128_wr;
-    using VT = typename simd::SimdFilterProcessor<SIMD_TYPE, WIDTH>;
+    using VT = typename simd::SimdFilterProcessorA<SIMD_TYPE, T>;
     bool hasInputRIDs = (in->NVALS > 0) ? true : false;
     if (hasInputRIDs)
     {

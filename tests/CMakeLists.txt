@@ -33,6 +33,7 @@ if (WITH_UNITTESTS)
     add_executable(column_scan_filter_tests primitives_column_scan_and_filter.cpp)
     target_link_libraries(column_scan_filter_tests ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
     gtest_discover_tests(column_scan_filter_tests TEST_PREFIX columnstore:)
+    install(TARGETS column_scan_filter_tests DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
 
     # CPPUNIT TESTS
     add_executable(we_shared_components_tests shared_components_tests.cpp)
