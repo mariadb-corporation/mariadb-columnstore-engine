@@ -1554,7 +1554,7 @@ void vectorizedFilteringDispatcher(NewColRequestHeader* in, ColResultHeader* out
     bool hasInputRIDs = (in->NVALS > 0) ? true : false;
     if (hasInputRIDs)
     {
-        constexpr const bool hasInput = true;
+        const bool hasInput = true;
         switch (in->OutputType)
         {
             case OT_RID:
@@ -1585,29 +1585,29 @@ void vectorizedFilteringDispatcher(NewColRequestHeader* in, ColResultHeader* out
     }
     else
     {
-        constexpr const bool hasNoInput = false;
+        const bool hasInput = false;
         switch (in->OutputType)
         {
             case OT_RID:
-                vectorizedFiltering<T, VT, hasNoInput, OT_RID, KIND, FT, ST>(in, out,
+                vectorizedFiltering<T, VT, hasInput, OT_RID, KIND, FT, ST>(in, out,
                                                                  srcArray, srcSize, ridArray, ridSize,
                                                                  parsedColumnFilter,
                                                                  validMinMax, emptyValue, nullValue, Min, Max, isNullValueMatches);
                 break;
             case OT_BOTH:
-                vectorizedFiltering<T, VT, hasNoInput, OT_BOTH, KIND, FT, ST>(in, out,
+                vectorizedFiltering<T, VT, hasInput, OT_BOTH, KIND, FT, ST>(in, out,
                                                                   srcArray, srcSize, ridArray, ridSize,
                                                                   parsedColumnFilter,
                                                                   validMinMax, emptyValue, nullValue, Min, Max, isNullValueMatches);
                 break;
             case OT_TOKEN:
-                vectorizedFiltering<T, VT, hasNoInput, OT_TOKEN, KIND, FT, ST>(in, out,
+                vectorizedFiltering<T, VT, hasInput, OT_TOKEN, KIND, FT, ST>(in, out,
                                                                    srcArray, srcSize, ridArray, ridSize,
                                                                    parsedColumnFilter,
                                                                    validMinMax, emptyValue, nullValue, Min, Max, isNullValueMatches);
                 break;
             case OT_DATAVALUE:
-                vectorizedFiltering<T, VT, hasNoInput, OT_DATAVALUE, KIND, FT, ST>(in, out,
+                vectorizedFiltering<T, VT, hasInput, OT_DATAVALUE, KIND, FT, ST>(in, out,
                                                                        srcArray, srcSize, ridArray, ridSize,
                                                                        parsedColumnFilter,
                                                                        validMinMax, emptyValue, nullValue, Min, Max, isNullValueMatches);
