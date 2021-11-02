@@ -50,7 +50,6 @@ using namespace execplan;
 
 namespace
 {
-// WIP Move this
 using MT = uint16_t;
 
 // Column filtering is dispatched 4-way based on the column type,
@@ -1522,6 +1521,7 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
 
     // Set the number of output values here b/c tail processing can skip this operation.
     out->NVALS = totalValuesWritten;
+    // WIP Remove this block
     // Write captured Min/Max values to *out
     out->ValidMinMax = validMinMax;
     if (validMinMax)
@@ -1547,8 +1547,8 @@ void vectorizedFilteringDispatcher(NewColRequestHeader* in, ColResultHeader* out
     const bool validMinMax, const T emptyValue, const T nullValue,
     T Min, T Max, const bool isNullValueMatches)
 {
-    // TODO make a SFINAE template switch for the class template spec.
-    using SIMD_TYPE = simd::vi128_wr;
+    // Using struct to dispatch SIMD type based on integral type T.
+    using SIMD_TYPE = typename simd::IntegralToVectorWrapper<T>::type;
     using VT = typename simd::SimdFilterProcessor<SIMD_TYPE, T>;
     bool hasInputRIDs = (in->NVALS > 0) ? true : false;
     if (hasInputRIDs)
@@ -1742,7 +1742,6 @@ void PrimitiveProcessor::scanAndFilterTypeDispatcher(NewColRequestHeader* in,
     auto dataType = (execplan::CalpontSystemCatalog::ColDataType) in->colType.DataType;
     if (dataType == execplan::CalpontSystemCatalog::FLOAT)
     {
-// WIP make this inline function
         const uint16_t ridSize = in->NVALS;
         uint16_t* ridArray = in->getRIDArrayPtr(W);
         const uint32_t itemsPerBlock = logicalBlockMode ? BLOCK_SIZE
