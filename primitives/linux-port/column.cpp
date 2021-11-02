@@ -52,13 +52,6 @@ namespace
 {
 using MT = uint16_t;
 
-// Column filtering is dispatched 4-way based on the column type,
-// which defines implementation of comparison operations for the column values
-enum ENUM_KIND {KIND_DEFAULT,   // compared as signed integers
-                KIND_UNSIGNED,  // compared as unsigned integers
-                KIND_FLOAT,     // compared as floating-point numbers
-                KIND_TEXT};     // whitespace-trimmed and then compared as signed integers
-
 inline uint64_t order_swap(uint64_t x)
 {
     uint64_t ret = (x >> 56) |
@@ -1044,7 +1037,8 @@ inline uint16_t vectWriteColValues(VT& simdProcessor, // SIMD processor
     primitives::RIDType* ridDstArray,                 // The actual dst arrray ptr to start writing RIDs
     primitives::RIDType* ridSrcArray)                 // The actual src array ptr to read RIDs
 {
-    constexpr const uint16_t WIDTH = sizeof(T);
+    //constexpr const uint16_t WIDTH = sizeof(T);
+    constexpr const uint16_t FILTER_MASK_STEP = VT::FILTER_MASK_STEP;
     using SIMD_TYPE = typename VT::SIMD_TYPE;
     SIMD_TYPE tmpStorageVector;
     T* tmpDstVecTPtr = reinterpret_cast<T*>(&tmpStorageVector);
@@ -1053,7 +1047,7 @@ inline uint16_t vectWriteColValues(VT& simdProcessor, // SIMD processor
     // The mask is 16 bit long and it describes N elements.
     // N = sizeof(vector type) / WIDTH.
     uint32_t j = 0;
-    for (uint32_t it = 0; it < VT::vecByteSize; ++j, it += WIDTH)
+    for (uint32_t it = 0; it < VT::vecByteSize; ++j, it += FILTER_MASK_STEP)
     {
         MT bitMapPosition = 1 << it;
         if (writeMask & bitMapPosition)
@@ -1108,7 +1102,7 @@ inline uint16_t vectWriteColValues(VT& simdProcessor, // SIMD processor
     primitives::RIDType* ridDstArray,                 // The actual dst arrray ptr to start writing RIDs
     primitives::RIDType* ridSrcArray)                 // The actual src array ptr to read RIDs
 {
-    constexpr const uint16_t WIDTH = sizeof(T);
+    constexpr const uint16_t FILTER_MASK_STEP = VT::FILTER_MASK_STEP;
     using SIMD_TYPE = typename VT::SIMD_TYPE;
     SIMD_TYPE tmpStorageVector;
     T* tmpDstVecTPtr = reinterpret_cast<T*>(&tmpStorageVector);
@@ -1117,7 +1111,7 @@ inline uint16_t vectWriteColValues(VT& simdProcessor, // SIMD processor
     // The mask is 16 bit long and it describes N elements.
     // N = sizeof(vector type) / WIDTH.
     uint32_t j = 0;
-    for (uint32_t it = 0; it < VT::vecByteSize; ++j, it += WIDTH)
+    for (uint32_t it = 0; it < VT::vecByteSize; ++j, it += FILTER_MASK_STEP)
     {
         MT bitMapPosition = 1 << it;
         if (writeMask & bitMapPosition)
@@ -1155,13 +1149,13 @@ inline uint16_t vectWriteRIDValues(VT& processor,   // SIMD processor
     MT nonNullOrEmptyMask,                          // SIMD intrinsics inverce bitmask for NULL/EMPTY values
     primitives::RIDType* ridSrcArray)               // The actual src array ptr to read RIDs
 {
-    constexpr const uint16_t WIDTH = sizeof(T);
+    constexpr const uint16_t FILTER_MASK_STEP = VT::FILTER_MASK_STEP;
     primitives::RIDType* origRIDDstArray = ridDstArray;
     // Saving values based on writeMask into tmp vec.
     // Min/Max processing.
     // The mask is 16 bit long and it describes N elements where N = sizeof(vector type) / WIDTH.
     uint16_t j = 0;
-    for (uint32_t it = 0; it < VT::vecByteSize; ++j, it += WIDTH)
+    for (uint32_t it = 0; it < VT::vecByteSize; ++j, it += FILTER_MASK_STEP)
     {
         MT bitMapPosition = 1 << it;
         if (writeMask & (1 << it))
@@ -1338,6 +1332,7 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
     constexpr const uint16_t WIDTH = sizeof(T);
     using SIMD_TYPE = typename VT::SIMD_TYPE;
     using SIMD_WRAPPER_TYPE = typename VT::SIMD_WRAPPER_TYPE;
+    using FILTER_TYPE = typename VT::FILTER_TYPE;
     VT simdProcessor;
     SIMD_TYPE dataVec;
     SIMD_TYPE emptyFilterArgVec = simdProcessor.loadValue(emptyValue);
@@ -1410,7 +1405,8 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
             for (uint32_t j = 0; j < filterCount; ++j)
             {
                 // Preload filter argument values only once.
-                filterArgsVectors[j] = simdProcessor.loadValue(filterValues[j]);
+                // WIP Remove this ugly hack
+                filterArgsVectors[j] = simdProcessor.loadValue(*((FILTER_TYPE*)&filterValues[j]));
                 switch(filterCOPs[j])
                 {
                     case(COMPARE_EQ):
@@ -1540,16 +1536,17 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
 }
 
 // This routine dispatches template function calls to reduce branching.
-template<typename T, ENUM_KIND KIND, typename FT, typename ST>
+template<typename STORAGE_TYPE, ENUM_KIND KIND, typename FT, typename ST>
 void vectorizedFilteringDispatcher(NewColRequestHeader* in, ColResultHeader* out,
-    const T* srcArray, const uint32_t srcSize, uint16_t* ridArray,
+    const STORAGE_TYPE* srcArray, const uint32_t srcSize, uint16_t* ridArray,
     const uint16_t ridSize, ParsedColumnFilter* parsedColumnFilter,
-    const bool validMinMax, const T emptyValue, const T nullValue,
-    T Min, T Max, const bool isNullValueMatches)
+    const bool validMinMax, const STORAGE_TYPE emptyValue, const STORAGE_TYPE nullValue,
+    STORAGE_TYPE Min, STORAGE_TYPE Max, const bool isNullValueMatches)
 {
     // Using struct to dispatch SIMD type based on integral type T.
-    using SIMD_TYPE = typename simd::IntegralToVectorWrapper<T>::type;
-    using VT = typename simd::SimdFilterProcessor<SIMD_TYPE, T>;
+    using SIMD_TYPE = typename simd::IntegralToSIMD<STORAGE_TYPE, KIND>::type;
+    using FILTERING_TYPE = typename simd::StorageToFiltering<STORAGE_TYPE, KIND>::type;
+    using VT = typename simd::SimdFilterProcessor<SIMD_TYPE, FILTERING_TYPE>;
     bool hasInputRIDs = (in->NVALS > 0) ? true : false;
     if (hasInputRIDs)
     {
@@ -1557,25 +1554,25 @@ void vectorizedFilteringDispatcher(NewColRequestHeader* in, ColResultHeader* out
         switch (in->OutputType)
         {
             case OT_RID:
-                vectorizedFiltering<T, VT, hasInput, OT_RID, KIND, FT, ST>(in, out,
+                vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_RID, KIND, FT, ST>(in, out,
                                                                  srcArray, srcSize, ridArray, ridSize,
                                                                  parsedColumnFilter,
                                                                  validMinMax, emptyValue, nullValue, Min, Max, isNullValueMatches);
                 break;
             case OT_BOTH:
-                vectorizedFiltering<T, VT, hasInput, OT_BOTH, KIND, FT, ST>(in, out,
+                vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_BOTH, KIND, FT, ST>(in, out,
                                                                   srcArray, srcSize, ridArray, ridSize,
                                                                   parsedColumnFilter,
                                                                   validMinMax, emptyValue, nullValue, Min, Max, isNullValueMatches);
                 break;
             case OT_TOKEN:
-                vectorizedFiltering<T, VT, hasInput, OT_TOKEN, KIND, FT, ST>(in, out,
+                vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_TOKEN, KIND, FT, ST>(in, out,
                                                                    srcArray, srcSize, ridArray, ridSize,
                                                                    parsedColumnFilter,
                                                                    validMinMax, emptyValue, nullValue, Min, Max, isNullValueMatches);
                 break;
             case OT_DATAVALUE:
-                vectorizedFiltering<T, VT, hasInput, OT_DATAVALUE, KIND, FT, ST>(in, out,
+                vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_DATAVALUE, KIND, FT, ST>(in, out,
                                                                        srcArray, srcSize, ridArray, ridSize,
                                                                        parsedColumnFilter,
                                                                        validMinMax, emptyValue, nullValue, Min, Max, isNullValueMatches);
@@ -1588,25 +1585,25 @@ void vectorizedFilteringDispatcher(NewColRequestHeader* in, ColResultHeader* out
         switch (in->OutputType)
         {
             case OT_RID:
-                vectorizedFiltering<T, VT, hasInput, OT_RID, KIND, FT, ST>(in, out,
+                vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_RID, KIND, FT, ST>(in, out,
                                                                  srcArray, srcSize, ridArray, ridSize,
                                                                  parsedColumnFilter,
                                                                  validMinMax, emptyValue, nullValue, Min, Max, isNullValueMatches);
                 break;
             case OT_BOTH:
-                vectorizedFiltering<T, VT, hasInput, OT_BOTH, KIND, FT, ST>(in, out,
+                vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_BOTH, KIND, FT, ST>(in, out,
                                                                   srcArray, srcSize, ridArray, ridSize,
                                                                   parsedColumnFilter,
                                                                   validMinMax, emptyValue, nullValue, Min, Max, isNullValueMatches);
                 break;
             case OT_TOKEN:
-                vectorizedFiltering<T, VT, hasInput, OT_TOKEN, KIND, FT, ST>(in, out,
+                vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_TOKEN, KIND, FT, ST>(in, out,
                                                                    srcArray, srcSize, ridArray, ridSize,
                                                                    parsedColumnFilter,
                                                                    validMinMax, emptyValue, nullValue, Min, Max, isNullValueMatches);
                 break;
             case OT_DATAVALUE:
-                vectorizedFiltering<T, VT, hasInput, OT_DATAVALUE, KIND, FT, ST>(in, out,
+                vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_DATAVALUE, KIND, FT, ST>(in, out,
                                                                        srcArray, srcSize, ridArray, ridSize,
                                                                        parsedColumnFilter,
                                                                        validMinMax, emptyValue, nullValue, Min, Max, isNullValueMatches);

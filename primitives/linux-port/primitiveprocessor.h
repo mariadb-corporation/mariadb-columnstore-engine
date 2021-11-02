@@ -169,6 +169,7 @@ class ParsedColumnFilter
     using RFsType = uint8_t;
     static constexpr uint32_t noSetFilterThreshold = 8;
     ColumnFilterMode columnFilterMode;
+    // Very unfortunately prestored_argVals can also be used to store double/float values.
     boost::shared_array<int64_t> prestored_argVals;
     boost::shared_array<int128_t> prestored_argVals128;
     boost::shared_array<CopsType> prestored_cops;
@@ -181,10 +182,10 @@ class ParsedColumnFilter
     ~ParsedColumnFilter();
 
     template<typename T,
-             typename std::enable_if<std::is_same<T, int64_t>::value, T>::type* = nullptr>
+             typename std::enable_if<sizeof(T) <= sizeof(int64_t), T>::type* = nullptr>
     T* getFilterVals()
     {
-        return prestored_argVals.get();
+        return reinterpret_cast<T*>(prestored_argVals.get());
     }
 
     template<typename T,

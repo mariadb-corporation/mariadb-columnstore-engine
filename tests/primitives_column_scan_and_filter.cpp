@@ -429,7 +429,9 @@ TEST_F(ColumnScanFilterTest, ColumnScan4Bytes2Filters)
   ASSERT_EQ(out->NVALS, 9);
 
   for (i = 0; i < out->NVALS; i++)
-      ASSERT_EQ(results[i], 11 + (uint32_t)i);
+  {
+    ASSERT_EQ(results[i], 11 + (uint32_t)i);
+  }
 
   EXPECT_EQ(out->Max, __col4block_cdf_umax);
   EXPECT_EQ(out->Min, __col4block_cdf_umin);
@@ -893,13 +895,11 @@ TEST_F(ColumnScanFilterTest, ColumnScan8BytesNegDouble2CompFilters)
   pp.setBlockPtr((int*) readBlockFromLiteralArray("col_neg_double.cdf", block));
   pp.columnScanAndFilter<int64_t>(in, out);
 
-  //ASSERT_EQ(out->NVALS, 19);
-  std::cerr << "ColumnScan8BytesNegDouble2CompFilters " << out->NVALS << std::endl;
+  ASSERT_EQ(out->NVALS, 19);
 
   for (i = 0; i < out->NVALS; i++)
   {
-    std::cerr << "ColumnScan8BytesNegDouble2CompFilters " << results[i] << " expected " << -4.5 + (i * 0.5) << std::endl;
-    //ASSERT_EQ(results[i], -4.5 + (i * 0.5));
+    ASSERT_EQ(results[i], -4.5 + (i * 0.5));
   }
 }
 

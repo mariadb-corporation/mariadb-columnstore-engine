@@ -37,6 +37,13 @@
 
 #include <mcs_datatype.h>
 
+// Column filtering is dispatched 4-way based on the column type,
+// which defines implementation of comparison operations for the column values
+enum ENUM_KIND {KIND_DEFAULT,   // compared as signed integers
+                KIND_UNSIGNED,  // compared as unsigned integers
+                KIND_FLOAT,     // compared as floating-point numbers
+                KIND_TEXT};     // whitespace-trimmed and then compared as signed integers
+
 namespace simd
 {
   using vi128_t = __m128i;
@@ -60,47 +67,54 @@ namespace simd
     __m128d v;
   };
 
-  template<typename T>
-  struct _IntegralToVectorWrapper
+  template<typename T, ENUM_KIND KIND, typename ENABLE = void>
+  struct IntegralToSIMD;
+
+  template<typename T, ENUM_KIND KIND>
+  struct IntegralToSIMD<T,KIND,
+    typename std::enable_if<KIND == KIND_FLOAT && sizeof(double) == sizeof(T)>::type>
+  {
+      using type = vi128d_wr;
+  };
+
+  template<typename T, ENUM_KIND KIND>
+  struct IntegralToSIMD<T,KIND,
+    typename std::enable_if<KIND == KIND_FLOAT && sizeof(float) == sizeof(T)>::type>
+  {
+      using type = vi128f_wr;
+  };
+
+  template<typename T, ENUM_KIND KIND>
+  struct IntegralToSIMD<T,KIND,
+    typename std::enable_if<KIND != KIND_FLOAT>::type>
+  {
+      using type = vi128_wr;
+  };
+
+  template<typename T, ENUM_KIND KIND, typename ENABLE = void>
+  struct StorageToFiltering;
+
+  template<typename T, ENUM_KIND KIND>
+  struct StorageToFiltering<T,KIND,
+    typename std::enable_if<KIND == KIND_FLOAT && sizeof(double) == sizeof(T)>::type>
+  {
+      using type = double;
+  };
+
+  template<typename T, ENUM_KIND KIND>
+  struct StorageToFiltering<T,KIND,
+    typename std::enable_if<KIND == KIND_FLOAT && sizeof(float) == sizeof(T)>::type>
+  {
+      using type = float;
+  };
+
+  template<typename T, ENUM_KIND KIND>
+  struct StorageToFiltering<T,KIND,
+    typename std::enable_if<KIND != KIND_FLOAT>::type>
   {
       using type = T;
   };
 
-  template<typename T>
-  struct IntegralToVectorWrapper: _IntegralToVectorWrapper<T> { };
-
-  template<>
-  struct IntegralToVectorWrapper<int128_t>: _IntegralToVectorWrapper<vi128_wr> { };
-
-  template<>
-  struct IntegralToVectorWrapper<uint64_t>: _IntegralToVectorWrapper<vi128_wr> { };
-
-  template<>
-  struct IntegralToVectorWrapper<int64_t>: _IntegralToVectorWrapper<vi128_wr> { };
-
-  template<>
-  struct IntegralToVectorWrapper<uint32_t>: _IntegralToVectorWrapper<vi128_wr> { };
-
-  template<>
-  struct IntegralToVectorWrapper<int32_t>: _IntegralToVectorWrapper<vi128_wr> { };
-
-  template<>
-  struct IntegralToVectorWrapper<uint16_t>: _IntegralToVectorWrapper<vi128_wr> { };
-
-  template<>
-  struct IntegralToVectorWrapper<int16_t>: _IntegralToVectorWrapper<vi128_wr> { };
-
-  template<>
-  struct IntegralToVectorWrapper<uint8_t>: _IntegralToVectorWrapper<vi128_wr> { };
-
-  template<>
-  struct IntegralToVectorWrapper<int8_t>: _IntegralToVectorWrapper<vi128_wr> { };
-
-  template<>
-  struct IntegralToVectorWrapper<double>: _IntegralToVectorWrapper<vi128d_wr> { };
-
-  template<>
-  struct IntegralToVectorWrapper<float>: _IntegralToVectorWrapper<vi128f_wr> { };
 
   template <typename VT, typename T, typename ENABLE = void>
   class SimdFilterProcessor;
@@ -114,80 +128,82 @@ namespace simd
     constexpr static const uint16_t vecByteSize = 16U;
     constexpr static const uint16_t vecBitSize = 128U;
     using T = typename datatypes::WidthToSIntegralType<sizeof(CHECK_T)>::type;
-    using SIMD_WRAPPER_TYPE = simd::vi128_wr;
-    using SIMD_TYPE = simd::vi128_t;
+    using SIMD_WRAPPER_TYPE = vi128_wr;
+    using SIMD_TYPE = vi128_t;
+    using FILTER_TYPE = T;
+    constexpr static const uint16_t FILTER_MASK_STEP = sizeof(T);
     // Load value
-    MCS_FORCE_INLINE vi128_t loadValue(const T fill)
+    MCS_FORCE_INLINE SIMD_TYPE loadValue(const T fill)
     {
-      return _mm_loadu_si128(reinterpret_cast<const vi128_t*>(&fill));
+      return _mm_loadu_si128(reinterpret_cast<const SIMD_TYPE*>(&fill));
     }
 
     // Load from
-    MCS_FORCE_INLINE vi128_t loadFrom(const char* from)
+    MCS_FORCE_INLINE SIMD_TYPE loadFrom(const char* from)
     {
-      return _mm_loadu_si128(reinterpret_cast<const vi128_t*>(from));
+      return _mm_loadu_si128(reinterpret_cast<const SIMD_TYPE*>(from));
     }
 
-    MCS_FORCE_INLINE MT cmpDummy(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpDummy(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return 0xFFFF;
     }
     // Compare
-    MCS_FORCE_INLINE MT cmpEq(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpEq(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return cmpDummy(x, y);
     }
 
-    MCS_FORCE_INLINE MT cmpGe(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpGe(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return cmpDummy(x, y);
     }
 
-    MCS_FORCE_INLINE MT cmpGt(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpGt(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return cmpDummy(x, y);
     }
 
-    MCS_FORCE_INLINE MT cmpLt(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpLt(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return cmpDummy(x, y);
     }
 
-    MCS_FORCE_INLINE MT cmpLe(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpLe(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return cmpDummy(x, y);
     }
 
-    MCS_FORCE_INLINE MT cmpNe(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpNe(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return cmpDummy(x, y);
     }
 
-    MCS_FORCE_INLINE MT cmpAlwaysFalse(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpAlwaysFalse(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return 0;
     }
 
     // misc
-    MCS_FORCE_INLINE uint16_t convertVectorToBitMask(vi128_t& vmask)
+    MCS_FORCE_INLINE MT convertVectorToBitMask(SIMD_TYPE& vmask)
     {
       return _mm_movemask_epi8(vmask);
     }
 
-    MCS_FORCE_INLINE vi128_t setToZero()
+    MCS_FORCE_INLINE SIMD_TYPE setToZero()
     {
       return _mm_setzero_si128();
     }
 
     // store
-    MCS_FORCE_INLINE void storeWMask(vi128_t& x, vi128_t& vmask, char* dst)
+    MCS_FORCE_INLINE void storeWMask(SIMD_TYPE& x, SIMD_TYPE& vmask, char* dst)
     {
       _mm_maskmoveu_si128(x, vmask, dst);
     }
 
-    MCS_FORCE_INLINE void store(char* dst, vi128_t& x)
+    MCS_FORCE_INLINE void store(char* dst, SIMD_TYPE& x)
     {
-      _mm_storeu_si128(reinterpret_cast<vi128_t*>(dst), x);
+      _mm_storeu_si128(reinterpret_cast<SIMD_TYPE*>(dst), x);
     }
   };
 
@@ -200,6 +216,8 @@ namespace simd
     constexpr static const uint16_t vecBitSize = 128U;
     using SIMD_WRAPPER_TYPE = simd::vi128d_wr;
     using SIMD_TYPE = simd::vi128d_t;
+    using FILTER_TYPE = T;
+    constexpr static const uint16_t FILTER_MASK_STEP = 1;
     // Load value
     MCS_FORCE_INLINE SIMD_TYPE loadValue(const T fill)
     {
@@ -267,13 +285,15 @@ namespace simd
 
   template <typename VT, typename T>
   class SimdFilterProcessor<VT, T,
-    typename std::enable_if<std::is_same<VT, vi128_wr>::value && std::is_same<T, float>::value>::type>
+    typename std::enable_if<std::is_same<VT, vi128f_wr>::value && std::is_same<T, float>::value>::type>
   {
    public:
     constexpr static const uint16_t vecByteSize = 16U;
     constexpr static const uint16_t vecBitSize = 128U;
-    using SIMD_WRAPPER_TYPE = simd::vi128f_wr;
-    using SIMD_TYPE = simd::vi128f_t;
+    using SIMD_WRAPPER_TYPE = vi128f_wr;
+    using SIMD_TYPE = vi128f_t;
+    using FILTER_TYPE = T;
+    constexpr static const uint16_t FILTER_MASK_STEP = 1;
     // Load value
     MCS_FORCE_INLINE SIMD_TYPE loadValue(const T fill)
     {
@@ -348,76 +368,78 @@ namespace simd
     constexpr static const uint16_t vecByteSize = 16U;
     constexpr static const uint16_t vecBitSize = 128U;
     using T = typename datatypes::WidthToSIntegralType<sizeof(CHECK_T)>::type;
-    using SIMD_WRAPPER_TYPE = simd::vi128_wr;
-    using SIMD_TYPE = simd::vi128_t;
+    using SIMD_WRAPPER_TYPE = vi128_wr;
+    using SIMD_TYPE = vi128_t;
+    using FILTER_TYPE = T;
+    constexpr static const uint16_t FILTER_MASK_STEP = sizeof(T);
     // Load value
-    MCS_FORCE_INLINE vi128_t loadValue(const T fill)
+    MCS_FORCE_INLINE SIMD_TYPE loadValue(const T fill)
     {
       return _mm_set_epi64x(fill, fill);
     }
 
     // Load from
-    MCS_FORCE_INLINE vi128_t loadFrom(const char* from)
+    MCS_FORCE_INLINE SIMD_TYPE loadFrom(const char* from)
     {
-      return _mm_loadu_si128(reinterpret_cast<const vi128_t*>(from));
+      return _mm_loadu_si128(reinterpret_cast<const SIMD_TYPE*>(from));
     }
 
     // Compare
-    MCS_FORCE_INLINE MT cmpGe(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpGe(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return _mm_movemask_epi8(_mm_or_si128(_mm_cmpgt_epi64(x, y),_mm_cmpeq_epi64(x, y)));
     }
 
-    MCS_FORCE_INLINE MT cmpGt(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpGt(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return _mm_movemask_epi8(_mm_cmpgt_epi64(x, y));
     }
 
-    MCS_FORCE_INLINE MT cmpEq(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpEq(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return _mm_movemask_epi8(_mm_cmpeq_epi64(x, y));
     }
 
-    MCS_FORCE_INLINE MT cmpLe(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpLe(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return cmpGt(x, y) ^ 0xFFFF;
     }
 
-    MCS_FORCE_INLINE MT cmpLt(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpLt(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return cmpNe(x, y) ^ cmpGt(x, y);
     }
 
-    MCS_FORCE_INLINE MT cmpNe(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpNe(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return _mm_movemask_epi8(_mm_cmpeq_epi64(x, y)) ^ 0xFFFF;
     }
 
-    MCS_FORCE_INLINE MT cmpAlwaysFalse(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpAlwaysFalse(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return 0;
     }
 
     // misc
-    MCS_FORCE_INLINE MT convertVectorToBitMask(vi128_t& vmask)
+    MCS_FORCE_INLINE MT convertVectorToBitMask(SIMD_TYPE& vmask)
     {
       return _mm_movemask_epi8(vmask);
     }
 
-    MCS_FORCE_INLINE vi128_t setToZero()
+    MCS_FORCE_INLINE SIMD_TYPE setToZero()
     {
       return _mm_setzero_si128();
     }
 
     // store
-    MCS_FORCE_INLINE void storeWMask(vi128_t& x, vi128_t& vmask, char* dst)
+    MCS_FORCE_INLINE void storeWMask(SIMD_TYPE& x, SIMD_TYPE& vmask, char* dst)
     {
       _mm_maskmoveu_si128(x, vmask, dst);
     }
 
-    MCS_FORCE_INLINE void store(char* dst, vi128_t& x)
+    MCS_FORCE_INLINE void store(char* dst, SIMD_TYPE& x)
     {
-      _mm_storeu_si128(reinterpret_cast<vi128_t*>(dst), x);
+      _mm_storeu_si128(reinterpret_cast<SIMD_TYPE*>(dst), x);
     }
   };
 
@@ -430,76 +452,78 @@ namespace simd
     constexpr static const uint16_t vecByteSize = 16U;
     constexpr static const uint16_t vecBitSize = 128U;
     using T = typename datatypes::WidthToSIntegralType<sizeof(CHECK_T)>::type;
-    using SIMD_WRAPPER_TYPE = simd::vi128_wr;
-    using SIMD_TYPE = simd::vi128_t;
+    using SIMD_WRAPPER_TYPE = vi128_wr;
+    using SIMD_TYPE = vi128_t;
+    using FILTER_TYPE = T;
+    constexpr static const uint16_t FILTER_MASK_STEP = sizeof(T);
     // Load value
-    MCS_FORCE_INLINE vi128_t loadValue(const T fill)
+    MCS_FORCE_INLINE SIMD_TYPE loadValue(const T fill)
     {
       return _mm_set1_epi32(fill);
     }
 
     // Load from
-    MCS_FORCE_INLINE vi128_t loadFrom(const char* from)
+    MCS_FORCE_INLINE SIMD_TYPE loadFrom(const char* from)
     {
-      return _mm_loadu_si128(reinterpret_cast<const vi128_t*>(from));
+      return _mm_loadu_si128(reinterpret_cast<const SIMD_TYPE*>(from));
     }
 
     // Compare
-    MCS_FORCE_INLINE MT cmpEq(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpEq(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return _mm_movemask_epi8(_mm_cmpeq_epi32(x, y));
     }
 
-    MCS_FORCE_INLINE MT cmpGe(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpGe(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return cmpLt(x, y) ^ 0xFFFF;
     }
 
-    MCS_FORCE_INLINE MT cmpGt(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpGt(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return _mm_movemask_epi8(_mm_cmpgt_epi32(x, y));
     }
 
-    MCS_FORCE_INLINE MT cmpLe(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpLe(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return cmpGt(x, y) ^ 0xFFFF;
     }
 
-    MCS_FORCE_INLINE MT cmpLt(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpLt(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return _mm_movemask_epi8(_mm_cmplt_epi32(x, y));
     }
 
-    MCS_FORCE_INLINE MT cmpNe(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpNe(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return _mm_movemask_epi8(_mm_cmpeq_epi32(x, y)) ^ 0xFFFF;
     }
 
-    MCS_FORCE_INLINE MT cmpAlwaysFalse(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpAlwaysFalse(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return 0;
     }
 
     // misc
-    MCS_FORCE_INLINE MT convertVectorToBitMask(vi128_t& vmask)
+    MCS_FORCE_INLINE MT convertVectorToBitMask(SIMD_TYPE& vmask)
     {
       return _mm_movemask_epi8(vmask);
     }
 
-    MCS_FORCE_INLINE vi128_t setToZero()
+    MCS_FORCE_INLINE SIMD_TYPE setToZero()
     {
       return _mm_setzero_si128();
     }
 
     // store
-    MCS_FORCE_INLINE void storeWMask(vi128_t& x, vi128_t& vmask, char* dst)
+    MCS_FORCE_INLINE void storeWMask(SIMD_TYPE& x, SIMD_TYPE& vmask, char* dst)
     {
       _mm_maskmoveu_si128(x, vmask, dst);
     }
 
-    MCS_FORCE_INLINE void store(char* dst, vi128_t& x)
+    MCS_FORCE_INLINE void store(char* dst, SIMD_TYPE& x)
     {
-      _mm_storeu_si128(reinterpret_cast<vi128_t*>(dst), x);
+      _mm_storeu_si128(reinterpret_cast<SIMD_TYPE*>(dst), x);
     }
   };
 
@@ -513,74 +537,76 @@ namespace simd
     using T = typename datatypes::WidthToSIntegralType<sizeof(CHECK_T)>::type;
     using SIMD_WRAPPER_TYPE = simd::vi128_wr;
     using SIMD_TYPE = simd::vi128_t;
+    using FILTER_TYPE = T;
+    constexpr static const uint16_t FILTER_MASK_STEP = sizeof(T);
     // Load value
-    MCS_FORCE_INLINE vi128_t loadValue(const T fill)
+    MCS_FORCE_INLINE SIMD_TYPE loadValue(const T fill)
     {
       return _mm_set1_epi16(fill);
     }
 
     // Load from
-    MCS_FORCE_INLINE vi128_t loadFrom(const char* from)
+    MCS_FORCE_INLINE SIMD_TYPE loadFrom(const char* from)
     {
-      return _mm_loadu_si128(reinterpret_cast<const vi128_t*>(from));
+      return _mm_loadu_si128(reinterpret_cast<const SIMD_TYPE*>(from));
     }
 
     // Compare
-    MCS_FORCE_INLINE MT cmpEq(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpEq(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return _mm_movemask_epi8(_mm_cmpeq_epi16(x, y));
     }
 
-    MCS_FORCE_INLINE MT cmpGe(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpGe(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return cmpLt(x, y) ^ 0xFFFF;
     }
 
-    MCS_FORCE_INLINE MT cmpGt(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpGt(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return _mm_movemask_epi8(_mm_cmpgt_epi16(x, y));
     }
 
-    MCS_FORCE_INLINE MT cmpLe(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpLe(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return cmpGt(x, y) ^ 0xFFFF;
     }
 
-    MCS_FORCE_INLINE MT cmpLt(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpLt(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return _mm_movemask_epi8(_mm_cmplt_epi16(x, y));
     }
 
-    MCS_FORCE_INLINE MT cmpNe(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpNe(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return _mm_movemask_epi8(_mm_cmpeq_epi16(x, y)) ^ 0xFFFF;
     }
 
-    MCS_FORCE_INLINE MT cmpAlwaysFalse(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpAlwaysFalse(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return 0;
     }
 
     // misc
-    MCS_FORCE_INLINE MT convertVectorToBitMask(vi128_t& vmask)
+    MCS_FORCE_INLINE MT convertVectorToBitMask(SIMD_TYPE& vmask)
     {
       return _mm_movemask_epi8(vmask);
     }
 
-    MCS_FORCE_INLINE vi128_t setToZero()
+    MCS_FORCE_INLINE SIMD_TYPE setToZero()
     {
       return _mm_setzero_si128();
     }
 
     // store
-    MCS_FORCE_INLINE void storeWMask(vi128_t& x, vi128_t& vmask, char* dst)
+    MCS_FORCE_INLINE void storeWMask(SIMD_TYPE& x, SIMD_TYPE& vmask, char* dst)
     {
       _mm_maskmoveu_si128(x, vmask, dst);
     }
 
-    MCS_FORCE_INLINE void store(char* dst, vi128_t& x)
+    MCS_FORCE_INLINE void store(char* dst, SIMD_TYPE& x)
     {
-      _mm_storeu_si128(reinterpret_cast<vi128_t*>(dst), x);
+      _mm_storeu_si128(reinterpret_cast<SIMD_TYPE*>(dst), x);
     }
   };
 
@@ -592,83 +618,85 @@ namespace simd
     constexpr static const uint16_t vecByteSize = 16U;
     constexpr static const uint16_t vecBitSize = 128U;
     using T = typename datatypes::WidthToSIntegralType<sizeof(CHECK_T)>::type;
-    using SIMD_WRAPPER_TYPE = simd::vi128_wr;
-    using SIMD_TYPE = simd::vi128_t;
+    using SIMD_WRAPPER_TYPE = vi128_wr;
+    using SIMD_TYPE = vi128_t;
+    using FILTER_TYPE = T;
+    constexpr static const uint16_t FILTER_MASK_STEP = sizeof(T);
     // Load value
-    MCS_FORCE_INLINE vi128_t loadValue(const T fill)
+    MCS_FORCE_INLINE SIMD_TYPE loadValue(const T fill)
     {
       return _mm_set1_epi8(fill);
     }
 
     // Load from
-    MCS_FORCE_INLINE vi128_t loadFrom(const char* from)
+    MCS_FORCE_INLINE SIMD_TYPE loadFrom(const char* from)
     {
-      return _mm_loadu_si128(reinterpret_cast<const vi128_t*>(from));
+      return _mm_loadu_si128(reinterpret_cast<const SIMD_TYPE*>(from));
     }
 
     // Compare
-    MCS_FORCE_INLINE MT cmpEq(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpEq(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return _mm_movemask_epi8(_mm_cmpeq_epi8(x, y));
     }
 
-    MCS_FORCE_INLINE MT cmpGe(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpGe(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return cmpLt(x, y) ^ 0xFFFF;
     }
 
-    MCS_FORCE_INLINE MT cmpGt(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpGt(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return _mm_movemask_epi8(_mm_cmpgt_epi8(x, y));
     }
 
-    MCS_FORCE_INLINE MT cmpLe(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpLe(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return cmpGt(x, y) ^ 0xFFFF;
     }
 
-    MCS_FORCE_INLINE MT cmpLt(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpLt(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return _mm_movemask_epi8(_mm_cmplt_epi8(x, y));
     }
 
-    MCS_FORCE_INLINE MT cmpNe(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpNe(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return _mm_movemask_epi8(_mm_cmpeq_epi8(x, y)) ^ 0xFFFF;
     }
 
-    MCS_FORCE_INLINE MT cmpAlwaysFalse(vi128_t& x, vi128_t& y)
+    MCS_FORCE_INLINE MT cmpAlwaysFalse(SIMD_TYPE& x, SIMD_TYPE& y)
     {
       return 0;
     }
 
     // permute
 /* TODO Available in AVX-512
-    MCS_FORCE_INLINE vi128_t perm8Bits(vi128_t& x, vi128_t& idx)
+    MCS_FORCE_INLINE SIMD_TYPE perm8Bits(SIMD_TYPE& x, SIMD_TYPE& idx)
     {
       return _mm_permutexvar_epi8(x, idx);
     }
 */
     // misc
-    MCS_FORCE_INLINE MT convertVectorToBitMask(vi128_t& vmask)
+    MCS_FORCE_INLINE MT convertVectorToBitMask(SIMD_TYPE& vmask)
     {
       return _mm_movemask_epi8(vmask);
     }
 
-    MCS_FORCE_INLINE vi128_t setToZero()
+    MCS_FORCE_INLINE SIMD_TYPE setToZero()
     {
       return _mm_setzero_si128();
     }
 
     // store
-    MCS_FORCE_INLINE void storeWMask(vi128_t& x, vi128_t& vmask, char* dst)
+    MCS_FORCE_INLINE void storeWMask(SIMD_TYPE& x, SIMD_TYPE& vmask, char* dst)
     {
       _mm_maskmoveu_si128(x, vmask, dst);
     }
 
-    MCS_FORCE_INLINE void store(char* dst, vi128_t& x)
+    MCS_FORCE_INLINE void store(char* dst, SIMD_TYPE& x)
     {
-      _mm_storeu_si128(reinterpret_cast<vi128_t*>(dst), x);
+      _mm_storeu_si128(reinterpret_cast<SIMD_TYPE*>(dst), x);
     }
   };
 
