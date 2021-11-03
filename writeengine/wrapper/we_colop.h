@@ -221,9 +221,9 @@ public:
     /**
      * @brief Check whether it is an empty row
      */
-    EXPORT virtual bool isEmptyRow(uint64_t* curVal,
-                                   const uint8_t* emptyVal,
-                                   const int colWidth);
+    inline bool isEmptyRow(uint64_t* curVal,
+                           const uint8_t* emptyVal,
+                           const int colWidth);
 
     /**
      * @brief Check whether it is a valid column
