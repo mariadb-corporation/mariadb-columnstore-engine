@@ -120,7 +120,7 @@ JoinPartition::JoinPartition(const RowGroup& lRG,
         compressor.reset(new compress::CompressInterfaceSnappy());
     }
 
-    for (int i = 0; i < (int) bucketCount; i++)
+    for (uint32_t i = 0; i < bucketCount; i++)
         buckets.push_back(boost::shared_ptr<JoinPartition>(new JoinPartition(*this, false)));
         
         

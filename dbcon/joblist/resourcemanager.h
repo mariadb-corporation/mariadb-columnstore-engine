@@ -404,11 +404,11 @@ public:
     /* sessionLimit is a pointer to the var holding the session-scope limit, should be JobInfo.umMemLimit
        for the query. */
     /* Temporary parameter 'patience', will wait for up to 10s to get the memory. */
-    EXPORT bool getMemory(int64_t amount, boost::shared_ptr<int64_t> sessionLimit, bool patience = true);
-    inline void returnMemory(int64_t amount, boost::shared_ptr<int64_t> sessionLimit)
+    EXPORT bool getMemory(int64_t amount, boost::shared_ptr<int64_t>& sessionLimit, bool patience = true);
+    inline void returnMemory(int64_t amount, boost::shared_ptr<int64_t>& sessionLimit)
     {
         atomicops::atomicAdd(&totalUmMemLimit, amount);
-        sessionLimit? atomicops::atomicAdd(sessionLimit.get(), amount): 0;
+        sessionLimit ? atomicops::atomicAdd(sessionLimit.get(), amount): 0;
     }
     inline int64_t availableMemory() const
     {

@@ -1868,7 +1868,6 @@ void TupleHashJoinStep::generateJoinResultSet(const vector<vector<Row::Pointer> 
                 if (UNLIKELY(!getMemory(l_outputRG.getMaxDataSize())))
                 {
                     // Don't let the join results buffer get out of control.
-                    RowGroup out(outputRG);
                     sendResult(outputData);
                     outputData.clear();
                     returnMemory();
