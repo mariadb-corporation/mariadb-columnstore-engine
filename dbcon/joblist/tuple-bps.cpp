@@ -272,8 +272,11 @@ TupleBPS::TupleBPS(const pColStep& rhs, const JobInfo& jobInfo) :
     fDelivery = false;
     fExtendedInfo = "TBPS: ";
     fQtc.stepParms().stepType = StepTeleStats::T_BPS;
-    fJoinMemLimit.reset(new int64_t(*jobInfo.umMemLimit == 0 ? fRm->getConfiguredUMMemLimit() / 4 : min((uint64_t)*jobInfo.umMemLimit, fRm->getConfiguredUMMemLimit() / 4)));
-
+    if (jobInfo.umMemLimit && *jobInfo.umMemLimit > 0)
+        fJoinMemLimit.reset(new int64_t(min((uint64_t)*jobInfo.umMemLimit, fRm->getConfiguredUMMemLimit() / 4)));
+    else
+        fJoinMemLimit.reset(new int64_t(fRm->getConfiguredUMMemLimit() / 4));
+    
     hasPCFilter = hasPMFilter = hasRIDFilter = hasSegmentFilter = hasDBRootFilter = hasSegmentDirFilter =
                                     hasPartitionFilter = hasMaxFilter = hasMinFilter = hasLBIDFilter = hasExtentIDFilter = false;
 }
@@ -357,7 +360,10 @@ TupleBPS::TupleBPS(const pColScanStep& rhs, const JobInfo& jobInfo) :
 
     initExtentMarkers();
     fQtc.stepParms().stepType = StepTeleStats::T_BPS;
-    fJoinMemLimit.reset(new int64_t(*jobInfo.umMemLimit == 0 ? fRm->getConfiguredUMMemLimit() / 4 : min((uint64_t)*jobInfo.umMemLimit, fRm->getConfiguredUMMemLimit() / 4)));
+    if (jobInfo.umMemLimit && *jobInfo.umMemLimit > 0)
+        fJoinMemLimit.reset(new int64_t(min((uint64_t)*jobInfo.umMemLimit, fRm->getConfiguredUMMemLimit() / 4)));
+    else
+        fJoinMemLimit.reset(new int64_t(fRm->getConfiguredUMMemLimit() / 4));
     
     hasPCFilter = hasPMFilter = hasRIDFilter = hasSegmentFilter = hasDBRootFilter = hasSegmentDirFilter =
                                     hasPartitionFilter = hasMaxFilter = hasMinFilter = hasLBIDFilter = hasExtentIDFilter = false;
@@ -425,7 +431,10 @@ TupleBPS::TupleBPS(const PassThruStep& rhs, const JobInfo& jobInfo) :
     fDelivery = false;
     fExtendedInfo = "TBPS: ";
     fQtc.stepParms().stepType = StepTeleStats::T_BPS;
-    fJoinMemLimit.reset(new int64_t(*jobInfo.umMemLimit == 0 ? fRm->getConfiguredUMMemLimit() / 4 : min((uint64_t)*jobInfo.umMemLimit, fRm->getConfiguredUMMemLimit() / 4)));
+    if (jobInfo.umMemLimit && *jobInfo.umMemLimit > 0)
+        fJoinMemLimit.reset(new int64_t(min((uint64_t)*jobInfo.umMemLimit, fRm->getConfiguredUMMemLimit() / 4)));
+    else
+        fJoinMemLimit.reset(new int64_t(fRm->getConfiguredUMMemLimit() / 4));
     
     hasPCFilter = hasPMFilter = hasRIDFilter = hasSegmentFilter = hasDBRootFilter = hasSegmentDirFilter =
                                     hasPartitionFilter = hasMaxFilter = hasMinFilter = hasLBIDFilter = hasExtentIDFilter = false;
@@ -491,7 +500,10 @@ TupleBPS::TupleBPS(const pDictionaryStep& rhs, const JobInfo& jobInfo) :
     fDelivery = false;
     fExtendedInfo = "TBPS: ";
     fQtc.stepParms().stepType = StepTeleStats::T_BPS;
-    fJoinMemLimit.reset(new int64_t(*jobInfo.umMemLimit == 0 ? fRm->getConfiguredUMMemLimit() / 4 : min((uint64_t)*jobInfo.umMemLimit, fRm->getConfiguredUMMemLimit() / 4)));
+    if (jobInfo.umMemLimit && *jobInfo.umMemLimit > 0)
+        fJoinMemLimit.reset(new int64_t(min((uint64_t)*jobInfo.umMemLimit, fRm->getConfiguredUMMemLimit() / 4)));
+    else
+        fJoinMemLimit.reset(new int64_t(fRm->getConfiguredUMMemLimit() / 4));
     
     hasPCFilter = hasPMFilter = hasRIDFilter = hasSegmentFilter = hasDBRootFilter = hasSegmentDirFilter =
                                     hasPartitionFilter = hasMaxFilter = hasMinFilter = hasLBIDFilter = hasExtentIDFilter = false;
@@ -1948,7 +1960,7 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
     scoped_array<uint8_t> largeNullMemory;
     scoped_array<shared_array<uint8_t> > smallNullMemory;
     uint32_t matchCount;
-    uint64_t memSizeForOutputRG = 0;
+    uint64_t memUsedByOutputRG = 0;
     
     /* Thread-scoped F&E 2 var */
     Row postJoinRow;    // postJoinRow is also used for joins
@@ -2314,9 +2326,9 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
                             {
                                 applyMapping(largeMapping, largeSideRow, &joinedBaseRow);
                                 joinedBaseRow.setRid(largeSideRow.getRelRid());
-                                generateJoinResultSet(joinerOutput, joinedBaseRow, smallMappings,
-                                                      0, local_outputRG, joinedData, rgDatav, smallSideRows, postJoinRow, dlp, 
-                                                      local_fe2Output, local_fe2OutRow, local_fe2, memSizeForOutputRG);
+                                memUsedByOutputRG += generateJoinResultSet(joinerOutput, joinedBaseRow, smallMappings,
+                                                                           0, local_outputRG, joinedData, rgDatav, smallSideRows, postJoinRow, dlp, 
+                                                                           local_fe2Output, local_fe2OutRow, local_fe2);
                             }
                         }  // end of the for-loop in the join code
 
@@ -2336,8 +2348,8 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
                     {
                         processFE2(local_outputRG, local_fe2Output, postJoinRow, local_fe2OutRow, &rgDatav, &local_fe2);
                         rgDataVecToDl(rgDatav, local_fe2Output, dlp);
-                        fRm->returnMemory(memSizeForOutputRG, fJoinMemLimit);
-                        memSizeForOutputRG = 0;
+                        fRm->returnMemory(memUsedByOutputRG, fJoinMemLimit);
+                        memUsedByOutputRG = 0;
                     }
 
                     cachedIO_Thread += cachedIO;
@@ -2364,8 +2376,8 @@ void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
                         rgDataVecToDl(rgDatav, local_fe2Output, dlp);
                     else
                         rgDataVecToDl(rgDatav, local_outputRG, dlp);
-                    fRm->returnMemory(memSizeForOutputRG, fJoinMemLimit);
-                    memSizeForOutputRG = 0;
+                    fRm->returnMemory(memUsedByOutputRG, fJoinMemLimit);
+                    memUsedByOutputRG = 0;
                 }
             }  // end of the per-bytestream loop
 
@@ -2672,10 +2684,10 @@ out:
         }
     }
 
-    if (memSizeForOutputRG)
+    if (memUsedByOutputRG)
     {
-        fRm->returnMemory(memSizeForOutputRG, fJoinMemLimit);
-        memSizeForOutputRG = 0;
+        fRm->returnMemory(memUsedByOutputRG, fJoinMemLimit);
+        memUsedByOutputRG = 0;
     }
             // Bug 3136, let mini stats to be formatted if traceOn.
     if (lastThread && !didEOF)
@@ -2853,24 +2865,25 @@ void TupleBPS::setJoinedResultRG(const rowgroup::RowGroup& rg)
 
 // I tried to makke a bunch of these into member variables so we wouldn't have such a large calling signature, but unfortunatelly,
 // these are thread specific vars and this* is used in multiple threads.
-void TupleBPS::generateJoinResultSet(const vector<vector<Row::Pointer> >& joinerOutput,
+uint64_t TupleBPS::generateJoinResultSet(const vector<vector<Row::Pointer> >& joinerOutput,
                                      Row& baseRow, const vector<shared_array<int> >& mappings, const uint32_t depth,
                                      RowGroup& outputRG, RGData& rgData, vector<RGData>& outputData, const scoped_array<Row>& smallRows,
                                      Row& joinedRow, RowGroupDL* dlp, RowGroup& fe2OutputRG, Row& fe2OutRow, 
-                                     funcexp::FuncExpWrapper& local_fe2, uint64_t memSizeForOutputRG)
+                                     funcexp::FuncExpWrapper& local_fe2)
 {
     uint32_t i;
     Row& smallRow = smallRows[depth];
-
+    uint64_t memSizeForOutputRG = 0;
+    
     if (depth < smallSideCount - 1)
     {
         for (i = 0; i < joinerOutput[depth].size(); i++)
         {
             smallRow.setPointer(joinerOutput[depth][i]);
             applyMapping(mappings[depth], smallRow, &baseRow);
-            generateJoinResultSet(joinerOutput, baseRow, mappings, depth + 1,
+            memSizeForOutputRG += generateJoinResultSet(joinerOutput, baseRow, mappings, depth + 1,
                                   outputRG, rgData, outputData, smallRows, joinedRow,
-                                  dlp, fe2OutputRG, fe2OutRow, local_fe2, memSizeForOutputRG);
+                                  dlp, fe2OutputRG, fe2OutRow, local_fe2);
         }
     }
     else
@@ -2916,6 +2929,7 @@ void TupleBPS::generateJoinResultSet(const vector<vector<Row::Pointer> >& joiner
             copyRow(baseRow, &joinedRow);
         }
     }
+    return memSizeForOutputRG;
 }
 
 const rowgroup::RowGroup& TupleBPS::getOutputRowGroup() const
@@ -3402,7 +3416,6 @@ void TupleBPS::abort_nolock()
         }
 
         BPPIsAllocated = false;
-//        fDec->shutdownQueue(uniqueID);
         fDec->removeQueue(uniqueID);
     }
 
