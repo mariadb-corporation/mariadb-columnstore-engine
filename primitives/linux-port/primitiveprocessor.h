@@ -182,7 +182,7 @@ class ParsedColumnFilter
     ~ParsedColumnFilter();
 
     template<typename T,
-             typename std::enable_if<sizeof(T) <= sizeof(int64_t), T>::type* = nullptr>
+             typename std::enable_if<std::is_same<T, int64_t>::value, T>::type* = nullptr>
     T* getFilterVals()
     {
         return reinterpret_cast<T*>(prestored_argVals.get());
