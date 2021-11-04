@@ -225,6 +225,10 @@ public:
         return fMaxThreads;
     }
 
+    /** @brief get the issued number of threads
+      */
+    inline size_t getIssuedThreads() { return fIssued; }
+
     /** @brief queue size accessor
       *
       */
@@ -291,6 +295,7 @@ public:
     {
         fDebug = d;
     }
+
 
     friend class ThreadPoolMonitor;
 protected:
