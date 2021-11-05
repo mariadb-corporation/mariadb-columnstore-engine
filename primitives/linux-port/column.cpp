@@ -55,7 +55,7 @@ using MT = uint16_t;
 
 // Column filtering is dispatched 4-way based on the column type,
 // which defines implementation of comparison operations for the column values
-enum ENUM_KIND {KIND_DEFAULT,   // compared as signed integers
+enum ENUM_KIND {KIND_INTEGER,   // compared as signed integers
                 KIND_UNSIGNED,  // compared as unsigned integers
                 KIND_FLOAT,     // compared as floating-point numbers
                 KIND_TEXT};     // whitespace-trimmed and then compared as signed integers
@@ -287,6 +287,20 @@ inline bool colCompareDispatcherT(
     return colCompare_(dVal1, dVal2, cop);
 }
 
+// WIP
+template<ENUM_KIND KIND, int COL_WIDTH, bool IS_NULL, typename T1, typename T2,
+         typename std::enable_if<(COL_WIDTH == sizeof(int8_t) || COL_WIDTH == sizeof(int16_t) || COL_WIDTH == sizeof(int128_t)) && KIND == KIND_FLOAT && !IS_NULL, T1>::type* = nullptr>
+inline bool colCompareDispatcherT(
+    T1 columnValue,
+    T2 filterValue,
+    uint8_t cop,
+    uint8_t rf,
+    const ColRequestHeaderDataType& typeHolder,
+    bool isVal2Null)
+{
+    return false;
+}
+
 template<ENUM_KIND KIND, int COL_WIDTH, bool IS_NULL, typename T1, typename T2,
          typename std::enable_if<KIND == KIND_TEXT && !IS_NULL, T1>::type* = nullptr>
 inline bool colCompareDispatcherT(
@@ -380,7 +394,7 @@ inline bool colCompareDispatcherT(
 }
 
 template<ENUM_KIND KIND, int COL_WIDTH, bool IS_NULL, typename T1, typename T2,
-         typename std::enable_if<KIND == KIND_DEFAULT && !IS_NULL, T1>::type* = nullptr>
+         typename std::enable_if<KIND == KIND_INTEGER && !IS_NULL, T1>::type* = nullptr>
 inline bool colCompareDispatcherT(
     T1 columnValue,
     T2 filterValue,
@@ -1222,9 +1236,8 @@ inline uint16_t vectWriteRIDValues(VT& processor,   // SIMD processor
  *****************************************************************************/
 // TODO turn columnFilterMode into template param to use it in matchingColValue
 // This routine filters values in a columnar block processing one scalar at a time.
-template<typename T, typename FT, typename ST, ENUM_KIND KIND>
+template<typename T, typename FT, typename ST, ENUM_KIND KIND, ColumnFilterMode FILTER_MODE>
 void scalarFiltering(NewColRequestHeader* in, ColResultHeader* out,
-    const ColumnFilterMode columnFilterMode,
     const ST* filterSet,        // Set of values for simple filters (any of values / none of them)
     const uint32_t filterCount, // Number of filter elements, each described by one entry in the following arrays:
     const uint8_t* filterCOPs,  //   comparison operation
@@ -1268,7 +1281,7 @@ void scalarFiltering(NewColRequestHeader* in, ColResultHeader* out,
         else
         {
             // If curValue matches the filter, write it to the output buffer
-            if (matchingColValue<KIND, WIDTH, false>(curValue, columnFilterMode, filterSet, filterCount,
+            if (matchingColValue<KIND, WIDTH, false>(curValue, FILTER_MODE, filterSet, filterCount,
                                                      filterCOPs, filterValues, filterRFs, in->colType, nullValue))
             {
                 writeColValue<T>(outputType, out, rid, srcArray);
@@ -1287,6 +1300,124 @@ void scalarFiltering(NewColRequestHeader* in, ColResultHeader* out,
         out->Min = Min;
         out->Max = Max;
     }
+}
+
+template<typename T, typename FT, typename ST, ENUM_KIND KIND>
+void scalarFilteringFilterModeDispatcher(NewColRequestHeader* in,
+    ColResultHeader* out,
+    const ColumnFilterMode columnFilterMode,
+    const ST* filterSet,        // Set of values for simple filters (any of values / none of them)
+    const uint32_t filterCount, // Number of filter elements, each described by one entry in the following arrays:
+    const uint8_t* filterCOPs,  //   comparison operation
+    const FT* filterValues,     //   value to compare to
+    const uint8_t* filterRFs,
+    const ColRequestHeaderDataType& typeHolder, // TypeHolder to use collation-aware ops for char/text.
+    const T* srcArray,          // Input array
+    const uint32_t srcSize,     // ... and its size
+    const uint16_t* ridArray,   // Optional array of indexes into srcArray, that defines the read order
+    const uint16_t ridSize,     // ... and its size
+    const uint32_t initialRID,  // The input block idx to start scanning/filter at.
+    const uint8_t outputType,   // Used to decide whether to skip EMPTY values
+    const bool validMinMax,     // The flag to store min/max
+    T emptyValue,               // Deduced empty value magic
+    T nullValue,                // Deduced null value magic
+    T Min,
+    T Max,
+    const bool isNullValueMatches)
+{
+    switch (columnFilterMode)
+    {
+        case ALWAYS_TRUE:
+        {
+            scalarFiltering<T, FT, ST, KIND, ALWAYS_TRUE>(in, out,
+                filterSet, filterCount, filterCOPs, filterValues, filterRFs,
+                typeHolder, srcArray, srcSize, ridArray, ridSize,
+                initialRID, outputType, validMinMax, emptyValue, nullValue,
+                Min, Max, isNullValueMatches);
+            break;
+        }
+
+        case SINGLE_COMPARISON:
+        {
+            scalarFiltering<T, FT, ST, KIND, SINGLE_COMPARISON>(in, out,
+                filterSet, filterCount, filterCOPs, filterValues, filterRFs,
+                typeHolder, srcArray, srcSize, ridArray, ridSize,
+                initialRID, outputType, validMinMax, emptyValue, nullValue,
+                Min, Max, isNullValueMatches);
+            break;
+        }
+
+        case ANY_COMPARISON_TRUE:
+        {
+            scalarFiltering<T, FT, ST, KIND, ANY_COMPARISON_TRUE>(in, out,
+                filterSet, filterCount, filterCOPs, filterValues, filterRFs,
+                typeHolder, srcArray, srcSize, ridArray, ridSize,
+                initialRID, outputType, validMinMax, emptyValue, nullValue,
+                Min, Max, isNullValueMatches);
+            break;
+        }
+
+        case ALL_COMPARISONS_TRUE:
+        { 
+            scalarFiltering<T, FT, ST, KIND, ALL_COMPARISONS_TRUE>(in, out,
+                filterSet, filterCount, filterCOPs, filterValues, filterRFs,
+                typeHolder, srcArray, srcSize, ridArray, ridSize,
+                initialRID, outputType, validMinMax, emptyValue, nullValue,
+                Min, Max, isNullValueMatches);
+            break;
+        }
+ 
+        case XOR_COMPARISONS:
+        { 
+            scalarFiltering<T, FT, ST, KIND, XOR_COMPARISONS>(in, out,
+                filterSet, filterCount, filterCOPs, filterValues, filterRFs,
+                typeHolder, srcArray, srcSize, ridArray, ridSize,
+                initialRID, outputType, validMinMax, emptyValue, nullValue,
+                Min, Max, isNullValueMatches);
+            break;
+        }
+ 
+        case ONE_OF_VALUES_IN_ARRAY:
+        { 
+            scalarFiltering<T, FT, ST, KIND, ONE_OF_VALUES_IN_ARRAY>(in, out,
+                filterSet, filterCount, filterCOPs, filterValues, filterRFs,
+                typeHolder, srcArray, srcSize, ridArray, ridSize,
+                initialRID, outputType, validMinMax, emptyValue, nullValue,
+                Min, Max, isNullValueMatches);
+            break;
+        }
+ 
+        case NONE_OF_VALUES_IN_ARRAY:
+        { 
+            scalarFiltering<T, FT, ST, KIND, NONE_OF_VALUES_IN_ARRAY>(in, out,
+                filterSet, filterCount, filterCOPs, filterValues, filterRFs,
+                typeHolder, srcArray, srcSize, ridArray, ridSize,
+                initialRID, outputType, validMinMax, emptyValue, nullValue,
+                Min, Max, isNullValueMatches);
+            break;
+        }
+
+        case ONE_OF_VALUES_IN_SET:
+        { 
+            scalarFiltering<T, FT, ST, KIND, ONE_OF_VALUES_IN_SET>(in, out,
+                filterSet, filterCount, filterCOPs, filterValues, filterRFs,
+                typeHolder, srcArray, srcSize, ridArray, ridSize,
+                initialRID, outputType, validMinMax, emptyValue, nullValue,
+                Min, Max, isNullValueMatches);
+            break;
+        }
+ 
+        case NONE_OF_VALUES_IN_SET:
+        { 
+            scalarFiltering<T, FT, ST, KIND, NONE_OF_VALUES_IN_SET>(in, out,
+                filterSet, filterCount, filterCOPs, filterValues, filterRFs,
+                typeHolder, srcArray, srcSize, ridArray, ridSize,
+                initialRID, outputType, validMinMax, emptyValue, nullValue,
+                Min, Max, isNullValueMatches);
+            break;
+        }
+    }
+
 }
 
 #if defined(__x86_64__ )
@@ -1533,10 +1664,10 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
     // process the tail. scalarFiltering changes out contents, e.g. Min/Max, NVALS, RIDs and values array
     // This tail also sets out::Min/Max, out::validMinMax if validMinMax is set.
     uint32_t processedSoFar = rid;
-    scalarFiltering<T, FT, ST, KIND>(in, out, columnFilterMode, filterSet, filterCount, filterCOPs,
-                                     filterValues, filterRFs, in->colType, origSrcArray, srcSize, origRidArray,
-                                     ridSize, processedSoFar, outputType, validMinMax, emptyValue, nullValue,
-                                     Min, Max, isNullValueMatches);
+    scalarFilteringFilterModeDispatcher<T, FT, ST, KIND>(in, out, columnFilterMode,
+        filterSet, filterCount, filterCOPs, filterValues, filterRFs, in->colType,
+        origSrcArray, srcSize, origRidArray, ridSize, processedSoFar, outputType,
+        validMinMax, emptyValue, nullValue, Min, Max, isNullValueMatches);
 }
 
 // This routine dispatches template function calls to reduce branching.
@@ -1678,7 +1809,7 @@ void filterColumnData(
 
 #if defined(__x86_64__ )
     // Don't use vectorized filtering for non-integer based data types wider than 16 bytes.
-    if (KIND < KIND_FLOAT && WIDTH < 16)
+    if (KIND < KIND_FLOAT && columnFilterMode < ONE_OF_VALUES_IN_SET && WIDTH < 16)
     {
         bool canUseFastFiltering = true;
         for (uint32_t i = 0; i < filterCount; ++i)
@@ -1695,10 +1826,10 @@ void filterColumnData(
     }
 #endif
     uint32_t initialRID = 0;
-    scalarFiltering<T, FT, ST, KIND>(in, out, columnFilterMode, filterSet, filterCount, filterCOPs,
-                                     filterValues, filterRFs, in->colType, srcArray, srcSize, ridArray,
-                                     ridSize, initialRID, outputType, validMinMax, emptyValue, nullValue,
-                                     Min, Max, isNullValueMatches);
+    scalarFilteringFilterModeDispatcher<T, FT, ST, KIND>(in, out, columnFilterMode, 
+        filterSet, filterCount, filterCOPs, filterValues, filterRFs, in->colType,
+        srcArray, srcSize, ridArray, ridSize, initialRID, outputType, validMinMax,
+        emptyValue, nullValue, Min, Max, isNullValueMatches);
 } // end of filterColumnData
 
 } //namespace anon
@@ -1723,115 +1854,8 @@ inline bool isDictTokenScan(NewColRequestHeader* in)
     }
 }
 
-// A set of dispatchers for different column widths/integral types.
-template<typename T,
-// Remove this ugly preprocessor macrosses when RHEL7 reaches EOL.
-// This ugly preprocessor if is here b/c of templated class method parameter default value syntax diff b/w gcc versions.
-#ifdef __GNUC__
- #if ___GNUC__ >= 5
-         typename std::enable_if<sizeof(T) == sizeof(int32_t), T>::type* = nullptr> // gcc >= 5
- #else
-         typename std::enable_if<sizeof(T) == sizeof(int32_t), T>::type*> // gcc 4.8.5
- #endif
-#else
-         typename std::enable_if<sizeof(T) == sizeof(int32_t), T>::type* = nullptr>
-#endif
+template<typename T>
 void PrimitiveProcessor::scanAndFilterTypeDispatcher(NewColRequestHeader* in,
-    ColResultHeader* out)
-{
-    constexpr int W = sizeof(T);
-    auto dataType = (execplan::CalpontSystemCatalog::ColDataType) in->colType.DataType;
-    if (dataType == execplan::CalpontSystemCatalog::FLOAT)
-    {
-// WIP make this inline function
-        const uint16_t ridSize = in->NVALS;
-        uint16_t* ridArray = in->getRIDArrayPtr(W);
-        const uint32_t itemsPerBlock = logicalBlockMode ? BLOCK_SIZE
-                                                        : BLOCK_SIZE / W;
-        filterColumnData<T, KIND_FLOAT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
-        return;
-    }
-    _scanAndFilterTypeDispatcher<T>(in, out);
-}
-
-template<typename T,
-#ifdef __GNUC__
- #if ___GNUC__ >= 5
-         typename std::enable_if<sizeof(T) == sizeof(int64_t), T>::type* = nullptr> // gcc >= 5
- #else
-         typename std::enable_if<sizeof(T) == sizeof(int64_t), T>::type*> // gcc 4.8.5
- #endif
-#else
-         typename std::enable_if<sizeof(T) == sizeof(int64_t), T>::type* = nullptr>
-#endif
-void PrimitiveProcessor::scanAndFilterTypeDispatcher(NewColRequestHeader* in,
-    ColResultHeader* out)
-{
-    constexpr int W = sizeof(T);
-    auto dataType = (execplan::CalpontSystemCatalog::ColDataType) in->colType.DataType;
-    if (dataType == execplan::CalpontSystemCatalog::DOUBLE)
-    {
-        const uint16_t ridSize = in->NVALS;
-        uint16_t* ridArray = in->getRIDArrayPtr(W);
-        const uint32_t itemsPerBlock = logicalBlockMode ? BLOCK_SIZE
-                                                        : BLOCK_SIZE / W;
-        filterColumnData<T, KIND_FLOAT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
-        return;
-    }
-    _scanAndFilterTypeDispatcher<T>(in, out);
-}
-
-template<typename T,
-         typename std::enable_if<sizeof(T) == sizeof(int8_t) ||
-                                 sizeof(T) == sizeof(int16_t) ||
-#ifdef __GNUC__
- #if ___GNUC__ >= 5
-                                 sizeof(T) == sizeof(int128_t), T>::type* = nullptr> // gcc >= 5
- #else
-                                 sizeof(T) == sizeof(int128_t), T>::type*> // gcc 4.8.5
- #endif
-#else
-                                 sizeof(T) == sizeof(int128_t), T>::type* = nullptr>
-#endif
-void PrimitiveProcessor::scanAndFilterTypeDispatcher(NewColRequestHeader* in,
-    ColResultHeader* out)
-{
-    _scanAndFilterTypeDispatcher<T>(in, out);
-}
-
-template<typename T,
-#ifdef __GNUC__
- #if ___GNUC__ >= 5
-         typename std::enable_if<sizeof(T) == sizeof(int128_t), T>::type* = nullptr> // gcc >= 5
- #else
-         typename std::enable_if<sizeof(T) == sizeof(int128_t), T>::type*> // gcc 4.8.5
- #endif
-#else
-         typename std::enable_if<sizeof(T) == sizeof(int128_t), T>::type* = nullptr>
-#endif
-void PrimitiveProcessor::_scanAndFilterTypeDispatcher(NewColRequestHeader* in,
-    ColResultHeader* out)
-{
-    constexpr int W = sizeof(T);
-    const uint16_t ridSize = in->NVALS;
-    uint16_t* ridArray = in->getRIDArrayPtr(W);
-    const uint32_t itemsPerBlock = logicalBlockMode ? BLOCK_SIZE
-                                                    : BLOCK_SIZE / W;
-
-    filterColumnData<T, KIND_DEFAULT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
-}
-
-template<typename T,
-#ifdef __GNUC__
- #if ___GNUC__ >= 5
-         typename std::enable_if<sizeof(T) <= sizeof(int64_t), T>::type* = nullptr> // gcc >= 5
- #else
-         typename std::enable_if<sizeof(T) <= sizeof(int64_t), T>::type*> // gcc 4.8.5
- #endif
-#else
-         typename std::enable_if<sizeof(T) <= sizeof(int64_t), T>::type* = nullptr>
-#endif
-void PrimitiveProcessor::_scanAndFilterTypeDispatcher(NewColRequestHeader* in,
     ColResultHeader* out)
 {
     constexpr int W = sizeof(T);
@@ -1856,7 +1880,20 @@ void PrimitiveProcessor::_scanAndFilterTypeDispatcher(NewColRequestHeader* in,
         filterColumnData<UT, KIND_UNSIGNED>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
         return;
     }
-    filterColumnData<T, KIND_DEFAULT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
+
+    if (dataType == execplan::CalpontSystemCatalog::DOUBLE)
+    {
+        filterColumnData<T, KIND_FLOAT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
+        return;
+    }
+
+    if (dataType == execplan::CalpontSystemCatalog::FLOAT)
+    {
+        filterColumnData<T, KIND_FLOAT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
+        return;
+    }
+
+    filterColumnData<T, KIND_INTEGER>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
 }
 
 // The entrypoint for block scanning and filtering.

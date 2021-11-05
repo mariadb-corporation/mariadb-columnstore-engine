@@ -65,10 +65,10 @@ enum ColumnFilterMode
     ANY_COMPARISON_TRUE,    // ANY comparison is true (BOP_OR)
     ALL_COMPARISONS_TRUE,   // ALL comparisons are true (BOP_AND)
     XOR_COMPARISONS,        // XORing results of comparisons (BOP_XOR)
-    ONE_OF_VALUES_IN_SET,   // ONE of the values in the set is equal to the value checked (BOP_OR + all COMPARE_EQ)
-    NONE_OF_VALUES_IN_SET,  // NONE of the values in the set is equal to the value checked (BOP_AND + all COMPARE_NE)
     ONE_OF_VALUES_IN_ARRAY, // ONE of the values in the small set represented by an array (BOP_OR + all COMPARE_EQ)
     NONE_OF_VALUES_IN_ARRAY,// NONE of the values in the small set represented by an array (BOP_AND + all COMPARE_NE)
+    ONE_OF_VALUES_IN_SET,   // ONE of the values in the set is equal to the value checked (BOP_OR + all COMPARE_EQ)
+    NONE_OF_VALUES_IN_SET,  // NONE of the values in the set is equal to the value checked (BOP_AND + all COMPARE_NE)
 };
 
 // TBD Test if avalance makes lookup in the hash maps based on this hashers faster.
@@ -169,7 +169,10 @@ class ParsedColumnFilter
     using RFsType = uint8_t;
     static constexpr uint32_t noSetFilterThreshold = 8;
     ColumnFilterMode columnFilterMode;
+    boost::shared_array<uint8_t> filterSetBuf;
+    //WIP
     boost::shared_array<int64_t> prestored_argVals;
+    //WIP
     boost::shared_array<int128_t> prestored_argVals128;
     boost::shared_array<CopsType> prestored_cops;
     boost::shared_array<uint8_t> prestored_rfs;
@@ -223,6 +226,20 @@ class ParsedColumnFilter
                                           argValPtr);
     }
 
+    template<typename T>
+    void storeFilterSetArg(const uint32_t argIndex, const T* argValPtr)
+    {
+        T* filterSetPtr = reinterpret_cast<T*>(filterSetBuf.get());
+        filterSetPtr[argIndex] = *argValPtr;
+    }
+
+    template<typename T>
+    void allocateFilterArgsBuf()
+    {
+        filterSetBuf.reset(new uint8_t[mFilterCount*sizeof(T)]);
+    }
+
+    // WIP
     template<typename T,
              typename std::enable_if<sizeof(T) <= sizeof(int64_t), T>::type* = nullptr>
     void allocateSpaceForFilterArgs()
@@ -230,6 +247,7 @@ class ParsedColumnFilter
         prestored_argVals.reset(new int64_t[mFilterCount]);
     }
 
+    // WIP
     template<typename WT,
              typename std::enable_if<sizeof(WT) == sizeof(int128_t), WT>::type* = nullptr>
     void allocateSpaceForFilterArgs()
@@ -401,25 +419,8 @@ public:
     void p_Col(NewColRequestHeader* in, ColResultHeader* out, unsigned outSize,
                unsigned* written);
 
-    template<typename T,
-             typename std::enable_if<sizeof(T) == sizeof(int8_t) ||
-                                     sizeof(T) == sizeof(int16_t) ||
-                                     sizeof(T) == sizeof(int128_t), T>::type* = nullptr>
+    template<typename T>
     void scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out);
-
-    template<typename T,
-             typename std::enable_if<sizeof(T) == sizeof(int32_t), T>::type* = nullptr>
-    void scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out);
-    template<typename T,
-             typename std::enable_if<sizeof(T) == sizeof(int64_t), T>::type* = nullptr>
-    void scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out);
-    template<typename T,
-             typename std::enable_if<sizeof(T) <= sizeof(int64_t), T>::type* = nullptr>
-    void _scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out);
-
-    template<typename T,
-             typename std::enable_if<sizeof(T) == sizeof(int128_t), T>::type* = nullptr>
-    void _scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out);
  
     template<typename T>
     void columnScanAndFilter(NewColRequestHeader* in, ColResultHeader* out);
@@ -505,7 +506,9 @@ boost::shared_ptr<ParsedColumnFilter> _parseColumnFilter(
     // Allocate the compiled filter structure with space for filterCount filters.
     // No need to init arrays since they will be filled on the fly.
     ret.reset(new ParsedColumnFilter(filterCount, BOP));
+    //WIP
     ret->allocateSpaceForFilterArgs<T>();
+    ret->allocateFilterArgsBuf<T>();
 
     // Choose initial filter mode based on operation and number of filter elements
     if (filterCount == 1)
@@ -530,11 +533,17 @@ boost::shared_ptr<ParsedColumnFilter> _parseColumnFilter(
 
         ret->prestored_cops[argIndex] = args->COP;
         ret->prestored_rfs[argIndex] = args->rf;
-
+        //WIP
         if (datatypes::isUnsigned((execplan::CalpontSystemCatalog::ColDataType)colType))
+        {
             ret->storeFilterArg(argIndex, reinterpret_cast<const UT*>(args->val));
+            ret->storeFilterSetArg(argIndex, reinterpret_cast<const UT*>(args->val));
+        }
         else
+        {
             ret->storeFilterArg(argIndex, reinterpret_cast<const T*>(args->val));
+            ret->storeFilterSetArg(argIndex, reinterpret_cast<const T*>(args->val));
+        }
     }
 
     /*  Decide which structure to use.  I think the only cases where we can use the set
