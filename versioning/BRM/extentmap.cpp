@@ -1197,6 +1197,8 @@ void ExtentMap::loadVersion4(IDBDataFile* in)
         if (fExtentMap[i].status < EXTENTSTATUSMIN ||
                 fExtentMap[i].status > EXTENTSTATUSMAX)
             fExtentMap[i].status = EXTENTAVAILABLE;
+
+        fExtMapIndex_.insert(fExtentMap[i], i);
     }
 
     fEMShminfo->currentSize = emNumElements * sizeof(EMEntry);
@@ -5839,6 +5841,47 @@ void ExtentMap::dumpTo(ostream& os)
 	return 0;
 }
 */
+
+bool PartitionIndex::insert(const EMEntry& entry, const ExtentMapIdxT idx)
+{
+    std::cerr << "PartitionIndex::insert" << std::endl;
+    auto partitionNumber = entry.partitionNum;  
+
+    auto partitionIndexIter = partitionIndex_.find(partitionNumber);
+    // Questionable WIP
+    if (partitionIndexIter == partitionIndex_.end())
+    {
+        ExtentMapIndices indices;
+        indices.push_back(idx);
+        return partitionIndex_.insert({partitionNumber, std::move(indices)}).second;
+    }
+    partitionIndexIter->second.push_back(idx);
+    return true;
+}
+
+bool OIDIndex::insert(const EMEntry& entry, const ExtentMapIdxT idx)
+{
+    std::cerr << "OIDIndex::insert" << std::endl;
+    auto oid = entry.fileID; 
+    auto oidIndexIter = oidIndex_.find(oid);
+    // Questionable WIP
+    if (oidIndexIter == oidIndex_.end())
+    {
+        PartitionIndex partitionIndex;
+        partitionIndex.insert(entry, idx);
+        return oidIndex_.insert({oid, std::move(partitionIndex)}).second;
+    }
+    return oidIndexIter->second.insert(entry, idx);
+}
+
+bool DBrootIndex::insert(const EMEntry& entry, const ExtentMapIdxT idx)
+{
+    std::cerr << "DBrootIndex::insert" << std::endl;
+    auto dbRoot = entry.dbRoot;
+    if (dbRoot >= dbRootIndex_.size())
+       dbRootIndex_.resize(dbRoot + 1);
+    return dbRootIndex_[dbRoot].insert(entry, idx);
+}
 
 }	//namespace
 // vim:ts=4 sw=4:

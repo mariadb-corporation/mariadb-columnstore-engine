@@ -113,3 +113,19 @@ target_link_libraries(load_brm ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE
 
 install(TARGETS load_brm DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
 
+########### next target ###############
+add_executable(load_em load_em.cpp)
+target_link_libraries(load_em ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
+install(TARGETS load_em DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)          
+
+add_executable(load_brm_from_file load_brm_from_file.cpp)
+target_link_libraries(load_brm_from_file ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
+install(TARGETS load_brm_from_file DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
+
+add_executable(lock_state lock_state.cpp)
+target_link_libraries(lock_state ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
+install(TARGETS lock_state DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)          
+
+add_executable(lock_grabber lock_grabber.cpp)
+target_link_libraries(lock_grabber ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
+install(TARGETS lock_grabber DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)          

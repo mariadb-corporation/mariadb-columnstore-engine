@@ -33,6 +33,7 @@
 #ifdef _MSC_VER
 #include <unordered_map>
 #else
+#include <unordered_map>
 #include <tr1/unordered_map>
 #endif
 //#define NDEBUG
@@ -119,13 +120,15 @@ struct EMPartition_struct
 };
 typedef EMPartition_struct EMPartition_t;
 
+using PartitionNumberT = uint32_t;
+
 struct EMEntry
 {
     InlineLBIDRange range;
     int         fileID;
     uint32_t    blockOffset;
     HWM_t       HWM;
-    uint32_t	partitionNum; // starts at 0
+    PartitionNumberT	partitionNum; // starts at 0
     uint16_t	segmentNum;   // starts at 0
     uint16_t	dbRoot;       // starts at 1 to match Columnstore.xml
     uint16_t	colWid;
@@ -277,6 +280,45 @@ private:
     static boost::mutex fInstanceMutex;
     static FreeListImpl* fInstance;
 };
+
+using ExtentMapIdxT = size_t;
+using ExtentMapIndices = std::vector<ExtentMapIdxT>;
+using PartitionIndexContainer = std::unordered_map<PartitionNumberT, ExtentMapIndices>;
+
+class PartitionIndex
+{
+  public:
+    PartitionIndex() = default;
+    bool insert(const EMEntry& entry, const ExtentMapIdxT idx);
+  private:
+    PartitionIndexContainer partitionIndex_;
+};
+
+using OIDIndexContainer = std::unordered_map<OID_t, PartitionIndex>;
+
+class OIDIndex
+{
+  public:
+    OIDIndex() = default;
+    bool insert(const EMEntry& entry, const ExtentMapIdxT idx);
+  private:
+    OIDIndexContainer oidIndex_;
+};
+
+using dbroot_t = uint32_t;
+using DBrootIndexContainer = std::vector<OIDIndex>;
+
+class DBrootIndex
+{
+  public:
+    DBrootIndex() = default;
+    // return iterator or touple of iters
+    bool insert(const EMEntry& entry, const ExtentMapIdxT idx);
+  private:
+    DBrootIndexContainer dbRootIndex_;
+};
+
+using ExtentMapIndex = DBrootIndex;
 
 /** @brief This class encapsulates the extent map functionality of the system
  *
@@ -965,6 +1007,7 @@ private:
 
     ExtentMapImpl* fPExtMapImpl;
     FreeListImpl* fPFreeListImpl;
+    ExtentMapIndex fExtMapIndex_;
 };
 
 inline std::ostream& operator<<(std::ostream& os, ExtentMap& rhs)
