@@ -160,9 +160,8 @@ TupleBPS::JoinLocalData::JoinLocalData(RowGroup& primRowGroup, RowGroup& outputR
                                        rowgroup::RowGroup& joinFERG,
                                        std::vector<boost::shared_ptr<joiner::TupleJoiner>>& tjoiners,
                                        uint32_t smallSideCount, bool doJoin)
-    : local_primRG(primRowGroup), local_outputRG(outputRowGroup), fe2(fe2), fe2Output(fe2Output),
-      joinerMatchesRGs(joinerMatchesRGs), joinFERG(joinFERG), tjoiners(tjoiners),
-      smallSideCount(smallSideCount), doJoin(doJoin)
+    : local_primRG(primRowGroup), local_outputRG(outputRowGroup), doJoin(doJoin), fe2(fe2), fe2Output(fe2Output),
+      smallSideCount(smallSideCount), joinerMatchesRGs(joinerMatchesRGs), joinFERG(joinFERG), tjoiners(tjoiners)
 {
     if (doJoin || fe2)
     {
@@ -196,6 +195,7 @@ TupleBPS::JoinLocalData::JoinLocalData(RowGroup& primRowGroup, RowGroup& outputR
         bool hasJoinFE = false;
 
         for (uint32_t i = 0; i < smallSideCount; ++i)
+
         {
             joinerMatchesRGs[i].initRow(&(smallSideRows[i]));
             smallMappings[i] = makeMapping(joinerMatchesRGs[i], local_outputRG);
