@@ -1413,8 +1413,8 @@ private:
   SP_LBIDList lbidList;
   uint64_t ridsRequested;
   uint64_t totalMsgs;
-  volatile uint64_t msgsSent;
-  volatile uint64_t msgsRecvd;
+  uint64_t msgsSent;
+  uint64_t msgsRecvd;
   volatile bool finishedSending;
   bool firstRead;
   bool sendWaiting;
