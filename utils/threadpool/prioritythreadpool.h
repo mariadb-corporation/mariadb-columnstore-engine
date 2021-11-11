@@ -37,7 +37,7 @@
 #include <boost/function.hpp>
 #include "../winport/winport.h"
 #include "primitives/primproc/umsocketselector.h"
-
+#include "atomicops.h"
 namespace threadpool
 {
 
@@ -73,7 +73,8 @@ public:
         LOW,
         MEDIUM,
         HIGH,
-        _COUNT
+        _COUNT,
+        EXTRA     // After _COUNT because _COUNT is for jobQueue size and EXTRA isn't a jobQueue. But we need EXTRA in places where Priority is used.
     };
 
     /*********************************************
@@ -95,7 +96,19 @@ public:
     /** @brief for use in debugging
       */
     void dump();
-
+    
+    // If a job is blocked, we want to temporarily increase the number of threads managed by the pool
+    // A problem can occur if all threads are running long or blocked for a single query. Other
+    // queries won't get serviced, even though there are cpu cycles available.
+    void incBlockedThreads()
+    {
+        blockedThreads++;
+    }
+    void decBlockedThreads()
+    {
+        blockedThreads--;
+    }
+    
 protected:
 
 private:
@@ -127,6 +140,10 @@ private:
     bool _stop;
     uint32_t weightPerRun;
     volatile uint id;   // prevent it from being optimized out
+    
+    uint32_t blockedThreads;
+    uint32_t extraThreads;
+    bool stopExtra;
 };
 
 } // namespace threadpool

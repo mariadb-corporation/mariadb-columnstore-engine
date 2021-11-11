@@ -1453,7 +1453,7 @@ struct BPPHandler
         SBPPV bppv;
 
         // make the new BPP object
-        bppv.reset(new BPPV());
+        bppv.reset(new BPPV(fPrimitiveServerPtr));
         bpp.reset(new BatchPrimitiveProcessor(bs, fPrimitiveServerPtr->prefetchThreshold(),
                                               bppv->getSendThread(), fPrimitiveServerPtr->ProcessorThreads()));
 
@@ -2526,9 +2526,10 @@ void PrimitiveServer::start(Service *service)
     cerr << "PrimitiveServer::start() exiting!" << endl;
 }
 
-BPPV::BPPV()
+BPPV::BPPV(PrimitiveServer* ps)
 {
     sendThread.reset(new BPPSendThread());
+    sendThread->setProcessorPool(ps->getProcessorThreadPool());
     v.reserve(BPPCount);
     pos = 0;
     joinDataReceived = false;
@@ -2555,7 +2556,7 @@ void BPPV::add(boost::shared_ptr<BatchPrimitiveProcessor> a)
             joinDataReceived = false;
             unusedInstance->unlock();
         }
-        else
+        else                                            
             joinDataReceived = true;
     }
 
@@ -2570,7 +2571,7 @@ const vector<boost::shared_ptr<BatchPrimitiveProcessor> >& BPPV::get()
 boost::shared_ptr<BatchPrimitiveProcessor> BPPV::next()
 {
     uint32_t size = v.size();
-    uint32_t i;
+    uint32_t i = 0;
 
 #if 0
 

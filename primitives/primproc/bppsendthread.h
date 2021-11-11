@@ -20,7 +20,6 @@
  *
  *
  ***********************************************************************/
-/** @file */
 
 #include "batchprimitiveprocessor.h"
 #include "umsocketselector.h"
@@ -29,7 +28,7 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/condition.hpp>
 #include "threadnaming.h"
-
+#include "prioritythreadpool.h"
 #ifndef BPPSENDTHREAD_H
 #define BPPSENDTHREAD_H
 
@@ -82,6 +81,10 @@ public:
     inline bool aborted() const
     {
         return die;
+    }
+    void setProcessorPool(boost::shared_ptr<threadpool::PriorityThreadPool> processorPool)
+    {
+        fProcessorPool = processorPool;
     }
 
 private:
@@ -139,6 +142,9 @@ private:
     /* secondary queue size restriction based on byte size */
     volatile uint64_t currentByteSize;
     static uint64_t maxByteSize;
+    // Used to tell the PriorityThreadPool It should consider additional threads because a 
+    // queue full event has happened and a thread has been blocked.
+    boost::shared_ptr<threadpool::PriorityThreadPool> fProcessorPool;
 };
 
 }

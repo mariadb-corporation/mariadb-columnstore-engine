@@ -407,7 +407,6 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t *
 
             rgSize = smallRG.getSizeWithStrings();
             memUsedByThisJoin += rgSize;
-//            atomicops::atomicAdd(&memUsedByEachJoin[index], rgSize);
             gotMem = resourceManager->getMemory(rgSize, sessionMemLimit, false);
             if (!gotMem)
             {

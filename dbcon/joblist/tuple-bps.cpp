@@ -272,11 +272,13 @@ TupleBPS::TupleBPS(const pColStep& rhs, const JobInfo& jobInfo) :
     fDelivery = false;
     fExtendedInfo = "TBPS: ";
     fQtc.stepParms().stepType = StepTeleStats::T_BPS;
+    fJoinMemLimit.reset();
+#if 0    
     if (jobInfo.umMemLimit && *jobInfo.umMemLimit > 0)
         fJoinMemLimit.reset(new int64_t(min((uint64_t)*jobInfo.umMemLimit, fRm->getConfiguredUMMemLimit() / 4)));
     else
         fJoinMemLimit.reset(new int64_t(fRm->getConfiguredUMMemLimit() / 4));
-    
+#endif    
     hasPCFilter = hasPMFilter = hasRIDFilter = hasSegmentFilter = hasDBRootFilter = hasSegmentDirFilter =
                                     hasPartitionFilter = hasMaxFilter = hasMinFilter = hasLBIDFilter = hasExtentIDFilter = false;
 }
@@ -360,10 +362,7 @@ TupleBPS::TupleBPS(const pColScanStep& rhs, const JobInfo& jobInfo) :
 
     initExtentMarkers();
     fQtc.stepParms().stepType = StepTeleStats::T_BPS;
-    if (jobInfo.umMemLimit && *jobInfo.umMemLimit > 0)
-        fJoinMemLimit.reset(new int64_t(min((uint64_t)*jobInfo.umMemLimit, fRm->getConfiguredUMMemLimit() / 4)));
-    else
-        fJoinMemLimit.reset(new int64_t(fRm->getConfiguredUMMemLimit() / 4));
+    fJoinMemLimit.reset();
     
     hasPCFilter = hasPMFilter = hasRIDFilter = hasSegmentFilter = hasDBRootFilter = hasSegmentDirFilter =
                                     hasPartitionFilter = hasMaxFilter = hasMinFilter = hasLBIDFilter = hasExtentIDFilter = false;
@@ -431,10 +430,7 @@ TupleBPS::TupleBPS(const PassThruStep& rhs, const JobInfo& jobInfo) :
     fDelivery = false;
     fExtendedInfo = "TBPS: ";
     fQtc.stepParms().stepType = StepTeleStats::T_BPS;
-    if (jobInfo.umMemLimit && *jobInfo.umMemLimit > 0)
-        fJoinMemLimit.reset(new int64_t(min((uint64_t)*jobInfo.umMemLimit, fRm->getConfiguredUMMemLimit() / 4)));
-    else
-        fJoinMemLimit.reset(new int64_t(fRm->getConfiguredUMMemLimit() / 4));
+    fJoinMemLimit.reset();
     
     hasPCFilter = hasPMFilter = hasRIDFilter = hasSegmentFilter = hasDBRootFilter = hasSegmentDirFilter =
                                     hasPartitionFilter = hasMaxFilter = hasMinFilter = hasLBIDFilter = hasExtentIDFilter = false;
@@ -500,10 +496,7 @@ TupleBPS::TupleBPS(const pDictionaryStep& rhs, const JobInfo& jobInfo) :
     fDelivery = false;
     fExtendedInfo = "TBPS: ";
     fQtc.stepParms().stepType = StepTeleStats::T_BPS;
-    if (jobInfo.umMemLimit && *jobInfo.umMemLimit > 0)
-        fJoinMemLimit.reset(new int64_t(min((uint64_t)*jobInfo.umMemLimit, fRm->getConfiguredUMMemLimit() / 4)));
-    else
-        fJoinMemLimit.reset(new int64_t(fRm->getConfiguredUMMemLimit() / 4));
+    fJoinMemLimit.reset();
     
     hasPCFilter = hasPMFilter = hasRIDFilter = hasSegmentFilter = hasDBRootFilter = hasSegmentDirFilter =
                                     hasPartitionFilter = hasMaxFilter = hasMinFilter = hasLBIDFilter = hasExtentIDFilter = false;
@@ -2877,7 +2870,7 @@ uint64_t TupleBPS::generateJoinResultSet(const vector<vector<Row::Pointer> >& jo
     
     if (depth < smallSideCount - 1)
     {
-        for (i = 0; i < joinerOutput[depth].size(); i++)
+        for (i = 0; i < joinerOutput[depth].size() && !fDie; i++)
         {
             smallRow.setPointer(joinerOutput[depth][i]);
             applyMapping(mappings[depth], smallRow, &baseRow);
@@ -2890,7 +2883,7 @@ uint64_t TupleBPS::generateJoinResultSet(const vector<vector<Row::Pointer> >& jo
     {
         outputRG.getRow(outputRG.getRowCount(), &joinedRow);
 
-        for (i = 0; i < joinerOutput[depth].size(); i++, joinedRow.nextRow(),
+        for (i = 0; i < joinerOutput[depth].size() && !fDie; i++, joinedRow.nextRow(),
                 outputRG.incRowCount())
         {
             smallRow.setPointer(joinerOutput[depth][i]);

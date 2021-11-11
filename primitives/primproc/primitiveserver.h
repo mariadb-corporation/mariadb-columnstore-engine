@@ -55,10 +55,12 @@ extern BRM::DBRM* brm;
 extern boost::mutex bppLock;
 extern uint32_t highPriorityThreads, medPriorityThreads, lowPriorityThreads;
 
+class PrimitiveServer;
+
 class BPPV
 {
 public:
-    BPPV();
+    BPPV(PrimitiveServer* ps);
     ~BPPV();
     boost::shared_ptr<BatchPrimitiveProcessor> next();
     void add(boost::shared_ptr<BatchPrimitiveProcessor> a);
