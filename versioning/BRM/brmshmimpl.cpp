@@ -28,6 +28,7 @@
 using namespace std;
 
 #include <boost/interprocess/shared_memory_object.hpp>
+#include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/version.hpp>
 namespace bi = boost::interprocess;

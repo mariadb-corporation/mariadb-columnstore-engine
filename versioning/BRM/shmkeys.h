@@ -55,6 +55,7 @@ public:
     uint32_t KEYRANGE_EMFREELIST_BASE;
     uint32_t KEYRANGE_VBBM_BASE;
     uint32_t KEYRANGE_VSS_BASE;
+    uint32_t KEYRANGE_EXTENTMAP_INDEX_BASE;
 
     /****** Fixed location assignments *******/
     uint32_t MST_SYSVKEY;

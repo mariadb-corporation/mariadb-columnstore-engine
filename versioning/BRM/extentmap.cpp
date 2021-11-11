@@ -269,14 +269,49 @@ FreeListImpl::FreeListImpl(unsigned key, off_t size, bool readOnly) :
 {
 }
 
+/*static*/
+boost::mutex ExtentMapIndexImpl::fInstanceMutex;
+
+/*static*/
+ExtentMapIndexImpl* ExtentMapIndexImpl::fInstance = 0;
+
+/*static*/
+ExtentMapIndexImpl* ExtentMapIndexImpl::makeExtentMapIndexImpl(unsigned key, off_t size, bool readOnly)
+{
+    boost::mutex::scoped_lock lk(fInstanceMutex);
+
+    if (fInstance)
+    {
+        if (key != fInstance->fExtMapIndex.key())
+        {
+            BRMShmImpl newShm(key, 0);
+            fInstance->swapout(newShm);
+        }
+
+        ASSERT(key == fInstance->fExtMapIndex.key());
+        return fInstance;
+    }
+
+    fInstance = new ExtentMapIndexImpl(key, size, readOnly);
+
+    return fInstance;
+}
+
+ExtentMapIndexImpl::ExtentMapIndexImpl(unsigned key, off_t size, bool readOnly) :
+    fExtMapIndex(key, size, readOnly)
+{
+}
+
+
 ExtentMap::ExtentMap()
 {
-    fExtentMap = NULL;
-    fFreeList = NULL;
+    fExtentMap = nullptr;
+    fFreeList = nullptr;
+    fPExtMapImpl = nullptr; 
     fCurrentEMShmkey = -1;
     fCurrentFLShmkey = -1;
-    fEMShminfo = NULL;
-    fFLShminfo = NULL;
+    fEMShminfo = nullptr;
+    fFLShminfo = nullptr;
     r_only = false;
     flLocked = false;
     emLocked = false;
@@ -690,7 +725,7 @@ void ExtentMap::setExtentsMaxMin(const CPMaxMinMap_t& cpMap, bool firstNode, boo
 // @bug 1970.  Added mergeExtentsMaxMin to merge CP info for list of extents.
 // @note - The key passed in the map must the starting LBID in the extent.
 // Used by cpimport to update extentmap casual partition min/max.
-// NULL or empty values should not be passed in as min/max values.
+// nullptr or empty values should not be passed in as min/max values.
 // seqNum in the input struct is not currently used.
 //
 // Note that DML calls markInvalid() to flag an extent as CP_UPDATING and incre-
@@ -800,7 +835,7 @@ void ExtentMap::mergeExtentsMaxMin(CPMaxMinMergeMap_t& cpMap, bool useLock)
 
                         // We check the validity of the current min/max,
                         // because isValid could be CP_VALID for an extent
-                        // having all NULL values, in which case the current
+                        // having all nullptr values, in which case the current
                         // min/max needs to be set instead of merged.
 
                         if (isValidCPRange(
@@ -936,8 +971,8 @@ void ExtentMap::mergeExtentsMaxMin(CPMaxMinMergeMap_t& cpMap, bool useLock)
 
 //------------------------------------------------------------------------------
 // Use this function to see if the range is a valid min/max range or not.
-// Range is considered invalid if min or max, are NULL (min()), or EMPTY
-// (min()+1). For unsigned types NULL is max() and EMPTY is max()-1.
+// Range is considered invalid if min or max, are nullptr (min()), or EMPTY
+// (min()+1). For unsigned types nullptr is max() and EMPTY is max()-1.
 //------------------------------------------------------------------------------
 bool ExtentMap::isValidCPRange(int64_t max, int64_t min, execplan::CalpontSystemCatalog::ColDataType type) const
 {
@@ -1173,6 +1208,7 @@ void ExtentMap::loadVersion4(IDBDataFile* in)
         }
 
         growEMShmseg(nrows);
+        growEMIndexShmseg(nrows);
     }
 
     size_t progress = 0, writeSize = emNumElements * sizeof(EMEntry);
@@ -1198,7 +1234,7 @@ void ExtentMap::loadVersion4(IDBDataFile* in)
                 fExtentMap[i].status > EXTENTSTATUSMAX)
             fExtentMap[i].status = EXTENTAVAILABLE;
 
-        fExtMapIndex_.insert(fExtentMap[i], i);
+        //fExtMapIndex_.insert(fExtentMap[i], i);
     }
 
     fEMShminfo->currentSize = emNumElements * sizeof(EMEntry);
@@ -1453,9 +1489,9 @@ void ExtentMap::grabEMEntryTable(OPS op)
 
     if (!fPExtMapImpl || fPExtMapImpl->key() != (unsigned)fEMShminfo->tableShmkey)
     {
-        if (fExtentMap != NULL)
+        if (fExtentMap != nullptr)
         {
-            fExtentMap = NULL;
+            fExtentMap = nullptr;
         }
 
         if (fEMShminfo->allocdSize == 0)
@@ -1484,7 +1520,7 @@ void ExtentMap::grabEMEntryTable(OPS op)
 
             fExtentMap = fPExtMapImpl->get();
 
-            if (fExtentMap == NULL)
+            if (fExtentMap == nullptr)
             {
                 log_errno("ExtentMap::grabEMEntryTable(): shmat");
                 throw runtime_error("ExtentMap::grabEMEntryTable(): shmat failed.  Check the error log.");
@@ -1513,9 +1549,9 @@ void ExtentMap::grabFreeList(OPS op)
 
     if (!fPFreeListImpl || fPFreeListImpl->key() != (unsigned)fFLShminfo->tableShmkey)
     {
-        if (fFreeList != NULL)
+        if (fFreeList != nullptr)
         {
-            fFreeList = NULL;
+            fFreeList = nullptr;
         }
 
         if (fFLShminfo->allocdSize == 0)
@@ -1545,7 +1581,7 @@ void ExtentMap::grabFreeList(OPS op)
 
             fFreeList = fPFreeListImpl->get();
 
-            if (fFreeList == NULL)
+            if (fFreeList == nullptr)
             {
                 log_errno("ExtentMap::grabFreeList(): shmat");
                 throw runtime_error("ExtentMap::grabFreeList(): shmat failed.  Check the error log.");
@@ -1595,30 +1631,31 @@ void ExtentMap::releaseFreeList(OPS op)
 
 key_t ExtentMap::chooseEMShmkey()
 {
-    int fixedKeys = 1;
-    key_t ret;
-
-    if (fEMShminfo->tableShmkey + 1 == (key_t) (fShmKeys.KEYRANGE_EXTENTMAP_BASE +
-            fShmKeys.KEYRANGE_SIZE - 1) || (unsigned)fEMShminfo->tableShmkey < fShmKeys.KEYRANGE_EXTENTMAP_BASE)
-        ret = fShmKeys.KEYRANGE_EXTENTMAP_BASE + fixedKeys;
-    else
-        ret = fEMShminfo->tableShmkey + 1;
-
-    return ret;
+    return chooseShmkey(fEMShminfo, fShmKeys.KEYRANGE_EXTENTMAP_BASE);
 }
 
 key_t ExtentMap::chooseFLShmkey()
 {
-    int fixedKeys = 1, ret;
-
-    if (fFLShminfo->tableShmkey + 1 == (key_t) (fShmKeys.KEYRANGE_EMFREELIST_BASE +
-            fShmKeys.KEYRANGE_SIZE - 1) || (unsigned)fFLShminfo->tableShmkey < fShmKeys.KEYRANGE_EMFREELIST_BASE)
-        ret = fShmKeys.KEYRANGE_EMFREELIST_BASE + fixedKeys;
-    else
-        ret = fFLShminfo->tableShmkey + 1;
-
-    return ret;
+    return chooseShmkey(fFLShminfo, fShmKeys.KEYRANGE_EMFREELIST_BASE);
 }
+
+key_t ExtentMap::chooseEMIndexShmkey() const
+{
+    return chooseShmkey(fEMIndexShminfo, fShmKeys.KEYRANGE_EXTENTMAP_INDEX_BASE);
+}
+
+key_t ExtentMap::chooseShmkey(const MSTEntry* masterTableEntry, const uint32_t keyRangeBase) const
+{
+    int fixedKeys = 1;
+
+    if (masterTableEntry->tableShmkey + 1 == (key_t) (keyRangeBase + fShmKeys.KEYRANGE_SIZE - 1) ||
+        (unsigned)masterTableEntry->tableShmkey < keyRangeBase)
+    {
+        return keyRangeBase + fixedKeys;
+    }
+    return masterTableEntry->tableShmkey + 1;
+}
+
 
 /* Must be called holding the EM write lock
    Returns with the new shmseg mapped */
@@ -1654,6 +1691,39 @@ void ExtentMap::growEMShmseg(size_t nrows)
         fPExtMapImpl->makeReadOnly();
 
     fExtentMap = fPExtMapImpl->get();
+}
+
+void ExtentMap::growEMIndexShmseg(const size_t nrows)
+{
+    size_t allocSize;
+    key_t newshmkey;
+
+    // WIP
+    if (fEMShminfo->allocdSize == 0)
+        allocSize = EM_INITIAL_SIZE * 2;
+    else
+        allocSize = fEMShminfo->allocdSize + EM_INCREMENT;
+
+    newshmkey = chooseEMIndexShmkey();
+    //WIP
+    newshmkey = newshmkey + 0;
+    ASSERT((allocSize == EM_INITIAL_SIZE && !fPExtMapIndexImpl) || fPExtMapIndexImpl);
+
+    //Use the larger of the calculated value or the specified value
+    allocSize = max(allocSize, nrows * sizeof(EMEntry) * 2);
+
+    if (!fPExtMapIndexImpl)
+        fPExtMapIndexImpl = ExtentMapIndexImpl::makeExtentMapIndexImpl(newshmkey, allocSize, r_only);
+    else
+        fPExtMapIndexImpl->grow(newshmkey, allocSize);
+
+    fEMIndexShminfo->tableShmkey = newshmkey;
+    fEMIndexShminfo->allocdSize = allocSize;
+
+    if (r_only)
+        fPExtMapIndexImpl->makeReadOnly();
+
+//    fExtMapIndex_ = fEMIndexShminfo->get();
 }
 
 /* Must be called holding the FL lock

@@ -281,6 +281,60 @@ private:
     static FreeListImpl* fInstance;
 };
 
+class ExtentMapIndexImpl
+{
+public:
+    ~ExtentMapIndexImpl(){};
+
+    static ExtentMapIndexImpl* makeExtentMapIndexImpl(unsigned key, off_t size, bool readOnly = false);
+    static void refreshShm()
+    {
+        if (fInstance)
+        {
+            delete fInstance;
+            fInstance = NULL;
+        }
+    }
+
+    inline void grow(unsigned key, off_t size)
+    {
+        int rc = fExtMapIndex.grow(key, size);
+        idbassert(rc == 0);
+    }
+    inline void makeReadOnly()
+    {
+        fExtMapIndex.setReadOnly();
+    }
+    inline void clear(unsigned key, off_t size)
+    {
+        fExtMapIndex.clear(key, size);
+    }
+    inline void swapout(BRMShmImpl& rhs)
+    {
+        fExtMapIndex.swap(rhs);
+        rhs.destroy();
+    }
+    inline unsigned key() const
+    {
+        return fExtMapIndex.key();
+    }
+//WIP
+    inline EMEntry* get() const
+    {
+        return reinterpret_cast<EMEntry*>(fExtMapIndex.fMapreg.get_address());
+    }
+
+private:
+    ExtentMapIndexImpl(unsigned key, off_t size, bool readOnly = false);
+    ExtentMapIndexImpl(const ExtentMapIndexImpl& rhs);
+    ExtentMapIndexImpl& operator=(const ExtentMapIndexImpl& rhs);
+
+    BRMShmImpl fExtMapIndex;
+
+    static boost::mutex fInstanceMutex;
+    static ExtentMapIndexImpl* fInstance;
+};
+
 using ExtentMapIdxT = size_t;
 using ExtentMapIndices = std::vector<ExtentMapIdxT>;
 using PartitionIndexContainer = std::unordered_map<PartitionNumberT, ExtentMapIndices>;
@@ -933,10 +987,12 @@ private:
     ExtentMap& operator=(const ExtentMap& em);
 
     EMEntry* fExtentMap;
+    //ExtentMapIndex* fExtMapIndex_;
     InlineLBIDRange* fFreeList;
     key_t fCurrentEMShmkey;
     key_t fCurrentFLShmkey;
     MSTEntry* fEMShminfo;
+    MSTEntry* fEMIndexShminfo;
     MSTEntry* fFLShminfo;
     const MasterSegmentTable fMST;
     bool r_only;
@@ -981,14 +1037,18 @@ private:
     LBID_t getLBIDsFromFreeList(uint32_t size);
     void reserveLBIDRange(LBID_t start, uint8_t size);    // used by load() to allocate pre-existing LBIDs
 
-    key_t chooseEMShmkey();  //see the code for how keys are segmented
-    key_t chooseFLShmkey();  //see the code for how keys are segmented
+    key_t chooseEMShmkey(); 
+    key_t chooseFLShmkey();
+    key_t chooseEMIndexShmkey() const;
+    //see the code for how keys are segmented
+    key_t chooseShmkey(const MSTEntry* masterTableEntry, const uint32_t keyRangeBase ) const;
     void grabEMEntryTable(OPS op);
     void grabFreeList(OPS op);
     void releaseEMEntryTable(OPS op);
     void releaseFreeList(OPS op);
     void growEMShmseg(size_t nrows = 0);
     void growFLShmseg();
+    void growEMIndexShmseg(const size_t nrows = 0);
     void finishChanges();
 
     EXPORT unsigned getFilesPerColumnPartition();
@@ -1007,7 +1067,7 @@ private:
 
     ExtentMapImpl* fPExtMapImpl;
     FreeListImpl* fPFreeListImpl;
-    ExtentMapIndex fExtMapIndex_;
+    ExtentMapIndexImpl* fPExtMapIndexImpl;
 };
 
 inline std::ostream& operator<<(std::ostream& os, ExtentMap& rhs)
