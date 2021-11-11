@@ -385,16 +385,24 @@ bool  ResourceManager::getMysqldInfo(
 {
     static const std::string hostUserUnassignedValue("unassigned");
     // MCS will read username and pass from disk if the config changed.
-    bool reReadConfig = true;
-    u = getStringVal("CrossEngineSupport", "User", hostUserUnassignedValue, reReadConfig);
-    std::string encryptedPW = getStringVal("CrossEngineSupport", "Password", "", reReadConfig);
+    u = getStringVal("CrossEngineSupport", "User", hostUserUnassignedValue);
+    std::string encryptedPW = getStringVal("CrossEngineSupport", "Password", "");
     //This will return back the plaintext password if there is no MCSDATADIR/.secrets file present
     w = decrypt_password(encryptedPW);
     // MCS will not read username and pass from disk if the config changed.
     h = getStringVal("CrossEngineSupport", "Host", hostUserUnassignedValue);
     p = getUintVal("CrossEngineSupport", "Port", 0);
+    u = getStringVal("CrossEngineSupport", "User", "unassigned");
+    w = getStringVal("CrossEngineSupport", "Password", "");
 
-    return h != hostUserUnassignedValue && u != hostUserUnassignedValue && p;
+    bool rc = true;
+
+    if ((h.compare("unassigned") == 0) ||
+            (u.compare("unassigned") == 0) ||
+            (p == 0))
+        rc = false;
+
+    return rc;
 }
 
 bool ResourceManager::queryStatsEnabled() const
