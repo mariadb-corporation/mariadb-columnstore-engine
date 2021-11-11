@@ -24,15 +24,13 @@
 #include <unistd.h>
 #include <stdexcept>
 #include "bppsendthread.h"
-#include "resourcemanager.h"
 using namespace std;
 using namespace boost;
-
-#include "atomicops.h"
 
 namespace primitiveprocessor
 {
 extern uint32_t connectionsPerUM;
+extern uint32_t BPPCount;
 uint64_t BPPSendThread::maxByteSize = joblist::ResourceManager::instance()->getMaxBPPSendQueue();
 
 BPPSendThread::BPPSendThread() : die(false), gotException(false), mainThreadWaiting(false),
@@ -70,10 +68,12 @@ void BPPSendThread::sendResult(const Msg_t& msg, bool newConnection)
     if (sizeTooBig())
     {
         boost::mutex::scoped_lock sl1(respondLock);
-        while (currentByteSize >= maxByteSize && msgsLeft > 3 && !die)
+        while (currentByteSize >= maxByteSize && msgQueue.size() > 3 && !die)
         {
             respondWait = true;
+            fProcessorPool->incBlockedThreads();
             okToRespond.wait(sl1);
+            fProcessorPool->decBlockedThreads();
             respondWait = false;
         }
         sl1.unlock();
@@ -116,10 +116,12 @@ void BPPSendThread::sendResults(const vector<Msg_t>& msgs, bool newConnection)
     if (sizeTooBig())
     {
         boost::mutex::scoped_lock sl1(respondLock);
-        while (currentByteSize >= maxByteSize && msgsLeft > 3 && !die)
+        while (currentByteSize >= maxByteSize && msgQueue.size() > 3 && !die)
         {
             respondWait = true;
+            fProcessorPool->incBlockedThreads();
             okToRespond.wait(sl1);
+            fProcessorPool->decBlockedThreads();
             respondWait = false;
         }
         sl1.unlock();
