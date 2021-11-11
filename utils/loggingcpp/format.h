@@ -1,5 +1,4 @@
 /*
-   Copyright (C) 2014 InfiniDB, Inc.
    Copyright (c) 2021 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
@@ -20,75 +19,74 @@
 
 #pragma once
 
+#include <boost/any.hpp>
 #include <cstdint>
 #include <regex>
 #include <stdexcept>
 #include <string>
-#include <boost/any.hpp>
 
 namespace logging
 {
-
 template <class T, class Iter>
-void formatOne(std::string &errMsg, Iter iter, uint32_t position)
+void formatOne(std::string& errMsg, Iter iter, uint32_t position)
 {
-    T arg = boost::any_cast<T>(*iter);
-    std::string token = std::string("%") + std::to_string(position) + std::string("%");
-    size_t index = 0;
+  T arg = boost::any_cast<T>(*iter);
+  std::string token = std::string("%") + std::to_string(position) + std::string("%");
+  size_t index = 0;
 
-    while (true)
+  while (true)
+  {
+    index = errMsg.find(token, index);
+    if (index == std::string::npos)
+      break;
+
+    if constexpr (std::is_same_v<T, std::string>)
     {
-        index = errMsg.find(token, index);
-        if (index == std::string::npos)
-            break;
-
-        if constexpr (std::is_same_v<T, std::string>)
-        {
-            errMsg.replace(index, token.length(), arg);
-        }
-        else
-        {
-            errMsg.replace(index, token.length(), std::to_string(arg));
-        }
-
-      index += token.length();
+      errMsg.replace(index, token.length(), arg);
     }
+    else
+    {
+      errMsg.replace(index, token.length(), std::to_string(arg));
+    }
+
+    index += token.length();
+  }
 }
 
 template <class T>
 void formatMany(std::string& errMsg, const T& args)
 {
-    auto iter = args.begin();
-    auto end = args.end();
-    uint32_t position = 1;
+  auto iter = args.begin();
+  auto end = args.end();
+  uint32_t position = 1;
 
-    while (iter != end)
+  while (iter != end)
+  {
+    if (iter->type() == typeid(long))
     {
-        if (iter->type() == typeid(long))
-        {
-            formatOne<long>(errMsg, iter, position);
-        }
-        else if (iter->type() == typeid(uint64_t))
-        {
-            formatOne<uint64_t>(errMsg, iter, position);
-        }
-        else if (iter->type() == typeid(double))
-        {
-            formatOne<double>(errMsg, iter, position);
-        }
-        else if (iter->type() == typeid(std::string))
-        {
-            formatOne<std::string>(errMsg, iter, position);
-        }
-        else
-        {
-            throw std::logic_error("logggin::format: unexpected type in argslist");
-        }
-        ++iter;
-        ++position;
+      formatOne<long>(errMsg, iter, position);
     }
-    static std::regex restToken("%[0-9]%");
-    errMsg = std::regex_replace(errMsg, restToken, "");
+    else if (iter->type() == typeid(uint64_t))
+    {
+      formatOne<uint64_t>(errMsg, iter, position);
+    }
+    else if (iter->type() == typeid(double))
+    {
+      formatOne<double>(errMsg, iter, position);
+    }
+    else if (iter->type() == typeid(std::string))
+    {
+      formatOne<std::string>(errMsg, iter, position);
+    }
+    else
+    {
+      throw std::logic_error("logggin::format: unexpected type in argslist");
+    }
+    ++iter;
+    ++position;
+  }
+  static std::regex restToken("%[0-9]%");
+  errMsg = std::regex_replace(errMsg, restToken, "");
 }
 
-} // namespace logging
+}  // namespace logging
