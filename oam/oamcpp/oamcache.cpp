@@ -21,10 +21,10 @@
 #include <cassert>
 #include <map>
 #include <set>
-#include <atomic>
 using namespace std;
 
 #include <boost/thread.hpp>
+#include <boost/shared_ptr.hpp>
 using namespace boost;
 
 #define OAMCACHE_DLLEXPORT
@@ -38,27 +38,19 @@ using namespace boost;
 
 namespace
 {
-    oam::OamCache* oamCache = nullptr;
-    boost::mutex cacheLock;
+oam::OamCache* oamCache = 0;
+boost::mutex cacheLock;
 }
 
 namespace oam
 {
-std::atomic_bool hasOAMCache{false};
 
 OamCache* OamCache::makeOamCache()
 {
-    if (!hasOAMCache.load(std::memory_order_relaxed))
-    {
-        boost::mutex::scoped_lock lk(cacheLock);
+    boost::mutex::scoped_lock lk(cacheLock);
 
-        if (oamCache == nullptr)
-        {
-            oamCache = new OamCache();
-            oamCache->checkReload();
-            hasOAMCache.store(true, std::memory_order_relaxed);
-        }
-    }
+    if (oamCache == 0)
+        oamCache = new OamCache();
 
     return oamCache;
 }
@@ -88,7 +80,7 @@ void OamCache::checkReload()
 
     dbRootPMMap.reset(new map<int, int>());
 
-    //cerr << "reloading oamcache\n";
+    //cout << "reloading oamcache\n";
     for (uint32_t i = 0; i < dbroots.size(); i++)
     {
         oam.getDbrootPmConfig(dbroots[i], temp);
@@ -162,41 +154,64 @@ void OamCache::checkReload()
 
 OamCache::dbRootPMMap_t OamCache::getDBRootToPMMap()
 {
+    boost::mutex::scoped_lock lk(cacheLock);
+
+    checkReload();
     return dbRootPMMap;
 }
 
 OamCache::dbRootPMMap_t OamCache::getDBRootToConnectionMap()
 {
+    boost::mutex::scoped_lock lk(cacheLock);
+
+    checkReload();
     return dbRootConnectionMap;
 }
 
 OamCache::PMDbrootsMap_t OamCache::getPMToDbrootsMap()
 {
+    boost::mutex::scoped_lock lk(cacheLock);
+
+    checkReload();
     return pmDbrootsMap;
 }
 
 uint32_t OamCache::getDBRootCount()
 {
+    boost::mutex::scoped_lock lk(cacheLock);
+
+    checkReload();
     return numDBRoots;
 }
 
 DBRootConfigList& OamCache::getDBRootNums()
 {
+    boost::mutex::scoped_lock lk(cacheLock);
+
+    checkReload();
     return dbroots;
 }
 
 std::vector<int>& OamCache::getModuleIds()
 {
+    boost::mutex::scoped_lock lk(cacheLock);
+
+    checkReload();
     return moduleIds;
 }
 
 std::string OamCache::getOAMParentModuleName()
 {
+    boost::mutex::scoped_lock lk(cacheLock);
+
+    checkReload();
     return OAMParentModuleName;
 }
 
 int OamCache::getLocalPMId()
 {
+    boost::mutex::scoped_lock lk(cacheLock);
+
     // This comes from the file /var/lib/columnstore/local/module, not from the xml.
     // Thus, it's not refreshed during checkReload().
     if (mLocalPMId > 0)
@@ -237,11 +252,16 @@ int OamCache::getLocalPMId()
 
 string OamCache::getSystemName()
 {
+    boost::mutex::scoped_lock lk(cacheLock);
+
+    checkReload();
     return systemName;
 }
 
 string OamCache::getModuleName()
 {
+    boost::mutex::scoped_lock lk(cacheLock);
+
     if (!moduleName.empty())
         return moduleName;
 
