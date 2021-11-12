@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016-2021 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -5911,7 +5912,8 @@ void ExtentMap::dumpTo(ostream& os)
 	return 0;
 }
 */
-
+//WIP
+/*
 bool PartitionIndex::insert(const EMEntry& entry, const ExtentMapIdxT idx)
 {
     std::cerr << "PartitionIndex::insert" << std::endl;
@@ -5952,7 +5954,7 @@ bool DBrootIndex::insert(const EMEntry& entry, const ExtentMapIdxT idx)
        dbRootIndex_.resize(dbRoot + 1);
     return dbRootIndex_[dbRoot].insert(entry, idx);
 }
-
+*/
 }	//namespace
 // vim:ts=4 sw=4:
 

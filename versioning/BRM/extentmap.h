@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016-2021 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -40,6 +41,10 @@
 #include <cassert>
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
+#include <boost/interprocess/managed_shared_memory.hpp>
+#include <boost/interprocess/allocators/allocator.hpp>
+#include <boost/unordered_map.hpp>
+#include <boost/functional/hash.hpp> //boost::hash
 
 #include "shmkeys.h"
 #include "brmtypes.h"
@@ -64,6 +69,8 @@
 #else
 #define EXPORT
 #endif
+
+namespace bi = boost::interprocess;
 
 namespace oam
 {
@@ -121,6 +128,7 @@ struct EMPartition_struct
 typedef EMPartition_struct EMPartition_t;
 
 using PartitionNumberT = uint32_t;
+using DBRootT = uint16_t;
 
 struct EMEntry
 {
@@ -130,7 +138,7 @@ struct EMEntry
     HWM_t       HWM;
     PartitionNumberT	partitionNum; // starts at 0
     uint16_t	segmentNum;   // starts at 0
-    uint16_t	dbRoot;       // starts at 1 to match Columnstore.xml
+    DBRootT     dbRoot;       // starts at 1 to match Columnstore.xml
     uint16_t	colWid;
     int16_t 	status;       //extent avail for query or not, or out of service
     EMPartition_t partition;
@@ -335,10 +343,41 @@ private:
     static ExtentMapIndexImpl* fInstance;
 };
 
-using ExtentMapIdxT = size_t;
-using ExtentMapIndices = std::vector<ExtentMapIdxT>;
-using PartitionIndexContainer = std::unordered_map<PartitionNumberT, ExtentMapIndices>;
+using ShmSegmentManagerT = bi::managed_shared_memory::segment_manager;
+using ShmVoidAllocator = bi::allocator<void, ShmSegmentManagerT>;
 
+using ExtentMapIdxT = size_t;
+using ExtentMapIdxTAlloc = bi::allocator<ExtentMapIdxT, ShmSegmentManagerT>;
+using PartitionNumberTAlloc = bi::allocator<PartitionNumberT, ShmSegmentManagerT>;
+using ExtentMapIndicesT = std::vector<ExtentMapIdxT, ExtentMapIdxTAlloc>;
+
+using PartitionIndexContainerKeyT = PartitionNumberT;
+using PartitionIndexContainerValT =  std::pair<const PartitionIndexContainerKeyT, ExtentMapIndicesT>;
+using PartitionIndexContainerValTAlloc = bi::allocator<PartitionIndexContainerValT, ShmSegmentManagerT>;
+// Can't use std::unordered_map presumably b/c the map's pointer type doesn't use offset_type as boost::u_map does
+using PartitionIndexContainerT = boost::unordered_map
+    <PartitionIndexContainerKeyT, ExtentMapIndicesT,
+         boost::hash<PartitionIndexContainerKeyT>, std::equal_to<PartitionIndexContainerKeyT>,
+         PartitionIndexContainerValTAlloc
+    >;
+
+using OIDIndexContainerKeyT = OID_t;
+using OIDIndexContainerValT = std::pair<const OIDIndexContainerKeyT, PartitionIndexContainerT>;
+using OIDIndexContainerValTAlloc = bi::allocator<OIDIndexContainerValT, ShmSegmentManagerT>;
+using OIDIndexContainerT = boost::unordered_map
+     <OIDIndexContainerKeyT, PartitionIndexContainerT,
+        boost::hash<OIDIndexContainerKeyT>, std::equal_to<OIDIndexContainerKeyT>,
+        OIDIndexContainerValTAlloc
+    >;
+
+using DBRootIndexTAlloc = bi::allocator<OIDIndexContainerT, ShmSegmentManagerT>;
+using DBRootIndexContainerT = std::vector<OIDIndexContainerT, DBRootIndexTAlloc>;
+
+//using ExtentMapIndices = std::vector<ExtentMapIdxT>;
+//using PartitionIndexContainer = std::unordered_map<PartitionNumberT, ExtentMapIndices>;
+
+//WIP
+/*
 class PartitionIndex
 {
   public:
@@ -349,7 +388,6 @@ class PartitionIndex
 };
 
 using OIDIndexContainer = std::unordered_map<OID_t, PartitionIndex>;
-
 class OIDIndex
 {
   public:
@@ -371,8 +409,8 @@ class DBrootIndex
   private:
     DBrootIndexContainer dbRootIndex_;
 };
-
-using ExtentMapIndex = DBrootIndex;
+*/
+//using ExtentMapIndex = DBrootIndex;
 
 /** @brief This class encapsulates the extent map functionality of the system
  *
