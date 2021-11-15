@@ -232,7 +232,101 @@ void BRMShmImpl::destroy()
     if (!oldName.empty()) bi::shared_memory_object::remove(oldName.c_str());
 }
 
-} //namespace
+BRMManagedShmImpl::BRMManagedShmImpl(unsigned key, off_t size, bool readOnly)
+    : fKey(key), fSize(size), fReadOnly(readOnly)
+{
+    // FIXME: Take a right size.
+    // Actually this means to open a segment at the default code.
+    if (fSize == 0)
+        fSize = 64000;
+
+    try
+    {
+        bi::permissions perms;
+        perms.set_unrestricted();
+
+        fShmSegment = new boost::interprocess::managed_shared_memory(
+            boost::interprocess::open_or_create, segmentName, fSize, 0, perms);
+
+        fSize = fShmSegment->get_size();
+    }
+    catch (exception& e)
+    {
+        std::cout << "Cannot create boost::interprocess::managed_shared_memory object: " << e.what()
+                  << std::endl;
+    }
+}
+
+BRMManagedShmImpl::~BRMManagedShmImpl() {}
+
+void BRMManagedShmImpl::setReadOnly()
+{
+    try
+    {
+        if (fShmSegment)
+        {
+            delete fShmSegment;
+            fShmSegment = new bi::managed_shared_memory(bi::open_read_only, segmentName);
+            fReadOnly = true;
+        }
+    }
+    catch (exception& e)
+    {
+        std::cout << "BRMManagedShmImpl::setReadOnly() error " << e.what() << std::endl;
+        throw;
+    }
+}
+
+int32_t BRMManagedShmImpl::grow(unsigned key, off_t incSize)
+{
+    try
+    {
+        if (fShmSegment)
+        {
+            // Update key for this process.
+            fKey = key;
+            // Call destructor to unmap the segment.
+            delete fShmSegment;
+            // Grow the segment.
+            bi::managed_shared_memory::grow(segmentName, incSize);
+            // Open only.
+            fShmSegment = new bi::managed_shared_memory(bi::open_only, segmentName);
+            // Update size.
+            fSize = fShmSegment->get_size();
+        }
+    }
+    catch (exception& e)
+    {
+        std::cout << "BRMManagedShmImpl::grow() error " << e.what() << std::endl;
+        throw;
+    }
+
+    return 0;
+}
+
+void BRMManagedShmImpl::reMapSegment()
+{
+    try
+    {
+        if (fShmSegment)
+        {
+            // Call destructor to unmap the segment.
+            delete fShmSegment;
+            // Map.
+            fShmSegment = new bi::managed_shared_memory(bi::open_only, segmentName);
+            // Update size.
+            fSize = fShmSegment->get_size();
+        }
+    }
+    catch (exception& e)
+    {
+        std::cout << "BRMManagedShmImpl::remap() error " << e.what() << std::endl;
+        throw;
+    }
+}
+
+void BRMManagedShmImpl::destroy(unsigned key) { bi::shared_memory_object::remove(segmentName); }
+
+} // namespace BRM
 
 // vim:ts=4 sw=4:
-

@@ -49,6 +49,8 @@ using namespace std;
 using namespace messageqcpp;
 using namespace idbdatafile;
 
+#define BRM_VERBOSE
+
 namespace
 {
 #ifdef USE_VERY_COMPLEX_DROP_CACHES
