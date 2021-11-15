@@ -110,7 +110,7 @@ public:
     EXPORT static void refreshShm()
     {
         MasterSegmentTableImpl::refreshShm();
-        ExtentMapImpl::refreshShm();
+        ExtentMapRBTreeImpl::refreshShm();
         FreeListImpl::refreshShm();
     }
 
