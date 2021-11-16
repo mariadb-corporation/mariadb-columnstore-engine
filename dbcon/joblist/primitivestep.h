@@ -1366,7 +1366,15 @@ public:
     {
         return true;
     }
-
+    ResourceManager* resourceManager() const
+    {
+      return fRm;
+    }
+    bool runFEonPM()
+    {
+        return bRunFEonPM;
+    }
+    
 protected:
     void sendError(uint16_t status);
 
@@ -1448,21 +1456,12 @@ private:
   bool BPPIsAllocated;
   uint32_t uniqueID;
   ResourceManager* fRm;
-  boost::shared_ptr<int64_t> fJoinMemLimit;
   
   /* HashJoin support */
 
   void serializeJoiner();
   void serializeJoiner(uint32_t connectionNumber);
 
-  uint64_t generateJoinResultSet(const std::vector<std::vector<rowgroup::Row::Pointer> >& joinerOutput,
-                                 rowgroup::Row& baseRow, const std::vector<boost::shared_array<int> >& mappings,
-                                 const uint32_t depth, rowgroup::RowGroup& outputRG, rowgroup::RGData& rgData,
-                                 std::vector<rowgroup::RGData>& outputData,
-                                 const boost::scoped_array<rowgroup::Row>& smallRows, rowgroup::Row& joinedRow,
-                                 RowGroupDL* dlp, rowgroup::RowGroup& fe2OutputRG, rowgroup::Row& fe2OutRow,
-                                 funcexp::FuncExpWrapper& fe2);
-  
   std::vector<boost::shared_ptr<joiner::TupleJoiner>> tjoiners;
   bool doJoin, hasPMJoin, hasUMJoin;
   std::vector<rowgroup::RowGroup> joinerMatchesRGs; // parses the small-side matches from joiner
@@ -1494,16 +1493,11 @@ private:
   boost::shared_ptr<funcexp::FuncExpWrapper> fe1, fe2;
   rowgroup::RowGroup fe1Input, fe2Output;
   boost::shared_array<int> fe2Mapping;
-  bool runFEonPM;
+  bool bRunFEonPM;
 
   /* for UM F & E 2 processing */
   rowgroup::RGData fe2Data;
   rowgroup::Row fe2InRow, fe2OutRow;
-
-  void processFE2(rowgroup::RowGroup& input, rowgroup::RowGroup& output, rowgroup::Row& inRow, rowgroup::Row& outRow,
-                  std::vector<rowgroup::RGData>* rgData, funcexp::FuncExpWrapper* localFE2);
-  void processFE2_oneRG(rowgroup::RowGroup& input, rowgroup::RowGroup& output, rowgroup::Row& inRow,
-                        rowgroup::Row& outRow, funcexp::FuncExpWrapper* localFE2);
 
   /* Runtime Casual Partitioning adjustments.  The CP code is needlessly complicated;
    * to avoid making it worse, decided to designate 'scanFlags' as the static
@@ -1518,8 +1512,9 @@ private:
   boost::shared_ptr<RowGroupDL> deliveryDL;
   uint32_t deliveryIt;
 
-  struct JoinLocalData
+  class JoinLocalData
   {
+  public:    
       JoinLocalData() = delete;
       JoinLocalData(const JoinLocalData&) = delete;
       JoinLocalData(JoinLocalData&&) = delete;
@@ -1527,12 +1522,21 @@ private:
       JoinLocalData& operator=(JoinLocalData&&) = delete;
       ~JoinLocalData() = default;
 
-      JoinLocalData(rowgroup::RowGroup& primRowGroup, rowgroup::RowGroup& outputRowGroup,
+      JoinLocalData(TupleBPS* pTupleBPS, rowgroup::RowGroup& primRowGroup, rowgroup::RowGroup& outputRowGroup,
                     boost::shared_ptr<funcexp::FuncExpWrapper>& fe2, rowgroup::RowGroup& fe2Output,
                     std::vector<rowgroup::RowGroup>& joinerMatchesRGs, rowgroup::RowGroup& joinFERG,
                     std::vector<boost::shared_ptr<joiner::TupleJoiner>>& tjoiners, uint32_t smallSideCount,
                     bool doJoin);
 
+      friend class TupleBPS;
+
+  private:
+      uint64_t generateJoinResultSet(const uint32_t depth, 
+                                     std::vector<rowgroup::RGData>& outputData,
+                                     RowGroupDL* dlp);
+      void processFE2(vector<rowgroup::RGData>& rgData);
+
+      TupleBPS* tbps;      // Parent
       rowgroup::RowGroup local_primRG;
       rowgroup::RowGroup local_outputRG;
 
@@ -1567,7 +1571,9 @@ private:
       boost::scoped_array<uint8_t> largeNullMemory;
       boost::scoped_array<boost::shared_array<uint8_t>> smallNullMemory;
       uint32_t matchCount;
-
+      uint64_t memUsedByOutputRG = 0;
+      boost::shared_ptr<int64_t> fJoinMemLimit;
+      
       rowgroup::Row postJoinRow;
       rowgroup::RowGroup local_fe2Output;
       rowgroup::RGData local_fe2Data;
@@ -1593,7 +1599,7 @@ private:
       for (uint32_t i = 0; i < numThreads; ++i)
       {
           joinLocalDataPool.push_back(std::shared_ptr<JoinLocalData>(
-              new JoinLocalData(primRowGroup, outputRowGroup, fe2, fe2Output, joinerMatchesRGs, joinFERG,
+              new JoinLocalData(this, primRowGroup, outputRowGroup, fe2, fe2Output, joinerMatchesRGs, joinFERG,
                                 tjoiners, smallSideCount, doJoin)));
       }
 

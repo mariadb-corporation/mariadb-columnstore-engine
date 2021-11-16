@@ -347,7 +347,7 @@ void	ResourceManager::emMaxPct()  	{  }
 void	ResourceManager::emPriority() 	{  }
 void	ResourceManager::emExecQueueSize()	{ }
 
-void  ResourceManager::hjNumThreads() { }
+void    ResourceManager::hjNumThreads() { }
 void	ResourceManager::hjMaxBuckets() { }
 void	ResourceManager::hjMaxElems()  { }
 void	ResourceManager::hjFifoSizeLargeSide() { }
