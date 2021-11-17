@@ -2556,7 +2556,7 @@ void BPPV::add(boost::shared_ptr<BatchPrimitiveProcessor> a)
             joinDataReceived = false;
             unusedInstance->unlock();
         }
-        else                                            
+        else
             joinDataReceived = true;
     }
 

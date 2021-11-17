@@ -755,10 +755,10 @@ int ha_mcs_impl_write_batch_row_(const uchar* buf, TABLE* table, cal_impl_if::ca
         }
     }
 
-    rc = fprintf(ci.filePtr, "\n"); //@bug 6077 check whether thhe pipe is still open
+    rc = fprintf(ci.filePtr, "\n"); //@bug 6077 check whether the pipe is still open
 
     if ( rc < 0)
-        rc = errno;
+        rc = -1;
     else
         rc = 0;
 

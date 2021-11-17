@@ -1768,7 +1768,7 @@ void BatchPrimitiveProcessor::execute()
 #else
                     startRid = executeTupleJoin(startRid);
                     sStartRid = startRid;
-                    #endif
+#endif
                     /* project the non-key columns */
                     for (j = 0; j < projectCount; ++j)
                     {
@@ -1918,7 +1918,7 @@ void BatchPrimitiveProcessor::execute()
                 }while (startRid > 0);
             }
 #ifdef PRIMPROC_STOPWATCH
-            stopwatch->stop ( "- if(ot != ROW_GROUP) else" );
+            stopwatch->stop("- if(ot != ROW_GROUP) else");
 #endif
         }
         ridCount = origRidCount;  // May not be needed, but just to be safe.

@@ -80,9 +80,9 @@ void BPPSendThread::sendResult(const Msg_t& msg, bool newConnection)
     }
     if (die)
         return;
-    
+   
     boost::mutex::scoped_lock sl(msgQueueLock);
-    
+   
     if (gotException)
         throw runtime_error(exceptionString);
 

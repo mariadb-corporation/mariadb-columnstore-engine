@@ -1456,7 +1456,7 @@ private:
   bool BPPIsAllocated;
   uint32_t uniqueID;
   ResourceManager* fRm;
-  
+
   /* HashJoin support */
 
   void serializeJoiner();

@@ -416,7 +416,7 @@ private:
 
     std::string fView1;
     std::string fView2;
-    
+
     std::string fSchema1;
     std::string fSchema2;
 
