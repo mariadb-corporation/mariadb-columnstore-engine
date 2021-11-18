@@ -85,6 +85,10 @@ class IDBDataFile;
 namespace BRM
 {
 
+using PartitionNumberT = uint32_t;
+// WIP reuse it here and in oam namespace
+using DBRootT = uint16_t;
+
 // assumed column width when calculating dictionary store extent size
 #define DICT_COL_WIDTH 8
 
@@ -126,10 +130,6 @@ struct EMPartition_struct
     EMCasualPartition_t		cprange;
 };
 typedef EMPartition_struct EMPartition_t;
-
-using PartitionNumberT = uint32_t;
-using DBRootT = uint16_t;
-
 struct EMEntry
 {
     InlineLBIDRange range;
@@ -289,60 +289,6 @@ private:
     static FreeListImpl* fInstance;
 };
 
-class ExtentMapIndexImpl
-{
-public:
-    ~ExtentMapIndexImpl(){};
-
-    static ExtentMapIndexImpl* makeExtentMapIndexImpl(unsigned key, off_t size, bool readOnly = false);
-    static void refreshShm()
-    {
-        if (fInstance)
-        {
-            delete fInstance;
-            fInstance = NULL;
-        }
-    }
-
-    inline void grow(unsigned key, off_t size)
-    {
-        int rc = fExtMapIndex.grow(key, size);
-        idbassert(rc == 0);
-    }
-    inline void makeReadOnly()
-    {
-        fExtMapIndex.setReadOnly();
-    }
-    inline void clear(unsigned key, off_t size)
-    {
-        fExtMapIndex.clear(key, size);
-    }
-    inline void swapout(BRMShmImpl& rhs)
-    {
-        fExtMapIndex.swap(rhs);
-        rhs.destroy();
-    }
-    inline unsigned key() const
-    {
-        return fExtMapIndex.key();
-    }
-//WIP
-    inline EMEntry* get() const
-    {
-        return reinterpret_cast<EMEntry*>(fExtMapIndex.fMapreg.get_address());
-    }
-
-private:
-    ExtentMapIndexImpl(unsigned key, off_t size, bool readOnly = false);
-    ExtentMapIndexImpl(const ExtentMapIndexImpl& rhs);
-    ExtentMapIndexImpl& operator=(const ExtentMapIndexImpl& rhs);
-
-    BRMShmImpl fExtMapIndex;
-
-    static boost::mutex fInstanceMutex;
-    static ExtentMapIndexImpl* fInstance;
-};
-
 using ShmSegmentManagerT = bi::managed_shared_memory::segment_manager;
 using ShmVoidAllocator = bi::allocator<void, ShmSegmentManagerT>;
 
@@ -372,7 +318,69 @@ using OIDIndexContainerT = boost::unordered_map
 
 using DBRootIndexTAlloc = bi::allocator<OIDIndexContainerT, ShmSegmentManagerT>;
 using DBRootIndexContainerT = std::vector<OIDIndexContainerT, DBRootIndexTAlloc>;
+using ExtentMapIndex = DBRootIndexContainerT;
+using ExtentMapIndexIter = ExtentMapIndex*;
+using ExtentMapIndexFindResult = std::pair<ExtentMapIndexIter, bool>;
 
+class ExtentMapIndexImpl
+{
+public:
+    ~ExtentMapIndexImpl(){};
+
+    static ExtentMapIndexImpl* makeExtentMapIndexImpl(unsigned key, off_t size, bool readOnly = false);
+    static void refreshShm()
+    {
+        if (fInstance_)
+        {
+            delete fInstance_;
+            fInstance_ = nullptr;
+        }
+    }
+
+    inline void grow(unsigned key, off_t size)
+    {
+        int rc = fBRMManagedShmMemImpl_.grow(key, size);
+        idbassert(rc == 0);
+    }
+    inline void makeReadOnly()
+    {
+        fBRMManagedShmMemImpl_.setReadOnly();
+    }
+    inline void swapout(BRMManagedShmImpl& rhs)
+    {
+        fBRMManagedShmMemImpl_.swap(rhs);
+        rhs.destroy();
+    }
+    inline unsigned key() const
+    {
+        return fBRMManagedShmMemImpl_.key();
+    }
+    void createExtentMapIndexIfNeeded();
+    ExtentMapIndex* get();
+    // WIP The return type should return pair<bool, iter>
+    // const can be harmful thouth
+    bool insert(const EMEntry& emEntry, const size_t emIdx);
+    bool insert2ndLayer(OIDIndexContainerT& oids, const EMEntry& emEntry, const size_t emIdx);
+    bool insert3dLayer(PartitionIndexContainerT& partitions, const EMEntry& emEntry,
+        const size_t emIdx);
+    ExtentMapIndexFindResult find(const DBRootT dbroot, const OID_t oid,
+        const PartitionNumberT partitionNumber);
+    ExtentMapIndexFindResult search2ndLayer(OIDIndexContainerT& oids, const OID_t oid,
+        const PartitionNumberT partitionNumber); 
+    ExtentMapIndexFindResult search3dLayer(PartitionIndexContainerT& partitions,
+        const PartitionNumberT partitionNumber);
+
+private:
+    ExtentMapIndexImpl(unsigned key, off_t size, bool readOnly = false);
+    ExtentMapIndexImpl(const ExtentMapIndexImpl& rhs);
+    ExtentMapIndexImpl& operator=(const ExtentMapIndexImpl& rhs);
+
+    BRMManagedShmImpl fBRMManagedShmMemImpl_;
+
+    // WIP Unused
+    static boost::mutex fInstanceMutex_;
+    static ExtentMapIndexImpl* fInstance_;
+};
 //using ExtentMapIndices = std::vector<ExtentMapIdxT>;
 //using PartitionIndexContainer = std::unordered_map<PartitionNumberT, ExtentMapIndices>;
 
@@ -1025,12 +1033,11 @@ private:
     ExtentMap& operator=(const ExtentMap& em);
 
     EMEntry* fExtentMap;
-    //ExtentMapIndex* fExtMapIndex_;
+    ExtentMapIndex* fExtMapIndex_;
     InlineLBIDRange* fFreeList;
     key_t fCurrentEMShmkey;
     key_t fCurrentFLShmkey;
     MSTEntry* fEMShminfo;
-    MSTEntry* fEMIndexShminfo;
     MSTEntry* fFLShminfo;
     const MasterSegmentTable fMST;
     bool r_only;
@@ -1105,7 +1112,7 @@ private:
 
     ExtentMapImpl* fPExtMapImpl;
     FreeListImpl* fPFreeListImpl;
-    ExtentMapIndexImpl* fPExtMapIndexImpl;
+    ExtentMapIndexImpl* fPExtMapIndexImpl_;
 };
 
 inline std::ostream& operator<<(std::ostream& os, ExtentMap& rhs)

@@ -318,14 +318,19 @@ BRMManagedShmImpl::BRMManagedShmImpl(unsigned key, off_t size, bool readOnly)
 
 int BRMManagedShmImpl::grow(unsigned newKey, off_t newSize)
 {
-    idbassert(newKey != fKey);
     idbassert(newSize >= fSize);
-    // WIP tell about 0 semantics
-    string keyName = ShmKeys::keyToName(0x60000);
+    // WIP
+    string keyName = ShmKeys::keyToName(0x60001);
+    //return fShmKeys.KEYRANGE_EXTENTMAP_INDEX_BASE + 1;
+    size_t increment = fSize - newSize;
+    if (!increment)
+        return 0;
 
     try
     {
-        fShmobj.grow(keyName.c_str(), newSize);
+        // need to call fShmobj here.
+        // and bi::managed_shared_memory::grow(keyName.c_str(), incSize);
+        fShmobj.grow(keyName.c_str(), increment);
     }
     catch (bi::interprocess_exception &b)
     {

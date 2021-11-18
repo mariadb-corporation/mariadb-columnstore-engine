@@ -64,7 +64,7 @@ void shmDoit(key_t shm_key, const string& label)
             bi::offset_t memSize = 0;
             memObj.get_size(memSize);
             std::lock_guard<std::mutex> lk(coutMutex);
-            cout << label << ": shm_key: " << shm_key <<
+            cout << label << ": shm|sem_key: " << shm_key <<
                  "; key_name: " << key_name <<
                  "; size: " << memSize << endl;
         }
@@ -77,6 +77,11 @@ void shmDoit(key_t shm_key, const string& label)
     {
         bi::shared_memory_object::remove(key_name.c_str());
     }
+}
+
+void semDoit(key_t sem_key, const string& label)
+{
+    shmDoit(sem_key, label);
 }
 
 void shmDoitRange(key_t shm_key, const string& label)
@@ -88,35 +93,6 @@ void shmDoitRange(key_t shm_key, const string& label)
     for (shm_key_cnt = 0; shm_key_cnt < ShmKeys::KEYRANGE_SIZE; shm_key_cnt++, shm_key++)
     {
         shmDoit(shm_key, label);
-    }
-}
-
-void semDoit(key_t sem_key, const string& label)
-{
-    string key_name = ShmKeys::keyToName(sem_key);
-
-    if (vFlg)
-    {
-        try
-        {
-            bi::shared_memory_object memObj(bi::open_only,
-                                            key_name.c_str(),
-                                            bi::read_only);
-            bi::offset_t memSize = 0;
-            memObj.get_size(memSize);
-            std::lock_guard<std::mutex> lk(coutMutex);
-            cout << label << ": sem_key: " << sem_key <<
-                 "; key_name: " << key_name <<
-                 "; size: " << memSize << endl;
-        }
-        catch (...)
-        {
-        }
-    }
-
-    if (!nFlg)
-    {
-        bi::shared_memory_object::remove(key_name.c_str());
     }
 }
 
@@ -213,6 +189,8 @@ int main(int argc, char** argv)
     tg.add_thread(tp);
     tp = new boost::thread(ThdFunc(BrmKeys.KEYRANGE_VSS_BASE,        "VSS        "));
     tg.add_thread(tp);
+    tp = new boost::thread(ThdFunc(BrmKeys.KEYRANGE_EXTENTMAP_INDEX_BASE, "EXTMAP-INDX"));
+    tg.add_thread(tp);
     tg.join_all();
 
     shmDoit(BrmKeys.MST_SYSVKEY,           "MST        ");
@@ -233,6 +211,7 @@ int main(int argc, char** argv)
     semDoit(BrmKeys.KEYRANGE_EMFREELIST_BASE, "EXTMAP_FREE");
     semDoit(BrmKeys.KEYRANGE_VBBM_BASE,       "VBBM       ");
     semDoit(BrmKeys.KEYRANGE_VSS_BASE,        "VSS        ");
+    semDoit(BrmKeys.KEYRANGE_EXTENTMAP_INDEX_BASE, "EXTMAP-INDX");
     semDoit(BrmKeys.MST_SYSVKEY,              "MST        ");
 
     if (!cFlg)
