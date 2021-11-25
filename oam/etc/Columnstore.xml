@@ -523,7 +523,6 @@
 		<!-- <RowAggrBuckets>32</RowAggrBuckets> --> <!-- Default value is number of cores * 4 -->
 		<!-- <RowAggrRowGroupsPerThread>20</RowAggrRowGroupsPerThread> --> <!-- Default value is 20 -->
 		<AllowDiskBasedAggregation>N</AllowDiskBasedAggregation>
-		<!-- <Compression>SNAPPY</Compression> --> <!-- Disabled by default -->
 	</RowAggregation>
 	<CrossEngineSupport>
 		<Host>127.0.0.1</Host>
