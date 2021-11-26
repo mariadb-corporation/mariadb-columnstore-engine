@@ -1539,13 +1539,14 @@ private:
       int64_t ridsReturned_Thread = 0;
 
       // On init.
-      bool doJoin;
       boost::shared_ptr<funcexp::FuncExpWrapper> fe2;
       rowgroup::RowGroup fe2Output;
-      uint32_t smallSideCount;
       std::vector<rowgroup::RowGroup> joinerMatchesRGs;
       rowgroup::RowGroup joinFERG;
       std::vector<boost::shared_ptr<joiner::TupleJoiner>> tjoiners;
+
+      uint32_t smallSideCount;
+      bool doJoin;
 
       // Join vars.
       vector<vector<rowgroup::Row::Pointer>> joinerOutput;
