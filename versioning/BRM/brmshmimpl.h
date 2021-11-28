@@ -103,7 +103,7 @@ public:
 
     void swap(BRMManagedShmImpl& rhs);
 
-    bi::managed_shared_memory fShmobj;
+    bi::managed_shared_memory* fShmSegment;
 private:
     BRMManagedShmImpl(const BRMManagedShmImpl& rhs);
     BRMManagedShmImpl& operator=(const BRMManagedShmImpl& rhs);

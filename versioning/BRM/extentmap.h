@@ -319,8 +319,7 @@ using OIDIndexContainerT = boost::unordered_map
 using DBRootIndexTAlloc = bi::allocator<OIDIndexContainerT, ShmSegmentManagerT>;
 using DBRootIndexContainerT = std::vector<OIDIndexContainerT, DBRootIndexTAlloc>;
 using ExtentMapIndex = DBRootIndexContainerT;
-using ExtentMapIndexIter = ExtentMapIndex*;
-using ExtentMapIndexFindResult = std::pair<ExtentMapIndexIter, bool>;
+using ExtentMapIndexFindResult = std::vector<ExtentMapIdxT>;
 
 class ExtentMapIndexImpl
 {
@@ -365,8 +364,10 @@ public:
         const size_t emIdx);
     ExtentMapIndexFindResult find(const DBRootT dbroot, const OID_t oid,
         const PartitionNumberT partitionNumber);
+    ExtentMapIndexFindResult find(const DBRootT dbroot, const OID_t oid);
     ExtentMapIndexFindResult search2ndLayer(OIDIndexContainerT& oids, const OID_t oid,
-        const PartitionNumberT partitionNumber); 
+        const PartitionNumberT partitionNumber);
+    ExtentMapIndexFindResult search2ndLayer(OIDIndexContainerT& oids, const OID_t oid); 
     ExtentMapIndexFindResult search3dLayer(PartitionIndexContainerT& partitions,
         const PartitionNumberT partitionNumber);
 

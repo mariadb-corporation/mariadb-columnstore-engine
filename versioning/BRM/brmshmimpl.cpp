@@ -239,11 +239,12 @@ void BRMShmImpl::destroy()
 
     if (!oldName.empty()) bi::shared_memory_object::remove(oldName.c_str());
 }
-
+/*
 BRMManagedShmImpl::BRMManagedShmImpl(unsigned key, off_t size, bool readOnly)
     : BRMShmImplParent(key, size, readOnly)
 {
     string keyName = ShmKeys::keyToName(fKey);
+    off_t curSize = 0;
 
     for(uint32_t tries = 0; fSize == 0 && tries <= ShmCreateMaxRetries; ++tries)
     {
@@ -251,10 +252,16 @@ BRMManagedShmImpl::BRMManagedShmImpl(unsigned key, off_t size, bool readOnly)
         {
             bi::managed_shared_memory shm(bi::open_only, keyName.c_str());
             // WIP check impl conversions
-            off_t curSize = shm.get_size();
+            curSize = shm.get_size();
 
             if (curSize == 0)
                 throw bi::interprocess_exception("shared memory segment size is 0.");
+            else
+            {
+                fShmobj.swap(shm);
+                fSize = curSize;
+                return;
+            }
         }
         catch (bi::interprocess_exception&)
         {
@@ -273,12 +280,14 @@ BRMManagedShmImpl::BRMManagedShmImpl(unsigned key, off_t size, bool readOnly)
 
     try
     {
-        idbassert(fSize > 0);
         bi::permissions perms;
         perms.set_unrestricted();
         bi::managed_shared_memory shm(bi::create_only, keyName.c_str(), fSize,
                                       0, // use a default address to map the segment
                                       perms);
+        // fSize == 0 on any process startup but managed_shared_memory ctor throws
+        // so control flow doesn't get here. 
+        idbassert(fSize > 0);
         fShmobj.swap(shm);
     }
     catch (bi::interprocess_exception &b)
@@ -313,7 +322,6 @@ BRMManagedShmImpl::BRMManagedShmImpl(unsigned key, off_t size, bool readOnly)
         delete shm;
         fSize = curSize;
     }
-
 }
 
 int BRMManagedShmImpl::grow(unsigned newKey, off_t newSize)
@@ -322,7 +330,7 @@ int BRMManagedShmImpl::grow(unsigned newKey, off_t newSize)
     // WIP
     string keyName = ShmKeys::keyToName(0x60001);
     //return fShmKeys.KEYRANGE_EXTENTMAP_INDEX_BASE + 1;
-    size_t increment = fSize - newSize;
+    size_t increment = newSize - fSize;
     if (!increment)
         return 0;
 
@@ -347,53 +355,70 @@ int BRMManagedShmImpl::grow(unsigned newKey, off_t newSize)
     //if (fReadOnly)
     return 0;
 }
-int BRMManagedShmImpl::clear(unsigned newKey, off_t newSize)
-{ return 0; }
-/*
-    idbassert(newKey != fKey);
+*/
 
-    string oldName = fShmobj.get_name();
+BRMManagedShmImpl::BRMManagedShmImpl(unsigned key, off_t size, bool readOnly)
+    : BRMShmImplParent(key, size, readOnly)
+{
+    auto keyName = ShmKeys::keyToName(fKey);
 
-    string keyName = ShmKeys::keyToName(newKey);
-    bi::permissions perms;
-    perms.set_unrestricted();
-    bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write, perms);
-    shm.truncate(newSize);
+    // FIXME: Take a right size.
+    if (fSize == 0)
+        fSize = 6400000;
 
-    bi::mapped_region region(shm, bi::read_write);
-
-    //clear new region
-    memset(region.get_address(), 0, newSize);
-
-    fShmobj.swap(shm);
-    fMapreg.swap(region);
-
-    if (!oldName.empty())
-        bi::shared_memory_object::remove(oldName.c_str());
-
-    fKey = newKey;
-    fSize = newSize;
-
-    if (fReadOnly)
+    try
     {
-        bi::mapped_region ro_region(fShmobj, bi::read_only);
-        fMapreg.swap(ro_region);
+        // Check that segment is not exists in the shared memory.
+        boost::interprocess::shared_memory_object::remove(keyName.c_str());
+        fShmSegment = new boost::interprocess::managed_shared_memory(boost::interprocess::create_only,
+                                                                     keyName.c_str(), fSize);
     }
+    catch (exception& e)
+    {
+        std::cout << "Cannot create boost::interprocess::managed_shared_memory object: " << e.what()
+                  << std::endl;
+    }
+}
+
+int BRMManagedShmImpl::grow(unsigned newKey, off_t newSize)
+{
+    auto keyName = ShmKeys::keyToName(fKey);
+
+    if (newSize > fSize)
+    {
+        const auto incSize = newSize - fSize;
+        if (fShmSegment)
+        {
+            // Call destructor to unmap the segment.
+            delete fShmSegment;
+            // Grow the segment.
+            bi::managed_shared_memory::grow(keyName.c_str(), incSize);
+            // Open only.
+            fShmSegment = new bi::managed_shared_memory(bi::open_only, keyName.c_str());
+            // Update size.
+            fSize = newSize;
+        }
+    }
+
+    // FIXME: Is this needed?
     return 0;
 }
-*/
+
+int BRMManagedShmImpl::clear(unsigned newKey, off_t newSize)
+{ return 0; }
+
 // WIP Not sure if we need this method for this class.
 void BRMManagedShmImpl::setReadOnly()
 {
     if (fReadOnly)
         return;
-    // WIP This calls for fShmobj destructor call
+    // WIP This calls for fShmSegment destructor call
     fReadOnly = true;
 }
 
 void BRMManagedShmImpl::swap(BRMManagedShmImpl& rhs)
 {
-    fShmobj.swap(rhs.fShmobj);
+    fShmSegment->swap(*rhs.fShmSegment);
     std::swap(fKey, rhs.fKey);
     std::swap(fSize, rhs.fSize);
     std::swap(fReadOnly, rhs.fReadOnly);
