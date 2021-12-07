@@ -88,6 +88,11 @@ namespace BRM
 using PartitionNumberT = uint32_t;
 // WIP reuse it here and in oam namespace
 using DBRootT = uint16_t;
+using SegmentT = uint16_t; 
+using LastExtentIndexT = int;
+using EmptyEMEntry = int;
+using HighestOffset = uint32_t; 
+using LastIndEmptyIndEmptyInd = std::pair<LastExtentIndexT, EmptyEMEntry>;
 
 // assumed column width when calculating dictionary store extent size
 #define DICT_COL_WIDTH 8
@@ -1059,6 +1064,11 @@ private:
     };
 
     OPS EMLock, FLLock;
+
+    LastIndEmptyIndEmptyInd _createExtentCommonSearch(const OID_t OID,
+        const DBRootT dbRoot,
+        const PartitionNumberT partitionNum,
+        const SegmentT segmentNum);
 
     LBID_t _createColumnExtent_DBroot(uint32_t size, int OID,
                                       uint32_t colWidth,

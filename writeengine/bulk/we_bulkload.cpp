@@ -55,7 +55,6 @@
 #include "we_ddlcommandclient.h"
 #include "mcsconfig.h"
 
-
 using namespace std;
 using namespace boost;
 using namespace dataconvert;

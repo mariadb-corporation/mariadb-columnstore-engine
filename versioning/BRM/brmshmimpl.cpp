@@ -239,7 +239,7 @@ void BRMShmImpl::destroy()
 
     if (!oldName.empty()) bi::shared_memory_object::remove(oldName.c_str());
 }
-/*
+
 BRMManagedShmImpl::BRMManagedShmImpl(unsigned key, off_t size, bool readOnly)
     : BRMShmImplParent(key, size, readOnly)
 {
@@ -250,15 +250,15 @@ BRMManagedShmImpl::BRMManagedShmImpl(unsigned key, off_t size, bool readOnly)
     {
         try
         {
-            bi::managed_shared_memory shm(bi::open_only, keyName.c_str());
+            auto* shmSegment = new boost::interprocess::managed_shared_memory(bi::open_only, keyName.c_str());
             // WIP check impl conversions
-            curSize = shm.get_size();
+            curSize = shmSegment->get_size();
 
             if (curSize == 0)
                 throw bi::interprocess_exception("shared memory segment size is 0.");
             else
             {
-                fShmobj.swap(shm);
+                fShmSegment = shmSegment;
                 fSize = curSize;
                 return;
             }
@@ -282,13 +282,12 @@ BRMManagedShmImpl::BRMManagedShmImpl(unsigned key, off_t size, bool readOnly)
     {
         bi::permissions perms;
         perms.set_unrestricted();
-        bi::managed_shared_memory shm(bi::create_only, keyName.c_str(), fSize,
+        fShmSegment = new bi::managed_shared_memory(bi::create_only, keyName.c_str(), fSize,
                                       0, // use a default address to map the segment
                                       perms);
         // fSize == 0 on any process startup but managed_shared_memory ctor throws
         // so control flow doesn't get here. 
         idbassert(fSize > 0);
-        fShmobj.swap(shm);
     }
     catch (bi::interprocess_exception &b)
     {
@@ -299,13 +298,13 @@ BRMManagedShmImpl::BRMManagedShmImpl(unsigned key, off_t size, bool readOnly)
             log(o.str());
             throw;
         }
-        bi::managed_shared_memory *shm = nullptr;
+        bi::managed_shared_memory* shmSegment = nullptr;
         try
         {
             if (fReadOnly)
-                shm = new bi::managed_shared_memory(bi::open_read_only, keyName.c_str());
+                shmSegment = new bi::managed_shared_memory(bi::open_read_only, keyName.c_str());
             else
-                shm = new bi::managed_shared_memory(bi::open_only, keyName.c_str());
+                shmSegment = new bi::managed_shared_memory(bi::open_only, keyName.c_str());
         }
         catch (exception &e)
         {
@@ -314,16 +313,16 @@ BRMManagedShmImpl::BRMManagedShmImpl(unsigned key, off_t size, bool readOnly)
             log(o.str());
             throw;
         }
-        off_t curSize = shm->get_size();
+        off_t curSize = shmSegment->get_size();
 
         idbassert(curSize > 0);
         idbassert(curSize >= fSize);
-        fShmobj.swap(*shm);
-        delete shm;
+        fShmSegment = shmSegment;
         fSize = curSize;
     }
 }
 
+/*
 int BRMManagedShmImpl::grow(unsigned newKey, off_t newSize)
 {
     idbassert(newSize >= fSize);
@@ -356,7 +355,7 @@ int BRMManagedShmImpl::grow(unsigned newKey, off_t newSize)
     return 0;
 }
 */
-
+/*
 BRMManagedShmImpl::BRMManagedShmImpl(unsigned key, off_t size, bool readOnly)
     : BRMShmImplParent(key, size, readOnly)
 {
@@ -379,7 +378,7 @@ BRMManagedShmImpl::BRMManagedShmImpl(unsigned key, off_t size, bool readOnly)
                   << std::endl;
     }
 }
-
+*/
 int BRMManagedShmImpl::grow(unsigned newKey, off_t newSize)
 {
     auto keyName = ShmKeys::keyToName(fKey);

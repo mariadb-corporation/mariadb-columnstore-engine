@@ -389,6 +389,7 @@ ExtentMapIndexFindResult ExtentMapIndexImpl::find(const DBRootT dbroot, const OI
     const PartitionNumberT partitionNumber)
 {
     ExtentMapIndex& emIndex = *get();
+    //std::cout << "ExtentMapIndexImpl::find( " << (uint64_t) get() << std::endl;
     if (dbroot >= emIndex.size())
         return {};
     return search2ndLayer(emIndex[dbroot], oid, partitionNumber);
@@ -397,6 +398,7 @@ ExtentMapIndexFindResult ExtentMapIndexImpl::find(const DBRootT dbroot, const OI
 ExtentMapIndexFindResult ExtentMapIndexImpl::find(const DBRootT dbroot, const OID_t oid)
 {
     ExtentMapIndex& emIndex = *get();
+    //std::cout << "ExtentMapIndexImpl::find " << (uint64_t) get() << std::endl;
     if (dbroot >= emIndex.size())
         return {};
     return search2ndLayer(emIndex[dbroot], oid);
@@ -1380,15 +1382,14 @@ void ExtentMap::loadVersion4(IDBDataFile* in)
             fExtentMap[i].status = EXTENTAVAILABLE;
 
         fPExtMapIndexImpl_->insert(fExtentMap[i], i);
-        /*
+       /* 
         auto result = fPExtMapIndexImpl_->find(1, fExtentMap[i].fileID);
         for (auto el: result)
             std::cout << "ExtentMap::loadVersion4 oid " << fExtentMap[i].fileID << " id " << el;
         if(result.empty())
             std::cout << "ExtentMap::loadVersion4 oid " << fExtentMap[i].fileID << " id not found ";
         std::cout << std::endl;
-        */
-
+    */
     }
 
     fEMShminfo->currentSize = emNumElements * sizeof(EMEntry);
@@ -2080,7 +2081,8 @@ int ExtentMap::lookupLocal(int OID, uint32_t partitionNum, uint16_t segmentNum, 
     }
 
 #endif
-    int entries, i, offset;
+//    int entries, i
+    int offset;
 
     if (OID < 0)
     {
@@ -2090,25 +2092,31 @@ int ExtentMap::lookupLocal(int OID, uint32_t partitionNum, uint16_t segmentNum, 
 
     grabEMEntryTable(READ);
 
-    entries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
+    //entries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
+    vector<int> dbRootList;
+    getPmDbRoots( 1, dbRootList );
 
-    for (i = 0; i < entries; i++)
+    for (auto dbRoot: dbRootList)
     {
-
-        // TODO:  Blockoffset logic.
-        if (fExtentMap[i].range.size != 0 &&
-                fExtentMap[i].fileID == OID &&
-                fExtentMap[i].partitionNum == partitionNum &&
-                fExtentMap[i].segmentNum == segmentNum &&
-                fExtentMap[i].blockOffset <= fileBlockOffset &&
-                fileBlockOffset <= (fExtentMap[i].blockOffset +
-                                    (static_cast<LBID_t>(fExtentMap[i].range.size) * 1024) - 1))
+        auto emIdents = fPExtMapIndexImpl_->find(dbRoot, OID, partitionNum);
+        //for (i = 0; i < entries; i++)
+        for (auto i : emIdents)
         {
+            // TODO:  Blockoffset logic.
+            if (fExtentMap[i].range.size != 0 &&
+                    //fExtentMap[i].fileID == OID &&
+                    //fExtentMap[i].partitionNum == partitionNum &&
+                    fExtentMap[i].segmentNum == segmentNum &&
+                    fExtentMap[i].blockOffset <= fileBlockOffset &&
+                    fileBlockOffset <= (fExtentMap[i].blockOffset +
+                                        (static_cast<LBID_t>(fExtentMap[i].range.size) * 1024) - 1))
+            {
 
-            offset = fileBlockOffset - fExtentMap[i].blockOffset;
-            LBID = fExtentMap[i].range.start + offset;
-            releaseEMEntryTable(READ);
-            return 0;
+                offset = fileBlockOffset - fExtentMap[i].blockOffset;
+                LBID = fExtentMap[i].range.start + offset;
+                releaseEMEntryTable(READ);
+                return 0;
+            }
         }
     }
 
@@ -2196,7 +2204,8 @@ int ExtentMap::lookupLocalStartLbid(int      OID,
     }
 
 #endif
-    int entries, i;
+    // WIP
+    //int entries, i;
 
     if (OID < 0)
     {
@@ -2207,21 +2216,34 @@ int ExtentMap::lookupLocalStartLbid(int      OID,
     }
 
     grabEMEntryTable(READ);
-    entries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
+    //entries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
+    // WIP
+    vector<int> dbRootList;
+    getPmDbRoots( 1, dbRootList );
 
-    for (i = 0; i < entries; i++)
+    for (auto dbRoot: dbRootList)
     {
-        if (fExtentMap[i].range.size   != 0 &&
-                fExtentMap[i].fileID       == OID &&
-                fExtentMap[i].partitionNum == partitionNum &&
-                fExtentMap[i].segmentNum   == segmentNum &&
-                fExtentMap[i].blockOffset  <= fileBlockOffset &&
-                fileBlockOffset <= (fExtentMap[i].blockOffset +
-                                    (static_cast<LBID_t>(fExtentMap[i].range.size) * 1024) - 1))
+        auto emIdents = fPExtMapIndexImpl_->find(dbRoot, OID, partitionNum);
+        //for (i = 0; i < entries; i++)
+        for (auto i : emIdents)
         {
-            LBID = fExtentMap[i].range.start;
-            releaseEMEntryTable(READ);
-            return 0;
+        /*    if (fExtentMap[i].range.size   != 0 &&
+                    fExtentMap[i].fileID       == OID &&
+                    fExtentMap[i].partitionNum == partitionNum &&
+                    fExtentMap[i].segmentNum   == segmentNum &&
+                    fExtentMap[i].blockOffset  <= fileBlockOffset &&
+                    fileBlockOffset <= (fExtentMap[i].blockOffset +
+                                        (static_cast<LBID_t>(fExtentMap[i].range.size) * 1024) - 1))*/
+            if (fExtentMap[i].range.size   != 0 &&
+                    fExtentMap[i].segmentNum   == segmentNum &&
+                    fExtentMap[i].blockOffset  <= fileBlockOffset &&
+                    fileBlockOffset <= (fExtentMap[i].blockOffset +
+                                        (static_cast<LBID_t>(fExtentMap[i].range.size) * 1024) - 1))
+            {
+                LBID = fExtentMap[i].range.start;
+                releaseEMEntryTable(READ);
+                return 0;
+            }
         }
     }
 
@@ -2425,11 +2447,11 @@ LBID_t ExtentMap::_createColumnExtent_DBroot(uint32_t size, int OID,
         uint16_t& segmentNum,
         uint32_t& startBlockOffset)
 {
-    int emptyEMEntry        = -1;
-    int lastExtentIndex     = -1;
-    uint32_t highestOffset = 0;
-    uint32_t highestPartNum = 0;
-    uint16_t highestSegNum = 0;
+    EmptyEMEntry emptyEMEntry        = -1;
+    LastExtentIndexT lastExtentIndex     = -1;
+    HighestOffset highestOffset = 0;
+    PartitionNumberT highestPartNum = 0;
+    SegmentT highestSegNum = 0;
     const unsigned FILES_PER_COL_PART = getFilesPerColumnPartition();
     const unsigned EXTENT_ROWS        = getExtentRows();
     const unsigned EXTENTS_PER_SEGFILE = getExtentsPerSegmentFile();
@@ -2437,9 +2459,9 @@ LBID_t ExtentMap::_createColumnExtent_DBroot(uint32_t size, int OID,
 
     // Variables that track list of segfiles in target (HWM) DBRoot & partition.
     // Map segment number to the highest fbo extent in each file
-    typedef tr1::unordered_map<uint16_t, uint32_t> TargetDbRootSegsMap;
-    typedef TargetDbRootSegsMap::iterator          TargetDbRootSegsMapIter;
-    typedef TargetDbRootSegsMap::const_iterator    TargetDbRootSegsMapConstIter;
+    using TargetDbRootSegsMap = tr1::unordered_map<uint16_t, uint32_t>;
+    using TargetDbRootSegsMapIter = TargetDbRootSegsMap::iterator;
+    using TargetDbRootSegsMapConstIter = TargetDbRootSegsMap::const_iterator;
     TargetDbRootSegsMap targetDbRootSegs;
 
     uint32_t highEmptySegNum = 0; // high seg num for user specified partition;
@@ -2452,54 +2474,59 @@ LBID_t ExtentMap::_createColumnExtent_DBroot(uint32_t size, int OID,
     // 2. if DBRoot is empty, track highest seg num in user specified partition
     // 3. Find first unused extent map entry
     //--------------------------------------------------------------------------
-    int emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
-
     LBID_t startLBID = getLBIDsFromFreeList( size );
 
+    auto emIdents = fPExtMapIndexImpl_->find(dbRoot, OID);
     // Find the first empty Entry; and find last extent for this OID and dbRoot
-    for (int i = 0; i < emEntries; i++)
+    //for (int i = 0; i < emEntries; i++)
+    for (auto i: emIdents)
     {
         if (fExtentMap[i].range.size  != 0)
         {
-            if (fExtentMap[i].fileID == OID)
+            // 1. Find HWM extent in relevant DBRoot
+            if (fExtentMap[i].dbRoot == dbRoot)
             {
-
-                // 1. Find HWM extent in relevant DBRoot
-                if (fExtentMap[i].dbRoot == dbRoot)
+                if ( (fExtentMap[i].partitionNum >  highestPartNum) ||
+                        ((fExtentMap[i].partitionNum == highestPartNum) &&
+                         (fExtentMap[i].blockOffset   >  highestOffset)) ||
+                        ((fExtentMap[i].partitionNum == highestPartNum) &&
+                         (fExtentMap[i].blockOffset   == highestOffset)  &&
+                         (fExtentMap[i].segmentNum    >= highestSegNum)) )
                 {
-                    if ( (fExtentMap[i].partitionNum >  highestPartNum) ||
-                            ((fExtentMap[i].partitionNum == highestPartNum) &&
-                             (fExtentMap[i].blockOffset   >  highestOffset)) ||
-                            ((fExtentMap[i].partitionNum == highestPartNum) &&
-                             (fExtentMap[i].blockOffset   == highestOffset)  &&
-                             (fExtentMap[i].segmentNum    >= highestSegNum)) )
-                    {
 
-                        lastExtentIndex = i;
-                        highestPartNum  = fExtentMap[i].partitionNum;
-                        highestSegNum   = fExtentMap[i].segmentNum;
-                        highestOffset   = fExtentMap[i].blockOffset;
-                    }
+                    lastExtentIndex = i;
+                    highestPartNum  = fExtentMap[i].partitionNum;
+                    highestSegNum   = fExtentMap[i].segmentNum;
+                    highestOffset   = fExtentMap[i].blockOffset;
                 }
+            }
 
-                // 2. for empty DBRoot track hi seg# in user specified part#
-                if ((lastExtentIndex == -1) &&
-                        (fExtentMap[i].partitionNum == partitionNum))
+            // 2. for empty DBRoot track hi seg# in user specified part#
+            if ((lastExtentIndex == -1) &&
+                    (fExtentMap[i].partitionNum == partitionNum))
+            {
+                if ((fExtentMap[i].segmentNum > highEmptySegNum) ||
+                        (!bHighEmptySegNumSet))
                 {
-                    if ((fExtentMap[i].segmentNum > highEmptySegNum) ||
-                            (!bHighEmptySegNumSet))
-                    {
-                        highEmptySegNum = fExtentMap[i].segmentNum;
-                        bHighEmptySegNumSet = true;
-                    }
+                    highEmptySegNum = fExtentMap[i].segmentNum;
+                    bHighEmptySegNumSet = true;
                 }
-            }         // found extentmap entry for specified OID
+            }
         }             // found valid extentmap entry
-
         // 3. Find first available extent map entry that can be reused
         else if (emptyEMEntry < 0)
             emptyEMEntry = i;
     } // Loop through extent map entries
+
+    size_t emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
+    for (size_t i = 0; emptyEMEntry < 0 && i < emEntries; ++i)
+    {
+        if (fExtentMap[i].range.size == 0)
+        {
+            emptyEMEntry = i;
+            break;
+        }
+    }
 
     if (emptyEMEntry == -1)
     {
@@ -2530,19 +2557,22 @@ LBID_t ExtentMap::_createColumnExtent_DBroot(uint32_t size, int OID,
     // scan the extentmap.
     //--------------------------------------------------------------------------
     bool bSegsOutOfService = false;
+    // WIP change types
     int partHighSeg     = -1; // hi seg num for last partition
     int partHighSegNext = -1; // hi seg num for next partition
 
     if (lastExtentIndex >= 0)
     {
-        uint32_t targetDbRootPart = fExtentMap[lastExtentIndex].partitionNum;
-        uint32_t targetDbRootPartNext = targetDbRootPart + 1;
+        PartitionNumberT targetDbRootPart = fExtentMap[lastExtentIndex].partitionNum;
+        PartitionNumberT targetDbRootPartNext = targetDbRootPart + 1;
         partHighSeg                = fExtentMap[lastExtentIndex].segmentNum;
         targetDbRootSegs.insert( TargetDbRootSegsMap::value_type(
                                      fExtentMap[lastExtentIndex].segmentNum,
                                      fExtentMap[lastExtentIndex].blockOffset) );
 
-        for (int i = 0; i < emEntries; i++)
+        //vector<int> dbRootList;
+        //getPmDbRoots( pmNumber, dbRootList );
+        for (size_t i = 0; i < emEntries; ++i)
         {
             if (fExtentMap[i].range.size  != 0)
             {
@@ -2852,6 +2882,7 @@ LBID_t ExtentMap::_createColumnExtent_DBroot(uint32_t size, int OID,
 
     makeUndoRecord(fEMShminfo, sizeof(MSTEntry));
     fEMShminfo->currentSize += sizeof(struct EMEntry);
+    fPExtMapIndexImpl_->insert(fExtentMap[emptyEMEntry], emptyEMEntry);
 
     return startLBID;
 }
@@ -2932,6 +2963,49 @@ void ExtentMap::createColumnExtentExactFile(int OID,
     allocdsize = EXTENT_SIZE;
 }
 
+LastIndEmptyIndEmptyInd ExtentMap::_createExtentCommonSearch(const OID_t OID,
+    const DBRootT dbRoot,
+    const PartitionNumberT partitionNum,
+    const SegmentT segmentNum)  
+{
+    EmptyEMEntry emptyEMEntry = -1;
+    LastExtentIndexT lastExtentIndex = -1;
+    HighestOffset highestOffset = 0;
+
+    size_t emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
+
+    auto emIdents = fPExtMapIndexImpl_->find(dbRoot, OID, partitionNum);
+    // DRRTUY we might need to use cache preload here.
+    // Search of the last extent idx and the highest offset
+    for (auto i : emIdents)
+    {
+        if (fExtentMap[i].range.size != 0)
+        {
+            if ((fExtentMap[i].segmentNum == segmentNum) &&
+                    (fExtentMap[i].blockOffset  >= highestOffset))
+            {
+                lastExtentIndex = i;
+                highestOffset = fExtentMap[i].blockOffset;
+            }
+        }
+        // Search for the first empty Entry
+        else if (emptyEMEntry < 0)
+            emptyEMEntry = i;
+    }
+
+    // Search for the first empty Entry
+    // DRRTUY We might need to support empty EM ids vector
+    for (size_t i = 0; emptyEMEntry < 0 && i < emEntries; ++i)
+    {
+        if (fExtentMap[i].range.size == 0)
+        {
+            emptyEMEntry = i;
+            break;
+        }
+    }
+    return {lastExtentIndex, emptyEMEntry};
+}
+
 //------------------------------------------------------------------------------
 // Creates an extent for the exact segment file specified by the requested
 // OID, DBRoot, partition, and segment.  This is the internal implementation
@@ -2958,34 +3032,10 @@ LBID_t ExtentMap::_createColumnExtentExactFile(uint32_t size, int OID,
         execplan::CalpontSystemCatalog::ColDataType colDataType,
         uint32_t& startBlockOffset)
 {
-    int emptyEMEntry        = -1;
-    int lastExtentIndex     = -1;
-    uint32_t highestOffset = 0;
-
-    int emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
-    LBID_t startLBID = getLBIDsFromFreeList( size );
-
-    // Find the first empty Entry; and find the last extent for this
-    // combination of OID, partition, and segment.
-    for (int i = 0; i < emEntries; i++)
-    {
-        if (fExtentMap[i].range.size != 0)
-        {
-            if (fExtentMap[i].fileID == OID)
-            {
-                if ((fExtentMap[i].dbRoot       == dbRoot) &&
-                        (fExtentMap[i].partitionNum == partitionNum) &&
-                        (fExtentMap[i].segmentNum   == segmentNum) &&
-                        (fExtentMap[i].blockOffset  >= highestOffset))
-                {
-                    lastExtentIndex = i;
-                    highestOffset = fExtentMap[i].blockOffset;
-                }
-            }
-        }
-        else if (emptyEMEntry < 0)
-            emptyEMEntry = i;
-    } // Loop through extent map entries
+    auto lastIndEmptyIndEmptyInd = _createExtentCommonSearch(OID, dbRoot,
+        partitionNum, segmentNum);
+    LastExtentIndexT lastExtentIndex = lastIndEmptyIndEmptyInd.first;
+    EmptyEMEntry emptyEMEntry = lastIndEmptyIndEmptyInd.second;
 
     if (emptyEMEntry == -1)
     {
@@ -3001,6 +3051,7 @@ LBID_t ExtentMap::_createColumnExtentExactFile(uint32_t size, int OID,
     makeUndoRecord(&fExtentMap[emptyEMEntry], sizeof(EMEntry));
     EMEntry* e      = &fExtentMap[emptyEMEntry];
 
+    LBID_t startLBID = getLBIDsFromFreeList( size );
     e->range.start  = startLBID;
     e->range.size   = size;
     e->fileID       = OID;
@@ -3059,6 +3110,7 @@ LBID_t ExtentMap::_createColumnExtentExactFile(uint32_t size, int OID,
 
     makeUndoRecord(fEMShminfo, sizeof(MSTEntry));
     fEMShminfo->currentSize += sizeof(struct EMEntry);
+    fPExtMapIndexImpl_->insert(fExtentMap[emptyEMEntry], emptyEMEntry);
 
     return startLBID;
 }
@@ -3146,37 +3198,16 @@ void ExtentMap::createDictStoreExtent(int OID,
 //   segmentNum   - segment number to be assigned to the new extent
 // returns starting LBID of the created extent.
 //------------------------------------------------------------------------------
+// WIP this method almost identical with _createColumnExtentExactFile
 LBID_t ExtentMap::_createDictStoreExtent(uint32_t size, int OID,
         uint16_t  dbRoot,
         uint32_t  partitionNum,
         uint16_t  segmentNum)
 {
-    int emptyEMEntry        = -1;
-    int lastExtentIndex     = -1;
-    uint32_t highestOffset = 0;
-
-    int emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
-
-    LBID_t startLBID = getLBIDsFromFreeList( size );
-
-    // Find the first empty Entry; and find the last extent for this
-    // combination of OID, partition, and segment.
-    for (int i = 0; i < emEntries; i++)
-    {
-        if (fExtentMap[i].range.size != 0)
-        {
-            if ((fExtentMap[i].fileID       == OID) &&
-                    (fExtentMap[i].partitionNum == partitionNum) &&
-                    (fExtentMap[i].segmentNum   == segmentNum) &&
-                    (fExtentMap[i].blockOffset  >= highestOffset))
-            {
-                lastExtentIndex = i;
-                highestOffset = fExtentMap[i].blockOffset;
-            }
-        }
-        else if (emptyEMEntry < 0)
-            emptyEMEntry = i;
-    } // Loop through extent map entries
+    auto lastIndEmptyIndEmptyInd = _createExtentCommonSearch(OID, dbRoot,
+        partitionNum, segmentNum);
+    LastExtentIndexT lastExtentIndex = lastIndEmptyIndEmptyInd.first;
+    EmptyEMEntry emptyEMEntry = lastIndEmptyIndEmptyInd.second;
 
     if (emptyEMEntry == -1)
     {
@@ -3192,6 +3223,7 @@ LBID_t ExtentMap::_createDictStoreExtent(uint32_t size, int OID,
     makeUndoRecord(&fExtentMap[emptyEMEntry], sizeof(EMEntry));
     EMEntry* e      = &fExtentMap[emptyEMEntry];
 
+    LBID_t startLBID = getLBIDsFromFreeList( size );
     e->range.start  = startLBID;
     e->range.size   = size;
     e->fileID       = OID;
@@ -3229,6 +3261,7 @@ LBID_t ExtentMap::_createDictStoreExtent(uint32_t size, int OID,
 
     makeUndoRecord(fEMShminfo, sizeof(MSTEntry));
     fEMShminfo->currentSize += sizeof(struct EMEntry);
+    fPExtMapIndexImpl_->insert(fExtentMap[emptyEMEntry], emptyEMEntry);
 
     return startLBID;
 }
@@ -4355,9 +4388,9 @@ void ExtentMap::getDbRootHWMInfo(int OID, uint16_t pmNumber,
 
     // WIP
     for (auto dbRoot: dbRootList)
+    //for (int i = emEntries - 1; i >= 0; i--)
     {
         auto emIdents = fPExtMapIndexImpl_->find(dbRoot, OID);
-        //for (int i = emEntries - 1; i >= 0; i--)
         // WIP preload data
         for (auto i : emIdents)
         {
@@ -4531,7 +4564,7 @@ HWM_t ExtentMap::getLocalHWM(int OID, uint32_t partitionNum,
 
 #endif
 
-    int i, emEntries;
+    //int i, emEntries;
     HWM_t ret = 0;
     bool OIDPartSegExists = false;
 
@@ -4545,23 +4578,31 @@ HWM_t ExtentMap::getLocalHWM(int OID, uint32_t partitionNum,
 
     grabEMEntryTable(READ);
 
-    emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
+    // WIP
+    //emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
 
-    for (i = 0; i < emEntries; i++)
+    vector<int> dbRootList;
+    getPmDbRoots( 1, dbRootList );
+    for (auto dbRoot: dbRootList)
     {
-        if ((fExtentMap[i].range.size  != 0) &&
-                (fExtentMap[i].fileID      == OID) &&
-                (fExtentMap[i].partitionNum == partitionNum) &&
-                (fExtentMap[i].segmentNum  == segmentNum))
+        auto emIdents = fPExtMapIndexImpl_->find(dbRoot, OID, partitionNum);
+        //for (i = 0; i < emEntries; i++)
+        for (auto i : emIdents)
         {
-            OIDPartSegExists = true;
-            status = fExtentMap[i].status;
-
-            if (fExtentMap[i].HWM != 0)
+            if ((fExtentMap[i].range.size  != 0) &&
+     //               (fExtentMap[i].fileID      == OID) &&
+     //               (fExtentMap[i].partitionNum == partitionNum) &&
+                    (fExtentMap[i].segmentNum  == segmentNum))
             {
-                ret = fExtentMap[i].HWM;
-                releaseEMEntryTable(READ);
-                return ret;
+                OIDPartSegExists = true;
+                status = fExtentMap[i].status;
+
+                if (fExtentMap[i].HWM != 0)
+                {
+                    ret = fExtentMap[i].HWM;
+                    releaseEMEntryTable(READ);
+                    return ret;
+                }
             }
         }
     }
@@ -4615,34 +4656,41 @@ void ExtentMap::setLocalHWM(int OID, uint32_t partitionNum,
 
 #endif
 
-    int lastExtentIndex     = -1;
+    LastExtentIndexT lastExtentIndex     = -1;
     int oldHWMExtentIndex   = -1;
-    uint32_t highestOffset = 0;
+    HighestOffset highestOffset = 0;
 
     if (uselock)
         grabEMEntryTable(WRITE);
 
-    int emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
+    //int emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
+    vector<int> dbRootList;
+    getPmDbRoots( 1, dbRootList );
 
-    for (int i = 0; i < emEntries; i++)
+    for (auto dbRoot: dbRootList)
+    //for (int i = 0; i < emEntries; i++)
     {
-        if ((fExtentMap[i].range.size  != 0) &&
-                (fExtentMap[i].fileID      == OID) &&
-                (fExtentMap[i].partitionNum == partitionNum) &&
-                (fExtentMap[i].segmentNum  == segmentNum))
+        auto emIdents = fPExtMapIndexImpl_->find(dbRoot, OID, partitionNum);
+        for (auto i : emIdents)
         {
-
-            // Find current HWM extent
-            if (fExtentMap[i].blockOffset >= highestOffset)
+            if ((fExtentMap[i].range.size  != 0) &&
+                   // (fExtentMap[i].fileID      == OID) &&
+                   // (fExtentMap[i].partitionNum == partitionNum) &&
+                    (fExtentMap[i].segmentNum  == segmentNum))
             {
-                highestOffset   = fExtentMap[i].blockOffset;
-                lastExtentIndex = i;
-            }
 
-            // Find previous HWM extent
-            if (fExtentMap[i].HWM != 0)
-            {
-                oldHWMExtentIndex = i;
+                // Find current HWM extent
+                if (fExtentMap[i].blockOffset >= highestOffset)
+                {
+                    highestOffset   = fExtentMap[i].blockOffset;
+                    lastExtentIndex = i;
+                }
+
+                // Find previous HWM extent
+                if (fExtentMap[i].HWM != 0)
+                {
+                    oldHWMExtentIndex = i;
+                }
             }
         }
     }
