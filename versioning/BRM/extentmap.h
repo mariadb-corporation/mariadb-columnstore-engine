@@ -93,6 +93,7 @@ using LastExtentIndexT = int;
 using EmptyEMEntry = int;
 using HighestOffset = uint32_t; 
 using LastIndEmptyIndEmptyInd = std::pair<LastExtentIndexT, EmptyEMEntry>;
+using DBRootVec = std::vector<DBRootT>;
 
 // assumed column width when calculating dictionary store extent size
 #define DICT_COL_WIDTH 8
@@ -375,6 +376,9 @@ public:
     ExtentMapIndexFindResult search2ndLayer(OIDIndexContainerT& oids, const OID_t oid); 
     ExtentMapIndexFindResult search3dLayer(PartitionIndexContainerT& partitions,
         const PartitionNumberT partitionNumber);
+    void deleteDbRoot(const DBRootT dbroot);
+    void deleteOID(const DBRootT dbroot, const OID_t oid);
+    void deleteEMEntry(const EMEntry& emEntry);
 
 private:
     ExtentMapIndexImpl(unsigned key, off_t size, bool readOnly = false);
@@ -1089,7 +1093,7 @@ private:
                                   uint32_t  partitionNum,
                                   uint16_t  segmentNum);
     bool isValidCPRange(int64_t max, int64_t min, execplan::CalpontSystemCatalog::ColDataType type) const;
-    void deleteExtent(int emIndex);
+    void deleteExtent(const int emIndex, const bool clearEMIndex = true);
     LBID_t getLBIDsFromFreeList(uint32_t size);
     void reserveLBIDRange(LBID_t start, uint8_t size);    // used by load() to allocate pre-existing LBIDs
 
@@ -1111,6 +1115,7 @@ private:
     unsigned getExtentsPerSegmentFile();
     unsigned getDbRootCount();
     void getPmDbRoots(int pm, std::vector<int>& dbRootList);
+    DBRootVec getAllDbRoots();
     void checkReloadConfig();
     ShmKeys fShmKeys;
 
