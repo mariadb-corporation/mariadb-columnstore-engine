@@ -559,7 +559,13 @@ public:
                                    logging::ERR_AGGREGATION_TOO_BIG);
         }
 
-        fLRU->add(rgid);
+        if (fMM->getFree() < memSz * 2)
+        {
+          saveRG(rgid);
+          fRGDatas[rgid].reset();
+        }
+        else
+          fLRU->add(rgid);
       }
       else
       {
