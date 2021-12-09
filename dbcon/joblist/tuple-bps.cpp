@@ -1903,6 +1903,7 @@ struct _CPInfo
 
 void TupleBPS::receiveMultiPrimitiveMessages(uint32_t threadID)
 {
+    // Just to trigger build.
     AnyDataListSPtr dl = fOutputJobStepAssociation.outAt(0);
     RowGroupDL* dlp = (fDelivery ? deliveryDL.get() : dl->rowGroupDL());
 
