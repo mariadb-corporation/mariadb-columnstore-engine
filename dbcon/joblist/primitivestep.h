@@ -1574,7 +1574,7 @@ private:
   };
 
   // We will initialize the actual value in TupleBPS `initializeConfigParms` function.
-  uint32_t fMaxNumProcessorThreads = 4;
+  uint32_t fMaxNumProcessorThreads = 8;
 
   // Based on the `ThreadPool` workload we set it in runtime for each `TupleBPS` operation.
   uint32_t fNumProcessorThreads = 1;
