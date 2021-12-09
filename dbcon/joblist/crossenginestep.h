@@ -165,8 +165,9 @@ protected:
     virtual void setField(int, const char*, unsigned long, MYSQL_FIELD*, rowgroup::Row&);
     inline void addRow(rowgroup::RGData&);
     //inline  void addRow(boost::shared_array<uint8_t>&);
-    virtual int64_t convertValueNum(
-        const char*, const execplan::CalpontSystemCatalog::ColType&, int64_t);
+    template <typename T>
+    T convertValueNum(
+        const char*, const execplan::CalpontSystemCatalog::ColType&);
     virtual void formatMiniStats();
     virtual void printCalTrace();
 
