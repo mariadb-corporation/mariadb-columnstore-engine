@@ -286,7 +286,6 @@ void TupleBPS::initializeConfigParms()
     if ((fSessionId & 0x80000000) == 0)
     {
         fMaxNumThreads = fRm->getJlNumScanReceiveThreads();
-        fMaxNumProcessorThreads = fMaxNumThreads;
     }
     else
     {

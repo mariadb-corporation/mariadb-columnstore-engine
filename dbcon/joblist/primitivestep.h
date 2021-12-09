@@ -1573,8 +1573,7 @@ private:
       funcexp::FuncExpWrapper local_fe2;
   };
 
-  // We will initialize the actual value in TupleBPS `initializeConfigParms` function.
-  uint32_t fMaxNumProcessorThreads = 16;
+  uint32_t fMaxNumProcessorThreads = 4;
 
   // Based on the `ThreadPool` workload we set it in runtime for each `TupleBPS` operation.
   uint32_t fNumProcessorThreads = 1;
