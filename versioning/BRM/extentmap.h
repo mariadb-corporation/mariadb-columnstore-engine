@@ -31,12 +31,10 @@
 #include <sys/types.h>
 #include <vector>
 #include <set>
-#ifdef _MSC_VER
-#include <unordered_map>
-#else
 #include <unordered_map>
 #include <tr1/unordered_map>
-#endif
+#include <mutex>
+
 //#define NDEBUG
 #include <cassert>
 #include <boost/interprocess/shared_memory_object.hpp>
@@ -342,6 +340,21 @@ public:
         }
     }
 
+    // The multipliers and constants here are pure theoretical
+    // tested using customer's data.
+    static size_t estimateEMIndexSize(uint32_t numberOfExtents)
+    {
+        constexpr const size_t tablesNumber = 100ULL;
+        constexpr const size_t columnsNumber = 200ULL;
+        constexpr const size_t dbRootsNumber = 3ULL;
+        constexpr const size_t filesInPartition = 4ULL;
+        // WIP get here a constant
+        constexpr const size_t extentsInPartition = filesInPartition * 2;
+        return numberOfExtents * emIdentUnitSize +
+            numberOfExtents / extentsInPartition * partitionContainerUnitSize +
+            dbRootsNumber * tablesNumber * columnsNumber;
+    }
+
     inline void grow(unsigned key, off_t size)
     {
         int rc = fBRMManagedShmMemImpl_.grow(key, size);
@@ -378,57 +391,21 @@ public:
         const PartitionNumberT partitionNumber);
     void deleteDbRoot(const DBRootT dbroot);
     void deleteOID(const DBRootT dbroot, const OID_t oid);
-    void deleteEMEntry(const EMEntry& emEntry);
-
+    void deleteEMEntry(const EMEntry& emEntry, const ExtentMapIdxT emIdent);
+    //WIP
+    BRMManagedShmImpl fBRMManagedShmMemImpl_;
 private:
     ExtentMapIndexImpl(unsigned key, off_t size, bool readOnly = false);
     ExtentMapIndexImpl(const ExtentMapIndexImpl& rhs);
     ExtentMapIndexImpl& operator=(const ExtentMapIndexImpl& rhs);
 
-    BRMManagedShmImpl fBRMManagedShmMemImpl_;
-
-    // WIP Unused
-    static boost::mutex fInstanceMutex_;
+    static std::mutex fInstanceMutex_;
     static ExtentMapIndexImpl* fInstance_;
+    static const constexpr size_t dbRootContainerUnitSize = 64ULL;
+    static const constexpr size_t oidContainerUnitSize = 96ULL; // 2 * map overhead
+    static const constexpr size_t partitionContainerUnitSize = 48ULL; // single map overhead
+    static const constexpr size_t emIdentUnitSize = sizeof(uint64_t);
 };
-//using ExtentMapIndices = std::vector<ExtentMapIdxT>;
-//using PartitionIndexContainer = std::unordered_map<PartitionNumberT, ExtentMapIndices>;
-
-//WIP
-/*
-class PartitionIndex
-{
-  public:
-    PartitionIndex() = default;
-    bool insert(const EMEntry& entry, const ExtentMapIdxT idx);
-  private:
-    PartitionIndexContainer partitionIndex_;
-};
-
-using OIDIndexContainer = std::unordered_map<OID_t, PartitionIndex>;
-class OIDIndex
-{
-  public:
-    OIDIndex() = default;
-    bool insert(const EMEntry& entry, const ExtentMapIdxT idx);
-  private:
-    OIDIndexContainer oidIndex_;
-};
-
-using dbroot_t = uint32_t;
-using DBrootIndexContainer = std::vector<OIDIndex>;
-
-class DBrootIndex
-{
-  public:
-    DBrootIndex() = default;
-    // return iterator or touple of iters
-    bool insert(const EMEntry& entry, const ExtentMapIdxT idx);
-  private:
-    DBrootIndexContainer dbRootIndex_;
-};
-*/
-//using ExtentMapIndex = DBrootIndex;
 
 /** @brief This class encapsulates the extent map functionality of the system
  *
@@ -1033,11 +1010,13 @@ public:
 #endif
 
 private:
-    static const size_t EM_INCREMENT_ROWS = 100;
-    static const size_t EM_INITIAL_SIZE = EM_INCREMENT_ROWS * 10 * sizeof(EMEntry);
-    static const size_t EM_INCREMENT = EM_INCREMENT_ROWS * sizeof(EMEntry);
-    static const size_t EM_FREELIST_INITIAL_SIZE = 50 * sizeof(InlineLBIDRange);
-    static const size_t EM_FREELIST_INCREMENT = 50 * sizeof(InlineLBIDRange);
+    static const constexpr size_t EM_INCREMENT_ROWS = 100;
+    static const constexpr size_t EM_INITIAL_SIZE = EM_INCREMENT_ROWS * 10 * sizeof(EMEntry);
+    static const constexpr size_t EM_INCREMENT = EM_INCREMENT_ROWS * sizeof(EMEntry);
+    static const constexpr size_t EM_FREELIST_INITIAL_SIZE = 50 * sizeof(InlineLBIDRange);
+    static const constexpr size_t EM_FREELIST_INCREMENT = 50 * sizeof(InlineLBIDRange);
+    static const constexpr float EMIndexOverheadRatio_ = 1.4;
+    static const constexpr size_t InitEMIndexSize_ = 1024 * 1024;
 
     ExtentMap(const ExtentMap& em);
     ExtentMap& operator=(const ExtentMap& em);
@@ -1108,7 +1087,7 @@ private:
     void releaseFreeList(OPS op);
     void growEMShmseg(size_t nrows = 0);
     void growFLShmseg();
-    void growEMIndexShmseg(const size_t nrows = 0);
+    void growEMIndexShmseg(const size_t suggestedSize = 0);
     void finishChanges();
 
     EXPORT unsigned getFilesPerColumnPartition();

@@ -322,63 +322,6 @@ BRMManagedShmImpl::BRMManagedShmImpl(unsigned key, off_t size, bool readOnly)
     }
 }
 
-/*
-int BRMManagedShmImpl::grow(unsigned newKey, off_t newSize)
-{
-    idbassert(newSize >= fSize);
-    // WIP
-    string keyName = ShmKeys::keyToName(0x60001);
-    //return fShmKeys.KEYRANGE_EXTENTMAP_INDEX_BASE + 1;
-    size_t increment = newSize - fSize;
-    if (!increment)
-        return 0;
-
-    try
-    {
-        // need to call fShmobj here.
-        // and bi::managed_shared_memory::grow(keyName.c_str(), incSize);
-        fShmobj.grow(keyName.c_str(), increment);
-    }
-    catch (bi::interprocess_exception &b)
-    {
-        std::cerr << "some fuckup\n" << std::endl;
-        throw;
-    }    
-    
-    memset(reinterpret_cast<void*>(reinterpret_cast<ptrdiff_t>(fShmobj.get_address()) + fSize), 0, newSize - fSize);
-
-    fKey = newKey;
-    fSize = newSize;
-
-    // WIP
-    //if (fReadOnly)
-    return 0;
-}
-*/
-/*
-BRMManagedShmImpl::BRMManagedShmImpl(unsigned key, off_t size, bool readOnly)
-    : BRMShmImplParent(key, size, readOnly)
-{
-    auto keyName = ShmKeys::keyToName(fKey);
-
-    // FIXME: Take a right size.
-    if (fSize == 0)
-        fSize = 6400000;
-
-    try
-    {
-        // Check that segment is not exists in the shared memory.
-        boost::interprocess::shared_memory_object::remove(keyName.c_str());
-        fShmSegment = new boost::interprocess::managed_shared_memory(boost::interprocess::create_only,
-                                                                     keyName.c_str(), fSize);
-    }
-    catch (exception& e)
-    {
-        std::cout << "Cannot create boost::interprocess::managed_shared_memory object: " << e.what()
-                  << std::endl;
-    }
-}
-*/
 int BRMManagedShmImpl::grow(unsigned newKey, off_t newSize)
 {
     auto keyName = ShmKeys::keyToName(fKey);

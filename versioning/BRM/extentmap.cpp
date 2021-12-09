@@ -208,7 +208,7 @@ boost::mutex ExtentMapImpl::fInstanceMutex;
 boost::mutex ExtentMap::mutex;
 
 /*static*/
-ExtentMapImpl* ExtentMapImpl::fInstance = 0;
+ExtentMapImpl* ExtentMapImpl::fInstance = nullptr;
 
 /*static*/
 ExtentMapImpl* ExtentMapImpl::makeExtentMapImpl(unsigned key, off_t size, bool readOnly)
@@ -271,7 +271,7 @@ FreeListImpl::FreeListImpl(unsigned key, off_t size, bool readOnly) :
 }
 
 /*static*/
-boost::mutex ExtentMapIndexImpl::fInstanceMutex_;
+std::mutex ExtentMapIndexImpl::fInstanceMutex_;
 
 /*static*/
 ExtentMapIndexImpl* ExtentMapIndexImpl::fInstance_ = nullptr;
@@ -279,7 +279,7 @@ ExtentMapIndexImpl* ExtentMapIndexImpl::fInstance_ = nullptr;
 /*static*/
 ExtentMapIndexImpl* ExtentMapIndexImpl::makeExtentMapIndexImpl(unsigned key, off_t size, bool readOnly)
 {
-    boost::mutex::scoped_lock lk(fInstanceMutex_);
+    std::lock_guard<std::mutex> lock(fInstanceMutex_);
 
     if (fInstance_)
     {
@@ -290,8 +290,6 @@ ExtentMapIndexImpl* ExtentMapIndexImpl::makeExtentMapIndexImpl(unsigned key, off
         }
 
         ASSERT(key == fInstance_->fBRMManagedShmMemImpl_.key());
-        // WIP
-        //fInstance_->createExtentMapIndexIfNeeded();
         return fInstance_;
     }
 
@@ -331,13 +329,19 @@ bool ExtentMapIndexImpl::insert(const EMEntry& emEntry, const size_t emIdx)
 {
     auto dbRoot = emEntry.dbRoot;
     auto& extMapIndex = *get();
+
     // Hide fShmSegment
     ShmVoidAllocator alloc(fBRMManagedShmMemImpl_.fShmSegment->get_segment_manager());
     assert(dbRoot >= 1 && dbRoot <= numeric_limits<uint64_t>::max());
     while (dbRoot >= extMapIndex.size())
     {
+        std::cerr << "ExtentMapIndexImpl::insert before cr size " << fBRMManagedShmMemImpl_.fShmSegment->get_size()
+        << " free_memory " << fBRMManagedShmMemImpl_.fShmSegment->get_free_memory() << std::endl;
         OIDIndexContainerT oidIndices(alloc);
+        std::cerr << "ExtentMapIndexImpl::insert unit size " << sizeof(OIDIndexContainerT) << std::endl;
         extMapIndex.push_back(std::move(oidIndices));
+        std::cerr << "ExtentMapIndexImpl::insert after merge size " << fBRMManagedShmMemImpl_.fShmSegment->get_size()
+        << " free_memory " << fBRMManagedShmMemImpl_.fShmSegment->get_free_memory() << std::endl;
     }
     return insert2ndLayer(extMapIndex[dbRoot], emEntry, emIdx);
 }
@@ -353,8 +357,16 @@ bool ExtentMapIndexImpl::insert2ndLayer(OIDIndexContainerT& oids,
     { 
         // Hide fShmSegment
         ShmVoidAllocator alloc(fBRMManagedShmMemImpl_.fShmSegment->get_segment_manager());
+        std::cerr << "ExtentMapIndexImpl::insert2ndLayer before cr size " << fBRMManagedShmMemImpl_.fShmSegment->get_size()
+        << " free_memory " << fBRMManagedShmMemImpl_.fShmSegment->get_free_memory() << std::endl;
         PartitionIndexContainerT partitionIndex(alloc);
+        std::cerr << "ExtentMapIndexImpl::insert2ndLayer unit size " << sizeof(PartitionIndexContainerT) << std::endl;
+        std::cerr << "ExtentMapIndexImpl::insert2ndLayer after cr size " << fBRMManagedShmMemImpl_.fShmSegment->get_size()
+        << " free_memory " << fBRMManagedShmMemImpl_.fShmSegment->get_free_memory() << std::endl;
         auto iterAndResult = oids.insert({oid, std::move(partitionIndex)});
+        std::cerr << "ExtentMapIndexImpl::insert2ndLayer after merge size " << fBRMManagedShmMemImpl_.fShmSegment->get_size()
+        << " free_memory " << fBRMManagedShmMemImpl_.fShmSegment->get_free_memory() << std::endl;
+
         if (iterAndResult.second)
         {
             PartitionIndexContainerT& partitionsContainer = (*iterAndResult.first).second;
@@ -375,13 +387,26 @@ bool ExtentMapIndexImpl::insert3dLayer(PartitionIndexContainerT& partitions, con
     if (partitionsIter == partitions.end()) 
     {
         ShmVoidAllocator alloc(fBRMManagedShmMemImpl_.fShmSegment->get_segment_manager());
+        std::cerr << "ExtentMapIndexImpl::insert3d before cr size " << fBRMManagedShmMemImpl_.fShmSegment->get_size()
+        << " free_memory " << fBRMManagedShmMemImpl_.fShmSegment->get_free_memory() << std::endl;
         ExtentMapIndicesT emIndices(alloc);
+        std::cerr << "ExtentMapIndexImpl::insert3d unit size " << sizeof(ExtentMapIndicesT) << std::endl;
+        std::cerr << "ExtentMapIndexImpl::insert3d after cr size " << fBRMManagedShmMemImpl_.fShmSegment->get_size()
+        << " free_memory " << fBRMManagedShmMemImpl_.fShmSegment->get_free_memory() << std::endl;
         emIndices.push_back(emIdx);
+        std::cerr << "ExtentMapIndexImpl::insert3d after merge size " << fBRMManagedShmMemImpl_.fShmSegment->get_size()
+        << " free_memory " << fBRMManagedShmMemImpl_.fShmSegment->get_free_memory() << std::endl;
+
         auto iterAndResult = partitions.insert({partitionNumber, std::move(emIndices)});
+
+        std::cerr << "ExtentMapIndexImpl::insert3d final " << fBRMManagedShmMemImpl_.fShmSegment->get_size()
+        << " free_memory " << fBRMManagedShmMemImpl_.fShmSegment->get_free_memory() << std::endl;
         return iterAndResult.second;
     }
     ExtentMapIndicesT& emIndices = (*partitionsIter).second;
     emIndices.push_back(emIdx);
+    std::cerr << "ExtentMapIndexImpl::insert3d final " << fBRMManagedShmMemImpl_.fShmSegment->get_size()
+    << " free_memory " << fBRMManagedShmMemImpl_.fShmSegment->get_free_memory() << std::endl;
     return true;
 }
 
@@ -455,7 +480,8 @@ void ExtentMapIndexImpl::deleteDbRoot(const DBRootT dbroot)
     extMapIndex[dbroot].clear();
 }
 
-void ExtentMapIndexImpl::deleteOID(const DBRootT dbroot, const OID_t oid){
+void ExtentMapIndexImpl::deleteOID(const DBRootT dbroot, const OID_t oid)
+{
     auto& extMapIndex = *get();
     auto oidsIter = extMapIndex[dbroot].find(oid);
     // Nothing to delete. Might be a problem.
@@ -465,10 +491,36 @@ void ExtentMapIndexImpl::deleteOID(const DBRootT dbroot, const OID_t oid){
     partitions.clear();
 }
 
-//WIP
-void ExtentMapIndexImpl::deleteEMEntry(const EMEntry& emEntry)
+void ExtentMapIndexImpl::deleteEMEntry(const EMEntry& emEntry, const ExtentMapIdxT emIdent)
 {
-   // auto& extMapIndex = *get();
+    std::cerr << "ExtentMapIndexImpl::delete before cr size " << fBRMManagedShmMemImpl_.fShmSegment->get_size()
+    << " free_memory " << fBRMManagedShmMemImpl_.fShmSegment->get_free_memory() << std::endl;
+    // find partition
+    auto& extMapIndex = *get();
+    auto oidsIter = extMapIndex[emEntry.dbRoot].find(emEntry.fileID);
+    if (oidsIter == extMapIndex[emEntry.dbRoot].end())
+        return;
+    PartitionIndexContainerT& partitions = (*oidsIter).second;
+    auto partitionsIter = partitions.find(emEntry.partitionNum);
+    if (partitionsIter == partitions.end())
+        return;
+    ExtentMapIndicesT& emIdentifiers = (*partitionsIter).second;
+    // pop the identifier
+    if (emIdentifiers.size() > 1)
+    {
+        auto emIdentifiersTargetIter = std::find(emIdentifiers.begin(), emIdentifiers.end(), emIdent);
+        std::swap(*emIdentifiersTargetIter, emIdentifiers.back());
+        emIdentifiers.pop_back();
+    }
+    else // only 1 ident in this partition
+    {
+        emIdentifiers.clear();
+        partitions.erase(partitionsIter);
+    }
+    // try to clean up recursively
+
+    std::cerr << "ExtentMapIndexImpl::delete after size " << fBRMManagedShmMemImpl_.fShmSegment->get_size()
+    << " free_memory " << fBRMManagedShmMemImpl_.fShmSegment->get_free_memory() << std::endl;
 } 
 
 ExtentMap::ExtentMap()
@@ -1377,7 +1429,7 @@ void ExtentMap::loadVersion4(IDBDataFile* in)
         }
 
         growEMShmseg(nrows);
-        growEMIndexShmseg(nrows);
+        growEMIndexShmseg(ExtentMapIndexImpl::estimateEMIndexSize(emNumElements));
     }
 
     size_t progress = 0, writeSize = emNumElements * sizeof(EMEntry);
@@ -1404,14 +1456,6 @@ void ExtentMap::loadVersion4(IDBDataFile* in)
             fExtentMap[i].status = EXTENTAVAILABLE;
 
         fPExtMapIndexImpl_->insert(fExtentMap[i], i);
-       /* 
-        auto result = fPExtMapIndexImpl_->find(1, fExtentMap[i].fileID);
-        for (auto el: result)
-            std::cout << "ExtentMap::loadVersion4 oid " << fExtentMap[i].fileID << " id " << el;
-        if(result.empty())
-            std::cout << "ExtentMap::loadVersion4 oid " << fExtentMap[i].fileID << " id not found ";
-        std::cout << std::endl;
-    */
     }
 
     fEMShminfo->currentSize = emNumElements * sizeof(EMEntry);
@@ -1884,35 +1928,38 @@ void ExtentMap::growEMShmseg(size_t nrows)
     fExtentMap = fPExtMapImpl->get();
 }
 
-void ExtentMap::growEMIndexShmseg(const size_t nrows)
+void ExtentMap::growEMIndexShmseg(const size_t suggestedSize)
 {
-    decltype(fEMShminfo->allocdSize) allocSize;
-    key_t newshmkey;
+    size_t allocSize = InitEMIndexSize_;
+    //decltype(fEMShminfo->allocdSize) allocSize;
 
     // WIP fEMShminfo->allocdSize is int and allocSize is uint64 !!!
-    if (fEMShminfo->allocdSize == 0)
-        allocSize = EM_INITIAL_SIZE * 100;
+    /*if (fEMShminfo->allocdSize == 0)
+        allocSize = InitEMIndexSize_;
     else
-        allocSize = fEMShminfo->allocdSize * 3 + EM_INCREMENT;
+    {
+        size_t entries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
+        allocSize = InitEMIndexSize_ + entries * sizeof(ExtentMapIdxT) * 2 * EMIndexOverheadRatio_;
+    }
 
-    newshmkey = chooseEMIndexShmkey();
-    //WIP
-    newshmkey = newshmkey + 0;
-    // WIP
-    //ASSERT((allocSize == EM_INITIAL_SIZE * 100 && !fPExtMapIndexImpl_) || fPExtMapIndexImpl_);
+    allocSize = 16 * 1000 * 1000;
+    */
+    
+    key_t newshmkey = chooseEMIndexShmkey();
 
-    //Use the larger of the calculated value or the specified value
-    // WIP
-    decltype(fEMShminfo->allocdSize) tempAlloc = nrows * sizeof(EMEntry) * 3; 
+    // Use the larger of the calculated value or the specified value
+    /*decltype(fEMShminfo->allocdSize) tempAlloc =
+        InitEMIndexSize_+ nrows * sizeof(ExtentMapIdxT) * 2 * EMIndexOverheadRatio_;
     allocSize = max(allocSize, tempAlloc);
-
+*/
+    allocSize = max(allocSize, suggestedSize);
     if (!fPExtMapIndexImpl_)
         fPExtMapIndexImpl_ = ExtentMapIndexImpl::makeExtentMapIndexImpl(newshmkey, allocSize, r_only);
     else
         fPExtMapIndexImpl_->grow(newshmkey, allocSize);
-    // WIP
-    //fEMIndexShminfo->tableShmkey = newshmkey;
-    //fEMIndexShminfo->allocdSize = allocSize;
+
+    std::cerr << "growEMIndexShmseg size " << fPExtMapIndexImpl_->fBRMManagedShmMemImpl_.fShmSegment->get_size()
+        << " free_memory " << fPExtMapIndexImpl_->fBRMManagedShmMemImpl_.fShmSegment->get_free_memory() << std::endl;
 
     if (r_only)
         fPExtMapIndexImpl_->makeReadOnly();
@@ -2410,7 +2457,10 @@ void ExtentMap::createColumnExtent_DBroot(int OID,
     }
 
     if (fEMShminfo->currentSize == fEMShminfo->allocdSize)
+    {
         growEMShmseg();
+        growEMIndexShmseg();
+    }
 
 //  size is the number of multiples of 1024 blocks.
 //  ex: size=1 --> 1024 blocks
@@ -3079,7 +3129,10 @@ void ExtentMap::createColumnExtentExactFile(int OID,
     grabFreeList(WRITE);
 
     if (fEMShminfo->currentSize == fEMShminfo->allocdSize)
+    {
         growEMShmseg();
+        growEMIndexShmseg();
+    }
 
 //  size is the number of multiples of 1024 blocks.
 //  ex: size=1 --> 1024 blocks
@@ -3300,7 +3353,10 @@ void ExtentMap::createDictStoreExtent(int OID,
     grabFreeList(WRITE);
 
     if (fEMShminfo->currentSize == fEMShminfo->allocdSize)
+    {
         growEMShmseg();
+        growEMIndexShmseg();
+    }
 
 //  size is the number of multiples of 1024 blocks.
 //  ex: size=1 --> 1024 blocks
@@ -4375,6 +4431,8 @@ void ExtentMap::deleteExtent(const int emIndex, const bool clearEMIndex)
     //invalidate the entry in the Extent Map
     makeUndoRecord(&fExtentMap[emIndex], sizeof(EMEntry));
     fExtentMap[emIndex].range.size = 0;
+    if (clearEMIndex)
+        fPExtMapIndexImpl_->deleteEMEntry(fExtentMap[emIndex], emIndex);
     makeUndoRecord(&fEMShminfo, sizeof(MSTEntry));
     fEMShminfo->currentSize -= sizeof(struct EMEntry);
 }
