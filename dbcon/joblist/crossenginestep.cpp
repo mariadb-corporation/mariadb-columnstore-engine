@@ -195,10 +195,17 @@ void CrossEngineStep::setField(int i, const char* value, unsigned long length, M
         ct.colDataType = colType;
         ct.colWidth = row.getColumnWidth(i);
 
-        if (colType == CalpontSystemCatalog::DECIMAL)
+        if (colType == CalpontSystemCatalog::DECIMAL ||
+            colType == CalpontSystemCatalog::UDECIMAL)
         {
             ct.scale = field->decimals;
             ct.precision = field->length;
+
+            if (ct.colWidth == datatypes::MAXDECIMALWIDTH)
+            {
+                row.setInt128Field(convertValueNum<int128_t>(value, ct), i);
+                return;
+            }
         }
         else
         {
@@ -206,7 +213,7 @@ void CrossEngineStep::setField(int i, const char* value, unsigned long length, M
             ct.precision = row.getPrecision(i);
         }
 
-        row.setIntField(convertValueNum(value, ct, row.getSignedNullValue(i)), i);
+        row.setIntField(convertValueNum<int64_t>(value, ct), i);
     }
 }
 
@@ -229,29 +236,21 @@ inline void CrossEngineStep::addRow(RGData& data)
 
 
 // simplified version of convertValueNum() in jlf_execplantojoblist.cpp.
-int64_t CrossEngineStep::convertValueNum(
-    const char* str, const CalpontSystemCatalog::ColType& ct, int64_t nullValue)
+template <typename T>
+T CrossEngineStep::convertValueNum(
+    const char* str, const CalpontSystemCatalog::ColType& ct)
 {
-    // return value
-    int64_t rv = nullValue;
-
-    // null value
-    if (str == NULL)
-        return rv;
-
-    // convertColumnData(execplan::CalpontSystemCatalog::ColType colType,
-    //                   const std::string& dataOrig,
-    //                   bool& pushWarning,
-    //                   bool nulFlag,
-    //                   bool noRoundup )
+    T rv = 0;
     bool pushWarning = false;
-    boost::any anyVal = ct.convertColumnData(str, pushWarning, fTimeZone, false, true, false);
+    bool nullFlag = (str == NULL);
+    boost::any anyVal = ct.convertColumnData((nullFlag ? "" : str), pushWarning, fTimeZone, nullFlag, true, false);
 
     // Out of range values are treated as NULL as discussed during design review.
     if (pushWarning)
-        return rv;
+    {
+        anyVal = ct.getNullValueForType();
+    }
 
-    // non-null value
     switch (ct.colDataType)
     {
         case CalpontSystemCatalog::BIT:
@@ -259,7 +258,11 @@ int64_t CrossEngineStep::convertValueNum(
             break;
 
         case CalpontSystemCatalog::TINYINT:
+#if BOOST_VERSION >= 105200
             rv = boost::any_cast<char>(anyVal);
+#else
+            rv = boost::any_cast<int8_t>(anyVal);
+#endif
             break;
 
         case CalpontSystemCatalog::UTINYINT:
@@ -285,7 +288,11 @@ int64_t CrossEngineStep::convertValueNum(
 
         case CalpontSystemCatalog::UMEDINT:
         case CalpontSystemCatalog::UINT:
+#ifdef _MSC_VER
+            rv = boost::any_cast<unsigned int>(anyVal);
+#else
             rv = boost::any_cast<uint32_t>(anyVal);
+#endif
             break;
 
         case CalpontSystemCatalog::BIGINT:
@@ -359,20 +366,21 @@ int64_t CrossEngineStep::convertValueNum(
 
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
-            if (ct.colWidth == CalpontSystemCatalog::ONE_BYTE)
-                rv = boost::any_cast<char>(anyVal);
-            else if (ct.colWidth == CalpontSystemCatalog::TWO_BYTE)
-                rv = boost::any_cast<int16_t>(anyVal);
-            else if (ct.colWidth == CalpontSystemCatalog::FOUR_BYTE)
+            if (LIKELY(ct.colWidth == datatypes::MAXDECIMALWIDTH))
+                rv = boost::any_cast<int128_t>(anyVal);
+            else if (ct.colWidth == execplan::CalpontSystemCatalog::EIGHT_BYTE)
+                rv = boost::any_cast<long long>(anyVal);
+            else if (ct.colWidth == execplan::CalpontSystemCatalog::FOUR_BYTE)
 #ifdef _MSC_VER
                 rv = boost::any_cast<int>(anyVal);
 
 #else
                 rv = boost::any_cast<int32_t>(anyVal);
 #endif
-            else
-                rv = boost::any_cast<long long>(anyVal);
-
+            else if (ct.colWidth == execplan::CalpontSystemCatalog::TWO_BYTE)
+                rv = boost::any_cast<int16_t>(anyVal);
+            else if (ct.colWidth == execplan::CalpontSystemCatalog::ONE_BYTE)
+                rv = boost::any_cast<char>(anyVal);
             break;
 
         default:
