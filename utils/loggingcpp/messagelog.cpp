@@ -179,21 +179,21 @@ const string MessageLog::format(const Message& msg, const char prefix)
 
 void MessageLog::logDebugMessage(const Message& msg)
 {
-    ::openlog(SubsystemID[fLogData.fSubsysID].c_str(), 0 | LOG_PID | LOG_PERROR | LOG_CONS, fFacility);
+    ::openlog(SubsystemID[fLogData.fSubsysID].c_str(), 0 | LOG_PID | LOG_CONS, fFacility);
     ::syslog(LOG_DEBUG, "%s", format(msg, 'D').c_str());
     ::closelog();
 }
 
 void MessageLog::logInfoMessage(const Message& msg)
 {
-    ::openlog(SubsystemID[fLogData.fSubsysID].c_str(), 0 | LOG_PID | LOG_PERROR | LOG_CONS, fFacility);
+    ::openlog(SubsystemID[fLogData.fSubsysID].c_str(), 0 | LOG_PID | LOG_CONS, fFacility);
     ::syslog(LOG_INFO, "%s", format(msg, 'I').c_str());
     ::closelog();
 }
 
 void MessageLog::logWarningMessage(const Message& msg)
 {
-    ::openlog(SubsystemID[fLogData.fSubsysID].c_str(), 0 | LOG_PID | LOG_PERROR | LOG_CONS, fFacility);
+    ::openlog(SubsystemID[fLogData.fSubsysID].c_str(), 0 | LOG_PID | LOG_CONS, fFacility);
     ::syslog(LOG_WARNING, "%s", format(msg, 'W').c_str());
     ::closelog();
 }

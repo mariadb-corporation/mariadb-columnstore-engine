@@ -175,7 +175,6 @@ TupleBPS::JoinLocalData::JoinLocalData(RowGroup& primRowGroup, RowGroup& outputR
         local_fe2Output.initRow(&local_fe2OutRow);
         local_fe2Data.reinit(fe2Output);
         local_fe2Output.setData(&local_fe2Data);
-        // local_fe2OutRow = fe2OutRow;
         local_fe2 = *fe2;
     }
 
@@ -196,7 +195,7 @@ TupleBPS::JoinLocalData::JoinLocalData(RowGroup& primRowGroup, RowGroup& outputR
 
         bool hasJoinFE = false;
 
-        for (int i = 0; i < smallSideCount; i++)
+        for (uint32_t i = 0; i < smallSideCount; ++i)
         {
             joinerMatchesRGs[i].initRow(&(smallSideRows[i]));
             smallMappings[i] = makeMapping(joinerMatchesRGs[i], local_outputRG);
@@ -217,7 +216,7 @@ TupleBPS::JoinLocalData::JoinLocalData(RowGroup& primRowGroup, RowGroup& outputR
             fergMappings[smallSideCount] = makeMapping(local_primRG, joinFERG);
         }
 
-        for (int i = 0; i < smallSideCount; i++)
+        for (uint32_t i = 0; i < smallSideCount; ++i)
         {
             joinerMatchesRGs[i].initRow(&(smallNulls[i]), true);
             smallNullMemory[i].reset(new uint8_t[smallNulls[i].getSize()]);
@@ -2444,8 +2443,6 @@ void TupleBPS::receiveMultiPrimitiveMessages()
                         "st: " + std::to_string(fStepId) + " TupleBPS::receiveMultiPrimitiveMessages()");
         abort_nolock();
     }
-
-out:
 
     // We have on thread here and do not need to notify any waiting producer threads, because we are done of
     // consuming messages from queue.

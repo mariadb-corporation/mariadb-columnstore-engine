@@ -1673,7 +1673,7 @@ int ha_mcs_cache::external_lock(THD *thd, int lock_type)
 
 int ha_mcs_cache::delete_table(const char *name)
 {
-  int error= 0, error2;
+  int cache_error= 0, error;
 
   DBUG_ENTER("ha_mcs_cache::delete_table");
 
@@ -1681,13 +1681,18 @@ int ha_mcs_cache::delete_table(const char *name)
   {
     char cache_name[FN_REFLEN+8];
     create_cache_name(cache_name, name);
-    error= cache_handler->delete_table(cache_name);
+    cache_error= cache_handler->delete_table(cache_name);
+
+    if (cache_error && (cache_error != ENOENT))
+      DBUG_RETURN(cache_error);
+    else if (cache_error == ENOENT)
+      cache_error= 0;
   }
 
-  if ((error2= parent::delete_table(name)))
-    error= error2;
+  if ((error= parent::delete_table(name)))
+    cache_error= error;
 
-  DBUG_RETURN(error);
+  DBUG_RETURN(cache_error);
 }
 
 
