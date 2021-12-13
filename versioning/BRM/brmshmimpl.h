@@ -58,11 +58,10 @@ class BRMShmImplParent
     }
 
     virtual void setReadOnly() = 0;
-    virtual int grow(unsigned newKey, off_t newSize) = 0;
     virtual int clear(unsigned newKey, off_t newSize) = 0;
     virtual void destroy() = 0;
 
-protected:
+  protected:
     unsigned fKey;
     off_t fSize;
     bool fReadOnly;
@@ -71,42 +70,43 @@ protected:
 
 class BRMShmImpl : public BRMShmImplParent
 {
-public:
+  public:
     BRMShmImpl(unsigned key, off_t size, bool readOnly = false);
+    BRMShmImpl(const BRMShmImpl& rhs) = delete;
+    BRMShmImpl& operator=(const BRMShmImpl& rhs) = delete;
     ~BRMShmImpl() { }
 
-    int grow(unsigned newKey, off_t newSize) override;
     int clear(unsigned newKey, off_t newSize) override;
     void destroy() override;
     void setReadOnly() override;
 
+    int grow(unsigned newKey, off_t newSize);
     void swap(BRMShmImpl& rhs);
 
     bi::shared_memory_object fShmobj;
     bi::mapped_region fMapreg;
-
-private:
-    BRMShmImpl(const BRMShmImpl& rhs);
-    BRMShmImpl& operator=(const BRMShmImpl& rhs);
 };
 
 class BRMManagedShmImpl : public BRMShmImplParent
 {
-public:
+  public:
     BRMManagedShmImpl(unsigned key, off_t size, bool readOnly = false);
+    BRMManagedShmImpl(const BRMManagedShmImpl& rhs) = delete;
+    BRMManagedShmImpl& operator=(const BRMManagedShmImpl& rhs) = delete;
     ~BRMManagedShmImpl() { }
 
-    int grow(unsigned newKey, off_t newSize) override;
     int clear(unsigned newKey, off_t newSize) override;
     void destroy() override;
     void setReadOnly() override;
 
+    int grow(off_t newSize);
     void swap(BRMManagedShmImpl& rhs);
+    bi::managed_shared_memory* getManagedSegment()
+    { assert(fShmSegment); return fShmSegment; }
 
+  //WIP
+ //private:
     bi::managed_shared_memory* fShmSegment;
-private:
-    BRMManagedShmImpl(const BRMManagedShmImpl& rhs);
-    BRMManagedShmImpl& operator=(const BRMManagedShmImpl& rhs);
 };
 
 } //namespace

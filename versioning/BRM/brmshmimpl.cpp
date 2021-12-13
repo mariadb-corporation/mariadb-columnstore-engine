@@ -322,7 +322,7 @@ BRMManagedShmImpl::BRMManagedShmImpl(unsigned key, off_t size, bool readOnly)
     }
 }
 
-int BRMManagedShmImpl::grow(unsigned newKey, off_t newSize)
+int BRMManagedShmImpl::grow(off_t newSize)
 {
     auto keyName = ShmKeys::keyToName(fKey);
 

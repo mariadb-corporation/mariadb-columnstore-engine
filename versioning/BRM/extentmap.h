@@ -344,20 +344,24 @@ public:
     // tested using customer's data.
     static size_t estimateEMIndexSize(uint32_t numberOfExtents)
     {
-        constexpr const size_t tablesNumber = 100ULL;
-        constexpr const size_t columnsNumber = 200ULL;
-        constexpr const size_t dbRootsNumber = 3ULL;
-        constexpr const size_t filesInPartition = 4ULL;
+        // These are just educated guess values to calculate initial
+        // managed shmem size.
+        constexpr const size_t tablesNumber_ = 100ULL;
+        constexpr const size_t columnsNumber_ = 200ULL;
+        constexpr const size_t dbRootsNumber_ = 3ULL;
+        constexpr const size_t filesInPartition_ = 4ULL;
         // WIP get here a constant
-        constexpr const size_t extentsInPartition = filesInPartition * 2;
-        return numberOfExtents * emIdentUnitSize +
-            numberOfExtents / extentsInPartition * partitionContainerUnitSize +
-            dbRootsNumber * tablesNumber * columnsNumber;
+        constexpr const size_t extentsInPartition_ = filesInPartition_ * 2;
+        return numberOfExtents * emIdentUnitSize_ +
+            numberOfExtents / extentsInPartition_ * partitionContainerUnitSize_ +
+            dbRootsNumber_ * tablesNumber_ * columnsNumber_;
     }
 
-    inline void grow(unsigned key, off_t size)
+    void growIfNeeded(const size_t memoryNeeded);
+
+    inline void grow(off_t size)
     {
-        int rc = fBRMManagedShmMemImpl_.grow(key, size);
+        int rc = fBRMManagedShmMemImpl_.grow(size);
         idbassert(rc == 0);
     }
     inline void makeReadOnly()
@@ -401,10 +405,11 @@ private:
 
     static std::mutex fInstanceMutex_;
     static ExtentMapIndexImpl* fInstance_;
-    static const constexpr size_t dbRootContainerUnitSize = 64ULL;
-    static const constexpr size_t oidContainerUnitSize = 96ULL; // 2 * map overhead
-    static const constexpr size_t partitionContainerUnitSize = 48ULL; // single map overhead
-    static const constexpr size_t emIdentUnitSize = sizeof(uint64_t);
+    static const constexpr uint32_t dbRootContainerUnitSize_ = 64ULL;
+    static const constexpr uint32_t oidContainerUnitSize_ = 96ULL; // 2 * map overhead
+    static const constexpr uint32_t partitionContainerUnitSize_ = 48ULL; // single map overhead
+    static const constexpr uint32_t emIdentUnitSize_ = sizeof(uint64_t);
+    static const constexpr uint32_t extraUnits_ = 2;
 };
 
 /** @brief This class encapsulates the extent map functionality of the system
@@ -1078,7 +1083,7 @@ private:
 
     key_t chooseEMShmkey(); 
     key_t chooseFLShmkey();
-    key_t chooseEMIndexShmkey() const;
+    key_t chooseEMIndexShmkey();
     //see the code for how keys are segmented
     key_t chooseShmkey(const MSTEntry* masterTableEntry, const uint32_t keyRangeBase ) const;
     void grabEMEntryTable(OPS op);
