@@ -38,7 +38,7 @@ local deb_build_deps = 'apt update --yes && apt install --yes --no-install-recom
 
 local platformMap(platform) =
   local platform_map = {
-    'opensuse/leap:15': 'zypper ' + rpm_build_deps + ' liblz4-devel cmake libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel gcc-fortran && cmake ' + cmakeflags + ' -DRPM=sles15 && make -j$(nproc) package',
+    'opensuse/leap:15': 'zypper ' + rpm_build_deps + ' liblz4-devel cmake libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel gcc-fortran pcre-devel && cmake ' + cmakeflags + ' -DRPM=sles15 && make -j$(nproc) package',
     'centos:7': 'yum install -y epel-release && yum install -y cmake3 && ln -s /usr/bin/cmake3 /usr/bin/cmake && yum ' + rpm_build_deps + ' lz4-devel pcre2-devel && cmake ' + cmakeflags + ' -DRPM=centos7 && make -j$(nproc) package',
     'centos:8': "yum install -y libgcc libarchive && sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/*PowerTools.repo && yum " + rpm_build_deps + ' lz4-devel cmake && cmake ' + cmakeflags + ' -DRPM=centos8 && make -j$(nproc) package',
     'debian:10': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=buster' debian/autobake-deb.sh",
