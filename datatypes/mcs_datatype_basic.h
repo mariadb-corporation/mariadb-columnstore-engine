@@ -16,8 +16,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
 */
-#ifndef MCS_DATATYPE_BASIC_H_INCLUDED
-#define MCS_DATATYPE_BASIC_H_INCLUDED
+#pragma once
 
 /*
   This file contains simple definitions that can be
@@ -91,5 +90,4 @@ uint64_t xFloatToMCSUInt64Round(SRC value)
 
 } //end of namespace datatypes
 
-#endif // MCS_DATATYPE_BASIC_H_INCLUDED
 // vim:ts=2 sw=2:

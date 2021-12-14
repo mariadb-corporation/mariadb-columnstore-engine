@@ -16,8 +16,7 @@
    MA 02110-1301, USA. */
 
 
-#ifndef STATTASK_H_
-#define STATTASK_H_
+#pragma once
 
 #include "PosixTask.h"
 
@@ -38,4 +37,3 @@ class StatTask : public PosixTask
 
 
 }
-#endif

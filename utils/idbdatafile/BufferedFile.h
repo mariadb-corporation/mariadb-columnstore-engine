@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef BUFFEREDFILE_H_
-#define BUFFEREDFILE_H_
+#pragma once
 
 #include <stdexcept>
 #include <boost/utility.hpp>
@@ -64,4 +63,3 @@ private:
 };
 
 }
-#endif /* BUFFEREDFILE_H_ */

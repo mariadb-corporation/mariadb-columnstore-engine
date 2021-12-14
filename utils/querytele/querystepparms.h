@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef QUERYSTEPPARMS_H__
-#define QUERYSTEPPARMS_H__
+#pragma once
 
 #include "telestats.h"
 
@@ -39,5 +38,4 @@ private:
 
 }
 
-#endif
 

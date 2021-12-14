@@ -22,8 +22,7 @@
  ***********************************************************************/
 /** @file */
 
-#ifndef DELETEPACKAGEPROCESSOR_H
-#define DELETEPACKAGEPROCESSOR_H
+#pragma once
 #include <string>
 #include <iostream>
 #include <vector>
@@ -90,4 +89,3 @@ private:
 
 #undef EXPORT
 
-#endif  // DELETEPACKAGEPROCESSOR_H

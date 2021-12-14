@@ -21,8 +21,7 @@
 */
 /** @file */
 
-#ifndef JOBLISTTYPES_
-#define JOBLISTTYPES_
+#pragma once
 
 #include <stdint.h>
 #include <string>
@@ -103,5 +102,4 @@ const JoinType INIT = 0,
                CORRELATED = 0x100;
 }
 
-#endif
 

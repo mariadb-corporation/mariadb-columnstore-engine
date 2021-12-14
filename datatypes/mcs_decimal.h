@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef H_DECIMALDATATYPE
-#define H_DECIMALDATATYPE
+#pragma once
 
 #include <cstdint>
 #include <cfloat>
@@ -983,4 +982,3 @@ struct NoOverflowCheck {
 };
 
 } //end of namespace
-#endif

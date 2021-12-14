@@ -20,8 +20,7 @@
  */
 /** @file */
 
-#ifndef JOBLIST_ELEMENTTYPE_H_
-#define JOBLIST_ELEMENTTYPE_H_
+#pragma once
 
 #include <iostream>
 #include <utility>
@@ -650,6 +649,5 @@ extern std::ostream& omitOidInDL ( std::ostream& strm );
 
 #endif
 
-#endif
 // vim:ts=4 sw=4:
 

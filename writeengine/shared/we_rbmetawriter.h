@@ -27,8 +27,7 @@
  * Nothing.
  */
 
-#ifndef WE_RBMETAWRITER_H_
-#define WE_RBMETAWRITER_H_
+#pragma once
 
 #include <string>
 #include <sstream>
@@ -378,4 +377,3 @@ private:
 
 #undef EXPORT
 
-#endif // WE_RBMETAWRITER_H_

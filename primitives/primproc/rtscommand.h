@@ -28,8 +28,7 @@
 //
 //
 
-#ifndef RTSCOMMAND_H_
-#define RTSCOMMAND_H_
+#pragma once
 
 #include "command.h"
 #include <boost/scoped_ptr.hpp>
@@ -86,4 +85,3 @@ private:
 
 }
 
-#endif

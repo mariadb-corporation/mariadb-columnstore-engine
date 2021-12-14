@@ -33,8 +33,7 @@
 
 #include "datalist.h"
 
-#ifndef _DATALISTIMPL_HPP_
-#define _DATALISTIMPL_HPP_
+#pragma once
 
 namespace joblist
 {
@@ -272,4 +271,3 @@ void DataListImpl<container_t, element_t>::shrink()
 
 }   //namespace
 
-#endif

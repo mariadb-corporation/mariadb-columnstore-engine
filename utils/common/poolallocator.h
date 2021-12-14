@@ -23,8 +23,7 @@
 /* This allocator is an attempt to consolidate small allocations and
    deallocations to boost performance and reduce mem fragmentation. */
 
-#ifndef POOLALLOCATOR_H_
-#define POOLALLOCATOR_H_
+#pragma once
 
 #include <unistd.h>
 #include <stdint.h>
@@ -132,4 +131,3 @@ inline void* PoolAllocator::allocate(uint64_t size)
 
 }
 
-#endif

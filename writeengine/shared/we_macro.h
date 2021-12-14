@@ -21,8 +21,7 @@
 ******************************************************************************************/
 /** @file */
 
-#ifndef _WE_MACRO_H_
-#define _WE_MACRO_H_
+#pragma once
 
 #include <we_type.h>
 
@@ -50,4 +49,3 @@ namespace WriteEngine
                return NO_ERROR;
 
 } //end of namespace
-#endif // _WE_MACRO_H_

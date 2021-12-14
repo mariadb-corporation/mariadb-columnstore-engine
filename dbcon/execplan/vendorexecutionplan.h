@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef EXECPLAN_VENDOREXECUTIONPLAN_H
-#define EXECPLAN_VENDOREXECUTIONPLAN_H
+#pragma once
 
 /**
  * Namespace
@@ -44,5 +43,4 @@ private:
 
 }
 
-#endif //VENDOREXECUTIONPLAN_H
 

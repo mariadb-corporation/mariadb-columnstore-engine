@@ -28,8 +28,7 @@
 //
 //
 
-#ifndef DICTSTEP_H_
-#define DICTSTEP_H_
+#pragma once
 
 #include "command.h"
 #include "primitivemsg.h"
@@ -157,4 +156,3 @@ private:
 
 }  // namespace
 
-#endif

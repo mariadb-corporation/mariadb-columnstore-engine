@@ -27,8 +27,7 @@
  *      Author: bpaul
  */
 
-#ifndef WE_XMLGETTER_H_
-#define WE_XMLGETTER_H_
+#pragma once
 
 #include <libxml/parser.h>
 
@@ -68,4 +67,3 @@ private:
 };
 
 } /* namespace WriteEngine */
-#endif /* WE_XMLGETTER_H_ */

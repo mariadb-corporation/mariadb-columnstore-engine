@@ -17,8 +17,7 @@
 
 
 
-#ifndef POSIX_TASK_H_
-#define POSIX_TASK_H_
+#pragma once
 
 #include <vector>
 #include <sys/types.h>
@@ -66,4 +65,3 @@ class PosixTask
 };
 
 }
-#endif

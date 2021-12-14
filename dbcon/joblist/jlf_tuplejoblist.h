@@ -20,8 +20,7 @@
 
 /** @file */
 
-#ifndef JLF_TUPLEJOBLIST_H
-#define JLF_TUPLEJOBLIST_H
+#pragma once
 
 #include "calpontsystemcatalog.h"
 #include "joblist.h"
@@ -148,5 +147,4 @@ using PostJoinFilterKeys =
     std::vector<std::pair<std::pair<uint32_t, uint32_t>, std::vector<uint32_t>>>;
 }
 
-#endif  // JLF_TUPLEJOBLIST_H
 

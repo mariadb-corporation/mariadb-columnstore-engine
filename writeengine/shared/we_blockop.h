@@ -21,8 +21,7 @@
 *******************************************************************************/
 /** @file */
 
-#ifndef _WE_BLOCKOP_H_
-#define _WE_BLOCKOP_H_
+#pragma once
 
 #include <we_obj.h>
 
@@ -138,4 +137,3 @@ private:
 
 #undef EXPORT
 
-#endif // _WE_BLOCKOP_H_

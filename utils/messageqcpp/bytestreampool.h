@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
    
-#ifndef BYTESTREAMPOOL_H_
-#define BYTESTREAMPOOL_H_
+#pragma once
 
 /* This class defines a pool of bytestreams to improve BS reuse, reducing
 the need to use the dynamic allocator.  It allocates as many BS's as needed,
@@ -51,4 +50,3 @@ class ByteStreamPool
 
 }
 
-#endif

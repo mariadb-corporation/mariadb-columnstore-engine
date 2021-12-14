@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef IOMANAGER_H
-#define IOMANAGER_H
+#pragma once
 // $Id: iomanager.h 655 2008-07-08 16:42:54Z jrodriguez $
 //
 // C++ Interface: iomanager
@@ -108,5 +107,4 @@ private:
 };
 
 }
-#endif
 // vim:ts=4 sw=4:

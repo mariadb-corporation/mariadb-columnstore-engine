@@ -28,8 +28,7 @@
 //
 //
 
-#ifndef COLUMNCOMMAND_H_
-#define COLUMNCOMMAND_H_
+#pragma once
 
 #include "command.h"
 #include "calpontsystemcatalog.h"
@@ -316,6 +315,5 @@ inline void ColumnCommand::fillEmptyBlock<messageqcpp::ByteStream::hexbyte>(uint
 
 } // namespace
 
-#endif
 // vim:ts=4 sw=4:
 

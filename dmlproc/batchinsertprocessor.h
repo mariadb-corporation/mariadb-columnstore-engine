@@ -20,8 +20,7 @@
 
 /** @file */
 
-#ifndef BATCHINSERTPROCESSOR_H__
-#define BATCHINSERTPROCESSOR_H__
+#pragma once
 
 #include <stdint.h>
 #include <queue>
@@ -94,5 +93,4 @@ private:
 };
 
 } // namespace dmlprocessor
-#endif
 // vim:ts=4 sw=4:

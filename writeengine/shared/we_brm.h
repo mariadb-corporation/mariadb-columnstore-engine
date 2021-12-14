@@ -21,8 +21,7 @@
 *******************************************************************************/
 /** @file */
 
-#ifndef _WE_BRM_H_
-#define _WE_BRM_H_
+#pragma once
 
 #include <iostream>
 #include <vector>
@@ -768,4 +767,3 @@ inline int BRMWrapper::takeSnapshot()
 
 #undef EXPORT
 
-#endif // _WE_BRM_H_

@@ -17,8 +17,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef HA_MCS_IMPL_IF_H__
-#define HA_MCS_IMPL_IF_H__
+#pragma once
 #include <string>
 #include <stdint.h>
 #ifdef _MSC_VER
@@ -458,5 +457,4 @@ void debug_walk(const Item* item, void* arg);
 #endif
 }
 
-#endif
 

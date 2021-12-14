@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef PARTICIPANTS_H
-#define PARTICIPANTS_H
+#pragma once
 
 #define MAX_CLIENTS 1024
 
@@ -28,4 +27,3 @@ typedef struct participantsDb* participantsDb_t;
 void udpc_printNotSet(participantsDb_t db, char* d);
 void udpc_printSet(participantsDb_t db, char* d);
 
-#endif

@@ -23,8 +23,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef CONSTANTCOLUMN_H
-#define CONSTANTCOLUMN_H
+#pragma once
 #include <string>
 
 #include "returnedcolumn.h"
@@ -458,5 +457,4 @@ public:
 std::ostream& operator<<(std::ostream& output, const ConstantColumn& rhs);
 
 }
-#endif //CONSTANTCOLUMN_H
 

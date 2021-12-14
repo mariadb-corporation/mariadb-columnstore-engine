@@ -21,8 +21,7 @@
 ******************************************************************************************/
 /** @file */
 
-#ifndef _WE_INDEX_H_
-#define _WE_INDEX_H_
+#pragma once
 
 #include <bitset>
 
@@ -452,4 +451,3 @@ struct IdxLoadParam
 };
 
 } //end of namespace
-#endif // _WE_INDEX_H_

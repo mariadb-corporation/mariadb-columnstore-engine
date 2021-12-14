@@ -28,8 +28,7 @@
  *    CREATE AGGREGATE FUNCTION regr_r2 returns REAL soname 'libregr_mysql.so';
  *
  */
-#ifndef HEADER_regr_r2
-#define HEADER_regr_r2
+#pragma once
 
 #include <cstdlib>
 #include <string>
@@ -82,5 +81,4 @@ protected:
 
 #undef EXPORT
 
-#endif // HEADER_regr_r2.h
 

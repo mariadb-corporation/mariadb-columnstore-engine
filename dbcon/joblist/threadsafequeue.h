@@ -20,8 +20,7 @@
 */
 
 /** @file */
-#ifndef THREADSAFEQUEUE_H_
-#define THREADSAFEQUEUE_H_
+#pragma once
 
 #include <unistd.h>
 #include <queue>
@@ -351,5 +350,4 @@ private:
 
 }
 
-#endif
 

@@ -23,8 +23,7 @@
 
 /** @file */
 
-#ifndef PRIMITIVEPROCESSOR_H_
-#define PRIMITIVEPROCESSOR_H_
+#pragma once
 
 #include <stdexcept>
 #include <vector>
@@ -587,6 +586,5 @@ boost::shared_ptr<ParsedColumnFilter> _parseColumnFilter(
 
 } //namespace primitives
 
-#endif
 // vim:ts=4 sw=4:
 

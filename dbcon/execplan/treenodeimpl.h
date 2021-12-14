@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef EXECPLAN_TREENODEIMPL_H
-#define EXECPLAN_TREENODEIMPL_H
+#pragma once
 #include <string>
 #include <iosfwd>
 
@@ -133,5 +132,4 @@ private:
 std::ostream& operator<<(std::ostream& os, const TreeNodeImpl& rhs);
 
 }
-#endif //EXECPLAN_TREENODEIMPL_H
 

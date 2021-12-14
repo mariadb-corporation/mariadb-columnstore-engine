@@ -20,8 +20,7 @@
  *
  ***********************************************************************/
 /** @file */
-#ifndef _WE_XMLGENDATA_H_
-#define _WE_XMLGENDATA_H_
+#pragma once
 
 #include <iosfwd>
 #include <string>
@@ -120,4 +119,3 @@ private:
 
 #undef EXPORT
 
-#endif

@@ -16,8 +16,7 @@
    MA 02110-1301, USA. */
 
 
-#ifndef MCS_DATATYPES_STRING_H
-#define MCS_DATATYPES_STRING_H
+#pragma once
 
 #include "conststring.h"
 #include "collation.h"    // class Charset
@@ -50,4 +49,3 @@ public:
 } // namespace datatypes
 
 
-#endif // MCS_DATATYPES_STRING_H

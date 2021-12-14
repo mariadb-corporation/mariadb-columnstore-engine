@@ -20,8 +20,7 @@
 
 /** @file */
 
-#ifndef _WE_DCTNRY_COMPRESS_H_
-#define _WE_DCTNRY_COMPRESS_H_
+#pragma once
 
 #include <stdlib.h>
 
@@ -174,4 +173,3 @@ protected:
 
 #undef EXPORT
 
-#endif // _WE_DCTNRY_COMPRESS_H_

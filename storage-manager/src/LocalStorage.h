@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef LOCALSTORAGE_H_
-#define LOCALSTORAGE_H_
+#pragma once
 
 #include <string>
 #include "CloudStorage.h"
@@ -59,4 +58,3 @@ class LocalStorage : public CloudStorage
 
 }
 
-#endif

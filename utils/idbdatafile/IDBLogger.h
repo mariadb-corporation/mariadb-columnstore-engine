@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef IDBLOGGER_H_
-#define IDBLOGGER_H_
+#pragma once
 
 #include <string>
 #include "IDBDataFile.h"
@@ -69,4 +68,3 @@ bool IDBLogger::isEnabled()
 
 }
 
-#endif /* IDBLOGGER_H_ */

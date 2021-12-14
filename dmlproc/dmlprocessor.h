@@ -21,8 +21,7 @@
 *
 ***********************************************************************/
 /** @file */
-#ifndef DMLPROCESSOR_H
-#define DMLPROCESSOR_H
+#pragma once
 
 #include <boost/scoped_ptr.hpp>
 #include "threadpool.h"
@@ -328,6 +327,5 @@ protected:
 
 } // namespace dmlprocessor
 
-#endif //DMLPROCESSOR_H
 // vim:ts=4 sw=4:
 

@@ -21,8 +21,7 @@
 *******************************************************************************/
 
 
-#ifndef WE_DDLCOMMON_H
-#define WE_DDLCOMMON_H
+#pragma once
 
 #include <string>
 #include <stdexcept>
@@ -330,5 +329,4 @@ inline void convertRidToColumn(uint64_t& rid, unsigned& dbRoot, unsigned& partit
 
 }
 #undef EXPORT
-#endif
 

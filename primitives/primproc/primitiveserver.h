@@ -22,8 +22,7 @@
  *
  ***********************************************************************/
 /** @file */
-#ifndef PRIMITIVESERVER_H
-#define PRIMITIVESERVER_H
+#pragma once
 
 #include <map>
 #ifdef _MSC_VER
@@ -186,4 +185,3 @@ private:
 
 
 } // namespace primitiveprocessor
-#endif //PRIMITIVESERVER_H

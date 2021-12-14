@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_CONCURRENCY_THREAD_H_
-#define _THRIFT_CONCURRENCY_THREAD_H_ 1
+#pragma once
 
 #include <stdint.h>
 #include <boost/shared_ptr.hpp>
@@ -189,4 +188,3 @@ public:
 }
 } // apache::thrift::concurrency
 
-#endif // #ifndef _THRIFT_CONCURRENCY_THREAD_H_

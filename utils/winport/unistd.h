@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef _UNISTD_H
-#define _UNISTD_H 1
+#pragma once
 #include <stdio.h>
 #include <io.h>
 #define WIN32_LEAN_AND_MEAN
@@ -150,5 +149,4 @@ extern std::string IDBSysErrorStr(DWORD err);
 
 #endif
 
-#endif
 

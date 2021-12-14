@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TRANSPORT_TSIMPLEFILETRANSPORT_H_
-#define _THRIFT_TRANSPORT_TSIMPLEFILETRANSPORT_H_ 1
+#pragma once
 
 #include <thrift/transport/TFDTransport.h>
 
@@ -46,4 +45,3 @@ public:
 }
 } // apache::thrift::transport
 
-#endif //  _THRIFT_TRANSPORT_TSIMPLEFILETRANSPORT_H_

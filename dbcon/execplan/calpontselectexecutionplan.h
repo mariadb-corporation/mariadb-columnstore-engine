@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef CALPONTSELECTEXECUTIONPLAN_H
-#define CALPONTSELECTEXECUTIONPLAN_H
+#pragma once
 #include <vector>
 #include <map>
 #include <iosfwd>
@@ -942,6 +941,5 @@ inline std::ostream& operator<<(std::ostream& os, const CalpontSelectExecutionPl
 }
 
 }
-#endif //CALPONTSELECTEXECUTIONPLAN_H
 // vim:ts=4 sw=4:
 

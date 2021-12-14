@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_CONCURRENCY_EXCEPTION_H_
-#define _THRIFT_CONCURRENCY_EXCEPTION_H_ 1
+#pragma once
 
 #include <exception>
 #include <thrift/Thrift.h>
@@ -72,4 +71,3 @@ public:
 }
 } // apache::thrift::concurrency
 
-#endif // #ifndef _THRIFT_CONCURRENCY_EXCEPTION_H_

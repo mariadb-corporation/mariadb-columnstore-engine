@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
    
-#ifndef SMDATAFILE_H_
-#define SMDATAFILE_H_
+#pragma once
 
 #include <string>
 #include <boost/utility.hpp>
@@ -58,4 +57,3 @@ class SMDataFile : public IDBDataFile
 
 }
 
-#endif

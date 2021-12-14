@@ -21,8 +21,7 @@
 *******************************************************************************/
 /** @file */
 
-#ifndef _WE_XMLJOB_H_
-#define _WE_XMLJOB_H_
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -169,4 +168,3 @@ private:
 
 #undef EXPORT
 
-#endif // _WE_XMLJOB_H_

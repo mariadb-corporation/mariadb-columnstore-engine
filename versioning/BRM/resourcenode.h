@@ -24,8 +24,7 @@
  * class XXX interface
  */
 
-#ifndef RESOURCENODE_H_
-#define RESOURCENODE_H_
+#pragma once
 
 #include "rgnode.h"
 
@@ -87,4 +86,3 @@ struct RNEquals
 
 #undef EXPORT
 
-#endif

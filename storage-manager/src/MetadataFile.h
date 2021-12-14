@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef METADATAFILE_H_
-#define METADATAFILE_H_
+#pragma once
 
 #include "Config.h"
 #include "SMLogging.h"
@@ -142,4 +141,3 @@ class MetadataFile
 
 }
 
-#endif /* METADATAFILE_H_ */

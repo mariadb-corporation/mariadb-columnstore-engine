@@ -17,8 +17,7 @@
    MA 02110-1301, USA.
 */
 
-#ifndef UDAFCOLUMN_H
-#define UDAFCOLUMN_H
+#pragma once
 #include <string>
 
 #include "calpontselectexecutionplan.h"
@@ -132,5 +131,4 @@ private:
 std::ostream& operator<<(std::ostream& os, const UDAFColumn& rhs);
 
 }
-#endif //UDAFCOLUMN_H
 

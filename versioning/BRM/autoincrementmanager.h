@@ -27,8 +27,7 @@
 #include <map>
 #include "calpontsystemcatalog.h"
 
-#ifndef AUTOINCREMENTMANAGER_H_
-#define AUTOINCREMENTMANAGER_H_
+#pragma once
 
 #if defined(_MSC_VER) && defined(xxxBRMAUTOINCMGR_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
@@ -78,4 +77,3 @@ private:
 
 #undef EXPORT
 
-#endif /* AUTOINCREMENTMANAGER_H_ */

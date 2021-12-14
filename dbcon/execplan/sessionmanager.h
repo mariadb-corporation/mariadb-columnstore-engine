@@ -24,8 +24,7 @@
  * class SessionManager interface
  */
 
-#ifndef _SESSIONMANAGER_H
-#define _SESSIONMANAGER_H
+#pragma once
 
 #include "calpontsystemcatalog.h"
 #include "brm.h"
@@ -216,6 +215,5 @@ private:
 
 }   //namespace
 
-#endif
 // vim:ts=4 sw=4:
 

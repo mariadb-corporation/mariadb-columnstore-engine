@@ -19,8 +19,7 @@
 * $Id: we_tableinfo.h 4648 2013-05-29 21:42:40Z rdempsey $
 *
 *******************************************************************************/
-#ifndef _WE_TABLEINFO_H
-#define _WE_TABLEINFO_H
+#pragma once
 
 #include <sys/time.h>
 #include <fstream>
@@ -685,4 +684,3 @@ inline void TableInfo::setErrorDir( const std::string& errorDir )
 }
 #endif
 }
-#endif

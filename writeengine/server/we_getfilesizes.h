@@ -19,8 +19,7 @@
 * $Id: we_getfilesizes.h 4450 2013-04-15 14:13:24Z chao $
 *
 *******************************************************************************/
-#ifndef WE_GETFILESIZES_H__
-#define WE_GETFILESIZES_H__
+#pragma once
 
 #include <unistd.h>
 #include <string>
@@ -81,4 +80,3 @@ private:
 
 }
 
-#endif

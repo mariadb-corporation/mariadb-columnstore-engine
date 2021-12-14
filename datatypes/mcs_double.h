@@ -16,8 +16,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
 */
-#ifndef MCS_DOUBLE_H_INCLUDED
-#define MCS_DOUBLE_H_INCLUDED
+#pragma once
 
 #include "mcs_datatype_basic.h"
 
@@ -52,5 +51,4 @@ public:
 
 } //end of namespace datatypes
 
-#endif // MCS_DOUBLE_H_INCLUDED
 // vim:ts=2 sw=2:

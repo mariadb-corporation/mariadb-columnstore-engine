@@ -21,8 +21,7 @@
  *
  ***********************************************************************/
 /** @file */
-#ifndef DROPTABLEPROCESSOR_H
-#define DROPTABLEPROCESSOR_H
+#pragma once
 
 #include "ddlpackageprocessor.h"
 
@@ -78,4 +77,3 @@ private:
 
 #undef EXPORT
 
-#endif                                            //DROPTABLEPROCESSOR_H

@@ -24,8 +24,7 @@
  * class FilterCommand interface
  */
 
-#ifndef JOBLIST_FILTERCOMMANDJL_H_
-#define JOBLIST_FILTERCOMMANDJL_H_
+#pragma once
 
 #include "joblist.h"
 #include "command-jl.h"
@@ -62,5 +61,4 @@ private:
 };
 
 
-#endif // JOBLIST_FILTERCOMMANDJL_H_
 

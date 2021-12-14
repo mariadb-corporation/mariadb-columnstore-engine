@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef BUFFEREDFILEFACTORY_H_
-#define BUFFEREDFILEFACTORY_H_
+#pragma once
 
 #include "FileFactoryBase.h"
 #include "BufferedFile.h"
@@ -39,4 +38,3 @@ IDBDataFile* BufferedFileFactory::open(const char* fname, const char* mode, unsi
 }
 
 }
-#endif /* BUFFEREDFILEFACTORY_H_ */

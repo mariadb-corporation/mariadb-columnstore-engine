@@ -21,8 +21,7 @@
 
 /** @file */
 
-#ifndef JOBLIST_LOGGER_H_
-#define JOBLIST_LOGGER_H_
+#pragma once
 
 #include <boost/shared_ptr.hpp>
 
@@ -96,5 +95,4 @@ void catchHandler(const std::string& s, int c, SErrorInfo& errorInfo, unsigned s
 
 }
 
-#endif
 

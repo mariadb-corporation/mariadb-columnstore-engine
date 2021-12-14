@@ -24,8 +24,7 @@
  * class XXX interface
  */
 
-#ifndef _VSS_H_
-#define _VSS_H_
+#pragma once
 
 #include <set>
 //#define NDEBUG
@@ -298,5 +297,4 @@ private:
 
 #undef EXPORT
 
-#endif // _VSS_H_
 

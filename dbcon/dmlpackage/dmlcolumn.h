@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef DMLCOLUMN_H
-#define DMLCOLUMN_H
+#pragma once
 #include <string>
 #include <vector>
 #include "dmlobject.h"
@@ -167,5 +166,4 @@ typedef std::vector<DMLColumn*>ColumnList;
 
 #undef EXPORT
 
-#endif //DMLCOLUMN_H
 

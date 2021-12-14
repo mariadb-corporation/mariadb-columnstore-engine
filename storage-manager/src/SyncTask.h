@@ -17,8 +17,7 @@
 
 
 
-#ifndef SYNCTASK_H_
-#define SYNCTASK_H_
+#pragma once
 
 #include "PosixTask.h"
 
@@ -38,4 +37,3 @@ class SyncTask : public PosixTask
 };
 
 }
-#endif

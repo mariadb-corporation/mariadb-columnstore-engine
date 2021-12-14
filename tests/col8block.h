@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef HAVE_COL8BLOCK
-#define HAVE_COL8BLOCK
+#pragma once
 unsigned char ___bin_col8block_cdf[] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -705,4 +704,3 @@ unsigned char ___bin_col8block_cdf[] = {
 unsigned int ___bin_col8block_cdf_len = 8192;
 constexpr int __col8block_cdf_umin = 0;
 constexpr int __col8block_cdf_umax = 1023;
-#endif

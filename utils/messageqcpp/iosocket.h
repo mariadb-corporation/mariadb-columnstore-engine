@@ -21,8 +21,7 @@
 *
 ***********************************************************************/
 /** @file */
-#ifndef MESSAGEQCPP_IOSOCKET_H
-#define MESSAGEQCPP_IOSOCKET_H
+#pragma once
 
 #include <string>
 #include <cassert>
@@ -308,5 +307,4 @@ inline std::ostream& operator<<(std::ostream& os, const IOSocket& rhs)
 
 #undef EXPORT
 
-#endif //MESSAGEQCPP_IOSOCKET_H
 

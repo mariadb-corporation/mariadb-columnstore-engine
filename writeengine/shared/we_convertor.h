@@ -21,8 +21,7 @@
 *******************************************************************************/
 /** @file */
 
-#ifndef _WE_CONVERTOR_H_
-#define _WE_CONVERTOR_H_
+#pragma once
 
 #include <time.h>
 #include <sys/types.h>
@@ -150,4 +149,3 @@ private:
 
 #undef EXPORT
 
-#endif // _WE_CONVERTOR_H_

@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TRANSPORT_WINDOWS_TWINSOCKSINGLETON_H_
-#define _THRIFT_TRANSPORT_WINDOWS_TWINSOCKSINGLETON_H_ 1
+#pragma once
 
 #if defined(_MSC_VER) && (_MSC_VER > 1200)
 #pragma once
@@ -92,4 +91,3 @@ private:
 }
 } // apache::thrift::transport
 
-#endif // _THRIFT_TRANSPORT_WINDOWS_TWINSOCKSINGLETON_H_

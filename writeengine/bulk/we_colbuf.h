@@ -24,8 +24,7 @@
  * class ColumnBuffer
  */
 
-#ifndef WRITEENGINE_COLUMNBUF_H
-#define WRITEENGINE_COLUMNBUF_H
+#pragma once
 
 #include <cstdio>
 
@@ -130,4 +129,3 @@ protected:
 
 }
 
-#endif //WRITEENGINE_COLUMNBUF_H

@@ -19,8 +19,7 @@
 //  $Id: wf_sum_avg.h 3868 2013-06-06 22:13:05Z xlou $
 
 
-#ifndef UTILS_WF_SUM_AVG_H
-#define UTILS_WF_SUM_AVG_H
+#pragma once
 
 #include <set>
 #include "windowfunctiontype.h"
@@ -64,7 +63,6 @@ protected:
 
 } // namespace
 
-#endif  // UTILS_WF_SUM_AVG_H
 
 // vim:ts=4 sw=4:
 

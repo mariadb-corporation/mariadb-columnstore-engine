@@ -37,8 +37,7 @@
 #include "stlpoolallocator.h"
 #include "threadnaming.h"
 
-#ifndef TUPLEUNION2_H_
-#define TUPLEUNION2_H_
+#pragma once
 
 namespace joblist
 {
@@ -206,4 +205,3 @@ private:
 
 }
 
-#endif

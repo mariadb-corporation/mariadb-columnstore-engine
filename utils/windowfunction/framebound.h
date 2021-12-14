@@ -18,8 +18,7 @@
 //  $Id: framebound.h 3932 2013-06-25 16:08:10Z xlou $
 
 
-#ifndef UTILS_FRAMEBOUND_H
-#define UTILS_FRAMEBOUND_H
+#pragma once
 
 #include <boost/shared_ptr.hpp>
 
@@ -153,6 +152,5 @@ extern std::map<int, std::string> colType2String;
 
 } // namespace
 
-#endif  // UTILS_FRAMEBOUND_H
 
 // vim:ts=4 sw=4:

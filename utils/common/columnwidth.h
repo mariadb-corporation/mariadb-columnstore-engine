@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef UTILS_COLWIDTH_H
-#define UTILS_COLWIDTH_H
+#pragma once
 
 #include "branchpred.h"
 
@@ -89,4 +88,3 @@ namespace utils
 
 }
 
-#endif // UTILS_COLWIDTH_H

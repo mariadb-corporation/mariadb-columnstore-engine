@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef EXISTSFILTER_H
-#define EXISTSFILTER_H
+#pragma once
 #include <string>
 
 #include "filter.h"
@@ -146,5 +145,4 @@ private:
 std::ostream& operator<<(std::ostream& output, const ExistsFilter& rhs);
 
 }
-#endif //EXISTSFILTER_H
 

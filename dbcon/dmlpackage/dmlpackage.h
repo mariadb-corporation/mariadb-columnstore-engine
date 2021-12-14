@@ -21,8 +21,7 @@
  *
  ***********************************************************************/
 /** @file */
-#ifndef DMLPACKAGE_H
-#define DMLPACKAGE_H
+#pragma once
 
 #include "dmlpkg.h"
 
@@ -35,4 +34,3 @@ const std::string nullValue = "nvl";
 //const size_t maxThreads = 100;
 //const size_t queueSize = 200;
 }                                                 // namespace dmlpackage
-#endif                                            //DMLPACKAGE_H

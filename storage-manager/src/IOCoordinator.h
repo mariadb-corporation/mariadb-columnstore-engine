@@ -16,8 +16,7 @@
    MA 02110-1301, USA. */
 
 
-#ifndef IOCOORDINATOR_H_
-#define IOCOORDINATOR_H_
+#pragma once
 
 #include <sys/types.h>
 #include <stdint.h>
@@ -133,4 +132,3 @@ class IOCoordinator : public boost::noncopyable
 }
 
 
-#endif

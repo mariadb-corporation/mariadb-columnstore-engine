@@ -20,8 +20,7 @@
 
 /** @file */
 
-#ifndef LIMITED_ORDER_BY_H
-#define LIMITED_ORDER_BY_H
+#pragma once
 
 #include <string>
 #include "rowgroup.h"
@@ -70,5 +69,4 @@ protected:
 
 }
 
-#endif  // LIMITED_ORDER_BY_H
 

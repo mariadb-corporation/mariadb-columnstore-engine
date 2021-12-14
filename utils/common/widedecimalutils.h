@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef WIDE_DECIMAL_UTILS_H
-#define WIDE_DECIMAL_UTILS_H
+#pragma once
 
 #include <cstdint>
 #include "mcs_basic_types.h"
@@ -46,4 +45,3 @@ namespace utils
     }
 }
 
-#endif // WIDE_DECIMAL_UTILS_H

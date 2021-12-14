@@ -16,8 +16,7 @@
    MA 02110-1301, USA. */
 
 
-#ifndef SM_THREADPOOL_H_
-#define SM_THREADPOOL_H_
+#pragma once
 
 #include <deque>
 #include <set>
@@ -91,4 +90,3 @@ class ThreadPool : public boost::noncopyable
 
 }
 
-#endif

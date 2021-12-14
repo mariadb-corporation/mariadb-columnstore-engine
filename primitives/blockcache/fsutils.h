@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef FS_UTILS_H__
-#define FS_UTILS_H__
+#pragma once
 
 #include <string>
 
@@ -25,5 +24,4 @@ namespace fsutils
 const std::string symname2devname(const std::string& sympath);
 }
 
-#endif
 

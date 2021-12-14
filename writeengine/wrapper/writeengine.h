@@ -20,8 +20,7 @@
 
 /** @file */
 
-#ifndef _WRITE_ENGINE_H_
-#define _WRITE_ENGINE_H_
+#pragma once
 #include <stdio.h>
 #include <string>
 
@@ -832,4 +831,3 @@ private:
 
 #undef EXPORT
 
-#endif // _WRITE_ENGINE_H_

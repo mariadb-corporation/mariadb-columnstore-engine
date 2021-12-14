@@ -22,8 +22,7 @@
  ***********************************************************************/
 /** @file */
 
-#ifndef DELETEDMLPACKAGE_H
-#define DELETEDMLPACKAGE_H
+#pragma once
 #include <string>
 #include "calpontdmlpackage.h"
 #include "bytestream.h"
@@ -103,4 +102,3 @@ private:
 
 #undef EXPORT
 
-#endif                                            //DELETEDMLPACKAGE_H

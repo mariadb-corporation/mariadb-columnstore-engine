@@ -20,8 +20,7 @@
 
 /** @file */
 
-#ifndef FUNCHELPERS_H__
-#define FUNCHELPERS_H__
+#pragma once
 
 #include <string>
 
@@ -793,4 +792,3 @@ const char* convNumToStr(int64_t, char*, int);
 } //namespace funcexp::helpers
 } //namespace funcexp
 
-#endif

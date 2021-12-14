@@ -21,8 +21,7 @@
 *
 ***********************************************************************/
 /** @file */
-#ifndef MYSQLDMLSTATEMENT_H
-#define MYSQLDMLSTATEMENT_H
+#pragma once
 #include <string>
 #include "vendordmlstatement.h"
 
@@ -43,5 +42,4 @@ private:
 
 };
 }
-#endif //MYSQLDMLSTATEMENT_H
 

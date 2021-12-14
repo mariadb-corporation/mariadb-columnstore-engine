@@ -21,8 +21,7 @@
 
 /** @file */
 
-#ifndef JOBLIST_PRIMITIVESTEP_H
-#define JOBLIST_PRIMITIVESTEP_H
+#pragma once
 
 #include <iostream>
 #include <sstream>
@@ -1861,7 +1860,6 @@ private:
 
 }
 
-#endif  // JOBLIST_PRIMITIVESTEP_H
 // vim:ts=4 sw=4:
 
 

@@ -25,8 +25,7 @@
  * class XXX interface
  */
 
-#ifndef FIFO_HPP__
-#define FIFO_HPP__
+#pragma once
 
 #include <vector>
 #include <iostream>
@@ -536,6 +535,5 @@ const
 
 }   // namespace
 
-#endif
 // vim:ts=4 sw=4:
 

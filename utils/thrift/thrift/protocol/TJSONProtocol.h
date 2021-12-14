@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_PROTOCOL_TJSONPROTOCOL_H_
-#define _THRIFT_PROTOCOL_TJSONPROTOCOL_H_ 1
+#pragma once
 
 #include <thrift/protocol/TVirtualProtocol.h>
 
@@ -360,4 +359,3 @@ std::string ThriftJSONString(const ThriftStruct& ts)
 }
 } // apache::thrift
 
-#endif // #define _THRIFT_PROTOCOL_TJSONPROTOCOL_H_ 1

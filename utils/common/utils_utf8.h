@@ -19,8 +19,7 @@
 //  $Id$
 
 
-#ifndef _UTILS_UTF8_H_
-#define _UTILS_UTF8_H_
+#pragma once
 
 
 
@@ -158,4 +157,3 @@ int mcs_strcollsp(const std::string* str1, const std::string* str2, const uint32
 int mcs_strcollsp(const std::string& str1, const std::string& str2, const uint32_t charsetNumber);
 } //namespace utf8
 
-#endif

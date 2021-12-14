@@ -22,8 +22,7 @@
 ****************************************************************************/
 /** @file */
 
-#ifndef FUNCEXP_H
-#define FUNCEXP_H
+#pragma once
 
 #include <string>
 #include <vector>
@@ -118,5 +117,4 @@ inline void FuncExp::evaluate( rowgroup::RowGroup& rowgroup, execplan::ParseTree
 
 }
 
-#endif
 

@@ -19,8 +19,7 @@
 //  $Id: tupleannexstep.h 9596 2013-06-04 19:59:04Z xlou $
 
 
-#ifndef JOBLIST_TUPLEANNEXSTEP_H
-#define JOBLIST_TUPLEANNEXSTEP_H
+#pragma once
 
 #include <queue>
 #include <boost/thread/thread.hpp>
@@ -185,6 +184,5 @@ public:
 
 } // namespace
 
-#endif  // JOBLIST_TUPLEANNEXSTEP_H
 
 // vim:ts=4 sw=4:

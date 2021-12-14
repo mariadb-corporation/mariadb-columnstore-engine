@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TPROCESSOR_H_
-#define _THRIFT_TPROCESSOR_H_ 1
+#pragma once
 
 #include <string>
 #include <thrift/protocol/TProtocol.h>
@@ -261,4 +260,3 @@ private:
 }
 } // apache::thrift
 
-#endif // #ifndef _THRIFT_TPROCESSOR_H_

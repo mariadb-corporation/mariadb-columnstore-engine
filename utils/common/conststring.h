@@ -16,8 +16,7 @@
    MA 02110-1301, USA. */
 
 
-#ifndef MARIADB_CONSTSTRING_H
-#define MARIADB_CONSTSTRING_H
+#pragma once
 
 
 namespace utils
@@ -61,4 +60,3 @@ public:
 
 } // namespace utils
 
-#endif // MARIADB_CONSTSTRING_H

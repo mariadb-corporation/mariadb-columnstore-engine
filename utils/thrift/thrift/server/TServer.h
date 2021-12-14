@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_SERVER_TSERVER_H_
-#define _THRIFT_SERVER_TSERVER_H_ 1
+#pragma once
 
 #include <thrift/TProcessor.h>
 #include <thrift/transport/TServerTransport.h>
@@ -342,4 +341,3 @@ int increase_max_fds(int max_fds = (1 << 24));
 }
 } // apache::thrift::server
 
-#endif // #ifndef _THRIFT_SERVER_TSERVER_H_

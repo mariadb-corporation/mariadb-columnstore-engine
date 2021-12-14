@@ -16,8 +16,7 @@
    MA 02110-1301, USA. */
 
 // $Id: idb_getopt.h 3495 2013-01-21 14:09:51Z rdempsey $
-#ifndef IDB_GETOPT_H_
-#define IDB_GETOPT_H_
+#pragma once
 
 /* Same as GNU interface. For communication from `getopt' to the caller.
    When `getopt' finds an option that takes an argument,
@@ -50,4 +49,3 @@ extern int optopt;
 
 extern int getopt(int, char* const*, const char*);
 
-#endif

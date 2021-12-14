@@ -22,8 +22,7 @@
 /**
  * @file
  */
-#ifndef DBBUILDER_H
-#define DBBUILDER_H
+#pragma once
 
 #include <string>
 #include <sstream>
@@ -58,4 +57,3 @@
 #include "messagelog.h"
 #include "liboamcpp.h"
 
-#endif //DBBUILDER_H

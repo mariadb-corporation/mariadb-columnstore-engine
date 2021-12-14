@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef UTILITIES_H_
-#define UTILITIES_H_
+#pragma once
 
 #include <string>
 
@@ -85,4 +84,3 @@ class SharedCloser
 
 }
 
-#endif

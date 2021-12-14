@@ -19,8 +19,7 @@
 
 /** @file */
 
-#ifndef _WE_DBFILEOP_H_
-#define _WE_DBFILEOP_H_
+#pragma once
 
 #include "we_type.h"
 #include "we_fileop.h"
@@ -251,4 +250,3 @@ private:
 
 #undef EXPORT
 
-#endif // _WE_DBFILEOP_H_

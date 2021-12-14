@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef MCS_SUPPORT_UTIL_H_
-#define MCS_SUPPORT_UTIL_H_
+#pragma once
 
 #include <iostream>
 #include <fstream>
@@ -34,4 +33,3 @@ void getStorageStatus(FILE * pOutputFile);
 bool checkLogStatus(std::string filename, std::string phase);
 std::string getIPAddress(std::string hostName);
 
-#endif

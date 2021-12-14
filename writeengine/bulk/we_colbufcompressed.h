@@ -24,8 +24,7 @@
  * class ColumnBufferCompressed
  */
 
-#ifndef WRITEENGINE_COLUMNBUFCOMPRESSED_H
-#define WRITEENGINE_COLUMNBUFCOMPRESSED_H
+#pragma once
 
 #include "we_colbuf.h"
 
@@ -118,4 +117,3 @@ private:
 
 }
 
-#endif //WRITEENGINE_COLUMNBUFCOMPRESSED_H

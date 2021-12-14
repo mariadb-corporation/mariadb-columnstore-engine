@@ -21,8 +21,7 @@
 *******************************************************************************/
 /** @file */
 
-#ifndef _WE_BULKLOAD_H_
-#define _WE_BULKLOAD_H_
+#pragma once
 #ifndef _MSC_VER
 #include <pthread.h>
 #endif
@@ -574,4 +573,3 @@ inline bool BulkLoad::disableTimeOut() const
 
 #undef EXPORT
 
-#endif // _WE_BULKLOAD_H_

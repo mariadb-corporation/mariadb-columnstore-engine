@@ -15,8 +15,7 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
-#ifndef COLLATION_H_INCLUDED
-#define COLLATION_H_INCLUDED
+#pragma once
 
 #if defined(PREFER_MY_CONFIG_H)
 
@@ -222,4 +221,3 @@ public:
 
 } // end of namespace datatypes
 
-#endif

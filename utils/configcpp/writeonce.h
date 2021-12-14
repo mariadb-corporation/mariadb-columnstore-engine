@@ -22,8 +22,7 @@
 /**
  * @file
  */
-#ifndef CONFIG_WRITEONCECONFIG_H
-#define CONFIG_WRITEONCECONFIG_H
+#pragma once
 
 #include <string>
 #ifndef _MSC_VER
@@ -140,5 +139,4 @@ private:
 
 }
 
-#endif
 

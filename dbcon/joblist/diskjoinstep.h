@@ -22,8 +22,7 @@
 #include "threadnaming.h"
 #include "../../utils/threadpool/prioritythreadpool.h"
 
-#ifndef DISKJOINSTEP_H
-#define DISKJOINSTEP_H
+#pragma once
 
 namespace joblist
 {
@@ -152,4 +151,3 @@ private:
 
 }
 
-#endif // DISKJOINSTEP_H

@@ -30,8 +30,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef ROBIN_HOOD_H_INCLUDED
-#define ROBIN_HOOD_H_INCLUDED
+#pragma once
 
 // see https://semver.org/
 #define ROBIN_HOOD_VERSION_MAJOR 3  // for incompatible API changes
@@ -2451,4 +2450,3 @@ using unordered_set = detail::Table<sizeof(Key) <= sizeof(size_t) * 6 &&
 
 } // namespace robin_hood
 
-#endif

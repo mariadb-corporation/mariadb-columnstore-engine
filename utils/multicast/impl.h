@@ -27,8 +27,7 @@
 
 /** @file */
 
-#ifndef MCAST_IMPL_H__
-#define MCAST_IMPL_H__
+#pragma once
 
 #include <string>
 #include <stdint.h>
@@ -63,5 +62,4 @@ public:
 
 }
 
-#endif
 

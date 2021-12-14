@@ -29,8 +29,7 @@
 //
 /** @file */
 
-#ifndef BATCHPRIMITIVEPROCESSORJL_H_
-#define BATCHPRIMITIVEPROCESSORJL_H_
+#pragma once
 
 #include <boost/scoped_array.hpp>
 #include <boost/shared_ptr.hpp>
@@ -370,6 +369,5 @@ private:
 
 }
 
-#endif
 // vim:ts=4 sw=4:
 

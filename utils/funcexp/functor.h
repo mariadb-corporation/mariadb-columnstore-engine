@@ -20,8 +20,7 @@
 
 /** @file */
 
-#ifndef FUNCTOR_H
-#define FUNCTOR_H
+#pragma once
 
 #include <cstdlib>
 #include <string>
@@ -291,7 +290,6 @@ public:
 
 }
 
-#endif
 
 
 

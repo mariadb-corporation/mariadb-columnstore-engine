@@ -21,8 +21,7 @@
 
 /** @file */
 
-#ifndef PRIMPROC_STATS_H
-#define PRIMPROC_STATS_H
+#pragma once
 
 #ifndef _MSC_VER
 #include <pthread.h>
@@ -73,4 +72,3 @@ private:
 
 }
 
-#endif //PRIMPROC_STATS_H

@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef _SOCKETPOOL_H_
-#define _SOCKETPOOL_H_
+#pragma once
 
 #include <boost/utility.hpp>
 #include <boost/thread/mutex.hpp>
@@ -56,4 +55,3 @@ class SocketPool : public boost::noncopyable
 
 
 
-#endif

@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef EXP_TEMPLATES
-#define EXP_TEMPLATES
+#pragma once
 
 #include <iostream>
 #include <fstream>
@@ -672,5 +671,4 @@ private:
 #undef EXP_TEMPLATE
 }
 
-#endif
 

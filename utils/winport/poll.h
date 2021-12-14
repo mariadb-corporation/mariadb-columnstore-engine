@@ -66,8 +66,7 @@
 	original.
 \*---------------------------------------------------------------------------*/
 
-#ifndef _POLL_EMUL_H_
-#define _POLL_EMUL_H_
+#pragma once
 
 #define POLLIN		0x01
 #define POLLPRI		0x02
@@ -100,4 +99,3 @@ extern int poll();
 }
 #endif
 
-#endif /* _POLL_EMUL_H_ */

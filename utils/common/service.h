@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef SERVICE_H_INCLUDED
-#define SERVICE_H_INCLUDED
+#pragma once
 
 #include <signal.h>
 #include "pipe.h"
@@ -113,4 +112,3 @@ public:
     virtual int Child()= 0;
 };
 
-#endif // SERVICE_H_INCLUDED

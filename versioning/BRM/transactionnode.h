@@ -24,8 +24,7 @@
  * class XXX interface
  */
 
-#ifndef TRANSACTIONNODE_H_
-#define TRANSACTIONNODE_H_
+#pragma once
 
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
@@ -70,4 +69,3 @@ private:
 
 } // namespace
 
-#endif		// TRANSACTIONNODE_H_

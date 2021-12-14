@@ -22,8 +22,7 @@
 /**
  * @file
  */
-#ifndef LOGGING_MESSAGEOBJ_H
-#define LOGGING_MESSAGEOBJ_H
+#pragma once
 
 #include <string>
 #include <vector>
@@ -163,4 +162,3 @@ inline void swap(logging::Message& lhs, logging::Message& rhs)
 }//namespace logging
 
 
-#endif

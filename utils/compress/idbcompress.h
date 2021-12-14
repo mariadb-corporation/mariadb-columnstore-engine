@@ -17,8 +17,7 @@
 
 /** @file */
 
-#ifndef IDBCOMPRESS_H__
-#define IDBCOMPRESS_H__
+#pragma once
 
 #include <unistd.h>
 #ifdef __linux__
@@ -518,5 +517,4 @@ CompressInterface* getCompressInterfaceByType(uint32_t compressionType,
 
 #undef EXPORT
 
-#endif
 

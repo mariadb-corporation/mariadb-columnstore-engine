@@ -23,8 +23,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef OPERATOR_H
-#define OPERATOR_H
+#pragma once
 #include <string>
 #include <iosfwd>
 #include <boost/shared_ptr.hpp>
@@ -245,5 +244,4 @@ std::ostream& operator<<(std::ostream& os, const Operator& rhs);
 }
 
 
-#endif //OPERATOR_H
 

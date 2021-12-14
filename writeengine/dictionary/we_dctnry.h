@@ -24,8 +24,7 @@
  *  can be deleted
  */
 
-#ifndef _WE_DCTNRY_H_
-#define _WE_DCTNRY_H_
+#pragma once
 
 #include <cstdlib>
 #include <cstddef>
@@ -349,4 +348,3 @@ protected:
 
 #undef EXPORT
 
-#endif // _WE_DCTNRY_H_

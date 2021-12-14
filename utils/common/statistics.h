@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef STATISTICS_H
-#define STATISTICS_H
+#pragma once
 
 #include "rowgroup.h"
 #include "logger.h"
@@ -123,4 +122,3 @@ class StatisticsDistributor
 };
 
 } // namespace statistics
-#endif

@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef PEEKPROCESSOR_H
-#define PEEKPROCESSOR_H
+#pragma once
 
 #include <string>
 #include <thrift/TProcessor.h>
@@ -83,4 +82,3 @@ private:
 }
 } // apache::thrift::processor
 
-#endif

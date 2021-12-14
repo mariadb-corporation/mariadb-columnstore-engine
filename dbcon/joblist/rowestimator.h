@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef JOBLIST_ROWESTIMATOR_H
-#define JOBLIST_ROWESTIMATOR_H
+#pragma once
 
 #include <boost/shared_ptr.hpp>
 #include "joblisttypes.h"
@@ -150,4 +149,3 @@ private:
 
 
 } // joblist
-#endif

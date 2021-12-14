@@ -23,8 +23,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef PREDICATEOPERATOR_H
-#define PREDICATEOPERATOR_H
+#pragma once
 
 #include <string>
 #include <sstream>
@@ -192,5 +191,4 @@ inline bool PredicateOperator::numericCompare(const result_t op1, const result_t
 std::ostream& operator<<(std::ostream& os, const PredicateOperator& rhs);
 }
 
-#endif //PREDICATEOPERATOR_H
 

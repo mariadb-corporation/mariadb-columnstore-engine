@@ -25,8 +25,7 @@
 //
 // Author: Patrick LeBlanc <pleblanc@calpont.com>, (C) 2008
 
-#ifndef ROWGROUP_H_
-#define ROWGROUP_H_
+#pragma once
 
 #include <vector>
 #include <string>
@@ -2276,5 +2275,4 @@ inline void RGData::getRow(uint32_t num, Row* row)
 
 }
 
-#endif
 // vim:ts=4 sw=4:

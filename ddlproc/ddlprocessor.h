@@ -21,8 +21,7 @@
 *
 ***********************************************************************/
 /** @file */
-#ifndef DDLPROCESSOR_H
-#define DDLPROCESSOR_H
+#pragma once
 
 #include "ddlproc.h"
 #include "threadpool.h"
@@ -101,5 +100,4 @@ private:
 
 } //namespace ddlprocessor
 
-#endif //DDLPROCESSOR_H
 

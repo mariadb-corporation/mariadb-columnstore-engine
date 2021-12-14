@@ -16,8 +16,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
 */
-#ifndef MCS_INT128_H_INCLUDED
-#define MCS_INT128_H_INCLUDED
+#pragma once
 
 #include <cfloat>
 #include <cstdint>
@@ -345,5 +344,4 @@ class TSInt128
 
 } //end of namespace datatypes
 
-#endif // MCS_TSINT128_H_INCLUDED
 // vim:ts=2 sw=2:

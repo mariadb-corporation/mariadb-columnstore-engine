@@ -21,8 +21,7 @@
 *
 ***********************************************************************/
 /** @file */
-#ifndef MESSAGEQCPP_INETSTREAMSOCKET_H
-#define MESSAGEQCPP_INETSTREAMSOCKET_H
+#pragma once
 
 #include <ctime>
 #include <unistd.h>
@@ -288,5 +287,4 @@ inline std::ostream& operator<<(std::ostream& os, const InetStreamSocket& rhs)
 
 #undef EXPORT
 
-#endif //MESSAGEQCPP_INETSTREAMSOCKET_H
 

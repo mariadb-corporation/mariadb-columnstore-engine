@@ -30,8 +30,7 @@
 //
 /** @file */
 
-#ifndef DISTENGINECOMM_H
-#define DISTENGINECOMM_H
+#pragma once
 
 #include <iostream>
 #include <vector>
@@ -306,4 +305,3 @@ private:
 
 #undef EXPORT
 
-#endif // DISTENGINECOMM_H

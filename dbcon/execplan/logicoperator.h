@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef LOGICOPERATOR_H
-#define LOGICOPERATOR_H
+#pragma once
 #include <string>
 #include <iosfwd>
 #include <boost/shared_ptr.hpp>
@@ -186,5 +185,4 @@ private:
 std::ostream& operator<<(std::ostream& os, const LogicOperator& rhs);
 }
 
-#endif
 

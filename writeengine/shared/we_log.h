@@ -21,8 +21,7 @@
 *******************************************************************************/
 /** @file */
 
-#ifndef _WE_LOG_H_
-#define _WE_LOG_H_
+#pragma once
 
 #include <time.h>
 #include <sys/types.h>
@@ -125,4 +124,3 @@ private:
 
 #undef EXPORT
 
-#endif // _WE_LOG_H_

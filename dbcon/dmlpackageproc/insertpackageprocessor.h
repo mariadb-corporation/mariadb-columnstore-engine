@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef INSERTPACKAGEPROCESSOR_H
-#define INSERTPACKAGEPROCESSOR_H
+#pragma once
 #include <string>
 #include <vector>
 #include <boost/any.hpp>
@@ -67,5 +66,4 @@ private:
 
 #undef EXPORT
 
-#endif //INSERTPACKAGEPROCESSOR_H
 

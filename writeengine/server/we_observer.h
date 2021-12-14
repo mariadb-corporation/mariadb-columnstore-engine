@@ -27,8 +27,7 @@
  *      Author: bpaul@calpont.com
  */
 
-#ifndef OBSERVER_H_
-#define OBSERVER_H_
+#pragma once
 
 #include <list>
 
@@ -66,4 +65,3 @@ private:
 
 }
 
-#endif /* OBSERVER_H_ */

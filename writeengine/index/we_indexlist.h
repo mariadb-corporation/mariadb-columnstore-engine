@@ -21,8 +21,7 @@
 ******************************************************************************************/
 /** @file */
 
-#ifndef _WE_IndexList_H_
-#define _WE_IndexList_H_
+#pragma once
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -484,4 +483,3 @@ private:
 };
 //std::ostream& operator<<(std::ostream& os, const IndexList& rhs);
 } //end of namespace
-#endif // _WE_IndexList_H_

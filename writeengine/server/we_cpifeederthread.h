@@ -27,8 +27,7 @@
  *      Author: bpaul
  */
 
-#ifndef WE_CPIFEEDERTHREAD_H_
-#define WE_CPIFEEDERTHREAD_H_
+#pragma once
 
 #include <queue>
 
@@ -93,4 +92,3 @@ private:
 
 } /* namespace WriteEngine */
 
-#endif /* WE_CPIFEEDERTHREAD_H_ */

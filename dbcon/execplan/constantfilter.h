@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef CONSTANTFILTER_H
-#define CONSTANTFILTER_H
+#pragma once
 #include <string>
 #include <iosfwd>
 #include <vector>
@@ -249,5 +248,4 @@ inline bool ConstantFilter::getBoolVal(rowgroup::Row& row, bool& isNull)
 std::ostream& operator<<(std::ostream& output, const ConstantFilter& rhs);
 
 }
-#endif //CONSTANTFILTER_H
 

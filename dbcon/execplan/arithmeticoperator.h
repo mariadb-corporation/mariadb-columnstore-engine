@@ -23,8 +23,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef ARITHMETICOPERATOR_H
-#define ARITHMETICOPERATOR_H
+#pragma once
 #include <string>
 #include <iosfwd>
 #include <cmath>
@@ -457,5 +456,4 @@ inline void ArithmeticOperator::execute(IDB_Decimal& result, IDB_Decimal op1, ID
 std::ostream& operator<<(std::ostream& os, const ArithmeticOperator& rhs);
 }
 
-#endif
 

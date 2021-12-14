@@ -18,8 +18,7 @@
 //  $Id: tupleconstantstep.h 9596 2013-06-04 19:59:04Z xlou $
 
 
-#ifndef JOBLIST_TUPLECONSTANTSTEP_H
-#define JOBLIST_TUPLECONSTANTSTEP_H
+#pragma once
 
 #include "jobstep.h"
 #include "threadnaming.h"
@@ -188,6 +187,5 @@ protected:
 
 } // namespace
 
-#endif  // JOBLIST_TUPLECONSTANTSTEP_H
 
 // vim:ts=4 sw=4:

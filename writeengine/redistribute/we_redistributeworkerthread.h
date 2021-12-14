@@ -19,8 +19,7 @@
 * $Id: we_redistributeworkerthread.h 4450 2013-01-21 14:13:24Z rdempsey $
 */
 
-#ifndef WE_REDISTRIBUTEWORKERTHREAD_H
-#define WE_REDISTRIBUTEWORKERTHREAD_H
+#pragma once
 
 #include <map>
 #include <set>
@@ -153,7 +152,6 @@ private:
 } // namespace
 
 
-#endif  // WE_REDISTRIBUTEWORKERTHREAD_H
 
 // vim:ts=4 sw=4:
 

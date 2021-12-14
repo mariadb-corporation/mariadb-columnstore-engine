@@ -22,8 +22,7 @@
 
 /** @file */
 
-#ifndef ELEMENTCOMPRESSION_H_
-#define ELEMENTCOMPRESSION_H_
+#pragma once
 
 #include <fstream>
 #include <stdexcept>
@@ -557,4 +556,3 @@ ElementCompression::readWith32Rid(
 
 } // end of joblist namespace
 
-#endif

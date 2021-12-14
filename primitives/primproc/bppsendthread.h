@@ -29,8 +29,7 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/condition.hpp>
 
-#ifndef BPPSENDTHREAD_H
-#define BPPSENDTHREAD_H
+#pragma once
 
 namespace primitiveprocessor
 {
@@ -129,5 +128,4 @@ private:
 
 }
 
-#endif
 

@@ -24,8 +24,7 @@
  * class XXX interface
  */
 
-#ifndef _VBBM_H_
-#define _VBBM_H_
+#pragma once
 
 #include <vector>
 //#define NDEBUG
@@ -260,5 +259,4 @@ private:
 
 #undef EXPORT
 
-#endif // _VBBM_H_
 

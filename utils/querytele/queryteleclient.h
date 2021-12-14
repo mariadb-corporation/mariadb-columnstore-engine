@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef QUERYTELECLIENT_H__
-#define QUERYTELECLIENT_H__
+#pragma once
 
 #include <unistd.h>
 #include <stdint.h>
@@ -90,5 +89,4 @@ private:
 
 #undef EXPORT
 
-#endif
 

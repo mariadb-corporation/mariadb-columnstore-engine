@@ -16,8 +16,7 @@
    MA 02110-1301, USA. */
 
 
-#ifndef COPYTASK_H_
-#define COPYTASK_H_
+#pragma once
 
 #include "PosixTask.h"
 
@@ -38,4 +37,3 @@ class CopyTask : public PosixTask
 
 
 }
-#endif

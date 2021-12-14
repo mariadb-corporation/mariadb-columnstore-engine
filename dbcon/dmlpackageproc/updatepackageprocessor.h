@@ -21,8 +21,7 @@
  *
  ***********************************************************************/
 /** @file */
-#ifndef UPDATEPACKAGEPROCESSOR_H
-#define UPDATEPACKAGEPROCESSOR_H
+#pragma once
 #include <string>
 #include "dmlpackageprocessor.h"
 #include "dataconvert.h"
@@ -80,4 +79,3 @@ private:
 
 #undef EXPORT
 
-#endif                                            //UPDATEPACKAGEPROCESSOR_H

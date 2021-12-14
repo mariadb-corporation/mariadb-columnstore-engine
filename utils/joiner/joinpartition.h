@@ -16,8 +16,7 @@
    MA 02110-1301, USA. */
 
 
-#ifndef JOINPARTITION_H
-#define JOINPARTITION_H
+#pragma once
 
 #include "rowgroup.h"
 #include "hasher.h"
@@ -180,4 +179,3 @@ private:
 
 }
 
-#endif // JOINPARTITION_H

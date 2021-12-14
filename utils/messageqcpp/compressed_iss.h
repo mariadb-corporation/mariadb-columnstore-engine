@@ -21,8 +21,7 @@
 *
 ***********************************************************************/
 /** @file */
-#ifndef MESSAGEQCPP_COMPRESSED_ISS_H
-#define MESSAGEQCPP_COMPRESSED_ISS_H
+#pragma once
 
 #include <unistd.h>
 #ifndef _MSC_VER
@@ -63,4 +62,3 @@ private:
 
 #undef EXPORT
 
-#endif

@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_SERVER_TNONBLOCKINGSERVER_H_
-#define _THRIFT_SERVER_TNONBLOCKINGSERVER_H_ 1
+#pragma once
 
 #include <thrift/Thrift.h>
 #include <thrift/server/TServer.h>
@@ -1028,4 +1027,3 @@ private:
 }
 } // apache::thrift::server
 
-#endif // #ifndef _THRIFT_SERVER_TNONBLOCKINGSERVER_H_

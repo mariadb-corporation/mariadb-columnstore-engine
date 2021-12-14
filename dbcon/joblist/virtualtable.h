@@ -20,8 +20,7 @@
 
 /** @file */
 
-#ifndef VIRTUAL_TABLE_H
-#define VIRTUAL_TABLE_H
+#pragma once
 
 #include "calpontsystemcatalog.h"
 #include "returnedcolumn.h"
@@ -117,5 +116,4 @@ protected:
 
 }
 
-#endif  // VIRTUAL_TABLE_H
 

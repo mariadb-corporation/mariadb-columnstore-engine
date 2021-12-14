@@ -28,8 +28,7 @@
 //
 //
 
-#ifndef BPPSEEDER_H_
-#define BPPSEEDER_H_
+#pragma once
 
 #include <fstream>
 #include <iostream>
@@ -100,4 +99,3 @@ private:
 
 };
 
-#endif

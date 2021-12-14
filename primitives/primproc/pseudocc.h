@@ -16,8 +16,7 @@
    MA 02110-1301, USA. */
 
 
-#ifndef PSEUDOCC_H
-#define PSEUDOCC_H
+#pragma once
 
 #include "columncommand.h"
 #include "blocksize.h"
@@ -132,4 +131,3 @@ void PseudoCC::loadLBID()
 
 }
 
-#endif // PseudoCC_H

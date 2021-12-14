@@ -19,8 +19,7 @@
 //  $Id: tupleaggregatestep.h 9732 2013-08-02 15:56:15Z pleblanc $
 
 
-#ifndef JOBLIST_TUPLEAGGREGATESTEP_H
-#define JOBLIST_TUPLEAGGREGATESTEP_H
+#pragma once
 
 #include "jobstep.h"
 #include "rowaggregation.h"
@@ -234,6 +233,5 @@ private:
 
 } // namespace
 
-#endif  // JOBLIST_TUPLEAGGREGATESTEP_H
 
 // vim:ts=4 sw=4:

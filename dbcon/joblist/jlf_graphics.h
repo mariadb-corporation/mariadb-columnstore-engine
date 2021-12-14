@@ -19,8 +19,7 @@
 
 /** @file */
 
-#ifndef JLF_GRAPHICS_H__
-#define JLF_GRAPHICS_H__
+#pragma once
 
 #include <iostream>
 
@@ -37,5 +36,4 @@ std::ostream& writeDotCmds(std::ostream& dotFile, const joblist::JobStepVector& 
 
 }
 
-#endif
 

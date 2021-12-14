@@ -21,8 +21,7 @@
 
 /** @file */
 
-#ifndef PRIMPROC_STATS_H
-#define PRIMPROC_STATS_H
+#pragma once
 
 #include <pthread.h>
 #include <boost/thread.hpp>
@@ -65,4 +64,3 @@ private:
 
 }
 
-#endif //PRIMPROC_STATS_H

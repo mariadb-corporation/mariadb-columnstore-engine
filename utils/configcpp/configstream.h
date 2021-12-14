@@ -22,8 +22,7 @@
 /**
  * @file
  */
-#ifndef CONFIG_CONFIGSTREAM_H_
-#define CONFIG_CONFIGSTREAM_H_
+#pragma once
 
 #include <string>
 #include <libxml/parser.h>
@@ -63,6 +62,5 @@ private:
 
 } //namespace
 
-#endif
 // vim:ts=4 sw=4:
 

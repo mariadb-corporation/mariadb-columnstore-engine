@@ -24,8 +24,7 @@
  *  Contains main class used to manage compressed column information.
  */
 
-#ifndef _WE_COLUMNINFOCOMPRESSED_H
-#define _WE_COLUMNINFOCOMPRESSED_H
+#pragma once
 
 #include "we_columninfo.h"
 #include "we_fileop.h"
@@ -98,4 +97,3 @@ private:
 
 }
 
-#endif

@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef ORACLEEXECUTIONPLAN_H
-#define ORACLEEXECUTIONPLAN_H
+#pragma once
 #include <string>
 #include "vendorexecutionplan.h"
 
@@ -97,5 +96,4 @@ private:
      */
 };
 }
-#endif //ORACLEEXECUTIONPLAN_H
 

@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TRANSPORT_TSERVERSOCKET_H_
-#define _THRIFT_TRANSPORT_TSERVERSOCKET_H_ 1
+#pragma once
 
 #include <thrift/transport/TServerTransport.h>
 #include <thrift/transport/PlatformSocket.h>
@@ -91,4 +90,3 @@ private:
 }
 } // apache::thrift::transport
 
-#endif // #ifndef _THRIFT_TRANSPORT_TSERVERSOCKET_H_

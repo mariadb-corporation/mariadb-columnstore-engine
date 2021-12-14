@@ -29,8 +29,7 @@
  *    'libudf_mysql.so';
  *
  */
-#ifndef HEADER_avgx
-#define HEADER_avgx
+#pragma once
 
 #include <cstdlib>
 #include <string>
@@ -93,5 +92,4 @@ protected:
 
 #undef EXPORT
 
-#endif // HEADER_.h
 

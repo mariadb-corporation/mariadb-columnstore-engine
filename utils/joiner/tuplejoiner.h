@@ -16,8 +16,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef TJOINER_H_
-#define TJOINER_H_
+#pragma once
 
 #include <iostream>
 #include <vector>
@@ -581,4 +580,3 @@ private:
 
 }
 
-#endif

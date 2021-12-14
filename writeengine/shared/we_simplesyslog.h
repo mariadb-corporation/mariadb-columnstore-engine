@@ -21,8 +21,7 @@
 *******************************************************************************/
 /** @file */
 
-#ifndef _WE_SIMPLESYSLOG_H_
-#define _WE_SIMPLESYSLOG_H_
+#pragma once
 
 #include <boost/thread.hpp>
 
@@ -79,4 +78,3 @@ private:
 #undef EXPORT
 
 } //end of namespace
-#endif // _WE_SIMPLESYSLOG_H_

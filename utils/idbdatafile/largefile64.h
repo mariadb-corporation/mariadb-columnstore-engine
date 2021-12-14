@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef _LARGEFILE64_H
-#define _LARGEFILE64_H
+#pragma once
 
 #ifndef _LARGEFILE64_SOURCE
 #define _LARGEFILE64_SOURCE
@@ -43,4 +42,3 @@ typedef int64_t off64_t;
 #  endif
 #endif
 
-#endif

@@ -24,8 +24,7 @@
  * class XXX interface
  */
 
-#ifndef _SERIALIZEABLE_H_
-#define _SERIALIZEABLE_H_
+#pragma once
 
 namespace messageqcpp
 {
@@ -58,4 +57,3 @@ public:
 
 }
 
-#endif

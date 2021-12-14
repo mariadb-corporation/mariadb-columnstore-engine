@@ -20,8 +20,7 @@
 
 /** @file */
 
-#ifndef JOBLIST_ERROR_INFO_H_
-#define JOBLIST_ERROR_INFO_H_
+#pragma once
 
 #include <string>
 #include <boost/shared_ptr.hpp>
@@ -52,7 +51,6 @@ typedef boost::shared_ptr<ErrorInfo> SErrorInfo;
 
 }
 
-#endif  // JOBLIST_ERROR_INFO_H_
 // vim:ts=4 sw=4:
 
 

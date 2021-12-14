@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef REBUILD_EM_H
-#define REBUILD_EM_H
+#pragma once
 
 #include <string>
 #include <map>
@@ -228,4 +227,3 @@ class ChunkManagerWrapperDict : public ChunkManagerWrapper
 };
 
 } // namespace RebuildExtentMap
-#endif

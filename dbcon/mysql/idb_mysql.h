@@ -18,8 +18,7 @@
 //  global namespace
 //
 // Don't include ANY mysql headers anywhere except here!
-#ifndef IDB_MYSQL_H__
-#define IDB_MYSQL_H__
+#pragma once
 
 #ifdef TEST_MCSCONFIG_H
 #error mcsconfig.h was included before idb_mysql.h
@@ -118,5 +117,4 @@ inline char* idb_mysql_query_str(THD* thd)
 }
 }
 
-#endif
 // vim:ts=4 sw=4:

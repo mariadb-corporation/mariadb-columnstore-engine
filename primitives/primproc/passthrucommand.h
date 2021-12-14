@@ -28,8 +28,7 @@
 //
 //
 
-#ifndef PASSTHRUCOMMAND_H_
-#define PASSTHRUCOMMAND_H_
+#pragma once
 
 #include "command.h"
 
@@ -70,4 +69,3 @@ private:
 
 }
 
-#endif

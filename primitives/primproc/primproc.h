@@ -23,8 +23,7 @@
 /**
  * @file
  */
-#ifndef PRIMPROC_H
-#define PRIMPROC_H
+#pragma once
 
 #include <string>
 #include <sstream>
@@ -115,4 +114,3 @@ const int MAX_BUFFER_SIZE = 32768 * 2;
 extern Logger* mlp;
 }
 
-#endif //PRIMPROC_H

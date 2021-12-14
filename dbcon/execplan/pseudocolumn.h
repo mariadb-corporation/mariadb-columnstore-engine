@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef PSEUDOCOLUMN_H
-#define PSEUDOCOLUMN_H
+#pragma once
 #include <string>
 #include "simplecolumn.h"
 
@@ -165,5 +164,4 @@ private:
 
 } // namespace execplan
 
-#endif //PSEUDOCOLUMN_H
 

@@ -21,8 +21,7 @@
  *
  ***********************************************************************/
 /** @file */
-#ifndef DROPPARTITIONEPROCESSOR_H
-#define DROPPARTITIONEPROCESSOR_H
+#pragma once
 
 #include "ddlpackageprocessor.h"
 
@@ -57,4 +56,3 @@ private:
 
 #undef EXPORT
 
-#endif                                            //DROPPARTITIONEPROCESSOR_H

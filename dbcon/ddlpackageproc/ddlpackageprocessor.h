@@ -23,8 +23,7 @@
  ***********************************************************************/
 /** @file */
 
-#ifndef DDLPACKAGEPROCESSOR_H
-#define DDLPACKAGEPROCESSOR_H
+#pragma once
 #include <unistd.h>
 #include <string>
 #include <stdexcept>
@@ -879,6 +878,5 @@ bool from_string(T& t,
 
 #undef EXPORT
 
-#endif //DDLPACKAGEPROCESSOR_H
 // vim:ts=4 sw=4:
 

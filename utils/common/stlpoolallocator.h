@@ -29,8 +29,7 @@
 #undef min
 #undef max
 
-#ifndef STLPOOLALLOCATOR_H_
-#define STLPOOLALLOCATOR_H_
+#pragma once
 
 namespace utils
 {
@@ -183,4 +182,3 @@ bool operator!=(const STLPoolAllocator<T>&, const STLPoolAllocator<T>&)
 
 }
 
-#endif

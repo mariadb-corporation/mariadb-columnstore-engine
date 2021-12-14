@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TRANSPORT_TSOCKETPOOL_H_
-#define _THRIFT_TRANSPORT_TSOCKETPOOL_H_ 1
+#pragma once
 
 #include <vector>
 #include <thrift/transport/TSocket.h>
@@ -201,5 +200,4 @@ protected:
 }
 } // apache::thrift::transport
 
-#endif // #ifndef _THRIFT_TRANSPORT_TSOCKETPOOL_H_
 

@@ -24,8 +24,7 @@
  * class XXX interface
  */
 
-#ifndef LBIDRESOURCEGRAPH_H_
-#define LBIDRESOURCEGRAPH_H_
+#pragma once
 
 #include <map>
 #include <set>
@@ -85,4 +84,3 @@ private:
 
 #undef EXPORT
 
-#endif

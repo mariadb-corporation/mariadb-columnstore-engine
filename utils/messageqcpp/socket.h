@@ -21,8 +21,7 @@
 *
 ***********************************************************************/
 /** @file */
-#ifndef MESSAGEQCPP_SOCKET_H
-#define MESSAGEQCPP_SOCKET_H
+#pragma once
 
 #include <ctime>
 #include <unistd.h>
@@ -184,5 +183,4 @@ public:
 
 } //namespace messageqcpp
 
-#endif //MESSAGEQCPP_SOCKET_H
 

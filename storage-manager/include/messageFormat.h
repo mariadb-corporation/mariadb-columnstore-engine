@@ -17,8 +17,7 @@
 
 // Defines stuff client code will use to construct messages to StorageManager.
 
-#ifndef MESSAGEFORMAT_H_
-#define MESSAGEFORMAT_H_
+#pragma once
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -288,5 +287,4 @@ struct copy_cmd {
 
 }
 
-#endif
 

@@ -23,8 +23,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef FUNCTIONCOLUMN_H
-#define FUNCTIONCOLUMN_H
+#pragma once
 #include <string>
 #include <iosfwd>
 #include <vector>
@@ -326,5 +325,4 @@ private:
 std::ostream& operator<<(std::ostream& output, const FunctionColumn& rhs);
 
 }
-#endif //FUNCTIONCOLUMN_H
 

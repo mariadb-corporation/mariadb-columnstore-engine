@@ -22,8 +22,7 @@
  *      Author: pleblanc
  */
 
-#ifndef RWLOCKMONITOR_H_
-#define RWLOCKMONITOR_H_
+#pragma once
 
 #include <unistd.h>
 #include <boost/scoped_ptr.hpp>
@@ -68,5 +67,4 @@ private:
 
 #undef EXPORT
 
-#endif /* RWLOCKMONITOR_H_ */
 

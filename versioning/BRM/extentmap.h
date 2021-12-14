@@ -24,8 +24,7 @@
  * class ExtentMap
  */
 
-#ifndef _EXTENTMAP_H_
-#define _EXTENTMAP_H_
+#pragma once
 
 #include <sys/types.h>
 #include <vector>
@@ -1037,4 +1036,3 @@ inline std::ostream& operator<<(std::ostream& os, ExtentMap& rhs)
 
 #undef EXPORT
 
-#endif

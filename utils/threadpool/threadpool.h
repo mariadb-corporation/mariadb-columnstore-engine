@@ -27,8 +27,7 @@
 
 /** @file */
 
-#ifndef THREADPOOL_H
-#define THREADPOOL_H
+#pragma once
 
 #include <string>
 #include <fstream>
@@ -406,4 +405,3 @@ private:
 
 #undef EXPORT
 
-#endif //THREADPOOL_H

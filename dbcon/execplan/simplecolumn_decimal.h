@@ -23,8 +23,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef SIMPLECOLUMNDECIMAL_H
-#define SIMPLECOLUMNDECIMAL_H
+#pragma once
 #include <iostream>
 #include <string>
 #include <cmath>
@@ -268,5 +267,4 @@ void SimpleColumn_Decimal<len>::unserialize(messageqcpp::ByteStream& b)
 }
 
 }
-#endif //SIMPLECOLUMN_INT_H
 

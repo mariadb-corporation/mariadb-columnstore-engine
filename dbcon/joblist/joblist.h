@@ -21,8 +21,7 @@
 
 /** @file */
 
-#ifndef JOBLIST_JOBLIST_H_
-#define JOBLIST_JOBLIST_H_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -261,6 +260,5 @@ typedef boost::shared_ptr<TupleJobList> STJLP;
 
 #undef EXPORT
 
-#endif
 // vim:ts=4 sw=4:
 

@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef FEMSGHANDLER_H_
-#define FEMSGHANDLER_H_
+#pragma once
 
 #include "joblist.h"
 #include "inetstreamsocket.h"
@@ -47,4 +46,3 @@ private:
     uint64_t thr;
 };
 
-#endif /* FEMSGHANDLER_H_ */

@@ -23,8 +23,7 @@
  ***********************************************************************/
 /** @file */
 
-#ifndef EXECPLAN_CALPONTSYSTEMCATALOG_H
-#define EXECPLAN_CALPONTSYSTEMCATALOG_H
+#pragma once
 
 #include <unistd.h>
 #include <string>
@@ -1227,6 +1226,5 @@ bool ctListSort(const CalpontSystemCatalog::ColType& a, const CalpontSystemCatal
 
 } //namespace execplan
 
-#endif											//EXECPLAN_CALPONTSYSTEMCATALOG_H
 // vim:ts=4 sw=4:
 

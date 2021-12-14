@@ -25,8 +25,7 @@
  * to support revoking any changes made on error.
  */
 
-#ifndef _UNDOABLE_H_
-#define _UNDOABLE_H_
+#pragma once
 
 #include <vector>
 
@@ -59,4 +58,3 @@ protected:
 
 }
 
-#endif

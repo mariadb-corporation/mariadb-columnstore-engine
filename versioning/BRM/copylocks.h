@@ -24,8 +24,7 @@
  * class XXX interface
  */
 
-#ifndef COPYLOCKS_H_
-#define COPYLOCKS_H_
+#pragma once
 
 #include <set>
 #include <sys/types.h>
@@ -171,4 +170,3 @@ private:
 
 #undef EXPORT
 
-#endif

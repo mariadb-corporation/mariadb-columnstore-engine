@@ -16,8 +16,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef MCS_SYSVARS_H__
-#define MCS_SYSVARS_H__
+#pragma once
 
 #include <my_config.h>
 #include "idb_mysql.h"
@@ -142,4 +141,3 @@ void set_cache_use_import(THD* thd, bool value);
 ulonglong get_cache_flush_threshold(THD* thd);
 void set_cache_flush_threshold(THD* thd, ulonglong value);
 
-#endif

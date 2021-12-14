@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TRANSPORT_TPIPE_H_
-#define _THRIFT_TRANSPORT_TPIPE_H_ 1
+#pragma once
 
 #include <thrift/transport/TTransport.h>
 #include <thrift/transport/TVirtualTransport.h>
@@ -100,5 +99,4 @@ typedef TSocket TPipe;
 }
 } // apache::thrift::transport
 
-#endif // #ifndef _THRIFT_TRANSPORT_TPIPE_H_
 

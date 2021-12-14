@@ -21,8 +21,7 @@
  *
  ***********************************************************************/
 /** @file */
-#ifndef VENDORDMLSTATEMENT_H
-#define VENDORDMLSTATEMENT_H
+#pragma once
 #include <string>
 #include <vector>
 #include <map>
@@ -250,4 +249,3 @@ private:
 
 #undef EXPORT
 
-#endif                                            //VENDORDMLSTATEMENT_H

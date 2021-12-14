@@ -22,8 +22,7 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef BLOCKCACHEREQUESTCLIENT_H
-#define BLOCKCACHEREQUESTCLIENT_H
+#pragma once
 
 #include "blockrequestprocessor.h"
 #include "brmtypes.h"
@@ -108,4 +107,3 @@ private:
 
 }
 
-#endif

@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef THRIFT_TPROTOCOLDECORATOR_H_
-#define THRIFT_TPROTOCOLDECORATOR_H_ 1
+#pragma once
 
 #include <thrift/protocol/TProtocol.h>
 #include <boost/shared_ptr.hpp>
@@ -253,4 +252,3 @@ private:
 }
 }
 
-#endif // THRIFT_TPROTOCOLDECORATOR_H_

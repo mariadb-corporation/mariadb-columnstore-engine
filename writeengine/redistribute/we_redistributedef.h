@@ -19,8 +19,7 @@
 * $Id: we_redistributedef.h 4450 2013-01-21 14:13:24Z rdempsey $
 */
 
-#ifndef WE_REDISTRIBUTEDEF_H
-#define WE_REDISTRIBUTEDEF_H
+#pragma once
 
 #include <stdint.h>
 #include <time.h>
@@ -207,7 +206,6 @@ struct RedistributeInfo
 }  // namespace
 
 
-#endif  // WE_REDISTRIBUTEDEF_H
 
 // vim:ts=4 sw=4:
 

@@ -22,8 +22,7 @@
 /** @file jlf_common.h
  *
  */
-#ifndef JLF_COMMON_H__
-#define JLF_COMMON_H__
+#pragma once
 
 #include <map>
 #include <set>
@@ -497,4 +496,3 @@ bool compatibleColumnTypes(const execplan::CalpontSystemCatalog::ColDataType& dt
 
 } // end of jlf_common namespace
 
-#endif

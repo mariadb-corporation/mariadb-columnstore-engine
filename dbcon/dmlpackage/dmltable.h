@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef DMLTABLE_H
-#define DMLTABLE_H
+#pragma once
 
 #include <string>
 #include <vector>
@@ -125,5 +124,4 @@ private:
 
 }  // namespace dmlpackage
 
-#endif //DMLTABLE_H
 

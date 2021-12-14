@@ -17,8 +17,7 @@
 
 
 
-#ifndef STORAGEMANGER_H_
-#define STORAGEMANGER_H_
+#pragma once
 
 #include "ClientRequestProcessor.h"
 #include "messageFormat.h"
@@ -79,4 +78,3 @@ private:
 
 }
 
-#endif

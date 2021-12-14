@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef MCSANALYZETABLEXEXCUTIONPLAN_H
-#define MCSANALYZETABLEXEXCUTIONPLAN_H
+#pragma once
 #include <vector>
 #include <map>
 #include <iosfwd>
@@ -167,4 +166,3 @@ class MCSAnalyzeTableExecutionPlan : public CalpontExecutionPlan
     uint32_t fLocalQuery;
 };
 } // namespace execplan
-#endif

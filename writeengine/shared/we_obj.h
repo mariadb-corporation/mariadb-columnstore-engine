@@ -21,8 +21,7 @@
 ******************************************************************************************/
 /** @file */
 
-#ifndef _WE_OBJ_H_
-#define _WE_OBJ_H_
+#pragma once
 
 //#include <we_type.h>
 #include <we_macro.h>
@@ -93,4 +92,3 @@ private:
 
 
 } //end of namespace
-#endif // _WE_OBJ_H_

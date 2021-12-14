@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef WEIGHTEDTHREADPOOL_H
-#define WEIGHTEDTHREADPOOL_H
+#pragma once
 
 #include <string>
 #include <iostream>
@@ -239,4 +238,3 @@ private:
 
 } // namespace threadpool
 
-#endif //WEIGHTEDTHREADPOOL_H

@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef PRIORITYTHREADPOOL_H
-#define PRIORITYTHREADPOOL_H
+#pragma once
 
 #include <string>
 #include <iostream>
@@ -131,4 +130,3 @@ private:
 
 } // namespace threadpool
 
-#endif //PRIORITYTHREADPOOL_H

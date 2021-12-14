@@ -23,8 +23,7 @@
 
 /** @file */
 
-#ifndef CLIENTROTATOR_H
-#define CLIENTROTATOR_H
+#pragma once
 
 #include <iostream>
 #include <vector>
@@ -170,6 +169,5 @@ private:
 
 
 } // namespace
-#endif
 // vim:ts=4 sw=4:
 

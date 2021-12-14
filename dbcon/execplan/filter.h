@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef EXECPLAN_FILTER_H
-#define EXECPLAN_FILTER_H
+#pragma once
 #include <string>
 #include <iosfwd>
 
@@ -165,5 +164,4 @@ private:
 std::ostream& operator<<(std::ostream& os, const Filter& rhs);
 
 }
-#endif //EXECPLAN_FILTER_H
 

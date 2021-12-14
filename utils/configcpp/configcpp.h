@@ -22,8 +22,7 @@
 /**
  * @file
  */
-#ifndef CONFIG_CONFIGCPP_H
-#define CONFIG_CONFIGCPP_H
+#pragma once
 
 #include <string>
 #include <map>
@@ -258,6 +257,5 @@ private:
 
 #undef EXPORT
 
-#endif
 // vim:ts=4 sw=4:
 

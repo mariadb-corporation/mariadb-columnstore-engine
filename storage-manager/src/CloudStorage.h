@@ -16,8 +16,7 @@
    MA 02110-1301, USA. */
 
 
-#ifndef CLOUDSTORAGE_H_
-#define CLOUDSTORAGE_H_
+#pragma once
 
 #include <string>
 #include <boost/shared_array.hpp>
@@ -58,4 +57,3 @@ class CloudStorage
 
 }
 
-#endif

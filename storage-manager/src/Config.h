@@ -16,8 +16,7 @@
    MA 02110-1301, USA. */
 
 
-#ifndef CONFIG_H_
-#define CONFIG_H_
+#pragma once
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/thread.hpp>
@@ -73,4 +72,3 @@ class Config : public boost::noncopyable
 
 }
 
-#endif

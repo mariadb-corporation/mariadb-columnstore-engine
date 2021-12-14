@@ -16,8 +16,7 @@
    MA 02110-1301, USA. */
 
 
-#ifndef NUMERICLITERAL_H
-#define NUMERICLITERAL_H
+#pragma once
 
 #include "genericparser.h"
 #include "mcs_datatype.h"
@@ -617,4 +616,3 @@ public:
 
 } // namespace literal
 
-#endif // NUMERICLITERAL_H

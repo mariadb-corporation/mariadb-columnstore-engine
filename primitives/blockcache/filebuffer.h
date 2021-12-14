@@ -23,8 +23,7 @@
  *                                                                         *
 ***************************************************************************/
 
-#ifndef FILEBUFFER_H
-#define FILEBUFFER_H
+#pragma once
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -183,4 +182,3 @@ private:
 typedef std::vector<FileBuffer> FileBufferPool_t;
 
 }
-#endif

@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef SIMPLESCALARFILTER_H
-#define SIMPLESCALARFILTER_H
+#pragma once
 #include <string>
 #include <vector>
 #include <ostream>
@@ -169,5 +168,4 @@ private:
 std::ostream& operator<<(std::ostream& output, const SimpleScalarFilter& rhs);
 
 }
-#endif //SELECTFILTER_H
 

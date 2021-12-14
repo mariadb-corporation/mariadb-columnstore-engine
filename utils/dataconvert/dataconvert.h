@@ -22,8 +22,7 @@
 ****************************************************************************/
 /** @file */
 
-#ifndef DATACONVERT_H
-#define DATACONVERT_H
+#pragma once
 
 #include <unistd.h>
 #include <string>
@@ -1784,5 +1783,4 @@ inline int128_t string_to_ll<int128_t> ( const std::string& data, bool& bSaturat
 
 #undef EXPORT
 
-#endif //DATACONVERT_H
 

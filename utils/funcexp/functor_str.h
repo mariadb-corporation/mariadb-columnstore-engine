@@ -20,8 +20,7 @@
 
 /** @file */
 
-#ifndef FUNCTOR_STR_H
-#define FUNCTOR_STR_H
+#pragma once
 
 #include "functor.h"
 #include "sql_crypt.h"
@@ -1021,4 +1020,3 @@ private:
 
 }
 
-#endif

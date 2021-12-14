@@ -20,8 +20,7 @@
 
 /** @file */
 
-#ifndef SUBQUERY_TRANSFORMER_H
-#define SUBQUERY_TRANSFORMER_H
+#pragma once
 
 
 #include "elementtype.h"
@@ -239,6 +238,5 @@ protected:
 
 }
 
-#endif  // SUBQUERY_STEP_H
 // vim:ts=4 sw=4:
 

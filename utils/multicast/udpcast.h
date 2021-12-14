@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef UDPCAST_H
-#define UDPCAST_H
+#pragma once
 
 #include "socklib.h"
 #include <sys/time.h>
@@ -159,4 +158,3 @@ int udpc_shouldPrintUncompressedPos(int deflt, int fd, int pipe);
 # define DEBUG 0
 #endif
 
-#endif

@@ -19,8 +19,7 @@
  *   $Id: we_bulkloadbuffer.h 4489 2013-01-30 18:47:53Z dcathey $
  *
  ********************************************************************/
-#ifndef _WE_BULKLOADBUFFER_H
-#define _WE_BULKLOADBUFFER_H
+#pragma once
 
 #include "we_type.h"
 #include "limits"
@@ -422,4 +421,3 @@ inline bool isTrueWord(const char *field, int fieldLength)
 }
 
 }
-#endif

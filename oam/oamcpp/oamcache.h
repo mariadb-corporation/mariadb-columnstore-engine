@@ -16,8 +16,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef OAMCACHE_H_
-#define OAMCACHE_H_
+#pragma once
 
 #include <unistd.h>
 #include <map>
@@ -83,4 +82,3 @@ private:
 
 #undef EXPORT
 
-#endif /* OAMCACHE_H_ */

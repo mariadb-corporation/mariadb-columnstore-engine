@@ -16,8 +16,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef HA_MCS_IMPL_H__
-#define HA_MCS_IMPL_H__
+#pragma once
 
 #include "idb_mysql.h"
 
@@ -74,5 +73,4 @@ extern std::string  ha_mcs_impl_viewtablelock( cal_impl_if::cal_connection_info&
 extern std::string  ha_mcs_impl_cleartablelock( cal_impl_if::cal_connection_info& ci, uint64_t tableLockID);
 #endif
 
-#endif
 

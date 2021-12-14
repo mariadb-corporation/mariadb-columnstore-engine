@@ -1,5 +1,4 @@
-#ifndef QFE_RETURNEDROWS_H__
-#define QFE_RETURNEDROWS_H__
+#pragma once
 
 #include "socktype.h"
 #include "messagequeue.h"
@@ -11,5 +10,4 @@ void processReturnedRows(messageqcpp::MessageQueueClient*, SockType);
 
 }
 
-#endif
 

@@ -22,8 +22,7 @@
  ***********************************************************************/
 /** @file */
 
-#ifndef DMLPACKAGEPROCESSOR_H
-#define DMLPACKAGEPROCESSOR_H
+#pragma once
 #include <stdexcept>
 #include <string>
 #include <sstream>
@@ -551,4 +550,3 @@ bool from_string(T& t,
 
 #undef EXPORT
 
-#endif                                            //DMLPACKAGEPROCESSOR_H

@@ -21,8 +21,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef ROWCOLUMN_H
-#define ROWCOLUMN_H
+#pragma once
 #include <string>
 #include <vector>
 #include <boost/shared_ptr.hpp>
@@ -182,5 +181,4 @@ public:
 std::ostream& operator<<(std::ostream& output, const RowColumn& rhs);
 
 }
-#endif //SIMPLECOLUMN_H
 

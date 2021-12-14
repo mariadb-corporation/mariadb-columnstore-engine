@@ -22,8 +22,7 @@
 
 /** @file */
 
-#ifndef JOBLIST_PRIMITIVE_H
-#define JOBLIST_PRIMITIVE_H
+#pragma once
 
 #include <sys/types.h>
 
@@ -908,6 +907,5 @@ struct LbidAtVer
 
 #pragma pack(pop)
 
-#endif //JOBLIST_PRIMITIVE_H
 // vim:ts=4 sw=4:
 

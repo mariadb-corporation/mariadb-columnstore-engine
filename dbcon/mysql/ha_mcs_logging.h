@@ -16,8 +16,7 @@
  * MA 02110-1301, USA.
  */
 
-#ifndef HA_MCS_LOGGING_H__
-#define HA_MCS_LOGGING_H__
+#pragma once
 
 #include "messagelog.h"
 
@@ -50,4 +49,3 @@ inline void log_this(THD *thd, const char *message,
 
 };
 
-#endif

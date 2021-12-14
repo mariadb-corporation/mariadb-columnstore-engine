@@ -28,8 +28,7 @@
  *    CREATE AGGREGATE FUNCTION covar_samp returns REAL soname 'libregr_mysql.so';
  *
  */
-#ifndef HEADER_covar_samp
-#define HEADER_covar_samp
+#pragma once
 
 #include <cstdlib>
 #include <string>
@@ -82,5 +81,4 @@ protected:
 
 #undef EXPORT
 
-#endif // HEADER_covar_samp.h
 

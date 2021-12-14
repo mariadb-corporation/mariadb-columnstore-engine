@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef PRODUCONSUM_H
-#define PRODUCONSUM_H
+#pragma once
 
 typedef struct produconsum* produconsum_t;
 
@@ -25,4 +24,3 @@ typedef struct produconsum* produconsum_t;
  */
 int pc_consumeAnyContiguous(produconsum_t pc);
 
-#endif

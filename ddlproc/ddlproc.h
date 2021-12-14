@@ -20,8 +20,7 @@
 /**
  * @file
  */
-#ifndef DDLPROC_H
-#define DDLPROC_H
+#pragma once
 
 #include <string>
 #include <sstream>
@@ -45,4 +44,3 @@
 #include "messagelog.h"
 
 
-#endif //DDLPROC_H

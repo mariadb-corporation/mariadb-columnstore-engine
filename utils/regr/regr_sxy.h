@@ -28,8 +28,7 @@
  *    CREATE AGGREGATE FUNCTION regr_sxy returns REAL soname 'libregr_mysql.so';
  *
  */
-#ifndef HEADER_regr_sxy
-#define HEADER_regr_sxy
+#pragma once
 
 #include <cstdlib>
 #include <string>
@@ -82,5 +81,4 @@ protected:
 
 #undef EXPORT
 
-#endif // HEADER_regr_sxy.h
 

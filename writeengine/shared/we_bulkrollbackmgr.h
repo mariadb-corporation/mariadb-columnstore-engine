@@ -24,8 +24,7 @@
  * based on HWM meta data saved by a bulk load.
  */
 
-#ifndef WE_BULKROLLBACKMGR_H_
-#define WE_BULKROLLBACKMGR_H_
+#pragma once
 
 #ifdef _MSC_VER
 #define WIN32_LEAN_AND_MEAN
@@ -234,4 +233,3 @@ private:
 
 #undef EXPORT
 
-#endif // WE_BULKROLLBACKMGR_H_

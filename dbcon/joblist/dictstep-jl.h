@@ -29,8 +29,7 @@
 //
 /** @file */
 
-#ifndef DICTSTEP_JL_H_
-#define DICTSTEP_JL_H_
+#pragma once
 
 #include "jobstep.h"
 #include "command-jl.h"
@@ -81,4 +80,3 @@ private:
 
 };  // namespace
 
-#endif

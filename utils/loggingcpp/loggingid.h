@@ -22,8 +22,7 @@
 /**
  * @file
  */
-#ifndef LOGGING_LOGGINGID_H
-#define LOGGING_LOGGINGID_H
+#pragma once
 
 #include <string>
 
@@ -50,4 +49,3 @@ struct LoggingID
 
 }
 
-#endif

@@ -23,8 +23,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef AGGREGATECOLUMN_H
-#define AGGREGATECOLUMN_H
+#pragma once
 #include <string>
 
 #include "calpontselectexecutionplan.h"
@@ -465,5 +464,4 @@ std::ostream& operator<<(std::ostream& os, const AggregateColumn& rhs);
 void getAggCols(ParseTree* n, void* obj);
 
 } //namespace execplan
-#endif //AGGREGATECOLUMN_H
 

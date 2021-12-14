@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef WINPORT_SYSLOG_H__
-#define WINPORT_SYSLOG_H__
+#pragma once
 
 /* From sys/syslog.h */
 
@@ -58,5 +57,4 @@
 #define LOG_LOCAL6      (22<<3) /* reserved for local use */
 #define LOG_LOCAL7      (23<<3) /* reserved for local use */
 
-#endif
 

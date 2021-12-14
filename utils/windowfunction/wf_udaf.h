@@ -18,8 +18,7 @@
  *************************************************************************************/
 
 
-#ifndef UTILS_WF_UDAF_H
-#define UTILS_WF_UDAF_H
+#pragma once
 
 #ifndef _MSC_VER
 #include <tr1/unordered_map>
@@ -113,7 +112,6 @@ public:
 
 } // namespace
 
-#endif  // UTILS_WF_UDAF_H
 
 // vim:ts=4 sw=4:
 
