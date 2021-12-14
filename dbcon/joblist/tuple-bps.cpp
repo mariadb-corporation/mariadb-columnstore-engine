@@ -175,7 +175,6 @@ TupleBPS::JoinLocalData::JoinLocalData(TupleBPS* pTupleBPS, RowGroup& primRowGro
         local_fe2Output.initRow(&local_fe2OutRow);
         local_fe2Data.reinit(fe2Output);
         local_fe2Output.setData(&local_fe2Data);
-        // local_fe2OutRow = fe2OutRow;
         local_fe2 = *fe2;
     }
 

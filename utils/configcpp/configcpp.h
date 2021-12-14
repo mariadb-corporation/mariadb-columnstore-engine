@@ -87,15 +87,6 @@ public:
     */
     EXPORT const std::string getConfig(const std::string& section, const std::string& name);
 
-    /** @brief get name's value from section
-    *
-    * get name's value from section in the current config file re-reading the
-    * config file if it was updated.
-    * @param section the name of the config file section to search
-    * @param name the param name whose value is to be returned
-    */
-    const std::string getFromActualConfig(const std::string& section, const std::string& name);
-
     /** @brief get all name's values from a section
     *
     * get name's values from section in the current config file.
@@ -113,8 +104,6 @@ public:
     * @param name the param name whose value is to be updated
     * @param value the param value
     */
-    // !!!Don't ever ever use this in the engine code b/c it might result in a race
-    // b/w getConfig and setConfig methods.!!!
     EXPORT void setConfig(const std::string& section, const std::string& name, const std::string& value);
 
     /** @brief delete name from section
