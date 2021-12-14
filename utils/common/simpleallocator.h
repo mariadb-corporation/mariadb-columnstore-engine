@@ -24,8 +24,7 @@
  * class SimpleAllocator interface
  */
 
-#ifndef UTILS_SIMPLEALLOCATOR_H
-#define UTILS_SIMPLEALLOCATOR_H
+#pragma once
 
 #include <unistd.h>
 #include <list>
@@ -256,5 +255,4 @@ inline bool operator!=(const SimpleAllocator<T1>&, const SimpleAllocator<T2>&)
 }
 }
 
-#endif  // UTILS_SIMPLEALLOCATOR_H
 

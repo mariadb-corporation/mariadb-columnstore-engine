@@ -19,8 +19,7 @@
 
 /** @file */
 
-#ifndef _WE_FILEOP_H_
-#define _WE_FILEOP_H_
+#pragma once
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <string>
@@ -608,4 +607,3 @@ inline TxnID FileOp::getTransId() const
 
 #undef EXPORT
 
-#endif // _WE_FILEOP_H_

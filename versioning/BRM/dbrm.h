@@ -24,8 +24,7 @@
  * class DBRM
  */
 
-#ifndef DBRM_H_
-#define DBRM_H_
+#pragma once
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -1051,4 +1050,3 @@ private:
 
 #undef EXPORT
 
-#endif

@@ -16,8 +16,7 @@
    MA 02110-1301, USA. */
 
 
-#ifndef NULLVALUEMANIP_H
-#define NULLVALUEMANIP_H
+#pragma once
 
 #include "../../dbcon/execplan/calpontsystemcatalog.h"
 
@@ -32,4 +31,3 @@ int64_t getSignedNullValue(execplan::CalpontSystemCatalog::ColDataType, uint32_t
 
 }
 
-#endif // NULLVALUEMANIP_H

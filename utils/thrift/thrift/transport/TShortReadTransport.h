@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TRANSPORT_TSHORTREADTRANSPORT_H_
-#define _THRIFT_TRANSPORT_TSHORTREADTRANSPORT_H_ 1
+#pragma once
 
 #include <cstdlib>
 
@@ -118,4 +117,3 @@ protected:
 }
 } // apache::thrift::transport::test
 
-#endif // #ifndef _THRIFT_TRANSPORT_TSHORTREADTRANSPORT_H_

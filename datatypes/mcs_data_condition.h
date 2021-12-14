@@ -16,8 +16,7 @@
    MA 02110-1301, USA. */
 
 
-#ifndef MCS_DATA_CONDITION_H
-#define MCS_DATA_CONDITION_H
+#pragma once
 
 namespace datatypes
 {
@@ -80,4 +79,3 @@ private:
 
 } // namespace datatypes
 
-#endif // MCS_DATA_CONDITION_H

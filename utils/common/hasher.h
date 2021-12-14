@@ -24,8 +24,7 @@
  * class Hasher interface
  */
 
-#ifndef UTILS_HASHER_H
-#define UTILS_HASHER_H
+#pragma once
 
 #include <stdint.h>
 #include <string.h>
@@ -405,4 +404,3 @@ private:
 
 }
 
-#endif  // UTILS_HASHER_H

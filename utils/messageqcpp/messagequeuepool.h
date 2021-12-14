@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef MESSAGEQCPP_MESSAGEQUEUECLIENT_H
-#define MESSAGEQCPP_MESSAGEQUEUECLIENT_H
+#pragma once
 
 #include <map>
 #include "messagequeue.h"
@@ -55,4 +54,3 @@ private:
 };
 
 }
-#endif //MESSAGEQCPP_MESSAGEQUEUECLIENT_H

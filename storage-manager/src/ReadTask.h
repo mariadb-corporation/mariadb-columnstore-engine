@@ -17,8 +17,7 @@
 
 
 
-#ifndef READTASK_H_
-#define READTASK_H_
+#pragma once
 
 #include "PosixTask.h"
 
@@ -38,4 +37,3 @@ class ReadTask : public PosixTask
 };
 
 }
-#endif

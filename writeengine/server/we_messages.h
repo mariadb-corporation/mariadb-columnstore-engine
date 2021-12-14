@@ -19,8 +19,7 @@
 * $Id: we_messages.h 4609 2013-04-19 15:32:02Z chao $
 *
 *******************************************************************************/
-#ifndef WE_MESSAGES_H__
-#define WE_MESSAGES_H__
+#pragma once
 
 namespace WriteEngine
 {
@@ -118,5 +117,4 @@ enum ServerMessages
 
 }
 
-#endif
 

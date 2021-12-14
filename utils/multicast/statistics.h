@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef STATISTICS_H
-#define STATISTICS_H
+#pragma once
 
 
 typedef struct receiver_stats* receiver_stats_t;
@@ -39,4 +38,3 @@ sender_stats_t udpc_allocSenderStats(int fd, FILE* logfile, long bwPeriod,
 void udpc_displaySenderStats(sender_stats_t, int blockSize, int sliceSize,
                              int isFinal);
 
-#endif

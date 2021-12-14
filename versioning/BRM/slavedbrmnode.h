@@ -24,8 +24,7 @@
  * class SlaveDBRMNode
  */
 
-#ifndef SLAVEDBRMNODE_H_
-#define SLAVEDBRMNODE_H_
+#pragma once
 
 #include <sys/types.h>
 #include <vector>
@@ -519,4 +518,3 @@ private:
 
 #undef EXPORT
 
-#endif

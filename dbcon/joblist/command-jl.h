@@ -17,8 +17,7 @@
 
 /** @file */
 
-#ifndef COMMANDJL_H
-#define COMMANDJL_H
+#pragma once
 
 #include <string>
 #include <boost/uuid/uuid.hpp>
@@ -114,4 +113,3 @@ typedef boost::shared_ptr<CommandJL> SCommand;
 
 }
 
-#endif

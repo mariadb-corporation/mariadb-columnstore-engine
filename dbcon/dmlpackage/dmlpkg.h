@@ -21,8 +21,7 @@
  *
  ***********************************************************************/
 /** @file */
-#ifndef DMLPKG_H
-#define DMLPKG_H
+#pragma once
 
 #include <vector>
 #include <string>
@@ -1048,4 +1047,3 @@ public:
 };
 
 }                                                 // namespace dmlpackage
-#endif                                            // DMLPKG_H

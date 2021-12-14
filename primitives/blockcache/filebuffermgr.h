@@ -22,8 +22,7 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef FILEBUFFERMGR_H
-#define FILEBUFFERMGR_H
+#pragma once
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -240,4 +239,3 @@ private:
 };
 
 }
-#endif

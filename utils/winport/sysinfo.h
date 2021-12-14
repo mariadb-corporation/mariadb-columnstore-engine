@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef IDB_SYSINFO_H_
-#define IDB_SYSINFO_H_
+#pragma once
 
 // System info stuff
 struct sysinfo
@@ -37,4 +36,3 @@ struct sysinfo
 };
 extern int sysinfo(sysinfo*);
 
-#endif // IDB_SYSINFO_H_

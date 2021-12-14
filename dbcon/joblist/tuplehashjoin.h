@@ -19,8 +19,7 @@
 //  $Id: tuplehashjoin.h 9655 2013-06-25 23:08:13Z xlou $
 
 
-#ifndef TUPLEHASHJOIN_H_
-#define TUPLEHASHJOIN_H_
+#pragma once
 
 #include "jobstep.h"
 #include "calpontsystemcatalog.h"
@@ -630,5 +629,4 @@ private:
 }
 
 
-#endif
 // vim:ts=4 sw=4:

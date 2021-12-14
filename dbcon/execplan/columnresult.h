@@ -21,8 +21,7 @@
  *****************************************************************************/
 /** @file */
 
-#ifndef EXECPLAN_COLUMNRESULT_H_
-#define EXECPLAN_COLUMNRESULT_H_
+#pragma once
 
 #include <sys/types.h>
 #include <vector>
@@ -114,4 +113,3 @@ private:
 
 }
 
-#endif

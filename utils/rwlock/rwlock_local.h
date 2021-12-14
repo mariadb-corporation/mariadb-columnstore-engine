@@ -24,8 +24,7 @@
  * class RWLock_local interface
  */
 
-#ifndef RWLock_local_LOCAL_H_
-#define RWLock_local_LOCAL_H_
+#pragma once
 
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
@@ -198,4 +197,3 @@ private:
 
 }
 
-#endif

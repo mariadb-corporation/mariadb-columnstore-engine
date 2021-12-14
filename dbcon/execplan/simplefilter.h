@@ -23,8 +23,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef SIMPLEFILTER_H
-#define SIMPLEFILTER_H
+#pragma once
 #include <string>
 #include <iosfwd>
 #include <boost/shared_ptr.hpp>
@@ -285,5 +284,4 @@ typedef boost::shared_ptr<SimpleFilter> SSFP;
 std::ostream& operator<<(std::ostream& output, const SimpleFilter& rhs);
 
 }
-#endif //SIMPLEFILTER_H
 

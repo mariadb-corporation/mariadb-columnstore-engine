@@ -15,8 +15,7 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
-#ifndef MCS_DATATYPE_H_INCLUDED
-#define MCS_DATATYPE_H_INCLUDED
+#pragma once
 
 #include <sstream>
 #include <boost/any.hpp>
@@ -2883,6 +2882,5 @@ class TypeHandlerTimestamp: public TypeHandlerTemporal
 
 }// end of namespace datatypes
 
-#endif //MCS_DATATYPE_H_INCLUDED
 
 // vim:ts=2 sw=2:

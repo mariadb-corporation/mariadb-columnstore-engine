@@ -20,8 +20,7 @@
 
 /** @file */
 
-#ifndef JOBLIST_JOBSTEP_H_
-#define JOBLIST_JOBSTEP_H_
+#pragma once
 
 #include <iostream>
 #include <vector>
@@ -560,6 +559,5 @@ typedef boost::shared_ptr<JobStep> SJSTEP;
 
 }
 
-#endif  // JOBLIST_JOBSTEP_H_
 // vim:ts=4 sw=4:
 

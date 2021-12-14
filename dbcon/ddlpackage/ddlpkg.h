@@ -35,8 +35,7 @@
  *
  */
 
-#ifndef DDLPACKAGE_H
-#define DDLPACKAGE_H
+#pragma once
 
 #include <vector>
 #include <string>
@@ -1651,4 +1650,3 @@ struct DropPartitionStatement : public SqlStatement
 
 #undef EXPORT
 
-#endif

@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef DOWNLOADER_H_
-#define DOWNLOADER_H_
+#pragma once
 
 #include "ThreadPool.h"
 #include "CloudStorage.h"
@@ -113,4 +112,3 @@ class Downloader : public ConfigListener
 
 }
 
-#endif

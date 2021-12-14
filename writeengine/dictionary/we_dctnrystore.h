@@ -33,8 +33,7 @@
  *  delete tokens.  But this function is not currently used.
  */
 
-#ifndef _WE_DctnryStore_H_
-#define _WE_DctnryStore_H_
+#pragma once
 
 #include <string>
 
@@ -227,4 +226,3 @@ private:
 
 #undef EXPORT
 
-#endif // _WE_DctnryStore_H_

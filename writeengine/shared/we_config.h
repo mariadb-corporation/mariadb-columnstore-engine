@@ -21,8 +21,7 @@
 *******************************************************************************/
 /** @file */
 
-#ifndef WE_CONFIG_H_
-#define WE_CONFIG_H_
+#pragma once
 
 #include <string>
 #include <boost/thread.hpp>
@@ -198,4 +197,3 @@ private:
 
 #undef EXPORT
 
-#endif // WE_CONFIG_H_

@@ -1,5 +1,4 @@
-#ifndef QFE_SOCKETIO_H__
-#define QFE_SOCKETIO_H__
+#pragma once
 
 #ifdef _MSC_VER
 #define WIN32_LEAN_AND_MEAN
@@ -32,5 +31,4 @@ void writeString(SockType, const std::string&);
 } //namespace qfe::socketio
 } //namespace qfe
 
-#endif
 

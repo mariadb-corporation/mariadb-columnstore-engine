@@ -20,8 +20,7 @@
 
 /** @file */
 
-#ifndef FUNCTOR_ALL_H
-#define FUNCTOR_ALL_H
+#pragma once
 
 #include "functor.h"
 
@@ -606,4 +605,3 @@ public:
 
 }
 
-#endif

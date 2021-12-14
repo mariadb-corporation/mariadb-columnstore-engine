@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef CALPONTEXECUTIONPLAN_H
-#define CALPONTEXECUTIONPLAN_H
+#pragma once
 #include <string>
 #include <boost/shared_ptr.hpp>
 
@@ -162,5 +161,4 @@ private:
 typedef boost::shared_ptr<CalpontExecutionPlan> SCEP;
 
 }
-#endif //CALPONTEXECUTIONPLAN_H
 

@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef SELECTFILTER_H
-#define SELECTFILTER_H
+#pragma once
 #include <string>
 
 #include "filter.h"
@@ -187,5 +186,4 @@ private:
 std::ostream& operator<<(std::ostream& output, const SelectFilter& rhs);
 
 }
-#endif //SELECTFILTER_H
 

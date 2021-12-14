@@ -27,8 +27,7 @@
  * file did not exist prior to an aborted bulk load.
  */
 
-#ifndef WE_BULKROLLBACKFILE_H_
-#define WE_BULKROLLBACKFILE_H_
+#pragma once
 
 #include <string>
 
@@ -204,4 +203,3 @@ inline int BulkRollbackFile::buildDirName( OID oid,
 
 } //end of namespace
 
-#endif // WE_BULKROLLBACKFILE_H_

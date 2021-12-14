@@ -17,8 +17,7 @@
 
 // $Id: tpchrf2.h 2101 2013-01-21 14:12:52Z rdempsey $
 
-#ifndef TPCHRF2_H__
-#define TPCHRF2_H__
+#pragma once
 
 #include <string>
 #include <istream>
@@ -53,4 +52,3 @@ private:
 
 }
 
-#endif

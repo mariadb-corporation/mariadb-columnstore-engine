@@ -22,8 +22,7 @@
 /**
  * @file
  */
-#ifndef LOGGING_IDBERRORINFO_H
-#define LOGGING_IDBERRORINFO_H
+#pragma once
 
 #include <string>
 #include <map>
@@ -65,4 +64,3 @@ private:
 
 }//namespace logging
 
-#endif

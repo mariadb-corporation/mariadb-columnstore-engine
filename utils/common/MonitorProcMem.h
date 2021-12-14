@@ -24,8 +24,7 @@
  *
  */
 
-#ifndef MonitorProcMem_H__
-#define MonitorProcMem_H__
+#pragma once
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -127,4 +126,3 @@ protected:
 
 }
 
-#endif

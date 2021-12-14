@@ -17,8 +17,7 @@
 
 /** @file */
 
-#ifndef CONFIRM_HDFS_DBFILE_H
-#define CONFIRM_HDFS_DBFILE_H
+#pragma once
 
 #include <string>
 
@@ -136,4 +135,3 @@ private:
 
 #undef EXPORT
 
-#endif  // CONFIRM_HDFS_DBFILE_H

@@ -46,8 +46,7 @@
  *
  */
 
-#ifndef _SHA1_H_
-#define _SHA1_H_
+#pragma once
 
 namespace funcexp
 {
@@ -110,4 +109,3 @@ private:
 
 } //namespace
 
-#endif

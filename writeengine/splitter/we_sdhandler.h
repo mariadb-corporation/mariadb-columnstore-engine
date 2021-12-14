@@ -27,8 +27,7 @@
  *      Author: bpaul
  */
 
-#ifndef WE_SPLITTERDATAHANDLER_H_
-#define WE_SPLITTERDATAHANDLER_H_
+#pragma once
 
 
 #include "liboamcpp.h"
@@ -409,4 +408,3 @@ private:
 
 } /* namespace WriteEngine */
 
-#endif /* WE_SPLITTERDATAHANDLER_H_ */

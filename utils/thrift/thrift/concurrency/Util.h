@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_CONCURRENCY_UTIL_H_
-#define _THRIFT_CONCURRENCY_UTIL_H_ 1
+#pragma once
 
 #include <assert.h>
 #include <stddef.h>
@@ -174,4 +173,3 @@ public:
 }
 } // apache::thrift::concurrency
 
-#endif // #ifndef _THRIFT_CONCURRENCY_UTIL_H_

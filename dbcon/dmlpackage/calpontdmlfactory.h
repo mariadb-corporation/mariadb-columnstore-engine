@@ -21,8 +21,7 @@
  *
  ***********************************************************************/
 /** @file */
-#ifndef CALPONTDMLFACTORY_H
-#define CALPONTDMLFACTORY_H
+#pragma once
 #include <string>
 #include "dmlpackage.h"
 #include "calpontdmlpackage.h"
@@ -72,4 +71,3 @@ private:
 
 #undef EXPORT
 
-#endif                                            //CALPONTDMLFACTORY_H

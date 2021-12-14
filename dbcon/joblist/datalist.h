@@ -28,8 +28,7 @@
 
 #include "calpontsystemcatalog.h"
 
-#ifndef _DATALIST_HPP_
-#define _DATALIST_HPP_
+#pragma once
 
 namespace joblist
 {
@@ -221,4 +220,3 @@ void DataList<element_t>::setDiskElemSize(uint32_t size1st, uint32_t size2nd)
 
 }  // namespace
 
-#endif

@@ -19,8 +19,7 @@
 * $Id: we_ddlcommandproc.h 3043 2011-08-29 22:03:03Z chao $
 *
 *******************************************************************************/
-#ifndef WE_DMLCOMMANDPROC_H__
-#define WE_DMLCOMMANDPROC_H__
+#pragma once
 
 #include <unistd.h>
 #include <boost/scoped_ptr.hpp>
@@ -137,4 +136,3 @@ private:
 
 }
 #undef EXPORT
-#endif

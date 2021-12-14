@@ -23,8 +23,7 @@
 
 /** @file */
 
-#ifndef INTERVALCOLUMN_H
-#define INTERVALCOLUMN_H
+#pragma once
 #include <string>
 #include <iosfwd>
 #include <vector>
@@ -126,4 +125,3 @@ private:
 std::ostream& operator<<(std::ostream& output, const IntervalColumn& rhs);
 
 }
-#endif //INTERVALCOLUMN_H

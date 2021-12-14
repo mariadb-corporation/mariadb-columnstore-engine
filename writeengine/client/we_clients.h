@@ -19,8 +19,7 @@
 //
 /** @file */
 
-#ifndef WECLIENTS_H__
-#define WECLIENTS_H__
+#pragma once
 
 #include <iostream>
 #include <vector>
@@ -172,5 +171,4 @@ public:
 
 #undef EXPORT
 
-#endif
 // vim:ts=4 sw=4:

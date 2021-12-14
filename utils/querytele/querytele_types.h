@@ -4,8 +4,7 @@
  * DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
  *  @generated
  */
-#ifndef querytele_TYPES_H
-#define querytele_TYPES_H
+#pragma once
 
 #include <thrift/Thrift.h>
 #include <thrift/TApplicationException.h>
@@ -839,4 +838,3 @@ void swap(ImportTele& a, ImportTele& b);
 
 } // namespace
 
-#endif

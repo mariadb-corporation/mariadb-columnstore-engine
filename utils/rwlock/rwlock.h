@@ -24,8 +24,7 @@
  * class RWLock interface
  */
 
-#ifndef RWLOCK_H_
-#define RWLOCK_H_
+#pragma once
 
 #include <unistd.h>
 #include <stdexcept>
@@ -278,5 +277,4 @@ private:
 
 #undef EXPORT
 
-#endif
 // vim:ts=4 sw=4:

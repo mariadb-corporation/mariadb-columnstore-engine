@@ -19,8 +19,7 @@
 
 /** @file */
 
-#ifndef TABLELOCKDATA_H__
-#define TABLELOCKDATA_H__
+#pragma once
 
 #include <stdint.h>
 
@@ -63,6 +62,5 @@ private:
 
 #undef EXPORT
 
-#endif
 // vim:ts=4 sw=4:
 

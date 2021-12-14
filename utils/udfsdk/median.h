@@ -50,8 +50,7 @@
  * is also used to describe the interface that is used for
  * either.
  */
-#ifndef HEADER_median
-#define HEADER_median
+#pragma once
 
 #include <cstdlib>
 #include <string>
@@ -276,5 +275,4 @@ protected:
 
 #undef EXPORT
 
-#endif // HEADER_median.h
 

@@ -21,8 +21,7 @@
 ******************************************************************************************/
 /** @file */
 
-#ifndef _WE_FREEMGR_H_
-#define _WE_FREEMGR_H_
+#pragma once
 
 #include <stdlib.h>
 
@@ -121,4 +120,3 @@ public:
 };
 
 } //end of namespace
-#endif // _WE_FREEMGR_H_

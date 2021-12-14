@@ -21,8 +21,7 @@
 
 /** @file */
 
-#ifndef PRIMPROC_LOGGER_H_
-#define PRIMPROC_LOGGER_H_
+#pragma once
 
 #include <map>
 #include <boost/thread.hpp>
@@ -68,5 +67,4 @@ private:
 
 }
 
-#endif
 

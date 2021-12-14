@@ -21,8 +21,7 @@
  *
  ***********************************************************************/
 /** @file */
-#ifndef RESTOREPARTITIONEPROCESSOR_H
-#define RESTOREPARTITIONEPROCESSOR_H
+#pragma once
 
 #include "ddlpackageprocessor.h"
 
@@ -57,4 +56,3 @@ private:
 
 #undef EXPORT
 
-#endif                                            //RESTOREPARTITIONEPROCESSOR_H

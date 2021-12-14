@@ -55,8 +55,7 @@ main()
 }
 */
 
-#ifndef SYNCSTREAM_H__
-#define SYNCSTREAM_H__
+#pragma once
 
 #include <iostream>
 #include <cstdio>
@@ -148,5 +147,4 @@ private:
 
 }
 
-#endif
 

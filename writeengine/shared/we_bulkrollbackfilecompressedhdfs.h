@@ -19,8 +19,7 @@
  * Class to restore compressed hdfs db files on behalf of BulkRollBackMgr.
  */
 
-#ifndef WE_BULKROLLBACKFILECOMPRESSEDHDFS_H_
-#define WE_BULKROLLBACKFILECOMPRESSEDHDFS_H_
+#pragma once
 
 #include <cstdio>
 #include <cstring>
@@ -136,4 +135,3 @@ private:
 
 } //end of namespace
 
-#endif // WE_BULKROLLBACKFILECOMPRESSEDHDFS_H_

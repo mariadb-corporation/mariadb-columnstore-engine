@@ -22,8 +22,7 @@
 /**
  * @file
  */
-#ifndef TPCHSCHEMA_H
-#define TPCHSCHEMA_H
+#pragma once
 
 class TpchSchema
 {
@@ -42,4 +41,3 @@ private:
     void createindex(std::string createText);
 };
 
-#endif //TPCHSCHEMA_H

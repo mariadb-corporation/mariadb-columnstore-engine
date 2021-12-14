@@ -22,8 +22,7 @@
  * class ExpStep interface
  */
 
-#ifndef JOBLIST_EXPRESSION_STEP_H
-#define JOBLIST_EXPRESSION_STEP_H
+#pragma once
 
 //#define NDEBUG
 #include "jobstep.h"
@@ -271,5 +270,4 @@ private:
 
 }
 
-#endif //  JOBLIST_EXPRESSION_STEP_H
 

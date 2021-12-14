@@ -24,8 +24,7 @@
  * they are filled in and/or added to the DBRoots for the local PM.
  */
 
-#ifndef BATCHLOADER_H_
-#define BATCHLOADER_H_
+#pragma once
 
 #include <vector>
 #include "oamcache.h"
@@ -130,4 +129,3 @@ private:
 
 #undef EXPORT
 
-#endif // WE_DBROOTEXTENTTRACKER_H_

@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef IDBDATAFILE_H_
-#define IDBDATAFILE_H_
+#pragma once
 #define _FILE_OFFSET_BITS 64
 #include <stdlib.h>
 #include <string>
@@ -247,4 +246,3 @@ const std::string& IDBDataFile::name() const
 }
 
 }
-#endif /* IDBDATAFILE_H_ */

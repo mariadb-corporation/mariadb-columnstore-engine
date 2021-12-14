@@ -50,8 +50,7 @@
  * is also used to describe the interface that is used for
  * either.
  */
-#ifndef HEADER_ssq
-#define HEADER_ssq
+#pragma once
 
 #include <cstdlib>
 #include <string>
@@ -230,5 +229,4 @@ protected:
 
 #undef EXPORT
 
-#endif // HEADER_ssq.h
 

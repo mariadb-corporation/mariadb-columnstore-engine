@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef LARGEHASHJOIN_H
-#define LARGEHASHJOIN_H
+#pragma once
 // $Id: largehashjoin.h 9655 2013-06-25 23:08:13Z xlou $
 //
 // C++ Implementation: hashjoin
@@ -591,4 +590,3 @@ void HashJoin<element_t>::createHash(BucketDL<element_t>* srcBucketDL,
 
 } //namespace
 
-#endif

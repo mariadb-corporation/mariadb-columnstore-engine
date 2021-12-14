@@ -22,8 +22,7 @@
 /**
  * @file
  */
-#ifndef TPCHPOPULATE_H
-#define TPCHPOPULATE_H
+#pragma once
 
 class TpchPopulate
 {
@@ -41,4 +40,3 @@ private:
 
 };
 
-#endif //TPCHPOPULATE_H

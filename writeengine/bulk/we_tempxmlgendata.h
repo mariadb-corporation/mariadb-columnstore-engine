@@ -21,8 +21,7 @@
 *******************************************************************************/
 /** @file */
 
-#ifndef _WE_TEMPXMLGENDATA_H_
-#define _WE_TEMPXMLGENDATA_H_
+#pragma once
 
 #include <string>
 #include <iosfwd>
@@ -53,4 +52,3 @@ private:
 
 } // end of WriteEngine namespace
 
-#endif // _WE_TEMPXMLGENDATA_H_

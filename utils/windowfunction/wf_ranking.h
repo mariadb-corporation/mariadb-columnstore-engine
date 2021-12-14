@@ -18,8 +18,7 @@
 //  $Id: wf_ranking.h 3868 2013-06-06 22:13:05Z xlou $
 
 
-#ifndef UTILS_WF_RANKING_H
-#define UTILS_WF_RANKING_H
+#pragma once
 
 #include <set>
 #include "windowfunctiontype.h"
@@ -53,7 +52,6 @@ protected:
 
 } // namespace
 
-#endif  // UTILS_WF_RANKING_H
 
 // vim:ts=4 sw=4:
 

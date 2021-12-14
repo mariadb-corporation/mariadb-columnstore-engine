@@ -21,8 +21,7 @@
  *
  ***********************************************************************/
 /** @file */
-#ifndef CREATETABLEPROCESSOR_H
-#define CREATETABLEPROCESSOR_H
+#pragma once
 
 #include "ddlpackageprocessor.h"
 
@@ -61,4 +60,3 @@ private:
 
 #undef EXPORT
 
-#endif                                            // CREATETABLEPROCESSOR_H

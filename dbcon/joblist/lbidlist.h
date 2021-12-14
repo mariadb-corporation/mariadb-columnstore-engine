@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef JOBLIST_LBIDLIST_H
-#define JOBLIST_LBIDLIST_H
+#pragma once
 
 #include <boost/shared_ptr.hpp>
 #include "joblisttypes.h"
@@ -160,4 +159,3 @@ private:
 
 
 } // joblist
-#endif

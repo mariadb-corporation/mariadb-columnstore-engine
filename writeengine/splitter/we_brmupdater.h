@@ -27,8 +27,7 @@
  *      Author: bpaul
  */
 
-#ifndef WE_BRMUPDATER_H_
-#define WE_BRMUPDATER_H_
+#pragma once
 
 
 namespace WriteEngine
@@ -87,4 +86,3 @@ private:
 };
 
 } /* namespace WriteEngine */
-#endif /* WE_BRMUPDATER_H_ */

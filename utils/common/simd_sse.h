@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef UTILS_SIMD_SSE_H
-#define UTILS_SIMD_SSE_H
+#pragma once
 
 #if defined(__x86_64__ )
 
@@ -469,5 +468,4 @@ namespace simd
 
 #endif // if defined(__x86_64__ )
 
-#endif
 // vim:ts=2 sw=2:

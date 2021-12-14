@@ -24,8 +24,7 @@
  * class BlockResolutionManager
  */
 
-#ifndef BLOCKRESOLUTIONMANAGER_H_
-#define BLOCKRESOLUTIONMANAGER_H_
+#pragma once
 
 #include <sys/types.h>
 #include <vector>
@@ -127,4 +126,3 @@ private:
 
 #undef EXPORT
 
-#endif

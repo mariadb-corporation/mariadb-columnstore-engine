@@ -21,8 +21,7 @@
 /**
  * @file
  */
-#ifndef LIBOAMCPP_H
-#define LIBOAMCPP_H
+#pragma once
 
 #include <exception>
 #include <stdexcept>
@@ -438,6 +437,5 @@ private:
 
 #undef EXPORT
 
-#endif
 // vim:ts=4 sw=4:
 

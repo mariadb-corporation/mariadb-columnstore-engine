@@ -16,8 +16,7 @@
    MA 02110-1301, USA. */
 
 
-#ifndef PSEUDOCCJL_H
-#define PSEUDOCCJL_H
+#pragma once
 
 #include "columncommand-jl.h"
 
@@ -44,4 +43,3 @@ private:
 
 
 }
-#endif // PSEUDOCCJL_H

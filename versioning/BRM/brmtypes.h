@@ -23,8 +23,7 @@
 /** @file
  */
 
-#ifndef BRMTYPES_H_
-#define BRMTYPES_H_
+#pragma once
 
 #include <vector>
 #include <sys/types.h>
@@ -659,4 +658,3 @@ std::ostream& operator<<(std::ostream&, const QueryContext&);
 
 #undef EXPORT
 
-#endif

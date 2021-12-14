@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_ASYNC_TQIODEVICE_TRANSPORT_H_
-#define _THRIFT_ASYNC_TQIODEVICE_TRANSPORT_H_ 1
+#pragma once
 
 #include <boost/shared_ptr.hpp>
 
@@ -68,5 +67,4 @@ private:
 }
 } // apache::thrift::transport
 
-#endif // #ifndef _THRIFT_ASYNC_TQIODEVICE_TRANSPORT_H_
 

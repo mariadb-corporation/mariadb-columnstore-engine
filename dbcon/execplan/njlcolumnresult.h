@@ -21,8 +21,7 @@
  *****************************************************************************/
 /** @file */
 
-#ifndef NJLCOLUMNRESULT_H_
-#define NJLCOLUMNRESULT_H_
+#pragma once
 
 #include "columnresult.h"
 
@@ -33,4 +32,3 @@ typedef ColumnResult NJLColumnResult;
 
 }
 
-#endif

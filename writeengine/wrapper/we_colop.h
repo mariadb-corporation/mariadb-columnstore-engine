@@ -20,8 +20,7 @@
 
 /** @file */
 
-#ifndef _WE_COLOP_H_
-#define _WE_COLOP_H_
+#pragma once
 
 #include <stdlib.h>
 
@@ -348,4 +347,3 @@ private:
 
 #undef EXPORT
 
-#endif // _WE_COLOP_H_

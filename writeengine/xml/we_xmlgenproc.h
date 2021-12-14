@@ -20,8 +20,7 @@
  *
  ***********************************************************************/
 /** @file */
-#ifndef WE_XMLGENPROC_H
-#define WE_XMLGENPROC_H
+#pragma once
 
 #include <libxml/parser.h>
 #include <libxml/xmlwriter.h>
@@ -138,4 +137,3 @@ private:
 
 #undef EXPORT
 
-#endif

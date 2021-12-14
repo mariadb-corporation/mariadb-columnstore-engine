@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TRANSPORT_THTTPTRANSPORT_H_
-#define _THRIFT_TRANSPORT_THTTPTRANSPORT_H_ 1
+#pragma once
 
 #include <thrift/transport/TBufferTransports.h>
 #include <thrift/transport/TVirtualTransport.h>
@@ -116,4 +115,3 @@ protected:
 }
 } // apache::thrift::transport
 
-#endif // #ifndef _THRIFT_TRANSPORT_THTTPCLIENT_H_

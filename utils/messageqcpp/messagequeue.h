@@ -21,8 +21,7 @@
 *
 ******************************************************************************************/
 /** @file */
-#ifndef MESSAGEQCPP_MESSAGEQUEUE_H
-#define MESSAGEQCPP_MESSAGEQUEUE_H
+#pragma once
 #include <string>
 #include <ctime>
 
@@ -335,6 +334,5 @@ inline void MessageQueueClient::syncProto(bool use)
 
 #undef EXPORT
 
-#endif //MESSAGEQCPP_MESSAGEQUEUE_H
 // vim:ts=4 sw=4:
 

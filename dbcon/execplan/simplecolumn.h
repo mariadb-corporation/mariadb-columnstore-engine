@@ -23,8 +23,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef SIMPLECOLUMN_H
-#define SIMPLECOLUMN_H
+#pragma once
 #include <string>
 #include <boost/shared_ptr.hpp>
 
@@ -394,5 +393,4 @@ void getSimpleCols(ParseTree* n, void* obj);
 ParseTree* replaceRefCol(ParseTree*& n, CalpontSelectExecutionPlan::ReturnedColumnList&);
 
 }
-#endif //SIMPLECOLUMN_H
 

@@ -20,8 +20,7 @@
  *
  ***********************************************************************/
 /** @file */
-#ifndef INPUTMGR_H
-#define INPUTMGR_H
+#pragma once
 
 #include <string>
 #include "we_xmlgendata.h"
@@ -67,4 +66,3 @@ private:
 
 }
 
-#endif

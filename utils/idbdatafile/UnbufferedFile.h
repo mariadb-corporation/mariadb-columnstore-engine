@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef UNBUFFEREDFILE_H_
-#define UNBUFFEREDFILE_H_
+#pragma once
 
 #include <stdexcept>
 #include <unistd.h>
@@ -63,4 +62,3 @@ private:
 
 }
 
-#endif /* UNBUFFEREDFILE_H_ */

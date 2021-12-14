@@ -16,8 +16,7 @@
    MA 02110-1301, USA. */
 
 
-#ifndef LIST_DIRECTORYTASK_H_
-#define LIST_DIRECTORYTASK_H_
+#pragma once
 
 #include "PosixTask.h"
 #include <string>
@@ -41,4 +40,3 @@ class ListDirectoryTask : public PosixTask
 
 
 }
-#endif

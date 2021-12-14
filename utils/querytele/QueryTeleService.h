@@ -4,8 +4,7 @@
  * DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
  *  @generated
  */
-#ifndef QueryTeleService_H
-#define QueryTeleService_H
+#pragma once
 
 #include <thrift/TDispatchProcessor.h>
 #include "querytele_types.h"
@@ -499,4 +498,3 @@ public:
 
 } // namespace
 
-#endif

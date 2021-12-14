@@ -24,8 +24,7 @@
  * class DBRM
  */
 
-#ifndef TRACER_H_
-#define TRACER_H_
+#pragma once
 
 #include <sys/types.h>
 #include <string>
@@ -190,5 +189,4 @@ private:
 
 #undef EXPORT
 
-#endif
 

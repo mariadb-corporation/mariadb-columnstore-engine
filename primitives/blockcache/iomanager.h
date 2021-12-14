@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef IOMANAGER_H
-#define IOMANAGER_H
+#pragma once
 // $Id: iomanager.h 2145 2013-08-09 22:38:19Z wweeks $
 //
 // C++ Interface: iomanager
@@ -163,5 +162,4 @@ void dropFDCache();
 void purgeFDCache(std::vector<BRM::FileInfo>& files);
 
 }
-#endif
 // vim:ts=4 sw=4:

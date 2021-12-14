@@ -24,8 +24,7 @@
 /** @file jlf_execplantojoblist.h
  *
  */
-#ifndef JLF_EXECPLANTOJOBLIST_H__
-#define JLF_EXECPLANTOJOBLIST_H__
+#pragma once
 
 #include "calpontexecutionplan.h"
 #include "calpontselectexecutionplan.h"
@@ -67,4 +66,3 @@ private:
 
 } // end of joblist namespace
 
-#endif

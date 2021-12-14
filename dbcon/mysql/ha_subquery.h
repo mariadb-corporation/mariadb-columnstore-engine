@@ -24,8 +24,7 @@
 /** @file */
 /** class subquery series interface */
 
-#ifndef HA_SUBQUERY
-#define HA_SUBQUERY
+#pragma once
 
 //#undef LOG_INFO
 #include <my_config.h>
@@ -226,4 +225,3 @@ private:
 
 }
 
-#endif

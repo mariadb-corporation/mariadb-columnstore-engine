@@ -21,8 +21,7 @@
 ******************************************************************************************/
 /** @file */
 
-#ifndef _WE_CACHE_H_
-#define _WE_CACHE_H_
+#pragma once
 #include <iostream>
 #ifdef _MSC_VER
 #include <unordered_map>
@@ -227,4 +226,3 @@ private:
 
 #undef EXPORT
 
-#endif // _WE_CACHE_H_

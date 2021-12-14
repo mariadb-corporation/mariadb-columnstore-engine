@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TRANSPORT_TSERVERWINPIPES_H_
-#define _THRIFT_TRANSPORT_TSERVERWINPIPES_H_ 1
+#pragma once
 
 #include <thrift/transport/TServerTransport.h>
 #include <boost/shared_ptr.hpp>
@@ -98,4 +97,3 @@ typedef TServerSocket TPipeServer;
 }
 } // apache::thrift::transport
 
-#endif // #ifndef _THRIFT_TRANSPORT_TSERVERWINPIPES_H_

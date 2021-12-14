@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef UTILITY_H_
-#define UTILITY_H_
+#pragma once
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -117,4 +116,3 @@ int modeStrToFlags(const char* mode, int& createflags)
 
 }
 
-#endif /* UTILITY_H_ */

@@ -28,8 +28,7 @@
  *    CREATE AGGREGATE FUNCTION regr_count returns INTEGER soname 'libregr_mysql.so';
  *
  */
-#ifndef HEADER_regr_count
-#define HEADER_regr_count
+#pragma once
 
 #include <cstdlib>
 #include <string>
@@ -82,5 +81,4 @@ protected:
 
 #undef EXPORT
 
-#endif // HEADER_regr_count.h
 

@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef OUTERJOINONFILTER_H
-#define OUTERJOINONFILTER_H
+#pragma once
 #include <string>
 
 #include "filter.h"
@@ -125,5 +124,4 @@ private:
 std::ostream& operator<<(std::ostream& output, const OuterJoinOnFilter& rhs);
 
 }
-#endif //OUTERJOINONFILTER_H
 

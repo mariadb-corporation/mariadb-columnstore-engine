@@ -17,8 +17,7 @@
 
 // $Id: dmlif.h 2101 2013-01-21 14:12:52Z rdempsey $
 
-#ifndef DMLIF_H__
-#define DMLIF_H__
+#pragma once
 
 #include <string>
 #include <cstddef>
@@ -66,5 +65,4 @@ private:
 
 }
 
-#endif
 

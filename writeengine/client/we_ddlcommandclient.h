@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef WE_DDLCOMMANDCLIENT_H__
-#define WE_DDLCOMMANDCLIENT_H__
+#pragma once
 
 #include <unistd.h>
 
@@ -63,4 +62,3 @@ private:
 
 #undef EXPORT
 
-#endif

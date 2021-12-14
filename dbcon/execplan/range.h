@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef RANGE_H
-#define RANGE_H
+#pragma once
 #include <string>
 
 /**
@@ -96,5 +95,4 @@ private:
      */
 };
 }
-#endif //RANGE_H
 

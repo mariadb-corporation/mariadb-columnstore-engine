@@ -16,8 +16,7 @@
    MA 02110-1301, USA. */
 
 
-#ifndef S3STORAGE_H_
-#define S3STORAGE_H_
+#pragma once
 
 #include <string>
 #include <map>
@@ -95,4 +94,3 @@ class S3Storage : public CloudStorage
 
 }
 
-#endif

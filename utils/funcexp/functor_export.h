@@ -20,8 +20,7 @@
 
 /** @file */
 
-#ifndef FUNCTOR_EXPORT_H
-#define FUNCTOR_EXPORT_H
+#pragma once
 
 
 #include "functor.h"
@@ -82,4 +81,3 @@ private:
 
 }
 
-#endif

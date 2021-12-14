@@ -42,8 +42,7 @@
  *    soname 'libudf_mysql.so';
  *  
  */
-#ifndef HEADER_distinct_count
-#define HEADER_distinct_count
+#pragma once
 
 #include <cstdlib>
 #include <string>
@@ -217,5 +216,4 @@ protected:
 
 #undef EXPORT
 
-#endif // HEADER_distinct_count.h
 

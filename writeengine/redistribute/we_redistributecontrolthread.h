@@ -19,8 +19,7 @@
 * $Id: we_redistributecontrolthread.h 4450 2013-01-21 14:13:24Z rdempsey $
 */
 
-#ifndef WE_REDISTRIBUTECONTROLTHREAD_H
-#define WE_REDISTRIBUTECONTROLTHREAD_H
+#pragma once
 
 #include <map>
 #include <set>
@@ -129,7 +128,6 @@ private:
 } // namespace
 
 
-#endif  // WE_REDISTRIBUTECONTROLTHREAD_H
 
 // vim:ts=4 sw=4:
 

@@ -17,8 +17,7 @@
 
 
 
-#ifndef PROCESS_TASK_H_
-#define PROCESS_TASK_H_
+#pragma once
 
 #include "ThreadPool.h"
 
@@ -49,4 +48,3 @@ class ProcessTask : public ThreadPool::Job
 
 
 
-#endif

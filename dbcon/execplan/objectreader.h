@@ -24,8 +24,7 @@
  * class ObjectReader interface
  */
 
-#ifndef EXECPLAN_OBJECTREADER_H
-#define EXECPLAN_OBJECTREADER_H
+#pragma once
 
 #include <exception>
 #include <string>
@@ -170,5 +169,4 @@ public:
 };
 
 }
-#endif // EXECPLAN_OBJECTREADER_H
 

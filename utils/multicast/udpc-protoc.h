@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef UDPC_PROTOC_H
-#define UDPC_PROTOC_H
+#pragma once
 
 #include "udpcast.h"
 
@@ -214,4 +213,3 @@ union serverDataMsg
 	CAP_BIG_ENDIAN)
 
 
-#endif

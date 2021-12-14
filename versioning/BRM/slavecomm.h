@@ -24,8 +24,7 @@
  * class XXX interface
  */
 
-#ifndef SLAVECOMM_H_
-#define SLAVECOMM_H_
+#pragma once
 
 #include <unistd.h>
 #include <iostream>
@@ -142,4 +141,3 @@ private:
 
 #undef EXPORT
 
-#endif

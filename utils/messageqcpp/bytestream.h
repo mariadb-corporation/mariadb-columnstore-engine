@@ -18,8 +18,7 @@
    MA 02110-1301, USA.
 */
 
-#ifndef MESSAGEQCPP_BYTESTREAM_H
-#define MESSAGEQCPP_BYTESTREAM_H
+#pragma once
 
 #include <string>
 #include <iostream>
@@ -762,4 +761,3 @@ template<> inline void swap<messageqcpp::ByteStream>(messageqcpp::ByteStream& lh
 
 #undef EXPORT
 
-#endif //MESSAGEQCPP_BYTESTREAM_H

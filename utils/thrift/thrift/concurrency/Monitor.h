@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_CONCURRENCY_MONITOR_H_
-#define _THRIFT_CONCURRENCY_MONITOR_H_ 1
+#pragma once
 
 #include <thrift/concurrency/Exception.h>
 #include <thrift/concurrency/Mutex.h>
@@ -136,4 +135,3 @@ private:
 }
 } // apache::thrift::concurrency
 
-#endif // #ifndef _THRIFT_CONCURRENCY_MONITOR_H_

@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_WINDOWS_FCNTL_H_
-#define _THRIFT_WINDOWS_FCNTL_H_ 1
+#pragma once
 
 #if defined(_MSC_VER) && (_MSC_VER > 1200)
 #pragma once
@@ -46,4 +45,3 @@ extern "C" {
     int thrift_poll(THRIFT_POLLFD* fdArray, ULONG nfds, INT timeout);
 }
 
-#endif // _THRIFT_WINDOWS_FCNTL_H_

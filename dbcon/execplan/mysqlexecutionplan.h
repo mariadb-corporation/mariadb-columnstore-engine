@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef MYSQLEXECUTIONPLAN_H
-#define MYSQLEXECUTIONPLAN_H
+#pragma once
 #include <string>
 #include "vendorexecutionplan.h"
 
@@ -97,5 +96,4 @@ private:
      */
 };
 }
-#endif //MYSQLEXECUTIONPLAN_H
 

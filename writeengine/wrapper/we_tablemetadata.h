@@ -19,8 +19,7 @@
 //
 /** @file */
 
-#ifndef WE_TABLEMETADATA_H__
-#define WE_TABLEMETADATA_H__
+#pragma once
 
 #include <stdint.h>
 #include "we_type.h"
@@ -99,6 +98,5 @@ private:
 
 #undef EXPORT
 
-#endif
 // vim:ts=4 sw=4:
 

@@ -24,8 +24,7 @@
  * class SessionManagerServer interface
  */
 
-#ifndef _SESSIONMANAGERSERVER_H
-#define _SESSIONMANAGERSERVER_H
+#pragma once
 
 #include <map>
 
@@ -293,4 +292,3 @@ private:
 
 #undef EXPORT
 
-#endif

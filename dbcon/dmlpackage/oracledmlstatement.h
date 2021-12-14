@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef ORACLEDMLSTATEMENT_H
-#define ORACLEDMLSTATEMENT_H
+#pragma once
 #include <string>
 #include "vendordmlstatement.h"
 
@@ -44,5 +43,4 @@ private:
 
 };
 }
-#endif //ORACLEDMLSTATEMENT_H
 

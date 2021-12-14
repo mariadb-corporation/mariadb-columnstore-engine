@@ -28,8 +28,7 @@
  *    CREATE AGGREGATE FUNCTION corr returns REAL soname 'libregr_mysql.so';
  *
  */
-#ifndef HEADER_corr
-#define HEADER_corr
+#pragma once
 
 #include <cstdlib>
 #include <string>
@@ -82,5 +81,4 @@ protected:
 
 #undef EXPORT
 
-#endif // HEADER_corr.h
 

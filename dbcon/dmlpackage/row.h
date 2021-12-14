@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef ROW_H
-#define ROW_H
+#pragma once
 #include <string>
 #include "dmlobject.h"
 #include "bytestream.h"
@@ -119,5 +118,4 @@ typedef std::vector<Row*>RowList;
 
 #undef EXPORT
 
-#endif //ROW_H
 

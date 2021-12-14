@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef GROUPCONCATCOLUMN_H
-#define GROUPCONCATCOLUMN_H
+#pragma once
 #include <string>
 
 #include "calpontselectexecutionplan.h"
@@ -149,5 +148,4 @@ private:
 std::ostream& operator<<(std::ostream& os, const GroupConcatColumn& rhs);
 
 }
-#endif //GROUPCONCATCOLUMN_H
 

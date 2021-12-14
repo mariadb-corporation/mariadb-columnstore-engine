@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef COMMAND_H
-#define COMMAND_H
+#pragma once
 
 #include <boost/shared_ptr.hpp>
 #include <boost/uuid/uuid.hpp>
@@ -123,4 +122,3 @@ protected:
 
 }
 
-#endif

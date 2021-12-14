@@ -18,8 +18,7 @@
    MA 02110-1301, USA.
 */
 
-#ifndef ROWAGGREGATION_H
-#define ROWAGGREGATION_H
+#pragma once
 
 /** @file rowaggregation.h
  * Classes in this file are used to aggregate Rows in RowGroups.
@@ -1034,5 +1033,4 @@ typedef boost::shared_ptr<RowAggregationDistinct>   SP_ROWAGG_DIST;
 
 } // end of rowgroup namespace
 
-#endif  // ROWAGGREGATION_H
 

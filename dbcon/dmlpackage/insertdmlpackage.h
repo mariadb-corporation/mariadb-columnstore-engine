@@ -22,8 +22,7 @@
  ***********************************************************************/
 /** @file */
 
-#ifndef INSERTDMLPACKAGE_H
-#define INSERTDMLPACKAGE_H
+#pragma once
 #include <string>
 #include "calpontdmlpackage.h"
 #include "bytestream.h"
@@ -122,4 +121,3 @@ private:
 
 #undef EXPORT
 
-#endif                                            //INSERTDMLPACKAGE_H

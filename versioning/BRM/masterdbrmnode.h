@@ -24,8 +24,7 @@
  * class MasterDBRMNode interface
  */
 
-#ifndef MASTERDBRMNODE_H_
-#define MASTERDBRMNODE_H_
+#pragma once
 
 #include <boost/thread.hpp>
 #include <boost/scoped_ptr.hpp>
@@ -263,4 +262,3 @@ private:
 
 }
 
-#endif

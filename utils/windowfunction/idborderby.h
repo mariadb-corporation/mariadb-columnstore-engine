@@ -21,8 +21,7 @@
 
 /** @file */
 
-#ifndef IDB_ORDER_BY_H
-#define IDB_ORDER_BY_H
+#pragma once
 
 #include <queue>
 #include <utility>
@@ -435,5 +434,4 @@ protected:
 
 }
 
-#endif  // IDB_ORDER_BY_H
 

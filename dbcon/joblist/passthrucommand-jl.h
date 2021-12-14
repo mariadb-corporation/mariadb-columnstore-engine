@@ -29,8 +29,7 @@
 //
 /** @file */
 
-#ifndef PASSTHRUCOMMAND_JL
-#define PASSTHRUCOMMAND_JL
+#pragma once
 
 #include "jobstep.h"
 #include "command-jl.h"
@@ -66,4 +65,3 @@ private:
 
 };
 
-#endif

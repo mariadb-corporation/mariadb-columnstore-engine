@@ -24,8 +24,7 @@
  * class Multicast interface
  */
 
-#ifndef MULTICAST_H
-#define MULTICAST_H
+#pragma once
 
 #include "messagequeue.h"
 
@@ -130,5 +129,4 @@ private:
 
 } //namespace
 
-#endif //MULTICAST_H
 

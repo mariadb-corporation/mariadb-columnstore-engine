@@ -32,8 +32,7 @@
  * class BRMReporter
  */
 
-#ifndef _WE_BRMREPORTER_H_
-#define _WE_BRMREPORTER_H_
+#pragma once
 
 namespace WriteEngine
 {
@@ -144,4 +143,3 @@ private:
 
 } // end of namespace
 
-#endif // _WE_BRMREPORTER_H_

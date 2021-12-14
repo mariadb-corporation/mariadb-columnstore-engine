@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef THRIFT_TMULTIPLEXEDPROTOCOL_H_
-#define THRIFT_TMULTIPLEXEDPROTOCOL_H_ 1
+#pragma once
 
 #include <thrift/protocol/TProtocolDecorator.h>
 
@@ -100,4 +99,3 @@ private:
 }
 }
 
-#endif // THRIFT_TMULTIPLEXEDPROTOCOL_H_

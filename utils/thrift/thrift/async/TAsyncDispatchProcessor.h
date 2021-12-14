@@ -16,8 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-#ifndef _THRIFT_ASYNC_TASYNCDISPATCHPROCESSOR_H_
-#define _THRIFT_ASYNC_TASYNCDISPATCHPROCESSOR_H_ 1
+#pragma once
 
 #include <thrift/async/TAsyncProcessor.h>
 
@@ -163,4 +162,3 @@ class TAsyncDispatchProcessorT<protocol::TProtocol> :
 }
 } // apache::thrift::async
 
-#endif // _THRIFT_ASYNC_TASYNCDISPATCHPROCESSOR_H_

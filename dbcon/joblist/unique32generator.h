@@ -24,8 +24,7 @@
  *
  */
 
-#ifndef _UNIQUE32_GENERATOR_H_
-#define _UNIQUE32_GENERATOR_H_
+#pragma once
 
 #include <stdint.h>
 #include <boost/thread.hpp>
@@ -61,4 +60,3 @@ private:
 
 }  // namespace
 
-#endif

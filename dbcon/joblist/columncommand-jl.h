@@ -29,8 +29,7 @@
 //
 /** @file */
 
-#ifndef COLUMNCOMMANDJL_H_
-#define COLUMNCOMMANDJL_H_
+#pragma once
 
 #include "primitivestep.h"
 #include "command-jl.h"
@@ -131,6 +130,5 @@ private:
 
 }
 
-#endif
 // vim:ts=4 sw=4:
 

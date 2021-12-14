@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef PREFIXCACHE_H_
-#define PREFIXCACHE_H_
+#pragma once
 
 /* PrefixCache manages the cache for one prefix managed by SM. 
    Cache is a map of prefix -> PrefixCache, and holds the items
@@ -167,4 +166,3 @@ class PrefixCache : public boost::noncopyable
 
 }
 
-#endif

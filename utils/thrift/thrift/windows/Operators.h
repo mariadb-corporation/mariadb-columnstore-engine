@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_WINDOWS_OPERATORS_H_
-#define _THRIFT_WINDOWS_OPERATORS_H_
+#pragma once
 
 #if defined(_MSC_VER) && (_MSC_VER > 1200)
 #pragma once
@@ -41,4 +40,3 @@ inline bool operator == (const TEnumIterator&, const TEnumIterator&)
 }
 } // apache::thrift
 
-#endif // _THRIFT_WINDOWS_OPERATORS_H_

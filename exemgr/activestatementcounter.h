@@ -19,8 +19,7 @@
 //
 /** @file */
 
-#ifndef ACTIVESTATEMENTCOUNTER_H__
-#define ACTIVESTATEMENTCOUNTER_H__
+#pragma once
 
 #include <stdint.h>
 
@@ -63,6 +62,5 @@ private:
     BRM::VSS fVss;
 };
 
-#endif
 // vim:ts=4 sw=4:
 

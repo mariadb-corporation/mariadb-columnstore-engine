@@ -14,8 +14,7 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
-#ifndef H_SETTHREADNAME
-#define H_SETTHREADNAME
+#pragma once
 
 #include <string>
 
@@ -24,4 +23,3 @@ namespace utils
     void setThreadName(const char *threadName);
     std::string getThreadName();
 } // end of namespace
-#endif

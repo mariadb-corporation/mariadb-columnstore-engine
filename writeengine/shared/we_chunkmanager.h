@@ -20,8 +20,7 @@
 
 /** @file */
 
-#ifndef CHUNK_MANAGER_H
-#define CHUNK_MANAGER_H
+#pragma once
 
 #include <cstdio>
 #include <map>
@@ -393,5 +392,4 @@ protected:
 
 #undef EXPORT
 
-#endif  // CHUNK_MANAGER_H
 

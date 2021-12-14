@@ -23,8 +23,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef PARSETREE_H
-#define PARSETREE_H
+#pragma once
 
 #include <iostream>
 #include <fstream>
@@ -584,4 +583,3 @@ typedef boost::shared_ptr<ParseTree> SPTP;
 
 } // namespace
 
-#endif

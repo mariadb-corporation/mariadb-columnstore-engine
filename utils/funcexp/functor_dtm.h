@@ -20,8 +20,7 @@
 
 /** @file */
 
-#ifndef FUNCTOR_DTM_H
-#define FUNCTOR_DTM_H
+#pragma once
 
 #include "functor.h"
 
@@ -580,4 +579,3 @@ public:
 
 }
 
-#endif

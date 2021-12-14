@@ -19,8 +19,7 @@
 //  $Id: windowfunctionstep.h 9722 2013-07-25 21:29:10Z pleblanc $
 
 
-#ifndef JOBLIST_WINDOWFUNCTIONSTEP_H
-#define JOBLIST_WINDOWFUNCTIONSTEP_H
+#pragma once
 
 #include "../../utils/windowfunction/idborderby.h"
 #include "jobstep.h"
@@ -229,6 +228,5 @@ private:
 
 } // namespace
 
-#endif  // JOBLIST_WINDOWFUNCTIONSTEP_H
 
 // vim:ts=4 sw=4:

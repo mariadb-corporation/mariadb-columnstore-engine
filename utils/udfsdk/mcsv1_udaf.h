@@ -60,8 +60,7 @@
  * either.
  */
 
-#ifndef HEADER_mcsv1_udaf
-#define HEADER_mcsv1_udaf
+#pragma once
 
 #include <cstdlib>
 #include <string>
@@ -1089,5 +1088,4 @@ inline T mcsv1_UDAF::convertAnyTo(static_any::any& valIn) const
 
 #undef EXPORT
 
-#endif // HEADER_mcsv1_udaf.h
 

@@ -20,8 +20,7 @@
 
 /** @file */
 
-#ifndef GROUP_CONCAT_H
-#define GROUP_CONCAT_H
+#pragma once
 
 #include <utility>
 #include <set>
@@ -192,5 +191,4 @@ protected:
 
 #undef EXPORT
 
-#endif  // GROUP_CONCAT_H
 

@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef SMCOMM_H_
-#define SMCOMM_H_
+#pragma once
 
 #include <sys/stat.h>
 #include <string>
@@ -77,4 +76,3 @@ class SMComm : public boost::noncopyable
 
 }
 
-#endif

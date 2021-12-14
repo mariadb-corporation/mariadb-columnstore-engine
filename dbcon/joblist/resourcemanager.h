@@ -22,8 +22,7 @@
 /**
  * @file
  */
-#ifndef JOBLIST_RESOURCEMANAGER_H
-#define JOBLIST_RESOURCEMANAGER_H
+#pragma once
 
 #include <vector>
 #include <iostream>
@@ -672,4 +671,3 @@ inline bool ResourceManager::getBoolVal(const std::string& section, const std::s
 
 #undef EXPORT
 
-#endif

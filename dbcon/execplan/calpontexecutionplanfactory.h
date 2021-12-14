@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef CALPONTEXECUTIONPLANFACTORY_H
-#define CALPONTEXECUTIONPLANFACTORY_H
+#pragma once
 
 #include "calpontexecutionplan.h"
 #include "vendorexecutionplan.h"
@@ -40,5 +39,4 @@ public:
 };
 
 }  //namespace execplan
-#endif //CALPONTEXECUTIONPLANFACTORY_H
 

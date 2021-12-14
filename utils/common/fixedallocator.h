@@ -30,8 +30,7 @@
    TODO: make it STL and boost compliant...
 */
 
-#ifndef FIXEDALLOCATOR_H_
-#define FIXEDALLOCATOR_H_
+#pragma once
 
 #include <stdint.h>
 #include <boost/shared_array.hpp>
@@ -139,4 +138,3 @@ inline void* FixedAllocator::allocate(uint32_t len)
 
 #undef EXPORT
 }  // namespace
-#endif

@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef GLOB_H__
-#define GLOB_H__
+#pragma once
 
 #include <crtdefs.h>
 
@@ -59,5 +58,4 @@ extern void globfree(glob_t* pglob);
 
 #ifdef __cplusplus
 }
-#endif
 #endif

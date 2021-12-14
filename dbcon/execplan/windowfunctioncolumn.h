@@ -24,8 +24,7 @@
 
 /** @file */
 
-#ifndef WINDOW_FUNCTION_COLUMN_H
-#define WINDOW_FUNCTION_COLUMN_H
+#pragma once
 #include <string>
 #include <iosfwd>
 #include <vector>
@@ -262,4 +261,3 @@ std::ostream& operator<<(std::ostream& output, const WindowFunctionColumn& rhs);
 void getWindowFunctionCols(ParseTree* n, void* obj);
 
 }
-#endif //WINDOW_FUNCTION_COLUMN_H

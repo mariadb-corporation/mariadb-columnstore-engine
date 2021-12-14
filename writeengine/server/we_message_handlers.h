@@ -19,8 +19,7 @@
 * $Id: we_message_handlers.h 4450 2013-01-21 14:13:24Z rdempsey $
 *
 *******************************************************************************/
-#ifndef WE_MESSAGE_HANDLERS_H__
-#define WE_MESSAGE_HANDLERS_H__
+#pragma once
 
 #include "bytestream.h"
 
@@ -32,5 +31,4 @@ extern messageqcpp::ByteStream::byte doMsg2(messageqcpp::ByteStream& bs, std::st
 extern messageqcpp::ByteStream::byte doUpdateSyscolumnNextval(messageqcpp::ByteStream& bs, std::string err);
 }
 
-#endif
 

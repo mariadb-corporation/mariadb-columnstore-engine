@@ -21,8 +21,7 @@
 *
 ***********************************************************************/
 /** @file */
-#ifndef LOGGING_ERRORCODES_H
-#define LOGGING_ERRORCODES_H
+#pragma once
 
 #include <sys/types.h>
 #include <map>
@@ -97,5 +96,4 @@ private:
 };
 
 }
-#endif //LOGGING_ERRORCODES_H
 

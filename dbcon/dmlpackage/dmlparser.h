@@ -23,8 +23,7 @@
  ***********************************************************************/
 /** @file */
 
-#ifndef DMLPARSER_H
-#define DMLPARSER_H
+#pragma once
 
 #include <stdexcept>
 #include "dmlpkg.h"
@@ -117,4 +116,3 @@ private:
 };
 
 }
-#endif                                            // DMLPARSER_H

@@ -42,8 +42,7 @@
  *    'libudf_mysql.so';
  *
  */
-#ifndef HEADER_allnull
-#define HEADER_allnull
+#pragma once
 
 #include <cstdlib>
 #include <string>
@@ -194,5 +193,4 @@ protected:
 
 #undef EXPORT
 
-#endif // HEADER_allnull.h
 

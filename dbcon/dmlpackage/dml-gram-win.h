@@ -34,8 +34,7 @@
 
 
 /* Tokens.  */
-#ifndef YYTOKENTYPE
-# define YYTOKENTYPE
+#pragma once
 /* Put the tokens into the symbol table, so that GDB and other debuggers
    know about them.  */
 enum yytokentype
@@ -176,7 +175,6 @@ typedef union YYSTYPE
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
-#endif
 
 extern YYSTYPE dmllval;
 

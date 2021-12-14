@@ -24,8 +24,7 @@
  * class BRMShmImpl
  */
 
-#ifndef IDBSHMIMPL_H_
-#define IDBSHMIMPL_H_
+#pragma once
 
 #include <unistd.h>
 //#define NDEBUG
@@ -76,4 +75,3 @@ private:
 
 } //namespace
 
-#endif

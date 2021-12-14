@@ -16,8 +16,7 @@
    MA 02110-1301, USA. */
 
 
-#ifndef TRUNCATETASK_H_
-#define TRUNCATETASK_H_
+#pragma once
 
 #include "PosixTask.h"
 
@@ -38,4 +37,3 @@ class TruncateTask : public PosixTask
 
 
 }
-#endif

@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef POSIXFILESYSTEM_H_
-#define POSIXFILESYSTEM_H_
+#pragma once
 
 #include "IDBFileSystem.h"
 
@@ -46,4 +45,3 @@ public:
 
 }
 
-#endif /* POSIXFILESYSTEM_H_ */

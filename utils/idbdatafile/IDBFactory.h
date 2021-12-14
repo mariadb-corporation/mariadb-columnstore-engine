@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef IDBFACTORY_H_
-#define IDBFACTORY_H_
+#pragma once
 
 #include <string>
 #include <map>
@@ -124,4 +123,3 @@ const std::string& IDBFactory::name(IDBDataFile::Types type)
 
 }
 
-#endif /* IDBFACTORY_H_ */

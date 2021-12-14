@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef STATSPROCESSOR_H
-#define STATSPROCESSOR_H
+#pragma once
 
 #include <boost/shared_ptr.hpp>
 #include <thrift/transport/TTransport.h>
@@ -361,4 +360,3 @@ protected:
 }
 } // apache::thrift::processor
 
-#endif

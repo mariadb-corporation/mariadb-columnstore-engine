@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef WINPORT_GREPIT_H__
-#define WINPORT_GREPIT_H__
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -26,4 +25,3 @@ namespace winport
 extern bool grepit(std::istream&, const std::string&);
 }
 
-#endif

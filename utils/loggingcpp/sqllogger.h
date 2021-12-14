@@ -23,8 +23,7 @@
 
 /** @file */
 
-#ifndef LOGGING_SQLLOGGER_H_
-#define LOGGING_SQLLOGGER_H_
+#pragma once
 
 #include <string>
 
@@ -60,5 +59,4 @@ private:
 };
 
 }
-#endif
 

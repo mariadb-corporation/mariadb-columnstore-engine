@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef IDBFILESYSTEM_H_
-#define IDBFILESYSTEM_H_
+#pragma once
 
 #include <sys/types.h>
 #include <list>
@@ -166,4 +165,3 @@ IDBFileSystem& IDBFileSystem::getFs(IDBDataFile::Types type)
 
 }
 
-#endif /* IDBFILESYSTEM_H_ */

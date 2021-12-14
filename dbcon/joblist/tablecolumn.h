@@ -22,8 +22,7 @@
 
 /** @file */
 
-#ifndef _TABLECOLUMN_H_
-#define _TABLECOLUMN_H_
+#pragma once
 
 #include <vector>
 #include <boost/any.hpp>
@@ -157,5 +156,4 @@ private:
 
 }  // namespace
 
-#endif
 

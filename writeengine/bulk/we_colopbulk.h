@@ -24,8 +24,7 @@
  * class ColumnOpBulk
  */
 
-#ifndef _WE_COLOP_BULK_H_
-#define _WE_COLOP_BULK_H_
+#pragma once
 
 #include "we_colop.h"
 
@@ -59,4 +58,3 @@ public:
 
 } //end of namespace
 
-#endif // _WE_COLOP_BULK_H_

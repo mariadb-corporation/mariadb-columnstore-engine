@@ -19,8 +19,7 @@
 //  $Id: windowfunctiontype.h 3932 2013-06-25 16:08:10Z xlou $
 
 
-#ifndef UTILS_WINDOWFUNCTIONTYPE_H
-#define UTILS_WINDOWFUNCTIONTYPE_H
+#pragma once
 
 #include <map>
 #include <string>
@@ -302,7 +301,6 @@ extern std::map<int, std::string> colType2String;
 
 } // namespace
 
-#endif  // UTILS_WINDOWFUNCTIONTYPE_H
 
 // vim:ts=4 sw=4:
 

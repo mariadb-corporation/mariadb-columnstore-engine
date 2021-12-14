@@ -22,8 +22,7 @@
  ***********************************************************************/
 /** @file */
 
-#ifndef CALPONTDMLPACKAGE_H
-#define CALPONTDMLPACKAGE_H
+#pragma once
 #include <string>
 #include <boost/uuid/uuid.hpp>
 
@@ -394,4 +393,3 @@ protected:
     WriteEngine::ChunkManager* fCM;
 };
 }
-#endif                                            //CALPONTDMLPACKAGE_H

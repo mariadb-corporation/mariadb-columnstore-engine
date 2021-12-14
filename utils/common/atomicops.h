@@ -17,8 +17,7 @@
 
 /** @file */
 
-#ifndef COMMON_ATOMICOPS_H__
-#define COMMON_ATOMICOPS_H__
+#pragma once
 
 #include <unistd.h>
 #if defined(__linux__)
@@ -177,4 +176,3 @@ inline void atomicYield()
 
 }
 
-#endif

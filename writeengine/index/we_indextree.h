@@ -21,8 +21,7 @@
 ******************************************************************************************/
 /** @file */
 
-#ifndef _WE_INDEXTREE_H_
-#define _WE_INDEXTREE_H_
+#pragma once
 
 #include <stdlib.h>
 
@@ -331,4 +330,3 @@ private:
 
 #undef EXPORT
 
-#endif // _WE_INDEXTREE_H_

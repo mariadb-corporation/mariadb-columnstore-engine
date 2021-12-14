@@ -24,8 +24,7 @@
  * Used to maintain collection of timers tracking elapsed times for set of tasks
  */
 
-#ifndef TIMESET_H
-#define TIMESET_H
+#pragma once
 
 #include <ctime>
 #include <iostream>
@@ -363,4 +362,3 @@ void TimeSet::timespec_add(const struct timespec& tv1, // start time
 }
 
 };
-#endif

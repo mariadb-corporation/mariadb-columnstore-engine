@@ -23,8 +23,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef ARITHMETICCOLUMN_H
-#define ARITHMETICCOLUMN_H
+#pragma once
 #include <string>
 #include <iosfwd>
 #include <stack>
@@ -283,5 +282,4 @@ private:
 std::ostream& operator<<(std::ostream& output, const ArithmeticColumn& rhs);
 
 }
-#endif //ARITHMETICCOLUMN_H
 

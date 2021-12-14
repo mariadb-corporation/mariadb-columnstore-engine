@@ -21,8 +21,7 @@
 *******************************************************************************/
 /** @file */
 
-#ifndef _WE_XMLTAG_H_
-#define _WE_XMLTAG_H_
+#pragma once
 #include <libxml/parser.h>
 
 /** Namespace WriteEngine */
@@ -124,4 +123,3 @@ const char xmlTagTable[NUM_OF_XML_TAGS + 1][MAX_XML_TAG_NAME_SIZE] =
 };
 
 } //end of namespace
-#endif // _WE_XMLTAG_H_

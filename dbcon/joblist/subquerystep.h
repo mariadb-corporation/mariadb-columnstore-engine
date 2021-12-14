@@ -20,8 +20,7 @@
 
 /** @file */
 
-#ifndef SUBQUERY_STEP_H
-#define SUBQUERY_STEP_H
+#pragma once
 
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
@@ -279,6 +278,5 @@ protected:
 
 }
 
-#endif  // SUBQUERY_STEP_H
 // vim:ts=4 sw=4:
 

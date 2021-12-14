@@ -25,8 +25,7 @@
  * For ex: this is where we track the min/max values per extent for a column.
  */
 
-#ifndef WE_COLEXTINF_H_
-#define WE_COLEXTINF_H_
+#pragma once
 
 #include <limits>
 #include <stdint.h>
@@ -273,4 +272,3 @@ private:
 
 } //end of namespace
 
-#endif // WE_COLEXTINF_H_

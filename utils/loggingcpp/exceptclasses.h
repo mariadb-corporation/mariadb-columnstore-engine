@@ -22,8 +22,7 @@
 
 /** @file */
 
-#ifndef LOGGING_EXCEPTCLASSES_H
-#define LOGGING_EXCEPTCLASSES_H
+#pragma once
 
 #include <iostream>
 #include <sstream>
@@ -278,5 +277,4 @@ public:
 }
 
 
-#endif
 // vim:ts=4 sw=4:

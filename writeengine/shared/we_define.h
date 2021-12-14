@@ -21,8 +21,7 @@
 
 #undef NO_ERROR
 
-#ifndef _WE_DEFINE_H_
-#define _WE_DEFINE_H_
+#pragma once
 #include <string>
 #include <map>
 #include <stdint.h>
@@ -398,4 +397,3 @@ private:
 
 #undef EXPORT
 
-#endif // _WE_DEFINE_H_

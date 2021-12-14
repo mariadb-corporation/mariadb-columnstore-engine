@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef DMLRESULTBUFFER_H
-#define DMLRESULTBUFFER_H
+#pragma once
 #include <deque>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
@@ -93,4 +92,3 @@ private:
 
 } //namespace dmlprocessor
 
-#endif //DMLRESULTPROCESSOR_H

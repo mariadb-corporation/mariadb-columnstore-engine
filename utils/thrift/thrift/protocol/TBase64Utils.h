@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_PROTOCOL_TBASE64UTILS_H_
-#define _THRIFT_PROTOCOL_TBASE64UTILS_H_
+#pragma once
 
 #include <stdint.h>
 #include <string>
@@ -46,4 +45,3 @@ void base64_decode(uint8_t* buf, uint32_t len);
 }
 } // apache::thrift::protocol
 
-#endif // #define _THRIFT_PROTOCOL_TBASE64UTILS_H_

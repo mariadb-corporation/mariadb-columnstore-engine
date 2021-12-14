@@ -16,8 +16,7 @@
    MA 02110-1301, USA. */
 
 
-#ifndef GENERICPARSER_H
-#define GENERICPARSER_H
+#pragma once
 
 #include "conststring.h"
 
@@ -310,4 +309,3 @@ public:
 
 } // namespace genericparser
 
-#endif // GENERICPARSER_H

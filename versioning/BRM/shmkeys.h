@@ -17,8 +17,7 @@
 
 // $Id: shmkeys.h 1823 2013-01-21 14:13:09Z rdempsey $
 /** @file */
-#ifndef BRM_SHMEYS_H_
-#define BRM_SHMEYS_H_
+#pragma once
 
 #include <stdint.h>
 #include <string>
@@ -77,5 +76,4 @@ private:
 
 #undef EXPORT
 
-#endif
 

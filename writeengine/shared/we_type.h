@@ -21,8 +21,7 @@
 /** @file */
 
 
-#ifndef _WE_TYPE_H_
-#define _WE_TYPE_H_
+#pragma once
 
 #undef EXPORT
 #undef DELETE
@@ -546,4 +545,3 @@ private:
 
 } //end of namespace
 
-#endif // _WE_TYPE_H_

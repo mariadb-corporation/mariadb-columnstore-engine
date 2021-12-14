@@ -17,8 +17,7 @@
 
 
 
-#ifndef WRITETASK_H_
-#define WRITETASK_H_
+#pragma once
 
 #include "PosixTask.h"
 
@@ -38,4 +37,3 @@ class WriteTask : public PosixTask
 };
 
 }
-#endif

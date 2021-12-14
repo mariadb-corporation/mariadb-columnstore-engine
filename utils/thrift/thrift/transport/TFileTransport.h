@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TRANSPORT_TFILETRANSPORT_H_
-#define _THRIFT_TRANSPORT_TFILETRANSPORT_H_ 1
+#pragma once
 
 #include <thrift/transport/TTransport.h>
 #include <thrift/Thrift.h>
@@ -528,4 +527,3 @@ private:
 }
 } // apache::thrift::transport
 
-#endif // _THRIFT_TRANSPORT_TFILETRANSPORT_H_

@@ -22,8 +22,7 @@
  ***********************************************************************/
 /** @file */
 
-#ifndef UPDATEDMLPACKAGE_H
-#define UPDATEDMLPACKAGE_H
+#pragma once
 #include <string>
 #include "calpontdmlpackage.h"
 #include "bytestream.h"
@@ -105,4 +104,3 @@ private:
 
 #undef EXPORT
 
-#endif                                            //UPDATEDMLPACKAGE_H

@@ -21,8 +21,7 @@
 *
 ***********************************************************************/
 /** @file */
-#ifndef DMLPACKAGEPROCESSORFACTORY_H
-#define DMLPACKAGEPROCESSORFACTORY_H
+#pragma once
 #include <string>
 #include "calpontdmlpackage.h"
 #include "dmlpackageprocessor.h"
@@ -62,5 +61,4 @@ private:
 
 #undef EXPORT
 
-#endif //DMLPACKAGEPROCESSORFACTORY_H
 

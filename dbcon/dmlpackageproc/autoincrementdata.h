@@ -19,8 +19,7 @@
 
 /** @file */
 
-#ifndef AUTOINCREMENTDATA_H__
-#define AUTOINCREMENTDATA_H__
+#pragma once
 
 #include <stdint.h>
 
@@ -51,5 +50,4 @@ private:
     boost::mutex fOIDnextvalLock;
 };
 
-#endif
 // vim:ts=4 sw=4:

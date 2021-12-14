@@ -30,8 +30,7 @@
 
 
 
-#ifndef WE_DATALOADER_H_
-#define WE_DATALOADER_H_
+#pragma once
 
 #include "rwlock_local.h"
 #include "resourcemanager.h"
@@ -218,4 +217,3 @@ public:
 
 }
 
-#endif /* WE_DATALOADER_H_ */

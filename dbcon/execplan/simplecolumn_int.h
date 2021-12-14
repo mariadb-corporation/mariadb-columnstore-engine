@@ -23,8 +23,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef SIMPLECOLUMNINT_H
-#define SIMPLECOLUMNINT_H
+#pragma once
 #include <iostream>
 #include <string>
 
@@ -274,5 +273,4 @@ void SimpleColumn_INT<len>::unserialize(messageqcpp::ByteStream& b)
 }
 
 }
-#endif //SIMPLECOLUMN_INT_H
 

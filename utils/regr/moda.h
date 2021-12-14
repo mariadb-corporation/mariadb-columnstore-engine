@@ -34,8 +34,7 @@
  * 1) closest to AVG
  * 2) smallest value
  */
-#ifndef HEADER_moda
-#define HEADER_moda
+#pragma once
 
 #include <cstdlib>
 #include <string>
@@ -282,5 +281,4 @@ protected:
 
 #undef EXPORT
 
-#endif // HEADER_mode.h
 

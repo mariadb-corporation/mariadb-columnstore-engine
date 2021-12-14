@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef UDPCTHREADS_H
-#define UDPCTHREADS_H
+#pragma once
 
 #ifdef __MINGW32__
 
@@ -155,4 +154,3 @@ static inline int pthread_cond_timedwait(pthread_cond_t*  cond,
 #define THREAD_RETURN void *
 #endif /* __MINGW32__ */
 
-#endif

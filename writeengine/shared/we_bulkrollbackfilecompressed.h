@@ -23,8 +23,7 @@
  * Contains class to restore compressed db files on behalf of BulkRollBackMgr.
  */
 
-#ifndef WE_BULKROLLBACKFILECOMPRESSED_H_
-#define WE_BULKROLLBACKFILECOMPRESSED_H_
+#pragma once
 
 #include <cstdio>
 #include <cstring>
@@ -154,4 +153,3 @@ private:
 
 } //end of namespace
 
-#endif // WE_BULKROLLBACKFILECOMPRESSED_H_

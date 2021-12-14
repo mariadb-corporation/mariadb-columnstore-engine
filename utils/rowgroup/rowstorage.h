@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef ROWSTORAGE_H
-#define ROWSTORAGE_H
+#pragma once
 
 #include "resourcemanager.h"
 #include "rowgroup.h"
@@ -375,4 +374,3 @@ private:
 
 } // namespace rowgroup
 
-#endif // MYSQL_ROWSTORAGE_H

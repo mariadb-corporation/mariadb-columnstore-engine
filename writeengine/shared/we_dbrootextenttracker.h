@@ -32,8 +32,7 @@
  * countered.
  */
 
-#ifndef WE_DBROOTEXTENTTRACKER_H_
-#define WE_DBROOTEXTENTTRACKER_H_
+#pragma once
 
 #include <boost/thread/mutex.hpp>
 #include <vector>
@@ -237,4 +236,3 @@ private:
 
 #undef EXPORT
 
-#endif // WE_DBROOTEXTENTTRACKER_H_

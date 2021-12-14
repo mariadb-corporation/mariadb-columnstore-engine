@@ -22,8 +22,7 @@
  ***********************************************************************/
 /** @file */
 
-#ifndef COMMANDDMLPACKAGE_H
-#define COMMANDDMLPACKAGE_H
+#pragma once
 #include <string>
 #include "calpontdmlpackage.h"
 #include "bytestream.h"
@@ -101,4 +100,3 @@ private:
 
 #undef EXPORT
 
-#endif                                            //COMMANDDMLPACKAGE_H

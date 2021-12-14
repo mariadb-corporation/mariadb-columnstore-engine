@@ -15,8 +15,7 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
-#ifndef HA_MCS_DATATYPE_H_INCLUDED
-#define HA_MCS_DATATYPE_H_INCLUDED
+#pragma once
 
 /*
   Interface classes for MariaDB data types (e.g. Field) for TypeHandler.
@@ -856,6 +855,5 @@ public:
 
 } // end of namespace datatypes
 
-#endif
 
 // vim:ts=2 sw=2:

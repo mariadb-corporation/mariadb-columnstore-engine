@@ -21,8 +21,7 @@
 *******************************************************************************/
 /** @file */
 
-#ifndef _WE_BULKSTATUS_H_
-#define _WE_BULKSTATUS_H_
+#pragma once
 
 #if 0 //defined(_MSC_VER) && defined(WE_BULKSTATUS_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
@@ -62,4 +61,3 @@ private:
 
 #undef EXPORT
 
-#endif // _WE_BULKSTATUS_H_

@@ -21,8 +21,7 @@
  ***********************************************************************/
 /** @file */
 
-#ifndef SM_H__
-#define SM_H__
+#pragma once
 
 #include <stdint.h>
 #include <set>
@@ -288,5 +287,4 @@ extern status_t tpl_close(cpsm_tplh_t*, cpsm_conhdl_t**, querystats::QueryStats&
 
 #undef EXPORT
 
-#endif
 

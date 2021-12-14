@@ -20,8 +20,7 @@
 /**
  * @file
  */
-#ifndef SYSTEMCATALOG_H
-#define SYSTEMCATALOG_H
+#pragma once
 
 #include "writeengine.h"
 
@@ -38,4 +37,3 @@ private:
 
 
 
-#endif //SYSTEMCATLOG_H

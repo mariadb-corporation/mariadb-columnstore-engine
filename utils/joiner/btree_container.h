@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef UTIL_BTREE_BTREE_CONTAINER_H__
-#define UTIL_BTREE_BTREE_CONTAINER_H__
+#pragma once
 
 #include <iosfwd>
 #include <utility>
@@ -457,4 +456,3 @@ public:
 
 } // namespace btree
 
-#endif  // UTIL_BTREE_BTREE_CONTAINER_H__

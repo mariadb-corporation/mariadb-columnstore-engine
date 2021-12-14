@@ -16,8 +16,7 @@
    MA 02110-1301, USA. */
 
 
-#ifndef SM_LOGGING_H_
-#define SM_LOGGING_H_
+#pragma once
 
 #include <syslog.h>
 #include <boost/thread.hpp>
@@ -43,4 +42,3 @@ class SMLogging
 
 }
 
-#endif

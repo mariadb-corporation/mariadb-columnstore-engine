@@ -24,8 +24,7 @@
  *  Contains main class used to manage column information.
  */
 
-#ifndef _WE_COLUMNINFO_H
-#define _WE_COLUMNINFO_H
+#pragma once
 
 #include "we_type.h"
 #include "we_brm.h"
@@ -591,4 +590,3 @@ inline void ColumnInfo::updateCPInfo(
 
 } // end of namespace
 
-#endif

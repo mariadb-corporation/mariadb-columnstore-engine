@@ -19,8 +19,7 @@
 * $Id: we_readthread.h 4609 2013-04-19 15:32:02Z chao $
 *
 *******************************************************************************/
-#ifndef WE_SRV_READTHREAD_H__
-#define WE_SRV_READTHREAD_H__
+#pragma once
 
 #include <unistd.h>
 #include <boost/shared_ptr.hpp>
@@ -156,5 +155,4 @@ public:
 
 }
 
-#endif
 

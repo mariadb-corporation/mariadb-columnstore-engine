@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_WINDOWS_GETTIMEOFDAY_H_
-#define _THRIFT_WINDOWS_GETTIMEOFDAY_H_
+#pragma once
 
 #if defined(_MSC_VER) && (_MSC_VER > 1200)
 #pragma once
@@ -41,4 +40,3 @@ int thrift_sleep(unsigned int seconds);
 int thrift_usleep(unsigned int micro_seconds);
 char* thrift_ctime_r(const time_t* _clock, char* _buf);
 
-#endif // _THRIFT_WINDOWS_GETTIMEOFDAY_H_

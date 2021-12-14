@@ -28,8 +28,7 @@
 //
 //
 
-#ifndef BATCHPRIMITIVEPROCESSOR_H_
-#define BATCHPRIMITIVEPROCESSOR_H_
+#pragma once
 
 #include <boost/scoped_array.hpp>
 #include <boost/shared_ptr.hpp>
@@ -439,4 +438,3 @@ private:
 
 }
 
-#endif

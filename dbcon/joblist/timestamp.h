@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef TIMESTAMP_H_
-#define TIMESTAMP_H_
+#pragma once
 //
 // $Id: timestamp.h 9210 2013-01-21 14:10:42Z rdempsey $
 //
@@ -142,5 +141,4 @@ private:
 
 } //namespace joblist
 
-#endif
 

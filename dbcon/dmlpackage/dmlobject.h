@@ -23,8 +23,7 @@
 /** @file */
 
 
-#ifndef DMLOBJECT_H
-#define DMLOBJECT_H
+#pragma once
 #include <string>
 #include"bytestream.h"
 
@@ -67,6 +66,5 @@ private:
 };
 
 }
-#endif //DMLOBJECT_H
 
 

@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_PROTOCOL_TDENSEPROTOCOL_H_
-#define _THRIFT_PROTOCOL_TDENSEPROTOCOL_H_ 1
+#pragma once
 
 #include <thrift/protocol/TBinaryProtocol.h>
 
@@ -264,4 +263,3 @@ private:
 }
 } // apache::thrift::protocol
 
-#endif // #ifndef _THRIFT_PROTOCOL_TDENSEPROTOCOL_H_

@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TAPPLICATIONEXCEPTION_H_
-#define _THRIFT_TAPPLICATIONEXCEPTION_H_ 1
+#pragma once
 
 #include <thrift/Thrift.h>
 
@@ -148,4 +147,3 @@ protected:
 }
 } // apache::thrift
 
-#endif // #ifndef _THRIFT_TAPPLICATIONEXCEPTION_H_

@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef RETURNEDCOLUMN_H
-#define RETURNEDCOLUMN_H
+#pragma once
 #include <string>
 #include <iosfwd>
 #include <vector>
@@ -382,5 +381,4 @@ protected:
 std::ostream& operator<<(std::ostream& os, const ReturnedColumn& rhs);
 
 }
-#endif //RETURNEDCOLUMN_H
 

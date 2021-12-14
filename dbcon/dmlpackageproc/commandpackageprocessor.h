@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef COMMANDPACKAGEPROCESSOR_H
-#define COMMANDPACKAGEPROCESSOR_H
+#pragma once
 #include <string>
 #include <vector>
 #include <set>
@@ -77,5 +76,4 @@ private:
 
 #undef EXPORT
 
-#endif //COMMANDPACKAGEPROCESSOR_H
 

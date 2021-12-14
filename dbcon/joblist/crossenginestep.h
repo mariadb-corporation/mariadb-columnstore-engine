@@ -18,8 +18,7 @@
 //  $Id: crossenginestep.h 9620 2013-06-13 15:51:52Z pleblanc $
 
 
-#ifndef JOBLIST_CROSSENGINESTEP_H
-#define JOBLIST_CROSSENGINESTEP_H
+#pragma once
 
 #include <my_config.h>
 #include <mysql.h>
@@ -237,7 +236,6 @@ protected:
 
 
 
-#endif  // JOBLIST_CROSSENGINESTEP_H
 
 // vim:ts=4 sw=4:
 

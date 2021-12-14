@@ -18,8 +18,7 @@
 //  $Id: frameboundrow.h 3868 2013-06-06 22:13:05Z xlou $
 
 
-#ifndef UTILS_FRAMEBOUNDROW_H
-#define UTILS_FRAMEBOUNDROW_H
+#pragma once
 
 
 #include "framebound.h"
@@ -165,6 +164,5 @@ protected:
 
 } // namespace
 
-#endif  // UTILS_FRAMEBOUNDROW_H
 
 // vim:ts=4 sw=4:

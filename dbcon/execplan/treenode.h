@@ -21,8 +21,7 @@
 
 /** @file */
 
-#ifndef CALPONT_TREENODE_H
-#define CALPONT_TREENODE_H
+#pragma once
 
 #include <string>
 #include <iostream>
@@ -1175,4 +1174,3 @@ std::ostream& operator<<(std::ostream& output, const TreeNode& rhs);
 
 }
 
-#endif

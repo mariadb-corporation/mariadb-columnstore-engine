@@ -17,8 +17,7 @@
 
 
 
-#ifndef PINGTASK_H_
-#define PINGTASK_H_
+#pragma once
 
 #include "PosixTask.h"
 
@@ -38,4 +37,3 @@ class PingTask : public PosixTask
 };
 
 }
-#endif

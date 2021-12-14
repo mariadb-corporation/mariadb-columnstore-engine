@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef QUERYTELE_H__
-#define QUERYTELE_H__
+#pragma once
 
 #include "queryteleclient.h"
 #include "queryteleserverparms.h"
@@ -27,5 +26,4 @@ namespace querytele
 {
 }
 
-#endif
 

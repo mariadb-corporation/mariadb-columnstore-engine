@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef INTTYPES_H
-#define INTTYPES_H 1
+#pragma once
 
 typedef int key_t;
 typedef int pid_t;
@@ -28,4 +27,3 @@ typedef __int64 ssize_t;
 typedef unsigned int uint32_t;
 #endif
 
-#endif

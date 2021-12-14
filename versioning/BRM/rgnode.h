@@ -24,8 +24,7 @@
  * class RGNode interface.  This is a base class for the nodes in the resource graph.
  */
 
-#ifndef RGNODE_H_
-#define RGNODE_H_
+#pragma once
 
 #include <set>
 
@@ -74,4 +73,3 @@ private:
 
 #undef EXPORT
 
-#endif

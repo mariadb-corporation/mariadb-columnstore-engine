@@ -22,8 +22,7 @@
 ***********************************************************************/
 /** @file */
 
-#ifndef JOBLISTFACTORY_H
-#define JOBLISTFACTORY_H
+#pragma once
 
 #include <string>
 
@@ -77,5 +76,4 @@ private:
 
 #undef EXPORT
 
-#endif //JOBLISTFACTORY_H
 

@@ -17,8 +17,7 @@
 
 
 
-#ifndef APPENDTASK_H_
-#define APPENDTASK_H_
+#pragma once
 
 #include "PosixTask.h"
 
@@ -38,4 +37,3 @@ class AppendTask : public PosixTask
 };
 
 }
-#endif

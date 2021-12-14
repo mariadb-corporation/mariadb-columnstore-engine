@@ -23,8 +23,7 @@
 /**
  * @file
  */
-#ifndef DMLPROC_H
-#define DMLPROC_H
+#pragma once
 
 #include<string>
 #include<sstream>
@@ -34,4 +33,3 @@
 #include <stdexcept>
 #include "messagelog.h"
 
-#endif //DMLPROC_H

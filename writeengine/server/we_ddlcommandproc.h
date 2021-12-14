@@ -19,8 +19,7 @@
 * $Id: we_ddlcommandproc.h 3043 2011-08-29 22:03:03Z chao $
 *
 *******************************************************************************/
-#ifndef WE_DDLCOMMANDPROC_H__
-#define WE_DDLCOMMANDPROC_H__
+#pragma once
 
 #include <unistd.h>
 #include "bytestream.h"
@@ -116,4 +115,3 @@ private:
 };
 }
 #undef EXPORT
-#endif

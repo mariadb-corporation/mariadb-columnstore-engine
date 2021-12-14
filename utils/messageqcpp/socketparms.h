@@ -21,8 +21,7 @@
 *
 ***********************************************************************/
 /** @file */
-#ifndef MESSAGEQCPP_SOCKETPARMS_H
-#define MESSAGEQCPP_SOCKETPARMS_H
+#pragma once
 
 class MessageQTestSuite;
 
@@ -153,5 +152,4 @@ inline void SocketParms::protocol(int protocol)
 
 } //namespace messageqcpp
 
-#endif //MESSAGEQCPP_SOCKETPARMS_H
 

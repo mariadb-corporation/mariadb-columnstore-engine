@@ -24,8 +24,7 @@
  * Contains class to allocate a "stripe" of extents for all columns across a tbl
  */
 
-#ifndef WE_EXTENTSTRIPEALLOC_H_
-#define WE_EXTENTSTRIPEALLOC_H_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -181,4 +180,3 @@ private:
 
 } //end of namespace
 
-#endif // WE_EXTENTSTRIPEALLOC_H_
