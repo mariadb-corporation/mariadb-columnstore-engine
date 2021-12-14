@@ -197,7 +197,7 @@ TupleBPS::JoinLocalData::JoinLocalData(TupleBPS* pTupleBPS, RowGroup& primRowGro
 
         bool hasJoinFE = false;
 
-        for (uint32_t i = 0; i < smallSideCount; i++)
+        for (uint32_t i = 0; i < smallSideCount; ++i)
         {
             joinerMatchesRGs[i].initRow(&(smallSideRows[i]));
             smallMappings[i] = makeMapping(joinerMatchesRGs[i], local_outputRG);
@@ -218,7 +218,7 @@ TupleBPS::JoinLocalData::JoinLocalData(TupleBPS* pTupleBPS, RowGroup& primRowGro
             fergMappings[smallSideCount] = makeMapping(local_primRG, joinFERG);
         }
 
-        for (uint32_t i = 0; i < smallSideCount; i++)
+        for (uint32_t i = 0; i < smallSideCount; ++i)
         {
             joinerMatchesRGs[i].initRow(&(smallNulls[i]), true);
             smallNullMemory[i].reset(new uint8_t[smallNulls[i].getSize()]);

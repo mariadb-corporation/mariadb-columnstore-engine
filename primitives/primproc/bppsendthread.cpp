@@ -23,9 +23,8 @@
 
 #include <unistd.h>
 #include <stdexcept>
+#include <mutex>
 #include "bppsendthread.h"
-using namespace std;
-using namespace boost;
 
 namespace primitiveprocessor
 {
@@ -49,16 +48,7 @@ BPPSendThread::BPPSendThread(uint32_t initMsgsLeft) : die(false), gotException(f
 
 BPPSendThread::~BPPSendThread()
 {
-    boost::mutex::scoped_lock sl(msgQueueLock);
-    boost::mutex::scoped_lock sl2(ackLock);
-    boost::mutex::scoped_lock sl3(respondLock);
-    die = true;
-    queueNotEmpty.notify_one();
-    okToSend.notify_one();
-    okToRespond.notify_one();
-    sl.unlock();
-    sl2.unlock();
-    sl3.unlock();
+    abort();
     runner.join();
 }
 
@@ -67,7 +57,7 @@ void BPPSendThread::sendResult(const Msg_t& msg, bool newConnection)
     // Wait for the queue to empty out a bit if it's stuffed full
     if (sizeTooBig())
     {
-        boost::mutex::scoped_lock sl1(respondLock);
+        std::unique_lock<std::mutex> sl1(respondLock);
         while (currentByteSize >= maxByteSize && msgQueue.size() > 3 && !die)
         {
             respondWait = true;
@@ -76,12 +66,11 @@ void BPPSendThread::sendResult(const Msg_t& msg, bool newConnection)
             fProcessorPool->decBlockedThreads();
             respondWait = false;
         }
-        sl1.unlock();
     }
     if (die)
         return;
    
-    boost::mutex::scoped_lock sl(msgQueueLock);
+    std::unique_lock<std::mutex> sl(msgQueueLock);
    
     if (gotException)
         throw runtime_error(exceptionString);
@@ -106,6 +95,7 @@ void BPPSendThread::sendResult(const Msg_t& msg, bool newConnection)
         }
     }
 
+    sl.unlock();
     if (mainThreadWaiting)
         queueNotEmpty.notify_one();
 }
@@ -115,7 +105,7 @@ void BPPSendThread::sendResults(const vector<Msg_t>& msgs, bool newConnection)
     // Wait for the queue to empty out a bit if it's stuffed full
     if (sizeTooBig())
     {
-        boost::mutex::scoped_lock sl1(respondLock);
+        std::unique_lock<std::mutex> sl1(respondLock);
         while (currentByteSize >= maxByteSize && msgQueue.size() > 3 && !die)
         {
             respondWait = true;
@@ -124,13 +114,12 @@ void BPPSendThread::sendResults(const vector<Msg_t>& msgs, bool newConnection)
             fProcessorPool->decBlockedThreads();
             respondWait = false;
         }
-        sl1.unlock();
     }
     if (die)
         return;
 
-    boost::mutex::scoped_lock sl(msgQueueLock);
-
+    std::unique_lock<std::mutex>  sl(msgQueueLock);
+    
     if (gotException)
         throw runtime_error(exceptionString);
 
@@ -158,13 +147,14 @@ void BPPSendThread::sendResults(const vector<Msg_t>& msgs, bool newConnection)
         msgQueue.push(msgs[i]);
     }
 
+    sl.unlock();
     if (mainThreadWaiting)
         queueNotEmpty.notify_one();
 }
 
 void BPPSendThread::sendMore(int num)
 {
-    boost::mutex::scoped_lock sl(ackLock);
+    std::unique_lock<std::mutex> sl(ackLock);
 
 //	cout << "got an ACK for " << num << " msgsLeft=" << msgsLeft << endl;
     if (num == -1)
@@ -177,6 +167,7 @@ void BPPSendThread::sendMore(int num)
     else
         (void)atomicops::atomicAdd(&msgsLeft, num);
 
+    sl.unlock();
     if (waiting)
         okToSend.notify_one();
 }
@@ -199,7 +190,7 @@ void BPPSendThread::mainLoop()
 
     while (!die)
     {
-        boost::mutex::scoped_lock sl(msgQueueLock);
+        std::unique_lock<std::mutex>  sl(msgQueueLock);
 
         if (msgQueue.empty() && !die)
         {
@@ -230,8 +221,7 @@ void BPPSendThread::mainLoop()
 
             if (msgsLeft <= 0 && fcEnabled && !die)
             {
-                boost::mutex::scoped_lock sl2(ackLock);
-
+                std::unique_lock<std::mutex> sl2(ackLock);
                 while (msgsLeft <= 0 && fcEnabled && !die)
                 {
                     waiting = true;
@@ -278,7 +268,6 @@ void BPPSendThread::mainLoop()
 
             if (respondWait && currentByteSize < maxByteSize)
             {
-                boost::mutex::scoped_lock sl1(respondLock);
                 okToRespond.notify_one();
             }
         }
@@ -287,16 +276,15 @@ void BPPSendThread::mainLoop()
 
 void BPPSendThread::abort()
 {
-    boost::mutex::scoped_lock sl(msgQueueLock);
-    boost::mutex::scoped_lock sl2(ackLock);
-    boost::mutex::scoped_lock sl3(respondLock);
-    die = true;
-    queueNotEmpty.notify_one();
-    okToSend.notify_one();
+    {
+        std::lock_guard<std::mutex> sl(msgQueueLock);
+        std::lock_guard<std::mutex> sl2(ackLock);
+        std::lock_guard<std::mutex> sl3(respondLock);
+        die = true;
+    }
+    queueNotEmpty.notify_all();
+    okToSend.notify_all();
     okToRespond.notify_all();
-    sl.unlock();
-    sl2.unlock();
-    sl3.unlock();
 }
 
 }

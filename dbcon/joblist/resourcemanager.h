@@ -82,7 +82,15 @@ const uint32_t defaultRequestSize  = 1;
 const uint32_t defaultMaxOutstandingRequests = 20;
 const uint32_t defaultProcessorThreadsPerScan = 16;
 const uint32_t defaultJoinerChunkSize = 16 * 1024 * 1024;
-const uint64_t defaultMaxBPPSendQueue = 250000000; // 250MB
+
+// I estimate that the average non-cloud columnstore node has 64GB. I've seen from 16GB to 256GB. Cloud can be as low as 4GB
+// However, ExeMgr has a targetRecvQueueSize hardcoded to 50,000,000, so some number greater than this makes sense. Seriously greater doesn't make sense, 
+// so I went with 5x. If there are a number of simultaneous queries that return giant result sets, then 0.25 GB each seems reasonable. 
+// This is only for the return queue. We still need room for all the processing, and if a single node system, for ExeMgr as well. 
+// On small systems, I recommend we use a smaller value.
+// I believe a larger value will not improve anything since at this point, we're just filling a queue much faster than it can be emptied. 
+// Even if we make this default larger, giant results will still eventually block. Just with less memory available for other processing.
+const uint64_t defaultMaxBPPSendQueue = 250000000; // ~250MB
 
 //bucketreuse
 const std::string defaultTempDiskPath = "/tmp";

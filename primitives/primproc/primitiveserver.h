@@ -135,7 +135,7 @@ public:
 
     /** @brief get a pointer the shared processor thread pool
      */
-    inline boost::shared_ptr<threadpool::PriorityThreadPool> getProcessorThreadPool() const
+    inline threadpool::PriorityThreadPool* getProcessorThreadPool() const
     {
         return fProcessorPool;
     }
@@ -172,7 +172,7 @@ private:
     /** @brief the thread pool used to process
      * primitive commands
      */
-    boost::shared_ptr<threadpool::PriorityThreadPool> fProcessorPool;
+    threadpool::PriorityThreadPool* fProcessorPool;
 
     int fServerThreads;
     int fServerQueueSize;

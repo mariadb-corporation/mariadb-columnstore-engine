@@ -96,7 +96,6 @@
 		<!-- <MediumPriorityPercentage>30</MediumPriorityPercentage> -->
 		<!-- <LowPriorityPercentage>10</LowPriorityPercentage> -->
 		<DirectIO>y</DirectIO>
-        <MaxBPPSendQueue>250M</MaxBPPSendQueue>
         <HighPriorityPercentage/>
         <MediumPriorityPercentage/>
         <LowPriorityPercentage/>

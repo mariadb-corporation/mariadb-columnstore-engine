@@ -487,7 +487,7 @@ void DiskJoinStep::joinFcn()
                                 if (!thjs->getMemory(l_outputRG.getMaxDataSize()))
                                 {
                                     // calculate guess of size required for error message
-                                    uint64_t memReqd = (unmatched.size() * outputRG.getDataSize(1)) / 1048576;;
+                                    uint64_t memReqd = (unmatched.size() * outputRG.getDataSize(1)) / 1048576;
                                     Message::Args args;
                                     args.add(memReqd);
                                     args.add(thjs->resourceManager->getConfiguredUMMemLimit() / 1048576);

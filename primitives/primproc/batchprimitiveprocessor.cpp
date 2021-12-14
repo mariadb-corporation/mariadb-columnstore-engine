@@ -1392,16 +1392,16 @@ uint32_t BatchPrimitiveProcessor::executeTupleJoin(uint32_t startRid)
             //else
             // cout << "j != joinerCount\n";
         }
-        // If we've accumulated more than 1048576 (2^20)_ of resultCounts, cut off processing. The caller will
+        // If we've accumulated more than maxResultCount -- 1048576 (2^20)_ of resultCounts, cut off processing. The caller will
         // restart to continue where we left off.
-        if (resultCount >= 1048576)
+        if (resultCount >= maxResultCount)
         {
             newStartRid += newRowCount;
             break;
         }
     }
 
-    if (resultCount < 1048576)
+    if (resultCount < maxResultCount)
         newStartRid = 0;
                 
     ridCount = newRowCount;

@@ -23,10 +23,11 @@
 
 #include "batchprimitiveprocessor.h"
 #include "umsocketselector.h"
+#include <mutex>
+#include <condition_variable>
 #include <queue>
 #include <set>
 #include <boost/thread/thread.hpp>
-#include <boost/thread/condition.hpp>
 #include "threadnaming.h"
 #include "prioritythreadpool.h"
 #ifndef BPPSENDTHREAD_H
@@ -66,9 +67,9 @@ public:
     bool sizeTooBig()
     {
       // keep the queue size below the 100 msg threshold & below the 250MB mark,
-      // but at least 2 msgs so there is always 1 ready to be sent.
-      return (msgQueue.size() > sizeThreshold 
-                  || (currentByteSize >= maxByteSize && msgQueue.size() > 3)) && !die;
+      // but at least 3 msgs so there is always 1 ready to be sent.
+        return ((msgQueue.size() > sizeThreshold) ||
+                (currentByteSize >= maxByteSize && msgQueue.size() > 3)) && !die;
     }
     
     
@@ -82,7 +83,7 @@ public:
     {
         return die;
     }
-    void setProcessorPool(boost::shared_ptr<threadpool::PriorityThreadPool> processorPool)
+    void setProcessorPool(threadpool::PriorityThreadPool* processorPool)
     {
         fProcessorPool = processorPool;
     }
@@ -104,19 +105,19 @@ private:
 
     boost::thread runner;
     std::queue<Msg_t> msgQueue;
-    boost::mutex msgQueueLock;
-    boost::condition queueNotEmpty;
+    std::mutex msgQueueLock;
+    std::condition_variable queueNotEmpty;
     volatile bool die, gotException, mainThreadWaiting;
     std::string exceptionString;
     uint32_t sizeThreshold;
     volatile int32_t msgsLeft;
     bool waiting;
-    boost::mutex ackLock;
-    boost::condition okToSend;
+    std::mutex ackLock;
+    std::condition_variable okToSend;
     // Condition to prevent run away queue
     bool respondWait;
-    boost::mutex respondLock;
-    boost::condition okToRespond;
+    std::mutex respondLock;
+    std::condition_variable okToRespond;
     
     /* Load balancing structures */
     struct Connection_t
@@ -144,7 +145,7 @@ private:
     static uint64_t maxByteSize;
     // Used to tell the PriorityThreadPool It should consider additional threads because a 
     // queue full event has happened and a thread has been blocked.
-    boost::shared_ptr<threadpool::PriorityThreadPool> fProcessorPool;
+    threadpool::PriorityThreadPool* fProcessorPool;
 };
 
 }

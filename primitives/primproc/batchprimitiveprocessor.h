@@ -426,6 +426,8 @@ private:
     uint processorThreads;
     uint ptMask;
     bool firstInstance;
+    
+    static const uint64_t maxResultCount = 1048576;   // 2^20
 
     friend class Command;
     friend class ColumnCommand;

@@ -1913,7 +1913,7 @@ struct ReadThread
     /* Message format:
     	 * 	ISMPacketHeader
     	 * 	Partition count - 32 bits
-    	 * 	Partition set - sizeof(LogicalPartition) * count
+         * 	Partition set - sizeof(LogicalPartition)  boost::shared_ptr* count
     	 * 	OID count - 32 bits
     	 * 	OID array - 32 bits * count
     */
@@ -2004,8 +2004,7 @@ struct ReadThread
     void operator()()
     {
         utils::setThreadName("PPReadThread");
-        boost::shared_ptr<threadpool::PriorityThreadPool> procPoolPtr =
-            fPrimitiveServerPtr->getProcessorThreadPool();
+        threadpool::PriorityThreadPool* procPoolPtr = fPrimitiveServerPtr->getProcessorThreadPool();
         SBS bs;
         UmSocketSelector* pUmSocketSelector = UmSocketSelector::instance();
 
@@ -2475,8 +2474,8 @@ PrimitiveServer::PrimitiveServer(int serverThreads,
     fServerpool.setQueueSize(fServerQueueSize);
     fServerpool.setName("PrimitiveServer");
 
-    fProcessorPool.reset(new threadpool::PriorityThreadPool(fProcessorWeight, highPriorityThreads,
-                         medPriorityThreads, lowPriorityThreads, 0));
+    fProcessorPool = new threadpool::PriorityThreadPool(fProcessorWeight, highPriorityThreads,
+                         medPriorityThreads, lowPriorityThreads, 0);
 
     // We're not using either the priority or the job-clustering features, just need a threadpool
     // that can reschedule jobs, and an unlimited non-blocking queue

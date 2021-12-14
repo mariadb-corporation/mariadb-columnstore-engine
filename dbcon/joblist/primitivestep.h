@@ -1368,9 +1368,9 @@ public:
     }
     ResourceManager* resourceManager() const
     {
-      return fRm;
+        return fRm;
     }
-    bool runFEonPM()
+    bool runFEonPM() const
     {
         return bRunFEonPM;
     }
@@ -1571,7 +1571,6 @@ private:
       boost::scoped_array<uint8_t> largeNullMemory;
       boost::scoped_array<boost::shared_array<uint8_t>> smallNullMemory;
       uint32_t matchCount;
-      uint64_t memUsedByOutputRG = 0;
       boost::shared_ptr<int64_t> fJoinMemLimit;
       
       rowgroup::Row postJoinRow;
