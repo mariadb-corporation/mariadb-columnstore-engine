@@ -333,8 +333,9 @@ void ExtentMapIndexImpl::growIfNeeded(const size_t memoryNeeded)
     if (freeShmem <= memoryNeeded)
     {
         // WIP too generous
-        //static constexpr size_t allocSize = 16 * 1024 * 1024;
-        grow(memoryNeeded);
+        static constexpr size_t allocSize = 16 * 1024 * 1024;
+        //grow(memoryNeeded);
+        grow(allocSize);
     }
 }
 
@@ -1962,7 +1963,7 @@ void ExtentMap::growEMIndexShmseg(const size_t suggestedSize)
 {
     size_t allocSize = InitEMIndexSize_;
     // WIP
-    //allocSize = 16 * 1000 * 1000;
+    allocSize = 16 * 1000 * 1000;
     
     key_t newshmkey = chooseEMIndexShmkey();
 

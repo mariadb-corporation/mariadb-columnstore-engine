@@ -352,9 +352,10 @@ public:
         constexpr const size_t filesInPartition_ = 4ULL;
         // WIP get here a constant
         constexpr const size_t extentsInPartition_ = filesInPartition_ * 2;
+        // WIP remove extra 16 MB
         return numberOfExtents * emIdentUnitSize_ +
             numberOfExtents / extentsInPartition_ * partitionContainerUnitSize_ +
-            dbRootsNumber_ * tablesNumber_ * columnsNumber_;
+            dbRootsNumber_ * tablesNumber_ * columnsNumber_ + 16 * 1024 * 1024;
     }
 
     void growIfNeeded(const size_t memoryNeeded);
