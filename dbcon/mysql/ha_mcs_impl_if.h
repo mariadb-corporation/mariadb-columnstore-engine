@@ -368,6 +368,8 @@ const std::string bestTableName(const Item_field* ifp);
 bool isMCSTable(TABLE* table_ptr);
 bool isForeignTableUpdate(THD* thd);
 bool isUpdateHasForeignTable(THD* thd);
+bool isMCSTableUpdate(THD* thd);
+bool isMCSTableDelete(THD* thd);
 
 // execution plan util functions prototypes
 execplan::ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport, bool isRefItem = false);
@@ -411,10 +413,10 @@ bool buildEqualityPredicate(execplan::ReturnedColumn* lhs,
     const std::vector<Item*>& itemList,
     bool isInSubs = false);
 
-inline bool isUpdateStatement(const enum_sql_command& command, const bool isMCSTableUpdate = true)
+inline bool isUpdateStatement(const enum_sql_command& command)
 {
-    return (command == SQLCOM_UPDATE) ||
-        (command == SQLCOM_UPDATE_MULTI && isMCSTableUpdate);
+    return ((command == SQLCOM_UPDATE) ||
+        (command == SQLCOM_UPDATE_MULTI));
 }
 
 inline bool isDeleteStatement(const enum_sql_command& command)
@@ -423,9 +425,9 @@ inline bool isDeleteStatement(const enum_sql_command& command)
         (command == SQLCOM_DELETE_MULTI);
 }
 
-inline bool isUpdateOrDeleteStatement(const enum_sql_command& command, const bool isMCSTableUpdate = true)
+inline bool isUpdateOrDeleteStatement(const enum_sql_command& command)
 {
-    return isUpdateStatement(command, isMCSTableUpdate) ||
+    return isUpdateStatement(command) ||
         isDeleteStatement(command);
 }
 
