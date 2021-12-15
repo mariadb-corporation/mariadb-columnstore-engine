@@ -347,18 +347,18 @@ bool ExtentMapIndexImpl::insert(const EMEntry& emEntry, const size_t emIdx)
     assert(extMapIndexPtr);
     auto& extMapIndex = *extMapIndexPtr;
 
-    ShmVoidAllocator alloc(fBRMManagedShmMemImpl_.getManagedSegment()->get_segment_manager());
     while (dbRoot >= extMapIndex.size())
     {
-        //std::cerr << "ExtentMapIndexImpl::insert before cr size " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
-        //<< " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
+        std::cerr << "ExtentMapIndexImpl::insert before cr size " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
+        << " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
         const size_t memNeeded = (extMapIndex.capacity() + extraUnits_) * dbRootContainerUnitSize_;
         growIfNeeded(memNeeded);
+        ShmVoidAllocator alloc(fBRMManagedShmMemImpl_.getManagedSegment()->get_segment_manager());
         OIDIndexContainerT oidIndices(alloc);
-        //std::cerr << "ExtentMapIndexImpl::insert unit size " << sizeof(OIDIndexContainerT) << std::endl;
+        std::cerr << "ExtentMapIndexImpl::insert unit size " << sizeof(OIDIndexContainerT) << std::endl;
         extMapIndex.push_back(std::move(oidIndices));
-        //std::cerr << "ExtentMapIndexImpl::insert after merge size " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
-        //<< " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
+        std::cerr << "ExtentMapIndexImpl::insert after merge size " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
+        << " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
     }
     return insert2ndLayer(extMapIndex[dbRoot], emEntry, emIdx);
 }
@@ -372,24 +372,47 @@ bool ExtentMapIndexImpl::insert2ndLayer(OIDIndexContainerT& oids,
     auto oidsIter = oids.find(oid);
     if (oidsIter == oids.end())
     { 
-        // Hide fShmSegment
-        ShmVoidAllocator alloc(fBRMManagedShmMemImpl_.getManagedSegment()->get_segment_manager());
-        //std::cerr << "ExtentMapIndexImpl::insert2ndLayer before cr size " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
-        //<< " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
-        const size_t freeShmem = fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory(); 
+        std::cerr << "ExtentMapIndexImpl::insert2ndLayer before cr size " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
+        << " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
+        const size_t freeShmem = fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory();
         const size_t memNeeded = (oids.size() + extraUnits_) * oidContainerUnitSize_;
         if (oids.load_factor() >= oids.max_load_factor() ||
-            freeShmem <= oidContainerUnitSize_ * extraUnits_)
+            freeShmem <= oidContainerUnitSize_* extraUnits_)
         {
+            // Need to refresh all refs and iterators after this.
             growIfNeeded(memNeeded);
+            auto* extMapIndexPtr = get();
+            assert(extMapIndexPtr);
+            auto& extMapIndex = *extMapIndexPtr;
+            // The dbroot must be here b/c we found it once in insert().
+            OIDIndexContainerT& refreshedOidsRef = extMapIndex[emEntry.dbRoot];
+            ShmVoidAllocator alloc(fBRMManagedShmMemImpl_.getManagedSegment()->get_segment_manager());
+
+            PartitionIndexContainerT partitionIndex(alloc);
+            std::cerr << "ExtentMapIndexImpl::insert2ndLayer grow unit size " << sizeof(PartitionIndexContainerT) << std::endl;
+            std::cerr << "ExtentMapIndexImpl::insert2ndLayer grow after cr size " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
+            << " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
+            auto iterAndResult = refreshedOidsRef.insert({oid, std::move(partitionIndex)});
+            std::cerr << "ExtentMapIndexImpl::insert2ndLayer grow after merge size " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
+            << " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
+
+            if (iterAndResult.second)
+            {
+                PartitionIndexContainerT& partitionsContainer = (*iterAndResult.first).second;
+                return insert3dLayer(partitionsContainer, emEntry, emIdx);
+            }
+            else
+                return false;
+
         }
+        ShmVoidAllocator alloc(fBRMManagedShmMemImpl_.getManagedSegment()->get_segment_manager());
         PartitionIndexContainerT partitionIndex(alloc);
-        //std::cerr << "ExtentMapIndexImpl::insert2ndLayer unit size " << sizeof(PartitionIndexContainerT) << std::endl;
-        //std::cerr << "ExtentMapIndexImpl::insert2ndLayer after cr size " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
-        //<< " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
+        std::cerr << "ExtentMapIndexImpl::insert2ndLayer unit size " << sizeof(PartitionIndexContainerT) << std::endl;
+        std::cerr << "ExtentMapIndexImpl::insert2ndLayer after cr size " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
+        << " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
         auto iterAndResult = oids.insert({oid, std::move(partitionIndex)});
-        //std::cerr << "ExtentMapIndexImpl::insert2ndLayer after merge size " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
-        //<< " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
+        std::cerr << "ExtentMapIndexImpl::insert2ndLayer after merge size " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
+        << " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
 
         if (iterAndResult.second)
         {
@@ -410,9 +433,8 @@ bool ExtentMapIndexImpl::insert3dLayer(PartitionIndexContainerT& partitions, con
     auto partitionsIter = partitions.find(partitionNumber);                                                
     if (partitionsIter == partitions.end()) 
     {
-        ShmVoidAllocator alloc(fBRMManagedShmMemImpl_.getManagedSegment()->get_segment_manager());
-        //std::cerr << "ExtentMapIndexImpl::insert3d before cr size " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
-        //<< " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
+        std::cerr << "ExtentMapIndexImpl::insert3d before cr size " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
+        << " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
         const size_t freeShmem = fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory(); 
         const size_t memNeeded = (partitions.size() + extraUnits_) * partitionContainerUnitSize_ + emIdentUnitSize_;
         if (partitions.load_factor() >= partitions.max_load_factor() ||
@@ -420,25 +442,26 @@ bool ExtentMapIndexImpl::insert3dLayer(PartitionIndexContainerT& partitions, con
         {
             growIfNeeded(memNeeded);
         }
+        ShmVoidAllocator alloc(fBRMManagedShmMemImpl_.getManagedSegment()->get_segment_manager());
  
         ExtentMapIndicesT emIndices(alloc);
-        //std::cerr << "ExtentMapIndexImpl::insert3d unit size " << sizeof(ExtentMapIndicesT) << std::endl;
-        //std::cerr << "ExtentMapIndexImpl::insert3d after cr size " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
-        //<< " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
+        std::cerr << "ExtentMapIndexImpl::insert3d unit size " << sizeof(ExtentMapIndicesT) << std::endl;
+        std::cerr << "ExtentMapIndexImpl::insert3d after cr size " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
+        << " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
         emIndices.push_back(emIdx);
-        //std::cerr << "ExtentMapIndexImpl::insert3d after merge size " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
-        //<< " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
+        std::cerr << "ExtentMapIndexImpl::insert3d after merge size " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
+        << " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
 
         auto iterAndResult = partitions.insert({partitionNumber, std::move(emIndices)});
 
-        //std::cerr << "ExtentMapIndexImpl::insert3d final " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
-        //<< " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
+        std::cerr << "ExtentMapIndexImpl::insert3d final 1 " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
+        << " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
         return iterAndResult.second;
     }
     ExtentMapIndicesT& emIndices = (*partitionsIter).second;
     emIndices.push_back(emIdx);
-    //std::cerr << "ExtentMapIndexImpl::insert3d final " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
-    //<< " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
+    std::cerr << "ExtentMapIndexImpl::insert3d final " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
+    << " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
     return true;
 }
 
@@ -446,7 +469,6 @@ ExtentMapIndexFindResult ExtentMapIndexImpl::find(const DBRootT dbroot, const OI
     const PartitionNumberT partitionNumber)
 {
     ExtentMapIndex& emIndex = *get();
-    //std::cout << "ExtentMapIndexImpl::find( " << (uint64_t) get() << std::endl;
     if (dbroot >= emIndex.size())
         return {};
     return search2ndLayer(emIndex[dbroot], oid, partitionNumber);
@@ -455,7 +477,6 @@ ExtentMapIndexFindResult ExtentMapIndexImpl::find(const DBRootT dbroot, const OI
 ExtentMapIndexFindResult ExtentMapIndexImpl::find(const DBRootT dbroot, const OID_t oid)
 {
     ExtentMapIndex& emIndex = *get();
-    //std::cout << "ExtentMapIndexImpl::find " << (uint64_t) get() << std::endl;
     if (dbroot >= emIndex.size())
         return {};
     return search2ndLayer(emIndex[dbroot], oid);
@@ -1963,7 +1984,7 @@ void ExtentMap::growEMIndexShmseg(const size_t suggestedSize)
 {
     size_t allocSize = InitEMIndexSize_;
     // WIP
-    allocSize = 16 * 1000 * 1000;
+    //allocSize = 16 * 1000 * 1000;
     
     key_t newshmkey = chooseEMIndexShmkey();
 

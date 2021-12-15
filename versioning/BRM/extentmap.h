@@ -355,7 +355,7 @@ public:
         // WIP remove extra 16 MB
         return numberOfExtents * emIdentUnitSize_ +
             numberOfExtents / extentsInPartition_ * partitionContainerUnitSize_ +
-            dbRootsNumber_ * tablesNumber_ * columnsNumber_ + 16 * 1024 * 1024;
+            dbRootsNumber_ * tablesNumber_ * columnsNumber_;
     }
 
     void growIfNeeded(const size_t memoryNeeded);
@@ -407,8 +407,8 @@ private:
     static std::mutex fInstanceMutex_;
     static ExtentMapIndexImpl* fInstance_;
     static const constexpr uint32_t dbRootContainerUnitSize_ = 64ULL;
-    static const constexpr uint32_t oidContainerUnitSize_ = 96ULL; // 2 * map overhead
-    static const constexpr uint32_t partitionContainerUnitSize_ = 48ULL; // single map overhead
+    static const constexpr uint32_t oidContainerUnitSize_ = 352ULL; // 2 * map overhead
+    static const constexpr uint32_t partitionContainerUnitSize_ = 368ULL; // single map overhead
     static const constexpr uint32_t emIdentUnitSize_ = sizeof(uint64_t);
     static const constexpr uint32_t extraUnits_ = 2;
 };
@@ -1022,7 +1022,7 @@ private:
     static const constexpr size_t EM_FREELIST_INITIAL_SIZE = 50 * sizeof(InlineLBIDRange);
     static const constexpr size_t EM_FREELIST_INCREMENT = 50 * sizeof(InlineLBIDRange);
     static const constexpr float EMIndexOverheadRatio_ = 1.4;
-    static const constexpr size_t InitEMIndexSize_ = 1024 * 1024;
+    static const constexpr size_t InitEMIndexSize_ = 10 * 1024;
 
     ExtentMap(const ExtentMap& em);
     ExtentMap& operator=(const ExtentMap& em);
