@@ -383,7 +383,10 @@ public:
     // WIP The return type should return pair<bool, iter>
     // const can be harmful thouth
     bool insert(const EMEntry& emEntry, const size_t emIdx);
+    bool insert2ndLayerWrapper(OIDIndexContainerT& oids, const EMEntry& emEntry, const size_t emIdx);
     bool insert2ndLayer(OIDIndexContainerT& oids, const EMEntry& emEntry, const size_t emIdx);
+    bool insert3dLayerWrapper(PartitionIndexContainerT& partitions, const EMEntry& emEntry,
+        const size_t emIdx);
     bool insert3dLayer(PartitionIndexContainerT& partitions, const EMEntry& emEntry,
         const size_t emIdx);
     ExtentMapIndexFindResult find(const DBRootT dbroot, const OID_t oid,
