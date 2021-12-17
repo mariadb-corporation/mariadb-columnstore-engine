@@ -1,0 +1,74 @@
+--source ../include/have_columnstore.inc
+--source ../include/func_caltrace_create_if_needed.inc
+--disable_warnings
+DROP DATABASE IF EXISTS mcs_ctype_extent_utf8mb3;
+--enable_warnings
+CREATE DATABASE mcs_ctype_extent_utf8mb3;
+USE mcs_ctype_extent_utf8mb3;
+SET default_storage_engine=ColumnStore;
+--source ../include/ctype_extent_proc_create.inc
+
+--echo #
+--echo # MCOL-4871 Extent elimination for short CHAR does not work well
+--echo #
+
+SET NAMES utf8;
+
+DELIMITER $$;
+CREATE PROCEDURE test(collation VARCHAR(64))
+BEGIN
+  DECLARE stmt TEXT;
+  DECLARE CONTINUE HANDLER FOR 9999
+  BEGIN
+    GET DIAGNOSTICS CONDITION 1 @errmsg = MESSAGE_TEXT;
+    SET @errmsg=caltrace_extract_block_diagnostics(@errmsg);
+    RESIGNAL SET MESSAGE_TEXT=@errmsg;
+  END;
+
+  DO calsettrace(1);
+
+  SET stmt='CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci)';
+  SET stmt=REPLACE(stmt,'utf8mb3_general_ci', collation);
+  SELECT stmt AS ``;
+  EXECUTE IMMEDIATE stmt;
+  INSERT INTO t1 VALUES ('a');
+  SELECT c1, HEX(c1) FROM t1;
+  CALL show_extent_min_max(database(),'t1','c1');
+  SELECT * FROM t1 WHERE c1='a';
+  SHOW WARNINGS;
+  SELECT * FROM t1 WHERE c1='b';
+  SHOW WARNINGS;
+  DROP TABLE t1;
+
+  SET stmt='CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci)';
+  SET stmt=REPLACE(stmt,'utf8mb3_general_ci', collation);
+  SELECT stmt AS ``;
+  EXECUTE IMMEDIATE stmt;
+  INSERT INTO t1 VALUES ('aa');
+  SELECT c1, HEX(c1) FROM t1;
+  CALL show_extent_min_max(database(),'t1','c1');
+  SELECT * FROM t1 WHERE c1='aa';
+  SHOW WARNINGS;
+  SELECT * FROM t1 WHERE c1='bb';
+  SHOW WARNINGS;
+  DROP TABLE t1;
+
+  DO calsettrace(0);
+
+END;
+$$
+DELIMITER ;$$
+
+CALL test('utf8mb3_unicode_ci');
+CALL test('utf8mb3_unicode_nopad_ci');
+CALL test('utf8mb3_general_ci');
+CALL test('utf8mb3_general_nopad_ci');
+CALL test('utf8mb3_bin');
+CALL test('utf8mb3_nopad_bin');
+
+DROP PROCEDURE test;
+
+--source ../include/ctype_extent_proc_drop.inc
+--source ../include/func_caltrace_drop_if_needed.inc
+DROP DATABASE mcs_ctype_extent_utf8mb3;
+USE test;
