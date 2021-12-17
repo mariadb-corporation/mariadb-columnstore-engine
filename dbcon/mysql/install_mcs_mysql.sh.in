@@ -110,10 +110,7 @@ CREATE TABLE IF NOT EXISTS infinidb_querystats.priority
 insert ignore into infinidb_querystats.priority values ('High', 100),('Medium', 66), ('Low', 33);
 EOD
 
-$MDB <@ENGINE_SUPPORTDIR@/syscatalog_mysql.sql 2>/dev/null
 $MDB <@ENGINE_SUPPORTDIR@/calsetuserpriority.sql 2>/dev/null
 $MDB <@ENGINE_SUPPORTDIR@/calremoveuserpriority.sql 2>/dev/null
 $MDB <@ENGINE_SUPPORTDIR@/calshowprocesslist.sql 2>/dev/null
 $MDB <@ENGINE_SUPPORTDIR@/columnstore_info.sql 2>/dev/null
-
-
