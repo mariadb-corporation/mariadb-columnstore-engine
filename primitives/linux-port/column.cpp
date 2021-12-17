@@ -879,6 +879,47 @@ inline void updateMinMax(T& Min, T& Max, const T curValue, NewColRequestHeader* 
         Max = curValue;
 }
 
+// The next templates group sets initial Min/Max values in filterColumnData.
+template<ENUM_KIND KIND, typename T,
+         typename std::enable_if<KIND == KIND_TEXT, T>::type* = nullptr>
+T getInitialMin(NewColRequestHeader* in)
+{
+    const CHARSET_INFO &cs = in->colType.getCharset();
+    T Min = 0;
+    cs.max_str((uchar*) &Min, sizeof(Min), sizeof(Min));
+    return Min;
+}
+
+template<ENUM_KIND KIND, typename T,
+         typename std::enable_if<KIND != KIND_TEXT, T>::type* = nullptr>
+T getInitialMin(NewColRequestHeader* in)
+{
+    return datatypes::numeric_limits<T>::max();
+}
+
+template<ENUM_KIND KIND, typename T,
+         typename std::enable_if<KIND != KIND_TEXT && KIND != KIND_UNSIGNED, T>::type* = nullptr>
+T getInitialMax(NewColRequestHeader* in)
+{
+    return datatypes::numeric_limits<T>::min();
+}
+
+template<ENUM_KIND KIND, typename T,
+         typename std::enable_if<KIND == KIND_UNSIGNED, T>::type* = nullptr>
+T getInitialMax(NewColRequestHeader* in)
+{
+    return 0;
+}
+
+template<ENUM_KIND KIND, typename T,
+         typename std::enable_if<KIND == KIND_TEXT, T>::type* = nullptr>
+T getInitialMax(NewColRequestHeader* in)
+{
+    const CHARSET_INFO &cs = in->colType.getCharset();
+    T Max = 0;
+    cs.min_str((uchar*) &Max, sizeof(Max), sizeof(Max));
+    return Max;
+}
 
 /*****************************************************************************
  *** READ COLUMN VALUES ******************************************************
@@ -1667,8 +1708,8 @@ void filterColumnData(
     // ###########################
     // Boolean indicating whether to capture the min and max values
     bool validMinMax = isMinMaxValid(in);
-    T Min = datatypes::numeric_limits<T>::max();
-    T Max = (KIND == KIND_UNSIGNED) ? 0 : datatypes::numeric_limits<T>::min();
+    T Min = getInitialMin<KIND,T>(in);
+    T Max = getInitialMax<KIND,T>(in);
 
     // Vectorized scanning/filtering for all numerics except float/double types.
     // If the total number of input values can't fill a vector the vector path
