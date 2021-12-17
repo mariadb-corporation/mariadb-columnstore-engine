@@ -383,7 +383,7 @@ bool ExtentMapIndexImpl::insert2ndLayer(OIDIndexContainerT& oids,
     if (iterAndResult.second)
     {
         PartitionIndexContainerT& partitionsContainer = (*iterAndResult.first).second;
-        return insert3dLayer(partitionsContainer, emEntry, emIdx);
+        return insert3dLayerWrapper(partitionsContainer, emEntry, emIdx);
     }
     else
         return false;
@@ -416,7 +416,7 @@ bool ExtentMapIndexImpl::insert2ndLayerWrapper(OIDIndexContainerT& oids,
         return insert2ndLayer(oids, emEntry, emIdx); 
     }
     PartitionIndexContainerT& partitions = (*oidsIter).second;
-    return insert3dLayer(partitions, emEntry, emIdx);
+    return insert3dLayerWrapper(partitions, emEntry, emIdx);
 }
 
 bool ExtentMapIndexImpl::insert3dLayer(PartitionIndexContainerT& partitions, const EMEntry& emEntry,
