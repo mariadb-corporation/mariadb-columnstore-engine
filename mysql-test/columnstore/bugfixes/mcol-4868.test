@@ -1,0 +1,70 @@
+#
+# MCOL-4868 UPDATE on a ColumnStore table containing an IN-subquery
+# on a non-ColumnStore table does not work.
+#
+
+-- source include/have_innodb.inc
+-- source ../include/have_columnstore.inc
+
+if (!$MASTER_MYPORT)
+{
+  # Running with --extern
+  let $MASTER_MYPORT=`SELECT @@port`;
+}
+
+--disable_warnings
+DROP DATABASE IF EXISTS `mcol_4868`;
+--enable_warnings
+CREATE DATABASE `mcol_4868`;
+USE `mcol_4868`;
+
+#
+# Enable cross engine join
+# Configure user and password in Columnstore.xml file
+#
+--exec $MCS_MCSSETCONFIG CrossEngineSupport User 'cejuser'
+--exec $MCS_MCSSETCONFIG CrossEngineSupport Password 'Vagrant1|0000001'
+--exec $MCS_MCSSETCONFIG CrossEngineSupport Port $MASTER_MYPORT
+#
+# Create corresponding in the server
+#
+--disable_warnings
+CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
+--enable_warnings
+GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+FLUSH PRIVILEGES;
+
+CREATE TABLE test_cs (a INT, b VARCHAR(100)) ENGINE=COLUMNSTORE;
+INSERT INTO test_cs VALUES (1,'Test1'), (2,'Test2'), (3,'Test3'), (4,'Test4');
+INSERT INTO test_cs VALUES (null,'TestNULL'), (6,NULL), (7,'Test7');
+CREATE TABLE test_innodb (a INT, b VARCHAR(100));
+INSERT INTO test_innodb VALUES (1,'innodb1'), (2,'innodb2'), (3,'innodb3'), (5, 'innodb5');
+SELECT * FROM test_cs;
+SELECT * FROM test_innodb;
+
+SELECT * FROM test_cs WHERE a IN (SELECT a FROM test_innodb);
+UPDATE test_cs SET b='Update_cs' WHERE a IN (SELECT a FROM test_innodb);
+SELECT * FROM test_cs;
+
+SELECT * FROM test_innodb WHERE a IN (SELECT a FROM test_cs);
+UPDATE test_innodb SET b='Update_inno' WHERE a IN (SELECT a FROM test_cs);
+SELECT * FROM test_innodb;
+
+SELECT * FROM test_cs WHERE a IN (SELECT a FROM test_cs);
+UPDATE test_cs SET b='Update_cs2' WHERE a IN (SELECT a FROM test_cs);
+SELECT * FROM test_cs;
+
+# Test DELETEs
+DELETE FROM test_cs WHERE a IN (SELECT a FROM test_innodb);
+SELECT * FROM test_cs;
+DELETE FROM test_cs;
+INSERT INTO test_cs VALUES (1,'Test1'), (2,'Test2'), (3,'Test3'), (4,'Test4');
+INSERT INTO test_cs VALUES (null,'TestNULL'), (6,NULL), (7,'Test7');
+DELETE FROM test_innodb WHERE a IN (SELECT a FROM test_cs);
+SELECT * FROM test_innodb;
+DELETE FROM test_cs WHERE a IN (SELECT a FROM test_cs);
+SELECT * FROM test_cs;
+
+# Cleanup
+DROP USER 'cejuser'@'localhost';
+DROP DATABASE `mcol_4868`;
