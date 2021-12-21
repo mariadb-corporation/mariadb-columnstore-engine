@@ -279,13 +279,26 @@ struct cal_connection_info
         delimiter('\7'),
         affectedRows(0)
     {
+        auto* cf = config::Config::makeConfig();
+        if (checkQueryStats(cf))
+            traceFlags |= execplan::CalpontSelectExecutionPlan::TRACE_LOG;
         // check if this is a slave mysql daemon
-        isSlaveNode = checkSlave();
+        isSlaveNode = checkSlave(cf);
     }
 
-    static bool checkSlave()
+    bool checkQueryStats(config::Config* cfg)
     {
-        config::Config* cf = config::Config::makeConfig();
+        std::string qsVal = cfg->getConfig("QueryStats", "Enabled");
+        if (qsVal == "Y" || qsVal == "Y")
+            return true;
+
+        return false;
+    }
+
+    static bool checkSlave(config::Config* cf = nullptr)
+    {
+        if (!cf)
+            cf = config::Config::makeConfig();
         std::string configVal = cf->getConfig("Installation", "MySQLRep");
         bool isMysqlRep = (configVal == "y" || configVal == "Y");
 
