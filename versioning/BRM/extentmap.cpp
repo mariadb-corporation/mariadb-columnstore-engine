@@ -330,11 +330,9 @@ void ExtentMapIndexImpl::growIfNeeded(const size_t memoryNeeded)
     static const constexpr size_t shmemGrowStep = 1024 * 1024;
     auto freeShmem = fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory();
     // Worst case managed segment can't get continues buffer with len = memoryNeeded
-    if (freeShmem <= memoryNeeded)
-    {
-        const size_t allocSize = std::max(shmemGrowStep, memoryNeeded);
+    const size_t allocSize = std::max(shmemGrowStep, memoryNeeded);
+    if (freeShmem < allocSize)
         grow(allocSize);
-    }
 }
 
 bool ExtentMapIndexImpl::insert(const EMEntry& emEntry, const size_t emIdx)
@@ -397,11 +395,11 @@ bool ExtentMapIndexImpl::insert2ndLayerWrapper(OIDIndexContainerT& oids,
     if (oidsIter == oids.end())
     {
         //std::cerr << "ExtentMapIndexImpl::insert2ndLayerWrapper before cr size " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
-        //<< " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
+        //    << " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
         const size_t freeShmem = fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory();
         const size_t memNeeded = (oids.size() + extraUnits_) * oidContainerUnitSize_;
         if (oids.load_factor() >= oids.max_load_factor() ||
-            freeShmem <= oidContainerUnitSize_ * extraUnits_)
+            freeShmem <=  500 * 1024) //oidContainerUnitSize_ * extraUnits_)
         {
             // Need to refresh all refs and iterators b/c the local address range changed.
             growIfNeeded(memNeeded);
@@ -448,7 +446,7 @@ bool ExtentMapIndexImpl::insert3dLayerWrapper(PartitionIndexContainerT& partitio
         const size_t freeShmem = fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory(); 
         const size_t memNeeded = (partitions.size() + extraUnits_) * partitionContainerUnitSize_ + emIdentUnitSize_;
         if (partitions.load_factor() >= partitions.max_load_factor() ||
-            freeShmem <= partitionContainerUnitSize_ * extraUnits_ + emIdentUnitSize_)
+            freeShmem <=  500 * 1024) //partitionContainerUnitSize_ * extraUnits_ + emIdentUnitSize_)
         {
             // Need to refresh all refs and iterators b/c the local address range changed.
             growIfNeeded(memNeeded);
