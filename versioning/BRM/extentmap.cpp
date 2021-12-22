@@ -332,7 +332,10 @@ void ExtentMapIndexImpl::growIfNeeded(const size_t memoryNeeded)
     // Worst case managed segment can't get continues buffer with len = memoryNeeded
     const size_t allocSize = std::max(shmemGrowStep, memoryNeeded);
     if (freeShmem < allocSize)
-        grow(allocSize);
+    {
+        const size_t currentShmemSize = fBRMManagedShmMemImpl_.getManagedSegment()->get_size();
+        grow(allocSize + currentShmemSize);
+    }
 }
 
 bool ExtentMapIndexImpl::insert(const EMEntry& emEntry, const size_t emIdx)
@@ -1994,13 +1997,9 @@ void ExtentMap::growEMIndexShmseg(const size_t suggestedSize)
     if (!fPExtMapIndexImpl_)
         fPExtMapIndexImpl_ = ExtentMapIndexImpl::makeExtentMapIndexImpl(newshmkey, allocSize, r_only);
     else
-        fPExtMapIndexImpl_->grow(allocSize);
+        fPExtMapIndexImpl_->growIfNeeded(allocSize);
 
-    // WIP
-    //std::cerr << "growEMIndexShmseg size " << fPExtMapIndexImpl_->fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
-    //    << " free_memory " << fPExtMapIndexImpl_->fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
-
-    if (r_only)
+   if (r_only)
         fPExtMapIndexImpl_->makeReadOnly();
 
     fExtMapIndex_ = fPExtMapIndexImpl_->get();
