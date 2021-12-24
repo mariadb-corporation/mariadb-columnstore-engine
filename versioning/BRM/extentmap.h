@@ -324,6 +324,7 @@ using DBRootIndexTAlloc = bi::allocator<OIDIndexContainerT, ShmSegmentManagerT>;
 using DBRootIndexContainerT = std::vector<OIDIndexContainerT, DBRootIndexTAlloc>;
 using ExtentMapIndex = DBRootIndexContainerT;
 using ExtentMapIndexFindResult = std::vector<ExtentMapIdxT>;
+using InsertUpdateShmemKeyPair = std::pair<bool, bool>;
 
 class ExtentMapIndexImpl
 {
@@ -358,7 +359,7 @@ public:
             dbRootsNumber_ * tablesNumber_ * columnsNumber_;
     }
 
-    void growIfNeeded(const size_t memoryNeeded);
+    bool growIfNeeded(const size_t memoryNeeded);
 
     inline void grow(off_t size)
     {
@@ -378,17 +379,21 @@ public:
     {
         return fBRMManagedShmMemImpl_.key();
     }
+    unsigned getSize()
+    {
+        return fBRMManagedShmMemImpl_.getManagedSegment()->get_size();
+    } 
     void createExtentMapIndexIfNeeded();
     ExtentMapIndex* get();
     // WIP The return type should return pair<bool, iter>
     // const can be harmful thouth
-    bool insert(const EMEntry& emEntry, const size_t emIdx);
-    bool insert2ndLayerWrapper(OIDIndexContainerT& oids, const EMEntry& emEntry, const size_t emIdx);
-    bool insert2ndLayer(OIDIndexContainerT& oids, const EMEntry& emEntry, const size_t emIdx);
-    bool insert3dLayerWrapper(PartitionIndexContainerT& partitions, const EMEntry& emEntry,
-        const size_t emIdx);
-    bool insert3dLayer(PartitionIndexContainerT& partitions, const EMEntry& emEntry,
-        const size_t emIdx);
+    InsertUpdateShmemKeyPair insert(const EMEntry& emEntry, const size_t emIdx);
+    InsertUpdateShmemKeyPair insert2ndLayerWrapper(OIDIndexContainerT& oids, const EMEntry& emEntry, const size_t emIdx, const bool aShmemHasGrown);
+    InsertUpdateShmemKeyPair insert2ndLayer(OIDIndexContainerT& oids, const EMEntry& emEntry, const size_t emIdx, const bool aShmemHasGrown);
+    InsertUpdateShmemKeyPair insert3dLayerWrapper(PartitionIndexContainerT& partitions, const EMEntry& emEntry,
+        const size_t emIdx, const bool aShmemHasGrown);
+    InsertUpdateShmemKeyPair insert3dLayer(PartitionIndexContainerT& partitions, const EMEntry& emEntry,
+        const size_t emIdx, const bool aShmemHasGrown);
     ExtentMapIndexFindResult find(const DBRootT dbroot, const OID_t oid,
         const PartitionNumberT partitionNumber);
     ExtentMapIndexFindResult find(const DBRootT dbroot, const OID_t oid);
@@ -1036,6 +1041,7 @@ private:
     key_t fCurrentFLShmkey;
     MSTEntry* fEMShminfo;
     MSTEntry* fFLShminfo;
+    MSTEntry* fEMIndexShminfo;
     const MasterSegmentTable fMST;
     bool r_only;
     typedef std::tr1::unordered_map<int, oam::DBRootConfigList*> PmDbRootMap_t;
@@ -1087,12 +1093,15 @@ private:
     key_t chooseEMShmkey(); 
     key_t chooseFLShmkey();
     key_t chooseEMIndexShmkey();
+    key_t getInitialEMIndexShmkey() const;
     //see the code for how keys are segmented
     key_t chooseShmkey(const MSTEntry* masterTableEntry, const uint32_t keyRangeBase ) const;
     void grabEMEntryTable(OPS op);
     void grabFreeList(OPS op);
+    void grabEMIndex(OPS op);
     void releaseEMEntryTable(OPS op);
     void releaseFreeList(OPS op);
+    void releaseEMIndex(OPS op);
     void growEMShmseg(size_t nrows = 0);
     void growFLShmseg();
     void growEMIndexShmseg(const size_t suggestedSize = 0);
