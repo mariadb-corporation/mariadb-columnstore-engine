@@ -250,7 +250,13 @@ BRMManagedShmImpl::BRMManagedShmImpl(unsigned key, off_t size, bool readOnly)
     {
         try
         {
-            auto* shmSegment = new boost::interprocess::managed_shared_memory(bi::open_only, keyName.c_str());
+            // Readonly
+            bi::managed_shared_memory* shmSegment = nullptr;
+            if (readOnly)
+                shmSegment = new bi::managed_shared_memory(bi::open_read_only, keyName.c_str());
+            else
+                shmSegment = new bi::managed_shared_memory(bi::open_only, keyName.c_str());
+            //auto* shmSegment = new boost::interprocess::managed_shared_memory(bi::open_only, keyName.c_str());
             // WIP check impl conversions
             curSize = shmSegment->get_size();
 
@@ -355,6 +361,7 @@ void BRMManagedShmImpl::setReadOnly()
     if (fReadOnly)
         return;
     // WIP This calls for fShmSegment destructor call
+    // and subsequent pointers/refs refresh
     fReadOnly = true;
 }
 
