@@ -351,9 +351,7 @@ public:
         constexpr const size_t columnsNumber_ = 200ULL;
         constexpr const size_t dbRootsNumber_ = 3ULL;
         constexpr const size_t filesInPartition_ = 4ULL;
-        // WIP get here a constant
         constexpr const size_t extentsInPartition_ = filesInPartition_ * 2;
-        // WIP remove extra 16 MB
         return numberOfExtents * emIdentUnitSize_ +
             numberOfExtents / extentsInPartition_ * partitionContainerUnitSize_ +
             dbRootsNumber_ * tablesNumber_ * columnsNumber_;
@@ -373,16 +371,21 @@ public:
     inline void swapout(BRMManagedShmImpl& rhs)
     {
         fBRMManagedShmMemImpl_.swap(rhs);
-        rhs.destroy();
+        //rhs.destroy();
     }
     inline unsigned key() const
     {
         return fBRMManagedShmMemImpl_.key();
     }
-    unsigned getSize()
+    unsigned getShmemSize()
     {
         return fBRMManagedShmMemImpl_.getManagedSegment()->get_size();
     } 
+    unsigned getShmemImplSize()
+    {
+        return fBRMManagedShmMemImpl_.size();
+    } 
+ 
     void createExtentMapIndexIfNeeded();
     ExtentMapIndex* get();
     // WIP The return type should return pair<bool, iter>
@@ -419,6 +422,7 @@ private:
     static const constexpr uint32_t partitionContainerUnitSize_ = 368ULL; // single map overhead
     static const constexpr uint32_t emIdentUnitSize_ = sizeof(uint64_t);
     static const constexpr uint32_t extraUnits_ = 2;
+    static const constexpr size_t freeSpaceThreshold_ = 300 * 1024;
 };
 
 /** @brief This class encapsulates the extent map functionality of the system
@@ -1029,7 +1033,7 @@ private:
     static const constexpr size_t EM_INCREMENT = EM_INCREMENT_ROWS * sizeof(EMEntry);
     static const constexpr size_t EM_FREELIST_INITIAL_SIZE = 50 * sizeof(InlineLBIDRange);
     static const constexpr size_t EM_FREELIST_INCREMENT = 50 * sizeof(InlineLBIDRange);
-    static const constexpr size_t InitEMIndexSize_ = 10 * 1024;
+    static const constexpr size_t InitEMIndexSize_ = 1024 * 1024;
 
     ExtentMap(const ExtentMap& em);
     ExtentMap& operator=(const ExtentMap& em);

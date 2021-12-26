@@ -283,13 +283,14 @@ ExtentMapIndexImpl* ExtentMapIndexImpl::makeExtentMapIndexImpl(unsigned key, off
 
     if (fInstance_)
     {
-        if (key != fInstance_->fBRMManagedShmMemImpl_.key())
+        if (size != fInstance_->getShmemSize())
         {
-            BRMManagedShmImpl newShm(key, 0);
-            fInstance_->swapout(newShm);
+            fInstance_->fBRMManagedShmMemImpl_.remap(); 
+            //BRMManagedShmImpl newShm(key, 0);
+            //fInstance_->swapout(newShm);
         }
 
-        ASSERT(key == fInstance_->fBRMManagedShmMemImpl_.key());
+        //ASSERT(key == fInstance_->fBRMManagedShmMemImpl_.key());
         return fInstance_;
     }
 
@@ -327,7 +328,8 @@ ExtentMapIndex* ExtentMapIndexImpl::get()
 
 bool ExtentMapIndexImpl::growIfNeeded(const size_t memoryNeeded)
 {
-    static const constexpr size_t shmemGrowStep = 1024 * 1024;
+    //static const constexpr size_t shmemGrowStep = 1024 * 1024;
+    static const constexpr size_t shmemGrowStep = 10 * 1024;
     auto freeShmem = fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory();
     // Worst case managed segment can't get continues buffer with len = memoryNeeded
     const size_t allocSize = std::max(shmemGrowStep, memoryNeeded);
@@ -406,7 +408,7 @@ InsertUpdateShmemKeyPair ExtentMapIndexImpl::insert2ndLayerWrapper(OIDIndexConta
         const size_t freeShmem = fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory();
         const size_t memNeeded = (oids.size() + extraUnits_) * oidContainerUnitSize_;
         if (oids.load_factor() >= oids.max_load_factor() ||
-            freeShmem <=  500 * 1024) //oidContainerUnitSize_ * extraUnits_)
+            freeShmem <=  10000)//freeSpaceThreshold_)
         {
             // Need to refresh all refs and iterators b/c the local address range changed.
             shmemHasGrown = growIfNeeded(memNeeded);
@@ -437,8 +439,8 @@ InsertUpdateShmemKeyPair ExtentMapIndexImpl::insert3dLayer(PartitionIndexContain
         //std::cerr << "ExtentMapIndexImpl::insert3d after merge size " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
         //<< " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
     auto iterAndResult = partitions.insert({partitionNumber, std::move(emIndices)});
-        //std::cerr << "ExtentMapIndexImpl::insert3d final 1 " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
-        //<< " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
+        std::cerr << "ExtentMapIndexImpl::insert3d final 1 OID " << emEntry.fileID << " " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
+        << " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
     return {iterAndResult.second, aShmemHasGrown};
 }
 
@@ -455,7 +457,7 @@ InsertUpdateShmemKeyPair ExtentMapIndexImpl::insert3dLayerWrapper(PartitionIndex
         const size_t freeShmem = fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory(); 
         const size_t memNeeded = (partitions.size() + extraUnits_) * partitionContainerUnitSize_ + emIdentUnitSize_;
         if (partitions.load_factor() >= partitions.max_load_factor() ||
-            freeShmem <=  500 * 1024) //partitionContainerUnitSize_ * extraUnits_ + emIdentUnitSize_)
+            freeShmem <= 10000) //freeSpaceThreshold_)
         {
             // Need to refresh all refs and iterators b/c the local address range changed.
             shmemHasGrown = growIfNeeded(memNeeded);
@@ -474,8 +476,8 @@ InsertUpdateShmemKeyPair ExtentMapIndexImpl::insert3dLayerWrapper(PartitionIndex
 
     ExtentMapIndicesT& emIndices = (*partitionsIter).second;
     emIndices.push_back(emIdx);
-    //std::cerr << "ExtentMapIndexImpl::insert3d final " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
-    //<< " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
+    std::cerr << "ExtentMapIndexImpl::insert3d final " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
+    << " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
     return {true, shmemHasGrown};
 }
 
@@ -714,6 +716,7 @@ int ExtentMap::markInvalid(const LBID_t lbid,
 #endif
 
     grabEMEntryTable(WRITE);
+    grabEMIndex(WRITE);
     return _markInvalid(lbid, colDataType);
 }
 
@@ -746,6 +749,7 @@ int ExtentMap::markInvalid(const vector<LBID_t>& lbids,
 #endif
 
     grabEMEntryTable(WRITE);
+    grabEMIndex(WRITE);
 
     // XXXPAT: what's the proper return code when one and only one fails?
     for (i = 0; i < size; ++i)
@@ -814,6 +818,7 @@ int ExtentMap::setMaxMin(const LBID_t lbid,
 #endif
 
     grabEMEntryTable(WRITE);
+    grabEMIndex(WRITE);
     entries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
 
     for (i = 0; i < entries; i++)
@@ -871,7 +876,10 @@ int ExtentMap::setMaxMin(const LBID_t lbid,
     }
 
     if (emLocked)
+    {
+        releaseEMIndex(WRITE);
         releaseEMEntryTable(WRITE);
+    }
 
     throw logic_error("ExtentMap::setMaxMin(): lbid isn't allocated");
 // 	return -1;
@@ -930,7 +938,10 @@ void ExtentMap::setExtentsMaxMin(const CPMaxMinMap_t& cpMap, bool firstNode, boo
 #endif
 
     if (useLock)
+    {
         grabEMEntryTable(WRITE);
+        grabEMIndex(WRITE);
+    }
 
     entries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
 
@@ -1082,7 +1093,10 @@ void ExtentMap::mergeExtentsMaxMin(CPMaxMinMergeMap_t& cpMap, bool useLock)
 #endif
 
     if (useLock)
+    {
         grabEMEntryTable(WRITE);
+        grabEMIndex(WRITE);
+    }
 
     int entries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
 
@@ -1325,6 +1339,7 @@ int ExtentMap::getMaxMin(const LBID_t lbid,
 #endif
 
     grabEMEntryTable(READ);
+    grabEMIndex(READ);
     entries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
 
     for (i = 0; i < entries; i++)
@@ -1340,12 +1355,14 @@ int ExtentMap::getMaxMin(const LBID_t lbid,
                 min = fExtentMap[i].partition.cprange.lo_val;
                 seqNum = fExtentMap[i].partition.cprange.sequenceNum;
                 isValid = fExtentMap[i].partition.cprange.isValid;
+                releaseEMIndex(READ);
                 releaseEMEntryTable(READ);
                 return isValid;
             }
         }
     }
 
+    releaseEMIndex(READ);
     releaseEMEntryTable(READ);
     throw logic_error("ExtentMap::getMaxMin(): that lbid isn't allocated");
 //   	return -1;
@@ -1523,7 +1540,7 @@ void ExtentMap::loadVersion4(IDBDataFile* in)
             fExtentMap[i].status = EXTENTAVAILABLE;
 
         auto resShmemHasGrownPair = fPExtMapIndexImpl_->insert(fExtentMap[i], i);
-        if (resShmemHasGrownPair.first)
+        if (!resShmemHasGrownPair.first)
         {
             // WIP
             std::cout << "insert insert had failed" << std::endl;
@@ -1531,7 +1548,7 @@ void ExtentMap::loadVersion4(IDBDataFile* in)
             
         if (resShmemHasGrownPair.second)
         {
-            fEMIndexShminfo->allocdSize = fPExtMapIndexImpl_->getSize();
+            fEMIndexShminfo->allocdSize = fPExtMapIndexImpl_->getShmemSize();
         }
 
         std::cout << "insert result " << resShmemHasGrownPair.first << " shmem has grown " << resShmemHasGrownPair.second << std::endl;
@@ -1585,6 +1602,7 @@ void ExtentMap::load(const string& filename, bool fixFL)
 #endif
 
     grabEMEntryTable(WRITE);
+    grabEMIndex(WRITE);
 
     try
     {
@@ -1592,6 +1610,7 @@ void ExtentMap::load(const string& filename, bool fixFL)
     }
     catch (...)
     {
+        releaseEMIndex(WRITE);
         releaseEMEntryTable(WRITE);
         throw;
     }
@@ -1605,6 +1624,7 @@ void ExtentMap::load(const string& filename, bool fixFL)
     {
         log_errno("ExtentMap::load(): open");
         releaseFreeList(WRITE);
+        releaseEMIndex(WRITE);
         releaseEMEntryTable(WRITE);
         throw ios_base::failure("ExtentMap::load(): open failed. Check the error log.");
     }
@@ -1625,11 +1645,13 @@ void ExtentMap::load(const string& filename, bool fixFL)
     catch (...)
     {
         releaseFreeList(WRITE);
+        releaseEMIndex(WRITE);
         releaseEMEntryTable(WRITE);
         throw;
     }
 
     releaseFreeList(WRITE);
+    releaseEMIndex(WRITE);
     releaseEMEntryTable(WRITE);
 //	checkConsistency();
 }
@@ -1650,6 +1672,7 @@ void ExtentMap::save(const string& filename)
     int allocdSize, loadSize[3], i;
 
     grabEMEntryTable(READ);
+    grabEMIndex(READ);
 
     try
     {
@@ -1657,6 +1680,7 @@ void ExtentMap::save(const string& filename)
     }
     catch (...)
     {
+        releaseEMIndex(READ);
         releaseEMEntryTable(READ);
         throw;
     }
@@ -1665,6 +1689,7 @@ void ExtentMap::save(const string& filename)
     {
         log("ExtentMap::save(): got request to save an empty BRM");
         releaseFreeList(READ);
+        releaseEMIndex(READ);
         releaseEMEntryTable(READ);
         throw runtime_error("ExtentMap::save(): got request to save an empty BRM");
     }
@@ -1678,6 +1703,7 @@ void ExtentMap::save(const string& filename)
     {
         log_errno("ExtentMap::save(): open");
         releaseFreeList(READ);
+        releaseEMIndex(READ);
         releaseEMEntryTable(READ);
         throw ios_base::failure("ExtentMap::save(): open failed. Check the error log.");
     }
@@ -1699,6 +1725,7 @@ void ExtentMap::save(const string& filename)
     catch (...)
     {
         releaseFreeList(READ);
+        releaseEMIndex(READ);
         releaseEMEntryTable(READ);
         throw;
     }
@@ -1724,6 +1751,7 @@ void ExtentMap::save(const string& filename)
                 if (err < 0)
                 {
                     releaseFreeList(READ);
+                    releaseEMIndex(READ);
                     releaseEMEntryTable(READ);
                     throw ios_base::failure("ExtentMap::save(): write failed. Check the error log.");
                 }
@@ -1744,6 +1772,7 @@ void ExtentMap::save(const string& filename)
             if (err < 0)
             {
                 releaseFreeList(READ);
+                releaseEMIndex(READ);
                 releaseEMEntryTable(READ);
                 throw ios_base::failure("ExtentMap::save(): write failed. Check the error log.");
             }
@@ -1763,6 +1792,7 @@ void ExtentMap::save(const string& filename)
         if (err < 0)
         {
             releaseFreeList(READ);
+            releaseEMIndex(READ);
             releaseEMEntryTable(READ);
             throw ios_base::failure("ExtentMap::save(): write failed. Check the error log.");
         }
@@ -1771,6 +1801,7 @@ void ExtentMap::save(const string& filename)
     }
 
     releaseFreeList(READ);
+    releaseEMIndex(READ);
     releaseEMEntryTable(READ);
 }
 
@@ -1782,12 +1813,12 @@ void ExtentMap::grabEMEntryTable(OPS op)
     if (op == READ)
     {
         fEMShminfo = fMST.getTable_read(MasterSegmentTable::EMTable);
-        fEMIndexShminfo = fMST.getTable_read(MasterSegmentTable::EMIndex);
+        //fEMIndexShminfo = fMST.getTable_read(MasterSegmentTable::EMIndex);
     }
     else
     {
         fEMShminfo = fMST.getTable_write(MasterSegmentTable::EMTable);
-        fEMIndexShminfo = fMST.getTable_write(MasterSegmentTable::EMIndex);
+        //fEMIndexShminfo = fMST.getTable_write(MasterSegmentTable::EMIndex);
         emLocked = true;
     }
 
@@ -1808,7 +1839,7 @@ void ExtentMap::grabEMEntryTable(OPS op)
                 if (fEMShminfo->allocdSize == 0)
                 {
                     growEMShmseg();
-                    growEMIndexShmseg();
+                    //growEMIndexShmseg();
                 }
 
                 emLocked = false;	// has to be done holding the write lock
@@ -1817,14 +1848,14 @@ void ExtentMap::grabEMEntryTable(OPS op)
             else
             {
                 growEMShmseg();
-                growEMIndexShmseg();
+                //growEMIndexShmseg();
             }
         }
         else
         {
             fPExtMapImpl = ExtentMapImpl::makeExtentMapImpl(fEMShminfo->tableShmkey, 0);
-            fPExtMapIndexImpl_ =
-                ExtentMapIndexImpl::makeExtentMapIndexImpl(getInitialEMIndexShmkey(), 0);
+            //fPExtMapIndexImpl_ =
+            //    ExtentMapIndexImpl::makeExtentMapIndexImpl(getInitialEMIndexShmkey(), 0);
  
             ASSERT(fPExtMapImpl);
 
@@ -1832,7 +1863,7 @@ void ExtentMap::grabEMEntryTable(OPS op)
                 fPExtMapImpl->makeReadOnly();
 
             fExtentMap = fPExtMapImpl->get();
-            fExtMapIndex_ = fPExtMapIndexImpl_->get();
+            //fExtMapIndex_ = fPExtMapIndexImpl_->get();
 
             if (fExtentMap == nullptr)
             {
@@ -1843,7 +1874,7 @@ void ExtentMap::grabEMEntryTable(OPS op)
     }
     else
     {
-        fExtMapIndex_ = fPExtMapIndexImpl_->get();
+        //fExtMapIndex_ = fPExtMapIndexImpl_->get();
         fExtentMap = fPExtMapImpl->get();
     }
 }
@@ -1926,7 +1957,7 @@ void ExtentMap::grabEMIndex(OPS op)
     else
         fEMIndexShminfo = fMST.getTable_write(MasterSegmentTable::EMIndex);
 
-    if (!fPExtMapIndexImpl_ || fPExtMapIndexImpl_->getSize() != (unsigned)fEMIndexShminfo->allocdSize)
+    if (!fPExtMapIndexImpl_)
     {
         if (fExtMapIndex_ != nullptr)
         {
@@ -1968,6 +1999,13 @@ void ExtentMap::grabEMIndex(OPS op)
             }
         }
     }
+    else if (fPExtMapIndexImpl_->getShmemImplSize() != (unsigned)fEMIndexShminfo->allocdSize)
+    {
+        fPExtMapIndexImpl_->refreshShm();
+        fPExtMapIndexImpl_ =
+            ExtentMapIndexImpl::makeExtentMapIndexImpl(getInitialEMIndexShmkey(), fEMIndexShminfo->allocdSize);
+        fExtMapIndex_ = fPExtMapIndexImpl_->get();
+    }
     else
     {
         fExtMapIndex_ = fPExtMapIndexImpl_->get();
@@ -1980,7 +2018,7 @@ void ExtentMap::releaseEMEntryTable(OPS op)
     if (op == READ)
     {
         fMST.releaseTable_read(MasterSegmentTable::EMTable);
-        fMST.releaseTable_read(MasterSegmentTable::EMIndex);
+        //fMST.releaseTable_read(MasterSegmentTable::EMIndex);
     }
     else
     {
@@ -1993,7 +2031,7 @@ void ExtentMap::releaseEMEntryTable(OPS op)
          */
         emLocked = false;
         fMST.releaseTable_write(MasterSegmentTable::EMTable);
-        fMST.releaseTable_write(MasterSegmentTable::EMIndex);
+        //fMST.releaseTable_write(MasterSegmentTable::EMIndex);
     }
 }
 
@@ -2092,7 +2130,8 @@ void ExtentMap::growEMShmseg(size_t nrows)
 
 void ExtentMap::growEMIndexShmseg(const size_t suggestedSize)
 {
-    size_t allocSize = InitEMIndexSize_;
+    //size_t allocSize = InitEMIndexSize_;
+    size_t allocSize = 100000;
     key_t newshmkey = chooseEMIndexShmkey();
     key_t fixedManagedSegmentKey = getInitialEMIndexShmkey();
 
@@ -2184,6 +2223,7 @@ int ExtentMap::lookup(LBID_t lbid, LBID_t& firstLbid, LBID_t& lastLbid)
 #endif
 
     grabEMEntryTable(READ);
+    grabEMIndex(READ);
     entries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
 
     for (i = 0; i < entries; i++)
@@ -2197,12 +2237,13 @@ int ExtentMap::lookup(LBID_t lbid, LBID_t& firstLbid, LBID_t& lastLbid)
             {
                 firstLbid = fExtentMap[i].range.start;
                 lastLbid = lastBlock;
+                releaseEMIndex(READ);
                 releaseEMEntryTable(READ);
                 return 0;
             }
         }
     }
-
+    releaseEMIndex(READ);
     releaseEMEntryTable(READ);
     return -1;
 }
@@ -2250,6 +2291,7 @@ int ExtentMap::lookupLocal(LBID_t lbid, int& OID, uint16_t& dbRoot, uint32_t& pa
     }
 
     grabEMEntryTable(READ);
+    grabEMIndex(READ);
 
     entries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
 
@@ -2271,12 +2313,13 @@ int ExtentMap::lookupLocal(LBID_t lbid, int& OID, uint16_t& dbRoot, uint32_t& pa
                 offset = lbid - fExtentMap[i].range.start;
                 fileBlockOffset = fExtentMap[i].blockOffset + offset;
 
+                releaseEMIndex(READ);
                 releaseEMEntryTable(READ);
                 return 0;
             }
         }
     }
-
+    releaseEMIndex(READ);
     releaseEMEntryTable(READ);
     return -1;
 }
@@ -2306,6 +2349,7 @@ int ExtentMap::lookupLocal(int OID, uint32_t partitionNum, uint16_t segmentNum, 
     }
 
     grabEMEntryTable(READ);
+    grabEMIndex(READ);
 
     DBRootVec dbRootVec(std::move(getAllDbRoots()));
 
@@ -2324,12 +2368,14 @@ int ExtentMap::lookupLocal(int OID, uint32_t partitionNum, uint16_t segmentNum, 
 
                 offset = fileBlockOffset - fExtentMap[i].blockOffset;
                 LBID = fExtentMap[i].range.start + offset;
+                releaseEMIndex(READ);
                 releaseEMEntryTable(READ);
                 return 0;
             }
         }
     }
 
+    releaseEMIndex(READ);
     releaseEMEntryTable(READ);
     return -1;
 }
@@ -2360,6 +2406,7 @@ int ExtentMap::lookupLocal_DBroot(int OID, uint16_t dbroot, uint32_t partitionNu
     }
 
     grabEMEntryTable(READ);
+    grabEMIndex(READ);
 
     entries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
 
@@ -2379,11 +2426,13 @@ int ExtentMap::lookupLocal_DBroot(int OID, uint16_t dbroot, uint32_t partitionNu
 
             offset = fileBlockOffset - fExtentMap[i].blockOffset;
             LBID = fExtentMap[i].range.start + offset;
+            releaseEMIndex(READ);
             releaseEMEntryTable(READ);
             return 0;
         }
     }
 
+    releaseEMIndex(READ);
     releaseEMEntryTable(READ);
     return -1;
 }
@@ -2414,8 +2463,6 @@ int ExtentMap::lookupLocalStartLbid(int      OID,
     }
 
 #endif
-    // WIP
-    //int entries, i;
 
     if (OID < 0)
     {
@@ -2426,6 +2473,8 @@ int ExtentMap::lookupLocalStartLbid(int      OID,
     }
 
     grabEMEntryTable(READ);
+    grabEMIndex(READ);
+
     DBRootVec dbRootVec(std::move(getAllDbRoots()));
 
     for (auto dbRoot: dbRootVec)
@@ -2440,12 +2489,14 @@ int ExtentMap::lookupLocalStartLbid(int      OID,
                                         (static_cast<LBID_t>(fExtentMap[i].range.size) * 1024) - 1))
             {
                 LBID = fExtentMap[i].range.start;
+                releaseEMIndex(READ);
                 releaseEMEntryTable(READ);
                 return 0;
             }
         }
     }
 
+    releaseEMIndex(READ);
     releaseEMEntryTable(READ);
 
     return -1;
@@ -2478,6 +2529,7 @@ void ExtentMap::createStripeColumnExtents(
     uint32_t startBlkOffset;
 
     grabEMEntryTable(WRITE);
+    grabEMIndex(WRITE);
     grabFreeList(WRITE);
 
     OID_t     baselineOID = -1;
@@ -2600,6 +2652,7 @@ void ExtentMap::createColumnExtent_DBroot(int OID,
     if (useLock)
     {
         grabEMEntryTable(WRITE);
+        grabEMIndex(WRITE);
         grabFreeList(WRITE);
     }
 
@@ -3209,7 +3262,7 @@ LBID_t ExtentMap::_createColumnExtent_DBroot(uint32_t size, int OID,
     makeUndoRecord(fEMShminfo, sizeof(MSTEntry));
     fEMShminfo->currentSize += sizeof(struct EMEntry);
     auto resShmemHasGrownPair = fPExtMapIndexImpl_->insert(fExtentMap[emptyEMEntry], emptyEMEntry);
-    if (resShmemHasGrownPair.first)
+    if (!resShmemHasGrownPair.first)
     {
         // WIP
         std::cout << "insert insert had failed" << std::endl;
@@ -3217,7 +3270,7 @@ LBID_t ExtentMap::_createColumnExtent_DBroot(uint32_t size, int OID,
         
     if (resShmemHasGrownPair.second)
     {
-        fEMIndexShminfo->allocdSize = fPExtMapIndexImpl_->getSize();
+        fEMIndexShminfo->allocdSize = fPExtMapIndexImpl_->getShmemSize();
     }
     std::cout << "insert result " << resShmemHasGrownPair.first << " shmem has grown " << resShmemHasGrownPair.second << std::endl;
 
@@ -3284,6 +3337,7 @@ void ExtentMap::createColumnExtentExactFile(int OID,
     // extentRows should be multiple of blocksize (8192).
     const unsigned EXTENT_SIZE = (getExtentRows() * colWidth) / BLOCK_SIZE;
     grabEMEntryTable(WRITE);
+    grabEMIndex(WRITE);
     grabFreeList(WRITE);
 
     if (fEMShminfo->currentSize == fEMShminfo->allocdSize)
@@ -3452,7 +3506,7 @@ LBID_t ExtentMap::_createColumnExtentExactFile(uint32_t size, int OID,
     fEMShminfo->currentSize += sizeof(struct EMEntry);
     auto resShmemHasGrownPair = fPExtMapIndexImpl_->insert(fExtentMap[emptyEMEntry], emptyEMEntry);
 
-    if (resShmemHasGrownPair.first)
+    if (!resShmemHasGrownPair.first)
     {
         // WIP
         std::cout << "insert insert had failed" << std::endl;
@@ -3460,7 +3514,7 @@ LBID_t ExtentMap::_createColumnExtentExactFile(uint32_t size, int OID,
         
     if (resShmemHasGrownPair.second)
     {
-        fEMIndexShminfo->allocdSize = fPExtMapIndexImpl_->getSize();
+        fEMIndexShminfo->allocdSize = fPExtMapIndexImpl_->getShmemSize();
     }
 
     std::cout << "insert result " << resShmemHasGrownPair.first << " shmem has grown " << resShmemHasGrownPair.second << std::endl;
@@ -3520,6 +3574,7 @@ void ExtentMap::createDictStoreExtent(int OID,
     const unsigned EXTENT_SIZE = (getExtentRows() * DICT_COL_WIDTH) / BLOCK_SIZE;
 
     grabEMEntryTable(WRITE);
+    grabEMIndex(WRITE);
     grabFreeList(WRITE);
 
     if (fEMShminfo->currentSize == fEMShminfo->allocdSize)
@@ -3617,7 +3672,7 @@ LBID_t ExtentMap::_createDictStoreExtent(uint32_t size, int OID,
     makeUndoRecord(fEMShminfo, sizeof(MSTEntry));
     fEMShminfo->currentSize += sizeof(struct EMEntry);
     auto resShmemHasGrownPair = fPExtMapIndexImpl_->insert(fExtentMap[emptyEMEntry], emptyEMEntry);
-    if (resShmemHasGrownPair.first)
+    if (!resShmemHasGrownPair.first)
     {
         // WIP
         std::cout << "insert insert had failed" << std::endl;
@@ -3625,7 +3680,7 @@ LBID_t ExtentMap::_createDictStoreExtent(uint32_t size, int OID,
         
     if (resShmemHasGrownPair.second)
     {
-        fEMIndexShminfo->allocdSize = fPExtMapIndexImpl_->getSize();
+        fEMIndexShminfo->allocdSize = fPExtMapIndexImpl_->getShmemSize();
     }
 
     std::cout << "insert result " << resShmemHasGrownPair.first << " shmem has grown " << resShmemHasGrownPair.second << std::endl;
@@ -3810,6 +3865,7 @@ void ExtentMap::rollbackColumnExtents_DBroot ( int oid,
     uint32_t fboLoPreviousStripe = 0;
 
     grabEMEntryTable(WRITE);
+    grabEMIndex(WRITE);
     grabFreeList(WRITE);
 
     int emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
@@ -4015,6 +4071,7 @@ void ExtentMap::rollbackDictStoreExtents_DBroot ( int oid,
     segToHwmMapIter;
 
     grabEMEntryTable(WRITE);
+    grabEMIndex(WRITE);
     grabFreeList(WRITE);
 
     int emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
@@ -4144,6 +4201,7 @@ void ExtentMap::deleteEmptyColExtents(const ExtentsInfoMap_t& extentsInfo)
 #endif
 
     grabEMEntryTable(WRITE);
+    grabEMIndex(WRITE);
     grabFreeList(WRITE);
 
     uint32_t fboLo = 0;
@@ -4279,6 +4337,7 @@ void ExtentMap::deleteEmptyDictStoreExtents(const ExtentsInfoMap_t& extentsInfo)
 #endif
 
     grabEMEntryTable(WRITE);
+    grabEMIndex(WRITE);
     grabFreeList(WRITE);
 
     ExtentsInfoMap_t::const_iterator it;
@@ -4410,6 +4469,7 @@ void ExtentMap::deleteOID(int OID)
 #endif
 
     grabEMEntryTable(WRITE);
+    grabEMIndex(WRITE);
     grabFreeList(WRITE);
 
     // Clean up the index and tell deleteExtent to skip the clean-up.
@@ -4457,7 +4517,9 @@ void ExtentMap::deleteOIDs(const OidsMap_t& OIDs)
 
 #endif
     grabEMEntryTable(WRITE);
+    grabEMIndex(WRITE);
     grabFreeList(WRITE);
+
     OidsMap_t::const_iterator it;
     int emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
 
@@ -4663,6 +4725,7 @@ HWM_t ExtentMap::getLastHWM_DBroot(int OID, uint16_t dbRoot,
     }
 
     grabEMEntryTable(READ);
+    grabEMIndex(READ);
 
     // Searching the array in reverse order should be faster since the last
     // extent is usually at the bottom.  We still have to search the entire
@@ -4701,6 +4764,7 @@ HWM_t ExtentMap::getLastHWM_DBroot(int OID, uint16_t dbRoot,
         bFound = true;
     }
 
+    releaseEMIndex(READ);
     releaseEMEntryTable(READ);
 
     return hwm;
@@ -4760,6 +4824,7 @@ void ExtentMap::getDbRootHWMInfo(int OID, uint16_t pmNumber,
     }
 
     grabEMEntryTable(READ);
+    grabEMIndex(READ);
     tr1::unordered_map<uint16_t, EmDbRootHWMInfo>::iterator emIter;
 
    // Searching the array in reverse order should be faster since the last
@@ -4813,6 +4878,7 @@ void ExtentMap::getDbRootHWMInfo(int OID, uint16_t pmNumber,
         }
     }
 
+    releaseEMIndex(READ);
     releaseEMEntryTable(READ);
 
     for (tr1::unordered_map<uint16_t, EmDbRootHWMInfo>::iterator iter =
@@ -4898,6 +4964,7 @@ void ExtentMap::getExtentState(int OID, uint32_t partitionNum,
     }
 
     grabEMEntryTable(READ);
+    grabEMIndex(READ);
 
     emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
 
@@ -4914,6 +4981,7 @@ void ExtentMap::getExtentState(int OID, uint32_t partitionNum,
         }
     }
 
+    releaseEMIndex(READ);
     releaseEMEntryTable(READ);
 }
 
@@ -4959,6 +5027,7 @@ HWM_t ExtentMap::getLocalHWM(int OID, uint32_t partitionNum,
     }
 
     grabEMEntryTable(READ);
+    grabEMIndex(READ);
 
     DBRootVec dbRootVec(std::move(getAllDbRoots()));
     for (auto dbRoot: dbRootVec)
@@ -4975,6 +5044,7 @@ HWM_t ExtentMap::getLocalHWM(int OID, uint32_t partitionNum,
                 if (fExtentMap[i].HWM != 0)
                 {
                     ret = fExtentMap[i].HWM;
+                    releaseEMIndex(READ);
                     releaseEMEntryTable(READ);
                     return ret;
                 }
@@ -4982,6 +5052,7 @@ HWM_t ExtentMap::getLocalHWM(int OID, uint32_t partitionNum,
         }
     }
 
+    releaseEMIndex(READ);
     releaseEMEntryTable(READ);
 
     if (OIDPartSegExists)
@@ -5036,7 +5107,10 @@ void ExtentMap::setLocalHWM(int OID, uint32_t partitionNum,
     HighestOffset highestOffset = 0;
 
     if (uselock)
+    {
         grabEMEntryTable(WRITE);
+        grabEMIndex(WRITE);
+    }
 
     DBRootVec dbRootVec(std::move(getAllDbRoots()));
 
@@ -5144,6 +5218,7 @@ void ExtentMap::setLocalHWM(int OID, uint32_t partitionNum,
 void ExtentMap::bulkSetHWM(const vector<BulkSetHWMArg>& v, bool firstNode)
 {
     grabEMEntryTable(WRITE);
+    grabEMIndex(WRITE);
 
     for (uint32_t i = 0; i < v.size(); i++)
         setLocalHWM(v[i].oid, v[i].partNum, v[i].segNum, v[i].hwm, firstNode, false);
@@ -5178,6 +5253,7 @@ void ExtentMap::bulkUpdateDBRoot(const vector<BulkUpdateDBRootArg>& args)
         sArgs.insert(args[i]);
 
     grabEMEntryTable(WRITE);
+    grabEMIndex(WRITE);
 
     emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
 
@@ -5217,6 +5293,7 @@ void ExtentMap::getExtents(int OID, vector<struct EMEntry>& entries,
     }
 
     grabEMEntryTable(READ);
+    grabEMIndex(READ);
     emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
     // Pre-expand entries to stop lots of small allocs
     entries.reserve(emEntries);
@@ -5236,6 +5313,7 @@ void ExtentMap::getExtents(int OID, vector<struct EMEntry>& entries,
                 entries.push_back(fExtentMap[i]);
     }
 
+    releaseEMIndex(READ);
     releaseEMEntryTable(READ);
 
     if (sorted)
@@ -5293,6 +5371,7 @@ void ExtentMap::getExtents_dbroot(int OID, vector<struct EMEntry>& entries, cons
     }
 
     grabEMEntryTable(READ);
+    grabEMIndex(READ);
     emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
 
     for (i = 0 ; i < emEntries; i++)
@@ -5300,6 +5379,7 @@ void ExtentMap::getExtents_dbroot(int OID, vector<struct EMEntry>& entries, cons
                 (fExtentMap[i].range.size != 0) && (fExtentMap[i].dbRoot == dbroot))
             entries.push_back(fExtentMap[i]);
 
+    releaseEMIndex(READ);
     releaseEMEntryTable(READ);
 }
 
@@ -5323,6 +5403,7 @@ void ExtentMap::getExtentCount_dbroot(int OID, uint16_t dbroot,
     }
 
     grabEMEntryTable(READ);
+    grabEMIndex(READ);
     emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
 
     numExtents = 0;
@@ -5349,6 +5430,7 @@ void ExtentMap::getExtentCount_dbroot(int OID, uint16_t dbroot,
         }
     }
 
+    releaseEMIndex(READ);
     releaseEMEntryTable(READ);
 }
 
@@ -5374,6 +5456,7 @@ void ExtentMap::getSysCatDBRoot(OID_t oid, uint16_t& dbRoot)
 
     bool bFound = false;
     grabEMEntryTable(READ);
+    grabEMIndex(READ);
     int emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
 
     for (int i = 0 ; i < emEntries; i++)
@@ -5387,6 +5470,7 @@ void ExtentMap::getSysCatDBRoot(OID_t oid, uint16_t& dbRoot)
         }
     }
 
+    releaseEMIndex(READ);
     releaseEMEntryTable(READ);
 
     if (!bFound)
@@ -5437,6 +5521,7 @@ void ExtentMap::deletePartition(const set<OID_t>& oids,
     int rc = 0;
 
     grabEMEntryTable(WRITE);
+    grabEMIndex(WRITE);
     grabFreeList(WRITE);
     set<LogicalPartition> foundPartitions;
     int emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
@@ -5541,6 +5626,7 @@ void ExtentMap::markPartitionForDeletion(const set<OID_t>& oids,
     int rc = 0;
 
     grabEMEntryTable(WRITE);
+    grabEMIndex(WRITE);
     int emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
     set<LogicalPartition> foundPartitions;
     vector<uint32_t> extents;
@@ -5653,6 +5739,7 @@ void ExtentMap::markAllPartitionForDeletion(const set<OID_t>& oids)
     set<OID_t>::const_iterator it;
 
     grabEMEntryTable(WRITE);
+    grabEMIndex(WRITE);
     int emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
 
     for (int i = 0; i < emEntries; i++)
@@ -5706,6 +5793,7 @@ void ExtentMap::restorePartition(const set<OID_t>& oids,
 
     set<OID_t>::const_iterator it;
     grabEMEntryTable(WRITE);
+    grabEMIndex(WRITE);
 
     int emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
     vector<uint32_t> extents;
@@ -5798,6 +5886,7 @@ void ExtentMap::getOutOfServicePartitions(OID_t oid,
     }
 
     grabEMEntryTable(READ);
+    grabEMIndex(READ);
     int emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
 
     for (int i = 0; i < emEntries; i++)
@@ -5815,6 +5904,7 @@ void ExtentMap::getOutOfServicePartitions(OID_t oid,
         }
     }
 
+    releaseEMIndex(READ);
     releaseEMEntryTable(READ);
 }
 
@@ -5836,6 +5926,7 @@ void ExtentMap::deleteDBRoot(uint16_t dbroot)
 #endif
 
     grabEMEntryTable(WRITE);
+    grabEMIndex(WRITE);
     grabFreeList(WRITE);
 
     for (unsigned i = 0; i < fEMShminfo->allocdSize / sizeof(struct EMEntry); i++)
@@ -5864,6 +5955,7 @@ bool ExtentMap::isDBRootEmpty(uint16_t dbroot)
     bool bEmpty = true;
     int i, emEntries;
     grabEMEntryTable(READ);
+    grabEMIndex(READ);
     emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
 
     if (fEMShminfo->currentSize == 0)
@@ -5882,6 +5974,7 @@ bool ExtentMap::isDBRootEmpty(uint16_t dbroot)
         }
     }
 
+    releaseEMIndex(READ);
     releaseEMEntryTable(READ);
 
     return bEmpty;
@@ -5941,6 +6034,7 @@ void ExtentMap::lookup(OID_t OID, LBIDRange_v& ranges)
     }
 
     grabEMEntryTable(READ);
+    grabEMIndex(READ);
     emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
 
     for (i = 0 ; i < emEntries; i++)
@@ -5953,6 +6047,7 @@ void ExtentMap::lookup(OID_t OID, LBIDRange_v& ranges)
             ranges.push_back(tmp);
         }
 
+    releaseEMIndex(READ);
     releaseEMEntryTable(READ);
 }
 
@@ -5984,6 +6079,7 @@ int ExtentMap::checkConsistency()
     uint32_t usedEntries;
 
     grabEMEntryTable(READ);
+    grabEMIndex(READ);
 
     try
     {
@@ -5991,6 +6087,7 @@ int ExtentMap::checkConsistency()
     }
     catch (...)
     {
+        releaseEMIndex(READ);
         releaseEMEntryTable(READ);
         throw;
     }
@@ -6245,7 +6342,10 @@ void ExtentMap::finishChanges()
         releaseFreeList(WRITE);
 
     if (emLocked)
+    {
+        releaseEMIndex(WRITE);
         releaseEMEntryTable(WRITE);
+    }
 }
 
 const bool* ExtentMap::getEMFLLockStatus()
@@ -6437,6 +6537,7 @@ vector<InlineLBIDRange> ExtentMap::getFreeListEntries()
 {
     vector<InlineLBIDRange> v;
     grabEMEntryTable(READ);
+    grabEMIndex(READ);
     grabFreeList(READ);
 
     int allocdSize = fFLShminfo->allocdSize / sizeof(InlineLBIDRange);
@@ -6445,6 +6546,7 @@ vector<InlineLBIDRange> ExtentMap::getFreeListEntries()
         v.push_back(fFreeList[i]);
 
     releaseFreeList(READ);
+    releaseEMIndex(READ);
     releaseEMEntryTable(READ);
     return v;
 }
@@ -6452,6 +6554,7 @@ vector<InlineLBIDRange> ExtentMap::getFreeListEntries()
 void ExtentMap::dumpTo(ostream& os)
 {
     grabEMEntryTable(READ);
+    grabEMIndex(READ);
     unsigned emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
 
     for (unsigned i = 0; i < emEntries; i++)
@@ -6476,6 +6579,7 @@ void ExtentMap::dumpTo(ostream& os)
         }
     }
 
+    releaseEMIndex(READ);
     releaseEMEntryTable(READ);
 }
 

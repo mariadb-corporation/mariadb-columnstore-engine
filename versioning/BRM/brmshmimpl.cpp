@@ -380,6 +380,14 @@ void BRMManagedShmImpl::destroy()
     }
 }
 
+void BRMManagedShmImpl::remap()
+{
+    delete fShmSegment;
+    // WIP
+    string keyName = ShmKeys::keyToName(fKey);
+    fShmSegment = new bi::managed_shared_memory(bi::open_only, keyName.c_str());
+} 
+
 } //namespace
 
 // vim:ts=4 sw=4:

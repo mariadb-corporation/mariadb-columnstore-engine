@@ -93,13 +93,14 @@ class BRMManagedShmImpl : public BRMShmImplParent
     BRMManagedShmImpl(unsigned key, off_t size, bool readOnly = false);
     BRMManagedShmImpl(const BRMManagedShmImpl& rhs) = delete;
     BRMManagedShmImpl& operator=(const BRMManagedShmImpl& rhs) = delete;
-    ~BRMManagedShmImpl() { }
+    ~BRMManagedShmImpl() { delete fShmSegment; }
 
     int clear(unsigned newKey, off_t newSize) override;
     void destroy() override;
     void setReadOnly() override;
 
     int grow(off_t newSize);
+    void remap();
     void swap(BRMManagedShmImpl& rhs);
     bi::managed_shared_memory* getManagedSegment()
     { assert(fShmSegment); return fShmSegment; }
