@@ -553,8 +553,8 @@ void ExtentMapIndexImpl::deleteOID(const DBRootT dbroot, const OID_t oid)
 
 void ExtentMapIndexImpl::deleteEMEntry(const EMEntry& emEntry, const ExtentMapIdxT emIdent)
 {
-    std::cerr << "ExtentMapIndexImpl::delete before cr size " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
-    << " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
+    //std::cerr << "ExtentMapIndexImpl::delete before cr size " << fBRMManagedShmMemImpl_.getManagedSegment()->get_size()
+    //<< " free_memory " << fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory() << std::endl;
     // find partition
     auto& extMapIndex = *get();
     auto oidsIter = extMapIndex[emEntry.dbRoot].find(emEntry.fileID);
@@ -4469,8 +4469,8 @@ void ExtentMap::deleteExtent(const int emIndex, const bool clearEMIndex)
     //invalidate the entry in the Extent Map
     makeUndoRecord(&fExtentMap[emIndex], sizeof(EMEntry));
     fExtentMap[emIndex].range.size = 0;
-    if (clearEMIndex)
-        fPExtMapIndexImpl_->deleteEMEntry(fExtentMap[emIndex], emIndex);
+    //if (clearEMIndex)
+    //    fPExtMapIndexImpl_->deleteEMEntry(fExtentMap[emIndex], emIndex);
     makeUndoRecord(&fEMShminfo, sizeof(MSTEntry));
     fEMShminfo->currentSize -= sizeof(struct EMEntry);
 }

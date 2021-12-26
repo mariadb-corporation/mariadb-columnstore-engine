@@ -1024,7 +1024,7 @@ private:
     static const constexpr size_t EM_INCREMENT = EM_INCREMENT_ROWS * sizeof(EMEntry);
     static const constexpr size_t EM_FREELIST_INITIAL_SIZE = 50 * sizeof(InlineLBIDRange);
     static const constexpr size_t EM_FREELIST_INCREMENT = 50 * sizeof(InlineLBIDRange);
-    static const constexpr size_t InitEMIndexSize_ = 10 * 1024;
+    static const constexpr size_t InitEMIndexSize_ = 256 * 1024 * 1024;
 
     ExtentMap(const ExtentMap& em);
     ExtentMap& operator=(const ExtentMap& em);
