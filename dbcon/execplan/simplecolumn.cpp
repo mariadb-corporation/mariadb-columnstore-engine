@@ -159,7 +159,7 @@ SimpleColumn::SimpleColumn(const string& token, const uint32_t sessionID):
 SimpleColumn::SimpleColumn(const string& schemaName,
                            const string& tableName,
                            const string& columnName,
-                           const uint32_t sessionID, 
+                           const uint32_t sessionID,
                            const int lower_case_table_names) :
     ReturnedColumn(sessionID),
     fSchemaName (schemaName),
@@ -263,23 +263,32 @@ ostream& operator<<(ostream& output, const SimpleColumn& rhs)
 
 const string SimpleColumn::toString() const
 {
+    static const char delim = '/';
     ostringstream output;
+
     output << "SimpleColumn " << data() << endl;
-    output << "  s/t/c/v/o/ct/TA/CA/RA/#/card/join/source/engine/colPos: " << schemaName() << '/'
-           << tableName() << '/'
-           << columnName() << '/'
-           << viewName() << '/'
-           << oid() << '/'
-           << colDataTypeToString(fResultType.colDataType) << '/'
-           << tableAlias() << '/'
-           << alias() << '/'
-           << returnAll() << '/'
-           << sequence() << '/'
-           << cardinality() << '/'
-           << joinInfo() << '/'
-           << colSource() << '/'
-           << (isColumnStore() ? "ColumnStore" : "ForeignEngine") << '/'
-           << colPosition() << endl;
+    // collations in both result and operations type are the same and
+    // set in the plugin code.
+    datatypes::Charset cs(fResultType.charsetNumber);
+    output << "  s/t/c/v/o/ct/TA/CA/RA/#/card/join/source/engine/colPos/cs/coll: "
+           << schemaName() << delim
+           << tableName() << delim
+           << columnName() << delim
+           << viewName() << delim
+           << oid() << delim
+           << colDataTypeToString(fResultType.colDataType) << delim
+           << tableAlias() << delim
+           << alias() << delim
+           << returnAll() << delim
+           << sequence() << delim
+           << cardinality() << delim
+           << joinInfo() << delim
+           << colSource() << delim
+           << (isColumnStore() ? "ColumnStore" : "ForeignEngine") << delim
+           << colPosition() << delim
+           << cs.getCharset().cs_name.str << delim
+           << cs.getCharset().coll_name.str << delim
+           << endl;
 
     return output.str();
 }
