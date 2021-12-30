@@ -598,37 +598,49 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
     res->advanceInputPtr(msglen);
 
     std::vector<boost::shared_array<uint8_t>> longStrings;
-    longStrings.reserve(longStringSize);
-
-    for (uint32_t i = 0; i < longStringSize; ++i)
+    try
     {
-        // Read `MemChunk`.
-        rowgroup::StringStore::MemChunk memChunk;
-        if (!readFixedSizeData(pfd, reinterpret_cast<uint8_t*>(&memChunk),
-                               sizeof(rowgroup::StringStore::MemChunk), timeout, isTimeOut, stats,
-                               msecs))
-            return SBS(new ByteStream(0));
+        for (uint32_t i = 0; i < longStringSize; ++i)
+        {
+            // Read `MemChunk`.
+            rowgroup::StringStore::MemChunk memChunk;
+            if (!readFixedSizeData(pfd, reinterpret_cast<uint8_t*>(&memChunk),
+                                   sizeof(rowgroup::StringStore::MemChunk), timeout, isTimeOut,
+                                   stats, msecs))
+                return SBS(new ByteStream(0));
 
-        // Allocate new memory for the `long string`.
-        boost::shared_array<uint8_t> longString(
-            new uint8_t[sizeof(rowgroup::StringStore::MemChunk) + memChunk.currentSize]);
+            // Allocate new memory for the `long string`.
+            boost::shared_array<uint8_t> longString(
+                new uint8_t[sizeof(rowgroup::StringStore::MemChunk) + memChunk.currentSize]);
 
-        uint8_t* longStringData = longString.get();
-        // Initialize memchunk with `current size` and `capacity`.
-        auto* memChunkPointer = reinterpret_cast<rowgroup::StringStore::MemChunk*>(longStringData);
-        memChunkPointer->currentSize = memChunk.currentSize;
-        memChunkPointer->capacity = memChunk.capacity;
+            uint8_t* longStringData = longString.get();
+            // Initialize memchunk with `current size` and `capacity`.
+            auto* memChunkPointer =
+                reinterpret_cast<rowgroup::StringStore::MemChunk*>(longStringData);
+            memChunkPointer->currentSize = memChunk.currentSize;
+            memChunkPointer->capacity = memChunk.capacity;
 
-        // Read the `long string`.
-        if (!readFixedSizeData(pfd, memChunkPointer->data, memChunkPointer->currentSize, timeout,
-                               isTimeOut, stats, msecs))
-            return SBS(new ByteStream(0));
+            // Read the `long string`.
+            if (!readFixedSizeData(pfd, memChunkPointer->data, memChunkPointer->currentSize,
+                                   timeout, isTimeOut, stats, msecs))
+                return SBS(new ByteStream(0));
 
-        longStrings.push_back(longString);
+            longStrings.push_back(longString);
+        }
+    }
+    catch (std::bad_alloc& exception)
+    {
+        logIoError("InetStreamSocket::read: error during read for 'long strings' - 'bad_alloc'", 0);
+        return SBS(new ByteStream(0));
+    }
+    catch (std::exception& exception)
+    {
+        std::string errorMsg = "InetStreamSocket::read: error during read for 'long strings' ";
+        errorMsg += exception.what();
+        throw runtime_error(errorMsg);
     }
 
     res->setLongStrings(longStrings);
-
     return res;
 }
 
