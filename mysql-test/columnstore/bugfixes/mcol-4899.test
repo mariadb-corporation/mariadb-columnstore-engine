@@ -1,0 +1,42 @@
+#
+# MCOL-4899 MCS doesn't apply collation running IN with character data types
+#
+
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS `mcol_4899`;
+--enable_warnings
+CREATE DATABASE `mcol_4899` CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
+USE `mcol_4899`;
+
+SELECT @cs_conn := @@character_set_connection;
+SET character_set_connection=utf8mb4;
+
+CREATE TABLE collation_test (LETTERS TEXT NULL)ENGINE=ColumnStore;
+INSERT INTO collation_test (LETTERS) VALUES ('a'),('A'),('b'),('B');
+SELECT * FROM collation_test;
+SELECT * FROM collation_test WHERE LETTERS LIKE 'a';
+SELECT * FROM collation_test WHERE LETTERS IN ('a','B');
+# MCS doesn't apply explicit COLLATE as of 6.2.2
+SELECT * FROM collation_test WHERE LETTERS IN ('a' COLLATE utf8mb4_bin);
+
+DROP TABLE collation_test;
+CREATE TABLE collation_test (LETTERS TEXT NULL)ENGINE=ColumnStore DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
+INSERT INTO collation_test (LETTERS) VALUES ('a'),('A'),('b'),('B');
+SELECT * FROM collation_test;
+SELECT * FROM collation_test WHERE LETTERS LIKE 'a';
+SELECT * FROM collation_test WHERE LETTERS IN ('a','B');
+# MCS doesn't apply explicit COLLATE as of 6.2.2
+SELECT * FROM collation_test WHERE LETTERS IN ('a' COLLATE utf8mb4_bin);
+
+# re-testing with case insensitive collation
+DROP TABLE collation_test;
+CREATE TABLE collation_test (LETTERS TEXT NULL)ENGINE=ColumnStore DEFAULT CHARSET=utf8mb4;
+INSERT INTO collation_test (LETTERS) VALUES ('a'),('A'),('b'),('B');
+SELECT * FROM collation_test;
+SELECT * FROM collation_test WHERE LETTERS LIKE 'a';
+SELECT * FROM collation_test WHERE LETTERS IN ('a','B');
+
+DROP DATABASE `mcol_4899`;
+SET character_set_connection=@cs_conn;
