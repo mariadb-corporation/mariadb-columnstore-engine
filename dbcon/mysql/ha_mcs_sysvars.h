@@ -64,6 +64,9 @@ void set_fe_conn_info_ptr(void* ptr, THD* thd = NULL);
 ulonglong get_original_optimizer_flags(THD* thd = NULL);
 void set_original_optimizer_flags(ulonglong ptr, THD* thd = NULL);
 
+ulonglong get_original_option_bits(THD* thd = NULL);
+void set_original_option_bits(ulonglong value, THD* thd = NULL);
+
 mcs_select_handler_mode_t get_select_handler_mode(THD* thd);
 void set_select_handler_mode(THD* thd, ulong value);
 

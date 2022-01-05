@@ -2152,15 +2152,8 @@ int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows *affected_rows, 
     gwi.thd = thd;
     int rc = 0;
 
-    if (thd->slave_thread && !get_replication_slave(thd) && (
-                thd->lex->sql_command == SQLCOM_INSERT ||
-                thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
-                thd->lex->sql_command == SQLCOM_UPDATE ||
-                thd->lex->sql_command == SQLCOM_UPDATE_MULTI ||
-                thd->lex->sql_command == SQLCOM_DELETE ||
-                thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
-                thd->lex->sql_command == SQLCOM_TRUNCATE ||
-                thd->lex->sql_command == SQLCOM_LOAD))
+    if (thd->slave_thread && !get_replication_slave(thd) &&
+        isDMLStatement(thd->lex->sql_command))
     {
         if (affected_rows)
             *affected_rows = 0;
@@ -2189,15 +2182,8 @@ int ha_mcs::impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
     gp_walk_info gwi;
     gwi.thd = thd;
 
-    if (thd->slave_thread && !get_replication_slave(thd) && (
-                thd->lex->sql_command == SQLCOM_INSERT ||
-                thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
-                thd->lex->sql_command == SQLCOM_UPDATE ||
-                thd->lex->sql_command == SQLCOM_UPDATE_MULTI ||
-                thd->lex->sql_command == SQLCOM_DELETE ||
-                thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
-                thd->lex->sql_command == SQLCOM_TRUNCATE ||
-                thd->lex->sql_command == SQLCOM_LOAD))
+    if (thd->slave_thread && !get_replication_slave(thd) &&
+        isDMLStatement(thd->lex->sql_command))
         return 0;
 
     //check whether the system is ready to process statement.
@@ -2569,15 +2555,8 @@ int ha_mcs_impl_rnd_next(uchar* buf, TABLE* table)
 {
     THD* thd = current_thd;
 
-    if (thd->slave_thread && !get_replication_slave(thd) && (
-                thd->lex->sql_command == SQLCOM_INSERT ||
-                thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
-                thd->lex->sql_command == SQLCOM_UPDATE ||
-                thd->lex->sql_command == SQLCOM_UPDATE_MULTI ||
-                thd->lex->sql_command == SQLCOM_DELETE ||
-                thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
-                thd->lex->sql_command == SQLCOM_TRUNCATE ||
-                thd->lex->sql_command == SQLCOM_LOAD))
+    if (thd->slave_thread && !get_replication_slave(thd) &&
+        isDMLStatement(thd->lex->sql_command))
         return HA_ERR_END_OF_FILE;
 
     if (isMCSTableUpdate(thd) || isMCSTableDelete(thd))
@@ -2655,15 +2634,8 @@ int ha_mcs_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
     int rc = 0;
     THD* thd = current_thd;
 
-    if (thd->slave_thread && !get_replication_slave(thd) && (
-                thd->lex->sql_command == SQLCOM_INSERT ||
-                thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
-                thd->lex->sql_command == SQLCOM_UPDATE ||
-                thd->lex->sql_command == SQLCOM_UPDATE_MULTI ||
-                thd->lex->sql_command == SQLCOM_DELETE ||
-                thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
-                thd->lex->sql_command == SQLCOM_TRUNCATE ||
-                thd->lex->sql_command == SQLCOM_LOAD))
+    if (thd->slave_thread && !get_replication_slave(thd) &&
+        isDMLStatement(thd->lex->sql_command))
         return 0;
 
     cal_connection_info* ci = nullptr;
@@ -3942,6 +3914,31 @@ COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table, std::vector<COND*>& condSt
     return cond;
 }
 
+inline void disableBinlogForDML(THD* thd)
+{
+    if (isDMLStatement(thd->lex->sql_command) &&
+        (thd->variables.option_bits & OPTION_BIN_LOG))
+    {
+        set_original_option_bits(thd->variables.option_bits, thd);
+        thd->variables.option_bits &= ~OPTION_BIN_LOG;
+        thd->variables.option_bits |= OPTION_BIN_TMP_LOG_OFF;
+    }
+}
+
+inline void restoreBinlogForDML(THD* thd)
+{
+    if (isDMLStatement(thd->lex->sql_command))
+    {
+        ulonglong orig_option_bits = get_original_option_bits(thd);
+
+        if (orig_option_bits)
+        {
+            thd->variables.option_bits = orig_option_bits;
+            set_original_option_bits(0, thd);
+        }
+    }
+}
+
 int ha_mcs::impl_external_lock(THD* thd, TABLE* table, int lock_type)
 {
     // @bug 3014. Error out locking table command. IDB does not support it now.
@@ -4007,6 +4004,7 @@ int ha_mcs::impl_external_lock(THD* thd, TABLE* table, int lock_type)
         ci->physTablesList.erase(table);
         thd->variables.in_subquery_conversion_threshold = IN_SUBQUERY_CONVERSION_THRESHOLD;
         restore_optimizer_flags(thd);
+        restoreBinlogForDML(thd);
     }
     else
     {
@@ -4017,9 +4015,16 @@ int ha_mcs::impl_external_lock(THD* thd, TABLE* table, int lock_type)
             thd->variables.in_subquery_conversion_threshold=~ 0;
             // Early optimizer_switch changes to avoid unsupported opt-s.
             mutate_optimizer_flags(thd);
+
+            // MCOL-4936 Disable binlog for DMLs
+            if (lock_type == 1)
+            {
+                disableBinlogForDML(thd);
+            }
         }
         else if (lock_type == 2)
         {
+            restoreBinlogForDML(thd);
             std::set<TABLE*>::iterator iter = ci->physTablesList.find(table);
             if (iter != ci->physTablesList.end())
             {
@@ -4527,15 +4532,8 @@ int ha_mcs_impl_group_by_next(TABLE* table)
 {
     THD* thd = current_thd;
 
-    if (thd->slave_thread && !get_replication_slave(thd) && (
-                thd->lex->sql_command == SQLCOM_INSERT ||
-                thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
-                thd->lex->sql_command == SQLCOM_UPDATE ||
-                thd->lex->sql_command == SQLCOM_UPDATE_MULTI ||
-                thd->lex->sql_command == SQLCOM_DELETE ||
-                thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
-                thd->lex->sql_command == SQLCOM_TRUNCATE ||
-                thd->lex->sql_command == SQLCOM_LOAD))
+    if (thd->slave_thread && !get_replication_slave(thd) &&
+        isDMLStatement(thd->lex->sql_command))
         return HA_ERR_END_OF_FILE;
 
     if (isMCSTableUpdate(thd) || isMCSTableDelete(thd))
@@ -4609,15 +4607,8 @@ int ha_mcs_impl_group_by_end(TABLE* table)
     int rc = 0;
     THD* thd = current_thd;
 
-    if (thd->slave_thread && !get_replication_slave(thd) && (
-                thd->lex->sql_command == SQLCOM_INSERT ||
-                thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
-                thd->lex->sql_command == SQLCOM_UPDATE ||
-                thd->lex->sql_command == SQLCOM_UPDATE_MULTI ||
-                thd->lex->sql_command == SQLCOM_DELETE ||
-                thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
-                thd->lex->sql_command == SQLCOM_TRUNCATE ||
-                thd->lex->sql_command == SQLCOM_LOAD))
+    if (thd->slave_thread && !get_replication_slave(thd) &&
+        isDMLStatement(thd->lex->sql_command))
         return 0;
 
     cal_connection_info* ci = nullptr;
@@ -4784,15 +4775,8 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
     IDEBUG( cout << "pushdown_init for table " << endl );
     THD* thd = current_thd;
 
-    if (thd->slave_thread && !get_replication_slave(thd) && (
-                thd->lex->sql_command == SQLCOM_INSERT ||
-                thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
-                thd->lex->sql_command == SQLCOM_UPDATE ||
-                thd->lex->sql_command == SQLCOM_UPDATE_MULTI ||
-                thd->lex->sql_command == SQLCOM_DELETE ||
-                thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
-                thd->lex->sql_command == SQLCOM_TRUNCATE ||
-                thd->lex->sql_command == SQLCOM_LOAD))
+    if (thd->slave_thread && !get_replication_slave(thd) &&
+        isDMLStatement(thd->lex->sql_command))
         return 0;
 
     gp_walk_info gwi;
@@ -5235,15 +5219,8 @@ int ha_mcs_impl_select_next(uchar* buf, TABLE* table)
 {
     THD* thd = current_thd;
 
-    if (thd->slave_thread && !get_replication_slave(thd) && (
-                thd->lex->sql_command == SQLCOM_INSERT ||
-                thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
-                thd->lex->sql_command == SQLCOM_UPDATE ||
-                thd->lex->sql_command == SQLCOM_UPDATE_MULTI ||
-                thd->lex->sql_command == SQLCOM_DELETE ||
-                thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
-                thd->lex->sql_command == SQLCOM_TRUNCATE ||
-                thd->lex->sql_command == SQLCOM_LOAD))
+    if (thd->slave_thread && !get_replication_slave(thd) &&
+        isDMLStatement(thd->lex->sql_command))
         return HA_ERR_END_OF_FILE;
 
     int rc = HA_ERR_END_OF_FILE;
