@@ -78,6 +78,7 @@ void DictStep::createCommand(ByteStream& bs)
     bs >> BOP;
     bs >> tmp8;
     compressionType = tmp8;
+    bs >> charsetNumber;
     bs >> filterCount;
     bs >> tmp8;
     hasEqFilter = tmp8;
@@ -85,34 +86,18 @@ void DictStep::createCommand(ByteStream& bs)
     if (hasEqFilter)
     {
         string strTmp;
-
-        eqFilter.reset(new primitives::DictEqualityFilter(my_charset_latin1));
+        datatypes::Charset cs(charsetNumber);
+        eqFilter.reset(new primitives::DictEqualityFilter(cs));
         bs >> eqOp;
 
-        //cout << "saw the eqfilter count=" << filterCount << endl;
         for (uint32_t i = 0; i < filterCount; i++)
         {
             bs >> strTmp;
-            //cout << "  " << strTmp << endl;
             eqFilter->insert(strTmp);
         }
     }
     else
         bs >> filterString;
-    
-    bs >> charsetNumber;
-#if 0
-    cout << "see " << filterCount << " filters\n";
-    DictFilterElement* filters = (DictFilterElement*) filterString.buf();
-
-    for (uint32_t i = 0; i < filterCount; i++)
-    {
-        cout << "  COP=" << (int) filters->COP << endl;
-        cout << "  len=" << filters->len << endl;
-        cout << "  string=" << filters->data << endl;
-    }
-
-#endif
 
     Command::createCommand(bs);
 }
