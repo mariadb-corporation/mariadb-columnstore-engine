@@ -76,6 +76,7 @@ void DictStepJL::createCommand(ByteStream& bs) const
     bs << (uint8_t) DICT_STEP;
     bs << BOP;
     bs << (uint8_t)compressionType;
+    bs << charsetNumber;
     bs << filterCount;
     bs << (uint8_t) hasEqFilter;
 
@@ -89,7 +90,6 @@ void DictStepJL::createCommand(ByteStream& bs) const
     }
     else
         bs << filterString;
-    bs << charsetNumber;
     CommandJL::createCommand(bs);
 }
 
