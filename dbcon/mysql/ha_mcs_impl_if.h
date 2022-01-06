@@ -444,6 +444,15 @@ inline bool isUpdateOrDeleteStatement(const enum_sql_command& command)
         isDeleteStatement(command);
 }
 
+inline bool isDMLStatement(const enum_sql_command& command)
+{
+    return (command == SQLCOM_INSERT ||
+        command == SQLCOM_INSERT_SELECT ||
+        command == SQLCOM_TRUNCATE ||
+        command == SQLCOM_LOAD ||
+        isUpdateOrDeleteStatement(command));
+}
+
 #ifdef DEBUG_WALK_COND
 void debug_walk(const Item* item, void* arg);
 #endif
