@@ -244,7 +244,7 @@ CalpontSystemCatalog::ColType Func_date_format::operationType( FunctionParm& fp,
 string Func_date_format::getStrVal(rowgroup::Row& row,
                                    FunctionParm& parm,
                                    bool& isNull,
-                                   CalpontSystemCatalog::ColType&)
+                                   CalpontSystemCatalog::ColType& ct)
 {
     int64_t val = 0;
     DateTime dt = 0;
@@ -275,7 +275,7 @@ string Func_date_format::getStrVal(rowgroup::Row& row,
             TimeStamp timestamp(val);
             int64_t seconds = timestamp.second;
             MySQLTime time;
-            gmtSecToMySQLTime(seconds, time, timeZone());
+            gmtSecToMySQLTime(seconds, time, ct.timeZone);
             dt.year = time.year;
             dt.month = time.month;
             dt.day = time.day;
@@ -425,7 +425,7 @@ int64_t Func_date_format::getTimestampIntVal(rowgroup::Row& row,
         bool& isNull,
         CalpontSystemCatalog::ColType& ct)
 {
-    return dataconvert::DataConvert::timestampToInt(getStrVal(row, parm, isNull, ct), timeZone());
+    return dataconvert::DataConvert::timestampToInt(getStrVal(row, parm, isNull, ct), ct.timeZone);
 }
 
 

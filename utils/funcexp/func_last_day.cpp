@@ -77,7 +77,7 @@ int64_t Func_last_day::getIntVal(rowgroup::Row& row,
             TimeStamp timestamp(parm[0]->data()->getIntVal(row, isNull));
             int64_t seconds = timestamp.second;
             MySQLTime m_time;
-            gmtSecToMySQLTime(seconds, m_time, timeZone());
+            gmtSecToMySQLTime(seconds, m_time, op_ct.timeZone);
             year = m_time.year;
             month = m_time.month;
             day = m_time.day;

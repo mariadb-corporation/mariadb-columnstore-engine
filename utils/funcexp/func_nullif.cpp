@@ -986,7 +986,7 @@ execplan::IDB_Decimal Func_nullif::getDecimalVal(rowgroup::Row& row,
             string value;
 
             if (parm[1]->data()->resultType().colDataType == execplan::CalpontSystemCatalog::TIMESTAMP)
-                value = DataConvert::timestampToString1(parm[1]->data()->getTimestampIntVal(row, isNull), timeZone());
+                value = DataConvert::timestampToString1(parm[1]->data()->getTimestampIntVal(row, isNull), op_ct.timeZone);
             else
                 value = DataConvert::datetimeToString1(parm[1]->data()->getDatetimeIntVal(row, isNull));
 

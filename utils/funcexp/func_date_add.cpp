@@ -785,7 +785,7 @@ int64_t Func_date_add::getIntVal(rowgroup::Row& row,
             TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
             int64_t seconds = timestamp.second;
             MySQLTime m_time;
-            gmtSecToMySQLTime(seconds, m_time, timeZone());
+            gmtSecToMySQLTime(seconds, m_time, ct.timeZone);
             DateTime dt;
             dt.year = m_time.year;
             dt.month = m_time.month;

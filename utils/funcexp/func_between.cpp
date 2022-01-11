@@ -343,7 +343,7 @@ CalpontSystemCatalog::ColType Func_between::operationType( FunctionParm& fp, Cal
             if (cc)
             {
                 Result result = cc->result();
-                result.intVal = dataconvert::DataConvert::timestampToInt(result.strVal, timeZone());
+                result.intVal = dataconvert::DataConvert::timestampToInt(result.strVal, resultType.timeZone);
                 cc->result(result);
             }
         }

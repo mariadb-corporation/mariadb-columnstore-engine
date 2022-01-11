@@ -251,7 +251,7 @@ bool Func_regexp::getBoolVal(rowgroup::Row& row,
                              bool& isNull,
                              CalpontSystemCatalog::ColType& ct)
 {
-    return getBool(row, pm, isNull, ct, timeZone()) && !isNull;
+    return getBool(row, pm, isNull, ct, ct.timeZone) && !isNull;
 }
 
 

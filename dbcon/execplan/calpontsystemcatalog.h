@@ -208,6 +208,7 @@ public:
         ConstraintType constraintType;
         DictOID ddn;
         std::string defaultValue;
+        std::string timeZone;
         int32_t colPosition;	// temporally put here. may need to have ColInfo struct later
         int32_t compressionType;
         OID columnOID;

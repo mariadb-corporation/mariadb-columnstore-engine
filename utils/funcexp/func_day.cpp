@@ -67,7 +67,7 @@ int64_t Func_day::getIntVal(rowgroup::Row& row,
             dataconvert::TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
             int64_t seconds = timestamp.second;
 	    dataconvert::MySQLTime m_time;
-	    dataconvert::gmtSecToMySQLTime(seconds, m_time, timeZone());
+	    dataconvert::gmtSecToMySQLTime(seconds, m_time, op_ct.timeZone);
             return m_time.day;
         }
 

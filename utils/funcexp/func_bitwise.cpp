@@ -116,7 +116,8 @@ datatypes::TUInt64Null GenericToBitOperand(
     Row&  row,
     const execplan::SPTP& parm,
     const funcexp::Func& thisFunc,
-    bool temporalRounding)
+    bool temporalRounding,
+    const std::string& timeZone)
 {
     switch (parm->data()->resultType().colDataType)
     {
@@ -202,7 +203,7 @@ datatypes::TUInt64Null GenericToBitOperand(
                 return datatypes::TUInt64Null();
 
             TimeStamp dt(time);
-            int64_t value = dt.convertToMySQLint(thisFunc.timeZone());
+            int64_t value = dt.convertToMySQLint(timeZone);
             if (temporalRounding && dt.msecond >= 500000)
                 value++;
             return datatypes::TUInt64Null((uint64_t) value);
@@ -240,8 +241,9 @@ public:
     BitOperandGeneric() { }
     BitOperandGeneric(Row& row,
                       const execplan::SPTP& parm,
-                      const funcexp::Func& thisFunc)
-       :TUInt64Null(GenericToBitOperand(row, parm, thisFunc, true))
+                      const funcexp::Func& thisFunc,
+                      const std::string& timeZone)
+       :TUInt64Null(GenericToBitOperand(row, parm, thisFunc, true, timeZone))
     { }
 };
 
@@ -254,8 +256,9 @@ public:
     BitOperandGenericShiftAmount() { }
     BitOperandGenericShiftAmount(Row& row,
                                  const execplan::SPTP& parm,
-                                 const funcexp::Func& thisFunc)
-       :TUInt64Null(GenericToBitOperand(row, parm, thisFunc, false))
+                                 const funcexp::Func& thisFunc,
+                                 const std::string& timeZone)
+       :TUInt64Null(GenericToBitOperand(row, parm, thisFunc, false, timeZone))
     { }
 };
 
@@ -363,7 +366,7 @@ public:
                       CalpontSystemCatalog::ColType& operationColType) override
     {
         idbassert(parm.size() == 2);
-        Arg2Lazy<TA, TB> args(row, parm, *this);
+        Arg2Lazy<TA, TB> args(row, parm, *this, operationColType.timeZone);
         return (int64_t) (args.a & args.b).nullSafeValue(isNull);
     }
 };
@@ -395,7 +398,7 @@ public:
                       CalpontSystemCatalog::ColType& operationColType) override
     {
         idbassert(parm.size() == 2);
-        Arg2Eager<TA, BitOperandGenericShiftAmount> args(row, parm, *this);
+        Arg2Eager<TA, BitOperandGenericShiftAmount> args(row, parm, *this, operationColType.timeZone);
         return (int64_t) args.a.MariaDBShiftLeft(args.b).nullSafeValue(isNull);
     }
 };
@@ -427,7 +430,7 @@ public:
                       CalpontSystemCatalog::ColType& operationColType) override
     {
         idbassert(parm.size() == 2);
-        Arg2Eager<TA, BitOperandGenericShiftAmount> args(row, parm, *this);
+        Arg2Eager<TA, BitOperandGenericShiftAmount> args(row, parm, *this, operationColType.timeZone);
         return (int64_t) args.a.MariaDBShiftRight(args.b).nullSafeValue(isNull);
     }
 };
@@ -468,7 +471,7 @@ public:
                       CalpontSystemCatalog::ColType& operationColType) override
     {
         idbassert(parm.size() == 2);
-        Arg2Lazy<TA, TB> args(row, parm, *this);
+        Arg2Lazy<TA, TB> args(row, parm, *this, operationColType.timeZone);
         return (int64_t) (args.a | args.b).nullSafeValue(isNull);
     }
 };
@@ -500,7 +503,7 @@ public:
                       CalpontSystemCatalog::ColType& operationColType) override
     {
         idbassert(parm.size() == 2);
-        Arg2Eager<TA, TB> args(row, parm, *this);
+        Arg2Eager<TA, TB> args(row, parm, *this, operationColType.timeZone);
         return (int64_t) (args.a ^ args.b).nullSafeValue(isNull);
     }
 };
@@ -547,7 +550,7 @@ public:
                       CalpontSystemCatalog::ColType& operationColType) override
     {
         idbassert(parm.size() == 1);
-        return bitCount((uint64_t) TA(row, parm[0], *this).nullSafeValue(isNull));
+        return bitCount((uint64_t) TA(row, parm[0], *this, operationColType.timeZone).nullSafeValue(isNull));
     }
 };
 

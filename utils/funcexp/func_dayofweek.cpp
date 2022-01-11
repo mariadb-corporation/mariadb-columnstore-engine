@@ -77,7 +77,7 @@ int64_t Func_dayofweek::getIntVal(rowgroup::Row& row,
 	    dataconvert::TimeStamp timestamp(val);
             int64_t seconds = timestamp.second;
 	    dataconvert::MySQLTime time;
-	    dataconvert::gmtSecToMySQLTime(seconds, time, timeZone());
+	    dataconvert::gmtSecToMySQLTime(seconds, time, ct.timeZone);
             year = time.year;
             month = time.month;
             day = time.day;

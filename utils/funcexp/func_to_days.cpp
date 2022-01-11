@@ -90,7 +90,7 @@ int64_t Func_to_days::getIntVal(rowgroup::Row& row,
             dataconvert::TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
             int64_t seconds = timestamp.second;
 	    dataconvert::MySQLTime m_time;
-	    dataconvert::gmtSecToMySQLTime(seconds, m_time, timeZone());
+	    dataconvert::gmtSecToMySQLTime(seconds, m_time, op_ct.timeZone);
             year = m_time.year;
             month = m_time.month;
             day = m_time.day;

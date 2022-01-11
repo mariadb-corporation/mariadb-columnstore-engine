@@ -4409,7 +4409,9 @@ ReturnedColumn* buildFunctionColumn(
 
 #endif
 
-        fc->operationType(functor->operationType(funcParms, fc->resultType()));
+        execplan::CalpontSystemCatalog::ColType resultType = fc->resultType();
+        resultType.timeZone = gwi.thd->variables.time_zone->get_name()->ptr();
+        fc->operationType(functor->operationType(funcParms, resultType));
         // For some reason, MDB has MYSQL_TYPE_DATETIME2 for functions on a TIMESTAMP
         if (fc->operationType().colDataType == CalpontSystemCatalog::TIMESTAMP)
         {
@@ -4639,13 +4641,16 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
         return NULL;
     }
 
+    std::string timeZone = std::string(gwi.thd->variables.time_zone->get_name()->ptr());
     Func* functor = funcexp->getFunctor(funcName);
     fc->resultType(colType_MysqlToIDB(item));
-    fc->operationType(functor->operationType(funcParms, fc->resultType()));
+    execplan::CalpontSystemCatalog::ColType resultType = fc->resultType();
+    resultType.timeZone = timeZone;
+    fc->operationType(functor->operationType(funcParms, resultType));
     fc->functionName(funcName);
     fc->functionParms(funcParms);
     fc->expressionId(ci->expressionId++);
-    fc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+    fc->timeZone(timeZone);
 
     // For function join. If any argument has non-zero joininfo, set it to the function.
     fc->setSimpleColumnList();

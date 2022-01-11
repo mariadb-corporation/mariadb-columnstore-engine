@@ -219,31 +219,38 @@ private:
 public:
     virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
     {
+        fOperationType.timeZone = fTimeZone;
         fResult.strVal = fFunctor->getStrVal(row, fFunctionParms, isNull, fOperationType);
         return fResult.strVal;
     }
     virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
     {
+        fOperationType.timeZone = fTimeZone;
         return fFunctor->getIntVal(row, fFunctionParms, isNull, fOperationType);
     }
     virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull)
     {
+        fOperationType.timeZone = fTimeZone;
         return fFunctor->getUintVal(row, fFunctionParms, isNull, fOperationType);
     }
     virtual float getFloatVal(rowgroup::Row& row, bool& isNull)
     {
+        fOperationType.timeZone = fTimeZone;
         return fFunctor->getFloatVal(row, fFunctionParms, isNull, fOperationType);
     }
     virtual double getDoubleVal(rowgroup::Row& row, bool& isNull)
     {
+        fOperationType.timeZone = fTimeZone;
         return fFunctor->getDoubleVal(row, fFunctionParms, isNull, fOperationType);
     }
     virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull)
     {
+        fOperationType.timeZone = fTimeZone;
         return fFunctor->getLongDoubleVal(row, fFunctionParms, isNull, fOperationType);
     }
     virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull)
     {
+        fOperationType.timeZone = fTimeZone;
         IDB_Decimal decimal = fFunctor->getDecimalVal(row, fFunctionParms, isNull, fOperationType);
 
         if (UNLIKELY(fResultType.colWidth == utils::MAXLEGACYWIDTH
@@ -290,22 +297,27 @@ public:
     }
     virtual bool getBoolVal(rowgroup::Row& row, bool& isNull)
     {
+        fOperationType.timeZone = fTimeZone;
         return fFunctor->getBoolVal(row, fFunctionParms, isNull, fOperationType);
     }
     virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull)
     {
+        fOperationType.timeZone = fTimeZone;
         return fFunctor->getDateIntVal(row, fFunctionParms, isNull, fOperationType);
     }
     virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull)
     {
+        fOperationType.timeZone = fTimeZone;
         return fFunctor->getDatetimeIntVal(row, fFunctionParms, isNull, fOperationType);
     }
     virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull)
     {
+        fOperationType.timeZone = fTimeZone;
         return fFunctor->getTimestampIntVal(row, fFunctionParms, isNull, fOperationType);
     }
     virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
     {
+        fOperationType.timeZone = fTimeZone;
         return fFunctor->getTimeIntVal(row, fFunctionParms, isNull, fOperationType);
     }
 

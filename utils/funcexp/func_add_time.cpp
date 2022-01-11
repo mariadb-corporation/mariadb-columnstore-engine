@@ -181,7 +181,7 @@ int64_t Func_add_time::getTimestampIntVal(rowgroup::Row& row,
     TimeStamp timestamp(val1);
     int64_t seconds = timestamp.second;
     MySQLTime m_time;
-    gmtSecToMySQLTime(seconds, m_time, timeZone());
+    gmtSecToMySQLTime(seconds, m_time, ct.timeZone);
     dt1.year = m_time.year;
     dt1.month = m_time.month;
     dt1.day = m_time.day;

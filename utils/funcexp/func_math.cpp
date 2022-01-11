@@ -1834,7 +1834,7 @@ string Func_format::getStrVal(Row& row,
 
         case execplan::CalpontSystemCatalog::TIMESTAMP:
         {
-            value = dataconvert::DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull), timeZone());
+            value = dataconvert::DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull), operationColType.timeZone);
         }
         break;
 

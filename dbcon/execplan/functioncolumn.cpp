@@ -305,7 +305,6 @@ void FunctionColumn::unserialize(messageqcpp::ByteStream& b)
     b >> fTimeZone;
     FuncExp* funcExp = FuncExp::instance();
     fFunctor = funcExp->getFunctor(fFunctionName);
-    fFunctor->timeZone(fTimeZone);
     fFunctor->fix(*this);
 
     // @bug 3506. Special treatment for rand() function. reset the seed

@@ -104,7 +104,7 @@ public:
                                execplan::CalpontSystemCatalog::ColType& op_ct)
     {
         std::string str = getStrVal(row, fp, isNull, op_ct);
-        return (isNull ? 0 : stringToTimestamp(str));
+        return (isNull ? 0 : stringToTimestamp(str, op_ct.timeZone));
     }
 
     int64_t getTimeIntVal(rowgroup::Row& row,

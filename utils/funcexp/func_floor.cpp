@@ -234,7 +234,7 @@ uint64_t Func_floor::getUintVal(Row& row,
         case execplan::CalpontSystemCatalog::TIMESTAMP:
         {
             string str =
-                DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull), timeZone());
+                DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull), op_ct.timeZone);
 
             // strip off micro seconds
             str = str.substr(0, 14);
@@ -545,7 +545,7 @@ IDB_Decimal Func_floor::getDecimalVal(Row& row,
         case execplan::CalpontSystemCatalog::TIMESTAMP:
         {
             string str =
-                DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull), timeZone());
+                DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull), op_ct.timeZone);
 
             // strip off micro seconds
             str = str.substr(0, 14);

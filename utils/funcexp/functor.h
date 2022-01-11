@@ -73,17 +73,6 @@ public:
         fFuncName = funcName;
     }
 
-    const std::string timeZone() const
-    {
-        std::unique_lock<std::mutex> l(tzMutex);
-        return fTimeZone;
-    }
-    void timeZone(const std::string timeZone)
-    {
-        std::unique_lock<std::mutex> l(tzMutex);
-        fTimeZone = timeZone;
-    }
-
     void raiseIllegalParameterDataTypeError(const execplan::CalpontSystemCatalog::ColType& colType) const
     {
         std::ostringstream oss;
@@ -203,7 +192,7 @@ public:
 protected:
     virtual uint32_t stringToDate(std::string);
     virtual uint64_t stringToDatetime(std::string);
-    virtual uint64_t stringToTimestamp(std::string);
+    virtual uint64_t stringToTimestamp(const std::string&, const std::string&);
     virtual int64_t stringToTime(std::string);
 
     virtual uint32_t intToDate(int64_t);
@@ -231,9 +220,6 @@ private:
     float fFloatNullVal;
     double fDoubleNullVal;
     long double fLongDoubleNullVal;
-
-    std::string fTimeZone;
-    mutable std::mutex tzMutex;
 };
 
 
@@ -243,7 +229,8 @@ public:
     ParmTSInt64() { }
     ParmTSInt64(rowgroup::Row& row,
                 const execplan::SPTP& parm,
-                const funcexp::Func& thisFunc)
+                const funcexp::Func& thisFunc,
+                const std::string& timeZone)
        :TSInt64Null(parm->data()->toTSInt64Null(row))
     { }
 };
@@ -255,7 +242,8 @@ public:
     ParmTUInt64() { }
     ParmTUInt64(rowgroup::Row& row,
                 const execplan::SPTP& parm,
-                const funcexp::Func& thisFunc)
+                const funcexp::Func& thisFunc,
+                const std::string& timeZone)
        :TUInt64Null(parm->data()->toTUInt64Null(row))
     { }
 };
@@ -268,9 +256,10 @@ public:
    TB b;
    Arg2Lazy(rowgroup::Row& row,
             FunctionParm& parm,
-            const Func& thisFunc)
-      :a(row, parm[0], thisFunc),
-       b(a.isNull() ? TB() : TB(row, parm[1], thisFunc))
+            const Func& thisFunc,
+            const std::string& timeZone)
+      :a(row, parm[0], thisFunc, timeZone),
+       b(a.isNull() ? TB() : TB(row, parm[1], thisFunc, timeZone))
    { }
 };
 
@@ -282,9 +271,10 @@ public:
    TB b;
    Arg2Eager(rowgroup::Row& row,
              FunctionParm& parm,
-             const Func& thisFunc)
-      :a(row, parm[0], thisFunc),
-       b(row, parm[1], thisFunc)
+             const Func& thisFunc,
+             const std::string& timeZone)
+      :a(row, parm[0], thisFunc, timeZone),
+       b(row, parm[1], thisFunc, timeZone)
    { }
 };
 

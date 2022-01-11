@@ -575,7 +575,7 @@ IDB_Decimal Func_truncate::getDecimalVal(Row& row,
             int64_t x = 0;
 
             string value =
-                DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull), timeZone());
+                DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull), op_ct.timeZone);
 
             s = parm[1]->data()->getIntVal(row, isNull);
 

@@ -193,7 +193,7 @@ string Func_str_to_date::getStrVal(rowgroup::Row& row,
                                    CalpontSystemCatalog::ColType& ct)
 {
     dataconvert::DateTime dateTime;
-    dateTime = getDateTime(row, parm, isNull, ct, timeZone());
+    dateTime = getDateTime(row, parm, isNull, ct, ct.timeZone);
     string convertedDate = dataconvert::DataConvert::datetimeToString(*((long long*) &dateTime));
     return convertedDate;
 }
@@ -204,7 +204,7 @@ int32_t Func_str_to_date::getDateIntVal(rowgroup::Row& row,
                                         CalpontSystemCatalog::ColType& ct)
 {
     dataconvert::DateTime dateTime;
-    dateTime = getDateTime(row, parm, isNull, ct, timeZone());
+    dateTime = getDateTime(row, parm, isNull, ct, ct.timeZone);
     int64_t time = *(reinterpret_cast<int64_t*>(&dateTime));
     return ((((int32_t)(time >> 32)) & 0xFFFFFFC0) | 0x3E);
 }
@@ -215,7 +215,7 @@ int64_t Func_str_to_date::getDatetimeIntVal(rowgroup::Row& row,
         CalpontSystemCatalog::ColType& ct)
 {
     dataconvert::DateTime dateTime;
-    dateTime = getDateTime(row, parm, isNull, ct, timeZone());
+    dateTime = getDateTime(row, parm, isNull, ct, ct.timeZone);
     int64_t time = *(reinterpret_cast<int64_t*>(&dateTime));
     return time;
 }
@@ -226,7 +226,7 @@ int64_t Func_str_to_date::getTimestampIntVal(rowgroup::Row& row,
         CalpontSystemCatalog::ColType& ct)
 {
     dataconvert::DateTime dateTime;
-    dateTime = getDateTime(row, parm, isNull, ct, timeZone());
+    dateTime = getDateTime(row, parm, isNull, ct, ct.timeZone);
     dataconvert::TimeStamp timestamp;
     dataconvert::MySQLTime m_time;
     m_time.year = dateTime.year;
@@ -236,7 +236,7 @@ int64_t Func_str_to_date::getTimestampIntVal(rowgroup::Row& row,
     m_time.minute = dateTime.minute;
     m_time.second = dateTime.second;
     bool isValid = true;
-    int64_t seconds = mySQLTimeToGmtSec(m_time, timeZone(), isValid);
+    int64_t seconds = mySQLTimeToGmtSec(m_time, ct.timeZone, isValid);
     if (!isValid)
     {
         timestamp = -1;
@@ -258,7 +258,7 @@ int64_t Func_str_to_date::getTimeIntVal(rowgroup::Row& row,
 {
     dataconvert::DateTime dateTime;
     dataconvert::Time retTime;
-    dateTime = getDateTime(row, parm, isNull, ct, timeZone());
+    dateTime = getDateTime(row, parm, isNull, ct, ct.timeZone);
     retTime.day = 0;
     retTime.is_neg = false;
     retTime.hour = dateTime.hour;
@@ -275,7 +275,7 @@ int64_t Func_str_to_date::getIntVal(rowgroup::Row& row,
                                     CalpontSystemCatalog::ColType& ct)
 {
     dataconvert::DateTime dateTime;
-    dateTime = getDateTime(row, parm, isNull, ct, timeZone());
+    dateTime = getDateTime(row, parm, isNull, ct, ct.timeZone);
     int64_t time = *(reinterpret_cast<int64_t*>(&dateTime));
     return time;
 }

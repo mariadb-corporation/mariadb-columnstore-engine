@@ -57,7 +57,7 @@ int64_t Func_timestampdiff::getIntVal(rowgroup::Row& row,
         TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
         int64_t seconds = timestamp.second;
         MySQLTime m_time;
-        gmtSecToMySQLTime(seconds, m_time, timeZone());
+        gmtSecToMySQLTime(seconds, m_time, op_ct.timeZone);
         dt1.year = m_time.year;
         dt1.month = m_time.month;
         dt1.day = m_time.day;
@@ -84,7 +84,7 @@ int64_t Func_timestampdiff::getIntVal(rowgroup::Row& row,
         TimeStamp timestamp(parm[1]->data()->getTimestampIntVal(row, isNull));
         int64_t seconds = timestamp.second;
         MySQLTime m_time;
-        gmtSecToMySQLTime(seconds, m_time, timeZone());
+        gmtSecToMySQLTime(seconds, m_time, op_ct.timeZone);
         dt2.year = m_time.year;
         dt2.month = m_time.month;
         dt2.day = m_time.day;
