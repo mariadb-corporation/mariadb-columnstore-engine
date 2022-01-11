@@ -33,6 +33,8 @@
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 
+#include <iostream>
+
 namespace bi = boost::interprocess;
 
 namespace BRM
@@ -93,7 +95,7 @@ class BRMManagedShmImpl : public BRMShmImplParent
     BRMManagedShmImpl(unsigned key, off_t size, bool readOnly = false);
     BRMManagedShmImpl(const BRMManagedShmImpl& rhs) = delete;
     BRMManagedShmImpl& operator=(const BRMManagedShmImpl& rhs) = delete;
-    ~BRMManagedShmImpl() { delete fShmSegment; }
+    ~BRMManagedShmImpl() { delete fShmSegment; std::cout << "~BRMManagedShmImpl " << std::endl; }
 
     int clear(unsigned newKey, off_t newSize) override;
     void destroy() override;

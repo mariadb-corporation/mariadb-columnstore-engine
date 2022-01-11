@@ -280,11 +280,14 @@ ExtentMapIndexImpl* ExtentMapIndexImpl::fInstance_ = nullptr;
 ExtentMapIndexImpl* ExtentMapIndexImpl::makeExtentMapIndexImpl(unsigned key, off_t size, bool readOnly)
 {
     std::lock_guard<std::mutex> lock(fInstanceMutex_);
+    std::cout << "makeExtentMapIndexImpl key " << key << " size " << size << endl;
 
     if (fInstance_)
     {
+        std::cout << "makeExtentMapIndexImpl fInstance_ != nullptr" << endl;
         if (size != fInstance_->getShmemSize())
         {
+            std::cout << "makeExtentMapIndexImpl fInstance_ != nullptr and size != fInstance_->getShmemSize() -> remap managed shmem segment" << endl;
             fInstance_->fBRMManagedShmMemImpl_.remap(); 
             //BRMManagedShmImpl newShm(key, 0);
             //fInstance_->swapout(newShm);
@@ -293,6 +296,7 @@ ExtentMapIndexImpl* ExtentMapIndexImpl::makeExtentMapIndexImpl(unsigned key, off
         //ASSERT(key == fInstance_->fBRMManagedShmMemImpl_.key());
         return fInstance_;
     }
+    std::cout << "makeExtentMapIndexImpl fInstance_ == nullptr" << endl;
 
     fInstance_ = new ExtentMapIndexImpl(key, size, readOnly);
     fInstance_->createExtentMapIndexIfNeeded();
@@ -1959,13 +1963,16 @@ void ExtentMap::grabEMIndex(OPS op)
 
     if (!fPExtMapIndexImpl_)
     {
+        std::cout << "grabEMIndex fPExtMapIndexImpl_ == nullptr " << endl;
         if (fExtMapIndex_ != nullptr)
         {
+            std::cout << "grabEMIndex fPExtMapIndexImpl_ == nullptr and fExtMapIndex_ != nullptr" << endl;
             fExtMapIndex_ = nullptr;
         }
 
         if (fEMIndexShminfo->allocdSize == 0)
         {
+            std::cout << "grabEMIndex fPExtMapIndexImpl_ == nullptr and fEMIndexShminfo->allocdSize == 0" << endl;
             if (op == READ)
             {
                 fMST.getTable_upgrade(MasterSegmentTable::EMIndex);
@@ -1983,13 +1990,15 @@ void ExtentMap::grabEMIndex(OPS op)
         }
         else
         {
+            std::cout << "grabEMIndex fPExtMapIndexImpl_ == nullptr and fEMIndexShminfo->allocdSize != 0" << endl;
+            // Sending down current Managed Shmem size. If EMIndexImpl instance size doesn't match
+            // fEMIndexShminfo->allocdSize makeExtentMapIndexImpl will remap managed shmem segment.
             fPExtMapIndexImpl_ =
-                ExtentMapIndexImpl::makeExtentMapIndexImpl(getInitialEMIndexShmkey(), 0);
+                ExtentMapIndexImpl::makeExtentMapIndexImpl(getInitialEMIndexShmkey(), fEMIndexShminfo->allocdSize);
  
             //if (r_only)
             //    fPExtMapImpl->makeReadOnly();
 
-            //fExtentMap = fPExtMapImpl->get();
             fExtMapIndex_ = fPExtMapIndexImpl_->get();
 
             if (fExtMapIndex_ == nullptr)
@@ -2001,6 +2010,7 @@ void ExtentMap::grabEMIndex(OPS op)
     }
     else if (fPExtMapIndexImpl_->getShmemImplSize() != (unsigned)fEMIndexShminfo->allocdSize)
     {
+        std::cout << "grabEMIndex fPExtMapIndexImpl_ != nullptr and fPExtMapIndexImpl_->getShmemImplSize() != fEMIndexShminfo->allocdSize" << endl;
         fPExtMapIndexImpl_->refreshShm();
         fPExtMapIndexImpl_ =
             ExtentMapIndexImpl::makeExtentMapIndexImpl(getInitialEMIndexShmkey(), fEMIndexShminfo->allocdSize);
@@ -2131,11 +2141,11 @@ void ExtentMap::growEMShmseg(size_t nrows)
 void ExtentMap::growEMIndexShmseg(const size_t suggestedSize)
 {
     //size_t allocSize = InitEMIndexSize_;
-    size_t allocSize = 100000;
+    size_t allocSize = std::max(100000, fEMIndexShminfo->allocdSize);
     key_t newshmkey = chooseEMIndexShmkey();
     key_t fixedManagedSegmentKey = getInitialEMIndexShmkey();
 
-    allocSize = max(allocSize, suggestedSize);
+    allocSize = std::max(allocSize, suggestedSize);
     if (!fPExtMapIndexImpl_)
     {
         fPExtMapIndexImpl_ = ExtentMapIndexImpl::makeExtentMapIndexImpl(fixedManagedSegmentKey, allocSize, r_only);

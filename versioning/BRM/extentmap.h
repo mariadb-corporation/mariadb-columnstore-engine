@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016-2021 MariaDB Corporation
+   Copyright (C) 2016-2022 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -334,6 +334,7 @@ public:
     static ExtentMapIndexImpl* makeExtentMapIndexImpl(unsigned key, off_t size, bool readOnly = false);
     static void refreshShm()
     {
+        std::cout << "ExtentMapIndexImpl refreshShm fInstance_ is nullptr " << (fInstance_== nullptr) << std::endl;
         if (fInstance_)
         {
             delete fInstance_;

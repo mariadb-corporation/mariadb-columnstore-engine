@@ -383,6 +383,7 @@ void BRMManagedShmImpl::destroy()
 void BRMManagedShmImpl::remap()
 {
     delete fShmSegment;
+    // assign nullptr
     // WIP
     string keyName = ShmKeys::keyToName(fKey);
     fShmSegment = new bi::managed_shared_memory(bi::open_only, keyName.c_str());
