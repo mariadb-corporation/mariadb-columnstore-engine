@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016-2022 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -21,6 +22,7 @@
  *    third, lock or unlock it
  */
 
+#include <string>
 #include <iostream>
 #include <stdlib.h>
 #include <rwlock.h>
@@ -32,10 +34,16 @@ char* name;
 
 void usage()
 {
-    cout << "Usage " << name << " which_lock_to_use which_side_to_use lock_or_unlock\n" <<
-         "   which_lock_to_use: 1=VSS 2=ExtentMap 3=FreeList 4=VBBM 5=CopyLocks\n" <<
-         "   which_side_to_use: r|w   (read or write)\n" <<
-         "   lock_or_unlock:    l|u   (lock or unlock)\n";
+    std::cout << "Usage " << name << " which_lock_to_use which_side_to_use lock_or_unlock"
+        << std::endl;
+    size_t lockId = 0;
+    for (auto& lockName: RWLockNames)
+    {
+        std::cout << "         " << lockId << "=" << lockName << " ";
+    }
+    std::cout << std::endl
+              << "   which_side_to_use: r|w   (read or write)" << std::endl
+              << "   lock_or_unlock:    l|u   (lock or unlock)" << std::endl;
     exit(1);
 }
 
@@ -54,10 +62,21 @@ int main(int argc, char** argv)
     if (strlen(argv[1]) != 1 || strlen(argv[2]) != 1 || strlen(argv[3]) != 1)
         usage();
 
-    which_lock = atoi(argv[1]);
-
-    if (which_lock < 1 || which_lock > 5)
+    try
+    {
+         which_lock = std::stoi(argv[1]);
+    }
+    catch(std::exception const & e)
+    {
+        std::cerr << "Cannot convert the lock id: " << e.what() <<std::endl;
         usage();
+    }
+
+    if (which_lock >= RWLockNames.size())
+        usage();
+
+    size_t minLockId = (which_lock > 0) ? which_lock : 1;
+    size_t maxLockId = (which_lock > 0) ? which_lock : RWLockNames.size() - 1;
 
     if (argv[2][0] == 'r')
         which_side = 0;
@@ -73,17 +92,30 @@ int main(int argc, char** argv)
     else
         usage();
 
-    rwlock = new RWLock(0x10000 * which_lock);
+    for (size_t i = minLockId; i <= maxLockId; ++i)
+    {
+        rwlock = new RWLock(0x10000 * which_lock);
 
-    if (which_side == 0)
-        if (lock_unlock == 0)
-            rwlock->read_lock();
+        if (which_side == 0)
+        {
+            if (lock_unlock == 0)
+                rwlock->read_lock();
+            else
+                rwlock->read_unlock();
+        }
+        else if (lock_unlock == 0)
+        {
+            rwlock->write_lock();
+        }
         else
-            rwlock->read_unlock();
-    else if (lock_unlock == 0)
-        rwlock->write_lock();
-    else
-        rwlock->write_unlock();
+        {
+            rwlock->write_unlock();
+        }
+
+        delete rwlock;
+
+    }
+
 
     return 0;
 }
