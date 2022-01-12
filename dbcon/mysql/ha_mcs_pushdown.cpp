@@ -36,7 +36,7 @@ void mutate_optimizer_flags(THD *thd_)
     // CS restores it later in SH::scan_end() and in case of an error
     // in SH::scan_init()
 
-    ulonglong flags_to_set = OPTIMIZER_SWITCH_IN_TO_EXISTS |
+    ulonglong flags_to_set = OPTIMIZER_SWITCH_MATERIALIZATION |
         OPTIMIZER_SWITCH_COND_PUSHDOWN_FOR_DERIVED |
         OPTIMIZER_SWITCH_COND_PUSHDOWN_FROM_HAVING;
 

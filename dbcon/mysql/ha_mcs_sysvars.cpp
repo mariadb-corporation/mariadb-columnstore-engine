@@ -77,6 +77,18 @@ static MYSQL_THDVAR_ULONGLONG(
     1
 );
 
+static MYSQL_THDVAR_ULONGLONG(
+    original_option_bits,
+    PLUGIN_VAR_NOSYSVAR | PLUGIN_VAR_NOCMDOPT,
+    "Storage for thd->variables.option_bits. For internal usage.",
+    NULL,
+    NULL,
+    0,
+    0,
+    ~0U,
+    1
+);
+
 const char* mcs_select_handler_mode_values[] = {
     "OFF",
     "ON",
@@ -377,6 +389,7 @@ st_mysql_sys_var* mcs_system_variables[] =
   MYSQL_SYSVAR(compression_type),
   MYSQL_SYSVAR(fe_conn_info_ptr),
   MYSQL_SYSVAR(original_optimizer_flags),
+  MYSQL_SYSVAR(original_option_bits),
   MYSQL_SYSVAR(select_handler),
   MYSQL_SYSVAR(derived_handler),
   MYSQL_SYSVAR(group_by_handler),
@@ -441,6 +454,21 @@ void set_original_optimizer_flags(ulonglong ptr, THD* thd)
     }
     
     THDVAR(current_thd, original_optimizer_flags) = (uint64_t)(ptr);
+}
+
+ulonglong get_original_option_bits(THD* thd)
+{
+    return (thd == NULL) ? 0 : THDVAR(thd, original_option_bits);
+}
+
+void set_original_option_bits(ulonglong value, THD* thd)
+{
+    if (thd == NULL)
+    {
+        return;
+    }
+
+    THDVAR(thd, original_option_bits) = (uint64_t)(value);
 }
 
 mcs_select_handler_mode_t get_select_handler_mode(THD* thd)

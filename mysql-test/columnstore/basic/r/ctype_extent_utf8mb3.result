@@ -1,0 +1,238 @@
+DROP DATABASE IF EXISTS mcs_ctype_extent_utf8mb3;
+CREATE DATABASE mcs_ctype_extent_utf8mb3;
+USE mcs_ctype_extent_utf8mb3;
+SET default_storage_engine=ColumnStore;
+CREATE PROCEDURE show_extent_min_max(schema_arg VARCHAR(64),
+table_arg VARCHAR(64),
+column_arg VARCHAR(64))
+BEGIN
+SELECT
+c.table_schema,
+c.table_name,
+c.column_name,
+hex(CAST(e.min_value AS SIGNED)),
+hex(CAST(e.max_value AS SIGNED))
+FROM
+information_schema.columnstore_extents e,
+information_schema.columnstore_columns c
+WHERE c.object_id=e.object_id
+AND table_schema=schema_arg
+AND table_name=table_arg
+AND column_name=column_arg;
+END;
+$$
+CREATE FUNCTION caltrace_extract_block_diagnostics(msg TEXT CHARACTER SET utf8mb4)
+RETURNS TEXT CHARACTER SET utf8mb4
+BEGIN
+RETURN CONCAT(regexp_substr(msg, '(BlocksTouched-[^;]*);'), ' ',
+regexp_substr(msg, '(PartitionBlocksEliminated-[^;]*);'));
+END;
+$$
+#
+# MCOL-4871 Extent elimination for short CHAR does not work well
+#
+SET NAMES utf8;
+CREATE PROCEDURE test(collation VARCHAR(64))
+BEGIN
+DECLARE stmt TEXT;
+DECLARE CONTINUE HANDLER FOR 9999
+BEGIN
+GET DIAGNOSTICS CONDITION 1 @errmsg = MESSAGE_TEXT;
+SET @errmsg=caltrace_extract_block_diagnostics(@errmsg);
+RESIGNAL SET MESSAGE_TEXT=@errmsg;
+END;
+DO calsettrace(1);
+SET stmt='CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci)';
+SET stmt=REPLACE(stmt,'utf8mb3_general_ci', collation);
+SELECT stmt AS ``;
+EXECUTE IMMEDIATE stmt;
+INSERT INTO t1 VALUES ('a');
+SELECT c1, HEX(c1) FROM t1;
+CALL show_extent_min_max(database(),'t1','c1');
+SELECT * FROM t1 WHERE c1='a';
+SHOW WARNINGS;
+SELECT * FROM t1 WHERE c1='b';
+SHOW WARNINGS;
+DROP TABLE t1;
+SET stmt='CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci)';
+SET stmt=REPLACE(stmt,'utf8mb3_general_ci', collation);
+SELECT stmt AS ``;
+EXECUTE IMMEDIATE stmt;
+INSERT INTO t1 VALUES ('aa');
+SELECT c1, HEX(c1) FROM t1;
+CALL show_extent_min_max(database(),'t1','c1');
+SELECT * FROM t1 WHERE c1='aa';
+SHOW WARNINGS;
+SELECT * FROM t1 WHERE c1='bb';
+SHOW WARNINGS;
+DROP TABLE t1;
+DO calsettrace(0);
+END;
+$$
+CALL test('utf8mb3_unicode_ci');
+
+CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_ci)
+c1	HEX(c1)
+a	61
+table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
+mcs_ctype_extent_utf8mb3	t1	c1	61	61
+c1
+a
+Level	Code	Message
+Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+c1
+Level	Code	Message
+Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
+
+CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_ci)
+c1	HEX(c1)
+aa	6161
+table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
+mcs_ctype_extent_utf8mb3	t1	c1	6161	6161
+c1
+aa
+Level	Code	Message
+Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+c1
+Level	Code	Message
+Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
+CALL test('utf8mb3_unicode_nopad_ci');
+
+CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_nopad_ci)
+c1	HEX(c1)
+a	61
+table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
+mcs_ctype_extent_utf8mb3	t1	c1	61	61
+c1
+a
+Level	Code	Message
+Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+c1
+Level	Code	Message
+Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
+
+CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_nopad_ci)
+c1	HEX(c1)
+aa	6161
+table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
+mcs_ctype_extent_utf8mb3	t1	c1	6161	6161
+c1
+aa
+Level	Code	Message
+Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+c1
+Level	Code	Message
+Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
+CALL test('utf8mb3_general_ci');
+
+CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci)
+c1	HEX(c1)
+a	61
+table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
+mcs_ctype_extent_utf8mb3	t1	c1	61	61
+c1
+a
+Level	Code	Message
+Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+c1
+Level	Code	Message
+Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
+
+CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci)
+c1	HEX(c1)
+aa	6161
+table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
+mcs_ctype_extent_utf8mb3	t1	c1	6161	6161
+c1
+aa
+Level	Code	Message
+Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+c1
+Level	Code	Message
+Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
+CALL test('utf8mb3_general_nopad_ci');
+
+CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_nopad_ci)
+c1	HEX(c1)
+a	61
+table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
+mcs_ctype_extent_utf8mb3	t1	c1	61	61
+c1
+a
+Level	Code	Message
+Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+c1
+Level	Code	Message
+Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
+
+CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_nopad_ci)
+c1	HEX(c1)
+aa	6161
+table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
+mcs_ctype_extent_utf8mb3	t1	c1	6161	6161
+c1
+aa
+Level	Code	Message
+Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+c1
+Level	Code	Message
+Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
+CALL test('utf8mb3_bin');
+
+CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin)
+c1	HEX(c1)
+a	61
+table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
+mcs_ctype_extent_utf8mb3	t1	c1	61	61
+c1
+a
+Level	Code	Message
+Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+c1
+Level	Code	Message
+Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
+
+CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin)
+c1	HEX(c1)
+aa	6161
+table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
+mcs_ctype_extent_utf8mb3	t1	c1	6161	6161
+c1
+aa
+Level	Code	Message
+Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+c1
+Level	Code	Message
+Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
+CALL test('utf8mb3_nopad_bin');
+
+CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_nopad_bin)
+c1	HEX(c1)
+a	61
+table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
+mcs_ctype_extent_utf8mb3	t1	c1	61	61
+c1
+a
+Level	Code	Message
+Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+c1
+Level	Code	Message
+Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
+
+CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET utf8mb3 COLLATE utf8mb3_nopad_bin)
+c1	HEX(c1)
+aa	6161
+table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
+mcs_ctype_extent_utf8mb3	t1	c1	6161	6161
+c1
+aa
+Level	Code	Message
+Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+c1
+Level	Code	Message
+Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
+DROP PROCEDURE test;
+DROP PROCEDURE show_extent_min_max;
+DROP FUNCTION caltrace_extract_block_diagnostics;
+DROP DATABASE mcs_ctype_extent_utf8mb3;
+USE test;
