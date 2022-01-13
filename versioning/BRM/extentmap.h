@@ -86,10 +86,10 @@ namespace BRM
 using PartitionNumberT = uint32_t;
 // WIP reuse it here and in oam namespace
 using DBRootT = uint16_t;
-using SegmentT = uint16_t; 
+using SegmentT = uint16_t;
 using LastExtentIndexT = int;
 using EmptyEMEntry = int;
-using HighestOffset = uint32_t; 
+using HighestOffset = uint32_t;
 using LastIndEmptyIndEmptyInd = std::pair<LastExtentIndexT, EmptyEMEntry>;
 using DBRootVec = std::vector<DBRootT>;
 
@@ -334,7 +334,7 @@ public:
     static ExtentMapIndexImpl* makeExtentMapIndexImpl(unsigned key, off_t size, bool readOnly = false);
     static void refreshShm()
     {
-        std::cout << "ExtentMapIndexImpl refreshShm fInstance_ is nullptr " << (fInstance_== nullptr) << std::endl;
+        //std::cout << "ExtentMapIndexImpl refreshShm fInstance_ is nullptr " << (fInstance_== nullptr) << std::endl;
         if (fInstance_)
         {
             delete fInstance_;
@@ -378,15 +378,20 @@ public:
     {
         return fBRMManagedShmMemImpl_.key();
     }
+    // WIP might need at least an assert to check that shmem is up and running
     unsigned getShmemSize()
     {
         return fBRMManagedShmMemImpl_.getManagedSegment()->get_size();
-    } 
+    }
+    size_t getShmemFree()
+    {
+        return fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory();
+    }
     unsigned getShmemImplSize()
     {
         return fBRMManagedShmMemImpl_.size();
-    } 
- 
+    }
+
     void createExtentMapIndexIfNeeded();
     ExtentMapIndex* get();
     // WIP The return type should return pair<bool, iter>
@@ -403,7 +408,7 @@ public:
     ExtentMapIndexFindResult find(const DBRootT dbroot, const OID_t oid);
     ExtentMapIndexFindResult search2ndLayer(OIDIndexContainerT& oids, const OID_t oid,
         const PartitionNumberT partitionNumber);
-    ExtentMapIndexFindResult search2ndLayer(OIDIndexContainerT& oids, const OID_t oid); 
+    ExtentMapIndexFindResult search2ndLayer(OIDIndexContainerT& oids, const OID_t oid);
     ExtentMapIndexFindResult search3dLayer(PartitionIndexContainerT& partitions,
         const PartitionNumberT partitionNumber);
     void deleteDbRoot(const DBRootT dbroot);
@@ -1020,6 +1025,8 @@ public:
     EXPORT void dumpTo(std::ostream& os);
     EXPORT const bool* getEMLockStatus();
     EXPORT const bool* getEMFLLockStatus();
+    size_t EMIndexShmemSize();
+    size_t EMIndexShmemFree();
 
 #ifdef BRM_DEBUG
     EXPORT void printEM() const;
@@ -1095,7 +1102,7 @@ private:
     LBID_t getLBIDsFromFreeList(uint32_t size);
     void reserveLBIDRange(LBID_t start, uint8_t size);    // used by load() to allocate pre-existing LBIDs
 
-    key_t chooseEMShmkey(); 
+    key_t chooseEMShmkey();
     key_t chooseFLShmkey();
     key_t chooseEMIndexShmkey();
     key_t getInitialEMIndexShmkey() const;

@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016-2021 MariaDB Corporation
+   Copyright (C) 2016-2022 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -280,14 +280,14 @@ ExtentMapIndexImpl* ExtentMapIndexImpl::fInstance_ = nullptr;
 ExtentMapIndexImpl* ExtentMapIndexImpl::makeExtentMapIndexImpl(unsigned key, off_t size, bool readOnly)
 {
     std::lock_guard<std::mutex> lock(fInstanceMutex_);
-    std::cout << "makeExtentMapIndexImpl key " << key << " size " << size << endl;
+    //std::cout << "makeExtentMapIndexImpl key " << key << " size " << size << endl;
 
     if (fInstance_)
     {
-        std::cout << "makeExtentMapIndexImpl fInstance_ != nullptr" << endl;
+        //std::cout << "makeExtentMapIndexImpl fInstance_ != nullptr" << endl;
         if (size != fInstance_->getShmemSize())
         {
-            std::cout << "makeExtentMapIndexImpl fInstance_ != nullptr and size != fInstance_->getShmemSize() -> remap managed shmem segment" << endl;
+            //std::cout << "makeExtentMapIndexImpl fInstance_ != nullptr and size != fInstance_->getShmemSize() -> remap managed shmem segment" << endl;
             fInstance_->fBRMManagedShmMemImpl_.remap(); 
             //BRMManagedShmImpl newShm(key, 0);
             //fInstance_->swapout(newShm);
@@ -296,7 +296,7 @@ ExtentMapIndexImpl* ExtentMapIndexImpl::makeExtentMapIndexImpl(unsigned key, off
         //ASSERT(key == fInstance_->fBRMManagedShmMemImpl_.key());
         return fInstance_;
     }
-    std::cout << "makeExtentMapIndexImpl fInstance_ == nullptr" << endl;
+    //std::cout << "makeExtentMapIndexImpl fInstance_ == nullptr" << endl;
 
     fInstance_ = new ExtentMapIndexImpl(key, size, readOnly);
     fInstance_->createExtentMapIndexIfNeeded();
@@ -334,13 +334,14 @@ bool ExtentMapIndexImpl::growIfNeeded(const size_t memoryNeeded)
 {
     //static const constexpr size_t shmemGrowStep = 1024 * 1024;
     static const constexpr size_t shmemGrowStep = 10 * 1024;
+    // use ::getShmemFree
     auto freeShmem = fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory();
     // Worst case managed segment can't get continues buffer with len = memoryNeeded
     const size_t allocSize = std::max(shmemGrowStep, memoryNeeded);
     if (freeShmem < allocSize)
     {
         const size_t currentShmemSize = fBRMManagedShmMemImpl_.getManagedSegment()->get_size();
-        std::cout << "growIfNeeded  " << allocSize + currentShmemSize << std::endl;
+        //std::cout << "growIfNeeded  " << allocSize + currentShmemSize << std::endl;
         grow(allocSize + currentShmemSize);
         return true;
     }
@@ -1547,7 +1548,7 @@ void ExtentMap::loadVersion4(IDBDataFile* in)
         if (!resShmemHasGrownPair.first)
         {
             // WIP
-            std::cout << "insert insert had failed" << std::endl;
+            //std::cout << "insert insert had failed" << std::endl;
         }
             
         if (resShmemHasGrownPair.second)
@@ -1555,7 +1556,7 @@ void ExtentMap::loadVersion4(IDBDataFile* in)
             fEMIndexShminfo->allocdSize = fPExtMapIndexImpl_->getShmemSize();
         }
 
-        std::cout << "insert result " << resShmemHasGrownPair.first << " shmem has grown " << resShmemHasGrownPair.second << std::endl;
+        //std::cout << "insert result " << resShmemHasGrownPair.first << " shmem has grown " << resShmemHasGrownPair.second << std::endl;
     }
 
     fEMShminfo->currentSize = emNumElements * sizeof(EMEntry);
@@ -1963,16 +1964,16 @@ void ExtentMap::grabEMIndex(OPS op)
 
     if (!fPExtMapIndexImpl_)
     {
-        std::cout << "grabEMIndex fPExtMapIndexImpl_ == nullptr " << endl;
+        //std::cout << "grabEMIndex fPExtMapIndexImpl_ == nullptr " << endl;
         if (fExtMapIndex_ != nullptr)
         {
-            std::cout << "grabEMIndex fPExtMapIndexImpl_ == nullptr and fExtMapIndex_ != nullptr" << endl;
+            //std::cout << "grabEMIndex fPExtMapIndexImpl_ == nullptr and fExtMapIndex_ != nullptr" << endl;
             fExtMapIndex_ = nullptr;
         }
 
         if (fEMIndexShminfo->allocdSize == 0)
         {
-            std::cout << "grabEMIndex fPExtMapIndexImpl_ == nullptr and fEMIndexShminfo->allocdSize == 0" << endl;
+            //std::cout << "grabEMIndex fPExtMapIndexImpl_ == nullptr and fEMIndexShminfo->allocdSize == 0" << endl;
             if (op == READ)
             {
                 fMST.getTable_upgrade(MasterSegmentTable::EMIndex);
@@ -1990,7 +1991,7 @@ void ExtentMap::grabEMIndex(OPS op)
         }
         else
         {
-            std::cout << "grabEMIndex fPExtMapIndexImpl_ == nullptr and fEMIndexShminfo->allocdSize != 0" << endl;
+            //std::cout << "grabEMIndex fPExtMapIndexImpl_ == nullptr and fEMIndexShminfo->allocdSize != 0" << endl;
             // Sending down current Managed Shmem size. If EMIndexImpl instance size doesn't match
             // fEMIndexShminfo->allocdSize makeExtentMapIndexImpl will remap managed shmem segment.
             fPExtMapIndexImpl_ =
@@ -2010,7 +2011,7 @@ void ExtentMap::grabEMIndex(OPS op)
     }
     else if (fPExtMapIndexImpl_->getShmemImplSize() != (unsigned)fEMIndexShminfo->allocdSize)
     {
-        std::cout << "grabEMIndex fPExtMapIndexImpl_ != nullptr and fPExtMapIndexImpl_->getShmemImplSize() != fEMIndexShminfo->allocdSize" << endl;
+        //std::cout << "grabEMIndex fPExtMapIndexImpl_ != nullptr and fPExtMapIndexImpl_->getShmemImplSize() != fEMIndexShminfo->allocdSize" << endl;
         fPExtMapIndexImpl_->refreshShm();
         fPExtMapIndexImpl_ =
             ExtentMapIndexImpl::makeExtentMapIndexImpl(getInitialEMIndexShmkey(), fEMIndexShminfo->allocdSize);
@@ -3275,14 +3276,14 @@ LBID_t ExtentMap::_createColumnExtent_DBroot(uint32_t size, int OID,
     if (!resShmemHasGrownPair.first)
     {
         // WIP
-        std::cout << "insert insert had failed" << std::endl;
+        //std::cout << "insert insert had failed" << std::endl;
     }
         
     if (resShmemHasGrownPair.second)
     {
         fEMIndexShminfo->allocdSize = fPExtMapIndexImpl_->getShmemSize();
     }
-    std::cout << "insert result " << resShmemHasGrownPair.first << " shmem has grown " << resShmemHasGrownPair.second << std::endl;
+    //std::cout << "insert result " << resShmemHasGrownPair.first << " shmem has grown " << resShmemHasGrownPair.second << std::endl;
 
 
     return startLBID;
@@ -3519,7 +3520,7 @@ LBID_t ExtentMap::_createColumnExtentExactFile(uint32_t size, int OID,
     if (!resShmemHasGrownPair.first)
     {
         // WIP
-        std::cout << "insert insert had failed" << std::endl;
+        //std::cout << "insert insert had failed" << std::endl;
     }
         
     if (resShmemHasGrownPair.second)
@@ -3527,7 +3528,7 @@ LBID_t ExtentMap::_createColumnExtentExactFile(uint32_t size, int OID,
         fEMIndexShminfo->allocdSize = fPExtMapIndexImpl_->getShmemSize();
     }
 
-    std::cout << "insert result " << resShmemHasGrownPair.first << " shmem has grown " << resShmemHasGrownPair.second << std::endl;
+    //std::cout << "insert result " << resShmemHasGrownPair.first << " shmem has grown " << resShmemHasGrownPair.second << std::endl;
 
     return startLBID;
 }
@@ -3685,7 +3686,7 @@ LBID_t ExtentMap::_createDictStoreExtent(uint32_t size, int OID,
     if (!resShmemHasGrownPair.first)
     {
         // WIP
-        std::cout << "insert insert had failed" << std::endl;
+        //std::cout << "insert insert had failed" << std::endl;
     }
         
     if (resShmemHasGrownPair.second)
@@ -3693,7 +3694,7 @@ LBID_t ExtentMap::_createDictStoreExtent(uint32_t size, int OID,
         fEMIndexShminfo->allocdSize = fPExtMapIndexImpl_->getShmemSize();
     }
 
-    std::cout << "insert result " << resShmemHasGrownPair.first << " shmem has grown " << resShmemHasGrownPair.second << std::endl;
+    //std::cout << "insert result " << resShmemHasGrownPair.first << " shmem has grown " << resShmemHasGrownPair.second << std::endl;
 
     return startLBID;
 }
@@ -6591,6 +6592,22 @@ void ExtentMap::dumpTo(ostream& os)
 
     releaseEMIndex(READ);
     releaseEMEntryTable(READ);
+}
+
+size_t ExtentMap::EMIndexShmemSize()
+{
+    grabEMIndex(READ);
+    size_t EMIndexShmemSize = fPExtMapIndexImpl_->getShmemSize();
+    releaseEMIndex(READ);
+    return EMIndexShmemSize;
+}
+
+size_t ExtentMap::EMIndexShmemFree()
+{
+    grabEMIndex(READ);
+    size_t EMIndexShmemFree = fPExtMapIndexImpl_->getShmemFree();
+    releaseEMIndex(READ);
+    return EMIndexShmemFree;
 }
 
 }	//namespace

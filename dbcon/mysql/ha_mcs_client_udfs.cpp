@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporation
+   Copyright (C) 2016-2022 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -51,6 +51,8 @@ extern "C"
     const char* SetParmsPrelude = "Updated ";
     const char* SetParmsError = "Invalid parameter: ";
     const char* InvalidParmSize = "Invalid parameter size: Input value cannot be larger than ";
+    const char* MsgEMIndexSizeInitErrMsg = "mcs_emindex_size() takes no arguments";
+    const char* MsgEMIndexFreeInitErrMsg = "mcs_emindex_free() takes no arguments";
 
     const size_t Plen = strlen(SetParmsPrelude);
     const size_t Elen = strlen(SetParmsError);
@@ -872,6 +874,68 @@ extern "C"
     __declspec(dllexport)
 #endif
     void calgetsqlcount_deinit(UDF_INIT* initid)
+    {
+    }
+
+#ifdef _MSC_VER
+    __declspec(dllexport)
+#endif
+    long long mcs_emindex_size(UDF_INIT* initid, UDF_ARGS* args,
+                               char* is_null, char* error)
+    {
+        DBRM dbrm;
+        return dbrm.EMIndexShmemSize();
+    }
+
+#ifdef _MSC_VER
+    __declspec(dllexport)
+#endif
+    my_bool mcs_emindex_size_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+    {
+        if (args->arg_count != 0)
+        {
+            strcpy(message, "mcs_emindex_size() takes no arguments");
+            return 1;
+        }
+
+        return 0;
+    }
+
+#ifdef _MSC_VER
+    __declspec(dllexport)
+#endif
+    void mcs_emindex_size_deinit(UDF_INIT* initid)
+    {
+    }
+
+#ifdef _MSC_VER
+    __declspec(dllexport)
+#endif
+    long long mcs_emindex_free(UDF_INIT* initid, UDF_ARGS* args,
+                               char* is_null, char* error)
+    {
+        DBRM dbrm;
+        return dbrm.EMIndexShmemFree();
+    }
+
+#ifdef _MSC_VER
+    __declspec(dllexport)
+#endif
+    my_bool mcs_emindex_free_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+    {
+        if (args->arg_count != 0)
+        {
+            strcpy(message, MsgEMIndexFreeInitErrMsg);
+            return 1;
+        }
+
+        return 0;
+    }
+
+#ifdef _MSC_VER
+    __declspec(dllexport)
+#endif
+    void mcs_emindex_free_deinit(UDF_INIT* initid)
     {
     }
 

@@ -95,7 +95,7 @@ class BRMManagedShmImpl : public BRMShmImplParent
     BRMManagedShmImpl(unsigned key, off_t size, bool readOnly = false);
     BRMManagedShmImpl(const BRMManagedShmImpl& rhs) = delete;
     BRMManagedShmImpl& operator=(const BRMManagedShmImpl& rhs) = delete;
-    ~BRMManagedShmImpl() { delete fShmSegment; std::cout << "~BRMManagedShmImpl " << std::endl; }
+    ~BRMManagedShmImpl() { delete fShmSegment; /*std::cout << "~BRMManagedShmImpl " << std::endl;*/ }
 
     int clear(unsigned newKey, off_t newSize) override;
     void destroy() override;
