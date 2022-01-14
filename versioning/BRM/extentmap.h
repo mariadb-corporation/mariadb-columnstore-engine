@@ -365,28 +365,32 @@ public:
         int rc = fBRMManagedShmMemImpl_.grow(size);
         idbassert(rc == 0);
     }
+
     inline void makeReadOnly()
     {
         fBRMManagedShmMemImpl_.setReadOnly();
     }
+
     inline void swapout(BRMManagedShmImpl& rhs)
     {
         fBRMManagedShmMemImpl_.swap(rhs);
-        //rhs.destroy();
     }
+
     inline unsigned key() const
     {
         return fBRMManagedShmMemImpl_.key();
     }
-    // WIP might need at least an assert to check that shmem is up and running
+
     unsigned getShmemSize()
     {
         return fBRMManagedShmMemImpl_.getManagedSegment()->get_size();
     }
+
     size_t getShmemFree()
     {
         return fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory();
     }
+
     unsigned getShmemImplSize()
     {
         return fBRMManagedShmMemImpl_.size();
@@ -429,6 +433,7 @@ private:
     static const constexpr uint32_t emIdentUnitSize_ = sizeof(uint64_t);
     static const constexpr uint32_t extraUnits_ = 2;
     static const constexpr size_t freeSpaceThreshold_ = 300 * 1024;
+    static const constexpr size_t shmemGrowStep_ = 1024 * 1024;
 };
 
 /** @brief This class encapsulates the extent map functionality of the system
