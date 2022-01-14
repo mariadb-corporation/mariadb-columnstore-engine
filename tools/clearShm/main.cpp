@@ -189,7 +189,7 @@ int main(int argc, char** argv)
     tg.add_thread(tp);
     tp = new boost::thread(ThdFunc(BrmKeys.KEYRANGE_VSS_BASE,        "VSS        "));
     tg.add_thread(tp);
-    tp = new boost::thread(ThdFunc(BrmKeys.KEYRANGE_EXTENTMAP_INDEX_BASE, "EXTMAP-INDX"));
+    tp = new boost::thread(ThdFunc(BrmKeys.KEYRANGE_EXTENTMAP_INDEX_BASE, "EXTMAP_INDX"));
     tg.add_thread(tp);
     tg.join_all();
 
@@ -211,7 +211,7 @@ int main(int argc, char** argv)
     semDoit(BrmKeys.KEYRANGE_EMFREELIST_BASE, "EXTMAP_FREE");
     semDoit(BrmKeys.KEYRANGE_VBBM_BASE,       "VBBM       ");
     semDoit(BrmKeys.KEYRANGE_VSS_BASE,        "VSS        ");
-    semDoit(BrmKeys.KEYRANGE_EXTENTMAP_INDEX_BASE, "EXTMAP-INDX");
+    semDoit(BrmKeys.KEYRANGE_EXTENTMAP_INDEX_BASE, "EXTMAP_INDX");
     semDoit(BrmKeys.MST_SYSVKEY,              "MST        ");
 
     if (!cFlg)

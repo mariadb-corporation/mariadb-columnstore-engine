@@ -251,7 +251,6 @@ BRMManagedShmImpl::BRMManagedShmImpl(unsigned key, off_t size, bool readOnly)
         try
         {
             auto* shmSegment = new boost::interprocess::managed_shared_memory(bi::open_only, keyName.c_str());
-            // WIP check impl conversions
             curSize = shmSegment->get_size();
 
             if (curSize == 0)
@@ -283,8 +282,8 @@ BRMManagedShmImpl::BRMManagedShmImpl(unsigned key, off_t size, bool readOnly)
         bi::permissions perms;
         perms.set_unrestricted();
         fShmSegment = new bi::managed_shared_memory(bi::create_only, keyName.c_str(), fSize,
-                                      0, // use a default address to map the segment
-                                      perms);
+            0, // use a default address to map the segment
+            perms);
         // fSize == 0 on any process startup but managed_shared_memory ctor throws
         // so control flow doesn't get here. 
         idbassert(fSize > 0);
@@ -347,9 +346,10 @@ int BRMManagedShmImpl::grow(off_t newSize)
 }
 
 int BRMManagedShmImpl::clear(unsigned newKey, off_t newSize)
-{ return 0; }
+{
+    return 0;
+}
 
-// WIP Not sure if we need this method for this class.
 void BRMManagedShmImpl::setReadOnly()
 {
     if (fReadOnly)
@@ -366,6 +366,8 @@ void BRMManagedShmImpl::swap(BRMManagedShmImpl& rhs)
     std::swap(fReadOnly, rhs.fReadOnly);
 }
 
+// The method was copied from non-managed shmem impl class
+// and it is never called in the code.
 void BRMManagedShmImpl::destroy()
 {
     string keyName = ShmKeys::keyToName(fKey);
@@ -375,7 +377,9 @@ void BRMManagedShmImpl::destroy()
     }
     catch (bi::interprocess_exception &b)
     {
-        //WIP
+        std::ostringstream o;
+        o << "BRMManagedShmImpl::destroy caught an exception removing a managed shared memory segment: " << b.what();
+        log(o.str());
         throw;
     }
 }
@@ -383,8 +387,7 @@ void BRMManagedShmImpl::destroy()
 void BRMManagedShmImpl::remap()
 {
     delete fShmSegment;
-    // assign nullptr
-    // WIP
+    fShmSegment = nullptr;
     string keyName = ShmKeys::keyToName(fKey);
     fShmSegment = new bi::managed_shared_memory(bi::open_only, keyName.c_str());
 } 

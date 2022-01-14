@@ -40,7 +40,7 @@
 #include "extentmap.h"
 #include "IDBPolicy.h"
 
-#define BRM_VERBOSE 1
+//#define BRM_VERBOSE 1
 
 using namespace BRM;
 using namespace std;
@@ -997,7 +997,6 @@ static void* BRMRunner_si(void* arg)
 
 static void* EMRunner(void* arg)
 {
-
     // keep track of LBID ranges allocated here and
     // randomly allocate, lookup, delete, get/set HWM, and
     // destroy the EM object.
@@ -1010,7 +1009,6 @@ static void* EMRunner(void* arg)
     struct EMEntries* head = NULL, *tmp;
     struct timeval tv;
     ExtentMap* em;
-    vector<LBID_t> lbids;
     LBID_t lbid;
     uint32_t colWidth;
     PartitionNumberT partNum;
@@ -1023,7 +1021,9 @@ static void* EMRunner(void* arg)
 
     gettimeofday(&tv, NULL);
     randstate = static_cast<uint32_t>(tv.tv_usec);
+    //pthread_mutex_lock(&pthreadMutex);
     em = new ExtentMap();
+    //pthread_mutex_unlock(&pthreadMutex);
 
     while (!threadStop)
     {
@@ -1044,26 +1044,27 @@ static void* EMRunner(void* arg)
             {
                 vector<struct EMEntry> emEntriesVec;
                 struct EMEntries* newEm;
-                // WIP
                 size_t numberOfExtents = randNumber % 4 + 1;
                 int OID;
                 uint32_t startBlockOffset;
 
                 pthread_mutex_lock(&pthreadMutex);
-                //OID = oid++;
-                OID = randNumber % 1000; // max 1000 oids
+                OID = oid++;
                 pthread_mutex_unlock(&pthreadMutex);
 
                 em->getExtents(OID, emEntriesVec, false, false, true);
                 size_t extentsNumberBefore = emEntriesVec.size();
-                lbids.clear();
                 int allocdsize;
                 for (size_t i = 0; i < numberOfExtents; ++i)
                 {
                     em->createColumnExtent_DBroot(OID, colWidth, dbroot, colDataType,
                         partNum, segmentNum, lbid, allocdsize, startBlockOffset);
                     em->confirmChanges();
-                    lbids.push_back(lbid);
+
+                    newEm = new EMEntries(allocdsize, OID, startBlockOffset, lbid,
+                        head, dbroot, partNum, segmentNum);
+                    head = newEm;
+                    listSize++;
                 }
                 
                 emEntriesVec.clear();
@@ -1071,74 +1072,14 @@ static void* EMRunner(void* arg)
                 size_t extentsNumberAfter = emEntriesVec.size();
 
                 CPPUNIT_ASSERT(extentsNumberBefore + numberOfExtents == extentsNumberAfter);
-                const static uint32_t fixedSizeInKibiBlocks = 8;
-
-                for (auto lbidFromVec: lbids)
-                {
-                    newEm = new EMEntries(fixedSizeInKibiBlocks, OID, em->getExtentSize(), lbidFromVec,
-                        head, dbroot, partNum, segmentNum);
-                    head = newEm;
-                    listSize++;
-                }
 
 #ifdef BRM_VERBOSE
                 cerr << "created new space for OID " << newEm->OID << endl;
 #endif
-                em->checkConsistency();
-/*
-                ++counter;
-                if (counter > 40)
-                    return nullptr;
-                break;
-                vector<struct EMEntry> emEntriesVec;
-                struct EMEntries* newEm;
-                // WIP
-                //size_t size = rand_r(&randstate) % 10;
-                size_t size = 1;
-                int OID, allocdSize;
-                uint32_t startBlockOffset;
-
-                pthread_mutex_lock(&pthreadMutex);
-                //OID = oid++;
-                OID = randNumber % 1000; // max 1000 oids
-                pthread_mutex_unlock(&pthreadMutex);
-
-                em->getExtents(OID, emEntriesVec, false, false, true);
-                size_t extentsNumberBefore = emEntriesVec.size();
-                lbids.clear();
-                for (size_t i = 0; i < size; ++i)
-                {
-                    em->createColumnExtent_DBroot(OID, colWidth, dbroot, colDataType,
-                        partNum, segmentNum, lbid, allocdSize, startBlockOffset);
-                    em->confirmChanges();
-                    lbids.push_back(lbid);
-                }
-                
-                emEntriesVec.clear();
-                em->getExtents(OID, emEntriesVec, false, false, true);
-                size_t extentsNumberAfter = emEntriesVec.size();
-
-                CPPUNIT_ASSERT(extentsNumberBefore + size == extentsNumberAfter);
-
-                for (auto lbidFromVec: lbids)
-                {
-                    newEm = new EMEntries(em->getExtentSize(), OID, em->getExtentSize(), lbidFromVec,
-                        head, dbroot, partNum, segmentNum);
-                    head = newEm;
-                    listSize++;
-                }
-
-#ifdef BRM_VERBOSE
-                cerr << "created new space for OID " << newEm->OID << endl;
-#endif
-                em->checkConsistency();
-                ++counter;
-                if (counter > 40)
-                    return nullptr;
-*/
+                //em->checkConsistency();
                 break;
             }
-
+/*
             case 1:		//allocate space for an existing file
             {
                 if (listSize == 0)
@@ -1203,6 +1144,7 @@ static void* EMRunner(void* arg)
                 em->checkConsistency();
                 break;
             }
+*/
 
             case 2:  			//delete an OID
             {
@@ -1220,6 +1162,10 @@ static void* EMRunner(void* arg)
 
                 em->deleteOID(oid);
                 em->confirmChanges();
+
+                vector<struct EMEntry> emEntriesVec;
+                em->getExtents(oid, emEntriesVec, false, false, true);
+                CPPUNIT_ASSERT(emEntriesVec.empty());
 
                 for (tmp = head; tmp != NULL;)
                 {
@@ -1250,7 +1196,7 @@ static void* EMRunner(void* arg)
 #ifdef BRM_VERBOSE
                 cerr << "deleted OID " << oid << endl;
 #endif
-                em->checkConsistency();
+                //em->checkConsistency();
                 break;
             }
 
@@ -1271,19 +1217,19 @@ static void* EMRunner(void* arg)
                 for (i = 0, tmp = head; i < entryRand; i++)
                     tmp = tmp->next;
 
-                offset = rand_r(&randstate) % tmp->size * KibiBlocks;
+                offset = rand_r(&randstate) % (tmp->size - 1);
 
                 target = tmp->LBIDstart + offset;
                 err = em->lookupLocal(target, oid, localDbroot, localPartNum, localSegmentNum, fbo);
 #ifdef BRM_VERBOSE
                 cerr << "looked up LBID " << target << " got oid " << oid << " fbo " << fbo << endl;
                 cerr << "   oid should be " << tmp->OID << " fbo should be " << offset + tmp->FBO << endl;
+                cerr << "op 3 fbo " << fbo << " offset + tmp->FBO " << offset + tmp->FBO << endl; 
 #endif
                 CPPUNIT_ASSERT(err == 0);
                 CPPUNIT_ASSERT(oid == tmp->OID);
-                cerr << "op 3 fbo " << fbo << " offset + tmp->FBO " << offset + tmp->FBO << endl; 
                 CPPUNIT_ASSERT(fbo == offset + tmp->FBO);
-                em->checkConsistency();
+                //em->checkConsistency();
                 break;
             }
 
@@ -1300,11 +1246,10 @@ static void* EMRunner(void* arg)
                 for (i = 0, tmp = head; i < entryRand; i++)
                     tmp = tmp->next;
 
-                offset = rand_r(&randstate) % tmp->size * 1024;
+                offset = rand_r(&randstate) % (tmp->size - 1);
                 oid = tmp->OID;
 
                 err = em->lookupLocal(oid, tmp->partNum, tmp->segNum, offset + tmp->FBO, lbid);
-                //err = em->lookup(oid, offset + tmp->FBO, lbid);
 #ifdef BRM_VERBOSE
                 cerr << "looked up OID " << oid << " fbo " << offset + tmp->FBO <<
                      " got lbid " << lbid << endl;
@@ -1312,7 +1257,7 @@ static void* EMRunner(void* arg)
 #endif
                 CPPUNIT_ASSERT(err == 0);
                 CPPUNIT_ASSERT(lbid == tmp->LBIDstart + offset);
-                em->checkConsistency();
+                //em->checkConsistency();
                 break;
             }
 
@@ -1330,13 +1275,12 @@ static void* EMRunner(void* arg)
                     tmp = tmp->next;
 
                 hwm = em->getLocalHWM(tmp->OID, tmp->partNum, tmp->segNum, status);
-                //hwm = em->getHWM(tmp->OID);
 #ifdef BRM_VERBOSE
                 cerr << "stored HWM for OID " << tmp->OID << " is " << tmp->HWM
                      << " BRM says it's " << hwm << endl;
 #endif
                 CPPUNIT_ASSERT(hwm == tmp->HWM);
-                em->checkConsistency();
+                //em->checkConsistency();
                 break;
             }
 
@@ -1353,23 +1297,22 @@ static void* EMRunner(void* arg)
                     tmp = tmp->next;
 
                 oid = tmp->OID;
-                hwm = rand_r(&randstate) % (tmp->FBO + em->getExtentSize());
+                hwm = rand_r(&randstate) % (tmp->size - 1);
                 bool firstNode = true;
                 em->setLocalHWM(oid, tmp->partNum, tmp->segNum, hwm, firstNode);
-                //em->setHWM(oid, hwm);
+                
                 em->confirmChanges();
 
-                for (tmp = head; tmp != NULL; tmp = tmp->next)
-                    if (tmp->OID == oid)
-                        tmp->HWM = hwm;
+                tmp->HWM = hwm;
 
 #ifdef BRM_VERBOSE
                 cerr << "setHWM of OID " << oid << " to " << hwm << endl;
 #endif
-                em->checkConsistency();
+                //em->checkConsistency();
                 break;
             }
 
+/*
             case 7:			// renew this EM object
             {
                 delete em;
@@ -1380,7 +1323,6 @@ static void* EMRunner(void* arg)
                 em->checkConsistency();
                 break;
             }
-/*
             case 8:			//getBulkInsertVars
             {
                 if (listSize == 0)
@@ -1847,7 +1789,7 @@ public:
             usleep(1000);
         }
 
-        sleep(10);
+        sleep(3600);
         threadStop = 1;
 
         for (i = 0; i < threadCount; i++)

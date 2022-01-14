@@ -39,7 +39,7 @@ void usage()
     size_t lockId = 0;
     for (auto& lockName: RWLockNames)
     {
-        std::cout << "         " << lockId << "=" << lockName << " ";
+        std::cout << "         " << lockId++ << "=" << lockName << " ";
     }
     std::cout << std::endl
               << "   which_side_to_use: r|w   (read or write)" << std::endl

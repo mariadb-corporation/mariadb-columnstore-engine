@@ -328,11 +328,11 @@ bool ExtentMapIndexImpl::growIfNeeded(const size_t memoryNeeded)
     // use ::getShmemFree
     auto freeShmem = getShmemFree();
     // Worst case managed segment can't get continues buffer with len = memoryNeeded
-    const size_t allocSize = std::max(shmemGrowStep_, memoryNeeded);
-    if (freeShmem < allocSize)
+    //const size_t allocSize = std::max(memoryNeeded);
+    if (freeShmem < memoryNeeded)
     {
         const size_t currentShmemSize = getShmemSize();
-        grow(allocSize + currentShmemSize);
+        grow(memoryNeeded + currentShmemSize);
         return true;
     }
     return false;

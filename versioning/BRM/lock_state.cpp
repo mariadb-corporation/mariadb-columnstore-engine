@@ -38,7 +38,7 @@ void usage()
     size_t lockId = 0;
     for (auto& lockName: RWLockNames)
     {
-        std::cout << "         " << lockId << "=" << lockName << std::endl;
+        std::cout << "         " << lockId++ << "=" << lockName << std::endl;
     }
     exit(1);
 }
