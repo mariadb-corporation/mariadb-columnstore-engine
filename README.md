@@ -1,4 +1,4 @@
-# MariaDB ColumnStore Storage/Execution engine 6.X 
+# MariaDB ColumnStore Storage/Execution engine 8.X
 
 It is built by porting InfiniDB 4.6.7 on MariaDB and adding entirely 
 new features not found anywhere else.
@@ -7,7 +7,7 @@ new features not found anywhere else.
 
 This repository is not meant to be built independently outside of MariaDB server. 
 
-  https://github.com/MariaDB/server
+  https://github.com/MariaDB/server/tree/10.8
 
 See building instructions [here](BUILD.md).
 
