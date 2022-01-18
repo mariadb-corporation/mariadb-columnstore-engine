@@ -334,7 +334,6 @@ public:
     static ExtentMapIndexImpl* makeExtentMapIndexImpl(unsigned key, off_t size, bool readOnly = false);
     static void refreshShm()
     {
-        //std::cout << "ExtentMapIndexImpl refreshShm fInstance_ is nullptr " << (fInstance_== nullptr) << std::endl;
         if (fInstance_)
         {
             delete fInstance_;
@@ -365,7 +364,8 @@ public:
         int rc = fBRMManagedShmMemImpl_.grow(size);
         idbassert(rc == 0);
     }
-
+    // After this call one needs to refresh any refs or ptrs sourced
+    // from this shmem.
     inline void makeReadOnly()
     {
         fBRMManagedShmMemImpl_.setReadOnly();
@@ -398,8 +398,6 @@ public:
 
     void createExtentMapIndexIfNeeded();
     ExtentMapIndex* get();
-    // WIP The return type should return pair<bool, iter>
-    // const can be harmful thouth
     InsertUpdateShmemKeyPair insert(const EMEntry& emEntry, const size_t emIdx);
     InsertUpdateShmemKeyPair insert2ndLayerWrapper(OIDIndexContainerT& oids, const EMEntry& emEntry, const size_t emIdx, const bool aShmemHasGrown);
     InsertUpdateShmemKeyPair insert2ndLayer(OIDIndexContainerT& oids, const EMEntry& emEntry, const size_t emIdx, const bool aShmemHasGrown);
@@ -1046,12 +1044,13 @@ private:
     static const constexpr size_t EM_INCREMENT = EM_INCREMENT_ROWS * sizeof(EMEntry);
     static const constexpr size_t EM_FREELIST_INITIAL_SIZE = 50 * sizeof(InlineLBIDRange);
     static const constexpr size_t EM_FREELIST_INCREMENT = 50 * sizeof(InlineLBIDRange);
-    static const constexpr size_t InitEMIndexSize_ = 1024 * 1024;
+    static const constexpr int InitEMIndexSize_ = 16 * 1024 * 1024;
 
     ExtentMap(const ExtentMap& em);
     ExtentMap& operator=(const ExtentMap& em);
 
     EMEntry* fExtentMap;
+    // WIP UNused
     ExtentMapIndex* fExtMapIndex_;
     InlineLBIDRange* fFreeList;
     key_t fCurrentEMShmkey;
@@ -1083,6 +1082,8 @@ private:
         const DBRootT dbRoot,
         const PartitionNumberT partitionNum,
         const SegmentT segmentNum);
+
+    void logAndSetEMIndexReadOnly(const std::string& funcName);
 
     LBID_t _createColumnExtent_DBroot(uint32_t size, int OID,
                                       uint32_t colWidth,

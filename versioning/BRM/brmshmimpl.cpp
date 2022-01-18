@@ -350,11 +350,13 @@ int BRMManagedShmImpl::clear(unsigned newKey, off_t newSize)
     return 0;
 }
 
+// This method calls for all related shmem pointers to be refreshed.
 void BRMManagedShmImpl::setReadOnly()
 {
     if (fReadOnly)
         return;
-    // WIP This calls for fShmSegment destructor call
+    const bool readOnly = true;
+    remap(readOnly);
     fReadOnly = true;
 }
 
@@ -384,12 +386,15 @@ void BRMManagedShmImpl::destroy()
     }
 }
 
-void BRMManagedShmImpl::remap()
+void BRMManagedShmImpl::remap(const bool readOnly)
 {
     delete fShmSegment;
     fShmSegment = nullptr;
     string keyName = ShmKeys::keyToName(fKey);
-    fShmSegment = new bi::managed_shared_memory(bi::open_only, keyName.c_str());
+    if (readOnly)
+        fShmSegment = new bi::managed_shared_memory(bi::open_read_only, keyName.c_str());
+    else
+        fShmSegment = new bi::managed_shared_memory(bi::open_only, keyName.c_str());
 } 
 
 } //namespace
