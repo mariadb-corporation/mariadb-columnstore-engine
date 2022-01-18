@@ -1,4 +1,4 @@
-# MariaDB ColumnStore Storage/Execution engine 6.X 
+# MariaDB ColumnStore Storage/Execution engine 7.X 
 
 It is built by porting InfiniDB 4.6.7 on MariaDB and adding entirely 
 new features not found anywhere else.
