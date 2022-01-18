@@ -430,8 +430,7 @@ private:
     static const constexpr uint32_t partitionContainerUnitSize_ = 368ULL; // single map overhead
     static const constexpr uint32_t emIdentUnitSize_ = sizeof(uint64_t);
     static const constexpr uint32_t extraUnits_ = 2;
-    static const constexpr size_t freeSpaceThreshold_ = 300 * 1024;
-    static const constexpr size_t shmemGrowStep_ = 1024 * 1024;
+    static const constexpr size_t freeSpaceThreshold_ = 256 * 1024;
 };
 
 /** @brief This class encapsulates the extent map functionality of the system
@@ -1050,8 +1049,6 @@ private:
     ExtentMap& operator=(const ExtentMap& em);
 
     EMEntry* fExtentMap;
-    // WIP UNused
-    ExtentMapIndex* fExtMapIndex_;
     InlineLBIDRange* fFreeList;
     key_t fCurrentEMShmkey;
     key_t fCurrentFLShmkey;

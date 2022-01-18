@@ -325,7 +325,6 @@ ExtentMapIndex* ExtentMapIndexImpl::get()
 
 bool ExtentMapIndexImpl::growIfNeeded(const size_t memoryNeeded)
 {
-    // use ::getShmemFree
     auto freeShmem = getShmemFree();
     // Worst case managed segment can't get continues buffer with len = memoryNeeded
     if (freeShmem < memoryNeeded)
@@ -530,6 +529,7 @@ void ExtentMapIndexImpl::deleteOID(const DBRootT dbroot, const OID_t oid)
         return;
     PartitionIndexContainerT& partitions = (*oidsIter).second;
     partitions.clear();
+    // WIP remove oidsIter
 }
 
 void ExtentMapIndexImpl::deleteEMEntry(const EMEntry& emEntry, const ExtentMapIdxT emIdent)
@@ -1458,8 +1458,6 @@ void ExtentMap::loadVersion4(IDBDataFile* in)
     void *fExtentMapPtr = static_cast<void*>(fExtentMap);
     memset(fExtentMapPtr, 0, fEMShminfo->allocdSize);
     fEMShminfo->currentSize = 0;
-    // WIP
-
     // init the free list
     memset(fFreeList, 0, fFLShminfo->allocdSize);
     fFreeList[0].size = (1 << 26);   // 2^36 LBIDs
@@ -1910,11 +1908,6 @@ void ExtentMap::grabEMIndex(OPS op)
 
     if (!fPExtMapIndexImpl_)
     {
-        if (fExtMapIndex_ != nullptr)
-        {
-            fExtMapIndex_ = nullptr;
-        }
-
         if (fEMIndexShminfo->allocdSize == 0)
         {
             if (op == READ)
@@ -1939,16 +1932,8 @@ void ExtentMap::grabEMIndex(OPS op)
             fPExtMapIndexImpl_ =
                 ExtentMapIndexImpl::makeExtentMapIndexImpl(getInitialEMIndexShmkey(), fEMIndexShminfo->allocdSize);
 
-            //if (r_only)
-            //    fPExtMapImpl->makeReadOnly();
-
-            fExtMapIndex_ = fPExtMapIndexImpl_->get();
-
-            if (fExtMapIndex_ == nullptr)
-            {
-                log_errno("ExtentMap::grabEMIndex(): shmat");
-                throw runtime_error("ExtentMap::grabEMIndex(): shmat failed.  Check the error log.");
-            }
+            if (r_only)
+                fPExtMapImpl->makeReadOnly();
         }
     }
     else if (fPExtMapIndexImpl_->getShmemImplSize() != (unsigned)fEMIndexShminfo->allocdSize)
@@ -1956,11 +1941,6 @@ void ExtentMap::grabEMIndex(OPS op)
         fPExtMapIndexImpl_->refreshShm();
         fPExtMapIndexImpl_ =
             ExtentMapIndexImpl::makeExtentMapIndexImpl(getInitialEMIndexShmkey(), fEMIndexShminfo->allocdSize);
-        fExtMapIndex_ = fPExtMapIndexImpl_->get();
-    }
-    else
-    {
-        fExtMapIndex_ = fPExtMapIndexImpl_->get();
     }
 }
 
@@ -2018,7 +1998,7 @@ key_t ExtentMap::chooseFLShmkey()
     return chooseShmkey(fFLShminfo, fShmKeys.KEYRANGE_EMFREELIST_BASE);
 }
 
-// WIP Now it is fixed b/c we shouldn't increase a segment id number
+// The key values is fixed b/c MCS doesn't need to increase a segment id number
 key_t ExtentMap::chooseEMIndexShmkey()
 {
     return chooseShmkey(fEMIndexShminfo, fShmKeys.KEYRANGE_EXTENTMAP_INDEX_BASE);
@@ -2097,7 +2077,6 @@ void ExtentMap::growEMIndexShmseg(const size_t suggestedSize)
    if (r_only)
         fPExtMapIndexImpl_->makeReadOnly();
 
-    fExtMapIndex_ = fPExtMapIndexImpl_->get();
     fEMIndexShminfo->tableShmkey = newshmkey;
     fEMIndexShminfo->allocdSize = allocSize;
 }
@@ -3245,7 +3224,7 @@ void ExtentMap::logAndSetEMIndexReadOnly(const std::string& funcName)
     fPExtMapIndexImpl_->makeReadOnly();
     ostringstream os;
     os << "ExtentMap::" << funcName << ": "
-        << "Can not update EM Index. All major shared structs set to"
+        << "Can not update EM Index. EM Index shmem segment is set to"
         << " readonly. Please restart Columnstore.";
     log(os.str(), logging::LOG_TYPE_CRITICAL);
 
@@ -4666,19 +4645,13 @@ void ExtentMap::getDbRootHWMInfo(int OID, uint16_t pmNumber,
     grabEMIndex(READ);
     tr1::unordered_map<uint16_t, EmDbRootHWMInfo>::iterator emIter;
 
-   // Searching the array in reverse order should be faster since the last
+    // Searching the array in reverse order should be faster since the last
     // extent is usually at the bottom.  We still have to search the entire
     // array (just in case), but the number of operations per loop iteration
     // will be less.
-    // WIP
-    //int emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
-
-    // WIP
     for (auto dbRoot: dbRootVec)
-    //for (int i = emEntries - 1; i >= 0; i--)
     {
         auto emIdents = fPExtMapIndexImpl_->find(dbRoot, OID);
-        // WIP preload data
         for (auto i : emIdents)
         {
             if ((fExtentMap[i].range.size != 0)   &&
