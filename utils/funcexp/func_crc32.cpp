@@ -50,23 +50,23 @@ int64_t Func_crc32::getIntVal(rowgroup::Row& row,
                               bool& isNull,
                               CalpontSystemCatalog::ColType& ct)
 {
-    unsigned crc;
-    switch (parm.size) {
-    default:
-        isNull = true;
-        return 0;
-    case 1:
-        crc = 0;
-        break;
-    case 2:
-        crc = static_cast<unsigned>(parm[0]->data()->getIntVal(row, isNull));
-        if (isNull)
+    unsigned crc = 0;
+    switch (parm.size())
+    {
+        default:
+            isNull = true;
             return 0;
+        case 1:
+            break;
+        case 2:
+            crc = static_cast<unsigned>(parm[0]->data()->getIntVal(row, isNull));
+            if (isNull)
+                return 0;
     }
-    const string& b = parm[parm.size - 1]->data()->getStrVal(row, isNull);
+    const string& b = parm[parm.size() - 1]->data()->getStrVal(row, isNull);
     if (isNull)
         return 0;
-    return crc32(crc, reinterpret_cast<unsigned char*>(b.data()), b.size());
+    return crc32(crc, reinterpret_cast<const uint8_t*>(b.data()), b.size());
 }
 
 
