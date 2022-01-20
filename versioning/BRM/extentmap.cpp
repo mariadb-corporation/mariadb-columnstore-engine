@@ -527,9 +527,7 @@ void ExtentMapIndexImpl::deleteOID(const DBRootT dbroot, const OID_t oid)
     // Nothing to delete. Might be a sign of a problem.
     if (oidsIter == extMapIndex[dbroot].end())
         return;
-    PartitionIndexContainerT& partitions = (*oidsIter).second;
-    partitions.clear();
-    // WIP remove oidsIter
+    extMapIndex[dbroot].erase(oidsIter);
 }
 
 void ExtentMapIndexImpl::deleteEMEntry(const EMEntry& emEntry, const ExtentMapIdxT emIdent)
@@ -553,7 +551,6 @@ void ExtentMapIndexImpl::deleteEMEntry(const EMEntry& emEntry, const ExtentMapId
     }
     else // only 1 ident in this partition
     {
-        emIdentifiers.clear();
         partitions.erase(partitionsIter);
     }
 }
@@ -1933,7 +1930,7 @@ void ExtentMap::grabEMIndex(OPS op)
                 ExtentMapIndexImpl::makeExtentMapIndexImpl(getInitialEMIndexShmkey(), fEMIndexShminfo->allocdSize);
 
             if (r_only)
-                fPExtMapImpl->makeReadOnly();
+                fPExtMapIndexImpl_->makeReadOnly();
         }
     }
     else if (fPExtMapIndexImpl_->getShmemImplSize() != (unsigned)fEMIndexShminfo->allocdSize)

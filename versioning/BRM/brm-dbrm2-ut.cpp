@@ -1789,7 +1789,7 @@ public:
             usleep(1000);
         }
 
-        sleep(3600);
+        sleep(300);
         threadStop = 1;
 
         for (i = 0; i < threadCount; i++)
