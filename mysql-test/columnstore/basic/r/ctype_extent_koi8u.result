@@ -1,0 +1,248 @@
+DROP DATABASE IF EXISTS mcs_ctype_extent_koi8u;
+CREATE DATABASE mcs_ctype_extent_koi8u;
+USE mcs_ctype_extent_koi8u;
+SET default_storage_engine=ColumnStore;
+CREATE PROCEDURE show_extent_min_max(schema_arg VARCHAR(64),
+table_arg VARCHAR(64),
+column_arg VARCHAR(64))
+BEGIN
+SELECT
+c.table_schema,
+c.table_name,
+c.column_name,
+hex(CAST(e.min_value AS SIGNED)),
+hex(CAST(e.max_value AS SIGNED))
+FROM
+information_schema.columnstore_extents e,
+information_schema.columnstore_columns c
+WHERE c.object_id=e.object_id
+AND table_schema=schema_arg
+AND table_name=table_arg
+AND column_name=column_arg;
+END;
+$$
+CREATE FUNCTION caltrace_extract_block_diagnostics(msg TEXT CHARACTER SET utf8mb4)
+RETURNS TEXT CHARACTER SET utf8mb4
+BEGIN
+RETURN CONCAT(regexp_substr(msg, '(BlocksTouched-[^;]*);'), ' ',
+regexp_substr(msg, '(PartitionBlocksEliminated-[^;]*);'));
+END;
+$$
+#
+# MCOL-4871 Extent elimination for short CHAR does not work well
+#
+SET NAMES utf8;
+CREATE PROCEDURE test(collation VARCHAR(64))
+BEGIN
+DECLARE stmt TEXT;
+DECLARE CONTINUE HANDLER FOR 9999
+BEGIN
+GET DIAGNOSTICS CONDITION 1 @errmsg = MESSAGE_TEXT;
+SET @errmsg=caltrace_extract_block_diagnostics(@errmsg);
+RESIGNAL SET MESSAGE_TEXT=@errmsg;
+END;
+DO calsettrace(1);
+SET stmt='CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET koi8u COLLATE koi8u_general_ci)';
+SET stmt=REPLACE(stmt,'koi8u_general_ci', collation);
+SELECT stmt AS ``;
+EXECUTE IMMEDIATE stmt;
+INSERT INTO t1 VALUES ('Ъ─') /*_koi8u x'FF80'*/;
+SELECT c1, HEX(c1) FROM t1;
+CALL show_extent_min_max(database(),'t1','c1');
+SELECT * FROM t1 WHERE c1='Ъ─';
+SHOW WARNINGS;
+SELECT * FROM t1 WHERE c1='Ъя' /*_koi8u x'FFF1'*/;
+SHOW WARNINGS;
+DROP TABLE t1;
+SET stmt='CREATE TABLE t1 (c1 CHAR(4) CHARACTER SET koi8u COLLATE koi8u_general_ci)';
+SET stmt=REPLACE(stmt,'koi8u_general_ci', collation);
+SELECT stmt AS ``;
+EXECUTE IMMEDIATE stmt;
+INSERT INTO t1 VALUES ('ЪЪЪ─') /*_koi8u x'FFFFFF80'*/;
+SELECT c1, HEX(c1) FROM t1;
+CALL show_extent_min_max(database(),'t1','c1');
+SELECT * FROM t1 WHERE c1='ЪЪЪ─';
+SHOW WARNINGS;
+SELECT * FROM t1 WHERE c1='ЪЪЪя' /*_koi8u x'FFFFFFF1'*/;
+SHOW WARNINGS;
+DROP TABLE t1;
+SET stmt='CREATE TABLE t1 (c1 CHAR(8) CHARACTER SET koi8u COLLATE koi8u_general_ci)';
+SET stmt=REPLACE(stmt,'koi8u_general_ci', collation);
+SELECT stmt AS ``;
+EXECUTE IMMEDIATE stmt;
+INSERT INTO t1 VALUES ('ЪЪЪЪЪЪЪ─') /*_koi8u x'FFFFFFFFFFFFFF80'*/;
+SELECT c1, HEX(c1) FROM t1;
+CALL show_extent_min_max(database(),'t1','c1');
+SELECT * FROM t1 WHERE c1='ЪЪЪЪЪЪЪ─';
+SHOW WARNINGS;
+SELECT * FROM t1 WHERE c1='ЪЪЪЪЪЪЪя' /*_koi8u x'FFFFFFFFFFFFFFF1'*/;
+SHOW WARNINGS;
+DROP TABLE t1;
+DO calsettrace(0);
+END;
+$$
+CALL test('koi8u_general_ci');
+
+CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET koi8u COLLATE koi8u_general_ci)
+c1	HEX(c1)
+Ъ─	FF80
+table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
+mcs_ctype_extent_koi8u	t1	c1	FFFFFFFFFFFF80FF	FFFFFFFFFFFF80FF
+c1
+Ъ─
+Level	Code	Message
+Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+c1
+Level	Code	Message
+Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
+
+CREATE TABLE t1 (c1 CHAR(4) CHARACTER SET koi8u COLLATE koi8u_general_ci)
+c1	HEX(c1)
+ЪЪЪ─	FFFFFF80
+table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
+mcs_ctype_extent_koi8u	t1	c1	FFFFFFFF80FFFFFF	FFFFFFFF80FFFFFF
+c1
+ЪЪЪ─
+Level	Code	Message
+Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+c1
+Level	Code	Message
+Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
+
+CREATE TABLE t1 (c1 CHAR(8) CHARACTER SET koi8u COLLATE koi8u_general_ci)
+c1	HEX(c1)
+ЪЪЪЪЪЪЪ─	FFFFFFFFFFFFFF80
+table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
+mcs_ctype_extent_koi8u	t1	c1	80FFFFFFFFFFFFFF	80FFFFFFFFFFFFFF
+c1
+ЪЪЪЪЪЪЪ─
+Level	Code	Message
+Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+c1
+Level	Code	Message
+Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
+CALL test('koi8u_general_nopad_ci');
+
+CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET koi8u COLLATE koi8u_general_nopad_ci)
+c1	HEX(c1)
+Ъ─	FF80
+table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
+mcs_ctype_extent_koi8u	t1	c1	FFFFFFFFFFFF80FF	FFFFFFFFFFFF80FF
+c1
+Ъ─
+Level	Code	Message
+Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+c1
+Level	Code	Message
+Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
+
+CREATE TABLE t1 (c1 CHAR(4) CHARACTER SET koi8u COLLATE koi8u_general_nopad_ci)
+c1	HEX(c1)
+ЪЪЪ─	FFFFFF80
+table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
+mcs_ctype_extent_koi8u	t1	c1	FFFFFFFF80FFFFFF	FFFFFFFF80FFFFFF
+c1
+ЪЪЪ─
+Level	Code	Message
+Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+c1
+Level	Code	Message
+Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
+
+CREATE TABLE t1 (c1 CHAR(8) CHARACTER SET koi8u COLLATE koi8u_general_nopad_ci)
+c1	HEX(c1)
+ЪЪЪЪЪЪЪ─	FFFFFFFFFFFFFF80
+table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
+mcs_ctype_extent_koi8u	t1	c1	80FFFFFFFFFFFFFF	80FFFFFFFFFFFFFF
+c1
+ЪЪЪЪЪЪЪ─
+Level	Code	Message
+Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+c1
+Level	Code	Message
+Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
+CALL test('koi8u_bin');
+
+CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET koi8u COLLATE koi8u_bin)
+c1	HEX(c1)
+Ъ─	FF80
+table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
+mcs_ctype_extent_koi8u	t1	c1	FFFFFFFFFFFF80FF	FFFFFFFFFFFF80FF
+c1
+Ъ─
+Level	Code	Message
+Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+c1
+Level	Code	Message
+Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
+
+CREATE TABLE t1 (c1 CHAR(4) CHARACTER SET koi8u COLLATE koi8u_bin)
+c1	HEX(c1)
+ЪЪЪ─	FFFFFF80
+table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
+mcs_ctype_extent_koi8u	t1	c1	FFFFFFFF80FFFFFF	FFFFFFFF80FFFFFF
+c1
+ЪЪЪ─
+Level	Code	Message
+Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+c1
+Level	Code	Message
+Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
+
+CREATE TABLE t1 (c1 CHAR(8) CHARACTER SET koi8u COLLATE koi8u_bin)
+c1	HEX(c1)
+ЪЪЪЪЪЪЪ─	FFFFFFFFFFFFFF80
+table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
+mcs_ctype_extent_koi8u	t1	c1	80FFFFFFFFFFFFFF	80FFFFFFFFFFFFFF
+c1
+ЪЪЪЪЪЪЪ─
+Level	Code	Message
+Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+c1
+Level	Code	Message
+Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
+CALL test('koi8u_nopad_bin');
+
+CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET koi8u COLLATE koi8u_nopad_bin)
+c1	HEX(c1)
+Ъ─	FF80
+table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
+mcs_ctype_extent_koi8u	t1	c1	FFFFFFFFFFFF80FF	FFFFFFFFFFFF80FF
+c1
+Ъ─
+Level	Code	Message
+Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+c1
+Level	Code	Message
+Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
+
+CREATE TABLE t1 (c1 CHAR(4) CHARACTER SET koi8u COLLATE koi8u_nopad_bin)
+c1	HEX(c1)
+ЪЪЪ─	FFFFFF80
+table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
+mcs_ctype_extent_koi8u	t1	c1	FFFFFFFF80FFFFFF	FFFFFFFF80FFFFFF
+c1
+ЪЪЪ─
+Level	Code	Message
+Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+c1
+Level	Code	Message
+Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
+
+CREATE TABLE t1 (c1 CHAR(8) CHARACTER SET koi8u COLLATE koi8u_nopad_bin)
+c1	HEX(c1)
+ЪЪЪЪЪЪЪ─	FFFFFFFFFFFFFF80
+table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
+mcs_ctype_extent_koi8u	t1	c1	80FFFFFFFFFFFFFF	80FFFFFFFFFFFFFF
+c1
+ЪЪЪЪЪЪЪ─
+Level	Code	Message
+Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+c1
+Level	Code	Message
+Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
+DROP PROCEDURE test;
+DROP PROCEDURE show_extent_min_max;
+DROP FUNCTION caltrace_extract_block_diagnostics;
+DROP DATABASE mcs_ctype_extent_koi8u;
+USE test;

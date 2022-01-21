@@ -2,12 +2,14 @@ local events = ['pull_request', 'cron'];
 
 local platforms = {
   develop: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:10', 'ubuntu:20.04'],
+  'develop-7': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:10', 'ubuntu:20.04'],
   'develop-6': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:10', 'ubuntu:20.04'],
   'develop-5': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:10', 'ubuntu:20.04'],
 };
 
 local platforms_arm = {
   develop: ['centos:8'],
+  'develop-7': ['centos:8'],
   'develop-6': ['centos:8'],
 };
 
@@ -18,10 +20,11 @@ local platforms_arm_custom = ['centos:8'];
 local platforms_mtr = ['centos:7', 'centos:8', 'ubuntu:20.04'];
 
 local server_ref_map = {
-  develop: '10.7',
+  develop: '10.8',
+  'develop-7': '10.7',
   'develop-6': '10.6-enterprise',
   'develop-5': '10.5',
-  '**': '10.7',
+  '**': '10.8',
 };
 
 local builddir = 'verylongdirnameforverystrangecpackbehavior';

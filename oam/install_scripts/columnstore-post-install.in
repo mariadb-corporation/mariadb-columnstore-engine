@@ -275,6 +275,10 @@ Continue to install the engine though. \
 Please resolve the issues and run necessary scripts manually."
 fi
 
+# Create syscat tables that uses COLUMNSTORE engine after MDB
+# loads the engine plugin .so up.
+$MDB <@ENGINE_SUPPORTDIR@/syscatalog_mysql.sql 2>/dev/null
+
 if [ -z "$MCS_USE_S3_STORAGE" ]; then
   MCS_USE_S3_STORAGE="$(find_env_var "MCS_USE_S3_STORAGE")"
   MCS_S3_BUCKET="$(find_env_var "MCS_S3_BUCKET")"

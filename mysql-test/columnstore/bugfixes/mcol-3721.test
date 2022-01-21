@@ -1,0 +1,42 @@
+#
+# MCOL-3721 MCS doesn't honor COLLATE in ORDER BY but uses table level collate rule 
+#
+
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS `mcol_3721`;
+--enable_warnings
+CREATE DATABASE `mcol_3721`;
+USE `mcol_3721`;
+
+SELECT @cs_conn := @@character_set_connection;
+SET character_set_connection=latin1;
+
+# Test COLLATE in ORDER BY
+DROP TABLE IF EXISTS test_collate;
+CREATE TABLE test_collate (a INT, b INT) ENGINE=columnstore;
+INSERT INTO test_collate VALUES (1,2), (2,4);
+SELECT a, b FROM test_collate ORDER BY a COLLATE latin1_german2_ci;
+SHOW WARNINGS;
+SELECT a, b FROM test_collate ORDER BY a COLLATE latin1_german2_ci DESC;
+SHOW WARNINGS;
+DROP TABLE IF EXISTS test_collate;
+
+# Test COLLATE in table definition and column definition
+DROP TABLE IF EXISTS t1;
+CREATE TABLE t1 (col1 CHAR(10)) CHARSET latin1 COLLATE latin1_bin ENGINE=columnstore;
+INSERT INTO t1 VALUES ('a'), ('1'), ('-1');
+SELECT col1 FROM t1;
+DESCRIBE t1;
+DROP TABLE IF EXISTS t1;
+
+DROP TABLE IF EXISTS t1;
+CREATE TABLE t1 (col1 CHAR(10) CHARACTER SET utf8 COLLATE utf8_unicode_ci) ENGINE=columnstore;
+INSERT INTO t1 VALUES ('a'), ('1'), ('-1');
+SELECT col1 FROM t1;
+DESCRIBE t1;
+DROP TABLE IF EXISTS t1;
+
+DROP DATABASE `mcol_3721`;
+SET character_set_connection=@cs_conn;

@@ -6545,7 +6545,7 @@ bool isForeignTableUpdate(THD* thd)
 {
     LEX* lex = thd->lex;
 
-    if (lex->sql_command != SQLCOM_UPDATE_MULTI)
+    if (!isUpdateStatement(lex->sql_command))
         return false;
 
     Item_field* item;
@@ -6560,6 +6560,40 @@ bool isForeignTableUpdate(THD* thd)
     return false;
 }
 
+bool isMCSTableUpdate(THD* thd)
+{
+    LEX* lex = thd->lex;
+
+    if (!isUpdateStatement(lex->sql_command))
+        return false;
+
+    Item_field* item;
+    List_iterator_fast<Item> field_it(lex->first_select_lex()->item_list);
+
+    while ((item = (Item_field*) field_it++))
+    {
+        if (item->field && item->field->table && isMCSTable(item->field->table))
+            return true;
+    }
+
+    return false;
+}
+
+bool isMCSTableDelete(THD* thd)
+{
+    LEX* lex = thd->lex;
+
+    if (!isDeleteStatement(lex->sql_command))
+        return false;
+
+    TABLE_LIST* table_ptr = lex->first_select_lex()->get_table_list();
+
+    if (table_ptr && table_ptr->table && isMCSTable(table_ptr->table))
+        return true;
+
+    return false;
+}
+
 // This function is different from isForeignTableUpdate()
 // above as it only checks if any of the tables involved
 // in the multi-table update statement is a foreign table,
@@ -6569,7 +6603,7 @@ bool isUpdateHasForeignTable(THD* thd)
 {
     LEX* lex = thd->lex;
 
-    if (lex->sql_command != SQLCOM_UPDATE_MULTI)
+    if (!isUpdateStatement(lex->sql_command))
         return false;
 
     TABLE_LIST* table_ptr = lex->first_select_lex()->get_table_list();
