@@ -393,7 +393,6 @@ bool  ResourceManager::getMysqldInfo(
     h = getStringVal("CrossEngineSupport", "Host", hostUserUnassignedValue);
     p = getUintVal("CrossEngineSupport", "Port", 0);
     u = getStringVal("CrossEngineSupport", "User", "unassigned");
-    w = getStringVal("CrossEngineSupport", "Password", "");
 
     bool rc = true;
 
