@@ -32,18 +32,18 @@ namespace winport
 {
 bool grepit(istream& is, const string& pattern)
 {
-    boost::regex pat(pattern);
-    string cInput;
+  boost::regex pat(pattern);
+  string cInput;
+  getline(is, cInput);
+
+  while (is.good())
+  {
+    if (boost::regex_match(cInput, pat))
+      return true;
+
     getline(is, cInput);
+  }
 
-    while (is.good())
-    {
-        if (boost::regex_match(cInput, pat))
-            return true;
-
-        getline(is, cInput);
-    }
-
-    return false;
+  return false;
 }
-}
+}  // namespace winport

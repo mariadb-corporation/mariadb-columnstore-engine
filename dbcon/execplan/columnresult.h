@@ -30,86 +30,86 @@
 
 namespace execplan
 {
-
 /** @file
- 	This serves as a bridge between the new and old joblist code.
-	ColumnResults are column data created from the TableBands
-	returned by the NJL.  In getSysData, we convert TableBands
-	to NJLCR's to avoid having to rewrite all of the systemcatalog
-	code that used the old ColumnResult class.  It only implements
-	the part of the ColumnResult API used by the system catalog.
-	Hack as necessary.
+        This serves as a bridge between the new and old joblist code.
+        ColumnResults are column data created from the TableBands
+        returned by the NJL.  In getSysData, we convert TableBands
+        to NJLCR's to avoid having to rewrite all of the systemcatalog
+        code that used the old ColumnResult class.  It only implements
+        the part of the ColumnResult API used by the system catalog.
+        Hack as necessary.
 */
 class ColumnResult
 {
-public:
-    ColumnResult() : oid(0), dcount(0) { }
-    // the other defaults are OK.
+ public:
+  ColumnResult() : oid(0), dcount(0)
+  {
+  }
+  // the other defaults are OK.
 
-    int64_t GetData(uint32_t index) const
-    {
-        return intData[index];
-    }
+  int64_t GetData(uint32_t index) const
+  {
+    return intData[index];
+  }
 
-    void PutData(int64_t d)
-    {
-        intData.push_back(d);
-        dcount++;
-    }
+  void PutData(int64_t d)
+  {
+    intData.push_back(d);
+    dcount++;
+  }
 
-    const std::string& GetStringData(uint32_t index) const
-    {
-        return stringData[index];
-    }
+  const std::string& GetStringData(uint32_t index) const
+  {
+    return stringData[index];
+  }
 
-    void PutStringData(const std::string& s)
-    {
-        stringData.push_back(s);
-        dcount++;
-    }
+  void PutStringData(const std::string& s)
+  {
+    stringData.push_back(s);
+    dcount++;
+  }
 
-    int ColumnOID() const
-    {
-        return oid;
-    }
+  int ColumnOID() const
+  {
+    return oid;
+  }
 
-    void SetColumnOID(int o)
-    {
-        oid = o;
-    }
+  void SetColumnOID(int o)
+  {
+    oid = o;
+  }
 
-    uint64_t GetRid(uint32_t index) const
-    {
-        return rids[index];
-    }
+  uint64_t GetRid(uint32_t index) const
+  {
+    return rids[index];
+  }
 
-    void PutRid(uint64_t rid)
-    {
-        rids.push_back(rid);
-    }
+  void PutRid(uint64_t rid)
+  {
+    rids.push_back(rid);
+  }
 
-    void PutRidOnly(uint64_t rid)
-    {
-        rids.push_back(rid);
-        dcount++;
-    }
+  void PutRidOnly(uint64_t rid)
+  {
+    rids.push_back(rid);
+    dcount++;
+  }
 
-    int dataCount() const
-    {
-        return dcount;
-    }
+  int dataCount() const
+  {
+    return dcount;
+  }
 
-private:
-    //defaults okay
-    //ColumnResult(const ColumnResult& rhs);
-    //ColumnResult& operator=(const ColumnResult& rhs);
+ private:
+  // defaults okay
+  // ColumnResult(const ColumnResult& rhs);
+  // ColumnResult& operator=(const ColumnResult& rhs);
 
-    std::vector<int64_t> intData;
-    std::vector<std::string> stringData;
-    std::vector<uint64_t> rids;
-    int oid;
-    int dcount;  // data, string, and row counters
+  std::vector<int64_t> intData;
+  std::vector<std::string> stringData;
+  std::vector<uint64_t> rids;
+  int oid;
+  int dcount;  // data, string, and row counters
 };
 
-}
-
+}  // namespace execplan

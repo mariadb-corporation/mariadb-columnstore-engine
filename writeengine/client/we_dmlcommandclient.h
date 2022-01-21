@@ -39,18 +39,16 @@ namespace WriteEngine
 {
 class WE_DMLCommandClient
 {
-public:
-    EXPORT WE_DMLCommandClient();
-    EXPORT ~WE_DMLCommandClient();
+ public:
+  EXPORT WE_DMLCommandClient();
+  EXPORT ~WE_DMLCommandClient();
 
-private:
-    BRM::DBRM fDbrm;
-    WEClients* fWEClient;
-    oam::Oam fOam;
-
+ private:
+  BRM::DBRM fDbrm;
+  WEClients* fWEClient;
+  oam::Oam fOam;
 };
 
-}
+}  // namespace WriteEngine
 
 #undef EXPORT
-

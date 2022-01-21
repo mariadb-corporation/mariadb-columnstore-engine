@@ -23,84 +23,76 @@
  *                                                                         *
  ***************************************************************************/
 
-
 #include "filerequest.h"
 #include <stdexcept>
 
 using namespace std;
 
-
 namespace dbbc
 {
 fileRequest::fileRequest()
 {
-    fLBID = -1;
-    fVer = -1;
-    data = NULL;
-    init();
-    fRqstType = LBIDREQUEST;
+  fLBID = -1;
+  fVer = -1;
+  data = NULL;
+  init();
+  fRqstType = LBIDREQUEST;
 }
 
-
-fileRequest::fileRequest(BRM::LBID_t lbid, BRM::VER_t ver, bool flg) :
-    data(NULL), fLBID(lbid), fVer(ver), fFlg(flg)
+fileRequest::fileRequest(BRM::LBID_t lbid, BRM::VER_t ver, bool flg)
+ : data(NULL), fLBID(lbid), fVer(ver), fFlg(flg)
 {
-    init();
-    fLength = 1;
-    fRqstType = LBIDREQUEST;
+  init();
+  fLength = 1;
+  fRqstType = LBIDREQUEST;
 }
 
-
-fileRequest::fileRequest(BRM::LBID_t lbid, BRM::VER_t ver, bool flg, uint8_t* ptr) :
-    fLBID(lbid), fVer(ver), fFlg(flg)
+fileRequest::fileRequest(BRM::LBID_t lbid, BRM::VER_t ver, bool flg, uint8_t* ptr)
+ : fLBID(lbid), fVer(ver), fFlg(flg)
 {
-    init();
-    fLength = 1;
-    fRqstType = LBIDREQUEST;
-    data = ptr;
+  init();
+  fLength = 1;
+  fRqstType = LBIDREQUEST;
+  data = ptr;
 }
 
-
-fileRequest::fileRequest(const BRM::InlineLBIDRange& range, const BRM::VER_t ver) :
-    data(NULL), fLBID(range.start), fVer(ver), fFlg(false), fLength(range.size),
-    fRqstType(RANGEREQUEST)
+fileRequest::fileRequest(const BRM::InlineLBIDRange& range, const BRM::VER_t ver)
+ : data(NULL), fLBID(range.start), fVer(ver), fFlg(false), fLength(range.size), fRqstType(RANGEREQUEST)
 {
-    init();
-    fLength = range.size;
+  init();
+  fLength = range.size;
 }
-
 
 fileRequest::fileRequest(const fileRequest& blk)
 {
-    fLBID = blk.fLBID;
-    fVer = blk.fVer;
-    fLength = blk.fLength;
-    fblksRead = blk.fblksRead;
-    fRqstType = blk.fRqstType;
-    fRqstStatus = blk.fRqstStatus;
-    data = blk.data;
-    init();
+  fLBID = blk.fLBID;
+  fVer = blk.fVer;
+  fLength = blk.fLength;
+  fblksRead = blk.fblksRead;
+  fRqstType = blk.fRqstType;
+  fRqstStatus = blk.fRqstStatus;
+  data = blk.data;
+  init();
 }
-
 
 void fileRequest::init()
 {
-    if (pthread_mutex_init(&fFRMutex, NULL) != 0)
-        throw runtime_error("mutex initialization failure");
+  if (pthread_mutex_init(&fFRMutex, NULL) != 0)
+    throw runtime_error("mutex initialization failure");
 
-    if (pthread_cond_init(&fFRCond, NULL) != 0)
-        throw runtime_error("cond var initialization failure");
+  if (pthread_cond_init(&fFRCond, NULL) != 0)
+    throw runtime_error("cond var initialization failure");
 
-    fFRPredicate = INIT;
-    fLength = 0;
-    fblksRead = 0;
-    fRqstStatus = 0;
+  fFRPredicate = INIT;
+  fLength = 0;
+  fblksRead = 0;
+  fRqstStatus = 0;
 }
 
 fileRequest::~fileRequest()
 {
-    pthread_mutex_destroy(&fFRMutex);
-    pthread_cond_destroy(&fFRCond);
+  pthread_mutex_destroy(&fFRMutex);
+  pthread_cond_destroy(&fFRCond);
 }
 
-}
+}  // namespace dbbc

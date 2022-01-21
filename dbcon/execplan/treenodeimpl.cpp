@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: treenodeimpl.cpp 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: treenodeimpl.cpp 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 #include <string>
 using namespace std;
 
@@ -33,63 +33,65 @@ namespace execplan
  * Constructors/Destructors
  */
 TreeNodeImpl::TreeNodeImpl()
-{}
+{
+}
 
-TreeNodeImpl::TreeNodeImpl(const string& sql) :
-    fData(sql)
-{}
+TreeNodeImpl::TreeNodeImpl(const string& sql) : fData(sql)
+{
+}
 
 TreeNodeImpl::~TreeNodeImpl()
-{}
+{
+}
 
 /**
  * The serialization interface
  */
 void TreeNodeImpl::serialize(messageqcpp::ByteStream& b) const
 {
-    b << (ObjectReader::id_t) ObjectReader::TREENODEIMPL;
-    b << fData;
+  b << (ObjectReader::id_t)ObjectReader::TREENODEIMPL;
+  b << fData;
 }
 
 void TreeNodeImpl::unserialize(messageqcpp::ByteStream& b)
 {
-    ObjectReader::checkType(b, ObjectReader::TREENODEIMPL);
-    b >> fData;
+  ObjectReader::checkType(b, ObjectReader::TREENODEIMPL);
+  b >> fData;
 }
 
 const string TreeNodeImpl::toString() const
 {
-    return string(">TreeNodeImpl<");
+  return string(">TreeNodeImpl<");
 }
 
 bool TreeNodeImpl::operator==(const TreeNodeImpl& t) const
 {
-    if (data() == t.data())
-        return true;
+  if (data() == t.data())
+    return true;
 
-    return false;
+  return false;
 }
 
 bool TreeNodeImpl::operator==(const TreeNode* t) const
 {
-    const TreeNodeImpl* tni;
+  const TreeNodeImpl* tni;
 
-    tni = dynamic_cast<const TreeNodeImpl*>(t);
+  tni = dynamic_cast<const TreeNodeImpl*>(t);
 
-    if (tni == NULL)
-        return false;
+  if (tni == NULL)
+    return false;
 
-    return *this == *tni;
+  return *this == *tni;
 }
 
 bool TreeNodeImpl::operator!=(const TreeNodeImpl& t) const
 {
-    return !(*this == t);
+  return !(*this == t);
 }
 
 bool TreeNodeImpl::operator!=(const TreeNode* t) const
 {
-    return !(*this == t);
+  return !(*this == t);
 }
 
 /**
@@ -97,8 +99,8 @@ bool TreeNodeImpl::operator!=(const TreeNode* t) const
  */
 ostream& operator<<(ostream& output, const TreeNodeImpl& rhs)
 {
-    output << rhs.toString();
-    return output;
+  output << rhs.toString();
+  return output;
 }
 
-} // namespace execplan
+}  // namespace execplan

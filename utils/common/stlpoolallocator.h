@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /******************************************************************************************
-* $Id$
-*
-******************************************************************************************/
+ * $Id$
+ *
+ ******************************************************************************************/
 
 /* Makes PoolAllocator STL-compliant */
 
@@ -33,152 +33,151 @@
 
 namespace utils
 {
-
 /* If using the pool allocator with a boost smart ptr, use an instance of this
 as the deleter. */
 struct BoostPoolDeallocator
 {
-    inline void operator()(void* ptr) { };
+  inline void operator()(void* ptr){};
 };
 
 /* This is an STL-compliant wrapper for PoolAllocator + an optimization for containers
  * that aren't entirely node based (ex: vectors and hash tables)
  */
-template<class T>
+template <class T>
 class STLPoolAllocator
 {
-public:
-    typedef size_t size_type;
-    typedef ptrdiff_t difference_type;
-    typedef T* pointer;
-    typedef const T* const_pointer;
-    typedef T& reference;
-    typedef const T& const_reference;
-    typedef T value_type;
-    template<class U> struct rebind
-    {
-        typedef STLPoolAllocator<U> other;
-    };
+ public:
+  typedef size_t size_type;
+  typedef ptrdiff_t difference_type;
+  typedef T* pointer;
+  typedef const T* const_pointer;
+  typedef T& reference;
+  typedef const T& const_reference;
+  typedef T value_type;
+  template <class U>
+  struct rebind
+  {
+    typedef STLPoolAllocator<U> other;
+  };
 
-    STLPoolAllocator() throw();
-    STLPoolAllocator(const STLPoolAllocator&) throw();
-    STLPoolAllocator(uint32_t capacity) throw();
-    template<class U> STLPoolAllocator(const STLPoolAllocator<U>&) throw();
-    ~STLPoolAllocator();
+  STLPoolAllocator() throw();
+  STLPoolAllocator(const STLPoolAllocator&) throw();
+  STLPoolAllocator(uint32_t capacity) throw();
+  template <class U>
+  STLPoolAllocator(const STLPoolAllocator<U>&) throw();
+  ~STLPoolAllocator();
 
-    STLPoolAllocator<T>& operator=(const STLPoolAllocator<T>&);
+  STLPoolAllocator<T>& operator=(const STLPoolAllocator<T>&);
 
-    void usePoolAllocator(boost::shared_ptr<PoolAllocator> b);
-    boost::shared_ptr<utils::PoolAllocator> getPoolAllocator();
+  void usePoolAllocator(boost::shared_ptr<PoolAllocator> b);
+  boost::shared_ptr<utils::PoolAllocator> getPoolAllocator();
 
-    pointer allocate(size_type, const void* hint = 0);
-    void deallocate(pointer p, size_type n);
-    size_type max_size() const throw();
-    inline uint64_t getMemUsage() const
-    {
-        return pa->getMemUsage();
-    }
+  pointer allocate(size_type, const void* hint = 0);
+  void deallocate(pointer p, size_type n);
+  size_type max_size() const throw();
+  inline uint64_t getMemUsage() const
+  {
+    return pa->getMemUsage();
+  }
 
-    void construct(pointer p, const T& val);
-    void destroy(pointer p);
+  void construct(pointer p, const T& val);
+  void destroy(pointer p);
 
-    static const uint32_t DEFAULT_SIZE = 32768 * sizeof(T);
+  static const uint32_t DEFAULT_SIZE = 32768 * sizeof(T);
 
-    boost::shared_ptr<utils::PoolAllocator> pa;
+  boost::shared_ptr<utils::PoolAllocator> pa;
 };
 
-template<class T>
+template <class T>
 STLPoolAllocator<T>::STLPoolAllocator() throw()
 {
-    pa.reset(new PoolAllocator(DEFAULT_SIZE));
+  pa.reset(new PoolAllocator(DEFAULT_SIZE));
 }
 
-template<class T>
+template <class T>
 STLPoolAllocator<T>::STLPoolAllocator(const STLPoolAllocator<T>& s) throw()
 {
-    pa = s.pa;
+  pa = s.pa;
 }
 
-template<class T>
+template <class T>
 STLPoolAllocator<T>::STLPoolAllocator(uint32_t capacity) throw()
 {
-    pa.reset(new PoolAllocator(capacity));
+  pa.reset(new PoolAllocator(capacity));
 }
 
-template<class T>
-template<class U>
+template <class T>
+template <class U>
 STLPoolAllocator<T>::STLPoolAllocator(const STLPoolAllocator<U>& s) throw()
 {
-    pa = s.pa;
+  pa = s.pa;
 }
 
-template<class T>
+template <class T>
 STLPoolAllocator<T>::~STLPoolAllocator()
 {
 }
 
-template<class T>
+template <class T>
 void STLPoolAllocator<T>::usePoolAllocator(boost::shared_ptr<PoolAllocator> p)
 {
-    pa = p;
+  pa = p;
 }
-template<class T>
+template <class T>
 boost::shared_ptr<utils::PoolAllocator> STLPoolAllocator<T>::getPoolAllocator()
 {
-    return pa;
+  return pa;
 }
 
-template<class T>
-typename STLPoolAllocator<T>::pointer
-STLPoolAllocator<T>::allocate(typename STLPoolAllocator<T>::size_type s,
-                              typename std::allocator<void>::const_pointer hint)
+template <class T>
+typename STLPoolAllocator<T>::pointer STLPoolAllocator<T>::allocate(
+    typename STLPoolAllocator<T>::size_type s, typename std::allocator<void>::const_pointer hint)
 {
-    return (pointer) pa->allocate(s * sizeof(T));
+  return (pointer)pa->allocate(s * sizeof(T));
 }
 
-template<class T>
+template <class T>
 void STLPoolAllocator<T>::deallocate(typename STLPoolAllocator<T>::pointer p,
                                      typename STLPoolAllocator<T>::size_type n)
 {
-    pa->deallocate((void*) p);
+  pa->deallocate((void*)p);
 }
 
-template<class T>
+template <class T>
 typename STLPoolAllocator<T>::size_type STLPoolAllocator<T>::max_size() const throw()
 {
-    return std::numeric_limits<uint64_t>::max() / sizeof(T);
+  return std::numeric_limits<uint64_t>::max() / sizeof(T);
 }
 
-template<class T>
+template <class T>
 void STLPoolAllocator<T>::construct(typename STLPoolAllocator<T>::pointer p, const T& val)
 {
-    new ((void*)p) T(val);
+  new ((void*)p) T(val);
 }
 
-template<class T>
+template <class T>
 void STLPoolAllocator<T>::destroy(typename STLPoolAllocator<T>::pointer p)
 {
-    p->T::~T();
+  p->T::~T();
 }
 
-template<class T>
+template <class T>
 STLPoolAllocator<T>& STLPoolAllocator<T>::operator=(const STLPoolAllocator<T>& c)
 {
-    pa = c.pa;
-    return *this;
+  pa = c.pa;
+  return *this;
 }
 
-template<typename T>
+template <typename T>
 bool operator==(const STLPoolAllocator<T>&, const STLPoolAllocator<T>&)
 {
-    return true;
+  return true;
 }
 
-template<typename T>
+template <typename T>
 bool operator!=(const STLPoolAllocator<T>&, const STLPoolAllocator<T>&)
 {
-    return false;
+  return false;
 }
 
-}
-
+}  // namespace utils

@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: insertpackageprocessor.h 9473 2013-05-02 15:15:44Z dcathey $
-*
-*
-***********************************************************************/
+ *   $Id: insertpackageprocessor.h 9473 2013-05-02 15:15:44Z dcathey $
+ *
+ *
+ ***********************************************************************/
 /** @file */
 
 #pragma once
@@ -40,30 +40,25 @@
 namespace dmlpackageprocessor
 {
 /** @brief concrete implementation of a DMLPackageProcessor.
-  * Specifically for interacting with the Write Engine to
-  * process INSERT dml statements.
-  */
+ * Specifically for interacting with the Write Engine to
+ * process INSERT dml statements.
+ */
 class InsertPackageProcessor : public DMLPackageProcessor
 {
+ public:
+  InsertPackageProcessor(BRM::DBRM* aDbrm, uint32_t sid) : DMLPackageProcessor(aDbrm, sid)
+  {
+  }
+  /** @brief process an InsertDMLPackage
+   *
+   * @param cpackage the InsertDMLPackage to process
+   */
+  EXPORT DMLResult processPackage(dmlpackage::CalpontDMLPackage& cpackage);
 
-public:
-    InsertPackageProcessor(BRM::DBRM* aDbrm, uint32_t sid) : DMLPackageProcessor(aDbrm, sid)
-    {
-    }
-    /** @brief process an InsertDMLPackage
-      *
-      * @param cpackage the InsertDMLPackage to process
-      */
-    EXPORT DMLResult processPackage(dmlpackage::CalpontDMLPackage& cpackage);
-
-protected:
-
-private:
-
+ protected:
+ private:
 };
 
-}
+}  // namespace dmlpackageprocessor
 
 #undef EXPORT
-
-

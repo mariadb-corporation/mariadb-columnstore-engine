@@ -15,20 +15,18 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-
 #include "ClientRequestProcessor.h"
 #include "ProcessTask.h"
 #include <sys/types.h>
 
 namespace
 {
-storagemanager::ClientRequestProcessor *crp = NULL;
+storagemanager::ClientRequestProcessor* crp = NULL;
 boost::mutex m;
-};
+};  // namespace
 
 namespace storagemanager
 {
-
 ClientRequestProcessor::ClientRequestProcessor()
 {
 }
@@ -37,28 +35,26 @@ ClientRequestProcessor::~ClientRequestProcessor()
 {
 }
 
-ClientRequestProcessor * ClientRequestProcessor::get()
+ClientRequestProcessor* ClientRequestProcessor::get()
 {
-    if (crp)
-        return crp;
-    boost::mutex::scoped_lock s(m);
-    if (crp)
-        return crp;
-    crp = new ClientRequestProcessor();
+  if (crp)
     return crp;
+  boost::mutex::scoped_lock s(m);
+  if (crp)
+    return crp;
+  crp = new ClientRequestProcessor();
+  return crp;
 }
 
 void ClientRequestProcessor::processRequest(int sock, uint len)
 {
-    boost::shared_ptr<ThreadPool::Job> t(new ProcessTask(sock, len));
-    threadPool.addJob(t);
+  boost::shared_ptr<ThreadPool::Job> t(new ProcessTask(sock, len));
+  threadPool.addJob(t);
 }
 
 void ClientRequestProcessor::shutdown()
 {
-    delete crp;
+  delete crp;
 }
 
-}
-
-
+}  // namespace storagemanager

@@ -40,63 +40,60 @@ namespace dmlpackage
  */
 class CommandDMLPackage : public CalpontDMLPackage
 {
+ public:
+  /** @brief ctor
+   */
+  EXPORT CommandDMLPackage();
 
-public:
-    /** @brief ctor
-     */
-    EXPORT CommandDMLPackage();
+  /** @brief ctor
+   */
+  EXPORT CommandDMLPackage(std::string dmlStatement, int sessionID);
 
-    /** @brief ctor
-     */
-    EXPORT CommandDMLPackage( std::string dmlStatement, int sessionID );
+  /** @brief dtor
+   */
+  EXPORT virtual ~CommandDMLPackage();
 
-    /** @brief dtor
-     */
-    EXPORT virtual ~CommandDMLPackage();
+  /** @brief write a CommandDMLPackage to a ByteStream
+   *
+   *  @param bytestream the ByteStream to write to
+   */
+  EXPORT int write(messageqcpp::ByteStream& bytestream);
 
-    /** @brief write a CommandDMLPackage to a ByteStream
-     *
-     *  @param bytestream the ByteStream to write to
-     */
-    EXPORT int write(messageqcpp::ByteStream& bytestream);
+  /** @brief read CommandDMLPackage from bytestream
+   *
+   * @param bytestream the ByteStream to read from
+   */
+  EXPORT int read(messageqcpp::ByteStream& bytestream);
+  /** @brief do nothing
+   *
+   * @param buffer
+   * @param columns the number of columns in the buffer
+   * @param rows the number of rows in the buffer
+   */
+  inline int buildFromBuffer(std::string& buffer, int columns = 0, int rows = 0)
+  {
+    return 1;
+  };
 
-    /** @brief read CommandDMLPackage from bytestream
-     *
-     * @param bytestream the ByteStream to read from
-     */
-    EXPORT int read(messageqcpp::ByteStream& bytestream);
-    /** @brief do nothing
-     *
-     * @param buffer
-     * @param columns the number of columns in the buffer
-     * @param rows the number of rows in the buffer
-     */
-    inline int buildFromBuffer(std::string& buffer, int columns = 0, int rows = 0)
-    {
-        return 1;
-    };
+  /** @brief build a CommandDMLPackage from a CommandSqlStatement
+   */
+  EXPORT int buildFromSqlStatement(SqlStatement& sqlStatement);
 
-    /** @brief build a CommandDMLPackage from a CommandSqlStatement
-     */
-    EXPORT int buildFromSqlStatement(SqlStatement& sqlStatement);
+  /** @brief build a InsertDMLPackage from MySQL buffer
+   *
+   * @param colNameList, tableValuesMap
+   * @param rows the number of rows in the buffer
+   */
+  int buildFromMysqlBuffer(ColNameList& colNameList, TableValuesMap& tableValuesMap, int columns, int rows,
+                           NullValuesBitset& nullValues)
+  {
+    return 1;
+  };
 
-    /** @brief build a InsertDMLPackage from MySQL buffer
-    *
-    * @param colNameList, tableValuesMap
-    * @param rows the number of rows in the buffer
-    */
-    int buildFromMysqlBuffer(ColNameList& colNameList, TableValuesMap& tableValuesMap, int columns, int rows, NullValuesBitset& nullValues)
-    {
-        return 1;
-    };
-
-protected:
-
-private:
-
+ protected:
+ private:
 };
 
-}
+}  // namespace dmlpackage
 
 #undef EXPORT
-

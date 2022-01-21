@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id$
-*
-*******************************************************************************/
+ * $Id$
+ *
+ *******************************************************************************/
 
 /*
  * we_cpifeederthread.h
@@ -33,62 +33,62 @@
 
 namespace WriteEngine
 {
-
 class WEDataLoader;
 class WECpiFeederThread;
 
 class WECpiFeederRunner
 {
-public:
-    WECpiFeederRunner(WECpiFeederThread& Ref): fOwner(Ref) { /* ctor */ }
-    virtual ~WECpiFeederRunner() {/* dtor */}
-    void operator()();
+ public:
+  WECpiFeederRunner(WECpiFeederThread& Ref) : fOwner(Ref)
+  { /* ctor */
+  }
+  virtual ~WECpiFeederRunner()
+  { /* dtor */
+  }
+  void operator()();
 
-public:
-    WECpiFeederThread& fOwner;
+ public:
+  WECpiFeederThread& fOwner;
 };
-
 
 class WECpiFeederThread
 {
-public:
-    WECpiFeederThread(WEDataLoader& Ref);
-    virtual ~WECpiFeederThread();
+ public:
+  WECpiFeederThread(WEDataLoader& Ref);
+  virtual ~WECpiFeederThread();
 
-public:
-    void startFeederThread();
-    void add2MsgQueue(messageqcpp::ByteStream& Ibs);
-    void feedData2Cpi();
-    void stopThread();
-    bool isMsgQueueEmpty();
-    //bool isPushing() { return fPushing; }
-    bool isStopped()
-    {
-        return fStopped;
-    }
-    int getQueueSize()
-    {
-        return fMsgQueue.size();
-    }
-    bool isContinue();
-private:
+ public:
+  void startFeederThread();
+  void add2MsgQueue(messageqcpp::ByteStream& Ibs);
+  void feedData2Cpi();
+  void stopThread();
+  bool isMsgQueueEmpty();
+  // bool isPushing() { return fPushing; }
+  bool isStopped()
+  {
+    return fStopped;
+  }
+  int getQueueSize()
+  {
+    return fMsgQueue.size();
+  }
+  bool isContinue();
 
-    WEDataLoader& fOwner;
+ private:
+  WEDataLoader& fOwner;
 
-    boost::condition fFeederCond;
-    boost::mutex fMsgQMutex;
-    typedef std::queue<messageqcpp::SBS> WEMsgQueue;
-    WEMsgQueue fMsgQueue;
+  boost::condition fFeederCond;
+  boost::mutex fMsgQMutex;
+  typedef std::queue<messageqcpp::SBS> WEMsgQueue;
+  WEMsgQueue fMsgQueue;
 
-    boost::thread* fpThread;
-    bool fContinue;
-    boost::mutex fContMutex;
-    //bool fPushing;
-    bool fStopped;
+  boost::thread* fpThread;
+  bool fContinue;
+  boost::mutex fContMutex;
+  // bool fPushing;
+  bool fStopped;
 
-
-    friend class WEDataLoader;
+  friend class WEDataLoader;
 };
 
 } /* namespace WriteEngine */
-

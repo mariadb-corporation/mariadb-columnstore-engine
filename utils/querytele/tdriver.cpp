@@ -27,45 +27,44 @@ using namespace querytele;
 
 int main(int argc, char** argv)
 {
-    bu::random_generator rg;
-    QueryTeleServerParms qtsp;
-    qtsp.host = "localhost";
-    qtsp.port = 9090;
-    QueryTeleClient qtc(qtsp);
-    QueryTeleClient qtc1(qtc);
-    QueryTeleClient qtc2;
-    qtc2 = qtc;
-    QueryTeleStats qts;
-    qts.query_uuid = rg();
-    qts.msg_type = QueryTeleStats::QT_START;
-    qts.query = "SELECT * FROM NATION;";
-    qtc.postQueryTele(qts);
+  bu::random_generator rg;
+  QueryTeleServerParms qtsp;
+  qtsp.host = "localhost";
+  qtsp.port = 9090;
+  QueryTeleClient qtc(qtsp);
+  QueryTeleClient qtc1(qtc);
+  QueryTeleClient qtc2;
+  qtc2 = qtc;
+  QueryTeleStats qts;
+  qts.query_uuid = rg();
+  qts.msg_type = QueryTeleStats::QT_START;
+  qts.query = "SELECT * FROM NATION;";
+  qtc.postQueryTele(qts);
 
-    sleep(1);
+  sleep(1);
 
-    StepTeleStats sts;
-    sts.query_uuid = qts.query_uuid;
-    sts.step_uuid = rg();
-    sts.msg_type = StepTeleStats::ST_START;
-    qtc.postStepTele(sts);
+  StepTeleStats sts;
+  sts.query_uuid = qts.query_uuid;
+  sts.step_uuid = rg();
+  sts.msg_type = StepTeleStats::ST_START;
+  qtc.postStepTele(sts);
 
-    sleep(1);
+  sleep(1);
 
-    sts.msg_type = StepTeleStats::ST_PROGRESS;
-    qtc.postStepTele(sts);
+  sts.msg_type = StepTeleStats::ST_PROGRESS;
+  qtc.postStepTele(sts);
 
-    sleep(1);
+  sleep(1);
 
-    sts.msg_type = StepTeleStats::ST_SUMMARY;
-    qtc.postStepTele(sts);
+  sts.msg_type = StepTeleStats::ST_SUMMARY;
+  qtc.postStepTele(sts);
 
-    sleep(1);
+  sleep(1);
 
-    qts.msg_type = QueryTeleStats::QT_SUMMARY;
-    qtc.postQueryTele(qts);
+  qts.msg_type = QueryTeleStats::QT_SUMMARY;
+  qtc.postQueryTele(qts);
 
-    sleep(20);
+  sleep(20);
 
-    return 0;
+  return 0;
 }
-

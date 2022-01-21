@@ -15,32 +15,25 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-
 #pragma once
 
 #include "genericparser.h"
 #include "mcs_datatype.h"
 
-
 namespace literal
 {
-
-using utils::ConstString;
-using genericparser::Parser;
 using datatypes::DataCondition;
+using genericparser::Parser;
+using utils::ConstString;
 
 typedef uint32_t scale_t;
 
-
-
-template<class A>
-class Converter: public Parser,
-                 public A
+template <class A>
+class Converter : public Parser, public A
 {
-public:
-  Converter(const char *str, size_t length, DataCondition & error)
-   :Parser(str, length),
-    A(&Parser::skipLeadingSpaces())
+ public:
+  Converter(const char* str, size_t length, DataCondition& error)
+   : Parser(str, length), A(&Parser::skipLeadingSpaces())
   {
     if (Parser::syntaxError())
     {
@@ -56,14 +49,13 @@ public:
         '1e'  -  exponent marker was not followed by <exponent>,    expect '1e1'
         '1e+' -  in <exponent>, <sign> was not followed by a digit, expect '1e+1'
       */
-      error|=(DataCondition::X_INVALID_CHARACTER_VALUE_FOR_CAST);
+      error |= (DataCondition::X_INVALID_CHARACTER_VALUE_FOR_CAST);
     }
   }
-  Converter(const std::string & str, DataCondition &error)
-   :Converter(str.data(), str.length(), error)
-  { }
+  Converter(const std::string& str, DataCondition& error) : Converter(str.data(), str.length(), error)
+  {
+  }
 };
-
 
 /*
 
@@ -143,70 +135,83 @@ Grammar
 
 */
 
-
 //
 //  Terminal symbols
 //
 
-class Period: public ConstString
+class Period : public ConstString
 {
-public:
-  explicit Period(Parser *p)
-   :ConstString(p->tokenChar('.'))
-  { }
-  bool isNull() const { return mStr == nullptr; }
+ public:
+  explicit Period(Parser* p) : ConstString(p->tokenChar('.'))
+  {
+  }
+  bool isNull() const
+  {
+    return mStr == nullptr;
+  }
 };
 
-
-class ExponentMarker: public ConstString
+class ExponentMarker : public ConstString
 {
-public:
-  explicit ExponentMarker(Parser *p)
-   :ConstString(p->tokenAnyCharOf('e', 'E'))
-  { }
-  bool isNull() const { return mStr == nullptr; }
+ public:
+  explicit ExponentMarker(Parser* p) : ConstString(p->tokenAnyCharOf('e', 'E'))
+  {
+  }
+  bool isNull() const
+  {
+    return mStr == nullptr;
+  }
 };
 
-
-class Sign: public ConstString
+class Sign : public ConstString
 {
-public:
-  explicit Sign(): ConstString(NULL, 0) { }
-  explicit Sign(const ConstString &str)
-   :ConstString(str)
-  { }
-  explicit Sign(Parser *p)
-   :ConstString(p->tokenAnyCharOf('+', '-'))
-  { }
-  static Sign empty(Parser *p)
+ public:
+  explicit Sign() : ConstString(NULL, 0)
+  {
+  }
+  explicit Sign(const ConstString& str) : ConstString(str)
+  {
+  }
+  explicit Sign(Parser* p) : ConstString(p->tokenAnyCharOf('+', '-'))
+  {
+  }
+  static Sign empty(Parser* p)
   {
     return Sign(p->tokStartConstString());
   }
-  bool isNull() const { return mStr == nullptr; }
-  bool negative() const { return eq('-'); }
+  bool isNull() const
+  {
+    return mStr == nullptr;
+  }
+  bool negative() const
+  {
+    return eq('-');
+  }
 };
 
-
-class Digits: public ConstString
+class Digits : public ConstString
 {
-public:
-  explicit Digits()
-   :ConstString(NULL, 0)
-  { }
-  explicit Digits(const char *str, size_t length)
-   :ConstString(str, length)
-  { }
-  explicit Digits(const ConstString &str)
-   :ConstString(str)
-  { }
-  explicit Digits(Parser *p)
-   :ConstString(p->tokenDigits())
-  { }
-  bool isNull() const { return mStr == nullptr; }
+ public:
+  explicit Digits() : ConstString(NULL, 0)
+  {
+  }
+  explicit Digits(const char* str, size_t length) : ConstString(str, length)
+  {
+  }
+  explicit Digits(const ConstString& str) : ConstString(str)
+  {
+  }
+  explicit Digits(Parser* p) : ConstString(p->tokenDigits())
+  {
+  }
+  bool isNull() const
+  {
+    return mStr == nullptr;
+  }
 
   void skipLeadingZeroDigits()
   {
-    for ( ; mLength > 0 && mStr[0] == '0'; )
+    for (; mLength > 0 && mStr[0] == '0';)
     {
       mStr++;
       mLength--;
@@ -214,33 +219,32 @@ public:
   }
   void skipTrailingZeroDigits()
   {
-    for ( ; mLength > 0 && mStr[mLength - 1] == '0' ; )
+    for (; mLength > 0 && mStr[mLength - 1] == '0';)
       mLength--;
   }
 };
-
 
 //
 // Non-terminal symbols
 //
 
 // <unsigned integer>    ::=   <digit> ...
-class UnsignedInteger: public Digits
+class UnsignedInteger : public Digits
 {
-public:
-  explicit UnsignedInteger()
-   :Digits()
-  { }
-  explicit UnsignedInteger(const char *str, size_t length)
-   :Digits(str, length)
-  { }
-  explicit UnsignedInteger(const ConstString &str)
-   :Digits(str)
-  { }
-  explicit UnsignedInteger(Parser *p)
-   :Digits(p)
-  { }
-  static UnsignedInteger empty(const Parser *p)
+ public:
+  explicit UnsignedInteger() : Digits()
+  {
+  }
+  explicit UnsignedInteger(const char* str, size_t length) : Digits(str, length)
+  {
+  }
+  explicit UnsignedInteger(const ConstString& str) : Digits(str)
+  {
+  }
+  explicit UnsignedInteger(Parser* p) : Digits(p)
+  {
+  }
+  static UnsignedInteger empty(const Parser* p)
   {
     return UnsignedInteger(p->tokStartConstString());
   }
@@ -249,182 +253,177 @@ public:
     return UnsignedInteger(str(), length() > len ? len : length());
   }
 
-  template<typename T>
-  T toXIntPositiveContinue(T start, DataCondition & error) const
+  template <typename T>
+  T toXIntPositiveContinue(T start, DataCondition& error) const
   {
-    const char *e = end();
+    const char* e = end();
     T val = start;
-    for (const char *s= mStr; s < e; s++)
+    for (const char* s = mStr; s < e; s++)
     {
       constexpr T cutoff = datatypes::numeric_limits<T>::max() / 10;
       if (val > cutoff)
       {
-        error|= DataCondition::X_NUMERIC_VALUE_OUT_OF_RANGE;
+        error |= DataCondition::X_NUMERIC_VALUE_OUT_OF_RANGE;
         return datatypes::numeric_limits<T>::max();
       }
-      val*= 10;
+      val *= 10;
       T newval = val + (s[0] - '0');
       if (newval < val)
       {
-        error|= DataCondition::X_NUMERIC_VALUE_OUT_OF_RANGE;
+        error |= DataCondition::X_NUMERIC_VALUE_OUT_OF_RANGE;
         return datatypes::numeric_limits<T>::max();
       }
       val = newval;
     }
     return val;
   }
-  template<typename T>
-  T toXIntPositive(DataCondition & error) const
+  template <typename T>
+  T toXIntPositive(DataCondition& error) const
   {
     return toXIntPositiveContinue<T>(0, error);
   }
 
-  template<typename T>
-  T toSIntNegativeContinue(T start, DataCondition & error) const
+  template <typename T>
+  T toSIntNegativeContinue(T start, DataCondition& error) const
   {
-    const char *e = end();
+    const char* e = end();
     T val = start;
-    for (const char *s= mStr; s < e; s++)
+    for (const char* s = mStr; s < e; s++)
     {
       constexpr T cutoff = datatypes::numeric_limits<T>::min() / 10;
       if (val < cutoff)
       {
-        error|= DataCondition::X_NUMERIC_VALUE_OUT_OF_RANGE;
+        error |= DataCondition::X_NUMERIC_VALUE_OUT_OF_RANGE;
         return datatypes::numeric_limits<T>::min();
       }
-      val*= 10;
+      val *= 10;
       T newval = val - (s[0] - '0');
       if (newval > val)
       {
-        error|= DataCondition::X_NUMERIC_VALUE_OUT_OF_RANGE;
+        error |= DataCondition::X_NUMERIC_VALUE_OUT_OF_RANGE;
         return datatypes::numeric_limits<T>::min();
       }
       val = newval;
     }
     return val;
   }
-  template<typename T>
-  T toSIntNegative(DataCondition & error) const
+  template <typename T>
+  T toSIntNegative(DataCondition& error) const
   {
     return toSIntNegativeContinue<T>(0, error);
   }
 
-  template<typename T>
-  T toXIntPositiveRoundAwayFromZeroContinue(T start, bool round, DataCondition & error) const
+  template <typename T>
+  T toXIntPositiveRoundAwayFromZeroContinue(T start, bool round, DataCondition& error) const
   {
     T val = toXIntPositiveContinue<T>(start, error);
     if (val == datatypes::numeric_limits<T>::max() && round)
     {
-      error|= DataCondition::X_NUMERIC_VALUE_OUT_OF_RANGE;
+      error |= DataCondition::X_NUMERIC_VALUE_OUT_OF_RANGE;
       return val;
     }
     return val + round;
   }
-  template<typename T>
-  T toXIntPositiveRoundAwayFromZero(bool round, DataCondition & error) const
+  template <typename T>
+  T toXIntPositiveRoundAwayFromZero(bool round, DataCondition& error) const
   {
     return toXIntPositiveRoundAwayFromZeroContinue<T>(0, round, error);
   }
 };
 
-
 // <signed integer> := [<sign>] <unsigned integer>
-class SignedInteger: public Parser::DD2OM<Sign,UnsignedInteger>
+class SignedInteger : public Parser::DD2OM<Sign, UnsignedInteger>
 {
-public:
+ public:
   using DD2OM::DD2OM;
-  bool isNull() const { return UnsignedInteger::isNull(); }
+  bool isNull() const
+  {
+    return UnsignedInteger::isNull();
+  }
 
-  template<typename T> T abs(DataCondition & error) const
+  template <typename T>
+  T abs(DataCondition& error) const
   {
     return toXIntPositive<T>(error);
   }
 
-  template<typename T> T toSInt(DataCondition & error) const
+  template <typename T>
+  T toSInt(DataCondition& error) const
   {
-    return negative() ?
-           toSIntNegative<T>(error) :
-           toXIntPositive<T>(error);
+    return negative() ? toSIntNegative<T>(error) : toXIntPositive<T>(error);
   }
 };
 
-
 // E <signed integer>
-class EExponent: public Parser::UD2MM<ExponentMarker, SignedInteger>
+class EExponent : public Parser::UD2MM<ExponentMarker, SignedInteger>
 {
-public:
+ public:
   using UD2MM::UD2MM;
 };
-
 
 // <period> <unsigned integer>
-class ExactUnsignedNumericLiteralFractionAlone: public Parser::UD2MM<Period, UnsignedInteger>
+class ExactUnsignedNumericLiteralFractionAlone : public Parser::UD2MM<Period, UnsignedInteger>
 {
-public:
+ public:
   using UD2MM::UD2MM;
 };
 
-
 // <period> [ <unsigned integer> ]
-class PeriodOptUnsignedInteger: public Parser::UD2MO<Period, UnsignedInteger>
+class PeriodOptUnsignedInteger : public Parser::UD2MO<Period, UnsignedInteger>
 {
-public:
+ public:
   using UD2MO::UD2MO;
-  static PeriodOptUnsignedInteger empty(Parser *p)
+  static PeriodOptUnsignedInteger empty(Parser* p)
   {
     return PeriodOptUnsignedInteger(UnsignedInteger(p->tokStartConstString()));
   }
-  const PeriodOptUnsignedInteger & fraction() const
+  const PeriodOptUnsignedInteger& fraction() const
   {
     return *this;
   }
 };
-
 
 // <integral unsigned integer> := <unsigned integer>
-class IntegralUnsignedInteger: public UnsignedInteger
+class IntegralUnsignedInteger : public UnsignedInteger
 {
-public:
-  explicit IntegralUnsignedInteger(Parser *p)
-   :UnsignedInteger(p)
-  { }
-  const UnsignedInteger & integral() const
+ public:
+  explicit IntegralUnsignedInteger(Parser* p) : UnsignedInteger(p)
+  {
+  }
+  const UnsignedInteger& integral() const
   {
     return *this;
   }
 };
-
 
 // <integral unsigned integer> [ <period> [ <unsigned integer> ] ]
 
-class ExactUnsignedNumericLiteralIntegralOptFraction:
-                             public Parser::DD2MO<IntegralUnsignedInteger,
-                                                  PeriodOptUnsignedInteger>
+class ExactUnsignedNumericLiteralIntegralOptFraction
+ : public Parser::DD2MO<IntegralUnsignedInteger, PeriodOptUnsignedInteger>
 {
-public:
+ public:
   using DD2MO::DD2MO;
 };
-
 
 // A container for integral and fractional parts
 class UnsignedIntegerDecimal
 {
-protected:
+ protected:
   UnsignedInteger mIntegral;
   UnsignedInteger mFraction;
-public:
-  explicit UnsignedIntegerDecimal(const UnsignedInteger &intg,
-                                  const UnsignedInteger &frac)
-   :mIntegral(intg),
-    mFraction(frac)
-  { }
-  explicit UnsignedIntegerDecimal(const ExactUnsignedNumericLiteralFractionAlone &rhs)
-   :mFraction(rhs)
-  { }
-  explicit UnsignedIntegerDecimal(const ExactUnsignedNumericLiteralIntegralOptFraction &rhs)
-   :mIntegral(rhs.integral()),
-    mFraction(rhs.fraction())
-  { }
+
+ public:
+  explicit UnsignedIntegerDecimal(const UnsignedInteger& intg, const UnsignedInteger& frac)
+   : mIntegral(intg), mFraction(frac)
+  {
+  }
+  explicit UnsignedIntegerDecimal(const ExactUnsignedNumericLiteralFractionAlone& rhs) : mFraction(rhs)
+  {
+  }
+  explicit UnsignedIntegerDecimal(const ExactUnsignedNumericLiteralIntegralOptFraction& rhs)
+   : mIntegral(rhs.integral()), mFraction(rhs.fraction())
+  {
+  }
 
   size_t IntFracDigits() const
   {
@@ -442,51 +441,55 @@ public:
     mFraction.skipTrailingZeroDigits();
   }
 
-  template<typename T> T toXIntPositive(DataCondition & error) const
+  template <typename T>
+  T toXIntPositive(DataCondition& error) const
   {
     T val = mIntegral.toXIntPositive<T>(error);
     return mFraction.toXIntPositiveContinue<T>(val, error);
   }
 
-  template<typename T> T toXIntPositiveRoundAwayFromZero(bool roundUp, DataCondition & error) const
+  template <typename T>
+  T toXIntPositiveRoundAwayFromZero(bool roundUp, DataCondition& error) const
   {
     T val = mIntegral.toXIntPositive<T>(error);
     return mFraction.toXIntPositiveRoundAwayFromZeroContinue<T>(val, roundUp, error);
   }
 
-  template<typename T> T toXIntPositiveScaleUp(size_t scale, DataCondition & error) const
+  template <typename T>
+  T toXIntPositiveScaleUp(size_t scale, DataCondition& error) const
   {
     T val = toXIntPositive<T>(error);
     if (val == datatypes::numeric_limits<T>::max())
       return val;
-    for ( ; scale ; scale--)
+    for (; scale; scale--)
     {
       constexpr T cutoff = datatypes::numeric_limits<T>::max() / 10;
       if (val > cutoff)
       {
-        error|= DataCondition::X_NUMERIC_VALUE_OUT_OF_RANGE;
+        error |= DataCondition::X_NUMERIC_VALUE_OUT_OF_RANGE;
         return datatypes::numeric_limits<T>::max();
       }
-      val*= 10;
+      val *= 10;
     }
     return val;
   }
 
-  template<typename T> T toXIntPositiveRound(DataCondition & error) const
+  template <typename T>
+  T toXIntPositiveRound(DataCondition& error) const
   {
     bool roundUp = mFraction.length() && mFraction.str()[0] >= '5';
     return mIntegral.toXIntPositiveRoundAwayFromZero<T>(roundUp, error);
   }
 
-  template<typename T> T toXIntPositiveRoundExp(uint64_t absExp, bool negExp,
-                                                DataCondition & error) const
+  template <typename T>
+  T toXIntPositiveRoundExp(uint64_t absExp, bool negExp, DataCondition& error) const
   {
     if (absExp == 0)
       return toXIntPositiveRound<T>(error);
 
     if (negExp)
     {
-      if (mIntegral.length() == absExp) // 567.8e-3 -> 0.5678 -> 1
+      if (mIntegral.length() == absExp)  // 567.8e-3 -> 0.5678 -> 1
         return mIntegral.str()[0] >= '5' ? 1 : 0;
       if (mIntegral.length() < absExp)  // 123e-4 -> 0.0123
         return 0;
@@ -498,7 +501,7 @@ public:
     }
 
     // Positive exponent: 123.456e2
-    if (mFraction.length() >= absExp) // 123.456e2 -> 12345.6 -> 12346
+    if (mFraction.length() >= absExp)  // 123.456e2 -> 12345.6 -> 12346
     {
       bool roundUp = mFraction.length() > absExp && mFraction.str()[absExp] >= '5';
       UnsignedIntegerDecimal tmp(mIntegral, mFraction.left(absExp));
@@ -509,42 +512,38 @@ public:
     size_t diff = absExp - mFraction.length();
     return toXIntPositiveScaleUp<T>(diff, error);
   }
-
 };
-
 
 // <exact unsigned numeric literal> :=
 //           <period> [ <unsigned integer> ]
 //         | <unsigned integer> [ <period> [ <unsigned integer> ] ]
 
-class ExactUnsignedNumericLiteral:
-          public Parser::Choice2<UnsignedIntegerDecimal,
-                                 ExactUnsignedNumericLiteralFractionAlone,
-                                 ExactUnsignedNumericLiteralIntegralOptFraction>
+class ExactUnsignedNumericLiteral
+ : public Parser::Choice2<UnsignedIntegerDecimal, ExactUnsignedNumericLiteralFractionAlone,
+                          ExactUnsignedNumericLiteralIntegralOptFraction>
 {
-public:
+ public:
   using Choice2::Choice2;
 };
 
-
 // <unsigned numeric literal>  ::=  <exact numeric literal> [ E <exponent> ]
 
-class UnsignedNumericLiteral: public Parser::DM2MO<ExactUnsignedNumericLiteral,EExponent>
+class UnsignedNumericLiteral : public Parser::DM2MO<ExactUnsignedNumericLiteral, EExponent>
 {
-public:
+ public:
   using DM2MO::DM2MO;
   void normalize()
   {
     ExactUnsignedNumericLiteral::normalize();
     mB.skipLeadingZeroDigits();
   }
-  const SignedInteger & exponent() const
+  const SignedInteger& exponent() const
   {
     return mB;
   }
 
-  template<typename T>
-  T toXIntPositiveRound(DataCondition & error) const
+  template <typename T>
+  T toXIntPositiveRound(DataCondition& error) const
   {
     size_t availableDigits = IntFracDigits();
     if (!availableDigits)
@@ -553,35 +552,36 @@ public:
     return ExactUnsignedNumericLiteral::toXIntPositiveRoundExp<T>(absexp, exponent().negative(), error);
   }
 
-  template<typename T>
-  T toPackedDecimalPositive(scale_t scale, DataCondition & error) const
+  template <typename T>
+  T toPackedDecimalPositive(scale_t scale, DataCondition& error) const
   {
     size_t availableDigits = IntFracDigits();
     if (!availableDigits)
       return 0;
     int64_t exp = exponent().toSInt<int64_t>(error);
     if (exp <= datatypes::numeric_limits<int64_t>::max() - scale)
-      exp+= scale;
+      exp += scale;
     if (exp < 0)
     {
       if (exp == datatypes::numeric_limits<int64_t>::min())
-        exp++; // Avoid undefined behaviour in the unary minus below:
-      return ExactUnsignedNumericLiteral::toXIntPositiveRoundExp<T>((uint64_t) -exp, true, error);
+        exp++;  // Avoid undefined behaviour in the unary minus below:
+      return ExactUnsignedNumericLiteral::toXIntPositiveRoundExp<T>((uint64_t)-exp, true, error);
     }
-    return ExactUnsignedNumericLiteral::toXIntPositiveRoundExp<T>((uint64_t) exp, false, error);
+    return ExactUnsignedNumericLiteral::toXIntPositiveRoundExp<T>((uint64_t)exp, false, error);
   }
-
 };
 
-
 // <signed numeric literal>    ::=   [ <sign> ] <unsigned numeric literal>
-class SignedNumericLiteral: public Parser::DD2OM<Sign,UnsignedNumericLiteral>
+class SignedNumericLiteral : public Parser::DD2OM<Sign, UnsignedNumericLiteral>
 {
-public:
+ public:
   using DD2OM::DD2OM;
-  bool isNull() const { return UnsignedNumericLiteral::isNull(); }
+  bool isNull() const
+  {
+    return UnsignedNumericLiteral::isNull();
+  }
 
-  template<typename T>
+  template <typename T>
   T toUIntXRound() const
   {
     if (negative())
@@ -589,30 +589,28 @@ public:
     return UnsignedNumericLiteral::toXIntPositiveRound<T>();
   }
 
-  template<typename T>
-  T toPackedUDecimal(scale_t scale, DataCondition & error) const
+  template <typename T>
+  T toPackedUDecimal(scale_t scale, DataCondition& error) const
   {
     if (negative())
       return 0;
     return UnsignedNumericLiteral::toPackedDecimalPositive<T>(scale, error);
   }
 
-  template<typename T>
-  T toPackedSDecimal(scale_t scale, DataCondition & error) const
+  template <typename T>
+  T toPackedSDecimal(scale_t scale, DataCondition& error) const
   {
     if (!negative())
       return UnsignedNumericLiteral::toPackedDecimalPositive<T>(scale, error);
     typedef typename datatypes::make_unsigned<T>::type UT;
     UT absval = UnsignedNumericLiteral::toPackedDecimalPositive<UT>(scale, error);
-    if (absval >= (UT) datatypes::numeric_limits<T>::min())
+    if (absval >= (UT)datatypes::numeric_limits<T>::min())
     {
-      error|= DataCondition::X_NUMERIC_VALUE_OUT_OF_RANGE;
+      error |= DataCondition::X_NUMERIC_VALUE_OUT_OF_RANGE;
       return datatypes::numeric_limits<T>::min();
     }
-    return - (T) absval;
+    return -(T)absval;
   }
 };
 
-
-} // namespace literal
-
+}  // namespace literal

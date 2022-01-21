@@ -23,58 +23,69 @@
   MariaDB header files.
 */
 
-
-namespace datatypes {
-
-class StoreFieldMariaDB: public StoreField
+namespace datatypes
 {
-  Field *m_field;
-  const CalpontSystemCatalog::ColType &m_type;
-public:
-  StoreFieldMariaDB(Field *f, const CalpontSystemCatalog::ColType &type)
-   :m_field(f), m_type(type)
-  { }
+class StoreFieldMariaDB : public StoreField
+{
+  Field* m_field;
+  const CalpontSystemCatalog::ColType& m_type;
 
-  const CalpontSystemCatalog::ColType &type() const { return m_type; }
-  int32_t colWidth() const override { return m_type.colWidth; }
-  int32_t precision() const override { return m_type.precision; }
-  int32_t scale() const override { return m_type.scale; }
+ public:
+  StoreFieldMariaDB(Field* f, const CalpontSystemCatalog::ColType& type) : m_field(f), m_type(type)
+  {
+  }
+
+  const CalpontSystemCatalog::ColType& type() const
+  {
+    return m_type;
+  }
+  int32_t colWidth() const override
+  {
+    return m_type.colWidth;
+  }
+  int32_t precision() const override
+  {
+    return m_type.precision;
+  }
+  int32_t scale() const override
+  {
+    return m_type.scale;
+  }
 
   int store_date(int64_t val) override
   {
     char tmp[256];
-    DataConvert::dateToString(val, tmp, sizeof(tmp)-1);
+    DataConvert::dateToString(val, tmp, sizeof(tmp) - 1);
     return store_string(tmp, strlen(tmp));
   }
 
   int store_datetime(int64_t val) override
   {
     char tmp[256];
-    DataConvert::datetimeToString(val, tmp, sizeof(tmp)-1, m_type.precision);
+    DataConvert::datetimeToString(val, tmp, sizeof(tmp) - 1, m_type.precision);
     return store_string(tmp, strlen(tmp));
   }
 
   int store_time(int64_t val) override
   {
     char tmp[256];
-    DataConvert::timeToString(val, tmp, sizeof(tmp)-1, m_type.precision);
+    DataConvert::timeToString(val, tmp, sizeof(tmp) - 1, m_type.precision);
     return store_string(tmp, strlen(tmp));
   }
 
   int store_timestamp(int64_t val) override
   {
     char tmp[256];
-    DataConvert::timestampToString(val, tmp, sizeof(tmp),
-                                   current_thd->variables.time_zone->get_name()->ptr(),
+    DataConvert::timestampToString(val, tmp, sizeof(tmp), current_thd->variables.time_zone->get_name()->ptr(),
                                    m_type.precision);
     return store_string(tmp, strlen(tmp));
   }
 
-  int store_string(const char *str, size_t length) override
+  int store_string(const char* str, size_t length) override
   {
     return m_field->store(str, length, m_field->charset());
   }
-  int store_varbinary(const char *str, size_t length) override
+  int store_varbinary(const char* str, size_t length) override
   {
     if (get_varbin_always_hex(current_thd))
     {
@@ -133,7 +144,7 @@ public:
     m_field->field_length = 310;
     if (dl == 0)
     {
-      float8store(m_field->ptr,dl);
+      float8store(m_field->ptr, dl);
       return 0;
     }
     return m_field->store(dl);
@@ -173,44 +184,39 @@ public:
     return m_field->store(decAsAStr.c_str(), decAsAStr.length(), m_field->charset());
   }
 
-  int store_lob(const char *str, size_t length) override
+  int store_lob(const char* str, size_t length) override
   {
     idbassert(dynamic_cast<Field_blob*>(m_field));
     Field_blob* f2 = static_cast<Field_blob*>(m_field);
-    f2->set_ptr(length, (uchar*) str);
+    f2->set_ptr(length, (uchar*)str);
     return 0;
   }
-
 };
 
-
 /*******************************************************************************/
-class WriteBatchFieldMariaDB: public WriteBatchField
+class WriteBatchFieldMariaDB : public WriteBatchField
 {
   // Maximum number of decimal digits that can be represented in 4 bytes
   static const int DIG_PER_DEC = 9;
   // See strings/decimal.c
-  const int dig2bytes[DIG_PER_DEC+1]={0, 1, 1, 2, 2, 3, 3, 4, 4, 4};
-
+  const int dig2bytes[DIG_PER_DEC + 1] = {0, 1, 1, 2, 2, 3, 3, 4, 4, 4};
 
   // Returns the number of bytes required to store a given number
   // of decimal digits
   int numDecimalBytes(int digits)
   {
-    return (((digits/DIG_PER_DEC) * 4) + dig2bytes[digits % DIG_PER_DEC]);
+    return (((digits / DIG_PER_DEC) * 4) + dig2bytes[digits % DIG_PER_DEC]);
   }
 
-
-public:
-  Field * m_field;
-  const CalpontSystemCatalog::ColType & m_type;
+ public:
+  Field* m_field;
+  const CalpontSystemCatalog::ColType& m_type;
   uint32_t m_mbmaxlen;
-  WriteBatchFieldMariaDB(Field *field,
-                         const CalpontSystemCatalog::ColType & type,
-                         uint32_t mbmaxlen)
-   :m_field(field), m_type(type), m_mbmaxlen(mbmaxlen)
-  { }
-  size_t ColWriteBatchDate(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
+  WriteBatchFieldMariaDB(Field* field, const CalpontSystemCatalog::ColType& type, uint32_t mbmaxlen)
+   : m_field(field), m_type(type), m_mbmaxlen(mbmaxlen)
+  {
+  }
+  size_t ColWriteBatchDate(const uchar* buf, bool nullVal, ColBatchWriter& ci) override
   {
     // QQ: OLD DATE is not handled
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
@@ -228,7 +234,7 @@ public:
     }
     return 3;
   }
-  size_t ColWriteBatchDatetime(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
+  size_t ColWriteBatchDatetime(const uchar* buf, bool nullVal, ColBatchWriter& ci) override
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
     {
@@ -249,37 +255,34 @@ public:
 
       if (!ltime.second_part)
       {
-        fprintf(ci.filePtr(), "%04d-%02d-%02d %02d:%02d:%02d%c",
-                ltime.year, ltime.month, ltime.day,
+        fprintf(ci.filePtr(), "%04d-%02d-%02d %02d:%02d:%02d%c", ltime.year, ltime.month, ltime.day,
                 ltime.hour, ltime.minute, ltime.second, ci.delimiter());
       }
       else
       {
-        fprintf(ci.filePtr(), "%04d-%02d-%02d %02d:%02d:%02d.%ld%c",
-                ltime.year, ltime.month, ltime.day,
-                ltime.hour, ltime.minute, ltime.second,
-                ltime.second_part, ci.delimiter());
+        fprintf(ci.filePtr(), "%04d-%02d-%02d %02d:%02d:%02d.%ld%c", ltime.year, ltime.month, ltime.day,
+                ltime.hour, ltime.minute, ltime.second, ltime.second_part, ci.delimiter());
       }
 
       return m_field->pack_length();
     }
 
     // Old DATETIME
-    long long value = *((long long*) buf);
-    long datePart = (long) (value / 1000000ll);
+    long long value = *((long long*)buf);
+    long datePart = (long)(value / 1000000ll);
     int day = datePart % 100;
     int month = (datePart / 100) % 100;
     int year = datePart / 10000;
     fprintf(ci.filePtr(), "%04d-%02d-%02d ", year, month, day);
 
-    long timePart = (long) (value - (long long) datePart * 1000000ll);
+    long timePart = (long)(value - (long long)datePart * 1000000ll);
     int second = timePart % 100;
     int min = (timePart / 100) % 100;
     int hour = timePart / 10000;
     fprintf(ci.filePtr(), "%02d:%02d:%02d%c", hour, min, second, ci.delimiter());
     return 8;
   }
-  size_t ColWriteBatchTime(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
+  size_t ColWriteBatchTime(const uchar* buf, bool nullVal, ColBatchWriter& ci) override
   {
     // QQ: why old TIME is not handled?
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
@@ -297,20 +300,18 @@ public:
 
     if (!ltime.second_part)
     {
-      fprintf(ci.filePtr(), "%02d:%02d:%02d%c",
-              ltime.hour, ltime.minute, ltime.second, ci.delimiter());
+      fprintf(ci.filePtr(), "%02d:%02d:%02d%c", ltime.hour, ltime.minute, ltime.second, ci.delimiter());
     }
     else
     {
-      fprintf(ci.filePtr(), "%02d:%02d:%02d.%ld%c",
-              ltime.hour, ltime.minute, ltime.second,
-              ltime.second_part, ci.delimiter());
+      fprintf(ci.filePtr(), "%02d:%02d:%02d.%ld%c", ltime.hour, ltime.minute, ltime.second, ltime.second_part,
+              ci.delimiter());
     }
 
     return m_field->pack_length();
   }
 
-  size_t ColWriteBatchTimestamp(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
+  size_t ColWriteBatchTimestamp(const uchar* buf, bool nullVal, ColBatchWriter& ci) override
   {
     // QQ: old TIMESTAMP is not handled
 
@@ -328,30 +329,25 @@ public:
 
     if (!tm.tv_usec)
     {
-      fprintf(ci.filePtr(), "%04d-%02d-%02d %02d:%02d:%02d%c",
-              time.year, time.month, time.day,
-              time.hour, time.minute, time.second, ci.delimiter());
+      fprintf(ci.filePtr(), "%04d-%02d-%02d %02d:%02d:%02d%c", time.year, time.month, time.day, time.hour,
+              time.minute, time.second, ci.delimiter());
     }
     else
     {
-      fprintf(ci.filePtr(), "%04d-%02d-%02d %02d:%02d:%02d.%ld%c",
-              time.year, time.month, time.day,
-              time.hour, time.minute, time.second,
-              tm.tv_usec, ci.delimiter());
+      fprintf(ci.filePtr(), "%04d-%02d-%02d %02d:%02d:%02d.%ld%c", time.year, time.month, time.day, time.hour,
+              time.minute, time.second, tm.tv_usec, ci.delimiter());
     }
     return m_field->pack_length();
   }
 
-  static inline void ColWriteBatchTextStringPrintout(std::string& escape,
-                                                     const ColBatchWriter &ci)
+  static inline void ColWriteBatchTextStringPrintout(std::string& escape, const ColBatchWriter& ci)
   {
     boost::replace_all(escape, "\\", "\\\\");
-    fprintf(ci.filePtr(), "%c%.*s%c%c", ci.enclosed_by(), (int)escape.length(),
-      escape.c_str(), ci.enclosed_by(), ci.delimiter());
+    fprintf(ci.filePtr(), "%c%.*s%c%c", ci.enclosed_by(), (int)escape.length(), escape.c_str(),
+            ci.enclosed_by(), ci.delimiter());
   }
 
-  static void ColWriteBatchTextString(const String &value,
-                                      const ColBatchWriter &ci,
+  static void ColWriteBatchTextString(const String& value, const ColBatchWriter& ci,
                                       const size_t colWidthInBytes)
   {
     std::string escape;
@@ -359,8 +355,7 @@ public:
     ColWriteBatchTextStringPrintout(escape, ci);
   }
 
-  static void ColWriteBatchPaddedTextString(const String &value,
-                                            const ColBatchWriter &ci,
+  static void ColWriteBatchPaddedTextString(const String& value, const ColBatchWriter& ci,
                                             const size_t colWidthInBytes)
   {
     std::string escape;
@@ -368,23 +363,19 @@ public:
     ColWriteBatchTextStringPrintout(escape, ci);
   }
 
-  static void ColWriteBatchBlobString(const String &value,
-                                      const ColBatchWriter &ci,
+  static void ColWriteBatchBlobString(const String& value, const ColBatchWriter& ci,
                                       const size_t colWidthInBytes)
   {
     const char* ptr = value.ptr();
     for (uint32_t i = 0; i < value.length(); i++)
     {
-      fprintf(ci.filePtr(), "%02x", *(uint8_t*)(ptr+i));
+      fprintf(ci.filePtr(), "%02x", *(uint8_t*)(ptr + i));
     }
     fprintf(ci.filePtr(), "%c", ci.delimiter());
   }
 
-  size_t ColWriteBatchString(const uchar *buf,
-                             bool nullVal,
-                             ColBatchWriter &ci,
-                             void (*printFuncPtr)(const String&,
-                                                  const ColBatchWriter &,
+  size_t ColWriteBatchString(const uchar* buf, bool nullVal, ColBatchWriter& ci,
+                             void (*printFuncPtr)(const String&, const ColBatchWriter&,
                                                   const size_t colWidthInBytes)) const
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
@@ -402,19 +393,19 @@ public:
     return m_field->pack_length();
   }
 
-  size_t ColWriteBatchChar(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
+  size_t ColWriteBatchChar(const uchar* buf, bool nullVal, ColBatchWriter& ci) override
   {
-    return (current_thd->variables.sql_mode & MODE_PAD_CHAR_TO_FULL_LENGTH) ?
-      ColWriteBatchString(buf, nullVal, ci, &ColWriteBatchPaddedTextString) :
-      ColWriteBatchString(buf, nullVal, ci, &ColWriteBatchTextString);
+    return (current_thd->variables.sql_mode & MODE_PAD_CHAR_TO_FULL_LENGTH)
+               ? ColWriteBatchString(buf, nullVal, ci, &ColWriteBatchPaddedTextString)
+               : ColWriteBatchString(buf, nullVal, ci, &ColWriteBatchTextString);
   }
 
-  size_t ColWriteBatchVarchar(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
+  size_t ColWriteBatchVarchar(const uchar* buf, bool nullVal, ColBatchWriter& ci) override
   {
     return ColWriteBatchString(buf, nullVal, ci, &ColWriteBatchTextString);
   }
 
-  size_t ColWriteBatchSInt64(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
+  size_t ColWriteBatchSInt64(const uchar* buf, bool nullVal, ColBatchWriter& ci) override
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
       fprintf(ci.filePtr(), "%c", ci.delimiter());
@@ -423,7 +414,7 @@ public:
     return 8;
   }
 
-  size_t ColWriteBatchUInt64(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
+  size_t ColWriteBatchUInt64(const uchar* buf, bool nullVal, ColBatchWriter& ci) override
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
       fprintf(ci.filePtr(), "%c", ci.delimiter());
@@ -432,8 +423,7 @@ public:
     return 8;
   }
 
-
-  size_t ColWriteBatchSInt32(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
+  size_t ColWriteBatchSInt32(const uchar* buf, bool nullVal, ColBatchWriter& ci) override
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
       fprintf(ci.filePtr(), "%c", ci.delimiter());
@@ -442,7 +432,7 @@ public:
     return 4;
   }
 
-  size_t ColWriteBatchUInt32(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
+  size_t ColWriteBatchUInt32(const uchar* buf, bool nullVal, ColBatchWriter& ci) override
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
       fprintf(ci.filePtr(), "%c", ci.delimiter());
@@ -451,7 +441,7 @@ public:
     return 4;
   }
 
-  size_t ColWriteBatchSInt16(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
+  size_t ColWriteBatchSInt16(const uchar* buf, bool nullVal, ColBatchWriter& ci) override
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
       fprintf(ci.filePtr(), "%c", ci.delimiter());
@@ -460,7 +450,7 @@ public:
     return 2;
   }
 
-  size_t ColWriteBatchUInt16(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
+  size_t ColWriteBatchUInt16(const uchar* buf, bool nullVal, ColBatchWriter& ci) override
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
       fprintf(ci.filePtr(), "%c", ci.delimiter());
@@ -469,7 +459,7 @@ public:
     return 2;
   }
 
-  size_t ColWriteBatchSInt8(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
+  size_t ColWriteBatchSInt8(const uchar* buf, bool nullVal, ColBatchWriter& ci) override
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
       fprintf(ci.filePtr(), "%c", ci.delimiter());
@@ -478,7 +468,7 @@ public:
     return 1;
   }
 
-  size_t ColWriteBatchUInt8(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
+  size_t ColWriteBatchUInt8(const uchar* buf, bool nullVal, ColBatchWriter& ci) override
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
       fprintf(ci.filePtr(), "%c", ci.delimiter());
@@ -487,8 +477,7 @@ public:
     return 1;
   }
 
-
-  size_t ColWriteBatchXFloat(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
+  size_t ColWriteBatchXFloat(const uchar* buf, bool nullVal, ColBatchWriter& ci) override
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
       fprintf(ci.filePtr(), "%c", ci.delimiter());
@@ -496,7 +485,7 @@ public:
     {
       float val = *((float*)buf);
 
-      if ((fabs(val) > (1.0 / IDB_pow[4])) && (fabs(val) < (float) IDB_pow[6]))
+      if ((fabs(val) > (1.0 / IDB_pow[4])) && (fabs(val) < (float)IDB_pow[6]))
       {
         fprintf(ci.filePtr(), "%.7f%c", val, ci.delimiter());
       }
@@ -505,29 +494,27 @@ public:
         fprintf(ci.filePtr(), "%e%c", val, ci.delimiter());
       }
 
-      //fprintf(ci.filePtr(), "%.7g|", *((float*)buf2));
-      //printf("%.7f|", *((float*)buf2));
+      // fprintf(ci.filePtr(), "%.7g|", *((float*)buf2));
+      // printf("%.7f|", *((float*)buf2));
     }
 
     return 4;
   }
 
-
-  size_t ColWriteBatchXDouble(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
+  size_t ColWriteBatchXDouble(const uchar* buf, bool nullVal, ColBatchWriter& ci) override
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
       fprintf(ci.filePtr(), "%c", ci.delimiter());
     else
     {
       fprintf(ci.filePtr(), "%.15g%c", *((double*)buf), ci.delimiter());
-      //printf("%.15g|", *((double*)buf));
+      // printf("%.15g|", *((double*)buf));
     }
 
     return 8;
   }
 
-
-  size_t ColWriteBatchSLongDouble(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
+  size_t ColWriteBatchSLongDouble(const uchar* buf, bool nullVal, ColBatchWriter& ci) override
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
       fprintf(ci.filePtr(), "%c", ci.delimiter());
@@ -536,8 +523,7 @@ public:
     return sizeof(long double);
   }
 
-
-  size_t ColWriteBatchXDecimal(const uchar *buf, bool nullVal, ColBatchWriter &ci) override
+  size_t ColWriteBatchXDecimal(const uchar* buf, bool nullVal, ColBatchWriter& ci) override
   {
     uint bytesBefore = numDecimalBytes(m_type.precision - m_type.scale);
     uint totalBytes = bytesBefore + numDecimalBytes(m_type.scale);
@@ -545,7 +531,7 @@ public:
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
     {
       fprintf(ci.filePtr(), "%c", ci.delimiter());
-      //printf("|");
+      // printf("|");
     }
     else if (m_type.precision > datatypes::INT64MAXPRECISION)
     {
@@ -563,16 +549,16 @@ public:
     }
     else
     {
-      uint32_t mask [5] = {0, 0xFF, 0xFFFF, 0xFFFFFF, 0xFFFFFFFF};
+      uint32_t mask[5] = {0, 0xFF, 0xFFFF, 0xFFFFFF, 0xFFFFFFFF};
       char neg = '-';
 
       if (m_type.scale == 0)
       {
         const uchar* tmpBuf = buf;
-        //test flag bit for sign
-        bool posNum  = tmpBuf[0] & (0x80);
+        // test flag bit for sign
+        bool posNum = tmpBuf[0] & (0x80);
         uchar tmpChr = tmpBuf[0];
-        tmpChr ^= 0x80; //flip the bit
+        tmpChr ^= 0x80;  // flip the bit
         int32_t tmp1 = tmpChr;
 
         if (totalBytes > 4)
@@ -582,7 +568,7 @@ public:
             tmp1 = (tmp1 << 8) + tmpBuf[i];
           }
 
-          if (( tmp1 != 0 ) && (tmp1 != -1))
+          if ((tmp1 != 0) && (tmp1 != -1))
           {
             if (!posNum)
             {
@@ -591,7 +577,7 @@ public:
               if (tmp1 != 0)
               {
                 fprintf(ci.filePtr(), "%c", neg);
-                //printf("%c", neg);
+                // printf("%c", neg);
               }
             }
 
@@ -609,7 +595,7 @@ public:
             tmp2 = (tmp2 << 8) + tmpBuf[i];
           }
 
-          if ( tmp1 != 0 )
+          if (tmp1 != 0)
           {
             if (!posNum)
             {
@@ -631,7 +617,7 @@ public:
             else
             {
               fprintf(ci.filePtr(), "%09u%c", tmp2, ci.delimiter());
-              //printf("%09u|", tmp2);
+              // printf("%09u|", tmp2);
             }
           }
           else
@@ -640,11 +626,11 @@ public:
             {
               tmp2 = mask[4] - tmp2;
               fprintf(ci.filePtr(), "%c", neg);
-              //printf("%c", neg);
+              // printf("%c", neg);
             }
 
             fprintf(ci.filePtr(), "%d%c", tmp2, ci.delimiter());
-            //printf("%d|", tmp2);
+            // printf("%d|", tmp2);
           }
         }
         else
@@ -658,33 +644,33 @@ public:
           {
             tmp1 = mask[totalBytes] - tmp1;
             fprintf(ci.filePtr(), "%c", neg);
-            //printf("%c", neg);
+            // printf("%c", neg);
           }
 
           fprintf(ci.filePtr(), "%d%c", tmp1, ci.delimiter());
-          //printf("%d|", tmp1);
+          // printf("%d|", tmp1);
         }
       }
       else
       {
         const uchar* tmpBuf = buf;
-        //test flag bit for sign
-        bool posNum  = tmpBuf[0] & (0x80);
+        // test flag bit for sign
+        bool posNum = tmpBuf[0] & (0x80);
         uchar tmpChr = tmpBuf[0];
-        tmpChr ^= 0x80; //flip the bit
+        tmpChr ^= 0x80;  // flip the bit
         int32_t tmp1 = tmpChr;
 
-        //fetch the digits before decimal point
+        // fetch the digits before decimal point
         if (bytesBefore == 0)
         {
           if (!posNum)
           {
             fprintf(ci.filePtr(), "%c", neg);
-            //printf("%c", neg);
+            // printf("%c", neg);
           }
 
           fprintf(ci.filePtr(), "0.");
-          //printf("0.");
+          // printf("0.");
         }
         else if (bytesBefore > 4)
         {
@@ -698,23 +684,23 @@ public:
             tmp1 = mask[bytesBefore - 4] - tmp1;
           }
 
-          if (( tmp1 != 0 ) && (tmp1 != -1))
+          if ((tmp1 != 0) && (tmp1 != -1))
           {
             if (!posNum)
             {
               fprintf(ci.filePtr(), "%c", neg);
-              //printf("%c", neg);
+              // printf("%c", neg);
             }
 
             fprintf(ci.filePtr(), "%d", tmp1);
-            //printf("%d", tmp1);
+            // printf("%d", tmp1);
           }
 
           tmpBuf += (bytesBefore - 4);
           int32_t tmp2 = *((int32_t*)tmpBuf);
           tmp2 = ntohl(tmp2);
 
-          if ( tmp1 != 0 )
+          if (tmp1 != 0)
           {
             if (!posNum)
             {
@@ -725,13 +711,13 @@ public:
             {
               fprintf(ci.filePtr(), "%c", neg);
               fprintf(ci.filePtr(), "%d.", tmp2);
-              //printf("%c", neg);
-              //printf("%d.", tmp2);
+              // printf("%c", neg);
+              // printf("%d.", tmp2);
             }
             else
             {
               fprintf(ci.filePtr(), "%09u.", tmp2);
-              //printf("%09u.", tmp2);
+              // printf("%09u.", tmp2);
             }
           }
           else
@@ -740,11 +726,11 @@ public:
             {
               tmp2 = mask[4] - tmp2;
               fprintf(ci.filePtr(), "%c", neg);
-              //printf("%c", neg);
+              // printf("%c", neg);
             }
 
             fprintf(ci.filePtr(), "%d.", tmp2);
-            //printf("%d.", tmp2);
+            // printf("%d.", tmp2);
           }
         }
         else
@@ -758,14 +744,14 @@ public:
           {
             tmp1 = mask[bytesBefore] - tmp1;
             fprintf(ci.filePtr(), "%c", neg);
-            //printf("%c", neg);
+            // printf("%c", neg);
           }
 
           fprintf(ci.filePtr(), "%d.", tmp1);
-          //printf("%d.", tmp1);
+          // printf("%d.", tmp1);
         }
 
-        //fetch the digits after decimal point
+        // fetch the digits after decimal point
         int32_t tmp2 = 0;
 
         if (bytesBefore > 4)
@@ -782,9 +768,9 @@ public:
             tmp2 = (tmp2 << 8) + tmpBuf[j];
           }
 
-          int8_t digits = m_type.scale - 9; //9 digits is a 4 bytes chunk
+          int8_t digits = m_type.scale - 9;  // 9 digits is a 4 bytes chunk
 
-          if ( digits <= 0 )
+          if (digits <= 0)
             digits = m_type.scale;
 
           if (!posNum)
@@ -793,13 +779,13 @@ public:
           }
 
           fprintf(ci.filePtr(), "%0*u%c", digits, tmp2, ci.delimiter());
-          //printf("%0*u|", digits, tmp2);
+          // printf("%0*u|", digits, tmp2);
         }
         else
         {
           for (uint j = 1; j < 4; j++)
           {
-            tmp2 = (tmp2 << 8) +  tmpBuf[j];
+            tmp2 = (tmp2 << 8) + tmpBuf[j];
           }
 
           if (!posNum)
@@ -808,19 +794,19 @@ public:
           }
 
           fprintf(ci.filePtr(), "%09u", tmp2);
-          //printf("%09u", tmp2);
+          // printf("%09u", tmp2);
 
           tmpBuf += 4;
           int32_t tmp3 = tmpBuf[0];
 
           for (uint j = 1; j < (totalBytes - bytesBefore - 4); j++)
           {
-            tmp3 = (tmp3 << 8) +  tmpBuf[j];
+            tmp3 = (tmp3 << 8) + tmpBuf[j];
           }
 
-          int8_t digits = m_type.scale - 9; //9 digits is a 4 bytes chunk
+          int8_t digits = m_type.scale - 9;  // 9 digits is a 4 bytes chunk
 
-          if ( digits < 0 )
+          if (digits < 0)
             digits = m_type.scale;
 
           if (!posNum)
@@ -829,7 +815,7 @@ public:
           }
 
           fprintf(ci.filePtr(), "%0*u%c", digits, tmp3, ci.delimiter());
-          //printf("%0*u|", digits, tmp3);
+          // printf("%0*u|", digits, tmp3);
         }
       }
     }
@@ -837,23 +823,19 @@ public:
     return totalBytes;
   }
 
-
-  size_t ColWriteBatchVarbinary(const uchar *buf0, bool nullVal, ColBatchWriter &ci) override
+  size_t ColWriteBatchVarbinary(const uchar* buf0, bool nullVal, ColBatchWriter& ci) override
   {
     return ColWriteBatchString(buf0, nullVal, ci, &ColWriteBatchBlobString);
   }
 
-
-  size_t ColWriteBatchBlob(const uchar *buf0, bool nullVal, ColBatchWriter &ci) override
+  size_t ColWriteBatchBlob(const uchar* buf0, bool nullVal, ColBatchWriter& ci) override
   {
-    return (UNLIKELY(m_type.colDataType == CalpontSystemCatalog::BLOB)) ?
-      ColWriteBatchString(buf0, nullVal, ci, &ColWriteBatchBlobString) :
-      ColWriteBatchString(buf0, nullVal, ci, &ColWriteBatchTextString);
+    return (UNLIKELY(m_type.colDataType == CalpontSystemCatalog::BLOB))
+               ? ColWriteBatchString(buf0, nullVal, ci, &ColWriteBatchBlobString)
+               : ColWriteBatchString(buf0, nullVal, ci, &ColWriteBatchTextString);
   }
-
 };
 
-} // end of namespace datatypes
-
+}  // end of namespace datatypes
 
 // vim:ts=2 sw=2:

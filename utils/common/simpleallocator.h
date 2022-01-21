@@ -37,11 +37,11 @@
 
 namespace utils
 {
-
 // A specialized allocator for std::tr1::unordered_multimap<uint64_t, uint64_t> based joiner
 // or std::tr1::unordered_map<uint8_t*, uint8_t*> based aggregation.
 // User shall initialize a pool and pass it to allocator, release the pool when map is done.
-template<typename T> class SimpleAllocator;
+template <typename T>
+class SimpleAllocator;
 
 // this pool is best for node size of 3*sizeof(int64).
 // map nodes are taken from fixed size blocks, and control hash tables are from ::new.
@@ -51,208 +51,211 @@ template<typename T> class SimpleAllocator;
 #define OPT_NODE_UNITS 10
 class SimplePool
 {
-public:
-    SimplePool() : fNext(NULL), fEnd(NULL), fTableMemSize(0) {}
-    ~SimplePool()
-    {
-        reset();
-    }
+ public:
+  SimplePool() : fNext(NULL), fEnd(NULL), fTableMemSize(0)
+  {
+  }
+  ~SimplePool()
+  {
+    reset();
+  }
 
-    inline void* allocate(size_t n, const void* = 0);
-    inline void deallocate(void* p, size_t n);
-    inline size_t max_size() const throw();
-    inline uint64_t getMemUsage() const;
+  inline void* allocate(size_t n, const void* = 0);
+  inline void deallocate(void* p, size_t n);
+  inline size_t max_size() const throw();
+  inline uint64_t getMemUsage() const;
 
-private:
-    static const size_t fUnitPerChunk = OPT_NODE_UNITS * 10240;
+ private:
+  static const size_t fUnitPerChunk = OPT_NODE_UNITS * 10240;
 
-    inline void reset();
-    inline void allocateNewChunk();
+  inline void reset();
+  inline void allocateNewChunk();
 
-    // MemUnit stores a pointer to next unit before allocated, and T after allocated.
-    union MemUnit
-    {
-        MemUnit* fNext;
-        uint64_t fData;
-    }* fNext, *fEnd;    // fNext: next available unit, fEnd: one off the last unit
+  // MemUnit stores a pointer to next unit before allocated, and T after allocated.
+  union MemUnit
+  {
+    MemUnit* fNext;
+    uint64_t fData;
+  } * fNext, *fEnd;  // fNext: next available unit, fEnd: one off the last unit
 
-    std::list<MemUnit*> fBlockList;
-    uint64_t fTableMemSize;
+  std::list<MemUnit*> fBlockList;
+  uint64_t fTableMemSize;
 
-    static const size_t fUnitSize = sizeof(MemUnit);
-    static const size_t fMaxNodeSize = fUnitSize * OPT_NODE_UNITS;
-    static const size_t fChunkSize = fUnitSize * fUnitPerChunk;
+  static const size_t fUnitSize = sizeof(MemUnit);
+  static const size_t fMaxNodeSize = fUnitSize * OPT_NODE_UNITS;
+  static const size_t fChunkSize = fUnitSize * fUnitPerChunk;
 };
 
-
-template<typename T>
+template <typename T>
 class SimpleAllocator
 {
-public:
-    typedef size_t size_type;
-    typedef ptrdiff_t difference_type;
-    typedef T* pointer;
-    typedef const T* const_pointer;
-    typedef T& reference;
-    typedef const T& const_reference;
-    typedef T value_type;
-    template<typename U> struct rebind
-    {
-        typedef SimpleAllocator<U> other;
-    };
+ public:
+  typedef size_t size_type;
+  typedef ptrdiff_t difference_type;
+  typedef T* pointer;
+  typedef const T* const_pointer;
+  typedef T& reference;
+  typedef const T& const_reference;
+  typedef T value_type;
+  template <typename U>
+  struct rebind
+  {
+    typedef SimpleAllocator<U> other;
+  };
 
-    SimpleAllocator() throw() {}
-    SimpleAllocator(std::shared_ptr<SimplePool> pool) throw()
-    {
-        fPool = pool;
-    }
-    SimpleAllocator(const SimpleAllocator& alloc)
-    {
-        fPool = alloc.fPool;
-    }
-    template<class U> SimpleAllocator(const SimpleAllocator<U>& alloc)
-    {
-        fPool = alloc.fPool;
-    }
+  SimpleAllocator() throw()
+  {
+  }
+  SimpleAllocator(std::shared_ptr<SimplePool> pool) throw()
+  {
+    fPool = pool;
+  }
+  SimpleAllocator(const SimpleAllocator& alloc)
+  {
+    fPool = alloc.fPool;
+  }
+  template <class U>
+  SimpleAllocator(const SimpleAllocator<U>& alloc)
+  {
+    fPool = alloc.fPool;
+  }
 
-    ~SimpleAllocator() throw() { }
+  ~SimpleAllocator() throw()
+  {
+  }
 
-    inline pointer address(reference x) const
-    {
-        return &x;
-    }
-    inline const_pointer address(const_reference x) const
-    {
-        return &x;
-    }
+  inline pointer address(reference x) const
+  {
+    return &x;
+  }
+  inline const_pointer address(const_reference x) const
+  {
+    return &x;
+  }
 
-    inline pointer allocate(size_type n, const void* = 0)
-    {
-        return static_cast<pointer>(fPool->allocate(n * sizeof(T)));
-    }
-    inline void deallocate(pointer p, size_type n)
-    {
-        fPool->deallocate(p, n * sizeof(T));
-    }
+  inline pointer allocate(size_type n, const void* = 0)
+  {
+    return static_cast<pointer>(fPool->allocate(n * sizeof(T)));
+  }
+  inline void deallocate(pointer p, size_type n)
+  {
+    fPool->deallocate(p, n * sizeof(T));
+  }
 
 #ifdef _MSC_VER
-    //The MSVC STL library really needs this to return a big number...
-    size_type max_size() const throw()
-    {
-        return std::numeric_limits<size_type>::max();
-    }
+  // The MSVC STL library really needs this to return a big number...
+  size_type max_size() const throw()
+  {
+    return std::numeric_limits<size_type>::max();
+  }
 #else
-    inline size_type max_size() const throw()
-    {
-        return fPool->max_size() / sizeof(T);
-    }
+  inline size_type max_size() const throw()
+  {
+    return fPool->max_size() / sizeof(T);
+  }
 #endif
-    inline void construct(pointer ptr, const T& val)
-    {
-        new ((void*)ptr) T(val);
-    }
-    inline void destroy(pointer ptr)
-    {
-        ptr->T::~T();
-    }
+  inline void construct(pointer ptr, const T& val)
+  {
+    new ((void*)ptr) T(val);
+  }
+  inline void destroy(pointer ptr)
+  {
+    ptr->T::~T();
+  }
 
-    inline void setPool(SimplePool* pool)
-    {
-        fPool.reset(pool);
-    }
+  inline void setPool(SimplePool* pool)
+  {
+    fPool.reset(pool);
+  }
 
-    std::shared_ptr<SimplePool> fPool;
+  std::shared_ptr<SimplePool> fPool;
 };
-
 
 // inlines
 inline void* SimplePool::allocate(size_t n, const void* dur)
 {
-    // make sure the block allocated is on unit boundary
-    size_t unitCount = n / fUnitSize;
+  // make sure the block allocated is on unit boundary
+  size_t unitCount = n / fUnitSize;
 
-    if ((n % fUnitSize) != 0)
-        unitCount += 1;
+  if ((n % fUnitSize) != 0)
+    unitCount += 1;
 
-    // if for control table, let new allocator handle it.
-    if (unitCount > OPT_NODE_UNITS)
+  // if for control table, let new allocator handle it.
+  if (unitCount > OPT_NODE_UNITS)
+  {
+    fTableMemSize += n;
+    return new uint8_t[n];
+  }
+
+  // allocate node
+  MemUnit* curr = fNext;
+
+  do
+  {
+    if (curr == NULL)
     {
-        fTableMemSize += n;
-        return new uint8_t[n];
+      allocateNewChunk();
+      curr = fNext;
     }
 
-    // allocate node
-    MemUnit* curr = fNext;
+    fNext = curr + unitCount;
 
-    do
-    {
-        if (curr == NULL)
-        {
-            allocateNewChunk();
-            curr = fNext;
-        }
+    if (fNext > fEnd)
+      curr = NULL;
+  } while (!curr);
 
-        fNext = curr + unitCount;
-
-        if (fNext > fEnd)
-            curr = NULL;
-    }
-    while (!curr);
-
-    return curr;
+  return curr;
 }
 
 inline void SimplePool::deallocate(void* p, size_t n)
 {
-    // only delete the old control table, which is allocated by new allocator.
-    if (n > fMaxNodeSize)
-    {
-        fTableMemSize -= n;
-        delete [] (static_cast<uint8_t*>(p));
-    }
+  // only delete the old control table, which is allocated by new allocator.
+  if (n > fMaxNodeSize)
+  {
+    fTableMemSize -= n;
+    delete[](static_cast<uint8_t*>(p));
+  }
 }
 
 inline size_t SimplePool::max_size() const throw()
 {
-    return fUnitSize * fUnitPerChunk;
+  return fUnitSize * fUnitPerChunk;
 }
 
 inline uint64_t SimplePool::getMemUsage() const
 {
-    return fTableMemSize + fBlockList.size() * fChunkSize +
-           // add list overhead, element type is a pointer, and
-           // lists store a next pointer.
-           fBlockList.size() * 2 * sizeof(void*);
+  return fTableMemSize + fBlockList.size() * fChunkSize +
+         // add list overhead, element type is a pointer, and
+         // lists store a next pointer.
+         fBlockList.size() * 2 * sizeof(void*);
 }
 
 inline void SimplePool::reset()
 {
-    for (std::list<MemUnit*>::iterator i = fBlockList.begin(); i != fBlockList.end(); i++)
-        delete [] (*i);
+  for (std::list<MemUnit*>::iterator i = fBlockList.begin(); i != fBlockList.end(); i++)
+    delete[](*i);
 
-    fNext = NULL;
-    fEnd = NULL;
+  fNext = NULL;
+  fEnd = NULL;
 }
 
 inline void SimplePool::allocateNewChunk()
 {
-    MemUnit* chunk = new MemUnit[fUnitPerChunk];
-    fBlockList.push_back(chunk);
-    fNext = chunk;
-    fEnd = chunk + fUnitPerChunk;
+  MemUnit* chunk = new MemUnit[fUnitPerChunk];
+  fBlockList.push_back(chunk);
+  fNext = chunk;
+  fEnd = chunk + fUnitPerChunk;
 }
 
 template <typename T1, typename T2>
 inline bool operator==(const SimpleAllocator<T1>&, const SimpleAllocator<T2>&)
 {
-    return true;
+  return true;
 }
 
 template <typename T1, typename T2>
 inline bool operator!=(const SimpleAllocator<T1>&, const SimpleAllocator<T2>&)
 {
-    return false;
+  return false;
 }
-}
-
-
+}  // namespace utils

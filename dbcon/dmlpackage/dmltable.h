@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: dmltable.h 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: dmltable.h 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 /** @file */
 
 #pragma once
@@ -33,95 +33,86 @@
 namespace dmlpackage
 {
 /** @brief concrete implementation of a DMLObject
-  * Specifically for representing a database table
-  */
+ * Specifically for representing a database table
+ */
 class DMLTable : public DMLObject
 {
+ public:
+  /** @brief ctor
+   */
+  DMLTable();
 
-public:
+  /** @brief dtor
+   */
+  ~DMLTable();
 
-    /** @brief ctor
-      */
-    DMLTable();
+  /** @brief get the schema name
+   */
+  inline const std::string get_SchemaName() const
+  {
+    return fSchema;
+  }
 
-    /** @brief dtor
-      */
-    ~DMLTable();
+  /** @brief set the schema name
+   */
+  inline void set_SchemaName(std::string& sName)
+  {
+    fSchema = sName;
+  }
 
-    /** @brief get the schema name
-      */
-    inline const std::string get_SchemaName() const
-    {
-        return fSchema;
-    }
+  /** @brief get the table name
+   */
+  inline const std::string get_TableName() const
+  {
+    return fName;
+  }
 
-    /** @brief set the schema name
-      */
-    inline void set_SchemaName( std::string& sName )
-    {
-        fSchema = sName;
-    }
+  /** @brief set the table name
+   */
+  inline void set_TableName(std::string& tName)
+  {
+    fName = tName;
+  }
 
-    /** @brief get the table name
-      */
-    inline const std::string get_TableName() const
-    {
-        return fName;
-    }
+  /** @brief get the row list
+   */
+  inline RowList& get_RowList()
+  {
+    return fRows;
+  }
 
-    /** @brief set the table name
-      */
-    inline void set_TableName( std::string& tName )
-    {
-        fName = tName;
-    }
+  /** @brief read a DMLTable from a ByteStream
+   *
+   * @param bytestream the ByteStream to read from
+   */
+  int read(messageqcpp::ByteStream& bytestream);
 
-    /** @brief get the row list
-      */
-    inline RowList& get_RowList()
-    {
-        return fRows;
-    }
+  /** @brief read a DMLTable metadata from a ByteStream
+   *
+   * @param bytestream the ByteStream to read from
+   */
+  void readMetaData(messageqcpp::ByteStream& bytestream);
 
-    /** @brief read a DMLTable from a ByteStream
-      *
-      * @param bytestream the ByteStream to read from
-      */
-    int read(messageqcpp::ByteStream& bytestream);
+  /** @brief read a DMLTable row data from a ByteStream
+   *
+   * @param bytestream the ByteStream to read from
+   */
+  void readRowData(messageqcpp::ByteStream& bytestream);
 
+  /** @brief write a DMLTable to a ByteStream
+   *
+   * @param bytestream the ByteStream to write to
+   */
+  int write(messageqcpp::ByteStream& bytestream);
 
-    /** @brief read a DMLTable metadata from a ByteStream
-      *
-      * @param bytestream the ByteStream to read from
-      */
-    void readMetaData(messageqcpp::ByteStream& bytestream);
-
-
-    /** @brief read a DMLTable row data from a ByteStream
-      *
-      * @param bytestream the ByteStream to read from
-      */
-    void readRowData(messageqcpp::ByteStream& bytestream);
-
-
-    /** @brief write a DMLTable to a ByteStream
-      *
-      * @param bytestream the ByteStream to write to
-      */
-    int write(messageqcpp::ByteStream& bytestream);
-
-
-protected:
-
-private:
-    std::string fName;
-    RowList fRows;
-    std::string fSchema;
-    /*Copy and copy assignment constructor */
-    DMLTable(const DMLTable&);
-    DMLTable& operator=(const DMLTable&);
+ protected:
+ private:
+  std::string fName;
+  RowList fRows;
+  std::string fSchema;
+  /*Copy and copy assignment constructor */
+  DMLTable(const DMLTable&);
+  DMLTable& operator=(const DMLTable&);
 };
 
 }  // namespace dmlpackage
-
-

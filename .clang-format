@@ -18,5 +18,5 @@ DerivePointerAlignment: false
 IndentCaseLabels: true
 NamespaceIndentation: None
 PointerAlignment: Left
-SortIncludes: true
+SortIncludes: false
 Standard: Auto

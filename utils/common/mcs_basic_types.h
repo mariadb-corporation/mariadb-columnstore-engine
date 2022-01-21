@@ -14,13 +14,11 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA. 
-*/ 
+   MA 02110-1301, USA.
+*/
 #pragma once
-
 
 using int128_t = __int128;
 using uint128_t = unsigned __int128;
-
 
 // vim:ts=2 sw=2:

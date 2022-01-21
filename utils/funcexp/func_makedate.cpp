@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_makedate.cpp 2665 2011-06-01 20:42:52Z rdempsey $
-*
-*
-****************************************************************************/
+ * $Id: func_makedate.cpp 2665 2011-06-01 20:42:52Z rdempsey $
+ *
+ *
+ ****************************************************************************/
 
 #include <cstdlib>
 #include <string>
@@ -39,169 +39,155 @@ using namespace funcexp;
 
 namespace
 {
-uint64_t makedate(rowgroup::Row& row,
-                  FunctionParm& parm,
-                  bool& isNull)
+uint64_t makedate(rowgroup::Row& row, FunctionParm& parm, bool& isNull)
 {
-    int64_t year = 0;
-    string dayofyear;
+  int64_t year = 0;
+  string dayofyear;
 
-    //get year
-    switch (parm[0]->data()->resultType().colDataType)
+  // get year
+  switch (parm[0]->data()->resultType().colDataType)
+  {
+    case CalpontSystemCatalog::BIGINT:
+    case CalpontSystemCatalog::MEDINT:
+    case CalpontSystemCatalog::SMALLINT:
+    case CalpontSystemCatalog::TINYINT:
+    case CalpontSystemCatalog::INT:
+    case CalpontSystemCatalog::DOUBLE:
+    case CalpontSystemCatalog::FLOAT:
+    case CalpontSystemCatalog::CHAR:
+    case CalpontSystemCatalog::TEXT:
+    case CalpontSystemCatalog::VARCHAR:
     {
-        case CalpontSystemCatalog::BIGINT:
-        case CalpontSystemCatalog::MEDINT:
-        case CalpontSystemCatalog::SMALLINT:
-        case CalpontSystemCatalog::TINYINT:
-        case CalpontSystemCatalog::INT:
-        case CalpontSystemCatalog::DOUBLE:
-        case CalpontSystemCatalog::FLOAT:
-        case CalpontSystemCatalog::CHAR:
-        case CalpontSystemCatalog::TEXT:
-        case CalpontSystemCatalog::VARCHAR:
-        {
-            double value = parm[0]->data()->getDoubleVal(row, isNull);
-            year = (int64_t) value;
-            break;
-        }
-
-        case CalpontSystemCatalog::DECIMAL:
-        case CalpontSystemCatalog::UDECIMAL:
-        {
-            year = parm[0]->data()->getDecimalVal(row, isNull).toSInt64Round();
-            break;
-        }
-
-        default:
-            isNull = true;
-            return 0;
+      double value = parm[0]->data()->getDoubleVal(row, isNull);
+      year = (int64_t)value;
+      break;
     }
 
-    if (year < 70)
+    case CalpontSystemCatalog::DECIMAL:
+    case CalpontSystemCatalog::UDECIMAL:
     {
-        year = 2000 + year;
+      year = parm[0]->data()->getDecimalVal(row, isNull).toSInt64Round();
+      break;
     }
-    else if (year < 100)
+
+    default: isNull = true; return 0;
+  }
+
+  if (year < 70)
+  {
+    year = 2000 + year;
+  }
+  else if (year < 100)
+  {
+    year = 1900 + year;
+  }
+  else if (year < 1000 || year > 9999)
+  {
+    isNull = true;
+    return 0;
+  }
+
+  // get dayofyear
+  switch (parm[1]->data()->resultType().colDataType)
+  {
+    case CalpontSystemCatalog::BIGINT:
+    case CalpontSystemCatalog::MEDINT:
+    case CalpontSystemCatalog::SMALLINT:
+    case CalpontSystemCatalog::TINYINT:
+    case CalpontSystemCatalog::INT:
+    case CalpontSystemCatalog::DOUBLE:
+    case CalpontSystemCatalog::FLOAT:
+    case CalpontSystemCatalog::CHAR:
+    case CalpontSystemCatalog::TEXT:
+    case CalpontSystemCatalog::VARCHAR:
     {
-        year = 1900 + year;
-    }
-    else if (year < 1000 || year > 9999)
-    {
+      dayofyear = parm[1]->data()->getStrVal(row, isNull);
+
+      if (atoi(dayofyear.c_str()) < 1)
+      {
         isNull = true;
         return 0;
+      }
+
+      break;
     }
 
-    //get dayofyear
-    switch (parm[1]->data()->resultType().colDataType)
+    case CalpontSystemCatalog::DECIMAL:
+    case CalpontSystemCatalog::UDECIMAL:
     {
-        case CalpontSystemCatalog::BIGINT:
-        case CalpontSystemCatalog::MEDINT:
-        case CalpontSystemCatalog::SMALLINT:
-        case CalpontSystemCatalog::TINYINT:
-        case CalpontSystemCatalog::INT:
-        case CalpontSystemCatalog::DOUBLE:
-        case CalpontSystemCatalog::FLOAT:
-        case CalpontSystemCatalog::CHAR:
-        case CalpontSystemCatalog::TEXT:
-        case CalpontSystemCatalog::VARCHAR:
-        {
-            dayofyear = parm[1]->data()->getStrVal(row, isNull);
-
-            if (atoi(dayofyear.c_str()) < 1)
-            {
-                isNull = true;
-                return 0;
-            }
-
-            break;
-        }
-
-        case CalpontSystemCatalog::DECIMAL:
-        case CalpontSystemCatalog::UDECIMAL:
-        {
-            int64_t tmp = parm[1]->data()->getDecimalVal(row, isNull).toSInt64Round();
-            if (tmp < 1)
-            {
-                isNull = true;
-                return 0;
-            }
-            dayofyear = helpers::intToString(tmp);
-            break;
-        }
-
-        case CalpontSystemCatalog::TIME:
-        {
-            std::ostringstream ss;
-            char buf[9];
-            uint64_t aTime = parm[1]->data()->getTimeIntVal(row, isNull);
-            DataConvert::timeToString1(aTime, buf, 9);
-            dayofyear = buf;
-            break;
-        }
-
-        default:
-            isNull = true;
-            return 0;
-    }
-
-    if (atoi(dayofyear.c_str()) == 0)
-    {
+      int64_t tmp = parm[1]->data()->getDecimalVal(row, isNull).toSInt64Round();
+      if (tmp < 1)
+      {
         isNull = true;
         return 0;
+      }
+      dayofyear = helpers::intToString(tmp);
+      break;
     }
 
-    // convert the year to a date in our internal format, then subtract
-    // one since we are about to add the day of year back in
-    Date d(year, 1, 1);
-    //@Bug 5232. spare bit is set, cannot use regular substraction
-    d.day -= 1;
-    //uint64_t intDate = ((*(reinterpret_cast<uint32_t *> (&d))) & 0xFFFFFFC) - 1;
-    uint64_t intDate = *(reinterpret_cast<uint32_t*> (&d));
-
-    uint64_t value = helpers::dateAdd( intDate, dayofyear, IntervalColumn::INTERVAL_DAY, true, OP_ADD );
-
-    if ( value == 0 )
+    case CalpontSystemCatalog::TIME:
     {
-        isNull = true;
+      std::ostringstream ss;
+      char buf[9];
+      uint64_t aTime = parm[1]->data()->getTimeIntVal(row, isNull);
+      DataConvert::timeToString1(aTime, buf, 9);
+      dayofyear = buf;
+      break;
     }
 
-    return value;
+    default: isNull = true; return 0;
+  }
+
+  if (atoi(dayofyear.c_str()) == 0)
+  {
+    isNull = true;
+    return 0;
+  }
+
+  // convert the year to a date in our internal format, then subtract
+  // one since we are about to add the day of year back in
+  Date d(year, 1, 1);
+  //@Bug 5232. spare bit is set, cannot use regular substraction
+  d.day -= 1;
+  // uint64_t intDate = ((*(reinterpret_cast<uint32_t *> (&d))) & 0xFFFFFFC) - 1;
+  uint64_t intDate = *(reinterpret_cast<uint32_t*>(&d));
+
+  uint64_t value = helpers::dateAdd(intDate, dayofyear, IntervalColumn::INTERVAL_DAY, true, OP_ADD);
+
+  if (value == 0)
+  {
+    isNull = true;
+  }
+
+  return value;
 }
 
-}
-
+}  // namespace
 
 namespace funcexp
 {
-
-CalpontSystemCatalog::ColType Func_makedate::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
+CalpontSystemCatalog::ColType Func_makedate::operationType(FunctionParm& fp,
+                                                           CalpontSystemCatalog::ColType& resultType)
 {
-    return resultType;
+  return resultType;
 }
 
-
-int64_t Func_makedate::getIntVal(rowgroup::Row& row,
-                                 FunctionParm& parm,
-                                 bool& isNull,
+int64_t Func_makedate::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                                  CalpontSystemCatalog::ColType&)
 {
-    return makedate(row, parm, isNull);
+  return makedate(row, parm, isNull);
 }
 
-
-string Func_makedate::getStrVal(rowgroup::Row& row,
-                                FunctionParm& parm,
-                                bool& isNull,
+string Func_makedate::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                                 CalpontSystemCatalog::ColType&)
 {
-    uint64_t value = makedate(row, parm, isNull);
+  uint64_t value = makedate(row, parm, isNull);
 
-    if (isNull)
-        return "";
+  if (isNull)
+    return "";
 
-    return dataconvert::DataConvert::dateToString(value);
+  return dataconvert::DataConvert::dateToString(value);
 }
 
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:

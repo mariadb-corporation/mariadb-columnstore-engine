@@ -25,13 +25,11 @@
 
 namespace datatypes
 {
-
-
 // Convert a positive floating point value to
 // a signed or unsigned integer with rounding
 // SRC - a floating point data type (float, double, float128_t)
 // DST - a signed or unsigned integer data type (int32_t, uint64_t, int128_t, etc)
-template<typename SRC, typename DST>
+template <typename SRC, typename DST>
 DST positiveXFloatToXIntRound(SRC value, DST limit)
 {
   SRC tmp = value + 0.5;
@@ -40,12 +38,11 @@ DST positiveXFloatToXIntRound(SRC value, DST limit)
   return static_cast<DST>(tmp);
 }
 
-
 // Convert a negative floating point value to
 // a signed integer with rounding
 // SRC - a floating point data type (float, double, float128_t)
 // DST - a signed integer data type (int32_t, int64_t, int128_t, etc)
-template<typename SRC, typename DST>
+template <typename SRC, typename DST>
 DST negativeXFloatToXIntRound(SRC value, DST limit)
 {
   SRC tmp = value - 0.5;
@@ -54,40 +51,31 @@ DST negativeXFloatToXIntRound(SRC value, DST limit)
   return static_cast<DST>(tmp);
 }
 
-
 // Convert a floating point value to ColumnStore int64_t
 // Magic values cannot be returned.
-template<typename SRC>
+template <typename SRC>
 int64_t xFloatToMCSSInt64Round(SRC value)
 {
   if (value > 0)
-    return positiveXFloatToXIntRound<SRC, int64_t>(
-                                           value,
-                                           numeric_limits<int64_t>::max());
+    return positiveXFloatToXIntRound<SRC, int64_t>(value, numeric_limits<int64_t>::max());
   if (value < 0)
-    return negativeXFloatToXIntRound<SRC, int64_t>(
-                                           value,
-                                           numeric_limits<int64_t>::min() + 2);
+    return negativeXFloatToXIntRound<SRC, int64_t>(value, numeric_limits<int64_t>::min() + 2);
   return 0;
 }
 
-
 // Convert a floating point value to ColumnStore uint64_t
 // Magic values cannot be returned.
-template<typename SRC>
+template <typename SRC>
 uint64_t xFloatToMCSUInt64Round(SRC value)
 {
   if (value > 0)
-    return positiveXFloatToXIntRound<SRC, uint64_t>(
-                                           value,
-                                           numeric_limits<uint64_t>::max() - 2);
+    return positiveXFloatToXIntRound<SRC, uint64_t>(value, numeric_limits<uint64_t>::max() - 2);
   if (value < 0)
     return negativeXFloatToXIntRound<SRC, uint64_t>(value, 0);
 
   return 0;
 }
 
-
-} //end of namespace datatypes
+}  // end of namespace datatypes
 
 // vim:ts=2 sw=2:

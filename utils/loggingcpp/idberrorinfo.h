@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /******************************************************************************************
-* $Id: idberrorinfo.h 3626 2013-03-11 15:36:08Z xlou $
-*
-******************************************************************************************/
+ * $Id: idberrorinfo.h 3626 2013-03-11 15:36:08Z xlou $
+ *
+ ******************************************************************************************/
 /**
  * @file
  */
@@ -32,7 +32,6 @@
 
 namespace logging
 {
-
 /** @brief an IDB error info class
  *
  * Contains a error message map for looking up and constructing formatted message
@@ -42,25 +41,22 @@ typedef std::map<unsigned, std::string> ErrorMap;
 
 class IDBErrorInfo
 {
-public:
-    static IDBErrorInfo* instance();
-    std::string errorMsg(const unsigned eid, const Message::Args& args);
-    std::string errorMsg(const unsigned eid);
-    std::string errorMsg(const unsigned eid, int i);
-    std::string errorMsg(const unsigned eid, const std::string& s);
-    std::string logError(const logging::LOG_TYPE logLevel,
-                         const LoggingID logid,
-                         const unsigned eid,
-                         const Message::Args& args);
-    ~IDBErrorInfo();
+ public:
+  static IDBErrorInfo* instance();
+  std::string errorMsg(const unsigned eid, const Message::Args& args);
+  std::string errorMsg(const unsigned eid);
+  std::string errorMsg(const unsigned eid, int i);
+  std::string errorMsg(const unsigned eid, const std::string& s);
+  std::string logError(const logging::LOG_TYPE logLevel, const LoggingID logid, const unsigned eid,
+                       const Message::Args& args);
+  ~IDBErrorInfo();
 
-private:
-    static IDBErrorInfo* fInstance;
-    ErrorMap fErrMap;
-    IDBErrorInfo();
-    void format(std::string& messageFormat, const Message::Args& args);
-    std::string lookupError(const unsigned eid);
+ private:
+  static IDBErrorInfo* fInstance;
+  ErrorMap fErrMap;
+  IDBErrorInfo();
+  void format(std::string& messageFormat, const Message::Args& args);
+  std::string lookupError(const unsigned eid);
 };
 
-}//namespace logging
-
+}  // namespace logging

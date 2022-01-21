@@ -20,15 +20,15 @@
 
 namespace utils
 {
-    void setThreadName(const char *threadName)
-    {
-        prctl(PR_SET_NAME, threadName, 0, 0, 0);
-    }
+void setThreadName(const char* threadName)
+{
+  prctl(PR_SET_NAME, threadName, 0, 0, 0);
+}
 
-    std::string getThreadName()
-    {
-      char buf[32];
-      prctl(PR_GET_NAME, buf, 0, 0, 0);
-      return std::string(buf);
-    }
-} // end of namespace
+std::string getThreadName()
+{
+  char buf[32];
+  prctl(PR_GET_NAME, buf, 0, 0, 0);
+  return std::string(buf);
+}
+}  // namespace utils

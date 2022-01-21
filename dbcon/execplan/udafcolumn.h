@@ -42,93 +42,90 @@ namespace execplan
  */
 class UDAFColumn : public AggregateColumn
 {
+ public:
+  /**
+   * Constructors
+   */
+  UDAFColumn();
 
-public:
+  UDAFColumn(const uint32_t sessionID);
 
-    /**
-     * Constructors
-     */
-    UDAFColumn();
+  UDAFColumn(const UDAFColumn& rhs, const uint32_t sessionID = 0);
 
-    UDAFColumn(const uint32_t sessionID);
+  /**
+   * Destructors
+   */
+  virtual ~UDAFColumn();
 
-    UDAFColumn(const UDAFColumn& rhs, const uint32_t sessionID = 0);
+  /**
+   * Overloaded stream operator
+   */
+  virtual const std::string toString() const;
 
-    /**
-     * Destructors
-     */
-    virtual ~UDAFColumn();
+  /** return a copy of this pointer
+   *
+   * deep copy of this pointer and return the copy
+   */
+  virtual UDAFColumn* clone() const
+  {
+    return new UDAFColumn(*this);
+  }
 
-    /**
-     * Overloaded stream operator
-     */
-    virtual const std::string toString() const;
+  /**
+   * Accessors and Mutators
+   */
+  mcsv1sdk::mcsv1Context& getContext()
+  {
+    return context;
+  }
 
-    /** return a copy of this pointer
-     *
-     * deep copy of this pointer and return the copy
-     */
-    virtual UDAFColumn* clone() const
-    {
-        return new UDAFColumn(*this);
-    }
+  /**
+   * Serialize interface
+   */
+  virtual void serialize(messageqcpp::ByteStream&) const;
+  virtual void unserialize(messageqcpp::ByteStream&);
 
-    /**
-     * Accessors and Mutators
-     */
-    mcsv1sdk::mcsv1Context& getContext()
-    {
-        return context;
-    }
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return true iff every member of t is a duplicate copy of every member of this;
+   *         false otherwise
+   */
+  virtual bool operator==(const TreeNode* t) const;
 
-    /**
-     * Serialize interface
-     */
-    virtual void serialize(messageqcpp::ByteStream&) const;
-    virtual void unserialize(messageqcpp::ByteStream&);
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return true iff every member of t is a duplicate copy of every member of this;
+   *         false otherwise
+   */
+  using AggregateColumn::operator==;
+  virtual bool operator==(const UDAFColumn& t) const;
 
-    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-     *
-     * Do a deep, strict (as opposed to semantic) equivalence test.
-     * @return true iff every member of t is a duplicate copy of every member of this;
-     *         false otherwise
-     */
-    virtual bool operator==(const TreeNode* t) const;
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return false iff every member of t is a duplicate copy of every member of this;
+   *         true otherwise
+   */
+  virtual bool operator!=(const TreeNode* t) const;
 
-    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-     *
-     * Do a deep, strict (as opposed to semantic) equivalence test.
-     * @return true iff every member of t is a duplicate copy of every member of this;
-     *         false otherwise
-     */
-    using AggregateColumn::operator==;
-    virtual bool operator==(const UDAFColumn& t) const;
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return false iff every member of t is a duplicate copy of every member of this;
+   *         true otherwise
+   */
+  using AggregateColumn::operator!=;
+  virtual bool operator!=(const UDAFColumn& t) const;
 
-    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-     *
-     * Do a deep, strict (as opposed to semantic) equivalence test.
-     * @return false iff every member of t is a duplicate copy of every member of this;
-     *         true otherwise
-     */
-    virtual bool operator!=(const TreeNode* t) const;
-
-    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-     *
-     * Do a deep, strict (as opposed to semantic) equivalence test.
-     * @return false iff every member of t is a duplicate copy of every member of this;
-     *         true otherwise
-     */
-    using AggregateColumn::operator!=;
-    virtual bool operator!=(const UDAFColumn& t) const;
-
-private:
-    mcsv1sdk::mcsv1Context context;
+ private:
+  mcsv1sdk::mcsv1Context context;
 };
 
 /**
-* stream operator
-*/
+ * stream operator
+ */
 std::ostream& operator<<(std::ostream& os, const UDAFColumn& rhs);
 
-}
-
+}  // namespace execplan

@@ -17,7 +17,6 @@
 
 //  $Id: tuplehavingstep.h 9596 2013-06-04 19:59:04Z xlou $
 
-
 #pragma once
 
 #include "jobstep.h"
@@ -30,7 +29,6 @@ namespace fucexp
 class FuncExp;
 }
 
-
 namespace joblist
 {
 /** @brief class TupleHavingStep
@@ -38,83 +36,83 @@ namespace joblist
  */
 class TupleHavingStep : public ExpressionStep, public TupleDeliveryStep
 {
-public:
-    /** @brief TupleHavingStep constructor
-     */
-    TupleHavingStep(const JobInfo& jobInfo);
+ public:
+  /** @brief TupleHavingStep constructor
+   */
+  TupleHavingStep(const JobInfo& jobInfo);
 
-    /** @brief TupleHavingStep destructor
-     */
-    ~TupleHavingStep();
+  /** @brief TupleHavingStep destructor
+   */
+  ~TupleHavingStep();
 
-    /** @brief virtual void Run method
-     */
-    void run();
-    void join();
+  /** @brief virtual void Run method
+   */
+  void run();
+  void join();
 
-    const std::string toString() const;
+  const std::string toString() const;
 
-    /** @brief TupleJobStep's pure virtual methods
-     */
-    const rowgroup::RowGroup& getOutputRowGroup() const;
-    void  setOutputRowGroup(const rowgroup::RowGroup&);
+  /** @brief TupleJobStep's pure virtual methods
+   */
+  const rowgroup::RowGroup& getOutputRowGroup() const;
+  void setOutputRowGroup(const rowgroup::RowGroup&);
 
-    /** @brief TupleDeliveryStep's pure virtual methods
-     */
-    uint32_t nextBand(messageqcpp::ByteStream& bs);
-    const rowgroup::RowGroup& getDeliveredRowGroup() const;
-    void  deliverStringTableRowGroup(bool b);
-    bool  deliverStringTableRowGroup() const;
+  /** @brief TupleDeliveryStep's pure virtual methods
+   */
+  uint32_t nextBand(messageqcpp::ByteStream& bs);
+  const rowgroup::RowGroup& getDeliveredRowGroup() const;
+  void deliverStringTableRowGroup(bool b);
+  bool deliverStringTableRowGroup() const;
 
-    void initialize(const rowgroup::RowGroup& rgIn, const JobInfo& jobInfo);
-    using ExpressionStep::expressionFilter;
-    void expressionFilter(const execplan::ParseTree* filter, JobInfo& jobInfo);
+  void initialize(const rowgroup::RowGroup& rgIn, const JobInfo& jobInfo);
+  using ExpressionStep::expressionFilter;
+  void expressionFilter(const execplan::ParseTree* filter, JobInfo& jobInfo);
 
-    virtual bool stringTableFriendly()
+  virtual bool stringTableFriendly()
+  {
+    return true;
+  }
+
+ protected:
+  void execute();
+  void doHavingFilters();
+  void formatMiniStats();
+  void printCalTrace();
+
+  // input/output rowgroup and row
+  rowgroup::RowGroup fRowGroupIn;
+  rowgroup::RowGroup fRowGroupOut;
+  rowgroup::Row fRowIn;
+  rowgroup::Row fRowOut;
+
+  // for datalist
+  RowGroupDL* fInputDL;
+  RowGroupDL* fOutputDL;
+  uint64_t fInputIterator;
+
+  class Runner
+  {
+   public:
+    Runner(TupleHavingStep* step) : fStep(step)
     {
-        return true;
+    }
+    void operator()()
+    {
+      utils::setThreadName("HVSRunner");
+      fStep->execute();
     }
 
-protected:
-    void execute();
-    void doHavingFilters();
-    void formatMiniStats();
-    void printCalTrace();
+    TupleHavingStep* fStep;
+  };
 
-    // input/output rowgroup and row
-    rowgroup::RowGroup fRowGroupIn;
-    rowgroup::RowGroup fRowGroupOut;
-    rowgroup::Row fRowIn;
-    rowgroup::Row fRowOut;
+  uint64_t fRunner;  // thread pool handle
 
-    // for datalist
-    RowGroupDL* fInputDL;
-    RowGroupDL* fOutputDL;
-    uint64_t fInputIterator;
+  uint64_t fRowsReturned;
+  bool fEndOfResult;
 
-    class Runner
-    {
-    public:
-        Runner(TupleHavingStep* step) : fStep(step) { }
-        void operator()()
-        {
-            utils::setThreadName("HVSRunner");
-            fStep->execute();
-        }
-
-        TupleHavingStep* fStep;
-    };
-
-    uint64_t fRunner;  // thread pool handle
-
-    uint64_t fRowsReturned;
-    bool     fEndOfResult;
-
-    funcexp::FuncExp* fFeInstance;
+  funcexp::FuncExp* fFeInstance;
 };
 
-
-} // namespace
-
+}  // namespace joblist
 
 // vim:ts=4 sw=4:

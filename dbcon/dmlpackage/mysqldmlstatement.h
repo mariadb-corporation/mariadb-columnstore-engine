@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: mysqldmlstatement.h 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: mysqldmlstatement.h 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 /** @file */
 #pragma once
 #include <string>
@@ -32,14 +32,12 @@ namespace dmlpackage
  */
 class MySQLDMLStatement : public VendorDMLStatement
 {
+ public:
+  MySQLDMLStatement() : VendorDMLStatement("", 0)
+  {
+  }
 
-public:
-    MySQLDMLStatement() : VendorDMLStatement("", 0) {}
-
-protected:
-
-private:
-
+ protected:
+ private:
 };
-}
-
+}  // namespace dmlpackage

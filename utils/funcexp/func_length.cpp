@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_length.cpp 3495 2013-01-21 14:09:51Z rdempsey $
-*
-*
-****************************************************************************/
+ * $Id: func_length.cpp 3495 2013-01-21 14:09:51Z rdempsey $
+ *
+ *
+ ****************************************************************************/
 
 #include <cstdlib>
 #include <string>
@@ -33,29 +33,26 @@ using namespace execplan;
 
 #include "rowgroup.h"
 
-
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_length::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
+CalpontSystemCatalog::ColType Func_length::operationType(FunctionParm& fp,
+                                                         CalpontSystemCatalog::ColType& resultType)
 {
-    CalpontSystemCatalog::ColType ct;
-    ct.colDataType = CalpontSystemCatalog::VARCHAR;
-    ct.colWidth = 255;
-    return ct;
+  CalpontSystemCatalog::ColType ct;
+  ct.colDataType = CalpontSystemCatalog::VARCHAR;
+  ct.colWidth = 255;
+  return ct;
 }
 
-int64_t Func_length::getIntVal(rowgroup::Row& row,
-                               FunctionParm& fp,
-                               bool& isNull,
+int64_t Func_length::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                CalpontSystemCatalog::ColType&)
 {
-    if ((fp[0]->data()->resultType().colDataType == CalpontSystemCatalog::VARBINARY) ||
-            (fp[0]->data()->resultType().colDataType == CalpontSystemCatalog::BLOB))
-        return fp[0]->data()->getStrVal(row, isNull).length();
+  if ((fp[0]->data()->resultType().colDataType == CalpontSystemCatalog::VARBINARY) ||
+      (fp[0]->data()->resultType().colDataType == CalpontSystemCatalog::BLOB))
+    return fp[0]->data()->getStrVal(row, isNull).length();
 
-    return strlen(fp[0]->data()->getStrVal(row, isNull).c_str());
+  return strlen(fp[0]->data()->getStrVal(row, isNull).c_str());
 }
 
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:

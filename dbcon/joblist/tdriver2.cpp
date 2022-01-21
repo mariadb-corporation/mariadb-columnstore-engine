@@ -35,68 +35,69 @@ boost::shared_ptr<CalpontSystemCatalog> csc;
 
 string toString(const string& tb, const string& col)
 {
-    ostringstream oss;
+  ostringstream oss;
 
-    OID_t colOID = csc->lookupOID(make_tcn("calpontsys", tb, col));
-    oss << tb << " " << setw(24) << col << " " << colOID;
-    ColType_t ct = csc->colType(colOID);
-    oss << " " << setw(4) << ct.colWidth << " " << setw(4) << ct.ddn.dictOID << " " << setw(2) << ct.colPosition;
+  OID_t colOID = csc->lookupOID(make_tcn("calpontsys", tb, col));
+  oss << tb << " " << setw(24) << col << " " << colOID;
+  ColType_t ct = csc->colType(colOID);
+  oss << " " << setw(4) << ct.colWidth << " " << setw(4) << ct.ddn.dictOID << " " << setw(2)
+      << ct.colPosition;
 
-    return oss.str();
+  return oss.str();
 }
 
-}
+}  // namespace
 
 int main(int argc, char** argv)
 {
-    csc = CalpontSystemCatalog::makeCalpontSystemCatalog(0);
-    ROPair_t rp;
+  csc = CalpontSystemCatalog::makeCalpontSystemCatalog(0);
+  ROPair_t rp;
 
-    string calpontsys("calpontsys");
-    string table;
+  string calpontsys("calpontsys");
+  string table;
 
-    table = "systable";
-    rp = csc->tableRID(make_table(calpontsys, table));
-    cout << "   " << table << ": " << rp.objnum << endl;
-    cout << toString(table, "tablename") << endl;
-    cout << toString(table, "schema") << endl;
-    cout << toString(table, "objectid") << endl;
-    cout << toString(table, "createdate") << endl;
-    cout << toString(table, "lastupdate") << endl;
-    cout << toString(table, "init") << endl;
-    cout << toString(table, "next") << endl;
-    cout << toString(table, "numofrows") << endl;
-    cout << toString(table, "avgrowlen") << endl;
-    cout << toString(table, "numofblocks") << endl;
-    cout << toString(table, "autoincrement") << endl;
-    cout << endl;
+  table = "systable";
+  rp = csc->tableRID(make_table(calpontsys, table));
+  cout << "   " << table << ": " << rp.objnum << endl;
+  cout << toString(table, "tablename") << endl;
+  cout << toString(table, "schema") << endl;
+  cout << toString(table, "objectid") << endl;
+  cout << toString(table, "createdate") << endl;
+  cout << toString(table, "lastupdate") << endl;
+  cout << toString(table, "init") << endl;
+  cout << toString(table, "next") << endl;
+  cout << toString(table, "numofrows") << endl;
+  cout << toString(table, "avgrowlen") << endl;
+  cout << toString(table, "numofblocks") << endl;
+  cout << toString(table, "autoincrement") << endl;
+  cout << endl;
 
-    table = "syscolumn";
-    rp = csc->tableRID(make_table(calpontsys, table));
-    cout << "   " << table << ": " << rp.objnum << endl;
-    cout << toString(table, "schema") << endl;
-    cout << toString(table, "tablename") << endl;
-    cout << toString(table, "columnname") << endl;
-    cout << toString(table, "objectid") << endl;
-    cout << toString(table, "dictobjectid") << endl;
-    cout << toString(table, "listobjectid") << endl;
-    cout << toString(table, "treeobjectid") << endl;
-    cout << toString(table, "datatype") << endl;
-    cout << toString(table, "columnlength") << endl;
-    cout << toString(table, "columnposition") << endl;
-    cout << toString(table, "lastupdate") << endl;
-    cout << toString(table, "defaultvalue") << endl;
-    cout << toString(table, "nullable") << endl;
-    cout << toString(table, "scale") << endl;
-    cout << toString(table, "prec") << endl;
-    cout << toString(table, "autoincrement") << endl;
-    cout << toString(table, "distcount") << endl;
-    cout << toString(table, "nullcount") << endl;
-    cout << toString(table, "minvalue") << endl;
-    cout << toString(table, "maxvalue") << endl;
-    cout << toString(table, "compressiontype") << endl;
-    cout << toString(table, "nextvalue") << endl;
-    cout << endl;
+  table = "syscolumn";
+  rp = csc->tableRID(make_table(calpontsys, table));
+  cout << "   " << table << ": " << rp.objnum << endl;
+  cout << toString(table, "schema") << endl;
+  cout << toString(table, "tablename") << endl;
+  cout << toString(table, "columnname") << endl;
+  cout << toString(table, "objectid") << endl;
+  cout << toString(table, "dictobjectid") << endl;
+  cout << toString(table, "listobjectid") << endl;
+  cout << toString(table, "treeobjectid") << endl;
+  cout << toString(table, "datatype") << endl;
+  cout << toString(table, "columnlength") << endl;
+  cout << toString(table, "columnposition") << endl;
+  cout << toString(table, "lastupdate") << endl;
+  cout << toString(table, "defaultvalue") << endl;
+  cout << toString(table, "nullable") << endl;
+  cout << toString(table, "scale") << endl;
+  cout << toString(table, "prec") << endl;
+  cout << toString(table, "autoincrement") << endl;
+  cout << toString(table, "distcount") << endl;
+  cout << toString(table, "nullcount") << endl;
+  cout << toString(table, "minvalue") << endl;
+  cout << toString(table, "maxvalue") << endl;
+  cout << toString(table, "compressiontype") << endl;
+  cout << toString(table, "nextvalue") << endl;
+  cout << endl;
 #if 0
     table = "sysindexcol";
     rp = csc->tableRID(make_table(calpontsys, table));
@@ -157,6 +158,5 @@ int main(int argc, char** argv)
     cout << toString(table, "lastanalysisdate") << endl;
     cout << endl;
 #endif
-    return 0;
+  return 0;
 }
-

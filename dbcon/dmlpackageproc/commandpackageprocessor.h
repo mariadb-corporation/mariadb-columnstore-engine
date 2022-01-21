@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: commandpackageprocessor.h 9302 2013-03-07 16:06:59Z chao $
-*
-*
-***********************************************************************/
+ *   $Id: commandpackageprocessor.h 9302 2013-03-07 16:06:59Z chao $
+ *
+ *
+ ***********************************************************************/
 /** @file */
 
 #pragma once
@@ -42,38 +42,32 @@
 namespace dmlpackageprocessor
 {
 /** @brief concrete implementation of a DMLPackageProcessor.
-  * Specifically for interacting with the Write Engine to
-  * process INSERT dml statements.
-  */
+ * Specifically for interacting with the Write Engine to
+ * process INSERT dml statements.
+ */
 class CommandPackageProcessor : public DMLPackageProcessor
 {
+ public:
+  CommandPackageProcessor(BRM::DBRM* aDbrm, uint32_t sid) : DMLPackageProcessor(aDbrm, sid)
+  {
+  }
+  /** @brief process an CommandDMLPackage
+   *
+   * @param cpackage the CommandDMLPackage to process
+   */
+  EXPORT DMLResult processPackage(dmlpackage::CalpontDMLPackage& cpackage);
 
-public:
-    CommandPackageProcessor(BRM::DBRM* aDbrm, uint32_t sid) : DMLPackageProcessor(aDbrm, sid) {}
-    /** @brief process an CommandDMLPackage
-      *
-      * @param cpackage the CommandDMLPackage to process
-      */
-    EXPORT DMLResult processPackage(dmlpackage::CalpontDMLPackage& cpackage);
+ protected:
+ private:
+  void viewTableLock(const dmlpackage::CalpontDMLPackage& cpackage, DMLResult& result);
+  void clearTableLock(uint64_t uniqueId, const dmlpackage::CalpontDMLPackage& cpackage, DMLResult& result);
+  void establishTableLockToClear(uint64_t tableLockID, BRM::TableLockInfo& lockInfo);
 
-protected:
-
-private:
-    void viewTableLock(const dmlpackage::CalpontDMLPackage& cpackage,
-                       DMLResult& result );
-    void clearTableLock(uint64_t uniqueId,
-                        const dmlpackage::CalpontDMLPackage& cpackage,
-                        DMLResult& result );
-    void establishTableLockToClear(uint64_t tableLockID,
-                                   BRM::TableLockInfo& lockInfo);
-
-    // Tracks active cleartablelock commands by storing set of table lock IDs
-    static std::set<uint64_t> fActiveClearTableLockCmds;
-    static boost::mutex       fActiveClearTableLockCmdMutex;
+  // Tracks active cleartablelock commands by storing set of table lock IDs
+  static std::set<uint64_t> fActiveClearTableLockCmds;
+  static boost::mutex fActiveClearTableLockCmdMutex;
 };
 
-}
+}  // namespace dmlpackageprocessor
 
 #undef EXPORT
-
-

@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: arithmeticoperator.cpp 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: arithmeticoperator.cpp 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 #include <iostream>
 
 #include "bytestream.h"
@@ -30,28 +30,24 @@ using namespace std;
 
 namespace execplan
 {
-
 /**
  * Constructors/Destructors
  */
-ArithmeticOperator::ArithmeticOperator() : Operator(), 
-    fDecimalOverflowCheck(false)
+ArithmeticOperator::ArithmeticOperator() : Operator(), fDecimalOverflowCheck(false)
 {
 }
 
-ArithmeticOperator::ArithmeticOperator(const string& operatorName): Operator(operatorName),
-    fDecimalOverflowCheck(false)
+ArithmeticOperator::ArithmeticOperator(const string& operatorName)
+ : Operator(operatorName), fDecimalOverflowCheck(false)
 {
 }
 
-ArithmeticOperator::ArithmeticOperator(const ArithmeticOperator& rhs):
-    Operator(rhs),
-    fTimeZone(rhs.timeZone()),
-    fDecimalOverflowCheck(rhs.getOverflowCheck())
+ArithmeticOperator::ArithmeticOperator(const ArithmeticOperator& rhs)
+ : Operator(rhs), fTimeZone(rhs.timeZone()), fDecimalOverflowCheck(rhs.getOverflowCheck())
 {
 }
 
-ArithmeticOperator:: ~ArithmeticOperator()
+ArithmeticOperator::~ArithmeticOperator()
 {
 }
 
@@ -64,10 +60,10 @@ ArithmeticOperator:: ~ArithmeticOperator()
  */
 ostream& operator<<(ostream& output, const ArithmeticOperator& rhs)
 {
-    output << rhs.toString();
-    output << "opType=" << rhs.operationType().colDataType << endl;
-    output << "decimalOverflowCheck=" << rhs.getOverflowCheck() << endl;
-    return output;
+  output << rhs.toString();
+  output << "opType=" << rhs.operationType().colDataType << endl;
+  output << "decimalOverflowCheck=" << rhs.getOverflowCheck() << endl;
+  return output;
 }
 
 /**
@@ -75,72 +71,71 @@ ostream& operator<<(ostream& output, const ArithmeticOperator& rhs)
  */
 void ArithmeticOperator::serialize(messageqcpp::ByteStream& b) const
 {
-    b << (ObjectReader::id_t) ObjectReader::ARITHMETICOPERATOR;
-    b << fTimeZone;
-    const messageqcpp::ByteStream::byte tmp = fDecimalOverflowCheck;
-    b << tmp;
-    Operator::serialize(b);
+  b << (ObjectReader::id_t)ObjectReader::ARITHMETICOPERATOR;
+  b << fTimeZone;
+  const messageqcpp::ByteStream::byte tmp = fDecimalOverflowCheck;
+  b << tmp;
+  Operator::serialize(b);
 }
 
 void ArithmeticOperator::unserialize(messageqcpp::ByteStream& b)
 {
-    ObjectReader::checkType(b, ObjectReader::ARITHMETICOPERATOR);
-    b >> fTimeZone;
-    messageqcpp::ByteStream::byte tmp;
-    b >> tmp;
-    fDecimalOverflowCheck = tmp;
-    Operator::unserialize(b);
+  ObjectReader::checkType(b, ObjectReader::ARITHMETICOPERATOR);
+  b >> fTimeZone;
+  messageqcpp::ByteStream::byte tmp;
+  b >> tmp;
+  fDecimalOverflowCheck = tmp;
+  Operator::unserialize(b);
 }
 
 bool ArithmeticOperator::operator==(const ArithmeticOperator& t) const
 {
-    if (data() != t.data())
-        return false;
+  if (data() != t.data())
+    return false;
 
-    if (timeZone() != t.timeZone())
-        return false;
+  if (timeZone() != t.timeZone())
+    return false;
 
-    return true;
+  return true;
 }
 
 bool ArithmeticOperator::operator==(const TreeNode* t) const
 {
-    const ArithmeticOperator* o;
+  const ArithmeticOperator* o;
 
-    o = dynamic_cast<const ArithmeticOperator*>(t);
+  o = dynamic_cast<const ArithmeticOperator*>(t);
 
-    if (o == NULL)
-        return false;
+  if (o == NULL)
+    return false;
 
-    return *this == *o;
+  return *this == *o;
 }
 
 bool ArithmeticOperator::operator!=(const ArithmeticOperator& t) const
 {
-    return (!(*this == t));
+  return (!(*this == t));
 }
 
 bool ArithmeticOperator::operator!=(const TreeNode* t) const
 {
-    return (!(*this == t));
+  return (!(*this == t));
 }
 
 void ArithmeticOperator::adjustResultType(const CalpontSystemCatalog::ColType& m)
 {
-    if (m.colDataType != CalpontSystemCatalog::DECIMAL &&
-        m.colDataType != CalpontSystemCatalog::UDECIMAL)
-    {
-        fResultType = m;
-    }
-    else
-    {
-        CalpontSystemCatalog::ColType n;
-        n.colDataType = CalpontSystemCatalog::LONGDOUBLE;
-        n.scale = m.scale; // @bug5736, save the original decimal scale
-        n.precision = -1;  // @bug5736, indicate this double is for decimal math
-        n.colWidth = sizeof(long double);
-        fResultType = n;
-    }
+  if (m.colDataType != CalpontSystemCatalog::DECIMAL && m.colDataType != CalpontSystemCatalog::UDECIMAL)
+  {
+    fResultType = m;
+  }
+  else
+  {
+    CalpontSystemCatalog::ColType n;
+    n.colDataType = CalpontSystemCatalog::LONGDOUBLE;
+    n.scale = m.scale;  // @bug5736, save the original decimal scale
+    n.precision = -1;   // @bug5736, indicate this double is for decimal math
+    n.colWidth = sizeof(long double);
+    fResultType = n;
+  }
 }
 
-}  // namespace
+}  // namespace execplan

@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: sqlstatementlist.cpp 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: sqlstatementlist.cpp 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 
 #define DDLPKG_DLLEXPORT
 #include "ddlpkg.h"
@@ -29,35 +29,32 @@ namespace ddlpackage
 {
 using namespace std;
 
-
 ostream& operator<<(ostream& os, const SqlStatementList& ssl)
 {
-    vector<SqlStatement*>::const_iterator itr;
+  vector<SqlStatement*>::const_iterator itr;
 
-    for (itr = ssl.fList.begin(); itr != ssl.fList.end(); ++itr)
-    {
-        SqlStatement& stmt = **itr;
-        os << stmt;
-    }
+  for (itr = ssl.fList.begin(); itr != ssl.fList.end(); ++itr)
+  {
+    SqlStatement& stmt = **itr;
+    os << stmt;
+  }
 
-    return os;
+  return os;
 }
-
 
 void SqlStatementList::push_back(SqlStatement* v)
 {
-    fList.push_back(v);
+  fList.push_back(v);
 }
-
 
 SqlStatementList::~SqlStatementList()
 {
-    vector<SqlStatement*>::iterator itr;
+  vector<SqlStatement*>::iterator itr;
 
-    for (itr = fList.begin(); itr != fList.end(); ++itr)
-    {
-        delete *itr;
-    }
+  for (itr = fList.begin(); itr != fList.end(); ++itr)
+  {
+    delete *itr;
+  }
 }
 
-}
+}  // namespace ddlpackage

@@ -37,38 +37,37 @@
 
 namespace joblist
 {
-
 class RTSCommandJL : public CommandJL
 {
-public:
-    RTSCommandJL(const pColStep&, const pDictionaryStep&);
-    RTSCommandJL(const PassThruStep&, const pDictionaryStep&);
-    virtual ~RTSCommandJL();
+ public:
+  RTSCommandJL(const pColStep&, const pDictionaryStep&);
+  RTSCommandJL(const PassThruStep&, const pDictionaryStep&);
+  virtual ~RTSCommandJL();
 
-    void setLBID(uint64_t data, uint32_t dbroot);		// converts a rid or dictionary token to an LBID.  For ColumnCommandJL it's a RID, for a DictStep it's a token.
-    uint8_t getTableColumnType();
-    std::string toString();
-    bool isPassThru()
-    {
-        return (passThru != 0);
-    }
-    uint16_t getWidth();
-    CommandType getCommandType()
-    {
-        return RID_TO_STRING;
-    }
+  void setLBID(uint64_t data, uint32_t dbroot);  // converts a rid or dictionary token to an LBID.  For
+                                                 // ColumnCommandJL it's a RID, for a DictStep it's a token.
+  uint8_t getTableColumnType();
+  std::string toString();
+  bool isPassThru()
+  {
+    return (passThru != 0);
+  }
+  uint16_t getWidth();
+  CommandType getCommandType()
+  {
+    return RID_TO_STRING;
+  }
 
-    void createCommand(messageqcpp::ByteStream&) const;
-    void runCommand(messageqcpp::ByteStream&) const;
+  void createCommand(messageqcpp::ByteStream&) const;
+  void runCommand(messageqcpp::ByteStream&) const;
 
-private:
-    RTSCommandJL();
-    RTSCommandJL(const RTSCommandJL&);
+ private:
+  RTSCommandJL();
+  RTSCommandJL(const RTSCommandJL&);
 
-    boost::scoped_ptr<ColumnCommandJL> col;
-    boost::scoped_ptr<DictStepJL> dict;
-    uint8_t passThru;
+  boost::scoped_ptr<ColumnCommandJL> col;
+  boost::scoped_ptr<DictStepJL> dict;
+  uint8_t passThru;
 };
 
-};
-
+};  // namespace joblist

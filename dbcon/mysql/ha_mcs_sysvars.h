@@ -28,26 +28,29 @@ extern char cs_version[];
 extern char cs_commit_hash[];
 
 // compression_type
-enum mcs_compression_type_t {
-    NO_COMPRESSION = 0,
-    SNAPPY = 2,
+enum mcs_compression_type_t
+{
+  NO_COMPRESSION = 0,
+  SNAPPY = 2,
 #ifdef HAVE_LZ4
-    LZ4 = 3
+  LZ4 = 3
 #endif
 };
 
 // use_import_for_batchinsert mode
-enum class mcs_use_import_for_batchinsert_mode_t {
-    OFF = 0,
-    ON = 1,
-    ALWAYS = 2
+enum class mcs_use_import_for_batchinsert_mode_t
+{
+  OFF = 0,
+  ON = 1,
+  ALWAYS = 2
 };
 
 // select_handler mode
-enum class mcs_select_handler_mode_t {
-    OFF = 0,
-    ON = 1,
-    AUTO = 2
+enum class mcs_select_handler_mode_t
+{
+  OFF = 0,
+  ON = 1,
+  AUTO = 2
 };
 
 // simple setters/getters
@@ -140,4 +143,3 @@ void set_cache_use_import(THD* thd, bool value);
 
 ulonglong get_cache_flush_threshold(THD* thd);
 void set_cache_flush_threshold(THD* thd, ulonglong value);
-

@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id$
-*
-*   covar_pop.h
-***********************************************************************/
+ *   $Id$
+ *
+ *   covar_pop.h
+ ***********************************************************************/
 
 /**
  * Columnstore interface for for the covar_pop function
@@ -51,34 +51,30 @@
 
 namespace mcsv1sdk
 {
-
 // Return the covar_pop value of the dataset
 
-class covar_pop : public  mcsv1_UDAF
+class covar_pop : public mcsv1_UDAF
 {
-public:
-    // Defaults OK
-    covar_pop() : mcsv1_UDAF() {};
-    virtual ~covar_pop() {};
+ public:
+  // Defaults OK
+  covar_pop() : mcsv1_UDAF(){};
+  virtual ~covar_pop(){};
 
-    virtual ReturnCode init(mcsv1Context* context,
-                            ColumnDatum* colTypes);
+  virtual ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes);
 
-    virtual ReturnCode reset(mcsv1Context* context);
+  virtual ReturnCode reset(mcsv1Context* context);
 
-    virtual ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn);
+  virtual ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn);
 
-    virtual ReturnCode subEvaluate(mcsv1Context* context, const UserData* valIn);
+  virtual ReturnCode subEvaluate(mcsv1Context* context, const UserData* valIn);
 
-    virtual ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut);
+  virtual ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut);
 
-    virtual ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
+  virtual ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
 
-protected:
+ protected:
 };
 
-};  // namespace
+};  // namespace mcsv1sdk
 
 #undef EXPORT
-
-

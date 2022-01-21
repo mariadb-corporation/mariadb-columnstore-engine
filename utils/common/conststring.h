@@ -15,31 +15,38 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-
 #pragma once
-
 
 #include <string>
 #include <string.h>
 
 namespace utils
 {
-
 class ConstString
 {
-protected:
-  const char *mStr;
+ protected:
+  const char* mStr;
   size_t mLength;
-public:
-  ConstString(const char *str, size_t length)
-      :mStr(str), mLength(length)
-  { }
-  explicit ConstString(const std::string &str)
-      :mStr(str.data()), mLength(str.length())
-  { }
-  const char *str() const { return mStr; }
-  const char *end() const { return mStr + mLength; }
-  size_t length() const { return mLength; }
+
+ public:
+  ConstString(const char* str, size_t length) : mStr(str), mLength(length)
+  {
+  }
+  explicit ConstString(const std::string& str) : mStr(str.data()), mLength(str.length())
+  {
+  }
+  const char* str() const
+  {
+    return mStr;
+  }
+  const char* end() const
+  {
+    return mStr + mLength;
+  }
+  size_t length() const
+  {
+    return mLength;
+  }
   std::string toString() const
   {
     return std::string(mStr, mLength);
@@ -48,18 +55,17 @@ public:
   {
     return mLength == 1 && mStr[0] == ch;
   }
-  bool eq(const ConstString &rhs) const
+  bool eq(const ConstString& rhs) const
   {
     return mLength == rhs.mLength && !memcmp(mStr, rhs.mStr, mLength);
   }
-  ConstString & rtrimZero()
+  ConstString& rtrimZero()
   {
-    for ( ; mLength && mStr[mLength - 1] == '\0'; mLength--)
-    { }
+    for (; mLength && mStr[mLength - 1] == '\0'; mLength--)
+    {
+    }
     return *this;
   }
 };
 
-
-} // namespace utils
-
+}  // namespace utils

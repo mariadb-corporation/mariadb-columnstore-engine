@@ -42,7 +42,7 @@ using namespace std;
 
 class ColumnScanFilterTest : public ::testing::Test
 {
-protected:
+ protected:
   PrimitiveProcessor pp;
   uint8_t input[BLOCK_SIZE];
   alignas(utils::MAXCOLUMNWIDTH) uint8_t output[4 * BLOCK_SIZE];
@@ -52,7 +52,7 @@ protected:
   NewColRequestHeader* in;
   ColResultHeader* out;
   ColArgs* args;
-  
+
   void SetUp() override
   {
     memset(input, 0, BLOCK_SIZE);
@@ -72,32 +72,31 @@ protected:
 
     if (fd < 0)
     {
-        cerr << "getBlock(): skipping this test; needs the index list file "
-             << fileName << endl;
-        return nullptr;
+      cerr << "getBlock(): skipping this test; needs the index list file " << fileName << endl;
+      return nullptr;
     }
 
     i = read(fd, block, BLOCK_SIZE);
 
     if (i <= 0)
     {
-        cerr << "getBlock(): Couldn't read the file " << fileName << endl;
-        close(fd);
-        return nullptr;
+      cerr << "getBlock(): Couldn't read the file " << fileName << endl;
+      close(fd);
+      return nullptr;
     }
 
     if (i != BLOCK_SIZE)
     {
-        cerr << "getBlock(): could not read a whole block" << endl;
-        close(fd);
-        return nullptr;
+      cerr << "getBlock(): could not read a whole block" << endl;
+      close(fd);
+      return nullptr;
     }
 
     close(fd);
     return block;
- }
- uint8_t* readBlockFromLiteralArray(const std::string& fileName, uint8_t* block)
- {
+  }
+  uint8_t* readBlockFromLiteralArray(const std::string& fileName, uint8_t* block)
+  {
     if (fileName == std::string("col1block.cdf"))
       return &__col1block_cdf[0];
     else if (fileName == std::string("col2block.cdf"))
@@ -118,7 +117,7 @@ protected:
       return &___bin_col_neg_double_cdf[0];
 
     return nullptr;
- }
+  }
 };
 
 TEST_F(ColumnScanFilterTest, ColumnScan1Byte)
@@ -134,14 +133,14 @@ TEST_F(ColumnScanFilterTest, ColumnScan1Byte)
   in->NOPS = 0;
   in->NVALS = 0;
 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col1block.cdf", block));
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col1block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out);
 
   results = getValuesArrayPosition<UT>(getFirstValueArrayPosition(out), 0);
   EXPECT_EQ(out->NVALS, 8160);
 
   for (i = 0; i < 300; i++)
-      EXPECT_EQ(results[i],i % 255);
+    EXPECT_EQ(results[i], i % 255);
   // Can't check Min/Max for char columns until MCOL-4871
 }
 
@@ -158,23 +157,23 @@ TEST_F(ColumnScanFilterTest, ColumnScan1ByteVectorized)
   in->NOPS = 0;
   in->NVALS = 0;
 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col1block.cdf", block));
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col1block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out);
 
   results = getValuesArrayPosition<UT>(getFirstValueArrayPosition(out), 0);
   EXPECT_EQ(out->NVALS, 8160);
 
   for (i = 0; i < 128; ++i)
-    EXPECT_EQ(results[i],i);
+    EXPECT_EQ(results[i], i);
 
   for (i = 129; i < 255; ++i)
-    EXPECT_EQ(results[i],i + 1);
+    EXPECT_EQ(results[i], i + 1);
 
   EXPECT_EQ(results[8032], 0x7F);
   EXPECT_EQ(results[8033], 0x80);
 
   for (i = 8034; i < 8160; ++i)
-    EXPECT_EQ(results[i],i % 255 + 1);
+    EXPECT_EQ(results[i], i % 255 + 1);
 
   EXPECT_EQ(out->Max, __col1block_cdf_umax);
   EXPECT_EQ(out->Min, __col1block_cdf_umin);
@@ -192,14 +191,14 @@ TEST_F(ColumnScanFilterTest, ColumnScan2Bytes)
   in->NOPS = 0;
   in->NVALS = 0;
 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col2block.cdf", block));
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col2block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out);
 
   results = getValuesArrayPosition<UT>(getFirstValueArrayPosition(out), 0);
   EXPECT_EQ(out->NVALS, 4096);
 
   for (i = 0; i < out->NVALS; i++)
-      EXPECT_EQ(results[i], i);
+    EXPECT_EQ(results[i], i);
 
   EXPECT_EQ(out->Max, __col2block_cdf_umax);
   EXPECT_EQ(out->Min, __col2block_cdf_umin);
@@ -217,14 +216,14 @@ TEST_F(ColumnScanFilterTest, ColumnScan4Bytes)
   in->NOPS = 0;
   in->NVALS = 0;
 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col4block.cdf", block));
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col4block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out);
 
   results = getValuesArrayPosition<UT>(getFirstValueArrayPosition(out), 0);
   EXPECT_EQ(out->NVALS, 2048);
 
   for (i = 0; i < out->NVALS; i++)
-      EXPECT_EQ(results[i], (uint32_t) i);
+    EXPECT_EQ(results[i], (uint32_t)i);
   EXPECT_EQ(out->Max, __col4block_cdf_umax);
   EXPECT_EQ(out->Min, __col4block_cdf_umin);
 }
@@ -241,14 +240,14 @@ TEST_F(ColumnScanFilterTest, ColumnScan8Bytes)
   in->NOPS = 0;
   in->NVALS = 0;
 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col8block.cdf", block));
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col8block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out);
 
   results = getValuesArrayPosition<UT>(getFirstValueArrayPosition(out), 0);
   ASSERT_EQ(out->NVALS, 1024);
 
   for (i = 0; i < out->NVALS; i++)
-      ASSERT_EQ(results[i], (uint32_t) i);
+    ASSERT_EQ(results[i], (uint32_t)i);
   EXPECT_EQ(out->Max, __col8block_cdf_umax);
   EXPECT_EQ(out->Min, __col8block_cdf_umin);
 }
@@ -267,14 +266,14 @@ TEST_F(ColumnScanFilterTest, ColumnScan2Bytes1EqFilter)
   in->NOPS = 1;
   in->BOP = BOP_AND;
   in->NVALS = 0;
-  
+
   tmp = 50;
   args->COP = COMPARE_LE;
   memcpy(args->val, &tmp, in->colType.DataSize);
-  args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader) +
-                                           sizeof(ColArgs) + in->colType.DataSize]);
+  args = reinterpret_cast<ColArgs*>(
+      &input[sizeof(NewColRequestHeader) + sizeof(ColArgs) + in->colType.DataSize]);
 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col2block.cdf", block));
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col2block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out);
 
   results = getValuesArrayPosition<UT>(getFirstValueArrayPosition(out), 0);
@@ -299,14 +298,14 @@ TEST_F(ColumnScanFilterTest, ColumnScan1ByteUsingRID)
   rids[0] = 20;
   rids[1] = 17;
 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col1block.cdf", block));
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col1block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out);
 
   results = getValuesArrayPosition<UT>(getFirstValueArrayPosition(out), 0);
   ASSERT_EQ(out->NVALS, 2);
 
   for (i = 0; i < out->NVALS; ++i)
-      ASSERT_EQ(results[i], rids[i]);
+    ASSERT_EQ(results[i], rids[i]);
 }
 
 TEST_F(ColumnScanFilterTest, ColumnScan1ByteUsingMultipleRIDs)
@@ -328,7 +327,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan1ByteUsingMultipleRIDs)
   rids[1] = 17;
   rids[126] = 8189;
 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col1block.cdf", block));
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col1block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out);
 
   results = getValuesArrayPosition<UT>(getFirstValueArrayPosition(out), 0);
@@ -353,14 +352,14 @@ TEST_F(ColumnScanFilterTest, ColumnScan4Bytes1EqFilter)
   in->NOPS = 1;
   in->BOP = BOP_AND;
   in->NVALS = 0;
-  
+
   tmp = 2040;
   args->COP = COMPARE_GE;
   memcpy(args->val, &tmp, in->colType.DataSize);
-  args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader) +
-                                           sizeof(ColArgs) + in->colType.DataSize]);
+  args = reinterpret_cast<ColArgs*>(
+      &input[sizeof(NewColRequestHeader) + sizeof(ColArgs) + in->colType.DataSize]);
 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col4block.cdf", block));
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col4block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out);
 
   results = getValuesArrayPosition<UT>(getFirstValueArrayPosition(out), 0);
@@ -387,8 +386,8 @@ TEST_F(ColumnScanFilterTest, ColumnScan4BytesUsingMultipleRIDs)
   rids[0] = 20;
   rids[1] = 17;
   rids[126] = 1020;
- 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col4block.cdf", block));
+
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col4block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out);
 
   results = getValuesArrayPosition<UT>(getFirstValueArrayPosition(out), 0);
@@ -416,20 +415,20 @@ TEST_F(ColumnScanFilterTest, ColumnScan4Bytes2Filters)
   tmp = 20;
   args->COP = COMPARE_LT;
   memcpy(args->val, &tmp, in->colType.DataSize);
-  args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader) +
-                                           sizeof(ColArgs) + in->colType.DataSize]);
+  args = reinterpret_cast<ColArgs*>(
+      &input[sizeof(NewColRequestHeader) + sizeof(ColArgs) + in->colType.DataSize]);
   args->COP = COMPARE_GT;
   tmp = 10;
   memcpy(args->val, &tmp, in->colType.DataSize);
 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col4block.cdf", block));
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col4block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out);
 
   results = getValuesArrayPosition<UT>(getFirstValueArrayPosition(out), 0);
   ASSERT_EQ(out->NVALS, 9);
 
   for (i = 0; i < out->NVALS; i++)
-      ASSERT_EQ(results[i], 11 + (uint32_t)i);
+    ASSERT_EQ(results[i], 11 + (uint32_t)i);
 
   EXPECT_EQ(out->Max, __col4block_cdf_umax);
   EXPECT_EQ(out->Min, __col4block_cdf_umin);
@@ -449,14 +448,14 @@ TEST_F(ColumnScanFilterTest, ColumnScan8Bytes1EqFilter)
   in->NOPS = 1;
   in->BOP = BOP_AND;
   in->NVALS = 0;
-  
+
   tmp = 11;
   args->COP = COMPARE_LT;
   memcpy(args->val, &tmp, in->colType.DataSize);
-  args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader) +
-                                           sizeof(ColArgs) + in->colType.DataSize]);
+  args = reinterpret_cast<ColArgs*>(
+      &input[sizeof(NewColRequestHeader) + sizeof(ColArgs) + in->colType.DataSize]);
 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col8block.cdf", block));
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col8block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out);
 
   results = getValuesArrayPosition<UT>(getFirstValueArrayPosition(out), 0);
@@ -486,8 +485,8 @@ TEST_F(ColumnScanFilterTest, ColumnScan8BytesUsingMultipleRIDs)
   rids[0] = 20;
   rids[1] = 17;
   rids[126] = 1020;
- 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col8block.cdf", block));
+
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col8block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out);
 
   results = getValuesArrayPosition<UT>(getFirstValueArrayPosition(out), 0);
@@ -498,7 +497,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan8BytesUsingMultipleRIDs)
   ASSERT_EQ(results[126], 1020);
 }
 
-//void p_Col_7()
+// void p_Col_7()
 TEST_F(ColumnScanFilterTest, ColumnScan8Bytes2CompFilters)
 {
   constexpr const uint8_t W = 8;
@@ -513,24 +512,24 @@ TEST_F(ColumnScanFilterTest, ColumnScan8Bytes2CompFilters)
   in->NOPS = 2;
   in->BOP = BOP_OR;
   in->NVALS = 0;
-  
+
   tmp = 10;
   args->COP = COMPARE_LT;
   memcpy(args->val, &tmp, in->colType.DataSize);
-  args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader) +
-                                           sizeof(ColArgs) + in->colType.DataSize]);
+  args = reinterpret_cast<ColArgs*>(
+      &input[sizeof(NewColRequestHeader) + sizeof(ColArgs) + in->colType.DataSize]);
   args->COP = COMPARE_GT;
   tmp = 1000;
   memcpy(args->val, &tmp, in->colType.DataSize);
 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col8block.cdf", block));
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col8block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out);
 
   results = getValuesArrayPosition<UT>(getFirstValueArrayPosition(out), 0);
   ASSERT_EQ(out->NVALS, 33);
 
   for (i = 0; i < out->NVALS; i++)
-      ASSERT_EQ(results[i], (uint32_t) (i < 10 ? i : i - 10 + 1001));
+    ASSERT_EQ(results[i], (uint32_t)(i < 10 ? i : i - 10 + 1001));
 
   EXPECT_EQ(out->Max, __col8block_cdf_umax);
   EXPECT_EQ(out->Min, __col8block_cdf_umin);
@@ -554,13 +553,13 @@ TEST_F(ColumnScanFilterTest, ColumnScan8Bytes2EqFilters)
   tmp = 10;
   args->COP = COMPARE_EQ;
   memcpy(args->val, &tmp, in->colType.DataSize);
-  args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader) +
-                                    sizeof(ColArgs) + in->colType.DataSize]);
+  args = reinterpret_cast<ColArgs*>(
+      &input[sizeof(NewColRequestHeader) + sizeof(ColArgs) + in->colType.DataSize]);
   args->COP = COMPARE_EQ;
   tmp = 1000;
   memcpy(args->val, &tmp, in->colType.DataSize);
 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col8block.cdf", block));
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col8block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out);
 
   results = getValuesArrayPosition<UT>(getFirstValueArrayPosition(out), 0);
@@ -590,19 +589,19 @@ TEST_F(ColumnScanFilterTest, ColumnScan8Bytes2EqFiltersRID)
   tmp = 10;
   args->COP = COMPARE_EQ;
   memcpy(args->val, &tmp, in->colType.DataSize);
-  args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader) +
-                                           sizeof(ColArgs) + in->colType.DataSize]);
+  args = reinterpret_cast<ColArgs*>(
+      &input[sizeof(NewColRequestHeader) + sizeof(ColArgs) + in->colType.DataSize]);
   args->COP = COMPARE_EQ;
   tmp = 1000;
   memcpy(args->val, &tmp, in->colType.DataSize);
 
-  rids = reinterpret_cast<uint16_t*>(&input[sizeof(NewColRequestHeader) +
-                                     2 * (sizeof(ColArgs) + in->colType.DataSize)]);
+  rids = reinterpret_cast<uint16_t*>(
+      &input[sizeof(NewColRequestHeader) + 2 * (sizeof(ColArgs) + in->colType.DataSize)]);
 
   rids[0] = 10;
   rids[1] = 100;
 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col8block.cdf", block));
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col8block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out);
 
   results = getValuesArrayPosition<UT>(getFirstValueArrayPosition(out), 0);
@@ -623,17 +622,17 @@ TEST_F(ColumnScanFilterTest, ColumnScan8Bytes2FiltersRIDOutputRid)
   in->NOPS = 2;
   in->BOP = BOP_OR;
   in->NVALS = 0;
-  
+
   tmp = 10;
   args->COP = COMPARE_LT;
   memcpy(args->val, &tmp, in->colType.DataSize);
-  args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader) +
-                                           sizeof(ColArgs) + in->colType.DataSize]);
+  args = reinterpret_cast<ColArgs*>(
+      &input[sizeof(NewColRequestHeader) + sizeof(ColArgs) + in->colType.DataSize]);
   args->COP = COMPARE_GT;
   tmp = 1000;
   memcpy(args->val, &tmp, in->colType.DataSize);
 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col8block.cdf", block));
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col8block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out);
 
   results = getValuesArrayPosition<RIDType>(getFirstRIDArrayPosition(out), 0);
@@ -659,31 +658,31 @@ TEST_F(ColumnScanFilterTest, ColumnScan8Bytes2EqFiltersRIDOutputBoth)
   in->NOPS = 2;
   in->BOP = BOP_OR;
   in->NVALS = 0;
-  
+
   tmp = 10;
   args->COP = COMPARE_LT;
   memcpy(args->val, &tmp, in->colType.DataSize);
-  args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader) +
-                                           sizeof(ColArgs) + in->colType.DataSize]);
+  args = reinterpret_cast<ColArgs*>(
+      &input[sizeof(NewColRequestHeader) + sizeof(ColArgs) + in->colType.DataSize]);
   args->COP = COMPARE_GT;
   tmp = 1000;
   memcpy(args->val, &tmp, in->colType.DataSize);
 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col8block.cdf", block));
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col8block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out);
 
   ASSERT_EQ(out->NVALS, 33);
 
   for (i = 0; i < out->NVALS; i++)
   {
-      ASSERT_EQ(resultRid[i], (i < 10 ? i : i - 10 + 1001));
-      ASSERT_EQ(resultVal[i], (i < 10 ? i : i - 10 + 1001));
+    ASSERT_EQ(resultRid[i], (i < 10 ? i : i - 10 + 1001));
+    ASSERT_EQ(resultVal[i], (i < 10 ? i : i - 10 + 1001));
   }
   ASSERT_EQ(out->Max, __col8block_cdf_umax);
   ASSERT_EQ(out->Min, __col8block_cdf_umin);
 }
 
-//void p_Col_12()
+// void p_Col_12()
 TEST_F(ColumnScanFilterTest, ColumnScan1Byte2CompFilters)
 {
   constexpr const uint8_t W = 1;
@@ -706,14 +705,14 @@ TEST_F(ColumnScanFilterTest, ColumnScan1Byte2CompFilters)
   args->COP = COMPARE_LT;
   args->val[0] = '4';
 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col1block.cdf", block));
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col1block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out);
 
   results = getValuesArrayPosition<UT>(getFirstValueArrayPosition(out), 0);
   ASSERT_EQ(out->NVALS, 32);
 
   for (i = 0; i < out->NVALS; i++)
-      ASSERT_EQ( (int)'3', results[i]);
+    ASSERT_EQ((int)'3', results[i]);
 }
 /*
 The code doesn't support filters with RID and literal
@@ -764,7 +763,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan4Bytes2CompFiltersOutputRID)
   ASSERT_EQ(results[1], 11);
 }
 */
-//void p_Col_double_1()
+// void p_Col_double_1()
 TEST_F(ColumnScanFilterTest, ColumnScan8BytesDouble2CompFilters)
 {
   constexpr const uint8_t W = 8;
@@ -787,17 +786,17 @@ TEST_F(ColumnScanFilterTest, ColumnScan8BytesDouble2CompFilters)
   args->COP = COMPARE_LT;
   memcpy(args->val, &tmp, sizeof(tmp));
 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col_double_block.cdf", block));
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col_double_block.cdf", block));
   pp.columnScanAndFilter<int64_t>(in, out);
 
   results = getValuesArrayPosition<IntegralType>(getFirstValueArrayPosition(out), 0);
   ASSERT_EQ(out->NVALS, 8);
 
   for (i = 0; i < out->NVALS; i++)
-      ASSERT_EQ(results[i], 11 + (i * 0.5));
+    ASSERT_EQ(results[i], 11 + (i * 0.5));
 }
 
-//void p_Col_float_1()
+// void p_Col_float_1()
 TEST_F(ColumnScanFilterTest, ColumnScan4BytesFloat2CompFiltersOutputBoth)
 {
   constexpr const uint8_t W = 4;
@@ -812,7 +811,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan4BytesFloat2CompFiltersOutputBoth)
   in->BOP = BOP_AND;
   in->NOPS = 2;
   in->NVALS = 0;
-  
+
   tmp = 10.5;
   args->COP = COMPARE_GT;
   memcpy(args->val, &tmp, sizeof(tmp));
@@ -821,19 +820,19 @@ TEST_F(ColumnScanFilterTest, ColumnScan4BytesFloat2CompFiltersOutputBoth)
   args->COP = COMPARE_LT;
   memcpy(args->val, &tmp, sizeof(tmp));
 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col_float_block.cdf", block));
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col_float_block.cdf", block));
   pp.columnScanAndFilter<int32_t>(in, out);
 
   ASSERT_EQ(out->NVALS, 8);
 
   for (i = 0; i < out->NVALS; i++)
   {
-      ASSERT_EQ(resultRid[i], 19 + i);
-      ASSERT_EQ(resultVal[i], 11 + (i * 0.5));
+    ASSERT_EQ(resultRid[i], 19 + i);
+    ASSERT_EQ(resultVal[i], 11 + (i * 0.5));
   }
 }
 
-//void p_Col_neg_float_1()
+// void p_Col_neg_float_1()
 TEST_F(ColumnScanFilterTest, ColumnScan4BytesNegFloat2CompFiltersOutputBoth)
 {
   using IntegralType = float;
@@ -847,7 +846,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan4BytesNegFloat2CompFiltersOutputBoth)
   in->BOP = BOP_AND;
   in->NOPS = 2;
   in->NVALS = 0;
-  
+
   tmp = -5.0;
   args->COP = COMPARE_GT;
   memcpy(args->val, &tmp, sizeof(tmp));
@@ -856,18 +855,18 @@ TEST_F(ColumnScanFilterTest, ColumnScan4BytesNegFloat2CompFiltersOutputBoth)
   args->COP = COMPARE_LT;
   memcpy(args->val, &tmp, sizeof(tmp));
 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col_neg_float.cdf", block));
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col_neg_float.cdf", block));
   pp.columnScanAndFilter<int32_t>(in, out);
   ASSERT_EQ(out->NVALS, 19);
 
   for (i = 0; i < out->NVALS; i++)
   {
-      ASSERT_EQ(resultRid[i], 12 + i);
-      ASSERT_EQ(resultVal[i], -4.5 + (i * 0.5));
+    ASSERT_EQ(resultRid[i], 12 + i);
+    ASSERT_EQ(resultVal[i], -4.5 + (i * 0.5));
   }
 }
 
-//void p_Col_neg_double_1()
+// void p_Col_neg_double_1()
 TEST_F(ColumnScanFilterTest, ColumnScan4BytesNegDouble2CompFilters)
 {
   constexpr const uint8_t W = 8;
@@ -890,7 +889,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan4BytesNegDouble2CompFilters)
   args->COP = COMPARE_LT;
   memcpy(args->val, &tmp, sizeof(tmp));
 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col_neg_double.cdf", block));
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col_neg_double.cdf", block));
   pp.columnScanAndFilter<int64_t>(in, out);
 
   ASSERT_EQ(out->NVALS, 19);
@@ -914,7 +913,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan16Bytes)
   in->BOP = BOP_OR;
   in->NVALS = 0;
 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col16block.cdf", block));
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col16block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out);
 
   results = getValuesArrayPosition<IntegralType>(getFirstValueArrayPosition(out), 0);
@@ -924,7 +923,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan16Bytes)
   int128_t NullValue = int128_t(0x8000000000000000LL) << 64;
   ASSERT_EQ(results[0], NullValue);
   for (i = 1; i < out->NVALS; ++i)
-    ASSERT_EQ(results[i], i+1);
+    ASSERT_EQ(results[i], i + 1);
   EXPECT_EQ(out->Max, __col16block_cdf_umax);
   EXPECT_EQ(out->Min, __col16block_cdf_umin);
 }
@@ -946,13 +945,13 @@ TEST_F(ColumnScanFilterTest, ColumnScan16Bytes2CompFilters)
   tmp = 10;
   args->COP = COMPARE_EQ;
   memcpy(args->val, &tmp, in->colType.DataSize);
-  args = reinterpret_cast<ColArgs*>(&input[sizeof(NewColRequestHeader) +
-                                    sizeof(ColArgs) + in->colType.DataSize]);
+  args = reinterpret_cast<ColArgs*>(
+      &input[sizeof(NewColRequestHeader) + sizeof(ColArgs) + in->colType.DataSize]);
   args->COP = COMPARE_EQ;
   tmp = 510;
   memcpy(args->val, &tmp, in->colType.DataSize);
 
-  pp.setBlockPtr((int*) readBlockFromLiteralArray("col16block.cdf", block));
+  pp.setBlockPtr((int*)readBlockFromLiteralArray("col16block.cdf", block));
   pp.columnScanAndFilter<IntegralType>(in, out);
 
   results = getValuesArrayPosition<IntegralType>(getFirstValueArrayPosition(out), 0);

@@ -36,76 +36,74 @@ const struct timeval zerotime = {0, 0};
 
 namespace joblist
 {
-
-JSTimeStamp::JSTimeStamp() :
-    fFirstInsertTime(zerotime),
-    fLastInsertTime(zerotime),
-    fEndofInputTime(zerotime),
-    fFirstReadTime(zerotime),
-    fLastReadTime(zerotime)
+JSTimeStamp::JSTimeStamp()
+ : fFirstInsertTime(zerotime)
+ , fLastInsertTime(zerotime)
+ , fEndofInputTime(zerotime)
+ , fFirstReadTime(zerotime)
+ , fLastReadTime(zerotime)
 {
 }
 
 /* static */
 const string JSTimeStamp::format(const struct timeval& tvbuf)
 {
-    string res;
-    char timeString[50];
-    struct tm tmbuf;
+  string res;
+  char timeString[50];
+  struct tm tmbuf;
 #ifdef _MSC_VER
-    errno_t p = 0;
-    time_t t = tvbuf.tv_sec;
-    p = localtime_s(&tmbuf, &t);
+  errno_t p = 0;
+  time_t t = tvbuf.tv_sec;
+  p = localtime_s(&tmbuf, &t);
 
-    if (p != 0)
-    {
-        memset(&tmbuf, 0, sizeof(tmbuf));
-        strcpy(timeString, "UNKNOWN");
-    }
-    else
-    {
-        if (strftime(timeString, 50, "%Y-%m-%d %H:%M:%S", &tmbuf) == 0)
-            strcpy(timeString, "UNKNOWN");
-    }
+  if (p != 0)
+  {
+    memset(&tmbuf, 0, sizeof(tmbuf));
+    strcpy(timeString, "UNKNOWN");
+  }
+  else
+  {
+    if (strftime(timeString, 50, "%Y-%m-%d %H:%M:%S", &tmbuf) == 0)
+      strcpy(timeString, "UNKNOWN");
+  }
 
 #else
-    localtime_r(&tvbuf.tv_sec, &tmbuf);
-    strftime(timeString, 50, "%F %T", &tmbuf);
+  localtime_r(&tvbuf.tv_sec, &tmbuf);
+  strftime(timeString, 50, "%F %T", &tmbuf);
 #endif
-    const int len = strlen(timeString);
-    snprintf(&timeString[len], (50 - len), ".%06lu", tvbuf.tv_usec);
-    res = timeString;
-    return res;
+  const int len = strlen(timeString);
+  snprintf(&timeString[len], (50 - len), ".%06lu", tvbuf.tv_usec);
+  res = timeString;
+  return res;
 }
 
 /* static */
 const string JSTimeStamp::tsdiffstr(const struct timeval& t2, const struct timeval& t1)
 {
-    string res;
-    int ds;
-    int dus;
-    char timeString[50];
-    dus = t2.tv_usec - t1.tv_usec;
-    ds = t2.tv_sec - t1.tv_sec;
+  string res;
+  int ds;
+  int dus;
+  char timeString[50];
+  dus = t2.tv_usec - t1.tv_usec;
+  ds = t2.tv_sec - t1.tv_sec;
 
-    if (dus < 0)
-    {
-        ds--;
-        dus += 1000000;
-    }
+  if (dus < 0)
+  {
+    ds--;
+    dus += 1000000;
+  }
 
-    snprintf(timeString, 50, "%d.%06d", ds, dus);
-    res = timeString;
-    return res;
+  snprintf(timeString, 50, "%d.%06d", ds, dus);
+  res = timeString;
+  return res;
 }
 
 /* static */
 const string JSTimeStamp::timeNow()
 {
-    struct timeval tv;
-    gettimeofday(&tv, 0);
-    return JSTimeStamp::format(tv);
+  struct timeval tv;
+  gettimeofday(&tv, 0);
+  return JSTimeStamp::format(tv);
 }
 
-} //namespace joblist
-
+}  // namespace joblist

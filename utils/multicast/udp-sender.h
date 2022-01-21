@@ -36,20 +36,18 @@ int openFile(struct disk_config* config);
 int openPipe(struct disk_config* config, int in, int* pid);
 int localReader(struct fifo* fifo, int in);
 
-#define BCAST_DATA(s, msg) \
-	doSend(s, &msg, sizeof(msg), &net_config->dataMcastAddr)
-
+#define BCAST_DATA(s, msg) doSend(s, &msg, sizeof(msg), &net_config->dataMcastAddr)
 
 /**
  * "switched network" mode: server already starts sending next slice before
  * first one is acknowledged. Do not use on old coax networks
  */
-#define FLAG_SN    0x0001
+#define FLAG_SN 0x0001
 
 /**
  * "not switched network" mode: network is known not to be switched
  */
-#define FLAG_NOTSN    0x0002
+#define FLAG_NOTSN 0x0002
 
 /**
  * Asynchronous mode: do not any confirmation at all from clients.
@@ -57,13 +55,11 @@ int localReader(struct fifo* fifo, int in);
  */
 #define FLAG_ASYNC 0x0004
 
-
 /**
  * Point-to-point transmission mode: use unicast in the (frequent)
  * special case where there is only one receiver.
  */
 #define FLAG_POINTOPOINT 0x0008
-
 
 /**
  * Do automatic rate limitation by monitoring socket's send buffer
@@ -93,7 +89,6 @@ int localReader(struct fifo* fifo, int in);
  */
 #define FLAG_NOPOINTOPOINT 0x0040
 
-
 /*
  * Don't ask for keyboard input on sender end.
  */
@@ -103,4 +98,3 @@ int localReader(struct fifo* fifo, int in);
  * Streaming mode: allow receiver to join a running transmission
  */
 #define FLAG_STREAMING 0x0100
-

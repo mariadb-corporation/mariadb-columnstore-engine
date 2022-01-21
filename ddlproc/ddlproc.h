@@ -42,5 +42,3 @@
 #include "droptableprocessor.h"
 
 #include "messagelog.h"
-
-

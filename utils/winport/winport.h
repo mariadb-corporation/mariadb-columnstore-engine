@@ -20,4 +20,3 @@
 #ifdef _MSC_VER
 typedef unsigned int uint;
 #endif
-

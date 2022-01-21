@@ -40,92 +40,88 @@ const string cf("./woparms.dat");
 
 class WOConfigFileTest : public CppUnit::TestFixture
 {
+  CPPUNIT_TEST_SUITE(WOConfigFileTest);
 
-    CPPUNIT_TEST_SUITE( WOConfigFileTest );
+  CPPUNIT_TEST(test1);
+  CPPUNIT_TEST_EXCEPTION(test2, std::runtime_error);
+  CPPUNIT_TEST_EXCEPTION(test3, std::runtime_error);
+  CPPUNIT_TEST_EXCEPTION(test4, std::runtime_error);
+  CPPUNIT_TEST(test5);
 
-    CPPUNIT_TEST( test1 );
-    CPPUNIT_TEST_EXCEPTION( test2, std::runtime_error );
-    CPPUNIT_TEST_EXCEPTION( test3, std::runtime_error );
-    CPPUNIT_TEST_EXCEPTION( test4, std::runtime_error );
-    CPPUNIT_TEST( test5 );
+  CPPUNIT_TEST_SUITE_END();
 
-    CPPUNIT_TEST_SUITE_END();
+ private:
+ public:
+  void setUp()
+  {
+    unlink(cf.c_str());
+  }
 
-private:
+  void tearDown()
+  {
+    unlink(cf.c_str());
+  }
 
-public:
-    void setUp()
-    {
-        unlink(cf.c_str());
-    }
+  void test1()
+  {
+    WriteOnceConfig woc(cf);
+    CPPUNIT_ASSERT(woc.owns("PrimitiveServers", "LBID_Shift"));
+    CPPUNIT_ASSERT(woc.owns("SystemConfig", "DBRootCount"));
+    CPPUNIT_ASSERT(woc.owns("SystemConfig", "DBRMRoot"));
 
-    void tearDown()
-    {
-        unlink(cf.c_str());
-    }
+    CPPUNIT_ASSERT(!woc.owns("dummy", "dummy"));
 
-    void test1()
-    {
-        WriteOnceConfig woc(cf);
-        CPPUNIT_ASSERT(woc.owns("PrimitiveServers", "LBID_Shift"));
-        CPPUNIT_ASSERT(woc.owns("SystemConfig", "DBRootCount"));
-        CPPUNIT_ASSERT(woc.owns("SystemConfig", "DBRMRoot"));
+    int vali;
 
-        CPPUNIT_ASSERT(!woc.owns("dummy", "dummy"));
+    vali = Config::fromText(woc.getConfig("PrimitiveServers", "LBID_Shift"));
+    CPPUNIT_ASSERT(vali == 13);
 
-        int vali;
+    woc.setConfig("SystemConfig", "DBRootCount", "10");
+    vali = Config::fromText(woc.getConfig("SystemConfig", "DBRootCount"));
+    CPPUNIT_ASSERT(vali == 10);
 
-        vali = Config::fromText(woc.getConfig("PrimitiveServers", "LBID_Shift"));
-        CPPUNIT_ASSERT(vali == 13);
+    WriteOnceConfig woc2(cf.c_str());
+    vali = Config::fromText(woc2.getConfig("SystemConfig", "DBRootCount"));
+    CPPUNIT_ASSERT(vali == 10);
+  }
 
-        woc.setConfig("SystemConfig", "DBRootCount", "10");
-        vali = Config::fromText(woc.getConfig("SystemConfig", "DBRootCount"));
-        CPPUNIT_ASSERT(vali == 10);
+  void test2()
+  {
+    WriteOnceConfig woc(cf);
+    woc.getConfig("dummy", "dummy");
+  }
 
-        WriteOnceConfig woc2(cf.c_str());
-        vali = Config::fromText(woc2.getConfig("SystemConfig", "DBRootCount"));
-        CPPUNIT_ASSERT(vali == 10);
-    }
+  void test3()
+  {
+    WriteOnceConfig woc(cf);
+    woc.setConfig("dummy", "dummy", "100");
+  }
 
-    void test2()
-    {
-        WriteOnceConfig woc(cf);
-        woc.getConfig("dummy", "dummy");
-    }
+  void test4()
+  {
+    WriteOnceConfig woc(cf);
+    woc.setConfig("SystemConfig", "DBRootCount", "10");
+    woc.setConfig("SystemConfig", "DBRootCount", "11");
+  }
 
-    void test3()
-    {
-        WriteOnceConfig woc(cf);
-        woc.setConfig("dummy", "dummy", "100");
-    }
-
-    void test4()
-    {
-        WriteOnceConfig woc(cf);
-        woc.setConfig("SystemConfig", "DBRootCount", "10");
-        woc.setConfig("SystemConfig", "DBRootCount", "11");
-    }
-
-    void test5()
-    {
-        WriteOnceConfig woc(cf);
-        woc.setConfig("SystemConfig", "DBRootCount", "10");
-        woc.setConfig("SystemConfig", "DBRootCount", "11", true);
-    }
-
+  void test5()
+  {
+    WriteOnceConfig woc(cf);
+    woc.setConfig("SystemConfig", "DBRootCount", "10");
+    woc.setConfig("SystemConfig", "DBRootCount", "11", true);
+  }
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION( WOConfigFileTest );
+CPPUNIT_TEST_SUITE_REGISTRATION(WOConfigFileTest);
 
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
-int main( int argc, char** argv)
+int main(int argc, char** argv)
 {
-    CppUnit::TextUi::TestRunner runner;
-    CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
-    runner.addTest( registry.makeTest() );
-    bool wasSuccessful = runner.run( "", false );
-    return (wasSuccessful ? 0 : 1);
+  CppUnit::TextUi::TestRunner runner;
+  CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
+  runner.addTest(registry.makeTest());
+  bool wasSuccessful = runner.run("", false);
+  return (wasSuccessful ? 0 : 1);
 }
-

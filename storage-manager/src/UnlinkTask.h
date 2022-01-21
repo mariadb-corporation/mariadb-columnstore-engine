@@ -15,25 +15,22 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-
 #pragma once
 
 #include "PosixTask.h"
 
 namespace storagemanager
 {
-
 class UnlinkTask : public PosixTask
 {
-    public:
-        UnlinkTask(int sock, uint length);
-        virtual ~UnlinkTask();
-        
-        bool run();
-    
-    private:
-        UnlinkTask();
+ public:
+  UnlinkTask(int sock, uint length);
+  virtual ~UnlinkTask();
+
+  bool run();
+
+ private:
+  UnlinkTask();
 };
 
-
-}
+}  // namespace storagemanager

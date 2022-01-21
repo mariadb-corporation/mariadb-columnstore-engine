@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /******************************************************************************************
-* $Id$
-*
-******************************************************************************************/
+ * $Id$
+ *
+ ******************************************************************************************/
 /**
  * @file
  */
@@ -30,37 +30,37 @@
 
 namespace config
 {
-
 /** class XMLParser */
 class XMLParser
 {
-public:
-    XMLParser() { }
-    ~XMLParser() { }
+ public:
+  XMLParser()
+  {
+  }
+  ~XMLParser()
+  {
+  }
 
-    const std::string getConfig(const xmlDocPtr doc, const std::string& section, const std::string& name) const;
+  const std::string getConfig(const xmlDocPtr doc, const std::string& section, const std::string& name) const;
 
-    void getConfig(const xmlDocPtr doc, const std::string& section, const std::string& name,
-                   std::vector<std::string>& values) const;
+  void getConfig(const xmlDocPtr doc, const std::string& section, const std::string& name,
+                 std::vector<std::string>& values) const;
 
-    void setConfig(xmlDocPtr doc, const std::string& section, const std::string& name,
-                   const std::string& value);
+  void setConfig(xmlDocPtr doc, const std::string& section, const std::string& name,
+                 const std::string& value);
 
-    void delConfig(xmlDocPtr doc, const std::string& section, const std::string& name);
+  void delConfig(xmlDocPtr doc, const std::string& section, const std::string& name);
 
-    const std::vector<std::string> enumConfig(const xmlDocPtr doc) const;
+  const std::vector<std::string> enumConfig(const xmlDocPtr doc) const;
 
-    const std::vector<std::string> enumSection(const xmlDocPtr doc, const std::string& section) const;
+  const std::vector<std::string> enumSection(const xmlDocPtr doc, const std::string& section) const;
 
-private:
-    //defaults okay
-    //XMLParser(const XMLParser& rhs);
-    //XMLParser& operator=(const XMLParser& rhs);
-
-
+ private:
+  // defaults okay
+  // XMLParser(const XMLParser& rhs);
+  // XMLParser& operator=(const XMLParser& rhs);
 };
 
-} //namespace
+}  // namespace config
 
 // vim:ts=4 sw=4:
-

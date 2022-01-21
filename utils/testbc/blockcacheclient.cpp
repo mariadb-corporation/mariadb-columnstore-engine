@@ -28,72 +28,70 @@
 
 namespace dbbc
 {
-
 blockCacheClient::blockCacheClient()
 {
-    fBCCBrp = NULL;
+  fBCCBrp = NULL;
 }
 
 blockCacheClient::blockCacheClient(BlockRequestProcessor& brp)
 {
-    fBCCBrp = &brp;
+  fBCCBrp = &brp;
 }
 
 blockCacheClient::~blockCacheClient()
 {
 }
 
-
 void blockCacheClient::check(BRM::LBID_t lbid, BRM::VER_t ver, bool flg, bool& wasBlockInCache)
 {
-    fBCCBrp->check(lbid, ver, flg, wasBlockInCache);
+  fBCCBrp->check(lbid, ver, flg, wasBlockInCache);
 }
-
 
 void blockCacheClient::check(const BRM::InlineLBIDRange& range, const BRM::VER_t ver, uint32_t& rCount)
 {
-    fBCCBrp->check(range, ver, rCount);
+  fBCCBrp->check(range, ver, rCount);
 }
-
 
 FileBuffer* blockCacheClient::getBlockPtr(const BRM::LBID_t& lbid, const BRM::VER_t& ver)
 {
-    FileBuffer* fb = fBCCBrp->getBlockPtr(lbid, ver);
-    return fb;
+  FileBuffer* fb = fBCCBrp->getBlockPtr(lbid, ver);
+  return fb;
 }
 
 const int blockCacheClient::read(const BRM::LBID_t& lbid, const BRM::VER_t& ver, FileBuffer& fb)
 {
-    int ret = fBCCBrp->read(lbid, ver, fb);
-    return ret;
+  int ret = fBCCBrp->read(lbid, ver, fb);
+  return ret;
 }
 
 const int blockCacheClient::read(const BRM::LBID_t& lbid, const BRM::VER_t& ver, void* bufferPtr)
 {
-    int ret = fBCCBrp->read(lbid, ver, bufferPtr);
-    return ret;
+  int ret = fBCCBrp->read(lbid, ver, bufferPtr);
+  return ret;
 }
 
-const int blockCacheClient::read(const BRM::InlineLBIDRange& range, FileBufferList_t& fbList, const BRM::VER_t ver)
+const int blockCacheClient::read(const BRM::InlineLBIDRange& range, FileBufferList_t& fbList,
+                                 const BRM::VER_t ver)
 {
-    int ret = fBCCBrp->read(range, fbList, ver);
-    return ret;
+  int ret = fBCCBrp->read(range, fbList, ver);
+  return ret;
 }
 
-const int blockCacheClient::getBlock(const BRM::LBID_t& lbid, const BRM::VER_t& ver, void* bufferPtr, bool flg, bool& wasCached)
+const int blockCacheClient::getBlock(const BRM::LBID_t& lbid, const BRM::VER_t& ver, void* bufferPtr,
+                                     bool flg, bool& wasCached)
 {
-    int ret = fBCCBrp->getBlock(lbid, ver, bufferPtr, flg, wasCached);
-    return ret;
+  int ret = fBCCBrp->getBlock(lbid, ver, bufferPtr, flg, wasCached);
+  return ret;
 }
 
 bool blockCacheClient::exists(BRM::LBID_t lbid, BRM::VER_t ver)
 {
-    return fBCCBrp->exists(lbid, ver);
+  return fBCCBrp->exists(lbid, ver);
 }
 
 void blockCacheClient::flushCache()
 {
-    fBCCBrp->flushCache();
+  fBCCBrp->flushCache();
 }
 
-}
+}  // namespace dbbc

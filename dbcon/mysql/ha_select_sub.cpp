@@ -17,10 +17,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: ha_select_sub.cpp 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: ha_select_sub.cpp 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 /** class SelectSubQuery definition */
 
 //#define NDEBUG
@@ -47,70 +47,72 @@ using namespace logging;
 
 namespace cal_impl_if
 {
-SelectSubQuery::SelectSubQuery(gp_walk_info& gwip) : SubQuery(gwip), fSelSub (NULL)
-{}
+SelectSubQuery::SelectSubQuery(gp_walk_info& gwip) : SubQuery(gwip), fSelSub(NULL)
+{
+}
 
-SelectSubQuery::SelectSubQuery(gp_walk_info& gwip, Item_subselect* selSub) :
-    SubQuery(gwip),
-    fSelSub(selSub)
-{}
+SelectSubQuery::SelectSubQuery(gp_walk_info& gwip, Item_subselect* selSub) : SubQuery(gwip), fSelSub(selSub)
+{
+}
 
 SelectSubQuery::~SelectSubQuery()
-{}
+{
+}
 
 SCSEP SelectSubQuery::transform()
 {
-    idbassert(fSelSub);
-    SCSEP csep(new CalpontSelectExecutionPlan());
-    csep->sessionID(fGwip.sessionid);
-    csep->subType (CalpontSelectExecutionPlan::SELECT_SUBS);
+  idbassert(fSelSub);
+  SCSEP csep(new CalpontSelectExecutionPlan());
+  csep->sessionID(fGwip.sessionid);
+  csep->subType(CalpontSelectExecutionPlan::SELECT_SUBS);
 
-    // gwi for the sub query
-    gp_walk_info gwi;
-    gwi.thd = fGwip.thd;
-    gwi.subQuery = this;
+  // gwi for the sub query
+  gp_walk_info gwi;
+  gwi.thd = fGwip.thd;
+  gwi.subQuery = this;
 
-    // @4632 merge table list to gwi in case there is FROM sub to be referenced
-    // in the SELECT sub
-    gwi.derivedTbCnt = fGwip.derivedTbList.size();
-    uint32_t tbCnt = fGwip.tbList.size();
+  // @4632 merge table list to gwi in case there is FROM sub to be referenced
+  // in the SELECT sub
+  gwi.derivedTbCnt = fGwip.derivedTbList.size();
+  uint32_t tbCnt = fGwip.tbList.size();
 
-    gwi.tbList.insert(gwi.tbList.begin(), fGwip.tbList.begin(), fGwip.tbList.end());
-    gwi.derivedTbList.insert(gwi.derivedTbList.begin(), fGwip.derivedTbList.begin(), fGwip.derivedTbList.end());
+  gwi.tbList.insert(gwi.tbList.begin(), fGwip.tbList.begin(), fGwip.tbList.end());
+  gwi.derivedTbList.insert(gwi.derivedTbList.begin(), fGwip.derivedTbList.begin(), fGwip.derivedTbList.end());
 
-    if (getSelectPlan(gwi, *(fSelSub->get_select_lex()), csep, false) != 0)
+  if (getSelectPlan(gwi, *(fSelSub->get_select_lex()), csep, false) != 0)
+  {
+    if (!gwi.fatalParseError)
     {
-        if (!gwi.fatalParseError)
-        {
-            fGwip.fatalParseError = true;
-            fGwip.parseErrorText = "Error occured in SelectSubQuery::transform()";
-        }
-        else
-        {
-            fGwip.fatalParseError = gwi.fatalParseError;
-            fGwip.parseErrorText = gwi.parseErrorText;
-        }
-
-        csep.reset();
-        return csep;
+      fGwip.fatalParseError = true;
+      fGwip.parseErrorText = "Error occured in SelectSubQuery::transform()";
+    }
+    else
+    {
+      fGwip.fatalParseError = gwi.fatalParseError;
+      fGwip.parseErrorText = gwi.parseErrorText;
     }
 
-    fGwip.subselectList.push_back(csep);
-
-    // remove outer query tables
-    CalpontSelectExecutionPlan::TableList tblist;
-
-    if (csep->tableList().size() >= tbCnt)
-        tblist.insert(tblist.begin(), csep->tableList().begin() + tbCnt, csep->tableList().end());
-
-    CalpontSelectExecutionPlan::SelectList derivedTbList;
-
-    if (csep->derivedTableList().size() >= gwi.derivedTbCnt)
-        derivedTbList.insert(derivedTbList.begin(), csep->derivedTableList().begin() + gwi.derivedTbCnt, csep->derivedTableList().end());
-
-    csep->tableList(tblist);
-    csep->derivedTableList(derivedTbList);
+    csep.reset();
     return csep;
+  }
+
+  fGwip.subselectList.push_back(csep);
+
+  // remove outer query tables
+  CalpontSelectExecutionPlan::TableList tblist;
+
+  if (csep->tableList().size() >= tbCnt)
+    tblist.insert(tblist.begin(), csep->tableList().begin() + tbCnt, csep->tableList().end());
+
+  CalpontSelectExecutionPlan::SelectList derivedTbList;
+
+  if (csep->derivedTableList().size() >= gwi.derivedTbCnt)
+    derivedTbList.insert(derivedTbList.begin(), csep->derivedTableList().begin() + gwi.derivedTbCnt,
+                         csep->derivedTableList().end());
+
+  csep->tableList(tblist);
+  csep->derivedTableList(derivedTbList);
+  return csep;
 }
 
-}
+}  // namespace cal_impl_if

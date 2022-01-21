@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id$
-*
-*
-***********************************************************************/
+ *   $Id$
+ *
+ *
+ ***********************************************************************/
 #include "mcsconfig.h"
 
 #include <stdexcept>
@@ -59,99 +59,99 @@ using namespace compress;
 
 namespace messageqcpp
 {
-
 CompressedInetStreamSocket::CompressedInetStreamSocket()
 {
-    config::Config* config = config::Config::makeConfig();
-    string val;
-    string compressionType;
+  config::Config* config = config::Config::makeConfig();
+  string val;
+  string compressionType;
 
-    try
-    {
-        val = config->getConfig("NetworkCompression", "Enabled");
-    }
-    catch (...) { }
+  try
+  {
+    val = config->getConfig("NetworkCompression", "Enabled");
+  }
+  catch (...)
+  {
+  }
 
-    if (val == "" || val == "Y")
-        useCompression = true;
-    else
-        useCompression = false;
+  if (val == "" || val == "Y")
+    useCompression = true;
+  else
+    useCompression = false;
 
-    try
-    {
-        compressionType =
-            config->getConfig("NetworkCompression", "NetworkCompression");
-    }
-    catch (...) { }
+  try
+  {
+    compressionType = config->getConfig("NetworkCompression", "NetworkCompression");
+  }
+  catch (...)
+  {
+  }
 
-    auto* compressInterface = compress::getCompressInterfaceByName(compressionType);
-    if (!compressInterface)
-        compressInterface = new compress::CompressInterfaceSnappy();
+  auto* compressInterface = compress::getCompressInterfaceByName(compressionType);
+  if (!compressInterface)
+    compressInterface = new compress::CompressInterfaceSnappy();
 
-    alg.reset(compressInterface);
+  alg.reset(compressInterface);
 }
 
 Socket* CompressedInetStreamSocket::clone() const
 {
-    return new CompressedInetStreamSocket(*this);
+  return new CompressedInetStreamSocket(*this);
 }
 
 const SBS CompressedInetStreamSocket::read(const struct timespec* timeout, bool* isTimeOut,
-        Stats* stats) const
+                                           Stats* stats) const
 {
-    SBS readBS, ret;
-    size_t uncompressedSize;
+  SBS readBS, ret;
+  size_t uncompressedSize;
 
-    readBS = InetStreamSocket::read(timeout, isTimeOut, stats);
+  readBS = InetStreamSocket::read(timeout, isTimeOut, stats);
 
-    if (readBS->length() == 0 || fMagicBuffer == BYTESTREAM_MAGIC)
-        return readBS;
+  if (readBS->length() == 0 || fMagicBuffer == BYTESTREAM_MAGIC)
+    return readBS;
 
-    // Read stored len, first 4 bytes.
-    uint32_t storedLen = *(uint32_t*) readBS->buf();
+  // Read stored len, first 4 bytes.
+  uint32_t storedLen = *(uint32_t*)readBS->buf();
 
-    if (!storedLen)
-        return SBS(new ByteStream(0));
+  if (!storedLen)
+    return SBS(new ByteStream(0));
 
-    uncompressedSize = storedLen;
-    ret.reset(new ByteStream(uncompressedSize));
+  uncompressedSize = storedLen;
+  ret.reset(new ByteStream(uncompressedSize));
 
-    alg->uncompress((char*) readBS->buf() + HEADER_SIZE,
-                    readBS->length() - HEADER_SIZE, (char*) ret->getInputPtr(),
-                    &uncompressedSize);
+  alg->uncompress((char*)readBS->buf() + HEADER_SIZE, readBS->length() - HEADER_SIZE,
+                  (char*)ret->getInputPtr(), &uncompressedSize);
 
-    ret->advanceInputPtr(uncompressedSize);
+  ret->advanceInputPtr(uncompressedSize);
 
-    return ret;
+  return ret;
 }
 
 void CompressedInetStreamSocket::write(const ByteStream& msg, Stats* stats)
 {
-    size_t len = msg.length();
+  size_t len = msg.length();
 
-    if (useCompression && (len > 512))
-    {
-        size_t outLen = alg->maxCompressedSize(len) + HEADER_SIZE;
-        ByteStream smsg(outLen);
+  if (useCompression && (len > 512))
+  {
+    size_t outLen = alg->maxCompressedSize(len) + HEADER_SIZE;
+    ByteStream smsg(outLen);
 
-        alg->compress((char*) msg.buf(), len,
-                      (char*) smsg.getInputPtr() + HEADER_SIZE, &outLen);
-        // Save original len.
-        *(uint32_t*) smsg.getInputPtr() = len;
-        smsg.advanceInputPtr(outLen + HEADER_SIZE);
+    alg->compress((char*)msg.buf(), len, (char*)smsg.getInputPtr() + HEADER_SIZE, &outLen);
+    // Save original len.
+    *(uint32_t*)smsg.getInputPtr() = len;
+    smsg.advanceInputPtr(outLen + HEADER_SIZE);
 
-        if (outLen < len)
-            do_write(smsg, COMPRESSED_BYTESTREAM_MAGIC, stats);
-        else
-            InetStreamSocket::write(msg, stats);
-    }
+    if (outLen < len)
+      do_write(smsg, COMPRESSED_BYTESTREAM_MAGIC, stats);
     else
-        InetStreamSocket::write(msg, stats);
+      InetStreamSocket::write(msg, stats);
+  }
+  else
+    InetStreamSocket::write(msg, stats);
 }
 
 void CompressedInetStreamSocket::write(SBS msg, Stats* stats)
 {
-    write(*msg, stats);
+  write(*msg, stats);
 }
 
 /* this was cut & pasted from InetStreamSocket;
@@ -159,34 +159,33 @@ void CompressedInetStreamSocket::write(SBS msg, Stats* stats)
  */
 const IOSocket CompressedInetStreamSocket::accept(const struct timespec* timeout)
 {
-    int clientfd;
-    long msecs = 0;
+  int clientfd;
+  long msecs = 0;
 
-    struct pollfd pfd[1];
-    pfd[0].fd = socketParms().sd();
-    pfd[0].events = POLLIN;
+  struct pollfd pfd[1];
+  pfd[0].fd = socketParms().sd();
+  pfd[0].events = POLLIN;
 
-    if (timeout != 0)
-    {
-        msecs = timeout->tv_sec * 1000 + timeout->tv_nsec / 1000000;
+  if (timeout != 0)
+  {
+    msecs = timeout->tv_sec * 1000 + timeout->tv_nsec / 1000000;
 
-        if (poll(pfd, 1, msecs) != 1 || (pfd[0].revents & POLLIN) == 0 ||
-                pfd[0].revents & (POLLERR | POLLHUP | POLLNVAL))
-            return IOSocket(new CompressedInetStreamSocket());
-    }
+    if (poll(pfd, 1, msecs) != 1 || (pfd[0].revents & POLLIN) == 0 ||
+        pfd[0].revents & (POLLERR | POLLHUP | POLLNVAL))
+      return IOSocket(new CompressedInetStreamSocket());
+  }
 
-    struct sockaddr sa;
+  struct sockaddr sa;
 
-    socklen_t sl = sizeof(sa);
+  socklen_t sl = sizeof(sa);
 
-    int e;
+  int e;
 
-    do
-    {
-        clientfd = ::accept(socketParms().sd(), &sa, &sl);
-        e = errno;
-    }
-    while (clientfd < 0 && (e == EINTR ||
+  do
+  {
+    clientfd = ::accept(socketParms().sd(), &sa, &sl);
+    e = errno;
+  } while (clientfd < 0 && (e == EINTR ||
 #ifdef ERESTART
                             e == ERESTART ||
 #endif
@@ -195,90 +194,86 @@ const IOSocket CompressedInetStreamSocket::accept(const struct timespec* timeout
 #endif
                             false));
 
-    if (clientfd < 0)
-    {
-        string msg = "CompressedInetStreamSocket::accept: accept() error: ";
-        scoped_array<char> buf(new char[80]);
+  if (clientfd < 0)
+  {
+    string msg = "CompressedInetStreamSocket::accept: accept() error: ";
+    scoped_array<char> buf(new char[80]);
 #if STRERROR_R_CHAR_P
-        const char* p;
+    const char* p;
 
-        if ((p = strerror_r(e, buf.get(), 80)) != 0)
-            msg += p;
+    if ((p = strerror_r(e, buf.get(), 80)) != 0)
+      msg += p;
 
 #else
-        int p;
+    int p;
 
-        if ((p = strerror_r(e, buf.get(), 80)) == 0)
-            msg += buf.get();
+    if ((p = strerror_r(e, buf.get(), 80)) == 0)
+      msg += buf.get();
 
 #endif
-        throw runtime_error(msg);
-    }
+    throw runtime_error(msg);
+  }
 
-    if (fSyncProto)
+  if (fSyncProto)
+  {
+    /* send a byte to artificially synchronize with connect() on the remote */
+    char b = 'A';
+    int ret;
+
+    ret = ::send(clientfd, &b, 1, 0);
+    e = errno;
+
+    if (ret < 0)
     {
-        /* send a byte to artificially synchronize with connect() on the remote */
-        char b = 'A';
-        int ret;
-
-        ret = ::send(clientfd, &b, 1, 0);
-        e = errno;
-
-        if (ret < 0)
-        {
-            ostringstream  os;
-            char blah[80];
+      ostringstream os;
+      char blah[80];
 #if STRERROR_R_CHAR_P
-            const char* p;
+      const char* p;
 
-            if ((p = strerror_r(e, blah, 80)) != 0)
-                os << "CompressedInetStreamSocket::accept sync: " << p;
+      if ((p = strerror_r(e, blah, 80)) != 0)
+        os << "CompressedInetStreamSocket::accept sync: " << p;
 
 #else
-            int p;
+      int p;
 
-            if ((p = strerror_r(e, blah, 80)) == 0)
-                os << "CompressedInetStreamSocket::accept sync: " << blah;
+      if ((p = strerror_r(e, blah, 80)) == 0)
+        os << "CompressedInetStreamSocket::accept sync: " << blah;
 
 #endif
-            ::close(clientfd);
-            throw runtime_error(os.str());
-        }
-        else if (ret == 0)
-        {
-            ::close(clientfd);
-            throw runtime_error("CompressedInetStreamSocket::accept sync: got unexpected error code");
-        }
+      ::close(clientfd);
+      throw runtime_error(os.str());
     }
+    else if (ret == 0)
+    {
+      ::close(clientfd);
+      throw runtime_error("CompressedInetStreamSocket::accept sync: got unexpected error code");
+    }
+  }
 
-    CompressedInetStreamSocket* ciss = new CompressedInetStreamSocket();
-    IOSocket ios;
-    sockaddr_in* sin = (sockaddr_in*) &sa;
+  CompressedInetStreamSocket* ciss = new CompressedInetStreamSocket();
+  IOSocket ios;
+  sockaddr_in* sin = (sockaddr_in*)&sa;
 
-    if ((sin->sin_addr.s_addr == fSa.sin_addr.s_addr) ||
-            sin->sin_addr.s_addr == inet_addr("127.0.0.1"))
-        ciss->useCompression = false;
+  if ((sin->sin_addr.s_addr == fSa.sin_addr.s_addr) || sin->sin_addr.s_addr == inet_addr("127.0.0.1"))
+    ciss->useCompression = false;
 
-    ios.setSocketImpl(ciss);
-    SocketParms sp;
-    sp = ios.socketParms();
-    sp.sd(clientfd);
-    ios.socketParms(sp);
-    ios.sa(&sa);
-    return ios;
+  ios.setSocketImpl(ciss);
+  SocketParms sp;
+  sp = ios.socketParms();
+  sp.sd(clientfd);
+  ios.socketParms(sp);
+  ios.sa(&sa);
+  return ios;
 }
 
 void CompressedInetStreamSocket::connect(const sockaddr* serv_addr)
 {
-    sockaddr_in* sin = (sockaddr_in*) serv_addr;
+  sockaddr_in* sin = (sockaddr_in*)serv_addr;
 
-    if (sin->sin_addr.s_addr == fSa.sin_addr.s_addr ||
-            sin->sin_addr.s_addr == inet_addr("127.0.0.1"))
-        useCompression = false;
+  if (sin->sin_addr.s_addr == fSa.sin_addr.s_addr || sin->sin_addr.s_addr == inet_addr("127.0.0.1"))
+    useCompression = false;
 
-    InetStreamSocket::connect(serv_addr);
+  InetStreamSocket::connect(serv_addr);
 }
 
-
-} //namespace messageqcpp
-
+}  // namespace messageqcpp

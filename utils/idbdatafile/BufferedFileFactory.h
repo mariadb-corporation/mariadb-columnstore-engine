@@ -23,18 +23,17 @@
 
 namespace idbdatafile
 {
-
 class BufferedFileFactory : public FileFactoryBase
 {
-public:
-    /* virtual */
-    IDBDataFile* open(const char* fname, const char* mode, unsigned opts, unsigned colWidth);
+ public:
+  /* virtual */
+  IDBDataFile* open(const char* fname, const char* mode, unsigned opts, unsigned colWidth);
 };
 
-inline
-IDBDataFile* BufferedFileFactory::open(const char* fname, const char* mode, unsigned opts, unsigned /*defsize*/)
+inline IDBDataFile* BufferedFileFactory::open(const char* fname, const char* mode, unsigned opts,
+                                              unsigned /*defsize*/)
 {
-    return new BufferedFile(fname, mode, opts);
+  return new BufferedFile(fname, mode, opts);
 }
 
-}
+}  // namespace idbdatafile

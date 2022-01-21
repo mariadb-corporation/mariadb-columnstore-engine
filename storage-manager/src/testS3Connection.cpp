@@ -24,45 +24,46 @@
 using namespace storagemanager;
 using namespace std;
 
-void printUsage() {
-    cout << "MariaDB Columnstore Storage Manager Test Configuration Connectivity.\n"  << endl;
-    cout << "Usage: testS3Connection \n"  << endl;
-    cout << "Returns Success=0 Failure=1\n"  << endl;
+void printUsage()
+{
+  cout << "MariaDB Columnstore Storage Manager Test Configuration Connectivity.\n" << endl;
+  cout << "Usage: testS3Connection \n" << endl;
+  cout << "Returns Success=0 Failure=1\n" << endl;
 }
 int s3TestConnection()
 {
-    S3Storage* s3 = NULL;
-    int ret = 0;
-    try
-    {
-        S3Storage* s3 = new S3Storage(true);
-        cout << "S3 Storage Manager Configuration OK" << endl;
-        delete s3;
-    }
-    catch (exception &e)
-    {
-        cout << "S3 Storage Manager Configuration Error:" << endl;
-        cout << e.what() << endl;
-        if (s3)
-            delete s3;
-        ret = 1;
-    }
-    return ret;
+  S3Storage* s3 = NULL;
+  int ret = 0;
+  try
+  {
+    S3Storage* s3 = new S3Storage(true);
+    cout << "S3 Storage Manager Configuration OK" << endl;
+    delete s3;
+  }
+  catch (exception& e)
+  {
+    cout << "S3 Storage Manager Configuration Error:" << endl;
+    cout << e.what() << endl;
+    if (s3)
+      delete s3;
+    ret = 1;
+  }
+  return ret;
 }
 
 int main(int argc, char* argv[])
 {
-    int option;
-    while ((option = getopt(argc, argv, "h")) != EOF )
+  int option;
+  while ((option = getopt(argc, argv, "h")) != EOF)
+  {
+    switch (option)
     {
-        switch (option)
-        {
-        case 'h':
-        default:
-            printUsage();
-            return 0;
-            break;
-        }
+      case 'h':
+      default:
+        printUsage();
+        return 0;
+        break;
     }
-    return s3TestConnection();
+  }
+  return s3TestConnection();
 }

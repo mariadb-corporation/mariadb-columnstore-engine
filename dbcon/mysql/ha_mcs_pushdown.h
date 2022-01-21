@@ -14,7 +14,6 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA */
 
-
 #pragma once
 
 #define PREFER_MY_CONFIG_H
@@ -26,25 +25,25 @@
 #include "ha_mcs_impl_if.h"
 #include "ha_mcs_opt_rewrites.h"
 
-void mutate_optimizer_flags(THD *thd_);
-void restore_optimizer_flags(THD *thd_);
+void mutate_optimizer_flags(THD* thd_);
+void restore_optimizer_flags(THD* thd_);
 
 enum mcs_handler_types_t
 {
-    SELECT,
-    DERIVED,
-    GROUP_BY,
-    LEGACY
+  SELECT,
+  DERIVED,
+  GROUP_BY,
+  LEGACY
 };
 
 struct mcs_handler_info
 {
-    mcs_handler_info() : hndl_ptr(NULL), hndl_type(LEGACY) { };
-    mcs_handler_info(mcs_handler_types_t type) : hndl_ptr(NULL), hndl_type(type) { };
-    mcs_handler_info(void* ptr, mcs_handler_types_t type) : hndl_ptr(ptr), hndl_type(type) { };
-    ~mcs_handler_info() { };
-    void* hndl_ptr;
-    mcs_handler_types_t hndl_type;
+  mcs_handler_info() : hndl_ptr(NULL), hndl_type(LEGACY){};
+  mcs_handler_info(mcs_handler_types_t type) : hndl_ptr(NULL), hndl_type(type){};
+  mcs_handler_info(void* ptr, mcs_handler_types_t type) : hndl_ptr(ptr), hndl_type(type){};
+  ~mcs_handler_info(){};
+  void* hndl_ptr;
+  mcs_handler_types_t hndl_type;
 };
 
 /*@brief  group_by_handler class*/
@@ -75,22 +74,22 @@ struct mcs_handler_info
  * next_row - get a row back from sm.
  * end_scan - finish and clean the things up.
  ***********************************************************/
-class ha_mcs_group_by_handler: public group_by_handler
+class ha_mcs_group_by_handler : public group_by_handler
 {
-public:
-    ha_mcs_group_by_handler(THD* thd_arg, Query* query);
-    ~ha_mcs_group_by_handler();
-    int init_scan() override;
-    int next_row() override;
-    int end_scan() override;
+ public:
+  ha_mcs_group_by_handler(THD* thd_arg, Query* query);
+  ~ha_mcs_group_by_handler();
+  int init_scan() override;
+  int next_row() override;
+  int end_scan() override;
 
-    List<Item>* select;
-    TABLE_LIST* table_list;
-    bool        distinct;
-    Item*       where;
-    ORDER*      group_by;
-    ORDER*      order_by;
-    Item*       having;
+  List<Item>* select;
+  TABLE_LIST* table_list;
+  bool distinct;
+  Item* where;
+  ORDER* group_by;
+  ORDER* order_by;
+  Item* having;
 };
 
 /*@brief  derived_handler class*/
@@ -106,13 +105,13 @@ public:
  * next_row - get a row back from sm.
  * end_scan - finish and clean the things up.
  ***********************************************************/
-class ha_columnstore_derived_handler: public derived_handler
+class ha_columnstore_derived_handler : public derived_handler
 {
-private:
-  COLUMNSTORE_SHARE *share;
+ private:
+  COLUMNSTORE_SHARE* share;
 
-public:
-  ha_columnstore_derived_handler(THD* thd_arg, TABLE_LIST *tbl);
+ public:
+  ha_columnstore_derived_handler(THD* thd_arg, TABLE_LIST* tbl);
   ~ha_columnstore_derived_handler();
   int init_scan() override;
   int next_row() override;
@@ -133,14 +132,14 @@ public:
  * next_row - get a row back from sm.
  * end_scan - finish and clean the things up.
  ***********************************************************/
-class ha_columnstore_select_handler: public select_handler
+class ha_columnstore_select_handler : public select_handler
 {
-private:
-  COLUMNSTORE_SHARE *share;
+ private:
+  COLUMNSTORE_SHARE* share;
   bool prepared;
   bool scan_ended;
 
-public:
+ public:
   bool scan_initialized;
   int pushdown_init_rc;
   // MCOL-4525 Store the original TABLE_LIST::outer_join value in a hash map.
@@ -154,4 +153,3 @@ public:
   int end_scan() override;
   bool prepare() override;
 };
-

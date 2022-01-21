@@ -31,59 +31,75 @@ namespace dmlpackage
  */
 
 CalpontDMLPackage::CalpontDMLPackage()
-    : fPlan(new messageqcpp::ByteStream()),
-      fTable(0), fHasFilter(0), fLogging(true), fIsInsertSelect(false),
-      fIsBatchInsert(false), fIsCacheInsert(false), fIsAutocommitOn(false), fIsWarnToError(false), fTableOid(0)
+ : fPlan(new messageqcpp::ByteStream())
+ , fTable(0)
+ , fHasFilter(0)
+ , fLogging(true)
+ , fIsInsertSelect(false)
+ , fIsBatchInsert(false)
+ , fIsCacheInsert(false)
+ , fIsAutocommitOn(false)
+ , fIsWarnToError(false)
+ , fTableOid(0)
 {
-
 }
 
-CalpontDMLPackage::CalpontDMLPackage( std::string schemaName, std::string tableName,
-                                      std::string dmlStatement, int sessionID )
-    : fSchemaName(schemaName), fTableName( tableName ), fDMLStatement( dmlStatement ),
-      fSessionID(sessionID), fPlan(new messageqcpp::ByteStream()), fTable(0), fHasFilter(false), fLogging(true), fIsInsertSelect(false),
-      fIsBatchInsert(false), fIsCacheInsert(false), fIsAutocommitOn(false), fIsWarnToError(false), fTableOid(0)
+CalpontDMLPackage::CalpontDMLPackage(std::string schemaName, std::string tableName, std::string dmlStatement,
+                                     int sessionID)
+ : fSchemaName(schemaName)
+ , fTableName(tableName)
+ , fDMLStatement(dmlStatement)
+ , fSessionID(sessionID)
+ , fPlan(new messageqcpp::ByteStream())
+ , fTable(0)
+ , fHasFilter(false)
+ , fLogging(true)
+ , fIsInsertSelect(false)
+ , fIsBatchInsert(false)
+ , fIsCacheInsert(false)
+ , fIsAutocommitOn(false)
+ , fIsWarnToError(false)
+ , fTableOid(0)
 {
-
 }
 
 CalpontDMLPackage::~CalpontDMLPackage()
 {
-    if ( 0 != fTable )
-        delete fTable;
+  if (0 != fTable)
+    delete fTable;
 }
 
 /*
  * strip off whitespaces from a string
  */
-std::string CalpontDMLPackage::StripLeadingWhitespace( std::string value )
+std::string CalpontDMLPackage::StripLeadingWhitespace(std::string value)
 {
-    for (;;)
+  for (;;)
+  {
+    string::size_type pos = value.find(' ', 0);
+
+    if (pos == 0)
     {
-        string::size_type pos = value.find (' ', 0);
-
-        if (pos == 0)
-        {
-            value = value.substr (pos + 1, 10000);
-        }
-        else
-        {
-            // no more whitespace
-            break;
-        }
+      value = value.substr(pos + 1, 10000);
     }
+    else
+    {
+      // no more whitespace
+      break;
+    }
+  }
 
-    return value;
+  return value;
 }
 
 void CalpontDMLPackage::initializeTable()
 {
-    if (0 == fTable)
-    {
-        fTable = new DMLTable();
-        fTable->set_SchemaName(fSchemaName);
-        fTable->set_TableName(fTableName);
-    }
+  if (0 == fTable)
+  {
+    fTable = new DMLTable();
+    fTable->set_SchemaName(fSchemaName);
+    fTable->set_TableName(fTableName);
+  }
 }
 
-}                                                 // namespace dmlpackage
+}  // namespace dmlpackage

@@ -28,32 +28,30 @@
 
 namespace messageqcpp
 {
-
 class ByteStream;
 
 /** This is an abstract class that defines the interface ByteStream will
    use to serialize and deserialize your class.
 
-	To serialize an object, do 'ByteStream << object'
-	To deserialize an object, instantiate one of its type and do 'ByteStream >> object'
+        To serialize an object, do 'ByteStream << object'
+        To deserialize an object, instantiate one of its type and do 'ByteStream >> object'
 */
 
 class Serializeable
 {
-public:
-    /** dtor
-     *
-     */
-    virtual ~Serializeable() { };
-    /** serialize interface
-     *
-     */
-    virtual void serialize(ByteStream&) const = 0;
-    /** deserialize interface
-     *
-     */
-    virtual void deserialize(ByteStream&) = 0;
+ public:
+  /** dtor
+   *
+   */
+  virtual ~Serializeable(){};
+  /** serialize interface
+   *
+   */
+  virtual void serialize(ByteStream&) const = 0;
+  /** deserialize interface
+   *
+   */
+  virtual void deserialize(ByteStream&) = 0;
 };
 
-}
-
+}  // namespace messageqcpp

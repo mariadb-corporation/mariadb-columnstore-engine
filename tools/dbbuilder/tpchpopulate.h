@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /******************************************************************************************
-* $Id: tpchpopulate.h 2101 2013-01-21 14:12:52Z rdempsey $
-*
-******************************************************************************************/
+ * $Id: tpchpopulate.h 2101 2013-01-21 14:12:52Z rdempsey $
+ *
+ ******************************************************************************************/
 /**
  * @file
  */
@@ -26,17 +26,13 @@
 
 class TpchPopulate
 {
+ public:
+  void populate_part();
+  void populate_customer();
+  void populate_tpch();
+  void populateFromFile(std::string tableName, std::string& fileName);
 
-public:
-    void populate_part();
-    void populate_customer();
-    void populate_tpch();
-    void populateFromFile(std::string tableName, std::string& fileName);
-protected:
-
-
-private:
-    void insert(std::string insertStmt);
-
+ protected:
+ private:
+  void insert(std::string insertStmt);
 };
-

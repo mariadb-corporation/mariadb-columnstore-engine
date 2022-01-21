@@ -15,12 +15,10 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-
 #pragma once
 
 namespace datatypes
 {
-
 /*
   A subset of SQL Conditions related to data processing.
   SQLSTATE terminology is used for categories:
@@ -30,36 +28,39 @@ namespace datatypes
 */
 class DataCondition
 {
-public:
+ public:
   enum Code
   {
     // Code                                Value       SQLSTATE
-    S_SUCCESS                              = 0,        // 00000
-    W_STRING_DATA_RIGHT_TRUNCATION         = 1 << 1,   // 01004
-    X_STRING_DATA_RIGHT_TRUNCATION         = 1 << 16,  // 22001
-    X_NUMERIC_VALUE_OUT_OF_RANGE           = 1 << 17,  // 22003
-    X_INVALID_CHARACTER_VALUE_FOR_CAST     = 1 << 18,  // 22018
+    S_SUCCESS = 0,                                 // 00000
+    W_STRING_DATA_RIGHT_TRUNCATION = 1 << 1,       // 01004
+    X_STRING_DATA_RIGHT_TRUNCATION = 1 << 16,      // 22001
+    X_NUMERIC_VALUE_OUT_OF_RANGE = 1 << 17,        // 22003
+    X_INVALID_CHARACTER_VALUE_FOR_CAST = 1 << 18,  // 22018
   };
-  DataCondition()
-   :mError(S_SUCCESS)
-  { }
-  DataCondition(Code code)
-   :mError(code)
-  { }
-  DataCondition & operator|=(Code code)
+  DataCondition() : mError(S_SUCCESS)
   {
-    mError= (Code) (mError | code);
+  }
+  DataCondition(Code code) : mError(code)
+  {
+  }
+  DataCondition& operator|=(Code code)
+  {
+    mError = (Code)(mError | code);
     return *this;
   }
   DataCondition operator&(Code rhs) const
   {
-    return DataCondition((Code) (mError & rhs));
+    return DataCondition((Code)(mError & rhs));
   }
-  operator Code () const { return mError; }
+  operator Code() const
+  {
+    return mError;
+  }
 
   // Adjust a sigened integer of any size to the range [-absMaxVal , +absMaxVal]
-  template<typename T>
-  void adjustSIntXRange(T & val, T absMaxVal)
+  template <typename T>
+  void adjustSIntXRange(T& val, T absMaxVal)
   {
     if (val > absMaxVal)
     {
@@ -73,9 +74,8 @@ public:
     }
   }
 
-private:
+ private:
   Code mError;
 };
 
-} // namespace datatypes
-
+}  // namespace datatypes

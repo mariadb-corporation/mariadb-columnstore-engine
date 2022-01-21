@@ -37,14 +37,16 @@ int main(int argc, char* argv[])
   unsigned pid;
   void* agg;
   auto c = sscanf(p, "Agg-p%u-t%p-", &pid, &agg);
-  if (c == 2) {
+  if (c == 2)
+  {
     char fname[1024];
     snprintf(fname, sizeof(fname), "META-p%u-t%p", pid, agg);
     rfd = open(fname, O_RDONLY);
   }
   if (rfd < 0)
     rfd = open("./META", O_RDONLY);
-  if (rfd >= 0) {
+  if (rfd >= 0)
+  {
     struct stat rst;
     fstat(rfd, &rst);
     messageqcpp::ByteStream rbs;
@@ -56,17 +58,16 @@ int main(int argc, char* argv[])
     rbs.advanceInputPtr(r);
     rg.deserialize(rbs);
     close(rfd);
-  } else {
-    std::vector<uint32_t> pos{2, 6, 22, 30, 46, 54}; // ?
-    std::vector<uint32_t> oids{3011, 3011, 3011, 3011, 3011}; // ?
-    std::vector<uint32_t> keys{1, 1, 1, 1, 1}; // ?
+  }
+  else
+  {
+    std::vector<uint32_t> pos{2, 6, 22, 30, 46, 54};           // ?
+    std::vector<uint32_t> oids{3011, 3011, 3011, 3011, 3011};  // ?
+    std::vector<uint32_t> keys{1, 1, 1, 1, 1};                 // ?
     std::vector<execplan::CalpontSystemCatalog::ColDataType> col_t{
-        execplan::CalpontSystemCatalog::INT,
-        execplan::CalpontSystemCatalog::LONGDOUBLE,
-        execplan::CalpontSystemCatalog::UBIGINT,
-        execplan::CalpontSystemCatalog::LONGDOUBLE,
-        execplan::CalpontSystemCatalog::UBIGINT
-    };
+        execplan::CalpontSystemCatalog::INT, execplan::CalpontSystemCatalog::LONGDOUBLE,
+        execplan::CalpontSystemCatalog::UBIGINT, execplan::CalpontSystemCatalog::LONGDOUBLE,
+        execplan::CalpontSystemCatalog::UBIGINT};
     std::vector<uint32_t> csN{8, 8, 8, 8, 8};
     std::vector<uint32_t> scale{0, 0, 0, 0, 0};
     std::vector<uint32_t> prec{10, 4294967295, 9999, 4294967295, 19};

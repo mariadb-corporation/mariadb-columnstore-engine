@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_ascii.cpp 3923 2013-06-19 21:43:06Z bwilkinson $
-*
-*
-****************************************************************************/
+ * $Id: func_ascii.cpp 3923 2013-06-19 21:43:06Z bwilkinson $
+ *
+ *
+ ****************************************************************************/
 
 #include <cstdlib>
 #include <string>
@@ -38,24 +38,22 @@ using namespace dataconvert;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_ascii::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
+CalpontSystemCatalog::ColType Func_ascii::operationType(FunctionParm& fp,
+                                                        CalpontSystemCatalog::ColType& resultType)
 {
-    return resultType;
+  return resultType;
 }
 
-int64_t Func_ascii::getIntVal(rowgroup::Row& row,
-                              FunctionParm& parm,
-                              bool& isNull,
+int64_t Func_ascii::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                               CalpontSystemCatalog::ColType& op_ct)
 {
-    const string& str = parm[0]->data()->getStrVal(row, isNull);
+  const string& str = parm[0]->data()->getStrVal(row, isNull);
 
-    if (str.empty())
-        return 0;
+  if (str.empty())
+    return 0;
 
-    return (unsigned char)str[0];
+  return (unsigned char)str[0];
 }
 
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:
