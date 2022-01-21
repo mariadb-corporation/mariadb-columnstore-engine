@@ -15,7 +15,7 @@ AllowShortLoopsOnASingleLine: false
 BreakConstructorInitializersBeforeComma: true
 ConstructorInitializerIndentWidth: 1
 DerivePointerAlignment: false
-IndentCaseLabels: false
+IndentCaseLabels: true
 NamespaceIndentation: None
 PointerAlignment: Left
 SortIncludes: true

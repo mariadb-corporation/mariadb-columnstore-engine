@@ -54,6 +54,8 @@ extern BRM::DBRM* brm;
 extern boost::mutex bppLock;
 extern uint32_t highPriorityThreads, medPriorityThreads, lowPriorityThreads;
 
+class BPPSendThread;
+
 class BPPV
 {
 public:
