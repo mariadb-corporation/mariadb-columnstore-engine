@@ -29,6 +29,9 @@
 #include "filter.h"
 
 
+
+typedef boost::shared_ptr<SimpleColumn> SSC;
+
 namespace execplan
 {
 // forward reference

@@ -36,6 +36,7 @@
 
 namespace joblist
 {
+class PassThruStep;
 
 class PassThruCommandJL : public CommandJL
 {

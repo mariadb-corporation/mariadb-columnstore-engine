@@ -29,6 +29,8 @@
 
 #include "liboamcpp.h"
 
+#include "we_redistributedef.h"
+
 // forward reference
 namespace messageqcpp
 {
