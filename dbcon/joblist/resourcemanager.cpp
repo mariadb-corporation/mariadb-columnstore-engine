@@ -445,6 +445,26 @@ bool ResourceManager::getMemory(int64_t amount, boost::shared_ptr<int64_t>& sess
     }
     return (ret1 && ret2);
 }
+// Don't care about session memory
+bool ResourceManager::getMemory(int64_t amount, bool patience)
+{
+    bool ret1 = (atomicops::atomicSub(&totalUmMemLimit, amount) >= 0);
+    
+    uint32_t retryCounter = 0, maxRetries = 20;   // 10s delay
+    
+    while (patience && !ret1 && retryCounter++ < maxRetries)
+    {
+        atomicops::atomicAdd(&totalUmMemLimit, amount);
+        usleep(500000);
+        ret1 = (atomicops::atomicSub(&totalUmMemLimit, amount) >= 0);
+    }
+    if  (!ret1)
+    {
+        // If  we  didn't  get any memory, restore the counters.
+        atomicops::atomicAdd(&totalUmMemLimit, amount);
+    }
+    return ret1;
+}
 
 
 } //namespace

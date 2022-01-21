@@ -376,14 +376,16 @@ public:
     {
         if (fMemSizeForOutputRG > 0)
         {
-            resourceManager->returnMemory(fMemSizeForOutputRG, fJoinMemLimit);
+            resourceManager->returnMemory(fMemSizeForOutputRG);
             fMemSizeForOutputRG = 0;
         }
     }
     bool getMemory(uint64_t memSize)
     {
-        fMemSizeForOutputRG += memSize;
-        return resourceManager->getMemory(memSize, fJoinMemLimit); 
+        bool gotMem = resourceManager->getMemory(memSize); 
+        if (gotMem)
+            fMemSizeForOutputRG += memSize;
+        return gotMem;
     }
 private:
     TupleHashJoinStep();
@@ -442,7 +444,6 @@ private:
 
     ResourceManager* resourceManager;
     uint64_t fMemSizeForOutputRG;
-    boost::shared_ptr<int64_t> fJoinMemLimit;
     
     struct JoinerSorter
     {

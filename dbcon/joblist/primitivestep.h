@@ -1572,7 +1572,6 @@ private:
       boost::scoped_array<uint8_t> largeNullMemory;
       boost::scoped_array<boost::shared_array<uint8_t>> smallNullMemory;
       uint32_t matchCount;
-      boost::shared_ptr<int64_t> fJoinMemLimit;
       
       rowgroup::Row postJoinRow;
       rowgroup::RowGroup local_fe2Output;

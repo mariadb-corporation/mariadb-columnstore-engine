@@ -1432,8 +1432,8 @@ void BatchPrimitiveProcessor::execute()
 #endif
 {
     uint8_t sendCount = 0;
-    bool smoreRGs = false;
-    uint32_t sStartRid = 0;
+//    bool smoreRGs = false;
+//    uint32_t sStartRid = 0;
     uint32_t i, j;
 
     try
@@ -1767,7 +1767,7 @@ void BatchPrimitiveProcessor::execute()
                     stopwatch->stop("-- executeTupleJoin()");
 #else
                     startRid = executeTupleJoin(startRid);
-                    sStartRid = startRid;
+//                    sStartRid = startRid;
 #endif
                     /* project the non-key columns */
                     for (j = 0; j < projectCount; ++j)
@@ -1805,7 +1805,7 @@ void BatchPrimitiveProcessor::execute()
                              */
                             resetGJRG();
                             moreRGs = generateJoinedRowGroup(baseJRow);
-                            smoreRGs = moreRGs;
+//                            smoreRGs = moreRGs;
                             sendCount = (uint8_t)(!moreRGs && !startRid);
 //                            *serialized << (uint8_t)(!moreRGs && !startRid);   // the "count this msg" var
                             *serialized << sendCount;
@@ -1922,7 +1922,7 @@ void BatchPrimitiveProcessor::execute()
 #endif
         }
         ridCount = origRidCount;  // May not be needed, but just to be safe.
-        std::cout << "end of send. startRid=" << sStartRid << " moreRG=" << smoreRGs << " sendCount=" << sendCount << std::endl;
+//        std::cout << "end of send. startRid=" << sStartRid << " moreRG=" << smoreRGs << " sendCount=" << sendCount << std::endl;
         if (projectCount > 0 || ot == ROW_GROUP)
         {
             *serialized << cachedIO;

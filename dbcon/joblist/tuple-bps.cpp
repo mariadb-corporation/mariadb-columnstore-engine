@@ -160,9 +160,9 @@ TupleBPS::JoinLocalData::JoinLocalData(TupleBPS* pTupleBPS, RowGroup& primRowGro
                                        rowgroup::RowGroup& joinFERG,
                                        std::vector<boost::shared_ptr<joiner::TupleJoiner>>& tjoiners,
                                        uint32_t smallSideCount, bool doJoin)
-    : tbps(pTupleBPS), local_primRG(primRowGroup), local_outputRG(outputRowGroup), doJoin(doJoin), fe2(fe2), 
-      fe2Output(fe2Output), smallSideCount(smallSideCount), joinerMatchesRGs(joinerMatchesRGs), 
-      joinFERG(joinFERG), tjoiners(tjoiners)
+    : tbps(pTupleBPS), local_primRG(primRowGroup), local_outputRG(outputRowGroup), fe2(fe2),
+      fe2Output(fe2Output), joinerMatchesRGs(joinerMatchesRGs), joinFERG(joinFERG), tjoiners(tjoiners), 
+      smallSideCount(smallSideCount), doJoin(doJoin)
 {
     if (doJoin || fe2)
     {
@@ -180,7 +180,6 @@ TupleBPS::JoinLocalData::JoinLocalData(TupleBPS* pTupleBPS, RowGroup& primRowGro
 
     if (doJoin)
     {
-        fJoinMemLimit.reset();
         joinerOutput.resize(smallSideCount);
         smallSideRows.reset(new Row[smallSideCount]);
         smallNulls.reset(new Row[smallSideCount]);
@@ -263,11 +262,14 @@ uint64_t TupleBPS::JoinLocalData::generateJoinResultSet(const uint32_t depth,
                 uint32_t dbRoot = local_outputRG.getDBRoot();
                 uint64_t baseRid = local_outputRG.getBaseRid();
                 outputData.push_back(joinedData);
-                memSizeForOutputRG += local_outputRG.getMaxDataSize();
-                /* Don't let the join results buffer get out of control.  Need to refactor this.  
-                 * All post-join processing needs to go here AND later for now. */
-                if (UNLIKELY(!tbps->resourceManager()->getMemory(local_outputRG.getMaxDataSize(), fJoinMemLimit, false))) // Don't wait for memory, just send the data on to DL.
+                // Don't let the join results buffer get out of control.
+                if (tbps->resourceManager()->getMemory(local_outputRG.getMaxDataSize(), false))
                 {
+                    memSizeForOutputRG += local_outputRG.getMaxDataSize();
+                }
+                else
+                {
+                    // Don't wait for memory, just send the data on to DL.
                     RowGroup out(local_outputRG);
                     if (fe2 && tbps->runFEonPM())
                     {
@@ -278,7 +280,7 @@ uint64_t TupleBPS::JoinLocalData::generateJoinResultSet(const uint32_t depth,
                     {
                         tbps->rgDataVecToDl(outputData, out, dlp);
                     }
-                    tbps->resourceManager()->returnMemory(memSizeForOutputRG, fJoinMemLimit);
+                    tbps->resourceManager()->returnMemory(memSizeForOutputRG);
                     memSizeForOutputRG = 0;
                 }
                 joinedData.reinit(local_outputRG);
@@ -2129,6 +2131,7 @@ void TupleBPS::processByteStreamVector(vector<boost::shared_ptr<messageqcpp::Byt
     uint32_t cachedIO;
     uint32_t physIO;
     uint32_t touchedBlocks;
+    int32_t  memAmount = 0;
 
     for (uint32_t i = begin; i < end; ++i)
     {
@@ -2295,7 +2298,7 @@ void TupleBPS::processByteStreamVector(vector<boost::shared_ptr<messageqcpp::Byt
                     {
                         applyMapping(data->largeMapping, data->largeSideRow, &data->joinedBaseRow);
                         data->joinedBaseRow.setRid(data->largeSideRow.getRelRid());
-                        data->generateJoinResultSet( 0, rgDatav, dlp);
+                        memAmount += data->generateJoinResultSet( 0, rgDatav, dlp);
                     }
                 } // end of the for-loop in the join code
 
@@ -2308,7 +2311,12 @@ void TupleBPS::processByteStreamVector(vector<boost::shared_ptr<messageqcpp::Byt
             {
                 rgDatav.push_back(rgData);
             }
-
+            if (memAmount)
+            {
+                resourceManager()->returnMemory(memAmount);
+                memAmount = 0;
+            }
+            
             // Execute UM F & E group 2 on rgDatav
             if (fe2 && !bRunFEonPM && rgDatav.size() > 0 && !cancelled())
             {

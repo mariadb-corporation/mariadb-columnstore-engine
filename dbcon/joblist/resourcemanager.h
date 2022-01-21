@@ -412,6 +412,11 @@ public:
        for the query. */
     /* Temporary parameter 'patience', will wait for up to 10s to get the memory. */
     EXPORT bool getMemory(int64_t amount, boost::shared_ptr<int64_t>& sessionLimit, bool patience = true);
+    EXPORT bool getMemory(int64_t amount, bool patience = true);
+    inline void returnMemory(int64_t amount)
+    {
+        atomicops::atomicAdd(&totalUmMemLimit, amount);
+    }
     inline void returnMemory(int64_t amount, boost::shared_ptr<int64_t>& sessionLimit)
     {
         atomicops::atomicAdd(&totalUmMemLimit, amount);
@@ -616,7 +621,7 @@ private:
 
     /* new HJ/Union/Aggregation support */
     volatile int64_t totalUmMemLimit;	// mem limit for join, union, and aggregation on the UM
-    uint64_t configuredUmMemLimit;
+    int64_t  configuredUmMemLimit;
     uint64_t pmJoinMemLimit;	// mem limit on individual PM joins
 
     /* multi-thread aggregate */
