@@ -16,16 +16,16 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_inet_ntoa.cpp 3495 2013-01-21 14:09:51Z rdempsey $
-*
-*
-****************************************************************************/
+ * $Id: func_inet_ntoa.cpp 3495 2013-01-21 14:09:51Z rdempsey $
+ *
+ *
+ ****************************************************************************/
 
 #ifndef _MSC_VER
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #endif
-#include <iostream> // included when debugging
+#include <iostream>  // included when debugging
 #include <sstream>
 #include <climits>
 
@@ -38,7 +38,6 @@
 
 namespace funcexp
 {
-
 //------------------------------------------------------------------------------
 // The only accessor function that appears to make sense in conjunction with
 // inet_ntoa() is getStrVal().  I tested in MySQL (outside infinidb), and
@@ -57,10 +56,9 @@ namespace funcexp
 // See mcs_add in udfsdk.h for explanation of this function.
 //------------------------------------------------------------------------------
 execplan::CalpontSystemCatalog::ColType Func_inet_ntoa::operationType(
-    FunctionParm& fp,
-    execplan::CalpontSystemCatalog::ColType& resultType)
+    FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType)
 {
-    return fp[0]->data()->resultType(); // input type
+  return fp[0]->data()->resultType();  // input type
 }
 
 //------------------------------------------------------------------------------
@@ -68,34 +66,32 @@ execplan::CalpontSystemCatalog::ColType Func_inet_ntoa::operationType(
 // Not sure this is ever called, but emulated getDoubleVal() implementation,
 // to be safe.  (See getDoubleVal() description)
 //------------------------------------------------------------------------------
-int64_t Func_inet_ntoa::getIntVal(rowgroup::Row& row,
-                                  FunctionParm& fp,
-                                  bool& isNull,
+int64_t Func_inet_ntoa::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                   execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-//	std::cout << "In Func_inet_ntoa::getIntVal" << std::endl;
+  //	std::cout << "In Func_inet_ntoa::getIntVal" << std::endl;
 
-    std::string sValue = getStrVal( row, fp, isNull, op_ct );
-    int64_t iValue = joblist::NULL_INT64;
+  std::string sValue = getStrVal(row, fp, isNull, op_ct);
+  int64_t iValue = joblist::NULL_INT64;
 
-    if ( !isNull )
+  if (!isNull)
+  {
+    unsigned int newLength = sValue.length();
+    std::string::size_type dot1 = sValue.find('.');
+
+    if (dot1 != std::string::npos)
     {
-        unsigned int newLength      = sValue.length();
-        std::string::size_type dot1 = sValue.find('.');
-
-        if (dot1 != std::string::npos)
-        {
-            newLength = dot1;
-        }
-
-        if (newLength != sValue.length())
-            sValue.resize(newLength);
-
-        std::istringstream iss( sValue );
-        iss >> iValue;
+      newLength = dot1;
     }
 
-    return iValue;
+    if (newLength != sValue.length())
+      sValue.resize(newLength);
+
+    std::istringstream iss(sValue);
+    iss >> iValue;
+  }
+
+  return iValue;
 }
 
 //------------------------------------------------------------------------------
@@ -103,205 +99,183 @@ int64_t Func_inet_ntoa::getIntVal(rowgroup::Row& row,
 // SELECT ... WHERE inet_ntoa(ipstring) = 1.1 will call getDoubleVal()
 // SELECT ... WHERE inet_ntoa(ipstring) = 1   will also call getDoubleVal()
 //------------------------------------------------------------------------------
-double Func_inet_ntoa::getDoubleVal(rowgroup::Row& row,
-                                    FunctionParm& fp,
-                                    bool& isNull,
+double Func_inet_ntoa::getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                     execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-//	std::cout << "In Func_inet_ntoa::getDoubleVal" << std::endl;
+  //	std::cout << "In Func_inet_ntoa::getDoubleVal" << std::endl;
 
-    std::string sValue = getStrVal( row, fp, isNull, op_ct );
-    double dValue = doubleNullVal();
+  std::string sValue = getStrVal(row, fp, isNull, op_ct);
+  double dValue = doubleNullVal();
 
-    if ( !isNull )
+  if (!isNull)
+  {
+    unsigned int newLength = sValue.length();
+    std::string::size_type dot1 = sValue.find('.');
+
+    if ((dot1 != std::string::npos) && (sValue.length() > dot1 + 1))
     {
-        unsigned int newLength      = sValue.length();
-        std::string::size_type dot1 = sValue.find('.');
+      std::string::size_type dot2 = sValue.find('.', dot1 + 1);
 
-        if ((dot1 != std::string::npos) && (sValue.length() > dot1 + 1))
-        {
-            std::string::size_type dot2 = sValue.find('.', dot1 + 1);
-
-            if (dot2 != std::string::npos)
-            {
-                newLength = dot2;
-            }
-        }
-
-        if (newLength != sValue.length())
-            sValue.resize(newLength);
-
-        std::istringstream iss( sValue );
-        iss >> dValue;
+      if (dot2 != std::string::npos)
+      {
+        newLength = dot2;
+      }
     }
 
-    return dValue;
+    if (newLength != sValue.length())
+      sValue.resize(newLength);
+
+    std::istringstream iss(sValue);
+    iss >> dValue;
+  }
+
+  return dValue;
 }
 
 //------------------------------------------------------------------------------
 // Return IP address as a string value.
 // This is the get function that makes sense to use.
 //------------------------------------------------------------------------------
-std::string Func_inet_ntoa::getStrVal(rowgroup::Row& row,
-                                      FunctionParm& fp,
-                                      bool& isNull,
+std::string Func_inet_ntoa::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                       execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-//	std::cout << "In Func_inet_ntoa::getStrVal" << std::endl;
+  //	std::cout << "In Func_inet_ntoa::getStrVal" << std::endl;
 
-    std::string sValue;
+  std::string sValue;
 
-    int64_t iValue = 0;
+  int64_t iValue = 0;
 
-    // @bug 3628 reopened: get double and round up, if necessary;
-    //      else just get integer value
-    if ((fp[0]->data()->resultType().colDataType ==
-            execplan::CalpontSystemCatalog::DECIMAL) ||
-            (fp[0]->data()->resultType().colDataType ==
-             execplan::CalpontSystemCatalog::UDECIMAL)   ||
-            (fp[0]->data()->resultType().colDataType ==
-             execplan::CalpontSystemCatalog::FLOAT)   ||
-            (fp[0]->data()->resultType().colDataType ==
-             execplan::CalpontSystemCatalog::DOUBLE))
-    {
-        double d = fp[0]->data()->getDoubleVal(row, isNull);
+  // @bug 3628 reopened: get double and round up, if necessary;
+  //      else just get integer value
+  if ((fp[0]->data()->resultType().colDataType == execplan::CalpontSystemCatalog::DECIMAL) ||
+      (fp[0]->data()->resultType().colDataType == execplan::CalpontSystemCatalog::UDECIMAL) ||
+      (fp[0]->data()->resultType().colDataType == execplan::CalpontSystemCatalog::FLOAT) ||
+      (fp[0]->data()->resultType().colDataType == execplan::CalpontSystemCatalog::DOUBLE))
+  {
+    double d = fp[0]->data()->getDoubleVal(row, isNull);
 
-        if (d >= 0.0)
-            iValue = (int64_t)(d + 0.5);
-        else
-            iValue = (int64_t)(d - 0.5);
-    }
+    if (d >= 0.0)
+      iValue = (int64_t)(d + 0.5);
     else
-    {
-        iValue = fp[0]->data()->getIntVal(row, isNull);
-    }
+      iValue = (int64_t)(d - 0.5);
+  }
+  else
+  {
+    iValue = fp[0]->data()->getIntVal(row, isNull);
+  }
 
-    if (!isNull)
-    {
-        // @bug 3628 reopened: add check for out of range values
-        if ((iValue < 0) || (iValue > UINT_MAX))
-            isNull = true;
-        else
-            convertNtoa( iValue, sValue );
-    }
+  if (!isNull)
+  {
+    // @bug 3628 reopened: add check for out of range values
+    if ((iValue < 0) || (iValue > UINT_MAX))
+      isNull = true;
+    else
+      convertNtoa(iValue, sValue);
+  }
 
-    return sValue;
+  return sValue;
 }
 
 //------------------------------------------------------------------------------
 // Return IP address as a boolean.
 // N/A so returning null.  See explanation at the top of this source file.
 //------------------------------------------------------------------------------
-bool Func_inet_ntoa::getBoolVal(rowgroup::Row& row,
-                                FunctionParm& fp,
-                                bool& isNull,
+bool Func_inet_ntoa::getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                 execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-//	std::cout << "In Func_inet_ntoa::getBoolVal" << std::endl;
-    bool bValue = false;
-    isNull = true;
+  //	std::cout << "In Func_inet_ntoa::getBoolVal" << std::endl;
+  bool bValue = false;
+  isNull = true;
 
-    return bValue;
+  return bValue;
 }
 
 //------------------------------------------------------------------------------
 // Return IP address as a decimal value.
 // N/A so returning null.  See explanation at the top of this source file.
 //------------------------------------------------------------------------------
-execplan::IDB_Decimal Func_inet_ntoa::getDecimalVal(rowgroup::Row& row,
-        FunctionParm& fp,
-        bool& isNull,
-        execplan::CalpontSystemCatalog::ColType& op_ct)
+execplan::IDB_Decimal Func_inet_ntoa::getDecimalVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                                    execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-//	IDB_Decimal dValue = fp[0]->data()->getDecimalVal(row, isNull);
-    execplan::IDB_Decimal dValue ( joblist::NULL_INT64, 0, 0 );
-    isNull = true;
+  //	IDB_Decimal dValue = fp[0]->data()->getDecimalVal(row, isNull);
+  execplan::IDB_Decimal dValue(joblist::NULL_INT64, 0, 0);
+  isNull = true;
 
-    return dValue;
+  return dValue;
 }
 
 //------------------------------------------------------------------------------
 // Return IP address as a date.
 // N/A so returning null.  See explanation at the top of this source file.
 //------------------------------------------------------------------------------
-int32_t Func_inet_ntoa::getDateIntVal(rowgroup::Row& row,
-                                      FunctionParm& fp,
-                                      bool& isNull,
+int32_t Func_inet_ntoa::getDateIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                       execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-//	std::cout << "In Func_inet_ntoa::getDateIntVal" << std::endl;
+  //	std::cout << "In Func_inet_ntoa::getDateIntVal" << std::endl;
 
-//	int32_t iValue = fp[0]->data()->getDateIntVal(row, isNull);
-    int32_t iValue = joblist::DATENULL;
-    isNull = true;
+  //	int32_t iValue = fp[0]->data()->getDateIntVal(row, isNull);
+  int32_t iValue = joblist::DATENULL;
+  isNull = true;
 
-    return iValue;
+  return iValue;
 }
 
 //------------------------------------------------------------------------------
 // Return IP address as a date/time.
 // N/A so returning null.  See explanation at the top of this source file.
 //------------------------------------------------------------------------------
-int64_t Func_inet_ntoa::getDatetimeIntVal(rowgroup::Row& row,
-        FunctionParm& fp,
-        bool& isNull,
-        execplan::CalpontSystemCatalog::ColType& op_ct)
+int64_t Func_inet_ntoa::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                          execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-//	std::cout << "In Func_inet_ntoa::getDatetimeVal" << std::endl;
+  //	std::cout << "In Func_inet_ntoa::getDatetimeVal" << std::endl;
 
-//	int64t iValue = fp[0]->data()->getDatetimeIntVal(row, isNull);
-    int64_t iValue = joblist::DATETIMENULL;
-    isNull = true;
+  //	int64t iValue = fp[0]->data()->getDatetimeIntVal(row, isNull);
+  int64_t iValue = joblist::DATETIMENULL;
+  isNull = true;
 
-    return iValue;
+  return iValue;
 }
 
-int64_t Func_inet_ntoa::getTimestampIntVal(rowgroup::Row& row,
-        FunctionParm& fp,
-        bool& isNull,
-        execplan::CalpontSystemCatalog::ColType& op_ct)
+int64_t Func_inet_ntoa::getTimestampIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                           execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-//	std::cout << "In Func_inet_ntoa::getTimestampVal" << std::endl;
+  //	std::cout << "In Func_inet_ntoa::getTimestampVal" << std::endl;
 
-//	int64t iValue = fp[0]->data()->getTimestampIntVal(row, isNull);
-    int64_t iValue = joblist::TIMESTAMPNULL;
-    isNull = true;
+  //	int64t iValue = fp[0]->data()->getTimestampIntVal(row, isNull);
+  int64_t iValue = joblist::TIMESTAMPNULL;
+  isNull = true;
 
-    return iValue;
+  return iValue;
 }
 
-int64_t Func_inet_ntoa::getTimeIntVal(rowgroup::Row& row,
-                                      FunctionParm& fp,
-                                      bool& isNull,
+int64_t Func_inet_ntoa::getTimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                       execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-//	std::cout << "In Func_inet_ntoa::getTimeVal" << std::endl;
+  //	std::cout << "In Func_inet_ntoa::getTimeVal" << std::endl;
 
-//	int64t iValue = fp[0]->data()->getTimeIntVal(row, isNull);
-    int64_t iValue = joblist::TIMENULL;
-    isNull = true;
+  //	int64t iValue = fp[0]->data()->getTimeIntVal(row, isNull);
+  int64_t iValue = joblist::TIMENULL;
+  isNull = true;
 
-    return iValue;
+  return iValue;
 }
 
 //------------------------------------------------------------------------------
 // Convert an integer IP address to its equivalent IP address string.
 // Source code based on MySQL source (Item_func_inet_ntoa() in item_strfunc.cc).
 //------------------------------------------------------------------------------
-void Func_inet_ntoa::convertNtoa(
-    int64_t      ipNum,
-    std::string& ipString )
+void Func_inet_ntoa::convertNtoa(int64_t ipNum, std::string& ipString)
 {
-    struct sockaddr_in sa;
-    sa.sin_addr.s_addr = htonl(ipNum);
+  struct sockaddr_in sa;
+  sa.sin_addr.s_addr = htonl(ipNum);
 
-    // now get it back and print it
+  // now get it back and print it
 #ifdef _MSC_VER
-    ipString = inet_ntoa(sa.sin_addr);
+  ipString = inet_ntoa(sa.sin_addr);
 #else
-    char str[INET_ADDRSTRLEN];
-    ipString = inet_ntop(AF_INET, &(sa.sin_addr), str, INET_ADDRSTRLEN);
+  char str[INET_ADDRSTRLEN];
+  ipString = inet_ntop(AF_INET, &(sa.sin_addr), str, INET_ADDRSTRLEN);
 #endif
 }
 
-}
+}  // namespace funcexp

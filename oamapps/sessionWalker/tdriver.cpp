@@ -37,163 +37,153 @@ int maxTxns = 1000;
 
 class ExecPlanTest : public CppUnit::TestFixture
 {
+  CPPUNIT_TEST_SUITE(ExecPlanTest);
 
-    CPPUNIT_TEST_SUITE( ExecPlanTest );
+  CPPUNIT_TEST(MonitorTestPlan_1);
+  CPPUNIT_TEST_SUITE_END();
 
-    CPPUNIT_TEST( MonitorTestPlan_1 );
-    CPPUNIT_TEST_SUITE_END();
+ private:
+ public:
+  void setUp()
+  {
+  }
 
-private:
-public:
+  void tearDown()
+  {
+  }
 
-    void setUp()
+  int verifyLen;
+  SessionManager* manager;
+  SessionManager::TxnID managerTxns[1000];
+
+  int createTxns(const int& start, const int& end)
+  {
+    int first = start;
+    int last = end;
+    int newTxns = 0;
+
+    verifyLen = manager->verifySize();
+
+    for (int idx = first; idx < last && verifyLen < maxNewTxns; idx++)
     {
+      managerTxns[idx] = manager->newTxnID((uint32_t)idx + 1000);
+      CPPUNIT_ASSERT(managerTxns[idx].id > 0);
+      CPPUNIT_ASSERT(managerTxns[idx].valid == true);
+      verifyLen = manager->verifySize();
+      CPPUNIT_ASSERT(verifyLen > 0);
+      newTxns++;
     }
 
-    void tearDown()
+    CPPUNIT_ASSERT(newTxns == last - first);
+    return newTxns;
+  }
+
+  int closeTxns(const int& start, const int& end)
+  {
+    int first = start;
+    int last = end;
+    int totalClosed = 0;
+
+    for (int idx = first; idx < last; idx++)
     {
+      try
+      {
+        SessionManager::TxnID tmp = manager->getTxnID(idx + 1000);
+
+        if (tmp.valid == true)
+        {
+          manager->committed(tmp);
+          CPPUNIT_ASSERT(tmp.valid == false);
+          totalClosed++;
+        }
+      }
+      catch (exception& e)
+      {
+        cerr << e.what() << endl;
+        continue;
+      }
     }
 
-    int verifyLen;
-    SessionManager* manager;
-    SessionManager::TxnID managerTxns[1000];
+    return totalClosed;
 
-    int createTxns(const int& start, const int& end)
+  }  // closeTxns
+
+  void MonitorTestPlan_1()
+  {
+    int currStartTxn = 0;
+    int currEndTxn = 5;
+    int txnCntIncr = 5;
+    const int sleepTime = 1;
+    const int iterMax = 1;
+    vector<SessionMonitor::MonSIDTIDEntry*> toTxns;
+
+    manager = new SessionManager();
+    // CPPUNIT_ASSERT(manager->verifySize()==0);
+
+    SessionMonitor* monitor = NULL;
+
+    for (int jdx = 0; jdx < iterMax; jdx++)
     {
+      // store the current state of the SessionManager
+      monitor = new SessionMonitor();
+      monitor->AgeLimit(sleepTime);
+      delete monitor;
+      int idx = 0;
+      int grpStart = currStartTxn;
 
-        int first = start;
-        int last = end;
-        int newTxns = 0;
+      for (idx = 0; idx < 3; idx++)
+      {
+        createTxns(currStartTxn, currEndTxn);
+        // CPPUNIT_ASSERT(manager->verifySize()==(idx+1)*txnCntIncr);
 
-        verifyLen = manager->verifySize();
+        currStartTxn += txnCntIncr;
+        currEndTxn += txnCntIncr;
+        sleep(sleepTime + 1);  // make sessions time out
 
-        for (int idx = first; idx < last && verifyLen < maxNewTxns ; idx++)
-        {
-            managerTxns[idx] = manager->newTxnID((uint32_t)idx + 1000);
-            CPPUNIT_ASSERT(managerTxns[idx].id > 0);
-            CPPUNIT_ASSERT(managerTxns[idx].valid == true);
-            verifyLen = manager->verifySize();
-            CPPUNIT_ASSERT(verifyLen > 0);
-            newTxns++;
-        }
-
-        CPPUNIT_ASSERT(newTxns == last - first);
-        return newTxns;
-    }
-
-    int closeTxns(const int& start, const int& end)
-    {
-
-        int first = start;
-        int last = end;
-        int totalClosed = 0;
-
-        for (int idx = first; idx < last ; idx++)
-        {
-            try
-            {
-                SessionManager::TxnID tmp = manager->getTxnID(idx + 1000);
-
-                if (tmp.valid == true)
-                {
-                    manager->committed(tmp);
-                    CPPUNIT_ASSERT(tmp.valid == false);
-                    totalClosed++;
-                }
-
-            }
-            catch (exception& e)
-            {
-                cerr << e.what() << endl;
-                continue;
-            }
-        }
-
-        return totalClosed;
-
-    } //closeTxns
-
-    void MonitorTestPlan_1()
-    {
-
-        int currStartTxn = 0;
-        int currEndTxn = 5;
-        int txnCntIncr = 5;
-        const int sleepTime = 1;
-        const int iterMax = 1;
-        vector<SessionMonitor::MonSIDTIDEntry*> toTxns;
-
-        manager = new SessionManager();
-        //CPPUNIT_ASSERT(manager->verifySize()==0);
-
-        SessionMonitor* monitor = NULL;
-
-        for (int jdx = 0; jdx < iterMax; jdx++)
-        {
-
-            // store the current state of the SessionManager
-            monitor = new SessionMonitor();
-            monitor->AgeLimit(sleepTime);
-            delete monitor;
-            int idx = 0;
-            int grpStart = currStartTxn;
-
-            for (idx = 0; idx < 3; idx++ )
-            {
-
-                createTxns(currStartTxn, currEndTxn);
-                //CPPUNIT_ASSERT(manager->verifySize()==(idx+1)*txnCntIncr);
-
-                currStartTxn += txnCntIncr;
-                currEndTxn += txnCntIncr;
-                sleep(sleepTime + 1); //make sessions time out
-
-                monitor = new SessionMonitor(); // read Monitor data
-                monitor->AgeLimit(sleepTime);
-                toTxns.clear();
-                toTxns = monitor->timedOutTxns(); // get timed out txns
-                CPPUNIT_ASSERT(toTxns.size() == (uint32_t)txnCntIncr * idx);
-
-                delete monitor;
-            }
-
-            int grpEnd = currEndTxn;
-            monitor = new SessionMonitor();
-            monitor->AgeLimit(sleepTime);
-            closeTxns(grpStart, grpEnd); // close this iteration of txns
-            //CPPUNIT_ASSERT(manager->verifySize()==0);
-            toTxns = monitor->timedOutTxns(); // get timed out txns
-            CPPUNIT_ASSERT(toTxns.size() == 0);
-
-            delete monitor;
-
-        }
-
-        monitor = new SessionMonitor(); // readload Monitor data
-        monitor->AgeLimit(sleepTime - 1);
-
+        monitor = new SessionMonitor();  // read Monitor data
+        monitor->AgeLimit(sleepTime);
         toTxns.clear();
-        toTxns = monitor->timedOutTxns(); // get timed out txns
-        CPPUNIT_ASSERT(toTxns.size() == 0);
-        delete monitor;
+        toTxns = monitor->timedOutTxns();  // get timed out txns
+        CPPUNIT_ASSERT(toTxns.size() == (uint32_t)txnCntIncr * idx);
 
-        //CPPUNIT_ASSERT(manager->verifySize()==0);
-        delete manager;
+        delete monitor;
+      }
+
+      int grpEnd = currEndTxn;
+      monitor = new SessionMonitor();
+      monitor->AgeLimit(sleepTime);
+      closeTxns(grpStart, grpEnd);  // close this iteration of txns
+      // CPPUNIT_ASSERT(manager->verifySize()==0);
+      toTxns = monitor->timedOutTxns();  // get timed out txns
+      CPPUNIT_ASSERT(toTxns.size() == 0);
+
+      delete monitor;
     }
 
-}; // test suite
+    monitor = new SessionMonitor();  // readload Monitor data
+    monitor->AgeLimit(sleepTime - 1);
 
-CPPUNIT_TEST_SUITE_REGISTRATION( ExecPlanTest);
+    toTxns.clear();
+    toTxns = monitor->timedOutTxns();  // get timed out txns
+    CPPUNIT_ASSERT(toTxns.size() == 0);
+    delete monitor;
+
+    // CPPUNIT_ASSERT(manager->verifySize()==0);
+    delete manager;
+  }
+
+};  // test suite
+
+CPPUNIT_TEST_SUITE_REGISTRATION(ExecPlanTest);
 
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
 int main(int argc, char* argv[])
 {
-
-    CppUnit::TextUi::TestRunner runner;
-    CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
-    runner.addTest( registry.makeTest() );
-    bool wasSuccessful = runner.run( "", false );
-    return (wasSuccessful ? 0 : 1);
+  CppUnit::TextUi::TestRunner runner;
+  CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
+  runner.addTest(registry.makeTest());
+  bool wasSuccessful = runner.run("", false);
+  return (wasSuccessful ? 0 : 1);
 }

@@ -16,11 +16,10 @@
    MA 02110-1301, USA. */
 
 /*
-* $Id: we_redistribute.h 4450 2013-01-21 14:13:24Z rdempsey $
-*/
+ * $Id: we_redistribute.h 4450 2013-01-21 14:13:24Z rdempsey $
+ */
 
-#ifndef WE_REDISTRIBUTE_H
-#define WE_REDISTRIBUTE_H
+#pragma once
 
 // forward reference
 
@@ -28,27 +27,21 @@ namespace messageqcpp
 {
 class ByteStream;
 class IOSocket;
-}
+}  // namespace messageqcpp
 
 namespace redistribute
 {
-
 class Redistribute
 {
-public:
-    Redistribute();
-    ~Redistribute() {};
+ public:
+  Redistribute();
+  ~Redistribute(){};
 
-    static void handleRedistributeMessage(messageqcpp::ByteStream&, messageqcpp::IOSocket&);
+  static void handleRedistributeMessage(messageqcpp::ByteStream&, messageqcpp::IOSocket&);
 
-private:
+ private:
 };
 
-
-} // namespace
-
-
-#endif  // WE_REDISTRIBUTE_H
+}  // namespace redistribute
 
 // vim:ts=4 sw=4:
-

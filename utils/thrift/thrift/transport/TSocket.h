@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TRANSPORT_TSOCKET_H_
-#define _THRIFT_TRANSPORT_TSOCKET_H_ 1
+#pragma once
 
 #include <string>
 
@@ -315,5 +314,4 @@ private:
 }
 } // apache::thrift::transport
 
-#endif // #ifndef _THRIFT_TRANSPORT_TSOCKET_H_
 

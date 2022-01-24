@@ -24,8 +24,7 @@
  * class ColumnOpBulk
  */
 
-#ifndef _WE_COLOP_BULK_H_
-#define _WE_COLOP_BULK_H_
+#pragma once
 
 #include "we_colop.h"
 
@@ -42,21 +41,18 @@ class Log;
  */
 class ColumnOpBulk : public ColumnOp
 {
-public:
-    ColumnOpBulk();
-    ColumnOpBulk(Log* logger, int compressionType);
-    virtual      ~ColumnOpBulk();
+ public:
+  ColumnOpBulk();
+  ColumnOpBulk(Log* logger, int compressionType);
+  virtual ~ColumnOpBulk();
 
-    virtual bool  abbreviatedExtent(IDBDataFile*, int) const;
-    virtual int   blocksInFile(IDBDataFile*) const;
-    virtual IDBDataFile* openFile(const WriteEngine::Column& column,
-                                  uint16_t dbRoot, uint32_t partition, uint16_t segment,
-                                  std::string& segFile, bool useTmpSuffix, const char* mode = "r+b",
-                                  int ioBuffSize = DEFAULT_BUFSIZ) const;
-    virtual int   readBlock(IDBDataFile*, unsigned char*, const uint64_t);
-    virtual int   saveBlock(IDBDataFile*, const unsigned char*, const uint64_t);
+  virtual bool abbreviatedExtent(IDBDataFile*, int) const;
+  virtual int blocksInFile(IDBDataFile*) const;
+  virtual IDBDataFile* openFile(const WriteEngine::Column& column, uint16_t dbRoot, uint32_t partition,
+                                uint16_t segment, std::string& segFile, bool useTmpSuffix,
+                                const char* mode = "r+b", int ioBuffSize = DEFAULT_BUFSIZ) const;
+  virtual int readBlock(IDBDataFile*, unsigned char*, const uint64_t);
+  virtual int saveBlock(IDBDataFile*, const unsigned char*, const uint64_t);
 };
 
-} //end of namespace
-
-#endif // _WE_COLOP_BULK_H_
+}  // namespace WriteEngine

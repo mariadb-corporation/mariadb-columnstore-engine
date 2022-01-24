@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id$
-*
-*   avgx.h
-***********************************************************************/
+ *   $Id$
+ *
+ *   avgx.h
+ ***********************************************************************/
 
 /**
  * Columnstore interface for for the avgx function
@@ -29,8 +29,7 @@
  *    'libudf_mysql.so';
  *
  */
-#ifndef HEADER_avgx
-#define HEADER_avgx
+#pragma once
 
 #include <cstdlib>
 #include <string>
@@ -53,7 +52,6 @@
 
 namespace mcsv1sdk
 {
-
 // Override mcsv1_UDAF to build your User Defined Aggregate (UDAF) and/or
 // User Defined Analytic Function (UDAnF).
 // These will be singleton classes, so don't put any instance
@@ -66,32 +64,28 @@ namespace mcsv1sdk
 
 // Return the avgx value of the dataset
 
-class avgx : public  mcsv1_UDAF
+class avgx : public mcsv1_UDAF
 {
-public:
-    // Defaults OK
-    avgx() : mcsv1_UDAF() {};
-    virtual ~avgx() {};
+ public:
+  // Defaults OK
+  avgx() : mcsv1_UDAF(){};
+  virtual ~avgx(){};
 
-    virtual ReturnCode init(mcsv1Context* context,
-                            ColumnDatum* colTypes);
+  virtual ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes);
 
-    virtual ReturnCode reset(mcsv1Context* context);
+  virtual ReturnCode reset(mcsv1Context* context);
 
-    virtual ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn);
+  virtual ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn);
 
-    virtual ReturnCode subEvaluate(mcsv1Context* context, const UserData* valIn);
+  virtual ReturnCode subEvaluate(mcsv1Context* context, const UserData* valIn);
 
-    virtual ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut);
+  virtual ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut);
 
-    virtual ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
+  virtual ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
 
-protected:
+ protected:
 };
 
-};  // namespace
+};  // namespace mcsv1sdk
 
 #undef EXPORT
-
-#endif // HEADER_.h
-

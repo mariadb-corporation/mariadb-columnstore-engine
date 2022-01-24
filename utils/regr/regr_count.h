@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id$
-*
-*   regr_count.h
-***********************************************************************/
+ *   $Id$
+ *
+ *   regr_count.h
+ ***********************************************************************/
 
 /**
  * Columnstore interface for for the regr_count function
@@ -28,8 +28,7 @@
  *    CREATE AGGREGATE FUNCTION regr_count returns INTEGER soname 'libregr_mysql.so';
  *
  */
-#ifndef HEADER_regr_count
-#define HEADER_regr_count
+#pragma once
 
 #include <cstdlib>
 #include <string>
@@ -52,35 +51,30 @@
 
 namespace mcsv1sdk
 {
-
 // Return the regr_count value of the dataset
 
-class regr_count : public  mcsv1_UDAF
+class regr_count : public mcsv1_UDAF
 {
-public:
-    // Defaults OK
-    regr_count() : mcsv1_UDAF() {};
-    virtual ~regr_count() {};
+ public:
+  // Defaults OK
+  regr_count() : mcsv1_UDAF(){};
+  virtual ~regr_count(){};
 
-    virtual ReturnCode init(mcsv1Context* context,
-                            ColumnDatum* colTypes);
+  virtual ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes);
 
-    virtual ReturnCode reset(mcsv1Context* context);
+  virtual ReturnCode reset(mcsv1Context* context);
 
-    virtual ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn);
+  virtual ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn);
 
-    virtual ReturnCode subEvaluate(mcsv1Context* context, const UserData* valIn);
+  virtual ReturnCode subEvaluate(mcsv1Context* context, const UserData* valIn);
 
-    virtual ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut);
+  virtual ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut);
 
-    virtual ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
+  virtual ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
 
-protected:
+ protected:
 };
 
-};  // namespace
+};  // namespace mcsv1sdk
 
 #undef EXPORT
-
-#endif // HEADER_regr_count.h
-

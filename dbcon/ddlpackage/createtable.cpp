@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: createtable.cpp 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: createtable.cpp 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 
 #include <iostream>
 
@@ -29,33 +29,28 @@
 
 namespace ddlpackage
 {
-
 using namespace std;
 
-CreateTableStatement::CreateTableStatement() :
-    fTableDef(0)
+CreateTableStatement::CreateTableStatement() : fTableDef(0)
 {
 }
 
-CreateTableStatement::CreateTableStatement(TableDef* tableDef) :
-    fTableDef(tableDef)
+CreateTableStatement::CreateTableStatement(TableDef* tableDef) : fTableDef(tableDef)
 {
 }
-
 
 CreateTableStatement::~CreateTableStatement()
 {
-    if (fTableDef)
-    {
-        delete fTableDef;
-    }
+  if (fTableDef)
+  {
+    delete fTableDef;
+  }
 }
 
 /** \brief Put to ostream. */
 ostream& CreateTableStatement::put(ostream& os) const
 {
-    os << "CreateTable "
-       << *fTableDef;
-    return os;
+  os << "CreateTable " << *fTableDef;
+  return os;
 }
-}
+}  // namespace ddlpackage

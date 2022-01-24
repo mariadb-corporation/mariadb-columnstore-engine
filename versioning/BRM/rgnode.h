@@ -24,8 +24,7 @@
  * class RGNode interface.  This is a base class for the nodes in the resource graph.
  */
 
-#ifndef RGNODE_H_
-#define RGNODE_H_
+#pragma once
 
 #include <set>
 
@@ -39,39 +38,36 @@
 
 namespace BRM
 {
-
 class RGNode;
 
 class RGNode
 {
-public:
-    EXPORT RGNode();
-    EXPORT RGNode(const RGNode&);
-    EXPORT virtual ~RGNode();
+ public:
+  EXPORT RGNode();
+  EXPORT RGNode(const RGNode&);
+  EXPORT virtual ~RGNode();
 
-    EXPORT RGNode& operator=(const RGNode&);
+  EXPORT RGNode& operator=(const RGNode&);
 
-    EXPORT uint64_t color() const;
-    EXPORT void color(uint64_t);
-    EXPORT void addOutEdge(RGNode*);
-    EXPORT void addInEdge(RGNode*);
-    EXPORT void removeOutEdge(RGNode*);
-    EXPORT void removeInEdge(RGNode*);
+  EXPORT uint64_t color() const;
+  EXPORT void color(uint64_t);
+  EXPORT void addOutEdge(RGNode*);
+  EXPORT void addInEdge(RGNode*);
+  EXPORT void removeOutEdge(RGNode*);
+  EXPORT void removeInEdge(RGNode*);
 
-    friend class LBIDResourceGraph;
+  friend class LBIDResourceGraph;
 
-protected:
-    // adjacency lists.  Technically these should be private, but ResourceNode
-    // currently uses them to wake connected transactions.  TBD...
-    std::set<RGNode*> out;
-    std::set<RGNode*> in;
+ protected:
+  // adjacency lists.  Technically these should be private, but ResourceNode
+  // currently uses them to wake connected transactions.  TBD...
+  std::set<RGNode*> out;
+  std::set<RGNode*> in;
 
-private:
-    uint64_t _color;
+ private:
+  uint64_t _color;
 };
 
-}
+}  // namespace BRM
 
 #undef EXPORT
-
-#endif

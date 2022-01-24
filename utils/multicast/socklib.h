@@ -15,12 +15,11 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef SOCKLIB_H
-#define SOCKLIB_H
+#pragma once
 
 #ifndef UDPCAST_CONFIG_H
-# define UDPCAST_CONFIG_H
-# include "mcsconfig.h"
+#define UDPCAST_CONFIG_H
+#include "mcsconfig.h"
 #endif
 
 #include <sys/types.h>
@@ -65,7 +64,7 @@
 #endif
 
 #define RECEIVER_PORT(x) (x)
-#define SENDER_PORT(x) ((x)+1)
+#define SENDER_PORT(x) ((x) + 1)
 
 #define loseSendPacket udpc_loseSendPacket
 #define loseRecvPacket udpc_loseRecvPacket
@@ -93,20 +92,20 @@ int RecvMsg(int s, struct msghdr* msg, int flags);
 
 struct net_if
 {
-    struct in_addr addr;
-    struct in_addr bcast;
-    const char* name;
+  struct in_addr addr;
+  struct in_addr bcast;
+  const char* name;
 #ifdef SIOCGIFINDEX
-    int index;
+  int index;
 #endif
 };
 typedef struct net_if net_if_t;
 
 typedef enum addr_type_t
 {
-    ADDR_TYPE_UCAST,
-    ADDR_TYPE_MCAST,
-    ADDR_TYPE_BCAST
+  ADDR_TYPE_UCAST,
+  ADDR_TYPE_MCAST,
+  ADDR_TYPE_BCAST
 } addr_type_t;
 
 void doAutoRateLimit(int sock, int dir, int qsize, int size);
@@ -117,14 +116,11 @@ void printMyIp(net_if_t* net_if);
 
 int getSendBuf(int sock);
 
-#define SEND(s, msg, to) \
-	doSend(s, &msg, sizeof(msg), &to)
+#define SEND(s, msg, to) doSend(s, &msg, sizeof(msg), &to)
 
-#define RECV(s, msg, from, portBase ) \
-	doReceive((s), &msg, sizeof(msg), &from, (portBase) )
+#define RECV(s, msg, from, portBase) doReceive((s), &msg, sizeof(msg), &from, (portBase))
 
-#define BCAST_CONTROL(s, msg) \
-	doSend(s, &msg, sizeof(msg), &net_config->controlMcastAddr)
+#define BCAST_CONTROL(s, msg) doSend(s, &msg, sizeof(msg), &net_config->controlMcastAddr)
 
 void setIpFromString(struct sockaddr_in* addr, char* ip);
 
@@ -136,31 +132,30 @@ int udpc_socklibFatal(int code);
 
 struct iovec
 {
-    void* iov_base;
-    int iov_len;
+  void* iov_base;
+  int iov_len;
 };
 struct msghdr
 {
-    void* msg_name;
-    int msg_namelen;
-    struct iovec* msg_iov;
-    int msg_iovlen;
-
+  void* msg_name;
+  int msg_namelen;
+  struct iovec* msg_iov;
+  int msg_iovlen;
 };
 
 ssize_t sendmsg(int s, const struct msghdr* msg, int flags);
-ssize_t recvmsg (int fd, struct msghdr* msg, int flags);
+ssize_t recvmsg(int fd, struct msghdr* msg, int flags);
 
-#define usleep(x) Sleep((x)/1000)
-#define sleep(x) Sleep(1000L*(x))
+#define usleep(x) Sleep((x) / 1000)
+#define sleep(x) Sleep(1000L * (x))
 #endif /* __MINGW32__ */
 
 static inline void initMsgHdr(struct msghdr* hdr)
 {
 #ifndef WINDOWS
-    hdr->msg_control = 0;
-    hdr->msg_controllen = 0;
-    hdr->msg_flags = 0;
+  hdr->msg_control = 0;
+  hdr->msg_controllen = 0;
+  hdr->msg_flags = 0;
 #endif
 }
 
@@ -171,6 +166,4 @@ static inline void initMsgHdr(struct msghdr* hdr)
 
 #ifndef HAVE_IN_ADDR_T
 typedef unsigned long in_addr_t;
-#endif
-
 #endif

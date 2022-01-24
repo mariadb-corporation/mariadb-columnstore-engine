@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: dmltable.cpp 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: dmltable.cpp 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 
 #include "dmltable.h"
 using namespace std;
@@ -27,93 +27,91 @@ using namespace std;
 namespace dmlpackage
 {
 DMLTable::DMLTable()
-{}
+{
+}
 
 DMLTable::~DMLTable()
 {
+  try
+  {
+    RowList::iterator it = fRows.begin();
 
-    try
+    while (it != fRows.end())
     {
-        RowList::iterator it = fRows.begin();
-
-        while (it != fRows.end())
-        {
-            delete *it;
-            it++;
-        }
+      delete *it;
+      it++;
     }
-    catch (...)
-    {
-        cout << "failed to delete the table rows" << endl;
-    }
-
+  }
+  catch (...)
+  {
+    cout << "failed to delete the table rows" << endl;
+  }
 }
 
 int DMLTable::read(messageqcpp::ByteStream& bytestream)
 {
-    int retval = 1;
+  int retval = 1;
 
-    // read the table name
-    bytestream >> fName;
+  // read the table name
+  bytestream >> fName;
 
-    // read the schema name
-    bytestream >> fSchema;
+  // read the schema name
+  bytestream >> fSchema;
 
-    messageqcpp::ByteStream::quadbyte rowNum;
-    bytestream >> rowNum;
+  messageqcpp::ByteStream::quadbyte rowNum;
+  bytestream >> rowNum;
 
-    for (unsigned int i = 0; i < rowNum; i++)
-    {
-        Row* aRow = new Row();
-        retval = aRow->read(bytestream);
-        fRows.push_back(aRow);
-    }
+  for (unsigned int i = 0; i < rowNum; i++)
+  {
+    Row* aRow = new Row();
+    retval = aRow->read(bytestream);
+    fRows.push_back(aRow);
+  }
 
-    return retval;
+  return retval;
 }
 
 void DMLTable::readMetaData(messageqcpp::ByteStream& bytestream)
 {
-    // read the table name
-    bytestream >> fName;
+  // read the table name
+  bytestream >> fName;
 
-    // read the schema name
-    bytestream >> fSchema;
+  // read the schema name
+  bytestream >> fSchema;
 }
 
 void DMLTable::readRowData(messageqcpp::ByteStream& bytestream)
 {
-    messageqcpp::ByteStream::quadbyte rowNum;
-    bytestream >> rowNum;
+  messageqcpp::ByteStream::quadbyte rowNum;
+  bytestream >> rowNum;
 
-    for (unsigned int i = 0; i < rowNum; i++)
-    {
-        Row* aRow = new Row();
-        aRow->read(bytestream);
-        fRows.push_back(aRow);
-    }
+  for (unsigned int i = 0; i < rowNum; i++)
+  {
+    Row* aRow = new Row();
+    aRow->read(bytestream);
+    fRows.push_back(aRow);
+  }
 }
 
 int DMLTable::write(messageqcpp::ByteStream& bytestream)
 {
-    int retval = 1;
-    //write table name and schma name to the bytestream
-    bytestream << fName;
-    bytestream << fSchema;
-    messageqcpp::ByteStream::quadbyte rowNum;
-    rowNum = fRows.size();
-    bytestream << rowNum;
-    //write the row list
-    RowList::iterator rowListPtr;
-    rowListPtr = fRows.begin();
+  int retval = 1;
+  // write table name and schma name to the bytestream
+  bytestream << fName;
+  bytestream << fSchema;
+  messageqcpp::ByteStream::quadbyte rowNum;
+  rowNum = fRows.size();
+  bytestream << rowNum;
+  // write the row list
+  RowList::iterator rowListPtr;
+  rowListPtr = fRows.begin();
 
-    for (; rowListPtr != fRows.end(); ++rowListPtr)
-    {
-        retval = (*rowListPtr)->write(bytestream);
-    }
+  for (; rowListPtr != fRows.end(); ++rowListPtr)
+  {
+    retval = (*rowListPtr)->write(bytestream);
+  }
 
-    return retval;
+  return retval;
 }
 
-} // namespace dmlpackage
-
+}  // namespace dmlpackage

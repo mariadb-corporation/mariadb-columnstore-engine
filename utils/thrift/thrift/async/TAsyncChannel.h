@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_ASYNC_TASYNCCHANNEL_H_
-#define _THRIFT_ASYNC_TASYNCCHANNEL_H_ 1
+#pragma once
 
 #include <thrift/cxxfunctional.h>
 #include <thrift/Thrift.h>
@@ -78,4 +77,3 @@ public:
 }
 } // apache::thrift::async
 
-#endif // #ifndef _THRIFT_ASYNC_TASYNCCHANNEL_H_

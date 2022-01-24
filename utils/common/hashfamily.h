@@ -15,43 +15,39 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef UTILS_HASHFAMILY_H
-#define UTILS_HASHFAMILY_H
+#pragma once
 
 #include "hasher.h"
 #include "collation.h"
 
 namespace utils
 {
-
 class HashFamily
 {
-  public:
-    HashFamily(const utils::Hasher_r& h,
-               const uint64_t intermediateHash,
-               const uint64_t len,
-               const datatypes::MariaDBHasher& hM) : mHasher(h),
-                                                     mMariaDBHasher(hM),
-                                                     mHasher_rHash(intermediateHash),
-                                                     mHasher_rLen(len)
-    { }
+ public:
+  HashFamily(const utils::Hasher_r& h, const uint64_t intermediateHash, const uint64_t len,
+             const datatypes::MariaDBHasher& hM)
+   : mHasher(h), mMariaDBHasher(hM), mHasher_rHash(intermediateHash), mHasher_rLen(len)
+  {
+  }
 
-    // Algorithm, seed and factor are taken from this discussion
-    // https://stackoverflow.com/questions/1646807/quick-and-simple-hash-code-combinations
-    inline uint64_t finalize() const
-    {
-      return (seed * factor + mHasher.finalize(mHasher_rHash, mHasher_rLen)) * factor + mMariaDBHasher.finalize();
-    }
-  private:
-    constexpr static uint64_t seed = 1009ULL;
-    constexpr static uint64_t factor = 9176ULL;
+  // Algorithm, seed and factor are taken from this discussion
+  // https://stackoverflow.com/questions/1646807/quick-and-simple-hash-code-combinations
+  inline uint64_t finalize() const
+  {
+    return (seed * factor + mHasher.finalize(mHasher_rHash, mHasher_rLen)) * factor +
+           mMariaDBHasher.finalize();
+  }
 
-    const utils::Hasher_r& mHasher;
-    const datatypes::MariaDBHasher& mMariaDBHasher;
-    const uint64_t mHasher_rHash;
-    const uint32_t mHasher_rLen;
+ private:
+  constexpr static uint64_t seed = 1009ULL;
+  constexpr static uint64_t factor = 9176ULL;
+
+  const utils::Hasher_r& mHasher;
+  const datatypes::MariaDBHasher& mMariaDBHasher;
+  const uint64_t mHasher_rHash;
+  const uint32_t mHasher_rLen;
 };
 
-}
-#endif
+}  // namespace utils
 // vim:ts=2 sw=2:

@@ -15,9 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-
-#ifndef CONFIG_H_
-#define CONFIG_H_
+#pragma once
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/thread.hpp>
@@ -32,45 +30,40 @@ namespace storagemanager
 {
 class ConfigListener
 {
-    public:
-        virtual ~ConfigListener(){};
-        virtual void configListener() = 0;
+ public:
+  virtual ~ConfigListener(){};
+  virtual void configListener() = 0;
 };
 
 class Config : public boost::noncopyable
 {
-    public:
-        static Config *get();
-        virtual ~Config();
-        
-        std::string getValue(const std::string &section, const std::string &key) const;
-        
-        // for testing, lets caller specify a config file to use
-        static Config *get(const std::string &);
+ public:
+  static Config* get();
+  virtual ~Config();
 
-        void addConfigListener(ConfigListener *listener);
-        void removeConfigListener(ConfigListener *listener);
+  std::string getValue(const std::string& section, const std::string& key) const;
 
-    private:
-        Config();
-        Config(const std::string &);
-        
-        bool reload();
-        void reloadThreadFcn();
-        std::vector<ConfigListener *> configListeners;
-        struct ::timespec last_mtime;
-        mutable boost::mutex mutex;
-        boost::thread reloader;
-        boost::posix_time::time_duration reloadInterval;
-        
-        std::string filename;
-        boost::property_tree::ptree contents;
-        bool die;
+  // for testing, lets caller specify a config file to use
+  static Config* get(const std::string&);
+
+  void addConfigListener(ConfigListener* listener);
+  void removeConfigListener(ConfigListener* listener);
+
+ private:
+  Config();
+  Config(const std::string&);
+
+  bool reload();
+  void reloadThreadFcn();
+  std::vector<ConfigListener*> configListeners;
+  struct ::timespec last_mtime;
+  mutable boost::mutex mutex;
+  boost::thread reloader;
+  boost::posix_time::time_duration reloadInterval;
+
+  std::string filename;
+  boost::property_tree::ptree contents;
+  bool die;
 };
 
-
-
-
-}
-
-#endif
+}  // namespace storagemanager

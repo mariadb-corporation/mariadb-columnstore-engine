@@ -34,13 +34,12 @@
 
 namespace WriteEngine
 {
-
 //------------------------------------------------------------------------------
 // Default ColumnOpBulk constructor
 //------------------------------------------------------------------------------
 ColumnOpBulk::ColumnOpBulk()
 {
-    m_compressionType = 0;
+  m_compressionType = 0;
 }
 
 //------------------------------------------------------------------------------
@@ -48,7 +47,7 @@ ColumnOpBulk::ColumnOpBulk()
 //------------------------------------------------------------------------------
 ColumnOpBulk::ColumnOpBulk(Log* logger, int compressionType) : ColumnOp(logger)
 {
-    m_compressionType = compressionType;
+  m_compressionType = compressionType;
 }
 
 //------------------------------------------------------------------------------
@@ -62,61 +61,52 @@ ColumnOpBulk::~ColumnOpBulk()
 // Open specified column file
 //------------------------------------------------------------------------------
 // @bug 5572 - HDFS usage: add *.tmp file backup flag
-IDBDataFile* ColumnOpBulk::openFile(const WriteEngine::Column& column,
-                                    uint16_t     dbRoot,
-                                    uint32_t     partition,
-                                    uint16_t     segment,
-                                    std::string& segFile,
-                                    bool         useTmpSuffix,
-                                    const char*  mode,
-                                    int          ioBuffSize) const
+IDBDataFile* ColumnOpBulk::openFile(const WriteEngine::Column& column, uint16_t dbRoot, uint32_t partition,
+                                    uint16_t segment, std::string& segFile, bool useTmpSuffix,
+                                    const char* mode, int ioBuffSize) const
 {
-    return FileOp::openFile(column.dataFile.fid, dbRoot, partition, segment,
-                            segFile, mode, column.colWidth, useTmpSuffix);
+  return FileOp::openFile(column.dataFile.fid, dbRoot, partition, segment, segFile, mode, column.colWidth,
+                          useTmpSuffix);
 }
 
 //------------------------------------------------------------------------------
 // Stub for abbreviatedExtent
 //------------------------------------------------------------------------------
-bool  ColumnOpBulk::abbreviatedExtent(IDBDataFile*, int) const
+bool ColumnOpBulk::abbreviatedExtent(IDBDataFile*, int) const
 {
-    throw std::logic_error(
-        "Unauthorized use of ColumnOpBulk::abbreviatedExtent");
+  throw std::logic_error("Unauthorized use of ColumnOpBulk::abbreviatedExtent");
 
-    return false;
+  return false;
 }
 
 //------------------------------------------------------------------------------
 // Stub for blocksInFile
 //------------------------------------------------------------------------------
-int   ColumnOpBulk::blocksInFile(IDBDataFile*) const
+int ColumnOpBulk::blocksInFile(IDBDataFile*) const
 {
-    throw std::logic_error(
-        "Unauthorized use of ColumnOpBulk::blocksInFile");
+  throw std::logic_error("Unauthorized use of ColumnOpBulk::blocksInFile");
 
-    return 0;
+  return 0;
 }
 
 //------------------------------------------------------------------------------
 // Stub for readBlock
 //------------------------------------------------------------------------------
-int   ColumnOpBulk::readBlock(IDBDataFile*, unsigned char*, const uint64_t)
+int ColumnOpBulk::readBlock(IDBDataFile*, unsigned char*, const uint64_t)
 {
-    throw std::logic_error(
-        "Unauthorized use of ColumnOpBulk::readBlock");
+  throw std::logic_error("Unauthorized use of ColumnOpBulk::readBlock");
 
-    return 0;
+  return 0;
 }
 
 //------------------------------------------------------------------------------
 // Stub for writeBlock
 //------------------------------------------------------------------------------
-int   ColumnOpBulk::saveBlock(IDBDataFile*, const unsigned char*, const uint64_t)
+int ColumnOpBulk::saveBlock(IDBDataFile*, const unsigned char*, const uint64_t)
 {
-    throw std::logic_error(
-        "Unauthorized use of ColumnOpBulk::saveBlock");
+  throw std::logic_error("Unauthorized use of ColumnOpBulk::saveBlock");
 
-    return 0;
+  return 0;
 }
 
-} //end of namespace
+}  // namespace WriteEngine

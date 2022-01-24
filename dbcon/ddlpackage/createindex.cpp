@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: createindex.cpp 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: createindex.cpp 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 
 #include "ddlpkg.h"
 
@@ -27,35 +27,28 @@ namespace ddlpackage
 {
 using namespace std;
 
-CreateIndexStatement::CreateIndexStatement():
-    fIndexName(NULL),
-    fTableName(NULL),
-    fColumnNames(),
-    fUnique(false)
+CreateIndexStatement::CreateIndexStatement()
+ : fIndexName(NULL), fTableName(NULL), fColumnNames(), fUnique(false)
 {
 }
 
 CreateIndexStatement::CreateIndexStatement(QualifiedName* indexName, QualifiedName* tableName,
-        ColumnNameList* columnNames, bool unique) :
-    fIndexName(indexName),
-    fTableName(tableName),
-    fColumnNames(*columnNames),
-    fUnique(unique)
+                                           ColumnNameList* columnNames, bool unique)
+ : fIndexName(indexName), fTableName(tableName), fColumnNames(*columnNames), fUnique(unique)
 {
-    delete columnNames;
+  delete columnNames;
 }
 
 CreateIndexStatement::~CreateIndexStatement()
 {
-    delete fIndexName;
-    delete fTableName;
+  delete fIndexName;
+  delete fTableName;
 }
 
 std::ostream& CreateIndexStatement::put(std::ostream& os) const
 {
-    os << "Create Index: " << *fIndexName << " on " << *fTableName
-       << fColumnNames << endl;
-    return os;
+  os << "Create Index: " << *fIndexName << " on " << *fTableName << fColumnNames << endl;
+  return os;
 }
 
-}
+}  // namespace ddlpackage

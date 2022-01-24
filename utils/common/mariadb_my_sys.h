@@ -15,8 +15,7 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
-#ifndef MARIADB_MY_SYS_H_INCLUDED
-#define MARIADB_MY_SYS_H_INCLUDED
+#pragma once
 
 // These are the common headers needed to use the MariaDB mysys library.
 
@@ -35,5 +34,3 @@
 #include <my_sys.h>
 
 #include "mcsconfig_conflicting_defs_restore.h"
-
-#endif

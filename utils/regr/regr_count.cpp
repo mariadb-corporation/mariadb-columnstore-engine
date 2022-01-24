@@ -26,11 +26,11 @@ using namespace mcsv1sdk;
 
 class Add_regr_count_ToUDAFMap
 {
-public:
-    Add_regr_count_ToUDAFMap()
-    {
-        UDAFMap::getMap()["regr_count"] = new regr_count();
-    }
+ public:
+  Add_regr_count_ToUDAFMap()
+  {
+    UDAFMap::getMap()["regr_count"] = new regr_count();
+  }
 };
 
 static Add_regr_count_ToUDAFMap addToMap;
@@ -38,94 +38,90 @@ static Add_regr_count_ToUDAFMap addToMap;
 // Use the simple data model
 struct regr_count_data
 {
-    long long	cnt;
+  long long cnt;
 };
 
-
-mcsv1_UDAF::ReturnCode regr_count::init(mcsv1Context* context,
-                                       ColumnDatum* colTypes)
+mcsv1_UDAF::ReturnCode regr_count::init(mcsv1Context* context, ColumnDatum* colTypes)
 {
-    if (context->getParameterCount() != 2)
-    {
-        // The error message will be prepended with
-        // "The storage engine for the table doesn't support "
-        context->setErrorMessage("regr_count() with other than 2 arguments");
-        return mcsv1_UDAF::ERROR;
-    }
+  if (context->getParameterCount() != 2)
+  {
+    // The error message will be prepended with
+    // "The storage engine for the table doesn't support "
+    context->setErrorMessage("regr_count() with other than 2 arguments");
+    return mcsv1_UDAF::ERROR;
+  }
 
-    context->setUserDataSize(sizeof(regr_count_data));
-    context->setResultType(execplan::CalpontSystemCatalog::BIGINT);
-    context->setColWidth(8);
-    context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
-    return mcsv1_UDAF::SUCCESS;
-
+  context->setUserDataSize(sizeof(regr_count_data));
+  context->setResultType(execplan::CalpontSystemCatalog::BIGINT);
+  context->setColWidth(8);
+  context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
+  return mcsv1_UDAF::SUCCESS;
 }
 
 mcsv1_UDAF::ReturnCode regr_count::reset(mcsv1Context* context)
 {
-    struct  regr_count_data* data = (struct regr_count_data*)context->getUserData()->data;
-    data->cnt = 0;
-    return mcsv1_UDAF::SUCCESS;
+  struct regr_count_data* data = (struct regr_count_data*)context->getUserData()->data;
+  data->cnt = 0;
+  return mcsv1_UDAF::SUCCESS;
 }
 
 mcsv1_UDAF::ReturnCode regr_count::nextValue(mcsv1Context* context, ColumnDatum* valsIn)
 {
-    static_any::any& valIn_y = valsIn[0].columnData;
-    static_any::any& valIn_x = valsIn[1].columnData;
-    struct  regr_count_data* data = (struct regr_count_data*)context->getUserData()->data;
+  static_any::any& valIn_y = valsIn[0].columnData;
+  static_any::any& valIn_x = valsIn[1].columnData;
+  struct regr_count_data* data = (struct regr_count_data*)context->getUserData()->data;
 
-    if (context->isParamNull(0) || context->isParamNull(1))
-    {
-        return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
-    }
-    if (valIn_x.empty() || valIn_y.empty()) // Usually empty if NULL. Probably redundant
-    {
-        return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
-    }
-    ++data->cnt;
+  if (context->isParamNull(0) || context->isParamNull(1))
+  {
+    return mcsv1_UDAF::SUCCESS;  // Ought not happen when UDAF_IGNORE_NULLS is on.
+  }
+  if (valIn_x.empty() || valIn_y.empty())  // Usually empty if NULL. Probably redundant
+  {
+    return mcsv1_UDAF::SUCCESS;  // Ought not happen when UDAF_IGNORE_NULLS is on.
+  }
+  ++data->cnt;
 
-    return mcsv1_UDAF::SUCCESS;
+  return mcsv1_UDAF::SUCCESS;
 }
 
 mcsv1_UDAF::ReturnCode regr_count::subEvaluate(mcsv1Context* context, const UserData* userDataIn)
 {
-    if (!userDataIn)
-    {
-        return mcsv1_UDAF::SUCCESS;
-    }
-
-    struct regr_count_data* outData = (struct regr_count_data*)context->getUserData()->data;
-    struct regr_count_data* inData = (struct regr_count_data*)userDataIn->data;
-
-    outData->cnt += inData->cnt;
-
+  if (!userDataIn)
+  {
     return mcsv1_UDAF::SUCCESS;
+  }
+
+  struct regr_count_data* outData = (struct regr_count_data*)context->getUserData()->data;
+  struct regr_count_data* inData = (struct regr_count_data*)userDataIn->data;
+
+  outData->cnt += inData->cnt;
+
+  return mcsv1_UDAF::SUCCESS;
 }
 
 mcsv1_UDAF::ReturnCode regr_count::evaluate(mcsv1Context* context, static_any::any& valOut)
 {
-    struct regr_count_data* data = (struct regr_count_data*)context->getUserData()->data;
+  struct regr_count_data* data = (struct regr_count_data*)context->getUserData()->data;
 
-    valOut = data->cnt;
-    return mcsv1_UDAF::SUCCESS;
+  valOut = data->cnt;
+  return mcsv1_UDAF::SUCCESS;
 }
 
 mcsv1_UDAF::ReturnCode regr_count::dropValue(mcsv1Context* context, ColumnDatum* valsDropped)
 {
-    static_any::any& valIn_y = valsDropped[0].columnData;
-    static_any::any& valIn_x = valsDropped[1].columnData;
-    struct regr_count_data* data = (struct regr_count_data*)context->getUserData()->data;
+  static_any::any& valIn_y = valsDropped[0].columnData;
+  static_any::any& valIn_x = valsDropped[1].columnData;
+  struct regr_count_data* data = (struct regr_count_data*)context->getUserData()->data;
 
-    if (context->isParamNull(0) || context->isParamNull(1))
-    {
-        return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
-    }
-    if (valIn_x.empty() || valIn_y.empty())
-    {
-        return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
-    }
-    --data->cnt;
+  if (context->isParamNull(0) || context->isParamNull(1))
+  {
+    return mcsv1_UDAF::SUCCESS;  // Ought not happen when UDAF_IGNORE_NULLS is on.
+  }
+  if (valIn_x.empty() || valIn_y.empty())
+  {
+    return mcsv1_UDAF::SUCCESS;  // Ought not happen when UDAF_IGNORE_NULLS is on.
+  }
+  --data->cnt;
 
-    return mcsv1_UDAF::SUCCESS;
+  return mcsv1_UDAF::SUCCESS;
 }
-

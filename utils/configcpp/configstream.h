@@ -16,14 +16,13 @@
    MA 02110-1301, USA. */
 
 /******************************************************************************************
-* $Id$
-*
-******************************************************************************************/
+ * $Id$
+ *
+ ******************************************************************************************/
 /**
  * @file
  */
-#ifndef CONFIG_CONFIGSTREAM_H_
-#define CONFIG_CONFIGSTREAM_H_
+#pragma once
 
 #include <string>
 #include <libxml/parser.h>
@@ -34,35 +33,32 @@
 
 namespace config
 {
-
 /** @brief a config ByteStream I/F class
  *
  */
 class ConfigStream
 {
-public:
-    ConfigStream(const messageqcpp::ByteStream& bs);
-    ConfigStream(const std::string& str);
-    ConfigStream(const char* cptr);
-    ~ConfigStream();
+ public:
+  ConfigStream(const messageqcpp::ByteStream& bs);
+  ConfigStream(const std::string& str);
+  ConfigStream(const char* cptr);
+  ~ConfigStream();
 
-    const std::string getConfig(const std::string& section, const std::string& name) const
-    {
-        return fParser.getConfig(fDoc, section, name);
-    }
+  const std::string getConfig(const std::string& section, const std::string& name) const
+  {
+    return fParser.getConfig(fDoc, section, name);
+  }
 
-private:
-    ConfigStream(const ConfigStream& rhs);
-    ConfigStream& operator=(const ConfigStream& rhs);
+ private:
+  ConfigStream(const ConfigStream& rhs);
+  ConfigStream& operator=(const ConfigStream& rhs);
 
-    void init(const xmlChar* xp);
+  void init(const xmlChar* xp);
 
-    XMLParser fParser;
-    xmlDocPtr fDoc;
+  XMLParser fParser;
+  xmlDocPtr fDoc;
 };
 
-} //namespace
+}  // namespace config
 
-#endif
 // vim:ts=4 sw=4:
-

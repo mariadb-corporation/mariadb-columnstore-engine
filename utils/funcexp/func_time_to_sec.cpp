@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_time_to_sec.cpp 2477 2011-04-01 16:07:35Z rdempsey $
-*
-*
-****************************************************************************/
+ * $Id: func_time_to_sec.cpp 2477 2011-04-01 16:07:35Z rdempsey $
+ *
+ *
+ ****************************************************************************/
 
 #include <cstdlib>
 #include <string>
@@ -36,172 +36,163 @@ using namespace execplan;
 
 namespace funcexp
 {
-
-CalpontSystemCatalog::ColType Func_time_to_sec::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
+CalpontSystemCatalog::ColType Func_time_to_sec::operationType(FunctionParm& fp,
+                                                              CalpontSystemCatalog::ColType& resultType)
 {
-    return resultType;
+  return resultType;
 }
 
-
-int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row,
-                                    FunctionParm& parm,
-                                    bool& isNull,
+int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                                     CalpontSystemCatalog::ColType& op_ct)
 {
-    // assume 256 is enough. assume not allowing incomplete date
-    int32_t hour = 0,
-            min = 0,
-            sec = 0;
-    bool bIsNegative = false;   // Only set to true if CHAR or VARCHAR with a '-'
+  // assume 256 is enough. assume not allowing incomplete date
+  int32_t hour = 0, min = 0, sec = 0;
+  bool bIsNegative = false;  // Only set to true if CHAR or VARCHAR with a '-'
 
-    int64_t val = 0;
-    int64_t mask = 0;
-    dataconvert::Time tval;
+  int64_t val = 0;
+  int64_t mask = 0;
+  dataconvert::Time tval;
 
-    switch (parm[0]->data()->resultType().colDataType)
+  switch (parm[0]->data()->resultType().colDataType)
+  {
+    case CalpontSystemCatalog::DATE: return 0;
+
+    case CalpontSystemCatalog::DATETIME:
+      val = parm[0]->data()->getIntVal(row, isNull);
+      hour = (int32_t)((val >> 32) & 0x3f);
+      min = (int32_t)((val >> 26) & 0x3f);
+      sec = (int32_t)((val >> 20) & 0x3f);
+      break;
+
+    case CalpontSystemCatalog::TIMESTAMP:
     {
-        case CalpontSystemCatalog::DATE:
-            return 0;
+      val = parm[0]->data()->getIntVal(row, isNull);
+      dataconvert::TimeStamp timestamp(val);
+      int64_t seconds = timestamp.second;
+      dataconvert::MySQLTime time;
+      dataconvert::gmtSecToMySQLTime(seconds, time, timeZone());
+      hour = time.hour;
+      min = time.minute;
+      sec = time.second;
+      break;
+    }
 
-        case CalpontSystemCatalog::DATETIME:
-            val = parm[0]->data()->getIntVal(row, isNull);
-            hour = (int32_t)((val >> 32) & 0x3f);
-            min = (int32_t)((val >> 26) & 0x3f);
-            sec = (int32_t)((val >> 20) & 0x3f);
-            break;
+    case CalpontSystemCatalog::TIME:
+      val = parm[0]->data()->getTimeIntVal(row, isNull);
 
-        case CalpontSystemCatalog::TIMESTAMP:
+      // If negative, mask so it doesn't turn positive
+      if ((val >> 40) & 0x800)
+        mask = 0xfffffffffffff000;
+
+      bIsNegative = val >> 63;
+      hour = (int32_t)(mask | ((val >> 40) & 0xfff));
+
+      if ((hour >= 0) && bIsNegative)
+        hour *= -1;
+      else
+        bIsNegative = false;
+
+      min = (int32_t)((val >> 32) & 0xff);
+      sec = (int32_t)((val >> 24) & 0xff);
+      break;
+
+    case CalpontSystemCatalog::CHAR:
+    case CalpontSystemCatalog::TEXT:
+    case CalpontSystemCatalog::VARCHAR:
+    {
+      std::string strVal = parm[0]->data()->getStrVal(row, isNull);
+
+      if (strVal[0] == '-')
+      {
+        bIsNegative = true;
+        strVal.replace(0, 1, 1, ' ');
+      }
+
+      val = dataconvert::DataConvert::stringToTime(strVal);
+
+      if (val == -1)
+      {
+        isNull = true;
+        return -1;
+      }
+      else
+      {
+        tval = *(reinterpret_cast<dataconvert::Time*>(&val));
+        hour = (uint32_t)(tval.hour);
+        min = (uint32_t)(tval.minute);
+        sec = (uint32_t)(tval.second);
+      }
+    }
+    break;
+
+    case CalpontSystemCatalog::BIGINT:
+    case CalpontSystemCatalog::MEDINT:
+    case CalpontSystemCatalog::SMALLINT:
+    case CalpontSystemCatalog::TINYINT:
+    case CalpontSystemCatalog::INT:
+      val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
+
+      if (val == -1)
+      {
+        isNull = true;
+        return -1;
+      }
+      else
+      {
+        hour = (int32_t)((val >> 32) & 0x3f);
+        min = (int32_t)((val >> 26) & 0x3f);
+        sec = (int32_t)((val >> 20) & 0x3f);
+      }
+
+      break;
+
+    case CalpontSystemCatalog::DECIMAL:
+    case CalpontSystemCatalog::UDECIMAL:
+      if (parm[0]->data()->resultType().scale == 0)
+      {
+        val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
+
+        if (val == -1)
         {
-            val = parm[0]->data()->getIntVal(row, isNull);
-	    dataconvert::TimeStamp timestamp(val);
-            int64_t seconds = timestamp.second;
-	    dataconvert::MySQLTime time;
-	    dataconvert::gmtSecToMySQLTime(seconds, time, timeZone());
-            hour = time.hour;
-            min = time.minute;
-            sec = time.second;
-            break;
+          isNull = true;
+          return -1;
         }
-
-        case CalpontSystemCatalog::TIME:
-            val = parm[0]->data()->getTimeIntVal(row, isNull);
-
-            // If negative, mask so it doesn't turn positive
-            if ((val >> 40) & 0x800)
-                mask = 0xfffffffffffff000;
-
-            bIsNegative = val >> 63;
-            hour = (int32_t)(mask | ((val >> 40) & 0xfff));
-
-            if ((hour >= 0) && bIsNegative)
-                hour *= -1;
-            else
-                bIsNegative = false;
-
-            min = (int32_t)((val >> 32) & 0xff);
-            sec = (int32_t)((val >> 24) & 0xff);
-            break;
-
-        case CalpontSystemCatalog::CHAR:
-        case CalpontSystemCatalog::TEXT:
-        case CalpontSystemCatalog::VARCHAR:
+        else
         {
-            std::string strVal = parm[0]->data()->getStrVal(row, isNull);
-
-            if (strVal[0] == '-')
-            {
-                bIsNegative = true;
-                strVal.replace(0, 1, 1, ' ');
-            }
-
-            val = dataconvert::DataConvert::stringToTime(strVal);
-
-            if (val == -1)
-            {
-                isNull = true;
-                return -1;
-            }
-            else
-            {
-                tval = *(reinterpret_cast<dataconvert::Time*>(&val));
-                hour = (uint32_t)(tval.hour);
-                min = (uint32_t)(tval.minute);
-                sec = (uint32_t)(tval.second);
-            }
+          hour = (int32_t)((val >> 32) & 0x3f);
+          min = (int32_t)((val >> 26) & 0x3f);
+          sec = (int32_t)((val >> 20) & 0x3f);
         }
-        break;
+      }
+      else
+      {
+        isNull = true;
+        return -1;
+      }
 
-        case CalpontSystemCatalog::BIGINT:
-        case CalpontSystemCatalog::MEDINT:
-        case CalpontSystemCatalog::SMALLINT:
-        case CalpontSystemCatalog::TINYINT:
-        case CalpontSystemCatalog::INT:
-            val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
+      break;
 
-            if (val == -1)
-            {
-                isNull = true;
-                return -1;
-            }
-            else
-            {
-                hour = (int32_t)((val >> 32) & 0x3f);
-                min = (int32_t)((val >> 26) & 0x3f);
-                sec = (int32_t)((val >> 20) & 0x3f);
-            }
+    default: isNull = true; return -1;
+  }
 
-            break;
+  int64_t rtn;
 
-        case CalpontSystemCatalog::DECIMAL:
-        case CalpontSystemCatalog::UDECIMAL:
-            if (parm[0]->data()->resultType().scale == 0)
-            {
-                val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
+  if (hour < 0)
+  {
+    rtn = (int64_t)(hour * 60 * 60) - (min * 60) - sec;
+  }
+  else
+  {
+    rtn = (int64_t)(hour * 60 * 60) + (min * 60) + sec;
+  }
 
-                if (val == -1)
-                {
-                    isNull = true;
-                    return -1;
-                }
-                else
-                {
-                    hour = (int32_t)((val >> 32) & 0x3f);
-                    min = (int32_t)((val >> 26) & 0x3f);
-                    sec = (int32_t)((val >> 20) & 0x3f);
-                }
-            }
-            else
-            {
-                isNull = true;
-                return -1;
-            }
+  if (bIsNegative)
+  {
+    rtn *= -1;
+  }
 
-            break;
-
-        default:
-            isNull = true;
-            return -1;
-    }
-
-    int64_t rtn;
-
-    if (hour < 0)
-    {
-        rtn = (int64_t)(hour * 60 * 60) - (min * 60) - sec;
-    }
-    else
-    {
-        rtn = (int64_t)(hour * 60 * 60) + (min * 60) + sec;
-    }
-
-    if (bIsNegative)
-    {
-        rtn *= -1;
-    }
-
-    return rtn;
+  return rtn;
 }
 
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:

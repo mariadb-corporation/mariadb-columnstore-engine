@@ -16,13 +16,12 @@
    MA 02110-1301, USA. */
 
 /******************************************************************************************
-* $Id: messagequeue.h 3632 2013-03-13 18:08:46Z pleblanc $
-*
-*
-******************************************************************************************/
+ * $Id: messagequeue.h 3632 2013-03-13 18:08:46Z pleblanc $
+ *
+ *
+ ******************************************************************************************/
 /** @file */
-#ifndef MESSAGEQCPP_MESSAGEQUEUE_H
-#define MESSAGEQCPP_MESSAGEQUEUE_H
+#pragma once
 #include <string>
 #include <ctime>
 
@@ -55,7 +54,6 @@ class MessageQTestSuite;
 
 namespace messageqcpp
 {
-
 using AddrAndPortPair = std::pair<std::string, uint16_t>;
 // utility f-s
 // Extracts a pair of address and port from the XML configuration.
@@ -82,76 +80,77 @@ AddrAndPortPair getAddressAndPort(config::Config* config, const std::string& fOt
  */
 class MessageQueueServer
 {
-public:
-    /**
-     * @brief construct a server queue for thisEnd
-     *
-     * construct a server queue for thisEnd. Optionally specify a Config object to use.
-     */
-    EXPORT explicit MessageQueueServer(const std::string& thisEnd, config::Config* config = 0,
-                                       size_t blocksize = ByteStream::BlockSize, int backlog = 5, bool syncProto = true);
+ public:
+  /**
+   * @brief construct a server queue for thisEnd
+   *
+   * construct a server queue for thisEnd. Optionally specify a Config object to use.
+   */
+  EXPORT explicit MessageQueueServer(const std::string& thisEnd, config::Config* config = 0,
+                                     size_t blocksize = ByteStream::BlockSize, int backlog = 5,
+                                     bool syncProto = true);
 
-    /**
-     * @brief construct a server queue for thisEnd
-     *
-     * construct a server queue for thisEnd, specifying the name of a config file to use.
-     */
-    EXPORT MessageQueueServer(const std::string& thisEnd, const std::string& config,
-                              size_t blocksize = ByteStream::BlockSize, int backlog = 5, bool syncProto = true);
+  /**
+   * @brief construct a server queue for thisEnd
+   *
+   * construct a server queue for thisEnd, specifying the name of a config file to use.
+   */
+  EXPORT MessageQueueServer(const std::string& thisEnd, const std::string& config,
+                            size_t blocksize = ByteStream::BlockSize, int backlog = 5, bool syncProto = true);
 
-    /**
-     * @brief destructor
-     */
-    EXPORT ~MessageQueueServer();
-//
-    /**
-     * @brief wait for a connection and return an IOSocket
-     *
-     * This method can be used by a main thread to wait for an incoming connection. The IOSocket
-     * that is returned can be passed to a thread to handle the socket connection. The main thread
-     * is then free to wait again for another connection. The IOSocket is already open and ready for
-     * read() and/or write(). The caller is responsible for calling close() when it is done.
-     */
-    EXPORT const IOSocket accept(const struct timespec* timeout = 0) const;
+  /**
+   * @brief destructor
+   */
+  EXPORT ~MessageQueueServer();
+  //
+  /**
+   * @brief wait for a connection and return an IOSocket
+   *
+   * This method can be used by a main thread to wait for an incoming connection. The IOSocket
+   * that is returned can be passed to a thread to handle the socket connection. The main thread
+   * is then free to wait again for another connection. The IOSocket is already open and ready for
+   * read() and/or write(). The caller is responsible for calling close() when it is done.
+   */
+  EXPORT const IOSocket accept(const struct timespec* timeout = 0) const;
 
-    /**
-     * @brief get a mutable pointer to the client IOSocket
-     */
-    inline IOSocket& clientSock() const;
+  /**
+   * @brief get a mutable pointer to the client IOSocket
+   */
+  inline IOSocket& clientSock() const;
 
-    /**
-     * @brief set the sync proto
-     */
-    EXPORT void syncProto(bool use);
+  /**
+   * @brief set the sync proto
+   */
+  EXPORT void syncProto(bool use);
 
-    /**
-     * allow test suite access to private data for OOB test
-     */
-    friend class ::MessageQTestSuite;
+  /**
+   * allow test suite access to private data for OOB test
+   */
+  friend class ::MessageQTestSuite;
 
-private:
-    /** copy ctor
-     *
-     */
-    MessageQueueServer(const MessageQueueServer& rhs);
+ private:
+  /** copy ctor
+   *
+   */
+  MessageQueueServer(const MessageQueueServer& rhs);
 
-    /** assign op
-     *
-     */
-    MessageQueueServer& operator=(const MessageQueueServer& rhs);
+  /** assign op
+   *
+   */
+  MessageQueueServer& operator=(const MessageQueueServer& rhs);
 
-    /** ctor helper
-     *
-     */
-    void setup(size_t blocksize, int backlog, bool syncProto);
+  /** ctor helper
+   *
+   */
+  void setup(size_t blocksize, int backlog, bool syncProto);
 
-    std::string fThisEnd;		/// the process name for this process
-    struct sockaddr fServ_addr;	/// the addr of the server (may be this process)
-    config::Config* fConfig;			/// config file has the IP addrs and port numbers
-    mutable ServerSocket fListenSock;	/// the socket the server listens on for new connections
-    mutable IOSocket fClientSock;	/// the socket connected to a client
+  std::string fThisEnd;              /// the process name for this process
+  struct sockaddr fServ_addr;        /// the addr of the server (may be this process)
+  config::Config* fConfig;           /// config file has the IP addrs and port numbers
+  mutable ServerSocket fListenSock;  /// the socket the server listens on for new connections
+  mutable IOSocket fClientSock;      /// the socket connected to a client
 
-    mutable logging::Logger fLogger;
+  mutable logging::Logger fLogger;
 };
 
 /**
@@ -170,171 +169,171 @@ private:
  */
 class MessageQueueClient
 {
-public:
-    /**
-     * @brief construct a queue to otherEnd
-     *
-     * construct a queue from this process to otherEnd. Optionally specify a Config object to use.
-     */
-    EXPORT explicit MessageQueueClient(const std::string& otherEnd, config::Config* config = 0, bool syncProto = true);
+ public:
+  /**
+   * @brief construct a queue to otherEnd
+   *
+   * construct a queue from this process to otherEnd. Optionally specify a Config object to use.
+   */
+  EXPORT explicit MessageQueueClient(const std::string& otherEnd, config::Config* config = 0,
+                                     bool syncProto = true);
 
-    /**
-     * @brief construct a queue to otherEnd
-     *
-     * construct a queue from this process to otherEnd, specifying the name of a config file to use.
-     */
-    EXPORT explicit MessageQueueClient(const std::string& otherEnd, const std::string& config, bool syncProto = true);
+  /**
+   * @brief construct a queue to otherEnd
+   *
+   * construct a queue from this process to otherEnd, specifying the name of a config file to use.
+   */
+  EXPORT explicit MessageQueueClient(const std::string& otherEnd, const std::string& config,
+                                     bool syncProto = true);
 
-    /**
-     * @brief construct a queue to otherEnd
-     *
-     * construct a queue from this process to otherEnd on the given IP and Port.
-     */
-	EXPORT explicit MessageQueueClient(const std::string& dnOrIp, uint16_t port, bool syncProto=true);
+  /**
+   * @brief construct a queue to otherEnd
+   *
+   * construct a queue from this process to otherEnd on the given IP and Port.
+   */
+  EXPORT explicit MessageQueueClient(const std::string& dnOrIp, uint16_t port, bool syncProto = true);
 
+  /**
+   * @brief destructor
+   *
+   * calls shutdown() method.
+   */
+  EXPORT ~MessageQueueClient();
 
-    /**
-     * @brief destructor
-     *
-     * calls shutdown() method.
-     */
-    EXPORT ~MessageQueueClient();
+  /**
+   * @brief read a message from the queue
+   *
+   * wait for and return a message from otherEnd. The deafult timeout waits forever. Note that
+   * eventhough struct timespec has nanosecond resolution, this method only has milisecond resolution.
+   */
+  EXPORT const SBS read(const struct timespec* timeout = 0, bool* isTimeOut = NULL,
+                        Stats* stats = NULL) const;
 
-    /**
-     * @brief read a message from the queue
-     *
-     * wait for and return a message from otherEnd. The deafult timeout waits forever. Note that
-     * eventhough struct timespec has nanosecond resolution, this method only has milisecond resolution.
-     */
-    EXPORT const SBS read(const struct timespec* timeout = 0, bool* isTimeOut = NULL, Stats* stats = NULL) const;
+  /**
+   * @brief write a message to the queue
+   *
+   * write a message to otherEnd. If the socket is not open, the timeout parm (in ms) will be used
+   *  to establish a sync connection w/ the server
+   */
+  EXPORT void write(const ByteStream& msg, const struct timespec* timeout = 0, Stats* stats = NULL) const;
 
-    /**
-     * @brief write a message to the queue
-     *
-     * write a message to otherEnd. If the socket is not open, the timeout parm (in ms) will be used
-     *  to establish a sync connection w/ the server
-     */
-    EXPORT void write(const ByteStream& msg, const struct timespec* timeout = 0, Stats* stats = NULL) const;
+  /**
+   * @brief shutdown the connection to the server
+   *
+   * indicate to the class that the user is done with the socket
+   * and the other class methods won't be used.
+   */
+  EXPORT void shutdown();
 
-    /**
-     * @brief shutdown the connection to the server
-     *
-     * indicate to the class that the user is done with the socket
-     * and the other class methods won't be used.
-     */
-    EXPORT void shutdown();
+  /**
+   * @brief connect to the server. Returns true if connection was successful.
+   *
+   * read() and write() automatically connect, but this method can be used to verify a server is listening
+   * before that.
+   */
+  EXPORT bool connect() const;
 
-    /**
-     * @brief connect to the server. Returns true if connection was successful.
-     *
-     * read() and write() automatically connect, but this method can be used to verify a server is listening
-     * before that.
-     */
-    EXPORT bool connect() const;
+  /**
+   * @brief accessors and mutators
+   */
+  EXPORT const sockaddr serv_addr() const
+  {
+    return fServ_addr;
+  }
+  EXPORT const std::string otherEnd() const
+  {
+    return fOtherEnd;
+  }
+  EXPORT bool isAvailable() const
+  {
+    return fIsAvailable;
+  }
+  EXPORT void isAvailable(const bool isAvailable)
+  {
+    fIsAvailable = isAvailable;
+  }
+  EXPORT const std::string moduleName() const
+  {
+    return fModuleName;
+  }
+  EXPORT void moduleName(const std::string& moduleName)
+  {
+    fModuleName = moduleName;
+  }
 
-    /**
-     * @brief accessors and mutators
-     */
-    EXPORT const sockaddr serv_addr() const
-    {
-        return fServ_addr;
-    }
-    EXPORT const std::string otherEnd() const
-    {
-        return fOtherEnd;
-    }
-    EXPORT bool isAvailable() const
-    {
-        return fIsAvailable;
-    }
-    EXPORT void isAvailable (const bool isAvailable)
-    {
-        fIsAvailable = isAvailable;
-    }
-    EXPORT const std::string moduleName() const
-    {
-        return fModuleName;
-    }
-    EXPORT void moduleName(const std::string& moduleName)
-    {
-        fModuleName = moduleName;
-    }
+  /**
+   * @brief set the sync proto
+   */
+  inline void syncProto(bool use);
 
-    /**
-     * @brief set the sync proto
-     */
-    inline void syncProto(bool use);
+  /**
+   * @brief return the address as a string
+   */
+  inline const std::string addr2String() const;
 
-    /**
-     * @brief return the address as a string
-     */
-    inline const std::string addr2String() const;
+  /**
+   * @brief compare the addresses of 2 MessageQueueClient
+   */
+  inline bool isSameAddr(const MessageQueueClient& rhs) const;
 
-    /**
-     * @brief compare the addresses of 2 MessageQueueClient
-     */
-    inline bool isSameAddr(const MessageQueueClient& rhs) const;
+  bool isConnected()
+  {
+    return fClientSock.isConnected();
+  }
 
-    bool isConnected()
-    {
-        return fClientSock.isConnected();
-    }
+  bool hasData()
+  {
+    return fClientSock.hasData();
+  }
+  /*
+   * allow test suite access to private data for OOB test
+   */
+  friend class ::MessageQTestSuite;
 
-    bool hasData()
-    {
-        return fClientSock.hasData();
-    }
-    /*
-     * allow test suite access to private data for OOB test
-     */
-    friend class ::MessageQTestSuite;
+ private:
+  /** copy ctor
+   *
+   */
+  MessageQueueClient(const MessageQueueClient& rhs);
 
-private:
-    /** copy ctor
-     *
-     */
-    MessageQueueClient(const MessageQueueClient& rhs);
+  /** assign op
+   *
+   */
+  MessageQueueClient& operator=(const MessageQueueClient& rhs);
 
-    /** assign op
-     *
-     */
-    MessageQueueClient& operator=(const MessageQueueClient& rhs);
+  /** ctor helper
+   *
+   */
+  void setup(bool syncProto);
 
-    /** ctor helper
-     *
-     */
-    void setup(bool syncProto);
-
-    std::string fOtherEnd;		/// the process name for this process
-    struct sockaddr fServ_addr;	/// the addr of the server (may be this process)
-    config::Config* fConfig;			/// config file has the IP addrs and port numbers
-    mutable IOSocket fClientSock;	/// the socket to communicate with the server
-    mutable logging::Logger fLogger;
-    bool fIsAvailable;
-    std::string fModuleName;
+  std::string fOtherEnd;         /// the process name for this process
+  struct sockaddr fServ_addr;    /// the addr of the server (may be this process)
+  config::Config* fConfig;       /// config file has the IP addrs and port numbers
+  mutable IOSocket fClientSock;  /// the socket to communicate with the server
+  mutable logging::Logger fLogger;
+  bool fIsAvailable;
+  std::string fModuleName;
 };
 
 inline IOSocket& MessageQueueServer::clientSock() const
 {
-    return fClientSock;
+  return fClientSock;
 }
 inline const std::string MessageQueueClient::addr2String() const
 {
-    return fClientSock.addr2String();
+  return fClientSock.addr2String();
 }
 inline bool MessageQueueClient::isSameAddr(const MessageQueueClient& rhs) const
 {
-    return fClientSock.isSameAddr(&rhs.fClientSock);
+  return fClientSock.isSameAddr(&rhs.fClientSock);
 }
 inline void MessageQueueClient::syncProto(bool use)
 {
-    fClientSock.syncProto(use);
+  fClientSock.syncProto(use);
 }
 
-}
+}  // namespace messageqcpp
 
 #undef EXPORT
 
-#endif //MESSAGEQCPP_MESSAGEQUEUE_H
 // vim:ts=4 sw=4:
-

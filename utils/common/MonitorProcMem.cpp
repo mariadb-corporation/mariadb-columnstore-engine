@@ -45,10 +45,9 @@ using namespace logging;
 
 namespace utils
 {
-
 uint64_t MonitorProcMem::fMemTotal = 1;
 uint64_t MonitorProcMem::fMemFree = 0;
-int      MonitorProcMem::fMemPctCheck = 0;
+int MonitorProcMem::fMemPctCheck = 0;
 
 //------------------------------------------------------------------------------
 // Thread entry point function, that drives a thread to periodically (every
@@ -57,30 +56,30 @@ int      MonitorProcMem::fMemPctCheck = 0;
 //------------------------------------------------------------------------------
 void MonitorProcMem::operator()() const
 {
-    while (1)
+  while (1)
+  {
+    if (fMaxPct > 0)
     {
-        if (fMaxPct > 0)
-        {
-            size_t pct = rss() * 100 / fMemTotal;
+      size_t pct = rss() * 100 / fMemTotal;
 
-            if (pct > fMaxPct)
-            {
-                cerr << "PrimProc: Too much memory allocated!" << endl;
+      if (pct > fMaxPct)
+      {
+        cerr << "PrimProc: Too much memory allocated!" << endl;
 
-                LoggingID logid(fSubsystemID);
-                logging::Message msg(logging::M0045);
-                logging::Message::Args args;
-                msg.format(args);
-                logging::Logger logger(logid.fSubsysID);
-                logger.logMessage(LOG_TYPE_CRITICAL, msg, logid);
-                exit(1);
-            }
-        }
-
-        fMemFree = cg.getFreeMemory();
-        //calculateFreeMem();
-        pause_();
+        LoggingID logid(fSubsystemID);
+        logging::Message msg(logging::M0045);
+        logging::Message::Args args;
+        msg.format(args);
+        logging::Logger logger(logid.fSubsysID);
+        logger.logMessage(LOG_TYPE_CRITICAL, msg, logid);
+        exit(1);
+      }
     }
+
+    fMemFree = cg.getFreeMemory();
+    // calculateFreeMem();
+    pause_();
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -89,7 +88,7 @@ void MonitorProcMem::operator()() const
 //------------------------------------------------------------------------------
 size_t MonitorProcMem::memTotal() const
 {
-    return cg.getTotalMemory();
+  return cg.getTotalMemory();
 }
 
 //------------------------------------------------------------------------------
@@ -98,83 +97,81 @@ size_t MonitorProcMem::memTotal() const
 //------------------------------------------------------------------------------
 size_t MonitorProcMem::rss() const
 {
-    uint64_t rss;
+  uint64_t rss;
 
 #if defined(_MSC_VER)
-    HANDLE hProcess;
-    PROCESS_MEMORY_COUNTERS pmc;
-    hProcess = OpenProcess(  PROCESS_QUERY_INFORMATION |
-                             PROCESS_VM_READ,
-                             FALSE, fPid );
+  HANDLE hProcess;
+  PROCESS_MEMORY_COUNTERS pmc;
+  hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, fPid);
 
-    if (NULL == hProcess)
-        return 0;
+  if (NULL == hProcess)
+    return 0;
 
-    if ( GetProcessMemoryInfo( hProcess, &pmc, sizeof(pmc)) )
-        rss = pmc.WorkingSetSize;
-    else
-        rss = 0;
+  if (GetProcessMemoryInfo(hProcess, &pmc, sizeof(pmc)))
+    rss = pmc.WorkingSetSize;
+  else
+    rss = 0;
 
-    CloseHandle( hProcess );
+  CloseHandle(hProcess);
 #elif defined(__FreeBSD__)
-    ostringstream cmd;
-    cmd << "ps -a -o rss -p " << getpid() << " | tail +2";
-    FILE* cmdPipe;
-    char input[80];
-    cmdPipe = popen(cmd.str().c_str(), "r");
-    input[0] = '\0';
-    fgets(input, 80, cmdPipe);
-    input[79] = '\0';
-    pclose(cmdPipe);
-    rss = atoi(input) * 1024LL;
+  ostringstream cmd;
+  cmd << "ps -a -o rss -p " << getpid() << " | tail +2";
+  FILE* cmdPipe;
+  char input[80];
+  cmdPipe = popen(cmd.str().c_str(), "r");
+  input[0] = '\0';
+  fgets(input, 80, cmdPipe);
+  input[79] = '\0';
+  pclose(cmdPipe);
+  rss = atoi(input) * 1024LL;
 #else
-    ostringstream pstat;
-    pstat << "/proc/" << fPid << "/statm";
-    ifstream in(pstat.str().c_str());
-    size_t x;
+  ostringstream pstat;
+  pstat << "/proc/" << fPid << "/statm";
+  ifstream in(pstat.str().c_str());
+  size_t x;
 
-    in >> x;
-    in >> rss;
+  in >> x;
+  in >> rss;
 
-    //rss is now in pages, convert to bytes
-    rss *= fPageSize;
+  // rss is now in pages, convert to bytes
+  rss *= fPageSize;
 #endif
 
-    return static_cast<size_t>(rss);
+  return static_cast<size_t>(rss);
 }
 
 //------------------------------------------------------------------------------
 // Stays in "sleep" state till fSleepSec seconds have elapsed.
 //------------------------------------------------------------------------------
-void MonitorProcMem::pause_( ) const
+void MonitorProcMem::pause_() const
 {
-    struct timespec req;
-    struct timespec rem;
+  struct timespec req;
+  struct timespec rem;
 
-    req.tv_sec  = fSleepSec;
-    req.tv_nsec = 0;
+  req.tv_sec = fSleepSec;
+  req.tv_nsec = 0;
 
-    rem.tv_sec  = 0;
-    rem.tv_nsec = 0;
+  rem.tv_sec = 0;
+  rem.tv_nsec = 0;
 
-    while (1)
-    {
+  while (1)
+  {
 #ifdef _MSC_VER
-        Sleep(req.tv_sec * 1000);
+    Sleep(req.tv_sec * 1000);
 #else
 
-        if (nanosleep(&req, &rem) != 0)
-        {
-            if (rem.tv_sec > 0 || rem.tv_nsec > 0)
-            {
-                req = rem;
-                continue;
-            }
-        }
+    if (nanosleep(&req, &rem) != 0)
+    {
+      if (rem.tv_sec > 0 || rem.tv_nsec > 0)
+      {
+        req = rem;
+        continue;
+      }
+    }
 
 #endif
-        break;
-    }
+    break;
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -182,7 +179,7 @@ void MonitorProcMem::pause_( ) const
 //------------------------------------------------------------------------------
 unsigned MonitorProcMem::memUsedPct()
 {
-    return ((100 * (fMemTotal - fMemFree)) / fMemTotal);
+  return ((100 * (fMemTotal - fMemFree)) / fMemTotal);
 }
 
 //------------------------------------------------------------------------------
@@ -190,8 +187,8 @@ unsigned MonitorProcMem::memUsedPct()
 //------------------------------------------------------------------------------
 bool MonitorProcMem::isMemAvailable(size_t memRequest)
 {
-    int memAvailPct = ((100 * (fMemFree - memRequest)) / fMemTotal);
-    return (memAvailPct < fMemPctCheck);
+  int memAvailPct = ((100 * (fMemFree - memRequest)) / fMemTotal);
+  return (memAvailPct < fMemPctCheck);
 }
 
-} // end of namespace
+}  // namespace utils

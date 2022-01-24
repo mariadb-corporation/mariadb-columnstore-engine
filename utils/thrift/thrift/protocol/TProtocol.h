@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_PROTOCOL_TPROTOCOL_H_
-#define _THRIFT_PROTOCOL_TPROTOCOL_H_ 1
+#pragma once
 
 #include <thrift/transport/TTransport.h>
 #include <thrift/protocol/TProtocolException.h>
@@ -789,4 +788,3 @@ class TDummyProtocol : public TProtocol
 }
 } // apache::thrift::protocol
 
-#endif // #define _THRIFT_PROTOCOL_TPROTOCOL_H_ 1

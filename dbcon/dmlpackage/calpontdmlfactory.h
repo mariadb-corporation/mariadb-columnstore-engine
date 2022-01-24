@@ -21,8 +21,7 @@
  *
  ***********************************************************************/
 /** @file */
-#ifndef CALPONTDMLFACTORY_H
-#define CALPONTDMLFACTORY_H
+#pragma once
 #include <string>
 #include "dmlpackage.h"
 #include "calpontdmlpackage.h"
@@ -36,40 +35,38 @@
 #endif
 namespace dmlpackage
 {
-
 class CalpontDMLFactory
 {
-    /** @brief a concrete implementation responsible for creating
-     * the proper concrete realization of a CalpontDMLPackage
-     * given a VendorDMLStatement.
-     */
-public:
+  /** @brief a concrete implementation responsible for creating
+   * the proper concrete realization of a CalpontDMLPackage
+   * given a VendorDMLStatement.
+   */
+ public:
+  /** @brief factory method
+   *
+   * @param vpackage the VendorDMLStatement
+   * @param defaultSchema the default schema to be used for DML statements
+   */
+  EXPORT static dmlpackage::CalpontDMLPackage* makeCalpontDMLPackage(dmlpackage::VendorDMLStatement& vpackage,
+                                                                     std::string defaultSchema = "");
 
-    /** @brief factory method
-     *
-     * @param vpackage the VendorDMLStatement
-     * @param defaultSchema the default schema to be used for DML statements
-     */
-    EXPORT static dmlpackage::CalpontDMLPackage* makeCalpontDMLPackage (dmlpackage::VendorDMLStatement& vpackage,
-            std::string defaultSchema = "" );
+  /** @brief old factory method!
+   *
+   * @param vpackage the VendorDMLStatement
+   */
+  EXPORT static dmlpackage::CalpontDMLPackage* makeCalpontDMLPackageFromBuffer(
+      dmlpackage::VendorDMLStatement& vpackage);
 
-    /** @brief old factory method!
-     *
-     * @param vpackage the VendorDMLStatement
-     */
-    EXPORT static dmlpackage::CalpontDMLPackage* makeCalpontDMLPackageFromBuffer(dmlpackage::VendorDMLStatement& vpackage);
+  EXPORT static dmlpackage::CalpontDMLPackage* makeCalpontDMLPackageFromMysqlBuffer(
+      dmlpackage::VendorDMLStatement& vpackage);
+  static dmlpackage::CalpontDMLPackage* makeCalpontUpdatePackageFromMysqlBuffer(
+      dmlpackage::VendorDMLStatement& vpackage, dmlpackage::UpdateSqlStatement& updateStmt);
 
-    EXPORT static dmlpackage::CalpontDMLPackage* makeCalpontDMLPackageFromMysqlBuffer(dmlpackage::VendorDMLStatement& vpackage);
-    static dmlpackage::CalpontDMLPackage* makeCalpontUpdatePackageFromMysqlBuffer(dmlpackage::VendorDMLStatement& vpackage, dmlpackage::UpdateSqlStatement& updateStmt);
-
-protected:
-
-private:
-    static boost::mutex fParserLock;
+ protected:
+ private:
+  static boost::mutex fParserLock;
 };
 
-}
+}  // namespace dmlpackage
 
 #undef EXPORT
-
-#endif                                            //CALPONTDMLFACTORY_H

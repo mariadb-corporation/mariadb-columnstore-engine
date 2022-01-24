@@ -16,15 +16,14 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: ha_view.h 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: ha_view.h 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 /** @file */
 /** class View interface */
 
-#ifndef HA_VIEW
-#define HA_VIEW
+#pragma once
 
 //#undef LOG_INFO
 #include "ha_mcs_impl_if.h"
@@ -37,30 +36,29 @@ class CalpontSystemCatalog;
 
 namespace cal_impl_if
 {
-
 class View
 {
-public:
-    View(SELECT_LEX& select, gp_walk_info* parentGwip) :
-        fSelect(select),
-        fParentGwip(parentGwip) {}
-    ~View() {}
+ public:
+  View(SELECT_LEX& select, gp_walk_info* parentGwip) : fSelect(select), fParentGwip(parentGwip)
+  {
+  }
+  ~View()
+  {
+  }
 
-    execplan::CalpontSystemCatalog::TableAliasName& viewName();
-    void viewName(execplan::CalpontSystemCatalog::TableAliasName& viewName);
+  execplan::CalpontSystemCatalog::TableAliasName& viewName();
+  void viewName(execplan::CalpontSystemCatalog::TableAliasName& viewName);
 
-    /** get execution plan for this view. merge the table list and join list to the
-        parent select.
-     */
-    void transform();
-    uint32_t processJoin(gp_walk_info& gwi, std::stack<execplan::ParseTree*>&);
+  /** get execution plan for this view. merge the table list and join list to the
+      parent select.
+   */
+  void transform();
+  uint32_t processJoin(gp_walk_info& gwi, std::stack<execplan::ParseTree*>&);
 
-private:
-    SELECT_LEX fSelect;
-    gp_walk_info* fParentGwip;
-    execplan::CalpontSystemCatalog::TableAliasName fViewName;
+ private:
+  SELECT_LEX fSelect;
+  gp_walk_info* fParentGwip;
+  execplan::CalpontSystemCatalog::TableAliasName fViewName;
 };
 
-}
-
-#endif
+}  // namespace cal_impl_if

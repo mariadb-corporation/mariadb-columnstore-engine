@@ -15,37 +15,32 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef QUERYTELEPROTO_IMPL_H__
-#define QUERYTELEPROTO_IMPL_H__
+#pragma once
 
 #include "queryteleserverparms.h"
 
 namespace querytele
 {
-
 class QueryTeleProtoImpl
 {
-public:
-    explicit QueryTeleProtoImpl(const QueryTeleServerParms&);
-    ~QueryTeleProtoImpl() { }
+ public:
+  explicit QueryTeleProtoImpl(const QueryTeleServerParms&);
+  ~QueryTeleProtoImpl()
+  {
+  }
 
-    int enqStepTele(const StepTele&);
-    int enqImportTele(const ImportTele&);
-    int enqQueryTele(const QueryTele&);
+  int enqStepTele(const StepTele&);
+  int enqImportTele(const ImportTele&);
+  int enqQueryTele(const QueryTele&);
 
-    /**
-     * Wait for the consumer thread to post all messages
-     **/
-    int waitForQueues();
+  /**
+   * Wait for the consumer thread to post all messages
+   **/
+  int waitForQueues();
 
-protected:
-
-private:
-    QueryTeleServerParms fServerParms;
-
+ protected:
+ private:
+  QueryTeleServerParms fServerParms;
 };
 
-}
-
-#endif
-
+}  // namespace querytele

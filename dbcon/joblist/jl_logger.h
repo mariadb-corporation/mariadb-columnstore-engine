@@ -21,8 +21,7 @@
 
 /** @file */
 
-#ifndef JOBLIST_LOGGER_H_
-#define JOBLIST_LOGGER_H_
+#pragma once
 
 #include <boost/shared_ptr.hpp>
 
@@ -47,54 +46,52 @@ const unsigned LogRDReturn = logging::M0064;
 const unsigned LogRMResourceChange = logging::M0066;
 const unsigned LogRMResourceChangeError = logging::M0067;
 
-
 /** @brief message log wrapper class */
 class Logger
 {
-public:
-    Logger();
+ public:
+  Logger();
 
-    const std::string logMessage(logging::LOG_TYPE logLevel, logging::Message::MessageID mid,
-                                 const logging::Message::Args& args, const logging::LoggingID& logInfo)
-    {
-        return  fImpl->logMessage(logLevel, mid, args, logInfo);
-    }
+  const std::string logMessage(logging::LOG_TYPE logLevel, logging::Message::MessageID mid,
+                               const logging::Message::Args& args, const logging::LoggingID& logInfo)
+  {
+    return fImpl->logMessage(logLevel, mid, args, logInfo);
+  }
 
-    const std::string logMessage(logging::LOG_TYPE logLevel, const std::string& msg, logging::Message::MessageID mid = LogDefaultMsg )
-    {
-        logging::Message::Args args;
-        args.add(msg);
-        return  fImpl->logMessage(logLevel, mid, args, fLogId);
-    }
+  const std::string logMessage(logging::LOG_TYPE logLevel, const std::string& msg,
+                               logging::Message::MessageID mid = LogDefaultMsg)
+  {
+    logging::Message::Args args;
+    args.add(msg);
+    return fImpl->logMessage(logLevel, mid, args, fLogId);
+  }
 
-    const std::string logMessage(logging::LOG_TYPE logLevel, unsigned idbErrorCode);
+  const std::string logMessage(logging::LOG_TYPE logLevel, unsigned idbErrorCode);
 
-    void setLoggingSession(unsigned sid)
-    {
-        fLogId.fSessionID = sid;
-    }
-    void setLoggingTxn(unsigned txn)
-    {
-        fLogId.fTxnID = txn;
-    }
-    void setLoggingThd(unsigned thr)
-    {
-        fLogId.fThdID = thr;
-    }
-private:
-    // defaults okay
-    //Logger(const Logger& rhs);
-    //Logger& operator=(const Logger& rhs);
-    logging::LoggingID fLogId;
+  void setLoggingSession(unsigned sid)
+  {
+    fLogId.fSessionID = sid;
+  }
+  void setLoggingTxn(unsigned txn)
+  {
+    fLogId.fTxnID = txn;
+  }
+  void setLoggingThd(unsigned thr)
+  {
+    fLogId.fThdID = thr;
+  }
 
-    logging::SPL fImpl;
+ private:
+  // defaults okay
+  // Logger(const Logger& rhs);
+  // Logger& operator=(const Logger& rhs);
+  logging::LoggingID fLogId;
+
+  logging::SPL fImpl;
 };
 
 typedef boost::shared_ptr<Logger> SPJL;
 void catchHandler(const std::string& s, int c, SErrorInfo& errorInfo, unsigned sid = 0,
                   logging::LOG_TYPE = logging::LOG_TYPE_CRITICAL);
 
-}
-
-#endif
-
+}  // namespace joblist

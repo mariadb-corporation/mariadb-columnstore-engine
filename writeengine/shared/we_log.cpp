@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id: we_log.cpp 4504 2013-02-02 00:07:43Z bpaul $
-*
-*******************************************************************************/
+ * $Id: we_log.cpp 4504 2013-02-02 00:07:43Z bpaul $
+ *
+ *******************************************************************************/
 
 #include "we_log.h"
 
@@ -29,16 +29,14 @@
 
 namespace WriteEngine
 {
-WriteEngine::WErrorCodes ec; // referenced as extern by chunkmanager
+WriteEngine::WErrorCodes ec;  // referenced as extern by chunkmanager
 
 //------------------------------------------------------------------------------
 // Constructor
 //------------------------------------------------------------------------------
-Log::Log() : m_bConsoleOutput( true ),
-    m_logFileName( "" ),
-    m_errlogFileName( "" )
+Log::Log() : m_bConsoleOutput(true), m_logFileName(""), m_errlogFileName("")
 {
-    m_pid = ::getpid();
+  m_pid = ::getpid();
 }
 
 //------------------------------------------------------------------------------
@@ -46,8 +44,8 @@ Log::Log() : m_bConsoleOutput( true ),
 //------------------------------------------------------------------------------
 Log::~Log()
 {
-    m_logFile.close();
-    m_errLogFile.close();
+  m_logFile.close();
+  m_errLogFile.close();
 }
 
 //------------------------------------------------------------------------------
@@ -61,35 +59,31 @@ Log::~Log()
 // RETURN:
 //   none
 //------------------------------------------------------------------------------
-void Log::formatMsg( const std::string&  msg,
-                     MsgLevel       level,
-                     std::ostringstream& oss,
-                     int            code ) const
+void Log::formatMsg(const std::string& msg, MsgLevel level, std::ostringstream& oss, int code) const
 {
-    // Constructing and logging the entire message as one string, should
-    // help avoid any thread contention that could cause logging output
-    // to be interweaved between threads.
-    oss << Convertor::getTimeStr();
+  // Constructing and logging the entire message as one string, should
+  // help avoid any thread contention that could cause logging output
+  // to be interweaved between threads.
+  oss << Convertor::getTimeStr();
 
-    // Include thread id in log message based on debug level
-    if (isDebug( DEBUG_2 ))
-    {
-        oss << " (" << m_pid << ":" <<
+  // Include thread id in log message based on debug level
+  if (isDebug(DEBUG_2))
+  {
+    oss << " (" << m_pid << ":" <<
 #ifdef _MSC_VER
-            GetCurrentThreadId()
+        GetCurrentThreadId()
 #else
-            pthread_self()
+        pthread_self()
 #endif
-            << ") " <<
-            MSG_LEVEL_STR[level] << " : " << msg ;
-    }
-    else
-    {
-        oss << " (" << m_pid << ") " << MSG_LEVEL_STR[level] << " : " << msg ;
-    }
+        << ") " << MSG_LEVEL_STR[level] << " : " << msg;
+  }
+  else
+  {
+    oss << " (" << m_pid << ") " << MSG_LEVEL_STR[level] << " : " << msg;
+  }
 
-    if ( code > 0 )
-        oss << " [" << code << "]";
+  if (code > 0)
+    oss << " [" << code << "]";
 }
 
 //------------------------------------------------------------------------------
@@ -107,46 +101,44 @@ void Log::formatMsg( const std::string&  msg,
 // RETURN:
 //    none
 //------------------------------------------------------------------------------
-void Log::logMsg( const char* msg,
-                  int         code,
-                  MsgLevel    level )
+void Log::logMsg(const char* msg, int code, MsgLevel level)
 {
-    std::ostringstream oss;
-    formatMsg( msg, level, oss, code );
+  std::ostringstream oss;
+  formatMsg(msg, level, oss, code);
 
-    // log error and critical msgs to syslog
-    if ( level == MSGLVL_ERROR || level == MSGLVL_CRITICAL )
+  // log error and critical msgs to syslog
+  if (level == MSGLVL_ERROR || level == MSGLVL_CRITICAL)
+  {
     {
-        {
-            //log to log file and error log file within scope of mutex lock.
-            //logSyslog uses SimpleSyslog which has it's own lock.
-            boost::mutex::scoped_lock lk(m_WriteLockMutex);
+      // log to log file and error log file within scope of mutex lock.
+      // logSyslog uses SimpleSyslog which has it's own lock.
+      boost::mutex::scoped_lock lk(m_WriteLockMutex);
 
-            m_errLogFile << oss.str() << std::endl;
-            m_logFile    << oss.str() << std::endl;
+      m_errLogFile << oss.str() << std::endl;
+      m_logFile << oss.str() << std::endl;
 
-            std::cerr << oss.str() << std::endl;
-        }
-
-        logSyslog( std::string(msg), code );
+      std::cerr << oss.str() << std::endl;
     }
-    else
-    {
-        std::ostringstream oss2;
 
-        // Format msg again without including the status code.
-        // Only log INFO2 msgs to console if m_bConsoleOutput is TRUE;
-        // All other msg levels always go to console.
-        if ( (level != MSGLVL_INFO2) || (m_bConsoleOutput) )
-            formatMsg ( msg, level, oss2 );
+    logSyslog(std::string(msg), code);
+  }
+  else
+  {
+    std::ostringstream oss2;
 
-        boost::mutex::scoped_lock lk(m_WriteLockMutex);
+    // Format msg again without including the status code.
+    // Only log INFO2 msgs to console if m_bConsoleOutput is TRUE;
+    // All other msg levels always go to console.
+    if ((level != MSGLVL_INFO2) || (m_bConsoleOutput))
+      formatMsg(msg, level, oss2);
 
-        m_logFile << oss.str() << std::endl;
+    boost::mutex::scoped_lock lk(m_WriteLockMutex);
 
-        if ( (level != MSGLVL_INFO2) || (m_bConsoleOutput) )
-            std::cout << oss2.str() << std::endl;
-    }
+    m_logFile << oss.str() << std::endl;
+
+    if ((level != MSGLVL_INFO2) || (m_bConsoleOutput))
+      std::cout << oss2.str() << std::endl;
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -158,30 +150,26 @@ void Log::logMsg( const char* msg,
 // RETURN:
 //   none
 //------------------------------------------------------------------------------
-void Log::setLogFileName( const char* logfile,
-                          const char* errlogfile,
-                          bool        consoleFlag )
+void Log::setLogFileName(const char* logfile, const char* errlogfile, bool consoleFlag)
 {
-    m_logFileName = logfile;
-    m_errlogFileName = errlogfile;
-    m_bConsoleOutput = consoleFlag;
+  m_logFileName = logfile;
+  m_errlogFileName = errlogfile;
+  m_bConsoleOutput = consoleFlag;
 #ifdef _MSC_VER
-    // cpimport.bin calls BulkLoad::loadJobInfo() before calling
-    // BulkLoad::processJob(). loadJobInfo() attempts to write to this log
-    // before it's opened (by processJob()). This doesn't seem to bother Linux
-    // but puts Windows in a bad state. Once this logic is fixed, this hack can
-    // go away.
-    // This code probably wouldn't hurt if run on Linux, but I'll leave this
-    // here as a reminder to fix the logic for all platforms.
-    m_logFile.close();
-    m_logFile.clear();
-    m_errLogFile.close();
-    m_errLogFile.clear();
+  // cpimport.bin calls BulkLoad::loadJobInfo() before calling
+  // BulkLoad::processJob(). loadJobInfo() attempts to write to this log
+  // before it's opened (by processJob()). This doesn't seem to bother Linux
+  // but puts Windows in a bad state. Once this logic is fixed, this hack can
+  // go away.
+  // This code probably wouldn't hurt if run on Linux, but I'll leave this
+  // here as a reminder to fix the logic for all platforms.
+  m_logFile.close();
+  m_logFile.clear();
+  m_errLogFile.close();
+  m_errLogFile.clear();
 #endif
-    m_logFile.open( m_logFileName.c_str(),
-                    std::ofstream::out | std::ofstream::app );
-    m_errLogFile.open(m_errlogFileName.c_str(),
-                      std::ofstream::out | std::ofstream::app);
+  m_logFile.open(m_logFileName.c_str(), std::ofstream::out | std::ofstream::app);
+  m_errLogFile.open(m_errlogFileName.c_str(), std::ofstream::out | std::ofstream::app);
 }
 
 //------------------------------------------------------------------------------
@@ -193,38 +181,34 @@ void Log::setLogFileName( const char* logfile,
 // RETURN:
 //    none
 //------------------------------------------------------------------------------
-void Log::logSyslog( const std::string& msg,
-                     int         statusCode )
+void Log::logSyslog(const std::string& msg, int statusCode)
 {
-    logging::Message::MessageID msgId = logging::M0087;
+  logging::Message::MessageID msgId = logging::M0087;
 
-    switch (statusCode)
+  switch (statusCode)
+  {
+    case ERR_FILE_DISK_SPACE:
     {
-        case ERR_FILE_DISK_SPACE:
-        {
-            msgId = logging::M0076;
-            break;
-        }
-
-        case ERR_UNKNOWN:
-        {
-            msgId = logging::M0017;
-            break;
-        }
-
-        default:
-        {
-            msgId = logging::M0087;
-            break;
-        }
+      msgId = logging::M0076;
+      break;
     }
 
-    logging::Message::Args errMsgArgs;
-    errMsgArgs.add( msg );
-    SimpleSysLog::instance()->logMsg(
-        errMsgArgs,
-        logging::LOG_TYPE_ERROR,
-        msgId);
+    case ERR_UNKNOWN:
+    {
+      msgId = logging::M0017;
+      break;
+    }
+
+    default:
+    {
+      msgId = logging::M0087;
+      break;
+    }
+  }
+
+  logging::Message::Args errMsgArgs;
+  errMsgArgs.add(msg);
+  SimpleSysLog::instance()->logMsg(errMsgArgs, logging::LOG_TYPE_ERROR, msgId);
 }
 //------------------------------------------------------------------------------
 // DESCRIPTION:
@@ -239,9 +223,8 @@ void Log::logSyslog( const std::string& msg,
 
 void Log::closeLog()
 {
-    m_logFile.close();
-    m_errLogFile.close();
+  m_logFile.close();
+  m_errLogFile.close();
 }
 
-} //end of namespace
-
+}  // namespace WriteEngine

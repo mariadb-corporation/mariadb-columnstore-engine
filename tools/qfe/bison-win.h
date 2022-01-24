@@ -32,55 +32,45 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-
 /* Tokens.  */
-#ifndef YYTOKENTYPE
-# define YYTOKENTYPE
+#pragma once
 /* Put the tokens into the symbol table, so that GDB and other debuggers
    know about them.  */
 enum yytokentype
 {
-    CHAR_CONST = 258,
-    RELOP = 259,
-    LOGICOP = 260,
-    QFEP_SELECT = 261,
-    QFEP_FROM = 262,
-    QFEP_WHERE = 263,
-    GROUPBY = 264,
-    OBJNAME = 265,
-    INT_CONST = 266,
-    LIMIT = 267,
-    ORDERBY = 268,
-    ASC = 269,
-    DESC = 270,
-    AS = 271,
-    FUNC = 272
+  CHAR_CONST = 258,
+  RELOP = 259,
+  LOGICOP = 260,
+  QFEP_SELECT = 261,
+  QFEP_FROM = 262,
+  QFEP_WHERE = 263,
+  GROUPBY = 264,
+  OBJNAME = 265,
+  INT_CONST = 266,
+  LIMIT = 267,
+  ORDERBY = 268,
+  ASC = 269,
+  DESC = 270,
+  AS = 271,
+  FUNC = 272
 };
 #endif
 
-
-
-#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+#if !defined YYSTYPE && !defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
 {
-
-    /* Line 1676 of yacc.c  */
+  /* Line 1676 of yacc.c  */
 #line 31 "qfeparser.ypp"
 
-    execplan::ReturnedColumn* rcp;
-    std::string* cp;
-    std::pair<int, std::string>* cvp;
+  execplan::ReturnedColumn* rcp;
+  std::string* cp;
+  std::pair<int, std::string>* cvp;
 
-
-
-    /* Line 1676 of yacc.c  */
+  /* Line 1676 of yacc.c  */
 #line 77 "bison-win.hpp"
 } YYSTYPE;
-# define YYSTYPE_IS_TRIVIAL 1
-# define yystype YYSTYPE /* obsolescent; will be withdrawn */
-# define YYSTYPE_IS_DECLARED 1
-#endif
+#define YYSTYPE_IS_TRIVIAL 1
+#define yystype YYSTYPE /* obsolescent; will be withdrawn */
+#define YYSTYPE_IS_DECLARED 1
 
 extern YYSTYPE qfelval;
-
-

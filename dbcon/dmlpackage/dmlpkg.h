@@ -21,8 +21,7 @@
  *
  ***********************************************************************/
 /** @file */
-#ifndef DMLPKG_H
-#define DMLPKG_H
+#pragma once
 
 #include <vector>
 #include <string>
@@ -34,7 +33,6 @@
 
 namespace dmlpackage
 {
-
 class DeleteSqlStatement;
 class UpdateSqlStatement;
 class InsertSqlStatement;
@@ -81,25 +79,25 @@ std::ostream& operator<<(std::ostream& os, const SqlStatement& stmt);
  */
 enum PREDICATE_TYPE
 {
-    COMPARE_PREDICATE,
-    BETWEEN_PREDICATE,
-    LIKE_PREDICATE,
-    NULLTEST_PREDICATE,
-    IN_PREDICATE,
-    ALLORANY_PREDICATE,
-    EXIST_PREDICATE,
-    INVALID_PREDICATE
+  COMPARE_PREDICATE,
+  BETWEEN_PREDICATE,
+  LIKE_PREDICATE,
+  NULLTEST_PREDICATE,
+  IN_PREDICATE,
+  ALLORANY_PREDICATE,
+  EXIST_PREDICATE,
+  INVALID_PREDICATE
 };
 
 /** @brief DML Statement types
  */
 enum DML_TYPE
 {
-    DML_INSERT,
-    DML_UPDATE,
-    DML_DELETE,
-    DML_COMMAND,
-    DML_INVALID_TYPE
+  DML_INSERT,
+  DML_UPDATE,
+  DML_DELETE,
+  DML_COMMAND,
+  DML_INVALID_TYPE
 };
 
 /** @brief SqlStatement represents a toplevel
@@ -112,40 +110,39 @@ enum DML_TYPE
  */
 class SqlStatement
 {
-public:
-    /** @brief ctor
-     */
-    SqlStatement();
+ public:
+  /** @brief ctor
+   */
+  SqlStatement();
 
-    /** @brief dtor
-     */
-    virtual ~SqlStatement();
+  /** @brief dtor
+   */
+  virtual ~SqlStatement();
 
-    /** @brief dump to stdout.
-     */
-    virtual std::ostream& put(std::ostream& os) const = 0;
+  /** @brief dump to stdout.
+   */
+  virtual std::ostream& put(std::ostream& os) const = 0;
 
-    /** @brief get the query string associated with the
-     * SqlStatement
-     */
-    virtual std::string getQueryString() const = 0;
+  /** @brief get the query string associated with the
+   * SqlStatement
+   */
+  virtual std::string getQueryString() const = 0;
 
-    /** @brief get the statement type
-     */
-    virtual int getStatementType() const = 0;
+  /** @brief get the statement type
+   */
+  virtual int getStatementType() const = 0;
 
-    /** @brief get the schema name from the
-     * TableName data member
-     */
-    virtual std::string getSchemaName() const;
+  /** @brief get the schema name from the
+   * TableName data member
+   */
+  virtual std::string getSchemaName() const;
 
-    /** @brief get the table name from the
-     * TableName data member
-     */
-    virtual std::string getTableName() const;
+  /** @brief get the table name from the
+   * TableName data member
+   */
+  virtual std::string getTableName() const;
 
-    TableName* fNamePtr;
-
+  TableName* fNamePtr;
 };
 
 /** @brief Collects SqlStatements so that we can support the
@@ -157,37 +154,37 @@ public:
  */
 class SqlStatementList
 {
-public:
-    /** @brief ctor
-     */
-    SqlStatementList()
-    {}
+ public:
+  /** @brief ctor
+   */
+  SqlStatementList()
+  {
+  }
 
-    /** @brief dtor
-     */
-    virtual ~SqlStatementList();
+  /** @brief dtor
+   */
+  virtual ~SqlStatementList();
 
-    /** @brief get the SqlStatement at the given index
-     *
-     * @param i the index
-     */
-    SqlStatement* operator[](int i) const
-    {
-        return fList[i];
-    }
+  /** @brief get the SqlStatement at the given index
+   *
+   * @param i the index
+   */
+  SqlStatement* operator[](int i) const
+  {
+    return fList[i];
+  }
 
-    /** @brief push the supplied SqlStatement pointer onto the list
-     *
-     * @param v a pointer to a SqlStatement
-     */
-    void push_back(SqlStatement* v);
+  /** @brief push the supplied SqlStatement pointer onto the list
+   *
+   * @param v a pointer to a SqlStatement
+   */
+  void push_back(SqlStatement* v);
 
-    std::vector<SqlStatement*> fList;
-    std::string fSqlText;
+  std::vector<SqlStatement*> fList;
+  std::string fSqlText;
 
-private:
-    SqlStatementList(const SqlStatementList& x);
-
+ private:
+  SqlStatementList(const SqlStatementList& x);
 };
 
 /** @brief The representation of a parsed
@@ -198,48 +195,47 @@ private:
  */
 class InsertSqlStatement : public SqlStatement
 {
-public:
-    /** @brief ctor
-     */
-    InsertSqlStatement();
+ public:
+  /** @brief ctor
+   */
+  InsertSqlStatement();
 
-    /** @brief ctor
-     *
-     * @param tableNamePtr pointer to a TableName object
-     * @param valsOrQueryPtr pointer to a ValuesOrQueryObject
-     */
-    InsertSqlStatement(TableName* tableNamePtr, ValuesOrQuery* valsOrQueryPtr);
+  /** @brief ctor
+   *
+   * @param tableNamePtr pointer to a TableName object
+   * @param valsOrQueryPtr pointer to a ValuesOrQueryObject
+   */
+  InsertSqlStatement(TableName* tableNamePtr, ValuesOrQuery* valsOrQueryPtr);
 
-    /** @brief ctor
-     *
-     * @param tableNamePtr pointer to a TableName object
-     * @param columnNamesPtr pointer to ColumnNamesList object
-     * @param valsOrQueryPtr pointer to ValuesOrQueryObject
-     */
-    InsertSqlStatement(TableName* tableNamePtr, ColumnNameList* columnNamesPtr,
-                       ValuesOrQuery* valsOrQueryPtr);
+  /** @brief ctor
+   *
+   * @param tableNamePtr pointer to a TableName object
+   * @param columnNamesPtr pointer to ColumnNamesList object
+   * @param valsOrQueryPtr pointer to ValuesOrQueryObject
+   */
+  InsertSqlStatement(TableName* tableNamePtr, ColumnNameList* columnNamesPtr, ValuesOrQuery* valsOrQueryPtr);
 
-    /** @brief dtor
-     */
-    virtual ~InsertSqlStatement();
+  /** @brief dtor
+   */
+  virtual ~InsertSqlStatement();
 
-    /** @brief dump to stdout
-     */
-    virtual std::ostream& put(std::ostream& os) const;
+  /** @brief dump to stdout
+   */
+  virtual std::ostream& put(std::ostream& os) const;
 
-    /** @brief get a string representation of the query spec
-     */
-    virtual std::string getQueryString() const;
+  /** @brief get a string representation of the query spec
+   */
+  virtual std::string getQueryString() const;
 
-    /** @brief get the statement type - DML_INSERT
-     */
-    inline virtual int getStatementType() const
-    {
-        return DML_INSERT;
-    }
+  /** @brief get the statement type - DML_INSERT
+   */
+  inline virtual int getStatementType() const
+  {
+    return DML_INSERT;
+  }
 
-    ValuesOrQuery* fValuesOrQueryPtr;
-    ColumnNameList fColumnList;
+  ValuesOrQuery* fValuesOrQueryPtr;
+  ColumnNameList fColumnList;
 };
 
 /** @brief The representation of a parsed
@@ -250,43 +246,43 @@ public:
  */
 class UpdateSqlStatement : public SqlStatement
 {
-public:
-    /** @brief ctor
-     */
-    UpdateSqlStatement();
+ public:
+  /** @brief ctor
+   */
+  UpdateSqlStatement();
 
-    /** @brief ctor
-     *
-     * @param tableNamePtr pointer to a TableName object
-     * @param colAssignmentPtr pointer to a ColumnAssignmentList object
-     * @param whereClausePtr pointer to a WhereClause object - default 0
-     */
-    UpdateSqlStatement(TableName* tableNamePtr, ColumnAssignmentList* colAssignmentListPtr,
-                       WhereClause* whereClausePtr = 0);
+  /** @brief ctor
+   *
+   * @param tableNamePtr pointer to a TableName object
+   * @param colAssignmentPtr pointer to a ColumnAssignmentList object
+   * @param whereClausePtr pointer to a WhereClause object - default 0
+   */
+  UpdateSqlStatement(TableName* tableNamePtr, ColumnAssignmentList* colAssignmentListPtr,
+                     WhereClause* whereClausePtr = 0);
 
-    /** @brief dtor
-     */
-    virtual ~UpdateSqlStatement();
+  /** @brief dtor
+   */
+  virtual ~UpdateSqlStatement();
 
-    /** @brief dump to stdout
-     */
-    virtual std::ostream& put(std::ostream& os) const;
+  /** @brief dump to stdout
+   */
+  virtual std::ostream& put(std::ostream& os) const;
 
-    /** @brief get the string representation of the
-     *  SET assignment_commalist opt_where_clause
-     *  statement
-     */
-    virtual std::string getQueryString() const;
+  /** @brief get the string representation of the
+   *  SET assignment_commalist opt_where_clause
+   *  statement
+   */
+  virtual std::string getQueryString() const;
 
-    /** @brief get the statement type - DML_UPDATE
-     */
-    inline virtual int getStatementType() const
-    {
-        return DML_UPDATE;
-    }
+  /** @brief get the statement type - DML_UPDATE
+   */
+  inline virtual int getStatementType() const
+  {
+    return DML_UPDATE;
+  }
 
-    ColumnAssignmentList* fColAssignmentListPtr;
-    WhereClause* fWhereClausePtr;
+  ColumnAssignmentList* fColAssignmentListPtr;
+  WhereClause* fWhereClausePtr;
 };
 
 /** @brief The representation of a parsed
@@ -297,38 +293,38 @@ public:
  */
 class DeleteSqlStatement : public SqlStatement
 {
-public:
-    /** @brief ctor
-     */
-    DeleteSqlStatement();
+ public:
+  /** @brief ctor
+   */
+  DeleteSqlStatement();
 
-    /** @brief ctor
-     *
-     * @param tableNamePtr pointer to a TableName object
-     * @param whereClausePtr pointer to a WhereClause object - default = 0
-     */
-    DeleteSqlStatement(TableName* tableNamePtr, WhereClause* whereClausePtr = 0);
+  /** @brief ctor
+   *
+   * @param tableNamePtr pointer to a TableName object
+   * @param whereClausePtr pointer to a WhereClause object - default = 0
+   */
+  DeleteSqlStatement(TableName* tableNamePtr, WhereClause* whereClausePtr = 0);
 
-    /** @brief dtor
-     */
-    virtual ~DeleteSqlStatement();
+  /** @brief dtor
+   */
+  virtual ~DeleteSqlStatement();
 
-    /** @brief dump to stdout
-     */
-    virtual std::ostream& put(std::ostream& os) const;
+  /** @brief dump to stdout
+   */
+  virtual std::ostream& put(std::ostream& os) const;
 
-    /** @brief get the string representation of the WHERE clause
-     */
-    virtual std::string getQueryString() const;
+  /** @brief get the string representation of the WHERE clause
+   */
+  virtual std::string getQueryString() const;
 
-    /** @brief get the statement type - DML_DELETE
-     */
-    inline virtual int getStatementType() const
-    {
-        return DML_DELETE;
-    }
+  /** @brief get the statement type - DML_DELETE
+   */
+  inline virtual int getStatementType() const
+  {
+    return DML_DELETE;
+  }
 
-    WhereClause* fWhereClausePtr;
+  WhereClause* fWhereClausePtr;
 };
 
 /** @brief The representation of a parsed
@@ -344,29 +340,29 @@ public:
  */
 class CommandSqlStatement : public SqlStatement
 {
-public:
-    /** @brief ctor
-     *
-     * @param command the COMMIT or ROLLBACK string
-     */
-    CommandSqlStatement(std::string command);
+ public:
+  /** @brief ctor
+   *
+   * @param command the COMMIT or ROLLBACK string
+   */
+  CommandSqlStatement(std::string command);
 
-    /** @brief get the statement type - DML_COMMAND
-     */
-    inline virtual int getStatementType() const
-    {
-        return DML_COMMAND;
-    }
+  /** @brief get the statement type - DML_COMMAND
+   */
+  inline virtual int getStatementType() const
+  {
+    return DML_COMMAND;
+  }
 
-    /** @brief dump to stdout
-     */
-    virtual std::ostream& put(std::ostream& os) const;
+  /** @brief dump to stdout
+   */
+  virtual std::ostream& put(std::ostream& os) const;
 
-    /** @brief get the COMMIT or ROLLBACK string
-     */
-    virtual std::string getQueryString() const;
+  /** @brief get the COMMIT or ROLLBACK string
+   */
+  virtual std::string getQueryString() const;
 
-    std::string fCommandText;
+  std::string fCommandText;
 };
 
 /** @brief Stores schema, object names.
@@ -374,30 +370,30 @@ public:
  */
 class TableName
 {
-public:
-    /** @brief ctor
-     */
-    TableName();
+ public:
+  /** @brief ctor
+   */
+  TableName();
 
-    /** @brief ctor
-     *
-     * @param name the table name
-     */
-    TableName(char* name);
+  /** @brief ctor
+   *
+   * @param name the table name
+   */
+  TableName(char* name);
 
-    /** @brief ctor
-     *
-     * @param schema the schema name
-     * @param name the table name
-     */
-    TableName(char* shema, char* name);
+  /** @brief ctor
+   *
+   * @param schema the schema name
+   * @param name the table name
+   */
+  TableName(char* shema, char* name);
 
-    /** @brief dump to stdout
-     */
-    std::ostream& put(std::ostream& os) const;
+  /** @brief dump to stdout
+   */
+  std::ostream& put(std::ostream& os) const;
 
-    std::string fName;
-    std::string fSchema;
+  std::string fName;
+  std::string fSchema;
 };
 
 /** @brief Stores a column assignment
@@ -408,30 +404,31 @@ public:
  */
 class ColumnAssignment
 {
-public:
-    explicit ColumnAssignment(
-        std::string const& column,
-        std::string const& op = "=",
-        std::string const& expr = "") :
-        fColumn(column), fOperator(op), fScalarExpression(expr),
-        fFromCol(false), fFuncScale(0), fIsNull(false)
-        {};
+ public:
+  explicit ColumnAssignment(std::string const& column, std::string const& op = "=",
+                            std::string const& expr = "")
+   : fColumn(column)
+   , fOperator(op)
+   , fScalarExpression(expr)
+   , fFromCol(false)
+   , fFuncScale(0)
+   , fIsNull(false){};
 
-    /** @brief dump to stdout
-     */
-    std::ostream& put(std::ostream& os) const;
+  /** @brief dump to stdout
+   */
+  std::ostream& put(std::ostream& os) const;
 
-    /** @brief get the string representation of
-     * the column assignment
-     */
-    std::string getColumnAssignmentString() const;
+  /** @brief get the string representation of
+   * the column assignment
+   */
+  std::string getColumnAssignmentString() const;
 
-    std::string fColumn;
-    std::string fOperator;
-    std::string fScalarExpression;
-    bool fFromCol;
-    uint32_t fFuncScale;
-    bool fIsNull;
+  std::string fColumn;
+  std::string fOperator;
+  std::string fScalarExpression;
+  bool fFromCol;
+  uint32_t fFuncScale;
+  bool fIsNull;
 };
 
 /** @brief Stores a value list or a query specification
@@ -442,38 +439,38 @@ public:
  */
 class ValuesOrQuery
 {
-public:
-    /** @brief ctor
-     */
-    ValuesOrQuery();
+ public:
+  /** @brief ctor
+   */
+  ValuesOrQuery();
 
-    /** @brief ctor
-     *
-     * @param valuesPtr pointer to a ValuesList object
-     */
-    ValuesOrQuery(ValuesList* valuesPtr);
+  /** @brief ctor
+   *
+   * @param valuesPtr pointer to a ValuesList object
+   */
+  ValuesOrQuery(ValuesList* valuesPtr);
 
-    /** @brief  ctor
-     *
-     * @param querySpecPtr pointer to a QuerySpec object
-     */
-    ValuesOrQuery(QuerySpec* querySpecPtr);
+  /** @brief  ctor
+   *
+   * @param querySpecPtr pointer to a QuerySpec object
+   */
+  ValuesOrQuery(QuerySpec* querySpecPtr);
 
-    /** @brief dtor
-     */
-    ~ValuesOrQuery();
+  /** @brief dtor
+   */
+  ~ValuesOrQuery();
 
-    /** @brief dump to stdout
-     */
-    std::ostream& put(std::ostream& os) const;
+  /** @brief dump to stdout
+   */
+  std::ostream& put(std::ostream& os) const;
 
-    /** @brief get the string reperesentation of
-     * the ValuesList or the QuerySpec
-     */
-    std::string getQueryString() const;
+  /** @brief get the string reperesentation of
+   * the ValuesList or the QuerySpec
+   */
+  std::string getQueryString() const;
 
-    ValuesList fValuesList;
-    QuerySpec* fQuerySpecPtr;
+  ValuesList fValuesList;
+  QuerySpec* fQuerySpecPtr;
 };
 
 /** @brief Stores a SELECT filter
@@ -484,30 +481,30 @@ public:
  */
 class SelectFilter
 {
-public:
-    /** @brief ctor
-     */
-    SelectFilter();
+ public:
+  /** @brief ctor
+   */
+  SelectFilter();
 
-    /** @brief ctor
-     *
-     * @param columnListPtr pointer to a ColumnNameList object
-     */
-    SelectFilter(ColumnNameList* columnListPtr);
+  /** @brief ctor
+   *
+   * @param columnListPtr pointer to a ColumnNameList object
+   */
+  SelectFilter(ColumnNameList* columnListPtr);
 
-    /** @brief dtor
-     */
-    ~SelectFilter();
+  /** @brief dtor
+   */
+  ~SelectFilter();
 
-    /** @brief dump to stdout
-     */
-    std::ostream& put(std::ostream& os) const;
+  /** @brief dump to stdout
+   */
+  std::ostream& put(std::ostream& os) const;
 
-    /** @brief get the string represntation of the SELECT statement
-     */
-    std::string getSelectString() const;
+  /** @brief get the string represntation of the SELECT statement
+   */
+  std::string getSelectString() const;
 
-    ColumnNameList fColumnList;
+  ColumnNameList fColumnList;
 };
 
 /** @brief Stores a FROM clause
@@ -517,30 +514,30 @@ public:
  */
 class FromClause
 {
-public:
-    /** @brief ctor
-     */
-    FromClause();
+ public:
+  /** @brief ctor
+   */
+  FromClause();
 
-    /** @brief ctor
-     *
-     * @param tableNameList pointer to a TableNameList object
-     */
-    FromClause(TableNameList* tableNameList);
+  /** @brief ctor
+   *
+   * @param tableNameList pointer to a TableNameList object
+   */
+  FromClause(TableNameList* tableNameList);
 
-    /** @brief dtor
-     */
-    ~FromClause();
+  /** @brief dtor
+   */
+  ~FromClause();
 
-    /** @brief dump to stdout
-     */
-    std::ostream& put(std::ostream& os) const;
+  /** @brief dump to stdout
+   */
+  std::ostream& put(std::ostream& os) const;
 
-    /** @brief get the string representation of the FROM clause
-     */
-    std::string getFromClauseString() const;
+  /** @brief get the string representation of the FROM clause
+   */
+  std::string getFromClauseString() const;
 
-    TableNameList* fTableListPtr;
+  TableNameList* fTableListPtr;
 };
 
 /** @brief Stores a WHERE clause
@@ -550,25 +547,24 @@ public:
  */
 class WhereClause
 {
-public:
-    /** @brief ctor
-     */
-    WhereClause();
+ public:
+  /** @brief ctor
+   */
+  WhereClause();
 
-    /** @brief dtor
-     */
-    ~WhereClause();
+  /** @brief dtor
+   */
+  ~WhereClause();
 
-    /** @brief dump to stdout
-     */
-    std::ostream& put(std::ostream& os) const;
+  /** @brief dump to stdout
+   */
+  std::ostream& put(std::ostream& os) const;
 
-    /** @brief get the string representation of the WHERE clause
-     */
-    std::string getWhereClauseString() const;
+  /** @brief get the string representation of the WHERE clause
+   */
+  std::string getWhereClauseString() const;
 
-    SearchCondition* fSearchConditionPtr;
-
+  SearchCondition* fSearchConditionPtr;
 };
 
 /** @brief Stores a GROUP BY clause
@@ -579,24 +575,24 @@ public:
  */
 class GroupByClause
 {
-public:
-    /** @brief ctor
-     */
-    GroupByClause();
+ public:
+  /** @brief ctor
+   */
+  GroupByClause();
 
-    /** @brief dtor
-     */
-    ~GroupByClause();
+  /** @brief dtor
+   */
+  ~GroupByClause();
 
-    /** @brief dump to stdout
-     */
-    std::ostream& put(std::ostream& os) const;
+  /** @brief dump to stdout
+   */
+  std::ostream& put(std::ostream& os) const;
 
-    /** @brief get the string representation of the GROUP BY clause
-     */
-    std::string getGroupByClauseString() const;
+  /** @brief get the string representation of the GROUP BY clause
+   */
+  std::string getGroupByClauseString() const;
 
-    ColumnNameList* fColumnNamesListPtr;
+  ColumnNameList* fColumnNamesListPtr;
 };
 
 /** @brief Stores a HAVING clause
@@ -607,24 +603,24 @@ public:
  */
 class HavingClause
 {
-public:
-    /** @brief ctor
-     */
-    HavingClause();
+ public:
+  /** @brief ctor
+   */
+  HavingClause();
 
-    /** @brief dtor
-     */
-    ~HavingClause();
+  /** @brief dtor
+   */
+  ~HavingClause();
 
-    /** @brief dump to stdout
-     */
-    std::ostream& put(std::ostream& os) const;
+  /** @brief dump to stdout
+   */
+  std::ostream& put(std::ostream& os) const;
 
-    /** @brief get the string representation of the HAVING clause
-     */
-    std::string getHavingClauseString() const;
+  /** @brief get the string representation of the HAVING clause
+   */
+  std::string getHavingClauseString() const;
 
-    SearchCondition* fSearchConditionPtr;
+  SearchCondition* fSearchConditionPtr;
 };
 
 /** @brief Stores an ESCAPE sequence
@@ -636,12 +632,12 @@ public:
  */
 class Escape
 {
-public:
-    /** @brief dump to stdout
-     */
-    std::ostream& put(std::ostream& os) const;
+ public:
+  /** @brief dump to stdout
+   */
+  std::ostream& put(std::ostream& os) const;
 
-    std::string fEscapeChar;
+  std::string fEscapeChar;
 };
 
 /** @brief The base class representaion of a parsed SQL predicate
@@ -657,30 +653,30 @@ public:
  */
 class Predicate
 {
-public:
-    /** @brief ctor
-     */
-    Predicate();
+ public:
+  /** @brief ctor
+   */
+  Predicate();
 
-    /** @brief ctor
-     *
-     * @param predicateType the PREDICATE_TYPE
-     */
-    Predicate(PREDICATE_TYPE predicateType);
+  /** @brief ctor
+   *
+   * @param predicateType the PREDICATE_TYPE
+   */
+  Predicate(PREDICATE_TYPE predicateType);
 
-    /** @brief dtor
-     */
-    virtual ~Predicate();
+  /** @brief dtor
+   */
+  virtual ~Predicate();
 
-    /** @brief dump to stdout
-     */
-    virtual std::ostream& put(std::ostream& os) const;
+  /** @brief dump to stdout
+   */
+  virtual std::ostream& put(std::ostream& os) const;
 
-    /** @param get the string representation of the predicate
-     */
-    virtual std::string getPredicateString() const;
+  /** @param get the string representation of the predicate
+   */
+  virtual std::string getPredicateString() const;
 
-    PREDICATE_TYPE fPredicateType;
+  PREDICATE_TYPE fPredicateType;
 };
 
 /** @brief The representation of a parsed
@@ -692,30 +688,30 @@ public:
  */
 class ComparisonPredicate : public Predicate
 {
-public:
-    /** @brief ctor
-     */
-    ComparisonPredicate();
+ public:
+  /** @brief ctor
+   */
+  ComparisonPredicate();
 
-    /** @brief dtor
-     */
-    ~ComparisonPredicate();
+  /** @brief dtor
+   */
+  ~ComparisonPredicate();
 
-    /** @brief dump to stdout
-     */
-    virtual std::ostream& put(std::ostream& os) const;
+  /** @brief dump to stdout
+   */
+  virtual std::ostream& put(std::ostream& os) const;
 
-    /** @brief get the string representation of the COMPARISON
-     * predicate
-     */
-    virtual std::string getPredicateString() const;
+  /** @brief get the string representation of the COMPARISON
+   * predicate
+   */
+  virtual std::string getPredicateString() const;
 
-    std::string fLHScalarExpression;
-    std::string fRHScalarExpression;
+  std::string fLHScalarExpression;
+  std::string fRHScalarExpression;
 
-    std::string fOperator;
+  std::string fOperator;
 
-    QuerySpec* fSubQuerySpec;
+  QuerySpec* fSubQuerySpec;
 };
 
 /** @brief The representation of a parsed
@@ -727,30 +723,30 @@ public:
  */
 class BetweenPredicate : public Predicate
 {
-public:
-    /** @brief ctor
-     */
-    BetweenPredicate();
+ public:
+  /** @brief ctor
+   */
+  BetweenPredicate();
 
-    /** @brief dtor
-     */
-    ~BetweenPredicate();
+  /** @brief dtor
+   */
+  ~BetweenPredicate();
 
-    /** @brief dump to stdout
-     */
-    virtual std::ostream& put(std::ostream& os) const;
+  /** @brief dump to stdout
+   */
+  virtual std::ostream& put(std::ostream& os) const;
 
-    /** @brief get the string representation of the BETWEEN
-     *  predicate
-     */
-    virtual std::string getPredicateString() const;
+  /** @brief get the string representation of the BETWEEN
+   *  predicate
+   */
+  virtual std::string getPredicateString() const;
 
-    std::string fLHScalarExpression;
-    std::string fRH1ScalarExpression;
-    std::string fRH2ScalarExpression;
+  std::string fLHScalarExpression;
+  std::string fRH1ScalarExpression;
+  std::string fRH2ScalarExpression;
 
-    std::string fOperator1;
-    std::string fOperator2;
+  std::string fOperator1;
+  std::string fOperator2;
 };
 
 /** @brief The representation of a parsed
@@ -762,29 +758,29 @@ public:
  */
 class LikePredicate : public Predicate
 {
-public:
-    /** @brief ctor
-     */
-    LikePredicate();
+ public:
+  /** @brief ctor
+   */
+  LikePredicate();
 
-    /** @brief dtor
-     */
-    ~LikePredicate();
+  /** @brief dtor
+   */
+  ~LikePredicate();
 
-    /** @brief dump to stdout
-     */
-    virtual std::ostream& put(std::ostream& os) const;
+  /** @brief dump to stdout
+   */
+  virtual std::ostream& put(std::ostream& os) const;
 
-    /** @brief get the string representation of the LIKE
-     * predicate
-     */
-    virtual std::string getPredicateString() const;
+  /** @brief get the string representation of the LIKE
+   * predicate
+   */
+  virtual std::string getPredicateString() const;
 
-    std::string fLHScalarExpression;
-    std::string fAtom;
+  std::string fLHScalarExpression;
+  std::string fAtom;
 
-    std::string fOperator;
-    Escape* fOptionalEscapePtr;
+  std::string fOperator;
+  Escape* fOptionalEscapePtr;
 };
 
 /** @brief The representation of a parsed
@@ -796,27 +792,27 @@ public:
  */
 class NullTestPredicate : public Predicate
 {
-public:
-    /** @brief ctor
-     */
-    NullTestPredicate();
+ public:
+  /** @brief ctor
+   */
+  NullTestPredicate();
 
-    /** @brief dtor
-     */
-    ~NullTestPredicate();
+  /** @brief dtor
+   */
+  ~NullTestPredicate();
 
-    /** @brief dump to stdout
-     */
-    virtual std::ostream& put(std::ostream& os) const;
+  /** @brief dump to stdout
+   */
+  virtual std::ostream& put(std::ostream& os) const;
 
-    /** @brief get the string representation of the NULL test
-     * predicate
-     */
-    std::string getPredicateString() const;
+  /** @brief get the string representation of the NULL test
+   * predicate
+   */
+  std::string getPredicateString() const;
 
-    std::string  fColumnRef;
+  std::string fColumnRef;
 
-    std::string fOperator;
+  std::string fOperator;
 };
 
 /** @brief The representation of a parsed
@@ -830,29 +826,29 @@ public:
  */
 class InPredicate : public Predicate
 {
-public:
-    /** @brief ctor
-     */
-    InPredicate();
+ public:
+  /** @brief ctor
+   */
+  InPredicate();
 
-    /** @brief dtor
-     */
-    ~InPredicate();
+  /** @brief dtor
+   */
+  ~InPredicate();
 
-    /** @brief dump to stdout
-     */
-    virtual std::ostream& put(std::ostream& os) const;
+  /** @brief dump to stdout
+   */
+  virtual std::ostream& put(std::ostream& os) const;
 
-    /** @brief get the string representation of the IN
-     * predicate
-     */
-    virtual std::string getPredicateString() const;
+  /** @brief get the string representation of the IN
+   * predicate
+   */
+  virtual std::string getPredicateString() const;
 
-    std::string fScalarExpression;
-    std::string fOperator;
+  std::string fScalarExpression;
+  std::string fOperator;
 
-    AtomList   fAtomList;
-    QuerySpec* fSubQuerySpecPtr;
+  AtomList fAtomList;
+  QuerySpec* fSubQuerySpecPtr;
 };
 
 /** @brief The representation of a parsed
@@ -863,29 +859,29 @@ public:
  */
 class AllOrAnyPredicate : public Predicate
 {
-public:
-    /** @brief ctor
-     */
-    AllOrAnyPredicate();
+ public:
+  /** @brief ctor
+   */
+  AllOrAnyPredicate();
 
-    /** @brief dtor
-     */
-    ~AllOrAnyPredicate();
+  /** @brief dtor
+   */
+  ~AllOrAnyPredicate();
 
-    /** @brief dump to stdout
-     */
-    virtual std::ostream& put(std::ostream& os) const;
+  /** @brief dump to stdout
+   */
+  virtual std::ostream& put(std::ostream& os) const;
 
-    /** @brief get the string representation of the
-     * ALL or ANY predicate
-     */
-    virtual std::string getPredicateString() const;
+  /** @brief get the string representation of the
+   * ALL or ANY predicate
+   */
+  virtual std::string getPredicateString() const;
 
-    std::string fScalarExpression;
-    std::string fOperator;
-    std::string fAnyAllSome;
+  std::string fScalarExpression;
+  std::string fOperator;
+  std::string fAnyAllSome;
 
-    QuerySpec* fSubQuerySpecPtr;
+  QuerySpec* fSubQuerySpecPtr;
 };
 
 /** @brief The representation of a parsed
@@ -896,25 +892,25 @@ public:
  */
 class ExistanceTestPredicate : public Predicate
 {
-public:
-    /** @brief ctor
-     */
-    ExistanceTestPredicate();
+ public:
+  /** @brief ctor
+   */
+  ExistanceTestPredicate();
 
-    /** @brief dtor
-     */
-    ~ExistanceTestPredicate();
+  /** @brief dtor
+   */
+  ~ExistanceTestPredicate();
 
-    /** @brief dump to stdout
-     */
-    virtual std::ostream& put(std::ostream& os) const;
+  /** @brief dump to stdout
+   */
+  virtual std::ostream& put(std::ostream& os) const;
 
-    /** @brief get the string representation of the EXISTS
-     * predicate
-     */
-    virtual std::string getPredicateString() const;
+  /** @brief get the string representation of the EXISTS
+   * predicate
+   */
+  virtual std::string getPredicateString() const;
 
-    QuerySpec* fSubQuerySpecPtr;
+  QuerySpec* fSubQuerySpecPtr;
 };
 
 /** @brief The representation of a parsed
@@ -929,29 +925,29 @@ public:
  */
 class SearchCondition
 {
-public:
-    /** @brief ctor
-     */
-    SearchCondition();
+ public:
+  /** @brief ctor
+   */
+  SearchCondition();
 
-    /** @brief dtor
-     */
-    ~SearchCondition();
+  /** @brief dtor
+   */
+  ~SearchCondition();
 
-    /** @brief dump to stdout
-     */
-    std::ostream& put(std::ostream& os) const;
+  /** @brief dump to stdout
+   */
+  std::ostream& put(std::ostream& os) const;
 
-    /** @brief get the striong representation of the
-     * search condition
-     */
-    std::string getSearchConditionString() const;
+  /** @brief get the striong representation of the
+   * search condition
+   */
+  std::string getSearchConditionString() const;
 
-    Predicate* fPredicatePtr;
-    SearchCondition* fLHSearchConditionPtr;
-    SearchCondition* fRHSearchConditionPtr;
+  Predicate* fPredicatePtr;
+  SearchCondition* fLHSearchConditionPtr;
+  SearchCondition* fRHSearchConditionPtr;
 
-    std::string fOperator;
+  std::string fOperator;
 };
 
 /** @brief The representation of a parsed
@@ -965,38 +961,38 @@ public:
  */
 class TableExpression
 {
-public:
-    /** @brief ctor
-     */
-    TableExpression();
+ public:
+  /** @brief ctor
+   */
+  TableExpression();
 
-    /** @brief ctor
-     *
-     * @param fromClausePtr pointer to a FromClause object
-     * @param whereClausePtr pointer to a WhereClause object
-     * @param groupByPtr pointer to a GroupByClause object
-     * @param havingPtr pointer to a HavingClause object
-     */
-    TableExpression(FromClause* fromClausePtr, WhereClause* whereClausePtr,
-                    GroupByClause* groupByPtr, HavingClause* havingPtr);
+  /** @brief ctor
+   *
+   * @param fromClausePtr pointer to a FromClause object
+   * @param whereClausePtr pointer to a WhereClause object
+   * @param groupByPtr pointer to a GroupByClause object
+   * @param havingPtr pointer to a HavingClause object
+   */
+  TableExpression(FromClause* fromClausePtr, WhereClause* whereClausePtr, GroupByClause* groupByPtr,
+                  HavingClause* havingPtr);
 
-    /** @brief dtor
-     */
-    ~TableExpression();
+  /** @brief dtor
+   */
+  ~TableExpression();
 
-    /** @brief dump to stdout
-     */
-    std::ostream& put(std::ostream& os) const;
+  /** @brief dump to stdout
+   */
+  std::ostream& put(std::ostream& os) const;
 
-    /** @brief get the string representation of the
-     * table expression
-     */
-    std::string getTableExpressionString() const;
+  /** @brief get the string representation of the
+   * table expression
+   */
+  std::string getTableExpressionString() const;
 
-    FromClause* fFromClausePtr;
-    WhereClause* fWhereClausePtr;
-    GroupByClause* fGroupByPtr;
-    HavingClause* fHavingPtr;
+  FromClause* fFromClausePtr;
+  WhereClause* fWhereClausePtr;
+  GroupByClause* fGroupByPtr;
+  HavingClause* fHavingPtr;
 };
 
 /** @brief The representation of a parsed
@@ -1007,45 +1003,43 @@ public:
  */
 class QuerySpec
 {
-public:
-    /** @brief ctor
-     */
-    QuerySpec();
+ public:
+  /** @brief ctor
+   */
+  QuerySpec();
 
-    /** @brief ctor
-     *
-     * @param selectFilter pointer to a SelectFilter object
-     * @param tableExpression pointer to a TableExpression object
-     */
-    QuerySpec(SelectFilter* selectFilter, TableExpression* tableExpression);
+  /** @brief ctor
+   *
+   * @param selectFilter pointer to a SelectFilter object
+   * @param tableExpression pointer to a TableExpression object
+   */
+  QuerySpec(SelectFilter* selectFilter, TableExpression* tableExpression);
 
-    /** @brief ctor
-     *
-     * @param selectFilter pointer to a SelectFilter object
-     * @param tableExpression pointer to a TableExpression object
-     * @param allOrDistinct pointer to a ALL or DISTINCT string
-     */
-    QuerySpec(SelectFilter* selectFilter, TableExpression* tableExpression,
-              char* allOrDistinct);
+  /** @brief ctor
+   *
+   * @param selectFilter pointer to a SelectFilter object
+   * @param tableExpression pointer to a TableExpression object
+   * @param allOrDistinct pointer to a ALL or DISTINCT string
+   */
+  QuerySpec(SelectFilter* selectFilter, TableExpression* tableExpression, char* allOrDistinct);
 
-    /** @brief dtor
-     */
-    ~QuerySpec();
+  /** @brief dtor
+   */
+  ~QuerySpec();
 
-    /** @brief dump to stdout
-     */
-    std::ostream& put(std::ostream& os) const;
+  /** @brief dump to stdout
+   */
+  std::ostream& put(std::ostream& os) const;
 
-    /** @brief get the string representation of the
-     * query specification
-     */
-    std::string  getQueryString() const;
+  /** @brief get the string representation of the
+   * query specification
+   */
+  std::string getQueryString() const;
 
-    SelectFilter* fSelectFilterPtr;
-    TableExpression* fTableExpressionPtr;
+  SelectFilter* fSelectFilterPtr;
+  TableExpression* fTableExpressionPtr;
 
-    std::string fOptionAllOrDistinct;
+  std::string fOptionAllOrDistinct;
 };
 
-}                                                 // namespace dmlpackage
-#endif                                            // DMLPKG_H
+}  // namespace dmlpackage

@@ -38,97 +38,93 @@ using namespace BRM;
 
 namespace
 {
-
 void usage()
 {
-    cout << "usage: load_brm [-fh] prefix" << endl << endl;
-    cout << "   -h display this help" << endl;
-    cout << "   -f possibly fix a corrupted Free List" << endl;
+  cout << "usage: load_brm [-fh] prefix" << endl << endl;
+  cout << "   -h display this help" << endl;
+  cout << "   -f possibly fix a corrupted Free List" << endl;
 }
 
 struct CtlShmImage
 {
-    bi::interprocess_mutex controlFifoMutex;
+  bi::interprocess_mutex controlFifoMutex;
 };
 
-}
+}  // namespace
 
 int main(int argc, char** argv)
 {
-    opterr = 0;
-    bool fflg = false;
+  opterr = 0;
+  bool fflg = false;
 
-    int c;
+  int c;
 
-    while ((c = getopt(argc, argv, "fh")) != EOF)
-        switch (c)
-        {
-            case 'f':
-                fflg = true;
-                break;
-
-            case 'h':
-            case '?':
-            default:
-                usage();
-                return (c == 'h' ? 0 : 1);
-                break;
-        }
-
-    if ((argc - optind) != 1)
+  while ((c = getopt(argc, argv, "fh")) != EOF)
+    switch (c)
     {
+      case 'f': fflg = true; break;
+
+      case 'h':
+      case '?':
+      default:
         usage();
-        return 1;
+        return (c == 'h' ? 0 : 1);
+        break;
     }
 
-    idbdatafile::IDBPolicy::configIDBPolicy();
+  if ((argc - optind) != 1)
+  {
+    usage();
+    return 1;
+  }
 
-    BlockResolutionManager brm;
-    int err;
-    string prefix;
+  idbdatafile::IDBPolicy::configIDBPolicy();
 
-    prefix = argv[optind];
-    err = brm.loadState(prefix, fflg);
+  BlockResolutionManager brm;
+  int err;
+  string prefix;
 
-    if (err != 0)
-    {
-        cout << "Loading BRM snapshot failed (" << prefix << ")\n";
-        return 1;
-    }
+  prefix = argv[optind];
+  err = brm.loadState(prefix, fflg);
 
-    err = brm.replayJournal(prefix);
+  if (err != 0)
+  {
+    cout << "Loading BRM snapshot failed (" << prefix << ")\n";
+    return 1;
+  }
 
-    if (err < 0)
-    {
-        cout << "Could not load BRM journal file\n";
-        return 1;
-    }
+  err = brm.replayJournal(prefix);
 
-    ShmKeys shmkeys;
-    string key_name = ShmKeys::keyToName(shmkeys.DECOMSVRMUTEX_SYSVKEY);
-    bi::shared_memory_object::remove(key_name.c_str());
-    bi::permissions perms;
-    perms.set_unrestricted();
+  if (err < 0)
+  {
+    cout << "Could not load BRM journal file\n";
+    return 1;
+  }
 
-    try
-    {
-        bi::shared_memory_object shm(bi::create_only, key_name.c_str(), bi::read_write, perms);
-        shm.truncate(sizeof(CtlShmImage));
-        bi::mapped_region region(shm, bi::read_write);
-        (void)new (region.get_address()) CtlShmImage;
-    }
-    catch (...)
-    {
-        //Hmm...we just deleted it above, but the create failed...just bail out
-        throw runtime_error("couldn't create DecomSvr shm");
-    }
+  ShmKeys shmkeys;
+  string key_name = ShmKeys::keyToName(shmkeys.DECOMSVRMUTEX_SYSVKEY);
+  bi::shared_memory_object::remove(key_name.c_str());
+  bi::permissions perms;
+  perms.set_unrestricted();
 
-    /* An OAM friendly success msg */
-    cout << "OK.\n";
-    cout << "Successfully loaded BRM snapshot\n";
-    cout << "Successfully replayed " << err << " BRM transactions\n";
+  try
+  {
+    bi::shared_memory_object shm(bi::create_only, key_name.c_str(), bi::read_write, perms);
+    shm.truncate(sizeof(CtlShmImage));
+    bi::mapped_region region(shm, bi::read_write);
+    (void)new (region.get_address()) CtlShmImage;
+  }
+  catch (...)
+  {
+    // Hmm...we just deleted it above, but the create failed...just bail out
+    throw runtime_error("couldn't create DecomSvr shm");
+  }
 
-    return 0;
+  /* An OAM friendly success msg */
+  cout << "OK.\n";
+  cout << "Successfully loaded BRM snapshot\n";
+  cout << "Successfully replayed " << err << " BRM transactions\n";
+
+  return 0;
 }
 // vim:ts=4 sw=4:
-

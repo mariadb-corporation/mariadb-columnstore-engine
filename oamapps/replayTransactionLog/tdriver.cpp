@@ -36,34 +36,31 @@ int maxTxns = 1000;
 
 class ExecPlanTest : public CppUnit::TestFixture
 {
+  CPPUNIT_TEST_SUITE(ExecPlanTest);
 
-    CPPUNIT_TEST_SUITE( ExecPlanTest );
+  CPPUNIT_TEST_SUITE_END();
 
-    CPPUNIT_TEST_SUITE_END();
+ private:
+ public:
+  void setUp()
+  {
+  }
 
-private:
-public:
+  void tearDown()
+  {
+  }
+};  // test suite
 
-    void setUp()
-    {
-    }
-
-    void tearDown()
-    {
-    }
-}; // test suite
-
-CPPUNIT_TEST_SUITE_REGISTRATION( ExecPlanTest);
+CPPUNIT_TEST_SUITE_REGISTRATION(ExecPlanTest);
 
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
 int main(int argc, char* argv[])
 {
-
-    CppUnit::TextUi::TestRunner runner;
-    CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
-    runner.addTest( registry.makeTest() );
-    bool wasSuccessful = runner.run( "", false );
-    return (wasSuccessful ? 0 : 1);
+  CppUnit::TextUi::TestRunner runner;
+  CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
+  runner.addTest(registry.makeTest());
+  bool wasSuccessful = runner.run("", false);
+  return (wasSuccessful ? 0 : 1);
 }

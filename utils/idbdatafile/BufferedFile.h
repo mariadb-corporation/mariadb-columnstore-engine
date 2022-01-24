@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef BUFFEREDFILE_H_
-#define BUFFEREDFILE_H_
+#pragma once
 
 #include <stdexcept>
 #include <boost/utility.hpp>
@@ -29,7 +28,6 @@ typedef void* HANDLE;
 
 namespace idbdatafile
 {
-
 /**
  * BufferedFile implements the IDBDataFile for I/O to a C library FILE*
  * (via fopen, fwrite, fread, etc.).  See IDBDataFile.h for more documentation
@@ -37,31 +35,30 @@ namespace idbdatafile
  */
 class BufferedFile : public IDBDataFile, boost::noncopyable
 {
-public:
-    BufferedFile(const char* fname, const char* mode, unsigned opts);
-    /* virtual */ ~BufferedFile();
+ public:
+  BufferedFile(const char* fname, const char* mode, unsigned opts);
+  /* virtual */ ~BufferedFile();
 
-    /* virtual */ ssize_t pread(void* ptr, off64_t offset, size_t count);
-    /* virtual */ ssize_t read(void* ptr, size_t count);
-    /* virtual */ ssize_t write(const void* ptr, size_t count);
-    /* virtual */ int seek(off64_t offset, int whence);
-    /* virtual */ int truncate(off64_t length);
-    /* virtual */ off64_t size();
-    /* virtual */ off64_t tell();
-    /* virtual */ int flush();
-    /* virtual */ time_t mtime();
-    /* virtual */ int fallocate(int mode, off64_t offset, off64_t length);
+  /* virtual */ ssize_t pread(void* ptr, off64_t offset, size_t count);
+  /* virtual */ ssize_t read(void* ptr, size_t count);
+  /* virtual */ ssize_t write(const void* ptr, size_t count);
+  /* virtual */ int seek(off64_t offset, int whence);
+  /* virtual */ int truncate(off64_t length);
+  /* virtual */ off64_t size();
+  /* virtual */ off64_t tell();
+  /* virtual */ int flush();
+  /* virtual */ time_t mtime();
+  /* virtual */ int fallocate(int mode, off64_t offset, off64_t length);
 
-protected:
-    /* virtual */
-    int close();
+ protected:
+  /* virtual */
+  int close();
 
-private:
-    void	applyOptions( unsigned opts );
+ private:
+  void applyOptions(unsigned opts);
 
-    FILE*	m_fp;
-    char*   m_buffer;
+  FILE* m_fp;
+  char* m_buffer;
 };
 
-}
-#endif /* BUFFEREDFILE_H_ */
+}  // namespace idbdatafile

@@ -15,27 +15,22 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-
-
-#ifndef SYNCTASK_H_
-#define SYNCTASK_H_
+#pragma once
 
 #include "PosixTask.h"
 
 namespace storagemanager
 {
-
 class SyncTask : public PosixTask
 {
-    public:
-        SyncTask(int sock, uint length);
-        virtual ~SyncTask();
+ public:
+  SyncTask(int sock, uint length);
+  virtual ~SyncTask();
 
-        bool run();
+  bool run();
 
-    private:
-        SyncTask();
+ private:
+  SyncTask();
 };
 
-}
-#endif
+}  // namespace storagemanager

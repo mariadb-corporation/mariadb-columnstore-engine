@@ -32,7 +32,6 @@ using namespace boost;
 
 namespace dmlpackageprocessor
 {
-
 /*static*/
 boost::mutex TablelockData::map_mutex;
 /*static*/
@@ -40,31 +39,31 @@ TablelockData::TablelockDataMap TablelockData::fTablelockDataMap;
 /* static */
 TablelockData* TablelockData::makeTablelockData(uint32_t sessionID)
 {
-    boost::mutex::scoped_lock lock(map_mutex);
-    TablelockData* instance;
-    TablelockDataMap::const_iterator it = fTablelockDataMap.find(sessionID);
+  boost::mutex::scoped_lock lock(map_mutex);
+  TablelockData* instance;
+  TablelockDataMap::const_iterator it = fTablelockDataMap.find(sessionID);
 
-    if (it == fTablelockDataMap.end())
-    {
-        instance = new TablelockData();
-        fTablelockDataMap[sessionID] = instance;
-        return instance;
-    }
+  if (it == fTablelockDataMap.end())
+  {
+    instance = new TablelockData();
+    fTablelockDataMap[sessionID] = instance;
+    return instance;
+  }
 
-    return it->second;
+  return it->second;
 }
 
 /* static */
 void TablelockData::removeTablelockData(uint32_t sessionID)
 {
-    boost::mutex::scoped_lock lock(map_mutex);
-    TablelockDataMap::iterator it = fTablelockDataMap.find(sessionID);
+  boost::mutex::scoped_lock lock(map_mutex);
+  TablelockDataMap::iterator it = fTablelockDataMap.find(sessionID);
 
-    if (it != fTablelockDataMap.end())
-    {
-        delete (*it).second;
-        fTablelockDataMap.erase(it);
-    }
+  if (it != fTablelockDataMap.end())
+  {
+    delete (*it).second;
+    fTablelockDataMap.erase(it);
+  }
 }
 
 TablelockData::TablelockData()
@@ -76,30 +75,30 @@ TablelockData::~TablelockData()
 
 void TablelockData::setTablelock(uint32_t tableOid, uint64_t tablelockId)
 {
-    boost::mutex::scoped_lock lk(fOIDTablelock);
-    fOIDTablelockMap[tableOid] = tablelockId;
+  boost::mutex::scoped_lock lk(fOIDTablelock);
+  fOIDTablelockMap[tableOid] = tablelockId;
 }
 
 uint64_t TablelockData::getTablelockId(uint32_t tableOid)
 {
-    boost::mutex::scoped_lock lk(fOIDTablelock);
-    uint64_t tablelockId = 0;
-    OIDTablelock::iterator it = fOIDTablelockMap.find(tableOid);
+  boost::mutex::scoped_lock lk(fOIDTablelock);
+  uint64_t tablelockId = 0;
+  OIDTablelock::iterator it = fOIDTablelockMap.find(tableOid);
 
-    if (it != fOIDTablelockMap.end())
-    {
-        tablelockId = it->second;
-    }
+  if (it != fOIDTablelockMap.end())
+  {
+    tablelockId = it->second;
+  }
 
-    return tablelockId;
+  return tablelockId;
 }
 
 TablelockData::OIDTablelock& TablelockData::getOidTablelockMap()
 {
-    boost::mutex::scoped_lock lk(fOIDTablelock);
+  boost::mutex::scoped_lock lk(fOIDTablelock);
 
-    return fOIDTablelockMap;
+  return fOIDTablelockMap;
 }
 
-}
+}  // namespace dmlpackageprocessor
 // vim:ts=4 sw=4:

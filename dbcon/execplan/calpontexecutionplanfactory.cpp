@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: calpontexecutionplanfactory.cpp 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: calpontexecutionplanfactory.cpp 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 
 #include "calpontexecutionplanfactory.h"
 #include "calpontexecutionplan.h"
@@ -28,10 +28,10 @@
 
 namespace execplan
 {
-
-//CalpontExecutionPlan* CalpontExecutionPlanFactory::makeCalpontExecutionPlan(const VendorExecutionPlan* vplan)
+// CalpontExecutionPlan* CalpontExecutionPlanFactory::makeCalpontExecutionPlan(const VendorExecutionPlan*
+// vplan)
 //{
 //	return new CalpontSelectExecutionPlan();
 //}
 
-} //namespace execplan
+}  // namespace execplan

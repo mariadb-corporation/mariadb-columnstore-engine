@@ -24,8 +24,7 @@
  * class ColumnBuffer
  */
 
-#ifndef WRITEENGINE_COLUMNBUF_H
-#define WRITEENGINE_COLUMNBUF_H
+#pragma once
 
 #include <cstdio>
 
@@ -44,90 +43,84 @@ class ColumnInfo;
  */
 class ColumnBuffer
 {
+ public:
+  /** @brief default Constructor
+   */
+  ColumnBuffer(ColumnInfo* pColInfo, Log* logger);
 
-public:
+  /** @brief default Destructor
+   */
+  virtual ~ColumnBuffer();
 
-    /** @brief default Constructor
-     */
-    ColumnBuffer(ColumnInfo* pColInfo, Log* logger);
+  /** @brief Final flushing of data and headers prior to closing the file.
+   * This is a no-op for uncompressed columns.
+   * @param bTruncFile is file to be truncated
+   * @return NO_ERROR or success
+   */
+  virtual int finishFile(bool bTruncFile);
 
-    /** @brief default Destructor
-     */
-    virtual ~ColumnBuffer();
+  /** @brief Returns size of the buffer
+   */
+  int getSize() const
+  {
+    return fBufSize;
+  }
 
-    /** @brief Final flushing of data and headers prior to closing the file.
-     * This is a no-op for uncompressed columns.
-     * @param bTruncFile is file to be truncated
-     * @return NO_ERROR or success
-     */
-    virtual int finishFile( bool bTruncFile );
+  /** @brief Reset the ColBuf to-be-compressed buffer prior to importing the
+   *  next extent.  This is a no-op for uncompressed columns.
+   * @param startFileOffset (output) File offset to start of active chunk
+   */
+  virtual int resetToBeCompressedColBuf(long long& startFileOffset);
 
-    /** @brief Returns size of the buffer
-     */
-    int getSize() const
-    {
-        return fBufSize;
-    }
+  /** @brief Set the IDBDataFile* destination for the applicable col segment file.
+   *
+   * @param The destination IDBDataFile stream to which buffer data will be written
+   * @param Starting HWM for cFile
+   * @param Headers with ptr information (only applies to compressed files)
+   */
+  virtual int setDbFile(IDBDataFile* const cFile, HWM startHwm, const char* hdrs);
 
-    /** @brief Reset the ColBuf to-be-compressed buffer prior to importing the
-     *  next extent.  This is a no-op for uncompressed columns.
-     * @param startFileOffset (output) File offset to start of active chunk
-     */
-    virtual int resetToBeCompressedColBuf( long long& startFileOffset );
+  /** @brief Resize the buffer, also copying the section denoted by the
+   * offsets to the new buffer.  If offsets are -1, then the buffer is
+   * expanded, but no copy is performed.
+   *
+   * @param newSize The new size of the buffer
+   * @param startOffset The start offset in the current buffer from where the
+   * previous data need to be copied
+   * @param endOffset The end offset upto which the data should be copied to
+   * new buffer
+   */
+  void resizeAndCopy(int newSize, int startOffset, int endOffset);
 
-    /** @brief Set the IDBDataFile* destination for the applicable col segment file.
-     *
-     * @param The destination IDBDataFile stream to which buffer data will be written
-     * @param Starting HWM for cFile
-     * @param Headers with ptr information (only applies to compressed files)
-     */
-    virtual int setDbFile(IDBDataFile* const cFile, HWM startHwm, const char* hdrs);
+  /** @brief Write data to buffer
+   *
+   * @param data
+   * @param startOffset
+   * @param bytes
+   */
+  void write(const void* const data, int startOffset, int bytes) const;
 
-    /** @brief Resize the buffer, also copying the section denoted by the
-     * offsets to the new buffer.  If offsets are -1, then the buffer is
-     * expanded, but no copy is performed.
-     *
-     * @param newSize The new size of the buffer
-     * @param startOffset The start offset in the current buffer from where the
-     * previous data need to be copied
-     * @param endOffset The end offset upto which the data should be copied to
-     * new buffer
-     */
-    void resizeAndCopy(int newSize, int startOffset, int endOffset);
+  /** @brief Write data to FILE
+   *
+   * @param startOffset The buffer offset from where the write should begin
+   * @param writeSize   The number of bytes to be written to the file
+   * @param fillUpWEmpties The flag to fill the buffer with empty magic values
+   *                      up to the block boundary.
+   */
+  virtual int writeToFile(int startOffset, int writeSize, bool fillUpWEmpties = false);
 
-    /** @brief Write data to buffer
-     *
-     * @param data
-     * @param startOffset
-     * @param bytes
-     */
-    void write(const void* const data, int startOffset, int bytes) const;
+ protected:
+  // Disable copy constructor and assignment operator by declaring and
+  // not defining.
+  ColumnBuffer(const ColumnBuffer&);
+  ColumnBuffer& operator=(const ColumnBuffer&);
 
-    /** @brief Write data to FILE
-     *
-     * @param startOffset The buffer offset from where the write should begin
-     * @param writeSize   The number of bytes to be written to the file
-     * @param fillUpWEmpties The flag to fill the buffer with empty magic values
-     *                      up to the block boundary.
-     */
-    virtual int writeToFile(int startOffset, int writeSize,
-                            bool fillUpWEmpties = false);
-
-protected:
-
-    // Disable copy constructor and assignment operator by declaring and
-    // not defining.
-    ColumnBuffer(const ColumnBuffer&);
-    ColumnBuffer& operator=(const ColumnBuffer&);
-
-    unsigned char* fBuffer; // Internal buffer
-    int   fBufSize;         // Size of the internal buffer
-    IDBDataFile* fFile;            // The column file output stream
-    ColumnInfo* fColInfo;   // parent ColumnInfo Object
-    Log*  fLog;             // Logger
-    HWM   fStartingHwm;     // Starting HWM for current column segment file
+  unsigned char* fBuffer;  // Internal buffer
+  int fBufSize;            // Size of the internal buffer
+  IDBDataFile* fFile;      // The column file output stream
+  ColumnInfo* fColInfo;    // parent ColumnInfo Object
+  Log* fLog;               // Logger
+  HWM fStartingHwm;        // Starting HWM for current column segment file
 };
 
-}
-
-#endif //WRITEENGINE_COLUMNBUF_H
+}  // namespace WriteEngine

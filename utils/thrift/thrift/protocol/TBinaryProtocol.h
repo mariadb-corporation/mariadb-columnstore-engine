@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_PROTOCOL_TBINARYPROTOCOL_H_
-#define _THRIFT_PROTOCOL_TBINARYPROTOCOL_H_ 1
+#pragma once
 
 #include <thrift/protocol/TProtocol.h>
 #include <thrift/protocol/TVirtualProtocol.h>
@@ -301,4 +300,3 @@ typedef TBinaryProtocolFactoryT<TTransport> TBinaryProtocolFactory;
 
 #include <thrift/protocol/TBinaryProtocol.tcc>
 
-#endif // #ifndef _THRIFT_PROTOCOL_TBINARYPROTOCOL_H_

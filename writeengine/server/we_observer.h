@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id$
-*
-*******************************************************************************/
+ * $Id$
+ *
+ *******************************************************************************/
 
 /*
  * Observer.h
@@ -27,43 +27,37 @@
  *      Author: bpaul@calpont.com
  */
 
-#ifndef OBSERVER_H_
-#define OBSERVER_H_
+#pragma once
 
 #include <list>
 
-
 namespace WriteEngine
 {
-
-class Subject; 	// forward deceleration
+class Subject;  // forward deceleration
 
 class Observer
 {
-public:
-    virtual ~Observer();
-    virtual bool update(Subject* pSub) = 0;
+ public:
+  virtual ~Observer();
+  virtual bool update(Subject* pSub) = 0;
 
-protected:
-    Observer();
+ protected:
+  Observer();
 };
 
 class Subject
 {
-public:
-    Subject();
-    virtual ~Subject();
+ public:
+  Subject();
+  virtual ~Subject();
 
-    virtual void attach(Observer* Obs);
-    virtual void detach(Observer* Obs);
-    virtual void notify();
+  virtual void attach(Observer* Obs);
+  virtual void detach(Observer* Obs);
+  virtual void notify();
 
-
-private:
-    typedef std::list<Observer*> Observers;
-    Observers fObs;
+ private:
+  typedef std::list<Observer*> Observers;
+  Observers fObs;
 };
 
-}
-
-#endif /* OBSERVER_H_ */
+}  // namespace WriteEngine

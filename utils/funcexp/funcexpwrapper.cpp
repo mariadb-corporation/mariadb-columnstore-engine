@@ -38,100 +38,99 @@ using namespace execplan;
 
 namespace funcexp
 {
-
 FuncExpWrapper::FuncExpWrapper()
 {
-    fe = FuncExp::instance();
+  fe = FuncExp::instance();
 }
 
 FuncExpWrapper::FuncExpWrapper(const FuncExpWrapper& f)
 {
-    uint32_t i;
+  uint32_t i;
 
-    fe = FuncExp::instance();
+  fe = FuncExp::instance();
 
-    filters.resize(f.filters.size());
+  filters.resize(f.filters.size());
 
-    for (i = 0; i < f.filters.size(); i++)
-        filters[i].reset(new ParseTree(*(f.filters[i])));
+  for (i = 0; i < f.filters.size(); i++)
+    filters[i].reset(new ParseTree(*(f.filters[i])));
 
-    rcs.resize(f.rcs.size());
+  rcs.resize(f.rcs.size());
 
-    for (i = 0; i < f.rcs.size(); i++)
-        rcs[i].reset(f.rcs[i]->clone());
+  for (i = 0; i < f.rcs.size(); i++)
+    rcs[i].reset(f.rcs[i]->clone());
 }
 
 FuncExpWrapper::~FuncExpWrapper()
-{ }
+{
+}
 
 void FuncExpWrapper::operator=(const FuncExpWrapper& f)
 {
-    uint32_t i;
+  uint32_t i;
 
-    filters.resize(f.filters.size());
+  filters.resize(f.filters.size());
 
-    for (i = 0; i < f.filters.size(); i++)
-        filters[i].reset(new ParseTree(*(f.filters[i])));
+  for (i = 0; i < f.filters.size(); i++)
+    filters[i].reset(new ParseTree(*(f.filters[i])));
 
-    rcs.resize(f.rcs.size());
+  rcs.resize(f.rcs.size());
 
-    for (i = 0; i < f.rcs.size(); i++)
-        rcs[i].reset(f.rcs[i]->clone());
-
+  for (i = 0; i < f.rcs.size(); i++)
+    rcs[i].reset(f.rcs[i]->clone());
 }
 
 void FuncExpWrapper::serialize(ByteStream& bs) const
 {
-    uint32_t i;
+  uint32_t i;
 
-    bs << (uint32_t) filters.size();
-    bs << (uint32_t) rcs.size();
+  bs << (uint32_t)filters.size();
+  bs << (uint32_t)rcs.size();
 
-    for (i = 0; i < filters.size(); i++)
-        ObjectReader::writeParseTree(filters[i].get(), bs);
+  for (i = 0; i < filters.size(); i++)
+    ObjectReader::writeParseTree(filters[i].get(), bs);
 
-    for (i = 0; i < rcs.size(); i++)
-        rcs[i]->serialize(bs);
+  for (i = 0; i < rcs.size(); i++)
+    rcs[i]->serialize(bs);
 }
 
 void FuncExpWrapper::deserialize(ByteStream& bs)
 {
-    uint32_t fCount, rcsCount, i;
+  uint32_t fCount, rcsCount, i;
 
-    bs >> fCount;
-    bs >> rcsCount;
+  bs >> fCount;
+  bs >> rcsCount;
 
-    for (i = 0; i < fCount; i++)
-        filters.push_back(boost::shared_ptr<ParseTree>(ObjectReader::createParseTree(bs)));
+  for (i = 0; i < fCount; i++)
+    filters.push_back(boost::shared_ptr<ParseTree>(ObjectReader::createParseTree(bs)));
 
-    for (i = 0; i < rcsCount; i++)
-    {
-        ReturnedColumn* rc = (ReturnedColumn*) ObjectReader::createTreeNode(bs);
-        rcs.push_back(boost::shared_ptr<ReturnedColumn>(rc));
-    }
+  for (i = 0; i < rcsCount; i++)
+  {
+    ReturnedColumn* rc = (ReturnedColumn*)ObjectReader::createTreeNode(bs);
+    rcs.push_back(boost::shared_ptr<ReturnedColumn>(rc));
+  }
 }
 
 bool FuncExpWrapper::evaluate(Row* r)
 {
-    uint32_t i;
+  uint32_t i;
 
-    for (i = 0; i < filters.size(); i++)
-        if (!fe->evaluate(*r, filters[i].get()))
-            return false;
+  for (i = 0; i < filters.size(); i++)
+    if (!fe->evaluate(*r, filters[i].get()))
+      return false;
 
-    fe->evaluate(*r, rcs);
+  fe->evaluate(*r, rcs);
 
-    return true;
+  return true;
 }
 
 void FuncExpWrapper::addFilter(const boost::shared_ptr<ParseTree>& f)
 {
-    filters.push_back(f);
+  filters.push_back(f);
 }
 
 void FuncExpWrapper::addReturnedColumn(const boost::shared_ptr<ReturnedColumn>& rc)
 {
-    rcs.push_back(rc);
+  rcs.push_back(rc);
 }
 
-};
+};  // namespace funcexp

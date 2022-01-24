@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef UNBUFFEREDFILEFACTORY_H_
-#define UNBUFFEREDFILEFACTORY_H_
+#pragma once
 
 #include "FileFactoryBase.h"
 #include "UnbufferedFile.h"
@@ -24,19 +23,17 @@
 
 namespace idbdatafile
 {
-
 class UnbufferedFileFactory : public FileFactoryBase
 {
-public:
-    /* virtual */
-    IDBDataFile* open(const char* fname, const char* mode, unsigned opts, unsigned colWidth);
+ public:
+  /* virtual */
+  IDBDataFile* open(const char* fname, const char* mode, unsigned opts, unsigned colWidth);
 };
 
-inline
-IDBDataFile* UnbufferedFileFactory::open(const char* fname, const char* mode, unsigned opts, unsigned /*colWidth*/)
+inline IDBDataFile* UnbufferedFileFactory::open(const char* fname, const char* mode, unsigned opts,
+                                                unsigned /*colWidth*/)
 {
-    return new UnbufferedFile(fname, mode, opts);
+  return new UnbufferedFile(fname, mode, opts);
 }
 
-}
-#endif /* UNBUFFEREDFILEFACTORY_H_ */
+}  // namespace idbdatafile

@@ -21,8 +21,7 @@
  *
  ***********************************************************************/
 /** @file */
-#ifndef CREATETABLEPROCESSOR_H
-#define CREATETABLEPROCESSOR_H
+#pragma once
 
 #include "ddlpackageprocessor.h"
 
@@ -34,31 +33,29 @@
 
 namespace ddlpackageprocessor
 {
-
 /** @brief specialization of a DDLPackageProcessor
  * for interacting with the Write Engine
  * to process create table ddl statements.
  */
 class CreateTableProcessor : public DDLPackageProcessor
 {
-public:
+ public:
+  CreateTableProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm)
+  {
+  }
+  /** @brief process a create table statement
+   *
+   * @param createTableStmt the CreateTableStatement
+   */
+  EXPORT DDLResult processPackage(ddlpackage::CreateTableStatement& createTableStmt);
 
-    CreateTableProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm) {}
-    /** @brief process a create table statement
-     *
-     * @param createTableStmt the CreateTableStatement
-     */
-    EXPORT DDLResult processPackage(ddlpackage::CreateTableStatement& createTableStmt);
+ protected:
+  void rollBackCreateTable(const std::string& error, BRM::TxnID txnID, int sessionId,
+                           ddlpackage::TableDef& tableDef, DDLResult& result);
 
-protected:
-    void rollBackCreateTable(const std::string& error, BRM::TxnID txnID, int sessionId, ddlpackage::TableDef& tableDef, DDLResult& result);
-
-private:
-
+ private:
 };
 
-}                                                 // namespace ddlpackageprocessor
+}  // namespace ddlpackageprocessor
 
 #undef EXPORT
-
-#endif                                            // CREATETABLEPROCESSOR_H

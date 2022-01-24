@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_WINDOWS_SOCKETPAIR_H_
-#define _THRIFT_WINDOWS_SOCKETPAIR_H_ 1
+#pragma once
 
 #if defined(_MSC_VER) && (_MSC_VER > 1200)
 #pragma once
@@ -34,4 +33,3 @@
 
 int thrift_socketpair(int d, int type, int protocol, THRIFT_SOCKET sv[2]);
 
-#endif // _THRIFT_WINDOWS_SOCKETPAIR_H_

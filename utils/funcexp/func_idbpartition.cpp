@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id$
-*
-*
-****************************************************************************/
+ * $Id$
+ *
+ *
+ ****************************************************************************/
 
 #include <cstdlib>
 #include <string>
@@ -43,28 +43,24 @@ using namespace logging;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_idbpartition::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
+CalpontSystemCatalog::ColType Func_idbpartition::operationType(FunctionParm& fp,
+                                                               CalpontSystemCatalog::ColType& resultType)
 {
-    // all integer
-    CalpontSystemCatalog::ColType ct;
-    ct.colDataType = CalpontSystemCatalog::BIGINT;
-    ct.colWidth = 8;
-    return ct;
+  // all integer
+  CalpontSystemCatalog::ColType ct;
+  ct.colDataType = CalpontSystemCatalog::BIGINT;
+  ct.colWidth = 8;
+  return ct;
 }
 
-string Func_idbpartition::getStrVal(Row& row,
-                                    FunctionParm& parm,
-                                    bool& isNull,
+string Func_idbpartition::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
                                     CalpontSystemCatalog::ColType& ct)
 {
-    LogicalPartition part(
-        parm[0]->data()->getIntVal(row, isNull),
-        parm[1]->data()->getIntVal(row, isNull),
-        parm[2]->data()->getIntVal(row, isNull));
+  LogicalPartition part(parm[0]->data()->getIntVal(row, isNull), parm[1]->data()->getIntVal(row, isNull),
+                        parm[2]->data()->getIntVal(row, isNull));
 
-    return part.toString();
+  return part.toString();
 }
 
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:

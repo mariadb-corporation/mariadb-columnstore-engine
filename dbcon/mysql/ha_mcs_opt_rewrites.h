@@ -15,14 +15,11 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef HA_MCS_REWRITES
-#define HA_MCS_REWRITES
+#pragma once
 
 #include "idb_mysql.h"
 
-bool in_subselect_rewrite(SELECT_LEX *select_lex);
-void first_cond_optimization_flag_toggle(SELECT_LEX *select_lex, void (*func)(SELECT_LEX*));
+bool in_subselect_rewrite(SELECT_LEX* select_lex);
+void first_cond_optimization_flag_toggle(SELECT_LEX* select_lex, void (*func)(SELECT_LEX*));
 void first_cond_optimization_flag_unset(SELECT_LEX*);
 void first_cond_optimization_flag_set(SELECT_LEX*);
-
-#endif

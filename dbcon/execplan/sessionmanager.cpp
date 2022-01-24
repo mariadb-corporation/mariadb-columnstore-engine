@@ -41,29 +41,26 @@ using namespace BRM;
 
 namespace execplan
 {
-
-
-
 SessionManager::SessionManager()
 {
-    config::Config* conf;
+  config::Config* conf;
 
-    conf = config::Config::makeConfig();
-    txnidFilename = conf->getConfig("SessionManager", "TxnIDFile");
+  conf = config::Config::makeConfig();
+  txnidFilename = conf->getConfig("SessionManager", "TxnIDFile");
 }
 
 SessionManager::SessionManager(bool nolock)
 {
-    config::Config* conf;
-    string stmp;
+  config::Config* conf;
+  string stmp;
 
-    conf = config::Config::makeConfig();
-    txnidFilename = conf->getConfig("SessionManager", "TxnIDFile");
+  conf = config::Config::makeConfig();
+  txnidFilename = conf->getConfig("SessionManager", "TxnIDFile");
 }
 
 SessionManager::SessionManager(const SessionManager& sm)
 {
-    txnidFilename = sm.txnidFilename;
+  txnidFilename = sm.txnidFilename;
 }
 
 SessionManager::~SessionManager()
@@ -72,136 +69,136 @@ SessionManager::~SessionManager()
 
 const QueryContext SessionManager::verID()
 {
-    return dbrm.verID();
+  return dbrm.verID();
 }
 
 const QueryContext SessionManager::sysCatVerID()
 {
-    return dbrm.sysCatVerID();
+  return dbrm.sysCatVerID();
 }
 
 const TxnID SessionManager::newTxnID(const SID session, bool block, bool isDDL)
 {
-    TxnID ret;
+  TxnID ret;
 
-    ret = dbrm.newTxnID(session, block, isDDL);
-    return ret;
+  ret = dbrm.newTxnID(session, block, isDDL);
+  return ret;
 }
 
 void SessionManager::committed(TxnID& txn)
 {
-    TxnID tmp;
+  TxnID tmp;
 
-    tmp.id = txn.id;
-    tmp.valid = txn.valid;
-    dbrm.committed(tmp);
-    txn.id = tmp.id;
-    txn.valid = tmp.valid;
+  tmp.id = txn.id;
+  tmp.valid = txn.valid;
+  dbrm.committed(tmp);
+  txn.id = tmp.id;
+  txn.valid = tmp.valid;
 }
 
 void SessionManager::rolledback(TxnID& txn)
 {
-    TxnID tmp;
+  TxnID tmp;
 
-    tmp.id = txn.id;
-    tmp.valid = txn.valid;
-    dbrm.rolledback(tmp);
-    txn.id = tmp.id;
-    txn.valid = tmp.valid;
+  tmp.id = txn.id;
+  tmp.valid = txn.valid;
+  dbrm.rolledback(tmp);
+  txn.id = tmp.id;
+  txn.valid = tmp.valid;
 }
 
 const TxnID SessionManager::getTxnID(const SID session)
 {
-    TxnID tmp;
-    TxnID ret;
+  TxnID tmp;
+  TxnID ret;
 
-    tmp = dbrm.getTxnID(session);
-    ret.id = tmp.id;
-    ret.valid = tmp.valid;
+  tmp = dbrm.getTxnID(session);
+  ret.id = tmp.id;
+  ret.valid = tmp.valid;
 
-    return ret;
+  return ret;
 }
 
 boost::shared_array<SIDTIDEntry> SessionManager::SIDTIDMap(int& len)
 {
-    // is this cast valid?
-    return dbrm.SIDTIDMap(len);
+  // is this cast valid?
+  return dbrm.SIDTIDMap(len);
 }
 
 string SessionManager::getTxnIDFilename() const
 {
-    return txnidFilename;
+  return txnidFilename;
 }
 
 int SessionManager::verifySize()
 {
-    return 1;
+  return 1;
 }
 
 void SessionManager::reset()
 {
-    dbrm.sessionmanager_reset();
+  dbrm.sessionmanager_reset();
 }
 
 uint32_t SessionManager::getUnique32()
 {
-    return dbrm.getUnique32();
+  return dbrm.getUnique32();
 }
 
-bool SessionManager::checkActiveTransaction( const SID sessionId, bool& bIsDbrmUp, SIDTIDEntry& blocker )
+bool SessionManager::checkActiveTransaction(const SID sessionId, bool& bIsDbrmUp, SIDTIDEntry& blocker)
 {
-    bIsDbrmUp = true;
-    int arrayLenth = 0;
-    bool ret = false;
-    boost::shared_array<SIDTIDEntry> sIDTIDMap;
+  bIsDbrmUp = true;
+  int arrayLenth = 0;
+  bool ret = false;
+  boost::shared_array<SIDTIDEntry> sIDTIDMap;
 
-    sIDTIDMap = SIDTIDMap( arrayLenth );
+  sIDTIDMap = SIDTIDMap(arrayLenth);
 
-    if (sIDTIDMap)
+  if (sIDTIDMap)
+  {
+    for (int i = 0; i < arrayLenth; i++)
     {
-        for ( int i = 0; i < arrayLenth; i++ )
-        {
-            if ( sIDTIDMap[i].txnid.valid && ( sIDTIDMap[i].sessionid != sessionId || sessionId == 0 ) )
-            {
-                blocker = sIDTIDMap[i];
-                ret = true;
-            }
-        }
+      if (sIDTIDMap[i].txnid.valid && (sIDTIDMap[i].sessionid != sessionId || sessionId == 0))
+      {
+        blocker = sIDTIDMap[i];
+        ret = true;
+      }
     }
-    else
-    {
-        bIsDbrmUp = false;
-    }
+  }
+  else
+  {
+    bIsDbrmUp = false;
+  }
 
-    return ret;
+  return ret;
 }
 
 bool SessionManager::isTransactionActive(const SID sessionId, bool& bIsDbrmUp)
 {
-    bIsDbrmUp = true;
-    int arrayLenth = 0;
-    bool ret = false;
-    boost::shared_array<SIDTIDEntry> sIDTIDMap;
+  bIsDbrmUp = true;
+  int arrayLenth = 0;
+  bool ret = false;
+  boost::shared_array<SIDTIDEntry> sIDTIDMap;
 
-    sIDTIDMap = SIDTIDMap(arrayLenth);
+  sIDTIDMap = SIDTIDMap(arrayLenth);
 
-    if (sIDTIDMap)
+  if (sIDTIDMap)
+  {
+    for (int i = 0; i < arrayLenth; i++)
     {
-        for ( int i = 0; i < arrayLenth; i++ )
-        {
-            if (sIDTIDMap[i].txnid.valid && (sIDTIDMap[i].sessionid == sessionId))
-            {
-                ret = true;
-                break;
-            }
-        }
+      if (sIDTIDMap[i].txnid.valid && (sIDTIDMap[i].sessionid == sessionId))
+      {
+        ret = true;
+        break;
+      }
     }
-    else
-    {
-        bIsDbrmUp = false;
-    }
+  }
+  else
+  {
+    bIsDbrmUp = false;
+  }
 
-    return ret;
+  return ret;
 }
 
-}  //namespace
+}  // namespace execplan

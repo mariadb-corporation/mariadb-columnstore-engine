@@ -15,21 +15,15 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-
-#ifndef NULLVALUEMANIP_H
-#define NULLVALUEMANIP_H
+#pragma once
 
 #include "../../dbcon/execplan/calpontsystemcatalog.h"
 
 namespace utils
 {
-
 // returns the NULL value for our 'numeric' types including short strings.
 // The width is only relevant for long string columns.
 uint64_t getNullValue(execplan::CalpontSystemCatalog::ColDataType, uint32_t colWidth = 0);
 int64_t getSignedNullValue(execplan::CalpontSystemCatalog::ColDataType, uint32_t colWidth = 0);
 
-
-}
-
-#endif // NULLVALUEMANIP_H
+}  // namespace utils

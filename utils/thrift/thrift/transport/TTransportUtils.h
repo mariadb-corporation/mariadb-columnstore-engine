@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TRANSPORT_TTRANSPORTUTILS_H_
-#define _THRIFT_TRANSPORT_TTRANSPORTUTILS_H_ 1
+#pragma once
 
 #include <cstdlib>
 #include <cstring>
@@ -386,4 +385,3 @@ public:
 }
 } // apache::thrift::transport
 
-#endif // #ifndef _THRIFT_TRANSPORT_TTRANSPORTUTILS_H_

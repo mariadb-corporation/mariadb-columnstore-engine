@@ -39,24 +39,24 @@ using namespace std;
 
 uint8_t* readBlockFromLiteralArray(const std::string& fileName, uint8_t* block)
 {
-   if (fileName == std::string("col1block.cdf"))
-     return &__col1block_cdf[0];
-   else if (fileName == std::string("col2block.cdf"))
-     return &__col2block_cdf[0];
-   else if (fileName == std::string("col4block.cdf"))
-     return &__col4block_cdf[0];
-   else if (fileName == std::string("col8block.cdf"))
-     return &___bin_col8block_cdf[0];
-   else if (fileName == std::string("col_float_block.cdf"))
-     return &___bin_col_float_block_cdf[0];
-   else if (fileName == std::string("col_double_block.cdf"))
-     return &___bin_col_double_block_cdf[0];
-   else if (fileName == std::string("col_neg_float.cdf"))
-     return &___bin_col_neg_float_cdf[0];
-   else if (fileName == std::string("col_neg_double.cdf"))
-     return &___bin_col_neg_double_cdf[0];
+  if (fileName == std::string("col1block.cdf"))
+    return &__col1block_cdf[0];
+  else if (fileName == std::string("col2block.cdf"))
+    return &__col2block_cdf[0];
+  else if (fileName == std::string("col4block.cdf"))
+    return &__col4block_cdf[0];
+  else if (fileName == std::string("col8block.cdf"))
+    return &___bin_col8block_cdf[0];
+  else if (fileName == std::string("col_float_block.cdf"))
+    return &___bin_col_float_block_cdf[0];
+  else if (fileName == std::string("col_double_block.cdf"))
+    return &___bin_col_double_block_cdf[0];
+  else if (fileName == std::string("col_neg_float.cdf"))
+    return &___bin_col_neg_float_cdf[0];
+  else if (fileName == std::string("col_neg_double.cdf"))
+    return &___bin_col_neg_double_cdf[0];
 
-   return nullptr;
+  return nullptr;
 }
 
 class FilterBenchFixture : public benchmark::Fixture
@@ -89,7 +89,8 @@ class FilterBenchFixture : public benchmark::Fixture
     SetUp(const_cast<benchmark::State&>(state));
   }
 
-  void inTestRunSetUp(const std::string& dataName, const size_t dataSize, const uint8_t dataType, const uint32_t outputType, ColArgs* args)
+  void inTestRunSetUp(const std::string& dataName, const size_t dataSize, const uint8_t dataType,
+                      const uint32_t outputType, ColArgs* args)
   {
     in->colType = ColRequestHeaderDataType();
     in->colType.DataSize = dataSize;
@@ -97,21 +98,21 @@ class FilterBenchFixture : public benchmark::Fixture
     in->OutputType = outputType;
     in->NOPS = 0;
     in->NVALS = 0;
-    pp.setBlockPtr((int*) readBlockFromLiteralArray(dataName, block));
+    pp.setBlockPtr((int*)readBlockFromLiteralArray(dataName, block));
   }
   void runFilterBenchLegacy()
   {
     pp.p_Col(in, out, 4 * BLOCK_SIZE, &written);
   }
 
-  template<int W>
+  template <int W>
   void runFilterBenchTemplated()
   {
     using IntegralType = typename datatypes::WidthToSIntegralType<W>::type;
     pp.columnScanAndFilter<IntegralType>(in, out);
   }
 
-  template<int W>
+  template <int W>
   void setUp1EqFilter()
   {
     using IntegralType = typename datatypes::WidthToSIntegralType<W>::type;
@@ -121,7 +122,6 @@ class FilterBenchFixture : public benchmark::Fixture
     args->COP = COMPARE_EQ;
     memcpy(args->val, &tmp, W);
   }
-
 };
 
 BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan1ByteLegacyCode)(benchmark::State& state)

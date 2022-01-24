@@ -16,14 +16,13 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: joblistfactory.h 9655 2013-06-25 23:08:13Z xlou $
-*
-*
-***********************************************************************/
+ *   $Id: joblistfactory.h 9655 2013-06-25 23:08:13Z xlou $
+ *
+ *
+ ***********************************************************************/
 /** @file */
 
-#ifndef JOBLISTFACTORY_H
-#define JOBLISTFACTORY_H
+#pragma once
 
 #include <string>
 
@@ -42,7 +41,6 @@ class CalpontExecutionPlan;
 
 namespace joblist
 {
-
 class ResourceManager;
 /** @brief create a JobList object from a CalpontExecutionPlan object
  *
@@ -57,25 +55,17 @@ class ResourceManager;
  */
 class JobListFactory
 {
+ public:
+  /** @brief static JobList constructor method
+   *
+   * @param cplan the CalpontExecutionPlan from which the JobList is constructed
+   */
+  EXPORT static SJLP makeJobList(execplan::CalpontExecutionPlan* cplan, ResourceManager* rm,
+                                 bool tryTuple = false, bool isExeMgr = false);
 
-public:
-    /** @brief static JobList constructor method
-     *
-     * @param cplan the CalpontExecutionPlan from which the JobList is constructed
-     */
-    EXPORT static SJLP makeJobList(
-        execplan::CalpontExecutionPlan* cplan,
-        ResourceManager* rm,
-        bool tryTuple = false,
-        bool isExeMgr = false);
-
-private:
-
+ private:
 };
 
-}
+}  // namespace joblist
 
 #undef EXPORT
-
-#endif //JOBLISTFACTORY_H
-

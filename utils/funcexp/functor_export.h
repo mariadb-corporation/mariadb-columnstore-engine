@@ -20,9 +20,7 @@
 
 /** @file */
 
-#ifndef FUNCTOR_EXPORT_H
-#define FUNCTOR_EXPORT_H
-
+#pragma once
 
 #include "functor.h"
 
@@ -31,55 +29,48 @@
 
 namespace funcexp
 {
-
 /** @brief Func_rand class
-  *    This function is exported, so visible to FunctionColumn in dbcon.
-  */
+ *    This function is exported, so visible to FunctionColumn in dbcon.
+ */
 class Func_rand : public Func
 {
-public:
-    Func_rand() : Func("rand"), fSeed1(0), fSeed2(0), fSeedSet(false) {}
-    virtual ~Func_rand() {}
+ public:
+  Func_rand() : Func("rand"), fSeed1(0), fSeed2(0), fSeedSet(false)
+  {
+  }
+  virtual ~Func_rand()
+  {
+  }
 
-    double getRand();
-    execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+  double getRand();
+  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
+                                                        execplan::CalpontSystemCatalog::ColType& resultType);
 
-    int64_t getIntVal(rowgroup::Row& row,
-                      FunctionParm& fp,
-                      bool& isNull,
-                      execplan::CalpontSystemCatalog::ColType& op_ct)
-    {
-        return ((int64_t) getDoubleVal(row, fp, isNull, op_ct));
-    }
+  int64_t getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                    execplan::CalpontSystemCatalog::ColType& op_ct)
+  {
+    return ((int64_t)getDoubleVal(row, fp, isNull, op_ct));
+  }
 
-    double getDoubleVal(rowgroup::Row& row,
-                        FunctionParm& fp,
-                        bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+  double getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                      execplan::CalpontSystemCatalog::ColType& op_ct);
 
-    long double getLongDoubleVal(rowgroup::Row& row,
-                        FunctionParm& fp,
-                        bool& isNull,
+  long double getLongDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                               execplan::CalpontSystemCatalog::ColType& op_ct)
+  {
+    return (long double)getDoubleVal(row, fp, isNull, op_ct);
+  }
+
+  std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                         execplan::CalpontSystemCatalog::ColType& op_ct)
-    {
-        return (long double)getDoubleVal(row,  fp,  isNull, op_ct);
-    }
+  {
+    return doubleToString(getDoubleVal(row, fp, isNull, op_ct));
+  }
 
-    std::string getStrVal(rowgroup::Row& row,
-                          FunctionParm& fp,
-                          bool& isNull,
-                          execplan::CalpontSystemCatalog::ColType& op_ct)
-    {
-        return doubleToString(getDoubleVal(row, fp, isNull, op_ct));
-    }
-
-private:
-    uint64_t fSeed1;
-    uint64_t fSeed2;
-    bool     fSeedSet;
+ private:
+  uint64_t fSeed1;
+  uint64_t fSeed2;
+  bool fSeedSet;
 };
 
-
-}
-
-#endif
+}  // namespace funcexp

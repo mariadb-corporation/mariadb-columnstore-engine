@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /******************************************************************************************
-* $Id$
-*
-******************************************************************************************/
+ * $Id$
+ *
+ ******************************************************************************************/
 #include "mcsconfig.h"
 
 #include <string>
@@ -33,257 +33,256 @@ using namespace std;
 
 namespace config
 {
-
 const string XMLParser::getConfig(const xmlDocPtr doc, const string& section, const string& name) const
 {
-    string res;
-    xmlNodePtr cur1 = xmlDocGetRootElement(doc);
+  string res;
+  xmlNodePtr cur1 = xmlDocGetRootElement(doc);
 
-    if (cur1 == NULL)
-        throw runtime_error("XMLParser::getConfig: error accessing XML root");
+  if (cur1 == NULL)
+    throw runtime_error("XMLParser::getConfig: error accessing XML root");
 
-    cur1 = cur1->xmlChildrenNode;
+  cur1 = cur1->xmlChildrenNode;
 
-    while (cur1 != NULL)
+  while (cur1 != NULL)
+  {
+    string cur1name = (const char*)cur1->name;
+
+    if ((boost::iequals(cur1name, section)))
     {
-        string cur1name = (const char*)cur1->name;
+      xmlNodePtr cur2 = cur1->xmlChildrenNode;
 
-        if ((boost::iequals(cur1name, section)))
+      while (cur2 != NULL)
+      {
+        string cur2name = (const char*)cur2->name;
+
+        if ((boost::iequals(cur2name, name)))
         {
-            xmlNodePtr cur2 = cur1->xmlChildrenNode;
+          xmlNodePtr cur3 = cur2->xmlChildrenNode;
 
-            while (cur2 != NULL)
-            {
-                string cur2name = (const char*)cur2->name;
+          if (cur3)
+            res = (const char*)cur3->content;
 
-                if ((boost::iequals(cur2name, name)))
-                {
-                    xmlNodePtr cur3 = cur2->xmlChildrenNode;
-
-                    if (cur3)
-                        res = (const char*)cur3->content;
-
-                    return res;
-                }
-
-                cur2 = cur2->next;
-            }
+          return res;
         }
 
-        cur1 = cur1->next;
+        cur2 = cur2->next;
+      }
     }
 
-    // maybe nullstr if not found
-    return res;
+    cur1 = cur1->next;
+  }
+
+  // maybe nullstr if not found
+  return res;
 }
 
-void XMLParser::getConfig(const xmlDocPtr doc, const string& section, const string& name, vector<string>& values) const
+void XMLParser::getConfig(const xmlDocPtr doc, const string& section, const string& name,
+                          vector<string>& values) const
 {
-    string res;
+  string res;
 
-    xmlNodePtr cur1 = xmlDocGetRootElement(doc);
+  xmlNodePtr cur1 = xmlDocGetRootElement(doc);
 
-    if (cur1 == NULL)
-        throw runtime_error("XMLParser::getConfig: error accessing XML root");
+  if (cur1 == NULL)
+    throw runtime_error("XMLParser::getConfig: error accessing XML root");
 
-    cur1 = cur1->xmlChildrenNode;
+  cur1 = cur1->xmlChildrenNode;
 
-    while (cur1 != NULL)
+  while (cur1 != NULL)
+  {
+    string cur1name = (const char*)cur1->name;
+
+    if ((boost::iequals(cur1name, section)))
     {
-        string cur1name = (const char*)cur1->name;
+      xmlNodePtr cur2 = cur1->xmlChildrenNode;
 
-        if ((boost::iequals(cur1name, section)))
+      while (cur2 != NULL)
+      {
+        string cur2name = (const char*)cur2->name;
+
+        if ((boost::iequals(cur2name, name)))
         {
-            xmlNodePtr cur2 = cur1->xmlChildrenNode;
+          res.clear();
+          xmlNodePtr cur3 = cur2->xmlChildrenNode;
 
-            while (cur2 != NULL)
-            {
-                string cur2name = (const char*)cur2->name;
+          if (cur3)
+            res = (const char*)cur3->content;
 
-                if ((boost::iequals(cur2name, name)))
-                {
-                    res.clear();
-                    xmlNodePtr cur3 = cur2->xmlChildrenNode;
-
-                    if (cur3)
-                        res = (const char*)cur3->content;
-
-                    values.push_back(res);
-                }
-
-                cur2 = cur2->next;
-            }
+          values.push_back(res);
         }
 
-        cur1 = cur1->next;
+        cur2 = cur2->next;
+      }
     }
+
+    cur1 = cur1->next;
+  }
 }
 
 void XMLParser::setConfig(xmlDocPtr doc, const string& section, const string& name, const string& value)
 {
-    xmlNodePtr cur1 = xmlDocGetRootElement(doc);
+  xmlNodePtr cur1 = xmlDocGetRootElement(doc);
 
-    if (cur1 == NULL)
-        throw runtime_error("XMLParser::setConfig: error accessing XML root");
+  if (cur1 == NULL)
+    throw runtime_error("XMLParser::setConfig: error accessing XML root");
 
-    xmlNodePtr cur2;
+  xmlNodePtr cur2;
 
-    cur1 = cur1->xmlChildrenNode;
+  cur1 = cur1->xmlChildrenNode;
 
-    while (cur1 != NULL)
+  while (cur1 != NULL)
+  {
+    string cur1name = (const char*)cur1->name;
+
+    if (boost::iequals(cur1name, section))
     {
-        string cur1name = (const char*)cur1->name;
+      cur2 = cur1->xmlChildrenNode;
 
-        if (boost::iequals(cur1name, section))
+      while (cur2 != NULL)
+      {
+        string cur2name = (const char*)cur2->name;
+
+        if (boost::iequals(cur2name, name))
         {
-            cur2 = cur1->xmlChildrenNode;
+          xmlNodePtr cur3 = cur2->xmlChildrenNode;
 
-            while (cur2 != NULL)
-            {
-                string cur2name = (const char*)cur2->name;
+          if (cur3 == NULL)
+          {
+            xmlAddChild(cur2, xmlNewText((const xmlChar*)"\t"));
+            cur3 = cur2->xmlChildrenNode;
+          }
+          else
+          {
+            xmlFree(cur3->content);
+          }
 
-                if (boost::iequals(cur2name, name))
-                {
-                    xmlNodePtr cur3 = cur2->xmlChildrenNode;
-
-                    if (cur3 == NULL)
-                    {
-                        xmlAddChild(cur2, xmlNewText((const xmlChar*)"\t"));
-                        cur3 = cur2->xmlChildrenNode;
-                    }
-                    else
-                    {
-                        xmlFree(cur3->content);
-                    }
-
-                    cur3->content = xmlStrdup((const xmlChar*)value.c_str());
-                    return;
-                }
-
-                cur2 = cur2->next;
-            }
-
-            // We found the section, but not the name, so we need to add a new node here
-            xmlAddChild(cur1, xmlNewText((const xmlChar*)"\t"));
-            xmlNewTextChild(cur1, NULL, (const xmlChar*)name.c_str(), (const xmlChar*)value.c_str());
-            xmlAddChild(cur1, xmlNewText((const xmlChar*)"\n\t"));
-            return;
+          cur3->content = xmlStrdup((const xmlChar*)value.c_str());
+          return;
         }
 
-        cur1 = cur1->next;
+        cur2 = cur2->next;
+      }
+
+      // We found the section, but not the name, so we need to add a new node here
+      xmlAddChild(cur1, xmlNewText((const xmlChar*)"\t"));
+      xmlNewTextChild(cur1, NULL, (const xmlChar*)name.c_str(), (const xmlChar*)value.c_str());
+      xmlAddChild(cur1, xmlNewText((const xmlChar*)"\n\t"));
+      return;
     }
 
-    // We did not find the section, so we need to add it and the name here
-    cur1 = xmlDocGetRootElement(doc);
-    xmlAddChild(cur1, xmlNewText((const xmlChar*)"\t"));
-    cur2 = xmlNewChild(cur1, NULL, (const xmlChar*)section.c_str(), NULL);
-    xmlAddChild(cur2, xmlNewText((const xmlChar*)"\n\t\t"));
-    xmlNewTextChild(cur2, NULL, (const xmlChar*)name.c_str(), (const xmlChar*)value.c_str());
-    xmlAddChild(cur2, xmlNewText((const xmlChar*)"\n\t"));
-    xmlAddChild(cur1, xmlNewText((const xmlChar*)"\n"));
+    cur1 = cur1->next;
+  }
 
-    return;
+  // We did not find the section, so we need to add it and the name here
+  cur1 = xmlDocGetRootElement(doc);
+  xmlAddChild(cur1, xmlNewText((const xmlChar*)"\t"));
+  cur2 = xmlNewChild(cur1, NULL, (const xmlChar*)section.c_str(), NULL);
+  xmlAddChild(cur2, xmlNewText((const xmlChar*)"\n\t\t"));
+  xmlNewTextChild(cur2, NULL, (const xmlChar*)name.c_str(), (const xmlChar*)value.c_str());
+  xmlAddChild(cur2, xmlNewText((const xmlChar*)"\n\t"));
+  xmlAddChild(cur1, xmlNewText((const xmlChar*)"\n"));
+
+  return;
 }
 
 void XMLParser::delConfig(xmlDocPtr doc, const string& section, const string& name)
 {
-    string res;
+  string res;
 
-    xmlNodePtr cur1 = xmlDocGetRootElement(doc);
+  xmlNodePtr cur1 = xmlDocGetRootElement(doc);
 
-    if (cur1 == NULL)
-        throw runtime_error("XMLParser::delConfig: error accessing XML root");
+  if (cur1 == NULL)
+    throw runtime_error("XMLParser::delConfig: error accessing XML root");
 
-    cur1 = cur1->xmlChildrenNode;
+  cur1 = cur1->xmlChildrenNode;
 
-    while (cur1 != NULL)
+  while (cur1 != NULL)
+  {
+    string cur1name = (const char*)cur1->name;
+
+    if ((boost::iequals(cur1name, section)))
     {
-        string cur1name = (const char*)cur1->name;
+      xmlNodePtr cur2 = cur1->xmlChildrenNode;
 
-        if ((boost::iequals(cur1name, section)))
+      while (cur2 != NULL)
+      {
+        xmlNodePtr tmp = cur2;
+        cur2 = cur2->next;
+        string tmpname = (const char*)tmp->name;
+
+        if ((boost::iequals(tmpname, name)))
         {
-            xmlNodePtr cur2 = cur1->xmlChildrenNode;
-
-            while (cur2 != NULL)
-            {
-                xmlNodePtr tmp = cur2;
-                cur2 = cur2->next;
-                string tmpname = (const char*)tmp->name;
-
-                if ((boost::iequals(tmpname, name)))
-                {
-                    xmlUnlinkNode(tmp);
-                    xmlFreeNode(tmp);
-                }
-            }
+          xmlUnlinkNode(tmp);
+          xmlFreeNode(tmp);
         }
-
-        cur1 = cur1->next;
+      }
     }
 
-    return;
+    cur1 = cur1->next;
+  }
+
+  return;
 }
 
 const vector<string> XMLParser::enumConfig(const xmlDocPtr doc) const
 {
-    vector<string> resv;
-    string res;
+  vector<string> resv;
+  string res;
 
-    xmlNodePtr cur1 = xmlDocGetRootElement(doc);
+  xmlNodePtr cur1 = xmlDocGetRootElement(doc);
 
-    if (cur1 == NULL)
-        throw runtime_error("XMLParser::getConfig: error accessing XML root");
+  if (cur1 == NULL)
+    throw runtime_error("XMLParser::getConfig: error accessing XML root");
 
-    cur1 = cur1->xmlChildrenNode;
+  cur1 = cur1->xmlChildrenNode;
 
-    while (cur1 != NULL)
-    {
-        res = reinterpret_cast<const char*>(cur1->name);
+  while (cur1 != NULL)
+  {
+    res = reinterpret_cast<const char*>(cur1->name);
 
-        if (res != "text" && res != "comment")
-            resv.push_back(res);
+    if (res != "text" && res != "comment")
+      resv.push_back(res);
 
-        cur1 = cur1->next;
-    }
+    cur1 = cur1->next;
+  }
 
-    return resv;
+  return resv;
 }
 
 const vector<string> XMLParser::enumSection(const xmlDocPtr doc, const string& section) const
 {
-    vector<string> resv;
-    string res;
+  vector<string> resv;
+  string res;
 
-    xmlNodePtr cur1 = xmlDocGetRootElement(doc);
+  xmlNodePtr cur1 = xmlDocGetRootElement(doc);
 
-    if (cur1 == NULL)
-        throw runtime_error("XMLParser::getConfig: error accessing XML root");
+  if (cur1 == NULL)
+    throw runtime_error("XMLParser::getConfig: error accessing XML root");
 
-    cur1 = cur1->xmlChildrenNode;
+  cur1 = cur1->xmlChildrenNode;
 
-    while (cur1 != NULL)
+  while (cur1 != NULL)
+  {
+    if ((!xmlStrcmp(cur1->name, (const xmlChar*)section.c_str())))
     {
-        if ((!xmlStrcmp(cur1->name, (const xmlChar*)section.c_str())))
-        {
-            xmlNodePtr cur2 = cur1->xmlChildrenNode;
+      xmlNodePtr cur2 = cur1->xmlChildrenNode;
 
-            while (cur2 != NULL)
-            {
-                res = reinterpret_cast<const char*>(cur2->name);
+      while (cur2 != NULL)
+      {
+        res = reinterpret_cast<const char*>(cur2->name);
 
-                if (res != "text" && res != "comment")
-                    resv.push_back(res);
+        if (res != "text" && res != "comment")
+          resv.push_back(res);
 
-                cur2 = cur2->next;
-            }
-        }
-
-        cur1 = cur1->next;
+        cur2 = cur2->next;
+      }
     }
 
-    return resv;
+    cur1 = cur1->next;
+  }
+
+  return resv;
 }
 
-} //namespace
+}  // namespace config
 // vim:ts=4 sw=4:
-

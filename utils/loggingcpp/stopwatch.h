@@ -59,8 +59,7 @@
 // 0.30553  100  %      1          Total
 //
 // Note that you can have overlapping timers which will make your percentages add up to more than 100%.
-#ifndef LOGGING_STOPWATCH_H
-#define LOGGING_STOPWATCH_H
+#pragma once
 #include <iostream>
 #include <fstream>
 #include <list>
@@ -74,68 +73,65 @@
 
 namespace logging
 {
-
 class StopWatch
 {
-public:
-    void start(const std::string& message);
-    bool stop(const std::string& message, const int limit);
-    void stop(const std::string& message);
-    void finish();
+ public:
+  void start(const std::string& message);
+  bool stop(const std::string& message, const int limit);
+  void stop(const std::string& message);
+  void finish();
 
-    bool isActive()
+  bool isActive()
+  {
+    return fOpenCalls > 0;
+  }
+  StopWatch() : fStarted(false), fId(-1), fOpenCalls(0), fOutputToFile(false), fLogFile(""){};
+  StopWatch(int id) : fStarted(false), fId(id), fOpenCalls(0), fOutputToFile(false), fLogFile(""){};
+  StopWatch(const std::string& fileName)
+   : fStarted(false), fId(-1), fOpenCalls(0), fOutputToFile(true), fLogFile(fileName)
+  {
+  }
+  struct ::timeval fTvLast;
+  int getId()
+  {
+    return fId;
+  }
+
+ private:
+  class ProcessStats
+  {
+   public:
+    std::string fProcess;
+    struct timeval fTvProcessStarted;
+    double fTotalSeconds;
+    int64_t fStartCount;
+    int64_t fStopCount;
+
+    ProcessStats() : fProcess(""), fTotalSeconds(0.0), fStartCount(0), fStopCount(0){};
+
+    void processStart()
     {
-        return fOpenCalls > 0;
+      gettimeofday(&fTvProcessStarted, 0);
+      fStartCount++;
     }
-    StopWatch() : fStarted(false), fId(-1), fOpenCalls(0), fOutputToFile(false), fLogFile("") {};
-    StopWatch(int id) : fStarted(false), fId(id), fOpenCalls(0), fOutputToFile(false), fLogFile("") {};
-    StopWatch(const std::string& fileName) : fStarted(false), fId(-1), fOpenCalls(0), fOutputToFile(true), fLogFile(fileName) {}
-    struct ::timeval fTvLast;
-    int getId()
+
+    void processStop()
     {
-        return fId;
+      struct timeval tvStop;
+      gettimeofday(&tvStop, 0);
+      fStopCount++;
+      fTotalSeconds += (tvStop.tv_sec + (tvStop.tv_usec / 1000000.0)) -
+                       (fTvProcessStarted.tv_sec + (fTvProcessStarted.tv_usec / 1000000.0));
     }
+  };
 
-private:
-    class ProcessStats
-    {
-    public:
-
-        std::string fProcess;
-        struct timeval fTvProcessStarted;
-        double fTotalSeconds;
-        int64_t fStartCount;
-        int64_t fStopCount;
-
-        ProcessStats() : fProcess(""), fTotalSeconds(0.0), fStartCount(0), fStopCount(0) {};
-
-        void processStart()
-        {
-            gettimeofday(&fTvProcessStarted, 0);
-            fStartCount++;
-        }
-
-        void processStop()
-        {
-            struct timeval tvStop;
-            gettimeofday(&tvStop, 0);
-            fStopCount++;
-            fTotalSeconds +=
-                (tvStop.tv_sec + (tvStop.tv_usec / 1000000.0)) -
-                (fTvProcessStarted.tv_sec + (fTvProcessStarted.tv_usec / 1000000.0));
-
-        }
-    };
-
-    struct timeval fTvStart;
-    std::vector <ProcessStats> fProcessStats;
-    bool fStarted;
-    int fId;
-    int fOpenCalls;
-    bool fOutputToFile;
-    std::string fLogFile;
+  struct timeval fTvStart;
+  std::vector<ProcessStats> fProcessStats;
+  bool fStarted;
+  int fId;
+  int fOpenCalls;
+  bool fOutputToFile;
+  std::string fLogFile;
 };
 
-} // end of logging namespace
-
-#endif //  STOPWATCH_H
+}  // namespace logging

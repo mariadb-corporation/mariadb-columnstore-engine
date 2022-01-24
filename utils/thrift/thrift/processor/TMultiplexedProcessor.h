@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef THRIFT_TMULTIPLEXEDPROCESSOR_H_
-#define THRIFT_TMULTIPLEXEDPROCESSOR_H_ 1
+#pragma once
 
 #include <thrift/protocol/TProtocolDecorator.h>
 #include <thrift/TApplicationException.h>
@@ -218,4 +217,3 @@ private:
 }
 }
 
-#endif // THRIFT_TMULTIPLEXEDPROCESSOR_H_

@@ -21,8 +21,7 @@
  *
  ***********************************************************************/
 /** @file */
-#ifndef DROPTABLEPROCESSOR_H
-#define DROPTABLEPROCESSOR_H
+#pragma once
 
 #include "ddlpackageprocessor.h"
 
@@ -40,18 +39,18 @@ namespace ddlpackageprocessor
  */
 class DropTableProcessor : public DDLPackageProcessor
 {
-public:
-    DropTableProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm) {}
-    /** @brief process a drop table statement
-     *
-     *  @param dropTableStmt the drop table statement
-     */
-    EXPORT DDLResult processPackage(ddlpackage::DropTableStatement& dropTableStmt);
+ public:
+  DropTableProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm)
+  {
+  }
+  /** @brief process a drop table statement
+   *
+   *  @param dropTableStmt the drop table statement
+   */
+  EXPORT DDLResult processPackage(ddlpackage::DropTableStatement& dropTableStmt);
 
-protected:
-
-private:
-
+ protected:
+ private:
 };
 
 /** @brief specialization of a DDLPacakageProcessor
@@ -60,22 +59,20 @@ private:
  */
 class TruncTableProcessor : public DDLPackageProcessor
 {
-public:
-    TruncTableProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm) {}
-    /** @brief process a truncate table statement
-     *
-     *  @param truncTableStmt the truncate table statement
-     */
-    EXPORT DDLResult processPackage(ddlpackage::TruncTableStatement& truncTableStmt);
+ public:
+  TruncTableProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm)
+  {
+  }
+  /** @brief process a truncate table statement
+   *
+   *  @param truncTableStmt the truncate table statement
+   */
+  EXPORT DDLResult processPackage(ddlpackage::TruncTableStatement& truncTableStmt);
 
-protected:
-
-private:
-
+ protected:
+ private:
 };
 
-}                                                 // namespace ddlpackageprocessor
+}  // namespace ddlpackageprocessor
 
 #undef EXPORT
-
-#endif                                            //DROPTABLEPROCESSOR_H

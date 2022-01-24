@@ -29,21 +29,19 @@ using namespace messageqcpp;
 using namespace dataconvert;
 using namespace dmlpackage;
 
-
 #include "we_dmlcommandclient.h"
 
 namespace WriteEngine
 {
 WE_DMLCommandClient::WE_DMLCommandClient()
 {
-    fWEClient = new WEClients(WEClients::DDLPROC);
+  fWEClient = new WEClients(WEClients::DDLPROC);
 }
 
 WE_DMLCommandClient::~WE_DMLCommandClient()
 {
-    delete fWEClient;
-    fWEClient = NULL;
+  delete fWEClient;
+  fWEClient = NULL;
 }
 
-}
-
+}  // namespace WriteEngine

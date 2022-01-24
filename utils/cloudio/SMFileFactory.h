@@ -15,20 +15,17 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef SMFILEFACTORY_H_
-#define SMFILEFACTORY_H_
+#pragma once
 
 #include "IDBDataFile.h"
 #include "FileFactoryBase.h"
 
 namespace idbdatafile
 {
-
 class SMFileFactory : public FileFactoryBase
 {
-    public:
-        IDBDataFile * open(const char* fname, const char* mode, unsigned opts, unsigned colWidth);
+ public:
+  IDBDataFile* open(const char* fname, const char* mode, unsigned opts, unsigned colWidth);
 };
 
-}
-#endif
+}  // namespace idbdatafile

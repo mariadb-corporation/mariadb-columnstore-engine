@@ -30,7 +30,6 @@ using namespace std;
 
 namespace BRM
 {
-
 Undoable::Undoable()
 {
 }
@@ -41,30 +40,30 @@ Undoable::~Undoable()
 
 inline void Undoable::makeUndoRecord(void* start, int size)
 {
-    ImageDelta d;
+  ImageDelta d;
 
-    if (size > ID_MAXSIZE)
-        throw overflow_error("Undoable::makeUndoRecord(): size > max");
+  if (size > ID_MAXSIZE)
+    throw overflow_error("Undoable::makeUndoRecord(): size > max");
 
-    d.start = start;
-    d.size = size;
-    memcpy(d.data, start, size);
-    undoRecords.push_back(d);
+  d.start = start;
+  d.size = size;
+  memcpy(d.data, start, size);
+  undoRecords.push_back(d);
 }
 
 void Undoable::undoChanges()
 {
-    vector<ImageDelta>::reverse_iterator it;
+  vector<ImageDelta>::reverse_iterator it;
 
-    for (it = undoRecords.rbegin(); it != undoRecords.rend(); it++)
-        memcpy((*it).start, (*it).data, (*it).size);
+  for (it = undoRecords.rbegin(); it != undoRecords.rend(); it++)
+    memcpy((*it).start, (*it).data, (*it).size);
 
-    undoRecords.clear();
+  undoRecords.clear();
 }
 
 void Undoable::confirmChanges()
 {
-    undoRecords.clear();
+  undoRecords.clear();
 }
 
-}
+}  // namespace BRM

@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /******************************************************************************************
-* $Id$
-*
-******************************************************************************************/
+ * $Id$
+ *
+ ******************************************************************************************/
 #include "mcsconfig.h"
 
 #include <string>
@@ -34,39 +34,34 @@ using namespace messageqcpp;
 
 namespace config
 {
-
-ConfigStream::ConfigStream(const ByteStream& bs) :
-    fParser()
+ConfigStream::ConfigStream(const ByteStream& bs) : fParser()
 {
-    init(reinterpret_cast<const xmlChar*>(bs.buf()));
+  init(reinterpret_cast<const xmlChar*>(bs.buf()));
 }
 
-ConfigStream::ConfigStream(const string& str) :
-    fParser()
+ConfigStream::ConfigStream(const string& str) : fParser()
 {
-    init(reinterpret_cast<const xmlChar*>(str.c_str()));
+  init(reinterpret_cast<const xmlChar*>(str.c_str()));
 }
 
-ConfigStream::ConfigStream(const char* cptr) :
-    fParser()
+ConfigStream::ConfigStream(const char* cptr) : fParser()
 {
-    init(reinterpret_cast<const xmlChar*>(cptr));
+  init(reinterpret_cast<const xmlChar*>(cptr));
 }
 
 ConfigStream::~ConfigStream()
 {
-    if (fDoc != NULL)
-        xmlFreeDoc(fDoc);
+  if (fDoc != NULL)
+    xmlFreeDoc(fDoc);
 }
 
 void ConfigStream::init(const xmlChar* xp)
 {
-    fDoc = xmlParseDoc(xp);
+  fDoc = xmlParseDoc(xp);
 
-    if (fDoc == NULL)
-        throw runtime_error("ConfigStream::ConfigStream: bad XML stream");
+  if (fDoc == NULL)
+    throw runtime_error("ConfigStream::ConfigStream: bad XML stream");
 }
 
-} //namespace
+}  // namespace config
 // vim:ts=4 sw=4:
-

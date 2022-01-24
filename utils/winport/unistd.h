@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef _UNISTD_H
-#define _UNISTD_H 1
+#pragma once
 #include <stdio.h>
 #include <io.h>
 #define WIN32_LEAN_AND_MEAN
@@ -30,17 +29,18 @@
 #include "inttypes.h"
 #ifdef __cplusplus
 #include <string>
-extern "C" {
+extern "C"
+{
 #endif
 
 #if _MSC_VER < 1800
-extern unsigned long long strtoull(const char*, char**, int);
-extern long long atoll(const char*);
+  extern unsigned long long strtoull(const char*, char**, int);
+  extern long long atoll(const char*);
 #if _MSC_VER < 1600
-extern lldiv_t lldiv(const long long, const long long);
+  extern lldiv_t lldiv(const long long, const long long);
 #endif
 #endif
-extern unsigned int sleep(unsigned int);
+  extern unsigned int sleep(unsigned int);
 
 #define strerror_r(e, b, l) strerror_s((b), (l), (e))
 
@@ -62,66 +62,66 @@ extern unsigned int sleep(unsigned int);
 #define LOCK_UN 1
 #define LOCK_EX 2
 #endif
-struct flock
-{
+  struct flock
+  {
     int l_type;
     int l_whence;
     int l_start;
     int l_len;
     int l_pid;
-};
-extern int flock(int, int);
-extern int fcntl(int, int, ...);
+  };
+  extern int flock(int, int);
+  extern int fcntl(int, int, ...);
 #ifndef _my_pthread_h
-struct timespec
-{
+  struct timespec
+  {
     long tv_sec;
     long tv_nsec;
-};
+  };
 #endif
-int poll(struct pollfd*, unsigned long, int);
+  int poll(struct pollfd*, unsigned long, int);
 #ifndef SHUT_RDWR
 #define SHUT_RDWR SD_BOTH
 #endif
-extern int inet_aton(const char*, struct in_addr*);
-struct timezone
-{
-    int  tz_minuteswest; /* minutes W of Greenwich */
-    int  tz_dsttime;     /* type of dst correction */
-};
-extern int gettimeofday(struct timeval*, struct timezone*);
+  extern int inet_aton(const char*, struct in_addr*);
+  struct timezone
+  {
+    int tz_minuteswest; /* minutes W of Greenwich */
+    int tz_dsttime;     /* type of dst correction */
+  };
+  extern int gettimeofday(struct timeval*, struct timezone*);
 #define ctime_r(tp, b) ctime_s((b), sizeof(b), (tp))
 
-//These are also in MySQL, so we need to fudge them...
+// These are also in MySQL, so we need to fudge them...
 #ifndef _my_pthread_h
 #define localtime_r idb_localtime_r
-extern struct tm* idb_localtime_r(const time_t*, struct tm*);
+  extern struct tm* idb_localtime_r(const time_t*, struct tm*);
 #define strtoll _strtoi64
 #define strtoull _strtoui64
 #define crc32 idb_crc32
-extern unsigned int idb_crc32(const unsigned int, const unsigned char*, const size_t);
+  extern unsigned int idb_crc32(const unsigned int, const unsigned char*, const size_t);
 #endif
 
 #define CLOCK_REALTIME 1
 #define CLOCK_MONOTONIC 2
-extern long clock_gettime(clockid_t, struct timespec*);
+  extern long clock_gettime(clockid_t, struct timespec*);
 
-extern int syslog(int, const char*, ...);
+  extern int syslog(int, const char*, ...);
 #ifdef __cplusplus
-extern int closelog(...);
-extern int openlog(...);
+  extern int closelog(...);
+  extern int openlog(...);
 #else
 extern int closelog();
 extern int openlog();
 #endif
-extern int usleep(unsigned int);
-extern int fork();
+  extern int usleep(unsigned int);
+  extern int fork();
 
-extern int getpagesize();
+  extern int getpagesize();
 
-extern int pipe(int[2]);
-extern pid_t getppid();
-extern pid_t waitpid(pid_t, int*, int);
+  extern int pipe(int[2]);
+  extern pid_t getppid();
+  extern pid_t waitpid(pid_t, int*, int);
 
 #define WIFEXITED(x) 0
 #define WEXITSTATUS(x) 0
@@ -132,8 +132,8 @@ extern pid_t waitpid(pid_t, int*, int);
 #define WUNTRACED 0x02
 #define WCONTINUED 0x04
 
-extern int kill(pid_t, int);
-extern int setuid(uid_t);
+  extern int kill(pid_t, int);
+  extern int setuid(uid_t);
 
 #define snprintf _snprintf
 
@@ -149,6 +149,3 @@ extern int optopt;
 extern std::string IDBSysErrorStr(DWORD err);
 
 #endif
-
-#endif
-

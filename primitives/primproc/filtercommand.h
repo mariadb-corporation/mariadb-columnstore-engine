@@ -16,16 +16,15 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: filtercommand.h 2035 2013-01-21 14:12:19Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: filtercommand.h 2035 2013-01-21 14:12:19Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 /** @file
  * class FilterCommand interface
  */
 
-#ifndef PRIMITIVES_FILTERCOMMAND_H_
-#define PRIMITIVES_FILTERCOMMAND_H_
+#pragma once
 
 #include <string>
 #include <boost/scoped_array.hpp>
@@ -33,140 +32,131 @@
 #include "blocksize.h"
 #include "calpontsystemcatalog.h"
 
-
 namespace primitiveprocessor
 {
-
 class FilterCommand : public Command
 {
-public:
-    FilterCommand();
-    virtual ~FilterCommand();
+ public:
+  FilterCommand();
+  virtual ~FilterCommand();
 
-    // returns a FilterCommand based on column types
-    static Command* makeFilterCommand(messageqcpp::ByteStream&, std::vector<SCommand>& cmds);
+  // returns a FilterCommand based on column types
+  static Command* makeFilterCommand(messageqcpp::ByteStream&, std::vector<SCommand>& cmds);
 
-    // virtuals from base class -- Command
-    void execute();
-    void project();
-    void projectIntoRowGroup(rowgroup::RowGroup& rg, uint32_t col);
-    uint64_t getLBID();
-    void nextLBID();
-    void createCommand(messageqcpp::ByteStream&);
-    void resetCommand(messageqcpp::ByteStream&);
-    SCommand duplicate();
-    void prep(int8_t outputType, bool makeAbsRids);
+  // virtuals from base class -- Command
+  void execute();
+  void project();
+  void projectIntoRowGroup(rowgroup::RowGroup& rg, uint32_t col);
+  uint64_t getLBID();
+  void nextLBID();
+  void createCommand(messageqcpp::ByteStream&);
+  void resetCommand(messageqcpp::ByteStream&);
+  SCommand duplicate();
+  void prep(int8_t outputType, bool makeAbsRids);
 
-    void setColTypes(const execplan::CalpontSystemCatalog::ColType& left,
-                     const execplan::CalpontSystemCatalog::ColType& right);
+  void setColTypes(const execplan::CalpontSystemCatalog::ColType& left,
+                   const execplan::CalpontSystemCatalog::ColType& right);
 
-    // operator override
-    bool operator==(const FilterCommand&) const;
-    bool operator!=(const FilterCommand&) const;
+  // operator override
+  bool operator==(const FilterCommand&) const;
+  bool operator!=(const FilterCommand&) const;
 
-    int getCompType() const
-    {
-        return 0;
-    }
+  int getCompType() const
+  {
+    return 0;
+  }
 
-protected:
-    // filter operation
-    virtual void doFilter();
+ protected:
+  // filter operation
+  virtual void doFilter();
 
-    // compare method, take the indices to the values array
-    virtual bool compare(uint64_t, uint64_t);
+  // compare method, take the indices to the values array
+  virtual bool compare(uint64_t, uint64_t);
 
-    // compare method, take the indices to the values array
-    virtual bool binaryCompare(uint64_t, uint64_t);
+  // compare method, take the indices to the values array
+  virtual bool binaryCompare(uint64_t, uint64_t);
 
-    // binary operator
-    uint8_t fBOP;
+  // binary operator
+  uint8_t fBOP;
 
-    bool hasWideColumns;
+  bool hasWideColumns;
 
-    // column type for null check
-    execplan::CalpontSystemCatalog::ColType leftColType;
-    execplan::CalpontSystemCatalog::ColType rightColType;
+  // column type for null check
+  execplan::CalpontSystemCatalog::ColType leftColType;
+  execplan::CalpontSystemCatalog::ColType rightColType;
 
-    FilterCommand(const FilterCommand&rhs) = default;
+  FilterCommand(const FilterCommand& rhs) = default;
 
-private:
-    // disabled copy operator
-    FilterCommand& operator=(const FilterCommand&);
+ private:
+  // disabled copy operator
+  FilterCommand& operator=(const FilterCommand&);
 };
-
 
 class ScaledFilterCmd : public FilterCommand
 {
-public:
-    ScaledFilterCmd();
-    virtual ~ScaledFilterCmd();
-    SCommand duplicate();
+ public:
+  ScaledFilterCmd();
+  virtual ~ScaledFilterCmd();
+  SCommand duplicate();
 
-    void setFactor(double);
-    double factor();
+  void setFactor(double);
+  double factor();
 
-    // operator override
-    bool operator==(const ScaledFilterCmd&) const;
-    bool operator!=(const ScaledFilterCmd&) const;
+  // operator override
+  bool operator==(const ScaledFilterCmd&) const;
+  bool operator!=(const ScaledFilterCmd&) const;
 
-protected:
-    // compare method, take the indices to the values array
-    bool compare(uint64_t, uint64_t);
+ protected:
+  // compare method, take the indices to the values array
+  bool compare(uint64_t, uint64_t);
 
-    // value used in comparison;
-    double fFactor;
+  // value used in comparison;
+  double fFactor;
 
-private:
-    // disabled copy constructor and operator
-    ScaledFilterCmd(const ScaledFilterCmd&);
-    ScaledFilterCmd& operator=(const ScaledFilterCmd&);
+ private:
+  // disabled copy constructor and operator
+  ScaledFilterCmd(const ScaledFilterCmd&);
+  ScaledFilterCmd& operator=(const ScaledFilterCmd&);
 };
-
 
 class StrFilterCmd : public FilterCommand
 {
-public:
-    StrFilterCmd();
-    virtual ~StrFilterCmd();
+ public:
+  StrFilterCmd();
+  virtual ~StrFilterCmd();
 
-    // override FilterCommand methods
-    void execute();
-    SCommand duplicate();
+  // override FilterCommand methods
+  void execute();
+  SCommand duplicate();
 
-    void setCompareFunc(uint32_t);
-    void setCharLength(size_t);
-    size_t charLength();
+  void setCompareFunc(uint32_t);
+  void setCharLength(size_t);
+  size_t charLength();
 
-    // operator override
-    bool operator==(const StrFilterCmd&) const;
-    bool operator!=(const StrFilterCmd&) const;
+  // operator override
+  bool operator==(const StrFilterCmd&) const;
+  bool operator!=(const StrFilterCmd&) const;
 
-protected:
-    // compare method, take the indices to the values array
-    bool compare(uint64_t, uint64_t);
+ protected:
+  // compare method, take the indices to the values array
+  bool compare(uint64_t, uint64_t);
 
-    // compare method for differernt column combination, c--char[], s--string
-    // compare char[]-char[] is not the same as int-int due to endian issue.
-    bool compare_cc(uint64_t, uint64_t);
-    bool compare_ss(uint64_t, uint64_t);
-    bool compare_cs(uint64_t, uint64_t);
-    bool compare_sc(uint64_t, uint64_t);
-    bool (StrFilterCmd::*fCompare)(uint64_t, uint64_t);
+  // compare method for differernt column combination, c--char[], s--string
+  // compare char[]-char[] is not the same as int-int due to endian issue.
+  bool compare_cc(uint64_t, uint64_t);
+  bool compare_ss(uint64_t, uint64_t);
+  bool compare_cs(uint64_t, uint64_t);
+  bool compare_sc(uint64_t, uint64_t);
+  bool (StrFilterCmd::*fCompare)(uint64_t, uint64_t);
 
-    // colWidth of columns the don't need a dictionary
-    size_t fCharLength;
+  // colWidth of columns the don't need a dictionary
+  size_t fCharLength;
 
-    StrFilterCmd(const StrFilterCmd &rhs) = default;
+  StrFilterCmd(const StrFilterCmd& rhs) = default;
 
-private:
-    // disabled copy operator
-    StrFilterCmd& operator=(const StrFilterCmd&);
+ private:
+  // disabled copy operator
+  StrFilterCmd& operator=(const StrFilterCmd&);
 };
 
-
-};
-
-
-#endif // PRIMITIVES_FILTERCOMMAND_H_
-
+};  // namespace primitiveprocessor

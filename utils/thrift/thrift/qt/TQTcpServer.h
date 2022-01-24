@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TASYNC_QTCP_SERVER_H_
-#define _THRIFT_TASYNC_QTCP_SERVER_H_
+#pragma once
 
 #include <QObject>
 #include <QTcpServer>
@@ -84,4 +83,3 @@ private:
 }
 } // apache::thrift::async
 
-#endif // #ifndef _THRIFT_TASYNC_QTCP_SERVER_H_

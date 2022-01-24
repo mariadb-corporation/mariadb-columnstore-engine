@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_SERVER_TSIMPLESERVER_H_
-#define _THRIFT_SERVER_TSIMPLESERVER_H_ 1
+#pragma once
 
 #include <thrift/server/TServer.h>
 #include <thrift/transport/TServerTransport.h>
@@ -108,4 +107,3 @@ protected:
 }
 } // apache::thrift::server
 
-#endif // #ifndef _THRIFT_SERVER_TSIMPLESERVER_H_

@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TREFLECTIONLOCAL_H_
-#define _THRIFT_TREFLECTIONLOCAL_H_ 1
+#pragma once
 
 #include <stdint.h>
 #include <cstring>
@@ -109,4 +108,3 @@ struct TypeSpec
 }
 } // apache::thrift::reflection::local
 
-#endif // #ifndef _THRIFT_TREFLECTIONLOCAL_H_

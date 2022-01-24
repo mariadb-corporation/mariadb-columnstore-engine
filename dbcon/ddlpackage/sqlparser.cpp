@@ -17,10 +17,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: sqlparser.cpp 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: sqlparser.cpp 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 
 #include <fstream>
 #include <errno.h>
@@ -45,104 +45,94 @@ namespace ddlpackage
 {
 using namespace std;
 
-SqlParser::SqlParser() :
-    fStatus(-1),
-    fDebug(false),
-    x(&fParseTree)
+SqlParser::SqlParser() : fStatus(-1), fDebug(false), x(&fParseTree)
 {
 }
 
-
 void SqlParser::SetDebug(bool debug)
 {
-    fDebug = debug;
+  fDebug = debug;
 }
 
 void SqlParser::setDefaultSchema(std::string schema)
 {
-    x.fDBSchema = schema;
+  x.fDBSchema = schema;
 }
 
 void SqlParser::setDefaultCharset(const CHARSET_INFO* default_charset)
 {
-    x.default_table_charset = default_charset;
+  x.default_table_charset = default_charset;
 }
 
 int SqlParser::Parse(const char* sqltext)
 {
-    ddllex_init_extra(&scanData, &x.scanner);
-    scanner_init(sqltext, x.scanner);
-    fStatus = ddlparse(&x);
-    return fStatus;
+  ddllex_init_extra(&scanData, &x.scanner);
+  scanner_init(sqltext, x.scanner);
+  fStatus = ddlparse(&x);
+  return fStatus;
 }
-
 
 const ParseTree& SqlParser::GetParseTree(void)
 {
-    if (!Good())
-    {
-        throw logic_error("The ParseTree is invalid");
-    }
+  if (!Good())
+  {
+    throw logic_error("The ParseTree is invalid");
+  }
 
-    return fParseTree;
+  return fParseTree;
 }
-
 
 bool SqlParser::Good()
 {
-    return fStatus == 0;
+  return fStatus == 0;
 }
-
 
 SqlParser::~SqlParser()
 {
-    scanner_finish(x.scanner); // free scanner allocated memory
-    ddllex_destroy(x.scanner);
+  scanner_finish(x.scanner);  // free scanner allocated memory
+  ddllex_destroy(x.scanner);
 }
 
-
-SqlFileParser::SqlFileParser() :
-    SqlParser()
+SqlFileParser::SqlFileParser() : SqlParser()
 {
 }
-
 
 int SqlFileParser::Parse(const string& sqlfile)
 {
-    fStatus = -1;
+  fStatus = -1;
 
-    ifstream ifsql;
-    ifsql.open(sqlfile.c_str());
+  ifstream ifsql;
+  ifsql.open(sqlfile.c_str());
 
-    if (!ifsql.is_open())
-    {
-        perror(sqlfile.c_str());
-        return fStatus;
-    }
+  if (!ifsql.is_open())
+  {
+    perror(sqlfile.c_str());
+    return fStatus;
+  }
 
-    char sqlbuf[1024 * 1024];
-    unsigned length;
-    ifsql.seekg (0, ios::end);
-    length = ifsql.tellg();
-    ifsql.seekg (0, ios::beg);
+  char sqlbuf[1024 * 1024];
+  unsigned length;
+  ifsql.seekg(0, ios::end);
+  length = ifsql.tellg();
+  ifsql.seekg(0, ios::beg);
 
-    if (length > sizeof(sqlbuf) - 1)
-    {
-        throw length_error("SqlFileParser has file size hard limit of 16K.");
-    }
+  if (length > sizeof(sqlbuf) - 1)
+  {
+    throw length_error("SqlFileParser has file size hard limit of 16K.");
+  }
 
-    std::streamsize rcount;
-    rcount = ifsql.readsome(sqlbuf, sizeof(sqlbuf) - 1);
+  std::streamsize rcount;
+  rcount = ifsql.readsome(sqlbuf, sizeof(sqlbuf) - 1);
 
-    if (rcount < 0)
-        return fStatus;
+  if (rcount < 0)
+    return fStatus;
 
-    sqlbuf[rcount] = 0;
+  sqlbuf[rcount] = 0;
 
-    //cout << endl << sqlfile << "(" << rcount << ")" << endl;
-    //cout << "----------------------" << endl;
-    //cout << sqlbuf << endl;
+  // cout << endl << sqlfile << "(" << rcount << ")" << endl;
+  // cout << "----------------------" << endl;
+  // cout << sqlbuf << endl;
 
-    return SqlParser::Parse(sqlbuf);
+  return SqlParser::Parse(sqlbuf);
 }
-}
+}  // namespace ddlpackage

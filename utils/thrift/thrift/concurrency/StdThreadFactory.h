@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_CONCURRENCY_STDTHREADFACTORY_H_
-#define _THRIFT_CONCURRENCY_STDTHREADFACTORY_H_ 1
+#pragma once
 
 #include <thrift/concurrency/Thread.h>
 
@@ -77,4 +76,3 @@ private:
 }
 } // apache::thrift::concurrency
 
-#endif // #ifndef _THRIFT_CONCURRENCY_STDTHREADFACTORY_H_

@@ -2,8 +2,7 @@
 /* config.hin.  Generated from configure.ac by autoheader.  */
 
 
-#ifndef CONFIG_H
-#define CONFIG_H
+#pragma once
 
 
 /* Define if the AI_ADDRCONFIG symbol is unavailable */
@@ -423,5 +422,4 @@
 /* #undef volatile */
 
 
-#endif
 

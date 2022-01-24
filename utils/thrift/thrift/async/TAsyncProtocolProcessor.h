@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TNAME_ME_H_
-#define _THRIFT_TNAME_ME_H_ 1
+#pragma once
 
 #include <thrift/async/TAsyncProcessor.h>
 #include <thrift/async/TAsyncBufferProcessor.h>
@@ -62,4 +61,3 @@ private:
 }
 } // apache::thrift::async
 
-#endif // #ifndef _THRIFT_TNAME_ME_H_

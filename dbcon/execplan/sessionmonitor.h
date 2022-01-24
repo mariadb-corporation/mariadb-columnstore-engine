@@ -24,8 +24,7 @@
  * class SessionMonitor interface
  */
 
-#ifndef _SESSIONMONITOR_H
-#define _SESSIONMONITOR_H
+#pragma once
 
 #include <vector>
 #include <exception>
@@ -41,7 +40,6 @@
 
 namespace execplan
 {
-
 /** @brief Identifies stale and orphaned transaction IDs.
  *
  *
@@ -68,277 +66,273 @@ namespace execplan
 
 class SessionMonitor
 {
-public:
-
-    /** @brief A type describing a single transaction ID */
-    struct MonTxnID
+ public:
+  /** @brief A type describing a single transaction ID */
+  struct MonTxnID
+  {
+    /// The TransactionID number
+    CalpontSystemCatalog::SCN id;
+    /// True if the id is valid.
+    bool valid;
+    /// timestamp of firstrecord of this TID
+    time_t firstrecord;
+    MonTxnID()
     {
-        /// The TransactionID number
-        CalpontSystemCatalog::SCN	id;
-        /// True if the id is valid.
-        bool						valid;
-        /// timestamp of firstrecord of this TID
-        time_t						firstrecord;
-        MonTxnID()
-        {
-            id = 0;
-            valid = false;
-            firstrecord = 0;
-        };
+      id = 0;
+      valid = false;
+      firstrecord = 0;
     };
+  };
 
-    /** @brief A type describing a single transaction ID */
-    typedef struct MonTxnID MonTxnID;
+  /** @brief A type describing a single transaction ID */
+  typedef struct MonTxnID MonTxnID;
 
-    /** @brief A type associating a session with a transaction */
-    struct MonSIDTIDEntry
+  /** @brief A type associating a session with a transaction */
+  struct MonSIDTIDEntry
+  {
+    /// The Transaction ID.  txnid.valid determines whether or not this SIDTIDEntry is valid
+    MonTxnID txnid;
+    /// The session doing the transaction
+    SessionManager::SID sessionid;
+    MonSIDTIDEntry()
     {
-        /// The Transaction ID.  txnid.valid determines whether or not this SIDTIDEntry is valid
-        MonTxnID			txnid;
-        /// The session doing the transaction
-        SessionManager::SID		sessionid;
-        MonSIDTIDEntry()
-        {
-            txnid = MonTxnID();
-            sessionid = 0;
-        };
+      txnid = MonTxnID();
+      sessionid = 0;
     };
+  };
 
-    /** @brief A type associating a session with a transaction */
-    typedef struct MonSIDTIDEntry MonSIDTIDEntry_t;
+  /** @brief A type associating a session with a transaction */
+  typedef struct MonSIDTIDEntry MonSIDTIDEntry_t;
 
-    /** @brief Vector of MonSIDTIDEntry structures */
-    typedef std::vector<MonSIDTIDEntry_t*> MonSIDTIDEntryVector_t;
+  /** @brief Vector of MonSIDTIDEntry structures */
+  typedef std::vector<MonSIDTIDEntry_t*> MonSIDTIDEntryVector_t;
 
-    /** @brief needed to sort txns list in find timedOutTnxs()*/
-    struct lessMonSIDTIDEntry
+  /** @brief needed to sort txns list in find timedOutTnxs()*/
+  struct lessMonSIDTIDEntry
+  {
+    bool operator()(MonSIDTIDEntry const* p1, MonSIDTIDEntry const* p2)
     {
-        bool operator()(MonSIDTIDEntry const* p1, MonSIDTIDEntry const* p2)
-        {
-            if (!p1)
-                return true;
+      if (!p1)
+        return true;
 
-            if (!p2)
-                return false;
+      if (!p2)
+        return false;
 
-            return p1->txnid.firstrecord < p2->txnid.firstrecord;
-        }
-    };
-
-    /** @brief monitor version of the SessionManagerData */
-    struct SessionMonitorData_struct
-    {
-        int txnCount;
-        CalpontSystemCatalog::SCN verID;
-        MonSIDTIDEntry_t* activeTxns;
-        SessionMonitorData_struct()
-        {
-            txnCount = 0;
-            verID = 0;
-            activeTxns = NULL;
-        };
-    };
-    typedef struct SessionMonitorData_struct	SessionMonitorData_t;
-
-    /** @brief typedef if SessionManager struct SIDTIDEntry. For convenience.*/
-    typedef BRM::SIDTIDEntry SIDTIDEntry_t;
-    /** @brief This struct describes the layout of the shared memory segment copied from SessionManager.h */
-    struct SessionManagerData_struct
-    {
-        int txnCount;
-        CalpontSystemCatalog::SCN verID;
-        CalpontSystemCatalog::SCN syscatVerID;
-        int systemstate;
-        boost::interprocess::interprocess_semaphore sems[2];
-        SIDTIDEntry_t activeTxns[];
-    };
-    typedef SessionManagerData_struct SessionManagerData_t;
-
-    /** @brief Constructor
-     *
-     * This attaches to existing shared memory segments.
-     * @note throws ios_base::failure on file IO error, runtime_error for
-     * other types of errors.  It might be worthwhile to define additional
-     * exceptions for all the different types of failures that can happen
-     * here.
-     */
-    SessionMonitor();
-
-    /** @brief Destructor
-     *
-     * This detaches the shared memory segment then saves it
-     * to disk and destroyed. It does not destroy the semaphores
-     * or the shared memory segment. Deletes the local copies
-     * of the SessionManager data and SessionMonitor data.
-     */
-    virtual ~SessionMonitor();
-
-    const int maxTxns() const
-    {
-        return fMaxTxns;
+      return p1->txnid.firstrecord < p2->txnid.firstrecord;
     }
-    const int txnCount() const;
+  };
 
-    /**
-     * @brief identifies timed out SessionManager structures
-     * @param
-     * @return
-    */
-    MonSIDTIDEntryVector_t timedOutTxns();
+  /** @brief monitor version of the SessionManagerData */
+  struct SessionMonitorData_struct
+  {
+    int txnCount;
+    CalpontSystemCatalog::SCN verID;
+    MonSIDTIDEntry_t* activeTxns;
+    SessionMonitorData_struct()
+    {
+      txnCount = 0;
+      verID = 0;
+      activeTxns = NULL;
+    };
+  };
+  typedef struct SessionMonitorData_struct SessionMonitorData_t;
 
-    const SessionMonitorData_t* previousManagerData()
-    {
-        return &fPrevSegment;
-    }
-    SessionManagerData_t* currentManagerData()
-    {
-        return fCurrentSegment;
-    }
-    const SessionManagerData_t* sessionManagerData()
-    {
-        return fSessionManagerData;
-    }
+  /** @brief typedef if SessionManager struct SIDTIDEntry. For convenience.*/
+  typedef BRM::SIDTIDEntry SIDTIDEntry_t;
+  /** @brief This struct describes the layout of the shared memory segment copied from SessionManager.h */
+  struct SessionManagerData_struct
+  {
+    int txnCount;
+    CalpontSystemCatalog::SCN verID;
+    CalpontSystemCatalog::SCN syscatVerID;
+    int systemstate;
+    boost::interprocess::interprocess_semaphore sems[2];
+    SIDTIDEntry_t activeTxns[];
+  };
+  typedef SessionManagerData_struct SessionManagerData_t;
 
-    void printTxns(const MonSIDTIDEntry_t& txn) const;
+  /** @brief Constructor
+   *
+   * This attaches to existing shared memory segments.
+   * @note throws ios_base::failure on file IO error, runtime_error for
+   * other types of errors.  It might be worthwhile to define additional
+   * exceptions for all the different types of failures that can happen
+   * here.
+   */
+  SessionMonitor();
+
+  /** @brief Destructor
+   *
+   * This detaches the shared memory segment then saves it
+   * to disk and destroyed. It does not destroy the semaphores
+   * or the shared memory segment. Deletes the local copies
+   * of the SessionManager data and SessionMonitor data.
+   */
+  virtual ~SessionMonitor();
+
+  const int maxTxns() const
+  {
+    return fMaxTxns;
+  }
+  const int txnCount() const;
+
+  /**
+   * @brief identifies timed out SessionManager structures
+   * @param
+   * @return
+   */
+  MonSIDTIDEntryVector_t timedOutTxns();
+
+  const SessionMonitorData_t* previousManagerData()
+  {
+    return &fPrevSegment;
+  }
+  SessionManagerData_t* currentManagerData()
+  {
+    return fCurrentSegment;
+  }
+  const SessionManagerData_t* sessionManagerData()
+  {
+    return fSessionManagerData;
+  }
+
+  void printTxns(const MonSIDTIDEntry_t& txn) const;
 #ifdef SM_DEBUG
-    void printSegment(const SessionManagerData_t* seg, const int l = 1000) const;
-    void printMonitorData(const int l = 1000) const;
-    void printTxns(const SIDTIDEntry_t& txn) const;
+  void printSegment(const SessionManagerData_t* seg, const int l = 1000) const;
+  void printMonitorData(const int l = 1000) const;
+  void printTxns(const SIDTIDEntry_t& txn) const;
 #endif
-    const int AgeLimit() const
-    {
-        return fAgeLimit;   // to speed up testing
-    }
-    void AgeLimit(const int& age)
-    {
-        fAgeLimit = age;
-    }
-    const char* segmentFilename() const
-    {
-        return fSegmentFilename.c_str();
-    }
-    bool haveSemaphores() const
-    {
-        return fHaveSemaphores;
-    }
-    bool haveSharedMemory() const
-    {
-        return fIsAttached;
-    }
+  const int AgeLimit() const
+  {
+    return fAgeLimit;  // to speed up testing
+  }
+  void AgeLimit(const int& age)
+  {
+    fAgeLimit = age;
+  }
+  const char* segmentFilename() const
+  {
+    return fSegmentFilename.c_str();
+  }
+  bool haveSemaphores() const
+  {
+    return fHaveSemaphores;
+  }
+  bool haveSharedMemory() const
+  {
+    return fIsAttached;
+  }
 
-private:
+ private:
+  int fMaxTxns;                       // the maximum number of concurrent transactions
+  static const int fMaxRetries = 10;  // the max number of retries on file IO
+  std::string fSegmentFilename;       // filename used to store the image of the SessionManager data
+  time_t fDefaultAgeLimit;
+  time_t fAgeLimit;  // age limit in seconds used to timeout/orpan a transaction
 
-    int fMaxTxns;		// the maximum number of concurrent transactions
-    static const int fMaxRetries = 10; // the max number of retries on file IO
-    std::string fSegmentFilename; // filename used to store the image of the SessionManager data
-    time_t fDefaultAgeLimit;
-    time_t fAgeLimit; // age limit in seconds used to timeout/orpan a transaction
+  SessionMonitorData_t fSessionMonitorData;   // pointer to in memory copy of the Monitor data
+  SessionMonitorData_t fPrevSegment;          // in memory copy of SessionManager data from backup file
+  SessionManagerData_t* fCurrentSegment;      // in memory of SessionManager data
+  SessionManagerData_t* fSessionManagerData;  // current shared memory SessionManager data
 
-    SessionMonitorData_t fSessionMonitorData;	// pointer to in memory copy of the Monitor data
-    SessionMonitorData_t fPrevSegment;			// in memory copy of SessionManager data from backup file
-    SessionManagerData_t* fCurrentSegment;		// in memory of SessionManager data
-    SessionManagerData_t* fSessionManagerData;	// current shared memory SessionManager data
+  // refers to 2 semaphores; the first is a mutex that guards the shmseg
+  // the second is used to block processes when there are too many concurrent txns
+  int fsems;
+  int fshmid;     // shared memory segment id
+  uint32_t fuid;  // user id used to create the shared memory key
 
-    // refers to 2 semaphores; the first is a mutex that guards the shmseg
-    // the second is used to block processes when there are too many concurrent txns
-    int fsems;
-    int fshmid; 	// shared memory segment id
-    uint32_t fuid; // user id used to create the shared memory key
+  SessionManager sm;
 
-    SessionManager sm;
+  bool isStaleSIDTID(const SIDTIDEntry_t& src, const MonSIDTIDEntry_t& dest) const;
+  bool isEqualSIDTID(const SIDTIDEntry_t& src, const MonSIDTIDEntry_t& dest) const;
+  bool isUsedSIDTID(const SIDTIDEntry_t& e) const;
+  bool isUsed(const MonSIDTIDEntry_t& e) const;
 
-    bool isStaleSIDTID(const SIDTIDEntry_t& src, const MonSIDTIDEntry_t& dest) const;
-    bool isEqualSIDTID(const SIDTIDEntry_t& src, const MonSIDTIDEntry_t& dest) const;
-    bool isUsedSIDTID(const SIDTIDEntry_t& e) const;
-    bool isUsed(const MonSIDTIDEntry_t& e) const;
+  /**
+   * @brief attached to SessionManagerData shared memory
+   * @param
+   * @return void
+   */
+  void getSharedData(void);
 
-    /**
-     * @brief attached to SessionManagerData shared memory
-     * @param
-     * @return void
-     */
-    void getSharedData(void);
+  bool fIsAttached;
 
-    bool fIsAttached;
+  /**
+   * @brief unattached from SessionManagerData shared memory
+   * @param
+   * @return void
+   */
+  void detachSegment(void);
 
-    /**
-     * @brief unattached from SessionManagerData shared memory
-     * @param
-     * @return void
-     */
-    void detachSegment(void);
+  /**
+   * @brief initialize SessionMonitorData
+   * @param
+   * @return void
+   */
+  void initSegment(SessionMonitorData_t* seg);
 
-    /**
-     * @brief initialize SessionMonitorData
-     * @param
-     * @return void
-     */
-    void initSegment(SessionMonitorData_t* seg);
+  /**
+   * @brief initialize SessionManagerData
+   * @param
+   * @return void
+   */
+  void initSegment(SessionManagerData_t* seg);
 
-    /**
-     * @brief initialize SessionManagerData
-     * @param
-     * @return void
-     */
-    void initSegment(SessionManagerData_t* seg);
+  const key_t IPCKey() const
+  {
+    return fShmKeys.SESSIONMANAGER_SYSVKEY;
+  };
 
-    const key_t IPCKey() const
-    {
-        return fShmKeys.SESSIONMANAGER_SYSVKEY;
-    };
+  /**
+   * @brief copies the SessionMonitor data from a file into memory
+   * @param
+   * @return void
+   */
+  void copyPreviousSegment();
 
-    /**
-     * @brief copies the SessionMonitor data from a file into memory
-     * @param
-     * @return void
-     */
-    void copyPreviousSegment();
+  /**
+   * @brief copies the SessionManager data from shared memory into an SessionMonitor memory
+   * @param
+   * @return void
+   */
+  void copyCurrentSegment();
 
-    /**
-     * @brief copies the SessionManager data from shared memory into an SessionMonitor memory
-     * @param
-     * @return void
-     */
-    void copyCurrentSegment();
+  /**
+   * @brief Reads the SM data from file into memory. Used by copyPreviousSegment().
+   * @param
+   * @return bool
+   */
+  bool readMonitorDataFromFile(const std::string);
 
-    /**
-     * @brief Reads the SM data from file into memory. Used by copyPreviousSegment().
-     * @param
-     * @return bool
-    */
-    bool readMonitorDataFromFile(const std::string);
+  /**
+   * @brief write the current SessionManagerData as SessionMonitorData to a file.
+   * @param
+   * @return void
+   */
+  void saveAsMonitorData(const std::string);
 
-    /**
-     * @brief write the current SessionManagerData as SessionMonitorData to a file.
-     * @param
-     * @return void
-     */
-    void saveAsMonitorData(const std::string);
+  bool fHaveSemaphores;
 
-    bool fHaveSemaphores;
+  /**
+   * @brief get the SessionManager semaphores
+   * @param
+   * @return void
+   */
+  int getSems(void);
 
-    /**
-     * @brief get the SessionManager semaphores
-     * @param
-     * @return void
-     */
-    int getSems(void);
+  void lock(void);
 
-    void lock(void);
+  void unlock(void);
 
-    void unlock(void);
+  /**
+   * @brief do not use the copy constructor.
+   * @param
+   * @return
+   */
+  SessionMonitor(const SessionMonitor&);
 
-    /**
-     * @brief do not use the copy constructor.
-     * @param
-     * @return
-     */
-    SessionMonitor(const SessionMonitor&);
-
-private:
-    BRM::ShmKeys fShmKeys;
+ private:
+  BRM::ShmKeys fShmKeys;
 };
 
-}	//namespace
-
-#endif
+}  // namespace execplan
