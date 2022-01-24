@@ -38,7 +38,6 @@ using namespace rowgroup;
 
 namespace primitiveprocessor
 {
-
 PassThruCommand::PassThruCommand() : Command(PASS_THRU)
 {
 }
@@ -49,23 +48,23 @@ PassThruCommand::~PassThruCommand()
 
 void PassThruCommand::prep(int8_t outputType, bool makeAbsRids)
 {
-    if (bpp->ot == ROW_GROUP)
-    {
-        bpp->outputRG.initRow(&r);
-        rowSize = r.getSize();
-    }
+  if (bpp->ot == ROW_GROUP)
+  {
+    bpp->outputRG.initRow(&r);
+    rowSize = r.getSize();
+  }
 }
 
 void PassThruCommand::execute()
 {
-// 	throw logic_error("PassThruCommand isn't a filter step");
+  // 	throw logic_error("PassThruCommand isn't a filter step");
 }
 
 void PassThruCommand::project()
 {
-    uint32_t i;
+  uint32_t i;
 
-    *bpp->serialized << (uint32_t) (bpp->ridCount * colWidth);
+  *bpp->serialized << (uint32_t)(bpp->ridCount * colWidth);
 #if 0
     cout << "pass thru serializing " << (uint32_t) (bpp->ridCount * colWidth) << " bytes:\n";
     cout << "at relative position " << bpp->serialized->length() - sizeof(ISMPacketHeader) - sizeof(PrimitiveHeader) - 4 << endl;
@@ -75,97 +74,92 @@ void PassThruCommand::project()
 
 #endif
 
-    switch (colWidth)
-    {
-        case 16:
-            bpp->serialized->append((uint8_t*) bpp->wide128Values, bpp->ridCount << 4);
-            break;
-        
-        case 8:
-            bpp->serialized->append((uint8_t*) bpp->values, bpp->ridCount << 3);
-            break;
+  switch (colWidth)
+  {
+    case 16: bpp->serialized->append((uint8_t*)bpp->wide128Values, bpp->ridCount << 4); break;
 
-        case 4:
-            for (i = 0; i < bpp->ridCount; i++)
-                *bpp->serialized << (uint32_t) bpp->values[i];
+    case 8: bpp->serialized->append((uint8_t*)bpp->values, bpp->ridCount << 3); break;
 
-            break;
+    case 4:
+      for (i = 0; i < bpp->ridCount; i++)
+        *bpp->serialized << (uint32_t)bpp->values[i];
 
-        case 2:
-            for (i = 0; i < bpp->ridCount; i++)
-                *bpp->serialized << (uint16_t) bpp->values[i];
+      break;
 
-            break;
+    case 2:
+      for (i = 0; i < bpp->ridCount; i++)
+        *bpp->serialized << (uint16_t)bpp->values[i];
 
-        case 1:
-            for (i = 0; i < bpp->ridCount; i++)
-                *bpp->serialized << (uint8_t) bpp->values[i];
+      break;
 
-            break;
+    case 1:
+      for (i = 0; i < bpp->ridCount; i++)
+        *bpp->serialized << (uint8_t)bpp->values[i];
 
-        default:
-            throw logic_error("PassThruCommand has a bad column width");
-    }
+      break;
+
+    default: throw logic_error("PassThruCommand has a bad column width");
+  }
 }
 
 void PassThruCommand::projectIntoRowGroup(RowGroup& rg, uint32_t col)
 {
-    uint32_t i;
+  uint32_t i;
 
-    rg.initRow(&r);
-    rg.getRow(0, &r);
-    uint32_t offset = r.getOffset(col);
-    rowSize = r.getSize();
+  rg.initRow(&r);
+  rg.getRow(0, &r);
+  uint32_t offset = r.getOffset(col);
+  rowSize = r.getSize();
 
-    switch (colWidth)
-    {
-        case 1:
-            for (i = 0; i < bpp->ridCount; i++)
-            {
-                r.setUintField_offset<1>(bpp->values[i], offset);
-                r.nextRow(rowSize);
-            }
+  switch (colWidth)
+  {
+    case 1:
+      for (i = 0; i < bpp->ridCount; i++)
+      {
+        r.setUintField_offset<1>(bpp->values[i], offset);
+        r.nextRow(rowSize);
+      }
 
-            break;
+      break;
 
-        case 2:
-            for (i = 0; i < bpp->ridCount; i++)
-            {
-                r.setUintField_offset<2>(bpp->values[i], offset);
-                r.nextRow(rowSize);
-            }
+    case 2:
+      for (i = 0; i < bpp->ridCount; i++)
+      {
+        r.setUintField_offset<2>(bpp->values[i], offset);
+        r.nextRow(rowSize);
+      }
 
-            break;
+      break;
 
-        case 4:
-            for (i = 0; i < bpp->ridCount; i++)
-            {
-                r.setUintField_offset<4>(bpp->values[i], offset);
-                r.nextRow(rowSize);
-            }
+    case 4:
+      for (i = 0; i < bpp->ridCount; i++)
+      {
+        r.setUintField_offset<4>(bpp->values[i], offset);
+        r.nextRow(rowSize);
+      }
 
-            break;
+      break;
 
-        case 8:
-            for (i = 0; i < bpp->ridCount; i++)
-            {
-                r.setUintField_offset<8>(bpp->values[i], offset);
-                r.nextRow(rowSize);
-            }
+    case 8:
+      for (i = 0; i < bpp->ridCount; i++)
+      {
+        r.setUintField_offset<8>(bpp->values[i], offset);
+        r.nextRow(rowSize);
+      }
 
-            break;
-        case 16:
-            for (i = 0; i < bpp->ridCount; i++)
-            {
-                r.setBinaryField_offset(&bpp->wide128Values[i], 16, offset);
-                r.nextRow(rowSize);
-            }
-    }
+      break;
+    case 16:
+      for (i = 0; i < bpp->ridCount; i++)
+      {
+        r.setBinaryField_offset(&bpp->wide128Values[i], 16, offset);
+        r.nextRow(rowSize);
+      }
+  }
 }
 
 uint64_t PassThruCommand::getLBID()
 {
-    return 0;
+  return 0;
 }
 
 void PassThruCommand::nextLBID()
@@ -174,9 +168,9 @@ void PassThruCommand::nextLBID()
 
 void PassThruCommand::createCommand(ByteStream& bs)
 {
-    bs.advance(1);
-    bs >> colWidth;
-    Command::createCommand(bs);
+  bs.advance(1);
+  bs >> colWidth;
+  Command::createCommand(bs);
 }
 
 void PassThruCommand::resetCommand(ByteStream& bs)
@@ -185,27 +179,27 @@ void PassThruCommand::resetCommand(ByteStream& bs)
 
 SCommand PassThruCommand::duplicate()
 {
-    SCommand ret;
-    PassThruCommand* p;
+  SCommand ret;
+  PassThruCommand* p;
 
-    ret.reset(new PassThruCommand());
-    p = (PassThruCommand*) ret.get();
-    p->colWidth = colWidth;
-    p->Command::operator=(*this);
-    return ret;
+  ret.reset(new PassThruCommand());
+  p = (PassThruCommand*)ret.get();
+  p->colWidth = colWidth;
+  p->Command::operator=(*this);
+  return ret;
 }
 
 bool PassThruCommand::operator==(const PassThruCommand& p) const
 {
-    if (colWidth != p.colWidth)
-        return false;
+  if (colWidth != p.colWidth)
+    return false;
 
-    return true;
+  return true;
 }
 
 bool PassThruCommand::operator!=(const PassThruCommand& p) const
 {
-    return !(*this == p);
+  return !(*this == p);
 }
 
-};
+};  // namespace primitiveprocessor

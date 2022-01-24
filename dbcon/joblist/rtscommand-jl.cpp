@@ -31,35 +31,32 @@
 #include "bpp-jl.h"
 #include "tablecolumn.h"
 
-
 using namespace std;
 using namespace messageqcpp;
 
 namespace joblist
 {
-
 RTSCommandJL::RTSCommandJL(const pColStep& c, const pDictionaryStep& d)
 {
-
-    col.reset(new ColumnCommandJL(c));
-    dict.reset(new DictStepJL(d));
-    /* XXXPAT: Need to validate the width; critical for tuple return functionality */
-    dict->setWidth(c.realWidth);
-    OID = d.oid();
-    colName = d.name();
-    passThru = 0;
+  col.reset(new ColumnCommandJL(c));
+  dict.reset(new DictStepJL(d));
+  /* XXXPAT: Need to validate the width; critical for tuple return functionality */
+  dict->setWidth(c.realWidth);
+  OID = d.oid();
+  colName = d.name();
+  passThru = 0;
 }
 
 RTSCommandJL::RTSCommandJL(const PassThruStep& p, const pDictionaryStep& d)
 {
-    execplan::CalpontSystemCatalog::ColType colType;
+  execplan::CalpontSystemCatalog::ColType colType;
 
-    dict.reset(new DictStepJL(d));
-    /* XXXPAT: Need to validate the width; critical for tuple return functionality */
-    dict->setWidth(p.realWidth);
-    OID = d.oid();
-    colName = d.name();
-    passThru = 1;
+  dict.reset(new DictStepJL(d));
+  /* XXXPAT: Need to validate the width; critical for tuple return functionality */
+  dict->setWidth(p.realWidth);
+  OID = d.oid();
+  colName = d.name();
+  passThru = 1;
 }
 
 RTSCommandJL::~RTSCommandJL()
@@ -68,55 +65,55 @@ RTSCommandJL::~RTSCommandJL()
 
 void RTSCommandJL::setLBID(uint64_t data, uint32_t dbroot)
 {
-    if (!passThru)
-        col->setLBID(data, dbroot);
+  if (!passThru)
+    col->setLBID(data, dbroot);
 
-    dict->setLBID(data, dbroot);
+  dict->setLBID(data, dbroot);
 }
 
 void RTSCommandJL::createCommand(ByteStream& bs) const
 {
-    bs << (uint8_t) RID_TO_STRING;
-    bs << passThru;
+  bs << (uint8_t)RID_TO_STRING;
+  bs << passThru;
 
-    if (!passThru)
-        col->createCommand(bs);
+  if (!passThru)
+    col->createCommand(bs);
 
-    dict->createCommand(bs);
-    CommandJL::createCommand(bs);
+  dict->createCommand(bs);
+  CommandJL::createCommand(bs);
 }
 
 void RTSCommandJL::runCommand(ByteStream& bs) const
 {
-    if (!passThru)
-        col->runCommand(bs);
+  if (!passThru)
+    col->runCommand(bs);
 
-    dict->runCommand(bs);
+  dict->runCommand(bs);
 }
 
 uint8_t RTSCommandJL::getTableColumnType()
 {
-    return TableColumn::STRING;
+  return TableColumn::STRING;
 }
 
 string RTSCommandJL::toString()
 {
-    ostringstream ret;
+  ostringstream ret;
 
-    ret << "RTSCommandJL: oid=" << OID << " colName=" << colName << endl;
-    ret << "   ";
+  ret << "RTSCommandJL: oid=" << OID << " colName=" << colName << endl;
+  ret << "   ";
 
-    if (!passThru)
-        ret << col->toString() << endl;
+  if (!passThru)
+    ret << col->toString() << endl;
 
-    ret << "   ";
-    ret << dict->toString();
-    return ret.str();
+  ret << "   ";
+  ret << dict->toString();
+  return ret.str();
 }
 
 uint16_t RTSCommandJL::getWidth()
 {
-    return dict->getWidth();
+  return dict->getWidth();
 }
 
-};
+};  // namespace joblist

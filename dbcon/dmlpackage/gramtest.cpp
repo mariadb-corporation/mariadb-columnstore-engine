@@ -32,52 +32,54 @@ using namespace dmlpackage;
 
 int main(int argc, char* argv[])
 {
-    string sqlfile;
-    int count;
+  string sqlfile;
+  int count;
 
-    po::options_description desc ("Allowed options");
-    desc.add_options ()
-    ("help", "produce help message")
-    ("bisond", /* po::value <string>(),*/ "Have bison produce debug output")
-    ("count", po::value <int>(), "number of runs")
-    ("sql", po::value < string > (), "sql file");
-    po::variables_map vm;
-    po::store (po::parse_command_line (argc, argv, desc), vm);
-    po::notify (vm);
+  po::options_description desc("Allowed options");
+  desc.add_options()("help", "produce help message")(
+      "bisond",
+      /* po::value <string>(),*/ "Have bison produce debug output")("count", po::value<int>(),
+                                                                    "number of runs")("sql",
+                                                                                      po::value<string>(),
+                                                                                      "sql file");
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, desc), vm);
+  po::notify(vm);
 
-    if (vm.count ("sql"))
-        sqlfile = vm["sql"].as <string> ();
+  if (vm.count("sql"))
+    sqlfile = vm["sql"].as<string>();
 
-    if (vm.count("count"))
-        count = vm["count"].as<int>();
+  if (vm.count("count"))
+    count = vm["count"].as<int>();
 
-    DMLFileParser parser;
+  DMLFileParser parser;
 
-    if (vm.count ("bisond"))
-        parser.setDebug(true);
+  if (vm.count("bisond"))
+    parser.setDebug(true);
 
-    parser.parse(sqlfile);
+  parser.parse(sqlfile);
 
-    if (parser.good())
-    {
-        const ParseTree& ptree = parser.getParseTree();
+  if (parser.good())
+  {
+    const ParseTree& ptree = parser.getParseTree();
 
-        cout << "Parser succeeded." << endl;
-        cout << ptree.fList.size() << " " << "SQL statements" << endl;
-        cout << ptree.fSqlText << endl;
-        cout << ptree;
+    cout << "Parser succeeded." << endl;
+    cout << ptree.fList.size() << " "
+         << "SQL statements" << endl;
+    cout << ptree.fSqlText << endl;
+    cout << ptree;
 
-        SqlStatement* statementPtr = ptree[0];
+    SqlStatement* statementPtr = ptree[0];
 
-        if (statementPtr)
-            cout << statementPtr->getQueryString();
+    if (statementPtr)
+      cout << statementPtr->getQueryString();
 
-        cout << endl;
-    }
-    else
-    {
-        cout << "Parser failed." << endl;
-    }
+    cout << endl;
+  }
+  else
+  {
+    cout << "Parser failed." << endl;
+  }
 
-    return parser.good() ? 0 : -1;
+  return parser.good() ? 0 : -1;
 }

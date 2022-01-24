@@ -26,4 +26,3 @@ typedef struct participantsDb* participantsDb_t;
 
 void udpc_printNotSet(participantsDb_t db, char* d);
 void udpc_printSet(participantsDb_t db, char* d);
-

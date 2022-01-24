@@ -27,28 +27,26 @@
 
 namespace tpch
 {
-
 class RF2
 {
-public:
-    RF2(const std::string& sn, uint32_t sid, uint32_t tflg = 0, int c = std::numeric_limits<int>::max(),
-        int p = 1, bool d = false, bool v = false);
-    ~RF2();
+ public:
+  RF2(const std::string& sn, uint32_t sid, uint32_t tflg = 0, int c = std::numeric_limits<int>::max(),
+      int p = 1, bool d = false, bool v = false);
+  ~RF2();
 
-    int run(std::istream& in);
+  int run(std::istream& in);
 
-private:
-    //RF2(const RF2& rhs);
-    //RF2& operator=(const RF2& rhs);
+ private:
+  // RF2(const RF2& rhs);
+  // RF2& operator=(const RF2& rhs);
 
-    std::string fSchema;
-    uint32_t fSessionID;
-    uint32_t fTflg;
-    int fIntvl;
-    int fPack;
-    bool fDflg;
-    bool fVflg;
+  std::string fSchema;
+  uint32_t fSessionID;
+  uint32_t fTflg;
+  int fIntvl;
+  int fPack;
+  bool fDflg;
+  bool fVflg;
 };
 
-}
-
+}  // namespace tpch

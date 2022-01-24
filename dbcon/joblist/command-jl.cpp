@@ -25,35 +25,31 @@ using namespace messageqcpp;
 
 namespace joblist
 {
-
-CommandJL::CommandJL() :
-    bpp(0),
-    OID(0),
-    tupleKey(0xFFFFFFFF)
+CommandJL::CommandJL() : bpp(0), OID(0), tupleKey(0xFFFFFFFF)
 {
-    queryUuid = bu::nil_generator()();
-    stepUuid = bu::nil_generator()();
+  queryUuid = bu::nil_generator()();
+  stepUuid = bu::nil_generator()();
 }
 
-CommandJL::CommandJL(const CommandJL& c) :
-    bpp(c.bpp),
-    OID(c.OID),
-    tupleKey(c.tupleKey),
-    colName(c.colName),
-    queryUuid(c.queryUuid),
-    stepUuid(c.stepUuid)
+CommandJL::CommandJL(const CommandJL& c)
+ : bpp(c.bpp)
+ , OID(c.OID)
+ , tupleKey(c.tupleKey)
+ , colName(c.colName)
+ , queryUuid(c.queryUuid)
+ , stepUuid(c.stepUuid)
 {
 }
 
-CommandJL::~CommandJL() { };
+CommandJL::~CommandJL(){};
 
 void CommandJL::createCommand(ByteStream& bs) const
 {
-    bs << OID;
-    bs << tupleKey;
-    bs << queryUuid;
-    bs << stepUuid;
-    // no need to send column name to PM as of rel.2.2.5.
+  bs << OID;
+  bs << tupleKey;
+  bs << queryUuid;
+  bs << stepUuid;
+  // no need to send column name to PM as of rel.2.2.5.
 }
 
-}
+}  // namespace joblist

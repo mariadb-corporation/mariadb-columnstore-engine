@@ -22,11 +22,10 @@
 
 namespace idbdatafile
 {
-
 class SMFileFactory : public FileFactoryBase
 {
-    public:
-        IDBDataFile * open(const char* fname, const char* mode, unsigned opts, unsigned colWidth);
+ public:
+  IDBDataFile* open(const char* fname, const char* mode, unsigned opts, unsigned colWidth);
 };
 
-}
+}  // namespace idbdatafile

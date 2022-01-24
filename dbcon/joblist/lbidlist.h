@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: lbidlist.h 9655 2013-06-25 23:08:13Z xlou $
-*
-*
-***********************************************************************/
+ *   $Id: lbidlist.h 9655 2013-06-25 23:08:13Z xlou $
+ *
+ *
+ ***********************************************************************/
 /** @file */
 
 #pragma once
@@ -39,7 +39,6 @@
 
 namespace joblist
 {
-
 typedef BRM::LBIDRange_v LBIDRangeVector;
 
 /** @brief struct MinMaxPartition
@@ -47,21 +46,21 @@ typedef BRM::LBIDRange_v LBIDRangeVector;
  */
 struct MinMaxPartition
 {
-    int64_t lbid;
-    int64_t lbidmax;
-    int64_t seq;
-    int     isValid;
-    uint32_t blksScanned;
-    union
-    {
-        int128_t bigMin;
-        int64_t min;
-    };
-    union
-    {
-        int128_t bigMax;
-        int64_t max;
-    };
+  int64_t lbid;
+  int64_t lbidmax;
+  int64_t seq;
+  int isValid;
+  uint32_t blksScanned;
+  union
+  {
+    int128_t bigMin;
+    int64_t min;
+  };
+  union
+  {
+    int128_t bigMax;
+    int64_t max;
+  };
 };
 
 /** @brief class LBIDList
@@ -69,93 +68,86 @@ struct MinMaxPartition
  */
 class LBIDList
 {
-public:
+ public:
+  explicit LBIDList(const execplan::CalpontSystemCatalog::OID oid, const int debug);
 
-    explicit LBIDList(const execplan::CalpontSystemCatalog::OID oid,
-                      const int debug);
+  explicit LBIDList(const int debug);
 
-    explicit LBIDList(const int debug);
+  void init(const execplan::CalpontSystemCatalog::OID oid, const int debug);
 
-    void init(const execplan::CalpontSystemCatalog::OID oid,
-              const int debug);
+  virtual ~LBIDList();
 
-    virtual ~LBIDList();
+  void Dump(long Index, int Count) const;
+  uint32_t GetRangeSize() const
+  {
+    return LBIDRanges.size() ? LBIDRanges.at(0).size : 0;
+  }
 
-    void Dump(long Index, int Count) const;
-    uint32_t GetRangeSize() const
-    {
-        return LBIDRanges.size() ? LBIDRanges.at(0).size : 0;
-    }
+  // Functions to handle min/max values per lbid for casual partitioning;
+  // If pEMEntries is provided, then min/max will be extracted from that
+  // vector, else extents in BRM will be searched. If type is unsigned, caller
+  // should static cast returned min and max to uint64_t/int128_t
+  template <typename T>
+  bool GetMinMax(T& min, T& max, int64_t& seq, int64_t lbid,
+                 const std::vector<struct BRM::EMEntry>* pEMEntries,
+                 execplan::CalpontSystemCatalog::ColDataType type);
 
-    // Functions to handle min/max values per lbid for casual partitioning;
-    // If pEMEntries is provided, then min/max will be extracted from that
-    // vector, else extents in BRM will be searched. If type is unsigned, caller
-    // should static cast returned min and max to uint64_t/int128_t
-    template<typename T>
-    bool GetMinMax(T& min, T& max, int64_t& seq, int64_t lbid,
-                   const std::vector<struct BRM::EMEntry>* pEMEntries,
-                   execplan::CalpontSystemCatalog::ColDataType type);
+  template <typename T>
+  bool GetMinMax(T* min, T* max, int64_t* seq, int64_t lbid,
+                 const std::tr1::unordered_map<int64_t, BRM::EMEntry>& entries,
+                 execplan::CalpontSystemCatalog::ColDataType type);
 
-    template<typename T>
-    bool GetMinMax(T* min, T* max, int64_t* seq, int64_t lbid,
-                   const std::tr1::unordered_map<int64_t, BRM::EMEntry>& entries,
-                   execplan::CalpontSystemCatalog::ColDataType type);
+  template <typename T>
+  void UpdateMinMax(T min, T max, int64_t lbid, const execplan::CalpontSystemCatalog::ColType& type,
+                    bool validData = true);
 
-    template <typename T>
-    void UpdateMinMax(T min, T max, int64_t lbid,
-                      const execplan::CalpontSystemCatalog::ColType & type, bool validData = true);
+  void UpdateAllPartitionInfo(const execplan::CalpontSystemCatalog::ColType& colType);
 
-    void UpdateAllPartitionInfo(const execplan::CalpontSystemCatalog::ColType& colType);
+  bool IsRangeBoundary(uint64_t lbid);
 
-    bool IsRangeBoundary(uint64_t lbid);
+  bool CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
+                                const messageqcpp::ByteStream* MsgDataPtr, const uint16_t NOPS,
+                                const execplan::CalpontSystemCatalog::ColType& ct, const uint8_t BOP);
 
-    bool CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
-                                  const messageqcpp::ByteStream* MsgDataPtr,
-                                  const uint16_t NOPS,
-                                  const execplan::CalpontSystemCatalog::ColType& ct,
-                                  const uint8_t BOP);
+  template <typename T>
+  bool checkSingleValue(T min, T max, T value, const execplan::CalpontSystemCatalog::ColType& type);
 
-    template<typename T>
-    bool checkSingleValue(T min, T max, T value,
-                          const execplan::CalpontSystemCatalog::ColType & type);
+  template <typename T>
+  bool checkRangeOverlap(T min, T max, T tmin, T tmax, const execplan::CalpontSystemCatalog::ColType& type);
 
-    template<typename T>
-    bool checkRangeOverlap(T min, T max, T tmin, T tmax,
-                           const execplan::CalpontSystemCatalog::ColType & type);
+  // check the column data type and the column size to determine if it
+  // is a data type  to apply casual paritioning.
+  bool CasualPartitionDataType(const execplan::CalpontSystemCatalog::ColDataType type,
+                               const uint8_t size) const;
 
-    // check the column data type and the column size to determine if it
-    // is a data type  to apply casual paritioning.
-    bool CasualPartitionDataType(const execplan::CalpontSystemCatalog::ColDataType type, const uint8_t size) const;
+  LBIDList(const LBIDList& rhs)
+  {
+    copyLbidList(rhs);
+  }
 
-    LBIDList(const LBIDList& rhs)
-    {
-        copyLbidList(rhs);
-    }
+  LBIDList& operator=(const LBIDList& rhs)
+  {
+    copyLbidList(rhs);
+    return *this;
+  }
 
-    LBIDList& operator=(const LBIDList& rhs)
-    {
-        copyLbidList(rhs);
-        return *this;
-    }
+ private:
+  LBIDList();
 
-private:
-    LBIDList();
+  void copyLbidList(const LBIDList& rhs);
 
-    void copyLbidList(const LBIDList& rhs);
+  template <class T>
+  inline bool compareVal(const T& Min, const T& Max, const T& value, char op, uint8_t lcf);
 
-    template<class T>
-    inline bool compareVal(const T& Min, const T& Max, const T& value, char op, uint8_t lcf);
+  template <typename T>
+  int getMinMaxFromEntries(T& min, T& max, int32_t& seq, int64_t lbid,
+                           const std::vector<struct BRM::EMEntry>& EMEntries);
 
-    template <typename T>
-    int  getMinMaxFromEntries(T& min, T& max, int32_t& seq,
-                              int64_t lbid, const std::vector<struct BRM::EMEntry>& EMEntries);
+  boost::shared_ptr<BRM::DBRM> em;
+  std::vector<MinMaxPartition*> lbidPartitionVector;
+  LBIDRangeVector LBIDRanges;
+  int fDebug;
 
-    boost::shared_ptr<BRM::DBRM> em;
-    std::vector<MinMaxPartition*> lbidPartitionVector;
-    LBIDRangeVector LBIDRanges;
-    int fDebug;
+};  // LBIDList
 
-}; // LBIDList
-
-
-} // joblist
+}  // namespace joblist

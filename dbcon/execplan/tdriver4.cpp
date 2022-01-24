@@ -22,9 +22,9 @@ using namespace std;
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include<sstream>
-#include<exception>
-#include<iostream>
+#include <sstream>
+#include <exception>
+#include <iostream>
 #include <unistd.h>
 
 #include "messagequeue.h"
@@ -47,27 +47,26 @@ using namespace execplan;
 
 class TPCH_EXECPLAN : public CppUnit::TestFixture
 {
+  CPPUNIT_TEST_SUITE(TPCH_EXECPLAN);
 
-    CPPUNIT_TEST_SUITE( TPCH_EXECPLAN );
+  CPPUNIT_TEST(Q1);
 
-    CPPUNIT_TEST( Q1 );
+  CPPUNIT_TEST_SUITE_END();
 
-    CPPUNIT_TEST_SUITE_END();
+ private:
+ public:
+  void setUp()
+  {
+  }
 
-private:
-public:
+  void tearDown()
+  {
+  }
 
-    void setUp()
-    {
-    }
-
-    void tearDown()
-    {
-    }
-
-    void Q1()
-    {
-        string sql = "\
+  void Q1()
+  {
+    string sql =
+        "\
     select\
 	    o_orderpriority,\
 	    count(*) as order_count\
@@ -90,122 +89,110 @@ public:
     order by\
     	o_orderpriority;";
 
+    CalpontSelectExecutionPlan csep;
 
-        CalpontSelectExecutionPlan csep;
+    // Returned columns
+    CalpontSelectExecutionPlan::ReturnedColumnList returnedColumnList;
 
-        // Returned columns
-        CalpontSelectExecutionPlan::ReturnedColumnList returnedColumnList;
+    SimpleColumn* c1 = new SimpleColumn("tpch.orders.o_orderpriority");
+    returnedColumnList.push_back(c1);
 
-        SimpleColumn* c1 = new SimpleColumn("tpch.orders.o_orderpriority");
-        returnedColumnList.push_back(c1);
+    ArithmeticColumn* c2 = new ArithmeticColumn("count(ALL)");
+    c2->alias("order_count");
+    returnedColumnList.push_back(c2);
 
-        ArithmeticColumn* c2 = new ArithmeticColumn ("count(ALL)");
-        c2->alias("order_count");
-        returnedColumnList.push_back(c2);
+    csep.returnedCols(returnedColumnList);
 
-        csep.returnedCols(returnedColumnList);
+    // Filters
+    CalpontSelectExecutionPlan::FilterTokenList filterTokenList;
+    SimpleFilter* f1 = new SimpleFilter(new Operator(">="), new SimpleColumn("tpch.orders.o_orderdate"),
+                                        new ConstantColumn("1998-05-01"));
+    filterTokenList.push_back(f1);
+    filterTokenList.push_back(new Operator("and"));
+    SimpleFilter* f2 = new SimpleFilter(new Operator("<"), new SimpleColumn("tpch.orders.o_orderdate"),
+                                        new ConstantColumn("1999-05-01"));
+    filterTokenList.push_back(f2);
+    filterTokenList.push_back(new Operator("and"));
 
-        // Filters
-        CalpontSelectExecutionPlan::FilterTokenList filterTokenList;
-        SimpleFilter* f1 = new SimpleFilter (new Operator(">="),
-                                             new SimpleColumn("tpch.orders.o_orderdate"),
-                                             new ConstantColumn("1998-05-01"));
-        filterTokenList.push_back(f1);
-        filterTokenList.push_back(new Operator("and"));
-        SimpleFilter* f2 = new SimpleFilter (new Operator("<"),
-                                             new SimpleColumn("tpch.orders.o_orderdate"),
-                                             new ConstantColumn("1999-05-01"));
-        filterTokenList.push_back(f2);
-        filterTokenList.push_back(new Operator("and"));
+    // subselect for exists
+    CalpontSelectExecutionPlan* subcsep = new CalpontSelectExecutionPlan(CalpontSelectExecutionPlan::WHERE);
+    // select * (lineitem)
+    CalpontSelectExecutionPlan::ReturnedColumnList subReturnedColList;
+    SimpleColumn* sc1 = new SimpleColumn("tpch.lineitem.l_orderkey");
+    SimpleColumn* sc2 = new SimpleColumn("tpch.lineitem.l_partkey");
+    SimpleColumn* sc3 = new SimpleColumn("tpch.lineitem.l_suppkey");
+    SimpleColumn* sc4 = new SimpleColumn("tpch.lineitem.l_linenumber");
+    SimpleColumn* sc5 = new SimpleColumn("tpch.lineitem.l_extendedprice");
+    SimpleColumn* sc6 = new SimpleColumn("tpch.lineitem.l_tax");
+    SimpleColumn* sc7 = new SimpleColumn("tpch.lineitem.l_returnflag");
+    SimpleColumn* sc8 = new SimpleColumn("tpch.lineitem.l_linestatus");
+    SimpleColumn* sc9 = new SimpleColumn("tpch.lineitem.l_commitdate");
+    SimpleColumn* sc10 = new SimpleColumn("tpch.lineitem.l_receiptdate");
+    SimpleColumn* sc11 = new SimpleColumn("tpch.lineitem.l_shipinstruct");
+    SimpleColumn* sc12 = new SimpleColumn("tpch.lineitem.l_shipmode");
+    SimpleColumn* sc13 = new SimpleColumn("tpch.lineitem.l_comment");
 
-        // subselect for exists
-        CalpontSelectExecutionPlan* subcsep =
-            new CalpontSelectExecutionPlan(CalpontSelectExecutionPlan::WHERE);
-        // select * (lineitem)
-        CalpontSelectExecutionPlan::ReturnedColumnList subReturnedColList;
-        SimpleColumn* sc1 = new SimpleColumn ("tpch.lineitem.l_orderkey");
-        SimpleColumn* sc2 = new SimpleColumn ("tpch.lineitem.l_partkey");
-        SimpleColumn* sc3 = new SimpleColumn ("tpch.lineitem.l_suppkey");
-        SimpleColumn* sc4 = new SimpleColumn ("tpch.lineitem.l_linenumber");
-        SimpleColumn* sc5 = new SimpleColumn ("tpch.lineitem.l_extendedprice");
-        SimpleColumn* sc6 = new SimpleColumn ("tpch.lineitem.l_tax");
-        SimpleColumn* sc7 = new SimpleColumn ("tpch.lineitem.l_returnflag");
-        SimpleColumn* sc8 = new SimpleColumn ("tpch.lineitem.l_linestatus");
-        SimpleColumn* sc9 = new SimpleColumn ("tpch.lineitem.l_commitdate");
-        SimpleColumn* sc10 = new SimpleColumn ("tpch.lineitem.l_receiptdate");
-        SimpleColumn* sc11 = new SimpleColumn ("tpch.lineitem.l_shipinstruct");
-        SimpleColumn* sc12 = new SimpleColumn ("tpch.lineitem.l_shipmode");
-        SimpleColumn* sc13 = new SimpleColumn ("tpch.lineitem.l_comment");
+    subReturnedColList.push_back(sc1);
+    subReturnedColList.push_back(sc2);
+    subReturnedColList.push_back(sc3);
+    subReturnedColList.push_back(sc4);
+    subReturnedColList.push_back(sc5);
+    subReturnedColList.push_back(sc6);
+    subReturnedColList.push_back(sc7);
+    subReturnedColList.push_back(sc8);
+    subReturnedColList.push_back(sc9);
+    subReturnedColList.push_back(sc10);
+    subReturnedColList.push_back(sc11);
+    subReturnedColList.push_back(sc12);
+    subReturnedColList.push_back(sc13);
 
-        subReturnedColList.push_back(sc1);
-        subReturnedColList.push_back(sc2);
-        subReturnedColList.push_back(sc3);
-        subReturnedColList.push_back(sc4);
-        subReturnedColList.push_back(sc5);
-        subReturnedColList.push_back(sc6);
-        subReturnedColList.push_back(sc7);
-        subReturnedColList.push_back(sc8);
-        subReturnedColList.push_back(sc9);
-        subReturnedColList.push_back(sc10);
-        subReturnedColList.push_back(sc11);
-        subReturnedColList.push_back(sc12);
-        subReturnedColList.push_back(sc13);
+    subcsep->returnedCols(subReturnedColList);
 
-        subcsep->returnedCols(subReturnedColList);
+    // filters of subselect
+    CalpontSelectExecutionPlan::FilterTokenList subFilterTokenList;
+    SimpleFilter* ssf1 = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.lineitem.l_orderkey"),
+                                          new SimpleColumn("tpch.orders.o_orderkey"));
+    subFilterTokenList.push_back(ssf1);
+    subFilterTokenList.push_back(new Operator("and"));
 
-        // filters of subselect
-        CalpontSelectExecutionPlan::FilterTokenList subFilterTokenList;
-        SimpleFilter* ssf1 = new SimpleFilter (
-            new Operator("="),
-            new SimpleColumn("tpch.lineitem.l_orderkey"),
-            new SimpleColumn("tpch.orders.o_orderkey"));
-        subFilterTokenList.push_back (ssf1);
-        subFilterTokenList.push_back (new Operator("and"));
+    SimpleFilter* ssf2 = new SimpleFilter(new Operator("<"), new SimpleColumn("tpch.lineitem.l_commitdate"),
+                                          new SimpleColumn("tpch.lineitem.l_receiptdate"));
+    subFilterTokenList.push_back(ssf2);
+    subcsep->filterTokenList(subFilterTokenList);
 
-        SimpleFilter* ssf2 = new SimpleFilter (
-            new Operator("<"),
-            new SimpleColumn("tpch.lineitem.l_commitdate"),
-            new SimpleColumn("tpch.lineitem.l_receiptdate"));
-        subFilterTokenList.push_back (ssf2);
-        subcsep->filterTokenList(subFilterTokenList);
+    // back to parent select exist filter
+    ExistsFilter* exists = new ExistsFilter(subcsep);
+    filterTokenList.push_back(exists);
+    csep.filterTokenList(filterTokenList);
 
-        // back to parent select exist filter
-        ExistsFilter* exists = new ExistsFilter (subcsep);
-        filterTokenList.push_back (exists);
-        csep.filterTokenList(filterTokenList);
+    ParseTree* pt = const_cast<ParseTree*>(csep.filters());
+    pt->drawTree("q4.dot");
 
-        ParseTree* pt = const_cast<ParseTree*>(csep.filters());
-        pt->drawTree("q4.dot");
+    // Group by
+    CalpontSelectExecutionPlan::GroupByColumnList groupByList;
+    SimpleColumn* g1 = new SimpleColumn(*c1);
+    groupByList.push_back(g1);
 
-        // Group by
-        CalpontSelectExecutionPlan::GroupByColumnList groupByList;
-        SimpleColumn* g1 = new SimpleColumn(*c1);
-        groupByList.push_back(g1);
+    // Order by
+    CalpontSelectExecutionPlan::OrderByColumnList orderByList;
+    SimpleColumn* o1 = new SimpleColumn(*c1);
+    orderByList.push_back(o1);
+    csep.orderByCols(orderByList);
 
-        // Order by
-        CalpontSelectExecutionPlan::OrderByColumnList orderByList;
-        SimpleColumn* o1 = new SimpleColumn(*c1);
-        orderByList.push_back(o1);
-        csep.orderByCols(orderByList);
-
-        cout << csep;
-    }
-
-
+    cout << csep;
+  }
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION( TPCH_EXECPLAN );
+CPPUNIT_TEST_SUITE_REGISTRATION(TPCH_EXECPLAN);
 
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
-int main( int argc, char** argv)
+int main(int argc, char** argv)
 {
-    CppUnit::TextUi::TestRunner runner;
-    CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
-    runner.addTest( registry.makeTest() );
-    bool wasSuccessful = runner.run( "", false );
-    return (wasSuccessful ? 0 : 1);
+  CppUnit::TextUi::TestRunner runner;
+  CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
+  runner.addTest(registry.makeTest());
+  bool wasSuccessful = runner.run("", false);
+  return (wasSuccessful ? 0 : 1);
 }
-
-

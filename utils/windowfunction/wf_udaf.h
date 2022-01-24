@@ -17,7 +17,6 @@
   51 Franklin St., Fifth Floor, Boston, MA 02110, USA
  *************************************************************************************/
 
-
 #pragma once
 
 #ifndef _MSC_VER
@@ -28,90 +27,89 @@
 #include "windowfunctiontype.h"
 #include "mcsv1_udaf.h"
 
-
 namespace windowfunction
 {
 // Hash classes for the distinct hashmap
 class DistinctHasher
 {
-public:
-    inline size_t operator()(const static_any::any& a) const
-    {
-        return a.getHash();
-    }
+ public:
+  inline size_t operator()(const static_any::any& a) const
+  {
+    return a.getHash();
+  }
 };
 
 class DistinctEqual
 {
-public:
-    inline bool operator()(const static_any::any lhs, static_any::any rhs) const
-    {
-        return lhs == rhs;
-    }
+ public:
+  inline bool operator()(const static_any::any lhs, static_any::any rhs) const
+  {
+    return lhs == rhs;
+  }
 };
 
 // A class to control the execution of User Define Analytic Functions (UDAnF)
 // as defined by a specialization of mcsv1sdk::mcsv1_UDAF
 class WF_udaf : public WindowFunctionType
 {
-public:
-    WF_udaf(int id, const std::string& name, mcsv1sdk::mcsv1Context& context) :
-        WindowFunctionType(id, name), fUDAFContext(context), fDistinct(false), bHasDropValue(true) {}
-    WF_udaf(WF_udaf& rhs);
-    // pure virtual in base
-    void operator()(int64_t b, int64_t e, int64_t c);
-    WindowFunctionType* clone() const;
-    void resetData();
-    void parseParms(const std::vector<execplan::SRCP>&);
-    virtual bool dropValues(int64_t, int64_t);
+ public:
+  WF_udaf(int id, const std::string& name, mcsv1sdk::mcsv1Context& context)
+   : WindowFunctionType(id, name), fUDAFContext(context), fDistinct(false), bHasDropValue(true)
+  {
+  }
+  WF_udaf(WF_udaf& rhs);
+  // pure virtual in base
+  void operator()(int64_t b, int64_t e, int64_t c);
+  WindowFunctionType* clone() const;
+  void resetData();
+  void parseParms(const std::vector<execplan::SRCP>&);
+  virtual bool dropValues(int64_t, int64_t);
 
-    mcsv1sdk::mcsv1Context& getContext()
-    {
-        return fUDAFContext;
-    }
+  mcsv1sdk::mcsv1Context& getContext()
+  {
+    return fUDAFContext;
+  }
 
-    bool getInterrupted()
-    {
-        return bInterrupted;
-    }
+  bool getInterrupted()
+  {
+    return bInterrupted;
+  }
 
-    bool * getInterruptedPtr()
-    {
-        return &bInterrupted;
-    }
+  bool* getInterruptedPtr()
+  {
+    return &bInterrupted;
+  }
 
-    bool getDistinct()
-    {
-        return fDistinct;
-    }
+  bool getDistinct()
+  {
+    return fDistinct;
+  }
 
-    void setDistinct(bool d = true)
-    {
-        fDistinct = d;
-    }
+  void setDistinct(bool d = true)
+  {
+    fDistinct = d;
+  }
 
-protected:
-    void SetUDAFValue(static_any::any& valOut, int64_t colOut, int64_t b, int64_t e, int64_t c);
+ protected:
+  void SetUDAFValue(static_any::any& valOut, int64_t colOut, int64_t b, int64_t e, int64_t c);
 
-    mcsv1sdk::mcsv1Context fUDAFContext;  // The UDAF context
-    bool bInterrupted;                    // Shared by all the threads
-    bool fDistinct;
-    bool bRespectNulls;                   // respect null | ignore null
-    bool bHasDropValue;                   // Set to false when we discover the UDAnF doesn't implement dropValue.
-    // To hold distinct values and their counts
-	typedef std::tr1::unordered_map<static_any::any, uint64_t, DistinctHasher, DistinctEqual> DistinctMap;
-	DistinctMap fDistinctMap;
+  mcsv1sdk::mcsv1Context fUDAFContext;  // The UDAF context
+  bool bInterrupted;                    // Shared by all the threads
+  bool fDistinct;
+  bool bRespectNulls;  // respect null | ignore null
+  bool bHasDropValue;  // Set to false when we discover the UDAnF doesn't implement dropValue.
+                       // To hold distinct values and their counts
+  typedef std::tr1::unordered_map<static_any::any, uint64_t, DistinctHasher, DistinctEqual> DistinctMap;
+  DistinctMap fDistinctMap;
 
-    static_any::any fValOut;              // The return value
+  static_any::any fValOut;  // The return value
 
-public:
-    static boost::shared_ptr<WindowFunctionType> makeFunction(int id, const string& name,
-            int ct, mcsv1sdk::mcsv1Context& context, WindowFunctionColumn* wc);
+ public:
+  static boost::shared_ptr<WindowFunctionType> makeFunction(int id, const string& name, int ct,
+                                                            mcsv1sdk::mcsv1Context& context,
+                                                            WindowFunctionColumn* wc);
 };
 
-
-} // namespace
-
+}  // namespace windowfunction
 
 // vim:ts=4 sw=4:
-

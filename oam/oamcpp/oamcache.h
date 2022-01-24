@@ -33,52 +33,50 @@
 
 namespace oam
 {
-
 class OamCache
 {
-public:
-    typedef boost::shared_ptr<std::map<int, int> > dbRootPMMap_t;
-    typedef std::vector<int> dbRoots;
-    typedef boost::shared_ptr<std::map<int, dbRoots> > PMDbrootsMap_t;
-    EXPORT virtual ~OamCache();
+ public:
+  typedef boost::shared_ptr<std::map<int, int> > dbRootPMMap_t;
+  typedef std::vector<int> dbRoots;
+  typedef boost::shared_ptr<std::map<int, dbRoots> > PMDbrootsMap_t;
+  EXPORT virtual ~OamCache();
 
-    EXPORT void checkReload();
-    EXPORT void forceReload()
-    {
-        mtime = 0;
-    }
+  EXPORT void checkReload();
+  EXPORT void forceReload()
+  {
+    mtime = 0;
+  }
 
-    EXPORT dbRootPMMap_t getDBRootToPMMap();
-    EXPORT dbRootPMMap_t getDBRootToConnectionMap();
-    EXPORT PMDbrootsMap_t getPMToDbrootsMap();
-    EXPORT uint32_t getDBRootCount();
-    EXPORT DBRootConfigList& getDBRootNums();
-    EXPORT std::vector<int>& getModuleIds();
-    EXPORT static OamCache* makeOamCache();
-    EXPORT std::string getOAMParentModuleName();
-    EXPORT int getLocalPMId();	// return the PM id of this machine.
-    EXPORT std::string getSystemName();
-    EXPORT std::string getModuleName();
+  EXPORT dbRootPMMap_t getDBRootToPMMap();
+  EXPORT dbRootPMMap_t getDBRootToConnectionMap();
+  EXPORT PMDbrootsMap_t getPMToDbrootsMap();
+  EXPORT uint32_t getDBRootCount();
+  EXPORT DBRootConfigList& getDBRootNums();
+  EXPORT std::vector<int>& getModuleIds();
+  EXPORT static OamCache* makeOamCache();
+  EXPORT std::string getOAMParentModuleName();
+  EXPORT int getLocalPMId();  // return the PM id of this machine.
+  EXPORT std::string getSystemName();
+  EXPORT std::string getModuleName();
 
-private:
-    OamCache();
-    OamCache(const OamCache&);
-    OamCache& operator=(const OamCache&) const;
+ private:
+  OamCache();
+  OamCache(const OamCache&);
+  OamCache& operator=(const OamCache&) const;
 
-    dbRootPMMap_t dbRootPMMap;
-    dbRootPMMap_t dbRootConnectionMap;
-    PMDbrootsMap_t pmDbrootsMap;
-    uint32_t numDBRoots;
-    time_t mtime;
-    DBRootConfigList dbroots;
-    std::vector<int> moduleIds;
-    std::string OAMParentModuleName;
-    int mLocalPMId;	// The PM id running on this machine
-    std::string systemName;
-    std::string moduleName;
+  dbRootPMMap_t dbRootPMMap;
+  dbRootPMMap_t dbRootConnectionMap;
+  PMDbrootsMap_t pmDbrootsMap;
+  uint32_t numDBRoots;
+  time_t mtime;
+  DBRootConfigList dbroots;
+  std::vector<int> moduleIds;
+  std::string OAMParentModuleName;
+  int mLocalPMId;  // The PM id running on this machine
+  std::string systemName;
+  std::string moduleName;
 };
 
-} /* namespace */
+}  // namespace oam
 
 #undef EXPORT
-

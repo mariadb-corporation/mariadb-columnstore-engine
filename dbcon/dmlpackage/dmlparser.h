@@ -32,7 +32,6 @@ namespace dmlpackage
 {
 typedef std::vector<char*> valbuf_t;
 
-
 typedef SqlStatementList ParseTree;
 
 // instance data for the parser
@@ -40,55 +39,54 @@ typedef std::vector<char*> valbuf_t;
 
 struct scan_data
 {
-    /* Handles to the buffer that the lexer uses internally */
-    char* scanbuf;
-    void* scanbufhandle; // This is a YY_BUFFER_STATE defined in ddl-scan.cpp
-    valbuf_t valbuf;
+  /* Handles to the buffer that the lexer uses internally */
+  char* scanbuf;
+  void* scanbufhandle;  // This is a YY_BUFFER_STATE defined in ddl-scan.cpp
+  valbuf_t valbuf;
 };
 
 /** @brief BISON parser wrapper class
  */
 class DMLParser
 {
-public:
-    /** @brief ctor
-     */
-    DMLParser();
+ public:
+  /** @brief ctor
+   */
+  DMLParser();
 
-    /** @brief dtor
-     */
-    virtual ~DMLParser();
+  /** @brief dtor
+   */
+  virtual ~DMLParser();
 
-    /** @brief parse the supplied dml statement
-     *
-     * @param dmltext the dml statement to parse
-     */
-    int parse(const char* dmltext);
+  /** @brief parse the supplied dml statement
+   *
+   * @param dmltext the dml statement to parse
+   */
+  int parse(const char* dmltext);
 
-    /** @brief get the parse tree
-     */
-    const ParseTree& getParseTree();
+  /** @brief get the parse tree
+   */
+  const ParseTree& getParseTree();
 
-    void setDefaultSchema(std::string schema);
+  void setDefaultSchema(std::string schema);
 
-    /** @brief was the parse successful
-     */
-    bool good();
+  /** @brief was the parse successful
+   */
+  bool good();
 
-    /** @brief put the parser in debug mode so as to dump
-     * diagnostic information
-     */
-    void setDebug(bool debug);
+  /** @brief put the parser in debug mode so as to dump
+   * diagnostic information
+   */
+  void setDebug(bool debug);
 
-protected:
-    ParseTree fParseTree;
-    int fStatus;
-    bool fDebug;
-    void* scanner;   // yyscan_t * needed for re-entrant flex scanner
-    scan_data scanData;
+ protected:
+  ParseTree fParseTree;
+  int fStatus;
+  bool fDebug;
+  void* scanner;  // yyscan_t * needed for re-entrant flex scanner
+  scan_data scanData;
 
-private:
-
+ private:
 };
 
 /** @brief specialization of the DMLParser class
@@ -97,22 +95,21 @@ private:
  */
 class DMLFileParser : public DMLParser
 {
-public:
-    /** @brief ctor
-     */
-    DMLFileParser();
+ public:
+  /** @brief ctor
+   */
+  DMLFileParser();
 
-    /** @brief parse the dml statement contained in the
-     *	supplied file
-     *
-     * @param fileName the fully qualified file name to open
-     * and parse the contents of
-     */
-    int parse(const std::string& fileName);
+  /** @brief parse the dml statement contained in the
+   *	supplied file
+   *
+   * @param fileName the fully qualified file name to open
+   * and parse the contents of
+   */
+  int parse(const std::string& fileName);
 
-protected:
-
-private:
+ protected:
+ private:
 };
 
-}
+}  // namespace dmlpackage

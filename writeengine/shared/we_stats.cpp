@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id: we_stats.cpp 4450 2013-01-21 14:13:24Z rdempsey $
-*
-*******************************************************************************/
+ * $Id: we_stats.cpp 4450 2013-01-21 14:13:24Z rdempsey $
+ *
+ *******************************************************************************/
 /** @file */
 
 #include <we_stats.h>
@@ -28,16 +28,16 @@ using namespace std;
 namespace WriteEngine
 {
 #ifdef PROFILE
-/* static */ bool                            Stats::fProfiling = false;
-/* static */ boost::mutex                    Stats::fRegisterReaderMutex;
-/* static */ boost::mutex                    Stats::fRegisterParseMutex;
-/* static */ std::vector<pthread_t>          Stats::fReadProfThreads;
-/* static */ std::vector<pthread_t>          Stats::fParseProfThreads;
+/* static */ bool Stats::fProfiling = false;
+/* static */ boost::mutex Stats::fRegisterReaderMutex;
+/* static */ boost::mutex Stats::fRegisterParseMutex;
+/* static */ std::vector<pthread_t> Stats::fReadProfThreads;
+/* static */ std::vector<pthread_t> Stats::fParseProfThreads;
 /* static */ std::vector<logging::StopWatch> Stats::fReadStopWatch;
 /* static */ std::vector<logging::StopWatch> Stats::fParseStopWatch;
 #endif
 
-struct IoStats Stats::m_ioStats = { 0, 0 };
+struct IoStats Stats::m_ioStats = {0, 0};
 bool Stats::m_bUseStats = false;
 /***********************************************************
  * DESCRIPTION:
@@ -47,12 +47,12 @@ bool Stats::m_bUseStats = false;
  * RETURN:
  *    none
  ***********************************************************/
-void  Stats::incIoBlockRead( const int blockNum )
+void Stats::incIoBlockRead(const int blockNum)
 {
-    if ( !m_bUseStats )
-        return;
+  if (!m_bUseStats)
+    return;
 
-    m_ioStats.blockRead += blockNum;
+  m_ioStats.blockRead += blockNum;
 }
 
 /***********************************************************
@@ -63,12 +63,12 @@ void  Stats::incIoBlockRead( const int blockNum )
  * RETURN:
  *    none
  ***********************************************************/
-void  Stats::incIoBlockWrite( const int blockNum )
+void Stats::incIoBlockWrite(const int blockNum)
 {
-    if ( !m_bUseStats )
-        return;
+  if (!m_bUseStats)
+    return;
 
-    m_ioStats.blockWrite += blockNum;
+  m_ioStats.blockWrite += blockNum;
 }
 
 #ifdef PROFILE
@@ -87,18 +87,18 @@ void  Stats::incIoBlockWrite( const int blockNum )
  ***********************************************************/
 void Stats::enableProfiling(int nReadThreads, int nParseThreads)
 {
-    fProfiling = true;
+  fProfiling = true;
 
-    // @bug 2625: pre-reserve space for our vectors; else we could have a race
-    // condition whereby one parsing thread is adding itself to the vectors
-    // and thus "growing" the vector (in registerParseProfThread), at the
-    // same time that another parsing thread is reading the vector in parse-
-    // Event().  By pre-reserving the space, the vectors won't be growing,
-    // thus eliminating the problem with this race condition.
-    fReadProfThreads.reserve ( nReadThreads  );
-    fReadStopWatch.reserve   ( nReadThreads  );
-    fParseProfThreads.reserve( nParseThreads );
-    fParseStopWatch.reserve  ( nParseThreads );
+  // @bug 2625: pre-reserve space for our vectors; else we could have a race
+  // condition whereby one parsing thread is adding itself to the vectors
+  // and thus "growing" the vector (in registerParseProfThread), at the
+  // same time that another parsing thread is reading the vector in parse-
+  // Event().  By pre-reserving the space, the vectors won't be growing,
+  // thus eliminating the problem with this race condition.
+  fReadProfThreads.reserve(nReadThreads);
+  fReadStopWatch.reserve(nReadThreads);
+  fParseProfThreads.reserve(nParseThreads);
+  fParseStopWatch.reserve(nParseThreads);
 }
 
 /***********************************************************
@@ -109,13 +109,13 @@ void Stats::enableProfiling(int nReadThreads, int nParseThreads)
  * RETURN:
  *    none
  ***********************************************************/
-void  Stats::registerReadProfThread( )
+void Stats::registerReadProfThread()
 {
-    boost::mutex::scoped_lock lk(fRegisterReaderMutex);
+  boost::mutex::scoped_lock lk(fRegisterReaderMutex);
 
-    fReadProfThreads.push_back( pthread_self() );
-    logging::StopWatch readStopWatch;
-    fReadStopWatch.push_back  ( readStopWatch  );
+  fReadProfThreads.push_back(pthread_self());
+  logging::StopWatch readStopWatch;
+  fReadStopWatch.push_back(readStopWatch);
 }
 
 /***********************************************************
@@ -126,13 +126,13 @@ void  Stats::registerReadProfThread( )
  * RETURN:
  *    none
  ***********************************************************/
-void  Stats::registerParseProfThread( )
+void Stats::registerParseProfThread()
 {
-    boost::mutex::scoped_lock lk(fRegisterParseMutex);
+  boost::mutex::scoped_lock lk(fRegisterParseMutex);
 
-    fParseProfThreads.push_back( pthread_self() );
-    logging::StopWatch parseStopWatch;
-    fParseStopWatch.push_back  ( parseStopWatch );
+  fParseProfThreads.push_back(pthread_self());
+  logging::StopWatch parseStopWatch;
+  fParseStopWatch.push_back(parseStopWatch);
 }
 
 /***********************************************************
@@ -145,25 +145,25 @@ void  Stats::registerParseProfThread( )
  * RETURN:
  *    none
  ***********************************************************/
-void  Stats::readEvent ( const std::string& eventString, bool start )
+void Stats::readEvent(const std::string& eventString, bool start)
 {
-    if (fProfiling)
+  if (fProfiling)
+  {
+    pthread_t thread = pthread_self();
+
+    for (unsigned i = 0; i < fReadProfThreads.size(); i++)
     {
-        pthread_t thread = pthread_self();
+      if (fReadProfThreads[i] == thread)
+      {
+        if (start)
+          fReadStopWatch[i].start(eventString);
+        else
+          fReadStopWatch[i].stop(eventString);
 
-        for (unsigned i = 0; i < fReadProfThreads.size(); i++)
-        {
-            if (fReadProfThreads[i] == thread)
-            {
-                if (start)
-                    fReadStopWatch[i].start( eventString );
-                else
-                    fReadStopWatch[i].stop ( eventString );
-
-                break;
-            }
-        }
+        break;
+      }
     }
+  }
 }
 
 /***********************************************************
@@ -176,25 +176,25 @@ void  Stats::readEvent ( const std::string& eventString, bool start )
  * RETURN:
  *    none
  ***********************************************************/
-void  Stats::parseEvent ( const std::string& eventString, bool start )
+void Stats::parseEvent(const std::string& eventString, bool start)
 {
-    if (fProfiling)
+  if (fProfiling)
+  {
+    pthread_t thread = pthread_self();
+
+    for (unsigned i = 0; i < fParseProfThreads.size(); i++)
     {
-        pthread_t thread = pthread_self();
+      if (fParseProfThreads[i] == thread)
+      {
+        if (start)
+          fParseStopWatch[i].start(eventString);
+        else
+          fParseStopWatch[i].stop(eventString);
 
-        for (unsigned i = 0; i < fParseProfThreads.size(); i++)
-        {
-            if (fParseProfThreads[i] == thread)
-            {
-                if (start)
-                    fParseStopWatch[i].start( eventString );
-                else
-                    fParseStopWatch[i].stop ( eventString );
-
-                break;
-            }
-        }
+        break;
+      }
     }
+  }
 }
 
 /***********************************************************
@@ -205,33 +205,30 @@ void  Stats::parseEvent ( const std::string& eventString, bool start )
  * RETURN:
  *    none
  ***********************************************************/
-void  Stats::printProfilingResults ( )
+void Stats::printProfilingResults()
 {
-    if (fProfiling)
+  if (fProfiling)
+  {
+    std::cout << endl;
+
+    for (unsigned j = 0; j < fReadStopWatch.size(); j++)
     {
-        std::cout << endl;
-
-        for (unsigned j = 0; j < fReadStopWatch.size(); j++)
-        {
-            std::cout << "Execution Stats for Read Thread " << j << " (" <<
-                      fReadProfThreads[j] << ")"         << std::endl <<
-                      "-------------------------------"  << std::endl;
-            fReadStopWatch[j].finish();
-            std::cout << std::endl;
-        }
-
-        for (unsigned j = 0; j < fParseStopWatch.size(); j++)
-        {
-            std::cout << "Execution Stats for Parse Thread " << j << " (" <<
-                      fParseProfThreads[j] << ")"        << std::endl <<
-                      "--------------------------------" << std::endl;
-            fParseStopWatch[j].finish();
-            std::cout << std::endl;
-        }
-
+      std::cout << "Execution Stats for Read Thread " << j << " (" << fReadProfThreads[j] << ")" << std::endl
+                << "-------------------------------" << std::endl;
+      fReadStopWatch[j].finish();
+      std::cout << std::endl;
     }
+
+    for (unsigned j = 0; j < fParseStopWatch.size(); j++)
+    {
+      std::cout << "Execution Stats for Parse Thread " << j << " (" << fParseProfThreads[j] << ")"
+                << std::endl
+                << "--------------------------------" << std::endl;
+      fParseStopWatch[j].finish();
+      std::cout << std::endl;
+    }
+  }
 }
 #endif
 
-} //end of namespace
-
+}  // namespace WriteEngine

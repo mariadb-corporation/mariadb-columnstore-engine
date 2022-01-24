@@ -30,102 +30,106 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/condition.hpp>
 
-
 namespace primitiveprocessor
 {
-
 class BPPSendThread
 {
+ public:
+  BPPSendThread();                       // starts unthrottled
+  BPPSendThread(uint32_t initMsgsLeft);  // starts throttled
+  virtual ~BPPSendThread();
 
-public:
-    BPPSendThread();   // starts unthrottled
-    BPPSendThread(uint32_t initMsgsLeft);   // starts throttled
-    virtual ~BPPSendThread();
-
-    struct Msg_t
+  struct Msg_t
+  {
+    messageqcpp::SBS msg;
+    SP_UM_IOSOCK sock;
+    SP_UM_MUTEX sockLock;
+    int sockIndex;  // Socket index for round robin control. Bug 4475
+    Msg_t() : sockIndex(0)
     {
-        messageqcpp::SBS msg;
-        SP_UM_IOSOCK sock;
-        SP_UM_MUTEX sockLock;
-        int sockIndex;			// Socket index for round robin control. Bug 4475
-        Msg_t() : sockIndex(0) { }
-        Msg_t(const Msg_t& m) : msg(m.msg), sock(m.sock), sockLock(m.sockLock), sockIndex(m.sockIndex) { }
-        Msg_t& operator=(const Msg_t& m)
-        {
-            msg = m.msg;
-            sock = m.sock;
-            sockLock = m.sockLock;
-            sockIndex = m.sockIndex;
-            return *this;
-        }
-        Msg_t(const messageqcpp::SBS& m, const SP_UM_IOSOCK& so, const SP_UM_MUTEX& sl, int si) :
-            msg(m), sock(so), sockLock(sl), sockIndex(si) { }
-    };
-
-    bool okToProceed();
-    void sendMore(int num);
-    void sendResults(const std::vector<Msg_t>& msgs, bool newConnection);
-    void sendResult(const Msg_t& msg, bool newConnection);
-    void mainLoop();
-    bool flowControlEnabled();
-    void abort();
-    inline bool aborted() const
-    {
-        return die;
     }
-
-private:
-    BPPSendThread(const BPPSendThread&);
-    BPPSendThread& operator=(const BPPSendThread&);
-
-    struct Runner_t
+    Msg_t(const Msg_t& m) : msg(m.msg), sock(m.sock), sockLock(m.sockLock), sockIndex(m.sockIndex)
     {
-        BPPSendThread* bppst;
-        Runner_t(BPPSendThread* b) : bppst(b) { }
-        void operator()()
-        {
-            bppst->mainLoop();
-        }
-    };
-
-    boost::thread runner;
-    std::queue<Msg_t> msgQueue;
-    boost::mutex msgQueueLock;
-    boost::condition queueNotEmpty;
-    volatile bool die, gotException, mainThreadWaiting;
-    std::string exceptionString;
-    uint32_t sizeThreshold;
-    volatile int32_t msgsLeft;
-    bool waiting;
-    boost::mutex ackLock;
-    boost::condition okToSend;
-
-    /* Load balancing structures */
-    struct Connection_t
+    }
+    Msg_t& operator=(const Msg_t& m)
     {
-        Connection_t(const SP_UM_MUTEX& lock, const SP_UM_IOSOCK& so) :
-            sockLock(lock), sock(so) { }
-        SP_UM_MUTEX sockLock;
-        SP_UM_IOSOCK sock;
-        bool operator<(const Connection_t& t) const
-        {
-            return sockLock.get() < t.sockLock.get();
-        }
-        bool operator==(const Connection_t& t) const
-        {
-            return sockLock.get() == t.sockLock.get();
-        }
-    };
-    std::set<Connection_t> connections_s;
-    std::vector<Connection_t> connections_v;
-    bool sawAllConnections;
-    volatile bool fcEnabled;
+      msg = m.msg;
+      sock = m.sock;
+      sockLock = m.sockLock;
+      sockIndex = m.sockIndex;
+      return *this;
+    }
+    Msg_t(const messageqcpp::SBS& m, const SP_UM_IOSOCK& so, const SP_UM_MUTEX& sl, int si)
+     : msg(m), sock(so), sockLock(sl), sockIndex(si)
+    {
+    }
+  };
 
-    /* secondary queue size restriction based on byte size */
-    volatile uint64_t currentByteSize;
-    uint64_t maxByteSize;
+  bool okToProceed();
+  void sendMore(int num);
+  void sendResults(const std::vector<Msg_t>& msgs, bool newConnection);
+  void sendResult(const Msg_t& msg, bool newConnection);
+  void mainLoop();
+  bool flowControlEnabled();
+  void abort();
+  inline bool aborted() const
+  {
+    return die;
+  }
+
+ private:
+  BPPSendThread(const BPPSendThread&);
+  BPPSendThread& operator=(const BPPSendThread&);
+
+  struct Runner_t
+  {
+    BPPSendThread* bppst;
+    Runner_t(BPPSendThread* b) : bppst(b)
+    {
+    }
+    void operator()()
+    {
+      bppst->mainLoop();
+    }
+  };
+
+  boost::thread runner;
+  std::queue<Msg_t> msgQueue;
+  boost::mutex msgQueueLock;
+  boost::condition queueNotEmpty;
+  volatile bool die, gotException, mainThreadWaiting;
+  std::string exceptionString;
+  uint32_t sizeThreshold;
+  volatile int32_t msgsLeft;
+  bool waiting;
+  boost::mutex ackLock;
+  boost::condition okToSend;
+
+  /* Load balancing structures */
+  struct Connection_t
+  {
+    Connection_t(const SP_UM_MUTEX& lock, const SP_UM_IOSOCK& so) : sockLock(lock), sock(so)
+    {
+    }
+    SP_UM_MUTEX sockLock;
+    SP_UM_IOSOCK sock;
+    bool operator<(const Connection_t& t) const
+    {
+      return sockLock.get() < t.sockLock.get();
+    }
+    bool operator==(const Connection_t& t) const
+    {
+      return sockLock.get() == t.sockLock.get();
+    }
+  };
+  std::set<Connection_t> connections_s;
+  std::vector<Connection_t> connections_v;
+  bool sawAllConnections;
+  volatile bool fcEnabled;
+
+  /* secondary queue size restriction based on byte size */
+  volatile uint64_t currentByteSize;
+  uint64_t maxByteSize;
 };
 
-}
-
-
+}  // namespace primitiveprocessor

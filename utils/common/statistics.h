@@ -37,31 +37,30 @@ using namespace idbdatafile;
 
 namespace statistics
 {
-
 // Represents a column key type:
 // PK - primary key.
 // FK - foreign key.
 enum class KeyType : uint32_t
 {
-    PK,
-    FK
+  PK,
+  FK
 };
 
 // Rerpresents types of statistics CS supports.
 enum class StatisticsType : uint32_t
 {
-    // A special statistics type, made to solve circular inner join problem.
-    PK_FK
+  // A special statistics type, made to solve circular inner join problem.
+  PK_FK
 };
 
 // Represetns a header for the statistics file.
 struct StatisticsFileHeader
 {
-    uint64_t version;
-    uint64_t epoch;
-    uint64_t dataHash;
-    uint64_t dataSize;
-    uint8_t offset[1024];
+  uint64_t version;
+  uint64_t epoch;
+  uint64_t dataHash;
+  uint64_t dataSize;
+  uint8_t offset[1024];
 };
 
 // This class is responsible for processing and storing statistics.
@@ -69,56 +68,64 @@ struct StatisticsFileHeader
 // the updated statistics into the special file.
 class StatisticsManager
 {
-  public:
-    // Returns the instance of this class, static initialization happens only once.
-    static StatisticsManager* instance();
-    // Analyzes the given `rowGroup` by processing it row by row and searching for foreign key.
-    void analyzeColumnKeyTypes(const rowgroup::RowGroup& rowGroup, bool trace);
-    // Ouputs stats to out stream.
-    void output(StatisticsType statisticsType = StatisticsType::PK_FK);
-    // Saves stats to the file.
-    void saveToFile();
-    // Loads stats from the file.
-    void loadFromFile();
-    void incEpoch() { ++epoch; }
-    // Serialize stats to the given `bs`.
-    void serialize(messageqcpp::ByteStream& bs);
-    // Unserialize stats from the given `bs`.
-    void unserialize(messageqcpp::ByteStream& bs);
-    // Computes hash from the current statistics data.
-    uint64_t computeHashFromStats();
-    // Checks whether statistics is available for the given `oid`.
-    bool hasKey(uint32_t oid);
-    // Returns a KeyType for the given `oid`.
-    KeyType getKeyType(uint32_t oid);
+ public:
+  // Returns the instance of this class, static initialization happens only once.
+  static StatisticsManager* instance();
+  // Analyzes the given `rowGroup` by processing it row by row and searching for foreign key.
+  void analyzeColumnKeyTypes(const rowgroup::RowGroup& rowGroup, bool trace);
+  // Ouputs stats to out stream.
+  void output(StatisticsType statisticsType = StatisticsType::PK_FK);
+  // Saves stats to the file.
+  void saveToFile();
+  // Loads stats from the file.
+  void loadFromFile();
+  void incEpoch()
+  {
+    ++epoch;
+  }
+  // Serialize stats to the given `bs`.
+  void serialize(messageqcpp::ByteStream& bs);
+  // Unserialize stats from the given `bs`.
+  void unserialize(messageqcpp::ByteStream& bs);
+  // Computes hash from the current statistics data.
+  uint64_t computeHashFromStats();
+  // Checks whether statistics is available for the given `oid`.
+  bool hasKey(uint32_t oid);
+  // Returns a KeyType for the given `oid`.
+  KeyType getKeyType(uint32_t oid);
 
-  private:
-    std::map<uint32_t, KeyType> keyTypes;
-    StatisticsManager() : epoch(0), version(1) { IDBPolicy::init(true, false, "", 0); }
-    std::unique_ptr<char[]> convertStatsToDataStream(uint64_t& dataStreamSize);
+ private:
+  std::map<uint32_t, KeyType> keyTypes;
+  StatisticsManager() : epoch(0), version(1)
+  {
+    IDBPolicy::init(true, false, "", 0);
+  }
+  std::unique_ptr<char[]> convertStatsToDataStream(uint64_t& dataStreamSize);
 
-    std::mutex mut;
-    uint32_t epoch;
-    uint32_t version;
-    std::string statsFile = "/var/lib/columnstore/local/statistics";
+  std::mutex mut;
+  uint32_t epoch;
+  uint32_t version;
+  std::string statsFile = "/var/lib/columnstore/local/statistics";
 };
 
 // This class is responsible for distributing the statistics across all `ExeMgr` in a cluster.
 class StatisticsDistributor
 {
-  public:
-    // Returns the instance of this class, static initialization happens only once.
-    static StatisticsDistributor* instance();
+ public:
+  // Returns the instance of this class, static initialization happens only once.
+  static StatisticsDistributor* instance();
 
-    // Distribute stats across all `ExeMgr` in cluster by connecting to them using config file.
-    void distributeStatistics();
+  // Distribute stats across all `ExeMgr` in cluster by connecting to them using config file.
+  void distributeStatistics();
 
-  private:
-    StatisticsDistributor() : clientsCount(0) {}
-    // Count the number of clients by reading config file and evaluating `ExeMgr` fields.
-    void countClients();
-    uint32_t clientsCount;
-    std::mutex mut;
+ private:
+  StatisticsDistributor() : clientsCount(0)
+  {
+  }
+  // Count the number of clients by reading config file and evaluating `ExeMgr` fields.
+  void countClients();
+  uint32_t clientsCount;
+  std::mutex mut;
 };
 
-} // namespace statistics
+}  // namespace statistics

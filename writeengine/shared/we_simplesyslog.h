@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id: we_simplesyslog.h 4450 2013-01-21 14:13:24Z rdempsey $
-*
-*******************************************************************************/
+ * $Id: we_simplesyslog.h 4450 2013-01-21 14:13:24Z rdempsey $
+ *
+ *******************************************************************************/
 /** @file */
 
 #pragma once
@@ -37,7 +37,6 @@
 /** Namespace WriteEngine */
 namespace WriteEngine
 {
-
 /**
  * @brief SimpleSysLog class is a simple logger that only logs to syslog.
  *
@@ -46,35 +45,34 @@ namespace WriteEngine
  */
 class SimpleSysLog
 {
-public:
-    /**
-     * @brief Singleton accessor.
-     */
-    EXPORT static SimpleSysLog* instance();
+ public:
+  /**
+   * @brief Singleton accessor.
+   */
+  EXPORT static SimpleSysLog* instance();
 
-    /**
-     * @brief Modify the LoggingID to be used.  Mainly used to control the
-     * subsystem ID.
-     */
-    EXPORT void setLoggingID( const logging::LoggingID& loggingID );
+  /**
+   * @brief Modify the LoggingID to be used.  Mainly used to control the
+   * subsystem ID.
+   */
+  EXPORT void setLoggingID(const logging::LoggingID& loggingID);
 
-    /**
-     * @brief Function that logs a syslog msg.
-     */
-    EXPORT void logMsg( const logging::Message::Args& msgArgs,
-                        logging::LOG_TYPE             logType,
-                        logging::Message::MessageID   msgId );
+  /**
+   * @brief Function that logs a syslog msg.
+   */
+  EXPORT void logMsg(const logging::Message::Args& msgArgs, logging::LOG_TYPE logType,
+                     logging::Message::MessageID msgId);
 
-private:
-    SimpleSysLog( );
-    SimpleSysLog( const SimpleSysLog& );
-    SimpleSysLog& operator= ( const SimpleSysLog& );
+ private:
+  SimpleSysLog();
+  SimpleSysLog(const SimpleSysLog&);
+  SimpleSysLog& operator=(const SimpleSysLog&);
 
-    static SimpleSysLog* fSysLogger;
-    logging::LoggingID   fLoggingID;
-    boost::mutex         fWriteLockMutex; // logging mutex
+  static SimpleSysLog* fSysLogger;
+  logging::LoggingID fLoggingID;
+  boost::mutex fWriteLockMutex;  // logging mutex
 };
 
 #undef EXPORT
 
-} //end of namespace
+}  // namespace WriteEngine

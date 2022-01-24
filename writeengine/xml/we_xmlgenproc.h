@@ -41,9 +41,9 @@ namespace WriteEngine
 {
 struct SysCatColumn
 {
-    execplan::CalpontSystemCatalog::OID          oid;
-    execplan::CalpontSystemCatalog::ColType      colType;
-    execplan::CalpontSystemCatalog::TableColName tableColName;
+  execplan::CalpontSystemCatalog::OID oid;
+  execplan::CalpontSystemCatalog::ColType colType;
+  execplan::CalpontSystemCatalog::TableColName tableColName;
 };
 typedef std::vector<SysCatColumn> SysCatColumnList;
 
@@ -57,83 +57,77 @@ class XMLGenData;
  */
 class XMLGenProc
 {
-public:
+ public:
+  /** @brief XMLGenProc constructor
+   *
+   * @param mgr The input data used to generate a Job XML file.
+   * @param bUseXmlLogFile Log info/errors to Job XML log file.
+   * @param bSysCatRpt Generating SysCat report (true) or XML file (false)
+   */
+  EXPORT XMLGenProc(XMLGenData* mgr, bool bUseXmlLogFile, bool bSysCatRpt);
+  EXPORT ~XMLGenProc();
 
-    /** @brief XMLGenProc constructor
-     *
-     * @param mgr The input data used to generate a Job XML file.
-     * @param bUseXmlLogFile Log info/errors to Job XML log file.
-     * @param bSysCatRpt Generating SysCat report (true) or XML file (false)
-     */
-    EXPORT XMLGenProc(XMLGenData* mgr, bool bUseXmlLogFile, bool bSysCatRpt);
-    EXPORT ~XMLGenProc();
+  /** @brief start constructing XML file document.
+   */
+  EXPORT void startXMLFile();
 
-    /** @brief start constructing XML file document.
-     */
-    EXPORT void  startXMLFile( );
+  /** @brief Creates table tag for the specified table.
+   *
+   * @param table Name of table for which the table tag is to be generated.
+   */
+  EXPORT void makeTableData(const execplan::CalpontSystemCatalog::TableName& table);
 
-    /** @brief Creates table tag for the specified table.
-    *
-    * @param table Name of table for which the table tag is to be generated.
-    */
-    EXPORT void  makeTableData(
-        const execplan::CalpontSystemCatalog::TableName& table);
+  /** @brief Creates column tags for the specified table.
+   *
+   * @param table Name of table for which the column tags are to be generated.
+   * @return true means column tags created; else false is returned
+   */
+  EXPORT bool makeColumnData(const execplan::CalpontSystemCatalog::TableName& table);
 
-    /** @brief Creates column tags for the specified table.
-     *
-     * @param table Name of table for which the column tags are to be generated.
-     * @return true means column tags created; else false is returned
-     */
-    EXPORT bool  makeColumnData(
-        const execplan::CalpontSystemCatalog::TableName& table);
+  /** @brief Generate Job XML file name
+   */
+  EXPORT std::string genJobXMLFileName() const;
 
-    /** @brief Generate Job XML file name
-     */
-    EXPORT std::string genJobXMLFileName( ) const;
+  /** @brief Write xml file document to the destination Job XML file.
+   *
+   * @param xmlFileName Name of XML file to be generated.
+   */
+  EXPORT void writeXMLFile(const std::string& xmlFileName);
 
-    /** @brief Write xml file document to the destination Job XML file.
-     *
-     * @param xmlFileName Name of XML file to be generated.
-     */
-    EXPORT void  writeXMLFile( const std::string& xmlFileName );
+  /** @brief log a message.
+   *
+   * @param msg The message to be logged to the error log file.
+   */
+  EXPORT void logErrorMessage(const std::string& msg);
+  std::string errorString()
+  {
+    return fErrorString;
+  }
 
-    /** @brief log a message.
-     *
-     * @param msg The message to be logged to the error log file.
-     */
-    EXPORT void logErrorMessage(const std::string& msg);
-    std::string errorString()
-    {
-        return fErrorString;
-    }
+  /** @brief set debug level
+   */
+  void setDebugLevel(int dbg)
+  {
+    fDebugLevel = dbg;
+  }
 
-    /** @brief set debug level
-     */
-    void setDebugLevel( int dbg )
-    {
-        fDebugLevel = dbg;
-    }
+ protected:
+ private:
+  XMLGenProc(const XMLGenProc&);             // disable default copy ctor
+  XMLGenProc& operator=(const XMLGenProc&);  // disable default assignment
+  void getColumnsForTable(const std::string& schema, const std::string& table, SysCatColumnList& colList);
+  void sortColumnsByPosition(SysCatColumnList& columns);
 
-protected:
-
-private:
-    XMLGenProc(const XMLGenProc&);             // disable default copy ctor
-    XMLGenProc& operator=(const XMLGenProc&);  // disable default assignment
-    void getColumnsForTable(const std::string& schema,
-                            const std::string& table, SysCatColumnList& colList);
-    void sortColumnsByPosition(SysCatColumnList& columns);
-
-    Log               fLog;
-    xmlDocPtr         fDoc;
-    xmlTextWriterPtr  fWriter;
-    std::string       fErrorString;
-    int               fDebugLevel;
-    XMLGenData*       fInputMgr;    // Input data used to generate Job XML file
-    bool              fSysCatRpt;   // True colxml output or a syscat report
-    bool              fUseXmlLogFile;//Log info/errors to Job XML log file
+  Log fLog;
+  xmlDocPtr fDoc;
+  xmlTextWriterPtr fWriter;
+  std::string fErrorString;
+  int fDebugLevel;
+  XMLGenData* fInputMgr;  // Input data used to generate Job XML file
+  bool fSysCatRpt;        // True colxml output or a syscat report
+  bool fUseXmlLogFile;    // Log info/errors to Job XML log file
 };
 
-}                                                 // namespace WriteEngine
+}  // namespace WriteEngine
 
 #undef EXPORT
-

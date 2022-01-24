@@ -18,51 +18,46 @@
 
 //  $Id: wf_sum_avg.h 3868 2013-06-06 22:13:05Z xlou $
 
-
 #pragma once
 
 #include <set>
 #include "windowfunctiontype.h"
 
-
 namespace windowfunction
 {
-
 // T_IN is the data type of the input values.
-// T_OUT is the data type we are using for output and internal values    
-template<typename T_IN, typename T_OUT>
+// T_OUT is the data type we are using for output and internal values
+template <typename T_IN, typename T_OUT>
 class WF_sum_avg : public WindowFunctionType
 {
-public:
-    WF_sum_avg(int id, const std::string& name) :
-        WindowFunctionType(id, name), fDistinct(id != WF__SUM && id != WF__AVG)
-    {
-        resetData();
-    }
+ public:
+  WF_sum_avg(int id, const std::string& name)
+   : WindowFunctionType(id, name), fDistinct(id != WF__SUM && id != WF__AVG)
+  {
+    resetData();
+  }
 
-    // pure virtual in base
-    void operator()(int64_t b, int64_t e, int64_t c);
-    WindowFunctionType* clone() const;
-    void resetData();
+  // pure virtual in base
+  void operator()(int64_t b, int64_t e, int64_t c);
+  WindowFunctionType* clone() const;
+  void resetData();
 
-    static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int, WindowFunctionColumn*);
+  static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int, WindowFunctionColumn*);
 
-protected:
-    T_IN        fVal;
-    T_OUT       fAvg;
-    T_OUT       fSum;
-    uint64_t    fCount;
-    bool        fDistinct;
-    std::set<T_IN> fSet;
+ protected:
+  T_IN fVal;
+  T_OUT fAvg;
+  T_OUT fSum;
+  uint64_t fCount;
+  bool fDistinct;
+  std::set<T_IN> fSet;
 
-    void checkSumLimit(const T_IN& val, const T_OUT& sum);
+  void checkSumLimit(const T_IN& val, const T_OUT& sum);
 
-    int128_t calculateAvg(const int128_t& sum, const uint64_t count, const int scale);
-    long double calculateAvg(const long double& sum, const uint64_t count, const int scale);
+  int128_t calculateAvg(const int128_t& sum, const uint64_t count, const int scale);
+  long double calculateAvg(const long double& sum, const uint64_t count, const int scale);
 };
 
-} // namespace
-
+}  // namespace windowfunction
 
 // vim:ts=4 sw=4:
-

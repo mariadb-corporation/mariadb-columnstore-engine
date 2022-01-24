@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id: we_log.h 4504 2013-02-02 00:07:43Z bpaul $
-*
-*******************************************************************************/
+ * $Id: we_log.h 4504 2013-02-02 00:07:43Z bpaul $
+ *
+ *******************************************************************************/
 /** @file */
 
 #pragma once
@@ -44,83 +44,68 @@
 /** Namespace WriteEngine */
 namespace WriteEngine
 {
-const	std::string MSG_LEVEL_STR[] =
-{
-    "INFO",
-    "INFO2",
-    "WARN",
-    "ERR ",
-    "CRIT"
-};
+const std::string MSG_LEVEL_STR[] = {"INFO", "INFO2", "WARN", "ERR ", "CRIT"};
 
 /** @brief Class is used to format and write log messages to cpimport.bin log
  *  file.  When applicable, messages are also logged to syslog logs as well.
  */
 class Log : public WEObj
 {
-public:
-    /**
-     * @brief Constructor
-     */
-    EXPORT Log();
+ public:
+  /**
+   * @brief Constructor
+   */
+  EXPORT Log();
 
-    /**
-     * @brief Destructor
-     */
-    EXPORT ~Log();
+  /**
+   * @brief Destructor
+   */
+  EXPORT ~Log();
 
-    /**
-     * @brief Log a cpimport.bin logfile message; logs errors to syslog as well
-     */
-    EXPORT void     logMsg( const char* msg, int code, MsgLevel level );
-    EXPORT void     logMsg( const char* msg, MsgLevel level )
-    {
-        logMsg( msg, 0, level );
-    }
-    EXPORT void     logMsg( const std::string& msg, MsgLevel level )
-    {
-        logMsg( msg.c_str(), level );
-    }
-    EXPORT void     logMsg( const std::string& msg, int code, MsgLevel level )
-    {
-        logMsg( msg.c_str(), code, level );
-    }
+  /**
+   * @brief Log a cpimport.bin logfile message; logs errors to syslog as well
+   */
+  EXPORT void logMsg(const char* msg, int code, MsgLevel level);
+  EXPORT void logMsg(const char* msg, MsgLevel level)
+  {
+    logMsg(msg, 0, level);
+  }
+  EXPORT void logMsg(const std::string& msg, MsgLevel level)
+  {
+    logMsg(msg.c_str(), level);
+  }
+  EXPORT void logMsg(const std::string& msg, int code, MsgLevel level)
+  {
+    logMsg(msg.c_str(), code, level);
+  }
 
-    /**
-     * @brief Set log file name
-     */
-    EXPORT void     setLogFileName( const char* logfile,
-                                    const char* errlogfile,
-                                    bool consoleFlag = true );
+  /**
+   * @brief Set log file name
+   */
+  EXPORT void setLogFileName(const char* logfile, const char* errlogfile, bool consoleFlag = true);
 
-    // BUG 5022
-    /**
-     * @brief Set log files close other than calling d'tor
-     */
-    EXPORT void 	closeLog();
+  // BUG 5022
+  /**
+   * @brief Set log files close other than calling d'tor
+   */
+  EXPORT void closeLog();
 
+ private:
+  void logSyslog(const std::string& msg, int statusCode);
+  void formatMsg(const std::string& msg, MsgLevel level, std::ostringstream& oss, int code = 0) const;
 
-private:
-    void            logSyslog ( const std::string& msg,
-                                int                statusCode);
-    void            formatMsg(  const std::string& msg,
-                                MsgLevel           level,
-                                std::ostringstream& oss,
-                                int                code = 0 ) const;
+  bool m_bConsoleOutput;  // flag allowing INFO2 msg
+  //   to display to console
+  std::string m_logFileName;     // log file name
+  std::string m_errlogFileName;  // error log file name
+  pid_t m_pid;                   // current pid
 
-    bool            m_bConsoleOutput;              // flag allowing INFO2 msg
-    //   to display to console
-    std::string     m_logFileName;                 // log file name
-    std::string     m_errlogFileName;              // error log file name
-    pid_t           m_pid;                         // current pid
+  std::ofstream m_logFile;     // log file stream
+  std::ofstream m_errLogFile;  // error log file stream
 
-    std::ofstream   m_logFile;                     // log file stream
-    std::ofstream   m_errLogFile;                  // error log file stream
-
-    boost::mutex    m_WriteLockMutex;              // logging mutex
+  boost::mutex m_WriteLockMutex;  // logging mutex
 };
 
-} //end of namespace
+}  // namespace WriteEngine
 
 #undef EXPORT
-

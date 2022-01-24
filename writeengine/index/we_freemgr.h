@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /******************************************************************************************
-* $Id: we_freemgr.h 33 2006-07-19 17:09:27Z mthomas $
-*
-******************************************************************************************/
+ * $Id: we_freemgr.h 33 2006-07-19 17:09:27Z mthomas $
+ *
+ ******************************************************************************************/
 /** @file */
 
 #pragma once
@@ -31,92 +31,95 @@
 /** Namespace WriteEngine */
 namespace WriteEngine
 {
-
 /** Class FreeMgr */
 class FreeMgr : public DbFileOp
 {
-public:
-    /**
-     * @brief Constructor
-     */
-    FreeMgr();
+ public:
+  /**
+   * @brief Constructor
+   */
+  FreeMgr();
 
-    /**
-     * @brief Default Destructor
-     */
-    ~FreeMgr();
+  /**
+   * @brief Default Destructor
+   */
+  ~FreeMgr();
 
-    /**
-     * @brief init free chains in a new index file
-     */
-    const int      init( CommBlock& cb, const int freemgrType );
+  /**
+   * @brief init free chains in a new index file
+   */
+  const int init(CommBlock& cb, const int freemgrType);
 
-    /**
-     * @brief Init free chains in a new file or an existing file
-     * The start block is an FBO or an LBID depending on whether we are using BRM
-    **/
-    const int      init( CommBlock& cb, DataBlock* blockZero, const int freemgrType, const IdxTreeGroupType chainType, const int startBlock, const int numberBlocks );
+  /**
+   * @brief Init free chains in a new file or an existing file
+   * The start block is an FBO or an LBID depending on whether we are using BRM
+   **/
+  const int init(CommBlock& cb, DataBlock* blockZero, const int freemgrType, const IdxTreeGroupType chainType,
+                 const int startBlock, const int numberBlocks);
 
-    /**
-     * @brief find a free segment and return ptr
-     */
-    const int      assignSegment( CommBlock& cb, DataBlock* blockZero, const int freemgr_type, const IdxTreeGroupType segmentType,  IdxEmptyListEntry* assignPtr ) ;
+  /**
+   * @brief find a free segment and return ptr
+   */
+  const int assignSegment(CommBlock& cb, DataBlock* blockZero, const int freemgr_type,
+                          const IdxTreeGroupType segmentType, IdxEmptyListEntry* assignPtr);
 
-    /**
-     * @brief put a free segment back into chain
-     */
-    const int      releaseSegment( CommBlock& cb, DataBlock* blockZero, const int freemgr_type, const IdxTreeGroupType segmentType,  IdxEmptyListEntry* assignPtr ) ;
+  /**
+   * @brief put a free segment back into chain
+   */
+  const int releaseSegment(CommBlock& cb, DataBlock* blockZero, const int freemgr_type,
+                           const IdxTreeGroupType segmentType, IdxEmptyListEntry* assignPtr);
 
-    /**
-     * @brief Map an FBO to LBID
-      */
-    const uint64_t  mapLBID( CommBlock& cb, const uint64_t fbo, int& rc );
+  /**
+   * @brief Map an FBO to LBID
+   */
+  const uint64_t mapLBID(CommBlock& cb, const uint64_t fbo, int& rc);
 
-    /**
-     * extendFreespace - ran out of space in one of the chains?
-     * Add blocks via calls to BRM extent mgr and fseek the file to the end
-     **/
-    const int extendFreespace( CommBlock& cb, DataBlock* blockZero, const int freemgr_type );
+  /**
+   * extendFreespace - ran out of space in one of the chains?
+   * Add blocks via calls to BRM extent mgr and fseek the file to the end
+   **/
+  const int extendFreespace(CommBlock& cb, DataBlock* blockZero, const int freemgr_type);
 
+  // private:
 
-//private:
+  /**
+   * @brief Create sub block zero for use by free manager
+   */
+  const int initBlockzero(DataBlock* blockZero);
 
-    /**
-     * @brief Create sub block zero for use by free manager
-     */
-    const int initBlockzero( DataBlock* blockZero);
+  /**
+   * @brief Handle release of sub-blocks separately - sometimes a sub-block contains list entries and
+   * sometimes it is a list entry
+   */
 
-    /**
-     * @brief Handle release of sub-blocks separately - sometimes a sub-block contains list entries and sometimes it is a list entry
-     */
+  const int releaseSubblock(CommBlock& cb, WriteEngine::DataBlock*, int, WriteEngine::IdxEmptyListEntry*);
 
-    const int releaseSubblock( CommBlock& cb, WriteEngine::DataBlock*, int, WriteEngine::IdxEmptyListEntry*) ;
+  /**
+   * @brief Handle assignment of sub-blocks separately - sometimes a sub-block contains list entries and
+   * sometimes it is a list entry
+   */
 
-    /**
-     * @brief Handle assignment of sub-blocks separately - sometimes a sub-block contains list entries and sometimes it is a list entry
-     */
+  const int assignSubblock(CommBlock& cb, WriteEngine::DataBlock*, int, WriteEngine::IdxEmptyListEntry*);
 
-    const int assignSubblock( CommBlock& cb, WriteEngine::DataBlock*, int, WriteEngine::IdxEmptyListEntry*);
+  /**
+   * Blank out the entries in the structure
+   **/
+  const void nullPtr(WriteEngine::IdxEmptyListEntry* assignPtr) const;
 
-    /**
-     * Blank out the entries in the structure
-     **/
-    const void  nullPtr( WriteEngine::IdxEmptyListEntry* assignPtr ) const;
+  const void printMemSubBlock(DataBlock* curBlock, const int sbid);
 
-    const void printMemSubBlock( DataBlock* curBlock, const int sbid );
+  inline const int calcPtrOffset(const int position) const
+  {
+    return 1 + position;
+  }
 
-    inline const int calcPtrOffset( const int position ) const
-    {
-        return 1 + position;
-    }
+  inline const int calcStatOffset(const int position) const
+  {
+    return 8 + position;
+  }
 
-    inline const int calcStatOffset( const int position ) const
-    {
-        return 8 + position;
-    }
-
-    int initType;// decide which algorithm to use to init the chains
-    int allowExtend; // allow file to be extended
+  int initType;     // decide which algorithm to use to init the chains
+  int allowExtend;  // allow file to be extended
 };
 
-} //end of namespace
+}  // namespace WriteEngine

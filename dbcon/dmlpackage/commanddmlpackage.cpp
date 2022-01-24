@@ -31,70 +31,72 @@ using namespace std;
 #undef COMMANDDMLPKG_DLLEXPORT
 namespace dmlpackage
 {
-
 CommandDMLPackage::CommandDMLPackage()
-{}
+{
+}
 
-CommandDMLPackage::CommandDMLPackage( std::string dmlStatement, int sessionID)
-    : CalpontDMLPackage( "", "", dmlStatement, sessionID)
-{}
+CommandDMLPackage::CommandDMLPackage(std::string dmlStatement, int sessionID)
+ : CalpontDMLPackage("", "", dmlStatement, sessionID)
+{
+}
 
 CommandDMLPackage::~CommandDMLPackage()
-{}
+{
+}
 
 int CommandDMLPackage::write(messageqcpp::ByteStream& bytestream)
 {
-    int retval = 1;
+  int retval = 1;
 
-    messageqcpp::ByteStream::byte package_type = DML_COMMAND;
-    bytestream << package_type;
+  messageqcpp::ByteStream::byte package_type = DML_COMMAND;
+  bytestream << package_type;
 
-    messageqcpp::ByteStream::quadbyte session_id = fSessionID;
-    bytestream << session_id;
+  messageqcpp::ByteStream::quadbyte session_id = fSessionID;
+  bytestream << session_id;
 
-    bytestream << fUuid;
+  bytestream << fUuid;
 
-    bytestream << fDMLStatement;
-    bytestream << fSQLStatement; // for cleartablelock, this is table lockID
-    bytestream << (uint8_t)fLogging;
-    bytestream << fSchemaName;
-    bytestream << fTimeZone;
-    bytestream << fTableName;
-    bytestream << fTableOid;
-    bytestream << static_cast<messageqcpp::ByteStream::byte>(fIsAutocommitOn);
-    bytestream << static_cast<messageqcpp::ByteStream::byte>(fIsBatchInsert);
-    return retval;
+  bytestream << fDMLStatement;
+  bytestream << fSQLStatement;  // for cleartablelock, this is table lockID
+  bytestream << (uint8_t)fLogging;
+  bytestream << fSchemaName;
+  bytestream << fTimeZone;
+  bytestream << fTableName;
+  bytestream << fTableOid;
+  bytestream << static_cast<messageqcpp::ByteStream::byte>(fIsAutocommitOn);
+  bytestream << static_cast<messageqcpp::ByteStream::byte>(fIsBatchInsert);
+  return retval;
 }
 
 int CommandDMLPackage::read(messageqcpp::ByteStream& bytestream)
 {
-    int retval = 1;
+  int retval = 1;
 
-    messageqcpp::ByteStream::quadbyte session_id;
-    bytestream >> session_id;
-    fSessionID = session_id;
-    bytestream >> fUuid;
+  messageqcpp::ByteStream::quadbyte session_id;
+  bytestream >> session_id;
+  fSessionID = session_id;
+  bytestream >> fUuid;
 
-    bytestream >> fDMLStatement;
-    bytestream >> fSQLStatement; // for cleartablelock, this is table lockID
-    uint8_t logging;
-    bytestream >> logging;
-    fLogging = (logging != 0);
-    bytestream >> fSchemaName;
-    bytestream >> fTimeZone;
-    bytestream >> fTableName;
-    bytestream >> fTableOid;
-    bytestream >> reinterpret_cast< messageqcpp::ByteStream::byte&>(fIsAutocommitOn);
-    bytestream >> reinterpret_cast< messageqcpp::ByteStream::byte&>(fIsBatchInsert);
-    return retval;
+  bytestream >> fDMLStatement;
+  bytestream >> fSQLStatement;  // for cleartablelock, this is table lockID
+  uint8_t logging;
+  bytestream >> logging;
+  fLogging = (logging != 0);
+  bytestream >> fSchemaName;
+  bytestream >> fTimeZone;
+  bytestream >> fTableName;
+  bytestream >> fTableOid;
+  bytestream >> reinterpret_cast<messageqcpp::ByteStream::byte&>(fIsAutocommitOn);
+  bytestream >> reinterpret_cast<messageqcpp::ByteStream::byte&>(fIsBatchInsert);
+  return retval;
 }
 
 int CommandDMLPackage::buildFromSqlStatement(SqlStatement& sqlStatement)
 {
-    CommandSqlStatement& cmdStmt = dynamic_cast<CommandSqlStatement&>(sqlStatement);
-    fDMLStatement = cmdStmt.fCommandText;
+  CommandSqlStatement& cmdStmt = dynamic_cast<CommandSqlStatement&>(sqlStatement);
+  fDMLStatement = cmdStmt.fCommandText;
 
-    return 1;
+  return 1;
 }
 
-}                                                 // namespace dmlpackage
+}  // namespace dmlpackage

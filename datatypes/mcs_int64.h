@@ -14,162 +14,169 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA. 
-*/ 
+   MA 02110-1301, USA.
+*/
 #pragma once
 
 #include "exceptclasses.h"
 
 namespace datatypes
 {
-
-
 class TNullFlag
 {
-protected:
+ protected:
   bool mIsNull;
-public:
-  explicit TNullFlag(bool val) :mIsNull(val) { }
+
+ public:
+  explicit TNullFlag(bool val) : mIsNull(val)
+  {
+  }
   bool isNull() const
   {
     return mIsNull;
   }
 };
 
-
 class TUInt64
 {
-protected:
+ protected:
   uint64_t mValue;
-public:
-  TUInt64(): mValue(0) { }
 
-  explicit TUInt64(uint64_t value): mValue(value) { }
+ public:
+  TUInt64() : mValue(0)
+  {
+  }
 
-  explicit operator uint64_t () const
+  explicit TUInt64(uint64_t value) : mValue(value)
+  {
+  }
+
+  explicit operator uint64_t() const
   {
     return mValue;
   }
 
   void store(uint8_t* dst) const
   {
-    *(uint64_t*) dst = mValue;
+    *(uint64_t*)dst = mValue;
   }
 };
 
-
 class TSInt64
 {
-protected:
+ protected:
   int64_t mValue;
-public:
-  TSInt64(): mValue(0) { }
 
-  explicit TSInt64(int64_t value): mValue(value) { }
+ public:
+  TSInt64() : mValue(0)
+  {
+  }
 
-  explicit operator int64_t () const
+  explicit TSInt64(int64_t value) : mValue(value)
+  {
+  }
+
+  explicit operator int64_t() const
   {
     return mValue;
   }
-  explicit operator uint64_t () const
+  explicit operator uint64_t() const
   {
     return mValue < 0 ? 0 : static_cast<uint64_t>(mValue);
   }
 };
 
-
-
-class TUInt64Null: public TUInt64, public TNullFlag
+class TUInt64Null : public TUInt64, public TNullFlag
 {
-public:
+ public:
+  TUInt64Null() : TNullFlag(true)
+  {
+  }
 
-  TUInt64Null(): TNullFlag(true) { }
+  explicit TUInt64Null(uint64_t value, bool isNull = false) : TUInt64(value), TNullFlag(isNull)
+  {
+  }
 
-  explicit TUInt64Null(uint64_t value, bool isNull = false):
-    TUInt64(value), TNullFlag(isNull)
-  { }
-
-  explicit operator uint64_t () const
+  explicit operator uint64_t() const
   {
     idbassert(!mIsNull);
     return mValue;
   }
-  uint64_t nullSafeValue(bool & isNullRef) const
+  uint64_t nullSafeValue(bool& isNullRef) const
   {
     return (isNullRef = isNull()) ? 0 : mValue;
   }
 
-  TUInt64Null operator&(const TUInt64Null &rhs) const
+  TUInt64Null operator&(const TUInt64Null& rhs) const
   {
     return TUInt64Null(mValue & rhs.mValue, mIsNull || rhs.mIsNull);
   }
-  TUInt64Null operator|(const TUInt64Null &rhs) const
+  TUInt64Null operator|(const TUInt64Null& rhs) const
   {
     return TUInt64Null(mValue | rhs.mValue, mIsNull || rhs.mIsNull);
   }
-  TUInt64Null operator^(const TUInt64Null &rhs) const
+  TUInt64Null operator^(const TUInt64Null& rhs) const
   {
     return TUInt64Null(mValue ^ rhs.mValue, mIsNull || rhs.mIsNull);
   }
-  TUInt64Null MariaDBShiftLeft(const TUInt64Null &rhs) const
+  TUInt64Null MariaDBShiftLeft(const TUInt64Null& rhs) const
   {
     return TUInt64Null(rhs.mValue >= 64 ? 0 : mValue << rhs.mValue, mIsNull || rhs.mIsNull);
   }
-  TUInt64Null MariaDBShiftRight(const TUInt64Null &rhs) const
+  TUInt64Null MariaDBShiftRight(const TUInt64Null& rhs) const
   {
     return TUInt64Null(rhs.mValue >= 64 ? 0 : mValue >> rhs.mValue, mIsNull || rhs.mIsNull);
   }
 };
 
-
-class TSInt64Null: public TSInt64, public TNullFlag
+class TSInt64Null : public TSInt64, public TNullFlag
 {
-public:
+ public:
+  TSInt64Null() : TNullFlag(true)
+  {
+  }
 
-  TSInt64Null(): TNullFlag(true) { }
+  explicit TSInt64Null(int64_t value, bool isNull = false) : TSInt64(value), TNullFlag(isNull)
+  {
+  }
 
-  explicit TSInt64Null(int64_t value, bool isNull = false):
-    TSInt64(value), TNullFlag(isNull)
-  { }
-
-  explicit operator int64_t () const
+  explicit operator int64_t() const
   {
     idbassert(!mIsNull);
     return mValue;
   }
 
-  int64_t nullSafeValue(bool & isNullRef) const
+  int64_t nullSafeValue(bool& isNullRef) const
   {
     return (isNullRef = isNull()) ? 0 : mValue;
   }
 
-  TSInt64Null operator&(const TSInt64Null &rhs) const
+  TSInt64Null operator&(const TSInt64Null& rhs) const
   {
     return TSInt64Null(mValue & rhs.mValue, mIsNull || rhs.mIsNull);
   }
-  TSInt64Null operator|(const TSInt64Null &rhs) const
+  TSInt64Null operator|(const TSInt64Null& rhs) const
   {
     return TSInt64Null(mValue | rhs.mValue, mIsNull || rhs.mIsNull);
   }
-  TSInt64Null operator^(const TSInt64Null &rhs) const
+  TSInt64Null operator^(const TSInt64Null& rhs) const
   {
     return TSInt64Null(mValue ^ rhs.mValue, mIsNull || rhs.mIsNull);
   }
-  TSInt64Null MariaDBShiftLeft(const TUInt64Null &rhs) const
+  TSInt64Null MariaDBShiftLeft(const TUInt64Null& rhs) const
   {
     if (isNull() || rhs.isNull())
       return TSInt64Null();
-    return TSInt64Null((uint64_t) rhs >= 64 ? 0 : mValue << (uint64_t) rhs, false);
+    return TSInt64Null((uint64_t)rhs >= 64 ? 0 : mValue << (uint64_t)rhs, false);
   }
-  TSInt64Null MariaDBShiftRight(const TUInt64Null &rhs) const
+  TSInt64Null MariaDBShiftRight(const TUInt64Null& rhs) const
   {
     if (isNull() || rhs.isNull())
       return TSInt64Null();
-    return TSInt64Null((uint64_t) rhs >= 64 ? 0 : mValue >> (uint64_t) rhs, false);
+    return TSInt64Null((uint64_t)rhs >= 64 ? 0 : mValue >> (uint64_t)rhs, false);
   }
 };
 
-
-} //end of namespace datatypes
+}  // end of namespace datatypes
 
 // vim:ts=2 sw=2:

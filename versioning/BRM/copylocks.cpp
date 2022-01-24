@@ -48,16 +48,16 @@ namespace bi = boost::interprocess;
 #define CL_MAGIC_V1 0x789ba6c1
 
 #ifndef O_BINARY
-#  define O_BINARY 0
+#define O_BINARY 0
 #endif
 #ifndef O_DIRECT
-#  define O_DIRECT 0
+#define O_DIRECT 0
 #endif
 #ifndef O_LARGEFILE
-#  define O_LARGEFILE 0
+#define O_LARGEFILE 0
 #endif
 #ifndef O_NOATIME
-#  define O_NOATIME 0
+#define O_NOATIME 0
 #endif
 
 using namespace std;
@@ -70,12 +70,11 @@ using namespace idbdatafile;
 
 namespace BRM
 {
-
 CopyLockEntry::CopyLockEntry()
 {
-    start = 0;
-    size = 0;
-    txnID = 0;
+  start = 0;
+  size = 0;
+  txnID = 0;
 }
 
 /*static*/
@@ -88,37 +87,36 @@ CopyLocksImpl* CopyLocksImpl::fInstance = 0;
 /*static*/
 CopyLocksImpl* CopyLocksImpl::makeCopyLocksImpl(unsigned key, off_t size, bool readOnly)
 {
-    boost::mutex::scoped_lock lk(fInstanceMutex);
+  boost::mutex::scoped_lock lk(fInstanceMutex);
 
-    if (fInstance)
+  if (fInstance)
+  {
+    if (key != fInstance->fCopyLocks.key())
     {
-        if (key != fInstance->fCopyLocks.key())
-        {
-            BRMShmImpl newShm(key, size, readOnly);
-            fInstance->swapout(newShm);
-        }
-
-        idbassert(key == fInstance->fCopyLocks.key());
-        return fInstance;
+      BRMShmImpl newShm(key, size, readOnly);
+      fInstance->swapout(newShm);
     }
 
-    fInstance = new CopyLocksImpl(key, size, readOnly);
-
+    idbassert(key == fInstance->fCopyLocks.key());
     return fInstance;
+  }
+
+  fInstance = new CopyLocksImpl(key, size, readOnly);
+
+  return fInstance;
 }
 
-CopyLocksImpl::CopyLocksImpl(unsigned key, off_t size, bool readOnly) :
-    fCopyLocks(key, size, readOnly)
+CopyLocksImpl::CopyLocksImpl(unsigned key, off_t size, bool readOnly) : fCopyLocks(key, size, readOnly)
 {
 }
 
 CopyLocks::CopyLocks()
 {
-    entries = NULL;
-    currentShmkey = shmid = 0;
-    shminfo = NULL;
-    r_only = false;
-    fCopyLocksImpl = 0;
+  entries = NULL;
+  currentShmkey = shmid = 0;
+  shminfo = NULL;
+  r_only = false;
+  fCopyLocksImpl = 0;
 }
 
 CopyLocks::~CopyLocks()
@@ -127,182 +125,183 @@ CopyLocks::~CopyLocks()
 
 void CopyLocks::setReadOnly()
 {
-    r_only = true;
+  r_only = true;
 }
 
 /* always returns holding the specified lock type, and with the EM seg mapped */
 void CopyLocks::lock(OPS op)
 {
-    boost::mutex::scoped_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
 
-    if (op == READ)
-        shminfo = mst.getTable_read(MasterSegmentTable::CLSegment);
-    else
-        shminfo = mst.getTable_write(MasterSegmentTable::CLSegment);
+  if (op == READ)
+    shminfo = mst.getTable_read(MasterSegmentTable::CLSegment);
+  else
+    shminfo = mst.getTable_write(MasterSegmentTable::CLSegment);
 
-    if (currentShmkey != shminfo->tableShmkey)
-    {
-        if (entries != NULL)
-            entries = NULL;
+  if (currentShmkey != shminfo->tableShmkey)
+  {
+    if (entries != NULL)
+      entries = NULL;
+
+    if (shminfo->allocdSize == 0)
+      if (op == READ)
+      {
+        mst.getTable_upgrade(MasterSegmentTable::CLSegment);
 
         if (shminfo->allocdSize == 0)
-            if (op == READ)
-            {
-                mst.getTable_upgrade(MasterSegmentTable::CLSegment);
+          growCL();
 
-                if (shminfo->allocdSize == 0)
-                    growCL();
+        mst.getTable_downgrade(MasterSegmentTable::CLSegment);
+      }
+      else
+        growCL();
+    else
+    {
+      currentShmkey = shminfo->tableShmkey;
+      fCopyLocksImpl = CopyLocksImpl::makeCopyLocksImpl(currentShmkey, 0, r_only);
+      entries = fCopyLocksImpl->get();
 
-                mst.getTable_downgrade(MasterSegmentTable::CLSegment);
-            }
-            else
-                growCL();
-        else
-        {
-            currentShmkey = shminfo->tableShmkey;
-            fCopyLocksImpl = CopyLocksImpl::makeCopyLocksImpl(currentShmkey, 0, r_only);
-            entries = fCopyLocksImpl->get();
-
-            if (entries == NULL)
-            {
-                log_errno(string("CopyLocks::lock(): shmat failed"));
-                throw std::runtime_error("CopyLocks::lock(): shmat failed.  Check the error log.");
-            }
-        }
+      if (entries == NULL)
+      {
+        log_errno(string("CopyLocks::lock(): shmat failed"));
+        throw std::runtime_error("CopyLocks::lock(): shmat failed.  Check the error log.");
+      }
     }
+  }
 }
 
 void CopyLocks::release(OPS op)
 {
-    if (op == READ)
-        mst.releaseTable_read(MasterSegmentTable::CLSegment);
-    else
-        mst.releaseTable_write(MasterSegmentTable::CLSegment);
+  if (op == READ)
+    mst.releaseTable_read(MasterSegmentTable::CLSegment);
+  else
+    mst.releaseTable_write(MasterSegmentTable::CLSegment);
 }
 
 key_t CopyLocks::chooseShmkey()
 {
-    int fixedKeys = 1;
-    key_t ret;
+  int fixedKeys = 1;
+  key_t ret;
 
-    if (shminfo->tableShmkey + 1 == (key_t) (fShmKeys.KEYRANGE_CL_BASE +
-            fShmKeys.KEYRANGE_SIZE - 1) || (unsigned)shminfo->tableShmkey < fShmKeys.KEYRANGE_CL_BASE)
-        ret = fShmKeys.KEYRANGE_CL_BASE + fixedKeys;
-    else
-        ret = shminfo->tableShmkey + 1;
+  if (shminfo->tableShmkey + 1 == (key_t)(fShmKeys.KEYRANGE_CL_BASE + fShmKeys.KEYRANGE_SIZE - 1) ||
+      (unsigned)shminfo->tableShmkey < fShmKeys.KEYRANGE_CL_BASE)
+    ret = fShmKeys.KEYRANGE_CL_BASE + fixedKeys;
+  else
+    ret = shminfo->tableShmkey + 1;
 
-    return ret;
+  return ret;
 }
 
 void CopyLocks::growCL()
 {
-    int allocSize;
-    key_t newshmkey;
+  int allocSize;
+  key_t newshmkey;
 
-    if (shminfo->allocdSize == 0)
-        allocSize = CL_INITIAL_SIZE;
-    else
-        allocSize = shminfo->allocdSize + CL_INCREMENT;
+  if (shminfo->allocdSize == 0)
+    allocSize = CL_INITIAL_SIZE;
+  else
+    allocSize = shminfo->allocdSize + CL_INCREMENT;
 
-    newshmkey = chooseShmkey();
-    idbassert((allocSize == CL_INITIAL_SIZE && !fCopyLocksImpl) || fCopyLocksImpl);
+  newshmkey = chooseShmkey();
+  idbassert((allocSize == CL_INITIAL_SIZE && !fCopyLocksImpl) || fCopyLocksImpl);
 
-    if (!fCopyLocksImpl)
-        fCopyLocksImpl = CopyLocksImpl::makeCopyLocksImpl(newshmkey, allocSize, r_only);
-    else
-        fCopyLocksImpl->grow(newshmkey, allocSize);
+  if (!fCopyLocksImpl)
+    fCopyLocksImpl = CopyLocksImpl::makeCopyLocksImpl(newshmkey, allocSize, r_only);
+  else
+    fCopyLocksImpl->grow(newshmkey, allocSize);
 
-    shminfo->tableShmkey = currentShmkey = newshmkey;
-    shminfo->allocdSize = allocSize;
+  shminfo->tableShmkey = currentShmkey = newshmkey;
+  shminfo->allocdSize = allocSize;
 
-    if (r_only)
-        fCopyLocksImpl->makeReadOnly();
+  if (r_only)
+    fCopyLocksImpl->makeReadOnly();
 
-    entries = fCopyLocksImpl->get();
-    // Temporary fix.  Get rid of the old undo records that now point to nothing.
-    // Would be nice to be able to carry them forward.
-    confirmChanges();
+  entries = fCopyLocksImpl->get();
+  // Temporary fix.  Get rid of the old undo records that now point to nothing.
+  // Would be nice to be able to carry them forward.
+  confirmChanges();
 }
 
 // this fcn is dumb; relies on external check on whether it's safe or not
 // also relies on external write lock grab
 void CopyLocks::lockRange(const LBIDRange& l, VER_t txnID)
 {
-    int i, numEntries;
+  int i, numEntries;
 
-    // grow if necessary
-    if (shminfo->currentSize == shminfo->allocdSize)
-        growCL();
+  // grow if necessary
+  if (shminfo->currentSize == shminfo->allocdSize)
+    growCL();
 
-    /* debugging code, check for an existing lock */
-    //assert(!isLocked(l));
+  /* debugging code, check for an existing lock */
+  // assert(!isLocked(l));
 
-    //ostringstream os;
-    //os << "Copylocks locking <" << l.start << ", " << l.size << "> txnID = " << txnID;
-    //log(os.str());
+  // ostringstream os;
+  // os << "Copylocks locking <" << l.start << ", " << l.size << "> txnID = " << txnID;
+  // log(os.str());
 
-    // scan for an empty entry
-    numEntries = shminfo->allocdSize / sizeof(CopyLockEntry);
+  // scan for an empty entry
+  numEntries = shminfo->allocdSize / sizeof(CopyLockEntry);
 
-    for (i = 0; i < numEntries; i++)
+  for (i = 0; i < numEntries; i++)
+  {
+    if (entries[i].size == 0)
     {
-        if (entries[i].size == 0)
-        {
-            makeUndoRecord(&entries[i], sizeof(CopyLockEntry));
-            entries[i].start = l.start;
-            entries[i].size = l.size;
-            entries[i].txnID = txnID;
-            makeUndoRecord(shminfo, sizeof(MSTEntry));
-            shminfo->currentSize += sizeof(CopyLockEntry);
+      makeUndoRecord(&entries[i], sizeof(CopyLockEntry));
+      entries[i].start = l.start;
+      entries[i].size = l.size;
+      entries[i].txnID = txnID;
+      makeUndoRecord(shminfo, sizeof(MSTEntry));
+      shminfo->currentSize += sizeof(CopyLockEntry);
 
-            // make sure isLocked() now sees the lock
-            //assert(isLocked(l));
-            return;
-        }
+      // make sure isLocked() now sees the lock
+      // assert(isLocked(l));
+      return;
     }
+  }
 
-    log(string("CopyLocks::lockRange(): shm metadata problem: could not find an empty copylock entry"));
-    throw std::logic_error("CopyLocks::lockRange(): shm metadata problem: could not find an empty copylock entry");
+  log(string("CopyLocks::lockRange(): shm metadata problem: could not find an empty copylock entry"));
+  throw std::logic_error(
+      "CopyLocks::lockRange(): shm metadata problem: could not find an empty copylock entry");
 }
 
 // this fcn is dumb; relies on external check on whether it's safe or not
 // also relies on external write lock grab
 void CopyLocks::releaseRange(const LBIDRange& l)
 {
-    int i, numEntries;
-    LBID_t lastBlock = l.start + l.size - 1;
-    LBID_t eLastBlock;
+  int i, numEntries;
+  LBID_t lastBlock = l.start + l.size - 1;
+  LBID_t eLastBlock;
 
 #ifdef BRM_DEBUG
-    // debatable whether this should be included or not given the timers
-    // that automatically release locks
-    idbassert(isLocked(l));
+  // debatable whether this should be included or not given the timers
+  // that automatically release locks
+  idbassert(isLocked(l));
 #endif
 
-    numEntries = shminfo->allocdSize / sizeof(CopyLockEntry);
+  numEntries = shminfo->allocdSize / sizeof(CopyLockEntry);
 
-    for (i = 0; i < numEntries; i++)
+  for (i = 0; i < numEntries; i++)
+  {
+    CopyLockEntry& e = entries[i];
+
+    if (e.size != 0)
     {
-        CopyLockEntry& e = entries[i];
+      eLastBlock = e.start + e.size - 1;
 
-        if (e.size != 0)
-        {
-            eLastBlock = e.start + e.size - 1;
-
-            if (l.start <= eLastBlock && lastBlock >= e.start)
-            {
-                makeUndoRecord(&entries[i], sizeof(CopyLockEntry));
-                e.size = 0;
-                makeUndoRecord(shminfo, sizeof(MSTEntry));
-                shminfo->currentSize -= sizeof(CopyLockEntry);
-            }
-        }
+      if (l.start <= eLastBlock && lastBlock >= e.start)
+      {
+        makeUndoRecord(&entries[i], sizeof(CopyLockEntry));
+        e.size = 0;
+        makeUndoRecord(shminfo, sizeof(MSTEntry));
+        shminfo->currentSize -= sizeof(CopyLockEntry);
+      }
     }
+  }
 
 #ifdef BRM_DEBUG
-    idbassert(!isLocked(l));
-    //log(string("CopyLocks::releaseRange(): that range isn't locked", LOG_TYPE_WARNING));
-    //throw std::invalid_argument("CopyLocks::releaseRange(): that range isn't locked");
+  idbassert(!isLocked(l));
+  // log(string("CopyLocks::releaseRange(): that range isn't locked", LOG_TYPE_WARNING));
+  // throw std::invalid_argument("CopyLocks::releaseRange(): that range isn't locked");
 #endif
 }
 
@@ -310,89 +309,86 @@ void CopyLocks::releaseRange(const LBIDRange& l)
  * shouldn't use makeUndoRecord() */
 void CopyLocks::forceRelease(const LBIDRange& l)
 {
-    int i, numEntries;
-    LBID_t lastBlock = l.start + l.size - 1;
-    LBID_t eLastBlock;
+  int i, numEntries;
+  LBID_t lastBlock = l.start + l.size - 1;
+  LBID_t eLastBlock;
 
-    numEntries = shminfo->allocdSize / sizeof(CopyLockEntry);
+  numEntries = shminfo->allocdSize / sizeof(CopyLockEntry);
 
-    //ostringstream os;
-    //os << "Copylocks force-releasing <" << l.start << ", " << l.size << ">";
-    //log(os.str());
+  // ostringstream os;
+  // os << "Copylocks force-releasing <" << l.start << ", " << l.size << ">";
+  // log(os.str());
 
+  /* If a range intersects l, get rid of it. */
+  for (i = 0; i < numEntries; i++)
+  {
+    CopyLockEntry& e = entries[i];
 
-    /* If a range intersects l, get rid of it. */
-    for (i = 0; i < numEntries; i++)
+    if (e.size != 0)
     {
-        CopyLockEntry& e = entries[i];
+      eLastBlock = e.start + e.size - 1;
 
-        if (e.size != 0)
-        {
-            eLastBlock = e.start + e.size - 1;
-
-            if (l.start <= eLastBlock && lastBlock >= e.start)
-            {
-                makeUndoRecord(&entries[i], sizeof(CopyLockEntry));
-                e.size = 0;
-                makeUndoRecord(shminfo, sizeof(MSTEntry));
-                shminfo->currentSize -= sizeof(CopyLockEntry);
-            }
-        }
+      if (l.start <= eLastBlock && lastBlock >= e.start)
+      {
+        makeUndoRecord(&entries[i], sizeof(CopyLockEntry));
+        e.size = 0;
+        makeUndoRecord(shminfo, sizeof(MSTEntry));
+        shminfo->currentSize -= sizeof(CopyLockEntry);
+      }
     }
+  }
 
-    //assert(!isLocked(l));
+  // assert(!isLocked(l));
 }
 
-//assumes read lock
+// assumes read lock
 bool CopyLocks::isLocked(const LBIDRange& l) const
 {
-    int i, numEntries;
-    LBID_t lLastBlock, lastBlock;
+  int i, numEntries;
+  LBID_t lLastBlock, lastBlock;
 
-    numEntries = shminfo->allocdSize / sizeof(CopyLockEntry);
-    lLastBlock = l.start + l.size - 1;
+  numEntries = shminfo->allocdSize / sizeof(CopyLockEntry);
+  lLastBlock = l.start + l.size - 1;
 
-    for (i = 0; i < numEntries; i++)
+  for (i = 0; i < numEntries; i++)
+  {
+    if (entries[i].size != 0)
     {
-        if (entries[i].size != 0)
-        {
-            lastBlock = entries[i].start + entries[i].size - 1;
+      lastBlock = entries[i].start + entries[i].size - 1;
 
-            if (lLastBlock >= entries[i].start && l.start <= lastBlock)
-                return true;
-        }
+      if (lLastBlock >= entries[i].start && l.start <= lastBlock)
+        return true;
     }
+  }
 
-    return false;
+  return false;
 }
 
 void CopyLocks::rollback(VER_t txnID)
 {
-    int i, numEntries;
+  int i, numEntries;
 
-    numEntries = shminfo->allocdSize / sizeof(CopyLockEntry);
+  numEntries = shminfo->allocdSize / sizeof(CopyLockEntry);
 
-    for (i = 0; i < numEntries; i++)
-        if (entries[i].size != 0 && entries[i].txnID == txnID)
-        {
-            makeUndoRecord(&entries[i], sizeof(CopyLockEntry));
-            entries[i].size = 0;
-            makeUndoRecord(shminfo, sizeof(MSTEntry));
-            shminfo->currentSize -= sizeof(CopyLockEntry);
-        }
+  for (i = 0; i < numEntries; i++)
+    if (entries[i].size != 0 && entries[i].txnID == txnID)
+    {
+      makeUndoRecord(&entries[i], sizeof(CopyLockEntry));
+      entries[i].size = 0;
+      makeUndoRecord(shminfo, sizeof(MSTEntry));
+      shminfo->currentSize -= sizeof(CopyLockEntry);
+    }
 }
 
 void CopyLocks::getCurrentTxnIDs(std::set<VER_t>& list) const
 {
-    int i, numEntries;
+  int i, numEntries;
 
-    numEntries = shminfo->allocdSize / sizeof(CopyLockEntry);
+  numEntries = shminfo->allocdSize / sizeof(CopyLockEntry);
 
-    for (i = 0; i < numEntries; i++)
-        if (entries[i].size != 0)
-            list.insert(entries[i].txnID);
+  for (i = 0; i < numEntries; i++)
+    if (entries[i].size != 0)
+      list.insert(entries[i].txnID);
 }
 
-
-}  // namespace
-
+}  // namespace BRM

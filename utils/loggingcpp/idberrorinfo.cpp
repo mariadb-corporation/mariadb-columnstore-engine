@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /******************************************************************************************
-* $Id: idberrorinfo.cpp 3626 2013-03-11 15:36:08Z xlou $
-*
-******************************************************************************************/
+ * $Id: idberrorinfo.cpp 3626 2013-03-11 15:36:08Z xlou $
+ *
+ ******************************************************************************************/
 #include <iostream>
 #include <iomanip>
 #include <string>
@@ -45,69 +45,68 @@ using namespace config;
 
 namespace logging
 {
-
 IDBErrorInfo* IDBErrorInfo::fInstance = 0;
 boost::mutex mx;
 
 IDBErrorInfo* IDBErrorInfo::instance()
 {
-    boost::mutex::scoped_lock lk(mx);
+  boost::mutex::scoped_lock lk(mx);
 
-    if (!fInstance)
-        fInstance = new IDBErrorInfo();
+  if (!fInstance)
+    fInstance = new IDBErrorInfo();
 
-    return fInstance;
+  return fInstance;
 }
 
 IDBErrorInfo::IDBErrorInfo()
 {
-    Config* cf = Config::makeConfig();
-    string configFile(cf->getConfig("SystemConfig", "ErrorMessageFile"));
+  Config* cf = Config::makeConfig();
+  string configFile(cf->getConfig("SystemConfig", "ErrorMessageFile"));
 
-    if (configFile.length() == 0)
-        configFile = std::string(MCSSYSCONFDIR) + "/columnstore/ErrorMessage.txt";
+  if (configFile.length() == 0)
+    configFile = std::string(MCSSYSCONFDIR) + "/columnstore/ErrorMessage.txt";
 
-    ifstream msgFile(configFile.c_str());
+  ifstream msgFile(configFile.c_str());
 
-    while (msgFile.good())
+  while (msgFile.good())
+  {
+    stringbuf* sb = new stringbuf;
+    msgFile.get(*sb);
+    string m = sb->str();
+    delete sb;
+
+    if (m.length() > 0 && m[0] != '#')
     {
-        stringbuf* sb = new stringbuf;
-        msgFile.get(*sb);
-        string m = sb->str();
-        delete sb;
+      typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+      boost::char_separator<char> sep("\t");
+      tokenizer tokens(m, sep);
+      tokenizer::iterator tok_iter = tokens.begin();
 
-        if (m.length() > 0 && m[0] != '#')
+      if (tok_iter != tokens.end())
+      {
+        int msgid = atoi(tok_iter->c_str());
+        ++tok_iter;
+
+        if (tok_iter != tokens.end())
         {
-            typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-            boost::char_separator<char> sep("\t");
-            tokenizer tokens(m, sep);
-            tokenizer::iterator tok_iter = tokens.begin();
+          ++tok_iter;
 
-            if (tok_iter != tokens.end())
-            {
-                int msgid = atoi(tok_iter->c_str());
-                ++tok_iter;
-
-                if (tok_iter != tokens.end())
-                {
-                    ++tok_iter;
-
-                    if (tok_iter != tokens.end())
-                    {
-                        string msgtext = *tok_iter;
-                        fErrMap[msgid] = msgtext;
-                    }
-                }
-            }
+          if (tok_iter != tokens.end())
+          {
+            string msgtext = *tok_iter;
+            fErrMap[msgid] = msgtext;
+          }
         }
-
-        ios_base::iostate st = msgFile.rdstate();
-
-        if ((st & ios_base::failbit) && !(st & ios_base::eofbit))
-            msgFile.clear();
-
-        (void)msgFile.get();
+      }
     }
+
+    ios_base::iostate st = msgFile.rdstate();
+
+    if ((st & ios_base::failbit) && !(st & ios_base::eofbit))
+      msgFile.clear();
+
+    (void)msgFile.get();
+  }
 }
 
 IDBErrorInfo::~IDBErrorInfo()
@@ -116,104 +115,100 @@ IDBErrorInfo::~IDBErrorInfo()
 
 string IDBErrorInfo::errorMsg(const unsigned eid, const Message::Args& args)
 {
-    string errMsg = lookupError(eid);
-    format(errMsg, args);
-    return errMsg;
+  string errMsg = lookupError(eid);
+  format(errMsg, args);
+  return errMsg;
 }
 
 string IDBErrorInfo::errorMsg(const unsigned eid)
 {
-    string errMsg = lookupError(eid);
-    Message::Args args; // empty args
-    format(errMsg, args);
-    return errMsg;
+  string errMsg = lookupError(eid);
+  Message::Args args;  // empty args
+  format(errMsg, args);
+  return errMsg;
 }
 
 string IDBErrorInfo::errorMsg(const unsigned eid, int i)
 {
-    string errMsg = lookupError(eid);
-    Message::Args args;
-    args.add(i);
-    format(errMsg, args);
-    return errMsg;
+  string errMsg = lookupError(eid);
+  Message::Args args;
+  args.add(i);
+  format(errMsg, args);
+  return errMsg;
 }
 
 string IDBErrorInfo::errorMsg(const unsigned eid, const string& s)
 {
-    string errMsg = lookupError(eid);
-    Message::Args args;
-    args.add(s);
-    format(errMsg, args);
-    return errMsg;
+  string errMsg = lookupError(eid);
+  Message::Args args;
+  args.add(s);
+  format(errMsg, args);
+  return errMsg;
 }
 
-string IDBErrorInfo::logError(const logging::LOG_TYPE logLevel,
-                              const logging::LoggingID logid,
-                              const unsigned eid,
-                              const logging::Message::Args& args)
+string IDBErrorInfo::logError(const logging::LOG_TYPE logLevel, const logging::LoggingID logid,
+                              const unsigned eid, const logging::Message::Args& args)
 {
-    Logger logger(logid.fSubsysID);
-    Message message(errorMsg(eid, args));
-    return logger.logMessage(logLevel, message, logid);
+  Logger logger(logid.fSubsysID);
+  Message message(errorMsg(eid, args));
+  return logger.logMessage(logLevel, message, logid);
 }
 
 void IDBErrorInfo::format(string& errMsg, const Message::Args& args)
 {
-    Message::Args::AnyVec::const_iterator iter = args.args().begin();
-    Message::Args::AnyVec::const_iterator end = args.args().end();
+  Message::Args::AnyVec::const_iterator iter = args.args().begin();
+  Message::Args::AnyVec::const_iterator end = args.args().end();
 
-    boost::format fmt(errMsg);
-    fmt.exceptions(boost::io::no_error_bits);
+  boost::format fmt(errMsg);
+  fmt.exceptions(boost::io::no_error_bits);
 
-    while (iter != end)
+  while (iter != end)
+  {
+    if (iter->type() == typeid(long))
     {
-        if (iter->type() == typeid(long))
-        {
-            long l = any_cast<long>(*iter);
-            fmt % l;
-        }
-        else if (iter->type() == typeid(uint64_t))
-        {
-            uint64_t u64 = any_cast<uint64_t>(*iter);
-            fmt % u64;
-        }
-        else if (iter->type() == typeid(double))
-        {
-            double d = any_cast<double>(*iter);
-            fmt % d;
-        }
-        else if (iter->type() == typeid(string))
-        {
-            string s = any_cast<string>(*iter);
-            fmt % s;
-        }
-        else
-        {
-            throw logic_error("IDBErrorInfo::format: unexpected type in argslist");
-        }
-
-        ++iter;
+      long l = any_cast<long>(*iter);
+      fmt % l;
+    }
+    else if (iter->type() == typeid(uint64_t))
+    {
+      uint64_t u64 = any_cast<uint64_t>(*iter);
+      fmt % u64;
+    }
+    else if (iter->type() == typeid(double))
+    {
+      double d = any_cast<double>(*iter);
+      fmt % d;
+    }
+    else if (iter->type() == typeid(string))
+    {
+      string s = any_cast<string>(*iter);
+      fmt % s;
+    }
+    else
+    {
+      throw logic_error("IDBErrorInfo::format: unexpected type in argslist");
     }
 
-    errMsg = fmt.str();
+    ++iter;
+  }
+
+  errMsg = fmt.str();
 }
 
 /* static */
 string IDBErrorInfo::lookupError(const unsigned eid)
 {
-    string msgstr;
-    ErrorMap::const_iterator iter = fErrMap.find(eid);
+  string msgstr;
+  ErrorMap::const_iterator iter = fErrMap.find(eid);
 
-    if (iter == fErrMap.end())
-        msgstr = "Unknown Error %1% %2% %3% %4% %5%";
-    else
-        msgstr = iter->second;
+  if (iter == fErrMap.end())
+    msgstr = "Unknown Error %1% %2% %3% %4% %5%";
+  else
+    msgstr = iter->second;
 
-    ostringstream oss;
-    oss << "MCS-" << setw(4) << setfill('0') << eid << ": " << msgstr;
-    return oss.str();
+  ostringstream oss;
+  oss << "MCS-" << setw(4) << setfill('0') << eid << ": " << msgstr;
+  return oss.str();
 }
 
-}
-
-
+}  // namespace logging

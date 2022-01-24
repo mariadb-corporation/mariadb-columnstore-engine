@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: logicoperator.cpp 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: logicoperator.cpp 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 #include <iostream>
 
 #include "bytestream.h"
@@ -30,7 +30,6 @@ using namespace std;
 
 namespace execplan
 {
-
 /**
  * Constructors/Destructors
  */
@@ -40,15 +39,15 @@ LogicOperator::LogicOperator()
 
 LogicOperator::LogicOperator(const string& operatorName)
 {
-    data(operatorName);
+  data(operatorName);
 }
 
 LogicOperator::LogicOperator(const LogicOperator& rhs) : Operator(rhs)
 {
-    data(rhs.fData);
+  data(rhs.fData);
 }
 
-LogicOperator:: ~LogicOperator()
+LogicOperator::~LogicOperator()
 {
 }
 
@@ -56,14 +55,13 @@ LogicOperator:: ~LogicOperator()
  * Operations
  */
 
-
 /**
  * friend function
  */
 ostream& operator<<(ostream& output, const LogicOperator& rhs)
 {
-    output << rhs.toString();
-    return output;
+  output << rhs.toString();
+  return output;
 }
 
 /**
@@ -71,46 +69,46 @@ ostream& operator<<(ostream& output, const LogicOperator& rhs)
  */
 void LogicOperator::serialize(messageqcpp::ByteStream& b) const
 {
-    b << (ObjectReader::id_t) ObjectReader::LOGICOPERATOR;
-    //b << fData;
-    Operator::serialize(b);
+  b << (ObjectReader::id_t)ObjectReader::LOGICOPERATOR;
+  // b << fData;
+  Operator::serialize(b);
 }
 
 void LogicOperator::unserialize(messageqcpp::ByteStream& b)
 {
-    ObjectReader::checkType(b, ObjectReader::LOGICOPERATOR);
-    //b >> fData;
-    Operator::unserialize(b);
+  ObjectReader::checkType(b, ObjectReader::LOGICOPERATOR);
+  // b >> fData;
+  Operator::unserialize(b);
 }
 
 bool LogicOperator::operator==(const LogicOperator& t) const
 {
-    if (data() == t.data())
-        return true;
+  if (data() == t.data())
+    return true;
 
-    return false;
+  return false;
 }
 
 bool LogicOperator::operator==(const TreeNode* t) const
 {
-    const LogicOperator* o;
+  const LogicOperator* o;
 
-    o = dynamic_cast<const LogicOperator*>(t);
+  o = dynamic_cast<const LogicOperator*>(t);
 
-    if (o == NULL)
-        return false;
+  if (o == NULL)
+    return false;
 
-    return *this == *o;
+  return *this == *o;
 }
 
 bool LogicOperator::operator!=(const LogicOperator& t) const
 {
-    return (!(*this == t));
+  return (!(*this == t));
 }
 
 bool LogicOperator::operator!=(const TreeNode* t) const
 {
-    return (!(*this == t));
+  return (!(*this == t));
 }
 
-}  // namespace
+}  // namespace execplan

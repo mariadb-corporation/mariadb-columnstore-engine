@@ -48,4 +48,3 @@ extern int opterr;
 extern int optopt;
 
 extern int getopt(int, char* const*, const char*);
-

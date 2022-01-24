@@ -29,116 +29,111 @@
 
 namespace joblist
 {
-
 class JSTimeStamp
 {
+ public:
+  JSTimeStamp();
+  ~JSTimeStamp(){};
 
-public:
-    JSTimeStamp();
-    ~JSTimeStamp() { };
+  inline void setFirstInsertTime()
+  {
+    gettimeofday(&fFirstInsertTime, 0);
+  }
+  inline void setLastInsertTime()
+  {
+    gettimeofday(&fLastInsertTime, 0);
+  }
+  inline void setEndOfInputTime()
+  {
+    gettimeofday(&fEndofInputTime, 0);
+  }
+  inline void setFirstReadTime()
+  {
+    gettimeofday(&fFirstReadTime, 0);
+  }
+  inline void setLastReadTime()
+  {
+    gettimeofday(&fLastReadTime, 0);
+  }
 
-    inline void setFirstInsertTime()
-    {
-        gettimeofday(&fFirstInsertTime, 0);
-    }
-    inline void setLastInsertTime()
-    {
-        gettimeofday(&fLastInsertTime, 0);
-    }
-    inline void setEndOfInputTime()
-    {
-        gettimeofday(&fEndofInputTime, 0);
-    }
-    inline void setFirstReadTime()
-    {
-        gettimeofday(&fFirstReadTime, 0);
-    }
-    inline void setLastReadTime()
-    {
-        gettimeofday(&fLastReadTime, 0);
-    }
+  inline void setFirstInsertTime(const struct timeval& t)
+  {
+    fFirstInsertTime = t;
+  }
+  inline void setLastInsertTime(const struct timeval& t)
+  {
+    fLastInsertTime = t;
+  }
+  inline void setEndOfInputTime(const struct timeval& t)
+  {
+    fEndofInputTime = t;
+  }
+  inline void setFirstReadTime(const struct timeval& t)
+  {
+    fFirstReadTime = t;
+  }
+  inline void setLastReadTime(const struct timeval& t)
+  {
+    fLastReadTime = t;
+  }
 
-    inline void setFirstInsertTime(const struct timeval& t)
-    {
-        fFirstInsertTime = t;
-    }
-    inline void setLastInsertTime(const struct timeval& t)
-    {
-        fLastInsertTime = t;
-    }
-    inline void setEndOfInputTime(const struct timeval& t)
-    {
-        fEndofInputTime = t;
-    }
-    inline void setFirstReadTime(const struct timeval& t)
-    {
-        fFirstReadTime = t;
-    }
-    inline void setLastReadTime(const struct timeval& t)
-    {
-        fLastReadTime = t;
-    }
+  inline const struct timeval FirstInsertTime() const
+  {
+    return fFirstInsertTime;
+  }
+  inline const struct timeval LastInsertTime() const
+  {
+    return fLastInsertTime;
+  }
+  inline const struct timeval EndOfInputTime() const
+  {
+    return fEndofInputTime;
+  }
+  inline const struct timeval FirstReadTime() const
+  {
+    return fFirstReadTime;
+  }
+  inline const struct timeval LastReadTime() const
+  {
+    return fLastReadTime;
+  }
 
-    inline const struct timeval FirstInsertTime() const
-    {
-        return fFirstInsertTime;
-    }
-    inline const struct timeval LastInsertTime() const
-    {
-        return fLastInsertTime;
-    }
-    inline const struct timeval EndOfInputTime() const
-    {
-        return fEndofInputTime;
-    }
-    inline const struct timeval FirstReadTime() const
-    {
-        return fFirstReadTime;
-    }
-    inline const struct timeval LastReadTime() const
-    {
-        return fLastReadTime;
-    }
+  const std::string FirstInsertTimeString() const
+  {
+    return format(fFirstInsertTime);
+  }
+  const std::string LastInsertTimeString() const
+  {
+    return format(fLastInsertTime);
+  }
+  const std::string EndOfInputTimeString() const
+  {
+    return format(fEndofInputTime);
+  }
+  const std::string FirstReadTimeString() const
+  {
+    return format(fFirstReadTime);
+  }
+  const std::string LastReadTimeString() const
+  {
+    return format(fLastReadTime);
+  }
 
-    const std::string FirstInsertTimeString() const
-    {
-        return format(fFirstInsertTime);
-    }
-    const std::string LastInsertTimeString() const
-    {
-        return format(fLastInsertTime);
-    }
-    const std::string EndOfInputTimeString() const
-    {
-        return format(fEndofInputTime);
-    }
-    const std::string FirstReadTimeString() const
-    {
-        return format(fFirstReadTime);
-    }
-    const std::string LastReadTimeString() const
-    {
-        return format(fLastReadTime);
-    }
+  // returns str rep of t2 - t1 in seconds
+  static const std::string tsdiffstr(const struct timeval& t2, const struct timeval& t1);
 
-    //returns str rep of t2 - t1 in seconds
-    static const std::string tsdiffstr(const struct timeval& t2, const struct timeval& t1);
+  // returns str rep of tvbuf
+  static const std::string format(const struct timeval& tvbuf);
 
-    //returns str rep of tvbuf
-    static const std::string format(const struct timeval& tvbuf);
+  static const std::string timeNow();
 
-    static const std::string timeNow();
-
-protected:
-
-private:
-    struct timeval fFirstInsertTime;
-    struct timeval fLastInsertTime;
-    struct timeval fEndofInputTime;
-    struct timeval fFirstReadTime;
-    struct timeval fLastReadTime;
+ protected:
+ private:
+  struct timeval fFirstInsertTime;
+  struct timeval fLastInsertTime;
+  struct timeval fEndofInputTime;
+  struct timeval fFirstReadTime;
+  struct timeval fLastReadTime;
 };
 
-} //namespace joblist
-
-
+}  // namespace joblist

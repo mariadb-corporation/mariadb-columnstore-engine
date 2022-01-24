@@ -23,4 +23,3 @@ typedef struct produconsum* produconsum_t;
  * Get contiguous chunk of data
  */
 int pc_consumeAnyContiguous(produconsum_t pc);
-

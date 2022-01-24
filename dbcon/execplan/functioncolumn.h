@@ -17,10 +17,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: functioncolumn.h 9679 2013-07-11 22:32:03Z zzhu $
-*
-*
-***********************************************************************/
+ *   $Id: functioncolumn.h 9679 2013-07-11 22:32:03Z zzhu $
+ *
+ *
+ ***********************************************************************/
 /** @file */
 
 #pragma once
@@ -41,7 +41,6 @@ class ByteStream;
  */
 namespace execplan
 {
-
 /**
  * @brief A class to represent a functional column
  *
@@ -50,279 +49,279 @@ namespace execplan
  */
 class FunctionColumn : public ReturnedColumn
 {
+ public:
+  FunctionColumn();
+  FunctionColumn(std::string& funcName);
+  FunctionColumn(const std::string& functionName, const std::string& funcParmsInString,
+                 const uint32_t sessionID = 0);
+  FunctionColumn(const FunctionColumn& rhs, const uint32_t sessionID = 0);
+  virtual ~FunctionColumn();
 
-public:
-    FunctionColumn();
-    FunctionColumn(std::string& funcName);
-    FunctionColumn(const std::string& functionName, const std::string& funcParmsInString, const uint32_t sessionID = 0);
-    FunctionColumn( const FunctionColumn& rhs, const uint32_t sessionID = 0);
-    virtual ~FunctionColumn();
+  /** get function name
+   *
+   * get the function name for this function column
+   */
+  inline const std::string& functionName() const
+  {
+    return fFunctionName;
+  }
 
-    /** get function name
-     *
-     * get the function name for this function column
-     */
-    inline const std::string& functionName() const
+  /** set function name
+   *
+   * set the function name for this function column
+   */
+  inline void functionName(const std::string functionName)
+  {
+    fFunctionName = functionName;
+  }
+
+  /** get function parameters
+   *
+   * get the function parameters for this function column.
+   * @return a vector of paramenters in string format
+   */
+  inline const funcexp::FunctionParm& functionParms() const
+  {
+    return fFunctionParms;
+  }
+
+  /** set function parameters
+   *
+   * set the function parameters for this function column.
+   */
+  void functionParms(const funcexp::FunctionParm& functionParms)
+  {
+    fFunctionParms = functionParms;
+  }
+
+  /** set function parameters
+   *
+   * set the function parameters for this function column.
+   * pass in the functionParms with parenthesis as one string.
+   * tokenize the string with ' ' or ',' and form a vector of
+   * parameters in string.
+   */
+  void funcParms(const std::string& funcParmsInString);
+
+  /** get table alias name
+   *
+   * get the table alias name for this function
+   */
+  inline const std::string& tableAlias() const
+  {
+    return fTableAlias;
+  }
+
+  /** set table alias name
+   *
+   * set the table alias name for this function
+   */
+  inline void tableAlias(const std::string& tableAlias)
+  {
+    fTableAlias = tableAlias;
+  }
+
+  inline const std::string timeZone() const
+  {
+    return fTimeZone;
+  }
+
+  inline void timeZone(const std::string& timeZone)
+  {
+    fTimeZone = timeZone;
+  }
+
+  virtual const std::string data() const;
+  virtual void data(const std::string data)
+  {
+    fData = data;
+  }
+
+  virtual const std::string toString() const;
+
+  /** return a copy of this pointer
+   *
+   * deep copy of this pointer and return the copy
+   */
+  inline virtual FunctionColumn* clone() const
+  {
+    return new FunctionColumn(*this);
+  }
+
+  /**
+   * The serialization interface
+   */
+  virtual void serialize(messageqcpp::ByteStream&) const;
+  virtual void unserialize(messageqcpp::ByteStream&);
+
+  using ReturnedColumn::hasAggregate;
+  virtual bool hasAggregate();
+  virtual bool hasWindowFunc();
+  virtual void setDerivedTable();
+  virtual void replaceRealCol(std::vector<SRCP>&);
+  virtual const std::vector<SimpleColumn*>& simpleColumnList() const
+  {
+    return fSimpleColumnList;
+  }
+
+  virtual void setSimpleColumnList();
+  /**
+   * Return the tableAlias name of the table that the column arguments belong to.
+   *
+   * @param TableAliasName that will be set in the function
+   * @return true, if all arguments belong to one table
+   *         false, if multiple tables are involved in the function
+   */
+  virtual bool singleTable(CalpontSystemCatalog::TableAliasName& tan);
+
+ private:
+  /**
+   * Fields
+   */
+  std::string fFunctionName;  /// function name
+  std::string fTableAlias;    /// table alias which has the column
+  std::string fData;          /// SQL representation
+  std::string fTimeZone;
+
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
+   */
+  virtual bool operator==(const TreeNode* t) const;
+
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
+   */
+  bool operator==(const FunctionColumn& t) const;
+
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
+   */
+  virtual bool operator!=(const TreeNode* t) const;
+
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
+   */
+  bool operator!=(const FunctionColumn& t) const;
+
+  /***********************************************************
+   *				  F&E framework						  *
+   ***********************************************************/
+ public:
+  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
+  {
+    fResult.strVal = fFunctor->getStrVal(row, fFunctionParms, isNull, fOperationType);
+    return fResult.strVal;
+  }
+  virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
+  {
+    return fFunctor->getIntVal(row, fFunctionParms, isNull, fOperationType);
+  }
+  virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull)
+  {
+    return fFunctor->getUintVal(row, fFunctionParms, isNull, fOperationType);
+  }
+  virtual float getFloatVal(rowgroup::Row& row, bool& isNull)
+  {
+    return fFunctor->getFloatVal(row, fFunctionParms, isNull, fOperationType);
+  }
+  virtual double getDoubleVal(rowgroup::Row& row, bool& isNull)
+  {
+    return fFunctor->getDoubleVal(row, fFunctionParms, isNull, fOperationType);
+  }
+  virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull)
+  {
+    return fFunctor->getLongDoubleVal(row, fFunctionParms, isNull, fOperationType);
+  }
+  virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull)
+  {
+    IDB_Decimal decimal = fFunctor->getDecimalVal(row, fFunctionParms, isNull, fOperationType);
+
+    if (UNLIKELY(fResultType.colWidth == utils::MAXLEGACYWIDTH && fResultType.scale == decimal.scale))
+      return decimal;
+
+    if (LIKELY(fResultType.isWideDecimalType()))
     {
-        return fFunctionName;
-    }
+      decimal.s128Value = (datatypes::Decimal::isWideDecimalTypeByPrecision(decimal.precision))
+                              ? decimal.s128Value
+                              : decimal.value;
 
-    /** set function name
-     *
-     * set the function name for this function column
-     */
-    inline void functionName(const std::string functionName)
-    {
-        fFunctionName = functionName;
-    }
+      int128_t scaleMultiplier;
+      int32_t scaleDiff = fResultType.scale - decimal.scale;
+      datatypes::getScaleDivisor(scaleMultiplier, abs(scaleDiff));
 
-    /** get function parameters
-     *
-     * get the function parameters for this function column.
-     * @return a vector of paramenters in string format
-     */
-    inline const funcexp::FunctionParm& functionParms() const
-    {
-        return fFunctionParms;
-    }
-
-    /** set function parameters
-     *
-     * set the function parameters for this function column.
-     */
-    void functionParms(const funcexp::FunctionParm& functionParms)
-    {
-        fFunctionParms = functionParms;
-    }
-
-    /** set function parameters
-     *
-     * set the function parameters for this function column.
-     * pass in the functionParms with parenthesis as one string.
-     * tokenize the string with ' ' or ',' and form a vector of
-     * parameters in string.
-     */
-    void funcParms(const std::string& funcParmsInString);
-
-    /** get table alias name
-     *
-     * get the table alias name for this function
-     */
-    inline const std::string& tableAlias () const
-    {
-        return fTableAlias;
-    }
-
-    /** set table alias name
-     *
-     * set the table alias name for this function
-     */
-    inline void tableAlias (const std::string& tableAlias)
-    {
-        fTableAlias = tableAlias;
-    }
-
-    inline const std::string timeZone () const
-    {
-        return fTimeZone;
-    }
-
-    inline void timeZone (const std::string& timeZone)
-    {
-        fTimeZone = timeZone;
-    }
-
-    virtual const std::string data() const;
-    virtual void data(const std::string data)
-    {
-        fData = data;
-    }
-
-    virtual const std::string toString() const;
-
-    /** return a copy of this pointer
-     *
-     * deep copy of this pointer and return the copy
-     */
-    inline virtual FunctionColumn* clone() const
-    {
-        return new FunctionColumn (*this);
-    }
-
-    /**
-     * The serialization interface
-     */
-    virtual void serialize(messageqcpp::ByteStream&) const;
-    virtual void unserialize(messageqcpp::ByteStream&);
-
-    using ReturnedColumn::hasAggregate;
-    virtual bool hasAggregate();
-    virtual bool hasWindowFunc();
-    virtual void setDerivedTable();
-    virtual void replaceRealCol(std::vector<SRCP>&);
-    virtual const std::vector<SimpleColumn*>& simpleColumnList() const
-    {
-        return fSimpleColumnList;
-    }
-
-    virtual void setSimpleColumnList();
-    /**
-     * Return the tableAlias name of the table that the column arguments belong to.
-     *
-     * @param TableAliasName that will be set in the function
-     * @return true, if all arguments belong to one table
-     *         false, if multiple tables are involved in the function
-     */
-    virtual bool singleTable(CalpontSystemCatalog::TableAliasName& tan);
-
-private:
-    /**
-     * Fields
-     */
-    std::string fFunctionName;	/// function name
-    std::string fTableAlias;	/// table alias which has the column
-    std::string fData;			/// SQL representation
-    std::string fTimeZone;
-
-    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-    *
-    * Do a deep, strict (as opposed to semantic) equivalence test.
-    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
-     */
-    virtual bool operator==(const TreeNode* t) const;
-
-    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-     *
-     * Do a deep, strict (as opposed to semantic) equivalence test.
-     * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
-     */
-    bool operator==(const FunctionColumn& t) const;
-
-    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-     *
-     * Do a deep, strict (as opposed to semantic) equivalence test.
-     * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
-     */
-    virtual bool operator!=(const TreeNode* t) const;
-
-    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-     *
-     * Do a deep, strict (as opposed to semantic) equivalence test.
-     * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
-     */
-    bool operator!=(const FunctionColumn& t) const;
-
-    /***********************************************************
-     *				  F&E framework						  *
-     ***********************************************************/
-public:
-    virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
-    {
-        fResult.strVal = fFunctor->getStrVal(row, fFunctionParms, isNull, fOperationType);
-        return fResult.strVal;
-    }
-    virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
-    {
-        return fFunctor->getIntVal(row, fFunctionParms, isNull, fOperationType);
-    }
-    virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull)
-    {
-        return fFunctor->getUintVal(row, fFunctionParms, isNull, fOperationType);
-    }
-    virtual float getFloatVal(rowgroup::Row& row, bool& isNull)
-    {
-        return fFunctor->getFloatVal(row, fFunctionParms, isNull, fOperationType);
-    }
-    virtual double getDoubleVal(rowgroup::Row& row, bool& isNull)
-    {
-        return fFunctor->getDoubleVal(row, fFunctionParms, isNull, fOperationType);
-    }
-    virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull)
-    {
-        return fFunctor->getLongDoubleVal(row, fFunctionParms, isNull, fOperationType);
-    }
-    virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull)
-    {
-        IDB_Decimal decimal = fFunctor->getDecimalVal(row, fFunctionParms, isNull, fOperationType);
-
-        if (UNLIKELY(fResultType.colWidth == utils::MAXLEGACYWIDTH
-                && fResultType.scale == decimal.scale))
-            return decimal;
-
-        if (LIKELY(fResultType.isWideDecimalType()))
+      if (scaleMultiplier > 1)
+      {
+        if (scaleDiff > 0)
         {
-            decimal.s128Value =
-                (datatypes::Decimal::isWideDecimalTypeByPrecision(decimal.precision)) ?
-                    decimal.s128Value : decimal.value;
-
-            int128_t scaleMultiplier;
-            int32_t scaleDiff = fResultType.scale - decimal.scale;
-            datatypes::getScaleDivisor(scaleMultiplier, abs(scaleDiff));
-
-            if (scaleMultiplier > 1)
-            {
-                if (scaleDiff > 0)
-                {
-                    // TODO MCOL-641 Unconditional overflow check
-                    datatypes::MultiplicationNoOverflowCheck mul;
-                    mul(decimal.s128Value, scaleMultiplier, decimal.s128Value);
-                }
-                else
-                {
-                    decimal = decimal.integralWideRound();
-                }
-            }
+          // TODO MCOL-641 Unconditional overflow check
+          datatypes::MultiplicationNoOverflowCheck mul;
+          mul(decimal.s128Value, scaleMultiplier, decimal.s128Value);
         }
-        else if (fResultType.colWidth == utils::MAXLEGACYWIDTH)
+        else
         {
-            if (fResultType.scale > decimal.scale)
-                decimal.value *= IDB_pow[fResultType.scale - decimal.scale];
-            else
-                decimal.value = (int64_t)(decimal.value > 0 ?
-                                          (double)decimal.value / IDB_pow[decimal.scale - fResultType.scale] + 0.5 :
-                                          (double)decimal.value / IDB_pow[decimal.scale - fResultType.scale] - 0.5);
+          decimal = decimal.integralWideRound();
         }
-
-        decimal.scale = fResultType.scale;
-        decimal.precision = std::max(fResultType.precision, static_cast<int32_t>(decimal.precision));
-        return decimal;
+      }
     }
-    virtual bool getBoolVal(rowgroup::Row& row, bool& isNull)
+    else if (fResultType.colWidth == utils::MAXLEGACYWIDTH)
     {
-        return fFunctor->getBoolVal(row, fFunctionParms, isNull, fOperationType);
-    }
-    virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull)
-    {
-        return fFunctor->getDateIntVal(row, fFunctionParms, isNull, fOperationType);
-    }
-    virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull)
-    {
-        return fFunctor->getDatetimeIntVal(row, fFunctionParms, isNull, fOperationType);
-    }
-    virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull)
-    {
-        return fFunctor->getTimestampIntVal(row, fFunctionParms, isNull, fOperationType);
-    }
-    virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
-    {
-        return fFunctor->getTimeIntVal(row, fFunctionParms, isNull, fOperationType);
+      if (fResultType.scale > decimal.scale)
+        decimal.value *= IDB_pow[fResultType.scale - decimal.scale];
+      else
+        decimal.value =
+            (int64_t)(decimal.value > 0
+                          ? (double)decimal.value / IDB_pow[decimal.scale - fResultType.scale] + 0.5
+                          : (double)decimal.value / IDB_pow[decimal.scale - fResultType.scale] - 0.5);
     }
 
-    void setFunctor(funcexp::Func* functor)
-    {
-        fFunctor = functor;
-    }
-private:
-    funcexp::FunctionParm fFunctionParms;
-    funcexp::Func* fFunctor;   /// functor to execute this function
-    funcexp::Func* fDynamicFunctor = NULL; // for rand encode decode
-    bool fFixed = false;
+    decimal.scale = fResultType.scale;
+    decimal.precision = std::max(fResultType.precision, static_cast<int32_t>(decimal.precision));
+    return decimal;
+  }
+  virtual bool getBoolVal(rowgroup::Row& row, bool& isNull)
+  {
+    return fFunctor->getBoolVal(row, fFunctionParms, isNull, fOperationType);
+  }
+  virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull)
+  {
+    return fFunctor->getDateIntVal(row, fFunctionParms, isNull, fOperationType);
+  }
+  virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull)
+  {
+    return fFunctor->getDatetimeIntVal(row, fFunctionParms, isNull, fOperationType);
+  }
+  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull)
+  {
+    return fFunctor->getTimestampIntVal(row, fFunctionParms, isNull, fOperationType);
+  }
+  virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
+  {
+    return fFunctor->getTimeIntVal(row, fFunctionParms, isNull, fOperationType);
+  }
+
+  void setFunctor(funcexp::Func* functor)
+  {
+    fFunctor = functor;
+  }
+
+ private:
+  funcexp::FunctionParm fFunctionParms;
+  funcexp::Func* fFunctor;                /// functor to execute this function
+  funcexp::Func* fDynamicFunctor = NULL;  // for rand encode decode
+  bool fFixed = false;
 };
 
 /**
-* ostream operator
-*/
+ * ostream operator
+ */
 std::ostream& operator<<(std::ostream& output, const FunctionColumn& rhs);
 
-}
-
+}  // namespace execplan

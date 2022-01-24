@@ -15,8 +15,6 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-
-
 #pragma once
 
 #include "ClientRequestProcessor.h"
@@ -27,14 +25,13 @@
 #include <sys/poll.h>
 #include <tr1/unordered_map>
 
-
 namespace storagemanager
 {
-
-enum sessionCtrl {
-    ADDFD,
-    REMOVEFD,
-    SHUTDOWN
+enum sessionCtrl
+{
+  ADDFD,
+  REMOVEFD,
+  SHUTDOWN
 };
 
 #define MAX_SM_SOCKETS 200
@@ -44,37 +41,36 @@ enum sessionCtrl {
  */
 class SessionManager
 {
-public:
-    static SessionManager *get();
-    ~SessionManager();
+ public:
+  static SessionManager* get();
+  ~SessionManager();
 
-    /**
-     * start and manage socket connections
-     */
-    int start();
+  /**
+   * start and manage socket connections
+   */
+  int start();
 
-    void returnSocket(int socket);
-    void socketError(int socket);
-    void CRPTest(int socket,uint length);
-    void shutdownSM(int sig);
+  void returnSocket(int socket);
+  void socketError(int socket);
+  void CRPTest(int socket, uint length);
+  void shutdownSM(int sig);
 
-private:
-    SessionManager();
-    //SMConfig&  config;
-    ClientRequestProcessor *crp;
-    struct pollfd fds[MAX_SM_SOCKETS];
-    int socketCtrl[2];
-    boost::mutex ctrlMutex;
-    
-    // These map a socket fd to its state between read iterations if a message header could not be found in the data
-    // available at the time.
-    struct SockState {
-        char remainingData[SM_HEADER_LEN];
-        uint remainingBytes;
-    };
-    std::tr1::unordered_map<int, SockState> sockState;
-    
+ private:
+  SessionManager();
+  // SMConfig&  config;
+  ClientRequestProcessor* crp;
+  struct pollfd fds[MAX_SM_SOCKETS];
+  int socketCtrl[2];
+  boost::mutex ctrlMutex;
+
+  // These map a socket fd to its state between read iterations if a message header could not be found in the
+  // data available at the time.
+  struct SockState
+  {
+    char remainingData[SM_HEADER_LEN];
+    uint remainingBytes;
+  };
+  std::tr1::unordered_map<int, SockState> sockState;
 };
 
-}
-
+}  // namespace storagemanager

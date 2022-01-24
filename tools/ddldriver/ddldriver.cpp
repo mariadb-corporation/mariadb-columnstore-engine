@@ -36,99 +36,98 @@ namespace
 {
 void usage()
 {
-    cout << "usage: ddlriver [-h] schema sql_text" << endl;
+  cout << "usage: ddlriver [-h] schema sql_text" << endl;
 }
 const string toupper_(const string& in)
 {
-    string::const_iterator iter = in.begin();
-    string::const_iterator end = in.end();
-    ostringstream oss;
+  string::const_iterator iter = in.begin();
+  string::const_iterator end = in.end();
+  ostringstream oss;
 
-    while (iter != end)
-    {
-        oss << static_cast<char>(toupper(*iter));
-        ++iter;
-    }
+  while (iter != end)
+  {
+    oss << static_cast<char>(toupper(*iter));
+    ++iter;
+  }
 
-    return oss.str();
+  return oss.str();
 }
-}
+}  // namespace
 
 int main(int argc, char** argv)
 {
-    int c;
+  int c;
 
-    opterr = 0;
+  opterr = 0;
 
-    while ((c = getopt(argc, argv, "h")) != EOF)
-        switch (c)
-        {
-            case 'h':
-            case '?':
-            default:
-                usage();
-                return (c == 'h' ? 0 : 1);
-                break;
-        }
-
-    if (argc - optind < 2)
+  while ((c = getopt(argc, argv, "h")) != EOF)
+    switch (c)
     {
+      case 'h':
+      case '?':
+      default:
         usage();
-        return 1;
+        return (c == 'h' ? 0 : 1);
+        break;
     }
 
-    string owner(toupper_(argv[optind++]));
+  if (argc - optind < 2)
+  {
+    usage();
+    return 1;
+  }
 
-    SqlParser parser;
-    parser.setDefaultSchema(owner);
+  string owner(toupper_(argv[optind++]));
 
-    string stmtStr(toupper_(argv[optind++]));
-    parser.Parse(stmtStr.c_str());
+  SqlParser parser;
+  parser.setDefaultSchema(owner);
 
-    if (!parser.Good())
-    {
-        cerr << "Failed to parse statement: " << stmtStr << endl;
-        return 1;
-    }
+  string stmtStr(toupper_(argv[optind++]));
+  parser.Parse(stmtStr.c_str());
 
-    const ParseTree& ptree = parser.GetParseTree();
-    SqlStatement& stmt = *ptree.fList[0];
+  if (!parser.Good())
+  {
+    cerr << "Failed to parse statement: " << stmtStr << endl;
+    return 1;
+  }
 
-    stmt.fSessionID = 1;
-    stmt.fSql = stmtStr;
-    stmt.fOwner = owner;
+  const ParseTree& ptree = parser.GetParseTree();
+  SqlStatement& stmt = *ptree.fList[0];
 
-    ByteStream bytestream;
-    bytestream << stmt.fSessionID;
-    stmt.serialize(bytestream);
-    MessageQueueClient mq("DDLProc");
-    ByteStream::byte b;
-    string errorMsg;
+  stmt.fSessionID = 1;
+  stmt.fSql = stmtStr;
+  stmt.fOwner = owner;
 
-    try
-    {
-        mq.write(bytestream);
-        bytestream = mq.read();
-        bytestream >> b;
-        bytestream >> errorMsg;
-    }
-    catch (runtime_error& rex)
-    {
-        cerr << "runtime_error in engine: " << rex.what() << endl;
-        return 1;
-    }
-    catch (...)
-    {
-        cerr << "uknown error in engine" << endl;
-        return 1;
-    }
+  ByteStream bytestream;
+  bytestream << stmt.fSessionID;
+  stmt.serialize(bytestream);
+  MessageQueueClient mq("DDLProc");
+  ByteStream::byte b;
+  string errorMsg;
 
-    if (b != 0)
-    {
-        cerr << "DDLProc error: " << errorMsg << endl;
-        return 1;
-    }
+  try
+  {
+    mq.write(bytestream);
+    bytestream = mq.read();
+    bytestream >> b;
+    bytestream >> errorMsg;
+  }
+  catch (runtime_error& rex)
+  {
+    cerr << "runtime_error in engine: " << rex.what() << endl;
+    return 1;
+  }
+  catch (...)
+  {
+    cerr << "uknown error in engine" << endl;
+    return 1;
+  }
 
-    return 0;
+  if (b != 0)
+  {
+    cerr << "DDLProc error: " << errorMsg << endl;
+    return 1;
+  }
+
+  return 0;
 }
-

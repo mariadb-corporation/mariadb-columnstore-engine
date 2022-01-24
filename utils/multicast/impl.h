@@ -39,27 +39,25 @@
 
 namespace multicast
 {
-
 class MulticastImpl
 {
-public:
-    MulticastImpl(int min_receivers, const std::string& ifName, int portBase = 9000, int bufSize = 8 * 1024 * 1024);
-    ~MulticastImpl();
+ public:
+  MulticastImpl(int min_receivers, const std::string& ifName, int portBase = 9000,
+                int bufSize = 8 * 1024 * 1024);
+  ~MulticastImpl();
 
-    void startSender();
-    void doTransfer(const uint8_t* buf, uint32_t len);
+  void startSender();
+  void doTransfer(const uint8_t* buf, uint32_t len);
 
-    void startReceiver();
-    void receive(messageqcpp::SBS obs);
+  void startReceiver();
+  void receive(messageqcpp::SBS obs);
 
-    struct net_config fNet_config;
-    struct stat_config fStat_config;
-    struct client_config fClient_config;
-    std::string fIfName;
-    int fSock[3];
-    participantsDb_t fDb;
+  struct net_config fNet_config;
+  struct stat_config fStat_config;
+  struct client_config fClient_config;
+  std::string fIfName;
+  int fSock[3];
+  participantsDb_t fDb;
 };
 
-}
-
-
+}  // namespace multicast

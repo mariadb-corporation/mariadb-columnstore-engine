@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id$
-*
-*******************************************************************************/
+ * $Id$
+ *
+ *******************************************************************************/
 
 /*
  * we_respreadthread.h
@@ -31,19 +31,17 @@
 
 namespace WriteEngine
 {
-
 class WERespReadThread
 {
-public:
-    WERespReadThread(WESDHandler& aSdh);
-    WERespReadThread(const WERespReadThread& rhs);
-    virtual ~WERespReadThread();
+ public:
+  WERespReadThread(WESDHandler& aSdh);
+  WERespReadThread(const WERespReadThread& rhs);
+  virtual ~WERespReadThread();
 
-    void operator()();
+  void operator()();
 
-private:
-    WESDHandler& fSdh;
-
+ private:
+  WESDHandler& fSdh;
 };
 
 } /* namespace WriteEngine */

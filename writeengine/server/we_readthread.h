@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id: we_readthread.h 4609 2013-04-19 15:32:02Z chao $
-*
-*******************************************************************************/
+ * $Id: we_readthread.h 4609 2013-04-19 15:32:02Z chao $
+ *
+ *******************************************************************************/
 #pragma once
 
 #include <unistd.h>
@@ -36,92 +36,82 @@
 
 namespace WriteEngine
 {
-
-
 class ReadThread
 {
-public:
-    explicit ReadThread(const messageqcpp::IOSocket& ios);
-    virtual ~ReadThread();
+ public:
+  explicit ReadThread(const messageqcpp::IOSocket& ios);
+  virtual ~ReadThread();
 
-    virtual void operator()();
+  virtual void operator()();
 
+  // protected:
+ public:
+  messageqcpp::IOSocket fIos;
+  messageqcpp::ByteStream fIbs;
 
-//protected:
-public:
-    messageqcpp::IOSocket fIos;
-    messageqcpp::ByteStream fIbs;
-
-private:
-    //defaults okay
-    //ReadThread(const ReadThread& rhs);
-    //ReadThread& operator=(const ReadThread& rhs);
-
+ private:
+  // defaults okay
+  // ReadThread(const ReadThread& rhs);
+  // ReadThread& operator=(const ReadThread& rhs);
 };
 
-
-class DmlReadThread: public ReadThread
+class DmlReadThread : public ReadThread
 {
-public:
-    explicit DmlReadThread(const messageqcpp::IOSocket& ios, ByteStream& ibs );
-    virtual ~DmlReadThread();
+ public:
+  explicit DmlReadThread(const messageqcpp::IOSocket& ios, ByteStream& ibs);
+  virtual ~DmlReadThread();
 
-    virtual void operator()();
+  virtual void operator()();
 
-
-private:
-    boost::shared_ptr<WE_DMLCommandProc> fWeDMLprocessor;
-    boost::shared_ptr<WE_DDLCommandProc> fWeDDLprocessor;
-
+ private:
+  boost::shared_ptr<WE_DMLCommandProc> fWeDMLprocessor;
+  boost::shared_ptr<WE_DDLCommandProc> fWeDDLprocessor;
 };
 
-class SplitterReadThread: public ReadThread
+class SplitterReadThread : public ReadThread
 {
-public:
-    SplitterReadThread(const messageqcpp::IOSocket& ios, ByteStream& Ibs);
-    SplitterReadThread(const SplitterReadThread& rhs);
-    virtual ~SplitterReadThread();
+ public:
+  SplitterReadThread(const messageqcpp::IOSocket& ios, ByteStream& Ibs);
+  SplitterReadThread(const SplitterReadThread& rhs);
+  virtual ~SplitterReadThread();
 
-    virtual void operator()();
+  virtual void operator()();
 
+ private:
+  // WEDataLoader* fpWeDataLoader;
+  WEDataLoader fWeDataLoader;
 
-private:
-    //WEDataLoader* fpWeDataLoader;
-    WEDataLoader fWeDataLoader;
-
-    friend class ReadThreadFactory;
-//friend class WEDataLoader;
+  friend class ReadThreadFactory;
+  // friend class WEDataLoader;
 };
-
 
 //------------------------------------------------------------------------------
 // Thread object that receives a cleartablelock tool command.
 //------------------------------------------------------------------------------
 class ClearTableLockReadThread : public ReadThread
 {
-public:
-    ClearTableLockReadThread(const messageqcpp::IOSocket& ios, ByteStream& ibs);
-    virtual ~ClearTableLockReadThread();
+ public:
+  ClearTableLockReadThread(const messageqcpp::IOSocket& ios, ByteStream& ibs);
+  virtual ~ClearTableLockReadThread();
 
-    virtual void operator()();
-private:
-    boost::shared_ptr<WE_ClearTableLockCmd> fWeClearTableLockCmd;
+  virtual void operator()();
+
+ private:
+  boost::shared_ptr<WE_ClearTableLockCmd> fWeClearTableLockCmd;
 };
-
 
 //------------------------------------------------------------------------------
 // Thread object that receives a redistributeDB tool command.
 //------------------------------------------------------------------------------
 class RedistributeReadThread : public ReadThread
 {
-public:
-    RedistributeReadThread(const messageqcpp::IOSocket& ios, ByteStream& ibs);
-    virtual ~RedistributeReadThread();
+ public:
+  RedistributeReadThread(const messageqcpp::IOSocket& ios, ByteStream& ibs);
+  virtual ~RedistributeReadThread();
 
-    virtual void operator()();
+  virtual void operator()();
 
-private:
-
+ private:
 };
 
 //------------------------------------------------------------------------------
@@ -129,30 +119,29 @@ private:
 //------------------------------------------------------------------------------
 class GetFileSizeThread : public ReadThread
 {
-public:
-    GetFileSizeThread(const messageqcpp::IOSocket& ios, ByteStream& ibs, BRM::DBRM& dbrm);
-    virtual ~GetFileSizeThread();
+ public:
+  GetFileSizeThread(const messageqcpp::IOSocket& ios, ByteStream& ibs, BRM::DBRM& dbrm);
+  virtual ~GetFileSizeThread();
 
-    virtual void operator()();
+  virtual void operator()();
 
-private:
-    boost::shared_ptr<WE_GetFileSizes> fWeGetFileSizes;
-    int key;
+ private:
+  boost::shared_ptr<WE_GetFileSizes> fWeGetFileSizes;
+  int key;
 };
 
 class ReadThreadFactory
 {
-public:
-    ReadThreadFactory() {}
-    virtual ~ReadThreadFactory() {}
+ public:
+  ReadThreadFactory()
+  {
+  }
+  virtual ~ReadThreadFactory()
+  {
+  }
 
-public:
-    static void CreateReadThread(threadpool::ThreadPool& Tp, IOSocket& ios, BRM::DBRM& dbrm);
-
-
+ public:
+  static void CreateReadThread(threadpool::ThreadPool& Tp, IOSocket& ios, BRM::DBRM& dbrm);
 };
 
-
-}
-
-
+}  // namespace WriteEngine

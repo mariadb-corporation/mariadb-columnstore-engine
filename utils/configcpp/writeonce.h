@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /******************************************************************************************
-* $Id: writeonce.h 3495 2013-01-21 14:09:51Z rdempsey $
-*
-******************************************************************************************/
+ * $Id: writeonce.h 3495 2013-01-21 14:09:51Z rdempsey $
+ *
+ ******************************************************************************************/
 /**
  * @file
  */
@@ -37,106 +37,104 @@
 
 namespace config
 {
-
 /** @brief a write-once config file I/F class
  *
  * This class handles write-once config items
  */
 class WriteOnceConfig
 {
-public:
-    /** @brief ctor
-    *
-    */
-    explicit WriteOnceConfig(const char* cf = 0);
+ public:
+  /** @brief ctor
+   *
+   */
+  explicit WriteOnceConfig(const char* cf = 0);
 
-    /** @brief ctor
-    *
-    */
-    explicit WriteOnceConfig(const std::string& cf) :
-        fConfigFileName(cf)
-    {
-        setup();
-    }
+  /** @brief ctor
+   *
+   */
+  explicit WriteOnceConfig(const std::string& cf) : fConfigFileName(cf)
+  {
+    setup();
+  }
 
-    /** @brief dtor
-    *
-    */
-    virtual ~WriteOnceConfig() {}
+  /** @brief dtor
+   *
+   */
+  virtual ~WriteOnceConfig()
+  {
+  }
 
-    /** @brief check if this class owns parm
-    *
-    */
-    bool owns(const std::string& section, const std::string& name) const
-    {
-        return (fEntryMap.find(std::string(section + "." + name)) != fEntryMap.end());
-    }
+  /** @brief check if this class owns parm
+   *
+   */
+  bool owns(const std::string& section, const std::string& name) const
+  {
+    return (fEntryMap.find(std::string(section + "." + name)) != fEntryMap.end());
+  }
 
-    /** @brief set parm to value
-    *
-    * If you attempt to set a value more than once, and force is false, this will throw a runtime_error.
-    */
-    void setConfig(const std::string& section, const std::string& name, const std::string& value, bool force = false);
+  /** @brief set parm to value
+   *
+   * If you attempt to set a value more than once, and force is false, this will throw a runtime_error.
+   */
+  void setConfig(const std::string& section, const std::string& name, const std::string& value,
+                 bool force = false);
 
-    /** @brief get value of parm
-    *
-    */
-    const std::string getConfig(const std::string& section, const std::string& name) const;
+  /** @brief get value of parm
+   *
+   */
+  const std::string getConfig(const std::string& section, const std::string& name) const;
 
-protected:
-    /** @brief load from file
-    *
-    */
-    messageqcpp::ByteStream load();
+ protected:
+  /** @brief load from file
+   *
+   */
+  messageqcpp::ByteStream load();
 
-    /** @brief save to file
-    *
-    */
-    void save(messageqcpp::ByteStream& ibs) const;
+  /** @brief save to file
+   *
+   */
+  void save(messageqcpp::ByteStream& ibs) const;
 
-    /** @brief serialize to ByteStream
-    *
-    */
-    virtual void serialize(messageqcpp::ByteStream& obs) const;
+  /** @brief serialize to ByteStream
+   *
+   */
+  virtual void serialize(messageqcpp::ByteStream& obs) const;
 
-    /** @brief load from ByteStream
-    *
-    */
-    virtual void unserialize(messageqcpp::ByteStream& ibs);
+  /** @brief load from ByteStream
+   *
+   */
+  virtual void unserialize(messageqcpp::ByteStream& ibs);
 
-private:
-    typedef std::pair<std::string, bool> ConfigItem_t;
-    typedef std::tr1::unordered_map<std::string, ConfigItem_t*> EntryMap_t;
+ private:
+  typedef std::pair<std::string, bool> ConfigItem_t;
+  typedef std::tr1::unordered_map<std::string, ConfigItem_t*> EntryMap_t;
 
-    static const uint32_t WriteOnceConfigVersion = 1;
+  static const uint32_t WriteOnceConfigVersion = 1;
 
-    //defaults okay
-    //WriteOnceConfig(const WriteOnceConfig& rhs);
-    //WriteOnceConfig& operator=(const WriteOnceConfig& rhs);
+  // defaults okay
+  // WriteOnceConfig(const WriteOnceConfig& rhs);
+  // WriteOnceConfig& operator=(const WriteOnceConfig& rhs);
 
-    /** @brief ctor helper
-    *
-    */
-    void setup();
+  /** @brief ctor helper
+   *
+   */
+  void setup();
 
-    /** @brief setup defaults when file doesn't exist
-    *
-    */
-    void initializeDefaults();
+  /** @brief setup defaults when file doesn't exist
+   *
+   */
+  void initializeDefaults();
 
-    EntryMap_t fEntryMap;
+  EntryMap_t fEntryMap;
 
-    std::string fConfigFileName;
+  std::string fConfigFileName;
 
-    ConfigItem_t fLBID_Shift;
-    ConfigItem_t fDBRootCount;
-    ConfigItem_t fDBRMRoot;
-    ConfigItem_t fSharedMemoryTmpFile1;
-    ConfigItem_t fTxnIDFile;
-    ConfigItem_t fSharedMemoryTmpFile2;
-
+  ConfigItem_t fLBID_Shift;
+  ConfigItem_t fDBRootCount;
+  ConfigItem_t fDBRMRoot;
+  ConfigItem_t fSharedMemoryTmpFile1;
+  ConfigItem_t fTxnIDFile;
+  ConfigItem_t fSharedMemoryTmpFile2;
 };
 
-}
-
-
+}  // namespace config

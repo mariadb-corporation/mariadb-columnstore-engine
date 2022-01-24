@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_unhex.cpp 3923 2013-06-19 21:43:06Z bwilkinson $
-*
-*
-****************************************************************************/
+ * $Id: func_unhex.cpp 3923 2013-06-19 21:43:06Z bwilkinson $
+ *
+ *
+ ****************************************************************************/
 
 #include <cstdlib>
 #include <string>
@@ -38,82 +38,78 @@ namespace
 {
 inline int hex_to_int(char c, bool& isNull)
 {
-    if (c <= '9' && c >= '0')
-        return c - '0';
+  if (c <= '9' && c >= '0')
+    return c - '0';
 
-    c |= 32;
+  c |= 32;
 
-    if (c <= 'f' && c >= 'a')
-        return c - 'a' + 10;
+  if (c <= 'f' && c >= 'a')
+    return c - 'a' + 10;
 
-    isNull = true;
-    return -1;
+  isNull = true;
+  return -1;
 }
 
-inline string cleanup(char *to)
+inline string cleanup(char* to)
 {
-    delete[] to;
-    return "";
+  delete[] to;
+  return "";
 }
-}
+}  // namespace
 
 namespace funcexp
 {
-
-CalpontSystemCatalog::ColType Func_unhex::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
+CalpontSystemCatalog::ColType Func_unhex::operationType(FunctionParm& fp,
+                                                        CalpontSystemCatalog::ColType& resultType)
 {
-    return resultType;
+  return resultType;
 }
 
-
-string Func_unhex::getStrVal(rowgroup::Row& row,
-                             FunctionParm& parm,
-                             bool& isNull,
+string Func_unhex::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                              CalpontSystemCatalog::ColType& op_ct)
 {
-    const string& from = parm[0]->data()->getStrVal(row, isNull);
+  const string& from = parm[0]->data()->getStrVal(row, isNull);
 
-    if (isNull)
-        return "";
+  if (isNull)
+    return "";
 
-    char* to = new char[2 + from.size() / 2];
+  char* to = new char[2 + from.size() / 2];
 
-    uint64_t from_pos = 0, to_pos = 0;
-    int hex_char = 0;
+  uint64_t from_pos = 0, to_pos = 0;
+  int hex_char = 0;
 
-    if (from.size() % 2)
-    {
-        hex_char = hex_to_int(from[from_pos++], isNull);
+  if (from.size() % 2)
+  {
+    hex_char = hex_to_int(from[from_pos++], isNull);
 
-        if (hex_char == -1)
-            return cleanup(to);
+    if (hex_char == -1)
+      return cleanup(to);
 
-        to[to_pos++] = hex_char;
-    }
+    to[to_pos++] = hex_char;
+  }
 
-    for (; from_pos < from.size(); from_pos += 2)
-    {
-        hex_char = hex_to_int(from[from_pos], isNull) << 4;
+  for (; from_pos < from.size(); from_pos += 2)
+  {
+    hex_char = hex_to_int(from[from_pos], isNull) << 4;
 
-        if (hex_char == -1)
-            return cleanup(to);
+    if (hex_char == -1)
+      return cleanup(to);
 
-        to[to_pos] = hex_char;
-        hex_char = hex_to_int(from[from_pos + 1], isNull);
+    to[to_pos] = hex_char;
+    hex_char = hex_to_int(from[from_pos + 1], isNull);
 
-        if (hex_char == -1)
-            return cleanup(to);
+    if (hex_char == -1)
+      return cleanup(to);
 
-        to[to_pos++] |= hex_char;
-    }
+    to[to_pos++] |= hex_char;
+  }
 
-    to[to_pos] = 0;
-    string tmp = string(to);
-    delete[] to;
+  to[to_pos] = 0;
+  string tmp = string(to);
+  delete[] to;
 
-    return tmp;
+  return tmp;
 }
 
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:

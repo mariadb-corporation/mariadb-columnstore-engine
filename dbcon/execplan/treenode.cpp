@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: treenode.cpp 9317 2013-03-19 21:37:22Z dhall $
-*
-*
-***********************************************************************/
+ *   $Id: treenode.cpp 9317 2013-03-19 21:37:22Z dhall $
+ *
+ *
+ ***********************************************************************/
 /** @file */
 
 #include <unistd.h>
@@ -35,41 +35,40 @@
 using namespace std;
 namespace execplan
 {
-
 /**
  * Constructors/Destructors
  */
-TreeNode::TreeNode(): fDerivedTable(""),
-    fRefCount(0),
-    fDerivedRefCol(NULL)
+TreeNode::TreeNode() : fDerivedTable(""), fRefCount(0), fDerivedRefCol(NULL)
 {
-    memset(tmp, 0, 312);
+  memset(tmp, 0, 312);
 }
 
-TreeNode::TreeNode(const TreeNode& rhs):
-    fResult(rhs.fResult),
-    fResultType(rhs.resultType()),
-    fOperationType(rhs.operationType()),
-    fDerivedTable (rhs.derivedTable()),
-    fRefCount(rhs.refCount()),
-    fDerivedRefCol(rhs.derivedRefCol())
+TreeNode::TreeNode(const TreeNode& rhs)
+ : fResult(rhs.fResult)
+ , fResultType(rhs.resultType())
+ , fOperationType(rhs.operationType())
+ , fDerivedTable(rhs.derivedTable())
+ , fRefCount(rhs.refCount())
+ , fDerivedRefCol(rhs.derivedRefCol())
 {
-    memcpy(tmp, rhs.tmp, 312);
+  memcpy(tmp, rhs.tmp, 312);
 }
 
-TreeNode::~TreeNode() {}
-
-void TreeNode::resultType ( const execplan::CalpontSystemCatalog::ColType& resultType)
+TreeNode::~TreeNode()
 {
-    fResultType = resultType;
+}
 
-    // set scale/precision for the result
-    if (fResultType.colDataType == execplan::CalpontSystemCatalog::DECIMAL ||
-            fResultType.colDataType == execplan::CalpontSystemCatalog::UDECIMAL)
-    {
-        fResult.decimalVal.scale = fResultType.scale;
-        fResult.decimalVal.precision = fResultType.precision;
-    }
+void TreeNode::resultType(const execplan::CalpontSystemCatalog::ColType& resultType)
+{
+  fResultType = resultType;
+
+  // set scale/precision for the result
+  if (fResultType.colDataType == execplan::CalpontSystemCatalog::DECIMAL ||
+      fResultType.colDataType == execplan::CalpontSystemCatalog::UDECIMAL)
+  {
+    fResult.decimalVal.scale = fResultType.scale;
+    fResult.decimalVal.precision = fResultType.precision;
+  }
 }
 
 /**
@@ -77,8 +76,8 @@ void TreeNode::resultType ( const execplan::CalpontSystemCatalog::ColType& resul
  */
 ostream& operator<<(ostream& output, const TreeNode& rhs)
 {
-    output << rhs.toString();
-    return output;
+  output << rhs.toString();
+  return output;
 }
 
-}  /* namespace */
+}  // namespace execplan

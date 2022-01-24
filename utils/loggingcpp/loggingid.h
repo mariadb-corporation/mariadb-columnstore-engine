@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /******************************************************************************************
-* $Id: loggingid.h 3495 2013-01-21 14:09:51Z rdempsey $
-*
-******************************************************************************************/
+ * $Id: loggingid.h 3495 2013-01-21 14:09:51Z rdempsey $
+ *
+ ******************************************************************************************/
 /**
  * @file
  */
@@ -28,24 +28,23 @@
 
 namespace logging
 {
-
 /** @brief a logging context structure
  *
  */
 struct LoggingID
 {
-    /** @brief LoggingID ctor
-     *
-     */
-    explicit LoggingID(unsigned subsysID = 0, unsigned sessionID = 0, unsigned txnID = 0, unsigned ThdID = 0)
-        : fSubsysID(subsysID), fSessionID(sessionID), fTxnID(txnID), fThdID(ThdID)
-    {}
+  /** @brief LoggingID ctor
+   *
+   */
+  explicit LoggingID(unsigned subsysID = 0, unsigned sessionID = 0, unsigned txnID = 0, unsigned ThdID = 0)
+   : fSubsysID(subsysID), fSessionID(sessionID), fTxnID(txnID), fThdID(ThdID)
+  {
+  }
 
-    unsigned fSubsysID;	/// subsystem ID
-    unsigned fSessionID;	/// session ID
-    unsigned fTxnID;	/// transaction ID
-    unsigned fThdID;	/// thread ID
+  unsigned fSubsysID;   /// subsystem ID
+  unsigned fSessionID;  /// session ID
+  unsigned fTxnID;      /// transaction ID
+  unsigned fThdID;      /// thread ID
 };
 
-}
-
+}  // namespace logging

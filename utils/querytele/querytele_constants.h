@@ -10,15 +10,12 @@
 
 namespace querytele
 {
-
 class queryteleConstants
 {
-public:
-    queryteleConstants();
-
+ public:
+  queryteleConstants();
 };
 
 extern const queryteleConstants g_querytele_constants;
 
-} // namespace
-
+}  // namespace querytele

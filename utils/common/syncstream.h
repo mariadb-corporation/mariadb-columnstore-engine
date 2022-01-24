@@ -30,28 +30,28 @@
 
 void copyStream(istream& iss, ostream& oss)
 {
-	string line;
-	getline(iss, line);
-	while (iss.good())
-	{
-		oss << line << endl;
-		getline(iss, line);
-	}
+        string line;
+        getline(iss, line);
+        while (iss.good())
+        {
+                oss << line << endl;
+                getline(iss, line);
+        }
 }
 
 main()
 {
-	FILE* ifp;
-	FILE* ofp;
+        FILE* ifp;
+        FILE* ofp;
 
-	...
+        ...
 
-	isyncstream iss(ifp);
-	osyncstream oss(ofp);
+        isyncstream iss(ifp);
+        osyncstream oss(ofp);
 
-	copyStream(iss, oss);
+        copyStream(iss, oss);
 
-	...
+        ...
 }
 */
 
@@ -62,89 +62,96 @@ main()
 
 namespace syncstream
 {
-
 /** A streambuf implementation for C stdio FILE* streams.
  *
  * Adapted from http://www.drdobbs.com/184401305
  */
 class syncbuf : public std::streambuf
 {
-public:
-    /** ctor */
-    syncbuf(FILE* f) : std::streambuf(), fptr(f) {}
+ public:
+  /** ctor */
+  syncbuf(FILE* f) : std::streambuf(), fptr(f)
+  {
+  }
 
-protected:
-    /** Write character in the case of overflow */
-    virtual int overflow(int c = EOF)
-    {
-        return (c != EOF ? fputc(c, fptr) : EOF);
-    }
-    /** Get character in the case of overflow */
-    virtual int underflow()
-    {
-        int c = getc(fptr);
+ protected:
+  /** Write character in the case of overflow */
+  virtual int overflow(int c = EOF)
+  {
+    return (c != EOF ? fputc(c, fptr) : EOF);
+  }
+  /** Get character in the case of overflow */
+  virtual int underflow()
+  {
+    int c = getc(fptr);
 
-        if (c != EOF)
-            ungetc(c, fptr);
+    if (c != EOF)
+      ungetc(c, fptr);
 
-        return c;
-    }
-    /** Get character in the case of overflow and advance get pointer */
-    virtual int uflow()
-    {
-        return getc(fptr);
-    }
-    /** put character back in the case of backup underflow */
-    virtual int pbackfail(int c = EOF)
-    {
-        return (c != EOF ? ungetc(c, fptr) : EOF);
-    }
-    /** Synchronize stream buffer */
-    virtual int sync()
-    {
-        return fflush(fptr);
-    }
+    return c;
+  }
+  /** Get character in the case of overflow and advance get pointer */
+  virtual int uflow()
+  {
+    return getc(fptr);
+  }
+  /** put character back in the case of backup underflow */
+  virtual int pbackfail(int c = EOF)
+  {
+    return (c != EOF ? ungetc(c, fptr) : EOF);
+  }
+  /** Synchronize stream buffer */
+  virtual int sync()
+  {
+    return fflush(fptr);
+  }
 
-private:
-    FILE* fptr;
+ private:
+  FILE* fptr;
 };
 
 /** An istream adaptor for input FILE* streams */
 class isyncstream : public std::istream
 {
-public:
-    /** ctor */
-    isyncstream() : istream(&buf), buf(0) {}
-    /** ctor */
-    isyncstream(FILE* fptr) : istream(&buf), buf(fptr) {}
-    /** const streambuf accessor */
-    const syncbuf* rdbuf() const
-    {
-        return &buf;
-    }
+ public:
+  /** ctor */
+  isyncstream() : istream(&buf), buf(0)
+  {
+  }
+  /** ctor */
+  isyncstream(FILE* fptr) : istream(&buf), buf(fptr)
+  {
+  }
+  /** const streambuf accessor */
+  const syncbuf* rdbuf() const
+  {
+    return &buf;
+  }
 
-private:
-    syncbuf buf;
+ private:
+  syncbuf buf;
 };
 
 /** An ostream adaptor for output FILE* streams */
 class osyncstream : public std::ostream
 {
-public:
-    /** ctor */
-    osyncstream() : ostream(&buf), buf(0) {}
-    /** ctor */
-    osyncstream(FILE* fptr) : ostream(&buf), buf(fptr) {}
-    /** const streambuf accessor */
-    const syncbuf* rdbuf() const
-    {
-        return &buf;
-    }
+ public:
+  /** ctor */
+  osyncstream() : ostream(&buf), buf(0)
+  {
+  }
+  /** ctor */
+  osyncstream(FILE* fptr) : ostream(&buf), buf(fptr)
+  {
+  }
+  /** const streambuf accessor */
+  const syncbuf* rdbuf() const
+  {
+    return &buf;
+  }
 
-private:
-    syncbuf buf;
+ private:
+  syncbuf buf;
 };
 
-}
-
-
+}  // namespace syncstream

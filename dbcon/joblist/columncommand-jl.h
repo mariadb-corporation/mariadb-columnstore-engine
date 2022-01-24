@@ -36,99 +36,97 @@
 
 namespace joblist
 {
-
 class ColumnCommandJL : public CommandJL
 {
-public:
-    ColumnCommandJL(const pColScanStep&, std::vector<BRM::LBID_t> lastLBID);
-    ColumnCommandJL(const pColStep&);
-    virtual ~ColumnCommandJL();
+ public:
+  ColumnCommandJL(const pColScanStep&, std::vector<BRM::LBID_t> lastLBID);
+  ColumnCommandJL(const pColStep&);
+  virtual ~ColumnCommandJL();
 
-    virtual void createCommand(messageqcpp::ByteStream& bs) const;
-    virtual void runCommand(messageqcpp::ByteStream& bs) const;
-    void setLBID(uint64_t rid, uint32_t dbroot);
-    uint8_t getTableColumnType();
-    virtual std::string toString();
-    uint16_t getWidth();
-    CommandType getCommandType()
-    {
-        return COLUMN_COMMAND;
-    }
-    // @bug 1098
-    uint8_t getBOP() const
-    {
-        return BOP;
-    }
-    const messageqcpp::ByteStream& getFilterString()
-    {
-        return filterString;
-    }
-    uint16_t getFilterCount() const
-    {
-        return filterCount;
-    }
-    const std::vector<struct BRM::EMEntry>& getExtents()
-    {
-        return extents;
-    }
-    const execplan::CalpontSystemCatalog::ColType& getColType() const
-    {
-        return colType;
-    }
-    bool isDict() const
-    {
-        return fIsDict;
-    }
+  virtual void createCommand(messageqcpp::ByteStream& bs) const;
+  virtual void runCommand(messageqcpp::ByteStream& bs) const;
+  void setLBID(uint64_t rid, uint32_t dbroot);
+  uint8_t getTableColumnType();
+  virtual std::string toString();
+  uint16_t getWidth();
+  CommandType getCommandType()
+  {
+    return COLUMN_COMMAND;
+  }
+  // @bug 1098
+  uint8_t getBOP() const
+  {
+    return BOP;
+  }
+  const messageqcpp::ByteStream& getFilterString()
+  {
+    return filterString;
+  }
+  uint16_t getFilterCount() const
+  {
+    return filterCount;
+  }
+  const std::vector<struct BRM::EMEntry>& getExtents()
+  {
+    return extents;
+  }
+  const execplan::CalpontSystemCatalog::ColType& getColType() const
+  {
+    return colType;
+  }
+  bool isDict() const
+  {
+    return fIsDict;
+  }
 
-    void  scan(bool b)
-    {
-        isScan = b;
-    }
-    bool  scan()
-    {
-        return isScan;
-    }
+  void scan(bool b)
+  {
+    isScan = b;
+  }
+  bool scan()
+  {
+    return isScan;
+  }
 
-    void reloadExtents();
+  void reloadExtents();
 
-protected:
-    uint32_t currentExtentIndex;
-    messageqcpp::ByteStream filterString;
-    std::vector<struct BRM::EMEntry> extents;
-    execplan::CalpontSystemCatalog::ColType colType;
+ protected:
+  uint32_t currentExtentIndex;
+  messageqcpp::ByteStream filterString;
+  std::vector<struct BRM::EMEntry> extents;
+  execplan::CalpontSystemCatalog::ColType colType;
 
-private:
-    ColumnCommandJL();
-    ColumnCommandJL(const ColumnCommandJL&);
+ private:
+  ColumnCommandJL();
+  ColumnCommandJL(const ColumnCommandJL&);
 
-    uint32_t getFBO(uint64_t lbid);
+  uint32_t getFBO(uint64_t lbid);
 
-    bool isScan;
-    uint64_t lbid;
-    uint32_t traceFlags;  // probably move this to Command
-    uint8_t BOP;
-    uint32_t rpbShift, divShift, modMask;
-    uint16_t filterCount;
-    std::vector<BRM::LBID_t> fLastLbid;
+  bool isScan;
+  uint64_t lbid;
+  uint32_t traceFlags;  // probably move this to Command
+  uint8_t BOP;
+  uint32_t rpbShift, divShift, modMask;
+  uint16_t filterCount;
+  std::vector<BRM::LBID_t> fLastLbid;
 
-    bool fIsDict;
+  bool fIsDict;
 
-    // @Bug 2889.  Added two members below for drop partition enhancement.
-    // RJD: make sure that we keep enough significant digits around for partition math
-    uint64_t fFilesPerColumnPartition;
-    uint64_t fExtentsPerSegmentFile;
+  // @Bug 2889.  Added two members below for drop partition enhancement.
+  // RJD: make sure that we keep enough significant digits around for partition math
+  uint64_t fFilesPerColumnPartition;
+  uint64_t fExtentsPerSegmentFile;
 
-    uint32_t numDBRoots;
-    uint32_t dbroot;
+  uint32_t numDBRoots;
+  uint32_t dbroot;
 
-    static const unsigned DEFAULT_FILES_PER_COLUMN_PARTITION = 32;
+  static const unsigned DEFAULT_FILES_PER_COLUMN_PARTITION = 32;
 
-  public:
-    // MCOL-4685: remove the option to set more than 2 extents per file (ExtentsPreSegmentFile)
-    static const unsigned DEFAULT_EXTENTS_PER_SEGMENT_FILE = 2;
+ public:
+  // MCOL-4685: remove the option to set more than 2 extents per file (ExtentsPreSegmentFile)
+  static const unsigned DEFAULT_EXTENTS_PER_SEGMENT_FILE = 2;
 };
 
-}
+}  // namespace joblist
 
 // vim:ts=4 sw=4:
-

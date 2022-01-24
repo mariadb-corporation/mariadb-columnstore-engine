@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id$
-*
-*******************************************************************************/
+ * $Id$
+ *
+ *******************************************************************************/
 
 /*
  * we_brmupdater.h
@@ -29,60 +29,55 @@
 
 #pragma once
 
-
 namespace WriteEngine
 {
-
-class WESDHandler;					// forward deceleration
-
+class WESDHandler;  // forward deceleration
 
 class WEBrmUpdater
 {
-public:
-    WEBrmUpdater(WESDHandler& Ref):	fRef(Ref), fpBrm(0) {}
-    virtual ~WEBrmUpdater() {}
+ public:
+  WEBrmUpdater(WESDHandler& Ref) : fRef(Ref), fpBrm(0)
+  {
+  }
+  virtual ~WEBrmUpdater()
+  {
+  }
 
-public:
-    bool updateCasualPartitionAndHighWaterMarkInBRM();
-    int updateCPAndHWMInBRM();
-    int updateCasualPartitionInBRM();
-    int updateHighWaterMarkInBRM();
-    bool prepareCasualPartitionInfo();
-    bool prepareHighWaterMarkInfo();
+ public:
+  bool updateCasualPartitionAndHighWaterMarkInBRM();
+  int updateCPAndHWMInBRM();
+  int updateCasualPartitionInBRM();
+  int updateHighWaterMarkInBRM();
+  bool prepareCasualPartitionInfo();
+  bool prepareHighWaterMarkInfo();
 
-    bool createBrmConnection()
-    {
-        fpBrm = new BRM::DBRM();
-        return (fpBrm) ? true : false;
-    }
-    void releaseBrmConnection()
-    {
-        delete fpBrm;
-        fpBrm = 0;
-    }
+  bool createBrmConnection()
+  {
+    fpBrm = new BRM::DBRM();
+    return (fpBrm) ? true : false;
+  }
+  void releaseBrmConnection()
+  {
+    delete fpBrm;
+    fpBrm = 0;
+  }
 
+ public:
+  static bool prepareRowsInsertedInfo(std::string Entry, int64_t& TotRows, int64_t& InsRows);
+  static bool prepareColumnOutOfRangeInfo(std::string Entry, int& ColNum,
+                                          execplan::CalpontSystemCatalog::ColDataType& ColType,
+                                          std::string& ColName, int& OorValues);
+  static bool prepareErrorFileInfo(std::string Entry, std::string& ErrFileName);
+  static bool prepareBadDataFileInfo(std::string Entry, std::string& BadFileName);
 
+ private:
+  WESDHandler& fRef;
+  BRM::DBRM* fpBrm;
 
-public:
-    static bool prepareRowsInsertedInfo(std::string Entry, int64_t& TotRows,
-                                        int64_t& InsRows);
-    static bool prepareColumnOutOfRangeInfo(std::string Entry, int& ColNum,
-      execplan::CalpontSystemCatalog::ColDataType& ColType,
-                                            std::string& ColName, int& OorValues);
-    static bool prepareErrorFileInfo(std::string Entry, std::string& ErrFileName);
-    static bool prepareBadDataFileInfo(std::string Entry, std::string& BadFileName);
-
-private:
-    WESDHandler& fRef;
-    BRM::DBRM* fpBrm;
-
-
-    //BRM::CPInfoMergeList_t fCPInfo;
-    std::vector<BRM::CPInfoMerge> fCPInfo;
-    std::vector<BRM::BulkSetHWMArg> fHWMInfo;
-    std::vector<BRM::CPInfo> fCPInfoData;
-
-
+  // BRM::CPInfoMergeList_t fCPInfo;
+  std::vector<BRM::CPInfoMerge> fCPInfo;
+  std::vector<BRM::BulkSetHWMArg> fHWMInfo;
+  std::vector<BRM::CPInfo> fCPInfoData;
 };
 
 } /* namespace WriteEngine */

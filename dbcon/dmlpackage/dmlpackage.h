@@ -27,10 +27,9 @@
 
 namespace dmlpackage
 {
-
-#define DML_DEBUG 0                           // debug flag 0 for off, 1 for on
+#define DML_DEBUG 0  // debug flag 0 for off, 1 for on
 
 const std::string nullValue = "nvl";
-//const size_t maxThreads = 100;
-//const size_t queueSize = 200;
-}                                                 // namespace dmlpackage
+// const size_t maxThreads = 100;
+// const size_t queueSize = 200;
+}  // namespace dmlpackage

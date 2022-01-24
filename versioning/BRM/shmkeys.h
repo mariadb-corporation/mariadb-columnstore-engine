@@ -30,50 +30,49 @@
 
 namespace BRM
 {
-
 /** A struct to hold shared memory keys
  *
  * A struct to hold shared memory keys that can be tuned via the config file
  */
 struct ShmKeys
 {
-public:
-    EXPORT ShmKeys();
-    ~ShmKeys() { }
+ public:
+  EXPORT ShmKeys();
+  ~ShmKeys()
+  {
+  }
 
-    /******** The shmseg/sem key range assigments  *******/
+  /******** The shmseg/sem key range assigments  *******/
 #if defined(COMMUNITY_KEYRANGE)
-    const static uint32_t KEYRANGE_SIZE = 0x1000;
+  const static uint32_t KEYRANGE_SIZE = 0x1000;
 #elif defined(_MSC_VER)
-    const static uint32_t KEYRANGE_SIZE = 0x3800;
+  const static uint32_t KEYRANGE_SIZE = 0x3800;
 #else
-    const static uint32_t KEYRANGE_SIZE = 0x10000;
+  const static uint32_t KEYRANGE_SIZE = 0x10000;
 #endif
-    uint32_t KEYRANGE_CL_BASE;
-    uint32_t KEYRANGE_EXTENTMAP_BASE;
-    uint32_t KEYRANGE_EMFREELIST_BASE;
-    uint32_t KEYRANGE_VBBM_BASE;
-    uint32_t KEYRANGE_VSS_BASE;
+  uint32_t KEYRANGE_CL_BASE;
+  uint32_t KEYRANGE_EXTENTMAP_BASE;
+  uint32_t KEYRANGE_EMFREELIST_BASE;
+  uint32_t KEYRANGE_VBBM_BASE;
+  uint32_t KEYRANGE_VSS_BASE;
 
-    /****** Fixed location assignments *******/
-    uint32_t MST_SYSVKEY;
-    uint32_t PROCESSSTATUS_SYSVKEY;
-    uint32_t SYSTEMSTATUS_SYSVKEY;
-    uint32_t SWITCHSTATUS_SYSVKEY;
-    uint32_t NICSTATUS_SYSVKEY;
-    uint32_t DBROOTSTATUS_SYSVKEY;
-    uint32_t DECOMSVRMUTEX_SYSVKEY;
+  /****** Fixed location assignments *******/
+  uint32_t MST_SYSVKEY;
+  uint32_t PROCESSSTATUS_SYSVKEY;
+  uint32_t SYSTEMSTATUS_SYSVKEY;
+  uint32_t SWITCHSTATUS_SYSVKEY;
+  uint32_t NICSTATUS_SYSVKEY;
+  uint32_t DBROOTSTATUS_SYSVKEY;
+  uint32_t DECOMSVRMUTEX_SYSVKEY;
 
-    EXPORT static std::string keyToName(unsigned key);
+  EXPORT static std::string keyToName(unsigned key);
 
-private:
-    //defaults okay
-    //ShmKeys(const ShmKeys& rhs);
-    //ShmKeys operator=(const ShmKeys& rhs);
+ private:
+  // defaults okay
+  // ShmKeys(const ShmKeys& rhs);
+  // ShmKeys operator=(const ShmKeys& rhs);
 };
 
-}
+}  // namespace BRM
 
 #undef EXPORT
-
-

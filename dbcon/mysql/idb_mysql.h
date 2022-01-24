@@ -14,7 +14,7 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
-//One include file to deal with all the MySQL pollution of the
+// One include file to deal with all the MySQL pollution of the
 //  global namespace
 //
 // Don't include ANY mysql headers anywhere except here!
@@ -27,14 +27,15 @@
 #ifdef _MSC_VER
 #include <stdint.h>
 #if _MSC_VER >= 1800
-template <class T> bool isnan(T);
+template <class T>
+bool isnan(T);
 #endif
 #endif
 
 //#define INFINIDB_DEBUG
 //#define DEBUG_WALK_COND
 
-#define MYSQL_SERVER 1 //needed for definition of struct THD in mysql_priv.h
+#define MYSQL_SERVER 1  // needed for definition of struct THD in mysql_priv.h
 #define USE_CALPONT_REGEX
 
 #undef LOG_INFO
@@ -53,7 +54,7 @@ template <class T> bool isnan(T);
 #endif
 
 #define DBUG_ON 1
-#undef  DBUG_OFF
+#undef DBUG_OFF
 #else
 #undef SAFE_MUTEX
 #undef SAFEMALLOC
@@ -110,11 +111,11 @@ namespace
 inline char* idb_mysql_query_str(THD* thd)
 {
 #if MYSQL_VERSION_ID >= 50172
-    return thd->query();
+  return thd->query();
 #else
-    return thd->query;
+  return thd->query;
 #endif
 }
-}
+}  // namespace
 
 // vim:ts=4 sw=4:

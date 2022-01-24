@@ -27,13 +27,10 @@
 
 namespace jlf_graphics
 {
-
 /** Format a stream of dot commands
-* Format a stream of dot commands
-*/
+ * Format a stream of dot commands
+ */
 std::ostream& writeDotCmds(std::ostream& dotFile, const joblist::JobStepVector& querySteps,
                            const joblist::JobStepVector& projectSteps);
 
-}
-
-
+}  // namespace jlf_graphics

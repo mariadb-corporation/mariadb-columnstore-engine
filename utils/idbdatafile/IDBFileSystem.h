@@ -24,7 +24,6 @@
 
 namespace idbdatafile
 {
-
 /**
  * IDBFileSystem is a combination abstract base class and factory. The
  * purpose is to encapsulate access to various file system functions
@@ -32,136 +31,130 @@ namespace idbdatafile
  */
 class IDBFileSystem
 {
-public:
-    /**
-     * The TYPE enum defines the supported underlying filesystem types
-     */
-    enum Types
-    {
-        UNKNOWN = 0x00,
-        POSIX = 0x0001,
-        HDFS  = 0x0002,
-        CLOUD = 0x0003
-    };
+ public:
+  /**
+   * The TYPE enum defines the supported underlying filesystem types
+   */
+  enum Types
+  {
+    UNKNOWN = 0x00,
+    POSIX = 0x0001,
+    HDFS = 0x0002,
+    CLOUD = 0x0003
+  };
 
-    /**
-     * Destructor
-     */
-    virtual ~IDBFileSystem();
+  /**
+   * Destructor
+   */
+  virtual ~IDBFileSystem();
 
-    /**
-     * getFs() returns a reference to the IDBFileSystem instance for the
-     * specified type
-     */
-    static IDBFileSystem& getFs(IDBDataFile::Types type);
+  /**
+   * getFs() returns a reference to the IDBFileSystem instance for the
+   * specified type
+   */
+  static IDBFileSystem& getFs(IDBDataFile::Types type);
 
-    /**
-     * mkdir() creates a directory specified by pathname including any
-     * parent directories if needed.
-     * Returns 0 on success, -1 on error
-     */
-    virtual int mkdir(const char* pathname) = 0;
+  /**
+   * mkdir() creates a directory specified by pathname including any
+   * parent directories if needed.
+   * Returns 0 on success, -1 on error
+   */
+  virtual int mkdir(const char* pathname) = 0;
 
-    /**
-     * remove() removes a path from the filesystem.  It will handle
-     * both files and directories (including non-empty directories).  Note
-     * that a call to remove of a path that does not exist will return as
-     * success.
-     *
-     * Returns 0 on success, -1 on error
-     */
-    virtual int remove(const char* pathname) = 0;
+  /**
+   * remove() removes a path from the filesystem.  It will handle
+   * both files and directories (including non-empty directories).  Note
+   * that a call to remove of a path that does not exist will return as
+   * success.
+   *
+   * Returns 0 on success, -1 on error
+   */
+  virtual int remove(const char* pathname) = 0;
 
-    /**
-     * rename() names a file, moving it between directories if required.
-     * Returns 0 on success, -1 on error
-     */
-    virtual int rename(const char* oldpath, const char* newpath) = 0;
+  /**
+   * rename() names a file, moving it between directories if required.
+   * Returns 0 on success, -1 on error
+   */
+  virtual int rename(const char* oldpath, const char* newpath) = 0;
 
-    /**
-     * size() returns the size of the file specified by path.
-     * Returns the size on success, -1 on error
-     */
-    virtual off64_t size(const char* path) const = 0;
+  /**
+   * size() returns the size of the file specified by path.
+   * Returns the size on success, -1 on error
+   */
+  virtual off64_t size(const char* path) const = 0;
 
-    /**
-     * compressedSize() returns the decompressed size of the file
-     * speicified by path.
-     * Returns the size on success, -1 on error
-     */
-    virtual off64_t compressedSize(const char* path) const = 0;
+  /**
+   * compressedSize() returns the decompressed size of the file
+   * speicified by path.
+   * Returns the size on success, -1 on error
+   */
+  virtual off64_t compressedSize(const char* path) const = 0;
 
-    /**
-     * exists() checks for the existence of a particular path.
-     * Returns true if exists, false otherwise.
-     */
-    virtual bool exists(const char* pathname) const = 0;
+  /**
+   * exists() checks for the existence of a particular path.
+   * Returns true if exists, false otherwise.
+   */
+  virtual bool exists(const char* pathname) const = 0;
 
-    /**
-     * listDirectory() returns the contents of the directory as a
-     * list of strings.  For now, no indication of whether each
-     * item is a file or directory - both files and subdirectories
-     * will be returned.
-     * Returns 0 on success.  -1 on error (incl if directory does
-     * not exist.
-     */
+  /**
+   * listDirectory() returns the contents of the directory as a
+   * list of strings.  For now, no indication of whether each
+   * item is a file or directory - both files and subdirectories
+   * will be returned.
+   * Returns 0 on success.  -1 on error (incl if directory does
+   * not exist.
+   */
 
-    virtual int listDirectory(const char* pathname, std::list<std::string>& contents) const = 0;
+  virtual int listDirectory(const char* pathname, std::list<std::string>& contents) const = 0;
 
-    /**
-     * isDir() returns whether or not the path is a directory
-     */
-    virtual bool isDir(const char* pathname) const = 0;
+  /**
+   * isDir() returns whether or not the path is a directory
+   */
+  virtual bool isDir(const char* pathname) const = 0;
 
-    /**
-     * copyfile() copies the source file to the destination file
-     * Returns 0 on success.  -1 on error.
-     */
-    virtual int copyFile(const char* srcPath, const char* destPath) const = 0;
+  /**
+   * copyfile() copies the source file to the destination file
+   * Returns 0 on success.  -1 on error.
+   */
+  virtual int copyFile(const char* srcPath, const char* destPath) const = 0;
 
-    /**
-     * isFsUp() checks if the filesystem is up
-     * Returns 0 on success.  -1 on error.
-     */
-    virtual bool filesystemIsUp() const
-    {
-        return true;
-    }
+  /**
+   * isFsUp() checks if the filesystem is up
+   * Returns 0 on success.  -1 on error.
+   */
+  virtual bool filesystemIsUp() const
+  {
+    return true;
+  }
 
-    virtual bool filesystemSync() const
-    {
-        return true;
-    }
+  virtual bool filesystemSync() const
+  {
+    return true;
+  }
 
-    /**
-     * chown() changes the owner of the object on the FS
-     * Returns 0 on success.  -1 on error.
-     */
-    virtual int chown(const char* objectName,
-                      const uid_t p_uid,
-                      const gid_t p_pid,
-                      int& funcErrno) const
-    {
-        return 0;
-    }
+  /**
+   * chown() changes the owner of the object on the FS
+   * Returns 0 on success.  -1 on error.
+   */
+  virtual int chown(const char* objectName, const uid_t p_uid, const gid_t p_pid, int& funcErrno) const
+  {
+    return 0;
+  }
 
+ protected:
+  IDBFileSystem(Types type);
 
-protected:
-    IDBFileSystem( Types type );
-
-private:
-    Types m_type;
+ private:
+  Types m_type;
 };
 
 /**
  * getFs() returns a reference to the IDBFileSystem instance for the
  * specified type
  */
-inline
-IDBFileSystem& IDBFileSystem::getFs(IDBDataFile::Types type)
+inline IDBFileSystem& IDBFileSystem::getFs(IDBDataFile::Types type)
 {
-    return IDBFactory::getFs(type);
+  return IDBFactory::getFs(type);
 }
 
-}
-
+}  // namespace idbdatafile

@@ -26,11 +26,11 @@ using namespace mcsv1sdk;
 
 class Add_covar_pop_ToUDAFMap
 {
-public:
-    Add_covar_pop_ToUDAFMap()
-    {
-        UDAFMap::getMap()["covar_pop"] = new covar_pop();
-    }
+ public:
+  Add_covar_pop_ToUDAFMap()
+  {
+    UDAFMap::getMap()["covar_pop"] = new covar_pop();
+  }
 };
 
 static Add_covar_pop_ToUDAFMap addToMap;
@@ -38,113 +38,109 @@ static Add_covar_pop_ToUDAFMap addToMap;
 // Use the simple data model
 struct covar_pop_data
 {
-    uint64_t	cnt;
-    long double sumx;
-    long double sumy;
-    long double sumxy;  // sum of x * y
+  uint64_t cnt;
+  long double sumx;
+  long double sumy;
+  long double sumxy;  // sum of x * y
 };
 
-
-mcsv1_UDAF::ReturnCode covar_pop::init(mcsv1Context* context,
-                                       ColumnDatum* colTypes)
+mcsv1_UDAF::ReturnCode covar_pop::init(mcsv1Context* context, ColumnDatum* colTypes)
 {
-    if (context->getParameterCount() != 2)
-    {
-        // The error message will be prepended with
-        // "The storage engine for the table doesn't support "
-        context->setErrorMessage("covar_pop() with other than 2 arguments");
-        return mcsv1_UDAF::ERROR;
-    }
-    if (!(isNumeric(colTypes[0].dataType) && isNumeric(colTypes[1].dataType)))
-    {
-        // The error message will be prepended with
-        // "The storage engine for the table doesn't support "
-        context->setErrorMessage("covar_pop() with non-numeric arguments");
-        return mcsv1_UDAF::ERROR;
-    }
+  if (context->getParameterCount() != 2)
+  {
+    // The error message will be prepended with
+    // "The storage engine for the table doesn't support "
+    context->setErrorMessage("covar_pop() with other than 2 arguments");
+    return mcsv1_UDAF::ERROR;
+  }
+  if (!(isNumeric(colTypes[0].dataType) && isNumeric(colTypes[1].dataType)))
+  {
+    // The error message will be prepended with
+    // "The storage engine for the table doesn't support "
+    context->setErrorMessage("covar_pop() with non-numeric arguments");
+    return mcsv1_UDAF::ERROR;
+  }
 
-    context->setUserDataSize(sizeof(covar_pop_data));
-    context->setResultType(execplan::CalpontSystemCatalog::DOUBLE);
-    context->setColWidth(8);
-    context->setScale(DECIMAL_NOT_SPECIFIED);
-    context->setPrecision(0);
-    context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
-    return mcsv1_UDAF::SUCCESS;
-
+  context->setUserDataSize(sizeof(covar_pop_data));
+  context->setResultType(execplan::CalpontSystemCatalog::DOUBLE);
+  context->setColWidth(8);
+  context->setScale(DECIMAL_NOT_SPECIFIED);
+  context->setPrecision(0);
+  context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
+  return mcsv1_UDAF::SUCCESS;
 }
 
 mcsv1_UDAF::ReturnCode covar_pop::reset(mcsv1Context* context)
 {
-    struct  covar_pop_data* data = (struct covar_pop_data*)context->getUserData()->data;
-    data->cnt = 0;
-    data->sumx = 0.0;
-    data->sumy = 0.0;
-    data->sumxy = 0.0;
-    return mcsv1_UDAF::SUCCESS;
+  struct covar_pop_data* data = (struct covar_pop_data*)context->getUserData()->data;
+  data->cnt = 0;
+  data->sumx = 0.0;
+  data->sumy = 0.0;
+  data->sumxy = 0.0;
+  return mcsv1_UDAF::SUCCESS;
 }
 
 mcsv1_UDAF::ReturnCode covar_pop::nextValue(mcsv1Context* context, ColumnDatum* valsIn)
 {
-    double valy = toDouble(valsIn[0]);
-    double valx = toDouble(valsIn[1]);
-    struct  covar_pop_data* data = (struct covar_pop_data*)context->getUserData()->data;
+  double valy = toDouble(valsIn[0]);
+  double valx = toDouble(valsIn[1]);
+  struct covar_pop_data* data = (struct covar_pop_data*)context->getUserData()->data;
 
-    data->sumy += valy;
-    data->sumx += valx;
+  data->sumy += valy;
+  data->sumx += valx;
 
-    data->sumxy += valx*valy;
+  data->sumxy += valx * valy;
 
-    ++data->cnt;
-    
-    return mcsv1_UDAF::SUCCESS;
+  ++data->cnt;
+
+  return mcsv1_UDAF::SUCCESS;
 }
 
 mcsv1_UDAF::ReturnCode covar_pop::subEvaluate(mcsv1Context* context, const UserData* userDataIn)
 {
-    if (!userDataIn)
-    {
-        return mcsv1_UDAF::SUCCESS;
-    }
-
-    struct covar_pop_data* outData = (struct covar_pop_data*)context->getUserData()->data;
-    struct covar_pop_data* inData = (struct covar_pop_data*)userDataIn->data;
-
-    outData->sumx += inData->sumx;
-    outData->sumy += inData->sumy;
-    outData->sumxy += inData->sumxy;
-    outData->cnt += inData->cnt;
-
+  if (!userDataIn)
+  {
     return mcsv1_UDAF::SUCCESS;
+  }
+
+  struct covar_pop_data* outData = (struct covar_pop_data*)context->getUserData()->data;
+  struct covar_pop_data* inData = (struct covar_pop_data*)userDataIn->data;
+
+  outData->sumx += inData->sumx;
+  outData->sumy += inData->sumy;
+  outData->sumxy += inData->sumxy;
+  outData->cnt += inData->cnt;
+
+  return mcsv1_UDAF::SUCCESS;
 }
 
 mcsv1_UDAF::ReturnCode covar_pop::evaluate(mcsv1Context* context, static_any::any& valOut)
 {
-    struct covar_pop_data* data = (struct covar_pop_data*)context->getUserData()->data;
-    double N = data->cnt;
-    if (N > 0)
-    {
-        long double sumx = data->sumx;
-        long double sumy = data->sumy;
-        long double sumxy = data->sumxy;
+  struct covar_pop_data* data = (struct covar_pop_data*)context->getUserData()->data;
+  double N = data->cnt;
+  if (N > 0)
+  {
+    long double sumx = data->sumx;
+    long double sumy = data->sumy;
+    long double sumxy = data->sumxy;
 
-        long double covar_pop = (sumxy - ((sumx * sumy) / N)) / N;
-        valOut = static_cast<double>(covar_pop);
-    }
-    return mcsv1_UDAF::SUCCESS;
+    long double covar_pop = (sumxy - ((sumx * sumy) / N)) / N;
+    valOut = static_cast<double>(covar_pop);
+  }
+  return mcsv1_UDAF::SUCCESS;
 }
 
 mcsv1_UDAF::ReturnCode covar_pop::dropValue(mcsv1Context* context, ColumnDatum* valsDropped)
 {
-    double valy = toDouble(valsDropped[0]);
-    double valx = toDouble(valsDropped[1]);
-    struct covar_pop_data* data = (struct covar_pop_data*)context->getUserData()->data;
+  double valy = toDouble(valsDropped[0]);
+  double valx = toDouble(valsDropped[1]);
+  struct covar_pop_data* data = (struct covar_pop_data*)context->getUserData()->data;
 
-    data->sumy -= valy;
-    data->sumx -= valx;
+  data->sumy -= valy;
+  data->sumx -= valx;
 
-    data->sumxy -= valx*valy;
-    --data->cnt;
+  data->sumxy -= valx * valy;
+  --data->cnt;
 
-    return mcsv1_UDAF::SUCCESS;
+  return mcsv1_UDAF::SUCCESS;
 }
-

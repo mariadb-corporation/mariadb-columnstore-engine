@@ -15,25 +15,22 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-
-
 #pragma once
 
 #include "PosixTask.h"
 
 namespace storagemanager
 {
-
 class PingTask : public PosixTask
 {
-    public:
-        PingTask(int sock, uint length);
-        virtual ~PingTask();
-        
-        bool run();
-    
-    private:
-        PingTask();
+ public:
+  PingTask(int sock, uint length);
+  virtual ~PingTask();
+
+  bool run();
+
+ private:
+  PingTask();
 };
 
-}
+}  // namespace storagemanager

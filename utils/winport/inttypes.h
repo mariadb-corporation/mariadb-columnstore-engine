@@ -26,4 +26,3 @@ typedef __int64 ssize_t;
 #ifndef HAVE_UINT
 typedef unsigned int uint32_t;
 #endif
-

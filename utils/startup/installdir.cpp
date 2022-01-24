@@ -17,9 +17,9 @@
    MA 02110-1301, USA. */
 
 /******************************************************************************************
-* $Id$
-*
-******************************************************************************************/
+ * $Id$
+ *
+ ******************************************************************************************/
 #include <unistd.h>
 #include <string>
 using namespace std;
@@ -35,13 +35,12 @@ using namespace boost;
 
 using namespace config;
 
-#include <iostream> 
-   
+#include <iostream>
+
 using namespace std;
 
 namespace startup
 {
-
 /* static */
 boost::mutex StartUp::fTmpDirLock;
 /* static */
@@ -50,69 +49,67 @@ string* StartUp::fTmpDirp = 0;
 /* static */
 const string StartUp::tmpDir()
 {
-	boost::mutex::scoped_lock lk(fTmpDirLock);
+  boost::mutex::scoped_lock lk(fTmpDirLock);
 
-    if (fTmpDirp)
-        return *fTmpDirp;
+  if (fTmpDirp)
+    return *fTmpDirp;
 
 #ifdef _MSC_VER
-    fTmpDirp = new string("C:\\Calpont\Tmp");
-    string cfStr = IDBreadRegistry("");
+  fTmpDirp = new string("C:\\Calpont\Tmp");
+  string cfStr = IDBreadRegistry("");
 
-    if (!cfStr.empty())
-        *fTmpDirp = cfStr;
-    
-    return *fTmpDirp;
+  if (!cfStr.empty())
+    *fTmpDirp = cfStr;
+
+  return *fTmpDirp;
 
 #else
 
-	//check for non-root user 
-/*    const char* p = getenv("HOME");
-	string homedir = p;
+  // check for non-root user
+  /*    const char* p = getenv("HOME");
+          string homedir = p;
 
-    if (homedir == "/root")
-	{
-		Config* sysConfig = Config::makeConfig();
+      if (homedir == "/root")
+          {
+                  Config* sysConfig = Config::makeConfig();
 
-		string TempFileDir;
+                  string TempFileDir;
 
-		try
-		{
-			TempFileDir = sysConfig->getConfig("SystemConfig", "TempFileDir");
-		}
-		catch (...)
-		{}
+                  try
+                  {
+                          TempFileDir = sysConfig->getConfig("SystemConfig", "TempFileDir");
+                  }
+                  catch (...)
+                  {}
 
-		fTmpDirp = new string("/tmp");
-		
-		*fTmpDirp = *fTmpDirp + TempFileDir;
-	}
-	else
-	{
-		// non-root user
-		fTmpDirp = new string(homedir);
+                  fTmpDirp = new string("/tmp");
 
-		*fTmpDirp = *fTmpDirp + "/.tmp";
-	}
-*/
-	Config* sysConfig = Config::makeConfig();
+                  *fTmpDirp = *fTmpDirp + TempFileDir;
+          }
+          else
+          {
+                  // non-root user
+                  fTmpDirp = new string(homedir);
 
-	string TempFileDir;
+                  *fTmpDirp = *fTmpDirp + "/.tmp";
+          }
+  */
+  Config* sysConfig = Config::makeConfig();
 
-	try
-	{
-		TempFileDir = sysConfig->getConfig("SystemConfig", "SystemTempFileDir");
-	}
-	catch (...)
-	{}
-	
-	return TempFileDir;
-	
+  string TempFileDir;
+
+  try
+  {
+    TempFileDir = sysConfig->getConfig("SystemConfig", "SystemTempFileDir");
+  }
+  catch (...)
+  {
+  }
+
+  return TempFileDir;
+
 #endif
-
-
 }
 
-}
+}  // namespace startup
 // vim:ts=4 sw=4:
-

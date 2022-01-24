@@ -36,7 +36,6 @@
 
 namespace joblist
 {
-
 /** @brief ResourceDistributor
  *	Manages a resource.  Distributes up to fTotalResource on request.
  * 	Expects the requester to return the resource when finished.
@@ -58,85 +57,89 @@ extern const unsigned maxSessionsDefault;
 
 class LockedSessionMap
 {
-public:
-    LockedSessionMap(uint64_t resource, unsigned maxSessions = maxSessionsDefault): fResourceBlock(resource), fMaxSessions(maxSessions) {}
-    typedef std::map <uint32_t, uint64_t> SessionMap;
-    typedef std::list <uint32_t> SessionList;
-    bool addSession(uint32_t sessionID, uint64_t resource, uint64_t limit = std::numeric_limits<uint64_t>::max());
-    void removeSession(uint32_t sessionID);
-    uint64_t  getSessionResource(uint32_t sessionID);
-    friend std::ostream& operator<<(std::ostream& os, const LockedSessionMap& lsm);
+ public:
+  LockedSessionMap(uint64_t resource, unsigned maxSessions = maxSessionsDefault)
+   : fResourceBlock(resource), fMaxSessions(maxSessions)
+  {
+  }
+  typedef std::map<uint32_t, uint64_t> SessionMap;
+  typedef std::list<uint32_t> SessionList;
+  bool addSession(uint32_t sessionID, uint64_t resource,
+                  uint64_t limit = std::numeric_limits<uint64_t>::max());
+  void removeSession(uint32_t sessionID);
+  uint64_t getSessionResource(uint32_t sessionID);
+  friend std::ostream& operator<<(std::ostream& os, const LockedSessionMap& lsm);
 
-private:
-    void updateAging(uint32_t sessionID);
-    boost::mutex 		fMapLock;
-    SessionMap 		fSessionMap;
-    uint64_t 		fResourceBlock;
-    boost::mutex 		fSessionLock;
-    SessionList	 	fSessionAgingList;
-    const unsigned  	fMaxSessions;
-
-
+ private:
+  void updateAging(uint32_t sessionID);
+  boost::mutex fMapLock;
+  SessionMap fSessionMap;
+  uint64_t fResourceBlock;
+  boost::mutex fSessionLock;
+  SessionList fSessionAgingList;
+  const unsigned fMaxSessions;
 };
-
 
 class ResourceDistributor
 {
-public:
+ public:
+  ResourceDistributor(const std::string& job, const std::string& identity, uint64_t totalResource,
+                      uint64_t resourceBlock, bool trace)
+   : fJob(job)
+   , fIdentity(identity)
+   , fTotalResource(totalResource)
+   , fSessionMap(resourceBlock)
+   , fTraceOn(trace)
+  {
+  }
 
-    ResourceDistributor(const std::string& job, const std::string& identity, uint64_t totalResource, uint64_t resourceBlock, bool trace) :
-        fJob(job), fIdentity(identity), fTotalResource(totalResource), fSessionMap(resourceBlock), fTraceOn(trace)
-    {}
+  virtual ~ResourceDistributor()
+  {
+  }
 
-    virtual ~ResourceDistributor() {}
+  typedef std::map<uint32_t, uint64_t> SessionMap;
 
-    typedef std::map <uint32_t, uint64_t> SessionMap;
+  uint64_t requestResource(uint32_t sessionID);
+  uint64_t requestResource(uint32_t sessionID, uint64_t resource);
+  void returnResource(uint64_t resource);
 
-    uint64_t requestResource(uint32_t sessionID);
-    uint64_t requestResource(uint32_t sessionID, uint64_t resource);
-    void returnResource(uint64_t resource);
+  uint64_t getSessionResource(uint32_t sessionID)
+  {
+    return fSessionMap.getSessionResource(sessionID);
+  }
 
+  uint64_t getTotalResource() const
+  {
+    return fTotalResource;
+  }
 
-    uint64_t  getSessionResource(uint32_t sessionID)
-    {
-        return fSessionMap.getSessionResource(sessionID);
-    }
+  void setTrace(bool trace)
+  {
+    fTraceOn = trace;
+  }
 
-    uint64_t  getTotalResource() const
-    {
-        return fTotalResource;
-    }
+  bool addSession(uint32_t sessionID, uint64_t resource)
+  {
+    return fSessionMap.addSession(sessionID, resource, fTotalResource);
+  }
+  void removeSession(uint32_t sessionID)
+  {
+    fSessionMap.removeSession(sessionID);
+  }
 
+ private:
+  void logMessage(logging::LOG_TYPE logLevel, logging::Message::MessageID mid, uint64_t value = 0,
+                  uint32_t sessionId = 0);
 
-    void setTrace(bool trace)
-    {
-        fTraceOn = trace;
-    }
+  std::string fJob;
+  std::string fIdentity;
+  uint64_t fTotalResource;
+  uint64_t fResourceBlock;
+  boost::mutex fResourceLock;
+  boost::condition fResourceAvailable;
 
-    bool addSession(uint32_t sessionID, uint64_t resource)
-    {
-        return fSessionMap.addSession(sessionID, resource, fTotalResource);
-    }
-    void removeSession(uint32_t sessionID)
-    {
-        fSessionMap.removeSession(sessionID);
-    }
-
-private:
-
-    void logMessage(logging::LOG_TYPE logLevel, logging::Message::MessageID mid, uint64_t value = 0, uint32_t sessionId = 0);
-
-    std::string 	fJob;
-    std::string	fIdentity;
-    uint64_t   	fTotalResource;
-    uint64_t   	fResourceBlock;
-    boost::mutex 	fResourceLock;
-    boost::condition fResourceAvailable;
-
-    LockedSessionMap fSessionMap;
-    uint32_t 	fTraceOn;
-
+  LockedSessionMap fSessionMap;
+  uint32_t fTraceOn;
 };
 
-}
-
+}  // namespace joblist

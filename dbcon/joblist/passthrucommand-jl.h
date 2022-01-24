@@ -40,29 +40,29 @@ class PassThruStep;
 
 class PassThruCommandJL : public CommandJL
 {
-public:
-    PassThruCommandJL(const PassThruStep&);
-    virtual ~PassThruCommandJL();
+ public:
+  PassThruCommandJL(const PassThruStep&);
+  virtual ~PassThruCommandJL();
 
-    void setLBID(uint64_t data, uint32_t dbroot);		// converts a rid or dictionary token to an LBID.  For ColumnCommandJL it's a RID, for a DictStep it's a token.
-    uint8_t getTableColumnType();
-    std::string toString();
+  void setLBID(uint64_t data, uint32_t dbroot);  // converts a rid or dictionary token to an LBID.  For
+                                                 // ColumnCommandJL it's a RID, for a DictStep it's a token.
+  uint8_t getTableColumnType();
+  std::string toString();
 
-    void createCommand(messageqcpp::ByteStream&) const;
-    void runCommand(messageqcpp::ByteStream&) const;
-    uint16_t getWidth();
-    CommandType getCommandType()
-    {
-        return PASS_THRU;
-    }
+  void createCommand(messageqcpp::ByteStream&) const;
+  void runCommand(messageqcpp::ByteStream&) const;
+  uint16_t getWidth();
+  CommandType getCommandType()
+  {
+    return PASS_THRU;
+  }
 
-private:
-    PassThruCommandJL();
-    PassThruCommandJL(const PassThruCommandJL&);
+ private:
+  PassThruCommandJL();
+  PassThruCommandJL(const PassThruCommandJL&);
 
-    uint8_t colWidth;
-    uint8_t tableColumnType;
+  uint8_t colWidth;
+  uint8_t tableColumnType;
 };
 
-};
-
+};  // namespace joblist

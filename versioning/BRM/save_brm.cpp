@@ -26,7 +26,6 @@
  * More detailed description
  */
 
-
 #include <unistd.h>
 #include <iostream>
 #include <sys/types.h>
@@ -48,79 +47,76 @@ using namespace BRM;
 
 #include "configcpp.h"
 
-int main (int argc, char** argv)
+int main(int argc, char** argv)
 {
-    BlockResolutionManager brm;
-    config::Config* config = config::Config::makeConfig();
-    int err;
-    string prefix, currentFilename;
-    IDBDataFile* currentFile = NULL;
+  BlockResolutionManager brm;
+  config::Config* config = config::Config::makeConfig();
+  int err;
+  string prefix, currentFilename;
+  IDBDataFile* currentFile = NULL;
 
-    if (argc > 1)
-        prefix = argv[1];
-    else
+  if (argc > 1)
+    prefix = argv[1];
+  else
+  {
+    prefix = config->getConfig("SystemConfig", "DBRMRoot");
+
+    if (prefix.length() == 0)
     {
-        prefix = config->getConfig("SystemConfig", "DBRMRoot");
-
-        if (prefix.length() == 0)
-        {
-            cerr << "Error: Need a valid Calpont configuation file" << endl;
-            exit(1);
-        }
+      cerr << "Error: Need a valid Calpont configuation file" << endl;
+      exit(1);
     }
+  }
 
-    idbdatafile::IDBPolicy::configIDBPolicy();
+  idbdatafile::IDBPolicy::configIDBPolicy();
 
-    err = brm.saveState(prefix);
+  err = brm.saveState(prefix);
 
-    if (err == 0)
-        cout << "Saved to " << prefix << endl;
-    else
-    {
-        cout << "Save failed" << endl;
-        exit(1);
-    }
+  if (err == 0)
+    cout << "Saved to " << prefix << endl;
+  else
+  {
+    cout << "Save failed" << endl;
+    exit(1);
+  }
 
-    (void)::umask(0);
+  (void)::umask(0);
 
-    currentFilename = prefix + "_current";
-    currentFile = IDBDataFile::open(IDBPolicy::getType(currentFilename.c_str(),
-                                    IDBPolicy::WRITEENG),
-                                    currentFilename.c_str(),
-                                    "wb",
-                                    0);
+  currentFilename = prefix + "_current";
+  currentFile = IDBDataFile::open(IDBPolicy::getType(currentFilename.c_str(), IDBPolicy::WRITEENG),
+                                  currentFilename.c_str(), "wb", 0);
 
-    if (!currentFile)
-    {
-        cerr << "Error: could not open " << currentFilename << "for writing" << endl;
-        exit(1);
-    }
+  if (!currentFile)
+  {
+    cerr << "Error: could not open " << currentFilename << "for writing" << endl;
+    exit(1);
+  }
 
-    try
-    {
+  try
+  {
 #ifndef _MSC_VER
-        prefix += '\n';
+    prefix += '\n';
 #endif
-        // for MCOL-1558.  Make the _current file relative to DBRMRoot
-        string relative = prefix.substr(prefix.find_last_of('/') + 1);
-        currentFile->write(relative.c_str(), relative.length());
-    }
-    catch (exception& e)
-    {
-        cerr << "Error: failed to write to " << currentFilename << ": " << e.what() << endl;
-        exit(1);
-    }
+    // for MCOL-1558.  Make the _current file relative to DBRMRoot
+    string relative = prefix.substr(prefix.find_last_of('/') + 1);
+    currentFile->write(relative.c_str(), relative.length());
+  }
+  catch (exception& e)
+  {
+    cerr << "Error: failed to write to " << currentFilename << ": " << e.what() << endl;
+    exit(1);
+  }
 
-    try
-    {
-        delete currentFile;
-        currentFile = NULL;
-    }
-    catch (exception& e)
-    {
-        cerr << "Error: failed to close " << currentFilename << ": " << e.what() << endl;
-        exit(1);
-    }
+  try
+  {
+    delete currentFile;
+    currentFile = NULL;
+  }
+  catch (exception& e)
+  {
+    cerr << "Error: failed to close " << currentFilename << ": " << e.what() << endl;
+    exit(1);
+  }
 
-    return 0;
+  return 0;
 }

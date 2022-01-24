@@ -40,7 +40,6 @@ using namespace logging;
 
 namespace primitiveprocessor
 {
-
 RTSCommand::RTSCommand() : Command(RID_TO_STRING), absNull(false)
 {
 }
@@ -51,202 +50,203 @@ RTSCommand::~RTSCommand()
 
 void RTSCommand::execute()
 {
-    throw logic_error("RTSCommand shouldn't be used for filter steps");
+  throw logic_error("RTSCommand shouldn't be used for filter steps");
 }
 
 void RTSCommand::project()
 {
-    uint32_t i;
+  uint32_t i;
 
-    if (passThru)
+  if (passThru)
+  {
+    // 		if (bpp->absRids.get() == NULL)
+    if (absNull)  //@bug 1003. Always need to remake absRids
     {
-// 		if (bpp->absRids.get() == NULL)
-        if (absNull)   //@bug 1003. Always need to remake absRids
-        {
-            bpp->absRids.reset(new uint64_t[LOGICAL_BLOCK_RIDS]);
+      bpp->absRids.reset(new uint64_t[LOGICAL_BLOCK_RIDS]);
 
-            for (i = 0; i < bpp->ridCount; i++)
-                bpp->absRids[i] = bpp->relRids[i] + bpp->baseRid;
-        }
-
-        // need something in values
-
-        dict.project();
+      for (i = 0; i < bpp->ridCount; i++)
+        bpp->absRids[i] = bpp->relRids[i] + bpp->baseRid;
     }
-    else
+
+    // need something in values
+
+    dict.project();
+  }
+  else
+  {
+    int64_t tmpValues[LOGICAL_BLOCK_RIDS];
+    uint32_t old_rc = bpp->ridCount;
+
+    if (bpp->absRids.get() == NULL)
+      bpp->absRids.reset(new uint64_t[LOGICAL_BLOCK_RIDS]);
+
+    col->execute(tmpValues);
+
+    if (old_rc != bpp->ridCount)
     {
-        int64_t tmpValues[LOGICAL_BLOCK_RIDS];
-        uint32_t old_rc = bpp->ridCount;
+      ostringstream os;
 
-        if (bpp->absRids.get() == NULL)
-            bpp->absRids.reset(new uint64_t[LOGICAL_BLOCK_RIDS]);
+      os << __FILE__ << " (token column) error on projection for oid " << col->getOID() << " lbid "
+         << col->getLBID();
+      os << ": input rids " << old_rc;
+      os << ", output rids " << bpp->ridCount << endl;
 
-        col->execute(tmpValues);
-
-        if (old_rc != bpp->ridCount)
-        {
-            ostringstream os;
-
-            os << __FILE__ << " (token column) error on projection for oid " << col->getOID() << " lbid " << col->getLBID();
-            os << ": input rids " << old_rc;
-            os << ", output rids " << bpp->ridCount << endl;
-
-            if (bpp->sessionID & 0x80000000)
-                throw NeedToRestartJob(os.str());
-            else
-            {
-                throw PrimitiveColumnProjectResultExcept(os.str());
-            }
-        }
-
-        dict.project(tmpValues);
+      if (bpp->sessionID & 0x80000000)
+        throw NeedToRestartJob(os.str());
+      else
+      {
+        throw PrimitiveColumnProjectResultExcept(os.str());
+      }
     }
+
+    dict.project(tmpValues);
+  }
 }
 
 void RTSCommand::projectIntoRowGroup(RowGroup& rg, uint32_t colNum)
 {
-    uint32_t i;
+  uint32_t i;
 
-    if (passThru)
+  if (passThru)
+  {
+    if (absNull)  //@bug 1003. Always need to remake absRids
     {
-        if (absNull)   //@bug 1003. Always need to remake absRids
-        {
-            bpp->absRids.reset(new uint64_t[LOGICAL_BLOCK_RIDS]);
+      bpp->absRids.reset(new uint64_t[LOGICAL_BLOCK_RIDS]);
 
-            for (i = 0; i < bpp->ridCount; i++)
-                bpp->absRids[i] = bpp->relRids[i] + bpp->baseRid;
-        }
-
-        dict.projectIntoRowGroup(rg, colNum);
+      for (i = 0; i < bpp->ridCount; i++)
+        bpp->absRids[i] = bpp->relRids[i] + bpp->baseRid;
     }
-    else
+
+    dict.projectIntoRowGroup(rg, colNum);
+  }
+  else
+  {
+    int64_t tmpValues[LOGICAL_BLOCK_RIDS];
+    uint32_t old_rc = bpp->ridCount;
+
+    if (bpp->absRids.get() == NULL)
+      bpp->absRids.reset(new uint64_t[LOGICAL_BLOCK_RIDS]);
+
+    col->execute(tmpValues);
+
+    if (old_rc != bpp->ridCount)
     {
-        int64_t tmpValues[LOGICAL_BLOCK_RIDS];
-        uint32_t old_rc = bpp->ridCount;
+      ostringstream os;
 
-        if (bpp->absRids.get() == NULL)
-            bpp->absRids.reset(new uint64_t[LOGICAL_BLOCK_RIDS]);
+      os << __FILE__ << " (token column) error on projection for oid " << col->getOID() << " lbid "
+         << col->getLBID();
+      os << ": input rids " << old_rc;
+      os << ", output rids " << bpp->ridCount << endl;
 
-        col->execute(tmpValues);
-
-        if (old_rc != bpp->ridCount)
-        {
-
-            ostringstream os;
-
-            os << __FILE__ << " (token column) error on projection for oid " << col->getOID() << " lbid " << col->getLBID();
-            os << ": input rids " << old_rc;
-            os << ", output rids " << bpp->ridCount << endl;
-
-            if (bpp->sessionID & 0x80000000)
-                throw NeedToRestartJob(os.str());
-            else
-                throw PrimitiveColumnProjectResultExcept(os.str());
-        }
-
-        dict.projectIntoRowGroup(rg, tmpValues, colNum);
+      if (bpp->sessionID & 0x80000000)
+        throw NeedToRestartJob(os.str());
+      else
+        throw PrimitiveColumnProjectResultExcept(os.str());
     }
+
+    dict.projectIntoRowGroup(rg, tmpValues, colNum);
+  }
 }
 
 uint64_t RTSCommand::getLBID()
 {
-    if (!passThru)
-        return col->getLBID();
-    else
-        return 0;
+  if (!passThru)
+    return col->getLBID();
+  else
+    return 0;
 }
 
 void RTSCommand::nextLBID()
 {
-    if (!passThru)
-        col->nextLBID();
+  if (!passThru)
+    col->nextLBID();
 }
 
 void RTSCommand::prep(int8_t outputType, bool makeAbsRids)
 {
-    if (!passThru)
-        col->prep(OT_BOTH, true);
+  if (!passThru)
+    col->prep(OT_BOTH, true);
 
-    dict.prep(OT_DATAVALUE, true);
+  dict.prep(OT_DATAVALUE, true);
 }
 
 void RTSCommand::createCommand(ByteStream& bs)
 {
-    bs.advance(1);
-    bs >> passThru;
+  bs.advance(1);
+  bs >> passThru;
 
-    if (!passThru)
-    {
-        col.reset(ColumnCommandFabric::createCommand(bs));
-    }
+  if (!passThru)
+  {
+    col.reset(ColumnCommandFabric::createCommand(bs));
+  }
 
-    dict.createCommand(bs);
-    Command::createCommand(bs);
+  dict.createCommand(bs);
+  Command::createCommand(bs);
 }
 
 void RTSCommand::resetCommand(ByteStream& bs)
 {
-    if (!passThru)
-        col->resetCommand(bs);
+  if (!passThru)
+    col->resetCommand(bs);
 
-    dict.resetCommand(bs);
+  dict.resetCommand(bs);
 }
 
 SCommand RTSCommand::duplicate()
 {
-    SCommand ret;
-    RTSCommand* rts;
+  SCommand ret;
+  RTSCommand* rts;
 
-    ret.reset(new RTSCommand());
-    rts = (RTSCommand*) ret.get();
-    rts->passThru = passThru;
+  ret.reset(new RTSCommand());
+  rts = (RTSCommand*)ret.get();
+  rts->passThru = passThru;
 
-    if (!passThru)
-        rts->col.reset(ColumnCommandFabric::duplicate(col));
+  if (!passThru)
+    rts->col.reset(ColumnCommandFabric::duplicate(col));
 
-    rts->dict = dict;
-    rts->Command::operator=(*this);
-    return ret;
+  rts->dict = dict;
+  rts->Command::operator=(*this);
+  return ret;
 }
 
 bool RTSCommand::operator==(const RTSCommand& r) const
 {
-    if (passThru != r.passThru)
-        return false;
+  if (passThru != r.passThru)
+    return false;
 
-    if (!passThru)
-        if (col != r.col)
-            return false;
+  if (!passThru)
+    if (col != r.col)
+      return false;
 
-    if (absNull != r.absNull)
-        return false;
+  if (absNull != r.absNull)
+    return false;
 
-    if (dict != dict)
-        return false;
+  if (dict != dict)
+    return false;
 
-    return true;
+  return true;
 }
 
 bool RTSCommand::operator!=(const RTSCommand& r) const
 {
-    return !(*this == r);
+  return !(*this == r);
 }
 
 void RTSCommand::getLBIDList(uint32_t loopCount, vector<int64_t>* lbids)
 {
-    dict.getLBIDList(loopCount, lbids);
+  dict.getLBIDList(loopCount, lbids);
 
-    if (!passThru)
-        col->getLBIDList(loopCount, lbids);
+  if (!passThru)
+    col->getLBIDList(loopCount, lbids);
 }
 
 void RTSCommand::setBatchPrimitiveProcessor(BatchPrimitiveProcessor* b)
 {
-    Command::setBatchPrimitiveProcessor(b);
-    dict.setBatchPrimitiveProcessor(b);
+  Command::setBatchPrimitiveProcessor(b);
+  dict.setBatchPrimitiveProcessor(b);
 
-    if (!passThru)
-        col->setBatchPrimitiveProcessor(b);
+  if (!passThru)
+    col->setBatchPrimitiveProcessor(b);
 }
 
-};
+};  // namespace primitiveprocessor

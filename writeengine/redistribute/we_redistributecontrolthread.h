@@ -16,8 +16,8 @@
    MA 02110-1301, USA. */
 
 /*
-* $Id: we_redistributecontrolthread.h 4450 2013-01-21 14:13:24Z rdempsey $
-*/
+ * $Id: we_redistributecontrolthread.h 4450 2013-01-21 14:13:24Z rdempsey $
+ */
 
 #pragma once
 
@@ -27,7 +27,6 @@
 
 #include "boost/shared_ptr.hpp"
 #include "boost/thread/mutex.hpp"
-
 
 // forward reference
 namespace config
@@ -40,94 +39,90 @@ namespace oam
 class OamCache;
 }
 
-
 namespace messageqcpp
 {
 class ByteStream;
 class IOSocket;
-}
+}  // namespace messageqcpp
 
 namespace messagequeue
 {
 class MessageQueueClient;
 }
 
-
 namespace redistribute
 {
 class RedistributeControl;
 
-
 class RedistributeControlThread
 {
-public:
-    RedistributeControlThread(uint32_t act);
-    ~RedistributeControlThread();
+ public:
+  RedistributeControlThread(uint32_t act);
+  ~RedistributeControlThread();
 
-    int handleJobMsg(RedistributeMsgHeader&, messageqcpp::ByteStream&, messageqcpp::IOSocket&);
+  int handleJobMsg(RedistributeMsgHeader&, messageqcpp::ByteStream&, messageqcpp::IOSocket&);
 
-    void operator()();
+  void operator()();
 
-    // used by control to change status
-    static void setStopAction(bool);
+  // used by control to change status
+  static void setStopAction(bool);
 
-private:
-    // struct for sort partitions
-    struct PartitionInfo
+ private:
+  // struct for sort partitions
+  struct PartitionInfo
+  {
+    int32_t dbroot;
+    int32_t partition;
+
+    PartitionInfo() : dbroot(0), partition(0)
     {
-        int32_t dbroot;
-        int32_t partition;
+    }
+    PartitionInfo(int32_t d, int32_t p) : dbroot(d), partition(p)
+    {
+    }
 
-        PartitionInfo() : dbroot(0), partition(0) {}
-        PartitionInfo(int32_t d, int32_t p) : dbroot(d), partition(p) {}
+    bool operator<(const struct PartitionInfo& rhs) const
+    {
+      return ((dbroot < rhs.dbroot) || (dbroot == rhs.dbroot && partition < rhs.partition));
+    }
 
-        bool operator < (const struct PartitionInfo& rhs) const
-        {
-            return ((dbroot < rhs.dbroot) || (dbroot == rhs.dbroot && partition < rhs.partition));
-        }
+    bool operator==(const struct PartitionInfo& rhs) const
+    {
+      return (dbroot == rhs.dbroot && partition == rhs.partition);
+    }
+  };
 
-        bool operator == (const struct PartitionInfo& rhs) const
-        {
-            return (dbroot == rhs.dbroot && partition == rhs.partition);
-        }
+  void doRedistribute();
+  void doStopAction();
 
-    };
+  int setup();
+  int makeRedistributePlan();
+  int executeRedistributePlan();
 
-    void doRedistribute();
-    void doStopAction();
+  int connectToWes(int);
+  void dumpPlanToFile(uint64_t, std::vector<PartitionInfo>&, int);
+  void displayPlan();
 
-    int  setup();
-    int  makeRedistributePlan();
-    int  executeRedistributePlan();
+  uint32_t fAction;
+  oam::OamCache* fOamCache;
+  config::Config* fConfig;
+  boost::shared_ptr<messageqcpp::MessageQueueClient> fMsgQueueClient;
 
-    int  connectToWes(int);
-    void dumpPlanToFile(uint64_t, std::vector<PartitionInfo>&, int);
-    void displayPlan();
+  std::set<int> fSourceSet;
+  std::set<int> fTargetSet;
+  std::set<int> fDbrootSet;  // Union of fSourceSet and fTargetSet
+  int fMaxDbroot;
+  uint32_t fEntryCount;
+  std::string fErrorMsg;
+  int32_t fErrorCode;
 
-    uint32_t                      fAction;
-    oam::OamCache*                fOamCache;
-    config::Config*               fConfig;
-    boost::shared_ptr<messageqcpp::MessageQueueClient>  fMsgQueueClient;
+  RedistributeControl* fControl;
 
-    std::set<int> fSourceSet;
-    std::set<int> fTargetSet;
-    std::set<int> fDbrootSet;  // Union of fSourceSet and fTargetSet
-    int           fMaxDbroot;
-    uint32_t      fEntryCount;
-    std::string   fErrorMsg;
-    int32_t       fErrorCode;
-
-    RedistributeControl* fControl;
-
-    static boost::mutex  fActionMutex;
-    static volatile bool fStopAction;
-    static std::string   fWesInUse;
+  static boost::mutex fActionMutex;
+  static volatile bool fStopAction;
+  static std::string fWesInUse;
 };
 
-
-} // namespace
-
-
+}  // namespace redistribute
 
 // vim:ts=4 sw=4:
-

@@ -17,7 +17,6 @@
 
 //  $Id: jobstep.h 9636 2013-06-20 14:23:36Z rdempsey $
 
-
 /** @file */
 
 #pragma once
@@ -27,31 +26,30 @@
 
 namespace joblist
 {
-
 /** @brief struct ErrorInfo
  *
  * struct ErrorInfo stores the error code and message
  */
 struct ErrorInfo
 {
-    ErrorInfo() : errCode(0) { }
-    uint32_t errCode;
-    std::string errMsg;
-    // for backward compat
-    ErrorInfo(uint16_t v) : errCode(v) { }
-    ErrorInfo& operator=(uint16_t v)
-    {
-        errCode = v;
-        errMsg.clear();
-        return *this;
-    }
+  ErrorInfo() : errCode(0)
+  {
+  }
+  uint32_t errCode;
+  std::string errMsg;
+  // for backward compat
+  ErrorInfo(uint16_t v) : errCode(v)
+  {
+  }
+  ErrorInfo& operator=(uint16_t v)
+  {
+    errCode = v;
+    errMsg.clear();
+    return *this;
+  }
 };
 typedef boost::shared_ptr<ErrorInfo> SErrorInfo;
 
-
-}
+}  // namespace joblist
 
 // vim:ts=4 sw=4:
-
-
-

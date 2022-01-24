@@ -17,10 +17,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: aggregatecolumn.h 9679 2013-07-11 22:32:03Z zzhu $
-*
-*
-***********************************************************************/
+ *   $Id: aggregatecolumn.h 9679 2013-07-11 22:32:03Z zzhu $
+ *
+ *
+ ***********************************************************************/
 /** @file */
 
 #pragma once
@@ -39,7 +39,6 @@ class ByteStream;
  */
 namespace execplan
 {
-
 typedef std::vector<execplan::SRCP> AggParms;
 
 /**
@@ -50,418 +49,415 @@ typedef std::vector<execplan::SRCP> AggParms;
  */
 class AggregateColumn : public ReturnedColumn
 {
+ public:
+  /**
+   * AggOp enum
+   */
+  enum AggOp
+  {
+    NOOP = 0,
+    COUNT_ASTERISK,
+    COUNT,
+    SUM,
+    AVG,
+    MIN,
+    MAX,
+    CONSTANT,
+    DISTINCT_COUNT,
+    DISTINCT_SUM,
+    DISTINCT_AVG,
+    STDDEV_POP,
+    STDDEV_SAMP,
+    VAR_POP,
+    VAR_SAMP,
+    BIT_AND,
+    BIT_OR,
+    BIT_XOR,
+    GROUP_CONCAT,
+    UDAF,
+    MULTI_PARM
+  };
 
-public:
-    /**
-    * AggOp enum
-    */
-    enum AggOp
-    {
-        NOOP = 0,
-        COUNT_ASTERISK,
-        COUNT,
-        SUM,
-        AVG,
-        MIN,
-        MAX,
-        CONSTANT,
-        DISTINCT_COUNT,
-        DISTINCT_SUM,
-        DISTINCT_AVG,
-        STDDEV_POP,
-        STDDEV_SAMP,
-        VAR_POP,
-        VAR_SAMP,
-        BIT_AND,
-        BIT_OR,
-        BIT_XOR,
-        GROUP_CONCAT,
-        UDAF,
-        MULTI_PARM
-    };
+  /**
+   * typedef
+   */
+  typedef std::vector<SRCP> ColumnList;
+  /*
+   * Constructors
+   */
+  /**
+   * ctor
+   */
+  AggregateColumn();
 
-    /**
-     * typedef
-     */
-    typedef std::vector<SRCP> ColumnList;
-    /*
-     * Constructors
-     */
-    /**
-     * ctor
-     */
-    AggregateColumn();
+  /**
+   * ctor
+   */
+  AggregateColumn(const uint32_t sessionID);
 
-    /**
-     * ctor
-     */
-    AggregateColumn(const uint32_t sessionID);
+  /**
+   * ctor
+   */
+  AggregateColumn(const std::string& functionName, const std::string& content, const uint32_t sessionID = 0);
 
-    /**
-     * ctor
-     */
-    AggregateColumn(const std::string& functionName, const std::string& content, const uint32_t sessionID = 0);
+  /**
+   * ctor
+   */
+  AggregateColumn(const AggregateColumn& rhs, const uint32_t sessionID = 0);
 
-    /**
-     * ctor
-     */
-    AggregateColumn( const AggregateColumn& rhs, const uint32_t sessionID = 0 );
+  /**
+   * Destructors
+   */
+  virtual ~AggregateColumn()
+  {
+  }
 
-    /**
-     * Destructors
-     */
-    virtual ~AggregateColumn() { }
+  /**
+   * Accessor Methods
+   */
+  virtual const std::string functionName() const
+  {
+    return fFunctionName;
+  }
 
-    /**
-     * Accessor Methods
-     */
-    virtual const std::string functionName() const
-    {
-        return fFunctionName;
-    }
+  /**
+   * accessor
+   */
+  virtual void functionName(const std::string& functionName)
+  {
+    fFunctionName = functionName;
+  }
 
-    /**
-     * accessor
-     */
-    virtual void functionName(const std::string& functionName)
-    {
-        fFunctionName = functionName;
-    }
+  /**
+   * accessor
+   */
+  virtual uint8_t aggOp() const
+  {
+    return fAggOp;
+  }
+  /**
+   * accessor
+   */
+  virtual void aggOp(const uint8_t aggOp)
+  {
+    fAggOp = aggOp;
+  }
 
-    /**
-     * accessor
-     */
-    virtual uint8_t aggOp() const
-    {
-        return fAggOp;
-    }
-    /**
-     * accessor
-     */
-    virtual void aggOp(const uint8_t aggOp)
-    {
-        fAggOp = aggOp;
-    }
+  /** get function parms
+   */
+  virtual AggParms& aggParms()
+  {
+    return fAggParms;
+  }
 
+  virtual const AggParms& aggParms() const
+  {
+    return fAggParms;
+  }
 
-    /** get function parms
-     */
-    virtual AggParms& aggParms()
-    {
-        return fAggParms;
-    }
+  /** set function parms
+   */
+  virtual void aggParms(const AggParms& parms)
+  {
+    fAggParms = parms;
+  }
 
-    virtual const AggParms& aggParms() const
-    {
-        return fAggParms;
-    }
+  /** return a copy of this pointer
+   *
+   * deep copy of this pointer and return the copy
+   */
+  inline virtual AggregateColumn* clone() const
+  {
+    return new AggregateColumn(*this);
+  }
 
-    /** set function parms
-     */
-    virtual void aggParms(const AggParms& parms)
-    {
-        fAggParms = parms;
-    }
+  /**
+   * table alias name
+   */
+  virtual const std::string tableAlias() const
+  {
+    return fTableAlias;
+  }
+  /**
+   * table alias name
+   */
+  virtual void tableAlias(const std::string& tableAlias)
+  {
+    fTableAlias = tableAlias;
+  }
 
+  /**
+   * ASC flag
+   */
+  inline virtual bool asc() const
+  {
+    return fAsc;
+  }
+  /**
+   * ASC flag
+   */
+  inline virtual void asc(const bool asc)
+  {
+    fAsc = asc;
+  }
 
-    /** return a copy of this pointer
-     *
-     * deep copy of this pointer and return the copy
-     */
-    inline virtual AggregateColumn* clone() const
-    {
-        return new AggregateColumn (*this);
-    }
+  /**
+   * fData: SQL representation of this object
+   */
+  virtual const std::string data() const
+  {
+    return fData;
+  }
+  /**
+   * fData: SQL representation of this object
+   */
+  using ReturnedColumn::data;
+  virtual void data(const std::string& data)
+  {
+    fData = data;
+  }
 
-    /**
-    * table alias name
-    */
-    virtual const std::string tableAlias() const
-    {
-        return fTableAlias;
-    }
-    /**
-    * table alias name
-    */
-    virtual void tableAlias (const std::string& tableAlias)
-    {
-        fTableAlias = tableAlias;
-    }
+  /**
+   * Overloaded stream operator
+   */
+  virtual const std::string toString() const;
 
-    /**
-    * ASC flag
-    */
-    inline virtual bool asc() const
-    {
-        return fAsc;
-    }
-    /**
-    * ASC flag
-    */
-    inline virtual void asc(const bool asc)
-    {
-        fAsc = asc;
-    }
+  /**
+   * Serialize interface
+   */
+  virtual void serialize(messageqcpp::ByteStream&) const;
+  /**
+   * Serialize interface
+   */
+  virtual void unserialize(messageqcpp::ByteStream&);
 
-    /**
-     * fData: SQL representation of this object
-     */
-    virtual const std::string data() const
-    {
-        return fData;
-    }
-    /**
-     * fData: SQL representation of this object
-     */
-    using ReturnedColumn::data;
-    virtual void data(const std::string& data)
-    {
-        fData = data;
-    }
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
+   */
+  virtual bool operator==(const TreeNode* t) const;
 
-    /**
-     * Overloaded stream operator
-     */
-    virtual const std::string toString() const;
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
+   */
+  using ReturnedColumn::operator=;
+  virtual bool operator==(const AggregateColumn& t) const;
 
-    /**
-     * Serialize interface
-     */
-    virtual void serialize(messageqcpp::ByteStream&) const;
-    /**
-     * Serialize interface
-     */
-    virtual void unserialize(messageqcpp::ByteStream&);
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
+   */
+  virtual bool operator!=(const TreeNode* t) const;
 
-    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-     *
-     * Do a deep, strict (as opposed to semantic) equivalence test.
-     * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
-    */
-    virtual bool operator==(const TreeNode* t) const;
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
+   */
+  using ReturnedColumn::operator!=;
+  virtual bool operator!=(const AggregateColumn& t) const;
 
-    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-     *
-     * Do a deep, strict (as opposed to semantic) equivalence test.
-     * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
-     */
-    using ReturnedColumn::operator=;
-    virtual bool operator==(const AggregateColumn& t) const;
+  /** @brief push back arg to group by column list*/
+  virtual void addGroupByCol(SRCP ac)
+  {
+    fGroupByColList.push_back(ac);
+  }
 
-    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-     *
-     * Do a deep, strict (as opposed to semantic) equivalence test.
-     * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
-     */
-    virtual bool operator!=(const TreeNode* t) const;
+  /** @brief push back arg to project by column list*/
+  virtual void addProjectCol(SRCP ac)
+  {
+    fProjectColList.push_back(ac);
+  }
 
-    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-     *
-     * Do a deep, strict (as opposed to semantic) equivalence test.
-     * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
-     */
-    using ReturnedColumn::operator!=;
-    virtual bool operator!=(const AggregateColumn& t) const;
+  /**
+   * accessor
+   */
+  virtual const ColumnList& groupByColList() const
+  {
+    return fGroupByColList;
+  }
+  /**
+   * accessor
+   */
+  virtual const ColumnList& projectColList() const
+  {
+    return fProjectColList;
+  }
 
-    /** @brief push back arg to group by column list*/
-    virtual void addGroupByCol(SRCP ac)
-    {
-        fGroupByColList.push_back(ac);
-    }
+  /** @brief constant argument for aggregate with constant */
+  inline const SRCP constCol() const
+  {
+    return fConstCol;
+  }
+  /**
+   * accessor
+   */
+  inline void constCol(const SRCP& constCol)
+  {
+    fConstCol = constCol;
+  }
 
-    /** @brief push back arg to project by column list*/
-    virtual void addProjectCol(SRCP ac)
-    {
-        fProjectColList.push_back(ac);
-    }
+  /**
+   * convert an aggregate name to an AggOp enum
+   */
+  static AggOp agname2num(const std::string&);
 
-    /**
-    * accessor
-    */
-    virtual const ColumnList& groupByColList() const
-    {
-        return fGroupByColList;
-    }
-    /**
-    * accessor
-    */
-    virtual const ColumnList& projectColList() const
-    {
-        return fProjectColList;
-    }
+  using ReturnedColumn::hasAggregate;
+  virtual bool hasAggregate();
+  virtual bool hasWindowFunc()
+  {
+    return false;
+  }
 
-    /** @brief constant argument for aggregate with constant */
-    inline const SRCP constCol() const
-    {
-        return fConstCol;
-    }
-    /**
-    * accessor
-    */
-    inline void constCol(const SRCP& constCol)
-    {
-        fConstCol = constCol;
-    }
+  inline const std::string timeZone() const
+  {
+    return fTimeZone;
+  }
 
-    /**
-    * convert an aggregate name to an AggOp enum
-    */
-    static AggOp agname2num(const std::string&);
+  inline void timeZone(const std::string& timeZone)
+  {
+    fTimeZone = timeZone;
+  }
 
-    using ReturnedColumn::hasAggregate;
-    virtual bool hasAggregate();
-    virtual bool hasWindowFunc()
-    {
-        return false;
-    }
+ protected:
+  std::string fFunctionName;  // deprecated field
+  uint8_t fAggOp;
 
-    inline const std::string timeZone () const
-    {
-        return fTimeZone;
-    }
+  /**
+   * ReturnedColumn objects that are the arguments to this
+   * function
+   */
+  AggParms fAggParms;
 
-    inline void timeZone (const std::string& timeZone)
-    {
-        fTimeZone = timeZone;
-    }
+  /** table alias
+   * A string to represent table alias name which contains this column
+   */
+  std::string fTableAlias;
 
-protected:
-    std::string fFunctionName;	// deprecated field
-    uint8_t fAggOp;
+  /**
+   * Flag to indicate asc or desc order for order by column
+   */
+  bool fAsc;
+  std::string fData;
+  ColumnList fGroupByColList;
+  ColumnList fProjectColList;
+  SRCP fConstCol;
+  std::string fTimeZone;
 
-    /**
-     * ReturnedColumn objects that are the arguments to this
-     * function
-     */
-    AggParms fAggParms;
+ public:
+  /***********************************************************
+   *                 F&E framework                           *
+   ***********************************************************/
+  /**
+   * F&E
+   */
+  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
+  {
+    evaluate(row, isNull);
+    return TreeNode::getStrVal(fTimeZone);
+  }
 
-    /** table alias
-     * A string to represent table alias name which contains this column
-     */
-    std:: string fTableAlias;
+  /**
+   * F&E
+   */
+  virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
+  {
+    evaluate(row, isNull);
+    return TreeNode::getIntVal();
+  }
 
-    /**
-     * Flag to indicate asc or desc order for order by column
-     */
-    bool fAsc;
-    std::string fData;
-    ColumnList fGroupByColList;
-    ColumnList fProjectColList;
-    SRCP fConstCol;
-    std::string fTimeZone;
+  /**
+   * F&E
+   */
+  virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull)
+  {
+    evaluate(row, isNull);
+    return TreeNode::getUintVal();
+  }
 
-public:
-    /***********************************************************
-     *                 F&E framework                           *
-     ***********************************************************/
-    /**
-    * F&E
-    */
-    virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
-    {
-        evaluate(row, isNull);
-        return TreeNode::getStrVal(fTimeZone);
-    }
+  /**
+   * F&E
+   */
+  virtual float getFloatVal(rowgroup::Row& row, bool& isNull)
+  {
+    evaluate(row, isNull);
+    return TreeNode::getFloatVal();
+  }
 
-    /**
-    * F&E
-    */
-    virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
-    {
-        evaluate(row, isNull);
-        return TreeNode::getIntVal();
-    }
+  /**
+   * F&E
+   */
+  virtual double getDoubleVal(rowgroup::Row& row, bool& isNull)
+  {
+    evaluate(row, isNull);
+    return TreeNode::getDoubleVal();
+  }
 
-    /**
-    * F&E
-    */
-    virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull)
-    {
-        evaluate(row, isNull);
-        return TreeNode::getUintVal();
-    }
+  /**
+   * F&E
+   */
+  virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull)
+  {
+    evaluate(row, isNull);
+    return TreeNode::getLongDoubleVal();
+  }
 
-    /**
-    * F&E
-    */
-    virtual float getFloatVal(rowgroup::Row& row, bool& isNull)
-    {
-        evaluate(row, isNull);
-        return TreeNode::getFloatVal();
-    }
+  /**
+   * F&E
+   */
+  virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull)
+  {
+    evaluate(row, isNull);
+    return TreeNode::getDecimalVal();
+  }
+  /**
+   * F&E
+   */
+  virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull)
+  {
+    evaluate(row, isNull);
+    return TreeNode::getDateIntVal();
+  }
+  /**
+   * F&E
+   */
+  virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
+  {
+    evaluate(row, isNull);
+    return TreeNode::getTimeIntVal();
+  }
+  /**
+   * F&E
+   */
+  virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull)
+  {
+    evaluate(row, isNull);
+    return TreeNode::getDatetimeIntVal();
+  }
+  /**
+   * F&E
+   */
+  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull)
+  {
+    evaluate(row, isNull);
+    return TreeNode::getTimestampIntVal();
+  }
 
-    /**
-    * F&E
-    */
-    virtual double getDoubleVal(rowgroup::Row& row, bool& isNull)
-    {
-        evaluate(row, isNull);
-        return TreeNode::getDoubleVal();
-    }
-
-    /**
-    * F&E
-    */
-    virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull)
-    {
-        evaluate(row, isNull);
-        return TreeNode::getLongDoubleVal();
-    }
-
-    /**
-    * F&E
-    */
-    virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull)
-    {
-        evaluate(row, isNull);
-        return TreeNode::getDecimalVal();
-    }
-    /**
-    * F&E
-    */
-    virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull)
-    {
-        evaluate(row, isNull);
-        return TreeNode::getDateIntVal();
-    }
-    /**
-    * F&E
-    */
-    virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
-    {
-        evaluate(row, isNull);
-        return TreeNode::getTimeIntVal();
-    }
-    /**
-    * F&E
-    */
-    virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull)
-    {
-        evaluate(row, isNull);
-        return TreeNode::getDatetimeIntVal();
-    }
-    /**
-    * F&E
-    */
-    virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull)
-    {
-        evaluate(row, isNull);
-        return TreeNode::getTimestampIntVal();
-    }
-
-
-private:
-    void evaluate(rowgroup::Row& row, bool& isNull);
+ private:
+  void evaluate(rowgroup::Row& row, bool& isNull);
 };
 
 /**
-* stream operator
-*/
+ * stream operator
+ */
 std::ostream& operator<<(std::ostream& os, const AggregateColumn& rhs);
 /**
  * utility function to extract all aggregate columns from a parse tree
  */
 void getAggCols(ParseTree* n, void* obj);
 
-} //namespace execplan
-
+}  // namespace execplan
