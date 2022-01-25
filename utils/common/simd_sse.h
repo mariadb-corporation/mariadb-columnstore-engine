@@ -119,9 +119,11 @@ namespace simd
   template <typename VT, typename T, typename ENABLE = void>
   class SimdFilterProcessor;
 
+  // Dummy class that captures all impossible cases, e.g. integer vector as VT and flot as CHECK_T.
   template <typename VT, typename CHECK_T>
   class SimdFilterProcessor<VT, CHECK_T,
-    typename std::enable_if<std::is_same<VT, vi128_wr>::value && sizeof(CHECK_T) == 16>::type>
+    typename std::enable_if<(std::is_same<VT, vi128_wr>::value && sizeof(CHECK_T) == 16) ||
+    (std::is_same<VT, vi128f_wr>::value && !std::is_same<CHECK_T, float>::value && !std::is_same<CHECK_T, double>::value)>::type>
   {
    // This is a dummy class that is not currently used.
    public:
@@ -131,7 +133,9 @@ namespace simd
     using SIMD_WRAPPER_TYPE = vi128_wr;
     using SIMD_TYPE = vi128_t;
     using FILTER_TYPE = T;
+    using STORAGE_TYPE = T;
     constexpr static const uint16_t FILTER_MASK_STEP = sizeof(T);
+    constexpr static const uint16_t VEC_MASK_SIZE = vecByteSize;
     // Load value
     MCS_FORCE_INLINE SIMD_TYPE loadValue(const T fill)
     {
@@ -190,6 +194,11 @@ namespace simd
       return _mm_movemask_epi8(vmask);
     }
 
+    MCS_FORCE_INLINE MT nullEmptyCmpNe(SIMD_TYPE& x, SIMD_TYPE& y)
+    {
+      return cmpDummy(x, y);
+    }
+
     MCS_FORCE_INLINE SIMD_TYPE setToZero()
     {
       return _mm_setzero_si128();
@@ -216,8 +225,13 @@ namespace simd
     constexpr static const uint16_t vecBitSize = 128U;
     using SIMD_WRAPPER_TYPE = simd::vi128d_wr;
     using SIMD_TYPE = simd::vi128d_t;
+    using NULL_EMPTY_SIMD_TYPE = vi128_t;
     using FILTER_TYPE = T;
+    using STORAGE_TYPE = typename datatypes::WidthToSIntegralType<sizeof(T)>::type;
+    // Mask calculation for int and float types differs.
+    // See corresponding intrinsics algos for details.
     constexpr static const uint16_t FILTER_MASK_STEP = 1;
+    constexpr static const uint16_t VEC_MASK_SIZE = 2U;
     // Load value
     MCS_FORCE_INLINE SIMD_TYPE loadValue(const T fill)
     {
@@ -272,6 +286,20 @@ namespace simd
       return _mm_movemask_pd(vmask);
     }
 
+    MCS_FORCE_INLINE MT nullEmptyCmpNe(SIMD_TYPE& x, SIMD_TYPE& y)
+    {
+      using IntVecProcType = SimdFilterProcessor<simd::vi128_wr, STORAGE_TYPE>;
+      IntVecProcType nullEmptyProcessor;
+      NULL_EMPTY_SIMD_TYPE* xAsIntVecPtr
+        = reinterpret_cast<NULL_EMPTY_SIMD_TYPE*>(&x);
+      NULL_EMPTY_SIMD_TYPE* yAsIntVecPtr
+        = reinterpret_cast<NULL_EMPTY_SIMD_TYPE*>(&y);
+      // This spec borrows the expr from u-/int64 based proceesor class.
+      // WIP
+      //return _mm_movemask_epi8(_mm_cmpeq_epi64(*xAsIntVecPtr, *yAsIntVecPtr)) ^ 0xFFFF;
+      return nullEmptyProcessor.cmpNe(*xAsIntVecPtr, *yAsIntVecPtr);
+    }
+
     MCS_FORCE_INLINE SIMD_TYPE setToZero()
     {
       return _mm_setzero_pd();
@@ -292,8 +320,13 @@ namespace simd
     constexpr static const uint16_t vecBitSize = 128U;
     using SIMD_WRAPPER_TYPE = vi128f_wr;
     using SIMD_TYPE = vi128f_t;
+    using NULL_EMPTY_SIMD_TYPE = vi128_t;
     using FILTER_TYPE = T;
+    using STORAGE_TYPE = typename datatypes::WidthToSIntegralType<sizeof(T)>::type;
+    // Mask calculation for int and float types differs.
+    // See corresponding intrinsics algos for details.
     constexpr static const uint16_t FILTER_MASK_STEP = 1;
+    constexpr static const uint16_t VEC_MASK_SIZE = 4U;
     // Load value
     MCS_FORCE_INLINE SIMD_TYPE loadValue(const T fill)
     {
@@ -348,6 +381,20 @@ namespace simd
       return _mm_movemask_ps(vmask);
     }
 
+    MCS_FORCE_INLINE MT nullEmptyCmpNe(SIMD_TYPE& x, SIMD_TYPE& y)
+    {
+//      using IntVecProcType = SimdFilterProcessor<simd::vi128_wr, STORAGE_TYPE>;
+//      IntVecProcType nullEmptyProcessor;
+
+      NULL_EMPTY_SIMD_TYPE* xAsIntVecPtr
+        = reinterpret_cast<NULL_EMPTY_SIMD_TYPE*>(&x);
+      NULL_EMPTY_SIMD_TYPE* yAsIntVecPtr
+        = reinterpret_cast<NULL_EMPTY_SIMD_TYPE*>(&y);
+      // This spec borrows the expr from u-/int64 based proceesor class.
+      return _mm_movemask_epi8(_mm_cmpeq_epi32(*xAsIntVecPtr, *yAsIntVecPtr)) ^ 0xFFFF;
+      //return nullEmptyProcessor.cmpNe(*xAsIntVecPtr, *yAsIntVecPtr);
+    }
+
     MCS_FORCE_INLINE SIMD_TYPE setToZero()
     {
       return _mm_setzero_ps();
@@ -371,7 +418,11 @@ namespace simd
     using SIMD_WRAPPER_TYPE = vi128_wr;
     using SIMD_TYPE = vi128_t;
     using FILTER_TYPE = T;
+    using STORAGE_TYPE = T;
+    // Mask calculation for int and float types differs.
+    // See corresponding intrinsics algos for details.
     constexpr static const uint16_t FILTER_MASK_STEP = sizeof(T);
+    constexpr static const uint16_t VEC_MASK_SIZE = vecByteSize;
     // Load value
     MCS_FORCE_INLINE SIMD_TYPE loadValue(const T fill)
     {
@@ -431,6 +482,11 @@ namespace simd
       return _mm_setzero_si128();
     }
 
+    MCS_FORCE_INLINE MT nullEmptyCmpNe(SIMD_TYPE& x, SIMD_TYPE& y)
+    {
+      return cmpNe(x, y);
+    }
+
     // store
     MCS_FORCE_INLINE void storeWMask(SIMD_TYPE& x, SIMD_TYPE& vmask, char* dst)
     {
@@ -445,7 +501,7 @@ namespace simd
 
   template <typename VT, typename CHECK_T>
   class SimdFilterProcessor<VT, CHECK_T,
-    typename std::enable_if<std::is_same<VT, vi128_wr>::value && 
+    typename std::enable_if<std::is_same<VT, vi128_wr>::value &&
                             sizeof(CHECK_T) == 4 && !std::is_same<CHECK_T, float>::value>::type>
   {
    public:
@@ -455,7 +511,11 @@ namespace simd
     using SIMD_WRAPPER_TYPE = vi128_wr;
     using SIMD_TYPE = vi128_t;
     using FILTER_TYPE = T;
+    using STORAGE_TYPE = T;
+    // Mask calculation for int and float types differs.
+    // See corresponding intrinsics algos for details.
     constexpr static const uint16_t FILTER_MASK_STEP = sizeof(T);
+    constexpr static const uint16_t VEC_MASK_SIZE = vecByteSize;
     // Load value
     MCS_FORCE_INLINE SIMD_TYPE loadValue(const T fill)
     {
@@ -510,6 +570,11 @@ namespace simd
       return _mm_movemask_epi8(vmask);
     }
 
+    MCS_FORCE_INLINE MT nullEmptyCmpNe(SIMD_TYPE& x, SIMD_TYPE& y)
+    {
+      return cmpNe(x, y);
+    }
+
     MCS_FORCE_INLINE SIMD_TYPE setToZero()
     {
       return _mm_setzero_si128();
@@ -538,7 +603,11 @@ namespace simd
     using SIMD_WRAPPER_TYPE = simd::vi128_wr;
     using SIMD_TYPE = simd::vi128_t;
     using FILTER_TYPE = T;
+    using STORAGE_TYPE = T;
+    // Mask calculation for int and float types differs.
+    // See corresponding intrinsics algos for details.
     constexpr static const uint16_t FILTER_MASK_STEP = sizeof(T);
+    constexpr static const uint16_t VEC_MASK_SIZE = vecByteSize;
     // Load value
     MCS_FORCE_INLINE SIMD_TYPE loadValue(const T fill)
     {
@@ -593,6 +662,11 @@ namespace simd
       return _mm_movemask_epi8(vmask);
     }
 
+    MCS_FORCE_INLINE MT nullEmptyCmpNe(SIMD_TYPE& x, SIMD_TYPE& y)
+    {
+      return cmpNe(x, y);
+    }
+
     MCS_FORCE_INLINE SIMD_TYPE setToZero()
     {
       return _mm_setzero_si128();
@@ -621,7 +695,11 @@ namespace simd
     using SIMD_WRAPPER_TYPE = vi128_wr;
     using SIMD_TYPE = vi128_t;
     using FILTER_TYPE = T;
+    using STORAGE_TYPE = T;
+    // Mask calculation for int and float types differs.
+    // See corresponding intrinsics algos for details.
     constexpr static const uint16_t FILTER_MASK_STEP = sizeof(T);
+    constexpr static const uint16_t VEC_MASK_SIZE = vecByteSize;
     // Load value
     MCS_FORCE_INLINE SIMD_TYPE loadValue(const T fill)
     {
@@ -681,6 +759,11 @@ namespace simd
     MCS_FORCE_INLINE MT convertVectorToBitMask(SIMD_TYPE& vmask)
     {
       return _mm_movemask_epi8(vmask);
+    }
+
+    MCS_FORCE_INLINE MT nullEmptyCmpNe(SIMD_TYPE& x, SIMD_TYPE& y)
+    {
+      return cmpNe(x, y);
     }
 
     MCS_FORCE_INLINE SIMD_TYPE setToZero()

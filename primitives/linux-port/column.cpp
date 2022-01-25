@@ -1037,7 +1037,6 @@ inline uint16_t vectWriteColValues(VT& simdProcessor, // SIMD processor
     primitives::RIDType* ridDstArray,                 // The actual dst arrray ptr to start writing RIDs
     primitives::RIDType* ridSrcArray)                 // The actual src array ptr to read RIDs
 {
-    //constexpr const uint16_t WIDTH = sizeof(T);
     constexpr const uint16_t FILTER_MASK_STEP = VT::FILTER_MASK_STEP;
     using SIMD_TYPE = typename VT::SIMD_TYPE;
     SIMD_TYPE tmpStorageVector;
@@ -1047,7 +1046,7 @@ inline uint16_t vectWriteColValues(VT& simdProcessor, // SIMD processor
     // The mask is 16 bit long and it describes N elements.
     // N = sizeof(vector type) / WIDTH.
     uint32_t j = 0;
-    for (uint32_t it = 0; it < VT::vecByteSize; ++j, it += FILTER_MASK_STEP)
+    for (uint32_t it = 0; it < VT::VEC_MASK_SIZE; ++j, it += FILTER_MASK_STEP)
     {
         MT bitMapPosition = 1 << it;
         if (writeMask & bitMapPosition)
@@ -1111,7 +1110,7 @@ inline uint16_t vectWriteColValues(VT& simdProcessor, // SIMD processor
     // The mask is 16 bit long and it describes N elements.
     // N = sizeof(vector type) / WIDTH.
     uint32_t j = 0;
-    for (uint32_t it = 0; it < VT::vecByteSize; ++j, it += FILTER_MASK_STEP)
+    for (uint32_t it = 0; it < VT::VEC_MASK_SIZE; ++j, it += FILTER_MASK_STEP)
     {
         MT bitMapPosition = 1 << it;
         if (writeMask & bitMapPosition)
@@ -1155,7 +1154,7 @@ inline uint16_t vectWriteRIDValues(VT& processor,   // SIMD processor
     // Min/Max processing.
     // The mask is 16 bit long and it describes N elements where N = sizeof(vector type) / WIDTH.
     uint16_t j = 0;
-    for (uint32_t it = 0; it < VT::vecByteSize; ++j, it += FILTER_MASK_STEP)
+    for (uint32_t it = 0; it < VT::VEC_MASK_SIZE; ++j, it += FILTER_MASK_STEP)
     {
         MT bitMapPosition = 1 << it;
         if (writeMask & (1 << it))
@@ -1451,10 +1450,10 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
         assert(!HAS_INPUT_RIDS || (HAS_INPUT_RIDS && ridSize >= ridOffset));
         dataVec = simdDataLoadTemplate<VT, SIMD_WRAPPER_TYPE, HAS_INPUT_RIDS, T>(simdProcessor, srcArray, origSrcArray, ridArray, i).v;
         // empty check
-        nonEmptyMask = simdProcessor.cmpNe(dataVec, emptyFilterArgVec);
+        nonEmptyMask = simdProcessor.nullEmptyCmpNe(dataVec, emptyFilterArgVec);
         writeMask = nonEmptyMask;
         // NULL check
-        nonNullMask = simdProcessor.cmpNe(dataVec, nullFilterArgVec);
+        nonNullMask = simdProcessor.nullEmptyCmpNe(dataVec, nullFilterArgVec);
         // Exclude NULLs from the resulting set if NULL doesn't match the filters.
         writeMask = isNullValueMatches ? writeMask : writeMask & nonNullMask;
         nonNullOrEmptyMask = nonNullMask & nonEmptyMask;
@@ -1673,7 +1672,7 @@ void filterColumnData(
     // all values w/o any filter(even empty values filter) applied.
 
 #if defined(__x86_64__ )
-    // Don't use vectorized filtering for non-integer based data types wider than 16 bytes.
+    // Don't use vectorized filtering for text based data types.
     if (KIND <= KIND_FLOAT && WIDTH < 16)
     {
         bool canUseFastFiltering = true;
