@@ -24,8 +24,7 @@
  * class BRMShmImpl
  */
 
-#ifndef IDBSHMIMPL_H_
-#define IDBSHMIMPL_H_
+#pragma once
 
 #include <unistd.h>
 //#define NDEBUG
@@ -35,45 +34,44 @@
 
 namespace BRM
 {
-
 class BRMShmImpl
 {
-public:
-    BRMShmImpl(unsigned key, off_t size, bool readOnly = false);
-    ~BRMShmImpl() { }
+ public:
+  BRMShmImpl(unsigned key, off_t size, bool readOnly = false);
+  ~BRMShmImpl()
+  {
+  }
 
-    inline unsigned key() const
-    {
-        return fKey;
-    }
-    inline off_t size() const
-    {
-        return fSize;
-    }
-    inline bool isReadOnly() const
-    {
-        return fReadOnly;
-    }
+  inline unsigned key() const
+  {
+    return fKey;
+  }
+  inline off_t size() const
+  {
+    return fSize;
+  }
+  inline bool isReadOnly() const
+  {
+    return fReadOnly;
+  }
 
-    void setReadOnly();
-    int grow(unsigned newKey, off_t newSize);
-    int clear(unsigned newKey, off_t newSize);
+  void setReadOnly();
+  int grow(unsigned newKey, off_t newSize);
+  int clear(unsigned newKey, off_t newSize);
 
-    void swap(BRMShmImpl& rhs);
-    void destroy();
+  void swap(BRMShmImpl& rhs);
+  void destroy();
 
-    boost::interprocess::shared_memory_object fShmobj;
-    boost::interprocess::mapped_region fMapreg;
+  boost::interprocess::shared_memory_object fShmobj;
+  boost::interprocess::mapped_region fMapreg;
 
-private:
-    BRMShmImpl(const BRMShmImpl& rhs);
-    BRMShmImpl& operator=(const BRMShmImpl& rhs);
+ private:
+  BRMShmImpl(const BRMShmImpl& rhs);
+  BRMShmImpl& operator=(const BRMShmImpl& rhs);
 
-    unsigned fKey;
-    off_t fSize;
-    bool fReadOnly;
+  unsigned fKey;
+  off_t fSize;
+  bool fReadOnly;
 };
 
-} //namespace
-
-#endif
+}  // namespace BRM

@@ -21,8 +21,7 @@
 
 /** @file */
 
-#ifndef LOGGING_LOGGER_H_
-#define LOGGING_LOGGER_H_
+#pragma once
 
 #include <string>
 #include <map>
@@ -35,62 +34,58 @@
 
 namespace logging
 {
-
 typedef std::map<Message::MessageID, Message> MsgMap;
 
 /** @brief message log wrapper class */
 class Logger
 {
-public:
-    /** @brief ctor
-    *
-    * @param subsys the subsystem id
-    */
-    explicit Logger(unsigned subsys);
+ public:
+  /** @brief ctor
+   *
+   * @param subsys the subsystem id
+   */
+  explicit Logger(unsigned subsys);
 
-    /** @brief log a message
-    *
-    * Log a message at a certain debug level
-    */
-    const std::string logMessage(LOG_TYPE logLevel, Message::MessageID mid,
-                                 const Message::Args& args, const LoggingID& logInfo);
+  /** @brief log a message
+   *
+   * Log a message at a certain debug level
+   */
+  const std::string logMessage(LOG_TYPE logLevel, Message::MessageID mid, const Message::Args& args,
+                               const LoggingID& logInfo);
 
-    /** @brief log a formated message
-    *
-    * For the error framework to use
-    */
-    const std::string logMessage(LOG_TYPE logLevel, const Message& message, const LoggingID& logInfo);
+  /** @brief log a formated message
+   *
+   * For the error framework to use
+   */
+  const std::string logMessage(LOG_TYPE logLevel, const Message& message, const LoggingID& logInfo);
 
-    /** @brief set the message map for this logger
-    *
-    * This method sets the message map for this logger. You need to call this (once and only once) before
-    * using the class. The map needs to be constructed before and given to this class.
-    */
-    void msgMap(const MsgMap& msgMap)
-    {
-        fMsgMap = msgMap;
-    }
+  /** @brief set the message map for this logger
+   *
+   * This method sets the message map for this logger. You need to call this (once and only once) before
+   * using the class. The map needs to be constructed before and given to this class.
+   */
+  void msgMap(const MsgMap& msgMap)
+  {
+    fMsgMap = msgMap;
+  }
 
-    /** @brief get the message map from this logger
-    */
-    const MsgMap& msgMap() const
-    {
-        return fMsgMap;
-    }
+  /** @brief get the message map from this logger
+   */
+  const MsgMap& msgMap() const
+  {
+    return fMsgMap;
+  }
 
-private:
-    // not copyable (because of the mutex)
-    Logger(const Logger& rhs);
-    Logger& operator=(const Logger& rhs);
+ private:
+  // not copyable (because of the mutex)
+  Logger(const Logger& rhs);
+  Logger& operator=(const Logger& rhs);
 
-    MsgMap fMsgMap;
-    MessageLog fMl1;
-    boost::mutex fLogLock;
+  MsgMap fMsgMap;
+  MessageLog fMl1;
+  boost::mutex fLogLock;
 };
 
 typedef boost::shared_ptr<Logger> SPL;
 
-}
-
-#endif
-
+}  // namespace logging

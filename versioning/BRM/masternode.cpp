@@ -24,7 +24,6 @@
  * The executable source that runs a Master DBRM Node.
  */
 
-
 #include "masterdbrmnode.h"
 #include "liboamcpp.h"
 #include <unistd.h>
@@ -42,180 +41,174 @@
 #define MAX_RETRIES 10
 
 BRM::MasterDBRMNode* m;
-bool die= false;
+bool die = false;
 
 using namespace std;
 using namespace BRM;
 
 class Opt
 {
-protected:
-    const char *m_progname;
-    bool m_fg;
-public:
-    Opt(int argc, char **argv)
-     :m_progname(argv[0]),
-      m_fg(argc >= 2 && string(argv[1]) == "fg")
-    { }
+ protected:
+  const char* m_progname;
+  bool m_fg;
+
+ public:
+  Opt(int argc, char** argv) : m_progname(argv[0]), m_fg(argc >= 2 && string(argv[1]) == "fg")
+  {
+  }
 };
 
-
-class ServiceControllerNode: public Service, public Opt
+class ServiceControllerNode : public Service, public Opt
 {
-protected:
-    void setupChildSignalHandlers();
+ protected:
+  void setupChildSignalHandlers();
 
-public:
-    ServiceControllerNode(const Opt &opt)
-     :Service("ControllerNode"), Opt(opt)
-    { }
-    void LogErrno() override
-    {
-        perror(m_progname);
-        log_errno(std::string(m_progname));
-    }
-    void ParentLogChildMessage(const std::string &str) override
-    {
-        log(str, logging::LOG_TYPE_INFO);
-    }
-    int Child() override;
-    int Run()
-    {
-        return m_fg ? Child() : RunForking();
-    }
+ public:
+  ServiceControllerNode(const Opt& opt) : Service("ControllerNode"), Opt(opt)
+  {
+  }
+  void LogErrno() override
+  {
+    perror(m_progname);
+    log_errno(std::string(m_progname));
+  }
+  void ParentLogChildMessage(const std::string& str) override
+  {
+    log(str, logging::LOG_TYPE_INFO);
+  }
+  int Child() override;
+  int Run()
+  {
+    return m_fg ? Child() : RunForking();
+  }
 };
-
-
 
 void stop(int num)
 {
 #ifdef BRM_VERBOSE
-    std::cerr << "stopping..." << std::endl;
+  std::cerr << "stopping..." << std::endl;
 #endif
-    die = true;
+  die = true;
 
-    if (m != NULL)
-        m->stop();
+  if (m != NULL)
+    m->stop();
 }
 
 void restart(int num)
 {
 #ifdef BRM_VERBOSE
-    std::cerr << "stopping this instance..." << std::endl;
+  std::cerr << "stopping this instance..." << std::endl;
 #endif
 
-    if (m != NULL)
-        m->stop();
+  if (m != NULL)
+    m->stop();
 }
 
 /*  doesn't quite work yet...
 void reload(int num)
 {
 #ifdef BRM_VERBOSE
-	std::cerr << "reloading the config file" << std::endl;
+        std::cerr << "reloading the config file" << std::endl;
 #endif
-	m->lock();
-	try {
-		m->reload();
-	}
-	catch (std::exception &e) {
-		m->setReadOnly(true);
-		std::cerr << "Reload failed.  Check the config file.  Reverting to read-only mode."
-			<< std::endl;
-	}
-	m->unlock();
+        m->lock();
+        try {
+                m->reload();
+        }
+        catch (std::exception &e) {
+                m->setReadOnly(true);
+                std::cerr << "Reload failed.  Check the config file.  Reverting to read-only mode."
+                        << std::endl;
+        }
+        m->unlock();
 }
 */
 
-
 void ServiceControllerNode::setupChildSignalHandlers()
 {
-    /* XXXPAT: we might want to install signal handlers for every signal */
+  /* XXXPAT: we might want to install signal handlers for every signal */
 
-    signal(SIGINT, stop);
-    signal(SIGTERM, stop);
+  signal(SIGINT, stop);
+  signal(SIGTERM, stop);
 #ifndef _MSC_VER
-    signal(SIGHUP, SIG_IGN);
-    signal(SIGUSR1, restart);
-    signal(SIGPIPE, SIG_IGN);
+  signal(SIGHUP, SIG_IGN);
+  signal(SIGUSR1, restart);
+  signal(SIGPIPE, SIG_IGN);
 #endif
-    struct sigaction ign;
+  struct sigaction ign;
 
-    memset(&ign, 0, sizeof(ign));
-    ign.sa_handler = fatalHandler;
-    sigaction(SIGSEGV, &ign, 0);
-    sigaction(SIGABRT, &ign, 0);
-    sigaction(SIGFPE, &ign, 0);
+  memset(&ign, 0, sizeof(ign));
+  ign.sa_handler = fatalHandler;
+  sigaction(SIGSEGV, &ign, 0);
+  sigaction(SIGABRT, &ign, 0);
+  sigaction(SIGFPE, &ign, 0);
 }
-
 
 int ServiceControllerNode::Child()
 {
-    int retries = 0;
+  int retries = 0;
 
-    (void)config::Config::makeConfig();
+  (void)config::Config::makeConfig();
 
-    setupChildSignalHandlers();
+  setupChildSignalHandlers();
 
-    idbdatafile::IDBPolicy::configIDBPolicy();
+  idbdatafile::IDBPolicy::configIDBPolicy();
 
-    m = NULL;
+  m = NULL;
 
-    while (retries < MAX_RETRIES && !die)
+  while (retries < MAX_RETRIES && !die)
+  {
+    try
     {
-        try
-        {
-            if (m != NULL)
-                delete m;
+      if (m != NULL)
+        delete m;
 
-            m = new BRM::MasterDBRMNode();
+      m = new BRM::MasterDBRMNode();
 
-            NotifyServiceStarted();
+      NotifyServiceStarted();
 
-            m->run();
-            retries = 0;
-            delete m;
-            m = NULL;
-        }
-        catch (std::exception& e)
-        {
-            ostringstream os;
-            os << e.what();
-            os << "... attempt #" << retries + 1 << "/" << MAX_RETRIES << " to restart the  DBRM controller node";
-            cerr << os.str() << endl;
-            log(os.str());
-            sleep(5);
-        }
-
-        retries++;
+      m->run();
+      retries = 0;
+      delete m;
+      m = NULL;
+    }
+    catch (std::exception& e)
+    {
+      ostringstream os;
+      os << e.what();
+      os << "... attempt #" << retries + 1 << "/" << MAX_RETRIES << " to restart the  DBRM controller node";
+      cerr << os.str() << endl;
+      log(os.str());
+      sleep(5);
     }
 
-    if (retries == MAX_RETRIES)
-    {
-        NotifyServiceInitializationFailed();
-        log(string("Exiting after too many errors"));
-        return 1;
-    }
+    retries++;
+  }
 
-    std::cerr << "Exiting..." << std::endl;
-    return 0;
+  if (retries == MAX_RETRIES)
+  {
+    NotifyServiceInitializationFailed();
+    log(string("Exiting after too many errors"));
+    return 1;
+  }
+
+  std::cerr << "Exiting..." << std::endl;
+  return 0;
 }
-
 
 int main(int argc, char** argv)
 {
-    Opt opt(argc, argv);
-    // Set locale language
-    setlocale(LC_ALL, "");
-    setlocale(LC_NUMERIC, "C");
+  Opt opt(argc, argv);
+  // Set locale language
+  setlocale(LC_ALL, "");
+  setlocale(LC_NUMERIC, "C");
 
-    BRM::logInit ( BRM::SubSystemLogId_controllerNode );
+  BRM::logInit(BRM::SubSystemLogId_controllerNode);
 
-    /*
-      Need to shutdown TheadPool before fork(),
-      otherwise it would get stuck when trying to join fPruneThread.
-    */
-    joblist::JobStep::jobstepThreadPool.stop();
+  /*
+    Need to shutdown TheadPool before fork(),
+    otherwise it would get stuck when trying to join fPruneThread.
+  */
+  joblist::JobStep::jobstepThreadPool.stop();
 
-    return ServiceControllerNode(opt).Run();
+  return ServiceControllerNode(opt).Run();
 }

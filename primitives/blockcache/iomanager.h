@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef IOMANAGER_H
-#define IOMANAGER_H
+#pragma once
 // $Id: iomanager.h 2145 2013-08-09 22:38:19Z wweeks $
 //
 // C++ Interface: iomanager
@@ -30,7 +29,7 @@
 //
 
 /**
-	@author Jason Rodriguez <jrodriguez@calpont.com>
+        @author Jason Rodriguez <jrodriguez@calpont.com>
 */
 
 #include <iostream>
@@ -47,112 +46,97 @@
 
 namespace dbbc
 {
-
 class ioManager
 {
+ public:
+  ioManager(FileBufferMgr& fbm, fileBlockRequestQueue& fbrq, int thrCount, int bsPerRead);
+  // ioManager(FileBufferMgr& fbm, int thrCount);
+  ~ioManager();
+  int readerCount() const
+  {
+    return fThreadCount;
+  }
+  fileRequest* getNextRequest();
+  void go(void);
+  void stop();
+  FileBufferMgr& fileBufferManager()
+  {
+    return fIOMfbMgr;
+  }
+  config::Config* configPtr()
+  {
+    return fConfig;
+  }
 
-public:
+  int localLbidLookup(BRM::LBID_t lbid, BRM::VER_t verid, bool vbFlag, BRM::OID_t& oid, uint16_t& dbRoot,
+                      uint32_t& partitionNum, uint16_t& segmentNum, uint32_t& fileBlockOffset);
 
-    ioManager(FileBufferMgr& fbm, fileBlockRequestQueue& fbrq, int thrCount,
-              int bsPerRead);
-    //ioManager(FileBufferMgr& fbm, int thrCount);
-    ~ioManager();
-    int readerCount() const
-    {
-        return fThreadCount;
-    }
-    fileRequest* getNextRequest();
-    void go(void);
-    void stop();
-    FileBufferMgr& fileBufferManager()
-    {
-        return fIOMfbMgr;
-    }
-    config::Config* configPtr()
-    {
-        return fConfig;
-    }
+  void buildOidFileName(const BRM::OID_t oid, uint16_t dbRoot, const uint32_t partNum, const uint16_t segNum,
+                        char* file_name);
 
-    int localLbidLookup(BRM::LBID_t lbid,
-                              BRM::VER_t verid,
-                              bool vbFlag,
-                              BRM::OID_t& oid,
-                              uint16_t& dbRoot,
-                              uint32_t& partitionNum,
-                              uint16_t& segmentNum,
-                              uint32_t& fileBlockOffset);
+  uint32_t getExtentRows()
+  {
+    return fdbrm.getExtentRows();
+  }
 
-    void buildOidFileName(const BRM::OID_t oid,
-                          uint16_t dbRoot,
-                          const uint32_t partNum,
-                          const uint16_t segNum,
-                          char* file_name);
+  uint32_t blocksPerRead;
 
-    uint32_t getExtentRows()
-    {
-        return fdbrm.getExtentRows();
-    }
+  bool IOTrace() const
+  {
+    return fIOTrace;
+  }
 
-    uint32_t blocksPerRead;
+  uint32_t MaxOpenFiles() const
+  {
+    return fMaxOpenFiles;
+  }
 
-    bool IOTrace() const
-    {
-        return fIOTrace;
-    }
+  uint32_t DecreaseOpenFilesCount() const
+  {
+    return fDecreaseOpenFilesCount;
+  }
 
-    uint32_t MaxOpenFiles() const
-    {
-        return fMaxOpenFiles;
-    }
+  bool FDCacheTrace() const
+  {
+    return fFDCacheTrace;
+  }
 
-    uint32_t DecreaseOpenFilesCount() const
-    {
-        return fDecreaseOpenFilesCount;
-    }
+  void handleBlockReadError(fileRequest* fr, const std::string& errMsg, bool* copyLocked,
+                            int errorCode = fileRequest::FAILED);
 
-    bool FDCacheTrace() const
-    {
-        return fFDCacheTrace;
-    }
+  std::ofstream& FDTraceFile()
+  {
+    return fFDTraceFile;
+  }
 
-    void handleBlockReadError ( fileRequest* fr,
-                                const std::string& errMsg, bool* copyLocked, int errorCode = fileRequest::FAILED );
-
-    std::ofstream& FDTraceFile()
-    {
-        return fFDTraceFile;
-    }
-
-    BRM::DBRM* dbrm()
-    {
-        return &fdbrm;
-    }
-
+  BRM::DBRM* dbrm()
+  {
+    return &fdbrm;
+  }
 
 #ifdef SHARED_NOTHING_DEMO_2
-    uint32_t pmCount;
+  uint32_t pmCount;
 #endif
 
-private:
+ private:
+  FileBufferMgr& fIOMfbMgr;
+  fileBlockRequestQueue& fIOMRequestQueue;
+  int fThreadCount;
+  boost::thread_group fThreadArr;
+  void createReaders();
+  config::Config* fConfig;
+  BRM::DBRM fdbrm;
+  WriteEngine::FileOp fFileOp;
 
-    FileBufferMgr& fIOMfbMgr;
-    fileBlockRequestQueue& fIOMRequestQueue;
-    int fThreadCount;
-    boost::thread_group fThreadArr;
-    void createReaders();
-    config::Config* fConfig;
-    BRM::DBRM fdbrm;
-    WriteEngine::FileOp fFileOp;
-
-    // do not implement
-    ioManager();
-    ioManager(const ioManager& iom);
-    const ioManager& operator=(const ioManager& iom);
-    bool fIOTrace;
-    uint32_t fMaxOpenFiles;
-    uint32_t fDecreaseOpenFilesCount;
-    bool fFDCacheTrace;
-    std::ofstream fFDTraceFile;
+  // do not implement
+  ioManager();
+  ioManager(const ioManager& iom);
+  const ioManager& operator=(const ioManager& iom);
+  bool fIOTrace;
+  uint32_t fMaxOpenFiles;
+  uint32_t fDecreaseOpenFilesCount;
+  bool fFDCacheTrace;
+  std::ofstream fFDTraceFile;
 };
 
 // @bug2631, for remount filesystem by loadBlock() in primitiveserver
@@ -162,6 +146,5 @@ void releaseReadLock();
 void dropFDCache();
 void purgeFDCache(std::vector<BRM::FileInfo>& files);
 
-}
-#endif
+}  // namespace dbbc
 // vim:ts=4 sw=4:

@@ -22,65 +22,72 @@ int is_columnstore_files_plugin_init(void* p);
 int is_columnstore_tables_plugin_init(void* p);
 int is_columnstore_columns_plugin_init(void* p);
 
-
 class InformationSchemaCond
 {
-    StringBuffer<MAX_FIELD_WIDTH> mBufferTableName;
-    StringBuffer<MAX_FIELD_WIDTH> mBufferTableSchema;
-    String *mTableName;
-    String *mTableSchema;
-public:
-    InformationSchemaCond()
-     :mBufferTableName(system_charset_info),
-      mBufferTableSchema(system_charset_info),
-      mTableName(nullptr),
-      mTableSchema(nullptr)
-    { }
-    const String *tableName() const { return mTableName; }
-    const String *tableSchema() const { return mTableSchema; }
-    static bool eqName(const String &a, const std::string &b)
-    {
-        return a.length() == b.length() && !memcmp(a.ptr(), b.data(), a.length());
-    }
-    static bool eqName(const String *a, const std::string &b)
-    {
-        return !a || eqName(*a, b);
-    }
-    bool match(const std::string &schema, const std::string &table) const
-    {
-        return eqName(mTableName, table) && eqName(mTableSchema, schema);
-    }
+  StringBuffer<MAX_FIELD_WIDTH> mBufferTableName;
+  StringBuffer<MAX_FIELD_WIDTH> mBufferTableSchema;
+  String* mTableName;
+  String* mTableSchema;
 
-    void getCondItem(Item_field *item_field, Item *item_const)
-    {
-        if (strcasecmp(item_field->field_name.str, "table_name") == 0)
-        {
-            mTableName = item_const->val_str(&mBufferTableName);
-        }
-        else if (strcasecmp(item_field->field_name.str, "table_schema") == 0)
-        {
-            mTableSchema = item_const->val_str(&mBufferTableSchema);
-        }
-    }
+ public:
+  InformationSchemaCond()
+   : mBufferTableName(system_charset_info)
+   , mBufferTableSchema(system_charset_info)
+   , mTableName(nullptr)
+   , mTableSchema(nullptr)
+  {
+  }
+  const String* tableName() const
+  {
+    return mTableName;
+  }
+  const String* tableSchema() const
+  {
+    return mTableSchema;
+  }
+  static bool eqName(const String& a, const std::string& b)
+  {
+    return a.length() == b.length() && !memcmp(a.ptr(), b.data(), a.length());
+  }
+  static bool eqName(const String* a, const std::string& b)
+  {
+    return !a || eqName(*a, b);
+  }
+  bool match(const std::string& schema, const std::string& table) const
+  {
+    return eqName(mTableName, table) && eqName(mTableSchema, schema);
+  }
 
-    void getCondItemBoolFunc2(Item_bool_func2 *func)
+  void getCondItem(Item_field* item_field, Item* item_const)
+  {
+    if (strcasecmp(item_field->field_name.str, "table_name") == 0)
     {
-        Item_field *field = dynamic_cast<Item_field*>(func->arguments()[0]->real_item());
-        if (field && func->arguments()[1]->const_item())
-            getCondItem(field, func->arguments()[1]);
+      mTableName = item_const->val_str(&mBufferTableName);
     }
+    else if (strcasecmp(item_field->field_name.str, "table_schema") == 0)
+    {
+      mTableSchema = item_const->val_str(&mBufferTableSchema);
+    }
+  }
 
-    void getCondItems(COND* cond)
+  void getCondItemBoolFunc2(Item_bool_func2* func)
+  {
+    Item_field* field = dynamic_cast<Item_field*>(func->arguments()[0]->real_item());
+    if (field && func->arguments()[1]->const_item())
+      getCondItem(field, func->arguments()[1]);
+  }
+
+  void getCondItems(COND* cond)
+  {
+    if (Item_bool_func2* func = dynamic_cast<Item_bool_func2*>(cond))
     {
-        if (Item_bool_func2 *func = dynamic_cast<Item_bool_func2*>(cond))
-        {
-            getCondItemBoolFunc2(func);
-        }
-        else if (Item_cond_and *subcond = dynamic_cast<Item_cond_and*>(cond))
-        {
-            List_iterator<Item> li(*(subcond)->argument_list());
-            for (Item *item = li++; item ; item = li++ )
-                getCondItems(item);
-        }
+      getCondItemBoolFunc2(func);
     }
+    else if (Item_cond_and* subcond = dynamic_cast<Item_cond_and*>(cond))
+    {
+      List_iterator<Item> li(*(subcond)->argument_list());
+      for (Item* item = li++; item; item = li++)
+        getCondItems(item);
+    }
+  }
 };

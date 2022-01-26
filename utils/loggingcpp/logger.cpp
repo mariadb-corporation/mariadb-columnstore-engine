@@ -28,86 +28,73 @@ using namespace boost;
 
 namespace logging
 {
-
-Logger::Logger(unsigned subsys) :
-    fMl1(LoggingID(subsys))
+Logger::Logger(unsigned subsys) : fMl1(LoggingID(subsys))
 {
 }
 
 const string Logger::logMessage(LOG_TYPE logLevel, Message::MessageID mid, const Message::Args& args,
                                 const LoggingID& logInfo)
 {
-    MsgMap::mapped_type msg;
-    MsgMap::const_iterator msgIter = fMsgMap.find(mid);
+  MsgMap::mapped_type msg;
+  MsgMap::const_iterator msgIter = fMsgMap.find(mid);
 
-    //Default message if specified # not found
-    if (msgIter == fMsgMap.end())
-        msg = Message(M0000);
-    else
-        msg = msgIter->second;
+  // Default message if specified # not found
+  if (msgIter == fMsgMap.end())
+    msg = Message(M0000);
+  else
+    msg = msgIter->second;
 
-    msg.reset();
-    msg.format(args);
+  msg.reset();
+  msg.format(args);
 
-    return logMessage(logLevel, msg, logInfo);
-    /*
-    boost::mutex::scoped_lock lk(fLogLock);
-    fMl1.logData(logInfo);
+  return logMessage(logLevel, msg, logInfo);
+  /*
+  boost::mutex::scoped_lock lk(fLogLock);
+  fMl1.logData(logInfo);
 
-    switch (logLevel)
-    {
-        case LOG_TYPE_DEBUG:
-    default:
-    	fMl1.logDebugMessage(msg);
-    	break;
-        case LOG_TYPE_INFO:
-    	fMl1.logInfoMessage(msg);
-    	break;
-        case LOG_TYPE_WARNING:
-    	fMl1.logWarningMessage(msg);
-    	break;
-        case LOG_TYPE_ERROR:
-    	fMl1.logErrorMessage(msg);
-    	break;
-        case LOG_TYPE_CRITICAL:
-    	fMl1.logCriticalMessage(msg);
-    	break;
-    }
+  switch (logLevel)
+  {
+      case LOG_TYPE_DEBUG:
+  default:
+      fMl1.logDebugMessage(msg);
+      break;
+      case LOG_TYPE_INFO:
+      fMl1.logInfoMessage(msg);
+      break;
+      case LOG_TYPE_WARNING:
+      fMl1.logWarningMessage(msg);
+      break;
+      case LOG_TYPE_ERROR:
+      fMl1.logErrorMessage(msg);
+      break;
+      case LOG_TYPE_CRITICAL:
+      fMl1.logCriticalMessage(msg);
+      break;
+  }
 
-    return  msg.msg();*/
+  return  msg.msg();*/
 }
 
 const std::string Logger::logMessage(LOG_TYPE logLevel, const Message& msg, const LoggingID& logInfo)
 {
-    boost::mutex::scoped_lock lk(fLogLock);
-    fMl1.logData(logInfo);
+  boost::mutex::scoped_lock lk(fLogLock);
+  fMl1.logData(logInfo);
 
-    switch (logLevel)
-    {
-        case LOG_TYPE_DEBUG:
-        default:
-            fMl1.logDebugMessage(msg);
-            break;
+  switch (logLevel)
+  {
+    case LOG_TYPE_DEBUG:
+    default: fMl1.logDebugMessage(msg); break;
 
-        case LOG_TYPE_INFO:
-            fMl1.logInfoMessage(msg);
-            break;
+    case LOG_TYPE_INFO: fMl1.logInfoMessage(msg); break;
 
-        case LOG_TYPE_WARNING:
-            fMl1.logWarningMessage(msg);
-            break;
+    case LOG_TYPE_WARNING: fMl1.logWarningMessage(msg); break;
 
-        case LOG_TYPE_ERROR:
-            fMl1.logErrorMessage(msg);
-            break;
+    case LOG_TYPE_ERROR: fMl1.logErrorMessage(msg); break;
 
-        case LOG_TYPE_CRITICAL:
-            fMl1.logCriticalMessage(msg);
-            break;
-    }
+    case LOG_TYPE_CRITICAL: fMl1.logCriticalMessage(msg); break;
+  }
 
-    return  msg.msg();
+  return msg.msg();
 }
 
-}
-
+}  // namespace logging

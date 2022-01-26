@@ -22,8 +22,7 @@
  ***********************************************************************/
 /** @file */
 
-#ifndef UPDATEDMLPACKAGE_H
-#define UPDATEDMLPACKAGE_H
+#pragma once
 #include <string>
 #include "calpontdmlpackage.h"
 #include "bytestream.h"
@@ -41,68 +40,63 @@ namespace dmlpackage
  */
 class UpdateDMLPackage : public CalpontDMLPackage
 {
+ public:
+  /** @brief ctor
+   */
+  EXPORT UpdateDMLPackage();
 
-public:
-    /** @brief ctor
-     */
-    EXPORT UpdateDMLPackage();
+  /** @brief ctor
+   *
+   * @param schemaName the schema of the table being operated on
+   * @param tableName the name of the table being operated on
+   * @param dmlStatement the dml statement
+   * @param sessionID the session ID
+   */
+  EXPORT UpdateDMLPackage(std::string schemaName, std::string tableName, std::string dmlStatement,
+                          int sessionID);
 
-    /** @brief ctor
-     *
-     * @param schemaName the schema of the table being operated on
-     * @param tableName the name of the table being operated on
-     * @param dmlStatement the dml statement
-     * @param sessionID the session ID
-     */
-    EXPORT UpdateDMLPackage( std::string schemaName, std::string tableName,
-                             std::string dmlStatement, int sessionID );
+  /** @brief dtor
+   */
+  EXPORT virtual ~UpdateDMLPackage();
 
-    /** @brief dtor
-     */
-    EXPORT virtual ~UpdateDMLPackage();
+  /** @brief write a UpdateDMLPackage to a ByteStream
+   *
+   * @param bytestream the ByteStream to write to
+   */
+  EXPORT int write(messageqcpp::ByteStream& bytestream);
 
-    /** @brief write a UpdateDMLPackage to a ByteStream
-     *
-     * @param bytestream the ByteStream to write to
-     */
-    EXPORT int write(messageqcpp::ByteStream& bytestream);
+  /** @brief read a UpdateDMLPackage from a ByteStream
+   *
+   * @param bytestream the ByteStream to read from
+   */
+  EXPORT int read(messageqcpp::ByteStream& bytestream);
 
-    /** @brief read a UpdateDMLPackage from a ByteStream
-     *
-     * @param bytestream the ByteStream to read from
-     */
-    EXPORT int read(messageqcpp::ByteStream& bytestream);
+  /** @brief build a UpdateDMLPackage from a string buffer
+   *
+   * @param buffer
+   * @param columns the number of columns in the buffer
+   * @param rows the number of rows in the buffer
+   */
+  EXPORT int buildFromBuffer(std::string& buffer, int columns, int rows);
 
-    /** @brief build a UpdateDMLPackage from a string buffer
-     *
-     * @param buffer
-     * @param columns the number of columns in the buffer
-     * @param rows the number of rows in the buffer
-     */
-    EXPORT int buildFromBuffer(std::string& buffer, int columns, int rows);
+  /** @brief build a UpdateDMLPackage from a parsed UpdateSqlStatement
+   *
+   * @param sqlStatement the parsed UpdateSqlStatement
+   */
+  EXPORT int buildFromSqlStatement(SqlStatement& sqlStatement);
 
-    /** @brief build a UpdateDMLPackage from a parsed UpdateSqlStatement
-     *
-     * @param sqlStatement the parsed UpdateSqlStatement
-     */
-    EXPORT int buildFromSqlStatement(SqlStatement& sqlStatement);
+  /** @brief build a InsertDMLPackage from MySQL buffer
+   *
+   * @param colNameList, tableValuesMap
+   * @param rows the number of rows in the buffer
+   */
+  EXPORT int buildFromMysqlBuffer(ColNameList& colNameList, TableValuesMap& tableValuesMap, int columns,
+                                  int rows, NullValuesBitset& nullValues);
+  void buildUpdateFromMysqlBuffer(UpdateSqlStatement& updateStmt);
 
-    /** @brief build a InsertDMLPackage from MySQL buffer
-    *
-    * @param colNameList, tableValuesMap
-    * @param rows the number of rows in the buffer
-    */
-    EXPORT int buildFromMysqlBuffer(ColNameList& colNameList, TableValuesMap& tableValuesMap, int columns, int rows, NullValuesBitset& nullValues);
-    void buildUpdateFromMysqlBuffer(UpdateSqlStatement&  updateStmt );
-
-
-protected:
-
-private:
-
+ protected:
+ private:
 };
-}
+}  // namespace dmlpackage
 
 #undef EXPORT
-
-#endif                                            //UPDATEDMLPACKAGE_H

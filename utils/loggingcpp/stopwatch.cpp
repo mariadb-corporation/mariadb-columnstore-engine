@@ -75,172 +75,167 @@ using namespace std;
 
 namespace logging
 {
-
 void StopWatch::stop(const string& message)
 {
-    stop(message, 1);
+  stop(message, 1);
 }
 
 bool StopWatch::stop(const string& message, const int limit)
 {
-    gettimeofday(&fTvLast, 0);
-    fOpenCalls--;
-    bool found = false;
-    uint32_t idx = 0;
+  gettimeofday(&fTvLast, 0);
+  fOpenCalls--;
+  bool found = false;
+  uint32_t idx = 0;
 
-    for (uint32_t i = 0; i < fProcessStats.size(); i++)
+  for (uint32_t i = 0; i < fProcessStats.size(); i++)
+  {
+    if (fProcessStats[i].fProcess == message)
     {
-        if (fProcessStats[i].fProcess == message)
-        {
-            idx = i;
-            found = true;
-            break;
-        }
+      idx = i;
+      found = true;
+      break;
     }
+  }
 
-    if (!found)
-    {
-        //throw std::runtime_error("StopWatch::stop " + message + " called without calling start first.");
-        std::cerr << "StopWatch receiving STOP for unknown event: " << message << std::endl;
-        return false;
-    }
-
-    fProcessStats[idx].processStop();
-
-    if (fProcessStats[idx].fStopCount >= limit)
-        return true;
-
+  if (!found)
+  {
+    // throw std::runtime_error("StopWatch::stop " + message + " called without calling start first.");
+    std::cerr << "StopWatch receiving STOP for unknown event: " << message << std::endl;
     return false;
+  }
+
+  fProcessStats[idx].processStop();
+
+  if (fProcessStats[idx].fStopCount >= limit)
+    return true;
+
+  return false;
 }
 
 void StopWatch::start(const string& message)
 {
-    fOpenCalls++;
-    gettimeofday(&fTvLast, 0);
-    bool found = false;
-    uint32_t idx = 0;
-    ProcessStats processStats;
+  fOpenCalls++;
+  gettimeofday(&fTvLast, 0);
+  bool found = false;
+  uint32_t idx = 0;
+  ProcessStats processStats;
 
-    if (!fStarted)
+  if (!fStarted)
+  {
+    fStarted = true;
+    gettimeofday(&fTvStart, 0);
+  }
+
+  for (uint32_t i = 0; i < fProcessStats.size(); i++)
+  {
+    if (fProcessStats[i].fProcess == message)
     {
-        fStarted = true;
-        gettimeofday(&fTvStart, 0);
+      idx = i;
+      found = true;
+      break;
     }
+  }
 
-    for (uint32_t i = 0; i < fProcessStats.size(); i++)
-    {
-        if (fProcessStats[i].fProcess == message)
-        {
-            idx = i;
-            found = true;
-            break;
-        }
-    }
+  if (!found)
+  {
+    fProcessStats.push_back(processStats);
+    idx = fProcessStats.size() - 1;
+  }
 
-    if (!found)
-    {
-        fProcessStats.push_back(processStats);
-        idx = fProcessStats.size() - 1;
-    }
-
-    fProcessStats[idx].fProcess = message;
-    fProcessStats[idx].processStart();
+  fProcessStats[idx].fProcess = message;
+  fProcessStats[idx].processStart();
 }
 
 void StopWatch::finish()
 {
-    ostringstream oss;
+  ostringstream oss;
 
-    oss << endl;
-    oss << "Seconds      Percentage        Calls      Description" << endl;
+  oss << endl;
+  oss << "Seconds      Percentage        Calls      Description" << endl;
 
-    // total seconds elapsed
-    double totalSeconds = 1.0;
+  // total seconds elapsed
+  double totalSeconds = 1.0;
 
-    // Add a last entry into the vector for total.
-    ProcessStats total;
-    total.fProcess = "Total";
+  // Add a last entry into the vector for total.
+  ProcessStats total;
+  total.fProcess = "Total";
 
-    if (fProcessStats.size() > 0)
+  if (fProcessStats.size() > 0)
+  {
+    // Calculate the total seconds elapsed.
+    totalSeconds =
+        (fTvLast.tv_sec + (fTvLast.tv_usec / 1000000.0)) - (fTvStart.tv_sec + (fTvStart.tv_usec / 1000000.0));
+    total.fTotalSeconds = totalSeconds;
+    total.fStartCount = 1;
+  }
+  else
+  {
+    total.fTotalSeconds = 0.0;
+    total.fStartCount = 0;
+  }
+
+  fProcessStats.push_back(total);
+
+  for (uint32_t i = 0; i < fProcessStats.size(); i++)
+  {
+    if (i == (fProcessStats.size() - 1))
     {
-        // Calculate the total seconds elapsed.
-        totalSeconds =
-            (fTvLast.tv_sec + (fTvLast.tv_usec / 1000000.0)) -
-            (fTvStart.tv_sec + (fTvStart.tv_usec / 1000000.0));
-        total.fTotalSeconds = totalSeconds;
-        total.fStartCount   = 1;
+      oss << endl;
     }
+
+    // Seconds.
+    string seconds;
+    ostringstream ossTemp;
+    ossTemp << fProcessStats[i].fTotalSeconds;
+    seconds = ossTemp.str();
+    seconds.resize(11, ' ');
+    oss << seconds << "  ";
+
+    // Percentage.
+    string percentage;
+    ossTemp.str("");  // clear the stream.
+    ossTemp << (fProcessStats[i].fTotalSeconds / totalSeconds) * 100.0;
+    percentage = ossTemp.str();
+    percentage.resize(11, ' ');
+    oss << percentage << "%      ";
+
+    // Times Initiated.
+    ossTemp.str("");  // clear the stream.
+    ossTemp << fProcessStats[i].fStartCount;
+    string timesInitiated = ossTemp.str();
+    timesInitiated.resize(10, ' ');
+    oss << timesInitiated << " ";
+
+    // Description.
+    if (fId >= 0)
+      oss << fId << ": " << fProcessStats[i].fProcess << endl;
     else
-    {
-        total.fTotalSeconds = 0.0;
-        total.fStartCount   = 0;
-    }
+      oss << fProcessStats[i].fProcess << endl;
+  }
 
-    fProcessStats.push_back(total);
+  if (fOutputToFile)
+  {
+    ofstream profLog;
+    profLog.open(fLogFile.c_str(), std::ios::app);
 
-    for (uint32_t i = 0; i < fProcessStats.size(); i++)
-    {
+    // Output the date and time.
+    time_t t = time(0);
+    char timeString[50];
+    ctime_r(&t, timeString);
+    timeString[strlen(timeString) - 1] = '\0';
+    profLog << endl << timeString;
 
-        if (i == (fProcessStats.size() - 1))
-        {
-            oss << endl;
-        }
+    // Output the stopwatch info.
+    profLog << oss.str();
+  }
+  else
+  {
+    cout << oss.str();
+  }
 
-        // Seconds.
-        string seconds;
-        ostringstream ossTemp;
-        ossTemp << fProcessStats[i].fTotalSeconds;
-        seconds = ossTemp.str();
-        seconds.resize(11, ' ');
-        oss << seconds << "  ";
-
-        // Percentage.
-        string percentage;
-        ossTemp.str(""); // clear the stream.
-        ossTemp << (fProcessStats[i].fTotalSeconds / totalSeconds) * 100.0;
-        percentage = ossTemp.str();
-        percentage.resize(11, ' ');
-        oss << percentage << "%      ";
-
-        // Times Initiated.
-        ossTemp.str(""); // clear the stream.
-        ossTemp << fProcessStats[i].fStartCount;
-        string timesInitiated = ossTemp.str();
-        timesInitiated.resize(10, ' ');
-        oss << timesInitiated << " ";
-
-        // Description.
-        if (fId >= 0)
-            oss << fId << ": " << fProcessStats[i].fProcess << endl;
-        else
-            oss << fProcessStats[i].fProcess << endl;
-    }
-
-    if (fOutputToFile)
-    {
-
-        ofstream profLog;
-        profLog.open(fLogFile.c_str(), std::ios::app);
-
-        // Output the date and time.
-        time_t t = time(0);
-        char timeString[50];
-        ctime_r(&t, timeString);
-        timeString[ strlen(timeString) - 1 ] = '\0';
-        profLog << endl << timeString;
-
-        // Output the stopwatch info.
-        profLog << oss.str();
-    }
-    else
-    {
-        cout << oss.str();
-    }
-
-    // Clear everything out.
-    fStarted = false;
-    fProcessStats.clear();
-
+  // Clear everything out.
+  fStarted = false;
+  fProcessStats.clear();
 }
 
-} // end of logging namespace
+}  // namespace logging

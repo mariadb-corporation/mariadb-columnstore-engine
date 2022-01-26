@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id$
-*
-*******************************************************************************/
+ * $Id$
+ *
+ *******************************************************************************/
 
 /*
  * we_xmlgetter.cpp
@@ -26,7 +26,6 @@
  *  Created on: Feb 7, 2012
  *      Author: bpaul
  */
-
 
 #include <stdio.h>
 #include <string.h>
@@ -44,29 +43,25 @@ using namespace std;
 
 namespace WriteEngine
 {
-
 //------------------------------------------------------------------------------
 // WEXmlgetter constructor
 //------------------------------------------------------------------------------
-WEXmlgetter::WEXmlgetter(std::string& ConfigName):
-    fConfigName(ConfigName),
-    fDoc( NULL ),
-    fpRoot( NULL )
+WEXmlgetter::WEXmlgetter(std::string& ConfigName) : fConfigName(ConfigName), fDoc(NULL), fpRoot(NULL)
 {
-    //  xmlNodePtr curPtr;
-    fDoc = xmlParseFile( ConfigName.c_str() );
+  //  xmlNodePtr curPtr;
+  fDoc = xmlParseFile(ConfigName.c_str());
 
-    if (fDoc == NULL )
-        throw runtime_error("WEXmlgetter::getConfig(): no XML document!");
+  if (fDoc == NULL)
+    throw runtime_error("WEXmlgetter::getConfig(): no XML document!");
 
-    fpRoot = xmlDocGetRootElement( fDoc );
+  fpRoot = xmlDocGetRootElement(fDoc);
 
-    if ( fpRoot == NULL )
-    {
-        xmlFreeDoc( fDoc );
-        fDoc = NULL;
-        throw runtime_error("WEXmlgetter::getConfig(): no XML Root Tag!");
-    }
+  if (fpRoot == NULL)
+  {
+    xmlFreeDoc(fDoc);
+    fDoc = NULL;
+    throw runtime_error("WEXmlgetter::getConfig(): no XML Root Tag!");
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -74,66 +69,64 @@ WEXmlgetter::WEXmlgetter(std::string& ConfigName):
 //------------------------------------------------------------------------------
 WEXmlgetter::~WEXmlgetter()
 {
-    xmlFreeDoc( fDoc );
-    fDoc = NULL;
+  xmlFreeDoc(fDoc);
+  fDoc = NULL;
 }
 
 //------------------------------------------------------------------------------
 // Get/return the property or attribute value (strVal) for the specified xml tag
 // (pNode) and property/attribute (pTag)
 //------------------------------------------------------------------------------
-bool WEXmlgetter::getNodeAttribute(const xmlNode* pNode,
-                                   const char* pTag, std::string& strVal) const
+bool WEXmlgetter::getNodeAttribute(const xmlNode* pNode, const char* pTag, std::string& strVal) const
 {
-    xmlChar* pTmp = NULL;
-    bool     bFound = false;
+  xmlChar* pTmp = NULL;
+  bool bFound = false;
 
-    pTmp = xmlGetProp( const_cast<xmlNode*>(pNode), (xmlChar*) pTag );
+  pTmp = xmlGetProp(const_cast<xmlNode*>(pNode), (xmlChar*)pTag);
 
-    if ( pTmp )
-    {
-        bFound = true;
-        strVal = (char*)pTmp;
-        xmlFree( pTmp );
-    }
-    else
-    {
-        strVal.clear();
-    } // end if
+  if (pTmp)
+  {
+    bFound = true;
+    strVal = (char*)pTmp;
+    xmlFree(pTmp);
+  }
+  else
+  {
+    strVal.clear();
+  }  // end if
 
-    return bFound;
+  return bFound;
 }
 
 //------------------------------------------------------------------------------
 // Get/return the node content (strVal) for the specified xml tag (pNode)
 //------------------------------------------------------------------------------
-bool WEXmlgetter::getNodeContent( const xmlNode* pNode,
-                                  std::string& strVal) const
+bool WEXmlgetter::getNodeContent(const xmlNode* pNode, std::string& strVal) const
 {
-    xmlChar* pTmp = NULL;
-    bool     bFound = false;
+  xmlChar* pTmp = NULL;
+  bool bFound = false;
 
-    if ( pNode->children != NULL )
+  if (pNode->children != NULL)
+  {
+    pTmp = xmlNodeGetContent(pNode->children);
+
+    if (pTmp)
     {
-        pTmp = xmlNodeGetContent( pNode->children );
-
-        if ( pTmp )
-        {
-            bFound = true;
-            strVal = (char*)pTmp;
-            xmlFree( pTmp );
-        }
-        else
-        {
-            strVal.clear();
-        }
+      bFound = true;
+      strVal = (char*)pTmp;
+      xmlFree(pTmp);
     }
     else
     {
-        strVal.clear();
+      strVal.clear();
     }
+  }
+  else
+  {
+    strVal.clear();
+  }
 
-    return bFound;
+  return bFound;
 }
 
 //------------------------------------------------------------------------------
@@ -155,47 +148,46 @@ bool WEXmlgetter::getNodeContent( const xmlNode* pNode,
 // always returning the text node content inside each <name> rather than
 // any <subname1> node that might be within each <name> tag.
 //------------------------------------------------------------------------------
-void WEXmlgetter::getConfig(const string& section,
-                            const string& name, vector<string>& values) const
+void WEXmlgetter::getConfig(const string& section, const string& name, vector<string>& values) const
 {
-    string res;
+  string res;
 
-    if (section.length() == 0)
-        throw invalid_argument("Config::getConfig: section must have a length");
+  if (section.length() == 0)
+    throw invalid_argument("Config::getConfig: section must have a length");
 
-    xmlNode* pPtr = fpRoot->xmlChildrenNode;
+  xmlNode* pPtr = fpRoot->xmlChildrenNode;
 
-    while (pPtr != NULL)
+  while (pPtr != NULL)
+  {
+    // cout << "pPtr->name:    " <<
+    //	(const xmlChar*)pPtr->name << std::endl;
+
+    if ((!xmlStrcmp(pPtr->name, (const xmlChar*)section.c_str())))
     {
-        //cout << "pPtr->name:    " <<
-        //	(const xmlChar*)pPtr->name << std::endl;
+      xmlNodePtr pPtr2 = pPtr->xmlChildrenNode;
 
-        if ((!xmlStrcmp(pPtr->name, (const xmlChar*)section.c_str())))
+      while (pPtr2 != NULL)
+      {
+        // cout << "  pPtr2->name: " <<
+        //	(const xmlChar*)pPtr2->name << std::endl;
+
+        if ((!xmlStrcmp(pPtr2->name, (const xmlChar*)name.c_str())))
         {
-            xmlNodePtr pPtr2 = pPtr->xmlChildrenNode;
+          xmlNodePtr pPtr3 = pPtr2->xmlChildrenNode;
+          values.push_back((const char*)pPtr3->content);
 
-            while (pPtr2 != NULL)
-            {
-                //cout << "  pPtr2->name: " <<
-                //	(const xmlChar*)pPtr2->name << std::endl;
-
-                if ((!xmlStrcmp(pPtr2->name, (const xmlChar*)name.c_str())))
-                {
-                    xmlNodePtr pPtr3 = pPtr2->xmlChildrenNode;
-                    values.push_back((const char*)pPtr3->content);
-
-                    //cout << "    pPtr3->name: " <<
-                    //	(const xmlChar*)pPtr3->name <<
-                    //	"; content: " << (const xmlChar*)pPtr3->content <<
-                    //	"; len: " << strlen((char*)pPtr3->content) << std::endl;
-                }
-
-                pPtr2 = pPtr2->next;
-            }
+          // cout << "    pPtr3->name: " <<
+          //	(const xmlChar*)pPtr3->name <<
+          //	"; content: " << (const xmlChar*)pPtr3->content <<
+          //	"; len: " << strlen((char*)pPtr3->content) << std::endl;
         }
 
-        pPtr = pPtr->next;
+        pPtr2 = pPtr2->next;
+      }
     }
+
+    pPtr = pPtr->next;
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -210,35 +202,37 @@ void WEXmlgetter::getConfig(const string& section,
 //------------------------------------------------------------------------------
 std::string WEXmlgetter::getValue(const vector<string>& sections) const
 {
-    std::string aRet;
-    const xmlNode* pPtr = fpRoot;
-    int aSize = sections.size();
-    int aIdx = 0;
+  std::string aRet;
+  const xmlNode* pPtr = fpRoot;
+  int aSize = sections.size();
+  int aIdx = 0;
 
-    //cout << aSize << endl;
-    while (aIdx < aSize)
+  // cout << aSize << endl;
+  while (aIdx < aSize)
+  {
+    // cout << aIdx <<" "<< sections[aIdx] << endl;
+    pPtr = getNode(pPtr, sections[aIdx]);
+
+    if ((pPtr == NULL) || (aIdx == aSize - 1))
+      break;
+    else
     {
-        //cout << aIdx <<" "<< sections[aIdx] << endl;
-        pPtr = getNode(pPtr, sections[aIdx]);
-
-        if ((pPtr == NULL) || (aIdx == aSize - 1)) break;
-        else
-        {
-            //cout << "getValue Name " << (const char*)pPtr->name << endl;
-            pPtr = pPtr->xmlChildrenNode;
-            aIdx++;
-        }
+      // cout << "getValue Name " << (const char*)pPtr->name << endl;
+      pPtr = pPtr->xmlChildrenNode;
+      aIdx++;
     }
+  }
 
-    if (pPtr != NULL)
-    {
-        //aRet = (const char*)pPtr->content;
-        std::string aBuff;
+  if (pPtr != NULL)
+  {
+    // aRet = (const char*)pPtr->content;
+    std::string aBuff;
 
-        if (getNodeContent(pPtr, aBuff)) aRet = aBuff;
-    }
+    if (getNodeContent(pPtr, aBuff))
+      aRet = aBuff;
+  }
 
-    return aRet;
+  return aRet;
 }
 
 //------------------------------------------------------------------------------
@@ -246,23 +240,23 @@ std::string WEXmlgetter::getValue(const vector<string>& sections) const
 // a node with the specified name (section).  The xmlNode (if found) is
 // returned.
 //------------------------------------------------------------------------------
-const xmlNode* WEXmlgetter::getNode(const xmlNode* pParent,
-                                    const string& section)const
+const xmlNode* WEXmlgetter::getNode(const xmlNode* pParent, const string& section) const
 {
-    if (pParent == NULL) return NULL;
+  if (pParent == NULL)
+    return NULL;
 
-    const xmlNode* pPtr = pParent;
+  const xmlNode* pPtr = pParent;
 
-    while (pPtr != NULL )
-    {
-        //cout << "getNode Name " << (const char*)pPtr->name << endl;
-        if (!xmlStrcmp(pPtr->name, (const xmlChar*)section.c_str()))
-            return pPtr;
-        else
-            pPtr = pPtr->next;
-    }
+  while (pPtr != NULL)
+  {
+    // cout << "getNode Name " << (const char*)pPtr->name << endl;
+    if (!xmlStrcmp(pPtr->name, (const xmlChar*)section.c_str()))
+      return pPtr;
+    else
+      pPtr = pPtr->next;
+  }
 
-    return pPtr;
+  return pPtr;
 }
 
 //------------------------------------------------------------------------------
@@ -270,46 +264,46 @@ const xmlNode* WEXmlgetter::getNode(const xmlNode* pParent,
 // In the last child of this tree, we look for the specified attribute tag,
 // and return its value.
 //------------------------------------------------------------------------------
-std::string WEXmlgetter::getAttribute(const vector<string>& sections,
-                                      const string& Tag) const
+std::string WEXmlgetter::getAttribute(const vector<string>& sections, const string& Tag) const
 {
-    std::string aRet;
-    const xmlNode* pPtr = fpRoot;
-    int aSize = sections.size();
+  std::string aRet;
+  const xmlNode* pPtr = fpRoot;
+  int aSize = sections.size();
 
-    if (aSize == 0)
-        throw invalid_argument("WEXmlgetter::getAttribute(): section must be valid");
+  if (aSize == 0)
+    throw invalid_argument("WEXmlgetter::getAttribute(): section must be valid");
 
-    int aIdx = 0;
+  int aIdx = 0;
 
-    //cout << aSize << endl;
-    while (aIdx < aSize)
+  // cout << aSize << endl;
+  while (aIdx < aSize)
+  {
+    // cout << aIdx <<" "<< sections[aIdx] << endl;
+    pPtr = getNode(pPtr, sections[aIdx]);
+
+    if ((pPtr == NULL) || (aIdx == aSize - 1))
+      break;
+    else
     {
-        //cout << aIdx <<" "<< sections[aIdx] << endl;
-        pPtr = getNode(pPtr, sections[aIdx]);
-
-        if ((pPtr == NULL) || (aIdx == aSize - 1)) break;
-        else
-        {
-            //cout << "getValue Name " << (const char*)pPtr->name << endl;
-            pPtr = pPtr->xmlChildrenNode;
-            aIdx++;
-        }
+      // cout << "getValue Name " << (const char*)pPtr->name << endl;
+      pPtr = pPtr->xmlChildrenNode;
+      aIdx++;
     }
+  }
 
-    if (pPtr != NULL)
-    {
-        std::string aBuff;
+  if (pPtr != NULL)
+  {
+    std::string aBuff;
 
-        //cout << "attrTagNode Name " << (const char*)pPtr->name << endl;
-        if (getNodeAttribute(pPtr, Tag.c_str(), aBuff))
-            aRet = aBuff;
+    // cout << "attrTagNode Name " << (const char*)pPtr->name << endl;
+    if (getNodeAttribute(pPtr, Tag.c_str(), aBuff))
+      aRet = aBuff;
 
-        //aRet = (const char*)pPtr->content;
-        //cout << "Attribute("<<Tag<<") = "<< aRet<< endl;
-    }
+    // aRet = (const char*)pPtr->content;
+    // cout << "Attribute("<<Tag<<") = "<< aRet<< endl;
+  }
 
-    return aRet;
+  return aRet;
 }
 
 //------------------------------------------------------------------------------
@@ -320,54 +314,53 @@ std::string WEXmlgetter::getAttribute(const vector<string>& sections,
 // attribute tag, and return its value.  Hence a vector of attribute values
 // is returned.
 //------------------------------------------------------------------------------
-void WEXmlgetter::getAttributeListForAllChildren(
-    const vector<string>& sections,
-    const string& attributeTag,
-    vector<string>& attributeValues)
+void WEXmlgetter::getAttributeListForAllChildren(const vector<string>& sections, const string& attributeTag,
+                                                 vector<string>& attributeValues)
 {
-    const xmlNode* pPtr = fpRoot;
-    int aSize = sections.size();
+  const xmlNode* pPtr = fpRoot;
+  int aSize = sections.size();
 
-    if (aSize == 0)
+  if (aSize == 0)
+  {
+    throw invalid_argument(
+        "WEXmlgetter::getAttributeListForAllChildren():"
+        " No XML nodes specified in section search list");
+  }
+
+  // Step down the branch that has the nodes of interest
+  int aIdx = 0;
+
+  while (aIdx < aSize)
+  {
+    pPtr = getNode(pPtr, sections[aIdx]);
+
+    if ((pPtr == NULL) || (aIdx == aSize - 1))
     {
-        throw invalid_argument("WEXmlgetter::getAttributeListForAllChildren():"
-                               " No XML nodes specified in section search list");
+      break;
     }
-
-    // Step down the branch that has the nodes of interest
-    int aIdx = 0;
-
-    while (aIdx < aSize)
+    else
     {
-        pPtr = getNode(pPtr, sections[aIdx]);
-
-        if ((pPtr == NULL) || (aIdx == aSize - 1))
-        {
-            break;
-        }
-        else
-        {
-            pPtr = pPtr->xmlChildrenNode;
-            aIdx++;
-        }
+      pPtr = pPtr->xmlChildrenNode;
+      aIdx++;
     }
+  }
 
-    // Look for all the "matching" nodes at the end of the branch, and
-    // get the requested attribute value for each matching node.
-    if (pPtr != NULL)
+  // Look for all the "matching" nodes at the end of the branch, and
+  // get the requested attribute value for each matching node.
+  if (pPtr != NULL)
+  {
+    while (pPtr != NULL)
     {
-        while (pPtr != NULL )
-        {
-            std::string attrib;
+      std::string attrib;
 
-            if (getNodeAttribute(pPtr, attributeTag.c_str(), attrib))
-            {
-                attributeValues.push_back(attrib);
-            }
+      if (getNodeAttribute(pPtr, attributeTag.c_str(), attrib))
+      {
+        attributeValues.push_back(attrib);
+      }
 
-            pPtr = pPtr->next;
-        }
+      pPtr = pPtr->next;
     }
+  }
 }
 
 } /* namespace WriteEngine */

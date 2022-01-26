@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef CGROUPCONFIGURATOR_H
-#define CGROUPCONFIGURATOR_H
+#pragma once
 
 #include <stdlib.h>
 #include <inttypes.h>
@@ -26,51 +25,47 @@
 
 namespace utils
 {
-
 /* This class wraps a few methods for getting configuration variables that potentially
    come from a cgroup.  Might move it to utils/configcpp, and/or change the name. */
 
 class CGroupConfigurator
 {
-public:
-    CGroupConfigurator();
-    virtual ~CGroupConfigurator();
+ public:
+  CGroupConfigurator();
+  virtual ~CGroupConfigurator();
 
-    uint32_t getNumCores();
-    uint64_t getTotalMemory();
-    uint64_t getFreeMemory();
-    uint64_t getTotalSwapSpace();
-    uint64_t getSwapInUse();
+  uint32_t getNumCores();
+  uint64_t getTotalMemory();
+  uint64_t getFreeMemory();
+  uint64_t getTotalSwapSpace();
+  uint64_t getSwapInUse();
 
-    bool usingCGroup()
-    {
-        return cGroupDefined;
-    }
+  bool usingCGroup()
+  {
+    return cGroupDefined;
+  }
 
-private:
-    uint32_t getNumCoresFromProc();
-    uint32_t getNumCoresFromCGroup();
-    uint64_t getTotalMemoryFromProc();
-    uint64_t getTotalMemoryFromCGroup();
-    uint64_t getFreeMemoryFromProc();
-    uint64_t getMemUsageFromCGroup();
-    uint64_t getTotalSwapFromSysinfo();
-    int64_t getTotalMemAndSwapFromCGroup();
-    uint64_t getSwapInUseFromSysinfo();
-    int64_t getSwapInUseFromCGroup();
+ private:
+  uint32_t getNumCoresFromProc();
+  uint32_t getNumCoresFromCGroup();
+  uint64_t getTotalMemoryFromProc();
+  uint64_t getTotalMemoryFromCGroup();
+  uint64_t getFreeMemoryFromProc();
+  uint64_t getMemUsageFromCGroup();
+  uint64_t getTotalSwapFromSysinfo();
+  int64_t getTotalMemAndSwapFromCGroup();
+  uint64_t getSwapInUseFromSysinfo();
+  int64_t getSwapInUseFromCGroup();
 
-    std::string memUsageFilename;
-    std::string usedSwapFilename;
+  std::string memUsageFilename;
+  std::string usedSwapFilename;
 
-    std::string cGroupName;
-    bool cGroupDefined;
-    config::Config* config;
-    uint64_t totalMemory;
-    uint64_t totalSwap;
-    bool printedWarning;
-
+  std::string cGroupName;
+  bool cGroupDefined;
+  config::Config* config;
+  uint64_t totalMemory;
+  uint64_t totalSwap;
+  bool printedWarning;
 };
 
-}
-
-#endif // CGROUPCONFIGURATOR_H
+}  // namespace utils

@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id$
-*
-*******************************************************************************/
+ * $Id$
+ *
+ *******************************************************************************/
 /*
  * we_splitterapp.h
  *
@@ -26,8 +26,7 @@
  *      Author: bpaul
  */
 
-#ifndef WE_SPLITTERAPP_H_
-#define WE_SPLITTERAPP_H_
+#pragma once
 
 #include <boost/thread/condition.hpp>
 #include <boost/scoped_array.hpp>
@@ -41,61 +40,54 @@
 
 namespace WriteEngine
 {
-
-
 class WESplitterApp
 {
-public:
-    WESplitterApp(WECmdArgs& CmdArgs);
-    virtual ~WESplitterApp();
+ public:
+  WESplitterApp(WECmdArgs& CmdArgs);
+  virtual ~WESplitterApp();
 
+  void processMessages();
+  int getMode()
+  {
+    return fCmdArgs.getMode();
+  }
+  bool getPmStatus(int Id)
+  {
+    return fCmdArgs.getPmStatus(Id);
+  }
+  std::string getLocFile()
+  {
+    return fCmdArgs.getLocFile();
+  }
+  std::string getPmFile()
+  {
+    return fCmdArgs.getPmFile();
+  }
+  void updateWithJobFile(int aIdx);
 
+  // setup the signal handlers for the main app
+  void setupSignalHandlers();
+  static void onSigTerminate(int aInt);
+  static void onSigInterrupt(int aInt);
+  static void onSigHup(int aInt);
 
-    void processMessages();
-    int getMode()
-    {
-        return fCmdArgs.getMode();
-    }
-    bool getPmStatus(int Id)
-    {
-        return fCmdArgs.getPmStatus(Id);
-    }
-    std::string getLocFile()
-    {
-        return fCmdArgs.getLocFile();
-    }
-    std::string getPmFile()
-    {
-        return fCmdArgs.getPmFile();
-    }
-    void updateWithJobFile(int aIdx);
+  void invokeCpimport();
 
+ private:
+ public:  // for multi table support
+  WECmdArgs& fCmdArgs;
+  WESDHandler fDh;
+  static bool fContinue;
 
-    // setup the signal handlers for the main app
-    void setupSignalHandlers();
-    static void onSigTerminate(int aInt);
-    static void onSigInterrupt(int aInt);
-    static void onSigHup(int aInt);
+ public:
+  static bool fSignaled;
+  static bool fSigHup;
 
-    void invokeCpimport();
+ public:
+  static SimpleSysLog* fpSysLog;
 
-private:
-public:	// for multi table support
-    WECmdArgs& fCmdArgs;
-    WESDHandler fDh;
-    static bool fContinue;
-
-public:
-    static bool fSignaled;
-    static bool fSigHup;
-
-public:
-    static SimpleSysLog* fpSysLog;
-
-public:
-    friend class WESDHandler;
-
+ public:
+  friend class WESDHandler;
 };
 
 } /* namespace WriteEngine */
-#endif /* WE_SPLITTERAPP_H_ */

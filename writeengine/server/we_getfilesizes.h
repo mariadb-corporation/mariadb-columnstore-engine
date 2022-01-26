@@ -16,11 +16,10 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id: we_getfilesizes.h 4450 2013-04-15 14:13:24Z chao $
-*
-*******************************************************************************/
-#ifndef WE_GETFILESIZES_H__
-#define WE_GETFILESIZES_H__
+ * $Id: we_getfilesizes.h 4450 2013-04-15 14:13:24Z chao $
+ *
+ *******************************************************************************/
+#pragma once
 
 #include <unistd.h>
 #include <string>
@@ -31,54 +30,54 @@
 
 namespace WriteEngine
 {
-
 /** @brief Get all file sizes for the given table
  */
 class WE_GetFileSizes
 {
-public:
-
-    static int processTable(messageqcpp::ByteStream& bs, std::string& errMsg, int key);
-    static int processFileName(messageqcpp::ByteStream& bs, std::string& errMsg, int key);
+ public:
+  static int processTable(messageqcpp::ByteStream& bs, std::string& errMsg, int key);
+  static int processFileName(messageqcpp::ByteStream& bs, std::string& errMsg, int key);
 };
 
 class ActiveThreadCounter
 {
-public:
-    ActiveThreadCounter(int size) : factiveThreadCount(size) {}
-    virtual ~ActiveThreadCounter() {}
+ public:
+  ActiveThreadCounter(int size) : factiveThreadCount(size)
+  {
+  }
+  virtual ~ActiveThreadCounter()
+  {
+  }
 
-    void decr()
+  void decr()
+  {
+    int atc;
+
+    for (;;)
     {
-        int atc;
+      atomicops::atomicMb();
+      atc = factiveThreadCount;
 
-        for (;;)
-        {
-            atomicops::atomicMb();
-            atc = factiveThreadCount;
+      if (atc <= 0)  // hopefully atc will never be < 0!
+        return;
 
-            if (atc <= 0)		//hopefully atc will never be < 0!
-                return;
+      if (atomicops::atomicCAS(&factiveThreadCount, atc, (atc - 1)))
+        return;
 
-            if (atomicops::atomicCAS(&factiveThreadCount, atc, (atc - 1)))
-                return;
-
-            atomicops::atomicYield();
-        }
+      atomicops::atomicYield();
     }
+  }
 
-    uint32_t cur()
-    {
-        return factiveThreadCount;
-    }
+  uint32_t cur()
+  {
+    return factiveThreadCount;
+  }
 
-private:
-    ActiveThreadCounter(const ActiveThreadCounter& rhs);
-    ActiveThreadCounter& operator=(const ActiveThreadCounter& rhs);
+ private:
+  ActiveThreadCounter(const ActiveThreadCounter& rhs);
+  ActiveThreadCounter& operator=(const ActiveThreadCounter& rhs);
 
-    volatile int32_t factiveThreadCount;
+  volatile int32_t factiveThreadCount;
 };
 
-}
-
-#endif
+}  // namespace WriteEngine

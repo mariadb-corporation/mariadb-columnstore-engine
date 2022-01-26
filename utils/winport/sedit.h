@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef WINPORT_SEDIT_H__
-#define WINPORT_SEDIT_H__
+#pragma once
 
 #include <string>
 
@@ -24,6 +23,4 @@ namespace winport
 {
 extern bool sedit(std::string& line, const std::string& find, const std::string& replace);
 extern const string sedit2(const std::string& line, const std::string& find, const std::string& replace);
-}
-
-#endif
+}  // namespace winport

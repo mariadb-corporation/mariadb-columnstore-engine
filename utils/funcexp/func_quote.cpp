@@ -26,63 +26,58 @@ using namespace rowgroup;
 
 namespace funcexp
 {
-
-CalpontSystemCatalog::ColType Func_quote::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
+CalpontSystemCatalog::ColType Func_quote::operationType(FunctionParm& fp,
+                                                        CalpontSystemCatalog::ColType& resultType)
 {
-    return resultType;
+  return resultType;
 }
 
-std::string Func_quote::getStrVal(rowgroup::Row& row,
-                                  FunctionParm& fp,
-                                  bool& isNull,
+std::string Func_quote::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                   execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-    string str;
+  string str;
 
-    stringValue(fp[0], row, isNull, str);
+  stringValue(fp[0], row, isNull, str);
 
-    if (isNull)
+  if (isNull)
+  {
+    isNull = false;
+    return "NULL";
+  }
+
+  if (str.empty())
+    return "NULL";
+
+  string result;
+  result.reserve((str.size() * 1.3) + 2);
+
+  result.push_back('\'');
+
+  for (uint64_t i = 0; i < str.size(); i++)
+  {
+    switch (str[i])
     {
-        isNull = false;
-        return "NULL";
+      case 0:
+        result.push_back('\\');
+        result.push_back('0');
+        break;
+      case '\032':
+        result.push_back('\\');
+        result.push_back('Z');
+        break;
+      case '\'':
+      case '\\':
+        result.push_back('\\');
+        result.push_back(str[i]);
+        break;
+      default: result.push_back(str[i]); break;
     }
+  }
 
-    if (str.empty())
-        return "NULL";
+  result.push_back('\'');
 
-    string result;
-    result.reserve((str.size() * 1.3) + 2);
-
-    result.push_back('\'');
-
-    for (uint64_t i = 0; i < str.size(); i++)
-    {
-        switch(str[i])
-        {
-            case 0:
-                result.push_back('\\');
-                result.push_back('0');
-                break;
-            case '\032':
-                result.push_back('\\');
-                result.push_back('Z');
-                break;
-            case '\'':
-            case '\\':
-                result.push_back('\\');
-                result.push_back(str[i]);
-                break;
-            default:
-                result.push_back(str[i]);
-                break;
-        }
-    }
-
-    result.push_back('\'');
-
-    return result;
+  return result;
 }
 
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:
-

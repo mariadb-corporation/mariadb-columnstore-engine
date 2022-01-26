@@ -22,79 +22,75 @@ using namespace mcsv1sdk;
 
 struct distinct_count_data
 {
-   long long	cnt;
+  long long cnt;
 };
 
 #define OUT_TYPE int64_t
-mcsv1_UDAF::ReturnCode distinct_count::init(mcsv1Context* context,
-                                            ColumnDatum* colTypes)
+mcsv1_UDAF::ReturnCode distinct_count::init(mcsv1Context* context, ColumnDatum* colTypes)
 {
-	context->setUserDataSize(sizeof(distinct_count_data));
-    if (context->getParameterCount() != 1)
-	{
-		// The error message will be prepended with
-		// "The storage engine for the table doesn't support "
-        context->setErrorMessage("distinct_count() with other than 1 arguments");
-		return mcsv1_UDAF::ERROR;
-	}
-	context->setResultType(execplan::CalpontSystemCatalog::BIGINT);
-	context->setColWidth(8);
-	context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
-	context->setRunFlag(mcsv1sdk::UDAF_DISTINCT);
-    context->setRunFlag(mcsv1sdk::UDAF_OVER_REQUIRED);
+  context->setUserDataSize(sizeof(distinct_count_data));
+  if (context->getParameterCount() != 1)
+  {
+    // The error message will be prepended with
+    // "The storage engine for the table doesn't support "
+    context->setErrorMessage("distinct_count() with other than 1 arguments");
+    return mcsv1_UDAF::ERROR;
+  }
+  context->setResultType(execplan::CalpontSystemCatalog::BIGINT);
+  context->setColWidth(8);
+  context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
+  context->setRunFlag(mcsv1sdk::UDAF_DISTINCT);
+  context->setRunFlag(mcsv1sdk::UDAF_OVER_REQUIRED);
 
-	return mcsv1_UDAF::SUCCESS;
+  return mcsv1_UDAF::SUCCESS;
 }
 
 mcsv1_UDAF::ReturnCode distinct_count::reset(mcsv1Context* context)
 {
-	struct distinct_count_data* data = (struct distinct_count_data*)context->getUserData()->data;
-	data->cnt = 0;
-	return mcsv1_UDAF::SUCCESS;
+  struct distinct_count_data* data = (struct distinct_count_data*)context->getUserData()->data;
+  data->cnt = 0;
+  return mcsv1_UDAF::SUCCESS;
 }
 
-mcsv1_UDAF::ReturnCode distinct_count::nextValue(mcsv1Context* context, 
-										         ColumnDatum* valsIn)
+mcsv1_UDAF::ReturnCode distinct_count::nextValue(mcsv1Context* context, ColumnDatum* valsIn)
 {
-	static_any::any& valIn = valsIn[0].columnData;
-	struct distinct_count_data* data = (struct distinct_count_data*)context->getUserData()->data;
+  static_any::any& valIn = valsIn[0].columnData;
+  struct distinct_count_data* data = (struct distinct_count_data*)context->getUserData()->data;
 
-	if (valIn.empty())
-	{
-		return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
-	}
-    data->cnt++;
-	return mcsv1_UDAF::SUCCESS;
+  if (valIn.empty())
+  {
+    return mcsv1_UDAF::SUCCESS;  // Ought not happen when UDAF_IGNORE_NULLS is on.
+  }
+  data->cnt++;
+  return mcsv1_UDAF::SUCCESS;
 }
 
 mcsv1_UDAF::ReturnCode distinct_count::subEvaluate(mcsv1Context* context, const UserData* userDataIn)
 {
-	struct distinct_count_data* outData = (struct distinct_count_data*)context->getUserData()->data;
-	struct distinct_count_data* inData = (struct distinct_count_data*)userDataIn->data;
-	outData->cnt += inData->cnt;
-	return mcsv1_UDAF::SUCCESS;
+  struct distinct_count_data* outData = (struct distinct_count_data*)context->getUserData()->data;
+  struct distinct_count_data* inData = (struct distinct_count_data*)userDataIn->data;
+  outData->cnt += inData->cnt;
+  return mcsv1_UDAF::SUCCESS;
 }
 
 mcsv1_UDAF::ReturnCode distinct_count::evaluate(mcsv1Context* context, static_any::any& valOut)
 {
-	struct distinct_count_data* data = (struct distinct_count_data*)context->getUserData()->data;
-	valOut = data->cnt;
-	return mcsv1_UDAF::SUCCESS;
+  struct distinct_count_data* data = (struct distinct_count_data*)context->getUserData()->data;
+  valOut = data->cnt;
+  return mcsv1_UDAF::SUCCESS;
 }
 
-mcsv1_UDAF::ReturnCode distinct_count::dropValue(mcsv1Context* context, 
-												 ColumnDatum* valsDropped)
+mcsv1_UDAF::ReturnCode distinct_count::dropValue(mcsv1Context* context, ColumnDatum* valsDropped)
 {
-	static_any::any& valIn = valsDropped[0].columnData;
-	struct distinct_count_data* data = (struct distinct_count_data*)context->getUserData()->data;
+  static_any::any& valIn = valsDropped[0].columnData;
+  struct distinct_count_data* data = (struct distinct_count_data*)context->getUserData()->data;
 
-	if (valIn.empty())
-	{
-		return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
-	}
+  if (valIn.empty())
+  {
+    return mcsv1_UDAF::SUCCESS;  // Ought not happen when UDAF_IGNORE_NULLS is on.
+  }
 
-	data->cnt--;
+  data->cnt--;
 
-	return mcsv1_UDAF::SUCCESS;
+  return mcsv1_UDAF::SUCCESS;
 }
-

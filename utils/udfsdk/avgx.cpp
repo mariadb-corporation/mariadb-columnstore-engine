@@ -29,105 +29,101 @@ using namespace mcsv1sdk;
 // Use the simple data model
 struct avgx_data
 {
-    double	    sum;
-    uint64_t	cnt;
+  double sum;
+  uint64_t cnt;
 };
 
-
-mcsv1_UDAF::ReturnCode avgx::init(mcsv1Context* context,
-                                  ColumnDatum* colTypes)
+mcsv1_UDAF::ReturnCode avgx::init(mcsv1Context* context, ColumnDatum* colTypes)
 {
-    if (context->getParameterCount() != 1)
-    {
-        // The error message will be prepended with
-        // "The storage engine for the table doesn't support "
-        context->setErrorMessage("avgx() with other than 1 arguments");
-        return mcsv1_UDAF::ERROR;
-    }
+  if (context->getParameterCount() != 1)
+  {
+    // The error message will be prepended with
+    // "The storage engine for the table doesn't support "
+    context->setErrorMessage("avgx() with other than 1 arguments");
+    return mcsv1_UDAF::ERROR;
+  }
 
-    if (!(isNumeric(colTypes[0].dataType)))
-    {
-        // The error message will be prepended with
-        // "The storage engine for the table doesn't support "
-        context->setErrorMessage("avgx() with a non-numeric x argument");
-        return mcsv1_UDAF::ERROR;
-    }
+  if (!(isNumeric(colTypes[0].dataType)))
+  {
+    // The error message will be prepended with
+    // "The storage engine for the table doesn't support "
+    context->setErrorMessage("avgx() with a non-numeric x argument");
+    return mcsv1_UDAF::ERROR;
+  }
 
-    context->setUserDataSize(sizeof(avgx_data));
-    context->setResultType(execplan::CalpontSystemCatalog::DOUBLE);
-    context->setColWidth(8);
-    context->setScale(colTypes[0].scale + 4);
-    context->setPrecision(19);
-    context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
-    return mcsv1_UDAF::SUCCESS;
-
+  context->setUserDataSize(sizeof(avgx_data));
+  context->setResultType(execplan::CalpontSystemCatalog::DOUBLE);
+  context->setColWidth(8);
+  context->setScale(colTypes[0].scale + 4);
+  context->setPrecision(19);
+  context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
+  return mcsv1_UDAF::SUCCESS;
 }
 
 mcsv1_UDAF::ReturnCode avgx::reset(mcsv1Context* context)
 {
-    struct  avgx_data* data = (struct avgx_data*)context->getUserData()->data;
-    data->sum = 0;
-    data->cnt = 0;
-    return mcsv1_UDAF::SUCCESS;
+  struct avgx_data* data = (struct avgx_data*)context->getUserData()->data;
+  data->sum = 0;
+  data->cnt = 0;
+  return mcsv1_UDAF::SUCCESS;
 }
 
 mcsv1_UDAF::ReturnCode avgx::nextValue(mcsv1Context* context, ColumnDatum* valsIn)
 {
-    struct  avgx_data* data = (struct avgx_data*)context->getUserData()->data;
+  struct avgx_data* data = (struct avgx_data*)context->getUserData()->data;
 
-    if (valsIn[0].columnData.empty())
-    {
-        return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
-    }
+  if (valsIn[0].columnData.empty())
+  {
+    return mcsv1_UDAF::SUCCESS;  // Ought not happen when UDAF_IGNORE_NULLS is on.
+  }
 
-    DATATYPE val = toDouble(valsIn[0]);
+  DATATYPE val = toDouble(valsIn[0]);
 
-    data->sum += val;
-    ++data->cnt;
+  data->sum += val;
+  ++data->cnt;
 
-    return mcsv1_UDAF::SUCCESS;
+  return mcsv1_UDAF::SUCCESS;
 }
 
 mcsv1_UDAF::ReturnCode avgx::subEvaluate(mcsv1Context* context, const UserData* userDataIn)
 {
-    if (!userDataIn)
-    {
-        return mcsv1_UDAF::SUCCESS;
-    }
-
-    struct avgx_data* outData = (struct avgx_data*)context->getUserData()->data;
-
-    struct avgx_data* inData = (struct avgx_data*)userDataIn->data;
-
-    outData->sum += inData->sum;
-
-    outData->cnt += inData->cnt;
-
+  if (!userDataIn)
+  {
     return mcsv1_UDAF::SUCCESS;
+  }
+
+  struct avgx_data* outData = (struct avgx_data*)context->getUserData()->data;
+
+  struct avgx_data* inData = (struct avgx_data*)userDataIn->data;
+
+  outData->sum += inData->sum;
+
+  outData->cnt += inData->cnt;
+
+  return mcsv1_UDAF::SUCCESS;
 }
 
 mcsv1_UDAF::ReturnCode avgx::evaluate(mcsv1Context* context, static_any::any& valOut)
 {
-    struct avgx_data* data = (struct avgx_data*)context->getUserData()->data;
+  struct avgx_data* data = (struct avgx_data*)context->getUserData()->data;
 
-    valOut = data->sum / (double)data->cnt;
-    return mcsv1_UDAF::SUCCESS;
+  valOut = data->sum / (double)data->cnt;
+  return mcsv1_UDAF::SUCCESS;
 }
 
 mcsv1_UDAF::ReturnCode avgx::dropValue(mcsv1Context* context, ColumnDatum* valsDropped)
 {
-    struct avgx_data* data = (struct avgx_data*)context->getUserData()->data;
+  struct avgx_data* data = (struct avgx_data*)context->getUserData()->data;
 
-    if (valsDropped[0].columnData.empty())
-    {
-        return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
-    }
+  if (valsDropped[0].columnData.empty())
+  {
+    return mcsv1_UDAF::SUCCESS;  // Ought not happen when UDAF_IGNORE_NULLS is on.
+  }
 
-    DATATYPE val = toDouble(valsDropped[0]);
+  DATATYPE val = toDouble(valsDropped[0]);
 
-    data->sum -= val;
-    --data->cnt;
+  data->sum -= val;
+  --data->cnt;
 
-    return mcsv1_UDAF::SUCCESS;
+  return mcsv1_UDAF::SUCCESS;
 }
-

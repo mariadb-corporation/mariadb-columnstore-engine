@@ -29,7 +29,6 @@ using namespace std;
 
 namespace BRM
 {
-
 ResourceNode::ResourceNode() : _lbid(0)
 {
 }
@@ -48,48 +47,47 @@ ResourceNode::~ResourceNode()
 
 ResourceNode& ResourceNode::operator=(const ResourceNode& n)
 {
-    static_cast<RGNode&>(*this) = static_cast<const RGNode&>(n);
-    _lbid = n._lbid;
-    return *this;
+  static_cast<RGNode&>(*this) = static_cast<const RGNode&>(n);
+  _lbid = n._lbid;
+  return *this;
 }
 
 bool ResourceNode::operator==(const ResourceNode& n) const
 {
-    return (_lbid == n._lbid);
+  return (_lbid == n._lbid);
 }
 
 bool ResourceNode::operator==(LBID_t l) const
 {
-    return (_lbid == l);
+  return (_lbid == l);
 }
 
 bool ResourceNode::operator<(const ResourceNode& n) const
 {
-    return (_lbid < n._lbid);
+  return (_lbid < n._lbid);
 }
 
 LBID_t ResourceNode::lbid() const
 {
-    return _lbid;
+  return _lbid;
 }
 
 void ResourceNode::wakeAndDetach()
 {
-    TransactionNode* txn;
-    set<RGNode*>::iterator sit;
-    set<RGNode*>::iterator dummy_sit;
+  TransactionNode* txn;
+  set<RGNode*>::iterator sit;
+  set<RGNode*>::iterator dummy_sit;
 
-    for (sit = in.begin(); sit != in.end(); )
-    {
-        txn = dynamic_cast<TransactionNode*>(*sit);
-        txn->wake();
-        dummy_sit = ++sit;
-        removeInEdge(txn);
-        sit = dummy_sit;
-    }
+  for (sit = in.begin(); sit != in.end();)
+  {
+    txn = dynamic_cast<TransactionNode*>(*sit);
+    txn->wake();
+    dummy_sit = ++sit;
+    removeInEdge(txn);
+    sit = dummy_sit;
+  }
 
-    in.clear();
+  in.clear();
 }
 
-}
-
+}  // namespace BRM

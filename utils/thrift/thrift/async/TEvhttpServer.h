@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TEVHTTP_SERVER_H_
-#define _THRIFT_TEVHTTP_SERVER_H_ 1
+#pragma once
 
 #include <boost/shared_ptr.hpp>
 
@@ -76,4 +75,3 @@ private:
 }
 } // apache::thrift::async
 
-#endif // #ifndef _THRIFT_TEVHTTP_SERVER_H_

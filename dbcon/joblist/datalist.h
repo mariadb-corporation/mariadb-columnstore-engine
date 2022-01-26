@@ -28,17 +28,15 @@
 
 #include "calpontsystemcatalog.h"
 
-#ifndef _DATALIST_HPP_
-#define _DATALIST_HPP_
+#pragma once
 
 namespace joblist
 {
-
 /*
-	Need to implement the following members in element_t:
-	copy constructor
-	= operator
-	< operator if using BandedDL
+        Need to implement the following members in element_t:
+        copy constructor
+        = operator
+        < operator if using BandedDL
 */
 
 /** @brief class DataList<element_t>
@@ -85,140 +83,137 @@ namespace joblist
  *  level.  To use this class, be sure you have the \< operator defined for
  *  whatever element type you're storing.
  */
-template<typename element_t>
+template <typename element_t>
 class DataList
 {
-public:
-    typedef element_t value_type;
+ public:
+  typedef element_t value_type;
 
-    DataList();
-    DataList(const DataList<element_t>& dl);
-    virtual ~DataList();
+  DataList();
+  DataList(const DataList<element_t>& dl);
+  virtual ~DataList();
 
-    DataList<element_t>& operator=(const DataList<element_t>& dl);
+  DataList<element_t>& operator=(const DataList<element_t>& dl);
 
-    virtual void insert(const element_t& e) = 0;
-    virtual void insert(const std::vector<element_t>& v) = 0;
-    virtual uint64_t getIterator() = 0;
-    virtual bool next(uint64_t it, element_t* e) = 0;
-    virtual void endOfInput();
-    virtual void setMultipleProducers(bool b) = 0;
-    virtual uint64_t totalSize()
-    {
-        return 0;
-    }
-    virtual bool totalDiskIoTime(uint64_t& w, uint64_t& r)
-    {
-        return false;
-    }
+  virtual void insert(const element_t& e) = 0;
+  virtual void insert(const std::vector<element_t>& v) = 0;
+  virtual uint64_t getIterator() = 0;
+  virtual bool next(uint64_t it, element_t* e) = 0;
+  virtual void endOfInput();
+  virtual void setMultipleProducers(bool b) = 0;
+  virtual uint64_t totalSize()
+  {
+    return 0;
+  }
+  virtual bool totalDiskIoTime(uint64_t& w, uint64_t& r)
+  {
+    return false;
+  }
 
-    virtual void OID(execplan::CalpontSystemCatalog::OID OID)
-    {
-        fOID = OID;
-    }
-    virtual execplan::CalpontSystemCatalog::OID OID() const
-    {
-        return fOID;
-    }
+  virtual void OID(execplan::CalpontSystemCatalog::OID OID)
+  {
+    fOID = OID;
+  }
+  virtual execplan::CalpontSystemCatalog::OID OID() const
+  {
+    return fOID;
+  }
 
-    //...Following methods indicate whether this datalist employs temp disk;
-    //...and if so, the num bytes for element_t.first and element_t.second.
-    //...Currently support sizes: (8,8), (8,4), (4,8), and (4,4).
-    virtual  bool useDisk() const
-    {
-        return false;
-    }
-    virtual  void setDiskElemSize(uint32_t size1st, uint32_t size2nd);
-    uint32_t getDiskElemSize1st() const
-    {
-        return fElemDiskFirstSize;
-    }
-    uint32_t getDiskElemSize2nd() const
-    {
-        return fElemDiskSecondSize;
-    }
+  //...Following methods indicate whether this datalist employs temp disk;
+  //...and if so, the num bytes for element_t.first and element_t.second.
+  //...Currently support sizes: (8,8), (8,4), (4,8), and (4,4).
+  virtual bool useDisk() const
+  {
+    return false;
+  }
+  virtual void setDiskElemSize(uint32_t size1st, uint32_t size2nd);
+  uint32_t getDiskElemSize1st() const
+  {
+    return fElemDiskFirstSize;
+  }
+  uint32_t getDiskElemSize2nd() const
+  {
+    return fElemDiskSecondSize;
+  }
 
-protected:
-    void lock();
-    void unlock();
+ protected:
+  void lock();
+  void unlock();
 
-    boost::mutex& getMutex()
-    {
-        return mutex;    // why in the world is this necessary in FIFO?
-    }
+  boost::mutex& getMutex()
+  {
+    return mutex;  // why in the world is this necessary in FIFO?
+  }
 
-    boost::mutex mutex;
-    bool noMoreInput;
-    uint64_t consumersFinished;
-    uint32_t fElemDiskFirstSize; //byte size of element.first saved to disk
-    uint32_t fElemDiskSecondSize;//byte size of element.second saved to disk
+  boost::mutex mutex;
+  bool noMoreInput;
+  uint64_t consumersFinished;
+  uint32_t fElemDiskFirstSize;   // byte size of element.first saved to disk
+  uint32_t fElemDiskSecondSize;  // byte size of element.second saved to disk
 
-private:
-    execplan::CalpontSystemCatalog::OID fOID;
+ private:
+  execplan::CalpontSystemCatalog::OID fOID;
 };
 
-template<typename element_t>
-DataList<element_t>::DataList() :
-    noMoreInput(false), consumersFinished(0),
-    fElemDiskFirstSize(sizeof(uint64_t)), fElemDiskSecondSize(sizeof(uint64_t)),
-    fOID(0)
-{
-    //pthread_mutex_init(&mutex, NULL);
-};
+template <typename element_t>
+DataList<element_t>::DataList()
+ : noMoreInput(false)
+ , consumersFinished(0)
+ , fElemDiskFirstSize(sizeof(uint64_t))
+ , fElemDiskSecondSize(sizeof(uint64_t))
+ , fOID(0){
+       // pthread_mutex_init(&mutex, NULL);
+   };
 
-template<typename element_t>
+template <typename element_t>
 DataList<element_t>::DataList(const DataList<element_t>& dl)
 {
-    noMoreInput = dl.noMoreInput;
-    //pthread_mutex_init(&mutex, NULL);
-    fOID = dl.fOID;
-    consumersFinished   = dl.consumersFinished;
-    fElemDiskFirstSize  = dl.fElemDiskFirstSize;
-    fElemDiskSecondSize = dl.fElemDiskSecondSize;
+  noMoreInput = dl.noMoreInput;
+  // pthread_mutex_init(&mutex, NULL);
+  fOID = dl.fOID;
+  consumersFinished = dl.consumersFinished;
+  fElemDiskFirstSize = dl.fElemDiskFirstSize;
+  fElemDiskSecondSize = dl.fElemDiskSecondSize;
 };
 
-template<typename element_t>
-DataList<element_t>::~DataList()
+template <typename element_t>
+DataList<element_t>::~DataList(){
+    // pthread_mutex_destroy(&mutex);
+};
+
+template <typename element_t>
+DataList<element_t>& DataList<element_t>::operator=(const DataList<element_t>& dl)
 {
-    //pthread_mutex_destroy(&mutex);
+  noMoreInput = dl.noMoreInput;
+  fOID = dl.fOID;
+  consumersFinished = dl.consumersFinished;
+  fElemDiskFirstSize = dl.fElemDiskFirstSize;
+  fElemDiskSecondSize = dl.fElemDiskSecondSize;
 };
 
-template<typename element_t>
-DataList<element_t>& DataList<element_t>::operator=
-(const DataList<element_t>& dl)
-{
-    noMoreInput = dl.noMoreInput;
-    fOID = dl.fOID;
-    consumersFinished   = dl.consumersFinished;
-    fElemDiskFirstSize  = dl.fElemDiskFirstSize;
-    fElemDiskSecondSize = dl.fElemDiskSecondSize;
-};
-
-template<typename element_t>
+template <typename element_t>
 void DataList<element_t>::endOfInput()
 {
-    noMoreInput = true;
+  noMoreInput = true;
 };
 
-template<typename element_t>
+template <typename element_t>
 void DataList<element_t>::lock()
 {
-    mutex.lock(); //pthread_mutex_lock(&mutex);
+  mutex.lock();  // pthread_mutex_lock(&mutex);
 };
 
-template<typename element_t>
+template <typename element_t>
 void DataList<element_t>::unlock()
 {
-    mutex.unlock(); //pthread_mutex_unlock(&mutex);
+  mutex.unlock();  // pthread_mutex_unlock(&mutex);
 };
 
-template<typename element_t>
+template <typename element_t>
 void DataList<element_t>::setDiskElemSize(uint32_t size1st, uint32_t size2nd)
 {
-    fElemDiskFirstSize  = size1st;
-    fElemDiskSecondSize = size2nd;
+  fElemDiskFirstSize = size1st;
+  fElemDiskSecondSize = size2nd;
 }
 
-}  // namespace
-
-#endif
+}  // namespace joblist

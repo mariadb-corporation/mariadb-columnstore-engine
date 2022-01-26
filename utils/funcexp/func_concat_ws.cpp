@@ -16,42 +16,38 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_concat_ws.cpp 3714 2013-04-18 16:29:25Z bpaul $
-*
-*
-****************************************************************************/
+ * $Id: func_concat_ws.cpp 3714 2013-04-18 16:29:25Z bpaul $
+ *
+ *
+ ****************************************************************************/
 
 #include <string>
 using namespace std;
 
 #include "functor_str.h"
 #include "functioncolumn.h"
-#include "utils_utf8.h"     // idb_mbstowcs()
+#include "utils_utf8.h"  // idb_mbstowcs()
 using namespace execplan;
 
 #include "rowgroup.h"
 using namespace rowgroup;
 
-
 namespace funcexp
 {
-
-CalpontSystemCatalog::ColType Func_concat_ws::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
+CalpontSystemCatalog::ColType Func_concat_ws::operationType(FunctionParm& fp,
+                                                            CalpontSystemCatalog::ColType& resultType)
 {
-    // operation type is not used by this functor
-    return fp[0]->data()->resultType();
+  // operation type is not used by this functor
+  return fp[0]->data()->resultType();
 }
 
-
-string Func_concat_ws::getStrVal(Row& row,
-                                 FunctionParm& parm,
-                                 bool& isNull,
+string Func_concat_ws::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
                                  CalpontSystemCatalog::ColType& type)
 {
-	string delim;
-    stringValue(parm[0], row, isNull, delim);
-    if (isNull)
-        return "";
+  string delim;
+  stringValue(parm[0], row, isNull, delim);
+  if (isNull)
+    return "";
 
     // TODO: I don't think we need wide chars here.
     // Concatenation works without see Server implementation.
@@ -97,33 +93,32 @@ string Func_concat_ws::getStrVal(Row& row,
     delete [] wcbuf;
     return ret;
 #endif
-    string str;
-    string tmp;
-    for ( uint32_t i = 1 ; i < parm.size() ; i++)
+  string str;
+  string tmp;
+  for (uint32_t i = 1; i < parm.size(); i++)
+  {
+    stringValue(parm[i], row, isNull, tmp);
+    if (isNull)
     {
-        stringValue(parm[i], row, isNull, tmp);
-        if (isNull)
-        {
-            isNull = false;
-            continue;
-        }
-
-        if (!str.empty())
-            str += delim;
-
-        // TODO: Work on string reallocation. Use std::string::resize() to
-        // grab larger chunks in some intellegent manner.
-        str += tmp;
+      isNull = false;
+      continue;
     }
 
-    if (str.empty())
-        isNull = true;
-    else
-        isNull = false;
+    if (!str.empty())
+      str += delim;
 
-    return str;
+    // TODO: Work on string reallocation. Use std::string::resize() to
+    // grab larger chunks in some intellegent manner.
+    str += tmp;
+  }
+
+  if (str.empty())
+    isNull = true;
+  else
+    isNull = false;
+
+  return str;
 }
 
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:

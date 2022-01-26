@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef BLOCKREQUESTPROCESSOR_H
-#define BLOCKREQUESTPROCESSOR_H
+#pragma once
 
 /***************************************************************************
  *
@@ -26,19 +25,17 @@
  *                                                                         *
  ***************************************************************************/
 
-
 #include "blocksize.h"
 #include "fileblockrequestqueue.h"
 #include "filebuffermgr.h"
 #include "iomanager.h"
 
 /**
-	@author Jason Rodriguez <jrodriguez@calpont.com>
+        @author Jason Rodriguez <jrodriguez@calpont.com>
 */
 
 namespace dbbc
 {
-
 typedef std::list<FileBuffer> FileBufferList_t;
 
 /**
@@ -47,93 +44,88 @@ typedef std::list<FileBuffer> FileBufferList_t;
 
 class BlockRequestProcessor
 {
+ public:
+  /**
+   * @brief default ctor
+   **/
+  BlockRequestProcessor(uint32_t numBlcks, int thrCount, int blocksPerRead, uint32_t deleteBlocks = 0,
+                        uint32_t blckSz = BLOCK_SIZE);
 
-public:
+  /**
+   * @brief default dtor
+   **/
+  virtual ~BlockRequestProcessor();
 
-    /**
-     * @brief default ctor
-     **/
-    BlockRequestProcessor(uint32_t numBlcks, int thrCount, int blocksPerRead, uint32_t deleteBlocks = 0,
-                          uint32_t blckSz = BLOCK_SIZE);
+  /**
+   * @brief send a request for disk blocks to the IO manager
+   **/
+  int sendRequest(fileRequest& blk);
 
-    /**
-     * @brief default dtor
-     **/
-    virtual ~BlockRequestProcessor();
+  /**
+   * @brief verify that the lbid@ver disk block is in the block cache. Send request if it is not
+   **/
+  int check(BRM::LBID_t lbid, BRM::VER_t ver, bool flg, bool& wasBlockInCache);
 
-    /**
-     * @brief send a request for disk blocks to the IO manager
-     **/
-    int sendRequest(fileRequest& blk);
+  /**
+   * @brief verify the LBIDRange of disk blocks is in the block cache. Send request if it is not
+   **/
+  int check(const BRM::InlineLBIDRange& range, const BRM::VER_t ver, uint32_t& lbidCount);
 
-    /**
-     * @brief verify that the lbid@ver disk block is in the block cache. Send request if it is not
-     **/
-    int check(BRM::LBID_t lbid, BRM::VER_t ver, bool flg, bool& wasBlockInCache);
+  /**
+   * @brief retrieve the lbid@ver disk block from the block cache
+   **/
+  FileBuffer* getBlockPtr(const BRM::LBID_t lbid, const BRM::VER_t ver);
 
-    /**
-     * @brief verify the LBIDRange of disk blocks is in the block cache. Send request if it is not
-     **/
-    int check(const BRM::InlineLBIDRange& range, const BRM::VER_t ver, uint32_t& lbidCount);
+  const int read(const BRM::LBID_t& lbid, const BRM::VER_t& ver, FileBuffer& fb);
 
-    /**
-     * @brief retrieve the lbid@ver disk block from the block cache
-     **/
-    FileBuffer* getBlockPtr(const BRM::LBID_t lbid, const BRM::VER_t ver);
+  /**
+   * @brief retrieve the lbid@ver disk block from the block cache
+   **/
+  const int read(const BRM::LBID_t& lbid, const BRM::VER_t& ver, void* bufferPtr);
 
-    const int read(const BRM::LBID_t& lbid, const BRM::VER_t& ver, FileBuffer& fb);
+  /**
+   * @brief retrieve the LBIDRange of disk blocks from the block cache
+   **/
+  const int read(const BRM::InlineLBIDRange& range, FileBufferList_t& fbList, const BRM::VER_t ver);
 
-    /**
-     * @brief retrieve the lbid@ver disk block from the block cache
-     **/
-    const int read(const BRM::LBID_t& lbid, const BRM::VER_t& ver, void* bufferPtr);
+  const int getBlock(const BRM::LBID_t& lbid, const BRM::VER_t& ver, void* bufferPtr, bool flg,
+                     bool& wasCached);
 
-    /**
-     * @brief retrieve the LBIDRange of disk blocks from the block cache
-     **/
-    const int read(const BRM::InlineLBIDRange& range, FileBufferList_t& fbList, const BRM::VER_t ver);
+  bool exists(BRM::LBID_t lbid, BRM::VER_t ver);
 
-    const int getBlock(const BRM::LBID_t& lbid, const BRM::VER_t& ver, void* bufferPtr,
-                       bool flg, bool& wasCached);
+  /**
+   * @brief
+   **/
+  void flushCache();
 
-    bool exists(BRM::LBID_t lbid, BRM::VER_t ver);
+  // const uint32_t resize(const uint32_t s);
 
-    /**
-     * @brief
-     **/
-    void flushCache();
+  std::ostream& formatLRUList(std::ostream& os) const;
 
-    //const uint32_t resize(const uint32_t s);
+ private:
+  FileBufferMgr fbMgr;
+  fileBlockRequestQueue fBRPRequestQueue;
+  ioManager fIOMgr;
+  pthread_mutex_t check_mutex;
 
-    std::ostream& formatLRUList(std::ostream& os) const;
+  /**
+   * helper function for public check functions
+   **/
+  int check(fileRequest& rqstBlk);
 
-private:
+  /**
+   * send stop requests for IOmanager and request Q
+   **/
+  void stop();
 
-    FileBufferMgr fbMgr;
-    fileBlockRequestQueue fBRPRequestQueue;
-    ioManager fIOMgr;
-    pthread_mutex_t check_mutex;
+  std::ofstream fLogFile;
+  bool fTrace;
 
-    /**
-     * helper function for public check functions
-     **/
-    int check(fileRequest& rqstBlk);
+  BRM::DBRM fdbrm;
 
-    /**
-     * send stop requests for IOmanager and request Q
-     **/
-    void stop();
-
-    std::ofstream fLogFile;
-    bool fTrace;
-
-    BRM::DBRM fdbrm;
-
-    // do not implement
-    BlockRequestProcessor(const BlockRequestProcessor& brp);
-    BlockRequestProcessor& operator=(const BlockRequestProcessor& brp);
-
+  // do not implement
+  BlockRequestProcessor(const BlockRequestProcessor& brp);
+  BlockRequestProcessor& operator=(const BlockRequestProcessor& brp);
 };
 
-}
-#endif
+}  // namespace dbbc

@@ -21,8 +21,7 @@
  *
  ***********************************************************************/
 /** @file */
-#ifndef CREATEINDEXPROCESSOR_H
-#define CREATEINDEXPROCESSOR_H
+#pragma once
 
 #include "ddlpackageprocessor.h"
 #include "ddlpkg.h"
@@ -35,20 +34,19 @@ namespace ddlpackageprocessor
  */
 class CreateIndexProcessor : public DDLPackageProcessor
 {
-public:
-    /** @brief process a create index statement
-     *
-     * @param createIndexStmt the create index statement
-     */
-    DDLResult processPackage(ddlpackage::CreateIndexStatement& createIndexStmt);
+ public:
+  /** @brief process a create index statement
+   *
+   * @param createIndexStmt the create index statement
+   */
+  DDLResult processPackage(ddlpackage::CreateIndexStatement& createIndexStmt);
 
-protected:
-    DDLResult rollBackCreateIndex(const std::string& error, BRM::TxnID& txnID, int sessionId);
-    void rollBackIndex(BRM::TxnID& txnID);
-    std::string  errorString(const std::string& msg, int error);
-private:
+ protected:
+  DDLResult rollBackCreateIndex(const std::string& error, BRM::TxnID& txnID, int sessionId);
+  void rollBackIndex(BRM::TxnID& txnID);
+  std::string errorString(const std::string& msg, int error);
 
+ private:
 };
 
-}                                                 //namespace ddlpackageprocessor
-#endif                                            //CREATEINDEXPROCESSOR_H
+}  // namespace ddlpackageprocessor

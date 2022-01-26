@@ -36,33 +36,32 @@ using namespace idbdatafile;
 
 namespace WriteEngine
 {
-
-ColumnBuffer::ColumnBuffer(ColumnInfo* pColInfo, Log* logger) :
-    fBuffer(0), fBufSize(0), fFile(0), fColInfo(pColInfo), fLog(logger)
+ColumnBuffer::ColumnBuffer(ColumnInfo* pColInfo, Log* logger)
+ : fBuffer(0), fBufSize(0), fFile(0), fColInfo(pColInfo), fLog(logger)
 {
 }
 
 ColumnBuffer::~ColumnBuffer()
 {
-    delete[] fBuffer;
+  delete[] fBuffer;
 }
 
 int ColumnBuffer::finishFile(bool /*bTruncFile*/)
 {
-    return NO_ERROR;
+  return NO_ERROR;
 }
 
-int ColumnBuffer::resetToBeCompressedColBuf( long long& startFileOffset )
+int ColumnBuffer::resetToBeCompressedColBuf(long long& startFileOffset)
 {
-    return NO_ERROR;
+  return NO_ERROR;
 }
 
 int ColumnBuffer::setDbFile(IDBDataFile* f, HWM startHwm, const char* /*hdrs*/)
 {
-    fFile        = f;
-    fStartingHwm = startHwm;
+  fFile = f;
+  fStartingHwm = startHwm;
 
-    return NO_ERROR;
+  return NO_ERROR;
 }
 
 //------------------------------------------------------------------------------
@@ -74,29 +73,28 @@ int ColumnBuffer::setDbFile(IDBDataFile* f, HWM startHwm, const char* /*hdrs*/)
 //------------------------------------------------------------------------------
 void ColumnBuffer::resizeAndCopy(int newSize, int startOffset, int endOffset)
 {
-    unsigned char* old_buffer = fBuffer;
-    fBuffer = new unsigned char[newSize];
+  unsigned char* old_buffer = fBuffer;
+  fBuffer = new unsigned char[newSize];
 
-    if (startOffset != -1)
+  if (startOffset != -1)
+  {
+    int destBufferOffset = 0;
+
+    // If the data in "buffer" wraps around, then here's where we copy
+    // the data at the end of the buffer, before copying the data
+    // at the start of the bufffer.
+    if (endOffset < startOffset)
     {
-        int destBufferOffset = 0;
-
-        // If the data in "buffer" wraps around, then here's where we copy
-        // the data at the end of the buffer, before copying the data
-        // at the start of the bufffer.
-        if (endOffset < startOffset)
-        {
-            memcpy(fBuffer, old_buffer + startOffset, fBufSize - startOffset);
-            destBufferOffset = fBufSize - startOffset;
-            startOffset = 0;
-        }
-
-        memcpy(fBuffer + destBufferOffset,
-               old_buffer + startOffset, endOffset - startOffset + 1);
+      memcpy(fBuffer, old_buffer + startOffset, fBufSize - startOffset);
+      destBufferOffset = fBufSize - startOffset;
+      startOffset = 0;
     }
 
-    fBufSize = newSize;
-    delete[] old_buffer;
+    memcpy(fBuffer + destBufferOffset, old_buffer + startOffset, endOffset - startOffset + 1);
+  }
+
+  fBufSize = newSize;
+  delete[] old_buffer;
 }
 
 //------------------------------------------------------------------------------
@@ -106,46 +104,42 @@ void ColumnBuffer::resizeAndCopy(int newSize, int startOffset, int endOffset)
 //------------------------------------------------------------------------------
 int ColumnBuffer::writeToFile(int startOffset, int writeSize, bool fillUpWEmpties)
 {
-    if (writeSize == 0) // skip unnecessary write, if 0 bytes given
-        return NO_ERROR;
-
-    unsigned char *newBuf = NULL;
-
-    if ( fillUpWEmpties )
-    {
-        BlockOp blockOp;
-        newBuf = new unsigned char[BYTE_PER_BLOCK];
-        blockOp.findTypeHandler(fColInfo->column.width,
-                                fColInfo->column.dataType);
-        const uint8_t* emptyVal = blockOp.getEmptyRowValue(fColInfo->column.dataType,
-                                                     fColInfo->column.width);
-
-        ::memcpy(static_cast<void *>(newBuf),
-                static_cast<const void *>(fBuffer + startOffset), writeSize);
-        blockOp.setEmptyBuf(newBuf + writeSize, BYTE_PER_BLOCK - writeSize,
-                            emptyVal, fColInfo->column.width);
-    }
-#ifdef PROFILE
-    Stats::startParseEvent(WE_STATS_WRITE_COL);
-#endif
-    size_t nitems;
-    if ( fillUpWEmpties )
-        nitems = fFile->write(newBuf, BYTE_PER_BLOCK) / BYTE_PER_BLOCK;
-    else
-        nitems = fFile->write(fBuffer + startOffset, writeSize) / writeSize;
-
-    if (nitems != 1)
-    {
-        delete [] newBuf;
-        return ERR_FILE_WRITE;
-    }
-
-#ifdef PROFILE
-    Stats::stopParseEvent(WE_STATS_WRITE_COL);
-#endif
-
-    delete [] newBuf;
+  if (writeSize == 0)  // skip unnecessary write, if 0 bytes given
     return NO_ERROR;
+
+  unsigned char* newBuf = NULL;
+
+  if (fillUpWEmpties)
+  {
+    BlockOp blockOp;
+    newBuf = new unsigned char[BYTE_PER_BLOCK];
+    blockOp.findTypeHandler(fColInfo->column.width, fColInfo->column.dataType);
+    const uint8_t* emptyVal = blockOp.getEmptyRowValue(fColInfo->column.dataType, fColInfo->column.width);
+
+    ::memcpy(static_cast<void*>(newBuf), static_cast<const void*>(fBuffer + startOffset), writeSize);
+    blockOp.setEmptyBuf(newBuf + writeSize, BYTE_PER_BLOCK - writeSize, emptyVal, fColInfo->column.width);
+  }
+#ifdef PROFILE
+  Stats::startParseEvent(WE_STATS_WRITE_COL);
+#endif
+  size_t nitems;
+  if (fillUpWEmpties)
+    nitems = fFile->write(newBuf, BYTE_PER_BLOCK) / BYTE_PER_BLOCK;
+  else
+    nitems = fFile->write(fBuffer + startOffset, writeSize) / writeSize;
+
+  if (nitems != 1)
+  {
+    delete[] newBuf;
+    return ERR_FILE_WRITE;
+  }
+
+#ifdef PROFILE
+  Stats::stopParseEvent(WE_STATS_WRITE_COL);
+#endif
+
+  delete[] newBuf;
+  return NO_ERROR;
 }
 
 //------------------------------------------------------------------------------
@@ -153,7 +147,7 @@ int ColumnBuffer::writeToFile(int startOffset, int writeSize, bool fillUpWEmptie
 //------------------------------------------------------------------------------
 void ColumnBuffer::write(const void* const data, int startOffset, int bytes) const
 {
-    memcpy(fBuffer + startOffset, data, bytes);
+  memcpy(fBuffer + startOffset, data, bytes);
 }
 
-}
+}  // namespace WriteEngine

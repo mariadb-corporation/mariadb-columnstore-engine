@@ -16,8 +16,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef HA_MCS_IMPL_H__
-#define HA_MCS_IMPL_H__
+#pragma once
 
 #include "idb_mysql.h"
 
@@ -36,17 +35,18 @@ extern int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_c
 extern void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_insert = false);
 extern int ha_mcs_impl_end_bulk_insert(bool abort, TABLE* table);
 extern int ha_mcs_impl_rename_table(const char* from, const char* to);
-extern int ha_mcs_impl_commit (handlerton* hton, THD* thd, bool all);
-extern int ha_mcs_impl_rollback (handlerton* hton, THD* thd, bool all);
-extern int ha_mcs_impl_close_connection (handlerton* hton, THD* thd);
+extern int ha_mcs_impl_commit(handlerton* hton, THD* thd, bool all);
+extern int ha_mcs_impl_rollback(handlerton* hton, THD* thd, bool all);
+extern int ha_mcs_impl_close_connection(handlerton* hton, THD* thd);
 extern COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table, std::vector<COND*>&);
 extern int ha_mcs_impl_update_row();
-extern int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows *affected_rows, const std::vector<COND*>& condStack);
+extern int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows* affected_rows,
+                                                 const std::vector<COND*>& condStack);
 extern int ha_mcs_impl_delete_row();
 extern int ha_mcs_impl_rnd_pos(uchar* buf, uchar* pos);
 extern int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table);
-extern int ha_mcs_impl_select_next(uchar *buf, TABLE *table);
-extern int ha_mcs_impl_group_by_init(mcs_handler_info *handler_info, TABLE* table);
+extern int ha_mcs_impl_select_next(uchar* buf, TABLE* table);
+extern int ha_mcs_impl_group_by_init(mcs_handler_info* handler_info, TABLE* table);
 extern int ha_mcs_impl_group_by_next(TABLE* table);
 extern int ha_mcs_impl_group_by_end(TABLE* table);
 
@@ -57,22 +57,24 @@ extern int ha_mcs_impl_group_by_end(TABLE* table);
 #include "calpontsystemcatalog.h"
 #include "ha_mcs.h"
 extern int ha_mcs_impl_rename_table_(const char* from, const char* to, cal_impl_if::cal_connection_info& ci);
-extern int ha_mcs_impl_write_row_(const uchar* buf, TABLE* table, cal_impl_if::cal_connection_info& ci, ha_rows& rowsInserted);
+extern int ha_mcs_impl_write_row_(const uchar* buf, TABLE* table, cal_impl_if::cal_connection_info& ci,
+                                  ha_rows& rowsInserted);
 extern int ha_mcs_impl_write_batch_row_(const uchar* buf, TABLE* table, cal_impl_if::cal_connection_info& ci);
 extern int ha_mcs_impl_write_last_batch(TABLE* table, cal_impl_if::cal_connection_info& ci, bool abort);
-extern int ha_mcs_impl_commit_ (handlerton* hton, THD* thd, bool all, cal_impl_if::cal_connection_info& ci);
-extern int ha_mcs_impl_rollback_ (handlerton* hton, THD* thd, bool all, cal_impl_if::cal_connection_info& ci);
-extern int ha_mcs_impl_close_connection_ (handlerton* hton, THD* thd, cal_impl_if::cal_connection_info& ci);
+extern int ha_mcs_impl_commit_(handlerton* hton, THD* thd, bool all, cal_impl_if::cal_connection_info& ci);
+extern int ha_mcs_impl_rollback_(handlerton* hton, THD* thd, bool all, cal_impl_if::cal_connection_info& ci);
+extern int ha_mcs_impl_close_connection_(handlerton* hton, THD* thd, cal_impl_if::cal_connection_info& ci);
 extern int ha_mcs_impl_delete_table_(const char* db, const char* name, cal_impl_if::cal_connection_info& ci);
 extern int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* create_info,
-                                   cal_impl_if::cal_connection_info& ci);
-extern std::string  ha_mcs_impl_markpartition_ (execplan::CalpontSystemCatalog::TableName tableName, uint32_t partition);
-extern std::string  ha_mcs_impl_restorepartition_ (execplan::CalpontSystemCatalog::TableName tableName, uint32_t partition);
-extern std::string  ha_mcs_impl_droppartition_ (execplan::CalpontSystemCatalog::TableName tableName, uint32_t partition);
+                               cal_impl_if::cal_connection_info& ci);
+extern std::string ha_mcs_impl_markpartition_(execplan::CalpontSystemCatalog::TableName tableName,
+                                              uint32_t partition);
+extern std::string ha_mcs_impl_restorepartition_(execplan::CalpontSystemCatalog::TableName tableName,
+                                                 uint32_t partition);
+extern std::string ha_mcs_impl_droppartition_(execplan::CalpontSystemCatalog::TableName tableName,
+                                              uint32_t partition);
 
-extern std::string  ha_mcs_impl_viewtablelock( cal_impl_if::cal_connection_info& ci, execplan::CalpontSystemCatalog::TableName& tablename);
-extern std::string  ha_mcs_impl_cleartablelock( cal_impl_if::cal_connection_info& ci, uint64_t tableLockID);
+extern std::string ha_mcs_impl_viewtablelock(cal_impl_if::cal_connection_info& ci,
+                                             execplan::CalpontSystemCatalog::TableName& tablename);
+extern std::string ha_mcs_impl_cleartablelock(cal_impl_if::cal_connection_info& ci, uint64_t tableLockID);
 #endif
-
-#endif
-

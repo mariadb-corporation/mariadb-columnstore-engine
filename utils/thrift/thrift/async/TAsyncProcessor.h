@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TASYNCPROCESSOR_H_
-#define _THRIFT_TASYNCPROCESSOR_H_ 1
+#pragma once
 
 #include <thrift/cxxfunctional.h>
 #include <boost/shared_ptr.hpp>
@@ -112,4 +111,3 @@ using apache::thrift::async::TAsyncProcessor;
 }
 }
 
-#endif // #ifndef _THRIFT_TASYNCPROCESSOR_H_

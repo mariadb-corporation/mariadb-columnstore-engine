@@ -15,31 +15,30 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef QUERYTELESERVERPARMS_H__
-#define QUERYTELESERVERPARMS_H__
+#pragma once
 
 #include <string>
 
 namespace querytele
 {
-
 class QueryTeleServerParms
 {
-public:
-    QueryTeleServerParms() : port(0) { }
-    QueryTeleServerParms(const std::string h, int p) : host(h), port(p) { }
-    ~QueryTeleServerParms() { }
+ public:
+  QueryTeleServerParms() : port(0)
+  {
+  }
+  QueryTeleServerParms(const std::string h, int p) : host(h), port(p)
+  {
+  }
+  ~QueryTeleServerParms()
+  {
+  }
 
-    std::string host;
-    int port;
+  std::string host;
+  int port;
 
-protected:
-
-private:
-
+ protected:
+ private:
 };
 
-}
-
-#endif
-
+}  // namespace querytele

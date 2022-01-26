@@ -17,44 +17,34 @@
 
 //  $Id: wf_ntile.h 3868 2013-06-06 22:13:05Z xlou $
 
-
-#ifndef UTILS_WF_NTILE_H
-#define UTILS_WF_NTILE_H
+#pragma once
 
 #include <set>
 #include "windowfunctiontype.h"
 
-
 namespace windowfunction
 {
-
-
 class WF_ntile : public WindowFunctionType
 {
-public:
-    WF_ntile(int id, const std::string& name) : WindowFunctionType(id, name)
-    {
-        resetData();
-    }
+ public:
+  WF_ntile(int id, const std::string& name) : WindowFunctionType(id, name)
+  {
+    resetData();
+  }
 
-    // pure virtual in base
-    void operator()(int64_t b, int64_t e, int64_t c);
-    WindowFunctionType* clone() const;
-    void resetData();
-    void parseParms(const std::vector<execplan::SRCP>&);
+  // pure virtual in base
+  void operator()(int64_t b, int64_t e, int64_t c);
+  WindowFunctionType* clone() const;
+  void resetData();
+  void parseParms(const std::vector<execplan::SRCP>&);
 
-    static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int, WindowFunctionColumn*);
+  static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int, WindowFunctionColumn*);
 
-protected:
-
-    uint64_t    fNtile;
-    bool        fNtileNull;
+ protected:
+  uint64_t fNtile;
+  bool fNtileNull;
 };
 
-
-} // namespace
-
-#endif  // UTILS_WF_NTILE_H
+}  // namespace windowfunction
 
 // vim:ts=4 sw=4:
-

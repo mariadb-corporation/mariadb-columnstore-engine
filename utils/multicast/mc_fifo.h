@@ -15,22 +15,19 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef FIFO_H
-#define FIFO_H
+#pragma once
 
 #include "threads.h"
 #include "produconsum.h"
 
 typedef struct fifo
 {
-    unsigned char* dataBuffer;
-    unsigned int dataBufSize;
+  unsigned char* dataBuffer;
+  unsigned int dataBufSize;
 
-    produconsum_t freeMemQueue; /* queue for free memory */
-    produconsum_t data; /* queue for received data or data received
-			 * from disk */
+  produconsum_t freeMemQueue; /* queue for free memory */
+  produconsum_t data;         /* queue for received data or data received
+                               * from disk */
 
-    pthread_t thread;
-}* fifo_t;
-
-#endif
+  pthread_t thread;
+} * fifo_t;

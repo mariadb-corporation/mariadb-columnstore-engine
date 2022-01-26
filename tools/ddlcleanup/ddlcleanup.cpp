@@ -16,9 +16,8 @@
    MA 02110-1301, USA. */
 
 /*
-* $Id: ddlcleanup.cpp 967 2009-10-15 13:57:29Z rdempsey $
-*/
-
+ * $Id: ddlcleanup.cpp 967 2009-10-15 13:57:29Z rdempsey $
+ */
 
 #include <iostream>
 #include <fstream>
@@ -57,31 +56,28 @@ namespace fs = boost::filesystem;
 
 namespace
 {
-
-
 void usage()
 {
-    cout << "Usage: ddlcleanup" << endl;
+  cout << "Usage: ddlcleanup" << endl;
 }
-}
+}  // namespace
 
 int main(int argc, char** argv)
 {
-    int c;
+  int c;
 
-    while ((c = getopt(argc, argv, "h")) != EOF)
-        switch (c)
-        {
-            case 'h':
-            case '?':
-            default:
-                usage();
-                return (c == 'h' ? 0 : 1);
-                break;
-        }
+  while ((c = getopt(argc, argv, "h")) != EOF)
+    switch (c)
+    {
+      case 'h':
+      case '?':
+      default:
+        usage();
+        return (c == 'h' ? 0 : 1);
+        break;
+    }
 
-    return ddlcleanuputil::ddl_cleanup();
+  return ddlcleanuputil::ddl_cleanup();
 }
 
 // vim:ts=4 sw=4:
-

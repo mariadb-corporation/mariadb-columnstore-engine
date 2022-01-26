@@ -16,13 +16,12 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id: we_tempxmlgendata.h 4450 2013-01-21 14:13:24Z rdempsey $
-*
-*******************************************************************************/
+ * $Id: we_tempxmlgendata.h 4450 2013-01-21 14:13:24Z rdempsey $
+ *
+ *******************************************************************************/
 /** @file */
 
-#ifndef _WE_TEMPXMLGENDATA_H_
-#define _WE_TEMPXMLGENDATA_H_
+#pragma once
 
 #include <string>
 #include <iosfwd>
@@ -31,26 +30,21 @@
 
 namespace WriteEngine
 {
-
 /** @brief Class used by cpimport.bin to store data that is saved into a
  *  temporary runtime Job XML file.
  */
 class TempXMLGenData : public XMLGenData
 {
-public:
-    TempXMLGenData(const std::string& jobId,
-                   const std::string& schema,
-                   const std::string& table );
+ public:
+  TempXMLGenData(const std::string& jobId, const std::string& schema, const std::string& table);
 
-    virtual ~TempXMLGenData( );
+  virtual ~TempXMLGenData();
 
-    virtual void print(std::ostream& os) const;
+  virtual void print(std::ostream& os) const;
 
-private:
-    TempXMLGenData(const TempXMLGenData&);           //disable default copy ctor
-    TempXMLGenData& operator=(const TempXMLGenData&);//disable def assignment
+ private:
+  TempXMLGenData(const TempXMLGenData&);             // disable default copy ctor
+  TempXMLGenData& operator=(const TempXMLGenData&);  // disable def assignment
 };
 
-} // end of WriteEngine namespace
-
-#endif // _WE_TEMPXMLGENDATA_H_
+}  // namespace WriteEngine

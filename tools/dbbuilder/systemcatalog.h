@@ -20,22 +20,16 @@
 /**
  * @file
  */
-#ifndef SYSTEMCATALOG_H
-#define SYSTEMCATALOG_H
+#pragma once
 
 #include "writeengine.h"
 
 class SystemCatalog
 {
-public:
-    void build();
-    void remove();
+ public:
+  void build();
+  void remove();
 
-private:
-    WriteEngine::WriteEngineWrapper fWriteEngine;
-
+ private:
+  WriteEngine::WriteEngineWrapper fWriteEngine;
 };
-
-
-
-#endif //SYSTEMCATLOG_H

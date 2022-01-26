@@ -17,8 +17,8 @@
    MA 02110-1301, USA. */
 
 /*
-* $Id: stats.cpp 699 2008-09-09 19:44:18Z rdempsey $
-*/
+ * $Id: stats.cpp 699 2008-09-09 19:44:18Z rdempsey $
+ */
 
 #include <ctime>
 #include <sys/time.h>
@@ -41,237 +41,233 @@ using namespace BRM;
 
 namespace
 {
-
 void pause_(unsigned delay)
 {
-    struct timespec req;
-    struct timespec rem;
+  struct timespec req;
+  struct timespec rem;
 
-    req.tv_sec = delay;
-    req.tv_nsec = 0;
+  req.tv_sec = delay;
+  req.tv_nsec = 0;
 
-    rem.tv_sec = 0;
-    rem.tv_nsec = 0;
+  rem.tv_sec = 0;
+  rem.tv_nsec = 0;
 
 again:
 
-    if (nanosleep(&req, &rem) != 0)
-        if (rem.tv_sec > 0 || rem.tv_nsec > 0)
-        {
-            req = rem;
-            goto again;
-        }
+  if (nanosleep(&req, &rem) != 0)
+    if (rem.tv_sec > 0 || rem.tv_nsec > 0)
+    {
+      req = rem;
+      goto again;
+    }
 }
 
 const string timestr()
 {
-    // Get a timestamp for output.
-    struct tm tm;
-    struct timeval tv;
+  // Get a timestamp for output.
+  struct tm tm;
+  struct timeval tv;
 
-    gettimeofday(&tv, 0);
-    localtime_r(&tv.tv_sec, &tm);
+  gettimeofday(&tv, 0);
+  localtime_r(&tv.tv_sec, &tm);
 
-    ostringstream oss;
-    oss << setfill('0')
-        << setw(2) << tm.tm_hour << ':'
-        << setw(2) << tm.tm_min << ':'
-        << setw(2) << tm.tm_sec << '.'
-        << setw(4) << tv.tv_usec / 100;
+  ostringstream oss;
+  oss << setfill('0') << setw(2) << tm.tm_hour << ':' << setw(2) << tm.tm_min << ':' << setw(2) << tm.tm_sec
+      << '.' << setw(4) << tv.tv_usec / 100;
 
-    return oss.str();
+  return oss.str();
 }
 
 class TraceFile
 {
-public:
-    TraceFile(uint32_t sessionID, const char* name)
+ public:
+  TraceFile(uint32_t sessionID, const char* name)
+  {
+    if (sessionID > 0)
     {
-        if (sessionID > 0 )
-        {
-            const char* outName;
+      const char* outName;
 
-            if (name == 0)
-                outName = "lbids";
-            else
-                outName = name;
+      if (name == 0)
+        outName = "lbids";
+      else
+        outName = name;
 
-            ostringstream oss;
-            oss << MCSLOGDIR << "/trace/" << outName << '.' << sessionID;
-            oFile.reset(new ofstream());
-            oFile->open(oss.str().c_str(), ios_base::out | ios_base::ate | ios_base::app);
-        }
+      ostringstream oss;
+      oss << MCSLOGDIR << "/trace/" << outName << '.' << sessionID;
+      oFile.reset(new ofstream());
+      oFile->open(oss.str().c_str(), ios_base::out | ios_base::ate | ios_base::app);
     }
+  }
 
-    ~TraceFile()
+  ~TraceFile()
+  {
+  }
+
+  void close()
+  {
+    if (oFile)
     {
+      oFile->close();
     }
+  }
 
-    void close()
-    {
-        if (oFile)
-        {
-            oFile->close();
-        }
-    }
+  void log(OID_t oid, uint64_t lbid, pthread_t thdid, char event = '\0')
+  {
+    *oFile << oid << ' ' << timestr() << ' ' << lbid << ' ' << thdid;
 
-    void log(OID_t oid, uint64_t lbid, pthread_t thdid, char event = '\0')
-    {
-        *oFile << oid << ' ' << timestr() << ' ' << lbid
-               << ' ' << thdid;
+    if (event != '\0')
+      *oFile << ' ' << event;
 
-        if (event != '\0')
-            *oFile << ' ' << event;
+    *oFile << endl;
+    oFile->flush();
+  }
 
-        *oFile << endl;
-        oFile->flush();
-    }
-
-private:
-    //Compiler defaults okay
-    //TraceFile(const TraceFile& rhs);
-    //TraceFile operator=(const TraceFile& rhs);
-    shared_ptr<ofstream> oFile;
-
+ private:
+  // Compiler defaults okay
+  // TraceFile(const TraceFile& rhs);
+  // TraceFile operator=(const TraceFile& rhs);
+  shared_ptr<ofstream> oFile;
 };
 
 struct TraceFileInfo
 {
-    TraceFileInfo(uint32_t session = 0, const char* name = 0) : traceFile(session, name), lastTouched(0) { }
-    ~TraceFileInfo() { }
+  TraceFileInfo(uint32_t session = 0, const char* name = 0) : traceFile(session, name), lastTouched(0)
+  {
+  }
+  ~TraceFileInfo()
+  {
+  }
 
-    void log(OID_t oid, uint64_t lbid, pthread_t thdid, char event = '\0')
-    {
-        traceFile.log(oid, lbid, thdid, event);
-        lastTouched = time(0);
-    }
+  void log(OID_t oid, uint64_t lbid, pthread_t thdid, char event = '\0')
+  {
+    traceFile.log(oid, lbid, thdid, event);
+    lastTouched = time(0);
+  }
 
-    void close()
-    {
-        traceFile.close();
-    }
+  void close()
+  {
+    traceFile.close();
+  }
 
-    TraceFile traceFile;
-    time_t lastTouched;
+  TraceFile traceFile;
+  time_t lastTouched;
 
-private:
-    //Compiler defaults okay
-    //TraceFileInfo(const TraceFileInfo& rhs);
-    //TraceFileInfo operator=(const TraceFileInfo& rhs);
+ private:
+  // Compiler defaults okay
+  // TraceFileInfo(const TraceFileInfo& rhs);
+  // TraceFileInfo operator=(const TraceFileInfo& rhs);
 };
 
-//map a session id to a trace file
+// map a session id to a trace file
 typedef map<uint32_t, TraceFileInfo> TraceFileMap_t;
 
 TraceFileMap_t traceFileMap;
-//map mutex
+// map mutex
 mutex traceFileMapMutex;
 
 class StatMon
 {
-public:
-    StatMon()
-    {
-        sigset_t sigset;
-        sigemptyset(&sigset);
-        sigaddset(&sigset, SIGPIPE);
-        sigaddset(&sigset, SIGUSR1);
-        sigaddset(&sigset, SIGUSR2);
-        pthread_sigmask(SIG_BLOCK, &sigset, 0);
-    }
-    void operator()() const
-    {
-        //struct timespec ts = { 60 * 1, 0 };
-        mutex::scoped_lock lk(traceFileMapMutex);
-        TraceFileMap_t::iterator iter;
-        TraceFileMap_t::iterator end;
+ public:
+  StatMon()
+  {
+    sigset_t sigset;
+    sigemptyset(&sigset);
+    sigaddset(&sigset, SIGPIPE);
+    sigaddset(&sigset, SIGUSR1);
+    sigaddset(&sigset, SIGUSR2);
+    pthread_sigmask(SIG_BLOCK, &sigset, 0);
+  }
+  void operator()() const
+  {
+    // struct timespec ts = { 60 * 1, 0 };
+    mutex::scoped_lock lk(traceFileMapMutex);
+    TraceFileMap_t::iterator iter;
+    TraceFileMap_t::iterator end;
 
-        for (;;)
+    for (;;)
+    {
+      lk.unlock();
+      time_t beforeSleep = time(0);
+      // nanosleep(&ts, 0);
+      pause_(60);
+      lk.lock();
+      iter = traceFileMap.begin();
+      end = traceFileMap.end();
+
+      while (iter != end)
+      {
+        if (iter->second.lastTouched < beforeSleep)
         {
-            lk.unlock();
-            time_t beforeSleep = time(0);
-            //nanosleep(&ts, 0);
-            pause_(60);
-            lk.lock();
-            iter = traceFileMap.begin();
-            end = traceFileMap.end();
-
-            while (iter != end)
-            {
-                if (iter->second.lastTouched < beforeSleep)
-                {
-                    //remove this session trace file
-                    iter->second.close();
-                    traceFileMap.erase(iter++);
-                }
-                else
-                    ++iter;
-            }
+          // remove this session trace file
+          iter->second.close();
+          traceFileMap.erase(iter++);
         }
+        else
+          ++iter;
+      }
     }
-private:
-    //Compiler defaults okay
-    //StatMon(const StatMon& rhs);
-    //StatMon operator=(const StatMon& rhs);
+  }
+
+ private:
+  // Compiler defaults okay
+  // StatMon(const StatMon& rhs);
+  // StatMon operator=(const StatMon& rhs);
 };
 
-}
+}  // namespace
 
 namespace dbbc
 {
-
-Stats::Stats() :
-    fMonitorp(0)
+Stats::Stats() : fMonitorp(0)
 {
-
-    fMonitorp = new thread(StatMon());
+  fMonitorp = new thread(StatMon());
 }
 
-Stats::Stats(const char* name) :
-    fMonitorp(0), fName(name)
+Stats::Stats(const char* name) : fMonitorp(0), fName(name)
 {
-    fMonitorp = new thread(StatMon());
-    //fName << name;
+  fMonitorp = new thread(StatMon());
+  // fName << name;
 }
 
 Stats::~Stats()
 {
-    delete fMonitorp;
+  delete fMonitorp;
 }
 
 void Stats::touchedLBID(uint64_t lbid, pthread_t thdid, uint32_t session)
 {
-    if (lbid < 0 || session == 0) return;
+  if (lbid < 0 || session == 0)
+    return;
 
-    mutex::scoped_lock lk(traceFileMapMutex);
-    TraceFileMap_t::iterator iter = traceFileMap.find(session);
+  mutex::scoped_lock lk(traceFileMapMutex);
+  TraceFileMap_t::iterator iter = traceFileMap.find(session);
 
-    if (iter == traceFileMap.end())
-    {
-        traceFileMap[session] = TraceFileInfo(session);
-        iter = traceFileMap.find(session);
-        idbassert(iter != traceFileMap.end());
-    }
+  if (iter == traceFileMap.end())
+  {
+    traceFileMap[session] = TraceFileInfo(session);
+    iter = traceFileMap.find(session);
+    idbassert(iter != traceFileMap.end());
+  }
 
-    iter->second.log(lbid2oid(lbid), lbid, thdid);
+  iter->second.log(lbid2oid(lbid), lbid, thdid);
 }
 
 void Stats::markEvent(const uint64_t lbid, const pthread_t thdid, const uint32_t session, const char event)
 {
-    if (lbid < 0 || session == 0) return;
+  if (lbid < 0 || session == 0)
+    return;
 
-    mutex::scoped_lock lk(traceFileMapMutex);
-    TraceFileMap_t::iterator iter = traceFileMap.find(session);
+  mutex::scoped_lock lk(traceFileMapMutex);
+  TraceFileMap_t::iterator iter = traceFileMap.find(session);
 
-    if (iter == traceFileMap.end())
-    {
-        traceFileMap[session] = TraceFileInfo(session, fName);
-        iter = traceFileMap.find(session);
-        idbassert(iter != traceFileMap.end());
-    }
+  if (iter == traceFileMap.end())
+  {
+    traceFileMap[session] = TraceFileInfo(session, fName);
+    iter = traceFileMap.find(session);
+    idbassert(iter != traceFileMap.end());
+  }
 
-    iter->second.log(lbid2oid(lbid), lbid, thdid, event);
+  iter->second.log(lbid2oid(lbid), lbid, thdid, event);
 }
 
-}
-
+}  // namespace dbbc

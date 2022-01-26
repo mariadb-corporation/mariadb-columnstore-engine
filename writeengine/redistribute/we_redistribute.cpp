@@ -16,9 +16,8 @@
    MA 02110-1301, USA. */
 
 /*
-* $Id: we_redistribute.cpp 4450 2013-01-21 14:13:24Z rdempsey $
-*/
-
+ * $Id: we_redistribute.cpp 4450 2013-01-21 14:13:24Z rdempsey $
+ */
 
 #include "messagequeue.h"
 #include "bytestream.h"
@@ -30,36 +29,27 @@ using namespace messageqcpp;
 
 namespace redistribute
 {
-
 void Redistribute::handleRedistributeMessage(ByteStream& bs, IOSocket& ios)
 {
-    // consume the WES message id
-    ByteStream::byte wesMsgId;
-    bs >> wesMsgId;
+  // consume the WES message id
+  ByteStream::byte wesMsgId;
+  bs >> wesMsgId;
 
-    // peek at the message header
-    const RedistributeMsgHeader* h = (const RedistributeMsgHeader*) bs.buf();
+  // peek at the message header
+  const RedistributeMsgHeader* h = (const RedistributeMsgHeader*)bs.buf();
 
-    switch (h->messageId)
-    {
-        case RED_CNTL_START:
-        case RED_CNTL_STATUS:
-        case RED_CNTL_STOP:
-        case RED_CNTL_CLEAR:
-        case RED_CNTL_RESP:
-            RedistributeControl::instance()->handleUIMsg(bs, ios);
-            break;
+  switch (h->messageId)
+  {
+    case RED_CNTL_START:
+    case RED_CNTL_STATUS:
+    case RED_CNTL_STOP:
+    case RED_CNTL_CLEAR:
+    case RED_CNTL_RESP: RedistributeControl::instance()->handleUIMsg(bs, ios); break;
 
-        default:
-            RedistributeControl::instance()->handleJobMsg(bs, ios);
-            break;
-    }
+    default: RedistributeControl::instance()->handleJobMsg(bs, ios); break;
+  }
 }
 
-
-}
-
-
+}  // namespace redistribute
 
 // vim:ts=4 sw=4:
-

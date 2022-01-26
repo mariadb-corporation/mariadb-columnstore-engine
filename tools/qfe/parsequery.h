@@ -1,5 +1,4 @@
-#ifndef QFE_PARSEQUERY_H__
-#define QFE_PARSEQUERY_H__
+#pragma once
 
 #include <unistd.h>
 #include <string>
@@ -8,9 +7,6 @@
 
 namespace qfe
 {
-
 execplan::CalpontSelectExecutionPlan* parseQuery(const std::string&, uint32_t);
 
 }
-
-#endif

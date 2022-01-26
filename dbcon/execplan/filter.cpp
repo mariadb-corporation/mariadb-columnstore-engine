@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: filter.cpp 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: filter.cpp 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 #include <string>
 using namespace std;
 
@@ -36,69 +36,68 @@ namespace execplan
  */
 Filter::Filter()
 {
-    fCardinality = 0;
+  fCardinality = 0;
 }
 
-Filter::Filter(const string& sql) :
-    fData(sql)
+Filter::Filter(const string& sql) : fData(sql)
 {
-    fCardinality = 0;
+  fCardinality = 0;
 }
 
 Filter::~Filter()
-{}
-
+{
+}
 
 /**
  * The serialization interface
  */
 void Filter::serialize(messageqcpp::ByteStream& b) const
 {
-    b << (ObjectReader::id_t) ObjectReader::FILTER;
-    b << fData;
-    b << (uint64_t)fCardinality;
+  b << (ObjectReader::id_t)ObjectReader::FILTER;
+  b << fData;
+  b << (uint64_t)fCardinality;
 }
 
 void Filter::unserialize(messageqcpp::ByteStream& b)
 {
-    ObjectReader::checkType(b, ObjectReader::FILTER);
-    b >> fData;
-    b >> (uint64_t&)fCardinality;
+  ObjectReader::checkType(b, ObjectReader::FILTER);
+  b >> fData;
+  b >> (uint64_t&)fCardinality;
 }
 
 const string Filter::toString() const
 {
-    return string(">Filter<");
+  return string(">Filter<");
 }
 
 bool Filter::operator==(const Filter& t) const
 {
-    if (data() == t.data())
-        return true;
+  if (data() == t.data())
+    return true;
 
-    return false;
+  return false;
 }
 
 bool Filter::operator==(const TreeNode* t) const
 {
-    const Filter* o;
+  const Filter* o;
 
-    o = dynamic_cast<const Filter*>(t);
+  o = dynamic_cast<const Filter*>(t);
 
-    if (o == NULL)
-        return false;
+  if (o == NULL)
+    return false;
 
-    return *this == *o;
+  return *this == *o;
 }
 
 bool Filter::operator!=(const Filter& t) const
 {
-    return (!(*this == t));
+  return (!(*this == t));
 }
 
 bool Filter::operator!=(const TreeNode* t) const
 {
-    return (!(*this == t));
+  return (!(*this == t));
 }
 
 /**
@@ -106,8 +105,8 @@ bool Filter::operator!=(const TreeNode* t) const
  */
 ostream& operator<<(ostream& output, const Filter& rhs)
 {
-    output << rhs.toString();
-    return output;
+  output << rhs.toString();
+  return output;
 }
 
-} // namespace execplan
+}  // namespace execplan

@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_CONCURRENCY_MUTEX_H_
-#define _THRIFT_CONCURRENCY_MUTEX_H_ 1
+#pragma once
 
 #include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
@@ -218,4 +217,3 @@ private:
 }
 } // apache::thrift::concurrency
 
-#endif // #ifndef _THRIFT_CONCURRENCY_MUTEX_H_

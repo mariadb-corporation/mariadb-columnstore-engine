@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: calpontexecutionplan.cpp 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: calpontexecutionplan.cpp 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 
 #include "calpontexecutionplan.h"
 
@@ -39,5 +39,4 @@ CalpontExecutionPlan::~CalpontExecutionPlan()
 /**
  * Methods
  */
-}
-
+}  // namespace execplan

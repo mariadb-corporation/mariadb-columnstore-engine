@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: ddlpkg.cpp 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: ddlpkg.cpp 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 
 #include <iostream>
 
@@ -32,167 +32,135 @@ namespace ddlpackage
 {
 using namespace std;
 
-QualifiedName::QualifiedName(const char* name):
-    fName(name)
+QualifiedName::QualifiedName(const char* name) : fName(name)
 {
 }
 
-QualifiedName::QualifiedName(const char* schema, const char* name):
-    fName(name),
-    fSchema(schema)
+QualifiedName::QualifiedName(const char* schema, const char* name) : fName(name), fSchema(schema)
 {
 }
 
-QualifiedName::QualifiedName(const char* catalog, const char* schema, const char* name):
-    fCatalog(catalog),
-    fName(name),
-    fSchema(schema)
+QualifiedName::QualifiedName(const char* catalog, const char* schema, const char* name)
+ : fCatalog(catalog), fName(name), fSchema(schema)
 {
 }
 
 ostream& operator<<(ostream& os, const QualifiedName& qname)
 {
-    if (!qname.fCatalog.empty())
-        os << qname.fCatalog << ".";
+  if (!qname.fCatalog.empty())
+    os << qname.fCatalog << ".";
 
-    if (!qname.fSchema.empty())
-        os << qname.fSchema << ".";
+  if (!qname.fSchema.empty())
+    os << qname.fSchema << ".";
 
-    os << qname.fName;
-    return os;
+  os << qname.fName;
+  return os;
 }
 
-ColumnType::ColumnType(int prec, int scale) :
-    fType(DDL_INVALID_DATATYPE),
-    fLength(0),
-    fPrecision(prec),
-    fScale(scale),
-    fWithTimezone(false),
-    fCharset(NULL),
-    fExplicitLength(false)
+ColumnType::ColumnType(int prec, int scale)
+ : fType(DDL_INVALID_DATATYPE)
+ , fLength(0)
+ , fPrecision(prec)
+ , fScale(scale)
+ , fWithTimezone(false)
+ , fCharset(NULL)
+ , fExplicitLength(false)
 {
-    fLength = utils::widthByPrecision(fPrecision);
+  fLength = utils::widthByPrecision(fPrecision);
 }
 
-ColumnType::ColumnType(int type) :
-    fType(type),
-    fLength(0),
-    fScale(0),
-    fWithTimezone(false),
-    fCharset(NULL),
-    fExplicitLength(false)
+ColumnType::ColumnType(int type)
+ : fType(type), fLength(0), fScale(0), fWithTimezone(false), fCharset(NULL), fExplicitLength(false)
 {
-    switch ( type )
-    {
-        case DDL_TINYINT:
-        case DDL_UNSIGNED_TINYINT:
-            fPrecision = 3;
-            break;
+  switch (type)
+  {
+    case DDL_TINYINT:
+    case DDL_UNSIGNED_TINYINT: fPrecision = 3; break;
 
-        case DDL_SMALLINT:
-        case DDL_UNSIGNED_SMALLINT:
-            fPrecision = 5;
-            break;
+    case DDL_SMALLINT:
+    case DDL_UNSIGNED_SMALLINT: fPrecision = 5; break;
 
-        case DDL_MEDINT:
-            fPrecision = 7;
-            break;
+    case DDL_MEDINT: fPrecision = 7; break;
 
-        case DDL_UNSIGNED_MEDINT:
-            fPrecision = 8;
-            break;
+    case DDL_UNSIGNED_MEDINT: fPrecision = 8; break;
 
-        case DDL_INT:
-        case DDL_UNSIGNED_INT:
-            fPrecision = 10;
-            break;
+    case DDL_INT:
+    case DDL_UNSIGNED_INT: fPrecision = 10; break;
 
-        case DDL_BIGINT:
-            fPrecision = 19;
-	    break;
+    case DDL_BIGINT: fPrecision = 19; break;
 
-        case DDL_UNSIGNED_BIGINT:
-            fPrecision = 20;
-            break;
+    case DDL_UNSIGNED_BIGINT: fPrecision = 20; break;
 
-        default:
-            fPrecision = 10;
-            break;
-    }
+    default: fPrecision = 10; break;
+  }
 }
-ColumnConstraintDef::ColumnConstraintDef(DDL_CONSTRAINTS type) :
-    SchemaObject(),
-    fDeferrable(false),
-    fCheckTime(DDL_INITIALLY_IMMEDIATE),
-    fConstraintType(type),
-    fCheck("")
+ColumnConstraintDef::ColumnConstraintDef(DDL_CONSTRAINTS type)
+ : SchemaObject(), fDeferrable(false), fCheckTime(DDL_INITIALLY_IMMEDIATE), fConstraintType(type), fCheck("")
 {
 }
 
-ColumnConstraintDef::ColumnConstraintDef(const char* check) :
-    SchemaObject(),
-    fDeferrable(false),
-    fCheckTime(DDL_INITIALLY_IMMEDIATE),
-    fConstraintType(DDL_CHECK),
-    fCheck(check)
+ColumnConstraintDef::ColumnConstraintDef(const char* check)
+ : SchemaObject()
+ , fDeferrable(false)
+ , fCheckTime(DDL_INITIALLY_IMMEDIATE)
+ , fConstraintType(DDL_CHECK)
+ , fCheck(check)
 {
 }
 
-
-AtaAddColumn::AtaAddColumn(ColumnDef* columnDef) :
-    fColumnDef(columnDef)
+AtaAddColumn::AtaAddColumn(ColumnDef* columnDef) : fColumnDef(columnDef)
 {
 }
 
 ostream& operator<<(ostream& os, const ReferentialAction& ref)
 {
-    os << "ref action: u=" << ReferentialActionStrings[ref.fOnUpdate] << " "
-       << "d=" << ReferentialActionStrings[ref.fOnDelete];
-    return os;
+  os << "ref action: u=" << ReferentialActionStrings[ref.fOnUpdate] << " "
+     << "d=" << ReferentialActionStrings[ref.fOnDelete];
+  return os;
 }
 
 void ColumnDef::convertDecimal()
 {
-    //@Bug 2089 decimal precision default to 10 if 0 is used.
-    if (fType->fPrecision <= 0)
-        fType->fPrecision = 10;
+  //@Bug 2089 decimal precision default to 10 if 0 is used.
+  if (fType->fPrecision <= 0)
+    fType->fPrecision = 10;
 
-    if (fType->fPrecision == -1 || fType->fPrecision == 0)
-    {
-        fType->fType = DDL_BIGINT;
-        fType->fLength = 8;
-        fType->fScale = 0;
-    }
-    else if ((fType->fPrecision > 0) && (fType->fPrecision < 3))
-    {
-        fType->fType = DDL_TINYINT;
-        fType->fLength = 1;
-    }
+  if (fType->fPrecision == -1 || fType->fPrecision == 0)
+  {
+    fType->fType = DDL_BIGINT;
+    fType->fLength = 8;
+    fType->fScale = 0;
+  }
+  else if ((fType->fPrecision > 0) && (fType->fPrecision < 3))
+  {
+    fType->fType = DDL_TINYINT;
+    fType->fLength = 1;
+  }
 
-    else if (fType->fPrecision < 5 && (fType->fPrecision > 2))
-    {
-        fType->fType = DDL_SMALLINT;
-        fType->fLength = 2;
-    }
-    else if (fType->fPrecision > 4 && fType->fPrecision < 7)
-    {
-        fType->fType = DDL_MEDINT;
-        fType->fLength = 4;
-    }
-    else if (fType->fPrecision > 6 && fType->fPrecision < 10)
-    {
-        fType->fType = DDL_INT;
-        fType->fLength = 4;
-    }
-    else if (fType->fPrecision > 9 && fType->fPrecision < 19)
-    {
-        fType->fType = DDL_BIGINT;
-        fType->fLength = 8;
-    }
-    else if (fType->fPrecision > 18 && fType->fPrecision < 39)
-    {
-        fType->fType = DDL_DECIMAL;
-        fType->fLength = 16;
-    }
+  else if (fType->fPrecision < 5 && (fType->fPrecision > 2))
+  {
+    fType->fType = DDL_SMALLINT;
+    fType->fLength = 2;
+  }
+  else if (fType->fPrecision > 4 && fType->fPrecision < 7)
+  {
+    fType->fType = DDL_MEDINT;
+    fType->fLength = 4;
+  }
+  else if (fType->fPrecision > 6 && fType->fPrecision < 10)
+  {
+    fType->fType = DDL_INT;
+    fType->fLength = 4;
+  }
+  else if (fType->fPrecision > 9 && fType->fPrecision < 19)
+  {
+    fType->fType = DDL_BIGINT;
+    fType->fLength = 8;
+  }
+  else if (fType->fPrecision > 18 && fType->fPrecision < 39)
+  {
+    fType->fType = DDL_DECIMAL;
+    fType->fLength = 16;
+  }
 }
-} // end of namespace
+}  // namespace ddlpackage

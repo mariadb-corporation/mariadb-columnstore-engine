@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id$
-*
-*   regr_intercept.h
-***********************************************************************/
+ *   $Id$
+ *
+ *   regr_intercept.h
+ ***********************************************************************/
 
 /**
  * Columnstore interface for for the regr_intercept function
@@ -28,8 +28,7 @@
  *    CREATE AGGREGATE FUNCTION regr_intercept returns REAL soname 'libregr_mysql.so';
  *
  */
-#ifndef HEADER_regr_intercept
-#define HEADER_regr_intercept
+#pragma once
 
 #include <cstdlib>
 #include <string>
@@ -52,35 +51,30 @@
 
 namespace mcsv1sdk
 {
-
 // Return the regr_intercept value of the dataset
 
-class regr_intercept : public  mcsv1_UDAF
+class regr_intercept : public mcsv1_UDAF
 {
-public:
-    // Defaults OK
-    regr_intercept() : mcsv1_UDAF() {};
-    virtual ~regr_intercept() {};
+ public:
+  // Defaults OK
+  regr_intercept() : mcsv1_UDAF(){};
+  virtual ~regr_intercept(){};
 
-    virtual ReturnCode init(mcsv1Context* context,
-                            ColumnDatum* colTypes);
+  virtual ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes);
 
-    virtual ReturnCode reset(mcsv1Context* context);
+  virtual ReturnCode reset(mcsv1Context* context);
 
-    virtual ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn);
+  virtual ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn);
 
-    virtual ReturnCode subEvaluate(mcsv1Context* context, const UserData* valIn);
+  virtual ReturnCode subEvaluate(mcsv1Context* context, const UserData* valIn);
 
-    virtual ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut);
+  virtual ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut);
 
-    virtual ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
+  virtual ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
 
-protected:
+ protected:
 };
 
-};  // namespace
+};  // namespace mcsv1sdk
 
 #undef EXPORT
-
-#endif // HEADER_regr_intercept.h
-

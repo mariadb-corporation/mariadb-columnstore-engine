@@ -15,11 +15,8 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef WINPORT_H
-#define WINPORT_H 1
+#pragma once
 
 #ifdef _MSC_VER
 typedef unsigned int uint;
-#endif
-
 #endif

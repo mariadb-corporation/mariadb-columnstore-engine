@@ -16,14 +16,13 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: row.h 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: row.h 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 /** @file */
 
-#ifndef ROW_H
-#define ROW_H
+#pragma once
 #include <string>
 #include "dmlobject.h"
 #include "bytestream.h"
@@ -39,85 +38,79 @@
 namespace dmlpackage
 {
 /** @brief concrete implementation of a DMLObject
-  * Specifically for representing a table row
-  */
+ * Specifically for representing a table row
+ */
 class Row : public DMLObject
 {
-public:
+ public:
+  /** @brief ctor
+   */
+  EXPORT Row();
 
-    /** @brief ctor
-     */
-    EXPORT Row();
+  /** @brief dtor
+   */
+  EXPORT ~Row();
 
-    /** @brief dtor
-      */
-    EXPORT ~Row();
+  /** @brief copy constructor
+   */
+  EXPORT Row(const Row&);
 
-    /** @brief copy constructor
-     */
-    EXPORT Row(const Row&);
+  /** @brief read a Row from a ByteStream
+   *
+   * @param bytestream the ByteStream to read from
+   */
+  EXPORT int read(messageqcpp::ByteStream& bytestream);
 
-    /** @brief read a Row from a ByteStream
-      *
-      * @param bytestream the ByteStream to read from
-      */
-    EXPORT int read(messageqcpp::ByteStream& bytestream);
+  /** @brief write a Row to a ByteStream
+   *
+   * @param bytestream the ByteStream to write to
+   */
+  EXPORT int write(messageqcpp::ByteStream& bytestream);
 
-    /** @brief write a Row to a ByteStream
-      *
-      * @param bytestream the ByteStream to write to
-      */
-    EXPORT int write(messageqcpp::ByteStream& bytestream);
+  /** @brief get the list of columns in the row
+   */
+  inline ColumnList& get_ColumnList()
+  {
+    return fColumnList;
+  }
 
-    /** @brief get the list of columns in the row
-      */
-    inline ColumnList& get_ColumnList()
-    {
-        return fColumnList;
-    }
+  /** @brief get the row id
+   */
+  inline WriteEngine::RID get_RowID() const
+  {
+    return fRowID;
+  }
 
-    /** @brief get the row id
-      */
-    inline WriteEngine::RID get_RowID() const
-    {
-        return fRowID;
-    }
+  /** @brief set the row id
+   */
+  inline void set_RowID(WriteEngine::RID rowId)
+  {
+    fRowID = rowId;
+  }
 
-    /** @brief set the row id
-      */
-    inline void set_RowID(WriteEngine::RID rowId)
-    {
-        fRowID = rowId;
-    }
+  /** @brief  get the number of columns
+   */
+  inline unsigned int get_NumberOfColumns() const
+  {
+    return static_cast<unsigned int>(fColumnList.size());
+  }
 
-    /** @brief  get the number of columns
-      */
-    inline unsigned int get_NumberOfColumns() const
-    {
-        return static_cast<unsigned int>(fColumnList.size());
-    }
+  /** @brief  get the column at the specified index
+   *
+   * @param index the index of the column to get
+   */
+  EXPORT const DMLColumn* get_ColumnAt(unsigned int index) const;
 
-    /** @brief  get the column at the specified index
-      *
-      * @param index the index of the column to get
-      */
-    EXPORT const DMLColumn* get_ColumnAt( unsigned int index ) const;
-
-protected:
-
-private:
-    WriteEngine::RID fRowID;
-    ColumnList fColumnList;
-    Row& operator=(const Row&);
-
+ protected:
+ private:
+  WriteEngine::RID fRowID;
+  ColumnList fColumnList;
+  Row& operator=(const Row&);
 };
 
 /** @brief a vector of Rows
-  */
-typedef std::vector<Row*>RowList;
-}
+ */
+typedef std::vector<Row*> RowList;
+}  // namespace dmlpackage
 
 #undef EXPORT
-
-#endif //ROW_H
-

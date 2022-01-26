@@ -10,31 +10,30 @@ using namespace config;
 
 int main(int argc, char** argv)
 {
-    Config* cf = Config::makeConfig("./Columnstore.xml");
-    MessageQueueClient mqc("server1", cf);
+  Config* cf = Config::makeConfig("./Columnstore.xml");
+  MessageQueueClient mqc("server1", cf);
 
-    ByteStream obs;
-    string msg("Hello, world!");
-    ByteStream ibs;
-    uint32_t qb;
+  ByteStream obs;
+  string msg("Hello, world!");
+  ByteStream ibs;
+  uint32_t qb;
 
-    for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 10; i++)
+  {
+    obs.restart();
+    obs << msg;
+    cout << "writing " << obs.length() << " bytes to " << mqc.addr2String() << endl;
+    mqc.write(obs);
+    ibs = mqc.read();
+    ibs >> qb;
+
+    if (qb != 0)
     {
-        obs.restart();
-        obs << msg;
-        cout << "writing " << obs.length() << " bytes to " << mqc.addr2String() << endl;
-        mqc.write(obs);
-        ibs = mqc.read();
-        ibs >> qb;
-
-        if (qb != 0)
-        {
-            string emsg("server did not ack message!");
-            cerr << emsg << endl;
-            throw runtime_error(emsg);
-        }
+      string emsg("server did not ack message!");
+      cerr << emsg << endl;
+      throw runtime_error(emsg);
     }
+  }
 
-    return 0;
+  return 0;
 }
-

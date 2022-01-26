@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_second.cpp 3495 2013-01-21 14:09:51Z rdempsey $
-*
-*
-****************************************************************************/
+ * $Id: func_second.cpp 3495 2013-01-21 14:09:51Z rdempsey $
+ *
+ *
+ ****************************************************************************/
 
 #include <cstdlib>
 #include <string>
@@ -35,117 +35,113 @@ using namespace execplan;
 
 namespace funcexp
 {
-
-CalpontSystemCatalog::ColType Func_second::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
+CalpontSystemCatalog::ColType Func_second::operationType(FunctionParm& fp,
+                                                         CalpontSystemCatalog::ColType& resultType)
 {
-    return resultType;
+  return resultType;
 }
 
-
-int64_t Func_second::getIntVal(rowgroup::Row& row,
-                               FunctionParm& parm,
-                               bool& isNull,
+int64_t Func_second::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                                CalpontSystemCatalog::ColType& op_ct)
 {
-    int64_t val = 0;
+  int64_t val = 0;
 
-    switch (parm[0]->data()->resultType().colDataType)
+  switch (parm[0]->data()->resultType().colDataType)
+  {
+    case execplan::CalpontSystemCatalog::BIGINT:
+    case execplan::CalpontSystemCatalog::INT:
+    case execplan::CalpontSystemCatalog::MEDINT:
+    case execplan::CalpontSystemCatalog::TINYINT:
+    case execplan::CalpontSystemCatalog::SMALLINT:
     {
-        case execplan::CalpontSystemCatalog::BIGINT:
-        case execplan::CalpontSystemCatalog::INT:
-        case execplan::CalpontSystemCatalog::MEDINT:
-        case execplan::CalpontSystemCatalog::TINYINT:
-        case execplan::CalpontSystemCatalog::SMALLINT:
-        {
-            val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
+      val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
 
-            if (val == -1)
-                isNull = true;
+      if (val == -1)
+        isNull = true;
 
-            break;
-        }
-
-        case execplan::CalpontSystemCatalog::DECIMAL:
-        case execplan::CalpontSystemCatalog::UDECIMAL:
-        {
-            if (parm[0]->data()->resultType().scale == 0)
-            {
-                val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
-
-                if (val == -1)
-                    isNull = true;
-            }
-            else
-            {
-                isNull = true;
-            }
-
-            break;
-        }
-
-        case execplan::CalpontSystemCatalog::DOUBLE:
-        case execplan::CalpontSystemCatalog::FLOAT:
-        {
-             isNull = true;
-        }
-        /* fall through */
-
-        case execplan::CalpontSystemCatalog::VARCHAR:
-        case execplan::CalpontSystemCatalog::CHAR:
-        case execplan::CalpontSystemCatalog::TEXT:
-        {
-            val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
-
-            if (val == -1)
-                isNull = true;
-
-            break;
-        }
-
-        case execplan::CalpontSystemCatalog::DATE:
-        {
-            val = parm[0]->data()->getDatetimeIntVal(row, isNull);
-            break;
-        }
-
-        case execplan::CalpontSystemCatalog::DATETIME:
-        {
-            val = parm[0]->data()->getDatetimeIntVal(row, isNull);
-            break;
-        }
-
-        case execplan::CalpontSystemCatalog::TIMESTAMP:
-        {
-            dataconvert::TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
-            int64_t seconds = timestamp.second;
-	    dataconvert::MySQLTime m_time;
-	    dataconvert::gmtSecToMySQLTime(seconds, m_time, timeZone());
-            return m_time.second;
-        }
-
-        case execplan::CalpontSystemCatalog::TIME:
-        {
-            val = parm[0]->data()->getTimeIntVal(row, isNull);
-            return (uint32_t)((val >> 24) & 0xff);
-            break;
-        }
-
-        default:
-        {
-            isNull = true;
-            break;
-        }
+      break;
     }
 
-    if (isNull)
-        return -1;
+    case execplan::CalpontSystemCatalog::DECIMAL:
+    case execplan::CalpontSystemCatalog::UDECIMAL:
+    {
+      if (parm[0]->data()->resultType().scale == 0)
+      {
+        val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
 
-    if ( val < 1000000000 )
-        return 0;
+        if (val == -1)
+          isNull = true;
+      }
+      else
+      {
+        isNull = true;
+      }
 
-    return (uint32_t)((val >> 20) & 0x3f);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::DOUBLE:
+    case execplan::CalpontSystemCatalog::FLOAT:
+    {
+      isNull = true;
+    }
+      /* fall through */
+
+    case execplan::CalpontSystemCatalog::VARCHAR:
+    case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::TEXT:
+    {
+      val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
+
+      if (val == -1)
+        isNull = true;
+
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::DATE:
+    {
+      val = parm[0]->data()->getDatetimeIntVal(row, isNull);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::DATETIME:
+    {
+      val = parm[0]->data()->getDatetimeIntVal(row, isNull);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::TIMESTAMP:
+    {
+      dataconvert::TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
+      int64_t seconds = timestamp.second;
+      dataconvert::MySQLTime m_time;
+      dataconvert::gmtSecToMySQLTime(seconds, m_time, timeZone());
+      return m_time.second;
+    }
+
+    case execplan::CalpontSystemCatalog::TIME:
+    {
+      val = parm[0]->data()->getTimeIntVal(row, isNull);
+      return (uint32_t)((val >> 24) & 0xff);
+      break;
+    }
+
+    default:
+    {
+      isNull = true;
+      break;
+    }
+  }
+
+  if (isNull)
+    return -1;
+
+  if (val < 1000000000)
+    return 0;
+
+  return (uint32_t)((val >> 20) & 0x3f);
 }
 
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:

@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TRANSPORT_TTRANSPORT_H_
-#define _THRIFT_TRANSPORT_TTRANSPORT_H_ 1
+#pragma once
 
 #include <thrift/Thrift.h>
 #include <boost/shared_ptr.hpp>
@@ -299,4 +298,3 @@ public:
 }
 } // apache::thrift::transport
 
-#endif // #ifndef _THRIFT_TRANSPORT_TTRANSPORT_H_

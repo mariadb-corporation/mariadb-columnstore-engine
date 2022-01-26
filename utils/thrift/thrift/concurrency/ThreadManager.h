@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_CONCURRENCY_THREADMANAGER_H_
-#define _THRIFT_CONCURRENCY_THREADMANAGER_H_ 1
+#pragma once
 
 #include <boost/shared_ptr.hpp>
 #include <thrift/cxxfunctional.h>
@@ -208,4 +207,3 @@ public:
 }
 } // apache::thrift::concurrency
 
-#endif // #ifndef _THRIFT_CONCURRENCY_THREADMANAGER_H_

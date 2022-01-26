@@ -39,34 +39,34 @@ using namespace std;
 
 void usage(char* name)
 {
-    cout << "Usage: " << name << " <prefix>" << endl;
-    exit(1);
+  cout << "Usage: " << name << " <prefix>" << endl;
+  exit(1);
 }
 
 int main(int argc, char** argv)
 {
-    ExtentMap em;
-    string prefix;
+  ExtentMap em;
+  string prefix;
 
-    if (argc > 2)
-        usage(argv[0]);
-    else if (argc == 2)
-        prefix = argv[1];
-    else
-        prefix = "BRM_state";
+  if (argc > 2)
+    usage(argv[0]);
+  else if (argc == 2)
+    prefix = argv[1];
+  else
+    prefix = "BRM_state";
 
-    idbdatafile::IDBPolicy::configIDBPolicy();
+  idbdatafile::IDBPolicy::configIDBPolicy();
 
-    try
-    {
-        em.load(prefix);
-        cout << "OK." << endl;
-    }
-    catch (exception& e)
-    {
-        cout << "Load failed." << endl;
-        return 1;
-    }
+  try
+  {
+    em.load(prefix);
+    cout << "OK." << endl;
+  }
+  catch (exception& e)
+  {
+    cout << "Load failed." << endl;
+    return 1;
+  }
 
-    return 0;
+  return 0;
 }

@@ -36,51 +36,45 @@ namespace
 boost::mutex logMutex;
 };
 
-
 namespace joblist
 {
-
-Logger::Logger() : fLogId(5),
-    fImpl(new logging::Logger(5))
+Logger::Logger() : fLogId(5), fImpl(new logging::Logger(5))
 {
-    MsgMap msgMap;
+  MsgMap msgMap;
 
-    msgMap[LogDefaultMsg] = Message(LogDefaultMsg);
-    msgMap[LogSQLTrace] = Message(LogSQLTrace);
-    msgMap[LogNoPrimProcs] = Message(LogNoPrimProcs);
-    msgMap[LogMakeJobList] = Message(LogMakeJobList);
-    msgMap[LogRDRequest] = Message(LogRDRequest);
-    msgMap[LogRDRequestWait] = Message(LogRDRequestWait);
-    msgMap[LogRDReturn] = Message(LogRDReturn);
-    msgMap[LogRMResourceChange] = Message(LogRMResourceChange);
-    msgMap[LogRMResourceChangeError] = Message(LogRMResourceChangeError);
+  msgMap[LogDefaultMsg] = Message(LogDefaultMsg);
+  msgMap[LogSQLTrace] = Message(LogSQLTrace);
+  msgMap[LogNoPrimProcs] = Message(LogNoPrimProcs);
+  msgMap[LogMakeJobList] = Message(LogMakeJobList);
+  msgMap[LogRDRequest] = Message(LogRDRequest);
+  msgMap[LogRDRequestWait] = Message(LogRDRequestWait);
+  msgMap[LogRDReturn] = Message(LogRDReturn);
+  msgMap[LogRMResourceChange] = Message(LogRMResourceChange);
+  msgMap[LogRMResourceChangeError] = Message(LogRMResourceChangeError);
 
-    fImpl->msgMap(msgMap);
+  fImpl->msgMap(msgMap);
 }
 
-void catchHandler(const string& ex,
-                  int c, SErrorInfo& ei,
-                  unsigned sid, 
-                  logging::LOG_TYPE level)
+void catchHandler(const string& ex, int c, SErrorInfo& ei, unsigned sid, logging::LOG_TYPE level)
 {
-    boost::mutex::scoped_lock lk(logMutex);
+  boost::mutex::scoped_lock lk(logMutex);
 
-    if (ei->errCode == 0)
-    {
-        ei->errMsg = ex;
-        ei->errCode = c;
-    }
+  if (ei->errCode == 0)
+  {
+    ei->errMsg = ex;
+    ei->errCode = c;
+  }
 
-    Logger log;
-    log.setLoggingSession(sid);
-    log.logMessage(level, ex);
+  Logger log;
+  log.setLoggingSession(sid);
+  log.logMessage(level, ex);
 }
 
 const string Logger::logMessage(logging::LOG_TYPE logLevel, unsigned idbErrorCode)
 {
-    string errMsg = logging::IDBErrorInfo::instance()->errorMsg(idbErrorCode);
-    logMessage(logLevel, errMsg);
-    return errMsg;
+  string errMsg = logging::IDBErrorInfo::instance()->errorMsg(idbErrorCode);
+  logMessage(logLevel, errMsg);
+  return errMsg;
 }
 
-}
+}  // namespace joblist

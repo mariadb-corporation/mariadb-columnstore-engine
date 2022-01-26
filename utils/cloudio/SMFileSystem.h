@@ -15,9 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-
-#ifndef SMFILESYSTEM_H_
-#define SMFILESYSTEM_H_
+#pragma once
 
 #include <list>
 #include <string>
@@ -26,28 +24,24 @@
 
 namespace idbdatafile
 {
-
 class SMFileSystem : public IDBFileSystem, boost::noncopyable
 {
-    public:
-        SMFileSystem();
-        virtual ~SMFileSystem();
+ public:
+  SMFileSystem();
+  virtual ~SMFileSystem();
 
-        // why are some of these const and some not const in IDBFileSystem?
-        int mkdir(const char* pathname);
-        off64_t size(const char* path) const;
-        off64_t compressedSize(const char* path) const;
-        int remove(const char* pathname);
-        int rename(const char* oldpath, const char* newpath);
-        bool exists(const char* pathname) const;
-        int listDirectory(const char* pathname, std::list<std::string>& contents) const;
-        bool isDir(const char* pathname) const;
-        int copyFile(const char* srcPath, const char* destPath) const;
-        bool filesystemIsUp() const;
-        bool filesystemSync() const;
-
+  // why are some of these const and some not const in IDBFileSystem?
+  int mkdir(const char* pathname);
+  off64_t size(const char* path) const;
+  off64_t compressedSize(const char* path) const;
+  int remove(const char* pathname);
+  int rename(const char* oldpath, const char* newpath);
+  bool exists(const char* pathname) const;
+  int listDirectory(const char* pathname, std::list<std::string>& contents) const;
+  bool isDir(const char* pathname) const;
+  int copyFile(const char* srcPath, const char* destPath) const;
+  bool filesystemIsUp() const;
+  bool filesystemSync() const;
 };
 
-}
-
-#endif
+}  // namespace idbdatafile

@@ -22,8 +22,7 @@
 
 /** @file */
 
-#ifndef _TABLECOLUMN_H_
-#define _TABLECOLUMN_H_
+#pragma once
 
 #include <vector>
 #include <boost/any.hpp>
@@ -43,7 +42,6 @@
 
 namespace joblist
 {
-
 /** @brief create a JobList object from a CalpontExecutionPlan object
  *
  * Class TableColumn contains a column and it's values.  TableColumn objects are contained in a
@@ -51,111 +49,109 @@ namespace joblist
  */
 class TableColumn
 {
-public:
+ public:
+  /** @brief enum with the supported value types.
+   */
+  enum supportedType
+  {
+    UINT8,
+    UINT16,
+    UINT32,
+    UINT64,
+    STRING,
+    UNDEFINED
+  };
 
-    /** @brief enum with the supported value types.
-    */
-    enum supportedType
-    {
-        UINT8,
-        UINT16,
-        UINT32,
-        UINT64,
-        STRING,
-        UNDEFINED
-    };
+  /** @brief constructor
+   */
+  EXPORT TableColumn(const execplan::CalpontSystemCatalog::OID columnOID, const supportedType columnType);
 
-    /** @brief constructor
-    */
-    EXPORT TableColumn(const execplan::CalpontSystemCatalog::OID columnOID, const supportedType columnType);
+  EXPORT TableColumn();
 
-    EXPORT TableColumn();
+  /** @brief getter for the column's OID.
+   */
+  inline execplan::CalpontSystemCatalog::OID getColumnOID() const
+  {
+    return fColumnOID;
+  }
 
-    /** @brief getter for the column's OID.
-    */
-    inline execplan::CalpontSystemCatalog::OID getColumnOID() const
-    {
-        return fColumnOID;
-    }
+  /** @brief getter for the column's values.
+   */
+  inline const boost::shared_ptr<std::vector<uint64_t> > getIntValues()
+  {
+    return fIntValues;
+  }
 
-    /** @brief getter for the column's values.
-    */
-    inline const boost::shared_ptr<std::vector<uint64_t> > getIntValues()
-    {
-        return fIntValues;
-    }
+  inline const boost::shared_ptr<std::vector<std::string> > getStrValues()
+  {
+    return fStrValues;
+  }
 
-    inline const boost::shared_ptr<std::vector<std::string> > getStrValues()
-    {
-        return fStrValues;
-    }
+  inline bool isNullColumn() const
+  {
+    return fIsNullColumn;
+  }
 
-    inline bool isNullColumn() const
-    {
-        return fIsNullColumn;
-    }
+  // pre-build the bytestream to be returned
+  EXPORT void serialize();
 
-    // pre-build the bytestream to be returned
-    EXPORT void serialize();
+  /** @brief serializes the object into the passed byte stream.
+   */
+  EXPORT void serialize(messageqcpp::ByteStream& b);
 
-    /** @brief serializes the object into the passed byte stream.
-    */
-    EXPORT void serialize(messageqcpp::ByteStream& b);
+  /** @brief inflates the object from the passed byte stream.
+   */
+  EXPORT void unserialize(messageqcpp::ByteStream& b);
 
-    /** @brief inflates the object from the passed byte stream.
-    */
-    EXPORT void unserialize(messageqcpp::ByteStream& b);
-
-    /** @brief adds the column and it's values to the passed NJLSysDataList or appends the values if the column is already included in the NJLSysDataList.
-    */
-    EXPORT void addToSysDataList(execplan::CalpontSystemCatalog::NJLSysDataList& sysDataList, const std::vector<uint64_t>& rids);
+  /** @brief adds the column and it's values to the passed NJLSysDataList or appends the values if the column
+   * is already included in the NJLSysDataList.
+   */
+  EXPORT void addToSysDataList(execplan::CalpontSystemCatalog::NJLSysDataList& sysDataList,
+                               const std::vector<uint64_t>& rids);
 
 #if 0
     EXPORT void addToSysDataRids(execplan::CalpontSystemCatalog::NJLSysDataList& sysDataList, const std::vector<uint64_t>& rids);
 #endif
-    inline void setIntValues(boost::shared_ptr<std::vector<uint64_t> > sv)
-    {
-        fIntValues = sv;
-        fIsNullColumn = fIntValues->empty();
-    }
+  inline void setIntValues(boost::shared_ptr<std::vector<uint64_t> > sv)
+  {
+    fIntValues = sv;
+    fIsNullColumn = fIntValues->empty();
+  }
 
-    inline void setStrValues(boost::shared_ptr<std::vector<std::string> > sv)
-    {
-        fStrValues = sv;
-        fIsNullColumn = fStrValues->empty();
-    }
+  inline void setStrValues(boost::shared_ptr<std::vector<std::string> > sv)
+  {
+    fStrValues = sv;
+    fIsNullColumn = fStrValues->empty();
+  }
 
-    inline supportedType getColumnType()
-    {
-        return fColumnType;
-    }
+  inline supportedType getColumnType()
+  {
+    return fColumnType;
+  }
 
 #ifdef TC_CHECK_RIDS
-    const std::vector<uint64_t>& rids() const
-    {
-        return fRids;
-    }
+  const std::vector<uint64_t>& rids() const
+  {
+    return fRids;
+  }
 #endif
 
-private:
-    execplan::CalpontSystemCatalog::OID fColumnOID;
-    boost::shared_ptr<std::vector <uint64_t> > fIntValues;
-    boost::shared_ptr<std::vector <std::string> > fStrValues;
-    bool fIsNullColumn;
-    supportedType fColumnType;
-    boost::shared_ptr<messageqcpp::ByteStream> preserialized;
+ private:
+  execplan::CalpontSystemCatalog::OID fColumnOID;
+  boost::shared_ptr<std::vector<uint64_t> > fIntValues;
+  boost::shared_ptr<std::vector<std::string> > fStrValues;
+  bool fIsNullColumn;
+  supportedType fColumnType;
+  boost::shared_ptr<messageqcpp::ByteStream> preserialized;
 #ifdef TC_CHECK_RIDS
-    std::vector<uint64_t> fRids;
+  std::vector<uint64_t> fRids;
 #endif
 
-    // defaults okay
-    //TableColumn(const TableColumn& rhs); 			// no copies
-    //TableColumn& operator=(const TableColumn& rhs); 	// no assignments
+  // defaults okay
+  // TableColumn(const TableColumn& rhs); 			// no copies
+  // TableColumn& operator=(const TableColumn& rhs); 	// no assignments
 };
 
 #undef EXPORT
 
-}  // namespace
-
-#endif
-
+}  // namespace joblist

@@ -19,8 +19,7 @@
 //
 /** @file */
 
-#ifndef CACHEUTILS_H__
-#define CACHEUTILS_H__
+#pragma once
 
 #include "brmtypes.h"
 
@@ -72,8 +71,5 @@ int dropPrimProcFdCache();
  */
 int purgePrimProcFdCache(const std::vector<BRM::FileInfo> files, const int pmId);
 
-}
+}  // namespace cacheutils
 // vim:ts=4 sw=4:
-
-#endif
-

@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_reverse.cpp 2477 2011-04-01 16:07:35Z rdempsey $
-*
-*
-****************************************************************************/
+ * $Id: func_reverse.cpp 2477 2011-04-01 16:07:35Z rdempsey $
+ *
+ *
+ ****************************************************************************/
 
 #include <string>
 using namespace std;
@@ -34,68 +34,63 @@ using namespace rowgroup;
 #include "joblisttypes.h"
 using namespace joblist;
 
-
 namespace funcexp
 {
-
-CalpontSystemCatalog::ColType Func_reverse::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
+CalpontSystemCatalog::ColType Func_reverse::operationType(FunctionParm& fp,
+                                                          CalpontSystemCatalog::ColType& resultType)
 {
-    // operation type is not used by this functor
-    return fp[0]->data()->resultType();
+  // operation type is not used by this functor
+  return fp[0]->data()->resultType();
 }
 
-std::string Func_reverse::getStrVal(rowgroup::Row& row,
-                                    FunctionParm& fp,
-                                    bool& isNull,
+std::string Func_reverse::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                     execplan::CalpontSystemCatalog::ColType& type)
 {
-    CHARSET_INFO* cs = type.getCharset();
+  CHARSET_INFO* cs = type.getCharset();
 
-    string str;
-    stringValue(fp[0], row, isNull, str);
-    if (isNull)
-        return "";
-    if (str.empty() || str.length() == 0)
-        return str;
-    // binLen represents the number of bytes in str
-    size_t binLen = str.length();
-    const char* pos = str.c_str();
-    const char* end = pos + binLen;
+  string str;
+  stringValue(fp[0], row, isNull, str);
+  if (isNull)
+    return "";
+  if (str.empty() || str.length() == 0)
+    return str;
+  // binLen represents the number of bytes in str
+  size_t binLen = str.length();
+  const char* pos = str.c_str();
+  const char* end = pos + binLen;
 
-    char* pbuf = new char[binLen + 1];
-    pbuf[binLen] = 0;
-    char* tmp = pbuf + binLen;
-    
-    if (cs->use_mb()) // uses multi-byte characters
+  char* pbuf = new char[binLen + 1];
+  pbuf[binLen] = 0;
+  char* tmp = pbuf + binLen;
+
+  if (cs->use_mb())  // uses multi-byte characters
+  {
+    uint32 l;
+    while (pos < end)
     {
-        uint32 l;
-        while (pos < end)
-        {
-            if ((l = my_ismbchar(cs, pos, end)))
-            {
-                tmp -= l;
-                idbassert(tmp >= pbuf);
-                memcpy(tmp, pos, l);
-                pos += l;
-            }
-            else
-            {
-                *--tmp= *pos++;
-            }
-        }
+      if ((l = my_ismbchar(cs, pos, end)))
+      {
+        tmp -= l;
+        idbassert(tmp >= pbuf);
+        memcpy(tmp, pos, l);
+        pos += l;
+      }
+      else
+      {
+        *--tmp = *pos++;
+      }
     }
-    else
-    {
-        while (pos < end)
-          *--tmp= *pos++;
-    }
+  }
+  else
+  {
+    while (pos < end)
+      *--tmp = *pos++;
+  }
 
-    string rstr = pbuf;
-    delete [] pbuf;
-    return rstr;
+  string rstr = pbuf;
+  delete[] pbuf;
+  return rstr;
 }
 
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:
-

@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef FILEREQUEST_H
-#define FILEREQUEST_H
+#pragma once
 
 /***************************************************************************
  *
@@ -35,7 +34,7 @@
 #include "brmtypes.h"
 
 /**
-	@author Jason Rodriguez <jrodriguez@calpont.com>
+        @author Jason Rodriguez <jrodriguez@calpont.com>
 */
 
 /**
@@ -43,287 +42,282 @@
  **/
 namespace dbbc
 {
-
 class fileRequest
 {
+ public:
+  /**
+   * @brief default ctor
+   **/
+  fileRequest();
 
-public:
+  /**
+   * @brief copy constructor
+   **/
+  fileRequest(const fileRequest& blk);
 
-    /**
-     * @brief default ctor
-     **/
-    fileRequest();
+  /**
+   * @brief request for the disk block lbid@ver
+   * note, useCache tells IOManager to cache the loaded blocks.
+   **/
+  fileRequest(BRM::LBID_t lbid, const BRM::QueryContext& ver, bool flg, BRM::VER_t txn, int compType,
+              uint8_t* ptr = 0, bool useCache = true);
 
-    /**
-     * @brief copy constructor
-     **/
-    fileRequest(const fileRequest& blk);
+  /**
+   * @brief request a range of disk blocks
+   **/
+  fileRequest(const BRM::InlineLBIDRange& range, const BRM::QueryContext& ver, BRM::VER_t txn, int compType);
 
-    /**
-     * @brief request for the disk block lbid@ver
-     * note, useCache tells IOManager to cache the loaded blocks.
-     **/
-    fileRequest(BRM::LBID_t lbid, const BRM::QueryContext& ver, bool flg, BRM::VER_t txn, int compType,
-                uint8_t* ptr = 0, bool useCache = true);
+  /**
+   * @brief class dtor
+   **/
+  virtual ~fileRequest(){};
 
-    /**
-     * @brief request a range of disk blocks
-     **/
-    fileRequest(const BRM::InlineLBIDRange& range, const BRM::QueryContext& ver, BRM::VER_t txn, int compType);
+  /**
+   * @brief less-than operator
+   **/
+  bool operator<(const fileRequest& rhs) const
+  {
+    return fLength < rhs.fLength;
+  }
 
-    /**
-     * @brief class dtor
-     **/
-    virtual ~fileRequest() {};
+  /**
+   * @brief greater-than operator
+   **/
+  bool operator>(const fileRequest& rhs) const
+  {
+    return fLength > rhs.fLength;
+  }
 
-    /**
-     * @brief less-than operator
-     **/
-    bool operator< (const fileRequest& rhs) const
-    {
-        return fLength < rhs.fLength;
-    }
+  /**
+   * @brief equality operator
+   **/
+  bool operator==(const fileRequest& rhs) const
+  {
+    return fLength == rhs.fLength;
+  }
 
-    /**
-     * @brief greater-than operator
-     **/
-    bool operator> (const fileRequest& rhs) const
-    {
-        return fLength > rhs.fLength;
-    }
+  enum request_status_enum
+  {
+    SUCCESSFUL,
+    FAILED,
+    BRM_LOOKUP_ERROR,
+    FS_EINVAL,
+    FS_ENOENT
+  };
 
-    /**
-     * @brief equality operator
-     **/
-    bool operator== (const fileRequest& rhs) const
-    {
-        return fLength == rhs.fLength;
-    }
+  enum request_type_enum
+  {
+    LBIDREQUEST,
+    RANGEREQUEST
+  };
 
-    enum request_status_enum
-    {
-        SUCCESSFUL,
-        FAILED,
-        BRM_LOOKUP_ERROR,
-        FS_EINVAL,
-        FS_ENOENT
-    };
+  /**
+   * @brief used to manage request processing synchronzation
+   **/
+  enum predicate_status_enum
+  {
+    INIT,
+    SENDING,
+    READING,
+    COMPLETE,
+    STOP
+  };
 
-    enum request_type_enum
-    {
-        LBIDREQUEST,
-        RANGEREQUEST
-    };
+  /**
+   * @brief lbid requested
+   **/
+  BRM::LBID_t Lbid() const
+  {
+    return fLBID;
+  }
 
-    /**
-     * @brief used to manage request processing synchronzation
-     **/
-    enum predicate_status_enum
-    {
-        INIT,
-        SENDING,
-        READING,
-        COMPLETE,
-        STOP
-    };
+  /**
+   * @brief version of the lbid requested
+   **/
+  const BRM::QueryContext Ver() const
+  {
+    return fVer;
+  }
 
-    /**
-     * @brief lbid requested
-     **/
-    BRM::LBID_t 	Lbid() const
-    {
-        return fLBID;
-    }
+  /**
+   * @brief VBBM flag of the LBID/Ver
+   **/
+  bool Flg() const
+  {
+    return fFlg;
+  }
 
-    /**
-     * @brief version of the lbid requested
-     **/
-    const BRM::QueryContext 	Ver() const
-    {
-        return fVer;
-    }
+  BRM::VER_t Txn() const
+  {
+    return fTxn;
+  }
 
-    /**
-     * @brief VBBM flag of the LBID/Ver
-     **/
-    bool 	Flg() const
-    {
-        return fFlg;
-    }
+  int CompType() const
+  {
+    return fCompType;
+  }
 
-    BRM::VER_t Txn() const
-    {
-        return fTxn;
-    }
+  /**
+   * @brief number of blocks requested
+   **/
+  uint32_t BlocksRequested() const
+  {
+    return fLength;
+  }
 
-    int CompType() const
-    {
-        return fCompType;
-    }
+  /**
+   * @brief setter for blocks requested
+   **/
+  void BlocksRequested(const int l)
+  {
+    fLength = l;
+  }
 
-    /**
-     * @brief number of blocks requested
-     **/
-    uint32_t	BlocksRequested() const
-    {
-        return fLength;
-    }
+  /**
+   * @brief number of blocks read from disk
+   **/
+  uint32_t BlocksRead() const
+  {
+    return fblksRead;
+  }
+  uint32_t BlocksLoaded() const
+  {
+    return fblksLoaded;
+  }
 
-    /**
-     * @brief setter for blocks requested
-     **/
-    void 		BlocksRequested(const int l)
-    {
-        fLength = l;
-    }
+  /**
+   * @brief setter for blocks read from disk
+   **/
+  void BlocksRead(const int l)
+  {
+    fblksRead = l;
+  }
+  void BlocksLoaded(const int l)
+  {
+    fblksLoaded = l;
+  }
 
-    /**
-     * @brief number of blocks read from disk
-     **/
-    uint32_t	BlocksRead() const
-    {
-        return fblksRead;
-    }
-    uint32_t	BlocksLoaded() const
-    {
-        return fblksLoaded;
-    }
+  /**
+   * @brief did the request succeed for fail (0-success; else failure)
+   **/
+  int RequestStatus() const
+  {
+    return fRqstStatus;
+  }
 
-    /**
-     * @brief setter for blocks read from disk
-     **/
-    void 		BlocksRead(const int l)
-    {
-        fblksRead = l;
-    }
-    void 		BlocksLoaded(const int l)
-    {
-        fblksLoaded = l;
-    }
+  /**
+   * @brief setter for the request status
+   **/
+  void RequestStatus(int s)
+  {
+    fRqstStatus = s;
+  }
 
-    /**
-     * @brief did the request succeed for fail (0-success; else failure)
-     **/
-    int 		RequestStatus() const
-    {
-        return fRqstStatus;
-    }
+  void CompType(int compType)
+  {
+    fCompType = compType;
+  }
 
-    /**
-     * @brief setter for the request status
-     **/
-    void 		RequestStatus(int s)
-    {
-        fRqstStatus = s;
-    }
+  /**
+   * @brief if request failed, this is the error message string
+   **/
+  std::string RequestStatusStr() const
+  {
+    return fRqstStatusString;
+  }
 
-    void CompType(int compType)
-    {
-        fCompType = compType;
-    }
+  /**
+   * @brief setter for the request status error message string
+   **/
+  void RequestStatusStr(const std::string& s)
+  {
+    fRqstStatusString = s;
+  }
 
-    /**
-     * @brief if request failed, this is the error message string
-     **/
-    std::string	RequestStatusStr() const
-    {
-        return fRqstStatusString;
-    }
+  /**
+   * @brief return BLOCK or RANGE requested
+   **/
+  int RequestType() const
+  {
+    return fRqstType;
+  }
 
-    /**
-     * @brief setter for the request status error message string
-     **/
-    void 		RequestStatusStr(const std::string& s)
-    {
-        fRqstStatusString = s;
-    }
+  /**
+   * @brief mutex to control synchronzation of request processing
+   **/
+  boost::mutex& frMutex() const
+  {
+    return fFRMutex;
+  }
 
-    /**
-     * @brief return BLOCK or RANGE requested
-     **/
-    int 		RequestType() const
-    {
-        return fRqstType;
-    }
+  /**
+   * @brief condition variable. signal when request is complete
+   **/
+  boost::condition& frCond() const
+  {
+    return fFRCond;
+  }
 
-    /**
-     * @brief mutex to control synchronzation of request processing
-     **/
-    boost::mutex&	frMutex() const
-    {
-        return fFRMutex;
-    }
+  /**
+   * @brief
+   **/
+  const enum predicate_status_enum& frPredicate() const
+  {
+    return fFRPredicate;
+  }
 
-    /**
-     * @brief condition variable. signal when request is complete
-     **/
-    boost::condition& 	frCond() const
-    {
-        return fFRCond;
-    }
+  /**
+   * @brief setter for the predicate
+   **/
+  void SetPredicate(const enum predicate_status_enum& p)
+  {
+    fFRPredicate = p;
+  }
 
-    /**
-     * @brief
-     **/
-    const enum predicate_status_enum& frPredicate() const
-    {
-        return fFRPredicate;
-    }
+  uint8_t* data;
 
-    /**
-     * @brief setter for the predicate
-     **/
-    void SetPredicate(const enum predicate_status_enum& p)
-    {
-        fFRPredicate = p;
-    }
+  friend std::ostream& operator<<(std::ostream& os, const fileRequest& rhs);
 
-    uint8_t* data;
+  // tells IOManager to cache the loaded blocks or not
+  bool useCache()
+  {
+    return cache;
+  }
+  void useCache(bool c)
+  {
+    cache = c;
+  }
 
-    friend std::ostream& operator<<(std::ostream& os, const fileRequest& rhs);
+  bool versioned()
+  {
+    return wasVersioned;
+  }
+  void versioned(bool b)
+  {
+    wasVersioned = b;
+  }
 
-    // tells IOManager to cache the loaded blocks or not
-    bool useCache()
-    {
-        return cache;
-    }
-    void useCache(bool c)
-    {
-        cache = c;
-    }
+ private:
+  void init();
 
-    bool versioned()
-    {
-        return wasVersioned;
-    }
-    void versioned(bool b)
-    {
-        wasVersioned = b;
-    }
-
-private:
-    void init();
-
-    BRM::LBID_t fLBID;
-    BRM::QueryContext fVer;
-    bool fFlg;
-    BRM::VER_t fTxn;
-    mutable boost::mutex fFRMutex;
-    mutable boost::condition fFRCond;
-    predicate_status_enum fFRPredicate;
-    uint32_t fLength; // lbids requested
-    uint32_t fblksRead; // lbids read
-    uint32_t fblksLoaded; // lbids loaded into cache
-    int fRqstStatus;
-    std::string fRqstStatusString;
-    enum request_type_enum fRqstType;
-    int fCompType;
-    bool cache;
-    bool wasVersioned;
+  BRM::LBID_t fLBID;
+  BRM::QueryContext fVer;
+  bool fFlg;
+  BRM::VER_t fTxn;
+  mutable boost::mutex fFRMutex;
+  mutable boost::condition fFRCond;
+  predicate_status_enum fFRPredicate;
+  uint32_t fLength;      // lbids requested
+  uint32_t fblksRead;    // lbids read
+  uint32_t fblksLoaded;  // lbids loaded into cache
+  int fRqstStatus;
+  std::string fRqstStatusString;
+  enum request_type_enum fRqstType;
+  int fCompType;
+  bool cache;
+  bool wasVersioned;
 };
 
-}
+}  // namespace dbbc
 
-#endif
 // vim:ts=4 sw=4:
-

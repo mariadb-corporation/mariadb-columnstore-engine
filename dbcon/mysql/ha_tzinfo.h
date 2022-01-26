@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef HA_TZINFO
-#define HA_TZINFO
+#pragma once
 
 //#undef LOG_INFO
 #include <my_config.h>
@@ -26,9 +25,6 @@ using namespace dataconvert;
 
 namespace cal_impl_if
 {
-
-TIME_ZONE_INFO* my_tzinfo_find(THD *thd, const String *name);
+TIME_ZONE_INFO* my_tzinfo_find(THD* thd, const String* name);
 
 }
-
-#endif

@@ -16,14 +16,13 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: logicoperator.h 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: logicoperator.h 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 /** @file */
 
-#ifndef LOGICOPERATOR_H
-#define LOGICOPERATOR_H
+#pragma once
 #include <string>
 #include <iosfwd>
 #include <boost/shared_ptr.hpp>
@@ -57,134 +56,127 @@ class ParseTree;
 
 class LogicOperator : public Operator
 {
+  /**
+   * Public stuff
+   */
+ public:
+  /**
+   * Constructors
+   */
+  LogicOperator();
+  LogicOperator(const std::string& operatorName);
+  LogicOperator(const LogicOperator& rhs);
 
-    /**
-     * Public stuff
-     */
-public:
-    /**
-     * Constructors
-     */
-    LogicOperator();
-    LogicOperator(const std::string& operatorName);
-    LogicOperator(const LogicOperator& rhs);
+  /**
+   * Destructors
+   */
+  virtual ~LogicOperator();
 
-    /**
-     * Destructors
-     */
-    virtual ~LogicOperator();
+  /**
+   * Accessor Methods
+   */
 
-    /**
-     * Accessor Methods
-     */
+  /** return a copy of this pointer
+   *
+   * deep copy of this pointer and return the copy
+   */
+  inline virtual LogicOperator* clone() const
+  {
+    return new LogicOperator(*this);
+  }
 
-    /** return a copy of this pointer
-     *
-     * deep copy of this pointer and return the copy
-     */
-    inline virtual LogicOperator* clone() const
+  /**
+   * The serialization interface
+   */
+  virtual void serialize(messageqcpp::ByteStream&) const;
+  virtual void unserialize(messageqcpp::ByteStream&);
+
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
+   */
+  virtual bool operator==(const TreeNode* t) const;
+
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
+   */
+  bool operator==(const LogicOperator& t) const;
+
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
+   */
+  virtual bool operator!=(const TreeNode* t) const;
+
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
+   */
+  bool operator!=(const LogicOperator& t) const;
+  // template <typename result_t>
+  // result_t evaluate(result_t op1, result_t op2);
+
+  // F&E framework
+  using Operator::getBoolVal;
+  inline virtual bool getBoolVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  {
+    switch (fOp)
     {
-        return new LogicOperator (*this);
+      case OP_AND: return (lop->getBoolVal(row, isNull) && rop->getBoolVal(row, isNull));
+
+      case OP_OR:
+      {
+        if (lop->getBoolVal(row, isNull))
+          return true;
+
+        isNull = false;
+        // return (lop->getBoolVal(row, isNull) || rop->getBoolVal(row, isNull));
+        return rop->getBoolVal(row, isNull);
+      }
+
+      case OP_XOR:
+      {
+        // Logical XOR. Returns NULL if either operand is NULL.
+        // For non-NULL operands, evaluates to 1 if an odd number of operands is nonzero,
+        // otherwise 0 is returned.
+        bool lopv = lop->getBoolVal(row, isNull);
+
+        if (isNull)
+          return false;
+
+        bool ropv = rop->getBoolVal(row, isNull);
+
+        if (isNull)
+          return false;
+
+        if ((lopv && !ropv) || (ropv && !lopv))
+          return true;
+        else
+          return false;
+      }
+
+      default: throw std::runtime_error("invalid logical operation");
     }
+  }
 
-    /**
-     * The serialization interface
-     */
-    virtual void serialize(messageqcpp::ByteStream&) const;
-    virtual void unserialize(messageqcpp::ByteStream&);
+  using TreeNode::evaluate;
+  inline virtual void evaluate(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  {
+    fResult.boolVal = getBoolVal(row, isNull, lop, rop);
+  }
 
-    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-     *
-     * Do a deep, strict (as opposed to semantic) equivalence test.
-     * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
-    	 */
-    virtual bool operator==(const TreeNode* t) const;
-
-    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-     *
-     * Do a deep, strict (as opposed to semantic) equivalence test.
-     * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
-     */
-    bool operator==(const LogicOperator& t) const;
-
-    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-     *
-     * Do a deep, strict (as opposed to semantic) equivalence test.
-     * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
-     */
-    virtual bool operator!=(const TreeNode* t) const;
-
-    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-     *
-     * Do a deep, strict (as opposed to semantic) equivalence test.
-     * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
-     */
-    bool operator!=(const LogicOperator& t) const;
-    //template <typename result_t>
-    //result_t evaluate(result_t op1, result_t op2);
-
-    // F&E framework
-    using Operator::getBoolVal;
-    inline virtual bool getBoolVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
-    {
-        switch (fOp)
-        {
-            case OP_AND:
-                return (lop->getBoolVal(row, isNull) && rop->getBoolVal(row, isNull));
-
-            case OP_OR:
-            {
-                if (lop->getBoolVal(row, isNull))
-                    return true;
-
-                isNull = false;
-                //return (lop->getBoolVal(row, isNull) || rop->getBoolVal(row, isNull));
-                return rop->getBoolVal(row, isNull);
-            }
-
-            case OP_XOR:
-            {
-                // Logical XOR. Returns NULL if either operand is NULL.
-                // For non-NULL operands, evaluates to 1 if an odd number of operands is nonzero,
-                // otherwise 0 is returned.
-                bool lopv = lop->getBoolVal(row, isNull);
-
-                if (isNull)
-                    return false;
-
-                bool ropv = rop->getBoolVal(row, isNull);
-
-                if (isNull)
-                    return false;
-
-                if ((lopv && !ropv) || (ropv && !lopv))
-                    return true;
-                else
-                    return false;
-            }
-
-            default:
-                throw std::runtime_error("invalid logical operation");
-        }
-    }
-
-    using TreeNode::evaluate;
-    inline virtual void evaluate(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
-    {
-        fResult.boolVal = getBoolVal(row, isNull, lop, rop);
-    }
-
-private:
-    // default okay
-    //Operator& operator=(const Operator& rhs);
-    //std::string fData;
-
+ private:
+  // default okay
+  // Operator& operator=(const Operator& rhs);
+  // std::string fData;
 };
 
-//typedef boost::shared_ptr<Operator> SOP;
+// typedef boost::shared_ptr<Operator> SOP;
 
 std::ostream& operator<<(std::ostream& os, const LogicOperator& rhs);
-}
-
-#endif
-
+}  // namespace execplan

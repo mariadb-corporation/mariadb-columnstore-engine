@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_strcmp.cpp 2477 2011-04-01 16:07:35Z rdempsey $
-*
-*
-****************************************************************************/
+ * $Id: func_strcmp.cpp 2477 2011-04-01 16:07:35Z rdempsey $
+ *
+ *
+ ****************************************************************************/
 
 #include <cstdlib>
 #include <string>
@@ -38,48 +38,40 @@ using namespace joblist;
 
 using namespace funcexp;
 
-
-
 namespace funcexp
 {
-
-CalpontSystemCatalog::ColType Func_strcmp::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
+CalpontSystemCatalog::ColType Func_strcmp::operationType(FunctionParm& fp,
+                                                         CalpontSystemCatalog::ColType& resultType)
 {
-    // operation type is not used by this functor
-    //return fp[0]->data()->resultType();
-    return resultType;
+  // operation type is not used by this functor
+  // return fp[0]->data()->resultType();
+  return resultType;
 }
 
-int64_t Func_strcmp::getIntVal(rowgroup::Row& row,
-                               FunctionParm& fp,
-                               bool& isNull,
+int64_t Func_strcmp::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                execplan::CalpontSystemCatalog::ColType& type)
 {
-    CHARSET_INFO* cs = fp[0]->data()->resultType().getCharset();
-    const string& str = fp[0]->data()->getStrVal(row, isNull);
-    const string& str1 = fp[1]->data()->getStrVal(row, isNull);
+  CHARSET_INFO* cs = fp[0]->data()->resultType().getCharset();
+  const string& str = fp[0]->data()->getStrVal(row, isNull);
+  const string& str1 = fp[1]->data()->getStrVal(row, isNull);
 
-    int ret = cs->strnncollsp(str.c_str(), str.length(), str1.c_str(), str1.length());
-    // mysql's strcmp returns only -1, 0, and 1
-    return (ret < 0 ? -1 : (ret > 0 ? 1 : 0));
+  int ret = cs->strnncollsp(str.c_str(), str.length(), str1.c_str(), str1.length());
+  // mysql's strcmp returns only -1, 0, and 1
+  return (ret < 0 ? -1 : (ret > 0 ? 1 : 0));
 }
 
-
-std::string Func_strcmp::getStrVal(rowgroup::Row& row,
-                                   FunctionParm& fp,
-                                   bool& isNull,
+std::string Func_strcmp::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                    execplan::CalpontSystemCatalog::ColType& type)
 {
-    int64_t val = getIntVal(row, fp, isNull, type);
+  int64_t val = getIntVal(row, fp, isNull, type);
 
-    if (val > 0)
-        return string("1");
-    else if (val < 0)
-        return string("-1");
-    else
-        return string("0");
+  if (val > 0)
+    return string("1");
+  else if (val < 0)
+    return string("-1");
+  else
+    return string("0");
 }
 
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:
-

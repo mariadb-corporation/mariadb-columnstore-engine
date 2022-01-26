@@ -56,23 +56,22 @@ using namespace oam;
 namespace primitiveprocessor
 {
 /*static*/ const int32_t UmIPSocketConns::NEXT_IOSOCKET_UNASSIGNED = -1;
-/*static*/ const int32_t UmModuleIPs::NEXT_IP_SOCKET_UNASSIGNED    = -1;
-/*static*/ UmSocketSelector* UmSocketSelector::fpUmSocketSelector  =  0;
+/*static*/ const int32_t UmModuleIPs::NEXT_IP_SOCKET_UNASSIGNED = -1;
+/*static*/ UmSocketSelector* UmSocketSelector::fpUmSocketSelector = 0;
 
 //------------------------------------------------------------------------------
 // UmSocketSelector methods
 //------------------------------------------------------------------------------
 // UmSocketSelector Singleton accessor
 //------------------------------------------------------------------------------
-/* static */ UmSocketSelector*
-UmSocketSelector::instance()
+/* static */ UmSocketSelector* UmSocketSelector::instance()
 {
-    if (fpUmSocketSelector == 0)
-    {
-        fpUmSocketSelector = new UmSocketSelector();
-    }
+  if (fpUmSocketSelector == 0)
+  {
+    fpUmSocketSelector = new UmSocketSelector();
+  }
 
-    return fpUmSocketSelector;
+  return fpUmSocketSelector;
 }
 
 //------------------------------------------------------------------------------
@@ -80,24 +79,23 @@ UmSocketSelector::instance()
 //------------------------------------------------------------------------------
 UmSocketSelector::UmSocketSelector()
 {
-    loadUMModuleInfo();
+  loadUMModuleInfo();
 }
 
 //------------------------------------------------------------------------------
 // Returns the number of IP addresses defined in the Columnstore.xml file
 // return - uint32_t; the total number of IP addresses in the Columnstore.xml file
 //------------------------------------------------------------------------------
-uint32_t
-UmSocketSelector::ipAddressCount() const
+uint32_t UmSocketSelector::ipAddressCount() const
 {
-    uint32_t ipCount = 0;
+  uint32_t ipCount = 0;
 
-    for (unsigned int i = 0; i < fUmModuleIPs.size(); ++i)
-    {
-        ipCount += fUmModuleIPs[i]->ipAddressCount();
-    }
+  for (unsigned int i = 0; i < fUmModuleIPs.size(); ++i)
+  {
+    ipCount += fUmModuleIPs[i]->ipAddressCount();
+  }
 
-    return ipCount;
+  return ipCount;
 }
 
 //------------------------------------------------------------------------------
@@ -106,71 +104,67 @@ UmSocketSelector::ipAddressCount() const
 // does not insure thread safeness, but that's okay because it is assumed that
 // it will only be called once from the first call to instance().
 //------------------------------------------------------------------------------
-void
-UmSocketSelector::loadUMModuleInfo()
+void UmSocketSelector::loadUMModuleInfo()
 {
-    Oam					oam;
-    ModuleTypeConfig	moduleTypeConfig;
-    const std::string	UM_MODTYPE("um");
+  Oam oam;
+  ModuleTypeConfig moduleTypeConfig;
+  const std::string UM_MODTYPE("um");
 
-    oam.getSystemConfig(UM_MODTYPE, moduleTypeConfig);
+  oam.getSystemConfig(UM_MODTYPE, moduleTypeConfig);
 
-    int			moduleCount = moduleTypeConfig.ModuleCount;
-    std::string	moduleType = moduleTypeConfig.ModuleType;
+  int moduleCount = moduleTypeConfig.ModuleCount;
+  std::string moduleType = moduleTypeConfig.ModuleType;
 
 #ifdef LOAD_MODULE_DEBUG
-    std::cout << "ModuleConfig for type: " << UM_MODTYPE         << std::endl;
-    std::cout << "ModuleDesc  = " << moduleTypeConfig.ModuleDesc << std::endl;
-    std::cout << "ModuleCount = " << moduleCount                 << std::endl;
-    std::cout << "RunType     = " << moduleTypeConfig.RunType    << std::endl;
+  std::cout << "ModuleConfig for type: " << UM_MODTYPE << std::endl;
+  std::cout << "ModuleDesc  = " << moduleTypeConfig.ModuleDesc << std::endl;
+  std::cout << "ModuleCount = " << moduleCount << std::endl;
+  std::cout << "RunType     = " << moduleTypeConfig.RunType << std::endl;
 #endif
 
-    if ( moduleCount > 0 )
+  if (moduleCount > 0)
+  {
+    //..Loop through the list of UM modules
+    for (DeviceNetworkList::iterator iter1 = moduleTypeConfig.ModuleNetworkList.begin();
+         (iter1 != moduleTypeConfig.ModuleNetworkList.end()); ++iter1)
     {
-        //..Loop through the list of UM modules
-        for (DeviceNetworkList::iterator iter1 =
-                    moduleTypeConfig.ModuleNetworkList.begin();
-                (iter1 != moduleTypeConfig.ModuleNetworkList.end());
-                ++iter1)
+      std::string moduleName = iter1->DeviceName;
+
+#ifdef LOAD_MODULE_DEBUG
+      std::cout << "ModuleName-" << moduleName << std::endl;
+#endif
+
+      //..Assign the UM index based on whether it is a new UM or one
+      //  we have seen before
+      unsigned int umIdx = findOrAddUm(moduleName);
+
+      //..Get the list of IP addresses (NIC's) for this UM module
+      for (HostConfigList::iterator iter2 = iter1->hostConfigList.begin();
+           (iter2 != iter1->hostConfigList.end()); ++iter2)
+      {
+        std::string ipAddr = iter2->IPAddr;
+
+#ifdef LOAD_MODULE_DEBUG
+        std::cout << "  NIC-" << iter2->NicID << "; host-" << iter2->HostName << "; IP-" << ipAddr
+                  << std::endl;
+#endif
+
+        struct in_addr ip;
+
+        if (inet_aton(ipAddr.c_str(), &ip))
         {
-            std::string moduleName = iter1->DeviceName;
-
-#ifdef LOAD_MODULE_DEBUG
-            std::cout << "ModuleName-" << moduleName << std::endl;
-#endif
-
-            //..Assign the UM index based on whether it is a new UM or one
-            //  we have seen before
-            unsigned int umIdx = findOrAddUm( moduleName );
-
-            //..Get the list of IP addresses (NIC's) for this UM module
-            for (HostConfigList::iterator iter2 = iter1->hostConfigList.begin();
-                    (iter2 != iter1->hostConfigList.end());
-                    ++iter2)
-            {
-                std::string ipAddr = iter2->IPAddr;
-
-#ifdef LOAD_MODULE_DEBUG
-                std::cout << "  NIC-" << iter2->NicID <<
-                          "; host-" << iter2->HostName <<
-                          "; IP-"   << ipAddr          << std::endl;
-#endif
-
-                struct in_addr ip;
-
-                if ( inet_aton(ipAddr.c_str(), &ip ) )
-                {
-                    fIpAddressUmMap[ ip.s_addr ] = umIdx;
-                    fUmModuleIPs[umIdx]->addIP( ip.s_addr );
-                }
-                else
-                {
-                    std::cerr << "Invalid IP address in SystemModuleConfig "
-                              "section: " << ipAddr << std::endl;
-                }
-            } // loop through the IP addresses for a UM module
-        } // loop through the list of UM modules
-    } // moduleCount > 0
+          fIpAddressUmMap[ip.s_addr] = umIdx;
+          fUmModuleIPs[umIdx]->addIP(ip.s_addr);
+        }
+        else
+        {
+          std::cerr << "Invalid IP address in SystemModuleConfig "
+                       "section: "
+                    << ipAddr << std::endl;
+        }
+      }  // loop through the IP addresses for a UM module
+    }    // loop through the list of UM modules
+  }      // moduleCount > 0
 }
 
 //------------------------------------------------------------------------------
@@ -178,25 +172,24 @@ UmSocketSelector::loadUMModuleInfo()
 // fUmModuleIPs, if it is found.  Else add the new moduleName.
 // return - unsigned int for the index into fUmModuleIPs for moduleName.
 //------------------------------------------------------------------------------
-unsigned int
-UmSocketSelector::findOrAddUm( const std::string& moduleName )
+unsigned int UmSocketSelector::findOrAddUm(const std::string& moduleName)
 {
-    unsigned int umIdx = std::numeric_limits<unsigned int>::max();
+  unsigned int umIdx = std::numeric_limits<unsigned int>::max();
 
-    for (unsigned int i = 0; i < fUmModuleIPs.size(); ++i)
+  for (unsigned int i = 0; i < fUmModuleIPs.size(); ++i)
+  {
+    if (fUmModuleIPs[i]->moduleName() == moduleName)
     {
-        if (fUmModuleIPs[i]->moduleName() == moduleName)
-        {
-            umIdx = i;
-            return umIdx;
-        }
+      umIdx = i;
+      return umIdx;
     }
+  }
 
-    //..We have encountered a new UM module we should add to the list
-    fUmModuleIPs.push_back( SP_UM_MODIPS(new UmModuleIPs(moduleName)) );
-    umIdx = fUmModuleIPs.size() - 1;
+  //..We have encountered a new UM module we should add to the list
+  fUmModuleIPs.push_back(SP_UM_MODIPS(new UmModuleIPs(moduleName)));
+  umIdx = fUmModuleIPs.size() - 1;
 
-    return umIdx;
+  return umIdx;
 }
 
 //------------------------------------------------------------------------------
@@ -206,55 +199,48 @@ UmSocketSelector::findOrAddUm( const std::string& moduleName )
 // writeLock (in) - mutex to use when writing to ios.
 // return         - boolean indicating whether socket/port connection was added.
 //------------------------------------------------------------------------------
-bool
-UmSocketSelector::addConnection(
-    const SP_UM_IOSOCK& ios,
-    const SP_UM_MUTEX&  writeLock )
+bool UmSocketSelector::addConnection(const SP_UM_IOSOCK& ios, const SP_UM_MUTEX& writeLock)
 {
-    bool bConnAdded = false;
+  bool bConnAdded = false;
 
-    sockaddr sa = ios->sa();
-    const sockaddr_in* sinp = reinterpret_cast<const sockaddr_in*>(&sa);
-    IpAddressUmMap_t::iterator mapIter =
-        fIpAddressUmMap.find ( sinp->sin_addr.s_addr );
+  sockaddr sa = ios->sa();
+  const sockaddr_in* sinp = reinterpret_cast<const sockaddr_in*>(&sa);
+  IpAddressUmMap_t::iterator mapIter = fIpAddressUmMap.find(sinp->sin_addr.s_addr);
 
-    // Add this socket/port connection to the UM connection list it belongs to.
-    if ( mapIter != fIpAddressUmMap.end() )
-    {
-        unsigned int umIdx = mapIter->second;
-        bConnAdded = fUmModuleIPs[umIdx]->addSocketConn( ios, writeLock );
-    }
+  // Add this socket/port connection to the UM connection list it belongs to.
+  if (mapIter != fIpAddressUmMap.end())
+  {
+    unsigned int umIdx = mapIter->second;
+    bConnAdded = fUmModuleIPs[umIdx]->addSocketConn(ios, writeLock);
+  }
 
-    if (!bConnAdded)
-    {
+  if (!bConnAdded)
+  {
 #ifdef SEL_CONN_DEBUG
-        std::ostringstream oss;
-        oss << "No UM/IP match found to add connection " << ios->toString() <<
-            std::endl;
-        std::cout << oss.str();
+    std::ostringstream oss;
+    oss << "No UM/IP match found to add connection " << ios->toString() << std::endl;
+    std::cout << oss.str();
 #endif
-    }
+  }
 
-    return bConnAdded;
+  return bConnAdded;
 }
 
 //------------------------------------------------------------------------------
 // Delete a socket/port connection from the UM for which it belongs.
 // ioSock (in) - socket/port connection to be deleted
 //------------------------------------------------------------------------------
-void
-UmSocketSelector::delConnection( const messageqcpp::IOSocket& ios )
+void UmSocketSelector::delConnection(const messageqcpp::IOSocket& ios)
 {
-    sockaddr sa = ios.sa();
-    const sockaddr_in* sinp = reinterpret_cast<const sockaddr_in*>(&sa);
-    IpAddressUmMap_t::iterator mapIter =
-        fIpAddressUmMap.find ( sinp->sin_addr.s_addr );
+  sockaddr sa = ios.sa();
+  const sockaddr_in* sinp = reinterpret_cast<const sockaddr_in*>(&sa);
+  IpAddressUmMap_t::iterator mapIter = fIpAddressUmMap.find(sinp->sin_addr.s_addr);
 
-    if ( mapIter != fIpAddressUmMap.end() )
-    {
-        unsigned int umIdx = mapIter->second;
-        fUmModuleIPs[umIdx]->delSocketConn( ios );
-    }
+  if (mapIter != fIpAddressUmMap.end())
+  {
+    unsigned int umIdx = mapIter->second;
+    fUmModuleIPs[umIdx]->delSocketConn(ios);
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -269,67 +255,58 @@ UmSocketSelector::delConnection( const messageqcpp::IOSocket& ios )
 // return          - bool indicating if socket/port connection was assigned to
 //                   outIos
 //------------------------------------------------------------------------------
-bool
-UmSocketSelector::nextIOSocket(
-    const messageqcpp::IOSocket& ios,
-    SP_UM_IOSOCK&   outIos,
-    SP_UM_MUTEX&    writeLock )
+bool UmSocketSelector::nextIOSocket(const messageqcpp::IOSocket& ios, SP_UM_IOSOCK& outIos,
+                                    SP_UM_MUTEX& writeLock)
 {
-    sockaddr sa = ios.sa();
-    const sockaddr_in* sinp = reinterpret_cast<const sockaddr_in*>(&sa);
-    IpAddressUmMap_t::iterator mapIter =
-        fIpAddressUmMap.find ( sinp->sin_addr.s_addr );
+  sockaddr sa = ios.sa();
+  const sockaddr_in* sinp = reinterpret_cast<const sockaddr_in*>(&sa);
+  IpAddressUmMap_t::iterator mapIter = fIpAddressUmMap.find(sinp->sin_addr.s_addr);
 
-    if ( mapIter != fIpAddressUmMap.end() )
+  if (mapIter != fIpAddressUmMap.end())
+  {
+    unsigned int umIdx = mapIter->second;
+
+    if (fUmModuleIPs[umIdx]->nextIOSocket(outIos, writeLock))
     {
-        unsigned int umIdx = mapIter->second;
-
-        if (fUmModuleIPs[umIdx]->nextIOSocket( outIos, writeLock ))
-        {
-
 #ifdef SEL_CONN_DEBUG
-            std::ostringstream oss;
-            oss << "UM " << fUmModuleIPs[umIdx]->moduleName() <<
-                "; in: " << ios.toString() <<
-                "; selected out: " << outIos->toString() << std::endl;
-            std::cout << oss.str();
+      std::ostringstream oss;
+      oss << "UM " << fUmModuleIPs[umIdx]->moduleName() << "; in: " << ios.toString()
+          << "; selected out: " << outIos->toString() << std::endl;
+      std::cout << oss.str();
 #endif
 
-            return true;
-        }
+      return true;
     }
+  }
 
-    //..This should not happen.  Application is asking for next socket/port for
-    //  a connection not in our UM module list.
-    return false;
+  //..This should not happen.  Application is asking for next socket/port for
+  //  a connection not in our UM module list.
+  return false;
 }
 
 //------------------------------------------------------------------------------
 // Convert contents to string for logging, debugging, etc.
 //------------------------------------------------------------------------------
-const std::string
-UmSocketSelector::toString() const
+const std::string UmSocketSelector::toString() const
 {
-    std::ostringstream oss;
+  std::ostringstream oss;
 
-    oss << "IP Address to UM index map:" << std::endl;
+  oss << "IP Address to UM index map:" << std::endl;
 
-    for (IpAddressUmMap_t::const_iterator mapIter = fIpAddressUmMap.begin();
-            (mapIter != fIpAddressUmMap.end());
-            ++mapIter)
-    {
-        char ipString[INET_ADDRSTRLEN];
-        oss << "  IPAddress: " <<
-            UmIPSocketConns::nwToString(mapIter->first, ipString) <<
-            " maps to UM: "  << mapIter->second << std::endl;
-    }
+  for (IpAddressUmMap_t::const_iterator mapIter = fIpAddressUmMap.begin(); (mapIter != fIpAddressUmMap.end());
+       ++mapIter)
+  {
+    char ipString[INET_ADDRSTRLEN];
+    oss << "  IPAddress: " << UmIPSocketConns::nwToString(mapIter->first, ipString)
+        << " maps to UM: " << mapIter->second << std::endl;
+  }
 
-    for (unsigned int i = 0; i < fUmModuleIPs.size(); ++i)
-    {
-        oss << std::endl << fUmModuleIPs[i]->toString();
-    }
+  for (unsigned int i = 0; i < fUmModuleIPs.size(); ++i)
+  {
+    oss << std::endl << fUmModuleIPs[i]->toString();
+  }
 
-    return oss.str();
+  return oss.str();
 }
 
 //------------------------------------------------------------------------------
@@ -338,20 +315,19 @@ UmSocketSelector::toString() const
 // Add an IP address to be associated with this UM module.
 // ip (in) - IP address to associate with this UM module (in network byte order)
 //------------------------------------------------------------------------------
-void
-UmModuleIPs::addIP( in_addr_t ip )
+void UmModuleIPs::addIP(in_addr_t ip)
 {
-    boost::mutex::scoped_lock lock( fUmModuleMutex );
+  boost::mutex::scoped_lock lock(fUmModuleMutex);
 
 #ifdef MOD_CONN_DEBUG
-    std::ostringstream oss;
-    char ipString[INET_ADDRSTRLEN];
-    oss << "    UM " << fUmModuleName << "; adding IP: " <<
-        UmIPSocketConns::nwToString(ip, ipString) << std::endl;
-    std::cout << oss.str();
+  std::ostringstream oss;
+  char ipString[INET_ADDRSTRLEN];
+  oss << "    UM " << fUmModuleName << "; adding IP: " << UmIPSocketConns::nwToString(ip, ipString)
+      << std::endl;
+  std::cout << oss.str();
 #endif
 
-    fUmIPSocketConns.push_back( SP_UM_IPCONNS(new UmIPSocketConns(ip)) );
+  fUmIPSocketConns.push_back(SP_UM_IPCONNS(new UmIPSocketConns(ip)));
 }
 
 //------------------------------------------------------------------------------
@@ -361,81 +337,73 @@ UmModuleIPs::addIP( in_addr_t ip )
 // writeLock (in) - mutex to use when writing to ioSock.
 // return         - boolean indicating whether socket/port connection was added.
 //------------------------------------------------------------------------------
-bool
-UmModuleIPs::addSocketConn(
-    const SP_UM_IOSOCK& ioSock,
-    const SP_UM_MUTEX&  writeLock )
+bool UmModuleIPs::addSocketConn(const SP_UM_IOSOCK& ioSock, const SP_UM_MUTEX& writeLock)
 {
-    bool bConnAdded = false;
+  bool bConnAdded = false;
 
-    boost::mutex::scoped_lock lock( fUmModuleMutex );
+  boost::mutex::scoped_lock lock(fUmModuleMutex);
 
-    for (unsigned int i = 0; i < fUmIPSocketConns.size(); ++i)
+  for (unsigned int i = 0; i < fUmIPSocketConns.size(); ++i)
+  {
+    sockaddr sa = ioSock->sa();
+    const sockaddr_in* sinp = reinterpret_cast<const sockaddr_in*>(&sa);
+
+    if (fUmIPSocketConns[i]->ipAddress() == sinp->sin_addr.s_addr)
     {
-        sockaddr sa = ioSock->sa();
-        const sockaddr_in* sinp = reinterpret_cast<const sockaddr_in*>(&sa);
-
-        if (fUmIPSocketConns[i]->ipAddress() == sinp->sin_addr.s_addr)
-        {
-
 #ifdef MOD_CONN_DEBUG
-            std::ostringstream oss;
-            oss << "UM " << fUmModuleName << "; adding connection " <<
-                ioSock->toString() << std::endl;
-            std::cout << oss.str();
+      std::ostringstream oss;
+      oss << "UM " << fUmModuleName << "; adding connection " << ioSock->toString() << std::endl;
+      std::cout << oss.str();
 #endif
 
-            fUmIPSocketConns[i]->addSocketConn ( ioSock, writeLock );
-            bConnAdded = true;
+      fUmIPSocketConns[i]->addSocketConn(ioSock, writeLock);
+      bConnAdded = true;
 
-            //..Initialize fNextUmIPSocketIdx if this is the first socket/port
-            //  connection for this UM.
-            if ( fNextUmIPSocketIdx == NEXT_IP_SOCKET_UNASSIGNED)
-                fNextUmIPSocketIdx = i;
+      //..Initialize fNextUmIPSocketIdx if this is the first socket/port
+      //  connection for this UM.
+      if (fNextUmIPSocketIdx == NEXT_IP_SOCKET_UNASSIGNED)
+        fNextUmIPSocketIdx = i;
 
-            break;
-        }
+      break;
     }
+  }
 
-    return bConnAdded;
+  return bConnAdded;
 }
 
 //------------------------------------------------------------------------------
 // Delete a socket/port connection from this UM.
 // ioSock (in) - socket/port connection to be deleted
 //------------------------------------------------------------------------------
-void
-UmModuleIPs::delSocketConn( const messageqcpp::IOSocket& ioSock )
+void UmModuleIPs::delSocketConn(const messageqcpp::IOSocket& ioSock)
 {
-    boost::mutex::scoped_lock lock( fUmModuleMutex );
+  boost::mutex::scoped_lock lock(fUmModuleMutex);
 
-    for (unsigned int i = 0; i < fUmIPSocketConns.size(); ++i)
+  for (unsigned int i = 0; i < fUmIPSocketConns.size(); ++i)
+  {
+    sockaddr sa = ioSock.sa();
+    const sockaddr_in* sinp = reinterpret_cast<const sockaddr_in*>(&sa);
+
+    if (fUmIPSocketConns[i]->ipAddress() == sinp->sin_addr.s_addr)
     {
-        sockaddr sa = ioSock.sa();
-        const sockaddr_in* sinp = reinterpret_cast<const sockaddr_in*>(&sa);
-
-        if (fUmIPSocketConns[i]->ipAddress() == sinp->sin_addr.s_addr)
-        {
-
 #ifdef MOD_CONN_DEBUG
-            std::ostringstream oss;
-            oss << "UM " << fUmModuleName << "; deleting connection " <<
-                ioSock.toString() << std::endl;
-            std::cout << oss.str();
+      std::ostringstream oss;
+      oss << "UM " << fUmModuleName << "; deleting connection " << ioSock.toString() << std::endl;
+      std::cout << oss.str();
 #endif
 
-            fUmIPSocketConns[i]->delSocketConn ( ioSock );
+      fUmIPSocketConns[i]->delSocketConn(ioSock);
 
-            //..If we just deleted the last connection for this IP, then ad-
-            //  vance fNextUmIPSocketIdx to an IP address having connections.
-            if (fUmIPSocketConns[i]->count() == 0)
-            {
-                advanceToNextIP();
-            }
+      //..If we just deleted the last connection for this IP, then ad-
+      //  vance fNextUmIPSocketIdx to an IP address having connections.
+      if (fUmIPSocketConns[i]->count() == 0)
+      {
+        advanceToNextIP();
+      }
 
-            break;
-        }
+      break;
     }
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -446,23 +414,21 @@ UmModuleIPs::delSocketConn( const messageqcpp::IOSocket& ioSock )
 // return          - bool indicating if socket/port connection was assigned to
 //                   outIos
 //------------------------------------------------------------------------------
-bool
-UmModuleIPs::nextIOSocket( SP_UM_IOSOCK& outIos, SP_UM_MUTEX& writeLock )
+bool UmModuleIPs::nextIOSocket(SP_UM_IOSOCK& outIos, SP_UM_MUTEX& writeLock)
 {
-    bool found = false;
+  bool found = false;
 
-    boost::mutex::scoped_lock lock( fUmModuleMutex );
+  boost::mutex::scoped_lock lock(fUmModuleMutex);
 
-    if ((fUmIPSocketConns.size() > 0) &&
-            (fNextUmIPSocketIdx != NEXT_IP_SOCKET_UNASSIGNED))
-    {
-        assert (fNextUmIPSocketIdx < static_cast<int>(fUmIPSocketConns.size()));
-        fUmIPSocketConns[fNextUmIPSocketIdx]->nextIOSocket( outIos, writeLock );
-        advanceToNextIP();
-        found = true;
-    }
+  if ((fUmIPSocketConns.size() > 0) && (fNextUmIPSocketIdx != NEXT_IP_SOCKET_UNASSIGNED))
+  {
+    assert(fNextUmIPSocketIdx < static_cast<int>(fUmIPSocketConns.size()));
+    fUmIPSocketConns[fNextUmIPSocketIdx]->nextIOSocket(outIos, writeLock);
+    advanceToNextIP();
+    found = true;
+  }
 
-    return found;
+  return found;
 }
 
 //------------------------------------------------------------------------------
@@ -470,63 +436,57 @@ UmModuleIPs::nextIOSocket( SP_UM_IOSOCK& outIos, SP_UM_MUTEX& writeLock )
 // any IP's that have 0 socket/port connections.  No mutex locking done, as
 // the calling methods will have already locked a mutex.
 //------------------------------------------------------------------------------
-void
-UmModuleIPs::advanceToNextIP()
+void UmModuleIPs::advanceToNextIP()
 {
-    if ( fUmIPSocketConns.size() > 1 )
+  if (fUmIPSocketConns.size() > 1)
+  {
+    //..Search to end of IP list for an IP having 1 or more connections
+    for (int i = fNextUmIPSocketIdx + 1; i < static_cast<int>(fUmIPSocketConns.size()); ++i)
     {
-        //..Search to end of IP list for an IP having 1 or more connections
-        for (int i = fNextUmIPSocketIdx + 1;
-                i < static_cast<int>(fUmIPSocketConns.size());
-                ++i)
-        {
-            if (fUmIPSocketConns[i]->count() > 0)
-            {
-                fNextUmIPSocketIdx = i;
-                return;
-            }
-        }
-
-        //..Wrap back around to the start of the list, to continue the search
-        for (int i = 0; i < fNextUmIPSocketIdx; ++i)
-        {
-            if (fUmIPSocketConns[i]->count() > 0)
-            {
-                fNextUmIPSocketIdx = i;
-                return;
-            }
-        }
-
-        fNextUmIPSocketIdx = NEXT_IP_SOCKET_UNASSIGNED;
+      if (fUmIPSocketConns[i]->count() > 0)
+      {
+        fNextUmIPSocketIdx = i;
+        return;
+      }
     }
-    else // special logic to handle 0 fUmIPSocketConns, or a single empty one
+
+    //..Wrap back around to the start of the list, to continue the search
+    for (int i = 0; i < fNextUmIPSocketIdx; ++i)
     {
-        if ((fUmIPSocketConns.size() == 0) ||
-                (fUmIPSocketConns[0]->count() == 0))
-        {
-            fNextUmIPSocketIdx = NEXT_IP_SOCKET_UNASSIGNED;
-        }
+      if (fUmIPSocketConns[i]->count() > 0)
+      {
+        fNextUmIPSocketIdx = i;
+        return;
+      }
     }
+
+    fNextUmIPSocketIdx = NEXT_IP_SOCKET_UNASSIGNED;
+  }
+  else  // special logic to handle 0 fUmIPSocketConns, or a single empty one
+  {
+    if ((fUmIPSocketConns.size() == 0) || (fUmIPSocketConns[0]->count() == 0))
+    {
+      fNextUmIPSocketIdx = NEXT_IP_SOCKET_UNASSIGNED;
+    }
+  }
 }
 
 //------------------------------------------------------------------------------
 // Convert contents to string for logging, debugging, etc.
 //------------------------------------------------------------------------------
-const std::string
-UmModuleIPs::toString()
+const std::string UmModuleIPs::toString()
 {
-    std::ostringstream oss;
+  std::ostringstream oss;
 
-    boost::mutex::scoped_lock lock( fUmModuleMutex );
-    oss << "UM module name: " << fUmModuleName <<
-        "; nextUmIPIdx: " << fNextUmIPSocketIdx << std::endl;
+  boost::mutex::scoped_lock lock(fUmModuleMutex);
+  oss << "UM module name: " << fUmModuleName << "; nextUmIPIdx: " << fNextUmIPSocketIdx << std::endl;
 
-    for (unsigned int i = 0; i < fUmIPSocketConns.size(); ++i)
-    {
-        oss << fUmIPSocketConns[i]->toString();
-    }
+  for (unsigned int i = 0; i < fUmIPSocketConns.size(); ++i)
+  {
+    oss << fUmIPSocketConns[i]->toString();
+  }
 
-    return oss.str();
+  return oss.str();
 }
 
 //------------------------------------------------------------------------------
@@ -537,20 +497,14 @@ UmModuleIPs::toString()
 // ioSock (in)    - socket/port connection to be added
 // writeLock (in) - mutex to use when writing to ioSock
 //------------------------------------------------------------------------------
-void
-UmIPSocketConns::addSocketConn(
-    const SP_UM_IOSOCK& ioSock,
-    const SP_UM_MUTEX&  writeLock )
+void UmIPSocketConns::addSocketConn(const SP_UM_IOSOCK& ioSock, const SP_UM_MUTEX& writeLock)
 {
-    UmIOSocketData sockData =
-    {
-        SP_UM_IOSOCK(ioSock), SP_UM_MUTEX(writeLock)
-    };
-    fIOSockets.push_back( sockData );
+  UmIOSocketData sockData = {SP_UM_IOSOCK(ioSock), SP_UM_MUTEX(writeLock)};
+  fIOSockets.push_back(sockData);
 
-    //..Initialize fNextIOSocketIdx when we add first connection
-    if (fIOSockets.size() == 1)
-        fNextIOSocketIdx = 0;
+  //..Initialize fNextIOSocketIdx when we add first connection
+  if (fIOSockets.size() == 1)
+    fNextIOSocketIdx = 0;
 }
 
 //------------------------------------------------------------------------------
@@ -564,40 +518,39 @@ UmIPSocketConns::addSocketConn(
 // collection.  Plus we want to use a vector over a list, so that nextIOSocket()
 // can benefit from quick random access.
 //------------------------------------------------------------------------------
-void
-UmIPSocketConns::delSocketConn( const messageqcpp::IOSocket& ioSock )
+void UmIPSocketConns::delSocketConn(const messageqcpp::IOSocket& ioSock)
 {
-    for (unsigned int i = 0; i < fIOSockets.size(); ++i)
+  for (unsigned int i = 0; i < fIOSockets.size(); ++i)
+  {
+    sockaddr sa1 = fIOSockets[i].fSock->sa();
+    const sockaddr_in* sinp1 = reinterpret_cast<const sockaddr_in*>(&sa1);
+    sockaddr sa2 = ioSock.sa();
+    const sockaddr_in* sinp2 = reinterpret_cast<const sockaddr_in*>(&sa2);
+
+    if (sinp1->sin_port == sinp2->sin_port)
     {
-        sockaddr sa1 = fIOSockets[i].fSock->sa();
-        const sockaddr_in* sinp1 = reinterpret_cast<const sockaddr_in*>(&sa1);
-        sockaddr sa2 = ioSock.sa();
-        const sockaddr_in* sinp2 = reinterpret_cast<const sockaddr_in*>(&sa2);
+      fIOSockets.erase(fIOSockets.begin() + i);
 
-        if (sinp1->sin_port == sinp2->sin_port)
-        {
-            fIOSockets.erase ( fIOSockets.begin()  + i );
+      //..Adjust fNextIOSocketIdx
+      //  1a. decrement if fNextIOSocketIdx is after deleted connection
+      //  1b. reset to start of vector if we deleted the last connection
+      //  2.  reset fNextIOSocketIdx to -1 if we have no more connections
+      if (fIOSockets.size() > 0)
+      {
+        if (fNextIOSocketIdx > static_cast<int>(i))
+          fNextIOSocketIdx--;
 
-            //..Adjust fNextIOSocketIdx
-            //  1a. decrement if fNextIOSocketIdx is after deleted connection
-            //  1b. reset to start of vector if we deleted the last connection
-            //  2.  reset fNextIOSocketIdx to -1 if we have no more connections
-            if (fIOSockets.size() > 0)
-            {
-                if (fNextIOSocketIdx > static_cast<int>(i))
-                    fNextIOSocketIdx--;
+        if (fNextIOSocketIdx >= static_cast<int>(fIOSockets.size()))
+          fNextIOSocketIdx = 0;
+      }
+      else
+      {
+        fNextIOSocketIdx = NEXT_IOSOCKET_UNASSIGNED;
+      }
 
-                if ( fNextIOSocketIdx >= static_cast<int>(fIOSockets.size()) )
-                    fNextIOSocketIdx = 0;
-            }
-            else
-            {
-                fNextIOSocketIdx = NEXT_IOSOCKET_UNASSIGNED;
-            }
-
-            break;
-        }
+      break;
     }
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -606,62 +559,58 @@ UmIPSocketConns::delSocketConn( const messageqcpp::IOSocket& ioSock )
 // outIos (out)    - socket/port connection to use in sending next msg
 // writelock (out) - mutex lock to be used when writing to outIos
 //------------------------------------------------------------------------------
-void
-UmIPSocketConns::nextIOSocket ( SP_UM_IOSOCK& outIos, SP_UM_MUTEX& writeLock )
+void UmIPSocketConns::nextIOSocket(SP_UM_IOSOCK& outIos, SP_UM_MUTEX& writeLock)
 {
-    assert (fIOSockets.size() > 0);
-    assert (fNextIOSocketIdx != NEXT_IOSOCKET_UNASSIGNED);
-    assert (fNextIOSocketIdx  < static_cast<int>(fIOSockets.size()));
+  assert(fIOSockets.size() > 0);
+  assert(fNextIOSocketIdx != NEXT_IOSOCKET_UNASSIGNED);
+  assert(fNextIOSocketIdx < static_cast<int>(fIOSockets.size()));
 
-    outIos    = fIOSockets[fNextIOSocketIdx].fSock;
-    writeLock = fIOSockets[fNextIOSocketIdx].fMutex;
+  outIos = fIOSockets[fNextIOSocketIdx].fSock;
+  writeLock = fIOSockets[fNextIOSocketIdx].fMutex;
 
-    //..Update "next" index, being sure to wrap around to the start
-    //  whenever we reach the end of the vector.
-    fNextIOSocketIdx++;
+  //..Update "next" index, being sure to wrap around to the start
+  //  whenever we reach the end of the vector.
+  fNextIOSocketIdx++;
 
-    if (fNextIOSocketIdx >= static_cast<int>(fIOSockets.size()))
-        fNextIOSocketIdx = 0;
+  if (fNextIOSocketIdx >= static_cast<int>(fIOSockets.size()))
+    fNextIOSocketIdx = 0;
 }
 
 //------------------------------------------------------------------------------
 // Convert network byte ordered IP address to a string.
 // return - char* is returned with the IP address string.
 //------------------------------------------------------------------------------
-/* static */ char*
-UmIPSocketConns::nwToString( in_addr_t addr, char* ipString )
+/* static */ char* UmIPSocketConns::nwToString(in_addr_t addr, char* ipString)
 {
-    in_addr addrStruct = { addr };
+  in_addr addrStruct = {addr};
 #ifndef _MSC_VER
 
-    if (!inet_ntop(AF_INET, &addrStruct, ipString, INET_ADDRSTRLEN))
+  if (!inet_ntop(AF_INET, &addrStruct, ipString, INET_ADDRSTRLEN))
 #endif
-        strcpy(ipString, "unknown");
+    strcpy(ipString, "unknown");
 
-    return ipString;
+  return ipString;
 }
 
 //------------------------------------------------------------------------------
 // Convert contents to string for logging, debugging, etc.
 //------------------------------------------------------------------------------
-const std::string
-UmIPSocketConns::toString() const
+const std::string UmIPSocketConns::toString() const
 {
-    std::ostringstream oss;
+  std::ostringstream oss;
 
-    char ipString[INET_ADDRSTRLEN];
-    oss << "  IPAddress: " << UmIPSocketConns::nwToString(fIpAddress, ipString) <<
-        "; nextIOSocketIdx: " << fNextIOSocketIdx << std::endl;
+  char ipString[INET_ADDRSTRLEN];
+  oss << "  IPAddress: " << UmIPSocketConns::nwToString(fIpAddress, ipString)
+      << "; nextIOSocketIdx: " << fNextIOSocketIdx << std::endl;
 
-    for (unsigned int i = 0; i < fIOSockets.size(); ++i)
-    {
-        sockaddr sa = fIOSockets[i].fSock->sa();
-        const sockaddr_in* sinp = reinterpret_cast<const sockaddr_in*>(&sa);
-        oss << "    port: " << ntohs(sinp->sin_port) <<
-            std::endl;
-    }
+  for (unsigned int i = 0; i < fIOSockets.size(); ++i)
+  {
+    sockaddr sa = fIOSockets[i].fSock->sa();
+    const sockaddr_in* sinp = reinterpret_cast<const sockaddr_in*>(&sa);
+    oss << "    port: " << ntohs(sinp->sin_port) << std::endl;
+  }
 
-    return oss.str();
+  return oss.str();
 }
 
-} // end of primitiveprocessor namespace
+}  // namespace primitiveprocessor

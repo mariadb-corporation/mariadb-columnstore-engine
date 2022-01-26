@@ -22,8 +22,7 @@
  ***********************************************************************/
 /** @file */
 
-#ifndef DELETEDMLPACKAGE_H
-#define DELETEDMLPACKAGE_H
+#pragma once
 #include <string>
 #include "calpontdmlpackage.h"
 #include "bytestream.h"
@@ -41,66 +40,61 @@ namespace dmlpackage
  */
 class DeleteDMLPackage : public CalpontDMLPackage
 {
+ public:
+  /** @brief ctor
+   */
+  EXPORT DeleteDMLPackage();
 
-public:
+  /** @brief ctor
+   *
+   * @param schemaName the schema of the table being operated on
+   * @param tableName the name of the table being operated on
+   * @param dmlStatement the dml statement
+   * @param sessionID the session ID
+   */
+  EXPORT DeleteDMLPackage(std::string schemaName, std::string tableName, std::string dmlStatement,
+                          int sessionID);
 
-    /** @brief ctor
-     */
-    EXPORT DeleteDMLPackage();
+  /** @brief dtor
+   */
+  EXPORT virtual ~DeleteDMLPackage();
 
-    /** @brief ctor
-     *
-     * @param schemaName the schema of the table being operated on
-     * @param tableName the name of the table being operated on
-     * @param dmlStatement the dml statement
-     * @param sessionID the session ID
-     */
-    EXPORT DeleteDMLPackage( std::string schemaName, std::string tableName,
-                             std::string dmlStatement, int sessionID );
+  /** @brief write a DeleteDMLPackage to a ByteStream
+   *
+   * @param bytestream the ByteStream to write to
+   */
+  EXPORT int write(messageqcpp::ByteStream& bytestream);
 
-    /** @brief dtor
-     */
-    EXPORT virtual ~DeleteDMLPackage();
+  /** @brief read a DeleteDMLPackage from a ByteStream
+   *
+   * @param bytestream the ByteStream to read from
+   */
+  EXPORT int read(messageqcpp::ByteStream& bytestream);
 
-    /** @brief write a DeleteDMLPackage to a ByteStream
-     *
-     * @param bytestream the ByteStream to write to
-     */
-    EXPORT int write(messageqcpp::ByteStream& bytestream);
+  /** @brief build a DeleteDMLPackage from a string buffer
+   *
+   * @param buffer [rowId, columnName, colValue]
+   * @param columns the number of columns in the buffer
+   * @param rows the number of rows in the buffer
+   */
+  EXPORT int buildFromBuffer(std::string& buffer, int columns, int rows);
 
-    /** @brief read a DeleteDMLPackage from a ByteStream
-     *
-     * @param bytestream the ByteStream to read from
-     */
-    EXPORT int read(messageqcpp::ByteStream& bytestream);
+  /** @brief build a DeleteDMLPackage from a parsed DeleteSqlStatement
+   *
+   * @param sqlStatement the parsed DeleteSqlStatement
+   */
+  EXPORT int buildFromSqlStatement(SqlStatement& sqlStatement);
+  /** @brief build a InsertDMLPackage from MySQL buffer
+   *
+   * @param colNameList, tableValuesMap
+   * @param rows the number of rows in the buffer
+   */
+  EXPORT int buildFromMysqlBuffer(ColNameList& colNameList, TableValuesMap& tableValuesMap, int columns,
+                                  int rows, NullValuesBitset& nullValues);
 
-    /** @brief build a DeleteDMLPackage from a string buffer
-     *
-     * @param buffer [rowId, columnName, colValue]
-     * @param columns the number of columns in the buffer
-     * @param rows the number of rows in the buffer
-     */
-    EXPORT int buildFromBuffer(std::string& buffer, int columns, int rows);
-
-    /** @brief build a DeleteDMLPackage from a parsed DeleteSqlStatement
-     *
-     * @param sqlStatement the parsed DeleteSqlStatement
-     */
-    EXPORT int buildFromSqlStatement(SqlStatement& sqlStatement);
-    /** @brief build a InsertDMLPackage from MySQL buffer
-    *
-    * @param colNameList, tableValuesMap
-    * @param rows the number of rows in the buffer
-    */
-    EXPORT int buildFromMysqlBuffer(ColNameList& colNameList, TableValuesMap& tableValuesMap, int columns, int rows, NullValuesBitset& nullValues);
-
-protected:
-
-private:
-
+ protected:
+ private:
 };
-}
+}  // namespace dmlpackage
 
 #undef EXPORT
-
-#endif                                            //DELETEDMLPACKAGE_H

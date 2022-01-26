@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_crc32.cpp 3923 2013-06-19 21:43:06Z bwilkinson $
-*
-*
-****************************************************************************/
+ * $Id: func_crc32.cpp 3923 2013-06-19 21:43:06Z bwilkinson $
+ *
+ *
+ ****************************************************************************/
 
 #include <unistd.h>
 #include <cstdlib>
@@ -38,37 +38,30 @@ using namespace execplan;
 
 namespace funcexp
 {
-
-CalpontSystemCatalog::ColType Func_crc32::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
+CalpontSystemCatalog::ColType Func_crc32::operationType(FunctionParm& fp,
+                                                        CalpontSystemCatalog::ColType& resultType)
 {
-    return resultType;
+  return resultType;
 }
 
-
-int64_t Func_crc32::getIntVal(rowgroup::Row& row,
-                              FunctionParm& parm,
-                              bool& isNull,
+int64_t Func_crc32::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                               CalpontSystemCatalog::ColType& ct)
 {
-    unsigned crc = 0;
-    switch (parm.size())
-    {
-        default:
-            isNull = true;
-            return 0;
-        case 1:
-            break;
-        case 2:
-            crc = static_cast<unsigned>(parm[0]->data()->getIntVal(row, isNull));
-            if (isNull)
-                return 0;
-    }
-    const string& b = parm[parm.size() - 1]->data()->getStrVal(row, isNull);
-    if (isNull)
+  unsigned crc = 0;
+  switch (parm.size())
+  {
+    default: isNull = true; return 0;
+    case 1: break;
+    case 2:
+      crc = static_cast<unsigned>(parm[0]->data()->getIntVal(row, isNull));
+      if (isNull)
         return 0;
-    return crc32(crc, reinterpret_cast<const uint8_t*>(b.data()), b.size());
+  }
+  const string& b = parm[parm.size() - 1]->data()->getStrVal(row, isNull);
+  if (isNull)
+    return 0;
+  return crc32(crc, reinterpret_cast<const uint8_t*>(b.data()), b.size());
 }
 
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:

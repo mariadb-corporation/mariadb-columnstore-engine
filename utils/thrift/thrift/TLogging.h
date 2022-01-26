@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TLOGGING_H_
-#define _THRIFT_TLOGGING_H_ 1
+#pragma once
 
 #include <thrift/thrift-config.h>
 
@@ -190,4 +189,3 @@
 #define T_GENERIC_PROTOCOL(template_class, generic_prot, specific_prot)
 #endif
 
-#endif // #ifndef _THRIFT_TLOGGING_H_

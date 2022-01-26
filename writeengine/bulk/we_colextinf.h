@@ -25,8 +25,7 @@
  * For ex: this is where we track the min/max values per extent for a column.
  */
 
-#ifndef WE_COLEXTINF_H_
-#define WE_COLEXTINF_H_
+#pragma once
 
 #include <limits>
 #include <stdint.h>
@@ -58,70 +57,66 @@ typedef execplan::CalpontSystemCatalog::ColDataType ColDataType;
 //------------------------------------------------------------------------------
 class ColExtInfEntry
 {
-public:
-    // Default constructor
-    ColExtInfEntry() : fLbid(INVALID_LBID),
-        fMinVal(LLONG_MIN),
-        fMaxVal(LLONG_MIN),
-        fNewExtent(true)
-    {
-        utils::int128Min(fbigMaxVal);
-        utils::int128Max(fbigMinVal);
-    }
+ public:
+  // Default constructor
+  ColExtInfEntry() : fLbid(INVALID_LBID), fMinVal(LLONG_MIN), fMaxVal(LLONG_MIN), fNewExtent(true)
+  {
+    utils::int128Min(fbigMaxVal);
+    utils::int128Max(fbigMinVal);
+  }
 
-    // Used to create entry for an existing extent we are going to add data to.
-    ColExtInfEntry(BRM::LBID_t lbid, bool bIsNewExtent) :
-        fLbid(lbid),
-        fMinVal(LLONG_MIN),
-        fMaxVal(LLONG_MIN),
-        fNewExtent(bIsNewExtent)
-    {
-        utils::int128Min(fbigMaxVal);
-        utils::int128Max(fbigMinVal);
-    }
+  // Used to create entry for an existing extent we are going to add data to.
+  ColExtInfEntry(BRM::LBID_t lbid, bool bIsNewExtent)
+   : fLbid(lbid), fMinVal(LLONG_MIN), fMaxVal(LLONG_MIN), fNewExtent(bIsNewExtent)
+  {
+    utils::int128Min(fbigMaxVal);
+    utils::int128Max(fbigMinVal);
+  }
 
-    // Used to create entry for a new extent, with LBID not yet allocated
-    ColExtInfEntry(int64_t minVal, int64_t maxVal) :
-        fLbid(INVALID_LBID),
-        fMinVal(minVal),
-        fMaxVal(maxVal),
-        fNewExtent(true)   { }
+  // Used to create entry for a new extent, with LBID not yet allocated
+  ColExtInfEntry(int64_t minVal, int64_t maxVal)
+   : fLbid(INVALID_LBID), fMinVal(minVal), fMaxVal(maxVal), fNewExtent(true)
+  {
+  }
 
-    // Used to create entry for a new extent, with LBID not yet allocated
-    ColExtInfEntry(int128_t bigMinVal, int128_t bigMaxVal) :
-        fLbid(INVALID_LBID),
-        fNewExtent(true),
-        fbigMinVal(bigMinVal),
-        fbigMaxVal(bigMaxVal) { }
+  // Used to create entry for a new extent, with LBID not yet allocated
+  ColExtInfEntry(int128_t bigMinVal, int128_t bigMaxVal)
+   : fLbid(INVALID_LBID), fNewExtent(true), fbigMinVal(bigMinVal), fbigMaxVal(bigMaxVal)
+  {
+  }
 
-    // Used to create entry for a new extent, with LBID not yet allocated
-    ColExtInfEntry(uint64_t minVal, uint64_t maxVal) :
-        fLbid(INVALID_LBID),
-        fMinVal(static_cast<int64_t>(minVal)),
-        fMaxVal(static_cast<int64_t>(maxVal)),
-        fNewExtent(true)   { }
+  // Used to create entry for a new extent, with LBID not yet allocated
+  ColExtInfEntry(uint64_t minVal, uint64_t maxVal)
+   : fLbid(INVALID_LBID)
+   , fMinVal(static_cast<int64_t>(minVal))
+   , fMaxVal(static_cast<int64_t>(maxVal))
+   , fNewExtent(true)
+  {
+  }
 
-    // Used to create entry for a new extent, with LBID not yet allocated
-    ColExtInfEntry(uint128_t bigMinVal, uint128_t bigMaxVal) :
-        fLbid(INVALID_LBID),
-        fNewExtent(true),
-        fbigMinVal(static_cast<int128_t>(bigMinVal)),
-        fbigMaxVal(static_cast<int128_t>(bigMaxVal)) { }
+  // Used to create entry for a new extent, with LBID not yet allocated
+  ColExtInfEntry(uint128_t bigMinVal, uint128_t bigMaxVal)
+   : fLbid(INVALID_LBID)
+   , fNewExtent(true)
+   , fbigMinVal(static_cast<int128_t>(bigMinVal))
+   , fbigMaxVal(static_cast<int128_t>(bigMaxVal))
+  {
+  }
 
-    BRM::LBID_t fLbid;     // LBID for an extent; should be the starting LBID
-    int64_t     fMinVal;   // minimum value for extent associated with LBID
-    int64_t     fMaxVal;   // maximum value for extent associated with LBID
-    bool        fNewExtent;// is this a new extent
-    union
-    {
-        int128_t fbigMinVal;
-        int64_t fMinVal_;
-    };
-    union
-    {
-        int128_t fbigMaxVal;
-        int64_t fMaxVal_;
-    };
+  BRM::LBID_t fLbid;  // LBID for an extent; should be the starting LBID
+  int64_t fMinVal;    // minimum value for extent associated with LBID
+  int64_t fMaxVal;    // maximum value for extent associated with LBID
+  bool fNewExtent;    // is this a new extent
+  union
+  {
+    int128_t fbigMinVal;
+    int64_t fMinVal_;
+  };
+  union
+  {
+    int128_t fbigMaxVal;
+    int64_t fMaxVal_;
+  };
 };
 
 //------------------------------------------------------------------------------
@@ -131,10 +126,10 @@ public:
 //------------------------------------------------------------------------------
 struct uint64Hasher : public std::unary_function<RID, std::size_t>
 {
-    std::size_t operator()(RID val) const
-    {
-        return static_cast<std::size_t>(val);
-    }
+  std::size_t operator()(RID val) const
+  {
+    return static_cast<std::size_t>(val);
+  }
 };
 
 //------------------------------------------------------------------------------
@@ -144,33 +139,38 @@ struct uint64Hasher : public std::unary_function<RID, std::size_t>
 //------------------------------------------------------------------------------
 class ColExtInfBase
 {
-public:
-    ColExtInfBase( )                                        { }
-    virtual ~ColExtInfBase( )                               { }
+ public:
+  ColExtInfBase()
+  {
+  }
+  virtual ~ColExtInfBase()
+  {
+  }
 
-    virtual void addFirstEntry   ( RID     lastInputRow,
-                                   BRM::LBID_t lbid,
-                                   bool    bIsNewExtent)    { }
+  virtual void addFirstEntry(RID lastInputRow, BRM::LBID_t lbid, bool bIsNewExtent)
+  {
+  }
 
-    virtual void addOrUpdateEntry( RID     lastInputRow,
-                                   int64_t minVal,
-                                   int64_t maxVal,
-                                   ColDataType colDataType,
-                                   int width ) { }
+  virtual void addOrUpdateEntry(RID lastInputRow, int64_t minVal, int64_t maxVal, ColDataType colDataType,
+                                int width)
+  {
+  }
 
-    virtual void addOrUpdateEntry( RID     lastInputRow,
-                                   int128_t minVal,
-                                   int128_t maxVal,
-                                   ColDataType colDataType,
-                                   int width ) { }
+  virtual void addOrUpdateEntry(RID lastInputRow, int128_t minVal, int128_t maxVal, ColDataType colDataType,
+                                int width)
+  {
+  }
 
-    virtual void getCPInfoForBRM ( JobColumn column,
-                                   BRMReporter& brmReporter) { }
-    virtual void print( const JobColumn& column )           { }
-    virtual int updateEntryLbid( BRM::LBID_t startLbid )
-    {
-        return NO_ERROR;
-    }
+  virtual void getCPInfoForBRM(JobColumn column, BRMReporter& brmReporter)
+  {
+  }
+  virtual void print(const JobColumn& column)
+  {
+  }
+  virtual int updateEntryLbid(BRM::LBID_t startLbid)
+  {
+    return NO_ERROR;
+  }
 };
 
 //------------------------------------------------------------------------------
@@ -189,88 +189,73 @@ public:
 //------------------------------------------------------------------------------
 class ColExtInf : public ColExtInfBase
 {
-public:
+ public:
+  /** @brief Constructor
+   *  @param logger Log object using for debug logging.
+   */
+  ColExtInf(OID oid, Log* logger) : fColOid(oid), fLog(logger)
+  {
+  }
+  virtual ~ColExtInf()
+  {
+  }
 
-    /** @brief Constructor
-     *  @param logger Log object using for debug logging.
-     */
-    ColExtInf( OID oid, Log* logger ) : fColOid(oid), fLog(logger) { }
-    virtual ~ColExtInf( )                   { }
+  /** @brief Add an entry for first extent, for the specified Row and LBID.
+   *  @param lastInputRow Last input Row for old extent we are adding data to
+   *  @param lbid         LBID of the relevant extent.
+   *  @param bIsNewExtent Treat as new or existing extent when CP min/max is
+   *                      sent to BRM
+   */
+  virtual void addFirstEntry(RID lastInputRow, BRM::LBID_t lbid, bool bIsNewExtent);
 
-    /** @brief Add an entry for first extent, for the specified Row and LBID.
-     *  @param lastInputRow Last input Row for old extent we are adding data to
-     *  @param lbid         LBID of the relevant extent.
-     *  @param bIsNewExtent Treat as new or existing extent when CP min/max is
-     *                      sent to BRM
-     */
-    virtual void addFirstEntry( RID         lastInputRow,
-                                BRM::LBID_t lbid,
-                                bool        bIsNewExtent );
+  /** @brief Add or update an entry for the specified Row and its min/max val.
+   *         If new extent, LBID will be added later when extent is allocated.
+   *  @param lastInputRow Last input Row for a new extent being loaded.
+   *  @param minVal       Minimum value for the latest buffer read
+   *  @param maxVal       Maximum value for the latest buffer read
+   */
+  template <typename T>
+  void addOrUpdateEntryTemplate(RID lastInputRow, T minVal, T maxVal, ColDataType colDataType, int width);
 
-    /** @brief Add or update an entry for the specified Row and its min/max val.
-     *         If new extent, LBID will be added later when extent is allocated.
-     *  @param lastInputRow Last input Row for a new extent being loaded.
-     *  @param minVal       Minimum value for the latest buffer read
-     *  @param maxVal       Maximum value for the latest buffer read
-     */
-    template <typename T>
-    void addOrUpdateEntryTemplate( RID     lastInputRow,
-                                   T minVal, T maxVal,
-                                   ColDataType colDataType,
-                                   int width );
+  virtual void addOrUpdateEntry(RID lastInputRow, int64_t minVal, int64_t maxVal, ColDataType colDataType,
+                                int width)
+  {
+    addOrUpdateEntryTemplate(lastInputRow, minVal, maxVal, colDataType, width);
+  }
 
-    virtual void addOrUpdateEntry( RID     lastInputRow,
-                                   int64_t minVal, int64_t maxVal,
-                                   ColDataType colDataType,
-                                   int width )
-    {
-        addOrUpdateEntryTemplate( lastInputRow,
-                                  minVal, maxVal,
-                                  colDataType,
-                                  width );
-    }
+  virtual void addOrUpdateEntry(RID lastInputRow, int128_t minVal, int128_t maxVal, ColDataType colDataType,
+                                int width)
+  {
+    addOrUpdateEntryTemplate(lastInputRow, minVal, maxVal, colDataType, width);
+  }
 
-    virtual void addOrUpdateEntry( RID     lastInputRow,
-                                   int128_t minVal, int128_t maxVal,
-                                   ColDataType colDataType,
-                                   int width )
-    {
-        addOrUpdateEntryTemplate( lastInputRow,
-                                  minVal, maxVal,
-                                  colDataType,
-                                  width );
-    }
+  /** @brief Send updated Casual Partition (CP) info to BRM.
+   */
+  virtual void getCPInfoForBRM(JobColumn column, BRMReporter& brmReporter);
 
-    /** @brief Send updated Casual Partition (CP) info to BRM.
-     */
-    virtual void getCPInfoForBRM ( JobColumn column,
-                                   BRMReporter& brmReporter );
+  /** @brief Debug print function.
+   */
+  virtual void print(const JobColumn& column);
 
-    /** @brief Debug print function.
-     */
-    virtual void print( const JobColumn& column );
+  /** @brief Add extent's LBID to the oldest entry that is awaiting an LBID
+   *  @param startLbid Starting LBID for a pending extent.
+   *  @return NO_ERROR upon success; else error if extent entry not found
+   */
+  virtual int updateEntryLbid(BRM::LBID_t startLbid);
 
-    /** @brief Add extent's LBID to the oldest entry that is awaiting an LBID
-     *  @param startLbid Starting LBID for a pending extent.
-     *  @return NO_ERROR upon success; else error if extent entry not found
-     */
-    virtual int updateEntryLbid( BRM::LBID_t startLbid );
+ private:
+  OID fColOid;                       // Column OID for the relevant extents
+  Log* fLog;                         // Log used for debug logging
+  boost::mutex fMapMutex;            // protects unordered map access
+  std::set<RID> fPendingExtentRows;  // list of lastInputRow entries that
+  // are awaiting an LBID assignment.
 
-private:
-    OID             fColOid;              // Column OID for the relevant extents
-    Log*            fLog;                 // Log used for debug logging
-    boost::mutex    fMapMutex;            // protects unordered map access
-    std::set<RID>   fPendingExtentRows;   // list of lastInputRow entries that
-    // are awaiting an LBID assignment.
+  // unordered map where we collect the min/max values per extent
+  std::tr1::unordered_map<RID, ColExtInfEntry, uint64Hasher> fMap;
 
-    // unordered map where we collect the min/max values per extent
-    std::tr1::unordered_map<RID, ColExtInfEntry, uint64Hasher> fMap;
-
-    // disable copy constructor and assignment operator
-    ColExtInf(const ColExtInf&);
-    ColExtInf& operator=(const ColExtInf&);
+  // disable copy constructor and assignment operator
+  ColExtInf(const ColExtInf&);
+  ColExtInf& operator=(const ColExtInf&);
 };
 
-} //end of namespace
-
-#endif // WE_COLEXTINF_H_
+}  // namespace WriteEngine

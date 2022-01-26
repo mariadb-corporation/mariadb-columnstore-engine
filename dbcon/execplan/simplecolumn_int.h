@@ -17,14 +17,13 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: simplecolumn_int.h 9635 2013-06-19 21:42:30Z bwilkinson $
-*
-*
-***********************************************************************/
+ *   $Id: simplecolumn_int.h 9635 2013-06-19 21:42:30Z bwilkinson $
+ *
+ *
+ ***********************************************************************/
 /** @file */
 
-#ifndef SIMPLECOLUMNINT_H
-#define SIMPLECOLUMNINT_H
+#pragma once
 #include <iostream>
 #include <string>
 
@@ -48,231 +47,198 @@ namespace execplan
 template <int len>
 class SimpleColumn_INT : public SimpleColumn
 {
+  /**
+   * Public stuff
+   */
+ public:
+  /** Constructors */
+  SimpleColumn_INT();
+  SimpleColumn_INT(const std::string& token, const uint32_t sessionID = 0);
+  SimpleColumn_INT(const std::string& schema, const std::string& table, const std::string& col,
+                   const bool isColumnStore, const uint32_t sessionID = 0);
+  SimpleColumn_INT(const SimpleColumn& rhs, const uint32_t sessionID = 0);
 
-    /**
-     * Public stuff
-     */
-public:
+  /** Destructor */
+  virtual ~SimpleColumn_INT()
+  {
+  }
 
-    /** Constructors */
-    SimpleColumn_INT();
-    SimpleColumn_INT(const std::string& token, const uint32_t sessionID = 0);
-    SimpleColumn_INT(const std::string& schema,
-                     const std::string& table,
-                     const std::string& col,
-                     const bool isColumnStore,
-                     const uint32_t sessionID = 0);
-    SimpleColumn_INT(const SimpleColumn& rhs, const uint32_t sessionID = 0);
+  inline virtual SimpleColumn_INT* clone() const
+  {
+    return new SimpleColumn_INT<len>(*this);
+  }
 
-    /** Destructor */
-    virtual ~SimpleColumn_INT() {}
+  /** Evaluate methods */
+  virtual inline const std::string& getStrVal(rowgroup::Row& row, bool& isNull);
+  virtual inline int64_t getIntVal(rowgroup::Row& row, bool& isNull);
+  virtual inline uint64_t getUintVal(rowgroup::Row& row, bool& isNull);
+  virtual inline float getFloatVal(rowgroup::Row& row, bool& isNull);
+  virtual inline double getDoubleVal(rowgroup::Row& row, bool& isNull);
+  virtual inline long double getLongDoubleVal(rowgroup::Row& row, bool& isNull);
+  virtual inline IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull);
 
-    inline virtual SimpleColumn_INT* clone() const
-    {
-        return new SimpleColumn_INT<len> (*this);
-    }
+  /** The serialize interface */
+  virtual void serialize(messageqcpp::ByteStream&) const;
+  virtual void unserialize(messageqcpp::ByteStream&);
+  uint64_t fNullVal;
 
-    /** Evaluate methods */
-    virtual inline const std::string& getStrVal(rowgroup::Row& row, bool& isNull);
-    virtual inline int64_t getIntVal(rowgroup::Row& row, bool& isNull);
-    virtual inline uint64_t getUintVal(rowgroup::Row& row, bool& isNull);
-    virtual inline float getFloatVal(rowgroup::Row& row, bool& isNull);
-    virtual inline double getDoubleVal(rowgroup::Row& row, bool& isNull);
-    virtual inline long double getLongDoubleVal(rowgroup::Row& row, bool& isNull);
-    virtual inline IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull);
-
-    /** The serialize interface */
-    virtual void serialize(messageqcpp::ByteStream&) const;
-    virtual void unserialize(messageqcpp::ByteStream&);
-    uint64_t fNullVal;
-
-private:
-    void setNullVal();
-
+ private:
+  void setNullVal();
 };
 
-template<int len>
-SimpleColumn_INT<len>::SimpleColumn_INT(): SimpleColumn()
+template <int len>
+SimpleColumn_INT<len>::SimpleColumn_INT() : SimpleColumn()
 {
-    setNullVal();
+  setNullVal();
 }
 
-template<int len>
-SimpleColumn_INT<len>::SimpleColumn_INT(const std::string& token, const uint32_t sessionID):
-    SimpleColumn(token, sessionID)
+template <int len>
+SimpleColumn_INT<len>::SimpleColumn_INT(const std::string& token, const uint32_t sessionID)
+ : SimpleColumn(token, sessionID)
 {
-    setNullVal();
+  setNullVal();
 }
 
-template<int len>
-SimpleColumn_INT<len>::SimpleColumn_INT(const std::string& schema,
-                                        const std::string& table,
-                                        const std::string& col,
-                                        const bool isColumnStore,
-                                        const uint32_t sessionID) :
-    SimpleColumn(schema, table, col, isColumnStore, sessionID)
+template <int len>
+SimpleColumn_INT<len>::SimpleColumn_INT(const std::string& schema, const std::string& table,
+                                        const std::string& col, const bool isColumnStore,
+                                        const uint32_t sessionID)
+ : SimpleColumn(schema, table, col, isColumnStore, sessionID)
 {
-    setNullVal();
+  setNullVal();
 }
 
-template<int len>
-SimpleColumn_INT<len>::SimpleColumn_INT(const SimpleColumn& rhs, const uint32_t sessionID):
-    SimpleColumn(rhs, sessionID)
+template <int len>
+SimpleColumn_INT<len>::SimpleColumn_INT(const SimpleColumn& rhs, const uint32_t sessionID)
+ : SimpleColumn(rhs, sessionID)
 {
-    setNullVal();
+  setNullVal();
 }
 
-template<int len>
+template <int len>
 void SimpleColumn_INT<len>::setNullVal()
 {
-    switch (len)
-    {
-        case 8:
-            fNullVal = joblist::BIGINTNULL;
-            break;
+  switch (len)
+  {
+    case 8: fNullVal = joblist::BIGINTNULL; break;
 
-        case 4:
-            fNullVal = joblist::INTNULL;
-            break;
+    case 4: fNullVal = joblist::INTNULL; break;
 
-        case 2:
-            fNullVal = joblist::SMALLINTNULL;
-            break;
+    case 2: fNullVal = joblist::SMALLINTNULL; break;
 
-        case 1:
-            fNullVal = joblist::TINYINTNULL;
-            break;
+    case 1: fNullVal = joblist::TINYINTNULL; break;
 
-        default:
-            fNullVal = joblist::BIGINTNULL;
-    }
+    default: fNullVal = joblist::BIGINTNULL;
+  }
 }
 
-template<int len>
-inline const std::string& SimpleColumn_INT<len>:: getStrVal(rowgroup::Row& row, bool& isNull)
+template <int len>
+inline const std::string& SimpleColumn_INT<len>::getStrVal(rowgroup::Row& row, bool& isNull)
 {
-    if (row.equals<len>(fNullVal, fInputIndex))
-        isNull = true;
-    else
-    {
+  if (row.equals<len>(fNullVal, fInputIndex))
+    isNull = true;
+  else
+  {
 #ifndef __LP64__
-        snprintf(tmp, 20, "%lld", (int64_t)row.getIntField<len>(fInputIndex));
+    snprintf(tmp, 20, "%lld", (int64_t)row.getIntField<len>(fInputIndex));
 #else
-        snprintf(tmp, 20, "%ld", (int64_t)row.getIntField<len>(fInputIndex));
+    snprintf(tmp, 20, "%ld", (int64_t)row.getIntField<len>(fInputIndex));
 #endif
-    }
+  }
 
-    fResult.strVal = std::string(tmp);
-    return fResult.strVal;
+  fResult.strVal = std::string(tmp);
+  return fResult.strVal;
 }
 
-template<int len>
-inline int64_t SimpleColumn_INT<len>:: getIntVal(rowgroup::Row& row, bool& isNull)
+template <int len>
+inline int64_t SimpleColumn_INT<len>::getIntVal(rowgroup::Row& row, bool& isNull)
 {
-    if (row.equals<len>(fNullVal, fInputIndex))
-        isNull = true;
+  if (row.equals<len>(fNullVal, fInputIndex))
+    isNull = true;
 
-    return (int64_t)row.getIntField<len>(fInputIndex);
+  return (int64_t)row.getIntField<len>(fInputIndex);
 }
 
-template<int len>
-inline uint64_t SimpleColumn_INT<len>:: getUintVal(rowgroup::Row& row, bool& isNull)
+template <int len>
+inline uint64_t SimpleColumn_INT<len>::getUintVal(rowgroup::Row& row, bool& isNull)
 {
-    if (row.equals<len>(fNullVal, fInputIndex))
-        isNull = true;
+  if (row.equals<len>(fNullVal, fInputIndex))
+    isNull = true;
 
-    return (uint64_t)row.getIntField<len>(fInputIndex);
+  return (uint64_t)row.getIntField<len>(fInputIndex);
 }
 
-template<int len>
+template <int len>
 inline float SimpleColumn_INT<len>::getFloatVal(rowgroup::Row& row, bool& isNull)
 {
-    if (row.equals<len>(fNullVal, fInputIndex))
-        isNull = true;
+  if (row.equals<len>(fNullVal, fInputIndex))
+    isNull = true;
 
-    return (float)row.getIntField<len>(fInputIndex);
+  return (float)row.getIntField<len>(fInputIndex);
 }
 
-template<int len>
+template <int len>
 inline double SimpleColumn_INT<len>::getDoubleVal(rowgroup::Row& row, bool& isNull)
 {
-    if (row.equals<len>(fNullVal, fInputIndex))
-        isNull = true;
+  if (row.equals<len>(fNullVal, fInputIndex))
+    isNull = true;
 
-    return (double)row.getIntField<len>(fInputIndex);
+  return (double)row.getIntField<len>(fInputIndex);
 }
 
-template<int len>
+template <int len>
 inline long double SimpleColumn_INT<len>::getLongDoubleVal(rowgroup::Row& row, bool& isNull)
 {
-    if (row.equals<len>(fNullVal, fInputIndex))
-        isNull = true;
+  if (row.equals<len>(fNullVal, fInputIndex))
+    isNull = true;
 
-    return (long double)row.getIntField<len>(fInputIndex);
+  return (long double)row.getIntField<len>(fInputIndex);
 }
 
-template<int len>
+template <int len>
 inline IDB_Decimal SimpleColumn_INT<len>::getDecimalVal(rowgroup::Row& row, bool& isNull)
 {
-    if (row.equals<len>(fNullVal, fInputIndex))
-        isNull = true;
+  if (row.equals<len>(fNullVal, fInputIndex))
+    isNull = true;
 
-    fResult.decimalVal.value = (int64_t)row.getIntField<len>(fInputIndex);
-    fResult.decimalVal.precision = datatypes::INT64MAXPRECISION;
-    fResult.decimalVal.scale = 0;
-    return fResult.decimalVal;
+  fResult.decimalVal.value = (int64_t)row.getIntField<len>(fInputIndex);
+  fResult.decimalVal.precision = datatypes::INT64MAXPRECISION;
+  fResult.decimalVal.scale = 0;
+  return fResult.decimalVal;
 }
 
-template<int len>
+template <int len>
 void SimpleColumn_INT<len>::serialize(messageqcpp::ByteStream& b) const
 {
-    switch (len)
-    {
-        case 1:
-            b << (ObjectReader::id_t) ObjectReader::SIMPLECOLUMN_INT1;
-            break;
+  switch (len)
+  {
+    case 1: b << (ObjectReader::id_t)ObjectReader::SIMPLECOLUMN_INT1; break;
 
-        case 2:
-            b << (ObjectReader::id_t) ObjectReader::SIMPLECOLUMN_INT2;
-            break;
+    case 2: b << (ObjectReader::id_t)ObjectReader::SIMPLECOLUMN_INT2; break;
 
-        case 4:
-            b << (ObjectReader::id_t) ObjectReader::SIMPLECOLUMN_INT4;
-            break;
+    case 4: b << (ObjectReader::id_t)ObjectReader::SIMPLECOLUMN_INT4; break;
 
-        case 8:
-            b << (ObjectReader::id_t) ObjectReader::SIMPLECOLUMN_INT8;
-            break;
-    }
+    case 8: b << (ObjectReader::id_t)ObjectReader::SIMPLECOLUMN_INT8; break;
+  }
 
-    SimpleColumn::serialize(b);
+  SimpleColumn::serialize(b);
 }
 
-template<int len>
+template <int len>
 void SimpleColumn_INT<len>::unserialize(messageqcpp::ByteStream& b)
 {
-    switch (len)
-    {
-        case 1:
-            ObjectReader::checkType(b, ObjectReader::SIMPLECOLUMN_INT1);
-            break;
+  switch (len)
+  {
+    case 1: ObjectReader::checkType(b, ObjectReader::SIMPLECOLUMN_INT1); break;
 
-        case 2:
-            ObjectReader::checkType(b, ObjectReader::SIMPLECOLUMN_INT2);
-            break;
+    case 2: ObjectReader::checkType(b, ObjectReader::SIMPLECOLUMN_INT2); break;
 
-        case 4:
-            ObjectReader::checkType(b, ObjectReader::SIMPLECOLUMN_INT4);
-            break;
+    case 4: ObjectReader::checkType(b, ObjectReader::SIMPLECOLUMN_INT4); break;
 
-        case 8:
-            ObjectReader::checkType(b, ObjectReader::SIMPLECOLUMN_INT8);
-            break;
-    }
+    case 8: ObjectReader::checkType(b, ObjectReader::SIMPLECOLUMN_INT8); break;
+  }
 
-    SimpleColumn::unserialize(b);
+  SimpleColumn::unserialize(b);
 }
 
-}
-#endif //SIMPLECOLUMN_INT_H
-
+}  // namespace execplan

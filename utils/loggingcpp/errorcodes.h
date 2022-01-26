@@ -16,13 +16,12 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: errorcodes.h 3495 2013-01-21 14:09:51Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: errorcodes.h 3495 2013-01-21 14:09:51Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 /** @file */
-#ifndef LOGGING_ERRORCODES_H
-#define LOGGING_ERRORCODES_H
+#pragma once
 
 #include <sys/types.h>
 #include <map>
@@ -31,71 +30,69 @@
 
 namespace logging
 {
-
 enum ErrorCodeValues
 {
-    batchPrimitiveStepErr = 1,
-    tupleBPSErr,
-    batchPrimitiveStepLargeDataListFileErr,
-    bucketReuseStepErr,
-    bucketReuseStepLargeDataListFileErr,
-    aggregateFilterStepErr,
-    filterStepErr,
-    functionStepErr,
-    hashJoinStepErr,
-    hashJoinStepLargeDataListFileErr,
-    largeHashJoinErr,
-    largeHashJoinLargeDataListFileErr,
-    stringHashJoinStepErr,
-    stringHashJoinStepLargeDataListFileErr,
-    tupleHashJoinTooBigErr,
-    threadResourceErr,
-    pDictionaryScanErr,
-    pDictionaryScanLargeDataListFileErr,
-    pIdxListErr,
-    pIdxWalkErr,
-    pnlJoinErr,
-    reduceStepErr,
-    reduceStepLargeDataListFileErr,
-    unionStepErr,
-    unionStepLargeDataListFileErr,
-    unionStepTooBigErr,
-    tupleAggregateStepErr,
-    tupleConstantStepErr,
-    tupleHavingStepErr,
-    makeJobListErr,
-    aggregateFuncErr,
-    aggregateDataErr,
-//don't use 100, same as SQL_NOT_FOUND
-    batchPrimitiveProcessorErr = 101,
-    bppSeederErr,
-    primitiveServerErr,
-    projectResultErr,
-    hwmRangeSizeErr,
-// user input data error
-    formatErr = 201,
-    dataTypeErr,
-    incompatJoinCols,
-    incompatFilterCols,
-    aggregateResourceErr,
-    statisticsJobListEmpty = 301
+  batchPrimitiveStepErr = 1,
+  tupleBPSErr,
+  batchPrimitiveStepLargeDataListFileErr,
+  bucketReuseStepErr,
+  bucketReuseStepLargeDataListFileErr,
+  aggregateFilterStepErr,
+  filterStepErr,
+  functionStepErr,
+  hashJoinStepErr,
+  hashJoinStepLargeDataListFileErr,
+  largeHashJoinErr,
+  largeHashJoinLargeDataListFileErr,
+  stringHashJoinStepErr,
+  stringHashJoinStepLargeDataListFileErr,
+  tupleHashJoinTooBigErr,
+  threadResourceErr,
+  pDictionaryScanErr,
+  pDictionaryScanLargeDataListFileErr,
+  pIdxListErr,
+  pIdxWalkErr,
+  pnlJoinErr,
+  reduceStepErr,
+  reduceStepLargeDataListFileErr,
+  unionStepErr,
+  unionStepLargeDataListFileErr,
+  unionStepTooBigErr,
+  tupleAggregateStepErr,
+  tupleConstantStepErr,
+  tupleHavingStepErr,
+  makeJobListErr,
+  aggregateFuncErr,
+  aggregateDataErr,
+  // don't use 100, same as SQL_NOT_FOUND
+  batchPrimitiveProcessorErr = 101,
+  bppSeederErr,
+  primitiveServerErr,
+  projectResultErr,
+  hwmRangeSizeErr,
+  // user input data error
+  formatErr = 201,
+  dataTypeErr,
+  incompatJoinCols,
+  incompatFilterCols,
+  aggregateResourceErr,
+  statisticsJobListEmpty = 301
 };
 
 struct ErrorCodes
 {
-    ErrorCodes();
-    std::string errorString(uint16_t code) const;
-private:
-    typedef std::map<ErrorCodeValues, std::string> CodeMap;
+  ErrorCodes();
+  std::string errorString(uint16_t code) const;
 
-    //defaults okay
-    //ErrorCodes(const ErrorCodes& rhs);
-    //ErrorCodes& operator=(const ErrorCodes& rhs);
+ private:
+  typedef std::map<ErrorCodeValues, std::string> CodeMap;
 
-    CodeMap fErrorCodes;
-    const std::string fPreamble;
+  // defaults okay
+  // ErrorCodes(const ErrorCodes& rhs);
+  // ErrorCodes& operator=(const ErrorCodes& rhs);
+
+  CodeMap fErrorCodes;
+  const std::string fPreamble;
 };
 
-}
-#endif //LOGGING_ERRORCODES_H
-
+}  // namespace logging

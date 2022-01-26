@@ -16,24 +16,20 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: dmlobject.cpp 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: dmlobject.cpp 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 
 #include "dmlobject.h"
 
 namespace dmlpackage
 {
-
 DMLObject::DMLObject()
 {
-
 }
 DMLObject::~DMLObject()
 {
-
 }
 
-} // namespace dmlpackage
-
+}  // namespace dmlpackage

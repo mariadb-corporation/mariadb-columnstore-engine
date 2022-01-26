@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef BOOTSTRAP_FIXUP_H__
-#define BOOTSTRAP_FIXUP_H__
+#pragma once
 
 #include <string>
 
@@ -24,5 +23,3 @@ namespace bootstrap
 {
 extern int fixupConfig(const std::string&, const std::string&);
 }
-
-#endif

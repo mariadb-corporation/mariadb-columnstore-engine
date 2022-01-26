@@ -16,13 +16,12 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: dmlpackageprocessorfactory.h 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: dmlpackageprocessorfactory.h 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 /** @file */
-#ifndef DMLPACKAGEPROCESSORFACTORY_H
-#define DMLPACKAGEPROCESSORFACTORY_H
+#pragma once
 #include <string>
 #include "calpontdmlpackage.h"
 #include "dmlpackageprocessor.h"
@@ -35,32 +34,24 @@
 
 namespace dmlpackageprocessor
 {
-
 /** @brief create a DMLPackageProcessor object from a CalpontDMLPackage object
  *
  */
 class DMLPackageProcessorFactory
 {
+ public:
+  /** @brief static DMLPackageProcessor constructor method
+   *
+   * @param packageType the DML Package type
+   * @param cpackage the CalpontDMLPackage from which the DMLPackageProcessor is constructed
+   */
+  EXPORT static DMLPackageProcessor* makePackageProcessor(int packageType,
+                                                          dmlpackage::CalpontDMLPackage& cpackage);
 
-public:
-
-    /** @brief static DMLPackageProcessor constructor method
-      *
-      * @param packageType the DML Package type
-      * @param cpackage the CalpontDMLPackage from which the DMLPackageProcessor is constructed
-      */
-    EXPORT static DMLPackageProcessor*
-    makePackageProcessor( int packageType, dmlpackage::CalpontDMLPackage& cpackage );
-
-protected:
-
-private:
-
+ protected:
+ private:
 };
 
-}
+}  // namespace dmlpackageprocessor
 
 #undef EXPORT
-
-#endif //DMLPACKAGEPROCESSORFACTORY_H
-

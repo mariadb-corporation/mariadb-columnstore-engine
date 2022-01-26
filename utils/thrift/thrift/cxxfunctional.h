@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_CXXFUNCTIONAL_H_
-#define _THRIFT_CXXFUNCTIONAL_H_ 1
+#pragma once
 
 /**
  * Loads <functional> from the 'right' location, depending
@@ -147,4 +146,3 @@ using ::std::tr1::placeholders::_6;
 // Alias for thrift c++ compatibility namespace
 namespace tcxx = apache::thrift::stdcxx;
 
-#endif // #ifndef _THRIFT_CXXFUNCTIONAL_H_

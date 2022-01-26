@@ -22,9 +22,10 @@
  * this tool to create a binary BRM_saves_em file.
  *
  * compile with
- * g++ -g -Wall -o load_brm_from_file -I$HOME/genii/export/include -I/usr/include/libxml2 load_brm_from_file.cpp
+ * g++ -g -Wall -o load_brm_from_file -I$HOME/genii/export/include -I/usr/include/libxml2
+ * load_brm_from_file.cpp
  *
-*/
+ */
 #include <iostream>
 #include <stdint.h>
 #include <fstream>
@@ -48,99 +49,99 @@ namespace BRM
 {
 EMEntry::EMEntry()
 {
-    fileID = 0;
-    blockOffset = 0;
-    HWM = 0;
-    partitionNum = 0;
-    segmentNum   = 0;
-    dbRoot       = 0;
-    colWid       = 0;
-    status		= 0;
+  fileID = 0;
+  blockOffset = 0;
+  HWM = 0;
+  partitionNum = 0;
+  segmentNum = 0;
+  dbRoot = 0;
+  colWid = 0;
+  status = 0;
 }
 EMCasualPartition_struct::EMCasualPartition_struct()
 {
-    lo_val = numeric_limits<int64_t>::min();
-    hi_val = numeric_limits<int64_t>::max();
-    sequenceNum = 0;
-    isValid = CP_INVALID;
+  lo_val = numeric_limits<int64_t>::min();
+  hi_val = numeric_limits<int64_t>::max();
+  sequenceNum = 0;
+  isValid = CP_INVALID;
 }
-}
+}  // namespace BRM
 
 int main(int argc, char** argv)
 {
-    int e;
+  int e;
 
-    int loadSize[3];
+  int loadSize[3];
 
-    if (argc < 2)
-    {
-        cerr << "filename arg needed" << endl;
-        return 1;
-    }
+  if (argc < 2)
+  {
+    cerr << "filename arg needed" << endl;
+    return 1;
+  }
 
-    ifstream in(argv[1]);
-    e = errno;
+  ifstream in(argv[1]);
+  e = errno;
 
-    if (!in)
-    {
-        cerr << "file read error: " << strerror(e) << endl;
-        return 1;
-    }
+  if (!in)
+  {
+    cerr << "file read error: " << strerror(e) << endl;
+    return 1;
+  }
 
-    //Brute force count the number of lines
-    int numEMEntries = 0;
+  // Brute force count the number of lines
+  int numEMEntries = 0;
 
-    string line;
+  string line;
 
+  getline(in, line);
+
+  while (!in.eof())
+  {
+    numEMEntries++;
     getline(in, line);
+  }
 
-    while (!in.eof())
-    {
-        numEMEntries++;
-        getline(in, line);
-    }
+  // start at the beginning again...
+  in.clear();
+  in.seekg(0, ios_base::beg);
 
-    //start at the beginning again...
-    in.clear();
-    in.seekg(0, ios_base::beg);
+  idbassert(in.good());
+  idbassert(in.tellg() == static_cast<streampos>(0));
 
-    idbassert(in.good());
-    idbassert(in.tellg() == static_cast<streampos>(0));
+  string outname(argv[1]);
+  outname += ".out";
 
-    string outname(argv[1]);
-    outname += ".out";
+  ofstream out(outname.c_str());
+  e = errno;
 
-    ofstream out(outname.c_str());
-    e = errno;
+  if (!out)
+  {
+    cerr << "file write error: " << strerror(e) << endl;
+    return 1;
+  }
 
-    if (!out)
-    {
-        cerr << "file write error: " << strerror(e) << endl;
-        return 1;
-    }
+  loadSize[0] = EM_MAGIC_V4;
+  loadSize[1] = numEMEntries;
+  loadSize[2] = 1;  // one free list entry
+  out.write((char*)&loadSize, (3 * sizeof(int)));
 
-    loadSize[0] = EM_MAGIC_V4;
-    loadSize[1] = numEMEntries;
-    loadSize[2] = 1; //one free list entry
-    out.write((char*)&loadSize, (3 * sizeof(int)));
+  InlineLBIDRange fl;
+  fl.start = 0;
+  // the max lbid is 2^54-1, the size is in units of 1k
+  fl.size = numeric_limits<uint32_t>::max();
 
-    InlineLBIDRange fl;
-    fl.start = 0;
-    //the max lbid is 2^54-1, the size is in units of 1k
-    fl.size = numeric_limits<uint32_t>::max();
+  InlineLBIDRange maxLBIDinUse;
+  maxLBIDinUse.start = 0;
+  maxLBIDinUse.size = 0;
 
-    InlineLBIDRange maxLBIDinUse;
-    maxLBIDinUse.start = 0;
-    maxLBIDinUse.size = 0;
+  getline(in, line);
 
-    getline(in, line);
-
-    while (!in.eof())
-    {
-        EMEntry em;
-        int64_t v;
-        tokenizer<> tok(line);
-        tokenizer<>::iterator beg = tok.begin();
+  while (!in.eof())
+  {
+    EMEntry em;
+    int64_t v;
+    tokenizer<> tok(line);
+    tokenizer<>::iterator beg = tok.begin();
 #if 0
         emSrc[i].range.start
                 << '\t' << emSrc[i].range.size
@@ -157,81 +158,80 @@ int main(int argc, char** argv)
                 << '\t' << emSrc[i].partition.cprange.sequenceNum
                 << '\t' << (int)(emSrc[i].partition.cprange.isValid)
 #endif
-                v = strtoll(beg->c_str(), 0, 0);
-        ++beg;
-        em.range.start = v;
+    v = strtoll(beg->c_str(), 0, 0);
+    ++beg;
+    em.range.start = v;
 
-        v = strtoll(beg->c_str(), 0, 0);
-        ++beg;
-        em.range.size = v;
+    v = strtoll(beg->c_str(), 0, 0);
+    ++beg;
+    em.range.size = v;
 
-        if (em.range.start > maxLBIDinUse.start)
-        {
-            maxLBIDinUse.start = em.range.start;
-            maxLBIDinUse.size = em.range.size;
-        }
-
-        v = strtoll(beg->c_str(), 0, 0);
-        ++beg;
-        em.fileID = v;
-
-        v = strtoll(beg->c_str(), 0, 0);
-        ++beg;
-        em.blockOffset = v;
-
-        v = strtoll(beg->c_str(), 0, 0);
-        ++beg;
-        em.HWM = v;
-
-        v = strtoll(beg->c_str(), 0, 0);
-        ++beg;
-        em.partitionNum = v;
-
-        v = strtoll(beg->c_str(), 0, 0);
-        ++beg;
-        em.segmentNum = v;
-
-        v = strtoll(beg->c_str(), 0, 0);
-        ++beg;
-        em.dbRoot = v;
-
-        v = strtoll(beg->c_str(), 0, 0);
-        ++beg;
-        em.colWid = v;
-
-        v = strtoll(beg->c_str(), 0, 0);
-        ++beg;
-        em.status = v;
-
-        v = strtoll(beg->c_str(), 0, 0);
-        ++beg;
-        em.partition.cprange.hi_val = v;
-
-        v = strtoll(beg->c_str(), 0, 0);
-        ++beg;
-        em.partition.cprange.lo_val = v;
-
-        v = strtoll(beg->c_str(), 0, 0);
-        ++beg;
-        em.partition.cprange.sequenceNum = v;
-
-        v = strtoll(beg->c_str(), 0, 0);
-        ++beg;
-        em.partition.cprange.isValid = v;
-
-        out.write((char*)&em, sizeof(em));
-
-        getline(in, line);
+    if (em.range.start > maxLBIDinUse.start)
+    {
+      maxLBIDinUse.start = em.range.start;
+      maxLBIDinUse.size = em.range.size;
     }
 
-    fl.start = maxLBIDinUse.start + maxLBIDinUse.size * 1024;
-    fl.size -= fl.start / 1024;
+    v = strtoll(beg->c_str(), 0, 0);
+    ++beg;
+    em.fileID = v;
 
-    out.write((char*)&fl, sizeof(fl));
+    v = strtoll(beg->c_str(), 0, 0);
+    ++beg;
+    em.blockOffset = v;
 
-    out.close();
-    in.close();
+    v = strtoll(beg->c_str(), 0, 0);
+    ++beg;
+    em.HWM = v;
 
-    return 0;
+    v = strtoll(beg->c_str(), 0, 0);
+    ++beg;
+    em.partitionNum = v;
+
+    v = strtoll(beg->c_str(), 0, 0);
+    ++beg;
+    em.segmentNum = v;
+
+    v = strtoll(beg->c_str(), 0, 0);
+    ++beg;
+    em.dbRoot = v;
+
+    v = strtoll(beg->c_str(), 0, 0);
+    ++beg;
+    em.colWid = v;
+
+    v = strtoll(beg->c_str(), 0, 0);
+    ++beg;
+    em.status = v;
+
+    v = strtoll(beg->c_str(), 0, 0);
+    ++beg;
+    em.partition.cprange.hi_val = v;
+
+    v = strtoll(beg->c_str(), 0, 0);
+    ++beg;
+    em.partition.cprange.lo_val = v;
+
+    v = strtoll(beg->c_str(), 0, 0);
+    ++beg;
+    em.partition.cprange.sequenceNum = v;
+
+    v = strtoll(beg->c_str(), 0, 0);
+    ++beg;
+    em.partition.cprange.isValid = v;
+
+    out.write((char*)&em, sizeof(em));
+
+    getline(in, line);
+  }
+
+  fl.start = maxLBIDinUse.start + maxLBIDinUse.size * 1024;
+  fl.size -= fl.start / 1024;
+
+  out.write((char*)&fl, sizeof(fl));
+
+  out.close();
+  in.close();
+
+  return 0;
 }
-

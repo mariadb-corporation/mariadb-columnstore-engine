@@ -16,8 +16,7 @@
  * MA 02110-1301, USA.
  */
 
-#ifndef HA_MCS_LOGGING_H__
-#define HA_MCS_LOGGING_H__
+#pragma once
 
 #include "messagelog.h"
 
@@ -33,21 +32,18 @@
 */
 namespace ha_mcs_impl
 {
-inline void log_this(THD *thd, const char *message,
-                     logging::LOG_TYPE log_type, unsigned sid)
+inline void log_this(THD* thd, const char* message, logging::LOG_TYPE log_type, unsigned sid)
 {
-    // corresponds with dbcon in SubsystemID vector
-    // in messagelog.cpp
-    unsigned int subSystemId = 24;
-    logging::LoggingID logid( subSystemId, sid, 0);
-    logging::Message::Args args1;
-    logging::Message msg(1);
-    args1.add(message);
-    msg.format( args1 );
-    logging::Logger logger(logid.fSubsysID);
-    logger.logMessage(log_type, msg, logid);
+  // corresponds with dbcon in SubsystemID vector
+  // in messagelog.cpp
+  unsigned int subSystemId = 24;
+  logging::LoggingID logid(subSystemId, sid, 0);
+  logging::Message::Args args1;
+  logging::Message msg(1);
+  args1.add(message);
+  msg.format(args1);
+  logging::Logger logger(logid.fSubsysID);
+  logger.logMessage(log_type, msg, logid);
 }
 
-};
-
-#endif
+};  // namespace ha_mcs_impl

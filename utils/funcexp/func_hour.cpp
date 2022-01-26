@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_hour.cpp 3495 2013-01-21 14:09:51Z rdempsey $
-*
-*
-****************************************************************************/
+ * $Id: func_hour.cpp 3495 2013-01-21 14:09:51Z rdempsey $
+ *
+ *
+ ****************************************************************************/
 
 #include <cstdlib>
 #include <string>
@@ -35,129 +35,125 @@ using namespace execplan;
 
 namespace funcexp
 {
-
-CalpontSystemCatalog::ColType Func_hour::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
+CalpontSystemCatalog::ColType Func_hour::operationType(FunctionParm& fp,
+                                                       CalpontSystemCatalog::ColType& resultType)
 {
-    return resultType;
+  return resultType;
 }
 
-
-int64_t Func_hour::getIntVal(rowgroup::Row& row,
-                             FunctionParm& parm,
-                             bool& isNull,
+int64_t Func_hour::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                              CalpontSystemCatalog::ColType& op_ct)
 {
-    int64_t val = 0;
-    bool isTime = false;
+  int64_t val = 0;
+  bool isTime = false;
 
-    switch (parm[0]->data()->resultType().colDataType)
+  switch (parm[0]->data()->resultType().colDataType)
+  {
+    case execplan::CalpontSystemCatalog::BIGINT:
+    case execplan::CalpontSystemCatalog::INT:
+    case execplan::CalpontSystemCatalog::MEDINT:
+    case execplan::CalpontSystemCatalog::TINYINT:
+    case execplan::CalpontSystemCatalog::SMALLINT:
     {
-        case execplan::CalpontSystemCatalog::BIGINT:
-        case execplan::CalpontSystemCatalog::INT:
-        case execplan::CalpontSystemCatalog::MEDINT:
-        case execplan::CalpontSystemCatalog::TINYINT:
-        case execplan::CalpontSystemCatalog::SMALLINT:
-        {
-            val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
+      val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
 
-            if (val == -1)
-                isNull = true;
+      if (val == -1)
+        isNull = true;
 
-            break;
-        }
-
-        case execplan::CalpontSystemCatalog::DECIMAL:
-        case execplan::CalpontSystemCatalog::UDECIMAL:
-        {
-            if (parm[0]->data()->resultType().scale == 0)
-            {
-                val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
-
-                if (val == -1)
-                    isNull = true;
-            }
-            else
-            {
-                isNull = true;
-            }
-
-            break;
-        }
-
-        case execplan::CalpontSystemCatalog::DOUBLE:
-        case execplan::CalpontSystemCatalog::FLOAT:
-        {
-            isNull = true;
-        }
-        /* fall through */
-
-        case execplan::CalpontSystemCatalog::VARCHAR:
-        case execplan::CalpontSystemCatalog::CHAR:
-        case execplan::CalpontSystemCatalog::TEXT:
-        {
-            val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
-
-            if (val == -1)
-                isNull = true;
-
-            break;
-        }
-
-        case execplan::CalpontSystemCatalog::DATE:
-        {
-            val = parm[0]->data()->getDatetimeIntVal(row, isNull);
-            break;
-        }
-
-        case execplan::CalpontSystemCatalog::DATETIME:
-        {
-            val = parm[0]->data()->getDatetimeIntVal(row, isNull);
-            break;
-        }
-
-        case execplan::CalpontSystemCatalog::TIMESTAMP:
-        {
-            dataconvert::TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
-            int64_t seconds = timestamp.second;
-	    dataconvert::MySQLTime m_time;
-	    dataconvert::gmtSecToMySQLTime(seconds, m_time, timeZone());
-            return m_time.hour;
-        }
-
-        case execplan::CalpontSystemCatalog::TIME:
-        {
-            isTime = true;
-            val = parm[0]->data()->getTimeIntVal(row, isNull);
-            break;
-        }
-
-        default:
-        {
-            isNull = true;
-        }
+      break;
     }
 
-    if (isNull)
-        return -1;
-
-    if (isTime)
+    case execplan::CalpontSystemCatalog::DECIMAL:
+    case execplan::CalpontSystemCatalog::UDECIMAL:
     {
-        // HOUR() is always positive in MariaDB, even for negative time
-        int64_t mask = 0;
+      if (parm[0]->data()->resultType().scale == 0)
+      {
+        val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
 
-        if ((val >> 40) & 0x800)
-            mask = 0xfffffffffffff000;
+        if (val == -1)
+          isNull = true;
+      }
+      else
+      {
+        isNull = true;
+      }
 
-        val = abs(mask | ((val >> 40) & 0xfff));
+      break;
     }
-    else
+
+    case execplan::CalpontSystemCatalog::DOUBLE:
+    case execplan::CalpontSystemCatalog::FLOAT:
     {
-        val = (val >> 32) & 0x3f;
+      isNull = true;
+    }
+      /* fall through */
+
+    case execplan::CalpontSystemCatalog::VARCHAR:
+    case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::TEXT:
+    {
+      val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
+
+      if (val == -1)
+        isNull = true;
+
+      break;
     }
 
-    return val;
+    case execplan::CalpontSystemCatalog::DATE:
+    {
+      val = parm[0]->data()->getDatetimeIntVal(row, isNull);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::DATETIME:
+    {
+      val = parm[0]->data()->getDatetimeIntVal(row, isNull);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::TIMESTAMP:
+    {
+      dataconvert::TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
+      int64_t seconds = timestamp.second;
+      dataconvert::MySQLTime m_time;
+      dataconvert::gmtSecToMySQLTime(seconds, m_time, timeZone());
+      return m_time.hour;
+    }
+
+    case execplan::CalpontSystemCatalog::TIME:
+    {
+      isTime = true;
+      val = parm[0]->data()->getTimeIntVal(row, isNull);
+      break;
+    }
+
+    default:
+    {
+      isNull = true;
+    }
+  }
+
+  if (isNull)
+    return -1;
+
+  if (isTime)
+  {
+    // HOUR() is always positive in MariaDB, even for negative time
+    int64_t mask = 0;
+
+    if ((val >> 40) & 0x800)
+      mask = 0xfffffffffffff000;
+
+    val = abs(mask | ((val >> 40) & 0xfff));
+  }
+  else
+  {
+    val = (val >> 32) & 0x3f;
+  }
+
+  return val;
 }
 
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:

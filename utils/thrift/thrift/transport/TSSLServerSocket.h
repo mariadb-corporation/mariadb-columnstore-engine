@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TRANSPORT_TSSLSERVERSOCKET_H_
-#define _THRIFT_TRANSPORT_TSSLSERVERSOCKET_H_ 1
+#pragma once
 
 #include <boost/shared_ptr.hpp>
 #include <thrift/transport/TServerSocket.h>
@@ -64,4 +63,3 @@ protected:
 }
 }
 
-#endif

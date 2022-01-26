@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id$
-*
-*******************************************************************************/
+ * $Id$
+ *
+ *******************************************************************************/
 /*
  * we_brmrprtparser.h
  *
@@ -26,8 +26,7 @@
  *      Author: bpaul
  */
 
-#ifndef WE_BRMRPRTPARSER_H_
-#define WE_BRMRPRTPARSER_H_
+#pragma once
 
 #include <fstream>
 #include <iostream>
@@ -53,22 +52,19 @@
 
 namespace WriteEngine
 {
-
 class BrmReportParser
 {
-public:
-    BrmReportParser();
-    virtual ~BrmReportParser();
+ public:
+  BrmReportParser();
+  virtual ~BrmReportParser();
 
-public:
-    bool serialize(std::string RptFileName, messageqcpp::ByteStream& Bs);
-    bool serializeBlocks(std::string RptFileName, messageqcpp::ByteStream& Bs);
-    void unserialize(messageqcpp::ByteStream& Bs);
+ public:
+  bool serialize(std::string RptFileName, messageqcpp::ByteStream& Bs);
+  bool serializeBlocks(std::string RptFileName, messageqcpp::ByteStream& Bs);
+  void unserialize(messageqcpp::ByteStream& Bs);
 
-private:
-    ifstream fRptFile;
-
+ private:
+  ifstream fRptFile;
 };
 
 } /* namespace WriteEngine */
-#endif /* WE_BRMRPRTPARSER_H_ */

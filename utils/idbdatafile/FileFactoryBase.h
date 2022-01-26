@@ -15,20 +15,20 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef FILEFACTORYBASE_H_
-#define FILEFACTORYBASE_H_
+#pragma once
 
 namespace idbdatafile
 {
-
 class IDBDataFile;
 
 class FileFactoryBase
 {
-public:
-    virtual ~FileFactoryBase() {;}
-    virtual IDBDataFile* open(const char* fname, const char* mode, unsigned opts, unsigned colWidth) = 0;
+ public:
+  virtual ~FileFactoryBase()
+  {
+    ;
+  }
+  virtual IDBDataFile* open(const char* fname, const char* mode, unsigned opts, unsigned colWidth) = 0;
 };
 
-}
-#endif /* FILEFACTORYBASE_H_ */
+}  // namespace idbdatafile
