@@ -219,7 +219,9 @@ double Func_round::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull,
 long double Func_round::getLongDoubleVal(Row& row, FunctionParm& parm, bool& isNull,
                                          CalpontSystemCatalog::ColType& op_ct)
 {
-  if (execplan::CalpontSystemCatalog::LONGDOUBLE == op_ct.colDataType)
+  if (execplan::CalpontSystemCatalog::LONGDOUBLE == op_ct.colDataType ||
+      execplan::CalpontSystemCatalog::DOUBLE == op_ct.colDataType ||
+      execplan::CalpontSystemCatalog::FLOAT == op_ct.colDataType)
   {
     int64_t d = 0;
     long double p = 1;
