@@ -1046,7 +1046,7 @@ inline uint16_t vectWriteColValues(VT& simdProcessor, // SIMD processor
     // The mask is 16 bit long and it describes N elements.
     // N = sizeof(vector type) / WIDTH.
     uint32_t j = 0;
-    for (uint32_t it = 0; it < VT::VEC_MASK_SIZE; ++j, it += FILTER_MASK_STEP)
+    for (uint32_t it = 0; it < VT::vecByteSize; ++j, it += FILTER_MASK_STEP)
     {
         MT bitMapPosition = 1 << it;
         if (writeMask & bitMapPosition)
@@ -1110,7 +1110,7 @@ inline uint16_t vectWriteColValues(VT& simdProcessor, // SIMD processor
     // The mask is 16 bit long and it describes N elements.
     // N = sizeof(vector type) / WIDTH.
     uint32_t j = 0;
-    for (uint32_t it = 0; it < VT::VEC_MASK_SIZE; ++j, it += FILTER_MASK_STEP)
+    for (uint32_t it = 0; it < VT::vecByteSize; ++j, it += FILTER_MASK_STEP)
     {
         MT bitMapPosition = 1 << it;
         if (writeMask & bitMapPosition)
@@ -1154,7 +1154,7 @@ inline uint16_t vectWriteRIDValues(VT& processor,   // SIMD processor
     // Min/Max processing.
     // The mask is 16 bit long and it describes N elements where N = sizeof(vector type) / WIDTH.
     uint16_t j = 0;
-    for (uint32_t it = 0; it < VT::VEC_MASK_SIZE; ++j, it += FILTER_MASK_STEP)
+    for (uint32_t it = 0; it < VT::vecByteSize; ++j, it += FILTER_MASK_STEP)
     {
         MT bitMapPosition = 1 << it;
         if (writeMask & (1 << it))
@@ -1353,7 +1353,7 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
 
     uint64_t uint64EmptyValue = *(uint64_t*)(&emptyValue);
     uint64_t uint64NullValue = *(uint64_t*)(&nullValue);
-    std::cout << "vectorizedFiltering emptyValue " << uint64EmptyValue << " nullValue " << uint64NullValue << std::endl;
+    //std::cout << "vectorizedFiltering emptyValue " << uint64EmptyValue << " nullValue " << uint64NullValue << std::endl;
 
     uint8_t  outputType  = in->OutputType;
 
@@ -1362,7 +1362,7 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
     uint16_t iterNumber = HAS_INPUT_RIDS ? ridSize / VECTOR_SIZE : srcSize / VECTOR_SIZE;
     uint32_t filterCount = 0;
     // These pragmas are to silence GCC warnings
-    //  warning: ignoring attributes on template argument
+    // warning: ignoring attributes on template argument
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wignored-attributes"
     std::vector<SIMD_TYPE> filterArgsVectors;
@@ -1454,29 +1454,29 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
         primitives::RIDType ridOffset = i * VECTOR_SIZE;
         assert(!HAS_INPUT_RIDS || (HAS_INPUT_RIDS && ridSize >= ridOffset));
         dataVec = simdDataLoadTemplate<VT, SIMD_WRAPPER_TYPE, HAS_INPUT_RIDS, T>(simdProcessor, srcArray, origSrcArray, ridArray, i).v;
-        using STORAGE_VT = typename simd::SimdFilterProcessor<simd::vi128_wr, T>;
-        STORAGE_VT intSimdDataProcessor;
-        simd::vi128_t intDataVec = simdDataLoadTemplate<STORAGE_VT, simd::vi128_wr, HAS_INPUT_RIDS, T>(intSimdDataProcessor, srcArray, origSrcArray, ridArray, i).v;
+//        using STORAGE_VT = typename simd::SimdFilterProcessor<simd::vi128_wr, T>;
+//        STORAGE_VT intSimdDataProcessor;
+//        simd::vi128_t intDataVec = simdDataLoadTemplate<STORAGE_VT, simd::vi128_wr, HAS_INPUT_RIDS, T>(intSimdDataProcessor, srcArray, origSrcArray, ridArray, i).v;
         // empty check
-        simd::vi128_t intEmptyVec = intSimdDataProcessor.loadValue(emptyValue);
+//        simd::vi128_t intEmptyVec = intSimdDataProcessor.loadValue(emptyValue);
         nonEmptyMask = simdProcessor.nullEmptyCmpNe(dataVec, emptyFilterArgVec);
-        std::cout << "vectorizedFiltering nonEmptyMask " << nonEmptyMask << std::endl;
-        uint64_t *dataVecPtr = (uint64_t*)&dataVec;
-        uint64_t *intDataVecPtr = (uint64_t*)&intDataVec;
-        uint64_t *emptyVecPtr = (uint64_t*)&emptyFilterArgVec;
-        uint64_t *intEmptyVecPtr = (uint64_t*)&intEmptyVec;
-        std::cout << "vectorizedFiltering dataVecPtr[0] " << dataVecPtr[0] << " dataVecPtr[1] " << dataVecPtr[1] << std::endl;
-        std::cout << "vectorizedFiltering intDataVecPtr[0] " << intDataVecPtr[0] << " intDataVecPtr[1] " << intDataVecPtr[1] << std::endl;
-        std::cout << "vectorizedFiltering emptyVecPtr[0] " << emptyVecPtr[0] << " emptyVecPtr[1] " << emptyVecPtr[1] << std::endl;
-        std::cout << "vectorizedFiltering intEmptyVecPtr[0] " << intEmptyVecPtr[0] << " intEmptyVecPtr[1] " << intEmptyVecPtr[1] << std::endl;
+//        std::cout << "vectorizedFiltering nonEmptyMask " << nonEmptyMask << std::endl;
+//        uint64_t *dataVecPtr = (uint64_t*)&dataVec;
+//        uint64_t *intDataVecPtr = (uint64_t*)&intDataVec;
+//        uint64_t *emptyVecPtr = (uint64_t*)&emptyFilterArgVec;
+//        uint64_t *intEmptyVecPtr = (uint64_t*)&intEmptyVec;
+        //std::cout << "vectorizedFiltering dataVecPtr[0] " << dataVecPtr[0] << " dataVecPtr[1] " << dataVecPtr[1] << std::endl;
+        //std::cout << "vectorizedFiltering intDataVecPtr[0] " << intDataVecPtr[0] << " intDataVecPtr[1] " << intDataVecPtr[1] << std::endl;
+        //std::cout << "vectorizedFiltering emptyVecPtr[0] " << emptyVecPtr[0] << " emptyVecPtr[1] " << emptyVecPtr[1] << std::endl;
+        //std::cout << "vectorizedFiltering intEmptyVecPtr[0] " << intEmptyVecPtr[0] << " intEmptyVecPtr[1] " << intEmptyVecPtr[1] << std::endl;
         writeMask = nonEmptyMask;
         // NULL check
         nonNullMask = simdProcessor.nullEmptyCmpNe(dataVec, nullFilterArgVec);
         //std::cout << "vectorizedFiltering nonNullMask " << nonNullMask << std::endl;
         // Exclude NULLs from the resulting set if NULL doesn't match the filters.
-        std::cout << "vectorizedFiltering isNullValueMatches " << isNullValueMatches << std::endl;
+        //std::cout << "vectorizedFiltering isNullValueMatches " << isNullValueMatches << std::endl;
         writeMask = isNullValueMatches ? writeMask : writeMask & nonNullMask;
-        std::cout << "vectorizedFiltering writeMask " << writeMask << std::endl;
+        //std::cout << "vectorizedFiltering writeMask " << writeMask << std::endl;
         nonNullOrEmptyMask = nonNullMask & nonEmptyMask;
         // filters
         MT prevFilterMask = initFilterMask;
