@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef UTILS_SIMD_SSE_H
-#define UTILS_SIMD_SSE_H
+#pragma once
 
 #if defined(__x86_64__)
 
@@ -137,6 +136,11 @@ namespace simd
     constexpr static const uint16_t FILTER_MASK_STEP = sizeof(T);
     constexpr static const uint16_t VEC_MASK_SIZE = vecByteSize;
     // Load value
+    MCS_FORCE_INLINE SIMD_TYPE emptyNullLoadValue(const T fill)
+    {
+      return loadValue(fill);
+    }
+
     MCS_FORCE_INLINE SIMD_TYPE loadValue(const T fill)
     {
       return _mm_loadu_si128(reinterpret_cast<const SIMD_TYPE*>(&fill));
@@ -233,6 +237,14 @@ namespace simd
     constexpr static const uint16_t FILTER_MASK_STEP = 1;
     constexpr static const uint16_t VEC_MASK_SIZE = 2U;
     // Load value
+    MCS_FORCE_INLINE SIMD_TYPE emptyNullLoadValue(const T fill)
+    {
+      using IntVecProcType = SimdFilterProcessor<simd::vi128_wr, STORAGE_TYPE>;
+      IntVecProcType nullEmptyProcessor;
+      // This spec borrows the expr from u-/int64 based proceesor class.
+      return (SIMD_TYPE) nullEmptyProcessor.loadValue(fill);
+    }
+
     MCS_FORCE_INLINE SIMD_TYPE loadValue(const T fill)
     {
       return _mm_set1_pd(fill);
@@ -272,7 +284,7 @@ namespace simd
 
     MCS_FORCE_INLINE MT cmpNe(SIMD_TYPE& x, SIMD_TYPE& y)
     {
-      return _mm_movemask_pd(_mm_cmpneq_pd(x, y));
+      return _mm_movemask_epi8((vi128_t)_mm_cmpneq_pd(x, y));
     }
 
     MCS_FORCE_INLINE MT cmpAlwaysFalse(SIMD_TYPE& x, SIMD_TYPE& y)
@@ -295,9 +307,15 @@ namespace simd
       NULL_EMPTY_SIMD_TYPE* yAsIntVecPtr
         = reinterpret_cast<NULL_EMPTY_SIMD_TYPE*>(&y);
       // This spec borrows the expr from u-/int64 based proceesor class.
-      // WIP
-      //return _mm_movemask_epi8(_mm_cmpeq_epi64(*xAsIntVecPtr, *yAsIntVecPtr)) ^ 0xFFFF;
-      return nullEmptyProcessor.cmpNe(*xAsIntVecPtr, *yAsIntVecPtr);
+      //return nullEmptyProcessor.cmpNe(*xAsIntVecPtr, *yAsIntVecPtr);
+      uint64_t *xPtr = (uint64_t*)&x;
+      uint64_t *yPtr = (uint64_t*)&y;
+      std::cout << "nullEmptyCmpNe x[0] " << xPtr[0] << " x[1] " << xPtr[1] << std::endl;
+      std::cout << "nullEmptyCmpNe y[0] " << yPtr[0] << " y[1] " << yPtr[1] << std::endl;
+      auto a = cmpNe(x, y);
+      auto b = nullEmptyProcessor.cmpNe(*xAsIntVecPtr, *yAsIntVecPtr);
+      std::cout << "nullEmptyCmpNe cmpNe " << a << " intCmpNe " << b << std::endl;
+      return a;
     }
 
     MCS_FORCE_INLINE SIMD_TYPE setToZero()
@@ -328,6 +346,14 @@ namespace simd
     constexpr static const uint16_t FILTER_MASK_STEP = 1;
     constexpr static const uint16_t VEC_MASK_SIZE = 4U;
     // Load value
+    MCS_FORCE_INLINE SIMD_TYPE emptyNullLoadValue(const T fill)
+    {
+      using IntVecProcType = SimdFilterProcessor<simd::vi128_wr, STORAGE_TYPE>;
+      IntVecProcType nullEmptyProcessor;
+      // This spec borrows the expr from u-/int64 based proceesor class.
+      return (SIMD_TYPE) nullEmptyProcessor.loadValue(fill);
+    }
+
     MCS_FORCE_INLINE SIMD_TYPE loadValue(const T fill)
     {
       return _mm_set1_ps(fill);
@@ -383,16 +409,18 @@ namespace simd
 
     MCS_FORCE_INLINE MT nullEmptyCmpNe(SIMD_TYPE& x, SIMD_TYPE& y)
     {
-//      using IntVecProcType = SimdFilterProcessor<simd::vi128_wr, STORAGE_TYPE>;
-//      IntVecProcType nullEmptyProcessor;
+      /*
+      using IntVecProcType = SimdFilterProcessor<simd::vi128_wr, STORAGE_TYPE>;
+      IntVecProcType nullEmptyProcessor;
 
       NULL_EMPTY_SIMD_TYPE* xAsIntVecPtr
         = reinterpret_cast<NULL_EMPTY_SIMD_TYPE*>(&x);
       NULL_EMPTY_SIMD_TYPE* yAsIntVecPtr
         = reinterpret_cast<NULL_EMPTY_SIMD_TYPE*>(&y);
       // This spec borrows the expr from u-/int64 based proceesor class.
-      return _mm_movemask_epi8(_mm_cmpeq_epi32(*xAsIntVecPtr, *yAsIntVecPtr)) ^ 0xFFFF;
-      //return nullEmptyProcessor.cmpNe(*xAsIntVecPtr, *yAsIntVecPtr);
+      return nullEmptyProcessor.cmpNe(*xAsIntVecPtr, *yAsIntVecPtr);
+      */
+      return cmpNe(x, y);
     }
 
     MCS_FORCE_INLINE SIMD_TYPE setToZero()
@@ -424,6 +452,11 @@ namespace simd
     constexpr static const uint16_t FILTER_MASK_STEP = sizeof(T);
     constexpr static const uint16_t VEC_MASK_SIZE = vecByteSize;
     // Load value
+    MCS_FORCE_INLINE SIMD_TYPE emptyNullLoadValue(const T fill)
+    {
+      return loadValue(fill);
+    }
+
     MCS_FORCE_INLINE SIMD_TYPE loadValue(const T fill)
     {
       return _mm_set_epi64x(fill, fill);
@@ -517,6 +550,11 @@ namespace simd
     constexpr static const uint16_t FILTER_MASK_STEP = sizeof(T);
     constexpr static const uint16_t VEC_MASK_SIZE = vecByteSize;
     // Load value
+    MCS_FORCE_INLINE SIMD_TYPE emptyNullLoadValue(const T fill)
+    {
+      return loadValue(fill);
+    }
+
     MCS_FORCE_INLINE SIMD_TYPE loadValue(const T fill)
     {
       return _mm_set1_epi32(fill);
@@ -609,6 +647,11 @@ namespace simd
     constexpr static const uint16_t FILTER_MASK_STEP = sizeof(T);
     constexpr static const uint16_t VEC_MASK_SIZE = vecByteSize;
     // Load value
+    MCS_FORCE_INLINE SIMD_TYPE emptyNullLoadValue(const T fill)
+    {
+      return loadValue(fill);
+    }
+
     MCS_FORCE_INLINE SIMD_TYPE loadValue(const T fill)
     {
       return _mm_set1_epi16(fill);
@@ -701,6 +744,11 @@ namespace simd
     constexpr static const uint16_t FILTER_MASK_STEP = sizeof(T);
     constexpr static const uint16_t VEC_MASK_SIZE = vecByteSize;
     // Load value
+    MCS_FORCE_INLINE SIMD_TYPE emptyNullLoadValue(const T fill)
+    {
+      return loadValue(fill);
+    }
+
     MCS_FORCE_INLINE SIMD_TYPE loadValue(const T fill)
     {
       return _mm_set1_epi8(fill);
@@ -786,6 +834,4 @@ namespace simd
 } // end of simd
 
 #endif // if defined(__x86_64__ )
-
-#endif
 // vim:ts=2 sw=2:
