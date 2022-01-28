@@ -86,6 +86,7 @@ void logIt(int mid, int arg1, const string& arg2 = string())
     msg.format(args);
     logger.logErrorMessage(msg);
 }
+std::vector<int> a;
 
 template<class T>
 inline bool colCompare_(const T& val1, const T& val2, uint8_t COP)
@@ -1351,8 +1352,8 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
     const ST* filterSet = nullptr;
     const ParsedColumnFilter::RFsType* filterRFs = nullptr;
 
-    uint64_t uint64EmptyValue = *(uint64_t*)(&emptyValue);
-    uint64_t uint64NullValue = *(uint64_t*)(&nullValue);
+    //uint64_t uint64EmptyValue = *(uint64_t*)(&emptyValue);
+    //uint64_t uint64NullValue = *(uint64_t*)(&nullValue);
     //std::cout << "vectorizedFiltering emptyValue " << uint64EmptyValue << " nullValue " << uint64NullValue << std::endl;
 
     uint8_t  outputType  = in->OutputType;
@@ -1500,7 +1501,7 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
         // outside the scope of the memory allocated to out msg.
         // vectWriteColValues is empty if outputMode == OT_RID.
         uint16_t valuesWritten =
-            vectWriteColValues<T, VT, OUTPUT_TYPE, KIND, HAS_INPUT_RIDS>(simdProcessor,
+        vectWriteColValues<T, VT, OUTPUT_TYPE, KIND, HAS_INPUT_RIDS>(simdProcessor,
                                                                          writeMask,
                                                                          nonNullOrEmptyMask,
                                                                          validMinMax,
@@ -1679,7 +1680,6 @@ void filterColumnData(
     // Precompute filter results for NULL values
     bool isNullValueMatches = matchingColValue<KIND, WIDTH, true>(nullValue, columnFilterMode,
         filterSet, filterCount, filterCOPs, filterValues, filterRFs, in->colType, nullValue);
-    std::cout << "filterColumnData isNullValueMatches " << isNullValueMatches << std::endl;
 
     // ###########################
     // Boolean indicating whether to capture the min and max values

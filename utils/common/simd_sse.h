@@ -306,14 +306,13 @@ namespace simd
       NULL_EMPTY_SIMD_TYPE* yAsIntVecPtr = reinterpret_cast<NULL_EMPTY_SIMD_TYPE*>(&y);
       // This spec borrows the expr from u-/int64 based proceesor class.
       //return nullEmptyProcessor.cmpNe(*xAsIntVecPtr, *yAsIntVecPtr);
-      uint64_t *xPtr = (uint64_t*)&x;
-      uint64_t *yPtr = (uint64_t*)&y;
+//      uint64_t *xPtr = (uint64_t*)&x;
+//      uint64_t *yPtr = (uint64_t*)&y;
 //      std::cout << "nullEmptyCmpNe x[0] " << xPtr[0] << " x[1] " << xPtr[1] << std::endl;
 //      std::cout << "nullEmptyCmpNe y[0] " << yPtr[0] << " y[1] " << yPtr[1] << std::endl;
 //      auto a = cmpNe(x, y);
-      auto b = nullEmptyProcessor.cmpNe(*xAsIntVecPtr, *yAsIntVecPtr);
+      return nullEmptyProcessor.cmpNe(*xAsIntVecPtr, *yAsIntVecPtr);
 //      std::cout << "nullEmptyCmpNe cmpNe " << a << " intCmpNe " << b << std::endl;
-      return b;
     }
 
     MCS_FORCE_INLINE SIMD_TYPE setToZero()
