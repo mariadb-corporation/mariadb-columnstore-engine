@@ -86,7 +86,6 @@ void logIt(int mid, int arg1, const string& arg2 = string())
     msg.format(args);
     logger.logErrorMessage(msg);
 }
-std::vector<int> a;
 
 template<class T>
 inline bool colCompare_(const T& val1, const T& val2, uint8_t COP)
