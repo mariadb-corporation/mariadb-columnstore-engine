@@ -1456,6 +1456,7 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out,
         assert(!HAS_INPUT_RIDS || (HAS_INPUT_RIDS && ridSize >= ridOffset));
         dataVec = simdDataLoadTemplate<VT, SIMD_WRAPPER_TYPE, HAS_INPUT_RIDS, T>(simdProcessor, srcArray, origSrcArray, ridArray, i).v;
 //        using STORAGE_VT = typename simd::SimdFilterProcessor<simd::vi128_wr, T>;
+
 //        STORAGE_VT intSimdDataProcessor;
 //        simd::vi128_t intDataVec = simdDataLoadTemplate<STORAGE_VT, simd::vi128_wr, HAS_INPUT_RIDS, T>(intSimdDataProcessor, srcArray, origSrcArray, ridArray, i).v;
         // empty check
