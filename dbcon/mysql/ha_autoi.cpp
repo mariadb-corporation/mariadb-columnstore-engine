@@ -18,38 +18,42 @@
 /*
  * $Id$
  */
+#include <regex>
+#include <string>
+#include <boost/algorithm/string.hpp>
+#include <utils/loggingcpp/idberrorinfo.h>
 
 bool parseAutoincrementTableComment(std::string comment, uint64_t& startValue, std::string& columnName)
 {
-  algorithm::to_upper(comment);
-  regex compat("[[:space:]]*AUTOINCREMENT[[:space:]]*=[[:space:]]*", regex_constants::extended);
+  boost::algorithm::to_upper(comment);
+  std::regex compat("[[:space:]]*AUTOINCREMENT[[:space:]]*=[[:space:]]*", std::regex_constants::extended);
   bool autoincrement = false;
   columnName = "";
-  boost::match_results<std::string::const_iterator> what;
+  std::match_results<std::string::const_iterator> what;
   std::string::const_iterator start, end;
   start = comment.begin();
   end = comment.end();
-  boost::match_flag_type flags = boost::match_default;
+  std::regex_constants::match_flag_type flags = std::regex_constants::match_default;
 
-  if (boost::regex_search(start, end, what, compat, flags))
+  if (std::regex_search(start, end, what, compat, flags))
   {
     if (what[0].matched)
     {
       // string params (what[0].first, what[0].second);
-      string params(&(*(what[0].second)));
+      std::string params(&(*(what[0].second)));
       unsigned i = params.find_first_of(",");
 
       if (i <= params.length())
       {
         // check whether there is more autoincrement column
-        string restComment = params.substr(i + 1, params.length());
+        std::string restComment = params.substr(i + 1, params.length());
         start = restComment.begin();
         end = restComment.end();
 
-        if (boost::regex_search(start, end, what, compat, flags))
+        if (std::regex_search(start, end, what, compat, flags))
         {
           if (what[0].matched)
-            throw runtime_error(IDBErrorInfo::instance()->errorMsg(ERR_INVALID_NUMBER_AUTOINCREMENT));
+            throw runtime_error(logging::IDBErrorInfo::instance()->errorMsg(ERR_INVALID_NUMBER_AUTOINCREMENT));
         }
 
         columnName = params.substr(0, i);
@@ -112,25 +116,25 @@ bool parseAutoincrementTableComment(std::string comment, uint64_t& startValue, s
 
 bool parseAutoincrementColumnComment(std::string comment, uint64_t& startValue)
 {
-  algorithm::to_upper(comment);
-  regex compat("[[:space:]]*AUTOINCREMENT[[:space:]]*", regex_constants::extended);
+  boost::algorithm::to_upper(comment);
+  std::regex compat("[[:space:]]*AUTOINCREMENT[[:space:]]*", std::regex_constants::extended);
   bool autoincrement = false;
-  boost::match_results<std::string::const_iterator> what;
+  std::match_results<std::string::const_iterator> what;
   std::string::const_iterator start, end;
   start = comment.begin();
   end = comment.end();
-  boost::match_flag_type flags = boost::match_default;
+  std::regex_constants::match_flag_type flags = std::regex_constants::match_default;
 
-  if (boost::regex_search(start, end, what, compat, flags))
+  if (std::regex_search(start, end, what, compat, flags))
   {
     if (what[0].matched)
     {
-      string params(&(*(what[0].second)));
+      std::string params(&(*(what[0].second)));
       unsigned i = params.find_first_of(",");
 
       if (i <= params.length())
       {
-        string startVal = params.substr(i + 1, params.length());
+        std::string startVal = params.substr(i + 1, params.length());
         // get rid of possible empty space
         i = startVal.find_first_not_of(" ");
 
@@ -160,7 +164,7 @@ bool parseAutoincrementColumnComment(std::string comment, uint64_t& startValue)
           //  (no digits) || (more chars)  || (other errors & value = 0)
           if ((ep == str) || (*ep != '\0') || (errno != 0))
           {
-            throw runtime_error(IDBErrorInfo::instance()->errorMsg(ERR_INVALID_START_VALUE));
+            throw runtime_error(logging::IDBErrorInfo::instance()->errorMsg(ERR_INVALID_START_VALUE));
           }
         }
       }

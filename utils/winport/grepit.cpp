@@ -19,7 +19,7 @@
 #include <string>
 using namespace std;
 
-#include <boost/regex.hpp>
+#include <regex.hpp>
 
 #include "grepit.h"
 
@@ -32,13 +32,13 @@ namespace winport
 {
 bool grepit(istream& is, const string& pattern)
 {
-  boost::regex pat(pattern);
+  std::regex pat(pattern);
   string cInput;
   getline(is, cInput);
 
   while (is.good())
   {
-    if (boost::regex_match(cInput, pat))
+    if (std::regex_match(cInput, pat))
       return true;
 
     getline(is, cInput);

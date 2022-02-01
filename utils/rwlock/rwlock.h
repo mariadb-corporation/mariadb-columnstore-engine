@@ -45,17 +45,10 @@ namespace rwlock
 /// the layout of the shmseg
 struct State
 {
-#ifdef _MSC_VER
-  volatile LONG writerswaiting;
-  volatile LONG writing;
-  volatile LONG readerswaiting;
-  volatile LONG reading;
-#else
-  volatile int writerswaiting;
-  volatile int writing;
-  volatile int readerswaiting;
-  volatile int reading;
-#endif
+  int writerswaiting;
+  int writing;
+  int readerswaiting;
+  int reading;
   boost::interprocess::interprocess_semaphore sems[3];
 };
 

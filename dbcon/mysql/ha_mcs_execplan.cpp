@@ -45,7 +45,6 @@ using namespace std;
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
-#include <boost/regex.hpp>
 #include <boost/thread.hpp>
 
 #include "errorids.h"

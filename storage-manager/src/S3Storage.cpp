@@ -26,9 +26,9 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/random_generator.hpp>
-#define BOOST_SPIRIT_THREADSAFE
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
+
+#include "utils/json/json.hpp"
+
 #include "Utilities.h"
 
 using namespace std;
@@ -258,12 +258,12 @@ bool S3Storage::getCredentialsFromMetadataEC2()
     logger->log(LOG_ERR, "CURL fail %u", curl_res);
     return false;
   }
-  stringstream credentials(readBuffer);
-  boost::property_tree::ptree pt;
-  boost::property_tree::read_json(credentials, pt);
-  key = pt.get<string>("AccessKeyId");
-  secret = pt.get<string>("SecretAccessKey");
-  token = pt.get<string>("Token");
+
+  nlohmann::json pt = nlohmann::json::parse(readBuffer);
+  key = pt["AccessKeyId"];
+  secret = pt["SecretAccessKey"];
+  token = pt["Token"];
+
   // logger->log(LOG_INFO, "S3Storage: key = %s secret = %s token =
   // %s",key.c_str(),secret.c_str(),token.c_str());
 
@@ -626,7 +626,7 @@ int S3Storage::copyObject(const string& _sourceKey, const string& _destKey)
 
 #if 0
     // no s3-s3 copy yet.  get & put for now.
-    
+
     int err;
     boost::shared_array<uint8_t> data;
     size_t len;

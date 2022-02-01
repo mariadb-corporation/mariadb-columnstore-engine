@@ -22,12 +22,12 @@
 
 #include <unistd.h>
 #include <typeinfo>
+#include <regex>
 #include <string>
 #include <vector>
 using namespace std;
 
 #include <boost/shared_ptr.hpp>
-#include <boost/regex.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 
 #include "altertableprocessor.h"
@@ -2083,14 +2083,14 @@ void AlterTableProcessor::tableComment(uint32_t sessionID, execplan::CalpontSyst
       CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
 
   boost::algorithm::to_upper(ataTableComment.fTableComment);
-  boost::regex compat("[[:space:]]*AUTOINCREMENT[[:space:]]*=[[:space:]]*", boost::regex_constants::extended);
-  boost::match_results<std::string::const_iterator> what;
+  std::regex compat("[[:space:]]*AUTOINCREMENT[[:space:]]*=[[:space:]]*", std::regex_constants::extended);
+  std::match_results<std::string::const_iterator> what;
   std::string::const_iterator start, end;
   start = ataTableComment.fTableComment.begin();
   end = ataTableComment.fTableComment.end();
-  boost::match_flag_type flags = boost::match_default;
+  std::regex_constants::match_flag_type flags = std::regex_constants::match_default;
 
-  if (boost::regex_search(start, end, what, compat, flags) && what[0].matched)
+  if (std::regex_search(start, end, what, compat, flags) && what[0].matched)
   {
     std::string params(&(*(what[0].second)));
     char* ep = NULL;

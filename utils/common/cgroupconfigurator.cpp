@@ -20,13 +20,8 @@
 #include "logger.h"
 #include <fstream>
 #include <iostream>
-#include <boost/regex.hpp>
-#ifdef _MSC_VER
-#include "unistd.h"
-#include "sysinfo.h"
-#else
 #include <sys/sysinfo.h>
-#endif
+
 using namespace boost;
 using namespace std;
 
