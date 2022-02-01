@@ -35,7 +35,7 @@ systemctl cat mariadb-columnstore.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
     systemctl stop mariadb-columnstore >/dev/null 2>&1
 else
-    PROGS='PrimProc ExeMgr DMLProc DDLProc WriteEngineServer StorageManager controllernode workernode' 
+    PROGS='PrimProc ExeMgr DMLProc DDLProc WriteEngineServer StorageManager controllernode workernode'
     kill $(pidof $PROGS) > /dev/null
     sleep 3
     kill -9 $(pidof $PROGS) > /dev/null
@@ -43,7 +43,7 @@ else
 fi
 
 if [ -n "$(pgrep -x ProcMon)" ] || [ -n "$(pgrep -x ProcMgr)" ];then
-   # Old system must be running, kill ProcMon/ProcMgr 
+   # Old system must be running, kill ProcMon/ProcMgr
     pkill ProcMon
     pkill ProcMgr
 fi
@@ -65,7 +65,7 @@ rm -rf @ENGINE_LOGDIR@
 rm -rf /tmp/columnstore_tmp_files
 
 lockdir=`@ENGINE_BINDIR@/mcsGetConfig Installation LockFileDirectory`
-rm -f $lockdir/columnstore
+rm -f $lockdir/columnstore # Dangerous remove command
 
 #uninstall MariaDB Columnstore system logging
 columnstoreSyslogSetup.sh uninstall >/dev/null 2>&1
@@ -123,7 +123,7 @@ else
         updaterc=`which update-rc.d 2>/dev/null`
         if [ -n "$updaterc" ]; then
             update-rc.d -f columnstore remove > /dev/null 2>&1
-            rm -f /etc/init.d/columnstore > /dev/null 2>&1	
+            rm -f /etc/init.d/columnstore > /dev/null 2>&1
         fi
     fi
 fi

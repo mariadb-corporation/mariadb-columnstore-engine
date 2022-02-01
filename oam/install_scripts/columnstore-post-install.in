@@ -70,7 +70,7 @@ quiet=0
 stop_mysqld=0
 if [ -z "$(pgrep -x mariadbd)" ];then
 
-    # Startup mysqld 
+    # Startup mysqld
     systemctl cat mariadb.service > /dev/null 2>&1
     if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
         systemctl start mariadb.service
@@ -206,7 +206,7 @@ if [ $user = "root" ]; then
                 update-rc.d columnstore defaults 99 > /dev/null 2>&1
             else
                 echo ""
-                echo "Package 'systemctl', 'chkconfig' or 'update-rc.d' not installed, contact your sysadmin if you want to setup to autostart for columnstore"	
+                echo "Package 'systemctl', 'chkconfig' or 'update-rc.d' not installed, contact your sysadmin if you want to setup to autostart for columnstore"
             fi
         fi
     fi
@@ -227,7 +227,7 @@ if [ $user = "root" ]; then
     fi
 else
     chown $user:$user @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml
-	
+
 cat <<EOD
 
 NOTE: For non-root install, you will need to run the following commands as root user to
@@ -235,21 +235,10 @@ NOTE: For non-root install, you will need to run the following commands as root 
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 columnstoreSyslogSetup.sh --user=$user install
-      
-      
+
+
 EOD
 fi
-
-#determine lock file directory
-
-# Lock directory for root user
-lockdir='/var/lock/subsys'
-
-@ENGINE_BINDIR@/mcsSetConfig -d Installation LockFileDirectory $lockdir
-
-mkdir $lockdir >/dev/null 2>&1
-
-rm -f $lockdir/columnstore
 
 # This was the last place of postConfigure. RIP
 
@@ -265,13 +254,13 @@ else
         sleep 1
     done
     /usr/bin/mysqld_safe &
-    sleep 2  
+    sleep 2
 fi
 
 checkForError
 if [ $? -ne 0 ]; then
     echo "There was an error installing MariaDB ColumnStore engine plugin. \
-Continue to install the engine though. \ 
+Continue to install the engine though. \
 Please resolve the issues and run necessary scripts manually."
 fi
 
@@ -294,18 +283,18 @@ fi
 if [ ! -z "$MCS_USE_S3_STORAGE" ] && [ $MCS_USE_S3_STORAGE -eq 1 ]; then
   if [ -z "$MCS_S3_BUCKET" ]; then
     echo "Environment variable \$MCS_USE_S3_STORAGE is set but there is no \$MCS_S3_BUCKET."
-  fi  
+  fi
   if [ -z "$MCS_S3_ACCESS_KEY_ID" ] && [ -z "$MCS_S3_ROLE_NAME" ]; then
     echo "Environment variable \$MCS_USE_S3_STORAGE is set but there is no \$MCS_S3_ACCESS_KEY_ID."
-  fi  
+  fi
   if [ -z "$MCS_S3_SECRET_ACCESS_KEY" ] && [ -z "$MCS_S3_ROLE_NAME" ]; then
     echo "Environment variable \$MCS_USE_S3_STORAGE is set but there is no \$MCS_S3_SECRET_ACCESS_KEY."
-  fi  
-  if [ -z "$MCS_S3_BUCKET" ] || [[ -z "$MCS_S3_ACCESS_KEY_ID" && -z "$MCS_S3_ROLE_NAME" ]] || [[ -z "$MCS_S3_SECRET_ACCESS_KEY" && -z "$MCS_S3_ROLE_NAME" ]]; then 
+  fi
+  if [ -z "$MCS_S3_BUCKET" ] || [[ -z "$MCS_S3_ACCESS_KEY_ID" && -z "$MCS_S3_ROLE_NAME" ]] || [[ -z "$MCS_S3_SECRET_ACCESS_KEY" && -z "$MCS_S3_ROLE_NAME" ]]; then
     echo "Using local storage."
   else
       @ENGINE_BINDIR@/mcsSetConfig -d Installation DBRootStorageType "storagemanager"
-      @ENGINE_BINDIR@/mcsSetConfig -d StorageManager Enabled "Y" 
+      @ENGINE_BINDIR@/mcsSetConfig -d StorageManager Enabled "Y"
       @ENGINE_BINDIR@/mcsSetConfig -d SystemConfig DataFilePlugin "libcloudio.so"
       sed -i "s|^service =.*|service = S3|" /etc/columnstore/storagemanager.cnf
       if [ ! -z "$MCS_S3_REGION" ]; then
@@ -346,7 +335,7 @@ if [ ! -z "$MCS_USE_S3_STORAGE" ] && [ $MCS_USE_S3_STORAGE -eq 1 ]; then
         echo "After environment variables are fixed, run command: columnstore-post-install"
         exit 1
       fi
-  fi  
+  fi
 fi
 
 #change ownership/permissions to be able to run columnstore as non-root
@@ -381,7 +370,7 @@ if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
 
     flock -u "$fd_lock"
 fi
- 
+
 if [ $stop_mysqld -eq 1 ];then
     # Make sure we stop mariadb since it wasn't running prior to columnstore installation
     systemctl cat mariadb.service > /dev/null 2>&1
