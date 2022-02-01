@@ -98,7 +98,8 @@ void MCSAnalyzeTableExecutionPlan::serialize(messageqcpp::ByteStream& bs) const
     bs << fSchemaName;
     bs << fTableName;
     bs << fLocalQuery;
-    bs << fTimeZone;
+    messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
+    bs << timeZone;
     bs << fTraceFlags;
 }
 
@@ -150,7 +151,9 @@ void MCSAnalyzeTableExecutionPlan::unserialize(messageqcpp::ByteStream& bs)
     bs >> fSchemaName;
     bs >> fTableName;
     bs >> fLocalQuery;
-    bs >> fTimeZone;
+    messageqcpp::ByteStream::octbyte timeZone;
+    bs >> timeZone;
+    fTimeZone = timeZone;
     bs >> fTraceFlags;
 }
 } // namespace execplan

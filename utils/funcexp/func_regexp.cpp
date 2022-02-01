@@ -51,7 +51,7 @@ inline bool getBool(rowgroup::Row& row,
                     funcexp::FunctionParm& pm,
                     bool& isNull,
                     CalpontSystemCatalog::ColType& ct,
-                    const string& timeZone)
+                    long timeZone)
 {
 
     string expr;

@@ -69,7 +69,7 @@ public:
 
     SimpleFilter();
     SimpleFilter(const std::string& sql);
-    SimpleFilter(const SOP& op, ReturnedColumn* lhs, ReturnedColumn* rhs, const std::string& timeZone = "");
+    SimpleFilter(const SOP& op, ReturnedColumn* lhs, ReturnedColumn* rhs, const long timeZone = 0);
     SimpleFilter(const SimpleFilter& rhs);
 
     virtual ~SimpleFilter();
@@ -94,12 +94,12 @@ public:
         return fLhs;
     }
 
-    inline const std::string& timeZone() const
+    inline long timeZone() const
     {
         return fTimeZone;
     }
 
-    inline void timeZone(const std::string& timeZone)
+    inline void timeZone(const long timeZone)
     {
         fTimeZone = timeZone;
     }
@@ -222,7 +222,7 @@ private:
     ReturnedColumn* fRhs;	/// right operand
     int fIndexFlag;			/// which side col is index
     int fJoinFlag;			/// hash join type
-    std::string fTimeZone;
+    long fTimeZone;
 
     void parse (std::string);
 

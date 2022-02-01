@@ -45,7 +45,7 @@ dataconvert::DateTime getDateTime (rowgroup::Row& row,
                                    FunctionParm& parm,
                                    bool& isNull,
                                    CalpontSystemCatalog::ColType& ct,
-                                   const string& timeZone)
+                                   long timeZone)
 {
     TimeExtractor extractor;
     dataconvert::DateTime dateTime;

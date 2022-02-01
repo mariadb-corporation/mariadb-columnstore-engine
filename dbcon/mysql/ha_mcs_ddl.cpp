@@ -658,11 +658,14 @@ bool anyNullInTheColumn (THD* thd, string& schema, string& table, string& column
     csep.returnedCols(returnedColumnList);
 
     SimpleFilter* sf = new SimpleFilter();
-    sf->timeZone(thd->variables.time_zone->get_name()->ptr());
+    const char* timeZone = thd->variables.time_zone->get_name()->ptr();
+    long timeZoneOffset;
+    dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
+    sf->timeZone(timeZoneOffset);
     boost::shared_ptr<Operator> sop(new PredicateOperator("isnull"));
     sf->op(sop);
     ConstantColumn* rhs = new ConstantColumn("", ConstantColumn::NULLDATA);
-    rhs->timeZone(thd->variables.time_zone->get_name()->ptr());
+    rhs->timeZone(timeZoneOffset);
     sf->lhs(col[0]->clone());
     sf->rhs(rhs);
 
@@ -807,6 +810,10 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
         if (valConfig.compare("YES") == 0)
             isVarbinaryAllowed = true;
 
+        const char* timeZone = thd->variables.time_zone->get_name()->ptr();
+        long timeZoneOffset;
+        dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
+
         //@Bug 1771. error out for not supported feature.
         if ( typeid ( stmt ) == typeid ( CreateTableStatement ) )
         {
@@ -904,7 +911,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 
                         try
                         {
-                            convertedVal = colType.convertColumnData(createTable->fTableDef->fColumns[i]->fDefaultValue->fValue, pushWarning, thd->variables.time_zone->get_name()->ptr(), false, false, false);
+                            convertedVal = colType.convertColumnData(createTable->fTableDef->fColumns[i]->fDefaultValue->fValue, pushWarning, timeZoneOffset, false, false, false);
                         }
                         catch (std::exception&)
                         {
@@ -1127,7 +1134,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
                 algorithm::to_lower(alterTable->fTableName->fName);
             }
 
-            alterTable->fTimeZone.assign(thd->variables.time_zone->get_name()->ptr());
+            alterTable->fTimeZone = timeZoneOffset;
 
             if ( schema.length() == 0 )
             {
@@ -1282,7 +1289,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 
                             try
                             {
-                                convertedVal = colType.convertColumnData(addColumnPtr->fColumnDef->fDefaultValue->fValue, pushWarning, thd->variables.time_zone->get_name()->ptr(), false, false, false);
+                                convertedVal = colType.convertColumnData(addColumnPtr->fColumnDef->fDefaultValue->fValue, pushWarning, timeZoneOffset, false, false, false);
                             }
                             catch (std::exception&)
                             {
@@ -1638,7 +1645,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 
                             try
                             {
-                                convertedVal = colType.convertColumnData(addColumnsPtr->fColumns[0]->fDefaultValue->fValue, pushWarning, thd->variables.time_zone->get_name()->ptr(), false, false, false);
+                                convertedVal = colType.convertColumnData(addColumnsPtr->fColumns[0]->fDefaultValue->fValue, pushWarning, timeZoneOffset, false, false, false);
                             }
                             catch (std::exception&)
                             {

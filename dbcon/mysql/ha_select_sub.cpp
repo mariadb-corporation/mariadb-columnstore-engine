@@ -66,7 +66,7 @@ SCSEP SelectSubQuery::transform()
     csep->subType (CalpontSelectExecutionPlan::SELECT_SUBS);
 
     // gwi for the sub query
-    gp_walk_info gwi;
+    gp_walk_info gwi(fGwip.timeZone);
     gwi.thd = fGwip.thd;
     gwi.subQuery = this;
 

@@ -144,11 +144,6 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
 
         case execplan::CalpontSystemCatalog::TIMESTAMP:
         {
-            if (type1 != type2)
-            {
-                isNull = true;
-                break;
-            }
             int64_t temp = parm[0]->data()->getTimestampIntVal(row, isNull);
 	    dataconvert::TimeStamp timestamp(temp);
             int64_t seconds = timestamp.second;

@@ -286,7 +286,7 @@ bool onlyOneTableinTM(cal_impl_if::cal_connection_info* ci)
 }
 
 
-int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool handler_flag = false)
+int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, long timeZone, bool handler_flag = false)
 {
     int rc = HA_ERR_END_OF_FILE;
     int num_attr = ti.msTablePtr->s->fields;
@@ -427,7 +427,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
             {
               // fetch and store data
               (*f)->set_notnull();
-              datatypes::StoreFieldMariaDB mf(*f, colType);
+              datatypes::StoreFieldMariaDB mf(*f, colType, timeZone);
               h->storeValueToField(row, s, &mf);
             }
         }
@@ -881,6 +881,10 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
     bool isFromSameTable = true;
     execplan::SCSEP updateCP(new execplan::CalpontSelectExecutionPlan());
 
+    const char* timeZone = thd->variables.time_zone->get_name()->ptr();
+    long timeZoneOffset;
+    dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
+
     updateCP->isDML(true);
 
     //@Bug 2753. the memory already freed by destructor of UpdateSqlStatement
@@ -987,7 +991,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
                     columnAssignmentPtr->fFromCol = false;
                 }
             }
-           else if ( value->type() ==  Item::FUNC_ITEM )
+            else if ( value->type() ==  Item::FUNC_ITEM )
             {
                 //Bug 2092 handle negative values
                 Item_func* ifp = (Item_func*)value;
@@ -1005,9 +1009,9 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
                 // sysdate() etc.
                 if (!hasNonSupportItem && !cal_impl_if::nonConstFunc(ifp) && tmpVec.size() == 0)
                 {
-                    gp_walk_info gwi;
-                    gwi.thd = thd;
-                    SRCP srcp(buildReturnedColumn(value, gwi, gwi.fatalParseError));
+                    gp_walk_info gwi2(gwi.timeZone);
+                    gwi2.thd = thd;
+                    SRCP srcp(buildReturnedColumn(value, gwi2, gwi2.fatalParseError));
                     ConstantColumn* constCol = dynamic_cast<ConstantColumn*>(srcp.get());
 
                     if (constCol )
@@ -1154,7 +1158,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
                 char buf[64];
                 gettimeofday(&tv, 0);
                 MySQLTime time;
-                gmtSecToMySQLTime(tv.tv_sec, time, thd->variables.time_zone->get_name()->ptr());
+                gmtSecToMySQLTime(tv.tv_sec, time, timeZoneOffset);
                 sprintf(buf, "%04d-%02d-%02d %02d:%02d:%02d.%06ld", time.year, time.month, time.day, time.hour, time.minute, time.second, tv.tv_usec);
                 columnAssignmentPtr->fScalarExpression = buf;
                 colAssignmentListPtr->push_back ( columnAssignmentPtr );
@@ -1305,7 +1309,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
     pDMLPackage->set_TableName(tableName);
 
     pDMLPackage->set_SchemaName(schemaName);
-    pDMLPackage->set_TimeZone(thd->variables.time_zone->get_name()->ptr());
+    pDMLPackage->set_TimeZone(timeZoneOffset);
 
     pDMLPackage->set_IsFromCol( true );
     //cout << " setting 	isFromCol to " << isFromCol << endl;
@@ -1507,7 +1511,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
             CalpontSystemCatalog::TableColName tcn = csc->colName(colrids[minWidthColOffset].objnum);
             SimpleColumn* sc = new SimpleColumn(tcn.schema, tcn.table, tcn.column, csc->sessionID());
             sc->tableAlias(aliasName);
-            sc->timeZone(thd->variables.time_zone->get_name()->ptr());
+            sc->timeZone(timeZoneOffset);
             sc->resultType(csc->colType(colrids[minWidthColOffset].objnum));
             SRCP srcp;
             srcp.reset(sc);
@@ -1650,7 +1654,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
                         //cout << "doUpdateDelete start new DMLProc client for ctrl-c " <<  " for session " << sessionID << endl;
                         VendorDMLStatement cmdStmt( "CTRL+C", DML_COMMAND, sessionID);
                         CalpontDMLPackage* pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(cmdStmt);
-                        pDMLPackage->set_TimeZone(thd->variables.time_zone->get_name()->ptr());
+                        pDMLPackage->set_TimeZone(timeZoneOffset);
                         ByteStream bytestream;
                         bytestream << static_cast<uint32_t>(sessionID);
                         pDMLPackage->write(bytestream);
@@ -1772,7 +1776,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
         {
             VendorDMLStatement cmdStmt(command, DML_COMMAND, sessionID);
             CalpontDMLPackage* pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(cmdStmt);
-            pDMLPackage->set_TimeZone(thd->variables.time_zone->get_name()->ptr());
+            pDMLPackage->set_TimeZone(timeZoneOffset);
             pDMLPackage->setTableOid (ci->tableOid);
             ByteStream bytestream;
             bytestream << static_cast<uint32_t>(sessionID);
@@ -1998,6 +2002,10 @@ int ha_mcs_impl_analyze(THD* thd, TABLE* table)
     execplan::MCSAnalyzeTableExecutionPlan::ReturnedColumnList returnedColumnList;
     execplan::MCSAnalyzeTableExecutionPlan::ColumnMap columnMap;
 
+    const char* timeZone = thd->variables.time_zone->get_name()->ptr();
+    long timeZoneOffset;
+    dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
+
     // Iterate over table oid list and create a `SimpleColumn` for every column with supported type.
     for (uint32_t i = 0, e = oidlist.size(); i < e; ++i)
     {
@@ -2016,7 +2024,7 @@ int ha_mcs_impl_analyze(THD* thd, TABLE* table)
         simpleColumn->oid(objNum);
         simpleColumn->alias(tableColName.column);
         simpleColumn->resultType(colType);
-        simpleColumn->timeZone(thd->variables.time_zone->get_name()->ptr());
+        simpleColumn->timeZone(timeZoneOffset);
 
         returnedColumn.reset(simpleColumn);
         returnedColumnList.push_back(returnedColumn);
@@ -2030,7 +2038,7 @@ int ha_mcs_impl_analyze(THD* thd, TABLE* table)
 
     caep->schemaName(table->s->db.str, lower_case_table_names);
     caep->tableName(table->s->table_name.str, lower_case_table_names);
-    caep->timeZone(thd->variables.time_zone->get_name()->ptr());
+    caep->timeZone(timeZoneOffset);
 
     SessionManager sm;
     BRM::TxnID txnID;
@@ -2148,7 +2156,10 @@ int ha_mcs_impl_discover_existence(const char* schema, const char* name)
 int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows *affected_rows, const std::vector<COND*>& condStack)
 {
     THD* thd = current_thd;
-    cal_impl_if::gp_walk_info gwi;
+    const char* timeZone = thd->variables.time_zone->get_name()->ptr();
+    long timeZoneOffset;
+    dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
+    cal_impl_if::gp_walk_info gwi(timeZoneOffset);
     gwi.thd = thd;
     int rc = 0;
 
@@ -2178,8 +2189,10 @@ int ha_mcs::impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
 {
     IDEBUG( cout << "rnd_init for table " << table->s->table_name.str << endl );
     THD* thd = current_thd;
-
-    gp_walk_info gwi;
+    const char* timeZone = thd->variables.time_zone->get_name()->ptr();
+    long timeZoneOffset;
+    dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
+    gp_walk_info gwi(timeZoneOffset);
     gwi.thd = thd;
 
     if (thd->slave_thread && !get_replication_slave(thd) &&
@@ -2322,7 +2335,7 @@ int ha_mcs::impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
             ti.msTablePtr = table;
 
             // send plan whenever rnd_init is called
-            cp_get_table_plan(thd, ti.csep, ti);
+            cp_get_table_plan(thd, ti.csep, ti, timeZoneOffset);
         }
 
         IDEBUG( cerr << table->s->table_name.str << " send plan:" << endl );
@@ -2551,7 +2564,7 @@ internal_error:
     return ER_INTERNAL_ERROR;
 }
 
-int ha_mcs_impl_rnd_next(uchar* buf, TABLE* table)
+int ha_mcs_impl_rnd_next(uchar* buf, TABLE* table, long timeZone)
 {
     THD* thd = current_thd;
 
@@ -2594,7 +2607,7 @@ int ha_mcs_impl_rnd_next(uchar* buf, TABLE* table)
 
     try
     {
-        rc = fetchNextRow(buf, ti, ci);
+        rc = fetchNextRow(buf, ti, ci, timeZone);
     }
     catch (std::exception& e)
     {
@@ -2829,7 +2842,7 @@ int ha_mcs_impl_delete_table(const char* name)
     int rc = ha_mcs_impl_delete_table_(dbName, name, *ci);
     return rc;
 }
-int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_changed)
+int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_changed, long timeZone)
 {
     THD* thd = current_thd;
 
@@ -2876,7 +2889,7 @@ int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_changed)
          ((thd->lex)->sql_command == SQLCOM_INSERT) || ((thd->lex)->sql_command == SQLCOM_LOAD) ||
          ((thd->lex)->sql_command == SQLCOM_INSERT_SELECT) || ci->isCacheInsert) )
     {
-        rc = ha_mcs_impl_write_batch_row_(buf, table, *ci);
+        rc = ha_mcs_impl_write_batch_row_(buf, table, *ci, timeZone);
     }
     else
     {
@@ -3864,7 +3877,10 @@ COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table, std::vector<COND*>& condSt
 
 #ifdef DEBUG_WALK_COND
     {
-        gp_walk_info gwi;
+        const char* timeZone = thd->variables.time_zone->get_name()->ptr();
+        long timeZoneOffset;
+        dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
+        gp_walk_info gwi(timeZoneOffset);
         gwi.condPush = true;
         gwi.sessionid = tid2sid(thd->thread_id);
         cout << "------------------ cond push -----------------------" << endl;
@@ -3876,7 +3892,12 @@ COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table, std::vector<COND*>& condSt
     if (!ti.csep)
     {
         if (!ti.condInfo)
-            ti.condInfo = new gp_walk_info();
+        {
+            const char* timeZone = thd->variables.time_zone->get_name()->ptr();
+            long timeZoneOffset;
+            dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
+            ti.condInfo = new gp_walk_info(timeZoneOffset);
+        }
 
         gp_walk_info* gwi = ti.condInfo;
         gwi->dropCond = false;
@@ -4528,7 +4549,7 @@ internal_error:
  *    HA_ERR_END_OF_FILE if the record set has come to an end
  *    others if something went wrong whilst getting the result set
  ***********************************************************/
-int ha_mcs_impl_group_by_next(TABLE* table)
+int ha_mcs_impl_group_by_next(TABLE* table, long timeZone)
 {
     THD* thd = current_thd;
 
@@ -4568,7 +4589,7 @@ int ha_mcs_impl_group_by_next(TABLE* table)
     {
         // fetchNextRow interface forces to use buf.
         unsigned char buf;
-        rc = fetchNextRow(&buf, ti, ci, true);
+        rc = fetchNextRow(&buf, ti, ci, timeZone, true);
     }
     catch (std::exception& e)
     {
@@ -4779,7 +4800,10 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
         isDMLStatement(thd->lex->sql_command))
         return 0;
 
-    gp_walk_info gwi;
+    const char* timeZone = thd->variables.time_zone->get_name()->ptr();
+    long timeZoneOffset;
+    dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
+    gp_walk_info gwi(timeZoneOffset);
     gwi.thd = thd;
     bool err = false;
 
@@ -5215,7 +5239,7 @@ internal_error:
     return ER_INTERNAL_ERROR;
 }
 
-int ha_mcs_impl_select_next(uchar* buf, TABLE* table)
+int ha_mcs_impl_select_next(uchar* buf, TABLE* table, long timeZone)
 {
     THD* thd = current_thd;
 
@@ -5314,7 +5338,7 @@ int ha_mcs_impl_select_next(uchar* buf, TABLE* table)
 
     try
     {
-        rc = fetchNextRow(buf, ti, ci);
+        rc = fetchNextRow(buf, ti, ci, timeZone);
     }
     catch (std::exception& e)
     {

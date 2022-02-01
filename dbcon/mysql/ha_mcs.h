@@ -52,6 +52,7 @@ class ha_mcs: public handler
     // call on Ubuntu18.
     std::vector<COND*> condStack;
     int m_lock_type;
+    long time_zone;
 
     int impl_external_lock(THD* thd, TABLE* table, int lock_type);
     int impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack);

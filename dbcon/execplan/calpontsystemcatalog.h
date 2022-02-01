@@ -208,7 +208,7 @@ public:
         ConstraintType constraintType;
         DictOID ddn;
         std::string defaultValue;
-        std::string timeZone;
+        long timeZone;
         int32_t colPosition;	// temporally put here. may need to have ColInfo struct later
         int32_t compressionType;
         OID columnOID;
@@ -256,7 +256,7 @@ public:
          */
         boost::any convertColumnData(const std::string& data,
                                      bool& bSaturate,
-                                     const std::string& timeZone,
+                                     long timeZone,
                                      bool nulFlag = false,
                                      bool noRoundup = false,
                                      bool isUpdate = false) const;

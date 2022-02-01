@@ -421,11 +421,11 @@ public:
         fOnClauseFilter = b;
     }
 
-    void timeZone(const std::string& timezone)
+    void timeZone(const long timezone)
     {
         fTimeZone = timezone;
     }
-    const std::string timeZone() const
+    long timeZone() const
     {
         return fTimeZone;
     }
@@ -502,7 +502,7 @@ protected:
     uint64_t fProgress;
     int64_t  fStartTime;
     int64_t  fLastStepTeleTime;
-    std::string fTimeZone;
+    long fTimeZone;
 
 private:
     static boost::mutex fLogMutex;

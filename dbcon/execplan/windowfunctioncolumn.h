@@ -147,12 +147,12 @@ public:
         return udafContext;
     }
 
-    inline const std::string timeZone () const
+    inline long timeZone () const
     {
         return fTimeZone;
     }
 
-    inline void timeZone (const std::string& timeZone)
+    inline void timeZone (const long timeZone)
     {
         fTimeZone = timeZone;
     }
@@ -181,7 +181,7 @@ private:
     // UDAnF support
     mcsv1sdk::mcsv1Context udafContext;
 
-    std::string fTimeZone;
+    long fTimeZone;
     /***********************************************************
      *                 F&E framework                           *
      ***********************************************************/

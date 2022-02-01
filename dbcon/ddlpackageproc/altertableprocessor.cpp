@@ -1002,7 +1002,8 @@ void AlterTableProcessor::addColumn (uint32_t sessionID, execplan::CalpontSystem
                 bs << (ByteStream::byte) column_iterator->colType.colDataType;
                 bs << (uint32_t) column_iterator->colType.colWidth;
                 bs << (ByteStream::byte) column_iterator->colType.compressionType;
-                bs << fTimeZone;
+                messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
+                bs << timeZone;
                 //cout << "sending command fillcolumn " << endl;
                 uint32_t msgRecived = 0;
                 fWEClient->write_to_all(bs);

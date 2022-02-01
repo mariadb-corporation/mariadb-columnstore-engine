@@ -36,7 +36,7 @@ using namespace rowgroup;
 namespace
 {
 
-bool boolVal(SPTP& parm, Row& row, const string& timeZone)
+bool boolVal(SPTP& parm, Row& row, long timeZone)
 {
     bool ret = true;
     bool isNull = false;  // Keep it local. We don't want to mess with the global one here.

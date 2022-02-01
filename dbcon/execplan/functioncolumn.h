@@ -123,12 +123,12 @@ public:
         fTableAlias = tableAlias;
     }
 
-    inline const std::string timeZone () const
+    inline long timeZone () const
     {
         return fTimeZone;
     }
 
-    inline void timeZone (const std::string& timeZone)
+    inline void timeZone (const long timeZone)
     {
         fTimeZone = timeZone;
     }
@@ -183,7 +183,7 @@ private:
     std::string fFunctionName;	/// function name
     std::string fTableAlias;	/// table alias which has the column
     std::string fData;			/// SQL representation
-    std::string fTimeZone;
+    long fTimeZone;
 
     /** @brief Do a deep, strict (as opposed to semantic) equivalence test
     *

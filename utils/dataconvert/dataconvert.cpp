@@ -1215,7 +1215,7 @@ bool stringToTimeStruct(const string& data, Time& dtime, long decimals)
     return true;
 }
 
-bool stringToTimestampStruct(const string& data, TimeStamp& timeStamp, const string& timeZone)
+bool stringToTimestampStruct(const string& data, TimeStamp& timeStamp, long timeZone)
 {
     // special handling for 0000-00-00 00:00:00
     // "0" is sent by the server when checking for default value
@@ -1950,10 +1950,11 @@ int64_t DataConvert::convertColumnTimestamp(
     CalpontDateTimeFormat datetimeFormat,
     int& status,
     unsigned int dataOrgLen,
-    const std::string& timeZone )
+    long timeZone )
 {
     char tmbuf[64];
     std::string dataOrgTemp = dataOrg;
+    status = 0;
     if (dataOrgTemp.substr(0, 19) == "0000-00-00 00:00:00")
     {
         return 0;
@@ -1972,7 +1973,6 @@ int64_t DataConvert::convertColumnTimestamp(
         dataOrgLen = strlen(tmbuf);
     }
 
-    status = 0;
     const char* p;
     p = dataOrg;
     char fld[10];
@@ -2335,7 +2335,7 @@ std::string DataConvert::datetimeToString( long long  datetimevalue, long decima
     return buf;
 }
 
-std::string DataConvert::timestampToString( long long  timestampvalue, const std::string& timezone, long decimals )
+std::string DataConvert::timestampToString( long long  timestampvalue, long timezone, long decimals )
 {
     // 10 is default which means we don't need microseconds
     if (decimals > 6 || decimals < 0)
@@ -2417,7 +2417,7 @@ std::string DataConvert::datetimeToString1( long long  datetimevalue )
     return buf;
 }
 
-std::string DataConvert::timestampToString1( long long  timestampvalue, const std::string& timezone )
+std::string DataConvert::timestampToString1( long long  timestampvalue, long timezone )
 {
     const int TIMESTAMPTOSTRING1_LEN = 22; // YYYYMMDDHHMMSSmmmmmm\0
     char buf[TIMESTAMPTOSTRING1_LEN];
@@ -2454,7 +2454,7 @@ int64_t DataConvert::datetimeToInt(const string& datetime)
     return stringToDatetime(datetime);
 }
 
-int64_t DataConvert::timestampToInt(const string& timestamp, const string& timeZone)
+int64_t DataConvert::timestampToInt(const string& timestamp, long timeZone)
 {
     return stringToTimestamp(timestamp, timeZone);
 }
@@ -2487,7 +2487,7 @@ int64_t DataConvert::stringToDatetime(const string& data, bool* date)
         return -1;
 }
 
-int64_t DataConvert::stringToTimestamp(const string& data, const string& timeZone)
+int64_t DataConvert::stringToTimestamp(const string& data, long timeZone)
 {
     TimeStamp aTimestamp;
 

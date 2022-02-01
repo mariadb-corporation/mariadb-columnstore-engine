@@ -146,7 +146,7 @@ public:
                              ddlpackage::AtaTableComment& ataTableComment,
                              ddlpackage::QualifiedName& fTableName, const uint64_t uniqueId);
 
-    std::string fTimeZone;
+    long fTimeZone;
 
 protected:
     void rollBackAlter(const std::string& error, BRM::TxnID txnID, int sessionId, DDLResult& result, uint64_t uniqueId);

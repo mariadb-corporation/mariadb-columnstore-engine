@@ -61,11 +61,11 @@ public:
         return new ArithmeticOperator (*this);
     }
 
-    inline const std::string& timeZone() const
+    inline long timeZone() const
     {
         return fTimeZone;
     }
-    inline void timeZone(const std::string& timeZone)
+    inline void timeZone(const long timeZone)
     {
         fTimeZone = timeZone;
     }
@@ -209,7 +209,7 @@ private:
     template <typename result_t>
     inline result_t execute(result_t op1, result_t op2, bool& isNull);
     inline void execute(IDB_Decimal& result, IDB_Decimal op1, IDB_Decimal op2, bool& isNull);
-    std::string fTimeZone;
+    long fTimeZone;
     bool fDecimalOverflowCheck;
 };
 

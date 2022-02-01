@@ -316,12 +316,12 @@ public:
         return false;
     }
 
-    inline const std::string timeZone () const
+    inline long timeZone () const
     {
         return fTimeZone;
     }
 
-    inline void timeZone (const std::string& timeZone)
+    inline void timeZone (const long timeZone)
     {
         fTimeZone = timeZone;
     }
@@ -349,7 +349,7 @@ protected:
     ColumnList fGroupByColList;
     ColumnList fProjectColList;
     SRCP fConstCol;
-    std::string fTimeZone;
+    long fTimeZone;
 
 public:
     /***********************************************************

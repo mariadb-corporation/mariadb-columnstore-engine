@@ -78,7 +78,7 @@ const long long columnstore_precision[19] =
 XMLJob::XMLJob( ) : fDebugLevel( DEBUG_0 ),
     fDeleteTempFile(false),
     fValidateColList(true),
-    fTimeZone("SYSTEM")
+    fTimeZone(dataconvert::systemTimeZoneOffset())
 {
 }
 

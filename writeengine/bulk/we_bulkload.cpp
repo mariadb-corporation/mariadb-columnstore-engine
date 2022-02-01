@@ -158,7 +158,7 @@ BulkLoad::BulkLoad() :
     fbContinue(false),
     fDisableTimeOut(false),
     fUUID(boost::uuids::nil_generator()()),
-    fTimeZone("SYSTEM"),
+    fTimeZone(dataconvert::systemTimeZoneOffset()),
     fUsername("mysql") // MCOL-4328 default file owner
 {
     fTableInfo.clear();

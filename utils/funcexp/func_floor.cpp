@@ -117,7 +117,6 @@ int64_t Func_floor::getIntVal(Row& row,
         case execplan::CalpontSystemCatalog::DATETIME:
         {
             ret = parm[0]->data()->getDatetimeIntVal(row, isNull);
-
         }
         break;
 

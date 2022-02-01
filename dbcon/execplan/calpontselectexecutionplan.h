@@ -707,11 +707,11 @@ public:
         return fIsDML;
     }
 
-    void timeZone(const std::string& timezone)
+    void timeZone(const long timezone)
     {
         fTimeZone = timezone;
     }
-    const std::string timeZone() const
+    long timeZone() const
     {
         return fTimeZone;
     }
@@ -926,7 +926,7 @@ private:
     int64_t fUMMemLimit;
     bool fIsDML;
 
-    std::string fTimeZone;
+    long fTimeZone;
 
     std::vector<execplan::ParseTree*> fDynamicParseTreeVec;
 };

@@ -116,14 +116,14 @@ public:
     /**
      * accessor
      */
-    inline const std::string& timeZone() const
+    inline long timeZone() const
     {
         return fTimeZone;
     }
     /**
      * mutator
      */
-    inline void timeZone(const std::string& timeZone)
+    inline void timeZone(const long timeZone)
     {
         fTimeZone = timeZone;
     }
@@ -207,7 +207,7 @@ private:
     std::string fConstval;
     int fType;
     std::string fData;
-    std::string fTimeZone;
+    long fTimeZone;
 
     /***********************************************************
      *                  F&E framework                          *

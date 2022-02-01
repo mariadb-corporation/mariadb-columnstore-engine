@@ -140,7 +140,7 @@ BulkLoadBuffer::BulkLoadBuffer(
     fEnclosedByChar('\0'), fEscapeChar('\\'),
     fBufferId(bufferId), fTableName(tableName),
     fbTruncationAsError(false), fImportDataMode(IMPORT_DATA_TEXT),
-    fTimeZone("SYSTEM"),
+    fTimeZone(dataconvert::systemTimeZoneOffset()),
     fFixedBinaryRecLen(0)
 {
     fData            = new char[bufferSize];

@@ -697,7 +697,7 @@ string TypeHandlerTimestamp::format(const SimpleValue &v,
                                     const SystemCatalog::TypeAttributesStd &attr)
                                     const
 {
-  return DataConvert::timestampToString(v.toSInt64(), v.tzname());
+  return DataConvert::timestampToString(v.toSInt64(), v.timeZone());
 }
 
 
@@ -1059,7 +1059,7 @@ public:
                   const SystemCatalog::TypeAttributesStd &attr,
                   const char *str)
    :boost::any(h->convertFromString(attr,
-                                    ConvertFromStringParam(sp.tzname(), true, false),
+                                    ConvertFromStringParam(sp.timeZone(), true, false),
                                     str, initPushWarning()))
   { }
   round_style_t roundStyle() const
@@ -1248,7 +1248,7 @@ TypeHandlerTimestamp::toSimpleValue(const SessionParam &sp,
 {
   idbassert(attr.colWidth <= SystemCatalog::EIGHT_BYTE);
   SimpleConverter anyVal(sp, this, attr, str);
-  return SimpleValueTimestamp(anyVal.to_uint64(), sp.tzname());
+  return SimpleValueTimestamp(anyVal.to_uint64(), sp.timeZone());
 }
 
 

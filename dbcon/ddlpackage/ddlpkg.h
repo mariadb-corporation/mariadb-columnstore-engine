@@ -1405,7 +1405,7 @@ struct AlterTableStatement : public SqlStatement
 
     QualifiedName* fTableName;
     AlterTableActionList fActions;
-    std::string fTimeZone;
+    long fTimeZone;
 };
 
 

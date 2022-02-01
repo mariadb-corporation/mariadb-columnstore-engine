@@ -1633,7 +1633,8 @@ void RowAggregation::serialize(messageqcpp::ByteStream& bs) const
     for (uint64_t i = 0; i < functionCount; i++)
         fFunctionCols[i]->serialize(bs);
 
-    bs << fTimeZone;
+    messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
+    bs << timeZone;
 }
 
 
@@ -1679,7 +1680,9 @@ void RowAggregation::deserialize(messageqcpp::ByteStream& bs)
         fFunctionCols.push_back(funct);
     }
 
-    bs >> fTimeZone;
+    messageqcpp::ByteStream::octbyte timeZone;
+    bs >> timeZone;
+    fTimeZone = timeZone;
 }
 
 

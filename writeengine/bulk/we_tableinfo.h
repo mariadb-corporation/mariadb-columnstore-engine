@@ -130,7 +130,9 @@ private:
     //   data file
     bool fbTruncationAsError;           // Treat string truncation as error
     ImportDataMode fImportDataMode;     // Import data in text or binary mode
-    std::string fTimeZone;               // Timezone used by TIMESTAMP data type
+    long fTimeZone;                     // Timezone offset (in seconds) relative to UTC,
+                                        // to use for TIMESTAMP data type. For example,
+                                        // for EST which is UTC-5:00, offset will be -18000s.
 
     volatile bool fTableLocked;         // Do we have db table lock
 
@@ -275,7 +277,7 @@ public:
 
     /** @brief Get timezone.
      */
-    const std::string& getTimeZone( ) const;
+    long getTimeZone( ) const;
 
     /** @brief Get number of buffers
      */
@@ -336,7 +338,7 @@ public:
 
     /** @brief Set timezone.
      */
-    void setTimeZone( const std::string& timeZone );
+    void setTimeZone( long timeZone );
 
     /** @brief Enable distributed mode, saving BRM updates in rptFileName
      */
@@ -511,7 +513,7 @@ inline ImportDataMode TableInfo::getImportDataMode() const
     return fImportDataMode;
 }
 
-inline const std::string& TableInfo::getTimeZone() const
+inline long TableInfo::getTimeZone() const
 {
     return fTimeZone;
 }
@@ -615,7 +617,7 @@ inline void TableInfo::setImportDataMode( ImportDataMode importMode )
     fImportDataMode = importMode;
 }
 
-inline void TableInfo::setTimeZone( const std::string& timeZone )
+inline void TableInfo::setTimeZone( long timeZone )
 {
     fTimeZone = timeZone;
 }

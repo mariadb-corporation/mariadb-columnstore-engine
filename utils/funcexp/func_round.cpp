@@ -731,6 +731,14 @@ int64_t Func_round::getDatetimeIntVal(Row& row,
     return parm[0]->data()->getIntVal(row, isNull);
 }
 
+int64_t Func_round::getTimestampIntVal(rowgroup::Row& row,
+                                          FunctionParm& parm,
+                                          bool& isNull,
+                                          execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+    return parm[0]->data()->getTimestampIntVal(row, isNull);
+}
+
 
 } // namespace funcexp
 // vim:ts=4 sw=4:

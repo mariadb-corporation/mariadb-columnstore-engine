@@ -60,7 +60,7 @@ SimpleFilter::SimpleFilter(const string& sql):
     parse(sql);
 }
 
-SimpleFilter::SimpleFilter(const SOP& op, ReturnedColumn* lhs, ReturnedColumn* rhs, const string& timeZone) :
+SimpleFilter::SimpleFilter(const SOP& op, ReturnedColumn* lhs, ReturnedColumn* rhs, const long timeZone) :
     fOp(op), fLhs(lhs), fRhs(rhs), fIndexFlag(NOINDEX), fJoinFlag(EQUA), fTimeZone(timeZone)
 {
     convertConstant();
@@ -323,7 +323,8 @@ void SimpleFilter::serialize(messageqcpp::ByteStream& b) const
 
     b << static_cast<uint32_t>(fIndexFlag);
     b << static_cast<uint32_t>(fJoinFlag);
-    b << fTimeZone;
+    messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
+    b << timeZone;
 }
 
 void SimpleFilter::unserialize(messageqcpp::ByteStream& b)
@@ -339,7 +340,9 @@ void SimpleFilter::unserialize(messageqcpp::ByteStream& b)
     fRhs = dynamic_cast<ReturnedColumn*>(ObjectReader::createTreeNode(b));
     b >> reinterpret_cast<uint32_t&>(fIndexFlag);
     b >> reinterpret_cast<uint32_t&>(fJoinFlag);
-    b >> fTimeZone;
+    messageqcpp::ByteStream::octbyte timeZone;
+    b >> timeZone;
+    fTimeZone = timeZone;
 
     fSimpleColumnList.clear();
     fAggColumnList.clear();

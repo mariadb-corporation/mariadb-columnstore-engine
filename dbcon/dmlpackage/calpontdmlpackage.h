@@ -224,14 +224,14 @@ public:
      *
      * @param the timezone to set
      */
-    void set_TimeZone( const std::string& timeZone )
+    void set_TimeZone( const long timeZone )
     {
         fTimeZone = timeZone;
     }
 
     /** @brief get the timezone
      */
-    const std::string get_TimeZone() const
+    long get_TimeZone() const
     {
         return fTimeZone;
     }
@@ -370,7 +370,7 @@ protected:
     void initializeTable();
 
     std::string fSchemaName;
-    std::string fTimeZone;
+    long fTimeZone;
     std::string fTableName;
     std::string fDMLStatement;
     std::string fSQLStatement;

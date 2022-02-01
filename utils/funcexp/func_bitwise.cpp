@@ -117,7 +117,7 @@ datatypes::TUInt64Null GenericToBitOperand(
     const execplan::SPTP& parm,
     const funcexp::Func& thisFunc,
     bool temporalRounding,
-    const std::string& timeZone)
+    long timeZone)
 {
     switch (parm->data()->resultType().colDataType)
     {
@@ -242,7 +242,7 @@ public:
     BitOperandGeneric(Row& row,
                       const execplan::SPTP& parm,
                       const funcexp::Func& thisFunc,
-                      const std::string& timeZone)
+                      long timeZone)
        :TUInt64Null(GenericToBitOperand(row, parm, thisFunc, true, timeZone))
     { }
 };
@@ -257,7 +257,7 @@ public:
     BitOperandGenericShiftAmount(Row& row,
                                  const execplan::SPTP& parm,
                                  const funcexp::Func& thisFunc,
-                                 const std::string& timeZone)
+                                 long timeZone)
        :TUInt64Null(GenericToBitOperand(row, parm, thisFunc, false, timeZone))
     { }
 };

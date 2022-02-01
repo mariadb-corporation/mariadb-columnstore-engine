@@ -114,7 +114,7 @@ public:
     void                addToCmdLineImportFileList(const std::string& importFile);
     const std::string&  getAlternateImportDir( ) const;
     const std::string&  getErrorDir          ( ) const;
-    const std::string&  getTimeZone          ( ) const;
+    long                getTimeZone          ( ) const;
     const std::string&  getJobDir            ( ) const;
     const std::string&  getSchema            ( ) const;
     const std::string&  getTempJobDir        ( ) const;
@@ -154,7 +154,7 @@ public:
     void                setTruncationAsError ( bool bTruncationAsError );
     void                setJobUUID           ( const std::string& jobUUID );
     void                setErrorDir          ( const std::string& errorDir );
-    void                setTimeZone          ( const std::string& timeZone );
+    void                setTimeZone          ( long timeZone );
     void                setS3Key             ( const std::string& key );
     void                setS3Secret          ( const std::string& secret );
     void                setS3Bucket          ( const std::string& bucket );
@@ -237,9 +237,11 @@ private:
     static const std::string   DIR_BULK_IMPORT;  // Bulk job import dir
     static const std::string   DIR_BULK_LOG;     // Bulk job log directory
     bool        fDisableTimeOut;           // disable timeout when waiting for table lock
-    boost::uuids::uuid fUUID;               // job UUID
-    static bool		fNoConsoleOutput;		   // disable output to console
-    std::string fTimeZone;                 // Timezone to use for TIMESTAMP data type
+    boost::uuids::uuid fUUID;              // job UUID
+    static bool		fNoConsoleOutput;  // disable output to console
+    long fTimeZone;                        // Timezone offset (in seconds) relative to UTC,
+                                           // to use for TIMESTAMP data type. For example,
+                                           // for EST which is UTC-5:00, offset will be -18000s.
     std::string fS3Key;                    // S3 Key
     std::string fS3Secret;                 // S3 Secret
     std::string fS3Host;                   // S3 Host
@@ -338,7 +340,7 @@ inline const std::string& BulkLoad::getErrorDir( ) const
     return fErrorDir;
 }
 
-inline const std::string& BulkLoad::getTimeZone( ) const
+inline long BulkLoad::getTimeZone( ) const
 {
     return fTimeZone;
 }
@@ -508,7 +510,7 @@ inline void BulkLoad::setErrorDir( const std::string& errorDir )
     fErrorDir = errorDir;
 }
 
-inline void BulkLoad::setTimeZone( const std::string& timeZone )
+inline void BulkLoad::setTimeZone( long timeZone )
 {
     fTimeZone = timeZone;
 }

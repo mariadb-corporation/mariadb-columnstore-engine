@@ -555,31 +555,31 @@ enum class round_style_t: uint8_t
 
 class SessionParam
 {
-  const char *m_tzname;
+  long m_timeZone;
 public:
-  SessionParam(const char *tzname)
-   :m_tzname(tzname)
+  SessionParam(long timeZone)
+   :m_timeZone(timeZone)
   { }
-  const char *tzname() const
+  long timeZone() const
   {
-    return m_tzname;
+    return m_timeZone;
   }
 };
 
 
 class ConvertFromStringParam
 {
-  const std::string& m_timeZone;
+  const long m_timeZone;
   const bool m_noRoundup;
   const bool m_isUpdate;
 public:
-  ConvertFromStringParam(const std::string& timeZone,
+  ConvertFromStringParam(long timeZone,
                          bool noRoundup, bool isUpdate)
    :m_timeZone(timeZone),
     m_noRoundup(noRoundup),
     m_isUpdate(isUpdate)
   { }
-  const std::string& timeZone() const { return m_timeZone; }
+  long timeZone() const { return m_timeZone; }
   bool noRoundup() const { return m_noRoundup; }
   bool isUpdate() const { return m_isUpdate; }
 };
@@ -589,20 +589,20 @@ class SimpleValue
 {
   int64_t  m_sint64;
   int128_t m_sint128;
-  const char *m_tzname;
+  long m_timeZone;
 public:
   SimpleValue(const int64_t sint64,
               const int128_t &sint128,
-              const char *tzname)
-   :m_sint64(sint64), m_sint128(sint128), m_tzname(tzname)
+              long timeZone)
+   :m_sint64(sint64), m_sint128(sint128), m_timeZone(timeZone)
   { }
   SimpleValue()
-   :m_sint64(0), m_sint128(0), m_tzname(0)
+   :m_sint64(0), m_sint128(0), m_timeZone(0)
   { }
   int64_t toSInt64() const { return m_sint64; }
   uint64_t toUInt64() const { return static_cast<uint64_t>(m_sint64); }
   int128_t toSInt128() const { return m_sint128; }
-  const char *tzname() const { return m_tzname; }
+  long timeZone() const { return m_timeZone; }
 };
 
 
@@ -610,7 +610,7 @@ class SimpleValueSInt64: public SimpleValue
 {
 public:
   SimpleValueSInt64(int64_t value)
-   :SimpleValue(value, 0, NULL)
+   :SimpleValue(value, 0, 0)
   { }
 };
 
@@ -619,7 +619,7 @@ class SimpleValueUInt64: public SimpleValue
 {
 public:
   SimpleValueUInt64(uint64_t value)
-   :SimpleValue(static_cast<int64_t>(value), 0, NULL)
+   :SimpleValue(static_cast<int64_t>(value), 0, 0)
   { }
 };
 
@@ -628,7 +628,7 @@ class SimpleValueSInt128: public SimpleValue
 {
 public:
   SimpleValueSInt128(int128_t value)
-   :SimpleValue(0, value, NULL)
+   :SimpleValue(0, value, 0)
   { }
 };
 
@@ -636,8 +636,8 @@ public:
 class SimpleValueTimestamp: public SimpleValue
 {
 public:
-  SimpleValueTimestamp(uint64_t value, const char *tzname)
-   :SimpleValue(static_cast<int64_t>(value), 0, tzname)
+  SimpleValueTimestamp(uint64_t value, long timeZone)
+   :SimpleValue(static_cast<int64_t>(value), 0, timeZone)
   { }
 };
 

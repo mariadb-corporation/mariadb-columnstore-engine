@@ -370,7 +370,8 @@ void SimpleColumn::serialize(messageqcpp::ByteStream& b) const
     b << fColumnName;
     b << fIndexName;
     b << fViewName;
-    b << fTimeZone;
+    messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
+    b << timeZone;
     b << (uint32_t) fOid;
     b << fData;
     b << fTableAlias;
@@ -387,7 +388,9 @@ void SimpleColumn::unserialize(messageqcpp::ByteStream& b)
     b >> fColumnName;
     b >> fIndexName;
     b >> fViewName;
-    b >> fTimeZone;
+    messageqcpp::ByteStream::octbyte timeZone;
+    b >> timeZone;
+    fTimeZone = timeZone;
     b >> (uint32_t&) fOid;
     b >> fData;
     b >> fTableAlias;

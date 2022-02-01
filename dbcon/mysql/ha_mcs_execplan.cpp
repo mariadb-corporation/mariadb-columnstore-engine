@@ -1531,7 +1531,7 @@ uint32_t buildJoin(gp_walk_info& gwi, List<TABLE_LIST>& join_list,
     return 0;
 }
 
-ParseTree* buildRowPredicate(THD* thd, RowColumn* lhs, RowColumn* rhs, string predicateOp)
+ParseTree* buildRowPredicate(gp_walk_info* gwip, RowColumn* lhs, RowColumn* rhs, string predicateOp)
 {
     PredicateOperator* po = new PredicateOperator(predicateOp);
     boost::shared_ptr<Operator> sop(po);
@@ -1545,7 +1545,7 @@ ParseTree* buildRowPredicate(THD* thd, RowColumn* lhs, RowColumn* rhs, string pr
     ParseTree* pt = new ParseTree(lo);
     sop->setOpType(lhs->columnVec()[0]->resultType(), rhs->columnVec()[0]->resultType());
     SimpleFilter* sf = new SimpleFilter(sop, lhs->columnVec()[0].get(), rhs->columnVec()[0].get());
-    sf->timeZone(thd->variables.time_zone->get_name()->ptr());
+    sf->timeZone(gwip->timeZone);
     pt->left(new ParseTree(sf));
 
     for (uint32_t i = 1; i < lhs->columnVec().size(); i++)
@@ -1553,7 +1553,7 @@ ParseTree* buildRowPredicate(THD* thd, RowColumn* lhs, RowColumn* rhs, string pr
         sop.reset(po->clone());
         sop->setOpType(lhs->columnVec()[i]->resultType(), rhs->columnVec()[i]->resultType());
         SimpleFilter* sf = new SimpleFilter(sop, lhs->columnVec()[i].get(), rhs->columnVec()[i].get());
-        sf->timeZone(thd->variables.time_zone->get_name()->ptr());
+        sf->timeZone(gwip->timeZone);
         pt->right(new ParseTree(sf));
 
         if (i + 1 < lhs->columnVec().size())
@@ -1573,7 +1573,7 @@ bool buildRowColumnFilter(gp_walk_info* gwip, RowColumn* rhs, RowColumn* lhs, It
     {
         // (c1,c2,..) = (v1,v2,...) transform to: c1=v1 and c2=v2 and ...
         assert (!lhs->columnVec().empty() && lhs->columnVec().size() == rhs->columnVec().size());
-        gwip->ptWorkStack.push(buildRowPredicate(gwip->thd, rhs, lhs, ifp->func_name()));
+        gwip->ptWorkStack.push(buildRowPredicate(gwip, rhs, lhs, ifp->func_name()));
     }
     else if (ifp->functype() == Item_func::IN_FUNC)
     {
@@ -1617,7 +1617,7 @@ bool buildRowColumnFilter(gp_walk_info* gwip, RowColumn* rhs, RowColumn* lhs, It
         RowColumn* vals = dynamic_cast<RowColumn*>(tmpStack.top());
         valVec.push_back(vals);
         tmpStack.pop();
-        ParseTree* pt = buildRowPredicate(gwip->thd, columns, vals, predicateOp);
+        ParseTree* pt = buildRowPredicate(gwip, columns, vals, predicateOp);
 
         while (!tmpStack.empty())
         {
@@ -1626,7 +1626,7 @@ bool buildRowColumnFilter(gp_walk_info* gwip, RowColumn* rhs, RowColumn* lhs, It
             vals = dynamic_cast<RowColumn*>(tmpStack.top());
             valVec.push_back(vals);
             tmpStack.pop();
-            pt1->right(buildRowPredicate(gwip->thd, columns->clone(), vals, predicateOp));
+            pt1->right(buildRowPredicate(gwip, columns->clone(), vals, predicateOp));
             pt = pt1;
         }
 
@@ -1670,7 +1670,7 @@ bool buildRowColumnFilter(gp_walk_info* gwip, RowColumn* rhs, RowColumn* lhs, It
                 sop->setOpType(sc->resultType(), valVec[j]->columnVec()[i]->resultType());
                 cf->pushFilter(new SimpleFilter(sop, sc->clone(),
                                                 valVec[j]->columnVec()[i]->clone(),
-                                                gwip->thd->variables.time_zone->get_name()->ptr()));
+                                                gwip->timeZone));
             }
 
             if (j < valVec.size())
@@ -1821,7 +1821,7 @@ bool buildEqualityPredicate(execplan::ReturnedColumn* lhs,
     }
 
     SimpleFilter* sf = new SimpleFilter();
-    sf->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
+    sf->timeZone(gwip->timeZone);
 
     //@bug 2101 for when there are only constants in a delete or update where clause (eg "where 5 < 6").
     //There will be no field column and it will get here only if the comparison is true.
@@ -1936,11 +1936,11 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
             sop.reset(new PredicateOperator(">"));
             sop->setOpType(filterCol->resultType(), rhs->resultType());
             sfr = new SimpleFilter(sop, filterCol, rhs);
-            sfr->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
+            sfr->timeZone(gwip->timeZone);
             sop.reset(new PredicateOperator("<"));
             sop->setOpType(filterCol->resultType(), lhs->resultType());
             sfl = new SimpleFilter(sop, filterCol->clone(), lhs);
-            sfl->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
+            sfl->timeZone(gwip->timeZone);
             ParseTree* ptp = new ParseTree(new LogicOperator("or"));
             ptp->left(sfr);
             ptp->right(sfl);
@@ -1951,11 +1951,11 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
             sop.reset(new PredicateOperator("<="));
             sop->setOpType(filterCol->resultType(), rhs->resultType());
             sfr = new SimpleFilter(sop, filterCol, rhs);
-            sfr->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
+            sfr->timeZone(gwip->timeZone);
             sop.reset(new PredicateOperator(">="));
             sop->setOpType(filterCol->resultType(), lhs->resultType());
             sfl = new SimpleFilter(sop, filterCol->clone(), lhs);
-            sfl->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
+            sfl->timeZone(gwip->timeZone);
             ParseTree* ptp = new ParseTree(new LogicOperator("and"));
             ptp->left(sfr);
             ptp->right(sfl);
@@ -2015,7 +2015,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
         cf->op(sop);
         sop.reset(new PredicateOperator(eqop));
         sop->setOpType(gwip->scsp->resultType(), lhs->resultType());
-        cf->pushFilter(new SimpleFilter(sop, gwip->scsp->clone(), lhs, gwip->thd->variables.time_zone->get_name()->ptr()));
+        cf->pushFilter(new SimpleFilter(sop, gwip->scsp->clone(), lhs, gwip->timeZone));
 
         while (!gwip->rcWorkStack.empty())
         {
@@ -2026,7 +2026,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
             gwip->rcWorkStack.pop();
             sop.reset(new PredicateOperator(eqop));
             sop->setOpType(gwip->scsp->resultType(), lhs->resultType());
-            cf->pushFilter(new SimpleFilter(sop, gwip->scsp->clone(), lhs, gwip->thd->variables.time_zone->get_name()->ptr()));
+            cf->pushFilter(new SimpleFilter(sop, gwip->scsp->clone(), lhs, gwip->timeZone));
         }
 
         if (!gwip->rcWorkStack.empty())
@@ -2093,7 +2093,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
             {
                 gwip->rcWorkStack.push(new ConstantColumn((int64_t)udf->val_int()));
             }
-            (dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top()))->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
+            (dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top()))->timeZone(gwip->timeZone);
         }
         else
         {
@@ -2115,7 +2115,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
             {
                 gwip->rcWorkStack.push(new ConstantColumn(buf.ptr(), ConstantColumn::NUM));
             }
-            (dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top()))->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
+            (dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top()))->timeZone(gwip->timeZone);
 
             return false;
         }
@@ -2289,19 +2289,19 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
         SimpleFilter* sfo = 0;
         // b IS NULL
         ConstantColumn* nlhs1 = new ConstantColumn("", ConstantColumn::NULLDATA);
-        nlhs1->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
+        nlhs1->timeZone(gwip->timeZone);
         sop.reset(new PredicateOperator("isnull"));
         sop->setOpType(lhs->resultType(), rhs->resultType());
         sfn1 = new SimpleFilter(sop, rhs, nlhs1);
-        sfn1->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
+        sfn1->timeZone(gwip->timeZone);
         ParseTree* ptpl = new ParseTree(sfn1);
         // a IS NULL
         ConstantColumn* nlhs2 = new ConstantColumn("", ConstantColumn::NULLDATA);
-        nlhs2->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
+        nlhs2->timeZone(gwip->timeZone);
         sop.reset(new PredicateOperator("isnull"));
         sop->setOpType(lhs->resultType(), rhs->resultType());
         sfn2 = new SimpleFilter(sop, lhs, nlhs2);
-        sfn2->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
+        sfn2->timeZone(gwip->timeZone);
         ParseTree* ptpr = new ParseTree(sfn2);
         // AND them both
         ParseTree* ptpn = new ParseTree(new LogicOperator("and"));
@@ -2311,7 +2311,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
         sop.reset(new PredicateOperator("="));
         sop->setOpType(lhs->resultType(), rhs->resultType());
         sfo = new SimpleFilter(sop, lhs->clone(), rhs->clone());
-        sfo->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
+        sfo->timeZone(gwip->timeZone);
         // OR with the NULL comparison tree
         ParseTree* ptp = new ParseTree(new LogicOperator("or"));
         ptp->left(sfo);
@@ -2363,7 +2363,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 bool buildConstPredicate(Item_func* ifp, ReturnedColumn* rhs, gp_walk_info* gwip)
 {
     SimpleFilter* sf = new SimpleFilter();
-    sf->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
+    sf->timeZone(gwip->timeZone);
     boost::shared_ptr<Operator> sop(new PredicateOperator(ifp->func_name()));
     ConstantColumn* lhs = 0;
 
@@ -2382,7 +2382,7 @@ bool buildConstPredicate(Item_func* ifp, ReturnedColumn* rhs, gp_walk_info* gwip
         lhs = new ConstantColumn((int64_t)0, ConstantColumn::NUM);
         sop.reset(new PredicateOperator("="));
     }
-    lhs->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
+    lhs->timeZone(gwip->timeZone);
 
     CalpontSystemCatalog::ColType opType = rhs->resultType();
 
@@ -2456,7 +2456,7 @@ SimpleColumn* buildSimpleColFromDerivedTable(gp_walk_info& gwi, Item_field* ifp)
                     sc->tableAlias(gwi.tbList[i].alias);
                     sc->viewName(viewName, lower_case_table_names);
                     sc->resultType(ct);
-                    sc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+                    sc->timeZone(gwi.timeZone);
                     break;
                 }
             }
@@ -2513,7 +2513,7 @@ SimpleColumn* buildSimpleColFromDerivedTable(gp_walk_info& gwi, Item_field* ifp)
                     sc->tableName(csep->derivedTbAlias());
                     sc->colPosition(j);
                     sc->tableAlias(csep->derivedTbAlias());
-                    sc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+                    sc->timeZone(gwi.timeZone);
                     if (!viewName.empty())
                     {
                         sc->viewName(viewName, lower_case_table_names);
@@ -2637,7 +2637,7 @@ void collectAllCols(gp_walk_info& gwi, Item_field* ifp)
                 sc->tableAlias(csep->derivedTbAlias());
                 sc->viewName(gwi.tbList[i].view);
                 sc->resultType(cols[j]->resultType());
-                sc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+                sc->timeZone(gwi.timeZone);
 
                 // @bug5634 derived table optimization
                 cols[j]->incRefCount();
@@ -2685,7 +2685,7 @@ void collectAllCols(gp_walk_info& gwi, Item_field* ifp)
                 sc->resultType(ct);
                 sc->tableAlias(gwi.tbList[i].alias, lower_case_table_names);
                 sc->viewName(viewName, lower_case_table_names);
-                sc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+                sc->timeZone(gwi.timeZone);
                 srcp.reset(sc);
                 gwi.returnedCols.push_back(srcp);
                 gwi.columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(sc->columnName(), srcp));
@@ -3036,7 +3036,7 @@ SimpleColumn* getSmallestColumn(boost::shared_ptr<CalpontSystemCatalog> csc,
                 sc->columnName(rc->alias());
                 sc->sequence(0);
                 sc->tableAlias(tan.alias);
-                sc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+                sc->timeZone(gwi.timeZone);
                 sc->derivedTable(csep->derivedTbAlias());
                 sc->derivedRefCol(rc);
                 return sc;
@@ -3054,7 +3054,7 @@ SimpleColumn* getSmallestColumn(boost::shared_ptr<CalpontSystemCatalog> csc,
         SimpleColumn* sc = new SimpleColumn(table->s->db.str, table->s->table_name.str, field->field_name.str, tan.fisColumnStore, gwi.sessionid, lower_case_table_names);
         sc->tableAlias(table->alias.ptr(), lower_case_table_names);
         sc->isColumnStore(false);
-        sc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+        sc->timeZone(gwi.timeZone);
         sc->resultType(fieldType_MysqlToIDB(field));
         sc->oid(field->field_index + 1);
         return sc;
@@ -3084,7 +3084,7 @@ SimpleColumn* getSmallestColumn(boost::shared_ptr<CalpontSystemCatalog> csc,
     SimpleColumn* sc = new SimpleColumn(tcn.schema, tcn.table, tcn.column, csc->sessionID());
     sc->tableAlias(tan.alias);
     sc->viewName(tan.view);
-    sc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+    sc->timeZone(gwi.timeZone);
     sc->resultType(csc->colType(oidlist[minWidthColOffset].objnum));
     sc->charsetNumber(table->field[minWidthColOffset]->charset()->number);
     return sc;
@@ -3258,7 +3258,7 @@ buildReturnedColumnNull(gp_walk_info& gwi)
         return new SimpleColumn("noop");
     ConstantColumn *rc = new ConstantColumnNull();
     if (rc)
-        rc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+        rc->timeZone(gwi.timeZone);
     return rc;
 }
 
@@ -3406,7 +3406,7 @@ buildConstantColumnMaybeNullFromValStr(const Item *item,
 {
     ConstantColumn *rc= newConstantColumnMaybeNullFromValStrNoTz(item, valStr, gwi);
     if (rc)
-        rc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+        rc->timeZone(gwi.timeZone);
     return rc;
 }
 
@@ -3429,7 +3429,7 @@ buildConstantColumnNotNullUsingValNative(Item *item, gp_walk_info& gwi)
 {
     ConstantColumn *rc = newConstantColumnNotNullUsingValNativeNoTz(item, gwi);
     if (rc)
-        rc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+        rc->timeZone(gwi.timeZone);
     return rc; 
 }
 
@@ -3644,7 +3644,7 @@ ArithmeticColumn* buildArithmeticColumn(
     ArithmeticColumn* ac = new ArithmeticColumn();
     Item** sfitempp = item->arguments();
     ArithmeticOperator* aop = new ArithmeticOperator(item->func_name());
-    aop->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+    aop->timeZone(gwi.timeZone);
     aop->setOverflowCheck(get_decimal_overflow_check(gwi.thd));
     ParseTree* pt = new ParseTree(aop);
     //ReturnedColumn *lhs = 0, *rhs = 0;
@@ -3770,7 +3770,7 @@ ArithmeticColumn* buildArithmeticColumn(
     else
     {
         ConstantColumn* cc = new ConstantColumn(string("0"), (int64_t)0);
-        cc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+        cc->timeZone(gwi.timeZone);
 
         if (gwi.clauseType == SELECT || gwi.clauseType == HAVING || gwi.clauseType == GROUP_BY) // select clause
         {
@@ -4150,7 +4150,7 @@ ReturnedColumn* buildFunctionColumn(
         {
             THD* thd = current_thd;
             sptp.reset(new ParseTree(new ConstantColumn(static_cast<uint64_t>(thd->variables.default_week_format))));
-            (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+            (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwi.timeZone);
             funcParms.push_back(sptp);
         }
 
@@ -4158,7 +4158,7 @@ ReturnedColumn* buildFunctionColumn(
         if (funcName == "date_add_interval" || funcName == "extract" || funcName == "timestampdiff")
         {
 
-            addIntervalArgs(gwi.thd, ifp, funcParms);
+            addIntervalArgs(&gwi, ifp, funcParms);
         }
 
         // check for unsupported arguments add the keyword unit argument for extract functions
@@ -4209,19 +4209,19 @@ ReturnedColumn* buildFunctionColumn(
         // add the keyword unit argument and char length for cast functions
         if (funcName == "cast_as_char" )
         {
-            castCharArgs(gwi.thd, ifp, funcParms);
+            castCharArgs(&gwi, ifp, funcParms);
         }
 
         // add the length and scale arguments
         if (funcName == "decimal_typecast" )
         {
-            castDecimalArgs(gwi.thd, ifp, funcParms);
+            castDecimalArgs(&gwi, ifp, funcParms);
         }
 
         // add the type argument
         if (funcName == "get_format")
         {
-            castTypeArgs(gwi.thd, ifp, funcParms);
+            castTypeArgs(&gwi, ifp, funcParms);
         }
 
         // add my_time_zone
@@ -4236,7 +4236,7 @@ ReturnedColumn* buildFunctionColumn(
             //FIXME: Get GMT offset (in seconds east of GMT) in Windows...
             sptp.reset(new ParseTree(new ConstantColumn(static_cast<int64_t>(0), ConstantColumn::NUM)));
 #endif
-            (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+            (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwi.timeZone);
             funcParms.push_back(sptp);
         }
 
@@ -4246,10 +4246,10 @@ ReturnedColumn* buildFunctionColumn(
             if (funcParms.size() == 0)
             {
                 sptp.reset(new ParseTree(new ConstantColumn((int64_t)gwi.thd->rand.seed1, ConstantColumn::NUM)));
-                (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+                (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwi.timeZone);
                 funcParms.push_back(sptp);
                 sptp.reset(new ParseTree(new ConstantColumn((int64_t)gwi.thd->rand.seed2, ConstantColumn::NUM)));
-                (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+                (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwi.timeZone);
                 funcParms.push_back(sptp);
                 gwi.no_parm_func_list.push_back(fc);
             }
@@ -4303,7 +4303,7 @@ ReturnedColumn* buildFunctionColumn(
                 tzinfo = string((char*)buf, length);
             }
             sptp.reset(new ParseTree(new ConstantColumn(tzinfo)));
-            (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+            (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwi.timeZone);
             funcParms.push_back(sptp);
             tzinfo.clear();
             if (to_tzinfo)
@@ -4315,7 +4315,7 @@ ReturnedColumn* buildFunctionColumn(
                 tzinfo = string((char*)buf, length);
             }
             sptp.reset(new ParseTree(new ConstantColumn(tzinfo)));
-            (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+            (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwi.timeZone);
             funcParms.push_back(sptp);
             tzinfo.clear();
         }
@@ -4334,7 +4334,7 @@ ReturnedColumn* buildFunctionColumn(
                 sign = -1;
             }
             sptp.reset(new ParseTree(new ConstantColumn(sign)));
-            (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+            (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwi.timeZone);
             funcParms.push_back(sptp);
         }
 
@@ -4409,18 +4409,24 @@ ReturnedColumn* buildFunctionColumn(
 
 #endif
 
-        execplan::CalpontSystemCatalog::ColType resultType = fc->resultType();
-        resultType.timeZone = gwi.thd->variables.time_zone->get_name()->ptr();
+        execplan::CalpontSystemCatalog::ColType& resultType = fc->resultType();
+        resultType.timeZone = gwi.timeZone;
         fc->operationType(functor->operationType(funcParms, resultType));
-        // For some reason, MDB has MYSQL_TYPE_DATETIME2 for functions on a TIMESTAMP
-        if (fc->operationType().colDataType == CalpontSystemCatalog::TIMESTAMP)
+
+        // For floor/ceiling/truncate/round functions applied on TIMESTAMP columns, set the
+        // function result type to TIMESTAMP
+        if ((funcName == "floor" || funcName == "ceiling" ||
+             funcName == "truncate" || funcName == "round") &&
+            fc->operationType().colDataType == CalpontSystemCatalog::TIMESTAMP)
         {
             CalpontSystemCatalog::ColType ct = fc->resultType();
             ct.colDataType = CalpontSystemCatalog::TIMESTAMP;
             ct.colWidth = 8;
             fc->resultType(ct);
         }
+
         fc->expressionId(ci->expressionId++);
+
         // A few functions use a different collation than that found in
         // the base ifp class
         if (funcName == "locate" ||
@@ -4500,7 +4506,7 @@ ReturnedColumn* buildFunctionColumn(
         }
     }
 
-    fc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+    fc->timeZone(gwi.timeZone);
 
     return fc;
 }
@@ -4641,16 +4647,15 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
         return NULL;
     }
 
-    std::string timeZone = std::string(gwi.thd->variables.time_zone->get_name()->ptr());
     Func* functor = funcexp->getFunctor(funcName);
     fc->resultType(colType_MysqlToIDB(item));
     execplan::CalpontSystemCatalog::ColType resultType = fc->resultType();
-    resultType.timeZone = timeZone;
+    resultType.timeZone = gwi.timeZone;
     fc->operationType(functor->operationType(funcParms, resultType));
     fc->functionName(funcName);
     fc->functionParms(funcParms);
     fc->expressionId(ci->expressionId++);
-    fc->timeZone(timeZone);
+    fc->timeZone(gwi.timeZone);
 
     // For function join. If any argument has non-zero joininfo, set it to the function.
     fc->setSimpleColumnList();
@@ -4797,7 +4802,7 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
     sc->alias(ifp->name.str);
 
     sc->isColumnStore(prm.columnStore());
-    sc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+    sc->timeZone(gwi.timeZone);
 
     if (!prm.columnStore() && ifp->field)
         sc->oid(ifp->field->field_index + 1); // ExeMgr requires offset started from 1
@@ -4916,7 +4921,7 @@ processAggregateColumnConstArg(gp_walk_info& gwi, SRCP &parm,
             {
                 // Explicit NULL or a const function that evaluated to NULL
                 cc = new ConstantColumnNull();
-                cc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+                cc->timeZone(gwi.timeZone);
                 parm.reset(cc);
                 ac->constCol(SRCP(rt));
                 return;
@@ -4994,7 +4999,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
         ac = new AggregateColumn(gwi.sessionid);
     }
 
-    ac->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+    ac->timeZone(gwi.timeZone);
 
     if (isp->name.length)
         ac->alias(isp->name.str);
@@ -5523,7 +5528,7 @@ because it has multiple arguments.";
     return ac;
 }
 
-void addIntervalArgs(THD* thd, Item_func* ifp, FunctionParm& functionParms)
+void addIntervalArgs(gp_walk_info* gwip, Item_func* ifp, FunctionParm& functionParms)
 {
     string funcName = ifp->func_name();
     int interval_type = -1;
@@ -5535,7 +5540,7 @@ void addIntervalArgs(THD* thd, Item_func* ifp, FunctionParm& functionParms)
     else if (funcName == "extract")
         interval_type = ((Item_extract*)ifp)->int_type;
 
-    functionParms.push_back(getIntervalType(thd, interval_type));
+    functionParms.push_back(getIntervalType(gwip, interval_type));
     SPTP sptp;
 
     if (funcName == "date_add_interval")
@@ -5543,42 +5548,42 @@ void addIntervalArgs(THD* thd, Item_func* ifp, FunctionParm& functionParms)
         if (((Item_date_add_interval*)ifp)->date_sub_interval)
         {
             sptp.reset(new ParseTree(new ConstantColumn((int64_t)OP_SUB)));
-            (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(thd->variables.time_zone->get_name()->ptr());
+            (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwip->timeZone);
             functionParms.push_back(sptp);
         }
         else
         {
             sptp.reset(new ParseTree(new ConstantColumn((int64_t)OP_ADD)));
-            (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(thd->variables.time_zone->get_name()->ptr());
+            (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwip->timeZone);
             functionParms.push_back(sptp);
         }
     }
 }
 
-SPTP getIntervalType(THD* thd, int interval_type)
+SPTP getIntervalType(gp_walk_info* gwip, int interval_type)
 {
     SPTP sptp;
     sptp.reset(new ParseTree(new ConstantColumn((int64_t)interval_type)));
-    (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(thd->variables.time_zone->get_name()->ptr());
+    (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwip->timeZone);
     return sptp;
 }
 
-void castCharArgs(THD* thd, Item_func* ifp, FunctionParm& functionParms)
+void castCharArgs(gp_walk_info* gwip, Item_func* ifp, FunctionParm& functionParms)
 {
     Item_char_typecast* idai = (Item_char_typecast*)ifp;
 
     SPTP sptp;
     sptp.reset(new ParseTree(new ConstantColumn((int64_t)idai->get_cast_length())));
-    (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(thd->variables.time_zone->get_name()->ptr());
+    (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwip->timeZone);
     functionParms.push_back(sptp);
 }
 
-void castDecimalArgs(THD* thd, Item_func* ifp, FunctionParm& functionParms)
+void castDecimalArgs(gp_walk_info* gwip, Item_func* ifp, FunctionParm& functionParms)
 {
     Item_decimal_typecast* idai = (Item_decimal_typecast*)ifp;
     SPTP sptp;
     sptp.reset(new ParseTree(new ConstantColumn((int64_t)idai->decimals)));
-    (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(thd->variables.time_zone->get_name()->ptr());
+    (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwip->timeZone);
     functionParms.push_back(sptp);
 
     // max length including sign and/or decimal points
@@ -5586,12 +5591,12 @@ void castDecimalArgs(THD* thd, Item_func* ifp, FunctionParm& functionParms)
         sptp.reset(new ParseTree(new ConstantColumn((int64_t)idai->max_length - 1)));
     else
         sptp.reset(new ParseTree(new ConstantColumn((int64_t)idai->max_length - 2)));
-    (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(thd->variables.time_zone->get_name()->ptr());
+    (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwip->timeZone);
 
     functionParms.push_back(sptp);
 }
 
-void castTypeArgs(THD* thd, Item_func* ifp, FunctionParm& functionParms)
+void castTypeArgs(gp_walk_info* gwip, Item_func* ifp, FunctionParm& functionParms)
 {
     Item_func_get_format* get_format = (Item_func_get_format*)ifp;
     SPTP sptp;
@@ -5600,7 +5605,7 @@ void castTypeArgs(THD* thd, Item_func* ifp, FunctionParm& functionParms)
         sptp.reset(new ParseTree(new ConstantColumn("DATE")));
     else
         sptp.reset(new ParseTree(new ConstantColumn("DATETIME")));
-    (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(thd->variables.time_zone->get_name()->ptr());
+    (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwip->timeZone);
 
     functionParms.push_back(sptp);
 }
@@ -5700,7 +5705,7 @@ void gp_walk(const Item* item, void* arg)
                         Item_hex_hybrid *hip = reinterpret_cast<Item_hex_hybrid*>(const_cast<Item*>(item));
                         gwip->rcWorkStack.push(new ConstantColumn((int64_t)hip->val_int(), ConstantColumn::NUM));
                         ConstantColumn *cc = dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top());
-                        cc->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
+                        cc->timeZone(gwip->timeZone);
                         break;
                     }
 
@@ -5719,7 +5724,7 @@ void gp_walk(const Item* item, void* arg)
                             }
 
                             gwip->rcWorkStack.push(new ConstantColumn(cval));
-                            (dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top()))->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
+                            (dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top()))->timeZone(gwip->timeZone);
                             break;
                         }
 
@@ -5754,7 +5759,7 @@ void gp_walk(const Item* item, void* arg)
                     {
                         // push noop for unhandled item
                         SimpleColumn* rc = new SimpleColumn("noop");
-                        rc->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
+                        rc->timeZone(gwip->timeZone);
                         gwip->rcWorkStack.push(rc);
                         break;
                     }
@@ -5774,13 +5779,13 @@ void gp_walk(const Item* item, void* arg)
             {
                 // push noop for unhandled item
                 SimpleColumn* rc = new SimpleColumn("noop");
-                rc->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
+                rc->timeZone(gwip->timeZone);
                 gwip->rcWorkStack.push(rc);
                 break;
             }
 
             gwip->rcWorkStack.push(new ConstantColumn("", ConstantColumn::NULLDATA));
-            (dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top()))->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
+            (dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top()))->timeZone(gwip->timeZone);
             break;
         }
 
@@ -6328,7 +6333,7 @@ void gp_walk(const Item* item, void* arg)
             {
                 // push noop for unhandled item
                 SimpleColumn* rc = new SimpleColumn("noop");
-                rc->timeZone(gwip->thd->variables.time_zone->get_name()->ptr());
+                rc->timeZone(gwip->timeZone);
                 gwip->rcWorkStack.push(rc);
                 break;
             }
@@ -6820,7 +6825,7 @@ int processFrom(bool &isUnion,
             plan->data(csep->data());
 
             // gwi for the union unit
-            gp_walk_info union_gwi;
+            gp_walk_info union_gwi(gwi.timeZone);
             union_gwi.thd = gwi.thd;
             uint32_t err = 0;
 
@@ -6936,7 +6941,7 @@ int processWhere(SELECT_LEX &select_lex,
     else if (join && join->zero_result_cause)
     {
         gwi.rcWorkStack.push(new ConstantColumn((int64_t)0, ConstantColumn::NUM));
-        (dynamic_cast<ConstantColumn*>(gwi.rcWorkStack.top()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+        (dynamic_cast<ConstantColumn*>(gwi.rcWorkStack.top()))->timeZone(gwi.timeZone);
     }
 
     for (Item* item : gwi.condList)
@@ -7400,7 +7405,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     gwi.sessionid = sessionID;
     boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
     csc->identity(CalpontSystemCatalog::FE);
-    csep->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+    csep->timeZone(gwi.timeZone);
     gwi.csc = csc;
 
     CalpontSelectExecutionPlan::SelectList derivedTbList;
@@ -7782,7 +7787,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
                 selectSubList.push_back(ssub);
                 SimpleColumn* rc = new SimpleColumn();
                 rc->colSource(rc->colSource() | SELECT_SUB);
-                rc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+                rc->timeZone(gwi.timeZone);
 
                 if (sub->get_select_lex()->get_table_list())
                 {
@@ -8596,7 +8601,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
             sc1->tableAlias(sc->tableAlias());
             sc1->viewName(sc->viewName());
             sc1->colPosition(0);
-            sc1->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+            sc1->timeZone(gwi.timeZone);
             minSc.reset(sc1);
         }
     }
@@ -8655,12 +8660,12 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex,
     return 0;
 }
 
-int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti)
+int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti, long timeZone)
 {
     gp_walk_info* gwi = ti.condInfo;
 
     if (!gwi)
-        gwi = new gp_walk_info();
+        gwi = new gp_walk_info(timeZone);
 
     gwi->thd = thd;
     LEX* lex = thd->lex;
@@ -8687,7 +8692,7 @@ int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti)
                 boost::algorithm::to_lower(alias);
             }
             sc->tableAlias(alias);
-            sc->timeZone(gwi->thd->variables.time_zone->get_name()->ptr());
+            sc->timeZone(gwi->timeZone);
             assert (sc);
             boost::shared_ptr<SimpleColumn> spsc(sc);
             gwi->returnedCols.push_back(spsc);
@@ -8760,7 +8765,10 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
 {
 
     SELECT_LEX *select_lex = gi.groupByTables->select_lex;
-    gp_walk_info gwi;
+    const char* timeZone = thd->variables.time_zone->get_name()->ptr();
+    long timeZoneOffset;
+    dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
+    gp_walk_info gwi(timeZoneOffset);
     gwi.thd = thd;
     gwi.isGroupByHandler = true;
     int status = getGroupPlan(gwi, *select_lex, csep, gi);
@@ -8776,7 +8784,7 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
     else if (status < 0)
         return status;
     // Derived table projection and filter optimization.
-    derivedTableOptimization(thd, csep);
+    derivedTableOptimization(&gwi, csep);
 
     return 0;
 }
@@ -8797,7 +8805,7 @@ int cs_get_derived_plan(ha_columnstore_derived_handler* handler, THD* thd, SCSEP
     cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
 #endif
     // Derived table projection and filter optimization.
-    derivedTableOptimization(thd, csep);
+    derivedTableOptimization(&gwi, csep);
     return 0;
 }
 
@@ -8828,7 +8836,7 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
     cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
 #endif
     // Derived table projection and filter optimization.
-    derivedTableOptimization(thd, csep);
+    derivedTableOptimization(&gwi, csep);
 
     return 0;
 }
@@ -9130,7 +9138,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     else if (join && join->zero_result_cause)
     {
         gwi.rcWorkStack.push(new ConstantColumn((int64_t)0, ConstantColumn::NUM));
-        (dynamic_cast<ConstantColumn*>(gwi.rcWorkStack.top()))->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+        (dynamic_cast<ConstantColumn*>(gwi.rcWorkStack.top()))->timeZone(gwi.timeZone);
     }
 
     SELECT_LEX tmp_select_lex;
@@ -9618,7 +9626,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 selectSubList.push_back(ssub);
                 SimpleColumn* rc = new SimpleColumn();
                 rc->colSource(rc->colSource() | SELECT_SUB);
-                rc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+                rc->timeZone(gwi.timeZone);
 
                 if (sub->get_select_lex()->get_table_list())
                 {
@@ -10584,7 +10592,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             sc1->tableName(sc->tableName());
             sc1->tableAlias(sc->tableAlias());
             sc1->viewName(sc->viewName());
-            sc1->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+            sc1->timeZone(gwi.timeZone);
             sc1->colPosition(0);
             minSc.reset(sc1);
         }
