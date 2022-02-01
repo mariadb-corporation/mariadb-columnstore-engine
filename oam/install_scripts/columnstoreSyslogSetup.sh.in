@@ -54,7 +54,7 @@ tmpDir=@ENGINE_LOGDIR@/install
 
 checkSyslog() {
 #check which syslog daemon is being used
-#first check which is running 
+#first check which is running
 daemon="nodaemon"
 cnt=`ps -ef | grep -v grep | grep syslog-ng | wc -l`
 if [ $cnt -gt 0 ]; then
@@ -176,11 +176,10 @@ install() {
 makeDir
 checkSyslog
 if [ ! -z "$syslog_conf" ] ; then
-	@ENGINE_BINDIR@/mcsSetConfig -d Installation SystemLogConfigFile ${syslog_conf} >/dev/null 2>&1
 	if [ $non_root_user == "yes" ]; then
 		chown $user:$user @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml*
 	fi
-	
+
 	rm -f ${syslog_conf}.columnstoreSave
 	if [ "$syslog_conf" == /etc/rsyslog.d/columnstore.conf ] ||
 		[ "$syslog_conf" == /etc/rsyslog.d/49-columnstore.conf ]; then
@@ -189,13 +188,13 @@ if [ ! -z "$syslog_conf" ] ; then
 		cp ${syslog_conf} ${syslog_conf}.columnstoreSave >/dev/null 2>&1
 		sed -i '/# MariaDB/,$d' ${syslog_conf}.columnstoreSave > /dev/null 2>&1
 	fi
-	
+
 	egrep -qs 'MariaDB Columnstore Database Platform Logging' ${syslog_conf}
 	if [ $? -ne 0 ]; then
 		#set the syslog for ColumnStore logging
 		# remove older version incase it was installed by previous build
 		 rm -rf /etc/rsyslog.d/columnstore.conf
-		
+
 		if [ $rsyslog7 == 1 ]; then
 			 rm -f /etc/rsyslog.d/49-columnstore.conf
 			 cp  ${columnstoreSyslogFile7} ${syslog_conf}
@@ -203,7 +202,7 @@ if [ ! -z "$syslog_conf" ] ; then
 			 sed -i -e s/groupname/$groupname/g ${syslog_conf}
 			 sed -i -e s/username/$username/g ${syslog_conf}
 			 chmod 644 ${syslog_conf}
-		else		
+		else
 			 cp  ${columnstoreSyslogFile} ${syslog_conf}
 		fi
 	fi
@@ -218,7 +217,7 @@ if [ ! -z "$syslog_conf" ] ; then
 		#do the logrotate to start with a fresh log file during install
 		logrotate -f /etc/logrotate.d/columnstore > /dev/null 2>&1
 	fi
-	
+
 	#log install message and find the least permission that allows logging to work
 	CHMOD_LIST=("755" "775" "777")
 	for CHMOD in "${CHMOD_LIST[@]}"; do
@@ -229,7 +228,7 @@ if [ ! -z "$syslog_conf" ] ; then
 		chmod $CHMOD @ENGINE_LOGDIR@/trace
 
 		cplogger -i 19 "***** MariaDB Columnstore Installed *****"
-		
+
 		if [ -f @ENGINE_LOGDIR@/info.log ]; then
 			if [ -s @ENGINE_LOGDIR@/info.log ]; then
 				exit 0
@@ -263,7 +262,7 @@ if [ ! -z "$syslog_conf" ] ; then
 	else
 		 rm -f "$syslog_conf"
 	fi
-	
+
 	# uninstall Columnstore Log Rotate File
 	rm -f /etc/logrotate.d/columnstore
 
@@ -313,7 +312,7 @@ restartSyslog() {
                 else
                          systemctl restart rsyslog.service > /dev/null 2>&1
                 fi
-	elif [ "$daemon" = "syslog" ]; then	
+	elif [ "$daemon" = "syslog" ]; then
                 if [ -f /etc/init.d/syslog ]; then
                          /etc/init.d/syslog restart  > /dev/null 2>&1
                 else
