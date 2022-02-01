@@ -240,17 +240,6 @@ columnstoreSyslogSetup.sh --user=$user install
 EOD
 fi
 
-#determine lock file directory
-
-# Lock directory for root user
-lockdir='/var/lock/subsys'
-
-@ENGINE_BINDIR@/mcsSetConfig -d Installation LockFileDirectory $lockdir
-
-mkdir $lockdir >/dev/null 2>&1
-
-rm -f $lockdir/columnstore
-
 # This was the last place of postConfigure. RIP
 
 @ENGINE_SBINDIR@/install_mcs_mysql.sh --tmpdir=$installLogDir
