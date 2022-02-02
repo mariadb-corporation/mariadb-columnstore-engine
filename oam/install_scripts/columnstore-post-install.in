@@ -95,11 +95,8 @@ fi
 # Make copy of the new .xml file in 2 places so its preserved if something goes wrong in autoConfigure
 # Original Columnstore.xml will still be in .rpmsave
 if [ -f @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml.rpmsave ]; then
-    /bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml.rpmnew
     /bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml.new
     /bin/cp -f @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml.rpmsave @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml
-    @ENGINE_BINDIR@/autoConfigure
-    mv -f @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml.new @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml
 fi
 
 touch /dev/shm/columnstore-test && rm /dev/shm/columnstore-test
@@ -214,6 +211,7 @@ fi
 
 # upgrade the columnstore.cnf file
 if [ -f @MARIADB_MYCNFDIR@/columnstore.cnf.rpmsave ]; then
+     cp -f @MARIADB_MYCNFDIR@/columnstore.cnf @MARIADB_MYCNFDIR@/columnstore.cnf.new
      cp -f @MARIADB_MYCNFDIR@/columnstore.cnf.rpmsave @MARIADB_MYCNFDIR@/columnstore.cnf
 fi
 
