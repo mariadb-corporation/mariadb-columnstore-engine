@@ -43,9 +43,10 @@ static MYSQL_THDVAR_ENUM(
     compression_type,
     PLUGIN_VAR_RQCMDARG,
     "Controls compression algorithm for create tables. Possible values are: "
-    "NO_COMPRESSION segment files aren't compressed; "
     "SNAPPY segment files are Snappy compressed (default);"
+#ifdef HAVE_LZ4
     "LZ4 segment files are LZ4 compressed;",
+#endif
     NULL, // check
     NULL, // update
     1, //default
@@ -148,7 +149,7 @@ static MYSQL_THDVAR_UINT(
     NULL,
     16,
     0,
-    2048,    
+    2048,
     1
 );
 
@@ -437,7 +438,7 @@ void set_fe_conn_info_ptr(void* ptr, THD* thd)
     {
         return;
     }
-    
+
     THDVAR(current_thd, fe_conn_info_ptr) = (uint64_t)(ptr);
 }
 
@@ -452,7 +453,7 @@ void set_original_optimizer_flags(ulonglong ptr, THD* thd)
     {
         return;
     }
-    
+
     THDVAR(current_thd, original_optimizer_flags) = (uint64_t)(ptr);
 }
 
