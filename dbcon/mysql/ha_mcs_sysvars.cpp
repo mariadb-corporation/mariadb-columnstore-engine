@@ -36,9 +36,10 @@ static TYPELIB mcs_compression_type_names_lib = {array_elements(mcs_compression_
 // compression type
 static MYSQL_THDVAR_ENUM(compression_type, PLUGIN_VAR_RQCMDARG,
                          "Controls compression algorithm for create tables. Possible values are: "
-                         "NO_COMPRESSION segment files aren't compressed; "
                          "SNAPPY segment files are Snappy compressed (default);"
+#ifdef HAVE_LZ4
                          "LZ4 segment files are LZ4 compressed;",
+#endif
                          NULL,                              // check
                          NULL,                              // update
                          1,                                 // default
