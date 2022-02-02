@@ -176,7 +176,6 @@ install() {
 makeDir
 checkSyslog
 if [ ! -z "$syslog_conf" ] ; then
-	@ENGINE_BINDIR@/mcsSetConfig -d Installation SystemLogConfigFile ${syslog_conf} >/dev/null 2>&1
 	if [ $non_root_user == "yes" ]; then
 		chown $user:$user @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml*
 	fi
