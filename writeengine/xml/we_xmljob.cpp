@@ -1310,7 +1310,7 @@ int XMLJob::genJobXMLFileName(
     const string& tableName,
     boost::filesystem::path& xmlFilePath,
     string& errMsg,
-    std::string&	   tableOIDStr )
+    const std::string&	   tableOIDStr )
 {
     // get full file directory path for XML job description file
     if (sXMLJobDir.empty())

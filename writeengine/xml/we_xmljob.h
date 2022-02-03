@@ -82,7 +82,7 @@ public:
         const std::string& tableName,
         boost::filesystem::path& xmlDirPath,
         std::string&       errMsg,
-        std::string&	   tableOIDStr );
+        const std::string&	   tableOIDStr );
 
     /**
      * @brief Get job structure
