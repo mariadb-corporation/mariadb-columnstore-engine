@@ -206,6 +206,7 @@ bool EMEntry::operator< (const EMEntry& e) const
 /*static*/
 boost::mutex ExtentMapImpl::fInstanceMutex;
 boost::mutex ExtentMap::mutex;
+boost::mutex ExtentMap::emIndexMutex;
 
 /*static*/
 ExtentMapImpl* ExtentMapImpl::fInstance = nullptr;
@@ -305,7 +306,6 @@ ExtentMapIndexImpl::ExtentMapIndexImpl(unsigned key, off_t size, bool readOnly) 
 void ExtentMapIndexImpl::createExtentMapIndexIfNeeded()
 {
     // pair<T*, size>
-    // Hide fShmSegment
     auto managedShmemSearchPair = fBRMManagedShmMemImpl_.getManagedSegment()->find<ExtentMapIndex>(EmIndexObjectName);
     if (!managedShmemSearchPair.first || managedShmemSearchPair.second == 0)
     {
@@ -317,7 +317,6 @@ void ExtentMapIndexImpl::createExtentMapIndexIfNeeded()
 ExtentMapIndex* ExtentMapIndexImpl::get()
 {
     // pair<T*, size>
-    // Hide fShmSegment
     auto managedShmemSearchPair = fBRMManagedShmMemImpl_.getManagedSegment()->find<ExtentMapIndex>(EmIndexObjectName);
     assert(managedShmemSearchPair.first && managedShmemSearchPair.second > 0);
     return managedShmemSearchPair.first;
@@ -343,7 +342,6 @@ InsertUpdateShmemKeyPair ExtentMapIndexImpl::insert(const EMEntry& emEntry, cons
     auto dbRoot = emEntry.dbRoot;
     assert(dbRoot > 0 && dbRoot <= numeric_limits<uint64_t>::max());
     auto* extentMapIndexPtr = get();
-    assert(extentMapIndexPtr);
     bool shmemHasGrown = false;
 
     while (dbRoot >= extentMapIndexPtr->size())
@@ -438,7 +436,7 @@ InsertUpdateShmemKeyPair ExtentMapIndexImpl::insert3dLayerWrapper(PartitionIndex
             auto* extMapIndexPtr = get();
             assert(extMapIndexPtr);
             auto& extMapIndex = *extMapIndexPtr;
-            shmemHasGrown = std::max(shmemHasGrown, aShmemHasGrown);
+            shmemHasGrown = shmemHasGrown || aShmemHasGrown;
             // The dbroot must be here b/c we found it once in insert().
             OIDIndexContainerT& refreshedOidsRef = extMapIndex[emEntry.dbRoot];
             auto oidsIter = refreshedOidsRef.find(emEntry.fileID);
@@ -568,6 +566,7 @@ ExtentMap::ExtentMap()
     r_only = false;
     flLocked = false;
     emLocked = false;
+    emIndexLocked = false;
     fPFreeListImpl = nullptr;
     fPExtMapIndexImpl_ = nullptr;
 
@@ -840,13 +839,12 @@ int ExtentMap::setMaxMin(const LBID_t lbid,
     }
 
     if (emLocked)
-    {
-        releaseEMIndex(WRITE);
         releaseEMEntryTable(WRITE);
-    }
+
+    if (emIndexLocked)
+        releaseEMIndex(WRITE);
 
     throw logic_error("ExtentMap::setMaxMin(): lbid isn't allocated");
-// 	return -1;
 }
 
 // @bug 1970.  Added updateExtentsMaxMin function.
@@ -1896,12 +1894,17 @@ void ExtentMap::grabFreeList(OPS op)
 
 void ExtentMap::grabEMIndex(OPS op)
 {
-    boost::mutex::scoped_lock lk(mutex);
+    boost::mutex::scoped_lock lk(emIndexMutex);
 
     if (op == READ)
+    {
         fEMIndexShminfo = fMST.getTable_read(MasterSegmentTable::EMIndex);
+    }
     else
+    {
         fEMIndexShminfo = fMST.getTable_write(MasterSegmentTable::EMIndex);
+        emIndexLocked = true;
+    }
 
     if (!fPExtMapIndexImpl_)
     {
@@ -1910,11 +1913,13 @@ void ExtentMap::grabEMIndex(OPS op)
             if (op == READ)
             {
                 fMST.getTable_upgrade(MasterSegmentTable::EMIndex);
+                emIndexLocked = true;
 
                 // Checking race conditions
                 if (fEMIndexShminfo->allocdSize == 0)
                     growEMIndexShmseg();
 
+                emIndexLocked = false;
                 fMST.getTable_downgrade(MasterSegmentTable::EMIndex);
             }
             else
@@ -1981,6 +1986,7 @@ void ExtentMap::releaseEMIndex(OPS op)
     }
     else
     {
+        emIndexLocked = false;
         fMST.releaseTable_write(MasterSegmentTable::EMIndex);
     }
 }
@@ -2057,6 +2063,7 @@ void ExtentMap::growEMShmseg(size_t nrows)
 
 void ExtentMap::growEMIndexShmseg(const size_t suggestedSize)
 {
+    static const constexpr int InitEMIndexSize_ = 16 * 1024 * 1024;
     size_t allocSize = std::max(InitEMIndexSize_, fEMIndexShminfo->allocdSize);
     key_t newshmkey = chooseEMIndexShmkey();
     key_t fixedManagedSegmentKey = getInitialEMIndexShmkey();
@@ -6150,11 +6157,11 @@ void ExtentMap::finishChanges()
     if (flLocked)
         releaseFreeList(WRITE);
 
-    if (emLocked)
-    {
+    if (emIndexLocked)
         releaseEMIndex(WRITE);
+
+    if (emLocked)
         releaseEMEntryTable(WRITE);
-    }
 }
 
 const bool* ExtentMap::getEMFLLockStatus()
@@ -6165,6 +6172,11 @@ const bool* ExtentMap::getEMFLLockStatus()
 const bool* ExtentMap::getEMLockStatus()
 {
     return &emLocked;
+}
+
+const bool* ExtentMap::getEMIndexLockStatus()
+{
+    return &emIndexLocked;
 }
 
 //------------------------------------------------------------------------------

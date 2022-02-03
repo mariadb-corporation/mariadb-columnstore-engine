@@ -54,7 +54,7 @@ u_int64_t vbOffset = 0;
 pthread_mutex_t pthreadMutex;
 const std::vector<uint32_t> colWidthsAvailable = {1, 2, 4, 8, 16};
 const DBRootT dbroot = 1;
-const uint32_t KibiBlocks = 1024; 
+const uint32_t KibiBlocks = 1024;
 
 struct Range
 {
@@ -218,7 +218,7 @@ static void* BRMRunner_1(void* arg)
     gettimeofday(&tv, NULL);
     randstate = static_cast<uint32_t>(tv.tv_usec);
     brm = new DBRM();
-    
+
 
     while (!threadStop)
     {
@@ -477,7 +477,6 @@ static void* BRMRunner_1(void* arg)
 
                 for (i = 0, tmp = head; i < entryRand; i++)
                     tmp = tmp->next;
-                // WIP
                 err = brm->getLocalHWM(tmp->OID, partNum, segmentNum, hwm, status);
                 pthread_mutex_lock(&pthreadMutex);
                 opCount++;
@@ -1066,7 +1065,7 @@ static void* EMRunner(void* arg)
                     head = newEm;
                     listSize++;
                 }
-                
+
                 emEntriesVec.clear();
                 em->getExtents(OID, emEntriesVec, false, false, true);
                 size_t extentsNumberAfter = emEntriesVec.size();
@@ -1224,7 +1223,7 @@ static void* EMRunner(void* arg)
 #ifdef BRM_VERBOSE
                 cerr << "looked up LBID " << target << " got oid " << oid << " fbo " << fbo << endl;
                 cerr << "   oid should be " << tmp->OID << " fbo should be " << offset + tmp->FBO << endl;
-                cerr << "op 3 fbo " << fbo << " offset + tmp->FBO " << offset + tmp->FBO << endl; 
+                cerr << "op 3 fbo " << fbo << " offset + tmp->FBO " << offset + tmp->FBO << endl;
 #endif
                 CPPUNIT_ASSERT(err == 0);
                 CPPUNIT_ASSERT(oid == tmp->OID);
@@ -1275,7 +1274,7 @@ static void* EMRunner(void* arg)
                     tmp = tmp->next;
 
                 hwm = em->getLocalHWM(tmp->OID, tmp->partNum, tmp->segNum, status);
-#ifdef BRM_VERBOSE
+#ifdef BRM_VERBOSE_I
                 cerr << "stored HWM for OID " << tmp->OID << " is " << tmp->HWM
                      << " BRM says it's " << hwm << endl;
 #endif
@@ -1300,7 +1299,7 @@ static void* EMRunner(void* arg)
                 hwm = rand_r(&randstate) % (tmp->size - 1);
                 bool firstNode = true;
                 em->setLocalHWM(oid, tmp->partNum, tmp->segNum, hwm, firstNode);
-                
+
                 em->confirmChanges();
 
                 tmp->HWM = hwm;
@@ -1770,7 +1769,7 @@ private:
 public:
     void longEMTest_1()
     {
-        const int threadCount = 1;
+        const int threadCount = 10;
         int i;
         pthread_t threads[threadCount];
 

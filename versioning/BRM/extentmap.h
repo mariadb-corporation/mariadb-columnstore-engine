@@ -84,7 +84,6 @@ namespace BRM
 {
 
 using PartitionNumberT = uint32_t;
-// WIP reuse it here and in oam namespace
 using DBRootT = uint16_t;
 using SegmentT = uint16_t;
 using LastExtentIndexT = int;
@@ -1026,6 +1025,7 @@ public:
     EXPORT void dumpTo(std::ostream& os);
     EXPORT const bool* getEMLockStatus();
     EXPORT const bool* getEMFLLockStatus();
+    EXPORT const bool* getEMIndexLockStatus();
     size_t EMIndexShmemSize();
     size_t EMIndexShmemFree();
 
@@ -1042,7 +1042,7 @@ private:
     static const constexpr size_t EM_INCREMENT = EM_INCREMENT_ROWS * sizeof(EMEntry);
     static const constexpr size_t EM_FREELIST_INITIAL_SIZE = 50 * sizeof(InlineLBIDRange);
     static const constexpr size_t EM_FREELIST_INCREMENT = 50 * sizeof(InlineLBIDRange);
-    static const constexpr int InitEMIndexSize_ = 16 * 1024 * 1024;
+
 
     ExtentMap(const ExtentMap& em);
     ExtentMap& operator=(const ExtentMap& em);
@@ -1061,8 +1061,9 @@ private:
     time_t fCacheTime; // timestamp associated with config cache
 
     int numUndoRecords;
-    bool flLocked, emLocked;
+    bool flLocked, emLocked, emIndexLocked;
     static boost::mutex mutex; // @bug5355 - made mutex static
+    static boost::mutex emIndexMutex;
     boost::mutex fConfigCacheMutex; // protect access to Config Cache
 
     enum OPS
