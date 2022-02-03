@@ -428,7 +428,9 @@ TEST_F(ColumnScanFilterTest, ColumnScan4Bytes2Filters)
   ASSERT_EQ(out->NVALS, 9);
 
   for (i = 0; i < out->NVALS; i++)
+  {
     ASSERT_EQ(results[i], 11 + (uint32_t)i);
+  }
 
   EXPECT_EQ(out->Max, __col4block_cdf_umax);
   EXPECT_EQ(out->Min, __col4block_cdf_umin);
@@ -867,7 +869,7 @@ TEST_F(ColumnScanFilterTest, ColumnScan4BytesNegFloat2CompFiltersOutputBoth)
 }
 
 // void p_Col_neg_double_1()
-TEST_F(ColumnScanFilterTest, ColumnScan4BytesNegDouble2CompFilters)
+TEST_F(ColumnScanFilterTest, ColumnScan8BytesNegDouble2CompFilters)
 {
   constexpr const uint8_t W = 8;
   using IntegralType = double;
