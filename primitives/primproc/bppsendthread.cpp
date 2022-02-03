@@ -30,12 +30,12 @@ namespace primitiveprocessor
 {
 extern uint32_t connectionsPerUM;
 extern uint32_t BPPCount;
-uint64_t BPPSendThread::maxByteSize = joblist::ResourceManager::instance()->getMaxBPPSendQueue();
 
 BPPSendThread::BPPSendThread() : die(false), gotException(false), mainThreadWaiting(false),
     sizeThreshold(100), msgsLeft(-1), waiting(false), sawAllConnections(false),
     fcEnabled(false), currentByteSize(0)
 {
+    maxByteSize = joblist::ResourceManager::instance()->getMaxBPPSendQueue();
     runner = boost::thread(Runner_t(this));
 }
 
@@ -43,6 +43,7 @@ BPPSendThread::BPPSendThread(uint32_t initMsgsLeft) : die(false), gotException(f
     mainThreadWaiting(false), sizeThreshold(100), msgsLeft(initMsgsLeft), waiting(false),
     sawAllConnections(false), fcEnabled(false), currentByteSize(0)
 {
+    maxByteSize = joblist::ResourceManager::instance()->getMaxBPPSendQueue();
     runner = boost::thread(Runner_t(this));
 }
 

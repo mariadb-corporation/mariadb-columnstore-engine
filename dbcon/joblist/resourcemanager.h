@@ -391,7 +391,7 @@ public:
 
     uint64_t    getMaxBPPSendQueue() const
     {
-        return getUintVal(fPrimitiveServersStr, "MaxBPPSendQueue", defaultMaxBPPSendQueue);
+        return fMaxBPPSendQueue;
     }
     
     EXPORT void  emServerThreads();
@@ -637,6 +637,7 @@ private:
     bool fUseHdfs;
     bool fAllowedDiskAggregation{false};
     uint64_t fDECConnectionsPerQuery;
+    uint64_t fMaxBPPSendQueue = 250000000;
 };
 
 

@@ -398,7 +398,6 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t *
     smallRG = smallRGs[index];
 
     smallRG.initRow(&r);
-    ssize_t memUsedByThisJoin = 0;
     try
     {
         ssize_t rgSize;
@@ -419,7 +418,7 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t *
             gotMem = resourceManager->getMemory(rgSize, sessionMemLimit, true);
             if (gotMem)
             {
-                memUsedByThisJoin += rgSize;
+                atomicops::atomicAdd(&memUsedByEachJoin[index], rgSize);
             }
             else
             {
@@ -429,7 +428,6 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t *
                     else abort.
                 */
                 boost::unique_lock<boost::mutex> sl(saneErrMsg);
-                atomicops::atomicAdd(&memUsedByEachJoin[index], memUsedByThisJoin);
                 if (cancelled())
                     return;
                 if (!allowDJS || isDML || (fSessionId & 0x80000000) ||
@@ -450,7 +448,7 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t *
                 return;
             }
             joiner->insertRGData(smallRG, threadID);
-            if (!joiner->inUM() && (memUsedByThisJoin > pmMemLimit))
+            if (!joiner->inUM() && (memUsedByEachJoin[index] > pmMemLimit))
             {
                 joiner->setInUM(rgData[index]);
                 for (int i = 1; i < numCores; i++)
@@ -473,7 +471,6 @@ next:
     }
     if (!joiner->inUM())
         joiner->setInPM();
-    atomicops::atomicAdd(&memUsedByEachJoin[index], memUsedByThisJoin);
 }
 
 void TupleHashJoinStep::forwardCPData()
@@ -1718,7 +1715,6 @@ void TupleHashJoinStep::joinOneRG(uint32_t threadID, vector<RGData>& out,
                                   boost::scoped_array<boost::scoped_array<uint8_t> >* smallNullMem
                                  )
 {
-
     /* Disk-join support.
        These dissociate the fcn from THJS's members & allow this fcn to be called from DiskJoinStep
     */

@@ -142,7 +142,7 @@ private:
 
     /* secondary queue size restriction based on byte size */
     volatile uint64_t currentByteSize;
-    static uint64_t maxByteSize;
+    uint64_t maxByteSize;
     // Used to tell the PriorityThreadPool It should consider additional threads because a 
     // queue full event has happened and a thread has been blocked.
     threadpool::PriorityThreadPool* fProcessorPool;
