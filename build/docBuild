@@ -1,6 +1,0 @@
-#!/bin/sh
-
-if [ -f buildFlags ]; then
-	echo "Build Flags: `cat buildFlags`"
-fi
-

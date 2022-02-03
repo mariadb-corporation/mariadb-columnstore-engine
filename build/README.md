@@ -1,20 +1,16 @@
-This is InfiniDB 4.0.
+This is MariaDB Columnstore
 =====================
 
-To build InfiniDB from source you will need:
+To build MCS from source you will need:
 
-  * a CentOS/RHEL 5/6, debian 5/6 or Ubuntu 10/12 linux host configured for software development
-
-Along with a working C++ compiler and GNU software development tools you will need the following extra packages:
-
-  * expect
-  * zlib-devel
-  * ncurses-devel
-  * libxml2-devel
+  * modern linux distribution. e.g. Ubuntu 20
 
 Clone or download this repository.
 
-    git clone https://github.com/infinidb/infinidb
-    cd infinidb
-    ./build/src-build --prefix=$HOME
+    git clone https://github.com/MariaDB/server
 
+Edit a bootstrap script to fix paths to MariaDB repo cloned.
+    vim /some/path/server/storage/columnstore/columnstore/build/bootstrap_mcs.sh
+
+Run the bootstrap
+    /some/path/server/storage/columnstore/columnstore/build/bootstrap_mcs.sh
