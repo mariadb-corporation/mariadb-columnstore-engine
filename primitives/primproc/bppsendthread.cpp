@@ -96,7 +96,6 @@ void BPPSendThread::sendResult(const Msg_t& msg, bool newConnection)
         }
     }
 
-    sl.unlock();
     if (mainThreadWaiting)
         queueNotEmpty.notify_one();
 }
@@ -148,7 +147,6 @@ void BPPSendThread::sendResults(const vector<Msg_t>& msgs, bool newConnection)
         msgQueue.push(msgs[i]);
     }
 
-    sl.unlock();
     if (mainThreadWaiting)
         queueNotEmpty.notify_one();
 }
@@ -277,10 +275,10 @@ void BPPSendThread::mainLoop()
 
 void BPPSendThread::abort()
 {
+    std::lock_guard<std::mutex> sl(msgQueueLock);
+    std::lock_guard<std::mutex> sl2(ackLock);
+    std::lock_guard<std::mutex> sl3(respondLock);
     {
-        std::lock_guard<std::mutex> sl(msgQueueLock);
-        std::lock_guard<std::mutex> sl2(ackLock);
-        std::lock_guard<std::mutex> sl3(respondLock);
         die = true;
     }
     queueNotEmpty.notify_all();

@@ -35,9 +35,11 @@
 #include <boost/thread/condition.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
+#include <atomic> 
 #include "../winport/winport.h"
 #include "primitives/primproc/umsocketselector.h"
 #include "atomicops.h"
+
 namespace threadpool
 {
 
@@ -100,6 +102,8 @@ public:
     // If a job is blocked, we want to temporarily increase the number of threads managed by the pool
     // A problem can occur if all threads are running long or blocked for a single query. Other
     // queries won't get serviced, even though there are cpu cycles available.
+    // These calls are currently protected by respondLock in sendThread(). If you call from other
+    // places, you need to consider atomicity.
     void incBlockedThreads()
     {
         blockedThreads++;
@@ -141,8 +145,8 @@ private:
     uint32_t weightPerRun;
     volatile uint id;   // prevent it from being optimized out
     
-    uint32_t blockedThreads;
-    uint32_t extraThreads;
+    std::atomic<uint32_t> blockedThreads;
+    std::atomic<uint32_t> extraThreads;
     bool stopExtra;
 };
 
