@@ -41,6 +41,8 @@ using namespace logging;
 
 #include "funchelpers.h"
 
+#include "exceptclasses.h"
+
 namespace
 {
 using namespace funcexp;
@@ -136,18 +138,27 @@ int64_t Func_round::getIntVal(Row& row, FunctionParm& parm, bool& isNull,
 uint64_t Func_round::getUintVal(Row& row, FunctionParm& parm, bool& isNull,
                                 CalpontSystemCatalog::ColType& op_ct)
 {
-  uint64_t x;
-  if (UNLIKELY(op_ct.colDataType == execplan::CalpontSystemCatalog::DATE))
+  IDB_Decimal x = getDecimalVal(row, parm, isNull, op_ct);
+
+  if (!op_ct.isWideDecimalType())
   {
-    IDB_Decimal d = getDecimalVal(row, parm, isNull, op_ct);
-    x = static_cast<uint64_t>(d.value);
+    if (x.scale > 0)
+    {
+      while (x.scale-- > 0)
+        x.value /= 10;
+    }
+    else
+    {
+      while (x.scale++ < 0)
+        x.value *= 10;
+    }
+
+    return x.value;
   }
   else
   {
-    x = parm[0]->data()->getUintVal(row, isNull);
+    return static_cast<uint64_t>(x.getIntegralPart());
   }
-
-  return x;
 }
 
 double Func_round::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull,
@@ -434,10 +445,11 @@ IDB_Decimal Func_round::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull
     {
       uint64_t x = parm[0]->data()->getUintVal(row, isNull);
 
-      if (x > (uint64_t)helpers::maxNumber_c[18])
-      {
-        x = helpers::maxNumber_c[18];
-      }
+      // why it is here at all???
+      // if (x > (uint64_t)helpers::maxNumber_c[18])
+      //{
+      //    x = helpers::maxNumber_c[18];
+      //}
 
       decimal.value = x;
       decimal.scale = 0;

@@ -149,11 +149,10 @@ int ServiceWriteEngine::setupResources()
     return -3;
   }
 
-  if (rlim.rlim_cur != 65536)
+  if (rlim.rlim_cur < 65536)
   {
     return -4;
   }
-
 #endif
   return 0;
 }

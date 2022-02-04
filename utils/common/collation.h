@@ -177,6 +177,12 @@ class Charset
     bool res = !mCharset->wildcmp(subject.str(), subject.end(), pattern.str(), pattern.end(), '\\', '_', '%');
     return neg ? !res : res;
   }
+  size_t strnxfrm(uchar* dst, size_t dstlen, uint nweights, const uchar* src, size_t srclen, uint flags)
+  {
+    idbassert(mCharset->coll);
+
+    return mCharset->coll->strnxfrm(mCharset, dst, dstlen, nweights, src, srclen, flags);
+  }
 };
 
 class CollationAwareHasher : public Charset

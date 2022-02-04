@@ -1140,9 +1140,10 @@ bool combineJobStepsByTable(TableInfoMap::iterator& mit, JobInfo& jobInfo)
 
       for (unsigned i = 0; i < numOfStepsAddToBps; i++)
       {
-        bps->setBPP((it + i)->get());
+        auto pp = (it + i)->get();
+        bps->setBPP(pp);
         bps->setStepCount();
-        bps->setLastTupleId((it + i)->get()->tupleId());
+        bps->setLastTupleId(pp->tupleId());
       }
 
       it += itInc;

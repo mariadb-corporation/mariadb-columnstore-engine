@@ -181,7 +181,9 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
         colStruct.colDataType = colType.colDataType;
 
-        if (colStruct.tokenFlag)
+        dctnryStruct.fCharsetNumber = colType.charsetNumber;
+  
+	if (colStruct.tokenFlag)
         {
           dctnryStruct.dctnryOid = colType.ddn.dictOID;
           dctnryStruct.columnOid = colStruct.dataOid;
@@ -1037,6 +1039,8 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
 
         colStruct.colDataType = colType.colDataType;
 
+        dctnryStruct.fCharsetNumber = colType.charsetNumber;
+
         if (colStruct.tokenFlag)
         {
           dctnryStruct.dctnryOid = colType.ddn.dictOID;
@@ -1618,6 +1622,8 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
         }
 
         colStruct.colDataType = colType.colDataType;
+
+        dctnryStruct.fCharsetNumber = colType.charsetNumber;
 
         if (colStruct.tokenFlag)
         {
@@ -2830,6 +2836,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
       dctnryStruct.dctnryOid = colType.ddn.dictOID;
       dctnryStruct.columnOid = colStruct.dataOid;
       dctnryStruct.fCompressionType = colType.compressionType;
+      dctnryStruct.fCharsetNumber = colType.charsetNumber;
       dctnryStruct.colWidth = colType.colWidth;
 
       if (NO_ERROR != (error = fWEWrapper.openDctnry(txnId, dctnryStruct, false)))  // @bug 5572 HDFS tmp file
@@ -4444,6 +4451,8 @@ uint8_t WE_DMLCommandProc::processFixRows(messageqcpp::ByteStream& bs, std::stri
       dctnryStruct.fColSegment = colStruct.fColSegment;
       dctnryStruct.fCompressionType = colStruct.fCompressionType;
       dctnryStruct.dctnryOid = 0;
+
+      dctnryStruct.fCharsetNumber = colType.charsetNumber;
 
       if (colType.colWidth > 8)  // token
       {

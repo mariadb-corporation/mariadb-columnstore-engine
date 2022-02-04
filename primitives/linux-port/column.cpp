@@ -42,6 +42,8 @@ using namespace boost;
 #include "simd_sse.h"
 #include "utils/common/columnwidth.h"
 
+#include "exceptclasses.h"
+
 using namespace logging;
 using namespace dbbc;
 using namespace primitives;
@@ -1690,7 +1692,9 @@ void PrimitiveProcessor::_scanAndFilterTypeDispatcher(NewColRequestHeader* in, C
        dataType == execplan::CalpontSystemCatalog::TEXT) &&
       !isDictTokenScan(in))
   {
-    filterColumnData<T, KIND_TEXT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
+    using UT = typename std::conditional<std::is_unsigned<T>::value, T,
+                                         typename datatypes::make_unsigned<T>::type>::type;
+    filterColumnData<UT, KIND_TEXT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
     return;
   }
 
