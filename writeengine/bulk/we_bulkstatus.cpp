@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id: we_bulkstatus.cpp 4648 2013-05-29 21:42:40Z rdempsey $
-*
-*******************************************************************************/
+ * $Id: we_bulkstatus.cpp 4648 2013-05-29 21:42:40Z rdempsey $
+ *
+ *******************************************************************************/
 
 #include <unistd.h>
 #include <cstdlib>
@@ -31,4 +31,4 @@ namespace WriteEngine
 {
 /*static*/
 volatile int BulkStatus::fJobStatus = EXIT_SUCCESS;
-}
+}  // namespace WriteEngine

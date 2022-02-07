@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id$
-*
-*   regr_avgx.h
-***********************************************************************/
+ *   $Id$
+ *
+ *   regr_avgx.h
+ ***********************************************************************/
 
 /**
  * Columnstore interface for for the regr_avgx function
@@ -28,8 +28,7 @@
  *    CREATE AGGREGATE FUNCTION regr_avgx returns REAL soname 'libregr_mysql.so';
  *
  */
-#ifndef HEADER_regr_avgx
-#define HEADER_regr_avgx
+#pragma once
 
 #include <cstdlib>
 #include <string>
@@ -52,7 +51,6 @@
 
 namespace mcsv1sdk
 {
-
 // Override mcsv1_UDAF to build your User Defined Aggregate (UDAF) and/or
 // User Defined Analytic Function (UDAnF).
 // These will be singleton classes, so don't put any instance
@@ -65,32 +63,28 @@ namespace mcsv1sdk
 
 // Return the regr_avgx value of the dataset
 
-class regr_avgx : public  mcsv1_UDAF
+class regr_avgx : public mcsv1_UDAF
 {
-public:
-    // Defaults OK
-    regr_avgx() : mcsv1_UDAF() {};
-    virtual ~regr_avgx() {};
+ public:
+  // Defaults OK
+  regr_avgx() : mcsv1_UDAF(){};
+  virtual ~regr_avgx(){};
 
-    virtual ReturnCode init(mcsv1Context* context,
-                            ColumnDatum* colTypes);
+  virtual ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes);
 
-    virtual ReturnCode reset(mcsv1Context* context);
+  virtual ReturnCode reset(mcsv1Context* context);
 
-    virtual ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn);
+  virtual ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn);
 
-    virtual ReturnCode subEvaluate(mcsv1Context* context, const UserData* valIn);
+  virtual ReturnCode subEvaluate(mcsv1Context* context, const UserData* valIn);
 
-    virtual ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut);
+  virtual ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut);
 
-    virtual ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
+  virtual ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
 
-protected:
+ protected:
 };
 
-};  // namespace
+};  // namespace mcsv1sdk
 
 #undef EXPORT
-
-#endif // HEADER_regr_avgx.h
-

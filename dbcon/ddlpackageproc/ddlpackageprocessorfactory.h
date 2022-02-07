@@ -16,42 +16,33 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: ddlpackageprocessorfactory.h 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: ddlpackageprocessorfactory.h 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 /** @file */
-#ifndef DDLPACKAGEPROCESSORFACTORY_H
-#define DDLPACKAGEPROCESSORFACTORY_H
+#pragma once
 #include <string>
 #include "ddlpkg.h"
 #include "ddlpackageprocessor.h"
 
-
 namespace ddlpackageprocessor
 {
-
 /** @brief create a ddlPackageProcessor object from a CalpontddlPackage object
  *
  */
 class DDLPackageProcessorFactory
 {
+ public:
+  /** @brief static ddlPackageProcessor constructor method
+   *
+   * @param packageType the ddl Package type
+   * @param cpackage the CalpontddlPackage from which the ddlPackageProcessor is constructed
+   */
+  static DDLPackageProcessor* makePackageProcessor(int packageType, ddlpackage::CalpontDDLPackage& cpackage);
 
-public:
-
-    /** @brief static ddlPackageProcessor constructor method
-      *
-      * @param packageType the ddl Package type
-      * @param cpackage the CalpontddlPackage from which the ddlPackageProcessor is constructed
-      */
-    static DDLPackageProcessor*
-    makePackageProcessor( int packageType, ddlpackage::CalpontDDLPackage& cpackage );
-
-protected:
-
-private:
+ protected:
+ private:
 };
 
-}
-#endif //DDLPACKAGEPROCESSORFACTORY_H
-
+}  // namespace ddlpackageprocessor

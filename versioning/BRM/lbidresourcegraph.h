@@ -24,8 +24,7 @@
  * class XXX interface
  */
 
-#ifndef LBIDRESOURCEGRAPH_H_
-#define LBIDRESOURCEGRAPH_H_
+#pragma once
 
 #include <map>
 #include <set>
@@ -48,41 +47,36 @@
 
 namespace BRM
 {
-
 class LBIDResourceGraph
 {
+ public:
+  typedef std::tr1::unordered_set<ResourceNode*, RNHasher, RNEquals> RNodes_t;
 
-public:
-    typedef std::tr1::unordered_set<ResourceNode*, RNHasher, RNEquals> RNodes_t;
+  EXPORT LBIDResourceGraph();
+  EXPORT ~LBIDResourceGraph();
 
-    EXPORT LBIDResourceGraph();
-    EXPORT ~LBIDResourceGraph();
+  EXPORT int reserveRange(LBID_t start, LBID_t end, VER_t txn, boost::mutex& mutex);
 
-    EXPORT int reserveRange(LBID_t start, LBID_t end, VER_t txn, boost::mutex& mutex);
+  /// releases all resources held by txn
+  EXPORT void releaseResources(VER_t txn);
 
-    /// releases all resources held by txn
-    EXPORT void releaseResources(VER_t txn);
+  /// releases one resource
+  EXPORT void releaseResource(LBID_t start);
 
-    /// releases one resource
-    EXPORT void releaseResource(LBID_t start);
+ private:
+  uint64_t color;
 
-private:
-    uint64_t color;
+  LBIDResourceGraph(const LBIDResourceGraph&);
+  LBIDResourceGraph& operator=(const LBIDResourceGraph&);
 
-    LBIDResourceGraph(const LBIDResourceGraph&);
-    LBIDResourceGraph& operator=(const LBIDResourceGraph&);
+  void connectResources(LBID_t start, LBID_t end, TransactionNode* txnNode);
+  bool checkDeadlock(TransactionNode&);
+  bool DFSStep(RGNode*, uint64_t, uint64_t) const;
 
-    void connectResources(LBID_t start, LBID_t end, TransactionNode* txnNode);
-    bool checkDeadlock(TransactionNode&);
-    bool DFSStep(RGNode*, uint64_t, uint64_t) const;
-
-    std::map<VER_t, TransactionNode*> txns;
-    RNodes_t resources;
-
+  std::map<VER_t, TransactionNode*> txns;
+  RNodes_t resources;
 };
 
-}
+}  // namespace BRM
 
 #undef EXPORT
-
-#endif

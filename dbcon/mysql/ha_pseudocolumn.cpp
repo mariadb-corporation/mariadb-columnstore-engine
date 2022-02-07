@@ -26,7 +26,6 @@ using namespace cal_impl_if;
 
 namespace
 {
-
 /*******************************************************************************
  * Pseudo column connector interface
  *
@@ -46,548 +45,538 @@ namespace
 
 void bailout(char* error, const string& funcName)
 {
-    string errMsg = IDBErrorInfo::instance()->errorMsg(ERR_PSEUDOCOL_IDB_ONLY, funcName);
-    current_thd->get_stmt_da()->set_overwrite_status(true);
-    current_thd->raise_error_printf(ER_INTERNAL_ERROR, errMsg.c_str());
-    *error = 1;
+  string errMsg = IDBErrorInfo::instance()->errorMsg(ERR_PSEUDOCOL_IDB_ONLY, funcName);
+  current_thd->get_stmt_da()->set_overwrite_status(true);
+  current_thd->raise_error_printf(ER_INTERNAL_ERROR, errMsg.c_str());
+  *error = 1;
 }
 
 int64_t idblocalpm()
 {
-    if (get_fe_conn_info_ptr() == NULL)
-        set_fe_conn_info_ptr((void*)new cal_connection_info());
+  if (get_fe_conn_info_ptr() == NULL)
+    set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+  cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
-    if (ci->localPm == -1)
-    {
-        string module = ClientRotator::getModule();
+  if (ci->localPm == -1)
+  {
+    string module = ClientRotator::getModule();
 
-        if (module.size() >= 3 && (module[0] == 'p' || module[0] == 'P'))
-            ci->localPm = atol(module.c_str() + 2);
-        else
-            ci->localPm = 0;
-    }
+    if (module.size() >= 3 && (module[0] == 'p' || module[0] == 'P'))
+      ci->localPm = atol(module.c_str() + 2);
+    else
+      ci->localPm = 0;
+  }
 
-    return ci->localPm;
+  return ci->localPm;
 }
 
 extern "C"
 {
-    /**
-     * IDBDBROOT
-     */
+  /**
+   * IDBDBROOT
+   */
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    my_bool idbdbroot_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+      my_bool idbdbroot_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    if (args->arg_count != 1)
     {
-        if (args->arg_count != 1)
-        {
-            strcpy(message, "idbdbroot() requires one argument");
-            return 1;
-        }
-
-        return 0;
+      strcpy(message, "idbdbroot() requires one argument");
+      return 1;
     }
 
-#ifdef _MSC_VER
-    __declspec(dllexport)
-#endif
-    void idbdbroot_deinit(UDF_INIT* initid)
-    {
-    }
+    return 0;
+  }
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    long long idbdbroot(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
-    {
-        bailout(error, "idbdbroot");
-        return 0;
-    }
-
-    /**
-     * IDBPM
-     */
+      void idbdbroot_deinit(UDF_INIT* initid)
+  {
+  }
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    my_bool idbpm_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
-    {
-        if (args->arg_count != 1)
-        {
-            strcpy(message, "idbpm() requires one argument");
-            return 1;
-        }
+      long long idbdbroot(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  {
+    bailout(error, "idbdbroot");
+    return 0;
+  }
 
-        return 0;
-    }
+  /**
+   * IDBPM
+   */
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    void idbpm_deinit(UDF_INIT* initid)
+      my_bool idbpm_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    if (args->arg_count != 1)
     {
+      strcpy(message, "idbpm() requires one argument");
+      return 1;
     }
+
+    return 0;
+  }
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    long long idbpm(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
-    {
-        bailout(error, "idbpm");
-        return 0;
-    }
-
-    /**
-     * IDBEXTENTRELATIVERID
-     */
+      void idbpm_deinit(UDF_INIT* initid)
+  {
+  }
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    my_bool idbextentrelativerid_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
-    {
-        if (args->arg_count != 1)
-        {
-            strcpy(message, "idbextentrelativerid() requires one argument");
-            return 1;
-        }
+      long long idbpm(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  {
+    bailout(error, "idbpm");
+    return 0;
+  }
 
-        return 0;
-    }
+  /**
+   * IDBEXTENTRELATIVERID
+   */
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    void idbextentrelativerid_deinit(UDF_INIT* initid)
+      my_bool idbextentrelativerid_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    if (args->arg_count != 1)
     {
+      strcpy(message, "idbextentrelativerid() requires one argument");
+      return 1;
     }
+
+    return 0;
+  }
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    long long idbextentrelativerid(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
-    {
-        bailout(error, "idbextentrelativerid");
-        return 0;
-    }
-
-    /**
-     * IDBBLOCKID
-     */
+      void idbextentrelativerid_deinit(UDF_INIT* initid)
+  {
+  }
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    my_bool idbblockid_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
-    {
-        if (args->arg_count != 1)
-        {
-            strcpy(message, "idbblockid() requires one argument");
-            return 1;
-        }
+      long long idbextentrelativerid(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  {
+    bailout(error, "idbextentrelativerid");
+    return 0;
+  }
 
-        return 0;
-    }
+  /**
+   * IDBBLOCKID
+   */
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    void idbblockid_deinit(UDF_INIT* initid)
+      my_bool idbblockid_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    if (args->arg_count != 1)
     {
+      strcpy(message, "idbblockid() requires one argument");
+      return 1;
     }
+
+    return 0;
+  }
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    long long idbblockid(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
-    {
-        bailout(error, "idbblockid");
-        return 0;
-    }
-
-    /**
-     * IDBEXTENTID
-     */
+      void idbblockid_deinit(UDF_INIT* initid)
+  {
+  }
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    my_bool idbextentid_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
-    {
-        if (args->arg_count != 1)
-        {
-            strcpy(message, "idbextentid() requires one argument");
-            return 1;
-        }
+      long long idbblockid(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  {
+    bailout(error, "idbblockid");
+    return 0;
+  }
 
-        return 0;
-    }
+  /**
+   * IDBEXTENTID
+   */
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    void idbextentid_deinit(UDF_INIT* initid)
+      my_bool idbextentid_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    if (args->arg_count != 1)
     {
+      strcpy(message, "idbextentid() requires one argument");
+      return 1;
     }
+
+    return 0;
+  }
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    long long idbextentid(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
-    {
-        bailout(error, "idbextentid");
-        return 0;
-    }
-
-    /**
-     * IDBSEGMENT
-     */
+      void idbextentid_deinit(UDF_INIT* initid)
+  {
+  }
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    my_bool idbsegment_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
-    {
-        if (args->arg_count != 1)
-        {
-            strcpy(message, "idbsegment() requires one argument");
-            return 1;
-        }
+      long long idbextentid(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  {
+    bailout(error, "idbextentid");
+    return 0;
+  }
 
-        return 0;
-    }
+  /**
+   * IDBSEGMENT
+   */
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    void idbsegment_deinit(UDF_INIT* initid)
+      my_bool idbsegment_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    if (args->arg_count != 1)
     {
+      strcpy(message, "idbsegment() requires one argument");
+      return 1;
     }
+
+    return 0;
+  }
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    long long idbsegment(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
-    {
-        bailout(error, "idbsegment");
-        return 0;
-    }
-
-    /**
-     * IDBSEGMENTDIR
-     */
+      void idbsegment_deinit(UDF_INIT* initid)
+  {
+  }
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    my_bool idbsegmentdir_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
-    {
-        if (args->arg_count != 1)
-        {
-            strcpy(message, "idbsegmentdir() requires one argument");
-            return 1;
-        }
+      long long idbsegment(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  {
+    bailout(error, "idbsegment");
+    return 0;
+  }
 
-        return 0;
-    }
+  /**
+   * IDBSEGMENTDIR
+   */
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    void idbsegmentdir_deinit(UDF_INIT* initid)
+      my_bool idbsegmentdir_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    if (args->arg_count != 1)
     {
+      strcpy(message, "idbsegmentdir() requires one argument");
+      return 1;
     }
+
+    return 0;
+  }
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    long long idbsegmentdir(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
-    {
-        bailout(error, "idbsegmentdir");
-        return 0;
-    }
-
-    /**
-     * IDBPARTITION
-     */
+      void idbsegmentdir_deinit(UDF_INIT* initid)
+  {
+  }
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    my_bool idbpartition_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
-    {
-        if (args->arg_count != 1)
-        {
-            strcpy(message, "idbpartition() requires one argument");
-            return 1;
-        }
+      long long idbsegmentdir(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  {
+    bailout(error, "idbsegmentdir");
+    return 0;
+  }
 
-        return 0;
-    }
+  /**
+   * IDBPARTITION
+   */
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    void idbpartition_deinit(UDF_INIT* initid)
+      my_bool idbpartition_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    if (args->arg_count != 1)
     {
+      strcpy(message, "idbpartition() requires one argument");
+      return 1;
     }
+
+    return 0;
+  }
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    const char* idbpartition(UDF_INIT* initid, UDF_ARGS* args,
-                             char* result, unsigned long* length,
-                             char* is_null, char* error)
-    {
-        bailout(error, "idbpartition");
-        return result;
-    }
-
-    /**
-     * IDBEXTENTMIN
-     */
+      void idbpartition_deinit(UDF_INIT* initid)
+  {
+  }
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    my_bool idbextentmin_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
-    {
-        if (args->arg_count != 1)
-        {
-            strcpy(message, "idbpm() requires one argument");
-            return 1;
-        }
+      const char* idbpartition(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
+                               char* is_null, char* error)
+  {
+    bailout(error, "idbpartition");
+    return result;
+  }
 
-        initid->maybe_null = 1;
-        return 0;
-    }
+  /**
+   * IDBEXTENTMIN
+   */
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    void idbextentmin_deinit(UDF_INIT* initid)
+      my_bool idbextentmin_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    if (args->arg_count != 1)
     {
+      strcpy(message, "idbpm() requires one argument");
+      return 1;
     }
+
+    initid->maybe_null = 1;
+    return 0;
+  }
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    const char* idbextentmin(UDF_INIT* initid, UDF_ARGS* args,
-                             char* result, unsigned long* length,
-                             char* is_null, char* error)
-    {
-        bailout(error, "idbextentmin");
-        return result;
-    }
-
-    /**
-     * IDBEXTENTMAX
-     */
+      void idbextentmin_deinit(UDF_INIT* initid)
+  {
+  }
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    my_bool idbextentmax_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
-    {
-        if (args->arg_count != 1)
-        {
-            strcpy(message, "idbextentmax() requires one argument");
-            return 1;
-        }
+      const char* idbextentmin(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
+                               char* is_null, char* error)
+  {
+    bailout(error, "idbextentmin");
+    return result;
+  }
 
-        initid->maybe_null = 1;
-        return 0;
-    }
+  /**
+   * IDBEXTENTMAX
+   */
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    void idbextentmax_deinit(UDF_INIT* initid)
+      my_bool idbextentmax_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    if (args->arg_count != 1)
     {
+      strcpy(message, "idbextentmax() requires one argument");
+      return 1;
     }
+
+    initid->maybe_null = 1;
+    return 0;
+  }
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    const char* idbextentmax(UDF_INIT* initid, UDF_ARGS* args,
-                             char* result, unsigned long* length,
-                             char* is_null, char* error)
-    {
-        bailout(error, "idbextentmax");
-        return result;
-    }
-
-    /**
-     * IDBLOCALPM
-     */
+      void idbextentmax_deinit(UDF_INIT* initid)
+  {
+  }
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    my_bool idblocalpm_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
-    {
-        if (args->arg_count != 0)
-        {
-            strcpy(message, "idblocalpm() should take no argument");
-            return 1;
-        }
+      const char* idbextentmax(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
+                               char* is_null, char* error)
+  {
+    bailout(error, "idbextentmax");
+    return result;
+  }
 
-        initid->maybe_null = 1;
-        return 0;
-    }
+  /**
+   * IDBLOCALPM
+   */
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    void idblocalpm_deinit(UDF_INIT* initid)
+      my_bool idblocalpm_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    if (args->arg_count != 0)
     {
+      strcpy(message, "idblocalpm() should take no argument");
+      return 1;
     }
+
+    initid->maybe_null = 1;
+    return 0;
+  }
 
 #ifdef _MSC_VER
-    __declspec(dllexport)
+  __declspec(dllexport)
 #endif
-    long long idblocalpm(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
-    {
-        longlong localpm = idblocalpm();
+      void idblocalpm_deinit(UDF_INIT* initid)
+  {
+  }
 
-        if (localpm == 0)
-            *is_null = 1;
+#ifdef _MSC_VER
+  __declspec(dllexport)
+#endif
+      long long idblocalpm(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  {
+    longlong localpm = idblocalpm();
 
-        return localpm;
-    }
+    if (localpm == 0)
+      *is_null = 1;
 
+    return localpm;
+  }
 }
 
-}
+}  // namespace
 
 namespace cal_impl_if
 {
-
 ReturnedColumn* nullOnError(gp_walk_info& gwi, string& funcName)
 {
-    gwi.fatalParseError = true;
-    gwi.parseErrorText =
-        logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_PSEUDOCOL_WRONG_ARG, funcName);
-    return NULL;
+  gwi.fatalParseError = true;
+  gwi.parseErrorText =
+      logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_PSEUDOCOL_WRONG_ARG, funcName);
+  return NULL;
 }
 
 uint32_t isPseudoColumn(string funcName)
 {
-    return execplan::PseudoColumn::pseudoNameToType(funcName);
+  return execplan::PseudoColumn::pseudoNameToType(funcName);
 }
 
-execplan::ReturnedColumn* buildPseudoColumn(Item* item,
-        gp_walk_info& gwi,
-        bool& nonSupport,
-        uint32_t pseudoType)
+execplan::ReturnedColumn* buildPseudoColumn(Item* item, gp_walk_info& gwi, bool& nonSupport,
+                                            uint32_t pseudoType)
 {
-    if (get_fe_conn_info_ptr() == NULL)
-        set_fe_conn_info_ptr((void*)new cal_connection_info());
+  if (get_fe_conn_info_ptr() == NULL)
+    set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+  cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
-    Item_func* ifp = (Item_func*)item;
+  Item_func* ifp = (Item_func*)item;
 
-    // idblocalpm is replaced by constant
-    if (pseudoType == PSEUDO_LOCALPM)
-    {
-        int64_t localPm = idblocalpm();
-        ConstantColumn* cc;
+  // idblocalpm is replaced by constant
+  if (pseudoType == PSEUDO_LOCALPM)
+  {
+    int64_t localPm = idblocalpm();
+    ConstantColumn* cc;
 
-        if (localPm)
-            cc = new ConstantColumn(localPm);
-        else
-            cc = new ConstantColumn("", ConstantColumn::NULLDATA);
-        cc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+    if (localPm)
+      cc = new ConstantColumn(localPm);
+    else
+      cc = new ConstantColumn("", ConstantColumn::NULLDATA);
+    cc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
 
-        cc->alias(ifp->full_name() ? ifp->full_name() : "");
-        return cc;
-    }
+    cc->alias(ifp->full_name() ? ifp->full_name() : "");
+    return cc;
+  }
 
-    // convert udf item to pseudocolumn item.
-    // adjust result type
-    // put arg col to column map
-    string funcName = ifp->func_name();
+  // convert udf item to pseudocolumn item.
+  // adjust result type
+  // put arg col to column map
+  string funcName = ifp->func_name();
 
-    if (ifp->argument_count() != 1 ||
-            !(ifp->arguments()) ||
-            !(ifp->arguments()[0]) ||
-            ifp->arguments()[0]->type() != Item::FIELD_ITEM)
-        return nullOnError(gwi, funcName);
+  if (ifp->argument_count() != 1 || !(ifp->arguments()) || !(ifp->arguments()[0]) ||
+      ifp->arguments()[0]->type() != Item::FIELD_ITEM)
+    return nullOnError(gwi, funcName);
 
-    Item_field* field = (Item_field*)(ifp->arguments()[0]);
+  Item_field* field = (Item_field*)(ifp->arguments()[0]);
 
-    // @todo rule out derive table
-    if (!field->field || !field->db_name.str || strlen(field->db_name.str) == 0)
-        return nullOnError(gwi, funcName);
+  // @todo rule out derive table
+  if (!field->field || !field->db_name.str || strlen(field->db_name.str) == 0)
+    return nullOnError(gwi, funcName);
 
-    SimpleColumn* sc = buildSimpleColumn(field, gwi);
+  SimpleColumn* sc = buildSimpleColumn(field, gwi);
 
-    if (!sc)
-        return nullOnError(gwi, funcName);
+  if (!sc)
+    return nullOnError(gwi, funcName);
 
-    if ((pseudoType == PSEUDO_EXTENTMIN || pseudoType == PSEUDO_EXTENTMAX) &&
-            (sc->colType().colDataType == CalpontSystemCatalog::VARBINARY ||
-             (sc->colType().colDataType == CalpontSystemCatalog::VARCHAR && sc->colType().colWidth > 7) ||
-             (sc->colType().colDataType == CalpontSystemCatalog::CHAR && sc->colType().colWidth > 8)))
-        return nullOnError(gwi, funcName);
+  if ((pseudoType == PSEUDO_EXTENTMIN || pseudoType == PSEUDO_EXTENTMAX) &&
+      (sc->colType().colDataType == CalpontSystemCatalog::VARBINARY ||
+       (sc->colType().colDataType == CalpontSystemCatalog::VARCHAR && sc->colType().colWidth > 7) ||
+       (sc->colType().colDataType == CalpontSystemCatalog::CHAR && sc->colType().colWidth > 8)))
+    return nullOnError(gwi, funcName);
 
-    // put arg col to column map
-    if (gwi.clauseType == SELECT || gwi.clauseType == GROUP_BY) // select clause
-    {
-        SRCP srcp(sc);
-        gwi.columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(sc->columnName(), srcp));
-        gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(), sc->isColumnStore())] =
-            make_pair(1, field->cached_table);
-    }
-    else if (!gwi.rcWorkStack.empty())
-    {
-        gwi.rcWorkStack.pop();
-    }
+  // put arg col to column map
+  if (gwi.clauseType == SELECT || gwi.clauseType == GROUP_BY)  // select clause
+  {
+    SRCP srcp(sc);
+    gwi.columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(sc->columnName(), srcp));
+    gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(), sc->isColumnStore())] =
+        make_pair(1, field->cached_table);
+  }
+  else if (!gwi.rcWorkStack.empty())
+  {
+    gwi.rcWorkStack.pop();
+  }
 
-    if (pseudoType == PSEUDO_PARTITION)
-    {
-        // parms: psueducolumn dbroot, segmentdir, segment
-        SPTP sptp;
-        FunctionColumn* fc = new FunctionColumn(funcName);
-        funcexp::FunctionParm parms;
-        PseudoColumn* dbroot = new PseudoColumn(*sc, PSEUDO_DBROOT);
-        sptp.reset(new ParseTree(dbroot));
-        parms.push_back(sptp);
-        PseudoColumn* pp = new PseudoColumn(*sc, PSEUDO_SEGMENTDIR);
-        sptp.reset(new ParseTree(pp));
-        parms.push_back(sptp);
-        PseudoColumn* seg = new PseudoColumn(*sc, PSEUDO_SEGMENT);
-        sptp.reset(new ParseTree(seg));
-        parms.push_back(sptp);
-        fc->functionParms(parms);
-        fc->expressionId(ci->expressionId++);
-        fc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+  if (pseudoType == PSEUDO_PARTITION)
+  {
+    // parms: psueducolumn dbroot, segmentdir, segment
+    SPTP sptp;
+    FunctionColumn* fc = new FunctionColumn(funcName);
+    funcexp::FunctionParm parms;
+    PseudoColumn* dbroot = new PseudoColumn(*sc, PSEUDO_DBROOT);
+    sptp.reset(new ParseTree(dbroot));
+    parms.push_back(sptp);
+    PseudoColumn* pp = new PseudoColumn(*sc, PSEUDO_SEGMENTDIR);
+    sptp.reset(new ParseTree(pp));
+    parms.push_back(sptp);
+    PseudoColumn* seg = new PseudoColumn(*sc, PSEUDO_SEGMENT);
+    sptp.reset(new ParseTree(seg));
+    parms.push_back(sptp);
+    fc->functionParms(parms);
+    fc->expressionId(ci->expressionId++);
+    fc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
 
-        // string result type
-        CalpontSystemCatalog::ColType ct;
-        ct.colDataType = CalpontSystemCatalog::VARCHAR;
-        ct.colWidth = 256;
-        fc->resultType(ct);
+    // string result type
+    CalpontSystemCatalog::ColType ct;
+    ct.colDataType = CalpontSystemCatalog::VARCHAR;
+    ct.colWidth = 256;
+    fc->resultType(ct);
 
-        // operation type integer
-        funcexp::Func_idbpartition* idbpartition = new funcexp::Func_idbpartition();
-        fc->operationType(idbpartition->operationType(parms, fc->resultType()));
-        fc->alias(ifp->full_name() ? ifp->full_name() : "");
-        return fc;
-    }
+    // operation type integer
+    funcexp::Func_idbpartition* idbpartition = new funcexp::Func_idbpartition();
+    fc->operationType(idbpartition->operationType(parms, fc->resultType()));
+    fc->alias(ifp->full_name() ? ifp->full_name() : "");
+    return fc;
+  }
 
-    PseudoColumn* pc = new PseudoColumn(*sc, pseudoType);
+  PseudoColumn* pc = new PseudoColumn(*sc, pseudoType);
 
-    // @bug5892. set alias for derived table column matching.
-    pc->alias(ifp->name.length ? ifp->name.str : "");
-    return pc;
+  // @bug5892. set alias for derived table column matching.
+  pc->alias(ifp->name.length ? ifp->name.str : "");
+  return pc;
 }
 
-}
+}  // namespace cal_impl_if
 // vim:ts=4 sw=4:
-

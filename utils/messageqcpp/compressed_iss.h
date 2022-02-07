@@ -16,13 +16,12 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id$
-*
-*
-***********************************************************************/
+ *   $Id$
+ *
+ *
+ ***********************************************************************/
 /** @file */
-#ifndef MESSAGEQCPP_COMPRESSED_ISS_H
-#define MESSAGEQCPP_COMPRESSED_ISS_H
+#pragma once
 
 #include <unistd.h>
 #ifndef _MSC_VER
@@ -37,30 +36,28 @@
 
 namespace messageqcpp
 {
-
 class CompressedInetStreamSocket : public InetStreamSocket
 {
-public:
-    CompressedInetStreamSocket();
-    CompressedInetStreamSocket(const CompressedInetStreamSocket&) = default;
-    virtual ~CompressedInetStreamSocket(){};
+ public:
+  CompressedInetStreamSocket();
+  CompressedInetStreamSocket(const CompressedInetStreamSocket&) = default;
+  virtual ~CompressedInetStreamSocket(){};
 
-    using InetStreamSocket::operator=;
-    virtual Socket* clone() const;
-    virtual const SBS read(const struct timespec* timeout = 0, bool* isTimeOut = NULL,
-                           Stats* stats = NULL) const;
-    virtual void write(const ByteStream& msg, Stats* stats = NULL);
-    virtual void write(SBS msg, Stats* stats = NULL);
-    virtual const IOSocket accept(const struct timespec* timeout);
-    virtual void connect(const sockaddr* addr);
-private:
-    std::shared_ptr<compress::CompressInterface> alg;
-    bool useCompression;
-    static const uint32_t HEADER_SIZE = 4;
+  using InetStreamSocket::operator=;
+  virtual Socket* clone() const;
+  virtual const SBS read(const struct timespec* timeout = 0, bool* isTimeOut = NULL,
+                         Stats* stats = NULL) const;
+  virtual void write(const ByteStream& msg, Stats* stats = NULL);
+  virtual void write(SBS msg, Stats* stats = NULL);
+  virtual const IOSocket accept(const struct timespec* timeout);
+  virtual void connect(const sockaddr* addr);
+
+ private:
+  std::shared_ptr<compress::CompressInterface> alg;
+  bool useCompression;
+  static const uint32_t HEADER_SIZE = 4;
 };
 
-} //namespace messageqcpp
+}  // namespace messageqcpp
 
 #undef EXPORT
-
-#endif

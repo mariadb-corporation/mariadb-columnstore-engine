@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_SERVER_TTHREADPOOLSERVER_H_
-#define _THRIFT_SERVER_TTHREADPOOLSERVER_H_ 1
+#pragma once
 
 #include <thrift/concurrency/ThreadManager.h>
 #include <thrift/server/TServer.h>
@@ -142,4 +141,3 @@ protected:
 }
 } // apache::thrift::server
 
-#endif // #ifndef _THRIFT_SERVER_TTHREADPOOLSERVER_H_

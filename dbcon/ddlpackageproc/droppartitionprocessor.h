@@ -21,8 +21,7 @@
  *
  ***********************************************************************/
 /** @file */
-#ifndef DROPPARTITIONEPROCESSOR_H
-#define DROPPARTITIONEPROCESSOR_H
+#pragma once
 
 #include "ddlpackageprocessor.h"
 
@@ -40,21 +39,19 @@ namespace ddlpackageprocessor
  */
 class DropPartitionProcessor : public DDLPackageProcessor
 {
-public:
-    DropPartitionProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm) {}
-    /** @brief process a drop table statement
-     *
-     *  @param dropTableStmt the drop table statement
-     */
-    EXPORT DDLResult processPackage(ddlpackage::DropPartitionStatement& dropPartitionStmt);
+ public:
+  DropPartitionProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm)
+  {
+  }
+  /** @brief process a drop table statement
+   *
+   *  @param dropTableStmt the drop table statement
+   */
+  EXPORT DDLResult processPackage(ddlpackage::DropPartitionStatement& dropPartitionStmt);
 
-protected:
-
-private:
-
+ protected:
+ private:
 };
-}                                                 // namespace ddlpackageprocessor
+}  // namespace ddlpackageprocessor
 
 #undef EXPORT
-
-#endif                                            //DROPPARTITIONEPROCESSOR_H

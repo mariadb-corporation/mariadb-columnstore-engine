@@ -24,8 +24,7 @@
  *
  */
 
-#ifndef _UNIQUE32_GENERATOR_H_
-#define _UNIQUE32_GENERATOR_H_
+#pragma once
 
 #include <stdint.h>
 #include <boost/thread.hpp>
@@ -34,7 +33,6 @@
 
 namespace joblist
 {
-
 /** @brief Controls unique 32-bit generation for joblist
  *
  * Maintains a single DBRM connection that is used for the generation of all
@@ -44,21 +42,23 @@ namespace joblist
  */
 class UniqueNumberGenerator
 {
-public:
-    static UniqueNumberGenerator* instance();      // singleton accessor
-    static void               deleteInstance();// singleton cleanup
-    uint32_t                  getUnique32();   // generate unique 32-bit int
-    uint64_t				  getUnique64();	// generate unique 64-bit int
+ public:
+  static UniqueNumberGenerator* instance();  // singleton accessor
+  static void deleteInstance();              // singleton cleanup
+  uint32_t getUnique32();                    // generate unique 32-bit int
+  uint64_t getUnique64();                    // generate unique 64-bit int
 
-private:
-    UniqueNumberGenerator()  { }
-    ~UniqueNumberGenerator() { }
+ private:
+  UniqueNumberGenerator()
+  {
+  }
+  ~UniqueNumberGenerator()
+  {
+  }
 
-    static UniqueNumberGenerator* fUnique32Generator;
-    static boost::mutex       fLock;
-    BRM::DBRM                 fDbrm;
+  static UniqueNumberGenerator* fUnique32Generator;
+  static boost::mutex fLock;
+  BRM::DBRM fDbrm;
 };
 
-}  // namespace
-
-#endif
+}  // namespace joblist

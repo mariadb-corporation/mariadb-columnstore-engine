@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TRANSPORT_TBUFFERTRANSPORTS_H_
-#define _THRIFT_TRANSPORT_TBUFFERTRANSPORTS_H_ 1
+#pragma once
 
 #include <cstring>
 #include <boost/scoped_array.hpp>
@@ -823,4 +822,3 @@ protected:
 }
 } // apache::thrift::transport
 
-#endif // #ifndef _THRIFT_TRANSPORT_TBUFFERTRANSPORTS_H_

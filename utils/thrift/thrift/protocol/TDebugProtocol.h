@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_PROTOCOL_TDEBUGPROTOCOL_H_
-#define _THRIFT_PROTOCOL_TDEBUGPROTOCOL_H_ 1
+#pragma once
 
 #include <thrift/protocol/TVirtualProtocol.h>
 
@@ -244,6 +243,5 @@ std::string DebugString(const std::vector<Object>& vec)
 } // apache::thrift
 
 
-#endif // #ifndef _THRIFT_PROTOCOL_TDEBUGPROTOCOL_H_
 
 

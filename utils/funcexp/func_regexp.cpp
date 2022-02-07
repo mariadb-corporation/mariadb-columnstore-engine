@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_regexp.cpp 3495 2013-01-21 14:09:51Z rdempsey $
-*
-*
-****************************************************************************/
+ * $Id: func_regexp.cpp 3495 2013-01-21 14:09:51Z rdempsey $
+ *
+ *
+ ****************************************************************************/
 
 #include <cstdlib>
 #include <string>
@@ -47,213 +47,205 @@ using namespace logging;
 
 namespace
 {
-inline bool getBool(rowgroup::Row& row,
-                    funcexp::FunctionParm& pm,
-                    bool& isNull,
-                    CalpontSystemCatalog::ColType& ct,
-                    const string& timeZone)
+inline bool getBool(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& isNull,
+                    CalpontSystemCatalog::ColType& ct, const string& timeZone)
 {
+  string expr;
+  string pattern;
 
-    string expr;
-    string pattern;
-
-    switch (pm[0]->data()->resultType().colDataType)
+  switch (pm[0]->data()->resultType().colDataType)
+  {
+    case execplan::CalpontSystemCatalog::BIGINT:
+    case execplan::CalpontSystemCatalog::INT:
+    case execplan::CalpontSystemCatalog::MEDINT:
+    case execplan::CalpontSystemCatalog::TINYINT:
+    case execplan::CalpontSystemCatalog::SMALLINT:
+    case execplan::CalpontSystemCatalog::UBIGINT:
+    case execplan::CalpontSystemCatalog::UINT:
+    case execplan::CalpontSystemCatalog::UMEDINT:
+    case execplan::CalpontSystemCatalog::UTINYINT:
+    case execplan::CalpontSystemCatalog::USMALLINT:
+    case execplan::CalpontSystemCatalog::VARCHAR:  // including CHAR'
+    case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::DOUBLE:
+    case execplan::CalpontSystemCatalog::UDOUBLE:
+    case execplan::CalpontSystemCatalog::FLOAT:
+    case execplan::CalpontSystemCatalog::UFLOAT:
     {
-        case execplan::CalpontSystemCatalog::BIGINT:
-        case execplan::CalpontSystemCatalog::INT:
-        case execplan::CalpontSystemCatalog::MEDINT:
-        case execplan::CalpontSystemCatalog::TINYINT:
-        case execplan::CalpontSystemCatalog::SMALLINT:
-        case execplan::CalpontSystemCatalog::UBIGINT:
-        case execplan::CalpontSystemCatalog::UINT:
-        case execplan::CalpontSystemCatalog::UMEDINT:
-        case execplan::CalpontSystemCatalog::UTINYINT:
-        case execplan::CalpontSystemCatalog::USMALLINT:
-        case execplan::CalpontSystemCatalog::VARCHAR: // including CHAR'
-        case execplan::CalpontSystemCatalog::CHAR:
-        case execplan::CalpontSystemCatalog::TEXT:
-        case execplan::CalpontSystemCatalog::DOUBLE:
-        case execplan::CalpontSystemCatalog::UDOUBLE:
-        case execplan::CalpontSystemCatalog::FLOAT:
-        case execplan::CalpontSystemCatalog::UFLOAT:
-        {
-            expr = pm[0]->data()->getStrVal(row, isNull);
-            break;
-        }
-
-        case execplan::CalpontSystemCatalog::DATE:
-        {
-            expr = dataconvert::DataConvert::dateToString(pm[0]->data()->getDateIntVal(row, isNull));
-            break;
-        }
-
-        case execplan::CalpontSystemCatalog::DATETIME:
-        {
-            expr = dataconvert::DataConvert::datetimeToString(pm[0]->data()->getDatetimeIntVal(row, isNull));
-            //strip off micro seconds
-            expr = expr.substr(0, 19);
-            break;
-        }
-
-        case execplan::CalpontSystemCatalog::TIMESTAMP:
-        {
-            expr = dataconvert::DataConvert::timestampToString(pm[0]->data()->getTimestampIntVal(row, isNull), timeZone);
-            //strip off micro seconds
-            expr = expr.substr(0, 19);
-            break;
-        }
-
-        case execplan::CalpontSystemCatalog::TIME:
-        {
-            expr = dataconvert::DataConvert::timeToString(pm[0]->data()->getTimeIntVal(row, isNull));
-            //strip off micro seconds
-            expr = expr.substr(0, 19);
-            break;
-        }
-
-        case execplan::CalpontSystemCatalog::DECIMAL:
-        case execplan::CalpontSystemCatalog::UDECIMAL:
-        {
-            IDB_Decimal d = pm[0]->data()->getDecimalVal(row, isNull);
-
-            if (pm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
-            {
-                expr = d.toString(true);
-            }
-            else
-            {
-                expr = d.toString();
-            }
-
-            break;
-        }
-
-        default:
-        {
-            std::ostringstream oss;
-            oss << "regexp: datatype of " << execplan::colDataTypeToString(ct.colDataType);
-            throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
-        }
+      expr = pm[0]->data()->getStrVal(row, isNull);
+      break;
     }
 
-    switch (pm[1]->data()->resultType().colDataType)
+    case execplan::CalpontSystemCatalog::DATE:
     {
-        case execplan::CalpontSystemCatalog::BIGINT:
-        case execplan::CalpontSystemCatalog::INT:
-        case execplan::CalpontSystemCatalog::MEDINT:
-        case execplan::CalpontSystemCatalog::TINYINT:
-        case execplan::CalpontSystemCatalog::SMALLINT:
-        case execplan::CalpontSystemCatalog::UBIGINT:
-        case execplan::CalpontSystemCatalog::UINT:
-        case execplan::CalpontSystemCatalog::UMEDINT:
-        case execplan::CalpontSystemCatalog::UTINYINT:
-        case execplan::CalpontSystemCatalog::USMALLINT:
-        case execplan::CalpontSystemCatalog::VARCHAR: // including CHAR'
-        case execplan::CalpontSystemCatalog::DOUBLE:
-        case execplan::CalpontSystemCatalog::UDOUBLE:
-        case execplan::CalpontSystemCatalog::FLOAT:
-        case execplan::CalpontSystemCatalog::UFLOAT:
-        case execplan::CalpontSystemCatalog::CHAR:
-        case execplan::CalpontSystemCatalog::TEXT:
-        {
-            pattern = pm[1]->data()->getStrVal(row, isNull);
-            break;
-        }
-
-        case execplan::CalpontSystemCatalog::DATE:
-        {
-            pattern = dataconvert::DataConvert::dateToString(pm[1]->data()->getDateIntVal(row, isNull));
-            break;
-        }
-
-        case execplan::CalpontSystemCatalog::DATETIME:
-        {
-            pattern = dataconvert::DataConvert::datetimeToString(pm[1]->data()->getDatetimeIntVal(row, isNull));
-            //strip off micro seconds
-            pattern = pattern.substr(0, 19);
-            break;
-        }
-
-        case execplan::CalpontSystemCatalog::TIMESTAMP:
-        {
-            pattern = dataconvert::DataConvert::timestampToString(pm[1]->data()->getTimestampIntVal(row, isNull), timeZone);
-            //strip off micro seconds
-            pattern = pattern.substr(0, 19);
-            break;
-        }
-
-        case execplan::CalpontSystemCatalog::TIME:
-        {
-            pattern = dataconvert::DataConvert::timeToString(pm[1]->data()->getTimeIntVal(row, isNull));
-            //strip off micro seconds
-            pattern = pattern.substr(0, 19);
-            break;
-        }
-
-        case execplan::CalpontSystemCatalog::DECIMAL:
-        case execplan::CalpontSystemCatalog::UDECIMAL:
-        {
-            IDB_Decimal d = pm[1]->data()->getDecimalVal(row, isNull);
-
-            if (pm[1]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
-            {
-                pattern = d.toString(true);
-            }
-            else
-            {
-                pattern = d.toString();
-            }
-            break;
-        }
-
-        default:
-        {
-            std::ostringstream oss;
-            oss << "regexp: datatype of " << execplan::colDataTypeToString(ct.colDataType);
-            throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
-        }
+      expr = dataconvert::DataConvert::dateToString(pm[0]->data()->getDateIntVal(row, isNull));
+      break;
     }
 
+    case execplan::CalpontSystemCatalog::DATETIME:
+    {
+      expr = dataconvert::DataConvert::datetimeToString(pm[0]->data()->getDatetimeIntVal(row, isNull));
+      // strip off micro seconds
+      expr = expr.substr(0, 19);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::TIMESTAMP:
+    {
+      expr = dataconvert::DataConvert::timestampToString(pm[0]->data()->getTimestampIntVal(row, isNull),
+                                                         timeZone);
+      // strip off micro seconds
+      expr = expr.substr(0, 19);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::TIME:
+    {
+      expr = dataconvert::DataConvert::timeToString(pm[0]->data()->getTimeIntVal(row, isNull));
+      // strip off micro seconds
+      expr = expr.substr(0, 19);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::DECIMAL:
+    case execplan::CalpontSystemCatalog::UDECIMAL:
+    {
+      IDB_Decimal d = pm[0]->data()->getDecimalVal(row, isNull);
+
+      if (pm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+      {
+        expr = d.toString(true);
+      }
+      else
+      {
+        expr = d.toString();
+      }
+
+      break;
+    }
+
+    default:
+    {
+      std::ostringstream oss;
+      oss << "regexp: datatype of " << execplan::colDataTypeToString(ct.colDataType);
+      throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
+    }
+  }
+
+  switch (pm[1]->data()->resultType().colDataType)
+  {
+    case execplan::CalpontSystemCatalog::BIGINT:
+    case execplan::CalpontSystemCatalog::INT:
+    case execplan::CalpontSystemCatalog::MEDINT:
+    case execplan::CalpontSystemCatalog::TINYINT:
+    case execplan::CalpontSystemCatalog::SMALLINT:
+    case execplan::CalpontSystemCatalog::UBIGINT:
+    case execplan::CalpontSystemCatalog::UINT:
+    case execplan::CalpontSystemCatalog::UMEDINT:
+    case execplan::CalpontSystemCatalog::UTINYINT:
+    case execplan::CalpontSystemCatalog::USMALLINT:
+    case execplan::CalpontSystemCatalog::VARCHAR:  // including CHAR'
+    case execplan::CalpontSystemCatalog::DOUBLE:
+    case execplan::CalpontSystemCatalog::UDOUBLE:
+    case execplan::CalpontSystemCatalog::FLOAT:
+    case execplan::CalpontSystemCatalog::UFLOAT:
+    case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::TEXT:
+    {
+      pattern = pm[1]->data()->getStrVal(row, isNull);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::DATE:
+    {
+      pattern = dataconvert::DataConvert::dateToString(pm[1]->data()->getDateIntVal(row, isNull));
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::DATETIME:
+    {
+      pattern = dataconvert::DataConvert::datetimeToString(pm[1]->data()->getDatetimeIntVal(row, isNull));
+      // strip off micro seconds
+      pattern = pattern.substr(0, 19);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::TIMESTAMP:
+    {
+      pattern = dataconvert::DataConvert::timestampToString(pm[1]->data()->getTimestampIntVal(row, isNull),
+                                                            timeZone);
+      // strip off micro seconds
+      pattern = pattern.substr(0, 19);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::TIME:
+    {
+      pattern = dataconvert::DataConvert::timeToString(pm[1]->data()->getTimeIntVal(row, isNull));
+      // strip off micro seconds
+      pattern = pattern.substr(0, 19);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::DECIMAL:
+    case execplan::CalpontSystemCatalog::UDECIMAL:
+    {
+      IDB_Decimal d = pm[1]->data()->getDecimalVal(row, isNull);
+
+      if (pm[1]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+      {
+        pattern = d.toString(true);
+      }
+      else
+      {
+        pattern = d.toString();
+      }
+      break;
+    }
+
+    default:
+    {
+      std::ostringstream oss;
+      oss << "regexp: datatype of " << execplan::colDataTypeToString(ct.colDataType);
+      throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
+    }
+  }
 
 #ifdef __linux__
-    regex_t    re;
+  regex_t re;
 
-    regcomp(&re, pattern.c_str(), REG_EXTENDED | REG_NOSUB );
+  regcomp(&re, pattern.c_str(), REG_EXTENDED | REG_NOSUB);
 
-    int res = regexec(&re, expr.c_str(), 0, NULL, 0);
-    regfree(&re);
+  int res = regexec(&re, expr.c_str(), 0, NULL, 0);
+  regfree(&re);
 
-    if (res == 0)
-        return true;
-    else
-        return false;
+  if (res == 0)
+    return true;
+  else
+    return false;
 
 #else
-    regex pat(pattern.c_str());
-    return regex_search(expr.c_str(), pat);
+  regex pat(pattern.c_str());
+  return regex_search(expr.c_str(), pat);
 #endif
-
-
 }
 
-}
+}  // namespace
 
 namespace funcexp
 {
-
-CalpontSystemCatalog::ColType Func_regexp::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
+CalpontSystemCatalog::ColType Func_regexp::operationType(FunctionParm& fp,
+                                                         CalpontSystemCatalog::ColType& resultType)
 {
-    return resultType;
+  return resultType;
 }
 
-bool Func_regexp::getBoolVal(rowgroup::Row& row,
-                             FunctionParm& pm,
-                             bool& isNull,
+bool Func_regexp::getBoolVal(rowgroup::Row& row, FunctionParm& pm, bool& isNull,
                              CalpontSystemCatalog::ColType& ct)
 {
-    return getBool(row, pm, isNull, ct, timeZone()) && !isNull;
+  return getBool(row, pm, isNull, ct, timeZone()) && !isNull;
 }
 
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:

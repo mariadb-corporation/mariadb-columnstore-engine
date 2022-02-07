@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_PROTOCOL_TPROTOCOLTAP_H_
-#define _THRIFT_PROTOCOL_TPROTOCOLTAP_H_ 1
+#pragma once
 
 #include <thrift/protocol/TVirtualProtocol.h>
 
@@ -218,4 +217,3 @@ private:
 }
 } // apache::thrift::protocol
 
-#endif // #define _THRIFT_PROTOCOL_TPROTOCOLTAP_H_ 1

@@ -1,0 +1,110 @@
+#
+# MCOL-4868 UPDATE on a ColumnStore table containing an IN-subquery
+# on a non-ColumnStore table does not work.
+#
+# MCOL-4264 UPDATE on an InnoDB table containing an IN-subquery on
+# a ColumnStore table is failing
+#
+
+-- source include/have_innodb.inc
+-- source ../include/have_columnstore.inc
+
+if (!$MASTER_MYPORT)
+{
+  # Running with --extern
+  let $MASTER_MYPORT=`SELECT @@port`;
+}
+
+--disable_warnings
+DROP DATABASE IF EXISTS `mcol_4868`;
+--enable_warnings
+CREATE DATABASE `mcol_4868`;
+USE `mcol_4868`;
+
+#
+# Enable cross engine join
+# Configure user and password in Columnstore.xml file
+#
+--exec $MCS_MCSSETCONFIG CrossEngineSupport User 'cejuser'
+--exec $MCS_MCSSETCONFIG CrossEngineSupport Password 'Vagrant1|0000001'
+--exec $MCS_MCSSETCONFIG CrossEngineSupport Port $MASTER_MYPORT
+#
+# Create corresponding in the server
+#
+--disable_warnings
+CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
+--enable_warnings
+GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+FLUSH PRIVILEGES;
+
+CREATE TABLE test_cs (a INT, b VARCHAR(100)) ENGINE=COLUMNSTORE;
+INSERT INTO test_cs VALUES (1,'Test1'), (2,'Test2'), (3,'Test3'), (4,'Test4');
+INSERT INTO test_cs VALUES (null,'TestNULL'), (6,NULL), (7,'Test7');
+CREATE TABLE test_innodb (a INT, b VARCHAR(100));
+INSERT INTO test_innodb VALUES (1,'innodb1'), (2,'innodb2'), (3,'innodb3'), (5, 'innodb5');
+SELECT * FROM test_cs;
+SELECT * FROM test_innodb;
+
+SELECT * FROM test_cs WHERE a IN (SELECT a FROM test_innodb);
+UPDATE test_cs SET b='Update_cs' WHERE a IN (SELECT a FROM test_innodb);
+SELECT * FROM test_cs;
+
+SELECT * FROM test_innodb WHERE a IN (SELECT a FROM test_cs);
+UPDATE test_innodb SET b='Update_inno' WHERE a IN (SELECT a FROM test_cs);
+SELECT * FROM test_innodb;
+
+SELECT * FROM test_cs WHERE a IN (SELECT a FROM test_cs);
+UPDATE test_cs SET b='Update_cs2' WHERE a IN (SELECT a FROM test_cs);
+SELECT * FROM test_cs;
+
+# Test DELETEs
+DELETE FROM test_cs WHERE a IN (SELECT a FROM test_innodb);
+SELECT * FROM test_cs;
+DELETE FROM test_cs;
+INSERT INTO test_cs VALUES (1,'Test1'), (2,'Test2'), (3,'Test3'), (4,'Test4');
+INSERT INTO test_cs VALUES (null,'TestNULL'), (6,NULL), (7,'Test7');
+DELETE FROM test_innodb WHERE a IN (SELECT a FROM test_cs);
+SELECT * FROM test_innodb;
+DELETE FROM test_cs WHERE a IN (SELECT a FROM test_cs);
+SELECT * FROM test_cs;
+
+# Test cases for MCOL-4264
+CREATE TABLE cstab1 (
+  a int(11) DEFAULT NULL,
+  b varchar(10) DEFAULT NULL
+) ENGINE=Columnstore;
+INSERT INTO cstab1 VALUES (1,'cs01');
+INSERT INTO cstab1 VALUES (2,'cs02');
+
+CREATE TABLE innotab1 (
+  a int(11) DEFAULT NULL,
+  b varchar(10) DEFAULT NULL
+) ENGINE=InnoDB;
+INSERT INTO innotab1 VALUES (1,'in01');
+
+SELECT * FROM cstab1;
+SELECT * FROM innotab1;
+
+SELECT '--- Updating ---' AS ``;
+
+UPDATE innotab1 SET a=100 WHERE a IN (SELECT a FROM cstab1 WHERE a=1);
+SELECT * FROM cstab1;
+SELECT * FROM innotab1;
+
+UPDATE innotab1 SET a=10000 WHERE a NOT IN (SELECT a FROM cstab1 WHERE a=1);
+SELECT * FROM cstab1;
+SELECT * FROM innotab1;
+
+SELECT '--- Deleting ---' AS ``;
+
+DELETE FROM innotab1 WHERE a IN (SELECT a FROM cstab1 WHERE a=2);
+SELECT * FROM cstab1;
+SELECT * FROM innotab1;
+
+DELETE FROM innotab1 WHERE a NOT IN (SELECT a FROM cstab1 WHERE a=2);
+SELECT * FROM cstab1;
+SELECT * FROM innotab1;
+
+# Cleanup
+DROP USER 'cejuser'@'localhost';
+DROP DATABASE `mcol_4868`;

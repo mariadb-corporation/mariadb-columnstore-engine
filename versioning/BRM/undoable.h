@@ -25,8 +25,7 @@
  * to support revoking any changes made on error.
  */
 
-#ifndef _UNDOABLE_H_
-#define _UNDOABLE_H_
+#pragma once
 
 #include <vector>
 
@@ -40,23 +39,20 @@
 
 namespace BRM
 {
-
 class Undoable
 {
-public:
-    EXPORT Undoable();
-    EXPORT virtual ~Undoable();
+ public:
+  EXPORT Undoable();
+  EXPORT virtual ~Undoable();
 
-    EXPORT virtual void confirmChanges();
-    EXPORT virtual void undoChanges();
+  EXPORT virtual void confirmChanges();
+  EXPORT virtual void undoChanges();
 
-protected:
-    virtual void makeUndoRecord(void* start, int size);
-    std::vector<ImageDelta> undoRecords;
+ protected:
+  virtual void makeUndoRecord(void* start, int size);
+  std::vector<ImageDelta> undoRecords;
 };
 
 #undef EXPORT
 
-}
-
-#endif
+}  // namespace BRM

@@ -16,24 +16,27 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
 */
-#ifndef MCS_LONGDOUBLE_H_INCLUDED
-#define MCS_LONGDOUBLE_H_INCLUDED
+#pragma once
 
 #include "mcs_datatype_basic.h"
 
 namespace datatypes
 {
-
 class TLongDouble
 {
-protected:
+ protected:
   long double mValue;
-public:
-  TLongDouble(): mValue(0) { }
 
-  explicit TLongDouble(long double value): mValue(value) { }
+ public:
+  TLongDouble() : mValue(0)
+  {
+  }
 
-  explicit operator long double () const
+  explicit TLongDouble(long double value) : mValue(value)
+  {
+  }
+
+  explicit operator long double() const
   {
     return mValue;
   }
@@ -49,8 +52,6 @@ public:
   }
 };
 
+}  // end of namespace datatypes
 
-} //end of namespace datatypes
-
-#endif // MCS_LONGDOUBLE_H_INCLUDED
 // vim:ts=2 sw=2:

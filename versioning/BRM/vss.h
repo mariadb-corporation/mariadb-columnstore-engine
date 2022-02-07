@@ -24,8 +24,7 @@
  * class XXX interface
  */
 
-#ifndef _VSS_H_
-#define _VSS_H_
+#pragma once
 
 #include <set>
 //#define NDEBUG
@@ -52,23 +51,22 @@
 
 // These config parameters need to be loaded
 
-//will get a small hash function performance boost by using powers of 2
+// will get a small hash function performance boost by using powers of 2
 #define VSSSTORAGE_INITIAL_COUNT 200000
-#define VSSSTORAGE_INITIAL_SIZE (VSSSTORAGE_INITIAL_COUNT*sizeof(VSSEntry))
+#define VSSSTORAGE_INITIAL_SIZE (VSSSTORAGE_INITIAL_COUNT * sizeof(VSSEntry))
 #define VSSSTORAGE_INCREMENT_COUNT 20000
-#define VSSSTORAGE_INCREMENT (VSSSTORAGE_INCREMENT_COUNT*sizeof(VSSEntry))
+#define VSSSTORAGE_INCREMENT (VSSSTORAGE_INCREMENT_COUNT * sizeof(VSSEntry))
 
 // (average list length = 4)
-#define VSSTABLE_INITIAL_SIZE (50000*sizeof(int))
-#define VSSTABLE_INCREMENT (5000*sizeof(int))
+#define VSSTABLE_INITIAL_SIZE (50000 * sizeof(int))
+#define VSSTABLE_INCREMENT (5000 * sizeof(int))
 
-#define VSS_INITIAL_SIZE (sizeof(VSSShmsegHeader) + \
-	VSSSTORAGE_INITIAL_SIZE + VSSTABLE_INITIAL_SIZE)
+#define VSS_INITIAL_SIZE (sizeof(VSSShmsegHeader) + VSSSTORAGE_INITIAL_SIZE + VSSTABLE_INITIAL_SIZE)
 
 #define VSS_INCREMENT (VSSTABLE_INCREMENT + VSSSTORAGE_INCREMENT)
 
 #define VSS_SIZE(entries) \
-	((entries*sizeof(VSSEntry)) + (entries/4 * sizeof(int)) + sizeof(VSSShmsegHeader))
+  ((entries * sizeof(VSSEntry)) + (entries / 4 * sizeof(int)) + sizeof(VSSShmsegHeader))
 
 #if defined(_MSC_VER) && defined(xxxVSS_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
@@ -78,94 +76,93 @@
 
 namespace BRM
 {
-
 struct VSSEntry
 {
-    LBID_t lbid;
-    VER_t verID;
-    bool vbFlag;
-    bool locked;
-    int next;
+  LBID_t lbid;
+  VER_t verID;
+  bool vbFlag;
+  bool locked;
+  int next;
 #ifndef __LP64__
-    uint32_t pad1;
+  uint32_t pad1;
 #endif
-    EXPORT VSSEntry();
+  EXPORT VSSEntry();
 };
 
 struct VSSShmsegHeader
 {
-    int capacity;
-    int currentSize;
-    int LWM;
-    int numHashBuckets;
-    int lockedEntryCount;
+  int capacity;
+  int currentSize;
+  int LWM;
+  int numHashBuckets;
+  int lockedEntryCount;
 
-//  the rest of the overlay looks like this
-// 	int hashBuckets[numHashBuckets];
-// 	VSSEntry storage[capacity];
+  //  the rest of the overlay looks like this
+  // 	int hashBuckets[numHashBuckets];
+  // 	VSSEntry storage[capacity];
 };
 
 class QueryContext_vss
 {
-public:
-    QueryContext_vss() : currentScn(0)
-    {
-        txns.reset(new std::set<VER_t>());
-    }
-    QueryContext_vss(const QueryContext& qc);
-    VER_t currentScn;
-    boost::shared_ptr<std::set<VER_t> > txns;
+ public:
+  QueryContext_vss() : currentScn(0)
+  {
+    txns.reset(new std::set<VER_t>());
+  }
+  QueryContext_vss(const QueryContext& qc);
+  VER_t currentScn;
+  boost::shared_ptr<std::set<VER_t> > txns;
 };
 
 class VSSImpl
 {
-public:
-    static VSSImpl* makeVSSImpl(unsigned key, off_t size, bool readOnly = false);
+ public:
+  static VSSImpl* makeVSSImpl(unsigned key, off_t size, bool readOnly = false);
 
-    inline void grow(unsigned key, off_t size)
+  inline void grow(unsigned key, off_t size)
 #ifndef NDBUG
-    {
-        fVSS.grow(key, size);
-    }
+  {
+    fVSS.grow(key, size);
+  }
 #else
-    {
-        int rc = fVSS.grow(key, size);
-        idbassert(rc == 0);
-    }
+  {
+    int rc = fVSS.grow(key, size);
+    idbassert(rc == 0);
+  }
 #endif
-    inline void makeReadOnly()
-    {
-        fVSS.setReadOnly();
-    }
-    inline void clear(unsigned key, off_t size)
-    {
-        fVSS.clear(key, size);
-    }
-    inline void swapout(BRMShmImpl& rhs)
-    {
-        fVSS.swap(rhs);
-        rhs.destroy();
-    }
-    inline unsigned key() const
-    {
-        return fVSS.key();
-    }
+  inline void makeReadOnly()
+  {
+    fVSS.setReadOnly();
+  }
+  inline void clear(unsigned key, off_t size)
+  {
+    fVSS.clear(key, size);
+  }
+  inline void swapout(BRMShmImpl& rhs)
+  {
+    fVSS.swap(rhs);
+    rhs.destroy();
+  }
+  inline unsigned key() const
+  {
+    return fVSS.key();
+  }
 
-    inline VSSShmsegHeader* get() const
-    {
-        return reinterpret_cast<VSSShmsegHeader*>(fVSS.fMapreg.get_address());
-    }
+  inline VSSShmsegHeader* get() const
+  {
+    return reinterpret_cast<VSSShmsegHeader*>(fVSS.fMapreg.get_address());
+  }
 
-private:
-    VSSImpl(unsigned key, off_t size, bool readOnly = false);
-    ~VSSImpl();
-    VSSImpl(const VSSImpl& rhs);
-    VSSImpl& operator=(const VSSImpl& rhs);
+ private:
+  VSSImpl(unsigned key, off_t size, bool readOnly = false);
+  ~VSSImpl();
+  VSSImpl(const VSSImpl& rhs);
+  VSSImpl& operator=(const VSSImpl& rhs);
 
-    BRMShmImpl fVSS;
+  BRMShmImpl fVSS;
 
-    static boost::mutex fInstanceMutex;
-    static VSSImpl* fInstance;
+  static boost::mutex fInstanceMutex;
+  static VSSImpl* fInstance;
 };
 
 class VBBM;
@@ -204,99 +201,95 @@ class ExtentMap;
 
 class VSS : public Undoable
 {
-public:
+ public:
+  enum OPS
+  {
+    NONE,
+    READ,
+    WRITE
+  };
 
-    enum OPS
-    {
-        NONE,
-        READ,
-        WRITE
-    };
+  EXPORT VSS();
+  EXPORT ~VSS();
 
-    EXPORT VSS();
-    EXPORT ~VSS();
+  EXPORT bool isLocked(const LBIDRange& l, VER_t txnID = -1) const;
+  EXPORT void removeEntry(LBID_t lbid, VER_t verID, std::vector<LBID_t>* flushList);
 
-    EXPORT bool isLocked(const LBIDRange& l, VER_t txnID = -1) const;
-    EXPORT void removeEntry(LBID_t lbid, VER_t verID, std::vector<LBID_t>* flushList);
+  // Note, the use_vbbm switch should be used for unit testing the VSS only
+  EXPORT void removeEntriesFromDB(const LBIDRange& range, VBBM& vbbm, bool use_vbbm = true);
+  EXPORT int lookup(LBID_t lbid, const QueryContext_vss&, VER_t txnID, VER_t* outVer, bool* vbFlag,
+                    bool vbOnly = false) const;
 
-    // Note, the use_vbbm switch should be used for unit testing the VSS only
-    EXPORT void removeEntriesFromDB(const LBIDRange& range, VBBM& vbbm, bool use_vbbm = true);
-    EXPORT int lookup(LBID_t lbid, const QueryContext_vss&, VER_t txnID, VER_t* outVer,
-                      bool* vbFlag, bool vbOnly = false) const;
+  /// Returns the version in the main DB files
+  EXPORT VER_t getCurrentVersion(LBID_t lbid, bool* isLocked) const;  // returns the ver in the main DB files
 
-    /// Returns the version in the main DB files
-    EXPORT VER_t getCurrentVersion(LBID_t lbid, bool* isLocked) const;  // returns the ver in the main DB files
+  /// Returns the highest version in the version buffer, less than max
+  EXPORT VER_t getHighestVerInVB(LBID_t lbid, VER_t max) const;
 
-    /// Returns the highest version in the version buffer, less than max
-    EXPORT VER_t getHighestVerInVB(LBID_t lbid, VER_t max) const;
+  /// returns true if that block is in the version buffer, false otherwise
+  EXPORT bool isVersioned(LBID_t lbid, VER_t version) const;
 
-    /// returns true if that block is in the version buffer, false otherwise
-    EXPORT bool isVersioned(LBID_t lbid, VER_t version) const;
+  EXPORT void setVBFlag(LBID_t lbid, VER_t verID, bool vbFlag);
+  EXPORT void insert(LBID_t, VER_t, bool vbFlag, bool locked, bool loading = false);
+  EXPORT void commit(VER_t txnID);
+  EXPORT void getUncommittedLBIDs(VER_t txnID, std::vector<LBID_t>& lbids);
+  EXPORT void getUnlockedLBIDs(BlockList_t& lbids);
+  EXPORT void getLockedLBIDs(BlockList_t& lbids);
+  EXPORT void lock(OPS op);
+  EXPORT void release(OPS op);
+  EXPORT void setReadOnly();
 
-    EXPORT void setVBFlag(LBID_t lbid, VER_t verID, bool vbFlag);
-    EXPORT void insert(LBID_t, VER_t, bool vbFlag, bool locked, bool loading = false);
-    EXPORT void commit(VER_t txnID);
-    EXPORT void getUncommittedLBIDs(VER_t txnID, std::vector<LBID_t>& lbids);
-    EXPORT void getUnlockedLBIDs(BlockList_t& lbids);
-    EXPORT void getLockedLBIDs(BlockList_t& lbids);
-    EXPORT void lock(OPS op);
-    EXPORT void release(OPS op);
-    EXPORT void setReadOnly();
+  EXPORT int checkConsistency(const VBBM& vbbm, ExtentMap& em) const;
+  EXPORT int size() const;
+  EXPORT bool hashEmpty() const;
+  EXPORT void getCurrentTxnIDs(std::set<VER_t>& txnList) const;
 
-    EXPORT int checkConsistency(const VBBM& vbbm, ExtentMap& em) const;
-    EXPORT int size() const;
-    EXPORT bool hashEmpty() const;
-    EXPORT void getCurrentTxnIDs(std::set<VER_t>& txnList) const;
-
-    EXPORT void clear();
-    EXPORT void load(std::string filename);
-    EXPORT void save(std::string filename);
+  EXPORT void clear();
+  EXPORT void load(std::string filename);
+  EXPORT void save(std::string filename);
 
 #ifdef BRM_DEBUG
-    EXPORT int getShmid() const;
+  EXPORT int getShmid() const;
 #endif
 
-    EXPORT bool isEmpty(bool doLock = true);
+  EXPORT bool isEmpty(bool doLock = true);
 
-    /* Bug 2293.  VBBM will use this fcn to determine whether a block is
-     * currently in use. */
-    EXPORT bool isEntryLocked(LBID_t lbid, VER_t verID) const;
-    EXPORT bool isTooOld(LBID_t lbid, VER_t verID) const;
+  /* Bug 2293.  VBBM will use this fcn to determine whether a block is
+   * currently in use. */
+  EXPORT bool isEntryLocked(LBID_t lbid, VER_t verID) const;
+  EXPORT bool isTooOld(LBID_t lbid, VER_t verID) const;
 
-private:
-    VSS(const VSS&);
-    VSS& operator=(const VSS&);
+ private:
+  VSS(const VSS&);
+  VSS& operator=(const VSS&);
 
-    struct VSSShmsegHeader* vss;
-    int* hashBuckets;
-    VSSEntry* storage;
-    bool r_only;
-    static boost::mutex mutex; // @bug5355 - made mutex static
+  struct VSSShmsegHeader* vss;
+  int* hashBuckets;
+  VSSEntry* storage;
+  bool r_only;
+  static boost::mutex mutex;  // @bug5355 - made mutex static
 
-    key_t currentVSSShmkey;
-    int vssShmid;
-    MSTEntry* vssShminfo;
-    MasterSegmentTable mst;
-    static const int MAX_IO_RETRIES = 10;
+  key_t currentVSSShmkey;
+  int vssShmid;
+  MSTEntry* vssShminfo;
+  MasterSegmentTable mst;
+  static const int MAX_IO_RETRIES = 10;
 
-    key_t chooseShmkey() const;
-    void growVSS();
-    void growForLoad(int count);
-    void initShmseg();
-    void copyVSS(VSSShmsegHeader* dest);
+  key_t chooseShmkey() const;
+  void growVSS();
+  void growForLoad(int count);
+  void initShmseg();
+  void copyVSS(VSSShmsegHeader* dest);
 
-    int getIndex(LBID_t lbid, VER_t verID, int& prev, int& bucket) const;
-    void _insert(VSSEntry& e, VSSShmsegHeader* dest, int* destTable, VSSEntry*
-                 destStorage, bool loading = false);
-    ShmKeys fShmKeys;
+  int getIndex(LBID_t lbid, VER_t verID, int& prev, int& bucket) const;
+  void _insert(VSSEntry& e, VSSShmsegHeader* dest, int* destTable, VSSEntry* destStorage,
+               bool loading = false);
+  ShmKeys fShmKeys;
 
-    VSSImpl* fPVSSImpl;
-    utils::Hasher hasher;
+  VSSImpl* fPVSSImpl;
+  utils::Hasher hasher;
 };
 
-}
+}  // namespace BRM
 
 #undef EXPORT
-
-#endif // _VSS_H_
-

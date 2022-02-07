@@ -27,8 +27,7 @@
 #include <map>
 #include "calpontsystemcatalog.h"
 
-#ifndef AUTOINCREMENTMANAGER_H_
-#define AUTOINCREMENTMANAGER_H_
+#pragma once
 
 #if defined(_MSC_VER) && defined(xxxBRMAUTOINCMGR_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
@@ -38,44 +37,45 @@
 
 namespace BRM
 {
-
 class AutoincrementManager
 {
-public:
-    EXPORT AutoincrementManager();
-    EXPORT virtual ~AutoincrementManager();
+ public:
+  EXPORT AutoincrementManager();
+  EXPORT virtual ~AutoincrementManager();
 
-    EXPORT void startSequence(uint32_t OID, uint64_t firstNum, uint32_t colWidth,
-                              execplan::CalpontSystemCatalog::ColDataType colDataType);
-    EXPORT bool getAIRange(uint32_t OID, uint64_t count, uint64_t* firstNum);
-    EXPORT void resetSequence(uint32_t OID, uint64_t value);
-    EXPORT void getLock(uint32_t OID);
-    EXPORT void releaseLock(uint32_t OID);
-    EXPORT void deleteSequence(uint32_t OID);
+  EXPORT void startSequence(uint32_t OID, uint64_t firstNum, uint32_t colWidth,
+                            execplan::CalpontSystemCatalog::ColDataType colDataType);
+  EXPORT bool getAIRange(uint32_t OID, uint64_t count, uint64_t* firstNum);
+  EXPORT void resetSequence(uint32_t OID, uint64_t value);
+  EXPORT void getLock(uint32_t OID);
+  EXPORT void releaseLock(uint32_t OID);
+  EXPORT void deleteSequence(uint32_t OID);
 
-private:
-    static const uint32_t lockTime;   // 30 seconds
-    struct sequence
+ private:
+  static const uint32_t lockTime;  // 30 seconds
+  struct sequence
+  {
+    sequence() : value(0), overflow(0)
     {
-        sequence() : value(0), overflow(0) { }
-        sequence(const sequence& s) : value(s.value), overflow(s.overflow) { }
-        sequence& operator=(const sequence& s)
-        {
-            value = s.value;
-            overflow = s.overflow;
-            return *this;
-        }
-        uint64_t value;
-        uint64_t overflow;
-        boost::mutex lock;
-    };
-
+    }
+    sequence(const sequence& s) : value(s.value), overflow(s.overflow)
+    {
+    }
+    sequence& operator=(const sequence& s)
+    {
+      value = s.value;
+      overflow = s.overflow;
+      return *this;
+    }
+    uint64_t value;
+    uint64_t overflow;
     boost::mutex lock;
-    std::map<uint64_t, sequence> sequences;
+  };
+
+  boost::mutex lock;
+  std::map<uint64_t, sequence> sequences;
 };
 
 } /* namespace BRM */
 
 #undef EXPORT
-
-#endif /* AUTOINCREMENTMANAGER_H_ */

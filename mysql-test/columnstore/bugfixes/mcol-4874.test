@@ -1,0 +1,57 @@
+#
+# MCOL-4874 Crossengine JOIN involving a ColumnStore table and a
+# wide decimal column in a non-ColumnStore table throws an exception.
+#
+
+-- source include/have_innodb.inc
+-- source ../include/have_columnstore.inc
+
+if (!$MASTER_MYPORT)
+{
+  # Running with --extern
+  let $MASTER_MYPORT=`SELECT @@port`;
+}
+
+--disable_warnings
+DROP DATABASE IF EXISTS `mcol_4874`;
+--enable_warnings
+CREATE DATABASE `mcol_4874`;
+USE `mcol_4874`;
+
+#
+# Enable cross engine join
+# Configure user and password in Columnstore.xml file
+#
+--exec $MCS_MCSSETCONFIG CrossEngineSupport User 'cejuser'
+--exec $MCS_MCSSETCONFIG CrossEngineSupport Password 'Vagrant1|0000001'
+--exec $MCS_MCSSETCONFIG CrossEngineSupport Port $MASTER_MYPORT
+#
+# Create corresponding in the server
+#
+--disable_warnings
+CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
+--enable_warnings
+GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+FLUSH PRIVILEGES;
+
+CREATE TABLE cs1 (a1 INT, b1 BIGINT, c1 INT)ENGINE=COLUMNSTORE;
+
+CREATE TABLE i1 (a2 INT, b2 DECIMAL(37,0), c2 INT);
+
+INSERT INTO cs1 VALUES (1, 11, 10), (1, 0, 11);
+
+INSERT INTO i1 VALUES (1, 11, 100), (1, 0, 11), (1, 12, 101);
+
+SELECT * FROM
+(
+  SELECT a1 AS col1, COUNT(DISTINCT(IF((b1 <> 0), c1, NULL))) FROM cs1 group by col1
+) as t1
+JOIN
+(
+  SELECT a2 AS col1, COUNT(DISTINCT(IF((b2 <> 0), c2, NULL))) FROM i1 GROUP BY col1
+) as t2
+USING (col1);
+
+# Cleanup
+DROP USER 'cejuser'@'localhost';
+DROP DATABASE `mcol_4874`;

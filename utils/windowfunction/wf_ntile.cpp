@@ -17,7 +17,6 @@
 
 //  $Id: wf_ntile.cpp 3932 2013-06-25 16:08:10Z xlou $
 
-
 //#define NDEBUG
 #include <cassert>
 #include <cmath>
@@ -49,118 +48,110 @@ using namespace joblist;
 
 #include "wf_ntile.h"
 
-
 namespace windowfunction
 {
-
-
-boost::shared_ptr<WindowFunctionType> WF_ntile::makeFunction(int id, const string& name, int ct, WindowFunctionColumn* wc)
+boost::shared_ptr<WindowFunctionType> WF_ntile::makeFunction(int id, const string& name, int ct,
+                                                             WindowFunctionColumn* wc)
 {
-    boost::shared_ptr<WindowFunctionType> func(new WF_ntile(id, name));
-    return func;
+  boost::shared_ptr<WindowFunctionType> func(new WF_ntile(id, name));
+  return func;
 }
-
 
 WindowFunctionType* WF_ntile::clone() const
 {
-    return new WF_ntile(*this);
+  return new WF_ntile(*this);
 }
-
 
 void WF_ntile::resetData()
 {
-    WindowFunctionType::resetData();
+  WindowFunctionType::resetData();
 }
-
 
 void WF_ntile::parseParms(const std::vector<execplan::SRCP>& parms)
 {
-    // parms[0]: nt
-    ConstantColumn* cc = dynamic_cast<ConstantColumn*>(parms[0].get());
+  // parms[0]: nt
+  ConstantColumn* cc = dynamic_cast<ConstantColumn*>(parms[0].get());
 
-    if (cc != NULL)
+  if (cc != NULL)
+  {
+    fNtileNull = false;
+    fNtile = cc->getIntVal(fRow, fNtileNull);  // row not used, no need to setData.
+
+    if (!fNtileNull && fNtile <= 0)
     {
-        fNtileNull = false;
-        fNtile = cc->getIntVal(fRow, fNtileNull);  // row not used, no need to setData.
-
-        if (!fNtileNull && fNtile <= 0)
-        {
-            ostringstream oss;
-            oss << fNtile;
-            throw IDBExcept(IDBErrorInfo::instance()->errorMsg(ERR_WF_ARG_OUT_OF_RANGE,
-                            oss.str()), ERR_WF_ARG_OUT_OF_RANGE);
-        }
+      ostringstream oss;
+      oss << fNtile;
+      throw IDBExcept(IDBErrorInfo::instance()->errorMsg(ERR_WF_ARG_OUT_OF_RANGE, oss.str()),
+                      ERR_WF_ARG_OUT_OF_RANGE);
     }
+  }
 }
-
 
 void WF_ntile::operator()(int64_t b, int64_t e, int64_t c)
 {
-    int64_t idx = fFieldIndex[1];
+  int64_t idx = fFieldIndex[1];
+
+  if (idx != -1)
+  {
+    fRow.setData(getPointer(fRowData->at(b)));
 
     if (idx != -1)
     {
-        fRow.setData(getPointer(fRowData->at(b)));
+      double tmp = 1.0;
+      fNtileNull = fRow.isNullValue(idx);
 
-        if (idx != -1)
-        {
-            double tmp = 1.0;
-            fNtileNull = fRow.isNullValue(idx);
+      if (!fNtileNull)
+        implicit2T(idx, tmp, 0);
 
-            if (!fNtileNull)
-                implicit2T(idx, tmp, 0);
+      if (!fNtileNull && tmp <= 0)
+      {
+        ostringstream oss;
+        oss << tmp;
+        throw IDBExcept(IDBErrorInfo::instance()->errorMsg(ERR_WF_ARG_OUT_OF_RANGE, oss.str()),
+                        ERR_WF_ARG_OUT_OF_RANGE);
+      }
 
-            if (!fNtileNull && tmp <= 0)
-            {
-                ostringstream oss;
-                oss << tmp;
-                throw IDBExcept(IDBErrorInfo::instance()->errorMsg(ERR_WF_ARG_OUT_OF_RANGE,
-                                oss.str()), ERR_WF_ARG_OUT_OF_RANGE);
-            }
-
-            fNtile = round(tmp);
-        }
+      fNtile = round(tmp);
     }
+  }
 
-    c = b;
+  c = b;
 
-    if (!fNtileNull)
+  if (!fNtileNull)
+  {
+    int64_t rowPerBucket = (e - b + 1) / fNtile;
+    int64_t n = rowPerBucket * fNtile;
+    int64_t x = (e - b + 1) - n;  // extra
+    int64_t y = 0;
+    int64_t z = 0;
+
+    while (c <= e)
     {
-        int64_t rowPerBucket = (e - b + 1) / fNtile;
-        int64_t n = rowPerBucket * fNtile;
-        int64_t x = (e - b + 1) - n; // extra
-        int64_t y = 0;
-        int64_t z = 0;
+      if (c % 1000 == 0 && fStep->cancelled())
+        break;
 
-        while (c <= e)
-        {
-            if (c % 1000 == 0 && fStep->cancelled())
-                break;
+      y = rowPerBucket + ((x-- > 0) ? 1 : 0);
+      z++;
 
-            y = rowPerBucket + ((x-- > 0) ? 1 : 0);
-            z++;
-
-            for (int64_t i = 0; i < y && c <= e; i++)
-            {
-                fRow.setData(getPointer(fRowData->at(c++)));
-                setIntValue(fFieldIndex[0], z);
-            }
-        }
+      for (int64_t i = 0; i < y && c <= e; i++)
+      {
+        fRow.setData(getPointer(fRowData->at(c++)));
+        setIntValue(fFieldIndex[0], z);
+      }
     }
-    else
+  }
+  else
+  {
+    while (c <= e)
     {
-        while (c <= e)
-        {
-            if (c % 1000 == 0 && fStep->cancelled())
-                break;
+      if (c % 1000 == 0 && fStep->cancelled())
+        break;
 
-            fRow.setData(getPointer(fRowData->at(c++)));
-            setIntValue(fFieldIndex[0], joblist::BIGINTNULL);
-        }
+      fRow.setData(getPointer(fRowData->at(c++)));
+      setIntValue(fFieldIndex[0], joblist::BIGINTNULL);
     }
+  }
 }
 
-
-}   //namespace
+}  // namespace windowfunction
 // vim:ts=4 sw=4:
-

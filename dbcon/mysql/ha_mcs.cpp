@@ -35,20 +35,17 @@
 
 handlerton* mcs_hton = NULL;
 // This is the maria handlerton that we need for the cache
-static handlerton *mcs_maria_hton = NULL;
+static handlerton* mcs_maria_hton = NULL;
 char cs_version[25];
-char cs_commit_hash[41]; // a commit hash is 40 characters
+char cs_commit_hash[41];  // a commit hash is 40 characters
 
 // handlers creation function for hton.
 // Look into ha_mcs_pushdown.* for more details.
-group_by_handler*
-create_columnstore_group_by_handler(THD* thd, Query* query);
+group_by_handler* create_columnstore_group_by_handler(THD* thd, Query* query);
 
-derived_handler*
-create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived);
+derived_handler* create_columnstore_derived_handler(THD* thd, TABLE_LIST* derived);
 
-select_handler*
-create_columnstore_select_handler(THD* thd, SELECT_LEX* sel);
+select_handler* create_columnstore_select_handler(THD* thd, SELECT_LEX* sel);
 
 /* Variables for example share methods */
 
@@ -76,101 +73,97 @@ pthread_mutex_t mcs_mutex;
   Function we use in the creation of our hash to get key.
 */
 
-static uchar* mcs_get_key(COLUMNSTORE_SHARE* share, size_t* length,
-                          my_bool not_used __attribute__((unused)))
+static uchar* mcs_get_key(COLUMNSTORE_SHARE* share, size_t* length, my_bool not_used __attribute__((unused)))
 {
-    *length = share->table_name_length;
-    return (uchar*) share->table_name;
+  *length = share->table_name_length;
+  return (uchar*)share->table_name;
 }
 
 // This one is unused
 int mcs_discover(handlerton* hton, THD* thd, TABLE_SHARE* share)
 {
-    DBUG_ENTER("mcs_discover");
-    DBUG_PRINT("mcs_discover", ("db: '%s'  name: '%s'", share->db.str, share->table_name.str));
+  DBUG_ENTER("mcs_discover");
+  DBUG_PRINT("mcs_discover", ("db: '%s'  name: '%s'", share->db.str, share->table_name.str));
 #ifdef INFINIDB_DEBUG
-    fprintf(stderr, "mcs_discover()\n");
+  fprintf(stderr, "mcs_discover()\n");
 #endif
 
-    uchar* frm_data = NULL;
-    size_t frm_len = 0;
-    int error = 0;
+  uchar* frm_data = NULL;
+  size_t frm_len = 0;
+  int error = 0;
 
-    if (!ha_mcs_impl_discover_existence(share->db.str, share->table_name.str))
-        DBUG_RETURN(HA_ERR_NO_SUCH_TABLE);
+  if (!ha_mcs_impl_discover_existence(share->db.str, share->table_name.str))
+    DBUG_RETURN(HA_ERR_NO_SUCH_TABLE);
 
-    error = share->read_frm_image((const uchar**)&frm_data, &frm_len);
+  error = share->read_frm_image((const uchar**)&frm_data, &frm_len);
 
-    if (error)
-        DBUG_RETURN(HA_ERR_NO_SUCH_TABLE);
+  if (error)
+    DBUG_RETURN(HA_ERR_NO_SUCH_TABLE);
 
-    my_errno = share->init_from_binary_frm_image(thd, 1, frm_data, frm_len);
+  my_errno = share->init_from_binary_frm_image(thd, 1, frm_data, frm_len);
 
-    my_free(frm_data);
-    DBUG_RETURN(my_errno);
+  my_free(frm_data);
+  DBUG_RETURN(my_errno);
 }
 
 // This f() is also unused
-int mcs_discover_existence(handlerton* hton, const char* db,
-                           const char* table_name)
+int mcs_discover_existence(handlerton* hton, const char* db, const char* table_name)
 {
-    return ha_mcs_impl_discover_existence(db, table_name);
+  return ha_mcs_impl_discover_existence(db, table_name);
 }
 
 static int mcs_commit(handlerton* hton, THD* thd, bool all)
 {
-    int rc;
-    try
-    {
-        rc = ha_mcs_impl_commit(hton, thd, all);
-    }
-    catch (std::runtime_error& e)
-    {
-        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
-        rc = ER_INTERNAL_ERROR;
-    }
-    return rc;
+  int rc;
+  try
+  {
+    rc = ha_mcs_impl_commit(hton, thd, all);
+  }
+  catch (std::runtime_error& e)
+  {
+    current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+    rc = ER_INTERNAL_ERROR;
+  }
+  return rc;
 }
 
 static int mcs_rollback(handlerton* hton, THD* thd, bool all)
 {
-    int rc;
-    try
-    {
-        rc = ha_mcs_impl_rollback(hton, thd, all);
-    }
-    catch (std::runtime_error& e)
-    {
-        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
-        rc = ER_INTERNAL_ERROR;
-    }
-    return rc;
+  int rc;
+  try
+  {
+    rc = ha_mcs_impl_rollback(hton, thd, all);
+  }
+  catch (std::runtime_error& e)
+  {
+    current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+    rc = ER_INTERNAL_ERROR;
+  }
+  return rc;
 }
 
 static int mcs_close_connection(handlerton* hton, THD* thd)
 {
-    int rc;
-    try
-    {
-        rc = ha_mcs_impl_close_connection(hton, thd);
-    }
-    catch (std::runtime_error& e)
-    {
-        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
-        rc = ER_INTERNAL_ERROR;
-    }
-    return rc;
+  int rc;
+  try
+  {
+    rc = ha_mcs_impl_close_connection(hton, thd);
+  }
+  catch (std::runtime_error& e)
+  {
+    current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+    rc = ER_INTERNAL_ERROR;
+  }
+  return rc;
 }
 
-ha_mcs::ha_mcs(handlerton* hton, TABLE_SHARE* table_arg) :
-    handler(hton, table_arg),
-    int_table_flags(HA_BINLOG_STMT_CAPABLE | HA_BINLOG_ROW_CAPABLE |
-                    HA_TABLE_SCAN_ON_INDEX |
-                    HA_CAN_TABLE_CONDITION_PUSHDOWN |
-                    HA_CAN_DIRECT_UPDATE_AND_DELETE),
-    m_lock_type(F_UNLCK)
-{ }
-
+ha_mcs::ha_mcs(handlerton* hton, TABLE_SHARE* table_arg)
+ : handler(hton, table_arg)
+ , int_table_flags(HA_BINLOG_STMT_CAPABLE | HA_BINLOG_ROW_CAPABLE | HA_TABLE_SCAN_ON_INDEX |
+                   HA_CAN_TABLE_CONDITION_PUSHDOWN | HA_CAN_DIRECT_UPDATE_AND_DELETE)
+ , m_lock_type(F_UNLCK)
+{
+}
 
 /**
   @brief
@@ -190,32 +183,29 @@ ha_mcs::ha_mcs(handlerton* hton, TABLE_SHARE* table_arg) :
   delete_table method in handler.cc
 */
 
-static const char* ha_mcs_exts[] =
-{
-    NullS
-};
+static const char* ha_mcs_exts[] = {NullS};
 
 const char** ha_mcs::bas_ext() const
 {
-    return ha_mcs_exts;
+  return ha_mcs_exts;
 }
 
 int ha_mcs::analyze(THD* thd, HA_CHECK_OPT* check_opt)
 {
-    DBUG_ENTER("ha_mcs::analyze");
+  DBUG_ENTER("ha_mcs::analyze");
 
-    int rc;
-    try
-    {
-        rc = ha_mcs_impl_analyze(thd, table);
-    }
-    catch (std::runtime_error& e)
-    {
-        thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
-        rc = ER_INTERNAL_ERROR;
-    }
+  int rc;
+  try
+  {
+    rc = ha_mcs_impl_analyze(thd, table);
+  }
+  catch (std::runtime_error& e)
+  {
+    thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+    rc = ER_INTERNAL_ERROR;
+  }
 
-    DBUG_RETURN(rc);
+  DBUG_RETURN(rc);
 }
 
 /**
@@ -236,46 +226,44 @@ int ha_mcs::analyze(THD* thd, HA_CHECK_OPT* check_opt)
 
 int ha_mcs::open(const char* name, int mode, uint32_t test_if_locked)
 {
-    DBUG_ENTER("ha_mcs::open");
+  DBUG_ENTER("ha_mcs::open");
 
-    bool isPS = current_thd->stmt_arena &&
-        (current_thd->stmt_arena->is_stmt_prepare() ||
-         current_thd->stmt_arena->is_stmt_execute());
+  bool isPS = current_thd->stmt_arena &&
+              (current_thd->stmt_arena->is_stmt_prepare() || current_thd->stmt_arena->is_stmt_execute());
 
-    // MCOL-4282 See the description for discover_check_version() in ha_mcs.h
-    // for why we need to mutate optimizer flags here. Sequence of SQL
-    // statements that will lead to this execution path for prepared
-    // statements:
-    //   CREATE TABLE t1 (a int, b int) engine=columnstore;
-    //   PREPARE stmt1 FROM "SELECT * FROM t1";
-    //   EXECUTE stmt1;
-    if (isPS)
-        mutate_optimizer_flags(current_thd);
+  // MCOL-4282 See the description for discover_check_version() in ha_mcs.h
+  // for why we need to mutate optimizer flags here. Sequence of SQL
+  // statements that will lead to this execution path for prepared
+  // statements:
+  //   CREATE TABLE t1 (a int, b int) engine=columnstore;
+  //   PREPARE stmt1 FROM "SELECT * FROM t1";
+  //   EXECUTE stmt1;
+  if (isPS)
+    mutate_optimizer_flags(current_thd);
 
-    int rc;
-    try
-    {
-        rc = ha_mcs_impl_open(name, mode, test_if_locked);
-    }
-    catch (std::runtime_error& e)
-    {
-        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
-        rc = ER_INTERNAL_ERROR;
-    }
+  int rc;
+  try
+  {
+    rc = ha_mcs_impl_open(name, mode, test_if_locked);
+  }
+  catch (std::runtime_error& e)
+  {
+    current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+    rc = ER_INTERNAL_ERROR;
+  }
 
-    DBUG_RETURN(rc);
+  DBUG_RETURN(rc);
 }
 
 int ha_mcs::discover_check_version()
 {
-    bool isPS = current_thd->stmt_arena &&
-        (current_thd->stmt_arena->is_stmt_prepare() ||
-         current_thd->stmt_arena->is_stmt_execute());
+  bool isPS = current_thd->stmt_arena &&
+              (current_thd->stmt_arena->is_stmt_prepare() || current_thd->stmt_arena->is_stmt_execute());
 
-    if (isPS)
-        mutate_optimizer_flags(current_thd);
+  if (isPS)
+    mutate_optimizer_flags(current_thd);
 
-    return 0;
+  return 0;
 }
 
 /**
@@ -296,22 +284,21 @@ int ha_mcs::discover_check_version()
 
 int ha_mcs::close(void)
 {
-    DBUG_ENTER("ha_mcs::close");
+  DBUG_ENTER("ha_mcs::close");
 
-    int rc;
-    try
-    {
-        rc = ha_mcs_impl_close();
-    }
-    catch (std::runtime_error& e)
-    {
-        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
-        rc = ER_INTERNAL_ERROR;
-    }
+  int rc;
+  try
+  {
+    rc = ha_mcs_impl_close();
+  }
+  catch (std::runtime_error& e)
+  {
+    current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+    rc = ER_INTERNAL_ERROR;
+  }
 
-    DBUG_RETURN(rc);
+  DBUG_RETURN(rc);
 }
-
 
 /**
   @brief
@@ -327,63 +314,63 @@ int ha_mcs::close(void)
 
 int ha_mcs::write_row(const uchar* buf)
 {
-    DBUG_ENTER("ha_mcs::write_row");
-    int rc;
-    try
-    {
-        rc = ha_mcs_impl_write_row(buf, table, rows_changed);
-    }
-    catch (std::runtime_error& e)
-    {
-        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
-        rc = ER_INTERNAL_ERROR;
-    }
+  DBUG_ENTER("ha_mcs::write_row");
+  int rc;
+  try
+  {
+    rc = ha_mcs_impl_write_row(buf, table, rows_changed);
+  }
+  catch (std::runtime_error& e)
+  {
+    current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+    rc = ER_INTERNAL_ERROR;
+  }
 
-    DBUG_RETURN(rc);
+  DBUG_RETURN(rc);
 }
 
 void ha_mcs::start_bulk_insert(ha_rows rows, uint flags)
 {
-    DBUG_ENTER("ha_mcs::start_bulk_insert");
-    try
-    {
-        ha_mcs_impl_start_bulk_insert(rows, table);
-    }
-    catch (std::runtime_error& e)
-    {
-        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
-    }
-    DBUG_VOID_RETURN;
+  DBUG_ENTER("ha_mcs::start_bulk_insert");
+  try
+  {
+    ha_mcs_impl_start_bulk_insert(rows, table);
+  }
+  catch (std::runtime_error& e)
+  {
+    current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+  }
+  DBUG_VOID_RETURN;
 }
 
 void ha_mcs::start_bulk_insert_from_cache(ha_rows rows, uint flags)
 {
-    DBUG_ENTER("ha_mcs::start_bulk_insert_from_cache");
-    try
-    {
-        ha_mcs_impl_start_bulk_insert(rows, table, true);
-    }
-    catch (std::runtime_error& e)
-    {
-        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
-    }
-    DBUG_VOID_RETURN;
+  DBUG_ENTER("ha_mcs::start_bulk_insert_from_cache");
+  try
+  {
+    ha_mcs_impl_start_bulk_insert(rows, table, true);
+  }
+  catch (std::runtime_error& e)
+  {
+    current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+  }
+  DBUG_VOID_RETURN;
 }
 
 int ha_mcs::end_bulk_insert()
 {
-    DBUG_ENTER("ha_mcs::end_bulk_insert");
-    int rc;
-    try
-    {
-        rc = ha_mcs_impl_end_bulk_insert(false, table);
-    }
-    catch (std::runtime_error& e)
-    {
-        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
-        rc = ER_INTERNAL_ERROR;
-    }
-    DBUG_RETURN(rc);
+  DBUG_ENTER("ha_mcs::end_bulk_insert");
+  int rc;
+  try
+  {
+    rc = ha_mcs_impl_end_bulk_insert(false, table);
+  }
+  catch (std::runtime_error& e)
+  {
+    current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+    rc = ER_INTERNAL_ERROR;
+  }
+  DBUG_RETURN(rc);
 }
 
 /**
@@ -401,19 +388,18 @@ int ha_mcs::end_bulk_insert()
 */
 int ha_mcs::update_row(const uchar* old_data, const uchar* new_data)
 {
-
-    DBUG_ENTER("ha_mcs::update_row");
-    int rc;
-    try
-    {
-        rc = ha_mcs_impl_update_row();
-    }
-    catch (std::runtime_error& e)
-    {
-        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
-        rc = ER_INTERNAL_ERROR;
-    }
-    DBUG_RETURN(rc);
+  DBUG_ENTER("ha_mcs::update_row");
+  int rc;
+  try
+  {
+    rc = ha_mcs_impl_update_row();
+  }
+  catch (std::runtime_error& e)
+  {
+    current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+    rc = ER_INTERNAL_ERROR;
+  }
+  DBUG_RETURN(rc);
 }
 
 /**
@@ -429,65 +415,65 @@ int ha_mcs::update_row(const uchar* old_data, const uchar* new_data)
     @see
       mysql_update()/mysql_delete
 */
-int ha_mcs::direct_update_rows_init(List<Item> *update_fields)
+int ha_mcs::direct_update_rows_init(List<Item>* update_fields)
 {
-    DBUG_ENTER("ha_mcs::direct_update_rows_init");
-    DBUG_RETURN(0);
+  DBUG_ENTER("ha_mcs::direct_update_rows_init");
+  DBUG_RETURN(0);
 }
 
-int ha_mcs::direct_update_rows(ha_rows *update_rows)
+int ha_mcs::direct_update_rows(ha_rows* update_rows)
 {
-    DBUG_ENTER("ha_mcs::direct_update_rows");
-    int rc;
-    try
-    {
-        rc = ha_mcs_impl_direct_update_delete_rows(false, update_rows, condStack);
-    }
-    catch (std::runtime_error& e)
-    {
-        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
-        rc = ER_INTERNAL_ERROR;
-    }
-    DBUG_RETURN(rc);
+  DBUG_ENTER("ha_mcs::direct_update_rows");
+  int rc;
+  try
+  {
+    rc = ha_mcs_impl_direct_update_delete_rows(false, update_rows, condStack);
+  }
+  catch (std::runtime_error& e)
+  {
+    current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+    rc = ER_INTERNAL_ERROR;
+  }
+  DBUG_RETURN(rc);
 }
 
-int ha_mcs::direct_update_rows(ha_rows *update_rows, ha_rows *found_rows)
+int ha_mcs::direct_update_rows(ha_rows* update_rows, ha_rows* found_rows)
 {
-    DBUG_ENTER("ha_mcs::direct_update_rows");
-    int rc;
-    try
-    {
-        rc = ha_mcs_impl_direct_update_delete_rows(false, update_rows, condStack);
-        *found_rows = *update_rows;
-    }
-    catch (std::runtime_error& e)
-    {
-        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
-        rc = ER_INTERNAL_ERROR;
-    }
-    DBUG_RETURN(rc);
+  DBUG_ENTER("ha_mcs::direct_update_rows");
+  int rc;
+  try
+  {
+    rc = ha_mcs_impl_direct_update_delete_rows(false, update_rows, condStack);
+    *found_rows = *update_rows;
+  }
+  catch (std::runtime_error& e)
+  {
+    current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+    rc = ER_INTERNAL_ERROR;
+  }
+  DBUG_RETURN(rc);
 }
 
 int ha_mcs::direct_delete_rows_init()
 {
-    DBUG_ENTER("ha_mcs::direct_delete_rows_init");
-    DBUG_RETURN(0);
+  DBUG_ENTER("ha_mcs::direct_delete_rows_init");
+  DBUG_RETURN(0);
 }
 
-int ha_mcs::direct_delete_rows(ha_rows *deleted_rows)
+int ha_mcs::direct_delete_rows(ha_rows* deleted_rows)
 {
-    DBUG_ENTER("ha_mcs::direct_delete_rows");
-    int rc;
-    try
-    {
-        rc = ha_mcs_impl_direct_update_delete_rows(true, deleted_rows, condStack);
-    }
-    catch (std::runtime_error& e)
-    {
-        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
-        rc = ER_INTERNAL_ERROR;
-    }
-    DBUG_RETURN(rc);
+  DBUG_ENTER("ha_mcs::direct_delete_rows");
+  int rc;
+  try
+  {
+    rc = ha_mcs_impl_direct_update_delete_rows(true, deleted_rows, condStack);
+  }
+  catch (std::runtime_error& e)
+  {
+    current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+    rc = ER_INTERNAL_ERROR;
+  }
+  DBUG_RETURN(rc);
 }
 /**
   @brief
@@ -511,18 +497,18 @@ int ha_mcs::direct_delete_rows(ha_rows *deleted_rows)
 
 int ha_mcs::delete_row(const uchar* buf)
 {
-    DBUG_ENTER("ha_mcs::delete_row");
-    int rc;
-    try
-    {
-        rc = ha_mcs_impl_delete_row();
-    }
-    catch (std::runtime_error& e)
-    {
-        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
-        rc = ER_INTERNAL_ERROR;
-    }
-    DBUG_RETURN(rc);
+  DBUG_ENTER("ha_mcs::delete_row");
+  int rc;
+  try
+  {
+    rc = ha_mcs_impl_delete_row();
+  }
+  catch (std::runtime_error& e)
+  {
+    current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+    rc = ER_INTERNAL_ERROR;
+  }
+  DBUG_RETURN(rc);
 }
 
 /**
@@ -532,15 +518,12 @@ int ha_mcs::delete_row(const uchar* buf)
   index.
 */
 
-int ha_mcs::index_read_map(uchar* buf, const uchar* key,
-                               key_part_map keypart_map __attribute__((unused)),
-                               enum ha_rkey_function find_flag
-                               __attribute__((unused)))
+int ha_mcs::index_read_map(uchar* buf, const uchar* key, key_part_map keypart_map __attribute__((unused)),
+                           enum ha_rkey_function find_flag __attribute__((unused)))
 {
-    DBUG_ENTER("ha_mcs::index_read");
-    DBUG_RETURN(HA_ERR_WRONG_COMMAND);
+  DBUG_ENTER("ha_mcs::index_read");
+  DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
-
 
 /**
   @brief
@@ -549,10 +532,9 @@ int ha_mcs::index_read_map(uchar* buf, const uchar* key,
 
 int ha_mcs::index_next(uchar* buf)
 {
-    DBUG_ENTER("ha_mcs::index_next");
-    DBUG_RETURN(HA_ERR_WRONG_COMMAND);
+  DBUG_ENTER("ha_mcs::index_next");
+  DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
-
 
 /**
   @brief
@@ -561,10 +543,9 @@ int ha_mcs::index_next(uchar* buf)
 
 int ha_mcs::index_prev(uchar* buf)
 {
-    DBUG_ENTER("ha_mcs::index_prev");
-    DBUG_RETURN(HA_ERR_WRONG_COMMAND);
+  DBUG_ENTER("ha_mcs::index_prev");
+  DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
-
 
 /**
   @brief
@@ -578,10 +559,9 @@ int ha_mcs::index_prev(uchar* buf)
 */
 int ha_mcs::index_first(uchar* buf)
 {
-    DBUG_ENTER("ha_mcs::index_first");
-    DBUG_RETURN(HA_ERR_WRONG_COMMAND);
+  DBUG_ENTER("ha_mcs::index_first");
+  DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
-
 
 /**
   @brief
@@ -595,10 +575,9 @@ int ha_mcs::index_first(uchar* buf)
 */
 int ha_mcs::index_last(uchar* buf)
 {
-    DBUG_ENTER("ha_mcs::index_last");
-    DBUG_RETURN(HA_ERR_WRONG_COMMAND);
+  DBUG_ENTER("ha_mcs::index_last");
+  DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
-
 
 /**
   @brief
@@ -615,43 +594,42 @@ int ha_mcs::index_last(uchar* buf)
 */
 int ha_mcs::rnd_init(bool scan)
 {
-    DBUG_ENTER("ha_mcs::rnd_init");
+  DBUG_ENTER("ha_mcs::rnd_init");
 
-    int rc = 0;
-    if(scan)
+  int rc = 0;
+  if (scan)
+  {
+    try
     {
-        try
-        {
-            rc = impl_rnd_init(table, condStack);
-        }
-        catch (std::runtime_error& e)
-        {
-            current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
-            rc = ER_INTERNAL_ERROR;
-        }
+      rc = impl_rnd_init(table, condStack);
     }
+    catch (std::runtime_error& e)
+    {
+      current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+      rc = ER_INTERNAL_ERROR;
+    }
+  }
 
-    DBUG_RETURN(rc);
+  DBUG_RETURN(rc);
 }
 
 int ha_mcs::rnd_end()
 {
-    DBUG_ENTER("ha_mcs::rnd_end");
+  DBUG_ENTER("ha_mcs::rnd_end");
 
-    int rc;
-    try
-    {
-        rc = ha_mcs_impl_rnd_end(table);
-    }
-    catch (std::runtime_error& e)
-    {
-        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
-        rc = ER_INTERNAL_ERROR;
-    }
+  int rc;
+  try
+  {
+    rc = ha_mcs_impl_rnd_end(table);
+  }
+  catch (std::runtime_error& e)
+  {
+    current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+    rc = ER_INTERNAL_ERROR;
+  }
 
-    DBUG_RETURN(rc);
+  DBUG_RETURN(rc);
 }
-
 
 /**
   @brief
@@ -669,22 +647,21 @@ int ha_mcs::rnd_end()
 */
 int ha_mcs::rnd_next(uchar* buf)
 {
-    DBUG_ENTER("ha_mcs::rnd_next");
+  DBUG_ENTER("ha_mcs::rnd_next");
 
-    int rc;
-    try
-    {
-        rc = ha_mcs_impl_rnd_next(buf, table);
-    }
-    catch (std::runtime_error& e)
-    {
-        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
-        rc = ER_INTERNAL_ERROR;
-    }
+  int rc;
+  try
+  {
+    rc = ha_mcs_impl_rnd_next(buf, table);
+  }
+  catch (std::runtime_error& e)
+  {
+    current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+    rc = ER_INTERNAL_ERROR;
+  }
 
-    DBUG_RETURN(rc);
+  DBUG_RETURN(rc);
 }
-
 
 /**
   @brief
@@ -715,10 +692,9 @@ int ha_mcs::rnd_next(uchar* buf)
 // to retrieve records quickly by this "key"
 void ha_mcs::position(const uchar* record)
 {
-    DBUG_ENTER("ha_mcs::position");
-    DBUG_VOID_RETURN;
+  DBUG_ENTER("ha_mcs::position");
+  DBUG_VOID_RETURN;
 }
-
 
 /**
   @brief
@@ -735,20 +711,19 @@ void ha_mcs::position(const uchar* record)
 */
 int ha_mcs::rnd_pos(uchar* buf, uchar* pos)
 {
-    DBUG_ENTER("ha_mcs::rnd_pos");
-    int rc;
-    try
-    {
-        rc = ha_mcs_impl_rnd_pos(buf, pos);
-    }
-    catch (std::runtime_error& e)
-    {
-        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
-        rc = ER_INTERNAL_ERROR;
-    }
-    DBUG_RETURN(rc);
+  DBUG_ENTER("ha_mcs::rnd_pos");
+  int rc;
+  try
+  {
+    rc = ha_mcs_impl_rnd_pos(buf, pos);
+  }
+  catch (std::runtime_error& e)
+  {
+    current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+    rc = ER_INTERNAL_ERROR;
+  }
+  DBUG_RETURN(rc);
 }
-
 
 /**
   @brief
@@ -790,16 +765,15 @@ int ha_mcs::rnd_pos(uchar* buf, uchar* pos)
 */
 int ha_mcs::info(uint32_t flag)
 {
-    DBUG_ENTER("ha_mcs::info");
-    // @bug 1635. Raise this number magically fix the filesort crash issue. May need to twist
-    // the number again if the issue re-occurs
-    stats.records = 2000;
+  DBUG_ENTER("ha_mcs::info");
+  // @bug 1635. Raise this number magically fix the filesort crash issue. May need to twist
+  // the number again if the issue re-occurs
+  stats.records = 2000;
 #ifdef INFINIDB_DEBUG
-    puts("info");
+  puts("info");
 #endif
-    DBUG_RETURN(0);
+  DBUG_RETURN(0);
 }
-
 
 /**
   @brief
@@ -812,44 +786,31 @@ int ha_mcs::info(uint32_t flag)
 */
 int ha_mcs::extra(enum ha_extra_function operation)
 {
-    DBUG_ENTER("ha_mcs::extra");
+  DBUG_ENTER("ha_mcs::extra");
 #ifdef INFINIDB_DEBUG
+  {
+    const char* hefs;
+
+    switch (operation)
     {
-        const char* hefs;
+      case HA_EXTRA_NO_READCHECK: hefs = "HA_EXTRA_NO_READCHECK"; break;
 
-        switch (operation)
-        {
-            case HA_EXTRA_NO_READCHECK:
-                hefs = "HA_EXTRA_NO_READCHECK";
-                break;
+      case HA_EXTRA_CACHE: hefs = "HA_EXTRA_CACHE"; break;
 
-            case HA_EXTRA_CACHE:
-                hefs = "HA_EXTRA_CACHE";
-                break;
+      case HA_EXTRA_NO_CACHE: hefs = "HA_EXTRA_NO_CACHE"; break;
 
-            case HA_EXTRA_NO_CACHE:
-                hefs = "HA_EXTRA_NO_CACHE";
-                break;
+      case HA_EXTRA_NO_IGNORE_DUP_KEY: hefs = "HA_EXTRA_NO_IGNORE_DUP_KEY"; break;
 
-            case HA_EXTRA_NO_IGNORE_DUP_KEY:
-                hefs = "HA_EXTRA_NO_IGNORE_DUP_KEY";
-                break;
+      case HA_EXTRA_PREPARE_FOR_RENAME: hefs = "HA_EXTRA_PREPARE_FOR_RENAME"; break;
 
-            case HA_EXTRA_PREPARE_FOR_RENAME:
-                hefs = "HA_EXTRA_PREPARE_FOR_RENAME";
-                break;
-
-            default:
-                hefs = "UNKNOWN ENUM!";
-                break;
-        }
-
-        fprintf(stderr, "ha_mcs::extra(\"%s\", %d: %s)\n", table->s->table_name.str, operation, hefs);
+      default: hefs = "UNKNOWN ENUM!"; break;
     }
-#endif
-    DBUG_RETURN(0);
-}
 
+    fprintf(stderr, "ha_mcs::extra(\"%s\", %d: %s)\n", table->s->table_name.str, operation, hefs);
+  }
+#endif
+  DBUG_RETURN(0);
+}
 
 /**
   @brief
@@ -872,10 +833,9 @@ int ha_mcs::extra(enum ha_extra_function operation)
 */
 int ha_mcs::delete_all_rows()
 {
-    DBUG_ENTER("ha_mcs::delete_all_rows");
-    DBUG_RETURN(HA_ERR_WRONG_COMMAND);
+  DBUG_ENTER("ha_mcs::delete_all_rows");
+  DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
-
 
 /**
   @brief
@@ -896,25 +856,24 @@ int ha_mcs::delete_all_rows()
 */
 int ha_mcs::external_lock(THD* thd, int lock_type)
 {
-    DBUG_ENTER("ha_mcs::external_lock");
+  DBUG_ENTER("ha_mcs::external_lock");
 
-    int rc;
-    try
-    {
-        //@Bug 2526 Only register the transaction when autocommit is off
-        if ((thd_test_options(thd, OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN)))
-            trans_register_ha( thd, true, mcs_hton, 0);
+  int rc;
+  try
+  {
+    //@Bug 2526 Only register the transaction when autocommit is off
+    if ((thd_test_options(thd, OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN)))
+      trans_register_ha(thd, true, mcs_hton, 0);
 
-        rc = impl_external_lock(thd, table, lock_type);
-    }
-    catch (std::runtime_error& e)
-    {
-        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
-        rc = ER_INTERNAL_ERROR;
-    }
-    DBUG_RETURN(rc);
+    rc = impl_external_lock(thd, table, lock_type);
+  }
+  catch (std::runtime_error& e)
+  {
+    current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+    rc = ER_INTERNAL_ERROR;
+  }
+  DBUG_RETURN(rc);
 }
-
 
 /**
   @brief
@@ -954,19 +913,16 @@ int ha_mcs::external_lock(THD* thd, int lock_type)
   get_lock_data() in lock.cc
 */
 
-THR_LOCK_DATA** ha_mcs::store_lock(THD* thd,
-                                       THR_LOCK_DATA** to,
-                                       enum thr_lock_type lock_type)
+THR_LOCK_DATA** ha_mcs::store_lock(THD* thd, THR_LOCK_DATA** to, enum thr_lock_type lock_type)
 {
-    //if (lock_type != TL_IGNORE && lock.type == TL_UNLOCK)
-    //  lock.type=lock_type;
-    //*to++= &lock;
+  // if (lock_type != TL_IGNORE && lock.type == TL_UNLOCK)
+  //  lock.type=lock_type;
+  //*to++= &lock;
 #ifdef INFINIDB_DEBUG
-    puts("store_lock");
+  puts("store_lock");
 #endif
-    return to;
+  return to;
 }
-
 
 /**
   @brief
@@ -989,24 +945,23 @@ THR_LOCK_DATA** ha_mcs::store_lock(THD* thd,
 */
 int ha_mcs::delete_table(const char* name)
 {
-    DBUG_ENTER("ha_mcs::delete_table");
-    /* This is not implemented but we want someone to be able that it works. */
+  DBUG_ENTER("ha_mcs::delete_table");
+  /* This is not implemented but we want someone to be able that it works. */
 
-    int rc;
+  int rc;
 
-    try
-    {
-        rc = ha_mcs_impl_delete_table(name);
-    }
-    catch (std::runtime_error& e)
-    {
-        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
-        rc = ER_INTERNAL_ERROR;
-    }
+  try
+  {
+    rc = ha_mcs_impl_delete_table(name);
+  }
+  catch (std::runtime_error& e)
+  {
+    current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+    rc = ER_INTERNAL_ERROR;
+  }
 
-    DBUG_RETURN(rc);
+  DBUG_RETURN(rc);
 }
-
 
 /**
   @brief
@@ -1024,20 +979,19 @@ int ha_mcs::delete_table(const char* name)
 */
 int ha_mcs::rename_table(const char* from, const char* to)
 {
-    DBUG_ENTER("ha_mcs::rename_table ");
-    int rc;
-    try
-    {
-        rc = ha_mcs_impl_rename_table(from, to);
-    }
-    catch (std::runtime_error& e)
-    {
-        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
-        rc = ER_INTERNAL_ERROR;
-    }
-    DBUG_RETURN(rc);
+  DBUG_ENTER("ha_mcs::rename_table ");
+  int rc;
+  try
+  {
+    rc = ha_mcs_impl_rename_table(from, to);
+  }
+  catch (std::runtime_error& e)
+  {
+    current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+    rc = ER_INTERNAL_ERROR;
+  }
+  DBUG_RETURN(rc);
 }
-
 
 /**
   @brief
@@ -1052,13 +1006,12 @@ int ha_mcs::rename_table(const char* from, const char* to)
   @see
   check_quick_keys() in opt_range.cc
 */
-ha_rows ha_mcs::records_in_range(uint32_t inx, const key_range* min_key,
-                                     const key_range* max_key, page_range* res)
+ha_rows ha_mcs::records_in_range(uint32_t inx, const key_range* min_key, const key_range* max_key,
+                                 page_range* res)
 {
-    DBUG_ENTER("ha_mcs::records_in_range");
-    DBUG_RETURN(10);                         // low number to force index usage
+  DBUG_ENTER("ha_mcs::records_in_range");
+  DBUG_RETURN(10);  // low number to force index usage
 }
-
 
 /**
   @brief
@@ -1079,86 +1032,81 @@ ha_rows ha_mcs::records_in_range(uint32_t inx, const key_range* min_key,
   ha_create_table() in handle.cc
 */
 
-int ha_mcs::create(const char* name, TABLE* table_arg,
-                       HA_CREATE_INFO* create_info)
+int ha_mcs::create(const char* name, TABLE* table_arg, HA_CREATE_INFO* create_info)
 {
-    DBUG_ENTER("ha_mcs::create");
+  DBUG_ENTER("ha_mcs::create");
 
-    int rc;
-    try
-    {
-        rc = ha_mcs_impl_create(name, table_arg, create_info);
-    }
-    catch (std::runtime_error& e)
-    {
-        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
-        rc = ER_INTERNAL_ERROR;
-    }
-    DBUG_RETURN(rc);
+  int rc;
+  try
+  {
+    rc = ha_mcs_impl_create(name, table_arg, create_info);
+  }
+  catch (std::runtime_error& e)
+  {
+    current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+    rc = ER_INTERNAL_ERROR;
+  }
+  DBUG_RETURN(rc);
 }
 
 const COND* ha_mcs::cond_push(const COND* cond)
 {
-    DBUG_ENTER("ha_mcs::cond_push");
-    COND* ret_cond = NULL;
-    try
-    {
-        ret_cond = ha_mcs_impl_cond_push(const_cast<COND*>(cond), table, condStack);
-    }
-    catch (std::runtime_error& e)
-    {
-        current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
-    }
-    DBUG_RETURN(ret_cond);
+  DBUG_ENTER("ha_mcs::cond_push");
+  COND* ret_cond = NULL;
+  try
+  {
+    ret_cond = ha_mcs_impl_cond_push(const_cast<COND*>(cond), table, condStack);
+  }
+  catch (std::runtime_error& e)
+  {
+    current_thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+  }
+  DBUG_RETURN(ret_cond);
 }
 
 void ha_mcs::cond_pop()
 {
-    DBUG_ENTER("ha_mcs::cond_pop");
+  DBUG_ENTER("ha_mcs::cond_pop");
 
-    THD* thd = current_thd;
+  THD* thd = current_thd;
 
-    if ((((thd->lex)->sql_command == SQLCOM_UPDATE) ||
-         ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI) ||
-         ((thd->lex)->sql_command == SQLCOM_DELETE) ||
-         ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI)) &&
-        !condStack.empty())
-    {
-        condStack.pop_back();
-    }
+  if ((((thd->lex)->sql_command == SQLCOM_UPDATE) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI) ||
+       ((thd->lex)->sql_command == SQLCOM_DELETE) || ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI)) &&
+      !condStack.empty())
+  {
+    condStack.pop_back();
+  }
 
-    DBUG_VOID_RETURN;
+  DBUG_VOID_RETURN;
 }
 
 int ha_mcs::reset()
 {
-    DBUG_ENTER("ha_mcs::reset");
+  DBUG_ENTER("ha_mcs::reset");
 
-    if (!condStack.empty())
-    {
-        condStack.clear();
-    }
+  if (!condStack.empty())
+  {
+    condStack.clear();
+  }
 
-    // Restore the optimizer flags which were mutated earlier in
-    // ha_mcs::open/ha_mcs::discover_check_version
-    restore_optimizer_flags(current_thd);
+  // Restore the optimizer flags which were mutated earlier in
+  // ha_mcs::open/ha_mcs::discover_check_version
+  restore_optimizer_flags(current_thd);
 
-    DBUG_RETURN(0);
+  DBUG_RETURN(0);
 }
-
-
 
 int ha_mcs::repair(THD* thd, HA_CHECK_OPT* check_opt)
 {
-    DBUG_ENTER("ha_mcs::repair");
-    DBUG_ASSERT(!(int_table_flags & HA_CAN_REPAIR));
-    DBUG_RETURN(HA_ADMIN_NOT_IMPLEMENTED);
+  DBUG_ENTER("ha_mcs::repair");
+  DBUG_ASSERT(!(int_table_flags & HA_CAN_REPAIR));
+  DBUG_RETURN(HA_ADMIN_NOT_IMPLEMENTED);
 }
 
 bool ha_mcs::is_crashed() const
 {
-    DBUG_ENTER("ha_mcs::is_crashed");
-    DBUG_RETURN(0);
+  DBUG_ENTER("ha_mcs::is_crashed");
+  DBUG_RETURN(0);
 }
 
 /*
@@ -1201,19 +1149,17 @@ bool ha_mcs::is_crashed() const
     lock.
 */
 
-my_bool get_status_and_flush_cache(void *param,
-                                   my_bool concurrent_insert);
-
+my_bool get_status_and_flush_cache(void* param, my_bool concurrent_insert);
 
 /*
   Create a name for the cache table
 */
 
-static void create_cache_name(char *to, const char *name)
+static void create_cache_name(char* to, const char* name)
 {
-  uint dir_length= dirname_length(name);
-  to= strnmov(to, name, dir_length);
-  strxmov(to, CACHE_PREFIX, name+ dir_length, NullS);
+  uint dir_length = dirname_length(name);
+  to = strnmov(to, name, dir_length);
+  strxmov(to, CACHE_PREFIX, name + dir_length, NullS);
 }
 
 /*****************************************************************************
@@ -1230,43 +1176,40 @@ static void create_cache_name(char *to, const char *name)
   insert
 */
 
-my_bool get_status_and_flush_cache(void *param,
-                                   my_bool concurrent_insert)
+my_bool get_status_and_flush_cache(void* param, my_bool concurrent_insert)
 {
-  ha_mcs_cache *cache= (ha_mcs_cache*) param;
+  if (current_thd->slave_thread && !get_replication_slave(current_thd))
+    return (0);
+
+  ha_mcs_cache* cache = (ha_mcs_cache*)param;
   int error;
-  enum_sql_command sql_command= cache->table->in_use->lex->sql_command;
+  enum_sql_command sql_command = cache->table->in_use->lex->sql_command;
 
-  cache->sql_command= sql_command;
+  cache->sql_command = sql_command;
 
-  cache->insert_command= (sql_command == SQLCOM_INSERT ||
-                          sql_command == SQLCOM_LOAD);
+  cache->insert_command = (sql_command == SQLCOM_INSERT || sql_command == SQLCOM_LOAD);
   /*
     Call first the original Aria get_status function
     All Aria get_status functions takes Maria handler as the parameter
   */
   if (cache->share->org_lock.get_status)
-    (*cache->share->org_lock.get_status)(cache->cache_handler->file,
-                                         concurrent_insert);
+    (*cache->share->org_lock.get_status)(cache->cache_handler->file, concurrent_insert);
 
   /* If first get_status() call for this table, flush cache if needed */
   if (!cache->lock_counter++)
   {
     ha_rows num_rows = cache->num_rows_cached();
-    if (((!cache->insert_command && num_rows != 0) ||
-        num_rows >= get_cache_flush_threshold(current_thd)) &&
+    if (((!cache->insert_command && num_rows != 0) || num_rows >= get_cache_flush_threshold(current_thd)) &&
         // In replication, LDI on a master comes as sql_command = SQLCOM_END
         // on the slave, if binlog_format != STATEMENT. See mysql_load
         // function in sql/sql_load.cc to know why. If this is the case,
         // make sure we don't flush the cache.
         (!current_thd->slave_thread || sql_command != SQLCOM_END))
     {
-      if ((error= cache->flush_insert_cache()))
+      if ((error = cache->flush_insert_cache()))
       {
-        my_error(error, MYF(MY_WME | ME_FATAL),
-                 "Got error while trying to flush insert cache: %d",
-                 my_errno);
-        return(1);
+        my_error(error, MYF(MY_WME | ME_FATAL), "Got error while trying to flush insert cache: %d", my_errno);
+        return (1);
       }
     }
   }
@@ -1283,7 +1226,7 @@ my_bool get_status_and_flush_cache(void *param,
 
 my_bool cache_start_trans(void* param)
 {
-  ha_mcs_cache *cache= (ha_mcs_cache*) param;
+  ha_mcs_cache* cache = (ha_mcs_cache*)param;
 
   if (!cache->insert_command)
   {
@@ -1296,42 +1239,39 @@ my_bool cache_start_trans(void* param)
 
 /* Pass through functions for all the THR_LOCK virtual functions */
 
-static void cache_copy_status(void* to, void *from)
+static void cache_copy_status(void* to, void* from)
 {
-  ha_mcs_cache *to_cache= (ha_mcs_cache*) to, *from_cache= (ha_mcs_cache*) from;
-  (*to_cache->share->org_lock.copy_status)(to_cache->cache_handler->file,
-                                           from_cache->cache_handler->file);
+  ha_mcs_cache *to_cache = (ha_mcs_cache*)to, *from_cache = (ha_mcs_cache*)from;
+  (*to_cache->share->org_lock.copy_status)(to_cache->cache_handler->file, from_cache->cache_handler->file);
 }
 
 static void cache_update_status(void* param)
 {
-  ha_mcs_cache *cache= (ha_mcs_cache*) param;
+  ha_mcs_cache* cache = (ha_mcs_cache*)param;
   (*cache->share->org_lock.update_status)(cache->cache_handler->file);
 }
 
-static void cache_restore_status(void *param)
+static void cache_restore_status(void* param)
 {
-  ha_mcs_cache *cache= (ha_mcs_cache*) param;
+  ha_mcs_cache* cache = (ha_mcs_cache*)param;
   (*cache->share->org_lock.restore_status)(cache->cache_handler->file);
 }
 
-static my_bool cache_check_status(void *param)
+static my_bool cache_check_status(void* param)
 {
-  ha_mcs_cache *cache= (ha_mcs_cache*) param;
+  ha_mcs_cache* cache = (ha_mcs_cache*)param;
   return (*cache->share->org_lock.check_status)(cache->cache_handler->file);
 }
-
 
 /*****************************************************************************
  ha_mcs_cache_share functions (Common storage for an open cache file)
 *****************************************************************************/
 
-static ha_mcs_cache_share *cache_share_list= 0;
+static ha_mcs_cache_share* cache_share_list = 0;
 static PSI_mutex_key key_LOCK_cache_share;
 #ifdef HAVE_PSI_INTERFACE
-static PSI_mutex_info all_mutexes[]=
-{
-  { &key_LOCK_cache_share, "LOCK_cache_share", PSI_FLAG_GLOBAL},
+static PSI_mutex_info all_mutexes[] = {
+    {&key_LOCK_cache_share, "LOCK_cache_share", PSI_FLAG_GLOBAL},
 };
 #endif
 static mysql_mutex_t LOCK_cache_share;
@@ -1340,36 +1280,34 @@ static mysql_mutex_t LOCK_cache_share;
   Find or create a share
 */
 
-ha_mcs_cache_share *find_cache_share(const char *name, ulonglong cached_rows)
+ha_mcs_cache_share* find_cache_share(const char* name, ulonglong cached_rows)
 {
   ha_mcs_cache_share *pos, *share;
   mysql_mutex_lock(&LOCK_cache_share);
-  for (pos= cache_share_list; pos; pos= pos->next)
+  for (pos = cache_share_list; pos; pos = pos->next)
   {
     if (!strcmp(pos->name, name))
     {
       pos->open_count++;
       mysql_mutex_unlock(&LOCK_cache_share);
-      return(pos);
+      return (pos);
     }
   }
-  if (!(share= (ha_mcs_cache_share*) my_malloc(PSI_NOT_INSTRUMENTED,
-                                           sizeof(*share) + strlen(name)+1,
-                                           MYF(MY_FAE))))
+  if (!(share = (ha_mcs_cache_share*)my_malloc(PSI_NOT_INSTRUMENTED, sizeof(*share) + strlen(name) + 1,
+                                               MYF(MY_FAE))))
   {
     mysql_mutex_unlock(&LOCK_cache_share);
     return 0;
   }
-  share->name= (char*) (share+1);
-  share->open_count= 1;
-  share->cached_rows= cached_rows;
-  strmov((char*) share->name, name);
-  share->next= cache_share_list;
-  cache_share_list= share;
+  share->name = (char*)(share + 1);
+  share->open_count = 1;
+  share->cached_rows = cached_rows;
+  strmov((char*)share->name, name);
+  share->next = cache_share_list;
+  cache_share_list = share;
   mysql_mutex_unlock(&LOCK_cache_share);
   return share;
 }
-
 
 /*
   Decrement open counter and free share if there is no more users
@@ -1377,19 +1315,18 @@ ha_mcs_cache_share *find_cache_share(const char *name, ulonglong cached_rows)
 
 void ha_mcs_cache_share::close()
 {
-  ha_mcs_cache_share *pos;
+  ha_mcs_cache_share* pos;
   mysql_mutex_lock(&LOCK_cache_share);
   if (!--open_count)
   {
-    ha_mcs_cache_share **prev= &cache_share_list;
-    for ( ;  (pos= *prev) != this; prev= &pos->next)
+    ha_mcs_cache_share** prev = &cache_share_list;
+    for (; (pos = *prev) != this; prev = &pos->next)
       ;
-    *prev= next;
+    *prev = next;
     my_free(this);
   }
   mysql_mutex_unlock(&LOCK_cache_share);
 }
-
 
 /*****************************************************************************
  ha_mcs_cache handler functions
@@ -1397,11 +1334,10 @@ void ha_mcs_cache_share::close()
 
 static plugin_ref plugin_maria = NULL;
 
-ha_mcs_cache::ha_mcs_cache(handlerton *hton, TABLE_SHARE *table_arg, MEM_ROOT *mem_root)
-  :ha_mcs(mcs_hton, table_arg), isSysCatTable(false)
+ha_mcs_cache::ha_mcs_cache(handlerton* hton, TABLE_SHARE* table_arg, MEM_ROOT* mem_root)
+ : ha_mcs(mcs_hton, table_arg), isSysCatTable(false), isCacheDisabled(false)
 {
-  if (table_arg && table_arg->db.str &&
-      !strcasecmp(table_arg->db.str, "calpontsys") &&
+  if (table_arg && table_arg->db.str && !strcasecmp(table_arg->db.str, "calpontsys") &&
       table_arg->table_name.str &&
       (!strcasecmp(table_arg->table_name.str, "syscolumn") ||
        !strcasecmp(table_arg->table_name.str, "systable")))
@@ -1411,31 +1347,29 @@ ha_mcs_cache::ha_mcs_cache(handlerton *hton, TABLE_SHARE *table_arg, MEM_ROOT *m
   {
     if (!plugin_maria)
     {
-        LEX_CSTRING name = { STRING_WITH_LEN("Aria") };
-        plugin_maria = ha_resolve_by_name(0, &name, 0);
-        mcs_maria_hton = plugin_hton(plugin_maria);
-        int error = mcs_maria_hton == NULL; // Engine must exists!
-        if (error)
-          my_error(HA_ERR_INITIALIZATION, MYF(0),
-                   "Could not find storage engine %s", name.str);
+      LEX_CSTRING name = {STRING_WITH_LEN("Aria")};
+      plugin_maria = ha_resolve_by_name(0, &name, 0);
+      mcs_maria_hton = plugin_hton(plugin_maria);
+      int error = mcs_maria_hton == NULL;  // Engine must exists!
+      if (error)
+        my_error(HA_ERR_INITIALIZATION, MYF(0), "Could not find storage engine %s", name.str);
     }
 
     assert(mcs_maria_hton);
 
-    cache_handler= (ha_maria*) mcs_maria_hton->create(mcs_maria_hton, table_arg, mem_root);
-    share= 0;
-    lock_counter= 0;
-    cache_locked= 0;
+    cache_handler = (ha_maria*)mcs_maria_hton->create(mcs_maria_hton, table_arg, mem_root);
+    share = 0;
+    lock_counter = 0;
+    cache_locked = 0;
   }
 }
-
 
 ha_mcs_cache::~ha_mcs_cache()
 {
   if (get_cache_inserts(current_thd) && !isSysCatTable && cache_handler)
   {
     delete cache_handler;
-    cache_handler= NULL;
+    cache_handler = NULL;
   }
 }
 
@@ -1444,32 +1378,29 @@ ha_mcs_cache::~ha_mcs_cache()
   cache handler
 */
 
-int ha_mcs_cache::create(const char *name, TABLE *table_arg,
-                         HA_CREATE_INFO *ha_create_info)
+int ha_mcs_cache::create(const char* name, TABLE* table_arg, HA_CREATE_INFO* ha_create_info)
 {
   int error;
-  char cache_name[FN_REFLEN+8];
+  char cache_name[FN_REFLEN + 8];
   DBUG_ENTER("ha_mcs_cache::create");
 
-  if (get_cache_inserts(current_thd) && !isSysCatTable)
+  if (isCacheEnabled())
   {
     create_cache_name(cache_name, name);
-    {
-      /* Create a cached table */
-      ha_choice save_transactional= ha_create_info->transactional;
-      row_type save_row_type=       ha_create_info->row_type;
-      ha_create_info->transactional= HA_CHOICE_NO;
-      ha_create_info->row_type=      ROW_TYPE_DYNAMIC;
+    /* Create a cached table */
+    ha_choice save_transactional = ha_create_info->transactional;
+    row_type save_row_type = ha_create_info->row_type;
+    ha_create_info->transactional = HA_CHOICE_NO;
+    ha_create_info->row_type = ROW_TYPE_DYNAMIC;
 
-      if ((error= cache_handler->create(cache_name, table_arg, ha_create_info)))
-        DBUG_RETURN(error);
-      ha_create_info->transactional= save_transactional;
-      ha_create_info->row_type=      save_row_type;
-    }
+    if ((error = cache_handler->create(cache_name, table_arg, ha_create_info)))
+      DBUG_RETURN(error);
+    ha_create_info->transactional = save_transactional;
+    ha_create_info->row_type = save_row_type;
   }
 
   /* Create the real table in ColumnStore */
-  if ((error= parent::create(name, table_arg, ha_create_info)))
+  if ((error = parent::create(name, table_arg, ha_create_info)))
   {
     if (get_cache_inserts(current_thd) && !isSysCatTable)
       cache_handler->delete_table(cache_name);
@@ -1479,10 +1410,9 @@ int ha_mcs_cache::create(const char *name, TABLE *table_arg,
   DBUG_RETURN(0);
 }
 
-
-int ha_mcs_cache::open(const char *name, int mode, uint open_flags)
+int ha_mcs_cache::open(const char* name, int mode, uint open_flags)
 {
-  int error;
+  int error, cache_error;
   DBUG_ENTER("ha_mcs_cache::open");
 
   if (get_cache_inserts(current_thd) && !isSysCatTable)
@@ -1490,51 +1420,68 @@ int ha_mcs_cache::open(const char *name, int mode, uint open_flags)
     /* Copy table object to cache_handler */
     cache_handler->change_table_ptr(table, table->s);
 
-    char cache_name[FN_REFLEN+8];
+    char cache_name[FN_REFLEN + 8];
     create_cache_name(cache_name, name);
-    if ((error= cache_handler->open(cache_name, mode, open_flags)))
-      DBUG_RETURN(error);
 
-    if (!(share= find_cache_share(name, cache_handler->file->state->records)))
+    if (!(cache_error = cache_handler->open(cache_name, mode, open_flags)))
     {
-      cache_handler->close();
-      DBUG_RETURN(ER_OUTOFMEMORY);
-    }
+      if (!(share = find_cache_share(name, cache_handler->file->state->records)))
+      {
+        cache_handler->close();
+        DBUG_RETURN(ER_OUTOFMEMORY);
+      }
 
-    /* Fix lock so that it goes through get_status_and_flush() */
-    THR_LOCK *lock= &cache_handler->file->s->lock;
-    if (lock->get_status != &get_status_and_flush_cache)
-    {
-      mysql_mutex_lock(&cache_handler->file->s->intern_lock);
-
-      /* The following lock is here just to establish mutex locking order */
-      mysql_mutex_lock(&lock->mutex);
-      mysql_mutex_unlock(&lock->mutex);
-
+      /* Fix lock so that it goes through get_status_and_flush() */
+      THR_LOCK* lock = &cache_handler->file->s->lock;
       if (lock->get_status != &get_status_and_flush_cache)
       {
-        /* Remember original lock. Used by the THR_lock cache functions */
-        share->org_lock= lock[0];
-        if (lock->start_trans)
-          lock->start_trans=    &cache_start_trans;
-        if (lock->copy_status)
-          lock->copy_status=    &cache_copy_status;
-        if (lock->update_status)
-          lock->update_status=  &cache_update_status;
-        if (lock->restore_status)
-          lock->restore_status= &cache_restore_status;
-        if (lock->check_status)
-          lock->check_status=   &cache_check_status;
-        if (lock->restore_status)
-          lock->restore_status=  &cache_restore_status;
-        lock->get_status=       &get_status_and_flush_cache;
+        mysql_mutex_lock(&cache_handler->file->s->intern_lock);
+
+        /* The following lock is here just to establish mutex locking order */
+        mysql_mutex_lock(&lock->mutex);
+        mysql_mutex_unlock(&lock->mutex);
+
+        if (lock->get_status != &get_status_and_flush_cache)
+        {
+          /* Remember original lock. Used by the THR_lock cache functions */
+          share->org_lock = lock[0];
+          if (lock->start_trans)
+            lock->start_trans = &cache_start_trans;
+          if (lock->copy_status)
+            lock->copy_status = &cache_copy_status;
+          if (lock->update_status)
+            lock->update_status = &cache_update_status;
+          if (lock->restore_status)
+            lock->restore_status = &cache_restore_status;
+          if (lock->check_status)
+            lock->check_status = &cache_check_status;
+          if (lock->restore_status)
+            lock->restore_status = &cache_restore_status;
+          lock->get_status = &get_status_and_flush_cache;
+        }
+        mysql_mutex_unlock(&cache_handler->file->s->intern_lock);
       }
-      mysql_mutex_unlock(&cache_handler->file->s->intern_lock);
+      cache_handler->file->lock.status_param = (void*)this;
     }
-    cache_handler->file->lock.status_param= (void*) this;
+    else if (cache_error == ENOENT)
+    {
+      if (!(error = parent::open(name, mode, open_flags)))
+      {
+        isCacheDisabled = true;
+        DBUG_RETURN(0);
+      }
+      else
+      {
+        DBUG_RETURN(error);
+      }
+    }
+    else
+    {
+      DBUG_RETURN(cache_error);
+    }
   }
 
-  if ((error= parent::open(name, mode, open_flags)))
+  if ((error = parent::open(name, mode, open_flags)))
   {
     if (get_cache_inserts(current_thd) && !isSysCatTable)
       cache_handler->close();
@@ -1544,30 +1491,28 @@ int ha_mcs_cache::open(const char *name, int mode, uint open_flags)
   DBUG_RETURN(0);
 }
 
-
 int ha_mcs_cache::close()
 {
   int error, error2;
 
   DBUG_ENTER("ha_mcs_cache::close()");
 
-  if (get_cache_inserts(current_thd) && !isSysCatTable)
+  if (isCacheEnabled())
   {
-    error= cache_handler->close();
-    if ((error2= parent::close()))
-      error= error2;
-    ha_mcs_cache_share *org_share= share;
+    error = cache_handler->close();
+    if ((error2 = parent::close()))
+      error = error2;
+    ha_mcs_cache_share* org_share = share;
     if (org_share)
       org_share->close();
   }
   else
   {
-    error= parent::close();
+    error = parent::close();
   }
 
   DBUG_RETURN(error);
 }
-
 
 /*
    Handling locking of the tables. In case of INSERT we have to lock both
@@ -1580,7 +1525,7 @@ uint ha_mcs_cache::lock_count(void) const
     If we are doing an insert or if we want to flush the cache, we have to lock
     both the Aria table and normal table.
   */
-  if (get_cache_inserts(current_thd) && !isSysCatTable)
+  if (isCacheEnabled())
     return 2;
   else
     return 1;
@@ -1590,139 +1535,144 @@ uint ha_mcs_cache::lock_count(void) const
    Store locks for the Aria table and ColumnStore table
 */
 
-THR_LOCK_DATA **ha_mcs_cache::store_lock(THD *thd,
-                                         THR_LOCK_DATA **to,
-                                         enum thr_lock_type lock_type)
+THR_LOCK_DATA** ha_mcs_cache::store_lock(THD* thd, THR_LOCK_DATA** to, enum thr_lock_type lock_type)
 {
-  if (get_cache_inserts(current_thd) && !isSysCatTable)
-    to= cache_handler->store_lock(thd, to, TL_WRITE);
+  if (isCacheEnabled())
+    to = cache_handler->store_lock(thd, to, TL_WRITE);
   return parent::store_lock(thd, to, lock_type);
 }
-
 
 /**
    Do external locking of the tables
 */
 
-int ha_mcs_cache::external_lock(THD *thd, int lock_type)
+int ha_mcs_cache::external_lock(THD* thd, int lock_type)
 {
-  int error= 0;
+  int error = 0;
   DBUG_ENTER("ha_mcs_cache::external_lock");
 
-  if (get_cache_inserts(current_thd) && !isSysCatTable)
+  if (isCacheEnabled())
   {
     /*
       Reset lock_counter. This is ok as external_lock() is guaranteed to be
       called before first get_status()
     */
-    lock_counter= 0;
+    lock_counter = 0;
 
     if (lock_type == F_UNLCK)
     {
       int error2;
-      error= 0;
+      error = 0;
       if (cache_locked)
       {
-        error= cache_handler->external_lock(thd, lock_type);
-        cache_locked= 0;
+        error = cache_handler->external_lock(thd, lock_type);
+        cache_locked = 0;
       }
-      if ((error2= parent::external_lock(thd, lock_type)))
-        error= error2;
+      if ((error2 = parent::external_lock(thd, lock_type)))
+        error = error2;
       DBUG_RETURN(error);
     }
 
     /* Lock first with write lock to be able to do insert or flush table */
-    original_lock_type= lock_type;
-    lock_type= F_WRLCK;
-    if ((error= cache_handler->external_lock(thd, lock_type)))
+    original_lock_type = lock_type;
+    lock_type = F_WRLCK;
+    if ((error = cache_handler->external_lock(thd, lock_type)))
       DBUG_RETURN(error);
-    if ((error= parent::external_lock(thd, lock_type)))
+    if ((error = parent::external_lock(thd, lock_type)))
     {
-      error= cache_handler->external_lock(thd, F_UNLCK);
+      error = cache_handler->external_lock(thd, F_UNLCK);
       DBUG_RETURN(error);
     }
 
-    cache_locked= 1;
+    cache_locked = 1;
   }
   else
   {
-    error= parent::external_lock(thd, lock_type);
+    error = parent::external_lock(thd, lock_type);
   }
 
   DBUG_RETURN(error);
 }
 
-
-int ha_mcs_cache::delete_table(const char *name)
+int ha_mcs_cache::delete_table(const char* name)
 {
-  int error= 0, error2;
+  int cache_error = 0, error;
 
   DBUG_ENTER("ha_mcs_cache::delete_table");
 
-  if (get_cache_inserts(current_thd) && !isSysCatTable)
+  if (isCacheEnabled())
   {
-    char cache_name[FN_REFLEN+8];
+    char cache_name[FN_REFLEN + 8];
     create_cache_name(cache_name, name);
-    error= cache_handler->delete_table(cache_name);
+    cache_error = cache_handler->delete_table(cache_name);
+
+    if (cache_error && (cache_error != ENOENT))
+      DBUG_RETURN(cache_error);
+    else if (cache_error == ENOENT)
+      cache_error = 0;
   }
 
-  if ((error2= parent::delete_table(name)))
-    error= error2;
+  if ((error = parent::delete_table(name)))
+    cache_error = error;
 
-  DBUG_RETURN(error);
+  DBUG_RETURN(cache_error);
 }
 
-
-int ha_mcs_cache::rename_table(const char *from, const char *to)
+int ha_mcs_cache::rename_table(const char* from, const char* to)
 {
-  int error= 0;
+  int error = 0;
 
   DBUG_ENTER("ha_mcs_cache::rename_table");
 
-  if (get_cache_inserts(current_thd) && !isSysCatTable)
+  if (isCacheEnabled())
   {
-    char cache_from[FN_REFLEN+8], cache_to[FN_REFLEN+8];
+    char cache_from[FN_REFLEN + 8], cache_to[FN_REFLEN + 8];
     create_cache_name(cache_from, from);
     create_cache_name(cache_to, to);
-    if ((error= cache_handler->rename_table(cache_from, cache_to)))
-      DBUG_RETURN(error);
-
-    if ((error= parent::rename_table(from, to)))
+    if (!(error = cache_handler->rename_table(cache_from, cache_to)))
     {
-      cache_handler->rename_table(cache_to, cache_from);
-      DBUG_RETURN(error);
+      if ((error = parent::rename_table(from, to)))
+      {
+        cache_handler->rename_table(cache_to, cache_from);
+        DBUG_RETURN(error);
+      }
+    }
+    else if (error == ENOENT)
+    {
+      if ((error = parent::rename_table(from, to)))
+      {
+        DBUG_RETURN(error);
+      }
     }
   }
   else
   {
-    error= parent::rename_table(from, to);
+    error = parent::rename_table(from, to);
   }
 
   DBUG_RETURN(error);
 }
 
-
 int ha_mcs_cache::delete_all_rows(void)
 {
-  int error= 0, error2;
+  int error = 0, error2;
 
   DBUG_ENTER("ha_mcs_cache::delete_all_rows");
 
-  if (get_cache_inserts(current_thd) && !isSysCatTable)
+  if (isCacheEnabled())
   {
-    error= cache_handler->delete_all_rows();
-    share->cached_rows= 0;
+    error = cache_handler->delete_all_rows();
+    share->cached_rows = 0;
   }
-  if ((error2= parent::delete_all_rows()))
-    error= error2;
+  if ((error2 = parent::delete_all_rows()))
+    error = error2;
   DBUG_RETURN(error);
 }
 
 bool ha_mcs_cache::is_crashed() const
 {
-  if (get_cache_inserts(current_thd) && !isSysCatTable)
-    return (cache_handler->is_crashed() ||
-            parent::is_crashed());
+  if (isCacheEnabled())
+    return (cache_handler->is_crashed() || parent::is_crashed());
   else
     return parent::is_crashed();
 }
@@ -1746,55 +1696,58 @@ bool ha_mcs_cache::is_crashed() const
    When these are updated, we threat the cache as committed
 */
 
-int ha_mcs_cache::repair(THD *thd, HA_CHECK_OPT *check_opt)
+int ha_mcs_cache::repair(THD* thd, HA_CHECK_OPT* check_opt)
 {
-  int error= 0, error2;
-  int something_crashed= is_crashed();
+  int error = 0, error2;
+  int something_crashed = is_crashed();
   DBUG_ENTER("ha_mcs_cache::repair");
 
-  if (get_cache_inserts(current_thd) && !isSysCatTable)
+  if (isCacheEnabled())
   {
     if (cache_handler->is_crashed() || !something_crashed)
     {
       /* Delete everything that was not already committed */
-      mysql_file_chsize(cache_handler->file->dfile.file,
-                        cache_handler->file->s->state.state.data_file_length,
+      mysql_file_chsize(cache_handler->file->dfile.file, cache_handler->file->s->state.state.data_file_length,
                         0, MYF(MY_WME));
       mysql_file_chsize(cache_handler->file->s->kfile.file,
-                        cache_handler->file->s->state.state.key_file_length,
-                        0, MYF(MY_WME));
-      check_opt->flags|= T_AUTO_REPAIR;
-      error= cache_handler->repair(thd, check_opt);
-      share->cached_rows= cache_handler->file->state->records;
+                        cache_handler->file->s->state.state.key_file_length, 0, MYF(MY_WME));
+      check_opt->flags |= T_AUTO_REPAIR;
+      error = cache_handler->repair(thd, check_opt);
+      share->cached_rows = cache_handler->file->state->records;
     }
   }
 
   if (parent::is_crashed() || !something_crashed)
-    if ((error2= parent::repair(thd, check_opt)))
-      error= error2;
+    if ((error2 = parent::repair(thd, check_opt)))
+      error = error2;
 
   DBUG_RETURN(error);
 }
 
-
 /**
    Write to cache handler or main table
 */
-int ha_mcs_cache::write_row(const uchar *buf)
+int ha_mcs_cache::write_row(const uchar* buf)
 {
-  if (get_cache_inserts(current_thd) && !isSysCatTable && insert_command)
+  if (current_thd->slave_thread && !get_replication_slave(current_thd))
+    return (0);
+
+  if (isCacheEnabled() && insert_command)
   {
     DBUG_ASSERT(share->cached_rows == cache_handler->file->state->records);
     share->cached_rows++;
     return cache_handler->write_row(buf);
   }
+
   return parent::write_row(buf);
 }
 
-
 void ha_mcs_cache::start_bulk_insert(ha_rows rows, uint flags)
 {
-  if (get_cache_inserts(current_thd) && !isSysCatTable)
+  if (current_thd->slave_thread && !get_replication_slave(current_thd))
+    return;
+
+  if (isCacheEnabled())
   {
     if (insert_command)
     {
@@ -1818,10 +1771,12 @@ void ha_mcs_cache::start_bulk_insert(ha_rows rows, uint flags)
   }
 }
 
-
 int ha_mcs_cache::end_bulk_insert()
 {
-  if (get_cache_inserts(current_thd) && !isSysCatTable && insert_command)
+  if (current_thd->slave_thread && !get_replication_slave(current_thd))
+    return (0);
+
+  if (isCacheEnabled() && insert_command)
     return cache_handler->end_bulk_insert();
   return parent::end_bulk_insert();
 }
@@ -1830,13 +1785,10 @@ int ha_mcs_cache::end_bulk_insert()
  ha_mcs_cache Plugin code
 ******************************************************************************/
 
-static handler *ha_mcs_cache_create_handler(handlerton *hton,
-                                            TABLE_SHARE *table,
-                                            MEM_ROOT *mem_root)
+static handler* ha_mcs_cache_create_handler(handlerton* hton, TABLE_SHARE* table, MEM_ROOT* mem_root)
 {
   return new (mem_root) ha_mcs_cache(hton, table, mem_root);
 }
-
 
 /******************************************************************************
  ha_mcs Plugin code
@@ -1844,168 +1796,114 @@ static handler *ha_mcs_cache_create_handler(handlerton *hton,
 
 static int columnstore_init_func(void* p)
 {
-    DBUG_ENTER("columnstore_init_func");
+  DBUG_ENTER("columnstore_init_func");
 
-    struct tm tm;
-    time_t t;
-    time(&t);
-    localtime_r(&t, &tm);
-    fprintf(stderr, "%02d%02d%02d %2d:%02d:%02d ",
-            tm.tm_year % 100, tm.tm_mon + 1, tm.tm_mday,
-            tm.tm_hour, tm.tm_min, tm.tm_sec);
+  struct tm tm;
+  time_t t;
+  time(&t);
+  localtime_r(&t, &tm);
+  fprintf(stderr, "%02d%02d%02d %2d:%02d:%02d ", tm.tm_year % 100, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour,
+          tm.tm_min, tm.tm_sec);
 
-    fprintf(stderr, "Columnstore: Started; Version: %s-%s\n", columnstore_version.c_str(), columnstore_release.c_str());
+  fprintf(stderr, "Columnstore: Started; Version: %s-%s\n", columnstore_version.c_str(),
+          columnstore_release.c_str());
 
-    strncpy(cs_version, columnstore_version.c_str(), sizeof(cs_version));
-    cs_version[sizeof(cs_version) - 1] = 0;
+  strncpy(cs_version, columnstore_version.c_str(), sizeof(cs_version));
+  cs_version[sizeof(cs_version) - 1] = 0;
 
-    strncpy(cs_commit_hash, columnstore_commit_hash.c_str(), sizeof(cs_commit_hash));
-    cs_commit_hash[sizeof(cs_commit_hash) - 1] = 0;
+  strncpy(cs_commit_hash, columnstore_commit_hash.c_str(), sizeof(cs_commit_hash));
+  cs_commit_hash[sizeof(cs_commit_hash) - 1] = 0;
 
-    mcs_hton = (handlerton*)p;
+  mcs_hton = (handlerton*)p;
 
 #ifndef _MSC_VER
-    (void) pthread_mutex_init(&mcs_mutex, MY_MUTEX_INIT_FAST);
+  (void)pthread_mutex_init(&mcs_mutex, MY_MUTEX_INIT_FAST);
 #endif
-    (void) my_hash_init(PSI_NOT_INSTRUMENTED, &mcs_open_tables, system_charset_info, 32, 0, 0,
-                        (my_hash_get_key) mcs_get_key, 0, 0);
+  (void)my_hash_init(PSI_NOT_INSTRUMENTED, &mcs_open_tables, system_charset_info, 32, 0, 0,
+                     (my_hash_get_key)mcs_get_key, 0, 0);
 
-    mcs_hton->create = ha_mcs_cache_create_handler;
-    mcs_hton->panic = 0;
-    mcs_hton->flags = HTON_CAN_RECREATE | HTON_NO_PARTITION;
-//  mcs_hton->discover_table = mcs_discover;
-//  mcs_hton->discover_table_existence = mcs_discover_existence;
-    mcs_hton->commit = mcs_commit;
-    mcs_hton->rollback = mcs_rollback;
-    mcs_hton->close_connection = mcs_close_connection;
-    mcs_hton->create_group_by = create_columnstore_group_by_handler;
-    mcs_hton->create_derived = create_columnstore_derived_handler;
-    mcs_hton->create_select = create_columnstore_select_handler;
-    mcs_hton->db_type = DB_TYPE_AUTOASSIGN;
+  mcs_hton->create = ha_mcs_cache_create_handler;
+  mcs_hton->panic = 0;
+  mcs_hton->flags = HTON_CAN_RECREATE | HTON_NO_PARTITION;
+  //  mcs_hton->discover_table = mcs_discover;
+  //  mcs_hton->discover_table_existence = mcs_discover_existence;
+  mcs_hton->commit = mcs_commit;
+  mcs_hton->rollback = mcs_rollback;
+  mcs_hton->close_connection = mcs_close_connection;
+  mcs_hton->create_group_by = create_columnstore_group_by_handler;
+  mcs_hton->create_derived = create_columnstore_derived_handler;
+  mcs_hton->create_select = create_columnstore_select_handler;
+  mcs_hton->db_type = DB_TYPE_AUTOASSIGN;
 
 #ifdef HAVE_PSI_INTERFACE
-    uint count = sizeof(all_mutexes)/sizeof(all_mutexes[0]);
-    mysql_mutex_register("ha_mcs_cache", all_mutexes, count);
+  uint count = sizeof(all_mutexes) / sizeof(all_mutexes[0]);
+  mysql_mutex_register("ha_mcs_cache", all_mutexes, count);
 #else
-    (void)key_LOCK_cache_share;
+  (void)key_LOCK_cache_share;
 #endif
-    mysql_mutex_init(key_LOCK_cache_share, &LOCK_cache_share, MY_MUTEX_INIT_FAST);
+  mysql_mutex_init(key_LOCK_cache_share, &LOCK_cache_share, MY_MUTEX_INIT_FAST);
 
-    DBUG_RETURN(0);
+  DBUG_RETURN(0);
 }
 
 static int columnstore_done_func(void* p)
 {
-    DBUG_ENTER("columnstore_done_func");
+  DBUG_ENTER("columnstore_done_func");
 
-    config::Config::deleteInstanceMap();
-    my_hash_free(&mcs_open_tables);
+  config::Config::deleteInstanceMap();
+  my_hash_free(&mcs_open_tables);
 #ifndef _MSC_VER
-    pthread_mutex_destroy(&mcs_mutex);
+  pthread_mutex_destroy(&mcs_mutex);
 #endif
 
-    if (plugin_maria)
-    {
-        plugin_unlock(0, plugin_maria);
-        plugin_maria = NULL;
-    }
+  if (plugin_maria)
+  {
+    plugin_unlock(0, plugin_maria);
+    plugin_maria = NULL;
+  }
 
-    mysql_mutex_destroy(&LOCK_cache_share);
+  mysql_mutex_destroy(&LOCK_cache_share);
 
-    DBUG_RETURN(0);
+  DBUG_RETURN(0);
 }
 
-struct st_mysql_storage_engine ha_mcs_cache_storage_engine=
-{ MYSQL_HANDLERTON_INTERFACE_VERSION };
+struct st_mysql_storage_engine ha_mcs_cache_storage_engine = {MYSQL_HANDLERTON_INTERFACE_VERSION};
 
-struct st_mysql_storage_engine columnstore_storage_engine =
-{ MYSQL_HANDLERTON_INTERFACE_VERSION };
+struct st_mysql_storage_engine columnstore_storage_engine = {MYSQL_HANDLERTON_INTERFACE_VERSION};
 
-static struct st_mysql_information_schema is_columnstore_plugin_version =
-{ MYSQL_INFORMATION_SCHEMA_INTERFACE_VERSION };
+static struct st_mysql_information_schema is_columnstore_plugin_version = {
+    MYSQL_INFORMATION_SCHEMA_INTERFACE_VERSION};
 
-
-maria_declare_plugin(columnstore)
-{
-  MYSQL_STORAGE_ENGINE_PLUGIN,
-  &columnstore_storage_engine,
-  "Columnstore",
-  "MariaDB Corporation",
-  "ColumnStore storage engine",
-  PLUGIN_LICENSE_GPL,
-  columnstore_init_func,
-  columnstore_done_func,
-  MCSVERSIONHEX,
-  mcs_status_variables,          /* status variables */
-  mcs_system_variables,          /* system variables */
-  PLUGIN_COLUMNSTORE_VERSION,    /* string version */
-  COLUMNSTORE_MATURITY           /* maturity */
+maria_declare_plugin(columnstore){
+    MYSQL_STORAGE_ENGINE_PLUGIN, &columnstore_storage_engine,  "Columnstore",
+    "MariaDB Corporation",       "ColumnStore storage engine", PLUGIN_LICENSE_GPL,
+    columnstore_init_func,       columnstore_done_func,        MCSVERSIONHEX,
+    mcs_status_variables,       /* status variables */
+    mcs_system_variables,       /* system variables */
+    PLUGIN_COLUMNSTORE_VERSION, /* string version */
+    COLUMNSTORE_MATURITY        /* maturity */
 },
-{
-    MYSQL_INFORMATION_SCHEMA_PLUGIN,
-    &is_columnstore_plugin_version,
-    "COLUMNSTORE_COLUMNS",
-    "MariaDB Corporation",
-    "An information schema plugin to list ColumnStore columns",
-    PLUGIN_LICENSE_GPL,
-    is_columnstore_columns_plugin_init,
-    //is_columnstore_tables_plugin_deinit,
-    NULL,
-    MCSVERSIONHEX,
-    NULL,
-    NULL,
-    PLUGIN_COLUMNSTORE_VERSION,
-    COLUMNSTORE_MATURITY
-},
-{
-    MYSQL_INFORMATION_SCHEMA_PLUGIN,
-    &is_columnstore_plugin_version,
-    "COLUMNSTORE_TABLES",
-    "MariaDB Corporation",
-    "An information schema plugin to list ColumnStore tables",
-    PLUGIN_LICENSE_GPL,
-    is_columnstore_tables_plugin_init,
-    //is_columnstore_tables_plugin_deinit,
-    NULL,
-    MCSVERSIONHEX,
-    NULL,
-    NULL,
-    PLUGIN_COLUMNSTORE_VERSION,
-    COLUMNSTORE_MATURITY
-},
-{
-    MYSQL_INFORMATION_SCHEMA_PLUGIN,
-    &is_columnstore_plugin_version,
-    "COLUMNSTORE_FILES",
-    "MariaDB Corporation",
-    "An information schema plugin to list ColumnStore files",
-    PLUGIN_LICENSE_GPL,
-    is_columnstore_files_plugin_init,
-    //is_columnstore_files_plugin_deinit,
-    NULL,
-    MCSVERSIONHEX,
-    NULL,
-    NULL,
-    PLUGIN_COLUMNSTORE_VERSION,
-    COLUMNSTORE_MATURITY
-},
-{
-    MYSQL_INFORMATION_SCHEMA_PLUGIN,
-    &is_columnstore_plugin_version,
-    "COLUMNSTORE_EXTENTS",
-    "MariaDB Corporation",
-    "An information schema plugin to list ColumnStore extents",
-    PLUGIN_LICENSE_GPL,
-    is_columnstore_extents_plugin_init,
-    //is_columnstore_extents_plugin_deinit,
-    NULL,
-    MCSVERSIONHEX,
-    NULL,
-    NULL,
-    PLUGIN_COLUMNSTORE_VERSION,
-    COLUMNSTORE_MATURITY
-}
-maria_declare_plugin_end;
+    {MYSQL_INFORMATION_SCHEMA_PLUGIN, &is_columnstore_plugin_version, "COLUMNSTORE_COLUMNS",
+     "MariaDB Corporation", "An information schema plugin to list ColumnStore columns", PLUGIN_LICENSE_GPL,
+     is_columnstore_columns_plugin_init,
+     // is_columnstore_tables_plugin_deinit,
+     NULL, MCSVERSIONHEX, NULL, NULL, PLUGIN_COLUMNSTORE_VERSION, COLUMNSTORE_MATURITY},
+    {MYSQL_INFORMATION_SCHEMA_PLUGIN, &is_columnstore_plugin_version, "COLUMNSTORE_TABLES",
+     "MariaDB Corporation", "An information schema plugin to list ColumnStore tables", PLUGIN_LICENSE_GPL,
+     is_columnstore_tables_plugin_init,
+     // is_columnstore_tables_plugin_deinit,
+     NULL, MCSVERSIONHEX, NULL, NULL, PLUGIN_COLUMNSTORE_VERSION, COLUMNSTORE_MATURITY},
+    {MYSQL_INFORMATION_SCHEMA_PLUGIN, &is_columnstore_plugin_version, "COLUMNSTORE_FILES",
+     "MariaDB Corporation", "An information schema plugin to list ColumnStore files", PLUGIN_LICENSE_GPL,
+     is_columnstore_files_plugin_init,
+     // is_columnstore_files_plugin_deinit,
+     NULL, MCSVERSIONHEX, NULL, NULL, PLUGIN_COLUMNSTORE_VERSION, COLUMNSTORE_MATURITY},
+    {MYSQL_INFORMATION_SCHEMA_PLUGIN, &is_columnstore_plugin_version, "COLUMNSTORE_EXTENTS",
+     "MariaDB Corporation", "An information schema plugin to list ColumnStore extents", PLUGIN_LICENSE_GPL,
+     is_columnstore_extents_plugin_init,
+     // is_columnstore_extents_plugin_deinit,
+     NULL, MCSVERSIONHEX, NULL, NULL, PLUGIN_COLUMNSTORE_VERSION,
+     COLUMNSTORE_MATURITY} maria_declare_plugin_end;
 
 /******************************************************************************
 Implementation of write cache
@@ -2015,7 +1913,6 @@ ha_rows ha_mcs_cache::num_rows_cached()
 {
   return cache_handler->file->state->records;
 }
-
 
 /* Free write locks if this was not an insert */
 
@@ -2031,9 +1928,8 @@ void ha_mcs_cache::free_locks()
   /* We don't need to lock cache_handler anymore as it's already flushed */
   cache_handler->external_lock(table->in_use, F_UNLCK);
   thr_unlock(&cache_handler->file->lock, 0);
-  cache_locked= false;
+  cache_locked = false;
 }
-
 
 /**
    Copy data from cache to ColumnStore
@@ -2045,35 +1941,35 @@ void ha_mcs_cache::free_locks()
 int ha_mcs_cache::flush_insert_cache()
 {
   int error, error2;
-  ha_maria *from= cache_handler;
-  uchar *record= table->record[0];
-  ulonglong copied_rows= 0;
+  ha_maria* from = cache_handler;
+  uchar* record = table->record[0];
+  ulonglong copied_rows = 0;
   DBUG_ENTER("flush_insert_cache");
 
   DBUG_ASSERT(from->file->state->records == share->cached_rows);
 
   parent::start_bulk_insert_from_cache(from->file->state->records, 0);
   from->rnd_init(1);
-  while (!(error= from->rnd_next(record)))
+  while (!(error = from->rnd_next(record)))
   {
     copied_rows++;
-    if ((error= parent::write_row(record)))
+    if ((error = parent::write_row(record)))
       goto end;
     rows_changed++;
   }
   if (error == HA_ERR_END_OF_FILE)
-    error= 0;
+    error = 0;
   DBUG_ASSERT(copied_rows == share->cached_rows);
 
 end:
   from->rnd_end();
-  if ((error2= parent::end_bulk_insert()) && !error)
-    error= error2;
+  if ((error2 = parent::end_bulk_insert()) && !error)
+    error = error2;
 
   if (!error)
   {
     if (parent::ht->commit)
-      error= parent::ht->commit(parent::ht, table->in_use, 1);
+      error = parent::ht->commit(parent::ht, table->in_use, 1);
   }
   else
   {
@@ -2097,7 +1993,7 @@ end:
       */
       mysql_mutex_unlock(&from->file->s->lock.mutex);
       from->delete_all_rows();
-      share->cached_rows= 0;
+      share->cached_rows = 0;
       mysql_mutex_lock(&from->file->s->lock.mutex);
     }
   }

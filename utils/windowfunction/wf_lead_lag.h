@@ -17,49 +17,39 @@
 
 //  $Id: wf_lead_lag.h 3868 2013-06-06 22:13:05Z xlou $
 
-
-#ifndef UTILS_WF_LEAD_LAG_H
-#define UTILS_WF_LEAD_LAG_H
+#pragma once
 
 #include "windowfunctiontype.h"
 
-
 namespace windowfunction
 {
-
-
-template<typename T>
+template <typename T>
 class WF_lead_lag : public WindowFunctionType
 {
-public:
-    WF_lead_lag(int id, const std::string& name) : WindowFunctionType(id, name)
-    {
-        resetData();
-    }
+ public:
+  WF_lead_lag(int id, const std::string& name) : WindowFunctionType(id, name)
+  {
+    resetData();
+  }
 
-    // pure virtual in base
-    void operator()(int64_t b, int64_t e, int64_t c);
-    WindowFunctionType* clone() const;
-    void resetData();
-    void parseParms(const std::vector<execplan::SRCP>&);
+  // pure virtual in base
+  void operator()(int64_t b, int64_t e, int64_t c);
+  WindowFunctionType* clone() const;
+  void resetData();
+  void parseParms(const std::vector<execplan::SRCP>&);
 
-    static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int, WindowFunctionColumn*);
+  static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int, WindowFunctionColumn*);
 
-protected:
-    T           fValue;
-    T           fDefault;
-    int64_t     fOffset;
-    int64_t     fLead;
-    bool        fOffsetNull;
-    bool        fDefNull;
-    bool        fRespectNulls;  // respect null | ignore null
-
+ protected:
+  T fValue;
+  T fDefault;
+  int64_t fOffset;
+  int64_t fLead;
+  bool fOffsetNull;
+  bool fDefNull;
+  bool fRespectNulls;  // respect null | ignore null
 };
 
-
-} // namespace
-
-#endif  // UTILS_WF_LEAD_LAG_H
+}  // namespace windowfunction
 
 // vim:ts=4 sw=4:
-

@@ -21,8 +21,7 @@
 
 /** @file */
 
-#ifndef PRIMPROC_LOGGER_H_
-#define PRIMPROC_LOGGER_H_
+#pragma once
 
 #include <map>
 #include <boost/thread.hpp>
@@ -32,38 +31,32 @@
 
 namespace primitiveprocessor
 {
-
 /** @brief message log wrapper class */
 class Logger
 {
-public:
-    Logger();
+ public:
+  Logger();
 
-    void logMessage(const logging::Message::MessageID mid,
-                    const logging::Message::Args& args,
-                    bool  critical = false);
+  void logMessage(const logging::Message::MessageID mid, const logging::Message::Args& args,
+                  bool critical = false);
 
-    void logMessage(const std::string& msg, bool critical = true, logging::Message::MessageID mid = 0 )
-    {
-        logging::Message::Args args;
-        args.add(msg);
-        logMessage(mid, args, true);
-    }
+  void logMessage(const std::string& msg, bool critical = true, logging::Message::MessageID mid = 0)
+  {
+    logging::Message::Args args;
+    args.add(msg);
+    logMessage(mid, args, true);
+  }
 
-private:
-    // defaults okay
-    //Logger(const Logger& rhs);
-    //Logger& operator=(const Logger& rhs);
+ private:
+  // defaults okay
+  // Logger(const Logger& rhs);
+  // Logger& operator=(const Logger& rhs);
 
-    typedef std::map<logging::Message::MessageID, logging::Message> MsgMap;
+  typedef std::map<logging::Message::MessageID, logging::Message> MsgMap;
 
-    MsgMap fMsgMap;
-    boost::mutex fLogLock;
-    logging::MessageLog fMl1;
+  MsgMap fMsgMap;
+  boost::mutex fLogLock;
+  logging::MessageLog fMl1;
 };
 
-
-}
-
-#endif
-
+}  // namespace primitiveprocessor

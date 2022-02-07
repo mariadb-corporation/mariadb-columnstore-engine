@@ -1,0 +1,86 @@
+--source ../include/have_columnstore.inc
+--source ../include/func_caltrace_create_if_needed.inc
+--disable_warnings
+DROP DATABASE IF EXISTS mcs_ctype_extent_koi8u;
+--enable_warnings
+CREATE DATABASE mcs_ctype_extent_koi8u;
+USE mcs_ctype_extent_koi8u;
+SET default_storage_engine=ColumnStore;
+--source ../include/ctype_extent_proc_create.inc
+
+--echo #
+--echo # MCOL-4871 Extent elimination for short CHAR does not work well
+--echo #
+
+SET NAMES utf8;
+
+DELIMITER $$;
+CREATE PROCEDURE test(collation VARCHAR(64))
+BEGIN
+  DECLARE stmt TEXT;
+  DECLARE CONTINUE HANDLER FOR 9999
+  BEGIN
+    GET DIAGNOSTICS CONDITION 1 @errmsg = MESSAGE_TEXT;
+    SET @errmsg=caltrace_extract_block_diagnostics(@errmsg);
+    RESIGNAL SET MESSAGE_TEXT=@errmsg;
+  END;
+
+  DO calsettrace(1);
+
+  SET stmt='CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET koi8u COLLATE koi8u_general_ci)';
+  SET stmt=REPLACE(stmt,'koi8u_general_ci', collation);
+  SELECT stmt AS ``;
+  EXECUTE IMMEDIATE stmt;
+  INSERT INTO t1 VALUES ('Ъ─') /*_koi8u x'FF80'*/;
+  SELECT c1, HEX(c1) FROM t1;
+  CALL show_extent_min_max(database(),'t1','c1');
+  SELECT * FROM t1 WHERE c1='Ъ─';
+  SHOW WARNINGS;
+  SELECT * FROM t1 WHERE c1='Ъя' /*_koi8u x'FFF1'*/;
+  SHOW WARNINGS;
+  DROP TABLE t1;
+
+  SET stmt='CREATE TABLE t1 (c1 CHAR(4) CHARACTER SET koi8u COLLATE koi8u_general_ci)';
+  SET stmt=REPLACE(stmt,'koi8u_general_ci', collation);
+  SELECT stmt AS ``;
+  EXECUTE IMMEDIATE stmt;
+  INSERT INTO t1 VALUES ('ЪЪЪ─') /*_koi8u x'FFFFFF80'*/;
+  SELECT c1, HEX(c1) FROM t1;
+  CALL show_extent_min_max(database(),'t1','c1');
+  SELECT * FROM t1 WHERE c1='ЪЪЪ─';
+  SHOW WARNINGS;
+  SELECT * FROM t1 WHERE c1='ЪЪЪя' /*_koi8u x'FFFFFFF1'*/;
+  SHOW WARNINGS;
+  DROP TABLE t1;
+
+  SET stmt='CREATE TABLE t1 (c1 CHAR(8) CHARACTER SET koi8u COLLATE koi8u_general_ci)';
+  SET stmt=REPLACE(stmt,'koi8u_general_ci', collation);
+  SELECT stmt AS ``;
+  EXECUTE IMMEDIATE stmt;
+  INSERT INTO t1 VALUES ('ЪЪЪЪЪЪЪ─') /*_koi8u x'FFFFFFFFFFFFFF80'*/;
+  SELECT c1, HEX(c1) FROM t1;
+  CALL show_extent_min_max(database(),'t1','c1');
+  SELECT * FROM t1 WHERE c1='ЪЪЪЪЪЪЪ─';
+  SHOW WARNINGS;
+  SELECT * FROM t1 WHERE c1='ЪЪЪЪЪЪЪя' /*_koi8u x'FFFFFFFFFFFFFFF1'*/;
+  SHOW WARNINGS;
+  DROP TABLE t1;
+
+  DO calsettrace(0);
+
+END;
+$$
+DELIMITER ;$$
+
+CALL test('koi8u_general_ci');
+CALL test('koi8u_general_nopad_ci');
+CALL test('koi8u_bin');
+CALL test('koi8u_nopad_bin');
+
+DROP PROCEDURE test;
+
+
+--source ../include/ctype_extent_proc_drop.inc
+--source ../include/func_caltrace_drop_if_needed.inc
+DROP DATABASE mcs_ctype_extent_koi8u;
+USE test;

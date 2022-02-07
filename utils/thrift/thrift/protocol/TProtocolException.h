@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_PROTOCOL_TPROTOCOLEXCEPTION_H_
-#define _THRIFT_PROTOCOL_TPROTOCOLEXCEPTION_H_ 1
+#pragma once
 
 #include <string>
 
@@ -129,4 +128,3 @@ protected:
 }
 } // apache::thrift::protocol
 
-#endif // #ifndef _THRIFT_PROTOCOL_TPROTOCOLEXCEPTION_H_

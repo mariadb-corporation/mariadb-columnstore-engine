@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_repeat.cpp 2477 2011-04-01 16:07:35Z rdempsey $
-*
-*
-****************************************************************************/
+ * $Id: func_repeat.cpp 2477 2011-04-01 16:07:35Z rdempsey $
+ *
+ *
+ ****************************************************************************/
 
 #include <cstdlib>
 #include <string>
@@ -38,60 +38,56 @@ using namespace joblist;
 
 namespace funcexp
 {
-
-CalpontSystemCatalog::ColType Func_repeat::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
+CalpontSystemCatalog::ColType Func_repeat::operationType(FunctionParm& fp,
+                                                         CalpontSystemCatalog::ColType& resultType)
 {
-    // operation type is not used by this functor
-    //return fp[0]->data()->resultType();
-    return resultType;
+  // operation type is not used by this functor
+  // return fp[0]->data()->resultType();
+  return resultType;
 }
 
-std::string Func_repeat::getStrVal(rowgroup::Row& row,
-                                   FunctionParm& fp,
-                                   bool& isNull,
+std::string Func_repeat::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                    execplan::CalpontSystemCatalog::ColType& type)
 {
-	string str;
+  string str;
 
-    stringValue(fp[0], row, isNull, str);
+  stringValue(fp[0], row, isNull, str);
 
-    if (str.empty() || str == "")
-        return "";
+  if (str.empty() || str == "")
+    return "";
 
-    int count = fp[1]->data()->getIntVal(row, isNull);
+  int count = fp[1]->data()->getIntVal(row, isNull);
 
-    if (isNull)
-        return "";
+  if (isNull)
+    return "";
 
-    if ( count < 1  )
-        return "";
+  if (count < 1)
+    return "";
 
-    //calculate size of buffer to allocate
+  // calculate size of buffer to allocate
 
-    int size = str.length() * count;
+  int size = str.length() * count;
 
-    //allocate memory
-    char* result = new char[size + 1];
+  // allocate memory
+  char* result = new char[size + 1];
 
-    if (result == NULL)
-    {
-        return "";
-    }
+  if (result == NULL)
+  {
+    return "";
+  }
 
-    memset( (char*) result, 0, size);
+  memset((char*)result, 0, size);
 
-    for ( int i = 0 ; i < count ; i ++ )
-    {
-        if (strcat(result, str.c_str()) == NULL) //questionable check
-            return "";
-    }
+  for (int i = 0; i < count; i++)
+  {
+    if (strcat(result, str.c_str()) == NULL)  // questionable check
+      return "";
+  }
 
-    std::string res(result);
-    delete [] result;
-    return res;
+  std::string res(result);
+  delete[] result;
+  return res;
 }
 
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:
-

@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_period_diff.cpp 2477 2011-04-01 16:07:35Z rdempsey $
-*
-*
-****************************************************************************/
+ * $Id: func_period_diff.cpp 2477 2011-04-01 16:07:35Z rdempsey $
+ *
+ *
+ ****************************************************************************/
 
 #include <cstdlib>
 #include <string>
@@ -40,85 +40,77 @@ namespace funcexp
 
 inline uint64_t convert_period_to_month(uint64_t period)
 {
-    uint64_t a, b;
+  uint64_t a, b;
 
-    if (period == 0 || period > 999912)
-        return 0L;
+  if (period == 0 || period > 999912)
+    return 0L;
 
-    if ((a = period / 100) < YY_PART_YEAR)
-        a += 2000;
-    else if (a < 100)
-        a += 1900;
+  if ((a = period / 100) < YY_PART_YEAR)
+    a += 2000;
+  else if (a < 100)
+    a += 1900;
 
-    b = period % 100;
-    return a * 12 + b - 1;
+  b = period % 100;
+  return a * 12 + b - 1;
 }
 
-
-int64_t getArgSInt64Val(rowgroup::Row& row, TreeNode *exp, bool& isNull)
+int64_t getArgSInt64Val(rowgroup::Row& row, TreeNode* exp, bool& isNull)
 {
-    switch (exp->resultType().colDataType)
+  switch (exp->resultType().colDataType)
+  {
+    case execplan::CalpontSystemCatalog::BIGINT:
+    case execplan::CalpontSystemCatalog::INT:
+    case execplan::CalpontSystemCatalog::MEDINT:
+    case execplan::CalpontSystemCatalog::TINYINT:
+    case execplan::CalpontSystemCatalog::SMALLINT:
+    case execplan::CalpontSystemCatalog::DATE:
+    case execplan::CalpontSystemCatalog::DATETIME:
+    case execplan::CalpontSystemCatalog::TIMESTAMP: return exp->getIntVal(row, isNull);
+
+    case execplan::CalpontSystemCatalog::DECIMAL:
+    case execplan::CalpontSystemCatalog::UDECIMAL:
     {
-        case execplan::CalpontSystemCatalog::BIGINT:
-        case execplan::CalpontSystemCatalog::INT:
-        case execplan::CalpontSystemCatalog::MEDINT:
-        case execplan::CalpontSystemCatalog::TINYINT:
-        case execplan::CalpontSystemCatalog::SMALLINT:
-        case execplan::CalpontSystemCatalog::DATE:
-        case execplan::CalpontSystemCatalog::DATETIME:
-        case execplan::CalpontSystemCatalog::TIMESTAMP:
-            return exp->getIntVal(row, isNull);
-
-        case execplan::CalpontSystemCatalog::DECIMAL:
-        case execplan::CalpontSystemCatalog::UDECIMAL:
-        {
-            IDB_Decimal d = exp->getDecimalVal(row, isNull);
-            return d.toSInt64Round();
-        }
-
-        case execplan::CalpontSystemCatalog::VARCHAR:
-        case execplan::CalpontSystemCatalog::CHAR:
-        case execplan::CalpontSystemCatalog::TEXT:
-            return atoi(exp->getStrVal(row, isNull).c_str());
-
-        case execplan::CalpontSystemCatalog::DOUBLE:
-        case execplan::CalpontSystemCatalog::FLOAT:
-        {
-            datatypes::TDouble d(exp->getDoubleVal(row, isNull));
-            return d.toMCSSInt64Round();
-        }
-
-        default:
-            isNull = true;
+      IDB_Decimal d = exp->getDecimalVal(row, isNull);
+      return d.toSInt64Round();
     }
-    return 0;
+
+    case execplan::CalpontSystemCatalog::VARCHAR:
+    case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::TEXT: return atoi(exp->getStrVal(row, isNull).c_str());
+
+    case execplan::CalpontSystemCatalog::DOUBLE:
+    case execplan::CalpontSystemCatalog::FLOAT:
+    {
+      datatypes::TDouble d(exp->getDoubleVal(row, isNull));
+      return d.toMCSSInt64Round();
+    }
+
+    default: isNull = true;
+  }
+  return 0;
 }
 
-
-CalpontSystemCatalog::ColType Func_period_diff::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
+CalpontSystemCatalog::ColType Func_period_diff::operationType(FunctionParm& fp,
+                                                              CalpontSystemCatalog::ColType& resultType)
 {
-    return resultType;
+  return resultType;
 }
 
-
-int64_t Func_period_diff::getIntVal(rowgroup::Row& row,
-                                    FunctionParm& parm,
-                                    bool& isNull,
+int64_t Func_period_diff::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                                     CalpontSystemCatalog::ColType& op_ct)
 {
-    uint64_t period1 = (uint64_t) getArgSInt64Val(row, parm[0]->data(), isNull);
+  uint64_t period1 = (uint64_t)getArgSInt64Val(row, parm[0]->data(), isNull);
 
-    if (isNull)
-        return 0;
+  if (isNull)
+    return 0;
 
-    uint64_t period2 = (uint64_t) getArgSInt64Val(row, parm[1]->data(), isNull);
+  uint64_t period2 = (uint64_t)getArgSInt64Val(row, parm[1]->data(), isNull);
 
-    if (isNull)
-        return 0;
+  if (isNull)
+    return 0;
 
-    return convert_period_to_month(period1) - convert_period_to_month(period2);
+  return convert_period_to_month(period1) - convert_period_to_month(period2);
 }
 
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:

@@ -16,11 +16,10 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id: we_ddlcommandproc.h 3043 2011-08-29 22:03:03Z chao $
-*
-*******************************************************************************/
-#ifndef WE_DDLCOMMANDPROC_H__
-#define WE_DDLCOMMANDPROC_H__
+ * $Id: we_ddlcommandproc.h 3043 2011-08-29 22:03:03Z chao $
+ *
+ *******************************************************************************/
+#pragma once
 
 #include <unistd.h>
 #include "bytestream.h"
@@ -39,81 +38,88 @@
 
 namespace WriteEngine
 {
-
 class WE_DDLCommandProc
 {
-public:
-    enum LogFileType { DROPTABLE_LOG, DROPPART_LOG, TRUNCATE_LOG};
-    EXPORT WE_DDLCommandProc();
-    EXPORT WE_DDLCommandProc(const WE_DDLCommandProc& rhs);
-    EXPORT ~WE_DDLCommandProc();
-    /** @brief Update SYSCOLUMN nextval column for the columnoid with nextVal.
-    *
-    * Update SYSCOLUMN nextval column for the columnoid with nexValue.
-    * @param columnOid (in) The column OID
-    * @param nextVal (in) The partition number
-    * @return 0 on success, non-0 on error.
-    */
-    EXPORT uint8_t updateSyscolumnNextval(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t writeSystable(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t writeSyscolumn(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t writeCreateSyscolumn(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t createtablefiles(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t commitVersion(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t rollbackBlocks(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t rollbackVersion(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t deleteSyscolumn(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t deleteSyscolumnRow(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t deleteSystable(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t deleteSystables(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t dropFiles(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t updateSyscolumnAuto(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t updateSyscolumnNextvalCol(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t updateSyscolumnTablename(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t updateSystableAuto(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t updateSystableTablename(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t updateSystablesTablename(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t updateSyscolumnColumnposCol(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t fillNewColumn(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t updateSyscolumnRenameColumn(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t updateSyscolumnSetDefault(messageqcpp::ByteStream& bs, std::string& err);
-    //	EXPORT uint8_t updateSyscolumn(messageqcpp::ByteStream& bs, std::string & err);
-    EXPORT uint8_t writeTruncateLog(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t writeDropPartitionLog(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t writeDropTableLog(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t deleteDDLLog(messageqcpp::ByteStream& bs, std::string& err);
-    EXPORT uint8_t fetchDDLLog(messageqcpp::ByteStream& bs, std::string& err);
-    void purgeFDCache();
-    /** @brief drop a set of partitions
-     *
-     * Do many VSS lookups under one lock.
-     * @param bs (in) bytestream carry command info
-     * @param err (out) error message when error occurs
-     * @return 0 on success, otherwise error.
-     */
-    EXPORT uint8_t dropPartitions(messageqcpp::ByteStream& bs, std::string& err);
-    inline void convertRidToColumn (uint64_t& rid, uint16_t& dbRoot, uint32_t& partition, uint16_t& segment, const int32_t oid )
-    {
-        fDbrm.getSysCatDBRoot(oid, dbRoot);
-        partition = rid / ( filesPerColumnPartition * extentsPerSegmentFile * extentRows );
+ public:
+  enum LogFileType
+  {
+    DROPTABLE_LOG,
+    DROPPART_LOG,
+    TRUNCATE_LOG
+  };
+  EXPORT WE_DDLCommandProc();
+  EXPORT WE_DDLCommandProc(const WE_DDLCommandProc& rhs);
+  EXPORT ~WE_DDLCommandProc();
+  /** @brief Update SYSCOLUMN nextval column for the columnoid with nextVal.
+   *
+   * Update SYSCOLUMN nextval column for the columnoid with nexValue.
+   * @param columnOid (in) The column OID
+   * @param nextVal (in) The partition number
+   * @return 0 on success, non-0 on error.
+   */
+  EXPORT uint8_t updateSyscolumnNextval(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t writeSystable(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t writeSyscolumn(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t writeCreateSyscolumn(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t createtablefiles(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t commitVersion(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t rollbackBlocks(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t rollbackVersion(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t deleteSyscolumn(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t deleteSyscolumnRow(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t deleteSystable(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t deleteSystables(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t dropFiles(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t updateSyscolumnAuto(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t updateSyscolumnNextvalCol(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t updateSyscolumnTablename(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t updateSystableAuto(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t updateSystableTablename(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t updateSystablesTablename(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t updateSyscolumnColumnposCol(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t fillNewColumn(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t updateSyscolumnRenameColumn(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t updateSyscolumnSetDefault(messageqcpp::ByteStream& bs, std::string& err);
+  //	EXPORT uint8_t updateSyscolumn(messageqcpp::ByteStream& bs, std::string & err);
+  EXPORT uint8_t writeTruncateLog(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t writeDropPartitionLog(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t writeDropTableLog(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t deleteDDLLog(messageqcpp::ByteStream& bs, std::string& err);
+  EXPORT uint8_t fetchDDLLog(messageqcpp::ByteStream& bs, std::string& err);
+  void purgeFDCache();
+  /** @brief drop a set of partitions
+   *
+   * Do many VSS lookups under one lock.
+   * @param bs (in) bytestream carry command info
+   * @param err (out) error message when error occurs
+   * @return 0 on success, otherwise error.
+   */
+  EXPORT uint8_t dropPartitions(messageqcpp::ByteStream& bs, std::string& err);
+  inline void convertRidToColumn(uint64_t& rid, uint16_t& dbRoot, uint32_t& partition, uint16_t& segment,
+                                 const int32_t oid)
+  {
+    fDbrm.getSysCatDBRoot(oid, dbRoot);
+    partition = rid / (filesPerColumnPartition * extentsPerSegmentFile * extentRows);
 
-        segment = ( ( ( rid % ( filesPerColumnPartition * extentsPerSegmentFile * extentRows )) / extentRows ) ) % filesPerColumnPartition;
+    segment = (((rid % (filesPerColumnPartition * extentsPerSegmentFile * extentRows)) / extentRows)) %
+              filesPerColumnPartition;
 
-        //Calculate the relative rid for this segment file
-        uint64_t relRidInPartition = rid - ((uint64_t)partition * (uint64_t)filesPerColumnPartition * (uint64_t)extentsPerSegmentFile * (uint64_t)extentRows);
-        assert ( relRidInPartition <= (uint64_t)filesPerColumnPartition * (uint64_t)extentsPerSegmentFile * (uint64_t)extentRows );
-        uint32_t numExtentsInThisPart = relRidInPartition / extentRows;
-        unsigned numExtentsInThisSegPart = numExtentsInThisPart / filesPerColumnPartition;
-        uint64_t relRidInThisExtent = relRidInPartition - numExtentsInThisPart * extentRows;
-        rid = relRidInThisExtent +  numExtentsInThisSegPart * extentRows;
-    }
+    // Calculate the relative rid for this segment file
+    uint64_t relRidInPartition = rid - ((uint64_t)partition * (uint64_t)filesPerColumnPartition *
+                                        (uint64_t)extentsPerSegmentFile * (uint64_t)extentRows);
+    assert(relRidInPartition <=
+           (uint64_t)filesPerColumnPartition * (uint64_t)extentsPerSegmentFile * (uint64_t)extentRows);
+    uint32_t numExtentsInThisPart = relRidInPartition / extentRows;
+    unsigned numExtentsInThisSegPart = numExtentsInThisPart / filesPerColumnPartition;
+    uint64_t relRidInThisExtent = relRidInPartition - numExtentsInThisPart * extentRows;
+    rid = relRidInThisExtent + numExtentsInThisSegPart * extentRows;
+  }
 
-private:
-    WriteEngineWrapper fWEWrapper;
-    BRM::DBRM fDbrm;
-    unsigned  extentsPerSegmentFile, extentRows, filesPerColumnPartition, dbrootCnt;
-    static const uint32_t DEFAULT_EXTENTS_PER_SEGMENT_FILE = 2;
+ private:
+  WriteEngineWrapper fWEWrapper;
+  BRM::DBRM fDbrm;
+  unsigned extentsPerSegmentFile, extentRows, filesPerColumnPartition, dbrootCnt;
+  static const uint32_t DEFAULT_EXTENTS_PER_SEGMENT_FILE = 2;
 };
-}
+}  // namespace WriteEngine
 #undef EXPORT
-#endif

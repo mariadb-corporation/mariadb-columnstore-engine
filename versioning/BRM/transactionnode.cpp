@@ -29,7 +29,6 @@
 
 namespace BRM
 {
-
 TransactionNode::TransactionNode(int txn) : txnID(txn), _die(false), _sleeping(false)
 {
 }
@@ -40,39 +39,39 @@ TransactionNode::~TransactionNode()
 
 void TransactionNode::setTxnID(VER_t txn)
 {
-    txnID = txn;
+  txnID = txn;
 }
 
 int TransactionNode::getTxnID() const
 {
-    return txnID;
+  return txnID;
 }
 
 void TransactionNode::sleep(boost::mutex& mutex)
 {
-    _sleeping = true;
-    condVar.wait(mutex);
+  _sleeping = true;
+  condVar.wait(mutex);
 }
 
 void TransactionNode::wake()
 {
-    condVar.notify_one();
-    _sleeping = false;
+  condVar.notify_one();
+  _sleeping = false;
 }
 
 void TransactionNode::die()
 {
-    _die = true;
+  _die = true;
 }
 
 bool TransactionNode::dead()
 {
-    return _die;
+  return _die;
 }
 
 bool TransactionNode::sleeping()
 {
-    return _sleeping;
+  return _sleeping;
 }
 
-}  // namespace
+}  // namespace BRM

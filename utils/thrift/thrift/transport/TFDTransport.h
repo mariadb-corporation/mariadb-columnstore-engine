@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TRANSPORT_TFDTRANSPORT_H_
-#define _THRIFT_TRANSPORT_TFDTRANSPORT_H_ 1
+#pragma once
 
 #include <string>
 #ifdef HAVE_SYS_TIME_H
@@ -92,4 +91,3 @@ protected:
 }
 } // apache::thrift::transport
 
-#endif // #ifndef _THRIFT_TRANSPORT_TFDTRANSPORT_H_

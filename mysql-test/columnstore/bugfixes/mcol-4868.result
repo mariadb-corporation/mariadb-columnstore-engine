@@ -1,0 +1,146 @@
+DROP DATABASE IF EXISTS `mcol_4868`;
+CREATE DATABASE `mcol_4868`;
+USE `mcol_4868`;
+CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
+GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+FLUSH PRIVILEGES;
+CREATE TABLE test_cs (a INT, b VARCHAR(100)) ENGINE=COLUMNSTORE;
+INSERT INTO test_cs VALUES (1,'Test1'), (2,'Test2'), (3,'Test3'), (4,'Test4');
+INSERT INTO test_cs VALUES (null,'TestNULL'), (6,NULL), (7,'Test7');
+CREATE TABLE test_innodb (a INT, b VARCHAR(100));
+INSERT INTO test_innodb VALUES (1,'innodb1'), (2,'innodb2'), (3,'innodb3'), (5, 'innodb5');
+SELECT * FROM test_cs;
+a	b
+1	Test1
+2	Test2
+3	Test3
+4	Test4
+NULL	TestNULL
+6	NULL
+7	Test7
+SELECT * FROM test_innodb;
+a	b
+1	innodb1
+2	innodb2
+3	innodb3
+5	innodb5
+SELECT * FROM test_cs WHERE a IN (SELECT a FROM test_innodb);
+a	b
+1	Test1
+2	Test2
+3	Test3
+UPDATE test_cs SET b='Update_cs' WHERE a IN (SELECT a FROM test_innodb);
+SELECT * FROM test_cs;
+a	b
+1	Update_cs
+2	Update_cs
+3	Update_cs
+4	Test4
+NULL	TestNULL
+6	NULL
+7	Test7
+SELECT * FROM test_innodb WHERE a IN (SELECT a FROM test_cs);
+a	b
+1	innodb1
+2	innodb2
+3	innodb3
+UPDATE test_innodb SET b='Update_inno' WHERE a IN (SELECT a FROM test_cs);
+SELECT * FROM test_innodb;
+a	b
+1	Update_inno
+2	Update_inno
+3	Update_inno
+5	innodb5
+SELECT * FROM test_cs WHERE a IN (SELECT a FROM test_cs);
+a	b
+1	Update_cs
+2	Update_cs
+3	Update_cs
+4	Test4
+6	NULL
+7	Test7
+UPDATE test_cs SET b='Update_cs2' WHERE a IN (SELECT a FROM test_cs);
+SELECT * FROM test_cs;
+a	b
+1	Update_cs2
+2	Update_cs2
+3	Update_cs2
+4	Update_cs2
+NULL	TestNULL
+6	Update_cs2
+7	Update_cs2
+DELETE FROM test_cs WHERE a IN (SELECT a FROM test_innodb);
+SELECT * FROM test_cs;
+a	b
+4	Update_cs2
+NULL	TestNULL
+6	Update_cs2
+7	Update_cs2
+DELETE FROM test_cs;
+INSERT INTO test_cs VALUES (1,'Test1'), (2,'Test2'), (3,'Test3'), (4,'Test4');
+INSERT INTO test_cs VALUES (null,'TestNULL'), (6,NULL), (7,'Test7');
+DELETE FROM test_innodb WHERE a IN (SELECT a FROM test_cs);
+SELECT * FROM test_innodb;
+a	b
+5	innodb5
+DELETE FROM test_cs WHERE a IN (SELECT a FROM test_cs);
+SELECT * FROM test_cs;
+a	b
+NULL	TestNULL
+CREATE TABLE cstab1 (
+a int(11) DEFAULT NULL,
+b varchar(10) DEFAULT NULL
+) ENGINE=Columnstore;
+INSERT INTO cstab1 VALUES (1,'cs01');
+INSERT INTO cstab1 VALUES (2,'cs02');
+CREATE TABLE innotab1 (
+a int(11) DEFAULT NULL,
+b varchar(10) DEFAULT NULL
+) ENGINE=InnoDB;
+INSERT INTO innotab1 VALUES (1,'in01');
+SELECT * FROM cstab1;
+a	b
+1	cs01
+2	cs02
+SELECT * FROM innotab1;
+a	b
+1	in01
+SELECT '--- Updating ---' AS ``;
+
+--- Updating ---
+UPDATE innotab1 SET a=100 WHERE a IN (SELECT a FROM cstab1 WHERE a=1);
+SELECT * FROM cstab1;
+a	b
+1	cs01
+2	cs02
+SELECT * FROM innotab1;
+a	b
+100	in01
+UPDATE innotab1 SET a=10000 WHERE a NOT IN (SELECT a FROM cstab1 WHERE a=1);
+SELECT * FROM cstab1;
+a	b
+1	cs01
+2	cs02
+SELECT * FROM innotab1;
+a	b
+10000	in01
+SELECT '--- Deleting ---' AS ``;
+
+--- Deleting ---
+DELETE FROM innotab1 WHERE a IN (SELECT a FROM cstab1 WHERE a=2);
+SELECT * FROM cstab1;
+a	b
+1	cs01
+2	cs02
+SELECT * FROM innotab1;
+a	b
+10000	in01
+DELETE FROM innotab1 WHERE a NOT IN (SELECT a FROM cstab1 WHERE a=2);
+SELECT * FROM cstab1;
+a	b
+1	cs01
+2	cs02
+SELECT * FROM innotab1;
+a	b
+DROP USER 'cejuser'@'localhost';
+DROP DATABASE `mcol_4868`;

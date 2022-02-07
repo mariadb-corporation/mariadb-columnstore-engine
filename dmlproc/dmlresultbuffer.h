@@ -16,14 +16,13 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: dmlresultbuffer.h 927 2013-01-21 14:11:25Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: dmlresultbuffer.h 927 2013-01-21 14:11:25Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 /** @file */
 
-#ifndef DMLRESULTBUFFER_H
-#define DMLRESULTBUFFER_H
+#pragma once
 #include <deque>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
@@ -32,65 +31,63 @@
 namespace dmlprocessor
 {
 /** @brief holds dml results
-  */
+ */
 class DMLResultBuffer
 {
-public:
-    typedef boost::mutex::scoped_lock scoped_lock;
+ public:
+  typedef boost::mutex::scoped_lock scoped_lock;
 
-    /** @brief the type of a <DMLResult, sessionID> pair
-      *
-      */
-    struct ResultPair
-    {
-        dmlpackageprocessor::DMLPackageProcessor::DMLResult result;
-        int sessionID;
-    };
+  /** @brief the type of a <DMLResult, sessionID> pair
+   *
+   */
+  struct ResultPair
+  {
+    dmlpackageprocessor::DMLPackageProcessor::DMLResult result;
+    int sessionID;
+  };
 
-    /** @brief ctor
-      */
-    DMLResultBuffer();
+  /** @brief ctor
+   */
+  DMLResultBuffer();
 
-    /** @brief ctor
-      *
-      */
-    DMLResultBuffer(int bufferSize);
+  /** @brief ctor
+   *
+   */
+  DMLResultBuffer(int bufferSize);
 
-    /** @brief dtor
-      *
-      */
-    ~DMLResultBuffer();
+  /** @brief dtor
+   *
+   */
+  ~DMLResultBuffer();
 
-    /** @brief set the size of the buffer
-      *
-      * @param bufferSize the size of the buffer
-      */
-    inline void setBufferSize(int bufferSize)
-    {
-        fBufferSize = bufferSize;
-    }
+  /** @brief set the size of the buffer
+   *
+   * @param bufferSize the size of the buffer
+   */
+  inline void setBufferSize(int bufferSize)
+  {
+    fBufferSize = bufferSize;
+  }
 
-    /** @brief put results in the buffer
-      *
-      */
-    void put( dmlpackageprocessor::DMLPackageProcessor::DMLResult result, int sessionID );
+  /** @brief put results in the buffer
+   *
+   */
+  void put(dmlpackageprocessor::DMLPackageProcessor::DMLResult result, int sessionID);
 
-    /** @brief get results from the buffer
-      *
-      */
-    ResultPair get();
+  /** @brief get results from the buffer
+   *
+   */
+  ResultPair get();
 
-private:
-    boost::mutex fMutex;
-    boost::condition fCond;
+ private:
+  boost::mutex fMutex;
+  boost::condition fCond;
 
-    typedef std::deque<ResultPair> ResultBuffer;
-    ResultBuffer fResultBuffer;
+  typedef std::deque<ResultPair> ResultBuffer;
+  ResultBuffer fResultBuffer;
 
-    int fBufferSize;
-    int fFull;
+  int fBufferSize;
+  int fFull;
 };
 
-} //namespace dmlprocessor
-
-#endif //DMLRESULTPROCESSOR_H
+}  // namespace dmlprocessor

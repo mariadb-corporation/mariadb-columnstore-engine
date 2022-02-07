@@ -24,8 +24,7 @@
  * class ColumnBufferCompressed
  */
 
-#ifndef WRITEENGINE_COLUMNBUFCOMPRESSED_H
-#define WRITEENGINE_COLUMNBUFCOMPRESSED_H
+#pragma once
 
 #include "we_colbuf.h"
 
@@ -48,74 +47,67 @@ class ColumnInfo;
  */
 class ColumnBufferCompressed : public ColumnBuffer
 {
+ public:
+  /** @brief default Constructor
+   */
+  ColumnBufferCompressed(ColumnInfo* pColInfo, Log* logger);
 
-public:
+  /** @brief default Destructor
+   */
+  virtual ~ColumnBufferCompressed();
 
-    /** @brief default Constructor
-     */
-    ColumnBufferCompressed( ColumnInfo* pColInfo, Log* logger);
+  /** @brief Final flushing of data and headers prior to closing the file.
+   * @param bTruncFile is file to be truncated
+   * @return NO_ERROR or success
+   */
+  virtual int finishFile(bool bTruncFile);
 
-    /** @brief default Destructor
-     */
-    virtual ~ColumnBufferCompressed();
+  /** @brief Reset the ColBuf to-be-compressed buffer prior to importing the
+   * next extent.
+   * @param startFileOffset Byte offset where next extent chunk will start
+   */
+  virtual int resetToBeCompressedColBuf(long long& startFileOffset);
 
-    /** @brief Final flushing of data and headers prior to closing the file.
-     * @param bTruncFile is file to be truncated
-     * @return NO_ERROR or success
-     */
-    virtual int finishFile(bool bTruncFile);
+  /** @brief file mutator
+   *
+   * @param cFile    Destination FILE stream where buffer data will be written
+   * @param startHwm Starting HWM for cFile
+   * @param hdrs     Headers with ptr information.
+   */
+  virtual int setDbFile(IDBDataFile* const cFile, HWM startHwm, const char* hdrs);
 
-    /** @brief Reset the ColBuf to-be-compressed buffer prior to importing the
-     * next extent.
-     * @param startFileOffset Byte offset where next extent chunk will start
-     */
-    virtual int resetToBeCompressedColBuf(long long& startFileOffset );
+  /** @brief Write data to FILE
+   *
+   * @param startOffset The buffer offset from where the write should begin
+   * @param writeSize   The number of bytes to be written to the file
+   * @param fillUpWEmpties The flag to fill the buffer with empty magic
+   *                       values up to the block boundary.
+   */
+  virtual int writeToFile(int startOffset, int writeSize, bool fillUpWEmpties = false);
 
-    /** @brief file mutator
-     *
-     * @param cFile    Destination FILE stream where buffer data will be written
-     * @param startHwm Starting HWM for cFile
-     * @param hdrs     Headers with ptr information.
-     */
-    virtual int setDbFile(IDBDataFile* const cFile, HWM startHwm, const char* hdrs);
+ private:
+  // Disable copy constructor and assignment operator by declaring and
+  // not defining.
+  ColumnBufferCompressed(const ColumnBufferCompressed&);
+  ColumnBufferCompressed& operator=(const ColumnBufferCompressed&);
 
-    /** @brief Write data to FILE
-     *
-     * @param startOffset The buffer offset from where the write should begin
-     * @param writeSize   The number of bytes to be written to the file
-     * @param fillUpWEmpties The flag to fill the buffer with empty magic
-     *                       values up to the block boundary.
-     */
-    virtual int writeToFile(int startOffset, int writeSize,
-                            bool fillUpWEmpties = false);
+  // Compress and flush the to-be-compressed buffer; updates header if needed
+  int compressAndFlush(bool bFinishFile);
+  int initToBeCompressedBuffer(long long& startFileOffset);
+  // Initialize the to-be-compressed buffer
+  int saveCompressionHeaders();  // Saves compression headers to the db file
 
-private:
-
-    // Disable copy constructor and assignment operator by declaring and
-    // not defining.
-    ColumnBufferCompressed(const ColumnBufferCompressed&);
-    ColumnBufferCompressed& operator=(const ColumnBufferCompressed&);
-
-    // Compress and flush the to-be-compressed buffer; updates header if needed
-    int compressAndFlush(bool bFinishFile);
-    int initToBeCompressedBuffer( long long& startFileOffset);
-    // Initialize the to-be-compressed buffer
-    int saveCompressionHeaders(); // Saves compression headers to the db file
-
-    unsigned char*       fToBeCompressedBuffer; // data waiting to be compressed
-    size_t               fToBeCompressedCapacity;//size of comp buffer;
-    // should always be 4MB, unless
-    // working with abbrev extent.
-    size_t               fNumBytes;             // num Bytes in comp buffer
-    compress::CompressorPool fCompressorPool;   // data compression object pool
-    compress::CompChunkPtrList
-    fChunkPtrs;            // col file header information
-    bool                 fPreLoadHWMChunk;      // preload 1st HWM chunk only
-    unsigned int         fUserPaddingBytes;     // compressed chunk padding
-    bool                 fFlushedStartHwmChunk; // have we rewritten the hdr
-    //   for the starting HWM chunk
+  unsigned char* fToBeCompressedBuffer;  // data waiting to be compressed
+  size_t fToBeCompressedCapacity;        // size of comp buffer;
+  // should always be 4MB, unless
+  // working with abbrev extent.
+  size_t fNumBytes;                          // num Bytes in comp buffer
+  compress::CompressorPool fCompressorPool;  // data compression object pool
+  compress::CompChunkPtrList fChunkPtrs;     // col file header information
+  bool fPreLoadHWMChunk;                     // preload 1st HWM chunk only
+  unsigned int fUserPaddingBytes;            // compressed chunk padding
+  bool fFlushedStartHwmChunk;                // have we rewritten the hdr
+                                             //   for the starting HWM chunk
 };
 
-}
-
-#endif //WRITEENGINE_COLUMNBUFCOMPRESSED_H
+}  // namespace WriteEngine

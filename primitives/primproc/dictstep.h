@@ -28,133 +28,138 @@
 //
 //
 
-#ifndef DICTSTEP_H_
-#define DICTSTEP_H_
+#pragma once
 
 #include "command.h"
 #include "primitivemsg.h"
 
 namespace primitiveprocessor
 {
-
-
 class DictStep : public Command
 {
-public:
-    DictStep();
-    virtual ~DictStep();
+ public:
+  DictStep();
+  virtual ~DictStep();
 
-    void execute();
-    void project();
-    void project(int64_t* vals);		//used by RTSCommand to redirect input
-    void projectIntoRowGroup(rowgroup::RowGroup& rg, uint32_t row);
-    void projectIntoRowGroup(rowgroup::RowGroup& rg, int64_t* vals, uint32_t col);
-    uint64_t getLBID();
+  void execute();
+  void project();
+  void project(int64_t* vals);  // used by RTSCommand to redirect input
+  void projectIntoRowGroup(rowgroup::RowGroup& rg, uint32_t row);
+  void projectIntoRowGroup(rowgroup::RowGroup& rg, int64_t* vals, uint32_t col);
+  uint64_t getLBID();
 
-    /* This doesn't do anything for this class...  make it column-specific or not? */
-    void nextLBID();
-    void createCommand(messageqcpp::ByteStream&);
-    void resetCommand(messageqcpp::ByteStream&);
+  /* This doesn't do anything for this class...  make it column-specific or not? */
+  void nextLBID();
+  void createCommand(messageqcpp::ByteStream&);
+  void resetCommand(messageqcpp::ByteStream&);
 
-    /* Put bootstrap code here (ie, build the template primitive msg) */
-    void prep(int8_t outputType, bool makeAbsRids);
+  /* Put bootstrap code here (ie, build the template primitive msg) */
+  void prep(int8_t outputType, bool makeAbsRids);
 
-    SCommand duplicate();
-    bool operator==(const DictStep&) const;
-    bool operator!=(const DictStep&) const;
+  SCommand duplicate();
+  bool operator==(const DictStep&) const;
+  bool operator!=(const DictStep&) const;
 
-    int getCompType() const
+  int getCompType() const
+  {
+    return compressionType;
+  }
+  void setCompType(int ct)
+  {
+    compressionType = ct;
+  }
+
+ private:
+  DictStep(const DictStep&);
+  DictStep& operator=(const DictStep&);
+
+  struct StringPtr
+  {
+    const uint8_t* ptr;
+    unsigned len;
+
+    StringPtr() : ptr(NULL), len(0)
     {
-        return compressionType;
+      ;
     }
-    void setCompType(int ct)
+    StringPtr(const uint8_t* p, unsigned l) : ptr(p), len(l)
     {
-        compressionType = ct;
+      ;
     }
-
-private:
-    DictStep(const DictStep&);
-    DictStep& operator=(const DictStep&);
-
-    struct StringPtr
+    utils::ConstString getConstString() const
     {
-        const uint8_t* ptr;
-        unsigned    len;
+      return utils::ConstString((const char*)ptr, len);
+    }
+  };
 
-        StringPtr() : ptr(NULL), len(0) {;}
-        StringPtr(const uint8_t* p, unsigned l) : ptr(p), len(l) {;}
-        utils::ConstString getConstString() const
-        {
-            return utils::ConstString((const char *) ptr, len);
-        }
-    };
+  void _execute();
+  void issuePrimitive(bool isProjection);
+  void processResult();
+  void projectResult(std::string* tmpStrings);
+  void projectResult(StringPtr* tmpStrings);
+  void _project();
+  void _projectToRG(rowgroup::RowGroup& rg, uint32_t col);
 
-    void _execute();
-    void issuePrimitive(bool isProjection);
-    void processResult();
-    void projectResult(std::string* tmpStrings);
-    void projectResult(StringPtr* tmpStrings);
-    void _project();
-    void _projectToRG(rowgroup::RowGroup& rg, uint32_t col);
-
-    // struct used for scratch space
-    struct OrderedToken
+  // struct used for scratch space
+  struct OrderedToken
+  {
+    uint64_t rid;
+    uint64_t token;
+    uint16_t pos;
+    std::string str;
+    bool inResult;
+    OrderedToken() : inResult(false)
     {
-        uint64_t rid;
-        uint64_t token;
-        uint16_t pos;
-        std::string str;
-        bool inResult;
-        OrderedToken() : inResult(false) { }
-        ~OrderedToken() { }
-    };
-    struct TokenSorter
+    }
+    ~OrderedToken()
     {
-        inline bool operator()(const OrderedToken& c1, const OrderedToken& c2) const
-        {
-            return (c1.token < c2.token);
-        }
-    };
-    struct PosSorter
+    }
+  };
+  struct TokenSorter
+  {
+    inline bool operator()(const OrderedToken& c1, const OrderedToken& c2) const
     {
-        inline bool operator()(const OrderedToken& c1, const OrderedToken& c2) const
-        {
-            return (c1.pos < c2.pos);
-        }
-    };
+      return (c1.token < c2.token);
+    }
+  };
+  struct PosSorter
+  {
+    inline bool operator()(const OrderedToken& c1, const OrderedToken& c2) const
+    {
+      return (c1.pos < c2.pos);
+    }
+  };
 
-    //bug 3679.  FilterCommand depends on the result being in the same relative
-    //order as the input.  These fcns help restore the original order.
-    void copyResultToTmpSpace(OrderedToken* ot);
-    void copyResultToFinalPosition(OrderedToken* ot);
+  // bug 3679.  FilterCommand depends on the result being in the same relative
+  // order as the input.  These fcns help restore the original order.
+  void copyResultToTmpSpace(OrderedToken* ot);
+  void copyResultToFinalPosition(OrderedToken* ot);
 
-    // Worst case, 8192 tokens in the msg.  Each is 10 bytes. */
-    boost::scoped_array<uint8_t> inputMsg;
-    uint32_t tmpResultCounter;
-    uint32_t totalResultLength;
-    DictInput* primMsg;
-    std::vector<uint8_t> result;
+  // Worst case, 8192 tokens in the msg.  Each is 10 bytes. */
+  boost::scoped_array<uint8_t> inputMsg;
+  uint32_t tmpResultCounter;
+  uint32_t totalResultLength;
+  DictInput* primMsg;
+  std::vector<uint8_t> result;
 
-    uint64_t lbid;
-    uint32_t fbo;
-    uint32_t traceFlags;  // probably move this to Command
-    uint8_t BOP;
-    int64_t* values;
-    boost::scoped_array<std::string>* strValues;
-    int compressionType;
-    messageqcpp::ByteStream filterString;
-    uint32_t filterCount;
-    uint32_t bufferSize;
-    uint32_t charsetNumber;
-    uint16_t inputRidCount;
-    
-    bool hasEqFilter;
-    boost::shared_ptr<primitives::DictEqualityFilter> eqFilter;
-    uint8_t eqOp;   // COMPARE_EQ or COMPARE_NE
+  uint64_t lbid;
+  uint32_t fbo;
+  uint32_t traceFlags;  // probably move this to Command
+  uint8_t BOP;
+  int64_t* values;
+  boost::scoped_array<std::string>* strValues;
+  int compressionType;
+  messageqcpp::ByteStream filterString;
+  uint32_t filterCount;
+  uint32_t bufferSize;
+  uint32_t charsetNumber;
+  uint16_t inputRidCount;
 
-    friend class RTSCommand;
+  bool hasEqFilter;
+  boost::shared_ptr<primitives::DictEqualityFilter> eqFilter;
+  uint8_t eqOp;  // COMPARE_EQ or COMPARE_NE
+
+  friend class RTSCommand;
 };
 
-}  // namespace
-
-#endif
+}  // namespace primitiveprocessor

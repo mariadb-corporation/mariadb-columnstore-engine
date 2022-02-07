@@ -15,35 +15,28 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef POSIXFILESYSTEM_H_
-#define POSIXFILESYSTEM_H_
+#pragma once
 
 #include "IDBFileSystem.h"
 
 namespace idbdatafile
 {
-
 class PosixFileSystem : public IDBFileSystem
 {
-public:
-    PosixFileSystem();
-      ~PosixFileSystem();
+ public:
+  PosixFileSystem();
+  ~PosixFileSystem();
 
-    int mkdir(const char* pathname) override;
-    off64_t size(const char* path) const override;
-    off64_t compressedSize(const char* path) const override;
-    int remove(const char* pathname) override;
-    int rename(const char* oldpath, const char* newpath) override;
-    bool exists(const char* pathname) const override;
-    int listDirectory(const char* pathname, std::list<std::string>& contents) const override;
-    bool isDir(const char* pathname) const override;
-    int copyFile(const char* srcPath, const char* destPath) const override;
-    int chown(const char* objectName,
-              const uid_t p_uid,
-              const gid_t p_pid,
-              int& funcErrno) const override;
+  int mkdir(const char* pathname) override;
+  off64_t size(const char* path) const override;
+  off64_t compressedSize(const char* path) const override;
+  int remove(const char* pathname) override;
+  int rename(const char* oldpath, const char* newpath) override;
+  bool exists(const char* pathname) const override;
+  int listDirectory(const char* pathname, std::list<std::string>& contents) const override;
+  bool isDir(const char* pathname) const override;
+  int copyFile(const char* srcPath, const char* destPath) const override;
+  int chown(const char* objectName, const uid_t p_uid, const gid_t p_pid, int& funcErrno) const override;
 };
 
-}
-
-#endif /* POSIXFILESYSTEM_H_ */
+}  // namespace idbdatafile

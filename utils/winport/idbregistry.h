@@ -15,11 +15,8 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef IDB_REGISTRY_UTILS_H__
-#define IDB_REGISTRY_UTILS_H__
+#pragma once
 
 #include <string>
 
 const std::string IDBreadRegistry(const std::string& name, bool returnShortName = false);
-
-#endif

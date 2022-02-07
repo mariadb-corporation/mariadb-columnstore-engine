@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_SERVER_TTHREADEDSERVER_H_
-#define _THRIFT_SERVER_TTHREADEDSERVER_H_ 1
+#pragma once
 
 #include <thrift/server/TServer.h>
 #include <thrift/transport/TServerTransport.h>
@@ -155,4 +154,3 @@ TThreadedServer::TThreadedServer(
 }
 } // apache::thrift::server
 
-#endif // #ifndef _THRIFT_SERVER_TTHREADEDSERVER_H_

@@ -17,10 +17,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_in.cpp 3954 2013-07-08 16:30:15Z bpaul $
-*
-*
-****************************************************************************/
+ * $Id: func_in.cpp 3954 2013-07-08 16:30:15Z bpaul $
+ *
+ *
+ ****************************************************************************/
 
 #include <cstdlib>
 #include <string>
@@ -43,359 +43,347 @@ using namespace logging;
 
 using namespace funcexp;
 
-
 namespace
 {
-template<typename result_t>
+template <typename result_t>
 inline bool numericEQ(result_t op1, result_t op2)
 {
-    return op1 == op2;
+  return op1 == op2;
 }
 
-inline bool getBoolForIn(rowgroup::Row& row,
-                         funcexp::FunctionParm& pm,
-                         bool& isNull,
-                         CalpontSystemCatalog::ColType& ct,
-                         bool isNotIn)
+inline bool getBoolForIn(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& isNull,
+                         CalpontSystemCatalog::ColType& ct, bool isNotIn)
 {
-    IDB_Decimal d; // to be removed;
+  IDB_Decimal d;  // to be removed;
 
-    switch (ct.colDataType)
+  switch (ct.colDataType)
+  {
+    case execplan::CalpontSystemCatalog::BIGINT:
+    case execplan::CalpontSystemCatalog::INT:
+    case execplan::CalpontSystemCatalog::MEDINT:
+    case execplan::CalpontSystemCatalog::TINYINT:
+    case execplan::CalpontSystemCatalog::SMALLINT:
     {
-        case execplan::CalpontSystemCatalog::BIGINT:
-        case execplan::CalpontSystemCatalog::INT:
-        case execplan::CalpontSystemCatalog::MEDINT:
-        case execplan::CalpontSystemCatalog::TINYINT:
-        case execplan::CalpontSystemCatalog::SMALLINT:
-        {
-            int64_t val = pm[0]->data()->getIntVal(row, isNull);
+      int64_t val = pm[0]->data()->getIntVal(row, isNull);
 
-            if (isNull)
-                return false;
+      if (isNull)
+        return false;
 
-            for (uint32_t i = 1; i < pm.size(); i++)
-            {
-                isNull = false;
+      for (uint32_t i = 1; i < pm.size(); i++)
+      {
+        isNull = false;
 
-                if (val == pm[i]->data()->getIntVal(row, isNull) && !isNull )
-                    return true;
+        if (val == pm[i]->data()->getIntVal(row, isNull) && !isNull)
+          return true;
 
-                if (isNull && isNotIn)
-                    return true; // will be reversed to false by the caller
-            }
+        if (isNull && isNotIn)
+          return true;  // will be reversed to false by the caller
+      }
 
-            return false;
-        }
-
-        case execplan::CalpontSystemCatalog::UBIGINT:
-        case execplan::CalpontSystemCatalog::UINT:
-        case execplan::CalpontSystemCatalog::UMEDINT:
-        case execplan::CalpontSystemCatalog::UTINYINT:
-        case execplan::CalpontSystemCatalog::USMALLINT:
-        {
-            uint64_t val = pm[0]->data()->getUintVal(row, isNull);
-
-            if (isNull)
-                return false;
-
-            for (uint32_t i = 1; i < pm.size(); i++)
-            {
-                isNull = false;
-
-                if (val == pm[i]->data()->getUintVal(row, isNull) && !isNull )
-                    return true;
-
-                if (isNull && isNotIn)
-                    return true; // will be reversed to false by the caller
-            }
-
-            return false;
-        }
-
-        case execplan::CalpontSystemCatalog::DATE:
-        {
-            int32_t val = pm[0]->data()->getDateIntVal(row, isNull);
-
-            if (isNull)
-                return false;
-
-            for (uint32_t i = 1; i < pm.size(); i++)
-            {
-                isNull = false;
-
-                if ( val == pm[i]->data()->getDateIntVal(row, isNull) && !isNull )
-                    return true;
-
-                if (isNull && isNotIn)
-                    return true; // will be reversed to false by the caller
-            }
-
-            return false;
-        }
-
-        case execplan::CalpontSystemCatalog::DATETIME:
-        {
-            int64_t val = pm[0]->data()->getDatetimeIntVal(row, isNull);
-
-            if (isNull)
-                return false;
-
-            for (uint32_t i = 1; i < pm.size(); i++)
-            {
-                isNull = false;
-
-                if ( val == pm[i]->data()->getDatetimeIntVal(row, isNull) && !isNull )
-                    return true;
-
-                if (isNull && isNotIn)
-                    return true; // will be reversed to false by the caller
-            }
-
-            return false;
-        }
-
-        case execplan::CalpontSystemCatalog::TIMESTAMP:
-        {
-            int64_t val = pm[0]->data()->getTimestampIntVal(row, isNull);
-
-            if (isNull)
-                return false;
-
-            for (uint32_t i = 1; i < pm.size(); i++)
-            {
-                isNull = false;
-
-                if ( val == pm[i]->data()->getTimestampIntVal(row, isNull) && !isNull )
-                    return true;
-
-                if (isNull && isNotIn)
-                    return true; // will be reversed to false by the caller
-            }
-
-            return false;
-        }
-
-        case execplan::CalpontSystemCatalog::TIME:
-        {
-            int64_t val = pm[0]->data()->getTimeIntVal(row, isNull);
-
-            if (isNull)
-                return false;
-
-            for (uint32_t i = 1; i < pm.size(); i++)
-            {
-                isNull = false;
-
-                if ( val == pm[i]->data()->getTimeIntVal(row, isNull) && !isNull )
-                    return true;
-
-                if (isNull && isNotIn)
-                    return true; // will be reversed to false by the caller
-            }
-
-            return false;
-        }
-
-        case execplan::CalpontSystemCatalog::DOUBLE:
-        case execplan::CalpontSystemCatalog::UDOUBLE:
-        case execplan::CalpontSystemCatalog::FLOAT:
-        case execplan::CalpontSystemCatalog::UFLOAT:
-        {
-            double val = pm[0]->data()->getDoubleVal(row, isNull);
-
-            if (isNull)
-                return false;
-
-            for (uint32_t i = 1; i < pm.size(); i++)
-            {
-                isNull = false;
-
-                if ( val == pm[i]->data()->getDoubleVal(row, isNull) && !isNull )
-                    return true;
-
-                if (isNull && isNotIn)
-                    return true; // will be reversed to false by the caller
-            }
-
-            return false;
-        }
-
-        case execplan::CalpontSystemCatalog::LONGDOUBLE:
-        {
-            long double val = pm[0]->data()->getLongDoubleVal(row, isNull);
-
-            if (isNull)
-                return false;
-
-            for (uint32_t i = 1; i < pm.size(); i++)
-            {
-                isNull = false;
-
-                if ( val == pm[i]->data()->getLongDoubleVal(row, isNull) && !isNull )
-                    return true;
-
-                if (isNull && isNotIn)
-                    return true; // will be reversed to false by the caller
-            }
-
-            return false;
-        }
-
-        case execplan::CalpontSystemCatalog::DECIMAL:
-        case execplan::CalpontSystemCatalog::UDECIMAL:
-        {
-            IDB_Decimal val = pm[0]->data()->getDecimalVal(row, isNull);
-
-            if (isNull)
-                return false;
-
-            for (uint32_t i = 1; i < pm.size(); i++)
-            {
-                isNull = false;
-
-                if ( val == pm[i]->data()->getDecimalVal(row, isNull) && !isNull )
-                    return true;
-
-                if (isNull && isNotIn)
-                    return true; // will be reversed to false by the caller
-            }
-
-            return false;
-        }
-
-        case execplan::CalpontSystemCatalog::VARCHAR: // including CHAR'
-        case execplan::CalpontSystemCatalog::CHAR:
-        case execplan::CalpontSystemCatalog::TEXT:
-        {
-            const string& val = pm[0]->data()->getStrVal(row, isNull);
-            if (isNull)
-                return false;
-
-            CHARSET_INFO* cs = pm[0]->data()->resultType().getCharset();
-
-            for (uint32_t i = 1; i < pm.size(); i++)
-            {
-                isNull = false;
-                const string& str1 = pm[i]->data()->getStrVal(row, isNull);
-                if (cs->strnncoll(val.c_str(), val.length(), str1.c_str(), str1.length()) == 0 && !isNull)
-                    return true;
-
-                if (isNull && isNotIn)
-                    return true; // will be reversed to false by the caller
-            }
-
-            return false;
-        }
-
-        default:
-        {
-            std::ostringstream oss;
-            oss << "regexo: datatype of " << execplan::colDataTypeToString(ct.colDataType);
-            throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
-        }
+      return false;
     }
+
+    case execplan::CalpontSystemCatalog::UBIGINT:
+    case execplan::CalpontSystemCatalog::UINT:
+    case execplan::CalpontSystemCatalog::UMEDINT:
+    case execplan::CalpontSystemCatalog::UTINYINT:
+    case execplan::CalpontSystemCatalog::USMALLINT:
+    {
+      uint64_t val = pm[0]->data()->getUintVal(row, isNull);
+
+      if (isNull)
+        return false;
+
+      for (uint32_t i = 1; i < pm.size(); i++)
+      {
+        isNull = false;
+
+        if (val == pm[i]->data()->getUintVal(row, isNull) && !isNull)
+          return true;
+
+        if (isNull && isNotIn)
+          return true;  // will be reversed to false by the caller
+      }
+
+      return false;
+    }
+
+    case execplan::CalpontSystemCatalog::DATE:
+    {
+      int32_t val = pm[0]->data()->getDateIntVal(row, isNull);
+
+      if (isNull)
+        return false;
+
+      for (uint32_t i = 1; i < pm.size(); i++)
+      {
+        isNull = false;
+
+        if (val == pm[i]->data()->getDateIntVal(row, isNull) && !isNull)
+          return true;
+
+        if (isNull && isNotIn)
+          return true;  // will be reversed to false by the caller
+      }
+
+      return false;
+    }
+
+    case execplan::CalpontSystemCatalog::DATETIME:
+    {
+      int64_t val = pm[0]->data()->getDatetimeIntVal(row, isNull);
+
+      if (isNull)
+        return false;
+
+      for (uint32_t i = 1; i < pm.size(); i++)
+      {
+        isNull = false;
+
+        if (val == pm[i]->data()->getDatetimeIntVal(row, isNull) && !isNull)
+          return true;
+
+        if (isNull && isNotIn)
+          return true;  // will be reversed to false by the caller
+      }
+
+      return false;
+    }
+
+    case execplan::CalpontSystemCatalog::TIMESTAMP:
+    {
+      int64_t val = pm[0]->data()->getTimestampIntVal(row, isNull);
+
+      if (isNull)
+        return false;
+
+      for (uint32_t i = 1; i < pm.size(); i++)
+      {
+        isNull = false;
+
+        if (val == pm[i]->data()->getTimestampIntVal(row, isNull) && !isNull)
+          return true;
+
+        if (isNull && isNotIn)
+          return true;  // will be reversed to false by the caller
+      }
+
+      return false;
+    }
+
+    case execplan::CalpontSystemCatalog::TIME:
+    {
+      int64_t val = pm[0]->data()->getTimeIntVal(row, isNull);
+
+      if (isNull)
+        return false;
+
+      for (uint32_t i = 1; i < pm.size(); i++)
+      {
+        isNull = false;
+
+        if (val == pm[i]->data()->getTimeIntVal(row, isNull) && !isNull)
+          return true;
+
+        if (isNull && isNotIn)
+          return true;  // will be reversed to false by the caller
+      }
+
+      return false;
+    }
+
+    case execplan::CalpontSystemCatalog::DOUBLE:
+    case execplan::CalpontSystemCatalog::UDOUBLE:
+    case execplan::CalpontSystemCatalog::FLOAT:
+    case execplan::CalpontSystemCatalog::UFLOAT:
+    {
+      double val = pm[0]->data()->getDoubleVal(row, isNull);
+
+      if (isNull)
+        return false;
+
+      for (uint32_t i = 1; i < pm.size(); i++)
+      {
+        isNull = false;
+
+        if (val == pm[i]->data()->getDoubleVal(row, isNull) && !isNull)
+          return true;
+
+        if (isNull && isNotIn)
+          return true;  // will be reversed to false by the caller
+      }
+
+      return false;
+    }
+
+    case execplan::CalpontSystemCatalog::LONGDOUBLE:
+    {
+      long double val = pm[0]->data()->getLongDoubleVal(row, isNull);
+
+      if (isNull)
+        return false;
+
+      for (uint32_t i = 1; i < pm.size(); i++)
+      {
+        isNull = false;
+
+        if (val == pm[i]->data()->getLongDoubleVal(row, isNull) && !isNull)
+          return true;
+
+        if (isNull && isNotIn)
+          return true;  // will be reversed to false by the caller
+      }
+
+      return false;
+    }
+
+    case execplan::CalpontSystemCatalog::DECIMAL:
+    case execplan::CalpontSystemCatalog::UDECIMAL:
+    {
+      IDB_Decimal val = pm[0]->data()->getDecimalVal(row, isNull);
+
+      if (isNull)
+        return false;
+
+      for (uint32_t i = 1; i < pm.size(); i++)
+      {
+        isNull = false;
+
+        if (val == pm[i]->data()->getDecimalVal(row, isNull) && !isNull)
+          return true;
+
+        if (isNull && isNotIn)
+          return true;  // will be reversed to false by the caller
+      }
+
+      return false;
+    }
+
+    case execplan::CalpontSystemCatalog::VARCHAR:  // including CHAR'
+    case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::TEXT:
+    {
+      const string& val = pm[0]->data()->getStrVal(row, isNull);
+      if (isNull)
+        return false;
+
+      CHARSET_INFO* cs = pm[0]->data()->resultType().getCharset();
+
+      for (uint32_t i = 1; i < pm.size(); i++)
+      {
+        isNull = false;
+        const string& str1 = pm[i]->data()->getStrVal(row, isNull);
+        if (cs->strnncoll(val.c_str(), val.length(), str1.c_str(), str1.length()) == 0 && !isNull)
+          return true;
+
+        if (isNull && isNotIn)
+          return true;  // will be reversed to false by the caller
+      }
+
+      return false;
+    }
+
+    default:
+    {
+      std::ostringstream oss;
+      oss << "regexo: datatype of " << execplan::colDataTypeToString(ct.colDataType);
+      throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
+    }
+  }
 }
 
-}
+}  // namespace
 
 namespace funcexp
 {
-
-CalpontSystemCatalog::ColType Func_in::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
+CalpontSystemCatalog::ColType Func_in::operationType(FunctionParm& fp,
+                                                     CalpontSystemCatalog::ColType& resultType)
 {
-    PredicateOperator op;
-    CalpontSystemCatalog::ColType ct;
+  PredicateOperator op;
+  CalpontSystemCatalog::ColType ct;
 
-    // @bug 4230. Initialize ct to be the first argument.
-    if (!fp.empty())
-        ct = fp[0]->data()->resultType();
+  // @bug 4230. Initialize ct to be the first argument.
+  if (!fp.empty())
+    ct = fp[0]->data()->resultType();
 
-    bool allString = true;
+  bool allString = true;
 
-    for (uint32_t i = 0; i < fp.size(); i++)
+  for (uint32_t i = 0; i < fp.size(); i++)
+  {
+    // op.setOpType(op.operationType(), fp[i]->data()->resultType());
+    if (fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::CHAR &&
+        fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::VARCHAR &&
+        fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::TEXT)
     {
-        //op.setOpType(op.operationType(), fp[i]->data()->resultType());
-        if (fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::CHAR &&
-                fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::VARCHAR &&
-                fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::TEXT)
-        {
-            allString = false;
-            op.setOpType(ct, fp[i]->data()->resultType());
-            ct = op.operationType();
-        }
+      allString = false;
+      op.setOpType(ct, fp[i]->data()->resultType());
+      ct = op.operationType();
     }
+  }
 
-    if (allString)
+  if (allString)
+  {
+    ct.colDataType = CalpontSystemCatalog::VARCHAR;
+    ct.colWidth = 255;
+  }
+
+  // convert date const value according to the compare type here.
+  if (op.operationType().colDataType == CalpontSystemCatalog::DATE)
+  {
+    ConstantColumn* cc = NULL;
+
+    for (uint32_t i = 1; i < fp.size(); i++)
     {
-        ct.colDataType = CalpontSystemCatalog::VARCHAR;
-        ct.colWidth = 255;
-    }
+      cc = dynamic_cast<ConstantColumn*>(fp[i]->data());
 
-    // convert date const value according to the compare type here.
-    if (op.operationType().colDataType == CalpontSystemCatalog::DATE)
+      if (cc)
+      {
+        Result result = cc->result();
+        result.intVal = dataconvert::DataConvert::dateToInt(result.strVal);
+        cc->result(result);
+      }
+    }
+  }
+  else if (op.operationType().colDataType == CalpontSystemCatalog::DATETIME)
+  {
+    ConstantColumn* cc = NULL;
+
+    for (uint32_t i = 1; i < fp.size(); i++)
     {
-        ConstantColumn* cc = NULL;
+      cc = dynamic_cast<ConstantColumn*>(fp[i]->data());
 
-        for (uint32_t i = 1; i < fp.size(); i++)
-        {
-            cc = dynamic_cast<ConstantColumn*>(fp[i]->data());
-
-            if (cc)
-            {
-                Result result = cc->result();
-                result.intVal = dataconvert::DataConvert::dateToInt(result.strVal);
-                cc->result(result);
-            }
-        }
+      if (cc)
+      {
+        Result result = cc->result();
+        result.intVal = dataconvert::DataConvert::datetimeToInt(result.strVal);
+        cc->result(result);
+      }
     }
-    else if (op.operationType().colDataType == CalpontSystemCatalog::DATETIME)
-    {
-        ConstantColumn* cc = NULL;
+  }
 
-        for (uint32_t i = 1; i < fp.size(); i++)
-        {
-            cc = dynamic_cast<ConstantColumn*>(fp[i]->data());
-
-            if (cc)
-            {
-                Result result = cc->result();
-                result.intVal = dataconvert::DataConvert::datetimeToInt(result.strVal);
-                cc->result(result);
-            }
-        }
-    }
-
-    return ct;
+  return ct;
 }
 
-bool Func_in::getBoolVal(rowgroup::Row& row,
-                         FunctionParm& pm,
-                         bool& isNull,
+bool Func_in::getBoolVal(rowgroup::Row& row, FunctionParm& pm, bool& isNull,
                          CalpontSystemCatalog::ColType& ct)
 {
-    return getBoolForIn(row, pm, isNull, ct, false) && !isNull;
+  return getBoolForIn(row, pm, isNull, ct, false) && !isNull;
 }
 
-
-
-
-
-CalpontSystemCatalog::ColType Func_notin::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
+CalpontSystemCatalog::ColType Func_notin::operationType(FunctionParm& fp,
+                                                        CalpontSystemCatalog::ColType& resultType)
 {
-    PredicateOperator* op = new PredicateOperator();
-    CalpontSystemCatalog::ColType ct;
-    op->setOpType(fp[0]->data()->resultType(), fp[1]->data()->resultType());
-    return op->operationType();
+  PredicateOperator* op = new PredicateOperator();
+  CalpontSystemCatalog::ColType ct;
+  op->setOpType(fp[0]->data()->resultType(), fp[1]->data()->resultType());
+  return op->operationType();
 }
 
-bool Func_notin::getBoolVal(rowgroup::Row& row,
-                            FunctionParm& pm,
-                            bool& isNull,
+bool Func_notin::getBoolVal(rowgroup::Row& row, FunctionParm& pm, bool& isNull,
                             CalpontSystemCatalog::ColType& ct)
 {
-    return (!getBoolForIn(row, pm, isNull, ct, true) && !isNull);
+  return (!getBoolForIn(row, pm, isNull, ct, true) && !isNull);
 }
 
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:

@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TRANSPORT_TZLIBTRANSPORT_H_
-#define _THRIFT_TRANSPORT_TZLIBTRANSPORT_H_ 1
+#pragma once
 
 #include <boost/lexical_cast.hpp>
 #include <thrift/transport/TTransport.h>
@@ -275,4 +274,3 @@ public:
 }
 } // apache::thrift::transport
 
-#endif // #ifndef _THRIFT_TRANSPORT_TZLIBTRANSPORT_H_

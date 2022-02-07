@@ -16,70 +16,63 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: dmlresultbuffer.cpp 927 2013-01-21 14:11:25Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: dmlresultbuffer.cpp 927 2013-01-21 14:11:25Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 /** @file */
 
 #include "dmlresultbuffer.h"
 
 namespace dmlprocessor
 {
-
-DMLResultBuffer::DMLResultBuffer()
-    : fBufferSize(1), fFull(0)
+DMLResultBuffer::DMLResultBuffer() : fBufferSize(1), fFull(0)
 {
-
 }
 
-DMLResultBuffer::DMLResultBuffer(int bufferSize)
-    : fBufferSize(bufferSize), fFull(0)
+DMLResultBuffer::DMLResultBuffer(int bufferSize) : fBufferSize(bufferSize), fFull(0)
 {
-
 }
 
 DMLResultBuffer::~DMLResultBuffer()
 {
-    fResultBuffer.clear();
+  fResultBuffer.clear();
 }
 
 void DMLResultBuffer::put(dmlpackageprocessor::DMLPackageProcessor::DMLResult result, int sessionID)
 {
-    scoped_lock lock(fMutex);
+  scoped_lock lock(fMutex);
 
-    if (fFull == fBufferSize)
-    {
-        while (fFull == fBufferSize)
-            fCond.wait(lock);
-    }
+  if (fFull == fBufferSize)
+  {
+    while (fFull == fBufferSize)
+      fCond.wait(lock);
+  }
 
-    ResultPair rp;
-    rp.result = result;
-    rp.sessionID = sessionID;
+  ResultPair rp;
+  rp.result = result;
+  rp.sessionID = sessionID;
 
-    fResultBuffer.push_back(rp);
-    ++fFull;
-    fCond.notify_one();
+  fResultBuffer.push_back(rp);
+  ++fFull;
+  fCond.notify_one();
 }
 
 DMLResultBuffer::ResultPair DMLResultBuffer::get()
 {
-    scoped_lock lk(fMutex);
+  scoped_lock lk(fMutex);
 
-    if (fFull == 0)
-    {
-        while (fFull == 0)
-            fCond.wait(lk);
-    }
+  if (fFull == 0)
+  {
+    while (fFull == 0)
+      fCond.wait(lk);
+  }
 
-    ResultPair rp = fResultBuffer[0];
-    fResultBuffer.pop_front();
-    --fFull;
-    fCond.notify_one();
-    return rp;
+  ResultPair rp = fResultBuffer[0];
+  fResultBuffer.pop_front();
+  --fFull;
+  fCond.notify_one();
+  return rp;
 }
 
-} //namespace dmlprocessor
-
-
+}  // namespace dmlprocessor

@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: dropindex.cpp 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: dropindex.cpp 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 
 #include "ddlpkg.h"
 
@@ -29,18 +29,17 @@ using namespace std;
 
 DropIndexStatement::~DropIndexStatement()
 {
-    delete fIndexName;
+  delete fIndexName;
 }
 
-DropIndexStatement::DropIndexStatement(QualifiedName* qualifiedName) :
-    fIndexName(qualifiedName)
+DropIndexStatement::DropIndexStatement(QualifiedName* qualifiedName) : fIndexName(qualifiedName)
 {
 }
 
 std::ostream& DropIndexStatement::put(std::ostream& os) const
 {
-    os << "Drop Index: " << *fIndexName << endl;
-    return os;
+  os << "Drop Index: " << *fIndexName << endl;
+  return os;
 }
 
-}
+}  // namespace ddlpackage

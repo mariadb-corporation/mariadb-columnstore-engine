@@ -16,14 +16,13 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: funcexp.h 3495 2013-01-21 14:09:51Z rdempsey $
-*
-*
-****************************************************************************/
+ * $Id: funcexp.h 3495 2013-01-21 14:09:51Z rdempsey $
+ *
+ *
+ ****************************************************************************/
 /** @file */
 
-#ifndef FUNCEXP_H
-#define FUNCEXP_H
+#pragma once
 
 #include <string>
 #include <vector>
@@ -42,7 +41,7 @@ namespace execplan
 {
 class FunctionColumn;
 class ArithmeticColumn;
-}
+}  // namespace execplan
 
 namespace funcexp
 {
@@ -51,72 +50,68 @@ class Func;
 typedef std::tr1::unordered_map<std::string, Func*> FuncMap;
 
 /** @brief FuncExp is a component for evaluate function and expression filters
-  */
+ */
 class FuncExp
 {
-public:
+ public:
+  /** Singleton pattern */
+  static FuncExp* instance();
 
-    /** Singleton pattern */
-    static FuncExp* instance();
+  /********************************************************************
+   * Row based evaluation APIs
+   ********************************************************************/
 
-    /********************************************************************
-    * Row based evaluation APIs
-    ********************************************************************/
+  /** @brief evaluate a filter stack on row. used for F&E on the where clause
+   *
+   * @param row input row that contains all the columns in the filter stack
+   * @param filters parsetree of filters to evaluate
+   * @return boolean of whether or not the row passed evaluation
+   */
+  inline bool evaluate(rowgroup::Row& row, execplan::ParseTree* filters);
 
-    /** @brief evaluate a filter stack on row. used for F&E on the where clause
-    *
-    * @param row input row that contains all the columns in the filter stack
-    * @param filters parsetree of filters to evaluate
-    * @return boolean of whether or not the row passed evaluation
-    */
-    inline bool evaluate(rowgroup::Row& row, execplan::ParseTree* filters);
+  /** @brief evaluate a filter stack on rowgroup
+   *
+   * @param row input rowgroup that contains all the columns in the filter stack
+   * @param filters parse tree of filters to evaluate. The failed rows are removed from the rowgroup
+   */
+  inline void evaluate(rowgroup::RowGroup& rowgroup, execplan::ParseTree* filters);
 
-    /** @brief evaluate a filter stack on rowgroup
-     *
-     * @param row input rowgroup that contains all the columns in the filter stack
-     * @param filters parse tree of filters to evaluate. The failed rows are removed from the rowgroup
-     */
-    inline void evaluate(rowgroup::RowGroup& rowgroup, execplan::ParseTree* filters);
+  /** @brief evaluate a F&E column on row. used for F&E on the select and group by clause
+   *
+   * @param row input row that contains all the columns in all the expressions
+   * @param expressions vector of F&Es that needs evaluation. The results are filled on the row.
+   */
+  void evaluate(rowgroup::Row& row, std::vector<execplan::SRCP>& expressions);
 
-    /** @brief evaluate a F&E column on row. used for F&E on the select and group by clause
-    *
-    * @param row input row that contains all the columns in all the expressions
-    * @param expressions vector of F&Es that needs evaluation. The results are filled on the row.
-    */
-    void evaluate(rowgroup::Row& row, std::vector<execplan::SRCP>& expressions);
+  /** @brief evaluate a F&E column on rowgroup. used for F&E on the select and group by clause
+   *
+   * @param row input rowgroup that contains all the columns in all the expressions
+   * @param expressions vector of F&Es that needs evaluation. The results are filled on each row.
+   */
+  inline void evaluate(rowgroup::RowGroup& rowgroup, std::vector<execplan::SRCP>& expressions);
 
-    /** @brief evaluate a F&E column on rowgroup. used for F&E on the select and group by clause
-    *
-    * @param row input rowgroup that contains all the columns in all the expressions
-    * @param expressions vector of F&Es that needs evaluation. The results are filled on each row.
-    */
-    inline void evaluate(rowgroup::RowGroup& rowgroup, std::vector<execplan::SRCP>& expressions);
+  /** @brief get functor from functor map
+   *
+   * @param funcName function name
+   * @return functor pointer. If non-support function, return NULL
+   */
+  Func* getFunctor(std::string& funcName);
 
-    /** @brief get functor from functor map
-    *
-    * @param funcName function name
-    * @return functor pointer. If non-support function, return NULL
-    */
-    Func* getFunctor(std::string& funcName);
-
-private:
-    static FuncExp* fInstance;
-    static boost::mutex fInstanceMutex;
-    FuncMap fFuncMap;
-    FuncExp();
+ private:
+  static FuncExp* fInstance;
+  static boost::mutex fInstanceMutex;
+  FuncMap fFuncMap;
+  FuncExp();
 };
 
-inline bool FuncExp::evaluate( rowgroup::Row& row, execplan::ParseTree* filters )
+inline bool FuncExp::evaluate(rowgroup::Row& row, execplan::ParseTree* filters)
 {
-    bool isNull = false;
-    return (filters->getBoolVal(row, isNull));
+  bool isNull = false;
+  return (filters->getBoolVal(row, isNull));
 }
 
-inline void FuncExp::evaluate( rowgroup::RowGroup& rowgroup, execplan::ParseTree* filters )
+inline void FuncExp::evaluate(rowgroup::RowGroup& rowgroup, execplan::ParseTree* filters)
 {
 }
 
-}
-
-#endif
-
+}  // namespace funcexp

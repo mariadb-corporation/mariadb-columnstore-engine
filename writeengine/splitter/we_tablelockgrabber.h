@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id$
-*
-*******************************************************************************/
+ * $Id$
+ *
+ *******************************************************************************/
 
 /*
  * we_tableLockgrabber.h
@@ -27,37 +27,31 @@
  *      Author: bpaul
  */
 
-#ifndef WE_TABLELOCKGRABBER_H_
-#define WE_TABLELOCKGRABBER_H_
-
-
+#pragma once
 
 namespace WriteEngine
 {
-
-class WESDHandler;					// forward deceleration
+class WESDHandler;  // forward deceleration
 
 class WETableLockGrabber
 {
-public:
-    WETableLockGrabber(WESDHandler& Ref): fRef(Ref) { }
-    virtual ~WETableLockGrabber() { }
+ public:
+  WETableLockGrabber(WESDHandler& Ref) : fRef(Ref)
+  {
+  }
+  virtual ~WETableLockGrabber()
+  {
+  }
 
-public:
+ public:
+  uint64_t grabTableLock(std::vector<unsigned int>& PmList, uint32_t tableOID);
 
-    uint64_t grabTableLock(std::vector<unsigned int>& PmList,
-                           uint32_t tableOID);
+  bool releaseTableLock(uint64_t LockId);
 
-    bool releaseTableLock(uint64_t LockId);
+  bool changeTableLockState(uint64_t LockId);
 
-    bool changeTableLockState(uint64_t LockId);
-
-
-private:
-    WESDHandler& fRef;
-
+ private:
+  WESDHandler& fRef;
 };
 
-
 } /* namespace WriteEngine */
-#endif /* WE_TABLELOCKGRABBER_H_ */

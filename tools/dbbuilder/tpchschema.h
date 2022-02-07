@@ -16,30 +16,25 @@
    MA 02110-1301, USA. */
 
 /******************************************************************************************
-* $Id: tpchschema.h 2101 2013-01-21 14:12:52Z rdempsey $
-*
-******************************************************************************************/
+ * $Id: tpchschema.h 2101 2013-01-21 14:12:52Z rdempsey $
+ *
+ ******************************************************************************************/
 /**
  * @file
  */
-#ifndef TPCHSCHEMA_H
-#define TPCHSCHEMA_H
+#pragma once
 
 class TpchSchema
 {
+ public:
+  void build();
+  void buildTpchTables(std::string schema);
+  void buildTable();
+  void buildMultiColumnIndex();
+  void buildIndex();
 
-public:
-    void build();
-    void buildTpchTables(std::string schema);
-    void buildTable();
-    void buildMultiColumnIndex();
-    void buildIndex();
-protected:
-
-
-private:
-    void buildTable(std::string createText);
-    void createindex(std::string createText);
+ protected:
+ private:
+  void buildTable(std::string createText);
+  void createindex(std::string createText);
 };
-
-#endif //TPCHSCHEMA_H

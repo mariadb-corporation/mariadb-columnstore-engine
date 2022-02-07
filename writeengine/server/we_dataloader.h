@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id$
-*
-*******************************************************************************/
+ * $Id$
+ *
+ *******************************************************************************/
 
 /*
  * 	we_dataloader.h
@@ -28,10 +28,7 @@
  *
  */
 
-
-
-#ifndef WE_DATALOADER_H_
-#define WE_DATALOADER_H_
+#pragma once
 
 #include "rwlock_local.h"
 #include "resourcemanager.h"
@@ -45,7 +42,6 @@
 
 namespace WriteEngine
 {
-
 class SplitterReadThread;
 
 // This class will go with the read thread & client socket
@@ -53,169 +49,172 @@ class SplitterReadThread;
 
 class WEDataLoader : public Observer
 {
-public:
-    explicit WEDataLoader(SplitterReadThread& pSrt );
-    virtual ~WEDataLoader();
+ public:
+  explicit WEDataLoader(SplitterReadThread& pSrt);
+  virtual ~WEDataLoader();
 
-    virtual bool update(Subject* pSub);
+  virtual bool update(Subject* pSub);
 
-public:
-    bool setupCpimport();		// fork the cpimport
-    void teardownCpimport(bool useStoredWaitPidStatus); // @bug 4267
-    void pushData2Cpimport(ByteStream& Ibs);	// push data to cpimport from the queue
-    void closeWritePipe();
-    void str2Argv(std::string CmdLine, std::vector<char*>& V);
+ public:
+  bool setupCpimport();                                // fork the cpimport
+  void teardownCpimport(bool useStoredWaitPidStatus);  // @bug 4267
+  void pushData2Cpimport(ByteStream& Ibs);             // push data to cpimport from the queue
+  void closeWritePipe();
+  void str2Argv(std::string CmdLine, std::vector<char*>& V);
 
+ public:
+  void onReceiveKeepAlive(ByteStream& Ibs);
+  void onReceiveData(ByteStream& Ibs);
+  void onReceiveEod(ByteStream& Ibs);  // end of data
+  void onReceiveMode(ByteStream& Ibs);
+  // void onReceiveCmd(messageqcpp::SBS bs);// {(ByteStream& Ibs);
+  void onReceiveCmd(ByteStream& bs);  // {(ByteStream& Ibs);
+  void onReceiveAck(ByteStream& Ibs);
+  void onReceiveNak(ByteStream& Ibs);
+  void onReceiveError(ByteStream& Ibs);
 
-public:
-    void onReceiveKeepAlive(ByteStream& Ibs);
-    void onReceiveData(ByteStream& Ibs);
-    void onReceiveEod(ByteStream& Ibs);		//end of data
-    void onReceiveMode(ByteStream& Ibs);
-    //void onReceiveCmd(messageqcpp::SBS bs);// {(ByteStream& Ibs);
-    void onReceiveCmd(ByteStream& bs);// {(ByteStream& Ibs);
-    void onReceiveAck(ByteStream& Ibs);
-    void onReceiveNak(ByteStream& Ibs);
-    void onReceiveError(ByteStream& Ibs);
+  void onReceiveJobId(ByteStream& Ibs);
+  void onReceiveJobData(ByteStream& Ibs);
+  void onReceiveImportFileName(ByteStream& Ibs);
+  void onReceiveCmdLineArgs(ByteStream& Ibs);
+  void onReceiveStartCpimport();
+  void onReceiveBrmRptFileName(ByteStream& Ibs);
+  void onReceiveCleanup(ByteStream& Ibs);
+  void onReceiveRollback(ByteStream& Ibs);
 
-    void onReceiveJobId(ByteStream& Ibs);
-    void onReceiveJobData(ByteStream& Ibs);
-    void onReceiveImportFileName(ByteStream& Ibs);
-    void onReceiveCmdLineArgs(ByteStream& Ibs);
-    void onReceiveStartCpimport();
-    void onReceiveBrmRptFileName(ByteStream& Ibs);
-    void onReceiveCleanup(ByteStream& Ibs);
-    void onReceiveRollback(ByteStream& Ibs);
+  void onReceiveErrFileRqst(ByteStream& Ibs);
+  void onReceiveBadFileRqst(ByteStream& Ibs);
 
-    void onReceiveErrFileRqst(ByteStream& Ibs);
-    void onReceiveBadFileRqst(ByteStream& Ibs);
+  void onCpimportSuccess();
+  void onCpimportFailure();
 
-    void onCpimportSuccess();
-    void onCpimportFailure();
+  void sendDataRequest();
+  void sendCpimportFailureNotice();
 
-    void sendDataRequest();
-    void sendCpimportFailureNotice();
+  void serialize(messageqcpp::ByteStream& b) const;
+  void unserialize(messageqcpp::ByteStream& b);
 
-    void serialize(messageqcpp::ByteStream& b) const;
-    void unserialize(messageqcpp::ByteStream& b);
+  // setup the signal handlers for the main app
+  void setupSignalHandlers();
+  static void onSigChild(int aInt);
 
+ public:
+  void setMode(int Mode)
+  {
+    fMode = Mode;
+  }
+  void updateTxBytes(unsigned int Tx)
+  {
+    fTxBytes += Tx;
+  }
+  void updateRxBytes(unsigned int Rx)
+  {
+    fRxBytes += Rx;
+  }
+  void setChPid(pid_t pid)
+  {
+    fCh_pid = pid;
+  }
+  void setPid(pid_t pid)
+  {
+    fThis_pid = pid;
+  }
+  void setPPid(pid_t pid)
+  {
+    fP_pid = pid;
+  }
+  void setCmdLineStr(std::string& Str)
+  {
+    fCmdLineStr = Str;
+  }
+  void setObjId(int ObjId)
+  {
+    fObjId = ObjId;
+  }
 
-    // setup the signal handlers for the main app
-    void setupSignalHandlers();
-    static void onSigChild(int aInt);
+  unsigned int getTxBytes()
+  {
+    return fTxBytes;
+  }
+  unsigned int getRxBytes()
+  {
+    return fRxBytes;
+  }
 
-public:
-    void setMode(int Mode)
-    {
-        fMode = Mode;
-    }
-    void updateTxBytes(unsigned int Tx)
-    {
-        fTxBytes += Tx;
-    }
-    void updateRxBytes(unsigned int Rx)
-    {
-        fRxBytes += Rx;
-    }
-    void setChPid(pid_t pid)
-    {
-        fCh_pid = pid;
-    }
-    void setPid(pid_t pid)
-    {
-        fThis_pid = pid;
-    }
-    void setPPid(pid_t pid)
-    {
-        fP_pid = pid;
-    }
-    void setCmdLineStr(std::string& Str)
-    {
-        fCmdLineStr = Str;
-    }
-    void setObjId(int ObjId)
-    {
-        fObjId = ObjId;
-    }
+  int getObjId()
+  {
+    return fObjId;
+  }
+  int getMode()
+  {
+    return fMode;
+  }
+  pid_t getChPid()
+  {
+    return fCh_pid;
+  }
+  pid_t getPid()
+  {
+    return fThis_pid;
+  }
+  pid_t getPPid()
+  {
+    return fP_pid;
+  }
+  std::string getCmdLineStr()
+  {
+    return fCmdLineStr;
+  }
 
-    unsigned int getTxBytes()
-    {
-        return fTxBytes;
-    }
-    unsigned int getRxBytes()
-    {
-        return fRxBytes;
-    }
+ private:
+  SplitterReadThread& fRef;
 
-    int getObjId()
-    {
-        return fObjId;
-    }
-    int getMode()
-    {
-        return fMode;
-    }
-    pid_t getChPid()
-    {
-        return fCh_pid;
-    }
-    pid_t getPid()
-    {
-        return fThis_pid;
-    }
-    pid_t getPPid()
-    {
-        return fP_pid;
-    }
-    std::string getCmdLineStr()
-    {
-        return fCmdLineStr;
-    }
+  int fMode;
+  std::ofstream fDataDumpFile;
+  std::ofstream fJobFile;
+  unsigned int fTxBytes;
+  unsigned int fRxBytes;
+  char fPmId;
+  int fObjId;  // Object Identifier for logging
 
-private:
-    SplitterReadThread& fRef;
+  // CpImport related Member variables
+  int fFIFO[2];  // I/O Pipes
+  pid_t fCh_pid;
+  pid_t fThis_pid;
+  pid_t fP_pid;
+  bool fCpIStarted;
+  std::string fCmdLineStr;
+  std::string fBrmRptFileName;
 
-    int fMode;
-    std::ofstream fDataDumpFile;
-    std::ofstream fJobFile;
-    unsigned int fTxBytes;
-    unsigned int fRxBytes;
-    char fPmId;
-    int fObjId;					// Object Identifier for logging
+  // CPI Feeder Thread
+  WECpiFeederThread* fpCfThread;
 
-    // CpImport related Member variables
-    int fFIFO[2];			//I/O Pipes
-    pid_t fCh_pid;
-    pid_t fThis_pid;
-    pid_t fP_pid;
-    bool fCpIStarted;
-    std::string fCmdLineStr;
-    std::string fBrmRptFileName;
+  boost::mutex fClntMsgMutex;  // mutex in sending messages to client.
 
-    //CPI Feeder Thread
-    WECpiFeederThread* fpCfThread;
+  // static bool fTearDownCpimport; // @bug 4267
+  bool fTearDownCpimport;  // @bug 4267
+  pid_t fWaitPidRc;        // @bug 4267
+  int fWaitPidStatus;      // @bug 4267
 
-    boost::mutex fClntMsgMutex;		//mutex in sending messages to client.
+  bool fForceKill;
+  bool fPipeErr;  // Err Flag to restrict err msgs logging.
 
-    //static bool fTearDownCpimport; // @bug 4267
-    bool fTearDownCpimport; // @bug 4267
-    pid_t fWaitPidRc;       // @bug 4267
-    int   fWaitPidStatus;   // @bug 4267
+ private:
+  // more enums follow
+  enum CmdId
+  {
+    BULKFILENAME
+  };
 
-    bool fForceKill;
-    bool fPipeErr;			// Err Flag to restrict err msgs logging.
+ public:
+  enum
+  {
+    MIN_QSIZE = 25,
+    MAX_QSIZE = 250
+  };
 
-private:
-    // more enums follow
-    enum CmdId { BULKFILENAME };
-public:
-    enum { MIN_QSIZE = 25, MAX_QSIZE = 250};
-
-public:
-    SimpleSysLog* fpSysLog;
-
+ public:
+  SimpleSysLog* fpSysLog;
 };
 
-}
-
-#endif /* WE_DATALOADER_H_ */
+}  // namespace WriteEngine

@@ -22,9 +22,9 @@ using namespace std;
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include<sstream>
-#include<exception>
-#include<iostream>
+#include <sstream>
+#include <exception>
+#include <iostream>
 #include <unistd.h>
 
 #include "messagequeue.h"
@@ -47,27 +47,26 @@ using namespace execplan;
 
 class TPCH_EXECPLAN : public CppUnit::TestFixture
 {
+  CPPUNIT_TEST_SUITE(TPCH_EXECPLAN);
 
-    CPPUNIT_TEST_SUITE( TPCH_EXECPLAN );
+  CPPUNIT_TEST(Q1);
 
-    CPPUNIT_TEST( Q1 );
+  CPPUNIT_TEST_SUITE_END();
 
-    CPPUNIT_TEST_SUITE_END();
+ private:
+ public:
+  void setUp()
+  {
+  }
 
-private:
-public:
+  void tearDown()
+  {
+  }
 
-    void setUp()
-    {
-    }
-
-    void tearDown()
-    {
-    }
-
-    void Q1()
-    {
-        string sql = "\
+  void Q1()
+  {
+    string sql =
+        "\
     select\
         l_orderkey,\
         sum(l_extendedprice * (1 - l_discount)) as revenue,\
@@ -91,101 +90,91 @@ public:
         revenue desc,\
         o_orderdate;";
 
-        CalpontSelectExecutionPlan csep;
+    CalpontSelectExecutionPlan csep;
 
-        // Returned columns
-        CalpontSelectExecutionPlan::ReturnedColumnList returnedColumnList;
+    // Returned columns
+    CalpontSelectExecutionPlan::ReturnedColumnList returnedColumnList;
 
-        SimpleColumn* c1 = new SimpleColumn("tpch.lineitem.l_orderkey");
-        returnedColumnList.push_back(c1);
+    SimpleColumn* c1 = new SimpleColumn("tpch.lineitem.l_orderkey");
+    returnedColumnList.push_back(c1);
 
-        ArithmeticColumn* c2 = new ArithmeticColumn
-        ("sum(tpch.lineitem.l_extendedprice * (1 - tpch.lineitem.l_discount))");
-        c2->alias("revenue");
-        returnedColumnList.push_back(c2);
+    ArithmeticColumn* c2 =
+        new ArithmeticColumn("sum(tpch.lineitem.l_extendedprice * (1 - tpch.lineitem.l_discount))");
+    c2->alias("revenue");
+    returnedColumnList.push_back(c2);
 
-        SimpleColumn* c3 = new SimpleColumn("tpch.orders.o_orderdate");
-        returnedColumnList.push_back(c3);
+    SimpleColumn* c3 = new SimpleColumn("tpch.orders.o_orderdate");
+    returnedColumnList.push_back(c3);
 
-        SimpleColumn* c4 = new SimpleColumn("tpch.orders.o_shippriority");
-        returnedColumnList.push_back(c4);
+    SimpleColumn* c4 = new SimpleColumn("tpch.orders.o_shippriority");
+    returnedColumnList.push_back(c4);
 
-        csep.returnedCols(returnedColumnList);
+    csep.returnedCols(returnedColumnList);
 
-        // Filters
-        CalpontSelectExecutionPlan::FilterTokenList filterTokenList;
-        SimpleFilter* f1 = new SimpleFilter (new Operator("="),
-                                             new SimpleColumn("tpch.customer.c_mktsegment"),
-                                             new ConstantColumn(":1"));
-        filterTokenList.push_back(f1);
-        filterTokenList.push_back(new Operator("and"));
-        SimpleFilter* f2 = new SimpleFilter (new Operator("="),
-                                             new SimpleColumn("tpch.customer.c_custkey"),
-                                             new SimpleColumn("tpch.orders.o_custkey"));
-        filterTokenList.push_back(f2);
-        filterTokenList.push_back(new Operator("and"));
-        SimpleFilter* f3 = new SimpleFilter (new Operator("="),
-                                             new SimpleColumn("tpch.lineitem.l_orderkey"),
-                                             new SimpleColumn("tpch.orders.o_orderkey"));
-        filterTokenList.push_back(f3);
-        filterTokenList.push_back(new Operator("and"));
-        SimpleFilter* f4 = new SimpleFilter (new Operator("<"),
-                                             new SimpleColumn("tpch.orders.o_orderdate"),
-                                             new ArithmeticColumn("date(':2')"));
-        filterTokenList.push_back(f4);
-        filterTokenList.push_back(new Operator("and"));
-        SimpleFilter* f5 = new SimpleFilter (new Operator(">"),
-                                             new SimpleColumn("tpch.lineitem.l_shipdate"),
-                                             new ArithmeticColumn("date(':2')"));
-        filterTokenList.push_back(f5);
+    // Filters
+    CalpontSelectExecutionPlan::FilterTokenList filterTokenList;
+    SimpleFilter* f1 = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.customer.c_mktsegment"),
+                                        new ConstantColumn(":1"));
+    filterTokenList.push_back(f1);
+    filterTokenList.push_back(new Operator("and"));
+    SimpleFilter* f2 = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.customer.c_custkey"),
+                                        new SimpleColumn("tpch.orders.o_custkey"));
+    filterTokenList.push_back(f2);
+    filterTokenList.push_back(new Operator("and"));
+    SimpleFilter* f3 = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.lineitem.l_orderkey"),
+                                        new SimpleColumn("tpch.orders.o_orderkey"));
+    filterTokenList.push_back(f3);
+    filterTokenList.push_back(new Operator("and"));
+    SimpleFilter* f4 = new SimpleFilter(new Operator("<"), new SimpleColumn("tpch.orders.o_orderdate"),
+                                        new ArithmeticColumn("date(':2')"));
+    filterTokenList.push_back(f4);
+    filterTokenList.push_back(new Operator("and"));
+    SimpleFilter* f5 = new SimpleFilter(new Operator(">"), new SimpleColumn("tpch.lineitem.l_shipdate"),
+                                        new ArithmeticColumn("date(':2')"));
+    filterTokenList.push_back(f5);
 
-        csep.filterTokenList(filterTokenList);
+    csep.filterTokenList(filterTokenList);
 
-        ParseTree* pt = const_cast<ParseTree*>(csep.filters());
-        pt->drawTree("q3.dot");
+    ParseTree* pt = const_cast<ParseTree*>(csep.filters());
+    pt->drawTree("q3.dot");
 
-        // Group by
-        CalpontSelectExecutionPlan::GroupByColumnList groupByList;
+    // Group by
+    CalpontSelectExecutionPlan::GroupByColumnList groupByList;
 
-        SimpleColumn* g1 = new SimpleColumn(*c1);
-        groupByList.push_back(g1);
-        SimpleColumn* g2 = new SimpleColumn(*c3);
-        groupByList.push_back(g2);
-        SimpleColumn* g3 = new SimpleColumn(*c4);
-        groupByList.push_back(g3);
-        csep.groupByCols(groupByList);
+    SimpleColumn* g1 = new SimpleColumn(*c1);
+    groupByList.push_back(g1);
+    SimpleColumn* g2 = new SimpleColumn(*c3);
+    groupByList.push_back(g2);
+    SimpleColumn* g3 = new SimpleColumn(*c4);
+    groupByList.push_back(g3);
+    csep.groupByCols(groupByList);
 
+    // Order by
+    CalpontSelectExecutionPlan::OrderByColumnList orderByList;
+    // ArithmeticColumn *test = new ArithmeticColumn("a+b");
+    ArithmeticColumn* o1 = new ArithmeticColumn(*c2);
+    o1->asc(false);
+    orderByList.push_back(o1);
 
-        // Order by
-        CalpontSelectExecutionPlan::OrderByColumnList orderByList;
-        //ArithmeticColumn *test = new ArithmeticColumn("a+b");
-        ArithmeticColumn* o1 = new ArithmeticColumn(*c2);
-        o1->asc(false);
-        orderByList.push_back(o1);
+    SimpleColumn* o2 = new SimpleColumn(*c3);
+    orderByList.push_back(o2);
 
-        SimpleColumn* o2 = new SimpleColumn(*c3);
-        orderByList.push_back(o2);
+    csep.orderByCols(orderByList);
 
-        csep.orderByCols(orderByList);
-
-        cout << csep;
-    }
-
-
+    cout << csep;
+  }
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION( TPCH_EXECPLAN );
+CPPUNIT_TEST_SUITE_REGISTRATION(TPCH_EXECPLAN);
 
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
-int main( int argc, char** argv)
+int main(int argc, char** argv)
 {
-    CppUnit::TextUi::TestRunner runner;
-    CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
-    runner.addTest( registry.makeTest() );
-    bool wasSuccessful = runner.run( "", false );
-    return (wasSuccessful ? 0 : 1);
+  CppUnit::TextUi::TestRunner runner;
+  CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
+  runner.addTest(registry.makeTest());
+  bool wasSuccessful = runner.run("", false);
+  return (wasSuccessful ? 0 : 1);
 }
-
-

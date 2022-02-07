@@ -16,14 +16,13 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: mysqlexecutionplan.h 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: mysqlexecutionplan.h 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 /** @file */
 
-#ifndef MYSQLEXECUTIONPLAN_H
-#define MYSQLEXECUTIONPLAN_H
+#pragma once
 #include <string>
 #include "vendorexecutionplan.h"
 
@@ -38,64 +37,62 @@ namespace execplan
  */
 class MySQLExecutionPlan : public VendorExecutionPlan
 {
-    /**
-     * Public stuff
-     */
-public:
-    /**
-     * Fields
-     */
-    /**
-     *
-     */
-    /**
-     * Constructors
-     */
-    /**
-     * Accessor Methods
-     */
-    /**
-     * Operations
-     */
-    /**
-     * Protected stuff
-     */
-protected:
-    /**
-     * Fields
-     */
-    /**
-     *
-     */
-    /**
-     * Constructors
-     */
-    /**
-     * Accessor Methods
-     */
-    /**
-     * Operations
-     */
-    /**
-     * Private stuff
-     */
-private:
-    /**
-     * Fields
-     */
-    /**
-     *
-     */
-    /**
-     * Constructors
-     */
-    /**
-     * Accessor Methods
-     */
-    /**
-     * Operations
-     */
+  /**
+   * Public stuff
+   */
+ public:
+  /**
+   * Fields
+   */
+  /**
+   *
+   */
+  /**
+   * Constructors
+   */
+  /**
+   * Accessor Methods
+   */
+  /**
+   * Operations
+   */
+  /**
+   * Protected stuff
+   */
+ protected:
+  /**
+   * Fields
+   */
+  /**
+   *
+   */
+  /**
+   * Constructors
+   */
+  /**
+   * Accessor Methods
+   */
+  /**
+   * Operations
+   */
+  /**
+   * Private stuff
+   */
+ private:
+  /**
+   * Fields
+   */
+  /**
+   *
+   */
+  /**
+   * Constructors
+   */
+  /**
+   * Accessor Methods
+   */
+  /**
+   * Operations
+   */
 };
-}
-#endif //MYSQLEXECUTIONPLAN_H
-
+}  // namespace execplan

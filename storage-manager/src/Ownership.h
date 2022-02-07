@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef OWNERSHIP_H_
-#define OWNERSHIP_H_
+#pragma once
 
 #include <boost/filesystem/path.hpp>
 #include <boost/noncopyable.hpp>
@@ -24,57 +23,54 @@
 #include <map>
 #include "SMLogging.h"
 
-/* This class tracks the ownership of each prefix and manages ownership transfer. 
+/* This class tracks the ownership of each prefix and manages ownership transfer.
    Could we come up with a better name btw? */
 
 namespace storagemanager
 {
-
 class Ownership : public boost::noncopyable
 {
-    public:
-        Ownership();
-        ~Ownership();
+ public:
+  Ownership();
+  ~Ownership();
 
-        bool sharedFS();
-        // returns the path "right shifted" by prefixDepth, and with ownership of that path.
-        // on error it throws a runtime exception
-        // setting getOwnership to false will return the modified path but not also take ownership
-        // of the returned prefix.
-        boost::filesystem::path get(const boost::filesystem::path &, bool getOwnership=true);
-        
-        
-    private:
-        int prefixDepth;
-        boost::filesystem::path metadataPrefix;
-        SMLogging *logger;
-        
-        void touchFlushing(const boost::filesystem::path &, volatile bool *) const;
-        void takeOwnership(const boost::filesystem::path &);
-        void releaseOwnership(const boost::filesystem::path &, bool isDtor = false);
-        void _takeOwnership(const boost::filesystem::path &);
-        
-        struct Monitor
-        {
-            Monitor(Ownership *);
-            ~Monitor();
-            boost::thread thread;
-            Ownership *owner;
-            volatile bool stop;
-            void watchForInterlopers();
-        };
-        
-        // maps a prefix to a state.  ownedPrefixes[p] == false means it's being init'd, == true means it's ready for use.
-        std::map<boost::filesystem::path, bool> ownedPrefixes;
-        Monitor *monitor;
-        boost::mutex mutex;
+  bool sharedFS();
+  // returns the path "right shifted" by prefixDepth, and with ownership of that path.
+  // on error it throws a runtime exception
+  // setting getOwnership to false will return the modified path but not also take ownership
+  // of the returned prefix.
+  boost::filesystem::path get(const boost::filesystem::path&, bool getOwnership = true);
+
+ private:
+  int prefixDepth;
+  boost::filesystem::path metadataPrefix;
+  SMLogging* logger;
+
+  void touchFlushing(const boost::filesystem::path&, volatile bool*) const;
+  void takeOwnership(const boost::filesystem::path&);
+  void releaseOwnership(const boost::filesystem::path&, bool isDtor = false);
+  void _takeOwnership(const boost::filesystem::path&);
+
+  struct Monitor
+  {
+    Monitor(Ownership*);
+    ~Monitor();
+    boost::thread thread;
+    Ownership* owner;
+    volatile bool stop;
+    void watchForInterlopers();
+  };
+
+  // maps a prefix to a state.  ownedPrefixes[p] == false means it's being init'd, == true means it's ready
+  // for use.
+  std::map<boost::filesystem::path, bool> ownedPrefixes;
+  Monitor* monitor;
+  boost::mutex mutex;
 };
 
 inline bool Ownership::sharedFS()
 {
-    return prefixDepth >= 0;
+  return prefixDepth >= 0;
 }
 
-}
-
-#endif
+}  // namespace storagemanager

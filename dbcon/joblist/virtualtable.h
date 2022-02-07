@@ -17,11 +17,9 @@
 
 //  $Id: virtualtable.h 6370 2010-03-18 02:58:09Z xlou $
 
-
 /** @file */
 
-#ifndef VIRTUAL_TABLE_H
-#define VIRTUAL_TABLE_H
+#pragma once
 
 #include "calpontsystemcatalog.h"
 #include "returnedcolumn.h"
@@ -29,93 +27,91 @@
 
 namespace joblist
 {
-
 class VirtualTable
 {
-public:
-    VirtualTable();
-    virtual ~VirtualTable() {}
+ public:
+  VirtualTable();
+  virtual ~VirtualTable()
+  {
+  }
 
-    virtual void initialize();
-    void addColumn(const execplan::SRCP& column);
+  virtual void initialize();
+  void addColumn(const execplan::SRCP& column);
 
-    void tableOid(const execplan::CalpontSystemCatalog::OID& oid)
-    {
-        fTableOid = oid;
-    }
-    const execplan::CalpontSystemCatalog::OID& tableOid() const
-    {
-        return fTableOid;
-    }
+  void tableOid(const execplan::CalpontSystemCatalog::OID& oid)
+  {
+    fTableOid = oid;
+  }
+  const execplan::CalpontSystemCatalog::OID& tableOid() const
+  {
+    return fTableOid;
+  }
 
-    void name(const std::string& s)
-    {
-        fName = s;
-    }
-    const std::string& name() const
-    {
-        return fName;
-    }
+  void name(const std::string& s)
+  {
+    fName = s;
+  }
+  const std::string& name() const
+  {
+    return fName;
+  }
 
-    void alias(const std::string& s)
-    {
-        fAlias = s;
-    }
-    const std::string& alias() const
-    {
-        return fAlias;
-    }
+  void alias(const std::string& s)
+  {
+    fAlias = s;
+  }
+  const std::string& alias() const
+  {
+    return fAlias;
+  }
 
-    void view(const std::string& v)
-    {
-        fView = v;
-    }
-    const std::string& view() const
-    {
-        return fView;
-    }
+  void view(const std::string& v)
+  {
+    fView = v;
+  }
+  const std::string& view() const
+  {
+    return fView;
+  }
 
-    const std::vector<execplan::SSC>& columns() const
-    {
-        return fColumns;
-    }
-    const execplan::CalpontSystemCatalog::OID& columnOid(uint32_t i) const;
+  const std::vector<execplan::SSC>& columns() const
+  {
+    return fColumns;
+  }
+  const execplan::CalpontSystemCatalog::OID& columnOid(uint32_t i) const;
 
-    const std::vector<execplan::CalpontSystemCatalog::ColType>& columnTypes() const
-    {
-        return fColumnTypes;
-    }
-    void columnType(execplan::CalpontSystemCatalog::ColType& type, uint32_t i);
-    const execplan::CalpontSystemCatalog::ColType& columnType(uint32_t i) const;
+  const std::vector<execplan::CalpontSystemCatalog::ColType>& columnTypes() const
+  {
+    return fColumnTypes;
+  }
+  void columnType(execplan::CalpontSystemCatalog::ColType& type, uint32_t i);
+  const execplan::CalpontSystemCatalog::ColType& columnType(uint32_t i) const;
 
-    const std::map<UniqId, uint32_t>& columnMap() const
-    {
-        return fColumnMap;
-    }
+  const std::map<UniqId, uint32_t>& columnMap() const
+  {
+    return fColumnMap;
+  }
 
-    void varbinaryOK(bool b)
-    {
-        fVarBinOK = b;
-    }
-    bool varbinaryOK() const
-    {
-        return fVarBinOK;
-    }
+  void varbinaryOK(bool b)
+  {
+    fVarBinOK = b;
+  }
+  bool varbinaryOK() const
+  {
+    return fVarBinOK;
+  }
 
-protected:
-    execplan::CalpontSystemCatalog::OID fTableOid;
-    std::string                         fName;
-    std::string                         fAlias;
-    std::string                         fView;
+ protected:
+  execplan::CalpontSystemCatalog::OID fTableOid;
+  std::string fName;
+  std::string fAlias;
+  std::string fView;
 
-    std::vector<execplan::SSC>          fColumns;
-    std::vector<execplan::CalpontSystemCatalog::ColType> fColumnTypes;
-    std::map<UniqId, uint32_t>          fColumnMap;
+  std::vector<execplan::SSC> fColumns;
+  std::vector<execplan::CalpontSystemCatalog::ColType> fColumnTypes;
+  std::map<UniqId, uint32_t> fColumnMap;
 
-    bool                                fVarBinOK;
+  bool fVarBinOK;
 };
 
-}
-
-#endif  // VIRTUAL_TABLE_H
-
+}  // namespace joblist

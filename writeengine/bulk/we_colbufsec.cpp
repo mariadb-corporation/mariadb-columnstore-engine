@@ -28,20 +28,15 @@
 
 namespace WriteEngine
 {
-
-ColumnBufferSection::ColumnBufferSection(
-    ColumnBuffer* const cb,
-    RID sRowId,
-    RID eRowId,
-    int width,
-    int sOffset)
-    : fCBuf(cb),
-      fStartRowId(sRowId),
-      fEndRowId(eRowId),
-      fColWidth(width),
-      fBufStartOffset(sOffset),
-      fCurrRowId(sRowId),
-      fStatus(INIT_COMPLETE)
+ColumnBufferSection::ColumnBufferSection(ColumnBuffer* const cb, RID sRowId, RID eRowId, int width,
+                                         int sOffset)
+ : fCBuf(cb)
+ , fStartRowId(sRowId)
+ , fEndRowId(eRowId)
+ , fColWidth(width)
+ , fBufStartOffset(sOffset)
+ , fCurrRowId(sRowId)
+ , fStatus(INIT_COMPLETE)
 {
 }
 
@@ -51,49 +46,47 @@ ColumnBufferSection::~ColumnBufferSection()
 
 void ColumnBufferSection::write(const void* const data, int nRows)
 {
-//Casting void * to unsigned char * without modifying the constness
-    const unsigned char* const tData =
-        static_cast<const unsigned char* >(data);
+  // Casting void * to unsigned char * without modifying the constness
+  const unsigned char* const tData = static_cast<const unsigned char*>(data);
 
-    if (fCurrRowId + nRows + 1 > fEndRowId)
-    {
-        //TODO: Handle error (old-dmc)
-    }
+  if (fCurrRowId + nRows + 1 > fEndRowId)
+  {
+    // TODO: Handle error (old-dmc)
+  }
 
-    int startOffset = (fBufStartOffset + (fCurrRowId - fStartRowId) *
-                       fColWidth) % fCBuf->getSize();
-    int nBytes = nRows * fColWidth;
-    int bytesWritten = 0;
+  int startOffset = (fBufStartOffset + (fCurrRowId - fStartRowId) * fColWidth) % fCBuf->getSize();
+  int nBytes = nRows * fColWidth;
+  int bytesWritten = 0;
 
-    if ((startOffset + nBytes) > fCBuf->getSize())
-    {
-        fCBuf->write(tData, startOffset, fCBuf->getSize() - startOffset);
-        bytesWritten = fCBuf->getSize() - startOffset;
-        startOffset = 0;
-    }
+  if ((startOffset + nBytes) > fCBuf->getSize())
+  {
+    fCBuf->write(tData, startOffset, fCBuf->getSize() - startOffset);
+    bytesWritten = fCBuf->getSize() - startOffset;
+    startOffset = 0;
+  }
 
-    fCBuf->write(tData + bytesWritten, startOffset, nBytes - bytesWritten);
-    fCurrRowId += nRows;
+  fCBuf->write(tData + bytesWritten, startOffset, nBytes - bytesWritten);
+  fCurrRowId += nRows;
 }
 
 void ColumnBufferSection::setStatus(int s)
 {
-    fStatus = s;
+  fStatus = s;
 }
 
 int ColumnBufferSection::getStatus() const
 {
-    return fStatus;
+  return fStatus;
 }
 
 int ColumnBufferSection::getStartOffset() const
 {
-    return fBufStartOffset;
+  return fBufStartOffset;
 }
 
 int ColumnBufferSection::getSectionSize() const
 {
-    return (fEndRowId - fStartRowId + 1) * fColWidth;
+  return (fEndRowId - fStartRowId + 1) * fColWidth;
 }
 
-}
+}  // namespace WriteEngine

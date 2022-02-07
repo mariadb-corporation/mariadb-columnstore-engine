@@ -15,27 +15,22 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-
-#ifndef COPYTASK_H_
-#define COPYTASK_H_
+#pragma once
 
 #include "PosixTask.h"
 
 namespace storagemanager
 {
-
 class CopyTask : public PosixTask
 {
-    public:
-        CopyTask(int sock, uint length);
-        virtual ~CopyTask();
-        
-        bool run();
-    
-    private:
-        CopyTask();
+ public:
+  CopyTask(int sock, uint length);
+  virtual ~CopyTask();
+
+  bool run();
+
+ private:
+  CopyTask();
 };
 
-
-}
-#endif
+}  // namespace storagemanager

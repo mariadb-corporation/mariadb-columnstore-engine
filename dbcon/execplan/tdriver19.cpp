@@ -22,9 +22,9 @@ using namespace std;
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include<sstream>
-#include<exception>
-#include<iostream>
+#include <sstream>
+#include <exception>
+#include <iostream>
 #include <unistd.h>
 
 #include "messagequeue.h"
@@ -49,101 +49,97 @@ using namespace execplan;
 
 class ExecPlanTest : public CppUnit::TestFixture
 {
+  CPPUNIT_TEST_SUITE(ExecPlanTest);
 
-    CPPUNIT_TEST_SUITE( ExecPlanTest );
+  CPPUNIT_TEST(selectExecutionPlan_19);
 
-    CPPUNIT_TEST( selectExecutionPlan_19 );
+  CPPUNIT_TEST_SUITE_END();
 
-    CPPUNIT_TEST_SUITE_END();
+ private:
+ public:
+  static void walkfnString(const ParseTree* n)
+  {
+    char* r;
+    static bool is_init = false;
+    const char* mname = typeid(*(n->data())).name();
 
-private:
-public:
-
-    static void walkfnString(const ParseTree* n)
+    if (!is_init)
     {
-        char* r;
-        static bool is_init = false;
-        const char* mname = typeid(*(n->data())).name();
-
-        if (!is_init)
-        {
-            ::init_demangler(0, 0, 0);
-            is_init = true;
-        }
-
-        r = ::cplus_demangle_with_style(mname, 7, 27);
-
-        if (r != 0)
-        {
-            //cout << "mangle: " << mname << " demangle: " << r << endl;
-            ::free(r);
-        }
-
-        if (typeid(*(n->data())) == typeid(SimpleFilter))
-        {
-            cout << "SimpleFilter: " << endl;
-            const SimpleFilter* sf = dynamic_cast<SimpleFilter*>(n->data());
-            const ReturnedColumn* lhs = sf->lhs();
-            const ReturnedColumn* rhs = sf->rhs();
-            const Operator* op = sf->op();
-            cout << '\t' << lhs->data() << ' ' << op->data() << ' ' << rhs->data();
-            cout << endl << "\t\t";
-
-            if (typeid(*lhs) == typeid(SimpleColumn))
-            {
-                cout << "SimpleColumn: " << lhs->data() << " / ";
-            }
-            else if (typeid(*lhs) == typeid(ConstantColumn))
-            {
-                cout << "ConstantColumn: " << lhs->data() << " / ";
-            }
-            else
-            {
-                cout << "UNK: " << lhs->data() << " / ";
-            }
-
-            cout << "Operator: " << op->data() << " / ";
-
-            if (typeid(*rhs) == typeid(SimpleColumn))
-            {
-                cout << "SimpleColumn: " << rhs->data();
-            }
-            else if (typeid(*rhs) == typeid(ConstantColumn))
-            {
-                cout << "ConstantColumn: " << rhs->data();
-            }
-            else
-            {
-                cout << "UNK: " << rhs->data();
-            }
-        }
-        else if (typeid(*(n->data())) == typeid(Operator))
-        {
-            cout << "Operator: ";
-            const Operator* op = dynamic_cast<Operator*>(n->data());
-            cout << '\t' << op->data();
-        }
-        else
-        {
-            cout << mname << " -x-: ";
-        }
-
-        cout << endl;
+      ::init_demangler(0, 0, 0);
+      is_init = true;
     }
 
-    void setUp()
+    r = ::cplus_demangle_with_style(mname, 7, 27);
+
+    if (r != 0)
     {
+      // cout << "mangle: " << mname << " demangle: " << r << endl;
+      ::free(r);
     }
 
-    void tearDown()
+    if (typeid(*(n->data())) == typeid(SimpleFilter))
     {
+      cout << "SimpleFilter: " << endl;
+      const SimpleFilter* sf = dynamic_cast<SimpleFilter*>(n->data());
+      const ReturnedColumn* lhs = sf->lhs();
+      const ReturnedColumn* rhs = sf->rhs();
+      const Operator* op = sf->op();
+      cout << '\t' << lhs->data() << ' ' << op->data() << ' ' << rhs->data();
+      cout << endl << "\t\t";
+
+      if (typeid(*lhs) == typeid(SimpleColumn))
+      {
+        cout << "SimpleColumn: " << lhs->data() << " / ";
+      }
+      else if (typeid(*lhs) == typeid(ConstantColumn))
+      {
+        cout << "ConstantColumn: " << lhs->data() << " / ";
+      }
+      else
+      {
+        cout << "UNK: " << lhs->data() << " / ";
+      }
+
+      cout << "Operator: " << op->data() << " / ";
+
+      if (typeid(*rhs) == typeid(SimpleColumn))
+      {
+        cout << "SimpleColumn: " << rhs->data();
+      }
+      else if (typeid(*rhs) == typeid(ConstantColumn))
+      {
+        cout << "ConstantColumn: " << rhs->data();
+      }
+      else
+      {
+        cout << "UNK: " << rhs->data();
+      }
+    }
+    else if (typeid(*(n->data())) == typeid(Operator))
+    {
+      cout << "Operator: ";
+      const Operator* op = dynamic_cast<Operator*>(n->data());
+      cout << '\t' << op->data();
+    }
+    else
+    {
+      cout << mname << " -x-: ";
     }
 
-    void selectExecutionPlan_19()
-    {
+    cout << endl;
+  }
 
-        cout <<
-             "SQL: \
+  void setUp()
+  {
+  }
+
+  void tearDown()
+  {
+  }
+
+  void selectExecutionPlan_19()
+  {
+    cout << "SQL: \
 select \
 	sum(l_extendedprice* (1 - l_discount)) as revenue \
 from \
@@ -179,370 +175,326 @@ where \
 		and l_shipmode in ('AIR', 'AIR REG') \
 		and l_shipinstruct = 'DELIVER IN PERSON' \
 	); "
-             << endl;
+         << endl;
 
-        /* ------------The create view statement is being re-written as an inline view  ----- */
-        /* ------------ (dynamic table) to be used in a from cluase.                    ----- */
+    /* ------------The create view statement is being re-written as an inline view  ----- */
+    /* ------------ (dynamic table) to be used in a from cluase.                    ----- */
 
-        //This is the main query body for query 16
-        CalpontSelectExecutionPlan* csep = new CalpontSelectExecutionPlan();
+    // This is the main query body for query 16
+    CalpontSelectExecutionPlan* csep = new CalpontSelectExecutionPlan();
 
-        // Create the Projection (returned columns)
-        CalpontSelectExecutionPlan::ReturnedColumnList colList;
-        ArithmeticColumn* c1 = new ArithmeticColumn("sum(l_quantity * (1 - l_discount))");
-        c1->alias("revenue");
-        colList.push_back(c1);
-        csep->returnedCols(colList);  // set Projection columns
+    // Create the Projection (returned columns)
+    CalpontSelectExecutionPlan::ReturnedColumnList colList;
+    ArithmeticColumn* c1 = new ArithmeticColumn("sum(l_quantity * (1 - l_discount))");
+    c1->alias("revenue");
+    colList.push_back(c1);
+    csep->returnedCols(colList);  // set Projection columns
 
-        // Filter columns
-        CalpontSelectExecutionPlan::FilterTokenList csep_filterlist;
+    // Filter columns
+    CalpontSelectExecutionPlan::FilterTokenList csep_filterlist;
 
-        /* --  Where: Part 1 -- */
-        csep_filterlist.push_back(new Operator("("));
+    /* --  Where: Part 1 -- */
+    csep_filterlist.push_back(new Operator("("));
 
-        SimpleFilter* f1 = new SimpleFilter ( new Operator("="),
-                                              new SimpleColumn ("tpch.part.p_partkey"),
-                                              new SimpleColumn ("tpch.lineitem.l_partkey"));
-        csep_filterlist.push_back(f1);
+    SimpleFilter* f1 = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.part.p_partkey"),
+                                        new SimpleColumn("tpch.lineitem.l_partkey"));
+    csep_filterlist.push_back(f1);
 
-        csep_filterlist.push_back(new Operator("and"));
+    csep_filterlist.push_back(new Operator("and"));
 
-        SimpleFilter* f2 = new SimpleFilter ( new Operator("="),
-                                              new SimpleColumn ("tpch.part.p_brand"),
-                                              new ConstantColumn (":1"));
-        csep_filterlist.push_back(f2);
+    SimpleFilter* f2 =
+        new SimpleFilter(new Operator("="), new SimpleColumn("tpch.part.p_brand"), new ConstantColumn(":1"));
+    csep_filterlist.push_back(f2);
 
-        csep_filterlist.push_back(new Operator("and"));
-        csep_filterlist.push_back(new Operator("("));
+    csep_filterlist.push_back(new Operator("and"));
+    csep_filterlist.push_back(new Operator("("));
 
-        SimpleFilter* f3a = new SimpleFilter ( new Operator("="),
-                                               new SimpleColumn ("tpch.part.p_container"),
-                                               new ConstantColumn ("SM CASE"));
-        csep_filterlist.push_back(f3a);
+    SimpleFilter* f3a = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.part.p_container"),
+                                         new ConstantColumn("SM CASE"));
+    csep_filterlist.push_back(f3a);
 
-        csep_filterlist.push_back(new Operator("or"));
+    csep_filterlist.push_back(new Operator("or"));
 
-        SimpleFilter* f3b = new SimpleFilter ( new Operator("="),
-                                               new SimpleColumn ("tpch.part.p_container"),
-                                               new ConstantColumn ("SM BOX"));
-        csep_filterlist.push_back(f3b);
+    SimpleFilter* f3b = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.part.p_container"),
+                                         new ConstantColumn("SM BOX"));
+    csep_filterlist.push_back(f3b);
 
-        csep_filterlist.push_back(new Operator("or"));
+    csep_filterlist.push_back(new Operator("or"));
 
-        SimpleFilter* f3c = new SimpleFilter ( new Operator("="),
-                                               new SimpleColumn ("tpch.part.p_container"),
-                                               new ConstantColumn ("SM PACK"));
-        csep_filterlist.push_back(f3c);
+    SimpleFilter* f3c = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.part.p_container"),
+                                         new ConstantColumn("SM PACK"));
+    csep_filterlist.push_back(f3c);
 
-        csep_filterlist.push_back(new Operator("or"));
+    csep_filterlist.push_back(new Operator("or"));
 
-        SimpleFilter* f3d = new SimpleFilter ( new Operator("="),
-                                               new SimpleColumn ("tpch.part.p_container"),
-                                               new ConstantColumn ("SM PKG"));
-        csep_filterlist.push_back(f3d);
+    SimpleFilter* f3d = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.part.p_container"),
+                                         new ConstantColumn("SM PKG"));
+    csep_filterlist.push_back(f3d);
 
-        csep_filterlist.push_back(new Operator(")"));
-        csep_filterlist.push_back(new Operator("and"));
-        csep_filterlist.push_back(new Operator("("));
+    csep_filterlist.push_back(new Operator(")"));
+    csep_filterlist.push_back(new Operator("and"));
+    csep_filterlist.push_back(new Operator("("));
 
-        SimpleFilter* f4a = new SimpleFilter ( new Operator(">="),
-                                               new SimpleColumn ("tpch.lineitem.l_quantity"),
-                                               new ConstantColumn (":4"));
-        csep_filterlist.push_back(f4a);
+    SimpleFilter* f4a = new SimpleFilter(new Operator(">="), new SimpleColumn("tpch.lineitem.l_quantity"),
+                                         new ConstantColumn(":4"));
+    csep_filterlist.push_back(f4a);
 
-        csep_filterlist.push_back(new Operator("and"));
+    csep_filterlist.push_back(new Operator("and"));
 
-        SimpleFilter* f4b = new SimpleFilter ( new Operator("<="),
-                                               new SimpleColumn ("tpch.lineitem.l_quantity"),
-                                               new ArithmeticColumn ("(l_quantity :4 + 10)"));
-        csep_filterlist.push_back(f4b);
+    SimpleFilter* f4b = new SimpleFilter(new Operator("<="), new SimpleColumn("tpch.lineitem.l_quantity"),
+                                         new ArithmeticColumn("(l_quantity :4 + 10)"));
+    csep_filterlist.push_back(f4b);
 
-        csep_filterlist.push_back(new Operator(")"));
-        csep_filterlist.push_back(new Operator("and"));
-        csep_filterlist.push_back(new Operator("("));
+    csep_filterlist.push_back(new Operator(")"));
+    csep_filterlist.push_back(new Operator("and"));
+    csep_filterlist.push_back(new Operator("("));
 
-        SimpleFilter* f5a = new SimpleFilter ( new Operator(">="),
-                                               new SimpleColumn ("tpch.part.p_size"),
-                                               new ConstantColumn ("1"));
-        csep_filterlist.push_back(f5a);
+    SimpleFilter* f5a =
+        new SimpleFilter(new Operator(">="), new SimpleColumn("tpch.part.p_size"), new ConstantColumn("1"));
+    csep_filterlist.push_back(f5a);
 
-        csep_filterlist.push_back(new Operator("and"));
+    csep_filterlist.push_back(new Operator("and"));
 
-        SimpleFilter* f5b = new SimpleFilter ( new Operator("<="),
-                                               new SimpleColumn ("tpch.part.p_size"),
-                                               new ConstantColumn ("5"));
-        csep_filterlist.push_back(f5b);
+    SimpleFilter* f5b =
+        new SimpleFilter(new Operator("<="), new SimpleColumn("tpch.part.p_size"), new ConstantColumn("5"));
+    csep_filterlist.push_back(f5b);
 
-        csep_filterlist.push_back(new Operator(")"));
-        csep_filterlist.push_back(new Operator("and"));
-        csep_filterlist.push_back(new Operator("("));
+    csep_filterlist.push_back(new Operator(")"));
+    csep_filterlist.push_back(new Operator("and"));
+    csep_filterlist.push_back(new Operator("("));
 
-        SimpleFilter* f6a = new SimpleFilter ( new Operator("="),
-                                               new SimpleColumn ("tpch.lineitem.l_shipmode"),
-                                               new ConstantColumn ("AIR"));
-        csep_filterlist.push_back(f6a);
+    SimpleFilter* f6a = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.lineitem.l_shipmode"),
+                                         new ConstantColumn("AIR"));
+    csep_filterlist.push_back(f6a);
 
-        csep_filterlist.push_back(new Operator("or"));
+    csep_filterlist.push_back(new Operator("or"));
 
-        SimpleFilter* f6b = new SimpleFilter ( new Operator("="),
-                                               new SimpleColumn ("tpch.lineitem.l_shipmode"),
-                                               new ConstantColumn ("AIR REG"));
-        csep_filterlist.push_back(f6b);
+    SimpleFilter* f6b = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.lineitem.l_shipmode"),
+                                         new ConstantColumn("AIR REG"));
+    csep_filterlist.push_back(f6b);
 
-        csep_filterlist.push_back(new Operator(")"));
-        csep_filterlist.push_back(new Operator("and"));
+    csep_filterlist.push_back(new Operator(")"));
+    csep_filterlist.push_back(new Operator("and"));
 
-        SimpleFilter* f7 = new SimpleFilter ( new Operator("="),
-                                              new SimpleColumn ("tpch.lineitem.o_orderkey"),
-                                              new ConstantColumn ("DELIVER IN PERSON"));
-        csep_filterlist.push_back(f7);
+    SimpleFilter* f7 = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.lineitem.o_orderkey"),
+                                        new ConstantColumn("DELIVER IN PERSON"));
+    csep_filterlist.push_back(f7);
 
-        csep_filterlist.push_back(new Operator(")"));
+    csep_filterlist.push_back(new Operator(")"));
 
-        /* --  Where: Part 2 -- */
-        csep_filterlist.push_back(new Operator("or"));
-        csep_filterlist.push_back(new Operator("("));
+    /* --  Where: Part 2 -- */
+    csep_filterlist.push_back(new Operator("or"));
+    csep_filterlist.push_back(new Operator("("));
 
-        SimpleFilter* f8 = new SimpleFilter ( new Operator("="),
-                                              new SimpleColumn ("tpch.part.p_partkey"),
-                                              new SimpleColumn ("tpch.lineitem.l_partkey"));
-        csep_filterlist.push_back(f8);
+    SimpleFilter* f8 = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.part.p_partkey"),
+                                        new SimpleColumn("tpch.lineitem.l_partkey"));
+    csep_filterlist.push_back(f8);
 
-        csep_filterlist.push_back(new Operator("and"));
+    csep_filterlist.push_back(new Operator("and"));
 
-        SimpleFilter* f9 = new SimpleFilter ( new Operator("="),
-                                              new SimpleColumn ("tpch.part.p_brand"),
-                                              new ConstantColumn (":2"));
-        csep_filterlist.push_back(f9);
+    SimpleFilter* f9 =
+        new SimpleFilter(new Operator("="), new SimpleColumn("tpch.part.p_brand"), new ConstantColumn(":2"));
+    csep_filterlist.push_back(f9);
 
-        csep_filterlist.push_back(new Operator("and"));
-        csep_filterlist.push_back(new Operator("("));
+    csep_filterlist.push_back(new Operator("and"));
+    csep_filterlist.push_back(new Operator("("));
 
-        SimpleFilter* f10a = new SimpleFilter ( new Operator("="),
-                                                new SimpleColumn ("tpch.part.p_container"),
-                                                new ConstantColumn ("MED BAG"));
-        csep_filterlist.push_back(f10a);
+    SimpleFilter* f10a = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.part.p_container"),
+                                          new ConstantColumn("MED BAG"));
+    csep_filterlist.push_back(f10a);
 
-        csep_filterlist.push_back(new Operator("or"));
+    csep_filterlist.push_back(new Operator("or"));
 
-        SimpleFilter* f10b = new SimpleFilter ( new Operator("="),
-                                                new SimpleColumn ("tpch.part.p_container"),
-                                                new ConstantColumn ("MED BOX"));
-        csep_filterlist.push_back(f10b);
+    SimpleFilter* f10b = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.part.p_container"),
+                                          new ConstantColumn("MED BOX"));
+    csep_filterlist.push_back(f10b);
 
-        csep_filterlist.push_back(new Operator("or"));
+    csep_filterlist.push_back(new Operator("or"));
 
-        SimpleFilter* f10c = new SimpleFilter ( new Operator("="),
-                                                new SimpleColumn ("tpch.part.p_container"),
-                                                new ConstantColumn ("MED PKG"));
-        csep_filterlist.push_back(f10c);
+    SimpleFilter* f10c = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.part.p_container"),
+                                          new ConstantColumn("MED PKG"));
+    csep_filterlist.push_back(f10c);
 
-        csep_filterlist.push_back(new Operator("or"));
+    csep_filterlist.push_back(new Operator("or"));
 
-        SimpleFilter* f10d = new SimpleFilter ( new Operator("="),
-                                                new SimpleColumn ("tpch.part.p_container"),
-                                                new ConstantColumn ("MED PACK"));
-        csep_filterlist.push_back(f10d);
+    SimpleFilter* f10d = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.part.p_container"),
+                                          new ConstantColumn("MED PACK"));
+    csep_filterlist.push_back(f10d);
 
-        csep_filterlist.push_back(new Operator(")"));
-        csep_filterlist.push_back(new Operator("and"));
-        csep_filterlist.push_back(new Operator("("));
+    csep_filterlist.push_back(new Operator(")"));
+    csep_filterlist.push_back(new Operator("and"));
+    csep_filterlist.push_back(new Operator("("));
 
-        SimpleFilter* f11a = new SimpleFilter ( new Operator(">="),
-                                                new SimpleColumn ("tpch.lineitem.l_quantity"),
-                                                new ConstantColumn (":5"));
-        csep_filterlist.push_back(f11a);
+    SimpleFilter* f11a = new SimpleFilter(new Operator(">="), new SimpleColumn("tpch.lineitem.l_quantity"),
+                                          new ConstantColumn(":5"));
+    csep_filterlist.push_back(f11a);
 
-        csep_filterlist.push_back(new Operator("and"));
+    csep_filterlist.push_back(new Operator("and"));
 
-        SimpleFilter* f11b = new SimpleFilter ( new Operator("<="),
-                                                new SimpleColumn ("tpch.lineitem.l_quantity"),
-                                                new ArithmeticColumn ("(l_quantity :5 + 10)"));
-        csep_filterlist.push_back(f11b);
+    SimpleFilter* f11b = new SimpleFilter(new Operator("<="), new SimpleColumn("tpch.lineitem.l_quantity"),
+                                          new ArithmeticColumn("(l_quantity :5 + 10)"));
+    csep_filterlist.push_back(f11b);
 
-        csep_filterlist.push_back(new Operator(")"));
-        csep_filterlist.push_back(new Operator("and"));
-        csep_filterlist.push_back(new Operator("("));
+    csep_filterlist.push_back(new Operator(")"));
+    csep_filterlist.push_back(new Operator("and"));
+    csep_filterlist.push_back(new Operator("("));
 
-        SimpleFilter* f12a = new SimpleFilter ( new Operator(">="),
-                                                new SimpleColumn ("tpch.part.p_size"),
-                                                new ConstantColumn ("1"));
-        csep_filterlist.push_back(f12a);
+    SimpleFilter* f12a =
+        new SimpleFilter(new Operator(">="), new SimpleColumn("tpch.part.p_size"), new ConstantColumn("1"));
+    csep_filterlist.push_back(f12a);
 
-        csep_filterlist.push_back(new Operator("and"));
+    csep_filterlist.push_back(new Operator("and"));
 
-        SimpleFilter* f12b = new SimpleFilter ( new Operator("<="),
-                                                new SimpleColumn ("tpch.part.p_size"),
-                                                new ConstantColumn ("10"));
-        csep_filterlist.push_back(f12b);
+    SimpleFilter* f12b =
+        new SimpleFilter(new Operator("<="), new SimpleColumn("tpch.part.p_size"), new ConstantColumn("10"));
+    csep_filterlist.push_back(f12b);
 
-        csep_filterlist.push_back(new Operator(")"));
-        csep_filterlist.push_back(new Operator("and"));
-        csep_filterlist.push_back(new Operator("("));
+    csep_filterlist.push_back(new Operator(")"));
+    csep_filterlist.push_back(new Operator("and"));
+    csep_filterlist.push_back(new Operator("("));
 
-        SimpleFilter* f13a = new SimpleFilter ( new Operator("="),
-                                                new SimpleColumn ("tpch.lineitem.l_shipmode"),
-                                                new ConstantColumn ("AIR"));
-        csep_filterlist.push_back(f13a);
+    SimpleFilter* f13a = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.lineitem.l_shipmode"),
+                                          new ConstantColumn("AIR"));
+    csep_filterlist.push_back(f13a);
 
-        csep_filterlist.push_back(new Operator("or"));
+    csep_filterlist.push_back(new Operator("or"));
 
-        SimpleFilter* f13b = new SimpleFilter ( new Operator("="),
-                                                new SimpleColumn ("tpch.lineitem.l_shipmode"),
-                                                new ConstantColumn ("AIR REG"));
-        csep_filterlist.push_back(f13b);
+    SimpleFilter* f13b = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.lineitem.l_shipmode"),
+                                          new ConstantColumn("AIR REG"));
+    csep_filterlist.push_back(f13b);
 
-        csep_filterlist.push_back(new Operator(")"));
-        csep_filterlist.push_back(new Operator("and"));
+    csep_filterlist.push_back(new Operator(")"));
+    csep_filterlist.push_back(new Operator("and"));
 
-        SimpleFilter* f14 = new SimpleFilter ( new Operator("="),
-                                               new SimpleColumn ("tpch.lineitem.o_orderkey"),
-                                               new ConstantColumn ("DELIVER IN PERSON"));
-        csep_filterlist.push_back(f14);
+    SimpleFilter* f14 = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.lineitem.o_orderkey"),
+                                         new ConstantColumn("DELIVER IN PERSON"));
+    csep_filterlist.push_back(f14);
 
-        csep_filterlist.push_back(new Operator(")"));
+    csep_filterlist.push_back(new Operator(")"));
 
-        /* --  Where: Part 3 -- */
-        csep_filterlist.push_back(new Operator("or"));
-        csep_filterlist.push_back(new Operator("("));
+    /* --  Where: Part 3 -- */
+    csep_filterlist.push_back(new Operator("or"));
+    csep_filterlist.push_back(new Operator("("));
 
-        SimpleFilter* f15 = new SimpleFilter ( new Operator("="),
-                                               new SimpleColumn ("tpch.part.p_partkey"),
-                                               new SimpleColumn ("tpch.lineitem.l_partkey"));
-        csep_filterlist.push_back(f15);
+    SimpleFilter* f15 = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.part.p_partkey"),
+                                         new SimpleColumn("tpch.lineitem.l_partkey"));
+    csep_filterlist.push_back(f15);
 
-        csep_filterlist.push_back(new Operator("and"));
+    csep_filterlist.push_back(new Operator("and"));
 
-        SimpleFilter* f16 = new SimpleFilter ( new Operator("="),
-                                               new SimpleColumn ("tpch.part.p_brand"),
-                                               new ConstantColumn (":3"));
-        csep_filterlist.push_back(f16);
+    SimpleFilter* f16 =
+        new SimpleFilter(new Operator("="), new SimpleColumn("tpch.part.p_brand"), new ConstantColumn(":3"));
+    csep_filterlist.push_back(f16);
 
-        csep_filterlist.push_back(new Operator("and"));
-        csep_filterlist.push_back(new Operator("("));
+    csep_filterlist.push_back(new Operator("and"));
+    csep_filterlist.push_back(new Operator("("));
 
-        SimpleFilter* f17a = new SimpleFilter ( new Operator("="),
-                                                new SimpleColumn ("tpch.part.p_container"),
-                                                new ConstantColumn ("LG CASE"));
-        csep_filterlist.push_back(f17a);
+    SimpleFilter* f17a = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.part.p_container"),
+                                          new ConstantColumn("LG CASE"));
+    csep_filterlist.push_back(f17a);
 
-        csep_filterlist.push_back(new Operator("or"));
+    csep_filterlist.push_back(new Operator("or"));
 
-        SimpleFilter* f17b = new SimpleFilter ( new Operator("="),
-                                                new SimpleColumn ("tpch.part.p_container"),
-                                                new ConstantColumn ("LG BOX"));
-        csep_filterlist.push_back(f17b);
+    SimpleFilter* f17b = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.part.p_container"),
+                                          new ConstantColumn("LG BOX"));
+    csep_filterlist.push_back(f17b);
 
-        csep_filterlist.push_back(new Operator("or"));
+    csep_filterlist.push_back(new Operator("or"));
 
-        SimpleFilter* f17c = new SimpleFilter ( new Operator("="),
-                                                new SimpleColumn ("tpch.part.p_container"),
-                                                new ConstantColumn ("LG PACK"));
-        csep_filterlist.push_back(f17c);
+    SimpleFilter* f17c = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.part.p_container"),
+                                          new ConstantColumn("LG PACK"));
+    csep_filterlist.push_back(f17c);
 
-        csep_filterlist.push_back(new Operator("or"));
+    csep_filterlist.push_back(new Operator("or"));
 
-        SimpleFilter* f17d = new SimpleFilter ( new Operator("="),
-                                                new SimpleColumn ("tpch.part.p_container"),
-                                                new ConstantColumn ("LG PKG"));
-        csep_filterlist.push_back(f17d);
+    SimpleFilter* f17d = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.part.p_container"),
+                                          new ConstantColumn("LG PKG"));
+    csep_filterlist.push_back(f17d);
 
-        csep_filterlist.push_back(new Operator(")"));
-        csep_filterlist.push_back(new Operator("and"));
-        csep_filterlist.push_back(new Operator("("));
+    csep_filterlist.push_back(new Operator(")"));
+    csep_filterlist.push_back(new Operator("and"));
+    csep_filterlist.push_back(new Operator("("));
 
-        SimpleFilter* f18a = new SimpleFilter ( new Operator(">="),
-                                                new SimpleColumn ("tpch.lineitem.l_quantity"),
-                                                new ConstantColumn (":6"));
-        csep_filterlist.push_back(f18a);
+    SimpleFilter* f18a = new SimpleFilter(new Operator(">="), new SimpleColumn("tpch.lineitem.l_quantity"),
+                                          new ConstantColumn(":6"));
+    csep_filterlist.push_back(f18a);
 
-        csep_filterlist.push_back(new Operator("and"));
+    csep_filterlist.push_back(new Operator("and"));
 
-        SimpleFilter* f18b = new SimpleFilter ( new Operator("<="),
-                                                new SimpleColumn ("tpch.lineitem.l_quantity"),
-                                                new ArithmeticColumn ("(l_quantity :6 + 10)"));
-        csep_filterlist.push_back(f18b);
+    SimpleFilter* f18b = new SimpleFilter(new Operator("<="), new SimpleColumn("tpch.lineitem.l_quantity"),
+                                          new ArithmeticColumn("(l_quantity :6 + 10)"));
+    csep_filterlist.push_back(f18b);
 
-        csep_filterlist.push_back(new Operator(")"));
-        csep_filterlist.push_back(new Operator("and"));
-        csep_filterlist.push_back(new Operator("("));
+    csep_filterlist.push_back(new Operator(")"));
+    csep_filterlist.push_back(new Operator("and"));
+    csep_filterlist.push_back(new Operator("("));
 
-        SimpleFilter* f19a = new SimpleFilter ( new Operator(">="),
-                                                new SimpleColumn ("tpch.part.p_size"),
-                                                new ConstantColumn ("1"));
-        csep_filterlist.push_back(f19a);
+    SimpleFilter* f19a =
+        new SimpleFilter(new Operator(">="), new SimpleColumn("tpch.part.p_size"), new ConstantColumn("1"));
+    csep_filterlist.push_back(f19a);
 
-        csep_filterlist.push_back(new Operator("and"));
+    csep_filterlist.push_back(new Operator("and"));
 
-        SimpleFilter* f19b = new SimpleFilter ( new Operator("<="),
-                                                new SimpleColumn ("tpch.part.p_size"),
-                                                new ConstantColumn ("15"));
-        csep_filterlist.push_back(f19b);
+    SimpleFilter* f19b =
+        new SimpleFilter(new Operator("<="), new SimpleColumn("tpch.part.p_size"), new ConstantColumn("15"));
+    csep_filterlist.push_back(f19b);
 
-        csep_filterlist.push_back(new Operator(")"));
-        csep_filterlist.push_back(new Operator("and"));
-        csep_filterlist.push_back(new Operator("("));
+    csep_filterlist.push_back(new Operator(")"));
+    csep_filterlist.push_back(new Operator("and"));
+    csep_filterlist.push_back(new Operator("("));
 
-        SimpleFilter* f20a = new SimpleFilter ( new Operator("="),
-                                                new SimpleColumn ("tpch.lineitem.l_shipmode"),
-                                                new ConstantColumn ("AIR"));
-        csep_filterlist.push_back(f20a);
+    SimpleFilter* f20a = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.lineitem.l_shipmode"),
+                                          new ConstantColumn("AIR"));
+    csep_filterlist.push_back(f20a);
 
-        csep_filterlist.push_back(new Operator("or"));
+    csep_filterlist.push_back(new Operator("or"));
 
-        SimpleFilter* f20b = new SimpleFilter ( new Operator("="),
-                                                new SimpleColumn ("tpch.lineitem.l_shipmode"),
-                                                new ConstantColumn ("AIR REG"));
-        csep_filterlist.push_back(f20b);
+    SimpleFilter* f20b = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.lineitem.l_shipmode"),
+                                          new ConstantColumn("AIR REG"));
+    csep_filterlist.push_back(f20b);
 
-        csep_filterlist.push_back(new Operator(")"));
-        csep_filterlist.push_back(new Operator("and"));
+    csep_filterlist.push_back(new Operator(")"));
+    csep_filterlist.push_back(new Operator("and"));
 
-        SimpleFilter* f21 = new SimpleFilter ( new Operator("="),
-                                               new SimpleColumn ("tpch.lineitem.o_orderkey"),
-                                               new ConstantColumn ("DELIVER IN PERSON"));
-        csep_filterlist.push_back(f21);
+    SimpleFilter* f21 = new SimpleFilter(new Operator("="), new SimpleColumn("tpch.lineitem.o_orderkey"),
+                                         new ConstantColumn("DELIVER IN PERSON"));
+    csep_filterlist.push_back(f21);
 
-        csep_filterlist.push_back(new Operator(")"));
+    csep_filterlist.push_back(new Operator(")"));
 
+    /*-----  THIS IS WHERE IT ALL COMES TOGETHER ----- */
+    csep->filterTokenList(csep_filterlist);  // Set Filter Columns
 
-        /*-----  THIS IS WHERE IT ALL COMES TOGETHER ----- */
-        csep->filterTokenList(csep_filterlist); //Set Filter Columns
+    // Build Group By List
+    // CalpontSelectExecutionPlan::GroupByColumnList csep_groupbyList;
+    // csep->groupByCols(csep_groupbyList);  //Set GroupBy columns
 
-        // Build Group By List
-        //CalpontSelectExecutionPlan::GroupByColumnList csep_groupbyList;
-        //csep->groupByCols(csep_groupbyList);  //Set GroupBy columns
+    // Order By List
+    // CalpontSelectExecutionPlan::OrderByColumnList csep_orderbyList;
+    // csep->orderByCols(csep_orderbyList); //Set OrderBy columns
 
-        // Order By List
-        //CalpontSelectExecutionPlan::OrderByColumnList csep_orderbyList;
-        //csep->orderByCols(csep_orderbyList); //Set OrderBy columns
+    // filterList->walk(walkfnString); ??
 
-        //filterList->walk(walkfnString); ??
+    // Print the parse tree
+    ParseTree* pt = const_cast<ParseTree*>(csep->filters());
+    pt->drawTree("selectExecutionPlan_19.dot");
 
-        // Print the parse tree
-        ParseTree* pt = const_cast<ParseTree*>(csep->filters());
-        pt->drawTree("selectExecutionPlan_19.dot");
-
-        cout << "\nCalpont Execution Plan:" << endl;
-        cout << *csep << endl;
-        cout << " --- end of test 19 ---" << endl;
-
-    }
-
+    cout << "\nCalpont Execution Plan:" << endl;
+    cout << *csep << endl;
+    cout << " --- end of test 19 ---" << endl;
+  }
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION( ExecPlanTest );
+CPPUNIT_TEST_SUITE_REGISTRATION(ExecPlanTest);
 
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
-int main( int argc, char** argv)
+int main(int argc, char** argv)
 {
-    CppUnit::TextUi::TestRunner runner;
-    CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
-    runner.addTest( registry.makeTest() );
-    bool wasSuccessful = runner.run( "", false );
-    return (wasSuccessful ? 0 : 1);
+  CppUnit::TextUi::TestRunner runner;
+  CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
+  runner.addTest(registry.makeTest());
+  bool wasSuccessful = runner.run("", false);
+  return (wasSuccessful ? 0 : 1);
 }
-
-

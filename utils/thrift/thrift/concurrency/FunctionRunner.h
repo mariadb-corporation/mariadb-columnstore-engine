@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_CONCURRENCY_FUNCTION_RUNNER_H
-#define _THRIFT_CONCURRENCY_FUNCTION_RUNNER_H 1
+#pragma once
 
 #include <thrift/cxxfunctional.h>
 #include <thrift/concurrency/Thread.h>
@@ -133,4 +132,3 @@ private:
 }
 } // apache::thrift::concurrency
 
-#endif // #ifndef _THRIFT_CONCURRENCY_FUNCTION_RUNNER_H

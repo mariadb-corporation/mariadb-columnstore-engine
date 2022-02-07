@@ -17,17 +17,17 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: sqlparser.h 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: sqlparser.h 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 /** @file
  *
  * This contains a class wrapper for the Bison parsing machinery.
  */
 
 #include <stdexcept>
-#include "collation.h" // CHARSET_INFO
+#include "collation.h"  // CHARSET_INFO
 #include "ddlpkg.h"
 
 #if defined(_MSC_VER) && defined(xxxDDLPKGSQLPARSER_DLLEXPORT)
@@ -38,7 +38,6 @@
 
 namespace ddlpackage
 {
-
 typedef SqlStatementList ParseTree;
 
 /** @brief SqlParser is a class interface around the Bison parser
@@ -54,7 +53,7 @@ typedef SqlStatementList ParseTree;
      or
 
      SqlFileParser parser;
-	 parser.setDefaultSchema("tpch");
+         parser.setDefaultSchema("tpch");
      parser.Parse(sqlFileName);
 
      if (parser.Good()) {
@@ -76,78 +75,77 @@ typedef std::vector<char*> valbuf_t;
 
 struct scan_data
 {
-    /* Handles to the buffer that the lexer uses internally */
-    char* scanbuf;
-    void* scanbufhandle; // This is a YY_BUFFER_STATE defined in ddl-scan.cpp
-    valbuf_t valbuf;
+  /* Handles to the buffer that the lexer uses internally */
+  char* scanbuf;
+  void* scanbufhandle;  // This is a YY_BUFFER_STATE defined in ddl-scan.cpp
+  valbuf_t valbuf;
 };
 
 struct pass_to_bison
 {
-    ParseTree* fParseTree;
-    std::string fDBSchema;
-    void* scanner;
-    const CHARSET_INFO* default_table_charset;
+  ParseTree* fParseTree;
+  std::string fDBSchema;
+  void* scanner;
+  const CHARSET_INFO* default_table_charset;
 
-    pass_to_bison(ParseTree* pt) : fParseTree(pt), scanner(NULL), default_table_charset(NULL) {};
+  pass_to_bison(ParseTree* pt) : fParseTree(pt), scanner(NULL), default_table_charset(NULL){};
 };
 
 class SqlParser
 {
-public:
-    EXPORT SqlParser(void);
+ public:
+  EXPORT SqlParser(void);
 
-    EXPORT virtual ~SqlParser();
+  EXPORT virtual ~SqlParser();
 
-    EXPORT int Parse(const char* sqltext);
+  EXPORT int Parse(const char* sqltext);
 
-    /** @brief Return the ParseTree if state is Good.  Otherwise
-      *	throw a logic_error.
-      */
-    EXPORT const ParseTree& GetParseTree(void);
+  /** @brief Return the ParseTree if state is Good.  Otherwise
+   *	throw a logic_error.
+   */
+  EXPORT const ParseTree& GetParseTree(void);
 
-    /** @brief Tells whether current state resulted from a good
-      * parse.
-      */
-    EXPORT bool Good(void);
+  /** @brief Tells whether current state resulted from a good
+   * parse.
+   */
+  EXPORT bool Good(void);
 
-    /** @brief Control bison debugging
-      */
-    EXPORT void SetDebug(bool debug);
+  /** @brief Control bison debugging
+   */
+  EXPORT void SetDebug(bool debug);
 
-    /** @brief Set the default schema to use if it is not
-      * supplied in the DDL statement
-      *
-      * @param schema the default schema
-      */
-    EXPORT void setDefaultSchema(std::string schema);
+  /** @brief Set the default schema to use if it is not
+   * supplied in the DDL statement
+   *
+   * @param schema the default schema
+   */
+  EXPORT void setDefaultSchema(std::string schema);
 
-    /** @brief Set the default table charset. Can be overriden by column
-     *  or table options
-     *
-     *  @param default_charset the default CHARSET_INFO pointer
-     */
-     EXPORT void setDefaultCharset(const CHARSET_INFO* default_charset);
+  /** @brief Set the default table charset. Can be overriden by column
+   *  or table options
+   *
+   *  @param default_charset the default CHARSET_INFO pointer
+   */
+  EXPORT void setDefaultCharset(const CHARSET_INFO* default_charset);
 
-protected:
-    ParseTree fParseTree;
-    std::string fDBSchema;
-    int fStatus; ///< return from yyparse() stored here.
-    bool fDebug; ///< Turn on bison debugging.
-    scan_data scanData;
-    pass_to_bison x;
+ protected:
+  ParseTree fParseTree;
+  std::string fDBSchema;
+  int fStatus;  ///< return from yyparse() stored here.
+  bool fDebug;  ///< Turn on bison debugging.
+  scan_data scanData;
+  pass_to_bison x;
 };
-
 
 /** SqlFileParser is a testing device.
-  */
+ */
 class SqlFileParser : public SqlParser
 {
-public:
-    SqlFileParser();
-    int Parse(const std::string& fileName);
+ public:
+  SqlFileParser();
+  int Parse(const std::string& fileName);
 };
 
-}
+}  // namespace ddlpackage
 
 #undef EXPORT

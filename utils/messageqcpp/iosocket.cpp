@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: iosocket.cpp 3632 2013-03-13 18:08:46Z pleblanc $
-*
-*
-***********************************************************************/
+ *   $Id: iosocket.cpp 3632 2013-03-13 18:08:46Z pleblanc $
+ *
+ *
+ ***********************************************************************/
 #include <string>
 #include <sstream>
 #include <stdexcept>
@@ -42,58 +42,55 @@ using namespace std;
 
 namespace messageqcpp
 {
-
-IOSocket::IOSocket(Socket* socket) :
-    fSocket(socket), sockID(0)
+IOSocket::IOSocket(Socket* socket) : fSocket(socket), sockID(0)
 {
-    memset(&fSa, 0, sizeof(fSa));
+  memset(&fSa, 0, sizeof(fSa));
 }
 
 IOSocket::~IOSocket()
 {
-    delete fSocket;
+  delete fSocket;
 }
 
 void IOSocket::doCopy(const IOSocket& rhs)
 {
-    fSocket = rhs.fSocket->clone();
-    fSa = rhs.fSa;
-    sockID = rhs.sockID;
+  fSocket = rhs.fSocket->clone();
+  fSa = rhs.fSa;
+  sockID = rhs.sockID;
 }
 
 IOSocket::IOSocket(const IOSocket& rhs)
 {
-    doCopy(rhs);
+  doCopy(rhs);
 }
 
 IOSocket& IOSocket::operator=(const IOSocket& rhs)
 {
-    if (this != &rhs)
-    {
-        delete fSocket;
-        doCopy(rhs);
-    }
+  if (this != &rhs)
+  {
+    delete fSocket;
+    doCopy(rhs);
+  }
 
-    return *this;
+  return *this;
 }
 
 const string IOSocket::toString() const
 {
 #ifdef NOSSTREAM
-    return "IOSocket";
+  return "IOSocket";
 #else
-    ostringstream oss;
-    char buf[INET_ADDRSTRLEN];
-    SocketParms sp = fSocket->socketParms();
-    const sockaddr_in* sinp = reinterpret_cast<const sockaddr_in*>(&fSa);
-    oss << "IOSocket: sd: " << sp.sd() <<
+  ostringstream oss;
+  char buf[INET_ADDRSTRLEN];
+  SocketParms sp = fSocket->socketParms();
+  const sockaddr_in* sinp = reinterpret_cast<const sockaddr_in*>(&fSa);
+  oss << "IOSocket: sd: " << sp.sd() <<
 #ifndef _MSC_VER
-        " inet: " << inet_ntop(AF_INET, &sinp->sin_addr, buf, INET_ADDRSTRLEN) <<
+      " inet: " << inet_ntop(AF_INET, &sinp->sin_addr, buf, INET_ADDRSTRLEN) <<
 #endif
-        " port: " << ntohs(sinp->sin_port);
-    return oss.str();
+      " port: " << ntohs(sinp->sin_port);
+  return oss.str();
 #endif
 }
 
-} //namespace messageqcpp
-
+}  // namespace messageqcpp

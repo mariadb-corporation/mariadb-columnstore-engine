@@ -15,7 +15,6 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-
 #include "pseudocc-jl.h"
 #include "pseudocolumn.h"
 #include "nullvaluemanip.h"
@@ -26,7 +25,6 @@ using namespace execplan;
 
 namespace joblist
 {
-
 PseudoCCJL::PseudoCCJL(const PseudoColStep& pcs) : ColumnCommandJL(pcs), function(pcs.pseudoColumnId())
 {
 }
@@ -37,82 +35,78 @@ PseudoCCJL::~PseudoCCJL()
 
 void PseudoCCJL::createCommand(ByteStream& bs) const
 {
-    bs << (uint8_t) PSEUDO_COLUMN;
-    bs << function;
-    ColumnCommandJL::createCommand(bs);
+  bs << (uint8_t)PSEUDO_COLUMN;
+  bs << function;
+  ColumnCommandJL::createCommand(bs);
 }
 
 void PseudoCCJL::runCommand(ByteStream& bs) const
 {
-    if (function == PSEUDO_EXTENTMAX)
+  if (function == PSEUDO_EXTENTMAX)
+  {
+    if (!colType.isWideDecimalType())
     {
-        if (!colType.isWideDecimalType())
-        {
-            int64_t max = extents[currentExtentIndex].partition.cprange.hiVal;
-            int64_t min = extents[currentExtentIndex].partition.cprange.loVal;
+      int64_t max = extents[currentExtentIndex].partition.cprange.hiVal;
+      int64_t min = extents[currentExtentIndex].partition.cprange.loVal;
 
-            if (extents[currentExtentIndex].partition.cprange.isValid == BRM::CP_VALID && max >= min)
-                bs << max;
-            else
-                bs << utils::getNullValue(colType.colDataType, colType.colWidth);
-        }
-        else
-        {
-            int128_t max = extents[currentExtentIndex].partition.cprange.bigHiVal;
-            int128_t min = extents[currentExtentIndex].partition.cprange.bigLoVal;
-
-            if (extents[currentExtentIndex].partition.cprange.isValid == BRM::CP_VALID && max >= min)
-                bs << (uint128_t) max;
-            else
-            {
-                int128_t int128Null;
-                datatypes::Decimal::setWideDecimalNullValue(int128Null);
-                bs << (uint128_t) int128Null;
-            }
-        }
+      if (extents[currentExtentIndex].partition.cprange.isValid == BRM::CP_VALID && max >= min)
+        bs << max;
+      else
+        bs << utils::getNullValue(colType.colDataType, colType.colWidth);
     }
-    else if (function == PSEUDO_EXTENTMIN)
+    else
     {
-        if (!colType.isWideDecimalType())
-        {
-            int64_t max = extents[currentExtentIndex].partition.cprange.hiVal;
-            int64_t min = extents[currentExtentIndex].partition.cprange.loVal;
+      int128_t max = extents[currentExtentIndex].partition.cprange.bigHiVal;
+      int128_t min = extents[currentExtentIndex].partition.cprange.bigLoVal;
 
-            if (extents[currentExtentIndex].partition.cprange.isValid == BRM::CP_VALID && max >= min)
-                bs << min;
-            else
-                bs << utils::getNullValue(colType.colDataType, colType.colWidth);
-        }
-        else
-        {
-            int128_t max = extents[currentExtentIndex].partition.cprange.bigHiVal;
-            int128_t min = extents[currentExtentIndex].partition.cprange.bigLoVal;
-
-            if (extents[currentExtentIndex].partition.cprange.isValid == BRM::CP_VALID && max >= min)
-                bs << (uint128_t) min;
-            else
-            {
-                int128_t int128Null;
-                datatypes::Decimal::setWideDecimalNullValue(int128Null);
-                bs << (uint128_t) int128Null;
-            }
-        }
+      if (extents[currentExtentIndex].partition.cprange.isValid == BRM::CP_VALID && max >= min)
+        bs << (uint128_t)max;
+      else
+      {
+        int128_t int128Null;
+        datatypes::Decimal::setWideDecimalNullValue(int128Null);
+        bs << (uint128_t)int128Null;
+      }
     }
-    else if (function == PSEUDO_EXTENTID)
-        bs << extents[currentExtentIndex].range.start;
+  }
+  else if (function == PSEUDO_EXTENTMIN)
+  {
+    if (!colType.isWideDecimalType())
+    {
+      int64_t max = extents[currentExtentIndex].partition.cprange.hiVal;
+      int64_t min = extents[currentExtentIndex].partition.cprange.loVal;
 
-    ColumnCommandJL::runCommand(bs);
+      if (extents[currentExtentIndex].partition.cprange.isValid == BRM::CP_VALID && max >= min)
+        bs << min;
+      else
+        bs << utils::getNullValue(colType.colDataType, colType.colWidth);
+    }
+    else
+    {
+      int128_t max = extents[currentExtentIndex].partition.cprange.bigHiVal;
+      int128_t min = extents[currentExtentIndex].partition.cprange.bigLoVal;
+
+      if (extents[currentExtentIndex].partition.cprange.isValid == BRM::CP_VALID && max >= min)
+        bs << (uint128_t)min;
+      else
+      {
+        int128_t int128Null;
+        datatypes::Decimal::setWideDecimalNullValue(int128Null);
+        bs << (uint128_t)int128Null;
+      }
+    }
+  }
+  else if (function == PSEUDO_EXTENTID)
+    bs << extents[currentExtentIndex].range.start;
+
+  ColumnCommandJL::runCommand(bs);
 }
 
 string PseudoCCJL::toString()
 {
-    ostringstream oss;
-    oss << "PseudoColumnJL fcn: " << function << " on: " << ColumnCommandJL::toString();
-    return oss.str();
+  ostringstream oss;
+  oss << "PseudoColumnJL fcn: " << function << " on: " << ColumnCommandJL::toString();
+  return oss.str();
 }
 
-
-
-
-
-}
+}  // namespace joblist

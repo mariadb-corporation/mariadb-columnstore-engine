@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: dmlpackageprocessorfactory.cpp 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: dmlpackageprocessorfactory.cpp 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 #define DMLPKGPROCFACTORY_DLLEXPORT
 #include "dmlpackageprocessorfactory.h"
 #undef DMLPKGPROCFACTORY_DLLEXPORT
@@ -33,34 +33,23 @@ using namespace dmlpackage;
 
 namespace dmlpackageprocessor
 {
-
-DMLPackageProcessor*  DMLPackageProcessorFactory::
-makePackageProcessor(int packageType, dmlpackage::CalpontDMLPackage& cpackage)
+DMLPackageProcessor* DMLPackageProcessorFactory::makePackageProcessor(int packageType,
+                                                                      dmlpackage::CalpontDMLPackage& cpackage)
 {
-    DMLPackageProcessor* dmlProcPtr = 0;
+  DMLPackageProcessor* dmlProcPtr = 0;
 
-    switch ( packageType )
-    {
-        case DML_INSERT:
-            dmlProcPtr = new InsertPackageProcessor();
-            break;
+  switch (packageType)
+  {
+    case DML_INSERT: dmlProcPtr = new InsertPackageProcessor(); break;
 
-        case DML_DELETE:
-            dmlProcPtr = new DeletePackageProcessor();
-            break;
+    case DML_DELETE: dmlProcPtr = new DeletePackageProcessor(); break;
 
-        case DML_UPDATE:
-            dmlProcPtr = new UpdatePackageProcessor();
-            break;
+    case DML_UPDATE: dmlProcPtr = new UpdatePackageProcessor(); break;
 
-        case DML_COMMAND:
-            dmlProcPtr = new CommandPackageProcessor();
-            break;
+    case DML_COMMAND: dmlProcPtr = new CommandPackageProcessor(); break;
+  }
 
-    }
-
-    return dmlProcPtr;
+  return dmlProcPtr;
 }
 
-} // namespace dmlpackageprocessor
-
+}  // namespace dmlpackageprocessor

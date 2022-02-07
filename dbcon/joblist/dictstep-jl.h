@@ -29,56 +29,53 @@
 //
 /** @file */
 
-#ifndef DICTSTEP_JL_H_
-#define DICTSTEP_JL_H_
+#pragma once
 
 #include "jobstep.h"
 #include "command-jl.h"
 
 namespace joblist
 {
-
 class DictStepJL : public CommandJL
 {
-public:
-    DictStepJL();
-    DictStepJL(const pDictionaryStep&);
-    virtual ~DictStepJL();
+ public:
+  DictStepJL();
+  DictStepJL(const pDictionaryStep&);
+  virtual ~DictStepJL();
 
-    void setLBID(uint64_t data, uint32_t dbroot);		// converts a rid or dictionary token to an LBID.  For ColumnCommandJL it's a RID, for a DictStep it's a token.
-    uint8_t getTableColumnType();
-    std::string toString();
+  void setLBID(uint64_t data, uint32_t dbroot);  // converts a rid or dictionary token to an LBID.  For
+                                                 // ColumnCommandJL it's a RID, for a DictStep it's a token.
+  uint8_t getTableColumnType();
+  std::string toString();
 
-    /*  XXXPAT: The width is only valid for projection steps and the output
-    	type is TUPLE at the moment. */
-    void setWidth(uint16_t);
-    uint16_t getWidth();
+  /*  XXXPAT: The width is only valid for projection steps and the output
+      type is TUPLE at the moment. */
+  void setWidth(uint16_t);
+  uint16_t getWidth();
 
-    CommandType getCommandType()
-    {
-        return DICT_STEP;
-    }
+  CommandType getCommandType()
+  {
+    return DICT_STEP;
+  }
 
-    void createCommand(messageqcpp::ByteStream&) const;
-    void runCommand(messageqcpp::ByteStream&) const;
+  void createCommand(messageqcpp::ByteStream&) const;
+  void runCommand(messageqcpp::ByteStream&) const;
 
-private:
-    DictStepJL(const DictStepJL&);
+ private:
+  DictStepJL(const DictStepJL&);
 
-// 		uint64_t lbid;
-// 		uint32_t fbo;
-    uint32_t traceFlags;  // probably move this to Command
-    uint8_t BOP;
-    uint16_t colWidth;
-    int compressionType;
-    messageqcpp::ByteStream filterString;
-    uint32_t filterCount;
-    std::vector<std::string> eqFilter;
-    bool hasEqFilter;
-    uint8_t eqOp;    // COMPARE_EQ or COMPARE_NE
-    uint32_t charsetNumber;
+  // 		uint64_t lbid;
+  // 		uint32_t fbo;
+  uint32_t traceFlags;  // probably move this to Command
+  uint8_t BOP;
+  uint16_t colWidth;
+  int compressionType;
+  messageqcpp::ByteStream filterString;
+  uint32_t filterCount;
+  std::vector<std::string> eqFilter;
+  bool hasEqFilter;
+  uint8_t eqOp;  // COMPARE_EQ or COMPARE_NE
+  uint32_t charsetNumber;
 };
 
-};  // namespace
-
-#endif
+};  // namespace joblist

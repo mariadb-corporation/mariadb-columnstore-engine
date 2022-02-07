@@ -32,72 +32,67 @@ using namespace std;
 
 namespace dbbc
 {
-
 FileBuffer::FileBuffer() : fDataLen(0), fLbid(-1), fVerid(0)
 {
 }
 
 FileBuffer::FileBuffer(const FileBuffer& rhs)
 {
+  // Removed the check for gcc 8.2. The latest gcc version we
+  // use ATM is 4.8.2 for centos 6 and it also doesn't need
+  // the check
+  if (this == &rhs)
+    return;
 
-    // Removed the check for gcc 8.2. The latest gcc version we 
-    // use ATM is 4.8.2 for centos 6 and it also doesn't need
-    // the check
-    if (this == &rhs)
-        return;
-
-    fLbid = rhs.fLbid;
-    fVerid = rhs.fVerid;
-    setData(rhs.fByteData, rhs.fDataLen);
-    fListLoc = rhs.listLoc();
-    fDataLen = rhs.fDataLen;
+  fLbid = rhs.fLbid;
+  fVerid = rhs.fVerid;
+  setData(rhs.fByteData, rhs.fDataLen);
+  fListLoc = rhs.listLoc();
+  fDataLen = rhs.fDataLen;
 }
-
 
 FileBuffer::FileBuffer(const BRM::LBID_t lbid, const BRM::VER_t ver, const uint8_t* data, const uint32_t len)
 {
-    fLbid = lbid;
-    fVerid = ver;
-    fDataLen = len;
-    setData(data, fDataLen);
+  fLbid = lbid;
+  fVerid = ver;
+  fDataLen = len;
+  setData(data, fDataLen);
 }
-
 
 FileBuffer::FileBuffer(const BRM::LBID_t lbid, const BRM::VER_t ver)
 {
-    fLbid = lbid;
-    fVerid = ver;
-    fDataLen = 0;
+  fLbid = lbid;
+  fVerid = ver;
+  fDataLen = 0;
 }
 
-
-FileBuffer& FileBuffer::operator= (const FileBuffer& rhs)
+FileBuffer& FileBuffer::operator=(const FileBuffer& rhs)
 {
-    fLbid = rhs.fLbid;
-    fVerid = rhs.fVerid;
-    fDataLen = rhs.fDataLen;
-    setData(rhs.fByteData, fDataLen);
-    fListLoc = rhs.listLoc();
-    return *this;
+  fLbid = rhs.fLbid;
+  fVerid = rhs.fVerid;
+  fDataLen = rhs.fDataLen;
+  setData(rhs.fByteData, fDataLen);
+  fListLoc = rhs.listLoc();
+  return *this;
 }
 
 void FileBuffer::setData(const uint8_t* d, const int len)
 {
-    if (d == NULL || len <= 0)
-        return;
+  if (d == NULL || len <= 0)
+    return;
 
-    fDataLen = len;
-    memcpy(fByteData, d, len);
+  fDataLen = len;
+  memcpy(fByteData, d, len);
 }
 
 void FileBuffer::setData(const uint8_t* d)
 {
-    fDataLen = 8192;
-    memcpy(fByteData, d, 8192);
+  fDataLen = 8192;
+  memcpy(fByteData, d, 8192);
 }
 
 FileBuffer::~FileBuffer()
 {
 }
 
-}
+}  // namespace dbbc

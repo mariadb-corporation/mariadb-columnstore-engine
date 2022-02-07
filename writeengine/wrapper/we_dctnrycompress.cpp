@@ -17,7 +17,6 @@
 
 //  $Id: we_dctnrycompress.cpp 4726 2013-08-07 03:38:36Z bwilkinson $
 
-
 /** @file */
 
 #include <stdio.h>
@@ -31,7 +30,6 @@ using namespace std;
 
 #include "we_dctnrycompress.h"
 
-
 namespace WriteEngine
 {
 class ChunkManager;
@@ -44,21 +42,22 @@ class ChunkManager;
  */
 DctnryCompress0::DctnryCompress0()
 {
-    m_compressionType = 0;
+  m_compressionType = 0;
 }
 
 DctnryCompress0::DctnryCompress0(Log* logger)
 {
-    m_compressionType = 0;
-    setDebugLevel( logger->getDebugLevel() );
-    setLogger    ( logger );
+  m_compressionType = 0;
+  setDebugLevel(logger->getDebugLevel());
+  setLogger(logger);
 }
 
 /**
  * Default Destructor
  */
 DctnryCompress0::~DctnryCompress0()
-{}
+{
+}
 
 // -----------------------------------------------------------------------------
 // Dctnry with compression type 1
@@ -69,16 +68,16 @@ DctnryCompress0::~DctnryCompress0()
  */
 DctnryCompress1::DctnryCompress1(uint32_t compressionType, Log* logger)
 {
-    m_compressionType = compressionType;
-    m_chunkManager = new ChunkManager();
+  m_compressionType = compressionType;
+  m_chunkManager = new ChunkManager();
 
-    if (logger)
-    {
-        setDebugLevel( logger->getDebugLevel() );
-        setLogger    ( logger );
-    }
+  if (logger)
+  {
+    setDebugLevel(logger->getDebugLevel());
+    setLogger(logger);
+  }
 
-    m_chunkManager->fileOp(this);
+  m_chunkManager->fileOp(this);
 }
 
 /**
@@ -86,103 +85,90 @@ DctnryCompress1::DctnryCompress1(uint32_t compressionType, Log* logger)
  */
 DctnryCompress1::~DctnryCompress1()
 {
-    if (m_chunkManager)
-        delete m_chunkManager;
+  if (m_chunkManager)
+    delete m_chunkManager;
 }
 
-int DctnryCompress1::updateDctnryExtent(IDBDataFile* pFile, int nBlocks,
-                                        int64_t lbid)
+int DctnryCompress1::updateDctnryExtent(IDBDataFile* pFile, int nBlocks, int64_t lbid)
 {
-    return m_chunkManager->updateDctnryExtent(pFile, nBlocks, lbid);
+  return m_chunkManager->updateDctnryExtent(pFile, nBlocks, lbid);
 }
 
-IDBDataFile* DctnryCompress1::createDctnryFile(const char* name, int width,
-                                               const char* mode,
-                                               int ioBuffSize,
+IDBDataFile* DctnryCompress1::createDctnryFile(const char* name, int width, const char* mode, int ioBuffSize,
                                                BRM::LBID_t lbid)
 {
-    return m_chunkManager->createDctnryFile(m_dctnryOID, width, m_dbRoot,
-                                            m_partition, m_segment, name, mode,
-                                            ioBuffSize, lbid);
+  return m_chunkManager->createDctnryFile(m_dctnryOID, width, m_dbRoot, m_partition, m_segment, name, mode,
+                                          ioBuffSize, lbid);
 }
-
 
 // @bug 5572 - HDFS usage: add *.tmp file backup flag
 IDBDataFile* DctnryCompress1::openDctnryFile(bool useTmpSuffix)
 {
-    return m_chunkManager->getFilePtr(
-               m_dctnryOID, m_dbRoot, m_partition, m_segment, m_segFileName, "r+b", DEFAULT_BUFSIZ, useTmpSuffix);
+  return m_chunkManager->getFilePtr(m_dctnryOID, m_dbRoot, m_partition, m_segment, m_segFileName, "r+b",
+                                    DEFAULT_BUFSIZ, useTmpSuffix);
 }
-
 
 void DctnryCompress1::closeDctnryFile(bool doFlush, std::map<FID, FID>& columnOids)
 {
-    if (doFlush)
-        m_chunkManager->flushChunks(NO_ERROR, columnOids);
-    else
-        m_chunkManager->cleanUp(columnOids);
+  if (doFlush)
+    m_chunkManager->flushChunks(NO_ERROR, columnOids);
+  else
+    m_chunkManager->cleanUp(columnOids);
 
-    m_dFile = NULL;
+  m_dFile = NULL;
 }
-
 
 int DctnryCompress1::numOfBlocksInFile()
 {
-    return m_chunkManager->getBlockCount(m_dFile);
+  return m_chunkManager->getBlockCount(m_dFile);
 }
-
 
 int DctnryCompress1::readDBFile(IDBDataFile* pFile, unsigned char* readBuf, const uint64_t lbid,
                                 const bool isFbo)
 {
-    int fbo = lbid;
+  int fbo = lbid;
 
-    if (!isFbo)
-        RETURN_ON_ERROR(lbidToFbo(lbid, fbo));
+  if (!isFbo)
+    RETURN_ON_ERROR(lbidToFbo(lbid, fbo));
 
-    return m_chunkManager->readBlock(pFile, readBuf, fbo);
+  return m_chunkManager->readBlock(pFile, readBuf, fbo);
 }
-
 
 int DctnryCompress1::writeDBFile(IDBDataFile* pFile, const unsigned char* writeBuf, const uint64_t lbid,
                                  const int numOfBlock)
 {
-    int fbo = 0;
-    RETURN_ON_ERROR(lbidToFbo(lbid, fbo));
+  int fbo = 0;
+  RETURN_ON_ERROR(lbidToFbo(lbid, fbo));
 
-    for (int i = 0; i < numOfBlock; i++)
-        RETURN_ON_ERROR(m_chunkManager->saveBlock(pFile, writeBuf, fbo + i));
+  for (int i = 0; i < numOfBlock; i++)
+    RETURN_ON_ERROR(m_chunkManager->saveBlock(pFile, writeBuf, fbo + i));
 
-    return NO_ERROR;
+  return NO_ERROR;
 }
 
-int DctnryCompress1::writeDBFileNoVBCache(IDBDataFile* pFile,
-        const unsigned char* writeBuf, const int fbo,
-        const int numOfBlock)
+int DctnryCompress1::writeDBFileNoVBCache(IDBDataFile* pFile, const unsigned char* writeBuf, const int fbo,
+                                          const int numOfBlock)
 {
-    //int fbo = 0;
-    //RETURN_ON_ERROR(lbidToFbo(lbid, fbo));
+  // int fbo = 0;
+  // RETURN_ON_ERROR(lbidToFbo(lbid, fbo));
 
-    for (int i = 0; i < numOfBlock; i++)
-        RETURN_ON_ERROR(m_chunkManager->saveBlock(pFile, writeBuf, fbo + i));
+  for (int i = 0; i < numOfBlock; i++)
+    RETURN_ON_ERROR(m_chunkManager->saveBlock(pFile, writeBuf, fbo + i));
 
-    return NO_ERROR;
+  return NO_ERROR;
 }
 
 int DctnryCompress1::flushFile(int rc, std::map<FID, FID>& columnOids)
 {
-    return m_chunkManager->flushChunks(rc, columnOids);
+  return m_chunkManager->flushChunks(rc, columnOids);
 }
-
 
 int DctnryCompress1::lbidToFbo(const uint64_t lbid, int& fbo)
 {
-    uint16_t dbRoot;
-    uint16_t segment;
-    uint32_t partition;
-    return BRMWrapper::getInstance()->getFboOffset(lbid, dbRoot, partition, segment, fbo);
+  uint16_t dbRoot;
+  uint16_t segment;
+  uint32_t partition;
+  return BRMWrapper::getInstance()->getFboOffset(lbid, dbRoot, partition, segment, fbo);
 }
 
-
-} //end of namespace
-
+}  // namespace WriteEngine

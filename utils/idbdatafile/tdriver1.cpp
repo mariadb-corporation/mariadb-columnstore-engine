@@ -7,7 +7,7 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
-    void* dl = 0;
+  void* dl = 0;
 #if 0
     dl = dlopen("./libjvm.so", RTLD_NOW);
 
@@ -28,11 +28,10 @@ int main(int argc, char** argv)
     }
 
 #endif
-    bool ret = false;
-    ret = idbdatafile::IDBPolicy::installPlugin("hdfs-20.so");
+  bool ret = false;
+  ret = idbdatafile::IDBPolicy::installPlugin("hdfs-20.so");
 
-    cout << "ret = " << boolalpha << ret << endl;
+  cout << "ret = " << boolalpha << ret << endl;
 
-    return 0;
+  return 0;
 }
-

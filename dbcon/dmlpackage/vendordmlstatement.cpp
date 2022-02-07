@@ -29,31 +29,56 @@ using namespace std;
 
 namespace dmlpackage
 {
-
 VendorDMLStatement::VendorDMLStatement(std::string dmlstatement, int sessionID)
-    : fDMLStatement(dmlstatement), fSessionID(sessionID), fLogging(true), fLogending(true)
-{}
+ : fDMLStatement(dmlstatement), fSessionID(sessionID), fLogging(true), fLogending(true)
+{
+}
 
 VendorDMLStatement::VendorDMLStatement(std::string dmlstatement, int stmttype, int sessionID)
-    : fDMLStatement(dmlstatement), fDMLStatementType(stmttype), fSessionID(sessionID), fLogging(true), fLogending(true)
-{}
+ : fDMLStatement(dmlstatement)
+ , fDMLStatementType(stmttype)
+ , fSessionID(sessionID)
+ , fLogging(true)
+ , fLogending(true)
+{
+}
 
-VendorDMLStatement::VendorDMLStatement(std::string dmlstatement, int stmttype,
-                                       std::string tName, std::string schema,
-                                       int rows, int columns, std::string buf,
+VendorDMLStatement::VendorDMLStatement(std::string dmlstatement, int stmttype, std::string tName,
+                                       std::string schema, int rows, int columns, std::string buf,
                                        int sessionID)
-    : fDMLStatement(dmlstatement), fDMLStatementType(stmttype),
-      fTableName(tName), fSchema(schema), fRows(rows), fColumns(columns),
-      fDataBuffer(buf), fSessionID(sessionID), fLogging(true), fLogending(true)
-{}
+ : fDMLStatement(dmlstatement)
+ , fDMLStatementType(stmttype)
+ , fTableName(tName)
+ , fSchema(schema)
+ , fRows(rows)
+ , fColumns(columns)
+ , fDataBuffer(buf)
+ , fSessionID(sessionID)
+ , fLogging(true)
+ , fLogending(true)
+{
+}
 
-VendorDMLStatement::VendorDMLStatement(std::string dmlstatement, int stmttype, std::string tName, std::string schema, int rows, int columns,
-                                       ColNameList& colNameList, TableValuesMap& tableValuesMap, NullValuesBitset& nullValues, int sessionID)
-    : fDMLStatement(dmlstatement), fDMLStatementType(stmttype),
-      fTableName(tName), fSchema(schema), fRows(rows), fColumns(columns),
-      fColNameList(colNameList), fTableValuesMap(tableValuesMap), fNullValues(nullValues), fSessionID(sessionID), fLogging(true), fLogending(true)
-{}
+VendorDMLStatement::VendorDMLStatement(std::string dmlstatement, int stmttype, std::string tName,
+                                       std::string schema, int rows, int columns, ColNameList& colNameList,
+                                       TableValuesMap& tableValuesMap, NullValuesBitset& nullValues,
+                                       int sessionID)
+ : fDMLStatement(dmlstatement)
+ , fDMLStatementType(stmttype)
+ , fTableName(tName)
+ , fSchema(schema)
+ , fRows(rows)
+ , fColumns(columns)
+ , fColNameList(colNameList)
+ , fTableValuesMap(tableValuesMap)
+ , fNullValues(nullValues)
+ , fSessionID(sessionID)
+ , fLogging(true)
+ , fLogending(true)
+{
+}
 
 VendorDMLStatement::~VendorDMLStatement()
-{}
+{
 }
+}  // namespace dmlpackage

@@ -16,8 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-#ifndef _THRIFT_TDISPATCHPROCESSOR_H_
-#define _THRIFT_TDISPATCHPROCESSOR_H_ 1
+#pragma once
 
 #include <thrift/TProcessor.h>
 
@@ -153,4 +152,3 @@ class TDispatchProcessorT<protocol::TProtocol> :
 }
 } // apache::thrift
 
-#endif // _THRIFT_TDISPATCHPROCESSOR_H_

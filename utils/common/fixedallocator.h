@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /******************************************************************************************
-* $Id$
-*
-******************************************************************************************/
+ * $Id$
+ *
+ ******************************************************************************************/
 
 /* This allocator is for frequent small allocations that all get deallocated at once.
    It allocates large blocks of memory from the system and distributes 'allocsize'
@@ -30,8 +30,7 @@
    TODO: make it STL and boost compliant...
 */
 
-#ifndef FIXEDALLOCATOR_H_
-#define FIXEDALLOCATOR_H_
+#pragma once
 
 #include <stdint.h>
 #include <boost/shared_array.hpp>
@@ -49,94 +48,101 @@
 
 namespace utils
 {
-
 class FixedAllocator
 {
-public:
-    EXPORT static const unsigned long DEFAULT_NUM_ELEMENTS = (4096 * 4); // should be a multiple of pagesize
+ public:
+  EXPORT static const unsigned long DEFAULT_NUM_ELEMENTS = (4096 * 4);  // should be a multiple of pagesize
 
-    EXPORT FixedAllocator() :
-        capacityRemaining(0),
-        elementCount(DEFAULT_NUM_ELEMENTS),
-        elementSize(0),
-        currentlyStored(0),
-        tmpSpace(false),
-        nextAlloc(0),
-        useLock(false),
-        lock(false) {}
-    EXPORT explicit FixedAllocator(unsigned long allocSize, bool isTmpSpace = false,
-                                   unsigned long numElements = DEFAULT_NUM_ELEMENTS) :
-        capacityRemaining(0),
-        elementCount(numElements),
-        elementSize(allocSize),
-        currentlyStored(0),
-        tmpSpace(isTmpSpace),
-        nextAlloc(0),
-        useLock(false),
-        lock(false) {}
-    EXPORT FixedAllocator(const FixedAllocator&);
-    EXPORT FixedAllocator& operator=(const FixedAllocator&);
-    virtual ~FixedAllocator() {}
+  EXPORT FixedAllocator()
+   : capacityRemaining(0)
+   , elementCount(DEFAULT_NUM_ELEMENTS)
+   , elementSize(0)
+   , currentlyStored(0)
+   , tmpSpace(false)
+   , nextAlloc(0)
+   , useLock(false)
+   , lock(false)
+  {
+  }
+  EXPORT explicit FixedAllocator(unsigned long allocSize, bool isTmpSpace = false,
+                                 unsigned long numElements = DEFAULT_NUM_ELEMENTS)
+   : capacityRemaining(0)
+   , elementCount(numElements)
+   , elementSize(allocSize)
+   , currentlyStored(0)
+   , tmpSpace(isTmpSpace)
+   , nextAlloc(0)
+   , useLock(false)
+   , lock(false)
+  {
+  }
+  EXPORT FixedAllocator(const FixedAllocator&);
+  EXPORT FixedAllocator& operator=(const FixedAllocator&);
+  virtual ~FixedAllocator()
+  {
+  }
 
-    EXPORT void* allocate();
-    EXPORT void* allocate(uint32_t len);   // a hack to make it work more like a pool allocator (use PoolAllocator instead)
-    EXPORT void truncateBy(uint32_t amt);   // returns a portion of mem just allocated; use with caution
-    void deallocate() { }   // does nothing
-    EXPORT void deallocateAll();		// drops all memory in use
-    EXPORT uint64_t getMemUsage() const;
-    void setUseLock(bool);
-    void setAllocSize(uint);
+  EXPORT void* allocate();
+  EXPORT void* allocate(
+      uint32_t len);  // a hack to make it work more like a pool allocator (use PoolAllocator instead)
+  EXPORT void truncateBy(uint32_t amt);  // returns a portion of mem just allocated; use with caution
+  void deallocate()
+  {
+  }                             // does nothing
+  EXPORT void deallocateAll();  // drops all memory in use
+  EXPORT uint64_t getMemUsage() const;
+  void setUseLock(bool);
+  void setAllocSize(uint);
 
-private:
-    void newBlock();
+ private:
+  void newBlock();
 
-    std::vector<boost::shared_array<uint8_t> > mem;
-    unsigned long capacityRemaining;
-    uint64_t elementCount;
-    unsigned long elementSize;
-    uint64_t currentlyStored;
-    bool tmpSpace;
-    uint8_t* nextAlloc;
-    bool useLock;
-    std::atomic<bool> lock;
+  std::vector<boost::shared_array<uint8_t> > mem;
+  unsigned long capacityRemaining;
+  uint64_t elementCount;
+  unsigned long elementSize;
+  uint64_t currentlyStored;
+  bool tmpSpace;
+  uint8_t* nextAlloc;
+  bool useLock;
+  std::atomic<bool> lock;
 };
 
 inline void* FixedAllocator::allocate()
 {
-    void* ret;
+  void* ret;
 
-    if (useLock)
-        getSpinlock(lock);
-    if (capacityRemaining < elementSize)
-        newBlock();
+  if (useLock)
+    getSpinlock(lock);
+  if (capacityRemaining < elementSize)
+    newBlock();
 
-    ret = nextAlloc;
-    nextAlloc += elementSize;
-    capacityRemaining -= elementSize;
-    currentlyStored += elementSize;
-    if (useLock)
-        releaseSpinlock(lock);
-    return ret;
+  ret = nextAlloc;
+  nextAlloc += elementSize;
+  capacityRemaining -= elementSize;
+  currentlyStored += elementSize;
+  if (useLock)
+    releaseSpinlock(lock);
+  return ret;
 }
 
 inline void* FixedAllocator::allocate(uint32_t len)
 {
-    void* ret;
+  void* ret;
 
-    if (useLock)
-        getSpinlock(lock);
-    if (capacityRemaining < len)
-        newBlock();
+  if (useLock)
+    getSpinlock(lock);
+  if (capacityRemaining < len)
+    newBlock();
 
-    ret = nextAlloc;
-    nextAlloc += len;
-    capacityRemaining -= len;
-    currentlyStored += len;
-    if (useLock)
-        releaseSpinlock(lock);
-    return ret;
+  ret = nextAlloc;
+  nextAlloc += len;
+  capacityRemaining -= len;
+  currentlyStored += len;
+  if (useLock)
+    releaseSpinlock(lock);
+  return ret;
 }
 
 #undef EXPORT
-}  // namespace
-#endif
+}  // namespace utils

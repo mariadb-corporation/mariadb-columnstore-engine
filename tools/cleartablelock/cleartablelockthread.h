@@ -16,11 +16,10 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id: cleartablelockthread.h 2101 2013-01-21 14:12:52Z rdempsey $
-*
-*******************************************************************************/
-#ifndef ClearTableLockThread_H__
-#define ClearTableLockThread_H__
+ * $Id: cleartablelockthread.h 2101 2013-01-21 14:12:52Z rdempsey $
+ *
+ *******************************************************************************/
+#pragma once
 
 #include <string>
 
@@ -34,54 +33,55 @@
  */
 class ClearTableLockStatus
 {
-public:
-    /** @brief ClearTableLockStatus constructor
-     *  @param moduleID PM module ID relevant to this status object
-     */
-    explicit ClearTableLockStatus(int moduleID) :
-        fModuleID(moduleID), fReturnStatus(0)               { }
+ public:
+  /** @brief ClearTableLockStatus constructor
+   *  @param moduleID PM module ID relevant to this status object
+   */
+  explicit ClearTableLockStatus(int moduleID) : fModuleID(moduleID), fReturnStatus(0)
+  {
+  }
 
-    /** @brief Accessor to return status
-     */
-    int  retStatus()            const
-    {
-        return fReturnStatus;
-    }
+  /** @brief Accessor to return status
+   */
+  int retStatus() const
+  {
+    return fReturnStatus;
+  }
 
-    /** @brief Accessor to return message
-     */
-    const std::string& retMsg() const
-    {
-        return fReturnMsg;
-    }
+  /** @brief Accessor to return message
+   */
+  const std::string& retMsg() const
+  {
+    return fReturnMsg;
+  }
 
-    /** @brief Accessor to PM module ID
-     */
-    int  moduleID()             const
-    {
-        return fModuleID;
-    }
+  /** @brief Accessor to PM module ID
+   */
+  int moduleID() const
+  {
+    return fModuleID;
+  }
 
-    /** @brief Mutator used to set the return status
-     *  @param stat Status to be saved
-     */
-    void retStatus(int stat)
-    {
-        fReturnStatus = stat;
-    }
+  /** @brief Mutator used to set the return status
+   *  @param stat Status to be saved
+   */
+  void retStatus(int stat)
+  {
+    fReturnStatus = stat;
+  }
 
-    /** @brief Mutator used to set the return message
-     *  @param msg Status message to be saved
-     */
-    void retMsg   (const std::string& msg)
-    {
-        fReturnMsg = msg;
-    }
+  /** @brief Mutator used to set the return message
+   *  @param msg Status message to be saved
+   */
+  void retMsg(const std::string& msg)
+  {
+    fReturnMsg = msg;
+  }
 
-private:
-    int         fModuleID;     // PM module ID associated with this request
-    int         fReturnStatus; // Return status from the PM
-    std::string fReturnMsg;    // Return message from the PM
+ private:
+  int fModuleID;           // PM module ID associated with this request
+  int fReturnStatus;       // Return status from the PM
+  std::string fReturnMsg;  // Return message from the PM
 };
 
 //------------------------------------------------------------------------------
@@ -89,49 +89,42 @@ private:
  */
 class ClearTableLockThread
 {
-public:
-    enum CLRTBLLOCK_MSGTYPE
-    {
-        CLRTBLLOCK_MSGTYPE_ROLLBACK = 1,
-        CLRTBLLOCK_MSGTYPE_CLEANUP  = 2
-    };
+ public:
+  enum CLRTBLLOCK_MSGTYPE
+  {
+    CLRTBLLOCK_MSGTYPE_ROLLBACK = 1,
+    CLRTBLLOCK_MSGTYPE_CLEANUP = 2
+  };
 
-    /** @brief ClearTableLockThread constructor
-     *  @param brm     Handle to DBRM
-     *  @param clt     MessageQueueClient used to communicate with PM
-     *  @param tInfo   Initial table lock information
-     *  @param tblName Name of table referenced by tInfo
-     *  @param msgType Message to process
-     *  @param pStatus Status object used to track this bulkload rollback req
-     */
-    ClearTableLockThread(
-        BRM::DBRM*                brm,
-        messageqcpp::MessageQueueClient* clt,
-        const BRM::TableLockInfo& tInfo,
-        const std::string&        tblName,
-        CLRTBLLOCK_MSGTYPE        msgType,
-        ClearTableLockStatus*     pStatus);
+  /** @brief ClearTableLockThread constructor
+   *  @param brm     Handle to DBRM
+   *  @param clt     MessageQueueClient used to communicate with PM
+   *  @param tInfo   Initial table lock information
+   *  @param tblName Name of table referenced by tInfo
+   *  @param msgType Message to process
+   *  @param pStatus Status object used to track this bulkload rollback req
+   */
+  ClearTableLockThread(BRM::DBRM* brm, messageqcpp::MessageQueueClient* clt, const BRM::TableLockInfo& tInfo,
+                       const std::string& tblName, CLRTBLLOCK_MSGTYPE msgType, ClearTableLockStatus* pStatus);
 
-    /** @brief Entry point for thread execution
-     */
-    void operator() ();
+  /** @brief Entry point for thread execution
+   */
+  void operator()();
 
-private:
-    void executeRollback   ( );
-    void executeFileCleanup( );
-    void setStatus(int status, const std::string& msg)
-    {
-        fStatus->retStatus( status );
-        fStatus->retMsg   ( msg    );
-    }
+ private:
+  void executeRollback();
+  void executeFileCleanup();
+  void setStatus(int status, const std::string& msg)
+  {
+    fStatus->retStatus(status);
+    fStatus->retMsg(msg);
+  }
 
-    BRM::TableLockInfo    fTableLockInfo; // Initial table lock information
-    BRM::DBRM*            fBrm;           // Handle to DBRM
-    messageqcpp::MessageQueueClient* fClt;// Msg queue client to send/rcv msgs
-    std::string           fTblName;       // Name of relevant table
-    CLRTBLLOCK_MSGTYPE    fMsgType;       // Msg type to process
-    ClearTableLockStatus* fStatus;        // Status object used to track request
-    static boost::mutex   fStdOutLock;    // Synchronize logging to stdout
+  BRM::TableLockInfo fTableLockInfo;      // Initial table lock information
+  BRM::DBRM* fBrm;                        // Handle to DBRM
+  messageqcpp::MessageQueueClient* fClt;  // Msg queue client to send/rcv msgs
+  std::string fTblName;                   // Name of relevant table
+  CLRTBLLOCK_MSGTYPE fMsgType;            // Msg type to process
+  ClearTableLockStatus* fStatus;          // Status object used to track request
+  static boost::mutex fStdOutLock;        // Synchronize logging to stdout
 };
-
-#endif

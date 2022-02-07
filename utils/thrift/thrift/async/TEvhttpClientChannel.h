@@ -17,8 +17,7 @@
  * under the License.
  */
 
-#ifndef _THRIFT_TEVHTTP_CLIENT_CHANNEL_H_
-#define _THRIFT_TEVHTTP_CLIENT_CHANNEL_H_ 1
+#pragma once
 
 #include <string>
 #include <boost/shared_ptr.hpp>
@@ -97,4 +96,3 @@ private:
 }
 } // apache::thrift::async
 
-#endif // #ifndef _THRIFT_TEVHTTP_CLIENT_CHANNEL_H_

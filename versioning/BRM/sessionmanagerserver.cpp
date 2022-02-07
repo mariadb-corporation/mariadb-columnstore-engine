@@ -56,82 +56,85 @@ using namespace execplan;
 #undef SESSIONMANAGERSERVER_DLLEXPORT
 
 #ifndef O_BINARY
-#  define O_BINARY 0
+#define O_BINARY 0
 #endif
 #ifndef O_DIRECT
-#  define O_DIRECT 0
+#define O_DIRECT 0
 #endif
 #ifndef O_LARGEFILE
-#  define O_LARGEFILE 0
+#define O_LARGEFILE 0
 #endif
 #ifndef O_NOATIME
-#  define O_NOATIME 0
+#define O_NOATIME 0
 #endif
 
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
 using namespace idbdatafile;
 
-
 namespace BRM
 {
-
-const uint32_t SessionManagerServer::SS_READY				= 1 << 0;	// Set by dmlProc one time when dmlProc is ready
-const uint32_t SessionManagerServer::SS_SUSPENDED			= 1 << 1;	// Set by console when the system has been suspended by user.
-const uint32_t SessionManagerServer::SS_SUSPEND_PENDING		= 1 << 2;	// Set by console when user wants to suspend, but writing is occuring.
-const uint32_t SessionManagerServer::SS_SHUTDOWN_PENDING	= 1 << 3;	// Set by console when user wants to shutdown, but writing is occuring.
-const uint32_t SessionManagerServer::SS_ROLLBACK			= 1 << 4;   // In combination with a PENDING flag, force a rollback as soom as possible.
-const uint32_t SessionManagerServer::SS_FORCE				= 1 << 5;   // In combination with a PENDING flag, force a shutdown without rollback.
-const uint32_t SessionManagerServer::SS_QUERY_READY			= 1 << 6;   // Set by ProcManager when system is ready for queries
-
+const uint32_t SessionManagerServer::SS_READY = 1 << 0;  // Set by dmlProc one time when dmlProc is ready
+const uint32_t SessionManagerServer::SS_SUSPENDED =
+    1 << 1;  // Set by console when the system has been suspended by user.
+const uint32_t SessionManagerServer::SS_SUSPEND_PENDING =
+    1 << 2;  // Set by console when user wants to suspend, but writing is occuring.
+const uint32_t SessionManagerServer::SS_SHUTDOWN_PENDING =
+    1 << 3;  // Set by console when user wants to shutdown, but writing is occuring.
+const uint32_t SessionManagerServer::SS_ROLLBACK =
+    1 << 4;  // In combination with a PENDING flag, force a rollback as soom as possible.
+const uint32_t SessionManagerServer::SS_FORCE =
+    1 << 5;  // In combination with a PENDING flag, force a shutdown without rollback.
+const uint32_t SessionManagerServer::SS_QUERY_READY =
+    1 << 6;  // Set by ProcManager when system is ready for queries
 
 SessionManagerServer::SessionManagerServer() : unique32(0), unique64(0)
 {
-    config::Config* conf;
-    string stmp;
-    const char* ctmp;
+  config::Config* conf;
+  string stmp;
+  const char* ctmp;
 
-    conf = config::Config::makeConfig();
+  conf = config::Config::makeConfig();
 
-    try
-    {
-        stmp = conf->getConfig("SessionManager", "MaxConcurrentTransactions");
-    }
-    catch (const std::exception& e)
-    {
-        cout << e.what() << endl;
-        stmp.clear();
-    }
+  try
+  {
+    stmp = conf->getConfig("SessionManager", "MaxConcurrentTransactions");
+  }
+  catch (const std::exception& e)
+  {
+    cout << e.what() << endl;
+    stmp.clear();
+  }
 
-    if (stmp != "")
-    {
-        int64_t tmp;
-        ctmp = stmp.c_str();
-        tmp = config::Config::fromText(ctmp);
+  if (stmp != "")
+  {
+    int64_t tmp;
+    ctmp = stmp.c_str();
+    tmp = config::Config::fromText(ctmp);
 
-        if (tmp < 1)
-            maxTxns = 1;
-        else
-            maxTxns = static_cast<int>(tmp);
-    }
+    if (tmp < 1)
+      maxTxns = 1;
     else
-        maxTxns = 1;
+      maxTxns = static_cast<int>(tmp);
+  }
+  else
+    maxTxns = 1;
 
-    txnidFilename = conf->getConfig("SessionManager", "TxnIDFile");
+  txnidFilename = conf->getConfig("SessionManager", "TxnIDFile");
 
-    semValue = maxTxns;
-    _verID = 0;
-    _sysCatVerID = 0;
-    systemState = 0;
+  semValue = maxTxns;
+  _verID = 0;
+  _sysCatVerID = 0;
+  systemState = 0;
 
-    try
-    {
-        loadState();
-    }
-    catch (...)
-    {
-        // first-time run most likely, ignore the error
-    }
+  try
+  {
+    loadState();
+  }
+  catch (...)
+  {
+    // first-time run most likely, ignore the error
+  }
 }
 
 SessionManagerServer::~SessionManagerServer()
@@ -139,295 +142,293 @@ SessionManagerServer::~SessionManagerServer()
 }
 void SessionManagerServer::reset()
 {
-    mutex.try_lock();
-    semValue = maxTxns;
-    condvar.notify_all();
-    activeTxns.clear();
-    mutex.unlock();
+  mutex.try_lock();
+  semValue = maxTxns;
+  condvar.notify_all();
+  activeTxns.clear();
+  mutex.unlock();
 }
 
 void SessionManagerServer::loadState()
 {
-    int lastTxnID;
-    int err;
-    int lastSysCatVerId;
+  int lastTxnID;
+  int err;
+  int lastSysCatVerId;
 
 again:
 
-    // There are now 3 pieces of info stored in the txnidfd file: last
-    // transaction id, last system catalog version id, and the
-    // system state flags. All these values are stored in shared, an
-    // instance of struct Overlay.
-    // If we fail to read a full four bytes for any value, then the
-    // value isn't in the file, and we start with the default.
+  // There are now 3 pieces of info stored in the txnidfd file: last
+  // transaction id, last system catalog version id, and the
+  // system state flags. All these values are stored in shared, an
+  // instance of struct Overlay.
+  // If we fail to read a full four bytes for any value, then the
+  // value isn't in the file, and we start with the default.
 
-    if (IDBPolicy::exists(txnidFilename.c_str()))
+  if (IDBPolicy::exists(txnidFilename.c_str()))
+  {
+    scoped_ptr<IDBDataFile> txnidfp(IDBDataFile::open(
+        IDBPolicy::getType(txnidFilename.c_str(), IDBPolicy::WRITEENG), txnidFilename.c_str(), "rb", 0));
+
+    if (!txnidfp)
     {
-        scoped_ptr<IDBDataFile> txnidfp(IDBDataFile::open(
-                                            IDBPolicy::getType(txnidFilename.c_str(),
-                                                    IDBPolicy::WRITEENG),
-                                            txnidFilename.c_str(), "rb", 0));
-
-        if (!txnidfp)
-        {
-            perror("SessionManagerServer(): open");
-            throw runtime_error("SessionManagerServer: Could not open the transaction ID file");
-        }
-
-        // Last transaction id
-        txnidfp->seek(0, SEEK_SET);
-        err = txnidfp->read(&lastTxnID, 4);
-
-        if (err < 0 && errno != EINTR)
-        {
-            perror("Sessionmanager::initSegment(): read");
-            throw runtime_error("SessionManagerServer: read failed, aborting");
-        }
-        else if (err < 0)
-            goto again;
-        else if (err == sizeof(int))
-            _verID = lastTxnID;
-
-        // last system catalog version id
-        err = txnidfp->read(&lastSysCatVerId, 4);
-
-        if (err < 0 && errno != EINTR)
-        {
-            perror("Sessionmanager::initSegment(): read");
-            throw runtime_error("SessionManagerServer: read failed, aborting");
-        }
-        else if (err < 0)
-            goto again;
-        else if (err == sizeof(int))
-            _sysCatVerID = lastSysCatVerId;
-
-        // System state. Contains flags regarding the suspend state of the system.
-        err = txnidfp->read(&systemState, 4);
-
-        if (err < 0 && errno == EINTR)
-        {
-            goto again;
-        }
-        else if (err == sizeof(int))
-        {
-            // Turn off the pending and force flags. They make no sense for a clean start.
-            // Turn off the ready flag. DMLProc will set it back on when
-            // initialized.
-            systemState &=
-                ~(SS_READY | SS_QUERY_READY | SS_SUSPEND_PENDING | SS_SHUTDOWN_PENDING | SS_ROLLBACK | SS_FORCE);
-        }
-        else
-        {
-            // else no problem. System state wasn't saved. Might be an upgraded system.
-            systemState = 0;
-        }
+      perror("SessionManagerServer(): open");
+      throw runtime_error("SessionManagerServer: Could not open the transaction ID file");
     }
+
+    // Last transaction id
+    txnidfp->seek(0, SEEK_SET);
+    err = txnidfp->read(&lastTxnID, 4);
+
+    if (err < 0 && errno != EINTR)
+    {
+      perror("Sessionmanager::initSegment(): read");
+      throw runtime_error("SessionManagerServer: read failed, aborting");
+    }
+    else if (err < 0)
+      goto again;
+    else if (err == sizeof(int))
+      _verID = lastTxnID;
+
+    // last system catalog version id
+    err = txnidfp->read(&lastSysCatVerId, 4);
+
+    if (err < 0 && errno != EINTR)
+    {
+      perror("Sessionmanager::initSegment(): read");
+      throw runtime_error("SessionManagerServer: read failed, aborting");
+    }
+    else if (err < 0)
+      goto again;
+    else if (err == sizeof(int))
+      _sysCatVerID = lastSysCatVerId;
+
+    // System state. Contains flags regarding the suspend state of the system.
+    err = txnidfp->read(&systemState, 4);
+
+    if (err < 0 && errno == EINTR)
+    {
+      goto again;
+    }
+    else if (err == sizeof(int))
+    {
+      // Turn off the pending and force flags. They make no sense for a clean start.
+      // Turn off the ready flag. DMLProc will set it back on when
+      // initialized.
+      systemState &=
+          ~(SS_READY | SS_QUERY_READY | SS_SUSPEND_PENDING | SS_SHUTDOWN_PENDING | SS_ROLLBACK | SS_FORCE);
+    }
+    else
+    {
+      // else no problem. System state wasn't saved. Might be an upgraded system.
+      systemState = 0;
+    }
+  }
 }
 
 /* Save the systemState flags of the Overlay
  * segment. This is saved in the third
  * word of txnid File
-*/
+ */
 void SessionManagerServer::saveSystemState()
 {
-        saveSMTxnIDAndState();
+  saveSMTxnIDAndState();
 }
 
 const QueryContext SessionManagerServer::verID()
 {
-    QueryContext ret;
+  QueryContext ret;
 
-    boost::mutex::scoped_lock lk(mutex);
-    ret.currentScn = _verID;
+  boost::mutex::scoped_lock lk(mutex);
+  ret.currentScn = _verID;
 
-    for (iterator i = activeTxns.begin(); i != activeTxns.end(); ++i)
-        ret.currentTxns->push_back(i->second);
+  for (iterator i = activeTxns.begin(); i != activeTxns.end(); ++i)
+    ret.currentTxns->push_back(i->second);
 
-    return ret;
+  return ret;
 }
 
 const QueryContext SessionManagerServer::sysCatVerID()
 {
-    QueryContext ret;
+  QueryContext ret;
 
-    boost::mutex::scoped_lock lk(mutex);
-    ret.currentScn = _sysCatVerID;
+  boost::mutex::scoped_lock lk(mutex);
+  ret.currentScn = _sysCatVerID;
 
-    for (iterator i = activeTxns.begin(); i != activeTxns.end(); ++i)
-        ret.currentTxns->push_back(i->second);
+  for (iterator i = activeTxns.begin(); i != activeTxns.end(); ++i)
+    ret.currentTxns->push_back(i->second);
 
-    return ret;
+  return ret;
 }
 
 const TxnID SessionManagerServer::newTxnID(const SID session, bool block, bool isDDL)
 {
-    TxnID ret; //ctor must set valid = false
-    iterator it;
+  TxnID ret;  // ctor must set valid = false
+  iterator it;
 
-    boost::mutex::scoped_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
 
-    // if it already has a txn...
-    it = activeTxns.find(session);
+  // if it already has a txn...
+  it = activeTxns.find(session);
 
-    if (it != activeTxns.end())
-    {
-        ret.id = it->second;
-        ret.valid = true;
-        return ret;
-    }
-
-    if (!block && semValue == 0)
-        return ret;
-    else while (semValue == 0)
-            condvar.wait(lk);
-
-    semValue--;
-    idbassert(semValue <= (uint32_t)maxTxns);
-
-    ret.id = ++_verID;
+  if (it != activeTxns.end())
+  {
+    ret.id = it->second;
     ret.valid = true;
-    activeTxns[session] = ret.id;
-
-    if (isDDL)
-        ++_sysCatVerID;
-
-    saveSMTxnIDAndState();
-
     return ret;
+  }
+
+  if (!block && semValue == 0)
+    return ret;
+  else
+    while (semValue == 0)
+      condvar.wait(lk);
+
+  semValue--;
+  idbassert(semValue <= (uint32_t)maxTxns);
+
+  ret.id = ++_verID;
+  ret.valid = true;
+  activeTxns[session] = ret.id;
+
+  if (isDDL)
+    ++_sysCatVerID;
+
+  saveSMTxnIDAndState();
+
+  return ret;
 }
 
 void SessionManagerServer::finishTransaction(TxnID& txn)
 {
-    iterator it;
-    boost::mutex::scoped_lock lk(mutex);
-    bool found = false;
+  iterator it;
+  boost::mutex::scoped_lock lk(mutex);
+  bool found = false;
 
-    if (!txn.valid)
-        throw invalid_argument("SessionManagerServer::finishTransaction(): transaction is invalid");
+  if (!txn.valid)
+    throw invalid_argument("SessionManagerServer::finishTransaction(): transaction is invalid");
 
-    for (it = activeTxns.begin(); it != activeTxns.end(); )
+  for (it = activeTxns.begin(); it != activeTxns.end();)
+  {
+    if (it->second == txn.id)
     {
-        if (it->second == txn.id)
-        {
-            activeTxns.erase(it++);
-            txn.valid = false;
-            found = true;
-            //we could probably break at this point, but there won't be that many active txns, and,
-            // even though it'd be an error to have multiple entries for the same txn, we might
-            // well just get rid of them...
-        }
-        else
-            ++it;
-    }
-
-    if (found)
-    {
-        semValue++;
-        idbassert(semValue <= (uint32_t)maxTxns);
-        condvar.notify_one();
+      activeTxns.erase(it++);
+      txn.valid = false;
+      found = true;
+      // we could probably break at this point, but there won't be that many active txns, and,
+      // even though it'd be an error to have multiple entries for the same txn, we might
+      // well just get rid of them...
     }
     else
-        throw invalid_argument("SessionManagerServer::finishTransaction(): transaction doesn't exist");
+      ++it;
+  }
+
+  if (found)
+  {
+    semValue++;
+    idbassert(semValue <= (uint32_t)maxTxns);
+    condvar.notify_one();
+  }
+  else
+    throw invalid_argument("SessionManagerServer::finishTransaction(): transaction doesn't exist");
 }
 
 const TxnID SessionManagerServer::getTxnID(const SID session)
 {
-    TxnID ret;
-    iterator it;
+  TxnID ret;
+  iterator it;
 
-    boost::mutex::scoped_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
 
-    it = activeTxns.find(session);
+  it = activeTxns.find(session);
 
-    if (it != activeTxns.end())
-    {
-        ret.id = it->second;
-        ret.valid = true;
-    }
+  if (it != activeTxns.end())
+  {
+    ret.id = it->second;
+    ret.valid = true;
+  }
 
-    return ret;
+  return ret;
 }
 
 shared_array<SIDTIDEntry> SessionManagerServer::SIDTIDMap(int& len)
 {
-    int j;
-    shared_array<SIDTIDEntry> ret;
-    boost::mutex::scoped_lock lk(mutex);
-    iterator it;
+  int j;
+  shared_array<SIDTIDEntry> ret;
+  boost::mutex::scoped_lock lk(mutex);
+  iterator it;
 
-    ret.reset(new SIDTIDEntry[activeTxns.size()]);
+  ret.reset(new SIDTIDEntry[activeTxns.size()]);
 
-    len = activeTxns.size();
+  len = activeTxns.size();
 
-    for (it = activeTxns.begin(), j = 0; it != activeTxns.end(); ++it, ++j)
-    {
-        ret[j].sessionid = it->first;
-        ret[j].txnid.id = it->second;
-        ret[j].txnid.valid = true;
-    }
+  for (it = activeTxns.begin(), j = 0; it != activeTxns.end(); ++it, ++j)
+  {
+    ret[j].sessionid = it->first;
+    ret[j].txnid.id = it->second;
+    ret[j].txnid.valid = true;
+  }
 
-    return ret;
+  return ret;
 }
 
 void SessionManagerServer::setSystemState(uint32_t state)
 {
-    boost::mutex::scoped_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
 
-    systemState |= state;
-    saveSystemState();
+  systemState |= state;
+  saveSystemState();
 }
 
 void SessionManagerServer::clearSystemState(uint32_t state)
 {
-    boost::mutex::scoped_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
 
-    systemState &= ~state;
-    saveSystemState();
+  systemState &= ~state;
+  saveSystemState();
 }
 
 uint32_t SessionManagerServer::getTxnCount()
 {
-    boost::mutex::scoped_lock lk(mutex);
-    return activeTxns.size();
+  boost::mutex::scoped_lock lk(mutex);
+  return activeTxns.size();
 }
 
 void SessionManagerServer::saveSMTxnIDAndState()
 {
-    // caller holds the lock
-    scoped_ptr<IDBDataFile> txnidfp(IDBDataFile::open(
-                                        IDBPolicy::getType(txnidFilename.c_str(), IDBPolicy::WRITEENG),
-                                        txnidFilename.c_str(), "wb", 0));
+  // caller holds the lock
+  scoped_ptr<IDBDataFile> txnidfp(IDBDataFile::open(
+      IDBPolicy::getType(txnidFilename.c_str(), IDBPolicy::WRITEENG), txnidFilename.c_str(), "wb", 0));
 
-    if (!txnidfp)
-    {
-        perror("SessionManagerServer(): open");
-        throw runtime_error("SessionManagerServer: Could not open the transaction ID file");
-    }
+  if (!txnidfp)
+  {
+    perror("SessionManagerServer(): open");
+    throw runtime_error("SessionManagerServer: Could not open the transaction ID file");
+  }
 
-    int filedata[2];
-    filedata[0] = _verID;
-    filedata[1] = _sysCatVerID;
+  int filedata[2];
+  filedata[0] = _verID;
+  filedata[1] = _sysCatVerID;
 
-    int err = txnidfp->write(filedata, 8);
+  int err = txnidfp->write(filedata, 8);
 
-    if (err < 0)
-    {
-        perror("SessionManagerServer::newTxnID(): write(verid)");
-        throw runtime_error("SessionManagerServer::newTxnID(): write(verid) failed");
-    }
+  if (err < 0)
+  {
+    perror("SessionManagerServer::newTxnID(): write(verid)");
+    throw runtime_error("SessionManagerServer::newTxnID(): write(verid) failed");
+  }
 
-    uint32_t lSystemState = systemState;
-    // We don't save the pending flags, the force flag or the ready flags.
-    lSystemState &= ~(SS_READY | SS_QUERY_READY | SS_SUSPEND_PENDING | SS_SHUTDOWN_PENDING | SS_FORCE);
-    err = txnidfp->write(&lSystemState, sizeof(int));
+  uint32_t lSystemState = systemState;
+  // We don't save the pending flags, the force flag or the ready flags.
+  lSystemState &= ~(SS_READY | SS_QUERY_READY | SS_SUSPEND_PENDING | SS_SHUTDOWN_PENDING | SS_FORCE);
+  err = txnidfp->write(&lSystemState, sizeof(int));
 
-    if (err < 0)
-    {
-        perror("SessionManagerServer::saveSystemState(): write(systemState)");
-        throw runtime_error("SessionManagerServer::saveSystemState(): write(systemState) failed");
-    }
+  if (err < 0)
+  {
+    perror("SessionManagerServer::saveSystemState(): write(systemState)");
+    throw runtime_error("SessionManagerServer::saveSystemState(): write(systemState) failed");
+  }
 
-    txnidfp->flush();
+  txnidfp->flush();
 }
 
-}  //namespace
+}  // namespace BRM

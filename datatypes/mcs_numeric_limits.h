@@ -15,25 +15,30 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
-#ifndef MCS_NUMERIC_LIMITS_H_INCLUDED
-#define MCS_NUMERIC_LIMITS_H_INCLUDED
+#pragma once
 
 #include <limits>
 
 namespace datatypes
 {
-
 template <typename T>
 struct numeric_limits
 {
-  static constexpr T min() { return std::numeric_limits<T>::min(); }
-  static constexpr T max() { return std::numeric_limits<T>::max(); }
+  static constexpr T min()
+  {
+    return std::numeric_limits<T>::min();
+  }
+  static constexpr T max()
+  {
+    return std::numeric_limits<T>::max();
+  }
 };
 
 using int128_t = __int128;
 using uint128_t = unsigned __int128;
 
-template<> struct numeric_limits<int128_t>
+template <>
+struct numeric_limits<int128_t>
 {
   static constexpr int128_t min()
   {
@@ -45,7 +50,8 @@ template<> struct numeric_limits<int128_t>
   }
 };
 
-template<> struct numeric_limits<uint128_t>
+template <>
+struct numeric_limits<uint128_t>
 {
   static constexpr uint128_t min()
   {
@@ -57,6 +63,4 @@ template<> struct numeric_limits<uint128_t>
   }
 };
 
-} // namespace datatypes
-
-#endif // MCS_NUMERIC_LIMITS_H_INCLUDED
+}  // namespace datatypes

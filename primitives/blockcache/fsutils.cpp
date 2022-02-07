@@ -32,91 +32,88 @@ namespace fs = boost::filesystem;
 
 namespace
 {
-
 const string resolveInDir(const string& dir, const string& name)
 {
-    idbassert(!dir.empty() && !name.empty());
-    string ret;
-    fs::path path(dir);
+  idbassert(!dir.empty() && !name.empty());
+  string ret;
+  fs::path path(dir);
 
-    if (!fs::exists(path))
-        return ret;
+  if (!fs::exists(path))
+    return ret;
 
-    idbassert(fs::exists(path));
-    path /= name;
+  idbassert(fs::exists(path));
+  path /= name;
 
-    if (!fs::exists(path))
-        return ret;
+  if (!fs::exists(path))
+    return ret;
 
-    idbassert(fs::exists(path));
+  idbassert(fs::exists(path));
 #ifndef _MSC_VER
 
-    if (!fs::is_symlink(path))
-        return ret;
-
-    idbassert(fs::is_symlink(path));
-    char* realname = (char*)alloca(PATH_MAX + 1);
-    ssize_t realnamelen = readlink(path.string().c_str(), realname, PATH_MAX);
-
-    if (realnamelen <= 0)
-        return ret;
-
-    realname[realnamelen] = 0;
-    fs::path linkname(realname);
-    fs::path realpath("/dev");
-    realpath /= linkname.filename();
-    ret = realpath.string();
-#endif
+  if (!fs::is_symlink(path))
     return ret;
+
+  idbassert(fs::is_symlink(path));
+  char* realname = (char*)alloca(PATH_MAX + 1);
+  ssize_t realnamelen = readlink(path.string().c_str(), realname, PATH_MAX);
+
+  if (realnamelen <= 0)
+    return ret;
+
+  realname[realnamelen] = 0;
+  fs::path linkname(realname);
+  fs::path realpath("/dev");
+  realpath /= linkname.filename();
+  ret = realpath.string();
+#endif
+  return ret;
 }
 
 inline const string label2dev(const string& name)
 {
-    return resolveInDir("/dev/disk/by-label", name);
+  return resolveInDir("/dev/disk/by-label", name);
 }
 
 inline const string uuid2dev(const string& name)
 {
-    return resolveInDir("/dev/disk/by-uuid", name);
+  return resolveInDir("/dev/disk/by-uuid", name);
 }
 
-}
+}  // namespace
 
 namespace fsutils
 {
-
 const string symname2devname(const string& sympath)
 {
-    string ret;
+  string ret;
 #ifndef _MSC_VER
-    typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-    boost::char_separator<char> sep("=");
-    tokenizer tokens(sympath, sep);
-    tokenizer::iterator tok_iter = tokens.begin();
+  typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+  boost::char_separator<char> sep("=");
+  tokenizer tokens(sympath, sep);
+  tokenizer::iterator tok_iter = tokens.begin();
 
-    idbassert(tok_iter != tokens.end());
-    string symtype = *tok_iter;
+  idbassert(tok_iter != tokens.end());
+  string symtype = *tok_iter;
 
-    if (symtype != "LABEL" && symtype != "UUID")
-        return ret;
+  if (symtype != "LABEL" && symtype != "UUID")
+    return ret;
 
-    idbassert(symtype == "LABEL" || symtype == "UUID");
+  idbassert(symtype == "LABEL" || symtype == "UUID");
 
-    ++tok_iter;
-    idbassert(tok_iter != tokens.end());
-    string symname = *tok_iter;
+  ++tok_iter;
+  idbassert(tok_iter != tokens.end());
+  string symname = *tok_iter;
 
-    ++tok_iter;
-    idbassert(tok_iter == tokens.end());
+  ++tok_iter;
+  idbassert(tok_iter == tokens.end());
 
-    if (symtype == "LABEL")
-        ret = label2dev(symname);
-    else if (symtype == "UUID")
-        ret = uuid2dev(symname);
+  if (symtype == "LABEL")
+    ret = label2dev(symname);
+  else if (symtype == "UUID")
+    ret = uuid2dev(symname);
 
 #endif
-    return ret;
+  return ret;
 }
 
-}
-
+}  // namespace fsutils

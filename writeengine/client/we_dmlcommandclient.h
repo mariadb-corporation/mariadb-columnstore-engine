@@ -15,8 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifndef WE_DMLCOMMANDCLIENT_H__
-#define WE_DMLCOMMANDCLIENT_H__
+#pragma once
 
 #include <unistd.h>
 
@@ -40,19 +39,16 @@ namespace WriteEngine
 {
 class WE_DMLCommandClient
 {
-public:
-    EXPORT WE_DMLCommandClient();
-    EXPORT ~WE_DMLCommandClient();
+ public:
+  EXPORT WE_DMLCommandClient();
+  EXPORT ~WE_DMLCommandClient();
 
-private:
-    BRM::DBRM fDbrm;
-    WEClients* fWEClient;
-    oam::Oam fOam;
-
+ private:
+  BRM::DBRM fDbrm;
+  WEClients* fWEClient;
+  oam::Oam fOam;
 };
 
-}
+}  // namespace WriteEngine
 
 #undef EXPORT
-
-#endif
