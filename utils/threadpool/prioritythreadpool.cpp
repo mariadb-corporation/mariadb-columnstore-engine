@@ -28,6 +28,7 @@ using namespace std;
 
 #include "messageobj.h"
 #include "messagelog.h"
+#include "threadnaming.h"
 using namespace logging;
 
 #include "prioritythreadpool.h"
@@ -40,7 +41,8 @@ namespace threadpool
 
 PriorityThreadPool::PriorityThreadPool(uint targetWeightPerRun, uint highThreads,
                                        uint midThreads, uint lowThreads, uint ID) :
-    _stop(false), weightPerRun(targetWeightPerRun), id(ID)
+    _stop(false), weightPerRun(targetWeightPerRun), id(ID), 
+    blockedThreads(0), extraThreads(0), stopExtra(true)
 {
     boost::thread* newThread;
     for (uint32_t i = 0; i < highThreads; i++)
@@ -99,7 +101,22 @@ void PriorityThreadPool::addJob(const Job& job, bool useLock)
         newThread->detach();
         threadCounts[LOW]++;
     }
-
+    
+    // If some threads have blocked (because of output queue full)
+    // Temporarily add some extra worker threads to make up for the blocked threads.
+    if (blockedThreads > extraThreads)
+    {
+        stopExtra = false;
+        newThread = threads.create_thread(ThreadHelper(this, EXTRA));
+        newThread->detach();
+        extraThreads++;
+    }
+    else if (blockedThreads == 0)
+    {
+        // Release the temporary threads -- some threads have become unblocked.
+        stopExtra = true;
+    }
+    
     if (job.priority > 66)
         jobQueues[HIGH].push_back(job);
     else if (job.priority > 33)
@@ -127,7 +144,7 @@ void PriorityThreadPool::removeJobs(uint32_t id)
 
 PriorityThreadPool::Priority PriorityThreadPool::pickAQueue(Priority preference)
 {
-    if (!jobQueues[preference].empty())
+    if (preference != EXTRA && !jobQueues[preference].empty())
         return preference;
     else if (!jobQueues[HIGH].empty())
         return HIGH;
@@ -139,6 +156,10 @@ PriorityThreadPool::Priority PriorityThreadPool::pickAQueue(Priority preference)
 
 void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
 {
+    if (preferredQueue == EXTRA)
+        utils::setThreadName("Extra");
+    else
+        utils::setThreadName("Idle");
     Priority queue = LOW;
     uint32_t weight, i = 0;
     vector<Job> runList;
@@ -158,6 +179,14 @@ void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
 
             if (jobQueues[queue].empty())
             {
+                // If this is an EXTRA thread due toother threads blocking, and all blockers are unblocked, 
+                // we don't want this one any more.
+                if (preferredQueue == EXTRA && stopExtra)
+                {
+                    extraThreads--;
+                    return;
+                }
+                
                 newJob.wait(lk);
                 continue;
             }
@@ -194,7 +223,11 @@ void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
                 if (reschedule[i])
                     rescheduleCount++;
             }
-
+            if (preferredQueue == EXTRA)
+                utils::setThreadName("Extra (used)");
+            else
+                utils::setThreadName("Idle");
+            
             // no real work was done, prevent intensive busy waiting
             if (rescheduleCount == runList.size())
                 usleep(1000);
@@ -216,6 +249,7 @@ void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
             }
 
             runList.clear();
+            
         }
     }
     catch (std::exception& ex)

@@ -325,25 +325,31 @@ public:
 protected:
   bool acquireImpl(size_t amount) final
   {
-    MemManager::acquireImpl(amount);
-    if (!fRm->getMemory(amount, fSessLimit, fWait) && fStrict)
+    if (amount)
     {
-      return false;
-    }
-
+      if (!fRm->getMemory(amount, fSessLimit, fWait) && fStrict)
+      {
+        return false;
+      }
+      MemManager::acquireImpl(amount);
+    }    
     return true;
   }
 
-  void releaseImpl(size_t amount) override {
-    MemManager::releaseImpl(amount);
-    fRm->returnMemory(amount, fSessLimit);
+  void releaseImpl(size_t amount) override 
+  {
+    if (amount)
+    {
+      MemManager::releaseImpl(amount);
+      fRm->returnMemory(amount, fSessLimit);
+    }
   }
 
 private:
   joblist::ResourceManager* fRm = nullptr;
   boost::shared_ptr<int64_t> fSessLimit;
   const bool fWait;
-    const bool fStrict;
+  const bool fStrict;
 };
 
 class Dumper {
@@ -353,7 +359,8 @@ public:
     , fMM(mm->clone())
   {}
 
-  int write(const std::string &fname, const char *buf, size_t sz) {
+  int write(const std::string &fname, const char *buf, size_t sz) 
+  {
     if (sz == 0)
       return 0;
 
@@ -368,7 +375,9 @@ public:
       fCompressor->compress(buf, sz, fTmpBuf.data(), &len);
       tmpbuf = fTmpBuf.data();
       sz = len;
-    } else {
+    } 
+    else 
+    {
       tmpbuf = buf;
     }
 

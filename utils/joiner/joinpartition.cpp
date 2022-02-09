@@ -104,9 +104,6 @@ JoinPartition::JoinPartition(const RowGroup& lRG,
 
     buckets.reserve(bucketCount);
 
-    for (int i = 0; i < (int) bucketCount; i++)
-        buckets.push_back(boost::shared_ptr<JoinPartition>(new JoinPartition(*this, false)));
-
     string compressionType;
     try
     {
@@ -122,6 +119,11 @@ JoinPartition::JoinPartition(const RowGroup& lRG,
     {
         compressor.reset(new compress::CompressInterfaceSnappy());
     }
+
+    for (uint32_t i = 0; i < bucketCount; i++)
+        buckets.push_back(boost::shared_ptr<JoinPartition>(new JoinPartition(*this, false)));
+        
+        
 }
 
 /* Ctor used by JoinPartition on expansion, creates JP's in filemode */

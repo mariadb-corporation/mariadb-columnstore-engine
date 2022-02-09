@@ -165,6 +165,28 @@ inline bool atomicCAS(volatile T* mem, T comp, T swap)
 #endif
 }
 
+// implements a zero out of a variable
+template <typename T>
+inline void atomicZero(volatile T* mem)
+{
+#ifdef _MSC_VER
+    
+    switch (sizeof(T))
+    {
+        case 4:
+        default:
+            InterlockedXor(reinterpret_cast<volatile LONG*>(mem),(static_cast<LONG>(*mem)));
+            break;
+            
+        case 8:
+            InterlockedXor64(reinterpret_cast<volatile LONG*>(mem),(static_cast<LONG>(*mem)));
+            break;
+    }
+    #else
+        __sync_xor_and_fetch(mem, *mem);
+    #endif
+}
+
 //Implements a scheduler yield
 inline void atomicYield()
 {

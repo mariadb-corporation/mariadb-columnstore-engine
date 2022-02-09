@@ -771,15 +771,13 @@ void IdbOrderBy::initialize(const RowGroup& rg)
     IdbCompare::initialize(rg);
 
     uint64_t newSize = rg.getSizeWithStrings(fRowsPerRG);
-    fMemSize += newSize;
-
-    if (!fRm->getMemory(newSize, fSessionMemLimit))
+    if (fRm && !fRm->getMemory(newSize, fSessionMemLimit))
     {
         cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode)
              << " @" << __FILE__ << ":" << __LINE__;
         throw IDBExcept(fErrorCode);
     }
-
+    fMemSize += newSize;
     fData.reinit(fRowGroup, fRowsPerRG);
     fRowGroup.setData(&fData);
     fRowGroup.resetRowGroup(0);

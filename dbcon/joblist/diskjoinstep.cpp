@@ -424,8 +424,8 @@ void DiskJoinStep::joinFcn()
             while (largeData)
             {
                 l_largeRG.setData(largeData.get());
-                thjs->joinOneRG(0, &joinResults, l_largeRG, l_outputRG, l_largeRow, l_joinFERow,
-                                l_outputRow, baseRow, joinMatches, smallRowTemplates,
+                thjs->joinOneRG(0, joinResults, l_largeRG, l_outputRG, l_largeRow, l_joinFERow,
+                                l_outputRow, baseRow, joinMatches, smallRowTemplates, outputDL.get(),
                                 &joiners, &colMappings, &fergMappings, &smallNullMem);
 
                 for (j = 0; j < (int) joinResults.size(); j++)
@@ -434,7 +434,7 @@ void DiskJoinStep::joinFcn()
                     //cout << "got joined output " << l_outputRG.toString() << endl;
                     outputDL->insert(joinResults[j]);
                 }
-
+                thjs->returnMemory();
                 joinResults.clear();
                 largeData = in->jp->getNextLargeRGData();
             }
@@ -443,7 +443,6 @@ void DiskJoinStep::joinFcn()
             {
                 if (!lastLargeIteration)
                 {
-
                     /* TODO: an optimization would be to detect whether any new rows were marked and if not
                        suppress the save operation */
                     vector<Row::Pointer> unmatched;
@@ -454,7 +453,6 @@ void DiskJoinStep::joinFcn()
                 }
                 else
                 {
-
                     //cout << "finishing small-outer output" << endl;
                     vector<Row::Pointer> unmatched;
                     RGData rgData(l_outputRG);
@@ -484,6 +482,21 @@ void DiskJoinStep::joinFcn()
                         {
                             outputDL->insert(rgData);
                             //cout << "inserting a full RG" << endl;
+                            if (thjs)
+                            {
+                                if (!thjs->getMemory(l_outputRG.getMaxDataSize()))
+                                {
+                                    // calculate guess of size required for error message
+                                    uint64_t memReqd = (unmatched.size() * outputRG.getDataSize(1)) / 1048576;
+                                    Message::Args args;
+                                    args.add(memReqd);
+                                    args.add(thjs->resourceManager->getConfiguredUMMemLimit() / 1048576);
+                                    std::cerr << logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_JOIN_RESULT_TOO_BIG, args)
+                                    << " @" << __FILE__ << ":" << __LINE__;
+                                    throw logging::IDBExcept(logging::ERR_JOIN_RESULT_TOO_BIG, args);
+                                }
+                            }
+
                             rgData.reinit(l_outputRG);
                             l_outputRG.setData(&rgData);
                             l_outputRG.resetRowGroup(0);
@@ -497,6 +510,10 @@ void DiskJoinStep::joinFcn()
                     {
                         //cout << "inserting an rg with " << l_outputRG.getRowCount() << endl;
                         outputDL->insert(rgData);
+                    }
+                    if (thjs)
+                    {
+                        thjs->returnMemory();
                     }
                 }
             }
