@@ -75,6 +75,7 @@ using namespace idbdatafile;
 #include "mariadb_my_sys.h"
 
 #include "service.h"
+#include "threadnaming.h"
 
 class Opt
 {
@@ -246,6 +247,7 @@ class QszMonThd
 
   void operator()()
   {
+    utils::setThreadName("QszMonThd");
     for (;;)
     {
       uint32_t qd = fPsp->getProcessorThreadPool()->getWaiting();
@@ -287,6 +289,7 @@ class QszMonThd
 #ifdef DUMP_CACHE_CONTENTS
 void* waitForSIGUSR1(void* p)
 {
+  utils::setThreadName("waitForSIGUSR1");
 #if defined(__LP64__) || defined(_MSC_VER)
   ptrdiff_t tmp = reinterpret_cast<ptrdiff_t>(p);
   int cacheCount = static_cast<int>(tmp);

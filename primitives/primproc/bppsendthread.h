@@ -27,8 +27,9 @@
 #include "umsocketselector.h"
 #include <queue>
 #include <set>
-#include <boost/thread/thread.hpp>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
+#include "threadnaming.h"
+#include "prioritythreadpool.h"
 
 namespace primitiveprocessor
 {
@@ -65,7 +66,14 @@ class BPPSendThread
     }
   };
 
-  bool okToProceed();
+  bool sizeTooBig()
+  {
+    // keep the queue size below the 100 msg threshold & below the 250MB mark,
+    // but at least 3 msgs so there is always 1 ready to be sent.
+    return ((msgQueue.size() > sizeThreshold) || (currentByteSize >= maxByteSize && msgQueue.size() > 3)) &&
+           !die;
+  }
+
   void sendMore(int num);
   void sendResults(const std::vector<Msg_t>& msgs, bool newConnection);
   void sendResult(const Msg_t& msg, bool newConnection);
@@ -75,6 +83,10 @@ class BPPSendThread
   inline bool aborted() const
   {
     return die;
+  }
+  void setProcessorPool(threadpool::PriorityThreadPool* processorPool)
+  {
+    fProcessorPool = processorPool;
   }
 
  private:
@@ -89,21 +101,26 @@ class BPPSendThread
     }
     void operator()()
     {
+      utils::setThreadName("BPPSendThread");
       bppst->mainLoop();
     }
   };
 
   boost::thread runner;
   std::queue<Msg_t> msgQueue;
-  boost::mutex msgQueueLock;
-  boost::condition queueNotEmpty;
+  std::mutex msgQueueLock;
+  std::condition_variable queueNotEmpty;
   volatile bool die, gotException, mainThreadWaiting;
   std::string exceptionString;
   uint32_t sizeThreshold;
   volatile int32_t msgsLeft;
   bool waiting;
-  boost::mutex ackLock;
-  boost::condition okToSend;
+  std::mutex ackLock;
+  std::condition_variable okToSend;
+  // Condition to prevent run away queue
+  bool respondWait;
+  std::mutex respondLock;
+  std::condition_variable okToRespond;
 
   /* Load balancing structures */
   struct Connection_t
@@ -130,6 +147,9 @@ class BPPSendThread
   /* secondary queue size restriction based on byte size */
   volatile uint64_t currentByteSize;
   uint64_t maxByteSize;
+  // Used to tell the PriorityThreadPool It should consider additional threads because a
+  // queue full event has happened and a thread has been blocked.
+  threadpool::PriorityThreadPool* fProcessorPool;
 };
 
 }  // namespace primitiveprocessor

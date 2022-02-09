@@ -4705,11 +4705,11 @@ RowAggregationMultiDistinct::RowAggregationMultiDistinct(const RowAggregationMul
   for (uint32_t i = 0; i < rhs.fSubAggregators.size(); i++)
   {
 #if 0
-        fTotalMemUsage += fSubRowGroups[i].getDataSize(AGG_ROWGROUP_SIZE);
-
         if (!fRm->getMemory(fSubRowGroups[i].getDataSize(AGG_ROWGROUP_SIZE, fSessionMemLimit)))
             throw logging::IDBExcept(logging::IDBErrorInfo::instance()->
                                      errorMsg(logging::ERR_AGGREGATION_TOO_BIG), logging::ERR_AGGREGATION_TOO_BIG);
+
+        fTotalMemUsage += fSubRowGroups[i].getDataSize(AGG_ROWGROUP_SIZE);
 
 #endif
     data.reset(new RGData(fSubRowGroups[i],
@@ -4748,12 +4748,11 @@ void RowAggregationMultiDistinct::addSubAggregator(const boost::shared_ptr<RowAg
 {
   boost::shared_ptr<RGData> data;
 #if 0
-    fTotalMemUsage += rg.getDataSize(AGG_ROWGROUP_SIZE);
-
     if (!fRm->getMemory(rg.getDataSize(AGG_ROWGROUP_SIZE), fSessionMemLimit))
         throw logging::IDBExcept(logging::IDBErrorInfo::instance()->
                                  errorMsg(logging::ERR_AGGREGATION_TOO_BIG), logging::ERR_AGGREGATION_TOO_BIG);
 
+    fTotalMemUsage += rg.getDataSize(AGG_ROWGROUP_SIZE);
 #endif
   data.reset(new RGData(rg, RowAggStorage::getMaxRows(fRm ? fRm->getAllowDiskAggregation() : false)));
   fSubRowData.push_back(data);

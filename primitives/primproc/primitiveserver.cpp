@@ -1395,7 +1395,7 @@ struct BPPHandler
     SBPPV bppv;
 
     // make the new BPP object
-    bppv.reset(new BPPV());
+    bppv.reset(new BPPV(fPrimitiveServerPtr));
     bpp.reset(new BatchPrimitiveProcessor(bs, fPrimitiveServerPtr->prefetchThreshold(), bppv->getSendThread(),
                                           fPrimitiveServerPtr->ProcessorThreads()));
 
@@ -1857,7 +1857,7 @@ struct ReadThread
   /* Message format:
    * 	ISMPacketHeader
    * 	Partition count - 32 bits
-   * 	Partition set - sizeof(LogicalPartition) * count
+   * 	Partition set - sizeof(LogicalPartition)  boost::shared_ptr* count
    * 	OID count - 32 bits
    * 	OID array - 32 bits * count
    */
@@ -1948,8 +1948,7 @@ struct ReadThread
   void operator()()
   {
     utils::setThreadName("PPReadThread");
-    boost::shared_ptr<threadpool::PriorityThreadPool> procPoolPtr =
-        fPrimitiveServerPtr->getProcessorThreadPool();
+    threadpool::PriorityThreadPool* procPoolPtr = fPrimitiveServerPtr->getProcessorThreadPool();
     SBS bs;
     UmSocketSelector* pUmSocketSelector = UmSocketSelector::instance();
 
@@ -2407,8 +2406,8 @@ PrimitiveServer::PrimitiveServer(int serverThreads, int serverQueueSize, int pro
   fServerpool.setQueueSize(fServerQueueSize);
   fServerpool.setName("PrimitiveServer");
 
-  fProcessorPool.reset(new threadpool::PriorityThreadPool(fProcessorWeight, highPriorityThreads,
-                                                          medPriorityThreads, lowPriorityThreads, 0));
+  fProcessorPool = new threadpool::PriorityThreadPool(fProcessorWeight, highPriorityThreads,
+                                                      medPriorityThreads, lowPriorityThreads, 0);
 
   // We're not using either the priority or the job-clustering features, just need a threadpool
   // that can reschedule jobs, and an unlimited non-blocking queue
@@ -2460,9 +2459,10 @@ void PrimitiveServer::start(Service* service)
   cerr << "PrimitiveServer::start() exiting!" << endl;
 }
 
-BPPV::BPPV()
+BPPV::BPPV(PrimitiveServer* ps)
 {
   sendThread.reset(new BPPSendThread());
+  sendThread->setProcessorPool(ps->getProcessorThreadPool());
   v.reserve(BPPCount);
   pos = 0;
   joinDataReceived = false;
@@ -2503,7 +2503,7 @@ const vector<boost::shared_ptr<BatchPrimitiveProcessor> >& BPPV::get()
 boost::shared_ptr<BatchPrimitiveProcessor> BPPV::next()
 {
   uint32_t size = v.size();
-  uint32_t i;
+  uint32_t i = 0;
 
 #if 0
 

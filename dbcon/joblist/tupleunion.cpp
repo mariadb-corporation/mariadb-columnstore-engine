@@ -244,10 +244,13 @@ void TupleUnion::readInput(uint32_t which)
 
           memUsageAfter = allocator.getMemUsage();
           memDiff += (memUsageAfter - memUsageBefore);
-          memUsage += memDiff;
         }
 
-        if (!rm->getMemory(memDiff, sessionMemLimit))
+        if (rm->getMemory(memDiff, sessionMemLimit))
+        {
+          memUsage += memDiff;
+        }
+        else
         {
           fLogger->logMessage(logging::LOG_TYPE_INFO, logging::ERR_UNION_TOO_BIG);
 
