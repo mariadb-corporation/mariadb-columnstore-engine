@@ -93,7 +93,7 @@ void catFileOffline(const char* filename, int prefixlen)
 void catFileOnline(const char* filename, int prefixlen)
 {
   uint8_t data[8192];
-  off_t offset = 0;
+  [[maybe_unused]] off_t offset = 0;
   int read_err, write_err, count;
   idbdatafile::SMDataFile df(filename, O_RDONLY, 0);
 

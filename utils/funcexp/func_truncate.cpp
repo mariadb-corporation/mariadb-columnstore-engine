@@ -522,7 +522,7 @@ IDB_Decimal Func_truncate::getDecimalVal(Row& row, FunctionParm& parm, bool& isN
       {
         // strip off micro seconds
         value = value.substr(0, 14);
-        int64_t x = atoll(value.c_str());
+        x = atoll(value.c_str());
 
         if (s > 5)
           s = 0;
@@ -613,7 +613,7 @@ IDB_Decimal Func_truncate::getDecimalVal(Row& row, FunctionParm& parm, bool& isN
       {
         // strip off micro seconds
         value = value.substr(0, 14);
-        int64_t x = atoll(value.c_str());
+        x = atoll(value.c_str());
 
         if (s > 5)
           s = 0;

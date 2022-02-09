@@ -101,8 +101,6 @@ using boost::scoped_array;
 // some static functions
 namespace
 {
-using messageqcpp::ByteStream;
-
 // @bug 2441 - Retry after 512 read() error.
 // ERESTARTSYS (512) is a kernal I/O errno that is similar to a EINTR, except
 // that it is not supposed to "leak" out into the user space.   But we are
@@ -937,16 +935,8 @@ void InetStreamSocket::connect(const sockaddr* serv_addr)
     char buf = '\0';
     (void)::recv(socketParms().sd(), &buf, 1, 0);
 #else
-#if defined(__GNUC__) && __GNUC__ >= 5
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-result"
     char buf = '\0';
-    ::read(socketParms().sd(), &buf, 1);  // we know 1 byte is in the recv buffer
-#pragma GCC diagnostic pop
-#else
-    char buf = '\0';
-    ::read(socketParms().sd(), &buf, 1);  // we know 1 byte is in the recv buffer
-#endif  // pragma
+    std::ignore = ::read(socketParms().sd(), &buf, 1);  // we know 1 byte is in the recv buffer
 #endif
     return;
   }

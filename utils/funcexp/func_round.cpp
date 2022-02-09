@@ -645,7 +645,7 @@ string Func_round::getStrVal(Row& row, FunctionParm& parm, bool& isNull, Calpont
 {
   IDB_Decimal x = getDecimalVal(row, parm, isNull, op_ct);
   int64_t e = (x.scale < 0) ? (-x.scale) : x.scale;
-  int64_t p = 1;
+  [[maybe_unused]] int64_t p = 1;
 
   while (e-- > 0)
     p *= 10;

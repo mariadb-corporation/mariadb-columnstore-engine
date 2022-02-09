@@ -639,14 +639,7 @@ int ServiceDMLProc::Child()
 
     // Couldn't check the return code b/c
     // fuser returns 1 for unused port.
-#if defined(__GNUC__) && __GNUC__ >= 5
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-result"
-    (void)::system(cmd.c_str());
-#pragma GCC diagnostic pop
-#else
-    (void)::system(cmd.c_str());
-#endif
+    std::ignore = ::system(cmd.c_str());
   }
   catch (...)
   {
