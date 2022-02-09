@@ -52,4 +52,3 @@ class WF_lead_lag : public WindowFunctionType
 
 }  // namespace windowfunction
 
-// vim:ts=4 sw=4:

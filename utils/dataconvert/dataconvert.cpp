@@ -3388,4 +3388,3 @@ void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& u
 }
 
 }  // namespace dataconvert
-// vim:ts=4 sw=4:

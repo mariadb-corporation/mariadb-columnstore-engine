@@ -579,4 +579,3 @@ execplan::ReturnedColumn* buildPseudoColumn(Item* item, gp_walk_info& gwi, bool&
 }
 
 }  // namespace cal_impl_if
-// vim:ts=4 sw=4:

@@ -139,4 +139,3 @@ int64_t Func_quarter::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& is
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

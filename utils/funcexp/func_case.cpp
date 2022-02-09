@@ -723,4 +723,3 @@ int64_t Func_searched_case::getTimeIntVal(rowgroup::Row& row, FunctionParm& parm
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

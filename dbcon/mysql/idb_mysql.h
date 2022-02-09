@@ -118,4 +118,3 @@ inline char* idb_mysql_query_str(THD* thd)
 }
 }  // namespace
 
-// vim:ts=4 sw=4:

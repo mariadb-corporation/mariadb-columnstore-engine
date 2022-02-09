@@ -716,4 +716,3 @@ int64_t Func_round::getTimestampIntVal(rowgroup::Row& row, FunctionParm& parm, b
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

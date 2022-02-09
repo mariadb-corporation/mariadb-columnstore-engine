@@ -5953,4 +5953,3 @@ template int ExtentMap::getMaxMin<int64_t>(const LBID_t lbidRange, int64_t& max,
                                            int32_t& seqNum);
 
 }  // namespace BRM
-// vim:ts=4 sw=4:

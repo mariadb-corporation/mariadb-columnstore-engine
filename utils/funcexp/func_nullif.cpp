@@ -1022,4 +1022,3 @@ execplan::IDB_Decimal Func_nullif::getDecimalVal(rowgroup::Row& row, FunctionPar
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

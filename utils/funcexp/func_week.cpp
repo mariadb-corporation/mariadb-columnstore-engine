@@ -169,4 +169,3 @@ int64_t Func_week::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNul
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

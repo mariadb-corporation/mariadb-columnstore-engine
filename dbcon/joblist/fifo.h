@@ -529,4 +529,3 @@ void FIFO<element_t>::totalFileCounts(uint64_t& numFiles, uint64_t& numBytes) co
 
 }  // namespace joblist
 
-// vim:ts=4 sw=4:

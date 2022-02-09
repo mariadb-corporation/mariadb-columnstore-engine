@@ -638,4 +638,3 @@ extern std::ostream& omitOidInDL(std::ostream& strm);
 
 #endif
 
-// vim:ts=4 sw=4:

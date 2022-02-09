@@ -721,4 +721,3 @@ int64_t Func_truncate::getTimestampIntVal(rowgroup::Row& row, FunctionParm& parm
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

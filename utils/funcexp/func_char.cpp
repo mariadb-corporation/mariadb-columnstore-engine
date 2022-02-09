@@ -178,4 +178,3 @@ string Func_char::getStrVal(Row& row, FunctionParm& parm, bool& isNull, CalpontS
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

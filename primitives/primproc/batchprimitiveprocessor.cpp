@@ -2746,4 +2746,3 @@ void BatchPrimitiveProcessor::buildVSSCache(uint32_t loopCount)
 }
 
 }  // namespace primitiveprocessor
-// vim:ts=4 sw=4:

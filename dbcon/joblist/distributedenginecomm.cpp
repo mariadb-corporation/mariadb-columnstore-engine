@@ -1146,4 +1146,3 @@ uint32_t DistributedEngineComm::MQE::getNextConnectionId(const size_t pmIndex,
 }
 
 }  // namespace joblist
-// vim:ts=4 sw=4:

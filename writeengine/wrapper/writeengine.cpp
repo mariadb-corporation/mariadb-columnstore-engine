@@ -6628,4 +6628,3 @@ int WriteEngineWrapper::RemoveTxnFromLBIDMap(const TxnID txnid)
 }
 
 }  // end of namespace
-// vim:ts=4 sw=4:

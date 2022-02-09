@@ -52,4 +52,3 @@ void Redistribute::handleRedistributeMessage(ByteStream& bs, IOSocket& ios)
 
 }  // namespace redistribute
 
-// vim:ts=4 sw=4:

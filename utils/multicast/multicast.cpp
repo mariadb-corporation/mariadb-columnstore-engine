@@ -93,4 +93,3 @@ void MulticastSender::send(const ByteStream& msg)
 
 }  // namespace multicast
 
-// vim:ts=4 sw=4:

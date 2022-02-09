@@ -306,4 +306,3 @@ template boost::shared_ptr<WindowFunctionType> WF_sum_avg<int64_t, long double>:
     int, const string&, int, WindowFunctionColumn*);
 
 }  // namespace windowfunction
-// vim:ts=4 sw=4:

@@ -382,4 +382,3 @@ template boost::shared_ptr<WindowFunctionType> WF_percentile<int64_t>::makeFunct
                                                                                     WindowFunctionColumn*);
 
 }  // namespace windowfunction
-// vim:ts=4 sw=4:

@@ -562,4 +562,3 @@ boost::shared_ptr<ParsedColumnFilter> _parseColumnFilter(
 
 }  // namespace primitives
 
-// vim:ts=2 sw=2:

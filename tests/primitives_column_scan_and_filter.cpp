@@ -965,4 +965,3 @@ TEST_F(ColumnScanFilterTest, ColumnScan16Bytes2CompFilters)
   EXPECT_EQ(out->Max, __col16block_cdf_umax);
   EXPECT_EQ(out->Min, __col16block_cdf_umin);
 }
-// vim:ts=2 sw=2:

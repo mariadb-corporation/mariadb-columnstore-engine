@@ -1001,4 +1001,3 @@ int ha_mcs_impl_close_connection_(handlerton* hton, THD* thd, cal_connection_inf
   return rc;
 }
 
-// vim:ts=4 sw=4:

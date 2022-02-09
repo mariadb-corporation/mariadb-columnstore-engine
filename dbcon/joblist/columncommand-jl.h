@@ -129,4 +129,3 @@ class ColumnCommandJL : public CommandJL
 
 }  // namespace joblist
 
-// vim:ts=4 sw=4:

@@ -56,4 +56,3 @@ int64_t Func_ascii::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNu
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

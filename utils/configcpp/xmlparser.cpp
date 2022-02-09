@@ -285,4 +285,3 @@ const vector<string> XMLParser::enumSection(const xmlDocPtr doc, const string& s
 }
 
 }  // namespace config
-// vim:ts=4 sw=4:

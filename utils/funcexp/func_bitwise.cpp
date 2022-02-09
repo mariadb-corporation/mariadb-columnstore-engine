@@ -494,4 +494,3 @@ bool Func_bit_count::fix(execplan::FunctionColumn& col) const
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

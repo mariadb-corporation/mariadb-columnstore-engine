@@ -1825,4 +1825,3 @@ int main(int argc, char* argv[])
   return ServiceExeMgr(opt).Run();
 }
 
-// vim:ts=4 sw=4:

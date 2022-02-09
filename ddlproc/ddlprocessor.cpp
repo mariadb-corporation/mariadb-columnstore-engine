@@ -876,4 +876,3 @@ int DDLProcessor::commitTransaction(uint32_t txnID, std::string& errorMsg)
   return rc;
 }
 }  // namespace ddlprocessor
-// vim:ts=4 sw=4:

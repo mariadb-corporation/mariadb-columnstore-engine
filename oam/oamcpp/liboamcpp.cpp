@@ -1066,4 +1066,3 @@ std::string Oam::itoa(const int i)
   return ss.str();
 }
 }  // namespace oam
-// vim:ts=4 sw=4:

@@ -2539,7 +2539,6 @@ void AlterTableProcessor::renameColumn(uint32_t sessionID, execplan::CalpontSyst
 }
 
 }  // namespace ddlpackageprocessor
-// vim:ts=4 sw=4:
 
 #ifdef __clang__
 #pragma clang diagnostic pop

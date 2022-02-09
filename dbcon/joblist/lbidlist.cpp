@@ -920,4 +920,3 @@ template bool LBIDList::checkRangeOverlap<int64_t>(int64_t min, int64_t max, int
 
 }  // namespace joblist
 
-// vim:ts=4 sw=4:

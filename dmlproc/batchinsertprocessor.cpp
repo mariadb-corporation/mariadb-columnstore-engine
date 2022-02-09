@@ -547,4 +547,3 @@ void BatchInsertProc::getError(int& errorCode, std::string& errMsg)
   errMsg = fErrMsg;
 }
 }  // namespace dmlprocessor
-// vim:ts=4 sw=4:

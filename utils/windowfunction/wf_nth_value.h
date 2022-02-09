@@ -50,4 +50,3 @@ class WF_nth_value : public WindowFunctionType
 
 }  // namespace windowfunction
 
-// vim:ts=4 sw=4:

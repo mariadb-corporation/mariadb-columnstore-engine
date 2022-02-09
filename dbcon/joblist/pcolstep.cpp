@@ -1511,4 +1511,3 @@ void pColStep::appendFilter(const std::vector<const execplan::Filter*>& fs)
 }
 
 }  // namespace joblist
-// vim:ts=4 sw=4:

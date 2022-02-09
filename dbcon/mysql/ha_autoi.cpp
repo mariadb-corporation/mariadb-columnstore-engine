@@ -176,4 +176,3 @@ bool parseAutoincrementColumnComment(std::string comment, uint64_t& startValue)
   return autoincrement;
 }
 
-// vim:ts=4 sw=4:

@@ -57,4 +57,3 @@ void ActiveStatementCounter::decr(bool& counted)
   --fStatementCount;
   condvar.notify_one();
 }
-// vim:ts=4 sw=4:

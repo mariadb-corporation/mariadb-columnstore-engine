@@ -822,4 +822,3 @@ bool compatibleColumnTypes(const CalpontSystemCatalog::ColDataType& dt1, uint32_
 }
 
 }  // namespace joblist
-// vim:ts=4 sw=4:

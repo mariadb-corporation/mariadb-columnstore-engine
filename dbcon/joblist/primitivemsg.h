@@ -884,4 +884,3 @@ struct LbidAtVer
 
 #pragma pack(pop)
 
-// vim:ts=4 sw=4:

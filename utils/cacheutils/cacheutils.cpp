@@ -354,4 +354,3 @@ int purgePrimProcFdCache(const std::vector<BRM::FileInfo> files, const int pmId)
 }
 }  // namespace cacheutils
 
-// vim:ts=4 sw=4:

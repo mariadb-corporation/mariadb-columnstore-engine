@@ -376,4 +376,3 @@ bool Func_notbetween::getBoolVal(rowgroup::Row& row, FunctionParm& pm, bool& isN
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

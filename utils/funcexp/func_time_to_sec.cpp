@@ -195,4 +195,3 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

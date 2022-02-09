@@ -191,4 +191,3 @@ execplan::IDB_Decimal Func_monthname::getDecimalVal(rowgroup::Row& row, Function
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

@@ -49,4 +49,3 @@ class AutoincrementData
   boost::mutex fOIDnextvalLock;
 };
 
-// vim:ts=4 sw=4:

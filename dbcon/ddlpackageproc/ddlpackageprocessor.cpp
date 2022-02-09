@@ -1491,4 +1491,3 @@ int DDLPackageProcessor::commitTransaction(uint64_t uniqueId, BRM::TxnID txnID)
 }
 
 }  // namespace ddlpackageprocessor
-// vim:ts=4 sw=4:
