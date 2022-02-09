@@ -333,6 +333,7 @@ int BRMManagedShmImpl::grow(off_t newSize)
         const auto incSize = newSize - fSize;
         if (fShmSegment)
         {
+            std::cout << "CALL GROW() " << std::endl;
             // Call destructor to unmap the segment.
             delete fShmSegment;
             // Grow the segment.

@@ -317,7 +317,8 @@ void ExtentMapIndexImpl::createExtentMapIndexIfNeeded()
 ExtentMapIndex* ExtentMapIndexImpl::get()
 {
     // pair<T*, size>
-    auto managedShmemSearchPair = fBRMManagedShmMemImpl_.getManagedSegment()->find<ExtentMapIndex>(EmIndexObjectName);
+    auto managedShmemSearchPair =
+        fBRMManagedShmMemImpl_.getManagedSegment()->find<ExtentMapIndex>(EmIndexObjectName);
     assert(managedShmemSearchPair.first && managedShmemSearchPair.second > 0);
     return managedShmemSearchPair.first;
 }
@@ -329,7 +330,7 @@ bool ExtentMapIndexImpl::growIfNeeded(const size_t memoryNeeded)
     if (freeShmem < memoryNeeded)
     {
         const size_t currentShmemSize = getShmemSize();
-        constexpr static const size_t minAllowance = 16 * 1024 * 1024;
+        constexpr static const size_t minAllowance = 0;
         const size_t newShmemSize = std::max(minAllowance, memoryNeeded) + currentShmemSize;
         grow(newShmemSize);
         return true;
@@ -387,7 +388,7 @@ InsertUpdateShmemKeyPair ExtentMapIndexImpl::insert2ndLayerWrapper(OIDIndexConta
     if (oidsIter == oids.end())
     {
         const size_t freeShmem = fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory();
-        const size_t memNeeded = (oids.size() + extraUnits_) * oidContainerUnitSize_;
+        const size_t memNeeded = (oids.size() * oidContainerUnitSize_);
         if (oids.load_factor() >= oids.max_load_factor() ||
             freeShmem <= freeSpaceThreshold_)
         {
@@ -427,7 +428,8 @@ InsertUpdateShmemKeyPair ExtentMapIndexImpl::insert3dLayerWrapper(PartitionIndex
     if (partitionsIter == partitions.end())
     {
         const size_t freeShmem = fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory();
-        const size_t memNeeded = (partitions.size() + extraUnits_) * partitionContainerUnitSize_ + emIdentUnitSize_;
+        const size_t memNeeded =
+            (partitions.size() * partitionContainerUnitSize_) + emIdentUnitSize_;
         if (partitions.load_factor() >= partitions.max_load_factor() ||
             freeShmem <= freeSpaceThreshold_)
         {
@@ -2063,7 +2065,7 @@ void ExtentMap::growEMShmseg(size_t nrows)
 
 void ExtentMap::growEMIndexShmseg(const size_t suggestedSize)
 {
-    static const constexpr int InitEMIndexSize_ = 16 * 1024 * 1024;
+    static const constexpr int InitEMIndexSize_ = 2048;
     size_t allocSize = std::max(InitEMIndexSize_, fEMIndexShminfo->allocdSize);
     key_t newshmkey = chooseEMIndexShmkey();
     key_t fixedManagedSegmentKey = getInitialEMIndexShmkey();
