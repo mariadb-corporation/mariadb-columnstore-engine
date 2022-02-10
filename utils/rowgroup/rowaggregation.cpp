@@ -1,6 +1,6 @@
 /*
    Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (c) 2019-2020 MariaDB Corporation
+   Copyright (c) 2019-2021 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -1567,7 +1567,8 @@ void RowAggregation::serialize(messageqcpp::ByteStream& bs) const
   for (uint64_t i = 0; i < functionCount; i++)
     fFunctionCols[i]->serialize(bs);
 
-  bs << fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
+  bs << timeZone;
 }
 
 //------------------------------------------------------------------------------
@@ -1612,7 +1613,9 @@ void RowAggregation::deserialize(messageqcpp::ByteStream& bs)
     fFunctionCols.push_back(funct);
   }
 
-  bs >> fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone;
+  bs >> timeZone;
+  fTimeZone = timeZone;
 }
 
 //------------------------------------------------------------------------------

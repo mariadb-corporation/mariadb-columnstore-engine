@@ -199,7 +199,7 @@ class TupleUnion : public JobStep, public TupleDeliveryStep
   bool runRan, joinRan;
 
   boost::shared_ptr<int64_t> sessionMemLimit;
-  std::string fTimeZone;
+  long fTimeZone;
 };
 
 }  // namespace joblist

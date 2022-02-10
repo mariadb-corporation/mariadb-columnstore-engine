@@ -118,7 +118,9 @@ int AlterTableStatement::unserialize(ByteStream& bytestream)
   // read table name
   fTableName->unserialize(bytestream);
 
-  bytestream >> fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone;
+  bytestream >> timeZone;
+  fTimeZone = timeZone;
 
   // read alter action list
   quadbyte action_count;
@@ -225,7 +227,8 @@ int AlterTableStatement::serialize(ByteStream& bytestream)
   // write table name
   fTableName->serialize(bytestream);
 
-  bytestream << fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
+  bytestream << timeZone;
 
   write_vec<AlterTableAction>(fActions, bytestream);
 

@@ -205,7 +205,6 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
    */
   struct ColType : public datatypes::SystemCatalog::TypeHolderStd
   {
-    ColType();
     ConstraintType constraintType;
     DictOID ddn;
     std::string defaultValue;
@@ -216,11 +215,25 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
     uint64_t nextvalue;  // next autoincrement value
     uint32_t charsetNumber;
     const CHARSET_INFO* cs;
+   private:
+    long timeZone;
 
+   public:
+    ColType();
     ColType(const ColType& rhs);
     ColType& operator=(const ColType& rhs);
 
     CHARSET_INFO* getCharset();
+
+    long getTimeZone() const
+    {
+      return timeZone;
+    }
+    void setTimeZone(long timeZone_)
+    {
+      timeZone = timeZone_;
+    }
+
     // for F&E use. only serialize necessary info for now
     void serialize(messageqcpp::ByteStream& b) const
     {
@@ -254,7 +267,7 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
      * @param       nRoundtrip
      * @param       isUpdate
      */
-    boost::any convertColumnData(const std::string& data, bool& bSaturate, const std::string& timeZone,
+    boost::any convertColumnData(const std::string& data, bool& bSaturate, long timeZone,
                                  bool nulFlag = false, bool noRoundup = false, bool isUpdate = false) const;
 
     const std::string toString() const;

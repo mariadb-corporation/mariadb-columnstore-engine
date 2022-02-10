@@ -139,7 +139,7 @@ BulkLoadBuffer::BulkLoadBuffer(unsigned numberOfCols, unsigned bufferSize, Log* 
  , fTableName(tableName)
  , fbTruncationAsError(false)
  , fImportDataMode(IMPORT_DATA_TEXT)
- , fTimeZone("SYSTEM")
+ , fTimeZone(dataconvert::systemTimeZoneOffset())
  , fFixedBinaryRecLen(0)
 {
   fData = new char[bufferSize];

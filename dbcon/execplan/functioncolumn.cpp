@@ -272,7 +272,8 @@ void FunctionColumn::serialize(messageqcpp::ByteStream& b) const
 
   b << fTableAlias;
   b << fData;
-  b << fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
+  b << timeZone;
 }
 
 void FunctionColumn::unserialize(messageqcpp::ByteStream& b)
@@ -303,10 +304,11 @@ void FunctionColumn::unserialize(messageqcpp::ByteStream& b)
 
   b >> fTableAlias;
   b >> fData;
-  b >> fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone;
+  b >> timeZone;
+  fTimeZone = timeZone;
   FuncExp* funcExp = FuncExp::instance();
   fFunctor = funcExp->getFunctor(fFunctionName);
-  fFunctor->timeZone(fTimeZone);
   fFunctor->fix(*this);
 
   // @bug 3506. Special treatment for rand() function. reset the seed

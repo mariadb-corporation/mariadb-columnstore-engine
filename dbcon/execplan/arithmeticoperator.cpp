@@ -72,7 +72,8 @@ ostream& operator<<(ostream& output, const ArithmeticOperator& rhs)
 void ArithmeticOperator::serialize(messageqcpp::ByteStream& b) const
 {
   b << (ObjectReader::id_t)ObjectReader::ARITHMETICOPERATOR;
-  b << fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
+  b << timeZone;
   const messageqcpp::ByteStream::byte tmp = fDecimalOverflowCheck;
   b << tmp;
   Operator::serialize(b);
@@ -81,7 +82,9 @@ void ArithmeticOperator::serialize(messageqcpp::ByteStream& b) const
 void ArithmeticOperator::unserialize(messageqcpp::ByteStream& b)
 {
   ObjectReader::checkType(b, ObjectReader::ARITHMETICOPERATOR);
-  b >> fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone;
+  b >> timeZone;
+  fTimeZone = timeZone;
   messageqcpp::ByteStream::byte tmp;
   b >> tmp;
   fDecimalOverflowCheck = tmp;

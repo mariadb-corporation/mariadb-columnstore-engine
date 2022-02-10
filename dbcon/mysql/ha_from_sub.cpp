@@ -44,7 +44,7 @@ using namespace execplan;
 
 namespace cal_impl_if
 {
-void derivedTableOptimization(THD* thd, SCSEP& csep)
+void derivedTableOptimization(gp_walk_info* gwip, SCSEP& csep)
 {
   // @bug5634. replace the unused column with ConstantColumn from derived table column list,
   // ExeMgr will not project ConstantColumn. Only count for local derived column.
@@ -135,8 +135,7 @@ void derivedTableOptimization(THD* thd, SCSEP& csep)
           else
           {
             cols[i].reset(new ConstantColumn(val));
-            (reinterpret_cast<ConstantColumn*>(cols[i].get()))
-                ->timeZone(thd->variables.time_zone->get_name()->ptr());
+            (reinterpret_cast<ConstantColumn*>(cols[i].get()))->timeZone(gwip->timeZone);
           }
 
           for (uint j = 0; j < unionColVec.size(); j++)
@@ -156,8 +155,7 @@ void derivedTableOptimization(THD* thd, SCSEP& csep)
             else
             {
               unionColVec[j][i].reset(new ConstantColumn(val));
-              (reinterpret_cast<ConstantColumn*>(unionColVec[j][i].get()))
-                  ->timeZone(thd->variables.time_zone->get_name()->ptr());
+              (reinterpret_cast<ConstantColumn*>(unionColVec[j][i].get()))->timeZone(gwip->timeZone);
             }
           }
         }
@@ -173,15 +171,13 @@ void derivedTableOptimization(THD* thd, SCSEP& csep)
         if (!cols.empty())
         {
           cols[0].reset(new ConstantColumn(val));
-          (reinterpret_cast<ConstantColumn*>(cols[0].get()))
-              ->timeZone(thd->variables.time_zone->get_name()->ptr());
+          (reinterpret_cast<ConstantColumn*>(cols[0].get()))->timeZone(gwip->timeZone);
           nonConstCols.push_back(cols[0]);
 
           for (uint j = 0; j < unionColVec.size(); j++)
           {
             unionColVec[j][0].reset(new ConstantColumn(val));
-            (reinterpret_cast<ConstantColumn*>(unionColVec[j][0].get()))
-                ->timeZone(thd->variables.time_zone->get_name()->ptr());
+            (reinterpret_cast<ConstantColumn*>(unionColVec[j][0].get()))->timeZone(gwip->timeZone);
             nonConstUnionColVec[j].push_back(unionColVec[j][0]);
           }
         }
@@ -229,7 +225,7 @@ void derivedTableOptimization(THD* thd, SCSEP& csep)
   if (horizontalOptimization && pt)
   {
     pt->walk(setDerivedTable);
-    setDerivedFilter(thd, pt, derivedTbFilterMap, derivedTbList);
+    setDerivedFilter(gwip, pt, derivedTbFilterMap, derivedTbList);
     csep->filters(pt);
   }
 
@@ -301,7 +297,7 @@ void derivedTableOptimization(THD* thd, SCSEP& csep)
   for (uint i = 0; i < csep->subSelectList().size(); i++)
   {
     SCSEP subselect(boost::dynamic_pointer_cast<CalpontSelectExecutionPlan>(csep->subSelectList()[i]));
-    derivedTableOptimization(thd, subselect);
+    derivedTableOptimization(gwip, subselect);
   }
 }
 
@@ -339,7 +335,7 @@ void setDerivedTable(execplan::ParseTree* n)
   }
 }
 
-ParseTree* setDerivedFilter(THD* thd, ParseTree*& n, map<string, ParseTree*>& filterMap,
+ParseTree* setDerivedFilter(gp_walk_info* gwip, ParseTree*& n, map<string, ParseTree*>& filterMap,
                             CalpontSelectExecutionPlan::SelectList& derivedTbList)
 {
   if (!(n->derivedTable().empty()))
@@ -381,7 +377,7 @@ ParseTree* setDerivedFilter(THD* thd, ParseTree*& n, map<string, ParseTree*>& fi
 
     int64_t val = 1;
     n = new ParseTree(new ConstantColumn(val));
-    (dynamic_cast<ConstantColumn*>(n->data()))->timeZone(thd->variables.time_zone->get_name()->ptr());
+    (dynamic_cast<ConstantColumn*>(n->data()))->timeZone(gwip->timeZone);
   }
   else
   {
@@ -397,10 +393,10 @@ ParseTree* setDerivedFilter(THD* thd, ParseTree*& n, map<string, ParseTree*>& fi
       ParseTree* rhs = n->right();
 
       if (lhs)
-        n->left(setDerivedFilter(thd, lhs, filterMap, derivedTbList));
+        n->left(setDerivedFilter(gwip, lhs, filterMap, derivedTbList));
 
       if (rhs)
-        n->right(setDerivedFilter(thd, rhs, filterMap, derivedTbList));
+        n->right(setDerivedFilter(gwip, rhs, filterMap, derivedTbList));
     }
   }
 
@@ -428,7 +424,7 @@ SCSEP FromSubQuery::transform()
   csep->subType(CalpontSelectExecutionPlan::FROM_SUBS);
 
   // gwi for the sub query
-  gp_walk_info gwi;
+  gp_walk_info gwi(fGwip.timeZone);
   gwi.thd = fGwip.thd;
   gwi.subQuery = this;
   gwi.viewName = fGwip.viewName;

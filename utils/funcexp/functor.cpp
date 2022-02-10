@@ -105,9 +105,9 @@ uint64_t Func::stringToDatetime(const string str)
   return ret;
 }
 
-uint64_t Func::stringToTimestamp(const string str)
+uint64_t Func::stringToTimestamp(const std::string& str, long timeZone)
 {
-  int64_t ret = DataConvert::stringToTimestamp(str, timeZone());
+  int64_t ret = DataConvert::stringToTimestamp(str, timeZone);
 
   if (ret == -1)
   {

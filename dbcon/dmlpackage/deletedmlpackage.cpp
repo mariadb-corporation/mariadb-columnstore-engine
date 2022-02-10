@@ -69,7 +69,8 @@ int DeleteDMLPackage::write(messageqcpp::ByteStream& bytestream)
   bytestream << fDMLStatement;
   bytestream << fSQLStatement;
   bytestream << fSchemaName;
-  bytestream << fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
+  bytestream << timeZone;
 
   if (fTable != 0)
   {
@@ -105,7 +106,9 @@ int DeleteDMLPackage::read(messageqcpp::ByteStream& bytestream)
   bytestream >> fDMLStatement;
   bytestream >> fSQLStatement;
   bytestream >> fSchemaName;
-  bytestream >> fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone;
+  bytestream >> timeZone;
+  fTimeZone = timeZone;
 
   fTable = new DMLTable();
   retval = fTable->read(bytestream);

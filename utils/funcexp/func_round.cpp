@@ -569,7 +569,7 @@ IDB_Decimal Func_round::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull
       string value;
       if (op_ct.colDataType == execplan::CalpontSystemCatalog::TIMESTAMP)
         value = dataconvert::DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull),
-                                                             timeZone());
+                                                             op_ct.getTimeZone());
       else
         value = dataconvert::DataConvert::datetimeToString1(parm[0]->data()->getDatetimeIntVal(row, isNull));
 
@@ -707,6 +707,12 @@ int64_t Func_round::getDatetimeIntVal(Row& row, FunctionParm& parm, bool& isNull
                                       CalpontSystemCatalog::ColType& op_ct)
 {
   return parm[0]->data()->getIntVal(row, isNull);
+}
+
+int64_t Func_round::getTimestampIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
+                                       execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+  return parm[0]->data()->getTimestampIntVal(row, isNull);
 }
 
 }  // namespace funcexp
