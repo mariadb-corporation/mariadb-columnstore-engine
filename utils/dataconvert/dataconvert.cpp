@@ -1418,7 +1418,7 @@ boost::any DataConvert::StringToUDecimal(const datatypes::SystemCatalog::TypeAtt
   {
     int64_t val64;
     number_int_value(data, typeCode, colType, pushWarning, prm.noRoundup(), val64);
-    char ival = (char)val64;
+    signed char ival = (signed char)val64;
 
     if (ival < 0 && ival != static_cast<int8_t>(joblist::TINYINTEMPTYROW) &&
         ival != static_cast<int8_t>(joblist::TINYINTNULL))
