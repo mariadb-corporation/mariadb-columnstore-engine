@@ -32,143 +32,134 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-
 /* Tokens.  */
 #ifndef YYTOKENTYPE
-# define YYTOKENTYPE
+#define YYTOKENTYPE
 /* Put the tokens into the symbol table, so that GDB and other debuggers
    know about them.  */
 enum yytokentype
 {
-    ACTION = 258,
-    ADD = 259,
-    ALTER = 260,
-    AUTO_INCREMENT = 261,
-    BIGINT = 262,
-    BIT = 263,
-    IDB_BLOB = 264,
-    CASCADE = 265,
-    IDB_CHAR = 266,
-    CHARACTER = 267,
-    CHECK = 268,
-    CLOB = 269,
-    COLUMN = 270,
-    COLUMNS = 271,
-    COMMENT = 272,
-    CONSTRAINT = 273,
-    CONSTRAINTS = 274,
-    CREATE = 275,
-    CURRENT_USER = 276,
-    DATETIME = 277,
-    DEC = 278,
-    DECIMAL = 279,
-    DEFAULT = 280,
-    DEFERRABLE = 281,
-    DEFERRED = 282,
-    IDB_DELETE = 283,
-    DROP = 284,
-    ENGINE = 285,
-    FOREIGN = 286,
-    FULL = 287,
-    IMMEDIATE = 288,
-    INDEX = 289,
-    INITIALLY = 290,
-    IDB_INT = 291,
-    INTEGER = 292,
-    KEY = 293,
-    MATCH = 294,
-    MAX_ROWS = 295,
-    MIN_ROWS = 296,
-    MODIFY = 297,
-    NO = 298,
-    NOT = 299,
-    NULL_TOK = 300,
-    NUMBER = 301,
-    NUMERIC = 302,
-    ON = 303,
-    PARTIAL = 304,
-    PRECISION = 305,
-    PRIMARY = 306,
-    REFERENCES = 307,
-    RENAME = 308,
-    RESTRICT = 309,
-    SET = 310,
-    SMALLINT = 311,
-    TABLE = 312,
-    TIME = 313,
-    TINYINT = 314,
-    TO = 315,
-    UNIQUE = 316,
-    UNSIGNED = 317,
-    UPDATE = 318,
-    USER = 319,
-    SESSION_USER = 320,
-    SYSTEM_USER = 321,
-    VARCHAR = 322,
-    VARBINARY = 323,
-    VARYING = 324,
-    WITH = 325,
-    ZONE = 326,
-    DOUBLE = 327,
-    IDB_FLOAT = 328,
-    REAL = 329,
-    CHARSET = 330,
-    IDB_IF = 331,
-    EXISTS = 332,
-    CHANGE = 333,
-    TRUNCATE = 334,
-    IDENT = 335,
-    FCONST = 336,
-    SCONST = 337,
-    CP_SEARCH_CONDITION_TEXT = 338,
-    ICONST = 339,
-    DATE = 340
+  ACTION = 258,
+  ADD = 259,
+  ALTER = 260,
+  AUTO_INCREMENT = 261,
+  BIGINT = 262,
+  BIT = 263,
+  IDB_BLOB = 264,
+  CASCADE = 265,
+  IDB_CHAR = 266,
+  CHARACTER = 267,
+  CHECK = 268,
+  CLOB = 269,
+  COLUMN = 270,
+  COLUMNS = 271,
+  COMMENT = 272,
+  CONSTRAINT = 273,
+  CONSTRAINTS = 274,
+  CREATE = 275,
+  CURRENT_USER = 276,
+  DATETIME = 277,
+  DEC = 278,
+  DECIMAL = 279,
+  DEFAULT = 280,
+  DEFERRABLE = 281,
+  DEFERRED = 282,
+  IDB_DELETE = 283,
+  DROP = 284,
+  ENGINE = 285,
+  FOREIGN = 286,
+  FULL = 287,
+  IMMEDIATE = 288,
+  INDEX = 289,
+  INITIALLY = 290,
+  IDB_INT = 291,
+  INTEGER = 292,
+  KEY = 293,
+  MATCH = 294,
+  MAX_ROWS = 295,
+  MIN_ROWS = 296,
+  MODIFY = 297,
+  NO = 298,
+  NOT = 299,
+  NULL_TOK = 300,
+  NUMBER = 301,
+  NUMERIC = 302,
+  ON = 303,
+  PARTIAL = 304,
+  PRECISION = 305,
+  PRIMARY = 306,
+  REFERENCES = 307,
+  RENAME = 308,
+  RESTRICT = 309,
+  SET = 310,
+  SMALLINT = 311,
+  TABLE = 312,
+  TIME = 313,
+  TINYINT = 314,
+  TO = 315,
+  UNIQUE = 316,
+  UNSIGNED = 317,
+  UPDATE = 318,
+  USER = 319,
+  SESSION_USER = 320,
+  SYSTEM_USER = 321,
+  VARCHAR = 322,
+  VARBINARY = 323,
+  VARYING = 324,
+  WITH = 325,
+  ZONE = 326,
+  DOUBLE = 327,
+  IDB_FLOAT = 328,
+  REAL = 329,
+  CHARSET = 330,
+  IDB_IF = 331,
+  EXISTS = 332,
+  CHANGE = 333,
+  TRUNCATE = 334,
+  IDENT = 335,
+  FCONST = 336,
+  SCONST = 337,
+  CP_SEARCH_CONDITION_TEXT = 338,
+  ICONST = 339,
+  DATE = 340
 };
 #endif
 
-
-
-#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+#if !defined YYSTYPE && !defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
 {
-
-
-    ddlpackage::AlterTableStatement* alterTableStmt;
-    ddlpackage::AlterTableAction* ata;
-    ddlpackage::AlterTableActionList* ataList;
-    ddlpackage::DDL_CONSTRAINT_ATTRIBUTES cattr;
-    std::pair<std::string, std::string>* tableOption;
-    const char* columnOption;
-    ddlpackage::ColumnConstraintDef* columnConstraintDef;
-    ddlpackage::ColumnNameList* columnNameList;
-    ddlpackage::ColumnType* columnType;
-    ddlpackage::ConstraintAttributes* constraintAttributes;
-    ddlpackage::ColumnConstraintList* constraintList;
-    ddlpackage::DDL_CONSTRAINTS constraintType;
-    double dval;
-    bool flag;
-    int ival;
-    ddlpackage::QualifiedName* qualifiedName;
-    ddlpackage::SchemaObject* schemaObject;
-    ddlpackage::SqlStatement* sqlStmt;
-    ddlpackage::SqlStatementList* sqlStmtList;
-    const char* str;
-    ddlpackage::TableConstraintDef* tableConstraint;
-    ddlpackage::TableElementList* tableElementList;
-    ddlpackage::TableOptionMap* tableOptionMap;
-    ddlpackage::ColumnDefaultValue* colDefault;
-    ddlpackage::DDL_MATCH_TYPE matchType;
-    ddlpackage::DDL_REFERENTIAL_ACTION refActionCode;
-    ddlpackage::ReferentialAction* refAction;
-
-
+  ddlpackage::AlterTableStatement* alterTableStmt;
+  ddlpackage::AlterTableAction* ata;
+  ddlpackage::AlterTableActionList* ataList;
+  ddlpackage::DDL_CONSTRAINT_ATTRIBUTES cattr;
+  std::pair<std::string, std::string>* tableOption;
+  const char* columnOption;
+  ddlpackage::ColumnConstraintDef* columnConstraintDef;
+  ddlpackage::ColumnNameList* columnNameList;
+  ddlpackage::ColumnType* columnType;
+  ddlpackage::ConstraintAttributes* constraintAttributes;
+  ddlpackage::ColumnConstraintList* constraintList;
+  ddlpackage::DDL_CONSTRAINTS constraintType;
+  double dval;
+  bool flag;
+  int ival;
+  ddlpackage::QualifiedName* qualifiedName;
+  ddlpackage::SchemaObject* schemaObject;
+  ddlpackage::SqlStatement* sqlStmt;
+  ddlpackage::SqlStatementList* sqlStmtList;
+  const char* str;
+  ddlpackage::TableConstraintDef* tableConstraint;
+  ddlpackage::TableElementList* tableElementList;
+  ddlpackage::TableOptionMap* tableOptionMap;
+  ddlpackage::ColumnDefaultValue* colDefault;
+  ddlpackage::DDL_MATCH_TYPE matchType;
+  ddlpackage::DDL_REFERENTIAL_ACTION refActionCode;
+  ddlpackage::ReferentialAction* refAction;
 
 } YYSTYPE;
-# define YYSTYPE_IS_TRIVIAL 1
-# define yystype YYSTYPE /* obsolescent; will be withdrawn */
-# define YYSTYPE_IS_DECLARED 1
+#define YYSTYPE_IS_TRIVIAL 1
+#define yystype YYSTYPE /* obsolescent; will be withdrawn */
+#define YYSTYPE_IS_DECLARED 1
 #endif
 
 extern YYSTYPE ddllval;
-
-

@@ -36,37 +36,35 @@ using namespace config;
 
 namespace multicast
 {
-
-Multicast::Multicast() :
-    fPMCount(1),
-    fIFName("eth0"),
-    fPortBase(9000),
-    fBufSize(8 * 1024 * 1024)
+Multicast::Multicast() : fPMCount(1), fIFName("eth0"), fPortBase(9000), fBufSize(8 * 1024 * 1024)
 {
-    int tmp;
-    string stmp;
+  int tmp;
+  string stmp;
 
-    Config* cf = Config::makeConfig();
+  Config* cf = Config::makeConfig();
 
-    tmp = Config::fromText(cf->getConfig("PrimitiveServers", "Count"));
+  tmp = Config::fromText(cf->getConfig("PrimitiveServers", "Count"));
 
-    if (tmp > 0) fPMCount = tmp;
+  if (tmp > 0)
+    fPMCount = tmp;
 
-    stmp = cf->getConfig("Multicast", "Interface");
+  stmp = cf->getConfig("Multicast", "Interface");
 
-    if (!stmp.empty()) fIFName = stmp;
+  if (!stmp.empty())
+    fIFName = stmp;
 
-    tmp = Config::fromText(cf->getConfig("Multicast", "PortBase"));
+  tmp = Config::fromText(cf->getConfig("Multicast", "PortBase"));
 
-    if (tmp > 0) fPortBase = tmp;
+  if (tmp > 0)
+    fPortBase = tmp;
 
-    tmp = Config::fromText(cf->getConfig("Multicast", "BufSize"));
+  tmp = Config::fromText(cf->getConfig("Multicast", "BufSize"));
 
-    if (tmp > 0) fBufSize = tmp;
+  if (tmp > 0)
+    fBufSize = tmp;
 }
 
-MulticastReceiver::MulticastReceiver() :
-    fPimpl(0)
+MulticastReceiver::MulticastReceiver() : fPimpl(0)
 {
 }
 
@@ -76,12 +74,11 @@ MulticastReceiver::~MulticastReceiver()
 
 SBS MulticastReceiver::receive()
 {
-    throw runtime_error("Multicast is not available");
-    return fByteStream;
+  throw runtime_error("Multicast is not available");
+  return fByteStream;
 }
 
-MulticastSender::MulticastSender() :
-    fPimpl(0)
+MulticastSender::MulticastSender() : fPimpl(0)
 {
 }
 
@@ -91,9 +88,9 @@ MulticastSender::~MulticastSender()
 
 void MulticastSender::send(const ByteStream& msg)
 {
-    throw runtime_error("Multicast is not available");
+  throw runtime_error("Multicast is not available");
 }
 
-} //namespace multicast
+}  // namespace multicast
 
-//vim:ts=4 sw=4:
+// vim:ts=4 sw=4:

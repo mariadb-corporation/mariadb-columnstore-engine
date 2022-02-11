@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: markpartition.cpp 6566 2010-04-27 18:02:51Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: markpartition.cpp 6566 2010-04-27 18:02:51Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 
 #define DDLPKG_DLLEXPORT
 #include "ddlpkg.h"
@@ -29,23 +29,21 @@ using namespace std;
 
 namespace ddlpackage
 {
-
-RestorePartitionStatement::RestorePartitionStatement(QualifiedName* qualifiedName) :
-    fTableName(qualifiedName)
+RestorePartitionStatement::RestorePartitionStatement(QualifiedName* qualifiedName) : fTableName(qualifiedName)
 {
 }
 
 ostream& RestorePartitionStatement::put(ostream& os) const
 {
-    os << "Mark partition out of service: " << *fTableName;
-    os << " partitions: ";
-    set<BRM::LogicalPartition>::const_iterator it;
+  os << "Mark partition out of service: " << *fTableName;
+  os << " partitions: ";
+  set<BRM::LogicalPartition>::const_iterator it;
 
-    for (it = fPartitions.begin(); it != fPartitions.end(); ++it)
-        os << (*it) << "  ";
+  for (it = fPartitions.begin(); it != fPartitions.end(); ++it)
+    os << (*it) << "  ";
 
-    os << endl;
-    return os;
+  os << endl;
+  return os;
 }
 
-}
+}  // namespace ddlpackage

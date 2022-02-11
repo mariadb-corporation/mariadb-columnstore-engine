@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: jlf_execplantojoblist.h 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: jlf_execplantojoblist.h 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 
 /** @file jlf_execplantojoblist.h
  *
@@ -31,12 +31,10 @@
 #include "calpontselectexecutionplan.h"
 #include "calpontsystemcatalog.h"
 
-
 #include "jlf_common.h"
 
 namespace joblist
 {
-
 //------------------------------------------------------------------------------
 /** @brief Class makes initial pass at converting Calpont Exec Plan to a joblist
  *
@@ -44,27 +42,27 @@ namespace joblist
 //------------------------------------------------------------------------------
 class JLF_ExecPlanToJobList
 {
-public:
-    /** @brief This function is the entry point into CEP to joblist conversion
-     *
-     * @param ParseTree (in) is CEP to be translated to a joblist
-     * @param JobInfo&  (in/out) is the JobInfo reference that is loaded
-     */
-    static void walkTree(execplan::ParseTree* n, JobInfo& jobInfo);
+ public:
+  /** @brief This function is the entry point into CEP to joblist conversion
+   *
+   * @param ParseTree (in) is CEP to be translated to a joblist
+   * @param JobInfo&  (in/out) is the JobInfo reference that is loaded
+   */
+  static void walkTree(execplan::ParseTree* n, JobInfo& jobInfo);
 
-    /** @brief This function add new job steps to the job step vector in JobInfo
-     *
-     * @param JobStepVector& (in) is a vector of new job steps
-     * @param JobInfo&       (in/out) is the JobInfo reference that is loaded
-     * @param bool           (in) is combine job step possible
-     */
-    static void addJobSteps(JobStepVector& nsv, JobInfo& jobInfo, bool tryCombine);
+  /** @brief This function add new job steps to the job step vector in JobInfo
+   *
+   * @param JobStepVector& (in) is a vector of new job steps
+   * @param JobInfo&       (in/out) is the JobInfo reference that is loaded
+   * @param bool           (in) is combine job step possible
+   */
+  static void addJobSteps(JobStepVector& nsv, JobInfo& jobInfo, bool tryCombine);
 
-private:
-    // Disable constructor since this class only contains a static method
-    JLF_ExecPlanToJobList();
+ private:
+  // Disable constructor since this class only contains a static method
+  JLF_ExecPlanToJobList();
 };
 
-} // end of joblist namespace
+}  // namespace joblist
 
 #endif

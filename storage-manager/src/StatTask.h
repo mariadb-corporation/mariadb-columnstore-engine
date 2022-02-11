@@ -15,7 +15,6 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-
 #ifndef STATTASK_H_
 #define STATTASK_H_
 
@@ -23,19 +22,17 @@
 
 namespace storagemanager
 {
-
 class StatTask : public PosixTask
 {
-    public:
-        StatTask(int sock, uint length);
-        virtual ~StatTask();
-        
-        bool run();
-    
-    private:
-        StatTask();
+ public:
+  StatTask(int sock, uint length);
+  virtual ~StatTask();
+
+  bool run();
+
+ private:
+  StatTask();
 };
 
-
-}
+}  // namespace storagemanager
 #endif

@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_lpad.cpp 3923 2013-06-19 21:43:06Z bwilkinson $
-*
-*
-****************************************************************************/
+ * $Id: func_lpad.cpp 3923 2013-06-19 21:43:06Z bwilkinson $
+ *
+ *
+ ****************************************************************************/
 
 #include "errorids.h"
 #include <string>
@@ -41,95 +41,90 @@ namespace funcexp
 {
 const string Func_lpad::fPad = " ";
 
-
-CalpontSystemCatalog::ColType Func_lpad::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
+CalpontSystemCatalog::ColType Func_lpad::operationType(FunctionParm& fp,
+                                                       CalpontSystemCatalog::ColType& resultType)
 {
-    // operation type is not used by this functor
-    return fp[0]->data()->resultType();
+  // operation type is not used by this functor
+  return fp[0]->data()->resultType();
 }
 
-
-std::string Func_lpad::getStrVal(rowgroup::Row& row,
-                                 FunctionParm& fp,
-                                 bool& isNull,
+std::string Func_lpad::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                  execplan::CalpontSystemCatalog::ColType& type)
 {
-    CHARSET_INFO* cs = type.getCharset();
-    // The original string
-    const string& src = fp[0]->data()->getStrVal(row, isNull);
-    if (isNull)
-        return "";
-    if (src.empty() || src.length() == 0)
-        return src;
-    // binLen represents the number of bytes in src
-    size_t binLen = src.length();
-    const char* pos = src.c_str();
-    const char* end = pos + binLen;
-    // strLen = the number of characters in src
-    size_t strLen = cs->numchars(pos, end);
+  CHARSET_INFO* cs = type.getCharset();
+  // The original string
+  const string& src = fp[0]->data()->getStrVal(row, isNull);
+  if (isNull)
+    return "";
+  if (src.empty() || src.length() == 0)
+    return src;
+  // binLen represents the number of bytes in src
+  size_t binLen = src.length();
+  const char* pos = src.c_str();
+  const char* end = pos + binLen;
+  // strLen = the number of characters in src
+  size_t strLen = cs->numchars(pos, end);
 
-    // In the case where someone entered pad length as a quoted string,
-    // it may be interpreted by columnstore to be an actual string
-    // and stored in fResult.int as a htonl of that string,
-    // However fResult.double is always correct, so we'll use that.
-    size_t padLength = (size_t)fp[1]->data()->getDoubleVal(row, isNull);
-    if (isNull || padLength <= 0)
-        return "";
-    if (padLength > (size_t)INT_MAX32)
-        padLength = (size_t)INT_MAX32;
-    
-    if (padLength < strLen)
-    {
-        binLen = cs->charpos(pos, end, padLength);
-        std::string ret(pos, binLen);
-        return ret;
-    }
+  // In the case where someone entered pad length as a quoted string,
+  // it may be interpreted by columnstore to be an actual string
+  // and stored in fResult.int as a htonl of that string,
+  // However fResult.double is always correct, so we'll use that.
+  size_t padLength = (size_t)fp[1]->data()->getDoubleVal(row, isNull);
+  if (isNull || padLength <= 0)
+    return "";
+  if (padLength > (size_t)INT_MAX32)
+    padLength = (size_t)INT_MAX32;
 
-    // The pad characters.
-    const string* pad = &fPad; // Defaults to space
-    if (fp.size() > 2)
-    {
-        pad = &fp[2]->data()->getStrVal(row, isNull);
-    }
-    // binPLen represents the number of bytes in pad
-    size_t binPLen = pad->length();
-    const char* posP = pad->c_str();
-    // plen = the number of characters in pad
-    size_t plen = cs->numchars(posP, posP+binPLen);
-    if (plen == 0)
-        return src;
-
-    size_t byteCount = (padLength+1) * cs->mbmaxlen; // absolute maximun number of bytes
-    char* buf = new char[byteCount];
-    char* pBuf = buf;
-
-    padLength -= strLen;
-    byteCount = 0;
-    
-    while (padLength >= plen)
-    {
-        memcpy(pBuf, posP, binPLen);
-        padLength -= plen;
-        byteCount += binPLen;
-        pBuf += binPLen;
-    }
-    // Sometimes, in a case with multi-char pad, we need to add a partial pad
-    if (padLength > 0)
-    {
-        size_t partialSize = cs->charpos(posP, posP+binPLen, padLength);
-        memcpy(pBuf, posP, partialSize);
-        byteCount += partialSize;
-        pBuf += partialSize;
-    }
-    memcpy(pBuf, pos, binLen);
-    byteCount += binLen;
-    
-    std::string ret(buf, byteCount);
-    delete [] buf;
+  if (padLength < strLen)
+  {
+    binLen = cs->charpos(pos, end, padLength);
+    std::string ret(pos, binLen);
     return ret;
+  }
+
+  // The pad characters.
+  const string* pad = &fPad;  // Defaults to space
+  if (fp.size() > 2)
+  {
+    pad = &fp[2]->data()->getStrVal(row, isNull);
+  }
+  // binPLen represents the number of bytes in pad
+  size_t binPLen = pad->length();
+  const char* posP = pad->c_str();
+  // plen = the number of characters in pad
+  size_t plen = cs->numchars(posP, posP + binPLen);
+  if (plen == 0)
+    return src;
+
+  size_t byteCount = (padLength + 1) * cs->mbmaxlen;  // absolute maximun number of bytes
+  char* buf = new char[byteCount];
+  char* pBuf = buf;
+
+  padLength -= strLen;
+  byteCount = 0;
+
+  while (padLength >= plen)
+  {
+    memcpy(pBuf, posP, binPLen);
+    padLength -= plen;
+    byteCount += binPLen;
+    pBuf += binPLen;
+  }
+  // Sometimes, in a case with multi-char pad, we need to add a partial pad
+  if (padLength > 0)
+  {
+    size_t partialSize = cs->charpos(posP, posP + binPLen, padLength);
+    memcpy(pBuf, posP, partialSize);
+    byteCount += partialSize;
+    pBuf += partialSize;
+  }
+  memcpy(pBuf, pos, binLen);
+  byteCount += binLen;
+
+  std::string ret(buf, byteCount);
+  delete[] buf;
+  return ret;
 }
 
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:
-

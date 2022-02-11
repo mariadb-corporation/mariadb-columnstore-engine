@@ -6,10 +6,8 @@
 
 namespace qfe
 {
-
 void processReturnedRows(messageqcpp::MessageQueueClient*, SockType);
 
 }
 
 #endif
-

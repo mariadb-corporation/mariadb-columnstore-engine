@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*
-* $Id: fixdate.cpp 2101 2013-01-21 14:12:52Z rdempsey $
-*
-*/
+ * $Id: fixdate.cpp 2101 2013-01-21 14:12:52Z rdempsey $
+ *
+ */
 
 #include <iostream>
 #include <fstream>
@@ -42,7 +42,6 @@ using namespace dmlpackageprocessor;
 
 namespace
 {
-
 const streamsize blkSz = 8192;
 
 void usage()
@@ -51,9 +50,9 @@ void usage()
 
 u_int64_t fixDate(ByteStream& bs, ostream& out)
 {
-    ByteStream fixed;
-    ByteStream::quadbyte o;
-    u_int64_t cnt = 0;
+  ByteStream fixed;
+  ByteStream::quadbyte o;
+  u_int64_t cnt = 0;
 #if 0
     DMLPackageProcessor::Date minDate;
     DMLPackageProcessor::Date maxDate;
@@ -68,108 +67,107 @@ u_int64_t fixDate(ByteStream& bs, ostream& out)
     mxd = *(reinterpret_cast<ByteStream::quadbyte*>(&maxDate));
     mnd = *(reinterpret_cast<ByteStream::quadbyte*>(&minDate));
 #endif
-    DMLPackageProcessor::Date fixDate;
-    fixDate.spare = 0;
-    ByteStream::quadbyte f;
+  DMLPackageProcessor::Date fixDate;
+  fixDate.spare = 0;
+  ByteStream::quadbyte f;
 
-    while (bs.length() > 0)
+  while (bs.length() > 0)
+  {
+    bs >> o;
+
+    if (o >= 0xfffffffe)
     {
-        bs >> o;
+      fixed << o;
+      continue;
+    }
 
-        if (o >= 0xfffffffe)
-        {
-            fixed << o;
-            continue;
-        }
-
-        f = o & 0xffff;
-        fixDate.year = f;
-        o >>= 16;
-        f = o & 0xf;
-        fixDate.month = f;
-        o >>= 4;
-        f = o & 0x3f;
-        fixDate.day = f;
-        //o >>= 6;
-        o = *(reinterpret_cast<ByteStream::quadbyte*>(&fixDate));
-        fixed << o;
+    f = o & 0xffff;
+    fixDate.year = f;
+    o >>= 16;
+    f = o & 0xf;
+    fixDate.month = f;
+    o >>= 4;
+    f = o & 0x3f;
+    fixDate.day = f;
+    // o >>= 6;
+    o = *(reinterpret_cast<ByteStream::quadbyte*>(&fixDate));
+    fixed << o;
 #if 0
         cout << DMLPackageProcessor::dateToString(o) << endl;
         idbassert(o >= mnd && o <= mxd);
         cnt++;
 #endif
-    }
+  }
 
-    out << fixed;
-    return cnt;
+  out << fixed;
+  return cnt;
 }
 
-}
+}  // namespace
 
 int main(int argc, char* argv[])
 {
-    int c;
+  int c;
 
-    opterr = 0;
+  opterr = 0;
 
-    while ((c = getopt(argc, argv, "h")) != EOF)
-        switch (c)
-        {
-            case 'h':
-                usage();
-                return 0;
-                break;
-
-            default:
-                usage();
-                return 1;
-                break;
-        }
-
-    if ((argc - optind) < 1)
+  while ((c = getopt(argc, argv, "h")) != EOF)
+    switch (c)
     {
+      case 'h':
+        usage();
+        return 0;
+        break;
+
+      default:
         usage();
         return 1;
+        break;
     }
 
-    ByteStream bs;
+  if ((argc - optind) < 1)
+  {
+    usage();
+    return 1;
+  }
 
-    ifstream ifs(argv[optind + 0]);
-    ByteStream::byte inbuf[blkSz];
-    streampos fLen;
-    u_int64_t blkNo = 0;
+  ByteStream bs;
 
-    ifs.seekg(0, ios_base::end);
-    fLen = ifs.tellg();
-    ifs.seekg(0, ios_base::beg);
+  ifstream ifs(argv[optind + 0]);
+  ByteStream::byte inbuf[blkSz];
+  streampos fLen;
+  u_int64_t blkNo = 0;
 
-    idbassert((fLen % blkSz) == 0);
-    u_int64_t numBlks = fLen / blkSz;
-    cout << numBlks << " blocks to fix..." << endl;
+  ifs.seekg(0, ios_base::end);
+  fLen = ifs.tellg();
+  ifs.seekg(0, ios_base::beg);
 
-    ofstream ofs("fixdate.cdf");
+  idbassert((fLen % blkSz) == 0);
+  u_int64_t numBlks = fLen / blkSz;
+  cout << numBlks << " blocks to fix..." << endl;
 
-    cout << "pct done:    " << setw(3);
+  ofstream ofs("fixdate.cdf");
 
-    for (;;)
-    {
+  cout << "pct done:    " << setw(3);
 
-        ifs.read(reinterpret_cast<char*>(inbuf), blkSz);
+  for (;;)
+  {
+    ifs.read(reinterpret_cast<char*>(inbuf), blkSz);
 
-        if (ifs.eof()) break;
+    if (ifs.eof())
+      break;
 
-        bs.load(inbuf, blkSz);
+    bs.load(inbuf, blkSz);
 
-        fixDate(bs, ofs);
-        cout << "\b\b\b" << setw(3) << (u_int64_t)(blkNo * 100 / numBlks);
-        //cout << setw(3) << (u_int64_t)(blkNo * 100 / numBlks) << endl;
+    fixDate(bs, ofs);
+    cout << "\b\b\b" << setw(3) << (u_int64_t)(blkNo * 100 / numBlks);
+    // cout << setw(3) << (u_int64_t)(blkNo * 100 / numBlks) << endl;
 
-        blkNo++;
-    }
+    blkNo++;
+  }
 
-    cout << "\b\b\b" << setw(3) << 100 << endl;
-    //cout << setw(3) << 100 << endl;
+  cout << "\b\b\b" << setw(3) << 100 << endl;
+  // cout << setw(3) << 100 << endl;
 
-    return 0;
+  return 0;
 }
-

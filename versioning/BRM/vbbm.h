@@ -41,29 +41,27 @@
 
 // These config parameters need to be loaded
 
-//will get a small hash function performance boost by using powers of 2
+// will get a small hash function performance boost by using powers of 2
 #define VBSTORAGE_INITIAL_COUNT 100000
-#define VBSTORAGE_INITIAL_SIZE (VBSTORAGE_INITIAL_COUNT*sizeof(VBBMEntry))
+#define VBSTORAGE_INITIAL_SIZE (VBSTORAGE_INITIAL_COUNT * sizeof(VBBMEntry))
 #define VBSTORAGE_INCREMENT_COUNT 10000
-#define VBSTORAGE_INCREMENT (VBSTORAGE_INCREMENT_COUNT*sizeof(VBBMEntry))
+#define VBSTORAGE_INCREMENT (VBSTORAGE_INCREMENT_COUNT * sizeof(VBBMEntry))
 
 // (average list length = 4)
-#define VBTABLE_INITIAL_SIZE (25000*sizeof(int))
-#define VBTABLE_INCREMENT (2500*sizeof(int))
+#define VBTABLE_INITIAL_SIZE (25000 * sizeof(int))
+#define VBTABLE_INCREMENT (2500 * sizeof(int))
 
 #define VBBM_INCREMENT (VBTABLE_INCREMENT + VBSTORAGE_INCREMENT)
 
-#define VBBM_SIZE(files, entries) \
-		((entries * sizeof(VBBMEntry)) + (entries/4 * sizeof(int)) \
-			+ (files * sizeof(VBFileMetadata)) + sizeof(VBShmsegHeader))
-
+#define VBBM_SIZE(files, entries)                                                                   \
+  ((entries * sizeof(VBBMEntry)) + (entries / 4 * sizeof(int)) + (files * sizeof(VBFileMetadata)) + \
+   sizeof(VBShmsegHeader))
 
 #if defined(_MSC_VER) && defined(xxxVBBM_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
 #else
 #define EXPORT
 #endif
-
 
 namespace idbdatafile
 {
@@ -72,89 +70,88 @@ class IDBDataFile;
 
 namespace BRM
 {
-
 class VSS;
 
 struct VBFileMetadata
 {
-    OID_t OID;
-    uint64_t fileSize;
-    uint64_t nextOffset;
+  OID_t OID;
+  uint64_t fileSize;
+  uint64_t nextOffset;
 };
 
 struct VBBMEntry
 {
-    LBID_t lbid;
-    VER_t verID;
-    OID_t vbOID;
-    uint32_t vbFBO;
-    int next;
-    EXPORT VBBMEntry();
+  LBID_t lbid;
+  VER_t verID;
+  OID_t vbOID;
+  uint32_t vbFBO;
+  int next;
+  EXPORT VBBMEntry();
 };
 
 struct VBShmsegHeader
 {
-    int nFiles;
-    int vbCapacity;
-    int vbCurrentSize;
-    int vbLWM;
-    int numHashBuckets;
+  int nFiles;
+  int vbCapacity;
+  int vbCurrentSize;
+  int vbLWM;
+  int numHashBuckets;
 
-    // the rest of the overlay looks like this
-// 	VBFileMetadata files[nFiles];
-// 	int hashBuckets[numHashBuckets];
-// 	VBBMEntry storage[vbCapacity];
+  // the rest of the overlay looks like this
+  // 	VBFileMetadata files[nFiles];
+  // 	int hashBuckets[numHashBuckets];
+  // 	VBBMEntry storage[vbCapacity];
 };
 
 class VBBMImpl
 {
-public:
-    static VBBMImpl* makeVBBMImpl(unsigned key, off_t size, bool readOnly = false);
+ public:
+  static VBBMImpl* makeVBBMImpl(unsigned key, off_t size, bool readOnly = false);
 
-    inline void grow(unsigned key, off_t size)
+  inline void grow(unsigned key, off_t size)
 #ifdef NDEBUG
-    {
-        fVBBM.grow(key, size);
-    }
+  {
+    fVBBM.grow(key, size);
+  }
 #else
-    {
-        int rc = fVBBM.grow(key, size);
-        idbassert(rc == 0);
-    }
+  {
+    int rc = fVBBM.grow(key, size);
+    idbassert(rc == 0);
+  }
 #endif
-    inline void makeReadOnly()
-    {
-        fVBBM.setReadOnly();
-    }
-    inline void clear(unsigned key, off_t size)
-    {
-        fVBBM.clear(key, size);
-    }
-    inline void swapout(BRMShmImpl& rhs)
-    {
-        fVBBM.swap(rhs);
-        rhs.destroy();
-    }
-    inline unsigned key() const
-    {
-        return fVBBM.key();
-    }
+  inline void makeReadOnly()
+  {
+    fVBBM.setReadOnly();
+  }
+  inline void clear(unsigned key, off_t size)
+  {
+    fVBBM.clear(key, size);
+  }
+  inline void swapout(BRMShmImpl& rhs)
+  {
+    fVBBM.swap(rhs);
+    rhs.destroy();
+  }
+  inline unsigned key() const
+  {
+    return fVBBM.key();
+  }
 
-    inline VBShmsegHeader* get() const
-    {
-        return reinterpret_cast<VBShmsegHeader*>(fVBBM.fMapreg.get_address());
-    }
+  inline VBShmsegHeader* get() const
+  {
+    return reinterpret_cast<VBShmsegHeader*>(fVBBM.fMapreg.get_address());
+  }
 
-private:
-    VBBMImpl(unsigned key, off_t size, bool readOnly = false);
-    ~VBBMImpl();
-    VBBMImpl(const VBBMImpl& rhs);
-    VBBMImpl& operator=(const VBBMImpl& rhs);
+ private:
+  VBBMImpl(unsigned key, off_t size, bool readOnly = false);
+  ~VBBMImpl();
+  VBBMImpl(const VBBMImpl& rhs);
+  VBBMImpl& operator=(const VBBMImpl& rhs);
 
-    BRMShmImpl fVBBM;
+  BRMShmImpl fVBBM;
 
-    static boost::mutex fInstanceMutex;
-    static VBBMImpl* fInstance;
+  static boost::mutex fInstanceMutex;
+  static VBBMImpl* fInstance;
 };
 
 /** @brief The Version Buffer Block Map (VBBM)
@@ -187,78 +184,75 @@ private:
 
 class VBBM : public Undoable
 {
-public:
-    enum OPS
-    {
-        NONE,
-        READ,
-        WRITE
-    };
+ public:
+  enum OPS
+  {
+    NONE,
+    READ,
+    WRITE
+  };
 
+  EXPORT VBBM();
+  EXPORT ~VBBM();
 
-    EXPORT VBBM();
-    EXPORT ~VBBM();
+  EXPORT void lock(OPS op);
+  EXPORT void release(OPS op);
+  EXPORT int lookup(LBID_t lbid, VER_t ver, OID_t& oid, uint32_t& fbo) const;
+  EXPORT void insert(LBID_t lbid, VER_t ver, OID_t oid, uint32_t fbo, bool loading = false);
+  EXPORT void getBlocks(int num, OID_t vbOID, std::vector<VBRange>& vbRanges, VSS& vss, bool flushPMCache);
+  EXPORT void removeEntry(LBID_t, VER_t ver);
 
-    EXPORT void lock(OPS op);
-    EXPORT void release(OPS op);
-    EXPORT int lookup(LBID_t lbid, VER_t ver, OID_t& oid, uint32_t& fbo) const;
-    EXPORT void insert(LBID_t lbid, VER_t ver, OID_t oid, uint32_t fbo, bool loading = false);
-    EXPORT void getBlocks(int num, OID_t vbOID, std::vector<VBRange>& vbRanges, VSS& vss,
-                          bool flushPMCache);
-    EXPORT void removeEntry(LBID_t, VER_t ver);
+  EXPORT int size() const;
+  EXPORT bool hashEmpty() const;
+  EXPORT int checkConsistency() const;
+  EXPORT void setReadOnly();
 
-    EXPORT int size() const;
-    EXPORT bool hashEmpty() const;
-    EXPORT int checkConsistency() const;
-    EXPORT void setReadOnly();
-
-    EXPORT void clear();
-    EXPORT void load(std::string filename);
-    EXPORT void loadVersion2(idbdatafile::IDBDataFile* in);
-    EXPORT void save(std::string filename);
+  EXPORT void clear();
+  EXPORT void load(std::string filename);
+  EXPORT void loadVersion2(idbdatafile::IDBDataFile* in);
+  EXPORT void save(std::string filename);
 
 #ifdef BRM_DEBUG
-    EXPORT int getShmid() const;
+  EXPORT int getShmid() const;
 #endif
 
-private:
-    VBBM(const VBBM&);
-    VBBM& operator=(const VBBM&);
+ private:
+  VBBM(const VBBM&);
+  VBBM& operator=(const VBBM&);
 
-    VBShmsegHeader* vbbm;
-    VBFileMetadata* files;
-    int* hashBuckets;
-    VBBMEntry* storage;
+  VBShmsegHeader* vbbm;
+  VBFileMetadata* files;
+  int* hashBuckets;
+  VBBMEntry* storage;
 
-    key_t currentVBBMShmkey;
-    int vbbmShmid;
-    bool r_only;
-    MSTEntry* vbbmShminfo;
-    MasterSegmentTable mst;
-    static boost::mutex mutex; // @bug5355 - made mutex static
-    static const int MAX_IO_RETRIES = 10;
+  key_t currentVBBMShmkey;
+  int vbbmShmid;
+  bool r_only;
+  MSTEntry* vbbmShminfo;
+  MasterSegmentTable mst;
+  static boost::mutex mutex;  // @bug5355 - made mutex static
+  static const int MAX_IO_RETRIES = 10;
 
-    key_t chooseShmkey() const;
-    void growVBBM(bool addAFile = false);
-    void growForLoad(int count);
-    void copyVBBM(VBShmsegHeader* dest);
-    void initShmseg(int nFiles);
+  key_t chooseShmkey() const;
+  void growVBBM(bool addAFile = false);
+  void growForLoad(int count);
+  void copyVBBM(VBShmsegHeader* dest);
+  void initShmseg(int nFiles);
 
-    void _insert(VBBMEntry& e, VBShmsegHeader* dest, int* destTable, VBBMEntry*
-                 destStorage, bool loading = false);
-    int getIndex(LBID_t lbid, VER_t verID, int& prev, int& bucket) const;
-    ShmKeys fShmKeys;
-    VBBMImpl* fPVBBMImpl;
+  void _insert(VBBMEntry& e, VBShmsegHeader* dest, int* destTable, VBBMEntry* destStorage,
+               bool loading = false);
+  int getIndex(LBID_t lbid, VER_t verID, int& prev, int& bucket) const;
+  ShmKeys fShmKeys;
+  VBBMImpl* fPVBBMImpl;
 
-    /* Shared nothing mods */
-    uint64_t currentFileSize;
-    void setCurrentFileSize();
-    uint32_t addVBFileIfNotExists(OID_t vbOID);
+  /* Shared nothing mods */
+  uint64_t currentFileSize;
+  void setCurrentFileSize();
+  uint32_t addVBFileIfNotExists(OID_t vbOID);
 };
 
-}
+}  // namespace BRM
 
 #undef EXPORT
 
-#endif // _VBBM_H_
-
+#endif  // _VBBM_H_

@@ -16,57 +16,49 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: dmlobject.h 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: dmlobject.h 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 /** @file */
-
 
 #ifndef DMLOBJECT_H
 #define DMLOBJECT_H
 #include <string>
-#include"bytestream.h"
-
+#include "bytestream.h"
 
 namespace dmlpackage
 {
 /** @brief an abstract class that represents
-  * a database object to be inserted, updated or
-  * deleted by a DML statement
-  */
+ * a database object to be inserted, updated or
+ * deleted by a DML statement
+ */
 class DMLObject
 {
+ public:
+  /**	@brief ctor
+   */
+  DMLObject();
 
-public:
+  /** @brief dtor
+   */
+  virtual ~DMLObject();
 
-    /**	@brief ctor
-      */
-    DMLObject();
+  /** @brief read a DMLObject from a ByteStream
+   *
+   *  @param bytestream the ByteStream to read from
+   */
+  virtual int read(messageqcpp::ByteStream& bytestream) = 0;
 
-    /** @brief dtor
-      */
-    virtual ~DMLObject();
+  /** @brief write a DMLObject to a ByteStream
+   *
+   * @param bytestream the ByteStream to write to
+   */
+  virtual int write(messageqcpp::ByteStream& bytestream) = 0;
 
-    /** @brief read a DMLObject from a ByteStream
-      *
-      *  @param bytestream the ByteStream to read from
-      */
-    virtual int read(messageqcpp::ByteStream& bytestream) = 0;
-
-    /** @brief write a DMLObject to a ByteStream
-      *
-      * @param bytestream the ByteStream to write to
-      */
-    virtual int write(messageqcpp::ByteStream& bytestream) = 0;
-
-protected:
-
-private:
-
+ protected:
+ private:
 };
 
-}
-#endif //DMLOBJECT_H
-
-
+}  // namespace dmlpackage
+#endif  // DMLOBJECT_H

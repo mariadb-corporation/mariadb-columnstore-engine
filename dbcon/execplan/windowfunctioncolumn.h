@@ -17,10 +17,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: windowfunctioncolumn.h 9679 2013-07-11 22:32:03Z zzhu $
-*
-*
-***********************************************************************/
+ *   $Id: windowfunctioncolumn.h 9679 2013-07-11 22:32:03Z zzhu $
+ *
+ *
+ ***********************************************************************/
 
 /** @file */
 
@@ -45,7 +45,6 @@ class ByteStream;
  */
 namespace execplan
 {
-
 /**
  * @brief A class to represent a functional column
  *
@@ -54,206 +53,208 @@ namespace execplan
  */
 class WindowFunctionColumn : public ReturnedColumn
 {
+ public:
+  WindowFunctionColumn();
+  WindowFunctionColumn(const std::string& functionName, const uint32_t sessionID = 0);
+  WindowFunctionColumn(const WindowFunctionColumn& rhs, const uint32_t sessionID = 0);
+  virtual ~WindowFunctionColumn()
+  {
+  }
 
-public:
-    WindowFunctionColumn();
-    WindowFunctionColumn(const std::string& functionName, const uint32_t sessionID = 0);
-    WindowFunctionColumn(const WindowFunctionColumn& rhs, const uint32_t sessionID = 0);
-    virtual ~WindowFunctionColumn() {}
+  /** get function name */
+  inline const std::string& functionName() const
+  {
+    return fFunctionName;
+  }
 
-    /** get function name */
-    inline const std::string& functionName() const
-    {
-        return fFunctionName;
-    }
+  /** set function name */
+  inline void functionName(const std::string functionName)
+  {
+    fFunctionName = functionName;
+  }
 
-    /** set function name */
-    inline void functionName(const std::string functionName)
-    {
-        fFunctionName = functionName;
-    }
+  /** get function parameters */
+  inline const std::vector<SRCP>& functionParms() const
+  {
+    return fFunctionParms;
+  }
 
-    /** get function parameters */
-    inline const std::vector<SRCP>& functionParms() const
-    {
-        return fFunctionParms;
-    }
+  /** set function parameters*/
+  inline void functionParms(const std::vector<SRCP>& functionParms)
+  {
+    fFunctionParms = functionParms;
+  }
 
-    /** set function parameters*/
-    inline void functionParms(const std::vector<SRCP>& functionParms)
-    {
-        fFunctionParms = functionParms;
-    }
+  /** get partition columns */
+  inline const std::vector<SRCP>& partitions() const
+  {
+    return fPartitions;
+  }
 
-    /** get partition columns */
-    inline const std::vector<SRCP>& partitions() const
-    {
-        return fPartitions;
-    }
+  /** set partition columns */
+  inline void partitions(const std::vector<SRCP>& partitions)
+  {
+    fPartitions = partitions;
+  }
 
-    /** set partition columns */
-    inline void partitions(const std::vector<SRCP>& partitions)
-    {
-        fPartitions = partitions;
-    }
+  /** get order by clause */
+  inline const WF_OrderBy& orderBy() const
+  {
+    return fOrderBy;
+  }
 
-    /** get order by clause */
-    inline const WF_OrderBy& orderBy() const
-    {
-        return fOrderBy;
-    }
+  /** set order by clause */
+  inline void orderBy(const WF_OrderBy& orderBy)
+  {
+    fOrderBy = orderBy;
+  }
 
-    /** set order by clause */
-    inline void orderBy(const WF_OrderBy& orderBy)
-    {
-        fOrderBy = orderBy;
-    }
+  /** make a clone of this window function */
+  inline virtual WindowFunctionColumn* clone() const
+  {
+    return new WindowFunctionColumn(*this);
+  }
 
-    /** make a clone of this window function */
-    inline virtual WindowFunctionColumn* clone() const
-    {
-        return new WindowFunctionColumn (*this);
-    }
+  std::vector<SRCP> getColumnList() const;
 
-    std::vector<SRCP> getColumnList() const;
+  /** output the function for debug purpose */
+  const std::string toString() const;
 
-    /** output the function for debug purpose */
-    const std::string toString() const;
+  /**
+   * The serialization interface
+   */
+  virtual void serialize(messageqcpp::ByteStream&) const;
+  virtual void unserialize(messageqcpp::ByteStream&);
 
-    /**
-     * The serialization interface
-     */
-    virtual void serialize(messageqcpp::ByteStream&) const;
-    virtual void unserialize(messageqcpp::ByteStream&);
+  // util function for connector to use.
+  void addToPartition(std::vector<SRCP>& groupByList);
 
-    // util function for connector to use.
-    void addToPartition(std::vector<SRCP>& groupByList);
+  using ReturnedColumn::hasAggregate;
+  virtual bool hasAggregate()
+  {
+    return false;
+  }
+  virtual bool hasWindowFunc();
+  void adjustResultType();
 
-    using ReturnedColumn::hasAggregate;
-    virtual bool hasAggregate()
-    {
-        return false;
-    }
-    virtual bool hasWindowFunc();
-    void adjustResultType();
+  // UDAnF support
+  mcsv1sdk::mcsv1Context& getUDAFContext()
+  {
+    return udafContext;
+  }
+  const mcsv1sdk::mcsv1Context& getUDAFContext() const
+  {
+    return udafContext;
+  }
 
-    // UDAnF support
-    mcsv1sdk::mcsv1Context& getUDAFContext()
-    {
-        return udafContext;
-    }
-    const mcsv1sdk::mcsv1Context& getUDAFContext() const
-    {
-        return udafContext;
-    }
+  inline const std::string timeZone() const
+  {
+    return fTimeZone;
+  }
 
-    inline const std::string timeZone () const
-    {
-        return fTimeZone;
-    }
+  inline void timeZone(const std::string& timeZone)
+  {
+    fTimeZone = timeZone;
+  }
 
-    inline void timeZone (const std::string& timeZone)
-    {
-        fTimeZone = timeZone;
-    }
+ private:
+  /**
+   * Fields
+   */
+  std::string fFunctionName;         /// function name
+  std::vector<SRCP> fFunctionParms;  /// function arguments
+  std::vector<SRCP> fPartitions;     /// partition by clause
+  WF_OrderBy fOrderBy;               /// order by clause
 
-private:
-    /**
-     * Fields
-     */
-    std::string fFunctionName;					/// function name
-    std::vector<SRCP> fFunctionParms;		/// function arguments
-    std::vector<SRCP> fPartitions;			/// partition by clause
-    WF_OrderBy fOrderBy;								/// order by clause
+  // not support for window functions for now.
+  virtual bool operator==(const TreeNode* t) const
+  {
+    return false;
+  }
+  bool operator==(const WindowFunctionColumn& t) const;
+  virtual bool operator!=(const TreeNode* t) const
+  {
+    return false;
+  }
+  bool operator!=(const WindowFunctionColumn& t) const;
 
-    // not support for window functions for now.
-    virtual bool operator==(const TreeNode* t) const
-    {
-        return false;
-    }
-    bool operator==(const WindowFunctionColumn& t) const;
-    virtual bool operator!=(const TreeNode* t) const
-    {
-        return false;
-    }
-    bool operator!=(const WindowFunctionColumn& t) const;
+  // UDAnF support
+  mcsv1sdk::mcsv1Context udafContext;
 
-    // UDAnF support
-    mcsv1sdk::mcsv1Context udafContext;
+  std::string fTimeZone;
+  /***********************************************************
+   *                 F&E framework                           *
+   ***********************************************************/
+ public:
+  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
+  {
+    evaluate(row, isNull);
+    return TreeNode::getStrVal(fTimeZone);
+  }
 
-    std::string fTimeZone;
-    /***********************************************************
-     *                 F&E framework                           *
-     ***********************************************************/
-public:
-    virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
-    {
-        evaluate(row, isNull);
-        return TreeNode::getStrVal(fTimeZone);
-    }
+  virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
+  {
+    evaluate(row, isNull);
+    return TreeNode::getIntVal();
+  }
 
-    virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
-    {
-        evaluate(row, isNull);
-        return TreeNode::getIntVal();
-    }
+  virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull)
+  {
+    evaluate(row, isNull);
+    return TreeNode::getUintVal();
+  }
 
-    virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull)
-    {
-        evaluate(row, isNull);
-        return TreeNode::getUintVal();
-    }
+  virtual float getFloatVal(rowgroup::Row& row, bool& isNull)
+  {
+    evaluate(row, isNull);
+    return TreeNode::getFloatVal();
+  }
 
-    virtual float getFloatVal(rowgroup::Row& row, bool& isNull)
-    {
-        evaluate(row, isNull);
-        return TreeNode::getFloatVal();
-    }
+  virtual double getDoubleVal(rowgroup::Row& row, bool& isNull)
+  {
+    evaluate(row, isNull);
+    return TreeNode::getDoubleVal();
+  }
 
-    virtual double getDoubleVal(rowgroup::Row& row, bool& isNull)
-    {
-        evaluate(row, isNull);
-        return TreeNode::getDoubleVal();
-    }
+  virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull)
+  {
+    evaluate(row, isNull);
+    return TreeNode::getLongDoubleVal();
+  }
 
-    virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull)
-    {
-        evaluate(row, isNull);
-        return TreeNode::getLongDoubleVal();
-    }
+  virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull)
+  {
+    evaluate(row, isNull);
+    return TreeNode::getDecimalVal();
+  }
+  virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull)
+  {
+    evaluate(row, isNull);
+    return TreeNode::getDateIntVal();
+  }
+  virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull)
+  {
+    evaluate(row, isNull);
+    return TreeNode::getDatetimeIntVal();
+  }
+  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull)
+  {
+    evaluate(row, isNull);
+    return TreeNode::getTimestampIntVal();
+  }
+  virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
+  {
+    evaluate(row, isNull);
+    return TreeNode::getTimeIntVal();
+  }
 
-    virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull)
-    {
-        evaluate(row, isNull);
-        return TreeNode::getDecimalVal();
-    }
-    virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull)
-    {
-        evaluate(row, isNull);
-        return TreeNode::getDateIntVal();
-    }
-    virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull)
-    {
-        evaluate(row, isNull);
-        return TreeNode::getDatetimeIntVal();
-    }
-    virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull)
-    {
-        evaluate(row, isNull);
-        return TreeNode::getTimestampIntVal();
-    }
-    virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
-    {
-        evaluate(row, isNull);
-        return TreeNode::getTimeIntVal();
-    }
-private:
-    void evaluate(rowgroup::Row& row, bool& isNull);
+ private:
+  void evaluate(rowgroup::Row& row, bool& isNull);
 };
 
 /**
-* ostream operator
-*/
+ * ostream operator
+ */
 std::ostream& operator<<(std::ostream& output, const WindowFunctionColumn& rhs);
 
 /**
@@ -261,5 +262,5 @@ std::ostream& operator<<(std::ostream& output, const WindowFunctionColumn& rhs);
  */
 void getWindowFunctionCols(ParseTree* n, void* obj);
 
-}
-#endif //WINDOW_FUNCTION_COLUMN_H
+}  // namespace execplan
+#endif  // WINDOW_FUNCTION_COLUMN_H

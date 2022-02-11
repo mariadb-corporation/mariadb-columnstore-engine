@@ -22,9 +22,9 @@ using namespace std;
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include<sstream>
-#include<exception>
-#include<iostream>
+#include <sstream>
+#include <exception>
+#include <iostream>
 #include <unistd.h>
 
 #include "messagequeue.h"
@@ -46,27 +46,26 @@ using namespace execplan;
 
 class TPCH_EXECPLAN : public CppUnit::TestFixture
 {
+  CPPUNIT_TEST_SUITE(TPCH_EXECPLAN);
 
-    CPPUNIT_TEST_SUITE( TPCH_EXECPLAN );
+  CPPUNIT_TEST(Q1);
 
-    CPPUNIT_TEST( Q1 );
+  CPPUNIT_TEST_SUITE_END();
 
-    CPPUNIT_TEST_SUITE_END();
+ private:
+ public:
+  void setUp()
+  {
+  }
 
-private:
-public:
+  void tearDown()
+  {
+  }
 
-    void setUp()
-    {
-    }
-
-    void tearDown()
-    {
-    }
-
-    void Q1()
-    {
-        string sql = "\
+  void Q1()
+  {
+    string sql =
+        "\
         select\
         	sum(l_extendedprice * l_discount) as revenue\
         from\
@@ -77,72 +76,63 @@ public:
 	        and l_discount between :2 - 0.01 and :2 + 0.01\
 	        and l_quantity < :3;";
 
+    CalpontSelectExecutionPlan csep;
 
-        CalpontSelectExecutionPlan csep;
+    // Returned columns
+    CalpontSelectExecutionPlan::ReturnedColumnList returnedColumnList;
 
-        // Returned columns
-        CalpontSelectExecutionPlan::ReturnedColumnList returnedColumnList;
+    ArithmeticColumn* c1 =
+        new ArithmeticColumn("sum(tpch.lineitem.l_extendedprice * tpch.lineitem.l_discount)");
+    c1->alias("revenue");
+    returnedColumnList.push_back(c1);
 
-        ArithmeticColumn* c1 = new ArithmeticColumn("sum(tpch.lineitem.l_extendedprice * tpch.lineitem.l_discount)");
-        c1->alias("revenue");
-        returnedColumnList.push_back(c1);
+    csep.returnedCols(returnedColumnList);
 
-        csep.returnedCols(returnedColumnList);
+    // Filters
+    CalpontSelectExecutionPlan::FilterTokenList filterTokenList;
+    SimpleFilter* f1 = new SimpleFilter(new Operator(">="), new SimpleColumn("tpch.lineitem.l_shipdate"),
+                                        new ArithmeticColumn("date (':1')"));
+    filterTokenList.push_back(f1);
+    filterTokenList.push_back(new Operator("and"));
 
-        // Filters
-        CalpontSelectExecutionPlan::FilterTokenList filterTokenList;
-        SimpleFilter* f1 = new SimpleFilter (new Operator(">="),
-                                             new SimpleColumn("tpch.lineitem.l_shipdate"),
-                                             new ArithmeticColumn("date (':1')"));
-        filterTokenList.push_back(f1);
-        filterTokenList.push_back( new Operator ("and"));
+    SimpleFilter* f2 = new SimpleFilter(new Operator("<"), new SimpleColumn("tpch.lineitem.l_shipdate"),
+                                        new ArithmeticColumn("date (':1') + interval('1', year)"));
+    filterTokenList.push_back(f2);
+    filterTokenList.push_back(new Operator("and"));
 
-        SimpleFilter* f2 = new SimpleFilter (new Operator("<"),
-                                             new SimpleColumn("tpch.lineitem.l_shipdate"),
-                                             new ArithmeticColumn("date (':1') + interval('1', year)"));
-        filterTokenList.push_back(f2);
-        filterTokenList.push_back( new Operator ("and"));
+    SimpleFilter* f3 = new SimpleFilter(new Operator(">="), new SimpleColumn("tpch.lineitem.l_discount"),
+                                        new ArithmeticColumn("':2' - 0.01"));
+    filterTokenList.push_back(f3);
+    filterTokenList.push_back(new Operator("and"));
 
-        SimpleFilter* f3 = new SimpleFilter (new Operator(">="),
-                                             new SimpleColumn("tpch.lineitem.l_discount"),
-                                             new ArithmeticColumn("':2' - 0.01"));
-        filterTokenList.push_back(f3);
-        filterTokenList.push_back( new Operator ("and"));
+    SimpleFilter* f4 = new SimpleFilter(new Operator("<="), new SimpleColumn("tpch.lineitem.l_discount"),
+                                        new ArithmeticColumn("':2' + 0.01"));
+    filterTokenList.push_back(f4);
+    filterTokenList.push_back(new Operator("and"));
 
-        SimpleFilter* f4 = new SimpleFilter (new Operator("<="),
-                                             new SimpleColumn("tpch.lineitem.l_discount"),
-                                             new ArithmeticColumn("':2' + 0.01"));
-        filterTokenList.push_back(f4);
-        filterTokenList.push_back( new Operator ("and"));
+    SimpleFilter* f5 = new SimpleFilter(new Operator("<"), new SimpleColumn("tpch.lineitem.l_quantity"),
+                                        new ConstantColumn(":3"));
+    filterTokenList.push_back(f5);
 
-        SimpleFilter* f5 = new SimpleFilter (new Operator("<"),
-                                             new SimpleColumn("tpch.lineitem.l_quantity"),
-                                             new ConstantColumn(":3"));
-        filterTokenList.push_back(f5);
+    csep.filterTokenList(filterTokenList);
 
-        csep.filterTokenList(filterTokenList);
+    ParseTree* pt = const_cast<ParseTree*>(csep.filters());
+    pt->drawTree("q6.dot");
 
-        ParseTree* pt = const_cast<ParseTree*>(csep.filters());
-        pt->drawTree ("q6.dot");
-
-        cout << csep;
-    }
-
-
+    cout << csep;
+  }
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION( TPCH_EXECPLAN );
+CPPUNIT_TEST_SUITE_REGISTRATION(TPCH_EXECPLAN);
 
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
-int main( int argc, char** argv)
+int main(int argc, char** argv)
 {
-    CppUnit::TextUi::TestRunner runner;
-    CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
-    runner.addTest( registry.makeTest() );
-    bool wasSuccessful = runner.run( "", false );
-    return (wasSuccessful ? 0 : 1);
+  CppUnit::TextUi::TestRunner runner;
+  CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
+  runner.addTest(registry.makeTest());
+  bool wasSuccessful = runner.run("", false);
+  return (wasSuccessful ? 0 : 1);
 }
-
-

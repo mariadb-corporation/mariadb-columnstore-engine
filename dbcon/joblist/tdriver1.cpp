@@ -29,44 +29,43 @@ using namespace execplan;
 
 int main(int argc, char** argv)
 {
-    DistributedEngineComm* dec;
-    boost::shared_ptr<CalpontSystemCatalog> cat;
+  DistributedEngineComm* dec;
+  boost::shared_ptr<CalpontSystemCatalog> cat;
 
-    ResourceManager rm;
-    dec = DistributedEngineComm::instance(rm);
-    cat = CalpontSystemCatalog::makeCalpontSystemCatalog();
+  ResourceManager rm;
+  dec = DistributedEngineComm::instance(rm);
+  cat = CalpontSystemCatalog::makeCalpontSystemCatalog();
 
-    JobStepAssociation inJs;
-    JobStepAssociation outJs;
+  JobStepAssociation inJs;
+  JobStepAssociation outJs;
 
-    AnyDataListSPtr spdl1(new AnyDataList());
-    FifoDataList* dl1 = new FifoDataList(1, 128);
-    spdl1->fifoDL(dl1);
-    outJs.outAdd(spdl1);
+  AnyDataListSPtr spdl1(new AnyDataList());
+  FifoDataList* dl1 = new FifoDataList(1, 128);
+  spdl1->fifoDL(dl1);
+  outJs.outAdd(spdl1);
 
-    pColScanStep step0(inJs, outJs, dec, cat, 1003, 1000, 12345, 999, 7, 0, 0, rm);
-    int8_t cop;
-    int64_t filterValue;
-    cop = COMPARE_GE;
-    filterValue = 3010;
-    step0.addFilter(cop, filterValue);
-    cop = COMPARE_LE;
-    filterValue = 3318;
-    step0.addFilter(cop, filterValue);
-    step0.setBOP(BOP_AND);
-    inJs = outJs;
+  pColScanStep step0(inJs, outJs, dec, cat, 1003, 1000, 12345, 999, 7, 0, 0, rm);
+  int8_t cop;
+  int64_t filterValue;
+  cop = COMPARE_GE;
+  filterValue = 3010;
+  step0.addFilter(cop, filterValue);
+  cop = COMPARE_LE;
+  filterValue = 3318;
+  step0.addFilter(cop, filterValue);
+  step0.setBOP(BOP_AND);
+  inJs = outJs;
 
-    step0.run();
+  step0.run();
 
-    step0.join();
+  step0.join();
 
-    DeliveryStep step1(inJs, outJs, make_table("CALPONTSYS", "SYSTABLE"), cat, 1000, 0, 1, 0);
-    inJs = outJs;
+  DeliveryStep step1(inJs, outJs, make_table("CALPONTSYS", "SYSTABLE"), cat, 1000, 0, 1, 0);
+  inJs = outJs;
 
-    step1.run();
+  step1.run();
 
-    step1.join();
+  step1.join();
 
-    return 0;
+  return 0;
 }
-

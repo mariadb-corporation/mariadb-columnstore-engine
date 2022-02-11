@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id$
-*
-*******************************************************************************/
+ * $Id$
+ *
+ *******************************************************************************/
 
 /*
  * Observer.cpp
@@ -31,77 +31,71 @@
 
 #include "we_observer.h"
 
-
 namespace WriteEngine
 {
-
 //-----------------------------------------------------------------------------
 
 //	ctor
 Observer::Observer()
 {
-
 }
 
 //-----------------------------------------------------------------------------
-//dtor
+// dtor
 Observer::~Observer()
 {
-    //
+  //
 }
 
 //-----------------------------------------------------------------------------
-//ctor
+// ctor
 Subject::Subject()
 {
-
 }
 //-----------------------------------------------------------------------------
-//dtor
+// dtor
 Subject::~Subject()
 {
-
 }
 
 //-----------------------------------------------------------------------------
 
 void Subject::attach(Observer* Obs)
 {
-    boost::mutex::scoped_lock aLstLock;
-    fObs.push_back(Obs);
+  boost::mutex::scoped_lock aLstLock;
+  fObs.push_back(Obs);
 }
 
 //-----------------------------------------------------------------------------
 
 void Subject::detach(Observer* Obs)
 {
-    boost::mutex::scoped_lock aLstLock;
-    Observers::iterator aIt = fObs.begin();
+  boost::mutex::scoped_lock aLstLock;
+  Observers::iterator aIt = fObs.begin();
 
-    while (aIt != fObs.end())
+  while (aIt != fObs.end())
+  {
+    if ((*aIt) == Obs)
     {
-        if ((*aIt) == Obs)
-        {
-            fObs.erase(aIt);
-            break;
-        }
+      fObs.erase(aIt);
+      break;
     }
+  }
 }
 
 //-----------------------------------------------------------------------------
 
 void Subject::notify()
 {
-    boost::mutex::scoped_lock aLstLock;
-    Observers::iterator aIt = fObs.begin();
+  boost::mutex::scoped_lock aLstLock;
+  Observers::iterator aIt = fObs.begin();
 
-    while (aIt != fObs.end())
-    {
-        (*aIt)->update(this);
-    }
+  while (aIt != fObs.end())
+  {
+    (*aIt)->update(this);
+  }
 }
 
 //-----------------------------------------------------------------------------
 
-}// namespace WriteEngine
-
+}  // namespace WriteEngine

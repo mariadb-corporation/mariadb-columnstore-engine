@@ -15,12 +15,12 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#include <gtest/gtest.h> // googletest header file
+#include <gtest/gtest.h>  // googletest header file
 #include "mcs_basic_types.h"
 
-//using CSCDataType = execplan::CalpontSystemCatalog::ColDataType;
+// using CSCDataType = execplan::CalpontSystemCatalog::ColDataType;
 
 TEST(SimpleCheck, check1)
 {
-    EXPECT_EQ(true, true);
+  EXPECT_EQ(true, true);
 }

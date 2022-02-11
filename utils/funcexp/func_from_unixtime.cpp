@@ -17,10 +17,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_from_unixtime.cpp 3923 2013-06-19 21:43:06Z bwilkinson $
-*
-*
-****************************************************************************/
+ * $Id: func_from_unixtime.cpp 3923 2013-06-19 21:43:06Z bwilkinson $
+ *
+ *
+ ****************************************************************************/
 
 #include <unistd.h>
 #include <cstdlib>
@@ -36,202 +36,180 @@ using namespace execplan;
 #include "dataconvert.h"
 using namespace dataconvert;
 
-
 namespace
 {
 using namespace funcexp;
 
-DateTime getDateTime(rowgroup::Row& row,
-                     FunctionParm& parm,
-                     bool& isNull)
+DateTime getDateTime(rowgroup::Row& row, FunctionParm& parm, bool& isNull)
 {
-    int64_t val = 0;
-    uint32_t msec = 0;
+  int64_t val = 0;
+  uint32_t msec = 0;
 
-    switch (parm[0]->data()->resultType().colDataType)
+  switch (parm[0]->data()->resultType().colDataType)
+  {
+    case execplan::CalpontSystemCatalog::FLOAT:
+    case execplan::CalpontSystemCatalog::DOUBLE:
     {
-        case execplan::CalpontSystemCatalog::FLOAT:
-        case execplan::CalpontSystemCatalog::DOUBLE:
-        {
-            double value = parm[0]->data()->getDoubleVal(row, isNull);
-            double fracpart, intpart;
-            fracpart = modf(value, &intpart);
-            val = (int64_t)intpart;
-            msec = (uint32_t)(fracpart * IDB_pow[parm[0]->data()->resultType().scale]);
-            break;
-        }
-        case execplan::CalpontSystemCatalog::DECIMAL:
-        case execplan::CalpontSystemCatalog::UDECIMAL:
-        {
-            IDB_Decimal dec = parm[0]->data()->getDecimalVal(row, isNull);
+      double value = parm[0]->data()->getDoubleVal(row, isNull);
+      double fracpart, intpart;
+      fracpart = modf(value, &intpart);
+      val = (int64_t)intpart;
+      msec = (uint32_t)(fracpart * IDB_pow[parm[0]->data()->resultType().scale]);
+      break;
+    }
+    case execplan::CalpontSystemCatalog::DECIMAL:
+    case execplan::CalpontSystemCatalog::UDECIMAL:
+    {
+      IDB_Decimal dec = parm[0]->data()->getDecimalVal(row, isNull);
 
-            if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
-            {
-                auto integralAndFractional = dec.getIntegralAndFractional();
-                val = static_cast<int64_t>(integralAndFractional.first);
-                msec = static_cast<uint32_t>(integralAndFractional.second);
-            }
-            else
-            {
-                val = dec.value / IDB_pow[dec.scale];
-                msec = dec.value % IDB_pow[dec.scale];
-            }
-            break;
-        }
-
-        default:
-            val = parm[0]->data()->getDatetimeIntVal(row, isNull);
+      if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+      {
+        auto integralAndFractional = dec.getIntegralAndFractional();
+        val = static_cast<int64_t>(integralAndFractional.first);
+        msec = static_cast<uint32_t>(integralAndFractional.second);
+      }
+      else
+      {
+        val = dec.value / IDB_pow[dec.scale];
+        msec = dec.value % IDB_pow[dec.scale];
+      }
+      break;
     }
 
-    if (val < 0 || val > helpers::TIMESTAMP_MAX_VALUE)
-        return 0;
+    default: val = parm[0]->data()->getDatetimeIntVal(row, isNull);
+  }
 
-    DateTime dt;
+  if (val < 0 || val > helpers::TIMESTAMP_MAX_VALUE)
+    return 0;
 
-    struct tm tmp_tm;
-    time_t tmp_t = (time_t)val;
-    localtime_r(&tmp_t, &tmp_tm);
+  DateTime dt;
 
-    //to->neg=0;
-    dt.year = (int64_t) ((tmp_tm.tm_year + 1900) % 10000);
-    dt.month = (int64_t) tmp_tm.tm_mon + 1;
-    dt.day = (int64_t) tmp_tm.tm_mday;
-    dt.hour = (int64_t) tmp_tm.tm_hour;
-    dt.minute = (int64_t) tmp_tm.tm_min;
-    dt.second = (int64_t) tmp_tm.tm_sec;
-    dt.msecond = msec;
-    return dt;
+  struct tm tmp_tm;
+  time_t tmp_t = (time_t)val;
+  localtime_r(&tmp_t, &tmp_tm);
+
+  // to->neg=0;
+  dt.year = (int64_t)((tmp_tm.tm_year + 1900) % 10000);
+  dt.month = (int64_t)tmp_tm.tm_mon + 1;
+  dt.day = (int64_t)tmp_tm.tm_mday;
+  dt.hour = (int64_t)tmp_tm.tm_hour;
+  dt.minute = (int64_t)tmp_tm.tm_min;
+  dt.second = (int64_t)tmp_tm.tm_sec;
+  dt.msecond = msec;
+  return dt;
 }
-}
+}  // namespace
 
 namespace funcexp
 {
-
-CalpontSystemCatalog::ColType Func_from_unixtime::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
+CalpontSystemCatalog::ColType Func_from_unixtime::operationType(FunctionParm& fp,
+                                                                CalpontSystemCatalog::ColType& resultType)
 {
-    CalpontSystemCatalog::ColType ct;
-    ct.colDataType = CalpontSystemCatalog::VARCHAR;
-    ct.colWidth = 255;
-    return ct;
+  CalpontSystemCatalog::ColType ct;
+  ct.colDataType = CalpontSystemCatalog::VARCHAR;
+  ct.colWidth = 255;
+  return ct;
 }
 
-string Func_from_unixtime::getStrVal(rowgroup::Row& row,
-                                     FunctionParm& parm,
-                                     bool& isNull,
+string Func_from_unixtime::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                                      CalpontSystemCatalog::ColType&)
 {
-    DateTime dt = getDateTime(row, parm, isNull);
+  DateTime dt = getDateTime(row, parm, isNull);
 
-    if (*reinterpret_cast<int64_t*>(&dt) == 0)
-    {
-        isNull = true;
-        return "";
-    }
+  if (*reinterpret_cast<int64_t*>(&dt) == 0)
+  {
+    isNull = true;
+    return "";
+  }
 
-    if (parm.size() == 2)
-    {
-        const string& format = parm[1]->data()->getStrVal(row, isNull);
-        return helpers::IDB_date_format(dt, format);
-    }
+  if (parm.size() == 2)
+  {
+    const string& format = parm[1]->data()->getStrVal(row, isNull);
+    return helpers::IDB_date_format(dt, format);
+  }
 
-    char buf[256] = {0};
-    DataConvert::datetimeToString(*(reinterpret_cast<int64_t*>(&dt)), buf, 255);
-    return string(buf, 255);
+  char buf[256] = {0};
+  DataConvert::datetimeToString(*(reinterpret_cast<int64_t*>(&dt)), buf, 255);
+  return string(buf, 255);
 }
 
-int32_t Func_from_unixtime::getDateIntVal(rowgroup::Row& row,
-        FunctionParm& parm,
-        bool& isNull,
-        CalpontSystemCatalog::ColType& ct)
+int32_t Func_from_unixtime::getDateIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
+                                          CalpontSystemCatalog::ColType& ct)
 {
-    return (((getDatetimeIntVal(row, parm, isNull, ct) >> 32) & 0xFFFFFFC0) | 0x3E);
+  return (((getDatetimeIntVal(row, parm, isNull, ct) >> 32) & 0xFFFFFFC0) | 0x3E);
 }
 
-int64_t Func_from_unixtime::getDatetimeIntVal(rowgroup::Row& row,
-        FunctionParm& parm,
-        bool& isNull,
-        CalpontSystemCatalog::ColType& ct)
+int64_t Func_from_unixtime::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
+                                              CalpontSystemCatalog::ColType& ct)
 {
-    DateTime dt = getDateTime(row, parm, isNull);
+  DateTime dt = getDateTime(row, parm, isNull);
 
-    if (*reinterpret_cast<int64_t*>(&dt) == 0)
-    {
-        isNull = true;
-        return 0;
-    }
+  if (*reinterpret_cast<int64_t*>(&dt) == 0)
+  {
+    isNull = true;
+    return 0;
+  }
 
-    return *reinterpret_cast<int64_t*>(&dt);
+  return *reinterpret_cast<int64_t*>(&dt);
 }
 
-int64_t Func_from_unixtime::getTimeIntVal(rowgroup::Row& row,
-        FunctionParm& parm,
-        bool& isNull,
-        CalpontSystemCatalog::ColType& ct)
+int64_t Func_from_unixtime::getTimeIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
+                                          CalpontSystemCatalog::ColType& ct)
 {
-    DateTime dt = getDateTime(row, parm, isNull);
+  DateTime dt = getDateTime(row, parm, isNull);
 
-    if (*reinterpret_cast<int64_t*>(&dt) == 0)
-    {
-        isNull = true;
-        return 0;
-    }
+  if (*reinterpret_cast<int64_t*>(&dt) == 0)
+  {
+    isNull = true;
+    return 0;
+  }
 
-    return *reinterpret_cast<int64_t*>(&dt);
+  return *reinterpret_cast<int64_t*>(&dt);
 }
 
-int64_t Func_from_unixtime::getIntVal(rowgroup::Row& row,
-                                      FunctionParm& parm,
-                                      bool& isNull,
+int64_t Func_from_unixtime::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                                       CalpontSystemCatalog::ColType& ct)
 {
+  DateTime dt = getDateTime(row, parm, isNull);
+
+  if (*reinterpret_cast<int64_t*>(&dt) == 0)
+  {
+    isNull = true;
+    return 0;
+  }
+
+  char buf[32];  // actual string guaranteed to be 22
+  snprintf(buf, 32, "%04d%02d%02d%02d%02d%02d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
+  return atoll(buf);
+}
+
+double Func_from_unixtime::getDoubleVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
+                                        CalpontSystemCatalog::ColType& ct)
+{
+  if (parm.size() == 1)
+  {
     DateTime dt = getDateTime(row, parm, isNull);
 
     if (*reinterpret_cast<int64_t*>(&dt) == 0)
     {
-        isNull = true;
-        return 0;
+      isNull = true;
+      return 0;
     }
 
     char buf[32];  // actual string guaranteed to be 22
-    snprintf( buf, 32, "%04d%02d%02d%02d%02d%02d",
-              dt.year, dt.month, dt.day, dt.hour,
-              dt.minute, dt.second );
-    return atoll(buf);
+    snprintf(buf, 32, "%04d%02d%02d%02d%02d%02d.%06d", dt.year, dt.month, dt.day, dt.hour, dt.minute,
+             dt.second, dt.msecond);
+    return atof(buf);
+  }
+
+  return (double)atoi(getStrVal(row, parm, isNull, ct).c_str());
 }
 
-double Func_from_unixtime::getDoubleVal(rowgroup::Row& row,
-                                        FunctionParm& parm,
-                                        bool& isNull,
-                                        CalpontSystemCatalog::ColType& ct)
+long double Func_from_unixtime::getLongDoubleVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
+                                                 CalpontSystemCatalog::ColType& ct)
 {
-    if (parm.size() == 1)
-    {
-        DateTime dt = getDateTime(row, parm, isNull);
-
-        if (*reinterpret_cast<int64_t*>(&dt) == 0)
-        {
-            isNull = true;
-            return 0;
-        }
-
-        char buf[32];  // actual string guaranteed to be 22
-        snprintf( buf, 32, "%04d%02d%02d%02d%02d%02d.%06d",
-                  dt.year, dt.month, dt.day, dt.hour,
-                  dt.minute, dt.second, dt.msecond );
-        return atof(buf);
-    }
-
-    return (double) atoi(getStrVal(row, parm, isNull, ct).c_str());
+  return (long double)getDoubleVal(row, parm, isNull, ct);
 }
 
-long double Func_from_unixtime::getLongDoubleVal(rowgroup::Row& row,
-                                        FunctionParm& parm,
-                                        bool& isNull,
-                                        CalpontSystemCatalog::ColType& ct)
-{
-    return (long double) getDoubleVal(row, parm, isNull, ct);
-}
-
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:

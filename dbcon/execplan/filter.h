@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: filter.h 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: filter.h 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 /** @file */
 
 #ifndef EXECPLAN_FILTER_H
@@ -39,7 +39,6 @@ class ByteStream;
  */
 namespace execplan
 {
-
 class Operator;
 
 /** @brief A class to represent a generic filter predicate
@@ -52,118 +51,115 @@ class Operator;
  */
 class Filter : public TreeNode
 {
-//friend std::ostream &operator<< (std::ostream &, Filter &);
+  // friend std::ostream &operator<< (std::ostream &, Filter &);
 
-    /**
-     * Public stuff
-     */
-public:
+  /**
+   * Public stuff
+   */
+ public:
+  /**
+   * Constructors
+   */
+  Filter();
+  Filter(const std::string& sql);
+  // not needed yet
+  // Filter(const Filter& rhs);
 
-    /**
-     * Constructors
-     */
-    Filter();
-    Filter(const std::string& sql);
-    // not needed yet
-    //Filter(const Filter& rhs);
+  /**
+   * Destructors
+   */
+  virtual ~Filter();
+  /**
+   * Accessor Methods
+   */
 
-    /**
-     * Destructors
-     */
-    virtual ~Filter();
-    /**
-     * Accessor Methods
-     */
+  /**
+   * Operations
+   */
+  virtual const std::string toString() const;
 
-    /**
-     * Operations
-     */
-    virtual const std::string toString() const;
+  virtual const std::string data() const
+  {
+    return fData;
+  }
+  virtual void data(const std::string data)
+  {
+    fData = data;
+  }
 
-    virtual const std::string data() const
-    {
-        return fData;
-    }
-    virtual void data(const std::string data)
-    {
-        fData = data;
-    }
+  /** return a copy of this pointer
+   *
+   * deep copy of this pointer and return the copy
+   */
+  inline virtual Filter* clone() const
+  {
+    return new Filter(*this);
+  }
 
-    /** return a copy of this pointer
-     *
-     * deep copy of this pointer and return the copy
-     */
-    inline virtual Filter* clone() const
-    {
-        return new Filter (*this);
-    }
+  /**
+   * The serialization interface
+   */
+  virtual void serialize(messageqcpp::ByteStream&) const;
+  virtual void unserialize(messageqcpp::ByteStream&);
 
-    /**
-     * The serialization interface
-     */
-    virtual void serialize(messageqcpp::ByteStream&) const;
-    virtual void unserialize(messageqcpp::ByteStream&);
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
+   */
+  virtual bool operator==(const TreeNode* t) const;
 
-    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-      *
-      * Do a deep, strict (as opposed to semantic) equivalence test.
-      * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
-      */
-    virtual bool operator==(const TreeNode* t) const;
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
+   */
+  bool operator==(const Filter& t) const;
 
-    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-      *
-      * Do a deep, strict (as opposed to semantic) equivalence test.
-      * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
-      */
-    bool operator==(const Filter& t) const;
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
+   */
+  virtual bool operator!=(const TreeNode* t) const;
 
-    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-      *
-      * Do a deep, strict (as opposed to semantic) equivalence test.
-      * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
-      */
-    virtual bool operator!=(const TreeNode* t) const;
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
+   */
+  bool operator!=(const Filter& t) const;
 
-    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-      *
-      * Do a deep, strict (as opposed to semantic) equivalence test.
-      * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
-      */
-    bool operator!=(const Filter& t) const;
+  /** @brief test if this filter can be combined with the argument filter
+   *  This is for operation combine optimization
+   *  @param f the filter that this fiter tries to combine with
+   *  @param op the operator that connects the two filters. if one or both of the
+   *  two filters is constantFilter, need to make sure operator is consistant.
+   *  @return a filter(constantfilter) if successfully combined. otherwise
+   *     	 return NULL
+   * For Oracle front end. Deprecated now.
+   */
+  // virtual Filter* combinable(Filter* f, Operator* op);
+  virtual uint64_t cardinality() const
+  {
+    return fCardinality;
+  }
+  virtual void cardinality(const uint64_t cardinality)
+  {
+    fCardinality = cardinality;
+  }
 
-    /** @brief test if this filter can be combined with the argument filter
-     *  This is for operation combine optimization
-     *  @param f the filter that this fiter tries to combine with
-     *  @param op the operator that connects the two filters. if one or both of the
-     *  two filters is constantFilter, need to make sure operator is consistant.
-     *  @return a filter(constantfilter) if successfully combined. otherwise
-     *     	 return NULL
-     * For Oracle front end. Deprecated now.
-     */
-    //virtual Filter* combinable(Filter* f, Operator* op);
-    virtual uint64_t cardinality () const
-    {
-        return fCardinality;
-    }
-    virtual void cardinality (const uint64_t cardinality)
-    {
-        fCardinality = cardinality;
-    }
+ protected:
+  uint64_t fCardinality;
 
-protected:
-    uint64_t fCardinality;
+ private:
+  // default okay
+  // Filter& operator=(const Filter& rhs);
 
-private:
-    //default okay
-    //Filter& operator=(const Filter& rhs);
-
-    std::string fData;
-
+  std::string fData;
 };
 
 std::ostream& operator<<(std::ostream& os, const Filter& rhs);
 
-}
-#endif //EXECPLAN_FILTER_H
-
+}  // namespace execplan
+#endif  // EXECPLAN_FILTER_H

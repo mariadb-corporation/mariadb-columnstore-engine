@@ -15,8 +15,6 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-
-
 #ifndef APPENDTASK_H_
 #define APPENDTASK_H_
 
@@ -24,18 +22,17 @@
 
 namespace storagemanager
 {
-
 class AppendTask : public PosixTask
 {
-    public:
-        AppendTask(int sock, uint length);
-        virtual ~AppendTask();
-        
-        bool run();
-    
-    private:
-        AppendTask();
+ public:
+  AppendTask(int sock, uint length);
+  virtual ~AppendTask();
+
+  bool run();
+
+ private:
+  AppendTask();
 };
 
-}
+}  // namespace storagemanager
 #endif

@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: vendorexecutionplan.h 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: vendorexecutionplan.h 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 /** @file */
 
 #ifndef EXECPLAN_VENDOREXECUTIONPLAN_H
@@ -35,14 +35,10 @@ namespace execplan
  */
 class VendorExecutionPlan
 {
-
-public:
-
-private:
-
+ public:
+ private:
 };
 
-}
+}  // namespace execplan
 
-#endif //VENDOREXECUTIONPLAN_H
-
+#endif  // VENDOREXECUTIONPLAN_H

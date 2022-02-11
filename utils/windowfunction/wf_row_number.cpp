@@ -17,7 +17,6 @@
 
 //  $Id: wf_row_number.cpp 3932 2013-06-25 16:08:10Z xlou $
 
-
 //#define NDEBUG
 #include <cassert>
 #include <cmath>
@@ -48,50 +47,43 @@ using namespace joblist;
 
 #include "wf_row_number.h"
 
-
 namespace windowfunction
 {
-
-
-boost::shared_ptr<WindowFunctionType> WF_row_number::makeFunction(int id, const string& name, int ct, WindowFunctionColumn* wc)
+boost::shared_ptr<WindowFunctionType> WF_row_number::makeFunction(int id, const string& name, int ct,
+                                                                  WindowFunctionColumn* wc)
 {
-    boost::shared_ptr<WindowFunctionType> func(new WF_row_number(id, name));
-    return func;
+  boost::shared_ptr<WindowFunctionType> func(new WF_row_number(id, name));
+  return func;
 }
-
 
 WindowFunctionType* WF_row_number::clone() const
 {
-    return new WF_row_number(*this);
+  return new WF_row_number(*this);
 }
-
 
 void WF_row_number::resetData()
 {
-    fRowNumber = 0;
+  fRowNumber = 0;
 
-    WindowFunctionType::resetData();
+  WindowFunctionType::resetData();
 }
-
 
 void WF_row_number::operator()(int64_t b, int64_t e, int64_t c)
 {
-    b = fPartition.first;
-    e = fPartition.second;
+  b = fPartition.first;
+  e = fPartition.second;
 
-    for (c = b; c <= e; c++)
-    {
-        if (c % 1000 == 0 && fStep->cancelled())
-            break;
+  for (c = b; c <= e; c++)
+  {
+    if (c % 1000 == 0 && fStep->cancelled())
+      break;
 
-        fRow.setData(getPointer(fRowData->at(c)));
-        fRowNumber++;
+    fRow.setData(getPointer(fRowData->at(c)));
+    fRowNumber++;
 
-        setIntValue(fFieldIndex[0], fRowNumber);
-    }
+    setIntValue(fFieldIndex[0], fRowNumber);
+  }
 }
 
-
-}   //namespace
+}  // namespace windowfunction
 // vim:ts=4 sw=4:
-

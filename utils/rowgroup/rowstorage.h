@@ -26,13 +26,8 @@
 
 namespace rowgroup
 {
-
-uint32_t calcNumberOfBuckets(ssize_t availMem,
-                             uint32_t numOfThreads,
-                             uint32_t numOfBuckets,
-                             uint32_t groupsPerThread,
-                             uint32_t inRowSize,
-                             uint32_t outRowSize,
+uint32_t calcNumberOfBuckets(ssize_t availMem, uint32_t numOfThreads, uint32_t numOfBuckets,
+                             uint32_t groupsPerThread, uint32_t inRowSize, uint32_t outRowSize,
                              bool enabledDiskAggr);
 
 class MemManager;
@@ -44,29 +39,20 @@ uint64_t hashRow(const rowgroup::Row& r, std::size_t lastCol);
 
 class RowAggStorage
 {
-public:
-  RowAggStorage(const std::string& tmpDir,
-                RowGroup* rowGroupOut,
-                RowGroup* keysRowGroup,
-                uint32_t keyCount,
-                joblist::ResourceManager* rm = nullptr,
-                boost::shared_ptr<int64_t> sessLimit = {},
-                bool enabledDiskAgg = false,
-                bool allowGenerations = false,
+ public:
+  RowAggStorage(const std::string& tmpDir, RowGroup* rowGroupOut, RowGroup* keysRowGroup, uint32_t keyCount,
+                joblist::ResourceManager* rm = nullptr, boost::shared_ptr<int64_t> sessLimit = {},
+                bool enabledDiskAgg = false, bool allowGenerations = false,
                 compress::CompressInterface* compressor = nullptr);
 
-  RowAggStorage(const std::string& tmpDir,
-                RowGroup* rowGroupOut,
-                uint32_t keyCount,
-                joblist::ResourceManager* rm = nullptr,
-                boost::shared_ptr<int64_t> sessLimit = {},
-                bool enabledDiskAgg = false,
-                bool allowGenerations = false,
+  RowAggStorage(const std::string& tmpDir, RowGroup* rowGroupOut, uint32_t keyCount,
+                joblist::ResourceManager* rm = nullptr, boost::shared_ptr<int64_t> sessLimit = {},
+                bool enabledDiskAgg = false, bool allowGenerations = false,
                 compress::CompressInterface* compressor = nullptr)
-      : RowAggStorage(tmpDir, rowGroupOut, rowGroupOut, keyCount,
-                      rm, std::move(sessLimit),
-                      enabledDiskAgg, allowGenerations, compressor)
-  {}
+   : RowAggStorage(tmpDir, rowGroupOut, rowGroupOut, keyCount, rm, std::move(sessLimit), enabledDiskAgg,
+                   allowGenerations, compressor)
+  {
+  }
 
   ~RowAggStorage();
 
@@ -113,7 +99,7 @@ public:
    * @param mergeFunc
    * @param rowOut
    */
-  void finalize(std::function<void(Row &)> mergeFunc, Row &rowOut);
+  void finalize(std::function<void(Row&)> mergeFunc, Row& rowOut);
 
   /** @brief Calculate maximum size of hash assuming 80% fullness.
    *
@@ -138,7 +124,7 @@ public:
     return calcSizeWithBuffer(elems, calcMaxSize(elems));
   }
 
-private:
+ private:
   struct Data;
   /** @brief Create new RowAggStorage with the same params and load dumped data
    *
@@ -311,13 +297,8 @@ private:
    */
   void loadGeneration(uint16_t gen);
   /** @brief Load previously dumped data into the tmp storage */
-  void loadGeneration(uint16_t gen,
-                      size_t& size,
-                      size_t& mask,
-                      size_t& maxSize,
-                      uint32_t& infoInc,
-                      uint32_t& infoHashShift,
-                      std::unique_ptr<uint8_t[]>& info);
+  void loadGeneration(uint16_t gen, size_t& size, size_t& mask, size_t& maxSize, uint32_t& infoInc,
+                      uint32_t& infoHashShift, std::unique_ptr<uint8_t[]>& info);
 
   /** @brief Remove temporary data files */
   void cleanup();
@@ -328,12 +309,12 @@ private:
 
   std::string makeDumpFilename(int32_t gen = -1) const;
 
-private:
-  static constexpr size_t   INIT_SIZE{sizeof(uint64_t)};
+ private:
+  static constexpr size_t INIT_SIZE{sizeof(uint64_t)};
   static constexpr uint32_t INIT_INFO_BITS{5};
-  static constexpr uint8_t  INIT_INFO_INC{1U << INIT_INFO_BITS};
-  static constexpr size_t   INFO_MASK{INIT_INFO_INC - 1U};
-  static constexpr uint8_t  INIT_INFO_HASH_SHIFT{0};
+  static constexpr uint8_t INIT_INFO_INC{1U << INIT_INFO_BITS};
+  static constexpr size_t INFO_MASK{INIT_INFO_INC - 1U};
+  static constexpr uint8_t INIT_INFO_HASH_SHIFT{0};
   static constexpr uint16_t MAX_INMEMORY_GENS{4};
 
   struct Data
@@ -373,6 +354,6 @@ private:
   rowgroup::RowGroup* fKeysRowGroup;
 };
 
-} // namespace rowgroup
+}  // namespace rowgroup
 
-#endif // MYSQL_ROWSTORAGE_H
+#endif  // MYSQL_ROWSTORAGE_H

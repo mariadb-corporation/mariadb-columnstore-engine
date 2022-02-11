@@ -28,52 +28,51 @@
 
 namespace storagemanager
 {
-
 //	64-bit offset
 //	64-bit length
 //	<length-bytes of data to write at specified offset>
 
 class Replicator
 {
-    public:
-        static Replicator *get();
-        virtual ~Replicator();
+ public:
+  static Replicator* get();
+  virtual ~Replicator();
 
-        enum Flags
-        {
-            NONE = 0,
-            LOCAL_ONLY = 0x1,
-            NO_LOCAL = 0x2
-        };
-        
-        int addJournalEntry(const boost::filesystem::path &filename, const uint8_t *data, off_t offset, size_t length);
-        int newObject(const boost::filesystem::path &filename, const uint8_t *data, off_t offset, size_t length);
-        int newNullObject(const boost::filesystem::path &filename,size_t length );
+  enum Flags
+  {
+    NONE = 0,
+    LOCAL_ONLY = 0x1,
+    NO_LOCAL = 0x2
+  };
 
-        int remove(const boost::filesystem::path &file, Flags flags = NONE);
-        
-        int updateMetadata(MetadataFile &meta);
+  int addJournalEntry(const boost::filesystem::path& filename, const uint8_t* data, off_t offset,
+                      size_t length);
+  int newObject(const boost::filesystem::path& filename, const uint8_t* data, off_t offset, size_t length);
+  int newNullObject(const boost::filesystem::path& filename, size_t length);
 
-        void printKPIs() const;
+  int remove(const boost::filesystem::path& file, Flags flags = NONE);
 
-    private:
-        Replicator();
-        
-        // a couple helpers
-        ssize_t _write(int fd, const void *data, size_t len);
-        ssize_t _pwrite(int fd, const void *data, size_t len, off_t offset);
-        
-        Config *mpConfig;
-        SMLogging *mpLogger;
-        std::string msJournalPath;
-        std::string msCachePath;
-        //ThreadPool threadPool;
+  int updateMetadata(MetadataFile& meta);
 
-        size_t repUserDataWritten, repHeaderDataWritten;
-        size_t replicatorObjectsCreated, replicatorJournalsCreated;
+  void printKPIs() const;
 
+ private:
+  Replicator();
+
+  // a couple helpers
+  ssize_t _write(int fd, const void* data, size_t len);
+  ssize_t _pwrite(int fd, const void* data, size_t len, off_t offset);
+
+  Config* mpConfig;
+  SMLogging* mpLogger;
+  std::string msJournalPath;
+  std::string msCachePath;
+  // ThreadPool threadPool;
+
+  size_t repUserDataWritten, repHeaderDataWritten;
+  size_t replicatorObjectsCreated, replicatorJournalsCreated;
 };
 
-}
+}  // namespace storagemanager
 
 #endif

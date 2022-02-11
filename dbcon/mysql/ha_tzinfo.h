@@ -26,8 +26,7 @@ using namespace dataconvert;
 
 namespace cal_impl_if
 {
-
-TIME_ZONE_INFO* my_tzinfo_find(THD *thd, const String *name);
+TIME_ZONE_INFO* my_tzinfo_find(THD* thd, const String* name);
 
 }
 

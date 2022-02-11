@@ -22,18 +22,24 @@
 
 namespace datatypes
 {
-
 template <typename T>
 struct numeric_limits
 {
-  static constexpr T min() { return std::numeric_limits<T>::min(); }
-  static constexpr T max() { return std::numeric_limits<T>::max(); }
+  static constexpr T min()
+  {
+    return std::numeric_limits<T>::min();
+  }
+  static constexpr T max()
+  {
+    return std::numeric_limits<T>::max();
+  }
 };
 
 using int128_t = __int128;
 using uint128_t = unsigned __int128;
 
-template<> struct numeric_limits<int128_t>
+template <>
+struct numeric_limits<int128_t>
 {
   static constexpr int128_t min()
   {
@@ -45,7 +51,8 @@ template<> struct numeric_limits<int128_t>
   }
 };
 
-template<> struct numeric_limits<uint128_t>
+template <>
+struct numeric_limits<uint128_t>
 {
   static constexpr uint128_t min()
   {
@@ -57,6 +64,6 @@ template<> struct numeric_limits<uint128_t>
   }
 };
 
-} // namespace datatypes
+}  // namespace datatypes
 
-#endif // MCS_NUMERIC_LIMITS_H_INCLUDED
+#endif  // MCS_NUMERIC_LIMITS_H_INCLUDED

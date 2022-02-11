@@ -15,39 +15,35 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-
 #ifndef MCS_DATATYPES_STRING_H
 #define MCS_DATATYPES_STRING_H
 
 #include "conststring.h"
-#include "collation.h"    // class Charset
+#include "collation.h"  // class Charset
 
 namespace datatypes
 {
-
 class TCharShort
 {
-    int64_t mValue;
-public:
-    TCharShort(int64_t value)
-        :mValue(value)
-    { }
-    utils::ConstString toConstString(uint32_t width) const
-    {
-      utils::ConstString res = utils::ConstString((const char *) &mValue, width);
-      return res.rtrimZero();
-    }
-    static int strnncollsp(const datatypes::Charset &cs, int64_t a, int64_t b, uint32_t width)
-    {
-      datatypes::TCharShort sa(a);
-      datatypes::TCharShort sb(b);
-      return cs.strnncollsp(sa.toConstString(width),
-                            sb.toConstString(width));
-    }
+  int64_t mValue;
+
+ public:
+  TCharShort(int64_t value) : mValue(value)
+  {
+  }
+  utils::ConstString toConstString(uint32_t width) const
+  {
+    utils::ConstString res = utils::ConstString((const char*)&mValue, width);
+    return res.rtrimZero();
+  }
+  static int strnncollsp(const datatypes::Charset& cs, int64_t a, int64_t b, uint32_t width)
+  {
+    datatypes::TCharShort sa(a);
+    datatypes::TCharShort sb(b);
+    return cs.strnncollsp(sa.toConstString(width), sb.toConstString(width));
+  }
 };
 
+}  // namespace datatypes
 
-} // namespace datatypes
-
-
-#endif // MCS_DATATYPES_STRING_H
+#endif  // MCS_DATATYPES_STRING_H

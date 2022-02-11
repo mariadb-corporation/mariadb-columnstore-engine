@@ -31,60 +31,52 @@
 
 namespace WriteEngine
 {
-
 //------------------------------------------------------------------------------
 // Process a bulk rollback request based on input from the specified input
 // bytestream object.
 //------------------------------------------------------------------------------
-int WE_ClearTableLockCmd::processRollback(
-    messageqcpp::ByteStream& bs,
-    std::string& errMsg)
+int WE_ClearTableLockCmd::processRollback(messageqcpp::ByteStream& bs, std::string& errMsg)
 {
-    uint8_t rc = 0;
-    errMsg.clear();
+  uint8_t rc = 0;
+  errMsg.clear();
 
-    try
-    {
-        uint32_t    tableOID;
-        uint64_t    tableLockID;
-        std::string tableName;
-        std::string appName;
+  try
+  {
+    uint32_t tableOID;
+    uint64_t tableLockID;
+    std::string tableName;
+    std::string appName;
 
-        // May want to eventually comment out this logging to stdout,
-        // but it shouldn't hurt to keep in here.
-        std::cout << "ClearTableLockCmd::processRollback for " << fUserDesc;
-        bs >> tableLockID;
-        std::cout << ": tableLock-" << tableLockID;
+    // May want to eventually comment out this logging to stdout,
+    // but it shouldn't hurt to keep in here.
+    std::cout << "ClearTableLockCmd::processRollback for " << fUserDesc;
+    bs >> tableLockID;
+    std::cout << ": tableLock-" << tableLockID;
 
-        bs >> tableOID;
-        std::cout << "; tableOID-" << tableOID;
+    bs >> tableOID;
+    std::cout << "; tableOID-" << tableOID;
 
-        bs >> tableName;
-        std::cout << "; table-"    << tableName;
+    bs >> tableName;
+    std::cout << "; table-" << tableName;
 
-        bs >> appName;
-        std::cout << "; app-"      << appName << std::endl;
+    bs >> appName;
+    std::cout << "; app-" << appName << std::endl;
 
-        int we_rc = fWEWrapper.bulkRollback(
-                        tableOID,
-                        tableLockID,
-                        tableName,
-                        appName,
-                        false, // no extra debug logging to the console
-                        errMsg );
+    int we_rc = fWEWrapper.bulkRollback(tableOID, tableLockID, tableName, appName,
+                                        false,  // no extra debug logging to the console
+                                        errMsg);
 
-        if (we_rc != NO_ERROR)
-            rc = 2;
-    }
-    catch (std::exception& ex)
-    {
-        std::cout << "ClearTableLockCmd::Rollback exception-" << ex.what() <<
-                  std::endl;
-        errMsg = ex.what();
-        rc     = 1;
-    }
+    if (we_rc != NO_ERROR)
+      rc = 2;
+  }
+  catch (std::exception& ex)
+  {
+    std::cout << "ClearTableLockCmd::Rollback exception-" << ex.what() << std::endl;
+    errMsg = ex.what();
+    rc = 1;
+  }
 
-    return rc;
+  return rc;
 }
 
 //------------------------------------------------------------------------------
@@ -95,61 +87,55 @@ int WE_ClearTableLockCmd::processRollback(
 // We only need this for the "successful" case, as the bulk rollback takes
 // care of db file cleanup in the "unsuccessful" case.
 //------------------------------------------------------------------------------
-int WE_ClearTableLockCmd::processCleanup(
-    messageqcpp::ByteStream& bs,
-    std::string& errMsg)
+int WE_ClearTableLockCmd::processCleanup(messageqcpp::ByteStream& bs, std::string& errMsg)
 {
-    uint8_t rc = 0;
-    errMsg.clear();
+  uint8_t rc = 0;
+  errMsg.clear();
 
-    try
+  try
+  {
+    uint32_t tableOID;
+
+    // May want to eventually comment out this logging to stdout,
+    // but it shouldn't hurt to keep in here.
+    std::cout << "ClearTableLockCmd::processCleanup for " << fUserDesc;
+    bs >> tableOID;
+    std::cout << ": tableOID-" << tableOID << std::endl;
+
+    // On an HDFS system, this is where we delete any DB files
+    // (ex: *.orig) that we no longer need.
+    if ((idbdatafile::IDBPolicy::useHdfs()) && (bs.length() >= sizeof(messageqcpp::ByteStream::byte)))
     {
-        uint32_t tableOID;
+      messageqcpp::ByteStream::byte deleteHdfsTempDbFiles;
+      bs >> deleteHdfsTempDbFiles;
 
-        // May want to eventually comment out this logging to stdout,
-        // but it shouldn't hurt to keep in here.
-        std::cout << "ClearTableLockCmd::processCleanup for " << fUserDesc;
-        bs >> tableOID;
-        std::cout << ": tableOID-" << tableOID << std::endl;
+      if (deleteHdfsTempDbFiles)
+      {
+        std::string endDbErrMsg;
+        ConfirmHdfsDbFile confirmHdfs;
 
-        // On an HDFS system, this is where we delete any DB files
-        // (ex: *.orig) that we no longer need.
-        if ((idbdatafile::IDBPolicy::useHdfs()) &&
-                (bs.length() >= sizeof(messageqcpp::ByteStream::byte)))
-        {
-            messageqcpp::ByteStream::byte deleteHdfsTempDbFiles;
-            bs >> deleteHdfsTempDbFiles;
+        // We always pass "true", as this only applies to the "success-
+        // ful" case.  See comments that precede this function.
+        int endRc = confirmHdfs.endDbFileListFromMetaFile(tableOID, true, endDbErrMsg);
 
-            if (deleteHdfsTempDbFiles)
-            {
-                std::string endDbErrMsg;
-                ConfirmHdfsDbFile confirmHdfs;
-
-                // We always pass "true", as this only applies to the "success-
-                // ful" case.  See comments that precede this function.
-                int endRc = confirmHdfs.endDbFileListFromMetaFile(
-                                tableOID, true, endDbErrMsg);
-
-                // In this case, a deletion error is not fatal.
-                // so we don't propagate a bad return code.  We
-                // may want to add syslog msg (TBD)
-                if (endRc != NO_ERROR)
-                    std::cout << "Orig db file deletion error: " <<
-                              endDbErrMsg << std::endl;
-            }
-        }
-
-        BulkRollbackMgr::deleteMetaFile( tableOID );
-    }
-    catch (std::exception& ex)
-    {
-        std::cout << "ClearTableLockCmd::Cleanup exception-" << ex.what() <<
-                  std::endl;
-        errMsg = ex.what();
-        rc     = 1;
+        // In this case, a deletion error is not fatal.
+        // so we don't propagate a bad return code.  We
+        // may want to add syslog msg (TBD)
+        if (endRc != NO_ERROR)
+          std::cout << "Orig db file deletion error: " << endDbErrMsg << std::endl;
+      }
     }
 
-    return rc;
+    BulkRollbackMgr::deleteMetaFile(tableOID);
+  }
+  catch (std::exception& ex)
+  {
+    std::cout << "ClearTableLockCmd::Cleanup exception-" << ex.what() << std::endl;
+    errMsg = ex.what();
+    rc = 1;
+  }
+
+  return rc;
 }
 
-}
+}  // namespace WriteEngine

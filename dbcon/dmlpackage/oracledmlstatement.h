@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: oracledmlstatement.h 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: oracledmlstatement.h 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 /** @file */
 
 #ifndef ORACLEDMLSTATEMENT_H
@@ -34,15 +34,13 @@ namespace dmlpackage
  */
 class OracleDMLStatement : public VendorDMLStatement
 {
+ public:
+  OracleDMLStatement() : VendorDMLStatement("", 0)
+  {
+  }
 
-public:
-    OracleDMLStatement() : VendorDMLStatement("", 0) {}
-
-protected:
-
-private:
-
+ protected:
+ private:
 };
-}
-#endif //ORACLEDMLSTATEMENT_H
-
+}  // namespace dmlpackage
+#endif  // ORACLEDMLSTATEMENT_H

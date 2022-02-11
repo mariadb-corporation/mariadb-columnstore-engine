@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: outerjoinonfilter.cpp 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: outerjoinonfilter.cpp 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 #include <string>
 #include <sstream>
 using namespace std;
@@ -34,100 +34,98 @@ namespace execplan
 /**
  * Constructors/Destructors
  */
-OuterJoinOnFilter::OuterJoinOnFilter():
-    fData("Outer Join On Filter")
-{}
+OuterJoinOnFilter::OuterJoinOnFilter() : fData("Outer Join On Filter")
+{
+}
 
-OuterJoinOnFilter::OuterJoinOnFilter(const SPTP& pt):
-    Filter(),
-    fPt(new ParseTree (*(pt.get()))),
-    fData("Outer Join On Filter")
-{}
+OuterJoinOnFilter::OuterJoinOnFilter(const SPTP& pt)
+ : Filter(), fPt(new ParseTree(*(pt.get()))), fData("Outer Join On Filter")
+{
+}
 
-OuterJoinOnFilter::OuterJoinOnFilter(const OuterJoinOnFilter& rhs):
-    Filter(rhs),
-    fPt (rhs.fPt),
-    fData (rhs.fData)
-{}
+OuterJoinOnFilter::OuterJoinOnFilter(const OuterJoinOnFilter& rhs)
+ : Filter(rhs), fPt(rhs.fPt), fData(rhs.fData)
+{
+}
 
 OuterJoinOnFilter::~OuterJoinOnFilter()
-{}
+{
+}
 
 const string OuterJoinOnFilter::toString() const
 {
-    ostringstream oss;
-    oss << "OuterJoinOnFilter" << endl;
+  ostringstream oss;
+  oss << "OuterJoinOnFilter" << endl;
 
-    if (fPt.get())
-        oss << fPt->toString();
-    else
-        oss << "Empty Tree." << endl;
+  if (fPt.get())
+    oss << fPt->toString();
+  else
+    oss << "Empty Tree." << endl;
 
-    oss << "End OuterJoinOnFilter" << endl;
-    return oss.str();
+  oss << "End OuterJoinOnFilter" << endl;
+  return oss.str();
 }
 
 ostream& operator<<(ostream& output, const OuterJoinOnFilter& rhs)
 {
-    output << rhs.toString();
-    return output;
+  output << rhs.toString();
+  return output;
 }
 
 void OuterJoinOnFilter::serialize(messageqcpp::ByteStream& b) const
 {
-    b << static_cast<ObjectReader::id_t>(ObjectReader::OUTERJOINONFILTER);
-    Filter::serialize(b);
+  b << static_cast<ObjectReader::id_t>(ObjectReader::OUTERJOINONFILTER);
+  Filter::serialize(b);
 
-    if (fPt.get() != NULL)
-        ObjectReader::writeParseTree(fPt.get(), b);
-    else
-        b << static_cast<ObjectReader::id_t>(ObjectReader::NULL_CLASS);
+  if (fPt.get() != NULL)
+    ObjectReader::writeParseTree(fPt.get(), b);
+  else
+    b << static_cast<ObjectReader::id_t>(ObjectReader::NULL_CLASS);
 }
 
 void OuterJoinOnFilter::unserialize(messageqcpp::ByteStream& b)
 {
-    ObjectReader::checkType(b, ObjectReader::OUTERJOINONFILTER);
-    Filter::unserialize(b);
-    fPt.reset(ObjectReader::createParseTree(b));
+  ObjectReader::checkType(b, ObjectReader::OUTERJOINONFILTER);
+  Filter::unserialize(b);
+  fPt.reset(ObjectReader::createParseTree(b));
 }
 
 bool OuterJoinOnFilter::operator==(const OuterJoinOnFilter& t) const
 {
-    const Filter* f1, *f2;
+  const Filter *f1, *f2;
 
-    f1 = static_cast<const Filter*>(this);
-    f2 = static_cast<const Filter*>(&t);
+  f1 = static_cast<const Filter*>(this);
+  f2 = static_cast<const Filter*>(&t);
 
-    if (*f1 != *f2)
-        return false;
+  if (*f1 != *f2)
+    return false;
 
-    if (*(fPt.get()) != *(t.fPt.get()))
-        return false;
+  if (*(fPt.get()) != *(t.fPt.get()))
+    return false;
 
-    return true;
+  return true;
 }
 
 bool OuterJoinOnFilter::operator==(const TreeNode* t) const
 {
-    const OuterJoinOnFilter* o;
+  const OuterJoinOnFilter* o;
 
-    o = dynamic_cast<const OuterJoinOnFilter*>(t);
+  o = dynamic_cast<const OuterJoinOnFilter*>(t);
 
-    if (o == NULL)
-        return false;
+  if (o == NULL)
+    return false;
 
-    return *this == *o;
+  return *this == *o;
 }
 
 bool OuterJoinOnFilter::operator!=(const OuterJoinOnFilter& t) const
 {
-    return (!(*this == t));
+  return (!(*this == t));
 }
 
 bool OuterJoinOnFilter::operator!=(const TreeNode* t) const
 {
-    return (!(*this == t));
+  return (!(*this == t));
 }
 
-}
-
+}  // namespace execplan

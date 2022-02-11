@@ -22,30 +22,28 @@
 
 namespace querytele
 {
-
 class QueryTeleProtoImpl
 {
-public:
-    explicit QueryTeleProtoImpl(const QueryTeleServerParms&);
-    ~QueryTeleProtoImpl() { }
+ public:
+  explicit QueryTeleProtoImpl(const QueryTeleServerParms&);
+  ~QueryTeleProtoImpl()
+  {
+  }
 
-    int enqStepTele(const StepTele&);
-    int enqImportTele(const ImportTele&);
-    int enqQueryTele(const QueryTele&);
+  int enqStepTele(const StepTele&);
+  int enqImportTele(const ImportTele&);
+  int enqQueryTele(const QueryTele&);
 
-    /**
-     * Wait for the consumer thread to post all messages
-     **/
-    int waitForQueues();
+  /**
+   * Wait for the consumer thread to post all messages
+   **/
+  int waitForQueues();
 
-protected:
-
-private:
-    QueryTeleServerParms fServerParms;
-
+ protected:
+ private:
+  QueryTeleServerParms fServerParms;
 };
 
-}
+}  // namespace querytele
 
 #endif
-

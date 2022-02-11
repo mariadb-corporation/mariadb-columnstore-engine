@@ -26,4 +26,3 @@ const std::string symname2devname(const std::string& sympath);
 }
 
 #endif
-

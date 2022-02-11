@@ -52,40 +52,39 @@
 
 namespace BRM
 {
-
 struct MSTEntry
 {
-    key_t tableShmkey;
-    int allocdSize;
-    int currentSize;
-    EXPORT MSTEntry();
+  key_t tableShmkey;
+  int allocdSize;
+  int currentSize;
+  EXPORT MSTEntry();
 };
 
 class MasterSegmentTableImpl
 {
-public:
-    ~MasterSegmentTableImpl(){};
-    static MasterSegmentTableImpl* makeMasterSegmentTableImpl(int key, int size);
+ public:
+  ~MasterSegmentTableImpl(){};
+  static MasterSegmentTableImpl* makeMasterSegmentTableImpl(int key, int size);
 
-    static void refreshShm()
+  static void refreshShm()
+  {
+    if (fInstance)
     {
-        if (fInstance)
-        {
-            delete fInstance;
-            fInstance = NULL;
-        }
+      delete fInstance;
+      fInstance = NULL;
     }
-    
-    boost::interprocess::shared_memory_object fShmobj;
-    boost::interprocess::mapped_region fMapreg;
-    
-private:
-    MasterSegmentTableImpl(int key, int size);
-    MasterSegmentTableImpl(const MasterSegmentTableImpl& rhs);
-    MasterSegmentTableImpl& operator=(const MasterSegmentTableImpl& rhs);
+  }
 
-    static boost::mutex fInstanceMutex;
-    static MasterSegmentTableImpl* fInstance;
+  boost::interprocess::shared_memory_object fShmobj;
+  boost::interprocess::mapped_region fMapreg;
+
+ private:
+  MasterSegmentTableImpl(int key, int size);
+  MasterSegmentTableImpl(const MasterSegmentTableImpl& rhs);
+  MasterSegmentTableImpl& operator=(const MasterSegmentTableImpl& rhs);
+
+  static boost::mutex fInstanceMutex;
+  static MasterSegmentTableImpl* fInstance;
 };
 
 /** @brief This class regulates access to the BRM tables in shared memory
@@ -94,122 +93,122 @@ private:
  */
 class MasterSegmentTable
 {
-public:
-    /** @brief Constructor.
-     * @note Throws runtime_error on a semaphore-related error.
-     */
-    EXPORT MasterSegmentTable();
-    EXPORT ~MasterSegmentTable();
+ public:
+  /** @brief Constructor.
+   * @note Throws runtime_error on a semaphore-related error.
+   */
+  EXPORT MasterSegmentTable();
+  EXPORT ~MasterSegmentTable();
 
-    /// specifies the Extent Map table
-    static const int EMTable = 0;
-    /// specifies the Extent Map's Freelist table
-    static const int EMFreeList = 1;
-    /// specifies the Version Buffer Block Map segment
-    static const int VBBMSegment = 2;
-    /// specifies the Version Substitution Structure segment
-    static const int VSSSegment = 3;
-    /// specifies the copy lock segment
-    static const int CLSegment = 4;
-    /// the number of tables currently defined
-    static const int nTables = 5;
+  /// specifies the Extent Map table
+  static const int EMTable = 0;
+  /// specifies the Extent Map's Freelist table
+  static const int EMFreeList = 1;
+  /// specifies the Version Buffer Block Map segment
+  static const int VBBMSegment = 2;
+  /// specifies the Version Substitution Structure segment
+  static const int VSSSegment = 3;
+  /// specifies the copy lock segment
+  static const int CLSegment = 4;
+  /// the number of tables currently defined
+  static const int nTables = 5;
 
-    /** @brief This function gets the specified table.
-     *
-     * This function gets the specified table and grabs the
-     * associated read lock.
-     * @param num EMTable, EMFreeList, or VBBMTable
-     * @param block If false, it won't block.
-     * @note throws invalid_argument if num is outside the valid range
-     * and runtime_error on a semaphore-related error.
-     * @return If block == true, it always returns the specified MSTEntry;
-     * if block == false, it can also return NULL if it could not grab
-     * the table's lock.
-     */
-    EXPORT MSTEntry* getTable_read(int num, bool block = true) const;
+  /** @brief This function gets the specified table.
+   *
+   * This function gets the specified table and grabs the
+   * associated read lock.
+   * @param num EMTable, EMFreeList, or VBBMTable
+   * @param block If false, it won't block.
+   * @note throws invalid_argument if num is outside the valid range
+   * and runtime_error on a semaphore-related error.
+   * @return If block == true, it always returns the specified MSTEntry;
+   * if block == false, it can also return NULL if it could not grab
+   * the table's lock.
+   */
+  EXPORT MSTEntry* getTable_read(int num, bool block = true) const;
 
-    /** @brief This function gets the specified table.
-     *
-     * This function gets the specified table and grabs the
-     * associated write lock.
-     * @param num EMTable, EMFreeList, or VBBMTable
-     * @param block If false, it won't block.
-     * @note throws invalid_argument if num is outside the valid range
-     * and runtime_error on a semaphore-related error.
-     * @return If block == true, it always returns the specified MSTEntry;
-     * if block == false, it can also return NULL if it could not grab
-     * the table's lock.
-     */
-    EXPORT MSTEntry* getTable_write(int num, bool block = true) const;
+  /** @brief This function gets the specified table.
+   *
+   * This function gets the specified table and grabs the
+   * associated write lock.
+   * @param num EMTable, EMFreeList, or VBBMTable
+   * @param block If false, it won't block.
+   * @note throws invalid_argument if num is outside the valid range
+   * and runtime_error on a semaphore-related error.
+   * @return If block == true, it always returns the specified MSTEntry;
+   * if block == false, it can also return NULL if it could not grab
+   * the table's lock.
+   */
+  EXPORT MSTEntry* getTable_write(int num, bool block = true) const;
 
-    /** @brief Upgrade a read lock to a write lock.
-     *
-     * Upgrade a read lock to a write lock.  This is not an atomic
-     * operation.
-     * @param num The table the caller holds the read lock to.
-     */
-    EXPORT void getTable_upgrade(int num) const;
+  /** @brief Upgrade a read lock to a write lock.
+   *
+   * Upgrade a read lock to a write lock.  This is not an atomic
+   * operation.
+   * @param num The table the caller holds the read lock to.
+   */
+  EXPORT void getTable_upgrade(int num) const;
 
-    /** @brief Downgrade a write lock to a read lock.
-     *
-     * Downgrade a write lock to a read lock.  This is an atomic
-     * operation.
-     * @param num The table the caller holds the write lock to.
-     */
-    EXPORT void getTable_downgrade(int num) const;
+  /** @brief Downgrade a write lock to a read lock.
+   *
+   * Downgrade a write lock to a read lock.  This is an atomic
+   * operation.
+   * @param num The table the caller holds the write lock to.
+   */
+  EXPORT void getTable_downgrade(int num) const;
 
-    /** @brief This function unlocks the specified table.
-     *
-     * This function unlocks the specified table.
-     *
-     * @param num EMTable, EMFreeList, or VBBMTable
-     * @note throws invalid_argument if num is outside the valid range
-     * and runtime_error on a semaphore-related error.
-     */
-    EXPORT void releaseTable_read(int num) const;
+  /** @brief This function unlocks the specified table.
+   *
+   * This function unlocks the specified table.
+   *
+   * @param num EMTable, EMFreeList, or VBBMTable
+   * @note throws invalid_argument if num is outside the valid range
+   * and runtime_error on a semaphore-related error.
+   */
+  EXPORT void releaseTable_read(int num) const;
 
-    /** @brief This function unlocks the specified table.
-     *
-     * This function unlocks the specified table.
-     *
-     * @param num EMTable, EMFreeList, or VBBMTable
-     * @note throws invalid_argument if num is outside the valid range
-     * and runtime_error on a semaphore-related error.
-     */
-    EXPORT void releaseTable_write(int num) const;
+  /** @brief This function unlocks the specified table.
+   *
+   * This function unlocks the specified table.
+   *
+   * @param num EMTable, EMFreeList, or VBBMTable
+   * @note throws invalid_argument if num is outside the valid range
+   * and runtime_error on a semaphore-related error.
+   */
+  EXPORT void releaseTable_write(int num) const;
 
-    /** @brief This function gets the current VSS key out of shared memory without locking
-     *
-     * This function gets the current VSS key out of shared memory without any locking. It is used
-     * (eventually) by DBRM::vssLookup() to try and correctly & efficiently short-circuit a vss
-     * lookup when there are no locked blocks in the vss. This read should be atomic. Even if it's
-     * not, we should still be okay.
-     */
-    inline key_t getVSSShmkey() const
-    {
-        return fShmDescriptors[VSSSegment].tableShmkey;
-    }
+  /** @brief This function gets the current VSS key out of shared memory without locking
+   *
+   * This function gets the current VSS key out of shared memory without any locking. It is used
+   * (eventually) by DBRM::vssLookup() to try and correctly & efficiently short-circuit a vss
+   * lookup when there are no locked blocks in the vss. This read should be atomic. Even if it's
+   * not, we should still be okay.
+   */
+  inline key_t getVSSShmkey() const
+  {
+    return fShmDescriptors[VSSSegment].tableShmkey;
+  }
 
-private:
-    MasterSegmentTable(const MasterSegmentTable& mst);
-    MasterSegmentTable& operator=(const MasterSegmentTable& mst);
+ private:
+  MasterSegmentTable(const MasterSegmentTable& mst);
+  MasterSegmentTable& operator=(const MasterSegmentTable& mst);
 
-    int shmid;
-    mutable boost::scoped_ptr<rwlock::RWLock> rwlock[nTables];
+  int shmid;
+  mutable boost::scoped_ptr<rwlock::RWLock> rwlock[nTables];
 
-    static const int MSTshmsize = nTables * sizeof(MSTEntry);
-    int RWLockKeys[nTables];
+  static const int MSTshmsize = nTables * sizeof(MSTEntry);
+  int RWLockKeys[nTables];
 
-    /// indexed by EMTable, EMFreeList, and VBBMTable
-    MSTEntry* fShmDescriptors;
+  /// indexed by EMTable, EMFreeList, and VBBMTable
+  MSTEntry* fShmDescriptors;
 
-    void makeMSTSegment();
-    void initMSTData();
-    ShmKeys fShmKeys;
-    MasterSegmentTableImpl* fPImpl;
+  void makeMSTSegment();
+  void initMSTData();
+  ShmKeys fShmKeys;
+  MasterSegmentTableImpl* fPImpl;
 };
 
-}  //namespace
+}  // namespace BRM
 
 #undef EXPORT
 

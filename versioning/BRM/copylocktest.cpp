@@ -10,105 +10,92 @@ DBRM dbrm;
 
 void lockRange()
 {
-    LBIDRange r;
-    r.start = 12345;
-    r.size = 5;
-    copylocks.lock(CopyLocks::WRITE);
+  LBIDRange r;
+  r.start = 12345;
+  r.size = 5;
+  copylocks.lock(CopyLocks::WRITE);
 
-    if (copylocks.isLocked(r))
-        cout << "already locked\n";
-    else
-    {
-        copylocks.lockRange(r, -1);
-        cout << "got the 1st lock\n";
-    }
+  if (copylocks.isLocked(r))
+    cout << "already locked\n";
+  else
+  {
+    copylocks.lockRange(r, -1);
+    cout << "got the 1st lock\n";
+  }
 
-    r.start = 12349;
+  r.start = 12349;
 
-    if (copylocks.isLocked(r))
-        cout << "2nd range is locked\n";
-    else
-        cout << "2nd range is NOT locked\n";
+  if (copylocks.isLocked(r))
+    cout << "2nd range is locked\n";
+  else
+    cout << "2nd range is NOT locked\n";
 
+  r.start = 12350;
 
-    r.start = 12350;
+  if (copylocks.isLocked(r))
+    cout << "3rd range is locked\n";
+  else
+  {
+    copylocks.lockRange(r, -1);
+    cout << "got the 3rd lock\n";
+  }
 
-    if (copylocks.isLocked(r))
-        cout << "3rd range is locked\n";
-    else
-    {
-        copylocks.lockRange(r, -1);
-        cout << "got the 3rd lock\n";
-    }
-
-    copylocks.release(CopyLocks::WRITE);
+  copylocks.release(CopyLocks::WRITE);
 }
 
 void dbrmLockRange()
 {
-    dbrm.lockLBIDRange(12345, 5);
-    cout << "OK\n";
+  dbrm.lockLBIDRange(12345, 5);
+  cout << "OK\n";
 }
 
 void dbrmReleaseRange()
 {
-    dbrm.releaseLBIDRange(12345, 5);
-    cout << "OK\n";
+  dbrm.releaseLBIDRange(12345, 5);
+  cout << "OK\n";
 }
-
 
 void releaseRange()
 {
-    LBIDRange r;
-    r.start = 12345;
-    r.size = 5;
-    copylocks.lock(CopyLocks::WRITE);
-    copylocks.releaseRange(r);
+  LBIDRange r;
+  r.start = 12345;
+  r.size = 5;
+  copylocks.lock(CopyLocks::WRITE);
+  copylocks.releaseRange(r);
 
-    r.start = 12350;
-    copylocks.releaseRange(r);
-    copylocks.release(CopyLocks::WRITE);
+  r.start = 12350;
+  copylocks.releaseRange(r);
+  copylocks.release(CopyLocks::WRITE);
 
-
-    cout << "OK\n";
+  cout << "OK\n";
 }
 
 int main(int argc, char** argv)
 {
-    char cmd;
+  char cmd;
 
-    if (argc < 2)
-        goto usage;
+  if (argc < 2)
+    goto usage;
 
-    cmd = argv[1][0];
+  cmd = argv[1][0];
 
-    idbdatafile::IDBPolicy::configIDBPolicy();
+  idbdatafile::IDBPolicy::configIDBPolicy();
 
-    switch (cmd)
-    {
-        case 'l':
-            lockRange();
-            break;
+  switch (cmd)
+  {
+    case 'l': lockRange(); break;
 
-        case 'r':
-            releaseRange();
-            break;
+    case 'r': releaseRange(); break;
 
-        case 'L':
-            dbrmLockRange();
-            break;
+    case 'L': dbrmLockRange(); break;
 
-        case 'R':
-            dbrmReleaseRange();
-            break;
+    case 'R': dbrmReleaseRange(); break;
 
-        default:
-            goto usage;
-    }
+    default: goto usage;
+  }
 
-    exit(0);
+  exit(0);
 usage:
-    cout << "Usage: " << argv[0] << " l | r | L | R. lock/release. Check the code for specifics. :P" << endl;
-    exit(1);
+  cout << "Usage: " << argv[0] << " l | r | L | R. lock/release. Check the code for specifics. :P" << endl;
+  exit(1);
 }
-

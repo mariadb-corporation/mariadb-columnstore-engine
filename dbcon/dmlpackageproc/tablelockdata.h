@@ -35,34 +35,32 @@
 
 namespace dmlpackageprocessor
 {
-
 class TablelockData
 {
-public:
-    typedef std::map <uint32_t, TablelockData*> TablelockDataMap;
-    typedef std::map<uint32_t, uint64_t> OIDTablelock;
-    EXPORT static TablelockData* makeTablelockData(uint32_t sessionID = 0);
-    EXPORT static void removeTablelockData(uint32_t sessionID = 0);
-    EXPORT void setTablelock(uint32_t tableOid, uint64_t tablelockId);
-    EXPORT uint64_t getTablelockId(uint32_t tableOid);
-    OIDTablelock& getOidTablelockMap();
+ public:
+  typedef std::map<uint32_t, TablelockData*> TablelockDataMap;
+  typedef std::map<uint32_t, uint64_t> OIDTablelock;
+  EXPORT static TablelockData* makeTablelockData(uint32_t sessionID = 0);
+  EXPORT static void removeTablelockData(uint32_t sessionID = 0);
+  EXPORT void setTablelock(uint32_t tableOid, uint64_t tablelockId);
+  EXPORT uint64_t getTablelockId(uint32_t tableOid);
+  OIDTablelock& getOidTablelockMap();
 
-private:
-    /** Constuctors */
-    explicit TablelockData();
-    explicit TablelockData(const TablelockData& rhs);
-    ~TablelockData();
+ private:
+  /** Constuctors */
+  explicit TablelockData();
+  explicit TablelockData(const TablelockData& rhs);
+  ~TablelockData();
 
-    static boost::mutex map_mutex;
-    static TablelockDataMap fTablelockDataMap;
-    OIDTablelock fOIDTablelockMap;
-    boost::mutex fOIDTablelock;
+  static boost::mutex map_mutex;
+  static TablelockDataMap fTablelockDataMap;
+  OIDTablelock fOIDTablelockMap;
+  boost::mutex fOIDTablelock;
 };
 
-}
+}  // namespace dmlpackageprocessor
 
 #undef EXPORT
 
 #endif
 // vim:ts=4 sw=4:
-

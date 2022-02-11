@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id: we_simplesyslog.cpp 4607 2013-04-11 21:38:09Z rdempsey $
-*
-*******************************************************************************/
+ * $Id: we_simplesyslog.cpp 4607 2013-04-11 21:38:09Z rdempsey $
+ *
+ *******************************************************************************/
 
 #include "we_simplesyslog.h"
 
@@ -37,75 +37,73 @@ namespace WriteEngine
 /* static */
 SimpleSysLog* SimpleSysLog::instance()
 {
-    if ( !fSysLogger )
-        fSysLogger = new SimpleSysLog();
+  if (!fSysLogger)
+    fSysLogger = new SimpleSysLog();
 
-    return fSysLogger;
+  return fSysLogger;
 }
 
 //------------------------------------------------------------------------------
 // SimpleSysLog constructor.
 //------------------------------------------------------------------------------
-SimpleSysLog::SimpleSysLog() : fLoggingID( SUBSYSTEM_ID_WE )
+SimpleSysLog::SimpleSysLog() : fLoggingID(SUBSYSTEM_ID_WE)
 {
 }
 
 //------------------------------------------------------------------------------
 // Reset LoggingID (in order to set the subsystem id)
 //------------------------------------------------------------------------------
-void SimpleSysLog::setLoggingID( const logging::LoggingID& loggingID )
+void SimpleSysLog::setLoggingID(const logging::LoggingID& loggingID)
 {
-    fLoggingID = loggingID;
+  fLoggingID = loggingID;
 }
 
 //------------------------------------------------------------------------------
 // Log arguments (msgArgs) for specified msgId to the requested log (logType).
 //------------------------------------------------------------------------------
-void SimpleSysLog::logMsg( const logging::Message::Args& msgArgs,
-                           logging::LOG_TYPE             logType,
-                           logging::Message::MessageID   msgId )
+void SimpleSysLog::logMsg(const logging::Message::Args& msgArgs, logging::LOG_TYPE logType,
+                          logging::Message::MessageID msgId)
 {
-    logging::MessageLog ml( fLoggingID );
+  logging::MessageLog ml(fLoggingID);
 
-    logging::Message m(msgId);
-    m.format(msgArgs);
+  logging::Message m(msgId);
+  m.format(msgArgs);
 
-    boost::mutex::scoped_lock lk(fWriteLockMutex);
+  boost::mutex::scoped_lock lk(fWriteLockMutex);
 
-    switch (logType)
+  switch (logType)
+  {
+    case logging::LOG_TYPE_DEBUG:
     {
-        case logging::LOG_TYPE_DEBUG:
-        {
-            ml.logDebugMessage(m);
-            break;
-        }
-
-        case logging::LOG_TYPE_INFO:
-        default:
-        {
-            ml.logInfoMessage(m);
-            break;
-        }
-
-        case logging::LOG_TYPE_WARNING:
-        {
-            ml.logWarningMessage(m);
-            break;
-        }
-
-        case logging::LOG_TYPE_ERROR:
-        {
-            ml.logErrorMessage(m);
-            break;
-        }
-
-        case logging::LOG_TYPE_CRITICAL:
-        {
-            ml.logCriticalMessage(m);
-            break;
-        }
+      ml.logDebugMessage(m);
+      break;
     }
+
+    case logging::LOG_TYPE_INFO:
+    default:
+    {
+      ml.logInfoMessage(m);
+      break;
+    }
+
+    case logging::LOG_TYPE_WARNING:
+    {
+      ml.logWarningMessage(m);
+      break;
+    }
+
+    case logging::LOG_TYPE_ERROR:
+    {
+      ml.logErrorMessage(m);
+      break;
+    }
+
+    case logging::LOG_TYPE_CRITICAL:
+    {
+      ml.logCriticalMessage(m);
+      break;
+    }
+  }
 }
 
-} //end of namespace
-
+}  // namespace WriteEngine

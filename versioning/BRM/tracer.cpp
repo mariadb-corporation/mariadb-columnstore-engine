@@ -45,153 +45,148 @@ namespace BRM
 #ifdef BRM_INFO
 std::ofstream brmlog(string(MCSLOGDIR) + "/brm.log", std::ios::app);
 
-Tracer::Tracer(const std::string& file, int line, const std::string& msg, bool debug, bool writeNow): fFileName(file), fLine(line), fMsg(msg), fDebug(debug), fpid(getpid())
+Tracer::Tracer(const std::string& file, int line, const std::string& msg, bool debug, bool writeNow)
+ : fFileName(file), fLine(line), fMsg(msg), fDebug(debug), fpid(getpid())
 {
-    if (writeNow)
-        writeBegin();
+  if (writeNow)
+    writeBegin();
 }
 
 Tracer::~Tracer()
 {
-    writeEnd();
+  writeEnd();
 }
-
 
 void printIntVec(const pair<string, const int*>& p)
 {
-    brmlog << p.first << ": (" << *p.second << ") ";
+  brmlog << p.first << ": (" << *p.second << ") ";
 }
 
-void printBoolVec(const pair<string, const bool*>&  p)
+void printBoolVec(const pair<string, const bool*>& p)
 {
-    brmlog << p.first << ": (" << *p.second << ") ";
+  brmlog << p.first << ": (" << *p.second << ") ";
 }
 
 void printStrVec(const pair<string, const string*>& p)
 {
-    brmlog << p.first << ": (" << *p.second << ") ";
+  brmlog << p.first << ": (" << *p.second << ") ";
 }
 
 void printShortVec(const pair<string, const short*>& p)
 {
-    brmlog << p.first << ": (" << *p.second << ") ";
+  brmlog << p.first << ": (" << *p.second << ") ";
 }
 
 void printInt64Vec(const pair<string, const int64_t*>& p)
 {
-    brmlog << p.first << ": (" << *p.second << ") ";
+  brmlog << p.first << ": (" << *p.second << ") ";
 }
-
 
 void Tracer::writeBegin()
 {
-    brmlog << timeStamp() << fpid << ":" << fFileName << "@" << fLine << " " << fMsg << " begin - ";
-    for_each(fInputs.begin(), fInputs.end(), printIntVec);
-    for_each(fBoolInputs.begin(), fBoolInputs.end(), printBoolVec);
-    for_each(fStrInputs.begin(), fStrInputs.end(), printStrVec);
-    for_each(fShortInputs.begin(), fShortInputs.end(), printShortVec);
-    for_each(fInt64Inputs.begin(), fInt64Inputs.end(), printInt64Vec);
-    brmlog << endl << flush;
-
+  brmlog << timeStamp() << fpid << ":" << fFileName << "@" << fLine << " " << fMsg << " begin - ";
+  for_each(fInputs.begin(), fInputs.end(), printIntVec);
+  for_each(fBoolInputs.begin(), fBoolInputs.end(), printBoolVec);
+  for_each(fStrInputs.begin(), fStrInputs.end(), printStrVec);
+  for_each(fShortInputs.begin(), fShortInputs.end(), printShortVec);
+  for_each(fInt64Inputs.begin(), fInt64Inputs.end(), printInt64Vec);
+  brmlog << endl << flush;
 }
 
 void Tracer::writeEnd()
 {
-    brmlog << timeStamp() << fpid << ":" << fFileName << " " << fMsg << " end ";
+  brmlog << timeStamp() << fpid << ":" << fFileName << " " << fMsg << " end ";
 
-    if (! fOutputs.empty() || ! fBoolOutputs.empty())
-        brmlog << "- ";
+  if (!fOutputs.empty() || !fBoolOutputs.empty())
+    brmlog << "- ";
 
-    for_each(fOutputs.begin(), fOutputs.end(), printIntVec);
-    for_each(fBoolOutputs.begin(), fBoolOutputs.end(), printBoolVec);
-    for_each(fShortOutputs.begin(), fShortOutputs.end(), printShortVec);
-    for_each(fInt64Outputs.begin(), fInt64Outputs.end(), printInt64Vec);
-    brmlog << endl << flush;
-
+  for_each(fOutputs.begin(), fOutputs.end(), printIntVec);
+  for_each(fBoolOutputs.begin(), fBoolOutputs.end(), printBoolVec);
+  for_each(fShortOutputs.begin(), fShortOutputs.end(), printShortVec);
+  for_each(fInt64Outputs.begin(), fInt64Outputs.end(), printInt64Vec);
+  brmlog << endl << flush;
 }
 
 void Tracer::writeDirect(const std::string& msg)
 {
-    brmlog << msg << endl;
+  brmlog << msg << endl;
 }
 
 string Tracer::timeStamp()
 {
-    time_t outputTime;
-    time(&outputTime);
-    string datestr(ctime(&outputTime));
+  time_t outputTime;
+  time(&outputTime);
+  string datestr(ctime(&outputTime));
 
-    try
+  try
+  {
+    // replace newline
+    return datestr.replace(datestr.length() - 1, 1, string(":"));
+  }
+  catch (exception& ex)
+  {
+    size_t tries = 3;
+
+    while (!datestr.length() && tries--)
+      datestr = ctime(&outputTime);
+
+    if (datestr.length())
+      return datestr.replace(datestr.length() - 1, 1, string(":"));
+    else
     {
-        //replace newline
-        return datestr.replace(datestr.length() - 1, 1, string(":"));
+      std::cerr << __FILE__ << "@" << __LINE__ << " " << ex.what() << " ";
+      cerr << datestr << " length " << datestr.length() << " Source: ";
+      cerr << fFileName << "@" << fLine << " " << fMsg << endl;
+      return string("timestamp error:");
     }
-    catch (exception& ex)
-    {
-        size_t tries = 3;
-
-        while (!datestr.length() && tries--)
-            datestr = ctime(&outputTime);
-
-        if (datestr.length())
-            return datestr.replace(datestr.length() - 1, 1, string(":"));
-        else
-        {
-            std::cerr << __FILE__ << "@" << __LINE__ << " " << ex.what() << " ";
-            cerr << datestr << " length " << datestr.length() << " Source: ";
-            cerr << fFileName << "@" << fLine << " " << fMsg << endl;
-            return string("timestamp error:");
-        }
-    }
+  }
 }
-
 
 void Tracer::addInput(const string& name, const int* value)
 {
-    fInputs.push_back(make_pair(name, value));
+  fInputs.push_back(make_pair(name, value));
 }
 
 void Tracer::addInput(const string& name, const string* value)
 {
-    fStrInputs.push_back(make_pair(name, value));
+  fStrInputs.push_back(make_pair(name, value));
 }
 
 void Tracer::addInput(const string& name, const bool* value)
 {
-    fBoolInputs.push_back(make_pair(name, value));
+  fBoolInputs.push_back(make_pair(name, value));
 }
 
 void Tracer::addInput(const string& name, const short* value)
 {
-    fShortInputs.push_back(make_pair(name, value));
+  fShortInputs.push_back(make_pair(name, value));
 }
 
 void Tracer::addInput(const string& name, const int64_t* value)
 {
-    fInt64Inputs.push_back(make_pair(name, value));
+  fInt64Inputs.push_back(make_pair(name, value));
 }
-
 
 void Tracer::addOutput(const string& name, const int* value)
 {
-    fOutputs.push_back(make_pair(name, value));
+  fOutputs.push_back(make_pair(name, value));
 }
 
 void Tracer::addOutput(const string& name, const bool* value)
 {
-    fBoolOutputs.push_back(make_pair(name, value));
+  fBoolOutputs.push_back(make_pair(name, value));
 }
 
 void Tracer::addOutput(const string& name, const short* value)
 {
-    fShortOutputs.push_back(make_pair(name, value));
+  fShortOutputs.push_back(make_pair(name, value));
 }
 
 void Tracer::addOutput(const string& name, const int64_t* value)
 {
-    fInt64Outputs.push_back(make_pair(name, value));
+  fInt64Outputs.push_back(make_pair(name, value));
 }
 
 #endif
 
-} //namespace
+}  // namespace BRM

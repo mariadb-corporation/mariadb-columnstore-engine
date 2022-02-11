@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id: we_blockop.cpp 4500 2013-01-31 20:25:42Z dhall $
-*
-*******************************************************************************/
+ * $Id: we_blockop.cpp 4500 2013-01-31 20:25:42Z dhall $
+ *
+ *******************************************************************************/
 /** @file */
 
 #include <stdio.h>
@@ -37,18 +37,19 @@ using namespace execplan;
 
 namespace WriteEngine
 {
-
 /**
  * Constructor
  */
-BlockOp::BlockOp(): m_typeHandler(nullptr)
-{}
+BlockOp::BlockOp() : m_typeHandler(nullptr)
+{
+}
 
 /**
  * Default Destructor
  */
 BlockOp::~BlockOp()
-{}
+{
+}
 
 /***********************************************************
  * DESCRIPTION:
@@ -62,16 +63,15 @@ BlockOp::~BlockOp()
  *    bio - Block internal offset
  *    true if success, false otherwise
  ***********************************************************/
-bool BlockOp::calculateRowId(
-    RID rowId, const int epb, const int width, int& fbo, int& bio ) const
+bool BlockOp::calculateRowId(RID rowId, const int epb, const int width, int& fbo, int& bio) const
 {
-    if ( std::numeric_limits<WriteEngine::RID>::max() == rowId )
-        return false;
+  if (std::numeric_limits<WriteEngine::RID>::max() == rowId)
+    return false;
 
-    fbo = (int)( rowId / epb );
-    bio = ( rowId & ( epb - 1 )) * width;
+  fbo = (int)(rowId / epb);
+  bio = (rowId & (epb - 1)) * width;
 
-    return true;
+  return true;
 }
 
 /***********************************************************
@@ -83,20 +83,18 @@ bool BlockOp::calculateRowId(
  * RETURN:
  *    emptyVal - the value of empty row
  ***********************************************************/
-const uint8_t* BlockOp::getEmptyRowValue(
-    const CalpontSystemCatalog::ColDataType colDataType,
-    const int width) const
+const uint8_t* BlockOp::getEmptyRowValue(const CalpontSystemCatalog::ColDataType colDataType,
+                                         const int width) const
 {
-    auto attrs = datatypes::SystemCatalog::TypeAttributesStd(width, 0, -1);
-    // Bulk operation runtime should have m_typeHandler nullptr calling this
-    // Non-bulk operations runtime branch
-    if (m_typeHandler)
-        return m_typeHandler->getEmptyValueForType(attrs);
+  auto attrs = datatypes::SystemCatalog::TypeAttributesStd(width, 0, -1);
+  // Bulk operation runtime should have m_typeHandler nullptr calling this
+  // Non-bulk operations runtime branch
+  if (m_typeHandler)
+    return m_typeHandler->getEmptyValueForType(attrs);
 
-    // Bulk operation branch
-    auto* typeHandler = datatypes::TypeHandler::find(colDataType,
-                                                     attrs);
-    return typeHandler->getEmptyValueForType(attrs);
+  // Bulk operation branch
+  auto* typeHandler = datatypes::TypeHandler::find(colDataType, attrs);
+  return typeHandler->getEmptyValueForType(attrs);
 }
 
 /***********************************************************
@@ -108,10 +106,9 @@ const uint8_t* BlockOp::getEmptyRowValue(
  * RETURN:
  *    emptyVal - the value of empty row
  ***********************************************************/
-int BlockOp::getCorrectRowWidth(
-    const CalpontSystemCatalog::ColDataType colDataType, const int width ) const
+int BlockOp::getCorrectRowWidth(const CalpontSystemCatalog::ColDataType colDataType, const int width) const
 {
-    return Convertor::getCorrectRowWidth(colDataType, width);
+  return Convertor::getCorrectRowWidth(colDataType, width);
 }
 
 /***********************************************************
@@ -124,12 +121,11 @@ int BlockOp::getCorrectRowWidth(
  * RETURN:
  *    row id
  ***********************************************************/
-RID BlockOp::getRowId(
-    const long fbo, const int width, const int rowPos
-    /*const int bio, const int bbo*/ ) const
+RID BlockOp::getRowId(const long fbo, const int width, const int rowPos
+                      /*const int bio, const int bbo*/) const
 {
-//      return fbo*BYTE_PER_BLOCK*ROW_PER_BYTE + bio*ROW_PER_BYTE + bbo;
-    return (BYTE_PER_BLOCK / width) * fbo + rowPos;
+  //      return fbo*BYTE_PER_BLOCK*ROW_PER_BYTE + bio*ROW_PER_BYTE + bbo;
+  return (BYTE_PER_BLOCK / width) * fbo + rowPos;
 }
 
 /***********************************************************
@@ -141,10 +137,9 @@ RID BlockOp::getRowId(
  * RETURN:
  *    val - buffer value
  ***********************************************************/
-void BlockOp::readBufValue(
-    const unsigned char* buf, void* val, const short width ) const
+void BlockOp::readBufValue(const unsigned char* buf, void* val, const short width) const
 {
-    memcpy( val, buf, width );
+  memcpy(val, buf, width);
 }
 
 /***********************************************************
@@ -156,9 +151,9 @@ void BlockOp::readBufValue(
  * RETURN:
  *    none
  ***********************************************************/
-void BlockOp::resetBuf(  unsigned char* buf, const int bufSize ) const
+void BlockOp::resetBuf(unsigned char* buf, const int bufSize) const
 {
-    memset( buf, 0, bufSize );
+  memset(buf, 0, bufSize);
 }
 
 /***********************************************************
@@ -173,45 +168,38 @@ void BlockOp::resetBuf(  unsigned char* buf, const int bufSize ) const
  *    none
  ***********************************************************/
 /* static */
-void BlockOp::setEmptyBuf(
-    unsigned char* buf,
-    const int bufSize,
-    const uint8_t* emptyVal,
-    const int width )
+void BlockOp::setEmptyBuf(unsigned char* buf, const int bufSize, const uint8_t* emptyVal, const int width)
 {
-    const int ARRAY_COUNT     = 128;
-    const int NBYTES_IN_ARRAY = width * ARRAY_COUNT;
-    //unsigned char emptyValArray[NBYTES_IN_ARRAY];
-    unsigned char* emptyValArray = (unsigned char*)alloca(NBYTES_IN_ARRAY);
+  const int ARRAY_COUNT = 128;
+  const int NBYTES_IN_ARRAY = width * ARRAY_COUNT;
+  // unsigned char emptyValArray[NBYTES_IN_ARRAY];
+  unsigned char* emptyValArray = (unsigned char*)alloca(NBYTES_IN_ARRAY);
 
-    // Optimize buffer initialization by constructing and copying in an array
-    // instead of individual values.  This reduces the number of calls to
-    // memcpy().
-     
-    for(uint8_t* pos = emptyValArray, * end = pos + NBYTES_IN_ARRAY; pos < end; pos += width) //FIXME for no loop
-    {
-        memcpy(pos, emptyVal, width);
-    }
+  // Optimize buffer initialization by constructing and copying in an array
+  // instead of individual values.  This reduces the number of calls to
+  // memcpy().
 
-    int countFull128 = (bufSize / width) / ARRAY_COUNT;
-    int countRemain  = (bufSize / width) % ARRAY_COUNT;
+  for (uint8_t *pos = emptyValArray, *end = pos + NBYTES_IN_ARRAY; pos < end;
+       pos += width)  // FIXME for no loop
+  {
+    memcpy(pos, emptyVal, width);
+  }
 
-    // Copy in the 128 element array into "buf" as many times as needed
-    if (countFull128 > 0)
-    {
-        for ( int i = 0; i < countFull128; i++ )
-            memcpy( buf + (i * (NBYTES_IN_ARRAY)),
-                    emptyValArray,
-                    NBYTES_IN_ARRAY );
-    }
+  int countFull128 = (bufSize / width) / ARRAY_COUNT;
+  int countRemain = (bufSize / width) % ARRAY_COUNT;
 
-    // Initialize the remainder of "buf" that is leftover
-    if (countRemain > 0)
-    {
-        memcpy( buf + (countFull128 * NBYTES_IN_ARRAY),
-                emptyValArray,
-                width * countRemain );
-    }
+  // Copy in the 128 element array into "buf" as many times as needed
+  if (countFull128 > 0)
+  {
+    for (int i = 0; i < countFull128; i++)
+      memcpy(buf + (i * (NBYTES_IN_ARRAY)), emptyValArray, NBYTES_IN_ARRAY);
+  }
+
+  // Initialize the remainder of "buf" that is leftover
+  if (countRemain > 0)
+  {
+    memcpy(buf + (countFull128 * NBYTES_IN_ARRAY), emptyValArray, width * countRemain);
+  }
 }
 
 /***********************************************************
@@ -224,25 +212,20 @@ void BlockOp::setEmptyBuf(
  * RETURN:
  *    none
  ***********************************************************/
-void BlockOp::writeBufValue(
-    unsigned char* buf, const void* val, const size_t width, const bool clear ) const
+void BlockOp::writeBufValue(unsigned char* buf, const void* val, const size_t width, const bool clear) const
 {
-    if ( clear )
-        memset( buf, 0, width );
+  if (clear)
+    memset(buf, 0, width);
 
-    memcpy( buf, val, width );
+  memcpy(buf, val, width);
 }
 
 void BlockOp::findTypeHandler(const int colWidth,
                               const execplan::CalpontSystemCatalog::ColDataType colDataType)
 
 {
-    auto attrs = datatypes::SystemCatalog::TypeAttributesStd(colWidth,
-                                                             0,
-                                                             -1);
-    m_typeHandler = datatypes::TypeHandler::find(colDataType,
-                                                 attrs);
+  auto attrs = datatypes::SystemCatalog::TypeAttributesStd(colWidth, 0, -1);
+  m_typeHandler = datatypes::TypeHandler::find(colDataType, attrs);
 }
 
-} //end of namespace
-
+}  // namespace WriteEngine

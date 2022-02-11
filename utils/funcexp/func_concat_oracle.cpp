@@ -30,48 +30,45 @@ using namespace dataconvert;
 
 namespace funcexp
 {
-
-CalpontSystemCatalog::ColType Func_concat_oracle::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
+CalpontSystemCatalog::ColType Func_concat_oracle::operationType(FunctionParm& fp,
+                                                                CalpontSystemCatalog::ColType& resultType)
 {
-    // operation type is not used by this functor
-    return fp[0]->data()->resultType();
+  // operation type is not used by this functor
+  return fp[0]->data()->resultType();
 }
-
 
 // Returns the string that results from concatenating the arguments.
 // concat_oracle() returns NULL all arguments are NULL.
 // single arguments null is replaced by "".
 //
-string Func_concat_oracle::getStrVal(Row& row,
-                              FunctionParm& parm,
-                              bool& isNull,
-                              CalpontSystemCatalog::ColType&)
+string Func_concat_oracle::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
+                                     CalpontSystemCatalog::ColType&)
 {
-	string ret;
-    string tmp;
-    stringValue(parm[0], row, isNull, ret);
-    // Oracle Mode should replace NULL with "" unless all values are NULL
+  string ret;
+  string tmp;
+  stringValue(parm[0], row, isNull, ret);
+  // Oracle Mode should replace NULL with "" unless all values are NULL
+  if (isNull)
+  {
+    ret = "";
+    isNull = false;
+  }
+  // TODO: do a better job of cutting down the number re-allocations.
+  // look at Item_func_concat::realloc_result for ideas and use
+  // std::string:resize() appropriatly.
+  for (unsigned int id = 1; id < parm.size(); id++)
+  {
+    stringValue(parm[id], row, isNull, tmp);
     if (isNull)
     {
-        ret = "";
-        isNull = false;
+      tmp = "";
+      isNull = false;
     }
-    // TODO: do a better job of cutting down the number re-allocations.
-    // look at Item_func_concat::realloc_result for ideas and use 
-    // std::string:resize() appropriatly.
-    for ( unsigned int id = 1 ; id < parm.size() ; id++)
-    {
-		stringValue(parm[id], row, isNull, tmp);
-	    if (isNull)
-	    {
-	        tmp = "";
-	        isNull = false;
-	    }
-        ret.append(tmp);
-    }
+    ret.append(tmp);
+  }
 
-    return ret;
+  return ret;
 }
 
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:

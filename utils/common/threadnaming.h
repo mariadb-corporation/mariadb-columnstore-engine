@@ -21,7 +21,7 @@
 
 namespace utils
 {
-    void setThreadName(const char *threadName);
-    std::string getThreadName();
-} // end of namespace
+void setThreadName(const char* threadName);
+std::string getThreadName();
+}  // namespace utils
 #endif

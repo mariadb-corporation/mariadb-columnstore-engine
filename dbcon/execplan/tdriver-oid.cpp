@@ -39,7 +39,6 @@
 
 using namespace std;
 
-
 void* OIDManClient(void* arg);
 int timer;
 pthread_mutex_t lock;
@@ -48,85 +47,78 @@ using namespace execplan;
 
 class ExecPlanTest : public CppUnit::TestFixture
 {
+  CPPUNIT_TEST_SUITE(ExecPlanTest);
+  unlink("/tmp/oidbitmap");
+  CPPUNIT_TEST(objectIDManager_2);
+  CPPUNIT_TEST(objectIDManager_3);
+  unlink("/tmp/oidbitmap");
+  CPPUNIT_TEST_SUITE_END();
 
-    CPPUNIT_TEST_SUITE( ExecPlanTest );
-    unlink("/tmp/oidbitmap");
-    CPPUNIT_TEST( objectIDManager_2 );
-    CPPUNIT_TEST( objectIDManager_3 );
-    unlink("/tmp/oidbitmap");
-    CPPUNIT_TEST_SUITE_END();
+ public:
+  void objectIDManager_2()
+  {
+    ObjectIDManager o;
+    int i, j, allocsize, loopCount, firstOID;
+    const int chunkcap = 10000;
+    const int OIDSpaceSize = 16777216;
 
-public:
+    cout << endl << "Long OID Manager test" << endl;
+    cout << "using bitmap file " << o.getFilename() << endl;
 
-    void objectIDManager_2()
+    try
     {
-        ObjectIDManager o;
-        int i, j, allocsize, loopCount, firstOID;
-        const int chunkcap = 10000;
-        const int OIDSpaceSize = 16777216;
+      // make sure we can fill the entire OID space and clear it out a
+      // few times.  This should stress test the implementation pretty
+      // well.
 
-        cout << endl << "Long OID Manager test" << endl;
-        cout << "using bitmap file " << o.getFilename() << endl;
+      firstOID = o.allocOID();
+      cerr << "first OID is " << firstOID << endl;
+      o.returnOIDs(0, firstOID);
 
-        try
+      srand(time(NULL));
+
+      // fill the entire space then empty it out a few times.
+      for (i = 0; i < 10; i++)
+      {
+        cout << "fill & empty test " << i + 1 << "/10" << endl;
+
+        for (j = 0, loopCount = 1; j < OIDSpaceSize; j += allocsize, loopCount++)
         {
-            // make sure we can fill the entire OID space and clear it out a
-            // few times.  This should stress test the implementation pretty
-            // well.
+          allocsize = rand() % chunkcap;
+          allocsize = (allocsize > OIDSpaceSize - j ? OIDSpaceSize - j : allocsize);
+          CPPUNIT_ASSERT(o.allocOIDs(allocsize) > -1);
+        }
 
-            firstOID = o.allocOID();
-            cerr << "first OID is " << firstOID << endl;
-            o.returnOIDs(0, firstOID);
+        CPPUNIT_ASSERT(o.allocOID() == -1);
+        CPPUNIT_ASSERT(o.size() == OIDSpaceSize);
+        o.returnOIDs(0, OIDSpaceSize - 1);  // (gets rid of fragmentation in the freelist)
+      }
 
-            srand(time(NULL));
+      // fill the space again, then deallocate randomly to fragment
+      // the freelist
+      for (j = 0, loopCount = 1; j < OIDSpaceSize; j += allocsize, loopCount++)
+      {
+        allocsize = rand() % chunkcap;
+        allocsize = (allocsize > OIDSpaceSize - j ? OIDSpaceSize - j : allocsize);
+        CPPUNIT_ASSERT(o.allocOIDs(allocsize) > -1);
+      }
 
-            // fill the entire space then empty it out a few times.
-            for (i = 0; i < 10; i++)
-            {
-                cout << "fill & empty test " << i + 1 << "/10" << endl;
+      CPPUNIT_ASSERT(o.allocOID() == -1);
+      CPPUNIT_ASSERT(o.size() == OIDSpaceSize);
 
-                for (j = 0, loopCount = 1; j < OIDSpaceSize ; j += allocsize, loopCount++)
-                {
-                    allocsize = rand() % chunkcap;
-                    allocsize = (allocsize > OIDSpaceSize - j ?
-                                 OIDSpaceSize - j : allocsize);
-                    CPPUNIT_ASSERT(o.allocOIDs(allocsize) > -1);
-                }
+      for (j = 0, loopCount = 1; j < OIDSpaceSize; j += allocsize, loopCount++)
+      {
+        allocsize = rand() % chunkcap;
+        allocsize = (allocsize > OIDSpaceSize - j ? OIDSpaceSize - j : allocsize);
+        o.returnOIDs(j, j + allocsize - 1);
+      }
 
-                CPPUNIT_ASSERT(o.allocOID() == -1);
-                CPPUNIT_ASSERT(o.size() == OIDSpaceSize);
-                o.returnOIDs(0, OIDSpaceSize - 1); // (gets rid of fragmentation in the freelist)
-            }
+      CPPUNIT_ASSERT(o.size() == 0);
+      CPPUNIT_ASSERT(o.allocOIDs(OIDSpaceSize) == 0);
 
-            // fill the space again, then deallocate randomly to fragment
-            // the freelist
-            for (j = 0, loopCount = 1; j < OIDSpaceSize ; j += allocsize, loopCount++)
-            {
-                allocsize = rand() % chunkcap;
-                allocsize = (allocsize > OIDSpaceSize - j ?
-                             OIDSpaceSize - j : allocsize);
-                CPPUNIT_ASSERT(o.allocOIDs(allocsize) > -1);
-            }
-
-            CPPUNIT_ASSERT(o.allocOID() == -1);
-            CPPUNIT_ASSERT(o.size() == OIDSpaceSize);
-
-            for (j = 0, loopCount = 1; j < OIDSpaceSize; j += allocsize, loopCount++)
-            {
-                allocsize = rand() % chunkcap;
-                allocsize = (allocsize > OIDSpaceSize - j ?
-                             OIDSpaceSize - j : allocsize);
-                o.returnOIDs(j, j + allocsize - 1);
-            }
-
-            CPPUNIT_ASSERT(o.size() == 0);
-            CPPUNIT_ASSERT(o.allocOIDs(OIDSpaceSize) == 0);
-
-
-
-            // create small random holes & fill them.  This test takes > 15
-            // minutes, so it should be commented out unless there's a
-            // specific need for it
+      // create small random holes & fill them.  This test takes > 15
+      // minutes, so it should be commented out unless there's a
+      // specific need for it
 #if 0
             const int smallcap = 20;
 
@@ -174,127 +166,126 @@ public:
             CPPUNIT_ASSERT(o.allocOID() == -1);
             cout << "done." << endl;
 #endif
-        }
-        catch (...)
-        {
-            unlink(o.getFilename().c_str());
-            throw;
-        }
-
-        unlink(o.getFilename().c_str());
     }
-
-    /* This test attempts to simulate real transactions: many small
-    * blocks of allocs and returns in a multithreaded/multiprocess
-    * way.  This test only uses threads, but that should be good enough.
-    */
-    void objectIDManager_3()
+    catch (...)
     {
-        const int threadCount = 4;
-        int i;
-        pthread_t threads[threadCount];
-
-        cout << endl << "Multithreaded OIDManager test.  "
-             "This runs for 2 minutes." << endl;
-
-        timer = 0;
-
-        for (i = 0; i < threadCount; i++)
-            if (pthread_create(&threads[i], NULL, OIDManClient,
-                               reinterpret_cast<void*>(i + 1)) < 0)
-                throw logic_error("Error creating threads for the OID Manager test");
-
-        sleep(120);
-        timer = 1;
-
-        for (i = 0; i < threadCount; i++)
-            pthread_join(threads[i], NULL);
+      unlink(o.getFilename().c_str());
+      throw;
     }
 
+    unlink(o.getFilename().c_str());
+  }
+
+  /* This test attempts to simulate real transactions: many small
+   * blocks of allocs and returns in a multithreaded/multiprocess
+   * way.  This test only uses threads, but that should be good enough.
+   */
+  void objectIDManager_3()
+  {
+    const int threadCount = 4;
+    int i;
+    pthread_t threads[threadCount];
+
+    cout << endl
+         << "Multithreaded OIDManager test.  "
+            "This runs for 2 minutes."
+         << endl;
+
+    timer = 0;
+
+    for (i = 0; i < threadCount; i++)
+      if (pthread_create(&threads[i], NULL, OIDManClient, reinterpret_cast<void*>(i + 1)) < 0)
+        throw logic_error("Error creating threads for the OID Manager test");
+
+    sleep(120);
+    timer = 1;
+
+    for (i = 0; i < threadCount; i++)
+      pthread_join(threads[i], NULL);
+  }
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION( ExecPlanTest );
+CPPUNIT_TEST_SUITE_REGISTRATION(ExecPlanTest);
 
 void* OIDManClient(void* arg)
 {
-    ObjectIDManager o;
-    const int sizecap = 5;
-    int op, size, tmp;
-    uint32_t seed;
-    int threadnum = reinterpret_cast<int>(arg);
+  ObjectIDManager o;
+  const int sizecap = 5;
+  int op, size, tmp;
+  uint32_t seed;
+  int threadnum = reinterpret_cast<int>(arg);
 
-    struct entry
+  struct entry
+  {
+    int begin;
+    int end;
+    struct entry* next;
+  };
+
+  struct entry* e;
+  struct entry* listHead = NULL;
+  struct entry* listTail = NULL;
+
+  cout << "  Thread " << threadnum << " started." << endl;
+
+  seed = time(NULL) % MAXINT;
+
+  while (timer == 0)
+  {
+    op = rand_r(&seed) % 2;
+    size = (rand_r(&seed) % sizecap) + 1;
+
+    if (op == 1)  // allocate an OID block
     {
-        int begin;
-        int end;
-        struct entry* next;
-    };
+      e = new struct entry;
+      tmp = o.allocOIDs(size);
+      CPPUNIT_ASSERT(tmp != -1);
+      e->begin = tmp;
+      e->end = tmp + size - 1;
+      e->next = NULL;
 
-    struct entry* e;
-    struct entry* listHead = NULL;
-    struct entry* listTail = NULL;
+      if (listTail != NULL)
+        listTail->next = e;
+      else
+        listHead = e;
 
-    cout << "  Thread " << threadnum << " started." << endl;
-
-    seed = time(NULL) % MAXINT;
-
-    while (timer == 0)
-    {
-        op = rand_r(&seed) % 2;
-        size = (rand_r(&seed) % sizecap) + 1;
-
-        if (op == 1)     			// allocate an OID block
-        {
-            e = new struct entry;
-            tmp = o.allocOIDs(size);
-            CPPUNIT_ASSERT(tmp != -1);
-            e->begin = tmp;
-            e->end = tmp + size - 1;
-            e->next = NULL;
-
-            if (listTail != NULL)
-                listTail->next = e;
-            else
-                listHead = e;
-
-            listTail = e;
-        }
-        else  					//deallocate an OID block
-        {
-            if (listHead == NULL)
-                continue;
-
-            o.returnOIDs(listHead->begin, listHead->end);
-            e = listHead;
-            listHead = listHead->next;
-
-            if (listHead == NULL)
-                listTail = NULL;
-
-            delete e;
-        }
+      listTail = e;
     }
-
-    while (listHead != NULL)
+    else  // deallocate an OID block
     {
-        e = listHead;
-        listHead = listHead->next;
-        delete e;
-    }
+      if (listHead == NULL)
+        continue;
 
-    cout << "  Thread " << threadnum << " exiting." << endl;
-    pthread_exit(0);
+      o.returnOIDs(listHead->begin, listHead->end);
+      e = listHead;
+      listHead = listHead->next;
+
+      if (listHead == NULL)
+        listTail = NULL;
+
+      delete e;
+    }
+  }
+
+  while (listHead != NULL)
+  {
+    e = listHead;
+    listHead = listHead->next;
+    delete e;
+  }
+
+  cout << "  Thread " << threadnum << " exiting." << endl;
+  pthread_exit(0);
 }
-
 
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
-int main( int argc, char** argv)
+int main(int argc, char** argv)
 {
-    CppUnit::TextUi::TestRunner runner;
-    CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
-    runner.addTest( registry.makeTest() );
-    bool wasSuccessful = runner.run( "", false );
-    return (wasSuccessful ? 0 : 1);
+  CppUnit::TextUi::TestRunner runner;
+  CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
+  runner.addTest(registry.makeTest());
+  bool wasSuccessful = runner.run("", false);
+  return (wasSuccessful ? 0 : 1);
 }

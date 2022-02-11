@@ -28,43 +28,41 @@
 
 namespace bulkloadxml
 {
-
 /** @brief Stores Input to colxml; used to generate Job XML file for cpimport.
  */
 class InputMgr : public WriteEngine::XMLGenData
 {
-public:
+ public:
+  /** @brief Constructor to manage colxml input.
+   *
+   * @param job is the Job Number
+   */
+  InputMgr(const std::string& job);
+  virtual ~InputMgr();
 
-    /** @brief Constructor to manage colxml input.
-     *
-     * @param job is the Job Number
-     */
-    InputMgr(const std::string& job);
-    virtual ~InputMgr( );
+  /** @brief Specify parameter data to be written to Job XML file
+   *
+   * @param argc Number of arguments in argv
+   * @param argv Input arguments
+   * @return Return true if input accepted; false indicates an error
+   */
+  bool input(int argc, char** argv);
 
-    /** @brief Specify parameter data to be written to Job XML file
-     *
-     * @param argc Number of arguments in argv
-     * @param argv Input arguments
-     * @return Return true if input accepted; false indicates an error
-     */
-    bool input(int argc, char** argv);
+  /** @brief Load list of tables in system catalog for relevant schema.
+   */
+  bool loadCatalogTables();
 
-    /** @brief Load list of tables in system catalog for relevant schema.
-     */
-    bool loadCatalogTables();
+  /** @brief Print contents of this object
+   */
+  virtual void print(std::ostream& os) const;
 
-    /** @brief Print contents of this object
-     */
-    virtual void print(std::ostream& os) const;
+  friend std::ostream& operator<<(std::ostream& os, const InputMgr& m);
 
-    friend std::ostream& operator<<(std::ostream& os, const InputMgr& m);
-
-private:
-    void  printUsage();
-    int   verifyArgument(char* arg);
+ private:
+  void printUsage();
+  int verifyArgument(char* arg);
 };
 
-}
+}  // namespace bulkloadxml
 
 #endif

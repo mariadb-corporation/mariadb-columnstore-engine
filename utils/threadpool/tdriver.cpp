@@ -36,92 +36,81 @@ using namespace std;
 int thecount = 0;
 boost::mutex mutex;
 
-
-
 class ThreadPoolTestSuite : public CppUnit::TestFixture
 {
+  CPPUNIT_TEST_SUITE(ThreadPoolTestSuite);
 
-    CPPUNIT_TEST_SUITE( ThreadPoolTestSuite );
+  CPPUNIT_TEST(test_1);
 
-    CPPUNIT_TEST( test_1 );
+  CPPUNIT_TEST_SUITE_END();
 
-    CPPUNIT_TEST_SUITE_END();
-
-private:
-
-    // Functor class
-    struct foo
+ private:
+  // Functor class
+  struct foo
+  {
+    void operator()()
     {
-        void operator ()()
-        {
-            for (int i = 0; i < 500; i++)
-            {
-                // simulate some work
-                fData++;
-            }
+      for (int i = 0; i < 500; i++)
+      {
+        // simulate some work
+        fData++;
+      }
 
-            boost::mutex::scoped_lock lock(mutex);
+      boost::mutex::scoped_lock lock(mutex);
 
-            std::cout << "count = " << ++thecount << ' ' << fData << std::endl;
-        }
-
-        foo(int i):
-            fData(i)
-        {}
-
-        foo(const foo& copy)
-            : fData(copy.fData)
-        {}
-
-        int fData;
-
-    };
-
-public:
-    void setUp()
-    {}
-
-    void tearDown()
-    {}
-
-    void test_1()
-    {
-
-
-        threadpool::ThreadPool pool( 5, 10 );
-
-        for (int y = 0; y < 10; y++)
-        {
-            foo bar(y);
-
-            for (int i = 0; i < 10; ++i)
-            {
-                pool.invoke(bar);
-            }
-
-            // Wait until all of the queued up and in-progress work has finished
-            pool.wait();
-            pool.dump();
-        }
-
-
+      std::cout << "count = " << ++thecount << ' ' << fData << std::endl;
     }
 
+    foo(int i) : fData(i)
+    {
+    }
+
+    foo(const foo& copy) : fData(copy.fData)
+    {
+    }
+
+    int fData;
+  };
+
+ public:
+  void setUp()
+  {
+  }
+
+  void tearDown()
+  {
+  }
+
+  void test_1()
+  {
+    threadpool::ThreadPool pool(5, 10);
+
+    for (int y = 0; y < 10; y++)
+    {
+      foo bar(y);
+
+      for (int i = 0; i < 10; ++i)
+      {
+        pool.invoke(bar);
+      }
+
+      // Wait until all of the queued up and in-progress work has finished
+      pool.wait();
+      pool.dump();
+    }
+  }
 };
 
-
-CPPUNIT_TEST_SUITE_REGISTRATION( ThreadPoolTestSuite );
+CPPUNIT_TEST_SUITE_REGISTRATION(ThreadPoolTestSuite);
 
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
-
-int main( int argc, char** argv)
+int main(int argc, char** argv)
 {
-    CppUnit::TextUi::TestRunner runner;
-    CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
-    runner.addTest( registry.makeTest() );
-    bool wasSuccessful = runner.run( "", false );
-    return (wasSuccessful ? 0 : 1);
+  CppUnit::TextUi::TestRunner runner;
+  CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
+  runner.addTest(registry.makeTest());
+  bool wasSuccessful = runner.run("", false);
+  return (wasSuccessful ? 0 : 1);
 }
-

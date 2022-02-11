@@ -51,218 +51,213 @@ int threadStop, threadNum;
 
 static void* SMRunner(void* arg)
 {
-    SessionManager* sm;
-    int op;
-    uint32_t seed, sessionnum;
-    SessionManager::TxnID tmp;
-    int tNum = reinterpret_cast<int>(arg);
+  SessionManager* sm;
+  int op;
+  uint32_t seed, sessionnum;
+  SessionManager::TxnID tmp;
+  int tNum = reinterpret_cast<int>(arg);
 
-    struct entry
+  struct entry
+  {
+    SessionManager::TxnID tid;
+    uint32_t sessionnum;
+    struct entry* next;
+  };
+
+  struct entry* e;
+  struct entry* listHead = NULL;
+  struct entry* listTail = NULL;
+
+  cerr << "Thread " << tNum << " started." << endl;
+
+  seed = time(NULL) % MAXINT;
+
+  sm = new SessionManager();
+
+  while (!threadStop)
+  {
+    sm->verifySize();
+    op = rand_r(&seed) % 4;  // 0 = newTxnID, 1 = committed, 2 = getTxnID, 3 = delete sm; new sm
+    sessionnum = rand_r(&seed);
+
+    switch (op)
     {
-        SessionManager::TxnID tid;
-        uint32_t sessionnum;
-        struct entry* next;
-    };
+      case 0:
+        e = new struct entry;
+        e->tid = sm->newTxnID(sessionnum, false);
 
-    struct entry* e;
-    struct entry* listHead = NULL;
-    struct entry* listTail = NULL;
-
-    cerr << "Thread " << tNum << " started." << endl;
-
-    seed = time(NULL) % MAXINT;
-
-    sm = new SessionManager();
-
-    while (!threadStop)
-    {
-        sm->verifySize();
-        op = rand_r(&seed) % 4;  // 0 = newTxnID, 1 = committed, 2 = getTxnID, 3 = delete sm; new sm
-        sessionnum = rand_r(&seed);
-
-        switch (op)
+        if (e->tid.valid == false)  // SM is full
         {
-            case 0:
-                e = new struct entry;
-                e->tid = sm->newTxnID(sessionnum, false);
+          delete e;
+          break;
+        }
 
-                if (e->tid.valid == false)     // SM is full
-                {
-                    delete e;
-                    break;
-                }
+        e->sessionnum = sessionnum;
+        e->next = NULL;
 
-                e->sessionnum = sessionnum;
-                e->next = NULL;
+        if (listTail != NULL)
+          listTail->next = e;
+        else
+          listHead = e;
 
-                if (listTail != NULL)
-                    listTail->next = e;
-                else
-                    listHead = e;
+        listTail = e;
+        break;
 
-                listTail = e;
-                break;
+      case 1:
+        if (listHead == NULL)
+          continue;
 
-            case 1:
-                if (listHead == NULL)
-                    continue;
-
-                sm->committed(listHead->tid);
-                e = listHead;
-                listHead = listHead->next;
-
-                if (listHead == NULL)
-                    listTail = NULL;
-
-                delete e;
-                break;
-
-            case 2:
-                if (listHead == NULL)
-                    continue;
-
-                tmp = sm->getTxnID(listHead->sessionnum);
-                CPPUNIT_ASSERT(tmp.valid == listHead->tid.valid == true);
-                // there's some risk of collision here if 2 threads happen to choose the
-                // same session number
-                //CPPUNIT_ASSERT(tmp.id == listHead->tid.id);
-                break;
-
-            case 3:
-                delete sm;
-                sm = new SessionManager();
-                break;
-
-            default:
-                cerr << "SMRunner: ??" << endl;
-        };
-    }
-
-    while (listHead != NULL)
-    {
+        sm->committed(listHead->tid);
         e = listHead;
         listHead = listHead->next;
-        delete e;
-    }
 
-    delete sm;
-    cerr << "Thread " << tNum << " exiting." << endl;
-    pthread_exit(0);
+        if (listHead == NULL)
+          listTail = NULL;
+
+        delete e;
+        break;
+
+      case 2:
+        if (listHead == NULL)
+          continue;
+
+        tmp = sm->getTxnID(listHead->sessionnum);
+        CPPUNIT_ASSERT(tmp.valid == listHead->tid.valid == true);
+        // there's some risk of collision here if 2 threads happen to choose the
+        // same session number
+        // CPPUNIT_ASSERT(tmp.id == listHead->tid.id);
+        break;
+
+      case 3:
+        delete sm;
+        sm = new SessionManager();
+        break;
+
+      default: cerr << "SMRunner: ??" << endl;
+    };
+  }
+
+  while (listHead != NULL)
+  {
+    e = listHead;
+    listHead = listHead->next;
+    delete e;
+  }
+
+  delete sm;
+  cerr << "Thread " << tNum << " exiting." << endl;
+  pthread_exit(0);
 }
 
 class ExecPlanTest : public CppUnit::TestFixture
 {
+  CPPUNIT_TEST_SUITE(ExecPlanTest);
+  CPPUNIT_TEST(sessionManager_3);
+  unlink("/tmp/CalpontShm");
+  CPPUNIT_TEST_SUITE_END();
 
-    CPPUNIT_TEST_SUITE( ExecPlanTest );
-    CPPUNIT_TEST(sessionManager_3);
+ public:
+  /*
+   * destroySemaphores() and destroyShmseg() will print error messages
+   * if there are no objects to destroy.  That's OK.
+   */
+  void destroySemaphores()
+  {
+    key_t semkey;
+    char* semseed = "/usr/local/mariadb/columnstore/etc/Columnstore.xml";
+    int sems, err;
+
+    // 		semkey = ftok(semseed, 0x2149bdd2);   // these things must match in the SM constructor
+    semkey = 0x2149bdd2;
+
+    if (semkey == -1)
+      perror("tdriver: ftok");
+
+    sems = semget(semkey, 2, 0666);
+
+    if (sems != -1)
+    {
+      err = semctl(sems, 0, IPC_RMID);
+
+      if (err == -1)
+        perror("tdriver: semctl");
+    }
+  }
+
+  void destroyShmseg()
+  {
+    key_t shmkey;
+    char* shmseed = "/usr/local/mariadb/columnstore/etc/Columnstore.xml";
+    int shms, err;
+
+    // 		shmkey = ftok(shmseed, 0x2149bdd2);   // these things much match in the SM constructor
+    shmkey = 0x2149bdd2;
+
+    if (shmkey == -1)
+      perror("tdriver: ftok");
+
+    shms = shmget(shmkey, 0, 0666);
+
+    if (shms != -1)
+    {
+      err = shmctl(shms, IPC_RMID, NULL);
+
+      if (err == -1 && errno != EINVAL)
+      {
+        perror("tdriver: shmctl");
+        return;
+      }
+    }
+  }
+
+  /** This launches several threads to stress test the Session Manager
+   */
+  void sessionManager_3()
+  {
+    const int threadCount = 4;
+    int i;
+    pthread_t threads[threadCount];
+
+    cerr << endl
+         << "Multithreaded SessionManager test.  "
+            "This runs for 2 minutes."
+         << endl;
+
+    destroySemaphores();
+    destroyShmseg();
     unlink("/tmp/CalpontShm");
-    CPPUNIT_TEST_SUITE_END();
 
+    threadStop = 0;
 
-public:
-
-    /*
-    * destroySemaphores() and destroyShmseg() will print error messages
-    * if there are no objects to destroy.  That's OK.
-    */
-    void destroySemaphores()
+    for (i = 0; i < threadCount; i++)
     {
-        key_t semkey;
-        char* semseed = "/usr/local/mariadb/columnstore/etc/Columnstore.xml";
-        int sems, err;
+      if (pthread_create(&threads[i], NULL, SMRunner, reinterpret_cast<void*>(i + 1)) < 0)
+        throw logic_error("Error creating threads for the Session Manager test");
 
-// 		semkey = ftok(semseed, 0x2149bdd2);   // these things must match in the SM constructor
-        semkey = 0x2149bdd2;
-
-        if (semkey == -1)
-            perror("tdriver: ftok");
-
-        sems = semget(semkey, 2, 0666);
-
-        if (sems != -1)
-        {
-            err = semctl(sems, 0, IPC_RMID);
-
-            if (err == -1)
-                perror("tdriver: semctl");
-        }
+      usleep(1000);
     }
 
-    void destroyShmseg()
-    {
-        key_t shmkey;
-        char* shmseed = "/usr/local/mariadb/columnstore/etc/Columnstore.xml";
-        int shms, err;
+    sleep(120);
+    threadStop = 1;
 
-// 		shmkey = ftok(shmseed, 0x2149bdd2);   // these things much match in the SM constructor
-        shmkey = 0x2149bdd2;
+    for (i = 0; i < threadCount; i++)
+      pthread_join(threads[i], NULL);
 
-        if (shmkey == -1)
-            perror("tdriver: ftok");
-
-        shms = shmget(shmkey, 0, 0666);
-
-        if (shms != -1)
-        {
-            err = shmctl(shms, IPC_RMID, NULL);
-
-            if (err == -1 && errno != EINVAL)
-            {
-                perror("tdriver: shmctl");
-                return;
-            }
-        }
-    }
-
-    /** This launches several threads to stress test the Session Manager
-    */
-    void sessionManager_3()
-    {
-        const int threadCount = 4;
-        int i;
-        pthread_t threads[threadCount];
-
-        cerr << endl << "Multithreaded SessionManager test.  "
-             "This runs for 2 minutes." << endl;
-
-        destroySemaphores();
-        destroyShmseg();
-        unlink("/tmp/CalpontShm");
-
-        threadStop = 0;
-
-        for (i = 0; i < threadCount; i++)
-        {
-            if (pthread_create(&threads[i], NULL, SMRunner,
-                               reinterpret_cast<void*>(i + 1)) < 0)
-                throw logic_error("Error creating threads for the Session Manager test");
-
-            usleep(1000);
-        }
-
-        sleep(120);
-        threadStop = 1;
-
-        for (i = 0; i < threadCount; i++)
-            pthread_join(threads[i], NULL);
-
-        destroySemaphores();
-        destroyShmseg();
-    }
-
-
+    destroySemaphores();
+    destroyShmseg();
+  }
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION( ExecPlanTest );
+CPPUNIT_TEST_SUITE_REGISTRATION(ExecPlanTest);
 
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
-int main( int argc, char** argv)
+int main(int argc, char** argv)
 {
-    CppUnit::TextUi::TestRunner runner;
-    CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
-    runner.addTest( registry.makeTest() );
-    bool wasSuccessful = runner.run( "", false );
-    return (wasSuccessful ? 0 : 1);
+  CppUnit::TextUi::TestRunner runner;
+  CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
+  runner.addTest(registry.makeTest());
+  bool wasSuccessful = runner.run("", false);
+  return (wasSuccessful ? 0 : 1);
 }

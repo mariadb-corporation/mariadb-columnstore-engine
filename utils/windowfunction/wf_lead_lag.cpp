@@ -18,7 +18,6 @@
 
 //  $Id: wf_lead_lag.cpp 3932 2013-06-25 16:08:10Z xlou $
 
-
 //#define NDEBUG
 #include <cassert>
 #include <cmath>
@@ -47,266 +46,257 @@ using namespace joblist;
 
 #include "wf_lead_lag.h"
 
-
 namespace windowfunction
 {
-
-
-template<typename T>
-boost::shared_ptr<WindowFunctionType> WF_lead_lag<T>::makeFunction(int id, const string& name, int ct, WindowFunctionColumn* wc)
+template <typename T>
+boost::shared_ptr<WindowFunctionType> WF_lead_lag<T>::makeFunction(int id, const string& name, int ct,
+                                                                   WindowFunctionColumn* wc)
 {
-    boost::shared_ptr<WindowFunctionType> func;
+  boost::shared_ptr<WindowFunctionType> func;
 
-    switch (ct)
+  switch (ct)
+  {
+    case CalpontSystemCatalog::TINYINT:
+    case CalpontSystemCatalog::SMALLINT:
+    case CalpontSystemCatalog::MEDINT:
+    case CalpontSystemCatalog::INT:
+    case CalpontSystemCatalog::BIGINT:
     {
-        case CalpontSystemCatalog::TINYINT:
-        case CalpontSystemCatalog::SMALLINT:
-        case CalpontSystemCatalog::MEDINT:
-        case CalpontSystemCatalog::INT:
-        case CalpontSystemCatalog::BIGINT:
-        {
-            func.reset(new WF_lead_lag<int64_t>(id, name));
-            break;
-        }
-
-        case CalpontSystemCatalog::UTINYINT:
-        case CalpontSystemCatalog::USMALLINT:
-        case CalpontSystemCatalog::UMEDINT:
-        case CalpontSystemCatalog::UINT:
-        case CalpontSystemCatalog::UBIGINT:
-        case CalpontSystemCatalog::DATE:
-        case CalpontSystemCatalog::DATETIME:
-        case CalpontSystemCatalog::TIMESTAMP:
-        case CalpontSystemCatalog::TIME:
-        {
-            func.reset(new WF_lead_lag<uint64_t>(id, name));
-            break;
-        }
-
-        case CalpontSystemCatalog::DECIMAL:
-        case CalpontSystemCatalog::UDECIMAL:
-        {
-            decltype(datatypes::MAXDECIMALWIDTH) width =
-                wc->functionParms()[0]->resultType().colWidth;
-            if (width < datatypes::MAXDECIMALWIDTH)
-            {
-                if (ct == CalpontSystemCatalog::UDECIMAL)
-                    func.reset(new WF_lead_lag<uint64_t>(id, name));
-                else 
-                    func.reset(new WF_lead_lag<int64_t>(id, name));
-            }
-            else if (width == datatypes::MAXDECIMALWIDTH)
-            {
-                func.reset(new WF_lead_lag<int128_t>(id, name));
-            }
-            break;
-        }
-        case CalpontSystemCatalog::DOUBLE:
-        case CalpontSystemCatalog::UDOUBLE:
-        {
-            func.reset(new WF_lead_lag<double>(id, name));
-            break;
-        }
-
-        case CalpontSystemCatalog::LONGDOUBLE:
-        {
-            func.reset(new WF_lead_lag<long double>(id, name));
-            break;
-        }
-
-        case CalpontSystemCatalog::FLOAT:
-        case CalpontSystemCatalog::UFLOAT:
-        {
-            func.reset(new WF_lead_lag<float>(id, name));
-            break;
-        }
-
-        default:
-        {
-            func.reset(new WF_lead_lag<string>(id, name));
-            break;
-        }
+      func.reset(new WF_lead_lag<int64_t>(id, name));
+      break;
     }
 
-    return func;
+    case CalpontSystemCatalog::UTINYINT:
+    case CalpontSystemCatalog::USMALLINT:
+    case CalpontSystemCatalog::UMEDINT:
+    case CalpontSystemCatalog::UINT:
+    case CalpontSystemCatalog::UBIGINT:
+    case CalpontSystemCatalog::DATE:
+    case CalpontSystemCatalog::DATETIME:
+    case CalpontSystemCatalog::TIMESTAMP:
+    case CalpontSystemCatalog::TIME:
+    {
+      func.reset(new WF_lead_lag<uint64_t>(id, name));
+      break;
+    }
+
+    case CalpontSystemCatalog::DECIMAL:
+    case CalpontSystemCatalog::UDECIMAL:
+    {
+      decltype(datatypes::MAXDECIMALWIDTH) width = wc->functionParms()[0]->resultType().colWidth;
+      if (width < datatypes::MAXDECIMALWIDTH)
+      {
+        if (ct == CalpontSystemCatalog::UDECIMAL)
+          func.reset(new WF_lead_lag<uint64_t>(id, name));
+        else
+          func.reset(new WF_lead_lag<int64_t>(id, name));
+      }
+      else if (width == datatypes::MAXDECIMALWIDTH)
+      {
+        func.reset(new WF_lead_lag<int128_t>(id, name));
+      }
+      break;
+    }
+    case CalpontSystemCatalog::DOUBLE:
+    case CalpontSystemCatalog::UDOUBLE:
+    {
+      func.reset(new WF_lead_lag<double>(id, name));
+      break;
+    }
+
+    case CalpontSystemCatalog::LONGDOUBLE:
+    {
+      func.reset(new WF_lead_lag<long double>(id, name));
+      break;
+    }
+
+    case CalpontSystemCatalog::FLOAT:
+    case CalpontSystemCatalog::UFLOAT:
+    {
+      func.reset(new WF_lead_lag<float>(id, name));
+      break;
+    }
+
+    default:
+    {
+      func.reset(new WF_lead_lag<string>(id, name));
+      break;
+    }
+  }
+
+  return func;
 }
 
-
-template<typename T>
+template <typename T>
 WindowFunctionType* WF_lead_lag<T>::clone() const
 {
-    return new WF_lead_lag<T>(*this);
+  return new WF_lead_lag<T>(*this);
 }
 
-
-template<typename T>
+template <typename T>
 void WF_lead_lag<T>::resetData()
 {
-    WindowFunctionType::resetData();
+  WindowFunctionType::resetData();
 }
 
-
-template<typename T>
+template <typename T>
 void WF_lead_lag<T>::parseParms(const std::vector<execplan::SRCP>& parms)
 {
-    // lead | lag
-    fLead = 1;
-    fRespectNulls = true;
-    fDefNull = false;
-//    fDefault = (T)0; // Won't work for std::string. Default should always be set below.
+  // lead | lag
+  fLead = 1;
+  fRespectNulls = true;
+  fDefNull = false;
+  //    fDefault = (T)0; // Won't work for std::string. Default should always be set below.
+  fOffsetNull = false;
+  fOffset = 0;
+
+  if (fFunctionId == WF__LAG)
+    fLead = -1;
+
+  // parms[0]: value-expr
+  // skip
+
+  // parms[1]: offset
+  ConstantColumn* cc = dynamic_cast<ConstantColumn*>(parms[1].get());
+
+  if (cc != NULL)
+  {
     fOffsetNull = false;
-    fOffset = 0;
+    fOffset = cc->getIntVal(fRow, fOffsetNull) * fLead;  // row not used, no need to setData.
+  }
 
-    if (fFunctionId == WF__LAG)
-        fLead = -1;
+  // parms[2]: default value
+  cc = dynamic_cast<ConstantColumn*>(parms[2].get());
 
-    // parms[0]: value-expr
-    // skip
+  if (cc != NULL)
+  {
+    fDefNull = false;
+    getConstValue(cc, fDefault, fDefNull);
+  }
 
-    // parms[1]: offset
-    ConstantColumn* cc = dynamic_cast<ConstantColumn*>(parms[1].get());
-
-    if (cc != NULL)
-    {
-        fOffsetNull = false;
-        fOffset = cc->getIntVal(fRow, fOffsetNull) * fLead;  // row not used, no need to setData.
-    }
-
-    // parms[2]: default value
-    cc = dynamic_cast<ConstantColumn*>(parms[2].get());
-
-    if (cc != NULL)
-    {
-        fDefNull = false;
-        getConstValue(cc, fDefault, fDefNull);
-    }
-
-    // parms[3]: respect null | ignore null
-    cc = dynamic_cast<ConstantColumn*>(parms[3].get());
-    if (cc != NULL)
-    {
-        bool isNull = false;  // dummy. Return not used
-        fRespectNulls = (cc->getIntVal(fRow, isNull) > 0);
-    }
+  // parms[3]: respect null | ignore null
+  cc = dynamic_cast<ConstantColumn*>(parms[3].get());
+  if (cc != NULL)
+  {
+    bool isNull = false;  // dummy. Return not used
+    fRespectNulls = (cc->getIntVal(fRow, isNull) > 0);
+  }
 }
 
-
-
-template<typename T>
+template <typename T>
 void WF_lead_lag<T>::operator()(int64_t b, int64_t e, int64_t c)
 {
-    uint64_t colIn = fFieldIndex[1];
-    bool isNull = true;
+  uint64_t colIn = fFieldIndex[1];
+  bool isNull = true;
 
-    for (int64_t c = b; c <= e; c++)
+  for (int64_t c = b; c <= e; c++)
+  {
+    if (c % 1000 == 0 && fStep->cancelled())
+      break;
+
+    fRow.setData(getPointer(fRowData->at(c)));
+    // get offset if not constant
+    int64_t idx = fFieldIndex[2];
+
+    if (idx != -1)
     {
-        if (c % 1000 == 0 && fStep->cancelled())
-            break;
+      double tmp = 0.0;  // use double to cover all column types
+      fOffsetNull = fRow.isNullValue(idx);
 
-        fRow.setData(getPointer(fRowData->at(c)));
-        // get offset if not constant
-        int64_t idx = fFieldIndex[2];
-
-        if (idx != -1)
-        {
-            double tmp = 0.0;  // use double to cover all column types
-            fOffsetNull = fRow.isNullValue(idx);
-
-            if (!fOffsetNull)
-            {
-                implicit2T(idx, tmp, 0);
-                fOffset = round(tmp);
-                fOffset *= fLead;
-            }
-        }
-
-        // get default if not constant
-        idx = fFieldIndex[3];
-
-        if (idx != -1)
-        {
-            fDefNull = fRow.isNullValue(idx);
-
-            if (!fDefNull)
-                implicit2T(idx, fDefault, (int) fRow.getScale(idx));
-        }
-
-        int64_t o = c + fOffset;
-
-        if (o < b || o > e || fOffsetNull) // out of bound
-        {
-            T* v = (fDefNull) ? NULL : &fDefault;
-            setValue(fRow.getColType(fFieldIndex[0]), b, e, c, v);
-            continue;
-        }
-
-        if (fRespectNulls == false && fRow.isNullValue(colIn) == true)
-        {
-            if (fOffset > 0)
-            {
-                while (++o < e)
-                {
-                    fRow.setData(getPointer(fRowData->at(o)));
-
-                    if (fRow.isNullValue(colIn) == false)
-                        break;
-                }
-
-                if (o <= e)
-                {
-                    fRow.setData(getPointer(fRowData->at(o)));
-                    getValue(colIn, fValue);
-                    isNull = fRow.isNullValue(colIn);
-                }
-            }
-            else if (fOffset < 0)
-            {
-                while (--o > b)
-                {
-                    fRow.setData(getPointer(fRowData->at(o)));
-
-                    if (fRow.isNullValue(colIn) == false)
-                        break;
-                }
-
-                if (o >= b)
-                {
-                    fRow.setData(getPointer(fRowData->at(o)));
-                    getValue(colIn, fValue);
-                    isNull = fRow.isNullValue(colIn);
-                }
-            }
-
-            T* v = NULL;
-
-            if (!isNull)
-                v = &fValue;
-            else if (!fDefNull)
-                v = &fDefault;
-
-            setValue(fRow.getColType(fFieldIndex[0]), b, e, c, v);
-        }
-        else
-        {
-            fRow.setData(getPointer(fRowData->at(o)));
-            getValue(colIn, fValue);
-            isNull = fRow.isNullValue(colIn);
-
-            T* v = NULL;
-
-            if (!isNull)
-                v = &fValue;
-            else if (!fDefNull)
-                v = &fDefault;
-
-            setValue(fRow.getColType(fFieldIndex[0]), b, e, c, v);
-        }
+      if (!fOffsetNull)
+      {
+        implicit2T(idx, tmp, 0);
+        fOffset = round(tmp);
+        fOffset *= fLead;
+      }
     }
+
+    // get default if not constant
+    idx = fFieldIndex[3];
+
+    if (idx != -1)
+    {
+      fDefNull = fRow.isNullValue(idx);
+
+      if (!fDefNull)
+        implicit2T(idx, fDefault, (int)fRow.getScale(idx));
+    }
+
+    int64_t o = c + fOffset;
+
+    if (o < b || o > e || fOffsetNull)  // out of bound
+    {
+      T* v = (fDefNull) ? NULL : &fDefault;
+      setValue(fRow.getColType(fFieldIndex[0]), b, e, c, v);
+      continue;
+    }
+
+    if (fRespectNulls == false && fRow.isNullValue(colIn) == true)
+    {
+      if (fOffset > 0)
+      {
+        while (++o < e)
+        {
+          fRow.setData(getPointer(fRowData->at(o)));
+
+          if (fRow.isNullValue(colIn) == false)
+            break;
+        }
+
+        if (o <= e)
+        {
+          fRow.setData(getPointer(fRowData->at(o)));
+          getValue(colIn, fValue);
+          isNull = fRow.isNullValue(colIn);
+        }
+      }
+      else if (fOffset < 0)
+      {
+        while (--o > b)
+        {
+          fRow.setData(getPointer(fRowData->at(o)));
+
+          if (fRow.isNullValue(colIn) == false)
+            break;
+        }
+
+        if (o >= b)
+        {
+          fRow.setData(getPointer(fRowData->at(o)));
+          getValue(colIn, fValue);
+          isNull = fRow.isNullValue(colIn);
+        }
+      }
+
+      T* v = NULL;
+
+      if (!isNull)
+        v = &fValue;
+      else if (!fDefNull)
+        v = &fDefault;
+
+      setValue(fRow.getColType(fFieldIndex[0]), b, e, c, v);
+    }
+    else
+    {
+      fRow.setData(getPointer(fRowData->at(o)));
+      getValue(colIn, fValue);
+      isNull = fRow.isNullValue(colIn);
+
+      T* v = NULL;
+
+      if (!isNull)
+        v = &fValue;
+      else if (!fDefNull)
+        v = &fDefault;
+
+      setValue(fRow.getColType(fFieldIndex[0]), b, e, c, v);
+    }
+  }
 }
 
-
-template
-boost::shared_ptr<WindowFunctionType> WF_lead_lag<int64_t>::makeFunction(int, const string&, int, WindowFunctionColumn*);
+template boost::shared_ptr<WindowFunctionType> WF_lead_lag<int64_t>::makeFunction(int, const string&, int,
+                                                                                  WindowFunctionColumn*);
 
 template void WF_lead_lag<int64_t>::parseParms(const std::vector<execplan::SRCP>&);
 template void WF_lead_lag<uint64_t>::parseParms(const std::vector<execplan::SRCP>&);
@@ -315,6 +305,5 @@ template void WF_lead_lag<float>::parseParms(const std::vector<execplan::SRCP>&)
 template void WF_lead_lag<double>::parseParms(const std::vector<execplan::SRCP>&);
 template void WF_lead_lag<string>::parseParms(const std::vector<execplan::SRCP>&);
 
-}   //namespace
+}  // namespace windowfunction
 // vim:ts=4 sw=4:
-

@@ -28,9 +28,8 @@
 
 #include "brmtypes.h"
 
-
 /**
-	@author Jason Rodriguez <jrodriguez@calpont.com>
+        @author Jason Rodriguez <jrodriguez@calpont.com>
 */
 
 /**
@@ -38,222 +37,218 @@
  **/
 namespace dbbc
 {
-
 class fileRequest
 {
+ public:
+  /**
+   * @brief default ctor
+   **/
+  fileRequest();
 
-public:
+  /**
+   * @brief copy constructor
+   **/
+  fileRequest(const fileRequest& blk);
 
-    /**
-     * @brief default ctor
-     **/
-    fileRequest();
+  /**
+   * @brief request for the disk block lbid@ver
+   **/
+  fileRequest(BRM::LBID_t lbid, BRM::VER_t ver, bool flg);
 
-    /**
-     * @brief copy constructor
-     **/
-    fileRequest(const fileRequest& blk);
+  fileRequest(BRM::LBID_t lbid, BRM::VER_t ver, bool flg, uint8_t* ptr);
+  /**
+   * @brief request a range of disk blocks
+   **/
+  fileRequest(const BRM::InlineLBIDRange& range, const BRM::VER_t ver);
 
-    /**
-     * @brief request for the disk block lbid@ver
-     **/
-    fileRequest(BRM::LBID_t lbid, BRM::VER_t ver, bool flg);
+  /**
+   * @brief class dtor
+   **/
+  virtual ~fileRequest();
 
-    fileRequest(BRM::LBID_t lbid, BRM::VER_t ver, bool flg, uint8_t* ptr);
-    /**
-     * @brief request a range of disk blocks
-     **/
-    fileRequest(const BRM::InlineLBIDRange& range, const BRM::VER_t ver);
+  /**
+   * @brief less-than operator
+   **/
+  bool operator<(const fileRequest& rhs) const
+  {
+    return fLength < rhs.fLength;
+  }
 
-    /**
-     * @brief class dtor
-     **/
-    virtual ~fileRequest();
+  /**
+   * @brief greater-than operator
+   **/
+  bool operator>(const fileRequest& rhs) const
+  {
+    return fLength > rhs.fLength;
+  }
 
-    /**
-     * @brief less-than operator
-     **/
-    bool operator< (const fileRequest& rhs) const
-    {
-        return fLength < rhs.fLength;
-    }
+  /**
+   * @brief equality operator
+   **/
+  bool operator==(const fileRequest& rhs) const
+  {
+    return fLength == rhs.fLength;
+  }
 
-    /**
-     * @brief greater-than operator
-     **/
-    bool operator> (const fileRequest& rhs) const
-    {
-        return fLength > rhs.fLength;
-    }
+  enum request_status_enum
+  {
+    SUCCESSFUL,
+    FAILED
+  };
 
-    /**
-     * @brief equality operator
-     **/
-    bool operator== (const fileRequest& rhs) const
-    {
-        return fLength == rhs.fLength;
-    }
+  enum request_type_enum
+  {
+    LBIDREQUEST,
+    RANGEREQUEST
+  };
 
-    enum request_status_enum
-    {
-        SUCCESSFUL,
-        FAILED
-    };
+  /**
+   * @brief used to manage request processing synchronzation
+   **/
+  enum predicate_status_enum
+  {
+    INIT,
+    SENDING,
+    READING,
+    COMPLETE,
+    STOP
+  };
 
-    enum request_type_enum
-    {
-        LBIDREQUEST,
-        RANGEREQUEST
-    };
+  /**
+   * @brief lbid requested
+   **/
+  const BRM::LBID_t Lbid() const
+  {
+    return fLBID;
+  }
 
-    /**
-     * @brief used to manage request processing synchronzation
-     **/
-    enum predicate_status_enum
-    {
-        INIT,
-        SENDING,
-        READING,
-        COMPLETE,
-        STOP
-    };
+  /**
+   * @brief version of the lbid requested
+   **/
+  const BRM::VER_t Ver() const
+  {
+    return fVer;
+  }
 
-    /**
-     * @brief lbid requested
-     **/
-    const BRM::LBID_t 	Lbid() const
-    {
-        return fLBID;
-    }
+  /**
+   * @brief VBBM flag of the LBID/Ver
+   **/
+  const bool Flg() const
+  {
+    return fFlg;
+  }
 
-    /**
-     * @brief version of the lbid requested
-     **/
-    const BRM::VER_t 	Ver() const
-    {
-        return fVer;
-    }
+  /**
+   * @brief number of blocks requested
+   **/
+  const uint32_t BlocksRequested() const
+  {
+    return fLength;
+  }
 
-    /**
-     * @brief VBBM flag of the LBID/Ver
-     **/
-    const bool 	Flg() const
-    {
-        return fFlg;
-    }
+  /**
+   * @brief setter for blocks requested
+   **/
+  void BlocksRequested(const int l)
+  {
+    fLength = l;
+  }
 
-    /**
-     * @brief number of blocks requested
-     **/
-    const uint32_t	BlocksRequested() const
-    {
-        return fLength;
-    }
+  /**
+   * @brief number of blocks read from disk
+   **/
+  const uint32_t BlocksRead() const
+  {
+    return fblksRead;
+  }
+  const uint32_t BlocksLoaded() const
+  {
+    return fblksLoaded;
+  }
 
-    /**
-     * @brief setter for blocks requested
-     **/
-    void 		BlocksRequested(const int l)
-    {
-        fLength = l;
-    }
+  /**
+   * @brief setter for blocks read from disk
+   **/
+  void BlocksRead(const int l)
+  {
+    fblksRead = l;
+  }
+  void BlocksLoaded(const int l)
+  {
+    fblksLoaded = l;
+  }
 
-    /**
-     * @brief number of blocks read from disk
-     **/
-    const uint32_t	BlocksRead() const
-    {
-        return fblksRead;
-    }
-    const uint32_t	BlocksLoaded() const
-    {
-        return fblksLoaded;
-    }
+  /**
+   * @brief did the request succeed for fail
+   **/
+  int RequestStatus() const
+  {
+    return fRqstStatus;
+  }
 
-    /**
-     * @brief setter for blocks read from disk
-     **/
-    void 		BlocksRead(const int l)
-    {
-        fblksRead = l;
-    }
-    void 		BlocksLoaded(const int l)
-    {
-        fblksLoaded = l;
-    }
+  /**
+   * @brief setter for the request status
+   **/
+  void RequestStatus(int s)
+  {
+    fRqstStatus = s;
+  }
 
-    /**
-     * @brief did the request succeed for fail
-     **/
-    int 		RequestStatus() const
-    {
-        return fRqstStatus;
-    }
+  /**
+   * @brief return BLOCK or RANGE requested
+   **/
+  int RequestType() const
+  {
+    return fRqstType;
+  }
 
-    /**
-     * @brief setter for the request status
-     **/
-    void 		RequestStatus(int s)
-    {
-        fRqstStatus = s;
-    }
+  /**
+   * @brief mutex to control synchronzation of request processing
+   **/
+  pthread_mutex_t& frMutex() const
+  {
+    return fFRMutex;
+  }
 
-    /**
-     * @brief return BLOCK or RANGE requested
-     **/
-    int 		RequestType() const
-    {
-        return fRqstType;
-    }
+  /**
+   * @brief condition variable. signal when request is complete
+   **/
+  pthread_cond_t& frCond() const
+  {
+    return fFRCond;
+  }
 
-    /**
-     * @brief mutex to control synchronzation of request processing
-     **/
-    pthread_mutex_t&	frMutex() const
-    {
-        return fFRMutex;
-    }
+  /**
+   * @brief
+   **/
+  const enum predicate_status_enum& frPredicate() const
+  {
+    return fFRPredicate;
+  }
 
-    /**
-     * @brief condition variable. signal when request is complete
-     **/
-    pthread_cond_t& 	frCond() const
-    {
-        return fFRCond;
-    }
+  /**
+   * @brief setter for the predicate
+   **/
+  void SetPredicate(const enum predicate_status_enum& p)
+  {
+    fFRPredicate = p;
+  }
 
-    /**
-     * @brief
-     **/
-    const enum predicate_status_enum& frPredicate() const
-    {
-        return fFRPredicate;
-    }
+  uint8_t* data;
 
-    /**
-     * @brief setter for the predicate
-     **/
-    void SetPredicate(const enum predicate_status_enum& p)
-    {
-        fFRPredicate = p;
-    }
-
-    uint8_t* data;
-
-private:
-
-    void 		init();
-    BRM::LBID_t fLBID;
-    BRM::VER_t fVer;
-    bool fFlg;
-    mutable pthread_mutex_t fFRMutex;
-    mutable pthread_cond_t fFRCond;
-    predicate_status_enum fFRPredicate;
-    uint32_t fLength; // lbids requested
-    uint32_t fblksRead; // lbids read
-    uint32_t fblksLoaded; // lbids loaded into cache
-    int fRqstStatus;
-    enum request_type_enum fRqstType;
+ private:
+  void init();
+  BRM::LBID_t fLBID;
+  BRM::VER_t fVer;
+  bool fFlg;
+  mutable pthread_mutex_t fFRMutex;
+  mutable pthread_cond_t fFRCond;
+  predicate_status_enum fFRPredicate;
+  uint32_t fLength;      // lbids requested
+  uint32_t fblksRead;    // lbids read
+  uint32_t fblksLoaded;  // lbids loaded into cache
+  int fRqstStatus;
+  enum request_type_enum fRqstType;
 };
-}
+}  // namespace dbbc
 #endif

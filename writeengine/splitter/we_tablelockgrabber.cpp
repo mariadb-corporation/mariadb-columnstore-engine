@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id$
-*
-*******************************************************************************/
+ * $Id$
+ *
+ *******************************************************************************/
 
 /*
  * we_tablelockgrabber.cpp
@@ -37,93 +37,78 @@ using namespace std;
 #include "we_sdhandler.h"
 #include "we_tablelockgrabber.h"
 
-
-
 namespace WriteEngine
 {
-
-uint64_t WETableLockGrabber::grabTableLock(std::vector<unsigned int>& PmList,
-        uint32_t tableOID)
+uint64_t WETableLockGrabber::grabTableLock(std::vector<unsigned int>& PmList, uint32_t tableOID)
 {
-    uint64_t aLockId;
-    std::string aProcName = "cpimport";
-    uint32_t aProcId = getpid();
-    int32_t aSessId = -1;
-    int32_t aTxnId = -1;
+  uint64_t aLockId;
+  std::string aProcName = "cpimport";
+  uint32_t aProcId = getpid();
+  int32_t aSessId = -1;
+  int32_t aTxnId = -1;
 
+  try
+  {
+    aLockId =
+        fRef.fDbrm.getTableLock(PmList, tableOID, &aProcName, &aProcId, &aSessId, &aTxnId, BRM::LOADING);
+  }
+  catch (std::exception& e)
+  {
+    cout << "ERROR: Failed to get Table Lock " << e.what() << endl;
+    throw runtime_error(e.what());
+  }
 
+  if (aLockId == 0)
+  {
+    ostringstream oss;
+    oss << " Table currently locked by process-" << aProcName << "; pid-" << aProcId << "; session-"
+        << aSessId << "; txn-" << aTxnId;
+    throw runtime_error(oss.str());
+  }
 
-    try
-    {
-        aLockId = fRef.fDbrm.getTableLock(PmList, tableOID, &aProcName,
-                                          &aProcId, &aSessId, &aTxnId, BRM::LOADING);
-    }
-    catch (std::exception& e)
-    {
+  // cout << "lock ID = " << aLockId << endl;
+  // if (aLockId == 0)
+  //	cout << " existing owner name = " << aProcName << " pid = " <<
+  //						aProcId << " session = " << aSessId << endl;
 
-        cout << "ERROR: Failed to get Table Lock " << e.what() << endl;
-        throw runtime_error(e.what());
-    }
-
-    if (aLockId == 0)
-    {
-        ostringstream oss;
-        oss << " Table currently locked by process-" <<
-            aProcName << "; pid-" << aProcId <<
-            "; session-" << aSessId <<
-            "; txn-" << aTxnId;
-        throw runtime_error(oss.str());
-    }
-
-    //cout << "lock ID = " << aLockId << endl;
-    //if (aLockId == 0)
-    //	cout << " existing owner name = " << aProcName << " pid = " <<
-    //						aProcId << " session = " << aSessId << endl;
-
-    return aLockId;
+  return aLockId;
 }
 
 bool WETableLockGrabber::releaseTableLock(uint64_t LockId)
 {
-    bool aRet;
+  bool aRet;
 
-    //cout << "releasing lock " << LockId << endl;
-    try
-    {
-        aRet = fRef.fDbrm.releaseTableLock(LockId);
-    }
-    catch (std::exception& e)
-    {
-        cout << "caught an exception: " << e.what() << endl;
-        throw runtime_error(e.what());
-    }
+  // cout << "releasing lock " << LockId << endl;
+  try
+  {
+    aRet = fRef.fDbrm.releaseTableLock(LockId);
+  }
+  catch (std::exception& e)
+  {
+    cout << "caught an exception: " << e.what() << endl;
+    throw runtime_error(e.what());
+  }
 
-    return aRet;
+  return aRet;
 }
 
 bool WETableLockGrabber::changeTableLockState(uint64_t LockId)
 {
-    bool aRet;
+  bool aRet;
 
-    //cout << "changing state of lock " << LockId << endl;
+  // cout << "changing state of lock " << LockId << endl;
 
-    try
-    {
-        aRet = fRef.fDbrm.changeState(LockId, BRM::CLEANUP);
-    }
-    catch (std::exception& e)
-    {
-        cout << "caught an exception: " << e.what() << endl;
-        throw runtime_error(e.what());
-    }
+  try
+  {
+    aRet = fRef.fDbrm.changeState(LockId, BRM::CLEANUP);
+  }
+  catch (std::exception& e)
+  {
+    cout << "caught an exception: " << e.what() << endl;
+    throw runtime_error(e.what());
+  }
 
-    return aRet;
+  return aRet;
 }
-
-
-
-
-
-
 
 } /* namespace WriteEngine */

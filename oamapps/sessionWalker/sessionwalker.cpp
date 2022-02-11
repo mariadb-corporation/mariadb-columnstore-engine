@@ -39,102 +39,98 @@ using namespace messageqcpp;
 
 namespace
 {
-
 void usage()
 {
-    cout << "sessionwalker [-d|-h]" << endl <<
-         "   -r rollback all transactions found" << endl <<
-         "   -h display this help" << endl;
+  cout << "sessionwalker [-d|-h]" << endl
+       << "   -r rollback all transactions found" << endl
+       << "   -h display this help" << endl;
 }
 
 void rollback(const SessionMonitor::MonSIDTIDEntry& txn)
 {
-    VendorDMLStatement dmlStmt("ROLLBACK;", txn.sessionid);
-    CalpontDMLPackage* pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackage(dmlStmt);
+  VendorDMLStatement dmlStmt("ROLLBACK;", txn.sessionid);
+  CalpontDMLPackage* pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackage(dmlStmt);
 
-    if (pDMLPackage == 0)
-    {
-        return;
-    }
+  if (pDMLPackage == 0)
+  {
+    return;
+  }
 
-    ByteStream bytestream;
-    pDMLPackage->write(bytestream);
-    delete pDMLPackage;
-    MessageQueueClient mq("DMLProc");
+  ByteStream bytestream;
+  pDMLPackage->write(bytestream);
+  delete pDMLPackage;
+  MessageQueueClient mq("DMLProc");
 
-    try
-    {
-        cout << "sending ROLLBACK for sessionID " << txn.sessionid << endl;
-        mq.write(bytestream);
-        bytestream = mq.read();
-    }
-    catch (...)
-    {
-    }
+  try
+  {
+    cout << "sending ROLLBACK for sessionID " << txn.sessionid << endl;
+    mq.write(bytestream);
+    bytestream = mq.read();
+  }
+  catch (...)
+  {
+  }
 }
 
-}
+}  // namespace
 
 int main(int argc, char** argv)
 {
-    bool rflg = false;
-    opterr = 0;
-    int c;
+  bool rflg = false;
+  opterr = 0;
+  int c;
 
-    while ((c = getopt(argc, argv, "rh")) != EOF)
-        switch (c)
-        {
-            case 'r':
-                rflg = true;
-                break;
-
-            case 'h':
-                usage();
-                return 0;
-                break;
-
-            default:
-                usage();
-                return 1;
-                break;
-        }
-
-    vector<SessionMonitor::MonSIDTIDEntry*> toTxns;
-    SessionMonitor* monitor = new SessionMonitor();
-
-    toTxns.clear();
-    toTxns = monitor->timedOutTxns(); // get timed out txns
-
-    vector<SessionMonitor::MonSIDTIDEntry*>::iterator iter = toTxns.begin();
-    vector<SessionMonitor::MonSIDTIDEntry*>::iterator end = toTxns.end();
-
-    vector<SessionMonitor::MonSIDTIDEntry*> tmp;
-
-    while (iter != end)
+  while ((c = getopt(argc, argv, "rh")) != EOF)
+    switch (c)
     {
-        if ((*iter)->sessionid > 0)
-            tmp.push_back(*iter);
+      case 'r': rflg = true; break;
 
-        ++iter;
+      case 'h':
+        usage();
+        return 0;
+        break;
+
+      default:
+        usage();
+        return 1;
+        break;
     }
 
-    toTxns.swap(tmp);
+  vector<SessionMonitor::MonSIDTIDEntry*> toTxns;
+  SessionMonitor* monitor = new SessionMonitor();
 
-    cout << toTxns.size() << " timed out transactions." << endl;
+  toTxns.clear();
+  toTxns = monitor->timedOutTxns();  // get timed out txns
 
-    for (unsigned idx = 0; idx < toTxns.size(); idx++)
+  vector<SessionMonitor::MonSIDTIDEntry*>::iterator iter = toTxns.begin();
+  vector<SessionMonitor::MonSIDTIDEntry*>::iterator end = toTxns.end();
+
+  vector<SessionMonitor::MonSIDTIDEntry*> tmp;
+
+  while (iter != end)
+  {
+    if ((*iter)->sessionid > 0)
+      tmp.push_back(*iter);
+
+    ++iter;
+  }
+
+  toTxns.swap(tmp);
+
+  cout << toTxns.size() << " timed out transactions." << endl;
+
+  for (unsigned idx = 0; idx < toTxns.size(); idx++)
+  {
+    monitor->printTxns(*toTxns[idx]);
+
+    if (rflg)
     {
-        monitor->printTxns(*toTxns[idx]);
-
-        if (rflg)
-        {
-            rollback(*toTxns[idx]);
-        }
+      rollback(*toTxns[idx]);
     }
+  }
 
-    delete monitor;
+  delete monitor;
 
-    return 0;
+  return 0;
 }
 // vim:ts=4 sw=4:
-

@@ -16,8 +16,8 @@
    MA 02110-1301, USA. */
 
 /*
-* $Id: we_rbmetawriter.h 4450 2013-01-21 14:13:24Z rdempsey $
-*/
+ * $Id: we_rbmetawriter.h 4450 2013-01-21 14:13:24Z rdempsey $
+ */
 
 /** @file we_rbmetawriter.h
  * Contains class to write HWM-related information used to rollback a
@@ -60,24 +60,24 @@ class Log;
 //------------------------------------------------------------------------------
 struct RBChunkInfo
 {
-    OID                fOid;       // dctnry store OID containing relevant chunk
-    uint16_t           fDbRoot;    // dbroot, partition, segment of file
-    uint32_t           fPartition; //   containing relevant HWM chunk
-    uint16_t           fSegment;   //
-    HWM                fHwm;       // HWM block of interest
-    RBChunkInfo(OID oid, uint16_t dbRoot, uint32_t partition,
-                uint16_t segment, HWM hwm ) :
-        fOid(oid), fDbRoot(dbRoot), fPartition(partition),
-        fSegment(segment), fHwm(hwm) { }
+  OID fOid;             // dctnry store OID containing relevant chunk
+  uint16_t fDbRoot;     // dbroot, partition, segment of file
+  uint32_t fPartition;  //   containing relevant HWM chunk
+  uint16_t fSegment;    //
+  HWM fHwm;             // HWM block of interest
+  RBChunkInfo(OID oid, uint16_t dbRoot, uint32_t partition, uint16_t segment, HWM hwm)
+   : fOid(oid), fDbRoot(dbRoot), fPartition(partition), fSegment(segment), fHwm(hwm)
+  {
+  }
 };
 
 class RBChunkInfoCompare
 {
-public:
-    bool operator()(const RBChunkInfo& lhs, const RBChunkInfo& rhs) const;
+ public:
+  bool operator()(const RBChunkInfo& lhs, const RBChunkInfo& rhs) const;
 };
 
-typedef std::set< RBChunkInfo, RBChunkInfoCompare > RBChunkSet;
+typedef std::set<RBChunkInfo, RBChunkInfoCompare> RBChunkSet;
 
 //------------------------------------------------------------------------------
 /** @brief Class to write HWM-related information to support bulk rollbacks.
@@ -136,246 +136,196 @@ typedef std::set< RBChunkInfo, RBChunkInfoCompare > RBChunkSet;
  * parallel by several threads for different dictionary columns.
  */
 //------------------------------------------------------------------------------
-class RBMetaWriter: public WeUIDGID
+class RBMetaWriter : public WeUIDGID
 {
-public:
+ public:
+  /** @brief RBMetaWriter constructor
+   * @param appDesc Description of application that is using RBMetaWriter
+   * @param logger Logger to be used for logging messages.
+   */
+  EXPORT RBMetaWriter(const std::string& appDesc, Log* logger);
 
-    /** @brief RBMetaWriter constructor
-     * @param appDesc Description of application that is using RBMetaWriter
-     * @param logger Logger to be used for logging messages.
-     */
-    EXPORT RBMetaWriter (  const std::string& appDesc,
-                           Log* logger );
+  /** @brief RBMetaWriter destructor
+   */
+  EXPORT ~RBMetaWriter()
+  {
+    closeMetaFile();
+  }
 
-    /** @brief RBMetaWriter destructor
-     */
-    EXPORT ~RBMetaWriter ( )
-    {
-        closeMetaFile ( );
-    }
+  /** @brief Initialize this RBMetaWriter object
+   * Warning: This function may throw a WeException.
+   *
+   * @param tableOID OID of the table whose state is to be saved.
+   * @param tableName Name of the table associated with tableOID.
+   */
+  EXPORT void init(OID tableOID, const std::string& tableName);
 
-    /** @brief Initialize this RBMetaWriter object
-     * Warning: This function may throw a WeException.
-     *
-     * @param tableOID OID of the table whose state is to be saved.
-     * @param tableName Name of the table associated with tableOID.
-     */
-    EXPORT void init ( OID  tableOID,
-                       const std::string& tableName );
+  /** @brief Make a backup copy of the specified HWM dictionary store chunk.
+   * This operation only applies to compressed columns.  Backup may not be
+   * necessary.  Return value indicates whether the specified file needs to
+   * be backed up or not.
+   * Warning: This function may throw a WeException.
+   *
+   * This function is thread-safe since concurrent calls could be made by
+   * different threads, each for a different dictionary column.
+   *
+   * @param dctnryOID column OID to be saved
+   * @param dbRoot current dbRoot of last local HWM for columnOID
+   * @param partition current partition of last local HWM for columnOID
+   * @param segment current segment of last local HWM for columnOID
+   * @return Indicates whether it is necessary to perform backup
+   */
+  EXPORT bool backupDctnryHWMChunk(OID dctnryOID, uint16_t dbRoot, uint32_t partition, uint16_t segment);
 
-    /** @brief Make a backup copy of the specified HWM dictionary store chunk.
-     * This operation only applies to compressed columns.  Backup may not be
-     * necessary.  Return value indicates whether the specified file needs to
-     * be backed up or not.
-     * Warning: This function may throw a WeException.
-     *
-     * This function is thread-safe since concurrent calls could be made by
-     * different threads, each for a different dictionary column.
-     *
-     * @param dctnryOID column OID to be saved
-     * @param dbRoot current dbRoot of last local HWM for columnOID
-     * @param partition current partition of last local HWM for columnOID
-     * @param segment current segment of last local HWM for columnOID
-     * @return Indicates whether it is necessary to perform backup
-     */
-    EXPORT bool backupDctnryHWMChunk (
-        OID                dctnryOID,
-        uint16_t           dbRoot,
-        uint32_t           partition,
-        uint16_t           segment );
+  /** @brief Delete the rollback meta files associated with this table
+   * Warning: This function may throw a WeException.
+   */
+  EXPORT void deleteFile();
 
-    /** @brief Delete the rollback meta files associated with this table
-     * Warning: This function may throw a WeException.
-     */
-    EXPORT void deleteFile ( );
+  /** @brief Helper function that creates the primary meta data file.
+   * Warning: This function may throw a WeException.
+   *
+   * See class description for more details.
+   * @param columns Vector of column information.  The dataFile member in
+   *        each columns entry should be filled in with HWM information about
+   *        the start extent where rows will be added.  This information is
+   *        needed so that the HWM chunk in that extent can be backed up.
+   * @param dctnryStoreOids Vector of dictionary store OID associated with
+   *        columns vector.  dctnryStoreOid[n] should be 0 if columns[n] is
+   *        not a dictionary column.
+   * @param dbRootHwmInfoVecCol Vector of EmDbRootHWMInfo_v objects obtained
+   *        from multiple calls to DBRM::getDbRootHWMInfo().  There is one
+   *        EmDbRootHWMInfo_v entry per column.  Each
+   *        EmDbRootHWMInfo_v object carries a vector of DBRoot, HWM, etc
+   *        objects representing the current HWM extents for a column's
+   *        DBRoots on the local PM.
+   */
+  EXPORT void saveBulkRollbackMetaData(const std::vector<Column>& columns,
+                                       const std::vector<OID>& dctnryStoreOids,
+                                       const std::vector<BRM::EmDbRootHWMInfo_v>& dbRootHWMInfoVecCol);
 
-    /** @brief Helper function that creates the primary meta data file.
-     * Warning: This function may throw a WeException.
-     *
-     * See class description for more details.
-     * @param columns Vector of column information.  The dataFile member in
-     *        each columns entry should be filled in with HWM information about
-     *        the start extent where rows will be added.  This information is
-     *        needed so that the HWM chunk in that extent can be backed up.
-     * @param dctnryStoreOids Vector of dictionary store OID associated with
-     *        columns vector.  dctnryStoreOid[n] should be 0 if columns[n] is
-     *        not a dictionary column.
-     * @param dbRootHwmInfoVecCol Vector of EmDbRootHWMInfo_v objects obtained
-     *        from multiple calls to DBRM::getDbRootHWMInfo().  There is one
-     *        EmDbRootHWMInfo_v entry per column.  Each
-     *        EmDbRootHWMInfo_v object carries a vector of DBRoot, HWM, etc
-     *        objects representing the current HWM extents for a column's
-     *        DBRoots on the local PM.
-     */
-    EXPORT void saveBulkRollbackMetaData(
-        const std::vector<Column>& columns,
-        const std::vector<OID>&    dctnryStoreOids,
-        const std::vector<BRM::EmDbRootHWMInfo_v>& dbRootHWMInfoVecCol );
+  /** @brief Verify that specified version record is for Version 3 */
+  static bool verifyVersion3(const char* versionRec);
 
-    /** @brief Verify that specified version record is for Version 3 */
-    static bool verifyVersion3(const char* versionRec);
+  /** @brief Verify that specified version record is for Version 4 */
+  static bool verifyVersion4(const char* versionRec);
 
-    /** @brief Verify that specified version record is for Version 4 */
-    static bool verifyVersion4(const char* versionRec);
+  /** @brief Verify that specified record type is a Column1 record */
+  static bool verifyColumn1Rec(const char* recType);
 
-    /** @brief Verify that specified record type is a Column1 record */
-    static bool verifyColumn1Rec(const char* recType);
+  /** @brief Verify that specified record type is a Column2 record */
+  static bool verifyColumn2Rec(const char* recType);
 
-    /** @brief Verify that specified record type is a Column2 record */
-    static bool verifyColumn2Rec(const char* recType);
+  /** @brief Verify that specified record type is a DStore1 record */
+  static bool verifyDStore1Rec(const char* recType);
 
-    /** @brief Verify that specified record type is a DStore1 record */
-    static bool verifyDStore1Rec(const char* recType);
+  /** @brief Verify that specified record type is a DStore2 record */
+  static bool verifyDStore2Rec(const char* recType);
 
-    /** @brief Verify that specified record type is a DStore2 record */
-    static bool verifyDStore2Rec(const char* recType);
-    
-private:
-    // disable copy constructor and assignment operator
-    RBMetaWriter(const RBMetaWriter&);
-    RBMetaWriter& operator=(const RBMetaWriter&);
+ private:
+  // disable copy constructor and assignment operator
+  RBMetaWriter(const RBMetaWriter&);
+  RBMetaWriter& operator=(const RBMetaWriter&);
 
-    // Make a backup copy of the specified HWM column chunk.
-    // This operation only applies to compressed columns.
-    // Warning: This function may throw a WeException.
-    //   columnOID column OID to be saved
-    //   dbRoot current dbRoot of last local HWM for columnOID
-    //   partition current partition of last local HWM for columnOID
-    //   segment current segment of last local HWM for columnOID
-    //   lastLocalHwm current last local for column OID
-    void backupColumnHWMChunk (
-        OID                columnOID,
-        uint16_t           dbRoot,
-        uint32_t           partition,
-        uint16_t           segment,
-        HWM                lastLocalHwm );
+  // Make a backup copy of the specified HWM column chunk.
+  // This operation only applies to compressed columns.
+  // Warning: This function may throw a WeException.
+  //   columnOID column OID to be saved
+  //   dbRoot current dbRoot of last local HWM for columnOID
+  //   partition current partition of last local HWM for columnOID
+  //   segment current segment of last local HWM for columnOID
+  //   lastLocalHwm current last local for column OID
+  void backupColumnHWMChunk(OID columnOID, uint16_t dbRoot, uint32_t partition, uint16_t segment,
+                            HWM lastLocalHwm);
 
-    // This function must be thread-safe since it is called directly by
-    // backupDctnryHWMChunk().  Employed by non-hdfs.
-    void backupHWMChunk (
-        bool               bColumnFile,
-        OID                columnOID,
-        uint16_t           dbRoot,
-        uint32_t           partition,
-        uint16_t           segment,
-        HWM                lastLocalHwm );
+  // This function must be thread-safe since it is called directly by
+  // backupDctnryHWMChunk().  Employed by non-hdfs.
+  void backupHWMChunk(bool bColumnFile, OID columnOID, uint16_t dbRoot, uint32_t partition, uint16_t segment,
+                      HWM lastLocalHwm);
 
-    // This function must be thread-safe since it is called directly by
-    // backupDctnryHWMFile().   Employed by hdfs.
-    void backupHWMFile (
-        bool               bColumnFile,
-        OID                columnOID,
-        uint16_t           dbRoot,
-        uint32_t           partition,
-        uint16_t           segment,
-        HWM                lastLocalHwm );
+  // This function must be thread-safe since it is called directly by
+  // backupDctnryHWMFile().   Employed by hdfs.
+  void backupHWMFile(bool bColumnFile, OID columnOID, uint16_t dbRoot, uint32_t partition, uint16_t segment,
+                     HWM lastLocalHwm);
 
-    // Close the current meta data file.
-    EXPORT void closeMetaFile ( );
+  // Close the current meta data file.
+  EXPORT void closeMetaFile();
 
-    void createSubDir( const std::string& metaFileName );
-    void deleteSubDir( const std::string& metaFileName );
-    int  getSubDirPath(const uint16_t dbRoot,
-                       std::string& subDirPath ) const;
+  void createSubDir(const std::string& metaFileName);
+  void deleteSubDir(const std::string& metaFileName);
+  int getSubDirPath(const uint16_t dbRoot, std::string& subDirPath) const;
 
-    // Open a meta data file to save HWM bulk rollback info for tableOID
-    // Warning: This function may throw a WeException.
-    //   dbRoot is the DBRoot of interest for the applicable table.
-    std::string openMetaFile ( uint16_t dbRoot );
+  // Open a meta data file to save HWM bulk rollback info for tableOID
+  // Warning: This function may throw a WeException.
+  //   dbRoot is the DBRoot of interest for the applicable table.
+  std::string openMetaFile(uint16_t dbRoot);
 
-    // Rename temporary metadata control file(s) to the permanent name.
-    // Filenames are taken from fMetaFileNames.
-    // Warning: This function may throw a WeException.
-    void renameMetaFile( );
+  // Rename temporary metadata control file(s) to the permanent name.
+  // Filenames are taken from fMetaFileNames.
+  // Warning: This function may throw a WeException.
+  void renameMetaFile();
 
-    // Save column meta data to the currently open file.
-    // This is the Shared-Nothing version of this function.
-    // Warning: This function may throw a WeException.
-    //   metaFileName    name of metafile to be written
-    //   columnOID       column OID to be saved
-    //   dbRoot          current dbRoot of last local HWM for columnOID
-    //   partition       current partition of last local HWM for columnOID
-    //   segment         current segment of last local HWM for columnOID
-    //   lastLocalHwm    current last local for column OID
-    //   colType         type of columnOID
-    //   colTypeName     type name of columnOID
-    //   colWidth        width (in bytes) of columnOID
-    //   compressionType compression type
-    void writeColumnMetaData (
-        const std::string& metaFileName,
-        bool               withHWM,
-        OID                columnOID,
-        uint16_t           dbRoot,
-        uint32_t           partition,
-        uint16_t           segment,
-        HWM                lastLocalHwm,
-        execplan::CalpontSystemCatalog::ColDataType colType,
-        const std::string& colTypeName,
-        int                colWidth,
-        int                compressionType );
+  // Save column meta data to the currently open file.
+  // This is the Shared-Nothing version of this function.
+  // Warning: This function may throw a WeException.
+  //   metaFileName    name of metafile to be written
+  //   columnOID       column OID to be saved
+  //   dbRoot          current dbRoot of last local HWM for columnOID
+  //   partition       current partition of last local HWM for columnOID
+  //   segment         current segment of last local HWM for columnOID
+  //   lastLocalHwm    current last local for column OID
+  //   colType         type of columnOID
+  //   colTypeName     type name of columnOID
+  //   colWidth        width (in bytes) of columnOID
+  //   compressionType compression type
+  void writeColumnMetaData(const std::string& metaFileName, bool withHWM, OID columnOID, uint16_t dbRoot,
+                           uint32_t partition, uint16_t segment, HWM lastLocalHwm,
+                           execplan::CalpontSystemCatalog::ColDataType colType,
+                           const std::string& colTypeName, int colWidth, int compressionType);
 
-    // Save dictionary store meta data to the currently open file.
-    // This is the Shared-Nothing version of this function.
-    //   dictionaryStoreOID dictionary store OID to be saved
-    //   dbRoot dbRoot of store file
-    //   partition partition of store file
-    //   segment segment of store file
-    //   localHwm current local HWM for specified partition and seg file
-    //   compressionType compression type
-    void writeDictionaryStoreMetaData (
-        OID                columnOID,
-        OID                dictionaryStoreOID,
-        uint16_t           dbRoot,
-        uint32_t           partition,
-        uint16_t           segment,
-        HWM                localHwm,
-        int                compressionType );
+  // Save dictionary store meta data to the currently open file.
+  // This is the Shared-Nothing version of this function.
+  //   dictionaryStoreOID dictionary store OID to be saved
+  //   dbRoot dbRoot of store file
+  //   partition partition of store file
+  //   segment segment of store file
+  //   localHwm current local HWM for specified partition and seg file
+  //   compressionType compression type
+  void writeDictionaryStoreMetaData(OID columnOID, OID dictionaryStoreOID, uint16_t dbRoot,
+                                    uint32_t partition, uint16_t segment, HWM localHwm, int compressionType);
 
-    // For first extent stripe in a partition, this function is used to
-    // to log a marker to denote a trailing segment file that does not exist.
-    // This is the Shared-Nothing version of this function.
-    //   dictionaryStoreOID dictionary store OID to be saved
-    //   dbRoot dbRoot of store file
-    //   partition partition of store file
-    //   segment segment of store file
-    //   compressionType compression type
-    void writeDictionaryStoreMetaNoDataMarker (
-        OID                columnOID,
-        OID                dictionaryStoreOID,
-        uint16_t           dbRoot,
-        uint32_t           partition,
-        uint16_t           segment,
-        int                compressionType );
+  // For first extent stripe in a partition, this function is used to
+  // to log a marker to denote a trailing segment file that does not exist.
+  // This is the Shared-Nothing version of this function.
+  //   dictionaryStoreOID dictionary store OID to be saved
+  //   dbRoot dbRoot of store file
+  //   partition partition of store file
+  //   segment segment of store file
+  //   compressionType compression type
+  void writeDictionaryStoreMetaNoDataMarker(OID columnOID, OID dictionaryStoreOID, uint16_t dbRoot,
+                                            uint32_t partition, uint16_t segment, int compressionType);
 
-    // This function must be thread-safe since it is called indirectly by
-    // backupDctnryHWMChunk() (through backupHWMChunk()).
-    int writeHWMChunk (
-        bool               bColumnFile,
-        OID                columnOID,
-        uint16_t           dbRoot,
-        uint32_t           partition,
-        uint16_t           segment,
-        const unsigned char* compressedOutBuf,
-        uint64_t           chunkSize,
-        uint64_t           fileSize,
-        HWM                chunkHwm,
-        std::string&       errMsg) const;
-    void printDctnryChunkList(const RBChunkInfo& rbChk, const char* action);
+  // This function must be thread-safe since it is called indirectly by
+  // backupDctnryHWMChunk() (through backupHWMChunk()).
+  int writeHWMChunk(bool bColumnFile, OID columnOID, uint16_t dbRoot, uint32_t partition, uint16_t segment,
+                    const unsigned char* compressedOutBuf, uint64_t chunkSize, uint64_t fileSize,
+                    HWM chunkHwm, std::string& errMsg) const;
+  void printDctnryChunkList(const RBChunkInfo& rbChk, const char* action);
 
-    IDBDataFile*           fMetaDataFile;     // current meta data file to write
-    std::ostringstream     fMetaDataStream;   // adapter for IDBDataFile
-    std::map<uint16_t, std::string> fMetaFileNames;//map of dbroots to metafiles
-    std::string            fAppDesc;          // description of application user
-    Log*                   fLog;              // import log file
-    bool                   fCreatedSubDir;    // has subdir path been created
-    RBChunkSet             fRBChunkDctnrySet; // Dctnry HWM chunk info
-    boost::mutex           fRBChunkDctnryMutex;//Mutex lock for RBChunkSet
-    OID                    fTableOID;         // OID of relevant table
-    std::string            fTableName;        // Name of relevant table
+  IDBDataFile* fMetaDataFile;                      // current meta data file to write
+  std::ostringstream fMetaDataStream;              // adapter for IDBDataFile
+  std::map<uint16_t, std::string> fMetaFileNames;  // map of dbroots to metafiles
+  std::string fAppDesc;                            // description of application user
+  Log* fLog;                                       // import log file
+  bool fCreatedSubDir;                             // has subdir path been created
+  RBChunkSet fRBChunkDctnrySet;                    // Dctnry HWM chunk info
+  boost::mutex fRBChunkDctnryMutex;                // Mutex lock for RBChunkSet
+  OID fTableOID;                                   // OID of relevant table
+  std::string fTableName;                          // Name of relevant table
 };
 
-} //end of namespace
+}  // namespace WriteEngine
 
 #undef EXPORT
 
-#endif // WE_RBMETAWRITER_H_
+#endif  // WE_RBMETAWRITER_H_

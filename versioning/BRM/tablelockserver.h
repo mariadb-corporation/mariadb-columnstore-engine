@@ -36,35 +36,34 @@
 
 namespace BRM
 {
-
 class TableLockServer
 {
-public:
-    EXPORT TableLockServer(SessionManagerServer*);
-    virtual ~TableLockServer();
+ public:
+  EXPORT TableLockServer(SessionManagerServer*);
+  virtual ~TableLockServer();
 
-    EXPORT uint64_t lock(TableLockInfo*);
-    EXPORT bool unlock(uint64_t id);
-    EXPORT bool changeState(uint64_t id, LockState state);
-    EXPORT bool changeOwner(uint64_t id, const std::string& ownerName, uint32_t pid, int32_t sessionID,
-                            int32_t txnID);
-    EXPORT std::vector<TableLockInfo> getAllLocks() const;
-    EXPORT void releaseAllLocks();
-    EXPORT bool getLockInfo(uint64_t id, TableLockInfo* out) const;
+  EXPORT uint64_t lock(TableLockInfo*);
+  EXPORT bool unlock(uint64_t id);
+  EXPORT bool changeState(uint64_t id, LockState state);
+  EXPORT bool changeOwner(uint64_t id, const std::string& ownerName, uint32_t pid, int32_t sessionID,
+                          int32_t txnID);
+  EXPORT std::vector<TableLockInfo> getAllLocks() const;
+  EXPORT void releaseAllLocks();
+  EXPORT bool getLockInfo(uint64_t id, TableLockInfo* out) const;
 
-private:
-    void load();
-    void save();
+ private:
+  void load();
+  void save();
 
-    mutable boost::mutex mutex;
-    std::map<uint64_t, TableLockInfo> locks;
-    typedef std::map<uint64_t, TableLockInfo>::iterator lit_t;
-    typedef std::map<uint64_t, TableLockInfo>::const_iterator constlit_t;
-    std::string filename;
-    SessionManagerServer* sms;
+  mutable boost::mutex mutex;
+  std::map<uint64_t, TableLockInfo> locks;
+  typedef std::map<uint64_t, TableLockInfo>::iterator lit_t;
+  typedef std::map<uint64_t, TableLockInfo>::const_iterator constlit_t;
+  std::string filename;
+  SessionManagerServer* sms;
 };
 
-}
+}  // namespace BRM
 
 #undef EXPORT
 

@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_insert.cpp 2477 2011-04-01 16:07:35Z rdempsey $
-*
-*
-****************************************************************************/
+ * $Id: func_insert.cpp 2477 2011-04-01 16:07:35Z rdempsey $
+ *
+ *
+ ****************************************************************************/
 
 #include <string>
 using namespace std;
@@ -37,74 +37,69 @@ using namespace joblist;
 #include "utf8.h"
 using namespace utf8;
 
-
 namespace funcexp
 {
-
-CalpontSystemCatalog::ColType Func_insert::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
+CalpontSystemCatalog::ColType Func_insert::operationType(FunctionParm& fp,
+                                                         CalpontSystemCatalog::ColType& resultType)
 {
-    // operation type is not used by this functor
-    return fp[0]->data()->resultType();
+  // operation type is not used by this functor
+  return fp[0]->data()->resultType();
 }
 
-std::string Func_insert::getStrVal(rowgroup::Row& row,
-                                   FunctionParm& fp,
-                                   bool& isNull,
+std::string Func_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                    execplan::CalpontSystemCatalog::ColType&)
 {
-	string src;
-	string tnewstr;
-    int64_t start, length;
+  string src;
+  string tnewstr;
+  int64_t start, length;
 
-    stringValue(fp[0], row, isNull, src);
-    if (isNull)
-        return "";
+  stringValue(fp[0], row, isNull, src);
+  if (isNull)
+    return "";
 
-    stringValue(fp[3], row, isNull, tnewstr);
-    if (isNull)
-        return "";
+  stringValue(fp[3], row, isNull, tnewstr);
+  if (isNull)
+    return "";
 
-    start = fp[1]->data()->getIntVal(row, isNull);
-    if (isNull)
-        return "";
-    start--; // Because SQL syntax is 1 based and we want 0 based.
+  start = fp[1]->data()->getIntVal(row, isNull);
+  if (isNull)
+    return "";
+  start--;  // Because SQL syntax is 1 based and we want 0 based.
 
-    length = fp[2]->data()->getIntVal(row, isNull);
-    if (isNull)
-        return "";
+  length = fp[2]->data()->getIntVal(row, isNull);
+  if (isNull)
+    return "";
 
-    CHARSET_INFO* cs = fp[0]->data()->resultType().getCharset();
+  CHARSET_INFO* cs = fp[0]->data()->resultType().getCharset();
 
-    // binLen represents the number of bytes
-    int64_t binLen = static_cast<int64_t>(src.length());
-    const char* pos = src.c_str();
-    const char* end = pos + binLen;
-    // strLen is number of characters
-    int64_t strLen = cs->numchars(pos, end);
-    
-    // Return the original string if start isn't within the string.
-    if ((start < 0) || start >= strLen)
-        return src;
+  // binLen represents the number of bytes
+  int64_t binLen = static_cast<int64_t>(src.length());
+  const char* pos = src.c_str();
+  const char* end = pos + binLen;
+  // strLen is number of characters
+  int64_t strLen = cs->numchars(pos, end);
 
-    if ((length < 0) || (length > strLen))
-        length = strLen;
+  // Return the original string if start isn't within the string.
+  if ((start < 0) || start >= strLen)
+    return src;
 
-    // Convert start and length from characters to bytes.
-    start = cs->charpos(pos, end, start);
-    length = cs->charpos(pos+start, end, length);
+  if ((length < 0) || (length > strLen))
+    length = strLen;
 
-    string out;
-    out.reserve(binLen - length + tnewstr.length() + 1);
+  // Convert start and length from characters to bytes.
+  start = cs->charpos(pos, end, start);
+  length = cs->charpos(pos + start, end, length);
 
-    out.append(src.c_str(), start);
-    out.append(tnewstr.c_str(), tnewstr.length());
-    if (binLen - start - length > 0)
-        out.append(src.c_str() + start + length, binLen - start - length);
+  string out;
+  out.reserve(binLen - length + tnewstr.length() + 1);
 
-    return out;
+  out.append(src.c_str(), start);
+  out.append(tnewstr.c_str(), tnewstr.length());
+  if (binLen - start - length > 0)
+    out.append(src.c_str() + start + length, binLen - start - length);
+
+  return out;
 }
 
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:
-

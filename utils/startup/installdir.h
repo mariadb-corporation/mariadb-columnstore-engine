@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /******************************************************************************************
-* $Id$
-*
-******************************************************************************************/
+ * $Id$
+ *
+ ******************************************************************************************/
 /**
  * @file
  */
@@ -30,26 +30,28 @@
 
 namespace startup
 {
-
 /** class */
 class StartUp
 {
-public:
-    StartUp() {}
-    ~StartUp() {}
+ public:
+  StartUp()
+  {
+  }
+  ~StartUp()
+  {
+  }
 
-    static const std::string tmpDir();
+  static const std::string tmpDir();
 
-private:
-    StartUp(const StartUp& rhs);
-    StartUp& operator=(const StartUp& rhs);
+ private:
+  StartUp(const StartUp& rhs);
+  StartUp& operator=(const StartUp& rhs);
 
-    static boost::mutex fTmpDirLock;
-    static std::string* fTmpDirp;
+  static boost::mutex fTmpDirLock;
+  static std::string* fTmpDirp;
 };
 
-}
+}  // namespace startup
 
 #endif
 // vim:ts=4 sw=4:
-

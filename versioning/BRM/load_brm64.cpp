@@ -42,40 +42,40 @@ using namespace std;
 
 void usage(char* name)
 {
-    cout << "Usage: " << name << " <prefix>" << endl;
-    exit(1);
+  cout << "Usage: " << name << " <prefix>" << endl;
+  exit(1);
 }
 
 int main(int argc, char** argv)
 {
 #if __WORDSIZE <= 32
-//This code is OBE now that the structs are padded correctly
-    BlockResolutionManager brm;
-    int err;
-    string prefix;
+  // This code is OBE now that the structs are padded correctly
+  BlockResolutionManager brm;
+  int err;
+  string prefix;
 
-    if (argc > 2)
-        usage(argv[0]);
-    else if (argc == 2)
-        prefix = argv[1];
-    else
-        prefix = "BRM_state";
+  if (argc > 2)
+    usage(argv[0]);
+  else if (argc == 2)
+    prefix = argv[1];
+  else
+    prefix = "BRM_state";
 
-    idbdatafile::IDBPolicy::configIDBPolicy();
+  idbdatafile::IDBPolicy::configIDBPolicy();
 
-    err = brm.loadState(prefix);
+  err = brm.loadState(prefix);
 
-    if (err == 0)
-        cout << "OK." << endl;
-    else
-    {
-        cout << "Load failed" << endl;
-        return 1;
-    }
-
-    return 0;
-#else
-    cerr << "This tool does not work on 64-bit arch!" << endl;
+  if (err == 0)
+    cout << "OK." << endl;
+  else
+  {
+    cout << "Load failed" << endl;
     return 1;
+  }
+
+  return 0;
+#else
+  cerr << "This tool does not work on 64-bit arch!" << endl;
+  return 1;
 #endif
 }

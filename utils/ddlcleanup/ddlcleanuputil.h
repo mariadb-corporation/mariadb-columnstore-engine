@@ -22,7 +22,6 @@
 #ifndef DDLCLEANUPUTIL_H__
 #define DDLCLEANUPUTIL_H__
 
-
 /**
  * block cache utilities
  */
@@ -33,4 +32,3 @@ int ddl_cleanup();
 // vim:ts=4 sw=4:
 
 #endif
-

@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: sqlstatement.cpp 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: sqlstatement.cpp 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 
 #define DDLPKG_DLLEXPORT
 #include "ddlpkg.h"
@@ -33,7 +33,7 @@ static uint32_t sessionID = 1;
 
 SqlStatement::SqlStatement()
 {
-    fSessionID = sessionID;
+  fSessionID = sessionID;
 }
 
 SqlStatement::~SqlStatement()
@@ -42,6 +42,6 @@ SqlStatement::~SqlStatement()
 
 ostream& operator<<(ostream& os, const SqlStatement& stmt)
 {
-    return stmt.put(os);
+  return stmt.put(os);
 }
-}
+}  // namespace ddlpackage

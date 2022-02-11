@@ -27,129 +27,136 @@
 
 namespace joblist
 {
-
 class DiskJoinStep : public JobStep
 {
-public:
-    DiskJoinStep();
-    DiskJoinStep(TupleHashJoinStep*, int djsIndex, int joinerIndex, bool lastOne);
-    virtual ~DiskJoinStep();
+ public:
+  DiskJoinStep();
+  DiskJoinStep(TupleHashJoinStep*, int djsIndex, int joinerIndex, bool lastOne);
+  virtual ~DiskJoinStep();
 
-    void run();
-    void join();
-    const std::string toString() const;
+  void run();
+  void join();
+  const std::string toString() const;
 
-    void loadExistingData(std::vector<rowgroup::RGData>& data);
-    uint32_t getIterationCount()
+  void loadExistingData(std::vector<rowgroup::RGData>& data);
+  uint32_t getIterationCount()
+  {
+    return largeIterationCount;
+  }
+
+ protected:
+ private:
+  boost::shared_ptr<joiner::JoinPartition> jp;
+  rowgroup::RowGroup largeRG, smallRG, outputRG, joinFERG;
+  std::vector<uint32_t> largeKeyCols, smallKeyCols;
+  boost::shared_ptr<RowGroupDL> largeDL, outputDL;
+  RowGroupDL* smallDL;
+
+  boost::shared_array<int> LOMapping, SOMapping, SjoinFEMapping, LjoinFEMapping;
+  TupleHashJoinStep* thjs;
+  boost::shared_ptr<funcexp::FuncExpWrapper> fe;
+  bool typeless;
+  JoinType joinType;
+  boost::shared_ptr<joiner::TupleJoiner> joiner;  // the same instance THJS uses
+
+  /* main thread, started by JobStep::run() */
+  void mainRunner();
+  struct Runner
+  {
+    Runner(DiskJoinStep* d) : djs(d)
     {
-        return largeIterationCount;
     }
-
-protected:
-private:
-    boost::shared_ptr<joiner::JoinPartition> jp;
-    rowgroup::RowGroup largeRG, smallRG, outputRG, joinFERG;
-    std::vector<uint32_t> largeKeyCols, smallKeyCols;
-    boost::shared_ptr<RowGroupDL> largeDL, outputDL;
-    RowGroupDL* smallDL;
-
-    boost::shared_array<int> LOMapping, SOMapping, SjoinFEMapping, LjoinFEMapping;
-    TupleHashJoinStep* thjs;
-    boost::shared_ptr<funcexp::FuncExpWrapper> fe;
-    bool typeless;
-    JoinType joinType;
-    boost::shared_ptr<joiner::TupleJoiner> joiner;     // the same instance THJS uses
-
-    /* main thread, started by JobStep::run() */
-    void mainRunner();
-    struct Runner
+    void operator()()
     {
-        Runner(DiskJoinStep* d) : djs(d) { }
-        void operator()()
-        {
-            utils::setThreadName("DJSMainRunner");
-            djs->mainRunner();
-        }
-        DiskJoinStep* djs;
-    };
+      utils::setThreadName("DJSMainRunner");
+      djs->mainRunner();
+    }
+    DiskJoinStep* djs;
+  };
 
-    void smallReader();
-    void largeReader();
-    int largeIt;
-    bool lastLargeIteration;
-    uint32_t largeIterationCount;
+  void smallReader();
+  void largeReader();
+  int largeIt;
+  bool lastLargeIteration;
+  uint32_t largeIterationCount;
 
-    uint64_t mainThread; // thread handle from thread pool
+  uint64_t mainThread;  // thread handle from thread pool
 
-    /* Loader structs */
-    struct LoaderOutput
+  /* Loader structs */
+  struct LoaderOutput
+  {
+    std::vector<rowgroup::RGData> smallData;
+    uint64_t partitionID;
+    joiner::JoinPartition* jp;
+  };
+  boost::shared_ptr<joblist::FIFO<boost::shared_ptr<LoaderOutput> > > loadFIFO;
+
+  struct Loader
+  {
+    Loader(DiskJoinStep* d) : djs(d)
     {
-        std::vector<rowgroup::RGData> smallData;
-        uint64_t partitionID;
-        joiner::JoinPartition* jp;
-    };
-    boost::shared_ptr<joblist::FIFO<boost::shared_ptr<LoaderOutput> > > loadFIFO;
-
-    struct Loader
+    }
+    void operator()()
     {
-        Loader(DiskJoinStep* d) : djs(d) { }
-        void operator()()
-        {
-            utils::setThreadName("DJSLoader");
-            djs->loadFcn();
-        }
-        DiskJoinStep* djs;
-    };
-    void loadFcn();
+      utils::setThreadName("DJSLoader");
+      djs->loadFcn();
+    }
+    DiskJoinStep* djs;
+  };
+  void loadFcn();
 
-    /* Builder structs */
-    struct BuilderOutput
+  /* Builder structs */
+  struct BuilderOutput
+  {
+    boost::shared_ptr<joiner::TupleJoiner> tupleJoiner;
+    std::vector<rowgroup::RGData> smallData;
+    uint64_t partitionID;
+    joiner::JoinPartition* jp;
+  };
+
+  boost::shared_ptr<joblist::FIFO<boost::shared_ptr<BuilderOutput> > > buildFIFO;
+
+  struct Builder
+  {
+    Builder(DiskJoinStep* d) : djs(d)
     {
-        boost::shared_ptr<joiner::TupleJoiner> tupleJoiner;
-        std::vector<rowgroup::RGData> smallData;
-        uint64_t partitionID;
-        joiner::JoinPartition* jp;
-    };
-
-    boost::shared_ptr<joblist::FIFO<boost::shared_ptr<BuilderOutput> > > buildFIFO;
-
-    struct Builder
+    }
+    void operator()()
     {
-        Builder(DiskJoinStep* d) : djs(d) { }
-        void operator()()
-        {
-            utils::setThreadName("DJSBuilder");
-            djs->buildFcn();
-        }
-        DiskJoinStep* djs;
-    };
-    void buildFcn();
+      utils::setThreadName("DJSBuilder");
+      djs->buildFcn();
+    }
+    DiskJoinStep* djs;
+  };
+  void buildFcn();
 
-    /* Joining structs */
-    struct Joiner
+  /* Joining structs */
+  struct Joiner
+  {
+    Joiner(DiskJoinStep* d) : djs(d)
     {
-        Joiner(DiskJoinStep* d) : djs(d) { }
-        void operator()()
-        {
-            utils::setThreadName("DJSJoiner");
-            djs->joinFcn();
-        }
-        DiskJoinStep* djs;
-    };
-    void joinFcn();
+    }
+    void operator()()
+    {
+      utils::setThreadName("DJSJoiner");
+      djs->joinFcn();
+    }
+    DiskJoinStep* djs;
+  };
+  void joinFcn();
 
-    // limits & usage
-    boost::shared_ptr<int64_t> smallUsage;
-    int64_t smallLimit;
-    int64_t largeLimit;
-    uint64_t partitionSize;
+  // limits & usage
+  boost::shared_ptr<int64_t> smallUsage;
+  int64_t smallLimit;
+  int64_t largeLimit;
+  uint64_t partitionSize;
 
-    void reportStats();
+  void reportStats();
 
-    uint32_t joinerIndex;
-    bool closedOutput;
+  uint32_t joinerIndex;
+  bool closedOutput;
 };
 
-}
+}  // namespace joblist
 
-#endif // DISKJOINSTEP_H
+#endif  // DISKJOINSTEP_H
