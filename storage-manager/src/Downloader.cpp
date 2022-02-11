@@ -214,7 +214,11 @@ void Downloader::configListener()
   // Downloader threads
   string stmp = Config::get()->getValue("ObjectStorage", "max_concurrent_downloads");
   if (maxDownloads == 0)
+  {
     maxDownloads = 20;
+    workers.setMaxThreads(maxDownloads);
+    logger->log(LOG_INFO, "max_concurrent_downloads = %u",maxDownloads);
+  }
   if (stmp.empty())
   {
     logger->log(LOG_CRIT, "max_concurrent_downloads is not set. Using current value = %u", maxDownloads);

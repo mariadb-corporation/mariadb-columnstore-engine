@@ -884,7 +884,11 @@ void Synchronizer::configListener()
   // Uploader threads
   string stmp = Config::get()->getValue("ObjectStorage", "max_concurrent_uploads");
   if (maxUploads == 0)
+  {
     maxUploads = 20;
+    threadPool->setMaxThreads(maxUploads);
+    logger->log(LOG_INFO, "max_concurrent_uploads = %u",maxUploads);
+  }
   if (stmp.empty())
   {
     logger->log(LOG_CRIT, "max_concurrent_uploads is not set. Using current value = %u", maxUploads);
