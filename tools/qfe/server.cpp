@@ -16,7 +16,7 @@
    MA 02110-1301, USA. */
 
 /*
-	Protocol definition:
+        Protocol definition:
 */
 
 #ifdef _MSC_VER
@@ -65,7 +65,7 @@ using namespace boost;
 #include "socketio.h"
 #include "ddlstmts.h"
 
-#include "exceptclasses.h" //brings in idbassert_s macro
+#include "exceptclasses.h"  //brings in idbassert_s macro
 
 #include "messagequeue.h"
 using namespace messageqcpp;
@@ -90,89 +90,97 @@ using namespace qfe;
 
 enum StmtType
 {
-    UNKNOWN,
-    QUERY,
-    CREATE,
-    DROP,
-    SHOW,
+  UNKNOWN,
+  QUERY,
+  CREATE,
+  DROP,
+  SHOW,
 };
 
 volatile uint32_t SystemSID;
 
 void log(const string& s)
 {
-    cerr << s << endl;
+  cerr << s << endl;
 }
 
 struct QueryMessage
 {
-    QueryMessage() : isValid(false) { }
-    ~QueryMessage() { }
+  QueryMessage() : isValid(false)
+  {
+  }
+  ~QueryMessage()
+  {
+  }
 
-    string toString() const;
+  string toString() const;
 
-    bool isValid;
-    string queryText;
-    string defaultSchema;
+  bool isValid;
+  string queryText;
+  string defaultSchema;
 };
 
 string QueryMessage::toString() const
 {
-    ostringstream oss;
-    oss << "valid: " << boolalpha << isValid << ", " <<
-        "queryText: " << queryText << ", " <<
-        "defaultSchema: " << defaultSchema;
-    return oss.str();
+  ostringstream oss;
+  oss << "valid: " << boolalpha << isValid << ", "
+      << "queryText: " << queryText << ", "
+      << "defaultSchema: " << defaultSchema;
+  return oss.str();
 }
 
 ostream& operator<<(ostream& os, const QueryMessage& rhs)
 {
-    os << rhs.toString();
-    return os;
+  os << rhs.toString();
+  return os;
 }
 
 class ThreadFunc
 {
-public:
-    ThreadFunc(SockType fd) : fFd(fd) { }
-    ~ThreadFunc() { }
+ public:
+  ThreadFunc(SockType fd) : fFd(fd)
+  {
+  }
+  ~ThreadFunc()
+  {
+  }
 
-    void run();
-    void operator()()
-    {
-        run();
-    }
+  void run();
+  void operator()()
+  {
+    run();
+  }
 
-private:
-    ThreadFunc(const ThreadFunc& rhs);
-    ThreadFunc& operator=(const ThreadFunc& rhs);
+ private:
+  ThreadFunc(const ThreadFunc& rhs);
+  ThreadFunc& operator=(const ThreadFunc& rhs);
 
-    SockType fFd;
+  SockType fFd;
 };
 
 bool serverInit()
 {
 #ifndef _MSC_VER
 
-    setsid();
+  setsid();
 
-    //Handle certain signals (we want these to return EINTR so we can throw)
-    //SIGPIPE
-    //I don't think we'll get any of these from init (except possibly HUP, but that's an indication
-    // of bad things anyway)
-    //SIGHUP?
-    //SIGUSR1?
-    //SIGUSR2?
-    //SIGPOLL?
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(struct sigaction));
-    sa.sa_handler = SIG_IGN;
-    sigaction(SIGPIPE, &sa, 0);
-    sigaction(SIGHUP, &sa, 0);
-    sigaction(SIGUSR1, &sa, 0);
-    sigaction(SIGUSR2, &sa, 0);
+  // Handle certain signals (we want these to return EINTR so we can throw)
+  // SIGPIPE
+  // I don't think we'll get any of these from init (except possibly HUP, but that's an indication
+  // of bad things anyway)
+  // SIGHUP?
+  // SIGUSR1?
+  // SIGUSR2?
+  // SIGPOLL?
+  struct sigaction sa;
+  memset(&sa, 0, sizeof(struct sigaction));
+  sa.sa_handler = SIG_IGN;
+  sigaction(SIGPIPE, &sa, 0);
+  sigaction(SIGHUP, &sa, 0);
+  sigaction(SIGUSR1, &sa, 0);
+  sigaction(SIGUSR2, &sa, 0);
 #ifndef __FreeBSD__
-    sigaction(SIGPOLL, &sa, 0);
+  sigaction(SIGPOLL, &sa, 0);
 #endif
 #if 0
     int fd;
@@ -187,259 +195,255 @@ bool serverInit()
 
 #endif
 #endif
-    return true;
+  return true;
 }
 
 SockType initListenSock(short portNo)
 {
-    SockType listenSock = -1;
+  SockType listenSock = -1;
 #ifdef _MSC_VER
-    WSAData wsadata;
-    const WORD minVersion = MAKEWORD(2, 2);
-    WSAStartup(minVersion, &wsadata);
+  WSAData wsadata;
+  const WORD minVersion = MAKEWORD(2, 2);
+  WSAStartup(minVersion, &wsadata);
 #endif
-    listenSock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-    idbassert_s(listenSock >= 0, string("socket create error: ") + strerror(errno));
-    //if (listenSock < 0) throw runtime_error(string("socket create error: ") + strerror(errno));
+  listenSock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+  idbassert_s(listenSock >= 0, string("socket create error: ") + strerror(errno));
+  // if (listenSock < 0) throw runtime_error(string("socket create error: ") + strerror(errno));
 #ifndef _MSC_VER
-    int optval = 1;
-    setsockopt(listenSock, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char*>(&optval), sizeof(optval));
+  int optval = 1;
+  setsockopt(listenSock, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char*>(&optval), sizeof(optval));
 #endif
-    int rc = 0;
-    struct sockaddr_in serv_addr;
-    memset(&serv_addr, 0, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_port = htons(portNo);
-    const int MaxTries = 5 * 60 / 10;
-    int tries = 0;
+  int rc = 0;
+  struct sockaddr_in serv_addr;
+  memset(&serv_addr, 0, sizeof(serv_addr));
+  serv_addr.sin_family = AF_INET;
+  serv_addr.sin_addr.s_addr = INADDR_ANY;
+  serv_addr.sin_port = htons(portNo);
+  const int MaxTries = 5 * 60 / 10;
+  int tries = 0;
 again:
-    rc = ::bind(listenSock, (sockaddr*)&serv_addr, sizeof(serv_addr));
+  rc = ::bind(listenSock, (sockaddr*)&serv_addr, sizeof(serv_addr));
 
-    if (rc < 0)
-    {
+  if (rc < 0)
+  {
 #ifdef _MSC_VER
-        int x = WSAGetLastError();
+    int x = WSAGetLastError();
 
-        if (x == WSAEADDRINUSE)
+    if (x == WSAEADDRINUSE)
 #else
-        if (errno == EADDRINUSE)
+    if (errno == EADDRINUSE)
 #endif
-        {
-            //cerr << "Addr in use..." << endl;
-            if (++tries >= MaxTries)
-            {
-                log("Waited too long for socket to bind...giving up");
-                //cerr << "Waited too long for socket to bind...giving up" << endl;
-                exit(1);
-            }
+    {
+      // cerr << "Addr in use..." << endl;
+      if (++tries >= MaxTries)
+      {
+        log("Waited too long for socket to bind...giving up");
+        // cerr << "Waited too long for socket to bind...giving up" << endl;
+        exit(1);
+      }
 
-            sleep(10);
-            goto again;
-        }
-
-        idbassert_s(0, string("socket bind error: ") + strerror(errno));
-        //throw runtime_error(string("socket bind error: ") + strerror(errno));
+      sleep(10);
+      goto again;
     }
 
-    rc = listen(listenSock, 16);
-    idbassert_s(rc >= 0, string("socket listen error") + strerror(errno));
-    //if (rc < 0) throw runtime_error(string("socket listen error") + strerror(errno));
+    idbassert_s(0, string("socket bind error: ") + strerror(errno));
+    // throw runtime_error(string("socket bind error: ") + strerror(errno));
+  }
 
-    return listenSock;
+  rc = listen(listenSock, 16);
+  idbassert_s(rc >= 0, string("socket listen error") + strerror(errno));
+  // if (rc < 0) throw runtime_error(string("socket listen error") + strerror(errno));
+
+  return listenSock;
 }
 
 QueryMessage getNextMsg(SockType fd)
 {
-    QueryMessage msg;
+  QueryMessage msg;
 
-    try
-    {
-        msg.defaultSchema = socketio::readString(fd);
-        msg.queryText = socketio::readString(fd);
-        msg.isValid = true;
-    }
-    catch (runtime_error& rex)
-    {
-        cerr << "re reading ctl msg: " << rex.what() << endl;
-        msg.queryText = "";
-    }
-    catch (...)
-    {
-        cerr << "ex reading ctl msg" << endl;
-        msg.queryText = "";
-    }
+  try
+  {
+    msg.defaultSchema = socketio::readString(fd);
+    msg.queryText = socketio::readString(fd);
+    msg.isValid = true;
+  }
+  catch (runtime_error& rex)
+  {
+    cerr << "re reading ctl msg: " << rex.what() << endl;
+    msg.queryText = "";
+  }
+  catch (...)
+  {
+    cerr << "ex reading ctl msg" << endl;
+    msg.queryText = "";
+  }
 
-    return msg;
+  return msg;
 }
 
 StmtType guessStatementType(const string& stmt)
 {
-    typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-    char_separator<char> sep;
-    tokenizer tokens(stmt, sep);
-    tokenizer::iterator tok_iter = tokens.begin();
-    string first_word;
-    first_word = *tok_iter;
-    algorithm::to_lower(first_word);
+  typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+  char_separator<char> sep;
+  tokenizer tokens(stmt, sep);
+  tokenizer::iterator tok_iter = tokens.begin();
+  string first_word;
+  first_word = *tok_iter;
+  algorithm::to_lower(first_word);
 
-    if (first_word == "select")
-        return QUERY;
+  if (first_word == "select")
+    return QUERY;
 
-    if (first_word == "create")
-        return CREATE;
+  if (first_word == "create")
+    return CREATE;
 
-    if (first_word == "drop")
-        return DROP;
+  if (first_word == "drop")
+    return DROP;
 
-    if (first_word == "show")
-        return SHOW;
+  if (first_word == "show")
+    return SHOW;
 
-    return UNKNOWN;
+  return UNKNOWN;
 }
 
 struct ScopedCleaner
 {
-    ScopedCleaner(SockType fd = -1) : fFd(fd) { }
+  ScopedCleaner(SockType fd = -1) : fFd(fd)
+  {
+  }
 #ifdef _MSC_VER
-    ~ScopedCleaner()
-    {
-        if (fFd >= 0) shutdown(fFd, SHUT_RDWR);
+  ~ScopedCleaner()
+  {
+    if (fFd >= 0)
+      shutdown(fFd, SHUT_RDWR);
 
-        closesocket(fFd);
-    }
+    closesocket(fFd);
+  }
 #else
-    ~ScopedCleaner()
-    {
-        if (fFd >= 0) shutdown(fFd, SHUT_RDWR);
+  ~ScopedCleaner()
+  {
+    if (fFd >= 0)
+      shutdown(fFd, SHUT_RDWR);
 
-        close(fFd);
-    }
+    close(fFd);
+  }
 
 #endif
-    SockType fFd;
+  SockType fFd;
 };
 
 void ThreadFunc::run()
 {
-    QueryMessage m;
-    execplan::CalpontSelectExecutionPlan* csep = 0;
-    MessageQueueClient* msgqcl;
+  QueryMessage m;
+  execplan::CalpontSelectExecutionPlan* csep = 0;
+  MessageQueueClient* msgqcl;
 
-    ScopedCleaner cleaner(fFd);
+  ScopedCleaner cleaner(fFd);
 
-    uint32_t sid = 1;
-    sid = atomicops::atomicInc(&SystemSID);
+  uint32_t sid = 1;
+  sid = atomicops::atomicInc(&SystemSID);
 
-    try
+  try
+  {
+    m = getNextMsg(fFd);
+
+    if (m.isValid)
     {
-        m = getNextMsg(fFd);
+      DefaultSchema = m.defaultSchema;
+      StmtType st = guessStatementType(m.queryText);
 
-        if (m.isValid)
+      switch (st)
+      {
+        case QUERY:
+          csep = parseQuery(m.queryText, sid);
+          // sendCSEP takes ownership of the ptr from parseQuery
+          msgqcl = sendCSEP(csep);
+          // processReturnedRows takes ownership of the ptr from sendCSEP
+          processReturnedRows(msgqcl, fFd);
+          break;
+
+        case CREATE: processCreateStmt(m.queryText, sid); break;
+
+        case DROP: processDropStmt(m.queryText, sid); break;
+
+        case SHOW:
         {
-            DefaultSchema = m.defaultSchema;
-            StmtType st = guessStatementType(m.queryText);
-
-            switch (st)
-            {
-                case QUERY:
-                    csep = parseQuery(m.queryText, sid);
-                    //sendCSEP takes ownership of the ptr from parseQuery
-                    msgqcl = sendCSEP(csep);
-                    //processReturnedRows takes ownership of the ptr from sendCSEP
-                    processReturnedRows(msgqcl, fFd);
-                    break;
-
-                case CREATE:
-                    processCreateStmt(m.queryText, sid);
-                    break;
-
-                case DROP:
-                    processDropStmt(m.queryText, sid);
-                    break;
-
-                case SHOW:
-                {
-                    ostringstream oss;
-                    oss << "select calpontsys.systable.tablename from calpontsys.systable where "
-                        "calpontsys.systable.schema='" << m.defaultSchema << "';";
-                    csep = parseQuery(oss.str(), sid);
-                    msgqcl = sendCSEP(csep);
-                    processReturnedRows(msgqcl, fFd);
-                    break;
-                }
-
-                default:
-                    throw runtime_error("couldn't guess the statement type");
-                    break;
-            }
+          ostringstream oss;
+          oss << "select calpontsys.systable.tablename from calpontsys.systable where "
+                 "calpontsys.systable.schema='"
+              << m.defaultSchema << "';";
+          csep = parseQuery(oss.str(), sid);
+          msgqcl = sendCSEP(csep);
+          processReturnedRows(msgqcl, fFd);
+          break;
         }
+
+        default: throw runtime_error("couldn't guess the statement type"); break;
+      }
     }
-    catch (std::exception& ex)
-    {
-        socketio::writeString(fFd, ex.what());
-        throw; //in a multi-threaded server this will simply cause this thread to exit
-    }
-    catch (...)
-    {
-        socketio::writeString(fFd, "internal query processing error");
-        throw;
-    }
+  }
+  catch (std::exception& ex)
+  {
+    socketio::writeString(fFd, ex.what());
+    throw;  // in a multi-threaded server this will simply cause this thread to exit
+  }
+  catch (...)
+  {
+    socketio::writeString(fFd, "internal query processing error");
+    throw;
+  }
 }
 
-}
+}  // namespace
 
 int main(int argc, char** argv)
 {
-    int c;
-    SockType listenSock;
-    short portNo;
+  int c;
+  SockType listenSock;
+  short portNo;
 
-    portNo = 0;
-    char* p = getenv("IDB_QFE_PORT");
+  portNo = 0;
+  char* p = getenv("IDB_QFE_PORT");
 
-    if (p && *p)
-        portNo = atoi(p);
+  if (p && *p)
+    portNo = atoi(p);
 
-    if (portNo <= 0)
-        portNo = 9198;
+  if (portNo <= 0)
+    portNo = 9198;
 
 #ifdef _MSC_VER
-    listenSock = INVALID_SOCKET;
+  listenSock = INVALID_SOCKET;
 #else
-    listenSock = -1;
+  listenSock = -1;
 #endif
-    opterr = 0;
+  opterr = 0;
 
-    while ((c = getopt(argc, argv, "p:")) != -1)
-        switch (c)
-        {
-            case 'p':
-                portNo = atoi(optarg);
-                break;
-
-            case '?':
-            default:
-                break;
-        }
-
-    if (!serverInit())
+  while ((c = getopt(argc, argv, "p:")) != -1)
+    switch (c)
     {
-        log("Could not initialize the QFE Server!");
-        cerr << "Could not initialize the QFE Server!" << endl;
-        return 1;
+      case 'p': portNo = atoi(optarg); break;
+
+      case '?':
+      default: break;
     }
 
-    listenSock = initListenSock(portNo);
+  if (!serverInit())
+  {
+    log("Could not initialize the QFE Server!");
+    cerr << "Could not initialize the QFE Server!" << endl;
+    return 1;
+  }
 
-    SystemSID = 0;
+  listenSock = initListenSock(portNo);
 
-    for (;;)
-    {
+  SystemSID = 0;
+
+  for (;;)
+  {
 #ifdef _MSC_VER
-        SOCKET querySock = INVALID_SOCKET;
-        querySock = accept(listenSock, 0, 0);
-        idbassert_s(querySock != INVALID_SOCKET, string("socket accept error: ") + strerror(errno));
+    SOCKET querySock = INVALID_SOCKET;
+    querySock = accept(listenSock, 0, 0);
+    idbassert_s(querySock != INVALID_SOCKET, string("socket accept error: ") + strerror(errno));
 #if 0
         uint32_t sndbufsize;
         int sndbufsizelen = 4;
@@ -476,38 +480,37 @@ int main(int argc, char** argv)
         }
 
 #endif
-        uint32_t sndbufsize = 512 * 1024;
-        setsockopt(querySock, SOL_SOCKET, SO_SNDBUF, (const char*)&sndbufsize, 4);
+    uint32_t sndbufsize = 512 * 1024;
+    setsockopt(querySock, SOL_SOCKET, SO_SNDBUF, (const char*)&sndbufsize, 4);
 #else
-        int querySock = -1;
-        querySock = accept(listenSock, 0, 0);
-        idbassert_s(querySock >= 0, string("socket accept error: ") + strerror(errno));
+    int querySock = -1;
+    querySock = accept(listenSock, 0, 0);
+    idbassert_s(querySock >= 0, string("socket accept error: ") + strerror(errno));
 #endif
 
-        //ThreadFunc now owns querySock and is responsible for cleaning it up
-        ThreadFunc tf(querySock);
+    // ThreadFunc now owns querySock and is responsible for cleaning it up
+    ThreadFunc tf(querySock);
 
 #ifdef SINGLE_THREADED
 
-        try
-        {
-            tf.run();
-        }
-        catch (std::exception& ex)
-        {
-            cerr << "ThreadFunc run threw an exception: " << ex.what() << endl;
-        }
-        catch (...)
-        {
-            cerr << "ThreadFunc run threw an exception" << endl;
-        }
-
-#else
-        thread t(tf);
-#endif
+    try
+    {
+      tf.run();
+    }
+    catch (std::exception& ex)
+    {
+      cerr << "ThreadFunc run threw an exception: " << ex.what() << endl;
+    }
+    catch (...)
+    {
+      cerr << "ThreadFunc run threw an exception" << endl;
     }
 
-    return 0;
+#else
+    thread t(tf);
+#endif
+  }
+
+  return 0;
 }
 // vim:ts=4 sw=4:
-

@@ -23,17 +23,21 @@
 
 namespace datatypes
 {
-
 class TDouble
 {
-protected:
+ protected:
   double mValue;
-public:
-  TDouble(): mValue(0) { }
 
-  explicit TDouble(double value): mValue(value) { }
+ public:
+  TDouble() : mValue(0)
+  {
+  }
 
-  explicit operator double () const
+  explicit TDouble(double value) : mValue(value)
+  {
+  }
+
+  explicit operator double() const
   {
     return mValue;
   }
@@ -49,8 +53,7 @@ public:
   }
 };
 
+}  // end of namespace datatypes
 
-} //end of namespace datatypes
-
-#endif // MCS_DOUBLE_H_INCLUDED
+#endif  // MCS_DOUBLE_H_INCLUDED
 // vim:ts=2 sw=2:

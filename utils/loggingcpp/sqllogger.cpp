@@ -31,47 +31,51 @@ using namespace std;
 
 namespace logging
 {
-
 const unsigned LogDefaultMsg = M0000;
 const unsigned LogStartSql = M0041;
 const unsigned LogEndSql = M0042;
 
-//We can't use a member Logger here.  When used with DML and DDL, the syslog gets closed by calls to DMLLog and DDLLog.
+// We can't use a member Logger here.  When used with DML and DDL, the syslog gets closed by calls to DMLLog
+// and DDLLog.
 SQLLogger::SQLLogger(const std::string sql, unsigned subsys, unsigned session, unsigned txn, unsigned thread)
-    : fLogId(subsys, session, txn, thread), fLog(!sql.empty())
+ : fLogId(subsys, session, txn, thread), fLog(!sql.empty())
 {
-    makeMsgMap();
+  makeMsgMap();
 
-    if (fLog) logMessage(LOG_TYPE_DEBUG, sql, LogStartSql);
+  if (fLog)
+    logMessage(LOG_TYPE_DEBUG, sql, LogStartSql);
 }
 
 SQLLogger::SQLLogger(const std::string sql, const LoggingID& logId)
-    : fLogId(logId.fSubsysID, logId.fSessionID, logId.fTxnID, logId.fThdID), fLog(!sql.empty())
+ : fLogId(logId.fSubsysID, logId.fSessionID, logId.fTxnID, logId.fThdID), fLog(!sql.empty())
 {
-    makeMsgMap();
+  makeMsgMap();
 
-    if (fLog) logMessage(LOG_TYPE_DEBUG, sql, LogStartSql);
+  if (fLog)
+    logMessage(LOG_TYPE_DEBUG, sql, LogStartSql);
 }
 
 void SQLLogger::makeMsgMap()
 {
-    fMsgMap[LogDefaultMsg] = Message(LogDefaultMsg);
-    fMsgMap[LogStartSql] = Message(LogStartSql);
-    fMsgMap[LogEndSql] = Message(LogEndSql);
+  fMsgMap[LogDefaultMsg] = Message(LogDefaultMsg);
+  fMsgMap[LogStartSql] = Message(LogStartSql);
+  fMsgMap[LogEndSql] = Message(LogEndSql);
 }
 
 SQLLogger::~SQLLogger()
 {
-    if (fLog) logMessage(LOG_TYPE_DEBUG, "", LogEndSql);
+  if (fLog)
+    logMessage(LOG_TYPE_DEBUG, "", LogEndSql);
 }
 
-std::string SQLLogger::logMessage(logging::LOG_TYPE logLevel, const std::string& msg, logging::Message::MessageID mid )
+std::string SQLLogger::logMessage(logging::LOG_TYPE logLevel, const std::string& msg,
+                                  logging::Message::MessageID mid)
 {
-    logging::Message::Args args;
-    args.add(msg);
-    Logger logger(fLogId.fSubsysID);
-    logger.msgMap(fMsgMap);
-    return logger.logMessage(logLevel, mid, args, fLogId);
+  logging::Message::Args args;
+  args.add(msg);
+  Logger logger(fLogId.fSubsysID);
+  logger.msgMap(fMsgMap);
+  return logger.logMessage(logLevel, mid, args, fLogId);
 }
 
-}
+}  // namespace logging

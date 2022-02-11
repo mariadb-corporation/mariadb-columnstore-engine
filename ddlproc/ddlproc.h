@@ -44,5 +44,4 @@
 
 #include "messagelog.h"
 
-
-#endif //DDLPROC_H
+#endif  // DDLPROC_H

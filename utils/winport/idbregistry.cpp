@@ -25,30 +25,30 @@ using namespace std;
 
 const string IDBreadRegistry(const string& name, bool returnShortName)
 {
-    HKEY hkResult;
-    LONG lResult;
-    lResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\Calpont\\InfiniDB", 0, KEY_READ, &hkResult);
+  HKEY hkResult;
+  LONG lResult;
+  lResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\Calpont\\InfiniDB", 0, KEY_READ, &hkResult);
 
-    if (lResult != ERROR_SUCCESS)
-        return string();
+  if (lResult != ERROR_SUCCESS)
+    return string();
 
-    DWORD cbData = 1024;
-    TCHAR CfnameBuf[1024];
-    lResult = RegQueryValueEx(hkResult, name.c_str(), 0, 0, (LPBYTE)CfnameBuf, &cbData);
-    CloseHandle(hkResult);
+  DWORD cbData = 1024;
+  TCHAR CfnameBuf[1024];
+  lResult = RegQueryValueEx(hkResult, name.c_str(), 0, 0, (LPBYTE)CfnameBuf, &cbData);
+  CloseHandle(hkResult);
 
-    if (lResult != ERROR_SUCCESS)
-        return string();
+  if (lResult != ERROR_SUCCESS)
+    return string();
 
-    if (!returnShortName)
-        return string(CfnameBuf);
+  if (!returnShortName)
+    return string(CfnameBuf);
 
-    cbData = 1024;
-    TCHAR snbuffer[1024];
-    lResult = GetShortPathName(CfnameBuf, snbuffer, cbData);
+  cbData = 1024;
+  TCHAR snbuffer[1024];
+  lResult = GetShortPathName(CfnameBuf, snbuffer, cbData);
 
-    if (lResult == 0 || lResult > 1024)
-        return string();
+  if (lResult == 0 || lResult > 1024)
+    return string();
 
-    return string(snbuffer);
+  return string(snbuffer);
 }

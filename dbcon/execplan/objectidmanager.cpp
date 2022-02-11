@@ -74,16 +74,16 @@ using namespace std;
 #include "dbrm.h"
 
 #ifndef O_BINARY
-#  define O_BINARY 0
+#define O_BINARY 0
 #endif
 #ifndef O_DIRECT
-#  define O_DIRECT 0
+#define O_DIRECT 0
 #endif
 #ifndef O_LARGEFILE
-#  define O_LARGEFILE 0
+#define O_LARGEFILE 0
 #endif
 #ifndef O_NOATIME
-#  define O_NOATIME 0
+#define O_NOATIME 0
 #endif
 
 namespace
@@ -93,27 +93,26 @@ boost::mutex CtorMutex;
 
 namespace execplan
 {
-
 ObjectIDManager::ObjectIDManager()
 {
-    boost::mutex::scoped_lock lk(CtorMutex);
+  boost::mutex::scoped_lock lk(CtorMutex);
 
-    config::Config* conf;
-    string tmp;
+  config::Config* conf;
+  string tmp;
 
-    conf = config::Config::makeConfig();
+  conf = config::Config::makeConfig();
 
-    try
-    {
-        fFilename = conf->getConfig("OIDManager", "OIDBitmapFile");
-    }
-    catch (exception&)
-    {
-        fFilename = "/mnt/OAM/dbrm/oidbitmap";
-    }
+  try
+  {
+    fFilename = conf->getConfig("OIDManager", "OIDBitmapFile");
+  }
+  catch (exception&)
+  {
+    fFilename = "/mnt/OAM/dbrm/oidbitmap";
+  }
 
-    if (fFilename.empty())
-        fFilename = "/mnt/OAM/dbrm/oidbitmap";
+  if (fFilename.empty())
+    fFilename = "/mnt/OAM/dbrm/oidbitmap";
 }
 
 ObjectIDManager::~ObjectIDManager()
@@ -122,49 +121,48 @@ ObjectIDManager::~ObjectIDManager()
 
 int ObjectIDManager::allocOID()
 {
-    return allocOIDs(1);
+  return allocOIDs(1);
 }
 
 int ObjectIDManager::allocVBOID(uint32_t dbroot)
 {
-    return dbrm.allocVBOID(dbroot);
+  return dbrm.allocVBOID(dbroot);
 }
 
 int ObjectIDManager::getDBRootOfVBOID(uint32_t vboid)
 {
-    return dbrm.getDBRootOfVBOID(vboid);
+  return dbrm.getDBRootOfVBOID(vboid);
 }
 
 int ObjectIDManager::allocOIDs(int num)
 {
-    return dbrm.allocOIDs(num);
+  return dbrm.allocOIDs(num);
 }
 
 void ObjectIDManager::returnOID(int oid)
 {
-    returnOIDs(oid, oid);
+  returnOIDs(oid, oid);
 }
 
 void ObjectIDManager::returnOIDs(int start, int end)
 {
-    //@Bug 1412. Do not reuse oids for now.
-    return;
+  //@Bug 1412. Do not reuse oids for now.
+  return;
 }
 
 const string ObjectIDManager::getFilename() const
 {
-    return fFilename;
+  return fFilename;
 }
 
 int ObjectIDManager::size()
 {
-    return dbrm.oidm_size();
+  return dbrm.oidm_size();
 }
 
 vector<uint16_t> ObjectIDManager::getVBOIDToDBRootMap()
 {
-    return dbrm.getVBOIDToDBRootMap();
+  return dbrm.getVBOIDToDBRootMap();
 }
 
-
-}  // namespace
+}  // namespace execplan

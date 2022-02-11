@@ -29,42 +29,40 @@
 
 namespace dmlif
 {
-
 class DMLIF
 {
-public:
-    DMLIF(uint32_t sessionid, uint32_t tflg = 0, bool dflg = false, bool vflg = false);
-    ~DMLIF();
+ public:
+  DMLIF(uint32_t sessionid, uint32_t tflg = 0, bool dflg = false, bool vflg = false);
+  ~DMLIF();
 
-    int sendOne(const std::string& stmt);
+  int sendOne(const std::string& stmt);
 
-    void rf2Start(const std::string& sn);
-    void rf2Add(int64_t okey);
-    int rf2Send();
+  void rf2Start(const std::string& sn);
+  void rf2Add(int64_t okey);
+  int rf2Send();
 
-protected:
-    int DMLSend(messageqcpp::ByteStream& bytestream, messageqcpp::ByteStream::octbyte& rows);
+ protected:
+  int DMLSend(messageqcpp::ByteStream& bytestream, messageqcpp::ByteStream::octbyte& rows);
 
-private:
-    //DMLIF(const DMLIF& rhs);
-    //DMLIF& operator=(const DMLIF& rhs);
+ private:
+  // DMLIF(const DMLIF& rhs);
+  // DMLIF& operator=(const DMLIF& rhs);
 
-    uint32_t fSessionID;
-    uint32_t fTflg;
-    bool fDflg;
-    bool fVflg;
+  uint32_t fSessionID;
+  uint32_t fTflg;
+  bool fDflg;
+  bool fVflg;
 
-    boost::scoped_ptr<messageqcpp::MessageQueueClient> fMqp;
+  boost::scoped_ptr<messageqcpp::MessageQueueClient> fMqp;
 
-    std::string fSchema;
-    std::string fOFilterStr;
-    std::string fLFilterStr;
+  std::string fSchema;
+  std::string fOFilterStr;
+  std::string fLFilterStr;
 
-    execplan::ParseTree* fOPt;
-    execplan::ParseTree* fLPt;
+  execplan::ParseTree* fOPt;
+  execplan::ParseTree* fLPt;
 };
 
-}
+}  // namespace dmlif
 
 #endif
-

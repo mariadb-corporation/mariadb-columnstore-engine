@@ -28,7 +28,6 @@
 
 namespace execplan
 {
-
 typedef ColumnResult NJLColumnResult;
 
 }

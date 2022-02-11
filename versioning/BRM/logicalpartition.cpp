@@ -34,9 +34,9 @@ namespace BRM
 {
 std::string LogicalPartition::toString() const
 {
-    char buf[256] = {0};
-    std::sprintf(buf, "%d.%d.%d", pp, seg, dbroot);
-    return std::string(buf);
+  char buf[256] = {0};
+  std::sprintf(buf, "%d.%d.%d", pp, seg, dbroot);
+  return std::string(buf);
 }
 
 /**
@@ -44,18 +44,18 @@ std::string LogicalPartition::toString() const
  */
 std::ostream& operator<<(std::ostream& output, const LogicalPartition& rhs)
 {
-    output << rhs.pp << "." << rhs.seg << "." << rhs.dbroot;
-    return output;
+  output << rhs.pp << "." << rhs.seg << "." << rhs.dbroot;
+  return output;
 }
 
 std::istream& operator>>(std::istream& input, LogicalPartition& rhs)
 {
-    input >> rhs.pp;
-    input.ignore();
-    input >> rhs.seg;
-    input.ignore();
-    input >> rhs.dbroot;
-    return input;
+  input >> rhs.pp;
+  input.ignore();
+  input >> rhs.seg;
+  input.ignore();
+  input >> rhs.dbroot;
+  return input;
 }
 
 /**
@@ -63,14 +63,14 @@ std::istream& operator>>(std::istream& input, LogicalPartition& rhs)
  */
 messageqcpp::ByteStream& operator<<(messageqcpp::ByteStream& bs, const LogicalPartition& rhs)
 {
-    rhs.serialize(bs);
-    return bs;
+  rhs.serialize(bs);
+  return bs;
 }
 
 messageqcpp::ByteStream& operator>>(messageqcpp::ByteStream& bs, LogicalPartition& rhs)
 {
-    rhs.unserialize(bs);
-    return bs;
+  rhs.unserialize(bs);
+  return bs;
 }
 
-}
+}  // namespace BRM

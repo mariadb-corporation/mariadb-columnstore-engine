@@ -15,7 +15,6 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-
 #ifndef LIST_DIRECTORYTASK_H_
 #define LIST_DIRECTORYTASK_H_
 
@@ -24,21 +23,19 @@
 
 namespace storagemanager
 {
-
 class ListDirectoryTask : public PosixTask
 {
-    public:
-        ListDirectoryTask(int sock, uint length);
-        virtual ~ListDirectoryTask();
-        
-        bool run();
-    
-    private:
-        ListDirectoryTask();
-        
-        bool writeString(uint8_t *buf, int *offset, int size, const std::string &str);
+ public:
+  ListDirectoryTask(int sock, uint length);
+  virtual ~ListDirectoryTask();
+
+  bool run();
+
+ private:
+  ListDirectoryTask();
+
+  bool writeString(uint8_t* buf, int* offset, int size, const std::string& str);
 };
 
-
-}
+}  // namespace storagemanager
 #endif

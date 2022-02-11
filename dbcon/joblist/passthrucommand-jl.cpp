@@ -42,46 +42,34 @@ using namespace messageqcpp;
 
 namespace joblist
 {
-
 /* I think this class literally does nothing */
 
 PassThruCommandJL::PassThruCommandJL(const PassThruStep& p)
 {
-    OID = p.oid();
-    colName = p.name();
-    colWidth = p.colWidth;
+  OID = p.oid();
+  colName = p.name();
+  colWidth = p.colWidth;
 
-// 	cout << "PassThru col width = " << (int) colWidth << " for OID " << OID << endl;
-    /* Is this ever a dictionary column? */
-    if (p.isDictColumn)
-        tableColumnType = TableColumn::STRING;
-    else
-        switch (colWidth)
-        {
-            case 1:
-                tableColumnType = TableColumn::UINT8;
-                break;
+  // 	cout << "PassThru col width = " << (int) colWidth << " for OID " << OID << endl;
+  /* Is this ever a dictionary column? */
+  if (p.isDictColumn)
+    tableColumnType = TableColumn::STRING;
+  else
+    switch (colWidth)
+    {
+      case 1: tableColumnType = TableColumn::UINT8; break;
 
-            case 2:
-                tableColumnType = TableColumn::UINT16;
-                break;
+      case 2: tableColumnType = TableColumn::UINT16; break;
 
-            case 4:
-                tableColumnType = TableColumn::UINT32;
-                break;
+      case 4: tableColumnType = TableColumn::UINT32; break;
 
-            case 8:
-                tableColumnType = TableColumn::UINT64;
-                break;
-            
-            case 16:
-            case 32:
-                tableColumnType = TableColumn::STRING;
-                break;
-               
-            default:
-                throw logic_error("PassThruCommandJL(): bad column width?");
-        }
+      case 8: tableColumnType = TableColumn::UINT64; break;
+
+      case 16:
+      case 32: tableColumnType = TableColumn::STRING; break;
+
+      default: throw logic_error("PassThruCommandJL(): bad column width?");
+    }
 }
 
 PassThruCommandJL::~PassThruCommandJL()
@@ -94,9 +82,9 @@ void PassThruCommandJL::setLBID(uint64_t l, uint32_t dbroot)
 
 void PassThruCommandJL::createCommand(ByteStream& bs) const
 {
-    bs << (uint8_t) PASS_THRU;
-    bs << colWidth;
-    CommandJL::createCommand(bs);
+  bs << (uint8_t)PASS_THRU;
+  bs << colWidth;
+  CommandJL::createCommand(bs);
 }
 
 void PassThruCommandJL::runCommand(ByteStream& bs) const
@@ -105,22 +93,21 @@ void PassThruCommandJL::runCommand(ByteStream& bs) const
 
 uint8_t PassThruCommandJL::getTableColumnType()
 {
-    return tableColumnType;
+  return tableColumnType;
 }
 
 string PassThruCommandJL::toString()
 {
-    ostringstream oss;
-    oss << "PassThruCommandJL: colwidth=" << static_cast<uint32_t>(colWidth) << " oid=" << OID
-        << " colName=" << colName;
-    return oss.str();
+  ostringstream oss;
+  oss << "PassThruCommandJL: colwidth=" << static_cast<uint32_t>(colWidth) << " oid=" << OID
+      << " colName=" << colName;
+  return oss.str();
 }
 
 uint16_t PassThruCommandJL::getWidth()
 {
-    return colWidth;
+  return colWidth;
 }
 
-};
+};  // namespace joblist
 // vim:ts=4 sw=4:
-

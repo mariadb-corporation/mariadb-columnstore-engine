@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id$
-*
-*******************************************************************************/
+ * $Id$
+ *
+ *******************************************************************************/
 
 #include <unistd.h>
 
@@ -30,11 +30,9 @@ using namespace messageqcpp;
 
 namespace WriteEngine
 {
-
 ByteStream::byte doMsg1(ByteStream& bs, std::string err)
 {
-    return 0;
+  return 0;
 }
 
-}
-
+}  // namespace WriteEngine

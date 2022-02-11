@@ -35,12 +35,11 @@
 #include <stdint.h>
 
 /**
-	@author Jason Rodriguez <jrodriguez@calpont.com>
+        @author Jason Rodriguez <jrodriguez@calpont.com>
 */
 
 namespace dbbc
 {
-
 typedef std::list<FileBuffer> FileBufferList_t;
 
 /**
@@ -49,152 +48,148 @@ typedef std::list<FileBuffer> FileBufferList_t;
 
 class BlockRequestProcessor
 {
+ public:
+  /**
+   * @brief default ctor
+   **/
+  BlockRequestProcessor(uint32_t numBlcks, int thrCount, int blocksPerRead, uint32_t deleteBlocks = 0,
+                        uint32_t blckSz = BLOCK_SIZE);
 
-public:
+  /**
+   * @brief default dtor
+   **/
+  virtual ~BlockRequestProcessor();
 
-    /**
-     * @brief default ctor
-     **/
-    BlockRequestProcessor(uint32_t numBlcks, int thrCount, int blocksPerRead, uint32_t deleteBlocks = 0,
-                          uint32_t blckSz = BLOCK_SIZE);
+  /**
+   * @brief send a request for disk blocks to the IO manager
+   **/
+  int sendRequest(fileRequest& blk)
+  {
+    return fBRPRequestQueue.push(blk);
+  }
 
-    /**
-     * @brief default dtor
-     **/
-    virtual ~BlockRequestProcessor();
+  /**
+   * @brief verify that the lbid@ver disk block is in the block cache. Send request if it is not
+   **/
+  int check(BRM::LBID_t lbid, const BRM::QueryContext& ver, BRM::VER_t txn, bool flg, int compType,
+            bool& wasBlockInCache);
 
-    /**
-     * @brief send a request for disk blocks to the IO manager
-     **/
-    int sendRequest(fileRequest& blk)
-    {
-        return fBRPRequestQueue.push(blk);
-    }
+  /**
+   * @brief verify the LBIDRange of disk blocks is in the block cache. Send request if it is not
+   **/
+  int check(const BRM::InlineLBIDRange& range, const BRM::QueryContext& ver, const BRM::VER_t txn,
+            const int compType, uint32_t& lbidCount);
 
-    /**
-     * @brief verify that the lbid@ver disk block is in the block cache. Send request if it is not
-     **/
-    int check(BRM::LBID_t lbid, const BRM::QueryContext& ver, BRM::VER_t txn, bool flg, int compType, bool& wasBlockInCache);
+  /**
+   * @brief retrieve the lbid@ver disk block from the block cache
+   **/
+  inline FileBuffer* getBlockPtr(const BRM::LBID_t lbid, const BRM::VER_t ver, bool flg)
+  {
+    return fbMgr.findPtr(HashObject_t(lbid, ver, flg));
+  }
 
-    /**
-     * @brief verify the LBIDRange of disk blocks is in the block cache. Send request if it is not
-     **/
-    int check(const BRM::InlineLBIDRange& range, const BRM::QueryContext& ver, const BRM::VER_t txn, const int compType,
-              uint32_t& lbidCount);
+  inline int read(const BRM::LBID_t& lbid, const BRM::VER_t& ver, FileBuffer& fb)
+  {
+    return (fbMgr.find(HashObject_t(lbid, ver, 0), fb) ? 1 : 0);
+  }
 
-    /**
-     * @brief retrieve the lbid@ver disk block from the block cache
-     **/
-    inline FileBuffer* getBlockPtr(const BRM::LBID_t lbid, const BRM::VER_t ver, bool flg)
-    {
-        return fbMgr.findPtr(HashObject_t(lbid, ver, flg));
-    }
+  /**
+   * @brief retrieve the lbid@ver disk block from the block cache
+   **/
+  inline int read(const BRM::LBID_t& lbid, const BRM::VER_t& ver, void* bufferPtr)
+  {
+    return (fbMgr.find(HashObject_t(lbid, ver, 0), bufferPtr) ? 1 : 0);
+  }
 
-    inline int read(const BRM::LBID_t& lbid, const BRM::VER_t& ver, FileBuffer& fb)
-    {
-        return (fbMgr.find(HashObject_t(lbid, ver, 0), fb) ? 1 : 0);
-    }
+  int getBlock(const BRM::LBID_t& lbid, const BRM::QueryContext& ver, BRM::VER_t txn, int compType,
+               void* bufferPtr, bool flg, bool& wasCached, bool* wasVersioned, bool insertIntoCache,
+               bool readFromCache);
 
-    /**
-     * @brief retrieve the lbid@ver disk block from the block cache
-     **/
-    inline int read(const BRM::LBID_t& lbid, const BRM::VER_t& ver, void* bufferPtr)
-    {
-        return (fbMgr.find(HashObject_t(lbid, ver, 0), bufferPtr) ? 1 : 0);
-    }
+  int getCachedBlocks(const BRM::LBID_t* lbids, const BRM::VER_t* vers, uint8_t** ptrs, bool* wasCached,
+                      uint32_t count);
 
-    int getBlock(const BRM::LBID_t& lbid, const BRM::QueryContext& ver, BRM::VER_t txn, int compType,
-                       void* bufferPtr, bool flg, bool& wasCached, bool* wasVersioned, bool insertIntoCache,
-                       bool readFromCache);
+  inline bool exists(BRM::LBID_t lbid, BRM::VER_t ver)
+  {
+    return fbMgr.exists(HashObject_t(lbid, ver, 0));
+  }
 
-    int getCachedBlocks(const BRM::LBID_t* lbids, const BRM::VER_t* vers, uint8_t** ptrs,
-                        bool* wasCached, uint32_t count);
+  /**
+   * @brief
+   **/
+  void flushCache()
+  {
+    fbMgr.flushCache();
+  }
 
-    inline bool exists(BRM::LBID_t lbid, BRM::VER_t ver)
-    {
-        return fbMgr.exists(HashObject_t(lbid, ver, 0));
-    }
+  /**
+   * @brief
+   **/
+  void flushOne(BRM::LBID_t lbid, BRM::VER_t ver)
+  {
+    fbMgr.flushOne(lbid, ver);
+  }
 
-    /**
-     * @brief
-     **/
-    void flushCache()
-    {
-        fbMgr.flushCache();
-    }
+  void flushMany(const LbidAtVer* laVptr, uint32_t cnt)
+  {
+    fbMgr.flushMany(laVptr, cnt);
+  }
 
-    /**
-     * @brief
-     **/
-    void flushOne(BRM::LBID_t lbid, BRM::VER_t ver)
-    {
-        fbMgr.flushOne(lbid, ver);
-    }
+  void flushManyAllversion(const BRM::LBID_t* laVptr, uint32_t cnt)
+  {
+    fbMgr.flushManyAllversion(laVptr, cnt);
+  }
 
-    void flushMany(const LbidAtVer* laVptr, uint32_t cnt)
-    {
-        fbMgr.flushMany(laVptr, cnt);
-    }
+  void flushOIDs(const uint32_t* oids, uint32_t count)
+  {
+    fbMgr.flushOIDs(oids, count);
+  }
 
-    void flushManyAllversion(const BRM::LBID_t* laVptr, uint32_t cnt)
-    {
-        fbMgr.flushManyAllversion(laVptr, cnt);
-    }
+  void flushPartition(const std::vector<BRM::OID_t>& oids, const std::set<BRM::LogicalPartition>& partitions)
+  {
+    fbMgr.flushPartition(oids, partitions);
+  }
 
-    void flushOIDs(const uint32_t* oids, uint32_t count)
-    {
-        fbMgr.flushOIDs(oids, count);
-    }
+  void setReportingFrequency(const uint32_t d)
+  {
+    fbMgr.setReportingFrequency(d);
+  }
 
-    void flushPartition(const std::vector<BRM::OID_t>& oids, const std::set<BRM::LogicalPartition>& partitions)
-    {
-        fbMgr.flushPartition(oids, partitions);
-    }
+  uint32_t ReportingFrequency() const
+  {
+    return fbMgr.ReportingFrequency();
+  }
 
-    void setReportingFrequency(const uint32_t d)
-    {
-        fbMgr.setReportingFrequency(d);
-    }
+  std::ostream& formatLRUList(std::ostream& os) const
+  {
+    return fbMgr.formatLRUList(os);
+  }
 
-    uint32_t ReportingFrequency() const
-    {
-        return fbMgr.ReportingFrequency();
-    }
+ private:
+  FileBufferMgr fbMgr;
+  fileBlockRequestQueue fBRPRequestQueue;
+  ioManager fIOMgr;
+  boost::mutex check_mutex;
 
-    std::ostream& formatLRUList(std::ostream& os) const
-    {
-        return fbMgr.formatLRUList(os);
-    }
+  /**
+   * helper function for public check functions
+   **/
+  int check(fileRequest& rqstBlk);
 
-private:
+  /**
+   * send stop requests for IOmanager and request Q
+   **/
+  void stop();
 
-    FileBufferMgr fbMgr;
-    fileBlockRequestQueue fBRPRequestQueue;
-    ioManager fIOMgr;
-    boost::mutex check_mutex;
+  std::ofstream fLogFile;
+  bool fTrace;
 
-    /**
-     * helper function for public check functions
-     **/
-    int check(fileRequest& rqstBlk);
+  BRM::DBRM fdbrm;
 
-    /**
-     * send stop requests for IOmanager and request Q
-     **/
-    void stop();
-
-    std::ofstream fLogFile;
-    bool fTrace;
-
-    BRM::DBRM fdbrm;
-
-    // do not implement
-    BlockRequestProcessor(const BlockRequestProcessor& brp);
-    BlockRequestProcessor& operator=(const BlockRequestProcessor& brp);
-
+  // do not implement
+  BlockRequestProcessor(const BlockRequestProcessor& brp);
+  BlockRequestProcessor& operator=(const BlockRequestProcessor& brp);
 };
 
-}
+}  // namespace dbbc
 #endif
 // vim:ts=4 sw=4:
-

@@ -17,42 +17,36 @@
 
 //  $Id: wf_min_max.h 3868 2013-06-06 22:13:05Z xlou $
 
-
 #ifndef UTILS_WF_MIN_MAX_H
 #define UTILS_WF_MIN_MAX_H
 
 #include "windowfunctiontype.h"
 
-
 namespace windowfunction
 {
-
-
-template<typename T>
+template <typename T>
 class WF_min_max : public WindowFunctionType
 {
-public:
-    WF_min_max(int id, const std::string& name) : WindowFunctionType(id, name)
-    {
-        resetData();
-    }
+ public:
+  WF_min_max(int id, const std::string& name) : WindowFunctionType(id, name)
+  {
+    resetData();
+  }
 
-    // pure virtual in base
-    void operator()(int64_t b, int64_t e, int64_t c);
-    WindowFunctionType* clone() const;
-    void resetData();
+  // pure virtual in base
+  void operator()(int64_t b, int64_t e, int64_t c);
+  WindowFunctionType* clone() const;
+  void resetData();
 
-    static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int, WindowFunctionColumn*);
+  static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int, WindowFunctionColumn*);
 
-protected:
-    T           fValue;
-    uint64_t    fCount;
+ protected:
+  T fValue;
+  uint64_t fCount;
 };
 
-
-} // namespace
+}  // namespace windowfunction
 
 #endif  // UTILS_WF_MIN_MAX_H
 
 // vim:ts=4 sw=4:
-

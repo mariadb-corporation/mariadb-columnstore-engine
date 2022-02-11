@@ -17,7 +17,6 @@
 
 //  $Id: limitedorderby.h 9414 2013-04-22 22:18:30Z xlou $
 
-
 /** @file */
 
 #ifndef LIMITED_ORDER_BY_H
@@ -27,14 +26,10 @@
 #include "rowgroup.h"
 #include "../../utils/windowfunction/idborderby.h"
 
-
 namespace joblist
 {
-
-
 // forward reference
 struct JobInfo;
-
 
 // ORDER BY with LIMIT class
 // This version is for subqueries, limit the result set to fit in memory,
@@ -42,33 +37,29 @@ struct JobInfo;
 // The actual output are the first or last # of rows, which are NOT ordered.
 class LimitedOrderBy : public ordering::IdbOrderBy
 {
-public:
-    LimitedOrderBy();
-    virtual ~LimitedOrderBy();
-    using ordering::IdbOrderBy::initialize;
-    void initialize(const rowgroup::RowGroup&, 
-        const JobInfo&, 
-        bool invertRules = false, 
-        bool isMultiThreded = false);
-    void processRow(const rowgroup::Row&);
-    uint64_t getKeyLength() const;
-    uint64_t getLimitCount() const
-    {
-        return fCount;
-    }
-    const std::string toString() const;
+ public:
+  LimitedOrderBy();
+  virtual ~LimitedOrderBy();
+  using ordering::IdbOrderBy::initialize;
+  void initialize(const rowgroup::RowGroup&, const JobInfo&, bool invertRules = false,
+                  bool isMultiThreded = false);
+  void processRow(const rowgroup::Row&);
+  uint64_t getKeyLength() const;
+  uint64_t getLimitCount() const
+  {
+    return fCount;
+  }
+  const std::string toString() const;
 
-    void finalize();
+  void finalize();
 
-protected:
-    uint64_t              fStart;
-    uint64_t              fCount;
-    uint64_t              fUncommitedMemory;
-    static const uint64_t fMaxUncommited;
+ protected:
+  uint64_t fStart;
+  uint64_t fCount;
+  uint64_t fUncommitedMemory;
+  static const uint64_t fMaxUncommited;
 };
 
-
-}
+}  // namespace joblist
 
 #endif  // LIMITED_ORDER_BY_H
-

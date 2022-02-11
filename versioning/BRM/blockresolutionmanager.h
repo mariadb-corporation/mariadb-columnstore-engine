@@ -46,7 +46,6 @@
 
 namespace BRM
 {
-
 /** @brief The BlockResolutionManager manages the Logical Block ID space.
  *
  * The BlockResolutionManager manages the Logical Block ID space.  Its
@@ -57,73 +56,72 @@ namespace BRM
  */
 class BlockResolutionManager
 {
-public:
-    EXPORT explicit BlockResolutionManager(bool ronly = false) throw();
-    EXPORT ~BlockResolutionManager() throw();
+ public:
+  EXPORT explicit BlockResolutionManager(bool ronly = false) throw();
+  EXPORT ~BlockResolutionManager() throw();
 
-    /** @brief Persistence API.  Loads the local Extent Map from a file.
-     *
-     * Persistence API.  Loads the <b>local</b> Extent Map from a file.
-     *
-     * @warning The load must be done on each slave node atomically wrt
-     * writing operations, otherwise nodes may be out of synch.
-     * @param filename Relative or absolute path to a file saved with saveExtentMap.
-     * @return 0, throws if EM throws
-     */
-    EXPORT int loadExtentMap(const std::string& filename, bool fixFL);
+  /** @brief Persistence API.  Loads the local Extent Map from a file.
+   *
+   * Persistence API.  Loads the <b>local</b> Extent Map from a file.
+   *
+   * @warning The load must be done on each slave node atomically wrt
+   * writing operations, otherwise nodes may be out of synch.
+   * @param filename Relative or absolute path to a file saved with saveExtentMap.
+   * @return 0, throws if EM throws
+   */
+  EXPORT int loadExtentMap(const std::string& filename, bool fixFL);
 
-    /** @brief Persistence API.  Saves the local Extent Map to a file.
-     *
-     * Persistence API.  Saves the <b>local</b> Extent Map to a file.
-     *
-     * @param filename Relative or absolute path to save to.
-     * @return 0 on success, throws if EM throws
-     */
-    EXPORT int saveExtentMap(const std::string& filename);
+  /** @brief Persistence API.  Saves the local Extent Map to a file.
+   *
+   * Persistence API.  Saves the <b>local</b> Extent Map to a file.
+   *
+   * @param filename Relative or absolute path to save to.
+   * @return 0 on success, throws if EM throws
+   */
+  EXPORT int saveExtentMap(const std::string& filename);
 
-    /** @brief Persistence API.  Loads all BRM snapshots.
-     *
-     * Loads all <b>local</b> BRM structures from files saved with saveState().
-     *
-     * @warning The load must be done on each slave node atomically wrt
-     * writing operations, otherwise nodes may be out of synch.
-     * @param filename The filename prefix to use.  Loads 4 files with that prefix.
-     * @return 0 on success, -1 on error
-     */
-    EXPORT int loadState(std::string filename, bool fixFL = false) throw();
+  /** @brief Persistence API.  Loads all BRM snapshots.
+   *
+   * Loads all <b>local</b> BRM structures from files saved with saveState().
+   *
+   * @warning The load must be done on each slave node atomically wrt
+   * writing operations, otherwise nodes may be out of synch.
+   * @param filename The filename prefix to use.  Loads 4 files with that prefix.
+   * @return 0 on success, -1 on error
+   */
+  EXPORT int loadState(std::string filename, bool fixFL = false) throw();
 
-    /** @brief Persistence API.  Loads the BRM deltas since the last snapshot.
-     *
-     * Loads all <b>local</b> BRM structures from files saved with saveState().
-     *
-     * @warning The load must be done on each slave node atomically wrt
-     * writing operations, otherwise nodes may be out of synch.
-     * @param filename The filename prefix to use.  Loads 4 files with that prefix.
-     * @return 0 on success, -1 on error
-     */
-    EXPORT int replayJournal(std::string filename) throw();
+  /** @brief Persistence API.  Loads the BRM deltas since the last snapshot.
+   *
+   * Loads all <b>local</b> BRM structures from files saved with saveState().
+   *
+   * @warning The load must be done on each slave node atomically wrt
+   * writing operations, otherwise nodes may be out of synch.
+   * @param filename The filename prefix to use.  Loads 4 files with that prefix.
+   * @return 0 on success, -1 on error
+   */
+  EXPORT int replayJournal(std::string filename) throw();
 
-    /** @brief Persistence API.  Saves all BRM structures.
-     *
-     * Saves all <b>local</b> BRM structures to files.
-     *
-     * @param filename The filename prefix to use.  Saves 4 files with that prefix.
-     * @return 0 on success, -1 on error
-     */
-    EXPORT int saveState(std::string filename) throw();
+  /** @brief Persistence API.  Saves all BRM structures.
+   *
+   * Saves all <b>local</b> BRM structures to files.
+   *
+   * @param filename The filename prefix to use.  Saves 4 files with that prefix.
+   * @return 0 on success, -1 on error
+   */
+  EXPORT int saveState(std::string filename) throw();
 
-private:
-    explicit BlockResolutionManager(const BlockResolutionManager& brm);
-    BlockResolutionManager& operator=(const BlockResolutionManager& brm);
-    MasterSegmentTable mst;
-    ExtentMap em;
-    VBBM vbbm;
-    VSS vss;
-    CopyLocks copylocks;
-
+ private:
+  explicit BlockResolutionManager(const BlockResolutionManager& brm);
+  BlockResolutionManager& operator=(const BlockResolutionManager& brm);
+  MasterSegmentTable mst;
+  ExtentMap em;
+  VBBM vbbm;
+  VSS vss;
+  CopyLocks copylocks;
 };
 
-}
+}  // namespace BRM
 
 #undef EXPORT
 

@@ -17,7 +17,6 @@
 
 //  $Id: jlf_subquery.h 6383 2010-03-24 04:38:39Z xlou $
 
-
 /** @file */
 
 #ifndef JLF_SUBQUERY_H
@@ -27,22 +26,19 @@
 
 namespace execplan
 {
-
 class ParseTree;
 class SimpleScalarFilter;
-}
-
+}  // namespace execplan
 
 namespace joblist
 {
-
 bool simpleScalarFilterToParseTree(SimpleScalarFilter* sf, ParseTree*& pt, JobInfo& jobInfo);
 
 void addOrderByAndLimit(execplan::CalpontSelectExecutionPlan*, JobInfo&);
 
 void doExistsFilter(const execplan::ParseTree*, JobInfo&);
 
-int  doFromSubquery(execplan::CalpontExecutionPlan*, const std::string&, const std::string&, JobInfo&);
+int doFromSubquery(execplan::CalpontExecutionPlan*, const std::string&, const std::string&, JobInfo&);
 
 void doSelectFilter(const execplan::ParseTree*, JobInfo&);
 
@@ -54,7 +50,6 @@ void preprocessSelectSubquery(execplan::CalpontSelectExecutionPlan*, JobInfo&);
 
 SJSTEP doUnionSub(execplan::CalpontExecutionPlan*, JobInfo&);
 
-}
+}  // namespace joblist
 
 #endif  // JLF_SUBQUERY_H
-

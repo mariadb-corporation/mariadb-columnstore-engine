@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_elt.cpp 2665 2011-06-01 20:42:52Z rdempsey $
-*
-*
-****************************************************************************/
+ * $Id: func_elt.cpp 2665 2011-06-01 20:42:52Z rdempsey $
+ *
+ *
+ ****************************************************************************/
 
 #include <cstdlib>
 #include <string>
@@ -38,68 +38,62 @@ using namespace dataconvert;
 
 namespace funcexp
 {
-
-CalpontSystemCatalog::ColType Func_elt::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
+CalpontSystemCatalog::ColType Func_elt::operationType(FunctionParm& fp,
+                                                      CalpontSystemCatalog::ColType& resultType)
 {
-    return resultType;
+  return resultType;
 }
 
-string Func_elt::getStrVal(rowgroup::Row& row,
-                           FunctionParm& parm,
-                           bool& isNull,
+string Func_elt::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                            CalpontSystemCatalog::ColType&)
 {
-    uint64_t number = 0;
+  uint64_t number = 0;
 
-    //get number
-    switch (parm[0]->data()->resultType().colDataType)
+  // get number
+  switch (parm[0]->data()->resultType().colDataType)
+  {
+    case CalpontSystemCatalog::BIGINT:
+    case CalpontSystemCatalog::MEDINT:
+    case CalpontSystemCatalog::SMALLINT:
+    case CalpontSystemCatalog::TINYINT:
+    case CalpontSystemCatalog::INT:
+    case CalpontSystemCatalog::DOUBLE:
+    case CalpontSystemCatalog::FLOAT:
+    case CalpontSystemCatalog::CHAR:
+    case CalpontSystemCatalog::TEXT:
+    case CalpontSystemCatalog::VARCHAR:
     {
-        case CalpontSystemCatalog::BIGINT:
-        case CalpontSystemCatalog::MEDINT:
-        case CalpontSystemCatalog::SMALLINT:
-        case CalpontSystemCatalog::TINYINT:
-        case CalpontSystemCatalog::INT:
-        case CalpontSystemCatalog::DOUBLE:
-        case CalpontSystemCatalog::FLOAT:
-        case CalpontSystemCatalog::CHAR:
-        case CalpontSystemCatalog::TEXT:
-        case CalpontSystemCatalog::VARCHAR:
-        {
-            double value = parm[0]->data()->getDoubleVal(row, isNull);
-            number = (int64_t) value;
-            break;
-        }
-
-        case CalpontSystemCatalog::DECIMAL:
-        case CalpontSystemCatalog::UDECIMAL:
-        {
-            number = static_cast<uint64_t>(parm[0]->data()->getDecimalVal(row, isNull).toSInt64Round());
-            break;
-        }
-
-        default:
-            isNull = true;
-            return "";
+      double value = parm[0]->data()->getDoubleVal(row, isNull);
+      number = (int64_t)value;
+      break;
     }
 
-    if (number < 1)
+    case CalpontSystemCatalog::DECIMAL:
+    case CalpontSystemCatalog::UDECIMAL:
     {
-        isNull = true;
-        return "";
+      number = static_cast<uint64_t>(parm[0]->data()->getDecimalVal(row, isNull).toSInt64Round());
+      break;
     }
 
-    if (number > parm.size() - 1 )
-    {
-        isNull = true;
-        return "";
-    }
+    default: isNull = true; return "";
+  }
 
-    std::string ret;
-    stringValue(parm[number], row, isNull, ret);
-    return ret;
+  if (number < 1)
+  {
+    isNull = true;
+    return "";
+  }
 
+  if (number > parm.size() - 1)
+  {
+    isNull = true;
+    return "";
+  }
+
+  std::string ret;
+  stringValue(parm[number], row, isNull, ret);
+  return ret;
 }
 
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:

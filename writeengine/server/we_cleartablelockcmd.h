@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id: we_cleartablelockcmd.h 4450 2013-01-21 14:13:24Z rdempsey $
-*
-*******************************************************************************/
+ * $Id: we_cleartablelockcmd.h 4450 2013-01-21 14:13:24Z rdempsey $
+ *
+ *******************************************************************************/
 #ifndef WE_CLEARTABLELOCKCMD_H__
 #define WE_CLEARTABLELOCKCMD_H__
 
@@ -30,35 +30,34 @@
 
 namespace WriteEngine
 {
-
 /** @brief Process messages from a cleartablelock or filesplitter client
  */
 class WE_ClearTableLockCmd
 {
-public:
-    /** @brief WE_ClearTableLockCmd constructor
-     */
-    WE_ClearTableLockCmd(const char* userDesc) : fUserDesc(userDesc) { }
+ public:
+  /** @brief WE_ClearTableLockCmd constructor
+   */
+  WE_ClearTableLockCmd(const char* userDesc) : fUserDesc(userDesc)
+  {
+  }
 
-    /** @brief Process bulk rollback request
-     *  @param ibs Input byte stream
-     *  @param errMsg Return error message
-     */
-    int processRollback(messageqcpp::ByteStream& ibs,
-                        std::string& errMsg);
+  /** @brief Process bulk rollback request
+   *  @param ibs Input byte stream
+   *  @param errMsg Return error message
+   */
+  int processRollback(messageqcpp::ByteStream& ibs, std::string& errMsg);
 
-    /** @brief Process bulk rollback cleanup request
-     *  @param ibs Input byte stream
-     *  @param errMsg Return error message
-     */
-    int processCleanup (messageqcpp::ByteStream& ibs,
-                        std::string& errMsg);
+  /** @brief Process bulk rollback cleanup request
+   *  @param ibs Input byte stream
+   *  @param errMsg Return error message
+   */
+  int processCleanup(messageqcpp::ByteStream& ibs, std::string& errMsg);
 
-private:
-    WriteEngineWrapper fWEWrapper; // WriteEngineWrapper object
-    std::string fUserDesc;
+ private:
+  WriteEngineWrapper fWEWrapper;  // WriteEngineWrapper object
+  std::string fUserDesc;
 };
 
-}
+}  // namespace WriteEngine
 
 #endif

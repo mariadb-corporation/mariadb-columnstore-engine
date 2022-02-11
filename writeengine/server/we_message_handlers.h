@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id: we_message_handlers.h 4450 2013-01-21 14:13:24Z rdempsey $
-*
-*******************************************************************************/
+ * $Id: we_message_handlers.h 4450 2013-01-21 14:13:24Z rdempsey $
+ *
+ *******************************************************************************/
 #ifndef WE_MESSAGE_HANDLERS_H__
 #define WE_MESSAGE_HANDLERS_H__
 
@@ -26,11 +26,9 @@
 
 namespace WriteEngine
 {
-
 extern messageqcpp::ByteStream::byte doMsg1(messageqcpp::ByteStream& bs, std::string err);
 extern messageqcpp::ByteStream::byte doMsg2(messageqcpp::ByteStream& bs, std::string err);
 extern messageqcpp::ByteStream::byte doUpdateSyscolumnNextval(messageqcpp::ByteStream& bs, std::string err);
-}
+}  // namespace WriteEngine
 
 #endif
-

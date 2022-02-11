@@ -17,10 +17,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_coalesce.cpp 3495 2013-01-21 14:09:51Z rdempsey $
-*
-*
-****************************************************************************/
+ * $Id: func_coalesce.cpp 3495 2013-01-21 14:09:51Z rdempsey $
+ *
+ *
+ ****************************************************************************/
 
 #include <cstdlib>
 #include <string>
@@ -39,229 +39,209 @@ using namespace dataconvert;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_coalesce::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
+CalpontSystemCatalog::ColType Func_coalesce::operationType(FunctionParm& fp,
+                                                           CalpontSystemCatalog::ColType& resultType)
 {
-    return resultType;
+  return resultType;
 }
 
-int64_t Func_coalesce::getIntVal(rowgroup::Row& row,
-                                 FunctionParm& parm,
-                                 bool& isNull,
+int64_t Func_coalesce::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                                  CalpontSystemCatalog::ColType& op_ct)
 {
-    int64_t val = 0;
+  int64_t val = 0;
 
-    for (uint32_t i = 0; i < parm.size(); i++)
+  for (uint32_t i = 0; i < parm.size(); i++)
+  {
+    val = parm[i]->data()->getIntVal(row, isNull);
+
+    if (isNull)
     {
-        val = parm[i]->data()->getIntVal(row, isNull);
-
-        if (isNull)
-        {
-            isNull = false;
-            continue;
-        }
-
-        return val;
+      isNull = false;
+      continue;
     }
 
-    isNull = true;
     return val;
+  }
+
+  isNull = true;
+  return val;
 }
 
-string Func_coalesce::getStrVal(rowgroup::Row& row,
-                                FunctionParm& parm,
-                                bool& isNull,
+string Func_coalesce::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                                 CalpontSystemCatalog::ColType& ct)
 {
-    string val;
+  string val;
 
-    for (uint32_t i = 0; i < parm.size(); i++)
+  for (uint32_t i = 0; i < parm.size(); i++)
+  {
+    val = parm[i]->data()->getStrVal(row, isNull);
+
+    if (isNull)
     {
-        val = parm[i]->data()->getStrVal(row, isNull);
-
-        if (isNull)
-        {
-            isNull = false;
-            continue;
-        }
-
-        return val;
+      isNull = false;
+      continue;
     }
 
-    isNull = true;
-    return "";
+    return val;
+  }
+
+  isNull = true;
+  return "";
 }
 
-int32_t Func_coalesce::getDateIntVal(rowgroup::Row& row,
-                                     FunctionParm& parm,
-                                     bool& isNull,
+int32_t Func_coalesce::getDateIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                                      CalpontSystemCatalog::ColType& ct)
 {
-    int64_t val = 0;
+  int64_t val = 0;
 
-    for (uint32_t i = 0; i < parm.size(); i++)
+  for (uint32_t i = 0; i < parm.size(); i++)
+  {
+    val = parm[i]->data()->getDateIntVal(row, isNull);
+
+    if (isNull)
     {
-        val = parm[i]->data()->getDateIntVal(row, isNull);
-
-        if (isNull)
-        {
-            isNull = false;
-            continue;
-        }
-
-        return val;
+      isNull = false;
+      continue;
     }
 
-    isNull = true;
     return val;
+  }
+
+  isNull = true;
+  return val;
 }
 
-int64_t Func_coalesce::getDatetimeIntVal(rowgroup::Row& row,
-        FunctionParm& parm,
-        bool& isNull,
-        CalpontSystemCatalog::ColType& ct)
+int64_t Func_coalesce::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
+                                         CalpontSystemCatalog::ColType& ct)
 {
-    int64_t val = 0;
+  int64_t val = 0;
 
-    for (uint32_t i = 0; i < parm.size(); i++)
+  for (uint32_t i = 0; i < parm.size(); i++)
+  {
+    val = parm[i]->data()->getDatetimeIntVal(row, isNull);
+
+    if (isNull)
     {
-        val = parm[i]->data()->getDatetimeIntVal(row, isNull);
-
-        if (isNull)
-        {
-            isNull = false;
-            continue;
-        }
-
-        return val;
+      isNull = false;
+      continue;
     }
 
-    isNull = true;
     return val;
+  }
+
+  isNull = true;
+  return val;
 }
 
-int64_t Func_coalesce::getTimestampIntVal(rowgroup::Row& row,
-        FunctionParm& parm,
-        bool& isNull,
-        CalpontSystemCatalog::ColType& ct)
+int64_t Func_coalesce::getTimestampIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
+                                          CalpontSystemCatalog::ColType& ct)
 {
-    int64_t val = 0;
+  int64_t val = 0;
 
-    for (uint32_t i = 0; i < parm.size(); i++)
+  for (uint32_t i = 0; i < parm.size(); i++)
+  {
+    val = parm[i]->data()->getTimestampIntVal(row, isNull);
+
+    if (isNull)
     {
-        val = parm[i]->data()->getTimestampIntVal(row, isNull);
-
-        if (isNull)
-        {
-            isNull = false;
-            continue;
-        }
-
-        return val;
+      isNull = false;
+      continue;
     }
 
-    isNull = true;
     return val;
+  }
+
+  isNull = true;
+  return val;
 }
 
-int64_t Func_coalesce::getTimeIntVal(rowgroup::Row& row,
-                                     FunctionParm& parm,
-                                     bool& isNull,
+int64_t Func_coalesce::getTimeIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                                      CalpontSystemCatalog::ColType& ct)
 {
-    int64_t val = 0;
+  int64_t val = 0;
 
-    for (uint32_t i = 0; i < parm.size(); i++)
+  for (uint32_t i = 0; i < parm.size(); i++)
+  {
+    val = parm[i]->data()->getTimeIntVal(row, isNull);
+
+    if (isNull)
     {
-        val = parm[i]->data()->getTimeIntVal(row, isNull);
-
-        if (isNull)
-        {
-            isNull = false;
-            continue;
-        }
-
-        return val;
+      isNull = false;
+      continue;
     }
 
-    isNull = true;
     return val;
+  }
+
+  isNull = true;
+  return val;
 }
 
-double Func_coalesce::getDoubleVal(rowgroup::Row& row,
-                                   FunctionParm& parm,
-                                   bool& isNull,
+double Func_coalesce::getDoubleVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                                    execplan::CalpontSystemCatalog::ColType& ct)
 {
-    double d = 0.0;
+  double d = 0.0;
 
-    for (uint32_t i = 0; i < parm.size(); i++)
+  for (uint32_t i = 0; i < parm.size(); i++)
+  {
+    d = parm[i]->data()->getDoubleVal(row, isNull);
+
+    if (isNull)
     {
-        d = parm[i]->data()->getDoubleVal(row, isNull);
-
-        if (isNull)
-        {
-            isNull = false;
-            continue;
-        }
-
-        return d;
+      isNull = false;
+      continue;
     }
 
-    isNull = true;
     return d;
+  }
+
+  isNull = true;
+  return d;
 }
 
-
-long double Func_coalesce::getLongDoubleVal(rowgroup::Row& row,
-                                   FunctionParm& parm,
-                                   bool& isNull,
-                                   execplan::CalpontSystemCatalog::ColType& ct)
+long double Func_coalesce::getLongDoubleVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
+                                            execplan::CalpontSystemCatalog::ColType& ct)
 {
-    long double d = 0.0;
+  long double d = 0.0;
 
-    for (uint32_t i = 0; i < parm.size(); i++)
+  for (uint32_t i = 0; i < parm.size(); i++)
+  {
+    d = parm[i]->data()->getLongDoubleVal(row, isNull);
+
+    if (isNull)
     {
-        d = parm[i]->data()->getLongDoubleVal(row, isNull);
-
-        if (isNull)
-        {
-            isNull = false;
-            continue;
-        }
-
-        return d;
+      isNull = false;
+      continue;
     }
 
-    isNull = true;
     return d;
+  }
+
+  isNull = true;
+  return d;
 }
 
-
-execplan::IDB_Decimal Func_coalesce::getDecimalVal(rowgroup::Row& row,
-        FunctionParm& parm,
-        bool& isNull,
-        execplan::CalpontSystemCatalog::ColType& ct)
+execplan::IDB_Decimal Func_coalesce::getDecimalVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
+                                                   execplan::CalpontSystemCatalog::ColType& ct)
 {
-    IDB_Decimal d;
+  IDB_Decimal d;
 
-    for (uint32_t i = 0; i < parm.size(); i++)
+  for (uint32_t i = 0; i < parm.size(); i++)
+  {
+    d = parm[i]->data()->getDecimalVal(row, isNull);
+
+    if (isNull)
     {
-        d = parm[i]->data()->getDecimalVal(row, isNull);
-
-        if (isNull)
-        {
-            isNull = false;
-            continue;
-        }
-
-        return d;
+      isNull = false;
+      continue;
     }
 
-    isNull = true;
     return d;
+  }
+
+  isNull = true;
+  return d;
 }
 
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:

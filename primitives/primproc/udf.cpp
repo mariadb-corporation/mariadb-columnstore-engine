@@ -35,40 +35,38 @@ const string UdfLibName("libcaludf.so");
 
 namespace primitiveprocessor
 {
-
 void loadUDFs()
 {
 #ifndef _MSC_VER
-    int flags = RTLD_NOW;
+  int flags = RTLD_NOW;
 
-    void* libPtr = 0;
+  void* libPtr = 0;
 
-    UDFFcnPtr_t fcnPtr;
+  UDFFcnPtr_t fcnPtr;
 
-    libPtr = dlopen(UdfLibName.c_str(), flags);
+  libPtr = dlopen(UdfLibName.c_str(), flags);
 
-    if (libPtr == 0)
-        return;
+  if (libPtr == 0)
+    return;
 
-    unsigned i = 1;
+  unsigned i = 1;
 
-    for (;;)
-    {
-        ostringstream oss;
-        oss << "cpfunc" << i;
-        fcnPtr = (UDFFcnPtr_t)dlsym(libPtr, oss.str().c_str());
+  for (;;)
+  {
+    ostringstream oss;
+    oss << "cpfunc" << i;
+    fcnPtr = (UDFFcnPtr_t)dlsym(libPtr, oss.str().c_str());
 
-        if (fcnPtr == 0)
-            break;
+    if (fcnPtr == 0)
+      break;
 
-        UDFFcnMap[i] = fcnPtr;
-        i++;
-    }
+    UDFFcnMap[i] = fcnPtr;
+    i++;
+  }
 
-    cout << "loaded " << UDFFcnMap.size() << " UDF's" << endl;
+  cout << "loaded " << UDFFcnMap.size() << " UDF's" << endl;
 #endif
 }
 
-}
+}  // namespace primitiveprocessor
 // vim:ts=4 sw=4:
-

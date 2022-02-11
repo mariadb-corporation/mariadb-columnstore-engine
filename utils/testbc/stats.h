@@ -16,8 +16,8 @@
    MA 02110-1301, USA. */
 
 /*
-* $Id: stats.h 609 2008-06-11 12:40:07Z rdempsey $
-*/
+ * $Id: stats.h 609 2008-06-11 12:40:07Z rdempsey $
+ */
 
 /** @file */
 
@@ -33,36 +33,34 @@
 
 namespace dbbc
 {
-
 class Stats
 {
-public:
-    Stats();
-    Stats(const char* name);
-    virtual ~Stats();
+ public:
+  Stats();
+  Stats(const char* name);
+  virtual ~Stats();
 
-    void touchedLBID(uint64_t lbid, pthread_t thdid, uint32_t session = 0);
-    void markEvent(const uint64_t lbid, const pthread_t thdid, const uint32_t session, const char event);
+  void touchedLBID(uint64_t lbid, pthread_t thdid, uint32_t session = 0);
+  void markEvent(const uint64_t lbid, const pthread_t thdid, const uint32_t session, const char event);
 
-    inline BRM::OID_t lbid2oid(uint64_t lbid)
-    {
-        BRM::OID_t oid;
-        uint32_t fbo;
-        brm.lookup(lbid, 0, false, oid, fbo);
-        return oid;
-    }
+  inline BRM::OID_t lbid2oid(uint64_t lbid)
+  {
+    BRM::OID_t oid;
+    uint32_t fbo;
+    brm.lookup(lbid, 0, false, oid, fbo);
+    return oid;
+  }
 
-private:
-    Stats(const Stats& rhs);
-    Stats& operator=(const Stats& rhs);
+ private:
+  Stats(const Stats& rhs);
+  Stats& operator=(const Stats& rhs);
 
-    boost::thread* fMonitorp;
-    BRM::DBRM brm;
-    //ostringstream fName;
-    const char* fName;
-
+  boost::thread* fMonitorp;
+  BRM::DBRM brm;
+  // ostringstream fName;
+  const char* fName;
 };
 
-}
+}  // namespace dbbc
 
-#endif //PRIMPROC_STATS_H
+#endif  // PRIMPROC_STATS_H

@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_microsecond.cpp 2477 2011-05-11 16:07:35Z chao $
-*
-*
-****************************************************************************/
+ * $Id: func_microsecond.cpp 2477 2011-05-11 16:07:35Z chao $
+ *
+ *
+ ****************************************************************************/
 
 #include <cstdlib>
 #include <string>
@@ -36,111 +36,105 @@ using namespace execplan;
 
 namespace funcexp
 {
-
-CalpontSystemCatalog::ColType Func_microsecond::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
+CalpontSystemCatalog::ColType Func_microsecond::operationType(FunctionParm& fp,
+                                                              CalpontSystemCatalog::ColType& resultType)
 {
-    return resultType;
+  return resultType;
 }
 
-
-int64_t Func_microsecond::getIntVal(rowgroup::Row& row,
-                                    FunctionParm& parm,
-                                    bool& isNull,
+int64_t Func_microsecond::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                                     CalpontSystemCatalog::ColType& op_ct)
 {
-    int64_t val = 0;
-    uint32_t microSecond = 0;
+  int64_t val = 0;
+  uint32_t microSecond = 0;
 
-    switch (parm[0]->data()->resultType().colDataType)
-    {
-        case CalpontSystemCatalog::DATE:
-            val = parm[0]->data()->getIntVal(row, isNull);
-            microSecond = 0;
-            break;
+  switch (parm[0]->data()->resultType().colDataType)
+  {
+    case CalpontSystemCatalog::DATE:
+      val = parm[0]->data()->getIntVal(row, isNull);
+      microSecond = 0;
+      break;
 
-        case CalpontSystemCatalog::DATETIME:
-            val = parm[0]->data()->getIntVal(row, isNull);
-            microSecond = (uint32_t)((val & 0xfffff));
-            break;
+    case CalpontSystemCatalog::DATETIME:
+      val = parm[0]->data()->getIntVal(row, isNull);
+      microSecond = (uint32_t)((val & 0xfffff));
+      break;
 
-        case CalpontSystemCatalog::TIMESTAMP:
-            val = parm[0]->data()->getIntVal(row, isNull);
-            microSecond = (uint32_t)((val & 0xfffff));
-            break;
+    case CalpontSystemCatalog::TIMESTAMP:
+      val = parm[0]->data()->getIntVal(row, isNull);
+      microSecond = (uint32_t)((val & 0xfffff));
+      break;
 
-        case CalpontSystemCatalog::TIME:
-            val = parm[0]->data()->getIntVal(row, isNull);
-            microSecond = (uint32_t)((val & 0xffffff));
-            break;
+    case CalpontSystemCatalog::TIME:
+      val = parm[0]->data()->getIntVal(row, isNull);
+      microSecond = (uint32_t)((val & 0xffffff));
+      break;
 
-        case CalpontSystemCatalog::CHAR:
-        case CalpontSystemCatalog::TEXT:
-        case CalpontSystemCatalog::VARCHAR:
-            val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
+    case CalpontSystemCatalog::CHAR:
+    case CalpontSystemCatalog::TEXT:
+    case CalpontSystemCatalog::VARCHAR:
+      val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
 
-            if (val == -1)
-            {
-                isNull = true;
-                return -1;
-            }
-            else
-            {
-                microSecond = (uint32_t)((val & 0xfffff));
-            }
+      if (val == -1)
+      {
+        isNull = true;
+        return -1;
+      }
+      else
+      {
+        microSecond = (uint32_t)((val & 0xfffff));
+      }
 
-            break;
+      break;
 
-        case CalpontSystemCatalog::BIGINT:
-        case CalpontSystemCatalog::MEDINT:
-        case CalpontSystemCatalog::SMALLINT:
-        case CalpontSystemCatalog::TINYINT:
-        case CalpontSystemCatalog::INT:
-            val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
+    case CalpontSystemCatalog::BIGINT:
+    case CalpontSystemCatalog::MEDINT:
+    case CalpontSystemCatalog::SMALLINT:
+    case CalpontSystemCatalog::TINYINT:
+    case CalpontSystemCatalog::INT:
+      val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
 
-            if (val == -1)
-            {
-                isNull = true;
-                return -1;
-            }
-            else
-            {
-                microSecond = (uint32_t)((val & 0xfffff));
-            }
+      if (val == -1)
+      {
+        isNull = true;
+        return -1;
+      }
+      else
+      {
+        microSecond = (uint32_t)((val & 0xfffff));
+      }
 
-            break;
+      break;
 
-        case CalpontSystemCatalog::DECIMAL:
-        case CalpontSystemCatalog::UDECIMAL:
-            if (parm[0]->data()->resultType().scale == 0)
-            {
-                val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
+    case CalpontSystemCatalog::DECIMAL:
+    case CalpontSystemCatalog::UDECIMAL:
+      if (parm[0]->data()->resultType().scale == 0)
+      {
+        val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
 
-                if (val == -1)
-                {
-                    isNull = true;
-                    return -1;
-                }
-                else
-                {
-                    microSecond = (uint32_t)((val & 0xfffff));
-                }
-            }
-            else
-            {
-                isNull = true;
-                return -1;
-            }
+        if (val == -1)
+        {
+          isNull = true;
+          return -1;
+        }
+        else
+        {
+          microSecond = (uint32_t)((val & 0xfffff));
+        }
+      }
+      else
+      {
+        isNull = true;
+        return -1;
+      }
 
-            break;
+      break;
 
-        default:
-            isNull = true;
-            return -1;
-    }
+    default: isNull = true; return -1;
+  }
 
-    return microSecond;
+  return microSecond;
 }
 
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:

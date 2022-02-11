@@ -41,44 +41,43 @@
 
 namespace funcexp
 {
-
 /** @brief FuncExpWrapper class
-  */
+ */
 class FuncExpWrapper : public messageqcpp::Serializeable
 {
-public:
-    FuncExpWrapper();
-    FuncExpWrapper(const FuncExpWrapper&);
-    virtual ~FuncExpWrapper();
+ public:
+  FuncExpWrapper();
+  FuncExpWrapper(const FuncExpWrapper&);
+  virtual ~FuncExpWrapper();
 
-    void operator=(const FuncExpWrapper&);
+  void operator=(const FuncExpWrapper&);
 
-    void serialize(messageqcpp::ByteStream&) const;
-    void deserialize(messageqcpp::ByteStream&);
+  void serialize(messageqcpp::ByteStream&) const;
+  void deserialize(messageqcpp::ByteStream&);
 
-    bool evaluate(rowgroup::Row*);
-    inline bool evaluateFilter(uint32_t num, rowgroup::Row* r);
-    inline uint32_t getFilterCount() const;
+  bool evaluate(rowgroup::Row*);
+  inline bool evaluateFilter(uint32_t num, rowgroup::Row* r);
+  inline uint32_t getFilterCount() const;
 
-    void addFilter(const boost::shared_ptr<execplan::ParseTree>&);
-    void addReturnedColumn(const boost::shared_ptr<execplan::ReturnedColumn>&);
+  void addFilter(const boost::shared_ptr<execplan::ParseTree>&);
+  void addReturnedColumn(const boost::shared_ptr<execplan::ReturnedColumn>&);
 
-private:
-    std::vector<boost::shared_ptr<execplan::ParseTree> > filters;
-    std::vector<boost::shared_ptr<execplan::ReturnedColumn> > rcs;
-    FuncExp* fe;
+ private:
+  std::vector<boost::shared_ptr<execplan::ParseTree> > filters;
+  std::vector<boost::shared_ptr<execplan::ReturnedColumn> > rcs;
+  FuncExp* fe;
 };
 
 inline bool FuncExpWrapper::evaluateFilter(uint32_t num, rowgroup::Row* r)
 {
-    return fe->evaluate(*r, filters[num].get());
+  return fe->evaluate(*r, filters[num].get());
 }
 
 inline uint32_t FuncExpWrapper::getFilterCount() const
 {
-    return filters.size();
+  return filters.size();
 }
 
-}
+}  // namespace funcexp
 
 #endif

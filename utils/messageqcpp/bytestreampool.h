@@ -14,13 +14,13 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
-   
+
 #ifndef BYTESTREAMPOOL_H_
 #define BYTESTREAMPOOL_H_
 
 /* This class defines a pool of bytestreams to improve BS reuse, reducing
 the need to use the dynamic allocator.  It allocates as many BS's as needed,
-and automatically disposes of buffers that are 'large' to reduce mem usage. 
+and automatically disposes of buffers that are 'large' to reduce mem usage.
 Initially, 'large' is defined as 1MB.
 */
 
@@ -30,25 +30,25 @@ Initially, 'large' is defined as 1MB.
 
 namespace messageqcpp
 {
-
 class ByteStreamPool
 {
-    public:
-        ByteStreamPool();
-        ByteStreamPool(uint largeBufferSize);   // BS's above largeBufferSize get deallocated on return to the pool
-        ByteStreamPool(uint largeBufferSize, uint freeBufferLimit);   // freeBufferLimit is the max # of BSs to reserve
-        virtual ~ByteStreamPool();
-        
-        ByteStream * getByteStream();
-        void returnByteStream(ByteStream *);
-        
-    private:
-        std::deque<ByteStream *> freeByteStreams;
-        boost::mutex mutex;
-        uint maxBufferSize;
-        uint maxFreeBuffers;
+ public:
+  ByteStreamPool();
+  ByteStreamPool(uint largeBufferSize);  // BS's above largeBufferSize get deallocated on return to the pool
+  ByteStreamPool(uint largeBufferSize,
+                 uint freeBufferLimit);  // freeBufferLimit is the max # of BSs to reserve
+  virtual ~ByteStreamPool();
+
+  ByteStream* getByteStream();
+  void returnByteStream(ByteStream*);
+
+ private:
+  std::deque<ByteStream*> freeByteStreams;
+  boost::mutex mutex;
+  uint maxBufferSize;
+  uint maxFreeBuffers;
 };
 
-}
+}  // namespace messageqcpp
 
 #endif

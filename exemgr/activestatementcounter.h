@@ -31,38 +31,37 @@
 
 class ActiveStatementCounter
 {
-public:
-    ActiveStatementCounter(uint32_t limit) :
-        fStatementCount(0),
-        upperLimit(limit),
-        fStatementsWaiting(0)
-    {}
+ public:
+  ActiveStatementCounter(uint32_t limit) : fStatementCount(0), upperLimit(limit), fStatementsWaiting(0)
+  {
+  }
 
-    virtual ~ActiveStatementCounter() {}
+  virtual ~ActiveStatementCounter()
+  {
+  }
 
-    void incr(bool& counted);
-    void decr(bool& counted);
-    uint32_t cur() const
-    {
-        return fStatementCount;
-    }
-    uint32_t waiting() const
-    {
-        return fStatementsWaiting;
-    }
+  void incr(bool& counted);
+  void decr(bool& counted);
+  uint32_t cur() const
+  {
+    return fStatementCount;
+  }
+  uint32_t waiting() const
+  {
+    return fStatementsWaiting;
+  }
 
-private:
-    ActiveStatementCounter(const ActiveStatementCounter& rhs);
-    ActiveStatementCounter& operator=(const ActiveStatementCounter& rhs);
+ private:
+  ActiveStatementCounter(const ActiveStatementCounter& rhs);
+  ActiveStatementCounter& operator=(const ActiveStatementCounter& rhs);
 
-    uint32_t fStatementCount;
-    uint32_t upperLimit;
-    uint32_t fStatementsWaiting;
-    boost::mutex fMutex;
-    boost::condition condvar;
-    BRM::VSS fVss;
+  uint32_t fStatementCount;
+  uint32_t upperLimit;
+  uint32_t fStatementsWaiting;
+  boost::mutex fMutex;
+  boost::condition condvar;
+  BRM::VSS fVss;
 };
 
 #endif
 // vim:ts=4 sw=4:
-

@@ -46,183 +46,183 @@ namespace dmlpackage
 {
 boost::mutex CalpontDMLFactory::fParserLock;
 
-dmlpackage::CalpontDMLPackage* CalpontDMLFactory::makeCalpontDMLPackage(dmlpackage::VendorDMLStatement& vpackage,
-        std::string defaultSchema /*= ""*/)
+dmlpackage::CalpontDMLPackage* CalpontDMLFactory::makeCalpontDMLPackage(
+    dmlpackage::VendorDMLStatement& vpackage, std::string defaultSchema /*= ""*/)
 {
-    CalpontDMLPackage* packagePtr = 0;
+  CalpontDMLPackage* packagePtr = 0;
 
-    try
+  try
+  {
+    std::string dmlStatement = vpackage.get_DMLStatement();
+    //@Bug 2680. DMLParser is not thread safe.
+    boost::mutex::scoped_lock lk(fParserLock);
+    DMLParser parser;
+
+    if (defaultSchema.size())
     {
-        std::string dmlStatement = vpackage.get_DMLStatement();
-        //@Bug 2680. DMLParser is not thread safe.
-        boost::mutex::scoped_lock lk(fParserLock);
-        DMLParser parser;
-
-        if (defaultSchema.size())
-        {
-            parser.setDefaultSchema(defaultSchema);
-        }
-
-        parser.parse(dmlStatement.c_str());
-
-        if (parser.good())
-        {
-
-            const ParseTree& ptree = parser.getParseTree();
-            SqlStatement* statementPtr = ptree[0];
-
-            int dmlStatementType = statementPtr->getStatementType();
-
-            switch (dmlStatementType)
-            {
-                case DML_INSERT:
-                    packagePtr = new InsertDMLPackage(statementPtr->getSchemaName(), statementPtr->getTableName(),
-                                                      ptree.fSqlText, vpackage.get_SessionID() );
-                    packagePtr->set_SQLStatement(dmlStatement);
-                    (void)packagePtr->buildFromSqlStatement(*statementPtr);
-                    break;
-
-                case DML_UPDATE:
-                    packagePtr = new UpdateDMLPackage(statementPtr->getSchemaName(), statementPtr->getTableName(),
-                                                      ptree.fSqlText, vpackage.get_SessionID() );
-                    packagePtr->set_SQLStatement(dmlStatement);
-                    (void)packagePtr->buildFromSqlStatement(*statementPtr);
-                    break;
-
-                case DML_DELETE:
-                    packagePtr = new DeleteDMLPackage(statementPtr->getSchemaName(), statementPtr->getTableName(),
-                                                      ptree.fSqlText, vpackage.get_SessionID() );
-                    packagePtr->set_SQLStatement(dmlStatement);
-                    (void)packagePtr->buildFromSqlStatement(*statementPtr);
-                    break;
-
-                case DML_COMMAND:
-                    packagePtr = new CommandDMLPackage(ptree.fSqlText, vpackage.get_SessionID());
-                    (void)packagePtr->buildFromSqlStatement(*statementPtr);
-                    break;
-
-                default:
-                    cerr << "makeCalpontDMLPackage: invalid statement type" << endl;
-                    break;
-
-            }
-
-        }
-    }
-    catch (std::exception& ex)
-    {
-        cerr << "makeCalpontDMLPackage:" << ex.what() << endl;
-    }
-    catch (...)
-    {
-        cerr << "makeCalpontDMLPackage: caught unknown exception!" << endl;
+      parser.setDefaultSchema(defaultSchema);
     }
 
-    return packagePtr;
+    parser.parse(dmlStatement.c_str());
 
+    if (parser.good())
+    {
+      const ParseTree& ptree = parser.getParseTree();
+      SqlStatement* statementPtr = ptree[0];
+
+      int dmlStatementType = statementPtr->getStatementType();
+
+      switch (dmlStatementType)
+      {
+        case DML_INSERT:
+          packagePtr = new InsertDMLPackage(statementPtr->getSchemaName(), statementPtr->getTableName(),
+                                            ptree.fSqlText, vpackage.get_SessionID());
+          packagePtr->set_SQLStatement(dmlStatement);
+          (void)packagePtr->buildFromSqlStatement(*statementPtr);
+          break;
+
+        case DML_UPDATE:
+          packagePtr = new UpdateDMLPackage(statementPtr->getSchemaName(), statementPtr->getTableName(),
+                                            ptree.fSqlText, vpackage.get_SessionID());
+          packagePtr->set_SQLStatement(dmlStatement);
+          (void)packagePtr->buildFromSqlStatement(*statementPtr);
+          break;
+
+        case DML_DELETE:
+          packagePtr = new DeleteDMLPackage(statementPtr->getSchemaName(), statementPtr->getTableName(),
+                                            ptree.fSqlText, vpackage.get_SessionID());
+          packagePtr->set_SQLStatement(dmlStatement);
+          (void)packagePtr->buildFromSqlStatement(*statementPtr);
+          break;
+
+        case DML_COMMAND:
+          packagePtr = new CommandDMLPackage(ptree.fSqlText, vpackage.get_SessionID());
+          (void)packagePtr->buildFromSqlStatement(*statementPtr);
+          break;
+
+        default: cerr << "makeCalpontDMLPackage: invalid statement type" << endl; break;
+      }
+    }
+  }
+  catch (std::exception& ex)
+  {
+    cerr << "makeCalpontDMLPackage:" << ex.what() << endl;
+  }
+  catch (...)
+  {
+    cerr << "makeCalpontDMLPackage: caught unknown exception!" << endl;
+  }
+
+  return packagePtr;
 }
 
-dmlpackage::CalpontDMLPackage* CalpontDMLFactory::makeCalpontDMLPackageFromBuffer(dmlpackage::VendorDMLStatement& vpackage)
+dmlpackage::CalpontDMLPackage* CalpontDMLFactory::makeCalpontDMLPackageFromBuffer(
+    dmlpackage::VendorDMLStatement& vpackage)
 {
-    CalpontDMLPackage* packagePtr = 0;
+  CalpontDMLPackage* packagePtr = 0;
 
-    try
+  try
+  {
+    int dmlStatementType = vpackage.get_DMLStatementType();
+
+    switch (dmlStatementType)
     {
-        int dmlStatementType = vpackage.get_DMLStatementType();
+      case DML_INSERT:
+        packagePtr = new InsertDMLPackage(vpackage.get_SchemaName(), vpackage.get_TableName(),
+                                          vpackage.get_DMLStatement(), vpackage.get_SessionID());
+        (void)packagePtr->buildFromBuffer(vpackage.get_DataBuffer(), vpackage.get_Columns(),
+                                          vpackage.get_Rows());
+        break;
 
-        switch (dmlStatementType)
-        {
-            case DML_INSERT:
-                packagePtr = new InsertDMLPackage(vpackage.get_SchemaName(), vpackage.get_TableName(), vpackage.get_DMLStatement(), vpackage.get_SessionID());
-                (void)packagePtr->buildFromBuffer(vpackage.get_DataBuffer
-                                                  (), vpackage.get_Columns(), vpackage.get_Rows());
-                break;
+      case DML_UPDATE:
+        packagePtr = new UpdateDMLPackage(vpackage.get_SchemaName(), vpackage.get_TableName(),
+                                          vpackage.get_DMLStatement(), vpackage.get_SessionID());
+        (void)packagePtr->buildFromBuffer(vpackage.get_DataBuffer(), vpackage.get_Columns(),
+                                          vpackage.get_Rows());
+        break;
 
-            case DML_UPDATE:
-                packagePtr = new UpdateDMLPackage(vpackage.get_SchemaName(),
-                                                  vpackage.get_TableName(), vpackage.get_DMLStatement(), vpackage.get_SessionID());
-                (void)packagePtr->buildFromBuffer(vpackage.get_DataBuffer
-                                                  (), vpackage.get_Columns(), vpackage.get_Rows());
-                break;
+      case DML_DELETE:
+        packagePtr = new DeleteDMLPackage(vpackage.get_SchemaName(), vpackage.get_TableName(),
+                                          vpackage.get_DMLStatement(), vpackage.get_SessionID());
+        (void)packagePtr->buildFromBuffer(vpackage.get_DataBuffer(), vpackage.get_Columns(),
+                                          vpackage.get_Rows());
+        break;
 
-            case DML_DELETE:
-                packagePtr = new DeleteDMLPackage(vpackage.get_SchemaName(),
-                                                  vpackage.get_TableName(), vpackage.get_DMLStatement(), vpackage.get_SessionID());
-                (void)packagePtr->buildFromBuffer(vpackage.get_DataBuffer
-                                                  (), vpackage.get_Columns(), vpackage.get_Rows());
-                break;
+      case DML_COMMAND:
+        packagePtr = new CommandDMLPackage(vpackage.get_DMLStatement(), vpackage.get_SessionID());
 
-            case DML_COMMAND:
-                packagePtr = new CommandDMLPackage(vpackage.get_DMLStatement(), vpackage.get_SessionID() );
+        break;
 
-                break;
-
-            default:
-                cerr << "makeCalpontDMLPackage: invalid statement type" << endl;
-                break;
-        }
+      default: cerr << "makeCalpontDMLPackage: invalid statement type" << endl; break;
     }
-    catch (std::exception& ex)
-    {
-        cerr << "makeCalpontDMLPackage:" << ex.what() << endl;
-    }
-    catch (...)
-    {
-        cerr << "makeCalpontDMLPackage: caught unknown exception!" << endl;
-    }
+  }
+  catch (std::exception& ex)
+  {
+    cerr << "makeCalpontDMLPackage:" << ex.what() << endl;
+  }
+  catch (...)
+  {
+    cerr << "makeCalpontDMLPackage: caught unknown exception!" << endl;
+  }
 
-    return packagePtr;
+  return packagePtr;
 }
 
-dmlpackage::CalpontDMLPackage* CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlpackage::VendorDMLStatement& vpackage)
+dmlpackage::CalpontDMLPackage* CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(
+    dmlpackage::VendorDMLStatement& vpackage)
 {
-    CalpontDMLPackage* packagePtr = 0;
+  CalpontDMLPackage* packagePtr = 0;
 
-    try
+  try
+  {
+    int dmlStatementType = vpackage.get_DMLStatementType();
+
+    switch (dmlStatementType)
     {
-        int dmlStatementType = vpackage.get_DMLStatementType();
+      case DML_INSERT:
+        packagePtr = new InsertDMLPackage(vpackage.get_SchemaName(), vpackage.get_TableName(),
+                                          vpackage.get_DMLStatement(), vpackage.get_SessionID());
+        (void)packagePtr->buildFromMysqlBuffer(vpackage.get_ColNames(), vpackage.get_values(),
+                                               vpackage.get_Columns(), vpackage.get_Rows(),
+                                               vpackage.get_nullValues());
+        break;
 
-        switch (dmlStatementType)
-        {
-            case DML_INSERT:
-                packagePtr = new InsertDMLPackage(vpackage.get_SchemaName(), vpackage.get_TableName(), vpackage.get_DMLStatement(), vpackage.get_SessionID());
-                (void)packagePtr->buildFromMysqlBuffer(vpackage.get_ColNames(), vpackage.get_values(), vpackage.get_Columns(), vpackage.get_Rows(), vpackage.get_nullValues());
-                break;
+      case DML_COMMAND:
+        packagePtr = new CommandDMLPackage(vpackage.get_DMLStatement(), vpackage.get_SessionID());
+        break;
 
-            case  DML_COMMAND:
-                packagePtr = new CommandDMLPackage(vpackage.get_DMLStatement(), vpackage.get_SessionID() );
-                break;
+      case DML_DELETE:
+        packagePtr = new DeleteDMLPackage(vpackage.get_SchemaName(), vpackage.get_TableName(),
+                                          vpackage.get_DMLStatement(), vpackage.get_SessionID());
+        (void)packagePtr->buildFromMysqlBuffer(vpackage.get_ColNames(), vpackage.get_values(),
+                                               vpackage.get_Columns(), vpackage.get_Rows(),
+                                               vpackage.get_nullValues());
+        break;
 
-            case DML_DELETE:
-                packagePtr = new DeleteDMLPackage(vpackage.get_SchemaName(), vpackage.get_TableName(),
-                                                  vpackage.get_DMLStatement(), vpackage.get_SessionID() );
-                (void)packagePtr->buildFromMysqlBuffer(vpackage.get_ColNames(), vpackage.get_values(), vpackage.get_Columns(), vpackage.get_Rows(), vpackage.get_nullValues());
-                break;
-
-            default:
-                cerr << "makeCalpontDMLPackage: invalid statement type" << endl;
-                break;
-        }
+      default: cerr << "makeCalpontDMLPackage: invalid statement type" << endl; break;
     }
-    catch (std::exception& ex)
-    {
-        cerr << "makeCalpontDMLPackage:" << ex.what() << endl;
-    }
-    catch (...)
-    {
-        cerr << "makeCalpontDMLPackage: caught unknown exception!" << endl;
-    }
+  }
+  catch (std::exception& ex)
+  {
+    cerr << "makeCalpontDMLPackage:" << ex.what() << endl;
+  }
+  catch (...)
+  {
+    cerr << "makeCalpontDMLPackage: caught unknown exception!" << endl;
+  }
 
-    return packagePtr;
+  return packagePtr;
 }
 
-dmlpackage::CalpontDMLPackage* CalpontDMLFactory::makeCalpontUpdatePackageFromMysqlBuffer(dmlpackage::VendorDMLStatement& vpackage, dmlpackage::UpdateSqlStatement& updateStmt)
+dmlpackage::CalpontDMLPackage* CalpontDMLFactory::makeCalpontUpdatePackageFromMysqlBuffer(
+    dmlpackage::VendorDMLStatement& vpackage, dmlpackage::UpdateSqlStatement& updateStmt)
 {
-    CalpontDMLPackage* packagePtr = new UpdateDMLPackage((updateStmt.fNamePtr)->fSchema, (updateStmt.fNamePtr)->fName,
-            vpackage.get_DMLStatement(), vpackage.get_SessionID() );
-    UpdateDMLPackage* updatePkgPtr = dynamic_cast<UpdateDMLPackage*>(packagePtr);
-    updatePkgPtr->buildUpdateFromMysqlBuffer(updateStmt);
-    packagePtr = dynamic_cast<CalpontDMLPackage*>(updatePkgPtr);
-    return packagePtr;
+  CalpontDMLPackage* packagePtr =
+      new UpdateDMLPackage((updateStmt.fNamePtr)->fSchema, (updateStmt.fNamePtr)->fName,
+                           vpackage.get_DMLStatement(), vpackage.get_SessionID());
+  UpdateDMLPackage* updatePkgPtr = dynamic_cast<UpdateDMLPackage*>(packagePtr);
+  updatePkgPtr->buildUpdateFromMysqlBuffer(updateStmt);
+  packagePtr = dynamic_cast<CalpontDMLPackage*>(updatePkgPtr);
+  return packagePtr;
 }
-}                                                 //namespace dmlpackage
+}  // namespace dmlpackage

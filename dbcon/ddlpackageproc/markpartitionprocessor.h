@@ -34,30 +34,28 @@
 
 namespace ddlpackageprocessor
 {
-
 /** @brief specialization of a DDLPackageProcessor
  * for interacting with the Write Engine
  * to process create table ddl statements.
  */
 class MarkPartitionProcessor : public DDLPackageProcessor
 {
-public:
-    MarkPartitionProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm) {}
-    /** @brief process a create table statement
-     *
-     * @param createTableStmt the CreateTableStatement
-     */
-    EXPORT DDLResult processPackage(ddlpackage::MarkPartitionStatement& MarkPartitionStmt);
+ public:
+  MarkPartitionProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm)
+  {
+  }
+  /** @brief process a create table statement
+   *
+   * @param createTableStmt the CreateTableStatement
+   */
+  EXPORT DDLResult processPackage(ddlpackage::MarkPartitionStatement& MarkPartitionStmt);
 
-protected:
-
-
-private:
-
+ protected:
+ private:
 };
 
-}                                                 // namespace ddlpackageprocessor
+}  // namespace ddlpackageprocessor
 
 #undef EXPORT
 
-#endif                                            // MARKPARTITIONPROCESSOR_H
+#endif  // MARKPARTITIONPROCESSOR_H

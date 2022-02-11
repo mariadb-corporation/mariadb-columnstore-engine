@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_concat.cpp 3918 2013-06-19 13:54:34Z bwilkinson $
-*
-*
-****************************************************************************/
+ * $Id: func_concat.cpp 3918 2013-06-19 13:54:34Z bwilkinson $
+ *
+ *
+ ****************************************************************************/
 
 #include <string>
 using namespace std;
@@ -36,37 +36,33 @@ using namespace dataconvert;
 
 namespace funcexp
 {
-
-CalpontSystemCatalog::ColType Func_concat::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
+CalpontSystemCatalog::ColType Func_concat::operationType(FunctionParm& fp,
+                                                         CalpontSystemCatalog::ColType& resultType)
 {
-    // operation type is not used by this functor
-    return fp[0]->data()->resultType();
+  // operation type is not used by this functor
+  return fp[0]->data()->resultType();
 }
-
 
 // Returns the string that results from concatenating the arguments.
 // concat() returns NULL if any argument is NULL.
 //
-string Func_concat::getStrVal(Row& row,
-                              FunctionParm& parm,
-                              bool& isNull,
-                              CalpontSystemCatalog::ColType&)
+string Func_concat::getStrVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType&)
 {
-	string ret;
-    string tmp;
-    stringValue(parm[0], row, isNull, ret);
-    
-    // TODO: do a better job of cutting down the number re-allocations.
-    // look at Item_func_concat::realloc_result for ideas and use 
-    // std::string:resize() appropriatly.
-    for ( unsigned int id = 1 ; id < parm.size() ; id++)
-    {
-		stringValue(parm[id], row, isNull, tmp);
-        ret.append(tmp);
-    }
+  string ret;
+  string tmp;
+  stringValue(parm[0], row, isNull, ret);
 
-    return ret;
+  // TODO: do a better job of cutting down the number re-allocations.
+  // look at Item_func_concat::realloc_result for ideas and use
+  // std::string:resize() appropriatly.
+  for (unsigned int id = 1; id < parm.size(); id++)
+  {
+    stringValue(parm[id], row, isNull, tmp);
+    ret.append(tmp);
+  }
+
+  return ret;
 }
 
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:

@@ -29,7 +29,6 @@
  * 		rollback -r transID  	(for each one to roll them back)
  */
 
-
 #include "dbrm.h"
 
 #include <iostream>
@@ -42,84 +41,76 @@ using namespace BRM;
 
 void help(string name)
 {
-
-    cout << "Usage: " << endl << name << " -r txnID" << endl;
-    cout << name << " -p" << endl << endl;
-    cout << "Options:" << endl;
-    cout << "	-r -- rollback a transaction in the BRM data structures" << endl;
-    cout << "	-p -- print current transactions according to the BRM" << endl;
+  cout << "Usage: " << endl << name << " -r txnID" << endl;
+  cout << name << " -p" << endl << endl;
+  cout << "Options:" << endl;
+  cout << "	-r -- rollback a transaction in the BRM data structures" << endl;
+  cout << "	-p -- print current transactions according to the BRM" << endl;
 }
-
-
 
 void printTxnIDs()
 {
-    DBRM brm;
-    set<VER_t> txnList;
-    set<VER_t>::iterator it;
-    int err;
+  DBRM brm;
+  set<VER_t> txnList;
+  set<VER_t>::iterator it;
+  int err;
 
-    err = brm.getCurrentTxnIDs(txnList);
+  err = brm.getCurrentTxnIDs(txnList);
 
-    if (err != 0)
-        return;
+  if (err != 0)
+    return;
 
-    for (it = txnList.begin(); it != txnList.end(); it++)
-        cout << *it << endl;
+  for (it = txnList.begin(); it != txnList.end(); it++)
+    cout << *it << endl;
 }
-
 
 void rollbackTxn(VER_t txnID)
 {
-    DBRM brm;
-    vector<LBID_t> lbidList;
-    int err;
+  DBRM brm;
+  vector<LBID_t> lbidList;
+  int err;
 
-    err = brm.getUncommittedLBIDs(txnID, lbidList);
+  err = brm.getUncommittedLBIDs(txnID, lbidList);
 
-    if (err != 0)
-        return;
+  if (err != 0)
+    return;
 
-    err = brm.vbRollback(txnID, lbidList);
+  err = brm.vbRollback(txnID, lbidList);
 
-    if (err != 0)
-        return;
+  if (err != 0)
+    return;
 
-    cout << "OK." << endl;
+  cout << "OK." << endl;
 }
 
 int main(int argc, char** argv)
 {
+  int opt;
+  char options[] = "pr:";
+  VER_t txnID = -1;
+  string progname(argv[0]);
 
-    int opt;
-    char options[] = "pr:";
-    VER_t txnID = -1;
-    string progname(argv[0]);
-
-    while ((opt = getopt (argc, argv, options)) != -1)
+  while ((opt = getopt(argc, argv, options)) != -1)
+  {
+    switch (opt)
     {
-        switch (opt)
+      case 'r':
+        txnID = atoi(optarg);
+
+        if (txnID < 1)
         {
-            case 'r':
-                txnID = atoi (optarg);
-
-                if (txnID < 1)
-                {
-                    help(progname);
-                    exit(0);
-                }
-
-                idbdatafile::IDBPolicy::configIDBPolicy();
-                rollbackTxn(txnID);
-                exit(0);
-
-            case 'p':
-                printTxnIDs();
-                exit(0);
+          help(progname);
+          exit(0);
         }
+
+        idbdatafile::IDBPolicy::configIDBPolicy();
+        rollbackTxn(txnID);
+        exit(0);
+
+      case 'p': printTxnIDs(); exit(0);
     }
+  }
 
-    help(progname);
-    exit(0);
+  help(progname);
+  exit(0);
 }
-

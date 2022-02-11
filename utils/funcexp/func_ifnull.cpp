@@ -17,10 +17,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_ifnull.cpp 3923 2013-06-19 21:43:06Z bwilkinson $
-*
-*
-****************************************************************************/
+ * $Id: func_ifnull.cpp 3923 2013-06-19 21:43:06Z bwilkinson $
+ *
+ *
+ ****************************************************************************/
 
 #include <string>
 using namespace std;
@@ -34,7 +34,6 @@ using namespace rowgroup;
 
 namespace funcexp
 {
-
 // IFNULL(expression1, expression12)
 //
 // if parm order:
@@ -44,196 +43,166 @@ namespace funcexp
 // otherwise it returns expression2.
 //
 
-CalpontSystemCatalog::ColType Func_ifnull::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
+CalpontSystemCatalog::ColType Func_ifnull::operationType(FunctionParm& fp,
+                                                         CalpontSystemCatalog::ColType& resultType)
 {
-    // operation type is not used by this functor
-    return fp[0]->data()->resultType();
+  // operation type is not used by this functor
+  return fp[0]->data()->resultType();
 }
 
-
-int64_t Func_ifnull::getIntVal(Row& row,
-                               FunctionParm& parm,
-                               bool& isNull,
-                               CalpontSystemCatalog::ColType&)
+int64_t Func_ifnull::getIntVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType&)
 {
-    if (isNull)
-        return 0;
+  if (isNull)
+    return 0;
 
-    int64_t r = parm[0]->data()->getIntVal(row, isNull);
+  int64_t r = parm[0]->data()->getIntVal(row, isNull);
 
-    if (isNull)
-    {
-        isNull = false;
-        return parm[1]->data()->getIntVal(row, isNull);
-    }
+  if (isNull)
+  {
+    isNull = false;
+    return parm[1]->data()->getIntVal(row, isNull);
+  }
 
-    return r;
+  return r;
 }
 
-
-string Func_ifnull::getStrVal(Row& row,
-                              FunctionParm& parm,
-                              bool& isNull,
-                              CalpontSystemCatalog::ColType&)
+string Func_ifnull::getStrVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType&)
 {
-    if (isNull)
-        return string();
+  if (isNull)
+    return string();
 
-    const string& r = parm[0]->data()->getStrVal(row, isNull);
+  const string& r = parm[0]->data()->getStrVal(row, isNull);
 
-    if (isNull)
-    {
-        isNull = false;
-        return parm[1]->data()->getStrVal(row, isNull);
-    }
+  if (isNull)
+  {
+    isNull = false;
+    return parm[1]->data()->getStrVal(row, isNull);
+  }
 
-    return r;
+  return r;
 }
 
-
-IDB_Decimal Func_ifnull::getDecimalVal(Row& row,
-                                       FunctionParm& parm,
-                                       bool& isNull,
+IDB_Decimal Func_ifnull::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull,
                                        CalpontSystemCatalog::ColType&)
 {
-    if (isNull)
-        return IDB_Decimal();
+  if (isNull)
+    return IDB_Decimal();
 
-    IDB_Decimal r = parm[0]->data()->getDecimalVal(row, isNull);
+  IDB_Decimal r = parm[0]->data()->getDecimalVal(row, isNull);
 
-    if (isNull)
-    {
-        isNull = false;
-        return parm[1]->data()->getDecimalVal(row, isNull);
-    }
+  if (isNull)
+  {
+    isNull = false;
+    return parm[1]->data()->getDecimalVal(row, isNull);
+  }
 
-    return r;
+  return r;
 }
 
-
-double Func_ifnull::getDoubleVal(Row& row,
-                                 FunctionParm& parm,
-                                 bool& isNull,
-                                 CalpontSystemCatalog::ColType&)
+double Func_ifnull::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType&)
 {
-    if (isNull)
-        return 0.0;
+  if (isNull)
+    return 0.0;
 
-    double r = parm[0]->data()->getDoubleVal(row, isNull);
+  double r = parm[0]->data()->getDoubleVal(row, isNull);
 
-    if (isNull)
-    {
-        isNull = false;
-        return parm[1]->data()->getDoubleVal(row, isNull);
-    }
+  if (isNull)
+  {
+    isNull = false;
+    return parm[1]->data()->getDoubleVal(row, isNull);
+  }
 
-    return r;
+  return r;
 }
 
-long double Func_ifnull::getLongDoubleVal(Row& row,
-                                 FunctionParm& parm,
-                                 bool& isNull,
-                                 CalpontSystemCatalog::ColType&)
+long double Func_ifnull::getLongDoubleVal(Row& row, FunctionParm& parm, bool& isNull,
+                                          CalpontSystemCatalog::ColType&)
 {
-    if (isNull)
-        return 0.0;
+  if (isNull)
+    return 0.0;
 
-    long double r = parm[0]->data()->getLongDoubleVal(row, isNull);
+  long double r = parm[0]->data()->getLongDoubleVal(row, isNull);
 
-    if (isNull)
-    {
-        isNull = false;
-        return parm[1]->data()->getLongDoubleVal(row, isNull);
-    }
+  if (isNull)
+  {
+    isNull = false;
+    return parm[1]->data()->getLongDoubleVal(row, isNull);
+  }
 
-    return r;
+  return r;
 }
 
-
-int32_t Func_ifnull::getDateIntVal(Row& row,
-                                   FunctionParm& parm,
-                                   bool& isNull,
-                                   CalpontSystemCatalog::ColType&)
+int32_t Func_ifnull::getDateIntVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType&)
 {
-    if (isNull)
-        return 0;
+  if (isNull)
+    return 0;
 
-    int64_t r = parm[0]->data()->getDateIntVal(row, isNull);
+  int64_t r = parm[0]->data()->getDateIntVal(row, isNull);
 
-    if (isNull)
-    {
-        isNull = false;
-        return parm[1]->data()->getDateIntVal(row, isNull);
-    }
+  if (isNull)
+  {
+    isNull = false;
+    return parm[1]->data()->getDateIntVal(row, isNull);
+  }
 
-    return r;
+  return r;
 }
 
-int64_t Func_ifnull::getDatetimeIntVal(Row& row,
-                                       FunctionParm& parm,
-                                       bool& isNull,
+int64_t Func_ifnull::getDatetimeIntVal(Row& row, FunctionParm& parm, bool& isNull,
                                        CalpontSystemCatalog::ColType&)
 {
-    if (isNull)
-        return 0;
+  if (isNull)
+    return 0;
 
-    int64_t r = parm[0]->data()->getDatetimeIntVal(row, isNull);
+  int64_t r = parm[0]->data()->getDatetimeIntVal(row, isNull);
 
-    if (isNull)
-    {
-        isNull = false;
-        return parm[1]->data()->getDatetimeIntVal(row, isNull);
-    }
+  if (isNull)
+  {
+    isNull = false;
+    return parm[1]->data()->getDatetimeIntVal(row, isNull);
+  }
 
-    return r;
+  return r;
 }
 
-int64_t Func_ifnull::getTimestampIntVal(Row& row,
-                                        FunctionParm& parm,
-                                        bool& isNull,
+int64_t Func_ifnull::getTimestampIntVal(Row& row, FunctionParm& parm, bool& isNull,
                                         CalpontSystemCatalog::ColType&)
 {
-    if (isNull)
-        return 0;
+  if (isNull)
+    return 0;
 
-    int64_t r = parm[0]->data()->getTimestampIntVal(row, isNull);
+  int64_t r = parm[0]->data()->getTimestampIntVal(row, isNull);
 
-    if (isNull)
-    {
-        isNull = false;
-        return parm[1]->data()->getTimestampIntVal(row, isNull);
-    }
+  if (isNull)
+  {
+    isNull = false;
+    return parm[1]->data()->getTimestampIntVal(row, isNull);
+  }
 
-    return r;
+  return r;
 }
 
-int64_t Func_ifnull::getTimeIntVal(Row& row,
-                                   FunctionParm& parm,
-                                   bool& isNull,
-                                   CalpontSystemCatalog::ColType&)
+int64_t Func_ifnull::getTimeIntVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType&)
 {
-    if (isNull)
-        return 0;
+  if (isNull)
+    return 0;
 
-    int64_t r = parm[0]->data()->getTimeIntVal(row, isNull);
+  int64_t r = parm[0]->data()->getTimeIntVal(row, isNull);
 
-    if (isNull)
-    {
-        isNull = false;
-        return parm[1]->data()->getTimeIntVal(row, isNull);
-    }
+  if (isNull)
+  {
+    isNull = false;
+    return parm[1]->data()->getTimeIntVal(row, isNull);
+  }
 
-    return r;
+  return r;
 }
 
-bool Func_ifnull::getBoolVal(Row& row,
-                             FunctionParm& parm,
-                             bool& isNull,
-                             CalpontSystemCatalog::ColType& ct)
+bool Func_ifnull::getBoolVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& ct)
 {
-    int64_t ret = getIntVal(row, parm, isNull, ct);
-    return (ret == 0 ? false : true);
+  int64_t ret = getIntVal(row, parm, isNull, ct);
+  return (ret == 0 ? false : true);
 }
 
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:

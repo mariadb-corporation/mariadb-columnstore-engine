@@ -25,72 +25,69 @@
 
 namespace utils
 {
-
 class LibMySQL
 {
-public:
-    LibMySQL();
-    ~LibMySQL();
+ public:
+  LibMySQL();
+  ~LibMySQL();
 
-    // init:   host          port        username      passwd         db
-    int init(const char*, unsigned int, const char*, const char*, const char*);
+  // init:   host          port        username      passwd         db
+  int init(const char*, unsigned int, const char*, const char*, const char*);
 
-    // run the query
-    int run(const char* q, bool resultExpected = true);
+  // run the query
+  int run(const char* q, bool resultExpected = true);
 
-    void handleMySqlError(const char*, int);
+  void handleMySqlError(const char*, int);
 
-    MYSQL* getMySqlCon()
-    {
-        return fCon;
-    }
-    int getFieldCount()
-    {
-        return mysql_num_fields(fRes);
-    }
-    int getRowCount()
-    {
-        return mysql_num_rows(fRes);
-    }
-    char** nextRow()
-    {
-        char** row = mysql_fetch_row(fRes);
-        fieldLengths = mysql_fetch_lengths(fRes);
-        fFields = mysql_fetch_fields(fRes);
-        return row;
-    }
-    long getFieldLength(int field)
-    {
-        return fieldLengths[field];
-    }
-    MYSQL_FIELD* getField(int field)
-    {
-        return &fFields[field];
-    }
-    const std::string& getError()
-    {
-        return fErrStr;
-    }
-    unsigned int getErrno()
-    {
-        return mysql_errno(fCon);
-    }
-    const char* getErrorMsg()
-    {
-        return mysql_error(fCon);
-    }
+  MYSQL* getMySqlCon()
+  {
+    return fCon;
+  }
+  int getFieldCount()
+  {
+    return mysql_num_fields(fRes);
+  }
+  int getRowCount()
+  {
+    return mysql_num_rows(fRes);
+  }
+  char** nextRow()
+  {
+    char** row = mysql_fetch_row(fRes);
+    fieldLengths = mysql_fetch_lengths(fRes);
+    fFields = mysql_fetch_fields(fRes);
+    return row;
+  }
+  long getFieldLength(int field)
+  {
+    return fieldLengths[field];
+  }
+  MYSQL_FIELD* getField(int field)
+  {
+    return &fFields[field];
+  }
+  const std::string& getError()
+  {
+    return fErrStr;
+  }
+  unsigned int getErrno()
+  {
+    return mysql_errno(fCon);
+  }
+  const char* getErrorMsg()
+  {
+    return mysql_error(fCon);
+  }
 
-private:
-    MYSQL*          fCon;
-    MYSQL_RES*      fRes;
-    MYSQL_FIELD*    fFields;
-    std::string     fErrStr;
-    unsigned long*  fieldLengths;
+ private:
+  MYSQL* fCon;
+  MYSQL_RES* fRes;
+  MYSQL_FIELD* fFields;
+  std::string fErrStr;
+  unsigned long* fieldLengths;
 };
 
-} // namespace
-
-
+}  // namespace utils
 
 #endif  // UTILS_LIBMYSQL_CL_H
 

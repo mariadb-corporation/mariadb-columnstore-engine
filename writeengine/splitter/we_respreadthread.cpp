@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id$
-*
-*******************************************************************************/
+ * $Id$
+ *
+ *******************************************************************************/
 
 /*
  * we_respreadthread.cpp
@@ -37,27 +37,23 @@ using namespace boost;
 
 namespace WriteEngine
 {
-
-WERespReadThread::WERespReadThread(WESDHandler& aSdh):
-    fSdh(aSdh)
+WERespReadThread::WERespReadThread(WESDHandler& aSdh) : fSdh(aSdh)
 {
-    // ctor
+  // ctor
 }
-WERespReadThread::WERespReadThread(const WERespReadThread& rhs):
-    fSdh(rhs.fSdh)
+WERespReadThread::WERespReadThread(const WERespReadThread& rhs) : fSdh(rhs.fSdh)
 {
-    // copy ctor
+  // copy ctor
 }
 WERespReadThread::~WERespReadThread()
 {
-    // dtor
+  // dtor
 }
 
 void WERespReadThread::operator()()
 {
-    //call datahandler checkForAllPmMsgs()
-    fSdh.checkForRespMsgs();
+  // call datahandler checkForAllPmMsgs()
+  fSdh.checkForRespMsgs();
 }
-
 
 } /* namespace WriteEngine */

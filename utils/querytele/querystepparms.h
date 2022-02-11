@@ -22,22 +22,22 @@
 
 namespace querytele
 {
-
 class QueryStepParms
 {
-public:
-    explicit QueryStepParms(StepTeleStats::StepType st = StepTeleStats::T_INVALID) : stepType(st) { }
-    ~QueryStepParms() { }
+ public:
+  explicit QueryStepParms(StepTeleStats::StepType st = StepTeleStats::T_INVALID) : stepType(st)
+  {
+  }
+  ~QueryStepParms()
+  {
+  }
 
-    StepTeleStats::StepType stepType;
+  StepTeleStats::StepType stepType;
 
-protected:
-
-private:
-
+ protected:
+ private:
 };
 
-}
+}  // namespace querytele
 
 #endif
-

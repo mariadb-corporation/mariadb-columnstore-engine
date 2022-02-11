@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: selectfilter.h 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: selectfilter.h 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 /** @file */
 
 #ifndef SELECTFILTER_H
@@ -44,148 +44,146 @@ namespace execplan
  */
 class SelectFilter : public Filter
 {
-    /**
-     * Public stuff
-     */
-public:
+  /**
+   * Public stuff
+   */
+ public:
+  /**
+   * Constructors / copy constructor
+   */
+  SelectFilter();
+  SelectFilter(const SelectFilter& rhs);
 
-    /**
-     * Constructors / copy constructor
-     */
-    SelectFilter();
-    SelectFilter(const SelectFilter& rhs);
+  /** Constructors
+   *
+   * pass all parts in ctor
+   * @note SimpleFilter takes ownership of all these pointers
+   */
+  SelectFilter(const std::vector<SRCP>& cols, const SOP& op, SCSEP& sub, bool correlated = false);
 
-    /** Constructors
-     *
-     * pass all parts in ctor
-     * @note SimpleFilter takes ownership of all these pointers
-     */
-    SelectFilter(const std::vector<SRCP>& cols, const SOP& op, SCSEP& sub, bool correlated = false);
+  /**
+   * Destructors
+   */
+  virtual ~SelectFilter();
 
-    /**
-     * Destructors
-     */
-    virtual ~SelectFilter();
+  /**
+   * Accessor Methods
+   */
+  inline const std::vector<SRCP>& cols() const
+  {
+    return fCols;
+  }
 
-    /**
-     * Accessor Methods
-     */
-    inline const std::vector<SRCP>& cols() const
-    {
-        return fCols;
-    }
+  void cols(const std::vector<SRCP>& cols)
+  {
+    fCols = cols;
+  }
 
-    void cols(const std::vector<SRCP>& cols)
-    {
-        fCols = cols;
-    }
+  inline const SOP& op() const
+  {
+    return fOp;
+  }
 
-    inline const SOP& op() const
-    {
-        return fOp;
-    }
+  inline void op(const SOP& op)
+  {
+    fOp = op;
+  }
 
-    inline void op (const SOP& op)
-    {
-        fOp = op;
-    }
+  inline const SCSEP& sub() const
+  {
+    return fSub;
+  }
 
-    inline const SCSEP& sub() const
-    {
-        return fSub;
-    }
+  inline void sub(SCSEP& sub)
+  {
+    fSub = sub;
+  }
 
-    inline void sub(SCSEP& sub)
-    {
-        fSub = sub;
-    }
+  bool correlated() const
+  {
+    return fCorrelated;
+  }
+  void correlated(const bool correlated)
+  {
+    fCorrelated = correlated;
+  }
 
-    bool correlated() const
-    {
-        return fCorrelated;
-    }
-    void correlated(const bool correlated)
-    {
-        fCorrelated = correlated;
-    }
+  virtual const std::string toString() const;
 
-    virtual const std::string toString() const;
+  virtual inline const std::string data() const
+  {
+    return fData;
+  }
+  virtual inline void data(const std::string data)
+  {
+    fData = data;
+  }
 
-    virtual inline const std::string data() const
-    {
-        return fData;
-    }
-    virtual inline void data( const std::string data )
-    {
-        fData = data;
-    }
+  uint64_t returnedColPos() const
+  {
+    return fReturnedColPos;
+  }
+  void returnedColPos(const uint64_t returnedColPos)
+  {
+    fReturnedColPos = returnedColPos;
+  }
 
-    uint64_t returnedColPos() const
-    {
-        return fReturnedColPos;
-    }
-    void returnedColPos(const uint64_t returnedColPos)
-    {
-        fReturnedColPos = returnedColPos;
-    }
+  /**
+   * The serialization interface
+   */
+  virtual void serialize(messageqcpp::ByteStream&) const;
+  virtual void unserialize(messageqcpp::ByteStream&);
 
-    /**
-     * The serialization interface
-     */
-    virtual void serialize(messageqcpp::ByteStream&) const;
-    virtual void unserialize(messageqcpp::ByteStream&);
+  /** return a copy of this pointer
+   *
+   * deep copy of this pointer and return the copy
+   */
+  inline virtual SelectFilter* clone() const
+  {
+    return new SelectFilter(*this);
+  }
 
-    /** return a copy of this pointer
-     *
-     * deep copy of this pointer and return the copy
-     */
-    inline virtual SelectFilter* clone() const
-    {
-        return new SelectFilter (*this);
-    }
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
+   */
+  virtual bool operator==(const TreeNode* t) const;
 
-    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-     *
-     * Do a deep, strict (as opposed to semantic) equivalence test.
-     * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
-     */
-    virtual bool operator==(const TreeNode* t) const;
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
+   */
+  bool operator==(const SelectFilter& t) const;
 
-    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-     *
-     * Do a deep, strict (as opposed to semantic) equivalence test.
-     * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
-     */
-    bool operator==(const SelectFilter& t) const;
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
+   */
+  virtual bool operator!=(const TreeNode* t) const;
 
-    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-     *
-     * Do a deep, strict (as opposed to semantic) equivalence test.
-     * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
-     */
-    virtual bool operator!=(const TreeNode* t) const;
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
+   */
+  bool operator!=(const SelectFilter& t) const;
 
-    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-     *
-     * Do a deep, strict (as opposed to semantic) equivalence test.
-     * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
-     */
-    bool operator!=(const SelectFilter& t) const;
+ private:
+  // default okay?
+  // SelectFilter& operator=(const SelectFilter& rhs);
 
-private:
-    //default okay?
-    //SelectFilter& operator=(const SelectFilter& rhs);
-
-    std::vector<SRCP> fCols;
-    SOP fOp;
-    SCSEP fSub;
-    bool fCorrelated;
-    std::string fData;
-    uint64_t fReturnedColPos;	// offset in fSub->returnedColList to indicate the start of projection
+  std::vector<SRCP> fCols;
+  SOP fOp;
+  SCSEP fSub;
+  bool fCorrelated;
+  std::string fData;
+  uint64_t fReturnedColPos;  // offset in fSub->returnedColList to indicate the start of projection
 };
 
 std::ostream& operator<<(std::ostream& output, const SelectFilter& rhs);
 
-}
-#endif //SELECTFILTER_H
-
+}  // namespace execplan
+#endif  // SELECTFILTER_H

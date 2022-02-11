@@ -16,22 +16,22 @@
    MA 02110-1301, USA. */
 
 /******************************************************************************************
-*
-* $Id: dmlproc.h 927 2013-01-21 14:11:25Z rdempsey $
-*
-******************************************************************************************/
+ *
+ * $Id: dmlproc.h 927 2013-01-21 14:11:25Z rdempsey $
+ *
+ ******************************************************************************************/
 /**
  * @file
  */
 #ifndef DMLPROC_H
 #define DMLPROC_H
 
-#include<string>
-#include<sstream>
-#include<exception>
-#include<iostream>
+#include <string>
+#include <sstream>
+#include <exception>
+#include <iostream>
 #include <unistd.h>
 #include <stdexcept>
 #include "messagelog.h"
 
-#endif //DMLPROC_H
+#endif  // DMLPROC_H

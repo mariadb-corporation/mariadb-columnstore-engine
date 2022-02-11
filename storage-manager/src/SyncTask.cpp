@@ -15,7 +15,6 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-
 #include "SyncTask.h"
 #include "Synchronizer.h"
 #include "messageFormat.h"
@@ -23,7 +22,6 @@
 
 namespace storagemanager
 {
-
 SyncTask::SyncTask(int sock, uint len) : PosixTask(sock, len)
 {
 }
@@ -34,29 +32,29 @@ SyncTask::~SyncTask()
 
 bool SyncTask::run()
 {
-    // force flush synchronizer
-    uint8_t buf;
+  // force flush synchronizer
+  uint8_t buf;
 
-    if (getLength() > 1)
-    {
-        handleError("SyncTask", E2BIG);
-        return true;
-    }
-    // consume the msg
-    int success = read(&buf, getLength());
-    if (success<0)
-    {
-        handleError("SyncTask", errno);
-        return false;
-    }
+  if (getLength() > 1)
+  {
+    handleError("SyncTask", E2BIG);
+    return true;
+  }
+  // consume the msg
+  int success = read(&buf, getLength());
+  if (success < 0)
+  {
+    handleError("SyncTask", errno);
+    return false;
+  }
 
-    Synchronizer::get()->syncNow();
+  Synchronizer::get()->syncNow();
 
-    // send generic success response
-    sm_response ret;
-    ret.returnCode = 0;
-    success = write(ret, 0);
-    return success;
+  // send generic success response
+  sm_response ret;
+  ret.returnCode = 0;
+  success = write(ret, 0);
+  return success;
 }
 
-}
+}  // namespace storagemanager

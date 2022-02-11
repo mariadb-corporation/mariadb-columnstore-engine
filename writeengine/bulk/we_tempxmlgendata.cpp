@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id: we_tempxmlgendata.cpp 4450 2013-01-21 14:13:24Z rdempsey $
-*
-*******************************************************************************/
+ * $Id: we_tempxmlgendata.cpp 4450 2013-01-21 14:13:24Z rdempsey $
+ *
+ *******************************************************************************/
 /** @file */
 
 #include "we_tempxmlgendata.h"
@@ -29,26 +29,24 @@
 
 namespace WriteEngine
 {
-
 //------------------------------------------------------------------------------
 // TempXMLGenData constructor
 //------------------------------------------------------------------------------
-TempXMLGenData::TempXMLGenData(const std::string& jobId,
-                               const std::string& schema,
-                               const std::string& table)
+TempXMLGenData::TempXMLGenData(const std::string& jobId, const std::string& schema, const std::string& table)
 {
-    fParms[ JOBID] = jobId;                     // add or override default value
-    fSchema = schema;
-    execplan::CalpontSystemCatalog::TableName tbl(schema, table);
-    fTables.push_back( tbl );
+  fParms[JOBID] = jobId;  // add or override default value
+  fSchema = schema;
+  execplan::CalpontSystemCatalog::TableName tbl(schema, table);
+  fTables.push_back(tbl);
 }
 
 //------------------------------------------------------------------------------
 // TempXMLGenData destructor
 //------------------------------------------------------------------------------
 /* virtual */
-TempXMLGenData::~TempXMLGenData( )
-{ }
+TempXMLGenData::~TempXMLGenData()
+{
+}
 
 //------------------------------------------------------------------------------
 // TempXMLGenData print function.
@@ -56,10 +54,10 @@ TempXMLGenData::~TempXMLGenData( )
 /* virtual */
 void TempXMLGenData::print(std::ostream& os) const
 {
-    os << "Generating runtime job xml file for: schema-" << fSchema;
+  os << "Generating runtime job xml file for: schema-" << fSchema;
 
-    if (fTables.size() > 0)
-        os << ": table-" << fTables[0];
+  if (fTables.size() > 0)
+    os << ": table-" << fTables[0];
 }
 
-} // end of WriteEngine namespace
+}  // namespace WriteEngine
