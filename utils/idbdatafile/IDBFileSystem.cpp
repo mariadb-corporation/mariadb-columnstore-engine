@@ -19,9 +19,7 @@
 
 namespace idbdatafile
 {
-
-IDBFileSystem::IDBFileSystem( Types type ) :
-    m_type(type)
+IDBFileSystem::IDBFileSystem(Types type) : m_type(type)
 {
 }
 
@@ -29,4 +27,4 @@ IDBFileSystem::~IDBFileSystem()
 {
 }
 
-}
+}  // namespace idbdatafile

@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /*********************************************************************
-* $Id: clientrotator.h 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ * $Id: clientrotator.h 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 
 /** @file */
 
@@ -38,138 +38,134 @@
 
 namespace execplan
 {
-
 /** @brief connection handle structure */
 class ClientRotator
 {
-public:
-    /** @brief ctor
-    */
-    ClientRotator(uint32_t sid, const std::string& name, bool localQuery = false);
+ public:
+  /** @brief ctor
+   */
+  ClientRotator(uint32_t sid, const std::string& name, bool localQuery = false);
 
-    /** @brief dtor
-    */
-    ~ClientRotator()
+  /** @brief dtor
+   */
+  ~ClientRotator()
+  {
+    if (fClient)
     {
-        if (fClient)
-        {
-            fClient->shutdown();
-            delete fClient;
-        }
+      fClient->shutdown();
+      delete fClient;
     }
+  }
 
-    /** @brief connnect
-     *
-     * Try connecting to client based on session id.  If no connection,
-     * try connectList.
-     * @param timeout  in seconds.
-    */
-    void connect(double timeout = 50);
+  /** @brief connnect
+   *
+   * Try connecting to client based on session id.  If no connection,
+   * try connectList.
+   * @param timeout  in seconds.
+   */
+  void connect(double timeout = 50);
 
-    /** @brief write
-     *
-     * Write msg to fClient.  If unsuccessful, get new connection with
-     * connectList and write.
-    */
-    void write(const messageqcpp::ByteStream& msg);
+  /** @brief write
+   *
+   * Write msg to fClient.  If unsuccessful, get new connection with
+   * connectList and write.
+   */
+  void write(const messageqcpp::ByteStream& msg);
 
-    /** @brief shutdown
-    */
-    void shutdown()
+  /** @brief shutdown
+   */
+  void shutdown()
+  {
+    if (fClient)
     {
-        if (fClient)
-        {
-            fClient->shutdown();
-            delete fClient;
-            fClient = 0;
-        }
+      fClient->shutdown();
+      delete fClient;
+      fClient = 0;
     }
+  }
 
-    /** @brief read
-    */
-    messageqcpp::ByteStream read();
+  /** @brief read
+   */
+  messageqcpp::ByteStream read();
 
-    /** @brief getClient
-    */
-    messageqcpp::MessageQueueClient* getClient() const
-    {
-        return fClient;
-    }
+  /** @brief getClient
+   */
+  messageqcpp::MessageQueueClient* getClient() const
+  {
+    return fClient;
+  }
 
-    /** @brief getSessionId
-    */
-    uint32_t getSessionId() const
-    {
-        return fSessionId;
-    }
+  /** @brief getSessionId
+   */
+  uint32_t getSessionId() const
+  {
+    return fSessionId;
+  }
 
-    /** @brief setSessionId
-    */
-    void setSessionId(uint32_t sid)
-    {
-        fSessionId = sid;
-    }
+  /** @brief setSessionId
+   */
+  void setSessionId(uint32_t sid)
+  {
+    fSessionId = sid;
+  }
 
-    friend std::ostream& operator<<(std::ostream& output, const ClientRotator& rhs);
+  friend std::ostream& operator<<(std::ostream& output, const ClientRotator& rhs);
 
-    /** @brief reset fClient */
-    void resetClient();
+  /** @brief reset fClient */
+  void resetClient();
 
-    bool localQuery()
-    {
-        return fLocalQuery;
-    }
-    void localQuery(bool localQuery)
-    {
-        fLocalQuery = localQuery;
-    }
-    static std::string getModule();
+  bool localQuery()
+  {
+    return fLocalQuery;
+  }
+  void localQuery(bool localQuery)
+  {
+    fLocalQuery = localQuery;
+  }
+  static std::string getModule();
 
-private:
+ private:
+  // Not copyable
+  ClientRotator(const ClientRotator&);
+  ClientRotator& operator=(const ClientRotator&);
 
-    //Not copyable
-    ClientRotator(const ClientRotator& );
-    ClientRotator& operator=(const ClientRotator& );
+  /** @brief load Clients
+   *
+   * Put all entries for client name tag from config file into client list
+   */
+  void loadClients();
 
-    /** @brief load Clients
-     *
-     * Put all entries for client name tag from config file into client list
-     */
-    void loadClients();
+  /** @brief execute connect
+   *
+   * Make connection and return success.
+   */
+  bool exeConnect(const std::string& clientName);
 
-    /** @brief execute connect
-     *
-     * Make connection and return success.
-     */
-    bool exeConnect(const std::string& clientName );
+  /** @brief connnect to list
+   *
+   * Try connecting to next client on list
+   * until timeout lapses. Then throw exception.
+   */
+  void connectList(double timeout = 0.005);
 
-    /** @brief connnect to list
-     *
-     * Try connecting to next client on list
-     * until timeout lapses. Then throw exception.
-     */
-    void connectList(double timeout = 0.005);
+  /** @brief write to message log
+   *
+   * writes message with file name to debug or
+   * critical log.
+   */
+  void writeToLog(int line, const std::string& msg, bool critical) const;
 
-    /** @brief write to message log
-     *
-     * writes message with file name to debug or
-     * critical log.
-     */
-    void writeToLog(int line, const std::string& msg, bool critical) const;
-
-    const std::string fName;
-    uint32_t fSessionId;
-    messageqcpp::MessageQueueClient* fClient;
-    typedef std::vector<std::string> ClientList;
-    ClientList fClients;
-    config::Config* fCf;
-    int fDebug;
-    boost::mutex fClientLock;
-    bool fLocalQuery;
+  const std::string fName;
+  uint32_t fSessionId;
+  messageqcpp::MessageQueueClient* fClient;
+  typedef std::vector<std::string> ClientList;
+  ClientList fClients;
+  config::Config* fCf;
+  int fDebug;
+  boost::mutex fClientLock;
+  bool fLocalQuery;
 };
 
-
-} // namespace
+}  // namespace execplan
 #endif
 // vim:ts=4 sw=4:
-

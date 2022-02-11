@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_lcase.cpp 3923 2013-06-19 21:43:06Z bwilkinson $
-*
-*
-****************************************************************************/
+ * $Id: func_lcase.cpp 3923 2013-06-19 21:43:06Z bwilkinson $
+ *
+ *
+ ****************************************************************************/
 
 #include <string>
 using namespace std;
@@ -34,39 +34,34 @@ using namespace rowgroup;
 #include "joblisttypes.h"
 using namespace joblist;
 
-
 namespace funcexp
 {
-
-CalpontSystemCatalog::ColType Func_lcase::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
+CalpontSystemCatalog::ColType Func_lcase::operationType(FunctionParm& fp,
+                                                        CalpontSystemCatalog::ColType& resultType)
 {
-    // operation type is not used by this functor
-    return fp[0]->data()->resultType();
+  // operation type is not used by this functor
+  return fp[0]->data()->resultType();
 }
 
-std::string Func_lcase::getStrVal(rowgroup::Row& row,
-                                  FunctionParm& fp,
-                                  bool& isNull,
+std::string Func_lcase::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                   execplan::CalpontSystemCatalog::ColType& colType)
 {
-    const string& tstr = fp[0]->data()->getStrVal(row, isNull);
+  const string& tstr = fp[0]->data()->getStrVal(row, isNull);
 
-    if (isNull)
-        return "";
+  if (isNull)
+    return "";
 
-    CHARSET_INFO* cs = colType.getCharset();
-    uint64_t inLen = tstr.length();
-    uint64_t bufLen= inLen * cs->casedn_multiply;
-    char* outBuf = new char[bufLen];
-    
-    uint64_t outLen = cs->casedn(tstr.c_str(), inLen, outBuf, bufLen);
+  CHARSET_INFO* cs = colType.getCharset();
+  uint64_t inLen = tstr.length();
+  uint64_t bufLen = inLen * cs->casedn_multiply;
+  char* outBuf = new char[bufLen];
 
-    string ret = string(outBuf, outLen);
-    delete [] outBuf;
-    return ret;
+  uint64_t outLen = cs->casedn(tstr.c_str(), inLen, outBuf, bufLen);
+
+  string ret = string(outBuf, outLen);
+  delete[] outBuf;
+  return ret;
 }
 
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:
-

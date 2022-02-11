@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id: we_xmlgendata.cpp 4450 2013-01-21 14:13:24Z rdempsey $
-*
-*******************************************************************************/
+ * $Id: we_xmlgendata.cpp 4450 2013-01-21 14:13:24Z rdempsey $
+ *
+ *******************************************************************************/
 
 #include "we_xmlgendata.h"
 
@@ -33,71 +33,69 @@ const std::string JOBDIR("job");
 
 namespace WriteEngine
 {
-/* static */ const std::string XMLGenData::DELIMITER           ("-d");
-/* static */ const std::string XMLGenData::DESCRIPTION         ("-s");
+/* static */ const std::string XMLGenData::DELIMITER("-d");
+/* static */ const std::string XMLGenData::DESCRIPTION("-s");
 #ifdef _MSC_VER
 __declspec(dllexport)
 #endif
-/* static */ const std::string XMLGenData::ENCLOSED_BY_CHAR    ("-E");
+    /* static */ const std::string XMLGenData::ENCLOSED_BY_CHAR("-E");
 #ifdef _MSC_VER
 __declspec(dllexport)
 #endif
-/* static */ const std::string XMLGenData::ESCAPE_CHAR         ("-C");
+    /* static */ const std::string XMLGenData::ESCAPE_CHAR("-C");
 #ifdef _MSC_VER
 __declspec(dllexport)
 #endif
-/* static */ const std::string XMLGenData::JOBID               ("-j");
-/* static */ const std::string XMLGenData::MAXERROR            ("-e");
-/* static */ const std::string XMLGenData::NAME                ("-n");
-/* static */ const std::string XMLGenData::PATH                ("-p");
+    /* static */ const std::string XMLGenData::JOBID("-j");
+/* static */ const std::string XMLGenData::MAXERROR("-e");
+/* static */ const std::string XMLGenData::NAME("-n");
+/* static */ const std::string XMLGenData::PATH("-p");
 #ifdef _MSC_VER
 __declspec(dllexport)
 #endif
-/* static */ const std::string XMLGenData::RPT_DEBUG           ("-b");
-/* static */ const std::string XMLGenData::USER                ("-u");
-/* static */ const std::string XMLGenData::NO_OF_READ_BUFFER   ("-r");
+    /* static */ const std::string XMLGenData::RPT_DEBUG("-b");
+/* static */ const std::string XMLGenData::USER("-u");
+/* static */ const std::string XMLGenData::NO_OF_READ_BUFFER("-r");
 /* static */ const std::string XMLGenData::READ_BUFFER_CAPACITY("-c");
-/* static */ const std::string XMLGenData::WRITE_BUFFER_SIZE   ("-w");
-/* static */ const std::string XMLGenData::EXT                 ("-x");
+/* static */ const std::string XMLGenData::WRITE_BUFFER_SIZE("-w");
+/* static */ const std::string XMLGenData::EXT("-x");
 
 //------------------------------------------------------------------------------
 // XMLGenData constructor
 // Omit inserting JOBID; derived class is required to insert
 //------------------------------------------------------------------------------
-XMLGenData::XMLGenData( )
+XMLGenData::XMLGenData()
 {
-    fParms.insert(ParmList::value_type(DELIMITER, std::string("|")));
-    fParms.insert(ParmList::value_type(DESCRIPTION, std::string()));
-    fParms.insert(ParmList::value_type(ENCLOSED_BY_CHAR, std::string("")));
-    fParms.insert(ParmList::value_type(ESCAPE_CHAR, std::string("\\")));
-    fParms.insert(ParmList::value_type(JOBID, std::string("299")));
-    fParms.insert(ParmList::value_type(MAXERROR, std::string("10")));
-    fParms.insert(ParmList::value_type(NAME, std::string()));
+  fParms.insert(ParmList::value_type(DELIMITER, std::string("|")));
+  fParms.insert(ParmList::value_type(DESCRIPTION, std::string()));
+  fParms.insert(ParmList::value_type(ENCLOSED_BY_CHAR, std::string("")));
+  fParms.insert(ParmList::value_type(ESCAPE_CHAR, std::string("\\")));
+  fParms.insert(ParmList::value_type(JOBID, std::string("299")));
+  fParms.insert(ParmList::value_type(MAXERROR, std::string("10")));
+  fParms.insert(ParmList::value_type(NAME, std::string()));
 #ifdef _MSC_VER
-    std::string br;
-    br = Config::getBulkRoot();
-    boost::filesystem::path p(br);
+  std::string br;
+  br = Config::getBulkRoot();
+  boost::filesystem::path p(br);
 #else
-    boost::filesystem::path p{ std::string(Config::getBulkRoot()) };
+  boost::filesystem::path p{std::string(Config::getBulkRoot())};
 #endif
-    p /= JOBDIR;
-    fParms.insert(ParmList::value_type(PATH, p.string()));
+  p /= JOBDIR;
+  fParms.insert(ParmList::value_type(PATH, p.string()));
 
-    fParms.insert(ParmList::value_type(RPT_DEBUG, std::string("0")));
-    fParms.insert(ParmList::value_type(USER, std::string()));
-    fParms.insert(ParmList::value_type(NO_OF_READ_BUFFER, std::string("5")));
-    fParms.insert(ParmList::value_type(READ_BUFFER_CAPACITY,
-                                       std::string("1048576")));
-    fParms.insert(ParmList::value_type(WRITE_BUFFER_SIZE,
-                                       std::string("10485760")));
-    fParms.insert(ParmList::value_type(EXT, std::string("tbl")));
+  fParms.insert(ParmList::value_type(RPT_DEBUG, std::string("0")));
+  fParms.insert(ParmList::value_type(USER, std::string()));
+  fParms.insert(ParmList::value_type(NO_OF_READ_BUFFER, std::string("5")));
+  fParms.insert(ParmList::value_type(READ_BUFFER_CAPACITY, std::string("1048576")));
+  fParms.insert(ParmList::value_type(WRITE_BUFFER_SIZE, std::string("10485760")));
+  fParms.insert(ParmList::value_type(EXT, std::string("tbl")));
 }
 
 //------------------------------------------------------------------------------
 // XMLGenData destructor
 //------------------------------------------------------------------------------
 /* virtual */
-XMLGenData::~XMLGenData( )
+XMLGenData::~XMLGenData()
 {
 }
 
@@ -106,12 +104,12 @@ XMLGenData::~XMLGenData( )
 //------------------------------------------------------------------------------
 std::string XMLGenData::getParm(const std::string& key) const
 {
-    ParmList::const_iterator p = fParms.find(key);
+  ParmList::const_iterator p = fParms.find(key);
 
-    if (fParms.end() != p)
-        return p->second;
-    else
-        return "";
+  if (fParms.end() != p)
+    return p->second;
+  else
+    return "";
 }
 
 //------------------------------------------------------------------------------
@@ -122,4 +120,4 @@ void XMLGenData::print(std::ostream& /* os */) const
 {
 }
 
-}  //namespace WriteEngine
+}  // namespace WriteEngine

@@ -17,10 +17,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_hex.cpp 3923 2013-06-19 21:43:06Z bwilkinson $
-*
-*
-****************************************************************************/
+ * $Id: func_hex.cpp 3923 2013-06-19 21:43:06Z bwilkinson $
+ *
+ *
+ ****************************************************************************/
 
 #include <cstdlib>
 #include <string>
@@ -44,103 +44,100 @@ char digit_upper[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 void octet2hex(char* to, const char* str, uint32_t len)
 {
-    const char* str_end = str + len;
+  const char* str_end = str + len;
 
-    for (; str != str_end; ++str)
-    {
-        *to++ = digit_upper[((uint8_t) * str) >> 4];
-        *to++ = digit_upper[((uint8_t) * str) & 0x0F];
-    }
+  for (; str != str_end; ++str)
+  {
+    *to++ = digit_upper[((uint8_t)*str) >> 4];
+    *to++ = digit_upper[((uint8_t)*str) & 0x0F];
+  }
 
-    *to = '\0';
+  *to = '\0';
 }
 
-CalpontSystemCatalog::ColType Func_hex::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
+CalpontSystemCatalog::ColType Func_hex::operationType(FunctionParm& fp,
+                                                      CalpontSystemCatalog::ColType& resultType)
 {
-    return resultType;
+  return resultType;
 }
 
-string Func_hex::getStrVal(rowgroup::Row& row,
-                           FunctionParm& parm,
-                           bool& isNull,
+string Func_hex::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                            CalpontSystemCatalog::ColType& ct)
 {
-    string retval;
-    uint64_t dec;
-    char ans[65];
+  string retval;
+  uint64_t dec;
+  char ans[65];
 
-    switch (parm[0]->data()->resultType().colDataType)
+  switch (parm[0]->data()->resultType().colDataType)
+  {
+    case CalpontSystemCatalog::CHAR:
+    case CalpontSystemCatalog::TEXT:
+    case CalpontSystemCatalog::VARCHAR:
+    case CalpontSystemCatalog::DATETIME:
+    case CalpontSystemCatalog::TIMESTAMP:
+    case CalpontSystemCatalog::DATE:
+    case CalpontSystemCatalog::TIME:
     {
-        case CalpontSystemCatalog::CHAR:
-        case CalpontSystemCatalog::TEXT:
-        case CalpontSystemCatalog::VARCHAR:
-        case CalpontSystemCatalog::DATETIME:
-        case CalpontSystemCatalog::TIMESTAMP:
-        case CalpontSystemCatalog::DATE:
-        case CalpontSystemCatalog::TIME:
-        {
-            const string& arg = parm[0]->data()->getStrVal(row, isNull);
-            scoped_array<char> hexPtr(new char[strlen(arg.c_str()) * 2 + 1]);
-            octet2hex(hexPtr.get(), arg.c_str(), strlen(arg.c_str()));
-            return string(hexPtr.get(), strlen(arg.c_str()) * 2);
-        }
-
-        case CalpontSystemCatalog::DOUBLE:
-        case CalpontSystemCatalog::FLOAT:
-        case CalpontSystemCatalog::DECIMAL:
-        case CalpontSystemCatalog::UDECIMAL:
-        {
-            /* Return hex of unsigned longlong value */
-            double val = parm[0]->data()->getDoubleVal(row, isNull);
-
-            if ((val <= (double) numeric_limits<int64_t>::min()) ||
-                    (val >= (double) numeric_limits<int64_t>::max()))
-                dec =  ~(int64_t) 0;
-            else
-                dec = (uint64_t) (val + (val > 0 ? 0.5 : -0.5));
-
-            retval = helpers::convNumToStr(dec, ans, 16);
-            break;
-        }
-
-        case CalpontSystemCatalog::LONGDOUBLE:
-        {
-            char buf[256];
-            long double val = parm[0]->data()->getLongDoubleVal(row, isNull);
-
-#ifdef _MSC_VER
-            sprintf(buf, "%llA", val);
-
-#else
-            sprintf(buf, "%LA", val);
-#endif
-            retval = buf;
-            break;
-        }
-
-        case CalpontSystemCatalog::VARBINARY:
-        case CalpontSystemCatalog::BLOB:
-        {
-            const string& arg = parm[0]->data()->getStrVal(row, isNull);
-            uint64_t hexLen = arg.size() * 2;
-            scoped_array<char> hexPtr(new char[hexLen + 1]);  // "+ 1" for the last \0
-            octet2hex(hexPtr.get(), arg.data(), arg.size());
-            return string(hexPtr.get(), hexLen);
-        }
-
-        default:
-        {
-            dec = (uint64_t)parm[0]->data()->getIntVal(row, isNull);
-            retval = helpers::convNumToStr(dec, ans, 16);
-
-            if (retval.length() > (uint32_t)ct.colWidth)
-                retval = retval.substr(retval.length() - ct.colWidth, ct.colWidth);
-        }
+      const string& arg = parm[0]->data()->getStrVal(row, isNull);
+      scoped_array<char> hexPtr(new char[strlen(arg.c_str()) * 2 + 1]);
+      octet2hex(hexPtr.get(), arg.c_str(), strlen(arg.c_str()));
+      return string(hexPtr.get(), strlen(arg.c_str()) * 2);
     }
 
-    return retval;
+    case CalpontSystemCatalog::DOUBLE:
+    case CalpontSystemCatalog::FLOAT:
+    case CalpontSystemCatalog::DECIMAL:
+    case CalpontSystemCatalog::UDECIMAL:
+    {
+      /* Return hex of unsigned longlong value */
+      double val = parm[0]->data()->getDoubleVal(row, isNull);
+
+      if ((val <= (double)numeric_limits<int64_t>::min()) || (val >= (double)numeric_limits<int64_t>::max()))
+        dec = ~(int64_t)0;
+      else
+        dec = (uint64_t)(val + (val > 0 ? 0.5 : -0.5));
+
+      retval = helpers::convNumToStr(dec, ans, 16);
+      break;
+    }
+
+    case CalpontSystemCatalog::LONGDOUBLE:
+    {
+      char buf[256];
+      long double val = parm[0]->data()->getLongDoubleVal(row, isNull);
+
+#ifdef _MSC_VER
+      sprintf(buf, "%llA", val);
+
+#else
+      sprintf(buf, "%LA", val);
+#endif
+      retval = buf;
+      break;
+    }
+
+    case CalpontSystemCatalog::VARBINARY:
+    case CalpontSystemCatalog::BLOB:
+    {
+      const string& arg = parm[0]->data()->getStrVal(row, isNull);
+      uint64_t hexLen = arg.size() * 2;
+      scoped_array<char> hexPtr(new char[hexLen + 1]);  // "+ 1" for the last \0
+      octet2hex(hexPtr.get(), arg.data(), arg.size());
+      return string(hexPtr.get(), hexLen);
+    }
+
+    default:
+    {
+      dec = (uint64_t)parm[0]->data()->getIntVal(row, isNull);
+      retval = helpers::convNumToStr(dec, ans, 16);
+
+      if (retval.length() > (uint32_t)ct.colWidth)
+        retval = retval.substr(retval.length() - ct.colWidth, ct.colWidth);
+    }
+  }
+
+  return retval;
 }
 
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:

@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: serversocket.h 3495 2013-01-21 14:09:51Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: serversocket.h 3495 2013-01-21 14:09:51Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 /** @file */
 #ifndef MESSAGEQCPP_SERVERSOCKET_H
 #define MESSAGEQCPP_SERVERSOCKET_H
@@ -47,129 +47,129 @@ class SocketParms;
  */
 class ServerSocket
 {
-public:
+ public:
+  /** ctor
+   *
+   */
+  explicit ServerSocket(Socket* socket = 0) : fSocket(socket)
+  {
+  }
 
-    /** ctor
-     *
-     */
-    explicit ServerSocket(Socket* socket = 0) : fSocket(socket) {}
+  /** dtor
+   *
+   */
+  virtual ~ServerSocket()
+  {
+    delete fSocket;
+  }
 
-    /** dtor
-     *
-     */
-    virtual ~ServerSocket()
-    {
-        delete fSocket;
-    }
+  /** bind to an port
+   *
+   * bind this ServerSocket to the address/port specified in serv_addr
+   */
+  inline virtual void bind(const struct sockaddr* serv_addr);
 
-    /** bind to an port
-     *
-     * bind this ServerSocket to the address/port specified in serv_addr
-     */
-    inline virtual void bind(const struct sockaddr* serv_addr);
+  /** setup to listen for incoming connections
+   *
+   */
+  inline virtual void listen(int backlog = 5);
 
-    /** setup to listen for incoming connections
-     *
-     */
-    inline virtual void listen(int backlog = 5);
+  /** accept an incoming connection
+   *
+   * accepts a new incoming connection and returns an IOSocket to communicate over
+   */
+  inline virtual const IOSocket accept(const struct timespec* timeout = 0);
 
-    /** accept an incoming connection
-     *
-     * accepts a new incoming connection and returns an IOSocket to communicate over
-     */
-    inline virtual const IOSocket accept(const struct timespec* timeout = 0);
+  /** open the socket
+   *
+   */
+  inline virtual void open();
 
-    /** open the socket
-     *
-     */
-    inline virtual void open();
+  /** close the socket
+   *
+   */
+  inline virtual void close();
 
-    /** close the socket
-     *
-     */
-    inline virtual void close();
+  /** test if the socket is open
+   *
+   */
+  inline virtual bool isOpen() const;
 
-    /** test if the socket is open
-     *
-     */
-    inline virtual bool isOpen() const;
+  /** get the socket params
+   *
+   */
+  inline virtual const SocketParms socketParms() const;
 
-    /** get the socket params
-     *
-     */
-    inline virtual const SocketParms socketParms() const;
+  /** set the socket params
+   *
+   */
+  inline virtual void socketParms(const SocketParms& socketParms);
 
-    /** set the socket params
-     *
-     */
-    inline virtual void socketParms(const SocketParms& socketParms);
+  /** set the socket implementation
+   *
+   * Install a socket implementation that meets the Socket interface
+   */
+  inline virtual void setSocketImpl(Socket* socket);
 
-    /** set the socket implementation
-     *
-     * Install a socket implementation that meets the Socket interface
-     */
-    inline virtual void setSocketImpl(Socket* socket);
+  /** set the socket sync proto
+   *
+   */
+  inline virtual void syncProto(bool use);
 
-    /** set the socket sync proto
-     *
-     */
-    inline virtual void syncProto(bool use);
+  /*
+   * allow test suite access to private data for OOB test
+   */
+  friend class ::MessageQTestSuite;
 
-    /*
-     * allow test suite access to private data for OOB test
-     */
-    friend class ::MessageQTestSuite;
+ private:
+  ServerSocket(const ServerSocket& rhs);
+  ServerSocket& operator=(const ServerSocket& rhs);
 
-private:
-    ServerSocket(const ServerSocket& rhs);
-    ServerSocket& operator=(const ServerSocket& rhs);
-
-    Socket* fSocket;
+  Socket* fSocket;
 };
 
 inline void ServerSocket::bind(const struct sockaddr* serv_addr)
 {
-    fSocket->bind(serv_addr);
+  fSocket->bind(serv_addr);
 }
 inline void ServerSocket::listen(int backlog)
 {
-    fSocket->listen(backlog);
+  fSocket->listen(backlog);
 }
 inline const IOSocket ServerSocket::accept(const struct timespec* timeout)
 {
-    return fSocket->accept(timeout);
+  return fSocket->accept(timeout);
 }
 inline void ServerSocket::open()
 {
-    fSocket->open();
+  fSocket->open();
 }
 inline void ServerSocket::close()
 {
-    fSocket->close();
+  fSocket->close();
 }
 inline bool ServerSocket::isOpen() const
 {
-    return fSocket->isOpen();
+  return fSocket->isOpen();
 }
 inline const SocketParms ServerSocket::socketParms() const
 {
-    return fSocket->socketParms();
+  return fSocket->socketParms();
 }
 inline void ServerSocket::socketParms(const SocketParms& socketParms)
 {
-    fSocket->socketParms(socketParms);
+  fSocket->socketParms(socketParms);
 }
 inline void ServerSocket::setSocketImpl(Socket* socket)
 {
-    delete fSocket;
-    fSocket = socket;
+  delete fSocket;
+  fSocket = socket;
 }
 inline void ServerSocket::syncProto(bool use)
 {
-    fSocket->syncProto(use);
+  fSocket->syncProto(use);
 }
 
-} //namespace messageqcpp
+}  // namespace messageqcpp
 
-#endif //MESSAGEQCPP_SERVERSOCKET_H
-
+#endif  // MESSAGEQCPP_SERVERSOCKET_H

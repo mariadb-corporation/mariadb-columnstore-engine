@@ -31,47 +31,42 @@ using namespace std;
 
 namespace primitives
 {
-
-PrimitiveProcessor::PrimitiveProcessor(int debugLevel) :
-    fDebugLevel(debugLevel), fStatsPtr(NULL), logicalBlockMode(false)
+PrimitiveProcessor::PrimitiveProcessor(int debugLevel)
+ : fDebugLevel(debugLevel), fStatsPtr(NULL), logicalBlockMode(false)
 {
+  // 	This does
+  //	masks[11] = { 0, 1, 3, 7, 15, 31, 63, 127, 255, 511, 1023 };
+  int acc, i;
 
-// 	This does
-//	masks[11] = { 0, 1, 3, 7, 15, 31, 63, 127, 255, 511, 1023 };
-    int acc, i;
-
-    for (acc = 0, i = 0; i < 11; i++)
-    {
-        masks[i] = acc;
-        acc = acc << 1 | 1;
-    }
-
+  for (acc = 0, i = 0; i < 11; i++)
+  {
+    masks[i] = acc;
+    acc = acc << 1 | 1;
+  }
 }
 
 PrimitiveProcessor::~PrimitiveProcessor()
 {
 }
 
-
 void PrimitiveProcessor::setParsedColumnFilter(boost::shared_ptr<ParsedColumnFilter> pcf)
 {
-    parsedColumnFilter = pcf;
+  parsedColumnFilter = pcf;
 }
 
-ParsedColumnFilter::ParsedColumnFilter() : columnFilterMode(ALWAYS_TRUE), mFilterCount(0) 
+ParsedColumnFilter::ParsedColumnFilter() : columnFilterMode(ALWAYS_TRUE), mFilterCount(0)
 {
 }
 
 ParsedColumnFilter::ParsedColumnFilter(const uint32_t aFilterCount, const int BOP)
-    : columnFilterMode(ALWAYS_TRUE), mFilterCount(aFilterCount), mBOP(BOP)
+ : columnFilterMode(ALWAYS_TRUE), mFilterCount(aFilterCount), mBOP(BOP)
 {
-    prestored_rfs.reset(new uint8_t[mFilterCount]);
-    prestored_cops.reset(new uint8_t[mFilterCount]);
+  prestored_rfs.reset(new uint8_t[mFilterCount]);
+  prestored_cops.reset(new uint8_t[mFilterCount]);
 }
 
 ParsedColumnFilter::~ParsedColumnFilter()
 {
 }
 
-} // namespace primitives
-
+}  // namespace primitives

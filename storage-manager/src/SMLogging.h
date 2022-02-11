@@ -15,7 +15,6 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-
 #ifndef SM_LOGGING_H_
 #define SM_LOGGING_H_
 
@@ -24,23 +23,19 @@
 
 namespace storagemanager
 {
-
 class SMLogging
 {
-    public:
+ public:
+  static SMLogging* get();
+  ~SMLogging();
 
-        static SMLogging *get();
-        ~SMLogging();
+  void log(int priority, const char* format, ...);
 
-        void log(int priority, const char *format, ...);
-
-    private:
-        SMLogging();
-        //SMConfig&  config;
-
+ private:
+  SMLogging();
+  // SMConfig&  config;
 };
 
-
-}
+}  // namespace storagemanager
 
 #endif

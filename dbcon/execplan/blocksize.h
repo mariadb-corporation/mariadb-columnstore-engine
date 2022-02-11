@@ -29,4 +29,3 @@ const uint64_t BLOCK_SIZE = 8192;
 const uint64_t LOGICAL_BLOCK_RIDS = BLOCK_SIZE;
 
 #endif
-

@@ -25,140 +25,130 @@ using namespace messageqcpp;
 
 namespace primitiveprocessor
 {
+Command::Command(CommandType c) : cmdType(c), fFilterFeeder(NOT_FEEDER)
+{
+}
 
-Command::Command(CommandType c) : cmdType(c), fFilterFeeder(NOT_FEEDER) { }
-
-Command::~Command() { };
+Command::~Command(){};
 
 void Command::createCommand(ByteStream& bs)
 {
-    bs >> OID;
-    bs >> tupleKey;
-    bs >> queryUuid;
-    bs >> stepUuid;
+  bs >> OID;
+  bs >> tupleKey;
+  bs >> queryUuid;
+  bs >> stepUuid;
 }
 
-void Command::resetCommand(ByteStream& bs) { };
+void Command::resetCommand(ByteStream& bs){};
 
-void Command::setMakeAbsRids(bool) { }
+void Command::setMakeAbsRids(bool)
+{
+}
 
 Command* Command::makeCommand(ByteStream& bs, CommandType* type, vector<SCommand>& cmds)
 {
-    Command* ret;
-    uint8_t tmp8;
+  Command* ret;
+  uint8_t tmp8;
 
-    bs.peek(tmp8);
-    *type = (CommandType) tmp8;
+  bs.peek(tmp8);
+  *type = (CommandType)tmp8;
 
-    switch (*type)
-    {
-        case COLUMN_COMMAND:
-            return ColumnCommandFabric::createCommand(bs);
-            break;
+  switch (*type)
+  {
+    case COLUMN_COMMAND: return ColumnCommandFabric::createCommand(bs); break;
 
-        case DICT_STEP:
-            ret = new DictStep();
-            break;
+    case DICT_STEP: ret = new DictStep(); break;
 
-        case PASS_THRU:
-            ret = new PassThruCommand();
-            break;
+    case PASS_THRU: ret = new PassThruCommand(); break;
 
-        case RID_TO_STRING:
-            ret = new RTSCommand();
-            break;
+    case RID_TO_STRING: ret = new RTSCommand(); break;
 
-        case FILTER_COMMAND:
-            ret = FilterCommand::makeFilterCommand(bs, cmds);
-            break;
+    case FILTER_COMMAND: ret = FilterCommand::makeFilterCommand(bs, cmds); break;
 
-        case PSEUDOCOLUMN:
-            ret = new PseudoCC();
-            break;
+    case PSEUDOCOLUMN: ret = new PseudoCC(); break;
 
-        default:
-            throw logic_error("Command::makeCommand(): can't deserialize this bytestream");
-    };
+    default: throw logic_error("Command::makeCommand(): can't deserialize this bytestream");
+  };
 
-    ret->createCommand(bs);
+  ret->createCommand(bs);
 
-    return ret;
+  return ret;
 }
 
 void Command::setBatchPrimitiveProcessor(BatchPrimitiveProcessor* b)
 {
-    bpp = b;
+  bpp = b;
 }
 
 void Command::copyRidsForFilterCmd()
 {
-    if (fFilterFeeder == LEFT_FEEDER)
-    {
-        bpp->fFiltRidCount[0] = bpp->ridCount;
+  if (fFilterFeeder == LEFT_FEEDER)
+  {
+    bpp->fFiltRidCount[0] = bpp->ridCount;
 
-        for (uint64_t i = 0; i < bpp->ridCount; i++)
-            bpp->fFiltCmdRids[0][i] = bpp->relRids[i];
-    }
-    else // if (fFilterFeeder == RIGHT_FEEDER)
-    {
-        bpp->fFiltRidCount[1] = bpp->ridCount;
+    for (uint64_t i = 0; i < bpp->ridCount; i++)
+      bpp->fFiltCmdRids[0][i] = bpp->relRids[i];
+  }
+  else  // if (fFilterFeeder == RIGHT_FEEDER)
+  {
+    bpp->fFiltRidCount[1] = bpp->ridCount;
 
-        for (uint64_t i = 0; i < bpp->ridCount; i++)
-            bpp->fFiltCmdRids[1][i] = bpp->relRids[i];
-    }
+    for (uint64_t i = 0; i < bpp->ridCount; i++)
+      bpp->fFiltCmdRids[1][i] = bpp->relRids[i];
+  }
 }
 
 bool Command::operator==(const Command& c) const
 {
-    const type_info& cType = typeid(c);
+  const type_info& cType = typeid(c);
 
-    if (cType != typeid(*this))
-        return false;
+  if (cType != typeid(*this))
+    return false;
 
-    if (cType == typeid(ColumnCommand))
-    {
-        const ColumnCommand* cc = dynamic_cast<const ColumnCommand*>(&c);
-        const ColumnCommand* t = dynamic_cast<const ColumnCommand*>(this);
+  if (cType == typeid(ColumnCommand))
+  {
+    const ColumnCommand* cc = dynamic_cast<const ColumnCommand*>(&c);
+    const ColumnCommand* t = dynamic_cast<const ColumnCommand*>(this);
 
-        if (*cc != *t)
-            return false;
-    }
-    else if (cType == typeid(DictStep))
-    {
-        const DictStep* ds = dynamic_cast<const DictStep*>(&c);
-        const DictStep* t = dynamic_cast<const DictStep*>(this);
+    if (*cc != *t)
+      return false;
+  }
+  else if (cType == typeid(DictStep))
+  {
+    const DictStep* ds = dynamic_cast<const DictStep*>(&c);
+    const DictStep* t = dynamic_cast<const DictStep*>(this);
 
-        if (*ds != *t)
-            return false;
-    }
-    else if (cType == typeid(PassThruCommand))
-    {
-        const PassThruCommand* pt = dynamic_cast<const PassThruCommand*>(&c);
-        const PassThruCommand* t = dynamic_cast<const PassThruCommand*>(this);
+    if (*ds != *t)
+      return false;
+  }
+  else if (cType == typeid(PassThruCommand))
+  {
+    const PassThruCommand* pt = dynamic_cast<const PassThruCommand*>(&c);
+    const PassThruCommand* t = dynamic_cast<const PassThruCommand*>(this);
 
-        if (*pt != *t)
-            return false;
-    }
-    else if (cType == typeid(RTSCommand))
-    {
-        const RTSCommand* rts = dynamic_cast<const RTSCommand*>(&c);
-        const RTSCommand* t = dynamic_cast<const RTSCommand*>(this);
+    if (*pt != *t)
+      return false;
+  }
+  else if (cType == typeid(RTSCommand))
+  {
+    const RTSCommand* rts = dynamic_cast<const RTSCommand*>(&c);
+    const RTSCommand* t = dynamic_cast<const RTSCommand*>(this);
 
-        if (*rts != *t)
-            return false;
-    }
-    else if (cType == typeid(FilterCommand))
-    {
-        const FilterCommand* fc = dynamic_cast<const FilterCommand*>(&c);
-        const FilterCommand* t = dynamic_cast<const FilterCommand*>(this);
+    if (*rts != *t)
+      return false;
+  }
+  else if (cType == typeid(FilterCommand))
+  {
+    const FilterCommand* fc = dynamic_cast<const FilterCommand*>(&c);
+    const FilterCommand* t = dynamic_cast<const FilterCommand*>(this);
 
-        if (*fc != *t)
-            return false;
-    }
-    else
-        cerr << "unknown Command type\n";
+    if (*fc != *t)
+      return false;
+  }
+  else
+    cerr << "unknown Command type\n";
 
-    return true;
+  return true;
 }
 
-}
+}  // namespace primitiveprocessor

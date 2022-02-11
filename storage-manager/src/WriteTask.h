@@ -15,8 +15,6 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-
-
 #ifndef WRITETASK_H_
 #define WRITETASK_H_
 
@@ -24,18 +22,17 @@
 
 namespace storagemanager
 {
-
 class WriteTask : public PosixTask
 {
-    public:
-        WriteTask(int sock, uint length);
-        virtual ~WriteTask();
-        
-        bool run();
-    
-    private:
-        WriteTask();
+ public:
+  WriteTask(int sock, uint length);
+  virtual ~WriteTask();
+
+  bool run();
+
+ private:
+  WriteTask();
 };
 
-}
+}  // namespace storagemanager
 #endif

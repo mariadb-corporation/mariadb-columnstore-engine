@@ -34,18 +34,16 @@ namespace ddlpackageprocessor
  */
 class DropIndexProcessor : public DDLPackageProcessor
 {
-public:
-    /** @brief process a drop index statement
-     *
-     * @param dropIndexStmt the drop index statement
-     */
-    DDLResult processPackage(ddlpackage::DropIndexStatement& dropIndexStmt);
+ public:
+  /** @brief process a drop index statement
+   *
+   * @param dropIndexStmt the drop index statement
+   */
+  DDLResult processPackage(ddlpackage::DropIndexStatement& dropIndexStmt);
 
-protected:
-
-private:
-
+ protected:
+ private:
 };
 
-}                                                 //namespace ddlpackageprocessor
-#endif                                            //DROPINDEXPROCESSOR_H
+}  // namespace ddlpackageprocessor
+#endif  // DROPINDEXPROCESSOR_H

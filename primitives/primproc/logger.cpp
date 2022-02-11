@@ -31,58 +31,52 @@ using namespace logging;
 
 namespace primitiveprocessor
 {
-
-Logger::Logger() :
-    fMl1(LoggingID(28))
+Logger::Logger() : fMl1(LoggingID(28))
 {
-    fMsgMap[logging::M0000] = Message(logging::M0000);
-    fMsgMap[logging::M0016] = Message(logging::M0016);
-    fMsgMap[logging::M0045] = Message(logging::M0045);
-    fMsgMap[logging::M0053] = Message(logging::M0053);
-    fMsgMap[logging::M0058] = Message(logging::M0058);
-    fMsgMap[logging::M0061] = Message(logging::M0061);
-    fMsgMap[logging::M0069] = Message(logging::M0069);
-    fMsgMap[logging::M0070] = Message(logging::M0070);
-    fMsgMap[logging::M0077] = Message(logging::M0077);
+  fMsgMap[logging::M0000] = Message(logging::M0000);
+  fMsgMap[logging::M0016] = Message(logging::M0016);
+  fMsgMap[logging::M0045] = Message(logging::M0045);
+  fMsgMap[logging::M0053] = Message(logging::M0053);
+  fMsgMap[logging::M0058] = Message(logging::M0058);
+  fMsgMap[logging::M0061] = Message(logging::M0061);
+  fMsgMap[logging::M0069] = Message(logging::M0069);
+  fMsgMap[logging::M0070] = Message(logging::M0070);
+  fMsgMap[logging::M0077] = Message(logging::M0077);
 }
 
-void Logger::logMessage(const Message::MessageID mid,
-                        const Message::Args& args,
-                        bool  critical)
+void Logger::logMessage(const Message::MessageID mid, const Message::Args& args, bool critical)
 {
-    mutex::scoped_lock lk(fLogLock);
-    MsgMap::iterator msgIter = fMsgMap.find(mid);
+  mutex::scoped_lock lk(fLogLock);
+  MsgMap::iterator msgIter = fMsgMap.find(mid);
 
-    if (msgIter == fMsgMap.end())
-        msgIter = fMsgMap.find(logging::M0000);
+  if (msgIter == fMsgMap.end())
+    msgIter = fMsgMap.find(logging::M0000);
 
-    msgIter->second.reset();
-    msgIter->second.format(args);
+  msgIter->second.reset();
+  msgIter->second.format(args);
 
-    if (critical)
-    {
-        fMl1.logCriticalMessage(msgIter->second);
-    }
-    else
-    {
-        fMl1.logWarningMessage(msgIter->second);
-    }
+  if (critical)
+  {
+    fMl1.logCriticalMessage(msgIter->second);
+  }
+  else
+  {
+    fMl1.logWarningMessage(msgIter->second);
+  }
 }
 
-void Logger::logInfoMessage(const Message::MessageID mid,
-                            const Message::Args& args)
+void Logger::logInfoMessage(const Message::MessageID mid, const Message::Args& args)
 {
-    mutex::scoped_lock lk(fLogLock);
-    MsgMap::iterator msgIter = fMsgMap.find(mid);
+  mutex::scoped_lock lk(fLogLock);
+  MsgMap::iterator msgIter = fMsgMap.find(mid);
 
-    if (msgIter == fMsgMap.end())
-        msgIter = fMsgMap.find(logging::M0000);
+  if (msgIter == fMsgMap.end())
+    msgIter = fMsgMap.find(logging::M0000);
 
-    msgIter->second.reset();
-    msgIter->second.format(args);
+  msgIter->second.reset();
+  msgIter->second.format(args);
 
-    fMl1.logInfoMessage(msgIter->second);
+  fMl1.logInfoMessage(msgIter->second);
 }
 
-}
-
+}  // namespace primitiveprocessor

@@ -27,15 +27,12 @@
 
 class SystemCatalog
 {
-public:
-    void build();
-    void remove();
+ public:
+  void build();
+  void remove();
 
-private:
-    WriteEngine::WriteEngineWrapper fWriteEngine;
-
+ private:
+  WriteEngine::WriteEngineWrapper fWriteEngine;
 };
 
-
-
-#endif //SYSTEMCATLOG_H
+#endif  // SYSTEMCATLOG_H

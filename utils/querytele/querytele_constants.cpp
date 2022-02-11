@@ -8,12 +8,10 @@
 
 namespace querytele
 {
-
 const queryteleConstants g_querytele_constants;
 
 queryteleConstants::queryteleConstants()
 {
 }
 
-} // namespace
-
+}  // namespace querytele

@@ -50,54 +50,51 @@ namespace primitiveprocessor
 {
 class BPPSeeder : public threadpool::PriorityThreadPool::Functor
 {
-public:
-    BPPSeeder(const messageqcpp::SBS&,
-              const SP_UM_MUTEX& wLock,
-              const SP_UM_IOSOCK& ios,
-              const int pmThreads,
-              const bool trace = false);
-    BPPSeeder(const BPPSeeder& b);
+ public:
+  BPPSeeder(const messageqcpp::SBS&, const SP_UM_MUTEX& wLock, const SP_UM_IOSOCK& ios, const int pmThreads,
+            const bool trace = false);
+  BPPSeeder(const BPPSeeder& b);
 
-    virtual ~BPPSeeder();
+  virtual ~BPPSeeder();
 
-    int operator()();
+  int operator()();
 
-    bool isSysCat();
-    boost::shared_ptr<std::ofstream> spof;
+  bool isSysCat();
+  boost::shared_ptr<std::ofstream> spof;
 
-    uint32_t getID();
+  uint32_t getID();
 
-    void priority(uint32_t p)
-    {
-        _priority = p;
-    }
-    uint32_t priority()
-    {
-        return _priority;
-    }
+  void priority(uint32_t p)
+  {
+    _priority = p;
+  }
+  uint32_t priority()
+  {
+    return _priority;
+  }
 
-private:
-    BPPSeeder();
-    void catchHandler(const std::string& s, uint32_t uniqueID, uint32_t step);
-    void sendErrorMsg(uint32_t id, uint16_t status, uint32_t step);
-    void flushSyscatOIDs();
+ private:
+  BPPSeeder();
+  void catchHandler(const std::string& s, uint32_t uniqueID, uint32_t step);
+  void sendErrorMsg(uint32_t id, uint16_t status, uint32_t step);
+  void flushSyscatOIDs();
 
-    messageqcpp::SBS bs;
-    SP_UM_MUTEX  writelock;
-    SP_UM_IOSOCK sock;
-    int fPMThreads;
-    bool fTrace;
+  messageqcpp::SBS bs;
+  SP_UM_MUTEX writelock;
+  SP_UM_IOSOCK sock;
+  int fPMThreads;
+  bool fTrace;
 
-    /* To support reentrancy */
-    uint32_t uniqueID, sessionID, stepID, failCount;
-    boost::shared_ptr<BatchPrimitiveProcessor> bpp;
-    SBPPV bppv;
-    bool firstRun;
-    boost::posix_time::ptime dieTime;
+  /* To support reentrancy */
+  uint32_t uniqueID, sessionID, stepID, failCount;
+  boost::shared_ptr<BatchPrimitiveProcessor> bpp;
+  SBPPV bppv;
+  bool firstRun;
+  boost::posix_time::ptime dieTime;
 
-    uint32_t _priority;
+  uint32_t _priority;
 };
 
-};
+};  // namespace primitiveprocessor
 
 #endif

@@ -27,26 +27,26 @@
 
 void fatalHandler(int sig)
 {
-    char filename[128];
-    void* addrs[128];
-    snprintf(filename, 128, "%s/trace/%s.%d.log", MCSLOGDIR, program_invocation_short_name, getpid());
-    FILE* logfile = fopen(filename, "w");
-    char s[30];
-    struct tm tim;
-    time_t now;
-    now = time(NULL);
-    tim = *(localtime(&now));
-    strftime(s, 30, "%F %T", &tim);
-    fprintf(logfile, "Date/time: %s\n", s);
-    fprintf(logfile, "Signal: %d\n\n", sig);
-    fflush(logfile);
-    int fd = fileno(logfile);
-    int count = backtrace(addrs, sizeof(addrs) / sizeof(addrs[0]));
-    backtrace_symbols_fd(addrs, count, fd);
-    fclose(logfile);
-    struct sigaction sigact;
-    memset(&sigact, 0, sizeof(sigact));
-    sigact.sa_handler = SIG_DFL;
-    sigaction(sig, &sigact, NULL);
-    raise(sig);
+  char filename[128];
+  void* addrs[128];
+  snprintf(filename, 128, "%s/trace/%s.%d.log", MCSLOGDIR, program_invocation_short_name, getpid());
+  FILE* logfile = fopen(filename, "w");
+  char s[30];
+  struct tm tim;
+  time_t now;
+  now = time(NULL);
+  tim = *(localtime(&now));
+  strftime(s, 30, "%F %T", &tim);
+  fprintf(logfile, "Date/time: %s\n", s);
+  fprintf(logfile, "Signal: %d\n\n", sig);
+  fflush(logfile);
+  int fd = fileno(logfile);
+  int count = backtrace(addrs, sizeof(addrs) / sizeof(addrs[0]));
+  backtrace_symbols_fd(addrs, count, fd);
+  fclose(logfile);
+  struct sigaction sigact;
+  memset(&sigact, 0, sizeof(sigact));
+  sigact.sa_handler = SIG_DFL;
+  sigaction(sig, &sigact, NULL);
+  raise(sig);
 }

@@ -37,53 +37,52 @@
 
 namespace primitiveprocessor
 {
-
-
 class RTSCommand : public Command
 {
-public:
-    RTSCommand();
-    virtual ~RTSCommand();
+ public:
+  RTSCommand();
+  virtual ~RTSCommand();
 
-    void execute();
-    void project();
-    void projectIntoRowGroup(rowgroup::RowGroup& rg, uint32_t col);
-    uint64_t getLBID();
-    void nextLBID();
-    void createCommand(messageqcpp::ByteStream&);
-    void resetCommand(messageqcpp::ByteStream&);
-    SCommand duplicate();
-    bool operator==(const RTSCommand&) const;
-    bool operator!=(const RTSCommand&) const;
+  void execute();
+  void project();
+  void projectIntoRowGroup(rowgroup::RowGroup& rg, uint32_t col);
+  uint64_t getLBID();
+  void nextLBID();
+  void createCommand(messageqcpp::ByteStream&);
+  void resetCommand(messageqcpp::ByteStream&);
+  SCommand duplicate();
+  bool operator==(const RTSCommand&) const;
+  bool operator!=(const RTSCommand&) const;
 
-    void setBatchPrimitiveProcessor(BatchPrimitiveProcessor*);
+  void setBatchPrimitiveProcessor(BatchPrimitiveProcessor*);
 
-    /* Put bootstrap code here (ie, build the template primitive msg) */
-    void prep(int8_t outputType, bool makeAbsRids);
-    uint8_t isPassThru()
-    {
-        return passThru;
-    }
-    void setAbsNull(bool a = true)
-    {
-        absNull = a;
-    }
-    void getLBIDList(uint32_t loopCount, std::vector<int64_t>* lbids);
+  /* Put bootstrap code here (ie, build the template primitive msg) */
+  void prep(int8_t outputType, bool makeAbsRids);
+  uint8_t isPassThru()
+  {
+    return passThru;
+  }
+  void setAbsNull(bool a = true)
+  {
+    absNull = a;
+  }
+  void getLBIDList(uint32_t loopCount, std::vector<int64_t>* lbids);
 
-    //TODO: do we need to reference either col or dict?
-    int getCompType() const
-    {
-        return dict.getCompType();
-    }
-private:
-    RTSCommand(const RTSCommand&);
+  // TODO: do we need to reference either col or dict?
+  int getCompType() const
+  {
+    return dict.getCompType();
+  }
 
-    ColumnCommandUniquePtr col;
-    DictStep dict;
-    uint8_t passThru;
-    bool absNull;
+ private:
+  RTSCommand(const RTSCommand&);
+
+  ColumnCommandUniquePtr col;
+  DictStep dict;
+  uint8_t passThru;
+  bool absNull;
 };
 
-}
+}  // namespace primitiveprocessor
 
 #endif

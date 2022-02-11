@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id$
-*
-*   covar_samp.h
-***********************************************************************/
+ *   $Id$
+ *
+ *   covar_samp.h
+ ***********************************************************************/
 
 /**
  * Columnstore interface for for the covar_samp function
@@ -52,35 +52,32 @@
 
 namespace mcsv1sdk
 {
-
 // Return the covar_samp value of the dataset
 
-class covar_samp : public  mcsv1_UDAF
+class covar_samp : public mcsv1_UDAF
 {
-public:
-    // Defaults OK
-    covar_samp() : mcsv1_UDAF() {};
-    virtual ~covar_samp() {};
+ public:
+  // Defaults OK
+  covar_samp() : mcsv1_UDAF(){};
+  virtual ~covar_samp(){};
 
-    virtual ReturnCode init(mcsv1Context* context,
-                            ColumnDatum* colTypes);
+  virtual ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes);
 
-    virtual ReturnCode reset(mcsv1Context* context);
+  virtual ReturnCode reset(mcsv1Context* context);
 
-    virtual ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn);
+  virtual ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn);
 
-    virtual ReturnCode subEvaluate(mcsv1Context* context, const UserData* valIn);
+  virtual ReturnCode subEvaluate(mcsv1Context* context, const UserData* valIn);
 
-    virtual ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut);
+  virtual ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut);
 
-    virtual ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
+  virtual ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
 
-protected:
+ protected:
 };
 
-};  // namespace
+};  // namespace mcsv1sdk
 
 #undef EXPORT
 
-#endif // HEADER_covar_samp.h
-
+#endif  // HEADER_covar_samp.h

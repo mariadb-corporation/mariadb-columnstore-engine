@@ -26,41 +26,35 @@ using namespace rowgroup;
 
 namespace funcexp
 {
-
-CalpontSystemCatalog::ColType Func_space::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
+CalpontSystemCatalog::ColType Func_space::operationType(FunctionParm& fp,
+                                                        CalpontSystemCatalog::ColType& resultType)
 {
-    return resultType;
+  return resultType;
 }
 
-std::string Func_space::getStrVal(rowgroup::Row& row,
-                                  FunctionParm& fp,
-                                  bool& isNull,
+std::string Func_space::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                   execplan::CalpontSystemCatalog::ColType& op_ct)
 {
+  CalpontSystemCatalog::ColDataType ct = fp[0]->data()->resultType().colDataType;
 
-    CalpontSystemCatalog::ColDataType ct = fp[0]->data()->resultType().colDataType;
+  // Int representation of temporal types can be a very large value,
+  // so exit early if this is the case
+  if (ct == CalpontSystemCatalog::DATE || ct == CalpontSystemCatalog::DATETIME ||
+      ct == CalpontSystemCatalog::TIMESTAMP || ct == CalpontSystemCatalog::TIME)
+  {
+    isNull = true;
+    return "";
+  }
 
-    // Int representation of temporal types can be a very large value,
-    // so exit early if this is the case
-    if (ct == CalpontSystemCatalog::DATE ||
-        ct == CalpontSystemCatalog::DATETIME ||
-        ct == CalpontSystemCatalog::TIMESTAMP ||
-        ct == CalpontSystemCatalog::TIME)
-    {
-        isNull = true;
-        return "";
-    }
+  int64_t count = fp[0]->data()->getIntVal(row, isNull);
 
-    int64_t count = fp[0]->data()->getIntVal(row, isNull);
+  if (isNull || count < 1)
+    return "";
 
-    if (isNull || count < 1)
-        return "";
+  string result(count, ' ');
 
-    string result(count, ' ');
-
-    return result;
+  return result;
 }
 
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:
-

@@ -23,36 +23,32 @@
 
 namespace messageqcpp
 {
-
-
 struct ClientObject
 {
-    MessageQueueClient* client;
-    uint64_t lastUsed;
-    bool inUse;
+  MessageQueueClient* client;
+  uint64_t lastUsed;
+  bool inUse;
 
-    ClientObject() :
-        client(NULL),
-        lastUsed(0),
-        inUse(false)
-    {}
+  ClientObject() : client(NULL), lastUsed(0), inUse(false)
+  {
+  }
 };
 
 class MessageQueueClientPool
 {
-public:
-    static MessageQueueClient* getInstance(const std::string& module);
-        static MessageQueueClient *getInstance(const std::string &dnOrIp, uint64_t port);
-    static void releaseInstance(MessageQueueClient* client);
-    static void deleteInstance(MessageQueueClient* client);
-    static MessageQueueClient* findInPool(const std::string& search);
+ public:
+  static MessageQueueClient* getInstance(const std::string& module);
+  static MessageQueueClient* getInstance(const std::string& dnOrIp, uint64_t port);
+  static void releaseInstance(MessageQueueClient* client);
+  static void deleteInstance(MessageQueueClient* client);
+  static MessageQueueClient* findInPool(const std::string& search);
 
-private:
-    MessageQueueClientPool() { };
-    ~MessageQueueClientPool() { };
+ private:
+  MessageQueueClientPool(){};
+  ~MessageQueueClientPool(){};
 
-    static std::multimap<std::string, ClientObject*> clientMap;
+  static std::multimap<std::string, ClientObject*> clientMap;
 };
 
-}
-#endif //MESSAGEQCPP_MESSAGEQUEUECLIENT_H
+}  // namespace messageqcpp
+#endif  // MESSAGEQCPP_MESSAGEQUEUECLIENT_H

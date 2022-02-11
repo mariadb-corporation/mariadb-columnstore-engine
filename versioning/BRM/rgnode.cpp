@@ -28,7 +28,6 @@ using namespace std;
 
 namespace BRM
 {
-
 RGNode::RGNode() : _color(0)
 {
 }
@@ -39,62 +38,61 @@ RGNode::RGNode(const RGNode& n) : out(n.out), in(n.in), _color(n._color)
 
 RGNode::~RGNode()
 {
-    set<RGNode*>::iterator it;
+  set<RGNode*>::iterator it;
 
-    for (it = in.begin(); it != in.end(); )
-    {
-        (*it)->out.erase(this);
-        in.erase(it++);
-    }
+  for (it = in.begin(); it != in.end();)
+  {
+    (*it)->out.erase(this);
+    in.erase(it++);
+  }
 
-    for (it = out.begin(); it != out.end(); )
-    {
-        (*it)->in.erase(this);
-        out.erase(it++);
-    }
-
+  for (it = out.begin(); it != out.end();)
+  {
+    (*it)->in.erase(this);
+    out.erase(it++);
+  }
 }
 
 RGNode& RGNode::operator=(const RGNode& n)
 {
-    _color = n._color;
-    in = n.in;
-    out = n.out;
-    return *this;
+  _color = n._color;
+  in = n.in;
+  out = n.out;
+  return *this;
 }
 
 uint64_t RGNode::color() const
 {
-    return _color;
+  return _color;
 }
 
 void RGNode::color(uint64_t c)
 {
-    _color = c;
+  _color = c;
 }
 
 void RGNode::addOutEdge(RGNode* n)
 {
-    out.insert(n);
-    n->in.insert(this);
+  out.insert(n);
+  n->in.insert(this);
 }
 
 void RGNode::addInEdge(RGNode* n)
 {
-    in.insert(n);
-    n->out.insert(this);
+  in.insert(n);
+  n->out.insert(this);
 }
 
 void RGNode::removeOutEdge(RGNode* n)
 {
-    out.erase(n);
-    n->in.erase(this);
+  out.erase(n);
+  n->in.erase(this);
 }
 
 void RGNode::removeInEdge(RGNode* n)
 {
-    in.erase(n);
-    n->out.erase(this);
+  in.erase(n);
+  n->out.erase(this);
 }
 
-}    // namespace
+}  // namespace BRM

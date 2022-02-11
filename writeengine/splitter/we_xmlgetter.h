@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id$
-*
-*******************************************************************************/
+ * $Id$
+ *
+ *******************************************************************************/
 
 /*
  * we_xmlgetter.h
@@ -34,37 +34,31 @@
 
 namespace WriteEngine
 {
-
 class WEXmlgetter
 {
-public:
-    WEXmlgetter(std::string& ConfigName);
-    virtual ~WEXmlgetter();
+ public:
+  WEXmlgetter(std::string& ConfigName);
+  virtual ~WEXmlgetter();
 
-public:
-    //..Public methods
-    std::string getValue(const std::vector<std::string>& section) const;
-    std::string getAttribute(const std::vector<std::string>& sections,
-                             const std::string& Tag) const;
-    void getConfig(const std::string& section,
-                   const std::string& name, std::vector<std::string>& values ) const;
-    void getAttributeListForAllChildren(
-        const std::vector<std::string>& sections,
-        const std::string& attributeTag,
-      std::vector<std::string>& attributeValues);
+ public:
+  //..Public methods
+  std::string getValue(const std::vector<std::string>& section) const;
+  std::string getAttribute(const std::vector<std::string>& sections, const std::string& Tag) const;
+  void getConfig(const std::string& section, const std::string& name, std::vector<std::string>& values) const;
+  void getAttributeListForAllChildren(const std::vector<std::string>& sections,
+                                      const std::string& attributeTag,
+                                      std::vector<std::string>& attributeValues);
 
-private:
-    //..Private methods
-    const xmlNode* getNode(const xmlNode* pParent,
-                           const std::string& section)const;
-    bool getNodeAttribute(const xmlNode* pNode,
-                          const char* pTag, std::string& strVal ) const;
-    bool getNodeContent( const xmlNode* pNode, std::string& strVal) const;
+ private:
+  //..Private methods
+  const xmlNode* getNode(const xmlNode* pParent, const std::string& section) const;
+  bool getNodeAttribute(const xmlNode* pNode, const char* pTag, std::string& strVal) const;
+  bool getNodeContent(const xmlNode* pNode, std::string& strVal) const;
 
-    //..Private data members
-    std::string 	fConfigName;				// xml filename
-    xmlDocPtr      	fDoc;                    	// xml document pointer
-    xmlNode*       	fpRoot;                   	// root element
+  //..Private data members
+  std::string fConfigName;  // xml filename
+  xmlDocPtr fDoc;           // xml document pointer
+  xmlNode* fpRoot;          // root element
 };
 
 } /* namespace WriteEngine */

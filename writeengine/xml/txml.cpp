@@ -32,61 +32,54 @@ using namespace WriteEngine;
 
 class XmlTest : public CppUnit::TestFixture
 {
+  CPPUNIT_TEST_SUITE(XmlTest);
 
+  CPPUNIT_TEST(test1);
 
-    CPPUNIT_TEST_SUITE( XmlTest );
+  // XML basic testing
+  CPPUNIT_TEST(testBasicXMLRead);
+  /*CPPUNIT_TEST( testAddTreeNode );
 
+  // Index tree testing
+  CPPUNIT_TEST( testTreeGetTestbitValue );
+  */
+  CPPUNIT_TEST_SUITE_END();
 
-    CPPUNIT_TEST( test1 );
+ private:
+ public:
+  void setUp()
+  {
+  }
 
-// XML basic testing
-    CPPUNIT_TEST( testBasicXMLRead );
-    /*CPPUNIT_TEST( testAddTreeNode );
+  void tearDown()
+  {
+  }
 
-    // Index tree testing
-    CPPUNIT_TEST( testTreeGetTestbitValue );
-    */
-    CPPUNIT_TEST_SUITE_END();
+  void test1()
+  {
+  }
+  void testBasicXMLRead()
+  {
+    int rc;
+    XMLJob myJob;
 
-private:
+    rc = myJob.loadJobXmlFile("../test/bulk/job/Job_127.xml");
+    CPPUNIT_ASSERT(rc == NO_ERROR);
 
-public:
-    void setUp()
-    {
-    }
-
-    void tearDown()
-    {
-    }
-
-    void test1()
-    {
-    }
-    void testBasicXMLRead()
-    {
-        int      rc;
-        XMLJob   myJob;
-
-        rc = myJob.loadJobXmlFile( "../test/bulk/job/Job_127.xml" );
-        CPPUNIT_ASSERT( rc == NO_ERROR );
-
-        myJob.printJobInfo();
-    }
-
+    myJob.printJobInfo();
+  }
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION( XmlTest );
+CPPUNIT_TEST_SUITE_REGISTRATION(XmlTest);
 
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
-int main( int argc, char** argv)
+int main(int argc, char** argv)
 {
-    CppUnit::TextUi::TestRunner runner;
-    CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
-    runner.addTest( registry.makeTest() );
-    bool wasSuccessful = runner.run( "", false );
-    return (wasSuccessful ? 0 : 1);
+  CppUnit::TextUi::TestRunner runner;
+  CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
+  runner.addTest(registry.makeTest());
+  bool wasSuccessful = runner.run("", false);
+  return (wasSuccessful ? 0 : 1);
 }
-
-

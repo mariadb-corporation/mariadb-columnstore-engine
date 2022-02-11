@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_to_days.cpp 3923 2013-06-19 21:43:06Z bwilkinson $
-*
-*
-****************************************************************************/
+ * $Id: func_to_days.cpp 3923 2013-06-19 21:43:06Z bwilkinson $
+ *
+ *
+ ****************************************************************************/
 
 #include <cstdlib>
 #include <string>
@@ -39,121 +39,116 @@ using namespace execplan;
 #include "errorids.h"
 using namespace logging;
 
-
 namespace funcexp
 {
-
-CalpontSystemCatalog::ColType Func_to_days::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
+CalpontSystemCatalog::ColType Func_to_days::operationType(FunctionParm& fp,
+                                                          CalpontSystemCatalog::ColType& resultType)
 {
-    return resultType;
+  return resultType;
 }
 
-int64_t Func_to_days::getIntVal(rowgroup::Row& row,
-                                FunctionParm& parm,
-                                bool& isNull,
+int64_t Func_to_days::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                                 CalpontSystemCatalog::ColType& op_ct)
 {
-    CalpontSystemCatalog::ColDataType type = parm[0]->data()->resultType().colDataType;
+  CalpontSystemCatalog::ColDataType type = parm[0]->data()->resultType().colDataType;
 
-    uint32_t year = 0,
-             month = 0,
-             day = 0;
+  uint32_t year = 0, month = 0, day = 0;
 
-    dataconvert::DateTime aDateTime;
-    dataconvert::Time     aTime;
+  dataconvert::DateTime aDateTime;
+  dataconvert::Time aTime;
 
-    switch (type)
+  switch (type)
+  {
+    case execplan::CalpontSystemCatalog::DATE:
     {
-        case execplan::CalpontSystemCatalog::DATE:
-        {
-            int32_t val = parm[0]->data()->getDateIntVal(row, isNull);
-            year = (uint32_t)((val >> 16) & 0xffff);
-            month = (uint32_t)((val >> 12) & 0xf);
-            day = (uint32_t)((val >> 6) & 0x3f);
-            return helpers::calc_mysql_daynr(year, month, day);
-            break;
-        }
-
-        case execplan::CalpontSystemCatalog::DATETIME:
-        {
-            int64_t val = parm[0]->data()->getDatetimeIntVal(row, isNull);
-            year = (uint32_t)((val >> 48) & 0xffff);
-            month = (uint32_t)((val >> 44) & 0xf);
-            day = (uint32_t)((val >> 38) & 0x3f);
-
-            return helpers::calc_mysql_daynr(year, month, day);
-            break;
-        }
-
-        case execplan::CalpontSystemCatalog::TIMESTAMP:
-        {
-            dataconvert::TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
-            int64_t seconds = timestamp.second;
-	    dataconvert::MySQLTime m_time;
-	    dataconvert::gmtSecToMySQLTime(seconds, m_time, timeZone());
-            year = m_time.year;
-            month = m_time.month;
-            day = m_time.day;
-            return helpers::calc_mysql_daynr(year, month, day);
-        }
-        // Time adds to now() and then gets value
-        case CalpontSystemCatalog::TIME:
-        {
-            int64_t val;
-            aDateTime = static_cast<dataconvert::DateTime>(nowDatetime());
-            aTime = parm[0]->data()->getTimeIntVal(row, isNull);
-            aDateTime.hour = 0;
-            aDateTime.minute = 0;
-            aDateTime.second = 0;
-            aDateTime.msecond = 0;
-            aTime.day = 0;
-            val = addTime(aDateTime, aTime);
-            year = (uint32_t)((val >> 48) & 0xffff);
-            month = (uint32_t)((val >> 44) & 0xf);
-            day = (uint32_t)((val >> 38) & 0x3f);
-            return helpers::calc_mysql_daynr(year, month, day);
-            break;
-        }
-
-        case execplan::CalpontSystemCatalog::VARCHAR: // including CHAR'
-        case execplan::CalpontSystemCatalog::CHAR:
-        case execplan::CalpontSystemCatalog::TEXT:
-        {
-            const string& value = parm[0]->data()->getStrVal(row, isNull);
-            int64_t val = 0;
-
-            if ( value.size() == 10 )
-            {
-                // date type
-                val = dataconvert::DataConvert::dateToInt(value);
-                year = (uint32_t)((val >> 16) & 0xffff);
-                month = (uint32_t)((val >> 12) & 0xf);
-                day = (uint32_t)((val >> 6) & 0x3f);
-            }
-            else
-            {
-                // datetime type
-                val = dataconvert::DataConvert::datetimeToInt(value);
-                year = (uint32_t)((val >> 48) & 0xffff);
-                month = (uint32_t)((val >> 44) & 0xf);
-                day = (uint32_t)((val >> 38) & 0x3f);
-            }
-
-            return helpers::calc_mysql_daynr(year, month, day);
-            break;
-        }
-
-        default:
-        {
-            std::ostringstream oss;
-            oss << "to_days: datatype of " << execplan::colDataTypeToString(type);;
-            throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
-        }
+      int32_t val = parm[0]->data()->getDateIntVal(row, isNull);
+      year = (uint32_t)((val >> 16) & 0xffff);
+      month = (uint32_t)((val >> 12) & 0xf);
+      day = (uint32_t)((val >> 6) & 0x3f);
+      return helpers::calc_mysql_daynr(year, month, day);
+      break;
     }
 
-    return 0;
+    case execplan::CalpontSystemCatalog::DATETIME:
+    {
+      int64_t val = parm[0]->data()->getDatetimeIntVal(row, isNull);
+      year = (uint32_t)((val >> 48) & 0xffff);
+      month = (uint32_t)((val >> 44) & 0xf);
+      day = (uint32_t)((val >> 38) & 0x3f);
+
+      return helpers::calc_mysql_daynr(year, month, day);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::TIMESTAMP:
+    {
+      dataconvert::TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
+      int64_t seconds = timestamp.second;
+      dataconvert::MySQLTime m_time;
+      dataconvert::gmtSecToMySQLTime(seconds, m_time, timeZone());
+      year = m_time.year;
+      month = m_time.month;
+      day = m_time.day;
+      return helpers::calc_mysql_daynr(year, month, day);
+    }
+    // Time adds to now() and then gets value
+    case CalpontSystemCatalog::TIME:
+    {
+      int64_t val;
+      aDateTime = static_cast<dataconvert::DateTime>(nowDatetime());
+      aTime = parm[0]->data()->getTimeIntVal(row, isNull);
+      aDateTime.hour = 0;
+      aDateTime.minute = 0;
+      aDateTime.second = 0;
+      aDateTime.msecond = 0;
+      aTime.day = 0;
+      val = addTime(aDateTime, aTime);
+      year = (uint32_t)((val >> 48) & 0xffff);
+      month = (uint32_t)((val >> 44) & 0xf);
+      day = (uint32_t)((val >> 38) & 0x3f);
+      return helpers::calc_mysql_daynr(year, month, day);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::VARCHAR:  // including CHAR'
+    case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::TEXT:
+    {
+      const string& value = parm[0]->data()->getStrVal(row, isNull);
+      int64_t val = 0;
+
+      if (value.size() == 10)
+      {
+        // date type
+        val = dataconvert::DataConvert::dateToInt(value);
+        year = (uint32_t)((val >> 16) & 0xffff);
+        month = (uint32_t)((val >> 12) & 0xf);
+        day = (uint32_t)((val >> 6) & 0x3f);
+      }
+      else
+      {
+        // datetime type
+        val = dataconvert::DataConvert::datetimeToInt(value);
+        year = (uint32_t)((val >> 48) & 0xffff);
+        month = (uint32_t)((val >> 44) & 0xf);
+        day = (uint32_t)((val >> 38) & 0x3f);
+      }
+
+      return helpers::calc_mysql_daynr(year, month, day);
+      break;
+    }
+
+    default:
+    {
+      std::ostringstream oss;
+      oss << "to_days: datatype of " << execplan::colDataTypeToString(type);
+      ;
+      throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
+    }
+  }
+
+  return 0;
 }
 
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:

@@ -17,21 +17,16 @@
 
 #include "mariadb_my_sys.h"
 
-
 namespace datatypes
 {
-
-static inline CHARSET_INFO & get_charset_or_bin(int32_t charsetNumber)
+static inline CHARSET_INFO& get_charset_or_bin(int32_t charsetNumber)
 {
-    CHARSET_INFO *cs= get_charset(charsetNumber, MYF(MY_WME));
-    return cs ? *cs : my_charset_bin;
+  CHARSET_INFO* cs = get_charset(charsetNumber, MYF(MY_WME));
+  return cs ? *cs : my_charset_bin;
 }
 
-
-Charset::Charset(uint32_t charsetNumber)
-   :mCharset(&get_charset_or_bin(charsetNumber))
+Charset::Charset(uint32_t charsetNumber) : mCharset(&get_charset_or_bin(charsetNumber))
 {
 }
 
-
-}
+}  // namespace datatypes

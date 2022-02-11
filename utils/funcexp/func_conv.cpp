@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /****************************************************************************
-* $Id: func_conv.cpp 3923 2013-06-19 21:43:06Z bwilkinson $
-*
-*
-****************************************************************************/
+ * $Id: func_conv.cpp 3923 2013-06-19 21:43:06Z bwilkinson $
+ *
+ *
+ ****************************************************************************/
 
 #include <cstdlib>
 #include <string>
@@ -38,92 +38,93 @@ namespace
 {
 int64_t convStrToNum(const string& str, int base, bool unsignedFlag)
 {
-    int negative;
-    uint64_t cutoff, cutlim, i, j, save;
-    int overflow;
+  int negative;
+  uint64_t cutoff, cutlim, i, j, save;
+  int overflow;
 
-    // to skip the leading spaces.
-    for (i = 0; i < str.length() && str.c_str()[i] == ' '; i++)
-    {}
+  // to skip the leading spaces.
+  for (i = 0; i < str.length() && str.c_str()[i] == ' '; i++)
+  {
+  }
 
-    if (i == str.length())
-    {
-        return 0L;
-    }
+  if (i == str.length())
+  {
+    return 0L;
+  }
 
-    if (str.c_str()[i] == '-')
-    {
-        negative = 1;
-        ++i;
-    }
-    else if (str.c_str()[i] == '+')
-    {
-        negative = 0;
-        ++i;
-    }
+  if (str.c_str()[i] == '-')
+  {
+    negative = 1;
+    ++i;
+  }
+  else if (str.c_str()[i] == '+')
+  {
+    negative = 0;
+    ++i;
+  }
+  else
+    negative = 0;
+
+  save = i;
+
+  cutoff = (~(uint64_t)0) / (uint64_t)base;
+  cutlim = (uint32_t)((~(uint64_t)0) % (uint64_t)base);
+
+  overflow = 0;
+  j = 0;
+
+  for (; i < str.length(); i++)
+  {
+    unsigned char c = str.c_str()[i];
+
+    if (c >= '0' && c <= '9')
+      c -= '0';
+    else if (c >= 'A' && c <= 'Z')
+      c = c - 'A' + 10;
+    else if (c >= 'a' && c <= 'z')
+      c = c - 'a' + 10;
     else
-        negative = 0;
+      break;
 
-    save = i;
+    if (c >= base)
+      break;
 
-    cutoff = (~(uint64_t) 0) / (uint64_t) base;
-    cutlim = (uint32_t) ((~(uint64_t) 0) % (uint64_t) base);
-
-    overflow = 0;
-    j = 0;
-
-    for (; i < str.length(); i++)
+    if (j > cutoff || (j == cutoff && c > cutlim))
+      overflow = 1;
+    else
     {
-        unsigned char c = str.c_str()[i];
-
-        if (c >= '0' && c <= '9')
-            c -= '0';
-        else if (c >= 'A' && c <= 'Z')
-            c = c - 'A' + 10;
-        else if (c >= 'a' && c <= 'z')
-            c = c - 'a' + 10;
-        else
-            break;
-
-        if (c >= base)
-            break;
-
-        if (j > cutoff || (j == cutoff && c > cutlim))
-            overflow = 1;
-        else
-        {
-            j *= (uint64_t) base;
-            j += c;
-        }
+      j *= (uint64_t)base;
+      j += c;
     }
+  }
 
-    if (i == save)
-        return 0L;
+  if (i == save)
+    return 0L;
 
-    if (!unsignedFlag)
+  if (!unsignedFlag)
+  {
+    if (negative)
     {
-        if (negative)
-        {
-            if (j  > (uint64_t) numeric_limits<int64_t>::min())
-                overflow = 1;
-        }
-        else if (j > (uint64_t) numeric_limits<int64_t>::max())
-        {
-            overflow = 1;
-        }
+      if (j > (uint64_t)numeric_limits<int64_t>::min())
+        overflow = 1;
     }
-
-    if (overflow)
+    else if (j > (uint64_t)numeric_limits<int64_t>::max())
     {
-        if (unsignedFlag)
-            return (~(uint64_t) 0);
-
-        return negative ? numeric_limits<int64_t>::min() : numeric_limits<int64_t>::max();
+      overflow = 1;
     }
+  }
 
-    return (negative ? -((int64_t) j) : (int64_t) j);
+  if (overflow)
+  {
+    if (unsignedFlag)
+      return (~(uint64_t)0);
+
+    return negative ? numeric_limits<int64_t>::min() : numeric_limits<int64_t>::max();
+  }
+
+  return (negative ? -((int64_t)j) : (int64_t)j);
 }
-}
+}  // namespace
 
 namespace funcexp
 {
@@ -131,61 +132,61 @@ namespace helpers
 {
 const char* convNumToStr(int64_t val, char* dst, int radix)
 {
-    if (radix == 16 || radix == -16)
-        sprintf(dst, "%llX", (long long)val);
+  if (radix == 16 || radix == -16)
+    sprintf(dst, "%llX", (long long)val);
 
-    else if (radix == 8 || radix == -8)
-        sprintf(dst, "%llo", (long long)val);
+  else if (radix == 8 || radix == -8)
+    sprintf(dst, "%llo", (long long)val);
 
-    else if (radix == 10)
+  else if (radix == 10)
+  {
+    sprintf(dst, "%llu", (unsigned long long)val);
+  }
+  else if (radix == -10)
+    sprintf(dst, "%lld", (long long)val);
+
+  else if (radix == 2 || radix == -2)
+  {
+    char tmp[65];
+    char* ptr = &tmp[64];
+    *ptr-- = 0;
+
+    for (int i = 0; i < 64; i++)
     {
-        sprintf(dst, "%llu", (unsigned long long)val);
-    }
-    else if (radix == -10)
-        sprintf(dst, "%lld", (long long)val);
+      if (val & 1)
+        *ptr-- = '1';
+      else
+        *ptr-- = '0';
 
-    else if (radix == 2 || radix == -2)
+      val >>= 1;
+    }
+
+    ptr = strchr(tmp, '1');
+
+    if (ptr == 0)
+      strcpy(dst, &tmp[63]);
+    else
+      strcpy(dst, ptr);
+  }
+  else if (radix == 4 || radix == -4)
+  {
+    char tmp[33];
+    char* ptr = &tmp[32];
+    *ptr-- = 0;
+
+    for (int i = 0; i < 32; i++)
     {
-        char tmp[65];
-        char* ptr = &tmp[64];
-        *ptr-- = 0;
-
-        for (int i = 0; i < 64; i++)
-        {
-            if (val & 1)
-                *ptr-- = '1';
-            else
-                *ptr-- = '0';
-
-            val >>= 1;
-        }
-
-        ptr = strchr(tmp, '1');
-
-        if (ptr == 0)
-            strcpy(dst, &tmp[63]);
-        else
-            strcpy(dst, ptr);
+      *ptr-- = '0' + (val & 3);
+      val >>= 2;
     }
-    else if (radix == 4 || radix == -4)
-    {
-        char tmp[33];
-        char* ptr = &tmp[32];
-        *ptr-- = 0;
 
-        for (int i = 0; i < 32; i++)
-        {
-            *ptr-- = '0' + (val & 3);
-            val >>= 2;
-        }
+    ptr = strpbrk(tmp, "123");
 
-        ptr = strpbrk(tmp, "123");
-
-        if (ptr == 0)
-            strcpy(dst, &tmp[31]);
-        else
-            strcpy(dst, ptr);
-    }
+    if (ptr == 0)
+      strcpy(dst, &tmp[31]);
+    else
+      strcpy(dst, ptr);
+  }
 
 #if 0
     else if (radix == 8 || radix == -8)
@@ -234,76 +235,73 @@ const char* convNumToStr(int64_t val, char* dst, int radix)
     }
 
 #endif
-    else if (radix == 32 || radix == -32)
+  else if (radix == 32 || radix == -32)
+  {
+    char tmp[14];
+    char* ptr = &tmp[13];
+    *ptr-- = 0;
+
+    for (int i = 0; i < 13; i++)
     {
-        char tmp[14];
-        char* ptr = &tmp[13];
-        *ptr-- = 0;
+      int v = val & 0x1f;
 
-        for (int i = 0; i < 13; i++)
-        {
-            int v = val & 0x1f;
+      if (v > 9)
+        *ptr-- = 'A' + v - 10;
+      else
+        *ptr-- = '0' + v;
 
-            if (v > 9)
-                *ptr-- = 'A' + v - 10;
-            else
-                *ptr-- = '0' + v;
-
-            val >>= 5;
-        }
-
-        ptr = strpbrk(tmp, "123456789ABCDEFGHIJKLMNOPQRSTUV");
-
-        if (ptr == 0)
-            strcpy(dst, &tmp[12]);
-        else
-            strcpy(dst, ptr);
+      val >>= 5;
     }
+
+    ptr = strpbrk(tmp, "123456789ABCDEFGHIJKLMNOPQRSTUV");
+
+    if (ptr == 0)
+      strcpy(dst, &tmp[12]);
     else
-        *dst = 0;
+      strcpy(dst, ptr);
+  }
+  else
+    *dst = 0;
 
-    return dst;
+  return dst;
 }
-} //namespace funcexp::helpers
+}  // namespace helpers
 
-CalpontSystemCatalog::ColType Func_conv::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
+CalpontSystemCatalog::ColType Func_conv::operationType(FunctionParm& fp,
+                                                       CalpontSystemCatalog::ColType& resultType)
 {
-    // operation type is not used by this functor
-    return fp[0]->data()->resultType();
+  // operation type is not used by this functor
+  return fp[0]->data()->resultType();
 }
 
-
-string Func_conv::getStrVal(rowgroup::Row& row,
-                            FunctionParm& parm,
-                            bool& isNull,
+string Func_conv::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                             CalpontSystemCatalog::ColType& op_ct)
 {
-    const string& res = parm[0]->data()->getStrVal(row, isNull);
-    string str;
-    char ans[65];
-    int64_t dec;
-    int64_t from_base = parm[1]->data()->getIntVal(row, isNull);
-    int64_t to_base = parm[2]->data()->getIntVal(row, isNull);
+  const string& res = parm[0]->data()->getStrVal(row, isNull);
+  string str;
+  char ans[65];
+  int64_t dec;
+  int64_t from_base = parm[1]->data()->getIntVal(row, isNull);
+  int64_t to_base = parm[2]->data()->getIntVal(row, isNull);
 
-    if (isNull || abs(static_cast<int>(to_base)) > 36 || abs(static_cast<int>(to_base)) < 2 ||
-            abs(static_cast<int>(from_base)) > 36 || abs(static_cast<int>(from_base)) < 2 || !(res.length()))
-    {
-        isNull = true;
-        return "";
-    }
+  if (isNull || abs(static_cast<int>(to_base)) > 36 || abs(static_cast<int>(to_base)) < 2 ||
+      abs(static_cast<int>(from_base)) > 36 || abs(static_cast<int>(from_base)) < 2 || !(res.length()))
+  {
+    isNull = true;
+    return "";
+  }
 
-    if (from_base < 0)
-        dec = convStrToNum(res, -from_base, false);
-    else
-        dec = (int64_t) convStrToNum( res, from_base, true);
+  if (from_base < 0)
+    dec = convStrToNum(res, -from_base, false);
+  else
+    dec = (int64_t)convStrToNum(res, from_base, true);
 
-    str = helpers::convNumToStr(dec, ans, to_base);
+  str = helpers::convNumToStr(dec, ans, to_base);
 
-    isNull = str.empty();
+  isNull = str.empty();
 
-    return str;
+  return str;
 }
 
-
-} // namespace funcexp
+}  // namespace funcexp
 // vim:ts=4 sw=4:

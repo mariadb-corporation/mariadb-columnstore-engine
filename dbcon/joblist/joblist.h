@@ -18,7 +18,6 @@
 
 //  $Id: joblist.h 9623 2013-06-13 19:56:23Z rdempsey $
 
-
 /** @file */
 
 #ifndef JOBLIST_JOBLIST_H_
@@ -36,9 +35,9 @@
 #include "bytestream.h"
 
 #ifndef __GNUC__
-#  ifndef __attribute__
-#    define __attribute__(x)
-#  endif
+#ifndef __attribute__
+#define __attribute__(x)
+#endif
 #endif
 
 #if defined(_MSC_VER) && defined(JOBLIST_DLLEXPORT)
@@ -49,7 +48,6 @@
 
 namespace joblist
 {
-
 typedef std::vector<SJSTEP> JobStepVector;
 typedef std::map<execplan::CalpontSystemCatalog::OID, SJSTEP> DeliveredTableMap;
 
@@ -63,204 +61,205 @@ typedef boost::shared_ptr<JobList> SJLP;
 
 class JobList
 {
-public:
-    explicit JobList(bool isEM = false);
-    virtual ~JobList();
-    virtual int doQuery();
+ public:
+  explicit JobList(bool isEM = false);
+  virtual ~JobList();
+  virtual int doQuery();
 
-    /* returns row count */
-    virtual uint32_t projectTable(execplan::CalpontSystemCatalog::OID, messageqcpp::ByteStream&) = 0;
-    virtual int  putEngineComm(DistributedEngineComm*);
+  /* returns row count */
+  virtual uint32_t projectTable(execplan::CalpontSystemCatalog::OID, messageqcpp::ByteStream&) = 0;
+  virtual int putEngineComm(DistributedEngineComm*);
 
-    virtual void addQuery(const JobStepVector& query)
-    {
-        fQuery = query;
-    }
-    virtual void addProject(const JobStepVector& project)
-    {
-        fProject = project;
-    }
-    virtual void addDelivery(const DeliveredTableMap& delivery)
-    {
-        fDeliveredTables = delivery;
-    }
-    virtual void PutEngineComm(const DistributedEngineComm*) __attribute__((deprecated)) { }
-    virtual const DeliveredTableMap& deliveredTables() const
-    {
-        return fDeliveredTables;
-    }
-    virtual void querySummary(bool extendedStats);
-    virtual void graph(uint32_t sessionID);
+  virtual void addQuery(const JobStepVector& query)
+  {
+    fQuery = query;
+  }
+  virtual void addProject(const JobStepVector& project)
+  {
+    fProject = project;
+  }
+  virtual void addDelivery(const DeliveredTableMap& delivery)
+  {
+    fDeliveredTables = delivery;
+  }
+  virtual void PutEngineComm(const DistributedEngineComm*) __attribute__((deprecated))
+  {
+  }
+  virtual const DeliveredTableMap& deliveredTables() const
+  {
+    return fDeliveredTables;
+  }
+  virtual void querySummary(bool extendedStats);
+  virtual void graph(uint32_t sessionID);
 
-    virtual const SErrorInfo& errorInfo() const
-    {
-        return errInfo;
-    }
-    virtual void errorInfo(SErrorInfo sp)
-    {
-        errInfo = sp;
-    }
+  virtual const SErrorInfo& errorInfo() const
+  {
+    return errInfo;
+  }
+  virtual void errorInfo(SErrorInfo sp)
+  {
+    errInfo = sp;
+  }
 
-    virtual uint32_t status() const
-    {
-        return errInfo->errCode;
-    }
-    virtual void status(uint32_t ec)
-    {
-        errInfo->errCode = ec;
-    }
-    virtual const std::string& errMsg() const
-    {
-        return errInfo->errMsg;
-    }
-    virtual void errMsg(const std::string& s)
-    {
-        errInfo->errMsg = s;
-    }
+  virtual uint32_t status() const
+  {
+    return errInfo->errCode;
+  }
+  virtual void status(uint32_t ec)
+  {
+    errInfo->errCode = ec;
+  }
+  virtual const std::string& errMsg() const
+  {
+    return errInfo->errMsg;
+  }
+  virtual void errMsg(const std::string& s)
+  {
+    errInfo->errMsg = s;
+  }
 
-    virtual execplan::CalpontSystemCatalog::OID* projectingTableOIDPtr()
-    {
-        return &projectingTableOID;
-    }
+  virtual execplan::CalpontSystemCatalog::OID* projectingTableOIDPtr()
+  {
+    return &projectingTableOID;
+  }
 
-    /** Does some light validation on the final joblist
-     *
-     * Currently only verifies that all JobSteps are not tuple oriented.
-     */
-    virtual void validate() const;
+  /** Does some light validation on the final joblist
+   *
+   * Currently only verifies that all JobSteps are not tuple oriented.
+   */
+  virtual void validate() const;
 
-    querystats::QueryStats& queryStats()
-    {
-        return fStats;
-    }
-    void queryStats(const querystats::QueryStats& stats)
-    {
-        fStats = stats;
-    }
-    const std::string& extendedInfo() const
-    {
-        return fExtendedInfo;
-    }
-    void extendedInfo(const std::string& extendedInfo)
-    {
-        fExtendedInfo = extendedInfo;
-    }
-    const std::string& miniInfo() const
-    {
-        return fMiniInfo;
-    }
-    void miniInfo(const std::string& miniInfo)
-    {
-        fMiniInfo = miniInfo;
-    }
+  querystats::QueryStats& queryStats()
+  {
+    return fStats;
+  }
+  void queryStats(const querystats::QueryStats& stats)
+  {
+    fStats = stats;
+  }
+  const std::string& extendedInfo() const
+  {
+    return fExtendedInfo;
+  }
+  void extendedInfo(const std::string& extendedInfo)
+  {
+    fExtendedInfo = extendedInfo;
+  }
+  const std::string& miniInfo() const
+  {
+    return fMiniInfo;
+  }
+  void miniInfo(const std::string& miniInfo)
+  {
+    fMiniInfo = miniInfo;
+  }
 
-    void addSubqueryJobList(const SJLP& sjl)
-    {
-        subqueryJoblists.push_back(sjl);
-    }
+  void addSubqueryJobList(const SJLP& sjl)
+  {
+    subqueryJoblists.push_back(sjl);
+  }
 
-    /** Stop the running query
-     *
-     * This notifies the joblist to abort the running query.  It returns right away, not
-     * when the joblist has actually stopped.  The caller may need to drain some data
-     * through projectTable() for the joblist to abort completely.
-     */
-    EXPORT virtual void abort();
-    EXPORT virtual bool aborted()
-    {
-        return (fAborted != 0);
-    }
+  /** Stop the running query
+   *
+   * This notifies the joblist to abort the running query.  It returns right away, not
+   * when the joblist has actually stopped.  The caller may need to drain some data
+   * through projectTable() for the joblist to abort completely.
+   */
+  EXPORT virtual void abort();
+  EXPORT virtual bool aborted()
+  {
+    return (fAborted != 0);
+  }
 
-    std::string toString() const;
+  std::string toString() const;
 
-    void priority(uint32_t p)
-    {
-        fPriority = p;
-    }
-    uint32_t priority()
-    {
-        return fPriority;
-    }
+  void priority(uint32_t p)
+  {
+    fPriority = p;
+  }
+  uint32_t priority()
+  {
+    return fPriority;
+  }
 
-    // @bug4848, enhance and unify limit handling.
-    EXPORT virtual void abortOnLimit(JobStep* js);
+  // @bug4848, enhance and unify limit handling.
+  EXPORT virtual void abortOnLimit(JobStep* js);
 
-    static void setPMsConfigured(int pms)
-    {
-        fPmsConfigured = pms;
-    }
+  static void setPMsConfigured(int pms)
+  {
+    fPmsConfigured = pms;
+  }
 
-protected:
-    //defaults okay
-    //JobList(const JobList& rhs);
-    //JobList& operator=(const JobList& rhs);
-    bool fIsRunning;
-    bool fIsExeMgr;
-    int  fPmsConnected;
+ protected:
+  // defaults okay
+  // JobList(const JobList& rhs);
+  // JobList& operator=(const JobList& rhs);
+  bool fIsRunning;
+  bool fIsExeMgr;
+  int fPmsConnected;
 
-    // Dirty pool kludge. Contains the number of PMs configured in Columnstore.xml.
-    // This kludge reduces the number of calls needed to config.Config, which are expensive.
-    static int  fPmsConfigured;
+  // Dirty pool kludge. Contains the number of PMs configured in Columnstore.xml.
+  // This kludge reduces the number of calls needed to config.Config, which are expensive.
+  static int fPmsConfigured;
 
-    DeliveredTableMap fDeliveredTables;
-    execplan::CalpontSystemCatalog::OID projectingTableOID; //DeliveryWSDLs get a reference to this
-    SErrorInfo errInfo;
-    JobStepVector fQuery;
-    JobStepVector fProject;
+  DeliveredTableMap fDeliveredTables;
+  execplan::CalpontSystemCatalog::OID projectingTableOID;  // DeliveryWSDLs get a reference to this
+  SErrorInfo errInfo;
+  JobStepVector fQuery;
+  JobStepVector fProject;
 
-    // @bug3438, get stats/trace from subqueries
-    querystats::QueryStats fStats;
-    std::string fExtendedInfo;
-    std::string fMiniInfo;
-    std::vector<SJLP> subqueryJoblists;
+  // @bug3438, get stats/trace from subqueries
+  querystats::QueryStats fStats;
+  std::string fExtendedInfo;
+  std::string fMiniInfo;
+  std::vector<SJLP> subqueryJoblists;
 
-    volatile uint32_t fAborted;
+  volatile uint32_t fAborted;
 
-    uint32_t fPriority;   //higher #s = higher priority
+  uint32_t fPriority;  // higher #s = higher priority
 };
 
 class TupleJobList : public JobList
 {
-public:
-    TupleJobList(bool isEM = false);
-    virtual ~TupleJobList();
+ public:
+  TupleJobList(bool isEM = false);
+  virtual ~TupleJobList();
 
-    EXPORT uint32_t projectTable(execplan::CalpontSystemCatalog::OID, messageqcpp::ByteStream&);
-    EXPORT const rowgroup::RowGroup& getOutputRowGroup() const;
-    TupleDeliveryStep* getDeliveryStep()
-    {
-        return ds;
-    }
-    const JobStepVector& querySteps() const
-    {
-        return fQuery;
-    }
-    void setDeliveryFlag(bool f);
-    void abort();
+  EXPORT uint32_t projectTable(execplan::CalpontSystemCatalog::OID, messageqcpp::ByteStream&);
+  EXPORT const rowgroup::RowGroup& getOutputRowGroup() const;
+  TupleDeliveryStep* getDeliveryStep()
+  {
+    return ds;
+  }
+  const JobStepVector& querySteps() const
+  {
+    return fQuery;
+  }
+  void setDeliveryFlag(bool f);
+  void abort();
 
-    /** Does some light validation on the final joblist
-     *
-     * Currently verifies that JobSteps are all tuple-oriented, that
-     * there's one and only one projection step, and that its fake table OID is 100.
-     * @note The fake OID check is disabled atm because it's not always 100 although it's supposed to be.
-     */
-    EXPORT void validate() const;
+  /** Does some light validation on the final joblist
+   *
+   * Currently verifies that JobSteps are all tuple-oriented, that
+   * there's one and only one projection step, and that its fake table OID is 100.
+   * @note The fake OID check is disabled atm because it's not always 100 although it's supposed to be.
+   */
+  EXPORT void validate() const;
 
-private:
-    //defaults okay
-    //TupleJobList(const TupleJobList& rhs);
-    //TupleJobList& operator=(const TupleJobList& rhs);
+ private:
+  // defaults okay
+  // TupleJobList(const TupleJobList& rhs);
+  // TupleJobList& operator=(const TupleJobList& rhs);
 
-    TupleDeliveryStep* ds;
-    bool moreData;   // used to prevent calling nextBand beyond the last RowGroup
+  TupleDeliveryStep* ds;
+  bool moreData;  // used to prevent calling nextBand beyond the last RowGroup
 };
 
 typedef boost::shared_ptr<TupleJobList> STJLP;
 
-}
+}  // namespace joblist
 
 #undef EXPORT
 
 #endif
 // vim:ts=4 sw=4:
-

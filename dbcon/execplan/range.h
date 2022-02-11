@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: range.h 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: range.h 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 /** @file */
 
 #ifndef RANGE_H
@@ -37,64 +37,63 @@ namespace execplan
  */
 class Range
 {
-    /**
-     * Public stuff
-     */
-public:
-    /**
-     * Fields
-     */
-    /**
-     *
-     */
-    /**
-     * Constructors
-     */
-    /**
-     * Accessor Methods
-     */
-    /**
-     * Operations
-     */
-    /**
-     * Protected stuff
-     */
-protected:
-    /**
-     * Fields
-     */
-    /**
-     *
-     */
-    /**
-     * Constructors
-     */
-    /**
-     * Accessor Methods
-     */
-    /**
-     * Operations
-     */
-    /**
-     * Private stuff
-     */
-private:
-    /**
-     * Fields
-     */
-    /**
-     *
-     */
-    /**
-     * Constructors
-     */
-    /**
-     * Accessor Methods
-     */
-    /**
-     * Operations
-     */
+  /**
+   * Public stuff
+   */
+ public:
+  /**
+   * Fields
+   */
+  /**
+   *
+   */
+  /**
+   * Constructors
+   */
+  /**
+   * Accessor Methods
+   */
+  /**
+   * Operations
+   */
+  /**
+   * Protected stuff
+   */
+ protected:
+  /**
+   * Fields
+   */
+  /**
+   *
+   */
+  /**
+   * Constructors
+   */
+  /**
+   * Accessor Methods
+   */
+  /**
+   * Operations
+   */
+  /**
+   * Private stuff
+   */
+ private:
+  /**
+   * Fields
+   */
+  /**
+   *
+   */
+  /**
+   * Constructors
+   */
+  /**
+   * Accessor Methods
+   */
+  /**
+   * Operations
+   */
 };
-}
-#endif //RANGE_H
-
+}  // namespace execplan
+#endif  // RANGE_H

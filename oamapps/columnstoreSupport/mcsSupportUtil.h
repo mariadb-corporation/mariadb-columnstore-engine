@@ -27,10 +27,10 @@
 #include "configcpp.h"
 #include "liboamcpp.h"
 
-void getSystemNetworkConfig(FILE * pOutputFile);
-void getModuleTypeConfig(FILE * pOutputFile);
-void getStorageConfig(FILE * pOutputFile);
-void getStorageStatus(FILE * pOutputFile);
+void getSystemNetworkConfig(FILE* pOutputFile);
+void getModuleTypeConfig(FILE* pOutputFile);
+void getStorageConfig(FILE* pOutputFile);
+void getStorageStatus(FILE* pOutputFile);
 bool checkLogStatus(std::string filename, std::string phase);
 std::string getIPAddress(std::string hostName);
 

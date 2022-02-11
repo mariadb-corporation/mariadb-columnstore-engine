@@ -15,7 +15,6 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-
 #ifndef TRUNCATETASK_H_
 #define TRUNCATETASK_H_
 
@@ -23,19 +22,17 @@
 
 namespace storagemanager
 {
-
 class TruncateTask : public PosixTask
 {
-    public:
-        TruncateTask(int sock, uint length);
-        virtual ~TruncateTask();
-        
-        bool run();
-    
-    private:
-        TruncateTask();
+ public:
+  TruncateTask(int sock, uint length);
+  virtual ~TruncateTask();
+
+  bool run();
+
+ private:
+  TruncateTask();
 };
 
-
-}
+}  // namespace storagemanager
 #endif

@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: oracleexecutionplan.h 9210 2013-01-21 14:10:42Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: oracleexecutionplan.h 9210 2013-01-21 14:10:42Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 /** @file */
 
 #ifndef ORACLEEXECUTIONPLAN_H
@@ -38,64 +38,63 @@ namespace execplan
  */
 class OracleExecutionPlan : public VendorExecutionPlan
 {
-    /**
-     * Public stuff
-     */
-public:
-    /**
-     * Fields
-     */
-    /**
-     *
-     */
-    /**
-     * Constructors
-     */
-    /**
-     * Accessor Methods
-     */
-    /**
-     * Operations
-     */
-    /**
-     * Protected stuff
-     */
-protected:
-    /**
-     * Fields
-     */
-    /**
-     *
-     */
-    /**
-     * Constructors
-     */
-    /**
-     * Accessor Methods
-     */
-    /**
-     * Operations
-     */
-    /**
-     * Private stuff
-     */
-private:
-    /**
-     * Fields
-     */
-    /**
-     *
-     */
-    /**
-     * Constructors
-     */
-    /**
-     * Accessor Methods
-     */
-    /**
-     * Operations
-     */
+  /**
+   * Public stuff
+   */
+ public:
+  /**
+   * Fields
+   */
+  /**
+   *
+   */
+  /**
+   * Constructors
+   */
+  /**
+   * Accessor Methods
+   */
+  /**
+   * Operations
+   */
+  /**
+   * Protected stuff
+   */
+ protected:
+  /**
+   * Fields
+   */
+  /**
+   *
+   */
+  /**
+   * Constructors
+   */
+  /**
+   * Accessor Methods
+   */
+  /**
+   * Operations
+   */
+  /**
+   * Private stuff
+   */
+ private:
+  /**
+   * Fields
+   */
+  /**
+   *
+   */
+  /**
+   * Constructors
+   */
+  /**
+   * Accessor Methods
+   */
+  /**
+   * Operations
+   */
 };
-}
-#endif //ORACLEEXECUTIONPLAN_H
-
+}  // namespace execplan
+#endif  // ORACLEEXECUTIONPLAN_H

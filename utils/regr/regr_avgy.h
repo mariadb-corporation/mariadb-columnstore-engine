@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id$
-*
-*   regr_avgy.h
-***********************************************************************/
+ *   $Id$
+ *
+ *   regr_avgy.h
+ ***********************************************************************/
 
 /**
  * Columnstore interface for for the regr_avgy function
@@ -52,35 +52,32 @@
 
 namespace mcsv1sdk
 {
-
 // Return the regr_avgy value of the dataset
 
-class regr_avgy : public  mcsv1_UDAF
+class regr_avgy : public mcsv1_UDAF
 {
-public:
-    // Defaults OK
-    regr_avgy() : mcsv1_UDAF() {};
-    virtual ~regr_avgy() {};
+ public:
+  // Defaults OK
+  regr_avgy() : mcsv1_UDAF(){};
+  virtual ~regr_avgy(){};
 
-    virtual ReturnCode init(mcsv1Context* context,
-                            ColumnDatum* colTypes);
+  virtual ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes);
 
-    virtual ReturnCode reset(mcsv1Context* context);
+  virtual ReturnCode reset(mcsv1Context* context);
 
-    virtual ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn);
+  virtual ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn);
 
-    virtual ReturnCode subEvaluate(mcsv1Context* context, const UserData* valIn);
+  virtual ReturnCode subEvaluate(mcsv1Context* context, const UserData* valIn);
 
-    virtual ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut);
+  virtual ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut);
 
-    virtual ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
+  virtual ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
 
-protected:
+ protected:
 };
 
-};  // namespace
+};  // namespace mcsv1sdk
 
 #undef EXPORT
 
-#endif // HEADER_regr_avgy.h
-
+#endif  // HEADER_regr_avgy.h

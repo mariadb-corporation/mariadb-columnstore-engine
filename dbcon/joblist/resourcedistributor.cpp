@@ -31,137 +31,135 @@ using namespace std;
 
 namespace joblist
 {
-
 const unsigned maxSessionsDefault = 100;
 
 uint64_t ResourceDistributor::requestResource(uint32_t sessionID)
 {
-    uint64_t resource = getSessionResource(sessionID);
+  uint64_t resource = getSessionResource(sessionID);
 
-    return requestResource(sessionID, resource);
+  return requestResource(sessionID, resource);
 }
 
 uint64_t ResourceDistributor::requestResource(uint32_t sessionID, uint64_t resource)
 {
+  if (fTraceOn)
+    logMessage(logging::LOG_TYPE_DEBUG, LogRDRequest, resource, sessionID);
+
+  boost::mutex::scoped_lock lk(fResourceLock);
+
+  while (fTotalResource < resource)
+  {
     if (fTraceOn)
-        logMessage(logging::LOG_TYPE_DEBUG, LogRDRequest, resource, sessionID);
+      logMessage(logging::LOG_TYPE_DEBUG, LogRDRequestWait, resource, sessionID);
 
-    boost::mutex::scoped_lock lk (fResourceLock );
+    fResourceAvailable.wait(lk);
 
-    while (fTotalResource < resource)
-    {
-        if (fTraceOn)
-            logMessage(logging::LOG_TYPE_DEBUG, LogRDRequestWait, resource, sessionID);
-
-        fResourceAvailable.wait(lk);
-
-        if (fTraceOn)
-            logMessage(logging::LOG_TYPE_DEBUG, LogRDRequest, resource, sessionID);
-
-    }
-
-    fTotalResource -= resource;
-
-    return resource;
-}
-
-
-
-void  ResourceDistributor::returnResource(uint64_t resource)
-{
     if (fTraceOn)
-        logMessage(logging::LOG_TYPE_DEBUG, LogRDReturn, resource);
+      logMessage(logging::LOG_TYPE_DEBUG, LogRDRequest, resource, sessionID);
+  }
 
-    boost::mutex::scoped_lock lk (fResourceLock );
-    fTotalResource += resource;
+  fTotalResource -= resource;
 
-    fResourceAvailable.notify_all();
+  return resource;
 }
 
-void ResourceDistributor::logMessage(logging::LOG_TYPE logLevel, logging::Message::MessageID mid, uint64_t value, uint32_t sessionID)
+void ResourceDistributor::returnResource(uint64_t resource)
 {
-    logging::Message::Args args;
-    args.add(fJob);
-    args.add(fIdentity);
-    args.add(fTotalResource);
+  if (fTraceOn)
+    logMessage(logging::LOG_TYPE_DEBUG, LogRDReturn, resource);
 
-    if (value) args.add(value);
+  boost::mutex::scoped_lock lk(fResourceLock);
+  fTotalResource += resource;
 
-    Logger log;
-    log.logMessage(logLevel, mid, args, logging::LoggingID(5, sessionID));
+  fResourceAvailable.notify_all();
 }
 
-void  LockedSessionMap::updateAging(uint32_t sessionID)
+void ResourceDistributor::logMessage(logging::LOG_TYPE logLevel, logging::Message::MessageID mid,
+                                     uint64_t value, uint32_t sessionID)
 {
-    boost::mutex::scoped_lock lock(fSessionLock);
-    SessionList::iterator pos = find(fSessionAgingList.begin(), fSessionAgingList.end(), sessionID);
+  logging::Message::Args args;
+  args.add(fJob);
+  args.add(fIdentity);
+  args.add(fTotalResource);
 
-    if (fSessionAgingList.end() != pos)
-        fSessionAgingList.splice(fSessionAgingList.end(), fSessionAgingList, find(fSessionAgingList.begin(), fSessionAgingList.end(), sessionID));
-    else
-        fSessionAgingList.push_back(sessionID);
+  if (value)
+    args.add(value);
+
+  Logger log;
+  log.logMessage(logLevel, mid, args, logging::LoggingID(5, sessionID));
 }
 
-uint64_t  LockedSessionMap::getSessionResource(uint32_t sessionID)
+void LockedSessionMap::updateAging(uint32_t sessionID)
 {
-    SessionMap::const_iterator it = fSessionMap.find(sessionID);
+  boost::mutex::scoped_lock lock(fSessionLock);
+  SessionList::iterator pos = find(fSessionAgingList.begin(), fSessionAgingList.end(), sessionID);
 
-    if (fSessionMap.end() != it)
-    {
-        updateAging(sessionID);
-        return it->second;
-    }
+  if (fSessionAgingList.end() != pos)
+    fSessionAgingList.splice(fSessionAgingList.end(), fSessionAgingList,
+                             find(fSessionAgingList.begin(), fSessionAgingList.end(), sessionID));
+  else
+    fSessionAgingList.push_back(sessionID);
+}
 
-    return fResourceBlock;
+uint64_t LockedSessionMap::getSessionResource(uint32_t sessionID)
+{
+  SessionMap::const_iterator it = fSessionMap.find(sessionID);
+
+  if (fSessionMap.end() != it)
+  {
+    updateAging(sessionID);
+    return it->second;
+  }
+
+  return fResourceBlock;
 }
 
 bool LockedSessionMap::addSession(uint32_t sessionID, uint64_t resource, uint64_t limit)
 {
-    bool ret = true;
+  bool ret = true;
 
-    if (resource > limit)
-    {
-        resource = limit;
-        ret = false;
-    }
+  if (resource > limit)
+  {
+    resource = limit;
+    ret = false;
+  }
 
-    boost::mutex::scoped_lock maplock(fMapLock);
-    fSessionMap[sessionID] = resource;
-    updateAging(sessionID);
+  boost::mutex::scoped_lock maplock(fMapLock);
+  fSessionMap[sessionID] = resource;
+  updateAging(sessionID);
 
-    if (fMaxSessions < fSessionMap.size())
-    {
-        boost::mutex::scoped_lock lock(fSessionLock);
-        uint32_t oldsession = fSessionAgingList.front();
-        fSessionMap.erase(oldsession);
-        fSessionAgingList.erase(fSessionAgingList.begin());
-    }
+  if (fMaxSessions < fSessionMap.size())
+  {
+    boost::mutex::scoped_lock lock(fSessionLock);
+    uint32_t oldsession = fSessionAgingList.front();
+    fSessionMap.erase(oldsession);
+    fSessionAgingList.erase(fSessionAgingList.begin());
+  }
 
-    return ret;
-
+  return ret;
 }
 
 void LockedSessionMap::removeSession(uint32_t sessionID)
 {
-    boost::mutex::scoped_lock maplock(fMapLock);
-    fSessionMap.erase(sessionID);
-    boost::mutex::scoped_lock listlock(fSessionLock);
-    fSessionAgingList.erase(find(fSessionAgingList.begin(), fSessionAgingList.end(), sessionID));
+  boost::mutex::scoped_lock maplock(fMapLock);
+  fSessionMap.erase(sessionID);
+  boost::mutex::scoped_lock listlock(fSessionLock);
+  fSessionAgingList.erase(find(fSessionAgingList.begin(), fSessionAgingList.end(), sessionID));
 }
 
-ostream& operator<<(ostream& os, const LockedSessionMap&  lsm)
+ostream& operator<<(ostream& os, const LockedSessionMap& lsm)
 {
-    os << "Default Resource Block: " << lsm.fResourceBlock << "\tMax Number of saved sessions: " << lsm.fMaxSessions << endl;
-    os << "Session Map:\tsessionID\tvalue\n";
-    LockedSessionMap::SessionMap::const_iterator smIt = lsm.fSessionMap.begin(), smEnd = lsm.fSessionMap.end();
+  os << "Default Resource Block: " << lsm.fResourceBlock
+     << "\tMax Number of saved sessions: " << lsm.fMaxSessions << endl;
+  os << "Session Map:\tsessionID\tvalue\n";
+  LockedSessionMap::SessionMap::const_iterator smIt = lsm.fSessionMap.begin(), smEnd = lsm.fSessionMap.end();
 
-    for (; smIt != smEnd; ++smIt)
-        os << "\t\t" << smIt->first << "\t\t" << smIt->second << endl;
+  for (; smIt != smEnd; ++smIt)
+    os << "\t\t" << smIt->first << "\t\t" << smIt->second << endl;
 
-    os << "\nAging List:\tsessionID\n\t\t";
-    copy(lsm.fSessionAgingList.begin(), lsm.fSessionAgingList.end(), ostream_iterator<uint32_t>(os, "\n\t\t"));
-    os << endl;
-    return os;
+  os << "\nAging List:\tsessionID\n\t\t";
+  copy(lsm.fSessionAgingList.begin(), lsm.fSessionAgingList.end(), ostream_iterator<uint32_t>(os, "\n\t\t"));
+  os << endl;
+  return os;
 }
-} //namespace
-
+}  // namespace joblist

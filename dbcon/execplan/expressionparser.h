@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: expressionparser.h 9633 2013-06-19 13:36:01Z rdempsey $
-*
-*
-***********************************************************************/
+ *   $Id: expressionparser.h 9633 2013-06-19 13:36:01Z rdempsey $
+ *
+ *
+ ***********************************************************************/
 /** @file */
 #ifndef EXPRESSION_PARSER
 #define EXPRESSION_PARSER
@@ -39,7 +39,6 @@
 
 namespace execplan
 {
-
 /**
  * type define
  */
@@ -52,23 +51,28 @@ typedef std::stack<TreeNode*> OperatorStack;
  */
 struct Token
 {
-    TreeNode* value;
-    bool is_operator() const
-    {
-        if (value == 0) return false;
+  TreeNode* value;
+  bool is_operator() const
+  {
+    if (value == 0)
+      return false;
 
-        return (typeid(*value) == typeid(Operator));
-    }
-    Token() : value(0) {}
-    Token(TreeNode* v) : value(v) {}
-private:
-    // technically, these should be defined since Token is used in a
-    // std::vector, but it appears to work okay...ownership of the
-    // value ptr is dubious
-    //Token(const Token& rhs);
-    //Token& operator=(const Token& rhs);
+    return (typeid(*value) == typeid(Operator));
+  }
+  Token() : value(0)
+  {
+  }
+  Token(TreeNode* v) : value(v)
+  {
+  }
+
+ private:
+  // technically, these should be defined since Token is used in a
+  // std::vector, but it appears to work okay...ownership of the
+  // value ptr is dubious
+  // Token(const Token& rhs);
+  // Token& operator=(const Token& rhs);
 };
-
 
 /**
  * @brief this class builds an expression tree
@@ -80,63 +84,62 @@ private:
  */
 class ExpressionParser : public expression::default_expression_parser_error_policy
 {
-public:
-    /**
-     * Constructors/Destructors
-     */
-    ExpressionParser();
-    virtual ~ExpressionParser();
+ public:
+  /**
+   * Constructors/Destructors
+   */
+  ExpressionParser();
+  virtual ~ExpressionParser();
 
-    /**
-     * Operations
-     */
+  /**
+   * Operations
+   */
 
-    /*
-     * Error handling
-     */
-    static void invalid_operator_position(TreeNode* oper);
-    static void invalid_operator_position(const Token& oper);
-    static void invalid_operand_position(ParseTree* operand);
-    static void unbalanced_confix(TreeNode* oper);
-    static void missing_operand(const Token& oper);
+  /*
+   * Error handling
+   */
+  static void invalid_operator_position(TreeNode* oper);
+  static void invalid_operator_position(const Token& oper);
+  static void invalid_operand_position(ParseTree* operand);
+  static void unbalanced_confix(TreeNode* oper);
+  static void missing_operand(const Token& oper);
 
-    /**
-    * Syntax and precedence rules
-    */
-    static int positions(Token t);
-    static int position(TreeNode* op);
-    inline static bool is_operator(const Token& t)
-    {
-        return t.is_operator();
-    }
-    static ParseTree* as_operand(Token t);
-    static TreeNode* as_operator(Token t, int pos);
-    static expression::precedence precedence (TreeNode* op1, TreeNode* op2);
-    static expression::associativity associativity(TreeNode* op1, TreeNode* op2);
+  /**
+   * Syntax and precedence rules
+   */
+  static int positions(Token t);
+  static int position(TreeNode* op);
+  inline static bool is_operator(const Token& t)
+  {
+    return t.is_operator();
+  }
+  static ParseTree* as_operand(Token t);
+  static TreeNode* as_operator(Token t, int pos);
+  static expression::precedence precedence(TreeNode* op1, TreeNode* op2);
+  static expression::associativity associativity(TreeNode* op1, TreeNode* op2);
 
-    /**
-    * Build an expression tree with the tokens
-    */
-    static ParseTree* reduce(TreeNode* op, ParseTree* value);
-    static ParseTree* reduce(TreeNode* op, ParseTree* lhs, ParseTree* rhs);
+  /**
+   * Build an expression tree with the tokens
+   */
+  static ParseTree* reduce(TreeNode* op, ParseTree* value);
+  static ParseTree* reduce(TreeNode* op, ParseTree* lhs, ParseTree* rhs);
 
-    // parenthesis
-    static ParseTree* reduce(TreeNode* a, TreeNode* b, ParseTree* value);
+  // parenthesis
+  static ParseTree* reduce(TreeNode* a, TreeNode* b, ParseTree* value);
 
-    // function call
-    static ParseTree* reduce(ParseTree* a, TreeNode* b, ParseTree* value, TreeNode* d);
+  // function call
+  static ParseTree* reduce(ParseTree* a, TreeNode* b, ParseTree* value, TreeNode* d);
 
+  /**
+   * to clean up operator and operand stack when exception throws.
+   * this is to be used by Calpont execplan project, where the operator
+   * and operand are pointers. added by Zhixuan Zhu 06/30/06
+   */
+  static void cleanup(std::stack<ParseTree*> operandStack, std::stack<TreeNode*> operatorStack);
 
-    /**
-    * to clean up operator and operand stack when exception throws.
-    * this is to be used by Calpont execplan project, where the operator
-    * and operand are pointers. added by Zhixuan Zhu 06/30/06
-    */
-    static void cleanup(std::stack<ParseTree*> operandStack, std::stack<TreeNode*> operatorStack);
-
-private:
-    static int precnum(TreeNode* op);
-    static expression::associativity assoc(TreeNode* op);
+ private:
+  static int precnum(TreeNode* op);
+  static expression::associativity assoc(TreeNode* op);
 };
 
 /** @brief Do a deep, strict (as opposed to semantic) equivalence test
@@ -144,18 +147,15 @@ private:
  * Do a deep, strict (as opposed to semantic) equivalence test.
  * @return true iff every member of t1 is a duplicate copy of every member of t2; false otherwise
  */
-bool operator==(const ParseTree& t1,
-                const ParseTree& t2);
+bool operator==(const ParseTree& t1, const ParseTree& t2);
 
 /** @brief Do a deep, strict (as opposed to semantic) equivalence test
  *
  * Do a deep, strict (as opposed to semantic) equivalence test.
  * @return false iff every member of t1 is a duplicate copy of every member of t2; true otherwise
  */
-bool operator!=(const ParseTree& t1,
-                const ParseTree& t2);
+bool operator!=(const ParseTree& t1, const ParseTree& t2);
 
-
-} // namespace execplan
+}  // namespace execplan
 
 #endif

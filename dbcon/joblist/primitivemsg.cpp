@@ -33,43 +33,42 @@ namespace joblist
 {
 void PrimitiveMsg::send()
 {
-    throw logic_error("somehow ended up in PrimitiveMsg::send()!");
+  throw logic_error("somehow ended up in PrimitiveMsg::send()!");
 }
 
 void PrimitiveMsg::buildPrimitiveMessage(ISMPACKETCOMMAND, void*, void*)
 {
-    throw logic_error("somehow ended up in PrimitiveMsg::buildPrimitiveMessage()!");
+  throw logic_error("somehow ended up in PrimitiveMsg::buildPrimitiveMessage()!");
 }
 
 void PrimitiveMsg::receive()
 {
-    throw logic_error("somehow ended up in PrimitiveMsg::receive()!");
+  throw logic_error("somehow ended up in PrimitiveMsg::receive()!");
 }
 
 void PrimitiveMsg::sendPrimitiveMessages()
 {
-    throw logic_error("somehow ended up in PrimitiveMsg::sendPrimitiveMessages()!");
+  throw logic_error("somehow ended up in PrimitiveMsg::sendPrimitiveMessages()!");
 }
 
 void PrimitiveMsg::receivePrimitiveMessages()
 {
-    throw logic_error("somehow ended up in PrimitiveMsg::receivePrimitiveMessages()!");
+  throw logic_error("somehow ended up in PrimitiveMsg::receivePrimitiveMessages()!");
 }
 
 // Unfortuneately we have 32 bits in the execplan flags, but only 16 that can be sent to
 //  PrimProc, so we have to convert them (throwing some away).
 uint16_t PrimitiveMsg::planFlagsToPrimFlags(uint32_t planFlags)
 {
-    uint16_t flags = 0;
+  uint16_t flags = 0;
 
-    if (planFlags & CalpontSelectExecutionPlan::TRACE_LBIDS)
-        flags |= PF_LBID_TRACE;
+  if (planFlags & CalpontSelectExecutionPlan::TRACE_LBIDS)
+    flags |= PF_LBID_TRACE;
 
-    if (planFlags & CalpontSelectExecutionPlan::PM_PROFILE)
-        flags |= PF_PM_PROF;
+  if (planFlags & CalpontSelectExecutionPlan::PM_PROFILE)
+    flags |= PF_PM_PROF;
 
-    return flags;
+  return flags;
 }
 
-}
-
+}  // namespace joblist

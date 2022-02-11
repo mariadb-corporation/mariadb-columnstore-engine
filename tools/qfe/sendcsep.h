@@ -6,12 +6,10 @@
 
 namespace qfe
 {
-
-//Takes ownership of the alloc'd ptr
-//Returns an alloc'd mqc
+// Takes ownership of the alloc'd ptr
+// Returns an alloc'd mqc
 messageqcpp::MessageQueueClient* sendCSEP(execplan::CalpontSelectExecutionPlan*);
 
-}
+}  // namespace qfe
 
 #endif
-

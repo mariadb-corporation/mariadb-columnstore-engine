@@ -16,9 +16,9 @@
    MA 02110-1301, USA. */
 
 /*******************************************************************************
-* $Id: we_config.cpp 4737 2013-08-14 20:45:46Z bwilkinson $
-*
-*******************************************************************************/
+ * $Id: we_config.cpp 4737 2013-08-14 20:45:46Z bwilkinson $
+ *
+ *******************************************************************************/
 /** @file */
 
 #include <string>
@@ -41,42 +41,39 @@ using namespace idbdatafile;
 
 namespace WriteEngine
 {
-const int      DEFAULT_WAIT_PERIOD                = 10;
-const unsigned DEFAULT_FILES_PER_COLUMN_PARTITION =  4;
-const unsigned DEFAULT_EXTENTS_PER_SEGMENT_FILE   =  2;
-const int      DEFAULT_BULK_PROCESS_PRIORITY      = -1;
-const unsigned DEFAULT_MAX_FILESYSTEM_DISK_USAGE  = 98; // allow 98% full
-const unsigned DEFAULT_COMPRESSED_PADDING_BLKS    =  1;
-const int      DEFAULT_LOCAL_MODULE_ID            = 1;
-const bool     DEFAULT_PARENT_OAM                 = true;
-const char*    DEFAULT_LOCAL_MODULE_TYPE          = "pm";
+const int DEFAULT_WAIT_PERIOD = 10;
+const unsigned DEFAULT_FILES_PER_COLUMN_PARTITION = 4;
+const unsigned DEFAULT_EXTENTS_PER_SEGMENT_FILE = 2;
+const int DEFAULT_BULK_PROCESS_PRIORITY = -1;
+const unsigned DEFAULT_MAX_FILESYSTEM_DISK_USAGE = 98;  // allow 98% full
+const unsigned DEFAULT_COMPRESSED_PADDING_BLKS = 1;
+const int DEFAULT_LOCAL_MODULE_ID = 1;
+const bool DEFAULT_PARENT_OAM = true;
+const char* DEFAULT_LOCAL_MODULE_TYPE = "pm";
 
-int              Config::m_dbRootCount = 0;
+int Config::m_dbRootCount = 0;
 Config::strvec_t Config::m_dbRootPath;
 Config::intstrmap_t Config::m_dbRootPathMap;
 Config::uint16vec_t Config::m_dbRootId;
-string           Config::m_bulkRoot;
+string Config::m_bulkRoot;
 
-unsigned long    Config::fDBRootChangeCount = 0;
-time_t           Config::fCacheTime = 0;
-boost::mutex     Config::fCacheLock;
+unsigned long Config::fDBRootChangeCount = 0;
+time_t Config::fCacheTime = 0;
+boost::mutex Config::fCacheLock;
 #ifdef SHARED_NOTHING_DEMO_2
-boost::mutex     Config::m_bulkRoot_lk;
+boost::mutex Config::m_bulkRoot_lk;
 #endif
-int      Config::m_WaitPeriod              = DEFAULT_WAIT_PERIOD;
-unsigned Config::m_FilesPerColumnPartition =
-    DEFAULT_FILES_PER_COLUMN_PARTITION;
-unsigned Config::m_ExtentsPerSegmentFile   =
-    DEFAULT_EXTENTS_PER_SEGMENT_FILE;
-int      Config::m_BulkProcessPriority     = DEFAULT_BULK_PROCESS_PRIORITY;
-string   Config::m_BulkRollbackDir;
-unsigned Config::m_MaxFileSystemDiskUsage  =
-    DEFAULT_MAX_FILESYSTEM_DISK_USAGE;
-unsigned Config::m_NumCompressedPadBlks    = DEFAULT_COMPRESSED_PADDING_BLKS;
-bool     Config::m_ParentOAMModuleFlag     = DEFAULT_PARENT_OAM;
-string   Config::m_LocalModuleType;
-int      Config::m_LocalModuleID           = DEFAULT_LOCAL_MODULE_ID;
-string   Config::m_VersionBufferDir;
+int Config::m_WaitPeriod = DEFAULT_WAIT_PERIOD;
+unsigned Config::m_FilesPerColumnPartition = DEFAULT_FILES_PER_COLUMN_PARTITION;
+unsigned Config::m_ExtentsPerSegmentFile = DEFAULT_EXTENTS_PER_SEGMENT_FILE;
+int Config::m_BulkProcessPriority = DEFAULT_BULK_PROCESS_PRIORITY;
+string Config::m_BulkRollbackDir;
+unsigned Config::m_MaxFileSystemDiskUsage = DEFAULT_MAX_FILESYSTEM_DISK_USAGE;
+unsigned Config::m_NumCompressedPadBlks = DEFAULT_COMPRESSED_PADDING_BLKS;
+bool Config::m_ParentOAMModuleFlag = DEFAULT_PARENT_OAM;
+string Config::m_LocalModuleType;
+int Config::m_LocalModuleID = DEFAULT_LOCAL_MODULE_ID;
+string Config::m_VersionBufferDir;
 
 /*******************************************************************************
  * DESCRIPTION:
@@ -88,8 +85,8 @@ string   Config::m_VersionBufferDir;
  ******************************************************************************/
 void Config::initConfigCache()
 {
-    boost::mutex::scoped_lock lk(fCacheLock);
-    checkReload( );
+  boost::mutex::scoped_lock lk(fCacheLock);
+  checkReload();
 }
 
 /*******************************************************************************
@@ -98,221 +95,218 @@ void Config::initConfigCache()
  * PARAMETERS:
  *    none
  ******************************************************************************/
-void Config::checkReload( )
+void Config::checkReload()
 {
-    bool bFirstLoad = false;
+  bool bFirstLoad = false;
 
-    if (fCacheTime == 0)
-        bFirstLoad = true;
+  if (fCacheTime == 0)
+    bFirstLoad = true;
 
-    config::Config* cf = config::Config::makeConfig();
+  config::Config* cf = config::Config::makeConfig();
 
-    // Immediately return if Columnstore.xml timestamp has not changed
-    if (cf->getCurrentMTime() == fCacheTime)
-        return;
+  // Immediately return if Columnstore.xml timestamp has not changed
+  if (cf->getCurrentMTime() == fCacheTime)
+    return;
 
-    //std::cout << "RELOADING cache..." << std::endl;
+  // std::cout << "RELOADING cache..." << std::endl;
 
-    //--------------------------------------------------------------------------
-    // Initialize bulk root directory
-    //--------------------------------------------------------------------------
-    m_bulkRoot = cf->getConfig("WriteEngine", "BulkRoot");
+  //--------------------------------------------------------------------------
+  // Initialize bulk root directory
+  //--------------------------------------------------------------------------
+  m_bulkRoot = cf->getConfig("WriteEngine", "BulkRoot");
 
-    if ( m_bulkRoot.length() == 0 )
-    {
-        m_bulkRoot = "/var/log/mariadb/columnstore";
+  if (m_bulkRoot.length() == 0)
+  {
+    m_bulkRoot = "/var/log/mariadb/columnstore";
 #ifndef _MSC_VER
-        m_bulkRoot += "/data";
+    m_bulkRoot += "/data";
 #endif
-        m_bulkRoot += "/bulk";
-    }
+    m_bulkRoot += "/bulk";
+  }
 
-    // Get latest Columnstore.xml timestamp after first access forced a reload
-    fCacheTime = cf ->getLastMTime();
+  // Get latest Columnstore.xml timestamp after first access forced a reload
+  fCacheTime = cf->getLastMTime();
 
-    //--------------------------------------------------------------------------
-    // Initialize time interval (in seconds) between retries
-    //--------------------------------------------------------------------------
-    m_WaitPeriod = DEFAULT_WAIT_PERIOD;
-    string waitPeriodStr = cf->getConfig("SystemConfig", "WaitPeriod");
+  //--------------------------------------------------------------------------
+  // Initialize time interval (in seconds) between retries
+  //--------------------------------------------------------------------------
+  m_WaitPeriod = DEFAULT_WAIT_PERIOD;
+  string waitPeriodStr = cf->getConfig("SystemConfig", "WaitPeriod");
 
-    if ( waitPeriodStr.length() != 0 )
-        m_WaitPeriod = static_cast<int>(config::Config::fromText(
-                                            waitPeriodStr));
+  if (waitPeriodStr.length() != 0)
+    m_WaitPeriod = static_cast<int>(config::Config::fromText(waitPeriodStr));
 
-    //--------------------------------------------------------------------------
-    // Initialize files per column partition
-    //--------------------------------------------------------------------------
-    m_FilesPerColumnPartition = DEFAULT_FILES_PER_COLUMN_PARTITION;
-    string fpc = cf->getConfig("ExtentMap", "FilesPerColumnPartition");
+  //--------------------------------------------------------------------------
+  // Initialize files per column partition
+  //--------------------------------------------------------------------------
+  m_FilesPerColumnPartition = DEFAULT_FILES_PER_COLUMN_PARTITION;
+  string fpc = cf->getConfig("ExtentMap", "FilesPerColumnPartition");
 
-    if ( fpc.length() != 0 )
-        m_FilesPerColumnPartition = cf->uFromText(fpc);
+  if (fpc.length() != 0)
+    m_FilesPerColumnPartition = cf->uFromText(fpc);
 
-    //--------------------------------------------------------------------------
-    // Initialize extents per segment file
-    //--------------------------------------------------------------------------
-    m_ExtentsPerSegmentFile = DEFAULT_EXTENTS_PER_SEGMENT_FILE;
+  //--------------------------------------------------------------------------
+  // Initialize extents per segment file
+  //--------------------------------------------------------------------------
+  m_ExtentsPerSegmentFile = DEFAULT_EXTENTS_PER_SEGMENT_FILE;
 
-    //--------------------------------------------------------------------------
-    // Initialize bulk load process priority
-    //--------------------------------------------------------------------------
-    m_BulkProcessPriority = DEFAULT_BULK_PROCESS_PRIORITY;
-    string prior = cf->getConfig("WriteEngine", "Priority");
+  //--------------------------------------------------------------------------
+  // Initialize bulk load process priority
+  //--------------------------------------------------------------------------
+  m_BulkProcessPriority = DEFAULT_BULK_PROCESS_PRIORITY;
+  string prior = cf->getConfig("WriteEngine", "Priority");
 
-    if ( prior.length() != 0 )
-    {
-        int initialBPP = cf->fromText(prior);
+  if (prior.length() != 0)
+  {
+    int initialBPP = cf->fromText(prior);
 
-        // config file priority is 40..1 (highest..lowest)
-        // convert config file value to setpriority(2) value(-20..19, -1 is the
-        // default)
-        if (initialBPP > 0)
-            m_BulkProcessPriority = 20 - initialBPP;
-        else if (initialBPP < 0)
-            m_BulkProcessPriority = 19;
+    // config file priority is 40..1 (highest..lowest)
+    // convert config file value to setpriority(2) value(-20..19, -1 is the
+    // default)
+    if (initialBPP > 0)
+      m_BulkProcessPriority = 20 - initialBPP;
+    else if (initialBPP < 0)
+      m_BulkProcessPriority = 19;
 
-        if (m_BulkProcessPriority < -20)
-            m_BulkProcessPriority = -20;
-    }
+    if (m_BulkProcessPriority < -20)
+      m_BulkProcessPriority = -20;
+  }
 
-    //--------------------------------------------------------------------------
-    // Initialize bulk rollback directory
-    // Note this uses m_bulkRoot, so this init section must be after the section
-    // that sets m_bulkRoot.
-    //--------------------------------------------------------------------------
-    m_BulkRollbackDir = cf->getConfig("WriteEngine", "BulkRollbackDir");
+  //--------------------------------------------------------------------------
+  // Initialize bulk rollback directory
+  // Note this uses m_bulkRoot, so this init section must be after the section
+  // that sets m_bulkRoot.
+  //--------------------------------------------------------------------------
+  m_BulkRollbackDir = cf->getConfig("WriteEngine", "BulkRollbackDir");
 
-    if (m_BulkRollbackDir.length() == 0)
-    {
-        m_BulkRollbackDir.assign( m_bulkRoot );
-        m_BulkRollbackDir += "/rollback";
-    }
+  if (m_BulkRollbackDir.length() == 0)
+  {
+    m_BulkRollbackDir.assign(m_bulkRoot);
+    m_BulkRollbackDir += "/rollback";
+  }
 
-    //--------------------------------------------------------------------------
-    // Initialize max disk usage
-    //--------------------------------------------------------------------------
+  //--------------------------------------------------------------------------
+  // Initialize max disk usage
+  //--------------------------------------------------------------------------
+  m_MaxFileSystemDiskUsage = DEFAULT_MAX_FILESYSTEM_DISK_USAGE;
+  string usg = cf->getConfig("WriteEngine", "MaxFileSystemDiskUsagePct");
+
+  if (usg.length() != 0)
+    m_MaxFileSystemDiskUsage = cf->uFromText(usg);
+
+  if (m_MaxFileSystemDiskUsage > 100)
     m_MaxFileSystemDiskUsage = DEFAULT_MAX_FILESYSTEM_DISK_USAGE;
-    string usg = cf->getConfig("WriteEngine", "MaxFileSystemDiskUsagePct");
 
-    if ( usg.length() != 0 )
-        m_MaxFileSystemDiskUsage = cf->uFromText(usg);
+  //--------------------------------------------------------------------------
+  // Number of compressed padding blocks
+  //--------------------------------------------------------------------------
+  m_NumCompressedPadBlks = DEFAULT_COMPRESSED_PADDING_BLKS;
+  string ncpb = cf->getConfig("WriteEngine", "CompressedPaddingBlocks");
 
-    if (m_MaxFileSystemDiskUsage > 100)
-        m_MaxFileSystemDiskUsage = DEFAULT_MAX_FILESYSTEM_DISK_USAGE;
+  if (ncpb.length() != 0)
+    m_NumCompressedPadBlks = cf->uFromText(ncpb);
 
-    //--------------------------------------------------------------------------
-    // Number of compressed padding blocks
-    //--------------------------------------------------------------------------
-    m_NumCompressedPadBlks = DEFAULT_COMPRESSED_PADDING_BLKS;
-    string ncpb = cf->getConfig("WriteEngine", "CompressedPaddingBlocks");
+  IDBPolicy::configIDBPolicy();
 
-    if ( ncpb.length() != 0 )
-        m_NumCompressedPadBlks = cf->uFromText(ncpb);
+  //--------------------------------------------------------------------------
+  // Initialize Parent OAM Module flag
+  // Initialize Module Type
+  // Initialize Local Module ID
+  //--------------------------------------------------------------------------
+  oam::Oam oam;
+  oam::oamModuleInfo_t t;
 
-    IDBPolicy::configIDBPolicy();
+  try
+  {
+    t = oam.getModuleInfo();
+    m_ParentOAMModuleFlag = boost::get<4>(t);
+    m_LocalModuleType = boost::get<1>(t);
+    m_LocalModuleID = boost::get<2>(t);
+  }
+  catch (exception&)
+  {
+    m_ParentOAMModuleFlag = DEFAULT_PARENT_OAM;
+    m_LocalModuleType.assign(DEFAULT_LOCAL_MODULE_TYPE);
+    m_LocalModuleID = DEFAULT_LOCAL_MODULE_ID;
+  }
 
-    //--------------------------------------------------------------------------
-    // Initialize Parent OAM Module flag
-    // Initialize Module Type
-    // Initialize Local Module ID
-    //--------------------------------------------------------------------------
-    oam::Oam oam;
-    oam::oamModuleInfo_t t;
+  //--------------------------------------------------------------------------
+  // Initialize Version Buffer
+  //--------------------------------------------------------------------------
+  m_VersionBufferDir = cf->getConfig("SystemConfig", "DBRMRoot");
+
+  if (m_VersionBufferDir.length() == 0)
+  {
+    m_VersionBufferDir = "/var/lib/columnstore/data1/systemFiles/dbrm/BRM_saves";
+  }
+
+  //--------------------------------------------------------------------------
+  // Initialize m_dbRootCount, m_dbRootPath, m_dbRootPathMap, m_dbRootId.
+  // Note this uses m_localModuleType and m_LocalModuleID, so this init
+  // section must be after the section(s) that set m_localModuleType and
+  // m_LocalModuleID.
+  //--------------------------------------------------------------------------
+  uint16vec_t dbRootIdPrevious(m_dbRootId);   // save current settings
+  strvec_t dbRootPathPrevious(m_dbRootPath);  // save current setttings
+
+  m_dbRootPath.clear();
+  m_dbRootPathMap.clear();
+  m_dbRootId.clear();
+
+  if (m_LocalModuleType == "pm")
+  {
+    oam::DBRootConfigList oamRootList;
 
     try
     {
-        t = oam.getModuleInfo();
-        m_ParentOAMModuleFlag = boost::get<4>(t);
-        m_LocalModuleType     = boost::get<1>(t);
-        m_LocalModuleID       = boost::get<2>(t);
+      oam.getPmDbrootConfig(m_LocalModuleID, oamRootList);
+
+      std::sort(oamRootList.begin(), oamRootList.end());
+
+      m_dbRootCount = oamRootList.size();
+
+      for (unsigned int idx = 0; idx < oamRootList.size(); idx++)
+      {
+        ostringstream oss;
+        oss << "DBRoot" << oamRootList[idx];
+        std::string DbRootPath = cf->getConfig("SystemConfig", oss.str());
+        m_dbRootPath.push_back(DbRootPath);
+        m_dbRootPathMap[oamRootList[idx]] = DbRootPath;
+        m_dbRootId.push_back(oamRootList[idx]);
+      }
     }
     catch (exception&)
     {
-        m_ParentOAMModuleFlag = DEFAULT_PARENT_OAM;
-        m_LocalModuleType.assign( DEFAULT_LOCAL_MODULE_TYPE );
-        m_LocalModuleID       = DEFAULT_LOCAL_MODULE_ID;
+      m_dbRootCount = 0;
     }
+  }
+  else
+  {
+    m_dbRootCount = 0;
+  }
 
-    //--------------------------------------------------------------------------
-    // Initialize Version Buffer
-    //--------------------------------------------------------------------------
-    m_VersionBufferDir = cf->getConfig("SystemConfig", "DBRMRoot");
-
-    if ( m_VersionBufferDir.length() == 0 )
+  // Update counter used to track changes to local PM DBRoot list
+  if (!bFirstLoad)
+  {
+    if ((dbRootIdPrevious != m_dbRootId) || (dbRootPathPrevious != m_dbRootPath))
     {
-        m_VersionBufferDir = "/var/lib/columnstore/data1/systemFiles/dbrm/BRM_saves";
+      fDBRootChangeCount++;
     }
+  }
 
-    //--------------------------------------------------------------------------
-    // Initialize m_dbRootCount, m_dbRootPath, m_dbRootPathMap, m_dbRootId.
-    // Note this uses m_localModuleType and m_LocalModuleID, so this init
-    // section must be after the section(s) that set m_localModuleType and
-    // m_LocalModuleID.
-    //--------------------------------------------------------------------------
-    uint16vec_t dbRootIdPrevious( m_dbRootId );     // save current settings
-    strvec_t    dbRootPathPrevious( m_dbRootPath ); // save current setttings
-
-    m_dbRootPath.clear();
-    m_dbRootPathMap.clear();
-    m_dbRootId.clear();
-
-    if (m_LocalModuleType == "pm")
-    {
-        oam::DBRootConfigList oamRootList;
-
-        try
-        {
-            oam.getPmDbrootConfig( m_LocalModuleID, oamRootList );
-
-            std::sort( oamRootList.begin(), oamRootList.end() );
-
-            m_dbRootCount = oamRootList.size();
-
-            for (unsigned int idx = 0; idx < oamRootList.size(); idx++)
-            {
-                ostringstream oss;
-                oss << "DBRoot" << oamRootList[idx];
-                std::string DbRootPath =
-                    cf->getConfig("SystemConfig", oss.str());
-                m_dbRootPath.push_back( DbRootPath );
-                m_dbRootPathMap[ oamRootList[idx] ] = DbRootPath;
-                m_dbRootId.push_back( oamRootList[idx] );
-            }
-        }
-        catch (exception&)
-        {
-            m_dbRootCount = 0;
-        }
-    }
-    else
-    {
-        m_dbRootCount = 0;
-    }
-
-    // Update counter used to track changes to local PM DBRoot list
-    if (!bFirstLoad)
-    {
-        if ((dbRootIdPrevious   != m_dbRootId) ||
-                (dbRootPathPrevious != m_dbRootPath))
-        {
-            fDBRootChangeCount++;
-        }
-    }
-
-//  for (unsigned int n=0; n<m_dbRootPath.size(); n++)
-//  {
-//      std::cout << "dbrootpath: " << n << ". " << m_dbRootPath[n] <<std::endl;
-//  }
-//  for (unsigned int n=0; n<m_dbRootId.size(); n++)
-//  {
-//      std::cout << "dbrootId: " << n << ". " << m_dbRootId[n] << std::endl;
-//  }
-//  for (Config::intstrmap_t::iterator k=m_dbRootPathMap.begin();
-//      k!=m_dbRootPathMap.end(); ++k)
-//  {
-//      std::cout << "dbrootmap: " << k->first << "," << k->second << std::endl;
-//  }
+  //  for (unsigned int n=0; n<m_dbRootPath.size(); n++)
+  //  {
+  //      std::cout << "dbrootpath: " << n << ". " << m_dbRootPath[n] <<std::endl;
+  //  }
+  //  for (unsigned int n=0; n<m_dbRootId.size(); n++)
+  //  {
+  //      std::cout << "dbrootId: " << n << ". " << m_dbRootId[n] << std::endl;
+  //  }
+  //  for (Config::intstrmap_t::iterator k=m_dbRootPathMap.begin();
+  //      k!=m_dbRootPathMap.end(); ++k)
+  //  {
+  //      std::cout << "dbrootmap: " << k->first << "," << k->second << std::endl;
+  //  }
 }
 
 /*******************************************************************************
@@ -325,10 +319,10 @@ void Config::checkReload( )
  ******************************************************************************/
 size_t Config::DBRootCount()
 {
-    boost::mutex::scoped_lock lk(fCacheLock);
-    checkReload( );
+  boost::mutex::scoped_lock lk(fCacheLock);
+  checkReload();
 
-    return m_dbRootCount;
+  return m_dbRootCount;
 }
 
 /*******************************************************************************
@@ -341,16 +335,16 @@ size_t Config::DBRootCount()
  ******************************************************************************/
 std::string Config::getDBRootByIdx(unsigned idx)
 {
-    boost::mutex::scoped_lock lk(fCacheLock);
-    checkReload( );
+  boost::mutex::scoped_lock lk(fCacheLock);
+  checkReload();
 
-    if (idx >= m_dbRootPath.size())
-    {
-        std::string emptyResult;
-        return emptyResult;
-    }
+  if (idx >= m_dbRootPath.size())
+  {
+    std::string emptyResult;
+    return emptyResult;
+  }
 
-    return m_dbRootPath[idx];
+  return m_dbRootPath[idx];
 }
 
 /*******************************************************************************
@@ -361,13 +355,13 @@ std::string Config::getDBRootByIdx(unsigned idx)
  * RETURN:
  *    none
  ******************************************************************************/
-void Config::getDBRootPathList( std::vector<std::string>& dbRootPathList )
+void Config::getDBRootPathList(std::vector<std::string>& dbRootPathList)
 {
-    boost::mutex::scoped_lock lk(fCacheLock);
-    checkReload( );
+  boost::mutex::scoped_lock lk(fCacheLock);
+  checkReload();
 
-    dbRootPathList.clear();
-    dbRootPathList = m_dbRootPath;
+  dbRootPathList.clear();
+  dbRootPathList = m_dbRootPath;
 }
 
 /*******************************************************************************
@@ -380,18 +374,18 @@ void Config::getDBRootPathList( std::vector<std::string>& dbRootPathList )
  ******************************************************************************/
 std::string Config::getDBRootByNum(unsigned num)
 {
-    boost::mutex::scoped_lock lk(fCacheLock);
-    checkReload( );
+  boost::mutex::scoped_lock lk(fCacheLock);
+  checkReload();
 
-    Config::intstrmap_t::const_iterator iter = m_dbRootPathMap.find( num );
+  Config::intstrmap_t::const_iterator iter = m_dbRootPathMap.find(num);
 
-    if (iter == m_dbRootPathMap.end())
-    {
-        std::string emptyResult;
-        return emptyResult;
-    }
+  if (iter == m_dbRootPathMap.end())
+  {
+    std::string emptyResult;
+    return emptyResult;
+  }
 
-    return iter->second;
+  return iter->second;
 }
 
 /*******************************************************************************
@@ -402,12 +396,12 @@ std::string Config::getDBRootByNum(unsigned num)
  * RETURN:
  *    The list of DBRoot ids
  ******************************************************************************/
-void Config::getRootIdList( std::vector<uint16_t>& rootIds )
+void Config::getRootIdList(std::vector<uint16_t>& rootIds)
 {
-    boost::mutex::scoped_lock lk(fCacheLock);
-    checkReload( );
+  boost::mutex::scoped_lock lk(fCacheLock);
+  checkReload();
 
-    rootIds = m_dbRootId;
+  rootIds = m_dbRootId;
 }
 
 /*******************************************************************************
@@ -420,21 +414,20 @@ void Config::getRootIdList( std::vector<uint16_t>& rootIds )
  ******************************************************************************/
 std::string Config::getBulkRoot()
 {
-    boost::mutex::scoped_lock lk(fCacheLock);
-    checkReload( );
+  boost::mutex::scoped_lock lk(fCacheLock);
+  checkReload();
 
-    return m_bulkRoot;
+  return m_bulkRoot;
 }
 
 #ifdef SHARED_NOTHING_DEMO_2
 void Config::getSharedNothingRoot(char* ret)
 {
-    string root;
-    boost::mutex::scoped_lock lk(m_bulkRoot_lk);
+  string root;
+  boost::mutex::scoped_lock lk(m_bulkRoot_lk);
 
-    root = config::Config::makeConfig()->getConfig(
-               "WriteEngine", "SharedNothingRoot");
-    strncpy(ret, root.c_str(), FILE_NAME_SIZE);
+  root = config::Config::makeConfig()->getConfig("WriteEngine", "SharedNothingRoot");
+  strncpy(ret, root.c_str(), FILE_NAME_SIZE);
 }
 #endif
 
@@ -448,10 +441,10 @@ void Config::getSharedNothingRoot(char* ret)
  ******************************************************************************/
 int Config::getWaitPeriod()
 {
-    boost::mutex::scoped_lock lk(fCacheLock);
-    checkReload( );
+  boost::mutex::scoped_lock lk(fCacheLock);
+  checkReload();
 
-    return m_WaitPeriod;
+  return m_WaitPeriod;
 }
 
 /*******************************************************************************
@@ -464,10 +457,10 @@ int Config::getWaitPeriod()
  ******************************************************************************/
 unsigned Config::getFilesPerColumnPartition()
 {
-    boost::mutex::scoped_lock lk(fCacheLock);
-    checkReload( );
+  boost::mutex::scoped_lock lk(fCacheLock);
+  checkReload();
 
-    return m_FilesPerColumnPartition;
+  return m_FilesPerColumnPartition;
 }
 
 /*******************************************************************************
@@ -480,10 +473,10 @@ unsigned Config::getFilesPerColumnPartition()
  ******************************************************************************/
 unsigned Config::getExtentsPerSegmentFile()
 {
-    boost::mutex::scoped_lock lk(fCacheLock);
-    checkReload( );
+  boost::mutex::scoped_lock lk(fCacheLock);
+  checkReload();
 
-    return m_ExtentsPerSegmentFile;
+  return m_ExtentsPerSegmentFile;
 }
 
 /*******************************************************************************
@@ -503,10 +496,10 @@ unsigned Config::getExtentsPerSegmentFile()
  ******************************************************************************/
 int Config::getBulkProcessPriority()
 {
-    boost::mutex::scoped_lock lk(fCacheLock);
-    checkReload( );
+  boost::mutex::scoped_lock lk(fCacheLock);
+  checkReload();
 
-    return m_BulkProcessPriority;
+  return m_BulkProcessPriority;
 }
 
 /*******************************************************************************
@@ -517,10 +510,10 @@ int Config::getBulkProcessPriority()
  ******************************************************************************/
 std::string Config::getBulkRollbackDir()
 {
-    boost::mutex::scoped_lock lk(fCacheLock);
-    checkReload( );
+  boost::mutex::scoped_lock lk(fCacheLock);
+  checkReload();
 
-    return m_BulkRollbackDir;
+  return m_BulkRollbackDir;
 }
 
 /*******************************************************************************
@@ -531,10 +524,10 @@ std::string Config::getBulkRollbackDir()
  ******************************************************************************/
 unsigned Config::getMaxFileSystemDiskUsage()
 {
-    boost::mutex::scoped_lock lk(fCacheLock);
-    checkReload( );
+  boost::mutex::scoped_lock lk(fCacheLock);
+  checkReload();
 
-    return m_MaxFileSystemDiskUsage;
+  return m_MaxFileSystemDiskUsage;
 }
 
 /*******************************************************************************
@@ -546,10 +539,10 @@ unsigned Config::getMaxFileSystemDiskUsage()
  ******************************************************************************/
 unsigned Config::getNumCompressedPadBlks()
 {
-    boost::mutex::scoped_lock lk(fCacheLock);
-    checkReload( );
+  boost::mutex::scoped_lock lk(fCacheLock);
+  checkReload();
 
-    return m_NumCompressedPadBlks;
+  return m_NumCompressedPadBlks;
 }
 
 /*******************************************************************************
@@ -560,10 +553,10 @@ unsigned Config::getNumCompressedPadBlks()
  ******************************************************************************/
 bool Config::getParentOAMModuleFlag()
 {
-    boost::mutex::scoped_lock lk(fCacheLock);
-    checkReload( );
+  boost::mutex::scoped_lock lk(fCacheLock);
+  checkReload();
 
-    return m_ParentOAMModuleFlag;
+  return m_ParentOAMModuleFlag;
 }
 
 /*******************************************************************************
@@ -574,10 +567,10 @@ bool Config::getParentOAMModuleFlag()
  ******************************************************************************/
 std::string Config::getLocalModuleType()
 {
-    boost::mutex::scoped_lock lk(fCacheLock);
-    checkReload( );
+  boost::mutex::scoped_lock lk(fCacheLock);
+  checkReload();
 
-    return m_LocalModuleType;
+  return m_LocalModuleType;
 }
 
 /*******************************************************************************
@@ -588,10 +581,10 @@ std::string Config::getLocalModuleType()
  ******************************************************************************/
 uint16_t Config::getLocalModuleID()
 {
-    boost::mutex::scoped_lock lk(fCacheLock);
-    checkReload( );
+  boost::mutex::scoped_lock lk(fCacheLock);
+  checkReload();
 
-    return m_LocalModuleID;
+  return m_LocalModuleID;
 }
 
 /*******************************************************************************
@@ -604,10 +597,10 @@ uint16_t Config::getLocalModuleID()
  ******************************************************************************/
 std::string Config::getVBRoot()
 {
-    boost::mutex::scoped_lock lk(fCacheLock);
-    checkReload( );
+  boost::mutex::scoped_lock lk(fCacheLock);
+  checkReload();
 
-    return m_VersionBufferDir;
+  return m_VersionBufferDir;
 }
 
 /*******************************************************************************
@@ -621,16 +614,15 @@ std::string Config::getVBRoot()
  ******************************************************************************/
 bool Config::hasLocalDBRootListChanged()
 {
-    boost::mutex::scoped_lock lk(fCacheLock);
+  boost::mutex::scoped_lock lk(fCacheLock);
 
-    if (fDBRootChangeCount > 0)
-    {
-        fDBRootChangeCount = 0;
-        return true;
-    }
+  if (fDBRootChangeCount > 0)
+  {
+    fDBRootChangeCount = 0;
+    return true;
+  }
 
-    return false;
+  return false;
 }
 
-
-} //end of namespace
+}  // namespace WriteEngine

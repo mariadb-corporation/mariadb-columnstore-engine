@@ -36,63 +36,62 @@ namespace WriteEngine
 {
 WE_DDLCommandClient::WE_DDLCommandClient()
 {
-    fWEClient = new WEClients(WEClients::DDLPROC);
+  fWEClient = new WEClients(WEClients::DDLPROC);
 }
 
 WE_DDLCommandClient::~WE_DDLCommandClient()
 {
-    delete fWEClient;
-    fWEClient = NULL;
+  delete fWEClient;
+  fWEClient = NULL;
 }
 
 uint8_t WE_DDLCommandClient::UpdateSyscolumnNextval(uint32_t columnOid, uint64_t nextVal, uint32_t sessionID)
 {
-    ByteStream command, response;
-    uint8_t err = 0;
-    uint64_t uniqueId = fDbrm.getUnique64();
-    fWEClient->addQueue(uniqueId);
-    command << (ByteStream::byte)WE_UPDATE_NEXTVAL;
-    command << uniqueId;
-    command << columnOid;
-    command << nextVal;
-    command << sessionID;
-    uint16_t dbRoot;
-    BRM::OID_t oid = 1021;
-    fDbrm.getSysCatDBRoot(oid, dbRoot);
-    int pmNum = 1;
-    boost::shared_ptr<messageqcpp::ByteStream> bsIn;
+  ByteStream command, response;
+  uint8_t err = 0;
+  uint64_t uniqueId = fDbrm.getUnique64();
+  fWEClient->addQueue(uniqueId);
+  command << (ByteStream::byte)WE_UPDATE_NEXTVAL;
+  command << uniqueId;
+  command << columnOid;
+  command << nextVal;
+  command << sessionID;
+  uint16_t dbRoot;
+  BRM::OID_t oid = 1021;
+  fDbrm.getSysCatDBRoot(oid, dbRoot);
+  int pmNum = 1;
+  boost::shared_ptr<messageqcpp::ByteStream> bsIn;
 
-    try
+  try
+  {
+    fOam.getDbrootPmConfig(dbRoot, pmNum);
+    fWEClient->write(command, pmNum);
+
+    while (1)
     {
-        fOam.getDbrootPmConfig (dbRoot, pmNum);
-        fWEClient->write(command, pmNum);
+      bsIn.reset(new ByteStream());
+      fWEClient->read(uniqueId, bsIn);
 
-        while (1)
-        {
-            bsIn.reset(new ByteStream());
-            fWEClient->read(uniqueId, bsIn);
-
-            if ( bsIn->length() == 0 ) //read error
-            {
-                err = 1;
-
-                break;
-            }
-            else
-            {
-                *bsIn >> err;
-                break;
-            }
-        }
-    }
-    catch (...)
-    {
+      if (bsIn->length() == 0)  // read error
+      {
         err = 1;
+
+        break;
+      }
+      else
+      {
+        *bsIn >> err;
+        break;
+      }
     }
+  }
+  catch (...)
+  {
+    err = 1;
+  }
 
-    fWEClient->removeQueue(uniqueId);
-    return err;
+  fWEClient->removeQueue(uniqueId);
+  return err;
 }
 
-}
-
+}  // namespace WriteEngine

@@ -19,161 +19,161 @@
  * $Id$
  */
 
-bool parseAutoincrementTableComment ( std::string comment, uint64_t& startValue, std::string& columnName )
+bool parseAutoincrementTableComment(std::string comment, uint64_t& startValue, std::string& columnName)
 {
-    algorithm::to_upper(comment);
-    regex compat("[[:space:]]*AUTOINCREMENT[[:space:]]*=[[:space:]]*", regex_constants::extended);
-    bool autoincrement = false;
-    columnName = "";
-    boost::match_results<std::string::const_iterator> what;
-    std::string::const_iterator start, end;
-    start = comment.begin();
-    end = comment.end();
-    boost::match_flag_type flags = boost::match_default;
+  algorithm::to_upper(comment);
+  regex compat("[[:space:]]*AUTOINCREMENT[[:space:]]*=[[:space:]]*", regex_constants::extended);
+  bool autoincrement = false;
+  columnName = "";
+  boost::match_results<std::string::const_iterator> what;
+  std::string::const_iterator start, end;
+  start = comment.begin();
+  end = comment.end();
+  boost::match_flag_type flags = boost::match_default;
 
-    if (boost::regex_search(start, end, what, compat, flags))
+  if (boost::regex_search(start, end, what, compat, flags))
+  {
+    if (what[0].matched)
     {
-        if (what[0].matched)
+      // string params (what[0].first, what[0].second);
+      string params(&(*(what[0].second)));
+      unsigned i = params.find_first_of(",");
+
+      if (i <= params.length())
+      {
+        // check whether there is more autoincrement column
+        string restComment = params.substr(i + 1, params.length());
+        start = restComment.begin();
+        end = restComment.end();
+
+        if (boost::regex_search(start, end, what, compat, flags))
         {
-            //string params (what[0].first, what[0].second);
-            string params (&(*(what[0].second)));
-            unsigned i = params.find_first_of(",");
-
-            if ( i <= params.length() )
-            {
-                //check whether there is more autoincrement column
-                string restComment = params.substr(i + 1, params.length());
-                start = restComment.begin();
-                end = restComment.end();
-
-                if (boost::regex_search(start, end, what, compat, flags))
-                {
-                    if (what[0].matched)
-                        throw runtime_error(IDBErrorInfo::instance()->errorMsg(ERR_INVALID_NUMBER_AUTOINCREMENT));
-                }
-
-                columnName = params.substr(0, i);
-                string startVal = params.substr(i + 1, params.length());
-                //get rid of possible empty space
-                i = startVal.find_first_not_of(" ");
-
-                if ( i <= startVal.length() )
-                {
-                    startVal = startVal.substr( i, startVal.length());
-                    //; is the seperator between compression and autoincrement comments.
-                    i = startVal.find_first_of(";");
-
-                    if ( i <= startVal.length() )
-                    {
-                        startVal = startVal.substr( 0, i);
-                    }
-
-                    i = startVal.find_last_not_of(" ");
-
-                    if ( i <= startVal.length() )
-                    {
-                        startVal = startVal.substr( 0, i + 1);
-                    }
-
-                    errno = 0;
-                    char* ep = NULL;
-                    const char* str = startVal.c_str();
-                    startValue = strtoull(str, &ep, 10);
-
-                    //  (no digits) || (more chars)  || (other errors & value = 0)
-                    if ((ep == str) || (*ep != '\0') || (errno != 0))
-                    {
-                        throw runtime_error(IDBErrorInfo::instance()->errorMsg(ERR_INVALID_START_VALUE));
-                    }
-                }
-            }
-            else
-            {
-                columnName = params;
-            }
-
-            autoincrement = true;
+          if (what[0].matched)
+            throw runtime_error(IDBErrorInfo::instance()->errorMsg(ERR_INVALID_NUMBER_AUTOINCREMENT));
         }
-    }
 
-    if (columnName.compare("") != 0)
+        columnName = params.substr(0, i);
+        string startVal = params.substr(i + 1, params.length());
+        // get rid of possible empty space
+        i = startVal.find_first_not_of(" ");
+
+        if (i <= startVal.length())
+        {
+          startVal = startVal.substr(i, startVal.length());
+          //; is the seperator between compression and autoincrement comments.
+          i = startVal.find_first_of(";");
+
+          if (i <= startVal.length())
+          {
+            startVal = startVal.substr(0, i);
+          }
+
+          i = startVal.find_last_not_of(" ");
+
+          if (i <= startVal.length())
+          {
+            startVal = startVal.substr(0, i + 1);
+          }
+
+          errno = 0;
+          char* ep = NULL;
+          const char* str = startVal.c_str();
+          startValue = strtoull(str, &ep, 10);
+
+          //  (no digits) || (more chars)  || (other errors & value = 0)
+          if ((ep == str) || (*ep != '\0') || (errno != 0))
+          {
+            throw runtime_error(IDBErrorInfo::instance()->errorMsg(ERR_INVALID_START_VALUE));
+          }
+        }
+      }
+      else
+      {
+        columnName = params;
+      }
+
+      autoincrement = true;
+    }
+  }
+
+  if (columnName.compare("") != 0)
+  {
+    // get rid of possible empty space
+    unsigned i = columnName.find_last_not_of(" ");
+
+    if (i <= columnName.length())
     {
-        //get rid of possible empty space
-        unsigned i = columnName.find_last_not_of(" ");
-
-        if ( i <= columnName.length() )
-        {
-            columnName = columnName.substr( 0, i + 1);
-        }
+      columnName = columnName.substr(0, i + 1);
     }
+  }
 
-    return autoincrement;
+  return autoincrement;
 }
 
-bool parseAutoincrementColumnComment ( std::string comment, uint64_t& startValue )
+bool parseAutoincrementColumnComment(std::string comment, uint64_t& startValue)
 {
-    algorithm::to_upper(comment);
-    regex compat("[[:space:]]*AUTOINCREMENT[[:space:]]*", regex_constants::extended);
-    bool autoincrement = false;
-    boost::match_results<std::string::const_iterator> what;
-    std::string::const_iterator start, end;
-    start = comment.begin();
-    end = comment.end();
-    boost::match_flag_type flags = boost::match_default;
+  algorithm::to_upper(comment);
+  regex compat("[[:space:]]*AUTOINCREMENT[[:space:]]*", regex_constants::extended);
+  bool autoincrement = false;
+  boost::match_results<std::string::const_iterator> what;
+  std::string::const_iterator start, end;
+  start = comment.begin();
+  end = comment.end();
+  boost::match_flag_type flags = boost::match_default;
 
-    if (boost::regex_search(start, end, what, compat, flags))
+  if (boost::regex_search(start, end, what, compat, flags))
+  {
+    if (what[0].matched)
     {
-        if (what[0].matched)
+      string params(&(*(what[0].second)));
+      unsigned i = params.find_first_of(",");
+
+      if (i <= params.length())
+      {
+        string startVal = params.substr(i + 1, params.length());
+        // get rid of possible empty space
+        i = startVal.find_first_not_of(" ");
+
+        if (i <= startVal.length())
         {
-            string params (&(*(what[0].second)));
-            unsigned i = params.find_first_of(",");
+          startVal = startVal.substr(i, startVal.length());
+          //; is the seperator between compression and autoincrement comments.
+          i = startVal.find_first_of(";");
 
-            if ( i <= params.length() )
-            {
-                string startVal = params.substr(i + 1, params.length());
-                //get rid of possible empty space
-                i = startVal.find_first_not_of(" ");
+          if (i <= startVal.length())
+          {
+            startVal = startVal.substr(0, i);
+          }
 
-                if ( i <= startVal.length() )
-                {
-                    startVal = startVal.substr( i, startVal.length());
-                    //; is the seperator between compression and autoincrement comments.
-                    i = startVal.find_first_of(";");
+          i = startVal.find_last_not_of(" ");
 
-                    if ( i <= startVal.length() )
-                    {
-                        startVal = startVal.substr( 0, i);
-                    }
+          if (i <= startVal.length())
+          {
+            startVal = startVal.substr(0, i + 1);
+          }
 
-                    i = startVal.find_last_not_of(" ");
+          errno = 0;
+          char* ep = NULL;
+          const char* str = startVal.c_str();
+          startValue = strtoll(str, &ep, 10);
 
-                    if ( i <= startVal.length() )
-                    {
-                        startVal = startVal.substr( 0, i + 1);
-                    }
-
-                    errno = 0;
-                    char* ep = NULL;
-                    const char* str = startVal.c_str();
-                    startValue = strtoll(str, &ep, 10);
-
-                    //  (no digits) || (more chars)  || (other errors & value = 0)
-                    if ((ep == str) || (*ep != '\0') || (errno != 0))
-                    {
-                        throw runtime_error (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_START_VALUE));
-                    }
-                }
-            }
-            else
-            {
-                startValue = 1;
-            }
-
-            autoincrement = true;
+          //  (no digits) || (more chars)  || (other errors & value = 0)
+          if ((ep == str) || (*ep != '\0') || (errno != 0))
+          {
+            throw runtime_error(IDBErrorInfo::instance()->errorMsg(ERR_INVALID_START_VALUE));
+          }
         }
-    }
+      }
+      else
+      {
+        startValue = 1;
+      }
 
-    return autoincrement;
+      autoincrement = true;
+    }
+  }
+
+  return autoincrement;
 }
 
 // vim:ts=4 sw=4:

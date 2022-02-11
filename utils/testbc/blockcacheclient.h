@@ -29,7 +29,7 @@
 #include "brmtypes.h"
 
 /**
-	@author Jason Rodriguez <jrodriguez@calpont.com>
+        @author Jason Rodriguez <jrodriguez@calpont.com>
 */
 
 /**
@@ -42,70 +42,66 @@ namespace dbbc
 {
 class blockCacheClient
 {
+ public:
+  /**
+   * @brief ctor requires reference to BlockRequestProcessor object
+   **/
+  blockCacheClient(BlockRequestProcessor& brp);
 
-public:
+  /**
+   * @brief dtor
+   **/
+  virtual ~blockCacheClient();
 
-    /**
-     * @brief ctor requires reference to BlockRequestProcessor object
-     **/
-    blockCacheClient(BlockRequestProcessor& brp);
+  /**
+   * @brief verify that the Disk Block for the LBID lbid, ver are loaded into the Cache.
+   **/
+  void check(BRM::LBID_t lbid, BRM::VER_t ver, bool flg, bool& wasBlockInCache);
 
-    /**
-     * @brief dtor
-     **/
-    virtual ~blockCacheClient();
+  /**
+   * @brief verify all Disk Blocks for the LBID range are loaded into the Cache
+   **/
+  void check(const BRM::InlineLBIDRange& range, const BRM::VER_t ver, uint32_t& rCount);
 
-    /**
-     * @brief verify that the Disk Block for the LBID lbid, ver are loaded into the Cache.
-     **/
-    void check(BRM::LBID_t lbid, BRM::VER_t ver, bool flg, bool& wasBlockInCache);
+  /**
+   * @brief retrieve the Disk Block at lbid, ver from the Disk Block Buffer Cache
+   **/
+  const int read(const BRM::LBID_t& lbid, const BRM::VER_t& ver, FileBuffer& fb);
 
-    /**
-     * @brief verify all Disk Blocks for the LBID range are loaded into the Cache
-     **/
-    void check(const BRM::InlineLBIDRange& range, const BRM::VER_t ver, uint32_t& rCount);
+  FileBuffer* getBlockPtr(const BRM::LBID_t& lbid, const BRM::VER_t& ver);
 
-    /**
-     * @brief retrieve the Disk Block at lbid, ver from the Disk Block Buffer Cache
-     **/
-    const int read(const BRM::LBID_t& lbid, const BRM::VER_t& ver, FileBuffer& fb);
+  /**
+   * @brief retrieve the Disk Block at lbid, ver from the Disk Block Buffer Cache
+   **/
+  const int read(const BRM::LBID_t& lbid, const BRM::VER_t& ver, void* bufferPtr);
 
-    FileBuffer* getBlockPtr(const BRM::LBID_t& lbid, const BRM::VER_t& ver);
+  /**
+   * @brief retrieve all disk Blocks in the LBIDRange range and insert them into fbList
+   **/
+  const int read(const BRM::InlineLBIDRange& range, FileBufferList_t& fbList, const BRM::VER_t ver);
 
-    /**
-     * @brief retrieve the Disk Block at lbid, ver from the Disk Block Buffer Cache
-     **/
-    const int read(const BRM::LBID_t& lbid, const BRM::VER_t& ver, void* bufferPtr);
+  const int getBlock(const BRM::LBID_t& lbid, const BRM::VER_t& ver, void* bufferPtr, bool flg,
+                     bool& wasCached);
 
-    /**
-     * @brief retrieve all disk Blocks in the LBIDRange range and insert them into fbList
-     **/
-    const int read(const BRM::InlineLBIDRange& range, FileBufferList_t& fbList, const BRM::VER_t ver);
+  bool exists(BRM::LBID_t lbid, BRM::VER_t ver);
 
-    const int getBlock(const BRM::LBID_t& lbid, const BRM::VER_t& ver, void* bufferPtr,
-                       bool flg, bool& wasCached);
+  /**
+   * @brief flush the cache
+   **/
+  void flushCache();
 
-    bool exists(BRM::LBID_t lbid, BRM::VER_t ver);
+ private:
+  /**
+   * @brief pointer to the BlockRequestProcessor object on which the API will operate
+   **/
+  BlockRequestProcessor* fBCCBrp;
 
-    /**
-     * @brief flush the cache
-     **/
-    void flushCache();
-
-private:
-
-    /**
-     * @brief pointer to the BlockRequestProcessor object on which the API will operate
-     **/
-    BlockRequestProcessor* fBCCBrp;
-
-    //do not implement
-    blockCacheClient();
-    blockCacheClient(const blockCacheClient& bc);
-    const blockCacheClient& operator=(const blockCacheClient& blk);
-
+  // do not implement
+  blockCacheClient();
+  blockCacheClient(const blockCacheClient& bc);
+  const blockCacheClient& operator=(const blockCacheClient& blk);
 };
 
-}
+}  // namespace dbbc
 
 #endif

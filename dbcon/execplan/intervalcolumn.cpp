@@ -16,10 +16,10 @@
    MA 02110-1301, USA. */
 
 /***********************************************************************
-*   $Id: intervalcolumn.cpp 9414 2013-04-22 22:18:30Z xlou $
-*
-*
-***********************************************************************/
+ *   $Id: intervalcolumn.cpp 9414 2013-04-22 22:18:30Z xlou $
+ *
+ *
+ ***********************************************************************/
 
 #include <string>
 #include <iostream>
@@ -39,44 +39,42 @@ using namespace funcexp;
 
 namespace execplan
 {
-
 /**
  * Constructors/Destructors
  */
 IntervalColumn::IntervalColumn()
-{}
-
-IntervalColumn::IntervalColumn(SRCP& val, int intervalType):
-    fVal(val->clone()), fIntervalType(intervalType)
 {
-//	cout << "intervalType=" << fIntervalType << endl;
 }
 
-IntervalColumn::IntervalColumn( const IntervalColumn& rhs, const uint32_t sessionID):
-    ReturnedColumn(rhs, sessionID),
-    fVal(rhs.val()),
-    fIntervalType(rhs.intervalType())
-{}
+IntervalColumn::IntervalColumn(SRCP& val, int intervalType) : fVal(val->clone()), fIntervalType(intervalType)
+{
+  //	cout << "intervalType=" << fIntervalType << endl;
+}
+
+IntervalColumn::IntervalColumn(const IntervalColumn& rhs, const uint32_t sessionID)
+ : ReturnedColumn(rhs, sessionID), fVal(rhs.val()), fIntervalType(rhs.intervalType())
+{
+}
 
 /**
  * Methods
  */
 const string IntervalColumn::toString() const
 {
-    ostringstream output;
-    output << "INTERVAL" << endl;
+  ostringstream output;
+  output << "INTERVAL" << endl;
 
-    if (fVal)
-        output << fVal->toString();
+  if (fVal)
+    output << fVal->toString();
 
-    output << " IntervalType=" << fIntervalType << endl;
-    return output.str();
+  output << " IntervalType=" << fIntervalType << endl;
+  return output.str();
 }
 
 ostream& operator<<(ostream& output, const IntervalColumn& rhs)
 {
-    output << rhs.toString();
-    return output;
+  output << rhs.toString();
+  return output;
 }
 
-}   //namespace
+}  // namespace execplan

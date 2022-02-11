@@ -40,26 +40,25 @@ namespace WriteEngine
 {
 class WE_DDLCommandClient
 {
-public:
-    EXPORT WE_DDLCommandClient();
-    EXPORT ~WE_DDLCommandClient();
-    /** @brief Update SYSCOLUMN nextval column for the columnoid with nextVal.
-    *
-    * Update SYSCOLUMN nextval column for the columnoid with nexValue.
-    * @param columnOid (in) The column OID
-    * @param nextVal (in) The partition number
-    * @return 0 on success, non-0 on error.
-    */
-    EXPORT uint8_t UpdateSyscolumnNextval(uint32_t columnOid, uint64_t nextVal, uint32_t sessionID = 0);
+ public:
+  EXPORT WE_DDLCommandClient();
+  EXPORT ~WE_DDLCommandClient();
+  /** @brief Update SYSCOLUMN nextval column for the columnoid with nextVal.
+   *
+   * Update SYSCOLUMN nextval column for the columnoid with nexValue.
+   * @param columnOid (in) The column OID
+   * @param nextVal (in) The partition number
+   * @return 0 on success, non-0 on error.
+   */
+  EXPORT uint8_t UpdateSyscolumnNextval(uint32_t columnOid, uint64_t nextVal, uint32_t sessionID = 0);
 
-private:
-    BRM::DBRM fDbrm;
-    WEClients* fWEClient;
-    oam::Oam fOam;
-
+ private:
+  BRM::DBRM fDbrm;
+  WEClients* fWEClient;
+  oam::Oam fOam;
 };
 
-}
+}  // namespace WriteEngine
 
 #undef EXPORT
 
