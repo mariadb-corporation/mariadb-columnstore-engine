@@ -71,7 +71,11 @@ const long long columnstore_precision[19] = {0,
 //------------------------------------------------------------------------------
 // Constructor
 //------------------------------------------------------------------------------
-XMLJob::XMLJob() : fDebugLevel(DEBUG_0), fDeleteTempFile(false), fValidateColList(true), fTimeZone("SYSTEM")
+XMLJob::XMLJob()
+ : fDebugLevel(DEBUG_0)
+ , fDeleteTempFile(false)
+ , fValidateColList(true)
+ , fTimeZone(dataconvert::systemTimeZoneOffset())
 {
 }
 

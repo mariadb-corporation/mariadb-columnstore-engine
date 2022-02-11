@@ -2681,7 +2681,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
   CalpontSystemCatalog::OID oid = 0;
   CalpontSystemCatalog::ROPair tableRO;
 
-  std::string timeZone = cpackages[txnId].get_TimeZone();
+  long timeZone = cpackages[txnId].get_TimeZone();
 
   try
   {

@@ -132,7 +132,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo);
 /* This looks like an inefficient way to get NULL values. Much easier ways
    to do it. */
 template <typename T>
-void valueNullNum(const CalpontSystemCatalog::ColType& ct, const string& timeZone, T& val)
+void valueNullNum(const CalpontSystemCatalog::ColType& ct, const long timeZone, T& val)
 {
   T& n = val;
   bool pushWarning = false;
@@ -274,7 +274,7 @@ void valueNullNum(const CalpontSystemCatalog::ColType& ct, const string& timeZon
 
 template <typename T>
 void convertValueNum(const string& str, const CalpontSystemCatalog::ColType& ct, bool isNull, uint8_t& rf,
-                     const string& timeZone, T& v)
+                     const long timeZone, T& v)
 {
   if (str.size() == 0 || isNull)
   {

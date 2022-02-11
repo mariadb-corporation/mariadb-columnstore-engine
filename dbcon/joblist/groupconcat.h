@@ -128,7 +128,7 @@ class GroupConcator
   int64_t fGroupConcatLen;
   int64_t fConstantLen;
   boost::scoped_array<uint8_t> fOutputString;
-  std::string fTimeZone;
+  long fTimeZone;
 };
 
 // For GROUP_CONCAT withour distinct or orderby

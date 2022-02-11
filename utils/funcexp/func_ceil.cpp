@@ -571,7 +571,7 @@ IDB_Decimal Func_ceil::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull,
       TimeStamp dt(parm[0]->data()->getTimestampIntVal(row, isNull));
 
       if (!isNull)
-        ret.value = dt.convertToMySQLint(timeZone());
+        ret.value = dt.convertToMySQLint(op_ct.getTimeZone());
     }
     break;
 

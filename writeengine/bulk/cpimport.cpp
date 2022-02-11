@@ -648,12 +648,12 @@ void parseCmdLineArgs(int argc, char** argv, BulkLoad& curJob, std::string& sJob
         std::string timeZone = optarg;
         long offset;
 
-        if (timeZone != "SYSTEM" && dataconvert::timeZoneToOffset(timeZone.c_str(), timeZone.size(), &offset))
+        if (dataconvert::timeZoneToOffset(timeZone.c_str(), timeZone.size(), &offset))
         {
           startupError(std::string("Value for option -T is invalid"), true);
         }
 
-        curJob.setTimeZone(timeZone);
+        curJob.setTimeZone(offset);
         break;
       }
 

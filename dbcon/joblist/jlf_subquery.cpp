@@ -64,7 +64,7 @@ using namespace joblist;
 
 namespace
 {
-void getColumnValue(ConstantColumn** cc, uint64_t i, const Row& row, const string& timeZone)
+void getColumnValue(ConstantColumn** cc, uint64_t i, const Row& row, const long timeZone)
 {
   ostringstream oss;
   int64_t data = 0;

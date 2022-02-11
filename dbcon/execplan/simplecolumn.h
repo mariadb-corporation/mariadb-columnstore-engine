@@ -152,11 +152,11 @@ class SimpleColumn : public ReturnedColumn
     if (lower_case_table_names)
       boost::algorithm::to_lower(fViewName);
   }
-  inline const std::string& timeZone() const
+  inline long timeZone() const
   {
     return fTimeZone;
   }
-  inline void timeZone(const std::string& timeZone)
+  inline void timeZone(const long timeZone)
   {
     fTimeZone = timeZone;
   }
@@ -260,7 +260,7 @@ class SimpleColumn : public ReturnedColumn
   std::string fIndexName;
   // if belong to view, view name is non-empty
   std::string fViewName;
-  std::string fTimeZone;
+  long fTimeZone;
   bool fisColumnStore;
 
   /** @brief parse SimpleColumn text
@@ -350,7 +350,7 @@ class SimpleColumn : public ReturnedColumn
   inline int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull)
   {
     evaluate(row, isNull);
-    return TreeNode::getDatetimeIntVal();
+    return TreeNode::getDatetimeIntVal(fTimeZone);
   }
 
   inline int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull)

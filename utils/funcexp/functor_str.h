@@ -95,7 +95,7 @@ class Func_Str : public Func
                              execplan::CalpontSystemCatalog::ColType& op_ct)
   {
     std::string str = getStrVal(row, fp, isNull, op_ct);
-    return (isNull ? 0 : stringToTimestamp(str));
+    return (isNull ? 0 : stringToTimestamp(str, op_ct.getTimeZone()));
   }
 
   int64_t getTimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,

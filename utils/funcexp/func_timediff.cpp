@@ -142,16 +142,11 @@ string Func_timediff::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& is
 
     case execplan::CalpontSystemCatalog::TIMESTAMP:
     {
-      if (type1 != type2)
-      {
-        isNull = true;
-        break;
-      }
       int64_t temp = parm[0]->data()->getTimestampIntVal(row, isNull);
       dataconvert::TimeStamp timestamp(temp);
       int64_t seconds = timestamp.second;
       dataconvert::MySQLTime time;
-      dataconvert::gmtSecToMySQLTime(seconds, time, timeZone());
+      dataconvert::gmtSecToMySQLTime(seconds, time, ct.getTimeZone());
       dataconvert::DateTime dt;
       dt.year = time.year;
       dt.month = time.month;
@@ -239,7 +234,7 @@ string Func_timediff::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& is
       dataconvert::TimeStamp timestamp(temp);
       int64_t seconds = timestamp.second;
       dataconvert::MySQLTime time;
-      dataconvert::gmtSecToMySQLTime(seconds, time, timeZone());
+      dataconvert::gmtSecToMySQLTime(seconds, time, ct.getTimeZone());
       dataconvert::DateTime dt;
       dt.year = time.year;
       dt.month = time.month;
@@ -328,7 +323,7 @@ int64_t Func_timediff::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& parm,
 int64_t Func_timediff::getTimestampIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                                           CalpontSystemCatalog::ColType& ct)
 {
-  return dataconvert::DataConvert::timestampToInt(getStrVal(row, parm, isNull, ct), timeZone());
+  return dataconvert::DataConvert::timestampToInt(getStrVal(row, parm, isNull, ct), ct.getTimeZone());
 }
 
 int64_t Func_timediff::getTimeIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,

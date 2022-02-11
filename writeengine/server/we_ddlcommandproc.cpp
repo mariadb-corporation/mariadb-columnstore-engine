@@ -3552,7 +3552,7 @@ uint8_t WE_DDLCommandProc::fillNewColumn(ByteStream& bs, std::string& err)
   int dataWidth, scale, precision, compressionType, refColWidth, refCompressionType;
   string defaultValStr;
   ColTuple defaultVal;
-  string timeZone;
+  long timeZone;
 
   bs >> tmp32;
   txnID = tmp32;
@@ -3581,7 +3581,9 @@ uint8_t WE_DDLCommandProc::fillNewColumn(ByteStream& bs, std::string& err)
   refColWidth = tmp32;
   bs >> tmp8;
   refCompressionType = tmp8;
-  bs >> timeZone;
+  messageqcpp::ByteStream::octbyte timeZoneTemp;
+  bs >> timeZoneTemp;
+  timeZone = timeZoneTemp;
   // Find the fill in value
   bool isNULL = false;
 
