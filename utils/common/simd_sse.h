@@ -17,6 +17,17 @@
 
 #pragma once
 
+// Column filtering is dispatched 4-way based on the column type,
+// which defines implementation of comparison operations for the column values
+enum ENUM_KIND
+{
+  KIND_DEFAULT,   // compared as signed integers
+  KIND_UNSIGNED,  // compared as unsigned integers
+  KIND_FLOAT,     // compared as floating-point numbers
+  KIND_TEXT
+};  // whitespace-trimmed and then compared as signed integers
+
+
 #if defined(__x86_64__)
 
 #include <cstdint>
@@ -35,16 +46,6 @@
 #endif
 
 #include <mcs_datatype.h>
-
-// Column filtering is dispatched 4-way based on the column type,
-// which defines implementation of comparison operations for the column values
-enum ENUM_KIND
-{
-  KIND_DEFAULT,   // compared as signed integers
-  KIND_UNSIGNED,  // compared as unsigned integers
-  KIND_FLOAT,     // compared as floating-point numbers
-  KIND_TEXT
-};  // whitespace-trimmed and then compared as signed integers
 
 namespace simd
 {
