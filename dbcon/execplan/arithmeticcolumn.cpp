@@ -283,7 +283,7 @@ const string ArithmeticColumn::nextToken(string::size_type& pos, char end) const
   msg.append(1, end);
   msg.append(" found in " + fData);
   throw invalid_argument(msg);
-  return 0;
+  return {};
 }
 
 ostream& operator<<(ostream& output, const ArithmeticColumn& rhs)
