@@ -337,7 +337,7 @@ bool ExtentMapIndexImpl::growIfNeeded(const size_t memoryNeeded)
     return false;
 }
 
-InsertUpdateShmemKeyPair ExtentMapIndexImpl::insert(const EMEntry& emEntry, const size_t emIdx)
+InsertUpdateShmemKeyPair ExtentMapIndexImpl::insert(const EMEntry& emEntry, const LBID_t lbid)
 {
     auto dbRoot = emEntry.dbRoot;
     assert(dbRoot > 0 && dbRoot <= numeric_limits<uint64_t>::max());
@@ -356,11 +356,13 @@ InsertUpdateShmemKeyPair ExtentMapIndexImpl::insert(const EMEntry& emEntry, cons
         extentMapIndexPtr->push_back(std::move(oidIndices));
     }
     auto& extentMapIndex = *extentMapIndexPtr;
-    return insert2ndLayerWrapper(extentMapIndex[dbRoot], emEntry, emIdx, shmemHasGrown);
+    return insert2ndLayerWrapper(extentMapIndex[dbRoot], emEntry, lbid, shmemHasGrown);
 }
 
 InsertUpdateShmemKeyPair ExtentMapIndexImpl::insert2ndLayer(OIDIndexContainerT& oids,
-    const EMEntry& emEntry, const size_t emIdx, const bool aShmemHasGrown)
+                                                            const EMEntry& emEntry,
+                                                            const LBID_t lbid,
+                                                            const bool aShmemHasGrown)
 {
     OID_t oid = emEntry.fileID;
     ShmVoidAllocator alloc(fBRMManagedShmMemImpl_.getManagedSegment()->get_segment_manager());
@@ -371,15 +373,16 @@ InsertUpdateShmemKeyPair ExtentMapIndexImpl::insert2ndLayer(OIDIndexContainerT& 
     if (iterAndResult.second)
     {
         PartitionIndexContainerT& partitionsContainer = (*iterAndResult.first).second;
-        return insert3dLayerWrapper(partitionsContainer, emEntry, emIdx, aShmemHasGrown);
+        return insert3dLayerWrapper(partitionsContainer, emEntry, lbid, aShmemHasGrown);
     }
     else
         return {false, aShmemHasGrown};
 }
 
 InsertUpdateShmemKeyPair ExtentMapIndexImpl::insert2ndLayerWrapper(OIDIndexContainerT& oids,
-    const EMEntry& emEntry,
-    const size_t emIdx, const bool aShmemHasGrown)
+                                                                   const EMEntry& emEntry,
+                                                                   const LBID_t lbid,
+                                                                   const bool aShmemHasGrown)
 {
     OID_t oid = emEntry.fileID;
     auto oidsIter = oids.find(oid);
@@ -399,27 +402,31 @@ InsertUpdateShmemKeyPair ExtentMapIndexImpl::insert2ndLayerWrapper(OIDIndexConta
             shmemHasGrown = shmemHasGrown || aShmemHasGrown;
             // The dbroot must be here b/c it was already found once in the upper insert().
             OIDIndexContainerT& refreshedOidsRef = extMapIndex[emEntry.dbRoot];
-            return insert2ndLayer(refreshedOidsRef, emEntry, emIdx, shmemHasGrown);
+            return insert2ndLayer(refreshedOidsRef, emEntry, lbid, shmemHasGrown);
         }
-        return insert2ndLayer(oids, emEntry, emIdx, shmemHasGrown);
+        return insert2ndLayer(oids, emEntry, lbid, shmemHasGrown);
     }
     PartitionIndexContainerT& partitions = (*oidsIter).second;
-    return insert3dLayerWrapper(partitions, emEntry, emIdx, shmemHasGrown);
+    return insert3dLayerWrapper(partitions, emEntry, lbid, shmemHasGrown);
 }
 
-InsertUpdateShmemKeyPair ExtentMapIndexImpl::insert3dLayer(PartitionIndexContainerT& partitions, const EMEntry& emEntry,
-    const size_t emIdx, const bool aShmemHasGrown)
+InsertUpdateShmemKeyPair ExtentMapIndexImpl::insert3dLayer(PartitionIndexContainerT& partitions,
+                                                           const EMEntry& emEntry,
+                                                           const LBID_t lbid,
+                                                           const bool aShmemHasGrown)
 {
     auto partitionNumber = emEntry.partitionNum;
     ShmVoidAllocator alloc(fBRMManagedShmMemImpl_.getManagedSegment()->get_segment_manager());
-    ExtentMapIndicesT emIndices(alloc);
-    emIndices.push_back(emIdx);
-    auto iterAndResult = partitions.insert({partitionNumber, std::move(emIndices)});
+    LBID_tVectorT lbids(alloc);
+    lbids.push_back(lbid);
+    auto iterAndResult = partitions.insert({partitionNumber, std::move(lbids)});
     return {iterAndResult.second, aShmemHasGrown};
 }
 
-InsertUpdateShmemKeyPair ExtentMapIndexImpl::insert3dLayerWrapper(PartitionIndexContainerT& partitions, const EMEntry& emEntry,
-    const size_t emIdx, const bool aShmemHasGrown)
+InsertUpdateShmemKeyPair
+ExtentMapIndexImpl::insert3dLayerWrapper(PartitionIndexContainerT& partitions,
+                                         const EMEntry& emEntry, const LBID_t lbid,
+                                         const bool aShmemHasGrown)
 {
     auto partitionNumber = emEntry.partitionNum;
     auto partitionsIter = partitions.find(partitionNumber);
@@ -441,18 +448,18 @@ InsertUpdateShmemKeyPair ExtentMapIndexImpl::insert3dLayerWrapper(PartitionIndex
             OIDIndexContainerT& refreshedOidsRef = extMapIndex[emEntry.dbRoot];
             auto oidsIter = refreshedOidsRef.find(emEntry.fileID);
             PartitionIndexContainerT& refreshedPartitionsRef = (*oidsIter).second;
-            return insert3dLayer(refreshedPartitionsRef, emEntry, emIdx, shmemHasGrown);
+            return insert3dLayer(refreshedPartitionsRef, emEntry, lbid, shmemHasGrown);
         }
-        return insert3dLayer(partitions, emEntry, emIdx, shmemHasGrown);
+        return insert3dLayer(partitions, emEntry, lbid, shmemHasGrown);
     }
 
-    ExtentMapIndicesT& emIndices = (*partitionsIter).second;
-    emIndices.push_back(emIdx);
+    LBID_tVectorT& lbids = (*partitionsIter).second;
+    lbids.push_back(lbid);
     return {true, shmemHasGrown};
 }
 
-ExtentMapIndexFindResult ExtentMapIndexImpl::find(const DBRootT dbroot, const OID_t oid,
-    const PartitionNumberT partitionNumber)
+LBID_tFindResult ExtentMapIndexImpl::find(const DBRootT dbroot, const OID_t oid,
+                                          const PartitionNumberT partitionNumber)
 {
     ExtentMapIndex& emIndex = *get();
     if (dbroot >= emIndex.size())
@@ -460,7 +467,7 @@ ExtentMapIndexFindResult ExtentMapIndexImpl::find(const DBRootT dbroot, const OI
     return search2ndLayer(emIndex[dbroot], oid, partitionNumber);
 }
 
-ExtentMapIndexFindResult ExtentMapIndexImpl::find(const DBRootT dbroot, const OID_t oid)
+LBID_tFindResult ExtentMapIndexImpl::find(const DBRootT dbroot, const OID_t oid)
 {
     ExtentMapIndex& emIndex = *get();
     if (dbroot >= emIndex.size())
@@ -468,9 +475,8 @@ ExtentMapIndexFindResult ExtentMapIndexImpl::find(const DBRootT dbroot, const OI
     return search2ndLayer(emIndex[dbroot], oid);
 }
 
-ExtentMapIndexFindResult ExtentMapIndexImpl::search2ndLayer(OIDIndexContainerT& oids,
-    const OID_t oid,
-    const PartitionNumberT partitionNumber)
+LBID_tFindResult ExtentMapIndexImpl::search2ndLayer(OIDIndexContainerT& oids, const OID_t oid,
+                                                    const PartitionNumberT partitionNumber)
 {
     auto oidsIter = oids.find(oid);
     if (oidsIter == oids.end())
@@ -480,17 +486,17 @@ ExtentMapIndexFindResult ExtentMapIndexImpl::search2ndLayer(OIDIndexContainerT& 
     return search3dLayer(partitions, partitionNumber);
 }
 
-ExtentMapIndexFindResult ExtentMapIndexImpl::search2ndLayer(OIDIndexContainerT& oids, const OID_t oid)
+LBID_tFindResult ExtentMapIndexImpl::search2ndLayer(OIDIndexContainerT& oids, const OID_t oid)
 {
     auto oidsIter = oids.find(oid);
     if (oidsIter == oids.end())
         return {};
 
-    ExtentMapIndexFindResult result;
+    LBID_tFindResult result;
     PartitionIndexContainerT& partitions = (*oidsIter).second;
     for (auto& partKeyValue: partitions)
     {
-        ExtentMapIndicesT& emIdentifiers = partKeyValue.second;
+        LBID_tVectorT& emIdentifiers = partKeyValue.second;
         for (auto& emIdent: emIdentifiers)
             result.push_back(emIdent);
     }
@@ -498,15 +504,15 @@ ExtentMapIndexFindResult ExtentMapIndexImpl::search2ndLayer(OIDIndexContainerT& 
     return result;
 }
 
-ExtentMapIndexFindResult ExtentMapIndexImpl::search3dLayer(PartitionIndexContainerT& partitions,
-    const PartitionNumberT partitionNumber)
+LBID_tFindResult ExtentMapIndexImpl::search3dLayer(PartitionIndexContainerT& partitions,
+                                                   const PartitionNumberT partitionNumber)
 {
     auto partitionsIter = partitions.find(partitionNumber);
     if (partitionsIter == partitions.end())
         return {};
 
-    ExtentMapIndexFindResult result;
-    ExtentMapIndicesT& emIndicesVec = (*partitionsIter).second;
+    LBID_tFindResult result;
+    LBID_tVectorT& emIndicesVec = (*partitionsIter).second;
     for (auto& emIndex: emIndicesVec)
         result.push_back(emIndex);
     return result;
@@ -539,7 +545,7 @@ void ExtentMapIndexImpl::deleteEMEntry(const EMEntry& emEntry, const ExtentMapId
     auto partitionsIter = partitions.find(emEntry.partitionNum);
     if (partitionsIter == partitions.end())
         return;
-    ExtentMapIndicesT& emIdentifiers = (*partitionsIter).second;
+    LBID_tVectorT& emIdentifiers = (*partitionsIter).second;
     // pop the identifier
     if (emIdentifiers.size() > 1)
     {
@@ -1422,6 +1428,27 @@ void ExtentMap::reserveLBIDRange(LBID_t start, uint8_t size)
     }
 }
 
+std::vector<ExtentMapIdxT> ExtentMap::getEmIdentsByLbids(const std::vector<LBID_t>& lbids)
+{
+    const uint32_t entries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
+    vector<ExtentMapIdxT> emIdents;
+
+    tr1::unordered_set<LBID_t> lbidsSet;
+    for (const auto lbid : lbids)
+        lbidsSet.insert(lbid);
+
+    for (uint32_t i = 0; i < entries; ++i)
+    {
+        if (fExtentMap[i].range.size != 0)
+        {
+            if (lbidsSet.count(fExtentMap[i].range.start))
+                emIdents.push_back(i);
+        }
+    }
+
+    return emIdents;
+}
+
 /*
 	The file layout looks like this:
 
@@ -1499,7 +1526,8 @@ void ExtentMap::loadVersion4(IDBDataFile* in)
                 fExtentMap[i].status > EXTENTSTATUSMAX)
             fExtentMap[i].status = EXTENTAVAILABLE;
 
-        auto resShmemHasGrownPair = fPExtMapIndexImpl_->insert(fExtentMap[i], i);
+        auto resShmemHasGrownPair =
+            fPExtMapIndexImpl_->insert(fExtentMap[i], fExtentMap[i].range.start);
 
         if (resShmemHasGrownPair.second)
             fEMIndexShminfo->allocdSize = fPExtMapIndexImpl_->getShmemSize();
@@ -2286,7 +2314,8 @@ int ExtentMap::lookupLocal(int OID, uint32_t partitionNum, uint16_t segmentNum, 
 
     for (auto dbRoot: dbRootVec)
     {
-        auto emIdents = fPExtMapIndexImpl_->find(dbRoot, OID, partitionNum);
+        const auto lbids = fPExtMapIndexImpl_->find(dbRoot, OID, partitionNum);
+        const auto emIdents = getEmIdentsByLbids(lbids);
         for (auto i : emIdents)
         {
             // TODO:  Blockoffset logic.
@@ -2410,7 +2439,8 @@ int ExtentMap::lookupLocalStartLbid(int      OID,
 
     for (auto dbRoot: dbRootVec)
     {
-        auto emIdents = fPExtMapIndexImpl_->find(dbRoot, OID, partitionNum);
+        const auto lbids = fPExtMapIndexImpl_->find(dbRoot, OID, partitionNum);
+        const auto emIdents = getEmIdentsByLbids(lbids);
         for (auto i : emIdents)
         {
            if (fExtentMap[i].range.size   != 0 &&
@@ -2661,9 +2691,9 @@ LBID_t ExtentMap::_createColumnExtent_DBroot(uint32_t size, int OID,
     //--------------------------------------------------------------------------
     LBID_t startLBID = getLBIDsFromFreeList( size );
 
-    auto emIdents = fPExtMapIndexImpl_->find(dbRoot, OID);
+    const auto lbids = fPExtMapIndexImpl_->find(dbRoot, OID);
+    const auto emIdents = getEmIdentsByLbids(lbids);
     // Find the first empty Entry; and find last extent for this OID and dbRoot
-
     for (auto i : emIdents)
     {
         if (fExtentMap[i].range.size  != 0)
@@ -2699,7 +2729,8 @@ LBID_t ExtentMap::_createColumnExtent_DBroot(uint32_t size, int OID,
             if (dbRootFromList == dbRoot)
                 continue;
 
-            auto emIdentsLocal = fPExtMapIndexImpl_->find(dbRootFromList, OID, partitionNum);
+            const auto lbids = fPExtMapIndexImpl_->find(dbRootFromList, OID, partitionNum);
+            const auto emIdentsLocal = getEmIdentsByLbids(lbids);
             for (auto i: emIdentsLocal)
             {
                 if ((fExtentMap[i].range.size  != 0) &&
@@ -2776,7 +2807,8 @@ LBID_t ExtentMap::_createColumnExtent_DBroot(uint32_t size, int OID,
         {
             if (dbRootFromList == dbRoot)
             {
-                auto emIdents = fPExtMapIndexImpl_->find(dbRootFromList, OID, targetDbRootPart);
+                const auto lbids = fPExtMapIndexImpl_->find(dbRootFromList, OID, targetDbRootPart);
+                const auto emIdents = getEmIdentsByLbids(lbids);
                 for (auto i : emIdents)
                 {
                     // 5. Track hi seg for hwm partition
@@ -2812,7 +2844,9 @@ LBID_t ExtentMap::_createColumnExtent_DBroot(uint32_t size, int OID,
             else
             {
                 // 4. Track hi seg for hwm+1 partition
-                auto emIdentsNext = fPExtMapIndexImpl_->find(dbRootFromList, OID, targetDbRootPartNext);
+                const auto lbidsNext =
+                    fPExtMapIndexImpl_->find(dbRootFromList, OID, targetDbRootPartNext);
+                const auto emIdentsNext = getEmIdentsByLbids(lbidsNext);
                 for (auto i : emIdentsNext)
                 {
                     if (fExtentMap[i].segmentNum > partHighSegNext)
@@ -2822,7 +2856,8 @@ LBID_t ExtentMap::_createColumnExtent_DBroot(uint32_t size, int OID,
                 }
 
                 // 5. Track hi seg for hwm partition
-                auto emIdents = fPExtMapIndexImpl_->find(dbRootFromList, OID, targetDbRootPart);
+                const auto lbids = fPExtMapIndexImpl_->find(dbRootFromList, OID, targetDbRootPart);
+                const auto emIdents = getEmIdentsByLbids(lbids);
                 for (auto i : emIdentsNext)
                 {
                     if (fExtentMap[i].segmentNum > partHighSeg)
@@ -3089,7 +3124,8 @@ LBID_t ExtentMap::_createColumnExtent_DBroot(uint32_t size, int OID,
 
     makeUndoRecord(fEMShminfo, sizeof(MSTEntry));
     fEMShminfo->currentSize += sizeof(struct EMEntry);
-    auto resShmemHasGrownPair = fPExtMapIndexImpl_->insert(fExtentMap[emptyEMEntry], emptyEMEntry);
+    auto resShmemHasGrownPair =
+        fPExtMapIndexImpl_->insert(fExtentMap[emptyEMEntry], fExtentMap[emptyEMEntry].range.start);
 
     if (resShmemHasGrownPair.second)
         fEMIndexShminfo->allocdSize = fPExtMapIndexImpl_->getShmemSize();
@@ -3190,7 +3226,8 @@ LastIndEmptyIndEmptyInd ExtentMap::_createExtentCommonSearch(const OID_t OID,
 
     size_t emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
 
-    auto emIdents = fPExtMapIndexImpl_->find(dbRoot, OID, partitionNum);
+    const auto lbids = fPExtMapIndexImpl_->find(dbRoot, OID, partitionNum);
+    const auto emIdents = getEmIdentsByLbids(lbids);
     // DRRTUY we might need to use cache preload here.
     // Search of the last extent idx and the highest offset
     for (auto i : emIdents)
@@ -3339,7 +3376,8 @@ LBID_t ExtentMap::_createColumnExtentExactFile(uint32_t size, int OID,
 
     makeUndoRecord(fEMShminfo, sizeof(MSTEntry));
     fEMShminfo->currentSize += sizeof(struct EMEntry);
-    auto resShmemHasGrownPair = fPExtMapIndexImpl_->insert(fExtentMap[emptyEMEntry], emptyEMEntry);
+    auto resShmemHasGrownPair =
+        fPExtMapIndexImpl_->insert(fExtentMap[emptyEMEntry], fExtentMap[emptyEMEntry].range.start);
 
     if (resShmemHasGrownPair.second)
         fEMIndexShminfo->allocdSize = fPExtMapIndexImpl_->getShmemSize();
@@ -3498,7 +3536,8 @@ LBID_t ExtentMap::_createDictStoreExtent(uint32_t size, int OID,
 
     makeUndoRecord(fEMShminfo, sizeof(MSTEntry));
     fEMShminfo->currentSize += sizeof(struct EMEntry);
-    auto resShmemHasGrownPair = fPExtMapIndexImpl_->insert(fExtentMap[emptyEMEntry], emptyEMEntry);
+    auto resShmemHasGrownPair =
+        fPExtMapIndexImpl_->insert(fExtentMap[emptyEMEntry], fExtentMap[emptyEMEntry].range.start);
 
     if (resShmemHasGrownPair.second)
         fEMIndexShminfo->allocdSize = fPExtMapIndexImpl_->getShmemSize();
@@ -4654,13 +4693,12 @@ void ExtentMap::getDbRootHWMInfo(int OID, uint16_t pmNumber,
     // will be less.
     for (auto dbRoot: dbRootVec)
     {
-        auto emIdents = fPExtMapIndexImpl_->find(dbRoot, OID);
+        const auto lbids = fPExtMapIndexImpl_->find(dbRoot, OID);
+        const auto emIdents = getEmIdentsByLbids(lbids);
         for (auto i : emIdents)
         {
-            if ((fExtentMap[i].range.size != 0)   &&
-                    (fExtentMap[i].fileID     == OID))
+            if ((fExtentMap[i].range.size != 0) && (fExtentMap[i].fileID == OID))
             {
-
                 // Include this extent in the search, only if the extent's
                 // DBRoot falls in the list of DBRoots for this PM.
                 emIter = emDbRootMap.find( fExtentMap[i].dbRoot );
@@ -4847,7 +4885,8 @@ HWM_t ExtentMap::getLocalHWM(int OID, uint32_t partitionNum,
     DBRootVec dbRootVec(std::move(getAllDbRoots()));
     for (auto dbRoot: dbRootVec)
     {
-        auto emIdents = fPExtMapIndexImpl_->find(dbRoot, OID, partitionNum);
+        const auto lbids = fPExtMapIndexImpl_->find(dbRoot, OID, partitionNum);
+        const auto emIdents = getEmIdentsByLbids(lbids);
         for (auto i : emIdents)
         {
             if ((fExtentMap[i].range.size  != 0) &&
@@ -4931,7 +4970,8 @@ void ExtentMap::setLocalHWM(int OID, uint32_t partitionNum,
 
     for (auto dbRoot: dbRootVec)
     {
-        auto emIdents = fPExtMapIndexImpl_->find(dbRoot, OID, partitionNum);
+        const auto lbids = fPExtMapIndexImpl_->find(dbRoot, OID, partitionNum);
+        const auto emIdents = getEmIdentsByLbids(lbids);
         for (auto i : emIdents)
         {
             if ((fExtentMap[i].range.size  != 0) &&

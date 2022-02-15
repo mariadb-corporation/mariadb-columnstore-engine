@@ -296,33 +296,31 @@ using ShmSegmentManagerT = bi::managed_shared_memory::segment_manager;
 using ShmVoidAllocator = bi::allocator<void, ShmSegmentManagerT>;
 
 using ExtentMapIdxT = size_t;
-using ExtentMapIdxTAlloc = bi::allocator<ExtentMapIdxT, ShmSegmentManagerT>;
+using LBID_tAlloc = bi::allocator<LBID_t, ShmSegmentManagerT>;
 using PartitionNumberTAlloc = bi::allocator<PartitionNumberT, ShmSegmentManagerT>;
-using ExtentMapIndicesT = std::vector<ExtentMapIdxT, ExtentMapIdxTAlloc>;
+using LBID_tVectorT = std::vector<LBID_t, LBID_tAlloc>;
 
 using PartitionIndexContainerKeyT = PartitionNumberT;
-using PartitionIndexContainerValT =  std::pair<const PartitionIndexContainerKeyT, ExtentMapIndicesT>;
-using PartitionIndexContainerValTAlloc = bi::allocator<PartitionIndexContainerValT, ShmSegmentManagerT>;
+using PartitionIndexContainerValT = std::pair<const PartitionIndexContainerKeyT, LBID_tVectorT>;
+using PartitionIndexContainerValTAlloc =
+    bi::allocator<PartitionIndexContainerValT, ShmSegmentManagerT>;
 // Can't use std::unordered_map presumably b/c the map's pointer type doesn't use offset_type as boost::u_map does
-using PartitionIndexContainerT = boost::unordered_map
-    <PartitionIndexContainerKeyT, ExtentMapIndicesT,
-         boost::hash<PartitionIndexContainerKeyT>, std::equal_to<PartitionIndexContainerKeyT>,
-         PartitionIndexContainerValTAlloc
-    >;
+using PartitionIndexContainerT = boost::unordered_map<
+    PartitionIndexContainerKeyT, LBID_tVectorT, boost::hash<PartitionIndexContainerKeyT>,
+    std::equal_to<PartitionIndexContainerKeyT>, PartitionIndexContainerValTAlloc>;
 
 using OIDIndexContainerKeyT = OID_t;
 using OIDIndexContainerValT = std::pair<const OIDIndexContainerKeyT, PartitionIndexContainerT>;
 using OIDIndexContainerValTAlloc = bi::allocator<OIDIndexContainerValT, ShmSegmentManagerT>;
-using OIDIndexContainerT = boost::unordered_map
-     <OIDIndexContainerKeyT, PartitionIndexContainerT,
-        boost::hash<OIDIndexContainerKeyT>, std::equal_to<OIDIndexContainerKeyT>,
-        OIDIndexContainerValTAlloc
-    >;
+using OIDIndexContainerT =
+    boost::unordered_map<OIDIndexContainerKeyT, PartitionIndexContainerT,
+                         boost::hash<OIDIndexContainerKeyT>, std::equal_to<OIDIndexContainerKeyT>,
+                         OIDIndexContainerValTAlloc>;
 
 using DBRootIndexTAlloc = bi::allocator<OIDIndexContainerT, ShmSegmentManagerT>;
 using DBRootIndexContainerT = std::vector<OIDIndexContainerT, DBRootIndexTAlloc>;
 using ExtentMapIndex = DBRootIndexContainerT;
-using ExtentMapIndexFindResult = std::vector<ExtentMapIdxT>;
+using LBID_tFindResult = std::vector<LBID_t>;
 using InsertUpdateShmemKeyPair = std::pair<bool, bool>;
 
 class ExtentMapIndexImpl
@@ -397,21 +395,28 @@ public:
 
     void createExtentMapIndexIfNeeded();
     ExtentMapIndex* get();
-    InsertUpdateShmemKeyPair insert(const EMEntry& emEntry, const size_t emIdx);
-    InsertUpdateShmemKeyPair insert2ndLayerWrapper(OIDIndexContainerT& oids, const EMEntry& emEntry, const size_t emIdx, const bool aShmemHasGrown);
-    InsertUpdateShmemKeyPair insert2ndLayer(OIDIndexContainerT& oids, const EMEntry& emEntry, const size_t emIdx, const bool aShmemHasGrown);
-    InsertUpdateShmemKeyPair insert3dLayerWrapper(PartitionIndexContainerT& partitions, const EMEntry& emEntry,
-        const size_t emIdx, const bool aShmemHasGrown);
-    InsertUpdateShmemKeyPair insert3dLayer(PartitionIndexContainerT& partitions, const EMEntry& emEntry,
-        const size_t emIdx, const bool aShmemHasGrown);
-    ExtentMapIndexFindResult find(const DBRootT dbroot, const OID_t oid,
+    // Insert functions.
+    InsertUpdateShmemKeyPair insert(const EMEntry& emEntry, const LBID_t lbid);
+    InsertUpdateShmemKeyPair insert2ndLayerWrapper(OIDIndexContainerT& oids, const EMEntry& emEntry,
+                                                   const LBID_t lbid, const bool aShmemHasGrown);
+    InsertUpdateShmemKeyPair insert2ndLayer(OIDIndexContainerT& oids, const EMEntry& emEntry,
+                                            const LBID_t lbid, const bool aShmemHasGrown);
+    InsertUpdateShmemKeyPair insert3dLayerWrapper(PartitionIndexContainerT& partitions,
+                                                  const EMEntry& emEntry, const LBID_t lbid,
+                                                  const bool aShmemHasGrown);
+    InsertUpdateShmemKeyPair insert3dLayer(PartitionIndexContainerT& partitions,
+                                           const EMEntry& emEntry, const LBID_t lbid,
+                                           const bool aShmemHasGrown);
+    // Search functions.
+    LBID_tFindResult find(const DBRootT dbroot, const OID_t oid,
         const PartitionNumberT partitionNumber);
-    ExtentMapIndexFindResult find(const DBRootT dbroot, const OID_t oid);
-    ExtentMapIndexFindResult search2ndLayer(OIDIndexContainerT& oids, const OID_t oid,
+    LBID_tFindResult find(const DBRootT dbroot, const OID_t oid);
+    LBID_tFindResult search2ndLayer(OIDIndexContainerT& oids, const OID_t oid,
         const PartitionNumberT partitionNumber);
-    ExtentMapIndexFindResult search2ndLayer(OIDIndexContainerT& oids, const OID_t oid);
-    ExtentMapIndexFindResult search3dLayer(PartitionIndexContainerT& partitions,
+    LBID_tFindResult search2ndLayer(OIDIndexContainerT& oids, const OID_t oid);
+    LBID_tFindResult search3dLayer(PartitionIndexContainerT& partitions,
         const PartitionNumberT partitionNumber);
+    // Delete functions.
     void deleteDbRoot(const DBRootT dbroot);
     void deleteOID(const DBRootT dbroot, const OID_t oid);
     void deleteEMEntry(const EMEntry& emEntry, const ExtentMapIdxT emIdent);
@@ -1104,6 +1109,7 @@ private:
     void deleteExtent(const int emIndex, const bool clearEMIndex = true);
     LBID_t getLBIDsFromFreeList(uint32_t size);
     void reserveLBIDRange(LBID_t start, uint8_t size);    // used by load() to allocate pre-existing LBIDs
+    std::vector<size_t> getEmIdentsByLbids(const std::vector<LBID_t>& lbids);
 
     key_t chooseEMShmkey();
     key_t chooseFLShmkey();
