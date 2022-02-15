@@ -11,9 +11,15 @@ MDB_SOURCE_PATH=$(realpath $SCRIPT_LOCATION/../../../..)
 
 source $SCRIPT_LOCATION/utils.sh
 
+
+if [ "$EUID" -ne 0 ]
+    then error "Please run script as root to install MariaDb to system paths"
+    exit 1
+fi
+
 message "Building Mariadb Server from $MDB_SOURCE_PATH"
 
-BUILD_TYPE_OPTIONS=("Debug" "Release" "RelWithDebInfo" "MinSizeRel")
+BUILD_TYPE_OPTIONS=("Debug" "RelWithDebInfo")
 DISTRO_OPTIONS=("Ubuntu" "Centos" "Debian" "openSUSE")
 
 optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
@@ -62,13 +68,24 @@ stop_service()
     systemctl stop mariadb-columnstore
 }
 
+check_service()
+{
+    if systemctl is-active --quiet $1; then
+        message "$1 service started OK"
+    else
+        error "$1 service failed"
+        service $1 status
+    fi
+}
+
 start_service()
 {
     message "Starting MariaDB services"
     systemctl start mariadb-columnstore
     systemctl start mariadb
-    service mariadb-columnstore status
-    service mariadb status
+
+    check_service mariadb-columnstore
+    check_service mariadb
 }
 
 clean_old_installation()
@@ -101,10 +118,8 @@ build()
                      -DWITH_WSREP=OFF
                      -DWITH_SSL=system
                      -DWITH_UNITTESTS=YES
-                     -DWITH_MICROBENCHMARKS=YES
                      -DWITH_BRM_UT=YES
                      -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX"
-                     #-DDATA_DIR=$DATA_DIR"
 
     cd $MDB_SOURCE_PATH
 
@@ -140,6 +155,9 @@ install()
     fi
 
     mkdir -p /etc/my.cnf.d
+
+    bash -c 'echo "[client-server]
+socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
 
     mv $INSTALL_PREFIX/lib/plugin/ha_columnstore.so /tmp/ha_columnstore_1.so || mv $INSTALL_PREFIX/lib64/plugin/ha_columnstore.so /tmp/ha_columnstore_2.so
     message "Running mysql_install_db"
@@ -198,9 +216,6 @@ install()
     chown -R syslog:syslog /var/log/mariadb/
     chmod 777 /var/log/mariadb/
     chmod 777 /var/log/mariadb/columnstore
-
-    bash -c 'echo "[client-server]
-socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
 }
 
 if [[ $SKIP_DEPS = false ]] ; then
