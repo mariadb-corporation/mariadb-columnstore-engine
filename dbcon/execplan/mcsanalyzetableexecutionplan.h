@@ -170,12 +170,12 @@ class MCSAnalyzeTableExecutionPlan : public CalpontExecutionPlan
     return fUuid;
   }
 
-  void timeZone(const std::string& timezone)
+  void timeZone(long timezone)
   {
     fTimeZone = timezone;
   }
 
-  const std::string timeZone() const
+  long timeZone() const
   {
     return fTimeZone;
   }
@@ -257,7 +257,7 @@ class MCSAnalyzeTableExecutionPlan : public CalpontExecutionPlan
   std::string fTableName;
   uint32_t fTraceFlags;
   boost::uuids::uuid fUuid;
-  std::string fTimeZone;
+  long fTimeZone;
   uint32_t fStatementID;
   uint64_t fStringScanThreshold;
   std::string fData;

@@ -154,7 +154,9 @@ int64_t Func_convert_tz::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool&
   }
   else
   {
-    seconds = dataconvert::mySQLTimeToGmtSec(my_start_time, from_tz, valid);
+    long from_tz_offset;
+    dataconvert::timeZoneToOffset(from_tz.c_str(), from_tz.size(), &from_tz_offset);
+    seconds = dataconvert::mySQLTimeToGmtSec(my_start_time, from_tz_offset, valid);
     if (!valid)
     {
       if (seconds != 0)
@@ -196,7 +198,9 @@ int64_t Func_convert_tz::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool&
   }
   else
   {
-    dataconvert::gmtSecToMySQLTime(seconds, my_time_tmp, to_tz);
+    long to_tz_offset;
+    dataconvert::timeZoneToOffset(to_tz.c_str(), to_tz.size(), &to_tz_offset);
+    dataconvert::gmtSecToMySQLTime(seconds, my_time_tmp, to_tz_offset);
   }
 
   dataconvert::DateTime result_datetime(my_time_tmp.year, my_time_tmp.month, my_time_tmp.day,

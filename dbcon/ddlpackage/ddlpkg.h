@@ -1309,9 +1309,20 @@ struct AlterTableStatement : public SqlStatement
     return fTableName->fSchema;
   }
 
+  long getTimeZone() const
+  {
+    return fTimeZone;
+  }
+  void setTimeZone(long timeZone)
+  {
+    fTimeZone = timeZone;
+  }
+
   QualifiedName* fTableName;
   AlterTableActionList fActions;
-  std::string fTimeZone;
+ private:
+  long fTimeZone;
+ public:
 };
 
 /** @brief This is used during parsing when constraint attributes

@@ -166,6 +166,7 @@ struct gp_walk_info
   bool cs_vtable_impossible_where_on_union;
 
   bool isGroupByHandler;
+  long timeZone;
 
   // MCOL-4617 The below 2 fields are used for in-to-exists
   // predicate creation and injection. See usage in InSub::transform()
@@ -177,7 +178,7 @@ struct gp_walk_info
   TableOnExprList tableOnExprList;
   std::vector<COND*> condList;
 
-  gp_walk_info()
+  gp_walk_info(long timeZone_)
    : sessionid(0)
    , fatalParseError(false)
    , condPush(false)
@@ -198,6 +199,7 @@ struct gp_walk_info
    , cs_vtable_is_update_with_derive(false)
    , cs_vtable_impossible_where_on_union(false)
    , isGroupByHandler(false)
+   , timeZone(timeZone_)
    , inSubQueryLHS(nullptr)
    , inSubQueryLHSItem(nullptr)
   {
@@ -392,7 +394,7 @@ const std::string infinidb_err_msg =
     "distributed syntax or consider changing the MariaDB Columnstore Operating Mode (infinidb_vtable_mode).";
 
 int cp_get_plan(THD* thd, execplan::SCSEP& csep);
-int cp_get_table_plan(THD* thd, execplan::SCSEP& csep, cal_impl_if::cal_table_info& ti);
+int cp_get_table_plan(THD* thd, execplan::SCSEP& csep, cal_impl_if::cal_table_info& ti, long timeZone);
 int cp_get_group_plan(THD* thd, execplan::SCSEP& csep, cal_impl_if::cal_group_info& gi);
 int cs_get_derived_plan(ha_columnstore_derived_handler* handler, THD* thd, execplan::SCSEP& csep,
                         gp_walk_info& gwi);
@@ -429,14 +431,14 @@ execplan::ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi);
 execplan::ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& nonSupport);
 execplan::ReturnedColumn* buildPseudoColumn(Item* item, gp_walk_info& gwi, bool& nonSupport,
                                             uint32_t pseudoType);
-void addIntervalArgs(THD* thd, Item_func* ifp, funcexp::FunctionParm& functionParms);
-void castCharArgs(THD* thd, Item_func* ifp, funcexp::FunctionParm& functionParms);
-void castDecimalArgs(THD* thd, Item_func* ifp, funcexp::FunctionParm& functionParms);
-void castTypeArgs(THD* thd, Item_func* ifp, funcexp::FunctionParm& functionParms);
+void addIntervalArgs(gp_walk_info* gwip, Item_func* ifp, funcexp::FunctionParm& functionParms);
+void castCharArgs(gp_walk_info* gwip, Item_func* ifp, funcexp::FunctionParm& functionParms);
+void castDecimalArgs(gp_walk_info* gwip, Item_func* ifp, funcexp::FunctionParm& functionParms);
+void castTypeArgs(gp_walk_info* gwip, Item_func* ifp, funcexp::FunctionParm& functionParms);
 // void parse_item (Item* item, std::vector<Item_field*>& field_vec, bool& hasNonSupportItem, uint16&
 // parseInfo);
 bool isPredicateFunction(Item* item, gp_walk_info* gwip);
-execplan::ParseTree* buildRowPredicate(THD* thd, execplan::RowColumn* lhs, execplan::RowColumn* rhs,
+execplan::ParseTree* buildRowPredicate(gp_walk_info* gwip, execplan::RowColumn* lhs, execplan::RowColumn* rhs,
                                        std::string predicateOp);
 bool buildRowColumnFilter(gp_walk_info* gwip, execplan::RowColumn* rhs, execplan::RowColumn* lhs,
                           Item_func* ifp);
@@ -449,13 +451,13 @@ std::string getViewName(TABLE_LIST* table_ptr);
 bool buildConstPredicate(Item_func* ifp, execplan::ReturnedColumn* rhs, gp_walk_info* gwip);
 execplan::CalpontSystemCatalog::ColType fieldType_MysqlToIDB(const Field* field);
 execplan::CalpontSystemCatalog::ColType colType_MysqlToIDB(const Item* item);
-execplan::SPTP getIntervalType(THD* thd, int interval_type);
+execplan::SPTP getIntervalType(gp_walk_info* gwip, int interval_type);
 uint32_t isPseudoColumn(std::string funcName);
 void setDerivedTable(execplan::ParseTree* n);
-execplan::ParseTree* setDerivedFilter(THD* thd, execplan::ParseTree*& n,
+execplan::ParseTree* setDerivedFilter(gp_walk_info* gwip, execplan::ParseTree*& n,
                                       std::map<std::string, execplan::ParseTree*>& obj,
                                       execplan::CalpontSelectExecutionPlan::SelectList& derivedTbList);
-void derivedTableOptimization(THD* thd, execplan::SCSEP& csep);
+void derivedTableOptimization(gp_walk_info* gwip, execplan::SCSEP& csep);
 bool buildEqualityPredicate(execplan::ReturnedColumn* lhs, execplan::ReturnedColumn* rhs, gp_walk_info* gwip,
                             boost::shared_ptr<execplan::Operator>& sop, const Item_func::Functype& funcType,
                             const std::vector<Item*>& itemList, bool isInSubs = false);

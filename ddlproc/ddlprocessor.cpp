@@ -541,7 +541,7 @@ class PackageHandler
           qts.schema_name = alterTableStmt.schemaName();
           fQtc.postQueryTele(qts);
 
-          processor->fTimeZone = alterTableStmt.fTimeZone;
+          processor->fTimeZone = alterTableStmt.getTimeZone();
 
           result = processor->processPackage(alterTableStmt);
 

@@ -6105,8 +6105,8 @@ const string CalpontSystemCatalog::ColType::toString() const
 }
 
 boost::any CalpontSystemCatalog::ColType::convertColumnData(const std::string& data, bool& pushWarning,
-                                                            const std::string& timeZone, bool nulFlag,
-                                                            bool noRoundup, bool isUpdate) const
+                                                            long timeZone, bool nulFlag, bool noRoundup,
+                                                            bool isUpdate) const
 {
   pushWarning = false;
   const datatypes::TypeHandler* h = typeHandler();

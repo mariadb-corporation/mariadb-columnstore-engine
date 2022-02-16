@@ -254,7 +254,8 @@ void ConstantColumn::serialize(messageqcpp::ByteStream& b) const
   b << (uint32_t)fType;
   // b << fAlias;
   b << fData;
-  b << fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
+  b << timeZone;
   b << static_cast<ByteStream::doublebyte>(fReturnAll);
   b << (uint64_t)fResult.intVal;
   b << fResult.uintVal;
@@ -278,7 +279,9 @@ void ConstantColumn::unserialize(messageqcpp::ByteStream& b)
   b >> fConstval;
   b >> (uint32_t&)fType;
   b >> fData;
-  b >> fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone;
+  b >> timeZone;
+  fTimeZone = timeZone;
   b >> reinterpret_cast<ByteStream::doublebyte&>(fReturnAll);
   b >> (uint64_t&)fResult.intVal;
   b >> fResult.uintVal;

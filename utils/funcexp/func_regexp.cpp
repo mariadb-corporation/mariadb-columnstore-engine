@@ -48,7 +48,7 @@ using namespace logging;
 namespace
 {
 inline bool getBool(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& isNull,
-                    CalpontSystemCatalog::ColType& ct, const string& timeZone)
+                    CalpontSystemCatalog::ColType& ct, long timeZone)
 {
   string expr;
   string pattern;
@@ -244,7 +244,7 @@ CalpontSystemCatalog::ColType Func_regexp::operationType(FunctionParm& fp,
 bool Func_regexp::getBoolVal(rowgroup::Row& row, FunctionParm& pm, bool& isNull,
                              CalpontSystemCatalog::ColType& ct)
 {
-  return getBool(row, pm, isNull, ct, timeZone()) && !isNull;
+  return getBool(row, pm, isNull, ct, ct.getTimeZone()) && !isNull;
 }
 
 }  // namespace funcexp

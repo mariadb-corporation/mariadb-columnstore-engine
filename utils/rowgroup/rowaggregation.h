@@ -339,7 +339,7 @@ struct GroupConcat
   std::vector<std::pair<int, bool>> fOrderCond;  // position to order by [asc/desc]
   joblist::ResourceManager* fRm;                 // resource manager
   boost::shared_ptr<int64_t> fSessionMemLimit;
-  std::string fTimeZone;
+  long fTimeZone;
 
   GroupConcat() : fRm(nullptr)
   {
@@ -506,11 +506,11 @@ class RowAggregation : public messageqcpp::Serializeable
     return fAggMapKeyCount;
   }
 
-  inline void timeZone(const std::string& timeZone)
+  inline void timeZone(long timeZone)
   {
     fTimeZone = timeZone;
   }
-  inline const std::string& timeZone() const
+  inline long timeZone() const
   {
     return fTimeZone;
   }
@@ -599,7 +599,7 @@ class RowAggregation : public messageqcpp::Serializeable
 
   bool fKeyOnHeap = false;
 
-  std::string fTimeZone;
+  long fTimeZone;
 
   // We need a separate copy for each thread.
   mcsv1sdk::mcsv1Context fRGContext;

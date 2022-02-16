@@ -581,6 +581,8 @@ ha_columnstore_derived_handler::ha_columnstore_derived_handler(THD* thd, TABLE_L
  : derived_handler(thd, mcs_hton)
 {
   derived = dt;
+  const char* timeZone = thd->variables.time_zone->get_name()->ptr();
+  dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &time_zone);
 }
 
 /***********************************************************
@@ -625,7 +627,7 @@ int ha_columnstore_derived_handler::next_row()
 {
   DBUG_ENTER("ha_columnstore_derived_handler::next_row");
 
-  int rc = ha_mcs_impl_rnd_next(table->record[0], table);
+  int rc = ha_mcs_impl_rnd_next(table->record[0], table, time_zone);
 
   DBUG_RETURN(rc);
 }
@@ -670,6 +672,8 @@ ha_mcs_group_by_handler::ha_mcs_group_by_handler(THD* thd_arg, Query* query)
  , order_by(query->order_by)
  , having(query->having)
 {
+  const char* timeZone = thd_arg->variables.time_zone->get_name()->ptr();
+  dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &time_zone);
 }
 
 /***********************************************************
@@ -705,7 +709,7 @@ int ha_mcs_group_by_handler::init_scan()
 int ha_mcs_group_by_handler::next_row()
 {
   DBUG_ENTER("ha_mcs_group_by_handler::next_row");
-  int rc = ha_mcs_impl_group_by_next(table);
+  int rc = ha_mcs_impl_group_by_next(table, time_zone);
 
   DBUG_RETURN(rc);
 }
@@ -985,6 +989,8 @@ ha_columnstore_select_handler::ha_columnstore_select_handler(THD* thd, SELECT_LE
  , pushdown_init_rc(0)
 {
   select = select_lex;
+  const char* timeZone = thd->variables.time_zone->get_name()->ptr();
+  dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &time_zone);
 }
 
 /***********************************************************
@@ -1028,7 +1034,7 @@ int ha_columnstore_select_handler::next_row()
 {
   DBUG_ENTER("ha_columnstore_select_handler::next_row");
 
-  int rc = ha_mcs_impl_select_next(table->record[0], table);
+  int rc = ha_mcs_impl_select_next(table->record[0], table, time_zone);
 
   DBUG_RETURN(rc);
 }

@@ -337,7 +337,10 @@ int doProcessInsertValues(TABLE* table, uint32_t size, cal_connection_info& ci, 
   pDMLPackage->set_TableName(name);
   name = table->s->db.str;
   pDMLPackage->set_SchemaName(name);
-  pDMLPackage->set_TimeZone(thd->variables.time_zone->get_name()->ptr());
+  const char* timeZone = thd->variables.time_zone->get_name()->ptr();
+  long timeZoneOffset;
+  dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
+  pDMLPackage->set_TimeZone(timeZoneOffset);
 
   if (thd->lex->sql_command == SQLCOM_INSERT_SELECT)
     pDMLPackage->set_isInsertSelect(true);
@@ -676,7 +679,8 @@ int ha_mcs_impl_write_row_(const uchar* buf, TABLE* table, cal_connection_info& 
   }
 }
 
-int ha_mcs_impl_write_batch_row_(const uchar* buf, TABLE* table, cal_impl_if::cal_connection_info& ci)
+int ha_mcs_impl_write_batch_row_(const uchar* buf, TABLE* table, cal_impl_if::cal_connection_info& ci,
+                                 long timeZone)
 {
   ByteStream rowData;
   int rc = 0;
@@ -746,7 +750,7 @@ int ha_mcs_impl_write_batch_row_(const uchar* buf, TABLE* table, cal_impl_if::ca
         Field* fieldPtr = table->field[colpos];
         uint32_t mbmaxlen =
             (fieldPtr->charset() && fieldPtr->charset()->mbmaxlen) ? fieldPtr->charset()->mbmaxlen : 0;
-        datatypes::WriteBatchFieldMariaDB field(fieldPtr, colType, mbmaxlen);
+        datatypes::WriteBatchFieldMariaDB field(fieldPtr, colType, mbmaxlen, timeZone);
         idbassert(table == table->field[colpos]->table);
         buf += h->ColWriteBatch(&field, buf, nullVal, writer);
       }

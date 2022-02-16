@@ -153,7 +153,9 @@ class BulkLoadBuffer
   //   for db cols (omits default cols)
   bool fbTruncationAsError;         // Treat string truncation as error
   ImportDataMode fImportDataMode;   // Import data in text or binary mode
-  std::string fTimeZone;            // Timezone used by TIMESTAMP datatype
+  long fTimeZone;                   // Timezone offset (in seconds) relative to UTC,
+                                    // to use for TIMESTAMP data type. For example,
+                                    // for EST which is UTC-5:00, offset will be -18000s.
   unsigned int fFixedBinaryRecLen;  // Fixed rec len used in binary mode
 
   //--------------------------------------------------------------------------
@@ -389,7 +391,7 @@ class BulkLoadBuffer
 
   /** @brief set timezone.
    */
-  void setTimeZone(const std::string& timeZone)
+  void setTimeZone(long timeZone)
   {
     fTimeZone = timeZone;
   }

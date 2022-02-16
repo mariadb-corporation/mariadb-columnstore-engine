@@ -77,6 +77,9 @@ struct mcs_handler_info
  ***********************************************************/
 class ha_mcs_group_by_handler : public group_by_handler
 {
+ private:
+  long time_zone;
+
  public:
   ha_mcs_group_by_handler(THD* thd_arg, Query* query);
   ~ha_mcs_group_by_handler();
@@ -110,6 +113,7 @@ class ha_columnstore_derived_handler : public derived_handler
 {
  private:
   COLUMNSTORE_SHARE* share;
+  long time_zone;
 
  public:
   ha_columnstore_derived_handler(THD* thd_arg, TABLE_LIST* tbl);
@@ -139,6 +143,7 @@ class ha_columnstore_select_handler : public select_handler
   COLUMNSTORE_SHARE* share;
   bool prepared;
   bool scan_ended;
+  long time_zone;
 
  public:
   bool scan_initialized;

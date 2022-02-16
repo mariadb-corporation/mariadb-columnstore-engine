@@ -117,7 +117,7 @@ class XMLJob : public XMLOp
   /**
    * @brief Set timezone
    */
-  void setTimeZone(const std::string& timeZone)
+  void setTimeZone(long timeZone)
   {
     fTimeZone = timeZone;
   }
@@ -145,7 +145,9 @@ class XMLJob : public XMLOp
   JobColList fDefaultColumns;  // temporary list of default cols
   //   for table node being processed
   bool fValidateColList;  // Validate all cols have XML tag
-  std::string fTimeZone;  // Timezone used for TIMESTAMP datatype
+  long fTimeZone;         // Timezone offset (in seconds) relative to UTC,
+                          // to use for TIMESTAMP data type. For example,
+                          // for EST which is UTC-5:00, offset will be -18000s.
 };
 
 }  // namespace WriteEngine
