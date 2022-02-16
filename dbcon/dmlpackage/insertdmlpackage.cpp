@@ -64,7 +64,8 @@ int InsertDMLPackage::write(messageqcpp::ByteStream& bytestream)
   bytestream << fDMLStatement;
   bytestream << fDMLStatement;
   bytestream << fSchemaName;
-  bytestream << fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
+  bytestream << timeZone;
   bytestream << (uint8_t)fLogging;
   bytestream << (uint8_t)fLogending;
 
@@ -95,7 +96,9 @@ int InsertDMLPackage::read(messageqcpp::ByteStream& bytestream)
   bytestream >> fDMLStatement;
   bytestream >> fSQLStatement;
   bytestream >> fSchemaName;
-  bytestream >> fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone;
+  bytestream >> timeZone;
+  fTimeZone = timeZone;
   uint8_t logging;
   bytestream >> logging;
   fLogging = (logging != 0);
@@ -125,7 +128,9 @@ void InsertDMLPackage::readMetaData(messageqcpp::ByteStream& bytestream)
   bytestream >> fDMLStatement;
   bytestream >> fSQLStatement;
   bytestream >> fSchemaName;
-  bytestream >> fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone;
+  bytestream >> timeZone;
+  fTimeZone = timeZone;
   uint8_t logging;
   bytestream >> logging;
   fLogging = (logging != 0);

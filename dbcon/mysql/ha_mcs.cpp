@@ -163,6 +163,8 @@ ha_mcs::ha_mcs(handlerton* hton, TABLE_SHARE* table_arg)
                    HA_CAN_TABLE_CONDITION_PUSHDOWN | HA_CAN_DIRECT_UPDATE_AND_DELETE)
  , m_lock_type(F_UNLCK)
 {
+  const char* timeZone = current_thd->variables.time_zone->get_name()->ptr();
+  dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &time_zone);
 }
 
 /**
@@ -318,7 +320,7 @@ int ha_mcs::write_row(const uchar* buf)
   int rc;
   try
   {
-    rc = ha_mcs_impl_write_row(buf, table, rows_changed);
+    rc = ha_mcs_impl_write_row(buf, table, rows_changed, time_zone);
   }
   catch (std::runtime_error& e)
   {
@@ -652,7 +654,7 @@ int ha_mcs::rnd_next(uchar* buf)
   int rc;
   try
   {
-    rc = ha_mcs_impl_rnd_next(buf, table);
+    rc = ha_mcs_impl_rnd_next(buf, table, time_zone);
   }
   catch (std::runtime_error& e)
   {

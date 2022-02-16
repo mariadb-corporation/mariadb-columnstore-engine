@@ -29,9 +29,11 @@ class StoreFieldMariaDB : public StoreField
 {
   Field* m_field;
   const CalpontSystemCatalog::ColType& m_type;
+  long m_timeZone;
 
  public:
-  StoreFieldMariaDB(Field* f, const CalpontSystemCatalog::ColType& type) : m_field(f), m_type(type)
+  StoreFieldMariaDB(Field* f, const CalpontSystemCatalog::ColType& type, const long timeZone)
+   : m_field(f), m_type(type), m_timeZone(timeZone)
   {
   }
 
@@ -76,8 +78,7 @@ class StoreFieldMariaDB : public StoreField
   int store_timestamp(int64_t val) override
   {
     char tmp[256];
-    DataConvert::timestampToString(val, tmp, sizeof(tmp), current_thd->variables.time_zone->get_name()->ptr(),
-                                   m_type.precision);
+    DataConvert::timestampToString(val, tmp, sizeof(tmp), m_timeZone, m_type.precision);
     return store_string(tmp, strlen(tmp));
   }
 
@@ -212,8 +213,10 @@ class WriteBatchFieldMariaDB : public WriteBatchField
   Field* m_field;
   const CalpontSystemCatalog::ColType& m_type;
   uint32_t m_mbmaxlen;
-  WriteBatchFieldMariaDB(Field* field, const CalpontSystemCatalog::ColType& type, uint32_t mbmaxlen)
-   : m_field(field), m_type(type), m_mbmaxlen(mbmaxlen)
+  long m_timeZone;
+  WriteBatchFieldMariaDB(Field* field, const CalpontSystemCatalog::ColType& type, uint32_t mbmaxlen,
+                         const long timeZone)
+   : m_field(field), m_type(type), m_mbmaxlen(mbmaxlen), m_timeZone(timeZone)
   {
   }
   size_t ColWriteBatchDate(const uchar* buf, bool nullVal, ColBatchWriter& ci) override
@@ -325,7 +328,7 @@ class WriteBatchFieldMariaDB : public WriteBatchField
     my_timestamp_from_binary(&tm, buf, m_field->decimals());
 
     MySQLTime time;
-    gmtSecToMySQLTime(tm.tv_sec, time, current_thd->variables.time_zone->get_name()->ptr());
+    gmtSecToMySQLTime(tm.tv_sec, time, m_timeZone);
 
     if (!tm.tv_usec)
     {

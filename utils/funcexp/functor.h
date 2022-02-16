@@ -73,17 +73,6 @@ class Func
     fFuncName = funcName;
   }
 
-  const std::string timeZone() const
-  {
-    std::unique_lock<std::mutex> l(tzMutex);
-    return fTimeZone;
-  }
-  void timeZone(const std::string timeZone)
-  {
-    std::unique_lock<std::mutex> l(tzMutex);
-    fTimeZone = timeZone;
-  }
-
   void raiseIllegalParameterDataTypeError(const execplan::CalpontSystemCatalog::ColType& colType) const
   {
     std::ostringstream oss;
@@ -177,7 +166,7 @@ class Func
  protected:
   virtual uint32_t stringToDate(std::string);
   virtual uint64_t stringToDatetime(std::string);
-  virtual uint64_t stringToTimestamp(std::string);
+  virtual uint64_t stringToTimestamp(const std::string&, long);
   virtual int64_t stringToTime(std::string);
 
   virtual uint32_t intToDate(int64_t);
@@ -205,9 +194,6 @@ class Func
   float fFloatNullVal;
   double fDoubleNullVal;
   long double fLongDoubleNullVal;
-
-  std::string fTimeZone;
-  mutable std::mutex tzMutex;
 };
 
 class ParmTSInt64 : public datatypes::TSInt64Null
@@ -216,7 +202,7 @@ class ParmTSInt64 : public datatypes::TSInt64Null
   ParmTSInt64()
   {
   }
-  ParmTSInt64(rowgroup::Row& row, const execplan::SPTP& parm, const funcexp::Func& thisFunc)
+  ParmTSInt64(rowgroup::Row& row, const execplan::SPTP& parm, const funcexp::Func& thisFunc, long timeZone)
    : TSInt64Null(parm->data()->toTSInt64Null(row))
   {
   }
@@ -228,7 +214,7 @@ class ParmTUInt64 : public datatypes::TUInt64Null
   ParmTUInt64()
   {
   }
-  ParmTUInt64(rowgroup::Row& row, const execplan::SPTP& parm, const funcexp::Func& thisFunc)
+  ParmTUInt64(rowgroup::Row& row, const execplan::SPTP& parm, const funcexp::Func& thisFunc, long timeZone)
    : TUInt64Null(parm->data()->toTUInt64Null(row))
   {
   }
@@ -240,8 +226,8 @@ class Arg2Lazy
  public:
   TA a;
   TB b;
-  Arg2Lazy(rowgroup::Row& row, FunctionParm& parm, const Func& thisFunc)
-   : a(row, parm[0], thisFunc), b(a.isNull() ? TB() : TB(row, parm[1], thisFunc))
+  Arg2Lazy(rowgroup::Row& row, FunctionParm& parm, const Func& thisFunc, long timeZone)
+   : a(row, parm[0], thisFunc, timeZone), b(a.isNull() ? TB() : TB(row, parm[1], thisFunc, timeZone))
   {
   }
 };
@@ -252,8 +238,8 @@ class Arg2Eager
  public:
   TA a;
   TB b;
-  Arg2Eager(rowgroup::Row& row, FunctionParm& parm, const Func& thisFunc)
-   : a(row, parm[0], thisFunc), b(row, parm[1], thisFunc)
+  Arg2Eager(rowgroup::Row& row, FunctionParm& parm, const Func& thisFunc, long timeZone)
+   : a(row, parm[0], thisFunc, timeZone), b(row, parm[1], thisFunc, timeZone)
   {
   }
 };

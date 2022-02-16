@@ -121,12 +121,12 @@ class FunctionColumn : public ReturnedColumn
     fTableAlias = tableAlias;
   }
 
-  inline const std::string timeZone() const
+  inline long timeZone() const
   {
     return fTimeZone;
   }
 
-  inline void timeZone(const std::string& timeZone)
+  inline void timeZone(const long timeZone)
   {
     fTimeZone = timeZone;
   }
@@ -181,7 +181,7 @@ class FunctionColumn : public ReturnedColumn
   std::string fFunctionName;  /// function name
   std::string fTableAlias;    /// table alias which has the column
   std::string fData;          /// SQL representation
-  std::string fTimeZone;
+  long fTimeZone;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -217,31 +217,38 @@ class FunctionColumn : public ReturnedColumn
  public:
   virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
   {
+    fOperationType.setTimeZone(fTimeZone);
     fResult.strVal = fFunctor->getStrVal(row, fFunctionParms, isNull, fOperationType);
     return fResult.strVal;
   }
   virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
   {
+    fOperationType.setTimeZone(fTimeZone);
     return fFunctor->getIntVal(row, fFunctionParms, isNull, fOperationType);
   }
   virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull)
   {
+    fOperationType.setTimeZone(fTimeZone);
     return fFunctor->getUintVal(row, fFunctionParms, isNull, fOperationType);
   }
   virtual float getFloatVal(rowgroup::Row& row, bool& isNull)
   {
+    fOperationType.setTimeZone(fTimeZone);
     return fFunctor->getFloatVal(row, fFunctionParms, isNull, fOperationType);
   }
   virtual double getDoubleVal(rowgroup::Row& row, bool& isNull)
   {
+    fOperationType.setTimeZone(fTimeZone);
     return fFunctor->getDoubleVal(row, fFunctionParms, isNull, fOperationType);
   }
   virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull)
   {
+    fOperationType.setTimeZone(fTimeZone);
     return fFunctor->getLongDoubleVal(row, fFunctionParms, isNull, fOperationType);
   }
   virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull)
   {
+    fOperationType.setTimeZone(fTimeZone);
     IDB_Decimal decimal = fFunctor->getDecimalVal(row, fFunctionParms, isNull, fOperationType);
 
     if (UNLIKELY(fResultType.colWidth == utils::MAXLEGACYWIDTH && fResultType.scale == decimal.scale))
@@ -276,10 +283,9 @@ class FunctionColumn : public ReturnedColumn
       if (fResultType.scale > decimal.scale)
         decimal.value *= IDB_pow[fResultType.scale - decimal.scale];
       else
-        decimal.value =
-            (int64_t)(decimal.value > 0
-                          ? (double)decimal.value / IDB_pow[decimal.scale - fResultType.scale] + 0.5
-                          : (double)decimal.value / IDB_pow[decimal.scale - fResultType.scale] - 0.5);
+        decimal.value = (int64_t)(
+            decimal.value > 0 ? (double)decimal.value / IDB_pow[decimal.scale - fResultType.scale] + 0.5
+                              : (double)decimal.value / IDB_pow[decimal.scale - fResultType.scale] - 0.5);
     }
 
     decimal.scale = fResultType.scale;
@@ -288,22 +294,27 @@ class FunctionColumn : public ReturnedColumn
   }
   virtual bool getBoolVal(rowgroup::Row& row, bool& isNull)
   {
+    fOperationType.setTimeZone(fTimeZone);
     return fFunctor->getBoolVal(row, fFunctionParms, isNull, fOperationType);
   }
   virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull)
   {
+    fOperationType.setTimeZone(fTimeZone);
     return fFunctor->getDateIntVal(row, fFunctionParms, isNull, fOperationType);
   }
   virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull)
   {
+    fOperationType.setTimeZone(fTimeZone);
     return fFunctor->getDatetimeIntVal(row, fFunctionParms, isNull, fOperationType);
   }
   virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull)
   {
+    fOperationType.setTimeZone(fTimeZone);
     return fFunctor->getTimestampIntVal(row, fFunctionParms, isNull, fOperationType);
   }
   virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
   {
+    fOperationType.setTimeZone(fTimeZone);
     return fFunctor->getTimeIntVal(row, fFunctionParms, isNull, fOperationType);
   }
 

@@ -372,7 +372,7 @@ struct JobInfo
   int64_t largeSideLimit;
   uint64_t partitionSize;
   bool isDML;
-  std::string timeZone;
+  long timeZone;
 
   // This is for tracking any dynamically allocated ParseTree objects
   // in simpleScalarFilterToParseTree() for later deletion in

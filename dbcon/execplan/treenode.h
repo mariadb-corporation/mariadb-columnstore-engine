@@ -325,7 +325,7 @@ class TreeNode
   }
 
   inline bool getBoolVal();
-  inline const std::string& getStrVal(const std::string& timeZone);
+  inline const std::string& getStrVal(const long timeZone);
   inline int64_t getIntVal();
   inline uint64_t getUintVal();
   inline float getFloatVal();
@@ -333,7 +333,7 @@ class TreeNode
   inline long double getLongDoubleVal();
   inline IDB_Decimal getDecimalVal();
   inline int32_t getDateIntVal();
-  inline int64_t getDatetimeIntVal();
+  inline int64_t getDatetimeIntVal(long timeZone = 0);
   inline int64_t getTimestampIntVal();
   inline int64_t getTimeIntVal();
 
@@ -457,7 +457,7 @@ inline bool TreeNode::getBoolVal()
   return fResult.boolVal;
 }
 
-inline const std::string& TreeNode::getStrVal(const std::string& timeZone)
+inline const std::string& TreeNode::getStrVal(const long timeZone)
 {
   switch (fResultType.colDataType)
   {
@@ -1052,7 +1052,7 @@ inline IDB_Decimal TreeNode::getDecimalVal()
   return fResult.decimalVal;
 }
 
-inline int64_t TreeNode::getDatetimeIntVal()
+inline int64_t TreeNode::getDatetimeIntVal(long timeZone)
 {
   if (fResultType.colDataType == execplan::CalpontSystemCatalog::DATE)
     return (fResult.intVal & 0x00000000FFFFFFC0LL) << 32;
@@ -1083,6 +1083,17 @@ inline int64_t TreeNode::getDatetimeIntVal()
   else if (fResultType.colDataType == execplan::CalpontSystemCatalog::DATETIME)
     // return (fResult.intVal & 0xFFFFFFFFFFF00000LL);
     return (fResult.intVal);
+  else if (fResultType.colDataType == execplan::CalpontSystemCatalog::TIMESTAMP)
+  {
+    dataconvert::TimeStamp timestamp(fResult.intVal);
+    int64_t seconds = timestamp.second;
+    dataconvert::MySQLTime m_time;
+    dataconvert::gmtSecToMySQLTime(seconds, m_time, timeZone);
+    dataconvert::DateTime dt(m_time.year, m_time.month, m_time.day, m_time.hour, m_time.minute, m_time.second,
+                             timestamp.msecond);
+    memcpy(&fResult.intVal, &dt, 8);
+    return fResult.intVal;
+  }
   else
     return getIntVal();
 }

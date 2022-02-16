@@ -109,8 +109,7 @@ execplan::ParseTree* ScalarSub::transform()
   {
     fSub = (Item_subselect*)(fFunc->arguments()[0]);
     fColumn.reset(new ConstantColumn("", ConstantColumn::NULLDATA));
-    (dynamic_cast<ConstantColumn*>(fColumn.get()))
-        ->timeZone(fGwip.thd->variables.time_zone->get_name()->ptr());
+    (dynamic_cast<ConstantColumn*>(fColumn.get()))->timeZone(fGwip.timeZone);
     delete rhs;
     return buildParseTree(op);
   }
@@ -176,7 +175,7 @@ execplan::ParseTree* ScalarSub::transform_between()
     SOP sop;
     sop.reset(op_LE);
     rhs = new ParseTree(new SimpleFilter(sop, fColumn.get(), op3));
-    (dynamic_cast<SimpleFilter*>(rhs->data()))->timeZone(fGwip.thd->variables.time_zone->get_name()->ptr());
+    (dynamic_cast<SimpleFilter*>(rhs->data()))->timeZone(fGwip.timeZone);
   }
 
   SubSelect* sub1 = dynamic_cast<SubSelect*>(op2);
@@ -192,7 +191,7 @@ execplan::ParseTree* ScalarSub::transform_between()
     SOP sop;
     sop.reset(op_GE);
     lhs = new ParseTree(new SimpleFilter(sop, fColumn.get(), op2));
-    (dynamic_cast<SimpleFilter*>(lhs->data()))->timeZone(fGwip.thd->variables.time_zone->get_name()->ptr());
+    (dynamic_cast<SimpleFilter*>(lhs->data()))->timeZone(fGwip.timeZone);
   }
 
   if (!rhs || !lhs)
@@ -245,7 +244,7 @@ execplan::ParseTree* ScalarSub::buildParseTree(PredicateOperator* op)
   csep->subType(CalpontSelectExecutionPlan::SINGLEROW_SUBS);
 
   // gwi for the sub query
-  gp_walk_info gwi;
+  gp_walk_info gwi(fGwip.timeZone);
   gwi.thd = fGwip.thd;
   gwi.subQuery = this;
 

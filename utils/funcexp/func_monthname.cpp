@@ -97,7 +97,7 @@ int64_t Func_monthname::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& 
       dataconvert::TimeStamp timestamp(val);
       int64_t seconds = timestamp.second;
       dataconvert::MySQLTime time;
-      dataconvert::gmtSecToMySQLTime(seconds, time, timeZone());
+      dataconvert::gmtSecToMySQLTime(seconds, time, op_ct.getTimeZone());
       return time.month;
     }
 

@@ -60,7 +60,8 @@ int CommandDMLPackage::write(messageqcpp::ByteStream& bytestream)
   bytestream << fSQLStatement;  // for cleartablelock, this is table lockID
   bytestream << (uint8_t)fLogging;
   bytestream << fSchemaName;
-  bytestream << fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
+  bytestream << timeZone;
   bytestream << fTableName;
   bytestream << fTableOid;
   bytestream << static_cast<messageqcpp::ByteStream::byte>(fIsAutocommitOn);
@@ -83,7 +84,9 @@ int CommandDMLPackage::read(messageqcpp::ByteStream& bytestream)
   bytestream >> logging;
   fLogging = (logging != 0);
   bytestream >> fSchemaName;
-  bytestream >> fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone;
+  bytestream >> timeZone;
+  fTimeZone = timeZone;
   bytestream >> fTableName;
   bytestream >> fTableOid;
   bytestream >> reinterpret_cast<messageqcpp::ByteStream::byte&>(fIsAutocommitOn);

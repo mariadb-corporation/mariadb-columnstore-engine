@@ -65,7 +65,7 @@ void View::transform()
   csep->sessionID(fParentGwip->sessionid);
 
   // gwi for the sub query
-  gp_walk_info gwi;
+  gp_walk_info gwi(fParentGwip->timeZone);
   gwi.thd = fParentGwip->thd;
 
   uint32_t sessionID = csep->sessionID();

@@ -561,30 +561,30 @@ enum class round_style_t : uint8_t
 
 class SessionParam
 {
-  const char* m_tzname;
+  long m_timeZone;
 
  public:
-  SessionParam(const char* tzname) : m_tzname(tzname)
+  SessionParam(long timeZone) : m_timeZone(timeZone)
   {
   }
-  const char* tzname() const
+  long timeZone() const
   {
-    return m_tzname;
+    return m_timeZone;
   }
 };
 
 class ConvertFromStringParam
 {
-  const std::string& m_timeZone;
+  const long m_timeZone;
   const bool m_noRoundup;
   const bool m_isUpdate;
 
  public:
-  ConvertFromStringParam(const std::string& timeZone, bool noRoundup, bool isUpdate)
+  ConvertFromStringParam(long timeZone, bool noRoundup, bool isUpdate)
    : m_timeZone(timeZone), m_noRoundup(noRoundup), m_isUpdate(isUpdate)
   {
   }
-  const std::string& timeZone() const
+  long timeZone() const
   {
     return m_timeZone;
   }
@@ -602,14 +602,14 @@ class SimpleValue
 {
   int64_t m_sint64;
   int128_t m_sint128;
-  const char* m_tzname;
+  long m_timeZone;
 
  public:
-  SimpleValue(const int64_t sint64, const int128_t& sint128, const char* tzname)
-   : m_sint64(sint64), m_sint128(sint128), m_tzname(tzname)
+  SimpleValue(const int64_t sint64, const int128_t& sint128, long timeZone)
+   : m_sint64(sint64), m_sint128(sint128), m_timeZone(timeZone)
   {
   }
-  SimpleValue() : m_sint64(0), m_sint128(0), m_tzname(0)
+  SimpleValue() : m_sint64(0), m_sint128(0), m_timeZone(0)
   {
   }
   int64_t toSInt64() const
@@ -624,16 +624,16 @@ class SimpleValue
   {
     return m_sint128;
   }
-  const char* tzname() const
+  long timeZone() const
   {
-    return m_tzname;
+    return m_timeZone;
   }
 };
 
 class SimpleValueSInt64 : public SimpleValue
 {
  public:
-  SimpleValueSInt64(int64_t value) : SimpleValue(value, 0, NULL)
+  SimpleValueSInt64(int64_t value) : SimpleValue(value, 0, 0)
   {
   }
 };
@@ -641,7 +641,7 @@ class SimpleValueSInt64 : public SimpleValue
 class SimpleValueUInt64 : public SimpleValue
 {
  public:
-  SimpleValueUInt64(uint64_t value) : SimpleValue(static_cast<int64_t>(value), 0, NULL)
+  SimpleValueUInt64(uint64_t value) : SimpleValue(static_cast<int64_t>(value), 0, 0)
   {
   }
 };
@@ -649,7 +649,7 @@ class SimpleValueUInt64 : public SimpleValue
 class SimpleValueSInt128 : public SimpleValue
 {
  public:
-  SimpleValueSInt128(int128_t value) : SimpleValue(0, value, NULL)
+  SimpleValueSInt128(int128_t value) : SimpleValue(0, value, 0)
   {
   }
 };
@@ -657,8 +657,7 @@ class SimpleValueSInt128 : public SimpleValue
 class SimpleValueTimestamp : public SimpleValue
 {
  public:
-  SimpleValueTimestamp(uint64_t value, const char* tzname)
-   : SimpleValue(static_cast<int64_t>(value), 0, tzname)
+  SimpleValueTimestamp(uint64_t value, long timeZone) : SimpleValue(static_cast<int64_t>(value), 0, timeZone)
   {
   }
 };
