@@ -4553,4 +4553,14 @@ void DBRM::invalidateUncommittedExtentLBIDs(execplan::CalpontSystemCatalog::SCN 
     setExtentsMaxMin(cpInfos);
 }
 
+size_t DBRM::EMIndexShmemSize()
+{
+    return em->EMIndexShmemSize();
+}
+
+size_t DBRM::EMIndexShmemFree()
+{
+    return em->EMIndexShmemFree();
+}
+
 }   //namespace

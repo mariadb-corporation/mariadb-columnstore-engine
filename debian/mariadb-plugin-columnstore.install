@@ -33,6 +33,10 @@ usr/bin/mariadb-columnstore-stop.sh
 usr/bin/mcs-loadbrm.py
 usr/bin/mcs-savebrm.py
 usr/bin/mcs-stop-controllernode.sh
+usr/bin/mcs_load_brm_from_file
+usr/bin/mcs_load_em
+usr/bin/mcs_lock_grabber
+usr/bin/mcs_lock_state
 usr/bin/mcsGetConfig
 usr/bin/mcsSetConfig
 usr/bin/mycnfUpgrade

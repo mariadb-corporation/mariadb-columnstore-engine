@@ -1023,6 +1023,9 @@ public:
     EXPORT void invalidateUncommittedExtentLBIDs(execplan::CalpontSystemCatalog::SCN txnid,
             std::vector<LBID_t>* plbidList = NULL);
     
+
+    size_t EMIndexShmemSize();
+    size_t EMIndexShmemFree();
 private:
     DBRM(const DBRM& brm);
     DBRM& operator=(const DBRM& brm);
