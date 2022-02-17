@@ -134,6 +134,8 @@ class Charset
 {
  protected:
   const struct charset_info_st* mCharset;
+ private:
+  static constexpr uint flags_ = MY_STRXFRM_PAD_WITH_SPACE | MY_STRXFRM_PAD_TO_MAXLEN;
 
  public:
   Charset(CHARSET_INFO& cs) : mCharset(&cs)
@@ -177,6 +179,30 @@ class Charset
   {
     bool res = !mCharset->wildcmp(subject.str(), subject.end(), pattern.str(), pattern.end(), '\\', '_', '%');
     return neg ? !res : res;
+  }
+  // The magic check that tells that bytes are mapped to weights as 1:1
+  bool strnxfrmIsValid() const
+  {
+    return (mCharset->state & MY_CS_NON1TO1) == 0;
+  }
+  // WIP
+  template<typename T>
+  T strnxfrm(const utils::ConstString &src) const
+  {
+    T ret = 0;
+    size_t len = mCharset->strnxfrm((char*)&ret, sizeof(T), sizeof(T),
+      (char*)src.str(), src.length(), flags_);
+    assert(len <= sizeof(T));
+    return ret;
+  }
+  template<typename T>
+  T strnxfrm(char* src, T typeValue) const
+  {
+    T ret = 0;
+    size_t len = mCharset->strnxfrm((char*)&ret, sizeof(T), sizeof(T),
+      src, sizeof(T), flags_);
+    assert(len <= sizeof(T));
+    return ret;
   }
 };
 
