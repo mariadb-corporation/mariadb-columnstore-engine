@@ -21,6 +21,7 @@
 #include <openssl/evp.h>
 #include <openssl/ossl_typ.h>
 #include <openssl/rand.h>
+#include <openssl/opensslv.h>
 
 #define BOOST_SPIRIT_THREADSAFE
 #include <boost/property_tree/ptree.hpp>
@@ -33,6 +34,15 @@
 #include "vlarray.h"
 
 using std::string;
+
+
+#ifdef OPENSSL_VERSION_PREREQ
+#if OPENSSL_VERSION_PREREQ(3,0)
+  #define EVP_CIPHER_key_length EVP_CIPHER_get_key_length
+  #define EVP_CIPHER_iv_length EVP_CIPHER_get_iv_length
+  #define EVP_CIPHER_blocksize EVP_CIPHER_get_blocksize
+#endif
+#endif
 
 const char* const SECRETS_FILENAME = ".secrets";
 
@@ -460,6 +470,8 @@ string decrypt_password(const string& input)
  * @param input Encrypted password in hex form
  * @return Decrypted password or empty on error
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 string decrypt_password_old(const ByteVec& key, const ByteVec& iv, const std::string& input)
 {
     string rval;
@@ -492,6 +504,7 @@ string decrypt_password_old(const ByteVec& key, const ByteVec& iv, const std::st
     }
     return rval;
 }
+#pragma GCC diagnostic pop
 
 string decrypt_password(const ByteVec& key, const std::string& input)
 {

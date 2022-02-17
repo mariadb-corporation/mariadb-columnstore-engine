@@ -18,9 +18,16 @@
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
+#include <openssl/opensslv.h>
 
 #include "secrets.h"
 #include "mcsconfig.h"
+
+#ifdef OPENSSL_VERSION_PREREQ
+#if OPENSSL_VERSION_PREREQ(3,0)
+  #define EVP_CIPHER_key_length EVP_CIPHER_get_key_length
+#endif
+#endif
 
 using std::string;
 using ByteVec = std::vector<uint8_t>;
