@@ -48,4 +48,3 @@ class WF_stats : public WindowFunctionType
 
 }  // namespace windowfunction
 
-// vim:ts=4 sw=4:

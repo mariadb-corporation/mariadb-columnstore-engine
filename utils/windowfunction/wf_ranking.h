@@ -46,4 +46,3 @@ class WF_ranking : public WindowFunctionType
 
 }  // namespace windowfunction
 
-// vim:ts=4 sw=4:

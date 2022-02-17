@@ -271,4 +271,3 @@ template boost::shared_ptr<WindowFunctionType> WF_nth_value<int64_t>::makeFuncti
                                                                                    WindowFunctionColumn*);
 
 }  // namespace windowfunction
-// vim:ts=4 sw=4:

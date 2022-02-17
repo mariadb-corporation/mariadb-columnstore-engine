@@ -890,4 +890,3 @@ bool from_string(T& t, const std::string& s, std::ios_base& (*f)(std::ios_base&)
 
 #undef EXPORT
 
-// vim:ts=4 sw=4:

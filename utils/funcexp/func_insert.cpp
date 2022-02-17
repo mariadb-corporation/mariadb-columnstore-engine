@@ -102,4 +102,3 @@ std::string Func_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

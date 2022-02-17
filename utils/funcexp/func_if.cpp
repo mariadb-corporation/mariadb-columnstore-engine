@@ -234,4 +234,3 @@ int64_t Func_if::getTimeIntVal(Row& row, FunctionParm& parm, bool& isNull, Calpo
   }
 }
 }  // namespace funcexp
-// vim:ts=4 sw=4:

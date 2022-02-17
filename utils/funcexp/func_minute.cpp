@@ -137,4 +137,3 @@ int64_t Func_minute::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isN
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

@@ -195,4 +195,3 @@ int64_t Func_last_day::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& i
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

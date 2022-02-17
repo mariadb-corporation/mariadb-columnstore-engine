@@ -205,4 +205,3 @@ std::string Func_substring_index::getStrVal(rowgroup::Row& row, FunctionParm& fp
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

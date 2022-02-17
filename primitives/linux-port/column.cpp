@@ -1764,4 +1764,3 @@ template void primitives::PrimitiveProcessor::columnScanAndFilter<int128_t>(NewC
                                                                             ColResultHeader*);
 
 }  // namespace primitives
-// vim:ts=2 sw=2:

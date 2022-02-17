@@ -1997,4 +1997,3 @@ void TupleHashJoinStep::abort()
 }
 
 }  // namespace joblist
-// vim:ts=4 sw=4:

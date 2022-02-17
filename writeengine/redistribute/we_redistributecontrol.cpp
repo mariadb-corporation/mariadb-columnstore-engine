@@ -698,4 +698,3 @@ void RedistributeControl::logMessage(const string& msg)
 
 }  // namespace redistribute
 
-// vim:ts=4 sw=4:

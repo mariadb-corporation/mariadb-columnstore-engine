@@ -3356,4 +3356,3 @@ template bool TupleBPS::compareSingleValue<int64_t>(uint8_t COP, int64_t val1, i
 template bool TupleBPS::compareSingleValue<int128_t>(uint8_t COP, int128_t val1, int128_t val2) const;
 
 }  // namespace joblist
-// vim:ts=4 sw=4:

@@ -620,4 +620,3 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
 }
 
 }  // namespace primitives
-// vim:ts=4 sw=4:

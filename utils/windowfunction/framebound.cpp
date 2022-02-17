@@ -72,4 +72,3 @@ const string FrameBound::toString() const
 }
 
 }  // namespace windowfunction
-// vim:ts=4 sw=4:

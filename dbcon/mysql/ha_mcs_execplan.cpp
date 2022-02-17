@@ -10459,4 +10459,3 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 }
 
 }  // namespace cal_impl_if
-// vim:ts=4 sw=4:

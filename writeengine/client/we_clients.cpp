@@ -545,4 +545,3 @@ void WEClients::addDataToOutput(SBS sbs, uint32_t connIndex)
 
 }  // namespace WriteEngine
 
-// vim:ts=4 sw=4:

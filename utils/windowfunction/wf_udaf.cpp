@@ -1191,4 +1191,3 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
   fPrev = c;
 }
 }  // namespace windowfunction
-// vim:ts=4 sw=4:

@@ -91,4 +91,3 @@ class LibMySQL
 
 #endif  // UTILS_LIBMYSQL_CL_H
 
-// vim:ts=4 sw=4:

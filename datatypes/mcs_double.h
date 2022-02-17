@@ -54,4 +54,3 @@ class TDouble
 
 }  // end of namespace datatypes
 
-// vim:ts=2 sw=2:

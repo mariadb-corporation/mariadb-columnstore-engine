@@ -196,4 +196,3 @@ int64_t Func_timestampdiff::getTimeIntVal(rowgroup::Row& row, FunctionParm& parm
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

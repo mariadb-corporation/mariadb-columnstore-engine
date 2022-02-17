@@ -105,4 +105,3 @@ int64_t Func_sysdate::getTimeIntVal(rowgroup::Row& row, FunctionParm& parm, bool
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

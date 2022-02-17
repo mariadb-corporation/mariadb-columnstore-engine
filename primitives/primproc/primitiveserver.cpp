@@ -2575,4 +2575,3 @@ bool BPPV::aborted()
 // end workaround
 
 }  // namespace primitiveprocessor
-// vim:ts=4 sw=4:

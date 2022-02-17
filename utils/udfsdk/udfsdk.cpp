@@ -375,4 +375,3 @@ int64_t MCS_isnull::getDatetimeIntVal(Row& row, FunctionParm& parm, bool& isNull
 }
 
 }  // namespace udfsdk
-// vim:ts=4 sw=4:

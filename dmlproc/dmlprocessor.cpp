@@ -2001,4 +2001,3 @@ void DMLProcessor::log(const std::string& msg, logging::LOG_TYPE level)
 }
 
 }  // namespace dmlprocessor
-// vim:ts=4 sw=4:

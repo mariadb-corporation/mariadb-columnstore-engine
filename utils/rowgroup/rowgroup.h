@@ -2183,4 +2183,3 @@ inline void RGData::getRow(uint32_t num, Row* row)
 
 }  // namespace rowgroup
 
-// vim:ts=4 sw=4:

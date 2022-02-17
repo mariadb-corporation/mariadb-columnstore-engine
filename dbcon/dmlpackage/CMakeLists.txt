@@ -10,7 +10,7 @@ FIND_PACKAGE(FLEX REQUIRED)
 FLEX_TARGET(dml_scan dml.l ${CMAKE_CURRENT_BINARY_DIR}/dml-scan.cpp COMPILE_FLAGS "-i -L -Pdml")
 ADD_FLEX_BISON_DEPENDENCY(dml_scan dml_gram)
 
-set_source_files_properties(dml-scan.cpp PROPERTIES COMPILE_FLAGS "-Wno-sign-compare -DYY_NO_INPUT")
+set_source_files_properties(dml-scan.cpp PROPERTIES COMPILE_FLAGS "-Wno-register -Wno-deprecated-register -Wno-sign-compare -DYY_NO_INPUT")
 
 ########### next target ###############
 

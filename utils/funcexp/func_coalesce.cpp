@@ -244,4 +244,3 @@ execplan::IDB_Decimal Func_coalesce::getDecimalVal(rowgroup::Row& row, FunctionP
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

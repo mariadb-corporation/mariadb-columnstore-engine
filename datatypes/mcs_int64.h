@@ -179,4 +179,3 @@ class TSInt64Null : public TSInt64, public TNullFlag
 
 }  // end of namespace datatypes
 
-// vim:ts=2 sw=2:

@@ -303,4 +303,3 @@ int64_t Func_add_time::getTimeIntVal(rowgroup::Row& row, FunctionParm& parm, boo
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

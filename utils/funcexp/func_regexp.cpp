@@ -248,4 +248,3 @@ bool Func_regexp::getBoolVal(rowgroup::Row& row, FunctionParm& pm, bool& isNull,
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

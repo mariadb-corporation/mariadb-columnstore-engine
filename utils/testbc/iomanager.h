@@ -98,4 +98,3 @@ class ioManager
 };
 
 }  // namespace dbbc
-// vim:ts=4 sw=4:

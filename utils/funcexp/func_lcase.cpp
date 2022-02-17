@@ -64,4 +64,3 @@ std::string Func_lcase::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

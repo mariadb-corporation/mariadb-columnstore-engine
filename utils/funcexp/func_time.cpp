@@ -169,4 +169,3 @@ double Func_time::getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNul
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

@@ -218,4 +218,3 @@ int64_t Func_least::getTimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& is
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

@@ -62,4 +62,3 @@ class ActiveStatementCounter
   BRM::VSS fVss;
 };
 
-// vim:ts=4 sw=4:

@@ -109,4 +109,3 @@ ColsExtsInfoMap& TableMetaData::getColsExtsInfoMap()
   return fColsExtsInfoMap;
 }
 }  // namespace WriteEngine
-// vim:ts=4 sw=4:

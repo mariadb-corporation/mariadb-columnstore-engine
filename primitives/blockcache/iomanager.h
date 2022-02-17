@@ -147,4 +147,3 @@ void dropFDCache();
 void purgeFDCache(std::vector<BRM::FileInfo>& files);
 
 }  // namespace dbbc
-// vim:ts=4 sw=4:

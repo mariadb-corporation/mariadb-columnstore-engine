@@ -47,4 +47,3 @@ class WF_ntile : public WindowFunctionType
 
 }  // namespace windowfunction
 
-// vim:ts=4 sw=4:

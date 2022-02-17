@@ -724,4 +724,3 @@ class TFloat128
 
 }  // namespace datatypes
 
-// vim:ts=2 sw=2:

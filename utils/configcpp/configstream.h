@@ -61,4 +61,3 @@ class ConfigStream
 
 }  // namespace config
 
-// vim:ts=4 sw=4:

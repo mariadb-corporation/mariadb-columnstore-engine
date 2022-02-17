@@ -46,4 +46,3 @@ class WF_min_max : public WindowFunctionType
 
 }  // namespace windowfunction
 
-// vim:ts=4 sw=4:

@@ -314,4 +314,3 @@ class MCS_isnull : public funcexp::Func
 
 #undef EXPORT
 
-// vim:ts=4 sw=4:

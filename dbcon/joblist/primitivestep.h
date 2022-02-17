@@ -1835,4 +1835,3 @@ class PseudoColStep : public pColStep
 
 }  // namespace joblist
 
-// vim:ts=4 sw=4:
