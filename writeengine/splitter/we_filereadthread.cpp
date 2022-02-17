@@ -580,7 +580,7 @@ int WEFileReadThread::getNextRow(istream& ifs, char* pBuf, int MaxLen)
   const char ESC = fEsc;
   bool aTrailEsc = false;
   char* pEnd = pBuf;
-  char aCh = ifs.get();
+  int aCh = ifs.get();
 
   while (ifs.good())
   {
