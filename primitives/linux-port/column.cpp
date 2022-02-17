@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016-2021 MariaDB Corporation
+   Copyright (C) 2016-2022 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -22,6 +22,7 @@
 #include <cassert>
 #include <cmath>
 #include <functional>
+#include <type_traits>
 #ifndef _MSC_VER
 #include <pthread.h>
 #else
@@ -60,6 +61,55 @@ inline uint64_t order_swap(uint64_t x)
                  ((x << 8) & 0x000000FF00000000ULL) | ((x >> 8) & 0x00000000FF000000ULL) |
                  ((x >> 24) & 0x0000000000FF0000ULL) | ((x >> 40) & 0x000000000000FF00ULL) | (x << 56);
   return ret;
+}
+
+// Dummy template
+template<typename T,
+        typename std::enable_if<sizeof(T) >= sizeof(uint128_t), T>::type* = nullptr>
+inline T orderSwap(T x)
+{
+    return x;
+}
+
+template<typename T,
+        typename std::enable_if<sizeof(T) == sizeof(int64_t), T>::type* = nullptr>
+inline T orderSwap(T x)
+{
+    T ret = (x >> 56) |
+            ((x << 40) & 0x00FF000000000000ULL) |
+            ((x << 24) & 0x0000FF0000000000ULL) |
+            ((x << 8)  & 0x000000FF00000000ULL) |
+            ((x >> 8)  & 0x00000000FF000000ULL) |
+            ((x >> 24) & 0x0000000000FF0000ULL) |
+            ((x >> 40) & 0x000000000000FF00ULL) |
+            (x << 56);
+    return ret;
+}
+
+template<typename T,
+        typename std::enable_if<sizeof(T) == sizeof(int32_t), T>::type* = nullptr>
+inline T orderSwap(T x)
+{
+    T ret = (x >> 24) |
+            ((x << 8)  & 0x00FF0000U) |
+            ((x >> 8)  & 0x0000FF00U) |
+            (x << 24);
+    return ret;
+}
+
+template<typename T,
+        typename std::enable_if<sizeof(T) == sizeof(int16_t), T>::type* = nullptr>
+inline T orderSwap(T x)
+{
+    T ret = (x >> 8) | (x <<8);
+    return ret;
+}
+
+template<typename T,
+        typename std::enable_if<sizeof(T) == sizeof(uint8_t), T>::type* = nullptr>
+inline T orderSwap(T x)
+{
+    return x;
 }
 
 template <class T>
@@ -107,8 +157,11 @@ inline bool colCompare_(const T& val1, const T& val2, uint8_t COP)
   }
 }
 
-inline bool colCompareStr(const ColRequestHeaderDataType& type, uint8_t COP, const utils::ConstString& val1,
-                          const utils::ConstString& val2)
+inline bool colCompareStr(const ColRequestHeaderDataType &type,
+                          uint8_t COP,
+                          const utils::ConstString &val1,
+                          const utils::ConstString &val2,
+                          const bool printOut = false)
 {
   int error = 0;
   bool rc = primitives::StringComparator(type).op(&error, COP, val1, val2);
@@ -1179,7 +1232,7 @@ void scalarFiltering(
 #if defined(__x86_64__)
 template <typename VT, typename SIMD_WRAPPER_TYPE, bool HAS_INPUT_RIDS, typename T,
           typename std::enable_if<HAS_INPUT_RIDS == false, T>::type* = nullptr>
-inline SIMD_WRAPPER_TYPE simdDataLoadTemplate(VT& processor, const T* srcArray, const T* origSrcArray,
+inline SIMD_WRAPPER_TYPE simdDataLoad(VT& processor, const T* srcArray, const T* origSrcArray,
                                               const primitives::RIDType* ridArray, const uint16_t iter)
 {
   return {processor.loadFrom(reinterpret_cast<const char*>(srcArray))};
@@ -1189,7 +1242,7 @@ inline SIMD_WRAPPER_TYPE simdDataLoadTemplate(VT& processor, const T* srcArray, 
 // TODO Move the logic into simd namespace class methods and use intrinsics
 template <typename VT, typename SIMD_WRAPPER_TYPE, bool HAS_INPUT_RIDS, typename T,
           typename std::enable_if<HAS_INPUT_RIDS == true, T>::type* = nullptr>
-inline SIMD_WRAPPER_TYPE simdDataLoadTemplate(VT& processor, const T* srcArray, const T* origSrcArray,
+inline SIMD_WRAPPER_TYPE simdDataLoad(VT& processor, const T* srcArray, const T* origSrcArray,
                                               const primitives::RIDType* ridArray, const uint16_t iter)
 {
   constexpr const uint16_t WIDTH = sizeof(T);
@@ -1205,6 +1258,32 @@ inline SIMD_WRAPPER_TYPE simdDataLoadTemplate(VT& processor, const T* srcArray, 
   return {result};
 }
 
+template <ENUM_KIND KIND, typename VT,typename SIMD_WRAPPER_TYPE, typename T,
+          typename std::enable_if<KIND != KIND_TEXT, T>::type* = nullptr>
+inline SIMD_WRAPPER_TYPE simdSwapedOrderDataLoad(const ColRequestHeaderDataType &type, VT& processor, typename VT::SimdType& dataVector)
+{
+    return {dataVector};
+}
+
+template <ENUM_KIND KIND, typename VT,typename SIMD_WRAPPER_TYPE, typename T,
+          typename std::enable_if<KIND == KIND_TEXT, T>::type* = nullptr>
+inline SIMD_WRAPPER_TYPE simdSwapedOrderDataLoad(const ColRequestHeaderDataType &type,
+  VT& processor, typename VT::SimdType& dataVector)
+{
+    constexpr const uint16_t WIDTH = sizeof(T);
+    constexpr const uint16_t VECTOR_SIZE = VT::vecByteSize / WIDTH;
+    using SimdType = typename VT::SimdType;
+    SimdType result;
+    T* resultTypedPtr = reinterpret_cast<T*>(&result);
+    T* srcTypedPtr = reinterpret_cast<T*>(&dataVector);
+    for (uint32_t i = 0; i < VECTOR_SIZE; ++i)
+    {
+        utils::ConstString s{reinterpret_cast<const char*>(&srcTypedPtr[i]), WIDTH};
+        resultTypedPtr[i] = orderSwap(type.strnxfrm<T>(s.rtrimZero()));
+    }
+    return {result};
+}
+
 // This routine filters input block in a vectorized manner.
 // It supports all output types, all input types.
 // It doesn't support KIND==TEXT so upper layers filters this KIND out beforehand.
@@ -1214,8 +1293,8 @@ inline SIMD_WRAPPER_TYPE simdDataLoadTemplate(VT& processor, const T* srcArray, 
 // to glue the masks produced by actual filters.
 // Then it takes a vector of data, run filters and logical function using pointers.
 // See the corresponding dispatcher to get more details on vector processing class.
-template <typename T, typename VT, bool HAS_INPUT_RIDS, int OUTPUT_TYPE, ENUM_KIND KIND, typename FT,
-          typename ST>
+template<typename T, typename VT, bool HAS_INPUT_RIDS, int OUTPUT_TYPE,
+         ENUM_KIND KIND, typename FT, typename ST>
 void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T* srcArray,
                          const uint32_t srcSize, primitives::RIDType* ridArray, const uint16_t ridSize,
                          ParsedColumnFilter* parsedColumnFilter, const bool validMinMax, const T emptyValue,
@@ -1225,8 +1304,12 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
   using SimdType = typename VT::SimdType;
   using SimdWrapperType = typename VT::SimdWrapperType;
   using FilterType = typename VT::FilterType;
+  using UT = typename std::conditional<std::is_unsigned<FilterType>::value || datatypes::is_uint128_t<FilterType>::value || std::is_same<double, FilterType>::value,
+    FilterType, typename datatypes::make_unsigned<FilterType>::type>::type;
   VT simdProcessor;
   SimdType dataVec;
+  [[maybe_unused]] SimdType swapedOrderDataVec;
+  [[maybe_unused]] auto typeHolder = in->colType;
   SimdType emptyFilterArgVec = simdProcessor.emptyNullLoadValue(emptyValue);
   SimdType nullFilterArgVec = simdProcessor.emptyNullLoadValue(nullValue);
   MT writeMask, nonEmptyMask, nonNullMask, nonNullOrEmptyMask;
@@ -1292,11 +1375,27 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
       for (uint32_t j = 0; j < filterCount; ++j)
       {
         // Preload filter argument values only once.
-        filterArgsVectors.push_back(simdProcessor.loadValue(*((FilterType*)&filterValues[j])));
+        if constexpr (KIND == KIND_TEXT)
+        {
+          // Preload filter argument values only once.
+          // First cast filter value as the corresponding unsigned int value
+          UT filterValue = *((UT*)&filterValues[j]);
+          // Cast to ConstString to preprocess the string
+          utils::ConstString s{reinterpret_cast<const char*>(&filterValue), sizeof(UT)};
+          // Strip all 0 bytes on the right, convert byte into collation weights array
+          // and swap bytes order.
+          UT bigEndianFilterWeights = orderSwap(typeHolder.strnxfrm<UT>(s.rtrimZero()));
+          filterArgsVectors.push_back(simdProcessor.loadValue(bigEndianFilterWeights));
+        }
+        else
+        {
+          FilterType filterValue = *((FilterType*)&filterValues[j]);
+          filterArgsVectors.push_back(simdProcessor.loadValue(filterValue));
+        }
         switch (filterCOPs[j])
         {
           case (COMPARE_EQ):
-            // Skipping extra filter pass generated by IS NULL
+            // Filter against NULL value
             if (memcmp(&filterValues[j], &nullValue, sizeof(nullValue)) == 0)
               copFunctorVec.push_back(std::mem_fn(&VT::nullEmptyCmpEq));
             else
@@ -1329,9 +1428,10 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
   {
     primitives::RIDType ridOffset = i * VECTOR_SIZE;
     assert(!HAS_INPUT_RIDS || (HAS_INPUT_RIDS && ridSize >= ridOffset));
-    dataVec = simdDataLoadTemplate<VT, SimdWrapperType, HAS_INPUT_RIDS, T>(simdProcessor, srcArray,
-                                                                           origSrcArray, ridArray, i)
-                  .v;
+    dataVec = simdDataLoad<VT, SimdWrapperType, HAS_INPUT_RIDS, T>(simdProcessor, srcArray,
+      origSrcArray, ridArray, i).v;
+    if constexpr(KIND==KIND_TEXT)
+      swapedOrderDataVec = simdSwapedOrderDataLoad<KIND, VT, SimdWrapperType, T>(typeHolder, simdProcessor, dataVec).v;
     nonEmptyMask = simdProcessor.nullEmptyCmpNe(dataVec, emptyFilterArgVec);
     writeMask = nonEmptyMask;
     // NULL check
@@ -1346,7 +1446,11 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
     for (uint32_t j = 0; j < filterCount; ++j)
     {
       // filter using compiled filter and preloaded filter argument
-      filterMask = copFunctorVec[j](simdProcessor, dataVec, filterArgsVectors[j]);
+      if constexpr(KIND==KIND_TEXT)
+        filterMask = copFunctorVec[j](simdProcessor, swapedOrderDataVec, filterArgsVectors[j]);
+      else
+        filterMask = copFunctorVec[j](simdProcessor, dataVec, filterArgsVectors[j]);
+
       filterMask = bopFunctor(prevFilterMask, filterMask);
       prevFilterMask = filterMask;
     }
@@ -1389,7 +1493,6 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
     out->Min = Min;
     out->Max = Max;
   }
-
   // process the tail. scalarFiltering changes out contents, e.g. Min/Max, NVALS, RIDs and values array
   // This tail also sets out::Min/Max, out::validMinMax if validMinMax is set.
   uint32_t processedSoFar = rid;
@@ -1526,7 +1629,8 @@ void filterColumnData(NewColRequestHeader* in, ColResultHeader* out, uint16_t* r
 
 #if defined(__x86_64__)
   // Don't use vectorized filtering for text based data types.
-  if (KIND <= KIND_FLOAT && WIDTH < 16)
+  if (WIDTH < 16 &&
+    (KIND != KIND_TEXT || (KIND == KIND_TEXT && in->colType.strnxfrmIsValid()) ))
   {
     bool canUseFastFiltering = true;
     for (uint32_t i = 0; i < filterCount; ++i)
@@ -1672,6 +1776,8 @@ template <typename T,
 void PrimitiveProcessor::_scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out)
 {
   constexpr int W = sizeof(T);
+  using UT = typename std::conditional<std::is_unsigned<T>::value || datatypes::is_uint128_t<T>::value, T,
+                                      typename datatypes::make_unsigned<T>::type>::type;
   const uint16_t ridSize = in->NVALS;
   uint16_t* ridArray = in->getRIDArrayPtr(W);
   const uint32_t itemsPerBlock = logicalBlockMode ? BLOCK_SIZE : BLOCK_SIZE / W;
@@ -1682,16 +1788,12 @@ void PrimitiveProcessor::_scanAndFilterTypeDispatcher(NewColRequestHeader* in, C
        dataType == execplan::CalpontSystemCatalog::TEXT) &&
       !isDictTokenScan(in))
   {
-    using UT = typename std::conditional<std::is_unsigned<T>::value, T,
-                                         typename datatypes::make_unsigned<T>::type>::type;
     filterColumnData<UT, KIND_TEXT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
     return;
   }
 
   if (datatypes::isUnsigned(dataType))
   {
-    using UT = typename std::conditional<std::is_unsigned<T>::value || datatypes::is_uint128_t<T>::value, T,
-                                         typename datatypes::make_unsigned<T>::type>::type;
     filterColumnData<UT, KIND_UNSIGNED>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
     return;
   }

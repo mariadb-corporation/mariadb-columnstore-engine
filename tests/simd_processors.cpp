@@ -30,6 +30,7 @@ class SimdProcessorTypedTest : public testing::Test {
   using IntegralType = T;
   public:
 
+
   void SetUp() override
   {
   }
