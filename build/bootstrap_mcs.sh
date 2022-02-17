@@ -25,6 +25,8 @@ DISTRO_OPTIONS=("Ubuntu" "Centos" "Debian" "openSUSE")
 optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
 optparse.define short=d long=distro desc="Choouse your OS: ${DISTRO_OPTIONS[*]}" variable=OS
 optparse.define short=s long=skip-deps desc="Skip install dependences" variable=SKIP_DEPS default=false value=true
+optparse.define short=C long=force-cmake-reconfig desc="Force cmake reconfigure" variable=FORCE_CMAKE_CONFIG default=false value=true
+
 source $( optparse.build )
 
 if [[ ! " ${BUILD_TYPE_OPTIONS[*]} " =~ " ${MCS_BUILD_TYPE} " ]]; then
@@ -100,6 +102,7 @@ clean_old_installation()
     rm -rf /var/lib/mysql
     rm -rf /var/run/mysqld
     rm -rf $DATA_DIR
+    rm -rf /etc/mysql
 }
 
 build()
@@ -123,11 +126,20 @@ build()
 
     cd $MDB_SOURCE_PATH
 
+    if [[ $FORCE_CMAKE_CONFIG = true ]] ; then
+        warn "Erasing cmake cache"
+        rm -f "$MDB_SOURCE_PATH/CMakeCache.txt"
+        rm -rf "$MDB_SOURCE_PATH/CMakeFiles"
+    fi
+
     if [[ "$OS" = 'Ubuntu' || "$OS" = 'Debian' ]]; then
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DDEB=bionic"
     elif [ $OS = 'Centos' ]; then
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DRPM=CentOS7"
     fi
+
+    message "building with flags $MDB_CMAKE_FLAGS"
+
     local CPUS=$(getconf _NPROCESSORS_ONLN)
     cmake . -DCMAKE_BUILD_TYPE=$MDB_BUILD_TYPE $MDB_CMAKE_FLAGS && \
     make -j $CPUS install
@@ -159,10 +171,10 @@ install()
     bash -c 'echo "[client-server]
 socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
 
-    mv $INSTALL_PREFIX/lib/plugin/ha_columnstore.so /tmp/ha_columnstore_1.so || mv $INSTALL_PREFIX/lib64/plugin/ha_columnstore.so /tmp/ha_columnstore_2.so
+    mv $INSTALL_PREFIX/lib/mysql/plugin/ha_columnstore.so /tmp/ha_columnstore_1.so || mv $INSTALL_PREFIX/lib64/mysql/plugin/ha_columnstore.so /tmp/ha_columnstore_2.so
     message "Running mysql_install_db"
     mysql_install_db --rpm --user=mysql
-    mv /tmp/ha_columnstore_1.so $INSTALL_PREFIX/lib/plugin/ha_columnstore.so || mv /tmp/ha_columnstore_2.so $INSTALL_PREFIX/lib64/mysql/plugin/ha_columnstore.so
+    mv /tmp/ha_columnstore_1.so $INSTALL_PREFIX/lib/mysql/plugin/ha_columnstore.so || mv /tmp/ha_columnstore_2.so $INSTALL_PREFIX/lib64/mysql/plugin/ha_columnstore.so
     chown mysql:mysql $INSTALL_PREFIX/lib/plugin/ha_columnstore.so
 
     mkdir -p /etc/columnstore
