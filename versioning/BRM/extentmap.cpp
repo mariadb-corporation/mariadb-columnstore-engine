@@ -46,7 +46,6 @@
 
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
-namespace bi = boost::interprocess;
 
 #include "liboamcpp.h"
 #include "brmtypes.h"
@@ -340,7 +339,7 @@ bool ExtentMapIndexImpl::growIfNeeded(const size_t memoryNeeded)
 InsertUpdateShmemKeyPair ExtentMapIndexImpl::insert(const EMEntry& emEntry, const size_t emIdx)
 {
     auto dbRoot = emEntry.dbRoot;
-    assert(dbRoot > 0 && dbRoot <= numeric_limits<uint64_t>::max());
+    assert(dbRoot > 0);
     auto* extentMapIndexPtr = get();
     bool shmemHasGrown = false;
 
@@ -2282,7 +2281,7 @@ int ExtentMap::lookupLocal(int OID, uint32_t partitionNum, uint16_t segmentNum, 
     grabEMEntryTable(READ);
     grabEMIndex(READ);
 
-    DBRootVec dbRootVec(std::move(getAllDbRoots()));
+    DBRootVec dbRootVec(getAllDbRoots());
 
     for (auto dbRoot: dbRootVec)
     {
@@ -2406,7 +2405,7 @@ int ExtentMap::lookupLocalStartLbid(int      OID,
     grabEMEntryTable(READ);
     grabEMIndex(READ);
 
-    DBRootVec dbRootVec(std::move(getAllDbRoots()));
+    DBRootVec dbRootVec(getAllDbRoots());
 
     for (auto dbRoot: dbRootVec)
     {
@@ -2689,7 +2688,7 @@ LBID_t ExtentMap::_createColumnExtent_DBroot(uint32_t size, int OID,
             emptyEMEntry = i;
     } // Loop through extent map entries
 
-    DBRootVec dbRootVec(std::move(getAllDbRoots()));
+    DBRootVec dbRootVec(getAllDbRoots());
     // 2. for empty DBRoot track hi seg# in user specified part#
     if (lastExtentIndex == -1)
     {
@@ -2823,7 +2822,7 @@ LBID_t ExtentMap::_createColumnExtent_DBroot(uint32_t size, int OID,
 
                 // 5. Track hi seg for hwm partition
                 auto emIdents = fPExtMapIndexImpl_->find(dbRootFromList, OID, targetDbRootPart);
-                for (auto i : emIdentsNext)
+                for (auto i : emIdents)
                 {
                     if (fExtentMap[i].segmentNum > partHighSeg)
                     {
@@ -4294,7 +4293,7 @@ void ExtentMap::deleteOID(int OID)
     grabFreeList(WRITE);
 
     // Clean up the index and tell deleteExtent to skip the clean-up.
-    DBRootVec dbRootVec(std::move(getAllDbRoots()));
+    DBRootVec dbRootVec(getAllDbRoots());
     for (auto dbRoot: dbRootVec)
         fPExtMapIndexImpl_->deleteOID(dbRoot, OID);
     const bool clearEMIndex = false;
@@ -4345,7 +4344,7 @@ void ExtentMap::deleteOIDs(const OidsMap_t& OIDs)
     int emEntries = fEMShminfo->allocdSize / sizeof(struct EMEntry);
 
     const bool clearEMIndex = false;
-    DBRootVec dbRootVec(std::move(getAllDbRoots()));
+    DBRootVec dbRootVec(getAllDbRoots());
     for (auto dbRoot: dbRootVec)
     {
         for (auto& oidOidPair : OIDs)
@@ -4844,7 +4843,7 @@ HWM_t ExtentMap::getLocalHWM(int OID, uint32_t partitionNum,
     grabEMEntryTable(READ);
     grabEMIndex(READ);
 
-    DBRootVec dbRootVec(std::move(getAllDbRoots()));
+    DBRootVec dbRootVec(getAllDbRoots());
     for (auto dbRoot: dbRootVec)
     {
         auto emIdents = fPExtMapIndexImpl_->find(dbRoot, OID, partitionNum);
@@ -4927,7 +4926,7 @@ void ExtentMap::setLocalHWM(int OID, uint32_t partitionNum,
         grabEMIndex(WRITE);
     }
 
-    DBRootVec dbRootVec(std::move(getAllDbRoots()));
+    DBRootVec dbRootVec(getAllDbRoots());
 
     for (auto dbRoot: dbRootVec)
     {
