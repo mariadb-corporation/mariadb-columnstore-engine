@@ -1866,8 +1866,8 @@ void filterColumnData(NewColRequestHeader* in, ColResultHeader* out, uint16_t* r
 
 #if defined(__x86_64__)
   // Don't use vectorized filtering for text based data types.
-  if (WIDTH < 16 && KIND != KIND_TEXT)
-    //(KIND != KIND_TEXT || (KIND == KIND_TEXT && in->colType.strnxfrmIsValid()) )) // ||(KIND == KIND_TEXT && WIDTH == 4)) Add charsets that conv-s 1 -> 1
+  if (WIDTH < 16 && //KIND != KIND_TEXT)
+    (KIND != KIND_TEXT || (KIND == KIND_TEXT && in->colType.strnxfrmIsValid()) ))
   {
     bool canUseFastFiltering = true;
     for (uint32_t i = 0; i < filterCount; ++i)
@@ -2013,6 +2013,8 @@ template <typename T,
 void PrimitiveProcessor::_scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out)
 {
   constexpr int W = sizeof(T);
+  using UT = typename std::conditional<std::is_unsigned<T>::value || datatypes::is_uint128_t<T>::value, T,
+                                      typename datatypes::make_unsigned<T>::type>::type;
   const uint16_t ridSize = in->NVALS;
   uint16_t* ridArray = in->getRIDArrayPtr(W);
   const uint32_t itemsPerBlock = logicalBlockMode ? BLOCK_SIZE : BLOCK_SIZE / W;
@@ -2023,14 +2025,12 @@ void PrimitiveProcessor::_scanAndFilterTypeDispatcher(NewColRequestHeader* in, C
        dataType == execplan::CalpontSystemCatalog::TEXT) &&
       !isDictTokenScan(in))
   {
-    filterColumnData<T, KIND_TEXT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
+    filterColumnData<UT, KIND_TEXT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
     return;
   }
 
   if (datatypes::isUnsigned(dataType))
   {
-    using UT = typename std::conditional<std::is_unsigned<T>::value || datatypes::is_uint128_t<T>::value, T,
-                                         typename datatypes::make_unsigned<T>::type>::type;
     filterColumnData<UT, KIND_UNSIGNED>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
     return;
   }
