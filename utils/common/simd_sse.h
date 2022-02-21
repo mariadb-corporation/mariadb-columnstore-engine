@@ -631,7 +631,7 @@ class SimdFilterProcessor<VT, CHECK_T,
 
   MCS_FORCE_INLINE MT cmpLt(SimdType& x, SimdType& y)
   {
-    return cmpGe(y, x) ^ 0xFFFF;
+    return cmpGt(y, x);
   }
 
   MCS_FORCE_INLINE MT cmpNe(SimdType& x, SimdType& y)
@@ -848,7 +848,7 @@ class SimdFilterProcessor<VT, CHECK_T,
 
   MCS_FORCE_INLINE MT cmpLt(SimdType& x, SimdType& y)
   {
-    return cmpGe(y, x) ^ 0xFFFF;
+    return cmpGt(y, x);
   }
 
   MCS_FORCE_INLINE MT cmpNe(SimdType& x, SimdType& y)
