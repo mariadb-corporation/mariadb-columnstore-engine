@@ -57,11 +57,12 @@ install_deps()
 	&& yum config-manager --set-enabled powertools \
         && yum -y install bison ncurses-devel readline-devel perl-devel openssl-devel cmake libxml2-devel gperf libaio-devel libevent-devel tree wget pam-devel snappy-devel libicu \
         && yum -y install vim wget strace ltrace gdb  rsyslog net-tools openssh-server expect boost perl-DBI libicu boost-devel initscripts jemalloc-devel libcurl-devel gtest-devel cppunit-devel systemd-devel
-    elif [ $OS = 'OpenSuse' ]; then
+    elif [ $OS = 'openSUSE' ]; then
         zypper install -y bison ncurses-devel readline-devel libopenssl-devel cmake libxml2-devel gperf libaio-devel libevent-devel python-devel ruby-devel tree wget pam-devel snappy-devel libicu-devel \
-        && zypper install -y libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel \
-        && zypper install -y vim wget strace ltrace gdb  rsyslog net-tools expect perl-DBI libicu boost-devel jemalloc-devel libcurl-devel \
-        && zypper install -y gcc gcc-c++ git automake libtool gtest cppunit-devel
+        && zypper install -y libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel \
+        && zypper install -y vim wget strace ltrace gdb  rsyslog net-tools expect perl-DBI libicu boost-devel jemalloc-devel libcurl-devel liblz4-devel lz4 \
+        && zypper install -y gcc gcc-c++ git automake libtool gtest cppunit-devel pcre2-devel systemd-devel libaio-devel snappy-devel cracklib-devel policycoreutils-devel ncurses-devel \
+        && zypper install -y make flex libcurl-devel  automake libtool rpm-build lsof iproute pam-devel perl-DBI expect createrepo
     fi
 }
 
@@ -131,10 +132,10 @@ build()
     if [[ $SKIP_SUBMODULES = true ]] ; then
         warn "Skipping initialization of columnstore submodules"
     else
-	message "Initialization of columnstore submodules"
-	cd storage/columnstore/columnstore
-	git submodule update --init
-	cd -
+	    message "Initialization of columnstore submodules"
+	    cd storage/columnstore/columnstore
+	    git submodule update --init
+	    cd -
     fi
 
     if [[ $FORCE_CMAKE_CONFIG = true ]] ; then
@@ -147,6 +148,8 @@ build()
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DDEB=bionic"
     elif [ $OS = 'CentOS' ]; then
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DRPM=CentOS7"
+    elif [ $OS = 'openSUSE' ]; then
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DRPM=sles15"
     fi
 
     message "building with flags $MDB_CMAKE_FLAGS"
