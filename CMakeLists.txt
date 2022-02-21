@@ -224,6 +224,12 @@ ENDIF()
 
 
 MY_CHECK_AND_SET_COMPILER_FLAG("-Werror -Wall")
+
+IF(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+    MESSAGE("Set default char to signed for ARM")
+    MY_CHECK_AND_SET_COMPILER_FLAG("-fsigned-char")
+ENDIF()
+
 SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed")
 SET (ENGINE_DT_LIB datatypes)
 SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot ${Boost_LIBRARIES} xml2 pthread rt libmysql_client ${ENGINE_DT_LIB})
