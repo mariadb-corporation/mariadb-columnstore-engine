@@ -20,12 +20,13 @@ fi
 message "Building Mariadb Server from $MDB_SOURCE_PATH"
 
 BUILD_TYPE_OPTIONS=("Debug" "RelWithDebInfo")
-DISTRO_OPTIONS=("Ubuntu" "Centos" "Debian" "openSUSE")
+DISTRO_OPTIONS=("Ubuntu" "CentOS" "Debian" "openSUSE")
 
 optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
 optparse.define short=d long=distro desc="Choouse your OS: ${DISTRO_OPTIONS[*]}" variable=OS
 optparse.define short=s long=skip-deps desc="Skip install dependences" variable=SKIP_DEPS default=false value=true
 optparse.define short=C long=force-cmake-reconfig desc="Force cmake reconfigure" variable=FORCE_CMAKE_CONFIG default=false value=true
+optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore submodules initialization" variable=SKIP_SUBMODULES default=false value=true
 
 source $( optparse.build )
 
@@ -50,11 +51,12 @@ install_deps()
         libncurses5-dev libaio-dev libsystemd-dev libpcre2-dev \
         libperl-dev libssl-dev libxml2-dev libkrb5-dev flex libpam-dev git \
         libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest libsnappy-dev libjemalloc-dev
-    elif [ $OS = 'CentOS Linux' ]; then
+    elif [ $OS = 'CentOS' ]; then
         yum -y install epel-release \
         && yum -y groupinstall "Development Tools" \
-        && yum -y install bison ncurses-devel readline-devel perl-devel openssl-devel cmake libxml2-devel gperf libaio-devel libevent-devel python-devel ruby-devel tree wget pam-devel snappy-devel libicu \
-        && yum -y install vim wget strace ltrace gdb  rsyslog net-tools openssh-server expect boost perl-DBI libicu boost-devel initscripts jemalloc-devel libcurl-devel gtest-devel cppunit-devel
+	&& yum config-manager --set-enabled powertools \
+        && yum -y install bison ncurses-devel readline-devel perl-devel openssl-devel cmake libxml2-devel gperf libaio-devel libevent-devel tree wget pam-devel snappy-devel libicu \
+        && yum -y install vim wget strace ltrace gdb  rsyslog net-tools openssh-server expect boost perl-DBI libicu boost-devel initscripts jemalloc-devel libcurl-devel gtest-devel cppunit-devel systemd-devel
     elif [ $OS = 'OpenSuse' ]; then
         zypper install -y bison ncurses-devel readline-devel libopenssl-devel cmake libxml2-devel gperf libaio-devel libevent-devel python-devel ruby-devel tree wget pam-devel snappy-devel libicu-devel \
         && zypper install -y libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel \
@@ -126,6 +128,15 @@ build()
 
     cd $MDB_SOURCE_PATH
 
+    if [[ $SKIP_SUBMODULES = true ]] ; then
+        warn "Skipping initialization of columnstore submodules"
+    else
+	message "Initialization of columnstore submodules"
+	cd storage/columnstore/columnstore
+	git submodule update --init
+	cd -
+    fi
+
     if [[ $FORCE_CMAKE_CONFIG = true ]] ; then
         warn "Erasing cmake cache"
         rm -f "$MDB_SOURCE_PATH/CMakeCache.txt"
@@ -134,7 +145,7 @@ build()
 
     if [[ "$OS" = 'Ubuntu' || "$OS" = 'Debian' ]]; then
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DDEB=bionic"
-    elif [ $OS = 'Centos' ]; then
+    elif [ $OS = 'CentOS' ]; then
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DRPM=CentOS7"
     fi
 
