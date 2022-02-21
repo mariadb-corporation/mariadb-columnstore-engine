@@ -28,6 +28,7 @@
 
 #include <stdexcept>
 #include <vector>
+#include "mcs_datatype.h"
 #ifndef _MSC_VER
 #include <tr1/unordered_set>
 #else
@@ -146,6 +147,12 @@ struct IntegralTypeToFilterType<int128_t>
   using type = int128_t;
 };
 
+template <>
+struct IntegralTypeToFilterType<uint16_t>
+{
+  using type = uint64_t;
+};
+
 template <typename T, typename D = void>
 struct IntegralTypeToFilterSetType
 {
@@ -181,6 +188,12 @@ class ParsedColumnFilter
   ~ParsedColumnFilter();
 
   template <typename T, typename std::enable_if<std::is_same<T, int64_t>::value, T>::type* = nullptr>
+  T* getFilterVals()
+  {
+    return reinterpret_cast<T*>(prestored_argVals.get());
+  }
+
+  template <typename T, typename std::enable_if<std::is_same<T, uint64_t>::value, T>::type* = nullptr>
   T* getFilterVals()
   {
     return reinterpret_cast<T*>(prestored_argVals.get());
@@ -508,7 +521,9 @@ boost::shared_ptr<ParsedColumnFilter> _parseColumnFilter(
     ret->prestored_cops[argIndex] = args->COP;
     ret->prestored_rfs[argIndex] = args->rf;
 
-    if (datatypes::isUnsigned((execplan::CalpontSystemCatalog::ColDataType)colType))
+    // WIP
+    if (datatypes::isUnsigned((execplan::CalpontSystemCatalog::ColDataType)colType)
+        || datatypes::isCharType((execplan::CalpontSystemCatalog::ColDataType)colType))
       ret->storeFilterArg(argIndex, reinterpret_cast<const UT*>(args->val));
     else
       ret->storeFilterArg(argIndex, reinterpret_cast<const T*>(args->val));
