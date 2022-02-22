@@ -122,7 +122,8 @@ build()
                      -DWITH_SSL=system
                      -DWITH_UNITTESTS=YES
                      -DWITH_BRM_UT=YES
-                     -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX"
+                     -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX
+                     -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE"
 
     cd $MDB_SOURCE_PATH
 
