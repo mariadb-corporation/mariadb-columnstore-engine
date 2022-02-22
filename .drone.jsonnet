@@ -63,12 +63,12 @@ local testRun(platform) =
 
 local testPreparation(platform) =
   local platform_map = {
-    'opensuse/leap:15': 'zypper install -y gtest boost-devel libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel cppunit-devel snappy-devel cmake',
-    'centos:7': 'yum -y install epel-release && yum install -y gtest-devel cppunit-devel cmake3 boost-devel snappy-devel',
-    'centos:8': yum_vault_mirror + ' yum install -y dnf-plugins-core libarchive && yum config-manager --set-enabled powertools && yum install -y lz4 gtest-devel cppunit-devel cmake3 boost-devel snappy-devel',
-    'debian:10': 'apt update && apt install --yes libboost-all-dev libgtest-dev libcppunit-dev libsnappy-dev googletest cmake',
-    'ubuntu:18.04': 'apt update && apt install --yes libboost-all-dev libgtest-dev libcppunit-dev googletest libsnappy-dev cmake g++ && cd /usr/src/googletest; cmake . && cmake --build . --target install; cd -',
-    'ubuntu:20.04': 'apt update && apt install --yes libboost-all-dev libgtest-dev libcppunit-dev googletest libsnappy-dev cmake',
+    'opensuse/leap:15': 'zypper install -y git boost-devel libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel cppunit-devel snappy-devel cmake',
+    'centos:7': 'yum -y install epel-release && yum install -y git cppunit-devel cmake3 boost-devel snappy-devel',
+    'centos:8': yum_vault_mirror + ' yum install -y dnf-plugins-core libarchive && yum config-manager --set-enabled powertools && yum install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel',
+    'debian:10': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
+    'ubuntu:18.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev  libsnappy-dev cmake g++',
+    'ubuntu:20.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
   };
   platform_map[platform];
 
