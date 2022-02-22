@@ -14,6 +14,10 @@
 *.so.*
 *.vpj
 .libs/
+.cache/
+compile_commands.json
+*.code-workspace
+settings.json
 config.log
 *~
 *kdev*
