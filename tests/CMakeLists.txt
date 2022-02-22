@@ -34,6 +34,10 @@ if (WITH_UNITTESTS)
     target_link_libraries(column_scan_filter_tests ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
     gtest_discover_tests(column_scan_filter_tests TEST_PREFIX columnstore:)
 
+    add_executable(simd_processors simd_processors.cpp)
+    target_link_libraries(simd_processors ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
+    gtest_discover_tests(simd_processors TEST_PREFIX columnstore:)
+
     # CPPUNIT TESTS
     add_executable(we_shared_components_tests shared_components_tests.cpp)
     add_dependencies(we_shared_components_tests loggingcpp)
