@@ -35,12 +35,11 @@ if [[ ! " ${BUILD_TYPE_OPTIONS[*]} " =~ " ${MCS_BUILD_TYPE} " ]]; then
     MCS_BUILD_TYPE=$selectedChoice
 fi
 
-if [[ ! " ${DISTRO_OPTIONS[*]} " =~ " ${OS} " ]]; then
-    detect_distro
-fi
+detect_distro
 
 INSTALL_PREFIX="/usr/"
 DATA_DIR="/var/lib/mysql/data"
+CMAKE_BIN_NAME=cmake
 
 install_deps()
 {
@@ -55,8 +54,14 @@ install_deps()
         yum -y install epel-release \
         && yum -y groupinstall "Development Tools" \
 	&& yum config-manager --set-enabled powertools \
-        && yum -y install bison ncurses-devel readline-devel perl-devel openssl-devel cmake libxml2-devel gperf libaio-devel libevent-devel tree wget pam-devel snappy-devel libicu \
+        && yum -y install bison ncurses-devel readline-devel perl-devel openssl-devel libxml2-devel gperf libaio-devel libevent-devel tree wget pam-devel snappy-devel libicu \
         && yum -y install vim wget strace ltrace gdb  rsyslog net-tools openssh-server expect boost perl-DBI libicu boost-devel initscripts jemalloc-devel libcurl-devel gtest-devel cppunit-devel systemd-devel
+        if [[ "$OS_VERSION" == "7" ]]; then
+            yum -y install cmake3
+            CMAKE_BIN_NAME=cmake3
+        else
+            yum -y install cmake
+        fi
     elif [ $OS = 'openSUSE' ]; then
         zypper install -y bison ncurses-devel readline-devel libopenssl-devel cmake libxml2-devel gperf libaio-devel libevent-devel python-devel ruby-devel tree wget pam-devel snappy-devel libicu-devel \
         && zypper install -y libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel \
@@ -120,6 +125,7 @@ build()
                      -DPLUGIN_SPIDER=NO
                      -DPLUGIN_OQGRAPH=NO
                      -DPLUGIN_SPHINX=NO
+                     -DWITH_EMBEDDED_SERVER=OFF
                      -DBUILD_CONFIG=mysql_release
                      -DWITH_WSREP=OFF
                      -DWITH_SSL=system
@@ -155,7 +161,7 @@ build()
     message "building with flags $MDB_CMAKE_FLAGS"
 
     local CPUS=$(getconf _NPROCESSORS_ONLN)
-    cmake . -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS && \
+    ${CMAKE_BIN_NAME} . -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS && \
     make -j $CPUS install
 
     if [ $? -ne 0 ]; then
