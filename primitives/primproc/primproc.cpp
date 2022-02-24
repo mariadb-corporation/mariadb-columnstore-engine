@@ -346,6 +346,13 @@ void* waitForSIGUSR1(void* p)
 
 int ServicePrimProc::Child()
 {
+  // Placeholder for EM
+  // auto exeMgrStarter = []()
+  // {
+  //   std::cout << " Starting EM now" << std::endl;
+  // };
+  // std::thread exeMgrThread(exeMgrStarter);
+
   Config* cf = Config::makeConfig();
 
   setupSignalHandlers();

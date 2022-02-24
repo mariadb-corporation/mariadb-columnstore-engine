@@ -104,10 +104,16 @@ class Opt
       }
     }
   }
+  int getDebugLevel() const
+  {
+    return m_debug;
+  }
 };
 
 class ServiceExeMgr : public Service, public Opt
 {
+  using SessionMemMap_t = std::map<uint32_t, size_t>;
+  using ThreadCntPerSessionMap_t = std::map<uint32_t, uint32_t>;
  protected:
   void log(logging::LOG_TYPE type, const std::string& str)
   {
@@ -121,7 +127,7 @@ class ServiceExeMgr : public Service, public Opt
   }
 
  public:
-  ServiceExeMgr(const Opt& opt) : Service("ExeMgr"), Opt(opt)
+  ServiceExeMgr(const Opt& opt) : Service("ExeMgr"), Opt(opt), msgLog(logging::Logger(16))
   {
   }
   void LogErrno() override
@@ -137,37 +143,116 @@ class ServiceExeMgr : public Service, public Opt
   {
     return m_fg ? Child() : RunForking();
   }
+  static const constexpr unsigned logDefaultMsg = logging::M0000;
+  static const constexpr unsigned logDbProfStartStatement = logging::M0028;
+  static const constexpr unsigned logDbProfEndStatement = logging::M0029;
+  static const constexpr unsigned logStartSql = logging::M0041;
+  static const constexpr unsigned logEndSql = logging::M0042;
+  static const constexpr unsigned logRssTooBig = logging::M0044;
+  static const constexpr unsigned logDbProfQueryStats = logging::M0047;
+  static const constexpr unsigned logExeMgrExcpt = logging::M0055;
+  // If any flags other than the table mode flags are set, produce output to screeen
+  static const constexpr uint32_t flagsWantOutput = (0xffffffff & ~execplan::CalpontSelectExecutionPlan::TRACE_TUPLE_AUTOSWITCH &
+    ~execplan::CalpontSelectExecutionPlan::TRACE_TUPLE_OFF);
+  logging::Logger& getLogger()
+  {
+    return msgLog;
+  }
+  void updateSessionMap(const size_t pct)
+  {
+    std::lock_guard<std::mutex> lk(sessionMemMapMutex);
+
+    for (auto mapIter = sessionMemMap.begin(); mapIter != sessionMemMap.end(); ++mapIter)
+    {
+      if (pct > mapIter->second)
+      {
+        mapIter->second = pct;
+      }
+    }
+  }
+  // std::mutex& getSessionMemMapMutex()
+  // {
+  //   return sessionMemMapMutex;
+  // }
+  // SessionMemMap_t& getSessionMemMap()
+  // {
+  //   return sessionMemMap;
+  // }
+  ThreadCntPerSessionMap_t& getThreadCntPerSessionMap()
+  {
+    return threadCntPerSessionMap;
+  }
+  std::mutex& getThreadCntPerSessionMapMutex()
+  {
+    return threadCntPerSessionMapMutex;
+  }
+  void initMaxMemPct(uint32_t sessionId)
+  {
+    // WIP
+    if (sessionId < 0x80000000)
+    {
+      std::lock_guard<std::mutex> lk(sessionMemMapMutex);
+      auto mapIter = sessionMemMap.find(sessionId);
+
+      if (mapIter == sessionMemMap.end())
+      {
+        sessionMemMap[sessionId] = 0;
+      }
+      else
+      {
+        mapIter->second = 0;
+      }
+    }
+  }
+  uint64_t getMaxMemPct(const uint32_t sessionId)
+  {
+    uint64_t maxMemoryPct = 0;
+    // WIP
+    if (sessionId < 0x80000000)
+    {
+      std::lock_guard<std::mutex> lk(sessionMemMapMutex);
+      auto mapIter = sessionMemMap.find(sessionId);
+
+      if (mapIter != sessionMemMap.end())
+      {
+        maxMemoryPct = (uint64_t)mapIter->second;
+      }
+    }
+
+    return maxMemoryPct;
+  }
+  void deleteMaxMemPct(uint32_t sessionId)
+  {
+    if (sessionId < 0x80000000)
+    {
+      std::lock_guard<std::mutex> lk(sessionMemMapMutex);
+      auto mapIter = sessionMemMap.find(sessionId);
+
+      if (mapIter != sessionMemMap.end())
+      {
+        sessionMemMap.erase(sessionId);
+      }
+    }
+  }
+ private:
+  logging::Logger msgLog;
+  SessionMemMap_t sessionMemMap; // track memory% usage during a query
+  std::mutex sessionMemMapMutex;
+  //...The FrontEnd may establish more than 1 connection (which results in
+  //   more than 1 ExeMgr thread) per session.  These threads will share
+  //   the same CalpontSystemCatalog object for that session.  Here, we
+  //   define a std::map to track how many threads are sharing each session, so
+  //   that we know when we can safely delete a CalpontSystemCatalog object
+  //   shared by multiple threads per session.
+  ThreadCntPerSessionMap_t threadCntPerSessionMap;
+  std::mutex threadCntPerSessionMapMutex;
 };
 
 namespace
 {
-// If any flags other than the table mode flags are set, produce output to screeen
-const uint32_t flagsWantOutput = (0xffffffff & ~execplan::CalpontSelectExecutionPlan::TRACE_TUPLE_AUTOSWITCH &
-                                  ~execplan::CalpontSelectExecutionPlan::TRACE_TUPLE_OFF);
+  ServiceExeMgr* globServiceExeMgr = nullptr;
 
-int gDebug;
 
-const unsigned logDefaultMsg = logging::M0000;
-const unsigned logDbProfStartStatement = logging::M0028;
-const unsigned logDbProfEndStatement = logging::M0029;
-const unsigned logStartSql = logging::M0041;
-const unsigned logEndSql = logging::M0042;
-const unsigned logRssTooBig = logging::M0044;
-const unsigned logDbProfQueryStats = logging::M0047;
-const unsigned logExeMgrExcpt = logging::M0055;
-
-logging::Logger msgLog(16);
-
-typedef std::map<uint32_t, size_t> SessionMemMap_t;
-SessionMemMap_t sessionMemMap;  // track memory% usage during a query
-std::mutex sessionMemMapMutex;
-
-//...The FrontEnd may establish more than 1 connection (which results in
-//   more than 1 ExeMgr thread) per session.  These threads will share
-//   the same CalpontSystemCatalog object for that session.  Here, we
-//   define a std::map to track how many threads are sharing each session, so
-//   that we know when we can safely delete a CalpontSystemCatalog object
-//   shared by multiple threads per session.
 typedef std::map<uint32_t, uint32_t> ThreadCntPerSessionMap_t;
 ThreadCntPerSessionMap_t threadCntPerSessionMap;
 std::mutex threadCntPerSessionMapMutex;
@@ -343,36 +428,14 @@ class SessionThread
   //...SessionId >= 0x80000000 is system catalog query we can ignore.
   static uint64_t getMaxMemPct(uint32_t sessionId)
   {
-    uint64_t maxMemoryPct = 0;
-
-    if (sessionId < 0x80000000)
-    {
-      std::lock_guard<std::mutex> lk(sessionMemMapMutex);
-      SessionMemMap_t::iterator mapIter = sessionMemMap.find(sessionId);
-
-      if (mapIter != sessionMemMap.end())
-      {
-        maxMemoryPct = (uint64_t)mapIter->second;
-      }
-    }
-
-    return maxMemoryPct;
+    return globServiceExeMgr->getMaxMemPct(sessionId);
   }
 
   //...Delete sessionMemMap entry for the specified session's memory % use.
   //...SessionId >= 0x80000000 is system catalog query we can ignore.
   static void deleteMaxMemPct(uint32_t sessionId)
   {
-    if (sessionId < 0x80000000)
-    {
-      std::lock_guard<std::mutex> lk(sessionMemMapMutex);
-      SessionMemMap_t::iterator mapIter = sessionMemMap.find(sessionId);
-
-      if (mapIter != sessionMemMap.end())
-      {
-        sessionMemMap.erase(sessionId);
-      }
-    }
+    return globServiceExeMgr->deleteMaxMemPct(sessionId);
   }
 
   //...Get and log query stats to specified output stream
@@ -466,21 +529,7 @@ class SessionThread
   //...SessionId >= 0x80000000 is system catalog query we can ignore.
   static void initMaxMemPct(uint32_t sessionId)
   {
-    if (sessionId < 0x80000000)
-    {
-      // std::cout << "Setting pct to 0 for session " << sessionId << std::endl;
-      std::lock_guard<std::mutex> lk(sessionMemMapMutex);
-      SessionMemMap_t::iterator mapIter = sessionMemMap.find(sessionId);
-
-      if (mapIter == sessionMemMap.end())
-      {
-        sessionMemMap[sessionId] = 0;
-      }
-      else
-      {
-        mapIter->second = 0;
-      }
-    }
+    return globServiceExeMgr->initMaxMemPct(sessionId);
   }
 
   //... Round off to human readable format (KB, MB, or GB).
@@ -719,6 +768,8 @@ class SessionThread
     std::mutex jlMutex;
     std::condition_variable jlCleanupDone;
     int destructing = 0;
+    int gDebug = globServiceExeMgr->getDebugLevel();
+    logging::Logger& msgLog = globServiceExeMgr->getLogger();
 
     bool selfJoin = false;
     bool tryTuples = false;
@@ -895,7 +946,7 @@ class SessionThread
           args.add((int)csep.statementID());
           args.add((int)csep.verID().currentScn);
           args.add(sqlText);
-          msgLog.logMessage(logging::LOG_TYPE_DEBUG, logDbProfStartStatement, args, li);
+          msgLog.logMessage(logging::LOG_TYPE_DEBUG, ServiceExeMgr::logDbProfStartStatement, args, li);
           needDbProfEndStatementMsg = true;
         }
 
@@ -1257,7 +1308,7 @@ class SessionThread
           args.add(fStats.fMsgBytesIn);
           args.add(fStats.fMsgBytesOut);
           args.add(fStats.fCPBlocksSkipped);
-          msgLog.logMessage(logging::LOG_TYPE_DEBUG, logDbProfQueryStats, args, li);
+          msgLog.logMessage(logging::LOG_TYPE_DEBUG, ServiceExeMgr::logDbProfQueryStats, args, li);
           //@bug 1327
           deleteMaxMemPct(csep.sessionID());
           // Calling reset here, will cause joblist destructor to be
@@ -1269,18 +1320,15 @@ class SessionThread
           // making the whole session wait.  It can take several seconds.
           int stmtID = csep.statementID();
           std::unique_lock<std::mutex> scoped(jlMutex);
-          // C7's compiler complains about the msgLog capture here
-          // msgLog is global scope, and passed by copy, so, unclear
-          // what the warning is about.
           destructing++;
           std::thread bgdtor(
-              [jl, &jlMutex, &jlCleanupDone, stmtID, &li, &destructing]
+              [jl, &jlMutex, &jlCleanupDone, stmtID, &li, &destructing, &msgLog]
               {
                 std::unique_lock<std::mutex> scoped(jlMutex);
                 const_cast<joblist::SJLP&>(jl).reset();  // this happens second; does real destruction
                 logging::Message::Args args;
                 args.add(stmtID);
-                msgLog.logMessage(logging::LOG_TYPE_DEBUG, logDbProfEndStatement, args, li);
+                msgLog.logMessage(logging::LOG_TYPE_DEBUG, ServiceExeMgr::logDbProfEndStatement, args, li);
                 if (--destructing == 0)
                   jlCleanupDone.notify_one();
               });
@@ -1293,7 +1341,7 @@ class SessionThread
 
         std::string endtime(timeNow());
 
-        if ((csep.traceFlags() & flagsWantOutput) && (csep.sessionID() < 0x80000000))
+        if ((csep.traceFlags() & globServiceExeMgr->flagsWantOutput) && (csep.sessionID() < 0x80000000))
         {
           std::cout << "For session " << csep.sessionID() << ": " << totalBytesSent << " bytes sent back at "
                     << endtime << std::endl;
@@ -1358,7 +1406,7 @@ class SessionThread
       logging::Message::Args args;
       logging::LoggingID li(16, csep.sessionID(), csep.txnID());
       args.add(ex.what());
-      msgLog.logMessage(logging::LOG_TYPE_CRITICAL, logExeMgrExcpt, args, li);
+      msgLog.logMessage(logging::LOG_TYPE_CRITICAL, ServiceExeMgr::logExeMgrExcpt, args, li);
       fIos.close();
     }
     catch (...)
@@ -1369,7 +1417,7 @@ class SessionThread
       logging::Message::Args args;
       logging::LoggingID li(16, csep.sessionID(), csep.txnID());
       args.add("ExeMgr caught unknown exception");
-      msgLog.logMessage(logging::LOG_TYPE_CRITICAL, logExeMgrExcpt, args, li);
+      msgLog.logMessage(logging::LOG_TYPE_CRITICAL, ServiceExeMgr::logExeMgrExcpt, args, li);
       fIos.close();
     }
 
@@ -1390,6 +1438,7 @@ class RssMonFcn : public utils::MonitorProcMem
   /*virtual*/
   void operator()() const
   {
+    logging::Logger& msgLog = globServiceExeMgr->getLogger();
     for (;;)
     {
       size_t rssMb = rss();
@@ -1403,7 +1452,7 @@ class RssMonFcn : public utils::MonitorProcMem
           logging::Message::Args args;
           args.add((int)pct);
           args.add((int)fMaxPct);
-          msgLog.logMessage(logging::LOG_TYPE_CRITICAL, logRssTooBig, args, logging::LoggingID(16));
+          msgLog.logMessage(logging::LOG_TYPE_CRITICAL, ServiceExeMgr::logRssTooBig, args, logging::LoggingID(16));
           exit(1);
         }
 
@@ -1413,7 +1462,7 @@ class RssMonFcn : public utils::MonitorProcMem
           logging::Message::Args args;
           args.add((int)pct);
           args.add((int)fMaxPct);
-          msgLog.logMessage(logging::LOG_TYPE_WARNING, logRssTooBig, args, logging::LoggingID(16));
+          msgLog.logMessage(logging::LOG_TYPE_WARNING, ServiceExeMgr::logRssTooBig, args, logging::LoggingID(16));
           exit(1);
         }
 
@@ -1421,18 +1470,19 @@ class RssMonFcn : public utils::MonitorProcMem
       }
 
       // Update sessionMemMap entries lower than current mem % use
-      {
-        std::lock_guard<std::mutex> lk(sessionMemMapMutex);
+      globServiceExeMgr->updateSessionMap(pct);
+      // {
+      //   // std::lock_guard<std::mutex> lk(sessionMemMapMutex);
 
-        for (SessionMemMap_t::iterator mapIter = sessionMemMap.begin(); mapIter != sessionMemMap.end();
-             ++mapIter)
-        {
-          if (pct > mapIter->second)
-          {
-            mapIter->second = pct;
-          }
-        }
-      }
+      //   // for (SessionMemMap_t::iterator mapIter = sessionMemMap.begin(); mapIter != sessionMemMap.end();
+      //   //      ++mapIter)
+      //   // {
+      //   //   if (pct > mapIter->second)
+      //   //   {
+      //   //     mapIter->second = pct;
+      //   //   }
+      //   // }
+      // }
 
       pause_();
     }
@@ -1622,7 +1672,7 @@ void cleanTempDir()
 
 int ServiceExeMgr::Child()
 {
-  gDebug = m_debug;
+  //gDebug = m_debug;
 
 #ifdef _MSC_VER
   // FIXME:
@@ -1821,7 +1871,7 @@ int main(int argc, char* argv[])
 
   // Initialize the charset library
   MY_INIT(argv[0]);
-
-  return ServiceExeMgr(opt).Run();
+  ServiceExeMgr* globServiceExeMgr = new ServiceExeMgr(opt);
+  return globServiceExeMgr->Run();
 }
 
