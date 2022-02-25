@@ -95,7 +95,7 @@ string Func_hex::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
       if ((val <= (double)numeric_limits<int64_t>::min()) || (val >= (double)numeric_limits<int64_t>::max()))
         dec = ~(int64_t)0;
       else
-        dec = (uint64_t)(val + (val > 0 ? 0.5 : -0.5));
+        dec = static_cast<uint64_t>(static_cast<int64_t>(val + (val > 0 ? 0.5 : -0.5)));
 
       retval = helpers::convNumToStr(dec, ans, 16);
       break;
