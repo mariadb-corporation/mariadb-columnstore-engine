@@ -1300,7 +1300,7 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
       for (uint32_t j = 0; j < filterCount; ++j)
       {
         // Preload filter argument values only once.
-        filterArgsVectors[j] = simdProcessor.loadValue(*((FilterType*)&filterValues[j]));
+        filterArgsVectors.push_back(simdProcessor.loadValue(*((FilterType*)&filterValues[j])));
         switch (filterCOPs[j])
         {
           case (COMPARE_EQ):
