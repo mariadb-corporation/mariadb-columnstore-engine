@@ -79,312 +79,40 @@
 
 #include "mariadb_my_sys.h"
 #include "statistics.h"
+#include "serviceexemgr.h"
 
-class Opt
+namespace exemgr
 {
- public:
-  int m_debug;
-  bool m_e;
-  bool m_fg;
-  Opt(int argc, char* argv[]) : m_debug(0), m_e(false), m_fg(false)
-  {
-    int c;
-    while ((c = getopt(argc, argv, "edf")) != EOF)
-    {
-      switch (c)
-      {
-        case 'd': m_debug++; break;
-
-        case 'e': m_e = true; break;
-
-        case 'f': m_fg = true; break;
-
-        case '?':
-        default: break;
-      }
-    }
-  }
-  int getDebugLevel() const
-  {
-    return m_debug;
-  }
-};
-
-class ServiceExeMgr : public Service, public Opt
-{
-  using SessionMemMap_t = std::map<uint32_t, size_t>;
-  using ThreadCntPerSessionMap_t = std::map<uint32_t, uint32_t>;
- protected:
-  void log(logging::LOG_TYPE type, const std::string& str)
-  {
-    logging::LoggingID logid(16);
-    logging::Message::Args args;
-    logging::Message message(8);
-    args.add(strerror(errno));
-    message.format(args);
-    logging::Logger logger(logid.fSubsysID);
-    logger.logMessage(type, message, logid);
-  }
-
- public:
-  ServiceExeMgr(const Opt& opt) : Service("ExeMgr"), Opt(opt), msgLog(logging::Logger(16))
-  {
-  }
-  void LogErrno() override
-  {
-    log(logging::LOG_TYPE_CRITICAL, std::string(strerror(errno)));
-  }
-  void ParentLogChildMessage(const std::string& str) override
-  {
-    log(logging::LOG_TYPE_INFO, str);
-  }
-  int Child() override;
-  int Run()
-  {
-    return m_fg ? Child() : RunForking();
-  }
-  static const constexpr unsigned logDefaultMsg = logging::M0000;
-  static const constexpr unsigned logDbProfStartStatement = logging::M0028;
-  static const constexpr unsigned logDbProfEndStatement = logging::M0029;
-  static const constexpr unsigned logStartSql = logging::M0041;
-  static const constexpr unsigned logEndSql = logging::M0042;
-  static const constexpr unsigned logRssTooBig = logging::M0044;
-  static const constexpr unsigned logDbProfQueryStats = logging::M0047;
-  static const constexpr unsigned logExeMgrExcpt = logging::M0055;
-  // If any flags other than the table mode flags are set, produce output to screeen
-  static const constexpr uint32_t flagsWantOutput = (0xffffffff & ~execplan::CalpontSelectExecutionPlan::TRACE_TUPLE_AUTOSWITCH &
-    ~execplan::CalpontSelectExecutionPlan::TRACE_TUPLE_OFF);
-  logging::Logger& getLogger()
-  {
-    return msgLog;
-  }
-  void updateSessionMap(const size_t pct)
-  {
-    std::lock_guard<std::mutex> lk(sessionMemMapMutex);
-
-    for (auto mapIter = sessionMemMap.begin(); mapIter != sessionMemMap.end(); ++mapIter)
-    {
-      if (pct > mapIter->second)
-      {
-        mapIter->second = pct;
-      }
-    }
-  }
-  // std::mutex& getSessionMemMapMutex()
-  // {
-  //   return sessionMemMapMutex;
-  // }
-  // SessionMemMap_t& getSessionMemMap()
-  // {
-  //   return sessionMemMap;
-  // }
-  ThreadCntPerSessionMap_t& getThreadCntPerSessionMap()
-  {
-    return threadCntPerSessionMap;
-  }
-  std::mutex& getThreadCntPerSessionMapMutex()
-  {
-    return threadCntPerSessionMapMutex;
-  }
-  void initMaxMemPct(uint32_t sessionId)
-  {
-    // WIP
-    if (sessionId < 0x80000000)
-    {
-      std::lock_guard<std::mutex> lk(sessionMemMapMutex);
-      auto mapIter = sessionMemMap.find(sessionId);
-
-      if (mapIter == sessionMemMap.end())
-      {
-        sessionMemMap[sessionId] = 0;
-      }
-      else
-      {
-        mapIter->second = 0;
-      }
-    }
-  }
-  uint64_t getMaxMemPct(const uint32_t sessionId)
-  {
-    uint64_t maxMemoryPct = 0;
-    // WIP
-    if (sessionId < 0x80000000)
-    {
-      std::lock_guard<std::mutex> lk(sessionMemMapMutex);
-      auto mapIter = sessionMemMap.find(sessionId);
-
-      if (mapIter != sessionMemMap.end())
-      {
-        maxMemoryPct = (uint64_t)mapIter->second;
-      }
-    }
-
-    return maxMemoryPct;
-  }
-  void deleteMaxMemPct(uint32_t sessionId)
-  {
-    if (sessionId < 0x80000000)
-    {
-      std::lock_guard<std::mutex> lk(sessionMemMapMutex);
-      auto mapIter = sessionMemMap.find(sessionId);
-
-      if (mapIter != sessionMemMap.end())
-      {
-        sessionMemMap.erase(sessionId);
-      }
-    }
-  }
- private:
-  logging::Logger msgLog;
-  SessionMemMap_t sessionMemMap; // track memory% usage during a query
-  std::mutex sessionMemMapMutex;
-  //...The FrontEnd may establish more than 1 connection (which results in
-  //   more than 1 ExeMgr thread) per session.  These threads will share
-  //   the same CalpontSystemCatalog object for that session.  Here, we
-  //   define a std::map to track how many threads are sharing each session, so
-  //   that we know when we can safely delete a CalpontSystemCatalog object
-  //   shared by multiple threads per session.
-  ThreadCntPerSessionMap_t threadCntPerSessionMap;
-  std::mutex threadCntPerSessionMapMutex;
-};
-
-namespace
-{
+  #if 0
   ServiceExeMgr* globServiceExeMgr = nullptr;
 
-
-typedef std::map<uint32_t, uint32_t> ThreadCntPerSessionMap_t;
-ThreadCntPerSessionMap_t threadCntPerSessionMap;
-std::mutex threadCntPerSessionMapMutex;
-
-// This var is only accessed using thread-safe inc/dec calls
-ActiveStatementCounter* statementsRunningCount;
-
-joblist::DistributedEngineComm* ec;
-
-auto rm = joblist::ResourceManager::instance(true);
-
-int toInt(const std::string& val)
-{
-  if (val.length() == 0)
-    return -1;
-
-  return static_cast<int>(config::Config::fromText(val));
-}
-
-const std::string ExeMgr("ExeMgr1");
-
-const std::string prettyPrintMiniInfo(const std::string& in)
-{
-  // 1. take the std::string and tok it by '\n'
-  // 2. for each part in each line calc the longest part
-  // 3. padding to each longest value, output a header and the lines
-  typedef boost::tokenizer<boost::char_separator<char> > my_tokenizer;
-  boost::char_separator<char> sep1("\n");
-  my_tokenizer tok1(in, sep1);
-  std::vector<std::string> lines;
-  std::string header = "Desc Mode Table TableOID ReferencedColumns PIO LIO PBE Elapsed Rows";
-  const int header_parts = 10;
-  lines.push_back(header);
-
-  for (my_tokenizer::const_iterator iter1 = tok1.begin(); iter1 != tok1.end(); ++iter1)
+  void added_a_pm(int)
   {
-    if (!iter1->empty())
-      lines.push_back(*iter1);
-  }
+    logging::LoggingID logid(21, 0, 0);
+    logging::Message::Args args1;
+    logging::Message msg(1);
+    args1.add("exeMgr caught SIGHUP. Resetting connections");
+    msg.format(args1);
+    std::cout << msg.msg().c_str() << std::endl;
+    logging::Logger logger(logid.fSubsysID);
+    logger.logMessage(logging::LOG_TYPE_DEBUG, msg, logid);
 
-  std::vector<unsigned> lens;
-
-  for (int i = 0; i < header_parts; i++)
-    lens.push_back(0);
-
-  std::vector<std::vector<std::string> > lineparts;
-  std::vector<std::string>::iterator iter2;
-  int j;
-
-  for (iter2 = lines.begin(), j = 0; iter2 != lines.end(); ++iter2, j++)
-  {
-    boost::char_separator<char> sep2(" ");
-    my_tokenizer tok2(*iter2, sep2);
-    int i;
-    std::vector<std::string> parts;
-    my_tokenizer::iterator iter3;
-
-    for (iter3 = tok2.begin(), i = 0; iter3 != tok2.end(); ++iter3, i++)
+    auto* dec = exemgr::globServiceExeMgr->getDec();
+    if (dec)
     {
-      if (i >= header_parts)
-        break;
-
-      std::string part(*iter3);
-
-      if (j != 0 && i == 8)
-        part.resize(part.size() - 3);
-
-      assert(i < header_parts);
-
-      if (part.size() > lens[i])
-        lens[i] = part.size();
-
-      parts.push_back(part);
+      oam::OamCache* oamCache = oam::OamCache::makeOamCache();
+      oamCache->forceReload();
+      dec->Setup();
     }
-
-    assert(i == header_parts);
-    lineparts.push_back(parts);
   }
 
-  std::ostringstream oss;
-
-  std::vector<std::vector<std::string> >::iterator iter1 = lineparts.begin();
-  std::vector<std::vector<std::string> >::iterator end1 = lineparts.end();
-
-  oss << "\n";
-
-  while (iter1 != end1)
+  void printTotalUmMemory(int sig)
   {
-    std::vector<std::string>::iterator iter2 = iter1->begin();
-    std::vector<std::string>::iterator end2 = iter1->end();
-    assert(distance(iter2, end2) == header_parts);
-    int i = 0;
-
-    while (iter2 != end2)
-    {
-      assert(i < header_parts);
-      oss << std::setw(lens[i]) << std::left << *iter2 << " ";
-      ++iter2;
-      i++;
-    }
-
-    oss << "\n";
-    ++iter1;
+    int64_t num = globServiceExeMgr->getRm().availableMemory();
+    std::cout << "Total UM memory available: " << num << std::endl;
   }
-
-  return oss.str();
-}
-
-const std::string timeNow()
-{
-  time_t outputTime = time(0);
-  struct tm ltm;
-  char buf[32];  // ctime(3) says at least 26
-  size_t len = 0;
-#ifdef _MSC_VER
-  asctime_s(buf, 32, localtime_r(&outputTime, &ltm));
-#else
-  asctime_r(localtime_r(&outputTime, &ltm), buf);
 #endif
-  len = strlen(buf);
-
-  if (len > 0)
-    --len;
-
-  if (buf[len] == '\n')
-    buf[len] = 0;
-
-  return buf;
-}
-
-querytele::QueryTeleServerParms gTeleServerParms;
-
+#if 0
 class SessionThread
 {
  public:
@@ -394,7 +122,7 @@ class SessionThread
    , fEc(ec)
    , fRm(rm)
    , fStatsRetrieved(false)
-   , fTeleClient(gTeleServerParms)
+   , fTeleClient(globServiceExeMgr->getTeleServerParms())
    , fOamCachePtr(oam::OamCache::makeOamCache())
   {
   }
@@ -454,11 +182,7 @@ class SessionThread
       {
         // wait for the ei data to be written by another thread (brain-dead)
         struct timespec req = {0, 250000};  // 250 usec
-#ifdef _MSC_VER
-        Sleep(20);  // 20ms on Windows
-#else
         nanosleep(&req, 0);
-#endif
       }
 
       // Get % memory usage during current query for sessionId
@@ -489,40 +213,13 @@ class SessionThread
     return os.str();
   }
 
-  //...Increment the number of threads using the specified sessionId
   static void incThreadCntPerSession(uint32_t sessionId)
   {
-    std::lock_guard<std::mutex> lk(threadCntPerSessionMapMutex);
-    ThreadCntPerSessionMap_t::iterator mapIter = threadCntPerSessionMap.find(sessionId);
-
-    if (mapIter == threadCntPerSessionMap.end())
-      threadCntPerSessionMap.insert(ThreadCntPerSessionMap_t::value_type(sessionId, 1));
-    else
-      mapIter->second++;
+    return globServiceExeMgr->incThreadCntPerSession(sessionId);
   }
-
-  //...Decrement the number of threads using the specified sessionId.
-  //...When the thread count for a sessionId reaches 0, the corresponding
-  //...CalpontSystemCatalog objects are deleted.
-  //...The user query and its associated catalog query have a different
-  //...session Id where the highest bit is flipped.
-  //...The object with id(sessionId | 0x80000000) cannot be removed before
-  //...user query session completes because the sysdata may be used for
-  //...debugging/stats purpose, such as result graph, etc.
   static void decThreadCntPerSession(uint32_t sessionId)
   {
-    std::lock_guard<std::mutex> lk(threadCntPerSessionMapMutex);
-    ThreadCntPerSessionMap_t::iterator mapIter = threadCntPerSessionMap.find(sessionId);
-
-    if (mapIter != threadCntPerSessionMap.end())
-    {
-      if (--mapIter->second == 0)
-      {
-        threadCntPerSessionMap.erase(mapIter);
-        execplan::CalpontSystemCatalog::removeCalpontSystemCatalog(sessionId);
-        execplan::CalpontSystemCatalog::removeCalpontSystemCatalog((sessionId ^ 0x80000000));
-      }
-    }
+    return globServiceExeMgr->decThreadCntPerSession(sessionId);
   }
 
   //...Init sessionMemMap entry for specified session to 0 memory %.
@@ -574,13 +271,13 @@ class SessionThread
       {
         case execplan::PMSMALLSIDEMEMORY:
         {
-          fRm->addHJPmMaxSmallSideMap(it->sessionId, it->value);
+          globServiceExeMgr->getRm().addHJPmMaxSmallSideMap(it->sessionId, it->value);
           break;
         }
 
         case execplan::UMSMALLSIDEMEMORY:
         {
-          fRm->addHJUmMaxSmallSideMap(it->sessionId, it->value);
+          globServiceExeMgr->getRm().addHJUmMaxSmallSideMap(it->sessionId, it->value);
           break;
         }
 
@@ -593,10 +290,9 @@ class SessionThread
                      boost::shared_ptr<execplan::CalpontSystemCatalog> csc)
   {
     const execplan::CalpontSelectExecutionPlan::ColumnMap& colMap = csep.columnMap();
-    execplan::CalpontSelectExecutionPlan::ColumnMap::const_iterator it;
     std::string schemaName;
 
-    for (it = colMap.begin(); it != colMap.end(); ++it)
+    for (auto it = colMap.begin(); it != colMap.end(); ++it)
     {
       const auto sc = dynamic_cast<execplan::SimpleColumn*>((it->second).get());
 
@@ -633,6 +329,7 @@ class SessionThread
 
   void analyzeTableExecute(messageqcpp::ByteStream& bs, joblist::SJLP& jl, bool& stmtCounted)
   {
+    auto* statementsRunningCount = globServiceExeMgr->getStatementsRunningCount();
     messageqcpp::ByteStream::quadbyte qb;
     execplan::MCSAnalyzeTableExecutionPlan caep;
 
@@ -775,6 +472,7 @@ class SessionThread
     bool tryTuples = false;
     bool usingTuples = false;
     bool stmtCounted = false;
+    auto* statementsRunningCount = globServiceExeMgr->getStatementsRunningCount();
 
     try
     {
@@ -921,6 +619,7 @@ class SessionThread
         // Mask 0x80000000 is for associate user query and csc query
         if (incSessionThreadCnt)
         {
+          // WIP
           incThreadCntPerSession(csep.sessionID() | 0x80000000);
           incSessionThreadCnt = false;
         }
@@ -1129,7 +828,7 @@ class SessionThread
               if ((csep.traceFlags() & execplan::CalpontSelectExecutionPlan::TRACE_LOG) != 0)
               {
                 bs << jl->extendedInfo();
-                bs << prettyPrintMiniInfo(jl->miniInfo());
+                bs << globServiceExeMgr->prettyPrintMiniInfo(jl->miniInfo());
               }
               else
               {
@@ -1294,7 +993,7 @@ class SessionThread
                                 (csep.traceFlags() & execplan::CalpontSelectExecutionPlan::TRACE_LOG),
                                 totalRowCount);
           //@Bug 1306. Added timing info for real time tracking.
-          std::cout << ss << " at " << timeNow() << std::endl;
+          std::cout << ss << " at " << globServiceExeMgr->timeNow() << std::endl;
 
           // log query stats to debug log file
           args.reset();
@@ -1339,7 +1038,7 @@ class SessionThread
           // delete sessionMemMap entry for this session's memory % use
           deleteMaxMemPct(csep.sessionID());
 
-        std::string endtime(timeNow());
+        std::string endtime(globServiceExeMgr->timeNow());
 
         if ((csep.traceFlags() & globServiceExeMgr->flagsWantOutput) && (csep.sessionID() < 0x80000000))
         {
@@ -1427,7 +1126,7 @@ class SessionThread
       jlCleanupDone.wait(scoped);
   }
 };
-
+#endif
 class RssMonFcn : public utils::MonitorProcMem
 {
  public:
@@ -1439,6 +1138,7 @@ class RssMonFcn : public utils::MonitorProcMem
   void operator()() const
   {
     logging::Logger& msgLog = globServiceExeMgr->getLogger();
+    auto* statementsRunningCount = globServiceExeMgr->getStatementsRunningCount();
     for (;;)
     {
       size_t rssMb = rss();
@@ -1471,62 +1171,91 @@ class RssMonFcn : public utils::MonitorProcMem
 
       // Update sessionMemMap entries lower than current mem % use
       globServiceExeMgr->updateSessionMap(pct);
-      // {
-      //   // std::lock_guard<std::mutex> lk(sessionMemMapMutex);
-
-      //   // for (SessionMemMap_t::iterator mapIter = sessionMemMap.begin(); mapIter != sessionMemMap.end();
-      //   //      ++mapIter)
-      //   // {
-      //   //   if (pct > mapIter->second)
-      //   //   {
-      //   //     mapIter->second = pct;
-      //   //   }
-      //   // }
-      // }
 
       pause_();
     }
   }
 };
 
-#ifdef _MSC_VER
-void exit_(int)
+void startRssMon(size_t maxPct, int pauseSeconds)
 {
-  exit(0);
-}
-#endif
-
-void added_a_pm(int)
-{
-  logging::LoggingID logid(21, 0, 0);
-  logging::Message::Args args1;
-  logging::Message msg(1);
-  args1.add("exeMgr caught SIGHUP. Resetting connections");
-  msg.format(args1);
-  std::cout << msg.msg().c_str() << std::endl;
-  logging::Logger logger(logid.fSubsysID);
-  logger.logMessage(logging::LOG_TYPE_DEBUG, msg, logid);
-
-  if (ec)
-  {
-    oam::OamCache* oamCache = oam::OamCache::makeOamCache();
-    oamCache->forceReload();
-    ec->Setup();
-  }
+  new boost::thread(RssMonFcn(maxPct, pauseSeconds));
 }
 
-void printTotalUmMemory(int sig)
-{
-  int64_t num = rm->availableMemory();
-  std::cout << "Total UM memory available: " << num << std::endl;
-}
+// void cleanTempDir()
+// {
+//   using TempDirPurpose = config::Config::TempDirPurpose;
+//   struct Dirs
+//   {
+//     std::string section;
+//     std::string allowed;
+//     TempDirPurpose purpose;
+//   };
+//   std::vector<Dirs> dirs{{"HashJoin", "AllowDiskBasedJoin", TempDirPurpose::Joins},
+//                          {"RowAggregation", "AllowDiskBasedAggregation", TempDirPurpose::Aggregates}};
+//   const auto config = config::Config::makeConfig();
 
-void setupSignalHandlers()
+//   for (const auto& dir : dirs)
+//   {
+//     std::string allowStr = config->getConfig(dir.section, dir.allowed);
+//     bool allow = (allowStr == "Y" || allowStr == "y");
+
+//     std::string tmpPrefix = config->getTempFileDir(dir.purpose);
+
+//     if (allow && tmpPrefix.empty())
+//     {
+//       std::cerr << "Empty tmp directory name for " << dir.section << std::endl;
+//       logging::LoggingID logid(16, 0, 0);
+//       logging::Message::Args args;
+//       logging::Message message(8);
+//       args.add("Empty tmp directory name for:");
+//       args.add(dir.section);
+//       message.format(args);
+//       logging::Logger logger(logid.fSubsysID);
+//       logger.logMessage(logging::LOG_TYPE_CRITICAL, message, logid);
+//     }
+
+//     tmpPrefix += "/";
+
+//     idbassert(tmpPrefix != "/");
+
+//     /* This is quite scary as ExeMgr usually runs as root */
+//     try
+//     {
+//       if (allow)
+//       {
+//         boost::filesystem::remove_all(tmpPrefix);
+//       }
+//       boost::filesystem::create_directories(tmpPrefix);
+//     }
+//     catch (const std::exception& ex)
+//     {
+//       std::cerr << ex.what() << std::endl;
+//       logging::LoggingID logid(16, 0, 0);
+//       logging::Message::Args args;
+//       logging::Message message(8);
+//       args.add("Exception whilst cleaning tmpdir: ");
+//       args.add(ex.what());
+//       message.format(args);
+//       logging::Logger logger(logid.fSubsysID);
+//       logger.logMessage(logging::LOG_TYPE_WARNING, message, logid);
+//     }
+//     catch (...)
+//     {
+//       std::cerr << "Caught unknown exception during tmpdir cleanup" << std::endl;
+//       logging::LoggingID logid(16, 0, 0);
+//       logging::Message::Args args;
+//       logging::Message message(8);
+//       args.add("Unknown exception whilst cleaning tmpdir");
+//       message.format(args);
+//       logging::Logger logger(logid.fSubsysID);
+//       logger.logMessage(logging::LOG_TYPE_WARNING, message, logid);
+//     }
+//   }
+// }
+#if 0
+void ServiceExeMgr::setupSignalHandlers()
 {
-#ifdef _MSC_VER
-  signal(SIGINT, exit_);
-  signal(SIGTERM, exit_);
-#else
   struct sigaction ign;
 
   memset(&ign, 0, sizeof(ign));
@@ -1535,154 +1264,23 @@ void setupSignalHandlers()
   sigaction(SIGPIPE, &ign, 0);
 
   memset(&ign, 0, sizeof(ign));
-  ign.sa_handler = added_a_pm;
+  ign.sa_handler = exemgr::added_a_pm;
   sigaction(SIGHUP, &ign, 0);
-  ign.sa_handler = printTotalUmMemory;
+  ign.sa_handler = exemgr::printTotalUmMemory;
   sigaction(SIGUSR1, &ign, 0);
   memset(&ign, 0, sizeof(ign));
   ign.sa_handler = fatalHandler;
   sigaction(SIGSEGV, &ign, 0);
   sigaction(SIGABRT, &ign, 0);
   sigaction(SIGFPE, &ign, 0);
-#endif
-}
-
-int8_t setupCwd(joblist::ResourceManager* rm)
-{
-  std::string workdir = rm->getScWorkingDir();
-  int8_t rc = chdir(workdir.c_str());
-
-  if (rc < 0 || access(".", W_OK) != 0)
-    rc = chdir("/tmp");
-
-  return (rc < 0) ? -5 : rc;
-}
-
-void startRssMon(size_t maxPct, int pauseSeconds)
-{
-  new boost::thread(RssMonFcn(maxPct, pauseSeconds));
-}
-
-int setupResources()
-{
-#ifdef _MSC_VER
-  // FIXME:
-#else
-  struct rlimit rlim;
-
-  if (getrlimit(RLIMIT_NOFILE, &rlim) != 0)
-  {
-    return -1;
-  }
-
-  rlim.rlim_cur = rlim.rlim_max = 65536;
-
-  if (setrlimit(RLIMIT_NOFILE, &rlim) != 0)
-  {
-    return -2;
-  }
-
-  if (getrlimit(RLIMIT_NOFILE, &rlim) != 0)
-  {
-    return -3;
-  }
-
-  if (rlim.rlim_cur != 65536)
-  {
-    return -4;
-  }
-
-#endif
-  return 0;
-}
-
-}  // namespace
-
-void cleanTempDir()
-{
-  using TempDirPurpose = config::Config::TempDirPurpose;
-  struct Dirs
-  {
-    std::string section;
-    std::string allowed;
-    TempDirPurpose purpose;
-  };
-  std::vector<Dirs> dirs{{"HashJoin", "AllowDiskBasedJoin", TempDirPurpose::Joins},
-                         {"RowAggregation", "AllowDiskBasedAggregation", TempDirPurpose::Aggregates}};
-  const auto config = config::Config::makeConfig();
-
-  for (const auto& dir : dirs)
-  {
-    std::string allowStr = config->getConfig(dir.section, dir.allowed);
-    bool allow = (allowStr == "Y" || allowStr == "y");
-
-    std::string tmpPrefix = config->getTempFileDir(dir.purpose);
-
-    if (allow && tmpPrefix.empty())
-    {
-      std::cerr << "Empty tmp directory name for " << dir.section << std::endl;
-      logging::LoggingID logid(16, 0, 0);
-      logging::Message::Args args;
-      logging::Message message(8);
-      args.add("Empty tmp directory name for:");
-      args.add(dir.section);
-      message.format(args);
-      logging::Logger logger(logid.fSubsysID);
-      logger.logMessage(logging::LOG_TYPE_CRITICAL, message, logid);
-    }
-
-    tmpPrefix += "/";
-
-    idbassert(tmpPrefix != "/");
-
-    /* This is quite scary as ExeMgr usually runs as root */
-    try
-    {
-      if (allow)
-      {
-        boost::filesystem::remove_all(tmpPrefix);
-      }
-      boost::filesystem::create_directories(tmpPrefix);
-    }
-    catch (const std::exception& ex)
-    {
-      std::cerr << ex.what() << std::endl;
-      logging::LoggingID logid(16, 0, 0);
-      logging::Message::Args args;
-      logging::Message message(8);
-      args.add("Exception whilst cleaning tmpdir: ");
-      args.add(ex.what());
-      message.format(args);
-      logging::Logger logger(logid.fSubsysID);
-      logger.logMessage(logging::LOG_TYPE_WARNING, message, logid);
-    }
-    catch (...)
-    {
-      std::cerr << "Caught unknown exception during tmpdir cleanup" << std::endl;
-      logging::LoggingID logid(16, 0, 0);
-      logging::Message::Args args;
-      logging::Message message(8);
-      args.add("Unknown exception whilst cleaning tmpdir");
-      message.format(args);
-      logging::Logger logger(logid.fSubsysID);
-      logger.logMessage(logging::LOG_TYPE_WARNING, message, logid);
-    }
-  }
 }
 
 int ServiceExeMgr::Child()
 {
-  //gDebug = m_debug;
-
-#ifdef _MSC_VER
-  // FIXME:
-#else
-
   // Make sure CSC thinks it's on a UM or else bucket reuse stuff below will stall
   if (!m_e)
     setenv("CALPONT_CSC_IDENT", "um", 1);
 
-#endif
   setupSignalHandlers();
   int err = 0;
   if (!m_debug)
@@ -1703,7 +1301,7 @@ int ServiceExeMgr::Child()
     default: errMsg = "Couldn't change working directory or unknown error"; break;
   }
 
-  err = setupCwd(rm);
+  err = setupCwd();
 
   if (err < 0)
   {
@@ -1732,23 +1330,22 @@ int ServiceExeMgr::Child()
   msgMap[logRssTooBig] = logging::Message(logRssTooBig);
   msgMap[logDbProfQueryStats] = logging::Message(logDbProfQueryStats);
   msgMap[logExeMgrExcpt] = logging::Message(logExeMgrExcpt);
-  msgLog.msgMap(msgMap);
+  msgLog_.msgMap(msgMap);
 
-  ec = joblist::DistributedEngineComm::instance(rm, true);
-  ec->Open();
+  dec_ = joblist::DistributedEngineComm::instance(rm_, true);
+  dec_->Open();
 
   bool tellUser = true;
 
   messageqcpp::MessageQueueServer* mqs;
 
-  statementsRunningCount = new ActiveStatementCounter(rm->getEmExecQueueSize());
-
+  statementsRunningCount_ = new ActiveStatementCounter(rm_->getEmExecQueueSize());
+  const std::string ExeMgr = "ExeMgr1";
   for (;;)
   {
     try
     {
-      mqs = new messageqcpp::MessageQueueServer(ExeMgr, rm->getConfig(), messageqcpp::ByteStream::BlockSize,
-                                                64);
+      mqs = new messageqcpp::MessageQueueServer(ExeMgr, rm_->getConfig(), messageqcpp::ByteStream::BlockSize, 64);
       break;
     }
     catch (std::runtime_error& re)
@@ -1777,48 +1374,45 @@ int ServiceExeMgr::Child()
   // because rm has a "isExeMgr" flag that is set upon creation (rm is a singleton).
   // From  the pools perspective, it has no idea if it is ExeMgr doing the
   // creation, so it has no idea which way to set the flag. So we set the max here.
-  joblist::JobStep::jobstepThreadPool.setMaxThreads(rm->getJLThreadPoolSize());
+  joblist::JobStep::jobstepThreadPool.setMaxThreads(rm_->getJLThreadPoolSize());
   joblist::JobStep::jobstepThreadPool.setName("ExeMgrJobList");
 
-  if (rm->getJlThreadPoolDebug() == "Y" || rm->getJlThreadPoolDebug() == "y")
+  if (rm_->getJlThreadPoolDebug() == "Y" || rm_->getJlThreadPoolDebug() == "y")
   {
     joblist::JobStep::jobstepThreadPool.setDebug(true);
     joblist::JobStep::jobstepThreadPool.invoke(
         threadpool::ThreadPoolMonitor(&joblist::JobStep::jobstepThreadPool));
   }
 
-  int serverThreads = rm->getEmServerThreads();
-  int maxPct = rm->getEmMaxPct();
-  int pauseSeconds = rm->getEmSecondsBetweenMemChecks();
-  int priority = rm->getEmPriority();
+  int serverThreads = rm_->getEmServerThreads();
+  int maxPct = rm_->getEmMaxPct();
+  int pauseSeconds = rm_->getEmSecondsBetweenMemChecks();
+  int priority = rm_->getEmPriority();
 
   FEMsgHandler::threadPool.setMaxThreads(serverThreads);
   FEMsgHandler::threadPool.setName("FEMsgHandler");
 
   if (maxPct > 0)
-    startRssMon(maxPct, pauseSeconds);
+    exemgr::startRssMon(maxPct, pauseSeconds);
 
-#ifndef _MSC_VER
   setpriority(PRIO_PROCESS, 0, priority);
-#endif
 
-  std::string teleServerHost(rm->getConfig()->getConfig("QueryTele", "Host"));
+  std::string teleServerHost(rm_->getConfig()->getConfig("QueryTele", "Host"));
 
   if (!teleServerHost.empty())
   {
-    int teleServerPort = toInt(rm->getConfig()->getConfig("QueryTele", "Port"));
+    int teleServerPort = toInt(rm_->getConfig()->getConfig("QueryTele", "Port"));
 
     if (teleServerPort > 0)
     {
-      gTeleServerParms.host = teleServerHost;
-      gTeleServerParms.port = teleServerPort;
+      teleServerParms_ = querytele::QueryTeleServerParms(teleServerHost, teleServerPort);
     }
   }
 
   NotifyServiceStarted();
 
-  std::cout << "Starting ExeMgr: st = " << serverThreads << ", qs = " << rm->getEmExecQueueSize()
-            << ", mx = " << maxPct << ", cf = " << rm->getConfig()->configFile() << std::endl;
+  std::cout << "Starting ExeMgr: st = " << serverThreads << ", qs = " << rm_->getEmExecQueueSize()
+            << ", mx = " << maxPct << ", cf = " << rm_->getConfig()->configFile() << std::endl;
 
   {
     BRM::DBRM* dbrm = new BRM::DBRM();
@@ -1829,7 +1423,7 @@ int ServiceExeMgr::Child()
   threadpool::ThreadPool exeMgrThreadPool(serverThreads, 0);
   exeMgrThreadPool.setName("ExeMgrServer");
 
-  if (rm->getExeMgrThreadPoolDebug() == "Y" || rm->getExeMgrThreadPoolDebug() == "y")
+  if (rm_->getExeMgrThreadPoolDebug() == "Y" || rm_->getExeMgrThreadPoolDebug() == "y")
   {
     exeMgrThreadPool.setDebug(true);
     exeMgrThreadPool.invoke(threadpool::ThreadPoolMonitor(&exeMgrThreadPool));
@@ -1849,29 +1443,31 @@ int ServiceExeMgr::Child()
   {
     messageqcpp::IOSocket ios;
     ios = mqs->accept();
-    exeMgrThreadPool.invoke(SessionThread(ios, ec, rm));
+    exeMgrThreadPool.invoke(exemgr::SessionThread(ios, dec_, rm_));
   }
 
   exeMgrThreadPool.wait();
 
   return 0;
 }
+#endif
+} // namespace
 
 int main(int argc, char* argv[])
 {
   opterr = 0;
-  Opt opt(argc, argv);
+  exemgr::Opt opt(argc, argv);
 
   // Set locale language
   setlocale(LC_ALL, "");
   setlocale(LC_NUMERIC, "C");
 
   // This is unset due to the way we start it
-  program_invocation_short_name = const_cast<char*>("ExeMgr");
+  // program_invocation_short_name = const_cast<char*>("ExeMgr");
 
   // Initialize the charset library
   MY_INIT(argv[0]);
-  ServiceExeMgr* globServiceExeMgr = new ServiceExeMgr(opt);
-  return globServiceExeMgr->Run();
+  exemgr::globServiceExeMgr = new exemgr::ServiceExeMgr(opt);
+  return exemgr::globServiceExeMgr->Run();
 }
 
