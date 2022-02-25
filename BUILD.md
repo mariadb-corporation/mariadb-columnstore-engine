@@ -32,5 +32,22 @@ After the dependencies had been installed, just follow the normal building instr
 
 But for development convenience, we supply a script to build and run Mariadb server in MCS repo.
 
-	# TODO
-	
+- Remove all installed mariadb packages.
+
+- Edit cs-docker-tools script:
+```
+MCS_SCRIPTS_REPO_PREFIX=/path/to/script/cs-docker-tools
+MDB_SOURCE_PATH=/path/to/mdb_server
+MDB_GIT_TAG=10.6
+MCS_GIT_TAG=develop-6
+```
+
+for example for version 10.6.
+
+- Running the script:
+```
+sudo bash -x /data/cs-docker-tools/shells/run_mcs focal Debug
+```
+where focal is distro name (affects artifacts placement layout) and Debug is CMake build type.
+
+
