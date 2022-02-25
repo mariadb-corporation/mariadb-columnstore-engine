@@ -135,8 +135,6 @@ namespace exemgr
     sigaction(SIGFPE, &ign, 0);
   }
 
-
-
   void cleanTempDir()
   {
     using TempDirPurpose = config::Config::TempDirPurpose;
@@ -327,7 +325,10 @@ namespace exemgr
     FEMsgHandler::threadPool.setName("FEMsgHandler");
 
     if (maxPct > 0)
+    {
+      // Defined in rssmonfcn.cpp
       exemgr::startRssMon(maxPct, pauseSeconds);
+    }
 
     setpriority(PRIO_PROCESS, 0, priority);
 

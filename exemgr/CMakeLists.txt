@@ -4,7 +4,7 @@ include_directories( ${ENGINE_COMMON_INCLUDES} )
 
 ########### next target ###############
 
-set(ExeMgr_SRCS serviceexemgr.cpp sqlfrontsessionthread.cpp exemgr.cpp activestatementcounter.cpp femsghandler.cpp ../utils/common/crashtrace.cpp)
+set(ExeMgr_SRCS serviceexemgr.cpp sqlfrontsessionthread.cpp rssmonfcn.cpp exemgr.cpp activestatementcounter.cpp femsghandler.cpp ../utils/common/crashtrace.cpp)
 
 add_executable(ExeMgr ${ExeMgr_SRCS})
 
