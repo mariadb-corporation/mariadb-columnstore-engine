@@ -1,7 +1,7 @@
 color_normal=$(tput sgr0)
 color_bold=$(tput bold)
 color_red="$color_bold$(tput setaf 1)"
-color_green=$(tput setaf 2)
+color_green=$color_bold$(tput setaf 2)
 color_fawn=$(tput setaf 3); color_beige="$color_fawn"
 color_yellow="$color_bold$color_fawn"
 color_darkblue=$(tput setaf 4)
@@ -54,7 +54,7 @@ detect_distro()
         OS_VERSION=$(uname -r)
     fi
     OS=$(echo $OS | cut -f 1 -d " ")
-    message "Detected $OS $OS_VERSION"
+    message "Detected $color_yellow$OS $OS_VERSION$color_normal"
 }
 
 menuStr=""
