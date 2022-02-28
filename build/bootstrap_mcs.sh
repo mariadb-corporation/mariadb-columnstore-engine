@@ -17,16 +17,18 @@ if [ "$EUID" -ne 0 ]
     exit 1
 fi
 
-message "Building Mariadb Server from $MDB_SOURCE_PATH"
+message "Building Mariadb Server from $color_yellow$MDB_SOURCE_PATH$color_normal"
 
 BUILD_TYPE_OPTIONS=("Debug" "RelWithDebInfo")
 DISTRO_OPTIONS=("Ubuntu" "CentOS" "Debian" "openSUSE")
+BRANCHES=($(git branch --list --no-color| grep "[^* ]+" -Eo))
 
 optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
 optparse.define short=d long=distro desc="Choouse your OS: ${DISTRO_OPTIONS[*]}" variable=OS
 optparse.define short=s long=skip-deps desc="Skip install dependences" variable=SKIP_DEPS default=false value=true
 optparse.define short=C long=force-cmake-reconfig desc="Force cmake reconfigure" variable=FORCE_CMAKE_CONFIG default=false value=true
 optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore submodules initialization" variable=SKIP_SUBMODULES default=false value=true
+optparse.define short=b long=branch desc="Choouse git branch ('none' for menu)" variable=BRANCH
 
 source $( optparse.build )
 
@@ -35,12 +37,34 @@ if [[ ! " ${BUILD_TYPE_OPTIONS[*]} " =~ " ${MCS_BUILD_TYPE} " ]]; then
     MCS_BUILD_TYPE=$selectedChoice
 fi
 
-if [[ ! " ${DISTRO_OPTIONS[*]} " =~ " ${OS} " ]]; then
+if [[ ! " ${DISTRO_OPTIONS[*]} " =~ " ${OS} " || $OS = "Centos" ]]; then
     detect_distro
 fi
 
 INSTALL_PREFIX="/usr/"
 DATA_DIR="/var/lib/mysql/data"
+CMAKE_BIN_NAME=cmake
+
+select_branch()
+{
+    if [[ ! " ${BRANCHES[*]} " =~ " ${BRANCH} " ]]; then
+        if [[ $BRANCH = 'none' ]]; then
+            getChoice -q "Select your branch" -o BRANCHES
+            BRANCH=$selectedChoice
+        fi
+        cd $SCRIPT_LOCATION
+        message "Selecting $BRANCH branch for Columnstore"
+        git checkout $BRANCH
+        cd -
+
+        message "Turning off Columnstore submodule auto update via gitconfig"
+        cd $MDB_SOURCE_PATH
+        git config submodule.storage/columnstore/columnstore.update none
+        cd -
+    fi
+    CURRENT_BRANCH=$(git branch --show-current)
+    message "Columnstore will be built from $color_yellow$CURRENT_BRANCH$color_normal branch"
+}
 
 install_deps()
 {
@@ -55,8 +79,14 @@ install_deps()
         yum -y install epel-release \
         && yum -y groupinstall "Development Tools" \
 	&& yum config-manager --set-enabled powertools \
-        && yum -y install bison ncurses-devel readline-devel perl-devel openssl-devel cmake libxml2-devel gperf libaio-devel libevent-devel tree wget pam-devel snappy-devel libicu \
+        && yum -y install bison ncurses-devel readline-devel perl-devel openssl-devel libxml2-devel gperf libaio-devel libevent-devel tree wget pam-devel snappy-devel libicu \
         && yum -y install vim wget strace ltrace gdb  rsyslog net-tools openssh-server expect boost perl-DBI libicu boost-devel initscripts jemalloc-devel libcurl-devel gtest-devel cppunit-devel systemd-devel
+        if [[ "$OS_VERSION" == "7" ]]; then
+            yum -y install cmake3
+            CMAKE_BIN_NAME=cmake3
+        else
+            yum -y install cmake
+        fi
     elif [ $OS = 'openSUSE' ]; then
         zypper install -y bison ncurses-devel readline-devel libopenssl-devel cmake libxml2-devel gperf libaio-devel libevent-devel python-devel ruby-devel tree wget pam-devel snappy-devel libicu-devel \
         && zypper install -y libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel \
@@ -76,7 +106,7 @@ stop_service()
 check_service()
 {
     if systemctl is-active --quiet $1; then
-        message "$1 service started OK"
+        message "$1 service started$color_green OK $color_normal"
     else
         error "$1 service failed"
         service $1 status
@@ -110,7 +140,8 @@ clean_old_installation()
 
 build()
 {
-    message "Building sources"
+    message "Building sources in $color_yellow$MCS_BUILD_TYPE$color_normal mode"
+
     local MDB_CMAKE_FLAGS="-DWITH_SYSTEMD=yes
                      -DPLUGIN_COLUMNSTORE=YES
                      -DPLUGIN_MROONGA=NO
@@ -120,6 +151,7 @@ build()
                      -DPLUGIN_SPIDER=NO
                      -DPLUGIN_OQGRAPH=NO
                      -DPLUGIN_SPHINX=NO
+                     -DWITH_EMBEDDED_SERVER=OFF
                      -DBUILD_CONFIG=mysql_release
                      -DWITH_WSREP=OFF
                      -DWITH_SSL=system
@@ -155,7 +187,7 @@ build()
     message "building with flags $MDB_CMAKE_FLAGS"
 
     local CPUS=$(getconf _NPROCESSORS_ONLN)
-    cmake . -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS && \
+    ${CMAKE_BIN_NAME} . -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS && \
     make -j $CPUS install
 
     if [ $? -ne 0 ]; then
@@ -165,20 +197,26 @@ build()
     cd -
 }
 
-install()
+
+check_user_and_group()
 {
-    message "Installing MariaDB"
     if [ -z "$(grep mysql /etc/passwd)" ]; then
         message "Adding user mysql into /etc/passwd"
         useradd -r -U mysql -d /var/lib/mysql
     fi
 
     if [ -z "$(grep mysql /etc/group)" ]; then
-        echo "You need to manually add mysql group into /etc/group, e.g. mysql:x:999"
         GroupID = `awk -F: '{uid[$3]=1}END{for(x=100; x<=999; x++) {if(uid[x] != ""){}else{print x; exit;}}}' /etc/group`
         message "Adding group mysql with id $GroupID"
         groupadd -g GroupID mysql
     fi
+}
+
+install()
+{
+    message "Installing MariaDB"
+
+    check_user_and_group
 
     mkdir -p /etc/my.cnf.d
 
@@ -189,7 +227,6 @@ socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
     message "Running mysql_install_db"
     mysql_install_db --rpm --user=mysql
     mv /tmp/ha_columnstore_1.so $INSTALL_PREFIX/lib/mysql/plugin/ha_columnstore.so || mv /tmp/ha_columnstore_2.so $INSTALL_PREFIX/lib64/mysql/plugin/ha_columnstore.so
-    chown mysql:mysql $INSTALL_PREFIX/lib/plugin/ha_columnstore.so
 
     mkdir -p /etc/columnstore
 
@@ -244,6 +281,9 @@ socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
     chmod 777 /var/log/mariadb/columnstore
 }
 
+
+select_branch
+
 if [[ $SKIP_DEPS = false ]] ; then
     install_deps
 fi
@@ -253,4 +293,4 @@ clean_old_installation
 build
 install
 start_service
-message "FINISHED"
+message "$color_green FINISHED $color_normal"

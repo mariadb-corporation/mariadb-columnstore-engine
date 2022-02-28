@@ -54,7 +54,7 @@ detect_distro()
         OS_VERSION=$(uname -r)
     fi
     OS=$(echo $OS | cut -f 1 -d " ")
-    message "Detected $OS $OS_VERSION"
+    message "Detected $color_yellow$OS $OS_VERSION$color_normal"
 }
 
 menuStr=""
