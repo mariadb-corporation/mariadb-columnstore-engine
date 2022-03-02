@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2022 Mariadb Corporation.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -40,39 +41,26 @@ using namespace config;
 
 namespace joblist
 {
-// const string ResourceManager::fExeMgrStr("ExeMgr1");
-const string ResourceManager::fHashJoinStr("HashJoin");
-const string ResourceManager::fHashBucketReuseStr("HashBucketReuse");
-const string ResourceManager::fJobListStr("JobList");
-const string ResourceManager::fPrimitiveServersStr("PrimitiveServers");
-// const string ResourceManager::fSystemConfigStr("SystemConfig");
-const string ResourceManager::fTupleWSDLStr("TupleWSDL");
-const string ResourceManager::fZDLStr("ZDL");
-const string ResourceManager::fExtentMapStr("ExtentMap");
-// const string ResourceManager::fDMLProcStr("DMLProc");
-// const string ResourceManager::fBatchInsertStr("BatchInsert");
-const string ResourceManager::fOrderByLimitStr("OrderByLimit");
-const string ResourceManager::fRowAggregationStr("RowAggregation");
-
 ResourceManager* ResourceManager::fInstance = NULL;
 boost::mutex mx;
 
-ResourceManager* ResourceManager::instance(bool runningInExeMgr)
+ResourceManager* ResourceManager::instance(bool runningInExeMgr, config::Config *aConfig)
 {
   boost::mutex::scoped_lock lk(mx);
 
   if (!fInstance)
-    fInstance = new ResourceManager(runningInExeMgr);
+    fInstance = new ResourceManager(runningInExeMgr, aConfig);
 
+  std::cout << "ResourceManager::instance aConfig " << std::hex << (uint64_t)aConfig << std::endl;
   return fInstance;
 }
 
-ResourceManager::ResourceManager(bool runningInExeMgr)
+ResourceManager::ResourceManager(bool runningInExeMgr, config::Config *aConfig)
  : fExeMgrStr("ExeMgr1")
  , fSystemConfigStr("SystemConfig")
  , fDMLProcStr("DMLProc")
  , fBatchInsertStr("BatchInsert")
- , fConfig(Config::makeConfig())
+ , fConfig(aConfig == nullptr ? Config::makeConfig(): aConfig)
  , fNumCores(8)
  , fHjNumThreads(defaultNumThreads)
  , fJlProcessorThreadsPerScan(defaultProcessorThreadsPerScan)

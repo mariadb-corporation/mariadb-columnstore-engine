@@ -39,6 +39,9 @@
 #include <clocale>
 #include <iterator>
 #include <algorithm>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 //#define NDEBUG
 #include <cassert>
 using namespace std;
@@ -70,9 +73,36 @@ using namespace idbdatafile;
 #include "crashtrace.h"
 #include "installdir.h"
 
+// #include <boost/filesystem.hpp>
+// To be cleaned-up
+// #include "calpontselectexecutionplan.h"
+// #include "mcsanalyzetableexecutionplan.h"
+// #include "activestatementcounter.h"
+// #include "distributedenginecomm.h"
+// #include "resourcemanager.h"
+// #include "configcpp.h"
+// #include "queryteleserverparms.h"
+// #include "iosocket.h"
+// #include "joblist.h"
+// #include "joblistfactory.h"
+// #include "oamcache.h"
+// #include "simplecolumn.h"
+// #include "bytestream.h"
+// #include "telestats.h"
+// #include "messageobj.h"
+// #include "messagelog.h"
+// #include "sqllogger.h"
+// #include "femsghandler.h"
+// #include "idberrorinfo.h"
+// #include "MonitorProcMem.h"
+// #include "liboamcpp.h"
+// #include "crashtrace.h"
+// #include "service.h"
+
 #include "mariadb_my_sys.h"
 
 #include "service.h"
+#include "serviceexemgr.h"
 
 class Opt
 {
@@ -152,7 +182,8 @@ int toInt(const string& val)
 void setupSignalHandlers()
 {
 #ifndef _MSC_VER
-  signal(SIGHUP, SIG_IGN);
+  // It is set in EM::Child() ... setupSignalHandlers
+  // signal(SIGHUP, SIG_IGN);
 
   struct sigaction ign;
 
@@ -160,9 +191,10 @@ void setupSignalHandlers()
   ign.sa_handler = SIG_IGN;
   sigaction(SIGPIPE, &ign, 0);
 
-  memset(&ign, 0, sizeof(ign));
-  ign.sa_handler = SIG_IGN;
-  sigaction(SIGUSR1, &ign, 0);
+  // It is set in EM::Child() ... setupSignalHandlers
+  // memset(&ign, 0, sizeof(ign));
+  // ign.sa_handler = SIG_IGN;
+  // sigaction(SIGUSR1, &ign, 0);
 
   memset(&ign, 0, sizeof(ign));
   ign.sa_handler = SIG_IGN;
@@ -383,6 +415,13 @@ int ServicePrimProc::Child()
     return 2;
   }
 
+  std::thread exeMgrThread([cf]()
+  {
+    exemgr::Opt opt;
+    exemgr::globServiceExeMgr = new exemgr::ServiceExeMgr(opt, cf);
+    exemgr::globServiceExeMgr->Child();
+  });
+
   int serverThreads = 1;
   int serverQueueSize = 10;
   int processorWeight = 8 * 1024;
@@ -414,6 +453,8 @@ int ServicePrimProc::Child()
 
   gDebugLevel = primitiveprocessor::NONE;
 
+  int64_t val = cf->uFromText(cf->getConfig("PrimitiveServers", "Count"));
+  temp = val;
   temp = toInt(cf->getConfig(primitiveServers, "ServerThreads"));
 
   if (temp > 0)
