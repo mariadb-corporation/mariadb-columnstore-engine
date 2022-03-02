@@ -65,16 +65,12 @@ class WOConfigFileTest : public CppUnit::TestFixture
   void test1()
   {
     WriteOnceConfig woc(cf);
-    CPPUNIT_ASSERT(woc.owns("PrimitiveServers", "LBID_Shift"));
     CPPUNIT_ASSERT(woc.owns("SystemConfig", "DBRootCount"));
     CPPUNIT_ASSERT(woc.owns("SystemConfig", "DBRMRoot"));
 
     CPPUNIT_ASSERT(!woc.owns("dummy", "dummy"));
 
     int vali;
-
-    vali = Config::fromText(woc.getConfig("PrimitiveServers", "LBID_Shift"));
-    CPPUNIT_ASSERT(vali == 13);
 
     woc.setConfig("SystemConfig", "DBRootCount", "10");
     vali = Config::fromText(woc.getConfig("SystemConfig", "DBRootCount"));

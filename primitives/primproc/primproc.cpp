@@ -602,7 +602,6 @@ int ServicePrimProc::Child()
   if (temp >= 0)
     maxPct = temp;
 
-  // @bug4507, configurable pm aggregation AggregationMemoryCheck
   // We could use this same mechanism for other growing buffers.
   int aggPct = 95;
   temp = toInt(cf->getConfig("SystemConfig", "MemoryCheckPercent"));

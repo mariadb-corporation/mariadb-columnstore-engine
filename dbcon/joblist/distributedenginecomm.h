@@ -270,7 +270,6 @@ class DistributedEngineComm
   boost::mutex fMlock;   // sessionMessages mutex
   std::vector<boost::shared_ptr<boost::mutex> > fWlock;  // PrimProc socket write mutexes
   bool fBusy;
-  unsigned fLBIDShift;
   volatile uint32_t pmCount;
   boost::mutex fOnErrMutex;  // to lock function scope to reset pmconnections under error condition
   boost::mutex fSetupMutex;
