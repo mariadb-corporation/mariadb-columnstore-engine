@@ -26,7 +26,6 @@
 		<RowsPerBatch>10000</RowsPerBatch>
 	</BatchInsert>
 	<PrimitiveServers>
-		<Count>1</Count>
 		<ConnectionsPerPrimProc>2</ConnectionsPerPrimProc>
 		<ProcessorThreshold>128</ProcessorThreshold>
 		<ProcessorQueueSize>10K</ProcessorQueueSize> <!-- minimum of extent size 8192 -->
@@ -52,7 +51,6 @@
 	<SystemConfig>
 		<SystemName>columnstore-1</SystemName>
 		<ParentOAMModuleName>pm1</ParentOAMModuleName>
-		<StandbyOAMModuleName>unassigned</StandbyOAMModuleName>
 		<PrimaryUMModuleName>pm1</PrimaryUMModuleName>
 		<!-- Warning: Do not change this value once database is built -->
 		<DBRootCount>1</DBRootCount>
@@ -68,7 +66,6 @@
  		<hdfsRdwrBufferMaxSize>8G</hdfsRdwrBufferMaxSize>
 		-->
  		<hdfsRdwrScratch>/rdwrscratch</hdfsRdwrScratch> <!-- Do not set to an hdfs file path -->
- 		<TempFileDir>/columnstore_tmp_files</TempFileDir>
 		<!-- Be careful modifying SystemTempFileDir!  On start, ExeMgr deletes
 			the entire subdirectories "joins" & "aggregates" and recreates it to make sure no
 			files are left behind. -->
@@ -152,51 +149,6 @@
 		<Port>8700</Port>
 		<Module>pm1</Module>
 	</DBRM_Worker1>
-	<DBRM_Worker2>
-		<IPAddr>0.0.0.0</IPAddr>
-		<Port>8700</Port>
-		<Module>unassigned</Module>
-	</DBRM_Worker2>
-	<DBRM_Worker3>
-		<IPAddr>0.0.0.0</IPAddr>
-		<Port>8700</Port>
-		<Module>unassigned</Module>
-	</DBRM_Worker3>
-	<DBRM_Worker4>
-		<IPAddr>0.0.0.0</IPAddr>
-		<Port>8700</Port>
-		<Module>unassigned</Module>
-	</DBRM_Worker4>
-	<DBRM_Worker5>
-		<IPAddr>0.0.0.0</IPAddr>
-		<Port>8700</Port>
-		<Module>unassigned</Module>
-	</DBRM_Worker5>
-	<DBRM_Worker6>
-		<IPAddr>0.0.0.0</IPAddr>
-		<Port>8700</Port>
-		<Module>unassigned</Module>
-	</DBRM_Worker6>
-	<DBRM_Worker7>
-		<IPAddr>0.0.0.0</IPAddr>
-		<Port>8700</Port>
-		<Module>unassigned</Module>
-	</DBRM_Worker7>
-	<DBRM_Worker8>
-		<IPAddr>0.0.0.0</IPAddr>
-		<Port>8700</Port>
-		<Module>unassigned</Module>
-	</DBRM_Worker8>
-	<DBRM_Worker9>
-		<IPAddr>0.0.0.0</IPAddr>
-		<Port>8700</Port>
-		<Module>unassigned</Module>
-	</DBRM_Worker9>
-	<DBRM_Worker10>
-		<IPAddr>0.0.0.0</IPAddr>
-		<Port>8700</Port>
-		<Module>unassigned</Module>
-	</DBRM_Worker10>
 	<DBBC>
 		<!-- The percentage of RAM to use for the disk block cache. Defaults to 70% -->
         <!-- Alternatively, this can be specified in absolute terms using
@@ -213,40 +165,11 @@
 		<NumBlocksPct>50</NumBlocksPct>
 	</DBBC>
 	<Installation>
-		<SystemStartupOffline>n</SystemStartupOffline>
-		<InitialInstallFlag>y</InitialInstallFlag>
-		<SingleServerInstall>y</SingleServerInstall>
 		<ServerTypeInstall>2</ServerTypeInstall>
 		<PMwithUM>y</PMwithUM>
 		<MySQLRep>n</MySQLRep>
 		<DBRootStorageType>internal</DBRootStorageType>
-		<UMStorageType>internal</UMStorageType>
-		<SystemLogConfigFile>/etc/rsyslog.d/49-columnstore.conf</SystemLogConfigFile>
-		<Cloud>unassigned</Cloud>
-		<AmazonVPCNextPrivateIP>autoassign</AmazonVPCNextPrivateIP>
-		<UMInstanceType>unassigned</UMInstanceType>
-		<UMSecurityGroup>unassigned</UMSecurityGroup>
-		<UMVolumeSize>unassigned</UMVolumeSize>
-		<UMVolumeType>gp2</UMVolumeType>
-		<UMVolumeIOPS>unassigned</UMVolumeIOPS>
-		<PMInstanceType>unassigned</PMInstanceType>
-		<PMVolumeSize>unassigned</PMVolumeSize>
-		<PMVolumeType>gp2</PMVolumeType>
-		<PMVolumeIOPS>unassigned</PMVolumeIOPS>
-		<AmazonPMFailover>y</AmazonPMFailover>
-		<AmazonAutoTagging>y</AmazonAutoTagging>
-		<AmazonElasticIPCount>0</AmazonElasticIPCount>
-		<AmazonElasticIPAddr1>unassigned</AmazonElasticIPAddr1>
-		<AmazonElasticModule1>unassigned</AmazonElasticModule1>
-		<DataRedundancyConfig>n</DataRedundancyConfig>
-		<DataRedundancyCopies>0</DataRedundancyCopies>
-		<DataRedundancyStorageType>unassigned</DataRedundancyStorageType>
-		<CoreFileFlag>n</CoreFileFlag>
-		<MySQLPort>3306</MySQLPort>
-		<AmazonDeviceName>/dev/xvd</AmazonDeviceName>
-		<LockFileDirectory>/var/lock/subsys</LockFileDirectory>
 		<ProfileFile>/etc/profile.d/columnstoreAlias.sh</ProfileFile>
-		<DataRedundancyNetworkType/>
 	</Installation>
 	<ExtentMap>
 		<!--
@@ -264,11 +187,11 @@
 		<CPUniqueLimit>100</CPUniqueLimit>
 		<AllowDiskBasedJoin>N</AllowDiskBasedJoin>
 		<TempFileCompression>Y</TempFileCompression>
-    <TempFileCompressionType>Snappy</TempFileCompressionType> <!-- LZ4, Snappy -->
+		<TempFileCompressionType>Snappy</TempFileCompressionType> <!-- LZ4, Snappy -->
 	</HashJoin>
 	<JobList>
 		<FlushInterval>16K</FlushInterval>
-        <FifoSize>16</FifoSize>1
+		<FifoSize>16</FifoSize>1
 		<RequestSize>1</RequestSize>  <!-- Number of extents per request, should be 
 			  less than MaxOutstandingRequests. Otherwise, default value 1 is used. -->
 		<!--  ProcessorThreadsPerScan is the number of jobs issued to process
@@ -307,7 +230,7 @@
 	</UserPriority>
 	<NetworkCompression>
 		<Enabled>Y</Enabled>
-    <NetworkCompressionType>Snappy</NetworkCompressionType> <!-- LZ4, Snappy -->
+		<NetworkCompressionType>Snappy</NetworkCompressionType> <!-- LZ4, Snappy -->
 	</NetworkCompression>
 	<QueryTele>
 		<Host>127.0.0.1</Host>
