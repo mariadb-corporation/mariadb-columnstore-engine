@@ -6,7 +6,6 @@ etc/mysql/mariadb.conf.d/columnstore.cnf
 usr/bin/mcsRebuildEM
 usr/bin/DDLProc
 usr/bin/DMLProc
-usr/bin/ExeMgr
 usr/bin/PrimProc
 usr/bin/StorageManager
 usr/bin/WriteEngineServer

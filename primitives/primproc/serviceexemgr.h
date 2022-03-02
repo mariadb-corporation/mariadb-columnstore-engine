@@ -66,6 +66,7 @@ namespace exemgr
     int m_debug;
     bool m_e;
     bool m_fg;
+    Opt() : m_debug(0), m_e(false), m_fg(false) {};
     Opt(int argc, char* argv[]) : m_debug(0), m_e(false), m_fg(false)
     {
       int c;
@@ -84,7 +85,6 @@ namespace exemgr
         }
       }
     }
-    Opt(): m_debug(0), m_e(false), m_fg(false) {};
     int getDebugLevel() const
     {
       return m_debug;
@@ -112,6 +112,11 @@ namespace exemgr
     {
       bool runningWithExeMgr = true;
       rm_ = joblist::ResourceManager::instance(runningWithExeMgr);
+    }
+    ServiceExeMgr(const Opt& opt, config::Config* aConfig) : Service("ExeMgr"), Opt(opt), msgLog_(logging::Logger(16))
+    {
+      bool runningWithExeMgr = true;
+      rm_ = joblist::ResourceManager::instance(runningWithExeMgr, aConfig);
     }
     void LogErrno() override
     {

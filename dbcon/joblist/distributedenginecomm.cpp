@@ -292,7 +292,7 @@ void DistributedEngineComm::Setup()
     catch (std::exception& ex)
     {
       if (i < newPmCount)
-        newPmCount--;
+        newPmCount = newPmCount > 1 ? newPmCount-1 : 1; // We can't afford to reduce newPmCount to 0
 
       writeToLog(__FILE__, __LINE__,
                  "Could not connect to PMS" + std::to_string(connectionId) + ": " + ex.what(),
@@ -302,7 +302,7 @@ void DistributedEngineComm::Setup()
     catch (...)
     {
       if (i < newPmCount)
-        newPmCount--;
+        newPmCount = newPmCount > 1 ? newPmCount-1 : 1; // We can't afford to reduce newPmCount to 0
 
       writeToLog(__FILE__, __LINE__, "Could not connect to PMS" + std::to_string(connectionId),
                  LOG_TYPE_ERROR);

@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporation
+   Copyright (C) 2016-2022 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -30,15 +30,15 @@
 #endif
 #include <csignal>
 #include <sys/time.h>
-#ifndef _MSC_VER
 #include <sys/resource.h>
 #include <tr1/unordered_set>
-#else
-#include <unordered_set>
-#endif
+
 #include <clocale>
 #include <iterator>
 #include <algorithm>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 //#define NDEBUG
 #include <cassert>
 using namespace std;
@@ -72,7 +72,9 @@ using namespace idbdatafile;
 
 #include "mariadb_my_sys.h"
 
+#include "spinlock.h"
 #include "service.h"
+#include "serviceexemgr.h"
 
 class Opt
 {
@@ -115,6 +117,14 @@ class ServicePrimProc : public Service, public Opt
   {
     return m_fg ? Child() : RunForking();
   }
+  std::atomic_flag& getStartupRaceFlag()
+  {
+    return startupRaceFlag_;
+  }
+
+ private:
+  // Since C++20 flag's init value is false.
+  std::atomic_flag startupRaceFlag_;
 };
 
 namespace primitiveprocessor
@@ -152,27 +162,10 @@ int toInt(const string& val)
 void setupSignalHandlers()
 {
 #ifndef _MSC_VER
-  signal(SIGHUP, SIG_IGN);
-
   struct sigaction ign;
-
-  memset(&ign, 0, sizeof(ign));
-  ign.sa_handler = SIG_IGN;
-  sigaction(SIGPIPE, &ign, 0);
-
-  memset(&ign, 0, sizeof(ign));
-  ign.sa_handler = SIG_IGN;
-  sigaction(SIGUSR1, &ign, 0);
-
   memset(&ign, 0, sizeof(ign));
   ign.sa_handler = SIG_IGN;
   sigaction(SIGUSR2, &ign, 0);
-
-  memset(&ign, 0, sizeof(ign));
-  ign.sa_handler = fatalHandler;
-  sigaction(SIGSEGV, &ign, 0);
-  sigaction(SIGABRT, &ign, 0);
-  sigaction(SIGFPE, &ign, 0);
 
   sigset_t sigset;
   sigemptyset(&sigset);
@@ -382,6 +375,18 @@ int ServicePrimProc::Child()
     NotifyServiceInitializationFailed();
     return 2;
   }
+  utils::USpaceSpinLock startupRaceLock(getStartupRaceFlag());
+  std::thread exeMgrThread(
+      [this, cf]()
+      {
+        exemgr::Opt opt;
+        exemgr::globServiceExeMgr = new exemgr::ServiceExeMgr(opt, cf);
+        // primitive delay to avoid 'not connected to PM' log error messages
+        // from EM. PrimitiveServer::start() releases SpinLock after sockets
+        // are available.
+        utils::USpaceSpinLock startupRaceLock(this->getStartupRaceFlag());
+        exemgr::globServiceExeMgr->Child();
+      });
 
   int serverThreads = 1;
   int serverQueueSize = 10;
@@ -395,7 +400,6 @@ int ServicePrimProc::Child()
   bool rotatingDestination = false;
   uint32_t deleteBlocks = 128;
   bool PTTrace = false;
-  int temp;
   string strTemp;
   int priority = -1;
   const string primitiveServers("PrimitiveServers");
@@ -414,7 +418,7 @@ int ServicePrimProc::Child()
 
   gDebugLevel = primitiveprocessor::NONE;
 
-  temp = toInt(cf->getConfig(primitiveServers, "ServerThreads"));
+  int temp = toInt(cf->getConfig(primitiveServers, "ServerThreads"));
 
   if (temp > 0)
     serverThreads = temp;
@@ -761,7 +765,7 @@ int ServicePrimProc::Child()
   }
 #endif
 
-  server.start(this);
+  server.start(this, startupRaceLock);
 
   cerr << "server.start() exited!" << endl;
 

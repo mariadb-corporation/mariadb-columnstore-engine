@@ -20,41 +20,11 @@
 #include <iostream>
 #include <vector>
 #include <boost/shared_ptr.hpp>
-#ifdef _MSC_VER
-#include <unordered_map>
-#else
+
 #include <tr1/unordered_map>
-#endif
 
 #include "../common/simpleallocator.h"
-
-#ifndef _HASHFIX_
-#define _HASHFIX_
-#ifndef __LP64__
-#if __GNUC__ == 4 && __GNUC_MINOR__ < 2
-// This is needed for /usr/include/c++/4.1.1/tr1/functional on 32-bit compiles
-// tr1_hashtable_define_trivial_hash(long long unsigned int);
-namespace std
-{
-namespace tr1
-{
-template <>
-struct hash<long long unsigned int> : public std::unary_function<long long unsigned int, std::size_t>
-{
-  std::size_t operator()(long long unsigned int val) const
-  {
-    return static_cast<std::size_t>(val);
-  }
-};
-}  // namespace tr1
-}  // namespace std
-#endif
-#endif
-#endif
-
-#define NO_DATALISTS
 #include "../joblist/elementtype.h"
-#undef NO_DATALISTS
 
 namespace joiner
 {
