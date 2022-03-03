@@ -305,4 +305,3 @@ class ProtocolError : public std::logic_error
   } while (0)
 
 }  // namespace logging
-

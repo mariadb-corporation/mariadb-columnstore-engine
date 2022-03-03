@@ -45,7 +45,7 @@ CalpontSystemCatalog::ColType Func_monthname::operationType(FunctionParm& fp,
 string Func_monthname::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                                  CalpontSystemCatalog::ColType& op_ct)
 {
-  int32_t month = getIntVal(row, parm, isNull, op_ct);
+  int32_t month = getIntValInternal(row, parm, isNull, op_ct);
 
   if (month == -1)
     return "";
@@ -74,8 +74,8 @@ int64_t Func_monthname::getTimestampIntVal(rowgroup::Row& row, FunctionParm& par
   return val;
 }
 
-int64_t Func_monthname::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                  CalpontSystemCatalog::ColType& op_ct)
+int64_t Func_monthname::getIntValInternal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
+                                          CalpontSystemCatalog::ColType& op_ct)
 {
   int64_t val = 0;
   dataconvert::DateTime aDateTime;
@@ -165,10 +165,18 @@ int64_t Func_monthname::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& 
 
       break;
 
-    default: isNull = true; return -1;
+    default:
+      isNull = true;
+      return -1;
   }
 
   return -1;
+}
+
+int64_t Func_monthname::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
+                                  execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+  return getIntValInternal(row, parm, isNull, op_ct);
 }
 
 double Func_monthname::getDoubleVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,

@@ -117,6 +117,7 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor()
  , validCPData(false)
  , minVal(MAX64)
  , maxVal(MIN64)
+, cpDataFromDictScan(false)
  , lbidForCP(0)
  , hasWideColumnOut(false)
  , busyLoaderCount(0)
@@ -138,6 +139,7 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor()
  , processorThreads(0)
  , ptMask(0)
  , firstInstance(false)
+ , valuesLBID(0)
 {
   pp.setLogicalBlockMode(true);
   pp.setBlockPtr((int*)blockData);
@@ -167,6 +169,7 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor(ByteStream& b, double prefetch,
  , validCPData(false)
  , minVal(MAX64)
  , maxVal(MIN64)
+ , cpDataFromDictScan(false)
  , lbidForCP(0)
  , hasWideColumnOut(false)
  , busyLoaderCount(0)
@@ -186,10 +189,10 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor(ByteStream& b, double prefetch,
  , sockIndex(0)
  , endOfJoinerRan(false)
  , processorThreads(_processorThreads)
- ,
  // processorThreads(32),
  // ptMask(processorThreads - 1),
- firstInstance(true)
+ , firstInstance(true)
+ , valuesLBID(0)
 {
   // promote processorThreads to next power of 2.  also need to change the name to bucketCount or similar
   processorThreads = nextPowOf2(processorThreads);
@@ -2010,6 +2013,7 @@ void BatchPrimitiveProcessor::writeProjectionPreamble()
     {
       *serialized << (uint8_t)1;
       *serialized << lbidForCP;
+      *serialized << ((uint8_t)cpDataFromDictScan);
       if (UNLIKELY(hasWideColumnOut))
       {
         // PSA width
@@ -2108,6 +2112,7 @@ void BatchPrimitiveProcessor::makeResponse()
     {
       *serialized << (uint8_t)1;
       *serialized << lbidForCP;
+      *serialized << ((uint8_t)cpDataFromDictScan);
 
       if (UNLIKELY(hasWideColumnOut))
       {
@@ -2208,6 +2213,7 @@ int BatchPrimitiveProcessor::operator()()
     }
 
     validCPData = false;
+    cpDataFromDictScan = false;
 #ifdef PRIMPROC_STOPWATCH
     stopwatch->start("BPP() execute");
     execute(stopwatch);

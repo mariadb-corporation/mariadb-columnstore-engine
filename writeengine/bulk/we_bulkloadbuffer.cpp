@@ -1717,7 +1717,7 @@ int BulkLoadBuffer::parseCol(ColumnInfo& columnInfo)
 
         lastInputRowInExtent += columnInfo.rowsPerExtent();
 
-        if (isUnsigned(columnInfo.column.dataType) || isCharType(columnInfo.column.dataType))
+        if (isUnsigned(columnInfo.column.dataType))
         {
           if (columnInfo.column.width <= 8)
           {

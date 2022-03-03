@@ -241,6 +241,7 @@ uint8_t WE_DDLCommandProc::writeSystable(ByteStream& bs, std::string& err)
       if (colStruct.tokenFlag)
       {
         dctnryStruct.dctnryOid = column.colType.ddn.dictOID;
+        dctnryStruct.fCharsetNumber = column.colType.charsetNumber;
         dctnryStruct.columnOid = column.oid;
       }
       else
@@ -656,9 +657,10 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
           dctnryStruct.fCompressionType = 2;
         }
 
-        if (colStruct.tokenFlag)
+        if (colStruct.tokenFlag)  // TODO: XXX: this is copied aplenty. NEED TO REFACTOR.
         {
           dctnryStruct.dctnryOid = column.colType.ddn.dictOID;
+          dctnryStruct.fCharsetNumber = column.colType.charsetNumber;
           dctnryStruct.columnOid = column.oid;
         }
         else
@@ -1046,6 +1048,7 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
       if (colStruct.tokenFlag)
       {
         dctnryStruct.dctnryOid = column.colType.ddn.dictOID;
+        dctnryStruct.fCharsetNumber = column.colType.charsetNumber;
         dctnryStruct.columnOid = column.oid;
       }
       else
@@ -2442,6 +2445,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnTablename(ByteStream& bs, std::string&
   if (colStruct.tokenFlag)
   {
     dctnryStruct.dctnryOid = column.colType.ddn.dictOID;
+    dctnryStruct.fCharsetNumber = column.colType.charsetNumber;
     dctnryStruct.columnOid = colStruct.dataOid;
   }
   else
@@ -2846,6 +2850,7 @@ uint8_t WE_DDLCommandProc::updateSystableTablename(ByteStream& bs, std::string& 
   if (colStruct.tokenFlag)
   {
     dctnryStruct.dctnryOid = column.colType.ddn.dictOID;
+    dctnryStruct.fCharsetNumber = column.colType.charsetNumber;
     dctnryStruct.columnOid = colStruct.dataOid;
   }
   else
@@ -3087,6 +3092,7 @@ uint8_t WE_DDLCommandProc::updateSystablesTablename(ByteStream& bs, std::string&
   if (colStruct.tokenFlag)
   {
     dctnryStruct.dctnryOid = column.colType.ddn.dictOID;
+    dctnryStruct.fCharsetNumber = column.colType.charsetNumber;
     dctnryStruct.columnOid = colStruct.dataOid;
   }
   else
@@ -3273,6 +3279,7 @@ uint8_t WE_DDLCommandProc::updateSystablesTablename(ByteStream& bs, std::string&
   if (colStruct.tokenFlag)
   {
     dctnryStruct.dctnryOid = column.colType.ddn.dictOID;
+    dctnryStruct.fCharsetNumber = column.colType.charsetNumber;
     dctnryStruct.columnOid = colStruct.dataOid;
   }
   else
@@ -4258,6 +4265,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnSetDefault(messageqcpp::ByteStream& bs
   if (colStruct.tokenFlag)
   {
     dctnryStruct.dctnryOid = column.colType.ddn.dictOID;
+    dctnryStruct.fCharsetNumber = column.colType.charsetNumber;
     dctnryStruct.columnOid = colStruct.dataOid;
   }
   else
@@ -4545,6 +4553,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnRenameColumn(messageqcpp::ByteStream& 
   if (colStruct.tokenFlag)
   {
     dctnryStruct.dctnryOid = column1.colType.ddn.dictOID;
+    dctnryStruct.fCharsetNumber = column1.colType.charsetNumber;
     dctnryStruct.columnOid = colStruct.dataOid;
   }
   else
@@ -4756,6 +4765,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnRenameColumn(messageqcpp::ByteStream& 
   if (colStruct.tokenFlag)
   {
     dctnryStruct.dctnryOid = column5.colType.ddn.dictOID;
+    dctnryStruct.fCharsetNumber = column5.colType.charsetNumber;
     dctnryStruct.columnOid = colStruct.dataOid;
   }
   else

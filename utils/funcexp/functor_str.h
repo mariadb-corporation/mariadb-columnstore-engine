@@ -651,6 +651,8 @@ class Func_monthname : public Func_Str
 
   int64_t getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                     execplan::CalpontSystemCatalog::ColType& op_ct);
+  int64_t getIntValInternal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                            execplan::CalpontSystemCatalog::ColType& op_ct);
 
   double getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                       execplan::CalpontSystemCatalog::ColType& op_ct);

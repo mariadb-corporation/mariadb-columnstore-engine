@@ -214,6 +214,7 @@ int WEBrmUpdater::updateHighWaterMarkInBRM()
 int WEBrmUpdater::updateCPAndHWMInBRM()
 {
   int rc = 0;
+  size_t i;
 
   // BUG 4232. some imports may not contain CP but HWM
   if ((fCPInfo.size() > 0) || (fHWMInfo.size() > 0))
@@ -227,6 +228,13 @@ int WEBrmUpdater::updateCPAndHWMInBRM()
                                           const std::vector<CPInfoMerge> & mergeCPDataArgs,
                                           VER_t transID = 0) DBRM_THROW;
       */
+      for (i = 0; i < fCPInfo.size(); i++)
+      {
+        if (fCPInfo[i].newExtent)
+        {
+          fCPInfo[i].seqNum = 0;  // to be in sync with DBRM.
+        }
+      }
       rc = fpBrm->bulkSetHWMAndCP(fHWMInfo, fCPInfoData, fCPInfo, 0);
 
       // rc = fpBrm->mergeExtentsMaxMin(fCPInfo);

@@ -36,6 +36,7 @@
 #include "columnwidth.h"
 #include "mcs_decimal.h"
 #include "mcs_int64.h"
+#include "numericliteral.h"
 
 namespace messageqcpp
 {
@@ -664,25 +665,19 @@ inline int64_t TreeNode::getIntVal()
   switch (fResultType.colDataType)
   {
     case CalpontSystemCatalog::CHAR:
-      if (fResultType.colWidth <= 8)
-        return fResult.intVal;
-
-      return atoll(fResult.strVal.c_str());
-
     case CalpontSystemCatalog::VARCHAR:
-      if (fResultType.colWidth <= 7)
-        return fResult.intVal;
-
-      return atoll(fResult.strVal.c_str());
-
-    // FIXME: ???
     case CalpontSystemCatalog::VARBINARY:
     case CalpontSystemCatalog::BLOB:
     case CalpontSystemCatalog::TEXT:
-      if (fResultType.colWidth <= 7)
-        return fResult.intVal;
-
-      return atoll(fResult.strVal.c_str());
+    {
+      datatypes::DataCondition cnverr;
+      literal::Converter<literal::SignedInteger> cnv(fResult.strVal, cnverr);
+      if (datatypes::DataCondition::Code(cnverr) != 0)
+      {
+        cerr << "error in int conversion from '" << fResult.strVal << "'";
+      }
+      return cnv.toSInt<int64_t>(cnverr);
+    }
 
     case CalpontSystemCatalog::BIGINT:
     case CalpontSystemCatalog::TINYINT:
@@ -721,6 +716,20 @@ inline uint64_t TreeNode::getUintVal()
 {
   switch (fResultType.colDataType)
   {
+    case CalpontSystemCatalog::CHAR:
+    case CalpontSystemCatalog::VARCHAR:
+    case CalpontSystemCatalog::VARBINARY:
+    case CalpontSystemCatalog::BLOB:
+    case CalpontSystemCatalog::TEXT:
+    {
+      datatypes::DataCondition cnverr;
+      literal::Converter<literal::UnsignedInteger> cnv(fResult.strVal, cnverr);
+      if (datatypes::DataCondition::Code(cnverr) != 0)
+      {
+        cerr << "error in unsigned int conversion from '" << fResult.strVal << "'";
+      }
+      return cnv.toXIntPositive<uint64_t>(cnverr);
+    }
     case CalpontSystemCatalog::BIGINT:
     case CalpontSystemCatalog::TINYINT:
     case CalpontSystemCatalog::SMALLINT:

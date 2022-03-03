@@ -130,6 +130,59 @@ ColumnCommandJL::ColumnCommandJL(const pColStep& step)
     fFilesPerColumnPartition = cf->uFromText(fpc);
 }
 
+ColumnCommandJL::ColumnCommandJL(const ColumnCommandJL& prevCmd, const DictStepJL& dictWithFilters)
+{
+  BRM::DBRM dbrm;
+
+  /* grab necessary vars from scan */
+  traceFlags = prevCmd.traceFlags;
+  // we should call this constructor only when paired with dictionary
+  // and in that case previous command should not have any filters and
+  // should be "dict" (tokens) column command.
+  idbassert(dictWithFilters.getFilterCount() == 0 || prevCmd.filterCount == 0);
+  idbassert(prevCmd.fIsDict);
+
+  // need to reencode filters.
+  filterString = dictWithFilters.reencodedFilterString();
+  // we have a limitation here.
+  // consider this: textcol IS NULL AND textcol IN ('a', 'b')
+  // XXX: should check.
+  if (filterString.length() > 0 && (BOP = dictWithFilters.getBop() || prevCmd.filterString.length() < 1))
+  {
+    filterCount = dictWithFilters.getFilterCount();
+    BOP = dictWithFilters.getBop();
+    fContainsRanges = true;
+  }
+  else
+  {
+    filterCount = prevCmd.filterCount;
+    filterString = prevCmd.filterString;
+    BOP = prevCmd.BOP;
+  }
+  isScan = prevCmd.isScan;
+  colType = prevCmd.colType;
+  extents = prevCmd.extents;
+  OID = prevCmd.OID;
+  colName = prevCmd.colName;
+  rpbShift = prevCmd.rpbShift;
+  fIsDict = prevCmd.fIsDict;
+  fLastLbid = prevCmd.fLastLbid;
+  lbid = prevCmd.lbid;
+  traceFlags = prevCmd.traceFlags;
+  dbroot = prevCmd.dbroot;
+  numDBRoots = prevCmd.numDBRoots;
+
+  /* I think modmask isn't necessary for scans */
+  divShift = prevCmd.divShift;
+  modMask = (1 << divShift) - 1;
+
+  // @Bug 2889.  Drop partition enhancement.  Read FilesPerColumnPartition and ExtentsPerSegmentFile for use
+  // in RID calculation.
+  fFilesPerColumnPartition = prevCmd.fFilesPerColumnPartition;
+  // MCOL-4685 remove the option to set more than 2 extents per file (ExtentsPreSegmentFile).
+  fExtentsPerSegmentFile = prevCmd.fExtentsPerSegmentFile;
+}
+
 ColumnCommandJL::~ColumnCommandJL()
 {
 }
@@ -141,9 +194,22 @@ void ColumnCommandJL::createCommand(ByteStream& bs) const
   colType.serialize(bs);
   bs << (uint8_t)isScan;
   bs << traceFlags;
-  bs << filterString;
-  bs << BOP;
-  bs << filterCount;
+  if (isDict() && fContainsRanges)
+  {
+    // XXX: we should discern here between IS (NOT) NULL and other filters.
+    ByteStream empty;
+    auto zeroFC = filterCount;
+    bs << empty;
+    bs << BOP;
+    zeroFC = 0;
+    bs << zeroFC;
+  }
+  else
+  {
+    bs << filterString;
+    bs << BOP;
+    bs << filterCount;
+  }
   serializeInlineVector(bs, fLastLbid);
 
   CommandJL::createCommand(bs);
@@ -250,7 +316,7 @@ string ColumnCommandJL::toString()
 {
   ostringstream ret;
 
-  ret << "ColumnCommandJL: " << filterCount << " filters  colwidth=" << colType.colWidth << " oid=" << OID
+  ret << "ColumnCommandJL: " << filterCount << " filters, BOP=" << ((int)BOP) << ", colwidth=" << colType.colWidth << " oid=" << OID
       << " name=" << colName;
 
   if (isScan)
@@ -284,6 +350,11 @@ void ColumnCommandJL::reloadExtents()
   }
 
   sort(extents.begin(), extents.end(), BRM::ExtentSorter());
+}
+
+bool ColumnCommandJL::getIsDict()
+{
+  return fIsDict;
 }
 
 };  // namespace joblist

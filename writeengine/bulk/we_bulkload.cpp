@@ -739,7 +739,7 @@ int BulkLoad::preProcess(Job& job, int tableNo, TableInfo* tableInfo)
       // Setup import to start loading into starting HWM DB file
       RETURN_ON_ERROR(info->setupInitialColumnExtent(dbRoot, partition, segment,
                                                      job.jobTableList[tableNo].tblName, lbid, oldHwm, hwm,
-                                                     bSkippedToNewExtent, false));
+                                                     bSkippedToNewExtent, bSkippedToNewExtent || oldHwm < 1));
     }
 
     tableInfo->addColumn(info);

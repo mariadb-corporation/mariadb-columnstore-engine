@@ -75,6 +75,7 @@ using namespace rowgroup;
 #include "querytele.h"
 using namespace querytele;
 
+#include "columnwidth.h"
 #include "pseudocolumn.h"
 //#define DEBUG 1
 
@@ -865,6 +866,7 @@ void TupleBPS::storeCasualPartitionInfo(const bool estimateRowCounts)
   vector<ColumnCommandJL*> cpColVec;
   vector<SP_LBIDList> lbidListVec;
   ColumnCommandJL* colCmd = 0;
+  bool defaultScanFlag = true;
 
   // @bug 2123.  We call this earlier in the process for the hash join estimation process now.  Return if
   // we've already done the work.
@@ -876,7 +878,9 @@ void TupleBPS::storeCasualPartitionInfo(const bool estimateRowCounts)
   fCPEvaluated = true;
 
   if (colCmdVec.size() == 0)
-    return;
+  {
+    defaultScanFlag = false;  // no reason to scan if there are no commands.
+  }
 
   for (uint32_t i = 0; i < colCmdVec.size(); i++)
   {
@@ -902,30 +906,28 @@ void TupleBPS::storeCasualPartitionInfo(const bool estimateRowCounts)
   }
 
   if (cpColVec.size() == 0)
-    return;
+  {
+    defaultScanFlag = true;  // no reason to scan if there are no predicates to evaluate.
+  }
 
   const bool ignoreCP = ((fTraceFlags & CalpontSelectExecutionPlan::IGNORE_CP) != 0);
 
   for (uint32_t idx = 0; idx < numExtents; idx++)
   {
-    scanFlags[idx] = true;
+    scanFlags[idx] = defaultScanFlag;
 
-    for (uint32_t i = 0; i < cpColVec.size(); i++)
+    for (uint32_t i = 0; scanFlags[idx] && i < cpColVec.size(); i++)
     {
       colCmd = cpColVec[i];
       const EMEntry& extent = colCmd->getExtents()[idx];
 
       /* If any column filter eliminates an extent, it doesn't get scanned */
-      scanFlags[idx] =
-          scanFlags[idx] && (ignoreCP || extent.partition.cprange.isValid != BRM::CP_VALID ||
-                             lbidListVec[i]->CasualPartitionPredicate(
-                                 extent.partition.cprange, &(colCmd->getFilterString()),
-                                 colCmd->getFilterCount(), colCmd->getColType(), colCmd->getBOP()));
-
-      if (!scanFlags[idx])
-      {
-        break;
-      }
+      scanFlags[idx] = scanFlags[idx] && (extent.colWid <= utils::MAXCOLUMNWIDTH) &&  // XXX: change to named constant.
+                       (ignoreCP || extent.partition.cprange.isValid != BRM::CP_VALID ||
+                        colCmd->getColType().colWidth != extent.colWid ||
+                        lbidListVec[i]->CasualPartitionPredicate(
+                            extent.partition.cprange, &(colCmd->getFilterString()), colCmd->getFilterCount(),
+                            colCmd->getColType(), colCmd->getBOP(), colCmd->getIsDict()));
     }
   }
 
@@ -2008,9 +2010,10 @@ void TupleBPS::processByteStreamVector(vector<boost::shared_ptr<messageqcpp::Byt
     }
 
     bool unused;
+    bool fromDictScan;
     fromPrimProc.clear();
-    fBPP->getRowGroupData(*bs, &fromPrimProc, &validCPData, &lbid, &min, &max, &cachedIO, &physIO,
-                          &touchedBlocks, &unused, threadID, &hasBinaryColumn, fColType);
+    fBPP->getRowGroupData(*bs, &fromPrimProc, &validCPData, &lbid, &fromDictScan, &min, &max, &cachedIO,
+                          &physIO, &touchedBlocks, &unused, threadID, &hasBinaryColumn, fColType);
 
     // Another layer of messiness.  Need to refactor this fcn.
     while (!fromPrimProc.empty() && !cancelled())
@@ -2180,7 +2183,7 @@ void TupleBPS::processByteStreamVector(vector<boost::shared_ptr<messageqcpp::Byt
       {
         if (fColType.colWidth <= 8)
         {
-          cpv.push_back(_CPInfo((int64_t)min, (int64_t)max, lbid, validCPData));
+          cpv.push_back(_CPInfo((int64_t)min, (int64_t)max, lbid, fromDictScan, validCPData));
         }
         else if (fColType.colWidth == 16)
         {
@@ -2237,7 +2240,9 @@ void TupleBPS::receiveMultiPrimitiveMessages()
       }
 
       if (msgsSent == msgsRecvd && finishedSending)
+      {
         break;
+      }
 
       bool flowControlOn;
       fDec->read_some(uniqueID, fNumThreads, bsv, &flowControlOn);
@@ -2361,11 +2366,13 @@ void TupleBPS::receiveMultiPrimitiveMessages()
           {
             if (fColType.colWidth > 8)
             {
-              lbidList->UpdateMinMax(cpv[i].bigMin, cpv[i].bigMax, cpv[i].LBID, fColType, cpv[i].valid);
+              lbidList->UpdateMinMax(cpv[i].bigMin, cpv[i].bigMax, cpv[i].LBID, cpv[i].dictScan, fColType,
+                                     cpv[i].valid);
             }
             else
             {
-              lbidList->UpdateMinMax(cpv[i].min, cpv[i].max, cpv[i].LBID, fColType, cpv[i].valid);
+              lbidList->UpdateMinMax(cpv[i].min, cpv[i].max, cpv[i].LBID, cpv[i].dictScan, fColType,
+                                     cpv[i].valid);
             }
           }
         }

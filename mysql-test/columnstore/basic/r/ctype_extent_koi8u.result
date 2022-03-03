@@ -87,7 +87,7 @@ CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET koi8u COLLATE koi8u_general_ci)
 c1	HEX(c1)
 Ъ─	FF80
 table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
-mcs_ctype_extent_koi8u	t1	c1	FFFFFFFFFFFF80FF	FFFFFFFFFFFF80FF
+mcs_ctype_extent_koi8u	t1	c1	80FF	80FF
 c1
 Ъ─
 Level	Code	Message
@@ -100,7 +100,7 @@ CREATE TABLE t1 (c1 CHAR(4) CHARACTER SET koi8u COLLATE koi8u_general_ci)
 c1	HEX(c1)
 ЪЪЪ─	FFFFFF80
 table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
-mcs_ctype_extent_koi8u	t1	c1	FFFFFFFF80FFFFFF	FFFFFFFF80FFFFFF
+mcs_ctype_extent_koi8u	t1	c1	80FFFFFF	80FFFFFF
 c1
 ЪЪЪ─
 Level	Code	Message
@@ -127,7 +127,7 @@ CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET koi8u COLLATE koi8u_general_nopad_ci)
 c1	HEX(c1)
 Ъ─	FF80
 table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
-mcs_ctype_extent_koi8u	t1	c1	FFFFFFFFFFFF80FF	FFFFFFFFFFFF80FF
+mcs_ctype_extent_koi8u	t1	c1	80FF	80FF
 c1
 Ъ─
 Level	Code	Message
@@ -140,7 +140,7 @@ CREATE TABLE t1 (c1 CHAR(4) CHARACTER SET koi8u COLLATE koi8u_general_nopad_ci)
 c1	HEX(c1)
 ЪЪЪ─	FFFFFF80
 table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
-mcs_ctype_extent_koi8u	t1	c1	FFFFFFFF80FFFFFF	FFFFFFFF80FFFFFF
+mcs_ctype_extent_koi8u	t1	c1	80FFFFFF	80FFFFFF
 c1
 ЪЪЪ─
 Level	Code	Message
@@ -167,7 +167,7 @@ CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET koi8u COLLATE koi8u_bin)
 c1	HEX(c1)
 Ъ─	FF80
 table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
-mcs_ctype_extent_koi8u	t1	c1	FFFFFFFFFFFF80FF	FFFFFFFFFFFF80FF
+mcs_ctype_extent_koi8u	t1	c1	80FF	80FF
 c1
 Ъ─
 Level	Code	Message
@@ -180,7 +180,7 @@ CREATE TABLE t1 (c1 CHAR(4) CHARACTER SET koi8u COLLATE koi8u_bin)
 c1	HEX(c1)
 ЪЪЪ─	FFFFFF80
 table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
-mcs_ctype_extent_koi8u	t1	c1	FFFFFFFF80FFFFFF	FFFFFFFF80FFFFFF
+mcs_ctype_extent_koi8u	t1	c1	80FFFFFF	80FFFFFF
 c1
 ЪЪЪ─
 Level	Code	Message
@@ -207,7 +207,7 @@ CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET koi8u COLLATE koi8u_nopad_bin)
 c1	HEX(c1)
 Ъ─	FF80
 table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
-mcs_ctype_extent_koi8u	t1	c1	FFFFFFFFFFFF80FF	FFFFFFFFFFFF80FF
+mcs_ctype_extent_koi8u	t1	c1	80FF	80FF
 c1
 Ъ─
 Level	Code	Message
@@ -220,7 +220,7 @@ CREATE TABLE t1 (c1 CHAR(4) CHARACTER SET koi8u COLLATE koi8u_nopad_bin)
 c1	HEX(c1)
 ЪЪЪ─	FFFFFF80
 table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
-mcs_ctype_extent_koi8u	t1	c1	FFFFFFFF80FFFFFF	FFFFFFFF80FFFFFF
+mcs_ctype_extent_koi8u	t1	c1	80FFFFFF	80FFFFFF
 c1
 ЪЪЪ─
 Level	Code	Message
