@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporation
+   Copyright (C) 2016-2022 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -30,12 +30,9 @@
 #endif
 #include <csignal>
 #include <sys/time.h>
-#ifndef _MSC_VER
 #include <sys/resource.h>
 #include <tr1/unordered_set>
-#else
-#include <unordered_set>
-#endif
+
 #include <clocale>
 #include <iterator>
 #include <algorithm>
@@ -72,32 +69,6 @@ using namespace idbdatafile;
 
 #include "crashtrace.h"
 #include "installdir.h"
-
-// #include <boost/filesystem.hpp>
-// To be cleaned-up
-// #include "calpontselectexecutionplan.h"
-// #include "mcsanalyzetableexecutionplan.h"
-// #include "activestatementcounter.h"
-// #include "distributedenginecomm.h"
-// #include "resourcemanager.h"
-// #include "configcpp.h"
-// #include "queryteleserverparms.h"
-// #include "iosocket.h"
-// #include "joblist.h"
-// #include "joblistfactory.h"
-// #include "oamcache.h"
-// #include "simplecolumn.h"
-// #include "bytestream.h"
-// #include "telestats.h"
-// #include "messageobj.h"
-// #include "messagelog.h"
-// #include "sqllogger.h"
-// #include "femsghandler.h"
-// #include "idberrorinfo.h"
-// #include "MonitorProcMem.h"
-// #include "liboamcpp.h"
-// #include "crashtrace.h"
-// #include "service.h"
 
 #include "mariadb_my_sys.h"
 
