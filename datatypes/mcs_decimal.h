@@ -30,6 +30,7 @@
 #include "checks.h"
 #include "branchpred.h"
 #include "mcs_data_condition.h"
+#include "nullstring.h"
 
 namespace datatypes
 {
@@ -790,6 +791,7 @@ class Decimal : public TDecimal128, public TDecimal64
   // where precision can't detect decimal type properly, e.g.
   // DECIMAL(10)/DECIMAL(38)
   std::string toString(bool hasTSInt128 = false) const;
+  utils::NullString toNullString(bool hasTSInt128 = false) const;
   friend std::ostream& operator<<(std::ostream& os, const Decimal& dec);
 
   int8_t scale;       // 0~38

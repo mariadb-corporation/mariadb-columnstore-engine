@@ -47,6 +47,8 @@
 #include "bytestream.h"
 #include "errorids.h"
 
+#include "nullstring.h"
+
 // remove this block if the htonll is defined in library
 #include <endian.h>
 #if __BYTE_ORDER == __BIG_ENDIAN  // 4312
@@ -1255,10 +1257,13 @@ class DataConvert
 
   // convert string to date
   EXPORT static int64_t stringToDate(const std::string& data);
+  EXPORT static int64_t stringToDate(const utils::NullString& data);
   // convert string to datetime
   EXPORT static int64_t stringToDatetime(const std::string& data, bool* isDate = NULL);
+  EXPORT static int64_t stringToDatetime(const utils::NullString& data, bool* isDate = NULL);
   // convert string to timestamp
   EXPORT static int64_t stringToTimestamp(const std::string& data, long timeZone);
+  EXPORT static int64_t stringToTimestamp(const utils::NullString& data, long timeZone);
   // convert integer to date
   EXPORT static int64_t intToDate(int64_t data);
   // convert integer to datetime
@@ -1267,11 +1272,14 @@ class DataConvert
   EXPORT static int64_t intToTime(int64_t data, bool fromString = false);
   // convert string to date. alias to stringToDate
   EXPORT static int64_t dateToInt(const std::string& date);
+  EXPORT static int64_t dateToInt(const utils::NullString& date);
   // convert string to datetime. alias to datetimeToInt
   EXPORT static int64_t datetimeToInt(const std::string& datetime);
+  EXPORT static int64_t datetimeToInt(const utils::NullString& datetime);
   EXPORT static int64_t timestampToInt(const std::string& timestamp, long timeZone);
   EXPORT static int64_t timeToInt(const std::string& time);
   EXPORT static int64_t stringToTime(const std::string& data);
+  EXPORT static int64_t stringToTime(const utils::NullString& data);
   // bug4388, union type conversion
   EXPORT static void joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& unionedType,
                                          const datatypes::SystemCatalog::TypeHolderStd& type,

@@ -143,7 +143,7 @@ int64_t Func_cast_signed::getIntVal(Row& row, FunctionParm& parm, bool& isNull,
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      const string& value = parm[0]->data()->getStrVal(row, isNull);
+      const auto& value = parm[0]->data()->getStrVal(row, isNull);
 
       if (isNull)
       {
@@ -151,7 +151,7 @@ int64_t Func_cast_signed::getIntVal(Row& row, FunctionParm& parm, bool& isNull,
         return 0;
       }
 
-      return atoll(value.c_str());
+      return atoll(value.str());
     }
     break;
 
@@ -259,7 +259,7 @@ uint64_t Func_cast_unsigned::getUintVal(Row& row, FunctionParm& parm, bool& isNu
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      const string& value = parm[0]->data()->getStrVal(row, isNull);
+      const auto& value = parm[0]->data()->getStrVal(row, isNull);
 
       if (isNull)
       {
@@ -267,7 +267,7 @@ uint64_t Func_cast_unsigned::getUintVal(Row& row, FunctionParm& parm, bool& isNu
         return 0;
       }
 
-      uint64_t ret = strtoul(value.c_str(), 0, 0);
+      uint64_t ret = strtoul(value.str(), 0, 0);
       return ret;
     }
     break;
@@ -336,14 +336,14 @@ string Func_cast_char::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
 {
   // check for convert with 1 arg, return the argument
   if (parm.size() == 1)
-    return parm[0]->data()->getStrVal(row, isNull);
+    return parm[0]->data()->getStrVal(row, isNull).safeString("");
   ;
 
   int64_t length = parm[1]->data()->getIntVal(row, isNull);
 
   // @bug3488, a dummy parm is appended even the optional N is not present.
   if (length < 0)
-    return parm[0]->data()->getStrVal(row, isNull);
+    return parm[0]->data()->getStrVal(row, isNull).safeString("");
   ;
 
   switch (parm[0]->data()->resultType().colDataType)
@@ -392,15 +392,15 @@ string Func_cast_char::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      const string& value = parm[0]->data()->getStrVal(row, isNull);
+      const utils::NullString& value = parm[0]->data()->getStrVal(row, isNull);
 
       if (isNull)
       {
         isNull = true;
-        return value;
+        return string("");
       }
 
-      return value.substr(0, length);
+      return value.safeString("").substr(0, length);
     }
     break;
 
@@ -550,7 +550,7 @@ int32_t Func_cast_date::getDateIntVal(rowgroup::Row& row, FunctionParm& parm, bo
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      val = dataconvert::DataConvert::stringToDate(parm[0]->data()->getStrVal(row, isNull));
+      val = dataconvert::DataConvert::stringToDate(parm[0]->data()->getStrVal(row, isNull).safeString(""));
 
       if (val == -1)
         isNull = true;
@@ -660,7 +660,7 @@ int64_t Func_cast_date::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& parm
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
+      val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull).safeString(""));
 
       if (val == -1)
         isNull = true;
@@ -822,7 +822,7 @@ int64_t Func_cast_datetime::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& 
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
+      val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull).safeString(""));
 
       if (val == -1)
         isNull = true;
@@ -933,7 +933,7 @@ int64_t Func_cast_datetime::getTimeIntVal(rowgroup::Row& row, FunctionParm& parm
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      val = dataconvert::DataConvert::stringToTime(parm[0]->data()->getStrVal(row, isNull));
+      val = dataconvert::DataConvert::stringToTime(parm[0]->data()->getStrVal(row, isNull).safeString(""));
 
       if (val == -1)
         isNull = true;
@@ -1302,14 +1302,14 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row, FunctionParm& parm, bool&
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      const string& strValue = parm[0]->data()->getStrVal(row, isNull);
-      if (strValue.empty())
+      const utils::NullString& strValue = parm[0]->data()->getStrVal(row, isNull);
+      if (strValue.isNull())
       {
         isNull = true;
         return IDB_Decimal();  // need a null value for IDB_Decimal??
       }
       datatypes::DataCondition convError;
-      return IDB_Decimal(strValue.data(), strValue.length(), convError, decimals, max_length);
+      return IDB_Decimal(strValue.str(), strValue.length(), convError, decimals, max_length);
     }
 
     break;
@@ -1531,9 +1531,9 @@ double Func_cast_double::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      const string& strValue = parm[0]->data()->getStrVal(row, isNull);
+      const utils::NullString& strValue = parm[0]->data()->getStrVal(row, isNull);
 
-      dblval = strtod(strValue.c_str(), NULL);
+      dblval = strtod(strValue.str(), NULL);
     }
     break;
 

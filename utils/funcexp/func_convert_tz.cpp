@@ -86,26 +86,26 @@ int64_t Func_convert_tz::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool&
     return -1;
   }
 
-  const string& from_tz = parm[1]->data()->getStrVal(row, isNull);
+  const auto& from_tz = parm[1]->data()->getStrVal(row, isNull);
   if (isNull)
   {
     return 0;
   }
-  const string& to_tz = parm[2]->data()->getStrVal(row, isNull);
+  const auto& to_tz = parm[2]->data()->getStrVal(row, isNull);
   if (isNull)
   {
     return 0;
   }
 
-  cout << "from " << from_tz << endl;
-  cout << "to " << to_tz << endl;
+  cout << "from " << from_tz.safeString("") << endl;
+  cout << "to " << to_tz.safeString("") << endl;
 
-  const string& serialized_from_tzinfo = parm[3]->data()->getStrVal(row, isNull);
-  const string& serialized_to_tzinfo = parm[4]->data()->getStrVal(row, isNull);
+  const auto& serialized_from_tzinfo = parm[3]->data()->getStrVal(row, isNull);
+  const auto& serialized_to_tzinfo = parm[4]->data()->getStrVal(row, isNull);
 
-  if (!serialized_from_tzinfo.empty())
+  if (!serialized_from_tzinfo.isNull())
   {
-    bs.append((uint8_t*)serialized_from_tzinfo.c_str(), serialized_from_tzinfo.length());
+    bs.append((uint8_t*)serialized_from_tzinfo.str(), serialized_from_tzinfo.length());
     dataconvert::unserializeTimezoneInfo(bs, &tzinfo);
     deserializeInlineVector<int64_t>(bs, ats);
     tzinfo.ats = ats.data();
@@ -155,7 +155,7 @@ int64_t Func_convert_tz::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool&
   else
   {
     long from_tz_offset;
-    dataconvert::timeZoneToOffset(from_tz.c_str(), from_tz.size(), &from_tz_offset);
+    dataconvert::timeZoneToOffset(from_tz.str(), from_tz.length(), &from_tz_offset);
     seconds = dataconvert::mySQLTimeToGmtSec(my_start_time, from_tz_offset, valid);
     if (!valid)
     {
@@ -165,10 +165,10 @@ int64_t Func_convert_tz::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool&
     }
   }
 
-  if (!serialized_to_tzinfo.empty())
+  if (!serialized_to_tzinfo.isNull())
   {
     bs.reset();
-    bs.append((uint8_t*)serialized_to_tzinfo.c_str(), serialized_to_tzinfo.length());
+    bs.append((uint8_t*)serialized_to_tzinfo.str(), serialized_to_tzinfo.length());
     dataconvert::unserializeTimezoneInfo(bs, &tzinfo);
     deserializeInlineVector<int64_t>(bs, ats);
     tzinfo.ats = ats.data();
@@ -199,7 +199,7 @@ int64_t Func_convert_tz::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool&
   else
   {
     long to_tz_offset;
-    dataconvert::timeZoneToOffset(to_tz.c_str(), to_tz.size(), &to_tz_offset);
+    dataconvert::timeZoneToOffset(to_tz.str(), to_tz.length(), &to_tz_offset);
     dataconvert::gmtSecToMySQLTime(seconds, my_time_tmp, to_tz_offset);
   }
 

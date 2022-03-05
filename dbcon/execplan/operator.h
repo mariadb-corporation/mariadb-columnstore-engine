@@ -161,8 +161,9 @@ class Operator : public TreeNode
 
   // The following methods should be pure virtual. Currently too many instanslization exists.
   using TreeNode::getStrVal;
-  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
   {
+    isNull = isNull || fResult.strVal.isNull();
     return fResult.strVal;
   }
   using TreeNode::getIntVal;

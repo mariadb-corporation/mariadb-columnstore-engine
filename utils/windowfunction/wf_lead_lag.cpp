@@ -119,7 +119,7 @@ boost::shared_ptr<WindowFunctionType> WF_lead_lag<T>::makeFunction(int id, const
 
     default:
     {
-      func.reset(new WF_lead_lag<string>(id, name));
+      func.reset(new WF_lead_lag<utils::NullString>(id, name));
       break;
     }
   }
@@ -303,6 +303,6 @@ template void WF_lead_lag<uint64_t>::parseParms(const std::vector<execplan::SRCP
 template void WF_lead_lag<int128_t>::parseParms(const std::vector<execplan::SRCP>&);
 template void WF_lead_lag<float>::parseParms(const std::vector<execplan::SRCP>&);
 template void WF_lead_lag<double>::parseParms(const std::vector<execplan::SRCP>&);
-template void WF_lead_lag<string>::parseParms(const std::vector<execplan::SRCP>&);
+template void WF_lead_lag<utils::NullString>::parseParms(const std::vector<execplan::SRCP>&);
 
 }  // namespace windowfunction

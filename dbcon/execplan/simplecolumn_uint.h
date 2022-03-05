@@ -69,7 +69,7 @@ class SimpleColumn_UINT : public SimpleColumn
   }
 
   /** Evaluate methods */
-  virtual inline const std::string& getStrVal(rowgroup::Row& row, bool& isNull);
+  virtual inline const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull);
   virtual inline int64_t getIntVal(rowgroup::Row& row, bool& isNull);
   virtual inline uint64_t getUintVal(rowgroup::Row& row, bool& isNull);
   virtual inline float getFloatVal(rowgroup::Row& row, bool& isNull);
@@ -135,10 +135,13 @@ void SimpleColumn_UINT<len>::setNullVal()
 }
 
 template <int len>
-inline const std::string& SimpleColumn_UINT<len>::getStrVal(rowgroup::Row& row, bool& isNull)
+inline const utils::NullString& SimpleColumn_UINT<len>::getStrVal(rowgroup::Row& row, bool& isNull)
 {
   if (row.equals<len>(fNullVal, fInputIndex))
+  {
     isNull = true;
+    fResult.strVal.dropString();
+  }
   else
   {
 #ifndef __LP64__
@@ -146,9 +149,9 @@ inline const std::string& SimpleColumn_UINT<len>::getStrVal(rowgroup::Row& row, 
 #else
     snprintf(tmp, 21, "%lu", row.getUintField<len>(fInputIndex));
 #endif
+    fResult.strVal.assign(std::string(tmp));
   }
 
-  fResult.strVal = std::string(tmp);
   return fResult.strVal;
 }
 

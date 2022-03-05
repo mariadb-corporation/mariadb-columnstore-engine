@@ -2343,7 +2343,17 @@ int64_t DataConvert::dateToInt(const string& date)
   return stringToDate(date);
 }
 
+int64_t DataConvert::dateToInt(const utils::NullString& date)
+{
+  return stringToDate(date);
+}
+
 int64_t DataConvert::datetimeToInt(const string& datetime)
+{
+  return stringToDatetime(datetime);
+}
+
+int64_t DataConvert::datetimeToInt(const utils::NullString& datetime)
 {
   return stringToDatetime(datetime);
 }
@@ -2370,6 +2380,15 @@ int64_t DataConvert::stringToDate(const string& data)
   else
     return -1;
 }
+int64_t DataConvert::stringToDate(const utils::NullString& data)
+{
+  if (data.isNull())
+  {
+    return -1;
+  }
+
+  return stringToDate(data.unsafeStringRef());
+}
 
 int64_t DataConvert::stringToDatetime(const string& data, bool* date)
 {
@@ -2381,6 +2400,20 @@ int64_t DataConvert::stringToDatetime(const string& data, bool* date)
     return -1;
 }
 
+int64_t DataConvert::stringToDatetime(const utils::NullString& data, bool* date)
+{
+  if (data.isNull())
+  {
+    if (date)
+    {
+      *date = false;
+    }
+    return -1;
+  }
+
+  return stringToDatetime(data.unsafeStringRef(), date);
+}
+
 int64_t DataConvert::stringToTimestamp(const string& data, long timeZone)
 {
   TimeStamp aTimestamp;
@@ -2389,6 +2422,15 @@ int64_t DataConvert::stringToTimestamp(const string& data, long timeZone)
     return getUInt64LE((const char*)&aTimestamp);
   else
     return -1;
+}
+
+int64_t DataConvert::stringToTimestamp(const utils::NullString& data, long timeZone)
+{
+  if (data.isNull())
+  {
+    return -1;
+  }
+  return stringToTimestamp(data.unsafeStringRef(), timeZone);
 }
 
 /* This is really painful and expensive b/c it seems the input is not normalized or
@@ -2781,6 +2823,11 @@ int64_t DataConvert::intToTime(int64_t data, bool fromString)
   atime.is_neg = isNeg;
 
   return getSInt64LE((const char*)&atime);
+}
+
+int64_t DataConvert::stringToTime(const utils::NullString& data)
+{
+  return stringToTime(data.safeString(""));
 }
 
 int64_t DataConvert::stringToTime(const string& data)

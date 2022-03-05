@@ -52,14 +52,12 @@ std::string Func_rpad::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isN
 {
   CHARSET_INFO* cs = type.getCharset();
   // The original string
-  const string& src = fp[0]->data()->getStrVal(row, isNull);
-  if (isNull)
+  const auto& src = fp[0]->data()->getStrVal(row, isNull);
+  if (src.isNull() || src.length() < 1)
     return "";
-  if (src.empty() || src.length() == 0)
-    return src;
   // binLen represents the number of bytes in src
   size_t binLen = src.length();
-  const char* pos = src.c_str();
+  const char* pos = src.str();
   const char* end = pos + binLen;
   // strLen = the number of characters in src
   size_t strLen = cs->numchars(pos, end);
@@ -82,18 +80,18 @@ std::string Func_rpad::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isN
   }
 
   // The pad characters.
-  const string* pad = &fPad;
+  string pad = fPad;
   if (fp.size() > 2)
   {
-    pad = &fp[2]->data()->getStrVal(row, isNull);
+    pad = fp[2]->data()->getStrVal(row, isNull).safeString("");
   }
   // binPLen represents the number of bytes in pad
-  size_t binPLen = pad->length();
-  const char* posP = pad->c_str();
+  size_t binPLen = pad.length();
+  const char* posP = pad.c_str();
   // plen = the number of characters in pad
   size_t plen = cs->numchars(posP, posP + binPLen);
   if (plen == 0)
-    return src;
+    return src.safeString("");
 
   size_t byteCount = (padLength + 1) * cs->mbmaxlen;  // absolute maximun number of bytes
   char* buf = new char[byteCount];
