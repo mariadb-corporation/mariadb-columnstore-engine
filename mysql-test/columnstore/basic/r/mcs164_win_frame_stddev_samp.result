@@ -2,7 +2,7 @@ DROP DATABASE IF EXISTS mcs164_db;
 CREATE DATABASE mcs164_db;
 USE mcs164_db;
 CREATE TABLE t1 (a CHAR(1), b INT)ENGINE=Columnstore;
-INSERT INTO t1 VALUES ('', NULL),('a', 12),('a', 13),('b', 14),('c', 15),('d', 16),('d', 17),('b', 18),('a', 19);
+INSERT INTO t1 VALUES (NULL, NULL),('a', 12),('a', 13),('b', 14),('c', 15),('d', 16),('d', 17),('b', 18),('a', 19);
 SELECT a, b, STDDEV_SAMP(b) OVER(ORDER BY b RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) STDDEV_SAMP FROM t1;
 a	b	STDDEV_SAMP
 NULL	NULL	NULL

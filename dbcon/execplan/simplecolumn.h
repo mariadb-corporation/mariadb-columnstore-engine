@@ -287,9 +287,16 @@ class SimpleColumn : public ReturnedColumn
     evaluate(row, isNull);
     return TreeNode::getBoolVal();
   }
-  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
+  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull)
   {
-    evaluate(row, isNull);
+    bool localIsNull = false;
+    evaluate(row, localIsNull);
+    if (localIsNull)
+    {
+      isNull = isNull || localIsNull;
+      fResult.strVal.dropString();
+      return fResult.strVal;
+    }
     return TreeNode::getStrVal(fTimeZone);
   }
 

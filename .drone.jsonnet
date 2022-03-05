@@ -343,9 +343,20 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     image: 'docker:git',
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     environment: {
-      REGRESSION_REF: '${REGRESSION_REF:-' + regression_ref + '}',
+      REGRESSION_BRANCH_REF: '${DRONE_SOURCE_BRANCH}',
+      REGRESSION_REF_AUX: regression_ref,
     },
     commands: [
+      // compute branch.
+      'echo "$$REGRESSION_REF"',
+      'echo "$$REGRESSION_BRANCH_REF"',
+      // if REGRESSION_REF is empty, try to see whether regression repository has a branch named as one we PR.
+      'export REGRESSION_REF=$${REGRESSION_REF:-$$(git ls-remote https://github.com/mariadb-corporation/mariadb-columnstore-regression-test --h --sort origin "refs/heads/$$REGRESSION_BRANCH_REF" | grep -E -o "[^/]+$$")}',
+      'echo "$$REGRESSION_REF"',
+      // REGRESSION_REF can be empty if there is no appropriate branch in regression repository.
+      // assign what is appropriate by default.
+      'export REGRESSION_REF=$${REGRESSION_REF:-$$REGRESSION_REF_AUX}',
+      'echo "$$REGRESSION_REF"',
       // clone regression test repo
       'git clone --recurse-submodules --branch $$REGRESSION_REF --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test',
       // where are we now?

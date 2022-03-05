@@ -95,7 +95,7 @@ uint64_t StringStore::storeString(const uint8_t* data, uint32_t len)
   // if (len == 0)
   //	return numeric_limits<uint32_t>::max();
 
-  if ((len == 8 || len == 9) && *((uint64_t*)data) == *((uint64_t*)joblist::CPNULLSTRMARK.c_str()))
+  if (!data)
     return numeric_limits<uint64_t>::max();
 
   //@bug6065, make StringStore::storeString() thread safe
@@ -427,7 +427,6 @@ void RGData::deserialize(ByteStream& bs, uint32_t defAmount)
   uint8_t tmp8;
 
   bs.peek(sig);
-
   if (sig == RGDATA_SIG)
   {
     bs >> sig;
@@ -618,7 +617,7 @@ string Row::toCSV() const
       switch (types[i])
       {
         case CalpontSystemCatalog::CHAR:
-        case CalpontSystemCatalog::VARCHAR: os << getStringField(i).c_str(); break;
+        case CalpontSystemCatalog::VARCHAR: os << getStringField(i).safeString(); break;
 
         case CalpontSystemCatalog::FLOAT:
         case CalpontSystemCatalog::UFLOAT: os << getFloatField(i); break;
@@ -653,33 +652,30 @@ string Row::toCSV() const
   return os.str();
 }
 
-void Row::initToNull()
+void Row::setToNull(uint32_t colIndex)
 {
-  uint32_t i;
-
-  for (i = 0; i < columnCount; i++)
+  setNullMark(colIndex, true); // mark as null.
+  switch (types[colIndex])
   {
-    switch (types[i])
-    {
-      case CalpontSystemCatalog::TINYINT: data[offsets[i]] = joblist::TINYINTNULL; break;
+    case CalpontSystemCatalog::TINYINT: data[offsets[colIndex]] = joblist::TINYINTNULL; break;
 
-      case CalpontSystemCatalog::SMALLINT:
-        *((int16_t*)&data[offsets[i]]) = static_cast<int16_t>(joblist::SMALLINTNULL);
-        break;
+    case CalpontSystemCatalog::SMALLINT:
+      *((int16_t*)&data[offsets[colIndex]]) = static_cast<int16_t>(joblist::SMALLINTNULL);
+      break;
 
-      case CalpontSystemCatalog::MEDINT:
-      case CalpontSystemCatalog::INT:
-        *((int32_t*)&data[offsets[i]]) = static_cast<int32_t>(joblist::INTNULL);
-        break;
+    case CalpontSystemCatalog::MEDINT:
+    case CalpontSystemCatalog::INT:
+      *((int32_t*)&data[offsets[colIndex]]) = static_cast<int32_t>(joblist::INTNULL);
+      break;
 
-      case CalpontSystemCatalog::FLOAT:
-      case CalpontSystemCatalog::UFLOAT:
-        *((int32_t*)&data[offsets[i]]) = static_cast<int32_t>(joblist::FLOATNULL);
-        break;
+    case CalpontSystemCatalog::FLOAT:
+    case CalpontSystemCatalog::UFLOAT:
+      *((int32_t*)&data[offsets[colIndex]]) = static_cast<int32_t>(joblist::FLOATNULL);
+      break;
 
-      case CalpontSystemCatalog::DATE:
-        *((int32_t*)&data[offsets[i]]) = static_cast<int32_t>(joblist::DATENULL);
-        break;
+    case CalpontSystemCatalog::DATE:
+      *((int32_t*)&data[offsets[colIndex]]) = static_cast<int32_t>(joblist::DATENULL);
+      break;
 
       case CalpontSystemCatalog::BIGINT:
         if (precision[i] != MagicPrecisionForCountAgg)
@@ -687,101 +683,108 @@ void Row::initToNull()
         else  // work around for count() in outer join result.
           *((uint64_t*)&data[offsets[i]]) = 0;
 
-        break;
+      break;
 
-      case CalpontSystemCatalog::DOUBLE:
-      case CalpontSystemCatalog::UDOUBLE: *((uint64_t*)&data[offsets[i]]) = joblist::DOUBLENULL; break;
+    case CalpontSystemCatalog::DOUBLE:
+    case CalpontSystemCatalog::UDOUBLE: *((uint64_t*)&data[offsets[colIndex]]) = joblist::DOUBLENULL; break;
 
-      case CalpontSystemCatalog::LONGDOUBLE:
-        *((long double*)&data[offsets[i]]) = joblist::LONGDOUBLENULL;
-        break;
+    case CalpontSystemCatalog::LONGDOUBLE:
+      *((long double*)&data[offsets[colIndex]]) = joblist::LONGDOUBLENULL;
+      break;
 
-      case CalpontSystemCatalog::DATETIME: *((uint64_t*)&data[offsets[i]]) = joblist::DATETIMENULL; break;
+    case CalpontSystemCatalog::DATETIME: *((uint64_t*)&data[offsets[colIndex]]) = joblist::DATETIMENULL; break;
 
-      case CalpontSystemCatalog::TIMESTAMP: *((uint64_t*)&data[offsets[i]]) = joblist::TIMESTAMPNULL; break;
+    case CalpontSystemCatalog::TIMESTAMP: *((uint64_t*)&data[offsets[colIndex]]) = joblist::TIMESTAMPNULL; break;
 
-      case CalpontSystemCatalog::TIME: *((uint64_t*)&data[offsets[i]]) = joblist::TIMENULL; break;
+    case CalpontSystemCatalog::TIME: *((uint64_t*)&data[offsets[colIndex]]) = joblist::TIMENULL; break;
 
-      case CalpontSystemCatalog::CHAR:
-      case CalpontSystemCatalog::VARCHAR:
-      case CalpontSystemCatalog::TEXT:
-      case CalpontSystemCatalog::STRINT:
+    case CalpontSystemCatalog::VARBINARY:
+    case CalpontSystemCatalog::BLOB:
+    case CalpontSystemCatalog::CHAR:
+    case CalpontSystemCatalog::VARCHAR:
+    case CalpontSystemCatalog::TEXT:
+    case CalpontSystemCatalog::STRINT:
+    {
+      if (inStringTable(colIndex))
       {
-        if (inStringTable(i))
-        {
-          setStringField(joblist::CPNULLSTRMARK, i);
-          break;
-        }
-
-        uint32_t len = getColumnWidth(i);
-
-        switch (len)
-        {
-          case 1: data[offsets[i]] = joblist::CHAR1NULL; break;
-
-          case 2: *((uint16_t*)&data[offsets[i]]) = joblist::CHAR2NULL; break;
-
-          case 3:
-          case 4: *((uint32_t*)&data[offsets[i]]) = joblist::CHAR4NULL; break;
-
-          case 5:
-          case 6:
-          case 7:
-          case 8: *((uint64_t*)&data[offsets[i]]) = joblist::CHAR8NULL; break;
-
-          default:
-            *((uint64_t*)&data[offsets[i]]) = *((uint64_t*)joblist::CPNULLSTRMARK.c_str());
-            memset(&data[offsets[i] + 8], 0, len - 8);
-            break;
-        }
-
+        utils::NullString nullstr;
+        setStringField(nullstr, colIndex);
         break;
       }
 
-      case CalpontSystemCatalog::VARBINARY:
-      case CalpontSystemCatalog::BLOB: *((uint16_t*)&data[offsets[i]]) = 0; break;
+      uint32_t len = getColumnWidth(colIndex);
 
-      case CalpontSystemCatalog::DECIMAL:
-      case CalpontSystemCatalog::UDECIMAL:
+      switch (len)
       {
-        uint32_t len = getColumnWidth(i);
+        case 1: data[offsets[colIndex]] = joblist::CHAR1NULL; break;
 
-        switch (len)
-        {
-          case 1: data[offsets[i]] = joblist::TINYINTNULL; break;
+        case 2: *((uint16_t*)&data[offsets[colIndex]]) = joblist::CHAR2NULL; break;
 
-          case 2: *((int16_t*)&data[offsets[i]]) = static_cast<int16_t>(joblist::SMALLINTNULL); break;
+        case 3:
+        case 4: *((uint32_t*)&data[offsets[colIndex]]) = joblist::CHAR4NULL; break;
 
-          case 4: *((int32_t*)&data[offsets[i]]) = static_cast<int32_t>(joblist::INTNULL); break;
+        case 5:
+        case 6:
+        case 7:
+        case 8: *((uint64_t*)&data[offsets[colIndex]]) = joblist::CHAR8NULL; break;
 
-          case 16:
-          {
-            int128_t* s128ValuePtr = (int128_t*)(&data[offsets[i]]);
-            datatypes::TSInt128::storeUnaligned(s128ValuePtr, datatypes::Decimal128Null);
-          }
+        default:
+          setNullMark(colIndex, true);
           break;
-          default: *((int64_t*)&data[offsets[i]]) = static_cast<int64_t>(joblist::BIGINTNULL); break;
-        }
-
-        break;
       }
 
-      case CalpontSystemCatalog::UTINYINT: data[offsets[i]] = joblist::UTINYINTNULL; break;
-
-      case CalpontSystemCatalog::USMALLINT: *((uint16_t*)&data[offsets[i]]) = joblist::USMALLINTNULL; break;
-
-      case CalpontSystemCatalog::UMEDINT:
-      case CalpontSystemCatalog::UINT: *((uint32_t*)&data[offsets[i]]) = joblist::UINTNULL; break;
-
-      case CalpontSystemCatalog::UBIGINT: *((uint64_t*)&data[offsets[i]]) = joblist::UBIGINTNULL; break;
-
-      default:
-        ostringstream os;
-        os << "Row::initToNull(): got bad column type (" << types[i] << ").  Width=" << getColumnWidth(i)
-           << endl;
-        os << toString();
-        throw logic_error(os.str());
+      break;
     }
+
+    case CalpontSystemCatalog::DECIMAL:
+    case CalpontSystemCatalog::UDECIMAL:
+    {
+      uint32_t len = getColumnWidth(colIndex);
+
+      switch (len)
+      {
+        case 1: data[offsets[colIndex]] = joblist::TINYINTNULL; break;
+
+        case 2: *((int16_t*)&data[offsets[colIndex]]) = static_cast<int16_t>(joblist::SMALLINTNULL); break;
+
+        case 4: *((int32_t*)&data[offsets[colIndex]]) = static_cast<int32_t>(joblist::INTNULL); break;
+
+        case 16:
+        {
+          int128_t* s128ValuePtr = (int128_t*)(&data[offsets[colIndex]]);
+          datatypes::TSInt128::storeUnaligned(s128ValuePtr, datatypes::Decimal128Null);
+        }
+        break;
+        default: *((int64_t*)&data[offsets[colIndex]]) = static_cast<int64_t>(joblist::BIGINTNULL); break;
+      }
+
+      break;
+    }
+
+    case CalpontSystemCatalog::UTINYINT: data[offsets[colIndex]] = joblist::UTINYINTNULL; break;
+
+    case CalpontSystemCatalog::USMALLINT: *((uint16_t*)&data[offsets[colIndex]]) = joblist::USMALLINTNULL; break;
+
+    case CalpontSystemCatalog::UMEDINT:
+    case CalpontSystemCatalog::UINT: *((uint32_t*)&data[offsets[colIndex]]) = joblist::UINTNULL; break;
+
+    case CalpontSystemCatalog::UBIGINT: *((uint64_t*)&data[offsets[colIndex]]) = joblist::UBIGINTNULL; break;
+
+    default:
+      ostringstream os;
+      os << "Row::initToNull(): got bad column type (" << types[colIndex] << ").  Width=" << getColumnWidth(colIndex)
+         << endl;
+      os << toString();
+      throw logic_error(os.str());
+  }
+}
+void Row::initToNull()
+{
+  uint32_t i;
+
+  for (i = 0; i < columnCount; i++)
+  {
+    setToNull(i);
   }
 }
 
@@ -863,6 +866,9 @@ bool Row::isNullValue(uint32_t colIndex) const
 
     case CalpontSystemCatalog::TIME: return (*((uint64_t*)&data[offsets[colIndex]]) == joblist::TIMENULL);
 
+    case CalpontSystemCatalog::BLOB:
+    case CalpontSystemCatalog::TEXT:
+    case CalpontSystemCatalog::VARBINARY:
     case CalpontSystemCatalog::CHAR:
     case CalpontSystemCatalog::VARCHAR:
     case CalpontSystemCatalog::STRINT:
@@ -876,8 +882,8 @@ bool Row::isNullValue(uint32_t colIndex) const
         return strings->isNullValue(offset);
       }
 
-      if (data[offsets[colIndex]] == 0)  // empty string
-        return true;
+//      if (data[offsets[colIndex]] == 0)  // empty string
+//        return true;
 
       switch (len)
       {
@@ -893,7 +899,9 @@ bool Row::isNullValue(uint32_t colIndex) const
         case 7:
         case 8: return (*((uint64_t*)&data[offsets[colIndex]]) == joblist::CHAR8NULL);
         default:
-          return (*((uint64_t*)&data[offsets[colIndex]]) == *((uint64_t*)joblist::CPNULLSTRMARK.c_str()));
+          // a case for value stored with NULL flag prefix.
+          // see setStringField method.
+          return getNullMark(colIndex);
       }
 
       break;
@@ -915,28 +923,6 @@ bool Row::isNullValue(uint32_t colIndex) const
 
         default: return (*((int64_t*)&data[offsets[colIndex]]) == static_cast<int64_t>(joblist::BIGINTNULL));
       }
-
-      break;
-    }
-
-    case CalpontSystemCatalog::BLOB:
-    case CalpontSystemCatalog::TEXT:
-    case CalpontSystemCatalog::VARBINARY:
-    {
-      uint32_t pos = offsets[colIndex];
-
-      if (inStringTable(colIndex))
-      {
-        uint64_t offset;
-        offset = *((uint64_t*)&data[pos]);
-        return strings->isNullValue(offset);
-      }
-
-      if (*((uint16_t*)&data[pos]) == 0)
-        return true;
-      else if ((strncmp((char*)&data[pos + 2], joblist::CPNULLSTRMARK.c_str(), 8) == 0) &&
-               *((uint16_t*)&data[pos]) == joblist::CPNULLSTRMARK.length())
-        return true;
 
       break;
     }
@@ -1154,6 +1140,7 @@ RowGroup::RowGroup(const RowGroup& r)
     offsets = &stOffsets[0];
   else if (!useStringTable && !oldOffsets.empty())
     offsets = &oldOffsets[0];
+
 }
 
 RowGroup& RowGroup::operator=(const RowGroup& r)
@@ -1287,22 +1274,22 @@ void RowGroup::serializeRGData(ByteStream& bs) const
 
 uint32_t RowGroup::getDataSize() const
 {
-  return headerSize + (getRowCount() * offsets[columnCount]);
+  return getDataSize(getRowCount());
 }
 
 uint32_t RowGroup::getDataSize(uint64_t n) const
 {
-  return headerSize + (n * offsets[columnCount]);
+  return headerSize + (n * getRowSize());
 }
 
 uint32_t RowGroup::getMaxDataSize() const
 {
-  return headerSize + (8192 * offsets[columnCount]);
+  return headerSize + (8192 * getRowSize());
 }
 
 uint32_t RowGroup::getMaxDataSizeWithStrings() const
 {
-  return headerSize + (8192 * oldOffsets[columnCount]);
+  return headerSize + (8192 * (oldOffsets[columnCount] + columnCount));
 }
 
 uint32_t RowGroup::getEmptySize() const
@@ -1445,9 +1432,13 @@ void applyMapping(const int* mapping, const Row& in, Row* out)
       if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::VARBINARY ||
                    in.getColTypes()[i] == execplan::CalpontSystemCatalog::BLOB ||
                    in.getColTypes()[i] == execplan::CalpontSystemCatalog::TEXT))
+      {
         out->setVarBinaryField(in.getVarBinaryField(i), in.getVarBinaryLength(i), mapping[i]);
+      }
       else if (UNLIKELY(in.isLongString(i)))
+      {
         out->setStringField(in.getConstString(i), mapping[i]);
+      }
       else if (UNLIKELY(in.isShortString(i)))
         out->setUintField(in.getUintField(i), mapping[i]);
       else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::LONGDOUBLE))
@@ -1565,8 +1556,8 @@ void RowGroup::addToSysDataList(execplan::CalpontSystemCatalog::NJLSysDataList& 
 
             default:
             {
-              string s = row.getStringField(j);
-              cr->PutStringData(string(s.c_str(), strlen(s.c_str())));
+              NullString s = row.getStringField(j);
+              cr->PutStringData(s.str(), s.isNull() ? 0 : strlen(s.str()));
             }
           }
 
@@ -1609,6 +1600,8 @@ RGData RowGroup::duplicate()
   {
     // this isn't a straight memcpy of everything b/c it might be remapping strings.
     // think about a big memcpy + a remap operation; might be faster.
+    // SZ: copy columns (can even be donw COW style), not rows. even memcpy approach for
+    // columns is safer.
     Row r1, r2;
     RowGroup rg(*this);
     rg.setData(&ret);
@@ -1629,35 +1622,11 @@ RGData RowGroup::duplicate()
     }
   }
   else
+  {
     memcpy(ret.rowData.get(), data, getDataSize());
+  }
 
   return ret;
-}
-
-void Row::setStringField(const std::string& val, uint32_t colIndex)
-{
-  uint64_t offset;
-  uint64_t length;
-
-  // length = strlen(val.c_str()) + 1;
-  length = val.length();
-
-  if (length > getColumnWidth(colIndex))
-    length = getColumnWidth(colIndex);
-
-  if (inStringTable(colIndex))
-  {
-    offset = strings->storeString((const uint8_t*)val.data(), length);
-    *((uint64_t*)&data[offsets[colIndex]]) = offset;
-    //		cout << " -- stored offset " << *((uint32_t *) &data[offsets[colIndex]])
-    //				<< " length " << *((uint32_t *) &data[offsets[colIndex] + 4])
-    //				<< endl;
-  }
-  else
-  {
-    memcpy(&data[offsets[colIndex]], val.data(), length);
-    memset(&data[offsets[colIndex] + length], 0, offsets[colIndex + 1] - (offsets[colIndex] + length));
-  }
 }
 
 void RowGroup::append(RGData& rgd)
