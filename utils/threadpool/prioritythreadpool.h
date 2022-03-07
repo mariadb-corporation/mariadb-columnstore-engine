@@ -112,7 +112,11 @@ class PriorityThreadPool
   {
     blockedThreads--;
   }
-
+  uint32_t blockedThreadCount()
+  {
+    return blockedThreads;
+  }
+  
  protected:
  private:
   struct ThreadHelper
