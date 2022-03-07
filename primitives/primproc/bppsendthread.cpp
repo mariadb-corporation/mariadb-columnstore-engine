@@ -75,11 +75,9 @@ void BPPSendThread::sendResult(const Msg_t& msg, bool newConnection)
     std::unique_lock<std::mutex> sl1(respondLock);
     while (currentByteSize >= maxByteSize && msgQueue.size() > 3 && !die)
     {
-      respondWait = true;
       fProcessorPool->incBlockedThreads();
       okToRespond.wait(sl1);
       fProcessorPool->decBlockedThreads();
-      respondWait = false;
     }
   }
   if (die)
@@ -122,11 +120,9 @@ void BPPSendThread::sendResults(const vector<Msg_t>& msgs, bool newConnection)
     std::unique_lock<std::mutex> sl1(respondLock);
     while (currentByteSize >= maxByteSize && msgQueue.size() > 3 && !die)
     {
-      respondWait = true;
       fProcessorPool->incBlockedThreads();
       okToRespond.wait(sl1);
       fProcessorPool->decBlockedThreads();
-      respondWait = false;
     }
   }
   if (die)
@@ -278,7 +274,7 @@ void BPPSendThread::mainLoop()
         msg[msgsSent].msg.reset();
       }
 
-      if (respondWait && currentByteSize < maxByteSize)
+      if (fProcessorPool->blockedThreadCount() > 0 && currentByteSize < maxByteSize)
       {
         okToRespond.notify_one();
       }
