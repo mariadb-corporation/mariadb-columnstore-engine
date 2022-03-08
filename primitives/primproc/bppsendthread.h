@@ -120,7 +120,6 @@ class BPPSendThread
   std::mutex ackLock;
   std::condition_variable okToSend;
   // Condition to prevent run away queue
-  bool respondWait;
   std::mutex respondLock;
   std::condition_variable okToRespond;
 
