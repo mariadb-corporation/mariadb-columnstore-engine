@@ -172,12 +172,11 @@ void printUsage()
        << "        -T Timezone used for TIMESTAMP datatype" << endl
        << "           Possible values: \"SYSTEM\" (default)" << endl
        << "                          : Offset in the form +/-HH:MM" << endl
-       << endl
-       << "        -y S3 Authentication Key (for S3 imports)" << endl
-       << "        -K S3 Authentication Secret (for S3 imports)" << endl
-       << "        -t S3 Bucket (for S3 imports)" << endl
-       << "        -H S3 Hostname (for S3 imports, Amazon's S3 default)" << endl
-       << "        -g S3 Regions (for S3 imports)" << endl
+//       << "        -y S3 Authentication Key (for S3 imports)" << endl
+//       << "        -K S3 Authentication Secret (for S3 imports)" << endl
+//       << "        -t S3 Bucket (for S3 imports)" << endl
+//       << "        -H S3 Hostname (for S3 imports, Amazon's S3 default)" << endl
+//       << "        -g S3 Regions (for S3 imports)" << endl
        << "        -U username of new data files owner. Default is mysql" << endl;
 
   cout << "    Example1:" << endl
@@ -310,7 +309,7 @@ void parseCmdLineArgs(int argc, char** argv, BulkLoad& curJob, std::string& sJob
   BulkModeType bulkMode = BULK_MODE_LOCAL;
   std::string jobUUID;
 
-  while ((option = getopt(argc, argv, "b:c:d:e:f:hij:kl:m:n:p:r:s:u:w:B:C:DE:I:P:R:ST:X:NL:y:K:t:H:g:U:")) !=
+  while ((option = getopt(argc, argv, "b:c:d:e:f:hij:kl:m:n:p:r:s:u:w:B:C:DE:I:P:R:ST:X:NL:U:")) !=
          EOF)
   {
     switch (option)
@@ -677,7 +676,7 @@ void parseCmdLineArgs(int argc, char** argv, BulkLoad& curJob, std::string& sJob
         break;
       }
 
-      case 'y':
+/*      case 'y':
       {
         curJob.setS3Key(optarg);
         break;
@@ -706,7 +705,7 @@ void parseCmdLineArgs(int argc, char** argv, BulkLoad& curJob, std::string& sJob
         curJob.setS3Region(optarg);
         break;
       }
-
+*/
       case 'U':
       {
         curJob.setUsername(optarg);
