@@ -42,9 +42,9 @@ local deb_build_deps = 'apt update && apt install --yes --no-install-recommends 
 local platformMap(platform) =
 
   local platform_map = {
-    'opensuse/leap:15': 'zypper ' + rpm_build_deps + ' cmake libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel gcc-fortran && cmake ' + cmakeflags + ' -DRPM=sles15 && make -j$(nproc) package',
-    'centos:7': 'yum install -y epel-release && yum install -y cmake3 && ln -s /usr/bin/cmake3 /usr/bin/cmake && yum ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=centos7 && make -j$(nproc) package',
-    'centos:8': "yum install -y libgcc libarchive && sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/*PowerTools.repo && yum " + rpm_build_deps + ' cmake && cmake ' + cmakeflags + ' -DRPM=centos8 && make -j$(nproc) package',
+    'opensuse/leap:15': 'zypper ' + rpm_build_deps + ' pcre2-devel cmake libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel gcc-fortran && cmake ' + cmakeflags + ' -DRPM=sles15 && make -j$(nproc) package',
+    'centos:7': 'yum install -y epel-release && yum install -y cmake3 && ln -s /usr/bin/cmake3 /usr/bin/cmake && yum ' + rpm_build_deps + ' pcre2-devel && cmake ' + cmakeflags + ' -DRPM=centos7 && make -j$(nproc) package',
+    'centos:8': "dnf install -y libgcc libarchive && sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/*PowerTools.repo && yum " + rpm_build_deps + ' cmake && cmake ' + cmakeflags + ' -DRPM=centos8 && make -j$(nproc) package',
     'debian:9': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=stretch' debian/autobake-deb.sh",
     'debian:10': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=buster' debian/autobake-deb.sh",
     'ubuntu:18.04': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=bionic' debian/autobake-deb.sh",
@@ -59,7 +59,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
   local mtr_path = if (pkg_format == 'rpm') then '/usr/share/mysql-test' else '/usr/share/mysql/mysql-test',
   local socket_path = if (pkg_format == 'rpm') then '/var/lib/mysql/mysql.sock' else '/run/mysqld/mysqld.sock',
   local config_path_prefix = if (pkg_format == 'rpm') then '/etc/my.cnf.d/' else '/etc/mysql/mariadb.conf.d/50-',
-  local img = if (std.split(platform, ':')[0] == 'centos') then platform else 'romcheck/' + std.strReplace(platform, '/', '-'),
+  local img = if (platform == 'centos:7') then platform else 'romcheck/' + std.strReplace(platform, '/', '-'),
   local regression_ref = if (std.split(branch, '-')[0] == 'develop') then branch else 'develop-5',
   local branchp = if (branch == '**') then '' else branch,
 
@@ -320,7 +320,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
            },
            {
              name: 'build',
-             image: platform,
+             image: img,
              volumes: [pipeline._volumes.mdb],
              environment: {
                DEBIAN_FRONTEND: 'noninteractive',
