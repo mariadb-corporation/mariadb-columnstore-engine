@@ -111,25 +111,25 @@ class pColStep : public JobStep
 
   pColStep(const PassThruStep& rhs);
 
-  virtual ~pColStep(){};
+  virtual ~pColStep(){}
 
   /** @brief Starts processing.  Set at least the RID list before calling.
    *
    * Starts processing.  Set at least the RID list before calling this.
    */
-  virtual void run(){};
+  virtual void run(){}
   /** @brief Sync's the caller with the end of execution.
    *
    * Does nothing.  Returns when this instance is finished.
    */
-  virtual void join(){};
+  virtual void join(){}
 
   virtual const std::string toString() const;
 
   virtual bool isDictCol() const
   {
     return fIsDict;
-  };
+  }
   bool isExeMgr() const
   {
     return isEM;
@@ -285,7 +285,6 @@ class pColStep : public JobStep
   execplan::CalpontSystemCatalog::ColType fColType;
   uint32_t fFilterCount;
   int8_t fBOP;
-  int8_t fOutputType;
   uint16_t realWidth;
   DataList_t* ridList;
   StrDataList* strRidList;
@@ -348,24 +347,24 @@ class pColScanStep : public JobStep
                const execplan::CalpontSystemCatalog::ColType& ct, const JobInfo& jobInfo);
 
   pColScanStep(const pColStep& rhs);
-  ~pColScanStep(){};
+  ~pColScanStep(){}
 
   /** @brief Starts processing.
    *
    * Starts processing.
    */
-  virtual void run(){};
+  virtual void run(){}
 
   /** @brief Sync's the caller with the end of execution.
-   *setSingleThread
+   *
    * Does nothing.  Returns when this instance is finished.
    */
-  virtual void join(){};
+  virtual void join(){}
 
   virtual bool isDictCol() const
   {
     return fIsDict;
-  };
+  }
 
   /** @brief Add a filter when the column is a 4-byte float type
    *
@@ -550,12 +549,12 @@ class pDictionaryStep : public JobStep
   pDictionaryStep(execplan::CalpontSystemCatalog::OID oid, execplan::CalpontSystemCatalog::OID tabelOid,
                   const execplan::CalpontSystemCatalog::ColType& ct, const JobInfo& jobInfo);
 
-  virtual ~pDictionaryStep(){};
+  virtual ~pDictionaryStep(){}
 
   /** @brief virtual void Run method
    */
-  virtual void run(){};
-  virtual void join(){};
+  virtual void run(){}
+  virtual void join(){}
   // void setOutList(StringDataList* rids);
   void setInputList(DataList_t* rids)
   {
