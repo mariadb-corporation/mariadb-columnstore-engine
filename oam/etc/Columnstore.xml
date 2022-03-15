@@ -193,7 +193,7 @@
 	</HashJoin>
 	<JobList>
 		<FlushInterval>16K</FlushInterval>
-		<FifoSize>16</FifoSize>1
+		<FifoSize>16</FifoSize>
 		<RequestSize>1</RequestSize>  <!-- Number of extents per request, should be 
 			  less than MaxOutstandingRequests. Otherwise, default value 1 is used. -->
 		<!--  ProcessorThreadsPerScan is the number of jobs issued to process

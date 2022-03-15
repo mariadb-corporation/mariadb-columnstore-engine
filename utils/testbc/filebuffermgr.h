@@ -125,7 +125,7 @@ class FileBufferMgr
   /**
    * @brief add the Disk Block reference by fb into the Disk Block Buffer Cache
    **/
-  const int insert(const BRM::LBID_t lbid, const BRM::VER_t ver, const uint8_t* data);
+  const int insert_buf(const BRM::LBID_t lbid, const BRM::VER_t ver, const uint8_t* data);
 
   /**
    * @brief returns the total number of Disk Blocks in the Cache

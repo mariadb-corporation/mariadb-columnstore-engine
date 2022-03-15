@@ -332,7 +332,7 @@ int main(int argc, char* argv[])
   }
 
   // get Local Module Name and Server Install Indicator
-  string singleServerInstall = "y";
+  string singleServerInstall = "n";
 
   oamModuleInfo_t st;
 

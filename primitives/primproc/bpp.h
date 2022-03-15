@@ -27,7 +27,6 @@
 // Copyright: See COPYING file that comes with this distribution
 //
 //
-#include "primitivemsg.h"
 #include "bytestream.h"
 #include "messagequeue.h"
 #include "serializeable.h"
