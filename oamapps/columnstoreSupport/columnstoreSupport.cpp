@@ -62,7 +62,6 @@ string rootPassword = "";
 string debug_flag = "0";
 string mysqlpw = " ";
 string tmpDir;
-string ProfileFile;
 
 int runningThreads = 0;
 pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
@@ -121,8 +120,8 @@ void* childReportThread(threadInfo_t* st)
 
   cout << "Get " + reportType + " report data for " + remoteModuleName + "      " << endl;
 
-  string cmd = "remote_command.sh " + remoteModuleIP + " " + rootPassword + " '. " + ProfileFile + ";" +
-               reportType + "Report.sh " + remoteModuleName + "' " + debug_flag + " - forcetty";
+  string cmd = "remote_command.sh " + remoteModuleIP + " " + rootPassword + ";" + reportType + "Report.sh " +
+               remoteModuleName + "' " + debug_flag + " - forcetty";
 
   int rtnCode = system(cmd.c_str());
 
@@ -333,7 +332,7 @@ int main(int argc, char* argv[])
   }
 
   // get Local Module Name and Server Install Indicator
-  string singleServerInstall;
+  string singleServerInstall = "n";
 
   oamModuleInfo_t st;
 
@@ -346,15 +345,6 @@ int main(int argc, char* argv[])
   {
     cout << endl << "**** Failed : Failed to read Local Module Name" << endl;
     exit(-1);
-  }
-
-  try
-  {
-    oam.getSystemConfig("SingleServerInstall", singleServerInstall);
-  }
-  catch (...)
-  {
-    singleServerInstall = "y";
   }
 
   if (argc == 1)
@@ -589,17 +579,6 @@ int main(int argc, char* argv[])
   catch (...)
   {
     cout << "ERROR: Problem reading the Columnstore System Configuration file" << endl;
-    exit(-1);
-  }
-
-  // Get Profile file
-  try
-  {
-    ProfileFile = sysConfig->getConfig(InstallSection, "ProfileFile");
-  }
-  catch (...)
-  {
-    cout << "ERROR: Problem getting ProfileFile" << endl;
     exit(-1);
   }
 

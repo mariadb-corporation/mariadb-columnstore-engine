@@ -113,7 +113,6 @@ void DictStep::prep(int8_t outputType, bool makeAbsRids)
 
   primMsg->ism.Interleave = 0;
   primMsg->ism.Flags = 0;
-  // 	primMsg->ism.Flags = PrimitiveMsg::planFlagsToPrimFlags(traceFlags);
   primMsg->ism.Command = DICT_SIGNATURE;
   primMsg->ism.Size = bufferSize;
   primMsg->ism.Type = 2;

@@ -36,7 +36,6 @@ set(joblist_LIB_SRCS
     pcolstep.cpp
     pdictionary.cpp
     pdictionaryscan.cpp
-    primitivemsg.cpp
     pseudocc-jl.cpp
     resourcedistributor.cpp
     resourcemanager.cpp

@@ -119,7 +119,6 @@ void UmSocketSelector::loadUMModuleInfo()
   std::cout << "ModuleConfig for type: " << UM_MODTYPE << std::endl;
   std::cout << "ModuleDesc  = " << moduleTypeConfig.ModuleDesc << std::endl;
   std::cout << "ModuleCount = " << moduleCount << std::endl;
-  std::cout << "RunType     = " << moduleTypeConfig.RunType << std::endl;
 #endif
 
   if (moduleCount > 0)

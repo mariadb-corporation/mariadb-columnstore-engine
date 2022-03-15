@@ -258,22 +258,6 @@ int fixupCalpontXML()
       cout << "Fixing " << section << "." << parm << " = " << val << endl;
     }
 
-    // Fixup WES
-    section = "pm1_WriteEngineServer";
-    parm = "IPAddr";
-    val = cf->getConfig(section, parm);
-
-    if (val.empty())
-    {
-      val = "127.0.0.1";
-      cf->setConfig(section, parm, val);
-      cout << "Adding " << section << "." << parm << " = " << val << endl;
-      parm = "Port";
-      val = "8630";
-      cf->setConfig(section, parm, val);
-      cout << "Adding " << section << "." << parm << " = " << val << endl;
-    }
-
     // Fixup TableLockSaveFile
     section = "SystemConfig";
     parm = "TableLockSaveFile";

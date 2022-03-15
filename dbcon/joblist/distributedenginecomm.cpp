@@ -199,7 +199,7 @@ void DistributedEngineComm::reset()
 }
 
 DistributedEngineComm::DistributedEngineComm(ResourceManager* rm, bool isExeMgr)
- : fRm(rm), fLBIDShift(fRm->getPsLBID_Shift()), pmCount(0), fIsExeMgr(isExeMgr)
+ : fRm(rm), pmCount(0), fIsExeMgr(isExeMgr)
 {
   Setup();
 }
@@ -236,7 +236,6 @@ void DistributedEngineComm::Setup()
   unsigned numConnections = getNumConnections();
   oam::Oam oam;
   ModuleTypeConfig moduletypeconfig;
-
   try
   {
     oam.getSystemConfig("pm", moduletypeconfig);
@@ -249,10 +248,6 @@ void DistributedEngineComm::Setup()
 
   if (newPmCount == 0)
     writeToLog(__FILE__, __LINE__, "Got a config file with 0 PMs", LOG_TYPE_CRITICAL);
-
-  // This needs to make sense when compared to the extent size
-  //     fLBIDShift = static_cast<unsigned>(config::Config::uFromText(fConfig->getConfig(section,
-  //     "LBID_Shift")));
 
   auto* config = fRm->getConfig();
   std::vector<messageqcpp::AddrAndPortPair> pmsAddressesAndPorts;

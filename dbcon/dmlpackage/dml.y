@@ -90,7 +90,7 @@ char* copy_string(const char *str);
 }
 
 %}
-%pure-parser
+%define api.pure
 %lex-param {void * scanner}
 %parse-param {void * scanner}
 %debug
