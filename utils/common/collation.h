@@ -88,6 +88,8 @@ typedef double pfloat; /* Mixed prototypes can't take float */
 typedef const struct charset_info_st CHARSET_INFO;
 extern "C" MYSQL_PLUGIN_IMPORT CHARSET_INFO* default_charset_info;
 
+#define HAVE_PSI_INTERFACE
+
 #include "m_ctype.h"
 
 #undef FALSE
