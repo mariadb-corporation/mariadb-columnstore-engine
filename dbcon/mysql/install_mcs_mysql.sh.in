@@ -19,16 +19,25 @@ fi
 # DELETE libcalmysql.so entries first as they are in ha_columnstore.so in 1.4.2 onwards
 $MDB 2> ${tmpdir}/mysql_install.log <<EOD
 DELETE FROM mysql.func WHERE dl='libcalmysql.so';
+CREATE OR REPLACE FUNCTION mcsgetstats RETURNS STRING SONAME 'ha_columnstore.so';
 CREATE OR REPLACE FUNCTION calgetstats RETURNS STRING SONAME 'ha_columnstore.so';
+CREATE OR REPLACE FUNCTION mcssettrace RETURNS INTEGER SONAME 'ha_columnstore.so';
 CREATE OR REPLACE FUNCTION calsettrace RETURNS INTEGER SONAME 'ha_columnstore.so';
+CREATE OR REPLACE FUNCTION mcssetparms RETURNS STRING SONAME 'ha_columnstore.so';
 CREATE OR REPLACE FUNCTION calsetparms RETURNS STRING SONAME 'ha_columnstore.so';
+CREATE OR REPLACE FUNCTION mcsflushcache RETURNS INTEGER SONAME 'ha_columnstore.so';
 CREATE OR REPLACE FUNCTION calflushcache RETURNS INTEGER SONAME 'ha_columnstore.so';
+CREATE OR REPLACE FUNCTION mcsgettrace RETURNS STRING SONAME 'ha_columnstore.so';
 CREATE OR REPLACE FUNCTION calgettrace RETURNS STRING SONAME 'ha_columnstore.so';
+CREATE OR REPLACE FUNCTION mcsgetversion RETURNS STRING SONAME 'ha_columnstore.so';
 CREATE OR REPLACE FUNCTION calgetversion RETURNS STRING SONAME 'ha_columnstore.so';
-CREATE OR REPLACE FUNCTION calonlinealter RETURNS INTEGER SONAME 'ha_columnstore.so';
+CREATE OR REPLACE FUNCTION mcsviewtablelock RETURNS STRING SONAME 'ha_columnstore.so';
 CREATE OR REPLACE FUNCTION calviewtablelock RETURNS STRING SONAME 'ha_columnstore.so';
+CREATE OR REPLACE FUNCTION mcscleartablelock RETURNS STRING SONAME 'ha_columnstore.so';
 CREATE OR REPLACE FUNCTION calcleartablelock RETURNS STRING SONAME 'ha_columnstore.so';
+CREATE OR REPLACE FUNCTION mcslastinsertid RETURNS INTEGER SONAME 'ha_columnstore.so';
 CREATE OR REPLACE FUNCTION callastinsertid RETURNS INTEGER SONAME 'ha_columnstore.so';
+CREATE OR REPLACE FUNCTION mcsgetsqlcount RETURNS STRING SONAME 'ha_columnstore.so';
 CREATE OR REPLACE FUNCTION calgetsqlcount RETURNS STRING SONAME 'ha_columnstore.so';
 CREATE OR REPLACE FUNCTION idbpm RETURNS INTEGER SONAME 'ha_columnstore.so';
 CREATE OR REPLACE FUNCTION idbdbroot RETURNS INTEGER SONAME 'ha_columnstore.so';
