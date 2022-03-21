@@ -45,13 +45,13 @@ class ColumnCommandJL : public CommandJL
   ColumnCommandJL(const ColumnCommandJL&, const DictStepJL&);
   virtual ~ColumnCommandJL();
 
-  virtual void createCommand(messageqcpp::ByteStream& bs) const;
-  virtual void runCommand(messageqcpp::ByteStream& bs) const;
-  void setLBID(uint64_t rid, uint32_t dbroot);
-  uint8_t getTableColumnType();
-  virtual std::string toString();
-  uint16_t getWidth();
-  CommandType getCommandType()
+  virtual void createCommand(messageqcpp::ByteStream& bs) const override;
+  virtual void runCommand(messageqcpp::ByteStream& bs) const override;
+  void setLBID(uint64_t rid, uint32_t dbroot) override;
+  uint8_t getTableColumnType() override;
+  virtual std::string toString() override;
+  uint16_t getWidth() override;
+  CommandType getCommandType() override
   {
     return COLUMN_COMMAND;
   }
