@@ -539,16 +539,6 @@ inline bool isNullValue(const T val, const T NULL_VALUE)
   return val == NULL_VALUE;
 }
 
-template <>
-inline bool isNullValue<KIND_TEXT, int64_t>(const int64_t val, const int64_t NULL_VALUE)
-{
-  //@bug 339 might be a token here
-  // TODO: what's up with the alternative NULL here?
-  constexpr const int64_t ALT_NULL_VALUE = 0xFFFFFFFFFFFFFFFELL;
-
-  return (val == NULL_VALUE || val == ALT_NULL_VALUE);
-}
-
 //
 // FILTER A COLUMN VALUE
 //
