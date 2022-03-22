@@ -62,7 +62,10 @@ select_branch()
         git config submodule.storage/columnstore/columnstore.update none
         cd -
     fi
+
+    cd $SCRIPT_LOCATION
     CURRENT_BRANCH=$(git branch --show-current)
+    cd -
     message "Columnstore will be built from $color_yellow$CURRENT_BRANCH$color_normal branch"
 }
 
