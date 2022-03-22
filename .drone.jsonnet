@@ -1,23 +1,23 @@
 local events = ['pull_request', 'cron'];
 
 local platforms = {
-  develop: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
-  'develop-7': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
-  'develop-6': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
-  'develop-5': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
+  develop: ['opensuse/leap:15', 'centos:7', 'rockylinux:8', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
+  'develop-7': ['opensuse/leap:15', 'centos:7', 'rockylinux:8', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
+  'develop-6': ['opensuse/leap:15', 'centos:7', 'rockylinux:8', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
+  'develop-5': ['opensuse/leap:15', 'centos:7', 'rockylinux:8', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
 };
 
 local platforms_arm = {
-  develop: ['centos:8'],
-  'develop-7': ['centos:8'],
-  'develop-6': ['centos:8'],
+  develop: ['rockylinux:8'],
+  'develop-7': ['rockylinux:8'],
+  'develop-6': ['rockylinux:8'],
 };
 
 local any_branch = '**';
-local platforms_custom = ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'];
-local platforms_arm_custom = ['centos:8'];
+local platforms_custom = ['opensuse/leap:15', 'centos:7', 'rockylinux:8', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'];
+local platforms_arm_custom = ['rockylinux:8'];
 
-local platforms_mtr = ['centos:7', 'centos:8', 'ubuntu:20.04'];
+local platforms_mtr = ['centos:7', 'rockylinux:8', 'ubuntu:20.04'];
 
 local server_ref_map = {
   develop: '10.8',
@@ -39,10 +39,9 @@ local gcc_update_alternatives = 'update-alternatives --install /usr/bin/gcc gcc 
 local clang12_update_alternatives = 'update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 100 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-12 ';
 
 
-local yum_vault_mirror = "sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-Linux-*; sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.epel.cloud|g' /etc/yum.repos.d/CentOS-Linux-*; dnf update -y; ";
 local rpm_build_deps = 'install -y lz4 systemd-devel git make libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect createrepo ';
 local centos7_build_deps = 'yum install -y epel-release centos-release-scl && yum install -y pcre2-devel devtoolset-10 devtoolset-10-gcc cmake3 lz4-devel && ln -s /usr/bin/cmake3 /usr/bin/cmake && . /opt/rh/devtoolset-10/enable ';
-local centos8_build_deps = yum_vault_mirror + ' yum install -y gcc-toolset-10 libarchive dnf-plugins-core cmake lz4-devel && . /opt/rh/gcc-toolset-10/enable && yum config-manager --set-enabled powertools ';
+local rocky8_build_deps = 'yum install -y gcc-toolset-10 libarchive dnf-plugins-core cmake lz4-devel && . /opt/rh/gcc-toolset-10/enable && yum config-manager --set-enabled powertools && yum install -y clang-12';
 local ubuntu18_04_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-12 main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-12 &&' + clang12_update_alternatives;
 local debian10_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/buster/ llvm-toolchain-buster-12 main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-12 &&' + clang12_update_alternatives;
 local opensuse_build_deps = 'zypper install -y liblz4-devel cmake libboost_system-devel pcre2-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel gcc-fortran gcc10 gcc10-c++ && ' + gcc_update_alternatives;
@@ -53,7 +52,7 @@ local platformMap(platform) =
   local platform_map = {
     'opensuse/leap:15': opensuse_build_deps + ' && zypper ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=sles15 && make -j$(nproc) package',
     'centos:7': centos7_build_deps + ' && yum ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=centos7 && make -j$(nproc) package',
-    'centos:8': centos8_build_deps + ' && yum ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=centos8 && make -j$(nproc) package',
+    'rockylinux:8': centos8_build_deps + ' && yum ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=centos8 && make -j$(nproc) package',
     'debian:10': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=buster' debian/autobake-deb.sh",
     'ubuntu:18.04': ubuntu18_04_deps + ' && ' + deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=bionic' debian/autobake-deb.sh",
     'ubuntu:20.04': ubuntu20_04_deps + ' && ' + deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=focal' debian/autobake-deb.sh",
@@ -65,7 +64,7 @@ local testRun(platform) =
   local platform_map = {
     'opensuse/leap:15': 'ctest -R columnstore: -j $(nproc) --output-on-failure',
     'centos:7': 'ctest3 -R columnstore: -j $(nproc) --output-on-failure',
-    'centos:8': 'ctest3 -R columnstore: -j $(nproc) --output-on-failure',
+    'rockylinux:8': 'ctest3 -R columnstore: -j $(nproc) --output-on-failure',
     'debian:10': 'cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure',
     'ubuntu:18.04': 'cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure',
     'ubuntu:20.04': 'cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure',
@@ -77,7 +76,7 @@ local testPreparation(platform) =
   local platform_map = {
     'opensuse/leap:15': 'zypper install -y git boost-devel libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel cppunit-devel snappy-devel cmake',
     'centos:7': 'yum -y install epel-release && yum install -y git cppunit-devel cmake3 boost-devel snappy-devel',
-    'centos:8': yum_vault_mirror + ' yum install -y dnf-plugins-core libarchive && yum config-manager --set-enabled powertools && yum install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel',
+    'rockylinux:8': 'yum install -y dnf-plugins-core libarchive && yum config-manager --set-enabled powertools && yum install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel',
     'debian:10': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
     'ubuntu:18.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev  libsnappy-dev cmake g++',
     'ubuntu:20.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
@@ -135,9 +134,8 @@ local Pipeline(branch, platform, event, arch='amd64') = {
     commands: [
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name smoke$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       'docker cp result smoke$${DRONE_BUILD_NUMBER}:/',
-      if (platform == 'centos:8') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "' + yum_vault_mirror + '"' else '',
-      if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release which rsyslog hostname && yum install -y /result/*.' + pkg_format + '"' else '',
-      if (platform == 'centos:8') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "sed -i s/enabled=0/enabled=1/ /etc/yum.repos.d/*PowerTools.repo && yum install -y gtest"' else '',
+      if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0]) == 'rockylinux' then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release which rsyslog hostname && yum install -y /result/*.' + pkg_format + '"' else '',
+      if (platform == 'rockylinux:8') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "sed -i s/enabled=0/enabled=1/ /etc/yum.repos.d/*PowerTools.repo && yum install -y gtest"' else '',
       if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y rsyslog hostname && apt install -y -f /result/*.' + pkg_format + '"' else '',
       if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "zypper install -y which hostname rsyslog && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
@@ -160,9 +158,8 @@ local Pipeline(branch, platform, event, arch='amd64') = {
     commands: [
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env MYSQL_TEST_DIR=' + mtr_path + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       'docker cp result mtr$${DRONE_BUILD_NUMBER}:/',
-      if (platform == 'centos:8') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "' + yum_vault_mirror + '"' else '',
       if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "zypper install -y which hostname rsyslog patch perl-Data-Dumper-Concise perl-Memoize-ExpireLRU && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
-      if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release diffutils which rsyslog hostname patch perl-Data-Dumper perl-Getopt-Long perl-Memoize perl-Time-HiRes cracklib-dicts && yum install -y /result/*.' + pkg_format + '"' else '',
+      if (std.split(platform, ':')[0] == 'centos'  || std.split(platform, ':')[0]) == 'rockylinux' then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release diffutils which rsyslog hostname patch perl-Data-Dumper perl-Getopt-Long perl-Memoize perl-Time-HiRes cracklib-dicts && yum install -y /result/*.' + pkg_format + '"' else '',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y rsyslog hostname patch && apt install -y -f /result/*.' + pkg_format + '"' else '',
       'docker cp mysql-test/columnstore mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/suite/',
@@ -223,8 +220,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
       'docker cp /mdb/' + builddir + '/storage/columnstore/columnstore/storage-manager regression$${DRONE_BUILD_NUMBER}:/',
       // check storage-manager unit test binary file
       'docker exec -t regression$${DRONE_BUILD_NUMBER} ls -l /storage-manager',
-      if (platform == 'centos:8') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "' + yum_vault_mirror + '"' else '',
-      if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release diffutils tar lz4 wget which rsyslog hostname && yum install -y /result/*.' + pkg_format + '"' else '',
+      if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release diffutils tar lz4 wget which rsyslog hostname && yum install -y /result/*.' + pkg_format + '"' else '',
       if (pkg_format == 'deb') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       if (pkg_format == 'deb') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y tar liblz4-tool wget rsyslog hostname && apt install -y -f /result/*.' + pkg_format + '"' else '',
       if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "zypper install -y gzip tar lz4 wget which hostname rsyslog && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
@@ -435,7 +431,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
          ] +
          [pipeline.publish()] +
          (if (event == 'cron') || (event == 'push') then [pipeline.publish('pkg latest', 'latest')] else []) +
-         // (if (platform == 'centos:8' && event == 'cron') then [pipeline.dockerfile] + [pipeline.docker] + [pipeline.ecr] else []) +
+         // (if (platform == 'rockylinux:8' && event == 'cron') then [pipeline.dockerfile] + [pipeline.docker] + [pipeline.ecr] else []) +
          [pipeline.smoke] +
          [pipeline.smokelog] +
          (if (std.member(platforms_mtr, platform)) then [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish('mtr')] else []) +
