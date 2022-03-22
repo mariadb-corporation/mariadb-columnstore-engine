@@ -318,12 +318,12 @@ class TDecimal128 : public TSInt128
   static constexpr int128_t minInt128 = TFloat128::minInt128;
   static constexpr int128_t maxInt128 = TFloat128::maxInt128;
 
-  static inline bool isWideDecimalNullValue(const int128_t& val)
+  static inline bool isWideDecimalNullValue(const int128_t val)
   {
     return (val == TSInt128::NullValue);
   }
 
-  static inline bool isWideDecimalEmptyValue(const int128_t& val)
+  static inline bool isWideDecimalEmptyValue(const int128_t val)
   {
     return (val == TSInt128::EmptyValue);
   }
@@ -342,10 +342,10 @@ class TDecimal128 : public TSInt128
   TDecimal128()
   {
   }
-  explicit TDecimal128(const int128_t& val) : TSInt128(val)
+  explicit TDecimal128(const int128_t val) : TSInt128(val)
   {
   }
-  explicit TDecimal128(const TSInt128& val) : TSInt128(val)
+  explicit TDecimal128(const TSInt128 val) : TSInt128(val)
   {
   }
   explicit TDecimal128(const int128_t* valPtr) : TSInt128(valPtr)
