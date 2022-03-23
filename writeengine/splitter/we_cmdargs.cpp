@@ -561,6 +561,11 @@ void WECmdArgs::usage()
        << "\t-T\tTimezone used for TIMESTAMP datatype.\n"
        << "\t\tPossible values: \"SYSTEM\" (default)\n"
        << "\t\t               : Offset in the form +/-HH:MM\n"
+       << "\t-y\tS3 Authentication Key (for S3 imports)\n"
+       << "\t-K\tS3 Authentication Secret (for S3 imports)\n"
+       << "\t-t\tS3 Bucket (for S3 imports)\n"
+       << "\t-H\tS3 Hostname (for S3 imports, Amazon's S3 default)\n"
+       << "\t-g\tS3 Region (for S3 imports)\n"
        << "\t-L\tDirectory for the output .err and .bad files.\n"
        << "\t\tDefault is " << string(MCSLOGDIR);
 
@@ -593,7 +598,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
   if (argc > 0)
     fPrgmName = string(MCSBINDIR) + "/" + "cpimport.bin";  // argv[0] is splitter but we need cpimport
 
-  while ((aCh = getopt(argc, argv, "d:j:w:s:v:l:r:b:e:B:f:q:ihm:E:C:P:I:n:p:c:ST:N:U:L:")) != EOF)
+  while ((aCh = getopt(argc, argv, "d:j:w:s:v:l:r:b:e:B:f:q:ihm:E:C:P:I:n:p:c:ST:Ny:K:t:H:g:U:L:")) != EOF)
   {
     switch (aCh)
     {
@@ -901,7 +906,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
         fConsoleOutput = false;
         break;
       }
-/*
+
       case 'y':  //-y S3 Key
       {
         fS3Key = optarg;
@@ -931,7 +936,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
         fS3Region = optarg;
         break;
       }
-*/
+
       case 'U':  //-U username of the files owner
       {
         fUsername = optarg;
