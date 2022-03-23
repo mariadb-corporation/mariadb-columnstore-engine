@@ -20,7 +20,7 @@ fi
 message "Building Mariadb Server from $color_yellow$MDB_SOURCE_PATH$color_normal"
 
 BUILD_TYPE_OPTIONS=("Debug" "RelWithDebInfo")
-DISTRO_OPTIONS=("Ubuntu" "CentOS" "Debian" "openSUSE")
+DISTRO_OPTIONS=("Ubuntu" "CentOS" "Debian" "openSUSE" "Rocky")
 BRANCHES=($(git branch --list --no-color| grep "[^* ]+" -Eo))
 
 optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
@@ -37,7 +37,7 @@ if [[ ! " ${BUILD_TYPE_OPTIONS[*]} " =~ " ${MCS_BUILD_TYPE} " ]]; then
     MCS_BUILD_TYPE=$selectedChoice
 fi
 
-if [[ ! " ${DISTRO_OPTIONS[*]} " =~ " ${OS} " || $OS = "Centos" ]]; then
+if [[ ! " ${DISTRO_OPTIONS[*]} " =~ " ${OS} " || $OS = "CentOS" ]]; then
     detect_distro
 fi
 
@@ -78,7 +78,7 @@ install_deps()
         libncurses5-dev libaio-dev libsystemd-dev libpcre2-dev \
         libperl-dev libssl-dev libxml2-dev libkrb5-dev flex libpam-dev git \
         libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest libsnappy-dev libjemalloc-dev
-    elif [ $OS = 'CentOS' ]; then
+    elif [[ $OS = 'CentOS' || $OS = 'Rocky' ]]; then
         yum -y install epel-release \
         && yum -y groupinstall "Development Tools" \
 	&& yum config-manager --set-enabled powertools \
@@ -89,6 +89,9 @@ install_deps()
             CMAKE_BIN_NAME=cmake3
         else
             yum -y install cmake
+        fi
+        if [ $OS = 'Rocky' ]; then
+	    yum install -y checkpolicy
         fi
     elif [ $OS = 'openSUSE' ]; then
         zypper install -y bison ncurses-devel readline-devel libopenssl-devel cmake libxml2-devel gperf libaio-devel libevent-devel python-devel ruby-devel tree wget pam-devel snappy-devel libicu-devel \
@@ -182,6 +185,8 @@ build()
     if [[ "$OS" = 'Ubuntu' || "$OS" = 'Debian' ]]; then
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DDEB=bionic"
     elif [ $OS = 'CentOS' ]; then
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DRPM=CentOS7"
+    elif [ $OS = 'Rocky' ]; then
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DRPM=CentOS7"
     elif [ $OS = 'openSUSE' ]; then
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DRPM=sles15"
