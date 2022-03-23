@@ -1,0 +1,33 @@
+DROP DATABASE IF EXISTS cal_test_db;
+CREATE DATABASE cal_test_db;
+USE cal_test_db;
+create table t1(a int, b int comment 'autoincrement=1') engine=columnstore;
+select mcsflushcache();
+mcsflushcache()
+0
+select mcssettrace(0);
+mcssettrace(0)
+0
+select mcssetparms("pmmaxmemorysmallside","2048000000");
+mcssetparms("pmmaxmemorysmallside","2048000000")
+Updated pmmaxmemorysmallside 2048000000
+select mcsgettrace();
+mcsgettrace()
+NULL
+select mcsgetversion();
+mcsgetversion()
+8.1.1
+select mcsviewtablelock("t1");
+mcsviewtablelock("t1")
+ Table cal_test_db.t1 is not locked by any process.
+select mcscleartablelock(0);
+mcscleartablelock(0)
+No table lock found for specified table lock ID
+select mcslastinsertid("t1");
+mcslastinsertid("t1")
+0
+select mcsgetsqlcount();
+mcsgetsqlcount()
+Running SQL statements 0, Waiting SQL statments 0
+DROP TABLE t1;
+DROP DATABASE cal_test_db;
