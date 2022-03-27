@@ -2,14 +2,12 @@ local events = ['pull_request', 'cron'];
 
 local platforms = {
   develop: ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
-  'develop-7': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
   'develop-6': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
   'develop-5': ['opensuse/leap:15', 'centos:7', 'centos:8', 'debian:10', 'ubuntu:18.04', 'ubuntu:20.04'],
 };
 
 local platforms_arm = {
   develop: ['centos:8'],
-  'develop-7': ['centos:8'],
   'develop-6': ['centos:8'],
 };
 
@@ -21,7 +19,6 @@ local platforms_mtr = ['centos:7', 'centos:8', 'ubuntu:20.04'];
 
 local server_ref_map = {
   develop: '10.8',
-  'develop-7': '10.7',
   'develop-6': '10.6-enterprise',
   'develop-5': '10.5',
   '**': '10.8',
@@ -32,17 +29,16 @@ local builddir = 'verylongdirnameforverystrangecpackbehavior';
 local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_XPAND=NO -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO ' +
                    '-DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
                    '-DWITH_EMBEDDED_SERVER=OFF -DWITH_WSREP=OFF ' +
+                   '-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache ' +
                    '-DBUILD_CONFIG=mysql_release -DWITH_UNITTESTS=YES';
-
 
 local gcc_update_alternatives = 'update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10 --slave /usr/bin/gcov gcov /usr/bin/gcov-10 ';
 local clang12_update_alternatives = 'update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 100 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-12 ';
 
 
-local yum_vault_mirror = "sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-Linux-*; sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.epel.cloud|g' /etc/yum.repos.d/CentOS-Linux-*; dnf update -y; ";
 local rpm_build_deps = 'install -y lz4 systemd-devel git make libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect createrepo ';
 local centos7_build_deps = 'yum install -y epel-release centos-release-scl && yum install -y pcre2-devel devtoolset-10 devtoolset-10-gcc cmake3 lz4-devel && ln -s /usr/bin/cmake3 /usr/bin/cmake && . /opt/rh/devtoolset-10/enable ';
-local centos8_build_deps = yum_vault_mirror + ' yum install -y gcc-toolset-10 libarchive dnf-plugins-core cmake lz4-devel && . /opt/rh/gcc-toolset-10/enable && yum config-manager --set-enabled powertools ';
+local centos8_build_deps = 'yum install -y gcc-toolset-10 libarchive dnf-plugins-core cmake lz4-devel && . /opt/rh/gcc-toolset-10/enable && yum config-manager --set-enabled powertools ';
 local ubuntu18_04_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-12 main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-12 &&' + clang12_update_alternatives;
 local debian10_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/buster/ llvm-toolchain-buster-12 main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-12 &&' + clang12_update_alternatives;
 local opensuse_build_deps = 'zypper install -y clang12 liblz4-devel cmake libboost_system-devel pcre2-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel gcc-fortran gcc10 gcc10-c++ && ' + clang12_update_alternatives;
@@ -50,7 +46,7 @@ local deb_build_deps = 'apt update --yes && apt install --yes --no-install-recom
 local ubuntu20_04_deps = 'apt update --yes && apt install -y g++-10 git && ' + gcc_update_alternatives;
 
 local platformMap(platform, arch) =
-  local clang_force = if (arch == 'arm64') then " && export CXX=/usr/bin/clang++ && export CC=/usr/bin/clang " else '';
+  local clang_force = if (arch == 'arm64') then ' && export CXX=/usr/bin/clang++ && export CC=/usr/bin/clang ' else '';
   local platform_map = {
     'opensuse/leap:15': opensuse_build_deps + ' && zypper ' + rpm_build_deps + clang_force + ' && cmake ' + cmakeflags + ' -DRPM=sles15 && make -j$(nproc) package',
     'centos:7': centos7_build_deps + ' && yum ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=centos7 && make -j$(nproc) package',
@@ -60,7 +56,6 @@ local platformMap(platform, arch) =
     'ubuntu:20.04': ubuntu20_04_deps + ' && ' + deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=focal' debian/autobake-deb.sh",
   };
   platform_map[platform];
-
 
 local testRun(platform) =
   local platform_map = {
@@ -73,15 +68,14 @@ local testRun(platform) =
   };
   platform_map[platform];
 
-
 local testPreparation(platform) =
   local platform_map = {
-    'opensuse/leap:15': 'zypper install -y git boost-devel libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel cppunit-devel snappy-devel cmake',
-    'centos:7': 'yum -y install epel-release && yum install -y git cppunit-devel cmake3 boost-devel snappy-devel',
-    'centos:8': yum_vault_mirror + ' yum install -y dnf-plugins-core libarchive && yum config-manager --set-enabled powertools && yum install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel',
-    'debian:10': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
-    'ubuntu:18.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev  libsnappy-dev cmake g++',
-    'ubuntu:20.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
+    'opensuse/leap:15': 'zypper install -y gtest boost-devel libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel cppunit-devel snappy-devel cmake',
+    'centos:7': 'yum -y install epel-release && yum install -y gtest-devel cppunit-devel cmake3 boost-devel snappy-devel',
+    'centos:8': 'yum install -y dnf-plugins-core libarchive && yum config-manager --set-enabled powertools && yum install -y lz4 gtest-devel cppunit-devel cmake3 boost-devel snappy-devel',
+    'debian:10': 'apt update && apt install --yes libboost-all-dev libgtest-dev libcppunit-dev libsnappy-dev googletest cmake',
+    'ubuntu:18.04': 'apt update && apt install --yes libboost-all-dev libgtest-dev libcppunit-dev googletest libsnappy-dev cmake g++ && cd /usr/src/googletest; cmake . && cmake --build . --target install; cd -',
+    'ubuntu:20.04': 'apt update && apt install --yes libboost-all-dev libgtest-dev libcppunit-dev googletest libsnappy-dev cmake',
   };
   platform_map[platform];
 
@@ -92,11 +86,15 @@ local Pipeline(branch, platform, event, arch='amd64') = {
   local mtr_path = if (pkg_format == 'rpm') then '/usr/share/mysql-test' else '/usr/share/mysql/mysql-test',
   local socket_path = if (pkg_format == 'rpm') then '/var/lib/mysql/mysql.sock' else '/run/mysqld/mysqld.sock',
   local config_path_prefix = if (pkg_format == 'rpm') then '/etc/my.cnf.d/' else '/etc/mysql/mariadb.conf.d/50-',
-  local img = if (std.split(platform, ':')[0] == 'centos') then platform else 'romcheck/' + std.strReplace(platform, '/', '-'),
+  local img = if (platform == 'centos:7') then platform else 'romcheck/' + std.strReplace(platform, '/', '-'),
   local regression_ref = if (std.split(branch, '-')[0] == 'develop') then branch else 'develop-6',
   local branchp = if (branch == '**') then '' else branch,
-
+  local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
   local server_remote = if (std.split(branch, '-')[0] == 'columnstore' || branch == 'develop-6') then 'https://github.com/mariadb-corporation/MariaDBEnterprise' else 'https://github.com/MariaDB/server',
+  local sccache_arch = if (arch == 'amd64') then 'x86_64' else 'aarch64',
+  local get_sccache = 'curl -L -o sccache.tar.gz https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-' + sccache_arch + '-unknown-linux-musl.tar.gz ' +
+                      '&& tar xzf sccache.tar.gz ' +
+                      '&& install sccache*/sccache /usr/local/bin/',
 
   local pipeline = self,
 
@@ -114,8 +112,8 @@ local Pipeline(branch, platform, event, arch='amd64') = {
       secret_key: {
         from_secret: 'aws_secret_access_key',
       },
-      source: 'result',
-      target: branchp + '/' + eventp + '/' + arch + '/' + std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
+      source: result,
+      target: branchp + '/' + eventp + '/' + arch + '/' + result,
       delete: 'true',
     },
   },
@@ -135,13 +133,12 @@ local Pipeline(branch, platform, event, arch='amd64') = {
     volumes: [pipeline._volumes.docker],
     commands: [
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name smoke$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
-      'docker cp result smoke$${DRONE_BUILD_NUMBER}:/',
-      if (platform == 'centos:8') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "' + yum_vault_mirror + '"' else '',
-      if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release which rsyslog hostname && yum install -y /result/*.' + pkg_format + '"' else '',
+      'docker cp ' + result + ' smoke$${DRONE_BUILD_NUMBER}:/',
+      if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release which rsyslog hostname && yum install -y /' + result + '/*.' + pkg_format + '"' else '',
       if (platform == 'centos:8') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "sed -i s/enabled=0/enabled=1/ /etc/yum.repos.d/*PowerTools.repo && yum install -y gtest"' else '',
       if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
-      if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y rsyslog hostname && apt install -y -f /result/*.' + pkg_format + '"' else '',
-      if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "zypper install -y which hostname rsyslog && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
+      if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y rsyslog hostname && apt install -y -f /' + result + '/*.' + pkg_format + '"' else '',
+      if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "zypper install -y which hostname rsyslog && zypper install -y --allow-unsigned-rpm /' + result + '/*.' + pkg_format + '"' else '',
       // start mariadb and mariadb-columnstore services and run simple query
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl start mariadb',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl start mariadb-columnstore',
@@ -160,12 +157,11 @@ local Pipeline(branch, platform, event, arch='amd64') = {
     volumes: [pipeline._volumes.docker],
     commands: [
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env MYSQL_TEST_DIR=' + mtr_path + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
-      'docker cp result mtr$${DRONE_BUILD_NUMBER}:/',
-      if (platform == 'centos:8') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "' + yum_vault_mirror + '"' else '',
-      if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "zypper install -y which hostname rsyslog patch perl-Data-Dumper-Concise perl-Memoize-ExpireLRU && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
-      if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release diffutils which rsyslog hostname patch perl-Data-Dumper perl-Getopt-Long perl-Memoize perl-Time-HiRes cracklib-dicts && yum install -y /result/*.' + pkg_format + '"' else '',
+      'docker cp ' + result + ' mtr$${DRONE_BUILD_NUMBER}:/',
+      if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "zypper install -y which hostname rsyslog patch perl-Data-Dumper-Concise perl-Memoize-ExpireLRU && zypper install -y --allow-unsigned-rpm /' + result + '/*.' + pkg_format + '"' else '',
+      if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release diffutils which rsyslog hostname patch perl-Data-Dumper perl-Getopt-Long perl-Memoize perl-Time-HiRes cracklib-dicts && yum install -y /' + result + '/*.' + pkg_format + '"' else '',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
-      if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y rsyslog hostname patch && apt install -y -f /result/*.' + pkg_format + '"' else '',
+      if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y rsyslog hostname patch && apt install -y -f /' + result + '/*.' + pkg_format + '"' else '',
       'docker cp mysql-test/columnstore mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/suite/',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} chown -R mysql:mysql ' + mtr_path,
       // disable systemd 'ProtectSystem' (we need to write to /usr/share/)
@@ -191,7 +187,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} cat /var/log/mariadb/columnstore/debug.log || echo "missing columnstore debug.log"',
       'echo "---------- end columnstore debug log ----------"',
       'echo "---------- end columnstore debug log ----------"',
-      'docker cp mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/var/log /drone/src/result/mtr-logs || echo "missing ' + mtr_path + '/var/log"',
+      'docker cp mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/var/log /drone/src/' + result + '/mtr-logs || echo "missing ' + mtr_path + '/var/log"',
       'docker stop mtr$${DRONE_BUILD_NUMBER} && docker rm mtr$${DRONE_BUILD_NUMBER} || echo "cleanup mtr failure"',
     ],
     when: {
@@ -204,6 +200,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
     [if event == 'cron' then 'failure']: 'ignore',
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     environment: {
+      // run regression test000 on pull request and manual build events. nightly builds run all regression test suites
       REGRESSION_TESTS: if (event == 'cron') then '' else '${REGRESSION_TESTS:-test000.sh}',
       REGRESSION_REF: '${REGRESSION_REF:-' + regression_ref + '}',
       REGRESSION_TIMEOUT: {
@@ -219,18 +216,19 @@ local Pipeline(branch, platform, event, arch='amd64') = {
       'cd ..',
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name regression$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       // copy packages, regresssion test suite and storage manager unit test binary to the instance
-      'docker cp result regression$${DRONE_BUILD_NUMBER}:/',
+      'docker cp ' + result + ' regression$${DRONE_BUILD_NUMBER}:/',
       'docker cp mariadb-columnstore-regression-test regression$${DRONE_BUILD_NUMBER}:/',
       'docker cp /mdb/' + builddir + '/storage/columnstore/columnstore/storage-manager regression$${DRONE_BUILD_NUMBER}:/',
-      // check storage-manager unit test binary file
+      // list storage-manager dir
       'docker exec -t regression$${DRONE_BUILD_NUMBER} ls -l /storage-manager',
-      if (platform == 'centos:8') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "' + yum_vault_mirror + '"' else '',
-      if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release diffutils tar lz4 wget which rsyslog hostname && yum install -y /result/*.' + pkg_format + '"' else '',
+      if (std.split(platform, ':')[0] == 'centos') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release diffutils tar lz4 wget which rsyslog hostname && yum install -y /' + result + '/*.' + pkg_format + '"' else '',
       if (pkg_format == 'deb') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
-      if (pkg_format == 'deb') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y tar liblz4-tool wget rsyslog hostname && apt install -y -f /result/*.' + pkg_format + '"' else '',
-      if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "zypper install -y gzip tar lz4 wget which hostname rsyslog && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
+      if (pkg_format == 'deb') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y tar liblz4-tool wget rsyslog hostname && apt install -y -f /' + result + '/*.' + pkg_format + '"' else '',
+      if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "zypper install -y gzip tar lz4 wget which hostname rsyslog && zypper install -y --allow-unsigned-rpm /' + result + '/*.' + pkg_format + '"' else '',
       // copy test data for regression test suite
       'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C mariadb-columnstore-regression-test/"',
+      // drop charset and collation server settings
+      'docker exec -t regression$${DRONE_BUILD_NUMBER} sed -i "/^character-set-server/d;/^collation-server/d" ' + config_path_prefix + 'server.cnf',
       // set mariadb lower_case_table_names=1 config option
       'docker exec -t regression$${DRONE_BUILD_NUMBER} sed -i "/^.mariadb.$/a lower_case_table_names=1" ' + config_path_prefix + 'server.cnf',
       // set default client character set to utf-8
@@ -240,8 +238,8 @@ local Pipeline(branch, platform, event, arch='amd64') = {
       'docker exec -t regression$${DRONE_BUILD_NUMBER} systemctl start mariadb-columnstore',
       // delay regression for manual debugging on live instance
       'sleep $${REGRESSION_DELAY_SECONDS:-1s}',
-      // run regression test000 on pull request and manual (may be overwritten by env variable parameter) build events. on other events run all tests
-      'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} timeout -k 1m -s SIGKILL --preserve-status $${REGRESSION_TIMEOUT:-10h} ./go.sh --sm_unit_test_dir=/storage-manager --tests=$${REGRESSION_TESTS}',
+      'docker exec -t regression$${DRONE_BUILD_NUMBER} mariadb -e "create database if not exists test;"',
+      'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} timeout -k 1m -s SIGKILL --preserve-status $${REGRESSION_TIMEOUT:-4h} ./go.sh --sm_unit_test_dir=/storage-manager --tests=$${REGRESSION_TESTS}',
     ],
   },
   smokelog:: {
@@ -271,9 +269,9 @@ local Pipeline(branch, platform, event, arch='amd64') = {
       'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} cat go.log || echo "missing go.log"',
       'echo "---------- end columnstore regression short report ----------"',
       'echo',
-      'docker cp regression$${DRONE_BUILD_NUMBER}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs.tgz /drone/src/result/ || echo "missing testErrorLogs.tgz"',
+      'docker cp regression$${DRONE_BUILD_NUMBER}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs.tgz /drone/src/' + result + '/ || echo "missing testErrorLogs.tgz"',
       'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} bash -c "tar czf testErrorLogs2.tgz *.log /var/log/mariadb/columnstore" || echo "failed to grab regression results"',
-      'docker cp regression$${DRONE_BUILD_NUMBER}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs2.tgz /drone/src/result/ || echo "missing testErrorLogs.tgz"',
+      'docker cp regression$${DRONE_BUILD_NUMBER}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs2.tgz /drone/src/' + result + '/ || echo "missing testErrorLogs.tgz"',
       'docker stop regression$${DRONE_BUILD_NUMBER} && docker rm regression$${DRONE_BUILD_NUMBER} || echo "cleanup regression failure"',
     ],
     when: {
@@ -289,7 +287,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
       'cd mariadb-community-columnstore-docker',
       'apk add --no-cache patch',
       'patch Dockerfile ../Dockerfile.patch',
-      'cp ../result/MariaDB-common-10* ../result/MariaDB-client-10* ../result/MariaDB-server-10* ../result/MariaDB-shared-10* ../result/MariaDB-columnstore-engine-10* ./',
+      'cp ../' + result + '/MariaDB-common-10* ../' + result + '/MariaDB-client-10* ../' + result + '/MariaDB-server-10* ../' + result + '/MariaDB-shared-10* ../' + result + '/MariaDB-columnstore-engine-10* ./',
     ],
   },
   ecr:: {
@@ -352,7 +350,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
                'echo $$SERVER_REMOTE',
                'mkdir -p /mdb/' + builddir + ' && cd /mdb/' + builddir,
                'git config --global url."https://github.com/".insteadOf git@github.com:',
-               'git -c submodule."storage/rocksdb/rocksdb".update=none -c submodule."wsrep-lib".update=none -c submodule."storage/columnstore/columnstore".update=none clone --recurse-submodules --depth 200 --branch $$SERVER_REF $$SERVER_REMOTE .',
+               'git -c submodule."storage/rocksdb/rocksdb".update=none -c submodule."wsrep-lib".update=none -c submodule."storage/columnstore/columnstore".update=none clone --recurse-submodules --depth 10 --branch $$SERVER_REF $$SERVER_REMOTE .',
                'git reset --hard $$SERVER_SHA',
                'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
                'git config cmake.update-submodules no',
@@ -367,6 +365,17 @@ local Pipeline(branch, platform, event, arch='amd64') = {
              environment: {
                DEBIAN_FRONTEND: 'noninteractive',
                BUILDPACKAGE_FLAGS: '-b',  // Save time and produce only binary packages, not source
+               AWS_ACCESS_KEY_ID: {
+                 from_secret: 'aws_access_key_id',
+               },
+               AWS_SECRET_ACCESS_KEY: {
+                 from_secret: 'aws_secret_access_key',
+               },
+               SCCACHE_BUCKET: 'cs-sccache',
+               SCCACHE_S3_USE_SSL: 'true',
+               SCCACHE_S3_KEY_PREFIX: result + branch + arch,
+               SCCACHE_ERROR_LOG: '/tmp/sccache_log.txt',
+               SCCACHE_LOG: 'debug',
              },
              commands: [
                'cd /mdb/' + builddir,
@@ -399,9 +408,16 @@ local Pipeline(branch, platform, event, arch='amd64') = {
                // "sed -i 's/BETA/GAMMA/' storage/columnstore/CMakeLists.txt",
                // Workaround till upstream removes 4535 workaround (workaround for workaround!)
                "sed -i '/MCOL-4535/,/^$/d' debian/autobake-deb.sh",
+               if (pkg_format == 'deb') then 'apt update -y && apt install -y curl',
+               if (std.split(platform, '/')[0] == 'opensuse') then 'zypper install -y curl tar gzip',
+               if (std.split(platform, ':')[0] == 'centos') then 'yum install -y curl',
+               get_sccache,
                testPreparation(platform),
                platformMap(platform, arch),
-               if (pkg_format == 'rpm') then 'createrepo .' else 'dpkg-scanpackages ../ | gzip > ../Packages.gz',
+               'sccache --show-stats',
+               'mkdir ' + result,
+               if (pkg_format == 'rpm') then 'mv *.' + pkg_format + ' ' + result + '/' else 'mv ../*.' + pkg_format + ' ' + result + '/',
+               if (pkg_format == 'rpm') then 'createrepo ' + result else 'dpkg-scanpackages ' + result + ' | gzip > ' + result + '/Packages.gz',
              ],
            },
            {
@@ -418,19 +434,23 @@ local Pipeline(branch, platform, event, arch='amd64') = {
              ],
            },
            {
-             name: 'list pkgs',
+             name: 'organize artifacts',
              image: 'docker:git',
              volumes: [pipeline._volumes.mdb],
              commands: [
                'cd /mdb/' + builddir,
-               'mkdir -p /drone/src/result',
+
                'echo "engine: $DRONE_COMMIT" > buildinfo.txt',
                'echo "server: $$(git rev-parse HEAD)" >> buildinfo.txt',
                'echo "buildNo: $DRONE_BUILD_NUMBER" >> buildinfo.txt',
-               'cp -r ' + (if (pkg_format == 'deb') then '../Packages.gz ../' else 'repodata ') + '*.' + pkg_format + ' buildinfo.txt /drone/src/result/',
-               'ls -l /drone/src/result',
-               'echo "check columnstore package:"',
-               'ls -l /drone/src/result | grep columnstore',
+
+               'mv buildinfo.txt ' + result + '/',
+
+               'mv ' + result + ' /drone/src/',
+
+               'ls -l /drone/src/' + result,
+               'echo "check columnstore package presence:"',
+               'ls -l /drone/src/' + result + ' | grep -i columnstore',
              ],
            },
          ] +
