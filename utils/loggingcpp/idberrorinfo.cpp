@@ -29,7 +29,6 @@
 #include <fstream>
 using namespace std;
 
-#include <boost/format.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/thread.hpp>
 using namespace boost;
@@ -42,6 +41,8 @@ using namespace config;
 #include "idberrorinfo.h"
 
 #include "installdir.h"
+
+#include "format.h"
 
 namespace logging
 {
@@ -156,43 +157,7 @@ string IDBErrorInfo::logError(const logging::LOG_TYPE logLevel, const logging::L
 
 void IDBErrorInfo::format(string& errMsg, const Message::Args& args)
 {
-  Message::Args::AnyVec::const_iterator iter = args.args().begin();
-  Message::Args::AnyVec::const_iterator end = args.args().end();
-
-  boost::format fmt(errMsg);
-  fmt.exceptions(boost::io::no_error_bits);
-
-  while (iter != end)
-  {
-    if (iter->type() == typeid(long))
-    {
-      long l = any_cast<long>(*iter);
-      fmt % l;
-    }
-    else if (iter->type() == typeid(uint64_t))
-    {
-      uint64_t u64 = any_cast<uint64_t>(*iter);
-      fmt % u64;
-    }
-    else if (iter->type() == typeid(double))
-    {
-      double d = any_cast<double>(*iter);
-      fmt % d;
-    }
-    else if (iter->type() == typeid(string))
-    {
-      string s = any_cast<string>(*iter);
-      fmt % s;
-    }
-    else
-    {
-      throw logic_error("IDBErrorInfo::format: unexpected type in argslist");
-    }
-
-    ++iter;
-  }
-
-  errMsg = fmt.str();
+  formatMany(errMsg, args.args());
 }
 
 /* static */

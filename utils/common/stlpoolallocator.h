@@ -72,7 +72,7 @@ class STLPoolAllocator
   void usePoolAllocator(boost::shared_ptr<PoolAllocator> b);
   boost::shared_ptr<utils::PoolAllocator> getPoolAllocator();
 
-  pointer allocate(size_type, const void* hint = 0);
+  pointer allocate(size_type, typename STLPoolAllocator<T>::const_pointer hint = 0);
   void deallocate(pointer p, size_type n);
   size_type max_size() const throw();
   inline uint64_t getMemUsage() const
@@ -131,7 +131,7 @@ boost::shared_ptr<utils::PoolAllocator> STLPoolAllocator<T>::getPoolAllocator()
 
 template <class T>
 typename STLPoolAllocator<T>::pointer STLPoolAllocator<T>::allocate(
-    typename STLPoolAllocator<T>::size_type s, typename std::allocator<void>::const_pointer hint)
+    typename STLPoolAllocator<T>::size_type s, typename STLPoolAllocator<T>::const_pointer hint)
 {
   return (pointer)pa->allocate(s * sizeof(T));
 }

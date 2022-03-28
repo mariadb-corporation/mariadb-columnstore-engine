@@ -32,7 +32,6 @@
 
 #include <inttypes.h>
 #include <boost/algorithm/string/case_conv.hpp>
-#include <boost/regex.hpp>
 #include <boost/tokenizer.hpp>
 
 #include "dataconvert.h"

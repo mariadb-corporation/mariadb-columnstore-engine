@@ -891,7 +891,7 @@ void WEDataLoader::onReceiveData(ByteStream& Ibs)
       if (aQsz < MAX_QSIZE)
         sendDataRequest();
 
-      if (aQsz > 1.5 * MAX_QSIZE)  // > 2*250
+      if (aQsz > 1.5 * static_cast<int>(MAX_QSIZE))  // > 2*250
       {
         cout << "WARNING : Data Queuing up : QSize = " << aQsz << endl;
 

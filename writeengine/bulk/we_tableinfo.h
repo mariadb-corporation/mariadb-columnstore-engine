@@ -78,7 +78,7 @@ class TableInfo : public WeUIDGID
   int fCurrentReadBuffer;  // Id of current buffer being popu-
   //   lated by the read thread
   RID fTotalReadRows;               // Total number of rows read
-  volatile unsigned fTotalErrRows;  // Total error rows among all input
+  unsigned fTotalErrRows;  // Total error rows among all input
   //   for this table.  Is volatile to
   //   insure parser & reader threads
   //   see the latest value.

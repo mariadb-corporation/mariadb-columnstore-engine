@@ -63,7 +63,7 @@ typedef datatypes::Decimal IDB_Decimal;
 #ifdef POSIX_REGEX
 typedef regex_t IDB_Regex;
 #else
-typedef boost::regex IDB_Regex;
+typedef std::regex IDB_Regex;
 #endif
 
 typedef IDB_Regex CNX_Regex;

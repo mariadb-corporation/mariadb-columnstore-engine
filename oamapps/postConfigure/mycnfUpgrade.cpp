@@ -26,28 +26,30 @@
  * @file
  */
 
-#include <unistd.h>
-#include <iterator>
-#include <numeric>
-#include <deque>
-#include <iostream>
-#include <ostream>
-#include <fstream>
-#include <cstdlib>
-#include <string>
-#include <limits.h>
-#include <sstream>
-#include <exception>
-#include <stdexcept>
-#include <vector>
-#include <stdio.h>
-#include <ctype.h>
-#include <netdb.h>
-#include <sys/sysinfo.h>
 #include <climits>
+#include <cstdlib>
 #include <cstring>
+#include <ctype.h>
+#include <deque>
+#include <exception>
+#include <fstream>
 #include <glob.h>
-#include <boost/regex.hpp>
+#include <iostream>
+#include <iterator>
+#include <limits.h>
+#include <netdb.h>
+#include <numeric>
+#include <ostream>
+#include <regex>
+#include <sstream>
+#include <stdexcept>
+#include <stdio.h>
+#include <string>
+#include <unistd.h>
+#include <vector>
+
+#include <sys/sysinfo.h>
+
 #include "liboamcpp.h"
 #include "installdir.h"
 #include "mcsconfig.h"
@@ -178,7 +180,7 @@ int main(int argc, char* argv[])
   {
     includeArg = line;
 
-    boost::regex icludeArgRegEx("^#*\\s*" + includeArg + "\\s*=");
+    std::regex icludeArgRegEx("^#*\\s*" + includeArg + "\\s*=");
     // see if in columnstore.cnf.rpmsave
     ifstream mycnfsavefile(mycnfsaveFile.c_str());
     char line[200];
@@ -188,7 +190,7 @@ int main(int argc, char* argv[])
     {
       oldbuf = line;
 
-      if (boost::regex_search(oldbuf.begin(), oldbuf.end(), icludeArgRegEx))
+      if (std::regex_search(oldbuf.begin(), oldbuf.end(), icludeArgRegEx))
       {
         // found in columnstore.cnf.rpmsave, check if this is commented out
         if (line[0] != '#')
@@ -205,7 +207,7 @@ int main(int argc, char* argv[])
           {
             newbuf = line1;
 
-            if (boost::regex_search(newbuf.begin(), newbuf.end(), icludeArgRegEx))
+            if (std::regex_search(newbuf.begin(), newbuf.end(), icludeArgRegEx))
             {
               newbuf = oldbuf;
               cout << "Updated argument: " << includeArg << endl;
@@ -240,9 +242,9 @@ int main(int argc, char* argv[])
             while (mycnffile.getline(line1, 200))
             {
               newbuf = line1;
-              boost::regex mysqldSectionRegEx("\\[mysqld\\]");
+              std::regex mysqldSectionRegEx("\\[mysqld\\]");
 
-              if (boost::regex_search(newbuf.begin(), newbuf.end(), mysqldSectionRegEx))
+              if (std::regex_search(newbuf.begin(), newbuf.end(), mysqldSectionRegEx))
               {
                 lines.push_back(newbuf);
                 newbuf = oldbuf;

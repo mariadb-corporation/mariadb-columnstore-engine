@@ -29,9 +29,6 @@
 #include <sys/time.h>
 using namespace std;
 
-#include <boost/regex.hpp>
-using namespace boost;
-
 #include "resourcemanager.h"
 
 #include "jl_logger.h"

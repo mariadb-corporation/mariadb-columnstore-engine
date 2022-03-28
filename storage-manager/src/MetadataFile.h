@@ -28,6 +28,8 @@
 #include <unordered_map>
 #include <boost/filesystem/path.hpp>
 
+#include <utils/json/json.hpp>
+
 namespace storagemanager
 {
 struct metadataObject
@@ -110,7 +112,7 @@ class MetadataFile
 
   static void printKPIs();
 
-  typedef boost::shared_ptr<boost::property_tree::ptree> Jsontree_t;
+  typedef boost::shared_ptr<nlohmann::json> Jsontree_t;
 
  private:
   MetadataConfig* mpConfig;

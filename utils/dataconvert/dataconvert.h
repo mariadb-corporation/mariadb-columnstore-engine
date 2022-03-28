@@ -28,13 +28,8 @@
 #include <string>
 #include <boost/any.hpp>
 #include <vector>
-#ifdef _MSC_VER
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <stdio.h>
-#else
+
 #include <netinet/in.h>
-#endif
 
 #ifdef __linux__
 #define POSIX_REGEX
@@ -43,7 +38,7 @@
 #ifdef POSIX_REGEX
 #include <regex.h>
 #else
-#include <boost/regex.hpp>
+#include <regex>
 #endif
 
 #include "mcs_datatype.h"

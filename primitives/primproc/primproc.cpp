@@ -44,8 +44,6 @@
 using namespace std;
 
 #include <boost/thread.hpp>
-#include <boost/regex.hpp>
-#include <boost/tokenizer.hpp>
 using namespace boost;
 
 #include "configcpp.h"

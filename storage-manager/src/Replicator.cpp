@@ -27,11 +27,11 @@
 #include <errno.h>
 #include <sys/sendfile.h>
 #include <boost/filesystem.hpp>
-#define BOOST_SPIRIT_THREADSAFE
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/shared_array.hpp>
 #include <boost/format.hpp>
 #include <iostream>
+
+#include <utils/json/json.hpp>
 
 using namespace std;
 
@@ -279,12 +279,14 @@ int Replicator::addJournalEntry(const boost::filesystem::path& filename, const u
     stringstream ss;
     ss << headertxt.get();
     headerRollback = headertxt.get();
-    boost::property_tree::ptree header;
+    nlohmann::json header;
+
     try
     {
-      boost::property_tree::json_parser::read_json(ss, header);
+      header = nlohmann::json::parse(ss);
     }
-    catch (const boost::property_tree::json_parser::json_parser_error& e)
+
+    catch (const nlohmann::json::exception& e)
     {
       mpLogger->log(LOG_CRIT, "%s", e.what());
       errno = EIO;
@@ -296,8 +298,8 @@ int Replicator::addJournalEntry(const boost::filesystem::path& filename, const u
       errno = EIO;
       return -1;
     }
-    assert(header.get<int>("version") == 1);
-    uint64_t currentMaxOffset = header.get<uint64_t>("max_offset");
+    assert(header["version"] == 1);
+    uint64_t currentMaxOffset = header["max_offset"];
     if (thisEntryMaxOffset > currentMaxOffset)
     {
       bHeaderChanged = true;
