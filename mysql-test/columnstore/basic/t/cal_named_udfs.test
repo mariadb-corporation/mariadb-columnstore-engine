@@ -13,7 +13,7 @@ select calflushcache();
 select calsettrace(0);
 select calsetparms("pmmaxmemorysmallside","2048000000");
 select calgettrace();
-select calgetversion();
+select calgetversion()=mcsgetversion();
 
 
 select calviewtablelock("t1");

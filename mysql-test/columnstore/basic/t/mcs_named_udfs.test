@@ -13,8 +13,7 @@ select mcsflushcache();
 select mcssettrace(0);
 select mcssetparms("pmmaxmemorysmallside","2048000000");
 select mcsgettrace();
-select mcsgetversion();
-
+select mcsgetversion()=calgetversion();
 
 select mcsviewtablelock("t1");
 select mcscleartablelock(0);

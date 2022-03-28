@@ -66,6 +66,49 @@ extern "C"
     return str;
   }
 
+  my_bool setparms_init(UDF_INIT* initid, UDF_ARGS* args, char* message, const char* funcname)
+  {
+    if (args->arg_count != 2 || args->arg_type[0] != STRING_RESULT || args->arg_type[1] != STRING_RESULT)
+    {
+      sprintf(message, "%s() requires two string arguments", funcname);
+      return 1;
+    }
+
+    initid->max_length = MAXSTRINGLENGTH;
+
+    char valuestr[MAXSTRINGLENGTH];
+    size_t vlen = args->lengths[1];
+
+    memcpy(valuestr, args->args[1], vlen--);
+
+    for (size_t i = 0; i < vlen; ++i)
+      if (!isdigit(valuestr[i]))
+      {
+        sprintf(message, "%s() second argument must be numeric or end in G, M or K", funcname);
+        return 1;
+      }
+
+    if (!isdigit(valuestr[vlen]))
+    {
+      switch (valuestr[vlen])
+      {
+        case 'G':
+        case 'g':
+        case 'M':
+        case 'm':
+        case 'K':
+        case 'k':
+        case '\0': break;
+
+        default:
+          sprintf(message, "%s() second argument must be numeric or end in G, M or K", funcname);
+          return 1;
+      }
+    }
+
+    return 0;
+  }
+
 #ifdef _MSC_VER
   __declspec(dllexport)
 #endif
@@ -135,50 +178,13 @@ extern "C"
     return result;
   }
 
+
 #ifdef _MSC_VER
   __declspec(dllexport)
 #endif
       my_bool mcssetparms_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
-    if (args->arg_count != 2 || args->arg_type[0] != STRING_RESULT || args->arg_type[1] != STRING_RESULT)
-    {
-      strcpy(message, "MCSSETPARMS() requires two string arguments");
-      return 1;
-    }
-
-    initid->max_length = MAXSTRINGLENGTH;
-
-    char valuestr[MAXSTRINGLENGTH];
-    size_t vlen = args->lengths[1];
-
-    memcpy(valuestr, args->args[1], vlen--);
-
-    for (size_t i = 0; i < vlen; ++i)
-      if (!isdigit(valuestr[i]))
-      {
-        strcpy(message, "MCSSETPARMS() second argument must be numeric or end in G, M or K");
-        return 1;
-      }
-
-    if (!isdigit(valuestr[vlen]))
-    {
-      switch (valuestr[vlen])
-      {
-        case 'G':
-        case 'g':
-        case 'M':
-        case 'm':
-        case 'K':
-        case 'k':
-        case '\0': break;
-
-        default:
-          strcpy(message, "MCSSETPARMS() second argument must be numeric or end in G, M or K");
-          return 1;
-      }
-    }
-
-    return 0;
+    return setparms_init(initid, args, message, "MCSSETPARMS");
   }
 
 #ifdef _MSC_VER
@@ -187,6 +193,7 @@ extern "C"
       void mcssetparms_deinit(UDF_INIT* initid)
   {
   }
+
 
 #ifdef _MSC_VER
   __declspec(dllexport)
@@ -202,45 +209,7 @@ extern "C"
 #endif
       my_bool calsetparms_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
-    if (args->arg_count != 2 || args->arg_type[0] != STRING_RESULT || args->arg_type[1] != STRING_RESULT)
-    {
-      strcpy(message, "CALSETPARMS() requires two string arguments");
-      return 1;
-    }
-
-    initid->max_length = MAXSTRINGLENGTH;
-
-    char valuestr[MAXSTRINGLENGTH];
-    size_t vlen = args->lengths[1];
-
-    memcpy(valuestr, args->args[1], vlen--);
-
-    for (size_t i = 0; i < vlen; ++i)
-      if (!isdigit(valuestr[i]))
-      {
-        strcpy(message, "CALSETPARMS() second argument must be numeric or end in G, M or K");
-        return 1;
-      }
-
-    if (!isdigit(valuestr[vlen]))
-    {
-      switch (valuestr[vlen])
-      {
-        case 'G':
-        case 'g':
-        case 'M':
-        case 'm':
-        case 'K':
-        case 'k':
-        case '\0': break;
-
-        default:
-          strcpy(message, "CALSETPARMS() second argument must be numeric or end in G, M or K");
-          return 1;
-      }
-    }
-
-    return 0;
+    return setparms_init(initid, args, message, "CALSETPARMS");
   }
 
 #ifdef _MSC_VER
@@ -248,6 +217,20 @@ extern "C"
 #endif
       void calsetparms_deinit(UDF_INIT* initid)
   {
+  }
+
+  my_bool getstats_init(UDF_INIT* initid, UDF_ARGS* args, char* message, const char* funcname)
+  {
+    if (args->arg_count != 0)
+    {
+      sprintf(message, "%s() takes no arguments", funcname);
+      return 1;
+    }
+
+    initid->maybe_null = 1;
+    initid->max_length = 255;
+
+    return 0;
   }
 
 #ifdef _MSC_VER
@@ -277,21 +260,13 @@ extern "C"
     return result;
   }
 
+
 #ifdef _MSC_VER
   __declspec(dllexport)
 #endif
       my_bool mcsgetstats_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
-    if (args->arg_count != 0)
-    {
-      strcpy(message, "MCSGETSTATS() takes no arguments");
-      return 1;
-    }
-
-    initid->maybe_null = 1;
-    initid->max_length = 255;
-
-    return 0;
+    return getstats_init(initid, args, message, "MCSGETSTATS");
   }
 
 #ifdef _MSC_VER
@@ -315,16 +290,7 @@ extern "C"
 #endif
       my_bool calgetstats_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
-    if (args->arg_count != 0)
-    {
-      strcpy(message, "CALGETSTATS() takes no arguments");
-      return 1;
-    }
-
-    initid->maybe_null = 1;
-    initid->max_length = 255;
-
-    return 0;
+    return getstats_init(initid, args, message, "CALGETSTATS");
   }
 
 #ifdef _MSC_VER
@@ -332,6 +298,17 @@ extern "C"
 #endif
       void calgetstats_deinit(UDF_INIT* initid)
   {
+  }
+
+  my_bool settrace_init(UDF_INIT* initid, UDF_ARGS* args, char* message, const char* funcname)
+  {
+    if (args->arg_count != 1 || args->arg_type[0] != INT_RESULT)
+    {
+      sprintf(message, "%s() requires one INTEGER argument", funcname);
+      return 1;
+    }
+
+    return 0;
   }
 
 #ifdef _MSC_VER
@@ -357,13 +334,7 @@ extern "C"
 #endif
       my_bool mcssettrace_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
-    if (args->arg_count != 1 || args->arg_type[0] != INT_RESULT)
-    {
-      strcpy(message, "MCSSETTRACE() requires one INTEGER argument");
-      return 1;
-    }
-
-    return 0;
+    return settrace_init(initid, args, message, "MCSSETTRACE");
   }
 
 #ifdef _MSC_VER
@@ -386,13 +357,7 @@ extern "C"
 #endif
       my_bool calsettrace_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
-    if (args->arg_count != 1 || args->arg_type[0] != INT_RESULT)
-    {
-      strcpy(message, "CALSETTRACE() requires one INTEGER argument");
-      return 1;
-    }
-
-    return 0;
+    return settrace_init(initid, args, message, "CALSETTRACE");
   }
 
 #ifdef _MSC_VER
@@ -538,29 +503,26 @@ extern "C"
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
-      my_bool mcsviewtablelock_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool viewtablelock_init(UDF_INIT* initid, UDF_ARGS* args, char* message, const char* funcname)
   {
     if (args->arg_count == 2 && (args->arg_type[0] != STRING_RESULT || args->arg_type[1] != STRING_RESULT))
     {
-      strcpy(message, "MCSVIEWTABLELOCK() requires two string arguments");
+      sprintf(message, "%s() requires two string arguments", funcname);
       return 1;
     }
     else if ((args->arg_count == 1) && (args->arg_type[0] != STRING_RESULT))
     {
-      strcpy(message, "MCSVIEWTABLELOCK() requires one string argument");
+      sprintf(message, "%s() requires one string argument", funcname);
       return 1;
     }
     else if (args->arg_count > 2)
     {
-      strcpy(message, "MCSVIEWTABLELOCK() takes one or two arguments only");
+      sprintf(message, "%s() takes one or two arguments only", funcname);
       return 1;
     }
     else if (args->arg_count == 0)
     {
-      strcpy(message, "MCSVIEWTABLELOCK() requires at least one argument");
+      sprintf(message, "%s() requires at least one argument", funcname);
       return 1;
     }
 
@@ -568,6 +530,14 @@ extern "C"
     initid->max_length = 255;
 
     return 0;
+  }
+
+#ifdef _MSC_VER
+  __declspec(dllexport)
+#endif
+      my_bool mcsviewtablelock_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    return viewtablelock_init(initid, args, message, "MCSVIEWTABLELOCK");
   }
 
 #ifdef _MSC_VER
@@ -637,31 +607,7 @@ extern "C"
 #endif
       my_bool calviewtablelock_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
-    if (args->arg_count == 2 && (args->arg_type[0] != STRING_RESULT || args->arg_type[1] != STRING_RESULT))
-    {
-      strcpy(message, "CALVIEWTABLELOCK() requires two string arguments");
-      return 1;
-    }
-    else if ((args->arg_count == 1) && (args->arg_type[0] != STRING_RESULT))
-    {
-      strcpy(message, "CALVIEWTABLELOCK() requires one string argument");
-      return 1;
-    }
-    else if (args->arg_count > 2)
-    {
-      strcpy(message, "CALVIEWTABLELOCK() takes one or two arguments only");
-      return 1;
-    }
-    else if (args->arg_count == 0)
-    {
-      strcpy(message, "CALVIEWTABLELOCK() requires at least one argument");
-      return 1;
-    }
-
-    initid->maybe_null = 1;
-    initid->max_length = 255;
-
-    return 0;
+    return viewtablelock_init(initid, args, message, "CALVIEWTABLELOCK");
   }
 
 #ifdef _MSC_VER
@@ -670,7 +616,7 @@ extern "C"
       const char* calviewtablelock(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                                    char* is_null, char* error)
   {
-   return mcsviewtablelock(initid, args, result, length, is_null, error);
+    return mcsviewtablelock(initid, args, result, length, is_null, error);
   }
 
 #ifdef _MSC_VER
@@ -680,14 +626,11 @@ extern "C"
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
-      my_bool mcscleartablelock_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool cleartablelock_init(UDF_INIT* initid, UDF_ARGS* args, char* message, const char* funcname)
   {
     if ((args->arg_count != 1) || (args->arg_type[0] != INT_RESULT))
     {
-      strcpy(message, "MCSCLEARTABLELOCK() requires one integer argument (the lockID)");
+      sprintf(message, "%s() requires one integer argument (the lockID)", funcname);
       return 1;
     }
 
@@ -695,6 +638,15 @@ extern "C"
     initid->max_length = 255;
 
     return 0;
+  }
+
+
+#ifdef _MSC_VER
+  __declspec(dllexport)
+#endif
+      my_bool mcscleartablelock_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    return cleartablelock_init(initid, args, message, "MCSCLEARTABLELOCK");
   }
 
 #ifdef _MSC_VER
@@ -736,16 +688,7 @@ extern "C"
 #endif
       my_bool calcleartablelock_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
-    if ((args->arg_count != 1) || (args->arg_type[0] != INT_RESULT))
-    {
-      strcpy(message, "CALCLEARTABLELOCK() requires one integer argument (the lockID)");
-      return 1;
-    }
-
-    initid->maybe_null = 1;
-    initid->max_length = 255;
-
-    return 0;
+    return cleartablelock_init(initid, args, message, "CALCLEARTABLELOCK");
   }
 
 #ifdef _MSC_VER
@@ -764,29 +707,26 @@ extern "C"
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
-      my_bool mcslastinsertid_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool lastinsertid_init(UDF_INIT* initid, UDF_ARGS* args, char* message, const char* funcname)
   {
     if (args->arg_count == 2 && (args->arg_type[0] != STRING_RESULT || args->arg_type[1] != STRING_RESULT))
     {
-      strcpy(message, "MCSLASTINSRTID() requires two string arguments");
+      sprintf(message, "%s() requires two string arguments", funcname);
       return 1;
     }
     else if ((args->arg_count == 1) && (args->arg_type[0] != STRING_RESULT))
     {
-      strcpy(message, "MCSLASTINSERTID() requires one string argument");
+      sprintf(message, "%s() requires one string argument", funcname);
       return 1;
     }
     else if (args->arg_count > 2)
     {
-      strcpy(message, "MCSLASTINSERTID() takes one or two arguments only");
+      sprintf(message, "%s() takes one or two arguments only", funcname);
       return 1;
     }
     else if (args->arg_count == 0)
     {
-      strcpy(message, "MCSLASTINSERTID() requires at least one argument");
+      sprintf(message, "%s() requires at least one argument", funcname);
       return 1;
     }
 
@@ -794,6 +734,15 @@ extern "C"
     initid->max_length = 255;
 
     return 0;
+  }
+
+
+#ifdef _MSC_VER
+  __declspec(dllexport)
+#endif
+      my_bool mcslastinsertid_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    return lastinsertid_init(initid, args, message, "MCSLASTINSERTID");
   }
 
 #ifdef _MSC_VER
@@ -873,31 +822,7 @@ extern "C"
 #endif
       my_bool callastinsertid_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
-    if (args->arg_count == 2 && (args->arg_type[0] != STRING_RESULT || args->arg_type[1] != STRING_RESULT))
-    {
-      strcpy(message, "CALLASTINSRTID() requires two string arguments");
-      return 1;
-    }
-    else if ((args->arg_count == 1) && (args->arg_type[0] != STRING_RESULT))
-    {
-      strcpy(message, "CALLASTINSERTID() requires one string argument");
-      return 1;
-    }
-    else if (args->arg_count > 2)
-    {
-      strcpy(message, "CALLASTINSERTID() takes one or two arguments only");
-      return 1;
-    }
-    else if (args->arg_count == 0)
-    {
-      strcpy(message, "CALLASTINSERTID() requires at least one argument");
-      return 1;
-    }
-
-    initid->maybe_null = 1;
-    initid->max_length = 255;
-
-    return 0;
+    return lastinsertid_init(initid, args, message, "CALLASTINSERTID");
   }
 
 #ifdef _MSC_VER
@@ -913,6 +838,17 @@ extern "C"
 #endif
       void callastinsertid_deinit(UDF_INIT* initid)
   {
+  }
+
+  my_bool flushcache_init(UDF_INIT* initid, UDF_ARGS* args, char* message, const char* funcname)
+  {
+    if (args->arg_count != 0)
+    {
+      sprintf(message, "%s() takes no arguments", funcname);
+      return 1;
+    }
+
+    return 0;
   }
 
 #ifdef _MSC_VER
@@ -935,13 +871,7 @@ extern "C"
 #endif
       my_bool mcsflushcache_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
-    if (args->arg_count != 0)
-    {
-      strcpy(message, "MCSFLUSHCACHE() takes no arguments");
-      return 1;
-    }
-
-    return 0;
+    return flushcache_init(initid, args, message, "MCSFLUSHCACHE");
   }
 
 #ifdef _MSC_VER
@@ -964,13 +894,7 @@ extern "C"
 #endif
       my_bool calflushcache_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
-    if (args->arg_count != 0)
-    {
-      strcpy(message, "CALFLUSHCACHE() takes no arguments");
-      return 1;
-    }
-
-    return 0;
+    return flushcache_init(initid, args, message, "CALFLUSHCACHE");
   }
 
   static const unsigned long TraceSize = 16 * 1024;
@@ -1022,16 +946,13 @@ extern "C"
     return msgp->c_str();
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
-      my_bool mcsgettrace_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+   my_bool gettrace_init(UDF_INIT* initid, UDF_ARGS* args, char* message, const char* funcname)
   {
 #if 0
 
         if (args->arg_count != 0)
         {
-            strcpy(message, "MCSGETTRACE() takes no arguments");
+            sprintf(message, "%s() takes no arguments", funcname);
             return 1;
         }
 
@@ -1040,6 +961,14 @@ extern "C"
     initid->max_length = TraceSize;
 
     return 0;
+  }
+
+#ifdef _MSC_VER
+  __declspec(dllexport)
+#endif
+      my_bool mcsgettrace_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    return gettrace_init(initid, args, message, "MCSGETTRACE");
   }
 
 #ifdef _MSC_VER
@@ -1063,19 +992,7 @@ extern "C"
 #endif
       my_bool calgettrace_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
-#if 0
-
-        if (args->arg_count != 0)
-        {
-            strcpy(message, "CALGETTRACE() takes no arguments");
-            return 1;
-        }
-
-#endif
-    initid->maybe_null = 1;
-    initid->max_length = TraceSize;
-
-    return 0;
+    return gettrace_init(initid, args, message, "CALGETTRACE");
   }
 
 #ifdef _MSC_VER
@@ -1083,6 +1000,17 @@ extern "C"
 #endif
       void calgettrace_deinit(UDF_INIT* initid)
   {
+  }
+
+  my_bool getversion_init(UDF_INIT* initid, UDF_ARGS* args, char* message, const char* funcname)
+  {
+    if (args->arg_count != 0)
+    {
+      sprintf(message, "%s() takes no arguments", funcname);
+      return 1;
+    }
+
+    return 0;
   }
 
 #ifdef _MSC_VER
@@ -1102,13 +1030,7 @@ extern "C"
 #endif
       my_bool mcsgetversion_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
-    if (args->arg_count != 0)
-    {
-      strcpy(message, "MCSGETVERSION() takes no arguments");
-      return 1;
-    }
-
-    return 0;
+    return getversion_init(initid, args, message, "MCSGETVERSION");
   }
 
 #ifdef _MSC_VER
@@ -1132,13 +1054,7 @@ extern "C"
 #endif
       my_bool calgetversion_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
-    if (args->arg_count != 0)
-    {
-      strcpy(message, "CALGETVERSION() takes no arguments");
-      return 1;
-    }
-
-    return 0;
+    return getversion_init(initid, args, message, "CALGETVERSION");
   }
 
 #ifdef _MSC_VER
@@ -1146,6 +1062,17 @@ extern "C"
 #endif
       void calgetversion_deinit(UDF_INIT* initid)
   {
+  }
+
+  my_bool getsqlcount_init(UDF_INIT* initid, UDF_ARGS* args, char* message, const char* funcname)
+  {
+    if (args->arg_count != 0)
+    {
+      sprintf(message, "%s() takes no arguments", funcname);
+      return 1;
+    }
+
+    return 0;
   }
 
 #ifdef _MSC_VER
@@ -1195,13 +1122,7 @@ extern "C"
 #endif
       my_bool mcsgetsqlcount_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
-    if (args->arg_count != 0)
-    {
-      strcpy(message, "MCSGETSQLCOUNT() takes no arguments");
-      return 1;
-    }
-
-    return 0;
+    return getstats_init(initid, args, message, "MCSGETSQLCOUNT");
   }
 
 #ifdef _MSC_VER
@@ -1225,13 +1146,7 @@ extern "C"
 #endif
       my_bool calgetsqlcount_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
-    if (args->arg_count != 0)
-    {
-      strcpy(message, "CALGETSQLCOUNT() takes no arguments");
-      return 1;
-    }
-
-    return 0;
+    return getstats_init(initid, args, message, "CALGETSQLCOUNT");
   }
 
 #ifdef _MSC_VER

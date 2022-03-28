@@ -14,9 +14,9 @@ Updated pmmaxmemorysmallside 2048000000
 select mcsgettrace();
 mcsgettrace()
 NULL
-select mcsgetversion();
-mcsgetversion()
-8.1.1
+select mcsgetversion()=calgetversion();
+mcsgetversion()=calgetversion()
+1
 select mcsviewtablelock("t1");
 mcsviewtablelock("t1")
  Table cal_test_db.t1 is not locked by any process.
