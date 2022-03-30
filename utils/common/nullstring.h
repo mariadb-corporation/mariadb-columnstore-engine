@@ -18,39 +18,57 @@ class NullString
   NullString(const char* str, size_t length) : mStrPtr(new std::string(str, length))
   {
   }
-  explicit NullString(const std::string& str) : mStrPtr(new std::string(str)
+  explicit NullString(const std::string& str) : mStrPtr(new std::string(str))
   {
   }
   const char* str() const
   {
-    return mStr;
+    if (!mStrPtr)
+    {
+      return nullptr;
+    }
+    return mStrPtr->c_str();
   }
   const char* end() const
   {
-    return mStr + mLength;
+    if (!mStrPtr)
+    {
+      return nullptr;
+    }
+    return str() + length();
   }
   size_t length() const
   {
-    return mLength;
+    if (!mStrPtr)
+    {
+      return 0;
+    }
+    return mStrPtr->length();
   }
   std::string toString() const
   {
-    return std::string(mStr, mLength);
+    idbassert(mStrPtr);
+    return std::string(*mStrPtr);
   }
   bool eq(char ch) const
   {
-    return mLength == 1 && mStr[0] == ch;
+    return length() == 1 && str()[0] == ch;
   }
-  bool eq(const ConstString& rhs) const
+  bool eq(const NullString& rhs) const
   {
-    return mLength == rhs.mLength && !memcmp(mStr, rhs.mStr, mLength);
+    if (!rhs.mStrPtr)
+    {
+      return false;
+    }
+    if (!mStrPtr)
+    {
+      return false;
+    }
+    return *mStrPtr == *(rhs.mStrPtr);
   }
   ConstString& rtrimZero()
   {
-    for (; mLength && mStr[mLength - 1] == '\0'; mLength--)
-    {
-    }
-    return *this;
+    return *this; // TODO
   }
 };
 
