@@ -28,6 +28,7 @@
 #include "dmlobject.h"
 #include "bytestream.h"
 #include <boost/algorithm/string/case_conv.hpp>
+#include "nullstring.h"
 
 #if defined(_MSC_VER) && defined(xxxDMLPKGCOLUMN_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
@@ -47,11 +48,6 @@ class DMLColumn : public DMLObject
    */
   EXPORT DMLColumn();
 
-  /** @brief ctor
-   */
-
-  EXPORT DMLColumn(std::string name, std::string value, bool isFromCol = false, uint32_t funcScale = 0,
-                   bool isNULL = false);
   /** @brief new ctor
    * isNUll is currently not in use. It supposed to indicate whether each value is null or not.
    */
@@ -77,11 +73,6 @@ class DMLColumn : public DMLObject
 
   /** @brief get the data for the column
    */
-  const std::string get_Data() const
-  {
-    return fData;
-  }
-
   const std::vector<std::string>& get_DataVector() const
   {
     return fColValuesList;
@@ -136,10 +127,6 @@ class DMLColumn : public DMLObject
   {
     fFuncScale = funcScale;
   }
-  void set_Data(std::string data)
-  {
-    fData = data;
-  }
 
   void set_DataVector(std::vector<std::string>& dataVec)
   {
@@ -149,7 +136,6 @@ class DMLColumn : public DMLObject
  protected:
  private:
   std::string fName;
-  std::string fData;
   std::vector<std::string> fColValuesList;
   bool fisNULL;
   bool fIsFromCol;

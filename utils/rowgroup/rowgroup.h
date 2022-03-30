@@ -489,7 +489,7 @@ class Row
   inline void setRid(uint64_t rid);
 
   // TODO: remove this (string is not efficient for this), use getConstString() instead
-  inline std::string getStringField(uint32_t colIndex) const
+  inline std::string getStringFieldToRemove(uint32_t colIndex) const
   {
     return getConstString(colIndex).toString();
   }
