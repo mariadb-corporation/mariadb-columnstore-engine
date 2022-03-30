@@ -9,7 +9,7 @@
 class NullString
 {
  protected:
-  std::auto_ptr<std::string> mStrPtr;
+  std::unique_ptr<std::string> mStrPtr;
 
  public:
   NullString() : mStrPtr(nullptr)
