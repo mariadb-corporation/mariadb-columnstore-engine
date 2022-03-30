@@ -1492,6 +1492,11 @@ const bool* SlaveDBRMNode::getEMLockStatus()
   return em.getEMLockStatus();
 }
 
+const bool* SlaveDBRMNode::getEMIndexLockStatus()
+{
+  return em.getEMIndexLockStatus();
+}
+
 const bool* SlaveDBRMNode::getVBBMLockStatus()
 {
   return &locked[0];

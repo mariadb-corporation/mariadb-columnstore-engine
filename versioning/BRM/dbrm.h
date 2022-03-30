@@ -103,7 +103,7 @@ class DBRM
   // The param noBRMFcns suppresses init of the ExtentMap, VSS, VBBM, and CopyLocks.
   // It can speed up init if the caller only needs the other structures.
   EXPORT DBRM(bool noBRMFcns = false);
-  EXPORT ~DBRM() throw();
+  EXPORT ~DBRM();
 
   EXPORT static void refreshShm()
   {
@@ -780,12 +780,12 @@ class DBRM
                                 const std::vector<execplan::CalpontSystemCatalog::ColDataType>& colDataTypes)
       DBRM_THROW;
   template <typename T>
-  EXPORT int getExtentMaxMin(const LBID_t lbid, T& max, T& min, int32_t& seqNum) throw();
+  EXPORT int getExtentMaxMin(const LBID_t lbid, T& max, T& min, int32_t& seqNum);
 
   EXPORT int setExtentMaxMin(const LBID_t lbid, const int64_t max, const int64_t min,
                              const int32_t seqNum) DBRM_THROW;
 
-  EXPORT int getExtentCPMaxMin(const LBID_t lbid, CPMaxMin& cpMaxMin) throw();
+  EXPORT int getExtentCPMaxMin(const LBID_t lbid, CPMaxMin& cpMaxMin);
 
   /** @brief Updates the max and min casual partitioning info for the passed extents.
    *
@@ -983,6 +983,9 @@ class DBRM
    */
   EXPORT void invalidateUncommittedExtentLBIDs(execplan::CalpontSystemCatalog::SCN txnid, bool allExtents,
                                                std::vector<LBID_t>* plbidList = NULL);
+
+  size_t EMIndexShmemSize();
+  size_t EMIndexShmemFree();
 
  private:
   DBRM(const DBRM& brm);
