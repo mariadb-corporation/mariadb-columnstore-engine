@@ -96,7 +96,7 @@ SET (ENGINE_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 INCLUDE(columnstore_version)
 INCLUDE(misc)
 
-FIND_PACKAGE(Boost 1.53.0 COMPONENTS system filesystem thread regex date_time chrono atomic)
+FIND_PACKAGE(Boost 1.66.0)
 IF (NOT Boost_FOUND)
     MESSAGE_ONCE(CS_NO_BOOST "Required Boost libraries not found!")
     return()
