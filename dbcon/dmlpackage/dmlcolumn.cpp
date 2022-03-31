@@ -35,6 +35,15 @@ DMLColumn::DMLColumn()
 {
 }
 
+DMLColumn::DMLColumn(std::string name, std::string& value, bool isFromCol,
+                     uint32_t funcScale, bool isNULL)
+{
+  fName = name;
+  fColValuesList.push_back(value);
+  fisNULL = isNULL;
+  fIsFromCol = isFromCol;
+  fFuncScale = funcScale;
+}
 DMLColumn::DMLColumn(std::string name, std::vector<std::string>& valueList, bool isFromCol,
                      uint32_t funcScale, bool isNULL)
 {
