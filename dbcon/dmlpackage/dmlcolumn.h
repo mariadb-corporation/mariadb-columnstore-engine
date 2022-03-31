@@ -52,7 +52,7 @@ class DMLColumn : public DMLObject
    * isNUll is currently not in use. It supposed to indicate whether each value is null or not.
    */
 
-  EXPORT DMLColumn(std::string name, std::vector<std::string>& valueList, bool isFromCol = false,
+  EXPORT DMLColumn(std::string name, const std::vector<std::string>& valueList, bool isFromCol = false,
                    uint32_t funcScale = 0, bool isNULL = false);
 
   EXPORT DMLColumn(std::string name, std::string& value, bool isFromCol = false,
