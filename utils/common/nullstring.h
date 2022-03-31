@@ -74,9 +74,9 @@ class NullString
   {
     if (!mStrPtr)
     {
-      return string("<<<null>>>");
+      return std::string("<<<null>>>");
     }
-    return string(*mStrPtr);
+    return std::string(*mStrPtr);
   }
 };
 
