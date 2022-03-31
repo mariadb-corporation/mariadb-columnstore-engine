@@ -462,6 +462,7 @@ class SlaveDBRMNode
 
   EXPORT const bool* getEMFLLockStatus();
   EXPORT const bool* getEMLockStatus();
+  EXPORT const bool* getEMIndexLockStatus();
   EXPORT const bool* getVBBMLockStatus();
   EXPORT const bool* getVSSLockStatus();
 

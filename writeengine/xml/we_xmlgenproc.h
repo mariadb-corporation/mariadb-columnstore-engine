@@ -76,6 +76,9 @@ class XMLGenProc
    *
    * @param table Name of table for which the table tag is to be generated.
    */
+  EXPORT void makeTableData(const execplan::CalpontSystemCatalog::TableName& table,
+                            const std::string& tableOIDStr);
+
   EXPORT void makeTableData(const execplan::CalpontSystemCatalog::TableName& table);
 
   /** @brief Creates column tags for the specified table.
