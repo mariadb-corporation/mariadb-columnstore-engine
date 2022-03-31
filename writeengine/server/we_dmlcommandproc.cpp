@@ -3348,7 +3348,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
         }
         else
         {
-          value = columnsUpdated[j]->get_Data();
+          value = columnsUpdated[j]->get_DataVector()[0];
 
           if (value.length() > (unsigned int)colType.colWidth)
           {
@@ -3686,7 +3686,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
           isNull = false;
         }
 
-        string inData(columnsUpdated[j]->get_Data());
+        string inData(columnsUpdated[j]->get_DataVector()[0]);
 
         if (((colType.colDataType == execplan::CalpontSystemCatalog::DATE) && (inData == "0000-00-00")) ||
             ((colType.colDataType == execplan::CalpontSystemCatalog::DATETIME) &&
