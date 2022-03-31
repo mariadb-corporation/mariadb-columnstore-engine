@@ -39,6 +39,7 @@
 #include "calpontsystemcatalog.h"
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
+#include "nullstring.h"
 
 #undef EXPORT
 #undef DELETE
@@ -331,7 +332,7 @@ typedef std::vector<ColTupleList> ColValueList;                            /** @
 typedef std::vector<RID> RIDList;                                          /** @brief RID list */
 typedef std::vector<execplan::CalpontSystemCatalog::ColType> CSCTypesList; /** @brief CSC column types list */
 
-typedef std::vector<std::string> dictStr;
+typedef std::vector<NullString> dictStr;
 typedef std::vector<dictStr> DictStrList;
 
 // dictionary
