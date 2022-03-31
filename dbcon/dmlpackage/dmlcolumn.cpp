@@ -44,6 +44,7 @@ DMLColumn::DMLColumn(std::string name, std::string& value, bool isFromCol,
   fIsFromCol = isFromCol;
   fFuncScale = funcScale;
 }
+
 DMLColumn::DMLColumn(std::string name, std::vector<std::string>& valueList, bool isFromCol,
                      uint32_t funcScale, bool isNULL)
 {
