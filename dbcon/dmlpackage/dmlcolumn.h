@@ -136,6 +136,11 @@ class DMLColumn : public DMLObject
     fColValuesList = dataVec;
   }
 
+  std::vector<std::string>& get_DataVector()
+  {
+    return fColValuesList;
+  }
+
  protected:
  private:
   std::string fName;

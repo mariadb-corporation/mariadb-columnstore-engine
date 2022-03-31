@@ -47,7 +47,7 @@ Row::Row(const Row& row)
   for (unsigned int i = 0; i < row.fColumnList.size(); i++)
   {
     const DMLColumn* aColumn = row.get_ColumnAt(i);
-    DMLColumn* newColumn = new DMLColumn(aColumn->get_Name(), aColumn->get_Data());
+    DMLColumn* newColumn = new DMLColumn(aColumn->get_Name(), aColumn->get_DataVector());
     fColumnList.push_back(newColumn);
   }
 
