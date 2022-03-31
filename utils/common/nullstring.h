@@ -66,7 +66,7 @@ class NullString
     }
     return *mStrPtr == *(rhs.mStrPtr);
   }
-  ConstString& rtrimZero()
+  NullString& rtrimZero()
   {
     return *this; // TODO
   }
