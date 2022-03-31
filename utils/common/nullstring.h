@@ -70,5 +70,13 @@ class NullString
   {
     return *this; // TODO
   }
+  std::string safeString() const
+  {
+    if (!mStrPtr)
+    {
+      return string("<<<null>>>");
+    }
+    return string(*mStrPtr);
+  }
 };
 
