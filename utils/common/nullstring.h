@@ -78,5 +78,9 @@ class NullString
     }
     return std::string(*mStrPtr);
   }
+  bool isNull() const
+  {
+    return !!mStrPtr;
+  }
 };
 
