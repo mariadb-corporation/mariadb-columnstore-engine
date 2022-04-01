@@ -1092,7 +1092,8 @@ const string TupleHashJoinStep::toString() const
 {
   ostringstream oss;
   size_t idlsz = fInputJobStepAssociation.outSize();
-  idbassert(idlsz > 1);
+  // Avoid assertion on empty `TupleHashJoinStep`.
+  idbassert(idlsz > 1 || idlsz == 0);
   oss << "TupleHashJoinStep    ses:" << fSessionId << " st:" << fStepId;
   oss << omitOidInDL;
 
@@ -1184,6 +1185,7 @@ void TupleHashJoinStep::configJoinKeyIndex(const vector<JoinType>& jt, const vec
 {
   joinTypes.insert(joinTypes.begin(), jt.begin(), jt.end());
   typelessJoin.insert(typelessJoin.begin(), typeless.begin(), typeless.end());
+
   smallSideKeys.insert(smallSideKeys.begin(), smallkey.begin(), smallkey.end());
   largeSideKeys.insert(largeSideKeys.begin(), largekey.begin(), largekey.end());
 #ifdef JLF_DEBUG
