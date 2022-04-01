@@ -301,6 +301,8 @@ struct JobInfo
   std::set<uint32_t> outerOnTable;
   std::set<uint32_t> tableHasIsNull;
   JobStepVector outerJoinExpressions;
+  // Inner join tables.
+  std::set<pair<uint32_t, uint32_t>> innerOnTables;
 
   // bug 3759, join in order
   // mixed outer join

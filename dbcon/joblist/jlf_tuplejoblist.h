@@ -139,8 +139,9 @@ struct JoinTableNode
 };
 
 using JoinGraph = std::map<uint32_t, JoinTableNode>;
-using JoinEdges = std::set<pair<uint32_t, uint32_t>>;
-using Cycles = std::vector<std::vector<std::pair<uint32_t, uint32_t>>>;
-using Cycle = std::vector<std::pair<uint32_t, uint32_t>>;
-using PostJoinFilterKeys = std::vector<std::pair<std::pair<uint32_t, uint32_t>, std::vector<uint32_t>>>;
+using JoinEdge = std::pair<uint32_t, uint32_t>;
+using JoinEdges = std::set<JoinEdge>;
+using Cycle = std::vector<JoinEdge>;
+using Cycles = std::vector<std::vector<JoinEdge>>;
+using PostJoinFilterKeys = std::vector<std::pair<JoinEdge, std::vector<uint32_t>>>;
 }  // namespace joblist
