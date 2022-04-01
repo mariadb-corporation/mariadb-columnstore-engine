@@ -1731,7 +1731,7 @@ int WriteEngineWrapper::insertColumnRecs(
           timer.start("tokenize");
 #endif
           DctnryTuple dctTuple;
-          dctTuple.sigValue = (unsigned char*)dctStr_iter->c_str();
+          dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
           dctTuple.sigSize = dctStr_iter->length();
 #if defined(XXX_WRITEENGINE_TOKENS_RANGES_XXX)
           strPrefix = encodeStringPrefix(dctTuple.sigValue, dctTuple.sigSize,
@@ -1799,7 +1799,7 @@ int WriteEngineWrapper::insertColumnRecs(
             timer.start("tokenize");
 #endif
             DctnryTuple dctTuple;
-            dctTuple.sigValue = (unsigned char*)dctStr_iter->c_str();
+            dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
             dctTuple.sigSize = dctStr_iter->length();
 #if defined(XXX_WRITEENGINE_TOKENS_RANGES_XXX)
             strPrefix = encodeStringPrefix_check_null(dctTuple.sigValue, dctTuple.sigSize,
@@ -2546,7 +2546,7 @@ int WriteEngineWrapper::insertColumnRecsBinary(
           timer.start("tokenize");
 #endif
           DctnryTuple dctTuple;
-          dctTuple.sigValue = (unsigned char*)dctStr_iter->c_str();
+          dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
           dctTuple.sigSize = dctStr_iter->length();
           dctTuple.isNull = false;
           rc = tokenize(txnid, dctTuple, dctnryStructList[i].fCompressionType);
@@ -2603,7 +2603,7 @@ int WriteEngineWrapper::insertColumnRecsBinary(
             timer.start("tokenize");
 #endif
             DctnryTuple dctTuple;
-            dctTuple.sigValue = (unsigned char*)dctStr_iter->c_str();
+            dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
             dctTuple.sigSize = dctStr_iter->length();
             dctTuple.isNull = false;
             rc = tokenize(txnid, dctTuple, newDctnryStructList[i].fCompressionType);
@@ -3121,7 +3121,7 @@ int WriteEngineWrapper::insertColumnRec_SYS(const TxnID& txnid, const CSCTypesLi
           timer.start("tokenize");
 #endif
           DctnryTuple dctTuple;
-          dctTuple.sigValue = (unsigned char*)dctStr_iter->c_str();
+          dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
           dctTuple.sigSize = dctStr_iter->length();
           dctTuple.isNull = false;
           rc = tokenize(txnid, dctTuple, dctnryStructList[i].fCompressionType);
@@ -3195,7 +3195,7 @@ int WriteEngineWrapper::insertColumnRec_SYS(const TxnID& txnid, const CSCTypesLi
             timer.start("tokenize");
 #endif
             DctnryTuple dctTuple;
-            dctTuple.sigValue = (unsigned char*)dctStr_iter->c_str();
+            dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
             dctTuple.sigSize = dctStr_iter->length();
             dctTuple.isNull = false;
             rc = tokenize(txnid, dctTuple, newDctnryStructList[i].fCompressionType);
@@ -3783,7 +3783,7 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid, const CSCType
             timer.start("tokenize");
 #endif
             DctnryTuple dctTuple;
-            dctTuple.sigValue = (unsigned char*)dctStr_iter->c_str();
+            dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
             dctTuple.sigSize = dctStr_iter->length();
             dctTuple.isNull = false;
             rc = tokenize(txnid, dctTuple, dctnryStructList[i].fCompressionType);
@@ -3858,7 +3858,7 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid, const CSCType
             timer.start("tokenize");
 #endif
             DctnryTuple dctTuple;
-            dctTuple.sigValue = (unsigned char*)dctStr_iter->c_str();
+            dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
             dctTuple.sigSize = dctStr_iter->length();
             dctTuple.isNull = false;
             rc = tokenize(txnid, dctTuple, newDctnryStructList[i].fCompressionType);
