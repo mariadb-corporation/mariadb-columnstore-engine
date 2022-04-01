@@ -834,7 +834,6 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
   std::map<uint32_t, uint32_t> oids;
   std::vector<BRM::OID_t> oidsToFlush;
   // colpos = 0;
-  std::string tmpStr("");
 
   for (unsigned int ii = 0; ii < numCols; ii++)
   {
@@ -900,24 +899,25 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
 
     while (column_iterator != columns.end())
     {
+      NullString tmpStr;
       column = *column_iterator;
       boost::to_lower(column.tableColName.column);
 
       if (SCHEMA_COL == column.tableColName.column)
       {
         colTuple.data = schema;
-        tmpStr = schema;
+        tmpStr = NullString(schema);
       }
       else if (TABLENAME_COL == column.tableColName.column)
       {
         colTuple.data = tablename;
-        tmpStr = tablename;
+        tmpStr = NullString(tablename);
       }
       else if (COLNAME_COL == column.tableColName.column)
       {
         boost::to_lower(colDefPtr->fName);
         colTuple.data = colDefPtr->fName;
-        tmpStr = colDefPtr->fName;
+        tmpStr = NullString(colDefPtr->fName);
       }
       else if (OBJECTID_COL == column.tableColName.column)
       {
@@ -953,11 +953,11 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
         if (colDefPtr->fDefaultValue)
         {
           colTuple.data = colDefPtr->fDefaultValue->fValue;
-          tmpStr = colDefPtr->fDefaultValue->fValue;
+          tmpStr = NullString(colDefPtr->fDefaultValue->fValue);
         }
         else
         {
-          tmpStr = "";
+          tmpStr = NullString();
           // colTuple.data = column.colType.getNullValueForType();
         }
       }
@@ -1011,11 +1011,11 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
       }
       else if (MINVAL_COL == column.tableColName.column)
       {
-        tmpStr = "";
+        tmpStr = NullString();
       }
       else if (MAXVAL_COL == column.tableColName.column)
       {
-        tmpStr = "";
+        tmpStr = NullString();
       }
       else if (COMPRESSIONTYPE_COL == column.tableColName.column)
       {
