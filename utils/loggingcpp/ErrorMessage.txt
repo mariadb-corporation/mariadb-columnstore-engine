@@ -22,7 +22,6 @@
 1000	ERR_MISS_JOIN	%1% not joined.
 1001	ERR_NON_SUPPORTED_FUNCTION	Function '%1%' isn't supported.
 1002	ERR_INCOMPATIBLE_JOIN	%1% incompatible column type specified for join condition.
-1003	ERR_CIRCULAR_JOIN	Circular joins are not supported.
 1004	ERR_MIX_JOIN	Mixed %1% JOIN is not supported.
 1005	ERR_UPDATE_SUB	update with subselect in select clause is currently not supported in Columnstore.
 1006	ERR_DATATYPE_NOT_SUPPORT	Function called with unsupported datatype.
