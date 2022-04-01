@@ -1184,6 +1184,7 @@ void TupleHashJoinStep::configJoinKeyIndex(const vector<JoinType>& jt, const vec
 {
   joinTypes.insert(joinTypes.begin(), jt.begin(), jt.end());
   typelessJoin.insert(typelessJoin.begin(), typeless.begin(), typeless.end());
+
   smallSideKeys.insert(smallSideKeys.begin(), smallkey.begin(), smallkey.end());
   largeSideKeys.insert(largeSideKeys.begin(), largekey.begin(), largekey.end());
 #ifdef JLF_DEBUG
