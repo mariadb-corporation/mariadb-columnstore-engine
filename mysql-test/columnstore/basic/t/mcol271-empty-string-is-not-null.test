@@ -1,0 +1,13 @@
+# tests updates that sets invalid range when we set value at max boundary that is less than max.
+--disable_warnings
+CREATE DATABASE IF NOT EXISTS test_empty_strings;
+USE test_empty_strings;
+DROP TABLE IF EXISTS t;
+--enable_warnings
+
+CREATE TABLE t(s text) ENGINE=COLUMNSTORE;
+INSERT INTO t(s) VALUES (""), (NULL);
+
+SELECT COUNT(*) FROM t WHERE s IS NULL;
+
+DROP DATABASE test_empty_strings;
