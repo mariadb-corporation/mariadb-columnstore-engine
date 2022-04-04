@@ -94,5 +94,13 @@ class NullString
       mStrPtr->resize(newSize, pad);
     }
   }
+  void dropString()
+  {
+    mStrPtr.reset(nullptr);
+  }
+  void assign(const std::string& newVal)
+  {
+    mStrPtr.reset(new std::string(newVal));
+  }
 };
 
