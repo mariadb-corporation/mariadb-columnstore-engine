@@ -39,6 +39,7 @@
 #include "we_rbmetawriter.h"
 #include "rowgroup.h"
 #include "we_log.h"
+#include "nullstring.h"
 
 #if defined(_MSC_VER) && defined(xxxDDLPKGPROC_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
