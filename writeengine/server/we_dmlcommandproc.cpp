@@ -242,7 +242,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
               isNULL = columnPtr->get_isnull();
 
-	      isNull = isNull || tmpStr.isNull();
+	      isNull = isNull ? true : tmpStr.isNull();
 
               if (colType.constraintType == CalpontSystemCatalog::NOTNULL_CONSTRAINT)
               {
@@ -291,18 +291,13 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
           else
           {
             string x;
-            std::string indata;
+	    NullString indata;
 
             for (uint32_t i = 0; i < origVals.size(); i++)
             {
               indata = origVals[i];
 
-              isNULL = columnPtr->get_isnull();
-
-              if (isNULL || (indata.length() == 0))
-                isNULL = true;
-              else
-                isNULL = false;
+              isNULL = columnPtr->get_isnull() ? true : inData.isNull();
 
               // check if autoincrement column and value is 0 or null
               uint64_t nextVal = 1;
@@ -346,7 +341,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
                 ostringstream oss;
                 oss << nextVal;
-                indata = oss.str();
+                indata.assign(oss.str());
                 isNULL = false;
               }
 
@@ -362,14 +357,14 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
                 }
                 else if (isNULL && !(colType.defaultValue.empty()))
                 {
-                  indata = colType.defaultValue;
+                  indata.assign(colType.defaultValue);
                   isNULL = false;
                 }
               }
 
               try
               {
-                datavalue = colType.convertColumnData(indata, pushWarning, insertPkg.get_TimeZone(), isNULL,
+                datavalue = colType.convertColumnData(indata.isNull() ? "" : indata.unsafeStringRef(), pushWarning, insertPkg.get_TimeZone(), isNULL,
                                                       false, false);
               }
               catch (exception&)
