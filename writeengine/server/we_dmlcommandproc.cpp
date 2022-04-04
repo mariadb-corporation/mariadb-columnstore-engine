@@ -1648,7 +1648,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
       return rc;
     }
 
-    std::string tmpStr("");
+    NullString tmpStr;
     uint32_t valuesPerColumn;
     bs >> valuesPerColumn;
     colValuesList.reserve(columnCount * valuesPerColumn);
