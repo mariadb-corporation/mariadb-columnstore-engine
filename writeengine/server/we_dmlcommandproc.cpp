@@ -279,7 +279,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
           boost::any datavalue;
           bool isNULL = false;
           bool pushWarning = false;
-          std::vector<std::string> origVals;
+          std::vector<NullString> origVals;
           origVals = columnPtr->get_DataVector();
           WriteEngine::dictStr dicStrings;
 
