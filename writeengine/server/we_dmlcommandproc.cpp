@@ -288,7 +288,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
           {
             for (uint32_t i = 0; i < origVals.size(); i++)
             {
-              tmpStr.assign(origVals[i]);
+              tmpStr = origVals[i];
 
               isNULL = columnPtr->get_isnull();
 
