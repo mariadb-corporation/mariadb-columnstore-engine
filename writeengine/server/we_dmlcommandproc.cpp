@@ -256,7 +256,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
         cscColTypeList.push_back(colType);
       }
 
-      NullString tmpStr();
+      NullString tmpStr;
 
       for (unsigned int i = 0; i < numcols; i++)
       {
