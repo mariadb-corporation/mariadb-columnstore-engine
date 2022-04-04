@@ -85,7 +85,14 @@ class NullString
   }
   bool isNull() const
   {
-    return !!mStrPtr;
+    return !mStrPtr;
+  }
+  void resize(size_t newSize, char pad)
+  {
+    if (mStrPtr)
+    {
+      mStrPtr->resize(newSize, pad);
+    }
   }
 };
 

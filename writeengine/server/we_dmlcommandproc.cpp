@@ -205,7 +205,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
         ++column_iterator;
       }
 
-      std::string tmpStr("");
+      NullString tmpStr();
 
       for (unsigned int i = 0; i < numcols; i++)
       {
@@ -237,7 +237,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
           {
             for (uint32_t i = 0; i < origVals.size(); i++)
             {
-              tmpStr = origVals[i];
+              tmpStr = NullString(origVals[i]);
 
               isNULL = columnPtr->get_isnull();
 
@@ -258,7 +258,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
                 }
                 else if (isNULL && !(colType.defaultValue.empty()))
                 {
-                  tmpStr = colType.defaultValue;
+                  tmpStr = NullString(colType.defaultValue);
                 }
               }
 
@@ -1937,19 +1937,22 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
               case execplan::CalpontSystemCatalog::BLOB:
                 bs >> valStr;
 
-                if (valStr.length() > (unsigned int)colType.colWidth)
-                {
-                  valStr = valStr.substr(0, colType.colWidth);
-                  pushWarning = true;
-                }
-                else
-                {
-                  if ((unsigned int)colType.colWidth > valStr.length())
+                if (!valStr.isNull) // null values do not require any padding or truncation.
+		{
+                  if (valStr.length() > (unsigned int)colType.colWidth)
                   {
-                    // Pad null character to the string
-                    valStr.resize(colType.colWidth, 0);
+                    valStr = NullString(valStr.unsafeStringRef().substr(0, colType.colWidth));
+                    pushWarning = true;
                   }
-                }
+                  else
+                  {
+                    if ((unsigned int)colType.colWidth > valStr.length())
+                    {
+                      // Pad null character to the string
+                      valStr.resize(colType.colWidth, 0);
+                    }
+                  }
+		}
 
                 // FIXME: colValue is uint64_t (8 bytes)
                 memcpy(&colValue, valStr.c_str(), valStr.length());
