@@ -1185,7 +1185,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
     }
 
     unsigned int numcols = rowPtr->get_NumberOfColumns();
-    std::string tmpStr("");
+    NullString tmpStr;
 
     try
     {
@@ -1220,10 +1220,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
             {
               tmpStr = origVals[i];
 
-              if (tmpStr.length() == 0)
-                isNULL = true;
-              else
-                isNULL = false;
+              isNull = tmpStr.isNull();
 
               if (colType.constraintType == CalpontSystemCatalog::NOTNULL_CONSTRAINT)
               {
@@ -1237,13 +1234,13 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
                 }
                 else if (isNULL && !(colType.defaultValue.empty()))
                 {
-                  tmpStr = colType.defaultValue;
+                  tmpStr.assign(colType.defaultValue);
                 }
               }
 
               if (tmpStr.length() > (unsigned int)colType.colWidth)
               {
-                tmpStr = tmpStr.substr(0, colType.colWidth);
+                tmpStr.assign(tmpStr.unsafeStringRef().substr(0, colType.colWidth));
 
                 if (!pushWarning)
                   pushWarning = true;
@@ -2076,7 +2073,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
 		}
 
                 // FIXME: colValue is uint64_t (8 bytes)
-                memcpy(&colValue, valStr.c_str(), valStr.length());
+                memcpy(&colValue, valStr.str(), valStr.length());
                 break;
 
               default:
