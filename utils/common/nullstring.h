@@ -50,6 +50,11 @@ class NullString
     idbassert(mStrPtr);
     return std::string(*mStrPtr);
   }
+  const std::string& unsafeStringRef() const
+  {
+    idbassert(mStrPtr);
+    return (*mStrPtr);
+  }
   bool eq(char ch) const
   {
     return length() == 1 && str()[0] == ch;

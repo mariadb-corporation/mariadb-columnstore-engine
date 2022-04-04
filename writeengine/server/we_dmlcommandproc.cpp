@@ -1871,7 +1871,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
             uint64_t colValue;
             float valF;
             double valD;
-            std::string valStr;
+            NullString valStr;
             bool valZero = false;  // Needed for autoinc check
 
             switch (colType.colDataType)

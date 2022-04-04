@@ -36,6 +36,7 @@
 #include "exceptclasses.h"
 #include "serializeable.h"
 #include "any.hpp"
+#include "nullstring.h"
 
 class ByteStreamTestSuite;
 
@@ -172,6 +173,10 @@ class ByteStream : public Serializeable
    */
   EXPORT ByteStream& operator<<(const std::string& s);
   /**
+   * push a NullString onto the end of the stream.
+   */
+  EXPORT ByteStream& operator<<(const NullString& s);
+  /**
    * push an arbitrary class onto the end of the stream.
    */
   inline ByteStream& operator<<(const Serializeable& s);
@@ -244,6 +249,10 @@ class ByteStream : public Serializeable
    * extract a std::string from the front of the stream.
    */
   EXPORT ByteStream& operator>>(std::string& s);
+  /**
+   * extract a NullString from the front of the stream.
+   */
+  EXPORT ByteStream& operator>>(NullString& s);
   /**
    *	write the current stream into b. The ByteStream will be empty after this operation.
    * @warning the caller is responsible for making sure b is big enough to hold all the data (perhaps by
