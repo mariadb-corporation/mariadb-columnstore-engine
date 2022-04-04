@@ -96,7 +96,7 @@ class NullString
   }
   void dropString()
   {
-    mStrPtr.reset(nullptr);
+    mStrPtr.reset();
   }
   void assign(const std::string& newVal)
   {
