@@ -237,14 +237,11 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
           {
             for (uint32_t i = 0; i < origVals.size(); i++)
             {
-              tmpStr = NullString(origVals[i]);
+              tmpStr.assign(origVals[i]);
 
               isNULL = columnPtr->get_isnull();
 
-              if (isNULL || (tmpStr.length() == 0))
-                isNULL = true;
-              else
-                isNULL = false;
+	      isNull = isNull || tmpStr.isNull();
 
               if (colType.constraintType == CalpontSystemCatalog::NOTNULL_CONSTRAINT)
               {
@@ -258,13 +255,13 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
                 }
                 else if (isNULL && !(colType.defaultValue.empty()))
                 {
-                  tmpStr = NullString(colType.defaultValue);
+                  tmpStr.assign(colType.defaultValue);
                 }
               }
 
               if (tmpStr.length() > (unsigned int)colType.colWidth)
               {
-                tmpStr = tmpStr.substr(0, colType.colWidth);
+                tmpStr.assign(tmpStr.unsafeStringRef().substr(0, colType.colWidth));
 
                 if (!pushWarning)
                 {
