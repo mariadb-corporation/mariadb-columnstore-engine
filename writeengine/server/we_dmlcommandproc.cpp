@@ -1937,7 +1937,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
               case execplan::CalpontSystemCatalog::BLOB:
                 bs >> valStr;
 
-                if (!valStr.isNull) // null values do not require any padding or truncation.
+                if (!valStr.isNull()) // null values do not require any padding or truncation.
 		{
                   if (valStr.length() > (unsigned int)colType.colWidth)
                   {
