@@ -105,7 +105,6 @@ usr/share/columnstore/mariadb-columnstore.service
 usr/share/columnstore/mcs-controllernode.service
 usr/share/columnstore/mcs-ddlproc.service
 usr/share/columnstore/mcs-dmlproc.service
-usr/share/columnstore/mcs-exemgr.service
 usr/share/columnstore/mcs-loadbrm.service
 usr/share/columnstore/mcs-primproc.service
 usr/share/columnstore/mcs-storagemanager.service
