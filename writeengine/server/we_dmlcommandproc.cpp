@@ -297,7 +297,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
             {
               indata = origVals[i];
 
-              isNULL = columnPtr->get_isnull() ? true : inData.isNull();
+              isNULL = columnPtr->get_isnull() ? true : indata.isNull();
 
               // check if autoincrement column and value is 0 or null
               uint64_t nextVal = 1;
