@@ -10,4 +10,13 @@ INSERT INTO t(s) VALUES (""), (NULL);
 
 SELECT COUNT(*) FROM t WHERE s IS NULL;
 
+DROP TABLE t;
+
+CREATE TABLE t(s text) ENGINE=COLUMNSTORE;
+# this will test different code path in writeengine.
+INSERT INTO t(s) VALUES ("");
+INSERT INTO t(s) VALUES (NULL);
+
+SELECT COUNT(*) FROM t WHERE s IS NULL;
+
 DROP DATABASE test_empty_strings;
