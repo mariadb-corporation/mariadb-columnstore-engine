@@ -1701,7 +1701,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
 
             if (tmpStr.length() > (unsigned int)colType.colWidth)
             {
-              tmpStrassign(tmpStr.unsafeStringRef().substr(0, colType.colWidth));
+              tmpStr.assign(tmpStr.unsafeStringRef().substr(0, colType.colWidth));
 
               if (!pushWarning)
                 pushWarning = true;
