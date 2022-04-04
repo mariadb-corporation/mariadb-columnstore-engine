@@ -301,10 +301,10 @@ ByteStream& ByteStream::operator<<(const string& s)
 ByteStream& ByteStream::operator<<(const NullString& s)
 {
   uint8_t isNull = s.isNull();
-  bs << isNull;
+  (*this) << isNull;
   if (!isNull)
   {
-    bs << s.unsafeStringRef();
+    (*this) << s.unsafeStringRef();
   }
 }
 
