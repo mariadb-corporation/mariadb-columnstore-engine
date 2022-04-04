@@ -427,7 +427,7 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
   ddlpackage::QualifiedName qualifiedName = *(tableDef.fQualifiedName);
   iter = tableDefCols.begin();
   // colpos = 0;
-  NullString tmpStr();
+  NullString tmpStr;
 
   for (unsigned int ii = 0; ii < numCols; ii++)
   {
