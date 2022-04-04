@@ -169,24 +169,26 @@ uint8_t WE_DDLCommandProc::writeSystable(ByteStream& bs, std::string& err)
     getColumnsForTable(sessionID, tableName.schema, tableName.table, columns);
 
     column_iterator = columns.begin();
-    std::string tmpStr("");
+    NullString tmpStr;
 
     while (column_iterator != columns.end())
     {
       column = *column_iterator;
       boost::to_lower(column.tableColName.column);
 
+      tmpStr.dropString();
+
       if (TABLENAME_COL == column.tableColName.column)
       {
         std::string tablename = tableDef.fQualifiedName->fName;
         colTuple.data = tablename;
-        tmpStr = tablename;
+        tmpStr.assign(tablename);
       }
       else if (SCHEMA_COL == column.tableColName.column)
       {
         std::string schema = tableDef.fQualifiedName->fSchema;
         colTuple.data = schema;
-        tmpStr = schema;
+        tmpStr.assign(schema);
       }
       else if (OBJECTID_COL == column.tableColName.column)
       {
