@@ -206,7 +206,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
         ++column_iterator;
       }
 
-      NullString tmpStr();
+      NullString tmpStr;
 
       for (unsigned int i = 0; i < numcols; i++)
       {
