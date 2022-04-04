@@ -306,6 +306,7 @@ ByteStream& ByteStream::operator<<(const NullString& s)
   {
     (*this) << s.unsafeStringRef();
   }
+  return *this;
 }
 
 ByteStream& ByteStream::operator>>(int8_t& b)
