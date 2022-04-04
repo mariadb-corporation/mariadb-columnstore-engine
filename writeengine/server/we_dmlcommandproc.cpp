@@ -1795,12 +1795,14 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
         {
           for (uint32_t i = 0; i < valuesPerColumn; i++)
           {
-            bs >> tmp8;
-            isNULL = tmp8;
+            // XXX XXX XXX XXX now isNull is in the NullString, this is not necessary!!!
+	    // XXX XXX XXX XXX but it may crash the application!!! XXX XXX XXX XXX
+	    // XXX XXX XXX XXX I need to figure out where the opposite part is!!! XXX XXX XXX XXX
+            //bs >> tmp8;
+            //isNULL = tmp8;
             bs >> tmpStr;
 
-            if (tmpStr.length() == 0)
-              isNULL = true;
+            isNull = tmpStr.isNull();
 
             if (colType.constraintType == CalpontSystemCatalog::NOTNULL_CONSTRAINT)
             {
@@ -1814,7 +1816,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
               }
               else if (isNULL && !(colType.defaultValue.empty()))
               {
-                tmpStr = colType.defaultValue;
+                tmpStr.assign(colType.defaultValue);
               }
             }
 
