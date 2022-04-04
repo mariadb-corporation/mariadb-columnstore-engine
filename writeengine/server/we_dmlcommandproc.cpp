@@ -54,6 +54,7 @@ using namespace BRM;
 #include "columnwidth.h"
 
 using namespace std;
+using namespace utils;
 
 namespace WriteEngine
 {
