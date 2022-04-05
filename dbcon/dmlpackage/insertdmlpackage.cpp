@@ -263,7 +263,9 @@ int InsertDMLPackage::buildFromSqlStatement(SqlStatement& sqlStatement)
 
       for (unsigned int i = 0; i < columnNameList.size(); i++)
       {
-        DMLColumn* aColumn = new DMLColumn(columnNameList[i], valuesList[i], isNULL);
+        // XXX can here be NULLs?
+	idbassert(!isNULL);
+        DMLColumn* aColumn = new DMLColumn(columnNameList[i], valuesList[i]);
         (aRow->get_ColumnList()).push_back(aColumn);
       }
 
@@ -280,6 +282,7 @@ int InsertDMLPackage::buildFromSqlStatement(SqlStatement& sqlStatement)
       while (iter != valuesList.end())
       {
         colValue = *iter;
+	NullString nullColValue;
 
         if (strcasecmp(colValue.c_str(), "NULL") == 0)
         {
@@ -287,10 +290,11 @@ int InsertDMLPackage::buildFromSqlStatement(SqlStatement& sqlStatement)
         }
         else
         {
+          nullColValue.assign(colValue);
           isNULL = false;
         }
 
-        DMLColumn* aColumn = new DMLColumn(colName, colValue, isNULL);
+        DMLColumn* aColumn = new DMLColumn(colName, nullColValue, isNULL);
         (aRow->get_ColumnList()).push_back(aColumn);
 
         ++iter;
