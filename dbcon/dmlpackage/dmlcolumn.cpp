@@ -69,7 +69,7 @@ int DMLColumn::read(messageqcpp::ByteStream& bytestream)
 
   for (uint32_t i = 0; i < vectorSize; i++)
   {
-    std::string dataStr;
+    NullString dataStr;
     bytestream >> dataStr;
     //	if ( !fisNULL  && (dataStr.length() == 0 ))
     //		dataStr = (char) 0;
