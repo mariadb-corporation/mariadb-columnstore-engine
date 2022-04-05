@@ -76,7 +76,7 @@ class DMLColumn : public DMLObject
 
   /** @brief get the data for the column
    */
-  const std::vector<std::string>& get_DataVector() const
+  const std::vector<NullString>& get_DataVector() const
   {
     return fColValuesList;
   }
@@ -131,15 +131,10 @@ class DMLColumn : public DMLObject
     fFuncScale = funcScale;
   }
 
-  void set_DataVector(std::vector<std::string>& dataVec)
-  {
-    fColValuesList = dataVec;
-  }
-
  protected:
  private:
   std::string fName;
-  std::vector<std::string> fColValuesList;
+  std::vector<NullString> fColValuesList;
   bool fisNULL;
   bool fIsFromCol;
   uint32_t fFuncScale;
