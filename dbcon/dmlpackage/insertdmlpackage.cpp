@@ -189,10 +189,12 @@ int InsertDMLPackage::buildFromBuffer(std::string& buffer, int columns, int rows
       n++;
       colValue = dataList[n];
       n++;
+      // XXX check for "null"? what values do we have here?
+      NullString nullColValue(colValue);
 #ifdef DML_PACKAGE_DEBUG
       // cout << "The column data: " << colName << " " << colValue << endl;
 #endif
-      DMLColumn* aColumn = new DMLColumn(colName, colValue, false);
+      DMLColumn* aColumn = new DMLColumn(colName, nullColValue, false);
       (aRowPtr->get_ColumnList()).push_back(aColumn);
     }
 
