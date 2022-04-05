@@ -55,6 +55,11 @@ class DMLColumn : public DMLObject
   EXPORT DMLColumn(std::string name, const std::vector<NullString>& valueList, bool isFromCol = false,
                    uint32_t funcScale = 0, bool isNULL = false);
 
+  /** @brief new ctor
+   * 
+   */
+
+  EXPORT DMLColumn(std::string name, const std::vector<std::string>& valueList);
   EXPORT DMLColumn(std::string name, NullString& value, bool isFromCol = false,
                    uint32_t funcScale = 0, bool isNULL = false);
 
