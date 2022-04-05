@@ -30,6 +30,7 @@
 #include <iostream>
 #include <bitset>
 #include <stdint.h>
+#include "nullstring.h"
 
 namespace dmlpackage
 {
@@ -67,7 +68,7 @@ typedef std::vector<std::string> AtomList;
 
 typedef std::vector<char*> QueryBuffer;
 
-typedef std::vector<std::string> ColValuesList;
+typedef std::vector<NullString> ColValuesList;
 typedef std::vector<std::string> ColNameList;
 typedef std::map<uint32_t, ColValuesList> TableValuesMap;
 typedef std::bitset<4096> NullValuesBitset;

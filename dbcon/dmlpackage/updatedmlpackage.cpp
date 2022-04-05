@@ -143,7 +143,8 @@ int UpdateDMLPackage::buildFromSqlStatement(SqlStatement& sqlStatement)
   while (iter != updateStmt.fColAssignmentListPtr->end())
   {
     ColumnAssignment* colaPtr = *iter;
-    DMLColumn* colPtr = new DMLColumn(colaPtr->fColumn, colaPtr->fScalarExpression);
+    NullString expr(colaPtr->fScalarExpression);
+    DMLColumn* colPtr = new DMLColumn(colaPtr->fColumn, expr);
     rowPtr->get_ColumnList().push_back(colPtr);
 
     ++iter;
@@ -205,12 +206,13 @@ int UpdateDMLPackage::buildFromBuffer(std::string& buffer, int columns, int rows
       // Build a column list
       colName = dataList[n++];
       colValue = dataList[n++];
+      NullString val(colValue);
 #ifdef DML_PACKAGE_DEBUG
 
       // cout << "The column data: " << colName << " " << colValue << endl;
 #endif
 
-      DMLColumn* aColumn = new DMLColumn(colName, colValue);
+      DMLColumn* aColumn = new DMLColumn(colName, val);
       (aRowPtr->get_ColumnList()).push_back(aColumn);
     }
 
