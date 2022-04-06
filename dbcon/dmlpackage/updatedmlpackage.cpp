@@ -230,7 +230,7 @@ int UpdateDMLPackage::buildFromMysqlBuffer(ColNameList& colNameList, TableValues
   initializeTable();
   Row* aRowPtr = new Row();
   std::string colName;
-  ColValueList colValList;
+  ColValuesList colValList;
 
   for (int j = 0; j < columns; j++)
   {
