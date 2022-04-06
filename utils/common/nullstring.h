@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <memory>
 
 // A class for striings that can hold NULL values - a value that is separate from all possible string.
 class NullString
