@@ -265,7 +265,8 @@ int InsertDMLPackage::buildFromSqlStatement(SqlStatement& sqlStatement)
       {
         // XXX can here be NULLs?
 	idbassert(!isNULL);
-        DMLColumn* aColumn = new DMLColumn(columnNameList[i], valuesList[i]);
+	NullString ithValue(valuesList[i]);
+        DMLColumn* aColumn = new DMLColumn(columnNameList[i], ithValue;
         (aRow->get_ColumnList()).push_back(aColumn);
       }
 
