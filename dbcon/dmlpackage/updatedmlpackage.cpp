@@ -264,7 +264,8 @@ void UpdateDMLPackage::buildUpdateFromMysqlBuffer(UpdateSqlStatement& updateStmt
   while (iter != updateStmt.fColAssignmentListPtr->end())
   {
     ColumnAssignment* colaPtr = *iter;
-    DMLColumn* colPtr = new DMLColumn(colaPtr->fColumn, colaPtr->fScalarExpression, colaPtr->fFromCol,
+    NullString scalarExpression(colaPtr->fScalarExpression);
+    DMLColumn* colPtr = new DMLColumn(colaPtr->fColumn, scalarExpression, colaPtr->fFromCol,
                                       colaPtr->fFuncScale, colaPtr->fIsNull);
     rowPtr->get_ColumnList().push_back(colPtr);
 
