@@ -213,7 +213,7 @@ int InsertDMLPackage::buildFromMysqlBuffer(ColNameList& colNameList, TableValues
   initializeTable();
   Row* aRowPtr = new Row();
   std::string colName;
-  std::vector<std::string> colValList;
+  ColValuesList colValList;
 
   for (int j = 0; j < columns; j++)
   {
