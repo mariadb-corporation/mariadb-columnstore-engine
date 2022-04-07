@@ -136,12 +136,13 @@ uint32_t buildValueList(TABLE* table, cal_connection_info& ci)
 
         if (attribute.length() == 0)
         {
-          ci.tableValuesMap[columnPos].push_back("");  // currently, empty string is treated as null.
+          ci.tableValuesMap[columnPos].push_back(null);  // currently, empty string is treated as null.
         }
         else
         {
           string val(attribute.ptr(), attribute.length());
-          ci.tableValuesMap[columnPos].push_back(val);
+	  NullValue nonNull(val);
+          ci.tableValuesMap[columnPos].push_back(nonNull);
         }
       }
     }
