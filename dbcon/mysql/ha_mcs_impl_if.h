@@ -73,8 +73,6 @@ class ConstantColumn;
 class RowColumn;
 }  // namespace execplan
 
-using namespace dmlpackage;
-
 namespace cal_impl_if
 {
 class SubQuery;
@@ -99,6 +97,8 @@ enum ClauseType
 };
 
 typedef std::vector<JoinInfo> JoinInfoVec;
+typedef dmlpackage::ColValuesList ColValuesList;
+typedef dmlpackage::TableValuesMap TableValuesMap;
 typedef std::map<execplan::CalpontSystemCatalog::TableAliasName, std::pair<int, TABLE_LIST*>> TableMap;
 typedef std::tr1::unordered_map<TABLE_LIST*, std::vector<COND*>> TableOnExprList;
 typedef std::tr1::unordered_map<TABLE_LIST*, uint> TableOuterJoinMap;
