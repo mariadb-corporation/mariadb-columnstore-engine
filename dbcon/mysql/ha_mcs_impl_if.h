@@ -74,6 +74,8 @@ class ConstantColumn;
 class RowColumn;
 }  // namespace execplan
 
+using namespace dmlpackage;
+
 namespace cal_impl_if
 {
 class SubQuery;
@@ -263,9 +265,9 @@ struct cal_group_info
 };
 
 typedef std::tr1::unordered_map<TABLE*, cal_table_info> CalTableMap;
-typedef std::vector<std::string> ColValuesList;
+//typedef std::vector<std::string> ColValuesList;
 typedef std::vector<std::string> ColNameList;
-typedef std::map<uint32_t, ColValuesList> TableValuesMap;
+//typedef std::map<uint32_t, ColValuesList> TableValuesMap;
 typedef std::bitset<4096> NullValuesBitset;
 struct cal_connection_info
 {
