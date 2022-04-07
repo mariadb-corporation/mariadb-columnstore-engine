@@ -1254,7 +1254,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
           else
           {
             string x;
-            std::string indata;
+            NullString indata;
             // scan once to check how many autoincrement value needed
             uint32_t nextValNeeded = 0;
             uint64_t nextVal = 1;
@@ -1277,12 +1277,12 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
               {
                 indata = origVals[i];
 
-                if (indata.length() == 0)
+                if (indata.isNull())
                   isNULL = true;
                 else
                   isNULL = false;
 
-                if (isNULL || (indata.compare("0") == 0))
+                if (isNULL || (indata.safeString().compare("0") == 0))
                   nextValNeeded++;
               }
             }
@@ -1795,7 +1795,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
             //isNULL = tmp8;
             bs >> tmpStr;
 
-            isNull = tmpStr.isNull();
+            isNULL = tmpStr.isNull();
 
             if (colType.constraintType == CalpontSystemCatalog::NOTNULL_CONSTRAINT)
             {
