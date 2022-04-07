@@ -1213,7 +1213,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
             {
               tmpStr = origVals[i];
 
-              isNull = tmpStr.isNull();
+              isNULL = tmpStr.isNull();
 
               if (colType.constraintType == CalpontSystemCatalog::NOTNULL_CONSTRAINT)
               {
@@ -1312,13 +1312,13 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
             {
               indata = origVals[i];
 
-              if (indata.length() == 0)
+              if (indata.isNull())
                 isNULL = true;
               else
                 isNULL = false;
 
               // check if autoincrement column and value is 0 or null
-              if (colType.autoincrement && (isNULL || (indata.compare("0") == 0)))
+              if (colType.autoincrement && (isNULL || (indata.safeString().compare("0") == 0)))
               {
                 ostringstream oss;
                 oss << nextVal++;
@@ -1338,7 +1338,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
                 }
                 else if (isNULL && !(colType.defaultValue.empty()))
                 {
-                  indata = colType.defaultValue;
+                  indata.assign(colType.defaultValue);
                   isNULL = false;
                 }
               }
