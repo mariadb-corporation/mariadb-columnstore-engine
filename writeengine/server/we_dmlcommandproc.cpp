@@ -3220,7 +3220,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
         }
         else
         {
-          value = columnsUpdated[j]->get_DataVector()[0];
+          value = columnsUpdated[j]->get_DataVector()[0].safeString();
 
           if (value.length() > (unsigned int)colType.colWidth)
           {
