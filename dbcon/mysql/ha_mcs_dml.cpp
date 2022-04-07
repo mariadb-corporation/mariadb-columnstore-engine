@@ -78,6 +78,8 @@ using namespace joblist;
 
 #include "ha_mcs_datatype.h"
 
+#include "nullstring.h"
+
 namespace
 {
 #define BATCH_INSERT_GROUP_ROWS_FOR_CACHE 100000
@@ -100,12 +102,14 @@ uint32_t buildValueList(TABLE* table, cal_connection_info& ci)
   int columnPos = 0;
   double dbval;
   ci.nullValuesBitset.reset();
+  NullString null;
+
 
   for (Field** field = table->field; *field; field++)
   {
     if ((*field)->is_null())
     {
-      ci.tableValuesMap[columnPos].push_back("");  // currently, empty string is treated as null.
+      ci.tableValuesMap[columnPos].push_back(null);
       ci.nullValuesBitset[columnPos] = true;
     }
     else
@@ -122,7 +126,8 @@ uint32_t buildValueList(TABLE* table, cal_connection_info& ci)
         char buf[maxlen];
         memset(buf, 0, maxlen);
         snprintf(buf, maxlen, "%.1024f", dbval);
-        ci.tableValuesMap[columnPos].push_back(buf);
+	NullString value(buf, strlen(buf));
+        ci.tableValuesMap[columnPos].push_back(value);
       }
       else
       {
