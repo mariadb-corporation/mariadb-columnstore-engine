@@ -3565,11 +3565,11 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
           inData = columnsUpdated[j]->get_DataVector()[0];
 	}
 
-        if (((colType.colDataType == execplan::CalpontSystemCatalog::DATE) && (inData.str().compare("0000-00-00") == 0)) ||
+        if (((colType.colDataType == execplan::CalpontSystemCatalog::DATE) && (inData.safeString().compare("0000-00-00") == 0)) ||
             ((colType.colDataType == execplan::CalpontSystemCatalog::DATETIME) &&
-             (inData.str().compare("0000-00-00 00:00:00") == 0)) ||
+             (inData.safeString().compare("0000-00-00 00:00:00") == 0)) ||
             ((colType.colDataType == execplan::CalpontSystemCatalog::TIMESTAMP) &&
-             (inData.str().compare("0000-00-00 00:00:00") == 0))
+             (inData.safeString().compare("0000-00-00 00:00:00") == 0)))
         {
           inData.dropString();
           isNull = true;
