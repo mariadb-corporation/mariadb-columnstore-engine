@@ -421,7 +421,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
               {
                 rc = 1;
                 Message::Args args;
-                args.add(string("'") + indata + string("'"));
+                args.add(string("'") + indata.str() + string("'"));
                 err = IDBErrorInfo::instance()->errorMsg(ERR_NON_NUMERIC_DATA, args);
               }
 
@@ -1352,7 +1352,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
               {
                 rc = 1;
                 Message::Args args;
-                args.add(string("'") + indata + string("'"));
+                args.add(string("'") + indata.str() + string("'"));
                 err = IDBErrorInfo::instance()->errorMsg(ERR_NON_NUMERIC_DATA, args);
               }
 
@@ -3749,7 +3749,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
               //@Bug 2624. Error out on conversion failure
               rc = 1;
               Message::Args args;
-              args.add(string("'") + inData + string("'"));
+              args.add(string("'") + inData.str() + string("'"));
               err = IDBErrorInfo::instance()->errorMsg(ERR_NON_NUMERIC_DATA, args);
             }
 
@@ -3831,7 +3831,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
             rc = 1;
             cout << ex.what() << endl;
             Message::Args args;
-            args.add(string("'") + inData + string("'"));
+            args.add(string("'") + inData.str() + string("'"));
             err = IDBErrorInfo::instance()->errorMsg(ERR_NON_NUMERIC_DATA, args);
             return rc;
           }
