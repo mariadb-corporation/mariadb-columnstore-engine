@@ -50,6 +50,7 @@
 
 #include "mcs_datatype.h"
 #include "collation.h"  // CHARSET_INFO, class Charset
+#include "nullstring.h"
 
 class ExecPlanTest;
 namespace messageqcpp
@@ -269,6 +270,18 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
      */
     boost::any convertColumnData(const std::string& data, bool& bSaturate, long timeZone,
                                  bool nulFlag = false, bool noRoundup = false, bool isUpdate = false) const;
+
+    /**
+     * @brief convert a columns data, represnted as a string,
+     * to its native format
+     * @param       data       - the string representation, with special NULL value
+     * @param [OUT] bSaturate  - the value was truncated/adjusted
+     * @param       timeZone   - the time zone name, for TIMESTAMP conversion
+     * @param       nRoundtrip
+     * @param       isUpdate
+     */
+    boost::any convertColumnData(const NullString& data, bool& bSaturate, long timeZone,
+                                 bool noRoundup = false, bool isUpdate = false) const;
 
     const std::string toString() const;
 
