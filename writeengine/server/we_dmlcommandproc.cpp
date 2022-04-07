@@ -292,7 +292,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
               isNULL = columnPtr->get_isnull();
 
-	      isNull = isNull ? true : tmpStr.isNull();
+	      isNULL = isNULL ? true : tmpStr.isNull();
 
               if (colType.constraintType == CalpontSystemCatalog::NOTNULL_CONSTRAINT)
               {
@@ -369,7 +369,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
                 }
               }
 
-              if (colType.autoincrement && (isNULL || (indata.compare("0") == 0)))
+              if (colType.autoincrement && (isNULL || (indata.str().compare("0") == 0)))
               {
                 try
                 {
@@ -1202,7 +1202,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
 
           boost::any datavalue;
           bool isNULL = false;
-          std::vector<std::string> origVals;
+          std::vector<NullString> origVals;
           origVals = columnPtr->get_DataVector();
           WriteEngine::dictStr dicStrings;
 
@@ -1352,7 +1352,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
               {
                 rc = 1;
                 Message::Args args;
-                args.add(string("'") + indata.str() + string("'"));
+                args.add(string("'") + indata + string("'"));
                 err = IDBErrorInfo::instance()->errorMsg(ERR_NON_NUMERIC_DATA, args);
               }
 
