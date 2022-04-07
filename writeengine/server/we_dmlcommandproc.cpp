@@ -364,7 +364,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
               try
               {
-                datavalue = colType.convertColumnData(indata.isNull() ? "" : indata.unsafeStringRef(), pushWarning, insertPkg.get_TimeZone(), isNULL,
+                datavalue = colType.convertColumnData(indata, pushWarning, insertPkg.get_TimeZone(),
                                                       false, false);
               }
               catch (exception&)
@@ -1231,7 +1231,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
 
               try
               {
-                datavalue = colType.convertColumnData(indata, pushWarning, insertPkg.get_TimeZone(), isNULL,
+                datavalue = colType.convertColumnData(indata, pushWarning, insertPkg.get_TimeZone(),
                                                       false, false);
               }
               catch (exception&)
@@ -3701,7 +3701,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
         {
           try
           {
-            datavalue = colType.convertColumnData(inData, pushWarn, timeZone, isNull, false, true);
+            datavalue = colType.convertColumnData(inData, pushWarn, timeZone, false, true);
           }
           catch (exception& ex)
           {
