@@ -3681,13 +3681,17 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
           isNull = false;
         }
 
-        NullString inData(columnsUpdated[j]->get_DataVector()[0]);
+        NullString inData;
+	if (!isNull)
+	{
+          inData.assign(columnsUpdated[j]->get_DataVector()[0]);
+	}
 
-        if (((colType.colDataType == execplan::CalpontSystemCatalog::DATE) && (inData == "0000-00-00")) ||
+        if (((colType.colDataType == execplan::CalpontSystemCatalog::DATE) && (inData.str() == "0000-00-00")) ||
             ((colType.colDataType == execplan::CalpontSystemCatalog::DATETIME) &&
-             (inData == "0000-00-00 00:00:00")) ||
+             (inData.str() == "0000-00-00 00:00:00")) ||
             ((colType.colDataType == execplan::CalpontSystemCatalog::TIMESTAMP) &&
-             (inData == "0000-00-00 00:00:00")))
+             (inData.str() == "0000-00-00 00:00:00")))
         {
           inData.dropString();
           isNull = true;
@@ -3710,7 +3714,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
           }
         }
 
-        if (colType.autoincrement && (isNull || (inData.compare("0") == 0)))
+        if (colType.autoincrement && (isNull || (inData.str().compare("0") == 0)))
         {
           // reserve nextVal
           try
@@ -3738,11 +3742,11 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
           {
             ostringstream oss;
             oss << nextVal++;
-            inData = oss.str();
+            inData.assign(oss.str());
 
             try
             {
-              datavalue = colType.convertColumnData(inData, pushWarn, timeZone, isNull, false, false);
+              datavalue = colType.convertColumnData(inData, pushWarn, timeZone, false, false);
             }
             catch (exception&)
             {
