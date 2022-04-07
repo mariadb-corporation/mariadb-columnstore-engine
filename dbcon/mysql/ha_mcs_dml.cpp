@@ -141,7 +141,7 @@ uint32_t buildValueList(TABLE* table, cal_connection_info& ci)
         else
         {
           string val(attribute.ptr(), attribute.length());
-	  NullValue nonNull(val);
+	  NullString nonNull(val);
           ci.tableValuesMap[columnPos].push_back(nonNull);
         }
       }
