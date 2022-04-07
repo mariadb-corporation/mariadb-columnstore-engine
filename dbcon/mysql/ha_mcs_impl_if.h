@@ -33,6 +33,8 @@
 #include "idb_mysql.h"
 #include "ha_mcs_sysvars.h"
 
+#include "dmlpkg.h"
+
 struct st_ha_create_information;
 class ha_columnstore_select_handler;
 class ha_columnstore_derived_handler;
