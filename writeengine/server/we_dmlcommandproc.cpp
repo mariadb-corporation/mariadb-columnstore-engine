@@ -1208,7 +1208,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
               {
                 ostringstream oss;
                 oss << nextVal++;
-                indata = oss.str();
+                indata.assign(oss.str());
                 isNULL = false;
               }
 
@@ -1238,7 +1238,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
               {
                 rc = 1;
                 Message::Args args;
-                args.add(string("'") + indata + string("'"));
+                args.add(string("'") + indata.safeString() + string("'"));
                 err = IDBErrorInfo::instance()->errorMsg(ERR_NON_NUMERIC_DATA, args);
               }
 
