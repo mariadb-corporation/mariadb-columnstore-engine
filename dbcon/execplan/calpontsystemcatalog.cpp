@@ -6120,6 +6120,22 @@ boost::any CalpontSystemCatalog::ColType::convertColumnData(const std::string& d
   return h->convertFromString(*this, prm, data, pushWarning);
 }
 
+boost::any CalpontSystemCatalog::ColType::convertColumnData(const NullString& data, bool& pushWarning,
+                                                            long timeZone, bool noRoundup,
+                                                            bool isUpdate) const
+{
+  pushWarning = false;
+  const datatypes::TypeHandler* h = typeHandler();
+  if (!h)
+    throw QueryDataExcept("convertColumnData: unknown column data type.", dataTypeErr);
+
+  if (data.isNull)
+    return h->getNullValueForType(*this);
+
+  const datatypes::ConvertFromStringParam prm(timeZone, noRoundup, isUpdate);
+  return h->convertFromString(*this, prm, data.unsafeStringRef(), pushWarning);
+}
+
 CalpontSystemCatalog::ColType CalpontSystemCatalog::ColType::convertUnionColType(
     vector<CalpontSystemCatalog::ColType>& types)
 {
