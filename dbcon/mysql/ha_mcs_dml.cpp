@@ -280,7 +280,7 @@ int doProcessInsertValues(TABLE* table, uint32_t size, cal_connection_info& ci, 
   }
 
   VendorDMLStatement dmlStmts(query_str, DML_INSERT, table->s->table_name.str, table->s->db.str, size,
-                              ci.colNameList.size(), ci.colNameList, ci.tableValuesMap, ci.nullValuesBitSet,
+                              ci.colNameList.size(), ci.colNameList, ci.tableValuesMap, ci.nullValuesBitset,
                               sessionID);
 
   CalpontDMLPackage* pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStmts);
