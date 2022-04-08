@@ -52,6 +52,8 @@ class NullString
     idbassert(mStrPtr);
     return std::string(*mStrPtr);
   }
+  // "unsafe" means we do not check for NULL.
+  // it should be used after we know there is data in NullString.
   const std::string& unsafeStringRef() const
   {
     idbassert(mStrPtr);
