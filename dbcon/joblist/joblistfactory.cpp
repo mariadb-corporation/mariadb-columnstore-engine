@@ -2313,6 +2313,7 @@ SJLP JobListFactory::makeJobList(CalpontExecutionPlan* cplan, ResourceManager* r
     ret->errorInfo(errorInfo);
   }
 
+  std::cout<<ret->toString()<<std::endl;
   return ret;
 }
 

@@ -129,22 +129,24 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
       CalpontSystemCatalog::makeCalpontSystemCatalog(sessionId);
   systemCatalogPtr->identity(CalpontSystemCatalog::EC);
   CalpontSystemCatalog::ROPair tableRoPair;
+  CalpontSystemCatalog::OID tableAUXColOid;
   std::vector<string> colNames;
   bool isWarningSet = false;
 
   try
   {
     tableRoPair = systemCatalogPtr->tableRID(tableName);
+    tableAUXColOid = systemCatalogPtr->tableAUXColumnOID(tableName);
 
     if (rows.size())
     {
       Row* rowPtr = rows.at(0);
       ColumnList columns = rowPtr->get_ColumnList();
       unsigned int numcols = rowPtr->get_NumberOfColumns();
-      cscColTypeList.reserve(numcols);
+      cscColTypeList.reserve(numcols + 1);
       // WIP
       // We presume that DictCols number is low
-      colStructs.reserve(numcols);
+      colStructs.reserve(numcols + 1);
       ColumnList::const_iterator column_iterator = columns.begin();
 
       while (column_iterator != columns.end())
@@ -203,6 +205,33 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
         cscColTypeList.push_back(colType);
 
         ++column_iterator;
+      }
+
+      // MCOL-5021 Valid AUX column OID for a table is > 3000
+      // Tables that were created before this feature was added will have
+      // tableAUXColOid = 0
+      if (tableAUXColOid > 3000)
+      {
+        CalpontSystemCatalog::ColType colType;
+        colType.compressionType = 2;
+        colType.colWidth = 1;
+        colType.colDataType = datatypes::SystemCatalog::UTINYINT;
+        WriteEngine::ColStruct colStruct;
+        colStruct.fColDbRoot = dbroot;
+        WriteEngine::DctnryStruct dctnryStruct;
+        dctnryStruct.fColDbRoot = dbroot;
+        colStruct.dataOid = tableAUXColOid;
+        colStruct.tokenFlag = false;
+        colStruct.fCompressionType = colType.compressionType;
+        colStruct.colWidth = colType.colWidth;
+        colStruct.colDataType = colType.colDataType;
+        dctnryStruct.dctnryOid = 0;
+        dctnryStruct.columnOid = colStruct.dataOid;
+        dctnryStruct.fCompressionType = colType.compressionType;
+        dctnryStruct.colWidth = colType.colWidth;
+        colStructs.push_back(colStruct);
+        dctnryStructList.push_back(dctnryStruct);
+        cscColTypeList.push_back(colType);
       }
 
       std::string tmpStr("");
@@ -409,6 +438,27 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
             colValuesList.push_back(colTuples);
             dicStringList.push_back(dicStrings);
+          }
+
+          // MCOL-5021
+          if ((i == numcols - 1) && (tableAUXColOid > 3000))
+          {
+            WriteEngine::ColTupleList auxColTuples;
+            WriteEngine::dictStr auxDicStrings;
+
+            for (uint32_t j = 0; j < origVals.size(); j++)
+            {
+              WriteEngine::ColTuple auxColTuple;
+              auxColTuple.data = (uint8_t)1;
+
+              auxColTuples.push_back(auxColTuple);
+              //@Bug 2515. Only pass string values to write engine
+              auxDicStrings.push_back("");
+            }
+
+            colValuesList.push_back(auxColTuples);
+            //@Bug 2515. Only pass string values to write engine
+            dicStringList.push_back(auxDicStrings);
           }
 
           ++row_iterator;
@@ -841,6 +891,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
       CalpontSystemCatalog::makeCalpontSystemCatalog(sessionId);
   systemCatalogPtr->identity(CalpontSystemCatalog::EC);
   CalpontSystemCatalog::ROPair roPair;
+  CalpontSystemCatalog::OID tableAUXColOid;
   CalpontSystemCatalog::RIDList ridList;
   CalpontSystemCatalog::DictOIDList dictOids;
 
@@ -848,6 +899,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
   {
     ridList = systemCatalogPtr->columnRIDs(tableName, true);
     roPair = systemCatalogPtr->tableRID(tableName);
+    tableAUXColOid = systemCatalogPtr->tableAUXColumnOID(tableName);
   }
   catch (std::exception& ex)
   {
@@ -856,13 +908,13 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
     return rc;
   }
 
-  std::vector<OID> dctnryStoreOids(ridList.size());
+  uint32_t sizeToAdd = (tableAUXColOid > 3000 ? 1 : 0);
+  std::vector<OID> dctnryStoreOids(ridList.size() + sizeToAdd);
   std::vector<Column> columns;
   DctnryStructList dctnryList;
-  std::vector<BRM::EmDbRootHWMInfo_v> dbRootHWMInfoColVec(ridList.size());
+  std::vector<BRM::EmDbRootHWMInfo_v> dbRootHWMInfoColVec(ridList.size() + sizeToAdd);
 
   uint32_t tblOid = roPair.objnum;
-  CalpontSystemCatalog::ColType colType;
   std::vector<DBRootExtentInfo> colDBRootExtentInfo;
   bool bFirstExtentOnThisPM = false;
   Convertor convertor;
@@ -880,24 +932,51 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
 
     try
     {
+      std::vector<CalpontSystemCatalog::ColType> colTypes;
+
+      for (unsigned i = 0; i < ridList.size(); i++)
+      {
+        CalpontSystemCatalog::ColType colType = systemCatalogPtr->colType(ridList[i].objnum);
+        colTypes.push_back(colType);
+
+        if (colType.ddn.dictOID > 0)
+        {
+          dctnryStoreOids[i] = colType.ddn.dictOID;
+        }
+        else
+        {
+          dctnryStoreOids[i] = 0;
+        }
+      }
+
       // First gather HWM BRM information for all columns
       std::vector<int> colWidths;
-
       for (unsigned i = 0; i < ridList.size(); i++)
       {
         rc = BRMWrapper::getInstance()->getDbRootHWMInfo(ridList[i].objnum, dbRootHWMInfoColVec[i]);
         // need handle error
+        colWidths.push_back(convertor.getCorrectRowWidth(colTypes[i].colDataType, colTypes[i].colWidth));
+      }
 
-        CalpontSystemCatalog::ColType colType2 = systemCatalogPtr->colType(ridList[i].objnum);
-        colWidths.push_back(convertor.getCorrectRowWidth(colType2.colDataType, colType2.colWidth));
+      // MCOL-5021
+      if (tableAUXColOid > 3000)
+      {
+        rc = BRMWrapper::getInstance()->getDbRootHWMInfo(tableAUXColOid, dbRootHWMInfoColVec[ridList.size()]);
+        colWidths.push_back(1);
+        dctnryStoreOids[ridList.size()] = 0;
+        CalpontSystemCatalog::ROPair auxRoPair;
+        auxRoPair.rid = ridList.back().rid + 1;
+        auxRoPair.objnum = tableAUXColOid;
+        ridList.push_back(auxRoPair);
       }
 
       for (unsigned i = 0; i < ridList.size(); i++)
       {
+        uint32_t objNum = ridList[i].objnum;
+
         // Find DBRoot/segment file where we want to start adding rows
-        colType = systemCatalogPtr->colType(ridList[i].objnum);
         boost::shared_ptr<DBRootExtentTracker> pDBRootExtentTracker(
-            new DBRootExtentTracker(ridList[i].objnum, colWidths, dbRootHWMInfoColVec, i, 0));
+            new DBRootExtentTracker(objNum, colWidths, dbRootHWMInfoColVec, i, 0));
         dbRootExtTrackerVec.push_back(pDBRootExtentTracker);
         DBRootExtentInfo dbRootExtent;
         std::string trkErrMsg;
@@ -914,34 +993,38 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
         colDBRootExtentInfo.push_back(dbRootExtent);
 
         Column aColumn;
-        aColumn.colWidth = convertor.getCorrectRowWidth(colType.colDataType, colType.colWidth);
-        aColumn.colDataType = colType.colDataType;
-        aColumn.compressionType = colType.compressionType;
-        aColumn.dataFile.oid = ridList[i].objnum;
+
+        if ((i == ridList.size() - 1) && (tableAUXColOid > 3000)) // AUX column
+        {
+          aColumn.colWidth = 1;
+          aColumn.colDataType = datatypes::SystemCatalog::UTINYINT;
+          // TODO MCOL-5021 compressionType for the AUX column is hard-coded to 2
+          aColumn.compressionType = 2;
+        }
+        else
+        {
+          const CalpontSystemCatalog::ColType& colType = colTypes[i];
+          aColumn.colWidth = convertor.getCorrectRowWidth(colType.colDataType, colType.colWidth);
+          aColumn.colDataType = colType.colDataType;
+          aColumn.compressionType = colType.compressionType;
+
+          if ((colType.compressionType > 0) && (colType.ddn.dictOID > 0))
+          {
+            DctnryStruct aDctnry;
+            aDctnry.dctnryOid = colType.ddn.dictOID;
+            aDctnry.fColPartition = dbRootExtent.fPartition;
+            aDctnry.fColSegment = dbRootExtent.fSegment;
+            aDctnry.fColDbRoot = dbRootExtent.fDbRoot;
+            dctnryList.push_back(aDctnry);
+          }
+        }
+
+        aColumn.dataFile.oid = objNum;
         aColumn.dataFile.fPartition = dbRootExtent.fPartition;
         aColumn.dataFile.fSegment = dbRootExtent.fSegment;
         aColumn.dataFile.fDbRoot = dbRootExtent.fDbRoot;
         aColumn.dataFile.hwm = dbRootExtent.fLocalHwm;
         columns.push_back(aColumn);
-
-        if ((colType.compressionType > 0) && (colType.ddn.dictOID > 0))
-        {
-          DctnryStruct aDctnry;
-          aDctnry.dctnryOid = colType.ddn.dictOID;
-          aDctnry.fColPartition = dbRootExtent.fPartition;
-          aDctnry.fColSegment = dbRootExtent.fSegment;
-          aDctnry.fColDbRoot = dbRootExtent.fDbRoot;
-          dctnryList.push_back(aDctnry);
-        }
-
-        if (colType.ddn.dictOID > 0)
-        {
-          dctnryStoreOids[i] = colType.ddn.dictOID;
-        }
-        else
-        {
-          dctnryStoreOids[i] = 0;
-        }
       }
     }
     catch (std::exception& ex)
@@ -952,7 +1035,8 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
     }
 
     //@Bug 5996 validate hwm before starts
-    rc = validateColumnHWMs(ridList, systemCatalogPtr, colDBRootExtentInfo, "Starting");
+    rc = validateColumnHWMs(ridList, systemCatalogPtr, colDBRootExtentInfo, "Starting",
+                            tableAUXColOid > 3000);
 
     if (rc != 0)
     {
@@ -1061,6 +1145,31 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
         cscColTypeList.push_back(colType);
 
         ++column_iterator;
+      }
+
+      // MCOL-5021 Valid AUX column OID for a table is > 3000
+      // Tables that were created before this feature was added will have
+      // tableAUXColOid = 0
+      if (tableAUXColOid > 3000)
+      {
+        CalpontSystemCatalog::ColType colType;
+        colType.compressionType = 2;
+        colType.colWidth = 1;
+        colType.colDataType = datatypes::SystemCatalog::UTINYINT;
+        WriteEngine::ColStruct colStruct;
+        WriteEngine::DctnryStruct dctnryStruct;
+        colStruct.dataOid = tableAUXColOid;
+        colStruct.tokenFlag = false;
+        colStruct.fCompressionType = colType.compressionType;
+        colStruct.colWidth = colType.colWidth;
+        colStruct.colDataType = colType.colDataType;
+        dctnryStruct.dctnryOid = 0;
+        dctnryStruct.columnOid = colStruct.dataOid;
+        dctnryStruct.fCompressionType = colType.compressionType;
+        dctnryStruct.colWidth = colType.colWidth;
+        colStructs.push_back(colStruct);
+        dctnryStructList.push_back(dctnryStruct);
+        cscColTypeList.push_back(colType);
       }
     }
     catch (std::exception& ex)
@@ -1273,6 +1382,27 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
             dicStringList.push_back(dicStrings);
           }
 
+          // MCOL-5021
+          if ((i == numcols - 1) && (tableAUXColOid > 3000))
+          {
+            WriteEngine::ColTupleList auxColTuples;
+            WriteEngine::dictStr auxDicStrings;
+
+            for (uint32_t j = 0; j < origVals.size(); j++)
+            {
+              WriteEngine::ColTuple auxColTuple;
+              auxColTuple.data = (uint8_t)1;
+
+              auxColTuples.push_back(auxColTuple);
+              //@Bug 2515. Only pass string values to write engine
+              auxDicStrings.push_back("");
+            }
+
+            colValuesList.push_back(auxColTuples);
+            //@Bug 2515. Only pass string values to write engine
+            dicStringList.push_back(auxDicStrings);
+          }
+
           ++row_iterator;
         }
 
@@ -1372,6 +1502,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
   return rc;
 }
 
+#if 0
 uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs, std::string& err,
                                                     ByteStream::quadbyte& PMId)
 {
@@ -2102,6 +2233,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
   CalpontSystemCatalog::removeCalpontSystemCatalog(sessionId | 0x80000000);
   return rc;
 }
+#endif
 
 uint8_t WE_DMLCommandProc::commitBatchAutoOn(messageqcpp::ByteStream& bs, std::string& err)
 {
@@ -2275,8 +2407,49 @@ uint8_t WE_DMLCommandProc::processBatchInsertHwm(messageqcpp::ByteStream& bs, st
   ColExtsInfo::iterator aIt;
   CalpontSystemCatalog::RIDList ridList;
   CalpontSystemCatalog::ROPair roPair;
+
+  //@Bug 5996. Validate hwm before set them
+  boost::shared_ptr<CalpontSystemCatalog> systemCatalogPtr =
+      CalpontSystemCatalog::makeCalpontSystemCatalog(0);
+  systemCatalogPtr->identity(CalpontSystemCatalog::EC);
+
+  CalpontSystemCatalog::OID tableAUXColOid;
+
+  try
+  {
+    CalpontSystemCatalog::TableName tableName = systemCatalogPtr->tableName(tableOid);
+    ridList = systemCatalogPtr->columnRIDs(tableName);
+    tableAUXColOid = systemCatalogPtr->tableAUXColumnOID(tableName);
+  }
+  catch (exception& ex)
+  {
+    err = ex.what();
+    rc = 1;
+    TableMetaData::removeTableMetaData(tableOid);
+
+    fIsFirstBatchPm = true;
+    // cout << "flush files when autocommit off" << endl;
+    fWEWrapper.setIsInsert(true);
+    fWEWrapper.setBulkFlag(true);
+    return rc;
+  }
+
+  // MCOL-5021 Valid AUX column OID for a table is > 3000
+  // Tables that were created before this feature was added will have
+  // tableAUXColOid = 0
+  bool hasAUXCol = (tableAUXColOid > 3000);
+
+  if (hasAUXCol)
+  {
+    CalpontSystemCatalog::ROPair auxRoPair;
+    auxRoPair.rid = ridList.back().rid + 1;
+    auxRoPair.objnum = tableAUXColOid;
+    ridList.push_back(auxRoPair);
+  }
+
   std::vector<DBRootExtentInfo> colDBRootExtentInfo;
   DBRootExtentInfo aExtentInfo;
+  std::vector<DBRootExtentInfo> auxColDBRootExtentInfo;
 
   while (it != colsExtsInfoMap.end())
   {
@@ -2321,37 +2494,28 @@ uint8_t WE_DMLCommandProc::processBatchInsertHwm(messageqcpp::ByteStream& bs, st
 
     if (!isDict)
     {
-      ridList.push_back(roPair);
-      colDBRootExtentInfo.push_back(aExtentInfo);
+      if (hasAUXCol && (((uint32_t)tableAUXColOid) == it->first))
+      {
+        auxColDBRootExtentInfo.push_back(aExtentInfo);
+      }
+      else
+      {
+        colDBRootExtentInfo.push_back(aExtentInfo);
+      }
     }
 
     it++;
   }
 
-  //@Bug 5996. Validate hwm before set them
-  boost::shared_ptr<CalpontSystemCatalog> systemCatalogPtr =
-      CalpontSystemCatalog::makeCalpontSystemCatalog(0);
-  systemCatalogPtr->identity(CalpontSystemCatalog::EC);
-
-  try
+  if (hasAUXCol)
   {
-    CalpontSystemCatalog::TableName tableName = systemCatalogPtr->tableName(tableOid);
-    ridList = systemCatalogPtr->columnRIDs(tableName);
-  }
-  catch (exception& ex)
-  {
-    err = ex.what();
-    rc = 1;
-    TableMetaData::removeTableMetaData(tableOid);
-
-    fIsFirstBatchPm = true;
-    // cout << "flush files when autocommit off" << endl;
-    fWEWrapper.setIsInsert(true);
-    fWEWrapper.setBulkFlag(true);
-    return rc;
+    idbassert(auxColDBRootExtentInfo.size() == 1);
+    colDBRootExtentInfo.insert(colDBRootExtentInfo.end(), auxColDBRootExtentInfo.begin(),
+                               auxColDBRootExtentInfo.end());
   }
 
-  rc = validateColumnHWMs(ridList, systemCatalogPtr, colDBRootExtentInfo, "Ending");
+  rc = validateColumnHWMs(ridList, systemCatalogPtr, colDBRootExtentInfo, "Ending",
+                          hasAUXCol);
 
   if (rc != 0)
   {
@@ -2472,6 +2636,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertHwmFlushChunks(uint32_t tblOid, int
   CalpontSystemCatalog::TableName aTableName;
   CalpontSystemCatalog::RIDList ridList;
   CalpontSystemCatalog::DictOIDList dictOids;
+  CalpontSystemCatalog::OID tableAUXColOid;
 
   try
   {
@@ -2480,6 +2645,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertHwmFlushChunks(uint32_t tblOid, int
     aTableName = systemCatalogPtr->tableName(tblOid);
     ridList = systemCatalogPtr->columnRIDs(aTableName, true);
     dictOids = systemCatalogPtr->dictOIDs(aTableName);
+    tableAUXColOid = systemCatalogPtr->tableAUXColumnOID(aTableName);
   }
   catch (exception& ex)
   {
@@ -2494,6 +2660,17 @@ uint8_t WE_DMLCommandProc::processBatchInsertHwmFlushChunks(uint32_t tblOid, int
     err = ossErr.str();
     rc = 1;
     return rc;
+  }
+
+  // MCOL-5021 Valid AUX column OID for a table is > 3000
+  // Tables that were created before this feature was added will have
+  // tableAUXColOid = 0
+  if (tableAUXColOid > 3000)
+  {
+    CalpontSystemCatalog::ROPair auxRoPair;
+    auxRoPair.rid = ridList.back().rid + 1;
+    auxRoPair.objnum = tableAUXColOid;
+    ridList.push_back(auxRoPair);
   }
 
   for (unsigned i = 0; i < ridList.size(); i++)
@@ -4017,6 +4194,7 @@ uint8_t WE_DMLCommandProc::processDelete(messageqcpp::ByteStream& bs, std::strin
   boost::shared_ptr<CalpontSystemCatalog> systemCatalogPtr =
       CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
   CalpontSystemCatalog::ROPair roPair;
+  CalpontSystemCatalog::OID tableAUXColOid;
 
   CalpontSystemCatalog::RIDList tableRidList;
 
@@ -4024,6 +4202,7 @@ uint8_t WE_DMLCommandProc::processDelete(messageqcpp::ByteStream& bs, std::strin
   {
     roPair = systemCatalogPtr->tableRID(aTableName);
     tableRidList = systemCatalogPtr->columnRIDs(aTableName, true);
+    tableAUXColOid = systemCatalogPtr->tableAUXColumnOID(aTableName);
   }
   catch (exception& ex)
   {
@@ -4084,6 +4263,11 @@ uint8_t WE_DMLCommandProc::processDelete(messageqcpp::ByteStream& bs, std::strin
     }
   }
 
+  // MCOL-5021 Valid AUX column OID for a table is > 3000
+  // Tables that were created before this feature was added will have
+  // tableAUXColOid = 0
+  bool hasAUXCol = tableAUXColOid > 3000;
+
   try
   {
     for (unsigned i = 0; i < tableRidList.size(); i++)
@@ -4118,6 +4302,21 @@ uint8_t WE_DMLCommandProc::processDelete(messageqcpp::ByteStream& bs, std::strin
     return rc;
   }
 
+  if (hasAUXCol)
+  {
+    CalpontSystemCatalog::ColType colType;
+    colType.compressionType = 2;
+    colType.colWidth = 1;
+    colType.colDataType = datatypes::SystemCatalog::UTINYINT;
+    colStruct.dataOid = tableAUXColOid;
+    colStruct.tokenFlag = false;
+    colStruct.fCompressionType = colType.compressionType;
+    colStruct.colWidth = colType.colWidth;
+    colStruct.colDataType = colType.colDataType;
+    colStructList.push_back(colStruct);
+    cscColTypeList.push_back(colType);
+  }
+
   std::vector<ColStructList> colExtentsStruct;
   std::vector<CSCTypesList> colExtentsColType;
   std::vector<void*> colOldValueList;
@@ -4128,7 +4327,7 @@ uint8_t WE_DMLCommandProc::processDelete(messageqcpp::ByteStream& bs, std::strin
   int error = 0;
 
   error = fWEWrapper.deleteRow(txnId, colExtentsColType, colExtentsStruct, colOldValueList, ridLists,
-                               roPair.objnum);
+                               roPair.objnum, hasAUXCol);
 
   if (error != NO_ERROR)
   {
@@ -4544,35 +4743,45 @@ uint8_t WE_DMLCommandProc::processEndTransaction(ByteStream& bs, std::string& er
 //------------------------------------------------------------------------------
 int WE_DMLCommandProc::validateColumnHWMs(CalpontSystemCatalog::RIDList& ridList,
                                           boost::shared_ptr<CalpontSystemCatalog> systemCatalogPtr,
-                                          const std::vector<DBRootExtentInfo>& segFileInfo, const char* stage)
+                                          const std::vector<DBRootExtentInfo>& segFileInfo, const char* stage,
+                                          bool hasAuxCol)
 {
   int rc = NO_ERROR;
 
   if ((!fIsFirstBatchPm) && (strcmp(stage, "Starting") == 0))
     return rc;
 
-  // Used to track first 1-byte, 2-byte, 4-byte, and 8-byte columns in table
+  // Used to track first 1-byte, 2-byte, 4-byte, 8-byte and 16-byte columns in table
   int byte1First = -1;
   int byte2First = -1;
   int byte4First = -1;
   int byte8First = -1;
+  int byte16First = -1;
 
   // Make sure the HWMs for all 1-byte columns match; same for all 2-byte,
-  // 4-byte, and 8-byte columns as well.
+  // 4-byte, 8-byte, and 16-byte columns as well.
   CalpontSystemCatalog::ColType colType;
   Convertor convertor;
+  uint32_t colWidth;
 
   for (unsigned k = 0; k < segFileInfo.size(); k++)
   {
-    int k1 = 0;
+    unsigned k1 = 0;
 
     // Find out column width
-    colType = systemCatalogPtr->colType(ridList[k].objnum);
-    colType.colWidth = convertor.getCorrectRowWidth(colType.colDataType, colType.colWidth);
+    if (hasAuxCol && (k == segFileInfo.size() - 1))
+    {
+      colWidth = 1;
+    }
+    else
+    {
+      colType = systemCatalogPtr->colType(ridList[k].objnum);
+      colWidth = convertor.getCorrectRowWidth(colType.colDataType, colType.colWidth);
+    }
 
-    // Find the first 1-byte, 2-byte, 4-byte, and 8-byte columns.
+    // Find the first 1-byte, 2-byte, 4-byte, 8-byte and 16-byte columns.
     // Use those as our reference HWM for the respective column widths.
-    switch (colType.colWidth)
+    switch (colWidth)
     {
       case 1:
       {
@@ -4601,6 +4810,15 @@ int WE_DMLCommandProc::validateColumnHWMs(CalpontSystemCatalog::RIDList& ridList
         break;
       }
 
+      case 16:
+      {
+        if (byte16First == -1)
+          byte16First = k;
+
+        k1 = byte16First;
+        break;
+      }
+
       case 8:
       default:
       {
@@ -4610,7 +4828,7 @@ int WE_DMLCommandProc::validateColumnHWMs(CalpontSystemCatalog::RIDList& ridList
         k1 = byte8First;
         break;
       }
-    }  // end of switch based on column width (1,2,4, or 8)
+    }  // end of switch based on column width (1,2,4,8 or 16)
 
     // std::cout << "dbg: comparing0 " << stage << " refcol-" << k1 <<
     //  "; wid-" << jobColK1.width << "; hwm-" << segFileInfo[k1].fLocalHwm <<
@@ -4624,15 +4842,26 @@ int WE_DMLCommandProc::validateColumnHWMs(CalpontSystemCatalog::RIDList& ridList
         (segFileInfo[k1].fSegment != segFileInfo[k].fSegment) ||
         (segFileInfo[k1].fLocalHwm != segFileInfo[k].fLocalHwm))
     {
-      CalpontSystemCatalog::ColType colType2;
-      colType2 = systemCatalogPtr->colType(ridList[k1].objnum);
+      uint32_t colWidth2;
+
+      if (hasAuxCol && (k1 == segFileInfo.size() - 1))
+      {
+        colWidth2 = 1;
+      }
+      else
+      {
+        CalpontSystemCatalog::ColType colType2;
+        colType2 = systemCatalogPtr->colType(ridList[k1].objnum);
+        colWidth2 = colType2.colWidth;
+      }
+
       ostringstream oss;
       oss << stage
           << " HWMs do not match for"
              " OID1-"
           << ridList[k1].objnum << "; DBRoot-" << segFileInfo[k1].fDbRoot << "; partition-"
           << segFileInfo[k1].fPartition << "; segment-" << segFileInfo[k1].fSegment << "; hwm-"
-          << segFileInfo[k1].fLocalHwm << "; width-" << colType2.colWidth << ':' << std::endl
+          << segFileInfo[k1].fLocalHwm << "; width-" << colWidth2 << ':' << std::endl
           << " and OID2-" << ridList[k].objnum << "; DBRoot-" << segFileInfo[k].fDbRoot << "; partition-"
           << segFileInfo[k].fPartition << "; segment-" << segFileInfo[k].fSegment << "; hwm-"
           << segFileInfo[k].fLocalHwm << "; width-" << colType.colWidth;
@@ -4666,8 +4895,8 @@ int WE_DMLCommandProc::validateColumnHWMs(CalpontSystemCatalog::RIDList& ridList
   // Validate/compare HWM for 1-byte column in relation to 2-byte column, etc.
   // Without knowing the exact row count, we can't extrapolate the exact HWM
   // for the wider column, but we can narrow it down to an expected range.
-  int refCol = 0;
-  int colIdx = 0;
+  unsigned refCol = 0;
+  unsigned colIdx = 0;
 
   // Validate/compare HWMs given a 1-byte column as a starting point
   if (byte1First >= 0)
@@ -4771,12 +5000,27 @@ errorCheck:
 
   if (rc != NO_ERROR)
   {
-    CalpontSystemCatalog::ColType colType1, colType2;
-    colType1 = systemCatalogPtr->colType(ridList[refCol].objnum);
-    colType1.colWidth = convertor.getCorrectRowWidth(colType1.colDataType, colType1.colWidth);
+    uint32_t colWidth1, colWidth2;
 
-    colType2 = systemCatalogPtr->colType(ridList[colIdx].objnum);
-    colType2.colWidth = convertor.getCorrectRowWidth(colType2.colDataType, colType2.colWidth);
+    if (hasAuxCol && (refCol == ridList.size() - 1))
+    {
+      colWidth1 = 1;
+    }
+    else
+    {
+      CalpontSystemCatalog::ColType colType1 = systemCatalogPtr->colType(ridList[refCol].objnum);
+      colWidth1 = convertor.getCorrectRowWidth(colType1.colDataType, colType1.colWidth);
+    }
+
+    if (hasAuxCol && (colIdx == ridList.size() - 1))
+    {
+      colWidth2 = 1;
+    }
+    else
+    {
+      CalpontSystemCatalog::ColType colType2 = systemCatalogPtr->colType(ridList[colIdx].objnum);
+      colWidth2 = convertor.getCorrectRowWidth(colType2.colDataType, colType2.colWidth);
+    }
 
     ostringstream oss;
     oss << stage
@@ -4784,10 +5028,10 @@ errorCheck:
            " OID1-"
         << ridList[refCol].objnum << "; DBRoot-" << segFileInfo[refCol].fDbRoot << "; partition-"
         << segFileInfo[refCol].fPartition << "; segment-" << segFileInfo[refCol].fSegment << "; hwm-"
-        << segFileInfo[refCol].fLocalHwm << "; width-" << colType1.colWidth << ':' << std::endl
+        << segFileInfo[refCol].fLocalHwm << "; width-" << colWidth1 << ':' << std::endl
         << " and OID2-" << ridList[colIdx].objnum << "; DBRoot-" << segFileInfo[colIdx].fDbRoot
         << "; partition-" << segFileInfo[colIdx].fPartition << "; segment-" << segFileInfo[colIdx].fSegment
-        << "; hwm-" << segFileInfo[colIdx].fLocalHwm << "; width-" << colType2.colWidth;
+        << "; hwm-" << segFileInfo[colIdx].fLocalHwm << "; width-" << colWidth2;
     fLog.logMsg(oss.str(), ERR_UNKNOWN, MSGLVL_ERROR);
   }
 

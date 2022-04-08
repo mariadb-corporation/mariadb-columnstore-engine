@@ -89,6 +89,7 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
   CalpontSystemCatalog::RIDList tableColRidList;
   CalpontSystemCatalog::DictOIDList dictOIDList;
   execplan::CalpontSystemCatalog::ROPair roPair;
+  CalpontSystemCatalog::OID tableAUXColOid;
   std::string errorMsg;
   ByteStream bytestream;
   uint64_t uniqueId = 0;
@@ -145,6 +146,7 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
     try
     {
       roPair = systemCatalogPtr->tableRID(tableName);
+      tableAUXColOid = systemCatalogPtr->tableAUXColumnOID(tableName);
     }
     catch (IDBExcept& ie)
     {
@@ -578,6 +580,18 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
     result.message = message;
     fWEClient->removeQueue(uniqueId);
     return result;
+  }
+
+  // MCOL-5021 Valid AUX column OID for a table is > 3000
+  // Tables that were created before this feature was added will have
+  // tableAUXColOid = 0
+  if (tableAUXColOid > 3000)
+  {
+    oidList.push_back(tableAUXColOid);
+    CalpontSystemCatalog::ROPair auxRoPair;
+    auxRoPair.rid = 0;
+    auxRoPair.objnum = tableAUXColOid;
+    tableColRidList.push_back(auxRoPair);
   }
 
   // Save the oids to a file

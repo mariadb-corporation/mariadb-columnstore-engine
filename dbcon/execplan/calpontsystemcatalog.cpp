@@ -3607,6 +3607,140 @@ const CalpontSystemCatalog::ROPair CalpontSystemCatalog::tableRID(const TableNam
   throw IDBExcept(ERR_TABLE_NOT_IN_CATALOG, args);
 }
 
+// This function is similar to CalpontSystemCatalog::tableRID, except that
+// instead of returning a ROPair for the table, it returns the OID for the
+// AUX column for the table
+CalpontSystemCatalog::OID CalpontSystemCatalog::tableAUXColumnOID(const TableName& tableName,
+                                                                  int lower_case_table_names)
+{
+  TableName aTableName;
+  aTableName.schema = tableName.schema;
+  aTableName.table = tableName.table;
+  if (lower_case_table_names)
+  {
+    boost::algorithm::to_lower(aTableName.schema);
+    boost::algorithm::to_lower(aTableName.table);
+  }
+
+  if (aTableName.schema.compare(CALPONT_SCHEMA) == 0)
+  {
+    std::ostringstream oss;
+    oss << "tableAUXColumnOID() cannot be called on a ";
+    oss << CALPONT_SCHEMA << " schema table";
+    throw runtime_error(oss.str());
+  }
+
+  DEBUG << "Enter tableAUXColumnOID: " << tableName.schema << "|" << tableName.table << endl;
+
+  // look up the OID in the cache first
+  OID auxColOid;
+
+  checkSysCatVer();
+
+  boost::mutex::scoped_lock lk1(fTableAUXColumnOIDMapLock);
+  TableOIDmap::const_iterator iter = fTableAUXColumnOIDMap.find(aTableName);
+
+  if (iter != fTableAUXColumnOIDMap.end())
+  {
+    auxColOid = iter->second;
+    return auxColOid;
+  }
+
+  lk1.unlock();
+
+  // select auxcolumnoid from systable where schema = tableName.schema and tablename = tableName.table;
+  CalpontSelectExecutionPlan csep;
+  CalpontSelectExecutionPlan::ReturnedColumnList returnedColumnList;
+  CalpontSelectExecutionPlan::FilterTokenList filterTokenList;
+  CalpontSelectExecutionPlan::ColumnMap colMap;
+
+  SimpleColumn* c1 =
+    new SimpleColumn(CALPONT_SCHEMA + "." + SYSTABLE_TABLE + "." + AUXCOLUMNOID_COL, fSessionID);
+  SimpleColumn* c2 =
+    new SimpleColumn(CALPONT_SCHEMA + "." + SYSTABLE_TABLE + "." + SCHEMA_COL, fSessionID);
+  SimpleColumn* c3 =
+    new SimpleColumn(CALPONT_SCHEMA + "." + SYSTABLE_TABLE + "." + TABLENAME_COL, fSessionID);
+
+  SRCP srcp;
+  srcp.reset(c1);
+  colMap.insert(CMVT_(CALPONT_SCHEMA + "." + SYSTABLE_TABLE + "." + AUXCOLUMNOID_COL, srcp));
+  srcp.reset(c2);
+  colMap.insert(CMVT_(CALPONT_SCHEMA + "." + SYSTABLE_TABLE + "." + SCHEMA_COL, srcp));
+  srcp.reset(c3);
+  colMap.insert(CMVT_(CALPONT_SCHEMA + "." + SYSTABLE_TABLE + "." + TABLENAME_COL, srcp));
+  csep.columnMapNonStatic(colMap);
+
+  srcp.reset(c1->clone());
+  returnedColumnList.push_back(srcp);
+  csep.returnedCols(returnedColumnList);
+  OID oid = c1->oid();
+
+  // Filters
+  SimpleFilter* f1 =
+      new SimpleFilter(opeq, c2->clone(), new ConstantColumn(aTableName.schema, ConstantColumn::LITERAL));
+  filterTokenList.push_back(f1);
+  filterTokenList.push_back(new Operator("and"));
+
+  SimpleFilter* f2 =
+      new SimpleFilter(opeq, c3->clone(), new ConstantColumn(aTableName.table, ConstantColumn::LITERAL));
+  filterTokenList.push_back(f2);
+  csep.filterTokenList(filterTokenList);
+
+  ostringstream oss;
+  oss << "select auxcolumnoid from systable where schema='" << aTableName.schema << "' and tablename='"
+      << aTableName.table << "' --tableAUXColumnOID/";
+
+  csep.data(oss.str());  //@bug 6078. Log the statement
+
+  if (fIdentity == EC)
+    oss << "EC";
+  else
+    oss << "FE";
+
+  NJLSysDataList sysDataList;
+
+  try
+  {
+    getSysData(csep, sysDataList, SYSTABLE_TABLE);
+  }
+  catch (IDBExcept&)
+  {
+    throw;
+  }
+  catch (runtime_error& e)
+  {
+    throw runtime_error(e.what());
+  }
+
+  vector<ColumnResult*>::const_iterator it;
+
+  for (it = sysDataList.begin(); it != sysDataList.end(); it++)
+  {
+    if ((*it)->dataCount() == 0)
+    {
+      Message::Args args;
+      args.add("'" + tableName.schema + "." + tableName.table + "'");
+      // throw logging::NoTableExcept(msg);
+      throw IDBExcept(ERR_TABLE_NOT_IN_CATALOG, args);
+    }
+
+    if ((*it)->ColumnOID() == oid)
+    {
+      auxColOid = (OID)((*it)->GetData(0));
+
+      // populate cache
+      lk1.lock();
+      fTableAUXColumnOIDMap[aTableName] = auxColOid;
+      return auxColOid;
+    }
+  }
+
+  Message::Args args;
+  args.add("'" + tableName.schema + "." + tableName.table + "'");
+  // throw logging::NoTableExcept(msg);
+  throw IDBExcept(ERR_TABLE_NOT_IN_CATALOG, args);
+}
+
 #if 0
 const CalpontSystemCatalog::IndexNameList CalpontSystemCatalog::indexNames(const TableName& tableName)
 {
@@ -5640,6 +5774,10 @@ void CalpontSystemCatalog::flushCache()
   buildSysTablemap();
   lk3.unlock();
 
+  boost::mutex::scoped_lock auxlk(fTableAUXColumnOIDMapLock);
+  fTableAUXColumnOIDMap.clear();
+  auxlk.unlock();
+
   boost::recursive_mutex::scoped_lock lk4(fDctTokenMapLock);
   fDctTokenMap.clear();
   buildSysDctmap();
@@ -5772,6 +5910,14 @@ void CalpontSystemCatalog::buildSysColinfomap()
   aCol.ddn = notDict;
   aCol.colPosition++;
   aCol.columnOID = OID_SYSTABLE_AUTOINCREMENT;
+  fColinfomap[aCol.columnOID] = aCol;
+
+  aCol.colWidth = 4;
+  aCol.constraintType = NOTNULL_CONSTRAINT;
+  aCol.colDataType = INT;
+  aCol.ddn = notDict;
+  aCol.colPosition++;
+  aCol.columnOID = OID_SYSTABLE_AUXCOLUMNOID;
   fColinfomap[aCol.columnOID] = aCol;
 
   fTablemap[make_table(CALPONT_SCHEMA, SYSCOLUMN_TABLE)] = SYSCOLUMN_BASE;
@@ -5984,6 +6130,7 @@ void CalpontSystemCatalog::buildSysOIDmap()
   fOIDmap[make_tcn(CALPONT_SCHEMA, SYSTABLE_TABLE, AVGROWLEN_COL)] = OID_SYSTABLE_AVGROWLEN;
   fOIDmap[make_tcn(CALPONT_SCHEMA, SYSTABLE_TABLE, NUMOFBLOCKS_COL)] = OID_SYSTABLE_NUMOFBLOCKS;
   fOIDmap[make_tcn(CALPONT_SCHEMA, SYSTABLE_TABLE, AUTOINC_COL)] = OID_SYSTABLE_AUTOINCREMENT;
+  fOIDmap[make_tcn(CALPONT_SCHEMA, SYSTABLE_TABLE, AUXCOLUMNOID_COL)] = OID_SYSTABLE_AUXCOLUMNOID;
   fOIDmap[make_tcn(CALPONT_SCHEMA, SYSCOLUMN_TABLE, SCHEMA_COL)] = OID_SYSCOLUMN_SCHEMA;
   fOIDmap[make_tcn(CALPONT_SCHEMA, SYSCOLUMN_TABLE, TABLENAME_COL)] = OID_SYSCOLUMN_TABLENAME;
   fOIDmap[make_tcn(CALPONT_SCHEMA, SYSCOLUMN_TABLE, COLNAME_COL)] = OID_SYSCOLUMN_COLNAME;

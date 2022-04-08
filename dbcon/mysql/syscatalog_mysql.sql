@@ -16,7 +16,8 @@ create table if not exists systable (tablename varchar(128),
                        numofrows int,
                        avgrowlen int,
                        numofblocks int,
-					   autoincrement int) engine=columnstore comment='SCHEMA SYNC ONLY';
+                       autoincrement int,
+                       auxcolumnoid int not null default 0) engine=columnstore comment='SCHEMA SYNC ONLY';
 
 -- SYSCOLUMN
 create table if not exists syscolumn (`schema` varchar(128),

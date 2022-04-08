@@ -267,11 +267,16 @@ keepGoing:
         numDictCols++;
     }
 
-    fStartingColOID = fObjectIDManager.allocOIDs(numColumns + numDictCols +
-                                                 1);  // include column, oids,dictionary oids and tableoid
+    // Include column oids, dictionary oids, tableoid, and
+    // also include AUX oid as of MCOL-5021
+    fStartingColOID = fObjectIDManager.allocOIDs(numColumns + numDictCols + 2);
 #ifdef IDB_DDL_DEBUG
     cout << fTxnid.id << " Create table allocOIDs got the starting oid " << fStartingColOID << endl;
 #endif
+
+    uint32_t size = numColumns + numDictCols;
+    idbassert(size > 0);
+    size += 1; // MCOL-5021
 
     if (fStartingColOID < 0)
     {
@@ -295,6 +300,7 @@ keepGoing:
     bytestream << (uint32_t)createTableStmt.fSessionID;
     bytestream << (uint32_t)txnID.id;
     bytestream << (uint32_t)fStartingColOID;
+    bytestream << (uint32_t)(fStartingColOID + size);
     bytestream << (uint32_t)createTableStmt.fTableWithAutoi;
     uint16_t dbRoot;
     BRM::OID_t sysOid = 1001;
@@ -537,7 +543,7 @@ keepGoing:
     bytestream << (ByteStream::byte)WE_SVR_WRITE_CREATETABLEFILES;
     bytestream << uniqueId;
     bytestream << (uint32_t)txnID.id;
-    bytestream << (numColumns + numDictCols);
+    bytestream << size;
     unsigned colNum = 0;
     unsigned dictNum = 0;
 
@@ -601,6 +607,15 @@ keepGoing:
       ++iter;
     }
 
+    // MCOL-5021
+    // TODO compressionType is hardcoded to 2 (SNAPPY)
+    bytestream << (fStartingColOID + size);
+    bytestream << (uint8_t)datatypes::SystemCatalog::UTINYINT;
+    bytestream << (uint8_t) false;
+    bytestream << (uint32_t)1;
+    bytestream << (uint16_t)useDBRoot;
+    bytestream << (uint32_t)2;
+
     //@Bug 4176. save oids to a log file for cleanup after fail over.
     std::vector<CalpontSystemCatalog::OID> oidList;
 
@@ -615,6 +630,9 @@ keepGoing:
     {
       oidList.push_back(fStartingColOID + numColumns + i + 1);
     }
+
+    // MCOL-5021
+    oidList.push_back(fStartingColOID + size);
 
     try
     {
@@ -683,9 +701,9 @@ keepGoing:
         bytestream.restart();
         bytestream << (ByteStream::byte)WE_SVR_WRITE_DROPFILES;
         bytestream << uniqueId;
-        bytestream << (uint32_t)(numColumns + numDictCols);
+        bytestream << (uint32_t)size;
 
-        for (unsigned i = 0; i < (numColumns + numDictCols); i++)
+        for (unsigned i = 0; i < size; i++)
         {
           bytestream << (uint32_t)(fStartingColOID + i + 1);
         }

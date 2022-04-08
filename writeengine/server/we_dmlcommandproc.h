@@ -78,8 +78,8 @@ class WE_DMLCommandProc
   EXPORT uint8_t rollbackVersion(messageqcpp::ByteStream& bs, std::string& err);
   EXPORT uint8_t processBatchInsert(messageqcpp::ByteStream& bs, std::string& err,
                                     ByteStream::quadbyte& PMId);
-  EXPORT uint8_t processBatchInsertBinary(messageqcpp::ByteStream& bs, std::string& err,
-                                          ByteStream::quadbyte& PMId);
+  //EXPORT uint8_t processBatchInsertBinary(messageqcpp::ByteStream& bs, std::string& err,
+  //                                        ByteStream::quadbyte& PMId);
   EXPORT uint8_t commitBatchAutoOn(messageqcpp::ByteStream& bs, std::string& err);
   EXPORT uint8_t commitBatchAutoOff(messageqcpp::ByteStream& bs, std::string& err);
   EXPORT uint8_t rollbackBatchAutoOn(messageqcpp::ByteStream& bs, std::string& err);
@@ -101,7 +101,8 @@ class WE_DMLCommandProc
   EXPORT uint8_t getWrittenLbids(messageqcpp::ByteStream& bs, std::string& err, ByteStream::quadbyte& PMId);
   int validateColumnHWMs(execplan::CalpontSystemCatalog::RIDList& ridList,
                          boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatalogPtr,
-                         const std::vector<DBRootExtentInfo>& segFileInfo, const char* stage);
+                         const std::vector<DBRootExtentInfo>& segFileInfo, const char* stage,
+                         bool hasAuxCol);
 
  private:
   WriteEngineWrapper fWEWrapper;
