@@ -62,12 +62,6 @@ class VendorDMLStatement
                             int rows, int columns, ColNameList& colNameList, TableValuesMap& tableValuesMap,
                             NullValuesBitset& nullValues, int sessionID);
  
-  /** @brief ctor for mysql w/o NULL bitmap
-   */
-  EXPORT VendorDMLStatement(std::string dmlstatement, int stmttype, std::string tName, std::string schema,
-                            int rows, int columns, ColNameList& colNameList, TableValuesMap& tableValuesMap,
-                            int sessionID);
-
   /** @brief destructor
    */
   EXPORT ~VendorDMLStatement();
