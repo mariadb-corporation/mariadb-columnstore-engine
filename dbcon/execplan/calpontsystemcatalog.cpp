@@ -6129,7 +6129,7 @@ boost::any CalpontSystemCatalog::ColType::convertColumnData(const NullString& da
   if (!h)
     throw QueryDataExcept("convertColumnData: unknown column data type.", dataTypeErr);
 
-  if (data.isNull)
+  if (data.isNull())
     return h->getNullValueForType(*this);
 
   const datatypes::ConvertFromStringParam prm(timeZone, noRoundup, isUpdate);
