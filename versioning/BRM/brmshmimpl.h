@@ -109,4 +109,23 @@ class BRMManagedShmImpl : public BRMShmImplParent
     bi::managed_shared_memory* fShmSegment;
 };
 
+class BRMManagedShmImplRBTree : public BRMShmImplParent
+{
+public:
+  BRMManagedShmImplRBTree(unsigned key, off_t size, bool readOnly = false);
+  ~BRMManagedShmImplRBTree();
+
+  void setReadOnly();
+  int32_t grow(unsigned key, off_t incSize);
+  void destroy() override;
+  void reMapSegment();
+  int clear(unsigned newKey, off_t newSize) override;
+
+  boost::interprocess::managed_shared_memory* fShmSegment;
+
+private:
+  // The `segment` name is fixed.
+  const char* segmentName = "MCS-shm-00020001";
+};
+
 } //namespace
