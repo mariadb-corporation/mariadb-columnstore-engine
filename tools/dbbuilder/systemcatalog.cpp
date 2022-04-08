@@ -87,6 +87,7 @@ void SystemCatalog::build()
     oids[OID_SYSTABLE_AVGROWLEN] = OID_SYSTABLE_AVGROWLEN;
     oids[OID_SYSTABLE_NUMOFBLOCKS] = OID_SYSTABLE_NUMOFBLOCKS;
     oids[OID_SYSTABLE_AUTOINCREMENT] = OID_SYSTABLE_AUTOINCREMENT;
+    oids[OID_SYSTABLE_AUXCOLUMNOID] = OID_SYSTABLE_AUXCOLUMNOID;
   }
 
   fWriteEngine.setTransId(1);
@@ -227,6 +228,17 @@ void SystemCatalog::build()
   msg << "  Creating AUTOINCREMENT column OID: " << OID_SYSTABLE_AUTOINCREMENT;
   cout << msg.str() << endl;
   rc = fWriteEngine.createColumn(txnID, OID_SYSTABLE_AUTOINCREMENT, CalpontSystemCatalog::INT, 4, dbRoot,
+                                 partition, compressionType);
+
+  if (rc)
+    throw runtime_error(msg.str() + ec.errorString(rc));
+
+  msg.str("");
+
+  // AUXCOLUMNOID
+  msg << "  Creating AUXCOLUMNOID column OID: " << OID_SYSTABLE_AUXCOLUMNOID;
+  cout << msg.str() << endl;
+  rc = fWriteEngine.createColumn(txnID, OID_SYSTABLE_AUXCOLUMNOID, CalpontSystemCatalog::INT, 4, dbRoot,
                                  partition, compressionType);
 
   if (rc)

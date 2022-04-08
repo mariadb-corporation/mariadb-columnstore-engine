@@ -121,13 +121,15 @@ uint8_t WE_DDLCommandProc::writeSystable(ByteStream& bs, std::string& err)
 {
   int rc = 0;
   uint32_t sessionID, tmp32;
-  int txnID, tableOID;
+  int txnID, tableOID, tableAUXColumnOID;
   uint32_t tableWithAutoi;
   bs >> sessionID;
   bs >> tmp32;
   txnID = tmp32;
   bs >> tmp32;
   tableOID = tmp32;
+  bs >> tmp32;
+  tableAUXColumnOID = tmp32;
   bs >> tmp32;
   tableWithAutoi = tmp32;
   bs >> tmp32;
@@ -191,6 +193,10 @@ uint8_t WE_DDLCommandProc::writeSystable(ByteStream& bs, std::string& err)
       else if (OBJECTID_COL == column.tableColName.column)
       {
         colTuple.data = tableOID;
+      }
+      else if (AUXCOLUMNOID_COL == column.tableColName.column)
+      {
+        colTuple.data = tableAUXColumnOID;
       }
       else if (CREATEDATE_COL == column.tableColName.column)
       {

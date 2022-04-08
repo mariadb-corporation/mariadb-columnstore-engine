@@ -1198,9 +1198,9 @@ string JobList::toString() const
   for (i = 0; i < fQuery.size(); i++)
     ret += fQuery[i]->toString();
 
-  // ret += "\nProjection Steps:\n";
-  // for (i = 0; i < fProject.size(); i++)
-  //	ret += fProject[i]->toString();
+   ret += "\nProjection Steps:\n";
+   for (i = 0; i < fProject.size(); i++)
+  	ret += fProject[i]->toString();
   ret += "\n";
   return ret;
 }

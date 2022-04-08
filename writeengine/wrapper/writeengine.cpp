@@ -979,7 +979,7 @@ int WriteEngineWrapper::fillColumn(const TxnID& txnid, const OID& dataOid,
 
 int WriteEngineWrapper::deleteRow(const TxnID& txnid, const vector<CSCTypesList>& colExtentsColType,
                                   vector<ColStructList>& colExtentsStruct, vector<void*>& colOldValueList,
-                                  vector<RIDList>& ridLists, const int32_t tableOid)
+                                  vector<RIDList>& ridLists, const int32_t tableOid, bool hasAUXCol)
 {
   ColTuple curTuple;
   ColStruct curColStruct;
@@ -1047,7 +1047,7 @@ int WriteEngineWrapper::deleteRow(const TxnID& txnid, const vector<CSCTypesList>
   // unfortunately I don't have a better way to instruct without passing too many parameters
   m_opType = DELETE;
   rc = updateColumnRec(txnid, colExtentsColType, colExtentsStruct, colValueList, colOldValueList, ridLists,
-                       dctnryExtentsStruct, dctnryValueList, tableOid);
+                       dctnryExtentsStruct, dctnryValueList, tableOid, hasAUXCol);
   m_opType = NOOP;
 
   return rc;
@@ -4436,7 +4436,8 @@ int WriteEngineWrapper::updateColumnRec(const TxnID& txnid, const vector<CSCType
                                         vector<ColStructList>& colExtentsStruct, ColValueList& colValueList,
                                         vector<void*>& colOldValueList, vector<RIDList>& ridLists,
                                         vector<DctnryStructList>& dctnryExtentsStruct,
-                                        DctnryValueList& dctnryValueList, const int32_t tableOid)
+                                        DctnryValueList& dctnryValueList, const int32_t tableOid,
+                                        bool hasAUXCol)
 {
   int rc = 0;
   unsigned numExtents = colExtentsStruct.size();
@@ -4553,9 +4554,31 @@ int WriteEngineWrapper::updateColumnRec(const TxnID& txnid, const vector<CSCType
     if (m_opType != DELETE)
       m_opType = UPDATE;
 
-    rc = writeColumnRecUpdate(txnid, cscColTypeList, colStructList, colValueList, colOldValueList,
-                              ridLists[extent], tableOid, true, ridLists[extent].size(),
-                              &currentExtentRangesPtrs);
+    if (m_opType == DELETE && hasAUXCol)
+    {
+      ColStructList colStructListAUX(1, colStructList.back());
+      WriteEngine::CSCTypesList cscColTypeListAUX(1, cscColTypeList.back());
+      ColValueList colValueListAUX(1, colValueList.back());
+      std::vector<ExtCPInfo*> currentExtentRangesPtrsAUX(1, currentExtentRangesPtrs.back());
+
+      rc = writeColumnRecUpdate(txnid, cscColTypeListAUX, colStructListAUX, colValueListAUX, colOldValueList,
+                                ridLists[extent], tableOid, true, ridLists[extent].size(),
+                                &currentExtentRangesPtrsAUX);
+
+      for (auto& cpInfoPtr : currentExtentRangesPtrs)
+      {
+        if (cpInfoPtr)
+        {
+          cpInfoPtr->toInvalid();
+        }
+      }
+    }
+    else
+    {
+      rc = writeColumnRecUpdate(txnid, cscColTypeList, colStructList, colValueList, colOldValueList,
+                                ridLists[extent], tableOid, true, ridLists[extent].size(),
+                                &currentExtentRangesPtrs);
+    }
 
     if (rc != NO_ERROR)
       break;
