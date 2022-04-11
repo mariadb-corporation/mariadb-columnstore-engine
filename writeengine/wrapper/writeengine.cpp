@@ -1721,6 +1721,7 @@ int WriteEngineWrapper::insertColumnRecs(
         {
           Token nullToken;
           col_iter->data = nullToken;
+	  idblog("will write NULL");
 #if defined(XXX_WRITEENGINE_TOKENS_RANGES_XXX)
           strPrefix = (int64_t)joblist::UBIGINTNULL;  // the string prefixes are signed long ints.
 #endif
@@ -1730,6 +1731,7 @@ int WriteEngineWrapper::insertColumnRecs(
 #ifdef PROFILE
           timer.start("tokenize");
 #endif
+	  idblog("will write string '" << dctStr_iter->unsafeStringRef() << "'");
           DctnryTuple dctTuple;
           dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
           dctTuple.sigSize = dctStr_iter->length();
@@ -1788,6 +1790,7 @@ int WriteEngineWrapper::insertColumnRecs(
           if (dctStr_iter->isNull())
           {
             Token nullToken;
+	  idblog("will write NULL");
             col_iter->data = nullToken;
 #if defined(XXX_WRITEENGINE_TOKENS_RANGES_XXX)
             strPrefix = joblist::UBIGINTNULL;  // string prefixes are signed long ints.
@@ -1798,6 +1801,7 @@ int WriteEngineWrapper::insertColumnRecs(
 #ifdef PROFILE
             timer.start("tokenize");
 #endif
+	  idblog("will write string '" << dctStr_iter->unsafeStringRef() << "'");
             DctnryTuple dctTuple;
             dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
             dctTuple.sigSize = dctStr_iter->length();
@@ -2538,6 +2542,7 @@ int WriteEngineWrapper::insertColumnRecsBinary(
         if (dctStr_iter->isNull())
         {
           Token nullToken;
+	  idblog("will write NULL");
           memcpy(colValPtr, &nullToken, 8);
         }
         else
@@ -2545,6 +2550,7 @@ int WriteEngineWrapper::insertColumnRecsBinary(
 #ifdef PROFILE
           timer.start("tokenize");
 #endif
+	  idblog("will write string '" << dctStr_iter->unsafeStringRef() << "'");
           DctnryTuple dctTuple;
           dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
           dctTuple.sigSize = dctStr_iter->length();
@@ -2595,6 +2601,7 @@ int WriteEngineWrapper::insertColumnRecsBinary(
           if (dctStr_iter->isNull())
           {
             Token nullToken;
+	  idblog("will write NULL");
             memcpy(colValPtr, &nullToken, 8);
           }
           else
@@ -2602,6 +2609,7 @@ int WriteEngineWrapper::insertColumnRecsBinary(
 #ifdef PROFILE
             timer.start("tokenize");
 #endif
+	  idblog("will write string '" << dctStr_iter->unsafeStringRef() << "'");
             DctnryTuple dctTuple;
             dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
             dctTuple.sigSize = dctStr_iter->length();
@@ -3113,6 +3121,7 @@ int WriteEngineWrapper::insertColumnRec_SYS(const TxnID& txnid, const CSCTypesLi
         if (dctStr_iter->isNull())
         {
           Token nullToken;
+	  idblog("will write NULL");
           col_iter->data = nullToken;
         }
         else
@@ -3120,6 +3129,7 @@ int WriteEngineWrapper::insertColumnRec_SYS(const TxnID& txnid, const CSCTypesLi
 #ifdef PROFILE
           timer.start("tokenize");
 #endif
+	  idblog("will write string '" << dctStr_iter->unsafeStringRef() << "'");
           DctnryTuple dctTuple;
           dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
           dctTuple.sigSize = dctStr_iter->length();
@@ -3187,6 +3197,7 @@ int WriteEngineWrapper::insertColumnRec_SYS(const TxnID& txnid, const CSCTypesLi
           if (dctStr_iter->isNull())
           {
             Token nullToken;
+	  idblog("will write NULL");
             col_iter->data = nullToken;
           }
           else
@@ -3194,6 +3205,7 @@ int WriteEngineWrapper::insertColumnRec_SYS(const TxnID& txnid, const CSCTypesLi
 #ifdef PROFILE
             timer.start("tokenize");
 #endif
+	  idblog("will write string '" << dctStr_iter->unsafeStringRef() << "'");
             DctnryTuple dctTuple;
             dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
             dctTuple.sigSize = dctStr_iter->length();
@@ -3775,6 +3787,7 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid, const CSCType
           if (dctStr_iter->isNull())
           {
             Token nullToken;
+	  idblog("will write NULL");
             col_iter->data = nullToken;
           }
           else
@@ -3782,6 +3795,7 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid, const CSCType
 #ifdef PROFILE
             timer.start("tokenize");
 #endif
+	  idblog("will write string '" << dctStr_iter->unsafeStringRef() << "'");
             DctnryTuple dctTuple;
             dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
             dctTuple.sigSize = dctStr_iter->length();
@@ -3850,6 +3864,7 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid, const CSCType
           if (dctStr_iter->isNull())
           {
             Token nullToken;
+	  idblog("will write NULL");
             col_iter->data = nullToken;
           }
           else
@@ -3857,6 +3872,7 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid, const CSCType
 #ifdef PROFILE
             timer.start("tokenize");
 #endif
+	  idblog("will write string '" << dctStr_iter->unsafeStringRef() << "'");
             DctnryTuple dctTuple;
             dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
             dctTuple.sigSize = dctStr_iter->length();
@@ -4525,7 +4541,7 @@ int WriteEngineWrapper::updateColumnRec(const TxnID& txnid, const vector<CSCType
             RETURN_ON_ERROR_REPORT(
                 tokenize(txnid, dctnryStructList[i], *dctCol_iter, true));  // @bug 5572 HDFS tmp file
             token = dctCol_iter->token;
-idblog("token for string '" << dctCol_iter->unsafeStringRef() << "' is " << std::hex << token);
+idblog("token for string '" << "should be dctCol_iter->unsafeStringRef() or something" << "' is " << std::hex << token);
 
 #ifdef PROFILE
 // timer.stop("tokenize");
