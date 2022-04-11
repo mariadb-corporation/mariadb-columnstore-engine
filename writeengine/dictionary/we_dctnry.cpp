@@ -1067,12 +1067,14 @@ int Dctnry::insertDctnry(const int& sgnature_size, const unsigned char* sgnature
     return ERR_DICT_SIZE_GT_2G;
   }
 
+#if 0
   if (sgnature_size == 0)
   {
     WriteEngine::Token nullToken;
     memcpy(&token, &nullToken, 8);
     return NO_ERROR;
   }
+#endif
 
   CommBlock cb;
   cb.file.oid = m_dctnryOID;
