@@ -617,15 +617,19 @@ int Dctnry::openDctnry(const OID& dctnryOID, const uint16_t dbRoot, const uint32
 bool Dctnry::getTokenFromArray(Signature& sig)
 {
   std::set<Signature, sig_compare>::iterator it;
+idblog("searcching for signature '" << std::string(sig.signature, sig->sigSize) << "'");
   it = m_sigArray.find(sig);
   if (it == m_sigArray.end())
   {
+idblog("not found");
     return false;
   }
   else
   {
     Signature sigfound = *it;
     sig.token = sigfound.token;
+uint64_t *p = (uint64_t*) (&sig.token);
+idblog("found, token " << std::hex << (*p));
     return true;
   }
 
@@ -657,7 +661,7 @@ int Dctnry::insertDctnry2(Signature& sig)
 
   sig.token.bc = 0;
 
-  while (sig.size > 0)
+  while (sig.size > 0 || !lbid_in_token)
   {
     if (sig.size > (m_freeSpace - HDR_UNIT_SIZE))
     {
