@@ -97,6 +97,8 @@ int DMLColumn::write(messageqcpp::ByteStream& bytestream)
     bytestream << fColValuesList[i];
   }
 
+  bytestream << static_cast<uint8_t>(fIsFromCol);
+  bytestream << (uint32_t)fFuncScale;
   return retval;
 }
 
