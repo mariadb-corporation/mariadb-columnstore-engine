@@ -286,7 +286,6 @@ class ProtocolError : public std::logic_error
 #define idblog(x)                                                                       \
   do                                                                                       \
   {                                                                                        \
-    if (!(x))                                                                              \
     {                                                                                      \
       std::ostringstream os;                                                               \
                                                                                            \
