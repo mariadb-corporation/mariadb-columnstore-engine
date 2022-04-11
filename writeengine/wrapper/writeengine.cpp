@@ -4525,6 +4525,7 @@ int WriteEngineWrapper::updateColumnRec(const TxnID& txnid, const vector<CSCType
             RETURN_ON_ERROR_REPORT(
                 tokenize(txnid, dctnryStructList[i], *dctCol_iter, true));  // @bug 5572 HDFS tmp file
             token = dctCol_iter->token;
+idblog("token for string '" << dctCol_iter->unsafeStringRef() << "' is " << std::hex << token);
 
 #ifdef PROFILE
 // timer.stop("tokenize");
