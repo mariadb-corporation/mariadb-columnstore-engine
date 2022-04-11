@@ -855,6 +855,7 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
     {
       // Stats::startParseEvent("getTokenFromArray");
       found = getTokenFromArray(curSig);
+      idblog("after getTokenFromArray");
 
       if (found)
       {
@@ -878,6 +879,7 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
         (m_curOp < (MAX_OP_COUNT - 1)))
     {
       RETURN_ON_ERROR(insertDctnry2(curSig));  // m_freeSpace updated!
+      idblog("curSig inserted, token " << std::hex << (*((uint64_t*)(&curSig.token))));
       m_curBlock.state = BLK_WRITE;
       memcpy(pOut + outOffset, &curSig.token, 8);
       outOffset += 8;
@@ -1397,6 +1399,7 @@ int Dctnry::updateDctnry(unsigned char* sigValue, int& sigSize, Token& token)
   {
     bool found = false;
     found = getTokenFromArray(sig);
+      idblog("after getTokenFromArray");
 
     if (found)
     {
@@ -1408,6 +1411,7 @@ int Dctnry::updateDctnry(unsigned char* sigValue, int& sigSize, Token& token)
   // Insert into Dictionary
   rc = insertDctnry(sigSize, sigValue, token);
 
+  idblog("insert dctnry finished, token " << std::hex << (*((uint64_t*)(&token))));
   // Add the new signature and token into cache
   // As long as the string is <= 8000 bytes
   if ((m_arraySize < MAX_STRING_CACHE_SIZE) && (sigSize <= MAX_SIGNATURE_SIZE))
