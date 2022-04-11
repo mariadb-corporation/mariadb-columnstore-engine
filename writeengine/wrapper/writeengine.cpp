@@ -1731,7 +1731,6 @@ int WriteEngineWrapper::insertColumnRecs(
 #ifdef PROFILE
           timer.start("tokenize");
 #endif
-	  idblog("will write string '" << dctStr_iter->unsafeStringRef() << "'");
           DctnryTuple dctTuple;
           dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
           dctTuple.sigSize = dctStr_iter->length();
@@ -1751,6 +1750,8 @@ int WriteEngineWrapper::insertColumnRecs(
 #ifdef PROFILE
           timer.stop("tokenize");
 #endif
+	  uint64_t *p = (uint64_t*) (&token);
+	  idblog("will write string '" << dctStr_iter->unsafeStringRef() << "', token is " << std::hex << (*p));
           col_iter->data = dctTuple.token;
         }
 
