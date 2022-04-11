@@ -617,7 +617,7 @@ int Dctnry::openDctnry(const OID& dctnryOID, const uint16_t dbRoot, const uint32
 bool Dctnry::getTokenFromArray(Signature& sig)
 {
   std::set<Signature, sig_compare>::iterator it;
-idblog("searcching for signature '" << std::string(sig.signature, sig.sigSize) << "'");
+idblog("searcching for signature '" << std::string(sig.signature, sig.size) << "'");
   it = m_sigArray.find(sig);
   if (it == m_sigArray.end())
   {
