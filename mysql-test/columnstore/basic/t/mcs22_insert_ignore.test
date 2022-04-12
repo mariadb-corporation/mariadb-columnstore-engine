@@ -28,7 +28,7 @@ SELECT * FROM t1;
 INSERT INTO t1 (c1) VALUES ('hello');
 
 #Suspected bug. innodb ignores.
---error 1815
+#--error 1815
 INSERT IGNORE INTO t1 (c1) VALUES ('hello');
 SELECT * FROM t1;
 

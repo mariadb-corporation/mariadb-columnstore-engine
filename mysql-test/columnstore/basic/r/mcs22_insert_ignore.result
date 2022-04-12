@@ -16,7 +16,6 @@ hello	hi
 INSERT INTO t1 (c1) VALUES ('hello');
 ERROR HY000: Field 'c2' doesn't have a default value
 INSERT IGNORE INTO t1 (c1) VALUES ('hello');
-ERROR HY000: Internal error: CAL0001: Insert Failed:  MCS-4015: Column 'c2' cannot be null.  
 SELECT * FROM t1;
 c1	c2
 hello	hi

@@ -83,8 +83,6 @@ t1_int	t1_decimal	t1_text	t1_char	t1_datetime
 NULL	NULL	NULL	NULL	0000-00-00 00:00:00
 SELECT * FROM t1 WHERE ISNULL(t1_text) ORDER BY t1_decimal;
 t1_int	t1_decimal	t1_text	t1_char	t1_datetime
-NULL	NULL	NULL	NULL	0000-00-00 00:00:00
-NULL	222.22	NULL	b	2222-12-22 22:22:22
 SELECT * FROM t1 WHERE ISNULL(t1_datetime) ORDER BY t1_decimal;
 t1_int	t1_decimal	t1_text	t1_char	t1_datetime
 DROP DATABASE mcs91_db;
