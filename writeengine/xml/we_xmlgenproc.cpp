@@ -325,23 +325,23 @@ bool XMLGenProc::makeColumnData(const CalpontSystemCatalog::TableName& table)
       }
 
       // Include NotNull and Default value
-      const std::string col_defaultValue(col->colType.defaultValue);
+      const NullString col_defaultValue(col->colType.defaultValue);
 
       if (col->colType.constraintType == execplan::CalpontSystemCatalog::NOTNULL_CONSTRAINT)
       {
         int notNull = 1;
         xmlTextWriterWriteFormatAttribute(fWriter, BAD_CAST xmlTagTable[TAG_NOT_NULL], "%d", notNull);
 
-        if (!col_defaultValue.empty())
+        if (!col_defaultValue.isNull())
         {
           xmlTextWriterWriteAttribute(fWriter, BAD_CAST xmlTagTable[TAG_DEFAULT_VALUE],
-                                      BAD_CAST col_defaultValue.c_str());
+                                      BAD_CAST col_defaultValue.unsafeStringRef().c_str());
         }
       }
       else if (col->colType.constraintType == execplan::CalpontSystemCatalog::DEFAULT_CONSTRAINT)
       {
         xmlTextWriterWriteAttribute(fWriter, BAD_CAST xmlTagTable[TAG_DEFAULT_VALUE],
-                                    BAD_CAST col_defaultValue.c_str());
+                                    BAD_CAST (col_defaultValue.isNull() ? "NULL" : col_defaultValue.unsafeStringRef()c_str()));
       }
     }  // end of "if fSysCatRpt"
 
