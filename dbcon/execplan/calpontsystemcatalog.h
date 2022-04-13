@@ -208,7 +208,7 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
   {
     ConstraintType constraintType;
     DictOID ddn;
-    std::string defaultValue;
+    NullString defaultValue;
     int32_t colPosition;  // temporally put here. may need to have ColInfo struct later
     int32_t compressionType;
     OID columnOID;
