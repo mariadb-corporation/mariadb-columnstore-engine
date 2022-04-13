@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2022 Mariadb Corporation.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -138,11 +139,8 @@ class ResourceManager
   /** @brief ctor
    *
    */
-  EXPORT ResourceManager(bool runningInExeMgr = false);
-  static ResourceManager* instance(bool runningInExeMgr = false);
-  //     ResourceManager(const config::Config *cf);
-  //     ResourceManager(const std::string& config);
-  // passed by ExeMgr and DistributedEngineComm to MessageQueueServer or -Client
+  EXPORT ResourceManager(bool runningInExeMgr = false, config::Config *aConfig = nullptr);
+  static ResourceManager* instance(bool runningInExeMgr = false, config::Config *aConfig = nullptr);
   config::Config* getConfig()
   {
     return fConfig;
@@ -577,19 +575,19 @@ class ResourceManager
   void logMessage(logging::LOG_TYPE logLevel, logging::Message::MessageID mid, uint64_t value = 0,
                   uint32_t sessionId = 0);
 
-  /*static	const*/ std::string fExeMgrStr;
-  static const std::string fHashJoinStr;
-  static const std::string fHashBucketReuseStr;
-  static const std::string fJobListStr;
-  static const std::string fPrimitiveServersStr;
+  std::string fExeMgrStr;
+  inline static const std::string fHashJoinStr = "HashJoin";
+  inline static const std::string fHashBucketReuseStr = "HashBucketReuse";
+  inline static const std::string fJobListStr = "JobList";
+  inline static const std::string fPrimitiveServersStr = "PrimitiveServers";
   /*static	const*/ std::string fSystemConfigStr;
-  static const std::string fTupleWSDLStr;
-  static const std::string fZDLStr;
-  static const std::string fExtentMapStr;
+  inline static const std::string fTupleWSDLStr = "TupleWSDL";
+  inline static const std::string fZDLStr = "ZDL";
+  inline static const std::string fExtentMapStr = "ExtentMap";
   /*static	const*/ std::string fDMLProcStr;
   /*static	const*/ std::string fBatchInsertStr;
-  static const std::string fOrderByLimitStr;
-  static const std::string fRowAggregationStr;
+  inline static const std::string fOrderByLimitStr = "OrderByLimit";
+  inline static const std::string fRowAggregationStr = "RowAggregation";
   config::Config* fConfig;
   static ResourceManager* fInstance;
   uint32_t fTraceFlags;

@@ -4,7 +4,6 @@
 
 /bin/systemctl stop mcs-dmlproc
 /bin/systemctl stop mcs-ddlproc
-/bin/systemctl stop mcs-exemgr
 /bin/systemctl stop mcs-writeengineserver
 /bin/systemctl stop mcs-primproc
 /bin/systemctl stop mcs-controllernode

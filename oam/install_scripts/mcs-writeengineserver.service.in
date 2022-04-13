@@ -1,9 +1,9 @@
 [Unit]
 Description=WriteEngineServer
 
-# restart/stop mcs-writeengineserver on restart/stop of mcs-exemgr
-PartOf=mcs-exemgr.service
-After=network.target mcs-exemgr.service
+# restart/stop mcs-writeengineserver on restart/stop of mcs-primproc
+PartOf=mcs-primproc.service
+After=network.target mcs-primproc.service
 
 [Service]
 Type=forking
