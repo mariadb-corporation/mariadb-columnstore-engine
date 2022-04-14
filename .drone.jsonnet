@@ -29,7 +29,7 @@ local builddir = 'verylongdirnameforverystrangecpackbehavior';
 local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_XPAND=NO -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO ' +
                    '-DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
                    '-DWITH_EMBEDDED_SERVER=OFF -DWITH_WSREP=OFF ' +
-                   '-DBUILD_CONFIG=mysql_release -DWITH_UNITTESTS=YES';
+                   '-DBUILD_CONFIG=mysql_release -DWITH_UNITTESTS=YES -DCMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE=PRE_TEST';
 
 local rpm_build_deps = 'install -y lz4 systemd-devel git make gcc gcc-c++ libaio-devel openssl-devel boost-devel bison snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect createrepo';
 local deb_build_deps = 'apt update --yes && apt install --yes --no-install-recommends build-essential devscripts ccache equivs eatmydata dh-systemd ' +
