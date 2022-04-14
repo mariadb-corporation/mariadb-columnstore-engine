@@ -1645,7 +1645,6 @@ void ExtentMap::loadVersion4or5(T* in, bool upgradeV4ToV5)
     }
 
     growEMShmseg(nrows);
-    growEMIndexShmseg(ExtentMapIndexImpl::estimateEMIndexSize(emNumElements));
   }
 
   size_t progress = 0, writeSize = emNumElements * sizeof(EMEntry);
