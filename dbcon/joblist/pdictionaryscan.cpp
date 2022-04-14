@@ -138,10 +138,8 @@ pDictionaryScan::pDictionaryScan(CalpontSystemCatalog::OID o, CalpontSystemCatal
  , fColType(ct)
  , pThread(0)
  , cThread(0)
- , fScanLbidReqLimit(jobInfo.rm->getJlScanLbidReqLimit())
  , fScanLbidReqThreshold(jobInfo.rm->getJlScanLbidReqThreshold())
  , fStopSending(false)
- , fSingleThread(false)
  , fPhysicalIO(0)
  , fCacheIO(0)
  , fMsgBytesIn(0)
@@ -913,6 +911,21 @@ void pDictionaryScan::abort()
 
   if (fDec)
     fDec->shutdownQueue(uniqueID);
+}
+
+// Unfortuneately we have 32 bits in the execplan flags, but only 16 that can be sent to
+//  PrimProc, so we have to convert them (throwing some away).
+uint16_t pDictionaryScan::planFlagsToPrimFlags(uint32_t planFlags)
+{
+  uint16_t flags = 0;
+  
+  if (planFlags & CalpontSelectExecutionPlan::TRACE_LBIDS)
+    flags |= PF_LBID_TRACE;
+  
+  if (planFlags & CalpontSelectExecutionPlan::PM_PROFILE)
+    flags |= PF_PM_PROF;
+  
+  return flags;
 }
 
 }  // namespace joblist

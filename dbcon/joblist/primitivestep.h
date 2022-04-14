@@ -93,39 +93,9 @@ enum PrimitiveStepType
   AGGRFILTERSTEP
 };
 
-/** @brief class PrimitiveMsg
- *
- */
-class PrimitiveMsg
-{
- public:
-  /** @brief virtual void Send method
-   */
-  virtual void send();
-  /** @brief virtual void Receive method
-   */
-  virtual void receive();
-  /** @brief virtual void BuildPrimitiveMessage method
-   */
-  virtual void buildPrimitiveMessage(ISMPACKETCOMMAND cmd, void* filterValues, void* ridArray);
-  virtual void sendPrimitiveMessages();
-  virtual void receivePrimitiveMessages();
-
-  PrimitiveMsg()
-  {
-  }
-
-  virtual ~PrimitiveMsg()
-  {
-  }
-
-  uint16_t planFlagsToPrimFlags(uint32_t planFlags);
-
- private:
-};
 
 class pColScanStep;
-class pColStep : public JobStep, public PrimitiveMsg
+class pColStep : public JobStep
 {
   typedef std::pair<int64_t, int64_t> element_t;
 
@@ -141,47 +111,29 @@ class pColStep : public JobStep, public PrimitiveMsg
 
   pColStep(const PassThruStep& rhs);
 
-  virtual ~pColStep();
+  virtual ~pColStep(){};
 
   /** @brief Starts processing.  Set at least the RID list before calling.
    *
    * Starts processing.  Set at least the RID list before calling this.
    */
-  virtual void run();
+  virtual void run(){};
   /** @brief Sync's the caller with the end of execution.
    *
    * Does nothing.  Returns when this instance is finished.
    */
-  virtual void join();
+  virtual void join(){};
 
   virtual const std::string toString() const;
 
   virtual bool isDictCol() const
   {
     return fIsDict;
-  };
+  }
   bool isExeMgr() const
   {
     return isEM;
   }
-
-  /** @brief Set config parameters for this JobStep.
-   *
-   * Set the config parameters this JobStep.
-   */
-  void initializeConfigParms();
-
-  /** @brief The main loop for the send-side thread
-   *
-   * The main loop for the primitive-issuing thread.  Don't call it directly.
-   */
-  void sendPrimitiveMessages();
-
-  /** @brief The main loop for the recv-side thread
-   *
-   * The main loop for the receive-side thread.  Don't call it directly.
-   */
-  void receivePrimitiveMessages();
 
   /** @brief Add a filter.  Use this interface when the column stores anything but 4-byte floats.
    *
@@ -197,22 +149,28 @@ class pColStep : public JobStep, public PrimitiveMsg
    * this class from pColScan.  Use pColScan if the every RID should be considered; it's
    * faster at that.
    */
-  void setRidList(DataList<ElementType>* rids);
-
+  void setRidList(DataList<ElementType>* rids)
+  {
+    ridList = rids;
+  }
   /** @brief Sets the String DataList to get RID values from.
    *
    * Sets the string DataList to get RID values from.  Filtering by RID distinguishes
    * this class from pColScan.  Use pColScan if the every RID should be considered; it's
    * faster at that.
    */
-  void setStrRidList(DataList<StringElementType>* strDl);
-
+  void setStrRidList(DataList<StringElementType>* strDl)
+  {
+    strRidList = strDl;
+  }
   /** @brief Set the binary operator for the filter predicate (BOP_AND or BOP_OR).
    *
    * Set the binary operator for the filter predicate (BOP_AND or BOP_OR).
    */
-  void setBOP(int8_t BOP);
-
+  void setBOP(int8_t BOP)
+  {
+    fBOP = BOP;
+  }
   /** @brief Set the output type.
    *
    * Set the output type (1 = RID, 2 = Token, 3 = Both).
@@ -224,8 +182,10 @@ class pColStep : public JobStep, public PrimitiveMsg
    *
    * If true, no rows will be inserted to the output datalists.
    */
-  void setSwallowRows(const bool swallowRows);
-
+  void setSwallowRows(const bool swallowRows)
+  {
+    fSwallowRows = swallowRows;
+  }
   /** @brief Get the swallowRows flag.
    *
    *
@@ -263,10 +223,6 @@ class pColStep : public JobStep, public PrimitiveMsg
     return fColType;
   }
   void appendFilter(const messageqcpp::ByteStream& filter, unsigned count);
-  uint32_t flushInterval() const
-  {
-    return fFlushInterval;
-  }
   bool getFeederFlag() const
   {
     return isFilterFeeder;
@@ -275,14 +231,6 @@ class pColStep : public JobStep, public PrimitiveMsg
   void setFeederFlag(bool filterFeeder)
   {
     isFilterFeeder = filterFeeder;
-  }
-  virtual uint64_t phyIOCount() const
-  {
-    return fPhysicalIO;
-  }
-  virtual uint64_t cacheIOCount() const
-  {
-    return fCacheIO;
   }
   virtual uint64_t msgsRcvdCount() const
   {
@@ -329,14 +277,6 @@ class pColStep : public JobStep, public PrimitiveMsg
    */
   explicit pColStep();
 
-  /** @brief StartPrimitiveThread
-   *  Utility function to start worker thread that sends primitive messages
-   */
-  void startPrimitiveThread();
-  /** @brief StartAggregationThread
-   *  Utility function to start worker thread that receives result aggregation from primitive servers
-   */
-  void startAggregationThread();
   uint64_t getLBID(uint64_t rid, bool& scan);
   uint64_t getFBO(uint64_t lbid);
 
@@ -347,7 +287,6 @@ class pColStep : public JobStep, public PrimitiveMsg
   execplan::CalpontSystemCatalog::ColType fColType;
   uint32_t fFilterCount;
   int8_t fBOP;
-  int8_t fOutputType;
   uint16_t realWidth;
   DataList_t* ridList;
   StrDataList* strRidList;
@@ -359,29 +298,18 @@ class pColStep : public JobStep, public PrimitiveMsg
   bool finishedSending, recvWaiting, fIsDict;
   bool isEM;
   int64_t ridCount;
-  uint32_t fFlushInterval;
 
   // @bug 663 - Added fSwallowRows for calpont.caltrace(16) which is TRACE_FLAGS::TRACE_NO_ROWS4.
   // 	      Running with this one will swallow rows at projection.
   bool fSwallowRows;
-  uint32_t fProjectBlockReqLimit;  // max number of rids to send in a scan
-  // request to primproc
-  uint32_t fProjectBlockReqThreshold;  // min level of rids backlog before
-  // consumer will tell producer to send
-  // more rids scan requests to primproc
 
-  volatile bool fStopSending;
   bool isFilterFeeder;
-  uint64_t fPhysicalIO;      // total physical I/O count
-  uint64_t fCacheIO;         // total cache I/O count
   uint64_t fNumBlksSkipped;  // total number of block scans skipped due to CP
   uint64_t fMsgBytesIn;      // total byte count for incoming messages
   uint64_t fMsgBytesOut;     // total byte count for outcoming messages
 
   BRM::DBRM dbrm;
 
-  // boost::shared_ptr<boost::thread> cThread;  //consumer thread
-  // boost::shared_ptr<boost::thread> pThread;  //producer thread
   boost::mutex mutex;
   boost::condition condvar;
   boost::condition flushed;
@@ -413,7 +341,7 @@ class pColStep : public JobStep, public PrimitiveMsg
  *  c) send messages to the primitive server as quickly as possible
  */
 
-class pColScanStep : public JobStep, public PrimitiveMsg
+class pColScanStep : public JobStep
 {
  public:
   /** @brief pColScanStep constructor
@@ -422,37 +350,24 @@ class pColScanStep : public JobStep, public PrimitiveMsg
                const execplan::CalpontSystemCatalog::ColType& ct, const JobInfo& jobInfo);
 
   pColScanStep(const pColStep& rhs);
-  ~pColScanStep();
+  ~pColScanStep(){}
 
   /** @brief Starts processing.
    *
    * Starts processing.
    */
-  virtual void run();
+  virtual void run(){}
 
   /** @brief Sync's the caller with the end of execution.
    *
    * Does nothing.  Returns when this instance is finished.
    */
-  virtual void join();
+  virtual void join(){}
 
   virtual bool isDictCol() const
   {
     return fIsDict;
   };
-
-  /** @brief The main loop for the send-side thread
-   *
-   * The main loop for the primitive-issuing thread.  Don't call it directly.
-   */
-  void sendPrimitiveMessages();
-
-  /** @brief The main loop for the recv-side thread
-   *
-   * The main loop for the receive-side thread.  Don't call it directly.
-   */
-  using PrimitiveMsg::receivePrimitiveMessages;
-  void receivePrimitiveMessages(uint64_t i = 0);
 
   /** @brief Add a filter when the column is a 4-byte float type
    *
@@ -472,7 +387,11 @@ class pColScanStep : public JobStep, public PrimitiveMsg
    * Set the binary operator for the filter predicates (BOP_AND or BOP_OR).
    * It is initialized to OR.
    */
-  void setBOP(int8_t BOP);  // AND or OR
+  void setBOP(int8_t BOP)  // AND or OR
+  {
+    fBOP = BOP;
+  }
+  
   int8_t BOP() const
   {
     return fBOP;
@@ -496,17 +415,6 @@ class pColScanStep : public JobStep, public PrimitiveMsg
     return fFilterString;
   }
 
-  void setSingleThread(bool b);
-  bool getSingleThread()
-  {
-    return fSingleThread;
-  }
-
-  /** @brief Set the output type.
-   *
-   * Set the output type (1 = RID, 2 = Token, 3 = Both).pColScan
-   */
-  void setOutputType(int8_t OutputType);
   uint32_t filterCount() const
   {
     return fFilterCount;
@@ -532,18 +440,6 @@ class pColScanStep : public JobStep, public PrimitiveMsg
     return fRm;
   }
 
-  virtual uint64_t phyIOCount() const
-  {
-    return fPhysicalIO;
-  }
-  virtual uint64_t cacheIOCount() const
-  {
-    return fCacheIO;
-  }
-  virtual uint64_t msgsRcvdCount() const
-  {
-    return recvCount;
-  }
   virtual uint64_t msgBytesIn() const
   {
     return fMsgBytesIn;
@@ -599,18 +495,12 @@ class pColScanStep : public JobStep, public PrimitiveMsg
   // pColScanStep& operator=(const pColScanStep& rhs);
 
   typedef boost::shared_ptr<boost::thread> SPTHD;
-  void startPrimitiveThread();
-  void startAggregationThread();
-  void initializeConfigParms();
-  void sendAPrimitiveMessage(ISMPacketHeader& ism, BRM::LBID_t msgLbidStart, uint32_t msgLbidCount);
   uint64_t getFBO(uint64_t lbid);
   bool isEmptyVal(const uint8_t* val8) const;
 
   ResourceManager* fRm;
   ColByScanRangeRequestHeader fMsgHeader;
   SPTHD fConsumerThread;
-  /// number of threads on the receive side
-  uint32_t fNumThreads;
 
   SPTHD* fProducerThread;
   messageqcpp::ByteStream fFilterString;
@@ -619,16 +509,10 @@ class pColScanStep : public JobStep, public PrimitiveMsg
   execplan::CalpontSystemCatalog::OID fTableOid;
   execplan::CalpontSystemCatalog::ColType fColType;
   int8_t fBOP;
-  int8_t fOutputType;
-  uint32_t sentCount;
-  uint32_t recvCount;
   BRM::LBIDRange_v lbidRanges;
   BRM::DBRM dbrm;
   SP_LBIDList lbidList;
 
-  boost::mutex mutex;
-  boost::mutex dlMutex;
-  boost::mutex cpMutex;
   boost::condition condvar;
   boost::condition condvarWakeupProducer;
   bool finishedSending, sendWaiting, rDoNothing, fIsDict;
@@ -638,17 +522,7 @@ class pColScanStep : public JobStep, public PrimitiveMsg
   uint32_t extentSize, divShift, ridsPerBlock, rpbShift, numExtents;
   // 	config::Config *fConfig;
 
-  uint32_t fScanLbidReqLimit;  // max number of LBIDs to send in a scan
-  // request to primproc
-  uint32_t fScanLbidReqThreshold;  // min level of scan LBID backlog before
-  // consumer will tell producer to send
-  // more LBID scan requests to primproc
-
-  bool fStopSending;
-  bool fSingleThread;
   bool isFilterFeeder;
-  uint64_t fPhysicalIO;      // total physical I/O count
-  uint64_t fCacheIO;         // total cache I/O count
   uint64_t fNumBlksSkipped;  // total number of block scans skipped due to CP
   uint64_t fMsgBytesIn;      // total byte count for incoming messages
   uint64_t fMsgBytesOut;     // total byte count for outcoming messages
@@ -667,35 +541,10 @@ class pColScanStep : public JobStep, public PrimitiveMsg
   friend class TupleBPS;
 };
 
-#if 0
-class pIdxStep : public JobStep
-{
-public:
-    /** @brief pIdxStep constructor
-     * @param in the inputAssociation pointer
-     * @param out the outputAssociation pointer
-     * @param ec the DistributedEngineComm pointer
-     */
-    pIdxStep(JobStepAssociation* in, JobStepAssociation* out, DistributedEngineComm* ec);
-    /** @brief virtual void Run method
-     */
-    virtual void run();
-private:
-    pIdxStep();
-    void startPrimitveThread();
-    void startAggregationThread();
-
-protected:
-    DistributedEngineComm* fDec;
-    JobStepAssociation* fInputJobStepAssociation;
-    JobStepAssociation* fOutputJobStepAssociation;
-};
-#endif
-
 /** @brief class pDictionaryStep
  *
  */
-class pDictionaryStep : public JobStep, public PrimitiveMsg
+class pDictionaryStep : public JobStep
 {
  public:
   /** @brief pDictionaryStep constructor
@@ -704,17 +553,22 @@ class pDictionaryStep : public JobStep, public PrimitiveMsg
   pDictionaryStep(execplan::CalpontSystemCatalog::OID oid, execplan::CalpontSystemCatalog::OID tabelOid,
                   const execplan::CalpontSystemCatalog::ColType& ct, const JobInfo& jobInfo);
 
-  virtual ~pDictionaryStep();
+  virtual ~pDictionaryStep(){}
 
   /** @brief virtual void Run method
    */
-  virtual void run();
-  virtual void join();
+  virtual void run(){}
+  virtual void join(){}
   // void setOutList(StringDataList* rids);
-  void setInputList(DataList_t* rids);
-  void setBOP(int8_t b);
-  void sendPrimitiveMessages();
-  void receivePrimitiveMessages();
+  void setInputList(DataList_t* rids)
+  {
+    requestList = rids;
+  }
+  
+  void setBOP(int8_t b)
+  {
+    fBOP = b;
+  }
 
   virtual const std::string toString() const;
 
@@ -734,14 +588,6 @@ class pDictionaryStep : public JobStep, public PrimitiveMsg
   virtual execplan::CalpontSystemCatalog::OID tableOid() const
   {
     return fTableOid;
-  }
-  virtual uint64_t phyIOCount() const
-  {
-    return fPhysicalIO;
-  }
-  virtual uint64_t cacheIOCount() const
-  {
-    return fCacheIO;
   }
   virtual uint64_t msgsRcvdCount() const
   {
@@ -780,8 +626,6 @@ class pDictionaryStep : public JobStep, public PrimitiveMsg
 
  private:
   pDictionaryStep();
-  void startPrimitiveThread();
-  void startAggregationThread();
 
   boost::shared_ptr<execplan::CalpontSystemCatalog> sysCat;
   execplan::CalpontSystemCatalog::OID fOid;
@@ -804,8 +648,6 @@ class pDictionaryStep : public JobStep, public PrimitiveMsg
   boost::mutex mutex;
   boost::condition condvar;
   uint32_t fInterval;
-  uint64_t fPhysicalIO;   // total physical I/O count
-  uint64_t fCacheIO;      // total cache I/O count
   uint64_t fMsgBytesIn;   // total byte count for incoming messages
   uint64_t fMsgBytesOut;  // total byte count for outcoming messages
   uint32_t uniqueID;
@@ -828,7 +670,7 @@ class pDictionaryStep : public JobStep, public PrimitiveMsg
 /** @brief class pDictionaryScan
  *
  */
-class pDictionaryScan : public JobStep, public PrimitiveMsg
+class pDictionaryScan : public JobStep
 {
  public:
   /** @brief pDictionaryScan constructor
@@ -953,6 +795,7 @@ class pDictionaryScan : public JobStep, public PrimitiveMsg
 
  private:
   pDictionaryScan();
+  uint16_t planFlagsToPrimFlags(uint32_t planFlags);
   void startPrimitiveThread();
   void startAggregationThread();
   void initializeConfigParms();
@@ -990,12 +833,10 @@ class pDictionaryScan : public JobStep, public PrimitiveMsg
   uint64_t extentSize;
   uint64_t divShift;
   uint64_t numExtents;
-  uint32_t fScanLbidReqLimit;  // max number of LBIDs to send in a scan
   // request to primproc
   uint32_t fScanLbidReqThreshold;  // min level of scan LBID backlog before
   // consumer will tell producer to send
   bool fStopSending;
-  bool fSingleThread;
   uint64_t fPhysicalIO;   // total physical I/O count
   uint64_t fCacheIO;      // total cache I/O count
   uint64_t fMsgBytesIn;   // total byte count for incoming messages
@@ -1018,7 +859,7 @@ class pDictionaryScan : public JobStep, public PrimitiveMsg
   void destroyEqualityFilter();
 };
 
-class BatchPrimitive : public JobStep, public PrimitiveMsg, public DECEventListener
+class BatchPrimitive : public JobStep, public DECEventListener
 {
  public:
   BatchPrimitive(const JobInfo& jobInfo) : JobStep(jobInfo)
@@ -1697,7 +1538,7 @@ class FilterStep : public JobStep
 /** @brief class PassThruStep
  *
  */
-class PassThruStep : public JobStep, public PrimitiveMsg
+class PassThruStep : public JobStep
 {
   typedef std::pair<int64_t, int64_t> element_t;
 

@@ -115,7 +115,6 @@ const std::string UnassignedName = "unassigned";
 const std::string configSections[] = {"SystemConfig",
                                       "SystemModuleConfig",
                                       "SystemModuleConfig",
-                                      "SystemExtDeviceConfig",
                                       "SessionManager",
                                       "VersionBuffer",
                                       "OIDManager",
@@ -235,7 +234,6 @@ struct ModuleTypeConfig_s
 {
   std::string ModuleType;                 //!< Module Type
   std::string ModuleDesc;                 //!< Module Description
-  std::string RunType;                    //!< Run Type
   uint16_t ModuleCount;                   //!< Module Equipage Count
   uint16_t ModuleCPUCriticalThreshold;    //!< CPU Critical Threahold %
   uint16_t ModuleCPUMajorThreshold;       //!< CPU Major Threahold %
