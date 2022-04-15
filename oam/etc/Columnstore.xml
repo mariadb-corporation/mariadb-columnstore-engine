@@ -54,6 +54,9 @@
 		<PrimaryUMModuleName>pm1</PrimaryUMModuleName>
 		<!-- Warning: Do not change this value once database is built -->
 		<DBRootCount>1</DBRootCount>
+		<DBRoot1>/var/lib/columnstore/data1</DBRoot1>
+		<DBRMRoot>/var/lib/columnstore/data1/systemFiles/dbrm/BRM_saves</DBRMRoot>
+		<TableLockSaveFile>/var/lib/columnstore/data1/systemFiles/dbrm/tablelocks</TableLockSaveFile>
 		<DBRMTimeOut>15</DBRMTimeOut> <!-- in seconds -->
 		<DBRMSnapshotInterval>100000</DBRMSnapshotInterval>
 		<WaitPeriod>10</WaitPeriod> <!-- in seconds -->
@@ -187,7 +190,7 @@
 		<CPUniqueLimit>100</CPUniqueLimit>
 		<AllowDiskBasedJoin>N</AllowDiskBasedJoin>
 		<TempFileCompression>Y</TempFileCompression>
-    <TempFileCompressionType>Snappy</TempFileCompressionType> <!-- LZ4, Snappy -->
+		<TempFileCompressionType>Snappy</TempFileCompressionType> <!-- LZ4, Snappy -->
 	</HashJoin>
 	<JobList>
 		<FlushInterval>16K</FlushInterval>
