@@ -221,10 +221,10 @@ void TableColumn::unserialize(messageqcpp::ByteStream& b)
     {
       fStrValues.reset(new std::vector<std::string>());
       fStrValues->reserve(rowCount);
-      std::string value;
 
       for (uint32_t i = 0; i < rowCount; i++)
       {
+        NullString value;
         b >> value;
         // 				cout << "UN: " << value << endl;
         fStrValues->push_back(value);
