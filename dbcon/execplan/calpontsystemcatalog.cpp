@@ -1200,7 +1200,7 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
     {
       ct.defaultValue = ((*it)->GetStringData(0));
 
-      if (!ct.defaultValue.isNull()).
+      if (!ct.defaultValue.isNull())
       {
         if (ct.constraintType != NOTNULL_CONSTRAINT)
           ct.constraintType = DEFAULT_CONSTRAINT;
