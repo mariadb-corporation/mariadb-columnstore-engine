@@ -66,7 +66,7 @@ class ColumnResult
     return stringData[index];
   }
 
-  void PutStringData(const std::string& s)
+  void PutStringData(const NullString& s)
   {
     stringData.push_back(s);
     dcount++;
