@@ -52,7 +52,7 @@ class DMLColumn : public DMLObject
    * isNUll is currently not in use. It supposed to indicate whether each value is null or not.
    */
 
-  EXPORT DMLColumn(std::string name, const std::vector<NullString>& valueList, bool isFromCol = false,
+  EXPORT DMLColumn(std::string name, const std::vector<utils::NullString>& valueList, bool isFromCol = false,
                    uint32_t funcScale = 0, bool isNULL = false);
 
   /** @brief new ctor
@@ -60,7 +60,7 @@ class DMLColumn : public DMLObject
    */
 
   EXPORT DMLColumn(std::string name, const std::vector<std::string>& valueList);
-  EXPORT DMLColumn(std::string name, NullString& value, bool isFromCol = false,
+  EXPORT DMLColumn(std::string name, utils::NullString& value, bool isFromCol = false,
                    uint32_t funcScale = 0, bool isNULL = false);
 
   /** @brief dtor
@@ -81,7 +81,7 @@ class DMLColumn : public DMLObject
 
   /** @brief get the data for the column
    */
-  const std::vector<NullString>& get_DataVector() const
+  const std::vector<utils::NullString>& get_DataVector() const
   {
     return fColValuesList;
   }
@@ -139,7 +139,7 @@ class DMLColumn : public DMLObject
  protected:
  private:
   std::string fName;
-  std::vector<NullString> fColValuesList;
+  std::vector<utils::NullString> fColValuesList;
   bool fisNULL;
   bool fIsFromCol;
   uint32_t fFuncScale;
