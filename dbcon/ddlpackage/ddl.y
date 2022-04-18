@@ -95,7 +95,7 @@ void fix_column_length(SchemaObject* elem, const CHARSET_INFO* def_cs) {
 %}
 
 %expect 17
-%pure-parser
+%define api.pure
 %lex-param {void * scanner}
 %parse-param {struct ddlpackage::pass_to_bison * x}
 
