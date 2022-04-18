@@ -298,7 +298,7 @@ ByteStream& ByteStream::operator<<(const string& s)
 
   return *this;
 }
-ByteStream& ByteStream::operator<<(const NullString& s)
+ByteStream& ByteStream::operator<<(const utils::NullString& s)
 {
   uint8_t isNull = s.isNull();
   (*this) << isNull;
@@ -386,19 +386,19 @@ ByteStream& ByteStream::operator>>(string& s)
   return *this;
 }
 
-ByteStream& ByteStream::operator>>(NullString& s)
+ByteStream& ByteStream::operator>>(utils::NullString& s)
 {
   uint8_t isNull;
   (*this) >> isNull;
   if (isNull)
   {
-    s = NullString();
+    s = utils::NullString();
   }
   else
   {
     string t;
     (*this) >> t;
-    s = NullString(t);
+    s = utils::NullString(t);
   }
   return *this;
 }
