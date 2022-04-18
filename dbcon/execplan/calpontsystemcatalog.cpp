@@ -2823,7 +2823,7 @@ CalpontSystemCatalog::getTables(const std::string schema, int lower_case_table_n
     {
       for (int i = 0; i < (*it)->dataCount(); i++)
       {
-        tables.push_back(make_pair(0, make_table("", (*it)->GetStringData(i))));
+        tables.push_back(make_pair(0, make_table("", (*it)->GetStringData(i).safeString(""))));
         tnl.push_back((*it)->GetStringData(i));
       }
     }
@@ -2834,7 +2834,7 @@ CalpontSystemCatalog::getTables(const std::string schema, int lower_case_table_n
     if ((*it)->ColumnOID() == oid2)
     {
       for (int i = 0; i < (*it)->dataCount(); i++)
-        tables[i].second.schema = (*it)->GetStringData(i);
+        tables[i].second.schema = (*it)->GetStringData(i).safeString("");
     }
   }
 
@@ -3278,7 +3278,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
       {
         ctList[i].defaultValue = ((*it)->GetStringData(i));
 
-        if ((!ctList[i].defaultValue.empty()) || (ctList[i].defaultValue.length() > 0))
+        if (!ctList[i].defaultValue.isNull())
         {
           if (ctList[i].constraintType != NOTNULL_CONSTRAINT)
             ctList[i].constraintType = DEFAULT_CONSTRAINT;
