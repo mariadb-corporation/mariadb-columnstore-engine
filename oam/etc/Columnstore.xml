@@ -74,7 +74,6 @@
 	<SystemModuleConfig>
 		<ModuleType2>um</ModuleType2>
 		<ModuleDesc2>User Module</ModuleDesc2>
-		<RunType2>SIMPLEX</RunType2>
 		<ModuleCount2>0</ModuleCount2>
 		<ModuleIPAddr1-1-2>0.0.0.0</ModuleIPAddr1-1-2>
 		<ModuleHostName1-1-2>unassigned</ModuleHostName1-1-2>

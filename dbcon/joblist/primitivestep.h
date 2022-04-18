@@ -171,11 +171,6 @@ class pColStep : public JobStep
   {
     fBOP = BOP;
   }
-  /** @brief Set the output type.
-   *
-   * Set the output type (1 = RID, 2 = Token, 3 = Both).
-   */
-  void setOutputType(int8_t OutputType);
 
   /** @brief Set the swallowRows flag.
    *
