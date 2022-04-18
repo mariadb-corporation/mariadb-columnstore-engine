@@ -81,11 +81,14 @@ class NullString
   {
     return *this; // TODO
   }
-  std::string safeString() const
+  // this can be used to safely get a string value, with default value for NULL substitution.
+  // it does not raise anything and provides some nonsensical default value for you that will be
+  // easy to find.
+  std::string safeString(const char* defaultValue = "<<<no default value for null provided>>>") const
   {
     if (!mStrPtr)
     {
-      return std::string("<<<null>>>");
+      return std::string(defaultValue);
     }
     return std::string(*mStrPtr);
   }

@@ -5725,7 +5725,7 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema, int lower_case
       // lk2.lock();
       for (int i = 0; i < (*it)->dataCount(); i++)
       {
-        TableColName tcn = make_tcn(schema, tableNames[i], (*it)->GetStringData(i));
+        TableColName tcn = make_tcn(schema, tableNames[i], (*it)->GetStringData(i).safeString(""));
         fOIDmap[tcn] = rl[i].objnum;
 
         if (fIdentity == EC)
@@ -5780,7 +5780,7 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema, int lower_case
       {
         ctList[i].defaultValue = ((*it)->GetStringData(i));
 
-        if ((!ctList[i].defaultValue.empty()) || (ctList[i].defaultValue.length() > 0))
+        if (!ctList[i].defaultValue.isNull())
         {
           if (ctList[i].constraintType != NOTNULL_CONSTRAINT)
             ctList[i].constraintType = DEFAULT_CONSTRAINT;
