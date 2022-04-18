@@ -3222,7 +3222,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
 
       for (int i = 0; i < (*it)->dataCount(); i++)
       {
-        TableColName tcn = make_tcn(aTableName.schema, aTableName.table, (*it)->GetStringData(i));
+        TableColName tcn = make_tcn(aTableName.schema, aTableName.table, (*it)->GetStringData(i).safeString(""));
         fOIDmap[tcn] = rl[i].objnum;
 
         if (fIdentity == EC)
@@ -3447,9 +3447,9 @@ const CalpontSystemCatalog::TableName CalpontSystemCatalog::tableName(const OID&
     }
 
     if ((*it)->ColumnOID() == oid2)
-      tableName.schema = (*it)->GetStringData(0);
+      tableName.schema = (*it)->GetStringData(0).safeString("");
     else if ((*it)->ColumnOID() == oid3)
-      tableName.table = (*it)->GetStringData(0);
+      tableName.table = (*it)->GetStringData(0).safeString("");
   }
 
   //@Bug 2682. datacount 0 sometimes does not mean the table is not found.
@@ -5682,7 +5682,7 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema, int lower_case
     {
       for (int i = 0; i < (*it)->dataCount(); i++)
       {
-        tableNames.push_back((*it)->GetStringData(i));
+        tableNames.push_back((*it)->GetStringData(i).safeString(""));
         tbIter = tbInfo.find(tableNames[i]);
 
         if (tbIter == tbInfo.end())
