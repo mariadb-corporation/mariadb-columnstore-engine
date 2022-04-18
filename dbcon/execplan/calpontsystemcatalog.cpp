@@ -715,18 +715,18 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
     {
       ct.defaultValue = ((*it)->GetStringData(0));
 
-      if ((!ct.defaultValue.empty()) || (ct.defaultValue.length() > 0))
+      if (!ct.defaultValue.isNull())
       {
         if (ct.constraintType != NOTNULL_CONSTRAINT)
           ct.constraintType = DEFAULT_CONSTRAINT;
       }
     }
     else if ((*it)->ColumnOID() == DICTOID_SYSCOLUMN_SCHEMA)
-      tcn.schema = ((*it)->GetStringData(0));
+      tcn.schema = ((*it)->GetStringData(0).safeString(""));
     else if ((*it)->ColumnOID() == DICTOID_SYSCOLUMN_TABLENAME)
-      tcn.table = ((*it)->GetStringData(0));
+      tcn.table = ((*it)->GetStringData(0).safeString(""));
     else if ((*it)->ColumnOID() == DICTOID_SYSCOLUMN_COLNAME)
-      tcn.column = ((*it)->GetStringData(0));
+      tcn.column = ((*it)->GetStringData(0).safeString(""));
   }
 
   // temporialy memory leak fix until defaultvalue is added.
@@ -1209,11 +1209,11 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
     // NJL fix.  The schema, table, and column now return the oids for the dictionary columns
     // on schema, table, and column.
     else if ((*it)->ColumnOID() == DICTOID_SYSCOLUMN_SCHEMA)
-      tcn.schema = ((*it)->GetStringData(0));
+      tcn.schema = ((*it)->GetStringData(0).safeString(""));
     else if ((*it)->ColumnOID() == DICTOID_SYSCOLUMN_TABLENAME)
-      tcn.table = ((*it)->GetStringData(0));
+      tcn.table = ((*it)->GetStringData(0).safeString(""));
     else if ((*it)->ColumnOID() == DICTOID_SYSCOLUMN_COLNAME)
-      tcn.column = ((*it)->GetStringData(0));
+      tcn.column = ((*it)->GetStringData(0).safeString(""));
     else if ((*it)->ColumnOID() == oid[13])
     {
       if (static_cast<ConstraintType>((*it)->GetData(0)) == 0)
@@ -1444,11 +1444,11 @@ const CalpontSystemCatalog::TableColName CalpontSystemCatalog::colName(const OID
   for (it = sysDataList.begin(); it != sysDataList.end(); it++)
   {
     if ((*it)->ColumnOID() == oid2)
-      tableColName.schema = (*it)->GetStringData(0);
+      tableColName.schema = (*it)->GetStringData(0).safeString("");
     else if ((*it)->ColumnOID() == oid3)
-      tableColName.table = (*it)->GetStringData(0);
+      tableColName.table = (*it)->GetStringData(0).safeString("");
     else if ((*it)->ColumnOID() == oid4)
-      tableColName.column = (*it)->GetStringData(0);
+      tableColName.column = (*it)->GetStringData(0).safeString("");
   }
 
   if (oid > 3000)
@@ -1545,11 +1545,11 @@ const CalpontSystemCatalog::TableColName CalpontSystemCatalog::dictColName(const
   for (it = sysDataList.begin(); it != sysDataList.end(); it++)
   {
     if ((*it)->ColumnOID() == oid2)
-      tableColName.schema = (*it)->GetStringData(0);
+      tableColName.schema = (*it)->GetStringData(0).safeString("");
     else if ((*it)->ColumnOID() == oid3)
-      tableColName.table = (*it)->GetStringData(0);
+      tableColName.table = (*it)->GetStringData(0).safeString("");
     else if ((*it)->ColumnOID() == oid4)
-      tableColName.column = (*it)->GetStringData(0);
+      tableColName.column = (*it)->GetStringData(0).safeString("");
   }
 
   if (oid > 3000)
@@ -2814,7 +2814,7 @@ CalpontSystemCatalog::getTables(const std::string schema, int lower_case_table_n
       for (int i = 0; i < (*it)->dataCount(); i++)
       {
         tables.push_back(make_pair(0, make_table("", (*it)->GetStringData(i).safeString(""))));
-        tnl.push_back((*it)->GetStringData(i));
+        tnl.push_back((*it)->GetStringData(i).safeString(""));
       }
     }
   }
