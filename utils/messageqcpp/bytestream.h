@@ -176,7 +176,7 @@ class ByteStream : public Serializeable
   /**
    * push a NullString onto the end of the stream.
    */
-  EXPORT ByteStream& operator<<(const NullString& s);
+  EXPORT ByteStream& operator<<(const utils::NullString& s);
   /**
    * push an arbitrary class onto the end of the stream.
    */
@@ -253,7 +253,7 @@ class ByteStream : public Serializeable
   /**
    * extract a NullString from the front of the stream.
    */
-  EXPORT ByteStream& operator>>(NullString& s);
+  EXPORT ByteStream& operator>>(utils::NullString& s);
   /**
    *	write the current stream into b. The ByteStream will be empty after this operation.
    * @warning the caller is responsible for making sure b is big enough to hold all the data (perhaps by
