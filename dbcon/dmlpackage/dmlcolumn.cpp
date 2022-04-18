@@ -35,7 +35,7 @@ DMLColumn::DMLColumn()
 {
 }
 
-DMLColumn::DMLColumn(std::string name, NullString& value, bool isFromCol,
+DMLColumn::DMLColumn(std::string name, utils::NullString& value, bool isFromCol,
                      uint32_t funcScale, bool isNULL)
 {
   fName = name;
@@ -45,7 +45,7 @@ DMLColumn::DMLColumn(std::string name, NullString& value, bool isFromCol,
   fFuncScale = funcScale;
 }
 
-DMLColumn::DMLColumn(std::string name, const std::vector<NullString>& valueList, bool isFromCol,
+DMLColumn::DMLColumn(std::string name, const std::vector<utils::NullString>& valueList, bool isFromCol,
                      uint32_t funcScale, bool isNULL)
 {
   fName = name;
@@ -69,7 +69,7 @@ int DMLColumn::read(messageqcpp::ByteStream& bytestream)
 
   for (uint32_t i = 0; i < vectorSize; i++)
   {
-    NullString dataStr;
+    utils::NullString dataStr;
     bytestream >> dataStr;
     //	if ( !fisNULL  && (dataStr.length() == 0 ))
     //		dataStr = (char) 0;
