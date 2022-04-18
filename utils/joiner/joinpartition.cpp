@@ -155,7 +155,6 @@ JoinPartition::JoinPartition(const JoinPartition& jp, bool splitMode)
  , nextSmallOffset(0)
  , nextLargeOffset(0)
 {
-  boost::posix_time::ptime t;
   ostringstream os;
 
   fileMode = true;
