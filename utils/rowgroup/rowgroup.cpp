@@ -876,8 +876,8 @@ bool Row::isNullValue(uint32_t colIndex) const
         return strings->isNullValue(offset);
       }
 
-      if (data[offsets[colIndex]] == 0)  // empty string
-        return true;
+//      if (data[offsets[colIndex]] == 0)  // empty string
+//        return true;
 
       switch (len)
       {
@@ -1565,8 +1565,8 @@ void RowGroup::addToSysDataList(execplan::CalpontSystemCatalog::NJLSysDataList& 
 
             default:
             {
-              string s = row.getStringField(j);
-              cr->PutStringData(string(s.c_str(), strlen(s.c_str())));
+              NullString s = row.getStringField(j);
+              cr->PutStringData(string(s);
             }
           }
 

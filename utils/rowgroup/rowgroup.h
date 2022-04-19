@@ -143,8 +143,10 @@ class StringStore
   StringStore();
   virtual ~StringStore();
 
-  inline std::string getString(uint64_t offset) const;
+  inline utils::NullString getString(uint64_t offset) const;
   uint64_t storeString(const uint8_t* data, uint32_t length);  // returns the offset
+  //uint64_t storeString(const utils::NullString& str);  // returns the offset
+  //please note getPointer can return nullptr.
   inline const uint8_t* getPointer(uint64_t offset) const;
   inline uint32_t getStringLength(uint64_t offset) const;
   inline utils::ConstString getConstString(uint64_t offset) const
@@ -496,7 +498,7 @@ class Row
 
   inline utils::ConstString getConstString(uint32_t colIndex) const;
   inline utils::ConstString getShortConstString(uint32_t colIndex) const;
-  void setStringField(const std::string& val, uint32_t colIndex);
+  void setStringField(const utils::NullString& val, uint32_t colIndex);
   inline void setStringField(const utils::ConstString& str, uint32_t colIndex);
   template <typename T>
   inline void setBinaryField(const T* value, uint32_t width, uint32_t colIndex);
@@ -2047,32 +2049,36 @@ inline bool StringStore::isNullValue(uint64_t off) const
   if (off == std::numeric_limits<uint64_t>::max())
     return true;
 
-  // Long strings won't be NULL
-  if (off & 0x8000000000000000)
-    return false;
+  // commented out before deleting because we should
+//  // Long strings won't be NULL
+//  if (off & 0x8000000000000000)
+//    return false;
 
   uint32_t chunk = off / CHUNK_SIZE;
   uint32_t offset = off % CHUNK_SIZE;
   MemChunk* mc;
 
-  if (mem.size() <= chunk)
-    return true;
+  idbassert(mem.size() > chunk); // this is correct. we have a separate values
+//  if (mem.size() <= chunk)
+//    return true;
 
   mc = (MemChunk*)mem[chunk].get();
   memcpy(&length, &mc->data[offset], 4);
 
-  if (length == 0)
-    return true;
+//  if (length == 0)
+//    return true;
 
-  if (length < 8)
-    return false;
+//  if (length < 8)
+//    return false;
 
-  if ((offset + length) > mc->currentSize)
-    return true;
+  idbassert(offset + length <= mc->currentSize);
+//  if ((offset + length) > mc->currentSize)
+//    return true;
 
-  if (mc->data[offset + 4] == 0)  // "" = NULL string for some reason...
-    return true;
-  return (memcmp(&mc->data[offset + 4], joblist::CPNULLSTRMARK.c_str(), 8) == 0);
+//  if (mc->data[offset + 4] == 0)  // "" = NULL string for some reason...
+//    return true;
+//  return (memcmp(&mc->data[offset + 4], joblist::CPNULLSTRMARK.c_str(), 8) == 0);
+  return false;
 }
 
 inline uint32_t StringStore::getStringLength(uint64_t off) const
