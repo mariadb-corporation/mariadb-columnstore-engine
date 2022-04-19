@@ -44,6 +44,8 @@ class ConstString
   }
   const char* end() const
   {
+    // end() should be computed for non-nullptr mStrs, otherwise it is undefined behavior.
+    idbassert(mStr);
     return mStr + mLength;
   }
   size_t length() const
@@ -61,6 +63,7 @@ class ConstString
   }
   bool eq(const ConstString& rhs) const
   {
+    idbassert(mStr);
     return mLength == rhs.mLength && !memcmp(mStr, rhs.mStr, mLength);
   }
   ConstString& rtrimZero()

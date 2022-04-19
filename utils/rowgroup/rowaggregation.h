@@ -55,6 +55,7 @@
 
 #include "resourcemanager.h"
 #include "rowstorage.h"
+#include "nulstring.h"
 
 // To do: move code that depends on joblist to a proper subsystem.
 namespace joblist

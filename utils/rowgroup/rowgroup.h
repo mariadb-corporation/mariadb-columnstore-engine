@@ -144,7 +144,9 @@ class StringStore
   virtual ~StringStore();
 
   inline utils::NullString getString(uint64_t offset) const;
-  uint64_t storeString(const uint8_t* data, uint32_t length);  // returns the offset
+  // returns the offset.
+  // it may receive nullptr as data and it is proper way to store NULL values.
+  uint64_t storeString(const uint8_t* data, uint32_t length);
   //uint64_t storeString(const utils::NullString& str);  // returns the offset
   //please note getPointer can return nullptr.
   inline const uint8_t* getPointer(uint64_t offset) const;
@@ -1968,12 +1970,13 @@ inline void copyRow(const Row& in, Row* out)
   copyRow(in, out, std::min(in.getColumnCount(), out->getColumnCount()));
 }
 
-inline std::string StringStore::getString(uint64_t off) const
+inline utils::NullString StringStore::getString(uint64_t off) const
 {
   uint32_t length;
+  utils::NullString nStr;
 
   if (off == std::numeric_limits<uint64_t>::max())
-    return joblist::CPNULLSTRMARK;
+    return nStr;
 
   MemChunk* mc;
 
@@ -1983,11 +1986,12 @@ inline std::string StringStore::getString(uint64_t off) const
     off &= ~0x8000000000000000;
 
     if (longStrings.size() <= off)
-      return joblist::CPNULLSTRMARK;
+      return nStr;
 
     mc = (MemChunk*)longStrings[off].get();
     memcpy(&length, mc->data, 4);
-    return std::string((char*)mc->data + 4, length);
+    nStr.assign(std::string((char*)mc->data + 4, length));
+    return nStr;
   }
 
   uint64_t chunk = off / CHUNK_SIZE;
@@ -1996,22 +2000,23 @@ inline std::string StringStore::getString(uint64_t off) const
   // this has to handle uninitialized data as well.  If it's uninitialized it doesn't matter
   // what gets returned, it just can't go out of bounds.
   if (mem.size() <= chunk)
-    return joblist::CPNULLSTRMARK;
+    return nStr;
 
   mc = (MemChunk*)mem[chunk].get();
 
   memcpy(&length, &mc->data[offset], 4);
 
   if ((offset + length) > mc->currentSize)
-    return joblist::CPNULLSTRMARK;
+    return nStr;
 
-  return std::string((char*)&(mc->data[offset]) + 4, length);
+  nStr.assign(std::string((char*)&(mc->data[offset]) + 4, length));
+  return nStr;
 }
 
 inline const uint8_t* StringStore::getPointer(uint64_t off) const
 {
   if (off == std::numeric_limits<uint64_t>::max())
-    return (const uint8_t*)joblist::CPNULLSTRMARK.c_str();
+    return nullptr;
 
   uint64_t chunk = off / CHUNK_SIZE;
   uint64_t offset = off % CHUNK_SIZE;
@@ -2023,7 +2028,7 @@ inline const uint8_t* StringStore::getPointer(uint64_t off) const
     off &= ~0x8000000000000000;
 
     if (longStrings.size() <= off)
-      return (const uint8_t*)joblist::CPNULLSTRMARK.c_str();
+      return nullptr;
 
     mc = (MemChunk*)longStrings[off].get();
     return mc->data + 4;
@@ -2032,12 +2037,12 @@ inline const uint8_t* StringStore::getPointer(uint64_t off) const
   // this has to handle uninitialized data as well.  If it's uninitialized it doesn't matter
   // what gets returned, it just can't go out of bounds.
   if (UNLIKELY(mem.size() <= chunk))
-    return (const uint8_t*)joblist::CPNULLSTRMARK.c_str();
+    return nullptr;
 
   mc = (MemChunk*)mem[chunk].get();
 
   if (offset > mc->currentSize)
-    return (const uint8_t*)joblist::CPNULLSTRMARK.c_str();
+    return nullptr;
 
   return &(mc->data[offset]) + 4;
 }
