@@ -168,21 +168,7 @@ void XMLGenProc::startXMLFile()
 // makeTableData
 // Create XML tag for a table.
 //------------------------------------------------------------------------------
-// This method is used by colxml only and it can be relatively slower doing tableRID()
-// first call. All subsequent calls will re-use data from CalpontSystemCatalog cache.
 void XMLGenProc::makeTableData(const CalpontSystemCatalog::TableName& table)
-{
-  boost::shared_ptr<CalpontSystemCatalog> cat =
-      CalpontSystemCatalog::makeCalpontSystemCatalog(BULK_SYSCAT_SESSION_ID);
-  cat->identity(CalpontSystemCatalog::EC);
-  std::ostringstream oss;
-  // tableRID method might take a lot with a significant EM.
-  oss << cat->tableRID(table).objnum;
-
-  makeTableData(table, oss.str());
-}
-
-void XMLGenProc::makeTableData(const CalpontSystemCatalog::TableName& table, const std::string& tableOIDStr)
 {
   static unsigned kount;
 
@@ -194,8 +180,11 @@ void XMLGenProc::makeTableData(const CalpontSystemCatalog::TableName& table, con
   {
     try
     {
-      xmlTextWriterWriteFormatAttribute(fWriter, BAD_CAST xmlTagTable[TAG_TBL_OID], "%s",
-                                        tableOIDStr.c_str());
+      boost::shared_ptr<CalpontSystemCatalog> cat =
+          CalpontSystemCatalog::makeCalpontSystemCatalog(BULK_SYSCAT_SESSION_ID);
+      cat->identity(CalpontSystemCatalog::EC);
+      xmlTextWriterWriteFormatAttribute(fWriter, BAD_CAST xmlTagTable[TAG_TBL_OID], "%d",
+                                        cat->tableRID(table).objnum);
     }
     catch (std::exception& ex)
     {

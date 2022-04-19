@@ -110,10 +110,8 @@ class MasterSegmentTable
   static const int VSSSegment = 3;
   /// specifies the copy lock segment
   static const int CLSegment = 4;
-  /// specifies the EM Index segment
-  static const int EMIndex = 5;
   /// the number of tables currently defined
-  static const int nTables = 6;
+  static const int nTables = 5;
 
   /** @brief This function gets the specified table.
    *

@@ -138,7 +138,6 @@ MasterSegmentTable::MasterSegmentTable()
   RWLockKeys[2] = fShmKeys.KEYRANGE_VBBM_BASE;
   RWLockKeys[3] = fShmKeys.KEYRANGE_VSS_BASE;
   RWLockKeys[4] = fShmKeys.KEYRANGE_CL_BASE;
-  RWLockKeys[5] = fShmKeys.KEYRANGE_EXTENTMAP_INDEX_BASE;
 
   try
   {

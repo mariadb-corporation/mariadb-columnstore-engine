@@ -50,7 +50,6 @@ ShmKeys::ShmKeys()
   KEYRANGE_EMFREELIST_BASE = 0x30000 | (BRM_UID << 20);
   KEYRANGE_VBBM_BASE = 0x40000 | (BRM_UID << 20);
   KEYRANGE_CL_BASE = 0x50000 | (BRM_UID << 20);
-  KEYRANGE_EXTENTMAP_INDEX_BASE = 0x60000 | (BRM_UID << 20);
   MST_SYSVKEY = 0xff000000 | BRM_UID;
   PROCESSSTATUS_SYSVKEY = 0xfd000000 | BRM_UID;
   SYSTEMSTATUS_SYSVKEY = 0xfc000000 | BRM_UID;
@@ -63,7 +62,7 @@ ShmKeys::ShmKeys()
 string ShmKeys::keyToName(unsigned key)
 {
   ostringstream oss;
-  oss << "MCS-shm-";
+  oss << "InfiniDB-shm-";
   oss << setw(8) << setfill('0') << hex << key;
   return oss.str();
 }
