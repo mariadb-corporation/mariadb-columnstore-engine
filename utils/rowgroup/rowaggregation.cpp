@@ -218,9 +218,9 @@ inline long double getLongDoubleNullValue()
   return joblist::LONGDOUBLENULL;
 }
 
-inline string getStringNullValue()
+inline utils::NullString getStringNullValue()
 {
-  return joblist::CPNULLSTRMARK;
+  return utils::NullString();
 }
 
 }  // namespace
@@ -304,7 +304,7 @@ inline void RowAggregation::updateFloatMinMax(float val1, float val2, int64_t co
     fRow.setFloatField(val1, col);
 }
 
-void RowAggregation::updateStringMinMax(string val1, string val2, int64_t col, int func)
+void RowAggregation::updateStringMinMax(utils::NullString val1, utils::NullString val2, int64_t col, int func)
 {
   if (isNull(fRowGroupOut, fRow, col))
   {
@@ -312,7 +312,7 @@ void RowAggregation::updateStringMinMax(string val1, string val2, int64_t col, i
     return;
   }
   CHARSET_INFO* cs = fRow.getCharset(col);
-  int tmp = cs->strnncoll(val1.c_str(), val1.length(), val2.c_str(), val2.length());
+  int tmp = cs->strnncoll(val1.str(), val1.length(), val2.str(), val2.length());
 
   if ((tmp < 0 && func == rowgroup::ROWAGG_MIN) || (tmp > 0 && func == rowgroup::ROWAGG_MAX))
   {
@@ -353,6 +353,7 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
     {
       int colWidth = pRowGroup->getColumnWidth(col);
 
+      // XXX: this is wrong. NullStrings now contain separate NULL values.
       // bug 1853, use token to check null
       // scale here is used to indicate token, not real string.
       if ((pRowGroup->getScale())[col] > 0)
@@ -380,7 +381,7 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
       {
         //@bug 1821
         auto const str = row.getConstString(col);
-        ret = str.length() == 0 || str.eq(utils::ConstString(joblist::CPNULLSTRMARK));
+        ret = str.isNull();
       }
 
       break;
@@ -479,7 +480,7 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
     case execplan::CalpontSystemCatalog::BLOB:
     {
       auto const str = row.getConstString(col);
-      ret = str.length() == 0 || str.eq(utils::ConstString(joblist::CPNULLSTRMARK));
+      ret = str.isNull();
       break;
     }
 
@@ -2816,7 +2817,7 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
     case execplan::CalpontSystemCatalog::TEXT:
       if (valOut.compatible(strTypeId))
       {
-        strOut = valOut.cast<std::string>();
+        strOut = valOut.cast<utils::NullString>();
         fRow.setStringField(strOut, colOut);
         bSetSuccess = true;
       }
@@ -2828,7 +2829,7 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
     case execplan::CalpontSystemCatalog::BLOB:
       if (valOut.compatible(strTypeId))
       {
-        strOut = valOut.cast<std::string>();
+        strOut = valOut.cast<NullString>();
         fRow.setVarBinaryField(strOut, colOut);
         bSetSuccess = true;
       }
@@ -2880,7 +2881,7 @@ void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
   long double longdoubleOut = 0.0;
   int128_t int128Out = 0;
   ostringstream oss;
-  std::string strOut;
+  utils::NullString strOut;
 
   if (valOut.compatible(charTypeId))
   {
@@ -2975,12 +2976,12 @@ void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
 
   if (valOut.compatible(strTypeId))
   {
-    strOut = valOut.cast<std::string>();
+    strOut = valOut.cast<utils::NullString>();
     // Convert the string to numeric type, just in case.
-    intOut = atol(strOut.c_str());
-    uintOut = strtoul(strOut.c_str(), nullptr, 10);
-    doubleOut = strtod(strOut.c_str(), nullptr);
-    longdoubleOut = strtold(strOut.c_str(), nullptr);
+    intOut = atol(strOut.str());
+    uintOut = strtoul(strOut.str(), nullptr, 10);
+    doubleOut = strtod(strOut.str(), nullptr);
+    longdoubleOut = strtold(strOut.str(), nullptr);
     int128Out = longdoubleOut;
   }
   else
@@ -3360,7 +3361,8 @@ void RowAggregationUM::doNullConstantAggregate(const ConstantAggData& aggData, u
         case execplan::CalpontSystemCatalog::TEXT:
         default:
         {
-          fRow.setStringField("", colOut);
+          utils::NullString nullstr;
+          fRow.setStringField(nullstr, colOut);
         }
         break;
 
@@ -3459,7 +3461,8 @@ void RowAggregationUM::doNullConstantAggregate(const ConstantAggData& aggData, u
 
     default:
     {
-      fRow.setStringField("", colOut);
+      utils::NullString nullstr
+      fRow.setStringField(nullstr, colOut);
     }
     break;
   }
@@ -3709,7 +3712,8 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
         default:
         {
           // will not be here, checked in tupleaggregatestep.cpp.
-          fRow.setStringField("", colOut);
+          utils::NullString nullstr;
+          fRow.setStringField(nullstr, colOut);
         }
         break;
       }
@@ -3781,7 +3785,8 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
         case execplan::CalpontSystemCatalog::TEXT:
         default:
         {
-          fRow.setStringField(nullptr, colOut);
+          utils::NullString nullstr;
+          fRow.setStringField(nullstr, colOut);
         }
         break;
       }
@@ -3988,7 +3993,8 @@ void RowAggregationUM::setGroupConcatString()
         uint8_t* gcString;
         joblist::GroupConcatAgUM* gccAg = *((joblist::GroupConcatAgUM**)buff);
         gcString = gccAg->getResult();
-        fRow.setStringField((char*)gcString, fFunctionCols[j]->fOutputColumnIndex);
+	utils::NullString str((char*)gcString);
+        fRow.setStringField(str, fFunctionCols[j]->fOutputColumnIndex);
         // gccAg->getResult(buff);
       }
     }

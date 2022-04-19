@@ -95,7 +95,7 @@ uint64_t StringStore::storeString(const uint8_t* data, uint32_t len)
   // if (len == 0)
   //	return numeric_limits<uint32_t>::max();
 
-  if ((len == 8 || len == 9) && *((uint64_t*)data) == *((uint64_t*)joblist::CPNULLSTRMARK.c_str()))
+  if (!data)
     return numeric_limits<uint64_t>::max();
 
   //@bug6065, make StringStore::storeString() thread safe
@@ -709,7 +709,8 @@ void Row::initToNull()
       {
         if (inStringTable(i))
         {
-          setStringField(joblist::CPNULLSTRMARK, i);
+          utils::NullString nullstr;
+          setStringField(nullstr, i);
           break;
         }
 
@@ -730,8 +731,10 @@ void Row::initToNull()
           case 8: *((uint64_t*)&data[offsets[i]]) = joblist::CHAR8NULL; break;
 
           default:
-            *((uint64_t*)&data[offsets[i]]) = *((uint64_t*)joblist::CPNULLSTRMARK.c_str());
-            memset(&data[offsets[i] + 8], 0, len - 8);
+            // XXX: THIS IS WRONG!!!
+	    idbassert(false);
+            //*((uint64_t*)&data[offsets[i]]) = *((uint64_t*)joblist::CPNULLSTRMARK.c_str());
+            //memset(&data[offsets[i] + 8], 0, len - 8);
             break;
         }
 
@@ -893,6 +896,7 @@ bool Row::isNullValue(uint32_t colIndex) const
         case 7:
         case 8: return (*((uint64_t*)&data[offsets[colIndex]]) == joblist::CHAR8NULL);
         default:
+	  idbassert(false);
           return (*((uint64_t*)&data[offsets[colIndex]]) == *((uint64_t*)joblist::CPNULLSTRMARK.c_str()));
       }
 
@@ -932,6 +936,7 @@ bool Row::isNullValue(uint32_t colIndex) const
         return strings->isNullValue(offset);
       }
 
+      idbassert(false && "first, it should be (uint8_t*) cast for old logic, second, this should not happen at all!");
       if (*((uint16_t*)&data[pos]) == 0)
         return true;
       else if ((strncmp((char*)&data[pos + 2], joblist::CPNULLSTRMARK.c_str(), 8) == 0) &&
