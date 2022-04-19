@@ -141,7 +141,7 @@ JoinPartition::JoinPartition(const JoinPartition& jp, bool splitMode) :
     ostringstream os;
 
     fileMode = true;
-    // tuning issue: with the defaults, each 100MB bucket would split s.t. the children
+    // Tuning issue: with the defaults, each 100MB bucket would split s.t. the children
     // could store another 4GB total.  Given a good hash and evenly distributed data,
     // the first level of expansion would happen for all JPs at once, giving a total
     // capacity of (4GB * 40) = 160GB, when actual usage at that point is a little over 4GB.
