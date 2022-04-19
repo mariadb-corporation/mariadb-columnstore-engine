@@ -1286,14 +1286,14 @@ inline void Row::setInt128Field(const int128_t& val, uint32_t colIndex)
   setBinaryField<int128_t>(&val, colIndex);
 }
 
-inline void Row::setVarBinaryField(const std::string& val, uint32_t colIndex)
+inline void Row::setVarBinaryField(const utils::NullString& val, uint32_t colIndex)
 {
   if (inStringTable(colIndex))
     setStringField(val, colIndex);
   else
   {
     *((uint16_t*)&data[offsets[colIndex]]) = static_cast<uint16_t>(val.length());
-    memcpy(&data[offsets[colIndex] + 2], val.data(), val.length());
+    memcpy(&data[offsets[colIndex] + 2], val.str(), val.length());
   }
 }
 
@@ -1309,6 +1309,7 @@ inline void Row::setVarBinaryField(const uint8_t* val, uint32_t len, uint32_t co
   }
   else
   {
+    idbassert(val); // XXX: this is highly suspicious.
     *((uint16_t*)&data[offsets[colIndex]]) = len;
     memcpy(&data[offsets[colIndex] + 2], val, len);
   }
