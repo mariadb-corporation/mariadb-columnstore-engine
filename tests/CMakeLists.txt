@@ -49,11 +49,6 @@ if (WITH_UNITTESTS)
     target_link_libraries(comparators_tests ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
     add_test(NAME columnstore:comparators_tests, COMMAND comparators_tests)
 
-    # standalone EM routines test
-    # add_executable(brm_em_standalone brm-em-standalone.cpp)
-    # target_link_libraries(brm_em_standalone ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
-    # install(TARGETS brm_em_standalone DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-
 endif()
 
 # Saving this as the example of the microbench

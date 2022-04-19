@@ -381,11 +381,11 @@ void XMLJob::setJobData(xmlNode* pNode, const xmlTag tag, bool bExpectContent, X
     if (tagType == TYPE_INT)
       bSuccess = getNodeContent(pNode, &intVal, TYPE_INT);
     else  // longlong
-      if (tagType == TYPE_LONGLONG)
-        bSuccess = getNodeContent(pNode, &llVal, TYPE_LONGLONG);
-      else  // char
+        if (tagType == TYPE_LONGLONG)
+      bSuccess = getNodeContent(pNode, &llVal, TYPE_LONGLONG);
+    else  // char
         if (tagType == TYPE_CHAR)
-          bSuccess = getNodeContentStr(pNode, bufString);
+      bSuccess = getNodeContentStr(pNode, bufString);
 
     if (!bSuccess)
       return;
@@ -1194,8 +1194,7 @@ void XMLJob::validateAllColumnsHaveTags(const execplan::CalpontSystemCatalog::RI
 /* static */
 int XMLJob::genJobXMLFileName(const string& sXMLJobDir, const string& jobDir, const string& jobId,
                               bool bTempFile, const string& schemaName, const string& tableName,
-                              boost::filesystem::path& xmlFilePath, string& errMsg,
-                              const std::string& tableOIDStr)
+                              boost::filesystem::path& xmlFilePath, string& errMsg, std::string& tableOIDStr)
 {
   // get full file directory path for XML job description file
   if (sXMLJobDir.empty())

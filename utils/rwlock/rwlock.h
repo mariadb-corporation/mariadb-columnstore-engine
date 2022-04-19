@@ -1,5 +1,4 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016-2022 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -28,8 +27,6 @@
 #ifndef RWLOCK_H_
 #define RWLOCK_H_
 
-#include <array>
-
 #include <unistd.h>
 #include <stdexcept>
 
@@ -46,10 +43,6 @@
 
 namespace rwlock
 {
-const std::array<const std::string, 7> RWLockNames = {
-    "all", "VSS", "ExtentMap", "FreeList", "VBBM", "CopyLocks", "ExtentMapIndex",
-};
-
 /// the layout of the shmseg
 struct State
 {

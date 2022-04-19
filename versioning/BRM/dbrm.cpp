@@ -98,7 +98,7 @@ DBRM::DBRM(const DBRM& brm)
   throw logic_error("DBRM: Don't use the copy constructor.");
 }
 
-DBRM::~DBRM()
+DBRM::~DBRM() throw()
 {
   if (msgClient != NULL)
     MessageQueueClientPool::releaseInstance(msgClient);
@@ -461,7 +461,7 @@ int DBRM::markExtentsInvalid(const vector<LBID_t>& lbids,
 }
 
 template <typename T>
-int DBRM::getExtentMaxMin(const LBID_t lbid, T& max, T& min, int32_t& seqNum)
+int DBRM::getExtentMaxMin(const LBID_t lbid, T& max, T& min, int32_t& seqNum) throw()
 {
 #ifdef BRM_INFO
 
@@ -489,7 +489,7 @@ int DBRM::getExtentMaxMin(const LBID_t lbid, T& max, T& min, int32_t& seqNum)
   }
 }
 
-int DBRM::getExtentCPMaxMin(const LBID_t lbid, CPMaxMin& cpMaxMin)
+int DBRM::getExtentCPMaxMin(const LBID_t lbid, CPMaxMin& cpMaxMin) throw()
 {
   try
   {
@@ -4555,19 +4555,10 @@ void DBRM::invalidateUncommittedExtentLBIDs(execplan::CalpontSystemCatalog::SCN 
   setExtentsMaxMin(cpInfos);
 }
 
-size_t DBRM::EMIndexShmemSize()
-{
-  return em->EMIndexShmemSize();
-}
-
-size_t DBRM::EMIndexShmemFree()
-{
-  return em->EMIndexShmemFree();
-}
-
 template int DBRM::getExtentMaxMin<int128_t>(const LBID_t lbid, int128_t& max, int128_t& min,
-                                             int32_t& seqNum);
+                                             int32_t& seqNum) throw();
 
-template int DBRM::getExtentMaxMin<int64_t>(const LBID_t lbid, int64_t& max, int64_t& min, int32_t& seqNum);
+template int DBRM::getExtentMaxMin<int64_t>(const LBID_t lbid, int64_t& max, int64_t& min,
+                                            int32_t& seqNum) throw();
 
 }  // namespace BRM

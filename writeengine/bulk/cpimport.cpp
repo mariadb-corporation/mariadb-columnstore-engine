@@ -916,24 +916,16 @@ void getTableOID(const std::string& xmlGenSchema, const std::string& xmlGenTable
 void constructTempXmlFile(const std::string& tempJobDir, const std::string& sJobIdStr,
                           const std::string& xmlGenSchema, const std::string& xmlGenTable,
                           const std::string& alternateImportDir, const std::string& S3Bucket,
-                          const std::string& tableOIDStr, boost::filesystem::path& sFileName)
+                          boost::filesystem::path& sFileName)
 {
   // Construct the job description file name
   std::string xmlErrMsg;
   int rc = 0;
-  std::string localTableOIDStr;
-  if (tableOIDStr.empty())
-  {
-    getTableOID(xmlGenSchema, xmlGenTable, localTableOIDStr);
-  }
-  else
-  {
-    localTableOIDStr = tableOIDStr;
-  }
-
+  std::string tableOIDStr;
+  getTableOID(xmlGenSchema, xmlGenTable, tableOIDStr);
   rc = XMLJob::genJobXMLFileName(std::string(), tempJobDir, sJobIdStr,
                                  true,  // using temp job xml file
-                                 xmlGenSchema, xmlGenTable, sFileName, xmlErrMsg, localTableOIDStr);
+                                 xmlGenSchema, xmlGenTable, sFileName, xmlErrMsg, tableOIDStr);
 
   if (rc != NO_ERROR)
   {
@@ -953,7 +945,7 @@ void constructTempXmlFile(const std::string& tempJobDir, const std::string& sJob
   {
     genProc.startXMLFile();
     execplan::CalpontSystemCatalog::TableName tbl(xmlGenSchema, xmlGenTable);
-    genProc.makeTableData(tbl, localTableOIDStr);
+    genProc.makeTableData(tbl);
 
     if (!genProc.makeColumnData(tbl))
     {
@@ -1230,9 +1222,9 @@ int main(int argc, char** argv)
     if (!xmlGenSchema.empty())  // create temporary job file name
     {
       // If JobID is not provided, then default to the table OID
-      std::string tableOIDStr{""};
       if (sJobIdStr.empty())
       {
+        std::string tableOIDStr;
         getTableOID(xmlGenSchema, xmlGenTable, tableOIDStr);
 
         if (!(BulkLoad::disableConsoleOutput()))
@@ -1247,7 +1239,7 @@ int main(int argc, char** argv)
 
       bUseTempJobFile = true;
       constructTempXmlFile(curJob.getTempJobDir(), sJobIdStr, xmlGenSchema, xmlGenTable,
-                           curJob.getAlternateImportDir(), curJob.getS3Bucket(), tableOIDStr, sFileName);
+                           curJob.getAlternateImportDir(), curJob.getS3Bucket(), sFileName);
     }
     else  // create user's persistent job file name
     {

@@ -24,24 +24,24 @@
  * class BRMShmImpl
  */
 
-#pragma once
+#ifndef IDBSHMIMPL_H_
+#define IDBSHMIMPL_H_
 
 #include <unistd.h>
 //#define NDEBUG
 #include <cassert>
 #include <boost/interprocess/shared_memory_object.hpp>
-#include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/mapped_region.hpp>
-
-namespace bi = boost::interprocess;
 
 namespace BRM
 {
-class BRMShmImplParent
+class BRMShmImpl
 {
  public:
-  BRMShmImplParent(unsigned key, off_t size, bool readOnly = false);
-  virtual ~BRMShmImplParent();
+  BRMShmImpl(unsigned key, off_t size, bool readOnly = false);
+  ~BRMShmImpl()
+  {
+  }
 
   inline unsigned key() const
   {
@@ -56,63 +56,25 @@ class BRMShmImplParent
     return fReadOnly;
   }
 
-  virtual void setReadOnly() = 0;
-  virtual int clear(unsigned newKey, off_t newSize) = 0;
-  virtual void destroy() = 0;
+  void setReadOnly();
+  int grow(unsigned newKey, off_t newSize);
+  int clear(unsigned newKey, off_t newSize);
 
- protected:
+  void swap(BRMShmImpl& rhs);
+  void destroy();
+
+  boost::interprocess::shared_memory_object fShmobj;
+  boost::interprocess::mapped_region fMapreg;
+
+ private:
+  BRMShmImpl(const BRMShmImpl& rhs);
+  BRMShmImpl& operator=(const BRMShmImpl& rhs);
+
   unsigned fKey;
   off_t fSize;
   bool fReadOnly;
 };
 
-class BRMShmImpl : public BRMShmImplParent
-{
- public:
-  BRMShmImpl(unsigned key, off_t size, bool readOnly = false);
-  BRMShmImpl(const BRMShmImpl& rhs) = delete;
-  BRMShmImpl& operator=(const BRMShmImpl& rhs) = delete;
-  ~BRMShmImpl()
-  {
-  }
-
-  int clear(unsigned newKey, off_t newSize) override;
-  void destroy() override;
-  void setReadOnly() override;
-
-  int grow(unsigned newKey, off_t newSize);
-  void swap(BRMShmImpl& rhs);
-
-  bi::shared_memory_object fShmobj;
-  bi::mapped_region fMapreg;
-};
-
-class BRMManagedShmImpl : public BRMShmImplParent
-{
- public:
-  BRMManagedShmImpl(unsigned key, off_t size, bool readOnly = false);
-  BRMManagedShmImpl(const BRMManagedShmImpl& rhs) = delete;
-  BRMManagedShmImpl& operator=(const BRMManagedShmImpl& rhs) = delete;
-  ~BRMManagedShmImpl()
-  {
-    delete fShmSegment;
-  }
-
-  int clear(unsigned newKey, off_t newSize) override;
-  void destroy() override;
-  void setReadOnly() override;
-
-  int grow(off_t newSize);
-  void remap(const bool readOnly = false);
-  void swap(BRMManagedShmImpl& rhs);
-  bi::managed_shared_memory* getManagedSegment()
-  {
-    assert(fShmSegment);
-    return fShmSegment;
-  }
-
- private:
-  bi::managed_shared_memory* fShmSegment;
-};
-
 }  // namespace BRM
+
+#endif
