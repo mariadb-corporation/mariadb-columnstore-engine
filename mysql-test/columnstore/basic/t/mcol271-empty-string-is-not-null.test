@@ -6,7 +6,7 @@ DROP TABLE IF EXISTS t;
 --enable_warnings
 
 CREATE TABLE t(s text) ENGINE=COLUMNSTORE;
-INSERT INTO t(s) VALUES (""), (NULL);
+INSERT INTO t(s) VALUES (''), (NULL);
 
 SELECT COUNT(*) FROM t WHERE s IS NULL;
 
@@ -16,8 +16,28 @@ DROP TABLE t;
 
 CREATE TABLE t(s text) ENGINE=COLUMNSTORE;
 # this will test different code path in writeengine.
-INSERT INTO t(s) VALUES ("");
+INSERT INTO t(s) VALUES ('');
 INSERT INTO t(s) VALUES (NULL);
+
+SELECT * FROM t;
+
+SELECT COUNT(*) FROM t WHERE s IS NULL;
+
+DROP TABLE t;
+
+CREATE TABLE t(s varbinary(1024)) ENGINE=COLUMNSTORE;
+# rowgroup handles not-quite-long binary blobs differently than long binary blobs.
+INSERT INTO t(s) VALUES (''), (NULL);
+
+SELECT * FROM t;
+
+SELECT COUNT(*) FROM t WHERE s IS NULL;
+
+DROP TABLE t;
+
+CREATE TABLE t(s text) ENGINE=COLUMNSTORE;
+# handling of some obsucure pseudo-null magic value.
+INSERT INTO t(s) VALUES ('_CpNuLl_'),(''), (NULL);
 
 SELECT * FROM t;
 
