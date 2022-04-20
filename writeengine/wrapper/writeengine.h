@@ -722,7 +722,8 @@ class WriteEngineWrapper : public WEObj
                            const ColStructList& colStructList, const ColValueList& colValueList,
                            std::vector<void*>& colOldValueList, const RIDList& ridList,
                            const int32_t tableOid, bool convertStructFlag = true,
-                           ColTupleList::size_type nRows = 0, std::vector<ExtCPInfo*>* cpInfos = NULL);
+                           ColTupleList::size_type nRows = 0, std::vector<ExtCPInfo*>* cpInfos = NULL,
+                           bool hasAUXCol = false);
 
   // For update column from column to use
   int writeColumnRecords(const TxnID& txnid, const CSCTypesList& cscColTypeList,

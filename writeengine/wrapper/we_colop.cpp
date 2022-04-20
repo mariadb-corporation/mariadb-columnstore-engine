@@ -601,9 +601,9 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent, Column& col
  * RETURN:
  *    none
  ***********************************************************/
-void ColumnOp::clearColumn(Column& column) const
+void ColumnOp::clearColumn(Column& column, bool isFlush) const
 {
-  if (column.dataFile.pFile)
+  if (column.dataFile.pFile && isFlush)
   {
     column.dataFile.pFile->flush();
   }
@@ -1406,7 +1406,8 @@ bool ColumnOp::isValid(Column& column) const
  *    ERR_FILE_READ if something wrong in reading the file
  ***********************************************************/
 // @bug 5572 - HDFS usage: add *.tmp file backup flag
-int ColumnOp::openColumnFile(Column& column, std::string& segFile, bool useTmpSuffix, int ioBuffSize) const
+int ColumnOp::openColumnFile(Column& column, std::string& segFile, bool useTmpSuffix,
+                             int ioBuffSize) const
 {
   if (!isValid(column))
     return ERR_INVALID_PARAM;
@@ -1685,6 +1686,11 @@ int ColumnOp::writeRows(Column& curCol, uint64_t totalRow, const RIDList& ridLis
   char charTmpBuf[8];
   int rc = NO_ERROR;
 
+  if (bDelete)
+  {
+    pVal = getEmptyRowValue(curCol.colDataType, curCol.colWidth);
+  }
+
   while (!bExit)
   {
     curRowId = ridList[i];
@@ -1759,10 +1765,6 @@ int ColumnOp::writeRows(Column& curCol, uint64_t totalRow, const RIDList& ridLis
         default: pVal = &((int*)valArray)[0]; break;
       }
     }
-    else
-    {
-      pVal = getEmptyRowValue(curCol.colDataType, curCol.colWidth);
-    }
 
     // This is the write stuff
     if (oldValArray)
@@ -1787,6 +1789,59 @@ int ColumnOp::writeRows(Column& curCol, uint64_t totalRow, const RIDList& ridLis
   }
 
   curCol.dataFile.pFile->flush();
+
+  return rc;
+}
+
+/***********************************************************
+ * DESCRIPTION:
+ *    MCOL-5021 Read-only version of writeRows() function.
+ * PARAMETERS:
+ *    curCol - column information
+ *    totalRow - the total number of rows that need to be read
+ *    ridList - the vector of row id
+ *    oldValArray - the array of old value
+ * RETURN:
+ *    NO_ERROR if success, other number otherwise
+ ***********************************************************/
+int ColumnOp::writeRowsReadOnly(Column& curCol, uint64_t totalRow, const RIDList& ridList,
+                                void* oldValArray)
+{
+  uint64_t i = 0, curRowId;
+  int dataFbo, dataBio, curDataFbo = -1;
+  unsigned char dataBuf[BYTE_PER_BLOCK];
+  bool bExit = false;
+  int rc = NO_ERROR;
+
+  while (!bExit)
+  {
+    curRowId = ridList[i];
+
+    calculateRowId(curRowId, BYTE_PER_BLOCK / curCol.colWidth, curCol.colWidth, dataFbo, dataBio);
+
+    // load another data block if necessary
+    if (curDataFbo != dataFbo)
+    {
+      curDataFbo = dataFbo;
+      //@Bug 4849. need to check error code to prevent disk error
+      rc = readBlock(curCol.dataFile.pFile, dataBuf, curDataFbo, true);
+
+      if (rc != NO_ERROR)
+        return rc;
+    }
+
+    // Read the old value of the record
+    if (oldValArray)
+    {
+      uint8_t* p = static_cast<uint8_t*>(oldValArray);
+      memcpy(p + i * curCol.colWidth, dataBuf + dataBio, curCol.colWidth);
+    }
+
+    i++;
+
+    if (i >= totalRow)
+      bExit = true;
+  }
 
   return rc;
 }

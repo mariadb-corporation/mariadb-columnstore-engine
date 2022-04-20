@@ -146,7 +146,6 @@ class CompFileData
    , fColWidth(colWidth)
    , fDctnryCol(false)
    , fFilePtr(NULL)
-   , fIoBSize(0)
    , fCompressionType(1)
   {
   }
@@ -163,8 +162,6 @@ class CompFileData
   std::string fFileName;
   CompFileHeader fFileHeader;
   std::list<ChunkData*> fChunkList;
-  boost::scoped_array<char> fIoBuffer;
-  size_t fIoBSize;
   uint32_t fCompressionType;
 
   friend class ChunkManager;
@@ -203,7 +200,7 @@ class ChunkManager
 
   // @brief Read a block from pFile at offset fbo.
   //        The data may copied from memory if the chunk it belongs to is already available.
-  int readBlock(IDBDataFile* pFile, unsigned char* readBuf, uint64_t fbo);
+  int readBlock(IDBDataFile* pFile, unsigned char* readBuf, uint64_t fbo, bool isReadOnly = false);
 
   // @brief Save a block to a chunk in pFile.
   //        The block is not written to disk immediately, will be delayed until flush.
@@ -285,7 +282,7 @@ class ChunkManager
                             bool useTmpSuffix, bool dictnry = false) const;
 
   // @brief Retrieve a chunk of pFile from disk.
-  int fetchChunkFromFile(IDBDataFile* pFile, int64_t id, ChunkData*& chunkData);
+  int fetchChunkFromFile(IDBDataFile* pFile, int64_t id, ChunkData*& chunkData, bool isReadOnly = false);
 
   // @brief Compress a chunk and write it to file.
   int writeChunkToFile(CompFileData* fileData, int64_t id);
