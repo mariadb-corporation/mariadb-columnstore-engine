@@ -92,7 +92,7 @@ int ColumnOpBulk::blocksInFile(IDBDataFile*) const
 //------------------------------------------------------------------------------
 // Stub for readBlock
 //------------------------------------------------------------------------------
-int ColumnOpBulk::readBlock(IDBDataFile*, unsigned char*, const uint64_t)
+int ColumnOpBulk::readBlock(IDBDataFile*, unsigned char*, const uint64_t, bool)
 {
   throw std::logic_error("Unauthorized use of ColumnOpBulk::readBlock");
 

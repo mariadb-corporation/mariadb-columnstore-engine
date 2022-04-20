@@ -95,7 +95,8 @@ int ColumnOpCompress0::blocksInFile(IDBDataFile* pFile) const
   return 0;
 }
 
-int ColumnOpCompress0::readBlock(IDBDataFile* pFile, unsigned char* readBuf, const uint64_t fbo)
+int ColumnOpCompress0::readBlock(IDBDataFile* pFile, unsigned char* readBuf,
+                                 const uint64_t fbo, bool isReadOnly)
 {
   return readDBFile(pFile, readBuf, fbo, true);
 }
@@ -159,9 +160,10 @@ int ColumnOpCompress1::blocksInFile(IDBDataFile* pFile) const
   return m_chunkManager->getBlockCount(pFile);
 }
 
-int ColumnOpCompress1::readBlock(IDBDataFile* pFile, unsigned char* readBuf, const uint64_t fbo)
+int ColumnOpCompress1::readBlock(IDBDataFile* pFile, unsigned char* readBuf,
+                                 const uint64_t fbo, bool isReadOnly)
 {
-  return m_chunkManager->readBlock(pFile, readBuf, fbo);
+  return m_chunkManager->readBlock(pFile, readBuf, fbo, isReadOnly);
 }
 
 int ColumnOpCompress1::saveBlock(IDBDataFile* pFile, const unsigned char* writeBuf, const uint64_t fbo)
