@@ -4,8 +4,8 @@ USE mcol_4940;
 create table rounding_table ( a int, b double, c double) engine=columnstore;
 insert into rounding_table values (26805, 1252, -9647);
 insert into rounding_table values (26806, 573, -2804.5);
-SELECT CASE a WHEN 26805 THEN ROUND(c/b, 2) WHEN 26806 THEN b END MCOL4940 FROM ( SELECT a, SUM(b) b, SUM(c) c FROM rounding_table GROUP BY a ) abc ;
+SELECT CASE a WHEN 26805 THEN ROUND(c/b, 2) WHEN 26806 THEN b END MCOL4940 FROM ( SELECT a, SUM(b) b, SUM(c) c FROM rounding_table GROUP BY a ) abc ORDER BY MCOL4940;
 MCOL4940
-573
 -7.71
+573
 DROP DATABASE mcol_4940;
