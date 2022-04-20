@@ -72,7 +72,7 @@ class ColumnOpCompress0 : public ColumnOp
   /**
    * @brief virtual method in ColumnOp
    */
-  int readBlock(IDBDataFile* pFile, unsigned char* readBuf, const uint64_t fbo);
+  int readBlock(IDBDataFile* pFile, unsigned char* readBuf, const uint64_t fbo, bool isReadOnly = false);
 
   /**
    * @brief virtual method in ColumnOp
@@ -161,7 +161,7 @@ class ColumnOpCompress1 : public ColumnOp
   /**
    * @brief virtual method in ColumnOp
    */
-  int readBlock(IDBDataFile* pFile, unsigned char* readBuf, const uint64_t fbo);
+  int readBlock(IDBDataFile* pFile, unsigned char* readBuf, const uint64_t fbo, bool isReadOnly = false);
 
   /**
    * @brief virtual method in ColumnOp
