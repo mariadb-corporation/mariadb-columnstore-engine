@@ -160,7 +160,11 @@ class Charset
   }
   int strnncollsp(const utils::ConstString& str1, const utils::ConstString& str2) const
   {
-    return mCharset->strnncollsp(str1.str(), str1.length(), str2.str(), str2.length());
+    // nullptr handling below should return values as if nulls are substituted with empty string.
+    // please note that ConstString has an assertion so that nullptr data has zero length.
+    const char* s1 = str1.str();
+    const char* s2 = str2.str();
+    return mCharset->strnncollsp(s1 ? s1 : "", str1.length(), s2 ? s2 : "" , str2.length());
   }
   int strnncollsp(const char* str1, size_t length1, const char* str2, size_t length2) const
   {

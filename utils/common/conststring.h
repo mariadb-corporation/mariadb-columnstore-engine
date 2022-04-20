@@ -61,7 +61,10 @@ class ConstString
   }
   bool eq(const ConstString& rhs) const
   {
-    idbassert(mStr);
+    if (!mStr)
+    {
+      return mStr == rhs.mStr;
+    }
     return mLength == rhs.mLength && !memcmp(mStr, rhs.mStr, mLength);
   }
   ConstString& rtrimZero()

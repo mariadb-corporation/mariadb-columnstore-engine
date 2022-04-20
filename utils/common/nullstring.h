@@ -65,6 +65,7 @@ class NullString
   {
     return length() == 1 && str()[0] == ch;
   }
+  // this is SQL-like NULL handling equality. NULL will not be equal to anything, including NULL.
   bool eq(const NullString& rhs) const
   {
     if (!rhs.mStrPtr)
@@ -110,6 +111,25 @@ class NullString
   void assign(const std::string& newVal)
   {
     mStrPtr.reset(new std::string(newVal));
+  }
+  // XXX: here we implement what Row::equals expects.
+  //      It is not SQL-NULL-handling compatible, please beware.
+  bool operator ==(const NullString& a, const NullString& b)
+  {
+    if (!a.mStrPtr && !b.mStrPtr)
+    {
+      return true;
+    }
+    if (!a.mStrPtr)
+    {
+      return false;
+    }
+    if (!b.mStrPtr)
+    {
+      return false;
+    }
+    // fall to std::string equality.
+    return (*a.mStrPtr) == (*b.mStrPtr);
   }
 };
 } // namespace utils.

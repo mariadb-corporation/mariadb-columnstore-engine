@@ -494,9 +494,9 @@ class Row
   inline void setRid(uint64_t rid);
 
   // TODO: remove this (string is not efficient for this), use getConstString() instead
-  inline std::string getStringField(uint32_t colIndex) const
+  inline utils::NullString getStringField(uint32_t colIndex) const
   {
-    return getConstString(colIndex).toString();
+    return utils::NullString(getConstString(colIndex));
   }
 
   inline utils::ConstString getConstString(uint32_t colIndex) const;
@@ -512,8 +512,8 @@ class Row
   // support VARBINARY
   // Add 2-byte length at the CHARSET_INFO*beginning of the field.  NULL and zero length field are
   // treated the same, could use one of the length bit to distinguish these two cases.
-  inline std::string getVarBinaryStringField(uint32_t colIndex) const;
-  inline void setVarBinaryField(const std::string& val, uint32_t colIndex);
+  inline utils::NullString getVarBinaryStringField(uint32_t colIndex) const;
+  inline void setVarBinaryField(const utils::NullString& val, uint32_t colIndex);
   // No string construction is necessary for better performance.
   inline uint32_t getVarBinaryLength(uint32_t colIndex) const;
   inline const uint8_t* getVarBinaryField(uint32_t colIndex) const;
