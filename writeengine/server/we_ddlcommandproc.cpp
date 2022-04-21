@@ -487,7 +487,7 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
             (dataType != CalpontSystemCatalog::TEXT))
         {
           ostringstream os;
-          os << "char, varchar and varbinary length may not exceed 8000";
+          os << "char, varchar and varbinary length may not exceed 8000 bytes";
           throw std::runtime_error(os.str());
         }
       }
@@ -872,7 +872,7 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
           (dataType != CalpontSystemCatalog::TEXT))
       {
         ostringstream os;
-        os << "char, varchar and varbinary length may not exceed 8000";
+        os << "char, varchar and varbinary length may not exceed 8000 bytes";
         throw std::runtime_error(os.str());
       }
     }
