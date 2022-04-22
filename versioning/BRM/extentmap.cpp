@@ -532,6 +532,10 @@ void ExtentMapIndexImpl::deleteDbRoot(const DBRootT dbroot)
 void ExtentMapIndexImpl::deleteOID(const DBRootT dbroot, const OID_t oid)
 {
   auto& extMapIndex = *get();
+  if (dbroot >= extMapIndex.size())
+  {
+    return; // nothing to delete
+  }
   auto oidsIter = extMapIndex[dbroot].find(oid);
   // Nothing to delete. Might be a sign of a problem.
   if (oidsIter == extMapIndex[dbroot].end())
