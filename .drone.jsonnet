@@ -1,9 +1,9 @@
 local events = ['pull_request', 'cron'];
 
 local platforms = {
-  develop: ['centos:7', 'rockylinux:8', 'debian:10', 'ubuntu:20.04'],
-  'develop-6': ['centos:7', 'rockylinux:8', 'debian:10', 'ubuntu:20.04'],
-  'develop-5': ['centos:7', 'rockylinux:8', 'debian:10', 'ubuntu:20.04'],
+  develop: ['opensuse/leap:15', 'centos:7', 'rockylinux:8', 'debian:10', 'ubuntu:20.04', 'ubuntu:22.04'],
+  'develop-6': ['opensuse/leap:15', 'centos:7', 'rockylinux:8', 'debian:10', 'ubuntu:20.04', 'ubuntu:22.04'],
+  'develop-5': ['opensuse/leap:15', 'centos:7', 'rockylinux:8', 'debian:10', 'ubuntu:20.04', 'ubuntu:22.04'],
 };
 
 local platforms_arm = {
@@ -12,7 +12,7 @@ local platforms_arm = {
 };
 
 local any_branch = '**';
-local platforms_custom = ['centos:7', 'rockylinux:8', 'debian:10', 'ubuntu:20.04'];
+local platforms_custom = ['opensuse/leap:15', 'centos:7', 'rockylinux:8', 'debian:10', 'ubuntu:20.04', 'ubuntu:22.04'];
 local platforms_arm_custom = ['rockylinux:8'];
 
 local platforms_mtr = ['centos:7', 'rockylinux:8', 'ubuntu:20.04'];
@@ -45,6 +45,8 @@ local debian10_deps = 'apt update && apt install -y gnupg wget && echo "deb http
 local opensuse_build_deps = 'zypper install -y clang12 liblz4-devel cmake libboost_system-devel pcre2-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel gcc-fortran gcc10 gcc10-c++ && ' + clang12_update_alternatives;
 local deb_build_deps = 'apt update --yes && apt install --yes --no-install-recommends build-essential devscripts git ccache equivs eatmydata dh-systemd && mk-build-deps debian/control -t "apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends" -r -i ';
 local ubuntu20_04_deps = 'apt update --yes && apt install -y g++-10 git && ' + gcc_update_alternatives;
+local ubuntu22_04_deps = 'apt update --yes && apt install --yes --no-install-recommends clang-13 build-essential devscripts git ccache equivs eatmydata && mk-build-deps debian/control -t "apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends" -r -i ';
+
 
 local platformMap(platform, arch) =
   local clang_force = if (arch == 'arm64') then ' && export CXX=/usr/bin/clang++ && export CC=/usr/bin/clang ' else '';
@@ -55,7 +57,8 @@ local platformMap(platform, arch) =
     'rockylinux:8': rockylinux8_powertools + ' && ' + centos8_build_deps + ' && dnf ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=rockylinux8 && make -j$(nproc) package',
     'debian:10': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=buster' debian/autobake-deb.sh",
     'ubuntu:20.04': ubuntu20_04_deps + ' && ' + deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=focal' debian/autobake-deb.sh",
-  };
+    'ubuntu:22.04': ubuntu22_04_deps + ' && ' + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=jammy' debian/autobake-deb.sh",
+   };
   platform_map[platform];
 
 
@@ -67,6 +70,7 @@ local testRun(platform) =
     'rockylinux:8': 'ctest3 -R columnstore: -j $(nproc) --output-on-failure',
     'debian:10': 'cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure',
     'ubuntu:20.04': 'cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure',
+    'ubuntu:22.04': 'cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure',
   };
   platform_map[platform];
 
@@ -78,8 +82,8 @@ local testPreparation(platform) =
     'centos:8': 'dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel',
     'rockylinux:8': rockylinux8_powertools + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel',
     'debian:10': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
-    'ubuntu:18.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev  libsnappy-dev cmake g++',
     'ubuntu:20.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
+    'ubuntu:22.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
   };
   platform_map[platform];
 
@@ -90,7 +94,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
   local mtr_path = if (pkg_format == 'rpm') then '/usr/share/mysql-test' else '/usr/share/mysql/mysql-test',
   local socket_path = if (pkg_format == 'rpm') then '/var/lib/mysql/mysql.sock' else '/run/mysqld/mysqld.sock',
   local config_path_prefix = if (pkg_format == 'rpm') then '/etc/my.cnf.d/' else '/etc/mysql/mariadb.conf.d/50-',
-  local img = if (platform == 'centos:7' || std.split(platform, ':')[0] == 'rockylinux') then platform else 'romcheck/' + std.strReplace(platform, '/', '-'),
+  local img = if (platform == 'centos:7' || std.split(platform, ':')[0] == 'rockylinux' || platform == 'ubuntu:22.04') then platform else 'romcheck/' + std.strReplace(platform, '/', '-'),
   local regression_ref = if (std.split(branch, '-')[0] == 'develop') then branch else 'develop-6',
   local branchp = if (branch == '**') then '' else branch,
 
