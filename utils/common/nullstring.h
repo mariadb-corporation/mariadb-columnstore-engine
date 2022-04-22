@@ -114,22 +114,22 @@ class NullString
   }
   // XXX: here we implement what Row::equals expects.
   //      It is not SQL-NULL-handling compatible, please beware.
-  bool operator ==(const NullString& a, const NullString& b)
+  bool operator ==(const NullString& a) const
   {
-    if (!a.mStrPtr && !b.mStrPtr)
+    if (mStrPtr && !b.mStrPtr)
     {
       return true;
+    }
+    if (!mStrPtr)
+    {
+      return false;
     }
     if (!a.mStrPtr)
     {
       return false;
     }
-    if (!b.mStrPtr)
-    {
-      return false;
-    }
     // fall to std::string equality.
-    return (*a.mStrPtr) == (*b.mStrPtr);
+    return (*mStrPtr) == (*a.mStrPtr);
   }
 };
 } // namespace utils.
