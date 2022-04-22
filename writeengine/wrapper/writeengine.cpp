@@ -5758,9 +5758,9 @@ int WriteEngineWrapper::writeColumnRecUpdate(const TxnID& txnid, const CSCTypesL
     }
 
     string segFile;
-    bool isFlush = (m_opType != DELETE || !hasAUXCol || (i == colStructList.size() - 1));
+    bool isReadOnly = (m_opType == DELETE && hasAUXCol && (i != colStructList.size() - 1));
 
-    rc = colOp->openColumnFile(curCol, segFile, true, IO_BUFF_SIZE);  // @bug 5572 HDFS tmp file
+    rc = colOp->openColumnFile(curCol, segFile, true, IO_BUFF_SIZE, isReadOnly);  // @bug 5572 HDFS tmp file
 
     if (rc != NO_ERROR)
       break;
@@ -5888,7 +5888,7 @@ int WriteEngineWrapper::writeColumnRecUpdate(const TxnID& txnid, const CSCTypesL
 #ifdef PROFILE
       timer.start("writeRows ");
 #endif
-      if (!hasAUXCol || (i == colStructList.size() - 1))
+      if (!isReadOnly)
         rc = colOp->writeRows(curCol, totalRow, ridList, valArray, oldValArray, true);
       else
         rc = colOp->writeRowsReadOnly(curCol, totalRow, ridList, oldValArray);
@@ -5900,7 +5900,7 @@ int WriteEngineWrapper::writeColumnRecUpdate(const TxnID& txnid, const CSCTypesL
     updateMaxMinRange(1, totalRow, cscColTypeList[i], curColStruct.colType,
                       m_opType == DELETE ? NULL : valArray, oldValArray, cpInfo, false);
 
-    colOp->clearColumn(curCol, isFlush);
+    colOp->clearColumn(curCol, !isReadOnly);
 
     if (valArray != NULL)
     {

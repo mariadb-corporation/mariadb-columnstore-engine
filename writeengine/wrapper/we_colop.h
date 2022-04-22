@@ -198,7 +198,7 @@ class ColumnOp : public DbFileOp
    *        segment file that is opened.
    */
   EXPORT virtual int openColumnFile(Column& column, std::string& segFile, bool useTmpSuffix,
-                                    int ioBuffSize = DEFAULT_BUFSIZ) const;
+                                    int ioBuffSize = DEFAULT_BUFSIZ, bool isReadOnly = false) const;
 
   /**
    * @brief Open table file
@@ -265,7 +265,7 @@ class ColumnOp : public DbFileOp
    */
   virtual IDBDataFile* openFile(const Column& column, uint16_t dbRoot, uint32_t partition, uint16_t segment,
                                 std::string& segFile, bool useTmpSuffix, const char* mode = "r+b",
-                                int ioBuffSize = DEFAULT_BUFSIZ) const = 0;
+                                int ioBuffSize = DEFAULT_BUFSIZ, bool isReadOnly = false) const = 0;
 
   /**
    * @brief backup blocks to version buffer
@@ -288,8 +288,7 @@ class ColumnOp : public DbFileOp
   /**
    * @brief populate readBuf with data in block #lbid
    */
-  virtual int readBlock(IDBDataFile* pFile, unsigned char* readBuf, const uint64_t fbo,
-                        bool isReadOnly = false) = 0;
+  virtual int readBlock(IDBDataFile* pFile, unsigned char* readBuf, const uint64_t fbo) = 0;
 
   /**
    * @brief output writeBuf to pFile starting at position fbo

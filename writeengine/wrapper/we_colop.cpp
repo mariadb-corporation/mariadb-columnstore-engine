@@ -1407,15 +1407,22 @@ bool ColumnOp::isValid(Column& column) const
  ***********************************************************/
 // @bug 5572 - HDFS usage: add *.tmp file backup flag
 int ColumnOp::openColumnFile(Column& column, std::string& segFile, bool useTmpSuffix,
-                             int ioBuffSize) const
+                             int ioBuffSize, bool isReadOnly) const
 {
   if (!isValid(column))
     return ERR_INVALID_PARAM;
 
+  std::string mode;
+
+  if (isReadOnly)
+    mode = "r";
+  else
+    mode = "r+b";
+
   // open column data file
   column.dataFile.pFile =
       openFile(column, column.dataFile.fDbRoot, column.dataFile.fPartition, column.dataFile.fSegment,
-               column.dataFile.fSegFileName, useTmpSuffix, "r+b", ioBuffSize);
+               column.dataFile.fSegFileName, useTmpSuffix, mode.c_str(), ioBuffSize, isReadOnly);
   segFile = column.dataFile.fSegFileName;
 
   if (column.dataFile.pFile == NULL)
@@ -1824,7 +1831,7 @@ int ColumnOp::writeRowsReadOnly(Column& curCol, uint64_t totalRow, const RIDList
     {
       curDataFbo = dataFbo;
       //@Bug 4849. need to check error code to prevent disk error
-      rc = readBlock(curCol.dataFile.pFile, dataBuf, curDataFbo, true);
+      rc = readBlock(curCol.dataFile.pFile, dataBuf, curDataFbo);
 
       if (rc != NO_ERROR)
         return rc;

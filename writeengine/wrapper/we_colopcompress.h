@@ -57,7 +57,7 @@ class ColumnOpCompress0 : public ColumnOp
    */
   IDBDataFile* openFile(const Column& column, uint16_t dbRoot, uint32_t partition, uint16_t segment,
                         std::string& segFile, bool useTmpSuffix, const char* mode = "r+b",
-                        int ioBuffSize = DEFAULT_BUFSIZ) const;
+                        int ioBuffSize = DEFAULT_BUFSIZ, bool isReadOnly = false) const;
 
   /**
    * @brief virtual method in ColumnOp
@@ -73,7 +73,7 @@ class ColumnOpCompress0 : public ColumnOp
   /**
    * @brief virtual method in ColumnOp
    */
-  int readBlock(IDBDataFile* pFile, unsigned char* readBuf, const uint64_t fbo, bool isReadOnly = false);
+  int readBlock(IDBDataFile* pFile, unsigned char* readBuf, const uint64_t fbo);
 
   /**
    * @brief virtual method in ColumnOp
@@ -113,7 +113,7 @@ class ColumnOpCompress1 : public ColumnOp
    */
   IDBDataFile* openFile(const Column& column, uint16_t dbRoot, uint32_t partition, uint16_t segment,
                         std::string& segFile, bool useTmpSuffix, const char* mode = "r+b",
-                        int ioBuffSize = DEFAULT_BUFSIZ) const;
+                        int ioBuffSize = DEFAULT_BUFSIZ, bool isReadOnly = false) const;
 
   /**
    * @brief virtual method in ColumnOp
@@ -162,7 +162,7 @@ class ColumnOpCompress1 : public ColumnOp
   /**
    * @brief virtual method in ColumnOp
    */
-  int readBlock(IDBDataFile* pFile, unsigned char* readBuf, const uint64_t fbo, bool isReadOnly = false);
+  int readBlock(IDBDataFile* pFile, unsigned char* readBuf, const uint64_t fbo);
 
   /**
    * @brief virtual method in ColumnOp
