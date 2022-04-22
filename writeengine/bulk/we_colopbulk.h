@@ -50,8 +50,9 @@ class ColumnOpBulk : public ColumnOp
   virtual int blocksInFile(IDBDataFile*) const;
   virtual IDBDataFile* openFile(const WriteEngine::Column& column, uint16_t dbRoot, uint32_t partition,
                                 uint16_t segment, std::string& segFile, bool useTmpSuffix,
-                                const char* mode = "r+b", int ioBuffSize = DEFAULT_BUFSIZ) const;
-  virtual int readBlock(IDBDataFile*, unsigned char*, const uint64_t, bool isReadOnly = false);
+                                const char* mode = "r+b", int ioBuffSize = DEFAULT_BUFSIZ,
+                                bool isReadOnly = false) const;
+  virtual int readBlock(IDBDataFile*, unsigned char*, const uint64_t);
   virtual int saveBlock(IDBDataFile*, const unsigned char*, const uint64_t);
 };
 
