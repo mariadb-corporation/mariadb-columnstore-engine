@@ -63,7 +63,7 @@ ColumnOpCompress0::~ColumnOpCompress0()
 IDBDataFile* ColumnOpCompress0::openFile(const Column& column, const uint16_t dbRoot,
                                          const uint32_t partition, const uint16_t segment,
                                          std::string& segFile, bool useTmpSuffix, const char* mode,
-                                         const int ioBuffSize) const
+                                         const int ioBuffSize, bool isReadOnly) const
 {
   return FileOp::openFile(column.dataFile.fid, dbRoot, partition, segment, segFile, mode, column.colWidth,
                           useTmpSuffix);
@@ -96,7 +96,7 @@ int ColumnOpCompress0::blocksInFile(IDBDataFile* pFile) const
 }
 
 int ColumnOpCompress0::readBlock(IDBDataFile* pFile, unsigned char* readBuf,
-                                 const uint64_t fbo, bool isReadOnly)
+                                 const uint64_t fbo)
 {
   return readDBFile(pFile, readBuf, fbo, true);
 }
@@ -144,10 +144,10 @@ ColumnOpCompress1::~ColumnOpCompress1()
 IDBDataFile* ColumnOpCompress1::openFile(const Column& column, const uint16_t dbRoot,
                                          const uint32_t partition, const uint16_t segment,
                                          std::string& segFile, bool useTmpSuffix, const char* mode,
-                                         const int ioBuffSize) const
+                                         const int ioBuffSize, bool isReadOnly) const
 {
   return m_chunkManager->getFilePtr(column, dbRoot, partition, segment, segFile, mode, ioBuffSize,
-                                    useTmpSuffix);
+                                    useTmpSuffix, isReadOnly);
 }
 
 bool ColumnOpCompress1::abbreviatedExtent(IDBDataFile* pFile, int colWidth) const
@@ -161,9 +161,9 @@ int ColumnOpCompress1::blocksInFile(IDBDataFile* pFile) const
 }
 
 int ColumnOpCompress1::readBlock(IDBDataFile* pFile, unsigned char* readBuf,
-                                 const uint64_t fbo, bool isReadOnly)
+                                 const uint64_t fbo)
 {
-  return m_chunkManager->readBlock(pFile, readBuf, fbo, isReadOnly);
+  return m_chunkManager->readBlock(pFile, readBuf, fbo);
 }
 
 int ColumnOpCompress1::saveBlock(IDBDataFile* pFile, const unsigned char* writeBuf, const uint64_t fbo)

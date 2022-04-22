@@ -252,10 +252,11 @@ int ChunkManager::removeBackups(TxnID txnId)
 // @bug 5572 - HDFS usage: add *.tmp file backup flag
 IDBDataFile* ChunkManager::getFilePtr(const Column& column, uint16_t root, uint32_t partition,
                                       uint16_t segment, string& filename, const char* mode, int size,
-                                      bool useTmpSuffix) const
+                                      bool useTmpSuffix, bool isReadOnly) const
 {
   CompFileData* fileData = getFileData(column.dataFile.fid, root, partition, segment, filename, mode, size,
-                                       column.colDataType, column.colWidth, useTmpSuffix);
+                                       column.colDataType, column.colWidth, useTmpSuffix,
+                                       false, isReadOnly);
   return (fileData ? fileData->fFilePtr : NULL);
 }
 
@@ -312,7 +313,8 @@ IDBDataFile* ChunkManager::getSegmentFilePtr(FID& fid, uint16_t root, uint32_t p
 CompFileData* ChunkManager::getFileData(const FID& fid, uint16_t root, uint32_t partition, uint16_t segment,
                                         string& filename, const char* mode, int size,
                                         const CalpontSystemCatalog::ColDataType colDataType, int colWidth,
-                                        bool useTmpSuffix, bool dctnry) const
+                                        bool useTmpSuffix, bool dctnry,
+                                        bool isReadOnly) const
 {
   FileID fileID(fid, root, partition, segment);
   map<FileID, CompFileData*>::const_iterator mit = fFileMap.find(fileID);
@@ -333,7 +335,7 @@ CompFileData* ChunkManager::getFileData(const FID& fid, uint16_t root, uint32_t 
   if (fFileOp->getFileName(fid, name, root, partition, segment) != NO_ERROR)
     return NULL;
 
-  CompFileData* fileData = new CompFileData(fileID, fid, colDataType, colWidth);
+  CompFileData* fileData = new CompFileData(fileID, fid, colDataType, colWidth, isReadOnly);
   fileData->fFileName = filename = name;
 
   if (openFile(fileData, mode, colWidth, useTmpSuffix, __LINE__) != NO_ERROR)
@@ -456,7 +458,7 @@ IDBDataFile* ChunkManager::createDctnryFile(const FID& fid, int64_t width, uint1
 // Read the block for the specified fbo, from pFile's applicable chunk, and
 // into readBuf.
 //------------------------------------------------------------------------------
-int ChunkManager::readBlock(IDBDataFile* pFile, unsigned char* readBuf, uint64_t fbo, bool isReadOnly)
+int ChunkManager::readBlock(IDBDataFile* pFile, unsigned char* readBuf, uint64_t fbo)
 {
   map<IDBDataFile*, CompFileData*>::iterator fpIt = fFilePtrMap.find(pFile);
 
@@ -477,7 +479,7 @@ int ChunkManager::readBlock(IDBDataFile* pFile, unsigned char* readBuf, uint64_t
 
   // chunk is not already uncompressed
   if (chunkData == NULL)
-    rc = fetchChunkFromFile(pFile, offset.quot, chunkData, isReadOnly);
+    rc = fetchChunkFromFile(pFile, offset.quot, chunkData);
 
   if (rc == NO_ERROR)
   {
@@ -612,7 +614,7 @@ int ChunkManager::flushChunks(int rc, const std::map<FID, FID>& columOids)
         break;
 
       // finally update the header
-      if ((rc = writeHeader(fileData, __LINE__)) != NO_ERROR)
+      if (!fileData->fReadOnly && (rc = writeHeader(fileData, __LINE__)) != NO_ERROR)
         break;
 
       //@Bug 4977 remove log file
@@ -651,8 +653,7 @@ int ChunkManager::flushChunks(int rc, const std::map<FID, FID>& columOids)
 // If the header ptr for the requested chunk is 0 (or has length 0), then
 // chunkData is initialized with a new empty chunk.
 //------------------------------------------------------------------------------
-int ChunkManager::fetchChunkFromFile(IDBDataFile* pFile, int64_t id, ChunkData*& chunkData,
-                                     bool isReadOnly)
+int ChunkManager::fetchChunkFromFile(IDBDataFile* pFile, int64_t id, ChunkData*& chunkData)
 {
   // return value
   int rc = NO_ERROR;
@@ -698,7 +699,7 @@ int ChunkManager::fetchChunkFromFile(IDBDataFile* pFile, int64_t id, ChunkData*&
         return rc;
       }
 
-      if (!isReadOnly && (rc = writeHeader(fIt->second, __LINE__)) != NO_ERROR)
+      if (!fIt->second->fReadOnly && (rc = writeHeader(fIt->second, __LINE__)) != NO_ERROR)
       {
         // logged by writeHeader
         return rc;

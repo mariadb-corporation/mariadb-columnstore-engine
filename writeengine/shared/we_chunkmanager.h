@@ -139,7 +139,8 @@ class CompFileData
 {
  public:
   CompFileData(const FileID& id, const FID& fid,
-               const execplan::CalpontSystemCatalog::ColDataType colDataType, int colWidth)
+               const execplan::CalpontSystemCatalog::ColDataType colDataType, int colWidth,
+               bool readOnly = false)
    : fFileID(id)
    , fFid(fid)
    , fColDataType(colDataType)
@@ -147,6 +148,7 @@ class CompFileData
    , fDctnryCol(false)
    , fFilePtr(NULL)
    , fCompressionType(1)
+   , fReadOnly(readOnly)
   {
   }
 
@@ -163,6 +165,7 @@ class CompFileData
   CompFileHeader fFileHeader;
   std::list<ChunkData*> fChunkList;
   uint32_t fCompressionType;
+  bool fReadOnly;
 
   friend class ChunkManager;
 };
@@ -179,7 +182,8 @@ class ChunkManager
   // @brief Retrieve a file pointer in the chunk manager.
   //        for column file
   IDBDataFile* getFilePtr(const Column& column, uint16_t root, uint32_t partition, uint16_t segment,
-                          std::string& filename, const char* mode, int size, bool useTmpSuffix) const;
+                          std::string& filename, const char* mode, int size, bool useTmpSuffix,
+                          bool isReadOnly = false) const;
 
   // @brief Retrieve a file pointer in the chunk manager.
   //        for dictionary file
@@ -200,7 +204,7 @@ class ChunkManager
 
   // @brief Read a block from pFile at offset fbo.
   //        The data may copied from memory if the chunk it belongs to is already available.
-  int readBlock(IDBDataFile* pFile, unsigned char* readBuf, uint64_t fbo, bool isReadOnly = false);
+  int readBlock(IDBDataFile* pFile, unsigned char* readBuf, uint64_t fbo);
 
   // @brief Save a block to a chunk in pFile.
   //        The block is not written to disk immediately, will be delayed until flush.
@@ -279,10 +283,10 @@ class ChunkManager
   CompFileData* getFileData(const FID& fid, uint16_t root, uint32_t partition, uint16_t segment,
                             std::string& filename, const char* mode, int size,
                             const execplan::CalpontSystemCatalog::ColDataType colDataType, int colWidth,
-                            bool useTmpSuffix, bool dictnry = false) const;
+                            bool useTmpSuffix, bool dictnry = false, bool isReadOnly = false) const;
 
   // @brief Retrieve a chunk of pFile from disk.
-  int fetchChunkFromFile(IDBDataFile* pFile, int64_t id, ChunkData*& chunkData, bool isReadOnly = false);
+  int fetchChunkFromFile(IDBDataFile* pFile, int64_t id, ChunkData*& chunkData);
 
   // @brief Compress a chunk and write it to file.
   int writeChunkToFile(CompFileData* fileData, int64_t id);

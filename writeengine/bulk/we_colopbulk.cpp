@@ -63,7 +63,7 @@ ColumnOpBulk::~ColumnOpBulk()
 // @bug 5572 - HDFS usage: add *.tmp file backup flag
 IDBDataFile* ColumnOpBulk::openFile(const WriteEngine::Column& column, uint16_t dbRoot, uint32_t partition,
                                     uint16_t segment, std::string& segFile, bool useTmpSuffix,
-                                    const char* mode, int ioBuffSize) const
+                                    const char* mode, int ioBuffSize, bool isReadOnly) const
 {
   return FileOp::openFile(column.dataFile.fid, dbRoot, partition, segment, segFile, mode, column.colWidth,
                           useTmpSuffix);
@@ -92,7 +92,7 @@ int ColumnOpBulk::blocksInFile(IDBDataFile*) const
 //------------------------------------------------------------------------------
 // Stub for readBlock
 //------------------------------------------------------------------------------
-int ColumnOpBulk::readBlock(IDBDataFile*, unsigned char*, const uint64_t, bool)
+int ColumnOpBulk::readBlock(IDBDataFile*, unsigned char*, const uint64_t)
 {
   throw std::logic_error("Unauthorized use of ColumnOpBulk::readBlock");
 
