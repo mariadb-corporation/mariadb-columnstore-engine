@@ -66,6 +66,7 @@
 namespace rowgroup
 {
 const int16_t rgCommonSize = 8192;
+const uint32_t rgNullOffset = std::numeric_limits<uint32_t>.max();
 
 /*
     The RowGroup family of classes encapsulate the data moved through the
@@ -891,7 +892,12 @@ inline void Row::setBinaryField_offset<int128_t>(const int128_t* value, uint32_t
 
 inline utils::ConstString Row::getShortConstString(uint32_t colIndex) const
 {
-  const char* src = (const char*)&data[offsets[colIndex]];
+  uint32_t offset = offsets[colIndex];
+  if (offset == rgDataNullMark)
+  {
+    return utils::ConstString(nullptr, 0);
+  }
+  const char* src = (const char*)&data[offset];
   return utils::ConstString(src, strnlen(src, getColumnWidth(colIndex)));
 }
 
@@ -1007,8 +1013,19 @@ inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex
   }
   else
   {
-    memcpy(&data[offsets[colIndex]], str.str(), length);
-    memset(&data[offsets[colIndex] + length], 0, offsets[colIndex + 1] - (offsets[colIndex] + length));
+    uint8_t* buf = &data[offsets[colIndex]];
+    if (str.str())
+    {
+      buf[0] = 0;
+      memcpy(&data[offsets[colIndex]], str.str(), length);
+    }
+    else
+    {
+      buf[0] = 1;
+      length = 0;
+    }
+    length += 1; // actual data is one-byte longer than length.
+    memset(buf + length, 0, offsets[colIndex + 1] - (offsets[colIndex] + length));
   }
 }
 
@@ -2081,9 +2098,6 @@ inline bool StringStore::isNullValue(uint64_t off) const
 //  if ((offset + length) > mc->currentSize)
 //    return true;
 
-//  if (mc->data[offset + 4] == 0)  // "" = NULL string for some reason...
-//    return true;
-//  return (memcmp(&mc->data[offset + 4], joblist::CPNULLSTRMARK.c_str(), 8) == 0);
   return false;
 }
 

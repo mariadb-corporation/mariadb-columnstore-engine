@@ -702,6 +702,8 @@ void Row::initToNull()
 
       case CalpontSystemCatalog::TIME: *((uint64_t*)&data[offsets[i]]) = joblist::TIMENULL; break;
 
+      case CalpontSystemCatalog::VARBINARY:
+      case CalpontSystemCatalog::BLOB:
       case CalpontSystemCatalog::CHAR:
       case CalpontSystemCatalog::VARCHAR:
       case CalpontSystemCatalog::TEXT:
@@ -731,18 +733,12 @@ void Row::initToNull()
           case 8: *((uint64_t*)&data[offsets[i]]) = joblist::CHAR8NULL; break;
 
           default:
-            // XXX: THIS IS WRONG!!!
-	    idbassert(false);
-            //*((uint64_t*)&data[offsets[i]]) = *((uint64_t*)joblist::CPNULLSTRMARK.c_str());
-            //memset(&data[offsets[i] + 8], 0, len - 8);
+            data[offsets[i]] = 1; // mark as NULL. see setStringField method for details.
             break;
         }
 
         break;
       }
-
-      case CalpontSystemCatalog::VARBINARY:
-      case CalpontSystemCatalog::BLOB: *((uint16_t*)&data[offsets[i]]) = 0; break;
 
       case CalpontSystemCatalog::DECIMAL:
       case CalpontSystemCatalog::UDECIMAL:
@@ -866,6 +862,9 @@ bool Row::isNullValue(uint32_t colIndex) const
 
     case CalpontSystemCatalog::TIME: return (*((uint64_t*)&data[offsets[colIndex]]) == joblist::TIMENULL);
 
+    case CalpontSystemCatalog::BLOB:
+    case CalpontSystemCatalog::TEXT:
+    case CalpontSystemCatalog::VARBINARY:
     case CalpontSystemCatalog::CHAR:
     case CalpontSystemCatalog::VARCHAR:
     case CalpontSystemCatalog::STRINT:
@@ -896,8 +895,9 @@ bool Row::isNullValue(uint32_t colIndex) const
         case 7:
         case 8: return (*((uint64_t*)&data[offsets[colIndex]]) == joblist::CHAR8NULL);
         default:
-	  idbassert(false);
-          return (*((uint64_t*)&data[offsets[colIndex]]) == *((uint64_t*)joblist::CPNULLSTRMARK.c_str()));
+          // a case for value stored with NULL flag prefix.
+	  // see setStringField method.
+          return data[offsets[colIndex]] != 0;
       }
 
       break;
@@ -919,29 +919,6 @@ bool Row::isNullValue(uint32_t colIndex) const
 
         default: return (*((int64_t*)&data[offsets[colIndex]]) == static_cast<int64_t>(joblist::BIGINTNULL));
       }
-
-      break;
-    }
-
-    case CalpontSystemCatalog::BLOB:
-    case CalpontSystemCatalog::TEXT:
-    case CalpontSystemCatalog::VARBINARY:
-    {
-      uint32_t pos = offsets[colIndex];
-
-      if (inStringTable(colIndex))
-      {
-        uint64_t offset;
-        offset = *((uint64_t*)&data[pos]);
-        return strings->isNullValue(offset);
-      }
-
-      idbassert(false && "first, it should be (uint8_t*) cast for old logic, second, this should not happen at all!");
-      if (*((uint16_t*)&data[pos]) == 0)
-        return true;
-      else if ((strncmp((char*)&data[pos + 2], joblist::CPNULLSTRMARK.c_str(), 8) == 0) &&
-               *((uint16_t*)&data[pos]) == joblist::CPNULLSTRMARK.length())
-        return true;
 
       break;
     }
