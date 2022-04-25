@@ -515,12 +515,22 @@ LBID_tFindResult ExtentMapIndexImpl::search3dLayer(PartitionIndexContainerT& par
 void ExtentMapIndexImpl::deleteDbRoot(const DBRootT dbroot)
 {
     auto& extMapIndex = *get();
+    if (dbroot >= extMapIndex.size())
+      return;  // nothing to delete
     extMapIndex[dbroot].clear();
 }
 
 void ExtentMapIndexImpl::deleteOID(const DBRootT dbroot, const OID_t oid)
 {
     auto& extMapIndex = *get();
+     // nothing to delete
+    // In some cases containers demonstrate UB that might allow to access
+    // dbroot that doesn't exist. In some cases this ends up with workernode
+    // recieves FPE signal.
+    if (dbroot >= extMapIndex.size())
+        return;
+    if (extMapIndex[dbroot].empty())
+        return;
     auto oidsIter = extMapIndex[dbroot].find(oid);
     // Nothing to delete. Might be a sign of a problem.
     if (oidsIter == extMapIndex[dbroot].end())
@@ -532,6 +542,10 @@ void ExtentMapIndexImpl::deleteEMEntry(const EMEntry& emEntry, const ExtentMapId
 {
     // find partition
     auto& extMapIndex = *get();
+    if (emEntry.dbRoot >= extMapIndex.size())
+        return;
+    if (extMapIndex[emEntry.dbRoot].empty())
+        return;
     auto oidsIter = extMapIndex[emEntry.dbRoot].find(emEntry.fileID);
     if (oidsIter == extMapIndex[emEntry.dbRoot].end())
         return;
@@ -4678,7 +4692,7 @@ void ExtentMap::setLocalHWM(int OID, uint32_t partitionNum,
             os << "  Data extended into a new extent.";
 
         log(os.str(), logging::LOG_TYPE_DEBUG);
-    } 
+    }
 #endif
 }
 
@@ -4928,7 +4942,7 @@ void ExtentMap::getSysCatDBRoot(OID_t oid, uint16_t& dbRoot)
             break;
         }
     }
- 
+
     releaseEMIndex(READ);
     releaseEMEntryTable(READ);
 
