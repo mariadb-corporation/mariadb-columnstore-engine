@@ -526,16 +526,19 @@ ExtentMapIndexFindResult ExtentMapIndexImpl::search3dLayer(PartitionIndexContain
 void ExtentMapIndexImpl::deleteDbRoot(const DBRootT dbroot)
 {
   auto& extMapIndex = *get();
+  if (dbroot >= extMapIndex.size())
+    return;  // nothing to delete
   extMapIndex[dbroot].clear();
 }
 
 void ExtentMapIndexImpl::deleteOID(const DBRootT dbroot, const OID_t oid)
 {
   auto& extMapIndex = *get();
+  // nothing to delete
   if (dbroot >= extMapIndex.size())
-  {
-    return; // nothing to delete
-  }
+    return;
+  if (extMapIndex[dbroot].empty())
+    return;
   auto oidsIter = extMapIndex[dbroot].find(oid);
   // Nothing to delete. Might be a sign of a problem.
   if (oidsIter == extMapIndex[dbroot].end())
@@ -547,6 +550,10 @@ void ExtentMapIndexImpl::deleteEMEntry(const EMEntry& emEntry, const ExtentMapId
 {
   // find partition
   auto& extMapIndex = *get();
+  if (emEntry.dbRoot >= extMapIndex.size())
+    return;
+  if (extMapIndex[emEntry.dbRoot].empty())
+    return;
   auto oidsIter = extMapIndex[emEntry.dbRoot].find(emEntry.fileID);
   if (oidsIter == extMapIndex[emEntry.dbRoot].end())
     return;
