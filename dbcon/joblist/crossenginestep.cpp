@@ -161,7 +161,7 @@ void CrossEngineStep::setField(int i, const char* value, unsigned long length, M
       row.getColumnWidth(i) > 8)
   {
     if (value != NULL)
-      row.setStringField(value, length, i);
+      row.setStringField((const uint8_t*)value, length, i);
     else
       row.setStringField(nullptr, 0, i);
   }
