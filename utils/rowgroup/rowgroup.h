@@ -512,7 +512,6 @@ class Row
   // support VARBINARY
   // Add 2-byte length at the CHARSET_INFO*beginning of the field.  NULL and zero length field are
   // treated the same, could use one of the length bit to distinguish these two cases.
-  inline utils::NullString getVarBinaryStringField(uint32_t colIndex) const;
   inline void setVarBinaryField(const utils::NullString& val, uint32_t colIndex);
   // No string construction is necessary for better performance.
   inline uint32_t getVarBinaryLength(uint32_t colIndex) const;
@@ -1036,12 +1035,28 @@ inline std::string Row::getVarBinaryStringField(uint32_t colIndex) const
 
   return std::string((char*)&data[offsets[colIndex] + 2], *((uint16_t*)&data[offsets[colIndex]]));
 }
+template <typename T>
+inline T* Row::getBinaryField(uint32_t colIndex) const
+{
+  return getBinaryField_offset<T>(offsets[colIndex]);
+}
+
+template <typename T>
+inline T* Row::getBinaryField(T* argtype, uint32_t colIndex) const
+{
+  return getBinaryField_offset<T>(offsets[colIndex]);
+}
+
+template <typename T>
+inline T* Row::getBinaryField_offset(uint32_t offset) const
+{
+  return reinterpret_cast<T*>(&data[offset]);
+}
 
 inline uint32_t Row::getVarBinaryLength(uint32_t colIndex) const
 {
   if (inStringTable(colIndex))
     return strings->getStringLength(*((uint64_t*)&data[offsets[colIndex]]));
-  ;
 
   return *((uint16_t*)&data[offsets[colIndex]]);
 }
@@ -1958,7 +1973,7 @@ inline void copyRow(const Row& in, Row* out, uint32_t colCount)
                  in.getColTypes()[i] == execplan::CalpontSystemCatalog::TEXT ||
                  in.getColTypes()[i] == execplan::CalpontSystemCatalog::CLOB))
     {
-      out->setVarBinaryField(in.getVarBinaryStringField(i), i);
+      out->setVarBinaryField(in.getVarBinaryField(i), i);
     }
     else if (UNLIKELY(in.isLongString(i)))
     {
