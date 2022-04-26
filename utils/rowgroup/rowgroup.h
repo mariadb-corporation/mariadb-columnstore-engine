@@ -1062,7 +1062,12 @@ inline uint32_t Row::getVarBinaryLength(uint32_t colIndex) const
   if (inStringTable(colIndex))
     return strings->getStringLength(*((uint64_t*)&data[offsets[colIndex]]));
 
-  return *((uint16_t*)&data[offsets[colIndex]]);
+  if (data[offsets[colIndex]])
+  {
+    return 0;
+  }
+
+  return *((uint16_t*)&data[offsets[colIndex] + 1]);
 }
 
 inline const uint8_t* Row::getVarBinaryField(uint32_t colIndex) const
@@ -1070,7 +1075,12 @@ inline const uint8_t* Row::getVarBinaryField(uint32_t colIndex) const
   if (inStringTable(colIndex))
     return strings->getPointer(*((uint64_t*)&data[offsets[colIndex]]));
 
-  return &data[offsets[colIndex] + 2];
+  if (data[offsets[colIndex]])
+  {
+    return nullptr;
+  }
+
+  return &data[offsets[colIndex] + 3];
 }
 
 inline const uint8_t* Row::getVarBinaryField(uint32_t& len, uint32_t colIndex) const
@@ -1299,8 +1309,9 @@ inline void Row::setVarBinaryField(const utils::NullString& val, uint32_t colInd
     setStringField(val, colIndex);
   else
   {
-    *((uint16_t*)&data[offsets[colIndex]]) = static_cast<uint16_t>(val.length());
-    memcpy(&data[offsets[colIndex] + 2], val.str(), val.length());
+    data[offsets[colIndex]] = val.isNull();
+    *((uint16_t*)&data[offsets[colIndex] + 1]) = static_cast<uint16_t>(val.length());
+    memcpy(&data[offsets[colIndex] + 3], val.str(), val.length());
   }
 }
 
@@ -1317,8 +1328,9 @@ inline void Row::setVarBinaryField(const uint8_t* val, uint32_t len, uint32_t co
   else
   {
     idbassert(val); // XXX: this is highly suspicious.
-    *((uint16_t*)&data[offsets[colIndex]]) = len;
-    memcpy(&data[offsets[colIndex] + 2], val, len);
+    data[offsets[colIndex]i] = !!val;
+    *((uint16_t*)&data[offsets[colIndex]+1]) = len;
+    memcpy(&data[offsets[colIndex] + 3], val, len);
   }
 }
 
@@ -1347,7 +1359,7 @@ inline void Row::copyField(Row& out, uint32_t destIndex, uint32_t srcIndex) cons
                types[srcIndex] == execplan::CalpontSystemCatalog::BLOB ||
                types[srcIndex] == execplan::CalpontSystemCatalog::TEXT))
   {
-    out.setVarBinaryField(getVarBinaryField(srcIndex), destIndex);
+    out.setVarBinaryField(getVarBinaryField(srcIndex), getVarBinaryLength(srcIndex), destIndex);
   }
   else if (UNLIKELY(isLongString(srcIndex)))
   {
@@ -1977,7 +1989,7 @@ inline void copyRow(const Row& in, Row* out, uint32_t colCount)
                  in.getColTypes()[i] == execplan::CalpontSystemCatalog::TEXT ||
                  in.getColTypes()[i] == execplan::CalpontSystemCatalog::CLOB))
     {
-      out->setVarBinaryField(in.getVarBinaryField(i), i);
+      out->setVarBinaryField(in.getVarBinaryField(i), in.getVarBinaryLength(i), i);
     }
     else if (UNLIKELY(in.isLongString(i)))
     {
