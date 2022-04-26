@@ -262,7 +262,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
               if (tmpStr.length() > (unsigned int)colType.colWidth)
               {
-                tmpStr.assign(tmpStr.unsafeStringRef().substr(0, colType.colWidth));
+                tmpStr.assign(tmpStr.unsafeStringRef("").substr(0, colType.colWidth));
 
                 if (!pushWarning)
                 {
@@ -319,7 +319,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
                 }
               }
 
-              if (colType.autoincrement && (isNULL || (indata.safeString().compare("0") == 0)))
+              if (colType.autoincrement && (isNULL || (indata.safeString("").compare("0") == 0)))
               {
                 try
                 {
@@ -371,7 +371,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
               {
                 rc = 1;
                 Message::Args args;
-                args.add(string("'") + indata.safeString() + string("'"));
+                args.add(string("'") + indata.safeString("<<null>>") + string("'"));
                 err = IDBErrorInfo::instance()->errorMsg(ERR_NON_NUMERIC_DATA, args);
               }
 
@@ -1168,7 +1168,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
                 else
                   isNULL = false;
 
-                if (isNULL || (indata.safeString().compare("0") == 0))
+                if (isNULL || (indata.safeString("").compare("0") == 0))
                   nextValNeeded++;
               }
             }
@@ -1204,7 +1204,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
                 isNULL = false;
 
               // check if autoincrement column and value is 0 or null
-              if (colType.autoincrement && (isNULL || (indata.safeString().compare("0") == 0)))
+              if (colType.autoincrement && (isNULL || (indata.safeString("").compare("0") == 0)))
               {
                 ostringstream oss;
                 oss << nextVal++;
@@ -1238,7 +1238,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
               {
                 rc = 1;
                 Message::Args args;
-                args.add(string("'") + indata.safeString() + string("'"));
+                args.add(string("'") + indata.safeString("<<null>>") + string("'"));
                 err = IDBErrorInfo::instance()->errorMsg(ERR_NON_NUMERIC_DATA, args);
               }
 
@@ -2891,7 +2891,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
 
               if (value.length() > (unsigned int)colType.colWidth)
               {
-                value = value.assign(value.safeStr().substr(0, colType.colWidth));
+                value = value.assign(value.safeStr("").substr(0, colType.colWidth));
                 pushWarn = true;
 
                 if (!pushWarning)
@@ -3221,6 +3221,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
         }
         else
         {
+          idbassert(!columnsUpdated[j]->get_DataVector()[0].isNull);
           value = columnsUpdated[j]->get_DataVector()[0].safeString();
 
           if (value.length() > (unsigned int)colType.colWidth)
@@ -3566,11 +3567,11 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
           inData = columnsUpdated[j]->get_DataVector()[0];
 	}
 
-        if (((colType.colDataType == execplan::CalpontSystemCatalog::DATE) && (inData.safeString().compare("0000-00-00") == 0)) ||
+        if (((colType.colDataType == execplan::CalpontSystemCatalog::DATE) && (inData.safeString("").compare("0000-00-00") == 0)) ||
             ((colType.colDataType == execplan::CalpontSystemCatalog::DATETIME) &&
-             (inData.safeString().compare("0000-00-00 00:00:00") == 0)) ||
+             (inData.safeString("").compare("0000-00-00 00:00:00") == 0)) ||
             ((colType.colDataType == execplan::CalpontSystemCatalog::TIMESTAMP) &&
-             (inData.safeString().compare("0000-00-00 00:00:00") == 0)))
+             (inData.safeString("").compare("0000-00-00 00:00:00") == 0)))
         {
           inData.dropString();
           isNull = true;
@@ -3593,7 +3594,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
           }
         }
 
-        if (colType.autoincrement && (isNull || (inData.safeString().compare("0") == 0)))
+        if (colType.autoincrement && (isNull || (inData.safeString("").compare("0") == 0)))
         {
           // reserve nextVal
           try

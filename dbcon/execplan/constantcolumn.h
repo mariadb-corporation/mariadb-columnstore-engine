@@ -351,7 +351,7 @@ class ConstantColumn : public ReturnedColumn
 
     if (!fResult.valueConverted)
     {
-      fResult.intVal = dataconvert::DataConvert::stringToTime(fResult.strVal);
+      fResult.intVal = dataconvert::DataConvert::stringToTime(fResult.strVal.safeString(""));
       fResult.valueConverted = true;
     }
 

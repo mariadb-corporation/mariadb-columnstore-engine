@@ -4238,7 +4238,7 @@ void WriteEngineWrapper::printInputValue(const ColStructList& colStructList, con
       {
         // We presume there will be a value.
         auto tokenOidIdx = oidToIdxMap[dctnryStructList[i].columnOid];
-        std::cerr << "string [" << dictStrList[i][j].safeString() << "]" << std::endl;
+        std::cerr << "string [" << dictStrList[i][j].safeString("<<null>>") << "]" << std::endl;
         bool isToken = colStructList[tokenOidIdx].colType == WriteEngine::WR_TOKEN &&
                        colStructList[tokenOidIdx].tokenFlag;
         if (isToken && !colValueList[tokenOidIdx][j].data.empty())
