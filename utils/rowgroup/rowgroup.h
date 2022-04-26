@@ -66,7 +66,7 @@
 namespace rowgroup
 {
 const int16_t rgCommonSize = 8192;
-const uint32_t rgNullOffset = std::numeric_limits<uint32_t>.max();
+const uint32_t rgNullOffset = std::numeric_limits<uint32_t>::max();
 
 /*
     The RowGroup family of classes encapsulate the data moved through the
