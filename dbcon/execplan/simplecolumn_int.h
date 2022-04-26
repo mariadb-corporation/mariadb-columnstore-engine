@@ -133,10 +133,13 @@ void SimpleColumn_INT<len>::setNullVal()
 }
 
 template <int len>
-inline const std::string& SimpleColumn_INT<len>::getStrVal(rowgroup::Row& row, bool& isNull)
+inline const utils::NullString & SimpleColumn_INT<len>::getStrVal(rowgroup::Row& row, bool& isNull)
 {
   if (row.equals<len>(fNullVal, fInputIndex))
+  {
     isNull = true;
+    fResult.strVal.dropString();
+  }
   else
   {
 #ifndef __LP64__
@@ -144,9 +147,9 @@ inline const std::string& SimpleColumn_INT<len>::getStrVal(rowgroup::Row& row, b
 #else
     snprintf(tmp, 20, "%ld", (int64_t)row.getIntField<len>(fInputIndex));
 #endif
+    fResult.strVal.assign(std::string(tmp));
   }
 
-  fResult.strVal = std::string(tmp);
   return fResult.strVal;
 }
 
