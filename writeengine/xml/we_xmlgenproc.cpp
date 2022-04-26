@@ -340,8 +340,9 @@ bool XMLGenProc::makeColumnData(const CalpontSystemCatalog::TableName& table)
       }
       else if (col->colType.constraintType == execplan::CalpontSystemCatalog::DEFAULT_CONSTRAINT)
       {
+        idbassert(!col_defaultValue.isNull()); // good enough for now. I have to figure out how to store the null.
         xmlTextWriterWriteAttribute(fWriter, BAD_CAST xmlTagTable[TAG_DEFAULT_VALUE],
-                                    BAD_CAST (col_defaultValue.isNull() ? "NULL" : col_defaultValue.unsafeStringRef()c_str()));
+                                    BAD_CAST (col_defaultValue.unsafeStringRef()c_str()));
       }
     }  // end of "if fSysCatRpt"
 
