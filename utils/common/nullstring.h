@@ -115,7 +115,7 @@ class NullString
       mStrPtr.reset();
       return;
     }
-    mStrPtr.reset(new std::string(p, len));
+    mStrPtr.reset(new std::string((const char*)p, len));
   }
   void assign(const std::string& newVal)
   {
