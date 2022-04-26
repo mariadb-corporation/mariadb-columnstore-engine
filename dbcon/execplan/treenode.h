@@ -142,7 +142,7 @@ struct Result
    , longDoubleVal(0)
    , floatVal(0)
    , boolVal(false)
-   , strVal
+   , strVal()
    , decimalVal(IDB_Decimal())
    , valueConverted(false)
   {
