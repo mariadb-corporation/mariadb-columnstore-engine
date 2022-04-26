@@ -1005,7 +1005,7 @@ inline void Row::colUpdateHasherTypeless(datatypes::MariaDBHasher& h, uint32_t k
 
 inline void Row::setStringField(const uint8_t* str, uint32_t length, uint32_t colIndex)
 {
-  utils::ConstString temp(str, length);
+  utils::ConstString temp((const char*)str, length);
   setStringField(temp, colIndex);
 }
 inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex)
