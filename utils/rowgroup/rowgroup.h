@@ -503,6 +503,7 @@ class Row
   inline utils::ConstString getConstString(uint32_t colIndex) const;
   inline utils::ConstString getShortConstString(uint32_t colIndex) const;
   void setStringField(const utils::NullString& val, uint32_t colIndex);
+  void setStringField(const uint8_t* val, uint32_t length, uint32_t colIndex);
   inline void setStringField(const utils::ConstString& str, uint32_t colIndex);
   template <typename T>
   inline void setBinaryField(const T* value, uint32_t width, uint32_t colIndex);
@@ -991,6 +992,10 @@ inline void Row::colUpdateHasherTypeless(datatypes::MariaDBHasher& h, uint32_t k
   }
 }
 
+inline void Row::setStringField(const uint8_t* str, uint32_t length, uint32_t colIndex)
+{
+  setStringField(utils::ConstString(str, length), colIndex);
+}
 inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex)
 {
   uint64_t offset;
