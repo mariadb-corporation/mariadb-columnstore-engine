@@ -252,7 +252,7 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
+  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull)
   {
     isNull = isNull || (fType == NULLDATA);
     return fResult.strVal;
@@ -321,7 +321,8 @@ class ConstantColumn : public ReturnedColumn
 
     if (!fResult.valueConverted)
     {
-      fResult.intVal = dataconvert::DataConvert::stringToDatetime(fResult.strVal);
+      isNull = isNull || fResult.strVal.isNull();
+      fResult.intVal = dataconvert::DataConvert::stringToDatetime(fResult.strVal.safeString(""));
       fResult.valueConverted = true;
     }
 
@@ -336,7 +337,8 @@ class ConstantColumn : public ReturnedColumn
 
     if (!fResult.valueConverted)
     {
-      fResult.intVal = dataconvert::DataConvert::stringToTimestamp(fResult.strVal, fTimeZone);
+      isNull = isNull || fResult.strVal.isNull();
+      fResult.intVal = dataconvert::DataConvert::stringToTimestamp(fResult.strVal.safeString(""), fTimeZone);
       fResult.valueConverted = true;
     }
 
