@@ -991,7 +991,7 @@ void XMLJob::fillInXMLDataNotNullDefault(const std::string& fullTblName,
       {
         if (LIKELY(colType.colWidth == datatypes::MAXDECIMALWIDTH))
         {
-          col.fDefaultWideDecimal = colType.decimal128FromNullString(col_defaultValue, &bDefaultConvertError);
+          col.fDefaultWideDecimal = colType.decimal128FromString(col_defaultValue.safeStr(), &bDefaultConvertError);
         }
         else
         {
