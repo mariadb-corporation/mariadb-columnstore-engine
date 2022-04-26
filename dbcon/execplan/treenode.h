@@ -262,7 +262,7 @@ class TreeNode
   /***********************************************************************
    *                     F&E framework                                   *
    ***********************************************************************/
-  virtual const utils::NullString getStrVal(rowgroup::Row& row, bool& isNull)
+  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull)
   {
     return fResult.strVal;
   }
