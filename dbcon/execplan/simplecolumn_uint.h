@@ -135,7 +135,7 @@ void SimpleColumn_UINT<len>::setNullVal()
 }
 
 template <int len>
-inline const std::string& SimpleColumn_UINT<len>::getStrVal(rowgroup::Row& row, bool& isNull)
+inline const utils::NullString& SimpleColumn_UINT<len>::getStrVal(rowgroup::Row& row, bool& isNull)
 {
   if (row.equals<len>(fNullVal, fInputIndex))
   {
