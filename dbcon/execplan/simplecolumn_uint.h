@@ -69,7 +69,7 @@ class SimpleColumn_UINT : public SimpleColumn
   }
 
   /** Evaluate methods */
-  virtual inline const std::string& getStrVal(rowgroup::Row& row, bool& isNull);
+  virtual inline const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull);
   virtual inline int64_t getIntVal(rowgroup::Row& row, bool& isNull);
   virtual inline uint64_t getUintVal(rowgroup::Row& row, bool& isNull);
   virtual inline float getFloatVal(rowgroup::Row& row, bool& isNull);

@@ -279,7 +279,7 @@ class SimpleColumn : public ReturnedColumn
     evaluate(row, isNull);
     return TreeNode::getBoolVal();
   }
-  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
+  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull)
   {
     evaluate(row, isNull);
     return TreeNode::getStrVal(fTimeZone);
