@@ -405,13 +405,15 @@ inline bool TreeNode::getBoolVal()
       if (fResultType.colWidth <= 8)
         return (atoi((char*)(&fResult.origIntVal)) != 0);
 
-      return (atoi(fResult.strVal.c_str()) != 0);
+      idbassert(fResult.strVal.str());
+      return (atoi(fResult.strVal.str()) != 0);
 
     case CalpontSystemCatalog::VARCHAR:
       if (fResultType.colWidth <= 7)
         return (atoi((char*)(&fResult.origIntVal)) != 0);
 
-      return (atoi(fResult.strVal.c_str()) != 0);
+      idbassert(fResult.strVal.str());
+      return (atoi(fResult.strVal.str()) != 0);
 
     // FIXME: Huh???
     case CalpontSystemCatalog::VARBINARY:
@@ -420,7 +422,8 @@ inline bool TreeNode::getBoolVal()
       if (fResultType.colWidth <= 7)
         return (atoi((char*)(&fResult.origIntVal)) != 0);
 
-      return (atoi(fResult.strVal.c_str()) != 0);
+      idbassert(fResult.strVal.str());
+      return (atoi(fResult.strVal.str()) != 0);
 
     case CalpontSystemCatalog::BIGINT:
     case CalpontSystemCatalog::SMALLINT:
@@ -772,13 +775,15 @@ inline float TreeNode::getFloatVal()
       if (fResultType.colWidth <= 8)
         return atof((char*)(&fResult.origIntVal));
 
-      return atof(fResult.strVal.c_str());
+      idbassert(fResult.strVal.str());
+      return atof(fResult.strVal.str());
 
     case CalpontSystemCatalog::VARCHAR:
       if (fResultType.colWidth <= 7)
         return atof((char*)(&fResult.origIntVal));
 
-      return atof(fResult.strVal.c_str());
+      idbassert(fResult.strVal.str());
+      return atof(fResult.strVal.str());
 
     // FIXME: ???
     case CalpontSystemCatalog::VARBINARY:
@@ -787,7 +792,8 @@ inline float TreeNode::getFloatVal()
       if (fResultType.colWidth <= 7)
         return atof((char*)(&fResult.origIntVal));
 
-      return atof(fResult.strVal.c_str());
+      idbassert(fResult.strVal.str());
+      return atof(fResult.strVal.str());
 
     case CalpontSystemCatalog::BIGINT:
     case CalpontSystemCatalog::TINYINT:
@@ -840,13 +846,15 @@ inline double TreeNode::getDoubleVal()
       if (fResultType.colWidth <= 8)
         return strtod((char*)(&fResult.origIntVal), NULL);
 
-      return strtod(fResult.strVal.c_str(), NULL);
+      idbassert(fResult.strVal.str());
+      return strtod(fResult.strVal.str(), NULL);
 
     case CalpontSystemCatalog::VARCHAR:
       if (fResultType.colWidth <= 7)
         return strtod((char*)(&fResult.origIntVal), NULL);
 
-      return strtod(fResult.strVal.c_str(), NULL);
+      idbassert(fResult.strVal.str());
+      return strtod(fResult.strVal.str(), NULL);
 
     // FIXME: ???
     case CalpontSystemCatalog::VARBINARY:
@@ -855,7 +863,8 @@ inline double TreeNode::getDoubleVal()
       if (fResultType.colWidth <= 7)
         return strtod((char*)(&fResult.origIntVal), NULL);
 
-      return strtod(fResult.strVal.c_str(), NULL);
+      idbassert(fResult.strVal.str());
+      return strtod(fResult.strVal.str(), NULL);
 
     case CalpontSystemCatalog::BIGINT:
     case CalpontSystemCatalog::TINYINT:
@@ -908,13 +917,15 @@ inline long double TreeNode::getLongDoubleVal()
       if (fResultType.colWidth <= 8)
         return strtold((char*)(&fResult.origIntVal), NULL);
 
-      return strtold(fResult.strVal.c_str(), NULL);
+      idbassert(fResult.strVal.str());
+      return strtold(fResult.strVal.str(), NULL);
 
     case CalpontSystemCatalog::VARCHAR:
       if (fResultType.colWidth <= 7)
         return strtold((char*)(&fResult.origIntVal), NULL);
 
-      return strtold(fResult.strVal.c_str(), NULL);
+      idbassert(fResult.strVal.str());
+      return strtold(fResult.strVal.str(), NULL);
 
     // FIXME: ???
     case CalpontSystemCatalog::VARBINARY:
@@ -923,7 +934,8 @@ inline long double TreeNode::getLongDoubleVal()
       if (fResultType.colWidth <= 7)
         return strtold((char*)(&fResult.origIntVal), NULL);
 
-      return strtold(fResult.strVal.c_str(), NULL);
+      idbassert(fResult.strVal.str());
+      return strtold(fResult.strVal.str(), NULL);
 
     case CalpontSystemCatalog::BIGINT:
     case CalpontSystemCatalog::TINYINT:
