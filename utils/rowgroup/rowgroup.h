@@ -892,10 +892,7 @@ inline void Row::setBinaryField_offset<int128_t>(const int128_t* value, uint32_t
 inline utils::ConstString Row::getShortConstString(uint32_t colIndex) const
 {
   uint32_t offset = offsets[colIndex];
-  if (offset == rgDataNullMark)
-  {
-    return utils::ConstString(nullptr, 0);
-  }
+  idbassert(getColumnWidth(colIndex) < 8); // we have to be sure these are SHORT strings, not VARCHAR(8191).
   const char* src = (const char*)&data[offset];
   return utils::ConstString(src, strnlen(src, getColumnWidth(colIndex)));
 }
@@ -1324,7 +1321,7 @@ inline void Row::setVarBinaryField(const uint8_t* val, uint32_t len, uint32_t co
   else
   {
     idbassert(val); // XXX: this is highly suspicious.
-    data[offsets[colIndex]i] = !!val;
+    data[offsets[colIndex]] = !!val;
     *((uint16_t*)&data[offsets[colIndex]+1]) = len;
     memcpy(&data[offsets[colIndex] + 3], val, len);
   }
