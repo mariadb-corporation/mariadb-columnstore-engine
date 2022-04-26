@@ -476,7 +476,7 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
       case CalpontSystemCatalog::VARCHAR:
       case CalpontSystemCatalog::TEXT:
       {
-        oss << row.getStringField(*i).c_str();
+        oss << row.getStringField(*i).str().c_str();
         break;
       }
 
