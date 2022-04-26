@@ -1824,7 +1824,7 @@ void TupleUnion::writeNull(Row* out, uint32_t col)
         case 7:
         case 8: out->setUintField<8>(joblist::CHAR8NULL, col); break;
 
-        default: out->setStringField(joblist::CPNULLSTRMARK, col); break;
+        default: out->setStringField(nullptr, 0, col); break;
       }
 
       break;
@@ -1834,7 +1834,7 @@ void TupleUnion::writeNull(Row* out, uint32_t col)
     case CalpontSystemCatalog::VARBINARY:
       // could use below if zero length and NULL are treated the same
       // out->setVarBinaryField("", col); break;
-      out->setVarBinaryField(joblist::CPNULLSTRMARK, col);
+      out->setVarBinaryField(nullptr, 0, col);
       break;
 
     default:
