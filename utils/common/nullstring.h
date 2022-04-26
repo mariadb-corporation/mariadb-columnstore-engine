@@ -6,6 +6,7 @@
 
 #include <memory>
 #include "exceptclasses.h"
+#include "conststring.h"
 
 namespace utils
 {
@@ -24,6 +25,10 @@ class NullString
   }
   explicit NullString(const std::string& str) : mStrPtr(new std::string(str))
   {
+  }
+  explicit NullString(const ConstString& str) : mStrPtr()
+  {
+    assign(str.str(), str->length());
   }
   const char* str() const
   {

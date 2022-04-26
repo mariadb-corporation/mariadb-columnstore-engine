@@ -496,6 +496,7 @@ class Row
   // TODO: remove this (string is not efficient for this), use getConstString() instead
   inline utils::NullString getStringField(uint32_t colIndex) const
   {
+    
     return utils::NullString(getConstString(colIndex));
   }
 
