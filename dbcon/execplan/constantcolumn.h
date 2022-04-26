@@ -306,7 +306,7 @@ class ConstantColumn : public ReturnedColumn
 
     if (!fResult.valueConverted)
     {
-      fResult.intVal = dataconvert::DataConvert::stringToDate(fResult.strVal);
+      fResult.intVal = dataconvert::DataConvert::stringToDate(fResult.strVal.safeString());
       fResult.valueConverted = true;
     }
 
