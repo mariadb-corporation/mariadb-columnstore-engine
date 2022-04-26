@@ -262,7 +262,7 @@ class TreeNode
   /***********************************************************************
    *                     F&E framework                                   *
    ***********************************************************************/
-  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
+  virtual const utils::nullString getStrVal(rowgroup::Row& row, bool& isNull)
   {
     return fResult.strVal;
   }
@@ -467,23 +467,14 @@ inline const std::string& TreeNode::getStrVal(const long timeZone)
   switch (fResultType.colDataType)
   {
     case CalpontSystemCatalog::CHAR:
-      if (fResultType.colWidth <= 8)
-        fResult.strVal = (char*)(&fResult.origIntVal);
-
-      break;
-
     case CalpontSystemCatalog::VARCHAR:
-      if (fResultType.colWidth <= 7)
-        fResult.strVal = (char*)(&fResult.origIntVal);
-
-      break;
-
-    // FIXME: ???
     case CalpontSystemCatalog::VARBINARY:
     case CalpontSystemCatalog::BLOB:
     case CalpontSystemCatalog::TEXT:
-      if (fResultType.colWidth <= 7)
-        fResult.strVal = (char*)(&fResult.origIntVal);
+      if (fResultType.colWidth <= 8)
+      {
+        fResult.strVal.assign((uint8_t*)(&fResult.origIntVal), sizeof(fResult.origIntVal));
+      }
 
       break;
 
@@ -498,7 +489,7 @@ inline const std::string& TreeNode::getStrVal(const long timeZone)
 #else
       snprintf(tmp, 20, "%ld", fResult.intVal);
 #endif
-      fResult.strVal = std::string(tmp);
+      fResult.strVal.assign(std::string(tmp));
       break;
     }
 
@@ -513,7 +504,7 @@ inline const std::string& TreeNode::getStrVal(const long timeZone)
 #else
       snprintf(tmp, 20, "%lu", fResult.uintVal);
 #endif
-      fResult.strVal = std::string(tmp);
+      fResult.strVal.assign(std::string(tmp));
       break;
     }
 
@@ -523,7 +514,7 @@ inline const std::string& TreeNode::getStrVal(const long timeZone)
       if ((fabs(fResult.floatVal) > (1.0 / IDB_pow[4])) && (fabs(fResult.floatVal) < (float)IDB_pow[6]))
       {
         snprintf(tmp, 312, "%f", fResult.floatVal);
-        fResult.strVal = removeTrailing0(tmp, 312);
+        fResult.strVal.assign(removeTrailing0(tmp, 312));
       }
       else
       {
@@ -534,14 +525,15 @@ inline const std::string& TreeNode::getStrVal(const long timeZone)
         if (std::isnan(exponent) || std::isnan(base))
         {
           snprintf(tmp, 312, "%f", fResult.floatVal);
-          fResult.strVal = removeTrailing0(tmp, 312);
+          fResult.strVal.assign(removeTrailing0(tmp, 312));
         }
         else
         {
           snprintf(tmp, 312, "%.5f", base);
-          fResult.strVal = removeTrailing0(tmp, 312);
+	  std::string tmpCat(removeTrailing0(tmp, 312));
           snprintf(tmp, 312, "e%02d", exponent);
-          fResult.strVal += tmp;
+	  tmpCat += tmp;
+          fResult.strVal.assign(tmpCat);
         }
 
         //				snprintf(tmp, 312, "%e.5", fResult.floatVal);
@@ -557,7 +549,7 @@ inline const std::string& TreeNode::getStrVal(const long timeZone)
       if ((fabs(fResult.doubleVal) > (1.0 / IDB_pow[13])) && (fabs(fResult.doubleVal) < (float)IDB_pow[15]))
       {
         snprintf(tmp, 312, "%f", fResult.doubleVal);
-        fResult.strVal = removeTrailing0(tmp, 312);
+        fResult.strVal.assign(removeTrailing0(tmp, 312));
       }
       else
       {
@@ -568,14 +560,15 @@ inline const std::string& TreeNode::getStrVal(const long timeZone)
         if (std::isnan(exponent) || std::isnan(base))
         {
           snprintf(tmp, 312, "%f", fResult.doubleVal);
-          fResult.strVal = removeTrailing0(tmp, 312);
+          fResult.strVal.assign(removeTrailing0(tmp, 312));
         }
         else
         {
           snprintf(tmp, 312, "%.9f", base);
-          fResult.strVal = removeTrailing0(tmp, 312);
+	  std::string tmpCat(removeTrailingQ(tmp, 312));
           snprintf(tmp, 312, "e%02d", exponent);
-          fResult.strVal += tmp;
+	  tmpCat += tmp;
+          fResult.strVal.assign(tmp);
         }
 
         //				snprintf(tmp, 312, "%e", fResult.doubleVal);
@@ -591,7 +584,7 @@ inline const std::string& TreeNode::getStrVal(const long timeZone)
           (fabsl(fResult.longDoubleVal) < (float)IDB_pow[15]))
       {
         snprintf(tmp, 312, "%Lf", fResult.longDoubleVal);
-        fResult.strVal = removeTrailing0(tmp, 312);
+        fResult.strVal.assign(removeTrailing0(tmp, 312));
       }
       else
       {
@@ -602,14 +595,15 @@ inline const std::string& TreeNode::getStrVal(const long timeZone)
         if (std::isnan(exponent) || std::isnan(base))
         {
           snprintf(tmp, 312, "%Lf", fResult.longDoubleVal);
-          fResult.strVal = removeTrailing0(tmp, 312);
+          fResult.strVal.assign(removeTrailing0(tmp, 312));
         }
         else
         {
           snprintf(tmp, 312, "%.14Lf", base);
-          fResult.strVal = removeTrailing0(tmp, 312);
+	  std::string tmpCat = removeTrailing0(tmp, 312);
           snprintf(tmp, 312, "e%02d", exponent);
-          fResult.strVal += tmp;
+	  tmpCat += tmp;
+          fResult.strVal.assign(tmp);
         }
 
         //				snprintf(tmp, 312, "%e", fResult.doubleVal);
@@ -624,37 +618,37 @@ inline const std::string& TreeNode::getStrVal(const long timeZone)
     {
       if (fResultType.colWidth == datatypes::MAXDECIMALWIDTH)
         // Explicit path for TSInt128 decimals with low precision
-        fResult.strVal = fResult.decimalVal.toString(true);
+        fResult.strVal.assign(fResult.decimalVal.toString(true));
       else
-        fResult.strVal = fResult.decimalVal.toString();
+        fResult.strVal.assign(fResult.decimalVal.toString());
       break;
     }
 
     case CalpontSystemCatalog::DATE:
     {
       dataconvert::DataConvert::dateToString(fResult.intVal, tmp, 255);
-      fResult.strVal = std::string(tmp);
+      fResult.strVal.assign(std::string(tmp));
       break;
     }
 
     case CalpontSystemCatalog::DATETIME:
     {
       dataconvert::DataConvert::datetimeToString(fResult.intVal, tmp, 255, fResultType.precision);
-      fResult.strVal = std::string(tmp);
+      fResult.strVal.assign(std::string(tmp));
       break;
     }
 
     case CalpontSystemCatalog::TIMESTAMP:
     {
       dataconvert::DataConvert::timestampToString(fResult.intVal, tmp, 255, timeZone, fResultType.precision);
-      fResult.strVal = std::string(tmp);
+      fResult.strVal.assign(std::string(tmp));
       break;
     }
 
     case CalpontSystemCatalog::TIME:
     {
       dataconvert::DataConvert::timeToString(fResult.intVal, tmp, 255, fResultType.precision);
-      fResult.strVal = std::string(tmp);
+      fResult.strVal.assign(std::string(tmp));
       break;
     }
 
@@ -687,7 +681,7 @@ inline int64_t TreeNode::getIntVal()
         return fResult.intVal;
 
       datatypes::DataCondition cnverr;
-      literal::Converter<literal::SignedInteger> cnv(fResult.strVal, cnverr);
+      literal::Converter<literal::SignedInteger> cnv(fResult.strVal.safeString(""), cnverr);
       return cnv.toSInt<int64_t>(cnverr);
     }
 
@@ -735,7 +729,7 @@ inline uint64_t TreeNode::getUintVal()
     case CalpontSystemCatalog::TEXT:
     {
       datatypes::DataCondition cnverr;
-      literal::Converter<literal::UnsignedInteger> cnv(fResult.strVal, cnverr);
+      literal::Converter<literal::UnsignedInteger> cnv(fResult.strVal.safeString(""), cnverr);
       if (datatypes::DataCondition::Code(cnverr) != 0)
       {
         cerr << "error in unsigned int conversion from '" << fResult.strVal.safeString() << "'";
