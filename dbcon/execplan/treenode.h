@@ -738,7 +738,7 @@ inline uint64_t TreeNode::getUintVal()
       literal::Converter<literal::UnsignedInteger> cnv(fResult.strVal, cnverr);
       if (datatypes::DataCondition::Code(cnverr) != 0)
       {
-        cerr << "error in unsigned int conversion from '" << fResult.strVal << "'";
+        cerr << "error in unsigned int conversion from '" << fResult.strVal.safeString() << "'";
       }
       return cnv.toXIntPositive<uint64_t>(cnverr);
     }
