@@ -327,7 +327,7 @@ class TreeNode
   }
 
   inline bool getBoolVal();
-  inline const std::string& getStrVal(const long timeZone);
+  inline const utils::NullString& getStrVal(const long timeZone);
   inline int64_t getIntVal();
   inline uint64_t getUintVal();
   inline float getFloatVal();
@@ -462,7 +462,7 @@ inline bool TreeNode::getBoolVal()
   return fResult.boolVal;
 }
 
-inline const std::string& TreeNode::getStrVal(const long timeZone)
+inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
 {
   switch (fResultType.colDataType)
   {
