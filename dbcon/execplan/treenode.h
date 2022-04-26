@@ -672,7 +672,7 @@ inline int64_t TreeNode::getIntVal()
       literal::Converter<literal::SignedInteger> cnv(fResult.strVal.safeString(""), cnverr);
       if (datatypes::DataCondition::Code(cnverr) != 0)
       {
-        cerr << "error in int conversion from '" << fResult.strVal << "'";
+        cerr << "error in int conversion from '" << fResult.strVal.safeString("") << "'";
       }
       return cnv.toSInt<int64_t>(cnverr);
     }
