@@ -37,6 +37,7 @@
 #include "mcs_decimal.h"
 #include "mcs_int64.h"
 #include "numericliteral.h"
+#include "nullstring.h"
 
 namespace messageqcpp
 {
@@ -141,7 +142,7 @@ struct Result
    , longDoubleVal(0)
    , floatVal(0)
    , boolVal(false)
-   , strVal("")
+   , strVal
    , decimalVal(IDB_Decimal())
    , valueConverted(false)
   {
@@ -156,7 +157,7 @@ struct Result
   long double longDoubleVal;
   float floatVal;
   bool boolVal;
-  std::string strVal;
+  utils::NullString strVal;
   IDB_Decimal decimalVal;
   bool valueConverted;
 };
