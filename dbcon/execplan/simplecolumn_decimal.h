@@ -135,11 +135,19 @@ void SimpleColumn_Decimal<len>::setNullVal()
 }
 
 template <int len>
-inline const std::string& SimpleColumn_Decimal<len>::getStrVal(rowgroup::Row& row, bool& isNull)
+inline const utils::NullString& SimpleColumn_Decimal<len>::getStrVal(rowgroup::Row& row, bool& isNull)
 {
-  datatypes::Decimal dec((int64_t)row.getIntField<len>(fInputIndex), fResultType.scale,
-                         fResultType.precision);
-  fResult.strVal = dec.toString();
+  if (row.equals<len>(fNullVal, fInputIndex))
+  {
+    isNull = true;
+    fResult.strVal.dropString();
+  }
+  else
+  {
+    datatypes::Decimal dec((int64_t)row.getIntField<len>(fInputIndex), fResultType.scale,
+                           fResultType.precision);
+    fResult.strVal.assign(dec.toString());
+  }
   return fResult.strVal;
 }
 
