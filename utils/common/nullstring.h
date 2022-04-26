@@ -108,6 +108,15 @@ class NullString
   {
     mStrPtr.reset();
   }
+  void assign(const uint8_t* p, size_t len)
+  {
+    if (!p)
+    {
+      mStrPtr.reset();
+      return;
+    }
+    mStrPtr.reset(new std::string(p, len));
+  }
   void assign(const std::string& newVal)
   {
     mStrPtr.reset(new std::string(newVal));

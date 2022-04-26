@@ -2642,7 +2642,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
   // get rows and values
   rowgroup::Row row;
   rowGroups[txnId]->initRow(&row);
-  string value("");
+  utils::NullString value;
   uint32_t rowsThisRowgroup = rowGroups[txnId]->getRowCount();
   uint32_t columnsSelected = rowGroups[txnId]->getColumnCount();
   std::vector<execplan::CalpontSystemCatalog::ColDataType> fetchColTypes = rowGroups[txnId]->getColTypes();
@@ -2871,6 +2871,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
       {
         for (unsigned i = 0; i < rowsThisRowgroup; i++)
         {
+          value.reset();
           rowGroups[txnId]->getRow(i, &row);
 
           if (row.isNullValue(fetchColPos))
@@ -2886,11 +2887,11 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
             }
             else if (colType.defaultValue.length() > 0)
             {
-              value = colType.defaultValue;
+              value.assign(colType.defaultValue);
 
               if (value.length() > (unsigned int)colType.colWidth)
               {
-                value = value.substr(0, colType.colWidth);
+                value = value.assign(value.safeStr().substr(0, colType.colWidth));
                 pushWarn = true;
 
                 if (!pushWarning)
@@ -2971,7 +2972,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
             case CalpontSystemCatalog::BLOB:
             case CalpontSystemCatalog::TEXT:
             {
-              value = row.getVarBinaryStringField(fetchColPos);
+              value.assign(row.getVarBinaryField(fetchColPos), row.getVarBinaryFieldLength(fetchColPos));
               break;
             }
 
@@ -3318,7 +3319,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
               {
                 value = row.getStringField(fetchColPos);
                 unsigned i = strlen(value.c_str());
-                value = value.substr(0, i);
+                value.assign(value.safeStr().substr(0, i));
                 break;
               }
 
@@ -3326,7 +3327,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
               case CalpontSystemCatalog::BLOB:
               case CalpontSystemCatalog::TEXT:
               {
-                value = row.getVarBinaryStringField(fetchColPos);
+                value.assign(row.getVarBinaryField(fetchColPos), row.getVarBinaryFieldLength(fetchColPos));
                 break;
               }
 
@@ -3338,7 +3339,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
                   datatypes::Decimal dec(0, fetchColScales[fetchColPos],
                                          rowGroups[txnId]->getPrecision()[fetchColPos],
                                          row.getBinaryField<int128_t>(fetchColPos));
-                  value = dec.toString(true);
+                  value.assign(dec.toString(true));
                   break;
                 }
               }
