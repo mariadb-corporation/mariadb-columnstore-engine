@@ -163,7 +163,7 @@ void CrossEngineStep::setField(int i, const char* value, unsigned long length, M
     if (value != NULL)
       row.setStringField(value, i);
     else
-      row.setStringField("", i);
+      row.setStringField(nullptr, 0);
   }
   else if ((colType == CalpontSystemCatalog::BLOB) || (colType == CalpontSystemCatalog::TEXT) ||
            (colType == CalpontSystemCatalog::VARBINARY))
