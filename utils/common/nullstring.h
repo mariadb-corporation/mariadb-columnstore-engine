@@ -28,7 +28,7 @@ class NullString
   }
   explicit NullString(const ConstString& str) : mStrPtr()
   {
-    assign(str.str(), str.length());
+    assign((const uint8_t*)str.str(), str.length());
   }
   const char* str() const
   {
