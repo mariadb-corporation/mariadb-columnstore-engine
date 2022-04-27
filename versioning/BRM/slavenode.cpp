@@ -147,6 +147,8 @@ int ServiceWorkerNode::Child()
   monitorThreads.create_thread(RWLockMonitor(&die, slave.getEMLockStatus(), keys.KEYRANGE_EXTENTMAP_BASE));
   monitorThreads.create_thread(RWLockMonitor(&die, slave.getVBBMLockStatus(), keys.KEYRANGE_VBBM_BASE));
   monitorThreads.create_thread(RWLockMonitor(&die, slave.getVSSLockStatus(), keys.KEYRANGE_VSS_BASE));
+  monitorThreads.create_thread(
+      RWLockMonitor(&die, slave.getEMIndexLockStatus(), keys.KEYRANGE_EXTENTMAP_INDEX_BASE));
 
   try
   {
