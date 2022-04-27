@@ -68,6 +68,6 @@ USE outerjoin;
 # Set table name to case insensitive
 --exec sed -i 's/\[mysqld\]/\[mysqld\]\nlower_case_table_name=1/g' /etc/my.cnf.d/server.cnf
 #
---exec systemctl restart mariadb
+--exec /etc/init.d/mariadb restart
 --exec sleep 10
 
