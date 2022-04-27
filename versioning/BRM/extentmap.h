@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016-2022 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -30,15 +31,18 @@
 #include <sys/types.h>
 #include <vector>
 #include <set>
-#ifdef _MSC_VER
 #include <unordered_map>
-#else
 #include <tr1/unordered_map>
-#endif
+#include <mutex>
+
 //#define NDEBUG
 #include <cassert>
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
+#include <boost/interprocess/managed_shared_memory.hpp>
+#include <boost/interprocess/allocators/allocator.hpp>
+#include <boost/unordered_map.hpp>
+#include <boost/functional/hash.hpp>  //boost::hash
 
 #include "shmkeys.h"
 #include "brmtypes.h"
@@ -64,6 +68,8 @@
 #define EXPORT
 #endif
 
+namespace bi = boost::interprocess;
+
 namespace oam
 {
 typedef std::vector<uint16_t> DBRootConfigList;
@@ -76,6 +82,15 @@ class IDBDataFile;
 
 namespace BRM
 {
+using PartitionNumberT = uint32_t;
+using DBRootT = uint16_t;
+using SegmentT = uint16_t;
+using LastExtentIndexT = int;
+using EmptyEMEntry = int;
+using HighestOffset = uint32_t;
+using LastIndEmptyIndEmptyInd = std::pair<LastExtentIndexT, EmptyEMEntry>;
+using DBRootVec = std::vector<DBRootT>;
+
 // assumed column width when calculating dictionary store extent size
 #define DICT_COL_WIDTH 8
 
@@ -99,8 +114,6 @@ const char CP_INVALID = 0;
 const char CP_UPDATING = 1;
 const char CP_VALID = 2;
 
-// The _v4 structs are defined below for upgrading extent map
-// from v4 to v5; see ExtentMap::loadVersion4or5 for details.
 struct EMCasualPartition_struct_v4
 {
   RangePartitionData_t hi_val;  // This needs to be reinterpreted as unsigned for uint64_t column types.
@@ -114,16 +127,15 @@ struct EMPartition_struct_v4
 {
   EMCasualPartition_struct_v4 cprange;
 };
-
 struct EMEntry_v4
 {
   InlineLBIDRange range;
   int fileID;
   uint32_t blockOffset;
   HWM_t HWM;
-  uint32_t partitionNum;  // starts at 0
-  uint16_t segmentNum;    // starts at 0
-  uint16_t dbRoot;        // starts at 1 to match Columnstore.xml
+  PartitionNumberT partitionNum;  // starts at 0
+  uint16_t segmentNum;            // starts at 0
+  DBRootT dbRoot;                 // starts at 1 to match Columnstore.xml
   uint16_t colWid;
   int16_t status;  // extent avail for query or not, or out of service
   EMPartition_struct_v4 partition;
@@ -152,7 +164,7 @@ struct EMCasualPartition_struct
   EXPORT EMCasualPartition_struct(const EMCasualPartition_struct& em);
   EXPORT EMCasualPartition_struct& operator=(const EMCasualPartition_struct& em);
 };
-typedef EMCasualPartition_struct EMCasualPartition_t;
+using EMCasualPartition_t = EMCasualPartition_struct;
 
 struct EMPartition_struct
 {
@@ -166,9 +178,9 @@ struct EMEntry
   int fileID;
   uint32_t blockOffset;
   HWM_t HWM;
-  uint32_t partitionNum;  // starts at 0
-  uint16_t segmentNum;    // starts at 0
-  uint16_t dbRoot;        // starts at 1 to match Columnstore.xml
+  PartitionNumberT partitionNum;  // starts at 0
+  uint16_t segmentNum;            // starts at 0
+  DBRootT dbRoot;                 // starts at 1 to match Columnstore.xml
   uint16_t colWid;
   int16_t status;  // extent avail for query or not, or out of service
   EMPartition_t partition;
@@ -320,6 +332,146 @@ class FreeListImpl
   static FreeListImpl* fInstance;
 };
 
+using ShmSegmentManagerT = bi::managed_shared_memory::segment_manager;
+using ShmVoidAllocator = bi::allocator<void, ShmSegmentManagerT>;
+
+using ExtentMapIdxT = size_t;
+using ExtentMapIdxTAlloc = bi::allocator<ExtentMapIdxT, ShmSegmentManagerT>;
+using PartitionNumberTAlloc = bi::allocator<PartitionNumberT, ShmSegmentManagerT>;
+using ExtentMapIndicesT = std::vector<ExtentMapIdxT, ExtentMapIdxTAlloc>;
+
+using PartitionIndexContainerKeyT = PartitionNumberT;
+using PartitionIndexContainerValT = std::pair<const PartitionIndexContainerKeyT, ExtentMapIndicesT>;
+using PartitionIndexContainerValTAlloc = bi::allocator<PartitionIndexContainerValT, ShmSegmentManagerT>;
+// Can't use std::unordered_map presumably b/c the map's pointer type doesn't use offset_type as boost::u_map
+// does
+using PartitionIndexContainerT =
+    boost::unordered_map<PartitionIndexContainerKeyT, ExtentMapIndicesT,
+                         boost::hash<PartitionIndexContainerKeyT>, std::equal_to<PartitionIndexContainerKeyT>,
+                         PartitionIndexContainerValTAlloc>;
+
+using OIDIndexContainerKeyT = OID_t;
+using OIDIndexContainerValT = std::pair<const OIDIndexContainerKeyT, PartitionIndexContainerT>;
+using OIDIndexContainerValTAlloc = bi::allocator<OIDIndexContainerValT, ShmSegmentManagerT>;
+using OIDIndexContainerT =
+    boost::unordered_map<OIDIndexContainerKeyT, PartitionIndexContainerT, boost::hash<OIDIndexContainerKeyT>,
+                         std::equal_to<OIDIndexContainerKeyT>, OIDIndexContainerValTAlloc>;
+
+using DBRootIndexTAlloc = bi::allocator<OIDIndexContainerT, ShmSegmentManagerT>;
+using DBRootIndexContainerT = std::vector<OIDIndexContainerT, DBRootIndexTAlloc>;
+using ExtentMapIndex = DBRootIndexContainerT;
+using ExtentMapIndexFindResult = std::vector<ExtentMapIdxT>;
+using InsertUpdateShmemKeyPair = std::pair<bool, bool>;
+
+class ExtentMapIndexImpl
+{
+ public:
+  ~ExtentMapIndexImpl(){};
+
+  static ExtentMapIndexImpl* makeExtentMapIndexImpl(unsigned key, off_t size, bool readOnly = false);
+  static void refreshShm()
+  {
+    if (fInstance_)
+    {
+      delete fInstance_;
+      fInstance_ = nullptr;
+    }
+  }
+
+  // The multipliers and constants here are pure theoretical
+  // tested using customer's data.
+  static size_t estimateEMIndexSize(uint32_t numberOfExtents)
+  {
+    // These are just educated guess values to calculate initial
+    // managed shmem size.
+    constexpr const size_t tablesNumber_ = 100ULL;
+    constexpr const size_t columnsNumber_ = 200ULL;
+    constexpr const size_t dbRootsNumber_ = 3ULL;
+    constexpr const size_t filesInPartition_ = 4ULL;
+    constexpr const size_t extentsInPartition_ = filesInPartition_ * 2;
+    return numberOfExtents * emIdentUnitSize_ +
+           numberOfExtents / extentsInPartition_ * partitionContainerUnitSize_ +
+           dbRootsNumber_ * tablesNumber_ * columnsNumber_;
+  }
+
+  bool growIfNeeded(const size_t memoryNeeded);
+
+  inline void grow(off_t size)
+  {
+    int rc = fBRMManagedShmMemImpl_.grow(size);
+    idbassert(rc == 0);
+  }
+  // After this call one needs to refresh any refs or ptrs sourced
+  // from this shmem.
+  inline void makeReadOnly()
+  {
+    fBRMManagedShmMemImpl_.setReadOnly();
+  }
+
+  inline void swapout(BRMManagedShmImpl& rhs)
+  {
+    fBRMManagedShmMemImpl_.swap(rhs);
+  }
+
+  inline unsigned key() const
+  {
+    return fBRMManagedShmMemImpl_.key();
+  }
+
+  unsigned getShmemSize()
+  {
+    return fBRMManagedShmMemImpl_.getManagedSegment()->get_size();
+  }
+
+  size_t getShmemFree()
+  {
+    return fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory();
+  }
+
+  unsigned getShmemImplSize()
+  {
+    return fBRMManagedShmMemImpl_.size();
+  }
+
+  void createExtentMapIndexIfNeeded();
+  ExtentMapIndex* get();
+  InsertUpdateShmemKeyPair insert(const EMEntry& emEntry, const size_t emIdx);
+  InsertUpdateShmemKeyPair insert2ndLayerWrapper(OIDIndexContainerT& oids, const EMEntry& emEntry,
+                                                 const size_t emIdx, const bool aShmemHasGrown);
+  InsertUpdateShmemKeyPair insert2ndLayer(OIDIndexContainerT& oids, const EMEntry& emEntry,
+                                          const size_t emIdx, const bool aShmemHasGrown);
+  InsertUpdateShmemKeyPair insert3dLayerWrapper(PartitionIndexContainerT& partitions, const EMEntry& emEntry,
+                                                const size_t emIdx, const bool aShmemHasGrown);
+  InsertUpdateShmemKeyPair insert3dLayer(PartitionIndexContainerT& partitions, const EMEntry& emEntry,
+                                         const size_t emIdx, const bool aShmemHasGrown);
+  ExtentMapIndexFindResult find(const DBRootT dbroot, const OID_t oid,
+                                const PartitionNumberT partitionNumber);
+  ExtentMapIndexFindResult find(const DBRootT dbroot, const OID_t oid);
+  ExtentMapIndexFindResult search2ndLayer(OIDIndexContainerT& oids, const OID_t oid,
+                                          const PartitionNumberT partitionNumber);
+  ExtentMapIndexFindResult search2ndLayer(OIDIndexContainerT& oids, const OID_t oid);
+  ExtentMapIndexFindResult search3dLayer(PartitionIndexContainerT& partitions,
+                                         const PartitionNumberT partitionNumber);
+  void deleteDbRoot(const DBRootT dbroot);
+  void deleteOID(const DBRootT dbroot, const OID_t oid);
+  void deleteEMEntry(const EMEntry& emEntry, const ExtentMapIdxT emIdent);
+
+ private:
+  BRMManagedShmImpl fBRMManagedShmMemImpl_;
+  ExtentMapIndexImpl(unsigned key, off_t size, bool readOnly = false);
+  ExtentMapIndexImpl(const ExtentMapIndexImpl& rhs);
+  ExtentMapIndexImpl& operator=(const ExtentMapIndexImpl& rhs);
+
+  static std::mutex fInstanceMutex_;
+  static ExtentMapIndexImpl* fInstance_;
+  static const constexpr uint32_t dbRootContainerUnitSize_ = 64ULL;
+  static const constexpr uint32_t oidContainerUnitSize_ = 352ULL;        // 2 * map overhead
+  static const constexpr uint32_t partitionContainerUnitSize_ = 368ULL;  // single map overhead
+  static const constexpr uint32_t emIdentUnitSize_ = sizeof(uint64_t);
+  static const constexpr uint32_t extraUnits_ = 2;
+  static const constexpr size_t freeSpaceThreshold_ = 256 * 1024;
+};
+
 /** @brief This class encapsulates the extent map functionality of the system
  *
  * This class encapsulates the extent map functionality of the system.  It
@@ -346,7 +498,7 @@ class ExtentMap : public Undoable
    */
   EXPORT void load(const std::string& filename, bool fixFL = false);
 
-  /** @brief Loads the ExtentMap entries from a binayr blob.
+  /** @brief Loads the ExtentMap entries from a binary blob.
    *
    * Loads the ExtentMap entries from a file.  This will
    * clear out any existing entries.  The intention is that before
@@ -887,6 +1039,9 @@ class ExtentMap : public Undoable
   EXPORT void dumpTo(std::ostream& os);
   EXPORT const bool* getEMLockStatus();
   EXPORT const bool* getEMFLLockStatus();
+  EXPORT const bool* getEMIndexLockStatus();
+  size_t EMIndexShmemSize();
+  size_t EMIndexShmemFree();
 
 #ifdef BRM_DEBUG
   EXPORT void printEM() const;
@@ -896,11 +1051,11 @@ class ExtentMap : public Undoable
 #endif
 
  private:
-  static const size_t EM_INCREMENT_ROWS = 100;
-  static const size_t EM_INITIAL_SIZE = EM_INCREMENT_ROWS * 10 * sizeof(EMEntry);
-  static const size_t EM_INCREMENT = EM_INCREMENT_ROWS * sizeof(EMEntry);
-  static const size_t EM_FREELIST_INITIAL_SIZE = 50 * sizeof(InlineLBIDRange);
-  static const size_t EM_FREELIST_INCREMENT = 50 * sizeof(InlineLBIDRange);
+  static const constexpr size_t EM_INCREMENT_ROWS = 100;
+  static const constexpr size_t EM_INITIAL_SIZE = EM_INCREMENT_ROWS * 10 * sizeof(EMEntry);
+  static const constexpr size_t EM_INCREMENT = EM_INCREMENT_ROWS * sizeof(EMEntry);
+  static const constexpr size_t EM_FREELIST_INITIAL_SIZE = 50 * sizeof(InlineLBIDRange);
+  static const constexpr size_t EM_FREELIST_INCREMENT = 50 * sizeof(InlineLBIDRange);
 
   ExtentMap(const ExtentMap& em);
   ExtentMap& operator=(const ExtentMap& em);
@@ -911,6 +1066,7 @@ class ExtentMap : public Undoable
   key_t fCurrentFLShmkey;
   MSTEntry* fEMShminfo;
   MSTEntry* fFLShminfo;
+  MSTEntry* fEMIndexShminfo;
   const MasterSegmentTable fMST;
   bool r_only;
   typedef std::tr1::unordered_map<int, oam::DBRootConfigList*> PmDbRootMap_t;
@@ -918,8 +1074,9 @@ class ExtentMap : public Undoable
   time_t fCacheTime;  // timestamp associated with config cache
 
   int numUndoRecords;
-  bool flLocked, emLocked;
-  static boost::mutex mutex;       // @bug5355 - made mutex static
+  bool flLocked, emLocked, emIndexLocked;
+  static boost::mutex mutex;  // @bug5355 - made mutex static
+  static boost::mutex emIndexMutex;
   boost::mutex fConfigCacheMutex;  // protect access to Config Cache
 
   enum OPS
@@ -930,6 +1087,12 @@ class ExtentMap : public Undoable
   };
 
   OPS EMLock, FLLock;
+
+  LastIndEmptyIndEmptyInd _createExtentCommonSearch(const OID_t OID, const DBRootT dbRoot,
+                                                    const PartitionNumberT partitionNum,
+                                                    const SegmentT segmentNum);
+
+  void logAndSetEMIndexReadOnly(const std::string& funcName);
 
   LBID_t _createColumnExtent_DBroot(uint32_t size, int OID, uint32_t colWidth, uint16_t dbRoot,
                                     execplan::CalpontSystemCatalog::ColDataType colDataType,
@@ -942,24 +1105,32 @@ class ExtentMap : public Undoable
                                 uint16_t segmentNum);
   template <typename T>
   bool isValidCPRange(const T& max, const T& min, execplan::CalpontSystemCatalog::ColDataType type) const;
-  void deleteExtent(int emIndex);
+  void deleteExtent(const int emIndex, const bool clearEMIndex = true);
   LBID_t getLBIDsFromFreeList(uint32_t size);
   void reserveLBIDRange(LBID_t start, uint8_t size);  // used by load() to allocate pre-existing LBIDs
 
-  key_t chooseEMShmkey();  // see the code for how keys are segmented
-  key_t chooseFLShmkey();  // see the code for how keys are segmented
+  key_t chooseEMShmkey();
+  key_t chooseFLShmkey();
+  key_t chooseEMIndexShmkey();
+  key_t getInitialEMIndexShmkey() const;
+  // see the code for how keys are segmented
+  key_t chooseShmkey(const MSTEntry* masterTableEntry, const uint32_t keyRangeBase) const;
   void grabEMEntryTable(OPS op);
   void grabFreeList(OPS op);
+  void grabEMIndex(OPS op);
   void releaseEMEntryTable(OPS op);
   void releaseFreeList(OPS op);
+  void releaseEMIndex(OPS op);
   void growEMShmseg(size_t nrows = 0);
   void growFLShmseg();
+  void growEMIndexShmseg(const size_t suggestedSize = 0);
   void finishChanges();
 
   EXPORT unsigned getFilesPerColumnPartition();
   unsigned getExtentsPerSegmentFile();
   unsigned getDbRootCount();
   void getPmDbRoots(int pm, std::vector<int>& dbRootList);
+  DBRootVec getAllDbRoots();
   void checkReloadConfig();
   ShmKeys fShmKeys;
 
@@ -980,6 +1151,7 @@ class ExtentMap : public Undoable
 
   ExtentMapImpl* fPExtMapImpl;
   FreeListImpl* fPFreeListImpl;
+  ExtentMapIndexImpl* fPExtMapIndexImpl_;
 };
 
 inline std::ostream& operator<<(std::ostream& os, ExtentMap& rhs)
