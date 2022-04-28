@@ -379,7 +379,7 @@ extern "C"
 
     try
     {
-      if (dbrm.getSystemReady() && dbrm.getSystemQueryReady())
+      if (dbrm.getSystemReady() > 0 && dbrm.getSystemQueryReady() > 0)      
       {
         return 1;
       }
