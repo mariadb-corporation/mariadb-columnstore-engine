@@ -370,10 +370,12 @@ long double Func_ceil::getLongDoubleVal(Row& row, FunctionParm& parm, bool& isNu
   else if (op_ct.colDataType == CalpontSystemCatalog::VARCHAR ||
            op_ct.colDataType == CalpontSystemCatalog::CHAR || op_ct.colDataType == CalpontSystemCatalog::TEXT)
   {
-    const string& str = parm[0]->data()->getStrVal(row, isNull);
+    const std::string& str = parm[0]->data()->getStrVal(row, isNull);
 
     if (!isNull)
+    {
       ret = ceil(strtod(str.c_str(), 0));
+    }
   }
   else if (op_ct.colDataType == CalpontSystemCatalog::DECIMAL ||
            op_ct.colDataType == CalpontSystemCatalog::UDECIMAL)
@@ -443,11 +445,11 @@ string Func_ceil::getStrVal(Row& row, FunctionParm& parm, bool& isNull, CalpontS
 
     if (op_ct.colWidth == datatypes::MAXDECIMALWIDTH)
     {
-      return d.toString(true);
+      return d.toNullString(true);
     }
     else
     {
-      return d.toString();
+      return d.toNullString();
     }
   }
   else if (isUnsigned(op_ct.colDataType))
