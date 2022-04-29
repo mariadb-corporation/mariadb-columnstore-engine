@@ -181,9 +181,9 @@ class MCS_add : public funcexp::Func
                             execplan::CalpontSystemCatalog::ColType& op_ct);
 
   /**
-   * Returns a null-equipped string result of this function.
+   * Returns a string result of this function.
    */
-  virtual utils::NullString getStrVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
+  virtual std::string getStrVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
                                 execplan::CalpontSystemCatalog::ColType& op_ct);
 
   /**
@@ -272,9 +272,9 @@ class MCS_isnull : public funcexp::Func
                             execplan::CalpontSystemCatalog::ColType& op_ct);
 
   /**
-   * Returns a null-equipped string result of this function.
+   * Returns a string result of this function.
    */
-  virtual utils::NullString getStrVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
+  virtual std::string getStrVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
                                 execplan::CalpontSystemCatalog::ColType& op_ct);
 
   /**
