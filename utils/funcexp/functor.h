@@ -106,8 +106,20 @@ class Func
   virtual long double getLongDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                        execplan::CalpontSystemCatalog::ColType& op_ct) = 0;
 
-  virtual utils::NullString getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+  virtual std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                 execplan::CalpontSystemCatalog::ColType& op_ct) = 0;
+  utils::NullString getNullStrVal(rowgroup::Row& row, FunctionParm& fp,
+                                execplan::CalpontSystemCatalog::ColType& op_ct)
+  {
+    bool isNull;
+    std::string val = getStrVal(row, fp, isNull, op_ct);
+    utils::NullString result;
+    if (!isNull)
+    {
+      result.assign(val);
+    }
+    return result;
+  }
 
   virtual execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                               execplan::CalpontSystemCatalog::ColType& op_ct)
