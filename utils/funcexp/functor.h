@@ -37,6 +37,8 @@
 
 #include "dataconvert.h"
 
+#include "nullstring.h"
+
 namespace rowgroup
 {
 class Row;
@@ -104,7 +106,7 @@ class Func
   virtual long double getLongDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                        execplan::CalpontSystemCatalog::ColType& op_ct) = 0;
 
-  virtual std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+  virtual utils::NullString getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                 execplan::CalpontSystemCatalog::ColType& op_ct) = 0;
 
   virtual execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
