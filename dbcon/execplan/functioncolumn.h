@@ -218,7 +218,12 @@ class FunctionColumn : public ReturnedColumn
   virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull)
   {
     fOperationType.setTimeZone(fTimeZone);
-    fResult.strVal = fFunctor->getStrVal(row, fFunctionParms, isNull, fOperationType);
+    fResult.strVal.dropString();
+    std::string val = fFunctor->getStrVal(row, fFunctionParms, isNull, fOperationType);
+    if (!isNull)
+    {
+      fResult.assign(val);
+    }
     return fResult.strVal;
   }
   virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
