@@ -46,7 +46,7 @@ ConstantColumn::ConstantColumn() : ReturnedColumn(), fType(0)
 ConstantColumn::ConstantColumn(const string& sql, TYPE type)
  : ReturnedColumn(), fConstval(sql), fType(type), fData(sql)
 {
-  fResult.strVal = sql;
+  fResult.strVal.assign(sql);
 
   fResult.intVal = atoll(sql.c_str());
   fResult.uintVal = strtoull(sql.c_str(), NULL, 0);
@@ -81,7 +81,7 @@ ConstantColumn::ConstantColumn(const string& sql, TYPE type)
 ConstantColumn::ConstantColumn(const string& sql, const double val)
  : ReturnedColumn(), fConstval(sql), fType(NUM), fData(sql)
 {
-  fResult.strVal = sql;
+  fResult.strVal.assign(sql);
   fResult.doubleVal = val;
   fResult.intVal = (int64_t)val;
   fResult.uintVal = (uint64_t)val;
@@ -96,7 +96,7 @@ ConstantColumn::ConstantColumn(const string& sql, const double val)
 ConstantColumn::ConstantColumn(const string& sql, const long double val)
  : ReturnedColumn(), fConstval(sql), fType(NUM), fData(sql)
 {
-  fResult.strVal = sql;
+  fResult.strVal.assign(sql);
   fResult.doubleVal = (double)val;
   fResult.intVal = (int64_t)val;
   fResult.uintVal = (uint64_t)val;
@@ -111,7 +111,7 @@ ConstantColumn::ConstantColumn(const string& sql, const long double val)
 ConstantColumn::ConstantColumn(const string& sql, const int64_t val, TYPE type)
  : ReturnedColumn(), fConstval(sql), fType(type), fData(sql)
 {
-  fResult.strVal = sql;
+  fResult.strVal.assign(sql);
   fResult.intVal = val;
   fResult.uintVal = (uint64_t)fResult.intVal;
   fResult.floatVal = (float)fResult.intVal;
@@ -125,7 +125,7 @@ ConstantColumn::ConstantColumn(const string& sql, const int64_t val, TYPE type)
 ConstantColumn::ConstantColumn(const string& sql, const uint64_t val, TYPE type)
  : ReturnedColumn(), fConstval(sql), fType(type), fData(sql)
 {
-  fResult.strVal = sql;
+  fResult.strVal.assign(sql);
   fResult.uintVal = val;
   fResult.intVal = (int64_t)fResult.uintVal;
   fResult.floatVal = (float)fResult.uintVal;
@@ -139,7 +139,7 @@ ConstantColumn::ConstantColumn(const string& sql, const uint64_t val, TYPE type)
 ConstantColumn::ConstantColumn(const string& sql, const IDB_Decimal& val)
  : ReturnedColumn(), fConstval(sql), fType(NUM), fData(sql)
 {
-  fResult.strVal = sql;
+  fResult.strVal.assign(sql);
   fResult.intVal = (int64_t)atoll(sql.c_str());
   fResult.uintVal = strtoull(sql.c_str(), NULL, 0);
   fResult.floatVal = atof(sql.c_str());
@@ -169,7 +169,7 @@ ConstantColumn::ConstantColumn(const int64_t val, TYPE type) : ReturnedColumn(),
   oss << val;
   fConstval = oss.str();
   fData = oss.str();
-  fResult.strVal = fData;
+  fResult.strVal.assign(fData);
   fResult.intVal = val;
   fResult.uintVal = (uint64_t)fResult.intVal;
   fResult.floatVal = (float)fResult.intVal;
@@ -187,7 +187,7 @@ ConstantColumn::ConstantColumn(const uint64_t val, TYPE type, int8_t scale, uint
   oss << val;
   fConstval = oss.str();
   fData = oss.str();
-  fResult.strVal = fData;
+  fResult.strVal.assign(fData);
   fResult.intVal = (int64_t)val;
   fResult.uintVal = val;
   fResult.floatVal = (float)fResult.uintVal;
