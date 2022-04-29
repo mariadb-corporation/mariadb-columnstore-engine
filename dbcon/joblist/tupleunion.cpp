@@ -1128,12 +1128,12 @@ void TupleUnion::normalize(const Row& in, Row* out)
             if (LIKELY(isInputWide))
             {
               datatypes::Decimal dec(0, in.getScale(i), in.getPrecision(i), val128);
-              out->setStringField(dec.toString(), i);
+              out->setStringField(dec.toNullString(), i);
             }
             else
             {
               datatypes::Decimal dec(val, in.getScale(i), in.getPrecision(i));
-              out->setStringField(dec.toString(), i);
+              out->setStringField(dec.toNullString(), i);
             }
             break;
           }
