@@ -218,13 +218,15 @@ int64_t MCS_add::getIntVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSy
   return (int64_t)getDoubleVal(row, parm, isNull, op_ct);
 }
 
-string MCS_add::getStrVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& op_ct)
+utils::NullString MCS_add::getStrVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& op_ct)
 {
   // One will need a more efficient implementation if this API is frequently
   // called for this UDF function. This code is for demonstration purpose.
+  utils::NullString result;
   ostringstream oss;
   oss << getDoubleVal(row, parm, isNull, op_ct);
-  return oss.str();
+  result.assng(oss.str());
+  return result;
 }
 
 IDB_Decimal MCS_add::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull,
@@ -346,11 +348,13 @@ int64_t MCS_isnull::getIntVal(Row& row, FunctionParm& parm, bool& isNull,
   return (getBoolVal(row, parm, isNull, op_ct) ? 1 : 0);
 }
 
-string MCS_isnull::getStrVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& op_ct)
+utils::NullString MCS_isnull::getStrVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& op_ct)
 {
   // This needs to be more efficient if this API will be frequently
   // called for this UDF function.
-  return (getBoolVal(row, parm, isNull, op_ct) ? "1" : "0");
+  utils::NullString r;
+  r.assign((getBoolVal(row, parm, isNull, op_ct) ? "1" : "0"));
+  return r;
 }
 
 IDB_Decimal MCS_isnull::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull,

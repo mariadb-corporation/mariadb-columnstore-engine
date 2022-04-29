@@ -297,7 +297,7 @@ void WindowFunctionType::getValue<long double>(uint64_t i, long double& t, CDT* 
 }
 
 template <>
-void WindowFunctionType::getValue<string>(uint64_t i, utils::NullString& t, CDT* cdt)
+void WindowFunctionType::getValue<utils::NullString>(uint64_t i, utils::NullString& t, CDT* cdt)
 {
   t = fRow.getStringField(i);
   // By not setting cdt, we let it default to the column's type
