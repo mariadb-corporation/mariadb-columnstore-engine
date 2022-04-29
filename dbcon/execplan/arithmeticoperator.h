@@ -109,7 +109,7 @@ class ArithmeticOperator : public Operator
   inline virtual void evaluate(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop);
 
   using Operator::getStrVal;
-  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
   {
     evaluate(row, isNull, lop, rop);
     return TreeNode::getStrVal(fTimeZone);
