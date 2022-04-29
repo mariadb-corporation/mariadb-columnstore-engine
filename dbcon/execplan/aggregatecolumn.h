@@ -355,7 +355,7 @@ class AggregateColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
+  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull)
   {
     evaluate(row, isNull);
     return TreeNode::getStrVal(fTimeZone);
