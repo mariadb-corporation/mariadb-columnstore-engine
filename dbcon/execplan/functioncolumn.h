@@ -222,7 +222,7 @@ class FunctionColumn : public ReturnedColumn
     std::string val = fFunctor->getStrVal(row, fFunctionParms, isNull, fOperationType);
     if (!isNull)
     {
-      fResult.assign(val);
+      fResult.strVal.assign(val);
     }
     return fResult.strVal;
   }
