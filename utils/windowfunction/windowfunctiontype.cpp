@@ -574,7 +574,7 @@ void WindowFunctionType::implicit2T(uint64_t i, T& t, int s)
 }
 
 template <>
-void WindowFunctionType::implicit2T<string>(uint64_t i, string& t, int)
+void WindowFunctionType::implicit2T<utils::NullString>(uint64_t i, string& t, int)
 {
   t = fRow.getStringField(i);
 }
@@ -621,7 +621,7 @@ void WindowFunctionType::getConstValue<float>(ConstantColumn* cc, float& t, bool
 }
 
 template <>
-void WindowFunctionType::getConstValue<string>(ConstantColumn* cc, string& t, bool& b)
+void WindowFunctionType::getConstValue<utils::NullString>(ConstantColumn* cc, utils::NullString& t, bool& b)
 {
   t = cc->getStrVal(fRow, b);
 }
