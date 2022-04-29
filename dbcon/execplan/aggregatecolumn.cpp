@@ -408,7 +408,7 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
           auto const str = row.getConstString(fInputIndex);
 	  fResult.strVal.dropString();
           if (!str.isNull())
-            fResult.strVal.assign(str.str(), str.length());
+            fResult.strVal.assign((const uint8_t*)str.str(), str.length());
 
           isNull = fResult.strVal.isNull();
 

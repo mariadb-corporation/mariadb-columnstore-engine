@@ -454,7 +454,7 @@ bool WF_udaf::dropValues(int64_t b, int64_t e)
 
             if (cc)
             {
-              valIn = cc->getStrVal(fRow, isNull);
+              valIn = cc->getStrVal(fRow, isNull).safeString(""); // XXX: we probably need to change Distinctmap.
             }
             else
             {
@@ -1116,7 +1116,7 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
 
               if (cc)
               {
-                valIn = cc->getStrVal(fRow, isNull);
+                valIn = cc->getStrVal(fRow, isNull).safeString(); // XXX: the same problem with distinct.
               }
               else
               {

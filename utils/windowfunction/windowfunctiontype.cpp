@@ -574,7 +574,7 @@ void WindowFunctionType::implicit2T(uint64_t i, T& t, int s)
 }
 
 template <>
-void WindowFunctionType::implicit2T<utils::NullString>(uint64_t i, string& t, int)
+void WindowFunctionType::implicit2T<utils::NullString>(uint64_t i, utils::NullString& t, int)
 {
   t = fRow.getStringField(i);
 }
