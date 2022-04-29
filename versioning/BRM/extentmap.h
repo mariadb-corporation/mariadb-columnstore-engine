@@ -36,12 +36,13 @@
 
 //#define NDEBUG
 #include <cassert>
-#include <boost/interprocess/shared_memory_object.hpp>
-#include <boost/interprocess/mapped_region.hpp>
-#include <boost/interprocess/managed_shared_memory.hpp>
-#include <boost/interprocess/allocators/allocator.hpp>
-#include <boost/unordered_map.hpp>
 #include <boost/functional/hash.hpp>  //boost::hash
+#include <boost/interprocess/allocators/allocator.hpp>
+#include <boost/interprocess/containers/vector.hpp>
+#include <boost/interprocess/managed_shared_memory.hpp>
+#include <boost/interprocess/mapped_region.hpp>
+#include <boost/interprocess/shared_memory_object.hpp>
+#include <boost/unordered_map.hpp>
 
 #include "shmkeys.h"
 #include "brmtypes.h"
@@ -337,7 +338,7 @@ using ShmVoidAllocator = bi::allocator<void, ShmSegmentManagerT>;
 using ExtentMapIdxT = size_t;
 using ExtentMapIdxTAlloc = bi::allocator<ExtentMapIdxT, ShmSegmentManagerT>;
 using PartitionNumberTAlloc = bi::allocator<PartitionNumberT, ShmSegmentManagerT>;
-using ExtentMapIndicesT = std::vector<ExtentMapIdxT, ExtentMapIdxTAlloc>;
+using ExtentMapIndicesT = bi::vector<ExtentMapIdxT, ExtentMapIdxTAlloc>;
 
 using PartitionIndexContainerKeyT = PartitionNumberT;
 using PartitionIndexContainerValT = std::pair<const PartitionIndexContainerKeyT, ExtentMapIndicesT>;
@@ -357,9 +358,9 @@ using OIDIndexContainerT =
                          std::equal_to<OIDIndexContainerKeyT>, OIDIndexContainerValTAlloc>;
 
 using DBRootIndexTAlloc = bi::allocator<OIDIndexContainerT, ShmSegmentManagerT>;
-using DBRootIndexContainerT = std::vector<OIDIndexContainerT, DBRootIndexTAlloc>;
+using DBRootIndexContainerT = bi::vector<OIDIndexContainerT, DBRootIndexTAlloc>;
 using ExtentMapIndex = DBRootIndexContainerT;
-using ExtentMapIndexFindResult = std::vector<ExtentMapIdxT>;
+using ExtentMapIndexFindResult = bi::vector<ExtentMapIdxT>;
 using InsertUpdateShmemKeyPair = std::pair<bool, bool>;
 
 class ExtentMapIndexImpl
