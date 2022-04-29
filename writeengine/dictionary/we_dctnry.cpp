@@ -823,7 +823,7 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
     {
       if (m_defVal.length() > 0)  // use default string if available
       {
-        pIn = m_defVal.c_str();
+        pIn = m_defVal.str();
         curSig.signature = (unsigned char*)pIn;
         curSig.size = m_defVal.length();
       }
