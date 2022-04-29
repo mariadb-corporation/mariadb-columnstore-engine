@@ -409,7 +409,7 @@ struct JobColumn /** @brief Job Column Structure */
   unsigned long long fDefaultUInt; /** @brief UnsignedInt col default*/
   double fDefaultDbl;              /** @brief Dbl/Flt column default */
   int128_t fDefaultWideDecimal;    /** @brief Wide decimal column default */
-  std::string fDefaultChr;         /** @brief Char column default */
+  utils::NullString fDefaultChr;   /** @brief Char column default */
   JobColumn()
    : mapOid(0)
    , dataType(execplan::CalpontSystemCatalog::INT)
