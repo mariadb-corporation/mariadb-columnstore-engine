@@ -524,7 +524,7 @@ void BulkLoadBuffer::convert(char* field, int fieldLength, bool nullFlag, unsign
       {
         if (column.fWithDefault)
         {
-          int defLen = column.fDefaultChr.size();
+          int defLen = column.fDefaultChr.length();
           const char* defData = column.fDefaultChr.c_str();
 
           if (defLen > column.definedWidth)
