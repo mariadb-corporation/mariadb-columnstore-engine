@@ -865,8 +865,8 @@ void TupleUnion::normalize(const Row& in, Row* out)
           case CalpontSystemCatalog::TEXT:
           case CalpontSystemCatalog::VARCHAR:
           {
-            string d = DataConvert::timeToString(in.getIntField(i));
-            out->setStringField(d, i);
+            utils::NullString tmp(DataConvert::timeToString(in.getIntField(i)));
+            out->setStringField(tmp, i);
             break;
           }
 
@@ -922,7 +922,8 @@ void TupleUnion::normalize(const Row& in, Row* out)
             ostringstream os;
             os.precision(15);  // to match mysql's output
             os << val;
-            out->setStringField(os.str(), i);
+	    utils::NullString tmp(os.str());
+            out->setStringField(tmp, i);
             break;
           }
 
@@ -997,7 +998,8 @@ void TupleUnion::normalize(const Row& in, Row* out)
             ostringstream os;
             os.precision(15);  // to match mysql's output
             os << val;
-            out->setStringField(os.str(), i);
+	    utils::NullString tmp(os.str());
+            out->setStringField(tmp, i);
             break;
           }
 

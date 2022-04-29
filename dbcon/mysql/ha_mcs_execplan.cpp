@@ -2079,7 +2079,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
       }
 
       if (udf->result_type() == STRING_RESULT)
-        gwip->rcWorkStack.push(new ConstantColumn(buf.ptr()));
+        gwip->rcWorkStack.push(new ConstantColumn(buf.ptr())); // XXX: constantcolumn from string = can it be NULL?
       else
       {
         gwip->rcWorkStack.push(new ConstantColumn(buf.ptr(), ConstantColumn::NUM));
