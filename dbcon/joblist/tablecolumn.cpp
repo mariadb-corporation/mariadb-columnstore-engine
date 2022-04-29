@@ -219,7 +219,7 @@ void TableColumn::unserialize(messageqcpp::ByteStream& b)
     }
     else if (columnType == STRING)
     {
-      fStrValues.reset(new std::vector<std::string>());
+      fStrValues.reset(new std::vector<utils::NullString>());
       fStrValues->reserve(rowCount);
 
       for (uint32_t i = 0; i < rowCount; i++)

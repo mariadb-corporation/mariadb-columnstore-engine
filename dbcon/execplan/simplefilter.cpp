@@ -544,7 +544,7 @@ void SimpleFilter::convertConstant()
       {
         lcc->constval("0000-00-00");
         result.intVal = 0;
-        result.strVal = lcc->constval();
+        result.strVal.assign(lcc->constval());
       }
       else
       {
@@ -557,7 +557,7 @@ void SimpleFilter::convertConstant()
       {
         lcc->constval("0000-00-00 00:00:00");
         result.intVal = 0;
-        result.strVal = lcc->constval();
+        result.strVal.assign(lcc->constval());
       }
       else
       {
@@ -570,7 +570,7 @@ void SimpleFilter::convertConstant()
       {
         lcc->constval("0000-00-00 00:00:00");
         result.intVal = 0;
-        result.strVal = lcc->constval();
+        result.strVal.assign(lcc->constval());
       }
       else
       {
@@ -583,7 +583,7 @@ void SimpleFilter::convertConstant()
       {
         lcc->constval("00:00:00");
         result.intVal = 0;
-        result.strVal = lcc->constval();
+        result.strVal.assign(lcc->constval());
       }
       else
       {
@@ -604,7 +604,7 @@ void SimpleFilter::convertConstant()
       {
         rcc->constval("0000-00-00");
         result.intVal = 0;
-        result.strVal = rcc->constval();
+        result.strVal.assign(rcc->constval());
       }
       else
       {
@@ -617,7 +617,7 @@ void SimpleFilter::convertConstant()
       {
         rcc->constval("0000-00-00 00:00:00");
         result.intVal = 0;
-        result.strVal = rcc->constval();
+        result.strVal.assign(rcc->constval());
       }
       else
       {
@@ -630,7 +630,7 @@ void SimpleFilter::convertConstant()
       {
         rcc->constval("0000-00-00 00:00:00");
         result.intVal = 0;
-        result.strVal = rcc->constval();
+        result.strVal.assign(rcc->constval());
       }
       else
       {
@@ -643,7 +643,7 @@ void SimpleFilter::convertConstant()
       {
         rcc->constval("00:00:00");
         result.intVal = 0;
-        result.strVal = rcc->constval();
+        result.strVal.assign(rcc->constval());
       }
       else
       {

@@ -713,7 +713,7 @@ bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, ReturnedCol
       if (isNull)
         return false;
 
-      return strTrimCompare(val1, rop->getStrVal(row, isNull)) && !isNull;
+      return strTrimCompare(val1, rop->getStrVal(row, isNull).safeString("")) && !isNull;
     }
 
     case execplan::CalpontSystemCatalog::VARBINARY:
