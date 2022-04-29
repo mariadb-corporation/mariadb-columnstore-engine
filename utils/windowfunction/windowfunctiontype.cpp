@@ -356,7 +356,7 @@ void WindowFunctionType::setValue<int128_t>(uint64_t i, int128_t& t)
 }
 
 template <>
-void WindowFunctionType::setValue<string>(uint64_t i, string& t)
+void WindowFunctionType::setValue<utils::NullString>(uint64_t i, utils::NullString& t)
 {
   fRow.setStringField(t, i);
 }
