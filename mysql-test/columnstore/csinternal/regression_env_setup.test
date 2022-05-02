@@ -65,8 +65,8 @@ USE outerjoin;
 --source ../csinternal/include/dbt3/countTables.inc
 --source ../csinternal/include/autopilot_create_outerjoin_tables.inc
 #
-# Set table name to case insensitive
---exec sed -i 's/\[mysqld\]/\[mysqld\]\nlower_case_table_name=1/g' /etc/my.cnf.d/server.cnf
+# Set table name to case insensitive and couple other defaults
+--exec sed -i 's#\[mysqld\]#\[mysqld\]\nlower_case_table_names=1\ncharacter_set_server=utf8mb3\ncolumnstore_use_import_for_batchinser=ALWAYS#g' /etc/my.cnf.d/server.cnf
 #
 --exec systemctl restart mariadb
 --exec sleep 10
