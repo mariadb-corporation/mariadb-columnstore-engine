@@ -6,8 +6,9 @@
 #
 
 -- source ../include/have_columnstore.inc
-
+--disable_warnings
 drop table if exists j11;
+--enable_warnings
 
 create table j11 (j11_key int)engine=columnstore;
 
