@@ -257,6 +257,7 @@ inline bool getBool(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& isNull,
       return !isNull && strGE(cs, val, pm[1]->data()->getStrVal(row, isNull)) &&
              strLE(cs, val, pm[2]->data()->getStrVal(row, isNull));
     }
+    break; // XXX: gcc falsely complains here.
 
     default:
     {

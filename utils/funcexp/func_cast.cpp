@@ -354,7 +354,7 @@ string Func_cast_char::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
     case execplan::CalpontSystemCatalog::TINYINT:
     case execplan::CalpontSystemCatalog::SMALLINT:
     {
-      return helpers::intToString(parm[0]->data()->getIntVal(row, isNull)).safeString("").substr(0, length);
+      return helpers::intToString(parm[0]->data()->getIntVal(row, isNull)).substr(0, length);
     }
     break;
 
@@ -364,7 +364,7 @@ string Func_cast_char::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
     case execplan::CalpontSystemCatalog::UTINYINT:
     case execplan::CalpontSystemCatalog::USMALLINT:
     {
-      return helpers::uintToString(parm[0]->data()->getUintVal(row, isNull)).safeString("").substr(0, length);
+      return helpers::uintToString(parm[0]->data()->getUintVal(row, isNull)).substr(0, length);
     }
     break;
 
@@ -660,7 +660,7 @@ int64_t Func_cast_date::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& parm
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull).safeStr(""));
+      val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull).safeString(""));
 
       if (val == -1)
         isNull = true;
