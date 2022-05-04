@@ -277,7 +277,7 @@ CalpontSystemCatalog::ColType Func_conv::operationType(FunctionParm& fp,
 string Func_conv::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                             CalpontSystemCatalog::ColType& op_ct)
 {
-  const string& res = parm[0]->data()->getStrVal(row, isNull);
+  const auto& res = parm[0]->data()->getStrVal(row, isNull);
   string str;
   char ans[65];
   int64_t dec;
@@ -292,13 +292,13 @@ string Func_conv::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull
   }
 
   if (from_base < 0)
-    dec = convStrToNum(res, -from_base, false);
+    dec = convStrToNum(res.safeString(""), -from_base, false);
   else
-    dec = (int64_t)convStrToNum(res, from_base, true);
+    dec = (int64_t)convStrToNum(res.safeString(""), from_base, true);
 
   str = helpers::convNumToStr(dec, ans, to_base);
 
-  isNull = str.empty();
+  isNull = str.empty(); // XXX: this is wrong.
 
   return str;
 }
