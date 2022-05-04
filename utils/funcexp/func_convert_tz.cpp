@@ -86,26 +86,26 @@ int64_t Func_convert_tz::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool&
     return -1;
   }
 
-  const string& from_tz = parm[1]->data()->getStrVal(row, isNull);
+  const auto& from_tz = parm[1]->data()->getStrVal(row, isNull);
   if (isNull)
   {
     return 0;
   }
-  const string& to_tz = parm[2]->data()->getStrVal(row, isNull);
+  const auto& to_tz = parm[2]->data()->getStrVal(row, isNull);
   if (isNull)
   {
     return 0;
   }
 
-  cout << "from " << from_tz << endl;
-  cout << "to " << to_tz << endl;
+  cout << "from " << from_tz.safeString("") << endl;
+  cout << "to " << to_tz.safeString(""0) << endl;
 
-  const string& serialized_from_tzinfo = parm[3]->data()->getStrVal(row, isNull);
-  const string& serialized_to_tzinfo = parm[4]->data()->getStrVal(row, isNull);
+  const auto& serialized_from_tzinfo = parm[3]->data()->getStrVal(row, isNull);
+  const auto& serialized_to_tzinfo = parm[4]->data()->getStrVal(row, isNull);
 
-  if (!serialized_from_tzinfo.empty())
+  if (!serialized_from_tzinfo.isNull())
   {
-    bs.append((uint8_t*)serialized_from_tzinfo.c_str(), serialized_from_tzinfo.length());
+    bs.append((uint8_t*)serialized_from_tzinfo.str(), serialized_from_tzinfo.length());
     dataconvert::unserializeTimezoneInfo(bs, &tzinfo);
     deserializeInlineVector<int64_t>(bs, ats);
     tzinfo.ats = ats.data();
