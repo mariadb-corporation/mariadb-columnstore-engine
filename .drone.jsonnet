@@ -274,8 +274,8 @@ local Pipeline(branch, platform, event, arch='amd64') = {
     name: 'dockerfile',
     image: 'alpine/git',
     commands: [
-      'git clone --depth 1 https://github.com/mariadb-corporation/mariadb-enterprise-columnstore-docker',
-      "sed -i 's|dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup|cspkg.s3.amazonaws.com/cs_repo|' mariadb-enterprise-columnstore-docker/Dockerfile",
+      'git clone --depth 1  https://github.com/mariadb-corporation/mariadb-skysql-columnstore-docker docker',
+      "sed -i 's|dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup|cspkg.s3.amazonaws.com/cs_repo|' docker/Dockerfile",
     ],
   },
   dockerhub:: {
@@ -286,8 +286,8 @@ local Pipeline(branch, platform, event, arch='amd64') = {
     },
     settings: {
       repo: 'mariadb/enterprise-columnstore-dev',
-      context: 'mariadb-enterprise-columnstore-docker',
-      dockerfile: 'mariadb-enterprise-columnstore-docker/Dockerfile',
+      context: 'docker',
+      dockerfile: 'docker/Dockerfile',
       build_args_from_env: ['VERSION'],
       tags: container_tags,
       username: {
