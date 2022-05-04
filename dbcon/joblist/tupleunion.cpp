@@ -460,7 +460,9 @@ void TupleUnion::normalize(const Row& in, Row* out)
             else
               os << in.getIntField(i);
 
-            out->setStringField(os.str(), i);
+	    utils::NullString s(os.str());
+
+            out->setStringField(s, i);
             break;
           }
 
@@ -574,8 +576,9 @@ void TupleUnion::normalize(const Row& in, Row* out)
             }
             else
               os << in.getUintField(i);
+	    utils::NullString s(os.str());
 
-            out->setStringField(os.str(), i);
+            out->setStringField(s, i);
             break;
           }
 
@@ -713,7 +716,7 @@ void TupleUnion::normalize(const Row& in, Row* out)
           case CalpontSystemCatalog::TEXT:
           case CalpontSystemCatalog::VARCHAR:
           {
-            string d = DataConvert::dateToString(in.getUintField(i));
+            utils::NullString d(DataConvert::dateToString(in.getUintField(i)));
             out->setStringField(d, i);
             break;
           }
@@ -778,7 +781,7 @@ void TupleUnion::normalize(const Row& in, Row* out)
           case CalpontSystemCatalog::TEXT:
           case CalpontSystemCatalog::VARCHAR:
           {
-            string d = DataConvert::datetimeToString(in.getUintField(i));
+            utils::NullString d(DataConvert::datetimeToString(in.getUintField(i)));
             out->setStringField(d, i);
             break;
           }
@@ -840,7 +843,7 @@ void TupleUnion::normalize(const Row& in, Row* out)
           case CalpontSystemCatalog::TEXT:
           case CalpontSystemCatalog::VARCHAR:
           {
-            string d = DataConvert::timestampToString(in.getUintField(i), fTimeZone);
+            utils::NullString d(DataConvert::timestampToString(in.getUintField(i), fTimeZone));
             out->setStringField(d, i);
             break;
           }
