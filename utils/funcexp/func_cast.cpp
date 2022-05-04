@@ -336,14 +336,14 @@ string Func_cast_char::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
 {
   // check for convert with 1 arg, return the argument
   if (parm.size() == 1)
-    return parm[0]->data()->getStrVal(row, isNull);
+    return parm[0]->data()->getStrVal(row, isNull).safeString("");
   ;
 
   int64_t length = parm[1]->data()->getIntVal(row, isNull);
 
   // @bug3488, a dummy parm is appended even the optional N is not present.
   if (length < 0)
-    return parm[0]->data()->getStrVal(row, isNull);
+    return parm[0]->data()->getStrVal(row, isNull).safeString("");
   ;
 
   switch (parm[0]->data()->resultType().colDataType)
