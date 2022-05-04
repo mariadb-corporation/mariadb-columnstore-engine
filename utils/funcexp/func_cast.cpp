@@ -143,7 +143,7 @@ int64_t Func_cast_signed::getIntVal(Row& row, FunctionParm& parm, bool& isNull,
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      const string& value = parm[0]->data()->getStrVal(row, isNull);
+      const auto& value = parm[0]->data()->getStrVal(row, isNull);
 
       if (isNull)
       {
@@ -151,7 +151,7 @@ int64_t Func_cast_signed::getIntVal(Row& row, FunctionParm& parm, bool& isNull,
         return 0;
       }
 
-      return atoll(value.c_str());
+      return atoll(value.str());
     }
     break;
 
@@ -259,7 +259,7 @@ uint64_t Func_cast_unsigned::getUintVal(Row& row, FunctionParm& parm, bool& isNu
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      const string& value = parm[0]->data()->getStrVal(row, isNull);
+      const auto& value = parm[0]->data()->getStrVal(row, isNull);
 
       if (isNull)
       {
@@ -267,7 +267,7 @@ uint64_t Func_cast_unsigned::getUintVal(Row& row, FunctionParm& parm, bool& isNu
         return 0;
       }
 
-      uint64_t ret = strtoul(value.c_str(), 0, 0);
+      uint64_t ret = strtoul(value.str(), 0, 0);
       return ret;
     }
     break;

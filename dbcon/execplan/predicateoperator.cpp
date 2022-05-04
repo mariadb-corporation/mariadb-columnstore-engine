@@ -373,8 +373,8 @@ bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, ReturnedCol
     const auto& pattern = rop->getStrVal(row, isNull);
     if (isNull)
       return false;
-    return datatypes::Charset(cs).like(fOp == OP_NOTLIKE, utils::ConstString(subject),
-                                       utils::ConstString(pattern));
+    return datatypes::Charset(cs).like(fOp == OP_NOTLIKE, utils::ConstString(subject.str(), subject.length()),
+                                       utils::ConstString(pattern.str(), pattern.length()));
   }
 
   // fOpType should have already been set on the connector during parsing

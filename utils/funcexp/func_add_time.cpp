@@ -104,7 +104,7 @@ int64_t Func_add_time::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& parm,
   dt1.second = (val1 >> 20) & 0x3f;
   dt1.msecond = val1 & 0xfffff;
 
-  int64_t time = DataConvert::stringToTime(val2.unsafeString());
+  int64_t time = DataConvert::stringToTime(val2.unsafeStringRef());
 
   if (time == -1)
   {
@@ -172,7 +172,7 @@ int64_t Func_add_time::getTimestampIntVal(rowgroup::Row& row, FunctionParm& parm
   }
 
   const auto& val2 = parm[1]->data()->getStrVal(row, isNull);
-  if (val2.isNull)
+  if (val2.isNull())
   {
     isNull = true;
     return -1;
@@ -191,7 +191,7 @@ int64_t Func_add_time::getTimestampIntVal(rowgroup::Row& row, FunctionParm& parm
   dt1.second = m_time.second;
   dt1.msecond = timestamp.msecond;
 
-  int64_t time = DataConvert::stringToTime(val2.unsafeString());
+  int64_t time = DataConvert::stringToTime(val2.unsafeStringRef());
 
   if (time == -1)
   {
@@ -266,7 +266,7 @@ int64_t Func_add_time::getTimeIntVal(rowgroup::Row& row, FunctionParm& parm, boo
   dt1.second = (val1 >> 24) & 0xff;
   dt1.msecond = val1 & 0xffffff;
 
-  int64_t time = DataConvert::stringToTime(val2);
+  int64_t time = DataConvert::stringToTime(val2.unsafeStringRef());
 
   if (time == -1)
   {

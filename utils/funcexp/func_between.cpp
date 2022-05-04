@@ -242,20 +242,20 @@ inline bool getBool(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& isNull,
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      const string& val = pm[0]->data()->getStrVal(row, isNull);
+      const string& val = pm[0]->data()->getStrVal(row, isNull).safeString("");
       CHARSET_INFO& cs = datatypes::Charset(ct.charsetNumber).getCharset();
 
       if (notBetween)
       {
-        if (!strGE(cs, val, pm[1]->data()->getStrVal(row, isNull)) && !isNull)
+        if (!strGE(cs, val, pm[1]->data()->getStrVal(row, isNull).safeString("")) && !isNull)
           return true;
 
         isNull = false;
-        return (!strLE(cs, val, pm[2]->data()->getStrVal(row, isNull)) && !isNull);
+        return (!strLE(cs, val, pm[2]->data()->getStrVal(row, isNull).safeString("")) && !isNull);
       }
 
-      return !isNull && strGE(cs, val, pm[1]->data()->getStrVal(row, isNull)) &&
-             strLE(cs, val, pm[2]->data()->getStrVal(row, isNull));
+      return !isNull && strGE(cs, val, pm[1]->data()->getStrVal(row, isNull).safeString("")) &&
+             strLE(cs, val, pm[2]->data()->getStrVal(row, isNull).safeString(""));
     }
     break; // XXX: gcc falsely complains here.
 
@@ -313,7 +313,7 @@ CalpontSystemCatalog::ColType Func_between::operationType(FunctionParm& fp,
       if (cc)
       {
         Result result = cc->result();
-        result.intVal = dataconvert::DataConvert::datetimeToInt(result.strVal);
+        result.intVal = dataconvert::DataConvert::datetimeToInt(result.strVal.safeString(""));
         cc->result(result);
       }
     }
@@ -329,7 +329,7 @@ CalpontSystemCatalog::ColType Func_between::operationType(FunctionParm& fp,
       if (cc)
       {
         Result result = cc->result();
-        result.intVal = dataconvert::DataConvert::timestampToInt(result.strVal, resultType.getTimeZone());
+        result.intVal = dataconvert::DataConvert::timestampToInt(result.strVal.safeString(""), resultType.getTimeZone());
         cc->result(result);
       }
     }
