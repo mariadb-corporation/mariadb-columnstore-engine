@@ -53,11 +53,11 @@ CalpontSystemCatalog::ColType Func_find_in_set::operationType(FunctionParm& fp,
 int64_t Func_find_in_set::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                                     CalpontSystemCatalog::ColType& op_ct)
 {
-  const string& searchStr = parm[0]->data()->getStrVal(row, isNull);
+  const auto& searchStr = parm[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return 0;
 
-  const string& setString = parm[1]->data()->getStrVal(row, isNull);
+  const auto& setString = parm[1]->data()->getStrVal(row, isNull);
   if (isNull)
     return 0;
 
@@ -70,10 +70,10 @@ int64_t Func_find_in_set::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
   CHARSET_INFO* cs = op_ct.getCharset();
 
   my_wc_t wc = 0;
-  const char* str_begin = setString.c_str();
-  const char* str_end = setString.c_str();
+  const char* str_begin = setString.str();
+  const char* str_end = setString.str();
   const char* real_end = str_end + setString.length();
-  const char* find_str = searchStr.c_str();
+  const char* find_str = searchStr.str();
   size_t find_str_len = searchStr.length();
   int position = 0;
   static const char separator = ',';
