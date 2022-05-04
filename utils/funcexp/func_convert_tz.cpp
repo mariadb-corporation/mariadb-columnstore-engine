@@ -98,7 +98,7 @@ int64_t Func_convert_tz::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool&
   }
 
   cout << "from " << from_tz.safeString("") << endl;
-  cout << "to " << to_tz.safeString(""0) << endl;
+  cout << "to " << to_tz.safeString("") << endl;
 
   const auto& serialized_from_tzinfo = parm[3]->data()->getStrVal(row, isNull);
   const auto& serialized_to_tzinfo = parm[4]->data()->getStrVal(row, isNull);
