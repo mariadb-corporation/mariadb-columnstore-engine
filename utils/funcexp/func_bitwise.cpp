@@ -140,7 +140,7 @@ datatypes::TUInt64Null GenericToBitOperand(Row& row, const execplan::SPTP& parm,
     case execplan::CalpontSystemCatalog::TEXT:
     {
       bool tmpIsNull = false;
-      const string& str = parm->data()->getStrVal(row, tmpIsNull).safeStr("");
+      const auto& str = parm->data()->getStrVal(row, tmpIsNull).safeString("");
       if (tmpIsNull)
         return datatypes::TUInt64Null();
 
