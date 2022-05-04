@@ -92,10 +92,10 @@ int64_t Func_floor::getIntVal(Row& row, FunctionParm& parm, bool& isNull,
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      const string& str = parm[0]->data()->getStrVal(row, isNull);
+      const auto& str = parm[0]->data()->getStrVal(row, isNull);
 
       if (!isNull)
-        ret = (int64_t)floor(strtod(str.c_str(), 0));
+        ret = (int64_t)floor(strtod(str.str(), 0));
     }
     break;
 
@@ -194,10 +194,10 @@ uint64_t Func_floor::getUintVal(Row& row, FunctionParm& parm, bool& isNull,
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      const string& str = parm[0]->data()->getStrVal(row, isNull);
+      const auto& str = parm[0]->data()->getStrVal(row, isNull);
 
       if (!isNull)
-        ret = (uint64_t)floor(strtod(str.c_str(), 0));
+        ret = (uint64_t)floor(strtod(str.str(), 0));
     }
     break;
 
@@ -281,10 +281,10 @@ double Func_floor::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull,
   else if (op_ct.colDataType == CalpontSystemCatalog::VARCHAR ||
            op_ct.colDataType == CalpontSystemCatalog::CHAR || op_ct.colDataType == CalpontSystemCatalog::TEXT)
   {
-    const string& str = parm[0]->data()->getStrVal(row, isNull);
+    const auto& str = parm[0]->data()->getStrVal(row, isNull);
 
     if (!isNull)
-      ret = floor(strtod(str.c_str(), 0));
+      ret = floor(strtod(str.str(), 0));
   }
   else if (op_ct.colDataType == CalpontSystemCatalog::DECIMAL ||
            op_ct.colDataType == CalpontSystemCatalog::UDECIMAL)
@@ -325,10 +325,10 @@ long double Func_floor::getLongDoubleVal(Row& row, FunctionParm& parm, bool& isN
   else if (op_ct.colDataType == CalpontSystemCatalog::VARCHAR ||
            op_ct.colDataType == CalpontSystemCatalog::CHAR || op_ct.colDataType == CalpontSystemCatalog::TEXT)
   {
-    const string& str = parm[0]->data()->getStrVal(row, isNull);
+    const auto& str = parm[0]->data()->getStrVal(row, isNull);
 
     if (!isNull)
-      ret = floor(strtod(str.c_str(), 0));
+      ret = floor(strtod(str.str(), 0));
   }
   else if (op_ct.colDataType == CalpontSystemCatalog::DECIMAL ||
            op_ct.colDataType == CalpontSystemCatalog::UDECIMAL)
@@ -488,10 +488,10 @@ IDB_Decimal Func_floor::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      const string& str = parm[0]->data()->getStrVal(row, isNull);
+      const auto& str = parm[0]->data()->getStrVal(row, isNull);
 
       if (!isNull)
-        ret.value = (int64_t)floor(strtod(str.c_str(), 0));
+        ret.value = (int64_t)floor(strtod(str.str(), 0));
     }
     break;
 
