@@ -445,11 +445,11 @@ string Func_ceil::getStrVal(Row& row, FunctionParm& parm, bool& isNull, CalpontS
 
     if (op_ct.colWidth == datatypes::MAXDECIMALWIDTH)
     {
-      return d.toNullString(true);
+      return d.toString(true);
     }
     else
     {
-      return d.toNullString();
+      return d.toString();
     }
   }
   else if (isUnsigned(op_ct.colDataType))
@@ -543,10 +543,10 @@ IDB_Decimal Func_ceil::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull,
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      const string& str = parm[0]->data()->getStrVal(row, isNull);
+      const auto& str = parm[0]->data()->getStrVal(row, isNull);
 
       if (!isNull)
-        ret.value = (int64_t)ceil(strtod(str.c_str(), 0));
+        ret.value = (int64_t)ceil(strtod(str.str(), 0));
     }
     break;
 
