@@ -96,8 +96,15 @@ int64_t Func_dayofweek::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& 
     case CalpontSystemCatalog::CHAR:
     case CalpontSystemCatalog::TEXT:
     case CalpontSystemCatalog::VARCHAR:
-      val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
+      const auto& valStr = parm[0]->data()->getStrVal(row, isNull);
 
+      if (valStr.isNull())
+      {
+        isNull = true;
+	return -1;
+      }
+
+      val = dataconvert::DataConvert::stringToDatetime(valStr.safeString(""));
       if (val == -1)
       {
         isNull = true;
