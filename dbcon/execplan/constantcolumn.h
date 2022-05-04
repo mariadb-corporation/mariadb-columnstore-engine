@@ -200,6 +200,11 @@ class ConstantColumn : public ReturnedColumn
     fDerivedTable = "*";
   }
 
+  bool isNull()
+  {
+    return fType == NULLDATA;
+  }
+
  private:
   std::string fConstval;
   int fType;
