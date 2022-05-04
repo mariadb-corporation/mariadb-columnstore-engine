@@ -345,7 +345,7 @@ CalpontSystemCatalog::ColType Func_between::operationType(FunctionParm& fp,
       if (cc)
       {
         Result result = cc->result();
-        result.intVal = dataconvert::DataConvert::timeToInt(result.strVal);
+        result.intVal = dataconvert::DataConvert::timeToInt(result.strVal.safeString(""));
         cc->result(result);
       }
     }

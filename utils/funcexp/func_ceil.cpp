@@ -370,11 +370,11 @@ long double Func_ceil::getLongDoubleVal(Row& row, FunctionParm& parm, bool& isNu
   else if (op_ct.colDataType == CalpontSystemCatalog::VARCHAR ||
            op_ct.colDataType == CalpontSystemCatalog::CHAR || op_ct.colDataType == CalpontSystemCatalog::TEXT)
   {
-    const std::string& str = parm[0]->data()->getStrVal(row, isNull);
+    const auto& str = parm[0]->data()->getStrVal(row, isNull);
 
     if (!isNull)
     {
-      ret = ceil(strtod(str.c_str(), 0));
+      ret = ceil(strtod(str.str(), 0));
     }
   }
   else if (op_ct.colDataType == CalpontSystemCatalog::DECIMAL ||
