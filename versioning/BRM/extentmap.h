@@ -401,6 +401,9 @@ public:
     InsertUpdateShmemKeyPair insert3dLayer(PartitionIndexContainerT& partitions,
                                            const EMEntry& emEntry, const LBID_t lbid,
                                            const bool aShmemHasGrown);
+    PartitionIndexContainerT& refreshPartitionRef(const EMEntry& emEntry);
+    bool fragmentedMemExceptionHandler(const std::string& funcName, boost::interprocess::bad_alloc& ex,
+        const size_t partitionsSize);
     // Search functions.
     LBID_tFindResult find(const DBRootT dbroot, const OID_t oid,
         const PartitionNumberT partitionNumber);
@@ -424,7 +427,8 @@ private:
     static ExtentMapIndexImpl* fInstance_;
     static const constexpr uint32_t dbRootContainerUnitSize_ = 64ULL;
     static const constexpr uint32_t oidContainerUnitSize_ = 352ULL; // 2 * map overhead
-    static const constexpr uint32_t partitionContainerUnitSize_ = 368ULL; // single map overhead
+    static const constexpr uint32_t partitionContainerRoughUnitSize_ = 368ULL; // single map overhead
+    static const constexpr size_t partitionContainerUnitSize_ = 8; // single map overhead
     static const constexpr uint32_t emIdentUnitSize_ = sizeof(uint64_t);
     static const constexpr uint32_t extraUnits_ = 2;
     static const constexpr size_t freeSpaceThreshold_ = 256 * 1024;
