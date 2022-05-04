@@ -314,7 +314,7 @@ string Func_date_format::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool&
     case CalpontSystemCatalog::CHAR:
     case CalpontSystemCatalog::VARCHAR:
     case CalpontSystemCatalog::TEXT:
-      val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
+      val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull).safeString());
 
       if (val == -1)
       {

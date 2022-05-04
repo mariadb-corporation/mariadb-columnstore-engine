@@ -155,7 +155,7 @@ int64_t Func_convert_tz::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool&
   else
   {
     long from_tz_offset;
-    dataconvert::timeZoneToOffset(from_tz.c_str(), from_tz.size(), &from_tz_offset);
+    dataconvert::timeZoneToOffset(from_tz.str(), from_tz.length(), &from_tz_offset);
     seconds = dataconvert::mySQLTimeToGmtSec(my_start_time, from_tz_offset, valid);
     if (!valid)
     {
@@ -165,10 +165,10 @@ int64_t Func_convert_tz::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool&
     }
   }
 
-  if (!serialized_to_tzinfo.empty())
+  if (!serialized_to_tzinfo.isNull())
   {
     bs.reset();
-    bs.append((uint8_t*)serialized_to_tzinfo.c_str(), serialized_to_tzinfo.length());
+    bs.append((uint8_t*)serialized_to_tzinfo.str(), serialized_to_tzinfo.length());
     dataconvert::unserializeTimezoneInfo(bs, &tzinfo);
     deserializeInlineVector<int64_t>(bs, ats);
     tzinfo.ats = ats.data();
@@ -199,7 +199,7 @@ int64_t Func_convert_tz::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool&
   else
   {
     long to_tz_offset;
-    dataconvert::timeZoneToOffset(to_tz.c_str(), to_tz.size(), &to_tz_offset);
+    dataconvert::timeZoneToOffset(to_tz.ctr(), to_tz.length(), &to_tz_offset);
     dataconvert::gmtSecToMySQLTime(seconds, my_time_tmp, to_tz_offset);
   }
 
