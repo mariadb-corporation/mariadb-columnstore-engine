@@ -737,7 +737,7 @@ int64_t Func_date_add::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& i
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull).safeStrinig(""));
+      val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull).safeString(""));
       break;
     }
 

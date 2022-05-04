@@ -96,27 +96,28 @@ int64_t Func_dayofweek::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& 
     case CalpontSystemCatalog::CHAR:
     case CalpontSystemCatalog::TEXT:
     case CalpontSystemCatalog::VARCHAR:
-      const auto& valStr = parm[0]->data()->getStrVal(row, isNull);
-
-      if (valStr.isNull())
       {
-        isNull = true;
-	return -1;
-      }
+        const auto& valStr = parm[0]->data()->getStrVal(row, isNull);
 
-      val = dataconvert::DataConvert::stringToDatetime(valStr.safeString(""));
-      if (val == -1)
-      {
-        isNull = true;
-        return -1;
-      }
-      else
-      {
-        year = (uint32_t)((val >> 48) & 0xffff);
-        month = (uint32_t)((val >> 44) & 0xf);
-        day = (uint32_t)((val >> 38) & 0x3f);
-      }
+        if (valStr.isNull())
+        {
+          isNull = true;
+          return -1;
+        }
 
+        val = dataconvert::DataConvert::stringToDatetime(valStr.safeString(""));
+        if (val == -1)
+        {
+          isNull = true;
+          return -1;
+        }
+        else
+        {
+          year = (uint32_t)((val >> 48) & 0xffff);
+          month = (uint32_t)((val >> 44) & 0xf);
+          day = (uint32_t)((val >> 38) & 0x3f);
+        }
+      }
       break;
 
     case CalpontSystemCatalog::BIGINT:
