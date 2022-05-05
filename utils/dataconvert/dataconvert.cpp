@@ -2848,6 +2848,11 @@ int64_t DataConvert::intToTime(int64_t data, bool fromString)
   return getSInt64LE((const char*)&atime);
 }
 
+int64_t DataConvert::stringToTime(const utils::NullString& data)
+{
+  return stringToTime(data.safeString(""));
+}
+
 int64_t DataConvert::stringToTime(const string& data)
 {
   // MySQL supported time value format 'D HHH:MM:SS.fraction'
