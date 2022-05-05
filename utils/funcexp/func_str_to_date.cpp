@@ -64,7 +64,7 @@ dataconvert::DateTime getDateTime(rowgroup::Row& row, FunctionParm& parm, bool& 
     {
       val = parm[0]->data()->getIntVal(row, isNull);
       valStr = dataconvert::DataConvert::dateToString(val);
-      rc = extractor.extractTime(valStr, formatStr dateTime);
+      rc = extractor.extractTime(valStr, formatStr, dateTime);
 
       if (rc < 0)
       {
@@ -79,7 +79,7 @@ dataconvert::DateTime getDateTime(rowgroup::Row& row, FunctionParm& parm, bool& 
     {
       val = parm[0]->data()->getIntVal(row, isNull);
       valStr = dataconvert::DataConvert::datetimeToString(val);
-      rc = extractor.extractTime(valStr, formatStr dateTime);
+      rc = extractor.extractTime(valStr, formatStr, dateTime);
 
       if (rc < 0)
       {

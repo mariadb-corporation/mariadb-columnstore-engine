@@ -628,7 +628,7 @@ string Func_sha::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
 
   // Input is always treated as sring
   sha.Reset();
-  sha << parm[0]->data()->getStrVal(row, isNull).c_str();
+  sha << parm[0]->data()->getStrVal(row, isNull).safeString("").c_str();
 
   // can not compute
 #ifdef _MSC_VER
