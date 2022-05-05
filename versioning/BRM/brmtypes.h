@@ -251,6 +251,8 @@ public:
     uint32_t size;
 
     EXPORT LBIDRange();
+    LBIDRange(const LBID_t aStart, const uint32_t aSize)
+        :start(aStart), size(aSize) {}
     EXPORT LBIDRange(const LBIDRange& l);
     EXPORT LBIDRange(const InlineLBIDRange& l);
     EXPORT LBIDRange& operator=(const LBIDRange& l);
