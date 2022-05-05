@@ -152,19 +152,20 @@ string Func_time_format::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool&
     default: isNull = true; return "";
   }
 
-  const string& format = parm[1]->data()->getStrVal(row, isNull);
+  const auto& format = parm[1]->data()->getStrVal(row, isNull);
 
   char* ptr = buf;
 
   for (uint32_t i = 0; i < format.length(); i++)
   {
-    if (format[i] != '%')
-      *ptr++ = format[i];
+    char fi = format.unsafeStringRef()[i];
+    if (fi != '%')
+      *ptr++ = fi;
     else
     {
       i++;
 
-      switch (format[i])
+      switch (fi)
       {
         case 'f':
           sprintf(ptr, "%06d", msec);

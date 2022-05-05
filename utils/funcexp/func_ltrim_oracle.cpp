@@ -48,20 +48,18 @@ std::string Func_ltrim_oracle::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
 {
   CHARSET_INFO* cs = type.getCharset();
   // The original string
-  const string& src = fp[0]->data()->getStrVal(row, isNull);
-  if (isNull)
+  const auto& src = fp[0]->data()->getStrVal(row, isNull);
+  if (isNull || src.length() < 1)
     return "";
-  if (src.empty() || src.length() == 0)
-    return src;
   // binLen represents the number of bytes in src
   size_t binLen = src.length();
-  const char* pos = src.c_str();
+  const char* pos = src.str();
   const char* end = pos + binLen;
   // strLen = the number of characters in src
   size_t strLen = cs->numchars(pos, end);
 
   // The trim characters.
-  const string& trim = (fp.size() > 1 ? fp[1]->data()->getStrVal(row, isNull) : " ");
+  const string& trim = (fp.size() > 1 ? fp[1]->data()->getStrVal(row, isNull).safeString("") : " ");
   // binTLen represents the number of bytes in trim
   size_t binTLen = trim.length();
   const char* posT = trim.c_str();
@@ -91,7 +89,7 @@ std::string Func_ltrim_oracle::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
   std::string ret(pos, binLen);
   if (binLen == 0)
   {
-    isNull = true;
+    isNull = true; // XXX: is it goog?
   }
   return ret;
 }
