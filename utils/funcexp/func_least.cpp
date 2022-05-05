@@ -119,7 +119,7 @@ std::string Func_least::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
     }
   }
 
-  return leastStr;
+  return leastStr.safeString("");
 }
 
 IDB_Decimal Func_least::getDecimalVal(Row& row, FunctionParm& fp, bool& isNull,
