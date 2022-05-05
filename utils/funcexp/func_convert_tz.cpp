@@ -199,7 +199,7 @@ int64_t Func_convert_tz::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool&
   else
   {
     long to_tz_offset;
-    dataconvert::timeZoneToOffset(to_tz.ctr(), to_tz.length(), &to_tz_offset);
+    dataconvert::timeZoneToOffset(to_tz.str(), to_tz.length(), &to_tz_offset);
     dataconvert::gmtSecToMySQLTime(seconds, my_time_tmp, to_tz_offset);
   }
 

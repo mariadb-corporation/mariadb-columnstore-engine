@@ -64,14 +64,14 @@ string Func_get_format::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& 
 {
   // parm[0] -- format
   // parm[1] -- type
-  string format = parm[0]->data()->getStrVal(row, isNull);
+  string format = parm[0]->data()->getStrVal(row, isNull).safeString("");
 
   if (isNull)
     return "";
 
   transform(format.begin(), format.end(), format.begin(), to_upper());
 
-  string type = parm[1]->data()->getStrVal(row, isNull);
+  string type = parm[1]->data()->getStrVal(row, isNull).safeString("");
 
   if (isNull)
     return "";
