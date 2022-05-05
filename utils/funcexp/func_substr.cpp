@@ -89,7 +89,7 @@ std::string Func_substr::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
     return "";
 
   if (start == 0 && strLen == length)
-    return str;
+    return str.safeString("");
 
   length = std::min(length, strLen - start);
 
