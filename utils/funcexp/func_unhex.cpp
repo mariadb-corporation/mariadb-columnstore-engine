@@ -68,10 +68,12 @@ CalpontSystemCatalog::ColType Func_unhex::operationType(FunctionParm& fp,
 string Func_unhex::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                              CalpontSystemCatalog::ColType& op_ct)
 {
-  const auto& from = parm[0]->data()->getStrVal(row, isNull);
+  const auto& nfrom = parm[0]->data()->getStrVal(row, isNull);
 
-  if (from.isNull())
+  if (nfrom.isNull())
     return "";
+
+  const auto& from = nfrom.unsafeStringRef();
 
   char* to = new char[2 + from.size() / 2];
 
