@@ -62,7 +62,7 @@ std::string Func_right::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
 
   size_t start = cs->numchars(pos, end);  // Here, start is number of characters in src
   if (start <= trimLength)
-    return src;
+    return src.safeString("");
   start = cs->charpos(pos, end,
                       start - trimLength);  // Here, start becomes number of bytes into src to start copying
 

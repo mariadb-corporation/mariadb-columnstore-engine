@@ -52,7 +52,7 @@ std::string Func_replace::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& 
   if (nstr.isNull())
     return "";
 
-  const auto& str nstr.unsafeStringRef();
+  const auto& str = nstr.unsafeStringRef();
   size_t strLen = str.length();
 
   const auto& nfromstr = fp[1]->data()->getStrVal(row, isNull);
