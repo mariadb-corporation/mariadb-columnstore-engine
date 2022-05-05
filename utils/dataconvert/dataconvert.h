@@ -49,6 +49,8 @@
 #include "bytestream.h"
 #include "errorids.h"
 
+#include "nullstring.h"
+
 // remove this block if the htonll is defined in library
 #ifdef __linux__
 #include <endian.h>
@@ -1271,10 +1273,13 @@ class DataConvert
 
   // convert string to date
   EXPORT static int64_t stringToDate(const std::string& data);
+  EXPORT static int64_t nullStringToDate(const utils::NullString& data);
   // convert string to datetime
   EXPORT static int64_t stringToDatetime(const std::string& data, bool* isDate = NULL);
+  EXPORT static int64_t stringToDatetime(const utils::NullString& data, bool* isDate = NULL);
   // convert string to timestamp
   EXPORT static int64_t stringToTimestamp(const std::string& data, long timeZone);
+  EXPORT static int64_t stringToTimestamp(const utils::NullString& data, long timeZone);
   // convert integer to date
   EXPORT static int64_t intToDate(int64_t data);
   // convert integer to datetime

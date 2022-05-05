@@ -2402,6 +2402,15 @@ int64_t DataConvert::stringToDate(const string& data)
   else
     return -1;
 }
+int64_t DataConvert::stringToDate(const utils::NullString& data)
+{
+  if (data.isNull())
+  {
+    return -1;
+  }
+
+  return stringToDate(data.unsafeStringRef());
+}
 
 int64_t DataConvert::stringToDatetime(const string& data, bool* date)
 {
@@ -2411,6 +2420,20 @@ int64_t DataConvert::stringToDatetime(const string& data, bool* date)
     return getUInt64LE((const char*)&dtime);
   else
     return -1;
+}
+
+int64_t DataConvert::stringToDatetime(const utils::NullString& data, bool* date)
+{
+  if (data.isNull)
+  {
+    if (date)
+    {
+      *date = false;
+    }
+    return -1;
+  }
+
+  return stringToDatetime(date.unsafeStringRef(), date);
 }
 
 int64_t DataConvert::stringToTimestamp(const string& data, long timeZone)

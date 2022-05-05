@@ -504,8 +504,12 @@ CalpontSystemCatalog::ColType Func_md5::operationType(FunctionParm& fp,
 string Func_md5::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                            CalpontSystemCatalog::ColType& op_ct)
 {
-  const string& arg = parm[0]->data()->getStrVal(row, isNull);
-  return MD5String(arg.c_str());
+  const auto& arg = parm[0]->data()->getStrVal(row, isNull);
+  if (arg.isNull())
+  {
+    return "";
+  }
+  return MD5String(arg.str());
 
   // return str;
 }
