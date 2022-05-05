@@ -76,7 +76,11 @@ int64_t getArgSInt64Val(rowgroup::Row& row, TreeNode* exp, bool& isNull)
 
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::CHAR:
-    case execplan::CalpontSystemCatalog::TEXT: return atoi(exp->getStrVal(row, isNull).c_str());
+    case execplan::CalpontSystemCatalog::TEXT:
+    {
+      const auto& str = exp->getStrVal(row, isNull);
+      return str.isNull() ? 0 : atoi(str.str());
+    }
 
     case execplan::CalpontSystemCatalog::DOUBLE:
     case execplan::CalpontSystemCatalog::FLOAT:
