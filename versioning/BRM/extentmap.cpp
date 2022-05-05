@@ -1,4 +1,4 @@
- /* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2014 InfiniDB, Inc.
    Copyright (C) 2016-2022 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
@@ -44,6 +44,11 @@
 #include <unordered_set>
 #endif
 
+#if BOOST_VERSION >= 106501
+#include <boost/unordered/detail/implementation.hpp>
+#else
+#include <boost/unordered/detail/buckets.hpp>
+#endif
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 namespace bi = boost::interprocess;
@@ -404,6 +409,19 @@ InsertUpdateShmemKeyPair ExtentMapIndexImpl::insert2ndLayerWrapper(OIDIndexConta
     return insert3dLayerWrapper(partitions, emEntry, lbid, shmemHasGrown);
 }
 
+// This method presumes and doesn't check that emEntry.dbRoot exists at the 1st layer
+PartitionIndexContainerT& ExtentMapIndexImpl::refreshPartitionRef(const EMEntry& emEntry)
+{
+    auto* extMapIndexPtr = get();
+    assert(extMapIndexPtr);
+    auto& extMapIndex = *extMapIndexPtr;
+    // The dbroot must be here b/c we found it once in insert().
+    OIDIndexContainerT& refreshedOidsRef = extMapIndex[emEntry.dbRoot];
+    auto oidsIter = refreshedOidsRef.find(emEntry.fileID);
+    PartitionIndexContainerT& refreshedPartitionsRef = (*oidsIter).second;
+    return refreshedPartitionsRef;
+}
+
 InsertUpdateShmemKeyPair ExtentMapIndexImpl::insert3dLayer(PartitionIndexContainerT& partitions,
                                                            const EMEntry& emEntry,
                                                            const LBID_t lbid,
@@ -413,8 +431,28 @@ InsertUpdateShmemKeyPair ExtentMapIndexImpl::insert3dLayer(PartitionIndexContain
     ShmVoidAllocator alloc(fBRMManagedShmMemImpl_.getManagedSegment()->get_segment_manager());
     LBID_tVectorT lbids(alloc);
     lbids.push_back(lbid);
+    // map node is 56 bytes but rehashing allocates a dynamic number of bytes so
+    // the rehashing might throw
     auto iterAndResult = partitions.insert({partitionNumber, std::move(lbids)});
     return {iterAndResult.second, aShmemHasGrown};
+}
+
+bool ExtentMapIndexImpl::fragmentedMemExceptionHandler(const std::string& funcName,
+    bi::bad_alloc& ex, const size_t partitionsSize)
+{
+    std::ostringstream os;
+    os << funcName << ": " << ex.what() << ". Extending managed shared memory and continue." << std::endl;
+    log(os.str(), logging::LOG_TYPE_INFO);
+    // Extend managed shmem
+    static const size_t minGrowSize = 16 * 1024 * 1024;
+    // This number is taken from boost unordered impl and might change in future with
+    // a small probability
+    const auto bucketCapacity = boost::unordered::detail::next_prime(partitionsSize + 1);
+    const size_t currentShmemSize = getShmemSize();
+    const size_t newSize = std::max(bucketCapacity * partitionContainerUnitSize_, minGrowSize) + currentShmemSize;
+    // If the grow() throws then workernode runtime throws and a cluster becomes read-only that is expected
+    grow(newSize);
+    return true;
 }
 
 InsertUpdateShmemKeyPair
@@ -434,15 +472,23 @@ ExtentMapIndexImpl::insert3dLayerWrapper(PartitionIndexContainerT& partitions,
         {
             // Need to refresh all refs and iterators b/c the local address range changed.
             shmemHasGrown = growIfNeeded(memNeeded);
-            auto* extMapIndexPtr = get();
-            assert(extMapIndexPtr);
-            auto& extMapIndex = *extMapIndexPtr;
             shmemHasGrown = shmemHasGrown || aShmemHasGrown;
-            // The dbroot must be here b/c we found it once in insert().
-            OIDIndexContainerT& refreshedOidsRef = extMapIndex[emEntry.dbRoot];
-            auto oidsIter = refreshedOidsRef.find(emEntry.fileID);
-            PartitionIndexContainerT& refreshedPartitionsRef = (*oidsIter).second;
-            return insert3dLayer(refreshedPartitionsRef, emEntry, lbid, shmemHasGrown);
+            PartitionIndexContainerT& refreshedPartitionsRef = refreshPartitionRef(emEntry);
+            try
+            {
+                return insert3dLayer(refreshedPartitionsRef, emEntry, lbid, shmemHasGrown);
+            }
+            catch (bi::bad_alloc& ex)
+            {
+                static const std::string funcName{"insert3dLayerWrapper()"};
+                fragmentedMemExceptionHandler(funcName, ex, partitions.size());
+                PartitionIndexContainerT& refreshedPartitionsRef = refreshPartitionRef(emEntry);
+                ShmVoidAllocator alloc(fBRMManagedShmMemImpl_.getManagedSegment()->get_segment_manager());
+                LBID_tVectorT emIndices(alloc);
+                emIndices.push_back(lbid);
+                shmemHasGrown = true;
+                return insert3dLayer(refreshedPartitionsRef, emEntry, lbid, shmemHasGrown);
+            }
         }
         return insert3dLayer(partitions, emEntry, lbid, shmemHasGrown);
     }
@@ -654,8 +700,6 @@ ExtentMapRBTree::iterator ExtentMap::findByLBID(const LBID_t lbid)
 
 int ExtentMap::_markInvalid(const LBID_t lbid, const execplan::CalpontSystemCatalog::ColDataType colDataType)
 {
-  LBID_t lastBlock;
-
   auto emIt = findByLBID(lbid);
   if (emIt == fExtentMapRBTree->end())
     throw logic_error("ExtentMap::markInvalid(): lbid isn't allocated");
@@ -792,7 +836,6 @@ int ExtentMap::setMaxMin(const LBID_t lbid, const int64_t max, const int64_t min
     }
 
 #endif
-    LBID_t lastBlock;
     int32_t curSequence;
 
 #ifdef BRM_DEBUG
@@ -1229,7 +1272,6 @@ int ExtentMap::getMaxMin(const LBID_t lbid, int64_t& max, int64_t& min, int32_t&
     max = numeric_limits<uint64_t>::max();
     min = 0;
     seqNum *= (-1);
-    LBID_t lastBlock;
     int isValid = CP_INVALID;
 
 #ifdef BRM_DEBUG
@@ -4780,7 +4822,7 @@ void ExtentMap::getExtents(int OID, vector<struct EMEntry>& entries,
              ++emIt)
         {
             auto& emEntry = emIt->second;
-            if ((emEntry.fileID == OID))
+            if (emEntry.fileID == OID)
                 entries.push_back(emEntry);
         }
     }
