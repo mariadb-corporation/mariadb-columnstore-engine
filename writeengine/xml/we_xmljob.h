@@ -74,7 +74,7 @@ class XMLJob : public XMLOp
   EXPORT static int genJobXMLFileName(const std::string& sXMLJobDir, const std::string& jobDir,
                                       const std::string& jobId, bool bTempFile, const std::string& schemaName,
                                       const std::string& tableName, boost::filesystem::path& xmlDirPath,
-                                      std::string& errMsg, std::string& tableOIDStr);
+                                      std::string& errMsg, const std::string& tableOIDStr);
 
   /**
    * @brief Get job structure
