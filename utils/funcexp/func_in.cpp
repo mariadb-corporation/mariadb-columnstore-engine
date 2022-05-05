@@ -275,7 +275,7 @@ inline bool getBoolForIn(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& is
         const auto& str1 = pm[i]->data()->getStrVal(row, isNull);
 	// XXX: str1 may result in is NULL argument assing to strnncoll. The length is 0 in that case.
 	// We'll see how it will go.
-        if (cs->strnncoll(val.c_str(), val.length(), str1.str(), str1.length()) == 0 && !isNull)
+        if (cs->strnncoll(val.str(), val.length(), str1.str(), str1.length()) == 0 && !isNull)
           return true;
 
         if (isNull && isNotIn)
