@@ -2424,7 +2424,7 @@ int64_t DataConvert::stringToDatetime(const string& data, bool* date)
 
 int64_t DataConvert::stringToDatetime(const utils::NullString& data, bool* date)
 {
-  if (data.isNull)
+  if (data.isNull())
   {
     if (date)
     {
