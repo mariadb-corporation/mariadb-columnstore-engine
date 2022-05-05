@@ -80,14 +80,14 @@ std::string Func_rpad::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isN
   }
 
   // The pad characters.
-  const string pad = fPad;
+  string pad = fPad;
   if (fp.size() > 2)
   {
     pad = fp[2]->data()->getStrVal(row, isNull).safeString("");
   }
   // binPLen represents the number of bytes in pad
   size_t binPLen = pad.length();
-  const char* posP = pad.str();
+  const char* posP = pad.c_str();
   // plen = the number of characters in pad
   size_t plen = cs->numchars(posP, posP + binPLen);
   if (plen == 0)
