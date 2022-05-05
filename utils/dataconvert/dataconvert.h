@@ -1273,7 +1273,7 @@ class DataConvert
 
   // convert string to date
   EXPORT static int64_t stringToDate(const std::string& data);
-  EXPORT static int64_t nullStringToDate(const utils::NullString& data);
+  EXPORT static int64_t stringToDate(const utils::NullString& data);
   // convert string to datetime
   EXPORT static int64_t stringToDatetime(const std::string& data, bool* isDate = NULL);
   EXPORT static int64_t stringToDatetime(const utils::NullString& data, bool* isDate = NULL);

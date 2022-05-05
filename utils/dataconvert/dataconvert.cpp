@@ -2433,7 +2433,7 @@ int64_t DataConvert::stringToDatetime(const utils::NullString& data, bool* date)
     return -1;
   }
 
-  return stringToDatetime(date.unsafeStringRef(), date);
+  return stringToDatetime(data.unsafeStringRef(), date);
 }
 
 int64_t DataConvert::stringToTimestamp(const string& data, long timeZone)
