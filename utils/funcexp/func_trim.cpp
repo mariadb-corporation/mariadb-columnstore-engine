@@ -66,7 +66,7 @@ std::string Func_trim::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isN
   // strTLen = the number of characters in trim
   size_t strTLen = cs->numchars(posT, posT + binTLen);
   if (strTLen == 0 || strTLen > strLen)
-    return src;
+    return src.safeString("");
 
   if (binTLen == 1)
   {
