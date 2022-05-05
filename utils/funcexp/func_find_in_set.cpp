@@ -54,14 +54,14 @@ int64_t Func_find_in_set::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
                                     CalpontSystemCatalog::ColType& op_ct)
 {
   const auto& searchStr = parm[0]->data()->getStrVal(row, isNull);
-  if (isNull)
+  if (searchStr.isNull())
     return 0;
 
   const auto& setString = parm[1]->data()->getStrVal(row, isNull);
-  if (isNull)
+  if (setString.isNull())
     return 0;
 
-  if (searchStr.find(",") != string::npos)
+  if (searchStr.unsafeStringRef().find(",") != string::npos)
     return 0;
 
   if (setString.length() < searchStr.length())
