@@ -48,14 +48,16 @@ std::string Func_substring_index::getStrVal(rowgroup::Row& row, FunctionParm& fp
 {
   CHARSET_INFO* cs = ct.getCharset();
 
-  const auto& str = fp[0]->data()->getStrVal(row, isNull);
-  if (str.isNull())
+  const auto& nstr = fp[0]->data()->getStrVal(row, isNull);
+  if (nstr.isNull())
     return "";
+  const auto& str = nstr.unsafeStringRef();
   int64_t strLen = str.length();
 
-  const auto& delimstr = fp[1]->data()->getStrVal(row, isNull);
-  if (isNull)
+  const auto& ndelimstr = fp[1]->data()->getStrVal(row, isNull);
+  if (ndelimstr.isNull())
     return "";
+  const auto& delimstr = ndelimstr.unsafeStringRef();
   int64_t delimLen = delimstr.length();
 
   int64_t count = fp[2]->data()->getIntVal(row, isNull);
@@ -66,20 +68,20 @@ std::string Func_substring_index::getStrVal(rowgroup::Row& row, FunctionParm& fp
     return "";
 
   if (count > strLen)
-    return str.safeString("");
+    return str;
 
   if ((count < 0) && ((count * -1) > strLen))
-    return str.safeString("");
+    return str;
 
   bool binaryCmp = (cs->state & MY_CS_BINSORT) || !cs->use_mb();
   std::string value;  // Only used if !use_mb()
 
   if (!binaryCmp)  // Charset supports multibyte characters
   {
-    const char* src = str.str();
+    const char* src = str.c_str();
     const char* srcEnd = src + strLen;
     const char* srchEnd = srcEnd - delimLen + 1;
-    const char* delim = delimstr.str();
+    const char* delim = delimstr.c_str();
     const char* delimEnd = delim + delimLen;
     char* ptr = const_cast<char*>(src);
     char *i, *j;
