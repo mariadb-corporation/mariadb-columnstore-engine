@@ -2380,6 +2380,11 @@ int64_t DataConvert::datetimeToInt(const string& datetime)
   return stringToDatetime(datetime);
 }
 
+int64_t DataConvert::datetimeToInt(const utils::NullString& datetime)
+{
+  return stringToDatetime(datetime);
+}
+
 int64_t DataConvert::timestampToInt(const string& timestamp, long timeZone)
 {
   return stringToTimestamp(timestamp, timeZone);
