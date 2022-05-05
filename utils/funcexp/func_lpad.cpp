@@ -90,7 +90,7 @@ std::string Func_lpad::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isN
   }
   // binPLen represents the number of bytes in pad
   size_t binPLen = pad.length();
-  const char* posP = pad.str();
+  const char* posP = pad.c_str();
   // plen = the number of characters in pad
   size_t plen = cs->numchars(posP, posP + binPLen);
   if (plen == 0)
