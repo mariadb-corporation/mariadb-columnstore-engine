@@ -2375,6 +2375,11 @@ int64_t DataConvert::dateToInt(const string& date)
   return stringToDate(date);
 }
 
+int64_t DataConvert::dateToInt(const utils::NullString& date)
+{
+  return stringToDate(date);
+}
+
 int64_t DataConvert::datetimeToInt(const string& datetime)
 {
   return stringToDatetime(datetime);
