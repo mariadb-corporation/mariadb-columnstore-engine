@@ -1740,7 +1740,7 @@ string Func_format::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
     case execplan::CalpontSystemCatalog::UTINYINT:
     case execplan::CalpontSystemCatalog::USMALLINT:
     {
-      value = parm[0]->data()->getStrVal(row, isNull);
+      value = parm[0]->data()->getStrVal(row, isNull).safeString("");
     }
     break;
 
