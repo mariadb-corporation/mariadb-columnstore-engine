@@ -59,7 +59,7 @@ int64_t Func_instr::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNu
   if (substr.isNull())
     return 0;
 
-  const char* s2 = substr.unsafeStringRef().str();
+  const char* s2 = substr.str();
   uint32_t l2 = (uint32_t)substr.length();
   if (l2 < 1)
     return start + 1;
