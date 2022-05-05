@@ -186,7 +186,7 @@ int32_t Func_inet_aton::getDateIntVal(rowgroup::Row& row, FunctionParm& fp, bool
 {
   int32_t iValue = joblist::DATENULL;
 
-  const &uto sValue = fp[0]->data()->getStrVal(row, isNull);
+  const auto& sValue = fp[0]->data()->getStrVal(row, isNull);
 
   if (!sValue.isNull())
   {

@@ -1288,6 +1288,7 @@ class DataConvert
   EXPORT static int64_t intToTime(int64_t data, bool fromString = false);
   // convert string to date. alias to stringToDate
   EXPORT static int64_t dateToInt(const std::string& date);
+  EXPORT static int64_t dateToInt(const utils::NullString& date);
   // convert string to datetime. alias to datetimeToInt
   EXPORT static int64_t datetimeToInt(const std::string& datetime);
   EXPORT static int64_t datetimeToInt(const utils::NullString& datetime);
