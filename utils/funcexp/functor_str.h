@@ -80,14 +80,14 @@ class Func_Str : public Func
                         execplan::CalpontSystemCatalog::ColType& op_ct)
   {
     auto str = getStrVal(row, fp, isNull, op_ct);
-    return (isNull ? 0 : nullStringToDate(str));
+    return (isNull ? 0 : stringToDate(str));
   }
 
   int64_t getDatetimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                             execplan::CalpontSystemCatalog::ColType& op_ct)
   {
     auto str = getStrVal(row, fp, isNull, op_ct);
-    return (isNull ? 0 : nullStringToDatetime(str));
+    return (isNull ? 0 : stringToDatetime(str));
   }
 
   int64_t getTimestampIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
