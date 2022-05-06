@@ -207,7 +207,7 @@ class ConstantColumn : public ReturnedColumn
 
   bool isNull()
   {
-    return fType == NULLDATA || fConstVal.isNull();
+    return fType == NULLDATA || fConstval.isNull();
   }
 
  private:
