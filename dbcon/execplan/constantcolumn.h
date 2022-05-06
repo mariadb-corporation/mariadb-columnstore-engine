@@ -27,6 +27,7 @@
 #include <string>
 
 #include "returnedcolumn.h"
+#include "nullstring.h"
 
 namespace messageqcpp
 {
@@ -99,14 +100,14 @@ class ConstantColumn : public ReturnedColumn
   /**
    * accessor
    */
-  inline const std::string& constval() const
+  inline const utils::NullString& constval() const
   {
     return fConstval;
   }
   /**
    * accessor
    */
-  inline void constval(const std::string& constval)
+  inline void constval(const utils::NullString& constval)
   {
     fConstval = constval;
   }
@@ -206,7 +207,7 @@ class ConstantColumn : public ReturnedColumn
   }
 
  private:
-  std::string fConstval;
+  utils::NullString fConstval;
   int fType;
   std::string fData;
   long fTimeZone;
