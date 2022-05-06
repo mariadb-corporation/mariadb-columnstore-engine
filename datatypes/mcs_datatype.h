@@ -26,6 +26,7 @@
 #include "mcs_decimal.h"
 #include "mcs_double.h"
 #include "mcs_longdouble.h"
+#include "nullstring.h"
 
 #ifdef _MSC_VER
 typedef int mcs_sint32_t;
@@ -248,6 +249,7 @@ class SystemCatalog
         @brief Convenience method to get int128 from a std::string.
     */
     int128_t decimal128FromString(const std::string& value, bool* saturate = 0) const;
+    int128_t decimal128FromString(const utils::NullString& value, bool* saturate = 0) const;
 
     /**
         @brief The method sets the legacy scale and precision of a wide decimal
