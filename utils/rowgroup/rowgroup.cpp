@@ -618,7 +618,7 @@ string Row::toCSV() const
       switch (types[i])
       {
         case CalpontSystemCatalog::CHAR:
-        case CalpontSystemCatalog::VARCHAR: os << getStringField(i).c_str(); break;
+        case CalpontSystemCatalog::VARCHAR: os << getStringField(i).safeString(); break;
 
         case CalpontSystemCatalog::FLOAT:
         case CalpontSystemCatalog::UFLOAT: os << getFloatField(i); break;
@@ -1548,7 +1548,7 @@ void RowGroup::addToSysDataList(execplan::CalpontSystemCatalog::NJLSysDataList& 
             default:
             {
               NullString s = row.getStringField(j);
-              cr->PutStringData(string(s);
+              cr->PutStringData(s);
             }
           }
 
