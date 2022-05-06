@@ -205,7 +205,7 @@ ConstantColumn::~ConstantColumn()
 const string ConstantColumn::toString() const
 {
   ostringstream oss;
-  oss << "ConstantColumn: " << fConstval << " intVal=" << fResult.intVal << " uintVal=" << fResult.uintVal;
+  oss << "ConstantColumn: " << fConstval.safeString("<<NuLL>>") << " intVal=" << fResult.intVal << " uintVal=" << fResult.uintVal;
   oss << '(';
 
   if (fType == LITERAL)
@@ -296,7 +296,10 @@ bool ConstantColumn::operator==(const ConstantColumn& t) const
   if (*rc1 != *rc2)
     return false;
 
-  if (fConstval != t.fConstval)
+  if (fConsvVal.isNull() != t.fConstval.isNull())
+    return false;
+
+  if (!fConstval.isNull() && fConstval.unsafeStringRef() != t.fConstval.unsafeStringRef())
     return false;
 
   if (fType != t.fType)
