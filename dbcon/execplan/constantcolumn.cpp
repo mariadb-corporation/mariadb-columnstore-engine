@@ -167,7 +167,7 @@ ConstantColumn::ConstantColumn(const int64_t val, TYPE type) : ReturnedColumn(),
 {
   ostringstream oss;
   oss << val;
-  fConstval = oss.str();
+  fConstval.assign(oss.str());
   fData = oss.str();
   fResult.strVal.assign(fData);
   fResult.intVal = val;
@@ -185,7 +185,7 @@ ConstantColumn::ConstantColumn(const uint64_t val, TYPE type, int8_t scale, uint
 {
   ostringstream oss;
   oss << val;
-  fConstval = oss.str();
+  fConstval.assign(oss.str());
   fData = oss.str();
   fResult.strVal.assign(fData);
   fResult.intVal = (int64_t)val;
