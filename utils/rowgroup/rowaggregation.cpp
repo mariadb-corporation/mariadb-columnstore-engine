@@ -2663,7 +2663,7 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
   double doubleOut;
   long double longdoubleOut;
   ostringstream oss;
-  std::string strOut;
+  utils::NullString strOut;
 
   bool bSetSuccess = false;
 
