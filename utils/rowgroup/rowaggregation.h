@@ -567,7 +567,7 @@ class RowAggregation : public messageqcpp::Serializeable
   inline void updateDoubleMinMax(double val1, double val2, int64_t col, int func);
   inline void updateLongDoubleMinMax(long double val1, long double val2, int64_t col, int func);
   inline void updateFloatMinMax(float val1, float val2, int64_t col, int func);
-  inline void updateStringMinMax(std::string val1, std::string val2, int64_t col, int func);
+  inline void updateStringMinMax(utils::NullString val1, utils::NullString val2, int64_t col, int func);
   std::vector<SP_ROWAGG_GRPBY_t> fGroupByCols;
   std::vector<SP_ROWAGG_FUNC_t> fFunctionCols;
   uint32_t fAggMapKeyCount;  // the number of columns that make up the key
