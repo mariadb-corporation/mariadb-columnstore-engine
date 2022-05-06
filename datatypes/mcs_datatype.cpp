@@ -66,6 +66,16 @@ int128_t SystemCatalog::TypeAttributesStd::decimal128FromString(const std::strin
   return result;
 }
 
+int128_t SystemCatalog::TypeAttributesStd::decimal128FromString(const utils::NullString& value,
+                                                                bool* saturate) const
+{
+  if (value.isNull())
+  {
+    return TSInt128::NullValue;
+  }
+  return decimal128FromString(value.unsafeStringRef(), saturate);
+}
+
 const string& TypeHandlerSInt8::name() const
 {
   static const string xname = "TINYINT";
