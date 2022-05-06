@@ -306,7 +306,7 @@ struct ConstantAggData
   std::string fUDAFName;  // If a UDAF is called with constant.
   RowAggFunctionType fOp;
 
-  ConstantAggData() : fOp(ROWAGG_FUNCT_UNDEFINE), fIsNull(false)
+  ConstantAggData() : fOp(ROWAGG_FUNCT_UNDEFINE)
   {
   }
 
@@ -317,6 +317,10 @@ struct ConstantAggData
   ConstantAggData(utils::NullString v, std::string u, RowAggFunctionType f)
    : fConstValue(v), fUDAFName(std::move(u)), fOp(f)
   {
+  }
+  bool isNull() const
+  {
+    return fConstValue.isNull();
   }
 };
 
