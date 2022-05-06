@@ -296,7 +296,7 @@ bool ConstantColumn::operator==(const ConstantColumn& t) const
   if (*rc1 != *rc2)
     return false;
 
-  if (fConsvVal.isNull() != t.fConstval.isNull())
+  if (fConstval.isNull() != t.fConstval.isNull())
     return false;
 
   if (!fConstval.isNull() && fConstval.unsafeStringRef() != t.fConstval.unsafeStringRef())

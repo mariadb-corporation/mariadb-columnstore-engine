@@ -1163,8 +1163,8 @@ void RowAggregation::doMinMax(const Row& rowIn, int64_t colIn, int64_t colOut, i
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      string valIn = rowIn.getStringField(colIn);
-      string valOut = fRow.getStringField(colOut);
+      auto valIn = rowIn.getStringField(colIn);
+      auto valOut = fRow.getStringField(colOut);
       updateStringMinMax(valIn, valOut, colOut, funcType);
       break;
     }
@@ -2986,7 +2986,7 @@ void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
   }
   else
   {
-    strOut = oss.str();
+    strOut.assign(oss.str());
   }
 
   switch (colDataType)
