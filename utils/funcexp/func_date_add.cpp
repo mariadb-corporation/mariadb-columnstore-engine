@@ -793,7 +793,7 @@ int64_t Func_date_add::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& i
   if ((ct3.colDataType == execplan::CalpontSystemCatalog::CHAR ||
        ct3.colDataType == execplan::CalpontSystemCatalog::TEXT ||
        ct3.colDataType == execplan::CalpontSystemCatalog::VARCHAR) &&
-      constCol != NULL && constCol->constval().compare("SUB") == 0)
+      constCol != NULL && constCol->constval().safeString().compare("SUB") == 0)
     funcType = OP_SUB;
   else
     funcType = static_cast<OpType>(parm[3]->data()->getIntVal(row, isNull));
