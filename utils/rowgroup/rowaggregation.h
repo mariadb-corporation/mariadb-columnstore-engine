@@ -302,21 +302,20 @@ inline void RowUDAFFunctionCol::deserialize(messageqcpp::ByteStream& bs)
 
 struct ConstantAggData
 {
-  std::string fConstValue;
+  utils::NullString fConstValue;
   std::string fUDAFName;  // If a UDAF is called with constant.
   RowAggFunctionType fOp;
-  bool fIsNull;
 
   ConstantAggData() : fOp(ROWAGG_FUNCT_UNDEFINE), fIsNull(false)
   {
   }
 
-  ConstantAggData(std::string v, RowAggFunctionType f, bool n) : fConstValue(std::move(v)), fOp(f), fIsNull(n)
+  ConstantAggData(utils::NullString v, RowAggFunctionType f, bool n) : fConstValue(v), fOp(f)
   {
   }
 
-  ConstantAggData(std::string v, std::string u, RowAggFunctionType f, bool n)
-   : fConstValue(std::move(v)), fUDAFName(std::move(u)), fOp(f), fIsNull(n)
+  ConstantAggData(utils::NullString v, std::string u, RowAggFunctionType f)
+   : fConstValue(v), fUDAFName(std::move(u)), fOp(f)
   {
   }
 };
