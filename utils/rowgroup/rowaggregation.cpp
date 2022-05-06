@@ -3257,7 +3257,7 @@ void RowAggregationUM::fixConstantAggregate()
     {
       if (fFunctionCols[k]->fAggFunction == ROWAGG_CONSTANT)
       {
-        if (j->fIsNull || rowCnt == 0)
+        if (j->isNull() || rowCnt == 0)
           doNullConstantAggregate(*j, k);
         else
           doNotNullConstantAggregate(*j, k);

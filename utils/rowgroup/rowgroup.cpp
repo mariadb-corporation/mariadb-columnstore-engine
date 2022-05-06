@@ -1616,7 +1616,7 @@ RGData RowGroup::duplicate()
   return ret;
 }
 
-void Row::setStringField(const std::string& val, uint32_t colIndex)
+void Row::setStringField(const NullString& val, uint32_t colIndex)
 {
   uint64_t offset;
   uint64_t length;
@@ -1629,7 +1629,7 @@ void Row::setStringField(const std::string& val, uint32_t colIndex)
 
   if (inStringTable(colIndex))
   {
-    offset = strings->storeString((const uint8_t*)val.data(), length);
+    offset = strings->storeString((const uint8_t*)val.str(), length);
     *((uint64_t*)&data[offsets[colIndex]]) = offset;
     //		cout << " -- stored offset " << *((uint32_t *) &data[offsets[colIndex]])
     //				<< " length " << *((uint32_t *) &data[offsets[colIndex] + 4])
@@ -1637,7 +1637,8 @@ void Row::setStringField(const std::string& val, uint32_t colIndex)
   }
   else
   {
-    memcpy(&data[offsets[colIndex]], val.data(), length);
+    idbassert(!val.isNull());
+    memcpy(&data[offsets[colIndex]], val.str(), length);
     memset(&data[offsets[colIndex] + length], 0, offsets[colIndex + 1] - (offsets[colIndex] + length));
   }
 }
