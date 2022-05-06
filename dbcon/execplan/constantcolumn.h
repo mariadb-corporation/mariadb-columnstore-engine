@@ -111,6 +111,10 @@ class ConstantColumn : public ReturnedColumn
   {
     fConstval = constval;
   }
+  inline void constval(const std::string& constval)
+  {
+    fConstval.assign(constval);
+  }
   /**
    * accessor
    */
@@ -203,7 +207,7 @@ class ConstantColumn : public ReturnedColumn
 
   bool isNull()
   {
-    return fType == NULLDATA;
+    return fType == NULLDATA || fConstVal.isNull();
   }
 
  private:
