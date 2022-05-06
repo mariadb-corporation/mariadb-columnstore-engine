@@ -1497,7 +1497,7 @@ bool optimizeIdbPatitionSimpleFilter(SimpleFilter* sf, JobStepVector& jsv, JobIn
 
   // make sure the cc has 3 tokens
   vector<string> cv;
-  boost::split(cv, cc->constval(), boost::is_any_of("."));
+  boost::split(cv, cc->constval().safeString(""), boost::is_any_of("."));
 
   if (cv.size() != 3)
     return false;
@@ -1572,7 +1572,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
       return doExpressionFilter(sf, jobInfo);
     }
 
-    string constval(cc->constval());
+    utils::NullString constval(cc->constval());
 
     CalpontSystemCatalog::OID dictOid = 0;
     CalpontSystemCatalog::ColType ct = sc->colType();
@@ -1614,7 +1614,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
         pds->cardinality(sc->cardinality());
 
         // Add the filter
-        pds->addFilter(cop, constval);
+        pds->addFilter(cop, constval.safeString(""));
 
         // data list for pcolstep output
         AnyDataListSPtr spdl1(new AnyDataList());
@@ -1677,7 +1677,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
         pds->cardinality(sc->cardinality());
 
         // Add the filter
-        pds->addFilter(cop, constval);
+        pds->addFilter(cop, constval.safeString(""));
 
         // save for expression transformation
         pds->addFilter(sf);
@@ -1764,7 +1764,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
       try
       {
         bool isNull = ConstantColumn::NULLDATA == cc->type();
-        convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value);
+        convertValueNum(constval.safeString(""), ct, isNull, rf, jobInfo.timeZone, value);
 
         if (ct.colDataType == CalpontSystemCatalog::FLOAT && !isNull)
         {
@@ -1803,9 +1803,9 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
       bool isNull = ConstantColumn::NULLDATA == cc->type();
 
       if (ct.isWideDecimalType())
-        convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value128);
+        convertValueNum(constval.safeString(""), ct, isNull, rf, jobInfo.timeZone, value128);
       else
-        convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value);
+        convertValueNum(constval.safeString(""), ct, isNull, rf, jobInfo.timeZone, value);
 
       if (ct.colDataType == CalpontSystemCatalog::FLOAT && !isNull)
       {
@@ -1826,7 +1826,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 
       if (jobInfo.trace)
         cout << "doSimpleFilter Emit pCol for SimpleColumn op ConstantColumn = " << value << " ("
-             << cc->constval() << ')' << endl;
+             << cc->constval().safeString() << ')' << endl;
 
       if (sf->indexFlag() == 0)
       {
@@ -2713,7 +2713,7 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
           if (ConstantColumn::NULLDATA == cc->type() && (opeq == *sop || opne == *sop))
             cop = COMPARE_NIL;
 
-          string value = cc->constval();
+          string value = cc->constval().safeString("");
           // Because, on a filter, we want to compare ignoring trailing spaces
           boost::algorithm::trim_right_if(value, boost::is_any_of(" "));
 
@@ -2797,7 +2797,7 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
           if (ConstantColumn::NULLDATA == cc->type() && (opeq == *sop || opne == *sop))
             cop = COMPARE_NIL;
 
-          string value = cc->constval();
+          string value = cc->constval().safeString("");
           // Because, on a filter, we want to compare ignoring trailing spaces
           boost::algorithm::trim_right_if(value, boost::is_any_of(" "));
 
@@ -2905,7 +2905,7 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
           int8_t cop = op2num(sop);
           int64_t value = 0;
           int128_t value128 = 0;
-          string constval = cc->constval();
+          string constval = cc->constval().safeString("");
 
           // @bug 1151 string longer than colwidth of char/varchar.
           uint8_t rf = 0;
@@ -2993,7 +2993,7 @@ const JobStepVector doFunctionFilter(const ParseTree* n, JobInfo& jobInfo)
         if (cc)
         {
           vector<string> cv;
-          boost::split(cv, cc->constval(), boost::is_any_of("."));
+          boost::split(cv, cc->constval().safeString(""), boost::is_any_of("."));
 
           if (cv.size() == 3)
           {
@@ -3045,7 +3045,7 @@ const JobStepVector doFunctionFilter(const ParseTree* n, JobInfo& jobInfo)
 
         if (cc)
         {
-          constParms[0].push_back(cc->constval());
+          constParms[0].push_back(cc->constval().safeString(""));
           constParmsCount++;
         }
       }
