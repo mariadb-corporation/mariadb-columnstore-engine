@@ -1,7 +1,7 @@
 local events = ['pull_request', 'cron'];
 
 local platforms = {
-  develop: ['centos:7', 'rockylinux:8', 'debian:10', 'ubuntu:20.04'],
+  develop: ['ubuntu:22.04'],
   'develop-6': ['centos:7', 'rockylinux:8', 'debian:10', 'ubuntu:20.04'],
   'develop-5': ['centos:7', 'rockylinux:8', 'debian:10', 'ubuntu:20.04'],
 };
@@ -55,6 +55,7 @@ local platformMap(platform, arch) =
     'rockylinux:8': rockylinux8_powertools + ' && ' + centos8_build_deps + ' && dnf ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=rockylinux8 && make -j$(nproc) package',
     'debian:10': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=buster' debian/autobake-deb.sh",
     'ubuntu:20.04': ubuntu20_04_deps + ' && ' + deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=focal' debian/autobake-deb.sh",
+    'ubuntu:22.04': deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=jammy' debian/autobake-deb.sh",
   };
   platform_map[platform];
 
@@ -67,6 +68,7 @@ local testRun(platform) =
     'rockylinux:8': 'ctest3 -R columnstore: -j $(nproc) --output-on-failure',
     'debian:10': 'cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure',
     'ubuntu:20.04': 'cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure',
+    'ubuntu:22.04': 'cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure',
   };
   platform_map[platform];
 
@@ -80,6 +82,7 @@ local testPreparation(platform) =
     'debian:10': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
     'ubuntu:18.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev  libsnappy-dev cmake g++',
     'ubuntu:20.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
+    'ubuntu:22.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
   };
   platform_map[platform];
 
