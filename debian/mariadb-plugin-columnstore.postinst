@@ -3,6 +3,7 @@
 set -e
 
 # Install ColumnStore
-columnstore-post-install install
+touch /var/log/columnstore-post-install.log
+columnstore-post-install install > /var/log/columnstore-post-install.log 2>&1
 
 #DEBHELPER#

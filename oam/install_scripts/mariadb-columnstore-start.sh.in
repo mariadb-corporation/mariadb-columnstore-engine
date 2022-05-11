@@ -7,6 +7,8 @@
 exec {fd_lock}>@ENGINE_DATADIR@/storagemanager/storagemanager-lock
 flock -n "$fd_lock" || exit 0
 
+ls /var/lib/columnstore/data1/systemFiles/dbrm -la
+
 # pass in arg of 1 to start DBRM_Worker1
 /bin/systemctl start mcs-workernode@1.service
 /bin/systemctl start mcs-controllernode
