@@ -3461,7 +3461,7 @@ void RowAggregationUM::doNullConstantAggregate(const ConstantAggData& aggData, u
 
     default:
     {
-      utils::NullString nullstr
+      utils::NullString nullstr;
       fRow.setStringField(nullstr, colOut);
     }
     break;
