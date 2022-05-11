@@ -396,7 +396,7 @@ public:
     if (UNLIKELY(fd < 0))
       return errno;
 
-    struct stat st{};
+    struct stat st;
     fstat(fd, &st);
     size_t sz = st.st_size;
     std::vector<char>* tmpbuf;
@@ -2223,7 +2223,7 @@ void RowAggStorage::loadGeneration(uint16_t gen,
         logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errno)),
                              logging::ERR_DISKAGG_FILEIO_ERROR);
   }
-  struct stat st{};
+  struct stat st;
   fstat(fd, &st);
   bs.needAtLeast(st.st_size);
   bs.restart();
