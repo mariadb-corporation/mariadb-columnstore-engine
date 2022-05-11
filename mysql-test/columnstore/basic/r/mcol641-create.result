@@ -62,11 +62,11 @@ test_mcol641_create	cs4	d3	decimal	8	2	NULL	18	18
 CREATE TABLE cs5(d1 DECIMAL(39)) ENGINE=columnstore;
 ERROR HY000: Internal error: CAL0009: (3)Create table failed due to  Syntax error: The maximum precision (total number of digits) that can be specified is 38  
 CREATE TABLE cs5(d1 DECIMAL(38,39)) ENGINE=columnstore;
-ERROR 42000: Too big scale 39 specified for 'd1'. Maximum is 38
+Got one of the listed errors
 ALTER TABLE cs1 ADD COLUMN d10 DECIMAL(40);
 ERROR HY000: Internal error: CAL0001: Alter table Failed:  AlterTableProcessor::addColumn Syntax error: The maximum precision (total number of digits) that can be specified is 38  
 ALTER TABLE cs1 ADD COLUMN d11 DECIMAL(38,40);
-ERROR 42000: Too big scale 40 specified for 'd11'. Maximum is 38
+Got one of the listed errors
 DROP TABLE cs1;
 DROP TABLE cs2;
 DROP TABLE cs3;

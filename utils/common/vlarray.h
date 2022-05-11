@@ -16,13 +16,18 @@
    MA 02110-1301, USA. */
 #pragma once
 
+#include <cstddef>
+#include <stdexcept>
+#include <type_traits>
+
+
 namespace utils
 {
-template <typename T, size_t SIZE = 64>
+template <typename T, int SIZE = 64>
 class VLArray
 {
  public:
-  VLArray(size_t sz) : sz(sz), stack_storage(NULL), dyn_storage(NULL), ptr(NULL)
+  VLArray(int sz) : sz(sz), stack_storage(NULL), dyn_storage(NULL), ptr(NULL)
   {
     if (sz > SIZE)
     {
@@ -36,9 +41,9 @@ class VLArray
     }
   }
 
-  VLArray(size_t sz, const T& initval) : VLArray(sz)
+  VLArray(int sz, const T& initval) : VLArray(sz)
   {
-    for (size_t i = 0; i < sz; ++i)
+    for (int i = 0; i < sz; ++i)
       ptr[i] = initval;
   }
 
@@ -58,13 +63,13 @@ class VLArray
       // we cannot use `delete [] stack_storage` here so call d-tors explicitly
       if (!std::is_trivially_destructible<T>::value)
       {
-        for (size_t i = 0; i < sz; ++i)
+        for (int i = 0; i < sz; ++i)
           stack_storage[i].~T();
       }
     }
   }
 
-  size_t size() const
+  int size() const
   {
     return sz;
   }
@@ -77,16 +82,16 @@ class VLArray
     return ptr;
   }
 
-  const T& operator[](size_t i) const
+  const T& operator[](int i) const
   {
     return ptr[i];
   }
-  T& operator[](size_t i)
+  T& operator[](int i)
   {
     return ptr[i];
   }
 
-  const T& at(size_t i) const
+  const T& at(int i) const
   {
     if (i >= sz)
     {
@@ -95,7 +100,7 @@ class VLArray
     return ptr[i];
   }
 
-  T& at(size_t i)
+  T& at(int i)
   {
     if (i >= sz)
     {
@@ -114,7 +119,7 @@ class VLArray
   }
 
  private:
-  const size_t sz;
+  const int sz;
   alignas(T) char stack[SIZE * sizeof(T)];
   T* stack_storage;
   T* dyn_storage;
