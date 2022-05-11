@@ -29,7 +29,7 @@ local server_remote_map = {
 
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
 
-local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_XPAND=NO -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO ' +
+local cmakeflags = '-DCMAKE_BUILD_TYPE=Debug -DPLUGIN_COLUMNSTORE=YES -DPLUGIN_XPAND=NO -DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO ' +
                    '-DPLUGIN_TOKUDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
                    '-DWITH_EMBEDDED_SERVER=OFF -DWITH_WSREP=OFF ' +
                    '-DBUILD_CONFIG=mysql_release';
