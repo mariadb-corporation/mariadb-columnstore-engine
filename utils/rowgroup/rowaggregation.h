@@ -333,7 +333,7 @@ struct GroupConcat
   std::vector<std::pair<uint32_t, uint32_t>> fGroupCols;  // columns to concatenate, and position
   std::vector<std::pair<uint32_t, bool>> fOrderCols;      // columns to order by [asc/desc]
   std::string fSeparator;
-  std::vector<std::pair<std::string, uint32_t>> fConstCols;  // constant columns in group
+  std::vector<std::pair<utils::NullString, uint32_t>> fConstCols;  // constant columns in group
   bool fDistinct;
   uint64_t fSize;
 

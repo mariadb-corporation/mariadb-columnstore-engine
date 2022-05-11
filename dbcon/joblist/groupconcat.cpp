@@ -96,7 +96,8 @@ void GroupConcatInfo::prepGroupConcat(JobInfo& jobInfo)
       {
         key = getColumnKey(cols[j], jobInfo);
         fColumns.insert(key);
-        groupConcat->fGroupCols.push_back(make_pair(key, k++));
+	utils::NullString keyns(key);
+        groupConcat->fGroupCols.push_back(make_pair(keyns, k++));
       }
       else
       {
