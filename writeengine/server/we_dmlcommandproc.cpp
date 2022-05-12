@@ -246,7 +246,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
               if (colType.constraintType == CalpontSystemCatalog::NOTNULL_CONSTRAINT)
               {
-                if (isNULL && colType.defaultValue.empty())  // error out
+                if (isNULL && colType.defaultValue.isNull())  // error out
                 {
                   Message::Args args;
                   args.add(tableColName.column);
@@ -254,7 +254,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
                   rc = 1;
                   return rc;
                 }
-                else if (isNULL && !(colType.defaultValue.empty()))
+                else if (isNULL && !(colType.defaultValue.isNull()))
                 {
                   tmpStr.assign(colType.defaultValue);
                 }
@@ -347,7 +347,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
               if (colType.constraintType == CalpontSystemCatalog::NOTNULL_CONSTRAINT)
               {
-                if (isNULL && colType.defaultValue.empty())  // error out
+                if (isNULL && colType.defaultValue.isNull())  // error out
                 {
                   Message::Args args;
                   args.add(tableColName.column);
@@ -355,7 +355,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
                   rc = 1;
                   return rc;
                 }
-                else if (isNULL && !(colType.defaultValue.empty()))
+                else if (isNULL && !(colType.defaultValue.isNull()))
                 {
                   indata.assign(colType.defaultValue);
                   isNULL = false;
@@ -1103,7 +1103,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
 
               if (colType.constraintType == CalpontSystemCatalog::NOTNULL_CONSTRAINT)
               {
-                if (isNULL && colType.defaultValue.empty())  // error out
+                if (isNULL && colType.defaultValue.isiNull())  // error out
                 {
                   Message::Args args;
                   args.add(tableColName.column);
@@ -1111,7 +1111,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
                   rc = 1;
                   return rc;
                 }
-                else if (isNULL && !(colType.defaultValue.empty()))
+                else if (isNULL && !(colType.defaultValue.isNull()))
                 {
                   tmpStr.assign(colType.defaultValue);
                 }
@@ -1214,7 +1214,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
 
               if (colType.constraintType == CalpontSystemCatalog::NOTNULL_CONSTRAINT)
               {
-                if (isNULL && colType.defaultValue.empty())  // error out
+                if (isNULL && colType.defaultValue.isNull())  // error out
                 {
                   Message::Args args;
                   args.add(tableColName.column);
@@ -1222,7 +1222,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
                   rc = 1;
                   return rc;
                 }
-                else if (isNULL && !(colType.defaultValue.empty()))
+                else if (isNULL && !(colType.defaultValue.isNull()))
                 {
                   indata.assign(colType.defaultValue);
                   isNULL = false;
@@ -1678,7 +1678,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
 
             if (colType.constraintType == CalpontSystemCatalog::NOTNULL_CONSTRAINT)
             {
-              if (isNULL && colType.defaultValue.empty())  // error out
+              if (isNULL && colType.defaultValue.isNull())  // error out
               {
                 Message::Args args;
                 args.add(tableColName.column);
@@ -1686,7 +1686,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
                 rc = 1;
                 return rc;
               }
-              else if (isNULL && !(colType.defaultValue.empty()))
+              else if (isNULL && !(colType.defaultValue.isNull()))
               {
                 tmpStr.assign(colType.defaultValue);
               }
@@ -1987,7 +1987,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
 
             if (colType.constraintType == CalpontSystemCatalog::NOTNULL_CONSTRAINT)
             {
-              if (isNULL && colType.defaultValue.empty())  // error out
+              if (isNULL && colType.defaultValue.isNull())  // error out
               {
                 Message::Args args;
                 args.add(tableColName.column);
@@ -1995,9 +1995,9 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
                 rc = 1;
                 return rc;
               }
-              else if (isNULL && !(colType.defaultValue.empty()))
+              else if (isNULL && !(colType.defaultValue.isNull()))
               {
-                memcpy(&colValue, colType.defaultValue.c_str(), colType.defaultValue.length());
+                memcpy(&colValue, colType.defaultValue.str(), colType.defaultValue.length());
                 isNULL = false;
               }
             }
@@ -2891,7 +2891,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
 
               if (value.length() > (unsigned int)colType.colWidth)
               {
-                value = value.assign(value.safeStr("").substr(0, colType.colWidth));
+                value.assign(value.safeStr("").substr(0, colType.colWidth));
                 pushWarn = true;
 
                 if (!pushWarning)
@@ -2934,28 +2934,28 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
             case CalpontSystemCatalog::DATE:
             {
               intColVal = row.getUintField<4>(fetchColPos);
-              value = DataConvert::dateToString(intColVal);
+              value.assign(DataConvert::dateToString(intColVal));
               break;
             }
 
             case CalpontSystemCatalog::DATETIME:
             {
               intColVal = row.getUintField<8>(fetchColPos);
-              value = DataConvert::datetimeToString(intColVal, colType.precision);
+              value.assign(DataConvert::datetimeToString(intColVal, colType.precision));
               break;
             }
 
             case CalpontSystemCatalog::TIMESTAMP:
             {
               intColVal = row.getUintField<8>(fetchColPos);
-              value = DataConvert::timestampToString(intColVal, timeZone, colType.precision);
+              value.assign(DataConvert::timestampToString(intColVal, timeZone, colType.precision));
               break;
             }
 
             case CalpontSystemCatalog::TIME:
             {
               intColVal = row.getIntField<8>(fetchColPos);
-              value = DataConvert::timeToString(intColVal, colType.precision);
+              value.assign(DataConvert::timeToString(intColVal, colType.precision));
               break;
             }
 
@@ -2963,8 +2963,11 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
             case CalpontSystemCatalog::VARCHAR:
             {
               value = row.getStringField(fetchColPos);
-              unsigned i = strlen(value.c_str());
-              value = value.substr(0, i);
+	      if (!value.isNull())
+	      {
+                unsigned i = strlen(value.c_str());
+                value.assign(value.unsafeStringRef().substr(0, i));
+	      }
               break;
             }
 
@@ -2984,7 +2987,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
                 datatypes::Decimal dec(0, fetchColScales[fetchColPos],
                                        rowGroups[txnId]->getPrecision()[fetchColPos],
                                        row.getBinaryField<int128_t>(fetchColPos));
-                value = dec.toString(true);
+                value.assign(dec.toString(true));
                 break;
               }
             }
@@ -3018,13 +3021,13 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
                   else
                     os << intColVal;
 
-                  value = os.str();
+                  value.assign(os.str());
                 }
                 else
                 {
                   datatypes::Decimal dec(intColVal, fetchColScales[fetchColPos],
                                          rowGroups[txnId]->getPrecision()[fetchColPos]);
-                  value = dec.toString();
+                  value.assign(dec.toString());
                 }
               }
               break;
@@ -3048,7 +3051,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
               ostringstream os;
               //@Bug 3350 fix the precision.
               os << setprecision(7) << dl;
-              value = os.str();
+              value.assign(os.str());
               break;
             }
 
@@ -3068,7 +3071,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
               ostringstream os;
               //@Bug 3350 fix the precision.
               os << setprecision(16) << dl;
-              value = os.str();
+              value.assign(os.str());
               break;
             }
 
@@ -3082,7 +3085,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
               ostringstream os;
               //@Bug 3350 fix the precision.
               os << setprecision(19) << dll;
-              value = os.str();
+              value.assign(os.str());
               break;
             }
 
@@ -3091,7 +3094,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
               ostringstream os;
               intColVal = row.getUintField<8>(fetchColPos);
               os << intColVal;
-              value = os.str();
+              value.assign(os.str());
               break;
             }
           }
@@ -3120,7 +3123,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
           // trim the string if needed
           if (value.length() > (unsigned int)colType.colWidth)
           {
-            value = value.substr(0, colType.colWidth);
+            value.assign(value.safeStringRef().substr(0, colType.colWidth));
 
             if (!pushWarn)
               pushWarn = true;
@@ -3178,7 +3181,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
 
             if (value.length() > (unsigned int)colType.colWidth)
             {
-              value = value.substr(0, colType.colWidth);
+              value.assign(value.safeString("").substr(0, colType.colWidth));
               pushWarn = true;
 
               if (!pushWarning)
@@ -3222,11 +3225,11 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
         else
         {
           idbassert(!columnsUpdated[j]->get_DataVector()[0].isNull);
-          value = columnsUpdated[j]->get_DataVector()[0].safeString();
+          value = columnsUpdated[j]->get_DataVector()[0];
 
           if (value.length() > (unsigned int)colType.colWidth)
           {
-            value = value.substr(0, colType.colWidth);
+            value.assign(value.unsafeStringRef().substr(0, colType.colWidth));
             pushWarn = true;
 
             if (!pushWarning)
@@ -3279,7 +3282,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
           if (row.isNullValue(fetchColPos))
           {
             isNull = true;
-            value = "";
+            value.dropString();
           }
           else
           {
@@ -3290,28 +3293,28 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
               case CalpontSystemCatalog::DATE:
               {
                 intColVal = row.getUintField<4>(fetchColPos);
-                value = DataConvert::dateToString(intColVal);
+                value.assign(DataConvert::dateToString(intColVal));
                 break;
               }
 
               case CalpontSystemCatalog::DATETIME:
               {
                 intColVal = row.getUintField<8>(fetchColPos);
-                value = DataConvert::datetimeToString(intColVal, colType.precision);
+                value.assign(DataConvert::datetimeToString(intColVal, colType.precision));
                 break;
               }
 
               case CalpontSystemCatalog::TIMESTAMP:
               {
                 intColVal = row.getUintField<8>(fetchColPos);
-                value = DataConvert::timestampToString(intColVal, timeZone, colType.precision);
+                value.assign(DataConvert::timestampToString(intColVal, timeZone, colType.precision));
                 break;
               }
 
               case CalpontSystemCatalog::TIME:
               {
                 intColVal = row.getIntField<8>(fetchColPos);
-                value = DataConvert::timeToString(intColVal, colType.precision);
+                value.assign(DataConvert::timeToString(intColVal, colType.precision));
                 break;
               }
 
