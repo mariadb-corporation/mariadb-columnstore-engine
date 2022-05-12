@@ -1025,7 +1025,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
 
           if (constCol)
           {
-            columnAssignmentPtr->fScalarExpression = constCol->constval();
+            columnAssignmentPtr->fScalarExpression = constCol->constval().safeString("");
             isFromCol = false;
             columnAssignmentPtr->fFromCol = false;
           }
