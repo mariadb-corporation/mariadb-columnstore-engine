@@ -371,7 +371,7 @@ void WindowFunctionType::setValue<utils::NullString>(int ct, int64_t b, int64_t 
   uint64_t i = fFieldIndex[0];
 
   if (v == NULL)
-    v = (string*)getNullValueByType(ct, i);
+    v = (utils::NullString*)getNullValueByType(ct, i);
 
   for (int64_t j = b; j <= e; j++)
   {
