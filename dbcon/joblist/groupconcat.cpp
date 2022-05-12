@@ -415,7 +415,7 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
 {
   const CalpontSystemCatalog::ColDataType* types = row.getColTypes();
   vector<uint32_t>::iterator i = fConcatColumns.begin();
-  vector<pair<string, uint32_t> >::iterator j = fConstCols.begin();
+  auto j = fConstCols.begin();
 
   uint64_t groupColCount = fConcatColumns.size() + fConstCols.size();
 
@@ -678,7 +678,7 @@ const string GroupConcator::toString() const
   oss << "GroupConcat size-" << fGroupConcatLen;
   oss << "Concat   cols: ";
   vector<uint32_t>::const_iterator i = fConcatColumns.begin();
-  vector<pair<string, uint32_t> >::const_iterator j = fConstCols.begin();
+  auto j = fConstCols.begin();
   uint64_t groupColCount = fConcatColumns.size() + fConstCols.size();
 
   for (uint64_t k = 0; k < groupColCount; k++)

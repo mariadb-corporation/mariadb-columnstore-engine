@@ -1497,7 +1497,7 @@ bool optimizeIdbPatitionSimpleFilter(SimpleFilter* sf, JobStepVector& jsv, JobIn
 
   // make sure the cc has 3 tokens
   vector<string> cv;
-  auto str = cc->constantval().safeString("");
+  auto str = cc->constval().safeString("");
   boost::split(cv, str, boost::is_any_of("."));
 
   if (cv.size() != 3)
