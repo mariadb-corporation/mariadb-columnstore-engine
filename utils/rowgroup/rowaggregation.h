@@ -312,11 +312,13 @@ struct ConstantAggData
 
   ConstantAggData(utils::NullString v, RowAggFunctionType f, bool n) : fConstValue(v), fOp(f)
   {
+    idbassert(n == v.isNull());
   }
 
-  ConstantAggData(utils::NullString v, std::string u, RowAggFunctionType f)
-   : fConstValue(v), fUDAFName(std::move(u)), fOp(f)
+  ConstantAggData(utils::NullString v, std::string u, RowAggFunctionType f, bool n)
+   : fConstValue(v), fUDAFName(u), fOp(f)
   {
+    idbassert(n == v.isNull());
   }
   bool isNull() const
   {

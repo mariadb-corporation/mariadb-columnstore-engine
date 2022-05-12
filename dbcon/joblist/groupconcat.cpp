@@ -96,8 +96,7 @@ void GroupConcatInfo::prepGroupConcat(JobInfo& jobInfo)
       {
         key = getColumnKey(cols[j], jobInfo);
         fColumns.insert(key);
-	utils::NullString keyns(key);
-        groupConcat->fGroupCols.push_back(make_pair(keyns, k++));
+        groupConcat->fGroupCols.push_back(make_pair(key, k++));
       }
       else
       {
@@ -408,7 +407,7 @@ void GroupConcator::initialize(const rowgroup::SP_GroupConcat& gcc)
   fConstantLen = strlen(gcc->fSeparator.c_str());
 
   for (uint64_t i = 0; i < fConstCols.size(); i++)
-    fConstantLen += strlen(fConstCols[i].first.c_str());
+    fConstantLen += strlen(fConstCols[i].first.str());
 }
 
 void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
@@ -423,7 +422,7 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
   {
     if (j != fConstCols.end() && k == j->second)
     {
-      oss << j->first;
+      oss << j->first.safeString();
       j++;
       continue;
     }
