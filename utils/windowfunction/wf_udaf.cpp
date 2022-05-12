@@ -450,11 +450,11 @@ bool WF_udaf::dropValues(int64_t b, int64_t e)
           case CalpontSystemCatalog::TEXT:
           case CalpontSystemCatalog::BLOB:
           {
-            string valIn;
+            utils::NullString valIn;
 
             if (cc)
             {
-              valIn = cc->getStrVal(fRow, isNull).safeString(""); // XXX: we probably need to change Distinctmap.
+              valIn = cc->getStrVal(fRow, isNull); // XXX: we probably need to change Distinctmap.
             }
             else
             {
