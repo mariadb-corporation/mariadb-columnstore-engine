@@ -306,13 +306,13 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
                 }
                 else if (isNULL && !(colType.defaultValue.isNull()))
                 {
-                  tmpStr.assign(colType.defaultValue);
+                  tmpStr = colType.defaultValue;
                 }
               }
 
               if (tmpStr.length() > (unsigned int)colType.colWidth)
               {
-                tmpStr.assign(tmpStr.unsafeStringRef("").substr(0, colType.colWidth));
+                tmpStr.assign(tmpStr.unsafeStringRef().substr(0, colType.colWidth));
 
                 if (!pushWarning)
                 {
@@ -407,7 +407,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
                 }
                 else if (isNULL && !(colType.defaultValue.isNull()))
                 {
-                  indata.assign(colType.defaultValue);
+                  indata = colType.defaultValue;
                   isNULL = false;
                 }
               }
@@ -1217,7 +1217,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
 
               if (colType.constraintType == CalpontSystemCatalog::NOTNULL_CONSTRAINT)
               {
-                if (isNULL && colType.defaultValue.isiNull())  // error out
+                if (isNULL && colType.defaultValue.isNull())  // error out
                 {
                   Message::Args args;
                   args.add(tableColName.column);
@@ -1227,7 +1227,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
                 }
                 else if (isNULL && !(colType.defaultValue.isNull()))
                 {
-                  tmpStr.assign(colType.defaultValue);
+                  tmpStr = colType.defaultValue;
                 }
               }
 
@@ -1338,7 +1338,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
                 }
                 else if (isNULL && !(colType.defaultValue.isNull()))
                 {
-                  indata.assign(colType.defaultValue);
+                  indata = colType.defaultValue;
                   isNULL = false;
                 }
               }
@@ -1809,7 +1809,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
               }
               else if (isNULL && !(colType.defaultValue.isNull()))
               {
-                tmpStr.assign(colType.defaultValue);
+                tmpStr = colType.defaultValue;
               }
             }
 
@@ -2995,7 +2995,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
       {
         for (unsigned i = 0; i < rowsThisRowgroup; i++)
         {
-          value.reset();
+          value.dropString();
           rowGroups[txnId]->getRow(i, &row);
 
           if (row.isNullValue(fetchColPos))
@@ -3011,11 +3011,11 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
             }
             else if (colType.defaultValue.length() > 0)
             {
-              value.assign(colType.defaultValue);
+              value = colType.defaultValue;
 
               if (value.length() > (unsigned int)colType.colWidth)
               {
-                value.assign(value.safeStr("").substr(0, colType.colWidth));
+                value.assign(value.safeString("").substr(0, colType.colWidth));
                 pushWarn = true;
 
                 if (!pushWarning)
@@ -3028,7 +3028,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
               }
 
               WriteEngine::DctnryTuple dctTuple;
-              dctTuple.sigValue = (unsigned char*)value.c_str();
+              dctTuple.sigValue = (unsigned char*)value.str();
               dctTuple.sigSize = value.length();
               dctTuple.isNull = false;
 
@@ -3226,27 +3226,30 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
 
           if (funcScale != 0)
           {
-            string::size_type pos = value.find_first_of(".");  // decimal point
+            string str = value.safeString("");
+            string::size_type pos = str.find_first_of(".");  // decimal point
 
-            if (pos >= value.length())
-              value.insert(value.length(), ".");
+            if (pos >= str.length())
+              str.insert(str.length(), ".");
 
             // padding 0 if needed
-            pos = value.find_first_of(".");
-            uint32_t digitsAfterPoint = value.length() - pos - 1;
+            pos = str.find_first_of(".");
+            uint32_t digitsAfterPoint = str.length() - pos - 1;
 
             if (digitsAfterPoint < funcScale)
             {
               for (uint32_t i = 0; i < (funcScale - digitsAfterPoint); i++)
-                value += "0";
+                str += "0";
             }
+
+	    value.assign(str);
           }
 
           // check data length
           // trim the string if needed
           if (value.length() > (unsigned int)colType.colWidth)
           {
-            value.assign(value.safeStringRef().substr(0, colType.colWidth));
+            value.assign(value.unsafeStringRef().substr(0, colType.colWidth));
 
             if (!pushWarn)
               pushWarn = true;
@@ -3259,7 +3262,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
           }
 
           WriteEngine::DctnryTuple dctTuple;
-          dctTuple.sigValue = (unsigned char*)value.c_str();
+          dctTuple.sigValue = (unsigned char*)value.str();
           dctTuple.sigSize = value.length();
           dctTuple.isNull = false;
 
@@ -3347,7 +3350,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
         }
         else
         {
-          idbassert(!columnsUpdated[j]->get_DataVector()[0].isNull);
+          idbassert(!columnsUpdated[j]->get_DataVector()[0].isNull());
           value = columnsUpdated[j]->get_DataVector()[0];
 
           if (value.length() > (unsigned int)colType.colWidth)
@@ -3365,7 +3368,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
           }
 
           WriteEngine::DctnryTuple dctTuple;
-          dctTuple.sigValue = (unsigned char*)value.c_str();
+          dctTuple.sigValue = (unsigned char*)value.str();
           dctTuple.sigSize = value.length();
           dctTuple.isNull = false;
           error = fWEWrapper.tokenize(txnId, dctTuple, colType.compressionType);
@@ -3448,7 +3451,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
 		if (!value.isNull())
 		{
                   unsigned i = strlen(value.str());
-                  value.assign(value.safeStr().substr(0, i)); // XXX: why???
+                  value.assign(value.safeString().substr(0, i)); // XXX: why???
 		}
                 break;
               }
@@ -3457,7 +3460,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
               case CalpontSystemCatalog::BLOB:
               case CalpontSystemCatalog::TEXT:
               {
-                value.assign(row.getVarBinaryField(fetchColPos), row.getVarBinaryFieldLength(fetchColPos));
+                value.assign(row.getVarBinaryField(fetchColPos), row.getVarBinaryLength(fetchColPos));
                 break;
               }
 
