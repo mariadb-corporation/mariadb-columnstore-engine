@@ -2456,6 +2456,15 @@ int64_t DataConvert::stringToTimestamp(const string& data, long timeZone)
     return -1;
 }
 
+int64_t DataConvert::stringToTimestamp(const utils::NullString& data, long timeZone)
+{
+  if (data.isNull())
+  {
+    return -1;
+  }
+  return stringToTimestamp(data.unsafeStringRef(), timeZone);
+}
+
 /* This is really painful and expensive b/c it seems the input is not normalized or
 sanitized.  That should really be done on ingestion. */
 int64_t DataConvert::intToDate(int64_t data)
