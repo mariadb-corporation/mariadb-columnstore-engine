@@ -1497,7 +1497,8 @@ bool optimizeIdbPatitionSimpleFilter(SimpleFilter* sf, JobStepVector& jsv, JobIn
 
   // make sure the cc has 3 tokens
   vector<string> cv;
-  boost::split(cv, cc->constval().safeString(""), boost::is_any_of("."));
+  auto str = cc->constantval().safeString("");
+  boost::split(cv, str, boost::is_any_of("."));
 
   if (cv.size() != 3)
     return false;
@@ -2993,7 +2994,8 @@ const JobStepVector doFunctionFilter(const ParseTree* n, JobInfo& jobInfo)
         if (cc)
         {
           vector<string> cv;
-          boost::split(cv, cc->constval().safeString(""), boost::is_any_of("."));
+	  auto str = cc->constval().safeString("");
+          boost::split(cv, str, boost::is_any_of("."));
 
           if (cv.size() == 3)
           {

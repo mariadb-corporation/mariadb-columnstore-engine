@@ -122,7 +122,7 @@ class GroupConcator
   virtual int64_t lengthEstimate(const rowgroup::Row&);
 
   std::vector<uint32_t> fConcatColumns;
-  std::vector<std::pair<std::string, uint32_t> > fConstCols;
+  std::vector<std::pair<utils::NullString, uint32_t> > fConstCols;
   int64_t fCurrentLength;
   int64_t fGroupConcatLen;
   int64_t fConstantLen;
