@@ -149,14 +149,14 @@ static int is_columnstore_columns_fill(THD* thd, TABLE_LIST* tables, COND* cond)
       table->field[8]->store(ct.colWidth);
       table->field[9]->store(ct.colPosition);
 
-      if (ct.defaultValue.empty())
+      if (ct.defaultValue.isNull())
       {
         table->field[10]->set_null();
       }
       else
       {
         table->field[10]->set_notnull();
-        table->field[10]->store(ct.defaultValue.c_str(), ct.defaultValue.length(), cs);
+        table->field[10]->store(ct.defaultValue.str(), ct.defaultValue.length(), cs);
       }
 
       table->field[11]->store(ct.autoincrement);

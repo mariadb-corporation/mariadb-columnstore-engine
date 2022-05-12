@@ -755,7 +755,7 @@ vector<string> getOnUpdateTimestampColumns(string& schema, string& tableName, in
         {
           rowGroup->getRow(i, &row);
           // we are only fetching a single column
-          returnVal.push_back(row.getStringField(0));
+          returnVal.push_back(row.getStringField(0).safeString(""));
         }
       }
       else
