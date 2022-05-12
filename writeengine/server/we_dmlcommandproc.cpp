@@ -3319,8 +3319,11 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
               case CalpontSystemCatalog::VARCHAR:
               {
                 value = row.getStringField(fetchColPos);
-                unsigned i = strlen(value.c_str());
-                value.assign(value.safeStr().substr(0, i));
+		if (!value.isNull())
+		{
+                  unsigned i = strlen(value.str());
+                  value.assign(value.safeStr().substr(0, i)); // XXX: why???
+		}
                 break;
               }
 
@@ -3374,13 +3377,13 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
                     else
                       os << intColVal;
 
-                    value = os.str();
+                    value.assign(os.str());
                   }
                   else
                   {
                     datatypes::Decimal dec(intColVal, fetchColScales[fetchColPos],
                                            rowGroups[txnId]->getPrecision()[fetchColPos]);
-                    value = dec.toString();
+                    value.assign(dec.toString());
                   }
                 }
                 break;
@@ -3404,7 +3407,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
                 ostringstream os;
                 //@Bug 3350 fix the precision.
                 os << setprecision(7) << dl;
-                value = os.str();
+                value.assign(os.str());
                 break;
               }
 
@@ -3424,7 +3427,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
                 ostringstream os;
                 //@Bug 3350 fix the precision.
                 os << setprecision(16) << dl;
-                value = os.str();
+                value.assign(os.str());
                 break;
               }
 
@@ -3438,7 +3441,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
                 ostringstream os;
                 //@Bug 3350 fix the precision.
                 os << setprecision(19) << dll;
-                value = os.str();
+                value.assign(os.str());
                 break;
               }
 
@@ -3447,7 +3450,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
                 ostringstream os;
                 intColVal = row.getUintField<8>(fetchColPos);
                 os << intColVal;
-                value = os.str();
+                value.assign(os.str());
                 break;
               }
             }
@@ -3457,24 +3460,26 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
 
           if (funcScale != 0)
           {
-            string::size_type pos = value.find_first_of(".");  // decimal point
+            string str = value.safeString("");
+            string::size_type pos = str.find_first_of(".");  // decimal point
 
-            if (pos >= value.length())
-              value.insert(value.length(), ".");
+            if (pos >= str.length())
+              str.insert(str.length(), ".");
 
             // padding 0 if needed
-            pos = value.find_first_of(".");
-            uint32_t digitsAfterPoint = value.length() - pos - 1;
+            pos = str.find_first_of(".");
+            uint32_t digitsAfterPoint = str.length() - pos - 1;
 
             if (digitsAfterPoint < funcScale)
             {
               for (uint32_t i = 0; i < (funcScale - digitsAfterPoint); i++)
-                value += "0";
+                str += "0";
             }
+	    value.assign(str);
           }
 
           // Check NOT NULL constraint and default value
-          if ((isNull) && (colType.defaultValue.length() <= 0) &&
+          if ((isNull) && (colType.defaultValue.isNull()) &&
               (colType.constraintType == CalpontSystemCatalog::NOTNULL_CONSTRAINT))
           {
             rc = 1;
@@ -3483,7 +3488,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
             err = IDBErrorInfo::instance()->errorMsg(ERR_NOT_NULL_CONSTRAINTS, args);
             return rc;
           }
-          else if ((isNull) && (colType.defaultValue.length() > 0))
+          else if ((isNull) && (!colType.defaultValue.isNull()))
           {
             isNull = false;
             bool oneWarn = false;
@@ -3491,14 +3496,14 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
             try
             {
               datavalue =
-                  colType.convertColumnData(colType.defaultValue, pushWarn, timeZone, isNull, false, false);
+                  colType.convertColumnData(colType.defaultValue.safeString(""), pushWarn, timeZone, isNull, false, false);
             }
             catch (exception&)
             {
               //@Bug 2624. Error out on conversion failure
               rc = 1;
               Message::Args args;
-              args.add(string("'") + colType.defaultValue + string("'"));
+              args.add(string("'") + colType.defaultValue.safeString() + string("'"));
               err = IDBErrorInfo::instance()->errorMsg(ERR_NON_NUMERIC_DATA, args);
             }
 
@@ -3523,14 +3528,14 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
           {
             try
             {
-              datavalue = colType.convertColumnData(value, pushWarn, timeZone, isNull, false, false);
+              datavalue = colType.convertColumnData(value.safeString(""), pushWarn, timeZone, isNull, false, false);
             }
             catch (exception&)
             {
               //@Bug 2624. Error out on conversion failure
               rc = 1;
               Message::Args args;
-              args.add(string("'") + value + string("'"));
+              args.add(string("'") + value.safeString() + string("'"));
               err = IDBErrorInfo::instance()->errorMsg(ERR_NON_NUMERIC_DATA, args);
               return rc;
             }
@@ -3674,14 +3679,14 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
             try
             {
               datavalue =
-                  colType.convertColumnData(colType.defaultValue, pushWarn, timeZone, isNull, false, false);
+                  colType.convertColumnData(colType.defaultValue.safeString(), pushWarn, timeZone, isNull, false, false);
             }
             catch (exception&)
             {
               //@Bug 2624. Error out on conversion failure
               rc = 1;
               Message::Args args;
-              args.add(string("'") + colType.defaultValue + string("'"));
+              args.add(string("'") + colType.defaultValue.safeString() + string("'"));
               err = IDBErrorInfo::instance()->errorMsg(ERR_NON_NUMERIC_DATA, args);
             }
 
