@@ -129,7 +129,7 @@ boost::shared_ptr<WindowFunctionType> WF_percentile<T>::makeFunction(int id, con
       {
         if (id == WF__PERCENTILE_DISC)
         {
-          func.reset(new WF_percentile<string>(id, name));
+          func.reset(new WF_percentile<utils::NullString>(id, name));
         }
         else
         {
