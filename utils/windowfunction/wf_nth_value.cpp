@@ -120,7 +120,7 @@ boost::shared_ptr<WindowFunctionType> WF_nth_value<T>::makeFunction(int id, cons
 
     default:
     {
-      func.reset(new WF_nth_value<string>(id, name));
+      func.reset(new WF_nth_value<utils::NullString>(id, name));
       break;
     }
   }
