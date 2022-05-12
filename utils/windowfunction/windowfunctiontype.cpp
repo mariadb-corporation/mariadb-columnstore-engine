@@ -363,7 +363,7 @@ void WindowFunctionType::setValue<utils::NullString>(uint64_t i, utils::NullStri
 
 // MCOL-1676 Need a separate specialization for string now.
 template <>
-void WindowFunctionType::setValue<string>(int ct, int64_t b, int64_t e, int64_t c, string* v)
+void WindowFunctionType::setValue<utils::NullString>(int ct, int64_t b, int64_t e, int64_t c, utils::NullString* v)
 {
   if (c != WF__BOUND_ALL)
     b = e = c;
@@ -660,7 +660,7 @@ void* WindowFunctionType::getNullValueByType(int ct, int pos)
   //    static uint64_t char2Null     = joblist::CHAR2NULL;
   //    static uint64_t char4Null     = joblist::CHAR4NULL;
   //    static uint64_t char8Null     = joblist::CHAR8NULL;
-  static string stringNull("");
+  static utils::NullString stringNull;
   static int128_t int128Null;  // Set at runtime;
 
   void* v = NULL;
@@ -692,6 +692,7 @@ void* WindowFunctionType::getNullValueByType(int ct, int pos)
 
     case CalpontSystemCatalog::CHAR:
     case CalpontSystemCatalog::VARCHAR:
+    case CalpontSystemCatalog::VARBINARY: // XXX: I guess it is right to do that. TODO: we can add TEXT here too.
     {
 //			uint64_t len = fRow.getColumnWidth(pos);
 #if 0
@@ -764,7 +765,6 @@ void* WindowFunctionType::getNullValueByType(int ct, int pos)
 
     case CalpontSystemCatalog::LONGDOUBLE: v = &longDoubleNull; break;
 
-    case CalpontSystemCatalog::VARBINARY:
     default:
       std::ostringstream oss;
       oss << "not supported data type: " << colType2String[ct];
