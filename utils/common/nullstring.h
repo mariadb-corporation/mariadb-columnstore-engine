@@ -145,6 +145,24 @@ class NullString
     // fall to std::string equality.
     return (*mStrPtr) == (*a.mStrPtr);
   }
+  bool operator <(const NullString& a) const
+  {
+    if (!mStrPtr || !a.mStrPtr)
+    {
+      return false;
+    }
+    // fall to std::string equality.
+    return (*mStrPtr) < (*a.mStrPtr);
+  }
+  bool operator >(const NullString& a) const
+  {
+    if (!mStrPtr || !a.mStrPtr)
+    {
+      return false;
+    }
+    // fall to std::string equality.
+    return (*mStrPtr) > (*a.mStrPtr);
+  }
 };
 } // namespace utils.
 
