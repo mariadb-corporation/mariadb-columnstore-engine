@@ -2965,7 +2965,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
               value = row.getStringField(fetchColPos);
 	      if (!value.isNull())
 	      {
-                unsigned i = strlen(value.c_str());
+                unsigned i = strlen(value.str());
                 value.assign(value.unsafeStringRef().substr(0, i));
 	      }
               break;
@@ -2975,7 +2975,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
             case CalpontSystemCatalog::BLOB:
             case CalpontSystemCatalog::TEXT:
             {
-              value.assign(row.getVarBinaryField(fetchColPos), row.getVarBinaryFieldLength(fetchColPos));
+              value.assign(row.getVarBinaryField(fetchColPos), row.getVarBinaryLength(fetchColPos));
               break;
             }
 
@@ -3197,7 +3197,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
             }
 
             WriteEngine::DctnryTuple dctTuple;
-            dctTuple.sigValue = (unsigned char*)value.c_str();
+            dctTuple.sigValue = (unsigned char*)value.str();
             dctTuple.sigSize = value.length();
             dctTuple.isNull = false;
             error = fWEWrapper.tokenize(txnId, dctTuple, colType.compressionType);
