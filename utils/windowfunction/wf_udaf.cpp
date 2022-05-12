@@ -756,7 +756,7 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut, int64_t b, i
     case execplan::CalpontSystemCatalog::BLOB:
       if (valOut.empty())
       {
-        setValue(colDataType, b, e, c, (string*)NULL);
+        setValue(colDataType, b, e, c, (utils::NullString*)NULL);
       }
       else
       {
