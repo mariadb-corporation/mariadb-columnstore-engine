@@ -501,6 +501,7 @@ TupleBPS::TupleBPS(const pColStep& rhs, const JobInfo& jobInfo)
   fRunExecuted = false;
   fSwallowRows = false;
   smallOuterJoiner = -1;
+  hasAuxCol = false;
 
   // @1098 initialize scanFlags to be true
   scanFlags.assign(numExtents, true);
@@ -528,6 +529,25 @@ TupleBPS::TupleBPS(const pColScanStep& rhs, const JobInfo& jobInfo) : BatchPrimi
   fTableOid = rhs.tableOid();
   extentSize = rhs.extentSize;
   lbidRanges = rhs.lbidRanges;
+  hasAuxCol = false;
+
+  // TODO MCOL-5021 Add try-catch block
+  if (fTableOid >= 3000)
+  {
+    execplan::CalpontSystemCatalog::TableName tableName = jobInfo.csc->tableName(fTableOid);
+    fOidAux = jobInfo.csc->tableAUXColumnOID(tableName);
+
+    if (fOidAux > 3000)
+    {
+      hasAuxCol = true;
+
+      if (dbrm.getExtents(fOidAux, extentsAux))
+        throw runtime_error("TupleBPS::TupleBPS BRM extent lookup failure (1)");
+
+      idbassert(!extentsAux.empty());
+      sort(extentsAux.begin(), extentsAux.end(), BRM::ExtentSorter());
+    }
+  }
 
   /* These lines are obsoleted by initExtentMarkers.  Need to remove & retest. */
   scannedExtents = rhs.extents;
@@ -650,6 +670,7 @@ TupleBPS::TupleBPS(const PassThruStep& rhs, const JobInfo& jobInfo) : BatchPrimi
   fRunExecuted = false;
   isFilterFeeder = false;
   smallOuterJoiner = -1;
+  hasAuxCol = false;
 
   // @1098 initialize scanFlags to be true
   scanFlags.assign(numExtents, true);
@@ -719,6 +740,7 @@ TupleBPS::TupleBPS(const pDictionaryStep& rhs, const JobInfo& jobInfo)
   scanFlags.assign(numExtents, true);
   runtimeCPFlags.assign(numExtents, true);
   bop = BOP_AND;
+  hasAuxCol = false;
 
   runRan = joinRan = false;
   fDelivery = false;
@@ -827,7 +849,7 @@ void TupleBPS::setBPP(JobStep* jobStep)
 
     if (pcss != 0)
     {
-      fBPP->addFilterStep(*pcss, lastScannedLBID);
+      fBPP->addFilterStep(*pcss, lastScannedLBID, hasAuxCol, extentsAux);
 
       extentsMap[pcss->fOid] = tr1::unordered_map<int64_t, EMEntry>();
       tr1::unordered_map<int64_t, EMEntry>& ref = extentsMap[pcss->fOid];
@@ -1255,6 +1277,7 @@ void TupleBPS::initExtentMarkers()
   }
 }
 
+// TODO MCOL-5021 Add support here
 void TupleBPS::reloadExtentLists()
 {
   /*
