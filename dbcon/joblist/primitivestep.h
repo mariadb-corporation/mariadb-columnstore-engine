@@ -1232,6 +1232,9 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   execplan::CalpontSystemCatalog::ColType fColType;
   execplan::CalpontSystemCatalog::OID fOid;
   execplan::CalpontSystemCatalog::OID fTableOid;
+  execplan::CalpontSystemCatalog::OID fOidAux;
+  bool hasAuxCol;
+  std::vector<BRM::EMEntry> extentsAux;
   uint64_t fLastTupleId;
   BRM::LBIDRange_v lbidRanges;
   std::vector<int32_t> lastExtent;

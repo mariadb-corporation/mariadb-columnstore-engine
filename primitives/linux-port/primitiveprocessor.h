@@ -292,6 +292,10 @@ class PrimitiveProcessor
   {
     block = data;
   }
+  void setBlockPtrAux(int* data)
+  {
+    blockAux = data;
+  }
   void setPMStatsPtr(dbbc::Stats* p)
   {
     fStatsPtr = p;
@@ -390,20 +394,20 @@ class PrimitiveProcessor
   template <typename T, typename std::enable_if<sizeof(T) == sizeof(int8_t) || sizeof(T) == sizeof(int16_t) ||
                                                     sizeof(T) == sizeof(int128_t),
                                                 T>::type* = nullptr>
-  void scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out);
+  void scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out, bool hasAuxCol);
 
   template <typename T, typename std::enable_if<sizeof(T) == sizeof(int32_t), T>::type* = nullptr>
-  void scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out);
+  void scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out, bool hasAuxCol);
   template <typename T, typename std::enable_if<sizeof(T) == sizeof(int64_t), T>::type* = nullptr>
-  void scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out);
+  void scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out, bool hasAuxCol);
   template <typename T, typename std::enable_if<sizeof(T) <= sizeof(int64_t), T>::type* = nullptr>
-  void _scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out);
+  void _scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out, bool hasAuxCol);
 
   template <typename T, typename std::enable_if<sizeof(T) == sizeof(int128_t), T>::type* = nullptr>
-  void _scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out);
+  void _scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out, bool hasAuxCol);
 
   template <typename T>
-  void columnScanAndFilter(NewColRequestHeader* in, ColResultHeader* out);
+  void columnScanAndFilter(NewColRequestHeader* in, ColResultHeader* out, bool hasAuxCol);
 
   boost::shared_ptr<ParsedColumnFilter> parseColumnFilter(const uint8_t* filterString, uint32_t colWidth,
                                                           uint32_t colType, uint32_t filterCount,
@@ -436,6 +440,7 @@ class PrimitiveProcessor
   PrimitiveProcessor& operator=(const PrimitiveProcessor& rhs);
 
   int* block;
+  int* blockAux;
 
   bool compare(const datatypes::Charset& cs, uint8_t COP, const char* str1, size_t length1, const char* str2,
                size_t length2) throw();

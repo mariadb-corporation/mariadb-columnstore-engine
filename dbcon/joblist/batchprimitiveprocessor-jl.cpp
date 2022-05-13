@@ -88,12 +88,15 @@ BatchPrimitiveProcessorJL::~BatchPrimitiveProcessorJL()
 {
 }
 
-void BatchPrimitiveProcessorJL::addFilterStep(const pColScanStep& scan, vector<BRM::LBID_t> lastScannedLBID)
+void BatchPrimitiveProcessorJL::addFilterStep(const pColScanStep& scan,
+                                              vector<BRM::LBID_t> lastScannedLBID,
+                                              bool hasAuxCol,
+                                              const std::vector<BRM::EMEntry>& extentsAux)
 {
   SCommand cc;
 
   tableOID = scan.tableOid();
-  cc.reset(new ColumnCommandJL(scan, lastScannedLBID));
+  cc.reset(new ColumnCommandJL(scan, lastScannedLBID, hasAuxCol, extentsAux));
   cc->setBatchPrimitiveProcessor(this);
   cc->setQueryUuid(scan.queryUuid());
   cc->setStepUuid(uuid);

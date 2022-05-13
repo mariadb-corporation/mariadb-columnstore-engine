@@ -40,7 +40,8 @@ namespace joblist
 class ColumnCommandJL : public CommandJL
 {
  public:
-  ColumnCommandJL(const pColScanStep&, std::vector<BRM::LBID_t> lastLBID);
+  ColumnCommandJL(const pColScanStep&, std::vector<BRM::LBID_t> lastLBID,
+                  bool hasAuxCol_, const std::vector<BRM::EMEntry>& extentsAux_);
   ColumnCommandJL(const pColStep&);
   virtual ~ColumnCommandJL();
 
@@ -120,6 +121,10 @@ class ColumnCommandJL : public CommandJL
 
   uint32_t numDBRoots;
   uint32_t dbroot;
+
+  std::vector<struct BRM::EMEntry> extentsAux;
+  bool hasAuxCol;
+  uint64_t lbidAux;
 
   static const unsigned DEFAULT_FILES_PER_COLUMN_PARTITION = 32;
 

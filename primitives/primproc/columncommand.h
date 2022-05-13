@@ -77,6 +77,16 @@ class ColumnCommand : public Command
   {
     return _isScan;
   }
+
+  bool hasAuxCol() const
+  {
+    return _hasAuxCol;
+  }
+  uint64_t getLBIDAux() const
+  {
+    return lbidAux;
+  }
+
   void createCommand(messageqcpp::ByteStream&);
   void createCommand(execplan::CalpontSystemCatalog::ColType& aColType, messageqcpp::ByteStream&);
   void resetCommand(messageqcpp::ByteStream&);
@@ -164,6 +174,8 @@ class ColumnCommand : public Command
   uint32_t baseMsgLength;
 
   uint64_t lbid;
+  bool _hasAuxCol;
+  uint64_t lbidAux;
   uint32_t traceFlags;  // probably move this to Command
   uint8_t BOP;
   messageqcpp::ByteStream filterString;
