@@ -139,8 +139,8 @@ WindowFunctionType* WF_stats<T>::clone() const
 template <typename T>
 void WF_stats<T>::resetData()
 {
-  fSum1 = 0;
-  fSum2 = 0;
+  fMean = 0;
+  fM2sum = 0;
   fCount = 0;
   fStats = 0.0;
 
@@ -171,32 +171,27 @@ void WF_stats<T>::operator()(int64_t b, int64_t e, int64_t c)
 
       if (fRow.isNullValue(colIn) == true)
         continue;
-
+      // Welford's single-pass algorithm
       T valIn;
       getValue(colIn, valIn, &cdt);
       long double val = (long double)valIn;
-
-      fSum1 += val;
-      fSum2 += val * val;
       fCount++;
+      long double delta = val - fMean;
+      fMean += delta/fCount;
+      fM2sum += delta * (val - fMean);
     }
 
     if (fCount > 1)
     {
       uint32_t scale = fRow.getScale(colIn);
       auto factor = datatypes::scaleDivisor<long double>(scale);
-      long double ldSum1 = fSum1;
-      long double ldSum2 = fSum2;
+      long double stat = fM2sum;
 
       // adjust the scale if necessary
       if (scale != 0 && cdt != CalpontSystemCatalog::LONGDOUBLE)
       {
-        ldSum1 /= factor;
-        ldSum2 /= factor * factor;
+        stat /= factor * factor;
       }
-
-      long double stat = ldSum1 * ldSum1 / fCount;
-      stat = ldSum2 - stat;
 
       if (fFunctionId == WF__STDDEV_POP)
         stat = sqrt(stat / fCount);
