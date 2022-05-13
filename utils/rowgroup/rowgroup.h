@@ -905,7 +905,7 @@ inline void Row::setBinaryField_offset<int128_t>(const int128_t* value, uint32_t
 inline utils::ConstString Row::getShortConstString(uint32_t colIndex) const
 {
   uint32_t offset = offsets[colIndex];
-  idbassert(getColumnWidth(colIndex) < 8); // we have to be sure these are SHORT strings, not VARCHAR(8191).
+  //idbassert(getColumnWidth(colIndex) < 8); // we have to be sure these are SHORT strings, not VARCHAR(8191).
   const char* src = (const char*)&data[offset];
   return utils::ConstString(src, strnlen(src, getColumnWidth(colIndex)));
 }
