@@ -202,6 +202,20 @@ void ColumnCommand::_loadData()
   bpp->cachedIO += wasCached;
   bpp->physIO += blocksRead;
   bpp->touchedBlocks += blocksToLoad;
+
+  if (_hasAuxCol)
+  {
+    BRM::LBID_t* lbidsAux = (BRM::LBID_t*)alloca(1 * sizeof(BRM::LBID_t));
+    uint8_t** blockPtrsAux = (uint8_t**)alloca(1 * sizeof(uint8_t*));
+    blockPtrsAux[0] = &bpp->blockDataAux[0];
+    lbidsAux[0] = lbidAux;
+    wasCached = primitiveprocessor::loadBlocks(lbidsAux, bpp->versionInfo, bpp->txnID, 2,
+                                               blockPtrsAux, &blocksRead, bpp->LBIDTrace, bpp->sessionID,
+                                               1, &wasVersioned, true, &bpp->vssCache);
+    bpp->cachedIO += wasCached;
+    bpp->physIO += blocksRead;
+    bpp->touchedBlocks += 1;
+  }
 }
 
 void ColumnCommand::loadData()
@@ -276,7 +290,7 @@ void ColumnCommand::_issuePrimitive()
   using IntegralType = typename datatypes::WidthToSIntegralType<W>::type;
   // Down the call stack the code presumes outMsg buffer has enough space to store
   // ColRequestHeader + uint16_t Rids[8192] + IntegralType[8192].
-  bpp->getPrimitiveProcessor().columnScanAndFilter<IntegralType>(primMsg, outMsg);
+  bpp->getPrimitiveProcessor().columnScanAndFilter<IntegralType>(primMsg, outMsg, _hasAuxCol);
 }  // _issuePrimitive()
 
 void ColumnCommand::updateCPDataNarrow()
@@ -526,6 +540,8 @@ void ColumnCommand::createCommand(ByteStream& bs)
   bs >> filterString;
   bs >> BOP;
   bs >> filterCount;
+  bs >> tmp8;
+  _hasAuxCol = tmp8;
   deserializeInlineVector(bs, lastLbid);
 
   Command::createCommand(bs);
@@ -558,6 +574,8 @@ void ColumnCommand::createCommand(execplan::CalpontSystemCatalog::ColType& aColT
   bs >> filterString;
   bs >> BOP;
   bs >> filterCount;
+  bs >> tmp8;
+  _hasAuxCol = tmp8;
   deserializeInlineVector(bs, lastLbid);
 
   Command::createCommand(bs);
@@ -566,6 +584,9 @@ void ColumnCommand::createCommand(execplan::CalpontSystemCatalog::ColType& aColT
 void ColumnCommand::resetCommand(ByteStream& bs)
 {
   bs >> lbid;
+
+  if (_hasAuxCol)
+    bs >> lbidAux;
 }
 
 void ColumnCommand::prep(int8_t outputType, bool absRids)
@@ -826,11 +847,15 @@ void ColumnCommand::projectIntoRowGroup(RowGroup& rg, uint32_t pos)
 void ColumnCommand::nextLBID()
 {
   lbid += colType.colWidth;
+
+  if (_hasAuxCol)
+    lbidAux += 1;
 }
 
 void ColumnCommand::duplicate(ColumnCommand* cc)
 {
   cc->_isScan = _isScan;
+  cc->_hasAuxCol = _hasAuxCol;
   cc->traceFlags = traceFlags;
   cc->filterString = filterString;
   cc->colType.colDataType = colType.colDataType;
@@ -862,6 +887,9 @@ bool ColumnCommand::operator==(const ColumnCommand& cc) const
   if (_isScan != cc._isScan)
     return false;
 
+  if (_hasAuxCol != cc._hasAuxCol)
+    return false;
+
   if (BOP != cc.BOP)
     return false;
 
@@ -891,6 +919,7 @@ bool ColumnCommand::operator!=(const ColumnCommand& cc) const
 ColumnCommand& ColumnCommand::operator=(const ColumnCommand& c)
 {
   _isScan = c._isScan;
+  _hasAuxCol = c._hasAuxCol;
   traceFlags = c.traceFlags;
   filterString = c.filterString;
   colType.colDataType = c.colType.colDataType;
@@ -928,6 +957,15 @@ void ColumnCommand::getLBIDList(uint32_t loopCount, vector<int64_t>* lbids)
 
   for (i = firstLBID; i <= lastLBID; i++)
     lbids->push_back(i);
+
+  if (_hasAuxCol)
+  {
+    firstLBID = lbidAux;
+    lastLBID = firstLBID + (loopCount * 1) - 1;
+
+    for (i = firstLBID; i <= lastLBID; i++)
+      lbids->push_back(i);
+  }
 }
 
 int64_t ColumnCommand::getLastLbid()
