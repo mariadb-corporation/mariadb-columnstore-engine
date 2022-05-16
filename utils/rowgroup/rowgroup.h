@@ -907,7 +907,15 @@ inline utils::ConstString Row::getShortConstString(uint32_t colIndex) const
   uint32_t offset = offsets[colIndex];
   //idbassert(getColumnWidth(colIndex) < 8); // we have to be sure these are SHORT strings, not VARCHAR(8191).
   const char* src = (const char*)&data[offset];
-  return utils::ConstString(src, strnlen(src, getColumnWidth(colIndex)));
+  if (src[0])
+  {
+    src += 1;
+    return utils::ConstString(src, strnlen(src, getColumnWidth(colIndex) - 1));
+  }
+  else
+  {
+    return utils::ConstString(nullptr, 0);
+  }
 }
 
 inline utils::ConstString Row::getConstString(uint32_t colIndex) const
@@ -1031,7 +1039,7 @@ inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex
     if (str.str())
     {
       buf[0] = 0;
-      memcpy(&data[offsets[colIndex]], str.str(), length);
+      memcpy(buf + 1, str.str(), length);
     }
     else
     {
