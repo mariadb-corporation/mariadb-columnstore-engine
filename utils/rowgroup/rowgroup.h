@@ -1104,8 +1104,8 @@ inline const uint8_t* Row::getVarBinaryField(uint32_t& len, uint32_t colIndex) c
   }
   else
   {
-    len = *((uint16_t*)&data[offsets[colIndex]]);
-    return &data[offsets[colIndex] + 2];
+    len = *((uint16_t*)&data[offsets[colIndex]+1]);
+    return &data[offsets[colIndex] + 3];
   }
 }
 
@@ -1340,7 +1340,7 @@ inline void Row::setVarBinaryField(const uint8_t* val, uint32_t len, uint32_t co
   else
   {
     idbassert(val); // XXX: this is highly suspicious.
-    data[offsets[colIndex]] = !!val;
+    data[offsets[colIndex]] = !val;
     *((uint16_t*)&data[offsets[colIndex]+1]) = len;
     memcpy(&data[offsets[colIndex] + 3], val, len);
   }
