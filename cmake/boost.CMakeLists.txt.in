@@ -12,7 +12,7 @@ endif()
 
 set(INSTALL_LOCATION ${CMAKE_BINARY_DIR}/boost-lib)
 
-set(_cxxargs "-fPIC -DBOOST_NO_AUTO_PTR -fvisibility=default")
+set(_cxxargs "-fPIC -DBOOST_NO_AUTO_PTR -fvisibility=default -D_GLIBCXX_USE_CXX11_ABI=0")
 set(_b2args cxxflags=${_cxxargs};cflags=-fPIC;threading=multi; toolset=${_toolset} --without-python;--prefix=${INSTALL_LOCATION})
 
 ExternalProject_Add(external_boost
