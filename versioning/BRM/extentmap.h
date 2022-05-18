@@ -413,6 +413,7 @@ public:
     LBID_tFindResult search2ndLayer(OIDIndexContainerT& oids, const OID_t oid);
     LBID_tFindResult search3dLayer(PartitionIndexContainerT& partitions,
         const PartitionNumberT partitionNumber);
+    bool isDBRootEmpty(const DBRootT dbroot);
     // Delete functions.
     void deleteDbRoot(const DBRootT dbroot);
     void deleteOID(const DBRootT dbroot, const OID_t oid);
@@ -1047,7 +1048,7 @@ private:
   static const constexpr size_t EM_FREELIST_INITIAL_SIZE = 50 * sizeof(InlineLBIDRange);
   static const constexpr size_t EM_FREELIST_INCREMENT = 50 * sizeof(InlineLBIDRange);
   // RBTree constants.
-  static const size_t EM_RB_TREE_NODE_SIZE = 10 * (sizeof(EMEntry) + 8 * sizeof(uint64_t));
+  static const size_t EM_RB_TREE_NODE_SIZE = 2 * (sizeof(EMEntry) + 8 * sizeof(uint64_t));
   static const size_t EM_RB_TREE_EMPTY_SIZE = 1024;
   static const size_t EM_RB_TREE_INITIAL_SIZE =
       EM_INCREMENT_ROWS * 10 * EM_RB_TREE_NODE_SIZE + EM_RB_TREE_EMPTY_SIZE;
