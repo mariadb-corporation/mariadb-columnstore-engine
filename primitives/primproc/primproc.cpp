@@ -124,7 +124,7 @@ class ServicePrimProc : public Service, public Opt
 
  private:
   // Since C++20 flag's init value is false.
-  std::atomic_flag startupRaceFlag_;
+  std::atomic_flag startupRaceFlag_{false};
 };
 
 namespace primitiveprocessor
