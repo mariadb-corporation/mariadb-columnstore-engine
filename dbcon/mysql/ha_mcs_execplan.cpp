@@ -5193,7 +5193,6 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
           ct.precision = precision;
         }
         ac->resultType(ct);
-        ac->resultType(ct);
       }
       else if (isp->sum_func() == Item_sum::SUM_BIT_FUNC)
       {

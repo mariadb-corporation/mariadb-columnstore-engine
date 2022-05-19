@@ -21,6 +21,7 @@
 #include <cstdlib>
 #include <iomanip>
 #include <string>
+#include "mcs_datatype.h"
 using namespace std;
 
 #include "functor_real.h"
@@ -269,25 +270,26 @@ double Func_floor::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull,
                                 CalpontSystemCatalog::ColType& op_ct)
 {
   double ret = 0.0;
+  datatypes::SystemCatalog::ColDataType type = parm[0]->data()->resultType().colDataType;
 
-  if (op_ct.colDataType == CalpontSystemCatalog::DOUBLE || op_ct.colDataType == CalpontSystemCatalog::FLOAT)
+  if (type == CalpontSystemCatalog::DOUBLE || type == CalpontSystemCatalog::FLOAT)
   {
     ret = floor(parm[0]->data()->getDoubleVal(row, isNull));
   }
-  else if (op_ct.colDataType == CalpontSystemCatalog::LONGDOUBLE)
+  else if (type == CalpontSystemCatalog::LONGDOUBLE)
   {
     ret = floorl(parm[0]->data()->getLongDoubleVal(row, isNull));
   }
-  else if (op_ct.colDataType == CalpontSystemCatalog::VARCHAR ||
-           op_ct.colDataType == CalpontSystemCatalog::CHAR || op_ct.colDataType == CalpontSystemCatalog::TEXT)
+  else if (type == CalpontSystemCatalog::VARCHAR ||
+           type == CalpontSystemCatalog::CHAR || type == CalpontSystemCatalog::TEXT)
   {
     const string& str = parm[0]->data()->getStrVal(row, isNull);
 
     if (!isNull)
       ret = floor(strtod(str.c_str(), 0));
   }
-  else if (op_ct.colDataType == CalpontSystemCatalog::DECIMAL ||
-           op_ct.colDataType == CalpontSystemCatalog::UDECIMAL)
+  else if (type == CalpontSystemCatalog::DECIMAL ||
+           type == CalpontSystemCatalog::UDECIMAL)
   {
     IDB_Decimal tmp = getDecimalVal(row, parm, isNull, op_ct);
 
@@ -312,26 +314,27 @@ long double Func_floor::getLongDoubleVal(Row& row, FunctionParm& parm, bool& isN
                                          CalpontSystemCatalog::ColType& op_ct)
 {
   long double ret = 0.0;
+  datatypes::SystemCatalog::ColDataType type = parm[0]->data()->resultType().colDataType;
 
-  if (op_ct.colDataType == CalpontSystemCatalog::LONGDOUBLE ||
-      op_ct.colDataType == CalpontSystemCatalog::FLOAT)
+  if (type == CalpontSystemCatalog::LONGDOUBLE ||
+      type == CalpontSystemCatalog::FLOAT)
   {
     ret = floor(parm[0]->data()->getDoubleVal(row, isNull));
   }
-  else if (op_ct.colDataType == CalpontSystemCatalog::LONGDOUBLE)
+  else if (type == CalpontSystemCatalog::LONGDOUBLE)
   {
     ret = floorl(parm[0]->data()->getLongDoubleVal(row, isNull));
   }
-  else if (op_ct.colDataType == CalpontSystemCatalog::VARCHAR ||
-           op_ct.colDataType == CalpontSystemCatalog::CHAR || op_ct.colDataType == CalpontSystemCatalog::TEXT)
+  else if (type == CalpontSystemCatalog::VARCHAR ||
+           type == CalpontSystemCatalog::CHAR || type == CalpontSystemCatalog::TEXT)
   {
     const string& str = parm[0]->data()->getStrVal(row, isNull);
 
     if (!isNull)
       ret = floor(strtod(str.c_str(), 0));
   }
-  else if (op_ct.colDataType == CalpontSystemCatalog::DECIMAL ||
-           op_ct.colDataType == CalpontSystemCatalog::UDECIMAL)
+  else if (type == CalpontSystemCatalog::DECIMAL ||
+           type == CalpontSystemCatalog::UDECIMAL)
   {
     IDB_Decimal tmp = getDecimalVal(row, parm, isNull, op_ct);
 
