@@ -335,7 +335,10 @@ void WF_percentile<T>::operator()(int64_t b, int64_t e, int64_t c)
         vd = (crn - rn) * fv + (rn - frn) * cv;
       }
 
-      v = *(reinterpret_cast<T*>(&vd));
+      double tempvd[2];
+      tempvd[0] = vd;
+      tempvd[1] = 0;
+      v = *(reinterpret_cast<T*>(&tempvd[0])); // old code that referred to 'vd' var triggered partial out-of-bounds warning.
       p = &v;
     }
     else  // (fFunctionId == WF__PERCENTILE_DISC)
