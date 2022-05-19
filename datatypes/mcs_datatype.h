@@ -483,6 +483,7 @@ inline bool isUnsigned(const datatypes::SystemCatalog::ColDataType type)
     case datatypes::SystemCatalog::UMEDINT:
     case datatypes::SystemCatalog::UINT:
     case datatypes::SystemCatalog::UBIGINT:
+    case datatypes::SystemCatalog::UDECIMAL:
     case datatypes::SystemCatalog::CHAR:
     case datatypes::SystemCatalog::VARCHAR:
     case datatypes::SystemCatalog::TEXT:
@@ -500,7 +501,8 @@ inline bool isSignedInteger(const datatypes::SystemCatalog::ColDataType type)
     case datatypes::SystemCatalog::SMALLINT:
     case datatypes::SystemCatalog::MEDINT:
     case datatypes::SystemCatalog::INT:
-    case datatypes::SystemCatalog::BIGINT: return true;
+    case datatypes::SystemCatalog::BIGINT:
+    case datatypes::SystemCatalog::DECIMAL: return true;
 
     default: return false;
   }

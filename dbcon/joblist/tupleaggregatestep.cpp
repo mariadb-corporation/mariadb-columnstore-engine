@@ -991,6 +991,7 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
   const vector<uint32_t>& oidsProj = projRG.getOIDs();
   const vector<uint32_t>& keysProj = projRG.getKeys();
   const vector<uint32_t>& scaleProj = projRG.getScale();
+  const vector<uint32_t>& widthProj = projRG.getColWidths();
   const vector<uint32_t>& precisionProj = projRG.getPrecision();
   const vector<CalpontSystemCatalog::ColDataType>& typeProj = projRG.getColTypes();
   const vector<uint32_t>& csNumProj = projRG.getCharsetNumbers();
@@ -1271,7 +1272,7 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
           throw IDBExcept(emsg, ERR_AGGREGATE_TYPE_NOT_SUPPORT);
         }
 
-        wideDecimalOrLongDouble(colProj, typeProj[colProj], precisionProj, scaleProj, width, typeAgg,
+        wideDecimalOrLongDouble(colProj, typeProj[colProj], precisionProj, scaleProj, widthProj, typeAgg,
                                 scaleAgg, precisionAgg, widthAgg);
 
         oidsAgg.push_back(oidsProj[colProj]);
@@ -1315,11 +1316,16 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
 
         oidsAgg.push_back(oidsProj[colProj]);
         keysAgg.push_back(key);
-        scaleAgg.push_back(scaleProj[colProj]);
-        precisionAgg.push_back(0);
-        typeAgg.push_back(CalpontSystemCatalog::DOUBLE);
         csNumAgg.push_back(csNumProj[colProj]);
-        widthAgg.push_back(sizeof(double));
+
+        oidsAgg.push_back(oidsProj[colProj]);
+        keysAgg.push_back(key);
+        csNumAgg.push_back(csNumProj[colProj]);
+
+        wideDecimalOrLongDouble(colProj, typeProj[colProj], precisionProj, scaleProj, widthProj,
+                                typeAgg, scaleAgg, precisionAgg, widthAgg);
+        wideDecimalOrLongDouble(colProj, typeProj[colProj], precisionProj, scaleProj, widthProj,
+                                typeAgg, scaleAgg, precisionAgg, widthAgg);
       }
       break;
 
@@ -1478,25 +1484,35 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
 
     functionVec[i]->fAuxColumnIndex = lastCol;
 
-    // sum(x)
+    // mean(x)
     oidsAgg.push_back(oidsProj[j]);
     keysAgg.push_back(keysProj[j]);
-    scaleAgg.push_back(0);
-    precisionAgg.push_back(-1);
-    typeAgg.push_back(CalpontSystemCatalog::LONGDOUBLE);
     csNumAgg.push_back(8);
-    widthAgg.push_back(sizeof(long double));
-    ++lastCol;
 
-    // sum(x**2)
     oidsAgg.push_back(oidsProj[j]);
     keysAgg.push_back(keysProj[j]);
-    scaleAgg.push_back(0);
-    precisionAgg.push_back(-1);
-    typeAgg.push_back(CalpontSystemCatalog::LONGDOUBLE);
     csNumAgg.push_back(8);
-    widthAgg.push_back(sizeof(long double));
-    ++lastCol;
+
+    wideDecimalOrLongDouble(j, typeProj[j], precisionProj, scaleProj, widthProj,
+                            typeAgg, scaleAgg, precisionAgg, widthAgg);
+    wideDecimalOrLongDouble(j, typeProj[j], precisionProj, scaleProj, widthProj,
+                            typeAgg, scaleAgg, precisionAgg, widthAgg);
+    lastCol += 2;
+
+    // sum(x_i - mean)^2
+    oidsAgg.push_back(oidsProj[j]);
+    keysAgg.push_back(keysProj[j]);
+    csNumAgg.push_back(8);
+
+    oidsAgg.push_back(oidsProj[j]);
+    keysAgg.push_back(keysProj[j]);
+    csNumAgg.push_back(8);
+
+    wideDecimalOrLongDouble(j, typeProj[j], precisionProj, scaleProj, widthProj,
+                            typeAgg, scaleAgg, precisionAgg, widthAgg);
+    wideDecimalOrLongDouble(j, typeProj[j], precisionProj, scaleProj, widthProj,
+                            typeAgg, scaleAgg, precisionAgg, widthAgg);
+    lastCol += 2;
   }
 
   // calculate the offset and create the rowaggregation, rowgroup
@@ -1844,7 +1860,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
           oidsAgg.push_back(oidsProj[colProj]);
           keysAgg.push_back(aggKey);
           csNumAgg.push_back(8);
-          wideDecimalOrLongDouble(colProj, typeProj[colProj], precisionProj, scaleProj, width, typeAgg,
+          wideDecimalOrLongDouble(colProj, typeProj[colProj], precisionProj, scaleProj, widthProj, typeAgg,
                                   scaleAgg, precisionAgg, widthAgg);
           colAgg++;
 
@@ -1910,25 +1926,35 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
           widthAgg.push_back(sizeof(double));
           funct->fAuxColumnIndex = ++colAgg;
 
-          // sum(x)
+          // mean(x)
           oidsAgg.push_back(oidsProj[colProj]);
           keysAgg.push_back(aggKey);
-          scaleAgg.push_back(0);
-          precisionAgg.push_back(-1);
-          typeAgg.push_back(CalpontSystemCatalog::LONGDOUBLE);
           csNumAgg.push_back(8);
-          widthAgg.push_back(sizeof(long double));
-          ++colAgg;
 
-          // sum(x**2)
           oidsAgg.push_back(oidsProj[colProj]);
           keysAgg.push_back(aggKey);
-          scaleAgg.push_back(0);
-          precisionAgg.push_back(-1);
-          typeAgg.push_back(CalpontSystemCatalog::LONGDOUBLE);
           csNumAgg.push_back(8);
-          widthAgg.push_back(sizeof(long double));
-          ++colAgg;
+
+          wideDecimalOrLongDouble(colProj, typeProj[colProj], precisionProj, scaleProj, widthProj,
+                                  typeAgg, scaleAgg, precisionAgg, widthAgg);
+          wideDecimalOrLongDouble(colProj, typeProj[colProj], precisionProj, scaleProj, widthProj,
+                                  typeAgg, scaleAgg, precisionAgg, widthAgg);
+          colAgg += 2;
+
+          // sum(x_i - mean)^2
+          oidsAgg.push_back(oidsProj[colProj]);
+          keysAgg.push_back(aggKey);
+          csNumAgg.push_back(8);
+
+          oidsAgg.push_back(oidsProj[colProj]);
+          keysAgg.push_back(aggKey);
+          csNumAgg.push_back(8);
+
+          wideDecimalOrLongDouble(colProj, typeProj[colProj], precisionProj, scaleProj, widthProj,
+                                  typeAgg, scaleAgg, precisionAgg, widthAgg);
+          wideDecimalOrLongDouble(colProj, typeProj[colProj], precisionProj, scaleProj, widthProj,
+                                  typeAgg, scaleAgg, precisionAgg, widthAgg);
+          colAgg += 2;
         }
         break;
 
@@ -2581,25 +2607,35 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
 
       functionVec2[i]->fAuxColumnIndex = lastCol;
 
-      // sum(x)
+      // mean(x)
       oidsAggDist.push_back(oidsAgg[j]);
       keysAggDist.push_back(keysAgg[j]);
-      scaleAggDist.push_back(0);
-      precisionAggDist.push_back(0);
-      typeAggDist.push_back(CalpontSystemCatalog::LONGDOUBLE);
       csNumAggDist.push_back(8);
-      widthAggDist.push_back(sizeof(long double));
-      ++lastCol;
 
-      // sum(x**2)
       oidsAggDist.push_back(oidsAgg[j]);
       keysAggDist.push_back(keysAgg[j]);
-      scaleAggDist.push_back(0);
-      precisionAggDist.push_back(-1);
-      typeAggDist.push_back(CalpontSystemCatalog::LONGDOUBLE);
       csNumAggDist.push_back(8);
-      widthAggDist.push_back(sizeof(long double));
-      ++lastCol;
+
+      wideDecimalOrLongDouble(j, typeProj[j], precisionProj, scaleProj, widthProj,
+                              typeAggDist, scaleAggDist, precisionAggDist, widthAggDist);
+      wideDecimalOrLongDouble(j, typeProj[j], precisionProj, scaleProj, widthProj,
+                              typeAggDist, scaleAggDist, precisionAggDist, widthAggDist);
+      lastCol += 2;
+
+      // sum(x_i - mean)^2
+      oidsAggDist.push_back(oidsAgg[j]);
+      keysAggDist.push_back(keysAgg[j]);
+      csNumAggDist.push_back(8);
+
+      oidsAggDist.push_back(oidsAgg[j]);
+      keysAggDist.push_back(keysAgg[j]);
+      csNumAggDist.push_back(8);
+
+      wideDecimalOrLongDouble(j, typeProj[j], precisionProj, scaleProj, widthProj,
+                              typeAggDist, scaleAggDist, precisionAggDist, widthAggDist);
+      wideDecimalOrLongDouble(j, typeProj[j], precisionProj, scaleProj, widthProj,
+                              typeAggDist, scaleAggDist, precisionAggDist, widthAggDist);
+      lastCol += 2;
     }
   }
 
@@ -2944,6 +2980,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
   const vector<uint32_t>& keysProj = projRG.getKeys();
   const vector<uint32_t>& scaleProj = projRG.getScale();
   const vector<uint32_t>& precisionProj = projRG.getPrecision();
+  const vector<uint32_t>& widthProj = projRG.getColWidths();
   const vector<CalpontSystemCatalog::ColDataType>& typeProj = projRG.getColTypes();
   const vector<uint32_t>& csNumProj = projRG.getCharsetNumbers();
 
@@ -3184,7 +3221,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
             throw IDBExcept(emsg, ERR_AGGREGATE_TYPE_NOT_SUPPORT);
           }
 
-          wideDecimalOrLongDouble(colProj, typeProj[colProj], precisionProj, scaleProj, width, typeAggPm,
+          wideDecimalOrLongDouble(colProj, typeProj[colProj], precisionProj, scaleProj, widthProj, typeAggPm,
                                   scaleAggPm, precisionAggPm, widthAggPm);
 
           oidsAggPm.push_back(oidsProj[colProj]);
@@ -3243,25 +3280,37 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
           widthAggPm.push_back(sizeof(double));
           funct->fAuxColumnIndex = ++colAggPm;
 
-          // sum(x)
+          // mean(x)
           oidsAggPm.push_back(oidsProj[colProj]);
           keysAggPm.push_back(aggKey);
-          scaleAggPm.push_back(0);
-          precisionAggPm.push_back(-1);
-          typeAggPm.push_back(CalpontSystemCatalog::LONGDOUBLE);
           csNumAggPm.push_back(8);
-          widthAggPm.push_back(sizeof(long double));
-          ++colAggPm;
 
-          // sum(x**2)
           oidsAggPm.push_back(oidsProj[colProj]);
           keysAggPm.push_back(aggKey);
-          scaleAggPm.push_back(0);
-          precisionAggPm.push_back(-1);
-          typeAggPm.push_back(CalpontSystemCatalog::LONGDOUBLE);
           csNumAggPm.push_back(8);
-          widthAggPm.push_back(sizeof(long double));
-          ++colAggPm;
+
+          wideDecimalOrLongDouble(colProj, typeProj[colProj], precisionProj, scaleProj, widthProj,
+                                  typeAggPm, scaleAggPm, precisionAggPm, widthAggPm);
+          wideDecimalOrLongDouble(colProj, typeProj[colProj], precisionProj, scaleProj, widthProj,
+                                  typeAggPm, scaleAggPm, precisionAggPm, widthAggPm);
+
+          colAggPm += 2;
+
+          // sum(x_i - mean)^2
+          oidsAggPm.push_back(oidsProj[colProj]);
+          keysAggPm.push_back(aggKey);
+          csNumAggPm.push_back(8);
+
+          oidsAggPm.push_back(oidsProj[colProj]);
+          keysAggPm.push_back(aggKey);
+          csNumAggPm.push_back(8);
+
+          wideDecimalOrLongDouble(colProj, typeProj[colProj], precisionProj, scaleProj, widthProj,
+                                  typeAggPm, scaleAggPm, precisionAggPm, widthAggPm);
+          wideDecimalOrLongDouble(colProj, typeProj[colProj], precisionProj, scaleProj, widthProj,
+                                  typeAggPm, scaleAggPm, precisionAggPm, widthAggPm);
+
+          colAggPm += 2;
         }
         break;
 
@@ -3701,25 +3750,35 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
 
       functionVecUm[i]->fAuxColumnIndex = lastCol;
 
-      // sum(x)
+      // mean(x)
       oidsAggUm.push_back(oidsAggPm[j]);
       keysAggUm.push_back(keysAggPm[j]);
-      scaleAggUm.push_back(0);
-      precisionAggUm.push_back(-1);
-      typeAggUm.push_back(CalpontSystemCatalog::LONGDOUBLE);
       csNumAggUm.push_back(8);
-      widthAggUm.push_back(sizeof(long double));
-      ++lastCol;
 
-      // sum(x**2)
       oidsAggUm.push_back(oidsAggPm[j]);
       keysAggUm.push_back(keysAggPm[j]);
-      scaleAggUm.push_back(0);
-      precisionAggUm.push_back(-1);
-      typeAggUm.push_back(CalpontSystemCatalog::LONGDOUBLE);
       csNumAggUm.push_back(8);
-      widthAggUm.push_back(sizeof(long double));
-      ++lastCol;
+
+      wideDecimalOrLongDouble(j, typeProj[j], precisionProj, scaleProj, widthProj,
+                              typeAggUm, scaleAggUm, precisionAggUm, widthAggUm);
+      wideDecimalOrLongDouble(j, typeProj[j], precisionProj, scaleProj, widthProj,
+                              typeAggUm, scaleAggUm, precisionAggUm, widthAggUm);
+      lastCol += 2;
+
+      // sum(x_i - mean)^2
+      oidsAggUm.push_back(oidsAggPm[j]);
+      keysAggUm.push_back(keysAggPm[j]);
+      csNumAggUm.push_back(8);
+
+      oidsAggUm.push_back(oidsAggPm[j]);
+      keysAggUm.push_back(keysAggPm[j]);
+      csNumAggUm.push_back(8);
+
+      wideDecimalOrLongDouble(j, typeProj[j], precisionProj, scaleProj, widthProj,
+                              typeAggUm, scaleAggUm, precisionAggUm, widthAggUm);
+      wideDecimalOrLongDouble(j, typeProj[j], precisionProj, scaleProj, widthProj,
+                              typeAggUm, scaleAggUm, precisionAggUm, widthAggUm);
+      lastCol += 2;
     }
   }
 
@@ -3822,6 +3881,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
   const vector<uint32_t>& keysProj = projRG.getKeys();
   const vector<uint32_t>& scaleProj = projRG.getScale();
   const vector<uint32_t>& precisionProj = projRG.getPrecision();
+  const vector<uint32_t>& widthProj = projRG.getColWidths();
   const vector<CalpontSystemCatalog::ColDataType>& typeProj = projRG.getColTypes();
   const vector<uint32_t>& csNumProj = projRG.getCharsetNumbers();
 
@@ -4086,7 +4146,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
           oidsAggPm.push_back(oidsProj[colProj]);
           keysAggPm.push_back(aggKey);
           csNumAggPm.push_back(8);
-          wideDecimalOrLongDouble(colProj, typeProj[colProj], precisionProj, scaleProj, width, typeAggPm,
+          wideDecimalOrLongDouble(colProj, typeProj[colProj], precisionProj, scaleProj, widthProj, typeAggPm,
                                   scaleAggPm, precisionAggPm, widthAggPm);
           colAggPm++;
         }
@@ -4152,25 +4212,35 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
           widthAggPm.push_back(sizeof(double));
           funct->fAuxColumnIndex = ++colAggPm;
 
-          // sum(x)
+          // mean(x)
           oidsAggPm.push_back(oidsProj[colProj]);
           keysAggPm.push_back(aggKey);
-          scaleAggPm.push_back(0);
-          precisionAggPm.push_back(-1);
-          typeAggPm.push_back(CalpontSystemCatalog::LONGDOUBLE);
           csNumAggPm.push_back(8);
-          widthAggPm.push_back(sizeof(long double));
-          ++colAggPm;
 
-          // sum(x**2)
           oidsAggPm.push_back(oidsProj[colProj]);
           keysAggPm.push_back(aggKey);
-          scaleAggPm.push_back(0);
-          precisionAggPm.push_back(-1);
-          typeAggPm.push_back(CalpontSystemCatalog::LONGDOUBLE);
           csNumAggPm.push_back(8);
-          widthAggPm.push_back(sizeof(long double));
-          ++colAggPm;
+
+          wideDecimalOrLongDouble(colProj, typeProj[colProj], precisionProj, scaleProj, widthProj,
+                                 typeAggPm, scaleAggPm, precisionAggPm, widthAggPm);
+          wideDecimalOrLongDouble(colProj, typeProj[colProj], precisionProj, scaleProj, widthProj,
+                                 typeAggPm, scaleAggPm, precisionAggPm, widthAggPm);
+          colAggPm += 2;
+
+          // sum(x_i - mean)^2
+          oidsAggPm.push_back(oidsProj[colProj]);
+          keysAggPm.push_back(aggKey);
+          csNumAggPm.push_back(8);
+
+          oidsAggPm.push_back(oidsProj[colProj]);
+          keysAggPm.push_back(aggKey);
+          csNumAggPm.push_back(8);
+
+          wideDecimalOrLongDouble(colProj, typeProj[colProj], precisionProj, scaleProj, widthProj,
+                                 typeAggPm, scaleAggPm, precisionAggPm, widthAggPm);
+          wideDecimalOrLongDouble(colProj, typeProj[colProj], precisionProj, scaleProj, widthProj,
+                                 typeAggPm, scaleAggPm, precisionAggPm, widthAggPm);
+          colAggPm += 2;
         }
         break;
 
@@ -4808,25 +4878,35 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
 
       functionVecUm[i]->fAuxColumnIndex = lastCol;
 
-      // sum(x)
+      // mean(x)
       oidsAggDist.push_back(oidsAggPm[j]);
       keysAggDist.push_back(keysAggPm[j]);
-      scaleAggDist.push_back(0);
-      precisionAggDist.push_back(-1);
-      typeAggDist.push_back(CalpontSystemCatalog::LONGDOUBLE);
       csNumAggDist.push_back(8);
-      widthAggDist.push_back(sizeof(long double));
-      ++lastCol;
 
-      // sum(x**2)
       oidsAggDist.push_back(oidsAggPm[j]);
       keysAggDist.push_back(keysAggPm[j]);
-      scaleAggDist.push_back(0);
-      precisionAggDist.push_back(-1);
-      typeAggDist.push_back(CalpontSystemCatalog::LONGDOUBLE);
       csNumAggDist.push_back(8);
-      widthAggDist.push_back(sizeof(long double));
-      ++lastCol;
+
+      wideDecimalOrLongDouble(j, typeProj[j], precisionProj, scaleProj, widthAggPm,
+                              typeAggDist, scaleAggDist, precisionAggDist, widthAggDist);
+      wideDecimalOrLongDouble(j, typeProj[j], precisionProj, scaleProj, widthAggPm,
+                              typeAggDist, scaleAggDist, precisionAggDist, widthAggDist);
+      lastCol += 2;
+
+      // sum(x_i - mean)^2
+      oidsAggDist.push_back(oidsAggPm[j]);
+      keysAggDist.push_back(keysAggPm[j]);
+      csNumAggDist.push_back(8);
+
+      oidsAggDist.push_back(oidsAggPm[j]);
+      keysAggDist.push_back(keysAggPm[j]);
+      csNumAggDist.push_back(8);
+
+      wideDecimalOrLongDouble(j, typeProj[j], precisionProj, scaleProj, widthAggPm,
+                              typeAggDist, scaleAggDist, precisionAggDist, widthAggDist);
+      wideDecimalOrLongDouble(j, typeProj[j], precisionProj, scaleProj, widthAggPm,
+                              typeAggDist, scaleAggDist, precisionAggDist, widthAggDist);
+      lastCol += 2;
     }
   }
 

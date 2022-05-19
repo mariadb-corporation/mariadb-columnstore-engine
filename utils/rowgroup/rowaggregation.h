@@ -44,6 +44,8 @@
 #include <boost/scoped_array.hpp>
 #include <boost/scoped_ptr.hpp>
 
+#include <boost/rational.hpp>
+
 #include "serializeable.h"
 #include "bytestream.h"
 #include "rowgroup.h"

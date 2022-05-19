@@ -5173,10 +5173,26 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
       }
       else if (isp->sum_func() == Item_sum::STD_FUNC || isp->sum_func() == Item_sum::VARIANCE_FUNC)
       {
-        CalpontSystemCatalog::ColType ct;
-        ct.colDataType = CalpontSystemCatalog::DOUBLE;
-        ct.colWidth = 8;
-        ct.scale = 0;
+        CalpontSystemCatalog::ColType ct = parm->resultType();
+        if (ct.isWideDecimalType())
+        {
+          uint32_t precision = ct.precision;
+          uint32_t scale = ct.scale;
+          datatypes::Decimal::setScalePrecision4Avg(precision, scale);
+          ct.precision = precision;
+          ct.scale = scale;
+        }
+        else if (datatypes::hasUnderlyingWideDecimalForSumAndAvg(ct.colDataType))
+        {
+          uint32_t precision = datatypes::INT128MAXPRECISION;
+          uint32_t scale = ct.scale;
+          ct.colDataType = CalpontSystemCatalog::DECIMAL;
+          ct.colWidth = datatypes::MAXDECIMALWIDTH;
+          datatypes::Decimal::setScalePrecision4Avg(precision, scale);
+          ct.scale = scale;
+          ct.precision = precision;
+        }
+        ac->resultType(ct);
         ac->resultType(ct);
       }
       else if (isp->sum_func() == Item_sum::SUM_BIT_FUNC)

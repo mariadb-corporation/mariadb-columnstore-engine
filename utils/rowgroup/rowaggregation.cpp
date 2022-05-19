@@ -1900,18 +1900,25 @@ void RowAggregation::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int6
 // rowIn(in)  - Row to be included in aggregation.
 // colIn(in)  - column in the input row group
 // colOut(in) - column in the output row group stores the count
-// colAux(in) - column in the output row group stores the sum(x)
-// colAux + 1 - column in the output row group stores the sum(x**2)
+// colAux(in) - column in the output row group stores the mean(x)
+// colAux + 1 - column in the output row group stores the sum(x_i - mean)^2
 //------------------------------------------------------------------------------
 void RowAggregation::doStatistics(const Row& rowIn, int64_t colIn, int64_t colOut, int64_t colAux)
 {
-  int colDataType = (fRowGroupIn.getColTypes())[colIn];
+  using boost::rational;
+
+  datatypes::SystemCatalog::ColDataType colDataType = (fRowGroupIn.getColTypes())[colIn];
 
   if (isNull(&fRowGroupIn, rowIn, colIn) == true)
     return;
 
   long double valIn = 0.0;
-
+  int128_t wideValIn = 0;
+  if (datatypes::hasUnderlyingWideDecimalForSumAndAvg(colDataType))
+  {
+    wideValIn = rowIn.getTSInt128Field(colIn).getValue();
+  }
+  else {
   switch (colDataType)
   {
     case execplan::CalpontSystemCatalog::TINYINT:
@@ -1959,10 +1966,41 @@ void RowAggregation::doStatistics(const Row& rowIn, int64_t colIn, int64_t colOu
       throw logging::QueryDataExcept(errmsg.str(), logging::aggregateFuncErr);
       break;
   }
+  }
 
-  fRow.setDoubleField(fRow.getDoubleField(colOut) + 1.0, colOut);
-  fRow.setLongDoubleField(fRow.getLongDoubleField(colAux) + valIn, colAux);
-  fRow.setLongDoubleField(fRow.getLongDoubleField(colAux + 1) + valIn * valIn, colAux + 1);
+  if (datatypes::hasUnderlyingWideDecimalForSumAndAvg(colDataType))
+  {
+   int count = static_cast<int>(fRow.getDoubleField(colOut)) + 1;
+   int128_t mean_num = fRow.getTSInt128Field(colAux).getValue();
+   int128_t mean_den = fRow.getTSInt128Field(colAux + 1).getValue();
+   int128_t M2_num = fRow.getTSInt128Field(colAux + 2).getValue();
+   int128_t M2_den = fRow.getTSInt128Field(colAux + 3).getValue();
+
+   rational<int128_t> mean(mean_num, mean_den != 0? mean_den : 1);
+   rational<int128_t> M2(M2_num, M2_den != 0? M2_den : 1);
+   rational<int128_t> delta = wideValIn - mean;
+   mean += delta/count;
+   M2 += delta * (wideValIn - mean);
+
+   fRow.setDoubleField(static_cast<double>(count), colOut);
+   fRow.setBinaryField<int128_t>(&mean.numerator(),colAux);
+   fRow.setBinaryField<int128_t>(&mean.denominator(),colAux + 1);
+   fRow.setBinaryField<int128_t>(&M2.numerator(),colAux + 2);
+   fRow.setBinaryField<int128_t>(&M2.denominator(),colAux + 3);
+  } else
+  {
+   double count = fRow.getDoubleField(colOut) + 1.0;
+   long double mean = fRow.getLongDoubleField(colAux);
+   long double M2 = fRow.getLongDoubleField(colAux + 1);
+   long double delta = valIn - mean;
+   mean += delta/count;
+   M2 += delta * (valIn - mean);
+
+
+  fRow.setDoubleField(count, colOut);
+  fRow.setLongDoubleField(mean, colAux);
+  fRow.setLongDoubleField(M2, colAux + 1);
+  }
 }
 
 void RowAggregation::mergeStatistics(const Row& rowIn, uint64_t colOut, uint64_t colAux)
@@ -3115,6 +3153,7 @@ void RowAggregationUM::calculateStatisticsFunctions()
   // ROWAGG_DUP_STATS may be not strictly duplicates, covers for statistics functions.
   // They are calculated based on the same set of data: sum(x), sum(x**2) and count.
   // array of <aux index, count> for duplicates
+  using boost::rational;
   boost::scoped_array<pair<double, uint64_t>> auxCount(new pair<double, uint64_t>[fRow.getColumnCount()]);
 
   fRowGroupOut->getRow(0, &fRow);
@@ -3130,7 +3169,7 @@ void RowAggregationUM::calculateStatisticsFunctions()
         int64_t colAux = fFunctionCols[i]->fAuxColumnIndex;
 
         double cnt = fRow.getDoubleField(colOut);
-
+        datatypes::SystemCatalog::ColDataType colDataType = (fRowGroupIn.getColTypes())[colAux];
         if (fFunctionCols[i]->fAggFunction == ROWAGG_STATS)
         {
           auxCount[colOut].first = cnt;
@@ -3156,31 +3195,33 @@ void RowAggregationUM::calculateStatisticsFunctions()
         }
         else  // count > 1
         {
-          long double sum1 = fRow.getLongDoubleField(colAux);
-          long double sum2 = fRow.getLongDoubleField(colAux + 1);
+          long double M2;
+          if (datatypes::hasUnderlyingWideDecimalForSumAndAvg(colDataType)) {
+            rational<int128_t> rM2(fRow.getTSInt128Field(colAux + 2).getValue(), fRow.getTSInt128Field(colAux + 3).getValue());
+            M2 = boost::rational_cast<long double>(rM2);
+          } else
+          {
+            M2 = fRow.getLongDoubleField(colAux + 1);
+          }
 
           uint32_t scale = fRow.getScale(colOut);
           auto factor = datatypes::scaleDivisor<long double>(scale);
 
           if (scale != 0)  // adjust the scale if necessary
           {
-            sum1 /= factor;
-            sum2 /= factor * factor;
+            M2 /= factor * factor;
           }
 
-          long double stat = sum1 * sum1 / cnt;
-          stat = sum2 - stat;
-
           if (fFunctionCols[i]->fStatsFunction == ROWAGG_STDDEV_POP)
-            stat = sqrt(stat / cnt);
+            M2 = sqrt(M2 / cnt);
           else if (fFunctionCols[i]->fStatsFunction == ROWAGG_STDDEV_SAMP)
-            stat = sqrt(stat / (cnt - 1));
+            M2 = sqrt(M2 / (cnt - 1));
           else if (fFunctionCols[i]->fStatsFunction == ROWAGG_VAR_POP)
-            stat = stat / cnt;
+            M2 = M2 / cnt;
           else if (fFunctionCols[i]->fStatsFunction == ROWAGG_VAR_SAMP)
-            stat = stat / (cnt - 1);
+            M2 = M2 / (cnt - 1);
 
-          fRow.setDoubleField(stat, colOut);
+          fRow.setDoubleField(M2, colOut);
         }
       }
     }
@@ -4281,18 +4322,65 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
 // Update the sum and count fields for stattistics if input is not null.
 // rowIn(in)  - Row to be included in aggregation.
 // colIn(in)  - column in the input row group stores the count/logical block
-// colIn + 1  - column in the input row group stores the sum(x)/logical block
-// colIn + 2  - column in the input row group stores the sum(x**2)/logical block
+// colIn + 1  - column in the input row group stores the mean(x)/logical block
+// colIn + 2  - column in the input row group stores the sum(x_i - mean)^2/logical block
 // colOut(in) - column in the output row group stores the count
-// colAux(in) - column in the output row group stores the sum(x)
-// colAux + 1 - column in the output row group stores the sum(x**2)
+// colAux(in) - column in the output row group stores the mean(x)
+// colAux + 1 - column in the output row group stores the sum(x_i - mean)^2
 //------------------------------------------------------------------------------
 void RowAggregationUMP2::doStatistics(const Row& rowIn, int64_t colIn, int64_t colOut, int64_t colAux)
 {
-  fRow.setDoubleField(fRow.getDoubleField(colOut) + rowIn.getDoubleField(colIn), colOut);
-  fRow.setLongDoubleField(fRow.getLongDoubleField(colAux) + rowIn.getLongDoubleField(colIn + 1), colAux);
-  fRow.setLongDoubleField(fRow.getLongDoubleField(colAux + 1) + rowIn.getLongDoubleField(colIn + 2),
-                          colAux + 1);
+  using boost::rational;
+  // datatypes::SystemCatalog::ColDataType colDataType = rowIn.getColType(colIn);
+
+  // if (datatypes::hasUnderlyingWideDecimalForSumAndAvg(colDataType))
+  if (true)
+  {
+    int count = static_cast<int>(fRow.getDoubleField(colOut));
+    int128_t mean_den = fRow.getTSInt128Field(colAux + 1).getValue();
+    int128_t M2_den = fRow.getTSInt128Field(colAux + 3).getValue();
+    rational<int128_t> mean(fRow.getTSInt128Field(colAux).getValue(), mean_den != 0 ? mean_den : 1);
+    rational<int128_t> M2(fRow.getTSInt128Field(colAux + 2).getValue(), M2_den != 0 ? M2_den : 1);
+
+    int block_count = static_cast<int>(rowIn.getDoubleField(colIn));
+
+    int128_t block_mean_den = rowIn.getTSInt128Field(colIn + 2).getValue();
+    int128_t block_M2_den = rowIn.getTSInt128Field(colIn + 4).getValue();
+    rational<int128_t> block_mean(rowIn.getTSInt128Field(colIn + 1).getValue(),
+                                  block_mean_den != 0 ? block_mean_den : 1);
+    rational<int128_t> block_M2(rowIn.getTSInt128Field(colIn + 3).getValue(),
+                                block_M2_den != 0 ? block_M2_den : 1);
+
+    int next_count = count + block_count;
+    rational<int128_t> delta = mean - block_mean;
+    rational<int128_t> next_mean = (mean * count + block_mean * block_count) / next_count;
+    rational<int128_t> next_M2 = M2 + block_M2 + delta * delta * (count * block_count / next_count);
+
+    fRow.setDoubleField(static_cast<double>(next_count), colOut);
+    fRow.setBinaryField<int128_t>(&next_mean.numerator(), colAux);
+    fRow.setBinaryField<int128_t>(&next_mean.denominator(), colAux + 1);
+    fRow.setBinaryField<int128_t>(&next_M2.numerator(), colAux + 2);
+    fRow.setBinaryField<int128_t>(&next_M2.denominator(), colAux + 3);
+  }
+  else
+  {
+    double count = fRow.getDoubleField(colOut);
+    long double mean = fRow.getLongDoubleField(colAux);
+    long double M2 = fRow.getLongDoubleField(colAux + 1);
+
+    double block_count = rowIn.getDoubleField(colIn);
+    long double block_mean = rowIn.getLongDoubleField(colIn + 1);
+    long double block_M2 = rowIn.getLongDoubleField(colIn + 2);
+
+    double next_count = count + block_count;
+    long double delta = mean - block_mean;
+    long double next_mean = (mean * count + block_mean * block_count) / next_count;
+    long double next_M2 = M2 + block_M2 + delta * delta * (count * block_count / next_count);
+
+    fRow.setDoubleField(next_count, colOut);
+    fRow.setLongDoubleField(next_mean, colAux);
+    fRow.setLongDoubleField(next_M2, colAux + 1);
+  }
 }
 
 //------------------------------------------------------------------------------

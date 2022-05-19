@@ -161,7 +161,7 @@ build()
                      -DBUILD_CONFIG=mysql_release
                      -DWITH_WSREP=OFF
                      -DWITH_SSL=system
-                     -DWITH_UNITTESTS=YES
+
                      -DWITH_BRM_UT=YES
                      -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX"
 
