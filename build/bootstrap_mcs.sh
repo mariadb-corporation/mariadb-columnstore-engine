@@ -216,7 +216,7 @@ build()
     fi
 
     if [[ "$OS" = 'Ubuntu' || "$OS" = 'Debian' ]]; then
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DDEB=bionic -DWITH_SSL=bundled"
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DDEB=bionic"
     elif [ $OS = 'CentOS' ]; then
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DRPM=CentOS7"
     elif [ $OS = 'Rocky' ]; then
