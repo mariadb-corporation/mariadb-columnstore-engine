@@ -19,7 +19,7 @@ local platforms_mtr = ['centos:7', 'rockylinux:8', 'ubuntu:20.04'];
 
 local server_ref_map = {
   develop: '10.8',
-  'develop-6': '10.6-enterprise',
+  'develop-6': '10.6',
   'develop-5': '10.5',
   '**': '10.8',
 };
@@ -89,7 +89,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
   local container_tags = if (event == 'cron') then [branch, branch + '-' + std.strReplace(event, '_', '-') + '-${DRONE_BUILD_NUMBER}'] else [branch + '-' + std.strReplace(event, '_', '-') + '-${DRONE_BUILD_NUMBER}'],
   local container_version = branch + '/' + event + '/${DRONE_BUILD_NUMBER}/' + arch,
 
-  local server_remote = if (std.split(branch, '-')[0] == 'columnstore' || branch == 'develop-6') then 'https://github.com/mariadb-corporation/MariaDBEnterprise' else 'https://github.com/MariaDB/server',
+  local server_remote = if (std.split(branch, '-')[0] == 'columnstore' || branch == 'develop-6') then 'https://github.com/MariaDB/server' else 'https://github.com/MariaDB/server',
 
   local pipeline = self,
 
@@ -195,7 +195,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
     [if event == 'cron' then 'failure']: 'ignore',
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     environment: {
-      REGRESSION_TESTS: if (event == 'cron') then '' else '${REGRESSION_TESTS:-test000.sh}',
+      REGRESSION_TESTS: if (event == 'cron') then '' else '${REGRESSION_TESTS:-test000.sh,test001.sh}',
       REGRESSION_REF: '${REGRESSION_REF:-' + regression_ref + '}',
       REGRESSION_TIMEOUT: {
         from_secret: 'regression_timeout',
