@@ -87,6 +87,7 @@ void catFileOffline(const char* filename, int prefixlen)
   catch (exception& e)
   {
     cerr << "smcat catFileOffline FAIL: " << e.what() << endl;
+    exit(1);
   }
 }
 
