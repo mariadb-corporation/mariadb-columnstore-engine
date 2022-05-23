@@ -56,7 +56,18 @@ CloudStorage* CloudStorage::get()
   if (inst)
     return inst;
   if (type == "s3")
-    inst = new S3Storage();
+  {
+    try
+    {
+      inst = new S3Storage();
+    }
+    catch (exception& e)
+    {
+      cout << "S3 Storage Manager Configuration Error:" << endl;
+      cout << e.what() << endl;
+      throw runtime_error("S3Storage: Failed");
+    }
+  }
   else if (type == "local" || type == "localstorage")
     inst = new LocalStorage();
   else

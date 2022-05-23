@@ -98,7 +98,7 @@ if __name__ == '__main__':
         if use_systemd is True:
             cmd = 'systemctl start mcs-storagemanager'
             retcode = subprocess.call(cmd, shell=True)
-            if retcode < 0:
+            if retcode != 0:
                 print('Failed to start storagemanager. \
 {} exits with {}.'.format(cmd, retcode))
                 sys.exit(1)
@@ -219,7 +219,7 @@ brm_saves_current.decode("utf-8").replace("BRM_saves", ""), USER)
 brm_saves_current.decode("utf-8").replace("BRM_saves", ""))
         try:
             retcode = subprocess.call(cmd, shell=True)
-            if retcode < 0:
+            if retcode != 0:
                 print('{} exits with {}.'.format(cmd, retcode))
                 sys.exit(1)
             # systemd services by default works using mysql privileges.
@@ -230,3 +230,9 @@ brm_saves_current.decode("utf-8").replace("BRM_saves", ""))
                     shutil.chown(shm_file, USER, GROUP)
         except OSError as e:
             sys.exit(1)
+    else:
+        if s3_enabled:
+            print('brm_saves_currenty returned empty string from read_from_sm_with_retry')
+        else:
+            print('brm_saves_currenty returned empty string from read_from_disk')
+        sys.exit(1)
