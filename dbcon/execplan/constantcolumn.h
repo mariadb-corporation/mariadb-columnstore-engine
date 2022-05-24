@@ -102,6 +102,7 @@ class ConstantColumn : public ReturnedColumn
    */
   inline const utils::NullString& constval() const
   {
+idblog("getting const val: " << fConstval.safeString());
     return fConstval;
   }
   /**
@@ -109,6 +110,7 @@ class ConstantColumn : public ReturnedColumn
    */
   inline void constval(const utils::NullString& constval)
   {
+idblog("setting const val: " << constval.safeString());
     fConstval = constval;
   }
   inline void constval(const std::string& constval)
