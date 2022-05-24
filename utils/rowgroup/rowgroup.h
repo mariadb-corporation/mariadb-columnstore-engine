@@ -496,7 +496,8 @@ class Row
   // TODO: remove this (string is not efficient for this), use getConstString() instead
   inline utils::NullString getStringField(uint32_t colIndex) const
   {
-    
+    utils::ConstString x = getConstString(colIndex);
+    idblog("getting string field, result is " << (x.str() ? ("'" + x.toString() + "'") : "NULL"));
     return utils::NullString(getConstString(colIndex));
   }
 
@@ -899,10 +900,12 @@ inline utils::ConstString Row::getShortConstString(uint32_t colIndex) const
   if (!src[0])
   {
     src += 1;
+idblog("getShortConstString: '" << (utils::ConstString(src, strnlen(src, getColumnWidth(colIndex) - 1))) << "'");
     return utils::ConstString(src, strnlen(src, getColumnWidth(colIndex) - 1));
   }
   else
   {
+idblog("getShortConstString: NULL");
     return utils::ConstString(nullptr, 0);
   }
 }
@@ -1335,7 +1338,6 @@ inline void Row::setVarBinaryField(const uint8_t* val, uint32_t len, uint32_t co
   }
   else
   {
-    idbassert(val); // XXX: this is highly suspicious.
     data[offsets[colIndex]] = !val;
     *((uint16_t*)&data[offsets[colIndex]+1]) = len;
     memcpy(&data[offsets[colIndex] + 3], val, len);
