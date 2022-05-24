@@ -34,7 +34,7 @@ namespace threadpool
 {
 FairThreadPool::FairThreadPool(uint targetWeightPerRun, uint highThreads, uint midThreads, uint lowThreads,
                                uint ID)
- : _stop(false), weightPerRun(targetWeightPerRun), id(ID), blockedThreads(0), extraThreads(0), stopExtra(true)
+ : _stop(false), weightPerRun(targetWeightPerRun), id(ID)
 {
   boost::thread* newThread;
   size_t numberOfThreads = highThreads + midThreads + lowThreads;
@@ -73,32 +73,20 @@ void FairThreadPool::addJob_(const Job& job, bool useLock)
     ++threadCounts;
   }
 
-  // If some threads have blocked (because of output queue full)
-  // Temporarily add some extra worker threads to make up for the blocked threads.
-  if (blockedThreads > extraThreads)
-  {
-    stopExtra = false;
-    newThread = threads.create_thread(ThreadHelper(this, PriorityThreadPool::Priority::EXTRA));
-    newThread->detach();
-    extraThreads++;
-  }
-  else if (blockedThreads == 0)
-  {
-    // Release the temporary threads -- some threads have become unblocked.
-    stopExtra = true;
-  }
-
   auto jobsListMapIter = txn2JobsListMap_.find(job.txnIdx_);
-  if (jobsListMapIter == txn2JobsListMap_.end())
+  if (jobsListMapIter == txn2JobsListMap_.end()) // there is no txn in the map
   {
     ThreadPoolJobsList* jobsList = new ThreadPoolJobsList;
     jobsList->push_back(job);
     txn2JobsListMap_[job.txnIdx_] = jobsList;
-    WeightT currentTopWeight = weightedTxnsQueue_.empty() ? 0 : weightedTxnsQueue_.top().first;
-    weightedTxnsQueue_.push({currentTopWeight, job.txnIdx_});
+    weightedTxnsQueue_.push({job.weight_, job.txnIdx_});
   }
-  else
+  else // txn is in the map
   {
+    if (jobsListMapIter->second->empty()) // there are no jobs for the txn
+    {
+      weightedTxnsQueue_.push({job.weight_, job.txnIdx_});
+    }
     jobsListMapIter->second->push_back(job);
   }
 
@@ -135,11 +123,8 @@ void FairThreadPool::removeJobs(uint32_t id)
 
 void FairThreadPool::threadFcn(const PriorityThreadPool::Priority preferredQueue)
 {
-  if (preferredQueue == PriorityThreadPool::Priority::EXTRA)
-    utils::setThreadName("Extra");
-  else
-    utils::setThreadName("Idle");
-  RunListT runList; // This is a vector to allow to grab multiple jobs
+  utils::setThreadName("Idle");
+  RunListT runList(1); // This is a vector to allow to grab multiple jobs
   RescheduleVecType reschedule;
   bool running = false;
   bool rescheduleJob = false;
@@ -151,12 +136,6 @@ void FairThreadPool::threadFcn(const PriorityThreadPool::Priority preferredQueue
       runList.clear(); // remove the job
       std::unique_lock<std::mutex> lk(mutex);
 
-      if (preferredQueue == PriorityThreadPool::Priority::EXTRA && stopExtra)
-      {
-        --extraThreads;
-        return;
-      }
-
       if (weightedTxnsQueue_.empty())
       {
         newJob.wait(lk);
@@ -166,7 +145,7 @@ void FairThreadPool::threadFcn(const PriorityThreadPool::Priority preferredQueue
       WeightedTxnT weightedTxn = weightedTxnsQueue_.top();
       auto txnAndJobListPair = txn2JobsListMap_.find(weightedTxn.second);
       // Looking for non-empty jobsList in a loop
-      // Waiting on cond_var if PQ is empty(no jobs in this thread pool)
+      // The loop waits on newJob cond_var if PQ is empty(no jobs in this thread pool)
       while (txnAndJobListPair == txn2JobsListMap_.end() || txnAndJobListPair->second->empty())
       {
         // JobList is empty. This can happen when this method pops the last Job.
@@ -196,7 +175,6 @@ void FairThreadPool::threadFcn(const PriorityThreadPool::Priority preferredQueue
       weightedTxnsQueue_.pop();
       TransactionIdxT txnIdx = txnAndJobListPair->first;
       ThreadPoolJobsList* jobsList = txnAndJobListPair->second;
-      // Job& job = jobsList->front();
       runList.push_back(jobsList->front());
 
       jobsList->pop_front();
@@ -210,13 +188,15 @@ void FairThreadPool::threadFcn(const PriorityThreadPool::Priority preferredQueue
       lk.unlock();
 
       running = true;
-      rescheduleJob = (*(runList[0].functor_))();
+      rescheduleJob = (*(runList[0].functor_))(); // run the functor
       running = false;
 
       utils::setThreadName("Idle");
 
       if (rescheduleJob)
       {
+        // to avoid excessive CPU usage waiting for data from storage
+        usleep(500);
         lk.lock();
         addJob_(runList[0], false);
         newJob.notify_one();

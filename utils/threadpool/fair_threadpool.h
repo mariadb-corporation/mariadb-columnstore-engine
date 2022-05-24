@@ -39,6 +39,12 @@
 
 namespace threadpool
 {
+// The idea of this thread pool is to run morsel jobs(primitive job) is to equaly distribute CPU time
+// b/w multiple parallel queries(thread maps morsel to query using txnId). Query(txnId) has its weight
+// stored in PriorityQueue that thread increases before run another morsel for the query. When query is
+// done(ThreadPoolJobsList is empty) it is removed from PQ and the Map(txn to ThreadPoolJobsList).
+// I tested multiple morsels per one loop iteration in ::threadFcn. This approach reduces CPU consumption
+// and increases query timings.
 class FairThreadPool
 {
  public:
@@ -92,23 +98,6 @@ class FairThreadPool
    */
   void dump();
 
-  // If a job is blocked, we want to temporarily increase the number of threads managed by the pool
-  // A problem can occur if all threads are running long or blocked for a single query. Other
-  // queries won't get serviced, even though there are cpu cycles available.
-  // These calls are currently protected by respondLock in sendThread(). If you call from other
-  // places, you need to consider atomicity.
-  void incBlockedThreads()
-  {
-    blockedThreads++;
-  }
-  void decBlockedThreads()
-  {
-    blockedThreads--;
-  }
-  uint32_t blockedThreadCount() const
-  {
-    return blockedThreads;
-  }
   size_t queueSize() const
   {
     return weightedTxnsQueue_.size();
@@ -165,9 +154,6 @@ class FairThreadPool
   using Txn2ThreadPoolJobsListMap = std::unordered_map<TransactionIdxT, ThreadPoolJobsList*>;
   Txn2ThreadPoolJobsListMap txn2JobsListMap_;
   WeightedTxnPrioQueue weightedTxnsQueue_;
-  std::atomic<uint32_t> blockedThreads;
-  std::atomic<uint32_t> extraThreads;
-  bool stopExtra;
 };
 
 }  // namespace threadpool

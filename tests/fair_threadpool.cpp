@@ -111,12 +111,11 @@ TEST_F(FairThreadPoolTest, FairThreadPoolAdd)
 
   while (threadPool->queueSize())
   {
-    usleep(2500000);
+    usleep(250000);
   }
-  usleep(2500000);
 
-  EXPECT_EQ(threadPool->queueSize(), 0);
-  EXPECT_EQ(results.size(), 3);
+  EXPECT_EQ(threadPool->queueSize(), 0ULL);
+  EXPECT_EQ(results.size(), 3ULL);
   EXPECT_EQ(results[0], 1);
   EXPECT_EQ(results[1], 3);
   EXPECT_EQ(results[2], 2);
@@ -139,11 +138,11 @@ TEST_F(FairThreadPoolTest, FairThreadPoolRemove)
 
   while (threadPool->queueSize())
   {
-    usleep(1500000);
+    usleep(250000);
   }
 
-  EXPECT_EQ(threadPool->queueSize(), 0);
-  EXPECT_EQ(results.size(), 2);
+  EXPECT_EQ(threadPool->queueSize(), 0ULL);
+  EXPECT_EQ(results.size(), 2ULL);
   EXPECT_EQ(results[0], 1);
   EXPECT_EQ(results[1], 3);
 }
@@ -164,11 +163,11 @@ TEST_F(FairThreadPoolTest, FairThreadPoolReschedule)
 
   while (threadPool->queueSize())
   {
-    usleep(1500000);
+    usleep(250000);
   }
 
-  EXPECT_EQ(threadPool->queueSize(), 0);
-  EXPECT_EQ(results.size(), 3);
+  EXPECT_EQ(threadPool->queueSize(), 0ULL);
+  EXPECT_EQ(results.size(), 3ULL);
   EXPECT_EQ(results[0], 1);
   EXPECT_TRUE(isThisOrThat(results, 1, 2, 2, 3));
 }
