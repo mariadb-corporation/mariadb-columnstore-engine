@@ -20,7 +20,6 @@
 #include "tuplehashjoin.h"
 #include "joinpartition.h"
 #include "threadnaming.h"
-#include "../../utils/threadpool/prioritythreadpool.h"
 
 #ifndef DISKJOINSTEP_H
 #define DISKJOINSTEP_H

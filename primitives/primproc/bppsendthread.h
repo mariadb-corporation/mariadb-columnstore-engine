@@ -30,6 +30,7 @@
 #include <boost/thread/thread.hpp>
 #include "threadnaming.h"
 #include "prioritythreadpool.h"
+#include "fair_threadpool.h"
 #ifndef BPPSENDTHREAD_H
 #define BPPSENDTHREAD_H
 
@@ -86,7 +87,7 @@ class BPPSendThread
   {
     return die;
   }
-  void setProcessorPool(threadpool::PriorityThreadPool* processorPool)
+  void setProcessorPool(threadpool::FairThreadPool* processorPool)
   {
     fProcessorPool = processorPool;
   }
@@ -148,9 +149,9 @@ class BPPSendThread
   /* secondary queue size restriction based on byte size */
   volatile uint64_t currentByteSize;
   uint64_t maxByteSize;
-  // Used to tell the PriorityThreadPool It should consider additional threads because a
+  // Used to tell the FairThreadPool It should consider additional threads because a
   // queue full event has happened and a thread has been blocked.
-  threadpool::PriorityThreadPool* fProcessorPool;
+  threadpool::FairThreadPool* fProcessorPool;
 };
 
 }  // namespace primitiveprocessor

@@ -38,6 +38,7 @@
 
 #include "threadpool.h"
 #include "../../utils/threadpool/prioritythreadpool.h"
+#include "fair_threadpool.h"
 #include "messagequeue.h"
 #include "blockrequestprocessor.h"
 #include "batchprimitiveprocessor.h"
@@ -49,7 +50,7 @@ extern oam::OamCache* oamCache;
 
 namespace primitiveprocessor
 {
-extern boost::shared_ptr<threadpool::PriorityThreadPool> OOBPool;
+extern boost::shared_ptr<threadpool::FairThreadPool> OOBPool;
 extern dbbc::BlockRequestProcessor** BRPp;
 extern BRM::DBRM* brm;
 extern boost::mutex bppLock;
@@ -129,7 +130,7 @@ class PrimitiveServer
 
   /** @brief get a pointer the shared processor thread pool
    */
-  inline threadpool::PriorityThreadPool* getProcessorThreadPool() const
+  inline threadpool::FairThreadPool* getProcessorThreadPool() const
   {
     return fProcessorPool;
   }
@@ -166,7 +167,7 @@ class PrimitiveServer
   /** @brief the thread pool used to process
    * primitive commands
    */
-  threadpool::PriorityThreadPool* fProcessorPool;
+  threadpool::FairThreadPool* fProcessorPool;
 
   int fServerThreads;
   int fServerQueueSize;
