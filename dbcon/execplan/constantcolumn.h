@@ -29,6 +29,9 @@
 #include "returnedcolumn.h"
 #include "nullstring.h"
 
+#include "stdlib.h"
+#include "execinfo.h"
+
 namespace messageqcpp
 {
 class ByteStream;
@@ -102,7 +105,17 @@ class ConstantColumn : public ReturnedColumn
    */
   inline const utils::NullString& constval() const
   {
+int nptrs;
+void* pbuf[100];
+char** strs;
+nptrs = backtrace(pbuf, 100);
+strs = backtrace_symbols(pbuf, nptrs);
 idblog("getting const val: " << fConstval.safeString());
+for (int i=0; strs && i < nptrs; i++) {
+string s(strs[i]);
+idblog("    stk: " << i << ": " << s);
+free(strs[i]);
+}
     return fConstval;
   }
   /**
