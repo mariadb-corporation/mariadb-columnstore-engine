@@ -114,7 +114,9 @@ idblog("getting const val: " << fConstval.safeString());
 for (int i=0; strs && i < nptrs; i++) {
 string s(strs[i]);
 idblog("    stk: " << i << ": " << s);
-free(strs[i]);
+}
+if (strs) {
+free(strs);
 }
     return fConstval;
   }
