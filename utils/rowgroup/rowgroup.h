@@ -900,7 +900,8 @@ inline utils::ConstString Row::getShortConstString(uint32_t colIndex) const
   if (!src[0])
   {
     src += 1;
-idblog("getShortConstString: '" << (utils::ConstString(src, strnlen(src, getColumnWidth(colIndex) - 1))) << "'");
+utils::ConstString t(src, strnlen(src, getColumnWidth(colIndex) - 1));
+idblog("getShortConstString: '" << t.toString() << "'");
     return utils::ConstString(src, strnlen(src, getColumnWidth(colIndex) - 1));
   }
   else
