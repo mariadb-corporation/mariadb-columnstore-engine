@@ -7481,7 +7481,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           collectAllCols(gwi, ifp);
           break;
         }
-
+idblog("building a simple column");
         sc = buildSimpleColumn(ifp, gwi);
 
         if (sc)
