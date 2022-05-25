@@ -7622,6 +7622,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           if (!hasNonSupportItem && (after_size - before_size) == 0 && !(parseInfo & AGG_BIT) &&
               !(parseInfo & SUB_BIT))
           {
+idblog("building constant column");
             ConstantColumn* cc = buildConstantColumnMaybeNullUsingValStr(ifp, gwi);
 
             SRCP srcp(cc);
