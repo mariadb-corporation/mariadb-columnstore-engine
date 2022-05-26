@@ -1321,7 +1321,7 @@ inline void Row::setInt128Field(const int128_t& val, uint32_t colIndex)
 
 inline void Row::setVarBinaryField(const utils::NullString& val, uint32_t colIndex)
 {
-  setVarBinaryField(val.str(), val.length(), colIndex);
+  setVarBinaryField((uint8_t*)val.str(), val.length(), colIndex);
 }
 
 inline void Row::setVarBinaryField(const uint8_t* val, uint32_t len, uint32_t colIndex)
