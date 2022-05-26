@@ -1048,6 +1048,7 @@ RowGroup::RowGroup()
   precision.reserve(10);
 }
 
+/*
 RowGroup::RowGroup(uint32_t colCount, const vector<uint32_t>& positions, const vector<uint32_t>& roids,
                    const vector<uint32_t>& tkeys, const vector<CalpontSystemCatalog::ColDataType>& colTypes,
                    const vector<uint32_t>& csNumbers, const vector<uint32_t>& cscale,
@@ -1107,6 +1108,7 @@ RowGroup::RowGroup(uint32_t colCount, const vector<uint32_t>& positions, const v
   // Set all the charsets to NULL for jit initialization.
   charsets.insert(charsets.begin(), charsetNumbers.size(), NULL);
 }
+*/
 
 RowGroup::RowGroup(const RowGroup& r)
  : columnCount(r.columnCount)

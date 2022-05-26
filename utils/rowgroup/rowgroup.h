@@ -1015,11 +1015,12 @@ inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex
 
   // TODO: add multi-byte safe truncation here
   uint32_t length = str.length();
-  if (length > getColumnWidth(colIndex))
-    length = getColumnWidth(colIndex);
 
   if (inStringTable(colIndex))
   {
+    if (length > getColumnWidth(colIndex))
+      length = getColumnWidth(colIndex);
+
     offset = strings->storeString((const uint8_t*)str.str(), length);
     *((uint64_t*)&data[offsets[colIndex]]) = offset;
     //		cout << " -- stored offset " << *((uint32_t *) &data[offsets[colIndex]])
@@ -1028,6 +1029,9 @@ inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex
   }
   else
   {
+    if (length > getColumnWidth(colIndex) - 1)
+      length = getColumnWidth(colIndex) - 1;
+
     uint8_t* buf = &data[offsets[colIndex]];
     if (str.str())
     {
@@ -1317,28 +1321,24 @@ inline void Row::setInt128Field(const int128_t& val, uint32_t colIndex)
 
 inline void Row::setVarBinaryField(const utils::NullString& val, uint32_t colIndex)
 {
-  if (inStringTable(colIndex))
-    setStringField(val, colIndex);
-  else
-  {
-    data[offsets[colIndex]] = val.isNull();
-    *((uint16_t*)&data[offsets[colIndex] + 1]) = static_cast<uint16_t>(val.length());
-    memcpy(&data[offsets[colIndex] + 3], val.str(), val.length());
-  }
+  setVarBinaryField(val.str(), val.length(), colIndex);
 }
 
 inline void Row::setVarBinaryField(const uint8_t* val, uint32_t len, uint32_t colIndex)
 {
-  if (len > getColumnWidth(colIndex))
-    len = getColumnWidth(colIndex);
-
   if (inStringTable(colIndex))
   {
+    if (len > getColumnWidth(colIndex))
+      len = getColumnWidth(colIndex);
+
     uint64_t offset = strings->storeString(val, len);
     *((uint64_t*)&data[offsets[colIndex]]) = offset;
   }
   else
   {
+    if (len > getColumnWidth(colIndex) - 1)
+      len = getColumnWidth(colIndex) - 1;
+
     data[offsets[colIndex]] = !val;
     *((uint16_t*)&data[offsets[colIndex]+1]) = len;
     memcpy(&data[offsets[colIndex] + 3], val, len);
@@ -1468,13 +1468,14 @@ class RowGroup : public messageqcpp::Serializeable
   @param scale An array specifying the scale of DECIMAL types (0 for non-decimal)
   @param precision An array specifying the precision of DECIMAL types (0 for non-decimal)
   */
-
+/*
   RowGroup(uint32_t colCount, const std::vector<uint32_t>& positions, const std::vector<uint32_t>& cOids,
            const std::vector<uint32_t>& tkeys,
            const std::vector<execplan::CalpontSystemCatalog::ColDataType>& colTypes,
            const std::vector<uint32_t>& charsetNumbers, const std::vector<uint32_t>& scale,
            const std::vector<uint32_t>& precision, uint32_t stringTableThreshold, bool useStringTable = true,
            const std::vector<bool>& forceInlineData = std::vector<bool>());
+*/
 
   /** @brief The copiers.  It copies metadata, not the row data */
   RowGroup(const RowGroup&);
