@@ -104,11 +104,15 @@ class TupleAggregateStep : public JobStep, public TupleDeliveryStep
   void pruneAuxColumns();
   void formatMiniStats();
   void printCalTrace();
+  void startFirstPhaseAggregationThread();
+  void joinFirstPhaseAggregationThreads();
 
   boost::shared_ptr<execplan::CalpontSystemCatalog> fCatalog;
   uint64_t fRowsReturned;
   bool fDoneAggregate;
   bool fEndOfResult;
+  uint64_t counter{0};
+  const uint64_t step{256};
 
   rowgroup::SP_ROWAGG_UM_t fAggregator;
   rowgroup::RowGroup fRowGroupOut;
@@ -206,6 +210,7 @@ class TupleAggregateStep : public JobStep, public TupleDeliveryStep
   uint32_t fNumOfThreads;
   uint32_t fNumOfBuckets;
   uint32_t fNumOfRowGroups;
+  uint32_t fFirstPhaseAggThreads;
   uint32_t fBucketNum;
 
   boost::mutex fMutex;
@@ -215,6 +220,7 @@ class TupleAggregateStep : public JobStep, public TupleDeliveryStep
   std::vector<rowgroup::RowGroup> fRowGroupIns;
   std::vector<rowgroup::RowGroup> fRowGroupOuts;
   std::vector<std::vector<rowgroup::RGData> > fRowGroupsDeliveredData;
+  std::vector<uint64_t> fFirstPhaseAggregationThreads;
   bool fIsMultiThread;
   int fInputIter;  // iterator
   boost::scoped_array<uint64_t> fMemUsage;

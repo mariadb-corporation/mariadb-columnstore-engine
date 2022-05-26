@@ -324,6 +324,7 @@ TupleAggregateStep::TupleAggregateStep(const SP_ROWAGG_UM_t& agg, const RowGroup
  , fRunner(0)
  , fUmOnly(false)
  , fRm(jobInfo.rm)
+ , fFirstPhaseAggThreads(0)
  , fBucketNum(0)
  , fInputIter(-1)
  , fSessionMemLimit(jobInfo.umMemLimit)
@@ -342,10 +343,7 @@ TupleAggregateStep::TupleAggregateStep(const SP_ROWAGG_UM_t& agg, const RowGroup
   fNumOfRowGroups = fRm->aggNumRowGroups();
 
   auto memLimit = std::min(fRm->availableMemory(), *fSessionMemLimit);
-  fNumOfBuckets =
-      calcNumberOfBuckets(memLimit, fNumOfThreads, fNumOfBuckets, fNumOfRowGroups, fRowGroupIn.getRowSize(),
-                          fRowGroupOut.getRowSize(), fRm->getAllowDiskAggregation());
-  fNumOfThreads = std::min(fNumOfThreads, fNumOfBuckets);
+  fNumOfBuckets = fNumOfThreads;
 
   fMemUsage.reset(new uint64_t[fNumOfThreads]);
   memset(fMemUsage.get(), 0, fNumOfThreads * sizeof(uint64_t));
@@ -391,6 +389,23 @@ void TupleAggregateStep::initializeMultiThread()
     fRowGroupOuts[i].setData(&fRowGroupDatas[i]);
     fRowGroupOuts[i].resetRowGroup(0);
   }
+}
+
+void TupleAggregateStep::startFirstPhaseAggregationThread()
+{
+  if (fFirstPhaseAggThreads == fNumOfThreads)
+    return;
+
+  ++fFirstPhaseAggThreads;
+  std::cout << "start thread # " << fFirstPhaseAggThreads << std::endl;
+  fFirstPhaseAggregationThreads.push_back(
+      jobstepThreadPool.invoke(ThreadedAggregator(this, fFirstPhaseAggThreads - 1)));
+}
+
+void TupleAggregateStep::joinFirstPhaseAggregationThreads()
+{
+  jobstepThreadPool.join(fFirstPhaseAggregationThreads);
+  fFirstPhaseAggregationThreads.clear();
 }
 
 void TupleAggregateStep::run()
@@ -5378,6 +5393,15 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
         {
           more = dlIn->next(fInputIter, &rgData);
 
+          ++counter;
+          // `RowGroug` max row count is 256,
+          // each 65k rows we spawn a new thread.
+          if (more && counter == step)
+          {
+            startFirstPhaseAggregationThread();
+            counter = 0;
+          }
+
           if (firstRead)
           {
             if (threadID == 0)
@@ -5703,18 +5727,8 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
     if (!fDoneAggregate)
     {
       initializeMultiThread();
-
-      vector<uint64_t> runners;        // thread pool handles
-      runners.reserve(fNumOfThreads);  // to prevent a resize during use
-
-      // Start the aggregator threads
-      for (i = 0; i < fNumOfThreads; i++)
-      {
-        runners.push_back(jobstepThreadPool.invoke(ThreadedAggregator(this, i)));
-      }
-
-      // Now wait for all those threads
-      jobstepThreadPool.join(runners);
+      startFirstPhaseAggregationThread();
+      joinFirstPhaseAggregationThreads();
     }
 
     if (!cancelled())
