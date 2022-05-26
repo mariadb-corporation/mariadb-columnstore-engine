@@ -138,6 +138,7 @@
 		<BulkRollbackDir>/var/lib/columnstore/data1/systemFiles/bulkRollback</BulkRollbackDir>
 		<MaxFileSystemDiskUsagePct>98</MaxFileSystemDiskUsagePct>
 		<CompressedPaddingBlocks>1</CompressedPaddingBlocks> <!-- Number of blocks used to pad compressed chunks -->
+        <FastDelete>false</FastDelete>
 	</WriteEngine>
 	<DBRM_Controller>
 		<NumWorkers>1</NumWorkers>

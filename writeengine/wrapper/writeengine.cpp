@@ -4554,9 +4554,38 @@ int WriteEngineWrapper::updateColumnRec(const TxnID& txnid, const vector<CSCType
     if (m_opType != DELETE)
       m_opType = UPDATE;
 
-    rc = writeColumnRecUpdate(txnid, cscColTypeList, colStructList, colValueList, colOldValueList,
-                              ridLists[extent], tableOid, true, ridLists[extent].size(),
-                              &currentExtentRangesPtrs, hasAUXCol);
+    bool hasFastDelete = false;
+
+    if (m_opType == DELETE && hasAUXCol)
+    {
+      hasFastDelete = Config::getFastDelete();
+    }
+
+    if (hasFastDelete)
+    {
+      ColStructList colStructListAUX(1, colStructList.back());
+      WriteEngine::CSCTypesList cscColTypeListAUX(1, cscColTypeList.back());
+      ColValueList colValueListAUX(1, colValueList.back());
+      std::vector<ExtCPInfo*> currentExtentRangesPtrsAUX(1, currentExtentRangesPtrs.back());
+
+      rc = writeColumnRecUpdate(txnid, cscColTypeListAUX, colStructListAUX, colValueListAUX, colOldValueList,
+                                ridLists[extent], tableOid, true, ridLists[extent].size(),
+                                &currentExtentRangesPtrsAUX, hasAUXCol);
+
+      for (auto& cpInfoPtr : currentExtentRangesPtrs)
+      {
+        if (cpInfoPtr)
+        {
+          cpInfoPtr->toInvalid();
+        }
+      }
+    }
+    else
+    {
+      rc = writeColumnRecUpdate(txnid, cscColTypeList, colStructList, colValueList, colOldValueList,
+                                ridLists[extent], tableOid, true, ridLists[extent].size(),
+                                &currentExtentRangesPtrs, hasAUXCol);
+    }
 
     if (rc != NO_ERROR)
       break;
