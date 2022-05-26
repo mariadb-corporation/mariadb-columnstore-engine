@@ -1655,9 +1655,8 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
 
     for (uint16_t i = 0; i < iterNumberAux; ++i)
     {
-      dataVecAux = simdDataLoadTemplate<VTAux, SimdWrapperTypeAux, HAS_INPUT_RIDS, uint8_t>(simdProcessorAux, blockAux,
-                                                                             origBlockAux, ridArray, i)
-                  .v;
+      dataVecAux = simdDataLoad<VTAux, SimdWrapperTypeAux, HAS_INPUT_RIDS, uint8_t>(simdProcessorAux, blockAux,
+        origBlockAux, ridArray, i).v;
       nonEmptyMaskAux[i] = simdProcessorAux.nullEmptyCmpNe(dataVecAux, emptyFilterArgVecAux);
       blockAux += VECTOR_SIZE_AUX;
       ridArray += VECTOR_SIZE_AUX;

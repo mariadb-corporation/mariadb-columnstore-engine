@@ -123,6 +123,14 @@ class Config
   EXPORT static std::string getBulkRollbackDir();
 
   /**
+   * @brief MCOL-5021 Option to enable/disable fast deletes.
+   * When enabled (option is disabled by default),
+   * all column extents are indiscriminately invalidated
+   * and actual delete is only performed on the AUX column.
+   */
+  EXPORT static bool getFastDelete();
+
+  /**
    * @brief Max percentage of allowable file system disk usage for each DBRoot
    */
   EXPORT static unsigned getMaxFileSystemDiskUsage();
@@ -187,6 +195,7 @@ class Config
   static unsigned m_ExtentsPerSegmentFile;    // # extents per segment file
   static int m_BulkProcessPriority;           // cpimport.bin proc priority
   static std::string m_BulkRollbackDir;       // bulk rollback meta data dir
+  static bool m_FastDelete;                   // fast delete option
   static unsigned m_MaxFileSystemDiskUsage;   // max file system % disk usage
   static unsigned m_NumCompressedPadBlks;     // num blks to pad comp chunks
   static bool m_ParentOAMModuleFlag;          // are we running on parent PM
