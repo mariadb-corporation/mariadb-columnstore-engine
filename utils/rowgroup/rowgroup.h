@@ -1468,14 +1468,12 @@ class RowGroup : public messageqcpp::Serializeable
   @param scale An array specifying the scale of DECIMAL types (0 for non-decimal)
   @param precision An array specifying the precision of DECIMAL types (0 for non-decimal)
   */
-/*
   RowGroup(uint32_t colCount, const std::vector<uint32_t>& positions, const std::vector<uint32_t>& cOids,
            const std::vector<uint32_t>& tkeys,
            const std::vector<execplan::CalpontSystemCatalog::ColDataType>& colTypes,
            const std::vector<uint32_t>& charsetNumbers, const std::vector<uint32_t>& scale,
            const std::vector<uint32_t>& precision, uint32_t stringTableThreshold, bool useStringTable = true,
            const std::vector<bool>& forceInlineData = std::vector<bool>());
-*/
 
   /** @brief The copiers.  It copies metadata, not the row data */
   RowGroup(const RowGroup&);
