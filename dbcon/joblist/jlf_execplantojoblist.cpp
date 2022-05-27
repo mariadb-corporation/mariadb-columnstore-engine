@@ -1569,7 +1569,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
     else if (sc->schemaName().empty())
     {
       // bug 3749, mark outer join table with isNull filter
-      if (cc->isiNull() && (opis == *sop || opisnull == *sop))
+      if (cc->isNull() && (opis == *sop || opisnull == *sop))
         jobInfo.tableHasIsNull.insert(getTableKey(jobInfo, tbl_oid, alias, "", view));
 
       return doExpressionFilter(sf, jobInfo);
