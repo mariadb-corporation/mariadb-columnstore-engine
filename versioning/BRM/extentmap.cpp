@@ -1467,6 +1467,7 @@ void ExtentMap::loadVersion4(IDBDataFile* in)
 
     // Calculate how much memory we need.
     const uint32_t memorySizeNeeded = (emNumElements * EM_RB_TREE_NODE_SIZE) + EM_RB_TREE_EMPTY_SIZE;
+    constexpr const uint32_t freeShmemThreshold = EM_RB_TREE_INITIAL_SIZE >> 4;
     growEMShmseg(memorySizeNeeded);
 
     size_t progress = 0, writeSize = emNumElements * sizeof(EMEntry);
@@ -1491,6 +1492,8 @@ void ExtentMap::loadVersion4(IDBDataFile* in)
             }
             progress += (uint) err;
         }
+        if (fPExtMapRBTreeImpl->getFreeMemory() < freeShmemThreshold)
+            growEMShmseg(EM_RB_TREE_INCREMENT);
 
         std::pair<int64_t, EMEntry> lbidEMEntryPair = make_pair(emEntry.range.start, emEntry);
         fExtentMapRBTree->insert(lbidEMEntryPair);
