@@ -375,6 +375,7 @@ class Row
   inline void nextRow();
   inline uint32_t getColumnWidth(uint32_t colIndex) const;
   inline uint32_t getColumnCount() const;
+  inline uint32_t getInternalSize() const;  // this is only accurate if there is no string table
   inline uint32_t getSize() const;  // this is only accurate if there is no string table
   // if a string table is being used, getRealSize() takes into account variable-length strings
   inline uint32_t getRealSize() const;
@@ -602,6 +603,7 @@ class Row
   const CHARSET_INFO* getCharset(uint32_t col) const;
 
  private:
+  static const uint16_t null_string_length = 0xffffU;
   uint32_t columnCount;
   uint64_t baseRid;
 
@@ -661,7 +663,7 @@ inline void Row::setData(const Pointer& p)
 
 inline void Row::nextRow()
 {
-  data += offsets[columnCount];
+  data += getSize();
 }
 
 inline uint32_t Row::getColumnCount() const
@@ -674,9 +676,14 @@ inline uint32_t Row::getColumnWidth(uint32_t col) const
   return colWidths[col];
 }
 
-inline uint32_t Row::getSize() const
+inline uint32_t Row::getInternalSize() const
 {
   return offsets[columnCount];
+}
+
+inline uint32_t Row::getSize() const
+{
+  return getInternalSize + columnCount;
 }
 
 inline uint32_t Row::getRealSize() const
@@ -1035,8 +1042,7 @@ inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex
     uint8_t* buf = &data[offsets[colIndex]];
     if (str.str())
     {
-      buf[0] = 0;
-      memcpy(buf + 1, str.str(), length);
+      memcpy(buf, str.str(), length);
     }
     else
     {
@@ -1091,12 +1097,12 @@ inline const uint8_t* Row::getVarBinaryField(uint32_t colIndex) const
   if (inStringTable(colIndex))
     return strings->getPointer(*((uint64_t*)&data[offsets[colIndex]]));
 
-  if (data[offsets[colIndex]])
+  if (null_string_length == *((uint16_t*)&data[offsets[colIndex]]))
   {
     return nullptr;
   }
 
-  return &data[offsets[colIndex] + 3];
+  return &data[offsets[colIndex] + 2];
 }
 
 inline const uint8_t* Row::getVarBinaryField(uint32_t& len, uint32_t colIndex) const
@@ -1108,8 +1114,13 @@ inline const uint8_t* Row::getVarBinaryField(uint32_t& len, uint32_t colIndex) c
   }
   else
   {
-    len = *((uint16_t*)&data[offsets[colIndex]+1]);
-    return &data[offsets[colIndex] + 3];
+    len = *((uint16_t*)&data[offsets[colIndex]]);
+    if (null_string_length == len)
+    {
+      len = 0;
+      return nullptr;
+    }
+    return &data[offsets[colIndex] + 2];
   }
 }
 
@@ -1688,7 +1699,7 @@ inline void RowGroup::getRow(uint32_t rowNum, Row* r) const
     initRow(r);
 
   r->baseRid = getBaseRid();
-  r->data = &(data[headerSize + (rowNum * offsets[columnCount])]);
+  r->data = &(data[headerSize + (rowNum * r->getSize())]);
   r->strings = strings;
   r->userDataStore = rgData->userDataStore.get();
 }
@@ -1781,12 +1792,12 @@ void RowGroup::initRow(Row* r, bool forceInlineData) const
 
 inline uint32_t RowGroup::getRowSize() const
 {
-  return offsets[columnCount];
+  return offsets[columnCount] + columnCount;
 }
 
 inline uint32_t RowGroup::getRowSizeWithStrings() const
 {
-  return oldOffsets[columnCount];
+  return oldOffsets[columnCount] + columnCount;
 }
 
 inline uint64_t RowGroup::getSizeWithStrings(uint64_t n) const

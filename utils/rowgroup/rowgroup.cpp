@@ -734,7 +734,7 @@ void Row::initToNull()
           case 8: *((uint64_t*)&data[offsets[i]]) = joblist::CHAR8NULL; break;
 
           default:
-            data[offsets[i]] = 1; // mark as NULL. see setStringField method for details.
+            ((uint16_t*)&data[offsets[i]]) = null_string_length; // mark as NULL. see setStringField method for details.
             break;
         }
 
@@ -1270,22 +1270,22 @@ void RowGroup::serializeRGData(ByteStream& bs) const
 
 uint32_t RowGroup::getDataSize() const
 {
-  return headerSize + (getRowCount() * offsets[columnCount]);
+  return headerSize + (getRowCount() * getSize());
 }
 
 uint32_t RowGroup::getDataSize(uint64_t n) const
 {
-  return headerSize + (n * offsets[columnCount]);
+  return headerSize + (n * getSize());
 }
 
 uint32_t RowGroup::getMaxDataSize() const
 {
-  return headerSize + (8192 * offsets[columnCount]);
+  return headerSize + (8192 * getSize());
 }
 
 uint32_t RowGroup::getMaxDataSizeWithStrings() const
 {
-  return headerSize + (8192 * oldOffsets[columnCount]);
+  return headerSize + (8192 * (oldOffsets[columnCount] + columnCount));
 }
 
 uint32_t RowGroup::getEmptySize() const
