@@ -16,4 +16,5 @@ LimitNPROC=65536
 ExecStart=@ENGINE_BINDIR@/DMLProc
 
 Restart=on-failure
-TimeoutStopSec=2
+TimeoutStartSec=900
+TimeoutStopSec=900
