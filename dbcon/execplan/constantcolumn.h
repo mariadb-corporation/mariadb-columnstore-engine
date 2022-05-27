@@ -223,7 +223,7 @@ idblog("setting data to '" << data << "'");
     fDerivedTable = std::string("*");
   }
 
-  bool isNull()
+  bool isNull() const
   {
     return fType == NULLDATA || fConstval.isNull();
   }
