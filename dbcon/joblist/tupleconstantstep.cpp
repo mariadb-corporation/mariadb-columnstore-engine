@@ -189,7 +189,7 @@ void TupleConstantStep::constructContanstRow(const JobInfo& jobInfo)
     const ConstantColumn* cc = dynamic_cast<const ConstantColumn*>(jobInfo.deliveredCols[*i].get());
     const execplan::Result c = cc->result();
 
-    if (cc->type() == ConstantColumn::NULLDATA)
+    if (cc->isNull())
     {
       if (types[*i] == CalpontSystemCatalog::CHAR || types[*i] == CalpontSystemCatalog::VARCHAR ||
           types[*i] == CalpontSystemCatalog::TEXT)

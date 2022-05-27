@@ -4874,7 +4874,7 @@ static void processAggregateColumnConstArg(gp_walk_info& gwi, SRCP& parm, Aggreg
         return;
       }
       ConstantColumn* cc;
-      if ((cc = dynamic_cast<ConstantColumn*>(rt)) && cc->type() == ConstantColumn::NULLDATA)
+      if ((cc = dynamic_cast<ConstantColumn*>(rt)) && cc->isNull())
       {
         // Explicit NULL or a const function that evaluated to NULL
         cc = new ConstantColumnNull();

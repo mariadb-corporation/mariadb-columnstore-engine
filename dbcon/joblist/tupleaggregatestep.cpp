@@ -853,7 +853,7 @@ SJSTEP TupleAggregateStep::prepAggregate(SJSTEP& step, JobInfo& jobInfo)
 
         ConstantColumn* cc = dynamic_cast<ConstantColumn*>(ac->constCol().get());
         idbassert(cc != NULL);  // @bug5261
-        bool isNull = (ConstantColumn::NULLDATA == cc->type());
+        bool isNull = cc->isNull();
 
         if (ac->aggOp() == AggregateColumn::UDAF)
         {

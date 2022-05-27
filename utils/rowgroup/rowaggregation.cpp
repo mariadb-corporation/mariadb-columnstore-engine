@@ -2019,7 +2019,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut, int
       cc = dynamic_cast<execplan::ConstantColumn*>(fFunctionCols[funcColsIdx]->fpConstCol.get());
     }
 
-    if ((cc && cc->type() == execplan::ConstantColumn::NULLDATA) ||
+    if ((cc && cc->isNull()) ||
         (!cc && isNull(&fRowGroupIn, rowIn, colIn) == true))
     {
       if (udafContextsColl[origFuncColsIdx].getRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS))

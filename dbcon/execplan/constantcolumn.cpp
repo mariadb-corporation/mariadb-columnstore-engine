@@ -228,6 +228,19 @@ const string ConstantColumn::toString() const
 
 const string ConstantColumn::data() const
 {
+int nptrs;
+void* pbuf[100];
+char** strs;
+nptrs = backtrace(pbuf, 100);
+strs = backtrace_symbols(pbuf, nptrs);
+idblog("getting data val: " << fData);
+for (int i=0; strs && i < nptrs; i++) {
+string s(strs[i]);
+idblog("    stk: " << i << ": " << s);
+}
+if (strs) {
+free(strs);
+}
   return fData;
 }
 

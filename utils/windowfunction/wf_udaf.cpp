@@ -162,7 +162,7 @@ bool WF_udaf::dropValues(int64_t b, int64_t e)
 
       // Turn on Null flags or skip based on respect nulls
       flags[k] = 0;
-      if ((!cc && fRow.isNullValue(colIn) == true) || (cc && cc->type() == ConstantColumn::NULLDATA))
+      if ((!cc && fRow.isNullValue(colIn) == true) || (cc && cc->isNull()))
       {
         if (!bRespectNulls)
         {
@@ -846,7 +846,7 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
         // Turn on Null flags or skip based on respect nulls
         flags[k] = 0;
 
-        if ((!cc && fRow.isNullValue(colIn) == true) || (cc && cc->type() == ConstantColumn::NULLDATA))
+        if ((!cc && fRow.isNullValue(colIn) == true) || (cc && cc->isNull()))
         {
           if (!bRespectNulls)
           {

@@ -508,8 +508,7 @@ const SRCP doSelectSubquery(CalpontExecutionPlan* ep, SRCP& sc, JobInfo& jobInfo
     // Empty set or null value
     if (cc == NULL)
     {
-      cc = new ConstantColumn("");
-      cc->type(ConstantColumn::NULLDATA);
+      cc = new ConstantColumn("", ConstantColumn::NULLDATA);
     }
 
     rc.reset(cc);

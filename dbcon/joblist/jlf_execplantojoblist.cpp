@@ -1569,7 +1569,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
     else if (sc->schemaName().empty())
     {
       // bug 3749, mark outer join table with isNull filter
-      if (ConstantColumn::NULLDATA == cc->type() && (opis == *sop || opisnull == *sop))
+      if (cc->isiNull() && (opis == *sop || opisnull == *sop))
         jobInfo.tableHasIsNull.insert(getTableKey(jobInfo, tbl_oid, alias, "", view));
 
       return doExpressionFilter(sf, jobInfo);
@@ -1591,7 +1591,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
     // X
 
     //@bug 339 nulls are not stored in dictionary
-    if ((dictOid = isDictCol(ct)) > 0 && ConstantColumn::NULLDATA != cc->type())
+    if ((dictOid = isDictCol(ct)) > 0 && !cc->isNull())
     {
       if (jobInfo.trace)
         cout << "Emit pTokenByScan/pCol for SimpleColumn op ConstantColumn" << endl;
@@ -1750,7 +1750,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
         jsv.push_back(sjstep);
       }
     }
-    else if (ConstantColumn::NULLDATA != cc->type() && (cop & COMPARE_LIKE))  // both like and not like
+    else if (!cc->isNull() && (cop & COMPARE_LIKE))  // both like and not like
     {
       return doExpressionFilter(sf, jobInfo);
     }
@@ -1766,7 +1766,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
       //   throwing
       try
       {
-        bool isNull = ConstantColumn::NULLDATA == cc->type();
+        bool isNull = cc->isNull();
         convertValueNum(constval.safeString(""), ct, isNull, rf, jobInfo.timeZone, value);
 
         if (ct.colDataType == CalpontSystemCatalog::FLOAT && !isNull)
@@ -1803,7 +1803,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
       }
 
 #else
-      bool isNull = ConstantColumn::NULLDATA == cc->type();
+      bool isNull = cc->isNull();
 
       if (ct.isWideDecimalType())
         convertValueNum(constval.safeString(""), ct, isNull, rf, jobInfo.timeZone, value128);
@@ -1824,7 +1824,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 #endif
 
       // @bug 2584, make "= null" to COMPARE_NIL.
-      if (ConstantColumn::NULLDATA == cc->type() && (opeq == *sop || opne == *sop))
+      if (cc->isNull() && (opeq == *sop || opne == *sop))
         cop = COMPARE_NIL;
 
       if (jobInfo.trace)
@@ -1869,7 +1869,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
             jobInfo.tokenOnly[ti.key] = true;
         }
 
-        if (ConstantColumn::NULLDATA == cc->type() && (opis == *sop || opisnull == *sop))
+        if (cc->isNull() && (opis == *sop || opisnull == *sop))
           jobInfo.tableHasIsNull.insert(getTableKey(jobInfo, tbl_oid, alias, sc->schemaName(), view));
       }
       else
@@ -2713,7 +2713,7 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
           int8_t cop = op2num(sop);
 
           // @bug 2584, make "= null" to COMPARE_NIL.
-          if (ConstantColumn::NULLDATA == cc->type() && (opeq == *sop || opne == *sop))
+          if (cc->isNull() && (opeq == *sop || opne == *sop))
             cop = COMPARE_NIL;
 
           string value = cc->constval().safeString("");
@@ -2797,7 +2797,7 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
           int8_t cop = op2num(sop);
 
           // @bug 2584, make "= null" to COMPARE_NIL.
-          if (ConstantColumn::NULLDATA == cc->type() && (opeq == *sop || opne == *sop))
+          if (cc->isNull() && (opeq == *sop || opne == *sop))
             cop = COMPARE_NIL;
 
           string value = cc->constval().safeString("");
@@ -2912,7 +2912,7 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
 
           // @bug 1151 string longer than colwidth of char/varchar.
           uint8_t rf = 0;
-          bool isNull = ConstantColumn::NULLDATA == cc->type();
+          bool isNull = cc->isNull();
 
           if (ct.isWideDecimalType())
             convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value128);
@@ -2931,7 +2931,7 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
           }
 
           // @bug 2584, make "= null" to COMPARE_NIL.
-          if (ConstantColumn::NULLDATA == cc->type() && (opeq == *sop || opne == *sop))
+          if (cc->isNull() && (opeq == *sop || opne == *sop))
             cop = COMPARE_NIL;
 
           if (ct.isWideDecimalType())
