@@ -4876,6 +4876,7 @@ static void processAggregateColumnConstArg(gp_walk_info& gwi, SRCP& parm, Aggreg
       ConstantColumn* cc;
       if ((cc = dynamic_cast<ConstantColumn*>(rt)) && cc->isNull())
       {
+idblog("cc constval: " << cc->constval().safeString());
         // Explicit NULL or a const function that evaluated to NULL
         cc = new ConstantColumnNull();
         cc->timeZone(gwi.timeZone);
@@ -4883,6 +4884,7 @@ static void processAggregateColumnConstArg(gp_walk_info& gwi, SRCP& parm, Aggreg
         ac->constCol(SRCP(rt));
         return;
       }
+idblog("cc constval (not null): " << cc->constval().safeString());
 
       // treat as count(*)
       if (ac->aggOp() == AggregateColumn::COUNT)
