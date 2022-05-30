@@ -39,11 +39,12 @@ namespace RebuildExtentMap
 // This struct represents a FileId. For internal purpose only.
 struct FileId
 {
-  FileId(uint32_t oid, uint32_t partition, uint32_t segment, uint32_t colWidth,
+  FileId(uint32_t oid, uint32_t partition, uint32_t segment, uint32_t dbroot, uint32_t colWidth,
          execplan::CalpontSystemCatalog::ColDataType colDataType, int64_t lbid, uint64_t hwm, bool isDict)
    : oid(oid)
    , partition(partition)
    , segment(segment)
+   , dbroot(dbroot)
    , colWidth(colWidth)
    , colDataType(colDataType)
    , lbid(lbid)
@@ -55,6 +56,7 @@ struct FileId
   uint32_t oid;
   uint32_t partition;
   uint32_t segment;
+  uint32_t dbroot;
   uint32_t colWidth;
   execplan::CalpontSystemCatalog::ColDataType colDataType;
   int64_t lbid;
@@ -70,12 +72,16 @@ class EMReBuilder
   EMReBuilder(bool verbose, bool display) : verbose(verbose), display(display)
   {
     // Initalize plugins.
-    IDBPolicy::init(true, false, "", 0);
+    IDBPolicy::configIDBPolicy();
   }
   ~EMReBuilder() = default;
 
   // Collects extents from the given DBRoot path.
   int32_t collectExtents(const std::string& dbRootPath);
+
+  // Collects file names for the given `partialPath` direcotory.
+  void collectFileNames(const std::string& partialPath, std::string currentPath,
+                        std::vector<std::string>& fileNames);
 
   // Clears collected extents.
   void clear()
@@ -124,7 +130,8 @@ class EMReBuilder
   int32_t rebuildExtentMap();
 
   // Search HWM in the given segment file.
-  int32_t searchHWMInSegmentFile(uint32_t oid, uint32_t dbRoot, uint32_t partition, uint32_t segment,
+  int32_t searchHWMInSegmentFile(const std::string& fullFileName, uint32_t oid, uint32_t dbRoot,
+                                 uint32_t partition, uint32_t segment,
                                  execplan::CalpontSystemCatalog::ColDataType colDataType, uint32_t width,
                                  uint64_t blocksCount, bool isDict, uint32_t compressionType, uint64_t& hwm);
 
@@ -158,8 +165,9 @@ class EMReBuilder
 class ChunkManagerWrapper
 {
  public:
-  ChunkManagerWrapper(uint32_t oid, uint32_t dbRoot, uint32_t partition, uint32_t segment,
-                      execplan::CalpontSystemCatalog::ColDataType colDataType, uint32_t colWidth);
+  ChunkManagerWrapper(const std::string& filename, uint32_t oid, uint32_t dbRoot, uint32_t partition,
+                      uint32_t segment, execplan::CalpontSystemCatalog::ColDataType colDataType,
+                      uint32_t colWidth);
 
   virtual ~ChunkManagerWrapper() = default;
   ChunkManagerWrapper(const ChunkManagerWrapper& other) = delete;
@@ -182,8 +190,8 @@ class ChunkManagerWrapper
   execplan::CalpontSystemCatalog::ColDataType colDataType;
   uint32_t colWidth;
   int32_t size;
-  std::string fileName;
   std::unique_ptr<WriteEngine::FileOp> pFileOp;
+  std::string fileName;
   // Note: We cannot clear this pointer directly, because
   // `ChunkManager` closes this file for us, otherwise we will get double
   // free error.
@@ -196,9 +204,9 @@ class ChunkManagerWrapper
 class ChunkManagerWrapperColumn : public ChunkManagerWrapper
 {
  public:
-  ChunkManagerWrapperColumn(uint32_t oid, uint32_t dbRoot, uint32_t partition, uint32_t segment,
-                            execplan::CalpontSystemCatalog::ColDataType colDataType, uint32_t colWidth,
-                            uint32_t compressionType);
+  ChunkManagerWrapperColumn(const std::string& filename, uint32_t oid, uint32_t dbRoot, uint32_t partition,
+                            uint32_t segment, execplan::CalpontSystemCatalog::ColDataType colDataType,
+                            uint32_t colWidth, uint32_t compressionType);
 
   ~ChunkManagerWrapperColumn() = default;
   ChunkManagerWrapperColumn(const ChunkManagerWrapperColumn& other) = delete;
@@ -219,9 +227,9 @@ class ChunkManagerWrapperColumn : public ChunkManagerWrapper
 class ChunkManagerWrapperDict : public ChunkManagerWrapper
 {
  public:
-  ChunkManagerWrapperDict(uint32_t oid, uint32_t dbRoot, uint32_t partition, uint32_t segment,
-                          execplan::CalpontSystemCatalog::ColDataType colDataType, uint32_t colWidth,
-                          uint32_t compressionType);
+  ChunkManagerWrapperDict(const std::string& filename, uint32_t oid, uint32_t dbRoot, uint32_t partition,
+                          uint32_t segment, execplan::CalpontSystemCatalog::ColDataType colDataType,
+                          uint32_t colWidth, uint32_t compressionType);
 
   ~ChunkManagerWrapperDict() = default;
   ChunkManagerWrapperDict(const ChunkManagerWrapperDict& other) = delete;
