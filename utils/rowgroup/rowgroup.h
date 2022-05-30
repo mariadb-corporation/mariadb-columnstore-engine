@@ -1050,7 +1050,7 @@ inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex
 
     setNullMark(colIndex, !str.str());
 
-idblog("setting short string field[" << colIndex << "]: " << (str.str() ? str.toString() : "NULL"));
+idblog("setting short string field[" << colIndex << "]: " << (str.str() ? "'" + str.toString() + "'" : "NULL"));
 
     uint8_t* buf = &data[offsets[colIndex]];
     if (str.str())
