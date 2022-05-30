@@ -18,7 +18,6 @@
 #include <iostream>
 #include <string>
 #include <ftw.h>
-#include <boost/filesystem.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 
 #include "configcpp.h"
@@ -29,7 +28,7 @@
 using namespace idbdatafile;
 using namespace RebuildExtentMap;
 
-static void usage(const string& pname)
+static void usage(const std::string& pname)
 {
   std::cout << "usage: " << pname << " [-vdhs]" << std::endl;
   std::cout << "rebuilds the extent map from the contents of the database file "
@@ -39,6 +38,20 @@ static void usage(const string& pname)
   std::cout << "   -d display what would be done--don't do it" << std::endl;
   std::cout << "   -h display this help text" << std::endl;
   std::cout << "   -s show extent map and quit" << std::endl;
+}
+
+static bool isYes()
+{
+  std::string confirmation;
+  cin >> confirmation;
+  if (confirmation.size() == 0)
+    return false;
+
+  boost::algorithm::to_lower(confirmation);
+  if (!(confirmation == "y" || confirmation == "yes"))
+    return false;
+
+  return true;
 }
 
 int main(int argc, char** argv)
@@ -78,41 +91,28 @@ int main(int argc, char** argv)
 
   // MCOL-4685
   std::cout << "The launch of mcsRebuildEM tool must be sanctioned by MariaDB support. " << std::endl;
-  std::cout << "Requirement: all DBRoots must be on this node. " << std::endl;
   std::cout << "Do you want to continue Y/N? ";
-  std::string confirmation;
-  cin >> confirmation;
-  if (confirmation.size() == 0)
-    return 0;
-
-  boost::algorithm::to_lower(confirmation);
-  if (!(confirmation == "y" || confirmation == "yes"))
+  if (!isYes())
     return 0;
 
   auto* config = config::Config::makeConfig();
-
-  // Check for storage type.
-  const auto DBRootStorageType = config->getConfig("Installation", "DBRootStorageType");
-  if (DBRootStorageType != "internal")
-  {
-    std::cout << "Only internal DBRootStorageType is supported, provided: " << DBRootStorageType << std::endl;
-    return 0;
-  }
-
   const auto BRMSavesEM = config->getConfig("SystemConfig", "DBRMRoot") + "_em";
+
   // Check for `BRM_saves_em` file presents.
   // TODO: Should we add force option to remove file?
-  if (boost::filesystem::exists(BRMSavesEM))
+  if (IDBPolicy::exists(BRMSavesEM.c_str()))
   {
     std::cout << BRMSavesEM << " file exists. " << std::endl;
-    std::cout << "Please note: this tool is only suitable in situations "
-                 "where there is no `BRM_saves_em` file. "
-              << std::endl;
-    std::cout << "If `BRM_saves_em` "
-                 "exists extent map will be restored from it. "
-              << std::endl;
-    std::cout << "Exiting. " << std::endl;
-    return 0;
+    std::cout << "Do you want to delete this file Y/N? ";
+    if (!isYes())
+      return 0;
+
+    if (IDBPolicy::remove(BRMSavesEM.c_str()) == -1)
+    {
+      std::cout << "Cannot remove " << BRMSavesEM << std::endl;
+      std::cout << "Exiting. " << std::endl;
+      return 0;
+    }
   }
 
   // Initialize system extents from the binary blob.

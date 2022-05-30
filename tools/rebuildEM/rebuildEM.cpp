@@ -16,7 +16,6 @@
    MA 02110-1301, USA. */
 
 #include <iostream>
-#include <boost/filesystem.hpp>
 #include <stdint.h>
 
 #include "rebuildEM.h"
@@ -36,16 +35,36 @@ using namespace idbdatafile;
 
 namespace RebuildExtentMap
 {
-int32_t EMReBuilder::collectExtents(const string& dbRootPath)
+void EMReBuilder::collectFiles(const std::string& partialPath, std::string currentPath,
+                               std::vector<std::string>& fileNames)
+{
+  currentPath.append(partialPath);
+
+  std::list<std::string> partialPathes;
+  IDBPolicy::listDirectory(currentPath.c_str(), partialPathes);
+  if (partialPathes.size() == 0)
+  {
+    fileNames.push_back(currentPath);
+    return;
+  }
+
+  currentPath.push_back('/');
+  for (const auto& partialPath : partialPathes)
+    collectFiles(partialPath, currentPath, fileNames);
+}
+
+int32_t EMReBuilder::collectExtents(const std::string& dbRootPath)
 {
   if (doVerbose())
   {
     std::cout << "Collect extents for the DBRoot " << dbRootPath << std::endl;
   }
 
-  for (boost::filesystem::recursive_directory_iterator dirIt(dbRootPath), dirEnd; dirIt != dirEnd; ++dirIt)
+  std::vector<std::string> fileNames;
+  collectFiles(dbRootPath, "", fileNames);
+  for (const auto& fileName : fileNames)
   {
-    (void)collectExtent(dirIt->path().string());
+    (void)collectExtent(fileName);
   }
 
   return 0;

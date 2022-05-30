@@ -70,12 +70,16 @@ class EMReBuilder
   EMReBuilder(bool verbose, bool display) : verbose(verbose), display(display)
   {
     // Initalize plugins.
-    IDBPolicy::init(true, false, "", 0);
+    IDBPolicy::configIDBPolicy();
   }
   ~EMReBuilder() = default;
 
   // Collects extents from the given DBRoot path.
   int32_t collectExtents(const std::string& dbRootPath);
+
+  // Collects files for the given `partialPath` direcotory.
+  void collectFiles(const std::string& partialPath, std::string currentPath,
+                    std::vector<std::string>& fileNames);
 
   // Clears collected extents.
   void clear()
