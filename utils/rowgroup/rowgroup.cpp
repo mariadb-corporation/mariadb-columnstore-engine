@@ -1271,17 +1271,17 @@ void RowGroup::serializeRGData(ByteStream& bs) const
 
 uint32_t RowGroup::getDataSize() const
 {
-  return headerSize + (getRowCount() * getSize());
+  return getDataSize(getRowCount());
 }
 
 uint32_t RowGroup::getDataSize(uint64_t n) const
 {
-  return headerSize + (n * getSize());
+  return headerSize + (n * getRowSize());
 }
 
 uint32_t RowGroup::getMaxDataSize() const
 {
-  return headerSize + (8192 * getSize());
+  return headerSize + (8192 * getRowSize());
 }
 
 uint32_t RowGroup::getMaxDataSizeWithStrings() const
