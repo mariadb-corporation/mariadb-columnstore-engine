@@ -629,6 +629,16 @@ class Row
 
   UserDataStore* userDataStore;  // For UDAF
 
+  bool getNullMark(uint32_t col) const
+  {
+    return data[getInternalSize() + col];
+  }
+
+  void setNullMark(uint32_t col, bool isNull)
+  {
+    data[getInternalSize() + col] = isNull;
+  }
+
   friend class RowGroup;
 };
 
@@ -691,7 +701,7 @@ inline uint32_t Row::getRealSize() const
   if (!useStringTable)
     return getSize();
 
-  uint32_t ret = 2;
+  uint32_t ret = columnCount; // account for NULL flags.
 
   for (uint32_t i = 0; i < columnCount; i++)
   {
@@ -904,12 +914,11 @@ inline utils::ConstString Row::getShortConstString(uint32_t colIndex) const
   uint32_t offset = offsets[colIndex];
   //idbassert(getColumnWidth(colIndex) < 8); // we have to be sure these are SHORT strings, not VARCHAR(8191).
   const char* src = (const char*)&data[offset];
-  if (!src[0])
+  if (!getNullMark(colIndex))
   {
-    src += 1;
-utils::ConstString t(src, strnlen(src, getColumnWidth(colIndex) - 1));
+utils::ConstString t(src, strnlen(src, getColumnWidth(colIndex)));
 idblog("getShortConstString: '" << t.toString() << "'");
-    return utils::ConstString(src, strnlen(src, getColumnWidth(colIndex) - 1));
+    return utils::ConstString(src, strnlen(src, getColumnWidth(colIndex)));
   }
   else
   {
@@ -1036,20 +1045,16 @@ inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex
   }
   else
   {
-    if (length > getColumnWidth(colIndex) - 1)
-      length = getColumnWidth(colIndex) - 1;
+    if (length > getColumnWidth(colIndex))
+      length = getColumnWidth(colIndex);
+
+    setNullMark(colIndex, !str.str());
 
     uint8_t* buf = &data[offsets[colIndex]];
     if (str.str())
     {
       memcpy(buf, str.str(), length);
     }
-    else
-    {
-      buf[0] = 1;
-      length = 0;
-    }
-    length += 1; // actual data is one-byte longer than length.
     memset(buf + length, 0, offsets[colIndex + 1] - (offsets[colIndex] + length));
   }
 }
@@ -1350,7 +1355,7 @@ inline void Row::setVarBinaryField(const uint8_t* val, uint32_t len, uint32_t co
     if (len > getColumnWidth(colIndex) - 1)
       len = getColumnWidth(colIndex) - 1;
 
-    data[offsets[colIndex]] = !val;
+    setNullMark(colIndex, !val);
     *((uint16_t*)&data[offsets[colIndex]+1]) = len;
     memcpy(&data[offsets[colIndex] + 3], val, len);
   }

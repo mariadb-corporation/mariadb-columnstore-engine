@@ -659,6 +659,7 @@ void Row::initToNull()
 
   for (i = 0; i < columnCount; i++)
   {
+    data[getInternalSize() + i] = 1; // mark as null.
     switch (types[i])
     {
       case CalpontSystemCatalog::TINYINT: data[offsets[i]] = joblist::TINYINTNULL; break;
