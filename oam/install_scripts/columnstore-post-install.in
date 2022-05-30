@@ -12,11 +12,18 @@ running_systemd() {
    fi
 }
 
+# This function recursively(up to PID 1) searches for
+# env_var_name in the environment variables list
 find_env_var() {
     env_var_name=$1
     pid=$$
-    while [ -z "$ENV_VAR" -a "$pid" != 1 ]; do
+    ENV_VAR=''
+    while [ -z "$ENV_VAR" -a "$pid" != 1  ]; do
         ppid=$(ps -oppid -p$pid|tail -1|awk '{print $1}')
+        # This condition is true in containers
+        if [ "$ppid" == 0 ]; then
+            break;
+        fi
         env=$(strings /proc/$ppid/environ)
         ENV_VAR=$(echo "$env"|awk -F= "\$1 == \"$env_var_name\" { print \$2; }")
         pid=$ppid
