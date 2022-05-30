@@ -917,12 +917,12 @@ inline utils::ConstString Row::getShortConstString(uint32_t colIndex) const
   if (!getNullMark(colIndex))
   {
 utils::ConstString t(src, strnlen(src, getColumnWidth(colIndex)));
-idblog("getShortConstString: '" << t.toString() << "'");
+idblog("getShortConstString[" << colIndex << "]: '" << t.toString() << "'");
     return utils::ConstString(src, strnlen(src, getColumnWidth(colIndex)));
   }
   else
   {
-idblog("getShortConstString: NULL");
+idblog("getShortConstString[" << colIndex << "]: NULL");
     return utils::ConstString(nullptr, 0);
   }
 }
