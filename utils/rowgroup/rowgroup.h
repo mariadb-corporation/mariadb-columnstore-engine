@@ -1032,6 +1032,8 @@ inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex
   // TODO: add multi-byte safe truncation here
   uint32_t length = str.length();
 
+  setNullMark(colIndex, !str.str());
+
   if (inStringTable(colIndex))
   {
     if (length > getColumnWidth(colIndex))
@@ -1047,8 +1049,6 @@ inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex
   {
     if (length > getColumnWidth(colIndex))
       length = getColumnWidth(colIndex);
-
-    setNullMark(colIndex, !str.str());
 
 idblog("setting short string field[" << colIndex << "]: " << (str.str() ? "'" + str.toString() + "'" : "NULL"));
 
