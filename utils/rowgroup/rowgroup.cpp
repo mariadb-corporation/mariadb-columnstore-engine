@@ -659,7 +659,7 @@ void Row::initToNull()
 
   for (i = 0; i < columnCount; i++)
   {
-    setNullMark(i); // mark as null.
+    setNullMark(i, true); // mark as null.
     switch (types[i])
     {
       case CalpontSystemCatalog::TINYINT: data[offsets[i]] = joblist::TINYINTNULL; break;
@@ -735,7 +735,7 @@ void Row::initToNull()
           case 8: *((uint64_t*)&data[offsets[i]]) = joblist::CHAR8NULL; break;
 
           default:
-            setNullMark(1);
+            setNullMark(i, true);
             break;
         }
 
