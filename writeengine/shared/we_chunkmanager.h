@@ -190,12 +190,12 @@ class ChunkManager
   IDBDataFile* getFilePtr(const FID& fid, uint16_t root, uint32_t partition, uint16_t segment,
                           std::string& filename, const char* mode, int size, bool useTmpSuffix) const;
 
-  // @brief Retrieve a file pointer in the chunk manager.
+  // @brief Retrieve a file pointer in the chunk manager by the given `filename`.
   //        for column/dict segment file
-  IDBDataFile* getSegmentFilePtr(FID& fid, uint16_t root, uint32_t partition, uint16_t segment,
-                                 execplan::CalpontSystemCatalog::ColDataType colDataType, uint32_t colWidth,
-                                 std::string& filename, const char* mode, int32_t size, bool useTmpSuffix,
-                                 bool isDict) const;
+  IDBDataFile* getFilePtrByName(const std::string& filename, FID& fid, uint16_t root, uint32_t partition,
+                                uint16_t segment, execplan::CalpontSystemCatalog::ColDataType colDataType,
+                                uint32_t colWidth, const char* mode, int32_t size, bool useTmpSuffix,
+                                bool isDict) const;
 
   // @brief Create a compressed dictionary file with an appropriate header.
   IDBDataFile* createDctnryFile(const FID& fid, int64_t width, uint16_t root, uint32_t partition,
@@ -285,6 +285,11 @@ class ChunkManager
                             const execplan::CalpontSystemCatalog::ColDataType colDataType, int colWidth,
                             bool useTmpSuffix, bool dictnry = false) const;
 
+  CompFileData* getFileDataByName(const std::string& filename, const FID& fid, uint16_t root,
+                                  uint32_t partition, uint16_t segment, const char* mode, int size,
+                                  const execplan::CalpontSystemCatalog::ColDataType colDataType, int colWidth,
+                                  bool useTmpSuffix, bool dctnry) const;
+
   // @brief Retrieve a chunk of pFile from disk.
   int fetchChunkFromFile(IDBDataFile* pFile, int64_t id, ChunkData*& chunkData);
 
@@ -367,6 +372,9 @@ class ChunkManager
   size_t COMPRESSED_CHUNK_SIZE;
 
  private:
+  CompFileData* getFileData_(const FileID& fid, const std::string& filename, const char* mode, int size,
+                             const execplan::CalpontSystemCatalog::ColDataType colDataType, int colWidth,
+                             bool useTmpSuffix, bool dictnry = false) const;
 };
 
 }  // namespace WriteEngine
