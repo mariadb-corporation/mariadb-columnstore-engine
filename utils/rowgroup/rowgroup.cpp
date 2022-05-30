@@ -659,7 +659,7 @@ void Row::initToNull()
 
   for (i = 0; i < columnCount; i++)
   {
-    data[getInternalSize() + i] = 1; // mark as null.
+    setNullMark(i); // mark as null.
     switch (types[i])
     {
       case CalpontSystemCatalog::TINYINT: data[offsets[i]] = joblist::TINYINTNULL; break;
@@ -735,7 +735,7 @@ void Row::initToNull()
           case 8: *((uint64_t*)&data[offsets[i]]) = joblist::CHAR8NULL; break;
 
           default:
-            ((uint16_t*)&data[offsets[i]]) = null_string_length; // mark as NULL. see setStringField method for details.
+            setNullMark(1);
             break;
         }
 
@@ -899,7 +899,7 @@ bool Row::isNullValue(uint32_t colIndex) const
         default:
           // a case for value stored with NULL flag prefix.
 	  // see setStringField method.
-          return data[offsets[colIndex]] != 0;
+          return getNullMark(colIndex);
       }
 
       break;

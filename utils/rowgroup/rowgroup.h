@@ -693,7 +693,7 @@ inline uint32_t Row::getInternalSize() const
 
 inline uint32_t Row::getSize() const
 {
-  return getInternalSize + columnCount;
+  return getInternalSize() + columnCount;
 }
 
 inline uint32_t Row::getRealSize() const
