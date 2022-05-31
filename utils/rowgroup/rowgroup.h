@@ -61,6 +61,9 @@
 #include "collation.h"
 #include "common/hashfamily.h"
 
+#include "stdlib.h"
+#include "execinfo.h"
+
 // Workaround for my_global.h #define of isnan(X) causing a std::std namespace
 
 namespace rowgroup
@@ -1051,6 +1054,21 @@ inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex
       length = getColumnWidth(colIndex);
 
 idblog("setting short string field[" << colIndex << "]: " << (str.str() ? "'" + str.toString() + "'" : "NULL"));
+if (!str.str())
+{
+int nptrs;
+void* pbuf[100];
+char** strs;
+nptrs = backtrace(pbuf, 100);
+strs = backtrace_symbols(pbuf, nptrs);
+for (int i=0; strs && i < nptrs; i++) {
+string s(strs[i]);
+idblog("    stk: " << i << ": " << s);
+}
+if (strs) {
+free(strs);
+}
+}
 
     uint8_t* buf = &data[offsets[colIndex]];
     if (str.str())
