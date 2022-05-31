@@ -1036,6 +1036,7 @@ inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex
   uint32_t length = str.length();
 
   setNullMark(colIndex, !str.str());
+idblog("column #" << colIndex << ", null mark is " << ((int)getNullMark()) << ", pointer is NULL " << ((int)(!str.str())));
 
   if (inStringTable(colIndex))
   {
@@ -1077,6 +1078,7 @@ free(strs);
     }
     memset(buf + length, 0, offsets[colIndex + 1] - (offsets[colIndex] + length));
   }
+idblog("checking null mark for column #" << colIndex << ", null mark is " << ((int)getNullMark()));
 }
 
 inline std::string Row::getVarBinaryStringField(uint32_t colIndex) const
