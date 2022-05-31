@@ -262,7 +262,7 @@ idblog("constant column is null");
       {
 idblog("setting string field for constant column, the column constval is '" << cc->constval().safeString() << "', result's value is '" << c.strVal.safeString() << "'.");
         fRowConst.setStringField(c.strVal, *i);
-idblog("fetching value back: '" << fRowConst.getStringField().safeString(*i) << "'.");
+idblog("fetching value back: '" << fRowConst.getStringField(*i).safeString() << "'.");
         break;
       }
 
