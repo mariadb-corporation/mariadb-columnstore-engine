@@ -1030,7 +1030,7 @@ inline void Row::setStringField(const uint8_t* str, uint32_t length, uint32_t co
 }
 inline void Row::setStringField(const utils::NullString& val, uint32_t colIndex)
 {
-  utils::ConstString temp(val.str(), val.length);
+  utils::ConstString temp(val.str(), val.length());
   setStringField(temp, colIndex);
 }
 inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex)
