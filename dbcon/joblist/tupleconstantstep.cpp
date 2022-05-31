@@ -260,6 +260,7 @@ idblog("constant column is null");
       case CalpontSystemCatalog::VARCHAR:
       case CalpontSystemCatalog::TEXT:
       {
+idblog("setting string field for constant column, the column constval is '" << cc->constval().safeString() << "', result's value is '" << c.strVal.safeString() << "'.");
         fRowConst.setStringField(c.strVal, *i);
         break;
       }
