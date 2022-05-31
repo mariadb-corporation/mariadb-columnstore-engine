@@ -420,7 +420,9 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, long t
             colType.colDataType == CalpontSystemCatalog::VARBINARY)
         {
 idblog("storing empty string");
-          (*f)->store("", 0, (*f)->charset());
+          //(*f)->store("", 0, (*f)->charset());
+          (*f)->reset();
+	  (*f)->set_null();
         }
 
         continue;
