@@ -1620,33 +1620,6 @@ RGData RowGroup::duplicate()
   return ret;
 }
 
-void Row::setStringField(const NullString& val, uint32_t colIndex)
-{
-  uint64_t offset;
-  uint64_t length;
-
-  // length = strlen(val.c_str()) + 1;
-  length = val.length();
-
-  if (length > getColumnWidth(colIndex))
-    length = getColumnWidth(colIndex);
-
-  if (inStringTable(colIndex))
-  {
-    offset = strings->storeString((const uint8_t*)val.str(), length);
-    *((uint64_t*)&data[offsets[colIndex]]) = offset;
-    //		cout << " -- stored offset " << *((uint32_t *) &data[offsets[colIndex]])
-    //				<< " length " << *((uint32_t *) &data[offsets[colIndex] + 4])
-    //				<< endl;
-  }
-  else
-  {
-    idbassert(!val.isNull());
-    memcpy(&data[offsets[colIndex]], val.str(), length);
-    memset(&data[offsets[colIndex] + length], 0, offsets[colIndex + 1] - (offsets[colIndex] + length));
-  }
-}
-
 void RowGroup::append(RGData& rgd)
 {
   RowGroup tmp(*this);
