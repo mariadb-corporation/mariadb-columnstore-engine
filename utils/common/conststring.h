@@ -45,6 +45,7 @@ class ConstString
   const char* end() const
   {
     // end() should be computed for non-nullptr mStrs, otherwise it is undefined behavior.
+#if 0
 if (!mStr)
 {
 idblog("mStr is nullptr");
@@ -62,6 +63,11 @@ free(strs);
 }
 }
     idbassert(mStr);
+#endif
+    if (!mStr)
+    {
+      return nullptr;
+    }
     return mStr + mLength;
   }
   size_t length() const
