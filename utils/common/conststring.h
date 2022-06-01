@@ -54,7 +54,7 @@ char** strs;
 nptrs = backtrace(pbuf, 100);
 strs = backtrace_symbols(pbuf, nptrs);
 for (int i=0; strs && i < nptrs; i++) {
-string s(strs[i]);
+std::string s(strs[i]);
 idblog("    stk: " << i << ": " << s);
 }
 if (strs) {
