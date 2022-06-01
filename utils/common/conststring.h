@@ -60,6 +60,7 @@ idblog("    stk: " << i << ": " << s);
 if (strs) {
 free(strs);
 }
+}
     idbassert(mStr);
     return mStr + mLength;
   }
