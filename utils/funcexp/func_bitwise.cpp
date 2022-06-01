@@ -141,13 +141,17 @@ datatypes::TUInt64Null GenericToBitOperand(Row& row, const execplan::SPTP& parm,
     case execplan::CalpontSystemCatalog::TEXT:
     {
       bool tmpIsNull = false;
+ idblog("about to get strVal");
       const auto& str = parm->data()->getStrVal(row, tmpIsNull).safeString("");
       if (tmpIsNull)
         return datatypes::TUInt64Null();
 
       datatypes::DataCondition cnverr;
+ idblog("creating converter cnv");
       literal::Converter<literal::SignedNumericLiteral> cnv(str, cnverr);
+ idblog("normalize cnv");
       cnv.normalize();
+ idblog("and returning value");
       return cnv.negative() ? datatypes::TUInt64Null((uint64_t)cnv.toPackedSDecimal<int64_t>(0, cnverr))
                             : datatypes::TUInt64Null(cnv.toPackedUDecimal<uint64_t>(0, cnverr));
     }
@@ -412,6 +416,7 @@ class Func_bitor_return_uint64 : public Func_bitor
                     CalpontSystemCatalog::ColType& operationColType) override
   {
     idbassert(parm.size() == 2);
+idblog("converting for bitor");
     Arg2Lazy<TA, TB> args(row, parm, *this, operationColType.getTimeZone());
     return (int64_t)(args.a | args.b).nullSafeValue(isNull);
   }
