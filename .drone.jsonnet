@@ -156,7 +156,6 @@ local Pipeline(branch, platform, event, arch='amd64') = {
   mtr:: {
     name: 'mtr',
     image: 'docker:git',
-    [if arch == 'arm64' then 'failure']: 'ignore',
     volumes: [pipeline._volumes.docker],
     commands: [
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env MYSQL_TEST_DIR=' + mtr_path + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
