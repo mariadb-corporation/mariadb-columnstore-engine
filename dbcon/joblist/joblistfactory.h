@@ -27,6 +27,7 @@
 #include <string>
 
 #include "joblist.h"
+#include "../../primitives/primproc/primitiveserverthreadpools.h"
 
 #if defined(_MSC_VER) && defined(JOBLIST_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
@@ -61,6 +62,7 @@ class JobListFactory
    * @param cplan the CalpontExecutionPlan from which the JobList is constructed
    */
   EXPORT static SJLP makeJobList(execplan::CalpontExecutionPlan* cplan, ResourceManager* rm,
+                                 const PrimitiveServerThreadPools& primitiveServerThreadPools,
                                  bool tryTuple = false, bool isExeMgr = false);
 
  private:

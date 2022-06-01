@@ -2412,6 +2412,8 @@ PrimitiveServer::PrimitiveServer(int serverThreads, int serverQueueSize, int pro
   // We're not using either the priority or the job-clustering features, just need a threadpool
   // that can reschedule jobs, and an unlimited non-blocking queue
   OOBPool.reset(new threadpool::PriorityThreadPool(1, 5, 0, 0, 1));
+  // Initialize a local pointer.
+  fOOBPool = OOBPool;
 
   asyncCounter = 0;
 

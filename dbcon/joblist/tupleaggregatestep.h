@@ -23,6 +23,7 @@
 #include "jobstep.h"
 #include "rowaggregation.h"
 #include "threadnaming.h"
+#include "../../primitives/primproc/primitiveserverthreadpools.h"
 
 #include <boost/thread.hpp>
 
@@ -220,6 +221,8 @@ class TupleAggregateStep : public JobStep, public TupleDeliveryStep
   boost::scoped_array<uint64_t> fMemUsage;
 
   boost::shared_ptr<int64_t> fSessionMemLimit;
+
+  PrimitiveServerThreadPools fPrimitiveServerThreadPools;
 };
 
 }  // namespace joblist
