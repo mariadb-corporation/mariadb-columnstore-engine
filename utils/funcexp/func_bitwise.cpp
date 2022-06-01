@@ -54,6 +54,7 @@ bool validateBitOperandTypeOrError(execplan::FunctionColumn& col, const Func& fu
   auto& type = col.functionParms()[argno]->data()->resultType();
   if (type.canReturnXInt64())
     return false;
+idblog("will raise incorrect data type error");
   func.raiseIllegalParameterDataTypeError(type);
   return true;
 }

@@ -45,6 +45,21 @@ class ConstString
   const char* end() const
   {
     // end() should be computed for non-nullptr mStrs, otherwise it is undefined behavior.
+if (!mStr)
+{
+idblog("mStr is nullptr");
+int nptrs;
+void* pbuf[100];
+char** strs;
+nptrs = backtrace(pbuf, 100);
+strs = backtrace_symbols(pbuf, nptrs);
+for (int i=0; strs && i < nptrs; i++) {
+string s(strs[i]);
+idblog("    stk: " << i << ": " << s);
+}
+if (strs) {
+free(strs);
+}
     idbassert(mStr);
     return mStr + mLength;
   }
