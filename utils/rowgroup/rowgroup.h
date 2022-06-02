@@ -502,7 +502,7 @@ class Row
   {
     utils::ConstString x = getConstString(colIndex);
     idblog("getting string field, result is " << (x.str() ? ("'" + x.toString() + "'") : "NULL"));
-    return utils::NullString(getConstString(colIndex));
+    return utils::NullString(x);
   }
 
   inline utils::ConstString getConstString(uint32_t colIndex) const;
@@ -1059,7 +1059,7 @@ idblog("string is in string table");
   {
     if (length > getColumnWidth(colIndex))
       length = getColumnWidth(colIndex);
-
+idblog_stat(
 idblog("setting short string field[" << colIndex << "]: " << (str.str() ? "'" + str.toString() + "'" : "NULL"));
 if (!str.str())
 {
@@ -1076,6 +1076,7 @@ if (strs) {
 free(strs);
 }
 }
+)
 
     uint8_t* buf = &data[offsets[colIndex]];
     if (str.str())

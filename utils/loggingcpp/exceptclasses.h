@@ -301,8 +301,10 @@ class ProtocolError : public std::logic_error
       logger.logErrorMessage(message);                                                     \
     }                                                                                      \
   } while (0)
+#define idblog_stat(x) x
 #else
 #define idblog(x) do { } while (0)
+#define idblog_stat(x) /* nothing */
 #endif
 
 #define idbassert_s(x, s)                                                                                \
