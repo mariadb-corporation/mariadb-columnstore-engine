@@ -283,6 +283,7 @@ class ProtocolError : public std::logic_error
     }                                                                                      \
   } while (0)
 
+#if 0
 #define idblog(x)                                                                       \
   do                                                                                       \
   {                                                                                        \
@@ -300,6 +301,9 @@ class ProtocolError : public std::logic_error
       logger.logErrorMessage(message);                                                     \
     }                                                                                      \
   } while (0)
+#else
+#define idblog(x) do { } while (0)
+#endif
 
 #define idbassert_s(x, s)                                                                                \
   do                                                                                                     \
