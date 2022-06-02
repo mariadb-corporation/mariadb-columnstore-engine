@@ -2,7 +2,7 @@ DROP DATABASE IF EXISTS mcs138_db;
 CREATE DATABASE mcs138_db;
 USE mcs138_db;
 CREATE TABLE t1 (a CHAR(1), b INT)ENGINE=Columnstore;
-INSERT INTO t1 VALUES ('', NULL),('a', 123),('a', 1),('b', 123),('c', 1861),('c', 1991),('d', 10701),('d', 1071),('a', 92);
+INSERT INTO t1 VALUES (NULL, NULL),('a', 123),('a', 1),('b', 123),('c', 1861),('c', 1991),('d', 10701),('d', 1071),('a', 92);
 SELECT a, b, MAX(b) OVER(ORDER BY a) max FROM t1;
 a	b	max
 NULL	NULL	NULL

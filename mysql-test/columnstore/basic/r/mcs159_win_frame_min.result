@@ -2,7 +2,7 @@ DROP DATABASE IF EXISTS mcs159_db;
 CREATE DATABASE mcs159_db;
 USE mcs159_db;
 CREATE TABLE t1 (a CHAR(1), b INT)ENGINE=Columnstore;
-INSERT INTO t1 VALUES ('', NULL),('a', 12),('a', 13),('b', 14),('c', 15),('d', 16),('d', 17),('b', 18),('a', 19);
+INSERT INTO t1 VALUES (NULL, NULL),('a', 12),('a', 13),('b', 14),('c', 15),('d', 16),('d', 17),('b', 18),('a', 19);
 SELECT a, b, MIN(b) OVER(ORDER BY b RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) min FROM t1;
 a	b	min
 	NULL	NULL
