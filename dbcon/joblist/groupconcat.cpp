@@ -267,7 +267,7 @@ void GroupConcatInfo::mapColumns(const RowGroup& projRG)
       i2++;
     }
 
-idbassert(false);
+//idbassert(false);
 //    (*k)->fRowGroup = RowGroup(oids.size(), pos, oids, keys, types, csNums, scale, precision,
 //                               projRG.getStringTableThreshold(), false);
     (*k)->fMapping = makeMapping(projRG, (*k)->fRowGroup);
