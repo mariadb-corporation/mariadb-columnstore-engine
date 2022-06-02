@@ -931,10 +931,12 @@ void XMLJob::fillInXMLDataNotNullDefault(const std::string& fullTblName,
                                          execplan::CalpontSystemCatalog::ColType& colType, JobColumn& col)
 {
   const NullString col_defaultValue(colType.defaultValue);
+idblog("column default value: " << col_defaultValue.safeString());
 
   if (colType.constraintType == execplan::CalpontSystemCatalog::NOTNULL_CONSTRAINT)
   {
     col.fNotNull = true;
+idblog("not null constraint");
 
     if (!col_defaultValue.isNull())
       col.fWithDefault = true;
@@ -946,6 +948,7 @@ void XMLJob::fillInXMLDataNotNullDefault(const std::string& fullTblName,
 
   if (col.fWithDefault)
   {
+idblog("with default value");
     bool bDefaultConvertError = false;
 
     // Convert Default Value.
