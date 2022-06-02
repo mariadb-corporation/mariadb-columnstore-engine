@@ -501,7 +501,7 @@ class Row
   inline utils::NullString getStringField(uint32_t colIndex) const
   {
     utils::ConstString x = getConstString(colIndex);
-    idblog("getting string field, result is " << (x.str() ? ("'" + x.toString() + "'") : "NULL"));
+    //idblog("getting string field, result is " << (x.str() ? ("'" + x.toString() + "'") : "NULL"));
     return utils::NullString(x);
   }
 
@@ -919,13 +919,13 @@ inline utils::ConstString Row::getShortConstString(uint32_t colIndex) const
   const char* src = (const char*)&data[offset];
   if (!getNullMark(colIndex))
   {
-utils::ConstString t(src, strnlen(src, getColumnWidth(colIndex)));
-idblog("getShortConstString[" << colIndex << "]: '" << t.toString() << "'");
+//utils::ConstString t(src, strnlen(src, getColumnWidth(colIndex)));
+//idblog("getShortConstString[" << colIndex << "]: '" << t.toString() << "'");
     return utils::ConstString(src, strnlen(src, getColumnWidth(colIndex)));
   }
   else
   {
-idblog("getShortConstString[" << colIndex << "]: NULL");
+//idblog("getShortConstString[" << colIndex << "]: NULL");
     return utils::ConstString(nullptr, 0);
   }
 }
@@ -1041,11 +1041,11 @@ inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex
   uint32_t length = str.length();
 
   setNullMark(colIndex, !str.str());
-idblog("column #" << colIndex << ", null mark is " << ((int)getNullMark(colIndex)) << ", pointer is NULL " << ((int)(!str.str())));
+//idblog("column #" << colIndex << ", null mark is " << ((int)getNullMark(colIndex)) << ", pointer is NULL " << ((int)(!str.str())));
 
   if (inStringTable(colIndex))
   {
-idblog("string is in string table");
+//idblog("string is in string table");
     if (length > getColumnWidth(colIndex))
       length = getColumnWidth(colIndex);
 
@@ -1059,6 +1059,7 @@ idblog("string is in string table");
   {
     if (length > getColumnWidth(colIndex))
       length = getColumnWidth(colIndex);
+#if 0
 idblog_stat(
 idblog("setting short string field[" << colIndex << "]: " << (str.str() ? "'" + str.toString() + "'" : "NULL"));
 if (!str.str())
@@ -1077,6 +1078,7 @@ free(strs);
 }
 }
 )
+#endif
 
     uint8_t* buf = &data[offsets[colIndex]];
     if (str.str())
@@ -1085,7 +1087,7 @@ free(strs);
     }
     memset(buf + length, 0, offsets[colIndex + 1] - (offsets[colIndex] + length));
   }
-idblog("checking null mark for column #" << colIndex << ", null mark is " << ((int)getNullMark(colIndex)));
+//idblog("checking null mark for column #" << colIndex << ", null mark is " << ((int)getNullMark(colIndex)));
 }
 
 inline std::string Row::getVarBinaryStringField(uint32_t colIndex) const
