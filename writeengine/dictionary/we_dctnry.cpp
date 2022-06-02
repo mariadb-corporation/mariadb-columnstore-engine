@@ -628,7 +628,7 @@ idblog("not found");
   {
     Signature sigfound = *it;
     sig.token = sigfound.token;
-uint64_t *p = (uint64_t*) (&sig.token);
+idblog_stat(uint64_t *p = (uint64_t*) (&sig.token);)
 idblog("found, token " << std::hex << (*p));
     return true;
   }

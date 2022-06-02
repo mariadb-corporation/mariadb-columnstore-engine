@@ -1433,7 +1433,7 @@ void applyMapping(const int* mapping, const Row& in, Row* out)
       else if (UNLIKELY(in.isLongString(i)))
         {
 idblog("apply mapping");
-          utils::ConstString t = in.getConstString(i); out->setStringField(in.getConstString(i), mapping[i]); idblog("setting string field [" << mapping[i] << "] again: " << (t.str() ? "NULL" : "'" + t.toString() + "'")); }
+          idblog_stat(utils::ConstString t = in.getConstString(i);) out->setStringField(in.getConstString(i), mapping[i]); idblog("setting string field [" << mapping[i] << "] again: " << (t.str() ? "NULL" : "'" + t.toString() + "'")); }
       else if (UNLIKELY(in.isShortString(i)))
         out->setUintField(in.getUintField(i), mapping[i]);
       else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::LONGDOUBLE))
