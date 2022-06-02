@@ -52,7 +52,7 @@ static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* use
 inline bool retryable_error(uint8_t s3err)
 {
   return (s3err == MS3_ERR_RESPONSE_PARSE || s3err == MS3_ERR_REQUEST_ERROR || s3err == MS3_ERR_OOM ||
-          s3err == MS3_ERR_IMPOSSIBLE || s3err == MS3_ERR_AUTH || s3err == MS3_ERR_SERVER ||
+          s3err == MS3_ERR_IMPOSSIBLE || s3err == MS3_ERR_SERVER ||
           s3err == MS3_ERR_AUTH_ROLE);
 }
 
@@ -294,6 +294,12 @@ void S3Storage::testConnectivityAndPerms()
   err = deleteObject(testObjKey);
   if (err)
     FAIL(DELETE)
+  err = exists(testObjKey, &_exists);
+  if (err)
+  {
+    logger->log(LOG_CRIT, "S3Storage::exists() failed on nonexistent object. Check 'ListBucket' permissions.");
+    FAIL(HEAD)
+  }
   logger->log(LOG_INFO, "S3Storage: S3 connectivity & permissions are OK");
 }
 
