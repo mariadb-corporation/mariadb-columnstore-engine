@@ -312,6 +312,11 @@ void RowAggregation::updateStringMinMax(utils::NullString val1, utils::NullStrin
     fRow.setStringField(val1, col);
     return;
   }
+  if (val1.isNull())
+  {
+    // as any comparison with NULL is false, it should not affect min/max ranges.
+    return ; // do nothing.
+  }
   CHARSET_INFO* cs = fRow.getCharset(col);
   int tmp = cs->strnncoll(val1.str(), val1.length(), val2.str(), val2.length());
 
