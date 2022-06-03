@@ -98,7 +98,8 @@ class StatisticsManager
   std::map<uint32_t, KeyType> keyTypes;
   StatisticsManager() : epoch(0), version(1)
   {
-    IDBPolicy::init(true, false, "", 0);
+    // Initialize plugins.
+    IDBPolicy::configIDBPolicy();
   }
   std::unique_ptr<char[]> convertStatsToDataStream(uint64_t& dataStreamSize);
 
