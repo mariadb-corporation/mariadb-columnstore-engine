@@ -1962,15 +1962,15 @@ void RowAggregation::doStatistics(const Row& rowIn, int64_t colIn, int64_t colOu
 
   double count = fRow.getDoubleField(colOut) + 1.0;
   long double mean = fRow.getLongDoubleField(colAux);
-  long double M2 = fRow.getLongDoubleField(colAux + 1);
+  long double scaledMomentum2 = fRow.getLongDoubleField(colAux + 1);
   volatile long double delta = valIn - mean;
   mean += delta/count;
-  M2 += delta * (valIn - mean);
+  scaledMomentum2 += delta * (valIn - mean);
 
 
   fRow.setDoubleField(count, colOut);
   fRow.setLongDoubleField(mean, colAux);
-  fRow.setLongDoubleField(M2, colAux + 1);
+  fRow.setLongDoubleField(scaledMomentum2, colAux + 1);
 }
 
 void RowAggregation::mergeStatistics(const Row& rowIn, uint64_t colOut, uint64_t colAux)
@@ -3164,26 +3164,26 @@ void RowAggregationUM::calculateStatisticsFunctions()
         }
         else  // count > 1
         {
-          long double M2 = fRow.getLongDoubleField(colAux + 1);
+          long double scaledMomentum2 = fRow.getLongDoubleField(colAux + 1);
 
           uint32_t scale = fRow.getScale(colOut);
           auto factor = datatypes::scaleDivisor<long double>(scale);
 
           if (scale != 0)  // adjust the scale if necessary
           {
-            M2 /= factor * factor;
+            scaledMomentum2 /= factor * factor;
           }
 
           if (fFunctionCols[i]->fStatsFunction == ROWAGG_STDDEV_POP)
-            M2 = sqrt(M2 / cnt);
+            scaledMomentum2 = sqrt(scaledMomentum2 / cnt);
           else if (fFunctionCols[i]->fStatsFunction == ROWAGG_STDDEV_SAMP)
-            M2 = sqrt(M2 / (cnt - 1));
+            scaledMomentum2 = sqrt(scaledMomentum2 / (cnt - 1));
           else if (fFunctionCols[i]->fStatsFunction == ROWAGG_VAR_POP)
-            M2 = M2 / cnt;
+            scaledMomentum2 = scaledMomentum2 / cnt;
           else if (fFunctionCols[i]->fStatsFunction == ROWAGG_VAR_SAMP)
-            M2 = M2 / (cnt - 1);
+            scaledMomentum2 = scaledMomentum2 / (cnt - 1);
 
-          fRow.setDoubleField(M2, colOut);
+          fRow.setDoubleField(scaledMomentum2, colOut);
         }
       }
     }
@@ -4294,29 +4294,29 @@ void RowAggregationUMP2::doStatistics(const Row& rowIn, int64_t colIn, int64_t c
 {
   double count = fRow.getDoubleField(colOut);
   long double mean = fRow.getLongDoubleField(colAux);
-  long double M2 = fRow.getLongDoubleField(colAux + 1);
+  long double scaledMomentum2 = fRow.getLongDoubleField(colAux + 1);
 
-  double block_count = rowIn.getDoubleField(colIn);
-  long double block_mean = rowIn.getLongDoubleField(colIn + 1);
-  long double block_M2 = rowIn.getLongDoubleField(colIn + 2);
+  double blockCount = rowIn.getDoubleField(colIn);
+  long double blockMean = rowIn.getLongDoubleField(colIn + 1);
+  long double blockScaledMomentum2 = rowIn.getLongDoubleField(colIn + 2);
 
-  double next_count = count + block_count;
-  long double next_mean;
-  long double next_M2;
-  if (next_count == 0)
+  double nextCount = count + blockCount;
+  long double nextMean;
+  long double nextScaledMomentum2;
+  if (nextCount == 0)
   {
-    next_mean = 0;
-    next_M2 = 0;
+    nextMean = 0;
+    nextScaledMomentum2 = 0;
   }
   else
   {
-    volatile long double delta = mean - block_mean;
-    next_mean = (mean * count + block_mean * block_count) / next_count;
-    next_M2 = M2 + block_M2 + delta * delta * (count * block_count / next_count);
+    volatile long double delta = mean - blockMean;
+    nextMean = (mean * count + blockMean * blockCount) / nextCount;
+    nextScaledMomentum2 = scaledMomentum2 + blockScaledMomentum2 + delta * delta * (count * blockCount / nextCount);
   }
-  fRow.setDoubleField(next_count, colOut);
-  fRow.setLongDoubleField(next_mean, colAux);
-  fRow.setLongDoubleField(next_M2, colAux + 1);
+  fRow.setDoubleField(nextCount, colOut);
+  fRow.setLongDoubleField(nextMean, colAux);
+  fRow.setLongDoubleField(nextScaledMomentum2, colAux + 1);
 }
 
 //------------------------------------------------------------------------------
