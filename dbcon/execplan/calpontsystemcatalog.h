@@ -918,6 +918,14 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
   static uint32_t fModuleID;
 };
 
+// MCOL-5021
+const datatypes::SystemCatalog::ColDataType AUX_COL_DATATYPE = datatypes::SystemCatalog::UTINYINT;
+const int32_t AUX_COL_WIDTH = 1;
+const CalpontSystemCatalog::CompressionType AUX_COL_COMPRESSION_TYPE = CalpontSystemCatalog::COMPRESSION2;
+const std::string AUX_COL_DATATYPE_STRING = "unsigned-tinyint";
+const uint64_t AUX_COL_MINVALUE = MIN_UTINYINT;
+const uint64_t AUX_COL_MAXVALUE = MAX_UTINYINT;
+
 /** convenience function to make a TableColName from 3 strings
  */
 const CalpontSystemCatalog::TableColName make_tcn(const std::string& s, const std::string& t,
