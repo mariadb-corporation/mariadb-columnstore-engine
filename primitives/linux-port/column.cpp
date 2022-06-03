@@ -1959,7 +1959,7 @@ void filterColumnData(NewColRequestHeader* in, ColResultHeader* out, uint16_t* r
   // Bit patterns in srcArray[i] representing EMPTY and NULL values
   T emptyValue = getEmptyValue<T>(dataType);
   T nullValue = getNullValue<T>(dataType);
-  uint8_t emptyValueAux = getEmptyValue<uint8_t>(datatypes::SystemCatalog::UTINYINT);
+  uint8_t emptyValueAux = getEmptyValue<uint8_t>(execplan::AUX_COL_DATATYPE);
 
   // Precompute filter results for NULL values
   bool isNullValueMatches =

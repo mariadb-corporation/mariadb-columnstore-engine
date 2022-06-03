@@ -607,14 +607,13 @@ keepGoing:
       ++iter;
     }
 
-    // MCOL-5021
-    // TODO compressionType is hardcoded to 2 (SNAPPY)
+    // TODO MCOL-5021 compressionType is hardcoded to 2 (SNAPPY)
     bytestream << (fStartingColOID + size);
-    bytestream << (uint8_t)datatypes::SystemCatalog::UTINYINT;
+    bytestream << (uint8_t)execplan::AUX_COL_DATATYPE;
     bytestream << (uint8_t) false;
-    bytestream << (uint32_t)1;
+    bytestream << (uint32_t)execplan::AUX_COL_WIDTH;
     bytestream << (uint16_t)useDBRoot;
-    bytestream << (uint32_t)2;
+    bytestream << (uint32_t)execplan::AUX_COL_COMPRESSION_TYPE;
 
     //@Bug 4176. save oids to a log file for cleanup after fail over.
     std::vector<CalpontSystemCatalog::OID> oidList;

@@ -213,9 +213,9 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
       if (tableAUXColOid > 3000)
       {
         CalpontSystemCatalog::ColType colType;
-        colType.compressionType = 2;
-        colType.colWidth = 1;
-        colType.colDataType = datatypes::SystemCatalog::UTINYINT;
+        colType.compressionType = execplan::AUX_COL_COMPRESSION_TYPE;
+        colType.colWidth = execplan::AUX_COL_WIDTH;
+        colType.colDataType = execplan::AUX_COL_DATATYPE;
         WriteEngine::ColStruct colStruct;
         colStruct.fColDbRoot = dbroot;
         WriteEngine::DctnryStruct dctnryStruct;
@@ -996,10 +996,10 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
 
         if ((i == ridList.size() - 1) && (tableAUXColOid > 3000)) // AUX column
         {
-          aColumn.colWidth = 1;
-          aColumn.colDataType = datatypes::SystemCatalog::UTINYINT;
+          aColumn.colWidth = execplan::AUX_COL_WIDTH;
+          aColumn.colDataType = execplan::AUX_COL_DATATYPE;
           // TODO MCOL-5021 compressionType for the AUX column is hard-coded to 2
-          aColumn.compressionType = 2;
+          aColumn.compressionType = execplan::AUX_COL_COMPRESSION_TYPE;
         }
         else
         {
@@ -1153,9 +1153,9 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
       if (tableAUXColOid > 3000)
       {
         CalpontSystemCatalog::ColType colType;
-        colType.compressionType = 2;
-        colType.colWidth = 1;
-        colType.colDataType = datatypes::SystemCatalog::UTINYINT;
+        colType.compressionType = execplan::AUX_COL_COMPRESSION_TYPE;
+        colType.colWidth = execplan::AUX_COL_WIDTH;
+        colType.colDataType = execplan::AUX_COL_DATATYPE;
         WriteEngine::ColStruct colStruct;
         WriteEngine::DctnryStruct dctnryStruct;
         colStruct.dataOid = tableAUXColOid;
@@ -4305,9 +4305,9 @@ uint8_t WE_DMLCommandProc::processDelete(messageqcpp::ByteStream& bs, std::strin
   if (hasAUXCol)
   {
     CalpontSystemCatalog::ColType colType;
-    colType.compressionType = 2;
-    colType.colWidth = 1;
-    colType.colDataType = datatypes::SystemCatalog::UTINYINT;
+    colType.compressionType = execplan::AUX_COL_COMPRESSION_TYPE;
+    colType.colWidth = execplan::AUX_COL_WIDTH;
+    colType.colDataType = execplan::AUX_COL_DATATYPE;
     colStruct.dataOid = tableAUXColOid;
     colStruct.tokenFlag = false;
     colStruct.fCompressionType = colType.compressionType;

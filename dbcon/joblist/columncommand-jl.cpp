@@ -44,8 +44,10 @@ using namespace messageqcpp;
 namespace joblist
 {
 ColumnCommandJL::ColumnCommandJL(const pColScanStep& scan, vector<BRM::LBID_t> lastLBID,
-                                 bool hasAuxCol_, const std::vector<BRM::EMEntry>& extentsAux_) :
-                                extentsAux(extentsAux_), hasAuxCol(hasAuxCol_)
+                                 bool hasAuxCol_, const std::vector<BRM::EMEntry>& extentsAux_,
+                                 execplan::CalpontSystemCatalog::OID oidAux) :
+                                extentsAux(extentsAux_), hasAuxCol(hasAuxCol_),
+                                fOidAux(oidAux)
 {
   BRM::DBRM dbrm;
   isScan = true;
@@ -163,6 +165,8 @@ ColumnCommandJL::ColumnCommandJL(const ColumnCommandJL& prevCmd, const DictStepJ
     BOP = prevCmd.BOP;
   }
   isScan = prevCmd.isScan;
+  hasAuxCol = prevCmd.hasAuxCol;
+  extentsAux = prevCmd.extentsAux;
   colType = prevCmd.colType;
   extents = prevCmd.extents;
   OID = prevCmd.OID;
@@ -375,6 +379,20 @@ void ColumnCommandJL::reloadExtents()
   }
 
   sort(extents.begin(), extents.end(), BRM::ExtentSorter());
+
+  if (hasAuxCol)
+  {
+    err = dbrm.getExtents(fOidAux, extentsAux);
+
+    if (err)
+    {
+      ostringstream os;
+      os << "BRM lookup error. Could not get extents for Aux OID " << fOidAux;
+      throw runtime_error(os.str());
+    }
+
+    sort(extentsAux.begin(), extentsAux.end(), BRM::ExtentSorter());
+  }
 }
 
 bool ColumnCommandJL::getIsDict()

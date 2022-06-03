@@ -530,12 +530,45 @@ TupleBPS::TupleBPS(const pColScanStep& rhs, const JobInfo& jobInfo) : BatchPrimi
   extentSize = rhs.extentSize;
   lbidRanges = rhs.lbidRanges;
   hasAuxCol = false;
+  execplan::CalpontSystemCatalog::TableName tableName;
 
-  // TODO MCOL-5021 Add try-catch block
   if (fTableOid >= 3000)
   {
-    execplan::CalpontSystemCatalog::TableName tableName = jobInfo.csc->tableName(fTableOid);
-    fOidAux = jobInfo.csc->tableAUXColumnOID(tableName);
+    try
+    {
+      tableName = jobInfo.csc->tableName(fTableOid);
+      fOidAux = jobInfo.csc->tableAUXColumnOID(tableName);
+    }
+    catch (logging::IDBExcept& ie)
+    {
+      std::ostringstream oss;
+
+      if (ie.errorCode() == logging::ERR_TABLE_NOT_IN_CATALOG)
+      {
+        oss << "Table " << tableName.toString();
+        oss << " does not exist in the system catalog.";
+      }
+      else
+      {
+        oss << "Error getting AUX column OID for table " << tableName.toString();
+        oss << " due to:  " << ie.what();
+      }
+
+      throw runtime_error(oss.str());
+    }
+    catch(std::exception& ex)
+    {
+      std::ostringstream oss;
+      oss << "Error getting AUX column OID for table " << tableName.toString();
+      oss << " due to:  " << ex.what();
+      throw runtime_error(oss.str());
+    }
+    catch(...)
+    {
+      std::ostringstream oss;
+      oss << "Error getting AUX column OID for table " << tableName.toString();
+      throw runtime_error(oss.str());
+    }    
 
     if (fOidAux > 3000)
     {
@@ -546,6 +579,12 @@ TupleBPS::TupleBPS(const pColScanStep& rhs, const JobInfo& jobInfo) : BatchPrimi
 
       idbassert(!extentsAux.empty());
       sort(extentsAux.begin(), extentsAux.end(), BRM::ExtentSorter());
+
+      extentsMap[fOidAux] = tr1::unordered_map<int64_t, EMEntry>();
+      tr1::unordered_map<int64_t, EMEntry>& refAux = extentsMap[fOidAux];
+
+      for (uint32_t z = 0; z < extentsAux.size(); z++)
+        refAux[extentsAux[z].range.start] = extentsAux[z];
     }
   }
 
@@ -849,7 +888,7 @@ void TupleBPS::setBPP(JobStep* jobStep)
 
     if (pcss != 0)
     {
-      fBPP->addFilterStep(*pcss, lastScannedLBID, hasAuxCol, extentsAux);
+      fBPP->addFilterStep(*pcss, lastScannedLBID, hasAuxCol, extentsAux, fOidAux);
 
       extentsMap[pcss->fOid] = tr1::unordered_map<int64_t, EMEntry>();
       tr1::unordered_map<int64_t, EMEntry>& ref = extentsMap[pcss->fOid];
@@ -1279,7 +1318,6 @@ void TupleBPS::initExtentMarkers()
   }
 }
 
-// TODO MCOL-5021 Add support here
 void TupleBPS::reloadExtentLists()
 {
   /*
@@ -1333,6 +1371,18 @@ void TupleBPS::reloadExtentLists()
 
     for (j = 0; j < extents.size(); j++)
       mref[extents[j].range.start] = extents[j];
+
+    if (cc->auxCol())
+    {
+      const vector<EMEntry>& extentsAux = cc->getExtentsAux();
+      oid = cc->getOIDAux();
+
+      extentsMap[oid] = tr1::unordered_map<int64_t, struct BRM::EMEntry>();
+      tr1::unordered_map<int64_t, struct BRM::EMEntry>& mrefAux = extentsMap[oid];
+
+      for (j = 0; j < extentsAux.size(); j++)
+        mrefAux[extentsAux[j].range.start] = extentsAux[j];
+    }
   }
 
   for (i = 0; i < projections.size(); i++)

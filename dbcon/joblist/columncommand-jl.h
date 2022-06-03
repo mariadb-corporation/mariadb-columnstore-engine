@@ -41,7 +41,8 @@ class ColumnCommandJL : public CommandJL
 {
  public:
   ColumnCommandJL(const pColScanStep&, std::vector<BRM::LBID_t> lastLBID,
-                  bool hasAuxCol_, const std::vector<BRM::EMEntry>& extentsAux_);
+                  bool hasAuxCol_, const std::vector<BRM::EMEntry>& extentsAux_,
+                  execplan::CalpontSystemCatalog::OID oidAux);
   ColumnCommandJL(const pColStep&);
   ColumnCommandJL(const ColumnCommandJL&, const DictStepJL&);
   virtual ~ColumnCommandJL();
@@ -73,6 +74,10 @@ class ColumnCommandJL : public CommandJL
   {
     return extents;
   }
+  const std::vector<struct BRM::EMEntry>& getExtentsAux()
+  {
+    return extentsAux;
+  }
   const execplan::CalpontSystemCatalog::ColType& getColType() const
   {
     return colType;
@@ -89,6 +94,15 @@ class ColumnCommandJL : public CommandJL
   bool scan()
   {
     return isScan;
+  }
+  bool auxCol() const
+  {
+    return hasAuxCol;
+  }
+
+  execplan::CalpontSystemCatalog::OID getOIDAux() const
+  {
+    return fOidAux;
   }
 
   void reloadExtents();
@@ -127,6 +141,7 @@ class ColumnCommandJL : public CommandJL
   std::vector<struct BRM::EMEntry> extentsAux;
   bool hasAuxCol;
   uint64_t lbidAux;
+  execplan::CalpontSystemCatalog::OID fOidAux;
 
   static const unsigned DEFAULT_FILES_PER_COLUMN_PARTITION = 32;
 
