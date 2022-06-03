@@ -139,10 +139,10 @@ WindowFunctionType* WF_stats<T>::clone() const
 template <typename T>
 void WF_stats<T>::resetData()
 {
-  fMean = 0;
-  fM2sum = 0;
-  fCount = 0;
-  fStats = 0.0;
+  mean_ = 0;
+  scaledMomentum2_ = 0;
+  count_ = 0;
+  stats_ = 0.0;
 
   WindowFunctionType::resetData();
 }
@@ -175,17 +175,17 @@ void WF_stats<T>::operator()(int64_t b, int64_t e, int64_t c)
       T valIn;
       getValue(colIn, valIn, &cdt);
       long double val = (long double)valIn;
-      fCount++;
-      long double delta = val - fMean;
-      fMean += delta/fCount;
-      fM2sum += delta * (val - fMean);
+      count_++;
+      long double delta = val - mean_;
+      mean_ += delta/count_;
+      scaledMomentum2_ += delta * (val - mean_);
     }
 
-    if (fCount > 1)
+    if (count_ > 1)
     {
       uint32_t scale = fRow.getScale(colIn);
       auto factor = datatypes::scaleDivisor<long double>(scale);
-      long double stat = fM2sum;
+      long double stat = scaledMomentum2_;
 
       // adjust the scale if necessary
       if (scale != 0 && cdt != CalpontSystemCatalog::LONGDOUBLE)
@@ -194,23 +194,23 @@ void WF_stats<T>::operator()(int64_t b, int64_t e, int64_t c)
       }
 
       if (fFunctionId == WF__STDDEV_POP)
-        stat = sqrt(stat / fCount);
+        stat = sqrt(stat / count_);
       else if (fFunctionId == WF__STDDEV_SAMP)
-        stat = sqrt(stat / (fCount - 1));
+        stat = sqrt(stat / (count_ - 1));
       else if (fFunctionId == WF__VAR_POP)
-        stat = stat / fCount;
+        stat = stat / count_;
       else if (fFunctionId == WF__VAR_SAMP)
-        stat = stat / (fCount - 1);
+        stat = stat / (count_ - 1);
 
-      fStats = (double)stat;
+      stats_ = (double)stat;
     }
   }
 
-  if (fCount == 0)
+  if (count_ == 0)
   {
     setValue(CalpontSystemCatalog::DOUBLE, b, e, c, (double*)NULL);
   }
-  else if (fCount == 1)
+  else if (count_ == 1)
   {
     if (fFunctionId == WF__STDDEV_SAMP || fFunctionId == WF__VAR_SAMP)
     {
@@ -224,7 +224,7 @@ void WF_stats<T>::operator()(int64_t b, int64_t e, int64_t c)
   }
   else
   {
-    setValue(CalpontSystemCatalog::DOUBLE, b, e, c, &fStats);
+    setValue(CalpontSystemCatalog::DOUBLE, b, e, c, &stats_);
   }
 
   fPrev = c;
