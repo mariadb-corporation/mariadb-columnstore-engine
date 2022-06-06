@@ -956,6 +956,7 @@ const string GroupConcatOrderBy::toString() const
 GroupConcatNoOrder::GroupConcatNoOrder()
  : fRowsPerRG(128), fErrorCode(ERR_AGGREGATION_TOO_BIG), fMemSize(0), fRm(NULL)
 {
+idblog("constructing gcno");
 }
 
 GroupConcatNoOrder::~GroupConcatNoOrder()
@@ -966,6 +967,7 @@ GroupConcatNoOrder::~GroupConcatNoOrder()
 
 void GroupConcatNoOrder::initialize(const rowgroup::SP_GroupConcat& gcc)
 {
+idblog("initializing gcno");
   GroupConcator::initialize(gcc);
 
   fRowGroup = gcc->fRowGroup;
@@ -998,6 +1000,7 @@ void GroupConcatNoOrder::initialize(const rowgroup::SP_GroupConcat& gcc)
 
 void GroupConcatNoOrder::processRow(const rowgroup::Row& row)
 {
+idblog("processing a row");
   // if the row count is less than the limit
   if (fCurrentLength < fGroupConcatLen && concatColIsNull(row) == false)
   {
