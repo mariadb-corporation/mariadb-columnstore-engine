@@ -1029,7 +1029,7 @@ idblog("done copying and stuff");
       fRowGroup.setData(&fData);
       fRowGroup.resetRowGroup(0);
       fRowGroup.getRow(0, &fRow);
-idblog("done extending (???) rowgroup???");
+idblog("done extending (? ? ?) rowgroup? ? ?");
     }
   }
 }
