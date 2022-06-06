@@ -647,6 +647,7 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
    */
   const ROPair columnRID(const TableColName& tableColName, int lower_case_table_names = 0);
 
+  // TODO MCOL-5021
   /** return the RID's of the columns for a table
    *
    * returns a list of the RID's of the columns for a table
@@ -664,6 +665,11 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
    * returns the OID of the table's AUX column
    */
   OID tableAUXColumnOID(const TableName& tableName, int lower_case_table_names = 0);
+
+  /** returns true if the given OID is the AUX
+   *  column OID of the table.
+   */
+  bool isAUXColumnOID(const OID& oid);
 
   /** return the RID of the index for a table
    *

@@ -1241,6 +1241,14 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
     ct.columnOID = Oid;
   }
 
+  if ((sysDataList.size() == 0) && isAUXColumnOID(Oid))
+  {
+    ct.colDataType = execplan::AUX_COL_DATATYPE;
+    ct.colWidth = execplan::AUX_COL_WIDTH;
+    ct.compressionType = execplan::AUX_COL_COMPRESSION_TYPE;
+    ct.columnOID = Oid;
+  }
+
   // populate colinfomap cache and oidbitmap
   lk3.lock();
   boost::mutex::scoped_lock lk2(fOIDmapLock);
@@ -3739,6 +3747,67 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::tableAUXColumnOID(const TableNam
   args.add("'" + tableName.schema + "." + tableName.table + "'");
   // throw logging::NoTableExcept(msg);
   throw IDBExcept(ERR_TABLE_NOT_IN_CATALOG, args);
+}
+
+bool CalpontSystemCatalog::isAUXColumnOID(const OID& oid)
+{
+  DEBUG << "Enter isAUXColumnOID" << endl;
+
+  checkSysCatVer();
+
+  // select auxcolumnoid from systable where auxcolumnoid = oid;
+  CalpontSelectExecutionPlan csep;
+  CalpontSelectExecutionPlan::ReturnedColumnList returnedColumnList;
+  CalpontSelectExecutionPlan::FilterTokenList filterTokenList;
+  CalpontSelectExecutionPlan::ColumnMap colMap;
+
+  SimpleColumn* c1 =
+    new SimpleColumn(CALPONT_SCHEMA + "." + SYSTABLE_TABLE + "." + AUXCOLUMNOID_COL, fSessionID);
+  SRCP srcp;
+  srcp.reset(c1);
+  colMap.insert(CMVT_(CALPONT_SCHEMA + "." + SYSTABLE_TABLE + "." + AUXCOLUMNOID_COL, srcp));
+  csep.columnMapNonStatic(colMap);
+
+  srcp.reset(c1->clone());
+  returnedColumnList.push_back(srcp);
+  csep.returnedCols(returnedColumnList);
+
+  // Filters
+  SimpleFilter* f1 =
+      new SimpleFilter(opeq, c1->clone(), new ConstantColumn((int64_t)oid, ConstantColumn::NUM));
+  filterTokenList.push_back(f1);
+  csep.filterTokenList(filterTokenList);
+
+  ostringstream oss;
+  oss << "select auxcolumnoid from systable where auxcolumnoid='" << oid
+      << "' --isAUXColumnOID/";
+
+  csep.data(oss.str());  //@bug 6078. Log the statement
+
+  if (fIdentity == EC)
+    oss << "EC";
+  else
+    oss << "FE";
+
+  NJLSysDataList sysDataList;
+
+  try
+  {
+    getSysData(csep, sysDataList, SYSTABLE_TABLE);
+  }
+  catch (IDBExcept&)
+  {
+    throw;
+  }
+  catch (runtime_error& e)
+  {
+    throw runtime_error(e.what());
+  }
+
+  if (sysDataList.size() == 1)
+    return true;
+
+  return false;
 }
 
 #if 0
