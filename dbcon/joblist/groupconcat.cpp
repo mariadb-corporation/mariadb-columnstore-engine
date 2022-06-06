@@ -361,6 +361,7 @@ void GroupConcatAgUM::applyMapping(const boost::shared_array<int>& mapping, cons
           fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::VARCHAR ||
           fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::TEXT)
       {
+idblog("applying mapping through getConstString");
         fRow.setStringField(row.getConstString(mapping[i]), i);
       }
       else if (fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::LONGDOUBLE)
@@ -477,6 +478,7 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
       case CalpontSystemCatalog::VARCHAR:
       case CalpontSystemCatalog::TEXT:
       {
+idblog("about to output a string field");
         oss << row.getStringField(*i).str();
         break;
       }
@@ -991,6 +993,7 @@ void GroupConcatNoOrder::initialize(const rowgroup::SP_GroupConcat& gcc)
   fRowGroup.resetRowGroup(0);
   fRowGroup.initRow(&fRow);
   fRowGroup.getRow(0, &fRow);
+  idblog("group concat no order initialized");
 }
 
 void GroupConcatNoOrder::processRow(const rowgroup::Row& row)
@@ -998,6 +1001,7 @@ void GroupConcatNoOrder::processRow(const rowgroup::Row& row)
   // if the row count is less than the limit
   if (fCurrentLength < fGroupConcatLen && concatColIsNull(row) == false)
   {
+idblog("about to copy row");
     copyRow(row, &fRow);
 
     // the RID is no meaning here, use it to store the estimated length.
@@ -1006,6 +1010,7 @@ void GroupConcatNoOrder::processRow(const rowgroup::Row& row)
     fCurrentLength += estLen;
     fRowGroup.incRowCount();
     fRow.nextRow();
+idblog("done copying and stuff");
 
     if (fRowGroup.getRowCount() >= fRowsPerRG)
     {
@@ -1024,6 +1029,7 @@ void GroupConcatNoOrder::processRow(const rowgroup::Row& row)
       fRowGroup.setData(&fData);
       fRowGroup.resetRowGroup(0);
       fRowGroup.getRow(0, &fRow);
+idblog("done extending (???) rowgroup???");
     }
   }
 }
@@ -1047,6 +1053,8 @@ uint8_t* GroupConcatNoOrder::getResultImpl(const string& sep)
 {
   ostringstream oss;
   bool addSep = false;
+  idblog("getting result");
+
   fDataQueue.push(fData);
   size_t prevResultSize = 0;
 
