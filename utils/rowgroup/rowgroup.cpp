@@ -365,7 +365,8 @@ RGData::RGData(const RowGroup& rg)
 
 void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
 {
-  rowData.reset(new uint8_t[rg.getDataSize(rowCount)]);
+	idblog("RGData reinit, rowCount " << rowCount);
+  rowData.reset(new uint8_t[rg.getDataSize(rowCount)]); idblog("after resetting rowData");
 
   if (rg.usesStringTable())
     strings.reset(new StringStore());
@@ -379,6 +380,7 @@ void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
    */
   memset(rowData.get(), 0, rg.getDataSize(rowCount));
 #endif
+ idblog("afte rmemset");
 }
 
 void RGData::reinit(const RowGroup& rg)

@@ -105,6 +105,7 @@ class ConstantColumn : public ReturnedColumn
    */
   inline const utils::NullString& constval() const
   {
+#if 0
 int nptrs;
 void* pbuf[100];
 char** strs;
@@ -118,6 +119,7 @@ idblog("    stk: " << i << ": " << s);
 if (strs) {
 free(strs);
 }
+#endif
     return fConstval;
   }
   /**
