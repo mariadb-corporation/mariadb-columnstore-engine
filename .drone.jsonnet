@@ -374,6 +374,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
              environment: {
                DEBIAN_FRONTEND: 'noninteractive',
                BUILDPACKAGE_FLAGS: '-b',  // Save time and produce only binary packages, not source
+               DEB_BUILD_MAINT_OPTIONS: 'optimize=-lto',  // disable LTO https://jira.mariadb.org/browse/MDEV-25633
              },
              commands: [
                'cd /mdb/' + builddir,
