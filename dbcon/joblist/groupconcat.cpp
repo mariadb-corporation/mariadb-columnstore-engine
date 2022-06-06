@@ -968,7 +968,7 @@ GroupConcatNoOrder::~GroupConcatNoOrder()
 void GroupConcatNoOrder::initialize(const rowgroup::SP_GroupConcat& gcc)
 {
 idblog("initializing gcno");
-  GroupConcator::initialize(gcc);
+  GroupConcator::initialize(gcc); idblog("after base init");
 
   fRowGroup = gcc->fRowGroup;
   fRowsPerRG = 128;
@@ -980,7 +980,7 @@ idblog("initializing gcno");
 
   while (i != gcc->fGroupCols.end())
     fConcatColumns.push_back((*(i++)).second);
-
+idblog("after pushing columns");
   uint64_t newSize = fRowsPerRG * fRowGroup.getRowSize();
 
   if (!fRm->getMemory(newSize, fSessionMemLimit))
@@ -988,6 +988,7 @@ idblog("initializing gcno");
     cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
     throw IDBExcept(fErrorCode);
   }
+
   fMemSize += newSize;
 
   fData.reinit(fRowGroup, fRowsPerRG);
@@ -995,7 +996,6 @@ idblog("initializing gcno");
   fRowGroup.resetRowGroup(0);
   fRowGroup.initRow(&fRow);
   fRowGroup.getRow(0, &fRow);
-  idblog("group concat no order initialized");
 }
 
 void GroupConcatNoOrder::processRow(const rowgroup::Row& row)

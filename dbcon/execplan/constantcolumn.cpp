@@ -47,7 +47,7 @@ ConstantColumn::ConstantColumn() : ReturnedColumn(), fType(0)
 ConstantColumn::ConstantColumn(const string& sql, TYPE type)
  : ReturnedColumn(), fConstval(sql), fType(type), fData(sql)
 {
-idblog("ConstantColumn constructor from SQL '" << sql << "', type " << type << "(NULLDATA is " << ((int)NULLDATA) << ")");
+//idblog("ConstantColumn constructor from SQL '" << sql << "', type " << type << "(NULLDATA is " << ((int)NULLDATA) << ")");
   fResult.strVal.assign(sql);
 
   fResult.intVal = atoll(sql.c_str());
