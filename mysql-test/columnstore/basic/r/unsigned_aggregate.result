@@ -33,7 +33,7 @@ q5	floor(STD(u_custKey))
 q5	6749
 SELECT 'q6', floor(STD(u_bigcustKey)) FROM customer;
 q6	floor(STD(u_bigcustKey))
-q6	6688
+q6	6749
 SELECT 'q7', AVG(u_custKey) FROM customer;
 q7	AVG(u_custKey)
 q7	4294007575.1667
