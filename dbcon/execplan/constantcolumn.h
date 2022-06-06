@@ -125,7 +125,7 @@ free(strs);
    */
   inline void constval(const utils::NullString& constval)
   {
-idblog("setting const val: " << constval.safeString());
+//idblog("setting const val: " << constval.safeString());
     fConstval = constval;
   }
   inline void constval(const std::string& constval)
@@ -155,7 +155,7 @@ idblog("setting const val: " << constval.safeString());
    */
   virtual void data(const std::string data)
   {
-idblog("setting data to '" << data << "'");
+//idblog("setting data to '" << data << "'");
     fData = data;
   }
   /**
@@ -283,6 +283,7 @@ idblog("setting data to '" << data << "'");
   virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull)
   {
     isNull = isNull || (fType == NULLDATA);
+#if 0
 int nptrs;
 void* pbuf[100];
 char** strs;
@@ -296,6 +297,7 @@ idblog("    stk: " << i << ": " << s);
 if (strs) {
 free(strs);
 }
+#endif
     return fResult.strVal;
   }
   /**
