@@ -240,6 +240,14 @@ void PseudoColumn::adjustResultType()
       break;
     }
 
+    case PSEUDO_EXTENTMAX:
+    case PSEUDO_EXTENTMIN:
+    {
+      fResultType.colDataType = CalpontSystemCatalog::DECIMAL;
+      fResultType.colWidth = 16;
+      break;
+    }
+
     case PSEUDO_PARTITION:
     {
       fResultType.colDataType = CalpontSystemCatalog::VARCHAR;
