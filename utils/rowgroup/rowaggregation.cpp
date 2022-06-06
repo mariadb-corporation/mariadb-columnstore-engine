@@ -1900,8 +1900,8 @@ void RowAggregation::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int6
 // rowIn(in)  - Row to be included in aggregation.
 // colIn(in)  - column in the input row group
 // colOut(in) - column in the output row group stores the count
-// colAux(in) - column in the output row group stores the sum(x)
-// colAux + 1 - column in the output row group stores the sum(x**2)
+// colAux(in) - column in the output row group stores the mean(x)
+// colAux + 1 - column in the output row group stores the sum(x_i - mean)^2
 //------------------------------------------------------------------------------
 void RowAggregation::doStatistics(const Row& rowIn, int64_t colIn, int64_t colOut, int64_t colAux)
 {
@@ -1960,9 +1960,17 @@ void RowAggregation::doStatistics(const Row& rowIn, int64_t colIn, int64_t colOu
       break;
   }
 
-  fRow.setDoubleField(fRow.getDoubleField(colOut) + 1.0, colOut);
-  fRow.setLongDoubleField(fRow.getLongDoubleField(colAux) + valIn, colAux);
-  fRow.setLongDoubleField(fRow.getLongDoubleField(colAux + 1) + valIn * valIn, colAux + 1);
+  double count = fRow.getDoubleField(colOut) + 1.0;
+  long double mean = fRow.getLongDoubleField(colAux);
+  long double scaledMomentum2 = fRow.getLongDoubleField(colAux + 1);
+  volatile long double delta = valIn - mean;
+  mean += delta/count;
+  scaledMomentum2 += delta * (valIn - mean);
+
+
+  fRow.setDoubleField(count, colOut);
+  fRow.setLongDoubleField(mean, colAux);
+  fRow.setLongDoubleField(scaledMomentum2, colAux + 1);
 }
 
 void RowAggregation::mergeStatistics(const Row& rowIn, uint64_t colOut, uint64_t colAux)
@@ -3156,31 +3164,26 @@ void RowAggregationUM::calculateStatisticsFunctions()
         }
         else  // count > 1
         {
-          long double sum1 = fRow.getLongDoubleField(colAux);
-          long double sum2 = fRow.getLongDoubleField(colAux + 1);
+          long double scaledMomentum2 = fRow.getLongDoubleField(colAux + 1);
 
           uint32_t scale = fRow.getScale(colOut);
           auto factor = datatypes::scaleDivisor<long double>(scale);
 
           if (scale != 0)  // adjust the scale if necessary
           {
-            sum1 /= factor;
-            sum2 /= factor * factor;
+            scaledMomentum2 /= factor * factor;
           }
 
-          long double stat = sum1 * sum1 / cnt;
-          stat = sum2 - stat;
-
           if (fFunctionCols[i]->fStatsFunction == ROWAGG_STDDEV_POP)
-            stat = sqrt(stat / cnt);
+            scaledMomentum2 = sqrt(scaledMomentum2 / cnt);
           else if (fFunctionCols[i]->fStatsFunction == ROWAGG_STDDEV_SAMP)
-            stat = sqrt(stat / (cnt - 1));
+            scaledMomentum2 = sqrt(scaledMomentum2 / (cnt - 1));
           else if (fFunctionCols[i]->fStatsFunction == ROWAGG_VAR_POP)
-            stat = stat / cnt;
+            scaledMomentum2 = scaledMomentum2 / cnt;
           else if (fFunctionCols[i]->fStatsFunction == ROWAGG_VAR_SAMP)
-            stat = stat / (cnt - 1);
+            scaledMomentum2 = scaledMomentum2 / (cnt - 1);
 
-          fRow.setDoubleField(stat, colOut);
+          fRow.setDoubleField(scaledMomentum2, colOut);
         }
       }
     }
@@ -4281,18 +4284,39 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
 // Update the sum and count fields for stattistics if input is not null.
 // rowIn(in)  - Row to be included in aggregation.
 // colIn(in)  - column in the input row group stores the count/logical block
-// colIn + 1  - column in the input row group stores the sum(x)/logical block
-// colIn + 2  - column in the input row group stores the sum(x**2)/logical block
+// colIn + 1  - column in the input row group stores the mean(x)/logical block
+// colIn + 2  - column in the input row group stores the sum(x_i - mean)^2/logical block
 // colOut(in) - column in the output row group stores the count
-// colAux(in) - column in the output row group stores the sum(x)
-// colAux + 1 - column in the output row group stores the sum(x**2)
+// colAux(in) - column in the output row group stores the mean(x)
+// colAux + 1 - column in the output row group stores the sum(x_i - mean)^2
 //------------------------------------------------------------------------------
 void RowAggregationUMP2::doStatistics(const Row& rowIn, int64_t colIn, int64_t colOut, int64_t colAux)
 {
-  fRow.setDoubleField(fRow.getDoubleField(colOut) + rowIn.getDoubleField(colIn), colOut);
-  fRow.setLongDoubleField(fRow.getLongDoubleField(colAux) + rowIn.getLongDoubleField(colIn + 1), colAux);
-  fRow.setLongDoubleField(fRow.getLongDoubleField(colAux + 1) + rowIn.getLongDoubleField(colIn + 2),
-                          colAux + 1);
+  double count = fRow.getDoubleField(colOut);
+  long double mean = fRow.getLongDoubleField(colAux);
+  long double scaledMomentum2 = fRow.getLongDoubleField(colAux + 1);
+
+  double blockCount = rowIn.getDoubleField(colIn);
+  long double blockMean = rowIn.getLongDoubleField(colIn + 1);
+  long double blockScaledMomentum2 = rowIn.getLongDoubleField(colIn + 2);
+
+  double nextCount = count + blockCount;
+  long double nextMean;
+  long double nextScaledMomentum2;
+  if (nextCount == 0)
+  {
+    nextMean = 0;
+    nextScaledMomentum2 = 0;
+  }
+  else
+  {
+    volatile long double delta = mean - blockMean;
+    nextMean = (mean * count + blockMean * blockCount) / nextCount;
+    nextScaledMomentum2 = scaledMomentum2 + blockScaledMomentum2 + delta * delta * (count * blockCount / nextCount);
+  }
+  fRow.setDoubleField(nextCount, colOut);
+  fRow.setLongDoubleField(nextMean, colAux);
+  fRow.setLongDoubleField(nextScaledMomentum2, colAux + 1);
 }
 
 //------------------------------------------------------------------------------

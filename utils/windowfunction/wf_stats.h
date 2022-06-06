@@ -40,10 +40,10 @@ class WF_stats : public WindowFunctionType
   static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int, WindowFunctionColumn*);
 
  protected:
-  long double fSum1;
-  long double fSum2;
-  uint64_t fCount;
-  double fStats;
+  long double mean_;
+  long double scaledMomentum2_;
+  uint64_t count_;
+  double stats_;
 };
 
 }  // namespace windowfunction

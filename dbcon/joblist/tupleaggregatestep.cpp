@@ -1478,7 +1478,7 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
 
     functionVec[i]->fAuxColumnIndex = lastCol;
 
-    // sum(x)
+    // mean(x)
     oidsAgg.push_back(oidsProj[j]);
     keysAgg.push_back(keysProj[j]);
     scaleAgg.push_back(0);
@@ -1488,7 +1488,7 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
     widthAgg.push_back(sizeof(long double));
     ++lastCol;
 
-    // sum(x**2)
+    // sum(x_i - mean)^2
     oidsAgg.push_back(oidsProj[j]);
     keysAgg.push_back(keysProj[j]);
     scaleAgg.push_back(0);
@@ -1910,7 +1910,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
           widthAgg.push_back(sizeof(double));
           funct->fAuxColumnIndex = ++colAgg;
 
-          // sum(x)
+          // mean(x)
           oidsAgg.push_back(oidsProj[colProj]);
           keysAgg.push_back(aggKey);
           scaleAgg.push_back(0);
@@ -1920,7 +1920,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
           widthAgg.push_back(sizeof(long double));
           ++colAgg;
 
-          // sum(x**2)
+          // sum(x_i - mean)^2
           oidsAgg.push_back(oidsProj[colProj]);
           keysAgg.push_back(aggKey);
           scaleAgg.push_back(0);
@@ -2581,7 +2581,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
 
       functionVec2[i]->fAuxColumnIndex = lastCol;
 
-      // sum(x)
+      // mean(x)
       oidsAggDist.push_back(oidsAgg[j]);
       keysAggDist.push_back(keysAgg[j]);
       scaleAggDist.push_back(0);
@@ -2591,7 +2591,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
       widthAggDist.push_back(sizeof(long double));
       ++lastCol;
 
-      // sum(x**2)
+      // sum(x_i - mean)^2
       oidsAggDist.push_back(oidsAgg[j]);
       keysAggDist.push_back(keysAgg[j]);
       scaleAggDist.push_back(0);
@@ -3243,7 +3243,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
           widthAggPm.push_back(sizeof(double));
           funct->fAuxColumnIndex = ++colAggPm;
 
-          // sum(x)
+          // mean(x)
           oidsAggPm.push_back(oidsProj[colProj]);
           keysAggPm.push_back(aggKey);
           scaleAggPm.push_back(0);
@@ -3253,7 +3253,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
           widthAggPm.push_back(sizeof(long double));
           ++colAggPm;
 
-          // sum(x**2)
+          // sum(x_i - mean)^2
           oidsAggPm.push_back(oidsProj[colProj]);
           keysAggPm.push_back(aggKey);
           scaleAggPm.push_back(0);
@@ -3701,7 +3701,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
 
       functionVecUm[i]->fAuxColumnIndex = lastCol;
 
-      // sum(x)
+      // mean(x)
       oidsAggUm.push_back(oidsAggPm[j]);
       keysAggUm.push_back(keysAggPm[j]);
       scaleAggUm.push_back(0);
@@ -3711,7 +3711,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
       widthAggUm.push_back(sizeof(long double));
       ++lastCol;
 
-      // sum(x**2)
+      // sum(x_i - mean)^2
       oidsAggUm.push_back(oidsAggPm[j]);
       keysAggUm.push_back(keysAggPm[j]);
       scaleAggUm.push_back(0);
@@ -4152,7 +4152,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
           widthAggPm.push_back(sizeof(double));
           funct->fAuxColumnIndex = ++colAggPm;
 
-          // sum(x)
+          // mean(x)
           oidsAggPm.push_back(oidsProj[colProj]);
           keysAggPm.push_back(aggKey);
           scaleAggPm.push_back(0);
@@ -4162,7 +4162,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
           widthAggPm.push_back(sizeof(long double));
           ++colAggPm;
 
-          // sum(x**2)
+          // sum(x_i - mean)^2
           oidsAggPm.push_back(oidsProj[colProj]);
           keysAggPm.push_back(aggKey);
           scaleAggPm.push_back(0);
@@ -4808,7 +4808,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
 
       functionVecUm[i]->fAuxColumnIndex = lastCol;
 
-      // sum(x)
+      // mean(x)
       oidsAggDist.push_back(oidsAggPm[j]);
       keysAggDist.push_back(keysAggPm[j]);
       scaleAggDist.push_back(0);
@@ -4818,7 +4818,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
       widthAggDist.push_back(sizeof(long double));
       ++lastCol;
 
-      // sum(x**2)
+      // sum(x_i - mean)^2
       oidsAggDist.push_back(oidsAggPm[j]);
       keysAggDist.push_back(keysAggPm[j]);
       scaleAggDist.push_back(0);
