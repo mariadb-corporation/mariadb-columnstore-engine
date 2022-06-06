@@ -41,7 +41,7 @@ namespace execplan
  */
 ConstantColumn::ConstantColumn() : ReturnedColumn(), fType(0)
 {
-idblog("default ConstantColumn constructor");
+//idblog("default ConstantColumn constructor");
 }
 
 ConstantColumn::ConstantColumn(const string& sql, TYPE type)
@@ -228,6 +228,7 @@ const string ConstantColumn::toString() const
 
 const string ConstantColumn::data() const
 {
+#if 0
 int nptrs;
 void* pbuf[100];
 char** strs;
@@ -241,6 +242,7 @@ idblog("    stk: " << i << ": " << s);
 if (strs) {
 free(strs);
 }
+#endif
   return fData;
 }
 
