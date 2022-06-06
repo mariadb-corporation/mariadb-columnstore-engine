@@ -1828,6 +1828,7 @@ void RowGroup::initRow(Row* r, bool forceInlineData) const
 
 inline uint32_t RowGroup::getRowSize() const
 {
+idblog("get row size, column count " << columnCount);
   return offsets[columnCount] + columnCount;
 }
 
