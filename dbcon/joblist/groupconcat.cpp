@@ -980,7 +980,7 @@ idblog("initializing gcno");
 
   while (i != gcc->fGroupCols.end())
     fConcatColumns.push_back((*(i++)).second);
-idblog("after pushing columns");
+  
   uint64_t newSize = fRowsPerRG * fRowGroup.getRowSize();
 
   if (!fRm->getMemory(newSize, fSessionMemLimit))
