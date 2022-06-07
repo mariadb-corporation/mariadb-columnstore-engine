@@ -2487,6 +2487,7 @@ void RowAggregationUM::attachGroupConcatAg()
       if (fFunctionColGc[i]->fAggFunction == ROWAGG_GROUP_CONCAT)
       {
         // save the object's address in the result row
+	idblog("constructing GroupConcatAgUM, # columns " << fGroupConcat[j++].getColumnCount());
         SP_GroupConcatAg gcc(new joblist::GroupConcatAgUM(fGroupConcat[j++]));
         fGroupConcatAg.push_back(gcc);
         *((GroupConcatAg**)(data + fRow.getOffset(colOut))) = gcc.get();

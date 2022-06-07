@@ -316,6 +316,7 @@ GroupConcatAgUM::~GroupConcatAgUM()
 
 void GroupConcatAgUM::initialize()
 {
+	idblog("at GroupConcatAgUM::initialize, fGroupConcat # columns " << fGroupConcat.getColumnCount());
   if (fGroupConcat->fDistinct || fGroupConcat->fOrderCols.size() > 0)
     fConcator.reset(new GroupConcatOrderBy());
   else
