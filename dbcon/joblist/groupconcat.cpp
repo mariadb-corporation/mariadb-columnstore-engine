@@ -193,7 +193,7 @@ void GroupConcatInfo::mapColumns(const RowGroup& projRG)
   map<uint32_t, uint32_t> projColumnMap;
   const vector<uint32_t>& keysProj = projRG.getKeys();
 
-  idblog("projRG column count " << projRG.getCoolumnCount());
+  idblog("projRG column count " << projRG.getColumnCount());
 
   for (uint64_t i = 0; i < projRG.getColumnCount(); i++)
     projColumnMap[keysProj[i]] = i;
