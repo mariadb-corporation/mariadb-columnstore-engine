@@ -739,7 +739,12 @@ void GroupConcatOrderBy::initialize(const rowgroup::SP_GroupConcat& gcc)
   vector<std::pair<uint32_t, uint32_t> >::iterator i = gcc->fGroupCols.begin();
 
   while (i != gcc->fGroupCols.end())
-    fConcatColumns.push_back((*(i++)).second);
+  {
+	  auto x = (*i).second;
+	  idblog("pushing x=" << x );
+    fConcatColumns.push_back(x);
+    i++;
+  }
 
   IdbOrderBy::initialize(gcc->fRowGroup);
 }
