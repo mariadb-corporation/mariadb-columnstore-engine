@@ -407,6 +407,9 @@ void GroupConcator::initialize(const rowgroup::SP_GroupConcat& gcc)
   // MCOL-901 This value comes from the Server and it is
   // too high(3MB) to allocate it for every instance.
   fGroupConcatLen = gcc->fSize;
+  char t[100];
+  sprintf(t, "%p", gcc->fSeparator.c_str());
+  idblog("separator: pointer " << std::string(t) << ", value '" << gcc->fSeparator << "'");
   fCurrentLength -= strlen(gcc->fSeparator.c_str());
   fTimeZone = gcc->fTimeZone;
 
