@@ -193,6 +193,8 @@ void GroupConcatInfo::mapColumns(const RowGroup& projRG)
   map<uint32_t, uint32_t> projColumnMap;
   const vector<uint32_t>& keysProj = projRG.getKeys();
 
+  idblog("projRG column count " << projRG.getCoolumnCount());
+
   for (uint64_t i = 0; i < projRG.getColumnCount(); i++)
     projColumnMap[keysProj[i]] = i;
 
@@ -967,7 +969,7 @@ GroupConcatNoOrder::~GroupConcatNoOrder()
 
 void GroupConcatNoOrder::initialize(const rowgroup::SP_GroupConcat& gcc)
 {
-idblog("initializing gcno");
+idblog("initializing gcno, gcc->getColumncount() " << gcc->fRowGroup.getColumnCount());
   GroupConcator::initialize(gcc); idblog("after base init");
 
   fRowGroup = gcc->fRowGroup;
