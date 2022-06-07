@@ -410,7 +410,7 @@ void GroupConcator::initialize(const rowgroup::SP_GroupConcat& gcc)
   char t[100];
   sprintf(t, "%p", gcc->fSeparator.c_str());
   idblog("separator: pointer " << std::string(t) << ", value '" << gcc->fSeparator << "'");
-  fCurrentLength -= strlen(gcc->fSeparator.c_str());
+  fCurrentLength -= gcc->fSeparator.size(); // XXX Yet I have to find out why spearator has c_str() as nullptr here.
   fTimeZone = gcc->fTimeZone;
 
   fConstCols = gcc->fConstCols;
