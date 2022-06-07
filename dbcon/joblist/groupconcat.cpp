@@ -737,7 +737,7 @@ void GroupConcatOrderBy::initialize(const rowgroup::SP_GroupConcat& gcc)
   fSessionMemLimit = gcc->fSessionMemLimit;
 
   vector<std::pair<uint32_t, uint32_t> >::iterator i = gcc->fGroupCols.begin();
-
+idblog("expect to push " << gcc->fGroupCols.size() << " values.");
   while (i != gcc->fGroupCols.end())
   {
 	  auto x = (*i).second;
@@ -745,6 +745,7 @@ void GroupConcatOrderBy::initialize(const rowgroup::SP_GroupConcat& gcc)
     fConcatColumns.push_back(x);
     i++;
   }
+idblog("everything was pushed");
 
   IdbOrderBy::initialize(gcc->fRowGroup);
 }
