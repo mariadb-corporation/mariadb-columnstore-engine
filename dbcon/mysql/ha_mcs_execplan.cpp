@@ -5057,7 +5057,9 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
       {
         string separator;
         separator.assign(gc->get_separator()->ptr(), gc->get_separator()->length());
-	idblog("assigning separator with gc->get_separator()->ptr() " << gc->get_separator()->ptr());
+	char t[100];
+	sprintf(t, "%p",gc->get_separator()->ptr());
+	idblog("assigning separator with gc->get_separator()->ptr() " << string(t));
         (dynamic_cast<GroupConcatColumn*>(ac))->separator(separator);
       }
     }
