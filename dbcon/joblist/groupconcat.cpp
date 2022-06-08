@@ -123,7 +123,6 @@ void GroupConcatInfo::prepGroupConcat(JobInfo& jobInfo)
 
     i++;
   }
-	idbassert(groupConcat->fGroupCols.size() < 100);
 
   // Rare case: all columns in group_concat are constant columns, use a column in column map.
   if (jobInfo.groupConcatCols.size() > 0 && fColumns.size() == 0)
@@ -148,7 +147,6 @@ void GroupConcatInfo::prepGroupConcat(JobInfo& jobInfo)
       throw runtime_error("Empty column map.");
     }
   }
-	idbassert(groupConcat->fGroupCols.size() < 100);
 }
 
 uint32_t GroupConcatInfo::getColumnKey(const SRCP& srcp, JobInfo& jobInfo)
@@ -729,16 +727,16 @@ GroupConcatOrderBy::~GroupConcatOrderBy()
 
 void GroupConcatOrderBy::initialize(const rowgroup::SP_GroupConcat& gcc)
 {
-	idbassert(fGroupCols.size() < 100);
+	idbassert(gcc->fGroupCols.size() < 100);
   GroupConcator::initialize(gcc);
-	idbassert(fGroupCols.size() < 100);
+	idbassert(gcc->fGroupCols.size() < 100);
 
   fOrderByCond.resize(0);
 	idbassert(fGroupCols.size() < 100);
 
   for (uint64_t i = 0; i < gcc->fOrderCond.size(); i++)
     fOrderByCond.push_back(IdbSortSpec(gcc->fOrderCond[i].first, gcc->fOrderCond[i].second));
-	idbassert(fGroupCols.size() < 100);
+	idbassert(gcc->fGroupCols.size() < 100);
 
   fDistinct = gcc->fDistinct;
   fRowsPerRG = 128;
