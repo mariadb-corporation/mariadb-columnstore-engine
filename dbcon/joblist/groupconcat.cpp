@@ -323,6 +323,8 @@ void GroupConcatAgUM::initialize()
 	idblog("at GroupConcatAgUM::initialize, fGroupConcat # columns " << fGroupConcat->fRowGroup.getColumnCount());
 if (fGroupConcat->fRowGroup.getColumnCount() < 1)
 	idblog("at GroupConcatAgUM::initialize, fGroupConcat # columns " << fGroupConcat->fRowGroup.getColumnCount());
+idblog("at GroupConcatAgUM::initialize, fGroupConcat order cols size " << fGroupConcat->fOrderCols.size());
+idblog("at GroupConcatAgUM::initialize, fGroupConcat group cols size " << fGroupConcat->fGroupCols.size());
   if (fGroupConcat->fDistinct || fGroupConcat->fOrderCols.size() > 0)
     fConcator.reset(new GroupConcatOrderBy());
   else
