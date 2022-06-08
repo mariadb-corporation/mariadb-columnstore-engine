@@ -1049,6 +1049,7 @@ RowGroup::RowGroup()
   charsets.reserve(10);
   scale.reserve(10);
   precision.reserve(10);
+  idblog("default RowGroup constructor");
 }
 
 RowGroup::RowGroup(uint32_t colCount, const vector<uint32_t>& positions, const vector<uint32_t>& roids,
@@ -1109,6 +1110,7 @@ RowGroup::RowGroup(uint32_t colCount, const vector<uint32_t>& positions, const v
 
   // Set all the charsets to NULL for jit initialization.
   charsets.insert(charsets.begin(), charsetNumbers.size(), NULL);
+  idbassert(columnCount);
 }
 
 RowGroup::RowGroup(const RowGroup& r)
@@ -1140,6 +1142,7 @@ RowGroup::RowGroup(const RowGroup& r)
     offsets = &stOffsets[0];
   else if (!useStringTable && !oldOffsets.empty())
     offsets = &oldOffsets[0];
+  idbassert(columnCount);
 }
 
 RowGroup& RowGroup::operator=(const RowGroup& r)
@@ -1171,6 +1174,7 @@ RowGroup& RowGroup::operator=(const RowGroup& r)
   else if (!useStringTable && !oldOffsets.empty())
     offsets = &oldOffsets[0];
 
+  idbassert(columnCount);
   return *this;
 }
 
@@ -1185,6 +1189,7 @@ RowGroup::RowGroup(ByteStream& bs)
  , sTableThreshold(20)
 {
   this->deserialize(bs);
+  idbassert(columnCount);
 }
 
 RowGroup::~RowGroup()
