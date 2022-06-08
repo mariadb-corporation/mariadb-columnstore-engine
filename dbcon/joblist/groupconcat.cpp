@@ -732,7 +732,7 @@ void GroupConcatOrderBy::initialize(const rowgroup::SP_GroupConcat& gcc)
 	idbassert(gcc->fGroupCols.size() < 100);
 
   fOrderByCond.resize(0);
-	idbassert(fGroupCols.size() < 100);
+	idbassert(gcc->fGroupCols.size() < 100);
 
   for (uint64_t i = 0; i < gcc->fOrderCond.size(); i++)
     fOrderByCond.push_back(IdbSortSpec(gcc->fOrderCond[i].first, gcc->fOrderCond[i].second));
