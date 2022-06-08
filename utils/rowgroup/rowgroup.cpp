@@ -1177,7 +1177,7 @@ RowGroup& RowGroup::operator=(const RowGroup& r)
   if (!columnCount) {
 	  idblog("zero column count");
   }
-  idbassert(columnCount);
+  //idbassert(columnCount);
   return *this;
 }
 
