@@ -1174,6 +1174,9 @@ RowGroup& RowGroup::operator=(const RowGroup& r)
   else if (!useStringTable && !oldOffsets.empty())
     offsets = &oldOffsets[0];
 
+  if (!columnCount) {
+	  idblog("zero column count");
+  }
   idbassert(columnCount);
   return *this;
 }
