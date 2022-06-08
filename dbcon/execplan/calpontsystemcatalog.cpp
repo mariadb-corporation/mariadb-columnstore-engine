@@ -5843,6 +5843,10 @@ void CalpontSystemCatalog::flushCache()
   buildSysTablemap();
   lk3.unlock();
 
+  boost::mutex::scoped_lock namemaplk(fTableNameMapLock);
+  fTableNameMap.clear();
+  namemaplk.unlock();
+
   boost::mutex::scoped_lock auxlk(fTableAUXColumnOIDMapLock);
   fTableAUXColumnOIDMap.clear();
   auxlk.unlock();

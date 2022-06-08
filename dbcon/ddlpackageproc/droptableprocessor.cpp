@@ -779,6 +779,7 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
 
   std::vector<CalpontSystemCatalog::OID> columnOidList;
   std::vector<CalpontSystemCatalog::OID> allOidList;
+  CalpontSystemCatalog::OID tableAuxColOid;
   CalpontSystemCatalog::RIDList tableColRidList;
   CalpontSystemCatalog::DictOIDList dictOIDList;
   execplan::CalpontSystemCatalog::ROPair roPair;
@@ -919,6 +920,7 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
     userTableName.table = truncTableStmt.fTableName->fName;
 
     tableColRidList = systemCatalogPtr->columnRIDs(userTableName);
+    tableAuxColOid = systemCatalogPtr->tableAUXColumnOID(userTableName);
 
     dictOIDList = systemCatalogPtr->dictOIDs(userTableName);
 
@@ -929,6 +931,12 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
         columnOidList.push_back(tableColRidList[i].objnum);
         allOidList.push_back(tableColRidList[i].objnum);
       }
+    }
+
+    if (tableAuxColOid > 3000)
+    {
+      columnOidList.push_back(tableAuxColOid);
+      allOidList.push_back(tableAuxColOid);
     }
 
     for (unsigned i = 0; i < dictOIDList.size(); i++)
