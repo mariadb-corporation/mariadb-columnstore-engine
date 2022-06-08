@@ -102,6 +102,11 @@ class FairThreadPool
   {
     return weightedTxnsQueue_.size();
   }
+  // This method enables a pool current workload estimate.
+  size_t jobsRunning() const
+  {
+    return jobsRunning_.load(std::memory_order_relaxed);
+  }
 
  protected:
  private:
@@ -126,12 +131,10 @@ class FairThreadPool
   void threadFcn(const PriorityThreadPool::Priority preferredQueue);
   void sendErrorMsg(uint32_t id, uint32_t step, primitiveprocessor::SP_UM_IOSOCK sock);
 
-  uint32_t threadCounts;
   uint32_t defaultThreadCounts;
   std::mutex mutex;
   std::condition_variable newJob;
   boost::thread_group threads;
-  bool _stop;
   uint32_t weightPerRun;
   volatile uint id;  // prevent it from being optimized out
 
@@ -154,6 +157,9 @@ class FairThreadPool
   using Txn2ThreadPoolJobsListMap = std::unordered_map<TransactionIdxT, ThreadPoolJobsList*>;
   Txn2ThreadPoolJobsListMap txn2JobsListMap_;
   WeightedTxnPrioQueue weightedTxnsQueue_;
+  std::atomic<size_t> jobsRunning_{0};
+  std::atomic<size_t> threadCounts_{0};
+  std::atomic<bool> stop_{false};
 };
 
 }  // namespace threadpool
