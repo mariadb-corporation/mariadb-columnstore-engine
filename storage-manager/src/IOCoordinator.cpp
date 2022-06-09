@@ -25,6 +25,8 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <boost/filesystem.hpp>
+#define BOOST_SPIRIT_THREADSAFE
+#include <boost/property_tree/json_parser.hpp>
 #include <iostream>
 #include "checks.h"
 #include "vlarray.h"
@@ -1264,10 +1266,9 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char* object, con
   boost::shared_array<char> headertxt = seekToEndOfHeader1(journalFD, &l_bytesRead);
   stringstream ss;
   ss << headertxt.get();
-
-  nlohmann::json header = nlohmann::json::parse(ss);
-
-  assert(header["version"] == 1);
+  boost::property_tree::ptree header;
+  boost::property_tree::json_parser::read_json(ss, header);
+  assert(header.get<int>("version") == 1);
 
   // start processing the entries
   while (1)
@@ -1352,9 +1353,9 @@ int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t>& objData, size
   boost::shared_array<char> headertxt = seekToEndOfHeader1(journalFD, &l_bytesRead);
   stringstream ss;
   ss << headertxt.get();
-
-  nlohmann::json header = nlohmann::json::parse(ss);
-  assert(header["version"] == 1);
+  boost::property_tree::ptree header;
+  boost::property_tree::json_parser::read_json(ss, header);
+  assert(header.get<int>("version") == 1);
 
   // read the journal file into memory
   size_t journalBytes = ::lseek(journalFD, 0, SEEK_END) - l_bytesRead;
@@ -1432,9 +1433,9 @@ int IOCoordinator::mergeJournalInMem_bigJ(boost::shared_array<uint8_t>& objData,
   boost::shared_array<char> headertxt = seekToEndOfHeader1(journalFD, &l_bytesRead);
   stringstream ss;
   ss << headertxt.get();
-
-  nlohmann::json header = nlohmann::json::parse(ss);
-  assert(header["version"] == 1);
+  boost::property_tree::ptree header;
+  boost::property_tree::json_parser::read_json(ss, header);
+  assert(header.get<int>("version") == 1);
 
   // start processing the entries
   while (1)
