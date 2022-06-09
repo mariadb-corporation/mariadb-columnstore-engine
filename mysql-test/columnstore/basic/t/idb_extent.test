@@ -1,0 +1,99 @@
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS idb_extent_test_db;
+--enable_warnings
+
+CREATE DATABASE idb_extent_test_db;
+USE idb_extent_test_db;
+
+create table t1 (
+        col_signed TINYINT,
+        col_unsigned TINYINT UNSIGNED,
+        col_small_signed SMALLINT,
+        col_small_unsigned SMALLINT UNSIGNED,
+        col_med_signed MEDIUMINT,
+        col_med_unsigned MEDIUMINT UNSIGNED,
+        col_int_signed INT,
+        col_int_unsigned INT UNSIGNED,
+        col_big_signed BIGINT,
+        col_big_unsigned BIGINT UNSIGNED,
+        col_dec_signed DECIMAL(38,0),
+        col_dec_unsigned DECIMAL(38,0) UNSIGNED,
+        col_float_signed FLOAT,
+        col_float_unsigned FLOAT UNSIGNED,
+        col_double_signed DOUBLE,
+        col_double_unsigned DOUBLE UNSIGNED
+)engine=columnstore;
+
+
+
+INSERT INTO t1 (col_signed) VALUES(-126);
+INSERT INTO t1 (col_signed) VALUES(127);
+INSERT INTO t1 (col_unsigned) VALUES(0);
+INSERT INTO t1 (col_unsigned) VALUES(253);
+
+INSERT INTO t1 (col_small_signed) VALUES(-32766);
+INSERT INTO t1 (col_small_signed) VALUES(32767);
+INSERT INTO t1 (col_small_unsigned) VALUES(0);
+INSERT INTO t1 (col_small_unsigned) VALUES(65533);
+
+INSERT INTO t1 (col_med_signed) VALUES(-8388608);
+INSERT INTO t1 (col_med_signed) VALUES(8388607);
+INSERT INTO t1 (col_med_unsigned) VALUES(0);
+INSERT INTO t1 (col_med_unsigned) VALUES(16777215);
+
+INSERT INTO t1 (col_int_signed) VALUES(-2147483646);
+INSERT INTO t1 (col_int_signed) VALUES(2147483647);
+INSERT INTO t1 (col_int_unsigned) VALUES(0);
+INSERT INTO t1 (col_int_unsigned) VALUES(4294967293);
+
+INSERT INTO t1 (col_big_signed) VALUES(-9223372036854775806);
+INSERT INTO t1 (col_big_signed) VALUES(9223372036854775807);
+INSERT INTO t1 (col_big_unsigned) VALUES(0);
+INSERT INTO t1 (col_big_unsigned) VALUES(18446744073709551613);
+
+INSERT INTO t1 (col_dec_signed) VALUES(-70000000000000000000000000000000000003);
+INSERT INTO t1 (col_dec_signed) VALUES(80000000000000000000000000000000000003);
+INSERT INTO t1 (col_dec_unsigned) VALUES(0);
+INSERT INTO t1 (col_dec_unsigned) VALUES(70000000000000000000000000000000000003);
+
+INSERT INTO t1 (col_float_signed) VALUES(-92233775806.1);
+INSERT INTO t1 (col_float_signed) VALUES(92233775806.1);
+INSERT INTO t1 (col_float_unsigned) VALUES(0);
+INSERT INTO t1 (col_float_unsigned) VALUES(92233775806.1);
+
+INSERT INTO t1 (col_double_signed) VALUES(-9223372036854775806.1);
+INSERT INTO t1 (col_double_signed) VALUES(9223372036854775806.1);
+INSERT INTO t1 (col_double_unsigned) VALUES(0);
+INSERT INTO t1 (col_double_unsigned) VALUES(9223372036854775806.1);
+
+SELECT * FROM t1;
+
+SELECT 'q1', idbextentmax(col_signed), idbextentmin(col_signed) FROM t1 LIMIT 1;
+SELECT 'q2', idbextentmax(col_unsigned), idbextentmin(col_unsigned) FROM t1 LIMIT 1;
+
+SELECT 'q3', idbextentmax(col_small_signed), idbextentmin(col_small_signed) FROM t1 LIMIT 1;
+SELECT 'q4', idbextentmax(col_small_unsigned), idbextentmin(col_small_unsigned) FROM t1 LIMIT 1;
+
+SELECT 'q5', idbextentmax(col_med_signed), idbextentmin(col_med_signed) FROM t1 LIMIT 1;
+SELECT 'q6', idbextentmax(col_med_unsigned), idbextentmin(col_med_unsigned) FROM t1 LIMIT 1;
+
+SELECT 'q7', idbextentmax(col_int_signed), idbextentmin(col_int_signed) FROM t1 LIMIT 1;
+SELECT 'q8', idbextentmax(col_int_unsigned), idbextentmin(col_int_unsigned) FROM t1 LIMIT 1;
+
+SELECT 'q9', idbextentmax(col_big_signed), idbextentmin(col_big_signed) FROM t1 LIMIT 1;
+SELECT 'q10', idbextentmax(col_big_unsigned), idbextentmin(col_big_unsigned) FROM t1 LIMIT 1;
+
+SELECT 'q11', idbextentmax(col_dec_signed), idbextentmin(col_dec_signed) FROM t1 LIMIT 1;
+SELECT 'q12', idbextentmax(col_dec_unsigned), idbextentmin(col_dec_unsigned) FROM t1 LIMIT 1;
+
+SELECT 'q13', idbextentmax(col_float_signed), idbextentmin(col_float_signed) FROM t1 LIMIT 1;
+SELECT 'q14', idbextentmax(col_float_unsigned), idbextentmin(col_float_unsigned) FROM t1 LIMIT 1;
+
+SELECT 'q15', idbextentmax(col_double_signed), idbextentmin(col_double_signed) FROM t1 LIMIT 1;
+SELECT 'q16', idbextentmax(col_double_unsigned), idbextentmin(col_double_unsigned) FROM t1 LIMIT 1;
+
+
+# Clean UP
+DROP DATABASE idb_extent_test_db;
