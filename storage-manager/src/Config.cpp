@@ -23,6 +23,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/regex.hpp>
 
 #include <stdlib.h>
 #include <vector>
@@ -30,7 +31,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <iostream>
-#include <regex>
 
 #include "SMLogging.h"
 
@@ -165,13 +165,13 @@ bool Config::reload()
   return rtn;
 }
 
-string use_envvar(const std::smatch& envvar)
+string use_envvar(const boost::smatch& envvar)
 {
   char* env = getenv(envvar[1].str().c_str());
   return (env ? env : "");
 }
 
-string expand_numbers(const std::smatch& match)
+string expand_numbers(const boost::smatch& match)
 {
   long long num = stol(match[1].str());
   char suffix = (char)::tolower(match[2].str()[0]);
@@ -185,20 +185,6 @@ string expand_numbers(const std::smatch& match)
   else if (suffix == 'k')
     num <<= 10;
   return ::to_string(num);
-}
-
-std::string regex_replace_with_format(const std::string& input,
-                                      const std::regex& regex,
-                                      std::function<std::string(std::smatch const& match)> format)
-{
-
-    std::ostringstream output;
-    std::sregex_iterator begin(input.begin(), input.end(), regex), end;
-    for(; begin != end; begin++){
-        output << begin->prefix() << format(*begin);
-    }
-    output << input.substr(input.size() - begin->position());
-    return output.str();
 }
 
 string Config::getValue(const string& section, const string& key) const
@@ -216,15 +202,15 @@ string Config::getValue(const string& section, const string& key) const
   }
   s.unlock();
 
-  std::regex re("\\$\\{(.+)\\}");
+  boost::regex re("\\$\\{(.+)\\}");
 
-  ret = regex_replace_with_format(ret, re, use_envvar);
+  ret = boost::regex_replace(ret, re, use_envvar);
 
   // do the numeric substitutions.  ex, the suffixes m, k, g
   // ehhhhh.  going to end up turning a string to a number, to a string, and then to a number again
   // don't like that.  OTOH who cares.
-  std::regex num_re("^([[:digit:]]+)([mMkKgG])$", std::regex::extended);
-  ret = regex_replace_with_format(ret, num_re, expand_numbers);
+  boost::regex num_re("^([[:digit:]]+)([mMkKgG])$", boost::regex::extended);
+  ret = boost::regex_replace(ret, num_re, expand_numbers);
 
   return ret;
 }
