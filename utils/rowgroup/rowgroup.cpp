@@ -1144,6 +1144,7 @@ RowGroup::RowGroup(const RowGroup& r)
     offsets = &oldOffsets[0];
   if (!columnCount) {
     idblog("constructing from RowGroup with zero columns");
+    idbassert(false);
   }
 }
 
