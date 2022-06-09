@@ -18,11 +18,16 @@
 #pragma once
 
 #include <signal.h>
+#include <cstring>
+#include <sstream>
 #include "pipe.h"
 
 class Service
 {
  protected:
+  // The read operation implicitly controls how long binary waits
+  // before it starts. This is import for DMLProc to survive rollbacks. See MCOL-5105.
+  static constexpr const size_t PipeReadTimeout = 1200;
   // The service name, for logging
   const std::string m_name;
   // The pipe to send messages from the child to the parent
@@ -62,7 +67,7 @@ class Service
   {
     char str[100];
     // Read the message from the child
-    ssize_t nbytes = m_pipe.readtm({120, 0}, str, sizeof(str));
+    ssize_t nbytes = m_pipe.readtm({PipeReadTimeout, 0}, str, sizeof(str));
     if (nbytes >= 0)
     {
       ParentLogChildMessage(std::string(str, nbytes));
