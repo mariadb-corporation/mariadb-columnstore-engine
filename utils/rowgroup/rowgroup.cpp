@@ -1142,7 +1142,9 @@ RowGroup::RowGroup(const RowGroup& r)
     offsets = &stOffsets[0];
   else if (!useStringTable && !oldOffsets.empty())
     offsets = &oldOffsets[0];
-  idbassert(columnCount);
+  if (!columnCount) {
+    idblog("constructing from RowGroup with zero columns");
+  }
 }
 
 RowGroup& RowGroup::operator=(const RowGroup& r)
