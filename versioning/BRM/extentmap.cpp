@@ -1839,6 +1839,7 @@ struct EMBinaryReader
 void ExtentMap::loadFromBinaryBlob(const char* blob)
 {
   grabEMEntryTable(WRITE);
+  grabEMIndex(WRITE);
 
   try
   {
@@ -1846,6 +1847,7 @@ void ExtentMap::loadFromBinaryBlob(const char* blob)
   }
   catch (...)
   {
+    releaseEMIndex(WRITE);
     releaseEMEntryTable(WRITE);
     throw;
   }
