@@ -18,6 +18,11 @@
 #ifndef PIPE_H_INCLUDED
 #define PIPE_H_INCLUDED
 
+#include <sys/types.h>
+#include <unistd.h>
+#include <cerrno>
+#include <string>
+
 /*
   A helper class to hold the file descriptors returned from a pipe() call.
 */
@@ -60,7 +65,7 @@ public:
       FD_ZERO(&rfds);
       FD_SET(fd[0], &rfds);
       struct timeval tmptv = tv;
-      int retval = select(fd[0] + 1, &rfds, NULL, NULL, &tmptv);
+      int retval = select(fd[0] + 1, &rfds, nullptr, nullptr, &tmptv);
       if (retval == -1)
           return -1;
       if (!retval)
