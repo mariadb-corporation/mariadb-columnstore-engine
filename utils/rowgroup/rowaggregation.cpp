@@ -2363,6 +2363,13 @@ RowAggregationUM::RowAggregationUM(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupB
  , fTotalMemUsage(0)
  , fLastMemUsage(0)
 {
+	idblog("rowaggum creation from three arguments. fGroupconcat.size() " << fGroupConcat.size());
+	if (fGroupConcat.size()) {
+		idblog("rowaggum creation from three arguments. fGroupconcat[0].getColumnCount() " << fGroupConcat[0]->fRowGroup.getColumnCount());
+		if (fGroupConcat[0]->fRowGroup.getColumnCount() == 0) {
+			idblog("breakpoint place");
+		}
+	}
   // Check if there are any avg, stats or UDAF functions.
   // These flags are used in finalize.
   for (uint64_t i = 0; i < fFunctionCols.size(); i++)
