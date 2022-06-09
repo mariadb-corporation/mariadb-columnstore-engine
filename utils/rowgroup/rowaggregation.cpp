@@ -704,6 +704,7 @@ void RowAggregation::initialize()
   // Need map only if groupby list is not empty.
   if (fGroupByCols.empty())
   {
+	  idblog("empty fGroupByCols before attaching GroupConcatAgUM");
     fRowGroupOut->setRowCount(1);
     attachGroupConcatAg();
     // For UDAF, reset the data
@@ -765,6 +766,7 @@ void RowAggregation::aggReset()
   }
   fRowGroupOut->getRow(0, &fRow);
   copyNullRow(fRow);
+  idblog("attaching GroupConcatAgUM in addReset()");
   attachGroupConcatAg();
 
   // For UDAF, reset the data
@@ -807,6 +809,7 @@ void RowAggregation::aggregateRow(Row& row, const uint64_t* hash,
     if (is_new_row)
     {
       initMapData(row);
+      idblog("attaching GroupConcatAgUM in aggregate row, a new row");
       attachGroupConcatAg();
 
       // If there's UDAF involved, reset the user data.
