@@ -1111,6 +1111,7 @@ RowGroup::RowGroup(uint32_t colCount, const vector<uint32_t>& positions, const v
   // Set all the charsets to NULL for jit initialization.
   charsets.insert(charsets.begin(), charsetNumbers.size(), NULL);
   idbassert(columnCount);
+  idblog("constructing from complete data with " << columncount << " columns");
 }
 
 RowGroup::RowGroup(const RowGroup& r)
@@ -1142,9 +1143,8 @@ RowGroup::RowGroup(const RowGroup& r)
     offsets = &stOffsets[0];
   else if (!useStringTable && !oldOffsets.empty())
     offsets = &oldOffsets[0];
-  if (!columnCount) {
-    idblog("constructing from RowGroup with zero columns");
-  }
+
+  idblog("constructing from RowGroup with " << columncount << " columns");
 }
 
 RowGroup& RowGroup::operator=(const RowGroup& r)
@@ -1176,9 +1176,8 @@ RowGroup& RowGroup::operator=(const RowGroup& r)
   else if (!useStringTable && !oldOffsets.empty())
     offsets = &oldOffsets[0];
 
-  if (!columnCount) {
-	  idblog("zero column count");
-  }
+  idblog("rowgroup assignment, " << columnCount << " columns.");
+
   //idbassert(columnCount);
   return *this;
 }
