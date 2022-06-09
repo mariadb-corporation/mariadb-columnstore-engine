@@ -2397,6 +2397,9 @@ RowAggregationUM::RowAggregationUM(const RowAggregationUM& rhs)
  , fGroupConcat(rhs.fGroupConcat)
  , fLastMemUsage(rhs.fLastMemUsage)
 {
+	if (fGroupConcat.size()) {
+		idblog("rowaggum creation from other RAUM. fGroupconcat[0].getColumnCount() " << fGroupConcat[0]->rowGroup.getColumnCount());
+	}
 }
 
 RowAggregationUM::~RowAggregationUM()
