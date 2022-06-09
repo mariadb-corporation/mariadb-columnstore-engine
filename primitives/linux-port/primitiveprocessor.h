@@ -40,7 +40,7 @@
 #ifdef POSIX_REGEX
 #include <regex.h>
 #else
-#include <boost/regex.hpp>
+#include <regex>
 #endif
 #include <cstddef>
 #include <boost/shared_ptr.hpp>
@@ -53,6 +53,9 @@
 #include "hasher.h"
 
 class PrimTest;
+
+// XXX: turn off dictionary range setting during scan.
+#define	XXX_PRIMITIVES_TOKEN_RANGES_XXX
 
 namespace primitives
 {
@@ -423,7 +426,13 @@ class PrimitiveProcessor
   //	void p_ColAggregate(const NewColAggRequestHeader *in, NewColAggResultHeader *out);
 
   void p_Dictionary(const DictInput* in, std::vector<uint8_t>* out, bool skipNulls, uint32_t charsetNumber,
-                    boost::shared_ptr<DictEqualityFilter> eqFilter, uint8_t eqOp);
+#if !defined(XXX_PRIMITIVES_TOKEN_RANGES_XXX)
+                    boost::shared_ptr<DictEqualityFilter> eqFilter, uint8_t eqOp
+#else
+                    boost::shared_ptr<DictEqualityFilter> eqFilter, uint8_t eqOp,
+                    uint64_t minMax[2]  // as name suggests, [0] is min, [1] is max.
+#endif
+  );
 
   inline void setLogicalBlockMode(bool b)
   {
@@ -562,4 +571,3 @@ boost::shared_ptr<ParsedColumnFilter> _parseColumnFilter(
 
 }  // namespace primitives
 
-// vim:ts=2 sw=2:

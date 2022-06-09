@@ -14,6 +14,10 @@
 *.so.*
 *.vpj
 .libs/
+.cache/
+compile_commands.json
+*.code-workspace
+settings.json
 config.log
 *~
 *kdev*
@@ -172,3 +176,4 @@ mariadb-columnstore-regression-test/
 build/Testing/
 tests/*\[1\]_tests.cmake
 tests/*\[1\]_include.cmake
+.boost

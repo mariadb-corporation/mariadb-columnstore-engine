@@ -244,4 +244,3 @@ void JobStep::handleException(std::exception_ptr e, const int errorCode, const u
 }
 
 }  // namespace joblist
-// vim:ts=4 sw=4:

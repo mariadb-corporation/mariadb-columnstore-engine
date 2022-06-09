@@ -61,6 +61,21 @@ class DictStepJL : public CommandJL
   void createCommand(messageqcpp::ByteStream&) const;
   void runCommand(messageqcpp::ByteStream&) const;
 
+  messageqcpp::ByteStream getFilterString() const
+  {
+    return filterString;
+  }
+  uint32_t getFilterCount() const
+  {
+    return filterCount;
+  }
+  messageqcpp::ByteStream reencodedFilterString() const;
+
+  uint8_t getBop() const
+  {
+    return BOP;
+  }
+
  private:
   DictStepJL(const DictStepJL&);
 

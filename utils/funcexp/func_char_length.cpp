@@ -99,7 +99,7 @@ int64_t Func_char_length::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
     case execplan::CalpontSystemCatalog::TIMESTAMP:
     {
       string date = dataconvert::DataConvert::timestampToString(
-          parm[0]->data()->getTimestampIntVal(row, isNull), timeZone());
+          parm[0]->data()->getTimestampIntVal(row, isNull), op_ct.getTimeZone());
       return (int64_t)date.size();
     }
 
@@ -121,4 +121,3 @@ int64_t Func_char_length::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

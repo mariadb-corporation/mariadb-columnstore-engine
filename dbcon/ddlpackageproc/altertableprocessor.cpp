@@ -22,12 +22,12 @@
 
 #include <unistd.h>
 #include <typeinfo>
+#include <regex>
 #include <string>
 #include <vector>
 using namespace std;
 
 #include <boost/shared_ptr.hpp>
-#include <boost/regex.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 
 #include "altertableprocessor.h"
@@ -1023,7 +1023,8 @@ void AlterTableProcessor::addColumn(uint32_t sessionID, execplan::CalpontSystemC
         bs << (ByteStream::byte)column_iterator->colType.colDataType;
         bs << (uint32_t)column_iterator->colType.colWidth;
         bs << (ByteStream::byte)column_iterator->colType.compressionType;
-        bs << fTimeZone;
+        messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
+        bs << timeZone;
         // cout << "sending command fillcolumn " << endl;
         uint32_t msgRecived = 0;
         fWEClient->write_to_all(bs);
@@ -2082,14 +2083,14 @@ void AlterTableProcessor::tableComment(uint32_t sessionID, execplan::CalpontSyst
       CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
 
   boost::algorithm::to_upper(ataTableComment.fTableComment);
-  boost::regex compat("[[:space:]]*AUTOINCREMENT[[:space:]]*=[[:space:]]*", boost::regex_constants::extended);
-  boost::match_results<std::string::const_iterator> what;
+  std::regex compat("[[:space:]]*AUTOINCREMENT[[:space:]]*=[[:space:]]*", std::regex_constants::extended);
+  std::match_results<std::string::const_iterator> what;
   std::string::const_iterator start, end;
   start = ataTableComment.fTableComment.begin();
   end = ataTableComment.fTableComment.end();
-  boost::match_flag_type flags = boost::match_default;
+  std::regex_constants::match_flag_type flags = std::regex_constants::match_default;
 
-  if (boost::regex_search(start, end, what, compat, flags) && what[0].matched)
+  if (std::regex_search(start, end, what, compat, flags) && what[0].matched)
   {
     std::string params(&(*(what[0].second)));
     char* ep = NULL;
@@ -2538,7 +2539,6 @@ void AlterTableProcessor::renameColumn(uint32_t sessionID, execplan::CalpontSyst
 }
 
 }  // namespace ddlpackageprocessor
-// vim:ts=4 sw=4:
 
 #ifdef __clang__
 #pragma clang diagnostic pop

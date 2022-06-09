@@ -167,4 +167,3 @@ std::string Func_replace_oracle::getStrVal(rowgroup::Row& row, FunctionParm& fp,
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

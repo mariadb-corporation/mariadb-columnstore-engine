@@ -50,6 +50,8 @@ using namespace messageqcpp;
 using namespace rowgroup;
 using namespace joiner;
 
+//#define XXX_BATCHPRIMPROC_TOKENS_RANGES_XXX
+
 namespace joblist
 {
 BatchPrimitiveProcessorJL::BatchPrimitiveProcessorJL(const ResourceManager* rm)
@@ -152,6 +154,21 @@ void BatchPrimitiveProcessorJL::addFilterStep(const pDictionaryStep& step)
   cc->setBatchPrimitiveProcessor(this);
   cc->setQueryUuid(step.queryUuid());
   cc->setStepUuid(uuid);
+
+#if defined(XXX_BATCHPRIMPROC_TOKENS_RANGES_XXX)
+  if (filterSteps.size() > 0)
+  {
+    size_t stepsIndex = filterSteps.size() - 1;
+    SCommand prevCC = filterSteps[stepsIndex];
+    ColumnCommandJL* pcc = dynamic_cast<ColumnCommandJL*>(prevCC.get());
+    DictStepJL* ccc = dynamic_cast<DictStepJL*>(cc.get());
+    if (pcc && ccc)
+    {
+      filterSteps[stepsIndex].reset(
+          new ColumnCommandJL(*pcc, *ccc));  // column command will use same filters.
+    }
+  }
+#endif
   filterSteps.push_back(cc);
   filterCount++;
   needStrValues = true;
@@ -443,6 +460,7 @@ void BatchPrimitiveProcessorJL::getElementTypes(ByteStream& in, vector<ElementTy
     if (*validCPData)
     {
       in >> *lbid;
+
       in >> tmp64;
       *min = (int64_t)tmp64;
       in >> tmp64;
@@ -712,8 +730,9 @@ bool BatchPrimitiveProcessorJL::countThisMsg(messageqcpp::ByteStream& in) const
     }
 
     if (data[offset] != 0)
-      offset += (data[offset + CP_FLAG_AND_LBID] * 2) + CP_FLAG_AND_LBID +
-                1;  // skip the CP data with wide min/max values (16/32 bytes each)
+      offset += (data[offset + CP_FLAG_AND_LBID + 1] * 2) + CP_FLAG_AND_LBID + 1 +
+                1;  // skip the CP data with wide min/max values (16/32 bytes each). we also skip
+                    // cpFromDictScan flag.
     else
       offset += CP_FLAG_AND_LBID;  // skip only the "valid CP data" & LBID bytes
   }
@@ -750,9 +769,10 @@ void BatchPrimitiveProcessorJL::deserializeAggregateResult(ByteStream* in, vecto
 }
 
 void BatchPrimitiveProcessorJL::getRowGroupData(ByteStream& in, vector<RGData>* out, bool* validCPData,
-                                                uint64_t* lbid, int128_t* min, int128_t* max,
-                                                uint32_t* cachedIO, uint32_t* physIO, uint32_t* touchedBlocks,
-                                                bool* countThis, uint32_t threadID, bool* hasWideColumn,
+                                                uint64_t* lbid, bool* fromDictScan, int128_t* min,
+                                                int128_t* max, uint32_t* cachedIO, uint32_t* physIO,
+                                                uint32_t* touchedBlocks, bool* countThis, uint32_t threadID,
+                                                bool* hasWideColumn,
                                                 const execplan::CalpontSystemCatalog::ColType& colType) const
 {
   uint64_t tmp64;
@@ -788,6 +808,8 @@ void BatchPrimitiveProcessorJL::getRowGroupData(ByteStream& in, vector<RGData>* 
     if (*validCPData)
     {
       in >> *lbid;
+      in >> tmp8;
+      *fromDictScan = tmp8 != 0;
       in >> tmp8;
       *hasWideColumn = (tmp8 > utils::MAXLEGACYWIDTH);
       if (UNLIKELY(*hasWideColumn))

@@ -541,7 +541,7 @@ class PackageHandler
           qts.schema_name = alterTableStmt.schemaName();
           fQtc.postQueryTele(qts);
 
-          processor->fTimeZone = alterTableStmt.fTimeZone;
+          processor->fTimeZone = alterTableStmt.getTimeZone();
 
           result = processor->processPackage(alterTableStmt);
 
@@ -876,4 +876,3 @@ int DDLProcessor::commitTransaction(uint32_t txnID, std::string& errorMsg)
   return rc;
 }
 }  // namespace ddlprocessor
-// vim:ts=4 sw=4:

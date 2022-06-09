@@ -75,7 +75,7 @@ int64_t Func_dayofweek::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& 
       dataconvert::TimeStamp timestamp(val);
       int64_t seconds = timestamp.second;
       dataconvert::MySQLTime time;
-      dataconvert::gmtSecToMySQLTime(seconds, time, timeZone());
+      dataconvert::gmtSecToMySQLTime(seconds, time, ct.getTimeZone());
       year = time.year;
       month = time.month;
       day = time.day;
@@ -166,4 +166,3 @@ int64_t Func_dayofweek::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& 
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

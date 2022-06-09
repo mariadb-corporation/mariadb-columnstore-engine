@@ -63,7 +63,7 @@ int64_t Func_month::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNu
       dataconvert::TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
       int64_t seconds = timestamp.second;
       dataconvert::MySQLTime m_time;
-      dataconvert::gmtSecToMySQLTime(seconds, m_time, timeZone());
+      dataconvert::gmtSecToMySQLTime(seconds, m_time, op_ct.getTimeZone());
       return m_time.month;
     }
 
@@ -142,4 +142,3 @@ int64_t Func_month::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNu
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

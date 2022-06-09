@@ -185,14 +185,8 @@ struct JobInfo
    , maxElems(rm->getHjMaxElems())
    , flushInterval(rm->getJLFlushInterval())
    , fifoSize(rm->getJlFifoSize())
-   , fifoSizeLargeSideHj(rm->getHjFifoSizeLargeSide())
-   , scanLbidReqLimit(rm->getJlScanLbidReqLimit())
-   , scanLbidReqThreshold(rm->getJlScanLbidReqThreshold())
-   , tempSaveSize(rm->getScTempSaveSize())
    , logger(new Logger())
    , traceFlags(0)
-   , tupleDLMaxSize(rm->getTwMaxSize())
-   , tupleMaxBuckets(rm->getTwMaxBuckets())
    , projectingTableOID(0)
    , isExeMgr(false)
    , trace(false)
@@ -226,18 +220,8 @@ struct JobInfo
   JobStepVectorStack stack;
   uint32_t flushInterval;
   uint32_t fifoSize;
-  uint32_t fifoSizeLargeSideHj;
-  //...joblist does not use scanLbidReqLimit and SdanLbidReqThreshold.
-  //...They are actually used by pcolscan and pdictionaryscan, but
-  //...we have joblist get and report the values here since they
-  //...are global to the job.
-  uint32_t scanLbidReqLimit;
-  uint32_t scanLbidReqThreshold;
-  uint32_t tempSaveSize;
   SPJL logger;
   uint32_t traceFlags;
-  uint64_t tupleDLMaxSize;
-  uint32_t tupleMaxBuckets;
   SErrorInfo errorInfo;
   execplan::CalpontSystemCatalog::OID* projectingTableOID;  // DeliveryWSDLs get a reference to this
   bool isExeMgr;
@@ -372,7 +356,7 @@ struct JobInfo
   int64_t largeSideLimit;
   uint64_t partitionSize;
   bool isDML;
-  std::string timeZone;
+  long timeZone;
 
   // This is for tracking any dynamically allocated ParseTree objects
   // in simpleScalarFilterToParseTree() for later deletion in

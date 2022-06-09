@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2022 Mariadb Corporation.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -51,30 +52,17 @@ const uint32_t defaultNumThreads = 8;
 // joblistfactory
 const uint32_t defaultFlushInterval = 8 * 1024;
 const uint32_t defaultFifoSize = 10;
-const uint32_t defaultHJFifoSizeLargeSide = 128;
 const uint64_t defaultHJMaxElems = 512 * 1024;  // hashjoin uses 8192
 const int defaultHJMaxBuckets = 32;             // hashjoin uses 4
 const uint64_t defaultHJPmMaxMemorySmallSide = 1 * 1024 * 1024 * 1024ULL;
 const uint64_t defaultHJUmMaxMemorySmallSide = 4 * 1024 * 1024 * 1024ULL;
-const uint32_t defaultTempSaveSize = defaultHJMaxElems;
 const uint64_t defaultTotalUmMemory = 8 * 1024 * 1024 * 1024ULL;
-const uint64_t defaultHUATotalMem = 8 * 1024 * 1024 * 1024ULL;
-
-const uint32_t defaultTupleDLMaxSize = 64 * 1024;
-
 const uint32_t defaultJLThreadPoolSize = 100;
 
 // pcolscan.cpp
-const uint32_t defaultScanLbidReqLimit = 10000;
 const uint32_t defaultScanLbidReqThreshold = 5000;
 const uint32_t defaultLogicalBlocksPerScan = 1024;  // added for bug 1264.
-const uint32_t defaultScanBlockThreshhold = 10000;  // in jobstep.h
-
 const uint32_t defaultScanReceiveThreads = 8;
-
-// pcolstep.cpp
-const uint32_t defaultProjectBlockReqLimit = 32 * 1024;
-const uint32_t defaultProjectBlockReqThreshold = 16 * 1024;  // 256 in jobstep.h
 
 // BatchPrimitiveStep
 const uint32_t defaultRequestSize = 1;
@@ -95,15 +83,6 @@ const uint64_t defaultMaxBPPSendQueue = 250000000;  // ~250MB
 
 // bucketreuse
 const std::string defaultTempDiskPath = "/tmp";
-const std::string defaultWorkingDir = ".";  //"/tmp";
-
-// largedatalist
-const uint32_t defaultLDLMaxElements = 32 * 1024 * 1024;
-
-// zdl
-const uint64_t defaultMaxElementsInMem = 32 * 1024 * 1024;
-const uint64_t defaultNumBuckets = 128;
-const uint64_t defaultMaxElementsPerBuckert = 16 * 1024 * 1024;
 
 const int defaultEMServerThreads = 50;
 const int defaultEMSecondsBetweenMemChecks = 1;
@@ -111,11 +90,8 @@ const int defaultEMMaxPct = 95;
 const int defaultEMPriority = 21;  // @Bug 3385
 const int defaultEMExecQueueSize = 20;
 
-const uint64_t defaultInitialCapacity = 1024 * 1024;
-const int defaultTWMaxBuckets = 256;
 const int defaultPSCount = 0;
 const int defaultConnectionsPerPrimProc = 1;
-const uint32_t defaultLBID_Shift = 13;
 const uint64_t defaultExtentRows = 8 * 1024 * 1024;
 
 // DMLProc
@@ -130,12 +106,7 @@ const uint64_t defaultRowsPerBatch = 10000;
 /* HJ CP feedback, see bug #1465 */
 const uint32_t defaultHjCPUniqueLimit = 100;
 
-// Order By and Limit
-const uint64_t defaultOrderByLimitMaxMemory = 1 * 1024 * 1024 * 1024ULL;
-
 const uint64_t defaultDECThrottleThreshold = 200000000;  // ~200 MB
-
-const uint8_t defaultUseCpimport = 1;
 
 const bool defaultAllowDiskAggregation = false;
 
@@ -149,11 +120,8 @@ class ResourceManager
   /** @brief ctor
    *
    */
-  EXPORT ResourceManager(bool runningInExeMgr = false);
-  static ResourceManager* instance(bool runningInExeMgr = false);
-  //     ResourceManager(const config::Config *cf);
-  //     ResourceManager(const std::string& config);
-  // passed by ExeMgr and DistributedEngineComm to MessageQueueServer or -Client
+  EXPORT ResourceManager(bool runningInExeMgr = false, config::Config *aConfig = nullptr);
+  static ResourceManager* instance(bool runningInExeMgr = false, config::Config *aConfig = nullptr);
   config::Config* getConfig()
   {
     return fConfig;
@@ -185,7 +153,7 @@ class ResourceManager
   {
     return getUintVal(fExeMgrStr, "MaxPct", defaultEMMaxPct);
   }
-  EXPORT int getEmPriority() const;
+  EXPORT int getEmPriority() const;   // FOr Windows only
   int getEmExecQueueSize() const
   {
     return getIntVal(fExeMgrStr, "ExecQueueSize", defaultEMExecQueueSize);
@@ -213,10 +181,6 @@ class ResourceManager
   {
     return getUintVal(fHashJoinStr, "MaxElems", defaultHJMaxElems);
   }
-  uint32_t getHjFifoSizeLargeSide() const
-  {
-    return getUintVal(fHashJoinStr, "FifoSizeLargeSide", defaultHJFifoSizeLargeSide);
-  }
   uint32_t getHjCPUniqueLimit() const
   {
     return getUintVal(fHashJoinStr, "CPUniqueLimit", defaultHjCPUniqueLimit);
@@ -233,10 +197,6 @@ class ResourceManager
   uint32_t getJlFifoSize() const
   {
     return getUintVal(fJobListStr, "FifoSize", defaultFifoSize);
-  }
-  uint32_t getJlScanLbidReqLimit() const
-  {
-    return getUintVal(fJobListStr, "ScanLbidReqLimit", defaultScanLbidReqLimit);
   }
   uint32_t getJlScanLbidReqThreshold() const
   {
@@ -262,14 +222,6 @@ class ResourceManager
   uint32_t getJlLogicalBlocksPerScan() const
   {
     return getUintVal(fJobListStr, "LogicalBlocksPerScan", defaultLogicalBlocksPerScan);
-  }
-  uint32_t getJlProjectBlockReqLimit() const
-  {
-    return getUintVal(fJobListStr, "ProjectBlockReqLimit", defaultProjectBlockReqLimit);
-  }
-  uint32_t getJlProjectBlockReqThreshold() const
-  {
-    return getUintVal(fJobListStr, "ProjectBlockReqThreshold", defaultProjectBlockReqThreshold);
   }
   uint32_t getJlNumScanReceiveThreads() const
   {
@@ -303,47 +255,13 @@ class ResourceManager
   {
     return getUintVal(fPrimitiveServersStr, "ConnectionsPerPrimProc", defaultConnectionsPerPrimProc);
   }
-  uint32_t getPsLBID_Shift() const
-  {
-    return getUintVal(fPrimitiveServersStr, "LBID_Shift", defaultLBID_Shift);
-  }
-
   std::string getScTempDiskPath() const
   {
     return startup::StartUp::tmpDir();
   }
-  uint64_t getScTempSaveSize() const
-  {
-    return getUintVal(fSystemConfigStr, "TempSaveSize", defaultTempSaveSize);
-  }
   std::string getScWorkingDir() const
   {
     return startup::StartUp::tmpDir();
-  }
-
-  uint32_t getTwMaxSize() const
-  {
-    return getUintVal(fTupleWSDLStr, "MaxSize", defaultTupleDLMaxSize);
-  }
-  uint64_t getTwInitialCapacity() const
-  {
-    return getUintVal(fTupleWSDLStr, "InitialCapacity", defaultInitialCapacity);
-  }
-  int getTwMaxBuckets() const
-  {
-    return getUintVal(fTupleWSDLStr, "MaxBuckets", defaultTWMaxBuckets);
-  }
-  uint8_t getTwNumThreads() const
-  {
-    return fTwNumThreads;
-  }  // getUintVal(fTupleWSDLStr, "NumThreads", defaultNumThreads  ); }
-  uint64_t getZdl_MaxElementsInMem() const
-  {
-    return getUintVal(fZDLStr, "ZDL_MaxElementsInMem", defaultMaxElementsInMem);
-  }
-  uint64_t getZdl_MaxElementsPerBucket() const
-  {
-    return getUintVal(fZDLStr, "ZDL_MaxElementsPerBucket", defaultMaxElementsPerBuckert);
   }
 
   uint64_t getExtentRows() const
@@ -360,13 +278,6 @@ class ResourceManager
     return getUintVal(fPrimitiveServersStr, "Count", 1);
   }
 
-  std::vector<std::string> getHbrPredicate() const
-  {
-    std::vector<std::string> columns;
-    fConfig->getConfig(fHashBucketReuseStr, "Predicate", columns);
-    return columns;
-  }
-
   uint64_t getDMLMaxDeleteRows() const
   {
     return getUintVal(fDMLProcStr, "MaxDeleteRows", defaultDMLMaxDeleteRows);
@@ -375,17 +286,6 @@ class ResourceManager
   uint64_t getRowsPerBatch() const
   {
     return getUintVal(fBatchInsertStr, "RowsPerBatch", defaultRowsPerBatch);
-  }
-
-  uint8_t getUseCpimport() const
-  {
-    int val = getIntVal(fBatchInsertStr, "UseCpimport", defaultUseCpimport);
-    return val;
-  }
-
-  uint64_t getOrderByLimitMaxMemory() const
-  {
-    return getUintVal(fOrderByLimitStr, "MaxMemory", defaultOrderByLimitMaxMemory);
   }
 
   uint64_t getDECThrottleThreshold() const
@@ -477,32 +377,6 @@ class ResourceManager
   {
     fHJUmMaxMemorySmallSideDistributor.returnResource(mem);
   }
-
-  EXPORT void jlFlushInterval();
-  EXPORT void jlFifoSize();
-  EXPORT void jlScanLbidReqLimit();
-  EXPORT void jlScanLbidReqThreshold();
-  EXPORT void jlProjectBlockReqLimit();
-  EXPORT void jlProjectBlockReqThreshold();
-  EXPORT void jlNumScanReceiveThreads();
-
-  EXPORT void psCount();
-  EXPORT void psConnectionsPerPrimProc();
-  EXPORT void psLBID_Shift();
-
-  EXPORT void scTempDiskPath();
-  EXPORT void scTempSaveSize();
-  EXPORT void scWorkingDir();
-
-  EXPORT void twMaxSize();
-  EXPORT void twInitialCapacity();
-  EXPORT void twMaxBuckets();
-  EXPORT void twNumThreads();
-
-  EXPORT void zdl_MaxElementsInMem();
-  EXPORT void zdl_MaxElementsPerBucket();
-
-  EXPORT void hbrPredicate();
 
   void setTraceFlags(uint32_t flags)
   {
@@ -598,19 +472,16 @@ class ResourceManager
   void logMessage(logging::LOG_TYPE logLevel, logging::Message::MessageID mid, uint64_t value = 0,
                   uint32_t sessionId = 0);
 
-  /*static	const*/ std::string fExeMgrStr;
-  static const std::string fHashJoinStr;
-  static const std::string fHashBucketReuseStr;
-  static const std::string fJobListStr;
-  static const std::string fPrimitiveServersStr;
+  std::string fExeMgrStr;
+  inline static const std::string fHashJoinStr = "HashJoin";
+  inline static const std::string fJobListStr = "JobList";
+  inline static const std::string fPrimitiveServersStr = "PrimitiveServers";
   /*static	const*/ std::string fSystemConfigStr;
-  static const std::string fTupleWSDLStr;
-  static const std::string fZDLStr;
-  static const std::string fExtentMapStr;
+  inline static const std::string fExtentMapStr = "ExtentMap";
   /*static	const*/ std::string fDMLProcStr;
   /*static	const*/ std::string fBatchInsertStr;
-  static const std::string fOrderByLimitStr;
-  static const std::string fRowAggregationStr;
+  inline static const std::string fOrderByLimitStr = "OrderByLimit";
+  inline static const std::string fRowAggregationStr = "RowAggregation";
   config::Config* fConfig;
   static ResourceManager* fInstance;
   uint32_t fTraceFlags;
@@ -619,7 +490,6 @@ class ResourceManager
   unsigned fHjNumThreads;
   uint32_t fJlProcessorThreadsPerScan;
   uint32_t fJlNumScanReceiveThreads;
-  uint8_t fTwNumThreads;
   uint32_t fJlMaxOutstandingRequests;
 
   /* old HJ support */

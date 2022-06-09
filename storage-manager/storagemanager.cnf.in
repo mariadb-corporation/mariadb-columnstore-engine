@@ -55,9 +55,6 @@ journal_path = @ENGINE_DATADIR@/storagemanager/journal
 
 # max_concurrent_downloads is what is sounds like, per node.
 # This is not a global setting.
-# 
-# The default was changed from 20 to 21 as a temporary workaround 
-# for a bug.  It can be anything but 20.
 max_concurrent_downloads = 21
  
 # max_concurrent_uploads is what is sounds like, per node.
@@ -66,9 +63,6 @@ max_concurrent_downloads = 21
 # has low upstream bandwidth, consider lowering this value to the minimum
 # necessary to saturate your network.  This will reduce the latency of certain 
 # operations and improve your experience. 
-#
-# The default was changed from 20 to 21 as a temporary workaround 
-# for a bug.  It can be anything but 20.
 max_concurrent_uploads = 21
 
 # common_prefix_depth is the depth of the common prefix that all files 

@@ -29,6 +29,7 @@
 //
 
 #include "bpp-jl.h"
+#include "string_prefixes.h"
 
 using namespace std;
 using namespace messageqcpp;
@@ -50,7 +51,6 @@ DictStepJL::DictStepJL(const pDictionaryStep& dict)
 
   if (hasEqFilter)
   {
-    // cout << "saw eqfilter\n";
     eqOp = dict.tmpCOP;
     eqFilter = dict.eqFilter;
   }
@@ -118,6 +118,65 @@ uint16_t DictStepJL::getWidth()
 void DictStepJL::setWidth(uint16_t w)
 {
   colWidth = w;
+}
+
+messageqcpp::ByteStream DictStepJL::reencodedFilterString() const
+{
+  messageqcpp::ByteStream bs;
+
+  if (hasEqFilter)
+  {
+    idbassert(filterCount == eqFilter.size());
+
+    for (uint32_t i = 0; i < filterCount; i++)
+    {
+      uint8_t roundFlag = 0;
+      int64_t encodedPrefix = encodeStringPrefix((unsigned char*)eqFilter[i].c_str(), eqFilter[i].size(), charsetNumber);
+      bs << eqOp;
+      bs << roundFlag;
+      bs << encodedPrefix;
+    }
+  }
+  else
+  {
+    messageqcpp::ByteStream filterStringCopy(
+        filterString);  // XXX I am not sure about real semantics of messagecpp::ByteStream. So - copy.
+    // please erfer to pdictionary.cpp in this dicrectory, addFilter function for a proper encoding of string
+    // filters.
+    for (uint32_t i = 0; i < filterCount; i++)
+    {
+      uint8_t cop, roundFlag = 0;
+      uint16_t size;
+      const uint8_t* ptr;
+      int64_t encodedPrefix;
+      filterStringCopy >> cop;
+      // as we are dealing with prefixes, we have to use "... or equal" conditions instead of
+      // strict ones.
+      // Consider this: ... WHERE col > 'customer#001' AND col < 'customer#100'.
+      // "Working with prefixes of 8 bytes" means these conditions reduce to ... WHERE col > 'customer' AND
+      // col < 'customer' and their AND relation is impossible to satisfy. We do not pass this string to
+      // primproc and that means we can reencode operation codes here.
+      switch (cop)
+      {
+        case COMPARE_LT:
+        case COMPARE_NGE: cop = COMPARE_LE; break;
+
+        case COMPARE_GT:
+        case COMPARE_NLE: cop = COMPARE_GE; break;
+
+        default: break;
+      }
+
+      bs << cop;
+      bs << roundFlag;
+      filterStringCopy >> size;
+      ptr = filterStringCopy.buf();
+      encodedPrefix = encodeStringPrefix(ptr, size, charsetNumber);
+      bs << encodedPrefix;
+      filterStringCopy.advance(size);
+    }
+  }
+  return bs;
 }
 
 };  // namespace joblist

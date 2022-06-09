@@ -572,4 +572,3 @@ int main(int argc, char** argv)
 
   return SPLTR_EXIT_STATUS;
 }
-// vim:ts=4 sw=4:

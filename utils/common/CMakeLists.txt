@@ -11,11 +11,12 @@ set(common_LIB_SRCS
     nullvaluemanip.cpp
     threadnaming.cpp
     utils_utf8.cpp
-    statistics.cpp)
+    statistics.cpp
+    string_prefixes.cpp)
 
 add_library(common SHARED ${common_LIB_SRCS})
 
-target_link_libraries(common boost_filesystem)
+target_link_libraries(common Boost::filesystem)
 
 add_dependencies(common loggingcpp)
 

@@ -33,6 +33,7 @@
 
 #include "primitivestep.h"
 #include "command-jl.h"
+#include "dictstep-jl.h"
 
 namespace joblist
 {
@@ -41,15 +42,16 @@ class ColumnCommandJL : public CommandJL
  public:
   ColumnCommandJL(const pColScanStep&, std::vector<BRM::LBID_t> lastLBID);
   ColumnCommandJL(const pColStep&);
+  ColumnCommandJL(const ColumnCommandJL&, const DictStepJL&);
   virtual ~ColumnCommandJL();
 
-  virtual void createCommand(messageqcpp::ByteStream& bs) const;
-  virtual void runCommand(messageqcpp::ByteStream& bs) const;
-  void setLBID(uint64_t rid, uint32_t dbroot);
-  uint8_t getTableColumnType();
-  virtual std::string toString();
-  uint16_t getWidth();
-  CommandType getCommandType()
+  virtual void createCommand(messageqcpp::ByteStream& bs) const override;
+  virtual void runCommand(messageqcpp::ByteStream& bs) const override;
+  void setLBID(uint64_t rid, uint32_t dbroot) override;
+  uint8_t getTableColumnType() override;
+  virtual std::string toString() override;
+  uint16_t getWidth() override;
+  CommandType getCommandType() override
   {
     return COLUMN_COMMAND;
   }
@@ -111,6 +113,7 @@ class ColumnCommandJL : public CommandJL
   std::vector<BRM::LBID_t> fLastLbid;
 
   bool fIsDict;
+  bool fContainsRanges = false;
 
   // @Bug 2889.  Added two members below for drop partition enhancement.
   // RJD: make sure that we keep enough significant digits around for partition math
@@ -125,8 +128,7 @@ class ColumnCommandJL : public CommandJL
  public:
   // MCOL-4685: remove the option to set more than 2 extents per file (ExtentsPreSegmentFile)
   static const unsigned DEFAULT_EXTENTS_PER_SEGMENT_FILE = 2;
+  bool getIsDict() override;
 };
 
 }  // namespace joblist
-
-// vim:ts=4 sw=4:

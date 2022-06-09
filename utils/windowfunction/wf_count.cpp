@@ -184,4 +184,3 @@ template boost::shared_ptr<WindowFunctionType> WF_count<int64_t>::makeFunction(i
                                                                                WindowFunctionColumn*);
 
 }  // namespace windowfunction
-// vim:ts=4 sw=4:

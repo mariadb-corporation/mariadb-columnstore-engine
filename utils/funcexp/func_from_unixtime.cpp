@@ -212,4 +212,3 @@ long double Func_from_unixtime::getLongDoubleVal(rowgroup::Row& row, FunctionPar
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

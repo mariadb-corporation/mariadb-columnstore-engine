@@ -126,7 +126,7 @@ class PrimitiveServer
   /** @brief start the primitive server
    *
    */
-  void start(Service* p);
+  void start(Service* p, utils::USpaceSpinLock& startupRaceLock);
 
   /** @brief get a pointer the shared processor thread pool
    */

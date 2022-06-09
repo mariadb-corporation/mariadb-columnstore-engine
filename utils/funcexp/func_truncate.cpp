@@ -522,7 +522,7 @@ IDB_Decimal Func_truncate::getDecimalVal(Row& row, FunctionParm& parm, bool& isN
       {
         // strip off micro seconds
         value = value.substr(0, 14);
-        int64_t x = atoll(value.c_str());
+        x = atoll(value.c_str());
 
         if (s > 5)
           s = 0;
@@ -560,7 +560,7 @@ IDB_Decimal Func_truncate::getDecimalVal(Row& row, FunctionParm& parm, bool& isN
       int64_t x = 0;
 
       string value =
-          DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull), timeZone());
+          DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull), op_ct.getTimeZone());
 
       s = parm[1]->data()->getIntVal(row, isNull);
 
@@ -613,7 +613,7 @@ IDB_Decimal Func_truncate::getDecimalVal(Row& row, FunctionParm& parm, bool& isN
       {
         // strip off micro seconds
         value = value.substr(0, 14);
-        int64_t x = atoll(value.c_str());
+        x = atoll(value.c_str());
 
         if (s > 5)
           s = 0;
@@ -714,5 +714,10 @@ string Func_truncate::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
     return x.toString(true);
 }
 
+int64_t Func_truncate::getTimestampIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
+                                          execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+  return parm[0]->data()->getTimestampIntVal(row, isNull);
+}
+
 }  // namespace funcexp
-// vim:ts=4 sw=4:

@@ -241,6 +241,7 @@ uint8_t WE_DDLCommandProc::writeSystable(ByteStream& bs, std::string& err)
       if (colStruct.tokenFlag)
       {
         dctnryStruct.dctnryOid = column.colType.ddn.dictOID;
+        dctnryStruct.fCharsetNumber = column.colType.charsetNumber;
         dctnryStruct.columnOid = column.oid;
       }
       else
@@ -486,7 +487,7 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
             (dataType != CalpontSystemCatalog::TEXT))
         {
           ostringstream os;
-          os << "char, varchar and varbinary length may not exceed 8000";
+          os << "char, varchar and varbinary length may not exceed 8000 bytes";
           throw std::runtime_error(os.str());
         }
       }
@@ -656,9 +657,10 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
           dctnryStruct.fCompressionType = 2;
         }
 
-        if (colStruct.tokenFlag)
+        if (colStruct.tokenFlag)  // TODO: XXX: this is copied aplenty. NEED TO REFACTOR.
         {
           dctnryStruct.dctnryOid = column.colType.ddn.dictOID;
+          dctnryStruct.fCharsetNumber = column.colType.charsetNumber;
           dctnryStruct.columnOid = column.oid;
         }
         else
@@ -870,7 +872,7 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
           (dataType != CalpontSystemCatalog::TEXT))
       {
         ostringstream os;
-        os << "char, varchar and varbinary length may not exceed 8000";
+        os << "char, varchar and varbinary length may not exceed 8000 bytes";
         throw std::runtime_error(os.str());
       }
     }
@@ -1046,6 +1048,7 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
       if (colStruct.tokenFlag)
       {
         dctnryStruct.dctnryOid = column.colType.ddn.dictOID;
+        dctnryStruct.fCharsetNumber = column.colType.charsetNumber;
         dctnryStruct.columnOid = column.oid;
       }
       else
@@ -2442,6 +2445,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnTablename(ByteStream& bs, std::string&
   if (colStruct.tokenFlag)
   {
     dctnryStruct.dctnryOid = column.colType.ddn.dictOID;
+    dctnryStruct.fCharsetNumber = column.colType.charsetNumber;
     dctnryStruct.columnOid = colStruct.dataOid;
   }
   else
@@ -2846,6 +2850,7 @@ uint8_t WE_DDLCommandProc::updateSystableTablename(ByteStream& bs, std::string& 
   if (colStruct.tokenFlag)
   {
     dctnryStruct.dctnryOid = column.colType.ddn.dictOID;
+    dctnryStruct.fCharsetNumber = column.colType.charsetNumber;
     dctnryStruct.columnOid = colStruct.dataOid;
   }
   else
@@ -3087,6 +3092,7 @@ uint8_t WE_DDLCommandProc::updateSystablesTablename(ByteStream& bs, std::string&
   if (colStruct.tokenFlag)
   {
     dctnryStruct.dctnryOid = column.colType.ddn.dictOID;
+    dctnryStruct.fCharsetNumber = column.colType.charsetNumber;
     dctnryStruct.columnOid = colStruct.dataOid;
   }
   else
@@ -3273,6 +3279,7 @@ uint8_t WE_DDLCommandProc::updateSystablesTablename(ByteStream& bs, std::string&
   if (colStruct.tokenFlag)
   {
     dctnryStruct.dctnryOid = column.colType.ddn.dictOID;
+    dctnryStruct.fCharsetNumber = column.colType.charsetNumber;
     dctnryStruct.columnOid = colStruct.dataOid;
   }
   else
@@ -3552,7 +3559,7 @@ uint8_t WE_DDLCommandProc::fillNewColumn(ByteStream& bs, std::string& err)
   int dataWidth, scale, precision, compressionType, refColWidth, refCompressionType;
   string defaultValStr;
   ColTuple defaultVal;
-  string timeZone;
+  long timeZone;
 
   bs >> tmp32;
   txnID = tmp32;
@@ -3581,7 +3588,9 @@ uint8_t WE_DDLCommandProc::fillNewColumn(ByteStream& bs, std::string& err)
   refColWidth = tmp32;
   bs >> tmp8;
   refCompressionType = tmp8;
-  bs >> timeZone;
+  messageqcpp::ByteStream::octbyte timeZoneTemp;
+  bs >> timeZoneTemp;
+  timeZone = timeZoneTemp;
   // Find the fill in value
   bool isNULL = false;
 
@@ -4256,6 +4265,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnSetDefault(messageqcpp::ByteStream& bs
   if (colStruct.tokenFlag)
   {
     dctnryStruct.dctnryOid = column.colType.ddn.dictOID;
+    dctnryStruct.fCharsetNumber = column.colType.charsetNumber;
     dctnryStruct.columnOid = colStruct.dataOid;
   }
   else
@@ -4543,6 +4553,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnRenameColumn(messageqcpp::ByteStream& 
   if (colStruct.tokenFlag)
   {
     dctnryStruct.dctnryOid = column1.colType.ddn.dictOID;
+    dctnryStruct.fCharsetNumber = column1.colType.charsetNumber;
     dctnryStruct.columnOid = colStruct.dataOid;
   }
   else
@@ -4754,6 +4765,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnRenameColumn(messageqcpp::ByteStream& 
   if (colStruct.tokenFlag)
   {
     dctnryStruct.dctnryOid = column5.colType.ddn.dictOID;
+    dctnryStruct.fCharsetNumber = column5.colType.charsetNumber;
     dctnryStruct.columnOid = colStruct.dataOid;
   }
   else
@@ -4950,4 +4962,3 @@ void WE_DDLCommandProc::purgeFDCache()
 }
 
 }  // namespace WriteEngine
-// vim:ts=4 sw=4:

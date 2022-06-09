@@ -81,4 +81,3 @@ const string WindowFrame::toString() const
 }
 
 }  // namespace windowfunction
-// vim:ts=4 sw=4:

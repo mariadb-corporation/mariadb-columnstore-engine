@@ -115,4 +115,3 @@ class TupleHavingStep : public ExpressionStep, public TupleDeliveryStep
 
 }  // namespace joblist
 
-// vim:ts=4 sw=4:

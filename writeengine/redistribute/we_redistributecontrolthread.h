@@ -125,4 +125,3 @@ class RedistributeControlThread
 
 }  // namespace redistribute
 
-// vim:ts=4 sw=4:

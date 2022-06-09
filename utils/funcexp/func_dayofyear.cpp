@@ -74,7 +74,7 @@ int64_t Func_dayofyear::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& 
       dataconvert::TimeStamp timestamp(parm[0]->data()->getIntVal(row, isNull));
       int64_t seconds = timestamp.second;
       dataconvert::MySQLTime m_time;
-      dataconvert::gmtSecToMySQLTime(seconds, m_time, timeZone());
+      dataconvert::gmtSecToMySQLTime(seconds, m_time, ct.getTimeZone());
       year = m_time.year;
       month = m_time.month;
       day = m_time.day;
@@ -160,4 +160,3 @@ int64_t Func_dayofyear::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& 
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

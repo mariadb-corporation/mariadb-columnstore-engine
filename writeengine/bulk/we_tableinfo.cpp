@@ -146,7 +146,7 @@ TableInfo::TableInfo(Log* logger, const BRM::TxnID txnID, const string& processN
  , fKeepRbMetaFile(bKeepRbMetaFile)
  , fbTruncationAsError(false)
  , fImportDataMode(IMPORT_DATA_TEXT)
- , fTimeZone("SYSTEM")
+ , fTimeZone(dataconvert::systemTimeZoneOffset())
  , fTableLocked(false)
  , fReadFromStdin(false)
  , fReadFromS3(false)

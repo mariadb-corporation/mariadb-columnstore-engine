@@ -48,18 +48,8 @@ ConstantColumn::ConstantColumn(const string& sql, TYPE type)
 {
   fResult.strVal = sql;
 
-  if (type == LITERAL && sql.length() < 9)
-  {
-    memcpy(tmp, sql.c_str(), sql.length());
-    memset(tmp + sql.length(), 0, 8);
-    fResult.uintVal = uint64ToStr(*((uint64_t*)tmp));
-    fResult.intVal = (int64_t)fResult.uintVal;
-  }
-  else
-  {
-    fResult.intVal = atoll(sql.c_str());
-    fResult.uintVal = strtoull(sql.c_str(), NULL, 0);
-  }
+  fResult.intVal = atoll(sql.c_str());
+  fResult.uintVal = strtoull(sql.c_str(), NULL, 0);
 
   fResult.floatVal = atof(sql.c_str());
   fResult.doubleVal = atof(sql.c_str());
@@ -254,7 +244,8 @@ void ConstantColumn::serialize(messageqcpp::ByteStream& b) const
   b << (uint32_t)fType;
   // b << fAlias;
   b << fData;
-  b << fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
+  b << timeZone;
   b << static_cast<ByteStream::doublebyte>(fReturnAll);
   b << (uint64_t)fResult.intVal;
   b << fResult.uintVal;
@@ -278,7 +269,9 @@ void ConstantColumn::unserialize(messageqcpp::ByteStream& b)
   b >> fConstval;
   b >> (uint32_t&)fType;
   b >> fData;
-  b >> fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone;
+  b >> timeZone;
+  fTimeZone = timeZone;
   b >> reinterpret_cast<ByteStream::doublebyte&>(fReturnAll);
   b >> (uint64_t&)fResult.intVal;
   b >> fResult.uintVal;
@@ -344,4 +337,3 @@ bool ConstantColumn::operator!=(const TreeNode* t) const
 }
 
 }  // namespace execplan
-// vim:ts=4 sw=4:

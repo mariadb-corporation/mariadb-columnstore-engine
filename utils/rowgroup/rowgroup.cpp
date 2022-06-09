@@ -800,7 +800,8 @@ template <>
 inline bool Row::isNullValue_offset<execplan::CalpontSystemCatalog::DECIMAL, 16>(uint32_t offset) const
 {
   const int128_t* intPtr = reinterpret_cast<const int128_t*>(&data[offset]);
-  return datatypes::Decimal::isWideDecimalNullValue(*intPtr);
+  const datatypes::TSInt128 value(intPtr);
+  return datatypes::Decimal::isWideDecimalNullValue(value.getValue());
 }
 
 template <>
@@ -1751,4 +1752,3 @@ RowGroup RowGroup::truncate(uint32_t cols)
 
 }  // namespace rowgroup
 
-// vim:ts=4 sw=4:

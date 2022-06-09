@@ -46,6 +46,8 @@ extern uint32_t dictBufferSize;
 
 DictStep::DictStep() : Command(DICT_STEP), strValues(NULL), filterCount(0), bufferSize(0)
 {
+  fMinMax[0] = MAX_UBIGINT;
+  fMinMax[1] = MIN_UBIGINT;
 }
 
 DictStep::~DictStep()
@@ -65,6 +67,8 @@ DictStep& DictStep::operator=(const DictStep& d)
   eqOp = d.eqOp;
   filterCount = d.filterCount;
   charsetNumber = d.charsetNumber;
+  fMinMax[0] = d.fMinMax[0];
+  fMinMax[1] = d.fMinMax[1];
   return *this;
 }
 
@@ -113,7 +117,6 @@ void DictStep::prep(int8_t outputType, bool makeAbsRids)
 
   primMsg->ism.Interleave = 0;
   primMsg->ism.Flags = 0;
-  // 	primMsg->ism.Flags = PrimitiveMsg::planFlagsToPrimFlags(traceFlags);
   primMsg->ism.Command = DICT_SIGNATURE;
   primMsg->ism.Size = bufferSize;
   primMsg->ism.Type = 2;
@@ -147,8 +150,11 @@ void DictStep::issuePrimitive(bool isFilter)
     bpp->physIO += blocksRead;
     bpp->touchedBlocks++;
   }
-
+#if !defined(XXX_PRIMITIVES_TOKEN_RANGES_XXX)
   bpp->pp.p_Dictionary(primMsg, &result, isFilter, charsetNumber, eqFilter, eqOp);
+#else
+  bpp->pp.p_Dictionary(primMsg, &result, isFilter, charsetNumber, eqFilter, eqOp, fMinMax);
+#endif
 }
 
 void DictStep::copyResultToTmpSpace(OrderedToken* ot)
@@ -389,6 +395,14 @@ void DictStep::_execute()
     sort(&newRidList[0], &newRidList[inputRidCount], PosSorter());
     copyResultToFinalPosition(newRidList.get());
     copyRidsForFilterCmd();
+  }
+  if (fMinMax[0] <= fMinMax[1] && bpp->valuesLBID != 0)
+  {
+    bpp->validCPData = true;
+    bpp->cpDataFromDictScan = true;
+    bpp->lbidForCP = bpp->valuesLBID;
+    bpp->maxVal = fMinMax[1];
+    bpp->minVal = fMinMax[0];
   }
 
   // cout << "DS: /_execute()\n";

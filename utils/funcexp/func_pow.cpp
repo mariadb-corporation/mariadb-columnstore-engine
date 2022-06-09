@@ -121,4 +121,3 @@ long double Func_pow::getLongDoubleVal(Row& row, FunctionParm& parm, bool& isNul
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

@@ -306,4 +306,3 @@ inline void ColumnCommand::fillEmptyBlock<messageqcpp::ByteStream::hexbyte>(uint
 
 }  // namespace primitiveprocessor
 
-// vim:ts=4 sw=4:

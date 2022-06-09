@@ -172,12 +172,11 @@ void printUsage()
        << "        -T Timezone used for TIMESTAMP datatype" << endl
        << "           Possible values: \"SYSTEM\" (default)" << endl
        << "                          : Offset in the form +/-HH:MM" << endl
-       << endl
-       << "        -y S3 Authentication Key (for S3 imports)" << endl
-       << "        -K S3 Authentication Secret (for S3 imports)" << endl
-       << "        -t S3 Bucket (for S3 imports)" << endl
-       << "        -H S3 Hostname (for S3 imports, Amazon's S3 default)" << endl
-       << "        -g S3 Regions (for S3 imports)" << endl
+//       << "        -y S3 Authentication Key (for S3 imports)" << endl
+//       << "        -K S3 Authentication Secret (for S3 imports)" << endl
+//       << "        -t S3 Bucket (for S3 imports)" << endl
+//       << "        -H S3 Hostname (for S3 imports, Amazon's S3 default)" << endl
+//       << "        -g S3 Regions (for S3 imports)" << endl
        << "        -U username of new data files owner. Default is mysql" << endl;
 
   cout << "    Example1:" << endl
@@ -310,7 +309,7 @@ void parseCmdLineArgs(int argc, char** argv, BulkLoad& curJob, std::string& sJob
   BulkModeType bulkMode = BULK_MODE_LOCAL;
   std::string jobUUID;
 
-  while ((option = getopt(argc, argv, "b:c:d:e:f:hij:kl:m:n:p:r:s:u:w:B:C:DE:I:P:R:ST:X:NL:y:K:t:H:g:U:")) !=
+  while ((option = getopt(argc, argv, "b:c:d:e:f:hij:kl:m:n:p:r:s:u:w:B:C:DE:I:P:R:ST:X:NL:U:")) !=
          EOF)
   {
     switch (option)
@@ -648,12 +647,12 @@ void parseCmdLineArgs(int argc, char** argv, BulkLoad& curJob, std::string& sJob
         std::string timeZone = optarg;
         long offset;
 
-        if (timeZone != "SYSTEM" && dataconvert::timeZoneToOffset(timeZone.c_str(), timeZone.size(), &offset))
+        if (dataconvert::timeZoneToOffset(timeZone.c_str(), timeZone.size(), &offset))
         {
           startupError(std::string("Value for option -T is invalid"), true);
         }
 
-        curJob.setTimeZone(timeZone);
+        curJob.setTimeZone(offset);
         break;
       }
 
@@ -676,7 +675,7 @@ void parseCmdLineArgs(int argc, char** argv, BulkLoad& curJob, std::string& sJob
         BulkLoad::disableConsoleOutput(true);
         break;
       }
-
+/*
       case 'y':
       {
         curJob.setS3Key(optarg);
@@ -706,7 +705,7 @@ void parseCmdLineArgs(int argc, char** argv, BulkLoad& curJob, std::string& sJob
         curJob.setS3Region(optarg);
         break;
       }
-
+*/
       case 'U':
       {
         curJob.setUsername(optarg);
@@ -917,16 +916,24 @@ void getTableOID(const std::string& xmlGenSchema, const std::string& xmlGenTable
 void constructTempXmlFile(const std::string& tempJobDir, const std::string& sJobIdStr,
                           const std::string& xmlGenSchema, const std::string& xmlGenTable,
                           const std::string& alternateImportDir, const std::string& S3Bucket,
-                          boost::filesystem::path& sFileName)
+                          const std::string& tableOIDStr, boost::filesystem::path& sFileName)
 {
   // Construct the job description file name
   std::string xmlErrMsg;
   int rc = 0;
-  std::string tableOIDStr;
-  getTableOID(xmlGenSchema, xmlGenTable, tableOIDStr);
+  std::string localTableOIDStr;
+  if (tableOIDStr.empty())
+  {
+    getTableOID(xmlGenSchema, xmlGenTable, localTableOIDStr);
+  }
+  else
+  {
+    localTableOIDStr = tableOIDStr;
+  }
+
   rc = XMLJob::genJobXMLFileName(std::string(), tempJobDir, sJobIdStr,
                                  true,  // using temp job xml file
-                                 xmlGenSchema, xmlGenTable, sFileName, xmlErrMsg, tableOIDStr);
+                                 xmlGenSchema, xmlGenTable, sFileName, xmlErrMsg, localTableOIDStr);
 
   if (rc != NO_ERROR)
   {
@@ -946,7 +953,7 @@ void constructTempXmlFile(const std::string& tempJobDir, const std::string& sJob
   {
     genProc.startXMLFile();
     execplan::CalpontSystemCatalog::TableName tbl(xmlGenSchema, xmlGenTable);
-    genProc.makeTableData(tbl);
+    genProc.makeTableData(tbl, localTableOIDStr);
 
     if (!genProc.makeColumnData(tbl))
     {
@@ -1223,9 +1230,9 @@ int main(int argc, char** argv)
     if (!xmlGenSchema.empty())  // create temporary job file name
     {
       // If JobID is not provided, then default to the table OID
+      std::string tableOIDStr{""};
       if (sJobIdStr.empty())
       {
-        std::string tableOIDStr;
         getTableOID(xmlGenSchema, xmlGenTable, tableOIDStr);
 
         if (!(BulkLoad::disableConsoleOutput()))
@@ -1240,7 +1247,7 @@ int main(int argc, char** argv)
 
       bUseTempJobFile = true;
       constructTempXmlFile(curJob.getTempJobDir(), sJobIdStr, xmlGenSchema, xmlGenTable,
-                           curJob.getAlternateImportDir(), curJob.getS3Bucket(), sFileName);
+                           curJob.getAlternateImportDir(), curJob.getS3Bucket(), tableOIDStr, sFileName);
     }
     else  // create user's persistent job file name
     {

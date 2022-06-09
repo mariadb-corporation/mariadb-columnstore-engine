@@ -322,4 +322,3 @@ void PriorityThreadPool::stop()
 }
 
 }  // namespace threadpool
-// vim:ts=4 sw=4:

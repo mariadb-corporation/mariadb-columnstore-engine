@@ -328,7 +328,7 @@ CalpontSystemCatalog::ColType Func_between::operationType(FunctionParm& fp,
       if (cc)
       {
         Result result = cc->result();
-        result.intVal = dataconvert::DataConvert::timestampToInt(result.strVal, timeZone());
+        result.intVal = dataconvert::DataConvert::timestampToInt(result.strVal, resultType.getTimeZone());
         cc->result(result);
       }
     }
@@ -376,4 +376,3 @@ bool Func_notbetween::getBoolVal(rowgroup::Row& row, FunctionParm& pm, bool& isN
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

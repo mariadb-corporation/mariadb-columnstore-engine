@@ -481,6 +481,15 @@ void WEFileReadThread::openInFile()
         use ms3 lib to d/l data into mem
         use boost::iostreams to wrap the mem in a stream interface
         point infile's stream buffer to it.
+
+        MCOL-4576: The options to setup S3 with cpimport have been removed and this
+        code is unreachable. However we may need to resurrect it at some point in some form.
+        Performance issues with extremely large data files as well as the fact files larger
+        than system memory will cause an OOM error. Multipart downloads/uploads need to be
+        implemented or more likely a different streaming solution developed with external API tools
+
+        MCOL-4576 work around is to use 3rd party CLI tools and pipe data file from S3 bucket
+        into cpimport stdin. 3rd party tooling for large object downloads will be more efficient.
     */
 
     if (fSdh.getDebugLvl())
@@ -580,7 +589,7 @@ int WEFileReadThread::getNextRow(istream& ifs, char* pBuf, int MaxLen)
   const char ESC = fEsc;
   bool aTrailEsc = false;
   char* pEnd = pBuf;
-  char aCh = ifs.get();
+  int aCh = ifs.get();
 
   while (ifs.good())
   {

@@ -205,7 +205,6 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
    */
   struct ColType : public datatypes::SystemCatalog::TypeHolderStd
   {
-    ColType();
     ConstraintType constraintType;
     DictOID ddn;
     std::string defaultValue;
@@ -216,11 +215,25 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
     uint64_t nextvalue;  // next autoincrement value
     uint32_t charsetNumber;
     const CHARSET_INFO* cs;
+   private:
+    long timeZone;
 
+   public:
+    ColType();
     ColType(const ColType& rhs);
     ColType& operator=(const ColType& rhs);
 
     CHARSET_INFO* getCharset();
+
+    long getTimeZone() const
+    {
+      return timeZone;
+    }
+    void setTimeZone(long timeZone_)
+    {
+      timeZone = timeZone_;
+    }
+
     // for F&E use. only serialize necessary info for now
     void serialize(messageqcpp::ByteStream& b) const
     {
@@ -254,7 +267,7 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
      * @param       nRoundtrip
      * @param       isUpdate
      */
-    boost::any convertColumnData(const std::string& data, bool& bSaturate, const std::string& timeZone,
+    boost::any convertColumnData(const std::string& data, bool& bSaturate, long timeZone,
                                  bool nulFlag = false, bool noRoundup = false, bool isUpdate = false) const;
 
     const std::string toString() const;
@@ -932,17 +945,18 @@ inline bool isNull(int64_t val, const execplan::CalpontSystemCatalog::ColType& c
       break;
     }
 
+    case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::CHAR:
     {
       int colWidth = ct.colWidth;
 
       if (colWidth <= 8)
       {
-        if ((colWidth == 1) && ((int8_t)joblist::CHAR1NULL == val))
+        if ((colWidth == 1) && ((uint8_t)joblist::CHAR1NULL == (uint8_t)val))
           ret = true;
-        else if ((colWidth == 2) && ((int16_t)joblist::CHAR2NULL == val))
+        else if ((colWidth == 2) && ((uint16_t)joblist::CHAR2NULL == (uint16_t)val))
           ret = true;
-        else if ((colWidth < 5) && ((int32_t)joblist::CHAR4NULL == val))
+        else if ((colWidth < 5) && ((uint32_t)joblist::CHAR4NULL == (uint32_t)val))
           ret = true;
         else if ((int64_t)joblist::CHAR8NULL == val)
           ret = true;
@@ -951,7 +965,6 @@ inline bool isNull(int64_t val, const execplan::CalpontSystemCatalog::ColType& c
       {
         throw std::logic_error("Not a int column.");
       }
-
       break;
     }
 
@@ -1058,27 +1071,6 @@ inline bool isNull(int64_t val, const execplan::CalpontSystemCatalog::ColType& c
     {
       if ((int64_t)joblist::TIMESTAMPNULL == val)
         ret = true;
-
-      break;
-    }
-
-    case execplan::CalpontSystemCatalog::VARCHAR:
-    {
-      int colWidth = ct.colWidth;
-
-      if (colWidth <= 8)
-      {
-        if ((colWidth < 3) && ((int16_t)joblist::CHAR2NULL == val))
-          ret = true;
-        else if ((colWidth < 5) && ((int32_t)joblist::CHAR4NULL == val))
-          ret = true;
-        else if ((int64_t)joblist::CHAR8NULL == val)
-          ret = true;
-      }
-      else
-      {
-        throw std::logic_error("Not a int column.");
-      }
 
       break;
     }
@@ -1265,5 +1257,3 @@ const std::string colDataTypeToString(CalpontSystemCatalog::ColDataType cdt);
 bool ctListSort(const CalpontSystemCatalog::ColType& a, const CalpontSystemCatalog::ColType& b);
 
 }  // namespace execplan
-
-// vim:ts=4 sw=4:

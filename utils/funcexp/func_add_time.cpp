@@ -171,7 +171,7 @@ int64_t Func_add_time::getTimestampIntVal(rowgroup::Row& row, FunctionParm& parm
   TimeStamp timestamp(val1);
   int64_t seconds = timestamp.second;
   MySQLTime m_time;
-  gmtSecToMySQLTime(seconds, m_time, timeZone());
+  gmtSecToMySQLTime(seconds, m_time, ct.getTimeZone());
   dt1.year = m_time.year;
   dt1.month = m_time.month;
   dt1.day = m_time.day;
@@ -303,4 +303,3 @@ int64_t Func_add_time::getTimeIntVal(rowgroup::Row& row, FunctionParm& parm, boo
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

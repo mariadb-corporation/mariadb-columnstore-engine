@@ -28,7 +28,6 @@
 //
 //
 /** @file */
-// #include "primitivemsg.h"
 #include "bytestream.h"
 #include "messagequeue.h"
 #include "serializeable.h"

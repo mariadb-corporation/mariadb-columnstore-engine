@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016-2022 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -26,6 +27,8 @@
 
 #pragma once
 
+#include <array>
+
 #include <unistd.h>
 #include <stdexcept>
 
@@ -42,20 +45,17 @@
 
 namespace rwlock
 {
+const std::array<const std::string, 7> RWLockNames = {
+    "all", "VSS", "ExtentMap", "FreeList", "VBBM", "CopyLocks", "ExtentMapIndex",
+};
+
 /// the layout of the shmseg
 struct State
 {
-#ifdef _MSC_VER
-  volatile LONG writerswaiting;
-  volatile LONG writing;
-  volatile LONG readerswaiting;
-  volatile LONG reading;
-#else
-  volatile int writerswaiting;
-  volatile int writing;
-  volatile int readerswaiting;
-  volatile int reading;
-#endif
+  int writerswaiting;
+  int writing;
+  int readerswaiting;
+  int reading;
   boost::interprocess::interprocess_semaphore sems[3];
 };
 
@@ -275,4 +275,3 @@ class RWLock
 
 #undef EXPORT
 
-// vim:ts=4 sw=4:

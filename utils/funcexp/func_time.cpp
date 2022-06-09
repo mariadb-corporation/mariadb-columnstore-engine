@@ -45,7 +45,7 @@ CalpontSystemCatalog::ColType Func_time::operationType(FunctionParm& fp,
 }
 
 string Func_time::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                            CalpontSystemCatalog::ColType&)
+                            CalpontSystemCatalog::ColType& ct)
 {
   int64_t val = 0;
 
@@ -126,7 +126,7 @@ string Func_time::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull
       dataconvert::TimeStamp timestamp(parm[0]->data()->getTimestampIntVal(row, isNull));
       int64_t seconds = timestamp.second;
       dataconvert::MySQLTime m_time;
-      dataconvert::gmtSecToMySQLTime(seconds, m_time, timeZone());
+      dataconvert::gmtSecToMySQLTime(seconds, m_time, ct.getTimeZone());
       dataconvert::Time time;
       time.hour = m_time.hour;
       time.minute = m_time.minute;
@@ -169,4 +169,3 @@ double Func_time::getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNul
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

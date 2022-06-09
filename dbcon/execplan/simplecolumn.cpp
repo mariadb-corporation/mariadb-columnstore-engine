@@ -345,7 +345,8 @@ void SimpleColumn::serialize(messageqcpp::ByteStream& b) const
   b << fColumnName;
   b << fIndexName;
   b << fViewName;
-  b << fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
+  b << timeZone;
   b << (uint32_t)fOid;
   b << fData;
   b << fTableAlias;
@@ -362,7 +363,9 @@ void SimpleColumn::unserialize(messageqcpp::ByteStream& b)
   b >> fColumnName;
   b >> fIndexName;
   b >> fViewName;
-  b >> fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone;
+  b >> timeZone;
+  fTimeZone = timeZone;
   b >> (uint32_t&)fOid;
   b >> fData;
   b >> fTableAlias;
@@ -561,6 +564,16 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
         fResult.intVal = uint64ToStr(fResult.origIntVal);
       else
         fResult.intVal = atoll((char*)&fResult.origIntVal);
+
+      // MCOL-4580 - related, probably can be marked with XXX.
+      // This does not fail in any tests, but it is considered wrong.
+      // The reasonin behind that is that we changed signedness if characters to unsigned
+      // and it might be a case with short strings that they were copied as is using
+      // uint64ToStr encoding into int64_t values. So, potentially, unsuspecting code
+      // may use getUintVal instead of getIntVal to process short char column, getting
+      // unitialized value and give floating behavior.
+      // None of our tests failed, though.
+      fResult.uintVal = fResult.intVal;
 
       break;
     }

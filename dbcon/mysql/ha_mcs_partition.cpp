@@ -385,7 +385,10 @@ void partitionByValue_common(UDF_ARGS* args,                              // inp
     csc->identity(CalpontSystemCatalog::FE);
     OID_t oid = csc->lookupOID(tcn);
     CalpontSystemCatalog::ColType ct = csc->colType(oid);
-    datatypes::SessionParam sp(current_thd->variables.time_zone->get_name()->ptr());
+    const char* timeZone = current_thd->variables.time_zone->get_name()->ptr();
+    long timeZoneOffset;
+    dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
+    datatypes::SessionParam sp(timeZoneOffset);
     datatypes::SimpleValue startVal;
     datatypes::SimpleValue endVal;
     datatypes::round_style_t rfMin = datatypes::round_style_t::NONE;
@@ -1252,7 +1255,10 @@ extern "C"
     string schema, table, column;
     CalpontSystemCatalog::ColType ct;
     string errMsg;
-    datatypes::SessionParam sp(current_thd->variables.time_zone->get_name()->ptr());
+    const char* timeZone = current_thd->variables.time_zone->get_name()->ptr();
+    long timeZoneOffset;
+    dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
+    datatypes::SessionParam sp(timeZoneOffset);
     datatypes::SimpleValue startVal;
     datatypes::SimpleValue endVal;
     datatypes::round_style_t rfMin = datatypes::round_style_t::NONE;

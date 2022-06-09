@@ -78,4 +78,3 @@ uint64_t xFloatToMCSUInt64Round(SRC value)
 
 }  // end of namespace datatypes
 
-// vim:ts=2 sw=2:

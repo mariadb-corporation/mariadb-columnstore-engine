@@ -260,4 +260,3 @@ typedef boost::shared_ptr<TupleJobList> STJLP;
 
 #undef EXPORT
 
-// vim:ts=4 sw=4:

@@ -1,0 +1,24 @@
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS cal_test_db;
+--enable_warnings
+
+CREATE DATABASE cal_test_db;
+USE cal_test_db;
+
+create table t1(a int, b int comment 'autoincrement=1') engine=columnstore;
+
+select mcsflushcache();
+select mcssettrace(0);
+select mcssetparms("pmmaxmemorysmallside","2048000000");
+select mcsgettrace();
+select mcsgetversion()=calgetversion();
+
+select mcsviewtablelock("t1");
+select mcscleartablelock(0);
+select mcslastinsertid("t1");
+select mcsgetsqlcount();
+
+DROP TABLE t1;
+DROP DATABASE cal_test_db;

@@ -47,7 +47,7 @@ CalpontSystemCatalog::ColType Func_date::operationType(FunctionParm& fp,
 }
 
 int64_t Func_date::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                             CalpontSystemCatalog::ColType&)
+                             CalpontSystemCatalog::ColType& ct)
 {
   CalpontSystemCatalog::ColDataType type = parm[0]->data()->resultType().colDataType;
 
@@ -75,7 +75,7 @@ int64_t Func_date::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNul
     case execplan::CalpontSystemCatalog::TIMESTAMP:
     {
       int64_t val1 = parm[0]->data()->getTimestampIntVal(row, isNull);
-      value = dataconvert::DataConvert::timestampToString(val1, timeZone());
+      value = dataconvert::DataConvert::timestampToString(val1, ct.getTimeZone());
       value = value.substr(0, 10);
       break;
     }
@@ -149,4 +149,3 @@ string Func_date::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

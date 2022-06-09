@@ -105,7 +105,8 @@ static datatypes::TUInt64Null DecimalToBitOperand(Row& row, const execplan::SPTP
 // and could be extracted into a utility class with its own header
 // if that is the case - this is left as future exercise
 datatypes::TUInt64Null GenericToBitOperand(Row& row, const execplan::SPTP& parm,
-                                           const funcexp::Func& thisFunc, bool temporalRounding)
+                                           const funcexp::Func& thisFunc, bool temporalRounding,
+                                           long timeZone)
 {
   switch (parm->data()->resultType().colDataType)
   {
@@ -186,7 +187,7 @@ datatypes::TUInt64Null GenericToBitOperand(Row& row, const execplan::SPTP& parm,
         return datatypes::TUInt64Null();
 
       TimeStamp dt(time);
-      int64_t value = dt.convertToMySQLint(thisFunc.timeZone());
+      int64_t value = dt.convertToMySQLint(timeZone);
       if (temporalRounding && dt.msecond >= 500000)
         value++;
       return datatypes::TUInt64Null((uint64_t)value);
@@ -222,8 +223,8 @@ class BitOperandGeneric : public datatypes::TUInt64Null
   BitOperandGeneric()
   {
   }
-  BitOperandGeneric(Row& row, const execplan::SPTP& parm, const funcexp::Func& thisFunc)
-   : TUInt64Null(GenericToBitOperand(row, parm, thisFunc, true))
+  BitOperandGeneric(Row& row, const execplan::SPTP& parm, const funcexp::Func& thisFunc, long timeZone)
+   : TUInt64Null(GenericToBitOperand(row, parm, thisFunc, true, timeZone))
   {
   }
 };
@@ -236,8 +237,9 @@ class BitOperandGenericShiftAmount : public datatypes::TUInt64Null
   BitOperandGenericShiftAmount()
   {
   }
-  BitOperandGenericShiftAmount(Row& row, const execplan::SPTP& parm, const funcexp::Func& thisFunc)
-   : TUInt64Null(GenericToBitOperand(row, parm, thisFunc, false))
+  BitOperandGenericShiftAmount(Row& row, const execplan::SPTP& parm, const funcexp::Func& thisFunc,
+                               long timeZone)
+   : TUInt64Null(GenericToBitOperand(row, parm, thisFunc, false, timeZone))
   {
   }
 };
@@ -327,7 +329,7 @@ class Func_bitand_return_uint64 : public Func_bitand
                     CalpontSystemCatalog::ColType& operationColType) override
   {
     idbassert(parm.size() == 2);
-    Arg2Lazy<TA, TB> args(row, parm, *this);
+    Arg2Lazy<TA, TB> args(row, parm, *this, operationColType.getTimeZone());
     return (int64_t)(args.a & args.b).nullSafeValue(isNull);
   }
 };
@@ -353,7 +355,7 @@ class Func_leftshift_return_uint64 : public Func_leftshift
                     CalpontSystemCatalog::ColType& operationColType) override
   {
     idbassert(parm.size() == 2);
-    Arg2Eager<TA, BitOperandGenericShiftAmount> args(row, parm, *this);
+    Arg2Eager<TA, BitOperandGenericShiftAmount> args(row, parm, *this, operationColType.getTimeZone());
     return (int64_t)args.a.MariaDBShiftLeft(args.b).nullSafeValue(isNull);
   }
 };
@@ -378,7 +380,7 @@ class Func_rightshift_return_uint64 : public Func_rightshift
                     CalpontSystemCatalog::ColType& operationColType) override
   {
     idbassert(parm.size() == 2);
-    Arg2Eager<TA, BitOperandGenericShiftAmount> args(row, parm, *this);
+    Arg2Eager<TA, BitOperandGenericShiftAmount> args(row, parm, *this, operationColType.getTimeZone());
     return (int64_t)args.a.MariaDBShiftRight(args.b).nullSafeValue(isNull);
   }
 };
@@ -409,7 +411,7 @@ class Func_bitor_return_uint64 : public Func_bitor
                     CalpontSystemCatalog::ColType& operationColType) override
   {
     idbassert(parm.size() == 2);
-    Arg2Lazy<TA, TB> args(row, parm, *this);
+    Arg2Lazy<TA, TB> args(row, parm, *this, operationColType.getTimeZone());
     return (int64_t)(args.a | args.b).nullSafeValue(isNull);
   }
 };
@@ -435,7 +437,7 @@ class Func_bitxor_return_uint64 : public Func_bitxor
                     CalpontSystemCatalog::ColType& operationColType) override
   {
     idbassert(parm.size() == 2);
-    Arg2Eager<TA, TB> args(row, parm, *this);
+    Arg2Eager<TA, TB> args(row, parm, *this, operationColType.getTimeZone());
     return (int64_t)(args.a ^ args.b).nullSafeValue(isNull);
   }
 };
@@ -475,7 +477,7 @@ class Func_bit_count_return_uint64 : public Func_bit_count
                     CalpontSystemCatalog::ColType& operationColType) override
   {
     idbassert(parm.size() == 1);
-    return bitCount((uint64_t)TA(row, parm[0], *this).nullSafeValue(isNull));
+    return bitCount((uint64_t)TA(row, parm[0], *this, operationColType.getTimeZone()).nullSafeValue(isNull));
   }
 };
 
@@ -492,4 +494,3 @@ bool Func_bit_count::fix(execplan::FunctionColumn& col) const
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

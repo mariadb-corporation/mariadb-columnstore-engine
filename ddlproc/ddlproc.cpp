@@ -248,4 +248,3 @@ int main(int argc, char** argv)
 
   return ServiceDDLProc(opt).Run();
 }
-// vim:ts=4 sw=4:

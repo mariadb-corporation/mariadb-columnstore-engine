@@ -512,4 +512,3 @@ string Func_md5::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
 
 }  // namespace funcexp
 
-// vim:ts=4 sw=4:

@@ -1,0 +1,10 @@
+[client-server]
+
+#
+# include *.cnf from the config directory
+#
+!includedir /etc/my.cnf.d
+
+[mysqld]
+datadir=%DATADIR%
+plugin-load-add=ha_columnstore.so

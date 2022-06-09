@@ -706,11 +706,11 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
     return fIsDML;
   }
 
-  void timeZone(const std::string& timezone)
+  void timeZone(const long timezone)
   {
     fTimeZone = timezone;
   }
-  const std::string timeZone() const
+  long timeZone() const
   {
     return fTimeZone;
   }
@@ -923,7 +923,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   int64_t fUMMemLimit;
   bool fIsDML;
 
-  std::string fTimeZone;
+  long fTimeZone;
 
   std::vector<execplan::ParseTree*> fDynamicParseTreeVec;
 };
@@ -939,4 +939,3 @@ inline std::ostream& operator<<(std::ostream& os, const CalpontSelectExecutionPl
 }
 
 }  // namespace execplan
-// vim:ts=4 sw=4:

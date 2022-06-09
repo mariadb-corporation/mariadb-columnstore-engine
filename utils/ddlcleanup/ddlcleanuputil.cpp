@@ -270,4 +270,3 @@ int ddl_cleanup()
 }
 
 }  // namespace ddlcleanuputil
-// vim:ts=4 sw=4:

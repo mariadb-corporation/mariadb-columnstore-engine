@@ -2097,9 +2097,7 @@ SJLP makeJobList_(CalpontExecutionPlan* cplan, ResourceManager* rm, bool isExeMg
         oss << endl;
         oss << endl << "job parms: " << endl;
         oss << "maxBuckets = " << jobInfo.maxBuckets << ", maxElems = " << jobInfo.maxElems
-            << ", flushInterval = " << jobInfo.flushInterval << ", fifoSize = " << jobInfo.fifoSize
-            << ", ScanLimit/Threshold = " << jobInfo.scanLbidReqLimit << "/" << jobInfo.scanLbidReqThreshold
-            << endl;
+            << ", flushInterval = " << jobInfo.flushInterval << ", fifoSize = " << jobInfo.fifoSize << endl;
         oss << "UUID: " << jobInfo.uuid << endl;
         oss << endl << "job filter steps: " << endl;
         ostream_iterator<JobStepVector::value_type> oIter(oss, "\n");
@@ -2316,7 +2314,6 @@ SJLP JobListFactory::makeJobList(CalpontExecutionPlan* cplan, ResourceManager* r
 }
 
 }  // namespace joblist
-// vim:ts=4 sw=4:
 
 #ifdef __clang__
 #pragma clang diagnostic pop

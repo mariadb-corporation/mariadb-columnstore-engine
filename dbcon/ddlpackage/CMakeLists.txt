@@ -9,7 +9,7 @@ FIND_PACKAGE(FLEX REQUIRED)
 FLEX_TARGET(ddl_scan ddl.l ${CMAKE_CURRENT_BINARY_DIR}/ddl-scan.cpp COMPILE_FLAGS "-i -L -Pddl")
 ADD_FLEX_BISON_DEPENDENCY(ddl_scan ddl_gram)
 
-set_source_files_properties(ddl-scan.cpp PROPERTIES COMPILE_FLAGS "-Wno-sign-compare -DYY_NO_INPUT")
+set_source_files_properties(ddl-scan.cpp PROPERTIES COMPILE_FLAGS "-Wno-register -Wno-deprecated-register -Wno-sign-compare -DYY_NO_INPUT")
 
 ########### next target ###############
 

@@ -1056,10 +1056,10 @@ bool copytask(bool connectionTest = false)
   copy_cmd* cmd = (copy_cmd*)buf;
   cmd->opcode = COPY;
   cmd->file1.flen = strlen(source);
-  strncpy(cmd->file1.filename, source, cmd->file1.flen);
+  memcpy(cmd->file1.filename, source, cmd->file1.flen);
   f_name* file2 = (f_name*)&cmd->file1.filename[cmd->file1.flen];
   file2->flen = strlen(dest);
-  strncpy(file2->filename, dest, file2->flen);
+  memcpy(file2->filename, dest, file2->flen);
 
   uint len = (uint64_t)&file2->filename[file2->flen] - (uint64_t)buf;
 

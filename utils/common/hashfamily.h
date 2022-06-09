@@ -50,4 +50,3 @@ class HashFamily
 };
 
 }  // namespace utils
-// vim:ts=2 sw=2:

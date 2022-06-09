@@ -183,7 +183,8 @@ void AggregateColumn::serialize(messageqcpp::ByteStream& b) const
     (*rcit)->serialize(b);
 
   b << fData;
-  b << fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
+  b << timeZone;
   // b << fAlias;
   b << fTableAlias;
   b << static_cast<ByteStream::doublebyte>(fAsc);
@@ -236,7 +237,9 @@ void AggregateColumn::unserialize(messageqcpp::ByteStream& b)
   }
 
   b >> fData;
-  b >> fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone;
+  b >> timeZone;
+  fTimeZone = timeZone;
   // b >> fAlias;
   b >> fTableAlias;
   b >> reinterpret_cast<ByteStream::doublebyte&>(fAsc);
@@ -420,6 +423,8 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
         fResult.intVal = uint64ToStr(fResult.origIntVal);
       else
         fResult.intVal = atoll((char*)&fResult.origIntVal);
+
+      fResult.uintVal = fResult.intVal;
 
       break;
 

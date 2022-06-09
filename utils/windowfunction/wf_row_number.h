@@ -45,4 +45,3 @@ class WF_row_number : public WindowFunctionType
 
 }  // namespace windowfunction
 
-// vim:ts=4 sw=4:

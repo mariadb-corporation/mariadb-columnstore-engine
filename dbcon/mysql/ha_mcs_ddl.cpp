@@ -25,27 +25,19 @@
 #include <string>
 #include <iostream>
 #include <stack>
-#ifdef _MSC_VER
-#include <unordered_map>
-#else
 #include <tr1/unordered_map>
-#endif
 #include <fstream>
 #include <sstream>
 #include <cerrno>
 #include <cstring>
-#ifdef _MSC_VER
-#include <unordered_set>
-#else
+#include <regex>
 #include <tr1/unordered_set>
-#endif
 #include <utility>
 #include <cassert>
 using namespace std;
 
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
-#include <boost/regex.hpp>
 #include <boost/tokenizer.hpp>
 using namespace boost;
 
@@ -142,16 +134,16 @@ CalpontSystemCatalog::ColDataType convertDataType(const ddlpackage::ColumnType& 
 
 int parseCompressionComment(std::string comment)
 {
-  algorithm::to_upper(comment);
-  regex compat("[[:space:]]*COMPRESSION[[:space:]]*=[[:space:]]*", regex_constants::extended);
+  boost::algorithm::to_upper(comment);
+  std::regex compat("[[:space:]]*COMPRESSION[[:space:]]*=[[:space:]]*", std::regex_constants::extended);
   int compressiontype = 0;
-  boost::match_results<std::string::const_iterator> what;
+  std::match_results<std::string::const_iterator> what;
   std::string::const_iterator start, end;
   start = comment.begin();
   end = comment.end();
-  boost::match_flag_type flags = boost::match_default;
+  std::regex_constants::match_flag_type flags = std::regex_constants::match_default;
 
-  if (boost::regex_search(start, end, what, compat, flags))
+  if (std::regex_search(start, end, what, compat, flags))
   {
     // Find the pattern, now get the compression type
     string compType(&(*(what[0].second)));
@@ -649,11 +641,14 @@ bool anyNullInTheColumn(THD* thd, string& schema, string& table, string& columnN
   csep.returnedCols(returnedColumnList);
 
   SimpleFilter* sf = new SimpleFilter();
-  sf->timeZone(thd->variables.time_zone->get_name()->ptr());
+  const char* timeZone = thd->variables.time_zone->get_name()->ptr();
+  long timeZoneOffset;
+  dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
+  sf->timeZone(timeZoneOffset);
   boost::shared_ptr<Operator> sop(new PredicateOperator("isnull"));
   sf->op(sop);
   ConstantColumn* rhs = new ConstantColumn("", ConstantColumn::NULLDATA);
-  rhs->timeZone(thd->variables.time_zone->get_name()->ptr());
+  rhs->timeZone(timeZoneOffset);
   sf->lhs(col[0]->clone());
   sf->rhs(rhs);
 
@@ -799,6 +794,10 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
     if (valConfig.compare("YES") == 0)
       isVarbinaryAllowed = true;
 
+    const char* timeZone = thd->variables.time_zone->get_name()->ptr();
+    long timeZoneOffset;
+    dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
+
     //@Bug 1771. error out for not supported feature.
     if (typeid(stmt) == typeid(CreateTableStatement))
     {
@@ -901,9 +900,9 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 
             try
             {
-              convertedVal = colType.convertColumnData(
-                  createTable->fTableDef->fColumns[i]->fDefaultValue->fValue, pushWarning,
-                  thd->variables.time_zone->get_name()->ptr(), false, false, false);
+              convertedVal =
+                  colType.convertColumnData(createTable->fTableDef->fColumns[i]->fDefaultValue->fValue,
+                                            pushWarning, timeZoneOffset, false, false, false);
             }
             catch (std::exception&)
             {
@@ -1143,7 +1142,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
         algorithm::to_lower(alterTable->fTableName->fName);
       }
 
-      alterTable->fTimeZone.assign(thd->variables.time_zone->get_name()->ptr());
+      alterTable->setTimeZone(timeZoneOffset);
 
       if (schema.length() == 0)
       {
@@ -1313,9 +1312,8 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 
               try
               {
-                convertedVal = colType.convertColumnData(
-                    addColumnPtr->fColumnDef->fDefaultValue->fValue, pushWarning,
-                    thd->variables.time_zone->get_name()->ptr(), false, false, false);
+                convertedVal = colType.convertColumnData(addColumnPtr->fColumnDef->fDefaultValue->fValue,
+                                                         pushWarning, timeZoneOffset, false, false, false);
               }
               catch (std::exception&)
               {
@@ -1383,10 +1381,10 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
           if (comment.length() > 0)
           {
             //@Bug 3782 This is for synchronization after calonlinealter to use
-            algorithm::to_upper(comment);
-            regex pat("[[:space:]]*SCHEMA[[:space:]]+SYNC[[:space:]]+ONLY", regex_constants::extended);
+            boost::algorithm::to_upper(comment);
+            std::regex pat("[[:space:]]*SCHEMA[[:space:]]+SYNC[[:space:]]+ONLY", std::regex_constants::extended);
 
-            if (regex_search(comment, pat))
+            if (std::regex_search(comment, pat))
             {
               return 0;
             }
@@ -1698,9 +1696,8 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 
               try
               {
-                convertedVal = colType.convertColumnData(
-                    addColumnsPtr->fColumns[0]->fDefaultValue->fValue, pushWarning,
-                    thd->variables.time_zone->get_name()->ptr(), false, false, false);
+                convertedVal = colType.convertColumnData(addColumnsPtr->fColumns[0]->fDefaultValue->fValue,
+                                                         pushWarning, timeZoneOffset, false, false, false);
               }
               catch (std::exception&)
               {
@@ -2353,14 +2350,14 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
   bool schemaSyncOnly = false;
   bool isCreate = true;
 
-  regex pat("[[:space:]]*SCHEMA[[:space:]]+SYNC[[:space:]]+ONLY", regex_constants::extended);
+  std::regex pat("[[:space:]]*SCHEMA[[:space:]]+SYNC[[:space:]]+ONLY", std::regex_constants::extended);
 
-  if (regex_search(tablecomment, pat))
+  if (std::regex_search(tablecomment, pat))
   {
     schemaSyncOnly = true;
     pat = createpatstr;
 
-    if (!regex_search(stmt, pat))
+    if (!std::regex_search(stmt, pat))
     {
       isCreate = false;
     }
@@ -2390,7 +2387,7 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
 
   pat = alterpatstr;
 
-  if (regex_search(stmt, pat))
+  if (std::regex_search(stmt, pat))
   {
     ci.isAlter = true;
     ci.alterTableState = cal_connection_info::ALTER_FIRST_RENAME;
@@ -2802,4 +2799,3 @@ extern "C"
   }
 }
 
-// vim:ts=4 sw=4:

@@ -21,10 +21,10 @@
 #include <openssl/evp.h>
 #include <openssl/ossl_typ.h>
 #include <openssl/rand.h>
+#include <openssl/opensslv.h>
 
-#define BOOST_SPIRIT_THREADSAFE
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
+#include "utils/json/json.hpp"
+
 #include "idberrorinfo.h"
 #include "logger.h"
 #include "mcsconfig.h"
@@ -33,6 +33,15 @@
 #include "vlarray.h"
 
 using std::string;
+
+
+#ifdef OPENSSL_VERSION_PREREQ
+#if OPENSSL_VERSION_PREREQ(3,0)
+  #define EVP_CIPHER_key_length EVP_CIPHER_get_key_length
+  #define EVP_CIPHER_iv_length EVP_CIPHER_get_iv_length
+  #define EVP_CIPHER_blocksize EVP_CIPHER_get_blocksize
+#endif
+#endif
 
 const char* const SECRETS_FILENAME = ".secrets";
 
@@ -383,16 +392,16 @@ ReadKeyResult secrets_readkeys(const string& filepath)
   {
     // File contents should be json.
     // json_error_t err;
-    boost::property_tree::ptree jsontree;
+    nlohmann::json jsontree;
     try
     {
-      boost::property_tree::read_json(filepath, jsontree);
+      std::ifstream i(filepath);
+      jsontree = nlohmann::json::parse(i);
     }
-    catch (boost::property_tree::json_parser::json_parser_error& je)
+    catch (const nlohmann::json::exception& je)
     {
-      std::cout << "Error reading JSON from secrets file: " << je.filename() << " on line: " << je.line()
-                << std::endl;
-      std::cout << je.message() << std::endl;
+      std::cout << "Error reading JSON from secrets file: " << filepath << std::endl;
+      std::cout << je.what() << std::endl;
     }
     catch (...)
     {
@@ -400,8 +409,8 @@ ReadKeyResult secrets_readkeys(const string& filepath)
              strerror(errno));
     }
     // json_t* obj = json_load_file(filepathc, 0, &err);
-    string enc_cipher = jsontree.get<string>(field_cipher);
-    string enc_key = jsontree.get<string>(field_key);
+    string enc_cipher = jsontree[field_cipher];
+    string enc_key = jsontree[field_key];
     // const char* enc_cipher = json_string_value(json_object_get(obj, field_cipher));
     // const char* enc_key = json_string_value(json_object_get(obj, field_key));
     bool cipher_ok = !enc_cipher.empty() && (enc_cipher == CIPHER_NAME);
@@ -469,6 +478,8 @@ string decrypt_password(const string& input)
  * @param input Encrypted password in hex form
  * @return Decrypted password or empty on error
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 string decrypt_password_old(const ByteVec& key, const ByteVec& iv, const std::string& input)
 {
   string rval;
@@ -501,6 +512,7 @@ string decrypt_password_old(const ByteVec& key, const ByteVec& iv, const std::st
   }
   return rval;
 }
+#pragma GCC diagnostic pop
 
 string decrypt_password(const ByteVec& key, const std::string& input)
 {
@@ -635,23 +647,24 @@ bool secrets_write_keys(const ByteVec& key, const string& filepath, const string
   utils::VLArray<char> key_hex(2 * keylen + 1);
   bin2hex(key.data(), keylen, key_hex.data());
 
-  boost::property_tree::ptree jsontree;
-  jsontree.put(field_desc, desc);
-  jsontree.put(field_version, columnstore_version.c_str());
-  jsontree.put(field_cipher, CIPHER_NAME);
-  jsontree.put(field_key, (const char*)key_hex.data());
+  nlohmann::json jsontree;
+  jsontree[field_desc] = desc;
+  jsontree[field_version] = columnstore_version;
+  jsontree[field_cipher] = CIPHER_NAME;
+  jsontree[field_key] = (const char*)key_hex.data();
 
   auto filepathc = filepath.c_str();
   bool write_ok = false;
   errno = 0;
   try
   {
-    write_json(filepathc, jsontree);
+    std::ofstream o(filepath);
+    o << jsontree;
   }
-  catch (boost::property_tree::json_parser::json_parser_error& je)
+  catch (const nlohmann::json::exception& je)
   {
-    std::cout << "Write to secrets file: " << je.filename() << " on line: " << je.line() << std::endl;
-    std::cout << je.message() << std::endl;
+    std::cout << "Write to secrets file: " << filepath << std::endl;
+    std::cout << je.what() << std::endl;
   }
   catch (...)
   {

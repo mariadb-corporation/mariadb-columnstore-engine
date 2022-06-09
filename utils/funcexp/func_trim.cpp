@@ -168,4 +168,3 @@ std::string Func_trim::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isN
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

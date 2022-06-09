@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2022 Mariadb Corporation.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -29,9 +30,6 @@
 #include <sys/time.h>
 using namespace std;
 
-#include <boost/regex.hpp>
-using namespace boost;
-
 #include "resourcemanager.h"
 
 #include "jl_logger.h"
@@ -43,44 +41,29 @@ using namespace config;
 
 namespace joblist
 {
-// const string ResourceManager::fExeMgrStr("ExeMgr1");
-const string ResourceManager::fHashJoinStr("HashJoin");
-const string ResourceManager::fHashBucketReuseStr("HashBucketReuse");
-const string ResourceManager::fJobListStr("JobList");
-const string ResourceManager::fPrimitiveServersStr("PrimitiveServers");
-// const string ResourceManager::fSystemConfigStr("SystemConfig");
-const string ResourceManager::fTupleWSDLStr("TupleWSDL");
-const string ResourceManager::fZDLStr("ZDL");
-const string ResourceManager::fExtentMapStr("ExtentMap");
-// const string ResourceManager::fDMLProcStr("DMLProc");
-// const string ResourceManager::fBatchInsertStr("BatchInsert");
-const string ResourceManager::fOrderByLimitStr("OrderByLimit");
-const string ResourceManager::fRowAggregationStr("RowAggregation");
-
 ResourceManager* ResourceManager::fInstance = NULL;
 boost::mutex mx;
 
-ResourceManager* ResourceManager::instance(bool runningInExeMgr)
+ResourceManager* ResourceManager::instance(bool runningInExeMgr, config::Config* aConfig)
 {
   boost::mutex::scoped_lock lk(mx);
 
   if (!fInstance)
-    fInstance = new ResourceManager(runningInExeMgr);
+    fInstance = new ResourceManager(runningInExeMgr, aConfig);
 
   return fInstance;
 }
 
-ResourceManager::ResourceManager(bool runningInExeMgr)
+ResourceManager::ResourceManager(bool runningInExeMgr, config::Config* aConfig)
  : fExeMgrStr("ExeMgr1")
  , fSystemConfigStr("SystemConfig")
  , fDMLProcStr("DMLProc")
  , fBatchInsertStr("BatchInsert")
- , fConfig(Config::makeConfig())
+ , fConfig(aConfig == nullptr ? Config::makeConfig() : aConfig)
  , fNumCores(8)
  , fHjNumThreads(defaultNumThreads)
  , fJlProcessorThreadsPerScan(defaultProcessorThreadsPerScan)
  , fJlNumScanReceiveThreads(defaultScanReceiveThreads)
- , fTwNumThreads(defaultNumThreads)
  , fJlMaxOutstandingRequests(defaultMaxOutstandingRequests)
  , fHJUmMaxMemorySmallSideDistributor(
        fHashJoinStr, "UmMaxMemorySmallSide",
@@ -117,7 +100,6 @@ ResourceManager::ResourceManager(bool runningInExeMgr)
   {
     fHjNumThreads = fNumCores;
     fJlNumScanReceiveThreads = fNumCores;
-    fTwNumThreads = fNumCores;
   }
 
   // possibly override any calculated values
@@ -154,11 +136,6 @@ ResourceManager::ResourceManager(bool runningInExeMgr)
   fDECConnectionsPerQuery = getUintVal(fJobListStr, "DECConnectionsPerQuery", 0);
   fDECConnectionsPerQuery =
       (fDECConnectionsPerQuery) ? fDECConnectionsPerQuery : getPsConnectionsPerPrimProc();
-
-  temp = getIntVal(fTupleWSDLStr, "NumThreads", -1);
-
-  if (temp > 0)
-    fTwNumThreads = temp;
 
   pmJoinMemLimit = getUintVal(fHashJoinStr, "PmMaxMemorySmallSide", defaultHJPmMaxMemorySmallSide);
 
@@ -334,106 +311,6 @@ void ResourceManager::logResourceChangeMessage(logging::LOG_TYPE logType, uint32
   args.add(value);
   Logger log;
   log.logMessage(logType, mid, args, logging::LoggingID(5, sessionID));
-}
-
-void ResourceManager::emServerThreads()
-{
-}
-void ResourceManager::emServerQueueSize()
-{
-}
-void ResourceManager::emSecondsBetweenMemChecks()
-{
-}
-void ResourceManager::emMaxPct()
-{
-}
-void ResourceManager::emPriority()
-{
-}
-void ResourceManager::emExecQueueSize()
-{
-}
-
-void ResourceManager::hjNumThreads()
-{
-}
-void ResourceManager::hjMaxBuckets()
-{
-}
-void ResourceManager::hjMaxElems()
-{
-}
-void ResourceManager::hjFifoSizeLargeSide()
-{
-}
-void ResourceManager::hjPmMaxMemorySmallSide()
-{
-}
-
-void ResourceManager::jlFlushInterval()
-{
-}
-void ResourceManager::jlFifoSize()
-{
-}
-void ResourceManager::jlScanLbidReqLimit()
-{
-}
-void ResourceManager::jlScanLbidReqThreshold()
-{
-}
-void ResourceManager::jlProjectBlockReqLimit()
-{
-}
-void ResourceManager::jlProjectBlockReqThreshold()
-{
-}
-void ResourceManager::jlNumScanReceiveThreads()
-{
-}
-
-void ResourceManager::psCount()
-{
-}
-void ResourceManager::psConnectionsPerPrimProc()
-{
-}
-void ResourceManager::psLBID_Shift()
-{
-}
-
-void ResourceManager::scTempDiskPath()
-{
-}
-void ResourceManager::scTempSaveSize()
-{
-}
-void ResourceManager::scWorkingDir()
-{
-}
-
-void ResourceManager::twMaxSize()
-{
-}
-void ResourceManager::twInitialCapacity()
-{
-}
-void ResourceManager::twMaxBuckets()
-{
-}
-void ResourceManager::twNumThreads()
-{
-}
-void ResourceManager::zdl_MaxElementsInMem()
-{
-}
-void ResourceManager::zdl_MaxElementsPerBucket()
-{
-}
-
-void ResourceManager::hbrPredicate()
-{
 }
 
 bool ResourceManager::getMysqldInfo(std::string& h, std::string& u, std::string& w, unsigned int& p) const

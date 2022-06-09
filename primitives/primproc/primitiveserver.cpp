@@ -945,7 +945,6 @@ struct AsynchLoader
   QueryContext ver;
   uint32_t txn;
   int compType;
-  uint8_t dataWidth;
   bool LBIDTrace;
   uint32_t sessionID;
   uint32_t* cacheCount;
@@ -1420,8 +1419,8 @@ struct BPPHandler
 
         /* Uncomment these lines to verify duplicate().  == op might need updating */
         //  					if (*bpp != *dup)
-        // 	 					cerr << "createBPP: duplicate mismatch at index " << i <<
-        // endl;
+        // 	 					cerr << "createBPP: duplicate mismatch at index " << i
+        // << endl;
         //  					idbassert(*bpp == *dup);
         bppv->add(dup);
       }
@@ -2440,7 +2439,7 @@ PrimitiveServer::~PrimitiveServer()
 {
 }
 
-void PrimitiveServer::start(Service* service)
+void PrimitiveServer::start(Service* service, utils::USpaceSpinLock& startupRaceLock)
 {
   // start all the server threads
   for (int i = 1; i <= fServerThreads; i++)
@@ -2451,7 +2450,7 @@ void PrimitiveServer::start(Service* service)
 
     fServerpool.invoke(ServerThread(oss.str(), this));
   }
-
+  startupRaceLock.release();
   service->NotifyServiceStarted();
 
   fServerpool.wait();
@@ -2575,4 +2574,3 @@ bool BPPV::aborted()
 // end workaround
 
 }  // namespace primitiveprocessor
-// vim:ts=4 sw=4:

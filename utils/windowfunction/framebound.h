@@ -145,4 +145,3 @@ extern std::map<int, std::string> colType2String;
 
 }  // namespace windowfunction
 
-// vim:ts=4 sw=4:

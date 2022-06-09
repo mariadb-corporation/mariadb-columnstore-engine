@@ -199,7 +199,7 @@ void DistributedEngineComm::reset()
 }
 
 DistributedEngineComm::DistributedEngineComm(ResourceManager* rm, bool isExeMgr)
- : fRm(rm), fLBIDShift(fRm->getPsLBID_Shift()), pmCount(0), fIsExeMgr(isExeMgr)
+: fRm(rm), pmCount(0), fIsExeMgr(isExeMgr)
 {
   Setup();
 }
@@ -250,10 +250,6 @@ void DistributedEngineComm::Setup()
   if (newPmCount == 0)
     writeToLog(__FILE__, __LINE__, "Got a config file with 0 PMs", LOG_TYPE_CRITICAL);
 
-  // This needs to make sense when compared to the extent size
-  //     fLBIDShift = static_cast<unsigned>(config::Config::uFromText(fConfig->getConfig(section,
-  //     "LBID_Shift")));
-
   auto* config = fRm->getConfig();
   std::vector<messageqcpp::AddrAndPortPair> pmsAddressesAndPorts;
   for (size_t i = 1; i <= newPmCount; ++i)
@@ -292,7 +288,7 @@ void DistributedEngineComm::Setup()
     catch (std::exception& ex)
     {
       if (i < newPmCount)
-        newPmCount--;
+        newPmCount = newPmCount > 1 ? newPmCount-1 : 1; // We can't afford to reduce newPmCount to 0
 
       writeToLog(__FILE__, __LINE__,
                  "Could not connect to PMS" + std::to_string(connectionId) + ": " + ex.what(),
@@ -306,7 +302,7 @@ void DistributedEngineComm::Setup()
     catch (...)
     {
       if (i < newPmCount)
-        newPmCount--;
+        newPmCount = newPmCount > 1 ? newPmCount-1 : 1; // We can't afford to reduce newPmCount to 0
 
       writeToLog(__FILE__, __LINE__, "Could not connect to PMS" + std::to_string(connectionId),
                  LOG_TYPE_ERROR);
@@ -1155,4 +1151,3 @@ uint32_t DistributedEngineComm::MQE::getNextConnectionId(const size_t pmIndex,
 }
 
 }  // namespace joblist
-// vim:ts=4 sw=4:

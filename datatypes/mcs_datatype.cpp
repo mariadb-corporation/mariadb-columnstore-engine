@@ -592,7 +592,7 @@ string TypeHandlerDatetime::format(const SimpleValue& v, const SystemCatalog::Ty
 
 string TypeHandlerTimestamp::format(const SimpleValue& v, const SystemCatalog::TypeAttributesStd& attr) const
 {
-  return DataConvert::timestampToString(v.toSInt64(), v.tzname());
+  return DataConvert::timestampToString(v.toSInt64(), v.timeZone());
 }
 
 string TypeHandlerTime::format(const SimpleValue& v, const SystemCatalog::TypeAttributesStd& attr) const
@@ -893,8 +893,8 @@ class SimpleConverter : public boost::any
  public:
   SimpleConverter(const SessionParam& sp, const TypeHandler* h, const SystemCatalog::TypeAttributesStd& attr,
                   const char* str)
-   : boost::any(
-         h->convertFromString(attr, ConvertFromStringParam(sp.tzname(), true, false), str, initPushWarning()))
+   : boost::any(h->convertFromString(attr, ConvertFromStringParam(sp.timeZone(), true, false), str,
+                                     initPushWarning()))
   {
   }
   round_style_t roundStyle() const
@@ -1059,7 +1059,7 @@ SimpleValue TypeHandlerTimestamp::toSimpleValue(const SessionParam& sp,
 {
   idbassert(attr.colWidth <= SystemCatalog::EIGHT_BYTE);
   SimpleConverter anyVal(sp, this, attr, str);
-  return SimpleValueTimestamp(anyVal.to_uint64(), sp.tzname());
+  return SimpleValueTimestamp(anyVal.to_uint64(), sp.timeZone());
 }
 
 SimpleValue TypeHandlerTime::toSimpleValue(const SessionParam& sp,
@@ -1915,4 +1915,3 @@ const uint8_t* TypeHandlerUDecimal128::getEmptyValueForType(
 
 }  // end of namespace datatypes
 
-// vim:ts=2 sw=2:

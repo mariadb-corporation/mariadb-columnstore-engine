@@ -139,7 +139,7 @@ BulkLoadBuffer::BulkLoadBuffer(unsigned numberOfCols, unsigned bufferSize, Log* 
  , fTableName(tableName)
  , fbTruncationAsError(false)
  , fImportDataMode(IMPORT_DATA_TEXT)
- , fTimeZone("SYSTEM")
+ , fTimeZone(dataconvert::systemTimeZoneOffset())
  , fFixedBinaryRecLen(0)
 {
   fData = new char[bufferSize];
@@ -1717,7 +1717,7 @@ int BulkLoadBuffer::parseCol(ColumnInfo& columnInfo)
 
         lastInputRowInExtent += columnInfo.rowsPerExtent();
 
-        if (isUnsigned(columnInfo.column.dataType) || isCharType(columnInfo.column.dataType))
+        if (isUnsigned(columnInfo.column.dataType))
         {
           if (columnInfo.column.width <= 8)
           {

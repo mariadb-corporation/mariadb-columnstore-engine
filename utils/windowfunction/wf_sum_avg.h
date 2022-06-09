@@ -60,4 +60,3 @@ class WF_sum_avg : public WindowFunctionType
 
 }  // namespace windowfunction
 
-// vim:ts=4 sw=4:

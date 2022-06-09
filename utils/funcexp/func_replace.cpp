@@ -173,4 +173,3 @@ std::string Func_replace::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& 
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

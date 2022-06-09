@@ -36,6 +36,7 @@
 #include "columnwidth.h"
 #include "mcs_decimal.h"
 #include "mcs_int64.h"
+#include "numericliteral.h"
 
 namespace messageqcpp
 {
@@ -62,7 +63,7 @@ typedef datatypes::Decimal IDB_Decimal;
 #ifdef POSIX_REGEX
 typedef regex_t IDB_Regex;
 #else
-typedef boost::regex IDB_Regex;
+typedef std::regex IDB_Regex;
 #endif
 
 typedef IDB_Regex CNX_Regex;
@@ -325,7 +326,7 @@ class TreeNode
   }
 
   inline bool getBoolVal();
-  inline const std::string& getStrVal(const std::string& timeZone);
+  inline const std::string& getStrVal(const long timeZone);
   inline int64_t getIntVal();
   inline uint64_t getUintVal();
   inline float getFloatVal();
@@ -333,7 +334,7 @@ class TreeNode
   inline long double getLongDoubleVal();
   inline IDB_Decimal getDecimalVal();
   inline int32_t getDateIntVal();
-  inline int64_t getDatetimeIntVal();
+  inline int64_t getDatetimeIntVal(long timeZone = 0);
   inline int64_t getTimestampIntVal();
   inline int64_t getTimeIntVal();
 
@@ -457,7 +458,7 @@ inline bool TreeNode::getBoolVal()
   return fResult.boolVal;
 }
 
-inline const std::string& TreeNode::getStrVal(const std::string& timeZone)
+inline const std::string& TreeNode::getStrVal(const long timeZone)
 {
   switch (fResultType.colDataType)
   {
@@ -664,25 +665,19 @@ inline int64_t TreeNode::getIntVal()
   switch (fResultType.colDataType)
   {
     case CalpontSystemCatalog::CHAR:
-      if (fResultType.colWidth <= 8)
-        return fResult.intVal;
-
-      return atoll(fResult.strVal.c_str());
-
     case CalpontSystemCatalog::VARCHAR:
-      if (fResultType.colWidth <= 7)
-        return fResult.intVal;
-
-      return atoll(fResult.strVal.c_str());
-
-    // FIXME: ???
     case CalpontSystemCatalog::VARBINARY:
     case CalpontSystemCatalog::BLOB:
     case CalpontSystemCatalog::TEXT:
-      if (fResultType.colWidth <= 7)
-        return fResult.intVal;
-
-      return atoll(fResult.strVal.c_str());
+    {
+      datatypes::DataCondition cnverr;
+      literal::Converter<literal::SignedInteger> cnv(fResult.strVal, cnverr);
+      if (datatypes::DataCondition::Code(cnverr) != 0)
+      {
+        cerr << "error in int conversion from '" << fResult.strVal << "'";
+      }
+      return cnv.toSInt<int64_t>(cnverr);
+    }
 
     case CalpontSystemCatalog::BIGINT:
     case CalpontSystemCatalog::TINYINT:
@@ -721,6 +716,20 @@ inline uint64_t TreeNode::getUintVal()
 {
   switch (fResultType.colDataType)
   {
+    case CalpontSystemCatalog::CHAR:
+    case CalpontSystemCatalog::VARCHAR:
+    case CalpontSystemCatalog::VARBINARY:
+    case CalpontSystemCatalog::BLOB:
+    case CalpontSystemCatalog::TEXT:
+    {
+      datatypes::DataCondition cnverr;
+      literal::Converter<literal::UnsignedInteger> cnv(fResult.strVal, cnverr);
+      if (datatypes::DataCondition::Code(cnverr) != 0)
+      {
+        cerr << "error in unsigned int conversion from '" << fResult.strVal << "'";
+      }
+      return cnv.toXIntPositive<uint64_t>(cnverr);
+    }
     case CalpontSystemCatalog::BIGINT:
     case CalpontSystemCatalog::TINYINT:
     case CalpontSystemCatalog::SMALLINT:
@@ -1052,7 +1061,7 @@ inline IDB_Decimal TreeNode::getDecimalVal()
   return fResult.decimalVal;
 }
 
-inline int64_t TreeNode::getDatetimeIntVal()
+inline int64_t TreeNode::getDatetimeIntVal(long timeZone)
 {
   if (fResultType.colDataType == execplan::CalpontSystemCatalog::DATE)
     return (fResult.intVal & 0x00000000FFFFFFC0LL) << 32;
@@ -1083,6 +1092,17 @@ inline int64_t TreeNode::getDatetimeIntVal()
   else if (fResultType.colDataType == execplan::CalpontSystemCatalog::DATETIME)
     // return (fResult.intVal & 0xFFFFFFFFFFF00000LL);
     return (fResult.intVal);
+  else if (fResultType.colDataType == execplan::CalpontSystemCatalog::TIMESTAMP)
+  {
+    dataconvert::TimeStamp timestamp(fResult.intVal);
+    int64_t seconds = timestamp.second;
+    dataconvert::MySQLTime m_time;
+    dataconvert::gmtSecToMySQLTime(seconds, m_time, timeZone);
+    dataconvert::DateTime dt(m_time.year, m_time.month, m_time.day, m_time.hour, m_time.minute, m_time.second,
+                             timestamp.msecond);
+    memcpy(&fResult.intVal, &dt, 8);
+    return fResult.intVal;
+  }
   else
     return getIntVal();
 }

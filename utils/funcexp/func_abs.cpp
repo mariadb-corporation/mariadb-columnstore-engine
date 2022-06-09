@@ -79,4 +79,3 @@ long double Func_abs::getLongDoubleVal(Row& row, FunctionParm& parm, bool& isNul
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

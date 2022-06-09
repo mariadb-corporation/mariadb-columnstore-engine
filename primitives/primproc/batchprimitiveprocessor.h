@@ -257,6 +257,7 @@ class BatchPrimitiveProcessor
     int128_t max128Val;
     int64_t maxVal;
   };
+  bool cpDataFromDictScan;
 
   uint64_t lbidForCP;
   bool hasWideColumnOut;
@@ -432,6 +433,7 @@ class BatchPrimitiveProcessor
   uint processorThreads;
   uint ptMask;
   bool firstInstance;
+  uint64_t valuesLBID;
 
   static const uint64_t maxResultCount = 1048576;  // 2^20
 

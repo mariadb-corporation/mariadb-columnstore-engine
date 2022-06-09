@@ -1,4 +1,4 @@
-/* Copyright (C) 2021 Mariadb Corporation.
+/* Copyright (C) 2021-2022 Mariadb Corporation.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -16,6 +16,17 @@
    MA 02110-1301, USA. */
 
 #pragma once
+
+// Column filtering is dispatched 4-way based on the column type,
+// which defines implementation of comparison operations for the column values
+enum ENUM_KIND
+{
+  KIND_DEFAULT,   // compared as signed integers
+  KIND_UNSIGNED,  // compared as unsigned integers
+  KIND_FLOAT,     // compared as floating-point numbers
+  KIND_TEXT
+};  // whitespace-trimmed and then compared as signed integers
+
 
 #if defined(__x86_64__)
 
@@ -35,16 +46,6 @@
 #endif
 
 #include <mcs_datatype.h>
-
-// Column filtering is dispatched 4-way based on the column type,
-// which defines implementation of comparison operations for the column values
-enum ENUM_KIND
-{
-  KIND_DEFAULT,   // compared as signed integers
-  KIND_UNSIGNED,  // compared as unsigned integers
-  KIND_FLOAT,     // compared as floating-point numbers
-  KIND_TEXT
-};  // whitespace-trimmed and then compared as signed integers
 
 namespace simd
 {
@@ -114,6 +115,15 @@ struct StorageToFiltering<T, KIND, typename std::enable_if<KIND != KIND_FLOAT>::
 {
   using type = T;
 };
+
+template <int i0, int i1, int i2, int i3>
+static inline vi128_t constant4i() {
+    static const union {
+        int     i[4];
+        vi128_t xmm;
+    } u = {{i0,i1,i2,i3}};
+    return u.xmm;
+}
 
 template <typename VT, typename T, typename ENABLE = void>
 class SimdFilterProcessor;
@@ -461,7 +471,7 @@ class SimdFilterProcessor<
 
 template <typename VT, typename CHECK_T>
 class SimdFilterProcessor<VT, CHECK_T,
-                          typename std::enable_if<std::is_same<VT, vi128_wr>::value && sizeof(CHECK_T) == 8 &&
+                          typename std::enable_if<std::is_same<VT, vi128_wr>::value && std::is_same<CHECK_T, int64_t>::value &&
                                                   !std::is_same<CHECK_T, double>::value>::type>
 {
  public:
@@ -568,7 +578,117 @@ class SimdFilterProcessor<VT, CHECK_T,
 
 template <typename VT, typename CHECK_T>
 class SimdFilterProcessor<VT, CHECK_T,
-                          typename std::enable_if<std::is_same<VT, vi128_wr>::value && sizeof(CHECK_T) == 4 &&
+                          typename std::enable_if<std::is_same<VT, vi128_wr>::value && std::is_same<CHECK_T, uint64_t>::value &&
+                                                  !std::is_same<CHECK_T, double>::value>::type>
+{
+ public:
+  constexpr static const uint16_t vecByteSize = 16U;
+  constexpr static const uint16_t vecBitSize = 128U;
+  using T = typename datatypes::WidthToSIntegralType<sizeof(CHECK_T)>::type;
+  using SimdWrapperType = vi128_wr;
+  using SimdType = vi128_t;
+  using FilterType = T;
+  using StorageType = T;
+  // Mask calculation for int and float types differs.
+  // See corresponding intrinsics algos for details.
+  constexpr static const uint16_t FilterMaskStep = sizeof(T);
+  // Load value
+  MCS_FORCE_INLINE SimdType emptyNullLoadValue(const T fill)
+  {
+    return loadValue(fill);
+  }
+
+  MCS_FORCE_INLINE SimdType loadValue(const T fill)
+  {
+    return _mm_set_epi64x(fill, fill);
+  }
+
+  // Load from
+  MCS_FORCE_INLINE SimdType loadFrom(const char* from)
+  {
+    return _mm_loadu_si128(reinterpret_cast<const SimdType*>(from));
+  }
+
+  // Compare
+  MCS_FORCE_INLINE MT cmpGe(SimdType& x, SimdType& y)
+  {
+    return cmpGt(y, x) ^ 0xFFFF;
+  }
+
+  MCS_FORCE_INLINE MT cmpGt(SimdType& x, SimdType& y)
+  {
+    SimdType signVec = constant4i<0,(int32_t)0x80000000,0,(int32_t)0x80000000>();
+    SimdType xFlip = _mm_xor_si128(x, signVec);
+    SimdType yFlip = _mm_xor_si128(y, signVec);
+    return _mm_movemask_epi8(_mm_cmpgt_epi64(xFlip, yFlip));
+  }
+
+  MCS_FORCE_INLINE MT cmpEq(SimdType& x, SimdType& y)
+  {
+    return _mm_movemask_epi8(_mm_cmpeq_epi64(x, y));
+  }
+
+  MCS_FORCE_INLINE MT cmpLe(SimdType& x, SimdType& y)
+  {
+    return cmpGt(x, y) ^ 0xFFFF;
+  }
+
+  MCS_FORCE_INLINE MT cmpLt(SimdType& x, SimdType& y)
+  {
+    return cmpGt(y, x);
+  }
+
+  MCS_FORCE_INLINE MT cmpNe(SimdType& x, SimdType& y)
+  {
+    return _mm_movemask_epi8(_mm_cmpeq_epi64(x, y)) ^ 0xFFFF;
+  }
+
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType& x, SimdType& y)
+  {
+    return 0;
+  }
+
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType& x, SimdType& y)
+  {
+    return 0xFFFF;
+  }
+
+  // misc
+  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType& vmask)
+  {
+    return _mm_movemask_epi8(vmask);
+  }
+
+  MCS_FORCE_INLINE SimdType setToZero()
+  {
+    return _mm_setzero_si128();
+  }
+
+  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType& x, SimdType& y)
+  {
+    return cmpNe(x, y);
+  }
+
+  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType& x, SimdType& y)
+  {
+    return cmpEq(x, y);
+  }
+
+  // store
+  MCS_FORCE_INLINE void storeWMask(SimdType& x, SimdType& vmask, char* dst)
+  {
+    _mm_maskmoveu_si128(x, vmask, dst);
+  }
+
+  MCS_FORCE_INLINE void store(char* dst, SimdType& x)
+  {
+    _mm_storeu_si128(reinterpret_cast<SimdType*>(dst), x);
+  }
+};
+
+template <typename VT, typename CHECK_T>
+class SimdFilterProcessor<VT, CHECK_T,
+                          typename std::enable_if<std::is_same<VT, vi128_wr>::value && std::is_same<CHECK_T, int32_t>::value &&
                                                   !std::is_same<CHECK_T, float>::value>::type>
 {
  public:
@@ -674,8 +794,118 @@ class SimdFilterProcessor<VT, CHECK_T,
 };
 
 template <typename VT, typename CHECK_T>
+class SimdFilterProcessor<VT, CHECK_T,
+                          typename std::enable_if<std::is_same<VT, vi128_wr>::value && std::is_same<CHECK_T, uint32_t>::value &&
+                                                  !std::is_same<CHECK_T, float>::value>::type>
+{
+ public:
+  constexpr static const uint16_t vecByteSize = 16U;
+  constexpr static const uint16_t vecBitSize = 128U;
+  using T = typename datatypes::WidthToSIntegralType<sizeof(CHECK_T)>::type;
+  using SimdWrapperType = vi128_wr;
+  using SimdType = vi128_t;
+  using FilterType = T;
+  using StorageType = T;
+  // Mask calculation for int and float types differs.
+  // See corresponding intrinsics algos for details.
+  constexpr static const uint16_t FilterMaskStep = sizeof(T);
+  // Load value
+  MCS_FORCE_INLINE SimdType emptyNullLoadValue(const T fill)
+  {
+    return loadValue(fill);
+  }
+
+  MCS_FORCE_INLINE SimdType loadValue(const T fill)
+  {
+    return _mm_set1_epi32(fill);
+  }
+
+  // Load from
+  MCS_FORCE_INLINE SimdType loadFrom(const char* from)
+  {
+    return _mm_loadu_si128(reinterpret_cast<const SimdType*>(from));
+  }
+
+  // Compare
+  MCS_FORCE_INLINE MT cmpEq(SimdType& x, SimdType& y)
+  {
+    return _mm_movemask_epi8(_mm_cmpeq_epi32(x, y));
+  }
+
+  MCS_FORCE_INLINE MT cmpGe(SimdType& x, SimdType& y)
+  {
+    return cmpGt(y, x) ^ 0xFFFF;
+  }
+
+  MCS_FORCE_INLINE MT cmpGt(SimdType& x, SimdType& y)
+  {
+    SimdType signVec = constant4i<(int32_t)0x80000000,(int32_t)0x80000000,(int32_t)0x80000000,(int32_t)0x80000000>();
+    SimdType xFlip = _mm_xor_si128(x, signVec);
+    SimdType yFlip = _mm_xor_si128(y, signVec);
+    return _mm_movemask_epi8(_mm_cmpgt_epi32(xFlip, yFlip));
+  }
+
+  MCS_FORCE_INLINE MT cmpLe(SimdType& x, SimdType& y)
+  {
+    return cmpGt(x, y) ^ 0xFFFF;
+  }
+
+  MCS_FORCE_INLINE MT cmpLt(SimdType& x, SimdType& y)
+  {
+    return cmpGt(y, x);
+  }
+
+  MCS_FORCE_INLINE MT cmpNe(SimdType& x, SimdType& y)
+  {
+    return _mm_movemask_epi8(_mm_cmpeq_epi32(x, y)) ^ 0xFFFF;
+  }
+
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType& x, SimdType& y)
+  {
+    return 0;
+  }
+
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType& x, SimdType& y)
+  {
+    return 0xFFFF;
+  }
+
+  // misc
+  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType& vmask)
+  {
+    return _mm_movemask_epi8(vmask);
+  }
+
+  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType& x, SimdType& y)
+  {
+    return cmpNe(x, y);
+  }
+
+  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType& x, SimdType& y)
+  {
+    return cmpEq(x, y);
+  }
+
+  MCS_FORCE_INLINE SimdType setToZero()
+  {
+    return _mm_setzero_si128();
+  }
+
+  // store
+  MCS_FORCE_INLINE void storeWMask(SimdType& x, SimdType& vmask, char* dst)
+  {
+    _mm_maskmoveu_si128(x, vmask, dst);
+  }
+
+  MCS_FORCE_INLINE void store(char* dst, SimdType& x)
+  {
+    _mm_storeu_si128(reinterpret_cast<SimdType*>(dst), x);
+  }
+};
+
+template <typename VT, typename CHECK_T>
 class SimdFilterProcessor<
-    VT, CHECK_T, typename std::enable_if<std::is_same<VT, vi128_wr>::value && sizeof(CHECK_T) == 2>::type>
+    VT, CHECK_T, typename std::enable_if<std::is_same<VT, vi128_wr>::value && std::is_same<CHECK_T, int16_t>::value>::type>
 {
  public:
   constexpr static const uint16_t vecByteSize = 16U;
@@ -781,7 +1011,227 @@ class SimdFilterProcessor<
 
 template <typename VT, typename CHECK_T>
 class SimdFilterProcessor<
-    VT, CHECK_T, typename std::enable_if<std::is_same<VT, vi128_wr>::value && sizeof(CHECK_T) == 1>::type>
+    VT, CHECK_T, typename std::enable_if<std::is_same<VT, vi128_wr>::value && std::is_same<CHECK_T, uint16_t>::value>::type>
+{
+ public:
+  constexpr static const uint16_t vecByteSize = 16U;
+  constexpr static const uint16_t vecBitSize = 128U;
+  using T = typename datatypes::WidthToSIntegralType<sizeof(CHECK_T)>::type;
+  using SimdWrapperType = simd::vi128_wr;
+  using SimdType = simd::vi128_t;
+  using FilterType = T;
+  using StorageType = T;
+  // Mask calculation for int and float types differs.
+  // See corresponding intrinsics algos for details.
+  constexpr static const uint16_t FilterMaskStep = sizeof(T);
+  // Load value
+  MCS_FORCE_INLINE SimdType emptyNullLoadValue(const T fill)
+  {
+    return loadValue(fill);
+  }
+
+  MCS_FORCE_INLINE SimdType loadValue(const T fill)
+  {
+    return _mm_set1_epi16(fill);
+  }
+
+  // Load from
+  MCS_FORCE_INLINE SimdType loadFrom(const char* from)
+  {
+    return _mm_loadu_si128(reinterpret_cast<const SimdType*>(from));
+  }
+
+  // Compare
+  MCS_FORCE_INLINE MT cmpEq(SimdType& x, SimdType& y)
+  {
+    return _mm_movemask_epi8(_mm_cmpeq_epi16(x, y));
+  }
+
+  MCS_FORCE_INLINE MT cmpGe(SimdType& x, SimdType& y)
+  {
+    SimdType maxOfTwo = _mm_max_epu16(x, y); // max(x, y), unsigned
+    return _mm_movemask_epi8(_mm_cmpeq_epi16(x, maxOfTwo));
+  }
+
+  MCS_FORCE_INLINE MT cmpGt(SimdType& x, SimdType& y)
+  {
+    return cmpGe(y, x) ^ 0xFFFF;
+  }
+
+  MCS_FORCE_INLINE MT cmpLe(SimdType& x, SimdType& y)
+  {
+    return cmpGe(y, x);
+  }
+
+  MCS_FORCE_INLINE MT cmpLt(SimdType& x, SimdType& y)
+  {
+    return cmpGe(x, y) ^ 0xFFFF;
+  }
+
+  MCS_FORCE_INLINE MT cmpNe(SimdType& x, SimdType& y)
+  {
+    return _mm_movemask_epi8(_mm_cmpeq_epi16(x, y)) ^ 0xFFFF;
+  }
+
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType& x, SimdType& y)
+  {
+    return 0;
+  }
+
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType& x, SimdType& y)
+  {
+    return 0xFFFF;
+  }
+
+  // misc
+  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType& vmask)
+  {
+    return _mm_movemask_epi8(vmask);
+  }
+
+  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType& x, SimdType& y)
+  {
+    return cmpNe(x, y);
+  }
+
+  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType& x, SimdType& y)
+  {
+    return cmpEq(x, y);
+  }
+
+  MCS_FORCE_INLINE SimdType setToZero()
+  {
+    return _mm_setzero_si128();
+  }
+
+  // store
+  MCS_FORCE_INLINE void storeWMask(SimdType& x, SimdType& vmask, char* dst)
+  {
+    _mm_maskmoveu_si128(x, vmask, dst);
+  }
+
+  MCS_FORCE_INLINE void store(char* dst, SimdType& x)
+  {
+    _mm_storeu_si128(reinterpret_cast<SimdType*>(dst), x);
+  }
+};
+
+template <typename VT, typename CHECK_T>
+class SimdFilterProcessor<
+    VT, CHECK_T, typename std::enable_if<std::is_same<VT, vi128_wr>::value && std::is_same<CHECK_T, int8_t>::value>::type>
+{
+ public:
+  constexpr static const uint16_t vecByteSize = 16U;
+  constexpr static const uint16_t vecBitSize = 128U;
+  using T = typename datatypes::WidthToSIntegralType<sizeof(CHECK_T)>::type;
+  using SimdWrapperType = vi128_wr;
+  using SimdType = vi128_t;
+  using FilterType = T;
+  using StorageType = T;
+  // Mask calculation for int and float types differs.
+  // See corresponding intrinsics algos for details.
+  constexpr static const uint16_t FilterMaskStep = sizeof(T);
+  // Load value
+  MCS_FORCE_INLINE SimdType emptyNullLoadValue(const T fill)
+  {
+    return loadValue(fill);
+  }
+
+  MCS_FORCE_INLINE SimdType loadValue(const T fill)
+  {
+    return _mm_set1_epi8(fill);
+  }
+
+  // Load from
+  MCS_FORCE_INLINE SimdType loadFrom(const char* from)
+  {
+    return _mm_loadu_si128(reinterpret_cast<const SimdType*>(from));
+  }
+
+  // Compare
+  MCS_FORCE_INLINE MT cmpEq(SimdType& x, SimdType& y)
+  {
+    return _mm_movemask_epi8(_mm_cmpeq_epi8(x, y));
+  }
+
+  MCS_FORCE_INLINE MT cmpGe(SimdType& x, SimdType& y)
+  {
+    return cmpLt(x, y) ^ 0xFFFF;
+  }
+
+  MCS_FORCE_INLINE MT cmpGt(SimdType& x, SimdType& y)
+  {
+    return _mm_movemask_epi8(_mm_cmpgt_epi8(x, y));
+  }
+
+  MCS_FORCE_INLINE MT cmpLe(SimdType& x, SimdType& y)
+  {
+    return cmpGt(x, y) ^ 0xFFFF;
+  }
+
+  MCS_FORCE_INLINE MT cmpLt(SimdType& x, SimdType& y)
+  {
+    return _mm_movemask_epi8(_mm_cmplt_epi8(x, y));
+  }
+
+  MCS_FORCE_INLINE MT cmpNe(SimdType& x, SimdType& y)
+  {
+    return _mm_movemask_epi8(_mm_cmpeq_epi8(x, y)) ^ 0xFFFF;
+  }
+
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType& x, SimdType& y)
+  {
+    return 0;
+  }
+
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType& x, SimdType& y)
+  {
+    return 0xFFFF;
+  }
+
+  // permute
+  /* TODO Available in AVX-512
+      MCS_FORCE_INLINE SimdType perm8Bits(SimdType& x, SimdType& idx)
+      {
+        return _mm_permutexvar_epi8(x, idx);
+      }
+  */
+  // misc
+  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType& vmask)
+  {
+    return _mm_movemask_epi8(vmask);
+  }
+
+  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType& x, SimdType& y)
+  {
+    return cmpNe(x, y);
+  }
+
+  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType& x, SimdType& y)
+  {
+    return cmpEq(x, y);
+  }
+
+  MCS_FORCE_INLINE SimdType setToZero()
+  {
+    return _mm_setzero_si128();
+  }
+
+  // store
+  MCS_FORCE_INLINE void storeWMask(SimdType& x, SimdType& vmask, char* dst)
+  {
+    _mm_maskmoveu_si128(x, vmask, dst);
+  }
+
+  MCS_FORCE_INLINE void store(char* dst, SimdType& x)
+  {
+    _mm_storeu_si128(reinterpret_cast<SimdType*>(dst), x);
+  }
+};
+
+template <typename VT, typename CHECK_T>
+class SimdFilterProcessor<
+    VT, CHECK_T, typename std::enable_if<std::is_same<VT, vi128_wr>::value && std::is_same<CHECK_T, uint8_t>::value>::type>
 {
  public:
   constexpr static const uint16_t vecByteSize = 16U;
@@ -895,4 +1345,3 @@ class SimdFilterProcessor<
 }  // namespace simd
 
 #endif  // if defined(__x86_64__ )
-// vim:ts=2 sw=2:

@@ -167,7 +167,6 @@ void Oam::getSystemConfig(const std::string& moduletype, ModuleTypeConfig& modul
   const string Section = "SystemModuleConfig";
   const string MODULE_TYPE = "ModuleType";
   const string MODULE_DESC = "ModuleDesc";
-  const string MODULE_RUN_TYPE = "RunType";
   const string MODULE_COUNT = "ModuleCount";
   const string MODULE_DISABLE_STATE = "ModuleDisableState";
   const string MODULE_CPU_CRITICAL = "ModuleCPUCriticalThreshold";
@@ -198,7 +197,6 @@ void Oam::getSystemConfig(const std::string& moduletype, ModuleTypeConfig& modul
       string ModuleCount = MODULE_COUNT + itoa(moduleTypeID);
       string ModuleType = MODULE_TYPE + itoa(moduleTypeID);
       string ModuleDesc = MODULE_DESC + itoa(moduleTypeID);
-      string ModuleRunType = MODULE_RUN_TYPE + itoa(moduleTypeID);
       string ModuleCPUCriticalThreshold = MODULE_CPU_CRITICAL + itoa(moduleTypeID);
       string ModuleCPUMajorThreshold = MODULE_CPU_MAJOR + itoa(moduleTypeID);
       string ModuleCPUMinorThreshold = MODULE_CPU_MINOR + itoa(moduleTypeID);
@@ -216,7 +214,6 @@ void Oam::getSystemConfig(const std::string& moduletype, ModuleTypeConfig& modul
       moduletypeconfig.ModuleCount = strtol(sysConfig->getConfig(Section, ModuleCount).c_str(), 0, 0);
       moduletypeconfig.ModuleType = sysConfig->getConfig(Section, ModuleType);
       moduletypeconfig.ModuleDesc = sysConfig->getConfig(Section, ModuleDesc);
-      moduletypeconfig.RunType = sysConfig->getConfig(Section, ModuleRunType);
       moduletypeconfig.ModuleCPUCriticalThreshold =
           strtol(sysConfig->getConfig(Section, ModuleCPUCriticalThreshold).c_str(), 0, 0);
       moduletypeconfig.ModuleCPUMajorThreshold =
@@ -1066,4 +1063,3 @@ std::string Oam::itoa(const int i)
   return ss.str();
 }
 }  // namespace oam
-// vim:ts=4 sw=4:

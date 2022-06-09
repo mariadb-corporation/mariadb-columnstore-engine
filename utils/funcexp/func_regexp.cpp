@@ -28,7 +28,7 @@ using namespace std;
 #ifdef __linux__
 #include <regex.h>
 #else
-#include <boost/regex.hpp>
+#include <regex>
 using namespace boost;
 #endif
 
@@ -48,7 +48,7 @@ using namespace logging;
 namespace
 {
 inline bool getBool(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& isNull,
-                    CalpontSystemCatalog::ColType& ct, const string& timeZone)
+                    CalpontSystemCatalog::ColType& ct, long timeZone)
 {
   string expr;
   string pattern;
@@ -226,8 +226,8 @@ inline bool getBool(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& isNull,
     return false;
 
 #else
-  regex pat(pattern.c_str());
-  return regex_search(expr.c_str(), pat);
+  std::regex pat(pattern.c_str());
+  return std::regex_search(expr.c_str(), pat);
 #endif
 }
 
@@ -244,8 +244,7 @@ CalpontSystemCatalog::ColType Func_regexp::operationType(FunctionParm& fp,
 bool Func_regexp::getBoolVal(rowgroup::Row& row, FunctionParm& pm, bool& isNull,
                              CalpontSystemCatalog::ColType& ct)
 {
-  return getBool(row, pm, isNull, ct, timeZone()) && !isNull;
+  return getBool(row, pm, isNull, ct, ct.getTimeZone()) && !isNull;
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

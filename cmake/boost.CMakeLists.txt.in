@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION @CMAKE_VERSION@)
-
+project (BoostExternal)
 include(ExternalProject)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
@@ -10,22 +10,21 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
   set(_toolset "intel-linux")
 endif()
 
-set(_b2args link=shared;threading=multi;variant=release;toolset=${_toolset};--with-system;--with-filesystem;--with-thread;--with-regex;--with-date_time)
+set(INSTALL_LOCATION ${CMAKE_BINARY_DIR}/boost-lib)
 
-ExternalProject_Add(boost
-  PREFIX build
-  URL https://sourceforge.net/projects/boost/files/boost/1.55.0/boost_1_55_0.zip
-  URL_HASH SHA256=ae85620e810b87a03e1acf8bbf0d4ad87c0cf7040cf6a4e1d8958488ebe42e7e
-  DOWNLOAD_NO_PROGRESS TRUE
+set(_cxxargs "-fPIC -DBOOST_NO_AUTO_PTR -fvisibility=default")
+set(_b2args cxxflags=${_cxxargs};cflags=-fPIC;threading=multi; toolset=${_toolset} --without-python;--prefix=${INSTALL_LOCATION})
+
+ExternalProject_Add(external_boost
+  PREFIX boost
+  URL https://boostorg.jfrog.io/artifactory/main/release/1.79.0/source/boost_1_79_0.tar.bz2
+  URL_HASH SHA256=475d589d51a7f8b3ba2ba4eda022b170e562ca3b760ee922c146b6c65856ef39
+  CONFIGURE_COMMAND ./bootstrap.sh
   UPDATE_COMMAND ""
-  CONFIGURE_COMMAND <SOURCE_DIR>/bootstrap.sh 
-    --with-toolset=${_toolset}
-    --prefix=${CMAKE_CURRENT_SOURCE_DIR}/../boost
-	--with-libraries=system,filesystem,thread,regex,date_time
-  BUILD_COMMAND <SOURCE_DIR>/b2 -q ${_b2args}
+  BUILD_COMMAND ./b2 -q ${_b2args}
   LOG_BUILD TRUE
   BUILD_IN_SOURCE TRUE
-  INSTALL_COMMAND <SOURCE_DIR>/b2 -q install ${_b2args}
+  INSTALL_COMMAND ./b2 -q install ${_b2args}
   LOG_INSTALL TRUE
 )
 

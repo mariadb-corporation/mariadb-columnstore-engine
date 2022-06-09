@@ -28,13 +28,8 @@
 #include <string>
 #include <boost/any.hpp>
 #include <vector>
-#ifdef _MSC_VER
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <stdio.h>
-#else
+
 #include <netinet/in.h>
-#endif
 
 #ifdef __linux__
 #define POSIX_REGEX
@@ -43,7 +38,7 @@
 #ifdef POSIX_REGEX
 #include <regex.h>
 #else
-#include <boost/regex.hpp>
+#include <regex>
 #endif
 
 #include "mcs_datatype.h"
@@ -289,6 +284,14 @@ inline void unserializeTimezoneInfo(messageqcpp::ByteStream& bs, TIME_ZONE_INFO*
   bs >> (uint&)tz->revcnt;
 };
 
+inline long systemTimeZoneOffset()
+{
+  time_t t = time(NULL);
+  struct tm lt;
+  localtime_r(&t, &lt);
+  return lt.tm_gmtoff;
+}
+
 /**
  * This function converts the timezone represented as a string
  * in the format "+HH:MM" or "-HH:MM" to a signed offset in seconds
@@ -296,20 +299,32 @@ inline void unserializeTimezoneInfo(messageqcpp::ByteStream& bs, TIME_ZONE_INFO*
  */
 inline bool timeZoneToOffset(const char* str, std::string::size_type length, long* offset)
 {
+  if (strcmp(str, "SYSTEM") == 0)
+  {
+    *offset = systemTimeZoneOffset();
+    return 0;
+  }
+
   const char* end = str + length;
   bool negative;
   unsigned long number_tmp;
   long offset_tmp;
 
   if (length < 4)
+  {
+    *offset = 0;
     return 1;
+  }
 
   if (*str == '+')
     negative = 0;
   else if (*str == '-')
     negative = 1;
   else
+  {
+    *offset = 0;
     return 1;
+  }
   str++;
 
   number_tmp = 0;
@@ -321,7 +336,10 @@ inline bool timeZoneToOffset(const char* str, std::string::size_type length, lon
   }
 
   if (str + 1 >= end || *str != ':')
+  {
+    *offset = 0;
     return 1;
+  }
   str++;
 
   offset_tmp = number_tmp * 60L;
@@ -334,7 +352,10 @@ inline bool timeZoneToOffset(const char* str, std::string::size_type length, lon
   }
 
   if (str != end)
+  {
+    *offset = 0;
     return 1;
+  }
 
   offset_tmp = (offset_tmp + number_tmp) * 60L;
 
@@ -347,10 +368,12 @@ inline bool timeZoneToOffset(const char* str, std::string::size_type length, lon
   */
 
   if (number_tmp > 59 || offset_tmp < -13 * 3600L + 1 || offset_tmp > 13 * 3600L)
+  {
+    *offset = 0;
     return 1;
+  }
 
   *offset = offset_tmp;
-
   return 0;
 }
 
@@ -483,10 +506,10 @@ inline bool isTimestampValid(uint64_t second, uint64_t microsecond)
  *
  * @param seconds the value to be converted
  * @param time the broken-down representation of the timestamp
- * @param timeZone a string with the server timezone of the machine
- * which initiated the query
+   @param offset a timeZone offset (in seconds) relative to UTC.
+   For example, for EST which is UTC-5:00, offset will be -18000s.
  */
-inline void gmtSecToMySQLTime(int64_t seconds, MySQLTime& time, const std::string& timeZone)
+inline void gmtSecToMySQLTime(int64_t seconds, MySQLTime& time, long offset)
 {
   if (seconds == 0)
   {
@@ -494,78 +517,52 @@ inline void gmtSecToMySQLTime(int64_t seconds, MySQLTime& time, const std::strin
     return;
   }
 
-  if (timeZone == "SYSTEM")
+  int64_t days;
+  int32_t rem;
+  int32_t y;
+  int32_t yleap;
+  const unsigned int* ip;
+
+  days = (int64_t)(seconds / SECS_PER_DAY);
+  rem = (int32_t)(seconds % SECS_PER_DAY);
+
+  rem += offset;
+  while (rem < 0)
   {
-    struct tm tmp_tm;
-    time_t tmp_t = (time_t)seconds;
-    localtime_r(&tmp_t, &tmp_tm);
-    time.second_part = 0;
-    time.year = (int)((tmp_tm.tm_year + 1900) % 10000);
-    time.month = (int)tmp_tm.tm_mon + 1;
-    time.day = (int)tmp_tm.tm_mday;
-    time.hour = (int)tmp_tm.tm_hour;
-    time.minute = (int)tmp_tm.tm_min;
-    time.second = (int)tmp_tm.tm_sec;
-    time.time_type = CALPONTDATETIME_ENUM;
-    if (time.second == 60 || time.second == 61)
-      time.second = 59;
+    rem += SECS_PER_DAY;
+    days--;
   }
-  else
+  while (rem >= SECS_PER_DAY)
   {
-    long offset;
-    if (timeZoneToOffset(timeZone.c_str(), timeZone.size(), &offset))
-    {
-      time.reset();
-      return;
-    }
-
-    int64_t days;
-    int32_t rem;
-    int32_t y;
-    int32_t yleap;
-    const unsigned int* ip;
-
-    days = (int64_t)(seconds / SECS_PER_DAY);
-    rem = (int32_t)(seconds % SECS_PER_DAY);
-
-    rem += offset;
-    while (rem < 0)
-    {
-      rem += SECS_PER_DAY;
-      days--;
-    }
-    while (rem >= SECS_PER_DAY)
-    {
-      rem -= SECS_PER_DAY;
-      days++;
-    }
-    time.hour = (unsigned int)(rem / SECS_PER_HOUR);
-    rem = rem % SECS_PER_HOUR;
-    time.minute = (unsigned int)(rem / SECS_PER_MIN);
-    time.second = (unsigned int)(rem % SECS_PER_MIN);
-
-    y = EPOCH_YEAR;
-    while (days < 0 || days >= (int64_t)(year_lengths[yleap = isLeapYear(y)]))
-    {
-      int32_t newy;
-
-      newy = y + days / DAYS_PER_NYEAR;
-      if (days < 0)
-        newy--;
-      days -= (newy - y) * DAYS_PER_NYEAR + leapsThruEndOf(newy - 1) - leapsThruEndOf(y - 1);
-      y = newy;
-    }
-    time.year = y;
-
-    ip = mon_lengths[yleap];
-    for (time.month = 0; days >= (int64_t)ip[time.month]; time.month++)
-      days -= (int64_t)ip[time.month];
-    time.month++;
-    time.day = (unsigned int)(days + 1);
-
-    time.second_part = 0;
-    time.time_type = CALPONTDATETIME_ENUM;
+    rem -= SECS_PER_DAY;
+    days++;
   }
+  time.hour = (unsigned int)(rem / SECS_PER_HOUR);
+  rem = rem % SECS_PER_HOUR;
+  time.minute = (unsigned int)(rem / SECS_PER_MIN);
+  time.second = (unsigned int)(rem % SECS_PER_MIN);
+
+  y = EPOCH_YEAR;
+  while (days < 0 || days >= (int64_t)(year_lengths[yleap = isLeapYear(y)]))
+  {
+    int32_t newy;
+
+    newy = y + days / DAYS_PER_NYEAR;
+    if (days < 0)
+      newy--;
+    days -= (newy - y) * DAYS_PER_NYEAR + leapsThruEndOf(newy - 1) - leapsThruEndOf(y - 1);
+    y = newy;
+  }
+  time.year = y;
+
+  ip = mon_lengths[yleap];
+  for (time.month = 0; days >= (int64_t)ip[time.month]; time.month++)
+    days -= (int64_t)ip[time.month];
+  time.month++;
+  time.day = (unsigned int)(days + 1);
+
+  time.second_part = 0;
+  time.time_type = CALPONTDATETIME_ENUM;
 }
 
 /**
@@ -593,41 +590,15 @@ inline int64_t secSinceEpoch(int year, int month, int day, int hour, int min, in
   return ((days * HOURS_PER_DAY + hour) * MINS_PER_HOUR + min) * SECS_PER_MIN + sec;
 }
 
-// This is duplicate of funchelpers.h:calc_mysql_daynr,
-// with one additional function parameter
-inline uint32_t calc_mysql_daynr(uint32_t year, uint32_t month, uint32_t day, bool& isValid)
-{
-  int temp;
-  int y = year;
-  long delsum;
-
-  if (!isDateValid(day, month, year))
-  {
-    isValid = false;
-    return 0;
-  }
-
-  delsum = (long)(365 * y + 31 * ((int)month - 1) + (int)day);
-
-  if (month <= 2)
-    y--;
-  else
-    delsum -= (long)((int)month * 4 + 23) / 10;
-
-  temp = (int)((y / 100 + 1) * 3) / 4;
-
-  return delsum + (int)y / 4 - temp;
-}
-
 /**
  * @brief converts a timestamp from broken-down representation
  * to seconds since UTC epoch
  *
  * @param time the broken-down representation of the timestamp
-   @param timeZone a string with the server timezone of the machine
-   which initiated the query
+   @param offset a timeZone offset (in seconds) relative to UTC.
+   For example, for EST which is UTC-5:00, offset will be -18000s.
  */
-inline int64_t mySQLTimeToGmtSec(const MySQLTime& time, const std::string& timeZone, bool& isValid)
+inline int64_t mySQLTimeToGmtSec(const MySQLTime& time, long offset, bool& isValid)
 {
   int64_t seconds;
 
@@ -637,88 +608,7 @@ inline int64_t mySQLTimeToGmtSec(const MySQLTime& time, const std::string& timeZ
     return 0;
   }
 
-  if (timeZone == "SYSTEM")
-  {
-    // This is mirror of code in func_unix_timestamp.cpp
-    uint32_t loop;
-    time_t tmp_t = 0;
-    int shift = 0;
-    struct tm *l_time, tm_tmp;
-    int64_t diff;
-    localtime_r(&tmp_t, &tm_tmp);
-    // Get the system timezone offset at 0 seconds since epoch
-    int64_t my_time_zone = tm_tmp.tm_gmtoff;
-    int day = time.day;
-
-    if ((time.year == MAX_TIMESTAMP_YEAR) && (time.month == 1) && (day > 4))
-    {
-      day -= 2;
-      shift = 2;
-    }
-
-    tmp_t = (time_t)(((calc_mysql_daynr(time.year, time.month, day, isValid) - 719528) * 86400L +
-                      (int64_t)time.hour * 3600L + (int64_t)(time.minute * 60 + time.second)) -
-                     (time_t)my_time_zone);
-    if (!isValid)
-      return 0;
-
-    localtime_r(&tmp_t, &tm_tmp);
-    l_time = &tm_tmp;
-
-    for (loop = 0;
-         loop < 2 && (time.hour != (uint32_t)l_time->tm_hour || time.minute != (uint32_t)l_time->tm_min ||
-                      time.second != (uint32_t)l_time->tm_sec);
-         loop++)
-    {
-      int days = day - l_time->tm_mday;
-
-      if (days < -1)
-        days = 1; /* Month has wrapped */
-      else if (days > 1)
-        days = -1;
-
-      diff = (3600L * (int64_t)(days * 24 + ((int)time.hour - (int)l_time->tm_hour)) +
-              (int64_t)(60 * ((int)time.minute - (int)l_time->tm_min)) +
-              (int64_t)((int)time.second - (int)l_time->tm_sec));
-      tmp_t += (time_t)diff;
-      localtime_r(&tmp_t, &tm_tmp);
-      l_time = &tm_tmp;
-    }
-
-    if (loop == 2 && time.hour != (uint32_t)l_time->tm_hour)
-    {
-      int days = day - l_time->tm_mday;
-
-      if (days < -1)
-        days = 1; /* Month has wrapped */
-      else if (days > 1)
-        days = -1;
-
-      diff = (3600L * (int64_t)(days * 24 + ((int)time.hour - (int)l_time->tm_hour)) +
-              (int64_t)(60 * ((int)time.minute - (int)l_time->tm_min)) +
-              (int64_t)((int)time.second - (int)l_time->tm_sec));
-
-      if (diff == 3600)
-        tmp_t += 3600 - time.minute * 60 - time.second; /* Move to next hour */
-      else if (diff == -3600)
-        tmp_t -= time.minute * 60 + time.second; /* Move to previous hour */
-    }
-
-    /* shift back, if we were dealing with boundary dates */
-    tmp_t += shift * 86400L;
-
-    seconds = (int64_t)tmp_t;
-  }
-  else
-  {
-    long offset;
-    if (timeZoneToOffset(timeZone.c_str(), timeZone.size(), &offset))
-    {
-      isValid = false;
-      return -1;
-    }
-    seconds = secSinceEpoch(time.year, time.month, time.day, time.hour, time.minute, time.second) - offset;
-  }
+  seconds = secSinceEpoch(time.year, time.month, time.day, time.hour, time.minute, time.second) - offset;
   /* make sure we have legit timestamps (i.e. we didn't over/underflow anywhere above) */
   if (seconds >= MIN_TIMESTAMP_VALUE && seconds <= MAX_TIMESTAMP_VALUE)
     return seconds;
@@ -1151,11 +1041,11 @@ struct TimeStamp
   {
   }
 
-  int64_t convertToMySQLint(const std::string& timeZone) const;
+  int64_t convertToMySQLint(long timeZone) const;
   void reset();
 };
 
-inline int64_t TimeStamp::convertToMySQLint(const std::string& timeZone) const
+inline int64_t TimeStamp::convertToMySQLint(long timeZone) const
 {
   const int TIMESTAMPTOSTRING1_LEN = 22;  // YYYYMMDDHHMMSSmmmmmm\0
   char buf[TIMESTAMPTOSTRING1_LEN];
@@ -1262,10 +1152,9 @@ class DataConvert
    * @param type the columns database type
    * @param data the columns string representation of it's data
    */
-  EXPORT static std::string timestampToString(long long timestampvalue, const std::string& timezone,
-                                              long decimals = 0);
+  EXPORT static std::string timestampToString(long long timestampvalue, long timezone, long decimals = 0);
   static inline void timestampToString(long long timestampvalue, char* buf, unsigned int buflen,
-                                       const std::string& timezone, long decimals = 0);
+                                       long timezone, long decimals = 0);
 
   /**
    * @brief convert a columns data from native format to a string
@@ -1300,9 +1189,9 @@ class DataConvert
    * @param type the columns database type
    * @param data the columns string representation of it's data
    */
-  EXPORT static std::string timestampToString1(long long timestampvalue, const std::string& timezone);
+  EXPORT static std::string timestampToString1(long long timestampvalue, long timezone);
   static inline void timestampToString1(long long timestampvalue, char* buf, unsigned int buflen,
-                                        const std::string& timezone);
+                                        long timezone);
 
   /**
    * @brief convert a columns data from native format to a string
@@ -1352,11 +1241,11 @@ class DataConvert
    * @param datetimeFormat the format the date value in
    * @param status 0 - success, -1 - fail
    * @param dataOrgLen length specification of dataOrg
-   * @param timeZone the timezone used for conversion to native format
+   * @param timeZone an offset (in seconds) relative to UTC.
+     For example, for EST which is UTC-5:00, offset will be -18000s.
    */
   EXPORT static int64_t convertColumnTimestamp(const char* dataOrg, CalpontDateTimeFormat datetimeFormat,
-                                               int& status, unsigned int dataOrgLen,
-                                               const std::string& timeZone);
+                                               int& status, unsigned int dataOrgLen, long timeZone);
 
   /**
    * @brief convert a time column data, represented as a string,
@@ -1385,7 +1274,7 @@ class DataConvert
   // convert string to datetime
   EXPORT static int64_t stringToDatetime(const std::string& data, bool* isDate = NULL);
   // convert string to timestamp
-  EXPORT static int64_t stringToTimestamp(const std::string& data, const std::string& timeZone);
+  EXPORT static int64_t stringToTimestamp(const std::string& data, long timeZone);
   // convert integer to date
   EXPORT static int64_t intToDate(int64_t data);
   // convert integer to datetime
@@ -1396,7 +1285,7 @@ class DataConvert
   EXPORT static int64_t dateToInt(const std::string& date);
   // convert string to datetime. alias to datetimeToInt
   EXPORT static int64_t datetimeToInt(const std::string& datetime);
-  EXPORT static int64_t timestampToInt(const std::string& timestamp, const std::string& timeZone);
+  EXPORT static int64_t timestampToInt(const std::string& timestamp, long timeZone);
   EXPORT static int64_t timeToInt(const std::string& time);
   EXPORT static int64_t stringToTime(const std::string& data);
   // bug4388, union type conversion
@@ -1467,7 +1356,7 @@ inline void DataConvert::datetimeToString(long long datetimevalue, char* buf, un
 }
 
 inline void DataConvert::timestampToString(long long timestampvalue, char* buf, unsigned int buflen,
-                                           const std::string& timezone, long decimals)
+                                           long timezone, long decimals)
 {
   // 10 is default which means we don't need microseconds
   if (decimals > 6 || decimals < 0)
@@ -1545,7 +1434,7 @@ inline void DataConvert::datetimeToString1(long long datetimevalue, char* buf, u
 }
 
 inline void DataConvert::timestampToString1(long long timestampvalue, char* buf, unsigned int buflen,
-                                            const std::string& timezone)
+                                            long timezone)
 {
   TimeStamp timestamp(timestampvalue);
   int64_t seconds = timestamp.second;

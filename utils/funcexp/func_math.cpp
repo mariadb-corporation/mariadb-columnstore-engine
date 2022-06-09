@@ -1786,7 +1786,7 @@ string Func_format::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
     case execplan::CalpontSystemCatalog::TIMESTAMP:
     {
       value = dataconvert::DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull),
-                                                           timeZone());
+                                                           operationColType.getTimeZone());
     }
     break;
 
@@ -2276,4 +2276,3 @@ double Func_degrees::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Ca
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

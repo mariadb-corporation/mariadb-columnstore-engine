@@ -288,7 +288,8 @@ void WindowFunctionColumn::serialize(messageqcpp::ByteStream& b) const
 
   fOrderBy.serialize(b);
   udafContext.serialize(b);
-  b << fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
+  b << timeZone;
 }
 
 void WindowFunctionColumn::unserialize(messageqcpp::ByteStream& b)
@@ -320,7 +321,9 @@ void WindowFunctionColumn::unserialize(messageqcpp::ByteStream& b)
 
   fOrderBy.unserialize(b);
   udafContext.unserialize(b);
-  b >> fTimeZone;
+  messageqcpp::ByteStream::octbyte timeZone;
+  b >> timeZone;
+  fTimeZone = timeZone;
 }
 
 void WindowFunctionColumn::addToPartition(vector<SRCP>& groupByList)

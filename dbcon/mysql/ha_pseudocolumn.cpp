@@ -494,7 +494,7 @@ execplan::ReturnedColumn* buildPseudoColumn(Item* item, gp_walk_info& gwi, bool&
       cc = new ConstantColumn(localPm);
     else
       cc = new ConstantColumn("", ConstantColumn::NULLDATA);
-    cc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+    cc->timeZone(gwi.timeZone);
 
     cc->alias(ifp->full_name() ? ifp->full_name() : "");
     return cc;
@@ -556,7 +556,7 @@ execplan::ReturnedColumn* buildPseudoColumn(Item* item, gp_walk_info& gwi, bool&
     parms.push_back(sptp);
     fc->functionParms(parms);
     fc->expressionId(ci->expressionId++);
-    fc->timeZone(gwi.thd->variables.time_zone->get_name()->ptr());
+    fc->timeZone(gwi.timeZone);
 
     // string result type
     CalpontSystemCatalog::ColType ct;
@@ -579,4 +579,3 @@ execplan::ReturnedColumn* buildPseudoColumn(Item* item, gp_walk_info& gwi, bool&
 }
 
 }  // namespace cal_impl_if
-// vim:ts=4 sw=4:

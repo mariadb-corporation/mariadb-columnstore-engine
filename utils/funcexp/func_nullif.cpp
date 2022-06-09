@@ -955,7 +955,8 @@ execplan::IDB_Decimal Func_nullif::getDecimalVal(rowgroup::Row& row, FunctionPar
       string value;
 
       if (parm[1]->data()->resultType().colDataType == execplan::CalpontSystemCatalog::TIMESTAMP)
-        value = DataConvert::timestampToString1(parm[1]->data()->getTimestampIntVal(row, isNull), timeZone());
+        value =
+            DataConvert::timestampToString1(parm[1]->data()->getTimestampIntVal(row, isNull), op_ct.getTimeZone());
       else
         value = DataConvert::datetimeToString1(parm[1]->data()->getDatetimeIntVal(row, isNull));
 
@@ -963,7 +964,7 @@ execplan::IDB_Decimal Func_nullif::getDecimalVal(rowgroup::Row& row, FunctionPar
       {
         // strip off micro seconds
         value = value.substr(0, 14);
-        int64_t x = atoll(value.c_str());
+        x = atoll(value.c_str());
 
         if (s > 5)
           s = 0;
@@ -1021,4 +1022,3 @@ execplan::IDB_Decimal Func_nullif::getDecimalVal(rowgroup::Row& row, FunctionPar
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

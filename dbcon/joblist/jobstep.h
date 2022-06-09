@@ -417,11 +417,11 @@ class JobStep
     fOnClauseFilter = b;
   }
 
-  void timeZone(const std::string& timezone)
+  void timeZone(const long timezone)
   {
     fTimeZone = timezone;
   }
-  const std::string timeZone() const
+  long timeZone() const
   {
     return fTimeZone;
   }
@@ -479,7 +479,7 @@ class JobStep
   bool fDelivery;
   bool fOnClauseFilter;
   volatile bool fDie;
-  volatile uint32_t fWaitToRunStepCnt;
+  uint32_t fWaitToRunStepCnt;
   std::string fExtendedInfo;
   std::string fMiniInfo;
 
@@ -496,7 +496,7 @@ class JobStep
   uint64_t fProgress;
   int64_t fStartTime;
   int64_t fLastStepTeleTime;
-  std::string fTimeZone;
+  long fTimeZone;
 
  private:
   static boost::mutex fLogMutex;
@@ -566,4 +566,3 @@ typedef boost::shared_ptr<JobStep> SJSTEP;
 
 }  // namespace joblist
 
-// vim:ts=4 sw=4:

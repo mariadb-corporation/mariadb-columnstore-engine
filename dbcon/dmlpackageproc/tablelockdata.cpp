@@ -101,4 +101,3 @@ TablelockData::OIDTablelock& TablelockData::getOidTablelockMap()
 }
 
 }  // namespace dmlpackageprocessor
-// vim:ts=4 sw=4:

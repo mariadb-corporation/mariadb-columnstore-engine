@@ -180,4 +180,3 @@ class WEClients
 
 #undef EXPORT
 
-// vim:ts=4 sw=4:

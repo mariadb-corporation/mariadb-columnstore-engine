@@ -373,7 +373,15 @@ void GroupConcatAgUM::applyMapping(const boost::shared_array<int>& mapping, cons
     }
     else
     {
-      fRow.setIntField(row.getIntField(mapping[i]), i);
+      if (fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::CHAR ||
+          fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::VARCHAR)
+      {
+        fRow.setIntField(row.getUintField(mapping[i]), i);
+      }
+      else
+      {
+        fRow.setIntField(row.getIntField(mapping[i]), i);
+      }
     }
   }
 }
@@ -1050,4 +1058,3 @@ const string GroupConcatNoOrder::toString() const
 }
 
 }  // namespace joblist
-// vim:ts=4 sw=4:

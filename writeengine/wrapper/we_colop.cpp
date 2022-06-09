@@ -1910,4 +1910,3 @@ int ColumnOp::writeRowsValues(Column& curCol, uint64_t totalRow, const RIDList& 
 }
 
 }  // namespace WriteEngine
-// vim:ts=4 sw=4:

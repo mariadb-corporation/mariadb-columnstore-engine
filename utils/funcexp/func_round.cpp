@@ -41,6 +41,8 @@ using namespace logging;
 
 #include "funchelpers.h"
 
+#include "exceptclasses.h"
+
 namespace
 {
 using namespace funcexp;
@@ -136,18 +138,27 @@ int64_t Func_round::getIntVal(Row& row, FunctionParm& parm, bool& isNull,
 uint64_t Func_round::getUintVal(Row& row, FunctionParm& parm, bool& isNull,
                                 CalpontSystemCatalog::ColType& op_ct)
 {
-  uint64_t x;
-  if (UNLIKELY(op_ct.colDataType == execplan::CalpontSystemCatalog::DATE))
+  IDB_Decimal x = getDecimalVal(row, parm, isNull, op_ct);
+
+  if (!op_ct.isWideDecimalType())
   {
-    IDB_Decimal d = getDecimalVal(row, parm, isNull, op_ct);
-    x = static_cast<uint64_t>(d.value);
+    if (x.scale > 0)
+    {
+      while (x.scale-- > 0)
+        x.value /= 10;
+    }
+    else
+    {
+      while (x.scale++ < 0)
+        x.value *= 10;
+    }
+
+    return x.value;
   }
   else
   {
-    x = parm[0]->data()->getUintVal(row, isNull);
+    return static_cast<uint64_t>(x.getIntegralPart());
   }
-
-  return x;
 }
 
 double Func_round::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull,
@@ -434,10 +445,11 @@ IDB_Decimal Func_round::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull
     {
       uint64_t x = parm[0]->data()->getUintVal(row, isNull);
 
-      if (x > (uint64_t)helpers::maxNumber_c[18])
-      {
-        x = helpers::maxNumber_c[18];
-      }
+      // why it is here at all???
+      // if (x > (uint64_t)helpers::maxNumber_c[18])
+      //{
+      //    x = helpers::maxNumber_c[18];
+      //}
 
       decimal.value = x;
       decimal.scale = 0;
@@ -569,7 +581,7 @@ IDB_Decimal Func_round::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull
       string value;
       if (op_ct.colDataType == execplan::CalpontSystemCatalog::TIMESTAMP)
         value = dataconvert::DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull),
-                                                             timeZone());
+                                                             op_ct.getTimeZone());
       else
         value = dataconvert::DataConvert::datetimeToString1(parm[0]->data()->getDatetimeIntVal(row, isNull));
 
@@ -645,7 +657,7 @@ string Func_round::getStrVal(Row& row, FunctionParm& parm, bool& isNull, Calpont
 {
   IDB_Decimal x = getDecimalVal(row, parm, isNull, op_ct);
   int64_t e = (x.scale < 0) ? (-x.scale) : x.scale;
-  int64_t p = 1;
+  [[maybe_unused]] int64_t p = 1;
 
   while (e-- > 0)
     p *= 10;
@@ -709,5 +721,10 @@ int64_t Func_round::getDatetimeIntVal(Row& row, FunctionParm& parm, bool& isNull
   return parm[0]->data()->getIntVal(row, isNull);
 }
 
+int64_t Func_round::getTimestampIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
+                                       execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+  return parm[0]->data()->getTimestampIntVal(row, isNull);
+}
+
 }  // namespace funcexp
-// vim:ts=4 sw=4:
