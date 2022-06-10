@@ -3068,7 +3068,7 @@ LBID_t ExtentMap::_createColumnExtentExactFile(uint32_t size, int OID, uint32_t 
   LBID_t startLBID = getLBIDsFromFreeList(size);
   EMEntry* lastEmEntry = nullptr;
 
-  const auto lbids = fPExtMapIndexImpl_->find(dbRoot, OID);
+  const auto lbids = fPExtMapIndexImpl_->find(dbRoot, OID, partitionNum);
   auto emIdents = getEmIdentsByLbids(lbids);
   for (auto& emEntry : emIdents)
   {
@@ -3222,7 +3222,7 @@ LBID_t ExtentMap::_createDictStoreExtent(uint32_t size, int OID, uint16_t dbRoot
   LBID_t startLBID = getLBIDsFromFreeList(size);
   EMEntry* lastEmEntry = nullptr;
 
-  const auto lbids = fPExtMapIndexImpl_->find(dbRoot, OID);
+  const auto lbids = fPExtMapIndexImpl_->find(dbRoot, OID, partitionNum);
   auto emIdents = getEmIdentsByLbids(lbids);
   for (auto& emEntry : emIdents)
   {
@@ -3259,6 +3259,7 @@ LBID_t ExtentMap::_createDictStoreExtent(uint32_t size, int OID, uint16_t dbRoot
     newEmEntry.segmentNum = lastEmEntry->segmentNum;
     newEmEntry.partitionNum = lastEmEntry->partitionNum;
     newEmEntry.dbRoot = lastEmEntry->dbRoot;
+    newEmEntry.colWid = lastEmEntry->colWid;
   }
 
   // Insert into RBTree.
