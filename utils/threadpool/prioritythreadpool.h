@@ -51,6 +51,8 @@ class PriorityThreadPool
     virtual int operator()() = 0;
   };
 
+  // typedef boost::function0<int> Functor;
+
   struct Job
   {
     Job() : weight(1), priority(0), id(0)
