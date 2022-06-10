@@ -31,6 +31,7 @@
 #include "we_fileop.h"
 #include "IDBPolicy.h"
 #include "we_chunkmanager.h"
+#include "we_dbfileop.h"
 
 using namespace idbdatafile;
 
@@ -157,6 +158,7 @@ class EMReBuilder
   bool display;
   uint32_t dbRoot;
   BRM::ExtentMap em;
+  std::vector<FileId> systemExtentMap;
   std::vector<FileId> extentMap;
 };
 
@@ -167,7 +169,7 @@ class ChunkManagerWrapper
  public:
   ChunkManagerWrapper(const std::string& filename, uint32_t oid, uint32_t dbRoot, uint32_t partition,
                       uint32_t segment, execplan::CalpontSystemCatalog::ColDataType colDataType,
-                      uint32_t colWidth);
+                      uint32_t colWidth, uint32_t compressionType);
 
   virtual ~ChunkManagerWrapper() = default;
   ChunkManagerWrapper(const ChunkManagerWrapper& other) = delete;
@@ -189,8 +191,9 @@ class ChunkManagerWrapper
   uint32_t segment;
   execplan::CalpontSystemCatalog::ColDataType colDataType;
   uint32_t colWidth;
+  uint32_t compressionType;
   int32_t size;
-  std::unique_ptr<WriteEngine::FileOp> pFileOp;
+  std::unique_ptr<WriteEngine::DbFileOp> pFileOp;
   std::string fileName;
   // Note: We cannot clear this pointer directly, because
   // `ChunkManager` closes this file for us, otherwise we will get double
@@ -208,7 +211,13 @@ class ChunkManagerWrapperColumn : public ChunkManagerWrapper
                             uint32_t segment, execplan::CalpontSystemCatalog::ColDataType colDataType,
                             uint32_t colWidth, uint32_t compressionType);
 
-  ~ChunkManagerWrapperColumn() = default;
+  ~ChunkManagerWrapperColumn()
+  {
+    // In case we open file without `ChunkManager` machinery.
+    if (!compressionType && pFile)
+      delete pFile;
+  };
+
   ChunkManagerWrapperColumn(const ChunkManagerWrapperColumn& other) = delete;
   ChunkManagerWrapperColumn& operator=(const ChunkManagerWrapperColumn& other) = delete;
   ChunkManagerWrapperColumn(ChunkManagerWrapperColumn&& other) = delete;
