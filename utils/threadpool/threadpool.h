@@ -28,7 +28,6 @@
 /** @file */
 
 #pragma once
-#define BOOST_BIND_GLOBAL_PLACEHOLDERS
 
 #include <string>
 #include <fstream>
