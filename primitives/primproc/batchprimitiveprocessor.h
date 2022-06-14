@@ -136,7 +136,6 @@ class BatchPrimitiveProcessor
   {
     fBusy = b;
   }
-
   uint16_t FilterCount() const
   {
     return filterCount;
@@ -434,6 +433,8 @@ class BatchPrimitiveProcessor
   uint ptMask;
   bool firstInstance;
   uint64_t valuesLBID;
+
+  static const uint64_t maxResultCount = 1048576;  // 2^20
 
   friend class Command;
   friend class ColumnCommand;

@@ -84,7 +84,7 @@ class BPPSendThread
   {
     return die;
   }
-  void setProcessorPool(threadpool::PriorityThreadPool* processorPool)
+  void setProcessorPool(boost::shared_ptr<threadpool::PriorityThreadPool> processorPool)
   {
     fProcessorPool = processorPool;
   }
@@ -148,7 +148,7 @@ class BPPSendThread
   uint64_t maxByteSize;
   // Used to tell the PriorityThreadPool It should consider additional threads because a
   // queue full event has happened and a thread has been blocked.
-  threadpool::PriorityThreadPool* fProcessorPool;
+  boost::shared_ptr<threadpool::PriorityThreadPool> fProcessorPool;
 };
 
 }  // namespace primitiveprocessor
