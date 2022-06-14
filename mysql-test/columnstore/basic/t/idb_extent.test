@@ -19,11 +19,7 @@ create table t1 (
         col_big_signed BIGINT,
         col_big_unsigned BIGINT UNSIGNED,
         col_dec_signed DECIMAL(38,0),
-        col_dec_unsigned DECIMAL(38,0) UNSIGNED,
-        col_float_signed FLOAT,
-        col_float_unsigned FLOAT UNSIGNED,
-        col_double_signed DOUBLE,
-        col_double_unsigned DOUBLE UNSIGNED
+        col_dec_unsigned DECIMAL(38,0) UNSIGNED
 )engine=columnstore;
 
 
@@ -58,17 +54,22 @@ INSERT INTO t1 (col_dec_signed) VALUES(80000000000000000000000000000000000003);
 INSERT INTO t1 (col_dec_unsigned) VALUES(0);
 INSERT INTO t1 (col_dec_unsigned) VALUES(70000000000000000000000000000000000003);
 
-INSERT INTO t1 (col_float_signed) VALUES(-92233775806.1);
-INSERT INTO t1 (col_float_signed) VALUES(92233775806.1);
-INSERT INTO t1 (col_float_unsigned) VALUES(0);
-INSERT INTO t1 (col_float_unsigned) VALUES(92233775806.1);
+SELECT count(idbextentmax(col_signed)), count(idbextentmin(col_signed)),
+       count(idbextentmax(col_unsigned)), count(idbextentmin(col_unsigned)),
+       count(idbextentmax(col_small_signed)), count(idbextentmin(col_small_signed)),
+       count(idbextentmax(col_small_unsigned)), count(idbextentmin(col_small_unsigned)),
+       count(idbextentmax(col_med_signed)), count(idbextentmin(col_med_signed)),
+       count(idbextentmax(col_med_unsigned)), count(idbextentmin(col_med_unsigned)),
+       count(idbextentmax(col_int_signed)), count(idbextentmin(col_int_signed)),
+       count(idbextentmax(col_int_unsigned)), count(idbextentmin(col_int_unsigned)),
+       count(idbextentmax(col_big_signed)), count(idbextentmin(col_big_signed)),
+       count(idbextentmax(col_big_unsigned)), count(idbextentmin(col_big_unsigned)),
+       count(idbextentmax(col_dec_signed)), count(idbextentmin(col_dec_signed)),
+       count(idbextentmax(col_dec_unsigned)), count(idbextentmin(col_dec_unsigned))
+       FROM t1 LIMIT 1;
 
-INSERT INTO t1 (col_double_signed) VALUES(-9223372036854775806.1);
-INSERT INTO t1 (col_double_signed) VALUES(9223372036854775806.1);
-INSERT INTO t1 (col_double_unsigned) VALUES(0);
-INSERT INTO t1 (col_double_unsigned) VALUES(9223372036854775806.1);
 
-SELECT * FROM t1;
+
 
 SELECT 'q1', idbextentmax(col_signed), idbextentmin(col_signed) FROM t1 LIMIT 1;
 SELECT 'q2', idbextentmax(col_unsigned), idbextentmin(col_unsigned) FROM t1 LIMIT 1;
@@ -87,13 +88,6 @@ SELECT 'q10', idbextentmax(col_big_unsigned), idbextentmin(col_big_unsigned) FRO
 
 SELECT 'q11', idbextentmax(col_dec_signed), idbextentmin(col_dec_signed) FROM t1 LIMIT 1;
 SELECT 'q12', idbextentmax(col_dec_unsigned), idbextentmin(col_dec_unsigned) FROM t1 LIMIT 1;
-
-SELECT 'q13', idbextentmax(col_float_signed), idbextentmin(col_float_signed) FROM t1 LIMIT 1;
-SELECT 'q14', idbextentmax(col_float_unsigned), idbextentmin(col_float_unsigned) FROM t1 LIMIT 1;
-
-SELECT 'q15', idbextentmax(col_double_signed), idbextentmin(col_double_signed) FROM t1 LIMIT 1;
-SELECT 'q16', idbextentmax(col_double_unsigned), idbextentmin(col_double_unsigned) FROM t1 LIMIT 1;
-
 
 # Clean UP
 DROP DATABASE idb_extent_test_db;

@@ -87,7 +87,7 @@ NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	0
 NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	9.223372036854776e18
 SELECT 'q1', idbextentmax(col_signed), idbextentmin(col_signed) FROM t1 LIMIT 1;
 q1	idbextentmax(col_signed)	idbextentmin(col_signed)
-q1	NULL	NULL
+q1	127	-126
 SELECT 'q2', idbextentmax(col_unsigned), idbextentmin(col_unsigned) FROM t1 LIMIT 1;
 q2	idbextentmax(col_unsigned)	idbextentmin(col_unsigned)
 q2	NULL	NULL

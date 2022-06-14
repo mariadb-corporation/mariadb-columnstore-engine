@@ -147,6 +147,7 @@ class PseudoColumn : public SimpleColumn
    */
   uint32_t fPseudoType;
   void adjustResultType();
+  void adjustResultType(const SimpleColumn& sc);
 };
 
 }  // namespace execplan

@@ -70,7 +70,7 @@ PseudoColumn::PseudoColumn(const string& schemaName, const string& tableName, co
 PseudoColumn::PseudoColumn(const SimpleColumn& rhs, const uint32_t pseudoType, const uint32_t sessionID)
  : SimpleColumn(rhs, sessionID), fPseudoType(pseudoType)
 {
-  adjustResultType();
+  adjustResultType(rhs);
 }
 
 PseudoColumn::PseudoColumn(const PseudoColumn& rhs, const uint32_t sessionID)
@@ -239,7 +239,7 @@ void PseudoColumn::adjustResultType()
       fResultType.colWidth = 8;
       break;
     }
-
+    /*
     case PSEUDO_EXTENTMAX:
     case PSEUDO_EXTENTMIN:
     {
@@ -247,7 +247,7 @@ void PseudoColumn::adjustResultType()
       fResultType.colWidth = 16;
       break;
     }
-
+    */
     case PSEUDO_PARTITION:
     {
       fResultType.colDataType = CalpontSystemCatalog::VARCHAR;
@@ -262,4 +262,9 @@ void PseudoColumn::adjustResultType()
   }
 }
 
+void PseudoColumn::adjustResultType(const SimpleColumn& sc)
+{
+  fResultType.setDecimalScalePrecision(sc.colType().precision, sc.colType().scale);
+  fResultType.colDataType = sc.colType().colDataType;
+}
 }  // namespace execplan
