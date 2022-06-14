@@ -165,6 +165,8 @@ string Func_time_format::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool&
     {
       i++;
 
+      fi = format.unsafeStringRef()[i];
+
       switch (fi)
       {
         case 'f':
