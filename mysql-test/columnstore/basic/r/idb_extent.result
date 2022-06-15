@@ -13,11 +13,7 @@ col_int_unsigned INT UNSIGNED,
 col_big_signed BIGINT,
 col_big_unsigned BIGINT UNSIGNED,
 col_dec_signed DECIMAL(38,0),
-col_dec_unsigned DECIMAL(38,0) UNSIGNED,
-col_float_signed FLOAT,
-col_float_unsigned FLOAT UNSIGNED,
-col_double_signed DOUBLE,
-col_double_unsigned DOUBLE UNSIGNED
+col_dec_unsigned DECIMAL(38,0) UNSIGNED
 )engine=columnstore;
 INSERT INTO t1 (col_signed) VALUES(-126);
 INSERT INTO t1 (col_signed) VALUES(127);
@@ -43,51 +39,24 @@ INSERT INTO t1 (col_dec_signed) VALUES(-70000000000000000000000000000000000003);
 INSERT INTO t1 (col_dec_signed) VALUES(80000000000000000000000000000000000003);
 INSERT INTO t1 (col_dec_unsigned) VALUES(0);
 INSERT INTO t1 (col_dec_unsigned) VALUES(70000000000000000000000000000000000003);
-INSERT INTO t1 (col_float_signed) VALUES(-92233775806.1);
-INSERT INTO t1 (col_float_signed) VALUES(92233775806.1);
-INSERT INTO t1 (col_float_unsigned) VALUES(0);
-INSERT INTO t1 (col_float_unsigned) VALUES(92233775806.1);
-INSERT INTO t1 (col_double_signed) VALUES(-9223372036854775806.1);
-INSERT INTO t1 (col_double_signed) VALUES(9223372036854775806.1);
-INSERT INTO t1 (col_double_unsigned) VALUES(0);
-INSERT INTO t1 (col_double_unsigned) VALUES(9223372036854775806.1);
-SELECT * FROM t1;
-col_signed	col_unsigned	col_small_signed	col_small_unsigned	col_med_signed	col_med_unsigned	col_int_signed	col_int_unsigned	col_big_signed	col_big_unsigned	col_dec_signed	col_dec_unsigned	col_float_signed	col_float_unsigned	col_double_signed	col_double_unsigned
--126	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
-127	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
-NULL	0	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
-NULL	253	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
-NULL	NULL	-32766	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
-NULL	NULL	32767	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
-NULL	NULL	NULL	0	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
-NULL	NULL	NULL	65533	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
-NULL	NULL	NULL	NULL	-8388608	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
-NULL	NULL	NULL	NULL	8388607	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
-NULL	NULL	NULL	NULL	NULL	0	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
-NULL	NULL	NULL	NULL	NULL	16777215	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
-NULL	NULL	NULL	NULL	NULL	NULL	-2147483646	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
-NULL	NULL	NULL	NULL	NULL	NULL	2147483647	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
-NULL	NULL	NULL	NULL	NULL	NULL	NULL	0	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
-NULL	NULL	NULL	NULL	NULL	NULL	NULL	4294967293	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
-NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	-9223372036854775806	NULL	NULL	NULL	NULL	NULL	NULL	NULL
-NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	9223372036854775807	NULL	NULL	NULL	NULL	NULL	NULL	NULL
-NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	0	NULL	NULL	NULL	NULL	NULL	NULL
-NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	18446744073709551613	NULL	NULL	NULL	NULL	NULL	NULL
-NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	-70000000000000000000000000000000000003	NULL	NULL	NULL	NULL	NULL
-NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	80000000000000000000000000000000000003	NULL	NULL	NULL	NULL	NULL
-NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	0	NULL	NULL	NULL	NULL
-NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	70000000000000000000000000000000000003	NULL	NULL	NULL	NULL
-NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	-92233800000	NULL	NULL	NULL
-NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	92233800000	NULL	NULL	NULL
-NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	0	NULL	NULL
-NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	92233800000	NULL	NULL
-NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	-9.223372036854776e18	NULL
-NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	9.223372036854776e18	NULL
-NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	0
-NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	9.223372036854776e18
+SELECT count(idbextentmax(col_signed)), count(idbextentmin(col_signed)),
+count(idbextentmax(col_unsigned)), count(idbextentmin(col_unsigned)),
+count(idbextentmax(col_small_signed)), count(idbextentmin(col_small_signed)),
+count(idbextentmax(col_small_unsigned)), count(idbextentmin(col_small_unsigned)),
+count(idbextentmax(col_med_signed)), count(idbextentmin(col_med_signed)),
+count(idbextentmax(col_med_unsigned)), count(idbextentmin(col_med_unsigned)),
+count(idbextentmax(col_int_signed)), count(idbextentmin(col_int_signed)),
+count(idbextentmax(col_int_unsigned)), count(idbextentmin(col_int_unsigned))
+#       count(idbextentmax(col_big_signed)), count(idbextentmin(col_big_signed)),
+#       count(idbextentmax(col_big_unsigned)), count(idbextentmin(col_big_unsigned)),
+#       count(idbextentmax(col_dec_signed)), count(idbextentmin(col_dec_signed)),
+#       count(idbextentmax(col_dec_unsigned)), count(idbextentmin(col_dec_unsigned))
+FROM t1 LIMIT 1;
+count(idbextentmax(col_signed))	count(idbextentmin(col_signed))	count(idbextentmax(col_unsigned))	count(idbextentmin(col_unsigned))	count(idbextentmax(col_small_signed))	count(idbextentmin(col_small_signed))	count(idbextentmax(col_small_unsigned))	count(idbextentmin(col_small_unsigned))	count(idbextentmax(col_med_signed))	count(idbextentmin(col_med_signed))	count(idbextentmax(col_med_unsigned))	count(idbextentmin(col_med_unsigned))	count(idbextentmax(col_int_signed))	count(idbextentmin(col_int_signed))	count(idbextentmax(col_int_unsigned))	count(idbextentmin(col_int_unsigned))
+0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
 SELECT 'q1', idbextentmax(col_signed), idbextentmin(col_signed) FROM t1 LIMIT 1;
 q1	idbextentmax(col_signed)	idbextentmin(col_signed)
-q1	127	-126
+q1	NULL	NULL
 SELECT 'q2', idbextentmax(col_unsigned), idbextentmin(col_unsigned) FROM t1 LIMIT 1;
 q2	idbextentmax(col_unsigned)	idbextentmin(col_unsigned)
 q2	NULL	NULL
@@ -105,32 +74,8 @@ q6	idbextentmax(col_med_unsigned)	idbextentmin(col_med_unsigned)
 q6	NULL	NULL
 SELECT 'q7', idbextentmax(col_int_signed), idbextentmin(col_int_signed) FROM t1 LIMIT 1;
 q7	idbextentmax(col_int_signed)	idbextentmin(col_int_signed)
-q7	NULL	NULL
+q7	2147483647	-2147483646
 SELECT 'q8', idbextentmax(col_int_unsigned), idbextentmin(col_int_unsigned) FROM t1 LIMIT 1;
 q8	idbextentmax(col_int_unsigned)	idbextentmin(col_int_unsigned)
 q8	NULL	NULL
-SELECT 'q9', idbextentmax(col_big_signed), idbextentmin(col_big_signed) FROM t1 LIMIT 1;
-q9	idbextentmax(col_big_signed)	idbextentmin(col_big_signed)
-q9	NULL	NULL
-SELECT 'q10', idbextentmax(col_big_unsigned), idbextentmin(col_big_unsigned) FROM t1 LIMIT 1;
-q10	idbextentmax(col_big_unsigned)	idbextentmin(col_big_unsigned)
-q10	NULL	NULL
-SELECT 'q11', idbextentmax(col_dec_signed), idbextentmin(col_dec_signed) FROM t1 LIMIT 1;
-q11	idbextentmax(col_dec_signed)	idbextentmin(col_dec_signed)
-q11	NULL	NULL
-SELECT 'q12', idbextentmax(col_dec_unsigned), idbextentmin(col_dec_unsigned) FROM t1 LIMIT 1;
-q12	idbextentmax(col_dec_unsigned)	idbextentmin(col_dec_unsigned)
-q12	NULL	NULL
-SELECT 'q13', idbextentmax(col_float_signed), idbextentmin(col_float_signed) FROM t1 LIMIT 1;
-q13	idbextentmax(col_float_signed)	idbextentmin(col_float_signed)
-q13	NULL	NULL
-SELECT 'q14', idbextentmax(col_float_unsigned), idbextentmin(col_float_unsigned) FROM t1 LIMIT 1;
-q14	idbextentmax(col_float_unsigned)	idbextentmin(col_float_unsigned)
-q14	NULL	NULL
-SELECT 'q15', idbextentmax(col_double_signed), idbextentmin(col_double_signed) FROM t1 LIMIT 1;
-q15	idbextentmax(col_double_signed)	idbextentmin(col_double_signed)
-q15	NULL	NULL
-SELECT 'q16', idbextentmax(col_double_unsigned), idbextentmin(col_double_unsigned) FROM t1 LIMIT 1;
-q16	idbextentmax(col_double_unsigned)	idbextentmin(col_double_unsigned)
-q16	NULL	NULL
 DROP DATABASE idb_extent_test_db;

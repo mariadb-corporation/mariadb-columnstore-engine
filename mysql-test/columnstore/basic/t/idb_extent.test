@@ -61,11 +61,11 @@ SELECT count(idbextentmax(col_signed)), count(idbextentmin(col_signed)),
        count(idbextentmax(col_med_signed)), count(idbextentmin(col_med_signed)),
        count(idbextentmax(col_med_unsigned)), count(idbextentmin(col_med_unsigned)),
        count(idbextentmax(col_int_signed)), count(idbextentmin(col_int_signed)),
-       count(idbextentmax(col_int_unsigned)), count(idbextentmin(col_int_unsigned)),
-       count(idbextentmax(col_big_signed)), count(idbextentmin(col_big_signed)),
-       count(idbextentmax(col_big_unsigned)), count(idbextentmin(col_big_unsigned)),
-       count(idbextentmax(col_dec_signed)), count(idbextentmin(col_dec_signed)),
-       count(idbextentmax(col_dec_unsigned)), count(idbextentmin(col_dec_unsigned))
+       count(idbextentmax(col_int_unsigned)), count(idbextentmin(col_int_unsigned))
+#       count(idbextentmax(col_big_signed)), count(idbextentmin(col_big_signed)),
+#       count(idbextentmax(col_big_unsigned)), count(idbextentmin(col_big_unsigned)),
+#       count(idbextentmax(col_dec_signed)), count(idbextentmin(col_dec_signed)),
+#       count(idbextentmax(col_dec_unsigned)), count(idbextentmin(col_dec_unsigned))
        FROM t1 LIMIT 1;
 
 
@@ -83,11 +83,11 @@ SELECT 'q6', idbextentmax(col_med_unsigned), idbextentmin(col_med_unsigned) FROM
 SELECT 'q7', idbextentmax(col_int_signed), idbextentmin(col_int_signed) FROM t1 LIMIT 1;
 SELECT 'q8', idbextentmax(col_int_unsigned), idbextentmin(col_int_unsigned) FROM t1 LIMIT 1;
 
-SELECT 'q9', idbextentmax(col_big_signed), idbextentmin(col_big_signed) FROM t1 LIMIT 1;
-SELECT 'q10', idbextentmax(col_big_unsigned), idbextentmin(col_big_unsigned) FROM t1 LIMIT 1;
+# SELECT 'q9', idbextentmax(col_big_signed), idbextentmin(col_big_signed) FROM t1 LIMIT 1;
+# SELECT 'q10', idbextentmax(col_big_unsigned), idbextentmin(col_big_unsigned) FROM t1 LIMIT 1;
 
-SELECT 'q11', idbextentmax(col_dec_signed), idbextentmin(col_dec_signed) FROM t1 LIMIT 1;
-SELECT 'q12', idbextentmax(col_dec_unsigned), idbextentmin(col_dec_unsigned) FROM t1 LIMIT 1;
+# SELECT 'q11', idbextentmax(col_dec_signed), idbextentmin(col_dec_signed) FROM t1 LIMIT 1;
+# SELECT 'q12', idbextentmax(col_dec_unsigned), idbextentmin(col_dec_unsigned) FROM t1 LIMIT 1;
 
 # Clean UP
 DROP DATABASE idb_extent_test_db;
