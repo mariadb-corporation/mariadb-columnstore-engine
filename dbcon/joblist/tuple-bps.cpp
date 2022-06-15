@@ -577,7 +577,6 @@ TupleBPS::TupleBPS(const pColScanStep& rhs, const JobInfo& jobInfo) : BatchPrimi
       if (dbrm.getExtents(fOidAux, extentsAux))
         throw runtime_error("TupleBPS::TupleBPS BRM extent lookup failure (1)");
 
-      idbassert(!extentsAux.empty());
       sort(extentsAux.begin(), extentsAux.end(), BRM::ExtentSorter());
 
       extentsMap[fOidAux] = tr1::unordered_map<int64_t, EMEntry>();

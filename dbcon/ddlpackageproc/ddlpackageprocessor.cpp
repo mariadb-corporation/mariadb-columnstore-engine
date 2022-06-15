@@ -562,8 +562,19 @@ void DDLPackageProcessor::createFiles(CalpontSystemCatalog::TableName aTableName
 {
   SUMMARY_INFO("DDLPackageProcessor::createFiles");
   boost::shared_ptr<CalpontSystemCatalog> systemCatalogPtr =
-      CalpontSystemCatalog::makeCalpontSystemCatalog(1);
+    CalpontSystemCatalog::makeCalpontSystemCatalog(1);
   CalpontSystemCatalog::RIDList ridList = systemCatalogPtr->columnRIDs(aTableName);
+  CalpontSystemCatalog::OID tableAUXColOid =
+    systemCatalogPtr->tableAUXColumnOID(aTableName);
+
+  if (tableAUXColOid > 3000)
+  {
+    CalpontSystemCatalog::ROPair auxRoPair;
+    auxRoPair.rid = 0;
+    auxRoPair.objnum = tableAUXColOid;
+    ridList.push_back(auxRoPair);
+  }
+
   fWEClient->addQueue(uniqueId);
   CalpontSystemCatalog::ColType colType;
   ByteStream bytestream;
