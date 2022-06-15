@@ -39,7 +39,6 @@ using namespace std;
 #include "tuplehashjoin.h"
 #include "calpontsystemcatalog.h"
 #include "elementcompression.h"
-#include "resourcemanager.h"
 #include "tupleaggregatestep.h"
 #include "errorids.h"
 #include "diskjoinstep.h"
@@ -74,6 +73,7 @@ TupleHashJoinStep::TupleHashJoinStep(const JobInfo& jobInfo)
  , fTupleId2(-1)
  , fCorrelatedSide(0)
  , resourceManager(jobInfo.rm)
+ , fMemSizeForOutputRG(0)
  , runRan(false)
  , joinRan(false)
  , largeSideIndex(1)
@@ -135,9 +135,12 @@ TupleHashJoinStep::~TupleHashJoinStep()
   if (memUsedByEachJoin)
   {
     for (uint i = 0; i < smallDLs.size(); i++)
+    {
+      if (memUsedByEachJoin[i])
       resourceManager->returnMemory(memUsedByEachJoin[i], sessionMemLimit);
   }
-
+  }
+  returnMemory();
   // cout << "deallocated THJS, UM memory available: " << resourceManager.availableMemory() << endl;
 }
 
@@ -221,11 +224,13 @@ void TupleHashJoinStep::trackMem(uint index)
     memAfter = joiner->getMemUsage();
     if (memAfter != memBefore)
     {
-      gotMem = resourceManager->getMemory(memAfter - memBefore, sessionMemLimit, false);
+      gotMem = resourceManager->getMemory(memAfter - memBefore, sessionMemLimit, true);
+      if (gotMem)
       atomicops::atomicAdd(&memUsedByEachJoin[index], memAfter - memBefore);
-      memBefore = memAfter;
-      if (!gotMem)
+      else
         return;
+
+      memBefore = memAfter;
     }
     memTrackDone.timed_wait(scoped, boost::posix_time::seconds(1));
   }
@@ -235,16 +240,22 @@ void TupleHashJoinStep::trackMem(uint index)
   memAfter = joiner->getMemUsage();
   if (memAfter == memBefore)
     return;
-  gotMem = resourceManager->getMemory(memAfter - memBefore, sessionMemLimit, false);
+  gotMem = resourceManager->getMemory(memAfter - memBefore, sessionMemLimit, true);
+  if (gotMem)
+  {
   atomicops::atomicAdd(&memUsedByEachJoin[index], memAfter - memBefore);
-  if (!gotMem)
+  }
+  else
   {
     if (!joinIsTooBig &&
         (isDML || !allowDJS || (fSessionId & 0x80000000) || (tableOid() < 3000 && tableOid() >= 1000)))
     {
       joinIsTooBig = true;
-      fLogger->logMessage(logging::LOG_TYPE_INFO, logging::ERR_JOIN_TOO_BIG);
-      errorMessage(logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_JOIN_TOO_BIG));
+      ostringstream oss;
+      oss << "(" << __LINE__ << ") "
+          << logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_JOIN_TOO_BIG);
+      fLogger->logMessage(logging::LOG_TYPE_INFO, oss.str());
+      errorMessage(oss.str());
       status(logging::ERR_JOIN_TOO_BIG);
       cout << "Join is too big, raise the UM join limit for now (monitor thread)" << endl;
       abort();
@@ -387,7 +398,6 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t* 
   smallRG = smallRGs[index];
 
   smallRG.initRow(&r);
-
   try
   {
     ssize_t rgSize;
@@ -405,9 +415,12 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t* 
       utils::releaseSpinlock(rgdLock);
 
       rgSize = smallRG.getSizeWithStrings();
+      gotMem = resourceManager->getMemory(rgSize, sessionMemLimit, true);
+      if (gotMem)
+      {
       atomicops::atomicAdd(&memUsedByEachJoin[index], rgSize);
-      gotMem = resourceManager->getMemory(rgSize, sessionMemLimit, false);
-      if (!gotMem)
+      }
+      else
       {
         /*  Mem went over the limit.
             If DML or a syscat query, abort.
@@ -420,19 +433,21 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t* 
         if (!allowDJS || isDML || (fSessionId & 0x80000000) || (tableOid() < 3000 && tableOid() >= 1000))
         {
           joinIsTooBig = true;
-          fLogger->logMessage(logging::LOG_TYPE_INFO, logging::ERR_JOIN_TOO_BIG);
-          errorMessage(logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_JOIN_TOO_BIG));
+          ostringstream oss;
+          oss << "(" << __LINE__ << ") "
+              << logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_JOIN_TOO_BIG);
+          fLogger->logMessage(logging::LOG_TYPE_INFO, oss.str());
+          errorMessage(oss.str());
           status(logging::ERR_JOIN_TOO_BIG);
           cout << "Join is too big, raise the UM join limit for now (small runner)" << endl;
           abort();
         }
         else if (allowDJS)
           joiner->setConvertToDiskJoin();
+
         return;
       }
-
       joiner->insertRGData(smallRG, threadID);
-
       if (!joiner->inUM() && (memUsedByEachJoin[index] > pmMemLimit))
       {
         joiner->setInUM(rgData[index]);
@@ -452,7 +467,6 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t* 
                     "TupleHashJoinStep::smallRunnerFcn()");
     status(logging::ERR_EXEMGR_MALFUNCTION);
   }
-
   if (!joiner->inUM())
     joiner->setInPM();
 }
@@ -644,7 +658,7 @@ void TupleHashJoinStep::hjRunner()
   memUsedByEachJoin.reset(new ssize_t[smallDLs.size()]);
 
   for (i = 0; i < smallDLs.size(); i++)
-    memUsedByEachJoin[i] = 0;
+    atomicops::atomicZero(&memUsedByEachJoin[i]);
 
   try
   {
@@ -742,7 +756,7 @@ void TupleHashJoinStep::hjRunner()
       {
         vector<RGData> empty;
         resourceManager->returnMemory(memUsedByEachJoin[djsJoinerMap[i]], sessionMemLimit);
-        memUsedByEachJoin[djsJoinerMap[i]] = 0;
+        atomicops::atomicZero(&memUsedByEachJoin[i]);
         djs[i].loadExistingData(rgData[djsJoinerMap[i]]);
         rgData[djsJoinerMap[i]].swap(empty);
       }
@@ -828,8 +842,11 @@ void TupleHashJoinStep::hjRunner()
   {
     if (joinIsTooBig && !status())
     {
-      fLogger->logMessage(logging::LOG_TYPE_INFO, logging::ERR_JOIN_TOO_BIG);
-      errorMessage(logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_JOIN_TOO_BIG));
+      ostringstream oss;
+      oss << "(" << __LINE__ << ") "
+          << logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_JOIN_TOO_BIG);
+      fLogger->logMessage(logging::LOG_TYPE_INFO, oss.str());
+      errorMessage(oss.str());
       status(logging::ERR_JOIN_TOO_BIG);
       cout << "Join is too big, raise the UM join limit for now" << endl;
 
@@ -842,7 +859,7 @@ void TupleHashJoinStep::hjRunner()
         for (uint i = 0; i < smallDLs.size(); i++)
         {
           resourceManager->returnMemory(memUsedByEachJoin[i], sessionMemLimit);
-          memUsedByEachJoin[i] = 0;
+          atomicops::atomicZero(&memUsedByEachJoin[i]);
         }
       }
     }
@@ -1022,7 +1039,7 @@ uint32_t TupleHashJoinStep::nextBand(messageqcpp::ByteStream& bs)
       for (uint i = 0; i < smallDLs.size(); i++)
       {
         resourceManager->returnMemory(memUsedByEachJoin[i], sessionMemLimit);
-        memUsedByEachJoin[i] = 0;
+        atomicops::atomicZero(&memUsedByEachJoin[i]);
       }
       return 0;
     }
@@ -1046,7 +1063,7 @@ uint32_t TupleHashJoinStep::nextBand(messageqcpp::ByteStream& bs)
       for (uint i = 0; i < smallDLs.size(); i++)
       {
         resourceManager->returnMemory(memUsedByEachJoin[i], sessionMemLimit);
-        memUsedByEachJoin[i] = 0;
+        atomicops::atomicZero(&memUsedByEachJoin[i]);
       }
       return 0;
     }
@@ -1544,8 +1561,8 @@ void TupleHashJoinStep::joinRunnerFcn(uint32_t threadID)
       if (local_inputRG.getRowCount() == 0)
         continue;
 
-      joinOneRG(threadID, &joinedRowData, local_inputRG, local_outputRG, largeRow, joinFERow, joinedRow,
-                baseRow, joinMatches, smallRowTemplates);
+      joinOneRG(threadID, joinedRowData, local_inputRG, local_outputRG, largeRow, joinFERow, joinedRow,
+                baseRow, joinMatches, smallRowTemplates, outputDL);
     }
 
     if (fe2)
@@ -1553,6 +1570,7 @@ void TupleHashJoinStep::joinRunnerFcn(uint32_t threadID)
 
     processDupList(threadID, (fe2 ? local_fe2RG : local_outputRG), &joinedRowData);
     sendResult(joinedRowData);
+    returnMemory();
     joinedRowData.clear();
     grabSomeWork(&inputData);
   }
@@ -1684,9 +1702,9 @@ void TupleHashJoinStep::grabSomeWork(vector<RGData>* work)
 /* This function is a port of the main join loop in TupleBPS::receiveMultiPrimitiveMessages().  Any
  * changes made here should also be made there and vice versa. */
 void TupleHashJoinStep::joinOneRG(
-    uint32_t threadID, vector<RGData>* out, RowGroup& inputRG, RowGroup& joinOutput, Row& largeSideRow,
+    uint32_t threadID, vector<RGData>& out, RowGroup& inputRG, RowGroup& joinOutput, Row& largeSideRow,
     Row& joinFERow, Row& joinedRow, Row& baseRow, vector<vector<Row::Pointer> >& joinMatches,
-    shared_array<Row>& smallRowTemplates,
+    shared_array<Row>& smallRowTemplates, RowGroupDL* outputDL,
     // disk-join support vars.  This param list is insane; refactor attempt would be nice at some point.
     vector<boost::shared_ptr<joiner::TupleJoiner> >* tjoiners,
     boost::shared_array<boost::shared_array<int> >* rgMappings,
@@ -1812,19 +1830,19 @@ void TupleHashJoinStep::joinOneRG(
       applyMapping((*rgMappings)[smallSideCount], largeSideRow, &baseRow);
       baseRow.setRid(largeSideRow.getRelRid());
       generateJoinResultSet(joinMatches, baseRow, *rgMappings, 0, joinOutput, joinedData, out,
-                            smallRowTemplates, joinedRow);
+                            smallRowTemplates, joinedRow, outputDL);
     }
   }
 
   if (joinOutput.getRowCount() > 0)
-    out->push_back(joinedData);
+    out.push_back(joinedData);
 }
 
 void TupleHashJoinStep::generateJoinResultSet(const vector<vector<Row::Pointer> >& joinerOutput, Row& baseRow,
                                               const shared_array<shared_array<int> >& mappings,
                                               const uint32_t depth, RowGroup& l_outputRG, RGData& rgData,
-                                              vector<RGData>* outputData, const shared_array<Row>& smallRows,
-                                              Row& joinedRow)
+                                              vector<RGData>& outputData, const shared_array<Row>& smallRows,
+                                              Row& joinedRow, RowGroupDL* dlp)
 {
   uint32_t i;
   Row& smallRow = smallRows[depth];
@@ -1836,10 +1854,8 @@ void TupleHashJoinStep::generateJoinResultSet(const vector<vector<Row::Pointer> 
     {
       smallRow.setPointer(joinerOutput[depth][i]);
       applyMapping(mappings[depth], smallRow, &baseRow);
-      // 			cout << "depth " << depth << ", size " << joinerOutput[depth].size() << ", row "
-      // << i << ": " << smallRow.toString() << endl;
       generateJoinResultSet(joinerOutput, baseRow, mappings, depth + 1, l_outputRG, rgData, outputData,
-                            smallRows, joinedRow);
+                            smallRows, joinedRow, dlp);
     }
   }
   else
@@ -1854,7 +1870,15 @@ void TupleHashJoinStep::generateJoinResultSet(const vector<vector<Row::Pointer> 
       {
         uint32_t dbRoot = l_outputRG.getDBRoot();
         uint64_t baseRid = l_outputRG.getBaseRid();
-        outputData->push_back(rgData);
+        outputData.push_back(rgData);
+        // Count the memory
+        if (UNLIKELY(!getMemory(l_outputRG.getMaxDataSize())))
+        {
+          // Don't let the join results buffer get out of control.
+          sendResult(outputData);
+          outputData.clear();
+          returnMemory();
+        }
         rgData.reinit(l_outputRG);
         l_outputRG.setData(&rgData);
         l_outputRG.resetRowGroup(baseRid);
@@ -1862,12 +1886,8 @@ void TupleHashJoinStep::generateJoinResultSet(const vector<vector<Row::Pointer> 
         l_outputRG.getRow(0, &joinedRow);
       }
 
-      // 			cout << "depth " << depth << ", size " << joinerOutput[depth].size() << ", row "
-      // << i << ": " << smallRow.toString() << endl;
       applyMapping(mappings[depth], smallRow, &baseRow);
       copyRow(baseRow, &joinedRow);
-      // memcpy(joinedRow.getData(), baseRow.getData(), joinedRow.getSize());
-      // cout << "(step " << stepID << ") fully joined row is: " << joinedRow.toString() << endl;
     }
   }
 }

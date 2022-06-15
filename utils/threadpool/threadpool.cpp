@@ -83,6 +83,7 @@ void ThreadPool::setQueueSize(size_t queueSize)
 
 void ThreadPool::pruneThread()
 {
+  utils::setThreadName("pruneThread");
   boost::unique_lock<boost::mutex> lock2(fPruneMutex);
 
   while (true)

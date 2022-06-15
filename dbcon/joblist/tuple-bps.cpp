@@ -156,14 +156,15 @@ struct TupleBPSAggregators
   }
 };
 
-TupleBPS::JoinLocalData::JoinLocalData(RowGroup& primRowGroup, RowGroup& outputRowGroup,
+TupleBPS::JoinLocalData::JoinLocalData(TupleBPS* pTupleBPS, RowGroup& primRowGroup, RowGroup& outputRowGroup,
                                        boost::shared_ptr<funcexp::FuncExpWrapper>& fe2,
                                        rowgroup::RowGroup& fe2Output,
                                        std::vector<rowgroup::RowGroup>& joinerMatchesRGs,
                                        rowgroup::RowGroup& joinFERG,
                                        std::vector<boost::shared_ptr<joiner::TupleJoiner>>& tjoiners,
                                        uint32_t smallSideCount, bool doJoin)
- : local_primRG(primRowGroup)
+ : tbps(pTupleBPS)
+ , local_primRG(primRowGroup)
  , local_outputRG(outputRowGroup)
  , fe2(fe2)
  , fe2Output(fe2Output)
@@ -238,6 +239,130 @@ TupleBPS::JoinLocalData::JoinLocalData(RowGroup& primRowGroup, RowGroup& outputR
     largeNull.setData(largeNullMemory.get());
     largeNull.initToNull();
   }
+}
+
+uint64_t TupleBPS::JoinLocalData::generateJoinResultSet(const uint32_t depth,
+                                                        std::vector<rowgroup::RGData>& outputData,
+                                                        RowGroupDL* dlp)
+{
+  uint32_t i;
+  Row& smallRow = smallSideRows[depth];
+  uint64_t memSizeForOutputRG = 0;
+
+  if (depth < smallSideCount - 1)
+  {
+    for (i = 0; i < joinerOutput[depth].size() && !tbps->cancelled(); i++)
+    {
+      smallRow.setPointer(joinerOutput[depth][i]);
+      applyMapping(smallMappings[depth], smallRow, &joinedBaseRow);
+      memSizeForOutputRG += generateJoinResultSet(depth + 1, outputData, dlp);
+    }
+  }
+  else
+  {
+    local_outputRG.getRow(local_outputRG.getRowCount(), &postJoinRow);
+
+    for (i = 0; i < joinerOutput[depth].size() && !tbps->cancelled();
+         i++, postJoinRow.nextRow(), local_outputRG.incRowCount())
+    {
+      smallRow.setPointer(joinerOutput[depth][i]);
+
+      if (UNLIKELY(local_outputRG.getRowCount() == 8192))
+      {
+        uint32_t dbRoot = local_outputRG.getDBRoot();
+        uint64_t baseRid = local_outputRG.getBaseRid();
+        outputData.push_back(joinedData);
+        // Don't let the join results buffer get out of control.
+        if (tbps->resourceManager()->getMemory(local_outputRG.getMaxDataSize(), false))
+        {
+          memSizeForOutputRG += local_outputRG.getMaxDataSize();
+        }
+        else
+        {
+          // Don't wait for memory, just send the data on to DL.
+          RowGroup out(local_outputRG);
+          if (fe2 && tbps->runFEonPM())
+          {
+            processFE2(outputData);
+            tbps->rgDataVecToDl(outputData, local_fe2Output, dlp);
+          }
+          else
+          {
+            tbps->rgDataVecToDl(outputData, out, dlp);
+          }
+          tbps->resourceManager()->returnMemory(memSizeForOutputRG);
+          memSizeForOutputRG = 0;
+        }
+        joinedData.reinit(local_outputRG);
+        local_outputRG.setData(&joinedData);
+        local_outputRG.resetRowGroup(baseRid);
+        local_outputRG.setDBRoot(dbRoot);
+        local_outputRG.getRow(0, &postJoinRow);
+      }
+
+      applyMapping(smallMappings[depth], smallRow, &joinedBaseRow);
+      copyRow(joinedBaseRow, &postJoinRow);
+    }
+  }
+  return memSizeForOutputRG;
+}
+
+void TupleBPS::JoinLocalData::processFE2(vector<rowgroup::RGData>& rgData)
+{
+  vector<RGData> results;
+  RGData result;
+  uint32_t i, j;
+  bool ret;
+
+  result = RGData(local_fe2Output);
+  local_fe2Output.setData(&result);
+  local_fe2Output.resetRowGroup(-1);
+  local_fe2Output.getRow(0, &local_fe2OutRow);
+
+  for (i = 0; i < rgData.size(); i++)
+  {
+    local_outputRG.setData(&(rgData)[i]);
+
+    if (local_fe2Output.getRowCount() == 0)
+    {
+      local_fe2Output.resetRowGroup(local_outputRG.getBaseRid());
+      local_fe2Output.setDBRoot(local_outputRG.getDBRoot());
+    }
+
+    local_outputRG.getRow(0, &postJoinRow);
+
+    for (j = 0; j < local_outputRG.getRowCount(); j++, postJoinRow.nextRow())
+    {
+      ret = local_fe2.evaluate(&postJoinRow);
+
+      if (ret)
+      {
+        applyMapping(tbps->fe2Mapping, postJoinRow, &local_fe2OutRow);
+        local_fe2OutRow.setRid(postJoinRow.getRelRid());
+        local_fe2Output.incRowCount();
+        local_fe2OutRow.nextRow();
+
+        if (local_fe2Output.getRowCount() == 8192 ||
+            local_fe2Output.getDBRoot() != local_outputRG.getDBRoot() ||
+            local_fe2Output.getBaseRid() != local_outputRG.getBaseRid())
+        {
+          results.push_back(result);
+          result = RGData(local_fe2Output);
+          local_fe2Output.setData(&result);
+          local_fe2Output.resetRowGroup(local_outputRG.getBaseRid());
+          local_fe2Output.setDBRoot(local_outputRG.getDBRoot());
+          local_fe2Output.getRow(0, &local_fe2OutRow);
+        }
+      }
+    }
+  }
+
+  if (local_fe2Output.getRowCount() > 0)
+  {
+    results.push_back(result);
+  }
+
+  rgData.swap(results);
 }
 
 struct ByteStreamProcessor
@@ -1267,7 +1392,7 @@ void TupleBPS::run()
   if (fe1)
     fBPP->setFEGroup1(fe1, fe1Input);
 
-  if (fe2 && runFEonPM)
+  if (fe2 && bRunFEonPM)
     fBPP->setFEGroup2(fe2, fe2Output);
 
   if (fe2)
@@ -1972,6 +2097,7 @@ void TupleBPS::processByteStreamVector(vector<boost::shared_ptr<messageqcpp::Byt
   uint32_t cachedIO;
   uint32_t physIO;
   uint32_t touchedBlocks;
+  int32_t memAmount = 0;
 
   for (uint32_t i = begin; i < end; ++i)
   {
@@ -2134,26 +2260,7 @@ void TupleBPS::processByteStreamVector(vector<boost::shared_ptr<messageqcpp::Byt
           {
             applyMapping(data->largeMapping, data->largeSideRow, &data->joinedBaseRow);
             data->joinedBaseRow.setRid(data->largeSideRow.getRelRid());
-            generateJoinResultSet(data->joinerOutput, data->joinedBaseRow, data->smallMappings, 0,
-                                  data->local_outputRG, data->joinedData, &rgDatav, data->smallSideRows,
-                                  data->postJoinRow);
-
-            // Bug 3510: Don't let the join results buffer get out of control.  Need
-            // to refactor this.  All post-join processing needs to go here AND below
-            // for now.
-            if (rgDatav.size() * data->local_outputRG.getMaxDataSize() > 50000000)
-            {
-              RowGroup out(data->local_outputRG);
-
-              if (fe2 && !runFEonPM)
-              {
-                processFE2(out, data->local_fe2Output, data->postJoinRow, data->local_fe2OutRow, &rgDatav,
-                           &data->local_fe2);
-                rgDataVecToDl(rgDatav, data->local_fe2Output, dlp);
-              }
-              else
-                rgDataVecToDl(rgDatav, out, dlp);
-            }
+            memAmount += data->generateJoinResultSet(0, rgDatav, dlp);
           }
         }  // end of the for-loop in the join code
 
@@ -2166,12 +2273,16 @@ void TupleBPS::processByteStreamVector(vector<boost::shared_ptr<messageqcpp::Byt
       {
         rgDatav.push_back(rgData);
       }
+      if (memAmount)
+      {
+        resourceManager()->returnMemory(memAmount);
+        memAmount = 0;
+      }
 
       // Execute UM F & E group 2 on rgDatav
-      if (fe2 && !runFEonPM && rgDatav.size() > 0 && !cancelled())
+      if (fe2 && !bRunFEonPM && rgDatav.size() > 0 && !cancelled())
       {
-        processFE2(data->local_outputRG, data->local_fe2Output, data->postJoinRow, data->local_fe2OutRow,
-                   &rgDatav, &data->local_fe2);
+        data->processFE2(rgDatav);
         rgDataVecToDl(rgDatav, data->local_fe2Output, dlp);
       }
 
@@ -2195,7 +2306,7 @@ void TupleBPS::processByteStreamVector(vector<boost::shared_ptr<messageqcpp::Byt
     // insert the resulting rowgroup data from a single bytestream into dlp
     if (rgDatav.size() > 0)
     {
-      if (fe2 && runFEonPM)
+      if (fe2 && bRunFEonPM)
         rgDataVecToDl(rgDatav, data->local_fe2Output, dlp);
       else
         rgDataVecToDl(rgDatav, data->local_outputRG, dlp);
@@ -2344,10 +2455,7 @@ void TupleBPS::receiveMultiPrimitiveMessages()
         start = end;
       }
 
-      // Join threads.
-      for (uint32_t i = 0, e = fProcessorThreads.size(); i < e; ++i)
-        jobstepThreadPool.join(fProcessorThreads[i]);
-
+      jobstepThreadPool.join(fProcessorThreads);
       // Clear all.
       fProcessorThreads.clear();
       bsv.clear();
@@ -2406,7 +2514,7 @@ void TupleBPS::receiveMultiPrimitiveMessages()
     abort_nolock();
   }
 
-  // We have on thread here and do not need to notify any waiting producer threads, because we are done of
+  // We have one thread here and do not need to notify any waiting producer threads, because we are done with
   // consuming messages from queue.
   tplLock.unlock();
 
@@ -2454,8 +2562,7 @@ void TupleBPS::receiveMultiPrimitiveMessages()
           if (fe2)
           {
             rgDatav.push_back(data->joinedData);
-            processFE2(data->local_outputRG, data->local_fe2Output, data->postJoinRow, data->local_fe2OutRow,
-                       &rgDatav, &data->local_fe2);
+            data->processFE2(rgDatav);
 
             if (rgDatav.size() > 0)
               rgDataToDl(rgDatav[0], data->local_fe2Output, dlp);
@@ -2477,8 +2584,7 @@ void TupleBPS::receiveMultiPrimitiveMessages()
         if (fe2)
         {
           rgDatav.push_back(data->joinedData);
-          processFE2(data->local_outputRG, data->local_fe2Output, data->postJoinRow, data->local_fe2OutRow,
-                     &rgDatav, &data->local_fe2);
+          data->processFE2(rgDatav);
 
           if (rgDatav.size() > 0)
             rgDataToDl(rgDatav[0], data->local_fe2Output, dlp);
@@ -2818,51 +2924,6 @@ void TupleBPS::setJoinedResultRG(const rowgroup::RowGroup& rg)
     fe2Mapping = makeMapping(outputRowGroup, fe2Output);
 }
 
-/* probably worthwhile to make some of these class vars */
-void TupleBPS::generateJoinResultSet(const vector<vector<Row::Pointer>>& joinerOutput, Row& baseRow,
-                                     const vector<shared_array<int>>& mappings, const uint32_t depth,
-                                     RowGroup& outputRG, RGData& rgData, vector<RGData>* outputData,
-                                     const scoped_array<Row>& smallRows, Row& joinedRow)
-{
-  uint32_t i;
-  Row& smallRow = smallRows[depth];
-
-  if (depth < smallSideCount - 1)
-  {
-    for (i = 0; i < joinerOutput[depth].size(); i++)
-    {
-      smallRow.setPointer(joinerOutput[depth][i]);
-      applyMapping(mappings[depth], smallRow, &baseRow);
-      generateJoinResultSet(joinerOutput, baseRow, mappings, depth + 1, outputRG, rgData, outputData,
-                            smallRows, joinedRow);
-    }
-  }
-  else
-  {
-    outputRG.getRow(outputRG.getRowCount(), &joinedRow);
-
-    for (i = 0; i < joinerOutput[depth].size(); i++, joinedRow.nextRow(), outputRG.incRowCount())
-    {
-      smallRow.setPointer(joinerOutput[depth][i]);
-
-      if (UNLIKELY(outputRG.getRowCount() == 8192))
-      {
-        uint32_t dbRoot = outputRG.getDBRoot();
-        uint64_t baseRid = outputRG.getBaseRid();
-        outputData->push_back(rgData);
-        rgData = RGData(outputRG);
-        outputRG.setData(&rgData);
-        outputRG.resetRowGroup(baseRid);
-        outputRG.setDBRoot(dbRoot);
-        outputRG.getRow(0, &joinedRow);
-      }
-
-      applyMapping(mappings[depth], smallRow, &baseRow);
-      copyRow(baseRow, &joinedRow);
-    }
-  }
-}
-
 const rowgroup::RowGroup& TupleBPS::getOutputRowGroup() const
 {
   return outputRowGroup;
@@ -2977,9 +3038,9 @@ void TupleBPS::setFcnExpGroup2(const boost::shared_ptr<funcexp::FuncExpWrapper>&
   fe2Output = rg;
   checkDupOutputColumns(rg);
   fe2Mapping = makeMapping(outputRowGroup, fe2Output);
-  runFEonPM = runFE2onPM;
+  bRunFEonPM = runFE2onPM;
 
-  if (runFEonPM)
+  if (bRunFEonPM)
     fBPP->setFEGroup2(fe2, fe2Output);
 }
 
@@ -2992,7 +3053,7 @@ void TupleBPS::setFcnExpGroup3(const vector<execplan::SRCP>& fe)
     fe2->addReturnedColumn(fe[i]);
 
   // if this is called, there's no join, so it can always run on the PM
-  runFEonPM = true;
+  bRunFEonPM = true;
   fBPP->setFEGroup2(fe2, fe2Output);
 }
 
@@ -3002,91 +3063,8 @@ void TupleBPS::setFE23Output(const rowgroup::RowGroup& feOutput)
   checkDupOutputColumns(feOutput);
   fe2Mapping = makeMapping(outputRowGroup, fe2Output);
 
-  if (fe2 && runFEonPM)
+  if (fe2 && bRunFEonPM)
     fBPP->setFEGroup2(fe2, fe2Output);
-}
-
-void TupleBPS::processFE2_oneRG(RowGroup& input, RowGroup& output, Row& inRow, Row& outRow,
-                                funcexp::FuncExpWrapper* local_fe)
-{
-  bool ret;
-  uint32_t i;
-
-  output.resetRowGroup(input.getBaseRid());
-  output.setDBRoot(input.getDBRoot());
-  output.getRow(0, &outRow);
-  input.getRow(0, &inRow);
-
-  for (i = 0; i < input.getRowCount(); i++, inRow.nextRow())
-  {
-    ret = local_fe->evaluate(&inRow);
-
-    if (ret)
-    {
-      applyMapping(fe2Mapping, inRow, &outRow);
-      outRow.setRid(inRow.getRelRid());
-      output.incRowCount();
-      outRow.nextRow();
-    }
-  }
-}
-
-void TupleBPS::processFE2(RowGroup& input, RowGroup& output, Row& inRow, Row& outRow, vector<RGData>* rgData,
-                          funcexp::FuncExpWrapper* local_fe)
-{
-  vector<RGData> results;
-  RGData result;
-  uint32_t i, j;
-  bool ret;
-
-  result = RGData(output);
-  output.setData(&result);
-  output.resetRowGroup(-1);
-  output.getRow(0, &outRow);
-
-  for (i = 0; i < rgData->size(); i++)
-  {
-    input.setData(&(*rgData)[i]);
-
-    if (output.getRowCount() == 0)
-    {
-      output.resetRowGroup(input.getBaseRid());
-      output.setDBRoot(input.getDBRoot());
-    }
-
-    input.getRow(0, &inRow);
-
-    for (j = 0; j < input.getRowCount(); j++, inRow.nextRow())
-    {
-      ret = local_fe->evaluate(&inRow);
-
-      if (ret)
-      {
-        applyMapping(fe2Mapping, inRow, &outRow);
-        outRow.setRid(inRow.getRelRid());
-        output.incRowCount();
-        outRow.nextRow();
-
-        if (output.getRowCount() == 8192 || output.getDBRoot() != input.getDBRoot() ||
-            output.getBaseRid() != input.getBaseRid())
-        {
-          results.push_back(result);
-          result = RGData(output);
-          output.setData(&result);
-          output.resetRowGroup(input.getBaseRid());
-          output.setDBRoot(input.getDBRoot());
-          output.getRow(0, &outRow);
-        }
-      }
-    }
-  }
-
-  if (output.getRowCount() > 0)
-  {
-    results.push_back(result);
-  }
-
-  rgData->swap(results);
 }
 
 const rowgroup::RowGroup& TupleBPS::getDeliveredRowGroup() const

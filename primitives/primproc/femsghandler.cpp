@@ -19,6 +19,7 @@
 #include "iosocket.h"
 
 #include "femsghandler.h"
+#include "threadnaming.h"
 
 using namespace std;
 using namespace joblist;
@@ -36,6 +37,7 @@ class Runner
   }
   void operator()()
   {
+    utils::setThreadName("FEMsgHandler");
     target->threadFcn();
   }
   FEMsgHandler* target;

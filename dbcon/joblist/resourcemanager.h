@@ -70,6 +70,17 @@ const uint32_t defaultMaxOutstandingRequests = 20;
 const uint32_t defaultProcessorThreadsPerScan = 16;
 const uint32_t defaultJoinerChunkSize = 16 * 1024 * 1024;
 
+// I estimate that the average non-cloud columnstore node has 64GB. I've seen from 16GB to 256GB. Cloud can be
+// as low as 4GB However, ExeMgr has a targetRecvQueueSize hardcoded to 50,000,000, so some number greater
+// than this makes sense. Seriously greater doesn't make sense, so I went with 5x. If there are a number of
+// simultaneous queries that return giant result sets, then 0.25 GB each seems reasonable. This is only for
+// the return queue. We still need room for all the processing, and if a single node system, for ExeMgr as
+// well. On small systems, I recommend we use a smaller value. I believe a larger value will not improve
+// anything since at this point, we're just filling a queue much faster than it can be emptied. Even if we
+// make this default larger, giant results will still eventually block. Just with less memory available for
+// other processing.
+const uint64_t defaultMaxBPPSendQueue = 250000000;  // ~250MB
+
 // bucketreuse
 const std::string defaultTempDiskPath = "/tmp";
 
@@ -282,6 +293,11 @@ class ResourceManager
     return getUintVal(fJobListStr, "DECThrottleThreshold", defaultDECThrottleThreshold);
   }
 
+  uint64_t getMaxBPPSendQueue() const
+  {
+    return fMaxBPPSendQueue;
+  }
+
   EXPORT void emServerThreads();
   EXPORT void emServerQueueSize();
   EXPORT void emSecondsBetweenMemChecks();
@@ -299,11 +315,16 @@ class ResourceManager
   /* sessionLimit is a pointer to the var holding the session-scope limit, should be JobInfo.umMemLimit
      for the query. */
   /* Temporary parameter 'patience', will wait for up to 10s to get the memory. */
-  EXPORT bool getMemory(int64_t amount, boost::shared_ptr<int64_t> sessionLimit, bool patience = true);
-  inline void returnMemory(int64_t amount, boost::shared_ptr<int64_t> sessionLimit)
+  EXPORT bool getMemory(int64_t amount, boost::shared_ptr<int64_t>& sessionLimit, bool patience = true);
+  EXPORT bool getMemory(int64_t amount, bool patience = true);
+  inline void returnMemory(int64_t amount)
   {
     atomicops::atomicAdd(&totalUmMemLimit, amount);
-    atomicops::atomicAdd(sessionLimit.get(), amount);
+  }
+  inline void returnMemory(int64_t amount, boost::shared_ptr<int64_t>& sessionLimit)
+  {
+    atomicops::atomicAdd(&totalUmMemLimit, amount);
+    sessionLimit ? atomicops::atomicAdd(sessionLimit.get(), amount) : 0;
   }
   inline int64_t availableMemory() const
   {
@@ -477,7 +498,7 @@ class ResourceManager
 
   /* new HJ/Union/Aggregation support */
   volatile int64_t totalUmMemLimit;  // mem limit for join, union, and aggregation on the UM
-  uint64_t configuredUmMemLimit;
+  int64_t configuredUmMemLimit;
   uint64_t pmJoinMemLimit;  // mem limit on individual PM joins
 
   /* multi-thread aggregate */
@@ -492,6 +513,7 @@ class ResourceManager
   bool fUseHdfs;
   bool fAllowedDiskAggregation{false};
   uint64_t fDECConnectionsPerQuery;
+  uint64_t fMaxBPPSendQueue = 250000000;
 };
 
 inline std::string ResourceManager::getStringVal(const std::string& section, const std::string& name,

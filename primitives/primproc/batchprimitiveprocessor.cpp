@@ -1151,17 +1151,24 @@ void BatchPrimitiveProcessor::initProcessor()
 }
 
 /* This version does a join on projected rows */
-void BatchPrimitiveProcessor::executeTupleJoin()
+// In order to prevent super size result sets in the case of near cartesian joins on three or more joins,
+// the startRid start at 0) is used to begin the rid loop and if we cut off processing early because of
+// the size of the result set, we return the next rid to start with. If we finish ridCount rids, return 0-
+uint32_t BatchPrimitiveProcessor::executeTupleJoin(uint32_t startRid)
 {
   uint32_t newRowCount = 0, i, j;
   vector<uint32_t> matches;
   uint64_t largeKey;
-
+  uint64_t resultCount = 0;
+  uint32_t newStartRid = startRid;
   outputRG.getRow(0, &oldRow);
   outputRG.getRow(0, &newRow);
 
   // cout << "before join, RG has " << outputRG.getRowCount() << " BPP ridcount= " << ridCount << endl;
-  for (i = 0; i < ridCount && !sendThread->aborted(); i++, oldRow.nextRow())
+  // ridCount gets modified based on the number of Rids actually processed during this call.
+  // origRidCount is the number of rids for this thread after filter, which are the total
+  // number of rids to be processed from all calls to this function during this thread.
+  for (i = startRid; i < origRidCount && !sendThread->aborted(); i++, oldRow.nextRow())
   {
     /* Decide whether this large-side row belongs in the output.  The breaks
      * in the loop mean that it doesn't.
@@ -1268,10 +1275,9 @@ void BatchPrimitiveProcessor::executeTupleJoin()
 
     if (j == joinerCount)
     {
+      uint32_t matchCount;
       for (j = 0; j < joinerCount; j++)
       {
-        uint32_t matchCount;
-
         /* The result is already known if...
          *   -- anti-join with no fcnexp
          *   -- semi-join with no fcnexp and not scalar
@@ -1359,6 +1365,8 @@ void BatchPrimitiveProcessor::executeTupleJoin()
           tSmallSideMatches[j][newRowCount].push_back(-1);
           matchCount = 1;
         }
+
+        resultCount += matchCount;
       }
 
       /* Finally, copy the row into the output */
@@ -1382,7 +1390,17 @@ void BatchPrimitiveProcessor::executeTupleJoin()
       // else
       // cout << "j != joinerCount\n";
     }
+    // If we've accumulated more than maxResultCount -- 1048576 (2^20)_ of resultCounts, cut off processing.
+    // The caller will restart to continue where we left off.
+    if (resultCount >= maxResultCount)
+    {
+      newStartRid += newRowCount;
+      break;
+    }
   }
+
+  if (resultCount < maxResultCount)
+    newStartRid = 0;
 
   ridCount = newRowCount;
   outputRG.setRowCount(ridCount);
@@ -1400,6 +1418,7 @@ void BatchPrimitiveProcessor::executeTupleJoin()
               }
       }
   */
+  return newStartRid;
 }
 
 #ifdef PRIMPROC_STOPWATCH
@@ -1408,6 +1427,9 @@ void BatchPrimitiveProcessor::execute(StopWatch* stopwatch)
 void BatchPrimitiveProcessor::execute()
 #endif
 {
+  uint8_t sendCount = 0;
+  //    bool smoreRGs = false;
+  //    uint32_t sStartRid = 0;
   uint32_t i, j;
 
   try
@@ -1446,6 +1468,7 @@ void BatchPrimitiveProcessor::execute()
 
     // filters use relrids and values for intermediate results.
     if (bop == BOP_AND)
+    {
       for (j = 0; j < filterCount; ++j)
       {
 #ifdef PRIMPROC_STOPWATCH
@@ -1456,6 +1479,7 @@ void BatchPrimitiveProcessor::execute()
         filterSteps[j]->execute();
 #endif
       }
+    }
     else  // BOP_OR
     {
       /* XXXPAT: This is a hacky impl of OR logic.  Each filter is configured to
@@ -1545,10 +1569,12 @@ void BatchPrimitiveProcessor::execute()
     // projection commands read relrids and write output directly to a rowgroup
     // or the serialized bytestream
     if (ot != ROW_GROUP)
+    {
       for (j = 0; j < projectCount; ++j)
       {
         projectSteps[j]->project();
       }
+    }
     else
     {
       /* Function & Expression group 1 processing
@@ -1624,15 +1650,93 @@ void BatchPrimitiveProcessor::execute()
           //					cout << "   no target found for OID " << projectSteps[j]->getOID() <<
           //endl;
         }
+        if (fe2)
+        {
+          /* functionize this -> processFE2() */
+          fe2Output.resetRowGroup(baseRid);
+          fe2Output.getRow(0, &fe2Out);
+          fe2Input->getRow(0, &fe2In);
+
+          // cerr << "input row: " << fe2In.toString() << endl;
+          for (j = 0; j < outputRG.getRowCount(); j++, fe2In.nextRow())
+          {
+            if (fe2->evaluate(&fe2In))
+            {
+              applyMapping(fe2Mapping, fe2In, &fe2Out);
+              // cerr << "   passed. output row: " << fe2Out.toString() << endl;
+              fe2Out.setRid(fe2In.getRelRid());
+              fe2Output.incRowCount();
+              fe2Out.nextRow();
+            }
+          }
+
+          if (!fAggregator)
+          {
+            *serialized << (uint8_t)1;  // the "count this msg" var
+            fe2Output.setDBRoot(dbRoot);
+            fe2Output.serializeRGData(*serialized);
+            //*serialized << fe2Output.getDataSize();
+            // serialized->append(fe2Output.getData(), fe2Output.getDataSize());
+          }
+        }
+
+        if (fAggregator)
+        {
+          *serialized << (uint8_t)1;  // the "count this msg" var
+
+          RowGroup& toAggregate = (fe2 ? fe2Output : outputRG);
+          // toAggregate.convertToInlineDataInPlace();
+
+          if (fe2)
+            fe2Output.setDBRoot(dbRoot);
+          else
+            outputRG.setDBRoot(dbRoot);
+
+          fAggregator->addRowGroup(&toAggregate);
+
+          if ((currentBlockOffset + 1) == count)  // @bug4507, 8k
+          {
+            fAggregator->loadResult(*serialized);            // @bug4507, 8k
+          }                                                  // @bug4507, 8k
+          else if (utils::MonitorProcMem::isMemAvailable())  // @bug4507, 8k
+          {
+            fAggregator->loadEmptySet(*serialized);  // @bug4507, 8k
+          }                                          // @bug4507, 8k
+          else                                       // @bug4507, 8k
+          {
+            fAggregator->loadResult(*serialized);  // @bug4507, 8k
+            fAggregator->aggReset();               // @bug4507, 8k
+          }                                        // @bug4507, 8k
+        }
+
+        if (!fAggregator && !fe2)
+        {
+          *serialized << (uint8_t)1;  // the "count this msg" var
+          outputRG.setDBRoot(dbRoot);
+          // cerr << "serializing " << outputRG.toString() << endl;
+          outputRG.serializeRGData(*serialized);
+
+          //*serialized << outputRG.getDataSize();
+          // serialized->append(outputRG.getData(), outputRG.getDataSize());
+        }
+
+#ifdef PRIMPROC_STOPWATCH
+        stopwatch->stop("- if(ot != ROW_GROUP) else");
+#endif
       }
-      else
+      else  // Is doJoin
       {
+        uint32_t startRid = 0;
+        ByteStream preamble = *serialized;
+        origRidCount = ridCount;  // ridCount can get modified by executeTupleJoin(). We need to keep track of
+                                  // the original val.
         /* project the key columns.  If there's the filter IN the join, project everything.
            Also need to project 'long' strings b/c executeTupleJoin may copy entire rows
            using copyRow(), which will try to interpret the uninit'd string ptr.
            Valgrind will legitimately complain about copying uninit'd values for the
            other types but that is technically safe. */
         for (j = 0; j < projectCount; j++)
+        {
           if (keyColumnProj[j] ||
               (projectionMap[j] != -1 && (hasJoinFEFilters || oldRow.isLongString(projectionMap[j]))))
           {
@@ -1644,213 +1748,174 @@ void BatchPrimitiveProcessor::execute()
             projectSteps[j]->projectIntoRowGroup(outputRG, projectionMap[j]);
 #endif
           }
-
-#ifdef PRIMPROC_STOPWATCH
-        stopwatch->start("-- executeTupleJoin()");
-        executeTupleJoin();
-        stopwatch->stop("-- executeTupleJoin()");
-#else
-        executeTupleJoin();
-#endif
-
-        /* project the non-key columns */
-        for (j = 0; j < projectCount; ++j)
-        {
-          if (projectionMap[j] != -1 && !keyColumnProj[j] && !hasJoinFEFilters &&
-              !oldRow.isLongString(projectionMap[j]))
-          {
-#ifdef PRIMPROC_STOPWATCH
-            stopwatch->start("-- projectIntoRowGroup");
-            projectSteps[j]->projectIntoRowGroup(outputRG, projectionMap[j]);
-            stopwatch->stop("-- projectIntoRowGroup");
-#else
-            projectSteps[j]->projectIntoRowGroup(outputRG, projectionMap[j]);
-#endif
-          }
         }
-      }
 
-      /* The RowGroup is fully joined at this point.
-      Add additional RowGroup processing here.
-      TODO:  Try to clean up all of the switching */
-
-      if (doJoin && (fe2 || fAggregator))
-      {
-        bool moreRGs = true;
-        ByteStream preamble = *serialized;
-        initGJRG();
-
-        while (moreRGs && !sendThread->aborted())
+        do  // while (startRid > 0)
         {
-          /*
-              generate 1 rowgroup (8192 rows max) of joined rows
-              if there's an FE2, run it
-                      -pack results into a new rowgroup
-                      -if there are < 8192 rows in the new RG, continue
-              if there's an agg, run it
-              send the result
-          */
-          resetGJRG();
-          moreRGs = generateJoinedRowGroup(baseJRow);
-          *serialized << (uint8_t)!moreRGs;
-
-          if (fe2)
+#ifdef PRIMPROC_STOPWATCH
+          stopwatch->start("-- executeTupleJoin()");
+          startRid = executeTupleJoin(startRid);
+          stopwatch->stop("-- executeTupleJoin()");
+#else
+          startRid = executeTupleJoin(startRid);
+//                    sStartRid = startRid;
+#endif
+          /* project the non-key columns */
+          for (j = 0; j < projectCount; ++j)
           {
-            /* functionize this -> processFE2()*/
-            fe2Output.resetRowGroup(baseRid);
-            fe2Output.setDBRoot(dbRoot);
-            fe2Output.getRow(0, &fe2Out);
-            fe2Input->getRow(0, &fe2In);
-
-            for (j = 0; j < joinedRG.getRowCount(); j++, fe2In.nextRow())
-              if (fe2->evaluate(&fe2In))
-              {
-                applyMapping(fe2Mapping, fe2In, &fe2Out);
-                fe2Out.setRid(fe2In.getRelRid());
-                fe2Output.incRowCount();
-                fe2Out.nextRow();
-              }
+            if (projectionMap[j] != -1 && !keyColumnProj[j] && !hasJoinFEFilters &&
+              !oldRow.isLongString(projectionMap[j]))
+            {
+#ifdef PRIMPROC_STOPWATCH
+              stopwatch->start("-- projectIntoRowGroup");
+              projectSteps[j]->projectIntoRowGroup(outputRG, projectionMap[j]);
+              stopwatch->stop("-- projectIntoRowGroup");
+#else
+              projectSteps[j]->projectIntoRowGroup(outputRG, projectionMap[j]);
+#endif
+            }
           }
+          /* The RowGroup is fully joined at this point.
+           *            Add additional RowGroup processing here.
+           *            TODO:  Try to clean up all of the switching */
 
-          RowGroup& nextRG = (fe2 ? fe2Output : joinedRG);
-          nextRG.setDBRoot(dbRoot);
-
-          if (fAggregator)
+          if (fe2 || fAggregator)
           {
-            fAggregator->addRowGroup(&nextRG);
+            bool moreRGs = true;
+            initGJRG();
 
-            if ((currentBlockOffset + 1) == count && moreRGs == false)  // @bug4507, 8k
+            while (moreRGs && !sendThread->aborted())
             {
-              fAggregator->loadResult(*serialized);            // @bug4507, 8k
-            }                                                  // @bug4507, 8k
-            else if (utils::MonitorProcMem::isMemAvailable())  // @bug4507, 8k
+              /*
+                  *                        generate 1 rowgroup (8192 rows max) of joined rows
+                  *                        if there's an FE2, run it
+                  *                                -pack results into a new rowgroup
+                  *                                -if there are < 8192 rows in the new RG, continue
+                  *                        if there's an agg, run it
+                  *                        send the result
+              */
+              resetGJRG();
+              moreRGs = generateJoinedRowGroup(baseJRow);
+                  //                            smoreRGs = moreRGs;
+                  sendCount = (uint8_t)(!moreRGs && !startRid);
+                  //                            *serialized << (uint8_t)(!moreRGs && !startRid);   // the "count
+                  //                            this msg" var
+                  *serialized << sendCount;
+              if (fe2)
+              {
+                /* functionize this -> processFE2()*/
+                fe2Output.resetRowGroup(baseRid);
+                fe2Output.setDBRoot(dbRoot);
+                fe2Output.getRow(0, &fe2Out);
+                fe2Input->getRow(0, &fe2In);
+
+                for (j = 0; j < joinedRG.getRowCount(); j++, fe2In.nextRow())
+                {
+                  if (fe2->evaluate(&fe2In))
+                  {
+                    applyMapping(fe2Mapping, fe2In, &fe2Out);
+                    fe2Out.setRid(fe2In.getRelRid());
+                    fe2Output.incRowCount();
+                    fe2Out.nextRow();
+                  }
+                }
+              }
+
+              RowGroup& nextRG = (fe2 ? fe2Output : joinedRG);
+              nextRG.setDBRoot(dbRoot);
+
+              if (fAggregator)
+              {
+                fAggregator->addRowGroup(&nextRG);
+
+                    if ((currentBlockOffset + 1) == count && moreRGs == false && startRid == 0)  // @bug4507, 8k
+                {
+                  fAggregator->loadResult(*serialized);            // @bug4507, 8k
+                }                                                  // @bug4507, 8k
+                else if (utils::MonitorProcMem::isMemAvailable())  // @bug4507, 8k
+                {
+                  fAggregator->loadEmptySet(*serialized);  // @bug4507, 8k
+                }                                          // @bug4507, 8k
+                else                                       // @bug4507, 8k
+                {
+                  fAggregator->loadResult(*serialized);  // @bug4507, 8k
+                  fAggregator->aggReset();               // @bug4507, 8k
+                }                                        // @bug4507, 8k
+              }
+              else
+              {
+                // cerr <<" * serialzing " << nextRG.toString() << endl;
+                nextRG.serializeRGData(*serialized);
+              }
+
+              /* send the msg & reinit the BS */
+              if (moreRGs)
+              {
+                sendResponse();
+                serialized.reset(new ByteStream());
+                *serialized = preamble;
+              }
+            }
+
+            if (hasSmallOuterJoin)
             {
-              fAggregator->loadEmptySet(*serialized);  // @bug4507, 8k
-            }                                          // @bug4507, 8k
-            else                                       // @bug4507, 8k
+              // Should we happen to finish sending data rows right on the boundary of when moreRGs flips off,
+              // then we need to start a new buffer. I.e., it needs the count this message byte pushed.
+              if (serialized->length() == preamble.length())
+              *serialized << (uint8_t)(startRid > 0 ? 0 : 1);  // the "count this msg" var
+
+              *serialized << ridCount;
+
+              for (i = 0; i < joinerCount; i++)
+              {
+                for (j = 0; j < ridCount; ++j)
+                {
+                  serializeInlineVector<uint32_t>(*serialized, tSmallSideMatches[i][j]);
+                      tSmallSideMatches[i][j].clear();
+                }
+              }
+            }
+            else
             {
-              fAggregator->loadResult(*serialized);  // @bug4507, 8k
-              fAggregator->aggReset();               // @bug4507, 8k
-            }                                        // @bug4507, 8k
+              // We hae no more use for this allocation
+              for (i = 0; i < joinerCount; i++)
+                for (j = 0; j < ridCount; ++j)
+                  tSmallSideMatches[i][j].clear();
+            }
           }
           else
           {
-            // cerr <<" * serialzing " << nextRG.toString() << endl;
-            nextRG.serializeRGData(*serialized);
-          }
+            *serialized << (uint8_t)(startRid > 0 ? 0 : 1);  // the "count this msg" var
+            outputRG.setDBRoot(dbRoot);
+            // cerr << "serializing " << outputRG.toString() << endl;
+            outputRG.serializeRGData(*serialized);
 
-          /* send the msg & reinit the BS */
-          if (moreRGs)
+            //*serialized << outputRG.getDataSize();
+            // serialized->append(outputRG.getData(), outputRG.getDataSize());
+            for (i = 0; i < joinerCount; i++)
+            {
+              for (j = 0; j < ridCount; ++j)
+              {
+                serializeInlineVector<uint32_t>(*serialized, tSmallSideMatches[i][j]);
+                  tSmallSideMatches[i][j].clear();
+              }
+            }
+          }
+          if (startRid > 0)
           {
             sendResponse();
             serialized.reset(new ByteStream());
             *serialized = preamble;
           }
-        }
-
-        if (hasSmallOuterJoin)
-        {
-          *serialized << ridCount;
-
-          for (i = 0; i < joinerCount; i++)
-            for (j = 0; j < ridCount; ++j)
-              serializeInlineVector<uint32_t>(*serialized, tSmallSideMatches[i][j]);
-        }
+        } while (startRid > 0);
       }
-
-      if (!doJoin && fe2)
-      {
-        /* functionize this -> processFE2() */
-        fe2Output.resetRowGroup(baseRid);
-        fe2Output.getRow(0, &fe2Out);
-        fe2Input->getRow(0, &fe2In);
-
-        // cerr << "input row: " << fe2In.toString() << endl;
-        for (j = 0; j < outputRG.getRowCount(); j++, fe2In.nextRow())
-        {
-          if (fe2->evaluate(&fe2In))
-          {
-            applyMapping(fe2Mapping, fe2In, &fe2Out);
-            // cerr << "   passed. output row: " << fe2Out.toString() << endl;
-            fe2Out.setRid(fe2In.getRelRid());
-            fe2Output.incRowCount();
-            fe2Out.nextRow();
-          }
-        }
-
-        if (!fAggregator)
-        {
-          *serialized << (uint8_t)1;  // the "count this msg" var
-          fe2Output.setDBRoot(dbRoot);
-          fe2Output.serializeRGData(*serialized);
-          //*serialized << fe2Output.getDataSize();
-          // serialized->append(fe2Output.getData(), fe2Output.getDataSize());
-        }
-      }
-
-      if (!doJoin && fAggregator)
-      {
-        *serialized << (uint8_t)1;  // the "count this msg" var
-
-        RowGroup& toAggregate = (fe2 ? fe2Output : outputRG);
-        // toAggregate.convertToInlineDataInPlace();
-
-        if (fe2)
-          fe2Output.setDBRoot(dbRoot);
-        else
-          outputRG.setDBRoot(dbRoot);
-
-        fAggregator->addRowGroup(&toAggregate);
-
-        if ((currentBlockOffset + 1) == count)  // @bug4507, 8k
-        {
-          fAggregator->loadResult(*serialized);            // @bug4507, 8k
-        }                                                  // @bug4507, 8k
-        else if (utils::MonitorProcMem::isMemAvailable())  // @bug4507, 8k
-        {
-          fAggregator->loadEmptySet(*serialized);  // @bug4507, 8k
-        }                                          // @bug4507, 8k
-        else                                       // @bug4507, 8k
-        {
-          fAggregator->loadResult(*serialized);  // @bug4507, 8k
-          fAggregator->aggReset();               // @bug4507, 8k
-        }                                        // @bug4507, 8k
-      }
-
-      if (!fAggregator && !fe2)
-      {
-        *serialized << (uint8_t)1;  // the "count this msg" var
-        outputRG.setDBRoot(dbRoot);
-        // cerr << "serializing " << outputRG.toString() << endl;
-        outputRG.serializeRGData(*serialized);
-
-        //*serialized << outputRG.getDataSize();
-        // serialized->append(outputRG.getData(), outputRG.getDataSize());
-        if (doJoin)
-        {
-          for (i = 0; i < joinerCount; i++)
-          {
-            for (j = 0; j < ridCount; ++j)
-            {
-              serializeInlineVector<uint32_t>(*serialized, tSmallSideMatches[i][j]);
-            }
-          }
-        }
-      }
-
-      // clear small side match vector
-      if (doJoin)
-      {
-        for (i = 0; i < joinerCount; i++)
-          for (j = 0; j < ridCount; ++j)
-            tSmallSideMatches[i][j].clear();
-      }
-
 #ifdef PRIMPROC_STOPWATCH
       stopwatch->stop("- if(ot != ROW_GROUP) else");
 #endif
     }
-
+    ridCount = origRidCount;  // May not be needed, but just to be safe.
+    //        std::cout << "end of send. startRid=" << sStartRid << " moreRG=" << smoreRGs << " sendCount=" <<
+    //        sendCount << std::endl;
     if (projectCount > 0 || ot == ROW_GROUP)
     {
       *serialized << cachedIO;
@@ -2192,8 +2257,9 @@ int BatchPrimitiveProcessor::operator()()
       if (sendThread->aborted())
         break;
 
-      if (!sendThread->okToProceed())
+      if (sendThread->sizeTooBig())
       {
+        // The send buffer is full of messages yet to be sent, so this thread would block anyway.
         freeLargeBuffers();
         return -1;  // the reschedule error code
       }

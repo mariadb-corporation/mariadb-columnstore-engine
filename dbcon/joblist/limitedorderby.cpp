@@ -123,12 +123,12 @@ void LimitedOrderBy::processRow(const rowgroup::Row& row)
     fUncommitedMemory += memSizeInc;
     if (fUncommitedMemory >= fMaxUncommited)
     {
-      fMemSize += fUncommitedMemory;
       if (!fRm->getMemory(fUncommitedMemory, fSessionMemLimit))
       {
         cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
         throw IDBExcept(fErrorCode);
       }
+      fMemSize += fUncommitedMemory;
       fUncommitedMemory = 0;
     }
 
@@ -143,13 +143,13 @@ void LimitedOrderBy::processRow(const rowgroup::Row& row)
     {
       fDataQueue.push(fData);
       uint64_t newSize = fRowGroup.getSizeWithStrings() - fRowGroup.getHeaderSize();
-      fMemSize += newSize;
 
       if (!fRm->getMemory(newSize, fSessionMemLimit))
       {
         cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
         throw IDBExcept(fErrorCode);
       }
+      fMemSize += newSize;
 
       fData.reinit(fRowGroup, fRowsPerRG);
       fRowGroup.setData(&fData);
@@ -184,12 +184,12 @@ void LimitedOrderBy::finalize()
 {
   if (fUncommitedMemory > 0)
   {
-    fMemSize += fUncommitedMemory;
     if (!fRm->getMemory(fUncommitedMemory, fSessionMemLimit))
     {
       cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
       throw IDBExcept(fErrorCode);
     }
+    fMemSize += fUncommitedMemory;
     fUncommitedMemory = 0;
   }
 
@@ -202,13 +202,13 @@ void LimitedOrderBy::finalize()
     // *DRRTUY Very memory intensive. CS needs to account active
     // memory only and release memory if needed.
     uint64_t memSizeInc = fRowGroup.getSizeWithStrings() - fRowGroup.getHeaderSize();
-    fMemSize += memSizeInc;
 
     if (!fRm->getMemory(memSizeInc, fSessionMemLimit))
     {
       cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
       throw IDBExcept(fErrorCode);
     }
+    fMemSize += memSizeInc;
 
     uint64_t offset = 0;
     uint64_t i = 0;
@@ -256,13 +256,13 @@ void LimitedOrderBy::finalize()
       if (offset == (uint64_t)-1)
       {
         tempRGDataList.push_front(fData);
-        fMemSize += memSizeInc;
 
         if (!fRm->getMemory(memSizeInc, fSessionMemLimit))
         {
           cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
           throw IDBExcept(fErrorCode);
         }
+        fMemSize += memSizeInc;
 
         fData.reinit(fRowGroup, fRowsPerRG);
         fRowGroup.setData(&fData);

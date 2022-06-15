@@ -412,19 +412,24 @@ class RMMemManager : public MemManager
  protected:
   bool acquireImpl(size_t amount) final
   {
-    MemManager::acquireImpl(amount);
+    if (amount)
+    {
     if (!fRm->getMemory(amount, fSessLimit, fWait) && fStrict)
     {
       return false;
     }
-
+      MemManager::acquireImpl(amount);
+    }
     return true;
   }
 
   void releaseImpl(size_t amount) override
   {
+    if (amount)
+    {
     MemManager::releaseImpl(amount);
     fRm->returnMemory(amount, fSessLimit);
+  }
   }
 
  private:

@@ -30,11 +30,12 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include "resourcemanager.h"
+#include "exceptclasses.h"
 
 namespace joblist
 {
 class BatchPrimitive;
-class ResourceManager;
 class TupleBPS;
 struct FunctionJoinInfo;
 class DiskJoinStep;
@@ -365,6 +366,21 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   }
 
   void abort();
+  void returnMemory()
+  {
+    if (fMemSizeForOutputRG > 0)
+    {
+      resourceManager->returnMemory(fMemSizeForOutputRG);
+      fMemSizeForOutputRG = 0;
+    }
+  }
+  bool getMemory(uint64_t memSize)
+  {
+    bool gotMem = resourceManager->getMemory(memSize);
+    if (gotMem)
+      fMemSizeForOutputRG += memSize;
+    return gotMem;
+  }
 
  private:
   TupleHashJoinStep();
@@ -422,6 +438,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   std::vector<std::vector<uint32_t> > smallSideKeys;
 
   ResourceManager* resourceManager;
+  uint64_t fMemSizeForOutputRG;
 
   struct JoinerSorter
   {
@@ -521,18 +538,19 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
                              rowgroup::Row& baseRow,
                              const boost::shared_array<boost::shared_array<int> >& mappings,
                              const uint32_t depth, rowgroup::RowGroup& outputRG, rowgroup::RGData& rgData,
-                             std::vector<rowgroup::RGData>* outputData,
-                             const boost::shared_array<rowgroup::Row>& smallRows, rowgroup::Row& joinedRow);
+                             std::vector<rowgroup::RGData>& outputData,
+                             const boost::shared_array<rowgroup::Row>& smallRows, rowgroup::Row& joinedRow,
+                             RowGroupDL* outputDL);
   void grabSomeWork(std::vector<rowgroup::RGData>* work);
   void sendResult(const std::vector<rowgroup::RGData>& res);
   void processFE2(rowgroup::RowGroup& input, rowgroup::RowGroup& output, rowgroup::Row& inRow,
                   rowgroup::Row& outRow, std::vector<rowgroup::RGData>* rgData,
                   funcexp::FuncExpWrapper* local_fe);
-  void joinOneRG(uint32_t threadID, std::vector<rowgroup::RGData>* out, rowgroup::RowGroup& inputRG,
+  void joinOneRG(uint32_t threadID, std::vector<rowgroup::RGData>& out, rowgroup::RowGroup& inputRG,
                  rowgroup::RowGroup& joinOutput, rowgroup::Row& largeSideRow, rowgroup::Row& joinFERow,
                  rowgroup::Row& joinedRow, rowgroup::Row& baseRow,
                  std::vector<std::vector<rowgroup::Row::Pointer> >& joinMatches,
-                 boost::shared_array<rowgroup::Row>& smallRowTemplates,
+                 boost::shared_array<rowgroup::Row>& smallRowTemplates, RowGroupDL* outputDL,
                  std::vector<boost::shared_ptr<joiner::TupleJoiner> >* joiners = NULL,
                  boost::shared_array<boost::shared_array<int> >* rgMappings = NULL,
                  boost::shared_array<boost::shared_array<int> >* feMappings = NULL,
@@ -577,6 +595,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
     }
     void operator()()
     {
+      utils::setThreadName("DJSReader");
       HJ->djsReaderFcn(index);
     }
     TupleHashJoinStep* HJ;

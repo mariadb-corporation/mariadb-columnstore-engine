@@ -884,10 +884,11 @@ void WindowFunctionStep::execute()
       {
         fInRowGroupData.push_back(rgData);
         uint64_t memAdd = fRowGroupIn.getSizeWithStrings() + rowCnt * sizeof(RowPosition);
-        fMemUsage += memAdd;
 
         if (fRm->getMemory(memAdd, fSessionMemLimit) == false)
           throw IDBExcept(ERR_WF_DATA_SET_TOO_BIG);
+
+        fMemUsage += memAdd;
 
         for (uint64_t j = 0; j < rowCnt; ++j)
         {
@@ -1012,10 +1013,11 @@ void WindowFunctionStep::doFunction()
     while (((i = nextFunctionIndex()) < fFunctionCount) && !cancelled())
     {
       uint64_t memAdd = fRows.size() * sizeof(RowPosition);
-      fMemUsage += memAdd;
 
       if (fRm->getMemory(memAdd, fSessionMemLimit) == false)
         throw IDBExcept(ERR_WF_DATA_SET_TOO_BIG);
+
+      fMemUsage += memAdd;
 
       fFunctions[i]->setCallback(this, i);
       (*fFunctions[i].get())();

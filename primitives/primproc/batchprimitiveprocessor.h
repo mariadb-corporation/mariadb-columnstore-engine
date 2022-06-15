@@ -136,7 +136,6 @@ class BatchPrimitiveProcessor
   {
     fBusy = b;
   }
-
   uint16_t FilterCount() const
   {
     return filterCount;
@@ -224,6 +223,7 @@ class BatchPrimitiveProcessor
   int128_t wide128Values[LOGICAL_BLOCK_RIDS];
   boost::scoped_array<uint64_t> absRids;
   boost::scoped_array<std::string> strValues;
+  uint16_t origRidCount;
   uint16_t ridCount;
   bool needStrValues;
   uint16_t wideColumnsWidths;
@@ -334,7 +334,7 @@ class BatchPrimitiveProcessor
   boost::shared_array<boost::shared_array<boost::shared_ptr<TJoiner>>> tJoiners;
   typedef std::vector<uint32_t> MatchedData[LOGICAL_BLOCK_RIDS];
   boost::shared_array<MatchedData> tSmallSideMatches;
-  void executeTupleJoin();
+  uint32_t executeTupleJoin(uint32_t startRid);
   bool getTupleJoinRowGroupData;
   std::vector<rowgroup::RowGroup> smallSideRGs;
   rowgroup::RowGroup largeSideRG;
@@ -433,6 +433,8 @@ class BatchPrimitiveProcessor
   uint ptMask;
   bool firstInstance;
   uint64_t valuesLBID;
+
+  static const uint64_t maxResultCount = 1048576;  // 2^20
 
   friend class Command;
   friend class ColumnCommand;

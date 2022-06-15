@@ -19,7 +19,6 @@
 */
 
 #pragma once
-
 #include <string>
 #include <iostream>
 #include <sys/types.h>

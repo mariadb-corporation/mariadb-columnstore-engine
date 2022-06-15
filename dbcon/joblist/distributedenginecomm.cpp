@@ -293,7 +293,11 @@ void DistributedEngineComm::Setup()
       writeToLog(__FILE__, __LINE__,
                  "Could not connect to PMS" + std::to_string(connectionId) + ": " + ex.what(),
                  LOG_TYPE_ERROR);
-      cerr << "Could not connect to PMS" << std::to_string(connectionId) << ": " << ex.what() << endl;
+      if (newPmCount == 0)
+      {
+        writeToLog(__FILE__, __LINE__, "No more PMs to try to connect to", LOG_TYPE_ERROR);
+        break;
+      }
     }
     catch (...)
     {
@@ -302,6 +306,11 @@ void DistributedEngineComm::Setup()
 
       writeToLog(__FILE__, __LINE__, "Could not connect to PMS" + std::to_string(connectionId),
                  LOG_TYPE_ERROR);
+      if (newPmCount == 0)
+      {
+        writeToLog(__FILE__, __LINE__, "No more PMs to try to connect to", LOG_TYPE_ERROR);
+        break;
+      }
     }
   }
 
