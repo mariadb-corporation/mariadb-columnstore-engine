@@ -20,4 +20,9 @@ elsif (-d $mcs_ins_dir_installed)
 
 sub is_default { 0 }
 
+sub start_test {
+  # we should guard this for --force-restart flag condition.
+  system("systemctl", "restart", "mariadb-columnstore");
+}
+
 bless { };
