@@ -1308,7 +1308,6 @@ uint8_t WE_DDLCommandProc::deleteSyscolumn(ByteStream& bs, std::string& err)
 {
   int rc = 0;
   uint32_t sessionID, tmp32;
-  ;
   int txnID;
   string schema, tablename;
   bs >> sessionID;

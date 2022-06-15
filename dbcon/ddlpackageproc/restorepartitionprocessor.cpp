@@ -64,6 +64,7 @@ RestorePartitionProcessor::DDLResult RestorePartitionProcessor::processPackage(
   }
 
   std::vector<CalpontSystemCatalog::OID> oidList;
+  CalpontSystemCatalog::OID tableAuxColOid;
   CalpontSystemCatalog::RIDList tableColRidList;
   CalpontSystemCatalog::DictOIDList dictOIDList;
   std::string processName("DDLProc");
@@ -195,6 +196,7 @@ RestorePartitionProcessor::DDLResult RestorePartitionProcessor::processPackage(
     userTableName.table = restorePartitionStmt.fTableName->fName;
 
     tableColRidList = systemCatalogPtr->columnRIDs(userTableName);
+    tableAuxColOid = systemCatalogPtr->tableAUXColumnOID(userTableName);
 
     dictOIDList = systemCatalogPtr->dictOIDs(userTableName);
 
@@ -203,6 +205,11 @@ RestorePartitionProcessor::DDLResult RestorePartitionProcessor::processPackage(
     {
       if (tableColRidList[i].objnum > 3000)
         oidList.push_back(tableColRidList[i].objnum);
+    }
+
+    if (tableAuxColOid > 3000)
+    {
+      oidList.push_back(tableAuxColOid);
     }
 
     for (unsigned i = 0; i < dictOIDList.size(); i++)

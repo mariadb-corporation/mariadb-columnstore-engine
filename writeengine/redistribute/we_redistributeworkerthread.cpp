@@ -308,6 +308,7 @@ int RedistributeWorkerThread::buildEntryList()
     boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(0);
     const CalpontSystemCatalog::TableName table = csc->tableName(fPlanEntry.table);
     CalpontSystemCatalog::RIDList cols = csc->columnRIDs(table, true);
+    CalpontSystemCatalog::OID tableAuxColOid = csc->tableAUXColumnOID(table);
 
     for (CalpontSystemCatalog::RIDList::iterator i = cols.begin(); i != cols.end(); i++)
       fOids.push_back(i->objnum);
@@ -316,6 +317,11 @@ int RedistributeWorkerThread::buildEntryList()
 
     for (CalpontSystemCatalog::DictOIDList::iterator i = dicts.begin(); i != dicts.end(); i++)
       fOids.push_back(i->dictOID);
+
+    if (tableAuxColOid > 3000)
+    {
+      fOids.push_back(tableAuxColOid);
+    }
 
     bool firstOid = true;  // for adding segments, all columns have the same lay out.
     uint16_t source = fPlanEntry.source;

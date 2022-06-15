@@ -962,7 +962,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
       if (tableAUXColOid > 3000)
       {
         rc = BRMWrapper::getInstance()->getDbRootHWMInfo(tableAUXColOid, dbRootHWMInfoColVec[ridList.size()]);
-        colWidths.push_back(1);
+        colWidths.push_back(execplan::AUX_COL_WIDTH);
         dctnryStoreOids[ridList.size()] = 0;
         CalpontSystemCatalog::ROPair auxRoPair;
         auxRoPair.rid = ridList.back().rid + 1;
@@ -2299,47 +2299,6 @@ uint8_t WE_DMLCommandProc::commitBatchAutoOn(messageqcpp::ByteStream& bs, std::s
   // cout << "flush files when autocommit on" << endl;
   fWEWrapper.setIsInsert(true);
   fWEWrapper.setBulkFlag(true);
-
-  std::map<uint32_t, uint32_t> oids;
-  boost::shared_ptr<CalpontSystemCatalog> systemCatalogPtr =
-      CalpontSystemCatalog::makeCalpontSystemCatalog(sessionId);
-
-  CalpontSystemCatalog::TableName aTableName = systemCatalogPtr->tableName(tableOid);
-  CalpontSystemCatalog::RIDList ridList;
-
-  try
-  {
-    ridList = systemCatalogPtr->columnRIDs(aTableName, true);
-  }
-  catch (std::exception& ex)
-  {
-    err = ex.what();
-    rc = 1;
-    return rc;
-  }
-
-  for (unsigned i = 0; i < ridList.size(); i++)
-  {
-    oids[ridList[i].objnum] = ridList[i].objnum;
-  }
-
-  CalpontSystemCatalog::DictOIDList dictOids;
-
-  try
-  {
-    dictOids = systemCatalogPtr->dictOIDs(aTableName);
-  }
-  catch (std::exception& ex)
-  {
-    err = ex.what();
-    rc = 1;
-    return rc;
-  }
-
-  for (unsigned i = 0; i < dictOids.size(); i++)
-  {
-    oids[dictOids[i].dictOID] = dictOids[i].dictOID;
-  }
 
   fWEWrapper.setTransId(txnID);
 
