@@ -130,7 +130,7 @@ class NullString
   //      It is not SQL-NULL-handling compatible, please beware.
   bool operator ==(const NullString& a) const
   {
-    if (mStrPtr && !a.mStrPtr)
+    if (!mStrPtr && !a.mStrPtr)
     {
       return true;
     }
