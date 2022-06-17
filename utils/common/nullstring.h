@@ -147,21 +147,25 @@ class NullString
   }
   bool operator <(const NullString& a) const
   {
-    if (!mStrPtr || !a.mStrPtr)
+    // order NULLs first.
+    if (isNull() > a.isNull())
+    {
+      return true;
+    }
+    if (isNull() < a.isNull())
     {
       return false;
     }
-    // fall to std::string equality.
-    return (*mStrPtr) < (*a.mStrPtr);
+    if (!isNull())
+    {
+      // fall to std::string equality.
+      return (*mStrPtr) < (*a.mStrPtr);
+    }
+    return false; // both are NULLs.
   }
   bool operator >(const NullString& a) const
   {
-    if (!mStrPtr || !a.mStrPtr)
-    {
-      return false;
-    }
-    // fall to std::string equality.
-    return (*mStrPtr) > (*a.mStrPtr);
+    return a < (*this)
   }
 };
 } // namespace utils.
