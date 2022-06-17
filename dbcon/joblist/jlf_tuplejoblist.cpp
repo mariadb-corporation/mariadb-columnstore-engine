@@ -2116,7 +2116,7 @@ void spanningTreeCheck(TableInfoMap& tableInfoMap, JobStepVector joinSteps, JobI
       // 2.2. Outer.
       else
       {
-        errcode = ERR_CIRCULAR_JOIN;
+        errcode = ERR_CIRCULAR_OUTER_JOIN;
         spanningTree = false;
       }
     }
