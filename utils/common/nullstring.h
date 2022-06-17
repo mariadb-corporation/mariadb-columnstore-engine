@@ -165,7 +165,7 @@ class NullString
   }
   bool operator >(const NullString& a) const
   {
-    return a < (*this)
+    return a < (*this);
   }
 };
 } // namespace utils.
