@@ -1120,12 +1120,12 @@ inline uint32_t Row::getVarBinaryLength(uint32_t colIndex) const
   if (inStringTable(colIndex))
     return strings->getStringLength(*((uint64_t*)&data[offsets[colIndex]]));
 
-  if (data[offsets[colIndex]])
+  if (getNullMark(colIndex))
   {
     return 0;
   }
 
-  return *((uint16_t*)&data[offsets[colIndex] + 1]);
+  return *((uint16_t*)&data[offsets[colIndex]]);
 }
 
 inline const uint8_t* Row::getVarBinaryField(uint32_t colIndex) const
@@ -1133,7 +1133,7 @@ inline const uint8_t* Row::getVarBinaryField(uint32_t colIndex) const
   if (inStringTable(colIndex))
     return strings->getPointer(*((uint64_t*)&data[offsets[colIndex]]));
 
-  if (null_string_length == *((uint16_t*)&data[offsets[colIndex]]))
+  if (getNullMark(colIndex))
   {
     return nullptr;
   }
@@ -1150,12 +1150,12 @@ inline const uint8_t* Row::getVarBinaryField(uint32_t& len, uint32_t colIndex) c
   }
   else
   {
-    len = *((uint16_t*)&data[offsets[colIndex]]);
-    if (null_string_length == len)
+    if (getNullMark(colIndex))
     {
       len = 0;
       return nullptr;
     }
+    len = *((uint16_t*)&data[offsets[colIndex]]);
     return &data[offsets[colIndex] + 2];
   }
 }
@@ -1373,6 +1373,8 @@ inline void Row::setVarBinaryField(const utils::NullString& val, uint32_t colInd
 
 inline void Row::setVarBinaryField(const uint8_t* val, uint32_t len, uint32_t colIndex)
 {
+  setNullMark(colIndex, !val);
+
   if (inStringTable(colIndex))
   {
     if (len > getColumnWidth(colIndex))
@@ -1383,12 +1385,11 @@ inline void Row::setVarBinaryField(const uint8_t* val, uint32_t len, uint32_t co
   }
   else
   {
-    if (len > getColumnWidth(colIndex) - 1)
-      len = getColumnWidth(colIndex) - 1;
+    if (len > getColumnWidth(colIndex))
+      len = getColumnWidth(colIndex);
 
-    setNullMark(colIndex, !val);
-    *((uint16_t*)&data[offsets[colIndex]+1]) = len;
-    memcpy(&data[offsets[colIndex] + 3], val, len);
+    *((uint16_t*)&data[offsets[colIndex]]) = len;
+    memcpy(&data[offsets[colIndex] + 2], val, len);
   }
 }
 
