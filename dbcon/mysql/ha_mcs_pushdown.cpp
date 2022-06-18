@@ -962,6 +962,9 @@ select_handler* create_columnstore_select_handler(THD* thd, SELECT_LEX* select_l
       {
         my_printf_error(ER_INTERNAL_ERROR, "%s", MYF(0), "Error occured in ha_mcs_impl_pushdown_init()");
       }
+
+      // We had an error in `ha_mcs_impl_pushdown_init`, no need to continue execution of this query.
+      return handler;
     }
 
     // Unset select_lex::first_cond_optimization
