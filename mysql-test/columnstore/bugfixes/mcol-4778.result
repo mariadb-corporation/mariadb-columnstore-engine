@@ -1,0 +1,18 @@
+DROP DATABASE IF EXISTS mcol_4778;
+CREATE DATABASE mcol_4778;
+USE mcol_4778;
+CREATE TABLE bus_routes (origin varchar(50), dst varchar(50)) engine=columnstore;
+INSERT INTO bus_routes VALUES
+('New York', 'Boston'),
+('Boston', 'New York'),
+('New York', 'Washington'),
+('Washington', 'Boston'),
+('Washington', 'Raleigh');
+WITH RECURSIVE bus_dst as (
+SELECT origin as dst FROM bus_routes WHERE origin='New York'
+  UNION
+SELECT bus_routes.dst FROM bus_routes JOIN bus_dst ON bus_dst.dst = bus_routes.origin
+)
+SELECT * FROM bus_dst;
+ERROR 42000: The storage engine for the table doesn't support Recursive CTE
+DROP DATABASE mcol_4778;
