@@ -980,7 +980,7 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
   vector<std::pair<uint32_t, int>>& returnedColVec = jobInfo.returnedColVec;
 
   idblog("prep1PhaseAggregate: jobInfo.groupConcat.columns contains " << jobInfo.groupConcatInfo.columns().size() );
-  if (jobInfo.groupConcatInfo.columns().size()) { idblog("    index at 0 " << jobInfo.groupConcatInfo.columns()[0] ); }
+  if (jobInfo.groupConcatInfo.columns().size()) { idblog("    index at 0 " << *jobInfo.groupConcatInfo.columns().begin() ); }
 
   for (uint64_t i = 0; i < returnedColVec.size(); i++)
   {
