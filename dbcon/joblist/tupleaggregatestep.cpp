@@ -979,6 +979,8 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
   vector<pair<uint32_t, int>> aggColVec;
   vector<std::pair<uint32_t, int>>& returnedColVec = jobInfo.returnedColVec;
 
+  idblog("prep1PhaseAggregate: jobInfo.groupConcat.columns contains " << jobInfo.groupConcatInfo.columns().size() );
+
   for (uint64_t i = 0; i < returnedColVec.size(); i++)
   {
     if (returnedColVec[i].second != 0)
