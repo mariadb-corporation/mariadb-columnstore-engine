@@ -980,6 +980,7 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
   vector<std::pair<uint32_t, int>>& returnedColVec = jobInfo.returnedColVec;
 
   idblog("prep1PhaseAggregate: jobInfo.groupConcat.columns contains " << jobInfo.groupConcatInfo.columns().size() );
+  if (jobInfo.groupConcatInfo.columns().size()) { idblog("    index at 0 " << jobInfo.groupConcatInfo.columns()[0] ); }
 
   for (uint64_t i = 0; i < returnedColVec.size(); i++)
   {
@@ -1062,6 +1063,7 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
     RowAggFunctionType aggOp = functionIdMap(returnedColVec[i].second);
     RowAggFunctionType stats = statsFuncIdMap(returnedColVec[i].second);
     uint32_t key = returnedColVec[i].first;
+idblog("returnedColVec iteration " << i << ", aggOp " << ((int)aggOp) << ", GROUP_CONCAT is " << ((int)ROWAGG_GROUP_CONCAT) << ", UNDEF " << ((int)ROWAGG_FUNCT_UNDEFINE) << ", key " << key);
 
     if (aggOp == ROWAGG_CONSTANT)
     {
@@ -1081,6 +1083,7 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
 
     if (aggOp == ROWAGG_GROUP_CONCAT || aggOp == ROWAGG_JSON_ARRAY)
     {
+	    idblog("inside group concat branch");
       TupleInfo ti = getTupleInfo(key, jobInfo);
       uint32_t ptrSize = sizeof(GroupConcatAg*);
       uint32_t width = (ti.width >= ptrSize) ? ti.width : ptrSize;
@@ -1501,6 +1504,7 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
   for (uint64_t i = 0; i < oidsAgg.size(); i++)
     posAgg.push_back(posAgg[i] + widthAgg[i]);
 
+  idblog("creating row group for aggregator, oids size is " << oidsAgg.size());
   RowGroup aggRG(oidsAgg.size(), posAgg, oidsAgg, keysAgg, typeAgg, csNumAgg, scaleAgg, precisionAgg,
                  jobInfo.stringTableThreshold);
   SP_ROWAGG_UM_t rowAgg(new RowAggregationUM(groupBy, functionVec, jobInfo.rm, jobInfo.umMemLimit));
