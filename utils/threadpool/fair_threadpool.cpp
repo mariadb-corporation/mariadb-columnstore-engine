@@ -35,7 +35,7 @@ namespace threadpool
 {
 FairThreadPool::FairThreadPool(uint targetWeightPerRun, uint highThreads, uint midThreads, uint lowThreads,
                                uint ID)
- : weightPerRun(targetWeightPerRun), id(ID)
+ : weightPerRun(targetWeightPerRun), id(ID), stopExtra_(false)
 {
   boost::thread* newThread;
   size_t numberOfThreads = highThreads + midThreads + lowThreads;
@@ -74,6 +74,20 @@ void FairThreadPool::addJob_(const Job& job, bool useLock)
 
   if (useLock)
     lk.lock();
+  // If some threads have blocked (because of output queue full)
+  // Temporarily add some extra worker threads to make up for the blocked threads.
+  if (blockedThreads_ > extraThreads_)
+  {
+    stopExtra_ = false;
+    newThread = threads.create_thread(ThreadHelper(this, PriorityThreadPool::Priority::EXTRA));
+    newThread->detach();
+    ++extraThreads_;
+  }
+  else if (blockedThreads_ == 0)
+  {
+    // Release the temporary threads -- some threads have become unblocked.
+    stopExtra_ = true;
+  }
 
   auto jobsListMapIter = txn2JobsListMap_.find(job.txnIdx_);
   if (jobsListMapIter == txn2JobsListMap_.end())  // there is no txn in the map
@@ -140,6 +154,13 @@ void FairThreadPool::threadFcn(const PriorityThreadPool::Priority preferredQueue
 
       if (weightedTxnsQueue_.empty())
       {
+        // If this is an EXTRA thread due toother threads blocking, and all blockers are unblocked,
+        // we don't want this one any more.
+        if (preferredQueue == PriorityThreadPool::Priority::EXTRA && stopExtra_)
+        {
+          --extraThreads_;
+          return;
+        }
         newJob.wait(lk);
         continue;  // just go on w/o re-taking the lock
       }

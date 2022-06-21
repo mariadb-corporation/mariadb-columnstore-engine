@@ -107,6 +107,23 @@ class FairThreadPool
   {
     return jobsRunning_.load(std::memory_order_relaxed);
   }
+  // If a job is blocked, we want to temporarily increase the number of threads managed by the pool
+  // A problem can occur if all threads are running long or blocked for a single query. Other
+  // queries won't get serviced, even though there are cpu cycles available.
+  // These calls are currently protected by respondLock in sendThread(). If you call from other
+  // places, you need to consider atomicity.
+  void incBlockedThreads()
+  {
+    ++blockedThreads_;
+  }
+  void decBlockedThreads()
+  {
+    --blockedThreads_;
+  }
+  uint32_t blockedThreadCount()
+  {
+    return blockedThreads_;
+  }
 
  protected:
  private:
@@ -160,6 +177,10 @@ class FairThreadPool
   std::atomic<size_t> jobsRunning_{0};
   std::atomic<size_t> threadCounts_{0};
   std::atomic<bool> stop_{false};
+
+  std::atomic<uint32_t> blockedThreads_{0};
+  std::atomic<uint32_t> extraThreads_{0};
+  bool stopExtra_;
 };
 
 }  // namespace threadpool
