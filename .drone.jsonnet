@@ -194,7 +194,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
     [if event == 'cron' then 'failure']: 'ignore',
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     environment: {
-      REGRESSION_TESTS: if (event == 'cron') then '' else '${REGRESSION_TESTS:-test000.sh}',
+      REGRESSION_TESTS: if (event == 'cron') then '' else '${REGRESSION_TESTS:-test000.sh,test001.sh}',
       REGRESSION_REF: '${REGRESSION_REF:-' + regression_ref + '}',
       REGRESSION_TIMEOUT: {
         from_secret: 'regression_timeout',
@@ -224,12 +224,15 @@ local Pipeline(branch, platform, event, arch='amd64') = {
       'docker exec -t regression$${DRONE_BUILD_NUMBER} sed -i "/^.mariadb.$/a lower_case_table_names=1" ' + config_path_prefix + 'server.cnf',
       // set default client character set to utf-8
       'docker exec -t regression$${DRONE_BUILD_NUMBER} sed -i "/^.client.$/a default-character-set=utf8" ' + config_path_prefix + 'client.cnf',
+      // Regression tests hacks to pass on debs
+      if (pkg_format == 'deb') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} sed -i "/character-set-server/d" ' + config_path_prefix + 'server.cnf',
+      if (pkg_format == 'deb') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} sed -i "/collation-server/d" ' + config_path_prefix + 'server.cnf',
       // start mariadb and mariadb-columnstore services
       'docker exec -t regression$${DRONE_BUILD_NUMBER} systemctl start mariadb',
       'docker exec -t regression$${DRONE_BUILD_NUMBER} systemctl start mariadb-columnstore',
       // delay regression for manual debugging on live instance
       'sleep $${REGRESSION_DELAY_SECONDS:-1s}',
-      // run regression test000 on pull request and manual (may be overwritten by env variable parameter) build events. on other events run all tests
+      // run regression test000 and test000 on pull request and manual (may be overwritten by env variable parameter) build events. on other events run all tests
       'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} timeout -k 1m -s SIGKILL --preserve-status $${REGRESSION_TIMEOUT:-10h} ./go.sh --sm_unit_test_dir=/storage-manager --tests=$${REGRESSION_TESTS}',
     ],
   },
