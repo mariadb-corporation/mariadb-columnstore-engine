@@ -74,6 +74,8 @@ std::string Func_quote::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
 
   result.push_back('\'');
 
+  idblog("quote(): result is '" << result << "'");
+
   return result;
 }
 
