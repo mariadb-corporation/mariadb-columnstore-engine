@@ -42,14 +42,11 @@ std::string Func_quote::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
   if (isNull)
   {
     isNull = false;
-    return "NULL";
+    return "";
   }
 
-  if (str.empty())
-    return "NULL";
-
   string result;
-  result.reserve((str.size() * 1.3) + 2);
+  result.reserve(((str.size() + 1) * 1.3) + 2);
 
   result.push_back('\'');
 
