@@ -44,6 +44,7 @@ std::string Func_quote::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
     isNull = false;
     return "";
   }
+  idblog("quote(): argument is '" << str << "', argument's size " << str.size());
 
   string result;
   result.reserve(((str.size() + 1) * 1.3) + 2);
