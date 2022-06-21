@@ -20,7 +20,7 @@ CREATE TABLE t1(col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnstore;
 
 #Valid data and table
 --exec cat $MTR_SUITE_DIR/../std_data/100Krows.dat | $MCS_CPIMPORT mcs50_db t1 >/dev/null
-SELECT * FROM t1 ORDER BY col1;
+SELECT * FROM t1 ORDER BY col1, col2, col3;
 SELECT COUNT(*) FROM t1;
 
 TRUNCATE t1;

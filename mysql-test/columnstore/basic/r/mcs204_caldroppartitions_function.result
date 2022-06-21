@@ -30,5 +30,5 @@ Part#     Min                           Max                           Status
   0.1.1     0                             32767                         Enabled
 SELECT COUNT(*) FROM t1;
 COUNT(*)
-4419648
+4450368
 DROP DATABASE mcs204_db;
