@@ -473,7 +473,8 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
     case CalpontSystemCatalog::TEXT:
       if (fResultType.colWidth <= 8)
       {
-        fResult.strVal.assign((uint8_t*)(&fResult.origIntVal), sizeof(fResult.origIntVal));
+        //fResult.strVal.assign((uint8_t*)(&fResult.origIntVal), sizeof(fResult.origIntVal));
+        fResult.strVal.assign((uint8_t*)(&fResult.origIntVal), fResultType.colWidth);
       }
 
       break;
