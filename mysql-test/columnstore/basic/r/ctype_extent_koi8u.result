@@ -91,7 +91,7 @@ mcs_ctype_extent_koi8u	t1	c1	80FF	80FF
 c1
 Ъ─
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -104,7 +104,7 @@ mcs_ctype_extent_koi8u	t1	c1	80FFFFFF	80FFFFFF
 c1
 ЪЪЪ─
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -117,7 +117,7 @@ mcs_ctype_extent_koi8u	t1	c1	80FFFFFFFFFFFFFF	80FFFFFFFFFFFFFF
 c1
 ЪЪЪЪЪЪЪ─
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -131,7 +131,7 @@ mcs_ctype_extent_koi8u	t1	c1	80FF	80FF
 c1
 Ъ─
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -144,7 +144,7 @@ mcs_ctype_extent_koi8u	t1	c1	80FFFFFF	80FFFFFF
 c1
 ЪЪЪ─
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -157,7 +157,7 @@ mcs_ctype_extent_koi8u	t1	c1	80FFFFFFFFFFFFFF	80FFFFFFFFFFFFFF
 c1
 ЪЪЪЪЪЪЪ─
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -171,7 +171,7 @@ mcs_ctype_extent_koi8u	t1	c1	80FF	80FF
 c1
 Ъ─
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -184,7 +184,7 @@ mcs_ctype_extent_koi8u	t1	c1	80FFFFFF	80FFFFFF
 c1
 ЪЪЪ─
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -197,7 +197,7 @@ mcs_ctype_extent_koi8u	t1	c1	80FFFFFFFFFFFFFF	80FFFFFFFFFFFFFF
 c1
 ЪЪЪЪЪЪЪ─
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -211,7 +211,7 @@ mcs_ctype_extent_koi8u	t1	c1	80FF	80FF
 c1
 Ъ─
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -224,7 +224,7 @@ mcs_ctype_extent_koi8u	t1	c1	80FFFFFF	80FFFFFF
 c1
 ЪЪЪ─
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -237,7 +237,7 @@ mcs_ctype_extent_koi8u	t1	c1	80FFFFFFFFFFFFFF	80FFFFFFFFFFFFFF
 c1
 ЪЪЪЪЪЪЪ─
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
