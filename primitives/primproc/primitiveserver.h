@@ -135,6 +135,11 @@ class PrimitiveServer
     return fProcessorPool;
   }
 
+  inline boost::shared_ptr<threadpool::PriorityThreadPool> getOOBThreadPool() const
+  {
+    return fOOBPool;
+  }
+
   // 			int fCacheCount;
   int ReadAheadBlocks() const
   {
@@ -168,6 +173,7 @@ class PrimitiveServer
    * primitive commands
    */
   boost::shared_ptr<threadpool::PriorityThreadPool> fProcessorPool;
+  boost::shared_ptr<threadpool::PriorityThreadPool> fOOBPool;
 
   int fServerThreads;
   int fServerQueueSize;

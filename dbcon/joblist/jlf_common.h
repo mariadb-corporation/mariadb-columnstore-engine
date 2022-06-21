@@ -46,6 +46,7 @@
 
 #include "resourcemanager.h"
 #include "rowgroup.h"
+#include "../../primitives/primproc/primitiveserverthreadpools.h"
 
 // forward reference
 namespace execplan
@@ -362,6 +363,8 @@ struct JobInfo
   // in simpleScalarFilterToParseTree() for later deletion in
   // ~csep() or csep.unserialize()
   std::vector<execplan::ParseTree*> dynamicParseTreeVec;
+
+  PrimitiveServerThreadPools primitiveServerThreadPools;
 
  private:
   // defaults okay
