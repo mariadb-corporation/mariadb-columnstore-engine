@@ -1,0 +1,51 @@
+DROP DATABASE IF EXISTS json_value_db;
+CREATE DATABASE json_value_db;
+USE json_value_db;
+# ----------------------------------------------------------------------
+# Test of JSON_VALUE function.
+# ----------------------------------------------------------------------
+CREATE TABLE t1(s TEXT, p TEXT) ENGINE = columnstore;
+INSERT INTO t1 VALUES('{"key1":123}', '$.key2'),
+('{"key1":123}', '$.key1'),
+('{"key1":[1,2,3]}', '$.key1'),
+('{"key1": [1,2,3], "key1":123}', '$.key1'),
+('{ "x": [0,1], "y": "[0,1]", "z": "Mon\\\"t\\\"y" }','$.z'),
+('{"\\"key1":123}', '$."\\"key1"'),
+('{"\\"key1\\"":123}', '$."\\"key1\\""'),
+('{"key 1":123}', '$."key 1"');
+SELECT s as json_text, p as path, JSON_VALUE(s, p) as json_value, JSON_QUERY(s, p) as json_query
+FROM t1;
+json_text	path	json_value	json_query
+{"key1":123}	$.key2	NULL	NULL
+{"key1":123}	$.key1	123	NULL
+{"key1":[1,2,3]}	$.key1	NULL	[1,2,3]
+{"key1": [1,2,3], "key1":123}	$.key1	123	[1,2,3]
+{ "x": [0,1], "y": "[0,1]", "z": "Mon\"t\"y" }	$.z	Mon"t"y	NULL
+{"\"key1":123}	$."\"key1"	123	NULL
+{"\"key1\"":123}	$."\"key1\""	123	NULL
+{"key 1":123}	$."key 1"	123	NULL
+CREATE TABLE t2(s TEXT) ENGINE = columnstore;
+INSERT INTO t2 VALUES('{"key1":123, "key2":{"key3":"value3"}}'),
+('{"key1":123, "key3":[1,2,3]}'),
+('{"key1":123, "key2":"[1]"}');
+SELECT s as json_text, '$.key1' , JSON_VALUE(s, '$.key1') as json_value, JSON_QUERY(s, '$.key1') as json_query
+FROM t2;
+json_text	$.key1	json_value	json_query
+{"key1":123, "key2":{"key3":"value3"}}	$.key1	123	NULL
+{"key1":123, "key3":[1,2,3]}	$.key1	123	NULL
+{"key1":123, "key2":"[1]"}	$.key1	123	NULL
+SELECT s as json_text, '$.key2' , JSON_VALUE(s, '$.key2') as json_value, JSON_QUERY(s, '$.key2') as json_query
+FROM t2;
+json_text	$.key2	json_value	json_query
+{"key1":123, "key2":{"key3":"value3"}}	$.key2	NULL	{"key3":"value3"}
+{"key1":123, "key3":[1,2,3]}	$.key2	NULL	NULL
+{"key1":123, "key2":"[1]"}	$.key2	[1]	NULL
+SELECT s as json_text, '$.key3' , JSON_VALUE(s, '$.key3') as json_value, JSON_QUERY(s, '$.key3') as json_query
+FROM t2;
+json_text	$.key3	json_value	json_query
+{"key1":123, "key2":{"key3":"value3"}}	$.key3	NULL	NULL
+{"key1":123, "key3":[1,2,3]}	$.key3	NULL	[1,2,3]
+{"key1":123, "key2":"[1]"}	$.key3	NULL	NULL
+DROP TABLE t2;
+DROP TABLE t1;
+DROP DATABASE json_value_db;

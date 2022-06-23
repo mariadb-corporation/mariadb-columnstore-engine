@@ -1,0 +1,181 @@
+--source ../include/have_columnstore.inc
+--disable_warnings
+DROP DATABASE IF EXISTS json_quote_db;
+
+--enable_warnings
+CREATE DATABASE json_quote_db;
+
+USE json_quote_db;
+
+--echo # ----------------------------------------------------------------------
+--echo # Test of JSON_QUOTE, JSON_UNQUOTE function.
+--echo # ----------------------------------------------------------------------
+CREATE TABLE t1(l LONGTEXT) ENGINE = columnstore;
+
+INSERT INTO
+    t1
+VALUES
+    (NULL);
+
+--error ER_WRONG_PARAMCOUNT_TO_NATIVE_FCT
+SELECT
+    JSON_QUOTE(l, NULL)
+FROM
+    t1;
+
+--error ER_WRONG_PARAMCOUNT_TO_NATIVE_FCT
+SELECT
+    JSON_QUOTE(l, 'bar')
+FROM
+    t1;
+
+--error ER_WRONG_PARAMCOUNT_TO_NATIVE_FCT
+SELECT
+    JSON_UNQUOTE(l, NULL)
+FROM
+    t1;
+
+--error ER_WRONG_PARAMCOUNT_TO_NATIVE_FCT
+SELECT
+    JSON_UNQUOTE(l, 'bar')
+FROM
+    t1;
+
+--echo # Null arg
+SELECT
+    JSON_QUOTE(l)
+FROM
+    t1;
+
+SELECT
+    JSON_UNQUOTE(l)
+FROM
+    t1;
+
+--echo # Calling based on encodings
+TRUNCATE t1;
+
+INSERT INTO
+    t1
+VALUES
+    ('abc');
+
+SELECT
+    l AS raw,
+    JSON_QUOTE(CONVERT(l USING ascii)) AS quote_ascii,
+    JSON_QUOTE(CONVERT(l USING latin1)) AS quote_latin1,
+    JSON_QUOTE(CONVERT(l USING utf8)) AS quote_utf8,
+    JSON_QUOTE(CONVERT(l USING utf8mb4)) AS quote_utf8mb4
+FROM
+    t1;
+
+--echo # Chinese characters (normal in console,abnormal in test)
+CREATE TABLE t2(l VARCHAR(50)) ENGINE = columnstore;
+
+INSERT INTO
+    t2
+VALUES
+    (X'e68891');
+
+SELECT
+    *
+FROM
+    t2;
+
+SET
+    NAMES 'utf8';
+
+-- echo # All should be the Chinese "I" i.e. 我
+SELECT
+    JSON_QUOTE(CONVERT(l USING utf8)) AS quote_utf8,
+    JSON_COMPACT(JSON_QUOTE(CONVERT(l USING utf8))) AS compact_quote_utf8,
+    JSON_QUOTE(CONVERT(l USING utf8mb4)) AS quote_utf8mb4,
+    JSON_UNQUOTE(CONVERT(l USING utf8)) AS unquote_utf8
+FROM
+    t2;
+
+--echo # Do nothing
+TRUNCATE t1;
+
+INSERT INTO
+    t1
+VALUES
+    ('"');
+
+SELECT
+    JSON_QUOTE(l),
+    JSON_UNQUOTE(l)
+FROM
+    t1;
+
+TRUNCATE t1;
+
+INSERT INTO
+    t1
+VALUES
+    ('""');
+
+SELECT
+    JSON_UNQUOTE(l),
+    CHAR_LENGTH(JSON_UNQUOTE(l))
+FROM
+    t1;
+
+TRUNCATE t1;
+
+INSERT INTO
+    t1
+VALUES
+    ('"" ');
+
+SELECT
+    JSON_UNQUOTE(l)
+FROM
+    t1;
+
+--echo # Inconrrect type e.g. Integer
+CREATE TABLE t3(i INT) ENGINE = columnstore;
+
+INSERT INTO
+    t3
+VALUES
+    (123);
+
+SELECT
+    JSON_QUOTE(i)
+FROM
+    t3;
+
+SELECT
+    JSON_UNQUOTE(i)
+FROM
+    t3;
+
+--echo # Round trip
+TRUNCATE t1;
+
+INSERT INTO
+    t1
+VALUES
+    ('abc');
+
+SELECT
+    JSON_UNQUOTE(JSON_COMPACT(JSON_QUOTE(l)))
+FROM
+    t1;
+
+SELECT
+    JSON_UNQUOTE(
+        JSON_UNQUOTE(
+            JSON_UNQUOTE(JSON_QUOTE(JSON_QUOTE(JSON_QUOTE(l))))
+        )
+    )
+FROM
+    t1;
+
+DROP TABLE t1;
+
+--echo # DROP TABLE t2;
+DROP TABLE t3;
+
+DROP DATABASE json_quote_db;

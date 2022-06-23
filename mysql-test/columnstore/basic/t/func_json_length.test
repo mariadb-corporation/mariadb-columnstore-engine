@@ -1,0 +1,81 @@
+--source ../include/have_columnstore.inc
+--disable_warnings
+
+DROP DATABASE IF EXISTS json_length_db;
+--enable_warnings
+
+CREATE DATABASE json_length_db; 
+USE json_length_db;
+--echo # ----------------------------------------------------------------------
+--echo # Test of JSON_LENGTH function.
+--echo # ----------------------------------------------------------------------
+CREATE TABLE t1(l LONGTEXT) ENGINE = columnstore;
+--echo # Invalid json text
+INSERT INTO t1 VALUES(null);
+INSERT INTO t1 VALUES('1');
+INSERT INTO t1 VALUES('abc');
+INSERT INTO t1 VALUES('"abc"');
+INSERT INTO t1 VALUES('true');
+INSERT INTO t1 VALUES('false');
+INSERT INTO t1 VALUES('null');
+--echo error ER_INVALID_JSON_TEXT_IN_PARAM
+SELECT JSON_LENGTH(l) FROM t1;
+--echo # Valid json text 
+TRUNCATE t1;
+INSERT INTO t1 VALUES('{}');
+INSERT INTO t1 VALUES('{ "a" : 100, "b" : 200 }');
+INSERT INTO t1 VALUES('{ "a" : 100, "b" : [ 300, 400, 500 ] }');
+INSERT INTO t1 VALUES('[]');
+INSERT INTO t1 VALUES('[ null, "foo", true, 1.1 ]');
+INSERT INTO t1 VALUES('[ null, "foo", true, { "a" : "b", "c" : "d" } ]');
+INSERT INTO t1 VALUES('"foo"');
+INSERT INTO t1 VALUES('1.2');
+SELECT JSON_LENGTH(l) FROM t1;
+--echo # Bad path expressions
+TRUNCATE t1;
+INSERT INTO t1 VALUES('true');
+--echo error ER_INVALID_JSON_PATH
+SELECT JSON_LENGTH(l, 'c$') FROM t1;
+TRUNCATE t1;
+INSERT INTO t1 VALUES('{ "foo" : [ true, false ] }');
+--echo error ER_INVALID_JSON_PATH
+SELECT JSON_LENGTH(l, '$.foo[bar]') FROM t1;
+--echo # wildcards not allowed in path expressions for this function
+TRUNCATE t1;
+INSERT INTO t1 VALUES('true');
+--echo error ER_INVALID_JSON_PATH_WILDCARD
+SELECT JSON_LENGTH(l, '$.*') FROM t1;
+TRUNCATE t1;
+INSERT INTO t1 VALUES('true');
+--echo error ER_INVALID_JSON_PATH_WILDCARD
+SELECT JSON_LENGTH(l, '$.foo**.bar') FROM t1;
+--echo # Error ER_INVALID_JSON_TEXT_IN_PARAM
+TRUNCATE t1;
+INSERT INTO t1 VALUES('abc');
+INSERT INTO t1 VALUES('[ "a", true, "b" , { "e" : false }, "c" , null');
+SELECT JSON_LENGTH(l) FROM t1;
+--echo # Path exist
+TRUNCATE t1;
+INSERT INTO t1 VALUES('[ 1, [ 2, 3, 4 ], 5 ]');
+SELECT JSON_LENGTH(l, '$[0]') FROM t1;
+SELECT JSON_LENGTH(l, '$[1]') FROM t1;
+SELECT JSON_LENGTH(l, '$[2]') FROM t1;
+SELECT JSON_LENGTH(l, '$[2][0]') FROM t1;
+TRUNCATE t1;
+INSERT INTO t1 VALUES('[ 1, [ 2, 3, 4 ], {"a": 1} ]');
+SELECT JSON_LENGTH(l, '$[2][0]') FROM t1;
+TRUNCATE t1;
+INSERT INTO t1 VALUES('[ 1, { "a": true, "b": false, "c": null }, 5 ]');
+SELECT JSON_LENGTH(l, '$[1]') FROM t1;
+TRUNCATE t1;
+INSERT INTO t1 VALUES('{ "a" : 123, "b" : [ 123, 456, 789 ] }');
+SELECT JSON_LENGTH(l) FROM t1;
+SELECT JSON_LENGTH(l, '$.b') FROM t1;
+SELECT JSON_LENGTH(l, '$.c') FROM t1;
+--echo # No-existent path
+TRUNCATE t1;
+INSERT INTO t1 VALUES('[ 1, [ 2, 3, 4 ], 5 ]');
+SELECT JSON_LENGTH(l, '$[2][1]') FROM t1;
+
+DROP TABLE t1;
+DROP DATABASE json_length_db;

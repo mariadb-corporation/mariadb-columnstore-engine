@@ -1,0 +1,21 @@
+--source ../include/have_columnstore.inc
+--disable_warnings
+
+DROP DATABASE IF EXISTS json_array_db;
+--enable_warnings
+
+CREATE DATABASE json_array_db; 
+USE json_array_db;
+--echo # ----------------------------------------------------------------------
+--echo # Test of JSON_ARRAY function.
+--echo # ----------------------------------------------------------------------
+CREATE TABLE t1(l text) ENGINE = COLUMNSTORE;
+INSERT INTO t1 VALUES('1');
+SELECT JSON_ARRAY() FROM t1;
+SELECT JSON_ARRAY(l) FROM t1;
+SELECT JSON_ARRAY(l, null, 'My name is "Foo"', 3.1415, 6) FROM t1;
+SELECT JSON_ARRAY(l, true, false, "true", "false") FROM t1;
+SELECT JSON_ARRAY(l, '{"key1":"value1"}') FROM t1;
+SELECT JSON_ARRAY(l, JSON_COMPACT( '{"key1":"value1"}' ) ) FROM t1;
+DROP TABLE t1;
+DROP DATABASE json_array_db;

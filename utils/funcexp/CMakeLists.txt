@@ -57,6 +57,32 @@ set(funcexp_LIB_SRCS
     func_insert.cpp
     func_instr.cpp
     func_isnull.cpp
+    func_json_array.cpp
+    func_json_array_append.cpp
+    func_json_array_insert.cpp
+    func_json_contains.cpp
+    func_json_contains_path.cpp
+    func_json_depth.cpp
+    func_json_equals.cpp
+    func_json_exists.cpp
+    func_json_extract.cpp
+    func_json_format.cpp
+    func_json_insert.cpp
+    func_json_keys.cpp
+    func_json_length.cpp
+    func_json_merge.cpp
+    func_json_merge_patch.cpp
+    func_json_normalize.cpp
+    func_json_object.cpp
+    func_json_overlaps.cpp
+    func_json_query.cpp
+    func_json_quote.cpp
+    func_json_remove.cpp
+    func_json_search.cpp
+    func_json_type.cpp
+    func_json_unquote.cpp
+    func_json_valid.cpp
+    func_json_value.cpp
     func_last_day.cpp
     func_lcase.cpp
     func_least.cpp
@@ -117,6 +143,7 @@ set(funcexp_LIB_SRCS
     func_weekday.cpp
     func_year.cpp
     func_yearweek.cpp
+    jsonhelpers.cpp
     sql_crypt.cpp)
 
 add_library(funcexp SHARED ${funcexp_LIB_SRCS})

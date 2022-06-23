@@ -21,7 +21,7 @@
  *
  *
  ****************************************************************************/
-
+#include "functor_json.h"
 #include <boost/thread/mutex.hpp>
 
 #include "funcexp.h"
@@ -143,6 +143,39 @@ FuncExp::FuncExp()
   fFuncMap["isnottrue"] = new Func_IsNotTrue();
   fFuncMap["isfalse"] = new Func_IsFalse();
   fFuncMap["isnotfalse"] = new Func_IsNotFalse();
+  fFuncMap["json_array"] = new Func_json_array();
+  fFuncMap["json_array_append"] = new Func_json_array_append();
+  fFuncMap["json_array_insert"] = new Func_json_array_insert();
+  fFuncMap["json_contains"] = new Func_json_contains();
+  fFuncMap["json_contains_path"] = new Func_json_contains_path();
+  fFuncMap["json_compact"] = new Func_json_format(Func_json_format::COMPACT);
+  fFuncMap["json_depth"] = new Func_json_depth();
+  fFuncMap["json_equals"] = new Func_json_equals();
+  fFuncMap["json_exists"] = new Func_json_exists();
+  fFuncMap["json_extract"] = new Func_json_extract();
+  fFuncMap["json_format"] = new Func_json_format();
+  fFuncMap["json_insert"] = new Func_json_insert();
+  fFuncMap["json_keys"] = new Func_json_keys();
+  fFuncMap["json_length"] = new Func_json_length();
+  fFuncMap["json_loose"] = new Func_json_format(Func_json_format::LOOSE);
+  fFuncMap["json_merge"] = new Func_json_merge();
+  fFuncMap["json_merge_patch"] = new Func_json_merge_patch();
+  fFuncMap["json_merge_preserve"] = new Func_json_merge();
+  fFuncMap["json_normalize"] = new Func_json_normalize();
+  fFuncMap["json_object"] = new Func_json_object();
+#ifdef MYSQL_GE_1009
+  fFuncMap["json_overlaps"] = new Func_json_overlaps();
+#endif
+  fFuncMap["json_query"] = new Func_json_query();
+  fFuncMap["json_quote"] = new Func_json_quote();
+  fFuncMap["json_remove"] = new Func_json_remove();
+  fFuncMap["json_replace"] = new Func_json_insert(Func_json_insert::REPLACE);
+  fFuncMap["json_search"] = new Func_json_search();
+  fFuncMap["json_set"] = new Func_json_insert(Func_json_insert::SET);
+  fFuncMap["json_type"] = new Func_json_type();
+  fFuncMap["json_unquote"] = new Func_json_unquote();
+  fFuncMap["json_valid"] = new Func_json_valid();
+  fFuncMap["json_value"] = new Func_json_value();
   fFuncMap["last_day"] = new Func_last_day();
   fFuncMap["lcase"] = new Func_lcase();  // dlh
   fFuncMap["least"] = new Func_least();  // dlh

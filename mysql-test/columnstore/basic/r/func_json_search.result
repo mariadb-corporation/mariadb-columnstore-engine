@@ -1,0 +1,121 @@
+DROP DATABASE IF EXISTS json_search_db;
+CREATE DATABASE json_search_db;
+USE json_search_db;
+# ----------------------------------------------------------------------
+# Test of JSON_SEARCH function.
+# ----------------------------------------------------------------------
+
+# JSON_SEARCH with single path expression
+
+CREATE TABLE t1(j TEXT, f TEXT, v TEXT) ENGINE = COLUMNSTORE;
+INSERT INTO
+t1
+VALUES
+(
+'["abc", [{"k": "10"}, "def"], {"x":"abc"}, {"y":"bcd"}]',
+'one',
+'abc'
+    ),
+(
+'["abc", [{"k": "10"}, "def"], {"x":"abc"}, {"y":"bcd"}]',
+'all',
+'abc'
+    ),
+('{"x": "\\""}', "one", '"'),
+('{"x": "\\""}', "one", '\\"');
+SELECT
+j AS json,
+f AS return_arg,
+v AS search_str,
+j AS json, f AS return_arg, JSON_SEARCH(j, f, v) AS result
+FROM
+t1;
+json	return_arg	search_str	json	return_arg	result
+["abc", [{"k": "10"}, "def"], {"x":"abc"}, {"y":"bcd"}]	one	abc	["abc", [{"k": "10"}, "def"], {"x":"abc"}, {"y":"bcd"}]	one	"$[0]"
+["abc", [{"k": "10"}, "def"], {"x":"abc"}, {"y":"bcd"}]	all	abc	["abc", [{"k": "10"}, "def"], {"x":"abc"}, {"y":"bcd"}]	all	["$[0]", "$[2].x"]
+{"x": "\""}	one	"	{"x": "\""}	one	"$.x"
+{"x": "\""}	one	\"	{"x": "\""}	one	"$.x"
+
+# JSON_SEARCH with path expression
+
+CREATE TABLE t2(j TEXT, f TEXT, v TEXT, e TEXT, p TEXT) ENGINE = COLUMNSTORE;
+SET
+@j = '["abc", [{"k": "10"}, "def"], {"x":"abc"}, {"y":"bcd"}]';
+INSERT INTO
+t2
+VALUES
+(@j, 'all', 'abc', NULL, '$[0]'),
+(@j, 'all', 'abc', NULL, '$[2]'),
+(@j, 'all', '10', NULL, '$[1]'),
+(@j, 'all', '10', NULL, '$[2]');
+SELECT
+j AS json,
+f AS return_arg,
+v AS search_str,
+p AS path,
+JSON_SEARCH(j, f, v, NULL, p) AS result
+FROM
+t2;
+json	return_arg	search_str	path	result
+["abc", [{"k": "10"}, "def"], {"x":"abc"}, {"y":"bcd"}]	all	abc	$[0]	"$[0]"
+["abc", [{"k": "10"}, "def"], {"x":"abc"}, {"y":"bcd"}]	all	abc	$[2]	"$[2].x"
+["abc", [{"k": "10"}, "def"], {"x":"abc"}, {"y":"bcd"}]	all	10	$[1]	"$[1][0].k"
+["abc", [{"k": "10"}, "def"], {"x":"abc"}, {"y":"bcd"}]	all	10	$[2]	NULL
+
+# JSON_SEARCH with escape char
+
+CREATE TABLE t3(j TEXT, f TEXT) ENGINE = COLUMNSTORE;
+set @json = '[ "footbar", "foo%bar" ]';
+INSERT INTO t3 VALUES(@json,'all');
+SELECT j AS json, f AS return_arg, JSON_SEARCH(j, f, 'foo%bar' ) FROM t3;
+json	return_arg	JSON_SEARCH(j, f, 'foo%bar' )
+[ "footbar", "foo%bar" ]	all	["$[0]", "$[1]"]
+SELECT j AS json, f AS return_arg, JSON_SEARCH(j, f, 'foo\%bar' ) FROM t3;
+json	return_arg	JSON_SEARCH(j, f, 'foo\%bar' )
+[ "footbar", "foo%bar" ]	all	"$[1]"
+SELECT j AS json, f AS return_arg, JSON_SEARCH(j, f, 'foo|%bar', '|' ) FROM t3;
+json	return_arg	JSON_SEARCH(j, f, 'foo|%bar', '|' )
+[ "footbar", "foo%bar" ]	all	"$[1]"
+SELECT j AS json, f AS return_arg, JSON_SEARCH(j, f, 'foo|%bar', '|', '$[0]' ) FROM t3;
+json	return_arg	JSON_SEARCH(j, f, 'foo|%bar', '|', '$[0]' )
+[ "footbar", "foo%bar" ]	all	NULL
+SELECT j AS json, f AS return_arg, JSON_SEARCH(j, f, 'foo|%bar', '|', '$[0]', '$[1]' ) FROM t3;
+json	return_arg	JSON_SEARCH(j, f, 'foo|%bar', '|', '$[0]', '$[1]' )
+[ "footbar", "foo%bar" ]	all	"$[1]"
+SELECT j AS json, f AS return_arg, JSON_SEARCH(j, f, 'foo|%bar', '|', '$[0]', '$[1]', '$[2]' ) FROM t3;
+json	return_arg	JSON_SEARCH(j, f, 'foo|%bar', '|', '$[0]', '$[1]', '$[2]' )
+[ "footbar", "foo%bar" ]	all	"$[1]"
+SELECT j AS json, f AS return_arg, JSON_SEARCH(j, f, 'foo\%bar', null ) FROM t3;
+json	return_arg	JSON_SEARCH(j, f, 'foo\%bar', null )
+[ "footbar", "foo%bar" ]	all	"$[1]"
+SELECT j AS json, f AS return_arg, JSON_SEARCH(j, f, 'foo\%bar', null, '$[0]' ) FROM t3;
+json	return_arg	JSON_SEARCH(j, f, 'foo\%bar', null, '$[0]' )
+[ "footbar", "foo%bar" ]	all	NULL
+SELECT j AS json, f AS return_arg, JSON_SEARCH(j, f, 'foo\%bar', null, '$[1]' ) FROM t3;
+json	return_arg	JSON_SEARCH(j, f, 'foo\%bar', null, '$[1]' )
+[ "footbar", "foo%bar" ]	all	"$[1]"
+SELECT j AS json, f AS return_arg, JSON_SEARCH(j, f, 'foo|%bar', '|', '$[0]' ) FROM t3;
+json	return_arg	JSON_SEARCH(j, f, 'foo|%bar', '|', '$[0]' )
+[ "footbar", "foo%bar" ]	all	NULL
+SELECT j AS json, f AS return_arg, JSON_SEARCH(j, f, 'foo|%bar', '|', '$[1]' ) FROM t3;
+json	return_arg	JSON_SEARCH(j, f, 'foo|%bar', '|', '$[1]' )
+[ "footbar", "foo%bar" ]	all	"$[1]"
+
+# JSON_SEARCH in case-sensitive
+
+CREATE TABLE t4(j TEXT, f TEXT) ENGINE = COLUMNSTORE;
+INSERT INTO t4 VALUES('["abc", "ABC"]', 'all');
+SELECT j AS json, f AS return_arg, JSON_SEARCH(j, f, 'aBC') FROM t4;
+json	return_arg	JSON_SEARCH(j, f, 'aBC')
+["abc", "ABC"]	all	["$[0]", "$[1]"]
+SELECT j AS json, f AS return_arg, JSON_SEARCH(j, f, 'abc') FROM t4;
+json	return_arg	JSON_SEARCH(j, f, 'abc')
+["abc", "ABC"]	all	["$[0]", "$[1]"]
+SELECT j AS json, f AS return_arg, JSON_SEARCH(j, f, 'ABC') FROM t4;
+json	return_arg	JSON_SEARCH(j, f, 'ABC')
+["abc", "ABC"]	all	["$[0]", "$[1]"]
+drop TABLE t4;
+drop TABLE t3;
+DROP TABLE t2;
+DROP TABLE t1;
+DROP DATABASE json_search_db;

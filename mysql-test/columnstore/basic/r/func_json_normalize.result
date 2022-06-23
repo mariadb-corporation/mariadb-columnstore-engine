@@ -1,0 +1,35 @@
+DROP DATABASE IF EXISTS json_normalize_db;
+CREATE DATABASE json_normalize_db;
+USE json_normalize_db;
+# ----------------------------------------------------------------------
+# Test of JSON_NORMALIZE function.
+# ----------------------------------------------------------------------
+CREATE TABLE t1(l LONGTEXT) ENGINE = columnstore;
+INSERT INTO t1 VALUES('{"key2":"v2","key1":"v1"}');
+INSERT INTO t1 VALUES('{"key2":   "v2",  "key1":"v1"}');
+INSERT INTO t1 VALUES('{"key1":   "v2",  "key1":"v1"}');
+INSERT INTO t1 VALUES('{"key1":   "v2",  "key2":"v1"}');
+INSERT INTO t1 VALUES('{}');
+INSERT INTO t1 VALUES('{     }');
+INSERT INTO t1 VALUES('"123"');
+INSERT INTO t1 VALUES('[   1,2,3]');
+INSERT INTO t1 VALUES('[]');
+INSERT INTO t1 VALUES('[      ]');
+INSERT INTO t1 VALUES(null);
+INSERT INTO t1 VALUES('{"key1":value1}');
+SELECT JSON_NORMALIZE(l) from t1;
+JSON_NORMALIZE(l)
+{"key1":"v1","key2":"v2"}
+{"key1":"v1","key2":"v2"}
+{"key1":"v2","key1":"v1"}
+{"key1":"v2","key2":"v1"}
+{}
+{}
+"123"
+[1.0E0,2.0E0,3.0E0]
+[]
+[]
+NULL
+NULL
+DROP TABLE t1;
+DROP DATABASE json_normalize_db;

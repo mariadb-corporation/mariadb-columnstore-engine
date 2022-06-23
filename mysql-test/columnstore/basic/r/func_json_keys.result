@@ -1,0 +1,32 @@
+DROP DATABASE IF EXISTS json_keys_db;
+CREATE DATABASE json_keys_db;
+USE json_keys_db;
+# ----------------------------------------------------------------------
+# Test of JSON_KEYS function.
+# ----------------------------------------------------------------------
+CREATE TABLE t1(l TEXT) ENGINE = columnstore;
+INSERT INTO t1 VALUES('{"key1":"value1", "key2":{"key3": "value2"}}');
+INSERT INTO t1 VALUES('{"key1":"value1", "key2":{"key3": "value3", "key4":"value4"}}');
+INSERT INTO t1 VALUES('{"key1":"value1" "key2":{"key3": "value3", "key4":"value4"}}');
+SELECT JSON_KEYS(l) from t1;
+JSON_KEYS(l)
+["key1", "key2"]
+["key1", "key2"]
+NULL
+SELECT JSON_KEYS(l, '$.key2') from t1;
+JSON_KEYS(l, '$.key2')
+["key3"]
+["key3", "key4"]
+NULL
+SELECT JSON_KEYS(l, '$.key1') from t1;
+JSON_KEYS(l, '$.key1')
+NULL
+NULL
+NULL
+SELECT JSON_KEYS(l, '$.key123') from t1;
+JSON_KEYS(l, '$.key123')
+NULL
+NULL
+NULL
+DROP TABLE t1;
+DROP DATABASE json_keys_db;

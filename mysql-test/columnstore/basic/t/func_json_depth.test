@@ -1,0 +1,45 @@
+--source ../include/have_columnstore.inc
+--disable_warnings
+
+DROP DATABASE IF EXISTS json_depth_db;
+--enable_warnings
+
+CREATE DATABASE json_depth_db; 
+USE json_depth_db;
+--echo # ----------------------------------------------------------------------
+--echo # Test of JSON_DEPTH function.
+--echo # ----------------------------------------------------------------------
+CREATE TABLE t1(l LONGTEXT) ENGINE = columnstore;
+--echo # Return NULL
+INSERT INTO t1 VALUES(NULL);
+SELECT JSON_DEPTH(l) FROM t1;
+--echo # Return 1
+TRUNCATE t1;
+INSERT INTO t1 VALUES('{}');
+INSERT INTO t1 VALUES('[]');
+INSERT INTO t1 VALUES('"abc"');
+SELECT JSON_DEPTH(l) FROM t1;
+--echo # Error ER_INVALID_TYPE_FOR_JSON
+CREATE TABLE t2(i int) ENGINE=columnstore;
+INSERT INTO t2 VALUES(1);
+SELECT JSON_DEPTH(i) FROM t2;
+DROP TABLE t2;
+--echo # Error ER_INVALID_JSON_TEXT_IN_PARAM
+TRUNCATE t1;
+INSERT INTO t1 VALUES('abc');
+INSERT INTO t1 VALUES('[ "a", true, "b" , { "e" : false }, "c" , null');
+SELECT JSON_DEPTH(l) FROM t1;
+--echo # Return 2
+TRUNCATE t1;
+INSERT INTO t1 VALUES('{ "a" : true, "b" : false, "c" : null }');
+INSERT INTO t1 VALUES('[ "a", true, "b" , false, "c" , null ]');
+INSERT INTO t1 VALUES('{ "a" : true, "b" : {}, "c" : null }');
+INSERT INTO t1 VALUES('[ "a", true, "b" , {}, "c" , null ]');
+SELECT JSON_DEPTH(l) FROM t1;
+--echo # Return 3
+TRUNCATE t1;
+INSERT INTO t1 VALUES('{ "a" : true, "b" : { "e" : false }, "c" : null }');
+SELECT JSON_DEPTH(l) FROM t1;
+
+DROP TABLE t1;
+DROP DATABASE json_depth_db;

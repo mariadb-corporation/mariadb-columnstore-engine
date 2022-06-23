@@ -1,0 +1,81 @@
+--source ../include/have_columnstore.inc
+--disable_warnings
+DROP DATABASE IF EXISTS json_extract_db;
+
+--enable_warnings
+CREATE DATABASE json_extract_db;
+
+USE json_extract_db;
+
+--echo # ----------------------------------------------------------------------
+--echo # Test of JSON_EXTRACT function.
+--echo # ----------------------------------------------------------------------
+--echo 
+--echo # Single path expression
+--echo 
+CREATE TABLE t1(j LONGTEXT, p LONGTEXT) ENGINE = COLUMNSTORE;
+
+SET
+      @json = '[1, "val2", [3.1, -4]]';
+
+INSERT INTO
+      t1
+VALUES
+      (@json, '$[0]'),
+      (@json, '$[1]'),
+      (@json, '$[2]'),
+      (@json, '$[3]'),
+      (@json, '$[2][0]'),
+      (@json, '$[2][1]'),
+      (@json, '$[2][10]'),
+      (@json, '$'),
+      ('1', '$'),
+      ('[10, 20, [30, 40], 1, 10]', '$[1]'),
+      ('{"key1":"asd", "key2":[2,3]}', "$.key1"),
+      ('{"key0":true, "key1":"qwe"}', "$.key1"),
+      ('[10, 20, [30, 40]]', '$[2][*]'),
+      ('[10, 20, [{"a":3}, 30, 40]]', '$[2][*]'),
+      (json_object('foo', 'foobar'), '$');
+
+SELECT
+      j,
+      p,
+      JSON_EXTRACT(j, p) AS result
+FROM
+      t1;
+
+--echo 
+--echo # Multiple path expression
+--echo 
+CREATE TABLE t2(j LONGTEXT, p1 LONGTEXT, p2 LONGTEXT) ENGINE = COLUMNSTORE;
+
+INSERT INTO
+      t2
+VALUES
+      (
+            '{"key1":"asd", "key2":[2,3]}',
+            "$.keyX",
+            "$.keyY"
+      ),
+      (
+            '{"key1":"asd", "key2":[2,3]}',
+            "$.key1",
+            "$.key2"
+      ),
+      ('{"key1":5, "key2":[2,3]}', "$.key1", "$.key2"),
+      ('[10, 20, [30, 40], 1, 10]', '$[1]', '$[25]'),
+      ('[{"a": [3, 4]}, {"b": 2}]', '$[0].a', '$[1].a');
+
+SELECT
+      j,
+      p1,
+      p2,
+      JSON_EXTRACT(j, p1, p2) AS result
+FROM
+      t2;
+
+DROP TABLE t2;
+
+DROP TABLE t1;
+
+DROP DATABASE json_extract_db;
