@@ -5753,16 +5753,25 @@ void gp_walk(const Item* item, void* arg)
             if (isp->result_type() == STRING_RESULT)
             {
               String val, *str = isp->val_str(&val);
-              string cval;
+	      if (str)
+	      {
+                string cval;
 
-              if (str->ptr())
-              {
-                cval.assign(str->ptr(), str->length());
-              }
+                if (str->ptr())
+                {
+                  cval.assign(str->ptr(), str->length());
+                }
 
-              gwip->rcWorkStack.push(new ConstantColumn(cval));
-              (dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top()))->timeZone(gwip->timeZone);
-              break;
+                gwip->rcWorkStack.push(new ConstantColumn(cval));
+                (dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top()))->timeZone(gwip->timeZone);
+                break;
+	      }
+	      else
+	      {
+                gwip->rcWorkStack.push(new ConstantColumn("", ConstantColumn::NULLDATA));
+                (dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top()))->timeZone(gwip->timeZone);
+                break;
+	      }
             }
 
             gwip->rcWorkStack.push(buildReturnedColumn(isp, *gwip, gwip->fatalParseError));
