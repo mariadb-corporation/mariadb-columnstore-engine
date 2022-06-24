@@ -1269,6 +1269,7 @@ int ColumnDef::unserialize(ByteStream& bytestream)
   if (type == DDL_NULL)
   {
     fDefaultValue = 0;
+    idblog("no default value unserilized");
   }
   else
   {
