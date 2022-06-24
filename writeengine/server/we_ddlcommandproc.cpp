@@ -568,14 +568,13 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
         {
           if (colDefPtr->fDefaultValue)
           {
-            colTuple.data = colDefPtr->fDefaultValue->fValue;
             tmpStr.assign(colDefPtr->fDefaultValue->fValue);
           }
           else
           {
             tmpStr.dropString();
-            colTuple.data = column.colType.getNullValueForType();
           }
+          colTuple.data = tmpStr;
         }
         else if (NULLABLE_COL == column.tableColName.column)
         {
@@ -954,7 +953,6 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
       {
         if (colDefPtr->fDefaultValue)
         {
-          colTuple.data = colDefPtr->fDefaultValue->fValue;
           tmpStr.assign(colDefPtr->fDefaultValue->fValue);
         }
         else
@@ -962,6 +960,7 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
           tmpStr.dropString();
           // colTuple.data = column.colType.getNullValueForType();
         }
+        colTuple.data = tmpStr;
       }
       else if (NULLABLE_COL == column.tableColName.column)
       {
