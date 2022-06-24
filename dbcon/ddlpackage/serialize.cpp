@@ -1225,6 +1225,7 @@ int ColumnDefaultValue::unserialize(ByteStream& bytestream)
   fNull = (qb != 0);
 
   bytestream >> fValue;
+  idblog("deserialized column default value " << (fNull ? "NULL" : "<<<" + fValue + ">>>"));
 
   return ret;
 }
@@ -1237,6 +1238,7 @@ int ColumnDefaultValue::serialize(ByteStream& bytestream)
   // write update and delete actions
   bytestream << (quadbyte)fNull;
   bytestream << fValue;
+  idblog("serialized column default value " << (fNull ? "NULL" : "<<<" + fValue + ">>>"));
 
   return ret;
 }

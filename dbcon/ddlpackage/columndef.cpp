@@ -125,6 +125,7 @@ ColumnDefaultValue::ColumnDefaultValue(const char* value) : fNull(false)
     fNull = true;
   else
     fValue = value;
+  idblog("constructed column default value " << (fNull ? "NULL" : "<<<" + fValue + ">>>"));
 }
 
 std::ostream& operator<<(std::ostream& os, const ColumnDefaultValue& defaultValue)
