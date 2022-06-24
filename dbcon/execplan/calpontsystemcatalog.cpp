@@ -1203,6 +1203,7 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
     else if ((*it)->ColumnOID() == DICTOID_SYSCOLUMN_DEFAULTVAL)
     {
       ct.defaultValue = ((*it)->GetStringData(0));
+	    idblog("processing default value column: <<<" << ct.defaultValue.safeString() << ">>>.");
 
       if (!ct.defaultValue.isNull())
       {
@@ -1220,6 +1221,7 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
       tcn.column = ((*it)->GetStringData(0).safeString(""));
     else if ((*it)->ColumnOID() == oid[13])
     {
+	    idblog("processing constraint column");
       if (static_cast<ConstraintType>((*it)->GetData(0)) == 0)
       {
         ct.constraintType = NOTNULL_CONSTRAINT;
