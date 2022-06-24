@@ -23,7 +23,7 @@
 #include <cstdint>
 #include <type_traits>
 #ifdef __OPTIMIZE__
-#define MCS_FORCE_INLINE __attribute__((__always_inline__))
+#define MCS_FORCE_INLINE __attribute__((__always_inline__)) inline
 #else
 #define MCS_FORCE_INLINE inline
 #endif
