@@ -566,7 +566,7 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
         }
         else if (DEFAULTVAL_COL == column.tableColName.column)
         {
-          if (colDefPtr->fDefaultValue)
+          if (colDefPtr->fDefaultValue && !colDefPtr->fDefaultValue->fNull)
           {
             tmpStr.assign(colDefPtr->fDefaultValue->fValue);
           }
@@ -951,7 +951,7 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
       }
       else if (DEFAULTVAL_COL == column.tableColName.column)
       {
-        if (colDefPtr->fDefaultValue)
+        if (colDefPtr->fDefaultValue && !colDefPtr->fDefaultValue->fNull)
         {
           tmpStr.assign(colDefPtr->fDefaultValue->fValue);
         }
