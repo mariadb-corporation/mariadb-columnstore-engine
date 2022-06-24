@@ -1750,7 +1750,7 @@ int WriteEngineWrapper::insertColumnRecs(
 #ifdef PROFILE
           timer.stop("tokenize");
 #endif
-	  //idblog_stat(uint64_t *p = (uint64_t*) (&dctTuple.token);)
+	  idblog_stat(uint64_t *p = (uint64_t*) (&dctTuple.token);)
 	  idblog("will write string '" << dctStr_iter->unsafeStringRef() << "', token is " << std::hex << (*p));
           col_iter->data = dctTuple.token;
         }
