@@ -86,7 +86,7 @@ using SimdProcessor128TypedTestTypes =
     ::testing::Types<uint64_t, uint32_t, uint16_t, uint8_t, int64_t, int32_t, int16_t, int8_t>;
 TYPED_TEST_SUITE(SimdProcessorTypedTest, SimdProcessor128TypedTestTypes);
 
-TYPED_TEST(SimdProcessorTypedTest, SimdFilterProcessor_simd128)
+TYPED_TEST(SimdProcessorTypedTest, SimdFilterProcessor_simdarm128)
 {
   using Proc = typename simd::SimdFilterProcessor<typename simd::TypeToVecWrapperType<TypeParam>::WrapperType, TypeParam>;
   using SimdType = typename Proc::SimdType;
