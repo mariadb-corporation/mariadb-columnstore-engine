@@ -706,6 +706,7 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
       ct.nextvalue = ((*it)->GetData(0));
     else if ((*it)->ColumnOID() == oid[16])
     {
+	      idblog("setting is (not) null constraint, ");
       if (static_cast<ConstraintType>((*it)->GetData(0)) == 0)
       {
         ct.constraintType = NOTNULL_CONSTRAINT;
@@ -715,6 +716,7 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
     {
       ct.defaultValue = ((*it)->GetStringData(0));
 
+	      idblog("setting default value: <<<" << ct.defaultValue.safeString() << ">>>.");
       if (!ct.defaultValue.isNull())
       {
         if (ct.constraintType != NOTNULL_CONSTRAINT)
