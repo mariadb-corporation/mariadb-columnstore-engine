@@ -704,7 +704,7 @@ void RowAggregation::initialize()
   // Need map only if groupby list is not empty.
   if (fGroupByCols.empty())
   {
-	  idblog("empty fGroupByCols before attaching GroupConcatAgUM");
+//	  idblog("empty fGroupByCols before attaching GroupConcatAgUM");
     fRowGroupOut->setRowCount(1);
     attachGroupConcatAg();
     // For UDAF, reset the data
@@ -766,7 +766,7 @@ void RowAggregation::aggReset()
   }
   fRowGroupOut->getRow(0, &fRow);
   copyNullRow(fRow);
-  idblog("attaching GroupConcatAgUM in addReset()");
+  //idblog("attaching GroupConcatAgUM in addReset()");
   attachGroupConcatAg();
 
   // For UDAF, reset the data
@@ -809,7 +809,7 @@ void RowAggregation::aggregateRow(Row& row, const uint64_t* hash,
     if (is_new_row)
     {
       initMapData(row);
-      idblog("attaching GroupConcatAgUM in aggregate row, a new row");
+      //idblog("attaching GroupConcatAgUM in aggregate row, a new row");
       attachGroupConcatAg();
 
       // If there's UDAF involved, reset the user data.
@@ -2363,13 +2363,13 @@ RowAggregationUM::RowAggregationUM(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupB
  , fTotalMemUsage(0)
  , fLastMemUsage(0)
 {
-	idblog("rowaggum creation from three arguments. fGroupconcat.size() " << fGroupConcat.size());
-	if (fGroupConcat.size()) {
-		idblog("rowaggum creation from three arguments. fGroupconcat[0].getColumnCount() " << fGroupConcat[0]->fRowGroup.getColumnCount());
-		if (fGroupConcat[0]->fRowGroup.getColumnCount() == 0) {
-			idblog("breakpoint place");
-		}
-	}
+//	idblog("rowaggum creation from three arguments. fGroupconcat.size() " << fGroupConcat.size());
+//	if (fGroupConcat.size()) {
+//		idblog("rowaggum creation from three arguments. fGroupconcat[0].getColumnCount() " << fGroupConcat[0]->fRowGroup.getColumnCount());
+//		if (fGroupConcat[0]->fRowGroup.getColumnCount() == 0) {
+//			idblog("breakpoint place");
+//		}
+//	}
   // Check if there are any avg, stats or UDAF functions.
   // These flags are used in finalize.
   for (uint64_t i = 0; i < fFunctionCols.size(); i++)
@@ -2404,9 +2404,9 @@ RowAggregationUM::RowAggregationUM(const RowAggregationUM& rhs)
  , fGroupConcat(rhs.fGroupConcat)
  , fLastMemUsage(rhs.fLastMemUsage)
 {
-	if (fGroupConcat.size()) {
-		idblog("rowaggum creation from other RAUM. fGroupconcat[0].getColumnCount() " << fGroupConcat[0]->fRowGroup.getColumnCount());
-	}
+//	if (fGroupConcat.size()) {
+//		idblog("rowaggum creation from other RAUM. fGroupconcat[0].getColumnCount() " << fGroupConcat[0]->fRowGroup.getColumnCount());
+//	}
 }
 
 RowAggregationUM::~RowAggregationUM()
@@ -2500,7 +2500,7 @@ void RowAggregationUM::attachGroupConcatAg()
       if (fFunctionColGc[i]->fAggFunction == ROWAGG_GROUP_CONCAT)
       {
         // save the object's address in the result row
-	idblog("constructing GroupConcatAgUM, j " << j << ", # columns " << fGroupConcat[j]->fRowGroup.getColumnCount());
+	//idblog("constructing GroupConcatAgUM, j " << j << ", # columns " << fGroupConcat[j]->fRowGroup.getColumnCount());
         SP_GroupConcatAg gcc(new joblist::GroupConcatAgUM(fGroupConcat[j++]));
         fGroupConcatAg.push_back(gcc);
         *((GroupConcatAg**)(data + fRow.getOffset(colOut))) = gcc.get();

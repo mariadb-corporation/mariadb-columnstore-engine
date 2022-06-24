@@ -365,8 +365,8 @@ RGData::RGData(const RowGroup& rg)
 
 void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
 {
-	idblog("RGData reinit, rowCount " << rowCount);
-  rowData.reset(new uint8_t[rg.getDataSize(rowCount)]); idblog("after resetting rowData");
+//	idblog("RGData reinit, rowCount " << rowCount);
+  rowData.reset(new uint8_t[rg.getDataSize(rowCount)]);// idblog("after resetting rowData");
 
   if (rg.usesStringTable())
     strings.reset(new StringStore());
@@ -380,7 +380,7 @@ void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
    */
   memset(rowData.get(), 0, rg.getDataSize(rowCount));
 #endif
- idblog("afte rmemset");
+// idblog("afte rmemset");
 }
 
 void RGData::reinit(const RowGroup& rg)
@@ -1049,7 +1049,7 @@ RowGroup::RowGroup()
   charsets.reserve(10);
   scale.reserve(10);
   precision.reserve(10);
-  idblog("default RowGroup constructor");
+  //idblog("default RowGroup constructor");
 }
 
 RowGroup::RowGroup(uint32_t colCount, const vector<uint32_t>& positions, const vector<uint32_t>& roids,
@@ -1111,7 +1111,7 @@ RowGroup::RowGroup(uint32_t colCount, const vector<uint32_t>& positions, const v
   // Set all the charsets to NULL for jit initialization.
   charsets.insert(charsets.begin(), charsetNumbers.size(), NULL);
   idbassert(columnCount);
-  idblog("constructing from complete data with " << columnCount << " columns");
+  //idblog("constructing from complete data with " << columnCount << " columns");
 }
 
 RowGroup::RowGroup(const RowGroup& r)
@@ -1144,7 +1144,7 @@ RowGroup::RowGroup(const RowGroup& r)
   else if (!useStringTable && !oldOffsets.empty())
     offsets = &oldOffsets[0];
 
-  idblog("constructing from RowGroup with " << columnCount << " columns");
+  //idblog("constructing from RowGroup with " << columnCount << " columns");
 }
 
 RowGroup& RowGroup::operator=(const RowGroup& r)
@@ -1176,7 +1176,7 @@ RowGroup& RowGroup::operator=(const RowGroup& r)
   else if (!useStringTable && !oldOffsets.empty())
     offsets = &oldOffsets[0];
 
-  idblog("rowgroup assignment, " << columnCount << " columns.");
+  //idblog("rowgroup assignment, " << columnCount << " columns.");
 
   //idbassert(columnCount);
   return *this;
