@@ -17,6 +17,7 @@
 
 #pragma once
 
+enum ENUM_KIND;
 
 #ifdef __aarch64__
 #include "arm_neon.h"
@@ -30,15 +31,6 @@
 
 #include "mcs_datatype.h"
 
-// Column filtering is dispatched 4-way based on the column type,
-// which defines implementation of comparison operations for the column values
-enum ENUM_KIND
-{
-  KIND_DEFAULT,   // compared as signed integers
-  KIND_UNSIGNED,  // compared as unsigned integers
-  KIND_FLOAT,     // compared as floating-point numbers
-  KIND_TEXT
-};  // whitespace-trimmed and then compared as signed integers
 
 namespace simd
 {
@@ -64,7 +56,7 @@ struct vi1_wr
 };
 struct vi2_wr
 {
-  int8x16_t v;
+  int16x8_t v;
 };
 struct vi4_wr
 {
@@ -74,13 +66,17 @@ struct vi8_wr
 {
   int64x2_t v;
 };
+struct vi16_wr
+{
+  int128_t v;
+};
 struct viu1_wr
 {
   uint8x16_t v;
 };
 struct viu2_wr
 {
-  uint8x16_t v;
+  uint16x8_t v;
 };
 struct viu4_wr
 {
@@ -90,6 +86,7 @@ struct viu8_wr
 {
   uint64x2_t v;
 };
+
 struct vi128f_wr
 {
   float32x4_t v;
@@ -129,7 +126,12 @@ struct WidthToSVecWrapperType<8>
   using Vectype = int64x2_t;
   using WrapperType=struct vi8_wr;
 };
-
+template <>
+struct WidthToSVecWrapperType<16>
+{
+  using Vectype = int128_t;
+  using WrapperType = struct vi16_wr;
+};
 template <int W>
 struct WidthToVecWrapperType;
 
@@ -160,9 +162,16 @@ struct WidthToVecWrapperType<8>
   using Vectype = uint64x2_t;
   using WrapperType = struct viu8_wr;
 };
+
 //We get the simd and wrapper type of basic type by TypeToVecWrapperType.
 template <typename T, typename ENABLE=void>
 struct TypeToVecWrapperType;
+
+template <typename T>
+struct TypeToVecWrapperType<T, typename std::enable_if<std::is_same<T,__int128>::value>::type>
+ : WidthToSVecWrapperType<sizeof(__int128)>
+{
+};
 
 template <typename T>
 struct TypeToVecWrapperType<T, typename std::enable_if<std::is_unsigned<T>::value>::type> 
@@ -195,34 +204,20 @@ struct IntegralToSIMD<T, KIND,
 };
 
 template <typename T, ENUM_KIND KIND>
-struct IntegralToSIMD<T, KIND, typename std::enable_if<KIND != KIND_FLOAT && sizeof(T) == sizeof(int8_t)>::type>
+struct IntegralToSIMD<T, KIND, typename std::enable_if<KIND != KIND_FLOAT>::type>
 {
-  using type = vi1_wr;
-};
-
-template <typename T, ENUM_KIND KIND>
-struct IntegralToSIMD<T, KIND,
-                      typename std::enable_if<KIND != KIND_FLOAT && sizeof(T) == sizeof(int16_t)>::type>
-{
-  using type = vi2_wr;
-};
-
-template <typename T, ENUM_KIND KIND>
-struct IntegralToSIMD<T, KIND,
-                      typename std::enable_if<KIND != KIND_FLOAT && sizeof(T) == sizeof(int32_t)>::type>
-{
-  using type = vi4_wr;
-};
-
-template <typename T, ENUM_KIND KIND>
-struct IntegralToSIMD<T, KIND,
-                      typename std::enable_if<KIND != KIND_FLOAT && sizeof(T) == sizeof(int64_t)>::type>
-{
-  using type = vi8_wr;
+  using type = TypeToVecWrapperType<T>::WrapperType;
 };
 
 template <typename T, ENUM_KIND KIND, typename ENABLE = void>
 struct StorageToFiltering;
+
+template <typename T, ENUM_KIND KIND>
+struct StorageToFiltering<T, KIND,
+                          typename std::enable_if<KIND == KIND_FLOAT && sizeof(double) == sizeof(T)>::type>
+{
+  using type = double;
+};
 
 template <typename T, ENUM_KIND KIND>
 struct StorageToFiltering<T, KIND,

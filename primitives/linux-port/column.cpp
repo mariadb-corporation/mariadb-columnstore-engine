@@ -41,6 +41,7 @@ using namespace boost;
 #include "dataconvert.h"
 #include "mcs_decimal.h"
 #include "simd_sse.h"
+#include "simd_arm.h"
 #include "utils/common/columnwidth.h"
 
 #include "exceptclasses.h"
@@ -924,7 +925,7 @@ inline void writeColValue(uint8_t OutputType, ColResultHeader* out, uint16_t rid
   }
 }
 
-#if defined(__x86_64__)
+#if defined(__x86_64__) || defined(__aarch64__)
 template <typename T, ENUM_KIND KIND, bool HAS_INPUT_RIDS,
           typename std::enable_if<HAS_INPUT_RIDS == false, T>::type* = nullptr>
 inline void vectUpdateMinMax(const bool validMinMax, const bool isNonNullOrEmpty, T& Min, T& Max, T curValue,
@@ -1229,7 +1230,7 @@ void scalarFiltering(
   }
 }
 
-#if defined(__x86_64__)
+#if defined(__x86_64__) || defined(__aarch64__)
 template <typename VT, typename SIMD_WRAPPER_TYPE, bool HAS_INPUT_RIDS, typename T,
           typename std::enable_if<HAS_INPUT_RIDS == false, T>::type* = nullptr>
 inline SIMD_WRAPPER_TYPE simdDataLoad(VT& processor, const T* srcArray, const T* origSrcArray,
@@ -1627,7 +1628,7 @@ void filterColumnData(NewColRequestHeader* in, ColResultHeader* out, uint16_t* r
   // Syscat queries mustn't follow vectorized processing path b/c PP must return
   // all values w/o any filter(even empty values filter) applied.
 
-#if defined(__x86_64__)
+#if defined(__x86_64__) || defined(__aarch64__)
   // Don't use vectorized filtering for text based data types.
   if (WIDTH < 16 &&
     (KIND != KIND_TEXT || (KIND == KIND_TEXT && in->colType.strnxfrmIsValid()) ))

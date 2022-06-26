@@ -20,9 +20,10 @@
 #include <gtest/gtest.h>
 #include "datatypes/mcs_datatype.h"
 #include "datatypes/mcs_int128.h"
+#include "simd_sse.h"
+#include "simd_arm.h"
 
 #if defined(__x86_64__)
-#include "simd_sse.h"
 
 using namespace std;
 
@@ -66,8 +67,6 @@ TYPED_TEST(SimdProcessorTypedTest, SimdFilterProcessor_simd128)
 }
 #endif
 #ifdef __aarch64__
-#include "simd_arm.h"
-
 
 using namespace std;
 
