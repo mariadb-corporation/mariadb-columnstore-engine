@@ -36,7 +36,6 @@
 #include <boost/thread.hpp>
 
 #include "threadpool.h"
-#include "../../utils/threadpool/fair_threadpool.h"
 #include "fair_threadpool.h"
 #include "messagequeue.h"
 #include "blockrequestprocessor.h"
