@@ -1998,6 +1998,8 @@ struct ReadThread
           idbassert(bs->length() >= sizeof(ISMPacketHeader));
 
           const ISMPacketHeader* ismHdr = reinterpret_cast<const ISMPacketHeader*>(bs->buf());
+          // uint64_t someVal = ismHdr->Command;
+          // std::cout << " PP read thread Command " << someVal << std::endl;
 
           /* This switch is for the OOB commands */
           switch (ismHdr->Command)

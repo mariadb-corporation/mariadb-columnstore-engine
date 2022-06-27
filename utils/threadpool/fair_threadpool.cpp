@@ -112,14 +112,23 @@ void FairThreadPool::addJob_(const Job& job, bool useLock)
 
 void FairThreadPool::removeJobs(uint32_t id)
 {
+  // std::cout << "FairThreadPool::removeJobs id " << id << std::endl;
   std::unique_lock<std::mutex> lk(mutex);
 
   for (auto& txnJobsMapPair : txn2JobsListMap_)
   {
     ThreadPoolJobsList* txnJobsList = txnJobsMapPair.second;
+    if (txnJobsList->empty())
+    {
+      txn2JobsListMap_.erase(txnJobsMapPair.first);
+      delete txnJobsList;
+      continue;
+      // There is no clean-up for PQ. It will happen later in threadFcn
+    }
     auto job = txnJobsList->begin();
     while (job != txnJobsList->end())
     {
+      // std::cout << "removeJobs() job->id_ " << job->id_ << std::endl;
       if (job->id_ == id)
       {
         job = txnJobsList->erase(job);  // update the job iter
@@ -231,6 +240,7 @@ void FairThreadPool::threadFcn(const PriorityThreadPool::Priority preferredQueue
   }
   catch (std::exception& ex)
   {
+    // std::cout << "FairThreadPool::threadFcn(): std::exception - no reschedule but send an error" << std::endl;
     if (running)
     {
       jobsRunning_.fetch_sub(1, std::memory_order_relaxed);
@@ -254,14 +264,18 @@ void FairThreadPool::threadFcn(const PriorityThreadPool::Priority preferredQueue
 #endif
 
       if (running)
+      {
         sendErrorMsg(runList[0].uniqueID_, runList[0].stepID_, runList[0].sock_);
+      }
     }
     catch (...)
     {
+        std::cout << "FairThreadPool::threadFcn(): std::exception - double exception: failed to send an error" << std::endl;
     }
   }
   catch (...)
   {
+    // std::cout << "FairThreadPool::threadFcn(): ... exception - no reschedule but send an error" << std::endl;
     // Log the exception and exit this thread
     try
     {
@@ -270,7 +284,6 @@ void FairThreadPool::threadFcn(const PriorityThreadPool::Priority preferredQueue
         jobsRunning_.fetch_sub(1, std::memory_order_relaxed);
       }
       threadCounts_.fetch_sub(1, std::memory_order_relaxed);
-      ;
 #ifndef NOLOGGING
       logging::Message::Args args;
       logging::Message message(6);
@@ -289,6 +302,7 @@ void FairThreadPool::threadFcn(const PriorityThreadPool::Priority preferredQueue
     }
     catch (...)
     {
+        std::cout << "FairThreadPool::threadFcn(): ... exception - double exception: failed to send an error" << std::endl;
     }
   }
 }
