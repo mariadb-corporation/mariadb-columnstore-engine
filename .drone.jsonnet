@@ -92,6 +92,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
   local config_path_prefix = if (pkg_format == 'rpm') then '/etc/my.cnf.d/' else '/etc/mysql/mariadb.conf.d/50-',
   local img = if (platform == 'centos:7' || std.split(platform, ':')[0] == 'rockylinux') then platform else 'romcheck/' + std.strReplace(platform, '/', '-'),
   local regression_ref = if (std.split(branch, '-')[0] == 'develop') then branch else 'develop-6',
+  local regression_tests = if (branch == 'develop') then 'test000.sh' else 'test000.sh,test001.sh',
   local branchp = if (branch == '**') then '' else branch,
 
   local container_tags = if (event == 'cron') then [branch, branch + '-' + std.strReplace(event, '_', '-') + '-${DRONE_BUILD_NUMBER}'] else [branch + '-' + std.strReplace(event, '_', '-') + '-${DRONE_BUILD_NUMBER}'],
@@ -202,7 +203,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
     [if event == 'cron' then 'failure']: 'ignore',
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     environment: {
-      REGRESSION_TESTS: if (event == 'cron') then '' else '${REGRESSION_TESTS:-test000.sh,test001.sh}',
+      REGRESSION_TESTS: if (event == 'cron') then '' else '${REGRESSION_TESTS:-' + regression_tests + '}',
       REGRESSION_REF: '${REGRESSION_REF:-' + regression_ref + '}',
       REGRESSION_TIMEOUT: {
         from_secret: 'regression_timeout',
