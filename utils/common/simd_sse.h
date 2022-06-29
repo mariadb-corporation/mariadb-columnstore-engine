@@ -250,30 +250,17 @@ class SimdFilterProcessor<
     _mm_storeu_si128(reinterpret_cast<SimdType*>(dst), x);
   }
 
-  MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
-  {
-    return x;
-  }
-
-  MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
-  {
-    return x;
-  }
-
-  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
-  {
-    return x;
-  }
-
-  MCS_FORCE_INLINE SimdType min(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
   {
     return reinterpret_cast<SimdType>(std::min(reinterpret_cast<int128_t>(x), reinterpret_cast<int128_t>(y)));
   }
 
-  MCS_FORCE_INLINE SimdType max(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
   {
     return reinterpret_cast<SimdType>(std::max(reinterpret_cast<int128_t>(x), reinterpret_cast<int128_t>(y)));
   }
+
+
 };
 
 template <typename VT, typename T>
@@ -389,29 +376,14 @@ class SimdFilterProcessor<
     _mm_storeu_pd(reinterpret_cast<T*>(dst), x);
   }
 
-  MCS_FORCE_INLINE SimdType min(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
   {
     return _mm_min_pd(x, y);
   }
 
-  MCS_FORCE_INLINE SimdType max(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
   {
     return _mm_max_pd(x, y);
-  }
-
-  MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
-  {
-    return _mm_blendv_pd(x, y, mask);
-  }
-
-  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
-  {
-    return _mm_cmpgt_pd(x, y);
-  }
-
-  MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
-  {
-    return _mm_and_pd(x, y);
   }
 };
 
@@ -528,29 +500,14 @@ class SimdFilterProcessor<
     _mm_storeu_ps(reinterpret_cast<T*>(dst), x);
   }
 
-  MCS_FORCE_INLINE SimdType min(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
   {
     return _mm_min_ps(x, y);
   }
 
-  MCS_FORCE_INLINE SimdType max(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
   {
     return _mm_max_ps(x, y);
-  }
-
-  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
-  {
-    return _mm_cmpgt_ps(x, y);
-  }
-
-  MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
-  {
-    return _mm_blendv_ps(x, y, mask);
-  }
-
-  MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
-  {
-    return _mm_and_ps(x, y);
   }
 };
 
@@ -660,29 +617,14 @@ class SimdFilterProcessor<VT, CHECK_T,
     _mm_storeu_si128(reinterpret_cast<SimdType*>(dst), x);
   }
 
-  MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
+  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
   {
-    return _mm_blendv_epi8(x, y, mask);
+    return _mm_blendv_epi8(x, y, _mm_cmpgt_epi64(x,y));
   }
 
-  MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
   {
-    return _mm_and_si128(x, y);
-  }
-
-  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
-  {
-    return _mm_cmpgt_epi64(x, y);
-  }
-
-  MCS_FORCE_INLINE SimdType min(SimdType x, SimdType y) const
-  {
-    return blend(x, y, cmpGt2(x,y));
-  }
-
-  MCS_FORCE_INLINE SimdType max(SimdType x, SimdType y) const
-  {
-    return blend(x, y, cmpGt2(y,x));
+    return _mm_blendv_epi8(x, y, _mm_cmpgt_epi64(y,x));
   }
 };
 
@@ -795,32 +737,14 @@ class SimdFilterProcessor<VT, CHECK_T,
     _mm_storeu_si128(reinterpret_cast<SimdType*>(dst), x);
   }
 
-  MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
+  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
   {
-    return _mm_blendv_epi8(x, y, mask);
+    return _mm_blendv_epi8(x, y, _mm_cmpgt_epi64(x,y));
   }
 
-  MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
   {
-    return _mm_and_si128(x, y);
-  }
-
-  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
-  {
-    SimdType signVec = constant4i<0,(int32_t)0x80000000,0,(int32_t)0x80000000>();
-    SimdType xFlip = _mm_xor_si128(x, signVec);
-    SimdType yFlip = _mm_xor_si128(y, signVec);
-    return _mm_cmpgt_epi64(xFlip, yFlip);
-  }
-
-  MCS_FORCE_INLINE SimdType min(SimdType x, SimdType y) const
-  {
-    return blend(x, y, cmpGt2(x,y));
-  }
-
-  MCS_FORCE_INLINE SimdType max(SimdType x, SimdType y) const
-  {
-    return blend(x, y, cmpGt2(y,x));
+    return _mm_blendv_epi8(x, y, _mm_cmpgt_epi64(y,x));
   }
 };
 
@@ -930,27 +854,12 @@ class SimdFilterProcessor<VT, CHECK_T,
     _mm_storeu_si128(reinterpret_cast<SimdType*>(dst), x);
   }
 
-  MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
-  {
-    return _mm_blendv_epi8(x, y, mask);
-  }
-
-  MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
-  {
-    return _mm_and_si128(x, y);
-  }
-
-  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
-  {
-    return _mm_cmpgt_epi32(x, y);
-  }
-
-  MCS_FORCE_INLINE SimdType min(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
   {
     return _mm_min_epi32(x, y);
   }
 
-  MCS_FORCE_INLINE SimdType max(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
   {
     return _mm_max_epi32(x, y);
   }
@@ -1065,30 +974,12 @@ class SimdFilterProcessor<VT, CHECK_T,
     _mm_storeu_si128(reinterpret_cast<SimdType*>(dst), x);
   }
 
-  MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
-  {
-    return _mm_blendv_epi8(x, y, mask);
-  }
-
-  MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
-  {
-    return _mm_and_si128(x, y);
-  }
-
-  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
-  {
-    SimdType signVec = constant4i<(int32_t)0x80000000,(int32_t)0x80000000,(int32_t)0x80000000,(int32_t)0x80000000>();
-    SimdType xFlip = _mm_xor_si128(x, signVec);
-    SimdType yFlip = _mm_xor_si128(y, signVec);
-    return _mm_cmpgt_epi32(xFlip, yFlip);
-  }
-
-  MCS_FORCE_INLINE SimdType min(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
   {
     return _mm_min_epu32(x, y);
   }
 
-  MCS_FORCE_INLINE SimdType max(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
   {
     return _mm_max_epu32(x, y);
   }
@@ -1199,27 +1090,12 @@ class SimdFilterProcessor<
     _mm_storeu_si128(reinterpret_cast<SimdType*>(dst), x);
   }
 
-  MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
-  {
-    return _mm_blendv_epi8(x, y, mask);
-  }
-
-  MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
-  {
-    return _mm_and_si128(x, y);
-  }
-
-  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
-  {
-    return _mm_cmpgt_epi16(x, y);
-  }
-
-  MCS_FORCE_INLINE SimdType min(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
   {
     return _mm_min_epi16(x, y);
   }
 
-  MCS_FORCE_INLINE SimdType max(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
   {
     return _mm_max_epi16(x, y);
   }
@@ -1331,30 +1207,12 @@ class SimdFilterProcessor<
     _mm_storeu_si128(reinterpret_cast<SimdType*>(dst), x);
   }
 
-  MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
-  {
-    return _mm_blendv_epi8(x, y, mask);
-  }
-
-  MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
-  {
-    return _mm_and_si128(x, y);
-  }
-
-  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y)
-  {
-    SimdType ones =
-        constant4i<(int32_t)0xFFFFFFFF, (int32_t)0xFFFFFFFF, (int32_t)0xFFFFFFFF, (int32_t)0xFFFFFFFF>();
-    SimdType maxOfTwo = _mm_max_epu16(x, y);
-    return _mm_xor_si128(_mm_cmpeq_epi16(y, maxOfTwo), ones);
-  }
-
-  MCS_FORCE_INLINE SimdType min(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
   {
     return _mm_min_epu16(x, y);
   }
 
-  MCS_FORCE_INLINE SimdType max(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
   {
     return _mm_max_epu16(x, y);
   }
@@ -1472,27 +1330,12 @@ class SimdFilterProcessor<
     _mm_storeu_si128(reinterpret_cast<SimdType*>(dst), x);
   }
 
-  MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
-  {
-    return _mm_blendv_epi8(x, y, mask);
-  }
-
-  MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
-  {
-    return _mm_and_si128(x, y);
-  }
-
-  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
-  {
-    return _mm_cmpgt_epi8(x, y);
-  }
-
-  MCS_FORCE_INLINE SimdType min(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
   {
     return _mm_min_epi8(x, y);
   }
 
-  MCS_FORCE_INLINE SimdType max(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
   {
     return _mm_max_epi8(x, y);
   }
@@ -1611,30 +1454,12 @@ class SimdFilterProcessor<
     _mm_storeu_si128(reinterpret_cast<SimdType*>(dst), x);
   }
 
-  MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
-  {
-    return _mm_blendv_epi8(x, y, mask);
-  }
-
-  MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
-  {
-    return _mm_and_si128(x, y);
-  }
-
-  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y)
-  {
-    SimdType ones =
-        constant4i<(int32_t)0xFFFFFFFF, (int32_t)0xFFFFFFFF, (int32_t)0xFFFFFFFF, (int32_t)0xFFFFFFFF>();
-    SimdType maxOfTwo = _mm_max_epu8(x, y);
-    return _mm_xor_si128(_mm_cmpeq_epi8(y, maxOfTwo), ones);
-  }
-
-  MCS_FORCE_INLINE SimdType min(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
   {
     return _mm_min_epu8(x, y);
   }
 
-  MCS_FORCE_INLINE SimdType max(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
   {
     return _mm_max_epu8(x, y);
   }
