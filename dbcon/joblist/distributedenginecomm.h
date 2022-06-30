@@ -201,7 +201,13 @@ class DistributedEngineComm
     return fRm->getPsCount() * cpp;
   }
 
+  bool isExeMgrDEC() const
+  {
+    return fIsExeMgr;
+  }
+
   messageqcpp::Stats getNetworkStats(uint32_t uniqueID);
+  void addDataToOutput(messageqcpp::SBS sbs);
 
   friend class ::TestDistributedEngineComm;
 
@@ -251,7 +257,6 @@ class DistributedEngineComm
    *
    */
   void addDataToOutput(messageqcpp::SBS, uint32_t connIndex, messageqcpp::Stats* statsToAdd);
-
   /** @brief Writes data to the client at the index
    *
    * Continues trying to write data to the client at the next index until all clients have been tried.

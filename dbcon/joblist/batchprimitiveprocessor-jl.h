@@ -137,7 +137,7 @@ class BatchPrimitiveProcessorJL
   void addElementType(const StringElementType&, uint32_t dbroot);
   // void setRowGroupData(const rowgroup::RowGroup &);
 
-  void runBPP(messageqcpp::ByteStream&, uint32_t pmNum);
+  void runBPP(messageqcpp::ByteStream&, uint32_t pmNum, bool isExeMgrDEC);
   void abortProcessing(messageqcpp::ByteStream*);
 
   /* After serializing a BPP object, reset it and it's ready for more input */
