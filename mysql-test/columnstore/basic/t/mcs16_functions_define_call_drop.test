@@ -28,7 +28,6 @@ SELECT f1();
 --error 1242
 SELECT f1(100);
 --error 1241
-SELECT f2(1);
 
 # function drop
 DROP FUNCTION f1;
