@@ -20,8 +20,6 @@ SELECT f1();
 ERROR 42000: Incorrect number of arguments for FUNCTION mcs16_db.f1; expected 1, got 0
 SELECT f1(100);
 ERROR 21000: Subquery returns more than 1 row
-SELECT f2(1);
-ERROR 21000: Operand should contain 1 column(s)
 DROP FUNCTION f1;
 DROP FUNCTION f2;
 DROP FUNCTION f2;
