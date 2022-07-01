@@ -2084,6 +2084,7 @@ struct ReadThread
               }
               else if (ismHdr->Command == BATCH_PRIMITIVE_DESTROY)
               {
+                id = fBPPHandler->getUniqueID(bs, ismHdr->Command);
                 functor.reset(new BPPHandler::Destroy(fBPPHandler, bs));
               }
               else if (ismHdr->Command == BATCH_PRIMITIVE_ABORT)
@@ -2092,7 +2093,7 @@ struct ReadThread
                 functor.reset(new BPPHandler::Abort(fBPPHandler, bs));
               }
               FairThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
-              OOBPool->addJob(job);
+              procPoolPtr->addJob(job);
               break;
             }
 
@@ -2107,7 +2108,6 @@ struct ReadThread
               uint32_t txnId = 0;
               uint32_t stepID = 0;
               uint32_t uniqueID = 0;
-              bool isSyscat = false;
 
               if (bRotateDest)
               {
@@ -2157,15 +2157,7 @@ struct ReadThread
                 isSyscat = bpps->isSysCat();
               }
               FairThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
-
-              if (isSyscat)
-              {
-                OOBPool->addJob(job);
-              }
-              else
-              {
-                procPoolPtr->addJob(job);
-              }
+              procPoolPtr->addJob(job);
 
               break;
             }
