@@ -31,6 +31,7 @@ CREATE OR REPLACE FUNCTION mcsgettrace RETURNS STRING SONAME 'ha_columnstore.so'
 CREATE OR REPLACE FUNCTION calgettrace RETURNS STRING SONAME 'ha_columnstore.so';
 CREATE OR REPLACE FUNCTION mcsgetversion RETURNS STRING SONAME 'ha_columnstore.so';
 CREATE OR REPLACE FUNCTION calgetversion RETURNS STRING SONAME 'ha_columnstore.so';
+CREATE OR REPLACE FUNCTION calonlinealter RETURNS INTEGER SONAME 'ha_columnstore.so';
 CREATE OR REPLACE FUNCTION mcsviewtablelock RETURNS STRING SONAME 'ha_columnstore.so';
 CREATE OR REPLACE FUNCTION calviewtablelock RETURNS STRING SONAME 'ha_columnstore.so';
 CREATE OR REPLACE FUNCTION mcscleartablelock RETURNS STRING SONAME 'ha_columnstore.so';
