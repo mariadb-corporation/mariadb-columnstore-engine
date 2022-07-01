@@ -165,13 +165,13 @@ template <typename T, typename ENABLE=void>
 struct TypeToVecWrapperType;
 
 template <typename T>
-struct TypeToVecWrapperType<T, typename std::enable_if<std::is_unsigned<T>::value>::type> 
+struct TypeToVecWrapperType<T, typename std::enable_if<std::is_unsigned<T>::value>::type>
     : WidthToVecWrapperType<sizeof(T)>
 {
 };
 
 template <typename T>
-struct TypeToVecWrapperType<T, typename std::enable_if<std::is_signed<T>::value>::type> 
+struct TypeToVecWrapperType<T, typename std::enable_if<std::is_signed<T>::value>::type>
     : WidthToSVecWrapperType<sizeof(T)>
 {
 };
@@ -419,6 +419,16 @@ class SimdFilterProcessor<
   {
     vst1q_s32(reinterpret_cast<int32_t*>(dst), x);
   }
+
+  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
+  {
+    return reinterpret_cast<SimdType>(std::min(reinterpret_cast<int128_t>(x), reinterpret_cast<int128_t>(y)));
+  }
+
+  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
+  {
+    return reinterpret_cast<SimdType>(std::max(reinterpret_cast<int128_t>(x), reinterpret_cast<int128_t>(y)));
+  }
 };
 
 template <typename VT, typename T>
@@ -531,6 +541,16 @@ class SimdFilterProcessor<
   MCS_FORCE_INLINE void store(char* dst, SimdType& x)
   {
     vst1q_f64(reinterpret_cast<T*>(dst), x);
+  }
+
+  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
+  {
+    return vminq_f64(x, y);
+  }
+
+  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
+  {
+    return vmaxq_f64(x, y);
   }
 };
 
@@ -645,6 +665,16 @@ class SimdFilterProcessor<
   {
     vst1q_f32(reinterpret_cast<T*>(dst), x);
   }
+
+  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
+  {
+    return vminq_f32(x, y);
+  }
+
+  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
+  {
+    return vmaxq_f32(x, y);
+  }
 };
 
 template <typename VT, typename CHECK_T>
@@ -751,6 +781,16 @@ class SimdFilterProcessor<
   MCS_FORCE_INLINE void store(char* dst, SimdType& x)
   {
     vst1q_s64(reinterpret_cast<int64_t*>(dst), x);
+  }
+
+  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
+  {
+    return vbslq_s64(vcgtq_s64(x,y), x, y);
+  }
+
+  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
+  {
+    return vbslq_s64(vcgtq_s64(y,x), x, y);
   }
 };
 
@@ -859,6 +899,16 @@ class SimdFilterProcessor<
   {
     vst1q_u64(reinterpret_cast<uint64_t*>(dst), x);
   }
+
+  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
+  {
+    return vbslq_u64(vcgtq_u64(x,y), x, y);
+  }
+
+  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
+  {
+    return vbslq_u64(vcgtq_u64(y,x), x, y);
+  }
 };
 template <typename VT, typename CHECK_T>
 class SimdFilterProcessor<
@@ -964,6 +1014,16 @@ class SimdFilterProcessor<
   MCS_FORCE_INLINE void store(char* dst, SimdType& x)
   {
     vst1q_s32(reinterpret_cast<int32_t*>(dst), x);
+  }
+
+  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
+  {
+    return vminq_s32(x, y);
+  }
+
+  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
+  {
+    return vmaxq_s32(x, y);
   }
 };
 
@@ -1072,6 +1132,16 @@ class SimdFilterProcessor<
   {
     vst1q_u32(reinterpret_cast<uint32_t*>(dst), x);
   }
+
+  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
+  {
+    return vminq_u32(x, y);
+  }
+
+  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
+  {
+    return vmaxq_u32(x, y);
+  }
 };
 
 template <typename VT, typename CHECK_T>
@@ -1177,6 +1247,16 @@ class SimdFilterProcessor<
   MCS_FORCE_INLINE void store(char* dst, SimdType& x)
   {
     vst1q_s16(reinterpret_cast<int16_t*>(dst), x);
+  }
+
+  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
+  {
+    return vminq_s16(x, y);
+  }
+
+  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
+  {
+    return vmaxq_s16(x, y);
   }
 };
 
@@ -1284,6 +1364,16 @@ class SimdFilterProcessor<VT, CHECK_T,
   {
     vst1q_u16(reinterpret_cast<uint16_t*>(dst), x);
   }
+
+  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
+  {
+    return vminq_u16(x, y);
+  }
+
+  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
+  {
+    return vmaxq_u16(x, y);
+  }
 };
 
 template <typename VT, typename CHECK_T>
@@ -1388,6 +1478,16 @@ class SimdFilterProcessor<
   MCS_FORCE_INLINE void store(char* dst, SimdType& x)
   {
     vst1q_s8(reinterpret_cast<int8_t*>(dst), x);
+  }
+
+  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
+  {
+    return vminq_s8(x, y);
+  }
+
+  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
+  {
+    return vmaxq_s8(x, y);
   }
 };
 
@@ -1495,6 +1595,16 @@ class SimdFilterProcessor<
   MCS_FORCE_INLINE void store(char* dst, SimdType& x)
   {
     vst1q_u8(reinterpret_cast<uint8_t*>(dst), x);
+  }
+
+  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
+  {
+    return vminq_u8(x, y);
+  }
+
+  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
+  {
+    return vmaxq_u8(x, y);
   }
 };
 
