@@ -124,7 +124,6 @@ oam::OamCache* oamCache = oam::OamCache::makeOamCache();
 // FIXME: there is an anon ns burried later in between 2 named namespaces...
 namespace primitiveprocessor
 {
-boost::shared_ptr<threadpool::FairThreadPool> OOBPool;
 
 BlockRequestProcessor** BRPp;
 #ifndef _MSC_VER
@@ -1236,7 +1235,6 @@ struct BPPHandler
       }
 
       fPrimitiveServerPtr->getProcessorThreadPool()->removeJobs(key);
-      OOBPool->removeJobs(key);
     }
 
     scoped.unlock();
@@ -1360,7 +1358,6 @@ struct BPPHandler
 
     scoped.unlock();
     fPrimitiveServerPtr->getProcessorThreadPool()->removeJobs(key);
-    OOBPool->removeJobs(key);
     return 0;
   }
 
@@ -1660,7 +1657,6 @@ return 0;
                             " stepID "<< stepID << endl;
     */
     fPrimitiveServerPtr->getProcessorThreadPool()->removeJobs(uniqueID);
-    OOBPool->removeJobs(uniqueID);
     lk.unlock();
     deleteDJLock(uniqueID);
     return 0;
@@ -2138,7 +2134,6 @@ struct ReadThread
                 txnId = *((uint32_t*)&buf[pos + 2]);
                 stepID = *((uint32_t*)&buf[pos + 6]);
                 uniqueID = *((uint32_t*)&buf[pos + 10]);
-                isSyscat = hdr->flags & IS_SYSCAT;
               }
               else if (ismHdr->Command == BATCH_PRIMITIVE_RUN)
               {
@@ -2154,7 +2149,6 @@ struct ReadThread
                 stepID = *((uint32_t*)&buf[pos + 6]);
                 uniqueID = *((uint32_t*)&buf[pos + 10]);
                 weight = ismHdr->Size + *((uint32_t*)&buf[pos + 18]);
-                isSyscat = bpps->isSysCat();
               }
               FairThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
               procPoolPtr->addJob(job);
@@ -2318,12 +2312,6 @@ PrimitiveServer::PrimitiveServer(int serverThreads, int serverQueueSize, int pro
 
   fProcessorPool.reset(new threadpool::FairThreadPool(fProcessorWeight, highPriorityThreads,
                                                       medPriorityThreads, lowPriorityThreads, 0));
-
-  // We're not using either the priority or the job-clustering features, just need a threadpool
-  // that can reschedule jobs, and an unlimited non-blocking queue
-  OOBPool.reset(new threadpool::FairThreadPool(1, 5, 0, 0, 1));
-  // Initialize a local pointer.
-  fOOBPool = OOBPool;
 
   asyncCounter = 0;
 

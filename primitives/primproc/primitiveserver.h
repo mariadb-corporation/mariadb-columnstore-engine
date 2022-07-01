@@ -48,7 +48,6 @@ extern oam::OamCache* oamCache;
 
 namespace primitiveprocessor
 {
-extern boost::shared_ptr<threadpool::FairThreadPool> OOBPool;
 extern dbbc::BlockRequestProcessor** BRPp;
 extern BRM::DBRM* brm;
 extern boost::mutex bppLock;
@@ -135,12 +134,6 @@ class PrimitiveServer
     return fProcessorPool;
   }
 
-  inline boost::shared_ptr<threadpool::FairThreadPool> getOOBThreadPool() const
-  {
-    return fOOBPool;
-  }
-
-  // 			int fCacheCount;
   int ReadAheadBlocks() const
   {
     return fReadAheadBlocks;
@@ -173,7 +166,6 @@ class PrimitiveServer
    * primitive commands
    */
   boost::shared_ptr<threadpool::FairThreadPool> fProcessorPool;
-  boost::shared_ptr<threadpool::FairThreadPool> fOOBPool;
 
   int fServerThreads;
   int fServerQueueSize;
