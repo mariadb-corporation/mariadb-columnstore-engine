@@ -55,7 +55,7 @@ if (WITH_UNITTESTS)
     add_executable(fair_threadpool_test fair_threadpool.cpp)
     add_dependencies(fair_threadpool_test googletest)
     target_link_libraries(fair_threadpool_test ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
-    gtest_discover_tests(fair_threadpool_test TEST_PREFIX columnstore:)
+    gtest_add_tests(TARGET fair_threadpool_test TEST_PREFIX columnstore:)
 
     # CPPUNIT TESTS
     add_executable(we_shared_components_tests shared_components_tests.cpp)
