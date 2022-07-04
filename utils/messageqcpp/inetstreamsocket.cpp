@@ -1075,6 +1075,10 @@ bool InetStreamSocket::isSameAddr(const Socket* rhs) const
 
   return (fSa.sin_addr.s_addr == issp->fSa.sin_addr.s_addr);
 }
+bool InetStreamSocket::isSameAddr(const struct in_addr& ipv4Addr) const
+{
+  return (fSa.sin_addr.s_addr == ipv4Addr.s_addr);
+}
 
 /*static*/
 int InetStreamSocket::ping(const std::string& ipaddr, const struct timespec* timeout)

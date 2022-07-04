@@ -179,6 +179,11 @@ class IOSocket
   {
     return fSocket->isSameAddr(rhs->fSocket);
   }
+  virtual bool isSameAddr(const struct in_addr& ipv4Addr) const
+  {
+    return fSocket->isSameAddr(ipv4Addr);
+  }
+
 
   /** connect() forwarder for inherited classes
    *

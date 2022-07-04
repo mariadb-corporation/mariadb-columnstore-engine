@@ -53,7 +53,6 @@
 #include "bppsendthread.h"
 #include "columnwidth.h"
 
-//#define PRIMPROC_STOPWATCH
 #ifdef PRIMPROC_STOPWATCH
 #include "stopwatch.h"
 #endif
@@ -433,6 +432,7 @@ class BatchPrimitiveProcessor
   uint ptMask;
   bool firstInstance;
   uint64_t valuesLBID;
+  bool initiatedByEM_;
 
   static const uint64_t maxResultCount = 1048576;  // 2^20
 
