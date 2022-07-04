@@ -211,6 +211,8 @@ ENDIF()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-enum-enum-conversion -Wno-register")
+    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++")
+    SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -stdlib=libc++")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-register")
 endif()

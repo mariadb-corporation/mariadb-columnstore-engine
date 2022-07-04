@@ -5,7 +5,7 @@ if (WITH_UNITTESTS)
     set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
     ExternalProject_Add(googletest
         GIT_REPOSITORY https://github.com/google/googletest
-        GIT_TAG release-1.11.0
+        GIT_TAG release-1.12.0
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DBUILD_SHARED_LIBS=ON
     )
 
