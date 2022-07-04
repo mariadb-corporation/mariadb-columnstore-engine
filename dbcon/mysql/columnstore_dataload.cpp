@@ -1,4 +1,4 @@
-/* Copyright (C) 2021 MariaDB Corporation
+/* Copyright (C) 2022 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -70,13 +70,16 @@ extern "C"
 {
   struct InitData
   {
-    CURL* curl;
-    char* result;
+    CURL* curl = nullptr;
+    char* result = nullptr;
   };
 
   void columnstore_dataload_deinit(UDF_INIT* initid)
   {
     InitData* initData = (InitData*)(initid->ptr);
+    if (!initData)
+      return;
+
     curl_easy_cleanup(initData->curl);
     delete initData->result;
   }
@@ -174,16 +177,16 @@ extern "C"
 
   my_bool columnstore_dataload_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
-    initid->max_length = 1000 * 1000;
-    InitData* initData = new InitData;
-    initData->curl = curl_easy_init();
-    initid->ptr = (char*)(initData);
-
     if (args->arg_count != 3 && args->arg_count != 4)
     {
       strcpy(message, "COLUMNSTORE_DATALOAD() takes three or four arguments: (table, filename, bucket) or (table, filename, bucket, database)");
       return 1;
     }
+
+    initid->max_length = 1000 * 1000;
+    InitData* initData = new InitData;
+    initData->curl = curl_easy_init();
+    initid->ptr = (char*)(initData);
 
     return 0;
   }
