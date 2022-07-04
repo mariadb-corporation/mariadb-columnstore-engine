@@ -56,11 +56,6 @@ FairThreadPool::~FairThreadPool()
 
 void FairThreadPool::addJob(const Job& job)
 {
-  addJob_(job);
-}
-
-void FairThreadPool::addJob_(const Job& job, bool useLock)
-{
   boost::thread* newThread;
   std::unique_lock<std::mutex> lk(mutex, std::defer_lock_t());
 
@@ -72,8 +67,7 @@ void FairThreadPool::addJob_(const Job& job, bool useLock)
     threadCounts_.fetch_add(1, std::memory_order_relaxed);
   }
 
-  if (useLock)
-    lk.lock();
+  lk.lock();
   // If some threads have blocked (because of output queue full)
   // Temporarily add some extra worker threads to make up for the blocked threads.
   if (blockedThreads_ > extraThreads_)
@@ -106,18 +100,18 @@ void FairThreadPool::addJob_(const Job& job, bool useLock)
     jobsListMapIter->second->push_back(job);
   }
 
-  if (useLock)
-    newJob.notify_one();
+  newJob.notify_one();
 }
 
 void FairThreadPool::removeJobs(uint32_t id)
 {
-  // std::cout << "FairThreadPool::removeJobs id " << id << std::endl;
   std::unique_lock<std::mutex> lk(mutex);
 
   for (auto& txnJobsMapPair : txn2JobsListMap_)
   {
     ThreadPoolJobsList* txnJobsList = txnJobsMapPair.second;
+    if (!txnJobsList)
+      continue;
     if (txnJobsList->empty())
     {
       txn2JobsListMap_.erase(txnJobsMapPair.first);
@@ -128,7 +122,6 @@ void FairThreadPool::removeJobs(uint32_t id)
     auto job = txnJobsList->begin();
     while (job != txnJobsList->end())
     {
-      // std::cout << "removeJobs() job->id_ " << job->id_ << std::endl;
       if (job->id_ == id)
       {
         job = txnJobsList->erase(job);  // update the job iter
@@ -231,16 +224,14 @@ void FairThreadPool::threadFcn(const PriorityThreadPool::Priority preferredQueue
       {
         // to avoid excessive CPU usage waiting for data from storage
         usleep(500);
-        lk.lock();
-        addJob_(runList[0], false);
-        newJob.notify_one();
-        lk.unlock();
+        addJob(runList[0]);
       }
     }
   }
   catch (std::exception& ex)
   {
-    // std::cout << "FairThreadPool::threadFcn(): std::exception - no reschedule but send an error" << std::endl;
+    // std::cout << "FairThreadPool::threadFcn(): std::exception - no reschedule but send an error" <<
+    // std::endl;
     if (running)
     {
       jobsRunning_.fetch_sub(1, std::memory_order_relaxed);
@@ -270,13 +261,14 @@ void FairThreadPool::threadFcn(const PriorityThreadPool::Priority preferredQueue
     }
     catch (...)
     {
-        std::cout << "FairThreadPool::threadFcn(): std::exception - double exception: failed to send an error" << std::endl;
+      std::cout << "FairThreadPool::threadFcn(): std::exception - double exception: failed to send an error"
+                << std::endl;
     }
   }
   catch (...)
   {
-    // std::cout << "FairThreadPool::threadFcn(): ... exception - no reschedule but send an error" << std::endl;
-    // Log the exception and exit this thread
+    // std::cout << "FairThreadPool::threadFcn(): ... exception - no reschedule but send an error" <<
+    // std::endl; Log the exception and exit this thread
     try
     {
       if (running)
@@ -302,7 +294,8 @@ void FairThreadPool::threadFcn(const PriorityThreadPool::Priority preferredQueue
     }
     catch (...)
     {
-        std::cout << "FairThreadPool::threadFcn(): ... exception - double exception: failed to send an error" << std::endl;
+      std::cout << "FairThreadPool::threadFcn(): ... exception - double exception: failed to send an error"
+                << std::endl;
     }
   }
 }

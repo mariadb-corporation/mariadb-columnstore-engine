@@ -144,7 +144,6 @@ class FairThreadPool
   explicit FairThreadPool(const FairThreadPool&);
   FairThreadPool& operator=(const FairThreadPool&);
 
-  void addJob_(const Job& job, bool useLock = true);
   void threadFcn(const PriorityThreadPool::Priority preferredQueue);
   void sendErrorMsg(uint32_t id, uint32_t step, primitiveprocessor::SP_UM_IOSOCK sock);
 
