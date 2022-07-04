@@ -98,7 +98,9 @@ string Func_get_format::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& 
       {
         case 0: return known_date_time_formats[i][2]; break;
 
-        default: return "";
+        default:
+          isNull = r
+          return "";
       }
     }
   }

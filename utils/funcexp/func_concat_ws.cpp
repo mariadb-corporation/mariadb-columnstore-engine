@@ -104,7 +104,7 @@ string Func_concat_ws::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
       continue;
     }
 
-    if (!str.empty())
+    if (!str.empty()) // XXX: XXX: XXX: concatenation of empty strings will result in empty string.
       str += delim;
 
     // TODO: Work on string reallocation. Use std::string::resize() to
@@ -112,7 +112,7 @@ string Func_concat_ws::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
     str += tmp;
   }
 
-  if (str.empty())
+  if (str.empty()) // XXX: this is not right, again. empty strings are not nulls anymore.
     isNull = true;
   else
     isNull = false;
