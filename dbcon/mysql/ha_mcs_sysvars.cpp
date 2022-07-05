@@ -188,6 +188,22 @@ static MYSQL_THDVAR_ULONGLONG(cache_flush_threshold, PLUGIN_VAR_RQCMDARG,
                               "Threshold on the number of rows in the cache to trigger a flush", NULL, NULL,
                               500000, 1, 1000000000, 1);
 
+static MYSQL_THDVAR_STR(cmapi_host, PLUGIN_VAR_NOCMDOPT|PLUGIN_VAR_MEMALLOC, "CMAPI host", NULL, NULL,
+                        "https://localhost");
+
+static MYSQL_THDVAR_STR(cmapi_version, PLUGIN_VAR_NOCMDOPT|PLUGIN_VAR_MEMALLOC, "CMAPI version", NULL, NULL,
+                        "0.4.0");
+
+static MYSQL_THDVAR_STR(cmapi_key, PLUGIN_VAR_NOCMDOPT|PLUGIN_VAR_MEMALLOC, "CMAPI key", NULL, NULL,
+                        "");
+
+static MYSQL_THDVAR_ULONGLONG(cmapi_port, PLUGIN_VAR_NOCMDOPT, "CMAPI port", NULL,
+                              NULL, 8640, 100, 65356, 1);
+
+static MYSQL_THDVAR_STR(s3_key, PLUGIN_VAR_NOCMDOPT|PLUGIN_VAR_MEMALLOC, "S3 Authentication Key ", NULL, NULL, "");
+static MYSQL_THDVAR_STR(s3_secret, PLUGIN_VAR_NOCMDOPT|PLUGIN_VAR_MEMALLOC, "S3 Authentication Secret", NULL, NULL, "");
+static MYSQL_THDVAR_STR(s3_region, PLUGIN_VAR_NOCMDOPT|PLUGIN_VAR_MEMALLOC, "S3 region", NULL, NULL, "");
+
 st_mysql_sys_var* mcs_system_variables[] = {MYSQL_SYSVAR(compression_type),
                                             MYSQL_SYSVAR(fe_conn_info_ptr),
                                             MYSQL_SYSVAR(original_optimizer_flags),
@@ -217,6 +233,13 @@ st_mysql_sys_var* mcs_system_variables[] = {MYSQL_SYSVAR(compression_type),
                                             MYSQL_SYSVAR(cache_inserts),
                                             MYSQL_SYSVAR(cache_use_import),
                                             MYSQL_SYSVAR(cache_flush_threshold),
+                                            MYSQL_SYSVAR(cmapi_host),
+                                            MYSQL_SYSVAR(cmapi_port),
+                                            MYSQL_SYSVAR(cmapi_version),
+                                            MYSQL_SYSVAR(cmapi_key),
+                                            MYSQL_SYSVAR(s3_key),
+                                            MYSQL_SYSVAR(s3_secret),
+                                            MYSQL_SYSVAR(s3_region),
                                             NULL};
 
 st_mysql_show_var mcs_status_variables[] = {{"columnstore_version", (char*)&cs_version, SHOW_CHAR},
@@ -504,4 +527,74 @@ ulonglong get_cache_flush_threshold(THD* thd)
 void set_cache_flush_threshold(THD* thd, ulonglong value)
 {
   THDVAR(thd, cache_flush_threshold) = value;
+}
+
+ulong get_cmapi_port(THD* thd)
+{
+  return (thd == NULL) ? 5000 : THDVAR(thd, cmapi_port);
+}
+
+void set_cmapi_port(THD* thd, ulong value)
+{
+  THDVAR(thd, cmapi_port) = value;
+}
+
+const char* get_cmapi_host(THD* thd)
+{
+  return (thd == NULL) ? "127.0.0.1" : THDVAR(thd, cmapi_host);
+}
+
+void set_cmapi_host(THD* thd, char* value)
+{
+  THDVAR(thd, cmapi_host) = value;
+}
+
+const char* get_cmapi_version(THD* thd)
+{
+  return (thd == NULL) ? "0.4.0" : THDVAR(thd, cmapi_version);
+}
+
+void set_cmapi_version(THD* thd, char* value)
+{
+  THDVAR(thd, cmapi_version) = value;
+}
+
+const char* get_cmapi_key(THD* thd)
+{
+  return (thd == NULL) ? "" : THDVAR(thd, cmapi_key);
+}
+
+void set_cmapi_key(THD* thd, char* value)
+{
+  THDVAR(thd, cmapi_key) = value;
+}
+
+const char* get_s3_key(THD* thd)
+{
+  return THDVAR(thd, s3_key);
+}
+
+void set_s3_key(THD* thd, char* value)
+{
+  THDVAR(thd, s3_key) = value;
+}
+
+const char* get_s3_secret(THD* thd)
+{
+  return THDVAR(thd, s3_secret);
+}
+
+void set_s3_secret(THD* thd, char* value)
+{
+  THDVAR(thd, s3_secret) = value;
+}
+
+const char* get_s3_region(THD* thd)
+{
+  return THDVAR(thd, s3_region);
+}
+
+void set_s3_region(THD* thd, char* value)
+{
+  THDVAR(thd, s3_region) = value;
 }
