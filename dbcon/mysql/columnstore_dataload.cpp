@@ -128,7 +128,8 @@ extern "C"
 
     if (res != CURLE_OK)
     {
-      std::string msg = std::string("Remote request failed: ") + curl_easy_strerror(res);
+      std::string msg = std::string("CMAPI Remote request failed: ") + curl_easy_strerror(res);
+      result = new char[msg.length() + 1];
       memcpy(result, msg.c_str(), msg.length());
       *length = msg.length();
       return result;
