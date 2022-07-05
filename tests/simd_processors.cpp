@@ -48,7 +48,7 @@ public:
                                                            simd::vi128_wr>>;
     using Proc = typename simd::SimdFilterProcessor<SimdType, T>;
     #else
-    using Proc = typename simd::SimdFilterProcessor<typename simd::TypeToVecWrapperType<T>::WrapperType, TypeParam>;
+    using Proc = typename simd::SimdFilterProcessor<typename simd::TypeToVecWrapperType<T>::WrapperType, T>;
   #endif
   void SetUp() override
   {

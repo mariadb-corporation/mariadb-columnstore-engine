@@ -1296,7 +1296,7 @@ inline SIMD_WRAPPER_TYPE simdSwapedOrderDataLoad(const ColRequestHeaderDataType 
 
 template <typename VT, typename SimdType>
 void vectorizedUpdateMinMax(const bool validMinMax, const MT nonNullOrEmptyMask, VT& simdProcessor,
-                            SimdType dataVec, SimdType simdMin, SimdType simdMax)
+                            SimdType& dataVec, SimdType& simdMin, SimdType& simdMax)
 {
   if (validMinMax && nonNullOrEmptyMask)
   {
@@ -1521,7 +1521,7 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
         simdProcessor, valuesWritten, validMinMax, ridOffset, dataVecTPtr, ridDstArray, writeMask, min, max,
         in, out, nonNullOrEmptyMask, ridArray);
 
-    if constexpr (HAS_INPUT_RIDS && KIND != KIND_TEXT)
+    if constexpr (KIND != KIND_TEXT)
     {
       vectorizedUpdateMinMax(validMinMax, nonNullOrEmptyMask, simdProcessor, dataVec, simdMin, simdMax);
     }
@@ -1540,7 +1540,7 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
     srcArray += VECTOR_SIZE;
     ridArray += VECTOR_SIZE;
   }
-  if constexpr(HAS_INPUT_RIDS && KIND != KIND_TEXT)
+  if constexpr(KIND != KIND_TEXT)
   {
     extractMinMax(simdProcessor, simdMin, simdMax, min, max);
   }
