@@ -666,10 +666,10 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
    */
   OID tableAUXColumnOID(const TableName& tableName, int lower_case_table_names = 0);
 
-  /** returns true if the given OID is the AUX
+  /** returns the table OID if the input OID is the AUX
    *  column OID of the table.
    */
-  bool isAUXColumnOID(const OID& oid);
+  CalpontSystemCatalog::OID isAUXColumnOID(const OID& oid);
 
   /** return the RID of the index for a table
    *

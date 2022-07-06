@@ -1241,7 +1241,7 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
     ct.columnOID = Oid;
   }
 
-  if ((sysDataList.size() == 0) && isAUXColumnOID(Oid))
+  if ((sysDataList.size() == 0) && isAUXColumnOID(Oid) >= 3000)
   {
     ct.colDataType = execplan::AUX_COL_DATATYPE;
     ct.colWidth = execplan::AUX_COL_WIDTH;
@@ -3554,12 +3554,12 @@ const CalpontSystemCatalog::ROPair CalpontSystemCatalog::tableRID(const TableNam
   oss << "select objectid from systable where schema='" << aTableName.schema << "' and tablename='"
       << aTableName.table << "' --tableRID/";
 
-  csep.data(oss.str());  //@bug 6078. Log the statement
-
   if (fIdentity == EC)
     oss << "EC";
   else
     oss << "FE";
+
+  csep.data(oss.str());  //@bug 6078. Log the statement
 
   NJLSysDataList sysDataList;
 
@@ -3698,12 +3698,12 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::tableAUXColumnOID(const TableNam
   oss << "select auxcolumnoid from systable where schema='" << aTableName.schema << "' and tablename='"
       << aTableName.table << "' --tableAUXColumnOID/";
 
-  csep.data(oss.str());  //@bug 6078. Log the statement
-
   if (fIdentity == EC)
     oss << "EC";
   else
     oss << "FE";
+
+  csep.data(oss.str());  //@bug 6078. Log the statement
 
   NJLSysDataList sysDataList;
 
@@ -3749,22 +3749,26 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::tableAUXColumnOID(const TableNam
   throw IDBExcept(ERR_TABLE_NOT_IN_CATALOG, args);
 }
 
-bool CalpontSystemCatalog::isAUXColumnOID(const OID& oid)
+CalpontSystemCatalog::OID CalpontSystemCatalog::isAUXColumnOID(const OID& oid)
 {
   DEBUG << "Enter isAUXColumnOID" << endl;
 
   checkSysCatVer();
 
-  // select auxcolumnoid from systable where auxcolumnoid = oid;
+  // select objectid from systable where auxcolumnoid = oid;
   CalpontSelectExecutionPlan csep;
   CalpontSelectExecutionPlan::ReturnedColumnList returnedColumnList;
   CalpontSelectExecutionPlan::FilterTokenList filterTokenList;
   CalpontSelectExecutionPlan::ColumnMap colMap;
 
   SimpleColumn* c1 =
+    new SimpleColumn(CALPONT_SCHEMA + "." + SYSTABLE_TABLE + "." + OBJECTID_COL, fSessionID);
+  SimpleColumn* c2 =
     new SimpleColumn(CALPONT_SCHEMA + "." + SYSTABLE_TABLE + "." + AUXCOLUMNOID_COL, fSessionID);
   SRCP srcp;
   srcp.reset(c1);
+  colMap.insert(CMVT_(CALPONT_SCHEMA + "." + SYSTABLE_TABLE + "." + OBJECTID_COL, srcp));
+  srcp.reset(c2);
   colMap.insert(CMVT_(CALPONT_SCHEMA + "." + SYSTABLE_TABLE + "." + AUXCOLUMNOID_COL, srcp));
   csep.columnMapNonStatic(colMap);
 
@@ -3772,22 +3776,24 @@ bool CalpontSystemCatalog::isAUXColumnOID(const OID& oid)
   returnedColumnList.push_back(srcp);
   csep.returnedCols(returnedColumnList);
 
+  CalpontSystemCatalog::OID systableOid = c1->oid();
+
   // Filters
   SimpleFilter* f1 =
-      new SimpleFilter(opeq, c1->clone(), new ConstantColumn((int64_t)oid, ConstantColumn::NUM));
+      new SimpleFilter(opeq, c2->clone(), new ConstantColumn((int64_t)oid, ConstantColumn::NUM));
   filterTokenList.push_back(f1);
   csep.filterTokenList(filterTokenList);
 
   ostringstream oss;
-  oss << "select auxcolumnoid from systable where auxcolumnoid='" << oid
+  oss << "select objectid from systable where auxcolumnoid='" << oid
       << "' --isAUXColumnOID/";
-
-  csep.data(oss.str());  //@bug 6078. Log the statement
 
   if (fIdentity == EC)
     oss << "EC";
   else
     oss << "FE";
+
+  csep.data(oss.str());  //@bug 6078. Log the statement
 
   NJLSysDataList sysDataList;
 
@@ -3804,10 +3810,24 @@ bool CalpontSystemCatalog::isAUXColumnOID(const OID& oid)
     throw runtime_error(e.what());
   }
 
-  if (sysDataList.size() == 1)
-    return true;
+  vector<ColumnResult*>::const_iterator it;
 
-  return false;
+  for (it = sysDataList.begin(); it != sysDataList.end(); it++)
+  {
+    if ((*it)->ColumnOID() == systableOid)
+    {
+      if ((*it)->dataCount() == 1)
+      {
+        return (OID)((*it)->GetData(0));
+      }
+      else
+      {
+        break;
+      }
+    }
+  }
+
+  return (OID)(0);
 }
 
 #if 0

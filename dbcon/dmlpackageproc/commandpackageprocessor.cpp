@@ -374,6 +374,9 @@ DMLPackageProcessor::DMLResult CommandPackageProcessor::processPackage(
 
           if (weRc == 0)
           {
+            // MCOL-5021
+            fDbrm->addToLBIDList(fSessionID, lbidList);
+
             //@Bug 4560 invalidate cp first as bulkrollback will truncate the newly added lbids.
             fDbrm->invalidateUncommittedExtentLBIDs(0, true, &lbidList);
             cpInvalidated = true;
@@ -433,6 +436,12 @@ DMLPackageProcessor::DMLResult CommandPackageProcessor::processPackage(
 
         if (!cpInvalidated)
         {
+          // MCOL-5021
+          if (stmt == "ROLLBACK")
+          {
+            fDbrm->addToLBIDList(fSessionID, lbidList);
+          }
+
           fDbrm->invalidateUncommittedExtentLBIDs(0, stmt == "ROLLBACK", &lbidList);
         }
       }
