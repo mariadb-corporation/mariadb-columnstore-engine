@@ -144,6 +144,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
       if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y rsyslog hostname && apt install -y -f /result/*.' + pkg_format + '"' else '',
       if (std.split(platform, '/')[0] == 'opensuse') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "zypper install -y which hostname rsyslog && zypper install -y --allow-unsigned-rpm /result/*.' + pkg_format + '"' else '',
       // start mariadb and mariadb-columnstore services and run simple query
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} sleep 86400',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl start mariadb',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl start mariadb-columnstore',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} mariadb -e "create database if not exists test; create table test.t1 (a int) engine=Columnstore; insert into test.t1 values (1); select * from test.t1"',
