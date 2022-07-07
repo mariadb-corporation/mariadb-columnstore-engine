@@ -39,6 +39,20 @@
 
 namespace threadpool
 {
+template <typename T>
+class ThreadPoolJobsListT : public std::list<T>
+{
+ public:
+  using std::list<T>::push_back;
+  using std::list<T>::erase;
+  using std::list<T>::front;
+  using std::list<T>::empty;
+  using std::list<T>::pop_front;
+  using std::list<T>::begin;
+  using std::list<T>::end;
+  bool emptyFlag = false;
+};
+
 // The idea of this thread pool is to run morsel jobs(primitive job) is to equaly distribute CPU time
 // b/w multiple parallel queries(thread maps morsel to query using txnId). Query(txnId) has its weight
 // stored in PriorityQueue that thread increases before run another morsel for the query. When query is
@@ -169,7 +183,7 @@ class FairThreadPool
   using RunListT = std::vector<Job>;
   using RescheduleVecType = std::vector<bool>;
   using WeightedTxnPrioQueue = std::priority_queue<WeightedTxnT, WeightedTxnVec, PrioQueueCmp>;
-  using ThreadPoolJobsList = std::list<Job>;
+  using ThreadPoolJobsList = ThreadPoolJobsListT<Job>;
   using Txn2ThreadPoolJobsListMap = std::unordered_map<TransactionIdxT, ThreadPoolJobsList*>;
   Txn2ThreadPoolJobsListMap txn2JobsListMap_;
   WeightedTxnPrioQueue weightedTxnsQueue_;

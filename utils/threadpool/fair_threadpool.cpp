@@ -110,12 +110,21 @@ void FairThreadPool::removeJobs(uint32_t id)
   for (auto& txnJobsMapPair : txn2JobsListMap_)
   {
     ThreadPoolJobsList* txnJobsList = txnJobsMapPair.second;
-    if (!txnJobsList)
-      continue;
+    // txnJobsList must not be nullptr
     if (txnJobsList->empty())
     {
-      txn2JobsListMap_.erase(txnJobsMapPair.first);
-      delete txnJobsList;
+      // The next branching is for delayed clean-up that is
+      // necessary to avoid  BATCH_PRIMITIVE_DESTROY job self-removal
+      // running in the same ThreadPool.
+      if (txnJobsList->emptyFlag)
+      {
+        txn2JobsListMap_.erase(txnJobsMapPair.first);
+        delete txnJobsList;
+      }
+      else
+      {
+        txnJobsList->emptyFlag = true;
+      }
       continue;
       // There is no clean-up for PQ. It will happen later in threadFcn
     }
