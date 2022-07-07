@@ -474,7 +474,8 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
       if (fResultType.colWidth <= 8)
       {
         //fResult.strVal.assign((uint8_t*)(&fResult.origIntVal), sizeof(fResult.origIntVal));
-        fResult.strVal.assign((uint8_t*)(&fResult.origIntVal), fResultType.colWidth);
+	const char *intAsChar = (const char*) (&fResult.origIntVal);
+        fResult.strVal.assign((const uint8_t*)intAsChar, strlen(intAsChar));
       }
 
       break;

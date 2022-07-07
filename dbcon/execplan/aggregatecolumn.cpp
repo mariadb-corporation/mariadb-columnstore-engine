@@ -410,7 +410,7 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
           if (!str.isNull())
             fResult.strVal.assign((const uint8_t*)str.str(), str.length());
 
-          isNull = fResult.strVal.isNull();
+          isNull = isNull || fResult.strVal.isNull();
 
           break;
         }
