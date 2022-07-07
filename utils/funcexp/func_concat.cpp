@@ -47,6 +47,7 @@ CalpontSystemCatalog::ColType Func_concat::operationType(FunctionParm& fp,
   }
   auto temp = fp[0]->data()->resultType();
   temp.colWidth = widSum;
+  resultType = temp;
   return temp;
 }
 

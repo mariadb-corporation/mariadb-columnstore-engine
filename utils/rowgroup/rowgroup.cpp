@@ -1566,7 +1566,7 @@ void RowGroup::addToSysDataList(execplan::CalpontSystemCatalog::NJLSysDataList& 
             default:
             {
               NullString s = row.getStringField(j);
-              cr->PutStringData(s);
+              cr->PutStringData(s.str(), s.isNull() ? 0 : strlen(s.str()));
             }
           }
 
