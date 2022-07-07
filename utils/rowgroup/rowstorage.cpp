@@ -1814,7 +1814,10 @@ void RowAggStorage::increaseSize()
   if (fCurData->fSize < maxSize && tryIncreaseInfo())
     return;
 
-  if (fCurData->fSize * 2 < calcMaxSize(fCurData->fMask + 1))
+  constexpr size_t maxMaskMultiplierWoRehashing = 1U << (INIT_INFO_INC - 1);
+  // We don't check for the overflow here b/c it is impractical to has fSize so that multiplication
+  // overflows.
+  if (fCurData->fSize * maxMaskMultiplierWoRehashing < calcMaxSize(fCurData->fMask + 1))
   {
     // something strange happens...
     throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_ERROR),

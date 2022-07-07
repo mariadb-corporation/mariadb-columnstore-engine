@@ -321,6 +321,8 @@ class RowAggStorage
   {
     RowPosHashStoragePtr fHashes;
     std::unique_ptr<uint8_t[]> fInfo;
+    // This is a power of 2 that controls a potential number of hash buckets
+    // w/o rehashing.
     size_t fSize{0};
     size_t fMask{0};
     size_t fMaxSize{0};
