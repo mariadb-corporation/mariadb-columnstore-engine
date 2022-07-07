@@ -72,6 +72,13 @@ class ColumnResult
     dcount++;
   }
 
+  void PutStringData(const char*str, size_t len)
+  {
+    idbassert(str != nullptr || len == 0);
+    NullString tmp(str, len);
+    PutStringData(tmp);
+  }
+
   int ColumnOID() const
   {
     return oid;
