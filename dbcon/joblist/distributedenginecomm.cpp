@@ -38,6 +38,7 @@
 #include <unistd.h>
 #include <chrono>
 #include <thread>
+#include <ifaddrs.h>
 using namespace std;
 
 #include <boost/scoped_array.hpp>
@@ -186,7 +187,13 @@ DistributedEngineComm* DistributedEngineComm::fInstance = 0;
 DistributedEngineComm* DistributedEngineComm::instance(ResourceManager* rm, bool isExeMgr)
 {
   if (fInstance == 0)
+  {
     fInstance = new DistributedEngineComm(rm, isExeMgr);
+    if (isExeMgr && fInstance)
+    {
+      fInstance->getLocalNetIfacesSins();
+    }
+  }
 
   return fInstance;
 }
@@ -201,6 +208,10 @@ void DistributedEngineComm::reset()
 DistributedEngineComm::DistributedEngineComm(ResourceManager* rm, bool isExeMgr)
  : fRm(rm), pmCount(0), fIsExeMgr(isExeMgr)
 {
+  if (fIsExeMgr)
+  {
+    getLocalNetIfacesSins();
+  }
   Setup();
 }
 
@@ -268,6 +279,10 @@ void DistributedEngineComm::Setup()
     size_t connectionId = i % newPmCount;
     boost::shared_ptr<MessageQueueClient> cl(new MessageQueueClient(
         pmsAddressesAndPorts[connectionId].first, pmsAddressesAndPorts[connectionId].second));
+    if (clientAtTheSameHost(cl))
+    {
+      cl->atTheSameHost(true);
+    }
     boost::shared_ptr<boost::mutex> nl(new boost::mutex());
 
     try
@@ -410,8 +425,6 @@ Error:
 
   if (fIsExeMgr)
   {
-    // std::cout << "WARNING: DEC READ 0 LENGTH BS FROM "
-    //    << client->otherEnd()<< " OR GOT AN EXCEPTION READING" << std::endl;
     decltype(pmCount) originalPMCount = pmCount;
     // Re-establish if a remote PM restarted.
     std::this_thread::sleep_for(std::chrono::seconds(3));
@@ -1042,8 +1055,14 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const ByteStream& bs, 
 
     if (!client->isAvailable())
       return 0;
+    std::cout << "DEC id " << aPMIndex << " is same host conn " << client->atTheSameHost() << " fIsExeMgr "
+              << fIsExeMgr << std::endl;
 
     boost::mutex::scoped_lock lk(*(fWlock[connectionId]));
+    if (false && client->atTheSameHost() && fIsExeMgr)
+    {
+      // inMemoryEM2PPExchQueue_.push_back(bs);
+    }
     client->write(bs, NULL, senderStats);
     return 0;
   }
@@ -1183,4 +1202,52 @@ uint32_t DistributedEngineComm::MQE::getNextConnectionId(const size_t pmIndex,
   return nextConnectionId;
 }
 
+template <typename T>
+bool DistributedEngineComm::clientAtTheSameHost(T& client) const
+{
+  for (auto& sin : localNetIfaceSins_)
+  {
+    if (client->isSameAddr(sin))
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+// bool DistributedEngineComm::sockAtTheSameHost(SharedPtrEMSock& sock) const
+// {
+//   for (auto& sin : localNetIfaceSins_)
+//   {
+//     if (sock->isSameAddr(sin))
+//     {
+//       return true;
+//     }
+//   }
+//   return false;
+// }
+
+void DistributedEngineComm::getLocalNetIfacesSins()
+{
+  string ipAddress = "Unable to get IP Address";
+  struct ifaddrs* netIfacesList = nullptr;
+  struct ifaddrs* ifaceListMembPtr = nullptr;
+  int success = 0;
+  // retrieve the current interfaces - returns 0 on success
+  success = getifaddrs(&netIfacesList);
+  if (success == 0)
+  {
+    ifaceListMembPtr = netIfacesList;
+    for (; ifaceListMembPtr; ifaceListMembPtr = ifaceListMembPtr->ifa_next)
+    {
+      if (ifaceListMembPtr->ifa_addr->sa_family == AF_INET)
+      {
+        localNetIfaceSins_.push_back(((struct sockaddr_in*)ifaceListMembPtr->ifa_addr)->sin_addr);
+      }
+    }
+  }
+  freeifaddrs(netIfacesList);
+}
+template bool DistributedEngineComm::clientAtTheSameHost<DistributedEngineComm::SharedPtrEMSock>(
+    SharedPtrEMSock& client) const;
 }  // namespace joblist

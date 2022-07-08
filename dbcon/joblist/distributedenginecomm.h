@@ -32,6 +32,9 @@
 
 #pragma once
 
+#include <ifaddrs.h>
+// #include <sys/types.h>
+#include <condition_variable>
 #include <iostream>
 #include <vector>
 #include <queue>
@@ -84,6 +87,8 @@ class DECEventListener
  */
 class DistributedEngineComm
 {
+  using SharedPtrEMSock = boost::shared_ptr<messageqcpp::IOSocket>;
+
  public:
   /**
    * Constructors
@@ -206,6 +211,10 @@ class DistributedEngineComm
     return fIsExeMgr;
   }
 
+  template <typename T>
+  bool clientAtTheSameHost(T& client) const;
+  void getLocalNetIfacesSins();
+
   messageqcpp::Stats getNetworkStats(uint32_t uniqueID);
   void addDataToOutput(messageqcpp::SBS sbs);
 
@@ -300,6 +309,15 @@ class DistributedEngineComm
   void setFlowControl(bool enable, uint32_t uniqueID, boost::shared_ptr<MQE> mqe);
   void doHasBigMsgs(boost::shared_ptr<MQE> mqe, uint64_t targetSize);
   boost::mutex ackLock;
+
+ public:
+  std::mutex inMemoryEM2PPExchMutex_;
+  std::condition_variable inMemoryEM2PPExchCV_;
+  std::queue<messageqcpp::SBS> inMemoryEM2PPExchQueue_;
+
+
+ private:
+  std::vector<struct in_addr> localNetIfaceSins_;
 };
 
 }  // namespace joblist

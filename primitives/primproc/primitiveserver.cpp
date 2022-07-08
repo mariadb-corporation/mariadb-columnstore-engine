@@ -21,13 +21,16 @@
  *
  *
  ***********************************************************************/
+
 #define _FILE_OFFSET_BITS 64
 #define _LARGEFILE64_SOURCE
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <mutex>
 #include <stdexcept>
+
 //#define NDEBUG
 #include <cassert>
 #include <boost/thread.hpp>
@@ -49,7 +52,8 @@ using namespace std;
 #include <boost/scoped_array.hpp>
 #include <boost/thread.hpp>
 using namespace boost;
-
+#include "distributedenginecomm.h"
+#include "serviceexemgr.h"
 #include "primproc.h"
 #include "primitiveserver.h"
 #include "primitivemsg.h"
@@ -2215,6 +2219,25 @@ struct ReadThread
 
 /** @brief accept a primitive command from the user module
  */
+// struct SameHostServerThread
+// {
+//   SameHostServerThread(string serverName, PrimitiveServer* ps)
+//    : fServerName(serverName), fPrimitiveServerPtr(ps)
+//   {
+//     SUMMARY_INFO2("starting same host server thread ", fServerName);
+//   }
+
+//   void operator()()
+//   {
+//     utils::setThreadName("PPSHServerThr");
+//     // boost::thread rt(ReadThread(fServerName, ios, fPrimitiveServerPtr));
+//   }
+
+//   string fServerName;
+//   PrimitiveServer* fPrimitiveServerPtr;
+//   MessageQueueServer* mqServerPtr;
+// };
+
 struct ServerThread
 {
   ServerThread(string serverName, PrimitiveServer* ps) : fServerName(serverName), fPrimitiveServerPtr(ps)
@@ -2351,6 +2374,55 @@ void PrimitiveServer::start(Service* service, utils::USpaceSpinLock& startupRace
 
     fServerpool.invoke(ServerThread(oss.str(), this));
   }
+  std::thread sameHostServerThread(
+      [this]()
+      {
+        auto* exeMgrDecPtr = exemgr::globServiceExeMgr->getDec();
+        boost::shared_ptr<threadpool::PriorityThreadPool> procPoolPtr = this->getProcessorThreadPool();
+        boost::shared_ptr<BPPHandler> fBPPHandler(new BPPHandler(this));
+        for (;;)
+        {
+          std::unique_lock<std::mutex> exchangeLock(exeMgrDecPtr->inMemoryEM2PPExchMutex_);
+
+          // Reduce the crit section
+          while (!exeMgrDecPtr->inMemoryEM2PPExchQueue_.empty())
+          {
+            SBS sbs = exeMgrDecPtr->inMemoryEM2PPExchQueue_.front();
+            if (sbs->length() == 0)
+            {
+              exeMgrDecPtr->inMemoryEM2PPExchQueue_.pop();
+              continue;
+            }
+            idbassert(sbs->length() >= sizeof(ISMPacketHeader));
+
+            // const ISMPacketHeader* ismHdr = reinterpret_cast<const ISMPacketHeader*>(sbs->buf());
+            // switch (ismHdr->Command)
+            // {
+            //   case BATCH_PRIMITIVE_CREATE:
+            //   {
+            //     PriorityThreadPool::Job job;
+            //     job.functor =
+            //         boost::shared_ptr<PriorityThreadPool::Functor>(new BPPHandler::Create(fBPPHandler,
+            //         sbs));
+            //     uint8_t* buf = sbs->buf();
+            //     uint32_t pos = sizeof(ISMPacketHeader) - 2;
+            //     job.stepID = *((uint32_t*)&buf[pos + 6]);
+            //     job.uniqueID = *((uint32_t*)&buf[pos + 10]);
+            //     // job.sock = outIos;
+            //     OOBPool->addJob(job);
+            //     break;
+            //   }
+            // }  // the switch stmt
+
+            exeMgrDecPtr->inMemoryEM2PPExchQueue_.pop();
+          }
+          if (exeMgrDecPtr->inMemoryEM2PPExchQueue_.empty())
+          {
+            exeMgrDecPtr->inMemoryEM2PPExchCV_.wait(exchangeLock);
+          }
+        }
+      });
+
   startupRaceLock.release();
   service->NotifyServiceStarted();
 

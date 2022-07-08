@@ -29,6 +29,7 @@
 //
 //
 
+#include <mutex>
 #include <stdexcept>
 #include <unistd.h>
 #include <cstring>
@@ -2145,12 +2146,11 @@ void BatchPrimitiveProcessor::serializeStrings()
 
 void BatchPrimitiveProcessor::sendResponse()
 {
-  bool isLocalNodeConnection = exemgr::globServiceExeMgr->isLocalNodeSock(sock);
+  auto* exeMgrDecPtr = exemgr::globServiceExeMgr->getDec();
   // Here is the fast path for local EM to PM interacction. PM puts into the
   // input EM DEC queue directly.
-  if (initiatedByEM_ && isLocalNodeConnection)
+  if (initiatedByEM_ && exeMgrDecPtr->clientAtTheSameHost(sock))
   {
-    joblist::DistributedEngineComm* exeMgrDecPtr = exemgr::globServiceExeMgr->getDec();
     exeMgrDecPtr->addDataToOutput(serialized);
     serialized.reset();
     return;
