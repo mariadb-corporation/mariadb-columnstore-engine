@@ -107,24 +107,16 @@ void FairThreadPool::removeJobs(uint32_t id)
 {
   std::unique_lock<std::mutex> lk(mutex);
 
-  for (auto& txnJobsMapPair : txn2JobsListMap_)
+  auto txnJobsMapIter = txn2JobsListMap_.begin();
+  while (txnJobsMapIter != txn2JobsListMap_.end())
   {
+    auto& txnJobsMapPair = *txnJobsMapIter;
     ThreadPoolJobsList* txnJobsList = txnJobsMapPair.second;
     // txnJobsList must not be nullptr
-    if (txnJobsList->empty())
+    if (txnJobsList && txnJobsList->empty())
     {
-      // The next branching is for delayed clean-up that is
-      // necessary to avoid  BATCH_PRIMITIVE_DESTROY job self-removal
-      // running in the same ThreadPool.
-      if (txnJobsList->emptyFlag)
-      {
-        txn2JobsListMap_.erase(txnJobsMapPair.first);
-        delete txnJobsList;
-      }
-      else
-      {
-        txnJobsList->emptyFlag = true;
-      }
+      txnJobsMapIter = txn2JobsListMap_.erase(txnJobsMapIter);
+      delete txnJobsList;
       continue;
       // There is no clean-up for PQ. It will happen later in threadFcn
     }
@@ -134,17 +126,19 @@ void FairThreadPool::removeJobs(uint32_t id)
       if (job->id_ == id)
       {
         job = txnJobsList->erase(job);  // update the job iter
-        if (txnJobsList->empty())
-        {
-          txn2JobsListMap_.erase(txnJobsMapPair.first);
-          delete txnJobsList;
-          break;
-          // There is no clean-up for PQ. It will happen later in threadFcn
-        }
-        continue;  // go-on skiping job iter increment
+        continue;                       // go-on skiping job iter increment
       }
       ++job;
     }
+
+    if (txnJobsList->empty())
+    {
+      txnJobsMapIter = txn2JobsListMap_.erase(txnJobsMapIter);
+      delete txnJobsList;
+      continue;
+      // There is no clean-up for PQ. It will happen later in threadFcn
+    }
+    ++txnJobsMapIter;
   }
 }
 
@@ -187,6 +181,7 @@ void FairThreadPool::threadFcn(const PriorityThreadPool::Priority preferredQueue
         {
           ThreadPoolJobsList* txnJobsList = txnAndJobListPair->second;
           delete txnJobsList;
+          // !txnAndJobListPair is invalidated after this!
           txn2JobsListMap_.erase(txnAndJobListPair->first);
         }
         weightedTxnsQueue_.pop();
