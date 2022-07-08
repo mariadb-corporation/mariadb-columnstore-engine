@@ -1,3 +1,4 @@
+SET GLOBAL log_bin_trust_function_creators = 1;
 DROP DATABASE IF EXISTS mcs_ctype_extent_latin1;
 CREATE DATABASE mcs_ctype_extent_latin1;
 USE mcs_ctype_extent_latin1;
