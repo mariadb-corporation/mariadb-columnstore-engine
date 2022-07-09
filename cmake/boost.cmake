@@ -37,7 +37,7 @@ message("Boost installed localy at ${BOOST_ROOT}")
 
 
 SET(Boost_USE_STATIC_LIBS ON)
-FIND_PACKAGE(Boost 1.78.0 COMPONENTS system filesystem thread regex date_time chrono atomic)
+FIND_PACKAGE(Boost 1.78.0 COMPONENTS system filesystem thread regex date_time chrono atomic PATHS ${BOOST_ROOT})
 IF (NOT Boost_FOUND)
     MESSAGE_ONCE(CS_NO_BOOST "Required Boost libraries not found!")
     return()
