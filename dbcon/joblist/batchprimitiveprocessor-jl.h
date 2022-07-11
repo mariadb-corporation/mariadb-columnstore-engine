@@ -252,8 +252,27 @@ class BatchPrimitiveProcessorJL
   }
 
  private:
-  // void setLBIDForScan(uint64_t rid, uint32_t dbroot);
+  const size_t perColumnProjectWeight_ = 10;
+  const size_t perColumnFilteringWeight_ = 10;
+  const size_t fe1Weight_ = 10;
+  const size_t fe2Weight_ = 10;
+  const size_t joinWeight_ = 500;
+  const size_t aggregationWeight_ = 500;
 
+  // This is simple SQL operations-based model leveraged by
+  // FairThreadPool run by PP facility.
+  // Every operation mentioned in this calculation spends
+  // some CPU so the morsel uses this op weights more.
+  uint32_t calculateBPPWeight() const
+  {
+    uint32_t weight = perColumnProjectWeight_ * projectCount;
+    weight += filterCount * perColumnFilteringWeight_;
+    weight += tJoiners.size() * joinWeight_;
+    weight += (aggregatorPM) ? aggregationWeight_ : 0;
+    weight += (fe1) ? fe1Weight_ : 0;
+    weight += (fe2) ? fe2Weight_ : 0;
+    return weight;
+  }
   BPSOutputType ot;
 
   bool needToSetLBID;
