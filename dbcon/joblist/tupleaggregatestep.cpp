@@ -352,6 +352,7 @@ TupleAggregateStep::TupleAggregateStep(const SP_ROWAGG_UM_t& agg, const RowGroup
 
   fExtendedInfo = "TAS: ";
   fQtc.stepParms().stepType = StepTeleStats::T_TAS;
+  fPrimitiveServerThreadPools = jobInfo.primitiveServerThreadPools;
 }
 
 TupleAggregateStep::~TupleAggregateStep()

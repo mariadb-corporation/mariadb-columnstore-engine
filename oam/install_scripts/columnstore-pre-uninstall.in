@@ -94,10 +94,10 @@ if [ -n "$systemctl" ] && [ $(running_systemd) -eq 0 ]; then
     rm -f /lib/systemd/system/mcs-ddlproc.service
     rm -f /usr/lib/systemd/system/mcs-dmlproc.service
     rm -f /lib/systemd/system/mcs-dmlproc.service
-    if [[ -f  /usr/lib/systemd/system/mcs-exemgr.service ]]
+    if [[ -f  /usr/lib/systemd/system/mcs-exemgr.service ]]; then
         rm -f /usr/lib/systemd/system/mcs-exemgr.service
     fi
-    if [[ -f  /lib/systemd/system/mcs-exemgr.service ]]
+    if [[ -f  /lib/systemd/system/mcs-exemgr.service ]]; then
         rm -f /lib/systemd/system/mcs-exemgr.service
     fi
     rm -f /usr/lib/systemd/system/mcs-primproc.service

@@ -37,6 +37,7 @@
 #include <string>
 #include <sstream>
 #include <set>
+#include "serviceexemgr.h"
 #include <stdlib.h>
 using namespace std;
 
@@ -117,7 +118,7 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor()
  , validCPData(false)
  , minVal(MAX64)
  , maxVal(MIN64)
-, cpDataFromDictScan(false)
+ , cpDataFromDictScan(false)
  , lbidForCP(0)
  , hasWideColumnOut(false)
  , busyLoaderCount(0)
@@ -140,6 +141,8 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor()
  , ptMask(0)
  , firstInstance(false)
  , valuesLBID(0)
+ , initiatedByEM_(false)
+ , weight_(0)
 {
   pp.setLogicalBlockMode(true);
   pp.setBlockPtr((int*)blockData);
@@ -193,6 +196,8 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor(ByteStream& b, double prefetch,
  // ptMask(processorThreads - 1),
  , firstInstance(true)
  , valuesLBID(0)
+ , initiatedByEM_(false)
+ , weight_(0)
 {
   // promote processorThreads to next power of 2.  also need to change the name to bucketCount or similar
   processorThreads = nextPowOf2(processorThreads);
@@ -542,8 +547,13 @@ void BatchPrimitiveProcessor::resetBPP(ByteStream& bs, const SP_UM_MUTEX& w, con
 
   // skip the header, sessionID, stepID, uniqueID, and priority
   bs.advance(sizeof(ISMPacketHeader) + 16);
+  bs >> weight_;
   bs >> dbRoot;
   bs >> count;
+  uint8_t u8 = 0;
+  bs >> u8;
+  initiatedByEM_ = u8;
+
   bs >> ridCount;
 
   if (gotAbsRids)
@@ -1647,8 +1657,9 @@ void BatchPrimitiveProcessor::execute()
           }
 
           //				else
-          //					cout << "   no target found for OID " << projectSteps[j]->getOID() <<
-          //endl;
+          //					cout << "   no target found for OID " <<
+          // projectSteps[j]->getOID()
+          //<< endl;
         }
         if (fe2)
         {
@@ -1764,7 +1775,7 @@ void BatchPrimitiveProcessor::execute()
           for (j = 0; j < projectCount; ++j)
           {
             if (projectionMap[j] != -1 && !keyColumnProj[j] && !hasJoinFEFilters &&
-              !oldRow.isLongString(projectionMap[j]))
+                !oldRow.isLongString(projectionMap[j]))
             {
 #ifdef PRIMPROC_STOPWATCH
               stopwatch->start("-- projectIntoRowGroup");
@@ -1787,20 +1798,20 @@ void BatchPrimitiveProcessor::execute()
             while (moreRGs && !sendThread->aborted())
             {
               /*
-                  *                        generate 1 rowgroup (8192 rows max) of joined rows
-                  *                        if there's an FE2, run it
-                  *                                -pack results into a new rowgroup
-                  *                                -if there are < 8192 rows in the new RG, continue
-                  *                        if there's an agg, run it
-                  *                        send the result
-              */
+               *                        generate 1 rowgroup (8192 rows max) of joined rows
+               *                        if there's an FE2, run it
+               *                                -pack results into a new rowgroup
+               *                                -if there are < 8192 rows in the new RG, continue
+               *                        if there's an agg, run it
+               *                        send the result
+               */
               resetGJRG();
               moreRGs = generateJoinedRowGroup(baseJRow);
-                  //                            smoreRGs = moreRGs;
-                  sendCount = (uint8_t)(!moreRGs && !startRid);
-                  //                            *serialized << (uint8_t)(!moreRGs && !startRid);   // the "count
-                  //                            this msg" var
-                  *serialized << sendCount;
+              //                            smoreRGs = moreRGs;
+              sendCount = (uint8_t)(!moreRGs && !startRid);
+              //                            *serialized << (uint8_t)(!moreRGs && !startRid);   // the "count
+              //                            this msg" var
+              *serialized << sendCount;
               if (fe2)
               {
                 /* functionize this -> processFE2()*/
@@ -1828,7 +1839,7 @@ void BatchPrimitiveProcessor::execute()
               {
                 fAggregator->addRowGroup(&nextRG);
 
-                    if ((currentBlockOffset + 1) == count && moreRGs == false && startRid == 0)  // @bug4507, 8k
+                if ((currentBlockOffset + 1) == count && moreRGs == false && startRid == 0)  // @bug4507, 8k
                 {
                   fAggregator->loadResult(*serialized);            // @bug4507, 8k
                 }                                                  // @bug4507, 8k
@@ -1862,7 +1873,7 @@ void BatchPrimitiveProcessor::execute()
               // Should we happen to finish sending data rows right on the boundary of when moreRGs flips off,
               // then we need to start a new buffer. I.e., it needs the count this message byte pushed.
               if (serialized->length() == preamble.length())
-              *serialized << (uint8_t)(startRid > 0 ? 0 : 1);  // the "count this msg" var
+                *serialized << (uint8_t)(startRid > 0 ? 0 : 1);  // the "count this msg" var
 
               *serialized << ridCount;
 
@@ -1871,7 +1882,7 @@ void BatchPrimitiveProcessor::execute()
                 for (j = 0; j < ridCount; ++j)
                 {
                   serializeInlineVector<uint32_t>(*serialized, tSmallSideMatches[i][j]);
-                      tSmallSideMatches[i][j].clear();
+                  tSmallSideMatches[i][j].clear();
                 }
               }
             }
@@ -1897,7 +1908,7 @@ void BatchPrimitiveProcessor::execute()
               for (j = 0; j < ridCount; ++j)
               {
                 serializeInlineVector<uint32_t>(*serialized, tSmallSideMatches[i][j]);
-                  tSmallSideMatches[i][j].clear();
+                tSmallSideMatches[i][j].clear();
               }
             }
           }
@@ -2134,6 +2145,17 @@ void BatchPrimitiveProcessor::serializeStrings()
 
 void BatchPrimitiveProcessor::sendResponse()
 {
+  bool isLocalNodeConnection = exemgr::globServiceExeMgr->isLocalNodeSock(sock);
+  // Here is the fast path for local EM to PM interacction. PM puts into the
+  // input EM DEC queue directly.
+  if (initiatedByEM_ && isLocalNodeConnection)
+  {
+    joblist::DistributedEngineComm* exeMgrDecPtr = exemgr::globServiceExeMgr->getDec();
+    exeMgrDecPtr->addDataToOutput(serialized);
+    serialized.reset();
+    return;
+  }
+
   if (sendThread->flowControlEnabled())
   {
     // newConnection should be set only for the first result of a batch job

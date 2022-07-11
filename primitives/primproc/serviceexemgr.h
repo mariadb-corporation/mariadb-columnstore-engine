@@ -20,7 +20,9 @@
 #include <iostream>
 #include <cstdint>
 #include <csignal>
+#include <ifaddrs.h>
 #include <sys/resource.h>
+#include <sys/types.h>
 
 #undef root_name
 #include <boost/filesystem.hpp>
@@ -60,6 +62,7 @@
 
 namespace exemgr
 {
+  using SharedPtrEMSock = boost::shared_ptr<messageqcpp::IOSocket>;
   class Opt
   {
   public:
@@ -168,7 +171,6 @@ namespace exemgr
     }
     void initMaxMemPct(uint32_t sessionId)
     {
-      // WIP
       if (sessionId < 0x80000000)
       {
         std::lock_guard<std::mutex> lk(sessionMemMapMutex_);
@@ -187,7 +189,6 @@ namespace exemgr
     uint64_t getMaxMemPct(const uint32_t sessionId)
     {
       uint64_t maxMemoryPct = 0;
-      // WIP
       if (sessionId < 0x80000000)
       {
         std::lock_guard<std::mutex> lk(sessionMemMapMutex_);
@@ -290,6 +291,17 @@ namespace exemgr
     {
       return *rm_;
     }
+    bool isLocalNodeSock(SharedPtrEMSock& sock) const
+    {
+      for (auto& sin : localNetIfaceSins_)
+      {
+        if (sock->isSameAddr(sin))
+        {
+          return true;
+        }
+      }
+      return false;
+    }
   private:
     void setupSignalHandlers();
     int8_t setupCwd()
@@ -326,7 +338,27 @@ namespace exemgr
       }
       return 0;
     }
-
+    void getLocalNetIfacesSins()
+    {
+      string ipAddress = "Unable to get IP Address";
+      struct ifaddrs* netIfacesList = nullptr;
+      struct ifaddrs* ifaceListMembPtr = nullptr;
+      int success = 0;
+      // retrieve the current interfaces - returns 0 on success
+      success = getifaddrs(&netIfacesList);
+      if (success == 0)
+      {
+        ifaceListMembPtr = netIfacesList;
+        for (; ifaceListMembPtr; ifaceListMembPtr = ifaceListMembPtr->ifa_next)
+        {
+          if (ifaceListMembPtr->ifa_addr->sa_family == AF_INET)
+          {
+            localNetIfaceSins_.push_back(((struct sockaddr_in*)ifaceListMembPtr->ifa_addr)->sin_addr);
+          }
+        }
+      }
+      freeifaddrs(netIfacesList);
+    }
     logging::Logger msgLog_;
     SessionMemMap_t sessionMemMap_; // track memory% usage during a query
     std::mutex sessionMemMapMutex_;
@@ -343,6 +375,7 @@ namespace exemgr
     joblist::ResourceManager* rm_;
     // Its attributes are set in Child()
     querytele::QueryTeleServerParms teleServerParms_;
+    std::vector<struct in_addr> localNetIfaceSins_;
   };
   extern ServiceExeMgr* globServiceExeMgr;
 }

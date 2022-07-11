@@ -1047,12 +1047,13 @@ void TupleBPS::storeCasualPartitionInfo(const bool estimateRowCounts)
       const EMEntry& extent = colCmd->getExtents()[idx];
 
       /* If any column filter eliminates an extent, it doesn't get scanned */
-      scanFlags[idx] = scanFlags[idx] && (extent.colWid <= utils::MAXCOLUMNWIDTH) &&  // XXX: change to named constant.
-                       (ignoreCP || extent.partition.cprange.isValid != BRM::CP_VALID ||
-                        colCmd->getColType().colWidth != extent.colWid ||
-                        lbidListVec[i]->CasualPartitionPredicate(
-                            extent.partition.cprange, &(colCmd->getFilterString()), colCmd->getFilterCount(),
-                            colCmd->getColType(), colCmd->getBOP(), colCmd->getIsDict()));
+      scanFlags[idx] =
+          scanFlags[idx] && (extent.colWid <= utils::MAXCOLUMNWIDTH) &&  // XXX: change to named constant.
+          (ignoreCP || extent.partition.cprange.isValid != BRM::CP_VALID ||
+           colCmd->getColType().colWidth != extent.colWid ||
+           lbidListVec[i]->CasualPartitionPredicate(extent.partition.cprange, &(colCmd->getFilterString()),
+                                                    colCmd->getFilterCount(), colCmd->getColType(),
+                                                    colCmd->getBOP(), colCmd->getIsDict()));
     }
   }
 
@@ -2032,7 +2033,7 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
 #endif
 
     startingLBID = scannedExtents[i].range.start;
-
+    bool isExeMgrDEC = fDec->isExeMgrDEC();
     while (blocksToScan > 0)
     {
       uint32_t blocksThisJob = min(blocksToScan, blocksPerJob);
@@ -2040,7 +2041,7 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
       fBPP->setLBID(startingLBID, scannedExtents[i]);
       fBPP->setCount(blocksThisJob);
       bs.reset(new ByteStream());
-      fBPP->runBPP(*bs, (*dbRootConnectionMap)[scannedExtents[i].dbRoot]);
+      fBPP->runBPP(*bs, (*dbRootConnectionMap)[scannedExtents[i].dbRoot], isExeMgrDEC);
       jobs->push_back(
           Job(scannedExtents[i].dbRoot, (*dbRootConnectionMap)[scannedExtents[i].dbRoot], blocksThisJob, bs));
       blocksToScan -= blocksThisJob;
@@ -2373,7 +2374,9 @@ void TupleBPS::receiveMultiPrimitiveMessages()
       for (uint32_t z = 0; z < size; z++)
       {
         if (bsv[z]->length() > 0 && fBPP->countThisMsg(*(bsv[z])))
+        {
           ++msgsRecvd;
+        }
       }
 
       //@Bug 1424,1298

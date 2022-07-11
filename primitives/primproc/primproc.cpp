@@ -76,57 +76,6 @@ using namespace idbdatafile;
 #include "service.h"
 #include "serviceexemgr.h"
 
-class Opt
-{
- public:
-  int m_debug;
-  bool m_fg;
-  Opt(int argc, char* argv[]) : m_debug(0), m_fg(false)
-  {
-    int c;
-
-    while ((c = getopt(argc, argv, "df")) != EOF)
-    {
-      switch (c)
-      {
-        case 'd': m_debug++; break;
-        case 'f': m_fg = true; break;
-        case '?':
-        default: break;
-      }
-    }
-  }
-};
-
-class ServicePrimProc : public Service, public Opt
-{
- public:
-  ServicePrimProc(const Opt& opt) : Service("PrimProc"), Opt(opt)
-  {
-  }
-  void LogErrno() override
-  {
-    cerr << strerror(errno) << endl;
-  }
-  void ParentLogChildMessage(const std::string& str) override
-  {
-    cout << str << endl;
-  }
-  int Child() override;
-  int Run()
-  {
-    return m_fg ? Child() : RunForking();
-  }
-  std::atomic_flag& getStartupRaceFlag()
-  {
-    return startupRaceFlag_;
-  }
-
- private:
-  // Since C++20 flag's init value is false.
-  std::atomic_flag startupRaceFlag_{false};
-};
-
 namespace primitiveprocessor
 {
 extern uint32_t BPPCount;
@@ -336,6 +285,15 @@ void* waitForSIGUSR1(void* p)
 #endif
 
 }  // namespace
+
+ServicePrimProc* ServicePrimProc::fInstance = nullptr;
+ServicePrimProc* ServicePrimProc::instance()
+{
+  if (!fInstance)
+    fInstance = new ServicePrimProc();
+
+  return fInstance;
+}
 
 int ServicePrimProc::Child()
 {
@@ -766,6 +724,8 @@ int ServicePrimProc::Child()
   }
 #endif
 
+  primServerThreadPool = server.getProcessorThreadPool();
+
   server.start(this, startupRaceLock);
 
   cerr << "server.start() exited!" << endl;
@@ -785,5 +745,6 @@ int main(int argc, char** argv)
   // Initialize the charset library
   MY_INIT(argv[0]);
 
-  return ServicePrimProc(opt).Run();
+  ServicePrimProc::instance()->setOpt(opt);
+  return ServicePrimProc::instance()->Run();
 }

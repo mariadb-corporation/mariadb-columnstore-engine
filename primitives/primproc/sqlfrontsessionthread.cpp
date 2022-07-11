@@ -16,6 +16,8 @@
    MA 02110-1301, USA. */
 
 #include "sqlfrontsessionthread.h"
+#include "primproc.h"
+#include "primitiveserverthreadpools.h"
 
 namespace exemgr
 {
@@ -195,7 +197,8 @@ namespace exemgr
     caep.unserialize(bs);
 
     statementsRunningCount->incr(stmtCounted);
-    jl = joblist::JobListFactory::makeJobList(&caep, fRm, false, true);
+    PrimitiveServerThreadPools primitiveServerThreadPools;
+    jl = joblist::JobListFactory::makeJobList(&caep, fRm, primitiveServerThreadPools, false, true);
 
     // Joblist is empty.
     if (jl->status() == logging::statisticsJobListEmpty)
@@ -516,16 +519,19 @@ namespace exemgr
 
       statementsRunningCount->incr(stmtCounted);
 
+      PrimitiveServerThreadPools primitiveServerThreadPools(
+          ServicePrimProc::instance()->getPrimitiveServerThreadPool());
+
       if (tryTuples)
       {
           try  // @bug2244: try/catch around fIos.write() calls responding to makeTupleList
           {
-          jl = joblist::JobListFactory::makeJobList(&csep, fRm, true, true);
-          // assign query stats
-          jl->queryStats(fStats);
+            jl = joblist::JobListFactory::makeJobList(&csep, fRm, primitiveServerThreadPools, true, true);
+            // assign query stats
+            jl->queryStats(fStats);
 
-          if ((jl->status()) == 0 && (jl->putEngineComm(fEc) == 0))
-          {
+            if ((jl->status()) == 0 && (jl->putEngineComm(fEc) == 0))
+            {
               usingTuples = true;
 
               // Tell the FE that we're sending tuples back, not TableBands
@@ -535,59 +541,59 @@ namespace exemgr
               messageqcpp::ByteStream tbs;
               tbs << tjlp->getOutputRowGroup();
               fIos.write(tbs);
-          }
-          else
-          {
+            }
+            else
+            {
               const std::string emsg = jl->errMsg();
               statementsRunningCount->decr(stmtCounted);
               writeCodeAndError(jl->status(), emsg);
               std::cerr << "ExeMgr: could not build a tuple joblist: " << emsg << std::endl;
               continue;
-          }
+            }
           }
           catch (std::exception& ex)
           {
-          std::ostringstream errMsg;
-          errMsg << "ExeMgr: error writing makeJoblist "
+            std::ostringstream errMsg;
+            errMsg << "ExeMgr: error writing makeJoblist "
                       "response; "
-                  << ex.what();
-          throw std::runtime_error(errMsg.str());
+                   << ex.what();
+            throw std::runtime_error(errMsg.str());
           }
           catch (...)
           {
-          std::ostringstream errMsg;
-          errMsg << "ExeMgr: unknown error writing makeJoblist "
+            std::ostringstream errMsg;
+            errMsg << "ExeMgr: unknown error writing makeJoblist "
                       "response; ";
-          throw std::runtime_error(errMsg.str());
+            throw std::runtime_error(errMsg.str());
           }
 
           if (!usingTuples)
           {
-          if (gDebug)
+            if (gDebug)
               std::cout << "### UM wanted tuples but it didn't work out :-(" << std::endl;
           }
           else
           {
-          if (gDebug)
+            if (gDebug)
               std::cout << "### UM wanted tuples and we'll do our best;-)" << std::endl;
           }
       }
       else
       {
-          usingTuples = false;
-          jl = joblist::JobListFactory::makeJobList(&csep, fRm, false, true);
+        usingTuples = false;
+        jl = joblist::JobListFactory::makeJobList(&csep, fRm, primitiveServerThreadPools, false, true);
 
-          if (jl->status() == 0)
-          {
+        if (jl->status() == 0)
+        {
           std::string emsg;
 
           if (jl->putEngineComm(fEc) != 0)
-              throw std::runtime_error(jl->errMsg());
-          }
-          else
-          {
+            throw std::runtime_error(jl->errMsg());
+        }
+        else
+        {
           throw std::runtime_error("ExeMgr: could not build a JobList!");
-          }
+        }
       }
 
       jl->doQuery();

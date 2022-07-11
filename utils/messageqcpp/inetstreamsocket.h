@@ -201,6 +201,7 @@ class InetStreamSocket : public Socket
    *
    */
   virtual bool isSameAddr(const Socket* rhs) const;
+  virtual bool isSameAddr(const struct in_addr& ipv4Addr) const;
 
   /** ping an ip address
    *

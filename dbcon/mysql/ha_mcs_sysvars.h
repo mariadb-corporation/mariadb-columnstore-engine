@@ -143,3 +143,24 @@ void set_cache_use_import(THD* thd, bool value);
 
 ulonglong get_cache_flush_threshold(THD* thd);
 void set_cache_flush_threshold(THD* thd, ulonglong value);
+
+ulong get_cmapi_port(THD* thd);
+void set_cmapi_port(THD* thd, ulong value);
+
+const char* get_cmapi_key(THD* thd);
+void set_cmapi_key(THD* thd, char* value);
+
+const char* get_cmapi_host(THD* thd);
+void set_cmapi_host(THD* thd, char* value);
+
+const char* get_cmapi_version(THD* thd);
+void set_cmapi_version(THD* thd, char* value);
+
+const char* get_s3_key(THD* thd);
+void set_s3_key(THD* thd, char* value);
+
+const char* get_s3_secret(THD* thd);
+void set_s3_secret(THD* thd, char* value);
+
+const char* get_s3_region(THD* thd);
+void set_s3_region(THD* thd, char* value);

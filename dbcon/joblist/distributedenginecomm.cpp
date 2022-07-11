@@ -199,7 +199,7 @@ void DistributedEngineComm::reset()
 }
 
 DistributedEngineComm::DistributedEngineComm(ResourceManager* rm, bool isExeMgr)
-: fRm(rm), pmCount(0), fIsExeMgr(isExeMgr)
+ : fRm(rm), pmCount(0), fIsExeMgr(isExeMgr)
 {
   Setup();
 }
@@ -288,7 +288,7 @@ void DistributedEngineComm::Setup()
     catch (std::exception& ex)
     {
       if (i < newPmCount)
-        newPmCount = newPmCount > 1 ? newPmCount-1 : 1; // We can't afford to reduce newPmCount to 0
+        newPmCount = newPmCount > 1 ? newPmCount - 1 : 1;  // We can't afford to reduce newPmCount to 0
 
       writeToLog(__FILE__, __LINE__,
                  "Could not connect to PMS" + std::to_string(connectionId) + ": " + ex.what(),
@@ -302,7 +302,7 @@ void DistributedEngineComm::Setup()
     catch (...)
     {
       if (i < newPmCount)
-        newPmCount = newPmCount > 1 ? newPmCount-1 : 1; // We can't afford to reduce newPmCount to 0
+        newPmCount = newPmCount > 1 ? newPmCount - 1 : 1;  // We can't afford to reduce newPmCount to 0
 
       writeToLog(__FILE__, __LINE__, "Could not connect to PMS" + std::to_string(connectionId),
                  LOG_TYPE_ERROR);
@@ -921,13 +921,46 @@ void DistributedEngineComm::StartClientListener(boost::shared_ptr<MessageQueueCl
   fPmReader.push_back(thrd);
 }
 
-void DistributedEngineComm::addDataToOutput(SBS sbs, uint32_t connIndex, Stats* stats)
+void DistributedEngineComm::addDataToOutput(SBS sbs)
 {
   ISMPacketHeader* hdr = (ISMPacketHeader*)(sbs->buf());
   PrimitiveHeader* p = (PrimitiveHeader*)(hdr + 1);
   uint32_t uniqueId = p->UniqueID;
   boost::shared_ptr<MQE> mqe;
 
+  boost::mutex::scoped_lock lk(fMlock);
+  MessageQueueMap::iterator map_tok = fSessionMessages.find(uniqueId);
+
+  // The message for a session that doesn't exist.
+  if (map_tok == fSessionMessages.end())
+  {
+    // Here gets the dead session ByteStream that is already removed
+    // from DEC queue.
+    return;
+  }
+
+  mqe = map_tok->second;
+  lk.unlock();
+
+  if (pmCount > 0)
+  {
+    // I hardcoded the unacked Worker id here. ACK isn't important
+    // for the local exchange b/c there is no need to
+    // enable flowcontrol localy on PM.
+    (void)atomicops::atomicInc(&mqe->unackedWork[0]);
+  }
+
+  [[maybe_unused]] TSQSize_t queueSize = mqe->queue.push(sbs);
+  // There will be no statistics about data transfered
+  // over the memory.
+}
+
+void DistributedEngineComm::addDataToOutput(SBS sbs, uint32_t connIndex, Stats* stats)
+{
+  ISMPacketHeader* hdr = (ISMPacketHeader*)(sbs->buf());
+  PrimitiveHeader* p = (PrimitiveHeader*)(hdr + 1);
+  uint32_t uniqueId = p->UniqueID;
+  boost::shared_ptr<MQE> mqe;
   boost::mutex::scoped_lock lk(fMlock);
   MessageQueueMap::iterator map_tok = fSessionMessages.find(uniqueId);
 
@@ -1036,9 +1069,9 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const ByteStream& bs, 
                     // reconfig the connection array
                     ClientList tempConns;
                     {
-                            //cout << "WARNING: DEC WRITE BROKEN PIPE " << fPmConnections[index]->otherEnd()<<
-    endl; boost::mutex::scoped_lock onErrLock(fOnErrMutex); string moduleName =
-    fPmConnections[index]->moduleName();
+                            //cout << "WARNING: DEC WRITE BROKEN PIPE " <<
+    fPmConnections[index]->otherEnd()<< endl; boost::mutex::scoped_lock onErrLock(fOnErrMutex); string
+    moduleName = fPmConnections[index]->moduleName();
                             //cout << "module name = " << moduleName << endl;
                             if (index >= fPmConnections.size()) return 0;
 

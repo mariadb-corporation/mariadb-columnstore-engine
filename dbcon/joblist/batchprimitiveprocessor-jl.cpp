@@ -1243,7 +1243,7 @@ void BatchPrimitiveProcessorJL::createBPP(ByteStream& bs) const
  * (projection count)x run msgs for projection Commands
  */
 
-void BatchPrimitiveProcessorJL::runBPP(ByteStream& bs, uint32_t pmNum)
+void BatchPrimitiveProcessorJL::runBPP(ByteStream& bs, uint32_t pmNum, bool isExeMgrDEC)
 {
   ISMPacketHeader ism;
   uint32_t i;
@@ -1274,8 +1274,14 @@ void BatchPrimitiveProcessorJL::runBPP(ByteStream& bs, uint32_t pmNum)
   bs << uniqueID;
   bs << _priority;
 
+  // The weight is used by PrimProc thread pool algo
+  uint32_t weight = calculateBPPWeight();
+  bs << weight;
+
   bs << dbRoot;
   bs << count;
+  uint8_t sentByEM = (isExeMgrDEC) ? 1 : 0;
+  bs << sentByEM;
 
   if (_hasScan)
     idbassert(ridCount == 0);
