@@ -145,6 +145,7 @@ class DistributedEngineComm
    * LBID is extracted from the ISMPacketHeader and used to determine the actual P/M to send to.
    */
   EXPORT void write(uint32_t key, messageqcpp::ByteStream& msg);
+  EXPORT void write(uint32_t key, const messageqcpp::SBS& msg);
 
   // EXPORT void throttledWrite(const messageqcpp::ByteStream& msg);
 
@@ -272,6 +273,8 @@ class DistributedEngineComm
    */
   int writeToClient(size_t index, const messageqcpp::ByteStream& bs,
                     uint32_t senderID = std::numeric_limits<uint32_t>::max(), bool doInterleaving = false);
+  int writeToClient(size_t index, const messageqcpp::SBS& bs,
+                    uint32_t senderID = std::numeric_limits<uint32_t>::max(), bool doInterleaving = false);
 
   static DistributedEngineComm* fInstance;
   ResourceManager* fRm;
@@ -314,7 +317,6 @@ class DistributedEngineComm
   std::mutex inMemoryEM2PPExchMutex_;
   std::condition_variable inMemoryEM2PPExchCV_;
   std::queue<messageqcpp::SBS> inMemoryEM2PPExchQueue_;
-
 
  private:
   std::vector<struct in_addr> localNetIfaceSins_;

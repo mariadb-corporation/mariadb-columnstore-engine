@@ -287,6 +287,7 @@ class MessageQueueClient
     return fClientSock.hasData();
   }
 
+  // This client's flag is set running DEC::Setup() call
   bool atTheSameHost() const
   {
     return atTheSameHost_;

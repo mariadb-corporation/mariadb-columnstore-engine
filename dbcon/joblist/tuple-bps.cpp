@@ -1602,7 +1602,8 @@ void TupleBPS::sendJobs(const vector<Job>& jobs)
 
   for (i = 0; i < jobs.size() && !cancelled(); i++)
   {
-    fDec->write(uniqueID, *(jobs[i].msg));
+    // fDec->write(uniqueID, *(jobs[i].msg));
+    fDec->write(uniqueID, jobs[i].msg);
     tplLock.lock();
     msgsSent += jobs[i].expectedResponses;
 

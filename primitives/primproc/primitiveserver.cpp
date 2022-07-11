@@ -2374,10 +2374,22 @@ void PrimitiveServer::start(Service* service, utils::USpaceSpinLock& startupRace
 
     fServerpool.invoke(ServerThread(oss.str(), this));
   }
+
+  startupRaceLock.release();
+  service->NotifyServiceStarted();
+
   std::thread sameHostServerThread(
       [this]()
       {
+        utils::setThreadName("PPSHServerThr");
         auto* exeMgrDecPtr = exemgr::globServiceExeMgr->getDec();
+        // WIP
+        while (!exeMgrDecPtr)
+        {
+          sleep(1);
+          exeMgrDecPtr = exemgr::globServiceExeMgr->getDec();
+        }
+
         boost::shared_ptr<threadpool::PriorityThreadPool> procPoolPtr = this->getProcessorThreadPool();
         boost::shared_ptr<BPPHandler> fBPPHandler(new BPPHandler(this));
         for (;;)
@@ -2393,26 +2405,29 @@ void PrimitiveServer::start(Service* service, utils::USpaceSpinLock& startupRace
               exeMgrDecPtr->inMemoryEM2PPExchQueue_.pop();
               continue;
             }
-            idbassert(sbs->length() >= sizeof(ISMPacketHeader));
+            // idbassert(sbs->length() >= sizeof(ISMPacketHeader));
+            // size_t msg;
+            // *sbs >> msg;
 
-            // const ISMPacketHeader* ismHdr = reinterpret_cast<const ISMPacketHeader*>(sbs->buf());
-            // switch (ismHdr->Command)
-            // {
-            //   case BATCH_PRIMITIVE_CREATE:
-            //   {
-            //     PriorityThreadPool::Job job;
-            //     job.functor =
-            //         boost::shared_ptr<PriorityThreadPool::Functor>(new BPPHandler::Create(fBPPHandler,
-            //         sbs));
-            //     uint8_t* buf = sbs->buf();
-            //     uint32_t pos = sizeof(ISMPacketHeader) - 2;
-            //     job.stepID = *((uint32_t*)&buf[pos + 6]);
-            //     job.uniqueID = *((uint32_t*)&buf[pos + 10]);
-            //     // job.sock = outIos;
-            //     OOBPool->addJob(job);
-            //     break;
-            //   }
-            // }  // the switch stmt
+            const ISMPacketHeader* ismHdr = reinterpret_cast<const ISMPacketHeader*>(sbs->buf());
+            std::cout << "PP::lambda is RUN " << (ismHdr->Command == BATCH_PRIMITIVE_RUN) << std::endl;
+
+            switch (ismHdr->Command)
+            {
+              case BATCH_PRIMITIVE_CREATE:
+              {
+                PriorityThreadPool::Job job;
+                job.functor =
+                    boost::shared_ptr<PriorityThreadPool::Functor>(new BPPHandler::Create(fBPPHandler, sbs));
+                uint8_t* buf = sbs->buf();
+                uint32_t pos = sizeof(ISMPacketHeader) - 2;
+                job.stepID = *((uint32_t*)&buf[pos + 6]);
+                job.uniqueID = *((uint32_t*)&buf[pos + 10]);
+                // job.sock = outIos;
+                OOBPool->addJob(job);
+                break;
+              }
+            }  // the switch stmt
 
             exeMgrDecPtr->inMemoryEM2PPExchQueue_.pop();
           }
@@ -2422,9 +2437,6 @@ void PrimitiveServer::start(Service* service, utils::USpaceSpinLock& startupRace
           }
         }
       });
-
-  startupRaceLock.release();
-  service->NotifyServiceStarted();
 
   fServerpool.wait();
 
