@@ -101,8 +101,6 @@ typedef std::tr1::unordered_map<TABLE_LIST*, uint> TableOuterJoinMap;
 
 struct gp_walk_info
 {
-  // MCOL-2178 Marked for removal after 1.4
-  std::vector<std::string> selectCols;
   execplan::CalpontSelectExecutionPlan::ReturnedColumnList returnedCols;
   execplan::CalpontSelectExecutionPlan::ReturnedColumnList groupByCols;
   execplan::CalpontSelectExecutionPlan::ReturnedColumnList subGroupByCols;

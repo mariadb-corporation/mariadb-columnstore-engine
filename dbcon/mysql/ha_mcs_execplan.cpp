@@ -6034,7 +6034,17 @@ void gp_walk(const Item* item, void* arg)
             operand = buildReturnedColumn(ifp->arguments()[i], *gwip, gwip->fatalParseError);
 
           if (operand)
+          {
             gwip->rcWorkStack.push(operand);
+            if (i == 0 && gwip->scsp == NULL) // first item is the WHEN LHS
+            {
+              SimpleColumn* sc = dynamic_cast<SimpleColumn*>(operand);
+              if (sc)
+              {
+                gwip->scsp.reset(sc->clone());  // We need to clone else sc gets double deleted. This code is rarely executed so the cost is acceptable.
+              }
+            }
+          }
           else
           {
             cando = false;
