@@ -521,10 +521,6 @@ local FinalPipeline(branch, event) = {
   for e in events
 ] +
 [
-  Pipeline('develop', 'rockylinux:8', e, 'amd64', '10.6')
-  for e in events
-] +
-[
   Pipeline('develop-6', 'ubuntu:22.04', e, 'amd64', '10.9')
   for e in events
 ] +
