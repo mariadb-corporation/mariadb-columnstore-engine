@@ -425,7 +425,7 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
     }
     std::string schema;
     std::string table;
-    int64_t create_date;
+    int64_t create_date = 0;
     bool operator<(const TableName& rhs) const;
     bool operator>=(const TableName& rhs) const
     {
