@@ -5,7 +5,10 @@
 #include <string.h>
 #include <unordered_map>
 #include <algorithm>
-
+#include <sstream>
+#include <iostream>
+#include <charconv>
+#include "boost/lexical_cast.hpp"
 #include "idb_mysql.h"
 
 namespace
@@ -72,8 +75,15 @@ char* moda(CONTAINER& container, struct moda_data* data)
     }
   }
 
-  data->result = std::to_string(val);
-
+#if 0
+  // to_chars is alledgedly much faster, but not defined for float types until gcc 11
+  char                 buf[80];
+  std::to_chars_result result;
+  result = std::to_chars((char*)buf, buf+80, val);
+  result.ptr = 0;
+  data->result.assign(buf, ptr - buf);
+#endif
+  data->result.assign(boost::lexical_cast<std::string>(val));
   return const_cast<char*>(data->result.c_str());
 }
 
@@ -82,7 +92,7 @@ extern "C"
 #ifdef _MSC_VER
   __declspec(dllexport)
 #endif
-      my_bool moda_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool moda_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     struct moda_data* data;
     if (args->arg_count != 1)
@@ -107,7 +117,7 @@ extern "C"
 #ifdef _MSC_VER
   __declspec(dllexport)
 #endif
-      void moda_deinit(UDF_INIT* initid)
+  void moda_deinit(UDF_INIT* initid)
   {
     struct moda_data* data = (struct moda_data*)initid->ptr;
     data->clear();
@@ -117,8 +127,8 @@ extern "C"
 #ifdef _MSC_VER
   __declspec(dllexport)
 #endif
-      void moda_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
-                      char* message __attribute__((unused)))
+  void moda_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
+                  char* message __attribute__((unused)))
   {
     struct moda_data* data = (struct moda_data*)initid->ptr;
     data->clear();
@@ -127,7 +137,7 @@ extern "C"
 #ifdef _MSC_VER
   __declspec(dllexport)
 #endif
-      void moda_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
+  void moda_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
   {
     // Test for NULL
     if (args->args[0] == 0)
@@ -169,7 +179,7 @@ extern "C"
 #ifdef _MSC_VER
   __declspec(dllexport)
 #endif
-      void moda_remove(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
+  void moda_remove(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
   {
     // Test for NULL
     if (args->args[0] == 0)
@@ -210,7 +220,7 @@ extern "C"
 #ifdef _MSC_VER
   __declspec(dllexport)
 #endif
-      char* moda(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error __attribute__((unused)))
+  char* moda(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error __attribute__((unused)))
   {
     struct moda_data* data = (struct moda_data*)initid->ptr;
     switch (args->arg_type[0])

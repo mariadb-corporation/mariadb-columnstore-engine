@@ -133,6 +133,23 @@ mcsv1_UDAF::ReturnCode moda::init(mcsv1Context* context, ColumnDatum* colTypes)
 
   context->setResultType(colTypes[0].dataType);
 
+  mcsv1_UDAF* impl = getImpl(context);
+
+  if (!impl)
+  {
+    // The error message will be prepended with
+    // "The storage engine for the table doesn't support "
+    context->setErrorMessage("moda() with non-numeric argument");
+    return mcsv1_UDAF::ERROR;
+  }
+
+  context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
+  return impl->init(context, colTypes);
+}
+
+template <class T>
+mcsv1_UDAF::ReturnCode Moda_impl_T<T>::init(mcsv1Context* context, ColumnDatum* colTypes)
+{
   if (colTypes[0].dataType == execplan::CalpontSystemCatalog::DECIMAL ||
       colTypes[0].dataType == execplan::CalpontSystemCatalog::UDECIMAL)
   {
@@ -158,26 +175,14 @@ mcsv1_UDAF::ReturnCode moda::init(mcsv1Context* context, ColumnDatum* colTypes)
     }
 
     context->setScale(colTypes[0].scale);
+    context->setPrecision(colTypes[0].precision);
   }
-  context->setPrecision(colTypes[0].precision);
-
-  mcsv1_UDAF* impl = getImpl(context);
-
-  if (!impl)
+  else
   {
-    // The error message will be prepended with
-    // "The storage engine for the table doesn't support "
-    context->setErrorMessage("moda() with non-numeric argument");
-    return mcsv1_UDAF::ERROR;
+    context->setColWidth(sizeof(T));
+    context->setScale(0);
+    context->setPrecision(0);
   }
-
-  context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
-  return impl->init(context, colTypes);
-}
-
-template <class T>
-mcsv1_UDAF::ReturnCode Moda_impl_T<T>::init(mcsv1Context* context, ColumnDatum* colTypes)
-{
   return mcsv1_UDAF::SUCCESS;
 }
 
