@@ -75,14 +75,6 @@ char* moda(CONTAINER& container, struct moda_data* data)
     }
   }
 
-#if 0
-  // to_chars is alledgedly much faster, but not defined for float types until gcc 11
-  char                 buf[80];
-  std::to_chars_result result;
-  result = std::to_chars((char*)buf, buf+80, val);
-  result.ptr = 0;
-  data->result.assign(buf, ptr - buf);
-#endif
   data->result.assign(boost::lexical_cast<std::string>(val));
   return const_cast<char*>(data->result.c_str());
 }
