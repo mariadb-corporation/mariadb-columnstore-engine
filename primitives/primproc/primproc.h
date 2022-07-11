@@ -35,7 +35,7 @@
 #include <map>
 
 #include "service.h"
-#include "prioritythreadpool.h"
+#include "fair_threadpool.h"
 #include "pp_logger.h"
 
 namespace primitiveprocessor
@@ -172,12 +172,12 @@ class ServicePrimProc : public Service, public Opt
     return startupRaceFlag_;
   }
 
-  boost::shared_ptr<threadpool::PriorityThreadPool> getPrimitiveServerThreadPool()
+  boost::shared_ptr<threadpool::FairThreadPool> getPrimitiveServerThreadPool()
   {
     return primServerThreadPool;
   }
 
-  boost::shared_ptr<threadpool::PriorityThreadPool> getOOBThreadPool()
+  boost::shared_ptr<threadpool::FairThreadPool> getOOBThreadPool()
   {
     return OOBThreadPool;
   }
@@ -190,6 +190,6 @@ class ServicePrimProc : public Service, public Opt
   static ServicePrimProc* fInstance;
   // Since C++20 flag's init value is false.
   std::atomic_flag startupRaceFlag_{false};
-  boost::shared_ptr<threadpool::PriorityThreadPool> primServerThreadPool;
-  boost::shared_ptr<threadpool::PriorityThreadPool> OOBThreadPool;
+  boost::shared_ptr<threadpool::FairThreadPool> primServerThreadPool;
+  boost::shared_ptr<threadpool::FairThreadPool> OOBThreadPool;
 };

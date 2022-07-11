@@ -33,7 +33,7 @@ NULL	NULL	NULL	NULL	NULL
 SELECT CAST(t1_int AS DECIMAL(4,5)) FROM t1;
 ERROR 42000: For float(M,D), double(M,D) or decimal(M,D), M must be >= D (column '')
 SELECT CAST(t1_int AS DECIMAL(66,6)) FROM t1;
-ERROR 42000: Too big precision 66 specified for 't1_int'. Maximum is 65
+Got one of the listed errors
 SELECT CAST(t1_int AS DECIMAL(64,63)) FROM t1;
-ERROR 42000: Too big scale 63 specified for 't1_int'. Maximum is 38
+Got one of the listed errors
 DROP DATABASE mcs69_db;

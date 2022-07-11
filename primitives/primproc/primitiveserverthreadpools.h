@@ -18,29 +18,22 @@
 #pragma once
 
 #include <boost/shared_ptr.hpp>
-#include "prioritythreadpool.h"
+#include "fair_threadpool.h"
 
 class PrimitiveServerThreadPools
 {
  public:
   PrimitiveServerThreadPools() = default;
-  PrimitiveServerThreadPools(boost::shared_ptr<threadpool::PriorityThreadPool> primServerThreadPool,
-                             boost::shared_ptr<threadpool::PriorityThreadPool> OOBThreadPool)
-   : fPrimServerThreadPool(primServerThreadPool), fOOBThreadPool(OOBThreadPool)
+  PrimitiveServerThreadPools(boost::shared_ptr<threadpool::FairThreadPool> primServerThreadPool)
+   : fPrimServerThreadPool(primServerThreadPool)
   {
   }
 
-  boost::shared_ptr<threadpool::PriorityThreadPool> getPrimitiveServerThreadPool()
+  boost::shared_ptr<threadpool::FairThreadPool> getPrimitiveServerThreadPool()
   {
     return fPrimServerThreadPool;
   }
 
-  boost::shared_ptr<threadpool::PriorityThreadPool> getOOBThreadPool()
-  {
-    return fOOBThreadPool;
-  }
-
  private:
-  boost::shared_ptr<threadpool::PriorityThreadPool> fPrimServerThreadPool;
-  boost::shared_ptr<threadpool::PriorityThreadPool> fOOBThreadPool;
+  boost::shared_ptr<threadpool::FairThreadPool> fPrimServerThreadPool;
 };

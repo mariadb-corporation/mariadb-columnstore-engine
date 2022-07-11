@@ -2,3 +2,5 @@ mcs80_set_operations : BUG#MCOL-4273 2020-08-27 susil.behera@mariadb.com
 mcs211_idbExtentId_function : 2021-07-12 david.halla@mariadb.com
 mcs212_idbExtentMax_function : 2020-11-30 bharath.bokka@mariadb.com
 mcs213_idbExtentMin_function : 2020-11-30 bharath.bokka@mariadb.com
+mcs118_charset_negative : mcs error code has changed 2022-07-07 roman.navrotskiy@mariadb.com
+mcs16_functions_define_call_drop : 2022-07-08 roman.navrotskiy@mariadb.com
