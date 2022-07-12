@@ -78,7 +78,7 @@ CREATE OR REPLACE FUNCTION caldroppartitionsbyvalue RETURNS STRING SONAME 'ha_co
 CREATE OR REPLACE FUNCTION caldisablepartitionsbyvalue RETURNS STRING SONAME 'ha_columnstore.so';
 CREATE OR REPLACE FUNCTION calenablepartitionsbyvalue RETURNS STRING SONAME 'ha_columnstore.so';
 CREATE OR REPLACE FUNCTION calshowpartitionsbyvalue RETURNS STRING SONAME 'ha_columnstore.so';
-CREATE OR REPLACE AGGREGATE FUNCTION moda RETURNS DECIMAL SONAME 'libregr_mysql.so';
+CREATE OR REPLACE AGGREGATE FUNCTION moda RETURNS STRING SONAME 'libregr_mysql.so';
 
 CREATE DATABASE IF NOT EXISTS infinidb_querystats;
 CREATE TABLE IF NOT EXISTS infinidb_querystats.querystats

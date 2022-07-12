@@ -51,7 +51,7 @@ struct moda_data
 }  // namespace
 
 template <class TYPE, class CONTAINER>
-char* moda(CONTAINER& container, struct moda_data* data)
+void moda(CONTAINER& container, struct moda_data* data)
 {
   TYPE avg = (TYPE)data->fCount ? data->fSum / data->fCount : 0;
   TYPE val = 0.0;
@@ -75,8 +75,8 @@ char* moda(CONTAINER& container, struct moda_data* data)
     }
   }
 
-  data->result.assign(boost::lexical_cast<std::string>(val));
-  return const_cast<char*>(data->result.c_str());
+  data->result = boost::lexical_cast<std::string>(val);
+  data->result.push_back('\0');
 }
 
 extern "C"
@@ -212,18 +212,25 @@ extern "C"
 #ifdef _MSC_VER
   __declspec(dllexport)
 #endif
-  char* moda(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error __attribute__((unused)))
+//char* moda(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error __attribute__((unused)))
+  char* moda(UDF_INIT * initid, UDF_ARGS * args, char* result, ulong* res_length, char* is_null, char* error __attribute__((unused)))
   {
     struct moda_data* data = (struct moda_data*)initid->ptr;
     switch (args->arg_type[0])
     {
-      case INT_RESULT: return moda<int64_t>(data->mapINT, data);
-      case REAL_RESULT: return moda<double>(data->mapREAL, data);
+      case INT_RESULT: 
+        moda<int64_t>(data->mapINT, data);
+        break;
+      case REAL_RESULT: 
+        moda<double>(data->mapREAL, data);
+        break;
       case DECIMAL_RESULT:
-      case STRING_RESULT: return moda<long double>(data->mapDECIMAL, data);
+      case STRING_RESULT: 
+        moda<long double>(data->mapDECIMAL, data);
+        break;
       default: return NULL;
     }
-
-    return NULL;
+    *res_length = data->result.size();
+    return const_cast<char*>(data->result.c_str());
   }
 }  // Extern "C"
