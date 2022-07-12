@@ -22,7 +22,6 @@
 #include <cassert>
 #include <cmath>
 #include <functional>
-#include <bit>
 #include <type_traits>
 #ifndef _MSC_VER
 #include <pthread.h>
