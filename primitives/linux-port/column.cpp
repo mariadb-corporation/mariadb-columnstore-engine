@@ -22,6 +22,7 @@
 #include <cassert>
 #include <cmath>
 #include <functional>
+#include <bit>
 #include <type_traits>
 #ifndef _MSC_VER
 #include <pthread.h>
@@ -1295,13 +1296,19 @@ inline SIMD_WRAPPER_TYPE simdSwapedOrderDataLoad(const ColRequestHeaderDataType 
 }
 
 template <typename VT, typename SimdType>
-void vectorizedUpdateMinMax(const bool validMinMax, const MT nonNullOrEmptyMask, VT& simdProcessor,
+void vectorizedUpdateMinMax(const bool validMinMax, const MT nonNullOrEmptyMask, VT simdProcessor,
                             SimdType& dataVec, SimdType& simdMin, SimdType& simdMax)
 {
-  if (validMinMax && nonNullOrEmptyMask)
+  if (validMinMax)
   {
-    simdMin = simdProcessor.min(simdMin, dataVec);
-    simdMax = simdProcessor.max(simdMax, dataVec);
+    simdMin = simdProcessor.blend(
+        simdMin, dataVec,
+        simdProcessor.bwAnd(simdProcessor.cmpGt2(simdMin, dataVec),
+                            bitCast<SimdType>(simd::bitMaskToByteMask16(nonNullOrEmptyMask))));
+    simdMax = simdProcessor.blend(
+        simdMax, dataVec,
+        simdProcessor.bwAnd(simdProcessor.cmpGt2(dataVec, simdMax),
+                            bitCast<SimdType>(simd::bitMaskToByteMask16(nonNullOrEmptyMask))));
   }
 }
 
@@ -1322,13 +1329,20 @@ void scalarUpdateMinMax(const bool validMinMax, const MT nonNullOrEmptyMask, VT&
 }
 
 template<typename T, typename VT, typename SimdType>
-void extractMinMax(VT& simdProcessor, SimdType& simdMin, SimdType& simdMax, T& min, T& max)
+void extractMinMax(VT& simdProcessor, SimdType simdMin, SimdType simdMax, T& min, T& max)
 {
   constexpr const uint16_t size = VT::vecByteSize / sizeof(T);
   T* simdMinVec = reinterpret_cast<T*>(&simdMin);
   T* simdMaxVec = reinterpret_cast<T*>(&simdMax);
   max = *std::max_element(simdMaxVec, simdMaxVec + size);
   min = *std::min_element(simdMinVec, simdMinVec + size);
+}
+
+template <typename T, typename VT, typename SimdType>
+void getInitialSimdMinMax(VT& simdProcessor, SimdType& simdMin, SimdType& simdMax, T min, T max)
+{
+  simdMin = simdProcessor.loadValue(min);
+  simdMax = simdProcessor.loadValue(max);
 }
 // This routine filters input block in a vectorized manner.
 // It supports all output types, all input types.
@@ -1465,9 +1479,12 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
       }
     }
   }
-  [[maybe_unused]] SimdType simdMin = simdDataLoad<VT, SimdWrapperType, HAS_INPUT_RIDS, T>(simdProcessor, srcArray,
-      origSrcArray, ridArray, 0).v;;
-  [[maybe_unused]] SimdType simdMax = simdMin;
+  [[maybe_unused]] SimdType simdMin;
+  [[maybe_unused]] SimdType simdMax;
+  if constexpr (KIND != KIND_TEXT)
+  {
+    getInitialSimdMinMax(simdProcessor, simdMin, simdMax, min, max);
+  }
   // main loop
   // writeMask tells which values must get into the result. Includes values that matches filters. Can have
   // NULLs. nonEmptyMask tells which vector coords are not EMPTY magics. nonNullMask tells which vector coords
