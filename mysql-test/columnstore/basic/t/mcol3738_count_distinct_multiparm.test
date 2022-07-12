@@ -34,15 +34,15 @@ insert into t1 values   (1, 2, 2, 1, "something this way comes"),
 select count(distinct c1,  c2), count(distinct char1) from t1;
 select idx, count(distinct c1,  c2), count(distinct c1, c3, char1) from t1 group by idx order by idx;
 select avg(distinct c2), count(c2), count( distinct c2, c3), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2, c3) from t1;
-select avg(distinct c2), count(c2), count( distinct c2, c3), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2, c3) from t1 group by c1;
-select avg(distinct c2), count(c2), count( distinct c2, c3), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2) from t1 group by c1;
-select avg(distinct c2), count(c2), count( distinct c2), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2, c3) from t1 group by c1;
-select group_concat(distinct char1), avg(distinct c2), count(c2), count( distinct c2), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2, c3, c1) from t1;
+select avg(distinct c2), count(c2), count( distinct c2, c3), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2, c3) from t1 group by c1 order by 1, 2, 3, 4, 5, 6, 7;
+select avg(distinct c2), count(c2), count( distinct c2, c3), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2) from t1 group by c1 order by 1, 2, 3, 4, 5, 6, 7;
+select avg(distinct c2), count(c2), count( distinct c2), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2, c3) from t1 group by c1 order by 1, 2, 3, 4, 5, 6, 7;
+select group_concat(distinct char1), avg(distinct c2), count(c2), count( distinct c2), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2, c3, c1) from t1 order by 1, 2, 3, 4, 5, 6, 7;
 
 # group_concat causes the aggregation to be performed on UM only.
-select group_concat(distinct char1), avg(distinct c2), count(c2), count( distinct c2), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2, c3) from t1 group by c1;
-select idx, sum(c3), count(distinct c1,  c2), count(distinct c1, c3, char1), group_concat("ls_", char1) from t1 group by idx order by idx;
-select group_concat(distinct char1), avg(distinct c2), count(c2), count( distinct c2), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2, c3, c1) from t1;
+select group_concat(distinct char1), avg(distinct c2), count(c2), count( distinct c2), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2, c3) from t1 group by c1 order by 1, 2, 3, 4, 5, 6, 7;
+select idx, sum(c3), count(distinct c1,  c2), count(distinct c1, c3, char1), group_concat("ls_", char1) from t1 group by idx order by 1, 2, 3, 4, 5;
+select group_concat(distinct char1), avg(distinct c2), count(c2), count( distinct c2), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2, c3, c1) from t1 order by 1, 2, 3, 4, 5, 6, 7;
 
 # Clean UP
 DROP DATABASE mcol_3738_db;
