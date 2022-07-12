@@ -1,5 +1,6 @@
 --source ../include/have_columnstore.inc
 --source ../include/func_caltrace_create_if_needed.inc
+SET GLOBAL log_bin_trust_function_creators = 1;
 --disable_warnings
 DROP DATABASE IF EXISTS mcs_ctype_extent_koi8u;
 --enable_warnings

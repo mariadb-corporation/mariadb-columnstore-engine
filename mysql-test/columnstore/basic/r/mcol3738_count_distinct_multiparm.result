@@ -32,32 +32,32 @@ idx	count(distinct c1,  c2)	count(distinct c1, c3, char1)
 select avg(distinct c2), count(c2), count( distinct c2, c3), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2, c3) from t1;
 avg(distinct c2)	count(c2)	count( distinct c2, c3)	count(c2)	sum(distinct c2)	avg(distinct c3)	count(distinct c2, c3)
 3.0000	12	12	12	9	3.0000	12
-select avg(distinct c2), count(c2), count( distinct c2, c3), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2, c3) from t1 group by c1;
+select avg(distinct c2), count(c2), count( distinct c2, c3), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2, c3) from t1 group by c1 order by 1, 2, 3, 4, 5, 6, 7;
 avg(distinct c2)	count(c2)	count( distinct c2, c3)	count(c2)	sum(distinct c2)	avg(distinct c3)	count(distinct c2, c3)
 3.0000	6	6	6	9	2.0000	6
 3.0000	6	6	6	9	3.6667	6
-select avg(distinct c2), count(c2), count( distinct c2, c3), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2) from t1 group by c1;
+select avg(distinct c2), count(c2), count( distinct c2, c3), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2) from t1 group by c1 order by 1, 2, 3, 4, 5, 6, 7;
 avg(distinct c2)	count(c2)	count( distinct c2, c3)	count(c2)	sum(distinct c2)	avg(distinct c3)	count(distinct c2)
 3.0000	6	6	6	9	2.0000	3
 3.0000	6	6	6	9	3.6667	3
-select avg(distinct c2), count(c2), count( distinct c2), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2, c3) from t1 group by c1;
+select avg(distinct c2), count(c2), count( distinct c2), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2, c3) from t1 group by c1 order by 1, 2, 3, 4, 5, 6, 7;
 avg(distinct c2)	count(c2)	count( distinct c2)	count(c2)	sum(distinct c2)	avg(distinct c3)	count(distinct c2, c3)
 3.0000	6	3	6	9	2.0000	6
 3.0000	6	3	6	9	3.6667	6
-select group_concat(distinct char1), avg(distinct c2), count(c2), count( distinct c2), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2, c3, c1) from t1;
+select group_concat(distinct char1), avg(distinct c2), count(c2), count( distinct c2), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2, c3, c1) from t1 order by 1, 2, 3, 4, 5, 6, 7;
 group_concat(distinct char1)	avg(distinct c2)	count(c2)	count( distinct c2)	count(c2)	sum(distinct c2)	avg(distinct c3)	count(distinct c2, c3, c1)
 elsewhere this way comes,something this way comes	3.0000	12	3	12	9	3.0000	12
-select group_concat(distinct char1), avg(distinct c2), count(c2), count( distinct c2), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2, c3) from t1 group by c1;
+select group_concat(distinct char1), avg(distinct c2), count(c2), count( distinct c2), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2, c3) from t1 group by c1 order by 1, 2, 3, 4, 5, 6, 7;
 group_concat(distinct char1)	avg(distinct c2)	count(c2)	count( distinct c2)	count(c2)	sum(distinct c2)	avg(distinct c3)	count(distinct c2, c3)
 elsewhere this way comes,something this way comes	3.0000	6	3	6	9	2.0000	6
 elsewhere this way comes,something this way comes	3.0000	6	3	6	9	3.6667	6
-select idx, sum(c3), count(distinct c1,  c2), count(distinct c1, c3, char1), group_concat("ls_", char1) from t1 group by idx order by idx;
+select idx, sum(c3), count(distinct c1,  c2), count(distinct c1, c3, char1), group_concat("ls_", char1) from t1 group by idx order by 1, 2, 3, 4, 5;
 idx	sum(c3)	count(distinct c1,  c2)	count(distinct c1, c3, char1)	group_concat("ls_", char1)
 1	9	6	4	ls_something this way comes,ls_elsewhere this way comes,ls_something this way comes,ls_something this way comes,ls_elsewhere this way comes,ls_elsewhere this way comes
 2	9	3	2	ls_something this way comes,ls_elsewhere this way comes,ls_something this way comes
 3	8	2	2	ls_something this way comes,ls_elsewhere this way comes
 4	5	1	1	ls_elsewhere this way comes
-select group_concat(distinct char1), avg(distinct c2), count(c2), count( distinct c2), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2, c3, c1) from t1;
+select group_concat(distinct char1), avg(distinct c2), count(c2), count( distinct c2), count(c2),sum(distinct c2), avg(distinct c3), count(distinct c2, c3, c1) from t1 order by 1, 2, 3, 4, 5, 6, 7;
 group_concat(distinct char1)	avg(distinct c2)	count(c2)	count( distinct c2)	count(c2)	sum(distinct c2)	avg(distinct c3)	count(distinct c2, c3, c1)
 elsewhere this way comes,something this way comes	3.0000	12	3	12	9	3.0000	12
 DROP DATABASE mcol_3738_db;
