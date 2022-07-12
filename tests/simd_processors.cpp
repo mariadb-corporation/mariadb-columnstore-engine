@@ -37,19 +37,22 @@
 using namespace std;
 
 template <typename T>
-class SimdProcessorTypedTest : public testing::Test {
-public:
+class SimdProcessorTypedTest : public testing::Test
+{
+ public:
   using IntegralType = T;
-  #if TESTS_USING_SSE
-    using SimdType = std::conditional_t<std::is_same<T, float>::value,
-                                        simd::vi128f_wr,
-                                        std::conditional_t<std::is_same<T, double>::value,
-                                                           simd::vi128d_wr,
-                                                           simd::vi128_wr>>;
-    using Proc = typename simd::SimdFilterProcessor<SimdType, T>;
-    #else
-    using Proc = typename simd::SimdFilterProcessor<typename simd::TypeToVecWrapperType<T>::WrapperType, T>;
-  #endif
+#if TESTS_USING_SSE
+  using SimdType =
+      std::conditional_t<std::is_same<T, float>::value, simd::vi128f_wr,
+                         std::conditional_t<std::is_same<T, double>::value, simd::vi128d_wr, simd::vi128_wr>>;
+  using Proc = typename simd::SimdFilterProcessor<SimdType, T>;
+#else
+  using SimdType =
+      std::conditional_t<std::is_same<T, float>::value, simd::vi128f_wr,
+                         std::conditional_t<std::is_same<T, double>::value, simd::vi128d_wr,
+                                            typename simd::TypeToVecWrapperType<T>::WrapperType>>;
+  using Proc = typename simd::SimdFilterProcessor<SimdType, T>;
+#endif
   void SetUp() override
   {
   }
