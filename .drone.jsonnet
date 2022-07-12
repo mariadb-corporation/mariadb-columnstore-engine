@@ -25,7 +25,7 @@ local builddir = 'verylongdirnameforverystrangecpackbehavior';
 
 local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_CONFIG=mysql_release ' +
                    '-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache ' +
-                   '-DPLUGIN_COLUMNSTORE=YES -DWITH_UNITTESTS=NO ' +
+                   '-DPLUGIN_COLUMNSTORE=YES -DWITH_UNITTESTS=YES' +
                    '-DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO ' +
                    '-DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
                    '-DPLUGIN_GSSAPI=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
