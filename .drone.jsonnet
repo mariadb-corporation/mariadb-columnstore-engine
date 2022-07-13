@@ -40,7 +40,7 @@ local clang_update_alternatives = 'update-alternatives --install /usr/bin/clang 
 local rpm_build_deps = 'install -y lz4 systemd-devel git make libaio-devel openssl-devel boost-devel bison ' +
                        'snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool ' +
                        'policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel ' +
-                       'expect createrepo ';
+                       'expect createrepo gtest-devel ';
 
 local centos7_build_deps = 'yum install -y epel-release centos-release-scl ' +
                            '&& yum install -y pcre2-devel devtoolset-' + gcc_version + ' devtoolset-' + gcc_version + '-gcc cmake3 lz4-devel ' +
@@ -55,8 +55,8 @@ local debian10_deps = 'apt update && apt install -y gnupg wget && echo "deb http
 local debian11_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' && ' + clang_update_alternatives;
 local ubuntu20_04_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' &&' + clang_update_alternatives;
 
-local deb_build_deps = 'apt update --yes && apt install --yes --no-install-recommends build-essential devscripts git ccache equivs eatmydata libssl-dev && mk-build-deps debian/control -t "apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends" -r -i ';
-local turnon_clang = ' ';
+local deb_build_deps = 'apt update --yes && apt install --yes --no-install-recommends libgtest-dev build-essential devscripts git ccache equivs eatmydata libssl-dev && mk-build-deps debian/control -t "apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends" -r -i ';
+local turnon_clang = 'echo no-clang-here ';
 
 
 local platformMap(platform, arch) =
