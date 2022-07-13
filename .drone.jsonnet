@@ -25,7 +25,7 @@ local builddir = 'verylongdirnameforverystrangecpackbehavior';
 
 local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_CONFIG=mysql_release ' +
                    '-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache ' +
-                   '-DPLUGIN_COLUMNSTORE=YES -DWITH_UNITTESTS=NO -DCPACK_RPM_PACKAGE_DEBUG=NO ' +
+                   '-DPLUGIN_COLUMNSTORE=YES -DWITH_UNITTESTS=YES -DCPACK_RPM_PACKAGE_DEBUG=0 ' +
                    '-DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO ' +
                    '-DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
                    '-DPLUGIN_GSSAPI=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
@@ -40,7 +40,7 @@ local clang_update_alternatives = 'update-alternatives --install /usr/bin/clang 
 local rpm_build_deps = 'install -y lz4 systemd-devel git make libaio-devel openssl-devel boost-devel bison ' +
                        'snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool ' +
                        'policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel ' +
-                       'expect createrepo gtest-devel ';
+                       'expect createrepo gtest-devel gcc gcc-c++ ';
 
 local centos7_build_deps = 'yum install -y epel-release centos-release-scl ' +
                            '&& yum install -y pcre2-devel devtoolset-' + gcc_version + ' devtoolset-' + gcc_version + '-gcc cmake3 lz4-devel ' +
