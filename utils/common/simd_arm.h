@@ -509,6 +509,10 @@ class SimdFilterProcessor<
   {
     return vmaxvq_f64(x);
   }
+  MCS_FORCE_INLINE T minScalar(SimdType& x)
+  {
+    return vminvq_f64(x);
+  }
   MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
   {
     return vcgtq_f64(x, y);
@@ -629,6 +633,10 @@ class SimdFilterProcessor<
   MCS_FORCE_INLINE T maxScalar(SimdType& x)
   {
     return vmaxvq_f32(x);
+  }
+  MCS_FORCE_INLINE T minScalar(SimdType& x)
+  {
+    return vminvq_f32(x);
   }
   // Load from
   MCS_FORCE_INLINE SimdType loadFrom(const char* from)
