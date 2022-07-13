@@ -17,8 +17,6 @@
 
 #pragma once
 
-enum ENUM_KIND;
-
 #ifdef __aarch64__
 #include "arm_neon.h"
 #include <cstdint>
@@ -357,7 +355,10 @@ class SimdFilterProcessor<
   {
     return vbslq_s32(mask, x, y);
   }
-
+  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  {
+    return vcgtq_s32(x, y);
+  }
   MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
   {
     return vandq_s32(x, y);
@@ -508,6 +509,10 @@ class SimdFilterProcessor<
   {
     return vmaxvq_f64(x);
   }
+  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  {
+    return vcgtq_f64(x, y);
+  }
   MCS_FORCE_INLINE MT cmpGt(SimdType& x, SimdType& y)
   {
     return arm_neon_mm_movemask_epi8_64((ArmNeonSSEVecType)vcgtq_f64(x, y));
@@ -609,7 +614,10 @@ class SimdFilterProcessor<
   {
     return vbslq_f32(mask, x, y);
   }
-
+  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  {
+    return vcgtq_f32(x, y);
+  }
   MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
   {
     return vandq_f32(x, y);
@@ -756,6 +764,10 @@ class SimdFilterProcessor<
   {
     return vandq_s64(x, y);
   }
+  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  {
+    return vcgtq_s64(x, y);
+  }
   MCS_FORCE_INLINE T maxScalar(SimdType& x)
   {
     return vmaxvq_s64(x);
@@ -875,7 +887,10 @@ class SimdFilterProcessor<
   {
     return vbslq_u64(mask, x, y);
   }
-
+  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  {
+    return vcgtq_u64(x, y);
+  }
   MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
   {
     return vandq_u64(x, y);
@@ -1012,7 +1027,10 @@ class SimdFilterProcessor<
   {
     return vbslq_s32(mask, x, y);
   }
-
+  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  {
+    return vcgtq_s32(x, y);
+  }
   MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
   {
     return vandq_s32(x, y);
@@ -1142,7 +1160,10 @@ class SimdFilterProcessor<
   {
     return vbslq_u32(mask, x, y);
   }
-
+  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  {
+    return vcgtq_u32(x, y);
+  }
   MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
   {
     return vandq_u32(x, y);
@@ -1281,6 +1302,10 @@ class SimdFilterProcessor<
   {
     return vandq_s16(x, y);
   }
+  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  {
+    return vcgtq_s16(x, y);
+  }
   MCS_FORCE_INLINE T minScalar(SimdType& x)
   {
     return vminvq_s16(x);
@@ -1386,7 +1411,10 @@ class SimdFilterProcessor<VT, CHECK_T,
   {
     return vdupq_n_u16(fill);
   }
-
+  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  {
+    return vcgtq_u16(x, y);
+  }
   // Load from
   MCS_FORCE_INLINE SimdType loadFrom(const char* from)
   {
@@ -1523,6 +1551,10 @@ class SimdFilterProcessor<
   MCS_FORCE_INLINE T maxScalar(SimdType& x)
   {
     return vmaxvq_s8(x);
+  }
+  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  {
+    return vcgtq_s8(x, y);
   }
   MCS_FORCE_INLINE T minScalar(SimdType& x)
   {
@@ -1667,6 +1699,10 @@ class SimdFilterProcessor<
   MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
   {
     return vandq_u8(x, y);
+  }
+  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  {
+    return vcgtq_u8(x, y);
   }
   // Compare
   MCS_FORCE_INLINE MT cmpEq(SimdType& x, SimdType& y)
