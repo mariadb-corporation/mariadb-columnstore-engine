@@ -264,6 +264,7 @@ class TreeNode
    ***********************************************************************/
   virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull)
   {
+    isNull = fResult.isNull;
     return fResult.strVal;
   }
   virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
