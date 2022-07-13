@@ -100,7 +100,6 @@ class StoreFieldMariaDB : public StoreField
 
   int store_xlonglong(int64_t val) override
   {
-    idbassert(dynamic_cast<Field_num*>(m_field));
     return m_field->store(val, static_cast<Field_num*>(m_field)->unsigned_flag);
   }
 
