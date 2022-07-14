@@ -282,7 +282,9 @@ class SimpleColumn : public ReturnedColumn
   virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull)
   {
     evaluate(row, isNull);
-    return TreeNode::getStrVal(fTimeZone);
+    auto& result = TreeNode::getStrVal(fTimeZone);
+    isNull = result.isNull();
+    return result;
   }
 
   virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
