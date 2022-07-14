@@ -22,37 +22,33 @@
 #include <gtest/gtest.h>
 #include "datatypes/mcs_datatype.h"
 #include "datatypes/mcs_int128.h"
-
+#include "simd_sse.h"
+#include "simd_arm.h"
 #if defined(__x86_64__)
-  #include "simd_sse.h"
   #define TESTS_USING_SSE 1
   using float64_t = double;
   using float32_t = float;
 #endif
 #ifdef __aarch64__
-  #include "simd_arm.h"
   #define TESTS_USING_ARM 1
 #endif
 
 using namespace std;
 
 template <typename T>
-class SimdProcessorTypedTest : public testing::Test
-{
- public:
+class SimdProcessorTypedTest : public testing::Test {
+public:
   using IntegralType = T;
-#if TESTS_USING_SSE
-  using SimdType =
-      std::conditional_t<std::is_same<T, float>::value, simd::vi128f_wr,
-                         std::conditional_t<std::is_same<T, double>::value, simd::vi128d_wr, simd::vi128_wr>>;
-  using Proc = typename simd::SimdFilterProcessor<SimdType, T>;
-#else
-  using SimdType =
-      std::conditional_t<std::is_same<T, float>::value, simd::vi128f_wr,
-                         std::conditional_t<std::is_same<T, double>::value, simd::vi128d_wr,
-                                            typename simd::TypeToVecWrapperType<T>::WrapperType>>;
-  using Proc = typename simd::SimdFilterProcessor<SimdType, T>;
-#endif
+  #if TESTS_USING_SSE
+    using SimdType = std::conditional_t<std::is_same<T, float>::value,
+                                        simd::vi128f_wr,
+                                        std::conditional_t<std::is_same<T, double>::value,
+                                                           simd::vi128d_wr,
+                                                           simd::vi128_wr>>;
+    using Proc = typename simd::SimdFilterProcessor<SimdType, T>;
+    #else
+    using Proc = typename simd::SimdFilterProcessor<typename simd::TypeToVecWrapperType<T>::WrapperType, T>;
+  #endif
   void SetUp() override
   {
   }

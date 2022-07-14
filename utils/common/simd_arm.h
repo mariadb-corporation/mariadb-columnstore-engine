@@ -17,7 +17,6 @@
 
 #pragma once
 
-
 #ifdef __aarch64__
 #include "arm_neon.h"
 #include <cstdint>
@@ -30,15 +29,6 @@
 
 #include "mcs_datatype.h"
 
-// Column filtering is dispatched 4-way based on the column type,
-// which defines implementation of comparison operations for the column values
-enum ENUM_KIND
-{
-  KIND_DEFAULT,   // compared as signed integers
-  KIND_UNSIGNED,  // compared as unsigned integers
-  KIND_FLOAT,     // compared as floating-point numbers
-  KIND_TEXT
-};  // whitespace-trimmed and then compared as signed integers
 
 namespace simd
 {
@@ -55,6 +45,28 @@ using vi128f_t = float32x4_t;
 using vi128d_t = float64x2_t;
 using int128_t = __int128;
 using MT = uint16_t;
+using MaskSimdType=vi1u_t;
+template <int64_t i0, int64_t i1>
+static vi8_t constant2i()
+{
+  static const union
+  {
+    int64_t i[2];
+    vi8_t xmm;
+  } u = {{i0, i1}};
+  return u.xmm;
+}
+static inline MaskSimdType bitMaskToByteMask16(MT m)
+{
+  vi8_t sel = constant2i<(int64_t)0xffffffffffffffff, (int64_t)0x0>();
+  vi8_t andop = constant2i<(int64_t)0x8040201008040201, (int64_t)0x8040201008040201>();
+  vi1u_t op = vreinterpretq_u8_s64(
+      vandq_s64(vbslq_s64(vreinterpretq_u64_s64(sel), vreinterpretq_s64_u8(vdupq_n_u8(m & 0xff)),
+                          vreinterpretq_s64_u8(vdupq_n_u8((m & 0xff00) >> 8))),
+                andop));
+  vi1u_t zero = vdupq_n_u8(0);
+  return vcgtq_u8(op, zero);
+}
 //the type is used by the  fun like arm__neon__mm__...
 using ArmNeonSSEVecType=uint8x16_t;
 //wrapper types
@@ -64,7 +76,7 @@ struct vi1_wr
 };
 struct vi2_wr
 {
-  int8x16_t v;
+  int16x8_t v;
 };
 struct vi4_wr
 {
@@ -74,13 +86,17 @@ struct vi8_wr
 {
   int64x2_t v;
 };
+struct vi16_wr
+{
+  int128_t v;
+};
 struct viu1_wr
 {
   uint8x16_t v;
 };
 struct viu2_wr
 {
-  uint8x16_t v;
+  uint16x8_t v;
 };
 struct viu4_wr
 {
@@ -90,6 +106,7 @@ struct viu8_wr
 {
   uint64x2_t v;
 };
+
 struct vi128f_wr
 {
   float32x4_t v;
@@ -129,7 +146,12 @@ struct WidthToSVecWrapperType<8>
   using Vectype = int64x2_t;
   using WrapperType=struct vi8_wr;
 };
-
+template <>
+struct WidthToSVecWrapperType<16>
+{
+  using Vectype = int128_t;
+  using WrapperType = struct vi16_wr;
+};
 template <int W>
 struct WidthToVecWrapperType;
 
@@ -160,18 +182,37 @@ struct WidthToVecWrapperType<8>
   using Vectype = uint64x2_t;
   using WrapperType = struct viu8_wr;
 };
+
 //We get the simd and wrapper type of basic type by TypeToVecWrapperType.
 template <typename T, typename ENABLE=void>
 struct TypeToVecWrapperType;
 
 template <typename T>
-struct TypeToVecWrapperType<T, typename std::enable_if<std::is_unsigned<T>::value>::type>
+struct TypeToVecWrapperType<T, typename std::enable_if<std::is_same<T,__int128>::value>::type>
+ : WidthToSVecWrapperType<sizeof(__int128)>
+{
+};
+template <typename T>
+struct TypeToVecWrapperType<T, typename std::enable_if<std::is_same_v<float,T>>::type>
+{
+  using Vectype = vi128f_t;
+  using WrapperType = vi128f_wr;
+};
+template <typename T>
+struct TypeToVecWrapperType<T, typename std::enable_if<std::is_same_v<double, T>>::type>
+{
+  using Vectype = vi128d_t;
+  using WrapperType =  vi128d_wr;
+};
+template <typename T>
+struct TypeToVecWrapperType<T, typename std::enable_if<std::is_unsigned_v<T> >::type> 
     : WidthToVecWrapperType<sizeof(T)>
 {
 };
 
 template <typename T>
-struct TypeToVecWrapperType<T, typename std::enable_if<std::is_signed<T>::value>::type>
+    struct TypeToVecWrapperType<
+        T, typename std::enable_if<std::is_signed_v<T> &&!is_floating_point_v<T>>::type> 
     : WidthToSVecWrapperType<sizeof(T)>
 {
 };
@@ -195,34 +236,20 @@ struct IntegralToSIMD<T, KIND,
 };
 
 template <typename T, ENUM_KIND KIND>
-struct IntegralToSIMD<T, KIND, typename std::enable_if<KIND != KIND_FLOAT && sizeof(T) == sizeof(int8_t)>::type>
+struct IntegralToSIMD<T, KIND, typename std::enable_if<KIND != KIND_FLOAT>::type>
 {
-  using type = vi1_wr;
-};
-
-template <typename T, ENUM_KIND KIND>
-struct IntegralToSIMD<T, KIND,
-                      typename std::enable_if<KIND != KIND_FLOAT && sizeof(T) == sizeof(int16_t)>::type>
-{
-  using type = vi2_wr;
-};
-
-template <typename T, ENUM_KIND KIND>
-struct IntegralToSIMD<T, KIND,
-                      typename std::enable_if<KIND != KIND_FLOAT && sizeof(T) == sizeof(int32_t)>::type>
-{
-  using type = vi4_wr;
-};
-
-template <typename T, ENUM_KIND KIND>
-struct IntegralToSIMD<T, KIND,
-                      typename std::enable_if<KIND != KIND_FLOAT && sizeof(T) == sizeof(int64_t)>::type>
-{
-  using type = vi8_wr;
+  using type = TypeToVecWrapperType<T>::WrapperType;
 };
 
 template <typename T, ENUM_KIND KIND, typename ENABLE = void>
 struct StorageToFiltering;
+
+template <typename T, ENUM_KIND KIND>
+struct StorageToFiltering<T, KIND,
+                          typename std::enable_if<KIND == KIND_FLOAT && sizeof(double) == sizeof(T)>::type>
+{
+  using type = double;
+};
 
 template <typename T, ENUM_KIND KIND>
 struct StorageToFiltering<T, KIND,
@@ -336,70 +363,93 @@ class SimdFilterProcessor<
   {
     return vdupq_n_s32(fill);
   }
-
+  MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
+  {
+    return vbslq_s32((uint32x4_t)mask, x, y);
+  }
+  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  {
+    return (SimdType)vcgtq_s32(x, y);
+  }
+  MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
+  {
+    return vandq_s32(x, y);
+  }
+  MCS_FORCE_INLINE T minScalar(SimdType x)
+  {
+    return vminvq_s32(x);
+  }
   // Load from
   MCS_FORCE_INLINE SimdType loadFrom(const char* from)
   {
     return vld1q_s32(reinterpret_cast<const int32_t*>(from));
   }
 
-  MCS_FORCE_INLINE MT cmpDummy(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpDummy(SimdType x, SimdType y)
   {
     return 0xFFFF;
   }
   // Compare
-  MCS_FORCE_INLINE MT cmpEq(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpEq(SimdType x, SimdType y)
   {
     return cmpDummy(x, y);
   }
 
-  MCS_FORCE_INLINE MT cmpGe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpGe(SimdType x, SimdType y)
   {
     return cmpDummy(x, y);
   }
 
-  MCS_FORCE_INLINE MT cmpGt(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpGt(SimdType x, SimdType y)
   {
     return cmpDummy(x, y);
   }
 
-  MCS_FORCE_INLINE MT cmpLt(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpLt(SimdType x, SimdType y)
   {
     return cmpDummy(x, y);
   }
 
-  MCS_FORCE_INLINE MT cmpLe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpLe(SimdType x, SimdType y)
   {
     return cmpDummy(x, y);
   }
 
-  MCS_FORCE_INLINE MT cmpNe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpNe(SimdType x, SimdType y)
   {
     return cmpDummy(x, y);
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType x, SimdType y)
   {
     return 0;
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType x, SimdType y)
   {
     return 0xFFFF;
   }
 
   // misc
-  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType& vmask)
+  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType vmask)
   {
     return arm_neon_mm_movemask_epi8((ArmNeonSSEVecType)vmask);
   }
 
-  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType x, SimdType y)
   {
     return cmpDummy(x, y);
   }
+  MCS_FORCE_INLINE SimdType min(SimdType x, SimdType y)
+  {
+    return reinterpret_cast<SimdType>(std::min(reinterpret_cast<int128_t>(x), reinterpret_cast<int128_t>(y)));
+  }
 
-  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE SimdType max(SimdType x, SimdType y)
+  {
+    return reinterpret_cast<SimdType>(std::max(reinterpret_cast<int128_t>(x), reinterpret_cast<int128_t>(y)));
+  }
+  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType x, SimdType y)
   {
     return cmpDummy(x, y);
   }
@@ -408,27 +458,17 @@ class SimdFilterProcessor<
   {
     return vdupq_n_s32(0);
   }
-
   // store
-  MCS_FORCE_INLINE void storeWMask(SimdType& x, SimdType& vmask, char* dst)
+  MCS_FORCE_INLINE void storeWMask(SimdType x, SimdType vmask, char* dst)
   {
     arm_neon_mm_maskmoveu_si128((ArmNeonSSEVecType)x, (ArmNeonSSEVecType)vmask, dst);
   }
 
-  MCS_FORCE_INLINE void store(char* dst, SimdType& x)
+  MCS_FORCE_INLINE void store(char* dst, SimdType x)
   {
     vst1q_s32(reinterpret_cast<int32_t*>(dst), x);
   }
 
-  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
-  {
-    return reinterpret_cast<SimdType>(std::min(reinterpret_cast<int128_t>(x), reinterpret_cast<int128_t>(y)));
-  }
-
-  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
-  {
-    return reinterpret_cast<SimdType>(std::max(reinterpret_cast<int128_t>(x), reinterpret_cast<int128_t>(y)));
-  }
 };
 
 template <typename VT, typename T>
@@ -466,55 +506,74 @@ class SimdFilterProcessor<
   {
     return vld1q_f64(reinterpret_cast<const T*>(from));
   }
+  MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
+  {
+    return vbslq_f64((uint64x2_t)mask, x, y);
+  }
 
+  MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
+  {
+    return (SimdType)vandq_s64((StorageSimdType)x, (StorageSimdType)y);
+  }
   // Compare
-  MCS_FORCE_INLINE MT cmpEq(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpEq(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_64((ArmNeonSSEVecType)vceqq_f64(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpGe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpGe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_64((ArmNeonSSEVecType)vcgeq_f64(x, y));
   }
-
-  MCS_FORCE_INLINE MT cmpGt(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE T maxScalar(SimdType x)
+  {
+    return vmaxvq_f64(x);
+  }
+  MCS_FORCE_INLINE T minScalar(SimdType x)
+  {
+    return vminvq_f64(x);
+  }
+  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  {
+    return (SimdType)vcgtq_f64(x, y);
+  }
+  MCS_FORCE_INLINE MT cmpGt(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_64((ArmNeonSSEVecType)vcgtq_f64(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpLe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpLe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_64((ArmNeonSSEVecType)vcleq_f64(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpLt(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpLt(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_64((ArmNeonSSEVecType)vcltq_f64(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpNe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpNe(SimdType x, SimdType y)
   {
     return cmpEq(x,y) ^ 0xFFFF;
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType x, SimdType y)
   {
     return 0;
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType x, SimdType y)
   {
     return 0xFFFF;
   }
 
   // misc
-  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType& vmask)
+  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType vmask)
   {
     return arm_neon_mm_movemask_pd((ArmNeonSSEVecType)vmask);
   }
 
-  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType x, SimdType y)
   {
     StorageVecProcType nullEmptyProcessor;
     NullEmptySimdType* xAsIntVecPtr = reinterpret_cast<NullEmptySimdType*>(&x);
@@ -523,7 +582,7 @@ class SimdFilterProcessor<
     return nullEmptyProcessor.cmpNe(*xAsIntVecPtr, *yAsIntVecPtr);
   }
 
-  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType x, SimdType y)
   {
     StorageVecProcType nullEmptyProcessor;
 
@@ -537,20 +596,18 @@ class SimdFilterProcessor<
   {
     return vdupq_n_f64(0);
   }
-
-  MCS_FORCE_INLINE void store(char* dst, SimdType& x)
-  {
-    vst1q_f64(reinterpret_cast<T*>(dst), x);
-  }
-
-  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE SimdType min(SimdType x, SimdType y)
   {
     return vminq_f64(x, y);
   }
 
-  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE SimdType max(SimdType x, SimdType y)
   {
     return vmaxq_f64(x, y);
+  }
+  MCS_FORCE_INLINE void store(char* dst, SimdType x)
+  {
+    vst1q_f64(reinterpret_cast<T*>(dst), x);
   }
 };
 
@@ -577,12 +634,30 @@ class SimdFilterProcessor<
     // This spec borrows the expr from u-/int64 based proceesor class.
     return (SimdType)nullEmptyProcessor.loadValue(fill);
   }
-
+  MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
+  {
+    return vbslq_f32((uint32x4_t)mask, x, y);
+  }
+  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  {
+    return (SimdType)vcgtq_f32(x, y);
+  }
+  MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
+  {
+    return (SimdType)vandq_s32((StorageSimdType)x, (StorageSimdType)y);
+  }
   MCS_FORCE_INLINE SimdType loadValue(const T fill)
   {
     return vdupq_n_f32(fill);
   }
-
+  MCS_FORCE_INLINE T maxScalar(SimdType x)
+  {
+    return vmaxvq_f32(x);
+  }
+  MCS_FORCE_INLINE T minScalar(SimdType x)
+  {
+    return vminvq_f32(x);
+  }
   // Load from
   MCS_FORCE_INLINE SimdType loadFrom(const char* from)
   {
@@ -590,53 +665,53 @@ class SimdFilterProcessor<
   }
 
   // Compare
-  MCS_FORCE_INLINE MT cmpEq(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpEq(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_32((ArmNeonSSEVecType)vceqq_f32(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpGe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpGe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_32((ArmNeonSSEVecType)vcgeq_f32(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpGt(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpGt(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_32((ArmNeonSSEVecType)vcgtq_f32(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpLe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpLe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_32((ArmNeonSSEVecType)vcleq_f32(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpLt(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpLt(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_32((ArmNeonSSEVecType)vcltq_f32(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpNe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpNe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_32((ArmNeonSSEVecType)vmvnq_u32(vceqq_f32(x, y)));
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType x, SimdType y)
   {
     return 0;
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType x, SimdType y)
   {
     return 0xFFFF;
   }
 
   // misc
-  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType& vmask)
+  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType vmask)
   {
     return arm_neon_mm_movemask_ps((ArmNeonSSEVecType)vmask);
   }
 
-  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType x, SimdType y)
   {
     StorageVecProcType nullEmptyProcessor;
 
@@ -646,7 +721,7 @@ class SimdFilterProcessor<
     return nullEmptyProcessor.cmpNe(*xAsIntVecPtr, *yAsIntVecPtr);
   }
 
-  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType x, SimdType y)
   {
     StorageVecProcType nullEmptyProcessor;
 
@@ -661,17 +736,16 @@ class SimdFilterProcessor<
     return vdupq_n_f32(0);
   }
 
-  MCS_FORCE_INLINE void store(char* dst, SimdType& x)
+  MCS_FORCE_INLINE void store(char* dst, SimdType x)
   {
     vst1q_f32(reinterpret_cast<T*>(dst), x);
   }
-
-  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE SimdType min(SimdType x, SimdType y)
   {
     return vminq_f32(x, y);
   }
 
-  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE SimdType max(SimdType x, SimdType y)
   {
     return vmaxq_f32(x, y);
   }
@@ -709,50 +783,63 @@ class SimdFilterProcessor<
   {
     return vld1q_s64(reinterpret_cast<const int64_t*>(from));
   }
+  MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
+  {
+    return vbslq_s64((uint64x2_t)mask, x, y);
+  }
+
+  MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
+  {
+    return vandq_s64(x, y);
+  }
+  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  {
+    return (SimdType)vcgtq_s64(x, y);
+  }
 
   // Compare
-  MCS_FORCE_INLINE MT cmpGe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpGe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_64((ArmNeonSSEVecType) vcgeq_s64(x,y));
   }
 
-  MCS_FORCE_INLINE MT cmpGt(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpGt(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_64((ArmNeonSSEVecType)vcgtq_s64(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpEq(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpEq(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_64((ArmNeonSSEVecType)vceqq_s64(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpLe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpLe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_64((ArmNeonSSEVecType)vcleq_s64(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpLt(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpLt(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_64((ArmNeonSSEVecType)vcltq_s64(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpNe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpNe(SimdType x, SimdType y)
   {
     return cmpEq(x,y)^0xFFFF;
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType x, SimdType y)
   {
     return 0;
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType x, SimdType y)
   {
     return 0xFFFF;
   }
 
   // misc
-  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType& vmask)
+  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType vmask)
   {
     return arm_neon_mm_movemask_epi8_64((ArmNeonSSEVecType)vmask);
   }
@@ -762,35 +849,32 @@ class SimdFilterProcessor<
     return vdupq_n_s64(0);
   }
 
-  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType x, SimdType y)
   {
     return cmpNe(x, y);
   }
-
-  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType x, SimdType y)
   {
     return cmpEq(x, y);
   }
 
   // store
-  MCS_FORCE_INLINE void storeWMask(SimdType& x, SimdType& vmask, char* dst)
+  MCS_FORCE_INLINE void storeWMask(SimdType x, SimdType vmask, char* dst)
   {
     arm_neon_mm_maskmoveu_si128((ArmNeonSSEVecType)x, (ArmNeonSSEVecType)vmask, dst);
   }
-
-  MCS_FORCE_INLINE void store(char* dst, SimdType& x)
+  MCS_FORCE_INLINE SimdType min(SimdType x, SimdType y)
   {
-    vst1q_s64(reinterpret_cast<int64_t*>(dst), x);
+    return vbslq_s64(vcgtq_s64(y,x), x, y);
   }
 
-  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE SimdType max(SimdType x, SimdType y)
   {
     return vbslq_s64(vcgtq_s64(x,y), x, y);
   }
-
-  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE void store(char* dst, SimdType x)
   {
-    return vbslq_s64(vcgtq_s64(y,x), x, y);
+    vst1q_s64(reinterpret_cast<int64_t*>(dst), x);
   }
 };
 
@@ -820,56 +904,74 @@ class SimdFilterProcessor<
   {
     return vdupq_n_u64(fill);
   }
-
+  MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
+  {
+    return vbslq_u64((uint64x2_t)mask, x, y);
+  }
+  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  {
+    return (SimdType)vcgtq_u64(x, y);
+  }
+  MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
+  {
+    return vandq_u64(x, y);
+  }
   // Load from
   MCS_FORCE_INLINE SimdType loadFrom(const char* from)
   {
     return vld1q_u64(reinterpret_cast<const uint64_t*>(from));
   }
-
   // Compare
-  MCS_FORCE_INLINE MT cmpGe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpGe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_64((ArmNeonSSEVecType)vcgeq_u64(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpGt(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpGt(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_64((ArmNeonSSEVecType)vcgtq_u64(x, y));
   }
+  MCS_FORCE_INLINE SimdType min(SimdType x, SimdType y)
+  {
+    return vbslq_u64(vcgtq_u64(y,x), x, y);
+  }
 
-  MCS_FORCE_INLINE MT cmpEq(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE SimdType max(SimdType x, SimdType y)
+  {
+    return vbslq_u64(vcgtq_u64(x,y), x, y);
+  }
+  MCS_FORCE_INLINE MT cmpEq(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_64((ArmNeonSSEVecType)vceqq_u64(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpLe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpLe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_64((ArmNeonSSEVecType)vcleq_u64(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpLt(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpLt(SimdType x, SimdType y)
   {
     return cmpGt(y, x);
   }
 
-  MCS_FORCE_INLINE MT cmpNe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpNe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_64((ArmNeonSSEVecType)vceqq_u64(x, y)) ^ 0xFFFF;
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType x, SimdType y)
   {
     return 0;
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType x, SimdType y)
   {
     return 0xFFFF;
   }
 
   // misc
-  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType& vmask)
+  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType vmask)
   {
     return arm_neon_mm_movemask_epi8_64((ArmNeonSSEVecType)vmask);
   }
@@ -879,35 +981,25 @@ class SimdFilterProcessor<
     return vdupq_n_u64(0);
   }
 
-  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType x, SimdType y)
   {
     return cmpNe(x, y);
   }
 
-  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType x, SimdType y)
   {
     return cmpEq(x, y);
   }
 
   // store
-  MCS_FORCE_INLINE void storeWMask(SimdType& x, SimdType& vmask, char* dst)
+  MCS_FORCE_INLINE void storeWMask(SimdType x, SimdType vmask, char* dst)
   {
     arm_neon_mm_maskmoveu_si128((ArmNeonSSEVecType)x, (ArmNeonSSEVecType)vmask, dst);
   }
 
-  MCS_FORCE_INLINE void store(char* dst, SimdType& x)
+  MCS_FORCE_INLINE void store(char* dst, SimdType x)
   {
     vst1q_u64(reinterpret_cast<uint64_t*>(dst), x);
-  }
-
-  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
-  {
-    return vbslq_u64(vcgtq_u64(x,y), x, y);
-  }
-
-  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
-  {
-    return vbslq_u64(vcgtq_u64(y,x), x, y);
   }
 };
 template <typename VT, typename CHECK_T>
@@ -936,66 +1028,92 @@ class SimdFilterProcessor<
   {
     return vdupq_n_s32(fill);
   }
-
+  MCS_FORCE_INLINE T maxScalar(SimdType x)
+  {
+    return vmaxvq_s32(x);
+  }
   // Load from
   MCS_FORCE_INLINE SimdType loadFrom(const char* from)
   {
     return vld1q_s32(reinterpret_cast<const int32_t*>(from));
   }
-
+  MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
+  {
+    return vbslq_s32((uint32x4_t)mask, x, y);
+  }
+  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  {
+    return (SimdType)vcgtq_s32(x, y);
+  }
+  MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
+  {
+    return vandq_s32(x, y);
+  }
   // Compare
-  MCS_FORCE_INLINE MT cmpEq(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpEq(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_32((ArmNeonSSEVecType) vceqq_s32(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpGe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpGe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_32((ArmNeonSSEVecType)vcgeq_s32(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpGt(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpGt(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_32((ArmNeonSSEVecType)vcgtq_s32(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpLe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpLe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_32((ArmNeonSSEVecType)vcleq_s32(x, y));
   }
+  MCS_FORCE_INLINE T minScalar(SimdType x)
+  {
+    return vminvq_s32(x);
+  }
+  MCS_FORCE_INLINE SimdType min(SimdType x, SimdType y)
+  {
+    return vminq_s32(x, y);
+  }
 
-  MCS_FORCE_INLINE MT cmpLt(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE SimdType max(SimdType x, SimdType y)
+  {
+    return vmaxq_s32(x, y);
+  }
+  MCS_FORCE_INLINE MT cmpLt(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_32((ArmNeonSSEVecType)vcltq_s32(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpNe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpNe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_32((ArmNeonSSEVecType)vceqq_s32(x, y)) ^ 0xFFFF;
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType x, SimdType y)
   {
     return 0;
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType x, SimdType y)
   {
     return 0xFFFF;
   }
 
   // misc
-  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType& vmask)
+  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType vmask)
   {
     return arm_neon_mm_movemask_epi8_32((ArmNeonSSEVecType)vmask);
   }
 
-  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType x, SimdType y)
   {
     return cmpNe(x, y);
   }
 
-  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType x, SimdType y)
   {
     return cmpEq(x, y);
   }
@@ -1006,24 +1124,14 @@ class SimdFilterProcessor<
   }
 
   // store
-  MCS_FORCE_INLINE void storeWMask(SimdType& x, SimdType& vmask, char* dst)
+  MCS_FORCE_INLINE void storeWMask(SimdType x, SimdType vmask, char* dst)
   {
     arm_neon_mm_maskmoveu_si128((ArmNeonSSEVecType)x, (ArmNeonSSEVecType)vmask, dst);
   }
 
-  MCS_FORCE_INLINE void store(char* dst, SimdType& x)
+  MCS_FORCE_INLINE void store(char* dst, SimdType x)
   {
     vst1q_s32(reinterpret_cast<int32_t*>(dst), x);
-  }
-
-  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
-  {
-    return vminq_s32(x, y);
-  }
-
-  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
-  {
-    return vmaxq_s32(x, y);
   }
 };
 
@@ -1053,66 +1161,91 @@ class SimdFilterProcessor<
   {
     return vdupq_n_u32(fill);
   }
-
+  MCS_FORCE_INLINE T maxScalar(SimdType x)
+  {
+    return vmaxvq_u32(x);
+  }
   // Load from
   MCS_FORCE_INLINE SimdType loadFrom(const char* from)
   {
     return vld1q_u32(reinterpret_cast<const uint32_t*>(from));
   }
-
+  MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
+  {
+    return vbslq_u32((uint32x4_t)mask, x, y);
+  }
+  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  {
+    return (SimdType)vcgtq_u32(x, y);
+  }
+  MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
+  {
+    return vandq_u32(x, y);
+  }
   // Compare
-  MCS_FORCE_INLINE MT cmpEq(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpEq(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_32((ArmNeonSSEVecType)vceqq_u32(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpGe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpGe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_32((ArmNeonSSEVecType)vcgeq_u32(x, y));
   }
+  MCS_FORCE_INLINE SimdType min(SimdType x, SimdType y)
+  {
+    return vminq_u32(x, y);
+  }
 
-  MCS_FORCE_INLINE MT cmpGt(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE SimdType max(SimdType x, SimdType y)
+  {
+    return vmaxq_u32(x, y);
+  }
+  MCS_FORCE_INLINE MT cmpGt(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_32((ArmNeonSSEVecType)vcgtq_u32(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpLe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpLe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_32((ArmNeonSSEVecType)vcleq_u32(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpLt(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpLt(SimdType x, SimdType y)
   {
     return cmpGt(y, x);
   }
 
-  MCS_FORCE_INLINE MT cmpNe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpNe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_32((ArmNeonSSEVecType)vceqq_u32(x, y)) ^ 0xFFFF;
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType x, SimdType y)
   {
     return 0;
   }
-
-  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE T minScalar(SimdType x)
+  {
+    return vminvq_u32(x);
+  }
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType x, SimdType y)
   {
     return 0xFFFF;
   }
 
   // misc
-  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType& vmask)
+  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType vmask)
   {
     return arm_neon_mm_movemask_epi8_32((ArmNeonSSEVecType)vmask);
   }
 
-  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType x, SimdType y)
   {
     return cmpNe(x, y);
   }
 
-  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType x, SimdType y)
   {
     return cmpEq(x, y);
   }
@@ -1123,24 +1256,14 @@ class SimdFilterProcessor<
   }
 
   // store
-  MCS_FORCE_INLINE void storeWMask(SimdType& x, SimdType& vmask, char* dst)
+  MCS_FORCE_INLINE void storeWMask(SimdType x, SimdType vmask, char* dst)
   {
     arm_neon_mm_maskmoveu_si128((ArmNeonSSEVecType)x, (ArmNeonSSEVecType)vmask, dst);
   }
 
-  MCS_FORCE_INLINE void store(char* dst, SimdType& x)
+  MCS_FORCE_INLINE void store(char* dst, SimdType x)
   {
     vst1q_u32(reinterpret_cast<uint32_t*>(dst), x);
-  }
-
-  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
-  {
-    return vminq_u32(x, y);
-  }
-
-  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
-  {
-    return vmaxq_u32(x, y);
   }
 };
 
@@ -1169,7 +1292,10 @@ class SimdFilterProcessor<
   {
     return vdupq_n_s16(fill);
   }
-
+  MCS_FORCE_INLINE T maxScalar(SimdType x)
+  {
+    return vmaxvq_s16(x);
+  }
   // Load from
   MCS_FORCE_INLINE SimdType loadFrom(const char* from)
   {
@@ -1177,58 +1303,82 @@ class SimdFilterProcessor<
   }
 
   // Compare
-  MCS_FORCE_INLINE MT cmpEq(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpEq(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_16((ArmNeonSSEVecType)vceqq_s16(x, y));
   }
+  MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
+  {
+    return vbslq_s16((uint16x8_t)mask, x, y);
+  }
 
-  MCS_FORCE_INLINE MT cmpGe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
+  {
+    return vandq_s16(x, y);
+  }
+  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  {
+    return (SimdType)vcgtq_s16(x, y);
+  }
+  MCS_FORCE_INLINE T minScalar(SimdType x)
+  {
+    return vminvq_s16(x);
+  }
+  MCS_FORCE_INLINE MT cmpGe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_16((ArmNeonSSEVecType)vcgeq_s16(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpGt(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpGt(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_16((ArmNeonSSEVecType)vcgtq_s16(x, y));
   }
+  MCS_FORCE_INLINE SimdType min(SimdType x, SimdType y)
+  {
+    return vminq_s16(x, y);
+  }
 
-  MCS_FORCE_INLINE MT cmpLe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE SimdType max(SimdType x, SimdType y)
+  {
+    return vmaxq_s16(x, y);
+  }
+  MCS_FORCE_INLINE MT cmpLe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_16((ArmNeonSSEVecType)vcleq_s16(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpLt(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpLt(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_16((ArmNeonSSEVecType)vcltq_s16(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpNe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpNe(SimdType x, SimdType y)
   {
     return cmpEq(x,y) ^ 0xFFFF;
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType x, SimdType y)
   {
     return 0;
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType x, SimdType y)
   {
     return 0xFFFF;
   }
 
   // misc
-  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType& vmask)
+  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType vmask)
   {
     return arm_neon_mm_movemask_epi8_16((ArmNeonSSEVecType)vmask);
   }
 
-  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType x, SimdType y)
   {
     return cmpNe(x, y);
   }
 
-  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType x, SimdType y)
   {
     return cmpEq(x, y);
   }
@@ -1239,24 +1389,14 @@ class SimdFilterProcessor<
   }
 
   // store
-  MCS_FORCE_INLINE void storeWMask(SimdType& x, SimdType& vmask, char* dst)
+  MCS_FORCE_INLINE void storeWMask(SimdType x, SimdType vmask, char* dst)
   {
     arm_neon_mm_maskmoveu_si128((ArmNeonSSEVecType)x, (ArmNeonSSEVecType)vmask, dst);
   }
 
-  MCS_FORCE_INLINE void store(char* dst, SimdType& x)
+  MCS_FORCE_INLINE void store(char* dst, SimdType x)
   {
     vst1q_s16(reinterpret_cast<int16_t*>(dst), x);
-  }
-
-  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
-  {
-    return vminq_s16(x, y);
-  }
-
-  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
-  {
-    return vmaxq_s16(x, y);
   }
 };
 
@@ -1285,66 +1425,93 @@ class SimdFilterProcessor<VT, CHECK_T,
   {
     return vdupq_n_u16(fill);
   }
-
+  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  {
+    return (SimdType)vcgtq_u16(x, y);
+  }
   // Load from
   MCS_FORCE_INLINE SimdType loadFrom(const char* from)
   {
     return vld1q_u16(reinterpret_cast<const uint16_t*>(from));
   }
+  MCS_FORCE_INLINE SimdType min(SimdType x, SimdType y)
+  {
+    return vminq_u16(x, y);
+  }
 
+  MCS_FORCE_INLINE SimdType max(SimdType x, SimdType y)
+  {
+    return vmaxq_u16(x, y);
+  }
+  MCS_FORCE_INLINE T maxScalar(SimdType x)
+  {
+    return vmaxvq_u16(x);
+  }
+  MCS_FORCE_INLINE T minScalar(SimdType x)
+  {
+    return vminvq_u16(x);
+  }
   // Compare
-  MCS_FORCE_INLINE MT cmpEq(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpEq(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_16((ArmNeonSSEVecType)vceqq_u16(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpGe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpGe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_16((ArmNeonSSEVecType)vcgeq_u16(x, y));
   }
+  MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
+  {
+    return vbslq_u16((uint16x8_t)mask, x, y);
+  }
 
-  MCS_FORCE_INLINE MT cmpGt(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
+  {
+    return vandq_u16(x, y);
+  }
+  MCS_FORCE_INLINE MT cmpGt(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_16((ArmNeonSSEVecType)vcgtq_u16(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpLe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpLe(SimdType x, SimdType y)
   {
     return cmpGe(y, x);
   }
 
-  MCS_FORCE_INLINE MT cmpLt(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpLt(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_16((ArmNeonSSEVecType)vcltq_u16(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpNe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpNe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8_16((ArmNeonSSEVecType)vceqq_u16(x, y)) ^ 0xFFFF;
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType x, SimdType y)
   {
     return 0;
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType x, SimdType y)
   {
     return 0xFFFF;
   }
 
   // misc
-  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType& vmask)
+  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType vmask)
   {
     return arm_neon_mm_movemask_epi8_16((ArmNeonSSEVecType)vmask);
   }
 
-  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType x, SimdType y)
   {
     return cmpNe(x, y);
   }
 
-  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType x, SimdType y)
   {
     return cmpEq(x, y);
   }
@@ -1355,24 +1522,14 @@ class SimdFilterProcessor<VT, CHECK_T,
   }
 
   // store
-  MCS_FORCE_INLINE void storeWMask(SimdType& x, SimdType& vmask, char* dst)
+  MCS_FORCE_INLINE void storeWMask(SimdType x, SimdType vmask, char* dst)
   {
     arm_neon_mm_maskmoveu_si128((ArmNeonSSEVecType)x, (ArmNeonSSEVecType)vmask, dst);
   }
 
-  MCS_FORCE_INLINE void store(char* dst, SimdType& x)
+  MCS_FORCE_INLINE void store(char* dst, SimdType x)
   {
     vst1q_u16(reinterpret_cast<uint16_t*>(dst), x);
-  }
-
-  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
-  {
-    return vminq_u16(x, y);
-  }
-
-  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
-  {
-    return vmaxq_u16(x, y);
   }
 };
 
@@ -1396,7 +1553,27 @@ class SimdFilterProcessor<
   {
     return loadValue(fill);
   }
+  MCS_FORCE_INLINE SimdType min(SimdType x, SimdType y)
+  {
+    return vminq_s8(x, y);
+  }
 
+  MCS_FORCE_INLINE SimdType max(SimdType x, SimdType y)
+  {
+    return vmaxq_s8(x, y);
+  }
+  MCS_FORCE_INLINE T maxScalar(SimdType x)
+  {
+    return vmaxvq_s8(x);
+  }
+  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  {
+    return (SimdType)vcgtq_s8(x, y);
+  }
+  MCS_FORCE_INLINE T minScalar(SimdType x)
+  {
+    return vminvq_s8(x);
+  }
   MCS_FORCE_INLINE SimdType loadValue(const T fill)
   {
     return vdupq_n_s8(fill);
@@ -1407,59 +1584,67 @@ class SimdFilterProcessor<
   {
     return vld1q_s8(reinterpret_cast<const int8_t*>(from));
   }
+  MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
+  {
+    return vbslq_s8((uint8x16_t)mask, x, y);
+  }
 
+  MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
+  {
+    return vandq_s8(x, y);
+  }
   // Compare
-  MCS_FORCE_INLINE MT cmpEq(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpEq(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8((ArmNeonSSEVecType)vceqq_s8(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpGe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpGe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8((ArmNeonSSEVecType)vcgeq_s8(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpGt(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpGt(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8((ArmNeonSSEVecType)vcgtq_s8(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpLe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpLe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8((ArmNeonSSEVecType)vcleq_s8(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpLt(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpLt(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8((ArmNeonSSEVecType)vcltq_s8(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpNe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpNe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8((ArmNeonSSEVecType)vceqq_s8(x, y)) ^ 0xFFFF;
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType x, SimdType y)
   {
     return 0;
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType x, SimdType y)
   {
     return 0xFFFF;
   }
   // misc
-  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType& vmask)
+  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType vmask)
   {
     return arm_neon_mm_movemask_epi8((ArmNeonSSEVecType)vmask);
   }
 
-  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType x, SimdType y)
   {
     return cmpNe(x, y);
   }
 
-  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType x, SimdType y)
   {
     return cmpEq(x, y);
   }
@@ -1470,24 +1655,14 @@ class SimdFilterProcessor<
   }
 
   // store
-  MCS_FORCE_INLINE void storeWMask(SimdType& x, SimdType& vmask, char* dst)
+  MCS_FORCE_INLINE void storeWMask(SimdType x, SimdType vmask, char* dst)
   {
     arm_neon_mm_maskmoveu_si128((ArmNeonSSEVecType)x, (ArmNeonSSEVecType)vmask, dst);
   }
 
-  MCS_FORCE_INLINE void store(char* dst, SimdType& x)
+  MCS_FORCE_INLINE void store(char* dst, SimdType x)
   {
     vst1q_s8(reinterpret_cast<int8_t*>(dst), x);
-  }
-
-  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
-  {
-    return vminq_s8(x, y);
-  }
-
-  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
-  {
-    return vmaxq_s8(x, y);
   }
 };
 
@@ -1516,67 +1691,95 @@ class SimdFilterProcessor<
   {
     return vdupq_n_u8(fill);
   }
+  MCS_FORCE_INLINE T maxScalar(SimdType x)
+  {
+    return vmaxvq_u8(x);
+  }
+  MCS_FORCE_INLINE T minScalar(SimdType x)
+  {
+    return vminvq_u8(x);
+  }
 
   // Load from
   MCS_FORCE_INLINE SimdType loadFrom(const char* from)
   {
     return vld1q_u8(reinterpret_cast<const uint8_t*>(from));
   }
+  MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
+  {
+    return vbslq_u8((uint8x16_t)mask, x, y);
+  }
 
+  MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
+  {
+    return vandq_u8(x, y);
+  }
+  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  {
+    return (SimdType)vcgtq_u8(x, y);
+  }
   // Compare
-  MCS_FORCE_INLINE MT cmpEq(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpEq(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8((ArmNeonSSEVecType)vceqq_u8(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpGe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpGe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8((ArmNeonSSEVecType)vcgeq_u8(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpGt(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpGt(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8((ArmNeonSSEVecType)vcgtq_u8(x, y));
   }
+  MCS_FORCE_INLINE SimdType min(SimdType x, SimdType y)
+  {
+    return vminq_u8(x, y);
+  }
 
-  MCS_FORCE_INLINE MT cmpLe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE SimdType max(SimdType x, SimdType y)
+  {
+    return vmaxq_u8(x, y);
+  }
+  MCS_FORCE_INLINE MT cmpLe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8((ArmNeonSSEVecType)vcleq_u8(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpLt(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpLt(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8((ArmNeonSSEVecType)vcltq_u8(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpNe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpNe(SimdType x, SimdType y)
   {
     return arm_neon_mm_movemask_epi8((ArmNeonSSEVecType)vceqq_u8(x, y)) ^ 0xFFFF;
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType x, SimdType y)
   {
     return 0;
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType x, SimdType y)
   {
     return 0xFFFF;
   }
 
 
   // misc
-  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType& vmask)
+  MCS_FORCE_INLINE MT convertVectorToBitMask(SimdType vmask)
   {
     return arm_neon_mm_movemask_epi8((ArmNeonSSEVecType)vmask);
   }
 
-  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT nullEmptyCmpNe(SimdType x, SimdType y)
   {
     return cmpNe(x, y);
   }
 
-  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType& x, SimdType& y)
+  MCS_FORCE_INLINE MT nullEmptyCmpEq(SimdType x, SimdType y)
   {
     return cmpEq(x, y);
   }
@@ -1587,24 +1790,14 @@ class SimdFilterProcessor<
   }
 
   // store
-  MCS_FORCE_INLINE void storeWMask(SimdType& x, SimdType& vmask, char* dst)
+  MCS_FORCE_INLINE void storeWMask(SimdType x, SimdType vmask, char* dst)
   {
     arm_neon_mm_maskmoveu_si128((ArmNeonSSEVecType)x, (ArmNeonSSEVecType)vmask, dst);
   }
 
-  MCS_FORCE_INLINE void store(char* dst, SimdType& x)
+  MCS_FORCE_INLINE void store(char* dst, SimdType x)
   {
     vst1q_u8(reinterpret_cast<uint8_t*>(dst), x);
-  }
-
-  MCS_FORCE_INLINE SimdType min(SimdType& x, SimdType& y)
-  {
-    return vminq_u8(x, y);
-  }
-
-  MCS_FORCE_INLINE SimdType max(SimdType& x, SimdType& y)
-  {
-    return vmaxq_u8(x, y);
   }
 };
 
