@@ -100,7 +100,7 @@ class StoreFieldMariaDB : public StoreField
 
   int store_xlonglong(int64_t val) override
   {
-    return m_field->store(val, static_cast<Field_num*>(m_field)->unsigned_flag);
+    return m_field->store(val, val < 0? 0 : 1);
   }
 
   int store_float(float dl) override
