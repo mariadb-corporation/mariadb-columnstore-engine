@@ -1889,7 +1889,7 @@ void BatchPrimitiveProcessor::execute()
             }
             else
             {
-              // We hae no more use for this allocation
+              // We have no more use for this allocation
               for (i = 0; i < joinerCount; i++)
                 for (j = 0; j < ridCount; ++j)
                   tSmallSideMatches[i][j].clear();
@@ -2149,7 +2149,8 @@ void BatchPrimitiveProcessor::sendResponse()
   auto* exeMgrDecPtr = exemgr::globServiceExeMgr->getDec();
   // Here is the fast path for local EM to PM interacction. PM puts into the
   // input EM DEC queue directly.
-  if (initiatedByEM_ && exeMgrDecPtr->clientAtTheSameHost(sock))
+  // !sock has a 'same host connection' semantics here.
+  if (initiatedByEM_ && (!sock || exeMgrDecPtr->clientAtTheSameHost(sock)))
   {
     exeMgrDecPtr->addDataToOutput(serialized);
     serialized.reset();

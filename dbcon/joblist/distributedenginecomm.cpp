@@ -1108,19 +1108,6 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const ByteStream& bs, 
     //           << fIsExeMgr << std::endl;
 
     boost::mutex::scoped_lock lk(*(fWlock[connectionId]));
-    // // Move it to the start of the writeToClient()
-    // ISMPacketHeader* ism = (ISMPacketHeader*)bs.buf();
-
-    // if (client->atTheSameHost() && fIsExeMgr && ism->Command == BATCH_PRIMITIVE_RUN)
-    // {
-    //   SBS sbsa{new messageqcpp::ByteStream()};
-    //   size_t a = 42;
-    //   *sbsa << a;
-    //   inMemoryEM2PPExchQueue_.push(sbsa);
-    //   inMemoryEM2PPExchCV_.notify_one();
-    //   std::cout << "writeToClient() pushed to the local queue." << std::endl;
-    // }
-
     client->write(bs, NULL, senderStats);
     return 0;
   }
@@ -1215,22 +1202,20 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
     // std::cout << "DEC id " << aPMIndex << " is same host conn " << client->atTheSameHost() << " fIsExeMgr "
     //           << fIsExeMgr << std::endl;
 
-    boost::mutex::scoped_lock lk(*(fWlock[connectionId]));
     // Move it to the start of the writeToClient()
     ISMPacketHeader* ism = (ISMPacketHeader*)bs->buf();
-
     if (client->atTheSameHost() && fIsExeMgr && ism->Command == BATCH_PRIMITIVE_RUN)
     {
-      // SBS sbsa{new messageqcpp::ByteStream()};
-      // size_t a = 42;
-      // *sbsa << a;
+      std::unique_lock<std::mutex> lk(inMemoryEM2PPExchMutex_);
       inMemoryEM2PPExchQueue_.push(bs);
+      lk.unlock();
       inMemoryEM2PPExchCV_.notify_one();
-      std::cout << "writeToClient() pushed to the local queue." << std::endl;
+      // std::cout << "writeToClient() pushed to the local queue." << std::endl;
       // WIP
-      // return 0;
+      return 0;
     }
 
+    boost::mutex::scoped_lock lk(*(fWlock[connectionId]));
     client->write(bs, NULL, senderStats);
     return 0;
   }

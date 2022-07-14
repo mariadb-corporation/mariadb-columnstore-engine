@@ -70,6 +70,19 @@ class FairThreadPool
      , id_(id)
     {
     }
+    // sock_ is nullptr here. This is kinda dangerous.
+    Job(const uint32_t uniqueID, const uint32_t stepID, const TransactionIdxT txnIdx,
+        const boost::shared_ptr<Functor>& functor, const uint32_t weight = 1, const uint32_t priority = 0,
+        const uint32_t id = 0)
+     : uniqueID_(uniqueID)
+     , stepID_(stepID)
+     , txnIdx_(txnIdx)
+     , functor_(functor)
+     , weight_(weight)
+     , priority_(priority)
+     , id_(id)
+    {
+    }
     uint32_t uniqueID_;
     uint32_t stepID_;
     TransactionIdxT txnIdx_;
