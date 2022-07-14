@@ -365,7 +365,7 @@ class SimdFilterProcessor<
   }
   MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
   {
-    return vbslq_s32((uint32x4_t)mask, x, y);
+    return vbslq_s32((uint32x4_t)mask, y,x);
   }
   MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
   {
@@ -508,7 +508,7 @@ class SimdFilterProcessor<
   }
   MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
   {
-    return vbslq_f64((uint64x2_t)mask, x, y);
+    return vbslq_f64((uint64x2_t)mask,y,x);
   }
 
   MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
@@ -636,7 +636,7 @@ class SimdFilterProcessor<
   }
   MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
   {
-    return vbslq_f32((uint32x4_t)mask, x, y);
+    return vbslq_f32((uint32x4_t)mask, y,x);
   }
   MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
   {
@@ -785,7 +785,7 @@ class SimdFilterProcessor<
   }
   MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
   {
-    return vbslq_s64((uint64x2_t)mask, x, y);
+    return vbslq_s64((uint64x2_t)mask, y,x);
   }
 
   MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
@@ -906,7 +906,7 @@ class SimdFilterProcessor<
   }
   MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
   {
-    return vbslq_u64((uint64x2_t)mask, x, y);
+    return vbslq_u64((uint64x2_t)mask, y,x);
   }
   MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
   {
@@ -1039,7 +1039,7 @@ class SimdFilterProcessor<
   }
   MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
   {
-    return vbslq_s32((uint32x4_t)mask, x, y);
+    return vbslq_s32((uint32x4_t)mask, y,x);
   }
   MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
   {
@@ -1172,7 +1172,7 @@ class SimdFilterProcessor<
   }
   MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
   {
-    return vbslq_u32((uint32x4_t)mask, x, y);
+    return vbslq_u32((uint32x4_t)mask, y,x);
   }
   MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
   {
@@ -1309,7 +1309,7 @@ class SimdFilterProcessor<
   }
   MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
   {
-    return vbslq_s16((uint16x8_t)mask, x, y);
+    return vbslq_s16((uint16x8_t)mask, y,x);
   }
 
   MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
@@ -1463,7 +1463,7 @@ class SimdFilterProcessor<VT, CHECK_T,
   }
   MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
   {
-    return vbslq_u16((uint16x8_t)mask, x, y);
+    return vbslq_u16((uint16x8_t)mask, y, x);
   }
 
   MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
@@ -1586,7 +1586,7 @@ class SimdFilterProcessor<
   }
   MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
   {
-    return vbslq_s8((uint8x16_t)mask, x, y);
+    return vbslq_s8((uint8x16_t)mask, y, x);
   }
 
   MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
@@ -1707,7 +1707,7 @@ class SimdFilterProcessor<
   }
   MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
   {
-    return vbslq_u8((uint8x16_t)mask, x, y);
+    return vbslq_u8((uint8x16_t)mask, y, x);
   }
 
   MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
