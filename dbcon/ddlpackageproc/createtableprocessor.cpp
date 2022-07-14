@@ -607,7 +607,6 @@ keepGoing:
       ++iter;
     }
 
-    // TODO MCOL-5021 compressionType is hardcoded to 2 (SNAPPY)
     bytestream << (fStartingColOID + size);
     bytestream << (uint8_t)execplan::AUX_COL_DATATYPE;
     bytestream << (uint8_t) false;

@@ -647,7 +647,6 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
    */
   const ROPair columnRID(const TableColName& tableColName, int lower_case_table_names = 0);
 
-  // TODO MCOL-5021
   /** return the RID's of the columns for a table
    *
    * returns a list of the RID's of the columns for a table
@@ -879,6 +878,10 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
   TableOIDmap fTableAUXColumnOIDMap;
   boost::mutex fTableAUXColumnOIDMapLock;
 
+  typedef std::map<OID, OID> AUXColumnOIDTableOIDmap;
+  AUXColumnOIDTableOIDmap fAUXColumnOIDToTableOIDMap;
+  boost::mutex fAUXColumnOIDToTableOIDMapLock;
+
   typedef std::map<OID, ColType> Colinfomap;
   Colinfomap fColinfomap;
   boost::mutex fColinfomapLock;
@@ -927,6 +930,7 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
 // MCOL-5021
 const datatypes::SystemCatalog::ColDataType AUX_COL_DATATYPE = datatypes::SystemCatalog::UTINYINT;
 const int32_t AUX_COL_WIDTH = 1;
+// TODO MCOL-5021 compressionType is hardcoded to 2 (SNAPPY)
 const CalpontSystemCatalog::CompressionType AUX_COL_COMPRESSION_TYPE = CalpontSystemCatalog::COMPRESSION2;
 const std::string AUX_COL_DATATYPE_STRING = "unsigned-tinyint";
 const uint64_t AUX_COL_MINVALUE = MIN_UTINYINT;

@@ -113,7 +113,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
   local config_path_prefix = if (pkg_format == 'rpm') then '/etc/my.cnf.d/' else '/etc/mysql/mariadb.conf.d/50-',
   local img = if (platform == 'centos:7' || std.split(platform, ':')[0] == 'rockylinux') then platform else 'romcheck/' + std.strReplace(platform, '/', '-'),
   local regression_ref = if (std.split(branch, '-')[0] == 'develop') then branch else 'develop-6',
-  local regression_tests = if (std.startsWith(platform, 'debian') || std.startsWith(platform, 'ubuntu:20')) then 'test000.sh,test001.sh' else 'test000.sh,test001.sh',
+  local regression_tests = if (std.startsWith(platform, 'debian') || std.startsWith(platform, 'ubuntu:20')) then 'test000.sh' else 'test000.sh,test001.sh',
   local branchp = if (branch == '**') then '' else branch,
   local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
 

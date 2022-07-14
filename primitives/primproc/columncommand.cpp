@@ -849,7 +849,7 @@ void ColumnCommand::nextLBID()
   lbid += colType.colWidth;
 
   if (_hasAuxCol)
-    lbidAux += 1;
+    lbidAux += execplan::AUX_COL_WIDTH;
 }
 
 void ColumnCommand::duplicate(ColumnCommand* cc)
@@ -961,7 +961,7 @@ void ColumnCommand::getLBIDList(uint32_t loopCount, vector<int64_t>* lbids)
   if (_hasAuxCol)
   {
     firstLBID = lbidAux;
-    lastLBID = firstLBID + (loopCount * 1) - 1;
+    lastLBID = firstLBID + (loopCount * execplan::AUX_COL_WIDTH) - 1;
 
     for (i = firstLBID; i <= lastLBID; i++)
       lbids->push_back(i);

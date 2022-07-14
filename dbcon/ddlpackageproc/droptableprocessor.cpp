@@ -146,7 +146,15 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
     try
     {
       roPair = systemCatalogPtr->tableRID(tableName);
-      tableAUXColOid = systemCatalogPtr->tableAUXColumnOID(tableName);
+
+      if (tableName.schema.compare(execplan::CALPONT_SCHEMA) == 0)
+      {
+        tableAUXColOid = 0;
+      }
+      else
+      {
+        tableAUXColOid = systemCatalogPtr->tableAUXColumnOID(tableName);
+      }
     }
     catch (IDBExcept& ie)
     {

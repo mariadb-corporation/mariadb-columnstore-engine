@@ -4730,7 +4730,7 @@ int WE_DMLCommandProc::validateColumnHWMs(CalpontSystemCatalog::RIDList& ridList
     // Find out column width
     if (hasAuxCol && (k == segFileInfo.size() - 1))
     {
-      colWidth = 1;
+      colWidth = execplan::AUX_COL_WIDTH;
     }
     else
     {
@@ -4805,7 +4805,7 @@ int WE_DMLCommandProc::validateColumnHWMs(CalpontSystemCatalog::RIDList& ridList
 
       if (hasAuxCol && (k1 == segFileInfo.size() - 1))
       {
-        colWidth2 = 1;
+        colWidth2 = execplan::AUX_COL_WIDTH;
       }
       else
       {
@@ -4963,7 +4963,7 @@ errorCheck:
 
     if (hasAuxCol && (refCol == ridList.size() - 1))
     {
-      colWidth1 = 1;
+      colWidth1 = execplan::AUX_COL_WIDTH;
     }
     else
     {
@@ -4973,7 +4973,7 @@ errorCheck:
 
     if (hasAuxCol && (colIdx == ridList.size() - 1))
     {
-      colWidth2 = 1;
+      colWidth2 = execplan::AUX_COL_WIDTH;
     }
     else
     {

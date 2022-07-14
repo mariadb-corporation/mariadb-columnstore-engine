@@ -3755,6 +3755,16 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::isAUXColumnOID(const OID& oid)
 
   checkSysCatVer();
 
+  boost::mutex::scoped_lock lk1(fAUXColumnOIDToTableOIDMapLock);
+  AUXColumnOIDTableOIDmap::const_iterator iter = fAUXColumnOIDToTableOIDMap.find(oid);
+
+  if (iter != fAUXColumnOIDToTableOIDMap.end())
+  {
+    return iter->second;
+  }
+
+  lk1.unlock();
+
   // select objectid from systable where auxcolumnoid = oid;
   CalpontSelectExecutionPlan csep;
   CalpontSelectExecutionPlan::ReturnedColumnList returnedColumnList;
@@ -3818,7 +3828,10 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::isAUXColumnOID(const OID& oid)
     {
       if ((*it)->dataCount() == 1)
       {
-        return (OID)((*it)->GetData(0));
+        // populate cache
+        lk1.lock();
+        fAUXColumnOIDToTableOIDMap[oid] = (OID)((*it)->GetData(0));
+        return fAUXColumnOIDToTableOIDMap[oid];
       }
       else
       {
@@ -3827,7 +3840,10 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::isAUXColumnOID(const OID& oid)
     }
   }
 
-  return (OID)(0);
+  // populate cache
+  lk1.lock();
+  fAUXColumnOIDToTableOIDMap[oid] = 0;
+  return fAUXColumnOIDToTableOIDMap[oid];
 }
 
 #if 0
@@ -5870,6 +5886,10 @@ void CalpontSystemCatalog::flushCache()
   boost::mutex::scoped_lock auxlk(fTableAUXColumnOIDMapLock);
   fTableAUXColumnOIDMap.clear();
   auxlk.unlock();
+
+  boost::mutex::scoped_lock auxtotableoidlk(fAUXColumnOIDToTableOIDMapLock);
+  fAUXColumnOIDToTableOIDMap.clear();
+  auxtotableoidlk.unlock();
 
   boost::recursive_mutex::scoped_lock lk4(fDctTokenMapLock);
   fDctTokenMap.clear();
