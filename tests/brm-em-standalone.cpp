@@ -1150,7 +1150,7 @@ static void* EMRunner(void* arg)
                 if (listSize == 0)
                     break;
 
-                struct EMEntries* tmp, *prev;
+                struct EMEntries* tmp = nullptr, *prev = nullptr;
                 int fileRand = rand_r(&randstate) % listSize;
                 int i, oid;
 

@@ -100,10 +100,6 @@ class FilterBenchFixture : public benchmark::Fixture
     in->NVALS = 0;
     pp.setBlockPtr((int*)readBlockFromLiteralArray(dataName, block));
   }
-  void runFilterBenchLegacy()
-  {
-    pp.p_Col(in, out, 4 * BLOCK_SIZE, &written);
-  }
 
   template <int W>
   void runFilterBenchTemplated()
@@ -123,36 +119,6 @@ class FilterBenchFixture : public benchmark::Fixture
     memcpy(args->val, &tmp, W);
   }
 };
-
-BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan1ByteLegacyCode)(benchmark::State& state)
-{
-  for (auto _ : state)
-  {
-    constexpr const uint8_t W = 1;
-    state.PauseTiming();
-    inTestRunSetUp("col1block.cdf", W, SystemCatalog::CHAR, OT_DATAVALUE, args);
-    state.ResumeTiming();
-    runFilterBenchLegacy();
-  }
-}
-
-BENCHMARK_REGISTER_F(FilterBenchFixture, BM_ColumnScan1ByteLegacyCode);
-
-BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan1Byte1FilterLegacyCode)(benchmark::State& state)
-{
-  for (auto _ : state)
-  {
-    state.PauseTiming();
-    constexpr const uint8_t W = 1;
-    setUp1EqFilter<W>();
-    inTestRunSetUp("col1block.cdf", W, SystemCatalog::CHAR, OT_DATAVALUE, args);
-    state.ResumeTiming();
-
-    runFilterBenchLegacy();
-  }
-}
-
-BENCHMARK_REGISTER_F(FilterBenchFixture, BM_ColumnScan1Byte1FilterLegacyCode);
 
 BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan1ByteTemplatedCode)(benchmark::State& state)
 {
@@ -212,33 +178,6 @@ BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan1Byte1FilterVectorizedCode)(
 
 BENCHMARK_REGISTER_F(FilterBenchFixture, BM_ColumnScan1Byte1FilterVectorizedCode);
 
-BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan2ByteLegacyCode)(benchmark::State& state)
-{
-  for (auto _ : state)
-  {
-    constexpr const uint8_t W = 2;
-    state.PauseTiming();
-    inTestRunSetUp("col2block.cdf", W, SystemCatalog::INT, OT_DATAVALUE, args);
-    state.ResumeTiming();
-    runFilterBenchLegacy();
-  }
-}
-BENCHMARK_REGISTER_F(FilterBenchFixture, BM_ColumnScan2ByteLegacyCode);
-
-BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan2Byte1FilterLegacyCode)(benchmark::State& state)
-{
-  for (auto _ : state)
-  {
-    state.PauseTiming();
-    constexpr const uint8_t W = 2;
-    setUp1EqFilter<W>();
-    inTestRunSetUp("col2block.cdf", W, SystemCatalog::INT, OT_DATAVALUE, args);
-    state.ResumeTiming();
-    runFilterBenchLegacy();
-  }
-}
-BENCHMARK_REGISTER_F(FilterBenchFixture, BM_ColumnScan2Byte1FilterLegacyCode);
-
 BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan2ByteTemplatedCode)(benchmark::State& state)
 {
   for (auto _ : state)
@@ -283,34 +222,6 @@ BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan2Byte1FilterVectorizedCode)(
 
 BENCHMARK_REGISTER_F(FilterBenchFixture, BM_ColumnScan2Byte1FilterVectorizedCode);
 
-BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan4ByteLegacyCode)(benchmark::State& state)
-{
-  for (auto _ : state)
-  {
-    constexpr const uint8_t W = 4;
-    state.PauseTiming();
-    inTestRunSetUp("col4block.cdf", W, SystemCatalog::INT, OT_DATAVALUE, args);
-    state.ResumeTiming();
-    runFilterBenchLegacy();
-  }
-}
-
-BENCHMARK_REGISTER_F(FilterBenchFixture, BM_ColumnScan4ByteLegacyCode);
-
-BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan4Byte1FilterLegacyCode)(benchmark::State& state)
-{
-  for (auto _ : state)
-  {
-    constexpr const uint8_t W = 4;
-    state.PauseTiming();
-    setUp1EqFilter<W>();
-    inTestRunSetUp("col4block.cdf", W, SystemCatalog::INT, OT_DATAVALUE, args);
-    state.ResumeTiming();
-    runFilterBenchLegacy();
-  }
-}
-
-BENCHMARK_REGISTER_F(FilterBenchFixture, BM_ColumnScan4Byte1FilterLegacyCode);
 
 BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan4ByteTemplatedCode)(benchmark::State& state)
 {
@@ -340,33 +251,6 @@ BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan4ByteVectorizedCode)(benchma
 }
 
 BENCHMARK_REGISTER_F(FilterBenchFixture, BM_ColumnScan4ByteVectorizedCode);
-
-BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan8ByteLegacyCode)(benchmark::State& state)
-{
-  for (auto _ : state)
-  {
-    constexpr const uint8_t W = 8;
-    state.PauseTiming();
-    inTestRunSetUp("col8block.cdf", W, SystemCatalog::INT, OT_DATAVALUE, args);
-    state.ResumeTiming();
-    runFilterBenchLegacy();
-  }
-}
-BENCHMARK_REGISTER_F(FilterBenchFixture, BM_ColumnScan8ByteLegacyCode);
-
-BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan8Byte1FilterLegacyCode)(benchmark::State& state)
-{
-  for (auto _ : state)
-  {
-    state.PauseTiming();
-    constexpr const uint8_t W = 8;
-    setUp1EqFilter<W>();
-    inTestRunSetUp("col8block.cdf", W, SystemCatalog::INT, OT_DATAVALUE, args);
-    state.ResumeTiming();
-    runFilterBenchLegacy();
-  }
-}
-BENCHMARK_REGISTER_F(FilterBenchFixture, BM_ColumnScan8Byte1FilterLegacyCode);
 
 BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan8ByteTemplatedCode)(benchmark::State& state)
 {
