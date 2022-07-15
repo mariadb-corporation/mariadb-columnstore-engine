@@ -478,49 +478,49 @@ int TypeHandlerVarbinary::storeValueToField(rowgroup::Row& row, int pos, StoreFi
 int TypeHandlerSInt64::storeValueToField(rowgroup::Row& row, int pos, StoreField* f) const
 {
   int64_t val = row.getIntField<8>(pos);
-  return f->store_xlonglong(val);
+  return f->store_longlong(val);
 }
 
 int TypeHandlerUInt64::storeValueToField(rowgroup::Row& row, int pos, StoreField* f) const
 {
   uint64_t val = row.getUintField<8>(pos);
-  return f->store_xlonglong(static_cast<int64_t>(val));
+  return f->store_ulonglong(static_cast<int64_t>(val));
 }
 
 int TypeHandlerInt::storeValueToFieldSInt32(rowgroup::Row& row, int pos, StoreField* f) const
 {
   int64_t val = row.getIntField<4>(pos);
-  return f->store_xlonglong(val);
+  return f->store_longlong(val);
 }
 
 int TypeHandlerInt::storeValueToFieldUInt32(rowgroup::Row& row, int pos, StoreField* f) const
 {
   uint64_t val = row.getUintField<4>(pos);
-  return f->store_xlonglong(static_cast<int64_t>(val));
+  return f->store_ulonglong(static_cast<int64_t>(val));
 }
 
 int TypeHandlerSInt16::storeValueToField(rowgroup::Row& row, int pos, StoreField* f) const
 {
   int64_t val = row.getIntField<2>(pos);
-  return f->store_xlonglong(val);
+  return f->store_longlong(val);
 }
 
 int TypeHandlerUInt16::storeValueToField(rowgroup::Row& row, int pos, StoreField* f) const
 {
   uint64_t val = row.getUintField<2>(pos);
-  return f->store_xlonglong(static_cast<int64_t>(val));
+  return f->store_ulonglong(static_cast<int64_t>(val));
 }
 
 int TypeHandlerSInt8::storeValueToField(rowgroup::Row& row, int pos, StoreField* f) const
 {
   int64_t val = row.getIntField<1>(pos);
-  return f->store_xlonglong(val);
+  return f->store_longlong(val);
 }
 
 int TypeHandlerUInt8::storeValueToField(rowgroup::Row& row, int pos, StoreField* f) const
 {
   uint64_t val = row.getUintField<1>(pos);
-  return f->store_xlonglong(static_cast<int64_t>(val));
+  return f->store_ulonglong(static_cast<int64_t>(val));
 }
 
 /*

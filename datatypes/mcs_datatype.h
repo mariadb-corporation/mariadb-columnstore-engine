@@ -953,7 +953,8 @@ class StoreField
   virtual int store_timestamp(int64_t val) = 0;
   virtual int store_string(const char* str, size_t length) = 0;
   virtual int store_varbinary(const char* str, size_t length) = 0;
-  virtual int store_xlonglong(int64_t val) = 0;
+  virtual int store_longlong(int64_t val) = 0;
+  virtual int store_ulonglong(int64_t val) = 0;
   virtual int store_float(float val) = 0;
   virtual int store_double(double val) = 0;
   virtual int store_long_double(long double val) = 0;

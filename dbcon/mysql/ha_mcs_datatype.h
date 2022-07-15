@@ -98,9 +98,14 @@ class StoreFieldMariaDB : public StoreField
     return m_field->store_binary(str, length);
   }
 
-  int store_xlonglong(int64_t val) override
+  int store_longlong(int64_t val) override
   {
-    return m_field->store(val, val < 0? 0 : 1);
+    return m_field->store(val, 0);
+  }
+
+  int store_ulonglong(int64_t val)override
+  {
+    return m_field->store(val, 1);
   }
 
   int store_float(float dl) override
