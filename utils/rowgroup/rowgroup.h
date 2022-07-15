@@ -2037,7 +2037,8 @@ inline void copyRow(const Row& in, Row* out, uint32_t colCount)
 
   if (!in.usesStringTable() && !out->usesStringTable())
   {
-    memcpy(out->getData(), in.getData(), std::min(in.getOffset(colCount), out->getOffset(colCount)));
+    //memcpy(out->getData(), in.getData(), std::min(in.getOffset(colCount), out->getOffset(colCount)));
+    memcpy(out->getData(), in.getData(), std::min(in.getSize(), out->getSize()));
     return;
   }
 
