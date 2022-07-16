@@ -27,7 +27,9 @@ optparse.define short=s long=skip-deps desc="Skip install dependences" variable=
 optparse.define short=C long=force-cmake-reconfig desc="Force cmake reconfigure" variable=FORCE_CMAKE_CONFIG default=false value=true
 optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore submodules initialization" variable=SKIP_SUBMODULES default=false value=true
 optparse.define short=u long=skip-unit-tests desc="Skip UnitTests" variable=SKIP_UNIT_TESTS default=false value=true
+optparse.define short=B long=run-microbench="Compile and run microbenchmarks " variable=RUN_BENCHMARKS default=false value=true
 optparse.define short=b long=branch desc="Choouse git branch ('none' for menu)" variable=BRANCH
+
 
 source $( optparse.build )
 
@@ -77,7 +79,7 @@ install_deps()
         libncurses5-dev libaio-dev libsystemd-dev libpcre2-dev \
         libperl-dev libssl-dev libxml2-dev libkrb5-dev flex libpam-dev git \
         libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest libsnappy-dev libjemalloc-dev \
-        liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev
+        liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev
 
     elif [[ $OS = 'CentOS' || $OS = 'Rocky' ]]; then
         yum -y install epel-release \
@@ -157,9 +159,35 @@ build()
                      -DBUILD_CONFIG=mysql_release
                      -DWITH_WSREP=OFF
                      -DWITH_SSL=system
-                     -DWITH_UNITTESTS=YES
-                     -DWITH_BRM_UT=YES
                      -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX"
+
+
+    if [[ $SKIP_UNIT_TESTS = true ]] ; then
+        warn "Unittests are not build"
+
+    else
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_UNITTESTS=YES"
+        message "Buiding with unittests"
+    fi
+
+    if [[ $RUN_BENCHMARKS = true ]] ; then
+        if [[ $MCS_BUILD_TYPE = 'Debug' ]] ; then
+            error "Benchmarks will not be build in run in Debug build Mode"
+            MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_MICROBENCHMARKS=NO"
+            $RUN_BENCHMARKS = false
+        elif [[ $OS != 'Ubuntu' && $OS != 'Debian' ]] ; then
+            error "Benchmarks are now avaliable only at Ubuntu or Debian"
+            MAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_MICROBENCHMARKS=NO"
+            $RUN_BENCHMARKS = false
+        else
+            message "Compile with microbenchmarks"
+            MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_MICROBENCHMARKS=YES"
+        fi
+    else
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_MICROBENCHMARKS=NO"
+        info "Buiding without microbenchmarks"
+    fi
+
 
     cd $MDB_SOURCE_PATH
 
@@ -223,6 +251,18 @@ run_unit_tests()
         message "Running unittests"
         cd $MDB_SOURCE_PATH
         ctest . -R columnstore: -j $(nproc)
+        cd -
+    fi
+}
+
+run_microbenchmarks_tests()
+{
+    if [[ $RUN_BENCHMARKS = false ]] ; then
+        warn "Skipping microbenchmarks"
+    else
+        message "Runnning microbenchmarks"
+        cd $MDB_SOURCE_PATH
+        ctest . -V -R columnstore_microbenchmarks: -j $(nproc)
         cd -
     fi
 }
@@ -306,6 +346,7 @@ stop_service
 clean_old_installation
 build
 run_unit_tests
+run_microbenchmarks_tests
 install
 start_service
 message "$color_green FINISHED $color_normal"
