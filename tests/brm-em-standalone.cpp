@@ -54,7 +54,6 @@ u_int64_t vbOffset = 0;
 pthread_mutex_t pthreadMutex;
 const std::vector<uint32_t> colWidthsAvailable = {1, 2, 4, 8, 16};
 const DBRootT dbroot = 1;
-const uint32_t KibiBlocks = 1024;
 
 struct Range
 {
