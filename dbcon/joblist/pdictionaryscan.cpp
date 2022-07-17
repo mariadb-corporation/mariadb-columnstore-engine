@@ -325,7 +325,7 @@ void pDictionaryScan::sendPrimitiveMessages()
   LBIDRange_v::iterator it;
   HWM_t hwm;
   uint32_t fbo;
-  ByteStream primMsg(65536);
+  // SBS primMsg(new ByteStream(65536));
   DBRM dbrm;
   uint16_t dbroot;
   uint32_t partNum;
@@ -391,8 +391,9 @@ void pDictionaryScan::sendPrimitiveMessages()
           }
         }
 
-        sendAPrimitiveMessage(primMsg, msgLbidStart, msgLbidCount, (*dbRootConnectionMap)[dbroot]);
-        primMsg.restart();
+        // sendAPrimitiveMessage(primMsg, msgLbidStart, msgLbidCount, (*dbRootConnectionMap)[dbroot]);
+        sendAPrimitiveMessage(msgLbidStart, msgLbidCount, (*dbRootConnectionMap)[dbroot]);
+        // primMsg->restart();
 
         mutex.lock();
         msgsSent += msgLbidCount;
@@ -453,8 +454,8 @@ void pDictionaryScan::sendError(uint16_t s)
 //------------------------------------------------------------------------------
 // Construct and send a single primitive message to primproc
 //------------------------------------------------------------------------------
-void pDictionaryScan::sendAPrimitiveMessage(ByteStream& primMsg, BRM::LBID_t msgLbidStart,
-                                            uint32_t msgLbidCount, uint16_t pm)
+// void pDictionaryScan::sendAPrimitiveMessage(messageqcpp::SBS& primMsg, BRM::LBID_t msgLbidStart,
+void pDictionaryScan::sendAPrimitiveMessage(BRM::LBID_t msgLbidStart, uint32_t msgLbidCount, uint16_t pm)
 {
   DictTokenByScanRequestHeader hdr;
   void* hdrp = static_cast<void*>(&hdr);
@@ -500,11 +501,11 @@ void pDictionaryScan::sendAPrimitiveMessage(ByteStream& primMsg, BRM::LBID_t msg
    * than putting it in the middle or at the end in terms of simplicity & memory usage,
    * given the current code.
    */
-
-  primMsg.load((const uint8_t*)&hdr, sizeof(DictTokenByScanRequestHeader));
-  primMsg << fVerId;
-  primMsg.append((const uint8_t*)&hdr, sizeof(DictTokenByScanRequestHeader));
-  primMsg += fFilterString;
+  SBS primMsg(new ByteStream(hdr.ism.Size));
+  primMsg->load((const uint8_t*)&hdr, sizeof(DictTokenByScanRequestHeader));
+  *primMsg << fVerId;
+  primMsg->append((const uint8_t*)&hdr, sizeof(DictTokenByScanRequestHeader));
+  *primMsg += fFilterString;
 
   // cout << "Sending rqst LBIDS " << msgLbidStart
   //	<< " hdr.Count " << hdr.Count
@@ -852,7 +853,7 @@ void pDictionaryScan::appendFilter(const messageqcpp::ByteStream& filter, unsign
 
 void pDictionaryScan::serializeEqualityFilter()
 {
-  ByteStream msg;
+  SBS msg(new ByteStream());
   ISMPacketHeader ism;
   uint32_t i;
   vector<string> empty;
@@ -860,13 +861,13 @@ void pDictionaryScan::serializeEqualityFilter()
   void* ismp = static_cast<void*>(&ism);
   memset(ismp, 0, sizeof(ISMPacketHeader));
   ism.Command = DICT_CREATE_EQUALITY_FILTER;
-  msg.load((uint8_t*)&ism, sizeof(ISMPacketHeader));
-  msg << uniqueID;
-  msg << (uint32_t)colType().charsetNumber;
-  msg << (uint32_t)equalityFilter.size();
+  msg->load((uint8_t*)&ism, sizeof(ISMPacketHeader));
+  *msg << uniqueID;
+  *msg << (uint32_t)colType().charsetNumber;
+  *msg << (uint32_t)equalityFilter.size();
 
   for (i = 0; i < equalityFilter.size(); i++)
-    msg << equalityFilter[i];
+    *msg << equalityFilter[i];
 
   try
   {
@@ -884,14 +885,14 @@ void pDictionaryScan::serializeEqualityFilter()
 
 void pDictionaryScan::destroyEqualityFilter()
 {
-  ByteStream msg;
+  SBS msg(new ByteStream());
   ISMPacketHeader ism;
 
   void* ismp = static_cast<void*>(&ism);
   memset(ismp, 0, sizeof(ISMPacketHeader));
   ism.Command = DICT_DESTROY_EQUALITY_FILTER;
-  msg.load((uint8_t*)&ism, sizeof(ISMPacketHeader));
-  msg << uniqueID;
+  msg->load((uint8_t*)&ism, sizeof(ISMPacketHeader));
+  *msg << uniqueID;
 
   try
   {
@@ -918,13 +919,13 @@ void pDictionaryScan::abort()
 uint16_t pDictionaryScan::planFlagsToPrimFlags(uint32_t planFlags)
 {
   uint16_t flags = 0;
-  
+
   if (planFlags & CalpontSelectExecutionPlan::TRACE_LBIDS)
     flags |= PF_LBID_TRACE;
-  
+
   if (planFlags & CalpontSelectExecutionPlan::PM_PROFILE)
     flags |= PF_PM_PROF;
-  
+
   return flags;
 }
 
