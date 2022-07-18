@@ -1802,7 +1802,7 @@ void filterColumnData(NewColRequestHeader* in, ColResultHeader* out, uint16_t* r
 }  // end of filterColumnData
 
 template <>
-void filterColumnData<uint64_t, KIND_TEXT>(NewColRequestHeader* in, ColResultHeader* out, uint16_t* ridArray,
+void filterColumnData<uint64_t, KIND_UNSIGNED>(NewColRequestHeader* in, ColResultHeader* out, uint16_t* ridArray,
                       const uint16_t ridSize,  // Number of values in ridArray
                       int* srcArray16, const uint32_t srcSize,
                       boost::shared_ptr<ParsedColumnFilter> parsedColumnFilter)
