@@ -794,7 +794,13 @@ void WriteEngineWrapper::convertValue(const CalpontSystemCatalog::ColType& cscCo
 
       case WriteEngine::WR_ULONGLONG: ((uint64_t*)valArray)[pos] = boost::any_cast<uint64_t>(data); break;
 
-      case WriteEngine::WR_TOKEN: ((Token*)valArray)[pos] = boost::any_cast<Token>(data); break;
+      case WriteEngine::WR_TOKEN:
+        ((Token*)valArray)[pos] = boost::any_cast<Token>(data);
+	{
+		uint64_t tok = ((uint64_t*)valArray)[pos];
+		idblog("token at position " << pos << " is " << std::hex << tok);
+	}
+	break;
 
       case WriteEngine::WR_BINARY:
         size_t size = cscColType.colWidth;

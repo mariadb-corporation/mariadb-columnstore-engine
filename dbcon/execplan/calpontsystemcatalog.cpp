@@ -709,6 +709,7 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
 	      idblog("setting is (not) null constraint, ");
       if (static_cast<ConstraintType>((*it)->GetData(0)) == 0)
       {
+	      idblog("is not null constraint, ");
         ct.constraintType = NOTNULL_CONSTRAINT;
       }
     }
