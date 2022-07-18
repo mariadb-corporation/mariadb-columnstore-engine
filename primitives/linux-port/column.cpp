@@ -1758,6 +1758,7 @@ void filterColumnData(NewColRequestHeader* in, ColResultHeader* out, uint16_t* r
   bool isNullValueMatches =
       matchingColValue<KIND, WIDTH, true>(nullValue, columnFilterMode, filterSet, filterCount, filterCOPs,
                                           filterValues, filterRFs, in->colType, nullValue);
+  idblog(")generic filtercolumn) isNullValueMatches " << ((int)isNullValueMatches));
 
   // ###########################
   // Boolean indicating whether to capture the min and max values
