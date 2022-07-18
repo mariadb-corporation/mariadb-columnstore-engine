@@ -1835,6 +1835,8 @@ void filterColumnData<uint64_t, KIND_TEXT>(NewColRequestHeader* in, ColResultHea
   bool isNullValueMatches =
       matchingColValue<KIND_TEXT, WIDTH, true>(nullValue, columnFilterMode, filterSet, filterCount, filterCOPs,
                                           filterValues, filterRFs, in->colType, nullValue);
+  idblog("isNullValueMatches " << ((int)isNullValueMatches));
+  idblog("null value " << std::hex << nullValue;
 
   // ###########################
   // Boolean indicating whether to capture the min and max values
@@ -1859,6 +1861,7 @@ void filterColumnData<uint64_t, KIND_TEXT>(NewColRequestHeader* in, ColResultHea
 
     if (canUseFastFiltering)
     {
+idblog("use vectorized filtering");
       vectorizedFilteringDispatcher<uint64_t, KIND_TEXT, FT, ST>(in, out, srcArray, srcSize, ridArray, ridSize,
                                                      parsedColumnFilter.get(), validMinMax, emptyValue,
                                                      nullValue, Min, Max, isNullValueMatches);
