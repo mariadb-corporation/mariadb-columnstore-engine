@@ -1801,15 +1801,15 @@ void filterColumnData(NewColRequestHeader* in, ColResultHeader* out, uint16_t* r
 }  // end of filterColumnData
 
 template <>
-void filterColumnData<int64_t, KIND_TEXT>(NewColRequestHeader* in, ColResultHeader* out, uint16_t* ridArray,
+void filterColumnData<uint64_t, KIND_TEXT>(NewColRequestHeader* in, ColResultHeader* out, uint16_t* ridArray,
                       const uint16_t ridSize,  // Number of values in ridArray
                       int* srcArray16, const uint32_t srcSize,
                       boost::shared_ptr<ParsedColumnFilter> parsedColumnFilter)
 {
-  using FT = typename IntegralTypeToFilterType<int64_t>::type;
-  using ST = typename IntegralTypeToFilterSetType<int64_t>::type;
-  constexpr int WIDTH = sizeof(int64_t);
-  const int64_t* srcArray = reinterpret_cast<const int64_t*>(srcArray16);
+  using FT = typename IntegralTypeToFilterType<uint64_t>::type;
+  using ST = typename IntegralTypeToFilterSetType<uint64_t>::type;
+  constexpr int WIDTH = sizeof(uint64_t);
+  const uint64_t* srcArray = reinterpret_cast<const uint64_t*>(srcArray16);
 
   // Cache some structure fields in local vars
   auto dataType = (CalpontSystemCatalog::ColDataType)in->colType.DataType;  // Column datatype
@@ -1818,7 +1818,7 @@ void filterColumnData<int64_t, KIND_TEXT>(NewColRequestHeader* in, ColResultHead
 
   // If no pre-parsed column filter is set, parse the filter in the message
   if (parsedColumnFilter.get() == nullptr && filterCount > 0)
-    parsedColumnFilter = _parseColumnFilter<int64_t>(in->getFilterStringPtr(), dataType, filterCount, in->BOP);
+    parsedColumnFilter = _parseColumnFilter<uint64_t>(in->getFilterStringPtr(), dataType, filterCount, in->BOP);
 
   // Cache parsedColumnFilter fields in local vars
   auto columnFilterMode = filterCount == 0 ? ALWAYS_TRUE : parsedColumnFilter->columnFilterMode;
@@ -1828,8 +1828,8 @@ void filterColumnData<int64_t, KIND_TEXT>(NewColRequestHeader* in, ColResultHead
   ST* filterSet = filterCount == 0 ? nullptr : parsedColumnFilter->getFilterSet<ST>();
 
   // Bit patterns in srcArray[i] representing EMPTY and NULL values
-  int64_t emptyValue = getEmptyValue<int64_t>(dataType);
-  int64_t nullValue = getNullValue<int64_t>(dataType);
+  uint64_t emptyValue = getEmptyValue<uint64_t>(dataType);
+  uint64_t nullValue = getNullValue<uint64_t>(dataType);
 
   // Precompute filter results for NULL values
   bool isNullValueMatches =
@@ -1841,8 +1841,8 @@ void filterColumnData<int64_t, KIND_TEXT>(NewColRequestHeader* in, ColResultHead
   // ###########################
   // Boolean indicating whether to capture the min and max values
   bool validMinMax = isMinMaxValid(in);
-  int64_t Min = getInitialMin<KIND_TEXT, int64_t>(in);
-  int64_t Max = getInitialMax<KIND_TEXT, int64_t>(in);
+  uint64_t Min = getInitialMin<KIND_TEXT, uint64_t>(in);
+  uint64_t Max = getInitialMax<KIND_TEXT, uint64_t>(in);
 
   // Vectorized scanning/filtering for all numerics except float/double types.
   // If the total number of input values can't fill a vector the vector path
@@ -1862,7 +1862,7 @@ void filterColumnData<int64_t, KIND_TEXT>(NewColRequestHeader* in, ColResultHead
     if (canUseFastFiltering)
     {
 idblog("use vectorized filtering");
-      vectorizedFilteringDispatcher<int64_t, KIND_TEXT, FT, ST>(in, out, srcArray, srcSize, ridArray, ridSize,
+      vectorizedFilteringDispatcher<uint64_t, KIND_TEXT, FT, ST>(in, out, srcArray, srcSize, ridArray, ridSize,
                                                      parsedColumnFilter.get(), validMinMax, emptyValue,
                                                      nullValue, Min, Max, isNullValueMatches);
       return;
@@ -1870,7 +1870,7 @@ idblog("use vectorized filtering");
   }
 #endif
   uint32_t initialRID = 0;
-  scalarFiltering<int64_t, FT, ST, KIND_TEXT>(in, out, columnFilterMode, filterSet, filterCount, filterCOPs,
+  scalarFiltering<uint64_t, FT, ST, KIND_TEXT>(in, out, columnFilterMode, filterSet, filterCount, filterCOPs,
                                    filterValues, filterRFs, in->colType, srcArray, srcSize, ridArray, ridSize,
                                    initialRID, outputType, validMinMax, emptyValue, nullValue, Min, Max,
                                    isNullValueMatches);
