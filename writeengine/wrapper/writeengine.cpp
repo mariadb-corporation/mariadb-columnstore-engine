@@ -719,6 +719,8 @@ void WriteEngineWrapper::convertValue(const CalpontSystemCatalog::ColType& cscCo
 {
   string curStr;
 
+  idblog("convert value: colType " << ((int)colType) << ", WR_TOKEN " << ((int)WR_TOKEN) << ", fromList " << ((int)fromList) << ", pos " << pos);
+
   if (fromList)
   {
     switch (colType)
