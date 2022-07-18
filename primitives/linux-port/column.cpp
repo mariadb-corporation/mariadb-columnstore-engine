@@ -1801,7 +1801,6 @@ void filterColumnData(NewColRequestHeader* in, ColResultHeader* out, uint16_t* r
                                    isNullValueMatches, reinterpret_cast<const uint8_t*>(blockAux));
 }  // end of filterColumnData
 
-template <>
 void filterColumnData<uint64_t, KIND_TEXT>(NewColRequestHeader* in, ColResultHeader* out, uint16_t* ridArray,
                       const uint16_t ridSize,  // Number of values in ridArray
                       int* srcArray16, const uint32_t srcSize,
