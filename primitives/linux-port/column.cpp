@@ -1809,7 +1809,7 @@ void filterColumnData<uint64_t, KIND_TEXT>(NewColRequestHeader* in, ColResultHea
   using FT = typename IntegralTypeToFilterType<uint64_t>::type;
   using ST = typename IntegralTypeToFilterSetType<uint64_t>::type;
   constexpr int WIDTH = sizeof(uint64_t);
-  const T* srcArray = reinterpret_cast<const uint64_t*>(srcArray16);
+  const uint64_t* srcArray = reinterpret_cast<const uint64_t*>(srcArray16);
 
   // Cache some structure fields in local vars
   auto dataType = (CalpontSystemCatalog::ColDataType)in->colType.DataType;  // Column datatype
@@ -1818,7 +1818,7 @@ void filterColumnData<uint64_t, KIND_TEXT>(NewColRequestHeader* in, ColResultHea
 
   // If no pre-parsed column filter is set, parse the filter in the message
   if (parsedColumnFilter.get() == nullptr && filterCount > 0)
-    parsedColumnFilter = _parseColumnFilter<T>(in->getFilterStringPtr(), dataType, filterCount, in->BOP);
+    parsedColumnFilter = _parseColumnFilter<uint64_t>(in->getFilterStringPtr(), dataType, filterCount, in->BOP);
 
   // Cache parsedColumnFilter fields in local vars
   auto columnFilterMode = filterCount == 0 ? ALWAYS_TRUE : parsedColumnFilter->columnFilterMode;
@@ -1839,8 +1839,8 @@ void filterColumnData<uint64_t, KIND_TEXT>(NewColRequestHeader* in, ColResultHea
   // ###########################
   // Boolean indicating whether to capture the min and max values
   bool validMinMax = isMinMaxValid(in);
-  uint64_t Min = getInitialMin<KIND_ENUM, uint64_t>(in);
-  uint64_t Max = getInitialMax<KIND_ENUM, uint64_t>(in);
+  uint64_t Min = getInitialMin<KIND_TEXT, uint64_t>(in);
+  uint64_t Max = getInitialMax<KIND_TEXT, uint64_t>(in);
 
   // Vectorized scanning/filtering for all numerics except float/double types.
   // If the total number of input values can't fill a vector the vector path
