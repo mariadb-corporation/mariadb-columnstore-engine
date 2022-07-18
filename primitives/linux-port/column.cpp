@@ -1836,7 +1836,7 @@ void filterColumnData<uint64_t, KIND_TEXT>(NewColRequestHeader* in, ColResultHea
       matchingColValue<KIND_TEXT, WIDTH, true>(nullValue, columnFilterMode, filterSet, filterCount, filterCOPs,
                                           filterValues, filterRFs, in->colType, nullValue);
   idblog("isNullValueMatches " << ((int)isNullValueMatches));
-  idblog("null value " << std::hex << nullValue;
+  idblog("null value " << std::hex << nullValue);
 
   // ###########################
   // Boolean indicating whether to capture the min and max values
