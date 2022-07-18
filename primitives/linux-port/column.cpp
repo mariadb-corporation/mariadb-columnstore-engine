@@ -1806,10 +1806,10 @@ void filterColumnData<uint64_t, KIND_TEXT>(NewColRequestHeader* in, ColResultHea
                       int* srcArray16, const uint32_t srcSize,
                       boost::shared_ptr<ParsedColumnFilter> parsedColumnFilter)
 {
-  using FT = typename IntegralTypeToFilterType<T>::type;
-  using ST = typename IntegralTypeToFilterSetType<T>::type;
-  constexpr int WIDTH = sizeof(T);
-  const T* srcArray = reinterpret_cast<const T*>(srcArray16);
+  using FT = typename IntegralTypeToFilterType<uint64_t>::type;
+  using ST = typename IntegralTypeToFilterSetType<uint64_t>::type;
+  constexpr int WIDTH = sizeof(uint64_t);
+  const T* srcArray = reinterpret_cast<const uint64_t*>(srcArray16);
 
   // Cache some structure fields in local vars
   auto dataType = (CalpontSystemCatalog::ColDataType)in->colType.DataType;  // Column datatype
@@ -1828,19 +1828,19 @@ void filterColumnData<uint64_t, KIND_TEXT>(NewColRequestHeader* in, ColResultHea
   ST* filterSet = filterCount == 0 ? nullptr : parsedColumnFilter->getFilterSet<ST>();
 
   // Bit patterns in srcArray[i] representing EMPTY and NULL values
-  T emptyValue = getEmptyValue<T>(dataType);
-  T nullValue = getNullValue<T>(dataType);
+  uint64_t emptyValue = getEmptyValue<uint64_t>(dataType);
+  uint64_t nullValue = getNullValue<uint64_t>(dataType);
 
   // Precompute filter results for NULL values
   bool isNullValueMatches =
-      matchingColValue<KIND, WIDTH, true>(nullValue, columnFilterMode, filterSet, filterCount, filterCOPs,
+      matchingColValue<KIND_TEXT, WIDTH, true>(nullValue, columnFilterMode, filterSet, filterCount, filterCOPs,
                                           filterValues, filterRFs, in->colType, nullValue);
 
   // ###########################
   // Boolean indicating whether to capture the min and max values
   bool validMinMax = isMinMaxValid(in);
-  T Min = getInitialMin<KIND, T>(in);
-  T Max = getInitialMax<KIND, T>(in);
+  uint64_t Min = getInitialMin<KIND_ENUM, uint64_t>(in);
+  uint64_t Max = getInitialMax<KIND_ENUM, uint64_t>(in);
 
   // Vectorized scanning/filtering for all numerics except float/double types.
   // If the total number of input values can't fill a vector the vector path
@@ -1850,8 +1850,7 @@ void filterColumnData<uint64_t, KIND_TEXT>(NewColRequestHeader* in, ColResultHea
 
 #if defined(__x86_64__)
   // Don't use vectorized filtering for text based data types.
-  if (WIDTH < 16 &&
-    (KIND != KIND_TEXT || (KIND == KIND_TEXT && in->colType.strnxfrmIsValid()) ))
+  if (((in->colType.strnxfrmIsValid()) ))
   {
     bool canUseFastFiltering = true;
     for (uint32_t i = 0; i < filterCount; ++i)
@@ -1860,7 +1859,7 @@ void filterColumnData<uint64_t, KIND_TEXT>(NewColRequestHeader* in, ColResultHea
 
     if (canUseFastFiltering)
     {
-      vectorizedFilteringDispatcher<T, KIND, FT, ST>(in, out, srcArray, srcSize, ridArray, ridSize,
+      vectorizedFilteringDispatcher<uint64_t, KIND_TEXT, FT, ST>(in, out, srcArray, srcSize, ridArray, ridSize,
                                                      parsedColumnFilter.get(), validMinMax, emptyValue,
                                                      nullValue, Min, Max, isNullValueMatches);
       return;
@@ -1868,7 +1867,7 @@ void filterColumnData<uint64_t, KIND_TEXT>(NewColRequestHeader* in, ColResultHea
   }
 #endif
   uint32_t initialRID = 0;
-  scalarFiltering<T, FT, ST, KIND>(in, out, columnFilterMode, filterSet, filterCount, filterCOPs,
+  scalarFiltering<uint64_t, FT, ST, KIND_TEXT>(in, out, columnFilterMode, filterSet, filterCount, filterCOPs,
                                    filterValues, filterRFs, in->colType, srcArray, srcSize, ridArray, ridSize,
                                    initialRID, outputType, validMinMax, emptyValue, nullValue, Min, Max,
                                    isNullValueMatches);
