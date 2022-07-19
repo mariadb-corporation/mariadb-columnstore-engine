@@ -362,14 +362,14 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
       // XXX: this is wrong. NullStrings now contain separate NULL values.
       // bug 1853, use token to check null
       // scale here is used to indicate token, not real string.
-      if ((pRowGroup->getScale())[col] > 0)
-      {
-        if (row.getIntField(col) == joblist::BIGINTNULL)
-          ret = true;
+      //if ((pRowGroup->getScale())[col] > 0)
+      //{
+      //  if (static_cast<uint64_t>(row.getIntField(col)) == joblist::BIGINTNULL)
+      //    ret = true;
 
-        // break the case block
-        break;
-      }
+      //  // break the case block
+      //  break;
+      //}
 
       // real string to check null
       if (colWidth <= 8)
