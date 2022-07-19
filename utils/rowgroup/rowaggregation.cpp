@@ -364,7 +364,7 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
       // scale here is used to indicate token, not real string.
       if ((pRowGroup->getScale())[col] > 0)
       {
-        if (row.getIntField(col) & joblist::BIGINTNULL)
+        if (row.getIntField(col) == joblist::BIGINTNULL)
           ret = true;
 
         // break the case block
