@@ -362,18 +362,19 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
       // XXX: this is wrong. NullStrings now contain separate NULL values.
       // bug 1853, use token to check null
       // scale here is used to indicate token, not real string.
-      if ((pRowGroup->getScale())[col] > 0)
-      {
-        if (static_cast<uint64_t>(row.getIntField(col)) == joblist::BIGINTNULL)
-          ret = true;
+      //if ((pRowGroup->getScale())[col] > 0)
+      //{
+      //  if (static_cast<uint64_t>(row.getIntField(col)) == joblist::BIGINTNULL)
+      //    ret = true;
 
-        // break the case block
-        break;
-      }
+      //  // break the case block
+      //  break;
+      //}
 
       // real string to check null
       if (colWidth <= 8)
       {
+idblog("checking for short string null");
         if (colWidth == 1)
           ret = ((uint8_t)row.getUintField(col) == joblist::CHAR1NULL);
         else if (colWidth == 2)
@@ -385,6 +386,7 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
       }
       else
       {
+idblog("checking for long string null");
         //@bug 1821
         auto const str = row.getConstString(col);
         ret = str.isNull();
@@ -447,12 +449,14 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
 
     case execplan::CalpontSystemCatalog::BIGINT:
     {
+idblog("checkin for bigint null - you cannot be cautious enough");
       ret = ((uint64_t)row.getIntField(col) == joblist::BIGINTNULL);
       break;
     }
 
     case execplan::CalpontSystemCatalog::UBIGINT:
     {
+idblog("checkin for ubigint null");
       ret = ((uint64_t)row.getIntField(col) == joblist::UBIGINTNULL);
       break;
     }

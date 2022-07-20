@@ -1440,9 +1440,13 @@ void applyMapping(const int* mapping, const Row& in, Row* out)
       if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::VARBINARY ||
                    in.getColTypes()[i] == execplan::CalpontSystemCatalog::BLOB ||
                    in.getColTypes()[i] == execplan::CalpontSystemCatalog::TEXT))
+      {
+idblog("apply mapping for text likes");
         out->setVarBinaryField(in.getVarBinaryField(i), in.getVarBinaryLength(i), mapping[i]);
+      }
       else if (UNLIKELY(in.isLongString(i)))
         {
+idblog("apply mapping for varchar likes");
 //idblog("apply mapping");
         //  idblog_stat(utils::ConstString t = in.getConstString(i);)
 		  out->setStringField(in.getConstString(i), mapping[i]);

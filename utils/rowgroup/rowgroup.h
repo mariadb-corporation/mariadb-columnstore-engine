@@ -1418,6 +1418,7 @@ inline void Row::copyField(Row& out, uint32_t destIndex, uint32_t srcIndex) cons
                types[srcIndex] == execplan::CalpontSystemCatalog::BLOB ||
                types[srcIndex] == execplan::CalpontSystemCatalog::TEXT))
   {
+idblog("another use of varbinary");
     out.setVarBinaryField(getVarBinaryField(srcIndex), getVarBinaryLength(srcIndex), destIndex);
   }
   else if (UNLIKELY(isLongString(srcIndex)))
