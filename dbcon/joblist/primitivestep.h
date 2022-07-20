@@ -93,7 +93,6 @@ enum PrimitiveStepType
   AGGRFILTERSTEP
 };
 
-
 class pColScanStep;
 class pColStep : public JobStep
 {
@@ -345,19 +344,25 @@ class pColScanStep : public JobStep
                const execplan::CalpontSystemCatalog::ColType& ct, const JobInfo& jobInfo);
 
   pColScanStep(const pColStep& rhs);
-  ~pColScanStep(){}
+  ~pColScanStep()
+  {
+  }
 
   /** @brief Starts processing.
    *
    * Starts processing.
    */
-  virtual void run(){}
+  virtual void run()
+  {
+  }
 
   /** @brief Sync's the caller with the end of execution.
    *
    * Does nothing.  Returns when this instance is finished.
    */
-  virtual void join(){}
+  virtual void join()
+  {
+  }
 
   virtual bool isDictCol() const
   {
@@ -386,7 +391,7 @@ class pColScanStep : public JobStep
   {
     fBOP = BOP;
   }
-  
+
   int8_t BOP() const
   {
     return fBOP;
@@ -548,18 +553,24 @@ class pDictionaryStep : public JobStep
   pDictionaryStep(execplan::CalpontSystemCatalog::OID oid, execplan::CalpontSystemCatalog::OID tabelOid,
                   const execplan::CalpontSystemCatalog::ColType& ct, const JobInfo& jobInfo);
 
-  virtual ~pDictionaryStep(){}
+  virtual ~pDictionaryStep()
+  {
+  }
 
   /** @brief virtual void Run method
    */
-  virtual void run(){}
-  virtual void join(){}
+  virtual void run()
+  {
+  }
+  virtual void join()
+  {
+  }
   // void setOutList(StringDataList* rids);
   void setInputList(DataList_t* rids)
   {
     requestList = rids;
   }
-  
+
   void setBOP(int8_t b)
   {
     fBOP = b;
@@ -891,9 +902,9 @@ class BatchPrimitive : public JobStep, public DECEventListener
 struct _CPInfo
 {
   _CPInfo(int64_t MIN, int64_t MAX, uint64_t l, bool dictScan, bool val)
-   : min(MIN), max(MAX), LBID(l), valid(val), dictScan(dictScan) {};
+   : min(MIN), max(MAX), LBID(l), valid(val), dictScan(dictScan){};
   _CPInfo(int128_t BIGMIN, int128_t BIGMAX, uint64_t l, bool val)
-   : bigMin(BIGMIN), bigMax(BIGMAX), LBID(l), valid(val), dictScan(false) {};
+   : bigMin(BIGMIN), bigMax(BIGMAX), LBID(l), valid(val), dictScan(false){};
   union
   {
     int128_t bigMin;
@@ -1508,7 +1519,7 @@ class FilterStep : public JobStep
 
  protected:
   //	void unblockDataLists(FifoDataList* fifo, StringFifoDataList* strFifo, StrDataList* strResult,
-  //DataList_t* result);
+  // DataList_t* result);
 
  private:
   // This i/f is not meaningful in this step

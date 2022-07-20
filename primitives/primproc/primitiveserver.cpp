@@ -21,13 +21,16 @@
  *
  *
  ***********************************************************************/
+
 #define _FILE_OFFSET_BITS 64
 #define _LARGEFILE64_SOURCE
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <mutex>
 #include <stdexcept>
+
 //#define NDEBUG
 #include <cassert>
 #include <boost/thread.hpp>
@@ -49,7 +52,8 @@ using namespace std;
 #include <boost/scoped_array.hpp>
 #include <boost/thread.hpp>
 using namespace boost;
-
+#include "distributedenginecomm.h"
+#include "serviceexemgr.h"
 #include "primproc.h"
 #include "primitiveserver.h"
 #include "primitivemsg.h"
@@ -1940,6 +1944,130 @@ struct ReadThread
     ios->write(buildCacheOpResp(0));
   }
 
+  static void dispatchPrimitive(SBS sbs, boost::shared_ptr<BPPHandler>& fBPPHandler,
+                                boost::shared_ptr<threadpool::FairThreadPool>& procPoolPtr,
+                                SP_UM_IOSOCK& outIos, SP_UM_MUTEX& writeLock, const uint32_t processorThreads,
+                                const bool ptTrace)
+  {
+    const ISMPacketHeader* ismHdr = reinterpret_cast<const ISMPacketHeader*>(sbs->buf());
+    // const int32_t c = ismHdr->Command;
+    // std::cout << "dispatchPrimitive()  << ism->Command " << c << std::endl;
+    switch (ismHdr->Command)
+    {
+      case DICT_CREATE_EQUALITY_FILTER:
+      case DICT_DESTROY_EQUALITY_FILTER:
+      case BATCH_PRIMITIVE_CREATE:
+      case BATCH_PRIMITIVE_ADD_JOINER:
+      case BATCH_PRIMITIVE_END_JOINER:
+      case BATCH_PRIMITIVE_DESTROY:
+      case BATCH_PRIMITIVE_ABORT:
+      {
+        const uint8_t* buf = sbs->buf();
+        uint32_t pos = sizeof(ISMPacketHeader) - 2;
+        const uint32_t txnId = *((uint32_t*)&buf[pos + 2]);
+        const uint32_t stepID = *((uint32_t*)&buf[pos + 6]);
+        const uint32_t uniqueID = *((uint32_t*)&buf[pos + 10]);
+        const uint32_t weight = 1;
+        const uint32_t priority = 0;
+        uint32_t id = 0;
+        boost::shared_ptr<FairThreadPool::Functor> functor;
+        if (ismHdr->Command == DICT_CREATE_EQUALITY_FILTER)
+        {
+          functor.reset(new CreateEqualityFilter(sbs));
+        }
+        else if (ismHdr->Command == DICT_DESTROY_EQUALITY_FILTER)
+        {
+          functor.reset(new DestroyEqualityFilter(sbs));
+        }
+        else if (ismHdr->Command == BATCH_PRIMITIVE_CREATE)
+        {
+          functor.reset(new BPPHandler::Create(fBPPHandler, sbs));
+        }
+        else if (ismHdr->Command == BATCH_PRIMITIVE_ADD_JOINER)
+        {
+          functor.reset(new BPPHandler::AddJoiner(fBPPHandler, sbs));
+        }
+        else if (ismHdr->Command == BATCH_PRIMITIVE_END_JOINER)
+        {
+          id = fBPPHandler->getUniqueID(sbs, ismHdr->Command);
+          functor.reset(new BPPHandler::LastJoiner(fBPPHandler, sbs));
+        }
+        else if (ismHdr->Command == BATCH_PRIMITIVE_DESTROY)
+        {
+          id = fBPPHandler->getUniqueID(sbs, ismHdr->Command);
+          functor.reset(new BPPHandler::Destroy(fBPPHandler, sbs));
+        }
+        else if (ismHdr->Command == BATCH_PRIMITIVE_ABORT)
+        {
+          id = fBPPHandler->getUniqueID(sbs, ismHdr->Command);
+          functor.reset(new BPPHandler::Abort(fBPPHandler, sbs));
+        }
+        FairThreadPool::Job job(uniqueID, stepID, txnId, functor, weight, priority, id);
+        procPoolPtr->addJob(job);
+        break;
+      }
+
+      case DICT_TOKEN_BY_SCAN_COMPARE:
+      case BATCH_PRIMITIVE_RUN:
+      {
+        TokenByScanRequestHeader* hdr = nullptr;
+        boost::shared_ptr<FairThreadPool::Functor> functor;
+        uint32_t id = 0;
+        uint32_t weight = 0;
+        uint32_t priority = 0;
+        uint32_t txnId = 0;
+        uint32_t stepID = 0;
+        uint32_t uniqueID = 0;
+
+        if (ismHdr->Command == DICT_TOKEN_BY_SCAN_COMPARE)
+        {
+          idbassert(sbs->length() >= sizeof(TokenByScanRequestHeader));
+          hdr = (TokenByScanRequestHeader*)ismHdr;
+          functor.reset(new DictScanJob(outIos, sbs, writeLock));
+          id = hdr->Hdr.UniqueID;
+          weight = LOGICAL_BLOCK_RIDS;
+          priority = hdr->Hdr.Priority;
+          const uint8_t* buf = sbs->buf();
+          const uint32_t pos = sizeof(ISMPacketHeader) - 2;
+          txnId = *((uint32_t*)&buf[pos + 2]);
+          stepID = *((uint32_t*)&buf[pos + 6]);
+          uniqueID = *((uint32_t*)&buf[pos + 10]);
+        }
+        else if (ismHdr->Command == BATCH_PRIMITIVE_RUN)
+        {
+          functor.reset(new BPPSeeder(sbs, writeLock, outIos, processorThreads, ptTrace));
+          BPPSeeder* bpps = dynamic_cast<BPPSeeder*>(functor.get());
+          id = bpps->getID();
+          priority = bpps->priority();
+          const uint8_t* buf = sbs->buf();
+          const uint32_t pos = sizeof(ISMPacketHeader) - 2;
+          txnId = *((uint32_t*)&buf[pos + 2]);
+          stepID = *((uint32_t*)&buf[pos + 6]);
+          uniqueID = *((uint32_t*)&buf[pos + 10]);
+          weight = ismHdr->Size + *((uint32_t*)&buf[pos + 18]);
+        }
+        FairThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
+        procPoolPtr->addJob(job);
+
+        break;
+      }
+
+      case BATCH_PRIMITIVE_ACK:
+      {
+        fBPPHandler->doAck(*sbs);
+        break;
+      }
+      default:
+      {
+        std::ostringstream os;
+        Logger log;
+        os << "unknown primitive cmd: " << ismHdr->Command;
+        log.logMessage(os.str());
+        break;
+      }
+    }  // the switch stmt
+  }
+
   void operator()()
   {
     utils::setThreadName("PPReadThread");
@@ -1994,9 +2122,6 @@ struct ReadThread
           idbassert(bs->length() >= sizeof(ISMPacketHeader));
 
           const ISMPacketHeader* ismHdr = reinterpret_cast<const ISMPacketHeader*>(bs->buf());
-          // uint64_t someVal = ismHdr->Command;
-          // std::cout << " PP read thread Command " << someVal << std::endl;
-
           /* This switch is for the OOB commands */
           switch (ismHdr->Command)
           {
@@ -2037,139 +2162,139 @@ struct ReadThread
 
             default: break;
           }
+          dispatchPrimitive(bs, fBPPHandler, procPoolPtr, outIos, writeLock,
+                            fPrimitiveServerPtr->ProcessorThreads(), fPrimitiveServerPtr->PTTrace());
+          // switch (ismHdr->Command)
+          // {
+          //   case DICT_CREATE_EQUALITY_FILTER:
+          //   case DICT_DESTROY_EQUALITY_FILTER:
+          //   case BATCH_PRIMITIVE_CREATE:
+          //   case BATCH_PRIMITIVE_ADD_JOINER:
+          //   case BATCH_PRIMITIVE_END_JOINER:
+          //   case BATCH_PRIMITIVE_DESTROY:
+          //   case BATCH_PRIMITIVE_ABORT:
+          //   {
+          //     const uint8_t* buf = bs->buf();
+          //     uint32_t pos = sizeof(ISMPacketHeader) - 2;
+          //     const uint32_t txnId = *((uint32_t*)&buf[pos + 2]);
+          //     const uint32_t stepID = *((uint32_t*)&buf[pos + 6]);
+          //     const uint32_t uniqueID = *((uint32_t*)&buf[pos + 10]);
+          //     const uint32_t weight = 1;
+          //     const uint32_t priority = 0;
+          //     uint32_t id = 0;
+          //     boost::shared_ptr<FairThreadPool::Functor> functor;
+          //     if (ismHdr->Command == DICT_CREATE_EQUALITY_FILTER)
+          //     {
+          //       functor.reset(new CreateEqualityFilter(bs));
+          //     }
+          //     else if (ismHdr->Command == DICT_DESTROY_EQUALITY_FILTER)
+          //     {
+          //       functor.reset(new DestroyEqualityFilter(bs));
+          //     }
+          //     else if (ismHdr->Command == BATCH_PRIMITIVE_CREATE)
+          //     {
+          //       functor.reset(new BPPHandler::Create(fBPPHandler, bs));
+          //     }
+          //     else if (ismHdr->Command == BATCH_PRIMITIVE_ADD_JOINER)
+          //     {
+          //       functor.reset(new BPPHandler::AddJoiner(fBPPHandler, bs));
+          //     }
+          //     else if (ismHdr->Command == BATCH_PRIMITIVE_END_JOINER)
+          //     {
+          //       id = fBPPHandler->getUniqueID(bs, ismHdr->Command);
+          //       functor.reset(new BPPHandler::LastJoiner(fBPPHandler, bs));
+          //     }
+          //     else if (ismHdr->Command == BATCH_PRIMITIVE_DESTROY)
+          //     {
+          //       id = fBPPHandler->getUniqueID(bs, ismHdr->Command);
+          //       functor.reset(new BPPHandler::Destroy(fBPPHandler, bs));
+          //     }
+          //     else if (ismHdr->Command == BATCH_PRIMITIVE_ABORT)
+          //     {
+          //       id = fBPPHandler->getUniqueID(bs, ismHdr->Command);
+          //       functor.reset(new BPPHandler::Abort(fBPPHandler, bs));
+          //     }
+          //     FairThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
+          //     procPoolPtr->addJob(job);
+          //     break;
+          //   }
 
-          switch (ismHdr->Command)
-          {
-            case DICT_CREATE_EQUALITY_FILTER:
-            case DICT_DESTROY_EQUALITY_FILTER:
-            case BATCH_PRIMITIVE_CREATE:
-            case BATCH_PRIMITIVE_ADD_JOINER:
-            case BATCH_PRIMITIVE_END_JOINER:
-            case BATCH_PRIMITIVE_DESTROY:
-            case BATCH_PRIMITIVE_ABORT:
-            {
-              const uint8_t* buf = bs->buf();
-              uint32_t pos = sizeof(ISMPacketHeader) - 2;
-              const uint32_t txnId = *((uint32_t*)&buf[pos + 2]);
-              const uint32_t stepID = *((uint32_t*)&buf[pos + 6]);
-              const uint32_t uniqueID = *((uint32_t*)&buf[pos + 10]);
-              const uint32_t weight = 1;
-              const uint32_t priority = 0;
-              uint32_t id = 0;
-              boost::shared_ptr<FairThreadPool::Functor> functor;
-              if (ismHdr->Command == DICT_CREATE_EQUALITY_FILTER)
-              {
-                functor.reset(new CreateEqualityFilter(bs));
-              }
-              else if (ismHdr->Command == DICT_DESTROY_EQUALITY_FILTER)
-              {
-                functor.reset(new DestroyEqualityFilter(bs));
-              }
-              else if (ismHdr->Command == BATCH_PRIMITIVE_CREATE)
-              {
-                functor.reset(new BPPHandler::Create(fBPPHandler, bs));
-              }
-              else if (ismHdr->Command == BATCH_PRIMITIVE_ADD_JOINER)
-              {
-                functor.reset(new BPPHandler::AddJoiner(fBPPHandler, bs));
-              }
-              else if (ismHdr->Command == BATCH_PRIMITIVE_END_JOINER)
-              {
-                id = fBPPHandler->getUniqueID(bs, ismHdr->Command);
-                functor.reset(new BPPHandler::LastJoiner(fBPPHandler, bs));
-              }
-              else if (ismHdr->Command == BATCH_PRIMITIVE_DESTROY)
-              {
-                id = fBPPHandler->getUniqueID(bs, ismHdr->Command);
-                functor.reset(new BPPHandler::Destroy(fBPPHandler, bs));
-              }
-              else if (ismHdr->Command == BATCH_PRIMITIVE_ABORT)
-              {
-                id = fBPPHandler->getUniqueID(bs, ismHdr->Command);
-                functor.reset(new BPPHandler::Abort(fBPPHandler, bs));
-              }
-              FairThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
-              procPoolPtr->addJob(job);
-              break;
-            }
+          //   case DICT_TOKEN_BY_SCAN_COMPARE:
+          //   case BATCH_PRIMITIVE_RUN:
+          //   {
+          //     TokenByScanRequestHeader* hdr = nullptr;
+          //     boost::shared_ptr<FairThreadPool::Functor> functor;
+          //     uint32_t id = 0;
+          //     uint32_t weight = 0;
+          //     uint32_t priority = 0;
+          //     uint32_t txnId = 0;
+          //     uint32_t stepID = 0;
+          //     uint32_t uniqueID = 0;
 
-            case DICT_TOKEN_BY_SCAN_COMPARE:
-            case BATCH_PRIMITIVE_RUN:
-            {
-              TokenByScanRequestHeader* hdr = nullptr;
-              boost::shared_ptr<FairThreadPool::Functor> functor;
-              uint32_t id = 0;
-              uint32_t weight = 0;
-              uint32_t priority = 0;
-              uint32_t txnId = 0;
-              uint32_t stepID = 0;
-              uint32_t uniqueID = 0;
+          //     if (bRotateDest)
+          //     {
+          //       if (!pUmSocketSelector->nextIOSocket(fIos, outIos, writeLock))
+          //       {
+          //         // If we ever fall into this part of the
+          //         // code we have a "bug" of some sort.
+          //         // See handleUmSockSelErr() for more info.
+          //         // We reset ios and mutex to defaults.
+          //         handleUmSockSelErr(string("default cmd"));
+          //         outIos = outIosDefault;
+          //         writeLock = writeLockDefault;
+          //         pUmSocketSelector->delConnection(fIos);
+          //         bRotateDest = false;
+          //       }
+          //     }
 
-              if (bRotateDest)
-              {
-                if (!pUmSocketSelector->nextIOSocket(fIos, outIos, writeLock))
-                {
-                  // If we ever fall into this part of the
-                  // code we have a "bug" of some sort.
-                  // See handleUmSockSelErr() for more info.
-                  // We reset ios and mutex to defaults.
-                  handleUmSockSelErr(string("default cmd"));
-                  outIos = outIosDefault;
-                  writeLock = writeLockDefault;
-                  pUmSocketSelector->delConnection(fIos);
-                  bRotateDest = false;
-                }
-              }
+          //     if (ismHdr->Command == DICT_TOKEN_BY_SCAN_COMPARE)
+          //     {
+          //       idbassert(bs->length() >= sizeof(TokenByScanRequestHeader));
+          //       hdr = (TokenByScanRequestHeader*)ismHdr;
+          //       functor.reset(new DictScanJob(outIos, bs, writeLock));
+          //       id = hdr->Hdr.UniqueID;
+          //       weight = LOGICAL_BLOCK_RIDS;
+          //       priority = hdr->Hdr.Priority;
+          //       const uint8_t* buf = bs->buf();
+          //       const uint32_t pos = sizeof(ISMPacketHeader) - 2;
+          //       txnId = *((uint32_t*)&buf[pos + 2]);
+          //       stepID = *((uint32_t*)&buf[pos + 6]);
+          //       uniqueID = *((uint32_t*)&buf[pos + 10]);
+          //     }
+          //     else if (ismHdr->Command == BATCH_PRIMITIVE_RUN)
+          //     {
+          //       functor.reset(new BPPSeeder(bs, writeLock, outIos, fPrimitiveServerPtr->ProcessorThreads(),
+          //                                   fPrimitiveServerPtr->PTTrace()));
+          //       BPPSeeder* bpps = dynamic_cast<BPPSeeder*>(functor.get());
+          //       id = bpps->getID();
+          //       priority = bpps->priority();
+          //       const uint8_t* buf = bs->buf();
+          //       const uint32_t pos = sizeof(ISMPacketHeader) - 2;
+          //       txnId = *((uint32_t*)&buf[pos + 2]);
+          //       stepID = *((uint32_t*)&buf[pos + 6]);
+          //       uniqueID = *((uint32_t*)&buf[pos + 10]);
+          //       weight = ismHdr->Size + *((uint32_t*)&buf[pos + 18]);
+          //     }
+          //     FairThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
+          //     procPoolPtr->addJob(job);
 
-              if (ismHdr->Command == DICT_TOKEN_BY_SCAN_COMPARE)
-              {
-                idbassert(bs->length() >= sizeof(TokenByScanRequestHeader));
-                hdr = (TokenByScanRequestHeader*)ismHdr;
-                functor.reset(new DictScanJob(outIos, bs, writeLock));
-                id = hdr->Hdr.UniqueID;
-                weight = LOGICAL_BLOCK_RIDS;
-                priority = hdr->Hdr.Priority;
-                const uint8_t* buf = bs->buf();
-                const uint32_t pos = sizeof(ISMPacketHeader) - 2;
-                txnId = *((uint32_t*)&buf[pos + 2]);
-                stepID = *((uint32_t*)&buf[pos + 6]);
-                uniqueID = *((uint32_t*)&buf[pos + 10]);
-              }
-              else if (ismHdr->Command == BATCH_PRIMITIVE_RUN)
-              {
-                functor.reset(new BPPSeeder(bs, writeLock, outIos,
-                  fPrimitiveServerPtr->ProcessorThreads(),
-                  fPrimitiveServerPtr->PTTrace()));
-                BPPSeeder* bpps = dynamic_cast<BPPSeeder*>(functor.get());
-                id = bpps->getID();
-                priority = bpps->priority();
-                const uint8_t* buf = bs->buf();
-                const uint32_t pos = sizeof(ISMPacketHeader) - 2;
-                txnId = *((uint32_t*)&buf[pos + 2]);
-                stepID = *((uint32_t*)&buf[pos + 6]);
-                uniqueID = *((uint32_t*)&buf[pos + 10]);
-                weight = ismHdr->Size + *((uint32_t*)&buf[pos + 18]);
-              }
-              FairThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
-              procPoolPtr->addJob(job);
+          //     break;
+          //   }
 
-              break;
-            }
-
-            case BATCH_PRIMITIVE_ACK:
-            {
-              fBPPHandler->doAck(*bs);
-              break;
-            }
-            default:
-            {
-              std::ostringstream os;
-              Logger log;
-              os << "unknown primitive cmd: " << ismHdr->Command;
-              log.logMessage(os.str());
-              break;
-            }
-          }  // the switch stmt
+          //   case BATCH_PRIMITIVE_ACK:
+          //   {
+          //     fBPPHandler->doAck(*bs);
+          //     break;
+          //   }
+          //   default:
+          //   {
+          //     std::ostringstream os;
+          //     Logger log;
+          //     os << "unknown primitive cmd: " << ismHdr->Command;
+          //     log.logMessage(os.str());
+          //     break;
+          //   }
+          // }  // the switch stmt
         }
         else  // bs.length() == 0
         {
@@ -2213,8 +2338,6 @@ struct ReadThread
   boost::shared_ptr<BPPHandler> fBPPHandler;
 };
 
-/** @brief accept a primitive command from the user module
- */
 struct ServerThread
 {
   ServerThread(string serverName, PrimitiveServer* ps) : fServerName(serverName), fPrimitiveServerPtr(ps)
@@ -2351,8 +2474,59 @@ void PrimitiveServer::start(Service* service, utils::USpaceSpinLock& startupRace
 
     fServerpool.invoke(ServerThread(oss.str(), this));
   }
+
   startupRaceLock.release();
   service->NotifyServiceStarted();
+
+  std::thread sameHostServerThread(
+      [this]()
+      {
+        utils::setThreadName("PPSHServerThr");
+        auto* exeMgrDecPtr = exemgr::globServiceExeMgr->getDec();
+        // WIP
+        while (!exeMgrDecPtr)
+        {
+          sleep(1);
+          exeMgrDecPtr = exemgr::globServiceExeMgr->getDec();
+        }
+        SP_UM_IOSOCK outIos(nullptr);
+        SP_UM_MUTEX writeLock(nullptr);
+        auto procPoolPtr = this->getProcessorThreadPool();
+        boost::shared_ptr<BPPHandler> fBPPHandler(new BPPHandler(this));
+        for (;;)
+        {
+          std::unique_lock<std::mutex> exchangeLock(exeMgrDecPtr->inMemoryEM2PPExchMutex_);
+          if (exeMgrDecPtr->inMemoryEM2PPExchQueue_.empty())
+          {
+            exeMgrDecPtr->inMemoryEM2PPExchCV_.wait(exchangeLock);
+            continue;
+          }
+          // Reduce the crit section
+          std::vector<messageqcpp::SBS> primitiveMsgs;
+          while (!exeMgrDecPtr->inMemoryEM2PPExchQueue_.empty())
+          {
+            primitiveMsgs.push_back(exeMgrDecPtr->inMemoryEM2PPExchQueue_.front());
+            // SBS sbs = exeMgrDecPtr->inMemoryEM2PPExchQueue_.front();
+            exeMgrDecPtr->inMemoryEM2PPExchQueue_.pop();
+          }
+          exchangeLock.unlock();
+          for (auto& sbs : primitiveMsgs)
+          {
+            if (sbs->length() == 0)
+            {
+              // std::cout << "PP::lambda empty pop " << std::endl;
+              // exeMgrDecPtr->inMemoryEM2PPExchQueue_.pop();
+              continue;
+            }
+            idbassert(sbs->length() >= sizeof(ISMPacketHeader));
+
+            // const ISMPacketHeader* ismHdr = reinterpret_cast<const ISMPacketHeader*>(sbs->buf());
+            // std::cout << "PP::lambda sbs Len " << sbs->length() << std::endl;
+            ReadThread::dispatchPrimitive(sbs, fBPPHandler, procPoolPtr, outIos, writeLock,
+                                          this->ProcessorThreads(), this->PTTrace());
+          }
+        }
+      });
 
   fServerpool.wait();
 
