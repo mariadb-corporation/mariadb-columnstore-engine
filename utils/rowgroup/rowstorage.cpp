@@ -1,4 +1,4 @@
-/* Copyright (C) 2021 MariaDB Corporation
+/* Copyright (C) 2021-2022 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -414,10 +414,10 @@ class RMMemManager : public MemManager
   {
     if (amount)
     {
-    if (!fRm->getMemory(amount, fSessLimit, fWait) && fStrict)
-    {
-      return false;
-    }
+      if (!fRm->getMemory(amount, fSessLimit, fWait) && fStrict)
+      {
+        return false;
+      }
       MemManager::acquireImpl(amount);
     }
     return true;
@@ -427,9 +427,9 @@ class RMMemManager : public MemManager
   {
     if (amount)
     {
-    MemManager::releaseImpl(amount);
-    fRm->returnMemory(amount, fSessLimit);
-  }
+      MemManager::releaseImpl(amount);
+      fRm->returnMemory(amount, fSessLimit);
+    }
   }
 
  private:
@@ -1814,7 +1814,10 @@ void RowAggStorage::increaseSize()
   if (fCurData->fSize < maxSize && tryIncreaseInfo())
     return;
 
-  if (fCurData->fSize * 2 < calcMaxSize(fCurData->fMask + 1))
+  constexpr size_t maxMaskMultiplierWoRehashing = 1U << (INIT_INFO_INC - 1);
+  // We don't check for the overflow here b/c it is impractical to has fSize so that multiplication
+  // overflows.
+  if (fCurData->fSize * maxMaskMultiplierWoRehashing < calcMaxSize(fCurData->fMask + 1))
   {
     // something strange happens...
     throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_ERROR),
