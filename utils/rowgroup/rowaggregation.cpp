@@ -372,7 +372,7 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
       //}
 
       // real string to check null
-      if (colWidth <= 8)
+      if (colWidth <= 7 || (colWidth == 8 && colDataType == execplan::CalpontSystemCatalog::CHAR))
       {
 idblog("checking for short string null");
         if (colWidth == 1)
