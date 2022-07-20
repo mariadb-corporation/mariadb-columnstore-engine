@@ -16,6 +16,7 @@ Available options:
 -h, --help      Print this help and exit
 -d, --data      Data for table that will be given to cpimport; if no name provided it will be generated.
 -s, --size      Size of the dataset to generate
+-t, --table     Name of the table
 EOF
   exit
 }
@@ -30,6 +31,13 @@ cleanup() {
      then
          sudo rm $DATA
   fi
+  sudo rm "${BRANCH}_bench.txt"
+  sudo rm "develop_bench.txt"
+  sysbench $SCRIPT --mysql-socket=/run/mysqld/mysqld.sock \
+        --db-driver=mysql \
+        --mysql-db=test \
+        cleanup
+  unset TABLE
 }
 
 die() {
@@ -56,6 +64,7 @@ parse_params() {
 
   SCRIPT="$2"
   RANGE=1000000
+  TABLE="t1"
 
   while :; do
     case "${1-}" in
@@ -65,6 +74,9 @@ parse_params() {
     -s | --size) RANGE="${2-}"
                  shift
                  ;;
+    -t | --table) TABLE="${2-}"
+                  shift
+                  ;;
     -?*) die "Unknown option: $1" ;;
     *) break ;;
     esac
@@ -75,6 +87,7 @@ parse_params() {
 }
 
 parse_params "$@"
+export TABLE
 cd $MDB_SOURCE_PATH/columnstore/columnstore/benchmarks
 seq 1 $RANGE > "$DATA"
 
@@ -112,10 +125,5 @@ sysbench $SCRIPT \
         --db-driver=mysql \
         --mysql-db=test \
         --time=30 run | tail -n +12 > develop_bench.txt
-
-sysbench $SCRIPT --mysql-socket=/run/mysqld/mysqld.sock \
-        --db-driver=mysql \
-        --mysql-db=test \
-        cleanup
 
 python3 parse_bench.py "$BRANCH" "${BRANCH}_bench.txt" "develop_bench.txt"
