@@ -52,19 +52,33 @@ class PriorityThreadPool
     // this thread pool to reschedule the job, 0 will throw it away on return.
     virtual int operator()() = 0;
   };
-
+  using TransactionIdxT = uint32_t;
   struct Job
   {
     Job() : weight(1), priority(0), id(0)
     {
     }
+    Job(const uint32_t uniqueID, const uint32_t stepID, const TransactionIdxT txnIdx,
+        const boost::shared_ptr<Functor>& functor, const primitiveprocessor::SP_UM_IOSOCK& sock,
+        const uint32_t weight = 1, const uint32_t priority = 0, const uint32_t id = 0)
+     : uniqueID(uniqueID)
+     , stepID(stepID)
+     , txnIdx(txnIdx)
+     , functor(functor)
+     , sock(sock)
+     , weight(weight)
+     , priority(priority)
+     , id(id)
+    {
+    }
+    uint32_t uniqueID;
+    uint32_t stepID;
+    TransactionIdxT txnIdx;
     boost::shared_ptr<Functor> functor;
+    primitiveprocessor::SP_UM_IOSOCK sock;
     uint32_t weight;
     uint32_t priority;
     uint32_t id;
-    uint32_t uniqueID;
-    uint32_t stepID;
-    primitiveprocessor::SP_UM_IOSOCK sock;
   };
 
   enum Priority
@@ -114,7 +128,7 @@ class PriorityThreadPool
   {
     return blockedThreads;
   }
-  
+
  protected:
  private:
   struct ThreadHelper

@@ -725,6 +725,7 @@ int ServicePrimProc::Child()
 #endif
 
   primServerThreadPool = server.getProcessorThreadPool();
+  OOBThreadPool = server.getOOBThreadPool();
 
   server.start(this, startupRaceLock);
 

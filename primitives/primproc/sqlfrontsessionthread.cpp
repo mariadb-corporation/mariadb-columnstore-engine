@@ -520,7 +520,8 @@ namespace exemgr
       statementsRunningCount->incr(stmtCounted);
 
       PrimitiveServerThreadPools primitiveServerThreadPools(
-          ServicePrimProc::instance()->getPrimitiveServerThreadPool());
+        ServicePrimProc::instance()->getPrimitiveServerThreadPool(),
+        ServicePrimProc::instance()->getOOBThreadPool());
 
       if (tryTuples)
       {
