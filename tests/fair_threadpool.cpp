@@ -15,8 +15,9 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#include <iostream>
 #include <gtest/gtest.h>
+#include <iostream>
+#include <mutex>
 #include <vector>
 
 #include "utils/threadpool/fair_threadpool.h"
@@ -27,6 +28,7 @@ using namespace threadpool;
 
 using ResultsType = std::vector<int>;
 static ResultsType results;
+static std::mutex globMutex;
 
 class FairThreadPoolTest : public testing::Test
 {
@@ -50,6 +52,7 @@ class TestFunctor : public FairThreadPool::Functor
   int operator()() override
   {
     usleep(delay_);
+    std::lock_guard<std::mutex> gl(globMutex);
     results.push_back(id_);
     return 0;
   }
@@ -74,6 +77,7 @@ class TestRescheduleFunctor : public FairThreadPool::Functor
       return 1;  // re-schedule the Job
     }
     usleep(delay_);
+    std::lock_guard<std::mutex> gl(globMutex);
     results.push_back(id_);
     return 0;
   }
