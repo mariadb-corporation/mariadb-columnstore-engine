@@ -38,6 +38,7 @@
 #include <unistd.h>
 #include <chrono>
 #include <thread>
+#include <ifaddrs.h>
 using namespace std;
 
 #include <boost/scoped_array.hpp>
@@ -186,7 +187,13 @@ DistributedEngineComm* DistributedEngineComm::fInstance = 0;
 DistributedEngineComm* DistributedEngineComm::instance(ResourceManager* rm, bool isExeMgr)
 {
   if (fInstance == 0)
+  {
     fInstance = new DistributedEngineComm(rm, isExeMgr);
+    if (isExeMgr && fInstance)
+    {
+      fInstance->getLocalNetIfacesSins();
+    }
+  }
 
   return fInstance;
 }
@@ -201,6 +208,10 @@ void DistributedEngineComm::reset()
 DistributedEngineComm::DistributedEngineComm(ResourceManager* rm, bool isExeMgr)
  : fRm(rm), pmCount(0), fIsExeMgr(isExeMgr)
 {
+  if (fIsExeMgr)
+  {
+    getLocalNetIfacesSins();
+  }
   Setup();
 }
 
@@ -268,6 +279,10 @@ void DistributedEngineComm::Setup()
     size_t connectionId = i % newPmCount;
     boost::shared_ptr<MessageQueueClient> cl(new MessageQueueClient(
         pmsAddressesAndPorts[connectionId].first, pmsAddressesAndPorts[connectionId].second));
+    if (clientAtTheSameHost(cl))
+    {
+      cl->atTheSameHost(true);
+    }
     boost::shared_ptr<boost::mutex> nl(new boost::mutex());
 
     try
@@ -410,8 +425,6 @@ Error:
 
   if (fIsExeMgr)
   {
-    // std::cout << "WARNING: DEC READ 0 LENGTH BS FROM "
-    //    << client->otherEnd()<< " OR GOT AN EXCEPTION READING" << std::endl;
     decltype(pmCount) originalPMCount = pmCount;
     // Re-establish if a remote PM restarted.
     std::this_thread::sleep_for(std::chrono::seconds(3));
@@ -700,11 +713,11 @@ void DistributedEngineComm::sendAcks(uint32_t uniqueID, const vector<SBS>& msgs,
 
   if (l_msgCount > 0)
   {
-    ByteStream msg(sizeof(ISMPacketHeader));
+    SBS msg(new ByteStream(sizeof(ISMPacketHeader)));
     uint16_t* toAck;
     vector<bool> pmAcked(pmCount, false);
 
-    ism = (ISMPacketHeader*)msg.getInputPtr();
+    ism = (ISMPacketHeader*)msg->getInputPtr();
     // The only var checked by ReadThread is the Command var.  The others
     // are wasted space.  We hijack the Size, & Flags fields for the
     // params to the ACK msg.
@@ -713,7 +726,7 @@ void DistributedEngineComm::sendAcks(uint32_t uniqueID, const vector<SBS>& msgs,
     ism->Command = BATCH_PRIMITIVE_ACK;
     toAck = &ism->Size;
 
-    msg.advanceInputPtr(sizeof(ISMPacketHeader));
+    msg->advanceInputPtr(sizeof(ISMPacketHeader));
 
     while (l_msgCount > 0)
     {
@@ -819,8 +832,8 @@ void DistributedEngineComm::nextPMToACK(boost::shared_ptr<MQE> mqe, uint32_t max
 void DistributedEngineComm::setFlowControl(bool enabled, uint32_t uniqueID, boost::shared_ptr<MQE> mqe)
 {
   mqe->throttled = enabled;
-  ByteStream msg(sizeof(ISMPacketHeader));
-  ISMPacketHeader* ism = (ISMPacketHeader*)msg.getInputPtr();
+  SBS msg(new ByteStream(sizeof(ISMPacketHeader)));
+  ISMPacketHeader* ism = (ISMPacketHeader*)msg->getInputPtr();
 
   ism->Interleave = uniqueID;
   ism->Command = BATCH_PRIMITIVE_ACK;
@@ -834,15 +847,15 @@ void DistributedEngineComm::setFlowControl(bool enabled, uint32_t uniqueID, boos
   ism->Status = 0;
 #endif
 
-  msg.advanceInputPtr(sizeof(ISMPacketHeader));
+  msg->advanceInputPtr(sizeof(ISMPacketHeader));
 
   for (uint32_t i = 0; i < mqe->pmCount; i++)
     writeToClient(i, msg);
 }
 
-void DistributedEngineComm::write(uint32_t senderID, ByteStream& msg)
+void DistributedEngineComm::write(uint32_t senderID, const SBS& msg)
 {
-  ISMPacketHeader* ism = (ISMPacketHeader*)msg.buf();
+  ISMPacketHeader* ism = (ISMPacketHeader*)msg->buf();
   uint32_t dest;
   uint32_t numConn = fPmConnections.size();
 
@@ -852,7 +865,7 @@ void DistributedEngineComm::write(uint32_t senderID, ByteStream& msg)
     {
       case BATCH_PRIMITIVE_CREATE:
         /* Disable flow control initially */
-        msg << (uint32_t)-1;
+        *msg << (uint32_t)-1;
         /* FALLTHRU */
 
       case BATCH_PRIMITIVE_DESTROY:
@@ -1007,7 +1020,40 @@ void DistributedEngineComm::doHasBigMsgs(boost::shared_ptr<MQE> mqe, uint64_t ta
     mqe->targetQueueSize = targetSize;
 }
 
-int DistributedEngineComm::writeToClient(size_t aPMIndex, const ByteStream& bs, uint32_t senderUniqueID,
+DistributedEngineComm::SBSVector& DistributedEngineComm::readLocalQueueMessagesOrWait(
+    SBSVector& receivedMessages)
+{
+  for (;;)
+  {
+    std::unique_lock<std::mutex> exchangeLock(inMemoryEM2PPExchMutex_);
+    if (inMemoryEM2PPExchQueue_.empty())
+    {
+      inMemoryEM2PPExchCV_.wait(exchangeLock);
+      continue;
+    }
+
+    // Batch processing to reduce the crit section
+    while (!inMemoryEM2PPExchQueue_.empty())
+    {
+      receivedMessages.push_back(inMemoryEM2PPExchQueue_.front());
+      inMemoryEM2PPExchQueue_.pop();
+    }
+    exchangeLock.unlock();
+    break;
+  }
+
+  return receivedMessages;
+}
+
+void DistributedEngineComm::pushToTheLocalQueueAndNotifyRecv(const messageqcpp::SBS& bs)
+{
+  std::unique_lock<std::mutex> exchangeLock(inMemoryEM2PPExchMutex_);
+  inMemoryEM2PPExchQueue_.push(bs);
+  exchangeLock.unlock();
+  inMemoryEM2PPExchCV_.notify_one();
+}
+
+int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_t senderUniqueID,
                                          bool doInterleaving)
 {
   boost::mutex::scoped_lock lk(fMlock, boost::defer_lock_t());
@@ -1020,6 +1066,14 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const ByteStream& bs, 
     return 0;
 
   uint32_t connectionId = aPMIndex;
+  assert(connectionId < fPmConnections.size());
+  // EM-PP exchange via the queue.
+  if (fPmConnections[connectionId]->atTheSameHost() && fIsExeMgr)
+  {
+    pushToTheLocalQueueAndNotifyRecv(bs);
+    return 0;
+  }
+
   if (senderUniqueID != numeric_limits<uint32_t>::max())
   {
     lk.lock();
@@ -1183,4 +1237,39 @@ uint32_t DistributedEngineComm::MQE::getNextConnectionId(const size_t pmIndex,
   return nextConnectionId;
 }
 
+template <typename T>
+bool DistributedEngineComm::clientAtTheSameHost(T& client) const
+{
+  for (auto& sin : localNetIfaceSins_)
+  {
+    if (client->isSameAddr(sin))
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+void DistributedEngineComm::getLocalNetIfacesSins()
+{
+  struct ifaddrs* netIfacesList = nullptr;
+  struct ifaddrs* ifaceListMembPtr = nullptr;
+  int success = 0;
+  // retrieve the current interfaces - returns 0 on success
+  success = getifaddrs(&netIfacesList);
+  if (success == 0)
+  {
+    ifaceListMembPtr = netIfacesList;
+    for (; ifaceListMembPtr; ifaceListMembPtr = ifaceListMembPtr->ifa_next)
+    {
+      if (ifaceListMembPtr->ifa_addr->sa_family == AF_INET)
+      {
+        localNetIfaceSins_.push_back(((struct sockaddr_in*)ifaceListMembPtr->ifa_addr)->sin_addr);
+      }
+    }
+  }
+  freeifaddrs(netIfacesList);
+}
+template bool DistributedEngineComm::clientAtTheSameHost<DistributedEngineComm::SharedPtrEMSock>(
+    SharedPtrEMSock& client) const;
 }  // namespace joblist
