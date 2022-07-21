@@ -386,7 +386,7 @@ idblog("checking for short string null");
       }
       else
       {
-idblog("checking for long string null");
+idblog("checking for long string null, colWidth " << ((int)colWidth) << ", colDataType is " << ((int)colDataType) << ", CPS::CHAR is " << ((int)execplan::CalpontSystemCatalog::CHAR));
         //@bug 1821
         auto const str = row.getConstString(col);
         ret = str.isNull();

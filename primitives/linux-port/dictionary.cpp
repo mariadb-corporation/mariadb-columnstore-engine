@@ -327,7 +327,7 @@ void PrimitiveProcessor::nextSig(int NVALS, const PrimToken* tokens, p_DataValue
         }
 
         ret->len = nullStringLen;
-        ret->data = (const uint8_t*)nullString;
+        ret->data = (const uint8_t*)nullptr;
       }
       else
       {
@@ -358,6 +358,7 @@ void PrimitiveProcessor::nextSig(int NVALS, const PrimToken* tokens, p_DataValue
     }
 
     /* XXXPAT: Need to check for the NULL token here */
+    
     ret->len = tokens[dict_OffsetIndex].len;
     ret->data = &niceBlock[tokens[dict_OffsetIndex].offset];
 
