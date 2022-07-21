@@ -32,6 +32,8 @@
 
 #pragma once
 
+#include <ifaddrs.h>
+#include <condition_variable>
 #include <iostream>
 #include <vector>
 #include <queue>
@@ -84,7 +86,11 @@ class DECEventListener
  */
 class DistributedEngineComm
 {
+  using SharedPtrEMSock = boost::shared_ptr<messageqcpp::IOSocket>;
+
  public:
+  using SBSVector = std::vector<messageqcpp::SBS>;
+
   /**
    * Constructors
    */
@@ -139,7 +145,7 @@ class DistributedEngineComm
    * Writes a primitive message to a primitive server. Msg needs to conatin an ISMPacketHeader. The
    * LBID is extracted from the ISMPacketHeader and used to determine the actual P/M to send to.
    */
-  EXPORT void write(uint32_t key, messageqcpp::ByteStream& msg);
+  EXPORT void write(uint32_t key, const messageqcpp::SBS& msg);
 
   // EXPORT void throttledWrite(const messageqcpp::ByteStream& msg);
 
@@ -206,8 +212,13 @@ class DistributedEngineComm
     return fIsExeMgr;
   }
 
+  template <typename T>
+  bool clientAtTheSameHost(T& client) const;
+  void getLocalNetIfacesSins();
+
   messageqcpp::Stats getNetworkStats(uint32_t uniqueID);
   void addDataToOutput(messageqcpp::SBS sbs);
+  SBSVector& readLocalQueueMessagesOrWait(SBSVector&);
 
   friend class ::TestDistributedEngineComm;
 
@@ -261,9 +272,10 @@ class DistributedEngineComm
    *
    * Continues trying to write data to the client at the next index until all clients have been tried.
    */
-  int writeToClient(size_t index, const messageqcpp::ByteStream& bs,
+  int writeToClient(size_t index, const messageqcpp::SBS& bs,
                     uint32_t senderID = std::numeric_limits<uint32_t>::max(), bool doInterleaving = false);
 
+  void pushToTheLocalQueueAndNotifyRecv(const messageqcpp::SBS& bs);
   static DistributedEngineComm* fInstance;
   ResourceManager* fRm;
 
@@ -300,6 +312,11 @@ class DistributedEngineComm
   void setFlowControl(bool enable, uint32_t uniqueID, boost::shared_ptr<MQE> mqe);
   void doHasBigMsgs(boost::shared_ptr<MQE> mqe, uint64_t targetSize);
   boost::mutex ackLock;
+
+  std::vector<struct in_addr> localNetIfaceSins_;
+  std::mutex inMemoryEM2PPExchMutex_;
+  std::condition_variable inMemoryEM2PPExchCV_;
+  std::queue<messageqcpp::SBS> inMemoryEM2PPExchQueue_;
 };
 
 }  // namespace joblist
