@@ -1021,6 +1021,8 @@ inline mcsv1_UDAF::ReturnCode mcsv1_UDAF::createUserData(UserData*& userData, in
 }
 
 // Handy helper functions
+
+// Doesn't work with string
 template <typename T>
 inline T mcsv1_UDAF::convertAnyTo(static_any::any& valIn) const
 {

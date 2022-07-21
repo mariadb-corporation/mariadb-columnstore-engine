@@ -45,6 +45,7 @@
 #include "calpontsystemcatalog.h"
 #include "windowfunctioncolumn.h"
 #include "hasher.h"
+#include "collation.h"
 
 #if defined(_MSC_VER) && defined(xxxRGNODE_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
@@ -58,6 +59,8 @@ namespace mcsv1sdk
 template <class T>
 struct hasher
 {
+  hasher(datatypes::Charset cs) {}
+
   inline size_t operator()(T val) const
   {
     return fHasher((char*)&val, sizeof(T));
@@ -67,34 +70,77 @@ struct hasher
   utils::Hasher fHasher;
 };
 
+// A special hasher for double that may only have 10 bytes
 template <>
 struct hasher<long double>
 {
+  hasher<long double>(datatypes::Charset cs)
+  {}
   inline size_t operator()(long double val) const
   {
-    if (sizeof(long double) == 8)  // Probably just MSC, but you never know.
-    {
-      return fHasher((char*)&val, sizeof(long double));
-    }
-    else
-    {
-      // For Linux x86_64, long double is stored in 128 bits, but only 80 are significant
-      return fHasher((char*)&val, 10);
-    }
+#ifdef MASK_LONGDOUBLE
+    // For Linux x86_64, long double is stored in 128 bits, but only 80 are significant
+    return fHasher((char*)&val, 10);
+#else
+    return fHasher((char*)&val, sizeof(long double));
+#endif
   }
 
  private:
   utils::Hasher fHasher;
 };
 
+// A collation aware hasher for strings
+template<>
+struct hasher<string>
+{
+  hasher<string>(datatypes::Charset cs) : fHasher(cs){}
+  inline size_t operator()(string val) const
+  {
+    return fHasher(val.c_str(), val.size());
+  }
+
+private:
+  hasher<string>() : fHasher(datatypes::Charset(8)) {} // Private makes disabled
+  datatypes::CollationAwareHasher fHasher; 
+};
+
+template<class T>
+struct comparator
+{
+  comparator(datatypes::Charset cs) {}
+
+  bool operator()(const T& lhs, const T& rhs) const
+  {
+    return lhs == rhs;
+  }
+};
+// A collation aware string comparator
+template <>
+struct comparator<std::string>
+{
+  comparator<std::string>(datatypes::Charset cs) : fCs(cs) {}
+
+  bool operator()(const std::string lhs, const std::string rhs) const
+  {
+    return fCs.eq(lhs, rhs);
+  }
+ private:
+  datatypes::Charset fCs;
+};
+
+
+
 // Override UserData for data storage
 struct ModaData : public UserData
 {
-  ModaData()
+  ModaData(uint32_t cs_num = 8)
    : fMap(NULL)
    , fReturnType((uint32_t)execplan::CalpontSystemCatalog::UNDEFINED)
    , fColWidth(0)
-   , modaImpl(NULL){};
+   , modaImpl(NULL)
+   , fCs_num(cs_num)
+   , fCs(cs_num){};
 
   virtual ~ModaData()
   {
@@ -105,22 +151,23 @@ struct ModaData : public UserData
   virtual void unserialize(messageqcpp::ByteStream& bs);
 
   template <class T>
-  std::unordered_map<T, uint32_t, hasher<T> >* getMap()
+  std::unordered_map<T, uint32_t, hasher<T>, comparator<T> >* getMap()
   {
     if (!fMap)
     {
       // Just in time creation
-      fMap = new std::unordered_map<T, uint32_t, hasher<T> >;
+      fMap = new std::unordered_map<T, uint32_t, hasher<T>, comparator<T> >(
+        10, hasher<T>(fCs),comparator<T>(fCs));
     }
-    return (std::unordered_map<T, uint32_t, hasher<T> >*)fMap;
+    return (std::unordered_map<T, uint32_t, hasher<T>, comparator<T> >*)fMap;
   }
 
   // The const version is only called by serialize()
   // It shouldn't (and can't) create a new map.
   template <class T>
-  std::unordered_map<T, uint32_t, hasher<T> >* getMap() const
+  std::unordered_map<T, uint32_t, hasher<T>, comparator<T> >* getMap() const
   {
-    return (std::unordered_map<T, uint32_t, hasher<T> >*)fMap;
+    return (std::unordered_map<T, uint32_t, hasher<T>, comparator<T> >*)fMap;
   }
 
   template <class T>
@@ -128,7 +175,7 @@ struct ModaData : public UserData
   {
     if (fMap)
     {
-      delete (std::unordered_map<T, uint32_t, hasher<T> >*)fMap;
+      delete (std::unordered_map<T, uint32_t, hasher<T>, comparator<T> >*)fMap;
       fMap = NULL;
     }
   }
@@ -148,6 +195,8 @@ struct ModaData : public UserData
   uint32_t fReturnType;
   uint32_t fColWidth;
   mcsv1_UDAF* modaImpl;  // A pointer to one of the Moda_impl_T concrete classes
+  uint32_t fCs_num;
+  datatypes::Charset fCs;
 
  private:
   // For now, copy construction is unwanted
@@ -159,10 +208,11 @@ struct ModaData : public UserData
   template <class T>
   void serializeMap(messageqcpp::ByteStream& bs) const
   {
-    std::unordered_map<T, uint32_t, hasher<T> >* map = getMap<T>();
+    bs << fCs_num;
+    std::unordered_map<T, uint32_t, hasher<T>, comparator<T> >* map = getMap<T>();
     if (map)
     {
-      typename std::unordered_map<T, uint32_t, hasher<T> >::const_iterator iter;
+      typename std::unordered_map<T, uint32_t, hasher<T>, comparator<T> >::const_iterator iter;
       bs << (uint64_t)map->size();
       for (iter = map->begin(); iter != map->end(); ++iter)
       {
@@ -179,11 +229,14 @@ struct ModaData : public UserData
   template <class T>
   void unserializeMap(messageqcpp::ByteStream& bs)
   {
+    bs >> fCs_num;
+    fCs.setCharset(fCs_num);
+
     uint32_t cnt;
     T num;
     uint64_t sz;
     bs >> sz;
-    std::unordered_map<T, uint32_t, hasher<T> >* map = getMap<T>();
+    std::unordered_map<T, uint32_t, hasher<T>, comparator<T> >* map = getMap<T>();
     map->clear();
     for (uint64_t i = 0; i < sz; ++i)
     {
@@ -215,6 +268,33 @@ class Moda_impl_T : public mcsv1_UDAF
   {
     return mcsv1_UDAF::SUCCESS;
   }
+};
+
+template<> // string specialization
+class Moda_impl_T<string> : public mcsv1_UDAF
+{
+ public:
+  // Defaults OK
+  Moda_impl_T() : cs(8), fHasher(cs), fComparator(cs) {};
+  virtual ~Moda_impl_T() {};
+
+  virtual mcsv1_UDAF::ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes);
+
+  virtual mcsv1_UDAF::ReturnCode reset(mcsv1Context* context);
+  virtual mcsv1_UDAF::ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn);
+  virtual mcsv1_UDAF::ReturnCode subEvaluate(mcsv1Context* context, const UserData* valIn);
+  virtual mcsv1_UDAF::ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut);
+  virtual mcsv1_UDAF::ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
+
+  // Dummy: not used
+  virtual mcsv1_UDAF::ReturnCode createUserData(UserData*& userData, int32_t& length)
+  {
+    return mcsv1_UDAF::SUCCESS;
+  }
+ private:
+  datatypes::Charset cs;
+  datatypes::CollationAwareHasher fHasher;
+  datatypes::CollationAwareComparator fComparator;
 };
 
 // moda returns the modal value of the dataset. If more than one value
@@ -276,6 +356,7 @@ class moda : public mcsv1_UDAF
   Moda_impl_T<float> moda_impl_float;
   Moda_impl_T<double> moda_impl_double;
   Moda_impl_T<long double> moda_impl_longdouble;
+  Moda_impl_T<string> moda_impl_string;
 };
 
 };  // namespace mcsv1sdk

@@ -87,15 +87,19 @@ extern "C"
   my_bool moda_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     struct moda_data* data;
+
     if (args->arg_count != 1)
     {
-      strcpy(message, "moda() requires one argument");
+      strcpy(message, "moda() requires exactly one argument");
       return 1;
     }
     if (!isNumeric(args->arg_type[0], args->attributes[0]))
     {
-      strcpy(message, "moda() with a non-numeric argument");
-      return 1;
+      if (args->arg_type[0] != STRING_RESULT)
+      {
+        strcpy(message, "moda() with an invalid argument");
+        return 1;
+      }
     }
 
     data = new moda_data;
