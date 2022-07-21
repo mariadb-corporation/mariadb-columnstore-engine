@@ -29,4 +29,10 @@ Charset::Charset(uint32_t charsetNumber) : mCharset(&get_charset_or_bin(charsetN
 {
 }
 
+void Charset::setCharset(uint32_t charsetNumber)
+{
+  mCharset = &get_charset_or_bin(charsetNumber);
+}
+
 }  // namespace datatypes
+
