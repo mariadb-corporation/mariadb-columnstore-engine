@@ -682,7 +682,7 @@ void AlterTableProcessor::addColumn(uint32_t sessionID, execplan::CalpontSystemC
     throw std::runtime_error(err);
   }
 
-  if ((columnOid > 0) && (columnOid != OID_SYSTABLE_AUXCOLUMNOID))  // Column exists already
+  if (columnOid > 0)  // Column exists already
   {
     err = err + "Internal add column error for " + tableColName.schema + "." + tableColName.table + "." +
           tableColName.column + ". Column exists already. Your table is probably out-of-sync";
@@ -746,22 +746,6 @@ void AlterTableProcessor::addColumn(uint32_t sessionID, execplan::CalpontSystemC
     if ((inTableName.fName == SYSTABLE_TABLE) && (columnDefPtr->fName == AUTOINC_COL))
     {
       fStartingColOID = OID_SYSTABLE_AUTOINCREMENT;
-    }
-    else if ((inTableName.fName == SYSTABLE_TABLE) && (columnDefPtr->fName == AUXCOLUMNOID_COL))
-    {
-      fStartingColOID = OID_SYSTABLE_AUXCOLUMNOID;
-
-      if (!columnDefPtr->fDefaultValue || columnDefPtr->fDefaultValue->fValue != "0" ||
-          columnDefPtr->fConstraints.size() != 1 || !columnDefPtr->fConstraints[0] ||
-          columnDefPtr->fConstraints[0]->fConstraintType != ddlpackage::DDL_NOT_NULL ||
-          columnDefPtr->fType->fType != CalpontSystemCatalog::INT ||
-          columnDefPtr->fType->fLength != 4)
-      {
-        std::ostringstream oss;
-        oss << "Error adding " << AUXCOLUMNOID_COL << " column to calpontsys table.";
-        oss << " Column should be of type integer, added with NOT NULL constraint and default value of 0";
-        throw std::runtime_error(oss.str());
-      }
     }
     else if ((inTableName.fName == SYSCOLUMN_TABLE) && (columnDefPtr->fName == COMPRESSIONTYPE_COL))
     {
@@ -1019,19 +1003,18 @@ void AlterTableProcessor::addColumn(uint32_t sessionID, execplan::CalpontSystemC
         else
           bs << (uint32_t)0;
 
-        std::string tmpStr("");
-
-        if (columnDefPtr->fDefaultValue)
-        {
-          tmpStr = columnDefPtr->fDefaultValue->fValue;
-        }
-
         // new column info
         bs << (ByteStream::byte)dataType;
         bs << (ByteStream::byte)autoincrement;
         bs << (uint32_t)columnDefPtr->fType->fLength;
         bs << (uint32_t)columnDefPtr->fType->fScale;
         bs << (uint32_t)columnDefPtr->fType->fPrecision;
+        std::string tmpStr("");
+
+        if (columnDefPtr->fDefaultValue)
+        {
+          tmpStr = columnDefPtr->fDefaultValue->fValue;
+        }
 
         bs << tmpStr;
         bs << (ByteStream::byte)columnDefPtr->fType->fCompressiontype;
