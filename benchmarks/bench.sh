@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 
 trap cleanup SIGINT SIGTERM ERR EXIT
-
+source ../build/utils.sh
 usage() {
   cat <<EOF
 Usage: $(basename "${BASH_SOURCE[0]}") branch lua_script [-h] [-d data.tbl] [-s 1000000]
@@ -23,7 +23,7 @@ EOF
 
 SCRIPT_LOCATION=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
 MDB_SOURCE_PATH=$(realpath $SCRIPT_LOCATION/../../..)
-DATA="data.tbl"
+DATA=""
 
 cleanup() {
   trap - SIGINT SIGTERM ERR EXIT
@@ -31,8 +31,14 @@ cleanup() {
      then
          sudo rm $DATA
   fi
-  sudo rm "${BRANCH}_bench.txt"
-  sudo rm "develop_bench.txt"
+  if [ -f "${BRANCH}_bench.txt" ]
+     then
+         sudo rm "${BRANCH}_bench.txt"
+  fi
+  if [ -f "develop_bench.txt" ]
+     then
+         sudo rm "develop_bench.txt"
+  fi
   sysbench $SCRIPT --mysql-socket=/run/mysqld/mysqld.sock \
         --db-driver=mysql \
         --mysql-db=test \
@@ -66,18 +72,20 @@ parse_params() {
   RANGE=1000000
   TABLE="t1"
 
-  while :; do
-    case "${1-}" in
-    -d | --data) DATA="${2-}"
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+
+    case $key in
+    -d | --data) DATA="$2"
                  shift
                  ;;
-    -s | --size) RANGE="${2-}"
+    -s | --size) RANGE="$2"
                  shift
                  ;;
-    -t | --table) TABLE="${2-}"
+    -t | --table) TABLE="$2"
                   shift
                   ;;
-    -?*) die "Unknown option: $1" ;;
+    -?*) die "Unknown option: $key" ;;
     *) break ;;
     esac
     shift
@@ -89,7 +97,11 @@ parse_params() {
 parse_params "$@"
 export TABLE
 cd $MDB_SOURCE_PATH/columnstore/columnstore/benchmarks
-seq 1 $RANGE > "$DATA"
+if [[ $DATA == "" ]]
+  then
+    DATA="data.tbl"
+    seq 1 $RANGE > "$DATA"
+fi
 
 git checkout $BRANCH
 sudo $MDB_SOURCE_PATH/columnstore/columnstore/build/bootstrap_mcs.sh -t RelWithDebInfo
@@ -101,7 +113,7 @@ sysbench $SCRIPT \
         --mysql-db=test \
         prepare
 
-sudo cpimport test t1 "$DATA"
+sudo cpimport test "$TABLE" "$DATA"
 
 sysbench $SCRIPT \
         --mysql-socket=/run/mysqld/mysqld.sock \
@@ -118,7 +130,7 @@ sysbench $SCRIPT \
         --mysql-db=test \
         prepare
 
-sudo cpimport test t1 "$DATA"
+sudo cpimport test "$TABLE" "$DATA"
 
 sysbench $SCRIPT \
         --mysql-socket=/run/mysqld/mysqld.sock \

@@ -7,7 +7,7 @@ function prepare ()
 end
 
 function cleanup()
-  db_query("drop table if exists" .. os.getenv("TABLE") ..)
+  db_query("drop table if exists " .. os.getenv("TABLE"))
 end
 
 function help()
