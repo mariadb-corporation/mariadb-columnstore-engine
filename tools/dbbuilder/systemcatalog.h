@@ -23,12 +23,19 @@
 #pragma once
 
 #include "writeengine.h"
+#include <unordered_map>
+#include <utility>
+
+using OidTypeT = std::pair<execplan::CalpontSystemCatalog::ColDataType, int>;
 
 class SystemCatalog
 {
  public:
   void build();
   void remove();
+  int upgrade(const std::unordered_map<int, std::pair<int, bool>>&,
+              std::unordered_map<int, OidTypeT>,
+              std::unordered_map<int, std::string>);
 
  private:
   WriteEngine::WriteEngineWrapper fWriteEngine;

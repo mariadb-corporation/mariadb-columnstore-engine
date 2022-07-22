@@ -189,26 +189,62 @@ int main(int argc, char* argv[])
     if (access(logFile.c_str(), W_OK) != 0)
       canWrite = false;
 
+    // MCOL-5162 Automatic syscat upgrade
+    // The below std::unordered_map's are used by the
+    // SystemCatalog::upgrade() call.
+    bool isUpgrade = false;
+
+    std::unordered_map<int, std::pair<int, bool>> upgradeOidMap;
+    upgradeOidMap[OID_SYSTABLE_AUXCOLUMNOID] =      // This is the candidate OID for the upgrade.
+      std::make_pair(OID_SYSTABLE_OBJECTID, false); // std::pair::first is the reference OID used
+                                                    // to fill the candidate OID with default vals
+                                                    // std::pair::second is set to false by default
+                                                    // which means the candidate OID will not be
+                                                    // upgraded. This is set to true in the code
+                                                    // below if a specific condition is met. Please
+                                                    // note that the candidate and reference OID
+                                                    // datatypes and colwidths are assumed to be the
+                                                    // same in SystemCatalog::upgrade().
+
+    std::unordered_map<int, OidTypeT> upgradeOidTypeMap;
+    upgradeOidTypeMap[OID_SYSTABLE_AUXCOLUMNOID] =
+      std::make_pair(CalpontSystemCatalog::INT, 4);
+
+    std::unordered_map<int, std::string> upgradeOidDefaultValStrMap;
+    upgradeOidDefaultValStrMap[OID_SYSTABLE_AUXCOLUMNOID] = "0";
+
     try
     {
       if (checkNotThere(1001) != 0)
       {
-        string cmd = "echo 'FAILED: buildOption=" + oam.itoa(buildOption) + "' > " + logFile;
-
-        if (canWrite)
+        for (auto iter = upgradeOidMap.begin(); iter != upgradeOidMap.end(); iter++)
         {
-          rc = system(cmd.c_str());
-        }
-        else
-        {
-          cerr << cmd << endl;
+          if (checkNotThere(iter->first) == 0)
+          {
+            (iter->second).second = true;
+            isUpgrade = true;
+          }
         }
 
-        errorHandler(sysCatalogErr, "Build system catalog",
-                     "System catalog appears to exist.  It will remain intact "
-                     "for reuse.  The database is not recreated.",
-                     false);
-        return 1;
+        if (!isUpgrade)
+        {
+          string cmd = "echo 'FAILED: buildOption=" + oam.itoa(buildOption) + "' > " + logFile;
+
+          if (canWrite)
+          {
+            rc = system(cmd.c_str());
+          }
+          else
+          {
+            cerr << cmd << endl;
+          }
+
+          errorHandler(sysCatalogErr, "Build system catalog",
+                       "System catalog appears to exist.  It will remain intact "
+                       "for reuse.  The database is not recreated.",
+                       false);
+          return 1;
+        }
       }
 
       //@bug5554, make sure IDBPolicy matches the Columnstore.xml config
@@ -259,7 +295,15 @@ int main(int argc, char* argv[])
       }
 
       SystemCatalog sysCatalog;
-      sysCatalog.build();
+
+      if (!isUpgrade)
+      {
+        sysCatalog.build();
+      }
+      else
+      {
+        sysCatalog.upgrade(upgradeOidMap, upgradeOidTypeMap,upgradeOidDefaultValStrMap);
+      }
 
       std::string cmd = "echo 'OK: buildOption=" + oam.itoa(buildOption) + "' > " + logFile;
 
