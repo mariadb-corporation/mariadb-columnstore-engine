@@ -41,6 +41,7 @@ RTSCommandJL::RTSCommandJL(const pColStep& c, const pDictionaryStep& d)
   col.reset(new ColumnCommandJL(c));
   dict.reset(new DictStepJL(d));
   /* XXXPAT: Need to validate the width; critical for tuple return functionality */
+idblog("RTSCommand rom colstep and dictstep, colstep realwidth " << c.realWidth);
   dict->setWidth(c.realWidth);
   OID = d.oid();
   colName = d.name();
