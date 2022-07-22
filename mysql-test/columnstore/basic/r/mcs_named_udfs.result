@@ -26,8 +26,14 @@ No table lock found for specified table lock ID
 select mcslastinsertid("t1");
 mcslastinsertid("t1")
 0
+show processlist;
+Id	User	Host	db	Command	Time	State	Info	Progress
+443	root	localhost	cal_test_db	Query	0	starting	show processlist	0.000
 select mcsgetsqlcount();
 mcsgetsqlcount()
 Running SQL statements 0, Waiting SQL statments 0
+show processlist;
+Id	User	Host	db	Command	Time	State	Info	Progress
+443	root	localhost	cal_test_db	Query	0	starting	show processlist	0.000
 DROP TABLE t1;
 DROP DATABASE cal_test_db;

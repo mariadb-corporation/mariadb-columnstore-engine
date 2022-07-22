@@ -5,8 +5,14 @@ CREATE TABLE t1 (a DECIMAL(17,1)) ENGINE=ColumnStore;
 INSERT INTO t1 VALUES (-8999999999999999.9);
 SELECT * FROM t1 WHERE a=0;
 a
+show processlist;
+Id	User	Host	db	Command	Time	State	Info	Progress
+450	root	localhost	test	Query	0	starting	show processlist	0.000
 SELECT calshowpartitions('t1','a');
 calshowpartitions('t1','a')
 Part#     Min                           Max                           Status
   0.0.1     -8999999999999999.9           -8999999999999999.9           Enabled
+show processlist;
+Id	User	Host	db	Command	Time	State	Info	Progress
+450	root	localhost	test	Query	0	starting	show processlist	0.000
 DROP TABLE IF EXISTS t1;

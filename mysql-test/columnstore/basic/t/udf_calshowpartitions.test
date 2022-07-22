@@ -15,7 +15,9 @@ if (!$func_exists)
 CREATE TABLE t1 (a DECIMAL(17,1)) ENGINE=ColumnStore;
 INSERT INTO t1 VALUES (-8999999999999999.9);
 SELECT * FROM t1 WHERE a=0;
+show processlist;
 SELECT calshowpartitions('t1','a');
+show processlist;
 DROP TABLE IF EXISTS t1;
 
 --disable_query_log

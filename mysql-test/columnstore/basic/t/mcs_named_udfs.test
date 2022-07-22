@@ -18,7 +18,9 @@ select mcsgetversion()=calgetversion();
 select mcsviewtablelock("t1");
 select mcscleartablelock(0);
 select mcslastinsertid("t1");
+show processlist;
 select mcsgetsqlcount();
+show processlist;
 
 DROP TABLE t1;
 DROP DATABASE cal_test_db;
