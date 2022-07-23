@@ -1621,13 +1621,13 @@ class CircularJoinGraphTransformer
   // For each cycle breaks it and collects join edges.
   void breakCyclesAndCollectJoinEdges();
   // Removes given `join edge` from the `join graph`.
-  void breakCycleAndCollectJoinEdge(const std::pair<JoinEdge, uint32_t>& edgeForward);
+  void breakCycleAndCollectJoinEdge(const std::pair<JoinEdge, int64_t>& edgeForward);
   // Initializes the `join graph` based on the table connections.
   virtual void initializeJoinGraph();
   // Check if the given join edge has FK - FK relations.
   bool isForeignKeyForeignKeyLink(const JoinEdge& edge, statistics::StatisticsManager* statisticsManager);
   // Based on column statistics tries to search `join edge` with maximum join cardinality.
-  virtual void chooseEdgeToTransform(Cycle& cycle, std::pair<JoinEdge, uint32_t>& resultEdge);
+  virtual void chooseEdgeToTransform(Cycle& cycle, std::pair<JoinEdge, int64_t>& resultEdge);
   // Removes given `tableId` from adjacent list.
   void removeFromAdjacentList(uint32_t tableId, std::vector<uint32_t>& adjList);
   // Removes associated join step associated with the given `joinEdge` from job steps.
@@ -1675,7 +1675,7 @@ void CircularJoinGraphTransformer::analyzeJoinGraph(uint32_t currentTable, uint3
         auto nodeIt = currentTable;
         auto nextNode = joinGraph[nodeIt].fParent;
         // Walk back until we find node `adjNode` we identified before.
-        while (nextNode != UINT_MAX && nextNode != adjNode)
+        while (nextNode != std::numeric_limits<uint32_t>::max() && nextNode != adjNode)
         {
           const auto edgeForward = make_pair(nextNode, nodeIt);
           const auto edgeBackward = make_pair(nodeIt, nextNode);
@@ -1691,7 +1691,7 @@ void CircularJoinGraphTransformer::analyzeJoinGraph(uint32_t currentTable, uint3
         }
 
         // Add the last edge.
-        if (nextNode != UINT_MAX)
+        if (nextNode != std::numeric_limits<uint32_t>::max())
         {
           const auto edgeForward = make_pair(nextNode, nodeIt);
           const auto edgeBackward = make_pair(nodeIt, nextNode);
@@ -1813,7 +1813,7 @@ bool CircularJoinGraphTransformer::isForeignKeyForeignKeyLink(
 }
 
 void CircularJoinGraphTransformer::chooseEdgeToTransform(Cycle& cycle,
-                                                         std::pair<JoinEdge, uint32_t>& resultEdge)
+                                                         std::pair<JoinEdge, int64_t>& resultEdge)
 {
   // Use statistics if possible.
   auto* statisticsManager = statistics::StatisticsManager::instance();
@@ -1902,7 +1902,7 @@ void CircularJoinGraphTransformer::removeAssociatedHashJoinStepFromJoinSteps(con
 }
 
 void CircularJoinGraphTransformer::breakCycleAndCollectJoinEdge(
-    const std::pair<JoinEdge, uint32_t>& joinEdgeWithWeight)
+    const std::pair<JoinEdge, int64_t>& joinEdgeWithWeight)
 {
   // Add edge to be restored.
   jobInfo.joinEdgesToRestore.insert({joinEdgeWithWeight.first, joinEdgeWithWeight.second});
@@ -1937,7 +1937,7 @@ void CircularJoinGraphTransformer::breakCyclesAndCollectJoinEdges()
   // For each cycle.
   for (auto& cycle : cycles)
   {
-    std::pair<JoinEdge, uint32_t> joinEdgeWithWeight;
+    std::pair<JoinEdge, int64_t> joinEdgeWithWeight;
     chooseEdgeToTransform(cycle, joinEdgeWithWeight);
     breakCycleAndCollectJoinEdge(joinEdgeWithWeight);
   }
@@ -1960,7 +1960,7 @@ void CircularJoinGraphTransformer::initializeJoinGraph()
 void CircularJoinGraphTransformer::transformJoinGraph()
 {
   initializeJoinGraph();
-  analyzeJoinGraph(/*currentTable=*/headTable, /*prevTable=*/UINT_MAX);
+  analyzeJoinGraph(/*currentTable=*/headTable, /*prevTable=*/std::numeric_limits<uint32_t>::max());
   edgesToTransform.clear();
   breakCyclesAndCollectJoinEdges();
 }
@@ -1993,23 +1993,23 @@ class CircularOuterJoinGraphTransformer : public CircularJoinGraphTransformer
   void analyzeJoinGraph(uint32_t currentTable, uint32_t prevTable) override;
   // Chooses a join edge to transform from the given cycle based on the join edge weight,
   // the join edge for transformation has a maximum weight in a cycle.
-  void chooseEdgeToTransform(Cycle& cycle, std::pair<JoinEdge, uint32_t>& resultEdge) override;
+  void chooseEdgeToTransform(Cycle& cycle, std::pair<JoinEdge, int64_t>& resultEdge) override;
   // Returns the min weight among all join weights related to the given `headTable`.
-  uint32_t getSublingsMinWeight(uint32_t headTable, uint32_t associatedTable);
+  int64_t getSublingsMinWeight(uint32_t headTable, uint32_t associatedTable);
   // Returns the max weight which is less than given `upperBoundWeight` among all join weights related to
   // the given `headTable`.
-  uint32_t getSublingsMaxWeightLessThan(uint32_t headTable, uint32_t associatedTable,
-                                        uint32_t upperBoundWeight);
+  int64_t getSublingsMaxWeightLessThan(uint32_t headTable, uint32_t associatedTable,
+                                       int64_t upperBoundWeight);
   // Initializes `join graph` from the table connections.
   void initializeJoinGraph() override;
 
   // The map which represents a weight for each join edge in join graph.
-  std::map<JoinEdge, uint32_t> joinEdgesToWeights;
+  std::map<JoinEdge, int64_t> joinEdgesToWeights;
 };
 
-uint32_t CircularOuterJoinGraphTransformer::getSublingsMinWeight(uint32_t headTable, uint32_t associatedTable)
+int64_t CircularOuterJoinGraphTransformer::getSublingsMinWeight(uint32_t headTable, uint32_t associatedTable)
 {
-  uint32_t minWeight = UINT_MAX;
+  int64_t minWeight = std::numeric_limits<int64_t>::max();
   for (const auto adjNode : joinGraph[headTable].fAdjacentList)
   {
     if (adjNode != associatedTable)
@@ -2021,11 +2021,11 @@ uint32_t CircularOuterJoinGraphTransformer::getSublingsMinWeight(uint32_t headTa
   return minWeight;
 }
 
-uint32_t CircularOuterJoinGraphTransformer::getSublingsMaxWeightLessThan(uint32_t headTable,
-                                                                         uint32_t associatedTable,
-                                                                         uint32_t upperBoundWeight)
+int64_t CircularOuterJoinGraphTransformer::getSublingsMaxWeightLessThan(uint32_t headTable,
+                                                                        uint32_t associatedTable,
+                                                                        int64_t upperBoundWeight)
 {
-  uint32_t maxWeight = 0;
+  int64_t maxWeight = std::numeric_limits<int64_t>::min();
   for (const auto adjNode : joinGraph[headTable].fAdjacentList)
   {
     if (adjNode != associatedTable)
@@ -2048,7 +2048,7 @@ void CircularOuterJoinGraphTransformer::initializeJoinGraph()
   if (jobInfo.trace)
     std::cout << "Join edges with weights.\n";
 
-  uint32_t minWeightFullGraph = UINT_MAX;
+  int64_t minWeightFullGraph = std::numeric_limits<int64_t>::max();
   JoinEdge joinEdgeWithMinWeight(0, 0);
 
   // For each join step we associate a `join id` with `join edge`.
@@ -2057,7 +2057,7 @@ void CircularOuterJoinGraphTransformer::initializeJoinGraph()
     auto* tupleHashJoinStep = dynamic_cast<TupleHashJoinStep*>(joinStepIt->get());
     if (tupleHashJoinStep)
     {
-      const uint32_t weight = tupleHashJoinStep->joinId();
+      const int64_t weight = tupleHashJoinStep->joinId();
       const auto tableKey1 = getTableKey(jobInfo, tupleHashJoinStep->tupleId1());
       const auto tableKey2 = getTableKey(jobInfo, tupleHashJoinStep->tupleId2());
 
@@ -2110,7 +2110,7 @@ void CircularOuterJoinGraphTransformer::analyzeJoinGraph(uint32_t currentTable, 
   joinGraph[currentTable].fTableColor = JoinTableColor::GREY;
   joinGraph[currentTable].fParent = prevTable;
 
-  std::vector<std::pair<uint32_t, uint32_t>> adjacentListWeighted;
+  std::vector<std::pair<uint32_t, int64_t>> adjacentListWeighted;
   // For each adjacent node.
   for (const auto adjNode : joinGraph[currentTable].fAdjacentList)
   {
@@ -2124,7 +2124,7 @@ void CircularOuterJoinGraphTransformer::analyzeJoinGraph(uint32_t currentTable, 
 
   // Sort vertices by weights.
   std::sort(adjacentListWeighted.begin(), adjacentListWeighted.end(),
-            [](const std::pair<uint32_t, uint32_t>& a, const std::pair<uint32_t, uint32_t>& b) {
+            [](const std::pair<uint32_t, int64_t>& a, const std::pair<uint32_t, int64_t>& b) {
               return a.second < b.second;
             });
 
@@ -2148,7 +2148,7 @@ void CircularOuterJoinGraphTransformer::analyzeJoinGraph(uint32_t currentTable, 
       auto nodeIt = currentTable;
       auto nextNode = joinGraph[nodeIt].fParent;
       // Walk back until we find node `adjNode` we identified before.
-      while (nextNode != UINT_MAX && nextNode != adjNode)
+      while (nextNode != std::numeric_limits<uint32_t>::max() && nextNode != adjNode)
       {
         const auto edgeForward = make_pair(nextNode, nodeIt);
         const auto edgeBackward = make_pair(nodeIt, nextNode);
@@ -2164,7 +2164,7 @@ void CircularOuterJoinGraphTransformer::analyzeJoinGraph(uint32_t currentTable, 
       }
 
       // Add the last edge.
-      if (nextNode != UINT_MAX)
+      if (nextNode != std::numeric_limits<uint32_t>::max())
       {
         const auto edgeForward = make_pair(nextNode, nodeIt);
         const auto edgeBackward = make_pair(nodeIt, nextNode);
@@ -2190,9 +2190,9 @@ void CircularOuterJoinGraphTransformer::analyzeJoinGraph(uint32_t currentTable, 
 }
 
 void CircularOuterJoinGraphTransformer::chooseEdgeToTransform(Cycle& cycle,
-                                                              std::pair<JoinEdge, uint32_t>& resultEdge)
+                                                              std::pair<JoinEdge, int64_t>& resultEdge)
 {
-  uint32_t maxWeightInCycle = 0;
+  int64_t maxWeightInCycle = std::numeric_limits<int64_t>::min();
   JoinEdge joinEdgeWithMaxWeight;
 
   if (jobInfo.trace)
@@ -2225,6 +2225,10 @@ void CircularOuterJoinGraphTransformer::chooseEdgeToTransform(Cycle& cycle,
       getSublingsMaxWeightLessThan(joinEdgeWithMaxWeight.first, joinEdgeWithMaxWeight.second,
                                    maxWeightInCycle))
     largeSideTable = joinEdgeWithMaxWeight.second;
+
+  if (maxWeightInCycle < 0)
+    maxWeightInCycle = std::numeric_limits<int64_t>::max() + maxWeightInCycle + 1;
+  idbassert(maxWeightInCycle > 0);
 
   // Add large table to the map for the `join ordering` part.
   if (!jobInfo.tablesForLargeSide.count(largeSideTable))
@@ -2758,7 +2762,7 @@ bool matchKeys(const vector<uint32_t>& keysToSearch, const vector<uint32_t>& key
 
 void tryToRestoreJoinEdges(JobInfo& jobInfo, JoinInfo* joinInfo, const RowGroup& largeSideRG,
                            std::vector<uint32_t>& smallKeyIndices, std::vector<uint32_t>& largeKeyIndices,
-                           std::vector<std::string>& traces, std::map<uint32_t, uint32_t>& joinIndexIdMap,
+                           std::vector<std::string>& traces, std::map<int64_t, uint32_t>& joinIndexIdMap,
                            uint32_t smallSideIndex)
 {
   if (!jobInfo.joinEdgesToRestore.size())
@@ -2771,7 +2775,7 @@ void tryToRestoreJoinEdges(JobInfo& jobInfo, JoinInfo* joinInfo, const RowGroup&
 
   std::vector<uint32_t> smallKeyIndicesToRestore;
   std::vector<uint32_t> largeKeyIndicesToRestore;
-  std::vector<pair<JoinEdge, uint32_t>> takenEdgesWithJoinIDs;
+  std::vector<pair<JoinEdge, int64_t>> takenEdgesWithJoinIDs;
   auto& joinEdgesToRestore = jobInfo.joinEdgesToRestore;
 
   // We could have a multple join edges to restore from the same vertex e.g:
@@ -2887,7 +2891,7 @@ void tryToRestoreJoinEdges(JobInfo& jobInfo, JoinInfo* joinInfo, const RowGroup&
 }
 
 void matchEdgesInResultRowGroup(const JobInfo& jobInfo, const RowGroup& rg,
-                                std::map<JoinEdge, uint32_t>& edgesToRestore,
+                                std::map<JoinEdge, int64_t>& edgesToRestore,
                                 PostJoinFilterKeys& postJoinFilterKeys)
 {
   if (jobInfo.trace)
@@ -3069,7 +3073,7 @@ void createPostJoinFilters(const JobInfo& jobInfo, TableInfoMap& tableInfoMap,
 }
 
 SP_JoinInfo joinToLargeTable(uint32_t large, TableInfoMap& tableInfoMap, JobInfo& jobInfo,
-                             vector<uint32_t>& joinOrder, std::map<JoinEdge, uint32_t>& joinEdgesToRestore)
+                             vector<uint32_t>& joinOrder, std::map<JoinEdge, int64_t>& joinEdgesToRestore)
 {
   vector<SP_JoinInfo> smallSides;
   tableInfoMap[large].fVisited = true;
@@ -3578,7 +3582,7 @@ struct JoinOrderData
 {
   uint32_t fTid1;
   uint32_t fTid2;
-  uint32_t fJoinId;
+  int64_t fJoinId;
 };
 
 void getJoinOrder(vector<JoinOrderData>& joins, JobStepVector& joinSteps, JobInfo& jobInfo)
@@ -3642,7 +3646,7 @@ void joinTablesInOrder(uint32_t largest, JobStepVector& joinSteps, TableInfoMap&
   //      0 - prefer to be on small side, like FROM subquery;
   //      1 - can be on either large or small side;
   //      2 - must be on large side.
-  map<uint32_t, pair<SJSTEP, int>> joinStepMap;
+  map<uint32_t, pair<SJSTEP, int64_t>> joinStepMap;
   BatchPrimitive* bps = NULL;
   SubAdapterStep* tsas = NULL;
   TupleHashJoinStep* thjs = NULL;
@@ -3715,7 +3719,7 @@ void joinTablesInOrder(uint32_t largest, JobStepVector& joinSteps, TableInfoMap&
   }
 
   // sort the join steps based on join ID.
-  vector<JoinOrderData> joins;
+  std::vector<JoinOrderData> joins;
   getJoinOrder(joins, joinSteps, jobInfo);
 
   // join the steps
@@ -3775,6 +3779,7 @@ void joinTablesInOrder(uint32_t largest, JobStepVector& joinSteps, TableInfoMap&
     // merge in the next step if the large side is the same
     for (uint64_t ns = js + 1; ns < joins.size(); js++, ns++)
     {
+      // Check if FE needs table in previous smallsides.
       uint32_t tid1 = joins[ns].fTid1;
       uint32_t tid2 = joins[ns].fTid2;
       uint32_t small = (uint32_t)-1;
@@ -3901,8 +3906,8 @@ void joinTablesInOrder(uint32_t largest, JobStepVector& joinSteps, TableInfoMap&
     }
 
     uint32_t smallSideIndex = 0;
-    std::map<uint32_t, uint32_t> joinIdIndexMap;
-
+    // Join id to table id.
+    std::map<int64_t, uint32_t> joinIdIndexMap;
     for (vector<SP_JoinInfo>::iterator i = smallSides.begin(); i != smallSides.end(); i++, smallSideIndex++)
     {
       JoinInfo* info = i->get();
@@ -4052,7 +4057,7 @@ void joinTablesInOrder(uint32_t largest, JobStepVector& joinSteps, TableInfoMap&
     // The map for in clause filter.
     for (size_t i = 0; i < smallSides.size(); i++)
     {
-      if (smallSides[i]->fJoinData.fJoinId > 0)
+      if (smallSides[i]->fJoinData.fJoinId != 0)
         joinIdIndexMap[smallSides[i]->fJoinData.fJoinId] = i;
     }
 
@@ -4119,10 +4124,10 @@ void joinTablesInOrder(uint32_t largest, JobStepVector& joinSteps, TableInfoMap&
         keyToIndexMap.insert(make_pair(rowGroupKeys[i], i));
 
       // tables have additional comparisons
-      map<uint32_t, int> correlateTables;          // index in thjs
+      map<uint32_t, uint32_t> correlateTables;     // index in thjs
       map<uint32_t, ParseTree*> correlateCompare;  // expression
 
-      for (size_t i = 0; i != smallSides.size(); i++)
+      for (uint32_t i = 0; i != smallSides.size(); i++)
       {
         if ((jointypes[i] & SEMI) || (jointypes[i] & ANTI) || (jointypes[i] & SCALAR))
         {
@@ -4150,9 +4155,9 @@ void joinTablesInOrder(uint32_t largest, JobStepVector& joinSteps, TableInfoMap&
           }
 
           const vector<uint32_t>& tables = e->tableKeys();
-          map<uint32_t, int>::iterator j = correlateTables.end();
+          auto j = correlateTables.end();
 
-          for (size_t i = 0; i < tables.size(); i++)
+          for (uint32_t i = 0; i < tables.size(); i++)
           {
             j = correlateTables.find(tables[i]);
 
@@ -4191,7 +4196,7 @@ void joinTablesInOrder(uint32_t largest, JobStepVector& joinSteps, TableInfoMap&
           eit = readyExpSteps.erase(eit);
         }
 
-        map<uint32_t, int>::iterator k = correlateTables.begin();
+        auto k = correlateTables.begin();
 
         while (k != correlateTables.end())
         {
