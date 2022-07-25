@@ -1166,7 +1166,9 @@ const JobStepVector doJoin(SimpleColumn* sc1, SimpleColumn* sc2, JobInfo& jobInf
   // MCOL-334 joins in views need to have higher priority than SEMI/ANTI
   if (!view1.empty() && view1 == view2)
   {
-    thj->joinId(-1);
+    // MCOL-5061. We could have a filters to be associated with a specific join id, therefore we cannot have
+    // the same join id for different `TupleHashJoin` steps.
+    thj->joinId(std::numeric_limits<int64_t>::min() + (++jobInfo.joinNumInView));
   }
   else
   {
