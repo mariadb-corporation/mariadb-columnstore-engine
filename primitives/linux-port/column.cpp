@@ -43,6 +43,7 @@ using namespace boost;
 #include "simd_sse.h"
 #include "simd_arm.h"
 #include "utils/common/columnwidth.h"
+#include "utils/common/bit_cast.h"
 
 #include "exceptclasses.h"
 
@@ -117,24 +118,6 @@ template <class T>
 inline int compareBlock(const void* a, const void* b)
 {
   return ((*(T*)a) - (*(T*)b));
-}
-
-template <class To, class From>
-std::enable_if_t<
-    sizeof(To) == sizeof(From) &&
-    std::is_trivially_copyable_v<From> &&
-    std::is_trivially_copyable_v<To>,
-    To>
-// constexpr support needs compiler magic
-bitCast(const From& src) noexcept
-{
-    static_assert(std::is_trivially_constructible_v<To>,
-        "This implementation additionally requires "
-        "destination type to be trivially constructible");
-
-    To dst;
-    std::memcpy(&dst, &src, sizeof(To));
-    return dst;
 }
 
 // this function is out-of-band, we don't need to inline it
@@ -1301,30 +1284,28 @@ void vectorizedUpdateMinMax(const bool validMinMax, const MT nonNullOrEmptyMask,
 {
   if (validMinMax)
   {
-    simdMin = simdProcessor.blend(
-        simdMin, dataVec,
-        simdProcessor.bwAnd(simdProcessor.cmpGt2(simdMin, dataVec),
-                            bitCast<SimdType>(simd::bitMaskToByteMask16(nonNullOrEmptyMask))));
-    simdMax = simdProcessor.blend(
-        simdMax, dataVec,
-        simdProcessor.bwAnd(simdProcessor.cmpGt2(dataVec, simdMax),
-                            bitCast<SimdType>(simd::bitMaskToByteMask16(nonNullOrEmptyMask))));
+    auto byteMask = utils::bitCast<SimdType>(simd::bitMaskToByteMask16(nonNullOrEmptyMask));
+    simdMin = simdProcessor.blend(simdMin, dataVec,
+                                  simdProcessor.bwAnd(simdProcessor.cmpGt2(simdMin, dataVec), byteMask));
+    simdMax = simdProcessor.blend(simdMax, dataVec,
+                                  simdProcessor.bwAnd(simdProcessor.cmpGt2(dataVec, simdMax), byteMask));
   }
 }
 
-template <typename T, typename VT, ENUM_KIND KIND>
-void scalarUpdateMinMax(const bool validMinMax, const MT nonNullOrEmptyMask, VT& simdPRocessor,
-                        T* dataVecTPtr, T& min, T& max, NewColRequestHeader* in)
+template <typename VT, typename SimdType>
+void vectorizedTextUpdateMinMax(const bool validMinMax, const MT nonNullOrEmptyMask, VT simdProcessor,
+                                SimdType& dataVec, SimdType& simdMin, SimdType& simdMax,
+                                SimdType& swapedOrderDataVec, SimdType& weightsMin, SimdType& weightsMax)
 {
-  constexpr const uint16_t filterMaskStep = VT::FilterMaskStep;
-  uint16_t j = 0;
-  for (uint32_t it = 0; it < VT::vecByteSize; ++j, it += filterMaskStep)
+  if (validMinMax)
   {
-    MT bitMapPosition = 1 << it;
-    if (validMinMax && (nonNullOrEmptyMask & bitMapPosition))
-    {
-      updateMinMax<KIND>(min, max, dataVecTPtr[j], in);
-    }
+    auto byteMask = utils::bitCast<SimdType>(simd::bitMaskToByteMask16(nonNullOrEmptyMask));
+    auto minComp = simdProcessor.bwAnd(simdProcessor.cmpGt2(weightsMin, swapedOrderDataVec), byteMask);
+    auto maxComp = simdProcessor.bwAnd(simdProcessor.cmpGt2(swapedOrderDataVec, weightsMax), byteMask);
+    simdMin = simdProcessor.blend(simdMin, dataVec, minComp);
+    weightsMin = simdProcessor.blend(weightsMin, swapedOrderDataVec, minComp);
+    simdMax = simdProcessor.blend(simdMax, dataVec, maxComp);
+    weightsMax = simdProcessor.blend(weightsMax, swapedOrderDataVec, maxComp);
   }
 }
 
@@ -1338,12 +1319,21 @@ void extractMinMax(VT& simdProcessor, SimdType simdMin, SimdType simdMax, T& min
   min = *std::min_element(simdMinVec, simdMinVec + size);
 }
 
-template <typename T, typename VT, typename SimdType>
-void getInitialSimdMinMax(VT& simdProcessor, SimdType& simdMin, SimdType& simdMax, T min, T max)
+template<typename T, typename VT, typename SimdType>
+void extractTextMinMax(VT& simdProcessor, SimdType simdMin, SimdType simdMax, SimdType weightsMin,
+                       SimdType weightsMax, T& min, T& max)
 {
-  simdMin = simdProcessor.loadValue(min);
-  simdMax = simdProcessor.loadValue(max);
+  constexpr const uint16_t size = VT::vecByteSize / sizeof(T);
+  T* simdMinVec = reinterpret_cast<T*>(&simdMin);
+  T* simdMaxVec = reinterpret_cast<T*>(&simdMax);
+  T* weightsMinVec = reinterpret_cast<T*>(&weightsMin);
+  T* weightsMaxVec = reinterpret_cast<T*>(&weightsMax);
+  auto indMin = std::min_element(weightsMinVec, weightsMinVec + size);
+  auto indMax = std::max_element(weightsMaxVec, weightsMaxVec + size);
+  min = simdMinVec[indMin - weightsMinVec];
+  max = simdMaxVec[indMax - weightsMaxVec];
 }
+
 // This routine filters input block in a vectorized manner.
 // It supports all output types, all input types.
 // It doesn't support KIND==TEXT so upper layers filters this KIND out beforehand.
@@ -1479,11 +1469,14 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
       }
     }
   }
-  [[maybe_unused]] SimdType simdMin;
-  [[maybe_unused]] SimdType simdMax;
-  if constexpr (KIND != KIND_TEXT)
+  SimdType simdMin = simdProcessor.loadValue(min);;
+  SimdType simdMax = simdProcessor.loadValue(max);;
+  [[maybe_unused]] SimdType weightsMin;
+  [[maybe_unused]] SimdType weightsMax;
+  if constexpr (KIND == KIND_TEXT)
   {
-    getInitialSimdMinMax(simdProcessor, simdMin, simdMax, min, max);
+    weightsMin = simdSwapedOrderDataLoad<KIND, VT, SimdWrapperType, T>(typeHolder, simdProcessor, simdMin).v;
+    weightsMax = simdSwapedOrderDataLoad<KIND, VT, SimdWrapperType, T>(typeHolder, simdProcessor, simdMax).v;
   }
   // main loop
   // writeMask tells which values must get into the result. Includes values that matches filters. Can have
@@ -1539,14 +1532,10 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
         in, out, nonNullOrEmptyMask, ridArray);
 
     if constexpr (KIND != KIND_TEXT)
-    {
       vectorizedUpdateMinMax(validMinMax, nonNullOrEmptyMask, simdProcessor, dataVec, simdMin, simdMax);
-    }
     else
-    {
-      scalarUpdateMinMax<T, VT, KIND>(validMinMax, nonNullOrEmptyMask, simdProcessor, dataVecTPtr, min, max,
-                                      in);
-    }
+      vectorizedTextUpdateMinMax(validMinMax, nonNullOrEmptyMask, simdProcessor, dataVec, simdMin, simdMax,
+                                 swapedOrderDataVec, weightsMin, weightsMax);
 
     // Calculate bytes written
     uint16_t bytesWritten = valuesWritten * WIDTH;
@@ -1557,10 +1546,11 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
     srcArray += VECTOR_SIZE;
     ridArray += VECTOR_SIZE;
   }
-  if constexpr(KIND != KIND_TEXT)
-  {
+  if constexpr (KIND != KIND_TEXT)
     extractMinMax(simdProcessor, simdMin, simdMax, min, max);
-  }
+  else
+    extractTextMinMax(simdProcessor, simdMin, simdMax, weightsMin, weightsMax, min, max);
+
   // Set the number of output values here b/c tail processing can skip this operation.
   out->NVALS = totalValuesWritten;
 
