@@ -198,6 +198,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h, TokenB
 
     if (h->OutputType == OT_DATAVALUE)
     {
+idblog("sending data value"0;
       if ((ret->NBYTES + sizeof(DataValue) + siglen) > outSize)
       {
         MessageLog logger(LoggingID(28));
@@ -220,6 +221,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h, TokenB
     }
     else if (h->OutputType == OT_TOKEN)
     {
+idblog("sending token"0;
       if ((ret->NBYTES + sizeof(PrimToken)) > outSize)
       {
         MessageLog logger(LoggingID(28));
@@ -537,6 +539,7 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
 
       if (in->OutputType & OT_RID && in->InputFlags == 1)  // hack that indicates old GetSignature behavior
       {
+idblog("old get signature behavior");
         const OldGetSigParams* oldParams;
         uint64_t* outRid;
         oldParams = reinterpret_cast<const OldGetSigParams*>(in->tokens);
