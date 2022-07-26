@@ -189,11 +189,11 @@ idblog("decoding OT_DATAVALUE");
       pos += 1;
       len = *((uint16_t*)pos);
       pos += 2;
-      ot[rid16].str = isnull ? NullString() : NullString(pos, len); //string((char*)pos, len);
+      ot[rid16].str = string((char*)pos, len);
       pos += len;
 
-      //if (rid64 & 0x8000000000000000LL)
-      //  ot[rid16].str = joblist::CPNULLSTRMARK;
+      if (rid64 & 0x8000000000000000LL)
+        ot[rid16].str = joblist::CPNULLSTRMARK;
     }
   }
 }
