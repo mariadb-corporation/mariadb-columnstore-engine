@@ -231,7 +231,7 @@ void DictStep::processResult()
 
   pos = &result[sizeof(DictOutput)];
 
-  idblog("processResult. Output type is " << std::hex << ((int)primMsg->OutputType);
+  idblog("processResult. Output type is " << std::hex << ((int)primMsg->OutputType));
 
   for (i = 0; i < header->NVALS; i++, tmpResultCounter++)
   {
