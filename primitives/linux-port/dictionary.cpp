@@ -198,7 +198,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h, TokenB
 
     if (h->OutputType == OT_DATAVALUE)
     {
-idblog("sending data value"0;
+idblog("sending data value");
       if ((ret->NBYTES + sizeof(DataValue) + siglen) > outSize)
       {
         MessageLog logger(LoggingID(28));
@@ -221,7 +221,7 @@ idblog("sending data value"0;
     }
     else if (h->OutputType == OT_TOKEN)
     {
-idblog("sending token"0;
+idblog("sending token");
       if ((ret->NBYTES + sizeof(PrimToken)) > outSize)
       {
         MessageLog logger(LoggingID(28));
