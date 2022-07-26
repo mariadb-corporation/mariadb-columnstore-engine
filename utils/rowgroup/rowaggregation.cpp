@@ -366,7 +366,7 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
       {
         uint64_t uintField = row.getUintField(col);
 idblog("we are at getScales() null check. uintField is " << std::hex << uintField);
-        if (uintField == joblist::BIGINTNULL)
+        if (uintField == joblist::UBIGINTNULL)
           ret = true;
 
         // break the case block
