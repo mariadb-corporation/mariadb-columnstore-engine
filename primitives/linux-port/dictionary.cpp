@@ -538,6 +538,7 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
       // cout << "storing it, str = " << string((char *)sigptr.data, sigptr.len) << endl;
       header.NVALS++;
 
+idblog("store label, second occurence");
       if (in->OutputType & OT_RID && in->InputFlags == 1)  // hack that indicates old GetSignature behavior
       {
 idblog("old get signature behavior");
@@ -559,6 +560,7 @@ idblog("old get signature behavior");
 
       if (in->OutputType & OT_INPUTARG && in->InputFlags == 0)
       {
+idblog("why do we store filter's value???");
         uint32_t newlen = header.NBYTES + sizeof(DataValue) + filter->len;
 
         if (newlen > out->size())
@@ -574,6 +576,7 @@ idblog("old get signature behavior");
 
       if (in->OutputType & OT_TOKEN)
       {
+idblog("storing token");
         uint32_t newlen = header.NBYTES + sizeof(PrimToken);
 
         if (newlen > out->size())
@@ -590,6 +593,7 @@ idblog("old get signature behavior");
 
       if (in->OutputType & OT_DATAVALUE)
       {
+idblog("storing value");
         uint32_t newlen = header.NBYTES + sizeof(DataValue) + sigptr.len;
 
         if (newlen > out->size())
