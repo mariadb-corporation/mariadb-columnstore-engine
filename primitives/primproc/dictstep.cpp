@@ -185,8 +185,6 @@ idblog("decoding RID");
     if (primMsg->OutputType & OT_DATAVALUE)
     {
 idblog("decoding OT_DATAVALUE");
-      uint8_t isnull = *pos;
-      pos += 1;
       len = *((uint16_t*)pos);
       pos += 2;
       ot[rid16].str = string((char*)pos, len);
