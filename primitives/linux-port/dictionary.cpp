@@ -538,7 +538,7 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
       // cout << "storing it, str = " << string((char *)sigptr.data, sigptr.len) << endl;
       header.NVALS++;
 
-idblog("store label, second occurence");
+idblog("store label, second occurence. input flags " << ((int)in->InputFlags) << ", output type " << std::hex << in->OutputType);
       if (in->OutputType & OT_RID && in->InputFlags == 1)  // hack that indicates old GetSignature behavior
       {
 idblog("old get signature behavior");
