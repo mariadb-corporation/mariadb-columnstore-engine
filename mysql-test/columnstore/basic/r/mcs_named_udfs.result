@@ -26,8 +26,5 @@ No table lock found for specified table lock ID
 select mcslastinsertid("t1");
 mcslastinsertid("t1")
 0
-select mcsgetsqlcount();
-mcsgetsqlcount()
-Running SQL statements 0, Waiting SQL statments 0
 DROP TABLE t1;
 DROP DATABASE cal_test_db;
