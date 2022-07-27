@@ -106,6 +106,7 @@ fi
 git checkout $BRANCH
 sudo $MDB_SOURCE_PATH/columnstore/columnstore/build/bootstrap_mcs.sh -t RelWithDebInfo
 echo "Build done; benchmarking $BRANCH now"
+git checkout with_benchmarks
 #Prepare should only create the table, we will fill it with cpimport
 sysbench $SCRIPT \
         --mysql-socket=/run/mysqld/mysqld.sock \
@@ -124,6 +125,7 @@ sysbench $SCRIPT \
 git checkout develop
 sudo $MDB_SOURCE_PATH/columnstore/columnstore/build/bootstrap_mcs.sh -t RelWithDebInfo
 echo "Build done; benchmarking develop now"
+git checkout with_benchmarks
 sysbench $SCRIPT \
         --mysql-socket=/run/mysqld/mysqld.sock \
         --db-driver=mysql \
