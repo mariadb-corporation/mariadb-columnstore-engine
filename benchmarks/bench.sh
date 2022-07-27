@@ -2,28 +2,18 @@
 
 set -Eeuo pipefail
 
+
+
 trap cleanup SIGINT SIGTERM ERR EXIT
-source ../build/utils.sh
-usage() {
-  cat <<EOF
-Usage: $(basename "${BASH_SOURCE[0]}") branch lua_script [-h] [-d data.tbl] [-s 1000000]
-
-A script to run benchmark(for now) to compare the pefromanceo of min/max
-calculation on develop and provided branch. Runs the provided .lua script using sysbench.
-
-Available options:
-
--h, --help      Print this help and exit
--d, --data      Data for table that will be given to cpimport; if no name provided it will be generated.
--s, --size      Size of the dataset to generate
--t, --table     Name of the table
-EOF
-  exit
-}
 
 SCRIPT_LOCATION=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
 MDB_SOURCE_PATH=$(realpath $SCRIPT_LOCATION/../../..)
-DATA=""
+
+BRANCH="$1"
+SCRIPT="$2"
+DATA="$3"
+TABLE="t1"
+export TABLE
 
 cleanup() {
   trap - SIGINT SIGTERM ERR EXIT
@@ -42,9 +32,26 @@ cleanup() {
   sysbench $SCRIPT --mysql-socket=/run/mysqld/mysqld.sock \
         --db-driver=mysql \
         --mysql-db=test \
-        cleanup
+        cleanup > /dev/null
   unset TABLE
 }
+
+
+source $MDB_SOURCE_PATH/columnstore/columnstore/build/utils.sh
+
+if [ "$EUID" -ne 0 ]
+    then error "Please run this script as root"
+    exit 1
+fi
+
+message "Usage: $(basename "${BASH_SOURCE[0]}") branch lua_script data [-h] [-t t1]
+
+A script to run benchmark(for now) to compare the pefromanceo of min/max
+calculation on develop and provided branch. Runs the provided .lua script using sysbench.
+"
+optparse.define short=t long=table desc="Name of the test table" variable=TABLE
+
+source $( optparse.build )
 
 die() {
   local msg=$1
@@ -53,55 +60,7 @@ die() {
   exit "$code"
 }
 
-parse_params() {
-
-  args=("$@")
-  # check required params and arguments
-  [[ ${#args[@]} -eq 0 ]] && die "Missing script arguments"
-
-  BRANCH="$1"
-
-  if [ $BRANCH == "--help" ] || [ $BRANCH == "-h" ]
-     then
-         usage
-  fi
-
-  [[ ${#args[@]} < 2 ]] && die "Missing script arguments"
-
-  SCRIPT="$2"
-  RANGE=1000000
-  TABLE="t1"
-
-  while [[ $# -gt 0 ]]; do
-    key="$1"
-
-    case $key in
-    -d | --data) DATA="$2"
-                 shift
-                 ;;
-    -s | --size) RANGE="$2"
-                 shift
-                 ;;
-    -t | --table) TABLE="$2"
-                  shift
-                  ;;
-    -?*) die "Unknown option: $key" ;;
-    *) break ;;
-    esac
-    shift
-  done
-
-  return 0
-}
-
-parse_params "$@"
-export TABLE
 cd $MDB_SOURCE_PATH/columnstore/columnstore/benchmarks
-if [[ $DATA == "" ]]
-  then
-    DATA="data.tbl"
-    seq 1 $RANGE > "$DATA"
-fi
 
 git checkout $BRANCH
 sudo $MDB_SOURCE_PATH/columnstore/columnstore/build/bootstrap_mcs.sh -t RelWithDebInfo
@@ -120,7 +79,7 @@ sysbench $SCRIPT \
         --mysql-socket=/run/mysqld/mysqld.sock \
         --db-driver=mysql \
         --mysql-db=test \
-        --time=30 run | tail -n +12 > "${BRANCH}_bench.txt"
+        --time=120 run | tail -n +12 > "${BRANCH}_bench.txt"
 
 git checkout develop
 sudo $MDB_SOURCE_PATH/columnstore/columnstore/build/bootstrap_mcs.sh -t RelWithDebInfo
@@ -138,6 +97,6 @@ sysbench $SCRIPT \
         --mysql-socket=/run/mysqld/mysqld.sock \
         --db-driver=mysql \
         --mysql-db=test \
-        --time=30 run | tail -n +12 > develop_bench.txt
+        --time=120 run | tail -n +12 > develop_bench.txt
 
 python3 parse_bench.py "$BRANCH" "${BRANCH}_bench.txt" "develop_bench.txt"
