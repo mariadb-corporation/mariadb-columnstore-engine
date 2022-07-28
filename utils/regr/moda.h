@@ -275,7 +275,7 @@ class Moda_impl_T<string> : public mcsv1_UDAF
 {
  public:
   // Defaults OK
-  Moda_impl_T() : cs(8), fHasher(cs), fComparator(cs) {};
+  Moda_impl_T() : cs(8) {};
   virtual ~Moda_impl_T() {};
 
   virtual mcsv1_UDAF::ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes);
@@ -293,8 +293,6 @@ class Moda_impl_T<string> : public mcsv1_UDAF
   }
  private:
   datatypes::Charset cs;
-  datatypes::CollationAwareHasher fHasher;
-  datatypes::CollationAwareComparator fComparator;
 };
 
 // moda returns the modal value of the dataset. If more than one value

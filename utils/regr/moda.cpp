@@ -508,8 +508,6 @@ void ModaData::cleanup()
 mcsv1_UDAF::ReturnCode Moda_impl_T<string>::init(mcsv1Context* context, ColumnDatum* colTypes)
 {
   cs.setCharset(context->getCharsetNumber());
-  fHasher.setCharset(context->getCharsetNumber());
-  fComparator.setCharset(context->getCharsetNumber());
   return mcsv1_UDAF::SUCCESS;
 }
 

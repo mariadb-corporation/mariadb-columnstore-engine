@@ -75,8 +75,7 @@ void moda(CONTAINER& container, struct moda_data* data)
     }
   }
 
-  data->result = boost::lexical_cast<std::string>(val);
-  data->result.push_back('\0');
+  data->result = std::to_string(val);
 }
 
 extern "C"
