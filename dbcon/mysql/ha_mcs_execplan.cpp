@@ -3899,6 +3899,16 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
       {
         return NULL;
       }
+      if (ifp->argument_count() > 65536)
+      {
+        nonSupport = true;
+        gwi.fatalParseError = true;
+        Message::Args args;
+        string info = funcName + " with argument count > 65535"; // One arge is taken by the lhs
+        args.add(info);
+        gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORTED_FUNCTION, args);
+        return NULL;
+      }
 
       if (!selectBetweenIn && (ifp->arguments()[0]->type() == Item::FIELD_ITEM ||
                                (ifp->arguments()[0]->type() == Item::REF_ITEM &&
