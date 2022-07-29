@@ -103,9 +103,9 @@ class StoreFieldMariaDB : public StoreField
     return m_field->store(val, 0);
   }
 
-  int store_ulonglong(int64_t val)override
+  int store_ulonglong(uint64_t val)override
   {
-    return m_field->store(val, 1);
+    return m_field->store(static_cast<int64_t>(val), 1);
   }
 
   int store_float(float dl) override

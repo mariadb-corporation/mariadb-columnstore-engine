@@ -484,7 +484,7 @@ int TypeHandlerSInt64::storeValueToField(rowgroup::Row& row, int pos, StoreField
 int TypeHandlerUInt64::storeValueToField(rowgroup::Row& row, int pos, StoreField* f) const
 {
   uint64_t val = row.getUintField<8>(pos);
-  return f->store_ulonglong(static_cast<int64_t>(val));
+  return f->store_ulonglong(val);
 }
 
 int TypeHandlerInt::storeValueToFieldSInt32(rowgroup::Row& row, int pos, StoreField* f) const
@@ -496,7 +496,7 @@ int TypeHandlerInt::storeValueToFieldSInt32(rowgroup::Row& row, int pos, StoreFi
 int TypeHandlerInt::storeValueToFieldUInt32(rowgroup::Row& row, int pos, StoreField* f) const
 {
   uint64_t val = row.getUintField<4>(pos);
-  return f->store_ulonglong(static_cast<int64_t>(val));
+  return f->store_ulonglong(val);
 }
 
 int TypeHandlerSInt16::storeValueToField(rowgroup::Row& row, int pos, StoreField* f) const
@@ -508,7 +508,7 @@ int TypeHandlerSInt16::storeValueToField(rowgroup::Row& row, int pos, StoreField
 int TypeHandlerUInt16::storeValueToField(rowgroup::Row& row, int pos, StoreField* f) const
 {
   uint64_t val = row.getUintField<2>(pos);
-  return f->store_ulonglong(static_cast<int64_t>(val));
+  return f->store_ulonglong(val);
 }
 
 int TypeHandlerSInt8::storeValueToField(rowgroup::Row& row, int pos, StoreField* f) const
@@ -520,7 +520,7 @@ int TypeHandlerSInt8::storeValueToField(rowgroup::Row& row, int pos, StoreField*
 int TypeHandlerUInt8::storeValueToField(rowgroup::Row& row, int pos, StoreField* f) const
 {
   uint64_t val = row.getUintField<1>(pos);
-  return f->store_ulonglong(static_cast<int64_t>(val));
+  return f->store_ulonglong(val);
 }
 
 /*
