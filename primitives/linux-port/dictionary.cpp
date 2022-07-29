@@ -600,7 +600,7 @@ idblog("storing value");
           out->resize(out->size() * SCALE_FACTOR);
         }
 
-	out[header.NBYTES] = (uint8_t) (sigptr.data == nullptr);
+	(*out)[header.NBYTES] = (uint8_t) (sigptr.data == nullptr);
 	header.NBYTES ++;
 
         outValue = reinterpret_cast<DataValue*>(&(*out)[header.NBYTES]);
