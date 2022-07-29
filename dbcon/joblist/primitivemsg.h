@@ -580,6 +580,7 @@ struct DictTokenByIndexRequestHeader
 
 struct DataValue
 {
+  uint8_t isnull;
   uint16_t len;
   char data[];
 };

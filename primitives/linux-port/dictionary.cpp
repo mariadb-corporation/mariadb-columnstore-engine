@@ -36,9 +36,6 @@ using namespace std;
 
 using namespace logging;
 
-const char* nullString = " ";  // this is not NULL to preempt segfaults.
-const int nullStringLen = 0;
-
 namespace
 {
 const char* signatureNotFound = joblist::CPSTRNOTFOUND.c_str();
@@ -211,6 +208,7 @@ idblog("sending data value");
 
         throw logging::DictionaryBufferOverflow();
       }
+      
 
       retDataValues->len = siglen;
       memcpy(retDataValues->data, sig, siglen);
@@ -329,7 +327,7 @@ void PrimitiveProcessor::nextSig(int NVALS, const PrimToken* tokens, p_DataValue
           goto again;
         }
 
-        ret->len = nullStringLen;
+        ret->len = 0;
         ret->data = (const uint8_t*)nullptr;
       }
       else
@@ -361,6 +359,7 @@ void PrimitiveProcessor::nextSig(int NVALS, const PrimToken* tokens, p_DataValue
     }
 
     /* XXXPAT: Need to check for the NULL token here */
+    idbassert(0); // XXX: new behavior is completely broken.
     
     ret->len = tokens[dict_OffsetIndex].len;
     ret->data = &niceBlock[tokens[dict_OffsetIndex].offset];

@@ -106,7 +106,7 @@ class DictStep : public Command
     uint64_t rid;
     uint64_t token;
     uint16_t pos;
-    std::string str;
+    NullString str;
     bool inResult;
     OrderedToken() : inResult(false)
     {
@@ -147,7 +147,7 @@ class DictStep : public Command
   uint32_t traceFlags;  // probably move this to Command
   uint8_t BOP;
   int64_t* values;
-  boost::scoped_array<std::string>* strValues;
+  boost::scoped_array<NullString>* strValues;
   int compressionType;
   messageqcpp::ByteStream filterString;
   uint32_t filterCount;

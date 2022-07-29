@@ -184,14 +184,20 @@ idblog("decoding RID");
 
     if (primMsg->OutputType & OT_DATAVALUE)
     {
+      NullString ns;
 idblog("decoding OT_DATAVALUE");
-      len = *((uint16_t*)pos);
-      pos += 2;
-      ot[rid16].str = string((char*)pos, len);
-      pos += len;
+      uint8_t isnull = *pos;
+      pos += 1;
+      if (!isnull) {
+        len = *((uint16_t*)pos);
+        pos += 2;
+        ns.assign(pos, len);
+        pos += len;
+      }
+      ot[rid16].str = ns; //string((char*)pos, len);
 
-      if (rid64 & 0x8000000000000000LL)
-        ot[rid16].str = joblist::CPNULLSTRMARK;
+      //if (rid64 & 0x8000000000000000LL)
+      //  ot[rid16].str = joblist::CPNULLSTRMARK;
     }
   }
 }
@@ -243,21 +249,28 @@ void DictStep::processResult()
 
     if (primMsg->OutputType & OT_DATAVALUE)
     {
-      len = *((uint16_t*)pos);
-      pos += 2;
-      (*strValues)[tmpResultCounter] = string((char*)pos, len);
-      pos += len;
+      uint8_t isnull = *pos;
+      pos += 1;
+      NullString ns;
+      if (!isnull)
+      {
+        len = *((uint16_t*)pos);
+        pos += 2;
+	ns.assign(pos, len);
+        pos += len;
+      }
+      (*strValues)[tmpResultCounter] = ns;
     }
 
     // cout << "  stored " << (*strValues)[tmpResultCounter] << endl;
     /* XXXPAT: disclaimer: this is how we do it in DictionaryStep; don't know
             if it's necessary or not yet */
-    if ((bpp->absRids[tmpResultCounter] & 0x8000000000000000LL) != 0)
-    {
-      if (primMsg->OutputType & OT_DATAVALUE)
-        (*strValues)[tmpResultCounter] = joblist::CPNULLSTRMARK.c_str();
-    
-    }
+    //if ((bpp->absRids[tmpResultCounter] & 0x8000000000000000LL) != 0)
+    //{
+    //  if (primMsg->OutputType & OT_DATAVALUE)
+    //    (*strValues)[tmpResultCounter] = joblist::CPNULLSTRMARK.c_str();
+    //
+    //}
     bpp->absRids[tmpResultCounter] &= 0x7FFFFFFFFFFFFFFFLL;
   }
 }
