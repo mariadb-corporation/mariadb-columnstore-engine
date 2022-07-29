@@ -188,12 +188,12 @@ idblog("decoding RID");
 idblog("decoding OT_DATAVALUE");
       uint8_t isnull = *pos;
       pos += 1;
+      len = *((uint16_t*)pos);
+      pos += 2;
       if (!isnull) {
-        len = *((uint16_t*)pos);
-        pos += 2;
         ns.assign(pos, len);
-        pos += len;
       }
+      pos += len;
       ot[rid16].str = ns; //string((char*)pos, len);
 
       //if (rid64 & 0x8000000000000000LL)

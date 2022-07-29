@@ -593,17 +593,20 @@ idblog("storing token");
       if (in->OutputType & OT_DATAVALUE)
       {
 idblog("storing value");
-        uint32_t newlen = header.NBYTES + sizeof(DataValue) + sigptr.len;
+        uint32_t newlen = header.NBYTES + sizeof(DataValue) + sigptr.len + 1;
 
         if (newlen > out->size())
         {
           out->resize(out->size() * SCALE_FACTOR);
         }
 
+	out[header.NBYTES] = sigptr.data == nullptr;
+	header.NBYTES ++;
+
         outValue = reinterpret_cast<DataValue*>(&(*out)[header.NBYTES]);
         outValue->len = sigptr.len;
         memcpy(outValue->data, sigptr.data, sigptr.len);
-        header.NBYTES += sizeof(DataValue) + sigptr.len;
+        header.NBYTES += sizeof(DataValue) + sigptr.len + 1;
       }
     }
 
