@@ -359,7 +359,7 @@ void PrimitiveProcessor::nextSig(int NVALS, const PrimToken* tokens, p_DataValue
     }
 
     /* XXXPAT: Need to check for the NULL token here */
-    idbassert(0); // XXX: new behavior is completely broken.
+    idbassert(false && "new behavior is broken"); // XXX: new behavior is completely broken.
     
     ret->len = tokens[dict_OffsetIndex].len;
     ret->data = &niceBlock[tokens[dict_OffsetIndex].offset];
