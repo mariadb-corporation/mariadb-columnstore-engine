@@ -286,6 +286,7 @@ void PrimitiveProcessor::nextSig(int NVALS, const PrimToken* tokens, p_DataValue
   const uint8_t* niceBlock = reinterpret_cast<const uint8_t*>(block);
   const uint16_t* offsets = reinterpret_cast<const uint16_t*>(&niceBlock[10]);
 
+  idbassert(oldGetSigBehavior); // XXX: new behavior is completely broken.
   if (NVALS == 0)
   {
     if (offsets[dict_OffsetIndex + 1] == 0xffff)
@@ -359,7 +360,6 @@ void PrimitiveProcessor::nextSig(int NVALS, const PrimToken* tokens, p_DataValue
     }
 
     /* XXXPAT: Need to check for the NULL token here */
-    idbassert(!oldGetSigBehavior); // XXX: new behavior is completely broken.
     
     ret->len = tokens[dict_OffsetIndex].len;
     ret->data = &niceBlock[tokens[dict_OffsetIndex].offset];
