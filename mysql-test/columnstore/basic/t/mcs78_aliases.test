@@ -36,7 +36,9 @@ SELECT t1_int 'Serial no', t1_text 'Name of the Book', t1_datetime 'Publish Date
 SELECT CONCAT(t1_char, t1_text, t1_varchar) 'Concatinating String Columns' FROM t1;
 SELECT t1_tinyint AS 'Boolean value' FROM t1;
 SELECT t1_tinyint 'Tinyint', t1_bigint 'Big Int', t1_decimal 'Decimal', t1_text AS 'Text', t1_varchar AS 'Varchar', t1_datetime AS 'Date' FROM t1 WHERE 'Decimal' >= -300 ORDER BY 'Date';
+--disable_warnings
 SELECT COUNT(*) AS 'Total rows' FROM t1 AS table1 , t1 AS table2 WHERE table1.t1_int = table2.t1_int;
+--enable_warnings
 SELECT table1.t1_tinyint, table2.t1_int FROM t1 AS table1 JOIN t1 AS table2 ON table1.t1_int = table2.t1_int;
 
 CREATE TABLE t2(col1 INT, col2 TEXT)ENGINE=Columnstore;
