@@ -203,7 +203,7 @@ void ColumnCommand::_loadData()
   bpp->physIO += blocksRead;
   bpp->touchedBlocks += blocksToLoad;
 
-  if (_hasAuxCol)
+  if (hasAuxCol_)
   {
     BRM::LBID_t* lbidsAux = (BRM::LBID_t*)alloca(1 * sizeof(BRM::LBID_t));
     uint8_t** blockPtrsAux = (uint8_t**)alloca(1 * sizeof(uint8_t*));
@@ -288,9 +288,10 @@ template <int W>
 void ColumnCommand::_issuePrimitive()
 {
   using IntegralType = typename datatypes::WidthToSIntegralType<W>::type;
+  primMsg->hasAuxCol = hasAuxCol_;
   // Down the call stack the code presumes outMsg buffer has enough space to store
   // ColRequestHeader + uint16_t Rids[8192] + IntegralType[8192].
-  bpp->getPrimitiveProcessor().columnScanAndFilter<IntegralType>(primMsg, outMsg, _hasAuxCol);
+  bpp->getPrimitiveProcessor().columnScanAndFilter<IntegralType>(primMsg, outMsg);
 }  // _issuePrimitive()
 
 void ColumnCommand::updateCPDataNarrow()
@@ -541,7 +542,7 @@ void ColumnCommand::createCommand(ByteStream& bs)
   bs >> BOP;
   bs >> filterCount;
   bs >> tmp8;
-  _hasAuxCol = tmp8;
+  hasAuxCol_ = tmp8;
   deserializeInlineVector(bs, lastLbid);
 
   Command::createCommand(bs);
@@ -575,7 +576,7 @@ void ColumnCommand::createCommand(execplan::CalpontSystemCatalog::ColType& aColT
   bs >> BOP;
   bs >> filterCount;
   bs >> tmp8;
-  _hasAuxCol = tmp8;
+  hasAuxCol_ = tmp8;
   deserializeInlineVector(bs, lastLbid);
 
   Command::createCommand(bs);
@@ -585,7 +586,7 @@ void ColumnCommand::resetCommand(ByteStream& bs)
 {
   bs >> lbid;
 
-  if (_hasAuxCol)
+  if (hasAuxCol_)
     bs >> lbidAux;
 }
 
@@ -848,14 +849,14 @@ void ColumnCommand::nextLBID()
 {
   lbid += colType.colWidth;
 
-  if (_hasAuxCol)
+  if (hasAuxCol_)
     lbidAux += execplan::AUX_COL_WIDTH;
 }
 
 void ColumnCommand::duplicate(ColumnCommand* cc)
 {
   cc->_isScan = _isScan;
-  cc->_hasAuxCol = _hasAuxCol;
+  cc->hasAuxCol_ = hasAuxCol_;
   cc->traceFlags = traceFlags;
   cc->filterString = filterString;
   cc->colType.colDataType = colType.colDataType;
@@ -887,7 +888,7 @@ bool ColumnCommand::operator==(const ColumnCommand& cc) const
   if (_isScan != cc._isScan)
     return false;
 
-  if (_hasAuxCol != cc._hasAuxCol)
+  if (hasAuxCol_ != cc.hasAuxCol_)
     return false;
 
   if (BOP != cc.BOP)
@@ -919,7 +920,7 @@ bool ColumnCommand::operator!=(const ColumnCommand& cc) const
 ColumnCommand& ColumnCommand::operator=(const ColumnCommand& c)
 {
   _isScan = c._isScan;
-  _hasAuxCol = c._hasAuxCol;
+  hasAuxCol_ = c.hasAuxCol_;
   traceFlags = c.traceFlags;
   filterString = c.filterString;
   colType.colDataType = c.colType.colDataType;
@@ -958,7 +959,7 @@ void ColumnCommand::getLBIDList(uint32_t loopCount, vector<int64_t>* lbids)
   for (i = firstLBID; i <= lastLBID; i++)
     lbids->push_back(i);
 
-  if (_hasAuxCol)
+  if (hasAuxCol_)
   {
     firstLBID = lbidAux;
     lastLBID = firstLBID + (loopCount * execplan::AUX_COL_WIDTH) - 1;

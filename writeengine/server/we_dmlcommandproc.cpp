@@ -91,6 +91,27 @@ WE_DMLCommandProc::~WE_DMLCommandProc()
   dbRootExtTrackerVec.clear();
 }
 
+void WE_DMLCommandProc::processAuxCol(const std::vector<std::string>& origVals,
+                                      WriteEngine::ColValueList& colValuesList,
+                                      WriteEngine::DictStrList& dicStringList)
+{
+  WriteEngine::ColTupleList auxColTuples;
+  WriteEngine::dictStr auxDicStrings;
+
+  for (uint32_t j = 0; j < origVals.size(); j++)
+  {
+    WriteEngine::ColTuple auxColTuple;
+    auxColTuple.data = (uint8_t)1;
+    auxColTuples.push_back(auxColTuple);
+    //@Bug 2515. Only pass string values to write engine
+    auxDicStrings.push_back("");
+  }
+
+  colValuesList.push_back(auxColTuples);
+  //@Bug 2515. Only pass string values to write engine
+  dicStringList.push_back(auxDicStrings);
+}
+
 uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std::string& err)
 {
   uint8_t rc = 0;
@@ -443,22 +464,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
           // MCOL-5021
           if ((i == numcols - 1) && (tableAUXColOid > 3000))
           {
-            WriteEngine::ColTupleList auxColTuples;
-            WriteEngine::dictStr auxDicStrings;
-
-            for (uint32_t j = 0; j < origVals.size(); j++)
-            {
-              WriteEngine::ColTuple auxColTuple;
-              auxColTuple.data = (uint8_t)1;
-
-              auxColTuples.push_back(auxColTuple);
-              //@Bug 2515. Only pass string values to write engine
-              auxDicStrings.push_back("");
-            }
-
-            colValuesList.push_back(auxColTuples);
-            //@Bug 2515. Only pass string values to write engine
-            dicStringList.push_back(auxDicStrings);
+            processAuxCol(origVals, colValuesList, dicStringList);
           }
 
           ++row_iterator;
@@ -1385,22 +1391,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
           // MCOL-5021
           if ((i == numcols - 1) && (tableAUXColOid > 3000))
           {
-            WriteEngine::ColTupleList auxColTuples;
-            WriteEngine::dictStr auxDicStrings;
-
-            for (uint32_t j = 0; j < origVals.size(); j++)
-            {
-              WriteEngine::ColTuple auxColTuple;
-              auxColTuple.data = (uint8_t)1;
-
-              auxColTuples.push_back(auxColTuple);
-              //@Bug 2515. Only pass string values to write engine
-              auxDicStrings.push_back("");
-            }
-
-            colValuesList.push_back(auxColTuples);
-            //@Bug 2515. Only pass string values to write engine
-            dicStringList.push_back(auxDicStrings);
+            processAuxCol(origVals, colValuesList, dicStringList);
           }
 
           ++row_iterator;
@@ -1502,7 +1493,6 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
   return rc;
 }
 
-#if 0
 uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs, std::string& err,
                                                     ByteStream::quadbyte& PMId)
 {
@@ -1665,8 +1655,9 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
       return rc;
     }
 
-    //@Bug 5996 validate hwm before starts
-    rc = validateColumnHWMs(ridList, systemCatalogPtr, colDBRootExtentInfo, "Starting");
+    // @Bug 5996 validate hwm before starts
+    // TODO MCOL-5021 hasAuxCol is hardcoded to false; add support here. 
+    rc = validateColumnHWMs(ridList, systemCatalogPtr, colDBRootExtentInfo, "Starting", false);
 
     if (rc != 0)
     {
@@ -2233,7 +2224,6 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
   CalpontSystemCatalog::removeCalpontSystemCatalog(sessionId | 0x80000000);
   return rc;
 }
-#endif
 
 uint8_t WE_DMLCommandProc::commitBatchAutoOn(messageqcpp::ByteStream& bs, std::string& err)
 {

@@ -396,20 +396,20 @@ class PrimitiveProcessor
   template <typename T, typename std::enable_if<sizeof(T) == sizeof(int8_t) || sizeof(T) == sizeof(int16_t) ||
                                                     sizeof(T) == sizeof(int128_t),
                                                 T>::type* = nullptr>
-  void scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out, bool hasAuxCol);
+  void scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out);
 
   template <typename T, typename std::enable_if<sizeof(T) == sizeof(int32_t), T>::type* = nullptr>
-  void scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out, bool hasAuxCol);
+  void scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out);
   template <typename T, typename std::enable_if<sizeof(T) == sizeof(int64_t), T>::type* = nullptr>
-  void scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out, bool hasAuxCol);
+  void scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out);
   template <typename T, typename std::enable_if<sizeof(T) <= sizeof(int64_t), T>::type* = nullptr>
-  void _scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out, bool hasAuxCol);
+  void _scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out);
 
   template <typename T, typename std::enable_if<sizeof(T) == sizeof(int128_t), T>::type* = nullptr>
-  void _scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out, bool hasAuxCol);
+  void _scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out);
 
   template <typename T>
-  void columnScanAndFilter(NewColRequestHeader* in, ColResultHeader* out, bool hasAuxCol);
+  void columnScanAndFilter(NewColRequestHeader* in, ColResultHeader* out);
 
   boost::shared_ptr<ParsedColumnFilter> parseColumnFilter(const uint8_t* filterString, uint32_t colWidth,
                                                           uint32_t colType, uint32_t filterCount,

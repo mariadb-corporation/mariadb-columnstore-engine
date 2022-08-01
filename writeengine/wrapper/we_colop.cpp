@@ -1412,12 +1412,12 @@ int ColumnOp::openColumnFile(Column& column, std::string& segFile, bool useTmpSu
   if (!isValid(column))
     return ERR_INVALID_PARAM;
 
-  std::string mode;
+  std::string mode = "r";
 
-  if (isReadOnly)
-    mode = "r";
-  else
+  if (!isReadOnly)
+  {
     mode = "r+b";
+  }
 
   // open column data file
   column.dataFile.pFile =
@@ -1817,10 +1817,9 @@ int ColumnOp::writeRowsReadOnly(Column& curCol, uint64_t totalRow, const RIDList
   uint64_t i = 0, curRowId;
   int dataFbo, dataBio, curDataFbo = -1;
   unsigned char dataBuf[BYTE_PER_BLOCK];
-  bool bExit = false;
   int rc = NO_ERROR;
 
-  while (!bExit)
+  while (i < totalRow)
   {
     curRowId = ridList[i];
 
@@ -1845,9 +1844,6 @@ int ColumnOp::writeRowsReadOnly(Column& curCol, uint64_t totalRow, const RIDList
     }
 
     i++;
-
-    if (i >= totalRow)
-      bExit = true;
   }
 
   return rc;

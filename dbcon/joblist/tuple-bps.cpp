@@ -579,7 +579,6 @@ TupleBPS::TupleBPS(const pColScanStep& rhs, const JobInfo& jobInfo) : BatchPrimi
 
       sort(extentsAux.begin(), extentsAux.end(), BRM::ExtentSorter());
 
-      extentsMap[fOidAux] = tr1::unordered_map<int64_t, EMEntry>();
       tr1::unordered_map<int64_t, EMEntry>& refAux = extentsMap[fOidAux];
 
       for (uint32_t z = 0; z < extentsAux.size(); z++)
@@ -589,7 +588,6 @@ TupleBPS::TupleBPS(const pColScanStep& rhs, const JobInfo& jobInfo) : BatchPrimi
 
   /* These lines are obsoleted by initExtentMarkers.  Need to remove & retest. */
   scannedExtents = rhs.extents;
-  extentsMap[fOid] = tr1::unordered_map<int64_t, EMEntry>();
   tr1::unordered_map<int64_t, EMEntry>& ref = extentsMap[fOid];
 
   for (uint32_t z = 0; z < rhs.extents.size(); z++)

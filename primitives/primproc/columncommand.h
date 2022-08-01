@@ -79,7 +79,7 @@ class ColumnCommand : public Command
 
   bool hasAuxCol() const
   {
-    return _hasAuxCol;
+    return hasAuxCol_;
   }
   uint64_t getLBIDAux() const
   {
@@ -173,7 +173,7 @@ class ColumnCommand : public Command
   uint32_t baseMsgLength;
 
   uint64_t lbid;
-  bool _hasAuxCol;
+  bool hasAuxCol_;
   uint64_t lbidAux;
   uint32_t traceFlags;  // probably move this to Command
   uint8_t BOP;

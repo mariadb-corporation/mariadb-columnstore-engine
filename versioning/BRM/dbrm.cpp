@@ -43,6 +43,7 @@
 #include "configcpp.h"
 #include "sessionmanagerserver.h"
 #include "messagequeuepool.h"
+#include "blocksize.h"
 #define DBRM_DLLEXPORT
 #include "dbrm.h"
 #undef DBRM_DLLEXPORT
@@ -4513,7 +4514,7 @@ void DBRM::addToLBIDList(uint32_t sessionID, vector<LBID_t>& lbidList)
         }
       }
 
-      uint32_t extentNumAux = fbo / (execplan::AUX_COL_WIDTH * 1024);
+      uint32_t extentNumAux = fbo / ((getExtentRows() * execplan::AUX_COL_WIDTH) / BLOCK_SIZE);
 
       for (auto iter = extentMap[tableOid].begin(); iter != extentMap[tableOid].end(); iter++)
       {

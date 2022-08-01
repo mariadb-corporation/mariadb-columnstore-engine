@@ -274,9 +274,8 @@ keepGoing:
     cout << fTxnid.id << " Create table allocOIDs got the starting oid " << fStartingColOID << endl;
 #endif
 
-    uint32_t size = numColumns + numDictCols;
-    idbassert(size > 0);
-    size += 1; // MCOL-5021
+    uint32_t numColumnOids = numColumns + numDictCols;
+    numColumnOids += 1; // MCOL-5021
 
     if (fStartingColOID < 0)
     {
@@ -300,7 +299,7 @@ keepGoing:
     bytestream << (uint32_t)createTableStmt.fSessionID;
     bytestream << (uint32_t)txnID.id;
     bytestream << (uint32_t)fStartingColOID;
-    bytestream << (uint32_t)(fStartingColOID + size);
+    bytestream << (uint32_t)(fStartingColOID + numColumnOids);
     bytestream << (uint32_t)createTableStmt.fTableWithAutoi;
     uint16_t dbRoot;
     BRM::OID_t sysOid = 1001;
@@ -543,7 +542,7 @@ keepGoing:
     bytestream << (ByteStream::byte)WE_SVR_WRITE_CREATETABLEFILES;
     bytestream << uniqueId;
     bytestream << (uint32_t)txnID.id;
-    bytestream << size;
+    bytestream << numColumnOids;
     unsigned colNum = 0;
     unsigned dictNum = 0;
 
@@ -607,7 +606,7 @@ keepGoing:
       ++iter;
     }
 
-    bytestream << (fStartingColOID + size);
+    bytestream << (fStartingColOID + numColumnOids);
     bytestream << (uint8_t)execplan::AUX_COL_DATATYPE;
     bytestream << (uint8_t) false;
     bytestream << (uint32_t)execplan::AUX_COL_WIDTH;
@@ -630,7 +629,7 @@ keepGoing:
     }
 
     // MCOL-5021
-    oidList.push_back(fStartingColOID + size);
+    oidList.push_back(fStartingColOID + numColumnOids);
 
     try
     {
@@ -699,9 +698,9 @@ keepGoing:
         bytestream.restart();
         bytestream << (ByteStream::byte)WE_SVR_WRITE_DROPFILES;
         bytestream << uniqueId;
-        bytestream << (uint32_t)size;
+        bytestream << (uint32_t)numColumnOids;
 
-        for (unsigned i = 0; i < size; i++)
+        for (unsigned i = 0; i < numColumnOids; i++)
         {
           bytestream << (uint32_t)(fStartingColOID + i + 1);
         }

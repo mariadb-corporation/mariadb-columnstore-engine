@@ -717,6 +717,7 @@ struct NewColRequestHeader
   uint16_t NOPS;
   uint16_t NVALS;
   uint8_t sort;  // 1 to sort
+  bool hasAuxCol;
   // this follows the header
   // ColArgs ArgList[NOPS] (where the val field is DataSize bytes long)
   // uint16_t Rids[NVALS]  (each rid is relative to the given block)

@@ -78,8 +78,8 @@ class WE_DMLCommandProc
   EXPORT uint8_t rollbackVersion(messageqcpp::ByteStream& bs, std::string& err);
   EXPORT uint8_t processBatchInsert(messageqcpp::ByteStream& bs, std::string& err,
                                     ByteStream::quadbyte& PMId);
-  //EXPORT uint8_t processBatchInsertBinary(messageqcpp::ByteStream& bs, std::string& err,
-  //                                        ByteStream::quadbyte& PMId);
+  EXPORT uint8_t processBatchInsertBinary(messageqcpp::ByteStream& bs, std::string& err,
+                                          ByteStream::quadbyte& PMId);
   EXPORT uint8_t commitBatchAutoOn(messageqcpp::ByteStream& bs, std::string& err);
   EXPORT uint8_t commitBatchAutoOff(messageqcpp::ByteStream& bs, std::string& err);
   EXPORT uint8_t rollbackBatchAutoOn(messageqcpp::ByteStream& bs, std::string& err);
@@ -126,6 +126,10 @@ class WE_DMLCommandProc
   uint8_t processBatchInsertHwmFlushChunks(uint32_t tableOID, int txnID,
                                            const std::vector<BRM::FileInfo>& files,
                                            const std::vector<BRM::OID_t>& oidsToFlush, std::string& err);
+
+  void processAuxCol(const std::vector<std::string>& origVals,
+                     WriteEngine::ColValueList& colValuesList,
+                     WriteEngine::DictStrList& dicStringList);
 
   bool fIsFirstBatchPm;
   std::map<uint32_t, rowgroup::RowGroup*> rowGroups;

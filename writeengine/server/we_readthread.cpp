@@ -156,13 +156,11 @@ void DmlReadThread::operator()()
           break;
         }
 
-#if 0
         case WE_SVR_BATCH_INSERT_BINARY:
         {
           rc = fWeDMLprocessor->processBatchInsertBinary(ibs, errMsg, PMId);
           break;
         }
-#endif
 
         case WE_SVR_GET_WRITTEN_LBIDS:
         {

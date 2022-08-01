@@ -188,7 +188,8 @@ void Config::checkReload()
 
   const std::string fastDeleteTemp = cf->getConfig("WriteEngine", "FastDelete");
 
-  if (fastDeleteTemp.length() != 0 && boost::iequals(fastDeleteTemp, "true"))
+  if (fastDeleteTemp.length() != 0 &&
+      (fastDeleteTemp == "y" || fastDeleteTemp == "Y"))
   {
     m_FastDelete = true;
   }

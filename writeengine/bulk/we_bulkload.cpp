@@ -265,7 +265,7 @@ int BulkLoad::loadJobInfo(const string& fullName, bool bUseTempJobFile, int argc
     return rc;
   }
 
-  Job& curJob = const_cast<Job&>(fJobInfo.getJob());
+  Job& curJob = fJobInfo.getJob();
   string logFile, errlogFile;
   logFile = std::string(MCSLOGDIR) + "/cpimport/" + "Job_" + Convertor::int2Str(curJob.id) + LOG_SUFFIX;
   errlogFile =
@@ -319,6 +319,8 @@ int BulkLoad::loadJobInfo(const string& fullName, bool bUseTempJobFile, int argc
     execplan::CalpontSystemCatalog::OID tableAUXColOid;
     std::string tblName;
     std::string curTblName = curJob.jobTableList[i].tblName;
+
+    // Parse out <tablename> from [<schemaname>.]<tablename> string
     string::size_type startName = curTblName.rfind('.');
 
     if (startName == std::string::npos)
@@ -376,18 +378,10 @@ int BulkLoad::loadJobInfo(const string& fullName, bool bUseTempJobFile, int argc
     // tableAUXColOid = 0
     if (tableAUXColOid > 3000)
     {
-      JobColumn curColumn;
-      curColumn.colName = "aux";
-      curColumn.mapOid = tableAUXColOid;
-      curColumn.typeName = execplan::AUX_COL_DATATYPE_STRING;
-      curColumn.width = execplan::AUX_COL_WIDTH;
-      curColumn.definedWidth = execplan::AUX_COL_WIDTH;
-      curColumn.compressionType = execplan::AUX_COL_COMPRESSION_TYPE;
-      curColumn.dctnry.fCompressionType = execplan::AUX_COL_COMPRESSION_TYPE;
-      curColumn.fMinIntSat = execplan::AUX_COL_MINVALUE;
-      curColumn.fMaxIntSat = execplan::AUX_COL_MAXVALUE;
-      curColumn.fWithDefault = true;
-      curColumn.fDefaultUInt = 1;
+      JobColumn curColumn("aux", tableAUXColOid, execplan::AUX_COL_DATATYPE_STRING,
+        execplan::AUX_COL_WIDTH, execplan::AUX_COL_WIDTH,
+        execplan::AUX_COL_COMPRESSION_TYPE, execplan::AUX_COL_COMPRESSION_TYPE,
+        execplan::AUX_COL_MINVALUE, execplan::AUX_COL_MAXVALUE, true, 1);
       curJob.jobTableList[i].colList.push_back(curColumn);
       JobFieldRef fieldRef(BULK_FLDCOL_COLUMN_DEFAULT, curJob.jobTableList[i].colList.size() - 1);
       curJob.jobTableList[i].fFldRefs.push_back(fieldRef);

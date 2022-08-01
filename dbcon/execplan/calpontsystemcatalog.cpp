@@ -3662,20 +3662,23 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::tableAUXColumnOID(const TableNam
   CalpontSelectExecutionPlan::FilterTokenList filterTokenList;
   CalpontSelectExecutionPlan::ColumnMap colMap;
 
+  static const std::string sysCatSchemaTablePrefix =
+    CALPONT_SCHEMA + "." + SYSTABLE_TABLE + ".";
+
   SimpleColumn* c1 =
-    new SimpleColumn(CALPONT_SCHEMA + "." + SYSTABLE_TABLE + "." + AUXCOLUMNOID_COL, fSessionID);
+    new SimpleColumn(sysCatSchemaTablePrefix + AUXCOLUMNOID_COL, fSessionID);
   SimpleColumn* c2 =
-    new SimpleColumn(CALPONT_SCHEMA + "." + SYSTABLE_TABLE + "." + SCHEMA_COL, fSessionID);
+    new SimpleColumn(sysCatSchemaTablePrefix + SCHEMA_COL, fSessionID);
   SimpleColumn* c3 =
-    new SimpleColumn(CALPONT_SCHEMA + "." + SYSTABLE_TABLE + "." + TABLENAME_COL, fSessionID);
+    new SimpleColumn(sysCatSchemaTablePrefix + TABLENAME_COL, fSessionID);
 
   SRCP srcp;
   srcp.reset(c1);
-  colMap.insert(CMVT_(CALPONT_SCHEMA + "." + SYSTABLE_TABLE + "." + AUXCOLUMNOID_COL, srcp));
+  colMap.insert(CMVT_(sysCatSchemaTablePrefix + AUXCOLUMNOID_COL, srcp));
   srcp.reset(c2);
-  colMap.insert(CMVT_(CALPONT_SCHEMA + "." + SYSTABLE_TABLE + "." + SCHEMA_COL, srcp));
+  colMap.insert(CMVT_(sysCatSchemaTablePrefix + SCHEMA_COL, srcp));
   srcp.reset(c3);
-  colMap.insert(CMVT_(CALPONT_SCHEMA + "." + SYSTABLE_TABLE + "." + TABLENAME_COL, srcp));
+  colMap.insert(CMVT_(sysCatSchemaTablePrefix + TABLENAME_COL, srcp));
   csep.columnMapNonStatic(colMap);
 
   srcp.reset(c1->clone());
@@ -3771,15 +3774,18 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::isAUXColumnOID(const OID& oid)
   CalpontSelectExecutionPlan::FilterTokenList filterTokenList;
   CalpontSelectExecutionPlan::ColumnMap colMap;
 
+  static const std::string sysCatSchemaTablePrefix =
+    CALPONT_SCHEMA + "." + SYSTABLE_TABLE + ".";
+
   SimpleColumn* c1 =
-    new SimpleColumn(CALPONT_SCHEMA + "." + SYSTABLE_TABLE + "." + OBJECTID_COL, fSessionID);
+    new SimpleColumn(sysCatSchemaTablePrefix + OBJECTID_COL, fSessionID);
   SimpleColumn* c2 =
-    new SimpleColumn(CALPONT_SCHEMA + "." + SYSTABLE_TABLE + "." + AUXCOLUMNOID_COL, fSessionID);
+    new SimpleColumn(sysCatSchemaTablePrefix + AUXCOLUMNOID_COL, fSessionID);
   SRCP srcp;
   srcp.reset(c1);
-  colMap.insert(CMVT_(CALPONT_SCHEMA + "." + SYSTABLE_TABLE + "." + OBJECTID_COL, srcp));
+  colMap.insert(CMVT_(sysCatSchemaTablePrefix + OBJECTID_COL, srcp));
   srcp.reset(c2);
-  colMap.insert(CMVT_(CALPONT_SCHEMA + "." + SYSTABLE_TABLE + "." + AUXCOLUMNOID_COL, srcp));
+  colMap.insert(CMVT_(sysCatSchemaTablePrefix + AUXCOLUMNOID_COL, srcp));
   csep.columnMapNonStatic(colMap);
 
   srcp.reset(c1->clone());

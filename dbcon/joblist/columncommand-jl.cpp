@@ -265,6 +265,11 @@ void ColumnCommandJL::setLBID(uint64_t rid, uint32_t dbRoot)
     }
   }
 
+  if (i == extents.size())
+  {
+    throw logic_error("ColumnCommandJL: setLBID didn't find the extent for the rid.");
+  }
+
   uint32_t j;
 
   for (j = 0; j < extentsAux.size(); j++)
@@ -277,7 +282,7 @@ void ColumnCommandJL::setLBID(uint64_t rid, uint32_t dbRoot)
     }
   }
 
-  if (i == extents.size() || (hasAuxCol && j == extentsAux.size()))
+  if (hasAuxCol && j == extentsAux.size())
   {
     throw logic_error("ColumnCommandJL: setLBID didn't find the extent for the rid.");
   }

@@ -436,6 +436,38 @@ struct JobColumn /** @brief Job Column Structure */
    , fDefaultWideDecimal(0)
   {
   }
+  JobColumn(const std::string& colName_, OID mapOid_, const std::string& typeName_,
+            int width_, int definedWidth_, int compressionType_, int dctnryCompressionType_,
+            int64_t minIntSat_, uint64_t maxIntSat_, bool withDefault_,
+            unsigned long long defaultUInt_)
+   : colName(colName_)
+   , mapOid(mapOid_)
+   , dataType(execplan::CalpontSystemCatalog::INT)
+   , weType(WR_INT)
+   , typeName(typeName_)
+   , emptyVal(nullptr)
+   , width(width_)
+   , definedWidth(definedWidth_)
+   , dctnryWidth(0)
+   , precision(0)
+   , scale(0)
+   , fNotNull(false)
+   , fFldColRelation(BULK_FLDCOL_COLUMN_FIELD)
+   , colType(' ')
+   , compressionType(compressionType_)
+   , autoIncFlag(false)
+   , fMinIntSat(minIntSat_)
+   , fMaxIntSat(maxIntSat_)
+   , fMinDblSat(0)
+   , fMaxDblSat(0)
+   , fWithDefault(withDefault_)
+   , fDefaultInt(0)
+   , fDefaultUInt(defaultUInt_)
+   , fDefaultDbl(0.0)
+   , fDefaultWideDecimal(0)
+  {
+    dctnry.fCompressionType = dctnryCompressionType_;
+  }
 };
 
 typedef std::vector<JobColumn> JobColList; /** @brief column value list */
