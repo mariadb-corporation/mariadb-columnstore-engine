@@ -66,8 +66,8 @@ ostream& operator<<(ostream& out, const ElementType& rhs)
 
 static ostream& writeRid(std::ostream& out, const uint64_t& rhs)
 {
-  out->write((const char*) (&rhs), sizeof(rhs));
-  return *out;
+  out.write((const char*) (&rhs), sizeof(rhs));
+  return out;
 }
 
 std::istream& operator >>(std::istream& in, utils::NullString& ns)
@@ -107,8 +107,8 @@ std::ostream& operator <<(std::ostream& out, const utils::NullString& ns)
 // slightly different types.
 static istream& readRid(std::istream& in, uint64_t& rhs)
 {
-  in->read((char*)(&rhs), sizeof(rhs));
-  return *in;
+  in.read((char*)(&rhs), sizeof(rhs));
+  return in;
 }
 
 ostream& operator<<(std::ostream& out, const StringElementType& rhs)
