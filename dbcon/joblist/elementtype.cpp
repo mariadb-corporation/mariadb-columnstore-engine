@@ -69,15 +69,21 @@ ostream& operator<<(std::ostream& out, const StringElementType& rhs)
   uint64_t r = rhs.first;
   int16_t dlen = rhs.second.length();
 
+#if 0
   out.write((char*)&r, sizeof(r));
   out.write((char*)&dlen, sizeof(dlen));
   out.write(rhs.second.c_str(), dlen);
+#else
+  out << rhs.first;
+  out << rhs.second;
+#endif
 
   return out;
 }
 
 istream& operator>>(std::istream& out, StringElementType& rhs)
 {
+#if 0
   uint64_t r;
   int16_t dlen;
   char d[32768];  // atm 32k is the largest possible val for the length of strings stored
@@ -88,6 +94,10 @@ istream& operator>>(std::istream& out, StringElementType& rhs)
 
   rhs.first = r;
   rhs.second = string(d, dlen);
+#else
+  out >> rhs.first;
+  out >> rhs.second;
+#endif
 
   return out;
 }
