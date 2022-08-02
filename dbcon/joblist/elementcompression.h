@@ -351,11 +351,17 @@ template <typename SrcType>
 /* static */ inline void ElementCompression::writeWith32Rid(const StringElementType& e, std::fstream& fFile)
 {
   uint32_t rid = e.first;
-  uint16_t dlen = e.second.length();
 
   fFile.write((char*)&rid, sizeof(rid));
-  fFile.write((char*)&dlen, sizeof(dlen));
-  fFile.write(e.second.c_str(), dlen);
+  uint8_t isNull = e.second.isiNull();
+  fFile.write((char*)(&isNull), sizeof(isNull));
+  if (!isNull)
+  {
+    idbassert(e.second.length() < 32768);
+    uint16_t dlen = e.second.length();
+    fFile.write((char*)&dlen, sizeof(dlen));
+    fFile.write(e.second.str(), dlen);
+  }
 }
 
 /* static */ inline void ElementCompression::writeWith32Rid(const RIDElementType& e, std::fstream& fFile)
@@ -380,15 +386,25 @@ template <typename SrcType>
 /* static */ inline void ElementCompression::readWith32Rid(StringElementType& e, std::fstream& fFile)
 {
   uint32_t rid = 0;
-  uint16_t dlen = 0;
-  char d[32768];
 
   fFile.read((char*)&rid, sizeof(rid));
-  fFile.read((char*)&dlen, sizeof(dlen));
-  fFile.read(d, dlen);
-
   e.first = rid;
-  e.second.assign(d, dlen);
+
+  uint8_t isNull;
+  fFile.read((char*)(&isNull), sizeof(isNull));
+  if (isNull)
+  {
+    e.second.dropString();
+  }
+  else
+  {
+    uint16_t dlen = 0;
+    char d[32768];
+    fFile.read((char*)&dlen, sizeof(dlen));
+    fFile.read(d, dlen);
+    e.second.assign((const uint8_t*)d, dlen);
+  }
+
 }
 
 /* static */ inline void ElementCompression::readWith32Rid(RIDElementType& e, std::fstream& fFile)
