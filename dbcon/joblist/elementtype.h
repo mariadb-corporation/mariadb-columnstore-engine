@@ -76,10 +76,10 @@ struct ElementType
 struct StringElementType
 {
   typedef uint64_t first_type;
-  typedef std::string second_type;
+  typedef utils::NullString second_type;
 
   uint64_t first;
-  std::string second;
+  utils::NullString second;
 
   StringElementType();
   StringElementType(uint64_t f, const std::string& s);
@@ -90,7 +90,7 @@ struct StringElementType
     {
       case 0: *len = sizeof(first); return (char*)&first;
 
-      case 1: *len = second.size(); return (char*)second.data();
+      case 1: *len = second.length(); return (char*)second.str();
 
       default: throw std::logic_error("StringElementType: invalid mode in getHashString().");
     }
