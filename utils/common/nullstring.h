@@ -199,7 +199,7 @@ std::istream& operator >>(std::istream& in, utils::NullString& ns)
   return in;
 }
 
-std::istream& operator <<(std::istream& out, const utils::NullString& ns)
+std::ostream& operator <<(std::ostream& out, const utils::NullString& ns)
 {
   uint8_t isNull = ns.isNull();
   out.write((char*)(&isNull), sizeof(isNull));
