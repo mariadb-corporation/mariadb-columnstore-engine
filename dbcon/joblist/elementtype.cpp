@@ -64,7 +64,7 @@ ostream& operator<<(ostream& out, const ElementType& rhs)
   return out;
 }
 
-ostream& operator<<(std::ostream* out, const StringElementType::first_type& rhs)
+ostream& operator<<(std::ostream* out, const uint64_t& rhs)
 {
   out->write((const char*) (&rhs), sizeof(rhs));
   return *out;
@@ -105,7 +105,7 @@ std::ostream& operator <<(std::ostream& out, const utils::NullString& ns)
 
 // XXX: somewhat hacky. there's an operator with unknown/unneccessarily complex semantics, so I invented mine's, with
 // slightly different types.
-istream& operator>>(std::istream* out, StringElementType::first_type& rhs)
+istream& operator>>(std::istream* out, uint64_t& rhs)
 {
   out->read((char*)(&rhs), sizeof(rhs));
   return *out;
