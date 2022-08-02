@@ -121,7 +121,7 @@ ostream& operator<<(std::ostream& out, const StringElementType& rhs)
   out.write((char*)&dlen, sizeof(dlen));
   out.write(rhs.second.c_str(), dlen);
 #else
-  *out << rhs.first;
+  &out << rhs.first;
   out << rhs.second;
 #endif
 
@@ -142,7 +142,7 @@ istream& operator>>(std::istream& out, StringElementType& rhs)
   rhs.first = r;
   rhs.second = string(d, dlen);
 #else
-  *out >> rhs.first;
+  &out >> rhs.first;
   out >> rhs.second;
 #endif
 
