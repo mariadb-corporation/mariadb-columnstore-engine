@@ -39,7 +39,7 @@ lineitem	CREATE TABLE `lineitem` (
   `l_shipinstruct` char(25) DEFAULT NULL,
   `l_shipmode` char(10) DEFAULT NULL,
   `l_comment` varchar(44) DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
 drop table if exists lineitem1;
 create table lineitem1 (
 l_orderkey int,
@@ -78,7 +78,7 @@ lineitem1	CREATE TABLE `lineitem1` (
   `l_shipinstruct` char(25) DEFAULT NULL,
   `l_shipmode` char(10) DEFAULT NULL,
   `l_comment` varchar(44) DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
 insert into lineitem values
 (10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
 (10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
@@ -115,7 +115,7 @@ COUNT(*)
 30
 show variables like 'columnstore_use_import_for_batchinsert';
 Variable_name	Value
-columnstore_use_import_for_batchinsert	ALWAYS
+columnstore_use_import_for_batchinsert	ON
 SET columnstore_use_import_for_batchinsert = 0;
 show variables like 'columnstore_use_import_for_batchinsert';
 Variable_name	Value
@@ -134,7 +134,7 @@ INSERT INTO lineitem1 SELECT * FROM lineitem;
 SET columnstore_use_import_for_batchinsert = default;
 show variables like 'columnstore_use_import_for_batchinsert';
 Variable_name	Value
-columnstore_use_import_for_batchinsert	ALWAYS
+columnstore_use_import_for_batchinsert	ON
 INSERT INTO lineitem1 SELECT * FROM lineitem;
 SELECT COUNT(*) FROM lineitem1;
 COUNT(*)

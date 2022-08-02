@@ -18,9 +18,9 @@ SELECT * FROM jsontest;
 cInt	cVarchar	cText
 1	[1, 2, [3, 4]]	[1, 2, [3, 4]]
 SELECT cVarchar, JSON_EXTRACT(cVarchar, '$[1]'), cText, JSON_EXTRACT(cText, '$[1]') from jsontest;
-ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_extract' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_extract' isn't supported.
 SELECT cVarchar, JSON_EXTRACT(cVarchar, '$[2]'), cText, JSON_EXTRACT(cText, '$[2]') from jsontest;
-ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_extract' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_extract' isn't supported.
 SELECT cVarchar, JSON_EXTRACT(cVarchar, '$[2][1]'), cText, JSON_EXTRACT(cText, '$[2][1]') from jsontest;
-ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_extract' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_extract' isn't supported.
 TRUNCATE TABLE jsontest;

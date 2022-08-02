@@ -13,10 +13,12 @@ set max_length_for_sort_data=68192;
 select GROUP_CONCAT(CTEXT) from datatypetestm;
 select GROUP_CONCAT(CTINYTEXT) from datatypetestm;
 select GROUP_CONCAT(CMEDIUMTEXT) from datatypetestm;
+--error	1815
 select GROUP_CONCAT(CLONGTEXT) from datatypetestm;
 select GROUP_CONCAT('Hello') from datatypetestm;
 select GROUP_CONCAT('Hello, World') from datatypetestm;
 select cidx, CTEXT, GROUP_CONCAT(CTEXT) from datatypetestm group by cidx, CTEXT ;
 select cidx, CTINYTEXT, GROUP_CONCAT(CTINYTEXT) from datatypetestm group by cidx, CTINYTEXT ;
 select cidx, CMEDIUMTEXT, GROUP_CONCAT(CMEDIUMTEXT) from datatypetestm group by cidx, CMEDIUMTEXT ;
+--error	1815
 select cidx, CLONGTEXT, GROUP_CONCAT(CLONGTEXT) from datatypetestm group by cidx, CLONGTEXT ;

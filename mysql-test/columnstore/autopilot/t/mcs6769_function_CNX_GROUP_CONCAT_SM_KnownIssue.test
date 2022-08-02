@@ -22,9 +22,13 @@ select GROUP_CONCAT(CMEDIUMTEXT,CCHAR3) from datatypetestm;
 select GROUP_CONCAT(CMEDIUMTEXT,CCHAR3,'Calpont') from datatypetestm;
 select GROUP_CONCAT(CMEDIUMTEXT,CCHAR3,'Calpont' separator '#') from datatypetestm;
 select GROUP_CONCAT(CMEDIUMTEXT,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
+--error	1815
 select GROUP_CONCAT(CLONGTEXT,CCHAR3) from datatypetestm;
+--error	1815
 select GROUP_CONCAT(CLONGTEXT,CCHAR3,'Calpont') from datatypetestm;
+--error	1815
 select GROUP_CONCAT(CLONGTEXT,CCHAR3,'Calpont' separator '#') from datatypetestm;
+--error	1815
 select GROUP_CONCAT(CLONGTEXT,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
 select cidx, CTEXT, GROUP_CONCAT(CTEXT,CCHAR3) from datatypetestm group by cidx, CTEXT ;
 select cidx, CTEXT, GROUP_CONCAT(CTEXT,CCHAR3,'Calpont') from datatypetestm group by cidx, CTEXT ;
@@ -38,7 +42,11 @@ select cidx, CMEDIUMTEXT, GROUP_CONCAT(CMEDIUMTEXT,CCHAR3) from datatypetestm gr
 select cidx, CMEDIUMTEXT, GROUP_CONCAT(CMEDIUMTEXT,CCHAR3,'Calpont') from datatypetestm group by cidx, CMEDIUMTEXT ;
 select cidx, CMEDIUMTEXT, GROUP_CONCAT(CMEDIUMTEXT,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CMEDIUMTEXT ;
 select cidx, CMEDIUMTEXT, GROUP_CONCAT(CMEDIUMTEXT,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CMEDIUMTEXT ;
+--error	1815
 select cidx, CLONGTEXT, GROUP_CONCAT(CLONGTEXT,CCHAR3) from datatypetestm group by cidx, CLONGTEXT ;
+--error	1815
 select cidx, CLONGTEXT, GROUP_CONCAT(CLONGTEXT,CCHAR3,'Calpont') from datatypetestm group by cidx, CLONGTEXT ;
+--error	1815
 select cidx, CLONGTEXT, GROUP_CONCAT(CLONGTEXT,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CLONGTEXT ;
+--error	1815
 select cidx, CLONGTEXT, GROUP_CONCAT(CLONGTEXT,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CLONGTEXT ;

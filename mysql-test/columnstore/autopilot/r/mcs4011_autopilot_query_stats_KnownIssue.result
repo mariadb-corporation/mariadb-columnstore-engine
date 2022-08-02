@@ -19,7 +19,7 @@ nation	CREATE TABLE `nation` (
   `n_name` char(25) DEFAULT NULL,
   `n_regionkey` int(11) DEFAULT NULL,
   `n_comment` varchar(152) DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
 RENAME TABLE nation to nation1;
 drop table if exists nation;
 create table nation (
@@ -35,34 +35,20 @@ nation	CREATE TABLE `nation` (
   `n_name` char(25) DEFAULT NULL,
   `n_regionkey` int(11) DEFAULT NULL,
   `n_comment` varchar(152) DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
 LOAD DATA INFILE '/data/qa/source/dbt3/1m/nation.tbl' INTO TABLE nation FIELDS TERMINATED BY '|';
 select count(*) from nation where n_regionkey = 2;
 count(*)
 5
-Warnings:
-Note	9999	Query Stats: MaxMemPct-0; NumTempFiles-0; TempFileSpace-0B; ApproxPhyI/O-2; CacheI/O-2; BlocksTouched-2; PartitionBlocksEliminated-0; MsgBytesIn-129B; MsgBytesOut-601B; Mode-Distributed
 insert into nation values(25, 'Hawaiian Nation',5,'Hello world');
-Warnings:
-Note	9999	Query Stats: MaxMemPct-0; NumTempFiles-0; TempFileSpace-0B; ApproxPhyI/O-2; CacheI/O-2; BlocksTouched-2; PartitionBlocksEliminated-0; MsgBytesIn-129B; MsgBytesOut-601B; Mode-Distributed
 update nation set n_regionkey = -1 where n_regionkey = 5;
-Warnings:
-Note	9999	Query Stats: MaxMemPct-0; NumTempFiles-0; TempFileSpace-0B; ApproxPhyI/O-2; CacheI/O-2; BlocksTouched-2; PartitionBlocksEliminated-0; MsgBytesIn-129B; MsgBytesOut-601B; Mode-Distributed
 insert into nation1 select * from nation;
-Warnings:
-Note	9999	Query Stats: MaxMemPct-0; NumTempFiles-0; TempFileSpace-0B; ApproxPhyI/O-12; CacheI/O-8; BlocksTouched-7; PartitionBlocksEliminated-0; MsgBytesIn-2KB; MsgBytesOut-1019B; Mode-Distributed
 LOAD DATA INFILE '/data/qa/source/dbt3/1m/nation.tbl' INTO TABLE nation FIELDS TERMINATED BY '|';
-Warnings:
-Note	9999	Query Stats: MaxMemPct-0; NumTempFiles-0; TempFileSpace-0B; ApproxPhyI/O-12; CacheI/O-8; BlocksTouched-7; PartitionBlocksEliminated-0; MsgBytesIn-2KB; MsgBytesOut-1019B; Mode-Distributed
 delete from nation;
-Warnings:
-Note	9999	Query Stats: MaxMemPct-0; NumTempFiles-0; TempFileSpace-0B; ApproxPhyI/O-12; CacheI/O-8; BlocksTouched-7; PartitionBlocksEliminated-0; MsgBytesIn-2KB; MsgBytesOut-1019B; Mode-Distributed
 select user, priority, queryType, query from infinidb_querystats.querystats;
 user	priority	queryType	query
 root	LOW	LOAD_DATA_INFILE	LOAD DATA INFILE '/data/qa/source/dbt3/1m/nation.tbl' INTO TABLE nation FIELDS TERMINATED BY '|'
-root	LOW	SELECT	select count(*) from nation where n_regionkey = 2
 root	LOW	UPDATE	update nation set n_regionkey = -1 where n_regionkey = 5
-root	LOW	SELECT	insert into nation1 select * from nation
 root	LOW	LOAD_DATA_INFILE	LOAD DATA INFILE '/data/qa/source/dbt3/1m/nation.tbl' INTO TABLE nation FIELDS TERMINATED BY '|'
 root	LOW	DELETE	delete from nation
 DROP USER 'cejuser'@'localhost';

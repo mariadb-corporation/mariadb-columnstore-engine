@@ -16,7 +16,7 @@ nation	CREATE TABLE `nation` (
   `n_name` char(25) DEFAULT NULL,
   `n_regionkey` int(11) DEFAULT NULL,
   `n_comment` varchar(152) DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
 drop table if exists region;
 create table region (
 r_regionkey int,
@@ -29,7 +29,7 @@ region	CREATE TABLE `region` (
   `r_regionkey` int(11) DEFAULT NULL,
   `r_name` char(25) DEFAULT NULL,
   `r_comment` varchar(152) DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
 drop table if exists customer;
 create table customer (
 c_custkey int,
@@ -52,7 +52,7 @@ customer	CREATE TABLE `customer` (
   `c_acctbal` decimal(12,2) DEFAULT NULL,
   `c_mktsegment` char(10) DEFAULT NULL,
   `c_comment` varchar(117) DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
 drop table if exists orders;
 create table orders (
 o_orderkey int,
@@ -77,7 +77,7 @@ orders	CREATE TABLE `orders` (
   `o_clerk` char(15) DEFAULT NULL,
   `o_shippriority` int(11) DEFAULT NULL,
   `o_comment` varchar(79) DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
 drop table if exists supplier;
 create table supplier (
 s_suppkey int,
@@ -98,7 +98,7 @@ supplier	CREATE TABLE `supplier` (
   `s_phone` char(15) DEFAULT NULL,
   `s_acctbal` decimal(12,2) DEFAULT NULL,
   `s_comment` varchar(101) DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
 drop table if exists partsupp;
 create table partsupp (
 ps_partkey int,
@@ -115,7 +115,7 @@ partsupp	CREATE TABLE `partsupp` (
   `ps_availqty` int(11) DEFAULT NULL,
   `ps_supplycost` decimal(12,2) DEFAULT NULL,
   `ps_comment` varchar(199) DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
 drop table if exists part;
 create table part (
 p_partkey int,
@@ -140,7 +140,7 @@ part	CREATE TABLE `part` (
   `p_container` char(10) DEFAULT NULL,
   `p_retailprice` decimal(12,2) DEFAULT NULL,
   `p_comment` varchar(23) DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
 drop table if exists lineitem;
 create table lineitem (
 l_orderkey int,
@@ -179,7 +179,7 @@ lineitem	CREATE TABLE `lineitem` (
   `l_shipinstruct` char(25) DEFAULT NULL,
   `l_shipmode` char(10) DEFAULT NULL,
   `l_comment` varchar(44) DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
 LOAD DATA INFILE '/data/qa/source/dbt3/1m/nation.tbl' INTO TABLE nation FIELDS TERMINATED BY '|';
 LOAD DATA INFILE '/data/qa/source/dbt3/1m/region.tbl' INTO TABLE region FIELDS TERMINATED BY '|';
 LOAD DATA INFILE '/data/qa/source/dbt3/1m/customer.tbl' INTO TABLE customer FIELDS TERMINATED BY '|';

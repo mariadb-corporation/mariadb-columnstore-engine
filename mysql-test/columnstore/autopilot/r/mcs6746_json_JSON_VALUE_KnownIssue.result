@@ -21,5 +21,5 @@ cInt	cVarchar	cText
 1	{"key1":123}	{"key1":123}
 1	{"key1": [1,2,3], "key1":123}	{"key1": [1,2,3], "key1":123}
 SELECT cVarchar, JSON_VALUE(cVarchar, '$.key1'), cText, JSON_VALUE(cText, '$.key1') from jsontest;
-ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_value' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_value' isn't supported.
 TRUNCATE TABLE jsontest;

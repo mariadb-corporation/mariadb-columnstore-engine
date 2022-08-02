@@ -19,7 +19,6 @@ INSERT INTO jsontest VALUES (1, @json2, @json2);
 SELECT JSON_MERGE(@json1,@json2);
 #
 SELECT * FROM jsontest;
---error 1178
 SELECT cVarchar, JSON_MERGE(cVarchar, @json2), cText, JSON_MERGE(cText, @json2) from jsontest;
 --error 1178
 SELECT cVarchar, JSON_MERGE(cVarchar, cText), cText, JSON_MERGE(cText, cVarchar) from jsontest;

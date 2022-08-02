@@ -20,7 +20,7 @@ cInt	cVarchar	cText
 1	{"A": 1, "B": 2, "C": {"D": 3}}	{"A": 1, "B": 2, "C": {"D": 3}}
 2	["A", "B", ["C", "D"], "E"]	["A", "B", ["C", "D"], "E"]
 SELECT cVarchar, JSON_REMOVE(cVarchar, '$.C'), cText, JSON_REMOVE(cText, '$.C') from jsontest;
-ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_remove' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_remove' isn't supported.
 SELECT cVarchar, JSON_REMOVE(cVarchar, '$[1]'), cText, JSON_REMOVE(cText, '$[1]') from jsontest;
-ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_remove' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_remove' isn't supported.
 TRUNCATE TABLE jsontest;

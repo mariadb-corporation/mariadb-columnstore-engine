@@ -18,7 +18,9 @@ cInt	cVarchar	cText
 1	[1, 2]	[1, 2]
 1	[3, 4]	[3, 4]
 SELECT cVarchar, JSON_MERGE(cVarchar, @json2), cText, JSON_MERGE(cText, @json2) from jsontest;
-ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_merge_preserve' isn't supported.
+cVarchar	JSON_MERGE(cVarchar, @json2)	cText	JSON_MERGE(cText, @json2)
+[1, 2]	[1, 2, 3, 4]	[1, 2]	[1, 2, 3, 4]
+[3, 4]	[3, 4, 3, 4]	[3, 4]	[3, 4, 3, 4]
 SELECT cVarchar, JSON_MERGE(cVarchar, cText), cText, JSON_MERGE(cText, cVarchar) from jsontest;
-ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_merge_preserve' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_merge_preserve' isn't supported.
 TRUNCATE TABLE jsontest;

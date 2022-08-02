@@ -19,5 +19,5 @@ SELECT * FROM jsontest;
 cInt	cVarchar	cText
 1	{ "A":1,"B":[2,3]}	{ "A":1,"B":[2,3]}
 SELECT cVarchar, JSON_DETAILED(cVarchar), cText, JSON_DETAILED(cText) from jsontest;
-ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_detailed' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_detailed' isn't supported.
 TRUNCATE TABLE jsontest;

@@ -18,7 +18,7 @@ nation	CREATE TABLE `nation` (
   `n_name` char(25) DEFAULT NULL,
   `n_regionkey` int(11) DEFAULT NULL,
   `n_comment` varchar(152) DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
 LOAD DATA INFILE '/data/qa/source/dbt3/1m/nation.tbl' INTO TABLE nation FIELDS TERMINATED BY '|';
 create table region (
 r_regionkey int,
@@ -31,7 +31,7 @@ region	CREATE TABLE `region` (
   `r_regionkey` int(11) DEFAULT NULL,
   `r_name` char(25) DEFAULT NULL,
   `r_comment` varchar(152) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3
+) ENGINE=InnoDB DEFAULT CHARSET=latin1
 insert into region values (1, 'AMERICA', 'hs use ironic, even requests. s');
 insert into region values (2, 'ASIA', 'ges. thinly even pinto beans ca');
 select count(*) from nation n, region r where n.n_regionkey = r.r_regionkey and r.r_regionkey = 2;

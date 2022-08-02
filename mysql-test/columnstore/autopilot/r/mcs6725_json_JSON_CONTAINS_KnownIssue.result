@@ -21,11 +21,11 @@ SELECT * FROM jsontest;
 cInt	cVarchar	cText
 1	{"A": 0, "B": {"C": 1}, "D": 2}	{"A": 0, "B": {"C": 1}, "D": 2}
 SELECT cVarchar, JSON_CONTAINS(cVarchar, '2', '$.A'), cText, JSON_CONTAINS(cText, '2', '$.A') from jsontest;
-ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_contains' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_contains' isn't supported.
 SELECT cVarchar, JSON_CONTAINS(cVarchar, '2', '$.D'), cText, JSON_CONTAINS(cText, '2', '$.D') from jsontest;
-ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_contains' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_contains' isn't supported.
 SELECT cVarchar, JSON_CONTAINS(cVarchar, '{"C": 1}', '$.A'), cText, JSON_CONTAINS(cText, '{"C": 1}', '$.A') from jsontest;
-ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_contains' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_contains' isn't supported.
 SELECT cVarchar, JSON_CONTAINS(cVarchar, '{"C": 1}', '$.B'), cText, JSON_CONTAINS(cText, '{"C": 1}', '$.B') from jsontest;
-ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_contains' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_contains' isn't supported.
 TRUNCATE TABLE jsontest;

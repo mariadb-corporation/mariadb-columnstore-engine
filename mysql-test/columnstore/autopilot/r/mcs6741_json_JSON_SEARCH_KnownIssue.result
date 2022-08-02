@@ -12,5 +12,5 @@ SELECT * FROM jsontest;
 cInt	cVarchar	cText
 1	["A", [{"B": "1"}], {"C":"AB"}, {"D":"BC"}]	["A", [{"B": "1"}], {"C":"AB"}, {"D":"BC"}]
 SELECT cVarchar, JSON_SEARCH(cVarchar, 'one', 'AB'), cText, JSON_SEARCH(cText, 'one', 'AB') from jsontest;
-ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_search' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_search' isn't supported.
 TRUNCATE TABLE jsontest;
