@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <iostream>
 #include <memory>
 #include "exceptclasses.h"
 #include "conststring.h"
@@ -176,5 +177,39 @@ class NullString
     return a < (*this);
   }
 };
+
 } // namespace utils.
+
+std::istream& >>(std::istream& in, utils::NullString& ns)
+{
+  uint8_t isNull;
+  in.read((char*)(&isNull), sizeof(isNull));
+  if (!isNull)
+  {
+    uint16_t len;
+    char t[32768];
+    in.read((char*)(&len), sizeof(len));
+    in.read(t, len);
+    ns.assign(t, len);
+  }
+  else
+  {
+    ns.dropString();
+  }
+  return in;
+}
+
+std::istream& <<(std::istream& out, const utils::NullString& ns)
+{
+  uint8_t isNull = ns.isNull();
+  out.write((char*)(&isNull), sizeof(isNull));
+  if (!isNull)
+  {
+    idbassert(ns.length() < 32768);
+    uint16_t len = ns.length();
+    out.write((char*)(&len), sizeof(len));
+    out.write(ns.str(), ns.length());
+  }
+  return out;
+}
 

@@ -64,12 +64,18 @@ ostream& operator<<(ostream& out, const ElementType& rhs)
   return out;
 }
 
+ostream& operator<<(std::ostream& out, const StringElementType::first_type& rhs)
+{
+  out.write((const char*) (&rhs), sizeof(rhs));
+  return out;
+}
+
 ostream& operator<<(std::ostream& out, const StringElementType& rhs)
 {
+#if 0
   uint64_t r = rhs.first;
   int16_t dlen = rhs.second.length();
 
-#if 0
   out.write((char*)&r, sizeof(r));
   out.write((char*)&dlen, sizeof(dlen));
   out.write(rhs.second.c_str(), dlen);
@@ -78,6 +84,12 @@ ostream& operator<<(std::ostream& out, const StringElementType& rhs)
   out << rhs.second;
 #endif
 
+  return out;
+}
+
+istream& operator>>(std::istream& out, StringElementType::first_type& rhs)
+{
+  out.read((char*)(&rhs), sizeof(rhs));
   return out;
 }
 
