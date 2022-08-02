@@ -30,6 +30,14 @@ class NullString
   {
     assign((const uint8_t*)str.str(), str.length());
   }
+  ConstString toConstString() const
+  {
+    if (isNull())
+    {
+      return ConstString(nullptr, 0);
+    }
+    return ConstString(mStrPtr->c_str(), mStrPtr->length());
+  }
   const char* str() const
   {
     if (!mStrPtr)
