@@ -70,23 +70,6 @@ ostream& operator<<(std::ostream& out, const StringElementType::first_type& rhs)
   return out;
 }
 
-ostream& operator<<(std::ostream& out, const StringElementType& rhs)
-{
-#if 0
-  uint64_t r = rhs.first;
-  int16_t dlen = rhs.second.length();
-
-  out.write((char*)&r, sizeof(r));
-  out.write((char*)&dlen, sizeof(dlen));
-  out.write(rhs.second.c_str(), dlen);
-#else
-  out << rhs.first;
-  out << rhs.second;
-#endif
-
-  return out;
-}
-
 std::istream& operator >>(std::istream& in, utils::NullString& ns)
 {
   uint8_t isNull;
@@ -123,6 +106,23 @@ std::ostream& operator <<(std::ostream& out, const utils::NullString& ns)
 istream& operator>>(std::istream& out, StringElementType::first_type& rhs)
 {
   out.read((char*)(&rhs), sizeof(rhs));
+  return out;
+}
+
+ostream& operator<<(std::ostream& out, const StringElementType& rhs)
+{
+#if 0
+  uint64_t r = rhs.first;
+  int16_t dlen = rhs.second.length();
+
+  out.write((char*)&r, sizeof(r));
+  out.write((char*)&dlen, sizeof(dlen));
+  out.write(rhs.second.c_str(), dlen);
+#else
+  out << rhs.first;
+  out << rhs.second;
+#endif
+
   return out;
 }
 
