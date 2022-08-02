@@ -299,7 +299,7 @@ class BatchPrimitiveProcessor
   boost::scoped_array<uint16_t> fFiltCmdRids[2];
   boost::scoped_array<int64_t> fFiltCmdValues[2];
   boost::scoped_array<int128_t> fFiltCmdBinaryValues[2];
-  boost::scoped_array<std::string> fFiltStrValues[2];
+  boost::scoped_array<utils::NullString> fFiltStrValues[2];
   uint64_t fFiltRidCount[2];
 
   // query density threshold for prefetch & async loading
