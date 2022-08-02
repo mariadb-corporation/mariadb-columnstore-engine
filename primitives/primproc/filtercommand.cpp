@@ -515,8 +515,8 @@ bool StrFilterCmd::compare_cc(uint64_t i, uint64_t j)
     return false;
 
   datatypes::Charset cs(leftColType.getCharset());
-  datatypes::TCharShort s0(bpp->fFiltCmdValues[0][i].unsafeStringRef());
-  datatypes::TCharShort s1(bpp->fFiltCmdValues[1][j].unsafeStringRef());
+  datatypes::TCharShort s0(bpp->fFiltCmdValues[0][i]);
+  datatypes::TCharShort s1(bpp->fFiltCmdValues[1][j]);
   return compareString(cs, s0.toConstString(leftColType.colWidth), s1.toConstString(rightColType.colWidth),
                        fBOP);
 }
@@ -534,7 +534,7 @@ bool StrFilterCmd::compare_ss(uint64_t i, uint64_t j)
 
 bool StrFilterCmd::compare_cs(uint64_t i, uint64_t j)
 {
-  if (execplan::isNull(bpp->fFiltCmdValues[0][i], leftColType) || bpp->fFiltStrValues[1][].sNull())
+  if (execplan::isNull(bpp->fFiltCmdValues[0][i], leftColType) || bpp->fFiltStrValues[1][j].sNull())
     return false;
 
   datatypes::Charset cs(leftColType.getCharset());
@@ -550,7 +550,7 @@ bool StrFilterCmd::compare_sc(uint64_t i, uint64_t j)
 
   datatypes::Charset cs(leftColType.getCharset());
   utils::ConstString s0 = bpp->fFiltStrValues[0][i].toConstString();
-  datatypes::TCharShort s1(bpp->fFiltCmdValues[1][j].unsafeStringRef());
+  datatypes::TCharShort s1(bpp->fFiltCmdValues[1][j]);
   return compareString(cs, s0, s1.toConstString(rightColType.colWidth), fBOP);
 }
 
