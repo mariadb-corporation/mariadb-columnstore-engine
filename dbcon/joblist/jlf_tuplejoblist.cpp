@@ -2158,7 +2158,7 @@ SP_JoinInfo joinToLargeTable(uint32_t large, TableInfoMap& tableInfoMap,
         // @bug6158, try to put BPS on large side if possible
         if (tsas && smallSides.size() == 1)
         {
-            SJSTEP sspjs = tableInfoMap[cId].fQuerySteps.back(), get();
+            SJSTEP sspjs = tableInfoMap[cId].fQuerySteps.back();
             BatchPrimitive* sbps = dynamic_cast<BatchPrimitive*>(sspjs.get());
             TupleHashJoinStep* sthjs = dynamic_cast<TupleHashJoinStep*>(sspjs.get());
 
