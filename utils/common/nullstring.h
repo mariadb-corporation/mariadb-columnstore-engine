@@ -180,7 +180,7 @@ class NullString
 
 } // namespace utils.
 
-std::istream& >>(std::istream& in, utils::NullString& ns)
+std::istream& operator >>(std::istream& in, utils::NullString& ns)
 {
   uint8_t isNull;
   in.read((char*)(&isNull), sizeof(isNull));
@@ -199,7 +199,7 @@ std::istream& >>(std::istream& in, utils::NullString& ns)
   return in;
 }
 
-std::istream& <<(std::istream& out, const utils::NullString& ns)
+std::istream& operator <<(std::istream& out, const utils::NullString& ns)
 {
   uint8_t isNull = ns.isNull();
   out.write((char*)(&isNull), sizeof(isNull));
