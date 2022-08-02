@@ -534,7 +534,7 @@ bool StrFilterCmd::compare_ss(uint64_t i, uint64_t j)
 
 bool StrFilterCmd::compare_cs(uint64_t i, uint64_t j)
 {
-  if (execplan::isNull(bpp->fFiltCmdValues[0][i], leftColType) || bpp->fFiltStrValues[1][j].sNull())
+  if (execplan::isNull(bpp->fFiltCmdValues[0][i], leftColType) || bpp->fFiltStrValues[1][j].isNull())
     return false;
 
   datatypes::Charset cs(leftColType.getCharset());
