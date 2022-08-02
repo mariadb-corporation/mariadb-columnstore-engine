@@ -6,7 +6,7 @@
 # Author: Daniel Lee, daniel.lee@mariadb.com
 # -------------------------------------------------------------- #
 #
---source ./include/have_columnstore.inc
+--source ../include/have_columnstore.inc
 #
 --disable_warnings
 DROP DATABASE IF EXISTS tpch1m;
@@ -25,45 +25,45 @@ CREATE DATABASE autopilot;
 CREATE DATABASE outerjoin;
 #
 USE tpch1m;
---source ./include/dbt3/createTables.inc
---source ./include/dbt3/ldiTables1m.inc
---source ./include/dbt3/countTables.inc
+--source ../include/dbt3/createTables.inc
+--source ../include/dbt3/ldiTables1m.inc
+--source ../include/dbt3/countTables.inc
 #
 USE tpch1;
---source ./include/dbt3/createTables.inc
---source ./include/dbt3/ldiTables1g.inc
---source ./include/dbt3/countTables.inc
+--source ../include/dbt3/createTables.inc
+--source ../include/dbt3/ldiTables1g.inc
+--source ../include/dbt3/countTables.inc
 #
 use ssb1;
---source ./include/ssb/createTables.inc
---source ./include/ssb/ldiTables1g.inc
---source ./include/ssb/countTables.inc
+--source ../include/ssb/createTables.inc
+--source ../include/ssb/ldiTables1g.inc
+--source ../include/ssb/countTables.inc
 #
 USE dml;
---source ./include/dbt3/createTables.inc
---source ./include/dbt3/ldiTables1g.inc
---source ./include/dbt3/countTables.inc
+--source ../include/dbt3/createTables.inc
+--source ../include/dbt3/ldiTables1g.inc
+--source ../include/dbt3/countTables.inc
 #
 # Create misc test tables
 USE tpch1;
---source ./include/regression_create_dtypes.inc
---source ./include/regression_create_simple_subselect.inc
---source ./include/regression_create_empsalary.inc
---source ./include/regression_create_datatypetestm.inc
---source ./include/regression_create_datatypetestm1.inc
---source ./include/regression_create_wide_tables.inc
---source ./include/regression_create_misc_tables.inc
+--source ../include/regression_create_dtypes.inc
+--source ../include/regression_create_simple_subselect.inc
+--source ../include/regression_create_empsalary.inc
+--source ../include/regression_create_datatypetestm.inc
+--source ../include/regression_create_datatypetestm1.inc
+--source ../include/regression_create_wide_tables.inc
+--source ../include/regression_create_misc_tables.inc
 #
 USE autopilot;
---source ./include/autopilot_create_datatypetestm_tables.inc
---source ./include/autopilot_create_datatypeupdate_table.inc
---source ./include/autopilot_create_jsontest_table.inc
+--source ../include/autopilot_create_datatypetestm_tables.inc
+--source ../include/autopilot_create_datatypeupdate_table.inc
+--source ../include/autopilot_create_jsontest_table.inc
 #
 USE outerjoin;
---source ./include/dbt3/createTables.inc
---source ./include/dbt3/ldiTables1m.inc
---source ./include/dbt3/countTables.inc
---source ./include/autopilot_create_outerjoin_tables.inc
+--source ../include/dbt3/createTables.inc
+--source ../include/dbt3/ldiTables1m.inc
+--source ../include/dbt3/countTables.inc
+--source ../include/autopilot_create_outerjoin_tables.inc
 #
 # Set table name to case insensitive
 --exec sed -i 's/\[mysqld\]/\[mysqld\]\nlower_case_table_name=1/g' /etc/my.cnf.d/server.cnf
