@@ -64,10 +64,10 @@ ostream& operator<<(ostream& out, const ElementType& rhs)
   return out;
 }
 
-ostream& operator<<(std::ostream& out, const StringElementType::first_type& rhs)
+ostream& operator<<(std::ostream* out, const StringElementType::first_type& rhs)
 {
-  out.write((const char*) (&rhs), sizeof(rhs));
-  return out;
+  out->write((const char*) (&rhs), sizeof(rhs));
+  return *out;
 }
 
 std::istream& operator >>(std::istream& in, utils::NullString& ns)
@@ -103,10 +103,12 @@ std::ostream& operator <<(std::ostream& out, const utils::NullString& ns)
   return out;
 }
 
-istream& operator>>(std::istream& out, StringElementType::first_type& rhs)
+// XXX: somewhat hacky. there's an operator with unknown/unneccessarily complex semantics, so I invented mine's, with
+// slightly different types.
+istream& operator>>(std::istream* out, StringElementType::first_type& rhs)
 {
-  out.read((char*)(&rhs), sizeof(rhs));
-  return out;
+  out->read((char*)(&rhs), sizeof(rhs));
+  return *out;
 }
 
 ostream& operator<<(std::ostream& out, const StringElementType& rhs)
@@ -119,7 +121,7 @@ ostream& operator<<(std::ostream& out, const StringElementType& rhs)
   out.write((char*)&dlen, sizeof(dlen));
   out.write(rhs.second.c_str(), dlen);
 #else
-  out << rhs.first;
+  *out << rhs.first;
   out << rhs.second;
 #endif
 
@@ -140,7 +142,7 @@ istream& operator>>(std::istream& out, StringElementType& rhs)
   rhs.first = r;
   rhs.second = string(d, dlen);
 #else
-  out >> rhs.first;
+  *out >> rhs.first;
   out >> rhs.second;
 #endif
 
